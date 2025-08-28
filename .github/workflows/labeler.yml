@@ -1,7 +1,10 @@
 name: PR Labeler
 on:
-  pull_request_target:
-    types: [opened, synchronize, reopened]
+  # Workflow temporairement désactivé
+  # pull_request_target:
+  #   types: [opened, synchronize, reopened]
+  # Désactiver temporairement en utilisant un événement qui ne se produira jamais
+  workflow_dispatch:
 permissions:
   contents: read
   pull-requests: write

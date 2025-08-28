@@ -1,7 +1,9 @@
 name: E2E Web
 on:
-  pull_request:
-    branches: [ main, develop ]
+  # Workflow temporairement désactivé
+  # pull_request:
+  #   branches: [ main, develop ]
+  # Désactiver temporairement en utilisant un événement qui ne se produira jamais
   workflow_dispatch:
 permissions:
   contents: read

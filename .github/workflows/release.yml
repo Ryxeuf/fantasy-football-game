@@ -1,7 +1,9 @@
 name: Release
 on:
-  push:
-    branches: [ main ]
+  # Workflow temporairement désactivé
+  # push:
+  #   branches: [ main ]
+  # Désactiver temporairement en utilisant un événement qui ne se produira jamais
   workflow_dispatch: {}
 permissions:
   contents: write

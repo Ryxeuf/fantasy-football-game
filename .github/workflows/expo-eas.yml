@@ -1,7 +1,9 @@
 name: EAS Build
 on:
-  push:
-    tags: [ "mobile-v*" ]
+  # Workflow temporairement désactivé
+  # push:
+  #   tags: [ "mobile-v*" ]
+  # Désactiver temporairement en utilisant un événement qui ne se produira jamais
   workflow_dispatch:
 jobs:
   eas:

@@ -1,8 +1,10 @@
 name: Docker Server
 on:
-  push:
-    branches: [ main ]
-    tags: [ "server-v*" ]
+  # Workflow temporairement désactivé
+  # push:
+  #   branches: [ main ]
+  #   tags: [ "server-v*" ]
+  # Désactiver temporairement en utilisant un événement qui ne se produira jamais
   workflow_dispatch:
 permissions:
   contents: read
