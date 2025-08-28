@@ -9,6 +9,7 @@ import {
   makeRNG,
   type GameState,
   type Position,
+  type Move,
 } from "@bb/game-engine";
 
 export default function HomePage() {
@@ -18,11 +19,10 @@ export default function HomePage() {
   const [selected, setSelected] = useState<string | null>(null);
 
   const legal = useMemo(() => getLegalMoves(state), [state]);
+  const isMove = (m: Move, pid: string): m is Extract<Move, { type: "MOVE" }> =>
+    m.type === "MOVE" && (m as any).playerId === pid;
   const movesForSelected = useMemo(
-    () =>
-      selected
-        ? legal.filter((m) => m.type === "MOVE" && m.playerId === selected).map((m) => m.to)
-        : [],
+    () => (selected ? legal.filter((m) => isMove(m, selected)).map((m) => m.to) : []),
     [legal, selected]
   );
 

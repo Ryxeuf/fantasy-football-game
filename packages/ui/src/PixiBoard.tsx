@@ -8,7 +8,9 @@ import {
   Text as PixiText,
   Sprite,
 } from "@pixi/react";
-import { Texture } from "pixi.js";
+import { Texture } from "@pixi/core";
+import type { Graphics as PixiGraphics } from "@pixi/graphics";
+import { TextStyle } from "@pixi/text";
 import type { GameState, Position } from "@bb/game-engine";
 
 type Props = {
@@ -93,7 +95,7 @@ export default function PixiBoard({
         <Container scale={scale} x={offset.x} y={offset.y}>
           {/* Grid */}
           <Graphics
-            draw={g => {
+            draw={(g: PixiGraphics) => {
               g.clear();
               g.lineStyle(1, 0xCCCCCC, 1);
               for (let x = 0; x <= state.width; x++) {
@@ -109,7 +111,7 @@ export default function PixiBoard({
           {/* Ball */}
           {state.ball && (
             <Graphics
-              draw={g => {
+              draw={(g: PixiGraphics) => {
                 g.clear();
                 g.beginFill(0x222222);
                 g.drawCircle(
@@ -125,7 +127,7 @@ export default function PixiBoard({
           {legalMoves.map((m) => (
             <Graphics
               key={`lm-${m.x}-${m.y}`}
-              draw={(g) => {
+              draw={(g: PixiGraphics) => {
                 g.clear();
                 g.beginFill(0x22c55e, 0.35);
                 g.drawRect(m.x * cellSize, m.y * cellSize, cellSize, cellSize);
@@ -177,7 +179,7 @@ function PlayerSprite({ player, cellSize, selected }: PlayerSpriteProps) {
     <Container x={pos.x * cellSize} y={pos.y * cellSize}>
       {selected && (
         <Graphics
-          draw={(g) => {
+          draw={(g: PixiGraphics) => {
             g.clear();
             g.lineStyle(2, 0xFACC15);
             g.drawRoundedRect(cellSize * 0.1, cellSize * 0.1, cellSize * 0.8, cellSize * 0.8, 6);
@@ -196,7 +198,7 @@ function PlayerSprite({ player, cellSize, selected }: PlayerSpriteProps) {
         text={player.team}
         x={cellSize * 0.3}
         y={cellSize * 0.3}
-        style={{ fontFamily: "monospace", fontSize: 12, fill: 0xffffff }}
+        style={new TextStyle({ fontFamily: "monospace", fontSize: 12, fill: 0xffffff as any })}
       />
     </Container>
   );

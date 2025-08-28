@@ -1,12 +1,22 @@
 {
   "extends": "../../packages/config/tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "app"
+    "allowJs": true,
+    "noEmit": true,
+    "incremental": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
   },
   "include": [
     "app",
-    "../../packages/ui/src",
-    "../../packages/game-engine/src",
     "next-env.d.ts"
+  ],
+  "exclude": [
+    "node_modules"
   ]
 }

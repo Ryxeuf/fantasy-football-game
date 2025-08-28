@@ -2,5 +2,8 @@
   "extends": "../config/tsconfig.base.json",
   "include": [
     "src"
+  ],
+  "exclude": [
+    "src/PixiBoard.native.tsx"
   ]
 }
