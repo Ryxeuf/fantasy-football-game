@@ -1,0 +1,12 @@
+{
+  "extends": "../../packages/config/tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "app"
+  },
+  "include": [
+    "app",
+    "../../packages/ui/src",
+    "../../packages/game-engine/src",
+    "next-env.d.ts"
+  ]
+}

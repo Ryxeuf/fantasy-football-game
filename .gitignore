@@ -1,0 +1,29 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Builds
+.next
+dist
+build
+out
+.expo
+
+# Env
+.env
+.env.*
+.env.local
+
+# Misc
+.DS_Store
+.idea
+.vscode

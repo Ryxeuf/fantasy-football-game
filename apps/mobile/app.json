@@ -1,0 +1,10 @@
+{
+  "expo": {
+    "name": "BlooBowl",
+    "slug": "bloobowl",
+    "scheme": "bloobowl",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "sdkVersion": "51.0.0"
+  }
+}
