@@ -85,11 +85,18 @@ export function getLegalMoves(state: GameState): Move[] {
   state.players.forEach((p) => occ.set(`${p.pos.x},${p.pos.y}`, p));
 
   for (const p of myPlayers) {
+    // Mouvements orthogonaux ET diagonaux (Blood Bowl rules)
     const dirs = [
-      { x: 1, y: 0 },
-      { x: -1, y: 0 },
-      { x: 0, y: 1 },
-      { x: 0, y: -1 },
+      // Orthogonaux
+      { x: 1, y: 0 },   // droite
+      { x: -1, y: 0 },  // gauche
+      { x: 0, y: 1 },   // bas
+      { x: 0, y: -1 },  // haut
+      // Diagonaux
+      { x: 1, y: 1 },   // bas-droite
+      { x: 1, y: -1 },  // haut-droite
+      { x: -1, y: 1 },  // bas-gauche
+      { x: -1, y: -1 }, // haut-gauche
     ];
     for (const d of dirs) {
       const to = { x: p.pos.x + d.x, y: p.pos.y + d.y };
