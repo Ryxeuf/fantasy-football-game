@@ -18,7 +18,7 @@ Documentation complète pour les développeurs travaillant sur le projet BlooBow
 ```
 fantasy-football-game/
 ├── 📁 apps/                    # Applications principales
-│   ├── 🌐 web/                 # Next.js + Pixi.js (port 3000)
+│   ├── 🌐 web/                 # Next.js + Pixi.js (port 3100)
 │   │   ├── .next/             # Build Next.js (exclu du Git)
 │   │   ├── .turbo/            # Cache Turbo (exclu du Git)
 │   │   ├── tsconfig.tsbuildinfo # Cache TS (exclu du Git)
@@ -166,7 +166,7 @@ Desktop.ini
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   Frontend Web  │    │   Application   │    │   Serveur de    │
 │   (Next.js)     │    │   Mobile        │    │   Jeu           │
-│   Port 3000     │    │   (Expo)        │    │   (Express)     │
+│   Port 3100     │    │   (Expo)        │    │   (Express)     │
 │                 │    │   Port 8082     │    │   Port 8001     │
 └─────────┬───────┘    └─────────┬───────┘    └─────────┬───────┘
           │                      │                      │
@@ -223,7 +223,7 @@ nano .env.local
 pnpm dev
 
 # Lancer individuellement
-cd apps/web && pnpm dev        # Port 3000
+cd apps/web && pnpm dev        # Port 3100
 cd apps/server && pnpm dev     # Ports 8000 + 8001
 cd apps/mobile && pnpm dev     # Port 8082
 ```
@@ -271,7 +271,7 @@ pnpm update
 
 | Service | Port | URL | Description | Statut |
 |---------|------|-----|-------------|---------|
-| **Web App** | 3000 | `http://localhost:3000` | Interface Next.js + Pixi.js | ✅ Actif |
+| **Web App** | 3100 | `http://localhost:3100` | Interface Next.js + Pixi.js | ✅ Actif |
 | **API Express** | 8001 | `http://localhost:8001/health` | Endpoints API et health check | ✅ Actif |
 | **Boardgame.io** | 8000 | `http://localhost:8000` | Serveur de jeu principal | ✅ Actif |
 | **Expo Mobile** | 8082 | `http://localhost:8082` | Développement mobile | ✅ Actif |
@@ -280,7 +280,7 @@ pnpm update
 
 ```bash
 # Vérifier le statut de tous les services
-curl -s http://localhost:3000 | grep -o "BlooBowl"
+curl -s http://localhost:3100 | grep -o "BlooBowl"
 curl -s http://localhost:8001/health
 curl -s http://localhost:8000/ | head -1
 curl -s http://localhost:8082 | grep -o "exposdk"
