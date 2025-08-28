@@ -1,55 +1,185 @@
-# BlooBowl – Monorepo (Web + Mobile + Server)
+# 🏈 BlooBowl - Fantasy Football Game
 
-Monorepo **TypeScript** pour un jeu tour-par-tour inspiré Blood Bowl, jouable en **asynchrone** (deux joueurs), en **PWA** (web desktop/mobile) + **mobile Expo**. Serveur **boardgame.io**.
+Jeu de football américain tour-par-tour avec interface web (Next.js + Pixi.js) et mobile (Expo + React Native).
 
-## Stack
-- Monorepo: Turborepo + pnpm
-- Web: Next.js (App Router) + Tailwind
-- Mobile: Expo (React Native)
-- Serveur: boardgame.io + tsx
-- Moteur: packages/game-engine (TS pur, RNG déterministe)
-- UI partagée (web): packages/ui
+## 🚀 Installation
 
-## Prérequis
-- Node 20+
-- pnpm `npm i -g pnpm`
+### Prérequis
+- Node.js 18+ 
+- pnpm 9.7.0+
+- Expo CLI (pour le développement mobile)
 
-## Installation
+### Installation des dépendances
 ```bash
+# Installation globale de pnpm si nécessaire
+corepack install -g pnpm@10.15.0
+
+# Installation des dépendances du projet
 pnpm install
 ```
 
-## Développement
-Dans 3 terminaux ou via turbo:
+## 🛠️ Commandes utiles
+
+### Développement
 ```bash
+# Lancer tous les services en développement
 pnpm dev
+
+# Lancer seulement l'application web
+cd apps/web && pnpm dev
+
+# Lancer seulement le serveur
+cd apps/server && pnpm dev
+
+# Lancer seulement l'application mobile
+cd apps/mobile && pnpm dev -- --port 8082
 ```
-- Web: http://localhost:3000
-- Server (WS/HTTP): http://localhost:8000
-- Mobile: `apps/mobile` → `pnpm dev` (ouvre Expo)
 
-> Astuce: tu peux aussi lancer séparément: `pnpm --filter @bb/server dev` et `pnpm --filter @bb/web dev`
-
-## Base de données (optionnelle pour MVP)
-Un `docker-compose.yml` est fourni (Postgres + Redis). Lancement:
+### Vérification et qualité
 ```bash
-docker compose up -d
-```
-Configure `.env` à la racine et dans `apps/server` si tu branches Prisma plus tard.
+# Vérifier les types TypeScript
+pnpm typecheck
 
-## Structure
+# Linter le code
+pnpm lint
+
+# Formater le code
+pnpm format
+
+# Build de production
+pnpm build
 ```
-/apps
-  /web        -> Next.js PWA minimal + Board viewer
-  /mobile     -> Expo minimal
-  /server     -> boardgame.io server
-/packages
-  /game-engine -> moteur de règles déterministe (applyMove/getLegalMoves)
-  /ui          -> composants React web (Board)
-  /config      -> tsconfig & eslint partagés
-/prisma         -> (placeholder) schéma Postgres
+
+### Tests
+```bash
+# Lancer tous les tests
+pnpm test
+
+# Tests avec continue (ignore les erreurs)
+pnpm -w test
 ```
-## TODO
-- Auth (Supabase/Clerk)
-- Persistance Postgres + Prisma (events, matches)
-- Notifications push (Web + Expo)
+
+## 🌐 Services et ports
+
+| Service | Port | URL | Description |
+|---------|------|-----|-------------|
+| **Web App** | 3000 | `http://localhost:3000` | Interface Next.js + Pixi.js |
+| **API Express** | 8001 | `http://localhost:8001/health` | Endpoints API et health check |
+| **Boardgame.io** | 8000 | `http://localhost:8000` | Serveur de jeu principal |
+| **Expo Mobile** | 8082 | `http://localhost:8082` | Développement mobile |
+
+## 📱 Développement mobile
+
+### Installation d'Expo Go
+1. Installez **Expo Go** sur votre téléphone
+2. Scannez le QR code affiché dans le terminal
+3. L'application se chargera directement sur votre appareil
+
+### Commandes Expo utiles
+```bash
+# Démarrer Expo sur un port spécifique
+cd apps/mobile && pnpm dev -- --port 8082
+
+# Ouvrir dans le simulateur iOS
+# Appuyez sur 'i' dans le terminal Expo
+
+# Ouvrir dans l'émulateur Android  
+# Appuyez sur 'a' dans le terminal Expo
+
+# Ouvrir dans le navigateur web
+# Appuyez sur 'w' dans le terminal Expo
+```
+
+## 🏗️ Architecture
+
+```
+fantasy-football-game/
+├── apps/
+│   ├── web/          # Next.js + Pixi.js (port 3000)
+│   ├── mobile/       # Expo + React Native (port 8082)
+│   └── server/       # Express + Boardgame.io (ports 8000, 8001)
+├── packages/
+│   ├── ui/           # Composants Pixi.js partagés
+│   ├── game-engine/  # Logique de jeu déterministe
+│   └── config/       # Configuration TypeScript/ESLint
+└── prisma/           # Schéma de base de données
+```
+
+## 🎮 Moteur de jeu
+
+- **Plateau** : 26 × 15 cases (style Blood Bowl)
+- **Mouvements** : 1 case orthogonale par tour
+- **Actions** : MOVE, END_TURN
+- **RNG** : Déterministe (mulberry32)
+- **Équipes** : A (bleu) vs B (rouge)
+
+## 🔧 Développement
+
+### Structure des packages
+- `@bb/web` : Application web Next.js
+- `@bb/mobile` : Application mobile Expo
+- `@bb/server` : Serveur de jeu et API
+- `@bb/ui` : Composants Pixi.js partagés
+- `@bb/game-engine` : Logique de jeu
+
+### Scripts disponibles
+```bash
+# Gestion des changements
+pnpm changeset          # Créer un changelog
+pnpm changeset:version  # Versionner les packages
+pnpm changeset:publish  # Publier (désactivé en privé)
+```
+
+## 🚨 Résolution de problèmes
+
+### Ports déjà utilisés
+```bash
+# Libérer un port
+lsof -ti :8000 | xargs -r kill -9
+
+# Vérifier les processus
+ps aux | grep -E "(next|tsx|expo)" | grep -v grep
+```
+
+### Erreurs TypeScript
+```bash
+# Vérifier les types
+pnpm typecheck
+
+# Installer les dépendances manquantes
+pnpm install --filter @bb/[package-name]
+```
+
+### Serveur boardgame.io
+```bash
+# Vérifier le statut
+curl http://localhost:8000/
+curl http://localhost:8001/health
+
+# Relancer le serveur
+cd apps/server && pnpm dev
+```
+
+## 📚 Technologies utilisées
+
+- **Frontend** : Next.js 14, React 18, Pixi.js 7
+- **Mobile** : Expo 51, React Native 0.75
+- **Backend** : Express, Boardgame.io 0.50
+- **Build** : Turbo, pnpm, TypeScript
+- **Styling** : Tailwind CSS
+
+## 🤝 Contribution
+
+1. Fork le projet
+2. Créez une branche feature (`git checkout -b feature/AmazingFeature`)
+3. Committez vos changements (`git commit -m 'Add some AmazingFeature'`)
+4. Push vers la branche (`git push origin feature/AmazingFeature`)
+5. Ouvrez une Pull Request
+
+## 📄 Licence
+
+Ce projet est privé. Tous droits réservés.
+
+---
+
+**Note** : Les workflows GitHub Actions sont temporairement désactivés pour le développement local.
