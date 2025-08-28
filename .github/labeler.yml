@@ -1,0 +1,10 @@
+packages-ui:
+  - "packages/ui/**"
+game-engine:
+  - "packages/game-engine/**"
+web:
+  - "apps/web/**"
+server:
+  - "apps/server/**"
+mobile:
+  - "apps/mobile/**"
