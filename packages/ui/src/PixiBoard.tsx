@@ -1,6 +1,6 @@
 'use client';
 import * as React from "react";
-import { Stage, Container, Graphics } from "@pixi/react";
+import { Stage, Container, Graphics, Text } from "@pixi/react";
 import type { Graphics as PixiGraphics } from "@pixi/graphics";
 import type { GameState, Position } from "@bb/game-engine";
 
@@ -222,49 +222,84 @@ export default function PixiBoard({
             const isCurrentTeam = player.team === state.currentPlayer;
             
             return (
-              <Graphics
-                key={player.id}
-                draw={(g: PixiGraphics) => {
-                  g.clear();
-                  
-                  // Position (orientation verticale : inverser x et y)
-                  const x = player.pos.y * cellSize + cellSize / 2;
-                  const y = player.pos.x * cellSize + cellSize / 2;
-                  const radius = cellSize / 2 - 2;
-                  
-                  // Cercle du joueur
-                  g.beginFill(player.team === 'A' ? 0xFF0000 : 0x0000FF); // Rouge pour équipe A, Bleu pour équipe B
-                  g.drawCircle(x, y, radius);
-                  g.endFill();
-                  
-                  // Bordure - améliorée pour la sélection
-                  if (isSelected) {
-                    // Bordure jaune épaisse pour le joueur sélectionné
-                    g.lineStyle(4, 0xFFFF00, 1);
-                    g.drawCircle(x, y, radius + 2);
+              <React.Fragment key={player.id}>
+                <Graphics
+                  draw={(g: PixiGraphics) => {
+                    g.clear();
                     
-                    // Halo de sélection
-                    g.lineStyle(2, 0xFFFF00, 0.5);
-                    g.drawCircle(x, y, radius + 8);
-                  } else {
-                    // Bordure blanche normale
-                    g.lineStyle(3, 0xFFFFFF, 1);
+                    // Position (orientation verticale : inverser x et y)
+                    const x = player.pos.y * cellSize + cellSize / 2;
+                    const y = player.pos.x * cellSize + cellSize / 2;
+                    const radius = cellSize / 2 - 2;
+                    
+                    // Cercle du joueur
+                    g.beginFill(player.team === 'A' ? 0xFF0000 : 0x0000FF); // Rouge pour équipe A, Bleu pour équipe B
                     g.drawCircle(x, y, radius);
-                  }
-                  
-                  // Indicateur de tour actuel
-                  if (isCurrentTeam) {
-                    g.lineStyle(2, 0x00FF00, 1); // Vert pour le tour actuel
-                    g.drawCircle(x, y, radius + 3);
-                  }
-                  
-                  // Numéro du joueur au centre
-                  g.lineStyle(1, 0xFFFFFF, 1);
-                  g.beginFill(0xFFFFFF);
-                  g.drawCircle(x, y, radius / 2);
-                  g.endFill();
-                }}
-              />
+                    g.endFill();
+                    
+                    // Bordure - améliorée pour la sélection
+                    if (isSelected) {
+                      // Bordure jaune épaisse pour le joueur sélectionné
+                      g.lineStyle(4, 0xFFFF00, 1);
+                      g.drawCircle(x, y, radius + 2);
+                      
+                      // Halo de sélection
+                      g.lineStyle(2, 0xFFFF00, 0.5);
+                      g.drawCircle(x, y, radius + 8);
+                    } else {
+                      // Bordure blanche normale
+                      g.lineStyle(3, 0xFFFFFF, 1);
+                      g.drawCircle(x, y, radius);
+                    }
+                    
+                    // Indicateur de tour actuel
+                    if (isCurrentTeam) {
+                      g.lineStyle(2, 0x00FF00, 1); // Vert pour le tour actuel
+                      g.drawCircle(x, y, radius + 3);
+                    }
+                  }}
+                />
+                
+                {/* Numéro du joueur au centre */}
+                <Text
+                  x={player.pos.y * cellSize + cellSize / 2}
+                  y={player.pos.x * cellSize + cellSize / 2}
+                  text={player.id}
+                  anchor={{ x: 0.5, y: 0.5 }}
+                  style={{
+                    align: 'center',
+                    breakWords: false,
+                    dropShadow: false,
+                    dropShadowAlpha: 1,
+                    dropShadowAngle: 0,
+                    dropShadowBlur: 0,
+                    dropShadowColor: 0x000000,
+                    dropShadowDistance: 0,
+                    fill: 0xFFFFFF,
+                    fontFamily: 'Arial',
+                    fontSize: Math.max(12, cellSize / 3),
+                    fontStyle: 'normal',
+                    fontVariant: 'normal',
+                    fontWeight: 'normal',
+                    leading: 0,
+                    letterSpacing: 0,
+                    lineHeight: 0,
+                    lineJoin: 'miter',
+                    miterLimit: 10,
+                    padding: 0,
+                    stroke: 0x000000,
+                    strokeThickness: 2,
+                    textBaseline: 'alphabetic',
+                    trim: false,
+                    whiteSpace: 'pre',
+                    wordWrap: false,
+                    wordWrapWidth: 0,
+                    fillGradientType: 0,
+                    fillGradientStops: [],
+                    styleID: 0
+                  }}
+                />
+              </React.Fragment>
             );
           })}
           
