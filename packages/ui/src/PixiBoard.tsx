@@ -31,10 +31,46 @@ export default function PixiBoard({
     height 
   });
 
+  // Fonction pour gérer les clics sur le terrain
+  const handleStageClick = (event: any) => {
+    if (!onCellClick) return;
+    
+    // Dans Pixi.js avec React, l'événement a une structure différente
+    // event.nativeEvent contient les informations de la souris
+    const nativeEvent = event.nativeEvent;
+    if (!nativeEvent) return;
+    
+    // Obtenir les coordonnées relatives au canvas
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = nativeEvent.clientX - rect.left;
+    const y = nativeEvent.clientY - rect.top;
+    
+    // Convertir les coordonnées de la souris en position de grille
+    const gridX = Math.floor(x / cellSize);
+    const gridY = Math.floor(y / cellSize);
+    
+    // Vérifier que la position est dans les limites du terrain
+    if (gridX >= 0 && gridX < state.height && gridY >= 0 && gridY < state.width) {
+      // Créer la position (orientation verticale : inverser x et y)
+      const position: Position = {
+        x: gridY, // Inverser x et y pour l'orientation verticale
+        y: gridX
+      };
+      
+      console.log('Clic sur la cellule:', { gridX, gridY, position, clientX: nativeEvent.clientX, clientY: nativeEvent.clientY });
+      onCellClick(position);
+    }
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       {/* Canvas Pixi.js */}
-      <Stage width={width} height={height} options={{ backgroundColor: 0x6B8E23 }}>
+      <Stage 
+        width={width} 
+        height={height} 
+        options={{ backgroundColor: 0x6B8E23 }}
+        onPointerDown={handleStageClick}
+      >
         <Container>
           {/* Fond vert kaki du terrain principal */}
           <Graphics
@@ -169,12 +205,11 @@ export default function PixiBoard({
               g.beginFill(0x00FF00, 0.3); // Vert transparent
               
               legalMoves.forEach(move => {
-                if (move.type === 'MOVE' && move.to) {
-                  // Orientation verticale : inverser x et y
-                  const x = move.to.y * cellSize;
-                  const y = move.to.x * cellSize;
-                  g.drawRect(x, y, cellSize, cellSize);
-                }
+                // legalMoves est déjà un tableau de Position[] (les positions 'to' des mouvements légaux)
+                // Orientation verticale : inverser x et y
+                const x = move.y * cellSize;
+                const y = move.x * cellSize;
+                g.drawRect(x, y, cellSize, cellSize);
               });
               
               g.endFill();
@@ -202,15 +237,32 @@ export default function PixiBoard({
                   g.drawCircle(x, y, radius);
                   g.endFill();
                   
-                  // Bordure
-                  g.lineStyle(3, isSelected ? 0xFFFF00 : 0xFFFFFF, 1); // Jaune si sélectionné, blanc sinon
-                  g.drawCircle(x, y, radius);
+                  // Bordure - améliorée pour la sélection
+                  if (isSelected) {
+                    // Bordure jaune épaisse pour le joueur sélectionné
+                    g.lineStyle(4, 0xFFFF00, 1);
+                    g.drawCircle(x, y, radius + 2);
+                    
+                    // Halo de sélection
+                    g.lineStyle(2, 0xFFFF00, 0.5);
+                    g.drawCircle(x, y, radius + 8);
+                  } else {
+                    // Bordure blanche normale
+                    g.lineStyle(3, 0xFFFFFF, 1);
+                    g.drawCircle(x, y, radius);
+                  }
                   
                   // Indicateur de tour actuel
                   if (isCurrentTeam) {
                     g.lineStyle(2, 0x00FF00, 1); // Vert pour le tour actuel
                     g.drawCircle(x, y, radius + 3);
                   }
+                  
+                  // Numéro du joueur au centre
+                  g.lineStyle(1, 0xFFFFFF, 1);
+                  g.beginFill(0xFFFFFF);
+                  g.drawCircle(x, y, radius / 2);
+                  g.endFill();
                 }}
               />
             );
@@ -265,6 +317,7 @@ export default function PixiBoard({
         <p><strong>Tour:</strong> {state.turn} - Joueur: {state.currentPlayer}</p>
         <p><strong>Mouvements légaux:</strong> {legalMoves.length}</p>
         <p><strong>Joueur sélectionné:</strong> {selectedPlayerId || 'Aucun'}</p>
+        <p><strong>Interactivité:</strong> ✅ Clics activés</p>
       </div>
     </div>
   );
