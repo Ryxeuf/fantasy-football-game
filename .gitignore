@@ -23,12 +23,50 @@ out
 .cache
 .parcel-cache
 
-# Env
+# TypeScript build info
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# Expo
+.expo/
+.expo-shared/
+
+# Next.js
+.next/
+out/
+
+# Environment
 .env
 .env.*
 .env.local
+.env.development
+.env.test
+.env.production
 
-# Misc
+# IDE and Editor
 .DS_Store
 .idea
 .vscode
+*.swp
+*.swo
+*~
+
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+.temp/
+
+# Coverage and test
+coverage/
+.nyc_output/
+.jest/
+
+# Lock files (keep only pnpm-lock.yaml)
+package-lock.json
+yarn.lock
