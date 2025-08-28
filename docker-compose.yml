@@ -1,17 +1,51 @@
+version: '3.8'
+
 services:
-  postgres:
-    image: postgres:16
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    ports:
+      - "8200:3100"
     environment:
-      POSTGRES_USER: bloobowl
-      POSTGRES_PASSWORD: bloobowl
-      POSTGRES_DB: bloobowl
-    ports:
-      - "5432:5432"
+      - NODE_ENV=development
+      - PORT=3100
     volumes:
-      - pgdata:/var/lib/postgresql/data
-  redis:
-    image: redis:7
+      - .:/app
+      - /app/node_modules
+      - /app/apps/web/node_modules
+      - /app/packages/ui/node_modules
+      - /app/packages/game-engine/node_modules
+    working_dir: /app
+    command: >
+      sh -c "
+        pnpm install &&
+        pnpm run dev:web
+      "
+    depends_on:
+      - server
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
     ports:
-      - "6379:6379"
+      - "8000:8000"
+      - "8001:8001"
+    environment:
+      - NODE_ENV=development
+      - PORT=8000
+      - API_PORT=8001
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/apps/server/node_modules
+    working_dir: /app/apps/server
+    command: >
+      sh -c "
+        pnpm install &&
+        pnpm run dev
+      "
+
 volumes:
-  pgdata:
+  node_modules:

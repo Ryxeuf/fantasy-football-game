@@ -1,0 +1,29 @@
+FROM node:18-alpine
+
+# Install pnpm
+RUN npm install -g pnpm
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/web/package.json ./apps/web/
+COPY packages/ui/package.json ./packages/ui/
+COPY packages/game-engine/package.json ./packages/game-engine/
+
+# Install dependencies
+RUN pnpm install
+
+# Copy source code
+COPY . .
+
+# Expose port
+EXPOSE 3100
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:3100/ || exit 1
+
+# Default command
+CMD ["pnpm", "run", "dev:web"]
