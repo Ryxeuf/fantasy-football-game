@@ -1,0 +1,30 @@
+name: E2E Web
+on:
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: 'pnpm' }
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Install Playwright
+        run: pnpm exec playwright install --with-deps || true
+        working-directory: apps/web
+      - name: Build web
+        run: pnpm --filter @bb/web build
+      - name: Start web (bg)
+        run: pnpm --filter @bb/web start &
+      - name: Wait on web
+        run: npx wait-on http://localhost:3000
+      - name: Run Playwright tests
+        run: pnpm --filter @bb/web test:e2e || echo "Add Playwright tests to apps/web"

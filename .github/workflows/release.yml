@@ -1,0 +1,28 @@
+name: Release
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: {}
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  version-or-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: 'pnpm' }
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Create Release PR or Publish
+        uses: changesets/action@v1
+        with:
+          publish: pnpm -w changeset:publish
+          version: pnpm -w changeset:version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
