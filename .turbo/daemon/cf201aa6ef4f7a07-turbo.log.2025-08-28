@@ -124,3 +124,10 @@
 2025-08-28T13:24:45.476512Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
 2025-08-28T13:24:45.479564Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
 2025-08-28T13:24:45.479902Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-08-28T13:34:34.056789Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/mobile/tsconfig.json.3700425559"), AnchoredSystemPathBuf("apps/mobile/tsconfig.json"), AnchoredSystemPathBuf("apps/mobile/tsconfig.json.646796227")}
+2025-08-28T13:34:34.056800Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@bb/mobile"), path: AnchoredSystemPathBuf("apps/mobile") }}))
+2025-08-28T13:35:29.758581Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/server/src/index.ts")}
+2025-08-28T13:35:29.758598Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@bb/server"), path: AnchoredSystemPathBuf("apps/server") }}))
+2025-08-28T13:36:06.558064Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/server/src/index.ts")}
+2025-08-28T13:36:06.558077Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@bb/server"), path: AnchoredSystemPathBuf("apps/server") }}))
+2025-08-28T13:36:06.597479Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
