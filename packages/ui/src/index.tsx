@@ -32,3 +32,4 @@ export function Board({ state, onCellClick }: {
 }
 
 export { default as PixiBoard } from './PixiBoard';
+export { default as PlayerDetails } from './PlayerDetails';

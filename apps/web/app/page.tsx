@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from "react";
-import { PixiBoard } from "@bb/ui";
+import { PixiBoard, PlayerDetails } from "@bb/ui";
 import {
   setup,
   getLegalMoves,
@@ -69,6 +69,14 @@ export default function HomePage() {
       >
         Fin du tour
       </button>
+      
+      {/* Encart des détails du joueur */}
+      {selected && (
+        <PlayerDetails
+          player={state.players.find(p => p.id === selected) || null}
+          onClose={() => setSelected(null)}
+        />
+      )}
     </div>
   );
 }
