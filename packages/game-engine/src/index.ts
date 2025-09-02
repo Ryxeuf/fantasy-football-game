@@ -134,7 +134,44 @@ export function getAdjacentOpponents(state: GameState, position: Position, team:
 export function requiresDodgeRoll(state: GameState, from: Position, to: Position, team: TeamId): boolean {
   // Vérifier si le joueur sort d'une case où il était marqué par un adversaire
   const opponentsAtFrom = getAdjacentOpponents(state, from, team);
-  return opponentsAtFrom.length > 0;
+  
+  // Pas de jet d'esquive si pas d'adversaires adjacents
+  if (opponentsAtFrom.length === 0) {
+    return false;
+  }
+  
+  // Vérifier si le joueur sort vraiment de la zone de marquage
+  // Un jet d'esquive est nécessaire seulement si on quitte une case marquée
+  // et qu'on ne reste pas dans la zone de marquage des mêmes adversaires
+  
+  // Calculer la distance de mouvement
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const distance = Math.abs(dx) + Math.abs(dy); // Distance Manhattan
+  
+  // Si on ne bouge pas, pas de jet d'esquive
+  if (distance === 0) {
+    return false;
+  }
+  
+  // Vérifier si on sort de la zone de marquage
+  // Un jet d'esquive est nécessaire si on quitte une case où on était marqué
+  // et qu'on se déplace vers une case non marquée par les mêmes adversaires
+  
+  const opponentsAtTo = getAdjacentOpponents(state, to, team);
+  
+  // Si on va vers une case aussi marquée par les mêmes adversaires, pas de jet d'esquive
+  // (on reste dans la zone de marquage)
+  const sameOpponents = opponentsAtFrom.some(oppFrom => 
+    opponentsAtTo.some(oppTo => oppTo.id === oppFrom.id)
+  );
+  
+  if (sameOpponents) {
+    return false;
+  }
+  
+  // Jet d'esquive nécessaire : on quitte une zone marquée
+  return true;
 }
 
 // --- Setup minimal ---

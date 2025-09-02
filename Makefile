@@ -5,11 +5,11 @@
 
 # Variables
 PNPM := pnpm
-DOCKER_COMPOSE := docker-compose
+DOCKER_COMPOSE := docker compose
 WEB_PORT := 3100
 MOBILE_PORT := 8081
-SERVER_PORT := 8000
-API_PORT := 8001
+SERVER_PORT := 8200
+API_PORT := 8201
 
 # Aide par défaut
 help: ## Affiche cette aide
@@ -110,15 +110,15 @@ clean-cache: ## Nettoie seulement les caches (sans supprimer node_modules)
 # Docker
 docker: docker-up ## Alias pour docker-up
 
-docker-up: ## Démarre les services Docker
+up: ## Démarre les services Docker
 	@echo "🐳 Démarrage des services Docker..."
 	$(DOCKER_COMPOSE) up -d
 
-docker-down: ## Arrête les services Docker
+down: ## Arrête les services Docker
 	@echo "🐳 Arrêt des services Docker..."
 	$(DOCKER_COMPOSE) down
 
-docker-logs: ## Affiche les logs des services Docker
+logs: ## Affiche les logs des services Docker
 	@echo "📋 Logs des services Docker..."
 	$(DOCKER_COMPOSE) logs -f
 
@@ -126,7 +126,7 @@ docker-build: ## Build les images Docker
 	@echo "🔨 Build des images Docker..."
 	$(DOCKER_COMPOSE) build
 
-docker-restart: ## Redémarre les services Docker
+restart: ## Redémarre les services Docker
 	@echo "🔄 Redémarrage des services Docker..."
 	$(DOCKER_COMPOSE) restart
 
@@ -170,8 +170,6 @@ changeset-version: ## Met à jour les versions avec les changesets
 
 # Développement rapide
 quick-start: clean-cache install dev ## Démarrage rapide (clean + install + dev)
-
-restart: kill-ports dev ## Redémarre tout l'environnement
 
 # Debug et logs
 logs-web: ## Affiche les logs de l'application web
