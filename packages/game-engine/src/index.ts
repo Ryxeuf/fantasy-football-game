@@ -16,6 +16,16 @@ export interface Player {
   team: TeamId;
   pos: Position;
   stunned?: boolean;
+  name: string;
+  number: number;
+  position: string;
+  ma: number;
+  st: number;
+  ag: number;
+  pa: number;
+  av: number;
+  skills: string[];
+  pm: number; // points de mouvement restants
 }
 
 export interface GameState {
@@ -25,6 +35,7 @@ export interface GameState {
   ball?: Position;
   currentPlayer: TeamId;
   turn: number;
+  selectedPlayerId: string | null;
 }
 
 export type Move =
@@ -43,7 +54,7 @@ export function makeRNG(seed: string): RNG {
   }
   let t = h >>> 0;
   return function mulberry32() {
-    t += 0x6D2B79F5;
+    t += 0x6d2b79f5;
     let r = Math.imul(t ^ (t >>> 15), 1 | t);
     r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
     return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
@@ -65,9 +76,9 @@ export function setup(seed = "seed"): GameState {
     width: 26,
     height: 15,
     players: [
-      { 
-        id: "A1", 
-        team: "A", 
+      {
+        id: "A1",
+        team: "A",
         pos: { x: 5, y: 7 },
         name: "Grim Ironjaw",
         number: 1,
@@ -77,11 +88,12 @@ export function setup(seed = "seed"): GameState {
         ag: 3,
         pa: 4,
         av: 9,
-        skills: ["Block", "Tackle"]
+        skills: ["Block", "Tackle"],
+        pm: 7,
       },
-      { 
-        id: "A2", 
-        team: "A", 
+      {
+        id: "A2",
+        team: "A",
         pos: { x: 4, y: 7 },
         name: "Thunder Stonefist",
         number: 2,
@@ -91,11 +103,12 @@ export function setup(seed = "seed"): GameState {
         ag: 3,
         pa: 4,
         av: 8,
-        skills: []
+        skills: [],
+        pm: 6,
       },
-      { 
-        id: "B1", 
-        team: "B", 
+      {
+        id: "B1",
+        team: "B",
         pos: { x: 20, y: 7 },
         name: "Shadow Swift",
         number: 1,
@@ -105,11 +118,12 @@ export function setup(seed = "seed"): GameState {
         ag: 4,
         pa: 3,
         av: 7,
-        skills: ["Dodge", "Sure Hands"]
+        skills: ["Dodge", "Sure Hands"],
+        pm: 8,
       },
-      { 
-        id: "B2", 
-        team: "B", 
+      {
+        id: "B2",
+        team: "B",
         pos: { x: 21, y: 7 },
         name: "Iron Hide",
         number: 2,
@@ -119,12 +133,14 @@ export function setup(seed = "seed"): GameState {
         ag: 3,
         pa: 4,
         av: 8,
-        skills: []
+        skills: [],
+        pm: 6,
       },
     ],
     ball: { x: 13, y: 7 },
     currentPlayer: "A",
     turn: 1,
+    selectedPlayerId: null,
   };
 }
 
@@ -132,7 +148,9 @@ export function setup(seed = "seed"): GameState {
 export function getLegalMoves(state: GameState): Move[] {
   const moves: Move[] = [{ type: "END_TURN" }];
   const team = state.currentPlayer;
-  const myPlayers = state.players.filter((p) => p.team === team && !p.stunned);
+  const myPlayers = state.players.filter(
+    (p) => p.team === team && !p.stunned && p.pm > 0,
+  );
   const occ = new Map<string, Player>();
   state.players.forEach((p) => occ.set(`${p.pos.x},${p.pos.y}`, p));
 
@@ -140,14 +158,14 @@ export function getLegalMoves(state: GameState): Move[] {
     // Mouvements orthogonaux ET diagonaux (Blood Bowl rules)
     const dirs = [
       // Orthogonaux
-      { x: 1, y: 0 },   // droite
-      { x: -1, y: 0 },  // gauche
-      { x: 0, y: 1 },   // bas
-      { x: 0, y: -1 },  // haut
+      { x: 1, y: 0 }, // droite
+      { x: -1, y: 0 }, // gauche
+      { x: 0, y: 1 }, // bas
+      { x: 0, y: -1 }, // haut
       // Diagonaux
-      { x: 1, y: 1 },   // bas-droite
-      { x: 1, y: -1 },  // haut-droite
-      { x: -1, y: 1 },  // bas-gauche
+      { x: 1, y: 1 }, // bas-droite
+      { x: 1, y: -1 }, // haut-droite
+      { x: -1, y: 1 }, // bas-gauche
       { x: -1, y: -1 }, // haut-gauche
     ];
     for (const d of dirs) {
@@ -168,17 +186,23 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
         ...state,
         currentPlayer: state.currentPlayer === "A" ? "B" : "A",
         turn: state.currentPlayer === "B" ? state.turn + 1 : state.turn,
+        selectedPlayerId: null,
+        players: state.players.map((p) => ({ ...p, pm: p.ma })),
       };
     case "MOVE": {
       const idx = state.players.findIndex((p) => p.id === move.playerId);
       if (idx === -1) return state;
       const legal = getLegalMoves(state).some(
-        (m) => m.type === "MOVE" && m.playerId === move.playerId && samePos(m.to, move.to)
+        (m) =>
+          m.type === "MOVE" &&
+          m.playerId === move.playerId &&
+          samePos(m.to, move.to),
       );
       if (!legal) return state;
 
       const next = structuredClone(state) as GameState;
       next.players[idx].pos = { ...move.to };
+      next.players[idx].pm = Math.max(0, next.players[idx].pm - 1);
 
       // Ex: si on marche sur la balle -> pickup 50% (MVP)
       if (next.ball && samePos(next.ball, move.to)) {
@@ -203,9 +227,17 @@ export function toBGIOGame() {
     name: "bloobowl",
     setup: () => setup(),
     moves: {
-      MOVE: (G: GameState, ctx: Ctx, args: { playerId: string; to: Position }) => {
+      MOVE: (
+        G: GameState,
+        ctx: Ctx,
+        args: { playerId: string; to: Position },
+      ) => {
         const rng = makeRNG(String(ctx.turn || 1));
-        const s2 = applyMove(G, { type: "MOVE", playerId: args.playerId, to: args.to }, rng);
+        const s2 = applyMove(
+          G,
+          { type: "MOVE", playerId: args.playerId, to: args.to },
+          rng,
+        );
         Object.assign(G, s2);
       },
       END_TURN: (G: GameState, ctx: Ctx) => {
