@@ -1,7 +1,7 @@
-import * as React from 'react';
-import Svg, { Rect, Line, G, Text as SvgText, Circle } from 'react-native-svg';
-import type { GameState, Position } from '@bb/game-engine';
-import { GestureResponderEvent } from 'react-native';
+import * as React from "react";
+import Svg, { Rect, Line, G, Text as SvgText, Circle } from "react-native-svg";
+import type { GameState, Position } from "@bb/game-engine";
+import { GestureResponderEvent } from "react-native";
 
 type Props = {
   state: GameState;
@@ -41,7 +41,7 @@ export default function PixiBoardNative({
         y2={height}
         stroke="#ccc"
         strokeWidth={1}
-      />
+      />,
     );
   }
   for (let y = 0; y <= state.height; y++) {
@@ -54,7 +54,7 @@ export default function PixiBoardNative({
         y2={y * cellSize}
         stroke="#ccc"
         strokeWidth={1}
-      />
+      />,
     );
   }
 
@@ -99,7 +99,7 @@ export default function PixiBoardNative({
             y={p.pos.y * cellSize + cellSize * 0.1}
             width={cellSize * 0.8}
             height={cellSize * 0.8}
-            fill={p.team === 'A' ? '#3B82F6' : '#EF4444'}
+            fill={p.team === "A" ? "#3B82F6" : "#EF4444"}
           />
           <SvgText
             x={p.pos.x * cellSize + cellSize * 0.3}
@@ -108,6 +108,22 @@ export default function PixiBoardNative({
             fill="#fff"
           >
             {p.team}
+          </SvgText>
+          {/* Badge PM */}
+          <Circle
+            cx={p.pos.x * cellSize + cellSize * 0.8}
+            cy={p.pos.y * cellSize + cellSize * 0.2}
+            r={cellSize * 0.2}
+            fill="#000"
+          />
+          <SvgText
+            x={p.pos.x * cellSize + cellSize * 0.8}
+            y={p.pos.y * cellSize + cellSize * 0.2 + cellSize * 0.08}
+            fontSize={cellSize * 0.25}
+            fill="#fff"
+            textAnchor="middle"
+          >
+            {p.pm}
           </SvgText>
         </G>
       ))}
