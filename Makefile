@@ -126,7 +126,14 @@ docker-build: ## Build les images Docker
 	@echo "🔨 Build des images Docker..."
 	$(DOCKER_COMPOSE) build
 
-restart: ## Redémarre les services Docker
+restart: ## Redémarre l'environnement de développement (kill dev + dev)
+	@echo "🔄 Redémarrage de l'environnement de développement..."
+	@echo "1️⃣ Arrêt des processus de développement..."
+	@$(MAKE) kill-dev-ports
+	@echo "2️⃣ Redémarrage de l'environnement..."
+	@$(MAKE) dev
+
+restart-docker: ## Redémarre les services Docker
 	@echo "🔄 Redémarrage des services Docker..."
 	$(DOCKER_COMPOSE) restart
 
@@ -151,13 +158,35 @@ status: ## Affiche le statut des services
 	@echo "📱 Mobile (port $(MOBILE_PORT)):"
 	@curl -s http://localhost:$(MOBILE_PORT) > /dev/null && echo "  ✅ En ligne" || echo "  ❌ Hors ligne"
 
-kill-ports: ## Tue les processus utilisant les ports du projet
-	@echo "💀 Arrêt des processus sur les ports BlooBowl..."
-	@lsof -ti :$(WEB_PORT) | xargs kill -9 2>/dev/null || true
-	@lsof -ti :$(MOBILE_PORT) | xargs kill -9 2>/dev/null || true
-	@lsof -ti :$(SERVER_PORT) | xargs kill -9 2>/dev/null || true
-	@lsof -ti :$(API_PORT) | xargs kill -9 2>/dev/null || true
-	@echo "✅ Ports libérés"
+kill-ports: ## Tue les processus utilisant les ports du projet (évite Docker)
+	@echo "💀 Arrêt des processus sur les ports BlooBowl (sauf Docker)..."
+	@echo "⚠️  Attention: Cette commande évite de tuer les processus Docker"
+	@for port in $(WEB_PORT) $(MOBILE_PORT) $(SERVER_PORT) $(API_PORT); do \
+		echo "Vérification du port $$port..."; \
+		PIDS=$$(lsof -ti :$$port 2>/dev/null || true); \
+		if [ -n "$$PIDS" ]; then \
+			for pid in $$PIDS; do \
+				PROCESS=$$(ps -p $$pid -o comm= 2>/dev/null || true); \
+				if [ -n "$$PROCESS" ] && [ "$$PROCESS" != "docker" ] && [ "$$PROCESS" != "dockerd" ] && [ "$$PROCESS" != "com.docker" ]; then \
+					echo "  Arrêt du processus $$pid ($$PROCESS) sur le port $$port"; \
+					kill -9 $$pid 2>/dev/null || true; \
+				else \
+					echo "  Conservation du processus Docker $$pid sur le port $$port"; \
+				fi; \
+			done; \
+		else \
+			echo "  Port $$port libre"; \
+		fi; \
+	done
+	@echo "✅ Ports libérés (Docker préservé)"
+
+kill-dev-ports: ## Tue seulement les processus de développement (Next.js, Expo, etc.)
+	@echo "💀 Arrêt des processus de développement..."
+	@pkill -f "next dev" 2>/dev/null || true
+	@pkill -f "expo start" 2>/dev/null || true
+	@pkill -f "tsx watch" 2>/dev/null || true
+	@pkill -f "pnpm.*dev" 2>/dev/null || true
+	@echo "✅ Processus de développement arrêtés"
 
 # Git et versioning
 changeset: ## Crée un nouveau changeset
@@ -190,18 +219,19 @@ help-dev: ## Aide pour le développement
 	@echo "🛠️  Aide développement BlooBowl:"
 	@echo ""
 	@echo "Démarrage rapide:"
-	@echo "  make quick-start  - Clean + Install + Dev"
-	@echo "  make restart      - Kill ports + Dev"
+	@echo "  make quick-start     - Clean + Install + Dev"
+	@echo "  make restart         - Kill dev processes + Dev"
 	@echo ""
 	@echo "Services individuels:"
-	@echo "  make dev-web      - Application web seulement"
-	@echo "  make dev-mobile   - Application mobile seulement"
-	@echo "  make dev-server   - Serveur seulement"
+	@echo "  make dev-web         - Application web seulement"
+	@echo "  make dev-mobile      - Application mobile seulement"
+	@echo "  make dev-server      - Serveur seulement"
 	@echo ""
 	@echo "Debug:"
-	@echo "  make status       - Statut des services"
-	@echo "  make ports        - Ports utilisés"
-	@echo "  make kill-ports   - Libérer les ports"
+	@echo "  make status          - Statut des services"
+	@echo "  make ports           - Ports utilisés"
+	@echo "  make kill-dev-ports  - Arrêter les processus de dev"
+	@echo "  make kill-ports      - Libérer les ports (évite Docker)"
 
 help-docker: ## Aide pour Docker
 	@echo "🐳 Aide Docker BlooBowl:"

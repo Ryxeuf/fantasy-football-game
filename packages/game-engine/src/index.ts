@@ -140,10 +140,6 @@ export function requiresDodgeRoll(state: GameState, from: Position, to: Position
     return false;
   }
   
-  // Vérifier si le joueur sort vraiment de la zone de marquage
-  // Un jet d'esquive est nécessaire seulement si on quitte une case marquée
-  // et qu'on ne reste pas dans la zone de marquage des mêmes adversaires
-  
   // Calculer la distance de mouvement
   const dx = to.x - from.x;
   const dy = to.y - from.y;
@@ -154,23 +150,8 @@ export function requiresDodgeRoll(state: GameState, from: Position, to: Position
     return false;
   }
   
-  // Vérifier si on sort de la zone de marquage
-  // Un jet d'esquive est nécessaire si on quitte une case où on était marqué
-  // et qu'on se déplace vers une case non marquée par les mêmes adversaires
-  
-  const opponentsAtTo = getAdjacentOpponents(state, to, team);
-  
-  // Si on va vers une case aussi marquée par les mêmes adversaires, pas de jet d'esquive
-  // (on reste dans la zone de marquage)
-  const sameOpponents = opponentsAtFrom.some(oppFrom => 
-    opponentsAtTo.some(oppTo => oppTo.id === oppFrom.id)
-  );
-  
-  if (sameOpponents) {
-    return false;
-  }
-  
-  // Jet d'esquive nécessaire : on quitte une zone marquée
+  // En Blood Bowl : jet d'esquive nécessaire si on quitte une case marquée
+  // Peu importe où on va, dès qu'on sort d'une zone de marquage, c'est un jet d'esquive
   return true;
 }
 
@@ -330,6 +311,8 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
           // Jet réussi : mouvement autorisé
           next.players[idx].pos = { ...to };
           next.players[idx].pm = Math.max(0, next.players[idx].pm - 1);
+          // Réinitialiser le résultat de dés après un mouvement réussi
+          next.lastDiceResult = undefined;
         } else {
           // Jet échoué : turnover
           next.isTurnover = true;
@@ -341,6 +324,8 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
         const next = structuredClone(state) as GameState;
         next.players[idx].pos = { ...to };
         next.players[idx].pm = Math.max(0, next.players[idx].pm - 1);
+        // Réinitialiser le résultat de dés après un mouvement normal
+        next.lastDiceResult = undefined;
 
         // Ex: si on marche sur la balle -> pickup 50% (MVP)
         if (next.ball && samePos(next.ball, to)) {
@@ -368,6 +353,8 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
         // Jet réussi : mouvement autorisé
         next.players[idx].pos = { ...move.to };
         next.players[idx].pm = Math.max(0, next.players[idx].pm - 1);
+        // Réinitialiser le résultat de dés après un mouvement réussi
+        next.lastDiceResult = undefined;
       } else {
         // Jet échoué : turnover
         next.isTurnover = true;
