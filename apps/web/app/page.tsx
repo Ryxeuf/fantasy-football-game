@@ -78,12 +78,18 @@ export default function HomePage() {
       <div className="text-sm">
         Tour: {state.turn} • Équipe:{" "}
         <span className="font-mono">{state.currentPlayer}</span>
+        {state.isTurnover && (
+          <span className="ml-2 px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-bold">
+            TURNOVER !
+          </span>
+        )}
       </div>
       <button
-        className="px-3 py-2 rounded border bg-white hover:bg-neutral-100"
+        className="px-3 py-2 rounded border bg-white hover:bg-neutral-100 disabled:opacity-50 disabled:cursor-not-allowed"
         onClick={() => setState((s) => applyMove(s, { type: "END_TURN" }, rng))}
+        disabled={state.isTurnover}
       >
-        Fin du tour
+        {state.isTurnover ? "Tour terminé (Turnover)" : "Fin du tour"}
       </button>
 
       {/* Encart des détails du joueur */}
@@ -94,6 +100,17 @@ export default function HomePage() {
           }
           onClose={() => setState((s) => ({ ...s, selectedPlayerId: null }))}
         />
+      )}
+
+      {/* Affichage simple des résultats de jets */}
+      {state.lastDiceResult && (
+        <div className="p-4 bg-blue-100 border border-blue-300 rounded">
+          <h3 className="font-bold">Résultat du jet d'esquive</h3>
+          <p>Jet: {state.lastDiceResult.diceRoll} / Cible: {state.lastDiceResult.targetNumber}+</p>
+          <p className={state.lastDiceResult.success ? "text-green-600" : "text-red-600"}>
+            {state.lastDiceResult.success ? "✅ Réussi !" : "❌ Échec ! TURNOVER !"}
+          </p>
+        </div>
       )}
     </div>
   );

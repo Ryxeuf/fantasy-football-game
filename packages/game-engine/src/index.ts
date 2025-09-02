@@ -36,11 +36,23 @@ export interface GameState {
   currentPlayer: TeamId;
   turn: number;
   selectedPlayerId: string | null;
+  lastDiceResult?: DiceResult;
+  isTurnover: boolean;
+}
+
+export interface DiceResult {
+  type: "dodge" | "pickup" | "pass" | "catch";
+  playerId: string;
+  diceRoll: number;
+  targetNumber: number;
+  success: boolean;
+  modifiers: number;
 }
 
 export type Move =
   | { type: "MOVE"; playerId: string; to: Position }
-  | { type: "END_TURN" };
+  | { type: "END_TURN" }
+  | { type: "DODGE"; playerId: string; from: Position; to: Position };
 
 // --- RNG déterministe (mulberry32) ---
 export type RNG = () => number;
@@ -68,6 +80,61 @@ export function inBounds(s: GameState, p: Position): boolean {
 
 export function samePos(a: Position, b: Position) {
   return a.x === b.x && a.y === b.y;
+}
+
+// --- Système de jets de dés ---
+export function rollD6(rng: RNG): number {
+  return Math.floor(rng() * 6) + 1;
+}
+
+export function calculateDodgeTarget(player: Player, modifiers: number = 0): number {
+  // Target = AG + modifiers (AG = 3 => 3+, AG = 4 => 4+, etc.)
+  return Math.max(2, Math.min(6, player.ag + modifiers));
+}
+
+export function performDodgeRoll(player: Player, rng: RNG, modifiers: number = 0): DiceResult {
+  const diceRoll = rollD6(rng);
+  const targetNumber = calculateDodgeTarget(player, modifiers);
+  const success = diceRoll >= targetNumber;
+  
+  return {
+    type: "dodge",
+    playerId: player.id,
+    diceRoll,
+    targetNumber,
+    success,
+    modifiers,
+  };
+}
+
+// --- Détection des zones de tacle (influence) ---
+export function getAdjacentOpponents(state: GameState, position: Position, team: TeamId): Player[] {
+  const opponents: Player[] = [];
+  const dirs = [
+    { x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 },
+    { x: 1, y: 1 }, { x: 1, y: -1 }, { x: -1, y: 1 }, { x: -1, y: -1 }
+  ];
+  
+  for (const dir of dirs) {
+    const checkPos = { x: position.x + dir.x, y: position.y + dir.y };
+    const opponent = state.players.find(p => 
+      p.team !== team && 
+      p.pos.x === checkPos.x && 
+      p.pos.y === checkPos.y &&
+      !p.stunned
+    );
+    if (opponent) {
+      opponents.push(opponent);
+    }
+  }
+  
+  return opponents;
+}
+
+export function requiresDodgeRoll(state: GameState, from: Position, to: Position, team: TeamId): boolean {
+  // Vérifier si le joueur sort d'une case où il était marqué par un adversaire
+  const opponentsAtFrom = getAdjacentOpponents(state, from, team);
+  return opponentsAtFrom.length > 0;
 }
 
 // --- Setup minimal ---
@@ -141,6 +208,7 @@ export function setup(seed = "seed"): GameState {
     currentPlayer: "A",
     turn: 1,
     selectedPlayerId: null,
+    isTurnover: false,
   };
 }
 
@@ -180,6 +248,11 @@ export function getLegalMoves(state: GameState): Move[] {
 
 // --- Application d'un move ---
 export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
+  // Si c'est un turnover, on ne peut que finir le tour
+  if (state.isTurnover && move.type !== "END_TURN") {
+    return state;
+  }
+
   switch (move.type) {
     case "END_TURN":
       return {
@@ -188,6 +261,8 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
         turn: state.currentPlayer === "B" ? state.turn + 1 : state.turn,
         selectedPlayerId: null,
         players: state.players.map((p) => ({ ...p, pm: p.ma })),
+        isTurnover: false,
+        lastDiceResult: undefined,
       };
     case "MOVE": {
       const idx = state.players.findIndex((p) => p.id === move.playerId);
@@ -200,18 +275,67 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       );
       if (!legal) return state;
 
-      const next = structuredClone(state) as GameState;
-      next.players[idx].pos = { ...move.to };
-      next.players[idx].pm = Math.max(0, next.players[idx].pm - 1);
+      const player = state.players[idx];
+      const from = player.pos;
+      const to = move.to;
 
-      // Ex: si on marche sur la balle -> pickup 50% (MVP)
-      if (next.ball && samePos(next.ball, move.to)) {
-        const pickup = rng() < 0.5;
-        if (pickup) {
-          // attacher la balle au joueur (MVP: on enlève du board)
-          next.ball = undefined;
+      // Vérifier si un jet d'esquive est nécessaire
+      const needsDodge = requiresDodgeRoll(state, from, to, player.team);
+      
+      if (needsDodge) {
+        // Effectuer le jet d'esquive
+        const dodgeResult = performDodgeRoll(player, rng);
+        
+        const next = structuredClone(state) as GameState;
+        next.lastDiceResult = dodgeResult;
+        
+        if (dodgeResult.success) {
+          // Jet réussi : mouvement autorisé
+          next.players[idx].pos = { ...to };
+          next.players[idx].pm = Math.max(0, next.players[idx].pm - 1);
+        } else {
+          // Jet échoué : turnover
+          next.isTurnover = true;
         }
+        
+        return next;
+      } else {
+        // Pas de jet nécessaire : mouvement normal
+        const next = structuredClone(state) as GameState;
+        next.players[idx].pos = { ...to };
+        next.players[idx].pm = Math.max(0, next.players[idx].pm - 1);
+
+        // Ex: si on marche sur la balle -> pickup 50% (MVP)
+        if (next.ball && samePos(next.ball, to)) {
+          const pickup = rng() < 0.5;
+          if (pickup) {
+            // attacher la balle au joueur (MVP: on enlève du board)
+            next.ball = undefined;
+          }
+        }
+        return next;
       }
+    }
+    case "DODGE": {
+      // Action d'esquive explicite (pour l'interface)
+      const idx = state.players.findIndex((p) => p.id === move.playerId);
+      if (idx === -1) return state;
+      
+      const player = state.players[idx];
+      const dodgeResult = performDodgeRoll(player, rng);
+      
+      const next = structuredClone(state) as GameState;
+      next.lastDiceResult = dodgeResult;
+      
+      if (dodgeResult.success) {
+        // Jet réussi : mouvement autorisé
+        next.players[idx].pos = { ...move.to };
+        next.players[idx].pm = Math.max(0, next.players[idx].pm - 1);
+      } else {
+        // Jet échoué : turnover
+        next.isTurnover = true;
+      }
+      
       return next;
     }
     default:
@@ -236,6 +360,19 @@ export function toBGIOGame() {
         const s2 = applyMove(
           G,
           { type: "MOVE", playerId: args.playerId, to: args.to },
+          rng,
+        );
+        Object.assign(G, s2);
+      },
+      DODGE: (
+        G: GameState,
+        ctx: Ctx,
+        args: { playerId: string; from: Position; to: Position },
+      ) => {
+        const rng = makeRNG(String(ctx.turn || 1));
+        const s2 = applyMove(
+          G,
+          { type: "DODGE", playerId: args.playerId, from: args.from, to: args.to },
           rng,
         );
         Object.assign(G, s2);
