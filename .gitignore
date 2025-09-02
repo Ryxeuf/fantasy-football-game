@@ -70,3 +70,27 @@ coverage/
 # Lock files (keep only pnpm-lock.yaml)
 package-lock.json
 yarn.lock
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# Prisma
+prisma/migrations/
+!prisma/migrations/.gitkeep
+
+# Game specific
+*.replay
+*.save
+logs/
+screenshots/
+
+# Development tools
+.vscode/settings.json
+.idea/
+*.iml
