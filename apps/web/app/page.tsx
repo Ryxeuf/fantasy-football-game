@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { PixiBoard, PlayerDetails } from "@bb/ui";
+import { PixiBoard, PlayerDetails, DiceResultPopup } from "@bb/ui";
 import {
   setup,
   getLegalMoves,
@@ -10,10 +10,12 @@ import {
   type GameState,
   type Position,
   type Move,
+  type DiceResult,
 } from "@bb/game-engine";
 
 export default function HomePage() {
   const [state, setState] = useState<GameState>(() => setup());
+  const [showDicePopup, setShowDicePopup] = useState(false);
   const rng = useMemo(() => makeRNG("ui-seed"), []);
 
   const legal = useMemo(() => getLegalMoves(state), [state]);
@@ -50,6 +52,12 @@ export default function HomePage() {
           const s2 = applyMove(s, candidate, rng);
           const p = s2.players.find((pl) => pl.id === candidate.playerId);
           if (!p || p.pm <= 0) s2.selectedPlayerId = null;
+          
+          // Afficher la popup si un jet de dés a été effectué
+          if (s2.lastDiceResult) {
+            setShowDicePopup(true);
+          }
+          
           return s2;
         });
       }
@@ -102,15 +110,18 @@ export default function HomePage() {
         />
       )}
 
-      {/* Affichage simple des résultats de jets */}
-      {state.lastDiceResult && (
-        <div className="p-4 bg-blue-100 border border-blue-300 rounded">
-          <h3 className="font-bold">Résultat du jet d'esquive</h3>
-          <p>Jet: {state.lastDiceResult.diceRoll} / Cible: {state.lastDiceResult.targetNumber}+</p>
-          <p className={state.lastDiceResult.success ? "text-green-600" : "text-red-600"}>
-            {state.lastDiceResult.success ? "✅ Réussi !" : "❌ Échec ! TURNOVER !"}
-          </p>
-        </div>
+      {/* Popup des résultats de jets */}
+      {showDicePopup && state.lastDiceResult && (
+        <DiceResultPopup
+          result={state.lastDiceResult}
+          onClose={() => {
+            setShowDicePopup(false);
+            // Si c'est un échec d'esquive, forcer la fin du tour
+            if (!state.lastDiceResult.success && state.lastDiceResult.type === "dodge") {
+              setState((s) => applyMove(s, { type: "END_TURN" }, rng));
+            }
+          }}
+        />
       )}
     </div>
   );
