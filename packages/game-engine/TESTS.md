@@ -36,6 +36,11 @@ Ce document décrit la suite de tests pour le moteur de jeu BlooBowl.
   - Trouve les adversaires adjacents
   - Exclut les adversaires étourdis
 
+- ✅ **calculateDodgeModifiers** : Calcul des modificateurs de désquive
+  - Malus de -1 par adversaire adjacent à la case d'arrivée
+  - Gestion de plusieurs adversaires (malus cumulatif)
+  - Exclusion des adversaires étourdis
+
 ### Intégration
 - ✅ **Mouvements avec jets de désquive** : Scénarios complexes
   - Jets automatiques lors de mouvements marqués
@@ -66,10 +71,10 @@ pnpm test
 
 ## 📊 Couverture de code
 
-- **Statements** : 90.19%
-- **Branches** : 83.15%
-- **Functions** : 85.71%
-- **Lines** : 90.19%
+- **Statements** : 91.05%
+- **Branches** : 82.75%
+- **Functions** : 86.66%
+- **Lines** : 91.05%
 
 ## 🔧 Configuration
 

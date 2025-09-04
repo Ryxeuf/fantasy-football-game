@@ -131,6 +131,17 @@ export function getAdjacentOpponents(state: GameState, position: Position, team:
   return opponents;
 }
 
+// --- Calcul des modificateurs de désquive ---
+export function calculateDodgeModifiers(state: GameState, from: Position, to: Position, team: TeamId): number {
+  let modifiers = 0;
+  
+  // Malus pour chaque adversaire qui marque la case d'arrivée
+  const opponentsAtTo = getAdjacentOpponents(state, to, team);
+  modifiers -= opponentsAtTo.length; // -1 par adversaire adjacent à la case d'arrivée
+  
+  return modifiers;
+}
+
 export function requiresDodgeRoll(state: GameState, from: Position, to: Position, team: TeamId): boolean {
   // Vérifier si le joueur sort d'une case où il était marqué par un adversaire
   const opponentsAtFrom = getAdjacentOpponents(state, from, team);
@@ -301,8 +312,11 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       const needsDodge = requiresDodgeRoll(state, from, to, player.team);
       
       if (needsDodge) {
-        // Effectuer le jet d'esquive
-        const dodgeResult = performDodgeRoll(player, rng);
+        // Calculer les modificateurs de désquive (malus pour adversaires à l'arrivée)
+        const dodgeModifiers = calculateDodgeModifiers(state, from, to, player.team);
+        
+        // Effectuer le jet d'esquive avec les modificateurs
+        const dodgeResult = performDodgeRoll(player, rng, dodgeModifiers);
         
         const next = structuredClone(state) as GameState;
         next.lastDiceResult = dodgeResult;
@@ -346,7 +360,13 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       if (idx === -1) return state;
       
       const player = state.players[idx];
-      const dodgeResult = performDodgeRoll(player, rng);
+      const from = player.pos;
+      const to = move.to;
+      
+      // Calculer les modificateurs de désquive (malus pour adversaires à l'arrivée)
+      const dodgeModifiers = calculateDodgeModifiers(state, from, to, player.team);
+      
+      const dodgeResult = performDodgeRoll(player, rng, dodgeModifiers);
       
       const next = structuredClone(state) as GameState;
       next.lastDiceResult = dodgeResult;

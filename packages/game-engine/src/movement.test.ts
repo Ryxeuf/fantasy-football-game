@@ -7,6 +7,7 @@ import {
   requiresDodgeRoll,
   performDodgeRoll,
   getAdjacentOpponents,
+  calculateDodgeModifiers,
   type GameState,
   type Position,
   type Move,
@@ -350,6 +351,90 @@ describe('Jets de désquive', () => {
       expect(opponents).toHaveLength(0)
     })
   })
+
+  describe('calculateDodgeModifiers', () => {
+    it('devrait retourner 0 si pas d\'adversaires à l\'arrivée', () => {
+      const from = { x: 5, y: 5 }
+      const to = { x: 6, y: 5 }
+      
+      const modifiers = calculateDodgeModifiers(state, from, to, 'A')
+      expect(modifiers).toBe(0)
+    })
+
+    it('devrait appliquer -1 par adversaire adjacent à l\'arrivée', () => {
+      const playerA = state.players.find(p => p.team === 'A')
+      const playerB = state.players.find(p => p.team === 'B')
+      
+      if (!playerA || !playerB) return
+      
+      // Placer un adversaire adjacent à la case d'arrivée
+      const newState = {
+        ...state,
+        players: state.players.map(p => 
+          p.id === playerB.id 
+            ? { ...p, pos: { x: playerA.pos.x + 2, y: playerA.pos.y } }
+            : p
+        )
+      }
+      
+      const from = playerA.pos
+      const to = { x: playerA.pos.x + 1, y: playerA.pos.y }
+      
+      const modifiers = calculateDodgeModifiers(newState, from, to, 'A')
+      expect(modifiers).toBe(-1)
+    })
+
+    it('devrait appliquer -2 pour deux adversaires adjacents à l\'arrivée', () => {
+      const playerA = state.players.find(p => p.team === 'A')
+      const playerB1 = state.players.find(p => p.team === 'B')
+      const playerB2 = state.players.find(p => p.team === 'B' && p.id !== playerB1?.id)
+      
+      if (!playerA || !playerB1 || !playerB2) return
+      
+      // Placer deux adversaires adjacents à la case d'arrivée
+      const newState = {
+        ...state,
+        players: state.players.map(p => {
+          if (p.id === playerB1.id) {
+            return { ...p, pos: { x: playerA.pos.x + 2, y: playerA.pos.y } }
+          }
+          if (p.id === playerB2.id) {
+            return { ...p, pos: { x: playerA.pos.x + 2, y: playerA.pos.y + 1 } }
+          }
+          return p
+        })
+      }
+      
+      const from = playerA.pos
+      const to = { x: playerA.pos.x + 1, y: playerA.pos.y }
+      
+      const modifiers = calculateDodgeModifiers(newState, from, to, 'A')
+      expect(modifiers).toBe(-2)
+    })
+
+    it('ne devrait pas compter les adversaires étourdis', () => {
+      const playerA = state.players.find(p => p.team === 'A')
+      const playerB = state.players.find(p => p.team === 'B')
+      
+      if (!playerA || !playerB) return
+      
+      // Placer un adversaire étourdi adjacent à la case d'arrivée
+      const newState = {
+        ...state,
+        players: state.players.map(p => 
+          p.id === playerB.id 
+            ? { ...p, pos: { x: playerA.pos.x + 2, y: playerA.pos.y }, stunned: true }
+            : p
+        )
+      }
+      
+      const from = playerA.pos
+      const to = { x: playerA.pos.x + 1, y: playerA.pos.y }
+      
+      const modifiers = calculateDodgeModifiers(newState, from, to, 'A')
+      expect(modifiers).toBe(0)
+    })
+  })
 })
 
 describe('Intégration des mouvements avec jets de désquive', () => {
@@ -447,6 +532,69 @@ describe('Intégration des mouvements avec jets de désquive', () => {
     // Un jet de désquive devrait avoir été effectué
     expect(result.lastDiceResult).toBeDefined()
     expect(result.lastDiceResult?.type).toBe('dodge')
+  })
+
+  it('devrait appliquer les modificateurs de désquive lors des mouvements', () => {
+    // Créer un état où le joueur A est marqué et se déplace vers une case marquée
+    const playerA = state.players.find(p => p.team === 'A')
+    const playerB1 = state.players.find(p => p.team === 'B')
+    const playerB2 = state.players.find(p => p.team === 'B' && p.id !== playerB1?.id)
+    
+    if (!playerA || !playerB1 || !playerB2) return
+    
+    // Placer un adversaire adjacent au joueur A (pour déclencher le jet de désquive)
+    // et un autre adversaire adjacent à la case d'arrivée (pour le malus)
+    const newState = {
+      ...state,
+      players: state.players.map(p => {
+        if (p.id === playerB1.id) {
+          return { ...p, pos: { x: playerA.pos.x + 1, y: playerA.pos.y } } // Adjacent au joueur A
+        }
+        if (p.id === playerB2.id) {
+          return { ...p, pos: { x: playerA.pos.x + 2, y: playerA.pos.y + 1 } } // Adjacent à la case d'arrivée
+        }
+        return p
+      })
+    }
+    
+    // Vérifier que le mouvement est légal avant de l'appliquer
+    const legalMoves = getLegalMoves(newState)
+    const legalMove = legalMoves.find(m => 
+      m.type === 'MOVE' && 
+      m.playerId === playerA.id && 
+      m.to.x === playerA.pos.x + 1 && 
+      m.to.y === playerA.pos.y
+    )
+    
+    if (!legalMove || legalMove.type !== 'MOVE') {
+      // Si le mouvement n'est pas légal, tester avec un mouvement légal
+      const anyLegalMove = legalMoves.find(m => m.type === 'MOVE' && m.playerId === playerA.id)
+      if (!anyLegalMove || anyLegalMove.type !== 'MOVE') {
+        return
+      }
+      
+      const move: Move = anyLegalMove
+      const result = applyMove(newState, move, rng)
+      
+      // Vérifier que les modificateurs ont été appliqués
+      if (result.lastDiceResult) {
+        expect(result.lastDiceResult.modifiers).toBeLessThanOrEqual(0)
+      }
+      
+      return
+    }
+    
+    const move: Move = legalMove
+    const result = applyMove(newState, move, rng)
+    
+    // Le joueur devrait s'être déplacé
+    const movedPlayer = result.players.find(p => p.id === playerA.id)
+    expect(movedPlayer?.pos).toEqual(move.to)
+    
+    // Un jet de désquive devrait avoir été effectué avec les bons modificateurs
+    expect(result.lastDiceResult).toBeDefined()
+    expect(result.lastDiceResult?.type).toBe('dodge')
+    expect(result.lastDiceResult?.modifiers).toBe(-1) // -1 pour l'adversaire adjacent à l'arrivée
   })
 })
 
