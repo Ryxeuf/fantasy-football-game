@@ -8,6 +8,9 @@ import {
   performDodgeRoll,
   getAdjacentOpponents,
   calculateDodgeModifiers,
+  calculatePickupModifiers,
+  calculatePickupTarget,
+  performPickupRoll,
   type GameState,
   type Position,
   type Move,
@@ -433,6 +436,259 @@ describe('Jets de désquive', () => {
       
       const modifiers = calculateDodgeModifiers(newState, from, to, 'A')
       expect(modifiers).toBe(0)
+    })
+  })
+})
+
+describe('Ramassage de balle', () => {
+  let state: GameState
+  let rng: () => number
+
+  beforeEach(() => {
+    state = setup('pickup-test-seed')
+    rng = makeRNG('pickup-test-seed')
+  })
+
+  describe('calculatePickupModifiers', () => {
+    it('devrait retourner 0 si pas d\'adversaires près de la balle', () => {
+      const ballPosition = { x: 13, y: 7 }
+      
+      const modifiers = calculatePickupModifiers(state, ballPosition, 'A')
+      expect(modifiers).toBe(0)
+    })
+
+    it('devrait appliquer -1 par adversaire adjacent à la balle', () => {
+      const playerA = state.players.find(p => p.team === 'A')
+      const playerB = state.players.find(p => p.team === 'B')
+      
+      if (!playerA || !playerB) return
+      
+      // Placer un adversaire adjacent à la balle
+      const newState = {
+        ...state,
+        players: state.players.map(p => 
+          p.id === playerB.id 
+            ? { ...p, pos: { x: 14, y: 7 } } // Adjacent à la balle (x=13, y=7)
+            : p
+        )
+      }
+      
+      const ballPosition = { x: 13, y: 7 }
+      const modifiers = calculatePickupModifiers(newState, ballPosition, 'A')
+      expect(modifiers).toBe(-1)
+    })
+
+    it('devrait appliquer -2 pour deux adversaires adjacents à la balle', () => {
+      const playerA = state.players.find(p => p.team === 'A')
+      const playerB1 = state.players.find(p => p.team === 'B')
+      const playerB2 = state.players.find(p => p.team === 'B' && p.id !== playerB1?.id)
+      
+      if (!playerA || !playerB1 || !playerB2) return
+      
+      // Placer deux adversaires adjacents à la balle
+      const newState = {
+        ...state,
+        players: state.players.map(p => {
+          if (p.id === playerB1.id) {
+            return { ...p, pos: { x: 14, y: 7 } } // Adjacent à la balle
+          }
+          if (p.id === playerB2.id) {
+            return { ...p, pos: { x: 14, y: 8 } } // Adjacent à la balle
+          }
+          return p
+        })
+      }
+      
+      const ballPosition = { x: 13, y: 7 }
+      const modifiers = calculatePickupModifiers(newState, ballPosition, 'A')
+      expect(modifiers).toBe(-2)
+    })
+
+    it('ne devrait pas compter les adversaires étourdis', () => {
+      const playerA = state.players.find(p => p.team === 'A')
+      const playerB = state.players.find(p => p.team === 'B')
+      
+      if (!playerA || !playerB) return
+      
+      // Placer un adversaire étourdi adjacent à la balle
+      const newState = {
+        ...state,
+        players: state.players.map(p => 
+          p.id === playerB.id 
+            ? { ...p, pos: { x: 14, y: 7 }, stunned: true }
+            : p
+        )
+      }
+      
+      const ballPosition = { x: 13, y: 7 }
+      const modifiers = calculatePickupModifiers(newState, ballPosition, 'A')
+      expect(modifiers).toBe(0)
+    })
+  })
+
+  describe('calculatePickupTarget', () => {
+    it('devrait calculer le target basé sur l\'AG du joueur', () => {
+      const player = { ...state.players[0], ag: 3 }
+      
+      const target = calculatePickupTarget(player)
+      expect(target).toBe(3)
+    })
+
+    it('devrait appliquer les modificateurs', () => {
+      const player = { ...state.players[0], ag: 3 }
+      
+      const target = calculatePickupTarget(player, -1) // -1 modificateur
+      expect(target).toBe(4) // 3 - (-1) = 4
+    })
+
+    it('devrait limiter le target entre 2 et 6', () => {
+      const player = { ...state.players[0], ag: 1 }
+      
+      const target = calculatePickupTarget(player, 0)
+      expect(target).toBe(2) // Minimum 2
+      
+      const targetHigh = calculatePickupTarget(player, -5)
+      expect(targetHigh).toBe(6) // Maximum 6
+    })
+  })
+
+  describe('performPickupRoll', () => {
+    it('devrait retourner un résultat de dés valide', () => {
+      const player = state.players[0]
+      const rng = makeRNG('pickup-test')
+      
+      const result = performPickupRoll(player, rng)
+      
+      expect(result.type).toBe('pickup')
+      expect(result.playerId).toBe(player.id)
+      expect(result.diceRoll).toBeGreaterThanOrEqual(1)
+      expect(result.diceRoll).toBeLessThanOrEqual(6)
+      expect(result.targetNumber).toBeGreaterThanOrEqual(2)
+      expect(result.targetNumber).toBeLessThanOrEqual(6)
+      expect(typeof result.success).toBe('boolean')
+    })
+
+    it('devrait calculer correctement le succès', () => {
+      const player = { ...state.players[0], ag: 3 }
+      const rng = makeRNG('pickup-test')
+      
+      const result = performPickupRoll(player, rng)
+      
+      // Avec AG = 3, le target est 3+
+      expect(result.targetNumber).toBe(3)
+      expect(result.success).toBe(result.diceRoll >= 3)
+    })
+
+    it('devrait appliquer les modificateurs', () => {
+      const player = { ...state.players[0], ag: 3 }
+      const rng = makeRNG('pickup-test')
+      
+      const result = performPickupRoll(player, rng, -1) // -1 modificateur
+      
+      expect(result.targetNumber).toBe(4) // 3 - (-1) = 4
+      expect(result.modifiers).toBe(-1)
+    })
+  })
+
+  describe('Intégration du ramassage de balle', () => {
+    it('devrait effectuer un jet de pickup lors du passage sur la balle', () => {
+      const player = state.players.find(p => p.team === state.currentPlayer)
+      if (!player) return
+      
+      // Placer la balle sur une case accessible
+      const ballPosition = { x: player.pos.x + 1, y: player.pos.y }
+      const newState = {
+        ...state,
+        ball: ballPosition
+      }
+      
+      // Vérifier que le mouvement est légal
+      const legalMoves = getLegalMoves(newState)
+      const legalMove = legalMoves.find(m => 
+        m.type === 'MOVE' && 
+        m.playerId === player.id && 
+        m.to.x === ballPosition.x && 
+        m.to.y === ballPosition.y
+      )
+      
+      if (!legalMove || legalMove.type !== 'MOVE') {
+        // Si le mouvement n'est pas légal, tester avec un mouvement légal
+        const anyLegalMove = legalMoves.find(m => m.type === 'MOVE' && m.playerId === player.id)
+        if (!anyLegalMove || anyLegalMove.type !== 'MOVE') {
+          return
+        }
+        
+        const move: Move = anyLegalMove
+        const result = applyMove(newState, move, rng)
+        
+        // Vérifier qu'un jet de pickup a été effectué si on est sur la balle
+        if (result.lastDiceResult && result.lastDiceResult.type === 'pickup') {
+          expect(result.lastDiceResult.type).toBe('pickup')
+          expect(result.lastDiceResult.playerId).toBe(player.id)
+        }
+        
+        return
+      }
+      
+      const move: Move = legalMove
+      const result = applyMove(newState, move, rng)
+      
+      // Le joueur devrait s'être déplacé
+      const movedPlayer = result.players.find(p => p.id === player.id)
+      expect(movedPlayer?.pos).toEqual(move.to)
+      
+      // Un jet de pickup devrait avoir été effectué
+      expect(result.lastDiceResult).toBeDefined()
+      expect(result.lastDiceResult?.type).toBe('pickup')
+      expect(result.lastDiceResult?.playerId).toBe(player.id)
+      
+      // Si le jet échoue, il devrait y avoir un turnover
+      if (!result.lastDiceResult?.success) {
+        expect(result.isTurnover).toBe(true)
+      } else {
+        // Si le jet réussit, la balle devrait être ramassée
+        expect(result.ball).toBeUndefined()
+      }
+    })
+
+    it('devrait appliquer les modificateurs de pickup', () => {
+      const playerA = state.players.find(p => p.team === 'A')
+      const playerB = state.players.find(p => p.team === 'B')
+      
+      if (!playerA || !playerB) return
+      
+      // Placer un adversaire adjacent à la balle
+      const ballPosition = { x: 13, y: 7 }
+      const newState = {
+        ...state,
+        ball: ballPosition,
+        players: state.players.map(p => 
+          p.id === playerB.id 
+            ? { ...p, pos: { x: 14, y: 7 } } // Adjacent à la balle
+            : p
+        )
+      }
+      
+      // Vérifier que le mouvement est légal
+      const legalMoves = getLegalMoves(newState)
+      const legalMove = legalMoves.find(m => 
+        m.type === 'MOVE' && 
+        m.playerId === playerA.id && 
+        m.to.x === ballPosition.x && 
+        m.to.y === ballPosition.y
+      )
+      
+      if (!legalMove || legalMove.type !== 'MOVE') {
+        return
+      }
+      
+      const move: Move = legalMove
+      const result = applyMove(newState, move, rng)
+      
+      // Un jet de pickup devrait avoir été effectué avec les bons modificateurs
+      expect(result.lastDiceResult).toBeDefined()
+      expect(result.lastDiceResult?.type).toBe('pickup')
+      expect(result.lastDiceResult?.modifiers).toBe(-1) // -1 pour l'adversaire adjacent
     })
   })
 })

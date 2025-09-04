@@ -142,6 +142,39 @@ export function calculateDodgeModifiers(state: GameState, from: Position, to: Po
   return modifiers;
 }
 
+// --- Calcul des modificateurs de ramassage de balle ---
+export function calculatePickupModifiers(state: GameState, ballPosition: Position, team: TeamId): number {
+  let modifiers = 0;
+  
+  // Malus pour chaque adversaire qui marque la case où se trouve la balle
+  const opponentsAtBall = getAdjacentOpponents(state, ballPosition, team);
+  modifiers -= opponentsAtBall.length; // -1 par adversaire adjacent à la balle
+  
+  return modifiers;
+}
+
+// --- Calcul du target de ramassage de balle ---
+export function calculatePickupTarget(player: Player, modifiers: number = 0): number {
+  // Target = AG - modifiers (modificateurs positifs améliorent le jet)
+  return Math.max(2, Math.min(6, player.ag - modifiers));
+}
+
+// --- Jet de ramassage de balle ---
+export function performPickupRoll(player: Player, rng: RNG, modifiers: number = 0): DiceResult {
+  const diceRoll = rollD6(rng);
+  const targetNumber = calculatePickupTarget(player, modifiers);
+  const success = diceRoll >= targetNumber;
+  
+  return {
+    type: "pickup",
+    playerId: player.id,
+    diceRoll,
+    targetNumber,
+    success,
+    modifiers,
+  };
+}
+
 export function requiresDodgeRoll(state: GameState, from: Position, to: Position, team: TeamId): boolean {
   // Vérifier si le joueur sort d'une case où il était marqué par un adversaire
   const opponentsAtFrom = getAdjacentOpponents(state, from, team);
@@ -343,12 +376,23 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
         // Réinitialiser le résultat de dés après un mouvement normal
         next.lastDiceResult = undefined;
 
-        // Ex: si on marche sur la balle -> pickup 50% (MVP)
+        // Ramassage de balle avec jet d'agilité
         if (next.ball && samePos(next.ball, to)) {
-          const pickup = rng() < 0.5;
-          if (pickup) {
-            // attacher la balle au joueur (MVP: on enlève du board)
+          // Calculer les modificateurs de pickup (malus pour adversaires marquant la balle)
+          const pickupModifiers = calculatePickupModifiers(state, next.ball, player.team);
+          
+          // Effectuer le jet de pickup
+          const pickupResult = performPickupRoll(player, rng, pickupModifiers);
+          
+          // Stocker le résultat pour l'affichage
+          next.lastDiceResult = pickupResult;
+          
+          if (pickupResult.success) {
+            // Ramassage réussi : attacher la balle au joueur
             next.ball = undefined;
+          } else {
+            // Échec de pickup : turnover
+            next.isTurnover = true;
           }
         }
         return next;

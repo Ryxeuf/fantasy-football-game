@@ -17,7 +17,7 @@ import {
 export default function HomePage() {
   const [state, setState] = useState<GameState>(() => setup());
   const [showDicePopup, setShowDicePopup] = useState(false);
-  const rng = useMemo(() => makeRNG("ui-seed"), []);
+  const createRNG = () => makeRNG(`ui-seed-${Date.now()}-${Math.random()}`);
 
   const legal = useMemo(() => getLegalMoves(state), [state]);
   const isMove = (m: Move, pid: string): m is Extract<Move, { type: "MOVE" }> =>
@@ -50,7 +50,7 @@ export default function HomePage() {
       );
       if (candidate && candidate.type === "MOVE") {
         setState((s) => {
-          const s2 = applyMove(s, candidate, rng);
+          const s2 = applyMove(s, candidate, createRNG());
           const p = s2.players.find((pl) => pl.id === candidate.playerId);
           if (!p || p.pm <= 0) s2.selectedPlayerId = null;
           
@@ -95,7 +95,7 @@ export default function HomePage() {
       </div>
       <button
         className="px-3 py-2 rounded border bg-white hover:bg-neutral-100 disabled:opacity-50 disabled:cursor-not-allowed"
-        onClick={() => setState((s) => applyMove(s, { type: "END_TURN" }, rng))}
+        onClick={() => setState((s) => applyMove(s, { type: "END_TURN" }, createRNG()))}
         disabled={state.isTurnover}
       >
         {state.isTurnover ? "Tour terminé (Turnover)" : "Fin du tour"}
@@ -121,7 +121,7 @@ export default function HomePage() {
             setState((s) => clearDiceResult(s));
             // Si c'est un échec d'esquive, forcer la fin du tour
             if (!state.lastDiceResult.success && state.lastDiceResult.type === "dodge") {
-              setState((s) => applyMove(s, { type: "END_TURN" }, rng));
+              setState((s) => applyMove(s, { type: "END_TURN" }, createRNG()));
             }
           }}
         />

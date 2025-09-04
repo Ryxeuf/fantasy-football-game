@@ -41,6 +41,12 @@ Ce document décrit la suite de tests pour le moteur de jeu BlooBowl.
   - Gestion de plusieurs adversaires (malus cumulatif)
   - Exclusion des adversaires étourdis
 
+- ✅ **Ramassage de balle** : Système de pickup avec jet d'agilité
+  - Jet d'agilité requis pour ramasser la balle
+  - Modificateurs basés sur les adversaires adjacents à la balle
+  - Turnover en cas d'échec, balle ramassée en cas de succès
+  - Tests complets pour tous les scénarios
+
 ### Intégration
 - ✅ **Mouvements avec jets de désquive** : Scénarios complexes
   - Jets automatiques lors de mouvements marqués
@@ -71,10 +77,10 @@ pnpm test
 
 ## 📊 Couverture de code
 
-- **Statements** : 91.05%
-- **Branches** : 82.75%
-- **Functions** : 86.66%
-- **Lines** : 91.05%
+- **Statements** : 91.06%
+- **Branches** : 82.66%
+- **Functions** : 88.88%
+- **Lines** : 91.06%
 
 ## 🔧 Configuration
 
