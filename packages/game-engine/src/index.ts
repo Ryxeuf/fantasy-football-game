@@ -307,14 +307,16 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
         const next = structuredClone(state) as GameState;
         next.lastDiceResult = dodgeResult;
         
+        // Le joueur se déplace toujours, que le jet d'esquive réussisse ou échoue
+        next.players[idx].pos = { ...to };
+        next.players[idx].pm = Math.max(0, next.players[idx].pm - 1);
+        
         if (dodgeResult.success) {
           // Jet réussi : mouvement autorisé
-          next.players[idx].pos = { ...to };
-          next.players[idx].pm = Math.max(0, next.players[idx].pm - 1);
           // Garder le résultat de dés pour l'affichage de la popup
           // Il sera réinitialisé quand l'utilisateur fermera la popup
         } else {
-          // Jet échoué : turnover
+          // Jet échoué : turnover (mais le joueur s'est quand même déplacé)
           next.isTurnover = true;
         }
         
@@ -349,14 +351,16 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       const next = structuredClone(state) as GameState;
       next.lastDiceResult = dodgeResult;
       
+      // Le joueur se déplace toujours, que le jet d'esquive réussisse ou échoue
+      next.players[idx].pos = { ...move.to };
+      next.players[idx].pm = Math.max(0, next.players[idx].pm - 1);
+      
       if (dodgeResult.success) {
         // Jet réussi : mouvement autorisé
-        next.players[idx].pos = { ...move.to };
-        next.players[idx].pm = Math.max(0, next.players[idx].pm - 1);
         // Garder le résultat de dés pour l'affichage de la popup
         // Il sera réinitialisé quand l'utilisateur fermera la popup
       } else {
-        // Jet échoué : turnover
+        // Jet échoué : turnover (mais le joueur s'est quand même déplacé)
         next.isTurnover = true;
       }
       
