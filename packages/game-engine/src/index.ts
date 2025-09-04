@@ -88,8 +88,8 @@ export function rollD6(rng: RNG): number {
 }
 
 export function calculateDodgeTarget(player: Player, modifiers: number = 0): number {
-  // Target = AG + modifiers (AG = 3 => 3+, AG = 4 => 4+, etc.)
-  return Math.max(2, Math.min(6, player.ag + modifiers));
+  // Target = AG - modifiers (modificateurs positifs améliorent le jet)
+  return Math.max(2, Math.min(6, player.ag - modifiers));
 }
 
 export function performDodgeRoll(player: Player, rng: RNG, modifiers: number = 0): DiceResult {
