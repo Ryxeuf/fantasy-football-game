@@ -7,6 +7,7 @@ import {
   getLegalMoves,
   applyMove,
   makeRNG,
+  clearDiceResult,
   type GameState,
   type Position,
   type Move,
@@ -116,6 +117,8 @@ export default function HomePage() {
           result={state.lastDiceResult}
           onClose={() => {
             setShowDicePopup(false);
+            // Réinitialiser le résultat de dés
+            setState((s) => clearDiceResult(s));
             // Si c'est un échec d'esquive, forcer la fin du tour
             if (!state.lastDiceResult.success && state.lastDiceResult.type === "dodge") {
               setState((s) => applyMove(s, { type: "END_TURN" }, rng));

@@ -311,8 +311,8 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
           // Jet réussi : mouvement autorisé
           next.players[idx].pos = { ...to };
           next.players[idx].pm = Math.max(0, next.players[idx].pm - 1);
-          // Réinitialiser le résultat de dés après un mouvement réussi
-          next.lastDiceResult = undefined;
+          // Garder le résultat de dés pour l'affichage de la popup
+          // Il sera réinitialisé quand l'utilisateur fermera la popup
         } else {
           // Jet échoué : turnover
           next.isTurnover = true;
@@ -353,8 +353,8 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
         // Jet réussi : mouvement autorisé
         next.players[idx].pos = { ...move.to };
         next.players[idx].pm = Math.max(0, next.players[idx].pm - 1);
-        // Réinitialiser le résultat de dés après un mouvement réussi
-        next.lastDiceResult = undefined;
+        // Garder le résultat de dés pour l'affichage de la popup
+        // Il sera réinitialisé quand l'utilisateur fermera la popup
       } else {
         // Jet échoué : turnover
         next.isTurnover = true;
@@ -365,6 +365,14 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
     default:
       return state;
   }
+}
+
+// --- Fonctions utilitaires ---
+export function clearDiceResult(state: GameState): GameState {
+  return {
+    ...state,
+    lastDiceResult: undefined,
+  };
 }
 
 // --- Intégration boardgame.io (MVP) ---
@@ -404,6 +412,10 @@ export function toBGIOGame() {
       END_TURN: (G: GameState, ctx: Ctx) => {
         const rng = makeRNG(String(ctx.turn || 1));
         const s2 = applyMove(G, { type: "END_TURN" }, rng);
+        Object.assign(G, s2);
+      },
+      CLEAR_DICE_RESULT: (G: GameState) => {
+        const s2 = clearDiceResult(G);
         Object.assign(G, s2);
       },
     },
