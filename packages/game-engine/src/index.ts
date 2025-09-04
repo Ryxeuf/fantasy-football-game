@@ -175,7 +175,7 @@ export function setup(seed = "seed"): GameState {
       {
         id: "A1",
         team: "A",
-        pos: { x: 5, y: 7 },
+        pos: { x: 11, y: 7 },
         name: "Grim Ironjaw",
         number: 1,
         position: "Blitzer",
@@ -190,7 +190,7 @@ export function setup(seed = "seed"): GameState {
       {
         id: "A2",
         team: "A",
-        pos: { x: 4, y: 7 },
+        pos: { x: 10, y: 7 },
         name: "Thunder Stonefist",
         number: 2,
         position: "Lineman",
@@ -205,7 +205,7 @@ export function setup(seed = "seed"): GameState {
       {
         id: "B1",
         team: "B",
-        pos: { x: 20, y: 7 },
+        pos: { x: 15, y: 7 },
         name: "Shadow Swift",
         number: 1,
         position: "Runner",
@@ -220,7 +220,7 @@ export function setup(seed = "seed"): GameState {
       {
         id: "B2",
         team: "B",
-        pos: { x: 21, y: 7 },
+        pos: { x: 16, y: 7 },
         name: "Iron Hide",
         number: 2,
         position: "Lineman",
