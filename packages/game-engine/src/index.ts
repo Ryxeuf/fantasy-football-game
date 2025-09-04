@@ -26,6 +26,7 @@ export interface Player {
   av: number;
   skills: string[];
   pm: number; // points de mouvement restants
+  hasBall?: boolean; // indique si le joueur a la balle
 }
 
 export interface GameState {
@@ -219,6 +220,7 @@ export function setup(seed = "seed"): GameState {
         av: 9,
         skills: ["Block", "Tackle"],
         pm: 7,
+        hasBall: false,
       },
       {
         id: "A2",
@@ -234,6 +236,7 @@ export function setup(seed = "seed"): GameState {
         av: 8,
         skills: [],
         pm: 6,
+        hasBall: false,
       },
       {
         id: "B1",
@@ -249,6 +252,7 @@ export function setup(seed = "seed"): GameState {
         av: 7,
         skills: ["Dodge", "Sure Hands"],
         pm: 8,
+        hasBall: false,
       },
       {
         id: "B2",
@@ -264,6 +268,7 @@ export function setup(seed = "seed"): GameState {
         av: 8,
         skills: [],
         pm: 6,
+        hasBall: false,
       },
     ],
     ball: { x: 13, y: 7 },
@@ -317,7 +322,8 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
 
   switch (move.type) {
     case "END_TURN":
-      return {
+      // Si un joueur a la balle, la laisser tomber lors du changement de tour
+      const newState = {
         ...state,
         currentPlayer: state.currentPlayer === "A" ? "B" : "A",
         turn: state.currentPlayer === "B" ? state.turn + 1 : state.turn,
@@ -326,6 +332,9 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
         isTurnover: false,
         lastDiceResult: undefined,
       };
+      
+      // Si un joueur a la balle, la laisser tomber
+      return dropBall(newState);
     case "MOVE": {
       const idx = state.players.findIndex((p) => p.id === move.playerId);
       if (idx === -1) return state;
@@ -390,6 +399,7 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
           if (pickupResult.success) {
             // Ramassage réussi : attacher la balle au joueur
             next.ball = undefined;
+            next.players[idx].hasBall = true;
           } else {
             // Échec de pickup : turnover
             next.isTurnover = true;
@@ -440,6 +450,22 @@ export function clearDiceResult(state: GameState): GameState {
   return {
     ...state,
     lastDiceResult: undefined,
+  };
+}
+
+// --- Gestion de la balle ---
+export function dropBall(state: GameState): GameState {
+  // Trouver le joueur qui a la balle
+  const playerWithBall = state.players.find(p => p.hasBall);
+  if (!playerWithBall) return state;
+  
+  // Retirer la balle du joueur et la placer sur le terrain
+  return {
+    ...state,
+    players: state.players.map(p => 
+      p.id === playerWithBall.id ? { ...p, hasBall: false } : p
+    ),
+    ball: { ...playerWithBall.pos }
   };
 }
 

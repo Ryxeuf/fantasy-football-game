@@ -268,6 +268,18 @@ export default function PixiBoard({
                       g.lineStyle(2, 0x00ff00, 1); // Vert pour le tour actuel
                       g.drawCircle(x, y, radius + 3);
                     }
+
+                    // Indicateur de balle
+                    if (player.hasBall) {
+                      // Cercle doré pour indiquer que le joueur a la balle
+                      g.lineStyle(3, 0xffd700, 1); // Or
+                      g.drawCircle(x, y, radius + 5);
+                      
+                      // Petit cercle intérieur pour la balle
+                      g.beginFill(0xffd700, 0.8);
+                      g.drawCircle(x, y, 4);
+                      g.endFill();
+                    }
                   }}
                 />
 

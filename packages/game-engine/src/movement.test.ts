@@ -11,6 +11,7 @@ import {
   calculatePickupModifiers,
   calculatePickupTarget,
   performPickupRoll,
+  dropBall,
   type GameState,
   type Position,
   type Move,
@@ -648,6 +649,9 @@ describe('Ramassage de balle', () => {
       } else {
         // Si le jet réussit, la balle devrait être ramassée
         expect(result.ball).toBeUndefined()
+        // Et le joueur devrait avoir la balle
+        const playerWithBall = result.players.find(p => p.id === player.id)
+        expect(playerWithBall?.hasBall).toBe(true)
       }
     })
 
@@ -689,6 +693,44 @@ describe('Ramassage de balle', () => {
       expect(result.lastDiceResult).toBeDefined()
       expect(result.lastDiceResult?.type).toBe('pickup')
       expect(result.lastDiceResult?.modifiers).toBe(-1) // -1 pour l'adversaire adjacent
+    })
+  })
+})
+
+describe('Gestion de la balle', () => {
+  let state: GameState
+
+  beforeEach(() => {
+    state = setup('ball-test-seed')
+  })
+
+  describe('dropBall', () => {
+    it('devrait laisser tomber la balle du joueur qui l\'a', () => {
+      // Donner la balle à un joueur
+      const player = state.players[0]
+      const stateWithBall = {
+        ...state,
+        players: state.players.map(p => 
+          p.id === player.id ? { ...p, hasBall: true } : p
+        ),
+        ball: undefined
+      }
+
+      const result = dropBall(stateWithBall)
+
+      // Le joueur ne devrait plus avoir la balle
+      const playerWithoutBall = result.players.find(p => p.id === player.id)
+      expect(playerWithoutBall?.hasBall).toBe(false)
+
+      // La balle devrait être sur le terrain à la position du joueur
+      expect(result.ball).toEqual(player.pos)
+    })
+
+    it('ne devrait rien faire si aucun joueur n\'a la balle', () => {
+      const result = dropBall(state)
+
+      // L'état devrait rester identique
+      expect(result).toEqual(state)
     })
   })
 })
