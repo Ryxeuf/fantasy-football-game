@@ -5,9 +5,10 @@ Ce fichier contient toutes les issues GitHub du projet [fantasy-football-game](h
 ## 🚨 Priorité P1 (Critique)
 
 ### Règles Blood Bowl
-- **[#31](https://github.com/Ryxeuf/fantasy-football-game/issues/31)** - Jets & turnovers (MVP)
+- **[#31](https://github.com/Ryxeuf/fantasy-football-game/issues/31)** - Jets & turnovers (MVP) ✅ **TERMINÉE**
   - *Jet d'esquive (modif constant). Échec => turnover. Popup résultat.*
   - Labels: `area:engine`, `type:rules`, `epic:Règles Blood Bowl`
+  - **Implémentation** : Jets de désquive avec modificateurs basés sur les adversaires adjacents à l'arrivée (-1 par adversaire), turnover en cas d'échec, popup de résultat, tests complets (28 tests, 91% couverture)
 
 ### Rendu 2D avancé
 - **[#26](https://github.com/Ryxeuf/fantasy-football-game/issues/26)** - Web: Thème visuel terrain (tileset)
