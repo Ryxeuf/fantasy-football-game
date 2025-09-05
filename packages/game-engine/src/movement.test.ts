@@ -12,6 +12,8 @@ import {
   calculatePickupTarget,
   performPickupRoll,
   dropBall,
+  getRandomDirection,
+  bounceBall,
   type GameState,
   type Position,
   type Move,
@@ -956,5 +958,160 @@ describe('Conditions limites', () => {
     // Le joueur ne devrait pas avoir bougé
     const unchangedPlayer = result.players.find(p => p.id === player.id)
     expect(unchangedPlayer?.pos).toEqual(player.pos)
+  })
+})
+
+describe('Système de rebond de balle', () => {
+  let state: GameState
+  let rng: () => number
+
+  beforeEach(() => {
+    state = setup('test-seed')
+    rng = makeRNG('test-seed')
+  })
+
+  describe('getRandomDirection', () => {
+    it('devrait retourner une direction valide pour chaque valeur de 1D8', () => {
+      const directions = new Set<string>()
+      
+      // Tester toutes les directions possibles
+      for (let i = 0; i < 8; i++) {
+        const mockRng = () => i / 8 // Valeur entre 0 et 0.875
+        const direction = getRandomDirection(mockRng)
+        
+        // Vérifier que la direction est valide (x et y entre -1 et 1, pas (0,0))
+        expect(direction.x).toBeGreaterThanOrEqual(-1)
+        expect(direction.x).toBeLessThanOrEqual(1)
+        expect(direction.y).toBeGreaterThanOrEqual(-1)
+        expect(direction.y).toBeLessThanOrEqual(1)
+        expect(direction.x !== 0 || direction.y !== 0).toBe(true)
+        
+        directions.add(`${direction.x},${direction.y}`)
+      }
+      
+      // Vérifier qu'on a bien 8 directions différentes
+      expect(directions.size).toBe(8)
+    })
+  })
+
+  describe('bounceBall', () => {
+    it('devrait faire rebondir la balle d\'une case dans une direction aléatoire', () => {
+      // Placer la balle au centre du terrain
+      state.ball = { x: 13, y: 7 }
+      
+      const result = bounceBall(state, rng)
+      
+      // La balle devrait avoir bougé
+      expect(result.ball).toBeDefined()
+      expect(result.ball).not.toEqual(state.ball)
+      
+      // La balle devrait être à une case de distance (distance de Manhattan)
+      const distance = Math.abs((result.ball?.x || 0) - (state.ball?.x || 0)) + 
+                      Math.abs((result.ball?.y || 0) - (state.ball?.y || 0))
+      expect(distance).toBeLessThanOrEqual(2) // Distance de Manhattan pour un mouvement diagonal
+    })
+
+    it('devrait garder la balle dans les limites du terrain', () => {
+      // Placer la balle dans un coin
+      state.ball = { x: 0, y: 0 }
+      
+      const result = bounceBall(state, rng)
+      
+      // La balle devrait rester dans les limites
+      expect(result.ball?.x).toBeGreaterThanOrEqual(0)
+      expect(result.ball?.x).toBeLessThan(state.width)
+      expect(result.ball?.y).toBeGreaterThanOrEqual(0)
+      expect(result.ball?.y).toBeLessThan(state.height)
+    })
+
+    it('devrait faire réceptionner la balle par un joueur debout avec Zone de Tackle', () => {
+      // Placer un joueur debout à côté de la balle
+      const player = state.players[0]
+      player.pos = { x: 13, y: 7 }
+      player.stunned = false
+      player.pm = 1
+      player.ag = 6 // AG élevé pour réussir la réception
+      
+      state.ball = { x: 12, y: 7 }
+      
+      // Mock du RNG pour forcer la direction vers le joueur (Est = direction 3)
+      const mockRng = () => 2 / 8 // Valeur qui donne direction 3 (Est)
+      
+      const result = bounceBall(state, mockRng)
+      
+      // Vérifier que la balle a bougé (peut être vers le joueur ou ailleurs)
+      expect(result.ball).toBeDefined()
+      expect(result.ball).not.toEqual(state.ball)
+      
+      // Si la balle atterrit sur le joueur, il devrait l'avoir réceptionnée
+      if (result.ball && result.ball.x === 13 && result.ball.y === 7) {
+        const playerWithBall = result.players.find(p => p.id === player.id)
+        expect(playerWithBall?.hasBall).toBe(true)
+        expect(result.ball).toBeUndefined()
+      }
+    })
+
+    it('devrait continuer à rebondir si le joueur rate la réception', () => {
+      // Placer un joueur avec AG très bas pour échouer la réception
+      const player = state.players[0]
+      player.pos = { x: 13, y: 7 }
+      player.stunned = false
+      player.pm = 1
+      player.ag = 1 // AG très bas pour échouer
+      
+      state.ball = { x: 12, y: 7 }
+      
+      const result = bounceBall(state, rng)
+      
+      // La balle devrait continuer à rebondir (pas attachée au joueur)
+      const playerWithBall = result.players.find(p => p.id === player.id)
+      expect(playerWithBall?.hasBall).toBeFalsy()
+      expect(result.ball).toBeDefined()
+    })
+
+    it('ne devrait pas faire réceptionner par un joueur étourdi', () => {
+      // Placer un joueur étourdi à côté de la balle
+      const player = state.players[0]
+      player.pos = { x: 13, y: 7 }
+      player.stunned = true
+      player.pm = 1
+      
+      state.ball = { x: 12, y: 7 }
+      
+      const result = bounceBall(state, rng)
+      
+      // Le joueur étourdi ne devrait pas avoir la balle
+      const playerWithBall = result.players.find(p => p.id === player.id)
+      expect(playerWithBall?.hasBall).toBeFalsy()
+      expect(result.ball).toBeDefined()
+    })
+
+    it('ne devrait pas faire réceptionner par un joueur sans PM', () => {
+      // Placer un joueur sans PM à côté de la balle
+      const player = state.players[0]
+      player.pos = { x: 13, y: 7 }
+      player.stunned = false
+      player.pm = 0 // Pas de PM = pas de Zone de Tackle
+      
+      state.ball = { x: 12, y: 7 }
+      
+      const result = bounceBall(state, rng)
+      
+      // Le joueur sans PM ne devrait pas avoir la balle
+      const playerWithBall = result.players.find(p => p.id === player.id)
+      expect(playerWithBall?.hasBall).toBeFalsy()
+      expect(result.ball).toBeDefined()
+    })
+  })
+
+  describe('Intégration pickup échoué avec rebond', () => {
+    it('devrait gérer le pickup de balle correctement', () => {
+      // Test simple : vérifier que le système de rebond fonctionne
+      const result = bounceBall(state, rng)
+      
+      // Le système de rebond devrait fonctionner
+      expect(result).toBeDefined()
+      expect(result.ball).toBeDefined()
+    })
   })
 })

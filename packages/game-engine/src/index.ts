@@ -176,6 +176,80 @@ export function performPickupRoll(player: Player, rng: RNG, modifiers: number = 
   };
 }
 
+// --- Calcul de direction aléatoire pour rebond de balle ---
+export function getRandomDirection(rng: RNG): Position {
+  // 1D8 sur le Gabarit de Direction Aléatoire
+  // 1: Nord, 2: Nord-Est, 3: Est, 4: Sud-Est, 5: Sud, 6: Sud-Ouest, 7: Ouest, 8: Nord-Ouest
+  const direction = Math.min(8, Math.floor(rng() * 8) + 1);
+  
+  switch (direction) {
+    case 1: return { x: 0, y: -1 };  // Nord
+    case 2: return { x: 1, y: -1 };  // Nord-Est
+    case 3: return { x: 1, y: 0 };   // Est
+    case 4: return { x: 1, y: 1 };   // Sud-Est
+    case 5: return { x: 0, y: 1 };   // Sud
+    case 6: return { x: -1, y: 1 };  // Sud-Ouest
+    case 7: return { x: -1, y: 0 };  // Ouest
+    case 8: return { x: -1, y: -1 }; // Nord-Ouest
+    default: return { x: 0, y: 0 };  // Ne devrait jamais arriver
+  }
+}
+
+// --- Fonction de rebond de balle ---
+export function bounceBall(state: GameState, rng: RNG): GameState {
+  if (!state.ball) return state;
+  
+  const newState = structuredClone(state) as GameState;
+  const currentBallPos = { ...state.ball };
+  
+  // Calculer la nouvelle position après rebond
+  const direction = getRandomDirection(rng);
+  const newBallPos: Position = {
+    x: Math.max(0, Math.min(state.width - 1, currentBallPos.x + direction.x)),
+    y: Math.max(0, Math.min(state.height - 1, currentBallPos.y + direction.y))
+  };
+  
+  // Vérifier si la balle atterrit sur un joueur debout avec sa Zone de Tackle
+  const playerAtNewPos = newState.players.find(p => 
+    samePos(p.pos, newBallPos) && 
+    !p.stunned && 
+    p.pm > 0 // Zone de Tackle = joueur non étourdi avec des PM
+  );
+  
+  if (playerAtNewPos) {
+    // Le joueur doit tenter de réceptionner la balle
+    const catchModifiers = calculatePickupModifiers(newState, newBallPos, playerAtNewPos.team);
+    const catchResult = performPickupRoll(playerAtNewPos, rng, catchModifiers);
+    
+    newState.lastDiceResult = {
+      type: "catch",
+      playerId: playerAtNewPos.id,
+      diceRoll: catchResult.diceRoll,
+      targetNumber: catchResult.targetNumber,
+      success: catchResult.success,
+      modifiers: catchResult.modifiers
+    };
+    
+    if (catchResult.success) {
+      // Réception réussie : attacher la balle au joueur
+      newState.ball = undefined;
+      newState.players = newState.players.map(p => 
+        p.id === playerAtNewPos.id ? { ...p, hasBall: true } : p
+      );
+    } else {
+      // Échec de réception : la balle continue à rebondir
+      newState.ball = newBallPos;
+      // Appel récursif pour continuer le rebond
+      return bounceBall(newState, rng);
+    }
+  } else {
+    // Case vide ou joueur sans Zone de Tackle : la balle s'arrête là
+    newState.ball = newBallPos;
+  }
+  
+  return newState;
+}
+
 export function requiresDodgeRoll(state: GameState, from: Position, to: Position, team: TeamId): boolean {
   // Vérifier si le joueur sort d'une case où il était marqué par un adversaire
   const opponentsAtFrom = getAdjacentOpponents(state, from, team);
@@ -323,7 +397,7 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
   switch (move.type) {
     case "END_TURN":
       // Si un joueur a la balle, la laisser tomber lors du changement de tour
-      const newState = {
+      const newState: GameState = {
         ...state,
         currentPlayer: state.currentPlayer === "A" ? "B" : "A",
         turn: state.currentPlayer === "B" ? state.turn + 1 : state.turn,
@@ -401,8 +475,10 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
             next.ball = undefined;
             next.players[idx].hasBall = true;
           } else {
-            // Échec de pickup : turnover
+            // Échec de pickup : la balle rebondit et turnover
             next.isTurnover = true;
+            // Faire rebondir la balle
+            return bounceBall(next, rng);
           }
         }
         return next;
