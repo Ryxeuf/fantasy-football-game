@@ -61,6 +61,7 @@ Desktop.ini
 *.temp
 .cache/
 .temp/
+tmp/
 
 # Coverage and test
 coverage/
