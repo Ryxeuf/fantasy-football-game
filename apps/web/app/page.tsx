@@ -96,7 +96,6 @@ export default function HomePage() {
       <button
         className="px-3 py-2 rounded border bg-white hover:bg-neutral-100 disabled:opacity-50 disabled:cursor-not-allowed"
         onClick={() => setState((s) => applyMove(s, { type: "END_TURN" }, createRNG()))}
-        disabled={state.isTurnover}
       >
         {state.isTurnover ? "Tour terminé (Turnover)" : "Fin du tour"}
       </button>
@@ -119,8 +118,8 @@ export default function HomePage() {
             setShowDicePopup(false);
             // Réinitialiser le résultat de dés
             setState((s) => clearDiceResult(s));
-            // Si c'est un échec d'esquive, forcer la fin du tour
-            if (!state.lastDiceResult.success && state.lastDiceResult.type === "dodge") {
+            // Si c'est un échec d'esquive ou de pickup, forcer la fin du tour
+            if (state.lastDiceResult && !state.lastDiceResult.success && (state.lastDiceResult.type === "dodge" || state.lastDiceResult.type === "pickup")) {
               setState((s) => applyMove(s, { type: "END_TURN" }, createRNG()));
             }
           }}
