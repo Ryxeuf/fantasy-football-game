@@ -15,10 +15,23 @@ import {
   dropBall,
   getRandomDirection,
   bounceBall,
+  hasPlayerActed,
+  canPlayerAct,
+  canPlayerMove,
+  canPlayerContinueMoving,
+  getPlayerAction,
+  setPlayerAction,
+  clearPlayerActions,
+  shouldEndPlayerTurn,
+  endPlayerTurn,
+  checkPlayerTurnEnd,
+  shouldAutoEndTurn,
+  handlePlayerSwitch,
   type GameState,
   type Position,
   type Move,
   type Player,
+  type ActionType,
 } from './index'
 
 describe('Mouvements de base', () => {
@@ -1367,6 +1380,250 @@ describe('Système de rebond de balle', () => {
       expect(result.lastDiceResult).toBeDefined()
       expect(result.lastDiceResult?.type).toBe('armor')
       expect(result.lastDiceResult?.playerId).toBe(playerA.id)
+    })
+  })
+})
+
+describe('Gestion des actions par joueur', () => {
+  let state: GameState
+  let rng: () => number
+
+  beforeEach(() => {
+    state = setup('test-seed')
+    rng = makeRNG('test-seed')
+  })
+
+  describe('hasPlayerActed', () => {
+    it('devrait retourner false pour un joueur qui n\'a pas encore agi', () => {
+      const player = state.players[0]
+      expect(hasPlayerActed(state, player.id)).toBe(false)
+    })
+
+    it('devrait retourner true pour un joueur qui a agi', () => {
+      const player = state.players[0]
+      const newState = setPlayerAction(state, player.id, 'MOVE')
+      expect(hasPlayerActed(newState, player.id)).toBe(true)
+    })
+  })
+
+  describe('canPlayerAct', () => {
+    it('devrait retourner true pour un joueur qui peut agir', () => {
+      const player = state.players[0]
+      expect(canPlayerAct(state, player.id)).toBe(true)
+    })
+
+    it('devrait retourner true pour un joueur qui a déjà agi mais peut encore agir', () => {
+      const player = state.players[0]
+      const newState = setPlayerAction(state, player.id, 'MOVE')
+      expect(canPlayerAct(newState, player.id)).toBe(true)
+    })
+
+    it('devrait retourner false pour un joueur étourdi', () => {
+      const player = state.players[0]
+      const stunnedState = {
+        ...state,
+        players: state.players.map(p => 
+          p.id === player.id ? { ...p, stunned: true } : p
+        )
+      }
+      expect(canPlayerAct(stunnedState, player.id)).toBe(false)
+    })
+
+    it('devrait retourner false pour un joueur sans PM', () => {
+      const player = state.players[0]
+      const noPmState = {
+        ...state,
+        players: state.players.map(p => 
+          p.id === player.id ? { ...p, pm: 0 } : p
+        )
+      }
+      expect(canPlayerAct(noPmState, player.id)).toBe(false)
+    })
+  })
+
+  describe('setPlayerAction et getPlayerAction', () => {
+    it('devrait enregistrer et récupérer l\'action d\'un joueur', () => {
+      const player = state.players[0]
+      const action: ActionType = 'MOVE'
+      
+      const newState = setPlayerAction(state, player.id, action)
+      expect(getPlayerAction(newState, player.id)).toBe(action)
+    })
+  })
+
+  describe('shouldEndPlayerTurn', () => {
+    it('devrait retourner true si le joueur a agi', () => {
+      const player = state.players[0]
+      const newState = setPlayerAction(state, player.id, 'MOVE')
+      expect(shouldEndPlayerTurn(newState, player.id)).toBe(true)
+    })
+
+    it('devrait retourner false si le joueur n\'a pas encore agi', () => {
+      const player = state.players[0]
+      expect(shouldEndPlayerTurn(state, player.id)).toBe(false)
+    })
+  })
+
+  describe('shouldAutoEndTurn', () => {
+    it('devrait retourner false au début du tour', () => {
+      expect(shouldAutoEndTurn(state)).toBe(false)
+    })
+
+    it('devrait retourner true si tous les joueurs ont agi', () => {
+      let newState = state
+      const teamPlayers = state.players.filter(p => p.team === state.currentPlayer)
+      
+      // Faire agir tous les joueurs de l'équipe
+      for (const player of teamPlayers) {
+        newState = setPlayerAction(newState, player.id, 'MOVE')
+      }
+      
+      expect(shouldAutoEndTurn(newState)).toBe(true)
+    })
+  })
+
+  describe('Comportement des mouvements avec actions', () => {
+    it('devrait enregistrer l\'action MOVE quand un joueur bouge', () => {
+      const player = state.players[0]
+      const move: Move = { 
+        type: 'MOVE', 
+        playerId: player.id, 
+        to: { x: player.pos.x + 1, y: player.pos.y } 
+      }
+      
+      const newState = applyMove(state, move, rng)
+      
+      expect(hasPlayerActed(newState, player.id)).toBe(true)
+      expect(getPlayerAction(newState, player.id)).toBe('MOVE')
+    })
+
+    it('devrait permettre à un joueur de continuer à bouger tant qu\'il a des PM', () => {
+      const player = state.players[0]
+      
+      // Premier mouvement
+      const move1: Move = { 
+        type: 'MOVE', 
+        playerId: player.id, 
+        to: { x: player.pos.x + 1, y: player.pos.y } 
+      }
+      
+      let newState = applyMove(state, move1, rng)
+      
+      // Vérifier qu'il peut encore bouger
+      expect(canPlayerContinueMoving(newState, player.id)).toBe(true)
+      
+      // Deuxième mouvement
+      const move2: Move = { 
+        type: 'MOVE', 
+        playerId: player.id, 
+        to: { x: player.pos.x + 2, y: player.pos.y } 
+      }
+      
+      newState = applyMove(newState, move2, rng)
+      
+      // Vérifier qu'il peut encore bouger s'il a des PM
+      if (newState.players.find(p => p.id === player.id)?.pm > 0) {
+        expect(canPlayerContinueMoving(newState, player.id)).toBe(true)
+      }
+    })
+
+    it('devrait empêcher un joueur de bouger s\'il a fait une autre action', () => {
+      const player = state.players[0]
+      
+      // Faire agir le joueur avec une action non-MOVE
+      let newState = setPlayerAction(state, player.id, 'BLOCK')
+      
+      // Vérifier qu'il ne peut plus bouger
+      const legalMoves = getLegalMoves(newState)
+      const playerMoves = legalMoves.filter(m => 
+        m.type === 'MOVE' && m.playerId === player.id
+      )
+      
+      expect(playerMoves.length).toBe(0)
+    })
+
+    it('devrait permettre de changer de joueur si le précédent n\'a pas encore agi', () => {
+      const player1 = state.players[0]
+      const player2 = state.players[1]
+      
+      // Sélectionner le premier joueur
+      let newState = { ...state, selectedPlayerId: player1.id }
+      
+      // Changer vers le deuxième joueur
+      newState = handlePlayerSwitch(newState, player2.id)
+      
+      expect(newState.selectedPlayerId).toBe(player2.id)
+    })
+  })
+
+  describe('Mouvements multiples', () => {
+    it('devrait permettre les mouvements multiples tant qu\'il reste des PM', () => {
+      const player = state.players[0]
+      const initialPm = player.pm
+      
+      // Premier mouvement
+      const move1: Move = { 
+        type: 'MOVE', 
+        playerId: player.id, 
+        to: { x: player.pos.x + 1, y: player.pos.y } 
+      }
+      
+      let newState = applyMove(state, move1, rng)
+      const playerAfterMove1 = newState.players.find(p => p.id === player.id)!
+      
+      // Vérifier que le joueur a encore des PM et peut continuer
+      expect(playerAfterMove1.pm).toBeLessThan(initialPm)
+      expect(canPlayerContinueMoving(newState, player.id)).toBe(true)
+      
+      // Vérifier que des mouvements sont encore disponibles
+      const legalMoves = getLegalMoves(newState)
+      const playerMoves = legalMoves.filter(m => 
+        m.type === 'MOVE' && m.playerId === player.id
+      )
+      
+      expect(playerMoves.length).toBeGreaterThan(0)
+    })
+
+    it('devrait finir le tour du joueur quand il n\'a plus de PM', () => {
+      const player = state.players[0]
+      
+      // Réduire les PM du joueur à 1
+      let newState = {
+        ...state,
+        players: state.players.map(p => 
+          p.id === player.id ? { ...p, pm: 1 } : p
+        )
+      }
+      
+      // Faire bouger le joueur (consomme 1 PM)
+      const move: Move = { 
+        type: 'MOVE', 
+        playerId: player.id, 
+        to: { x: player.pos.x + 1, y: player.pos.y } 
+      }
+      
+      newState = applyMove(newState, move, rng)
+      
+      // Vérifier que le joueur n'a plus de PM et ne peut plus bouger
+      const playerAfterMove = newState.players.find(p => p.id === player.id)!
+      expect(playerAfterMove.pm).toBe(0)
+      expect(canPlayerContinueMoving(newState, player.id)).toBe(false)
+    })
+  })
+
+  describe('Réinitialisation des actions au changement de tour', () => {
+    it('devrait réinitialiser les actions au changement de tour', () => {
+      const player = state.players[0]
+      
+      // Faire agir un joueur
+      let newState = setPlayerAction(state, player.id, 'MOVE')
+      expect(hasPlayerActed(newState, player.id)).toBe(true)
+      
+      // Changer de tour
+      newState = applyMove(newState, { type: 'END_TURN' }, rng)
+      
+      // Vérifier que les actions sont réinitialisées
+      expect(hasPlayerActed(newState, player.id)).toBe(false)
     })
   })
 })

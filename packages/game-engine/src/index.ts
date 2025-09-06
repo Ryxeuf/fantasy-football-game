@@ -49,6 +49,8 @@ export interface GameState {
   selectedPlayerId: string | null;
   lastDiceResult?: DiceResult;
   isTurnover: boolean;
+  // Suivi des actions par joueur par tour
+  playerActions: Map<string, ActionType>; // playerId -> action effectuée ce tour
   // Informations de match
   half: number; // 1 ou 2
   score: {
@@ -71,6 +73,8 @@ export interface DiceResult {
   success: boolean;
   modifiers: number;
 }
+
+export type ActionType = "MOVE" | "BLOCK" | "BLITZ" | "PASS" | "HANDOFF" | "THROW_TEAM_MATE" | "FOUL";
 
 export type Move =
   | { type: "MOVE"; playerId: string; to: Position }
@@ -474,6 +478,7 @@ export function setup(seed = "seed"): GameState {
     turn: 1,
     selectedPlayerId: null,
     isTurnover: false,
+    playerActions: new Map<string, ActionType>(),
     // Informations de match
     half: 1,
     score: {
@@ -491,12 +496,134 @@ export function setup(seed = "seed"): GameState {
   };
 }
 
+// --- Fonctions utilitaires pour les actions ---
+export function hasPlayerActed(state: GameState, playerId: string): boolean {
+  return state.playerActions.has(playerId);
+}
+
+export function canPlayerAct(state: GameState, playerId: string): boolean {
+  const player = state.players.find(p => p.id === playerId);
+  if (!player) return false;
+  
+  // Un joueur ne peut pas agir s'il est étourdi ou n'a plus de PM
+  return !player.stunned && player.pm > 0;
+}
+
+export function canPlayerMove(state: GameState, playerId: string): boolean {
+  const player = state.players.find(p => p.id === playerId);
+  if (!player) return false;
+  
+  // Un joueur peut bouger s'il n'est pas étourdi, a des PM, et n'a pas encore fait d'action principale
+  return !player.stunned && player.pm > 0 && !hasPlayerActed(state, playerId);
+}
+
+export function canPlayerContinueMoving(state: GameState, playerId: string): boolean {
+  const player = state.players.find(p => p.id === playerId);
+  if (!player) return false;
+  
+  // Un joueur peut continuer à bouger s'il n'est pas étourdi, a des PM, et a déjà commencé à bouger
+  return !player.stunned && player.pm > 0 && hasPlayerActed(state, playerId) && getPlayerAction(state, playerId) === "MOVE";
+}
+
+export function getPlayerAction(state: GameState, playerId: string): ActionType | undefined {
+  return state.playerActions.get(playerId);
+}
+
+export function setPlayerAction(state: GameState, playerId: string, action: ActionType): GameState {
+  const newPlayerActions = new Map(state.playerActions);
+  newPlayerActions.set(playerId, action);
+  return {
+    ...state,
+    playerActions: newPlayerActions
+  };
+}
+
+export function clearPlayerActions(state: GameState): GameState {
+  return {
+    ...state,
+    playerActions: new Map<string, ActionType>()
+  };
+}
+
+export function shouldEndPlayerTurn(state: GameState, playerId: string): boolean {
+  // Un joueur finit son tour s'il a effectué une action
+  return hasPlayerActed(state, playerId);
+}
+
+export function endPlayerTurn(state: GameState, playerId: string): GameState {
+  // Marquer le joueur comme ayant fini son tour
+  const newState = setPlayerAction(state, playerId, "MOVE");
+  
+  // Log de fin de tour du joueur
+  const player = state.players.find(p => p.id === playerId);
+  if (player) {
+    const logEntry = createLogEntry(
+      'action',
+      `Fin du tour de ${player.name}`,
+      player.id,
+      player.team
+    );
+    newState.gameLog = [...newState.gameLog, logEntry];
+  }
+  
+  return newState;
+}
+
+export function checkPlayerTurnEnd(state: GameState, playerId: string): GameState {
+  const player = state.players.find(p => p.id === playerId);
+  if (!player) return state;
+  
+  // Si le joueur n'a plus de PM et a commencé à bouger, finir son tour
+  if (player.pm <= 0 && hasPlayerActed(state, playerId) && getPlayerAction(state, playerId) === "MOVE") {
+    return endPlayerTurn(state, playerId);
+  }
+  
+  return state;
+}
+
+export function shouldAutoEndTurn(state: GameState): boolean {
+  const team = state.currentPlayer;
+  const teamPlayers = state.players.filter(p => p.team === team);
+  
+  // Vérifier si tous les joueurs de l'équipe ont agi ou ne peuvent plus agir
+  return teamPlayers.every(player => 
+    hasPlayerActed(state, player.id) || 
+    player.stunned || 
+    player.pm <= 0
+  );
+}
+
+export function handlePlayerSwitch(state: GameState, newPlayerId: string): GameState {
+  // Si on change de joueur, finir le tour du joueur précédemment sélectionné
+  if (state.selectedPlayerId && state.selectedPlayerId !== newPlayerId) {
+    const previousPlayer = state.players.find(p => p.id === state.selectedPlayerId);
+    if (previousPlayer && hasPlayerActed(state, previousPlayer.id)) {
+      // Le joueur précédent a déjà agi, on ne peut pas le laisser actif
+      return {
+        ...state,
+        selectedPlayerId: newPlayerId
+      };
+    }
+  }
+  
+  return {
+    ...state,
+    selectedPlayerId: newPlayerId
+  };
+}
+
 // --- Légalité des moves (MVP) ---
 export function getLegalMoves(state: GameState): Move[] {
   const moves: Move[] = [{ type: "END_TURN" }];
   const team = state.currentPlayer;
+  
+  // Si tous les joueurs de l'équipe ont agi ou ne peuvent plus agir, seul END_TURN est possible
+  if (shouldAutoEndTurn(state)) {
+    return moves;
+  }
+  
   const myPlayers = state.players.filter(
-    (p) => p.team === team && !p.stunned && p.pm > 0,
+    (p) => p.team === team && (canPlayerMove(state, p.id) || canPlayerContinueMoving(state, p.id)),
   );
   const occ = new Map<string, Player>();
   state.players.forEach((p) => occ.set(`${p.pos.x},${p.pos.y}`, p));
@@ -543,6 +670,7 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
         players: state.players.map((p) => ({ ...p, pm: p.ma })),
         isTurnover: false,
         lastDiceResult: undefined,
+        playerActions: new Map<string, ActionType>(), // Réinitialiser les actions
       };
       
       // Log du changement de tour
@@ -559,29 +687,33 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
     case "MOVE": {
       const idx = state.players.findIndex((p) => p.id === move.playerId);
       if (idx === -1) return state;
-      const legal = getLegalMoves(state).some(
+      
+      // Gérer le changement de joueur
+      let newState = handlePlayerSwitch(state, move.playerId);
+      
+      const legal = getLegalMoves(newState).some(
         (m) =>
           m.type === "MOVE" &&
           m.playerId === move.playerId &&
           samePos(m.to, move.to),
       );
-      if (!legal) return state;
+      if (!legal) return newState;
 
-      const player = state.players[idx];
+      const player = newState.players[idx];
       const from = player.pos;
       const to = move.to;
 
       // Vérifier si un jet d'esquive est nécessaire
-      const needsDodge = requiresDodgeRoll(state, from, to, player.team);
+      const needsDodge = requiresDodgeRoll(newState, from, to, player.team);
       
       if (needsDodge) {
         // Calculer les modificateurs de désquive (malus pour adversaires à l'arrivée)
-        const dodgeModifiers = calculateDodgeModifiers(state, from, to, player.team);
+        const dodgeModifiers = calculateDodgeModifiers(newState, from, to, player.team);
         
         // Effectuer le jet d'esquive avec les modificateurs
         const dodgeResult = performDodgeRoll(player, rng, dodgeModifiers);
         
-        const next = structuredClone(state) as GameState;
+        let next = structuredClone(newState) as GameState;
         next.lastDiceResult = dodgeResult;
         
         // Log du jet d'esquive
@@ -597,6 +729,14 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
         // Le joueur se déplace toujours, que le jet d'esquive réussisse ou échoue
         next.players[idx].pos = { ...to };
         next.players[idx].pm = Math.max(0, next.players[idx].pm - 1);
+        
+        // Enregistrer l'action de mouvement seulement si c'est le premier mouvement
+        if (!hasPlayerActed(next, player.id)) {
+          next = setPlayerAction(next, player.id, "MOVE");
+        }
+        
+        // Vérifier si le tour du joueur doit se terminer
+        next = checkPlayerTurnEnd(next, player.id);
         
         if (dodgeResult.success) {
           // Jet réussi : mouvement autorisé
@@ -638,9 +778,17 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
         return next;
       } else {
         // Pas de jet nécessaire : mouvement normal
-        const next = structuredClone(state) as GameState;
+        let next = structuredClone(newState) as GameState;
         next.players[idx].pos = { ...to };
         next.players[idx].pm = Math.max(0, next.players[idx].pm - 1);
+        
+        // Enregistrer l'action de mouvement seulement si c'est le premier mouvement
+        if (!hasPlayerActed(next, player.id)) {
+          next = setPlayerAction(next, player.id, "MOVE");
+        }
+        
+        // Vérifier si le tour du joueur doit se terminer
+        next = checkPlayerTurnEnd(next, player.id);
         
         // Log du mouvement
         const moveLogEntry = createLogEntry(
@@ -656,7 +804,7 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
         // Ramassage de balle avec jet d'agilité
         if (next.ball && samePos(next.ball, to)) {
           // Calculer les modificateurs de pickup (malus pour adversaires marquant la balle)
-          const pickupModifiers = calculatePickupModifiers(state, next.ball, player.team);
+          const pickupModifiers = calculatePickupModifiers(newState, next.ball, player.team);
           
           // Effectuer le jet de pickup
           const pickupResult = performPickupRoll(player, rng, pickupModifiers);
