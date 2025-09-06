@@ -108,6 +108,56 @@ export default function PlayerDetails({ player, onClose }: PlayerDetailsProps) {
           )}
         </div>
 
+        {/* État du joueur */}
+        <div className="pt-3 border-t border-gray-200">
+          <h4 className="text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wide">
+            État
+          </h4>
+          <div className="space-y-2">
+            {/* Statut de base */}
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Statut:</span>
+              <span
+                className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                  player.stunned
+                    ? "bg-red-100 text-red-800 border border-red-300"
+                    : "bg-green-100 text-green-800 border border-green-300"
+                }`}
+              >
+                {player.stunned ? "Sonné" : "Debout"}
+              </span>
+            </div>
+            
+            {/* Ballon */}
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Ballon:</span>
+              <span
+                className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                  player.hasBall
+                    ? "bg-yellow-100 text-yellow-800 border border-yellow-300"
+                    : "bg-gray-100 text-gray-600 border border-gray-300"
+                }`}
+              >
+                {player.hasBall ? "Possède le ballon" : "Pas de ballon"}
+              </span>
+            </div>
+            
+            {/* Points de mouvement */}
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">PM restants:</span>
+              <span
+                className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                  player.pm > 0
+                    ? "bg-blue-100 text-blue-800 border border-blue-300"
+                    : "bg-gray-100 text-gray-600 border border-gray-300"
+                }`}
+              >
+                {player.pm} / {player.ma}
+              </span>
+            </div>
+          </div>
+        </div>
+
         {/* Équipe */}
         <div className="pt-3 border-t border-gray-200">
           <div className="text-center">
