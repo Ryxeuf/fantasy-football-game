@@ -162,15 +162,18 @@ export function performDodgeRoll(player: Player, rng: RNG, modifiers: number = 0
 
 export function calculateArmorTarget(player: Player, modifiers: number = 0): number {
   // En Blood Bowl, le jet d'armure se fait sur 2D6
-  // Le joueur doit faire 8+ pour réussir son jet d'armure (modificateurs positifs améliorent)
-  // La valeur cible est 8, et on soustrait les modificateurs positifs
-  return Math.max(2, 8 - modifiers);
+  // L'armure est percée si le résultat est >= à la valeur d'armure du joueur
+  // Les modificateurs positifs rendent l'armure plus difficile à percer (augmentent la valeur cible)
+  // La valeur de base est l'armure du joueur (av), et on ajoute les modificateurs positifs
+  return Math.min(12, player.av + modifiers);
 }
 
 export function performArmorRoll(player: Player, rng: RNG, modifiers: number = 0): DiceResult {
   const diceRoll = roll2D6(rng);
   const targetNumber = calculateArmorTarget(player, modifiers);
-  const success = diceRoll >= targetNumber;
+  // En Blood Bowl, l'armure est percée (échec) si le résultat est >= à la valeur d'armure
+  // Donc success = false si diceRoll >= targetNumber
+  const success = diceRoll < targetNumber;
   
   return {
     type: "armor",

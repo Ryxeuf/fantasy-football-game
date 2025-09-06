@@ -355,9 +355,10 @@ describe('Jets de désquive', () => {
       
       const result = performArmorRoll(player, rng)
       
-      // Le jet d'armure se fait sur 2D6, target 8+
-      expect(result.targetNumber).toBe(8)
-      expect(result.success).toBe(result.diceRoll >= 8)
+      // Le jet d'armure se fait sur 2D6, l'armure est percée si >= à la valeur d'armure
+      // Le joueur a une armure de 9 (av), donc l'armure est percée si le résultat est >= 9
+      expect(result.targetNumber).toBe(player.av)
+      expect(result.success).toBe(result.diceRoll < result.targetNumber)
     })
 
     it('devrait appliquer les modificateurs', () => {
@@ -366,7 +367,9 @@ describe('Jets de désquive', () => {
       
       const result = performArmorRoll(player, rng, 1) // +1 modificateur
       
-      expect(result.targetNumber).toBe(7) // 8 - 1 = 7
+      // Avec un modificateur de +1, l'armure devient plus difficile à percer
+      // Si le joueur a une armure de 9 (av), la valeur cible devient 10
+      expect(result.targetNumber).toBe(player.av + 1) // 9 + 1 = 10
       expect(result.modifiers).toBe(1)
     })
   })
@@ -1299,8 +1302,8 @@ describe('Système de rebond de balle', () => {
       expect(result.lastDiceResult).toBeDefined()
       expect(result.lastDiceResult?.type).toBe('armor')
       
-      // Avec notre RNG déterministe, le jet devrait échouer
-      expect(result.lastDiceResult?.success).toBe(false)
+      // Avec notre RNG déterministe, le jet d'armure devrait réussir (armure non percée)
+      expect(result.lastDiceResult?.success).toBe(true)
       expect(result.isTurnover).toBe(true)
       
       // Le joueur ne devrait plus avoir le ballon
