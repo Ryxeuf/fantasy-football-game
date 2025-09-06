@@ -42,7 +42,7 @@ export interface GameState {
 }
 
 export interface DiceResult {
-  type: "dodge" | "pickup" | "pass" | "catch";
+  type: "dodge" | "pickup" | "pass" | "catch" | "armor";
   playerId: string;
   diceRoll: number;
   targetNumber: number;
@@ -88,6 +88,10 @@ export function rollD6(rng: RNG): number {
   return Math.floor(rng() * 6) + 1;
 }
 
+export function roll2D6(rng: RNG): number {
+  return rollD6(rng) + rollD6(rng);
+}
+
 export function calculateDodgeTarget(player: Player, modifiers: number = 0): number {
   // Target = AG - modifiers (modificateurs positifs améliorent le jet)
   return Math.max(2, Math.min(6, player.ag - modifiers));
@@ -100,6 +104,28 @@ export function performDodgeRoll(player: Player, rng: RNG, modifiers: number = 0
   
   return {
     type: "dodge",
+    playerId: player.id,
+    diceRoll,
+    targetNumber,
+    success,
+    modifiers,
+  };
+}
+
+export function calculateArmorTarget(player: Player, modifiers: number = 0): number {
+  // En Blood Bowl, le jet d'armure se fait sur 2D6
+  // Le joueur doit faire 8+ pour réussir son jet d'armure (modificateurs positifs améliorent)
+  // La valeur cible est 8, et on soustrait les modificateurs positifs
+  return Math.max(2, 8 - modifiers);
+}
+
+export function performArmorRoll(player: Player, rng: RNG, modifiers: number = 0): DiceResult {
+  const diceRoll = roll2D6(rng);
+  const targetNumber = calculateArmorTarget(player, modifiers);
+  const success = diceRoll >= targetNumber;
+  
+  return {
+    type: "armor",
     playerId: player.id,
     diceRoll,
     targetNumber,
@@ -446,8 +472,18 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
           // Garder le résultat de dés pour l'affichage de la popup
           // Il sera réinitialisé quand l'utilisateur fermera la popup
         } else {
-          // Jet échoué : turnover (mais le joueur s'est quand même déplacé)
+          // Jet d'esquive échoué : le joueur chute et doit faire un jet d'armure
           next.isTurnover = true;
+          
+          // Le joueur chute (est mis à terre)
+          next.players[idx].stunned = true;
+          
+          // Effectuer le jet d'armure
+          const armorResult = performArmorRoll(next.players[idx], rng);
+          next.lastDiceResult = armorResult;
+          
+          // Si le jet d'armure échoue, le joueur est blessé (pour l'instant on garde juste le résultat)
+          // TODO: Implémenter la table des blessures si nécessaire
           
           // Si le joueur avait le ballon, il le perd et le ballon rebondit
           if (next.players[idx].hasBall) {
@@ -518,8 +554,18 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
         // Garder le résultat de dés pour l'affichage de la popup
         // Il sera réinitialisé quand l'utilisateur fermera la popup
       } else {
-        // Jet échoué : turnover (mais le joueur s'est quand même déplacé)
+        // Jet d'esquive échoué : le joueur chute et doit faire un jet d'armure
         next.isTurnover = true;
+        
+        // Le joueur chute (est mis à terre)
+        next.players[idx].stunned = true;
+        
+        // Effectuer le jet d'armure
+        const armorResult = performArmorRoll(next.players[idx], rng);
+        next.lastDiceResult = armorResult;
+        
+        // Si le jet d'armure échoue, le joueur est blessé (pour l'instant on garde juste le résultat)
+        // TODO: Implémenter la table des blessures si nécessaire
         
         // Si le joueur avait le ballon, il le perd et le ballon rebondit
         if (next.players[idx].hasBall) {

@@ -6,6 +6,7 @@ import {
   makeRNG,
   requiresDodgeRoll,
   performDodgeRoll,
+  performArmorRoll,
   getAdjacentOpponents,
   calculateDodgeModifiers,
   calculatePickupModifiers,
@@ -329,6 +330,43 @@ describe('Jets de désquive', () => {
       const result = performDodgeRoll(player, rng, 1) // +1 modificateur
       
       expect(result.targetNumber).toBe(2) // 3 - 1 = 2
+      expect(result.modifiers).toBe(1)
+    })
+  })
+
+  describe('performArmorRoll', () => {
+    it('devrait retourner un résultat de dés valide', () => {
+      const player = state.players[0]
+      const rng = makeRNG('armor-test')
+      
+      const result = performArmorRoll(player, rng)
+      
+      expect(result.type).toBe('armor')
+      expect(result.playerId).toBe(player.id)
+      expect(result.diceRoll).toBeGreaterThanOrEqual(2)
+      expect(result.diceRoll).toBeLessThanOrEqual(12)
+      expect(result.targetNumber).toBeGreaterThanOrEqual(2)
+      expect(typeof result.success).toBe('boolean')
+    })
+
+    it('devrait calculer correctement le succès', () => {
+      const player = { ...state.players[0] }
+      const rng = makeRNG('armor-test')
+      
+      const result = performArmorRoll(player, rng)
+      
+      // Le jet d'armure se fait sur 2D6, target 8+
+      expect(result.targetNumber).toBe(8)
+      expect(result.success).toBe(result.diceRoll >= 8)
+    })
+
+    it('devrait appliquer les modificateurs', () => {
+      const player = { ...state.players[0] }
+      const rng = makeRNG('armor-test')
+      
+      const result = performArmorRoll(player, rng, 1) // +1 modificateur
+      
+      expect(result.targetNumber).toBe(7) // 8 - 1 = 7
       expect(result.modifiers).toBe(1)
     })
   })
@@ -807,9 +845,9 @@ describe('Intégration des mouvements avec jets de désquive', () => {
       const movedPlayer = result.players.find(p => p.id === playerA.id)
       expect(movedPlayer?.pos).toEqual(move.to)
       
-      // Un jet de désquive devrait avoir été effectué
+      // Un jet d'armure devrait avoir été effectué (car le jet d'esquive a échoué)
       expect(result.lastDiceResult).toBeDefined()
-      expect(result.lastDiceResult?.type).toBe('dodge')
+      expect(result.lastDiceResult?.type).toBe('armor')
       expect(result.lastDiceResult?.playerId).toBe(playerA.id)
       
       return
@@ -822,9 +860,9 @@ describe('Intégration des mouvements avec jets de désquive', () => {
     const movedPlayer = result.players.find(p => p.id === playerA.id)
     expect(movedPlayer?.pos).toEqual(move.to)
     
-    // Un jet de désquive devrait avoir été effectué
+    // Un jet d'armure devrait avoir été effectué (car le jet d'esquive a échoué)
     expect(result.lastDiceResult).toBeDefined()
-    expect(result.lastDiceResult?.type).toBe('dodge')
+    expect(result.lastDiceResult?.type).toBe('armor')
     expect(result.lastDiceResult?.playerId).toBe(playerA.id)
     
     // Si le jet échoue, il devrait y avoir un turnover
@@ -849,9 +887,9 @@ describe('Intégration des mouvements avec jets de désquive', () => {
     const movedPlayer = result.players.find(p => p.id === player.id)
     expect(movedPlayer?.pos).toEqual(move.to)
     
-    // Un jet de désquive devrait avoir été effectué
+    // Un jet d'armure devrait avoir été effectué (car le jet d'esquive a échoué)
     expect(result.lastDiceResult).toBeDefined()
-    expect(result.lastDiceResult?.type).toBe('dodge')
+    expect(result.lastDiceResult?.type).toBe('armor')
   })
 
   it('devrait appliquer les modificateurs de désquive lors des mouvements', () => {
@@ -1188,9 +1226,9 @@ describe('Système de rebond de balle', () => {
         const movedPlayer = result.players.find(p => p.id === playerA.id)
         expect(movedPlayer?.pos).toEqual(move.to)
         
-        // Vérifier qu'un jet d'esquive a été effectué
+        // Vérifier qu'un jet d'armure a été effectué (car le jet d'esquive a échoué)
         expect(result.lastDiceResult).toBeDefined()
-        expect(result.lastDiceResult?.type).toBe('dodge')
+        expect(result.lastDiceResult?.type).toBe('armor')
         
         // Si le jet échoue, vérifier que le ballon rebondit
         if (!result.lastDiceResult?.success) {
@@ -1211,9 +1249,9 @@ describe('Système de rebond de balle', () => {
       const movedPlayer = result.players.find(p => p.id === playerA.id)
       expect(movedPlayer?.pos).toEqual(move.to)
       
-      // Vérifier qu'un jet d'esquive a été effectué
+      // Vérifier qu'un jet d'armure a été effectué (car le jet d'esquive a échoué)
       expect(result.lastDiceResult).toBeDefined()
-      expect(result.lastDiceResult?.type).toBe('dodge')
+      expect(result.lastDiceResult?.type).toBe('armor')
       
       // Avec notre RNG déterministe, le jet devrait échouer
       expect(result.lastDiceResult?.success).toBe(false)
@@ -1257,9 +1295,9 @@ describe('Système de rebond de balle', () => {
       const movedPlayer = result.players.find(p => p.id === playerA.id)
       expect(movedPlayer?.pos).toEqual(move.to)
       
-      // Vérifier qu'un jet d'esquive a été effectué
+      // Vérifier qu'un jet d'armure a été effectué (car le jet d'esquive a échoué)
       expect(result.lastDiceResult).toBeDefined()
-      expect(result.lastDiceResult?.type).toBe('dodge')
+      expect(result.lastDiceResult?.type).toBe('armor')
       
       // Avec notre RNG déterministe, le jet devrait échouer
       expect(result.lastDiceResult?.success).toBe(false)
@@ -1271,6 +1309,61 @@ describe('Système de rebond de balle', () => {
       // Le ballon devrait rebondir
       expect(result.ball).toBeDefined()
       expect(result.ball).not.toEqual(playerA.pos) // Le ballon ne devrait pas être à la position originale
+    })
+
+    it('devrait effectuer un jet d\'armure après un échec d\'esquive', () => {
+      const playerA = state.players.find(p => p.team === 'A')
+      const playerB = state.players.find(p => p.team === 'B')
+      
+      if (!playerA || !playerB) return
+      
+      // Placer un adversaire adjacent pour déclencher un jet d'esquive
+      const newState = {
+        ...state,
+        players: state.players.map(p => 
+          p.id === playerB.id 
+            ? { ...p, pos: { x: playerA.pos.x + 1, y: playerA.pos.y } }
+            : p
+        )
+      }
+      
+      const to = { x: playerA.pos.x + 2, y: playerA.pos.y }
+      
+      // Vérifier que le mouvement est légal avant de l'appliquer
+      const legalMoves = getLegalMoves(newState)
+      const legalMove = legalMoves.find(m => 
+        m.type === 'MOVE' && 
+        m.playerId === playerA.id && 
+        m.to.x === to.x && 
+        m.to.y === to.y
+      )
+      
+      if (!legalMove) {
+        // Si le mouvement n'est pas légal, on ne peut pas tester
+        console.log('Mouvement non légal, positions:', playerA.pos, 'vers', to)
+        console.log('Mouvements légaux:', legalMoves.filter(m => m.playerId === playerA.id))
+        return
+      }
+      
+      // Utiliser un RNG déterministe qui force un échec d'esquive
+      const failRng = () => 0.1 // Valeur très basse pour échouer
+      
+      const result = applyMove(newState, legalMove, failRng)
+      
+      // Vérifier que le joueur s'est déplacé
+      const movedPlayer = result.players.find(p => p.id === playerA.id)
+      expect(movedPlayer?.pos).toEqual(to)
+      
+      // Vérifier que c'est un turnover
+      expect(result.isTurnover).toBe(true)
+      
+      // Vérifier que le joueur est sonné (mis à terre)
+      expect(movedPlayer?.stunned).toBe(true)
+      
+      // Vérifier qu'un jet d'armure a été effectué
+      expect(result.lastDiceResult).toBeDefined()
+      expect(result.lastDiceResult?.type).toBe('armor')
+      expect(result.lastDiceResult?.playerId).toBe(playerA.id)
     })
   })
 })
