@@ -396,7 +396,7 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
 
   switch (move.type) {
     case "END_TURN":
-      // Si un joueur a la balle, la laisser tomber lors du changement de tour
+      // Changement de tour - le porteur de ballon garde le ballon
       const newState: GameState = {
         ...state,
         currentPlayer: state.currentPlayer === "A" ? "B" : "A",
@@ -407,8 +407,8 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
         lastDiceResult: undefined,
       };
       
-      // Si un joueur a la balle, la laisser tomber
-      return dropBall(newState);
+      // Le porteur de ballon garde le ballon lors du changement de tour
+      return newState;
     case "MOVE": {
       const idx = state.players.findIndex((p) => p.id === move.playerId);
       if (idx === -1) return state;

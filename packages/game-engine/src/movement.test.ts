@@ -218,6 +218,26 @@ describe('Mouvements de base', () => {
       })
     })
 
+    it('devrait préserver le ballon du porteur lors du changement de tour', () => {
+      // Donner le ballon à un joueur
+      const player = state.players[0]
+      const stateWithBall = {
+        ...state,
+        players: state.players.map(p => 
+          p.id === player.id ? { ...p, hasBall: true } : p
+        ),
+        ball: undefined
+      }
+
+      const move: Move = { type: 'END_TURN' }
+      const newState = applyMove(stateWithBall, move, rng)
+      
+      // Le joueur devrait toujours avoir le ballon
+      const playerWithBall = newState.players.find(p => p.id === player.id)
+      expect(playerWithBall?.hasBall).toBe(true)
+      expect(newState.ball).toBeUndefined()
+    })
+
     it('ne devrait pas permettre d\'autres actions pendant un turnover', () => {
       const turnoverState = { ...state, isTurnover: true }
       const player = state.players.find(p => p.team === state.currentPlayer)
