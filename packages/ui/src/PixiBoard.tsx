@@ -244,7 +244,11 @@ export default function PixiBoard({
                     const radius = cellSize / 2 - 2;
 
                     // Cercle du joueur
-                    g.beginFill(player.team === "A" ? 0xff0000 : 0x0000ff); // Rouge pour équipe A, Bleu pour équipe B
+                    // Joueurs sonnés en gris, sinon couleur d'équipe
+                    const playerColor = player.stunned 
+                      ? 0x808080 // Gris pour joueurs sonnés
+                      : (player.team === "A" ? 0xff0000 : 0x0000ff); // Rouge pour équipe A, Bleu pour équipe B
+                    g.beginFill(playerColor);
                     g.drawCircle(x, y, radius);
                     g.endFill();
 
@@ -299,7 +303,7 @@ export default function PixiBoard({
                       dropShadowBlur: 0,
                       dropShadowColor: 0x000000,
                       dropShadowDistance: 0,
-                      fill: 0xffffff,
+                      fill: player.stunned ? 0x000000 : 0xffffff, // Noir sur gris, blanc sur couleur d'équipe
                       fontFamily: "Arial",
                       fontSize: Math.max(12, cellSize / 3),
                       fontStyle: "normal",
@@ -311,7 +315,7 @@ export default function PixiBoard({
                       lineJoin: "miter",
                       miterLimit: 10,
                       padding: 0,
-                      stroke: 0x000000,
+                      stroke: player.stunned ? 0xffffff : 0x000000, // Contour blanc sur gris, noir sur couleur d'équipe
                       strokeThickness: 2,
                       textBaseline: "alphabetic",
                       trim: false,
@@ -332,7 +336,8 @@ export default function PixiBoard({
                     const r = cellSize / 4;
                     const bx = player.pos.y * cellSize + cellSize - r;
                     const by = player.pos.x * cellSize + r;
-                    g.beginFill(0x000000, 0.7);
+                    // Badge plus visible pour joueurs sonnés
+                    g.beginFill(player.stunned ? 0xffffff : 0x000000, player.stunned ? 0.9 : 0.7);
                     g.drawCircle(bx, by, r);
                     g.endFill();
                   }}
@@ -344,7 +349,7 @@ export default function PixiBoard({
                   anchor={{ x: 0.5, y: 0.5 }}
                   style={
                     {
-                      fill: 0xffffff,
+                      fill: player.stunned ? 0x000000 : 0xffffff, // Noir sur fond blanc, blanc sur fond noir
                       fontSize: Math.max(10, cellSize / 4),
                       fontFamily: "Arial",
                     } as any
