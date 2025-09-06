@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { PixiBoard, PlayerDetails, DiceResultPopup } from "@bb/ui";
+import { PixiBoard, PlayerDetails, DiceResultPopup, GameScoreboard } from "@bb/ui";
 import {
   setup,
   getLegalMoves,
@@ -66,39 +66,40 @@ export default function HomePage() {
   }
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">BlooBowl – Pixi Renderer</h1>
-      <p className="text-sm opacity-80">
-        Clique un joueur pour le sélectionner puis une case surbrillée pour le
-        déplacer.
-      </p>
-      <PixiBoard
+    <div className="min-h-screen bg-gray-100">
+      {/* Tableau de bord moderne - fixe en haut */}
+      <GameScoreboard
         state={state}
-        onCellClick={onCellClick}
-        legalMoves={movesForSelected}
-        selectedPlayerId={state.selectedPlayerId}
+        onEndTurn={() => setState((s) => applyMove(s, { type: "END_TURN" }, createRNG()))}
       />
-      {state.selectedPlayerId && (
-        <div className="text-sm">
-          Joueur sélectionné:{" "}
-          <span className="font-mono">{state.selectedPlayerId}</span>
+      
+      {/* Contenu principal - avec padding pour compenser le header fixe */}
+      <div className="pt-24">
+        <div className="container mx-auto px-4 py-6">
+        <div className="text-center mb-6">
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">Blood Bowl Fantasy Football</h1>
+          <p className="text-gray-600">
+            Cliquez sur un joueur pour le sélectionner, puis sur une case surbrillée pour le déplacer.
+          </p>
         </div>
-      )}
-      <div className="text-sm">
-        Tour: {state.turn} • Équipe:{" "}
-        <span className="font-mono">{state.currentPlayer}</span>
-        {state.isTurnover && (
-          <span className="ml-2 px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-bold">
-            TURNOVER !
-          </span>
+        
+        <div className="flex justify-center mb-6">
+          <PixiBoard
+            state={state}
+            onCellClick={onCellClick}
+            legalMoves={movesForSelected}
+            selectedPlayerId={state.selectedPlayerId}
+          />
+        </div>
+        
+        {state.selectedPlayerId && (
+          <div className="text-center text-sm text-gray-600 mb-4">
+            Joueur sélectionné:{" "}
+            <span className="font-mono font-semibold">{state.selectedPlayerId}</span>
+          </div>
         )}
+        </div>
       </div>
-      <button
-        className="px-3 py-2 rounded border bg-white hover:bg-neutral-100 disabled:opacity-50 disabled:cursor-not-allowed"
-        onClick={() => setState((s) => applyMove(s, { type: "END_TURN" }, createRNG()))}
-      >
-        {state.isTurnover ? "Tour terminé (Turnover)" : "Fin du tour"}
-      </button>
 
       {/* Encart des détails du joueur */}
       {state.selectedPlayerId && (

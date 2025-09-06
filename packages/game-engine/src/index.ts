@@ -39,6 +39,16 @@ export interface GameState {
   selectedPlayerId: string | null;
   lastDiceResult?: DiceResult;
   isTurnover: boolean;
+  // Informations de match
+  half: number; // 1 ou 2
+  score: {
+    teamA: number;
+    teamB: number;
+  };
+  teamNames: {
+    teamA: string;
+    teamB: string;
+  };
 }
 
 export interface DiceResult {
@@ -376,6 +386,16 @@ export function setup(seed = "seed"): GameState {
     turn: 1,
     selectedPlayerId: null,
     isTurnover: false,
+    // Informations de match
+    half: 1,
+    score: {
+      teamA: 0,
+      teamB: 0,
+    },
+    teamNames: {
+      teamA: "Orcs de Fer",
+      teamB: "Elfes Sombres",
+    },
   };
 }
 

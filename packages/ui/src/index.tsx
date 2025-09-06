@@ -34,3 +34,4 @@ export function Board({ state, onCellClick }: {
 export { default as PixiBoard } from './PixiBoard';
 export { default as PlayerDetails } from './PlayerDetails';
 export { default as DiceResultPopup } from './DiceResultPopup';
+export { default as GameScoreboard } from './GameScoreboard';
