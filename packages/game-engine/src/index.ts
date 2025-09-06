@@ -521,8 +521,9 @@ export function canPlayerContinueMoving(state: GameState, playerId: string): boo
   const player = state.players.find(p => p.id === playerId);
   if (!player) return false;
   
-  // Un joueur peut continuer à bouger s'il n'est pas étourdi, a des PM, et a déjà commencé à bouger
-  return !player.stunned && player.pm > 0 && hasPlayerActed(state, playerId) && getPlayerAction(state, playerId) === "MOVE";
+  // Un joueur peut continuer à bouger s'il n'est pas étourdi, a des PM, et 
+  // soit il n'a pas encore agi, soit il a déjà commencé à bouger
+  return !player.stunned && player.pm > 0 && (!hasPlayerActed(state, playerId) || getPlayerAction(state, playerId) === "MOVE");
 }
 
 export function getPlayerAction(state: GameState, playerId: string): ActionType | undefined {

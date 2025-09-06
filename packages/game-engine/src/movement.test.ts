@@ -1626,4 +1626,120 @@ describe('Gestion des actions par joueur', () => {
       expect(hasPlayerActed(newState, player.id)).toBe(false)
     })
   })
+
+  describe('Ramassage de ballon après rebond', () => {
+    it('devrait permettre de ramasser le ballon après un rebond', () => {
+      const playerA = state.players.find(p => p.team === 'A')!
+      const playerB = state.players.find(p => p.team === 'B')!
+      
+      // Placer le ballon à côté du joueur B (vers la gauche pour éviter B2)
+      const ballPosition = { x: playerB.pos.x - 1, y: playerB.pos.y }
+      let newState = {
+        ...state,
+        ball: ballPosition,
+        currentPlayer: 'B' as const
+      }
+      
+      // Faire bouger le joueur B vers le ballon
+      const move: Move = {
+        type: 'MOVE',
+        playerId: playerB.id,
+        to: ballPosition
+      }
+      
+      newState = applyMove(newState, move, rng)
+      
+      // Vérifier que le joueur B a tenté de ramasser le ballon
+      expect(newState.lastDiceResult).toBeDefined()
+      expect(newState.lastDiceResult?.type).toBe('pickup')
+      expect(newState.lastDiceResult?.playerId).toBe(playerB.id)
+    })
+
+    it('devrait détecter le ballon sur la case exacte', () => {
+      const player = state.players[0]
+      const ballPosition = { x: player.pos.x + 1, y: player.pos.y }
+      
+      let newState = {
+        ...state,
+        ball: ballPosition
+      }
+      
+      // Vérifier que le mouvement vers le ballon est proposé
+      const legalMoves = getLegalMoves(newState)
+      const moveToBall = legalMoves.find(m => 
+        m.type === 'MOVE' && 
+        m.playerId === player.id && 
+        m.to.x === ballPosition.x && 
+        m.to.y === ballPosition.y
+      )
+      
+      expect(moveToBall).toBeDefined()
+    })
+  })
+
+  describe('Marquage des joueurs sonnés', () => {
+    it('devrait exclure les joueurs sonnés du marquage', () => {
+      const playerA = state.players.find(p => p.team === 'A')!
+      const playerB = state.players.find(p => p.team === 'B')!
+      
+      // Sonner le joueur B
+      let newState = {
+        ...state,
+        players: state.players.map(p => 
+          p.id === playerB.id ? { ...p, stunned: true } : p
+        )
+      }
+      
+      // Vérifier que le joueur B sonné ne marque pas les cases adjacentes
+      const adjacentOpponents = getAdjacentOpponents(newState, playerA.pos, playerA.team)
+      const stunnedPlayerInAdjacent = adjacentOpponents.find(p => p.id === playerB.id)
+      
+      expect(stunnedPlayerInAdjacent).toBeUndefined()
+    })
+
+    it('devrait ne pas déclencher de jet d\'esquive pour les joueurs sonnés', () => {
+      const playerA = state.players.find(p => p.team === 'A')!
+      const playerB = state.players.find(p => p.team === 'B')!
+      
+      // Placer le joueur B à côté du joueur A
+      let newState = {
+        ...state,
+        players: state.players.map(p => 
+          p.id === playerB.id ? { ...p, pos: { x: playerA.pos.x + 1, y: playerA.pos.y } } : p
+        )
+      }
+      
+      // Sonner le joueur B
+      newState = {
+        ...newState,
+        players: newState.players.map(p => 
+          p.id === playerB.id ? { ...p, stunned: true } : p
+        )
+      }
+      
+      // Vérifier qu'aucun jet d'esquive n'est requis
+      const needsDodge = requiresDodgeRoll(newState, playerA.pos, { x: playerA.pos.x + 1, y: playerA.pos.y }, playerA.team)
+      
+      expect(needsDodge).toBe(false)
+    })
+
+    it('devrait ne pas faire réceptionner le ballon par un joueur sonné', () => {
+      const player = state.players[0]
+      
+      // Sonner le joueur
+      let newState = {
+        ...state,
+        players: state.players.map(p => 
+          p.id === player.id ? { ...p, stunned: true } : p
+        ),
+        ball: { x: player.pos.x, y: player.pos.y }
+      }
+      
+      // Faire rebondir le ballon
+      const result = bounceBall(newState, rng)
+      
+      // Vérifier que le joueur sonné n'a pas réceptionné le ballon
+      expect(result.players.find(p => p.id === player.id)?.hasBall).toBe(false)
+    })
+  })
 })
