@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { PixiBoard, PlayerDetails, DiceResultPopup, GameScoreboard } from "@bb/ui";
+import { PixiBoard, PlayerDetails, DiceResultPopup, GameScoreboard, GameLog } from "@bb/ui";
 import {
   setup,
   getLegalMoves,
@@ -98,6 +98,41 @@ export default function HomePage() {
             <span className="font-mono font-semibold">{state.selectedPlayerId}</span>
           </div>
         )}
+        </div>
+      </div>
+
+      {/* Log du match */}
+      <div className="container mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div>
+            <h2 className="text-xl font-bold text-gray-800 mb-4">Actions du Match</h2>
+            <GameLog logEntries={state.gameLog} />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-gray-800 mb-4">Statistiques</h2>
+            <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6">
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Tour actuel:</span>
+                  <span className="font-semibold">{state.turn}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Mi-temps:</span>
+                  <span className="font-semibold">{state.half}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Équipe active:</span>
+                  <span className="font-semibold">
+                    {state.currentPlayer === "A" ? state.teamNames.teamA : state.teamNames.teamB}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Actions enregistrées:</span>
+                  <span className="font-semibold">{state.gameLog.length}</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

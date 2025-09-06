@@ -29,6 +29,16 @@ export interface Player {
   hasBall?: boolean; // indique si le joueur a la balle
 }
 
+export interface GameLogEntry {
+  id: string;
+  timestamp: number;
+  type: 'action' | 'dice' | 'turnover' | 'score' | 'info';
+  message: string;
+  playerId?: string;
+  team?: TeamId;
+  details?: any;
+}
+
 export interface GameState {
   width: number;
   height: number;
@@ -49,6 +59,8 @@ export interface GameState {
     teamA: string;
     teamB: string;
   };
+  // Log du match
+  gameLog: GameLogEntry[];
 }
 
 export interface DiceResult {
@@ -91,6 +103,32 @@ export function inBounds(s: GameState, p: Position): boolean {
 
 export function samePos(a: Position, b: Position) {
   return a.x === b.x && a.y === b.y;
+}
+
+// --- Système de log ---
+export function createLogEntry(
+  type: GameLogEntry['type'],
+  message: string,
+  playerId?: string,
+  team?: TeamId,
+  details?: any
+): GameLogEntry {
+  return {
+    id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    timestamp: Date.now(),
+    type,
+    message,
+    playerId,
+    team,
+    details,
+  };
+}
+
+export function addLogEntry(state: GameState, entry: GameLogEntry): GameState {
+  return {
+    ...state,
+    gameLog: [...state.gameLog, entry],
+  };
 }
 
 // --- Système de jets de dés ---
@@ -245,6 +283,15 @@ export function bounceBall(state: GameState, rng: RNG): GameState {
     y: Math.max(0, Math.min(state.height - 1, currentBallPos.y + direction.y))
   };
   
+  // Log du rebond
+  const bounceLogEntry = createLogEntry(
+    'action',
+    `Ballon rebondit vers (${newBallPos.x}, ${newBallPos.y})`,
+    undefined,
+    undefined
+  );
+  newState.gameLog = [...newState.gameLog, bounceLogEntry];
+  
   // Vérifier si la balle atterrit sur un joueur debout avec sa Zone de Tackle
   const playerAtNewPos = newState.players.find(p => 
     samePos(p.pos, newBallPos) && 
@@ -266,21 +313,59 @@ export function bounceBall(state: GameState, rng: RNG): GameState {
       modifiers: catchResult.modifiers
     };
     
+    // Log du jet de réception
+    const catchLogEntry = createLogEntry(
+      'dice',
+      `Jet de réception: ${catchResult.diceRoll}/${catchResult.targetNumber} ${catchResult.success ? '✓' : '✗'}`,
+      playerAtNewPos.id,
+      playerAtNewPos.team,
+      { diceRoll: catchResult.diceRoll, targetNumber: catchResult.targetNumber, success: catchResult.success, modifiers: catchModifiers }
+    );
+    newState.gameLog = [...newState.gameLog, catchLogEntry];
+    
     if (catchResult.success) {
       // Réception réussie : attacher la balle au joueur
       newState.ball = undefined;
       newState.players = newState.players.map(p => 
         p.id === playerAtNewPos.id ? { ...p, hasBall: true } : p
       );
+      
+      // Log de la réception réussie
+      const successCatchLogEntry = createLogEntry(
+        'action',
+        `Ballon réceptionné avec succès`,
+        playerAtNewPos.id,
+        playerAtNewPos.team
+      );
+      newState.gameLog = [...newState.gameLog, successCatchLogEntry];
     } else {
       // Échec de réception : la balle continue à rebondir
       newState.ball = newBallPos;
+      
+      // Log de l'échec de réception
+      const failCatchLogEntry = createLogEntry(
+        'action',
+        `Échec de réception - le ballon continue à rebondir`,
+        playerAtNewPos.id,
+        playerAtNewPos.team
+      );
+      newState.gameLog = [...newState.gameLog, failCatchLogEntry];
+      
       // Appel récursif pour continuer le rebond
       return bounceBall(newState, rng);
     }
   } else {
     // Case vide ou joueur sans Zone de Tackle : la balle s'arrête là
     newState.ball = newBallPos;
+    
+    // Log de l'arrêt du ballon
+    const stopLogEntry = createLogEntry(
+      'action',
+      `Ballon s'arrête à (${newBallPos.x}, ${newBallPos.y})`,
+      undefined,
+      undefined
+    );
+    newState.gameLog = [...newState.gameLog, stopLogEntry];
   }
   
   return newState;
@@ -396,6 +481,10 @@ export function setup(seed = "seed"): GameState {
       teamA: "Orcs de Fer",
       teamB: "Elfes Sombres",
     },
+    // Log du match
+    gameLog: [
+      createLogEntry('info', 'Match commencé - Orcs de Fer vs Elfes Sombres'),
+    ],
   };
 }
 
@@ -453,6 +542,15 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
         lastDiceResult: undefined,
       };
       
+      // Log du changement de tour
+      const turnLogEntry = createLogEntry(
+        'action',
+        `Fin du tour - ${newState.currentPlayer === "A" ? newState.teamNames.teamA : newState.teamNames.teamB} joue maintenant`,
+        undefined,
+        newState.currentPlayer
+      );
+      newState.gameLog = [...newState.gameLog, turnLogEntry];
+      
       // Le porteur de ballon garde le ballon lors du changement de tour
       return newState;
     case "MOVE": {
@@ -483,6 +581,16 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
         const next = structuredClone(state) as GameState;
         next.lastDiceResult = dodgeResult;
         
+        // Log du jet d'esquive
+        const logEntry = createLogEntry(
+          'dice',
+          `Jet d'esquive: ${dodgeResult.diceRoll}/${dodgeResult.targetNumber} ${dodgeResult.success ? '✓' : '✗'}`,
+          player.id,
+          player.team,
+          { diceRoll: dodgeResult.diceRoll, targetNumber: dodgeResult.targetNumber, success: dodgeResult.success, modifiers: dodgeModifiers }
+        );
+        next.gameLog = [...next.gameLog, logEntry];
+        
         // Le joueur se déplace toujours, que le jet d'esquive réussisse ou échoue
         next.players[idx].pos = { ...to };
         next.players[idx].pm = Math.max(0, next.players[idx].pm - 1);
@@ -502,6 +610,16 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
           const armorResult = performArmorRoll(next.players[idx], rng);
           next.lastDiceResult = armorResult;
           
+          // Log du jet d'armure
+          const armorLogEntry = createLogEntry(
+            'dice',
+            `Jet d'armure: ${armorResult.diceRoll}/${armorResult.targetNumber} ${armorResult.success ? '✓' : '✗'}`,
+            next.players[idx].id,
+            next.players[idx].team,
+            { diceRoll: armorResult.diceRoll, targetNumber: armorResult.targetNumber, success: armorResult.success }
+          );
+          next.gameLog = [...next.gameLog, armorLogEntry];
+          
           // Si le jet d'armure échoue, le joueur est blessé (pour l'instant on garde juste le résultat)
           // TODO: Implémenter la table des blessures si nécessaire
           
@@ -520,6 +638,15 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
         const next = structuredClone(state) as GameState;
         next.players[idx].pos = { ...to };
         next.players[idx].pm = Math.max(0, next.players[idx].pm - 1);
+        
+        // Log du mouvement
+        const moveLogEntry = createLogEntry(
+          'action',
+          `Mouvement vers (${to.x}, ${to.y})`,
+          player.id,
+          player.team
+        );
+        next.gameLog = [...next.gameLog, moveLogEntry];
         // Réinitialiser le résultat de dés après un mouvement normal
         next.lastDiceResult = undefined;
 
@@ -534,13 +661,42 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
           // Stocker le résultat pour l'affichage
           next.lastDiceResult = pickupResult;
           
+          // Log du jet de pickup
+          const pickupLogEntry = createLogEntry(
+            'dice',
+            `Jet de pickup: ${pickupResult.diceRoll}/${pickupResult.targetNumber} ${pickupResult.success ? '✓' : '✗'}`,
+            player.id,
+            player.team,
+            { diceRoll: pickupResult.diceRoll, targetNumber: pickupResult.targetNumber, success: pickupResult.success, modifiers: pickupModifiers }
+          );
+          next.gameLog = [...next.gameLog, pickupLogEntry];
+          
           if (pickupResult.success) {
             // Ramassage réussi : attacher la balle au joueur
             next.ball = undefined;
             next.players[idx].hasBall = true;
+            
+            // Log du ramassage réussi
+            const successLogEntry = createLogEntry(
+              'action',
+              `Ballon ramassé avec succès`,
+              player.id,
+              player.team
+            );
+            next.gameLog = [...next.gameLog, successLogEntry];
           } else {
             // Échec de pickup : la balle rebondit et turnover
             next.isTurnover = true;
+            
+            // Log du ramassage échoué
+            const failLogEntry = createLogEntry(
+              'turnover',
+              `Échec du ramassage - Turnover`,
+              player.id,
+              player.team
+            );
+            next.gameLog = [...next.gameLog, failLogEntry];
+            
             // Faire rebondir la balle
             return bounceBall(next, rng);
           }
@@ -565,6 +721,16 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       const next = structuredClone(state) as GameState;
       next.lastDiceResult = dodgeResult;
       
+      // Log du jet d'esquive
+      const dodgeLogEntry = createLogEntry(
+        'dice',
+        `Jet d'esquive: ${dodgeResult.diceRoll}/${dodgeResult.targetNumber} ${dodgeResult.success ? '✓' : '✗'}`,
+        player.id,
+        player.team,
+        { diceRoll: dodgeResult.diceRoll, targetNumber: dodgeResult.targetNumber, success: dodgeResult.success, modifiers: dodgeModifiers }
+      );
+      next.gameLog = [...next.gameLog, dodgeLogEntry];
+      
       // Le joueur se déplace toujours, que le jet d'esquive réussisse ou échoue
       next.players[idx].pos = { ...move.to };
       next.players[idx].pm = Math.max(0, next.players[idx].pm - 1);
@@ -580,9 +746,28 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
         // Le joueur chute (est mis à terre)
         next.players[idx].stunned = true;
         
+        // Log de la chute
+        const fallLogEntry = createLogEntry(
+          'action',
+          `Joueur sonné après échec d'esquive`,
+          player.id,
+          player.team
+        );
+        next.gameLog = [...next.gameLog, fallLogEntry];
+        
         // Effectuer le jet d'armure
         const armorResult = performArmorRoll(next.players[idx], rng);
         next.lastDiceResult = armorResult;
+        
+        // Log du jet d'armure
+        const armorLogEntry = createLogEntry(
+          'dice',
+          `Jet d'armure: ${armorResult.diceRoll}/${armorResult.targetNumber} ${armorResult.success ? '✓' : '✗'}`,
+          next.players[idx].id,
+          next.players[idx].team,
+          { diceRoll: armorResult.diceRoll, targetNumber: armorResult.targetNumber, success: armorResult.success }
+        );
+        next.gameLog = [...next.gameLog, armorLogEntry];
         
         // Si le jet d'armure échoue, le joueur est blessé (pour l'instant on garde juste le résultat)
         // TODO: Implémenter la table des blessures si nécessaire
@@ -591,6 +776,16 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
         if (next.players[idx].hasBall) {
           next.players[idx].hasBall = false;
           next.ball = { ...next.players[idx].pos };
+          
+          // Log de la perte de ballon
+          const ballLossLogEntry = createLogEntry(
+            'action',
+            `Ballon perdu après chute`,
+            player.id,
+            player.team
+          );
+          next.gameLog = [...next.gameLog, ballLossLogEntry];
+          
           // Faire rebondir le ballon depuis la position du joueur
           return bounceBall(next, rng);
         }
