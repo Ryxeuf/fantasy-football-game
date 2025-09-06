@@ -1114,4 +1114,143 @@ describe('Système de rebond de balle', () => {
       expect(result.ball).toBeDefined()
     })
   })
+
+  describe('Rebondissement lors d\'échec d\'esquive', () => {
+    it('devrait faire rebondir le ballon quand un joueur rate un jet d\'esquive', () => {
+      // Créer un état avec un joueur qui a le ballon
+      const playerA = state.players.find(p => p.team === 'A')
+      const playerB = state.players.find(p => p.team === 'B')
+      
+      if (!playerA || !playerB) return
+      
+      // Donner le ballon au joueur A
+      const stateWithBall = {
+        ...state,
+        players: state.players.map(p => 
+          p.id === playerA.id ? { ...p, hasBall: true } : p
+        ),
+        ball: undefined
+      }
+      
+      // Placer un adversaire adjacent pour déclencher un jet d'esquive
+      const newState = {
+        ...stateWithBall,
+        players: stateWithBall.players.map(p => 
+          p.id === playerB.id 
+            ? { ...p, pos: { x: playerA.pos.x + 1, y: playerA.pos.y } }
+            : p
+        )
+      }
+      
+      // Utiliser un RNG déterministe qui force un échec d'esquive
+      const failRng = () => 0.1 // Valeur très basse pour échouer
+      
+      // Vérifier que le mouvement est légal
+      const legalMoves = getLegalMoves(newState)
+      const legalMove = legalMoves.find(m => 
+        m.type === 'MOVE' && 
+        m.playerId === playerA.id && 
+        m.to.x === playerA.pos.x + 2 && 
+        m.to.y === playerA.pos.y
+      )
+      
+      if (!legalMove || legalMove.type !== 'MOVE') {
+        // Si le mouvement n'est pas légal, tester avec un mouvement légal
+        const anyLegalMove = legalMoves.find(m => m.type === 'MOVE' && m.playerId === playerA.id)
+        if (!anyLegalMove || anyLegalMove.type !== 'MOVE') {
+          return
+        }
+        
+        const move: Move = anyLegalMove
+        const result = applyMove(newState, move, failRng)
+        
+        // Vérifier que le joueur s'est déplacé
+        const movedPlayer = result.players.find(p => p.id === playerA.id)
+        expect(movedPlayer?.pos).toEqual(move.to)
+        
+        // Vérifier qu'un jet d'esquive a été effectué
+        expect(result.lastDiceResult).toBeDefined()
+        expect(result.lastDiceResult?.type).toBe('dodge')
+        
+        // Si le jet échoue, vérifier que le ballon rebondit
+        if (!result.lastDiceResult?.success) {
+          expect(result.isTurnover).toBe(true)
+          // Le joueur ne devrait plus avoir le ballon
+          expect(movedPlayer?.hasBall).toBe(false)
+          // Le ballon devrait rebondir
+          expect(result.ball).toBeDefined()
+        }
+        
+        return
+      }
+      
+      const move: Move = legalMove
+      const result = applyMove(newState, move, failRng)
+      
+      // Vérifier que le joueur s'est déplacé
+      const movedPlayer = result.players.find(p => p.id === playerA.id)
+      expect(movedPlayer?.pos).toEqual(move.to)
+      
+      // Vérifier qu'un jet d'esquive a été effectué
+      expect(result.lastDiceResult).toBeDefined()
+      expect(result.lastDiceResult?.type).toBe('dodge')
+      
+      // Avec notre RNG déterministe, le jet devrait échouer
+      expect(result.lastDiceResult?.success).toBe(false)
+      expect(result.isTurnover).toBe(true)
+      
+      // Le joueur ne devrait plus avoir le ballon
+      expect(movedPlayer?.hasBall).toBe(false)
+      
+      // Le ballon devrait rebondir
+      expect(result.ball).toBeDefined()
+      expect(result.ball).not.toEqual(playerA.pos) // Le ballon ne devrait pas être à la position originale
+    })
+
+    it('devrait gérer le rebondissement avec action DODGE explicite', () => {
+      // Créer un état avec un joueur qui a le ballon
+      const playerA = state.players.find(p => p.team === 'A')
+      
+      if (!playerA) return
+      
+      // Donner le ballon au joueur A
+      const stateWithBall = {
+        ...state,
+        players: state.players.map(p => 
+          p.id === playerA.id ? { ...p, hasBall: true } : p
+        ),
+        ball: undefined
+      }
+      
+      // Utiliser un RNG déterministe qui force un échec d'esquive
+      const failRng = () => 0.1 // Valeur très basse pour échouer
+      
+      const move: Move = { 
+        type: 'DODGE', 
+        playerId: playerA.id, 
+        to: { x: playerA.pos.x + 1, y: playerA.pos.y } 
+      }
+      
+      const result = applyMove(stateWithBall, move, failRng)
+      
+      // Vérifier que le joueur s'est déplacé
+      const movedPlayer = result.players.find(p => p.id === playerA.id)
+      expect(movedPlayer?.pos).toEqual(move.to)
+      
+      // Vérifier qu'un jet d'esquive a été effectué
+      expect(result.lastDiceResult).toBeDefined()
+      expect(result.lastDiceResult?.type).toBe('dodge')
+      
+      // Avec notre RNG déterministe, le jet devrait échouer
+      expect(result.lastDiceResult?.success).toBe(false)
+      expect(result.isTurnover).toBe(true)
+      
+      // Le joueur ne devrait plus avoir le ballon
+      expect(movedPlayer?.hasBall).toBe(false)
+      
+      // Le ballon devrait rebondir
+      expect(result.ball).toBeDefined()
+      expect(result.ball).not.toEqual(playerA.pos) // Le ballon ne devrait pas être à la position originale
+    })
+  })
 })

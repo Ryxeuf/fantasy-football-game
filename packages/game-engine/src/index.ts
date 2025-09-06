@@ -448,6 +448,14 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
         } else {
           // Jet échoué : turnover (mais le joueur s'est quand même déplacé)
           next.isTurnover = true;
+          
+          // Si le joueur avait le ballon, il le perd et le ballon rebondit
+          if (next.players[idx].hasBall) {
+            next.players[idx].hasBall = false;
+            next.ball = { ...next.players[idx].pos };
+            // Faire rebondir le ballon depuis la position du joueur
+            return bounceBall(next, rng);
+          }
         }
         
         return next;
@@ -512,6 +520,14 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       } else {
         // Jet échoué : turnover (mais le joueur s'est quand même déplacé)
         next.isTurnover = true;
+        
+        // Si le joueur avait le ballon, il le perd et le ballon rebondit
+        if (next.players[idx].hasBall) {
+          next.players[idx].hasBall = false;
+          next.ball = { ...next.players[idx].pos };
+          // Faire rebondir le ballon depuis la position du joueur
+          return bounceBall(next, rng);
+        }
       }
       
       return next;
