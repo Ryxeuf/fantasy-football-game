@@ -92,7 +92,8 @@ export type Move =
   | { type: "END_TURN" }
   | { type: "DODGE"; playerId: string; from: Position; to: Position }
   | { type: "BLOCK"; playerId: string; targetId: string }
-  | { type: "BLOCK_CHOOSE"; playerId: string; targetId: string; result: BlockResult };
+  | { type: "BLOCK_CHOOSE"; playerId: string; targetId: string; result: BlockResult }
+  | { type: "BLITZ"; playerId: string; to: Position; targetId: string };
 
 export type BlockResult = "PLAYER_DOWN" | "BOTH_DOWN" | "PUSH_BACK" | "STUMBLE" | "POW";
 
@@ -377,6 +378,36 @@ export function canBlock(state: GameState, playerId: string, targetId: string): 
   if (player.team === target.team) return false;
   
   return true;
+}
+
+export function canBlitz(state: GameState, attackerId: string, to: Position, targetId: string): boolean {
+  const attacker = state.players.find(p => p.id === attackerId);
+  const target = state.players.find(p => p.id === targetId);
+  
+  if (!attacker || !target) return false;
+  
+  // Vérifier que l'attaquant peut bouger (pas étourdi, a des PM)
+  if (attacker.stunned || attacker.pm <= 0) return false;
+  
+  // Vérifier que la cible n'est pas étourdie
+  if (target.stunned) return false;
+  
+  // Vérifier que les joueurs sont d'équipes différentes
+  if (attacker.team === target.team) return false;
+  
+  // Vérifier que la position de destination est valide
+  if (!inBounds(state, to)) return false;
+  
+  // Vérifier que la position de destination n'est pas occupée
+  const occupied = state.players.some(p => p.pos.x === to.x && p.pos.y === to.y);
+  if (occupied) return false;
+  
+  // Vérifier que le joueur a assez de PM pour le mouvement + le blocage (coûte 1 PM supplémentaire)
+  const distance = Math.abs(attacker.pos.x - to.x) + Math.abs(attacker.pos.y - to.y);
+  if (attacker.pm < distance + 1) return false; // +1 pour le coût du blocage
+  
+  // Vérifier que la cible sera adjacente après le mouvement
+  return isAdjacent(to, target.pos);
 }
 
 export function calculateOffensiveAssists(state: GameState, attacker: Player, target: Player): number {
@@ -1280,6 +1311,23 @@ export function getLegalMoves(state: GameState): Move[] {
         moves.push({ type: "BLOCK", playerId: p.id, targetId: opponent.id });
       }
     }
+    
+    // Actions de blitz (mouvement + blocage)
+    // Pour chaque direction de mouvement possible
+    for (const d of dirs) {
+      const to = { x: p.pos.x + d.x, y: p.pos.y + d.y };
+      if (!inBounds(state, to)) continue;
+      if (occ.has(`${to.x},${to.y}`)) continue; // pas de chevauchement
+      
+      // Vérifier si on peut faire un blitz vers cette position
+      // Chercher tous les adversaires qui seraient adjacents après le mouvement
+      const allOpponents = state.players.filter(opp => opp.team !== p.team && !opp.stunned);
+      for (const opponent of allOpponents) {
+        if (canBlitz(state, p.id, to, opponent.id)) {
+          moves.push({ type: "BLITZ", playerId: p.id, to, targetId: opponent.id });
+        }
+      }
+    }
   }
   return moves;
 }
@@ -1605,22 +1653,79 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       const targetStrength = target.st + defensiveAssists;
       const diceCount = calculateBlockDiceCount(attackerStrength, targetStrength);
       const chooser = getBlockDiceChooser(attackerStrength, targetStrength);
+      
 
-      // Tirer les dés et enregistrer un choix en attente
-      const options = rollBlockDiceMany(rng, diceCount);
-      return {
-        ...state,
-        pendingBlock: {
-          attackerId: attacker.id,
+      // Enregistrer l'action de blocage
+      let newState = setPlayerAction(state, attacker.id, "BLOCK");
+      
+      // Si un seul dé, résoudre immédiatement
+      if (diceCount === 1) {
+        const blockResult = rollBlockDice(rng);
+        const blockDiceResult: BlockDiceResult = {
+          type: "block",
+          playerId: attacker.id,
           targetId: target.id,
-          options,
-          chooser,
+          diceRoll: blockResult.diceRoll,
+          result: blockResult.result,
           offensiveAssists,
           defensiveAssists,
           totalStrength: attackerStrength,
           targetStrength
-        }
-      };
+        };
+        
+        // Log du résultat de blocage
+        const blockLogEntry = createLogEntry(
+          'dice',
+          `Blocage: ${blockResult.diceRoll} → ${blockResult.result}`,
+          attacker.id,
+          attacker.team,
+          { diceRoll: blockResult.diceRoll, result: blockResult.result, offensiveAssists, defensiveAssists }
+        );
+        newState.gameLog = [...newState.gameLog, blockLogEntry];
+        newState.lastDiceResult = blockDiceResult;
+        
+        return resolveBlockResult(newState, blockDiceResult, rng);
+      } else {
+        // Plusieurs dés : enregistrer un choix en attente
+        const options = rollBlockDiceMany(rng, diceCount);
+        
+        // Log des dés lancés
+        const blockLogEntry = createLogEntry(
+          'dice',
+          `Blocage: ${options.map(o => o.diceRoll).join(', ')} (${diceCount} dés)`,
+          attacker.id,
+          attacker.team,
+          { diceRolls: options.map(o => o.diceRoll), diceCount, offensiveAssists, defensiveAssists }
+        );
+        newState.gameLog = [...newState.gameLog, blockLogEntry];
+        
+        // Définir lastDiceResult avec le premier dé pour l'interface
+        newState.lastDiceResult = {
+          type: "block",
+          playerId: attacker.id,
+          targetId: target.id,
+          diceRoll: options[0].diceRoll,
+          result: options[0].result,
+          offensiveAssists,
+          defensiveAssists,
+          totalStrength: attackerStrength,
+          targetStrength
+        };
+        
+        return {
+          ...newState,
+          pendingBlock: {
+            attackerId: attacker.id,
+            targetId: target.id,
+            options,
+            chooser,
+            offensiveAssists,
+            defensiveAssists,
+            totalStrength: attackerStrength,
+            targetStrength
+          }
+        };
+      }
     }
     case "BLOCK_CHOOSE": {
       const attacker = state.players.find(p => p.id === move.playerId);
@@ -1644,7 +1749,12 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       };
 
       let newState = resolveBlockResult({ ...state, pendingBlock: undefined }, blockResult, rng);
-      newState = setPlayerAction(newState, attacker.id, "BLOCK");
+      
+      // Déterminer si c'était un blitz ou un blocage normal
+      // Si le joueur a déjà l'action BLITZ enregistrée, c'est un blitz
+      // Sinon, c'est un blocage normal
+      const isBlitz = hasPlayerActed(state, attacker.id) && getPlayerAction(state, attacker.id) === "BLITZ";
+      newState = setPlayerAction(newState, attacker.id, isBlitz ? "BLITZ" : "BLOCK");
       // lastDiceResult est déjà renseigné par resolveBlockResult pour l'armure; on peut aussi logguer le block
       newState.lastDiceResult = {
         type: "block",
@@ -1655,6 +1765,181 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
         modifiers: 0,
       };
       return newState;
+    }
+    case "BLITZ": {
+      const attacker = state.players.find(p => p.id === move.playerId);
+      const target = state.players.find(p => p.id === move.targetId);
+      
+      if (!attacker || !target) return state;
+      
+      // Vérifier que le blitz est légal
+      if (!canBlitz(state, move.playerId, move.to, move.targetId)) return state;
+      
+      // Gérer le changement de joueur
+      let newState = handlePlayerSwitch(state, move.playerId);
+      
+      // 1. Effectuer le mouvement
+      const from = attacker.pos;
+      const to = move.to;
+      
+      // Vérifier si un jet d'esquive est nécessaire pour le mouvement
+      const needsDodge = requiresDodgeRoll(newState, from, to, attacker.team);
+      
+      if (needsDodge) {
+        // Calculer les modificateurs de désquive
+        const dodgeModifiers = calculateDodgeModifiers(newState, from, to, attacker.team);
+        
+        // Effectuer le jet d'esquive
+        const dodgeResult = performDodgeRoll(attacker, rng, dodgeModifiers);
+        
+        newState.lastDiceResult = dodgeResult;
+        
+        // Log du jet d'esquive
+        const dodgeLogEntry = createLogEntry(
+          'dice',
+          `Jet d'esquive (Blitz): ${dodgeResult.diceRoll}/${dodgeResult.targetNumber} ${dodgeResult.success ? '✓' : '✗'}`,
+          attacker.id,
+          attacker.team,
+          { diceRoll: dodgeResult.diceRoll, targetNumber: dodgeResult.targetNumber, success: dodgeResult.success, modifiers: dodgeModifiers }
+        );
+        newState.gameLog = [...newState.gameLog, dodgeLogEntry];
+        
+        // Le joueur se déplace toujours, que le jet d'esquive réussisse ou échoue
+        const attackerIdx = newState.players.findIndex(p => p.id === attacker.id);
+        newState.players[attackerIdx].pos = { ...to };
+        
+        // Calculer le coût en PM : distance + 1 pour le blocage
+        const distance = Math.abs(from.x - to.x) + Math.abs(from.y - to.y);
+        newState.players[attackerIdx].pm = Math.max(0, newState.players[attackerIdx].pm - distance - 1);
+        
+        if (dodgeResult.success) {
+          // Si le joueur porte la balle et atteint l'en-but adverse -> touchdown
+          const mover = newState.players[attackerIdx];
+          if (mover.hasBall && isInOpponentEndzone(newState, mover)) {
+            return awardTouchdown(newState, mover.team, mover);
+          }
+        } else {
+          // Jet d'esquive échoué : le joueur chute et doit faire un jet d'armure
+          newState.isTurnover = true;
+          
+          // Vérifier si le joueur avait le ballon AVANT de le mettre à terre
+          const hadBall = newState.players[attackerIdx].hasBall;
+          
+          // Le joueur chute (est mis à terre)
+          newState.players[attackerIdx].stunned = true;
+          
+          // Effectuer le jet d'armure
+          const armorResult = performArmorRoll(newState.players[attackerIdx], rng);
+          newState.lastDiceResult = armorResult;
+          
+          // Log du jet d'armure
+          const armorLogEntry = createLogEntry(
+            'dice',
+            `Jet d'armure (Blitz échoué): ${armorResult.diceRoll}/${armorResult.targetNumber} ${armorResult.success ? '✓' : '✗'}`,
+            newState.players[attackerIdx].id,
+            newState.players[attackerIdx].team,
+            { diceRoll: armorResult.diceRoll, targetNumber: armorResult.targetNumber, success: armorResult.success }
+          );
+          newState.gameLog = [...newState.gameLog, armorLogEntry];
+          
+          // Si le joueur avait le ballon, il le perd et le ballon rebondit
+          // (même si l'armure n'est pas percée, le joueur chute et perd le ballon)
+          if (hadBall) {
+            newState.players[attackerIdx].hasBall = false;
+            newState.ball = { ...newState.players[attackerIdx].pos };
+            
+            // Log de la perte de ballon
+            const ballLossLogEntry = createLogEntry(
+              'action',
+              `Ballon perdu après échec de blitz`,
+              attacker.id,
+              attacker.team
+            );
+            newState.gameLog = [...newState.gameLog, ballLossLogEntry];
+            
+            // Faire rebondir le ballon depuis la position du joueur
+            return bounceBall(newState, rng);
+          }
+          
+          // Enregistrer l'action de blitz et terminer le tour
+          newState = setPlayerAction(newState, attacker.id, "BLITZ");
+          newState = checkPlayerTurnEnd(newState, attacker.id);
+          return newState;
+        }
+      } else {
+        // Pas de jet d'esquive nécessaire, déplacer directement
+        const attackerIdx = newState.players.findIndex(p => p.id === attacker.id);
+        newState.players[attackerIdx].pos = { ...to };
+        
+        // Calculer le coût en PM : distance + 1 pour le blocage
+        const distance = Math.abs(from.x - to.x) + Math.abs(from.y - to.y);
+        newState.players[attackerIdx].pm = Math.max(0, newState.players[attackerIdx].pm - distance - 1);
+        
+        // Si le joueur porte la balle et atteint l'en-but adverse -> touchdown
+        const mover = newState.players[attackerIdx];
+        if (mover.hasBall && isInOpponentEndzone(newState, mover)) {
+          return awardTouchdown(newState, mover.team, mover);
+        }
+      }
+      
+      // 2. Effectuer le blocage après le mouvement
+      const updatedAttacker = newState.players.find(p => p.id === attacker.id);
+      const updatedTarget = newState.players.find(p => p.id === target.id);
+      
+      if (!updatedAttacker || !updatedTarget) return newState;
+      
+      // Vérifier que le blocage est toujours possible après le mouvement
+      if (!canBlock(newState, updatedAttacker.id, updatedTarget.id)) {
+        // Si le blocage n'est plus possible, enregistrer l'action et terminer
+        newState = setPlayerAction(newState, attacker.id, "BLITZ");
+        newState = checkPlayerTurnEnd(newState, attacker.id);
+        return newState;
+      }
+      
+      // Calculer les assists
+      const offensiveAssists = calculateOffensiveAssists(newState, updatedAttacker, updatedTarget);
+      const defensiveAssists = calculateDefensiveAssists(newState, updatedAttacker, updatedTarget);
+      
+      // Nombre de dés et qui choisit
+      const attackerStrength = updatedAttacker.st + offensiveAssists;
+      const targetStrength = updatedTarget.st + defensiveAssists;
+      const diceCount = calculateBlockDiceCount(attackerStrength, targetStrength);
+      const chooser = getBlockDiceChooser(attackerStrength, targetStrength);
+
+      // Tirer les dés et enregistrer un choix en attente
+      const options = rollBlockDiceMany(rng, diceCount);
+      
+      // Log de l'action de blitz
+      const blitzLogEntry = createLogEntry(
+        'action',
+        `Blitz: mouvement vers (${to.x}, ${to.y}) puis blocage de ${updatedTarget.name}`,
+        attacker.id,
+        attacker.team
+      );
+      newState.gameLog = [...newState.gameLog, blitzLogEntry];
+      
+      // Enregistrer l'action de blitz AVANT de créer le pendingBlock
+      newState = setPlayerAction(newState, attacker.id, "BLITZ");
+      
+      // Vérifier si le joueur porte la balle et est dans l'en-but adverse après le mouvement
+      const mover = newState.players.find(p => p.id === attacker.id);
+      if (mover && mover.hasBall && isInOpponentEndzone(newState, mover)) {
+        return awardTouchdown(newState, mover.team, mover);
+      }
+      
+      return {
+        ...newState,
+        pendingBlock: {
+          attackerId: updatedAttacker.id,
+          targetId: updatedTarget.id,
+          options,
+          chooser,
+          offensiveAssists,
+          defensiveAssists,
+          totalStrength: attackerStrength,
+          targetStrength
+        }
+      };
     }
     default:
       return checkTouchdowns(state);
