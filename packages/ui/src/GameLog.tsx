@@ -35,7 +35,7 @@ export default function GameLog({ logEntries, maxEntries = 50 }: GameLogProps) {
       case 'turnover':
         return 'text-red-600 bg-red-50 border-red-200';
       case 'score':
-        return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+        return 'text-yellow-700 bg-yellow-50 border-yellow-300';
       case 'info':
         return 'text-gray-600 bg-gray-50 border-gray-200';
       default:
@@ -50,6 +50,12 @@ export default function GameLog({ logEntries, maxEntries = 50 }: GameLogProps) {
       minute: '2-digit', 
       second: '2-digit' 
     });
+  };
+
+  const isRecent = (entry: GameLogEntry) => {
+    if (entry.type !== 'score') return false;
+    const now = Date.now();
+    return now - entry.timestamp < 2500;
   };
 
   return (
@@ -74,7 +80,7 @@ export default function GameLog({ logEntries, maxEntries = 50 }: GameLogProps) {
           displayEntries.map((entry) => (
             <div
               key={entry.id}
-              className={`flex items-start space-x-3 p-3 rounded-lg border ${getEntryColor(entry.type)}`}
+              className={`flex items-start space-x-3 p-3 rounded-lg border ${getEntryColor(entry.type)} ${isRecent(entry) ? 'ring-2 ring-yellow-400 animate-pulse' : ''}`}
             >
               {/* Icône */}
               <div className="flex-shrink-0 text-lg">
@@ -84,7 +90,7 @@ export default function GameLog({ logEntries, maxEntries = 50 }: GameLogProps) {
               {/* Contenu */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className={`text-sm font-medium ${entry.type === 'score' ? 'text-yellow-900 font-bold' : 'text-gray-900'}`}>
                     {entry.message}
                   </p>
                   <span className="text-xs text-gray-500 ml-2">
@@ -101,12 +107,17 @@ export default function GameLog({ logEntries, maxEntries = 50 }: GameLogProps) {
                 
                 {entry.details && (
                   <div className="mt-1 text-xs text-gray-500">
-                    {entry.type === 'dice' && entry.details.diceRoll && (
+                    {entry.type === 'dice' && (entry as any).details?.diceRoll && (
                       <span>
-                        Détails: {entry.details.diceRoll} sur {entry.details.targetNumber}
-                        {entry.details.modifiers && entry.details.modifiers !== 0 && (
-                          <span> (mod: {entry.details.modifiers > 0 ? '+' : ''}{entry.details.modifiers})</span>
+                        Détails: {(entry as any).details.diceRoll} sur {(entry as any).details.targetNumber}
+                        {(entry as any).details.modifiers && (entry as any).details.modifiers !== 0 && (
+                          <span> (mod: {(entry as any).details.modifiers > 0 ? '+' : ''}{(entry as any).details.modifiers})</span>
                         )}
+                      </span>
+                    )}
+                    {entry.type === 'score' && (entry as any).details?.score && (
+                      <span className="block mt-1 text-yellow-800">
+                        Score: {(entry as any).details.score.teamA} - {(entry as any).details.score.teamB}
                       </span>
                     )}
                   </div>

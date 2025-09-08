@@ -1,5 +1,5 @@
-import React from "react";
-import type { GameState } from "@bb/game-engine";
+import React, { useMemo, useEffect, useState } from "react";
+import type { GameState, GameLogEntry } from "@bb/game-engine";
 
 interface GameScoreboardProps {
   state: GameState;
@@ -23,8 +23,30 @@ export default function GameScoreboard({ state, onEndTurn }: GameScoreboardProps
     return state.currentPlayer === "A" ? "red" : "blue";
   };
 
+  // Déterminer la dernière entrée de score
+  const lastScore = useMemo(() => {
+    const entries = [...state.gameLog].reverse();
+    return entries.find(e => e.type === 'score');
+  }, [state.gameLog]);
+
+  // Afficher l'animation pendant 2.5s après un score
+  const [showScoreAnim, setShowScoreAnim] = useState(false);
+  useEffect(() => {
+    if (!lastScore) return;
+    setShowScoreAnim(true);
+    const t = setTimeout(() => setShowScoreAnim(false), 2500);
+    return () => clearTimeout(t);
+  }, [lastScore?.id]);
+
   return (
     <div className="fixed top-0 left-0 right-0 z-50 w-full bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white shadow-2xl">
+      {/* Bannière Touchdown */}
+      {showScoreAnim && (
+        <div className="w-full bg-yellow-400 text-yellow-900 font-black text-center uppercase tracking-widest py-2 animate-bounce">
+          Touchdown !
+        </div>
+      )}
+
       {/* Barre principale du scoreboard */}
       <div className="flex items-center justify-between px-6 py-4">
         {/* Informations de jeu à gauche */}
@@ -67,7 +89,7 @@ export default function GameScoreboard({ state, onEndTurn }: GameScoreboardProps
             <div className="text-sm text-gray-300 mb-1">
               {state.teamNames.teamA}
             </div>
-            <div className={`text-4xl font-black ${getTeamTextColor("A")}`}>
+            <div className={`text-4xl font-black ${getTeamTextColor("A")} ${showScoreAnim ? 'animate-ping' : ''}`}>
               {state.score.teamA}
             </div>
           </div>
@@ -82,7 +104,7 @@ export default function GameScoreboard({ state, onEndTurn }: GameScoreboardProps
             <div className="text-sm text-gray-300 mb-1">
               {state.teamNames.teamB}
             </div>
-            <div className={`text-4xl font-black ${getTeamTextColor("B")}`}>
+            <div className={`text-4xl font-black ${getTeamTextColor("B")} ${showScoreAnim ? 'animate-ping' : ''}`}>
               {state.score.teamB}
             </div>
           </div>

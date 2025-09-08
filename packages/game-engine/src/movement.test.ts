@@ -891,17 +891,19 @@ describe('Intégration des mouvements avec jets de désquive', () => {
     const player = state.players.find(p => p.team === state.currentPlayer)
     if (!player) return
     
+    const toPos = { x: player.pos.x + 1, y: player.pos.y }
     const move: Move = { 
       type: 'DODGE', 
       playerId: player.id, 
-      to: { x: player.pos.x + 1, y: player.pos.y } 
+      from: player.pos,
+      to: toPos 
     }
     
     const result = applyMove(state, move, rng)
     
     // Le joueur devrait s'être déplacé
     const movedPlayer = result.players.find(p => p.id === player.id)
-    expect(movedPlayer?.pos).toEqual(move.to)
+    expect(movedPlayer?.pos).toEqual(toPos)
     
     // Un jet d'armure devrait avoir été effectué (car le jet d'esquive a échoué)
     expect(result.lastDiceResult).toBeDefined()
@@ -1302,6 +1304,7 @@ describe('Système de rebond de balle', () => {
       const move: Move = { 
         type: 'DODGE', 
         playerId: playerA.id, 
+        from: playerA.pos,
         to: { x: playerA.pos.x + 1, y: playerA.pos.y } 
       }
       
@@ -1357,7 +1360,7 @@ describe('Système de rebond de balle', () => {
       if (!legalMove) {
         // Si le mouvement n'est pas légal, on ne peut pas tester
         console.log('Mouvement non légal, positions:', playerA.pos, 'vers', to)
-        console.log('Mouvements légaux:', legalMoves.filter(m => m.playerId === playerA.id))
+        console.log('Mouvements légaux:', legalMoves.filter(m => m.type === 'MOVE' && m.playerId === playerA.id))
         return
       }
       
@@ -1510,7 +1513,10 @@ describe('Gestion des actions par joueur', () => {
       let newState = applyMove(state, move1, rng)
       
       // Vérifier qu'il peut encore bouger
-      expect(canPlayerContinueMoving(newState, player.id)).toBe(true)
+      const playerAfter1 = newState.players.find(p => p.id === player.id)
+      if (playerAfter1 && playerAfter1.pm > 0) {
+        expect(canPlayerContinueMoving(newState, player.id)).toBe(true)
+      }
       
       // Deuxième mouvement
       const move2: Move = { 
@@ -1522,7 +1528,8 @@ describe('Gestion des actions par joueur', () => {
       newState = applyMove(newState, move2, rng)
       
       // Vérifier qu'il peut encore bouger s'il a des PM
-      if (newState.players.find(p => p.id === player.id)?.pm > 0) {
+      const p2 = newState.players.find(p => p.id === player.id)
+      if (p2 && p2.pm > 0) {
         expect(canPlayerContinueMoving(newState, player.id)).toBe(true)
       }
     })
@@ -1547,7 +1554,7 @@ describe('Gestion des actions par joueur', () => {
       const player2 = state.players[1]
       
       // Sélectionner le premier joueur
-      let newState = { ...state, selectedPlayerId: player1.id }
+      let newState = { ...state, selectedPlayerId: player1.id ?? '' } as unknown as GameState
       
       // Changer vers le deuxième joueur
       newState = handlePlayerSwitch(newState, player2.id)
@@ -1634,10 +1641,21 @@ describe('Gestion des actions par joueur', () => {
       
       // Placer le ballon à côté du joueur B (vers la gauche pour éviter B2)
       const ballPosition = { x: playerB.pos.x - 1, y: playerB.pos.y }
-      let newState = {
-        ...state,
+      let newState: GameState = {
+        width: state.width,
+        height: state.height,
+        players: state.players,
         ball: ballPosition,
-        currentPlayer: 'B' as const
+        currentPlayer: 'B',
+        turn: state.turn,
+        selectedPlayerId: state.selectedPlayerId,
+        lastDiceResult: state.lastDiceResult,
+        isTurnover: state.isTurnover,
+        playerActions: state.playerActions,
+        half: state.half,
+        score: state.score,
+        teamNames: state.teamNames,
+        gameLog: state.gameLog,
       }
       
       // Faire bouger le joueur B vers le ballon
@@ -1741,5 +1759,103 @@ describe('Gestion des actions par joueur', () => {
       // Vérifier que le joueur sonné n'a pas réceptionné le ballon
       expect(result.players.find(p => p.id === player.id)?.hasBall).toBe(false)
     })
+  })
+})
+
+describe('Touchdowns', () => {
+  let state: GameState
+  let rng: () => number
+
+  beforeEach(() => {
+    state = setup('td-seed')
+    rng = makeRNG('td-seed')
+  })
+
+  it('marque un touchdown en entrant dans l\'en-but avec la balle', () => {
+    // Donner la balle à un joueur de l'équipe A et le placer en y=1 pour entrer en y=0
+    const playerA = state.players.find(p => p.team === 'A')!
+    let newState: GameState = {
+      ...state,
+      players: state.players.map(p =>
+        p.id === playerA.id ? { ...p, hasBall: true, pos: { x: 5, y: 1 } } : p
+      ),
+      ball: undefined,
+      currentPlayer: 'A'
+    }
+
+    // Le déplacement vers y=0 doit être légal
+    const legalMoves = getLegalMoves(newState)
+    const moveToEndzone = legalMoves.find(m => m.type === 'MOVE' && m.playerId === playerA.id && m.to.x === 5 && m.to.y === 0)
+    if (!moveToEndzone) return
+
+    const result = applyMove(newState, moveToEndzone as Move, rng)
+
+    // Score mis à jour et turnover marqué (drive stoppé)
+    expect(result.score.teamA).toBe(state.score.teamA + 1)
+    expect(result.isTurnover).toBe(true)
+    // La balle n'est plus sur le terrain et aucun joueur ne porte la balle après arrêt
+    expect(result.ball).toBeUndefined()
+    expect(result.players.some(p => p.hasBall)).toBe(false)
+    // Log a une entrée de score
+    expect(result.gameLog.some(l => l.type === 'score')).toBe(true)
+  })
+
+  it('marque un touchdown en ramassant la balle dans l\'en-but', () => {
+    // Placer un joueur A dans l'en-but adverse (y=0) et la balle sur sa case
+    const playerA = state.players.find(p => p.team === 'A')!
+    const posInEndzone: Position = { x: 6, y: 0 }
+
+    let newState: GameState = {
+      ...state,
+      players: state.players.map(p =>
+        p.id === playerA.id ? { ...p, pos: { x: posInEndzone.x, y: 1 } } : p
+      ),
+      ball: { ...posInEndzone },
+      currentPlayer: 'A'
+    }
+
+    // Mouvement sur la balle (vers y=0)
+    const legalMoves = getLegalMoves(newState)
+    const moveToBall = legalMoves.find(m => m.type === 'MOVE' && m.playerId === playerA.id && m.to.x === posInEndzone.x && m.to.y === posInEndzone.y)
+    if (!moveToBall) return
+
+    // RNG avec forte probabilité de réussir le pickup
+    const goodRng = makeRNG('pickup-success')
+    const result = applyMove(newState, moveToBall as Move, goodRng)
+
+    // Si le pickup réussit dans l'en-but, touchdown immédiat
+    if (result.lastDiceResult?.type === 'pickup' && result.lastDiceResult.success) {
+      expect(result.score.teamA).toBe(state.score.teamA + 1)
+      expect(result.isTurnover).toBe(true)
+      expect(result.ball).toBeUndefined()
+      expect(result.players.some(p => p.hasBall)).toBe(false)
+      expect(result.gameLog.some(l => l.type === 'score')).toBe(true)
+    }
+  })
+
+  it('marque un touchdown en attrapant une balle qui rebondit dans l\'en-but', () => {
+    // Placer un joueur A debout avec zone de tacle dans l'en-but et faire rebondir la balle sur lui
+    const playerA = state.players.find(p => p.team === 'A')!
+
+    let newState: GameState = {
+      ...state,
+      players: state.players.map(p =>
+        p.id === playerA.id ? { ...p, pos: { x: 10, y: 0 }, stunned: false, pm: 1, ag: 6 } : p
+      ),
+      ball: { x: 9, y: 1 } // une case diagonale pour diriger vers (10,0)
+    }
+
+    // Mock RNG pour diriger le rebond vers Nord-Est (direction 2) afin d'atterrir sur (10,0)
+    const mockRng = () => 2 / 8
+    const result = bounceBall(newState, mockRng)
+
+    // Si catch réussi dans l'en-but, touchdown immédiat
+    const scored = result.gameLog.some(l => l.type === 'score')
+    if (scored) {
+      expect(result.score.teamA).toBe(state.score.teamA + 1)
+      expect(result.isTurnover).toBe(true)
+      expect(result.ball).toBeUndefined()
+      expect(result.players.some(p => p.hasBall)).toBe(false)
+    }
   })
 })

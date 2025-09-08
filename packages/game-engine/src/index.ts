@@ -135,6 +135,45 @@ export function addLogEntry(state: GameState, entry: GameLogEntry): GameState {
   };
 }
 
+// --- Touchdown & En-but ---
+function isInOpponentEndzone(state: GameState, player: Player): boolean {
+  // Hypothèse d'orientation du terrain (26x15) :
+  // L'équipe A marque dans la ligne d'en-but du haut (y = 0)
+  // L'équipe B marque dans la ligne d'en-but du bas (y = state.height - 1)
+  const endzoneY = player.team === "A" ? 0 : state.height - 1;
+  return player.pos.y === endzoneY;
+}
+
+function awardTouchdown(state: GameState, scoringTeam: TeamId, scorer?: Player): GameState {
+  let next = structuredClone(state) as GameState;
+
+  // Mettre à jour le score
+  const newScore = {
+    teamA: scoringTeam === "A" ? next.score.teamA + 1 : next.score.teamA,
+    teamB: scoringTeam === "B" ? next.score.teamB + 1 : next.score.teamB,
+  };
+
+  // Nettoyer la balle et arrêter le drive (Turnover satisfaisant)
+  next.ball = undefined;
+  next.players = next.players.map((p) => ({ ...p, hasBall: false }));
+  next.isTurnover = true;
+
+  // Log du score
+  const teamName = scoringTeam === "A" ? next.teamNames.teamA : next.teamNames.teamB;
+  const message = `Touchdown pour ${teamName} !`;
+  const logEntry = createLogEntry('score', message, scorer?.id, scoringTeam, {
+    scorer: scorer?.name,
+    score: newScore,
+  });
+
+  next = addLogEntry(next, logEntry);
+
+  return {
+    ...next,
+    score: newScore,
+  };
+}
+
 // --- Système de jets de dés ---
 export function rollD6(rng: RNG): number {
   return Math.floor(rng() * 6) + 1;
@@ -345,6 +384,12 @@ export function bounceBall(state: GameState, rng: RNG): GameState {
         playerAtNewPos.team
       );
       newState.gameLog = [...newState.gameLog, successCatchLogEntry];
+
+      // Si réception dans l'en-but adverse, touchdown immédiat
+      const scorer = newState.players.find(p => p.id === playerAtNewPos.id)!;
+      if (isInOpponentEndzone(newState, scorer)) {
+        return awardTouchdown(newState, scorer.team, scorer);
+      }
     } else {
       // Échec de réception : la balle continue à rebondir
       newState.ball = newBallPos;
@@ -740,9 +785,11 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
         next = checkPlayerTurnEnd(next, player.id);
         
         if (dodgeResult.success) {
-          // Jet réussi : mouvement autorisé
-          // Garder le résultat de dés pour l'affichage de la popup
-          // Il sera réinitialisé quand l'utilisateur fermera la popup
+          // Si le joueur porte la balle et atteint l'en-but adverse -> touchdown
+          const mover = next.players[idx];
+          if (mover.hasBall && isInOpponentEndzone(next, mover)) {
+            return awardTouchdown(next, mover.team, mover);
+          }
         } else {
           // Jet d'esquive échoué : le joueur chute et doit faire un jet d'armure
           next.isTurnover = true;
@@ -763,9 +810,6 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
             { diceRoll: armorResult.diceRoll, targetNumber: armorResult.targetNumber, success: armorResult.success }
           );
           next.gameLog = [...next.gameLog, armorLogEntry];
-          
-          // Si le jet d'armure échoue, le joueur est blessé (pour l'instant on garde juste le résultat)
-          // TODO: Implémenter la table des blessures si nécessaire
           
           // Si le joueur avait le ballon, il le perd et le ballon rebondit
           if (next.players[idx].hasBall) {
@@ -802,6 +846,12 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
         // Réinitialiser le résultat de dés après un mouvement normal
         next.lastDiceResult = undefined;
 
+        // Si le joueur porte la balle et atteint l'en-but adverse -> touchdown
+        const mover = next.players[idx];
+        if (mover.hasBall && isInOpponentEndzone(next, mover)) {
+          return awardTouchdown(next, mover.team, mover);
+        }
+
         // Ramassage de balle avec jet d'agilité
         if (next.ball && samePos(next.ball, to)) {
           // Calculer les modificateurs de pickup (malus pour adversaires marquant la balle)
@@ -836,6 +886,12 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
               player.team
             );
             next.gameLog = [...next.gameLog, successLogEntry];
+
+            // Si pickup dans l'en-but adverse, touchdown immédiat
+            const picker = next.players[idx];
+            if (isInOpponentEndzone(next, picker)) {
+              return awardTouchdown(next, picker.team, picker);
+            }
           } else {
             // Échec de pickup : la balle rebondit et turnover
             next.isTurnover = true;
@@ -888,9 +944,11 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       next.players[idx].pm = Math.max(0, next.players[idx].pm - 1);
       
       if (dodgeResult.success) {
-        // Jet réussi : mouvement autorisé
-        // Garder le résultat de dés pour l'affichage de la popup
-        // Il sera réinitialisé quand l'utilisateur fermera la popup
+        // Si le joueur porte la balle et atteint l'en-but adverse -> touchdown
+        const mover = next.players[idx];
+        if (mover.hasBall && isInOpponentEndzone(next, mover)) {
+          return awardTouchdown(next, mover.team, mover);
+        }
       } else {
         // Jet d'esquive échoué : le joueur chute et doit faire un jet d'armure
         next.isTurnover = true;
@@ -920,9 +978,6 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
           { diceRoll: armorResult.diceRoll, targetNumber: armorResult.targetNumber, success: armorResult.success }
         );
         next.gameLog = [...next.gameLog, armorLogEntry];
-        
-        // Si le jet d'armure échoue, le joueur est blessé (pour l'instant on garde juste le résultat)
-        // TODO: Implémenter la table des blessures si nécessaire
         
         // Si le joueur avait le ballon, il le perd et le ballon rebondit
         if (next.players[idx].hasBall) {
