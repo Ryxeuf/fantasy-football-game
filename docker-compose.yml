@@ -28,11 +28,11 @@ services:
       context: .
       dockerfile: Dockerfile.server
     ports:
-      - "8000:8000"
+      - "8202:8202"
       - "8201:8201"
     environment:
       - NODE_ENV=development
-      - PORT=8000
+      - PORT=8202
       - API_PORT=8201
     volumes:
       - .:/app

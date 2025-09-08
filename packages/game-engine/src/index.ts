@@ -49,6 +49,17 @@ export interface GameState {
   selectedPlayerId: string | null;
   lastDiceResult?: DiceResult;
   isTurnover: boolean;
+  // Choix de blocage en attente (règles officielles 1/2/3 dés)
+  pendingBlock?: {
+    attackerId: string;
+    targetId: string;
+    options: BlockResult[]; // résultats tirés
+    chooser: "attacker" | "defender"; // qui choisit
+    offensiveAssists: number;
+    defensiveAssists: number;
+    totalStrength: number;
+    targetStrength: number;
+  };
   // Suivi des actions par joueur par tour
   playerActions: Map<string, ActionType>; // playerId -> action effectuée ce tour
   // Informations de match
@@ -80,7 +91,8 @@ export type Move =
   | { type: "MOVE"; playerId: string; to: Position }
   | { type: "END_TURN" }
   | { type: "DODGE"; playerId: string; from: Position; to: Position }
-  | { type: "BLOCK"; playerId: string; targetId: string };
+  | { type: "BLOCK"; playerId: string; targetId: string }
+  | { type: "BLOCK_CHOOSE"; playerId: string; targetId: string; result: BlockResult };
 
 export type BlockResult = "PLAYER_DOWN" | "BOTH_DOWN" | "PUSH_BACK" | "STUMBLE" | "POW";
 
@@ -455,6 +467,14 @@ export function rollBlockDice(rng: RNG): BlockResult {
     case 5: return "POW";
     default: return "PUSH_BACK"; // Ne devrait jamais arriver
   }
+}
+
+export function rollBlockDiceMany(rng: RNG, count: number): BlockResult[] {
+  const results: BlockResult[] = [];
+  for (let i = 0; i < count; i++) {
+    results.push(rollBlockDice(rng));
+  }
+  return results;
 }
 
 export function performBlockRoll(
@@ -1580,25 +1600,60 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       const offensiveAssists = calculateOffensiveAssists(state, attacker, target);
       const defensiveAssists = calculateDefensiveAssists(state, attacker, target);
       
-      // Effectuer le jet de blocage
-      const blockResult = performBlockRoll(attacker, target, rng, offensiveAssists, defensiveAssists);
-      
-      // Résoudre le résultat
-      let newState = resolveBlockResult(state, blockResult, rng);
-      
-      // Marquer le joueur comme ayant effectué une action
+      // Nombre de dés et qui choisit
+      const attackerStrength = attacker.st + offensiveAssists;
+      const targetStrength = target.st + defensiveAssists;
+      const diceCount = calculateBlockDiceCount(attackerStrength, targetStrength);
+      const chooser = getBlockDiceChooser(attackerStrength, targetStrength);
+
+      // Tirer les dés et enregistrer un choix en attente
+      const options = rollBlockDiceMany(rng, diceCount);
+      return {
+        ...state,
+        pendingBlock: {
+          attackerId: attacker.id,
+          targetId: target.id,
+          options,
+          chooser,
+          offensiveAssists,
+          defensiveAssists,
+          totalStrength: attackerStrength,
+          targetStrength
+        }
+      };
+    }
+    case "BLOCK_CHOOSE": {
+      const attacker = state.players.find(p => p.id === move.playerId);
+      const target = state.players.find(p => p.id === move.targetId);
+      if (!attacker || !target) return state;
+      if (!state.pendingBlock || state.pendingBlock.attackerId !== attacker.id || state.pendingBlock.targetId !== target.id) {
+        return state; // pas de choix attendu
+      }
+
+      // Construire un résultat complet à partir du choix
+      const blockResult: BlockDiceResult = {
+        type: "block",
+        playerId: attacker.id,
+        targetId: target.id,
+        diceRoll: 0,
+        result: move.result,
+        offensiveAssists: state.pendingBlock.offensiveAssists,
+        defensiveAssists: state.pendingBlock.defensiveAssists,
+        totalStrength: state.pendingBlock.totalStrength,
+        targetStrength: state.pendingBlock.targetStrength,
+      };
+
+      let newState = resolveBlockResult({ ...state, pendingBlock: undefined }, blockResult, rng);
       newState = setPlayerAction(newState, attacker.id, "BLOCK");
-      
-      // Stocker le résultat pour l'affichage
+      // lastDiceResult est déjà renseigné par resolveBlockResult pour l'armure; on peut aussi logguer le block
       newState.lastDiceResult = {
         type: "block",
         playerId: attacker.id,
-        diceRoll: blockResult.diceRoll,
-        targetNumber: 0, // Pas de target number pour les dés de blocage
-        success: true, // Le blocage "réussit" toujours, c'est le résultat qui varie
-        modifiers: 0
+        diceRoll: 0,
+        targetNumber: 0,
+        success: true,
+        modifiers: 0,
       };
-      
       return newState;
     }
     default:

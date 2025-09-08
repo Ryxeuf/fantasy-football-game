@@ -9,6 +9,7 @@ type Props = {
   onCellClick?: (pos: Position) => void;
   cellSize?: number;
   legalMoves?: Position[];
+  blockTargets?: Position[];
   selectedPlayerId?: string | null;
 };
 
@@ -17,6 +18,7 @@ export default function PixiBoard({
   onCellClick,
   cellSize = 28,
   legalMoves = [],
+  blockTargets = [],
   selectedPlayerId,
 }: Props) {
   // Orientation verticale : largeur devient hauteur et vice versa
@@ -220,6 +222,23 @@ export default function PixiBoard({
                 // Orientation verticale : inverser x et y
                 const x = move.y * cellSize;
                 const y = move.x * cellSize;
+                g.drawRect(x, y, cellSize, cellSize);
+              });
+
+              g.endFill();
+            }}
+          />
+
+          {/* Cibles de blocage (surbrillance rouge) */}
+          <Graphics
+            draw={(g: PixiGraphics) => {
+              g.clear();
+              g.lineStyle(2, 0xff0000, 1); // Rouge
+              g.beginFill(0xff0000, 0.25);
+
+              blockTargets.forEach((pos) => {
+                const x = pos.y * cellSize;
+                const y = pos.x * cellSize;
                 g.drawRect(x, y, cellSize, cellSize);
               });
 

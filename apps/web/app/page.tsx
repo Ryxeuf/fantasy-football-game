@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { PixiBoard, PlayerDetails, DiceResultPopup, GameScoreboard, GameLog } from "@bb/ui";
+import { PixiBoard, PlayerDetails, DiceResultPopup, GameScoreboard, GameLog, BlockChoicePopup } from "@bb/ui";
 import {
   setup,
   getLegalMoves,
@@ -32,6 +32,20 @@ export default function HomePage() {
     [legal, state.selectedPlayerId],
   );
 
+  // Cibles de blocage adjacentes pour le joueur sélectionné
+  const blockTargets = useMemo(() => {
+    if (!state.selectedPlayerId) return [] as Position[];
+    const attacker = state.players.find((p) => p.id === state.selectedPlayerId);
+    if (!attacker) return [] as Position[];
+    return legal
+      .filter((m) => m.type === "BLOCK" && m.playerId === attacker.id)
+      .map((m: any) => {
+        const target = state.players.find((p) => p.id === m.targetId);
+        return target ? target.pos : null;
+      })
+      .filter(Boolean) as Position[];
+  }, [legal, state.selectedPlayerId, state.players]);
+
   function onCellClick(pos: Position) {
     const player = state.players.find(
       (p) => p.pos.x === pos.x && p.pos.y === pos.y,
@@ -41,6 +55,19 @@ export default function HomePage() {
       return;
     }
     if (state.selectedPlayerId) {
+      // Si on clique sur un adversaire qui est une cible de blocage, lancer BLOCK
+      const attackerId = state.selectedPlayerId;
+      const target = state.players.find(
+        (p) => p.team !== state.currentPlayer && p.pos.x === pos.x && p.pos.y === pos.y,
+      );
+      const blockMove = legal.find(
+        (m) => m.type === "BLOCK" && (m as any).playerId === attackerId && target && (m as any).targetId === target.id,
+      ) as any;
+      if (blockMove && target) {
+        setState((s) => applyMove(s, { type: "BLOCK", playerId: attackerId, targetId: target.id } as any, createRNG()));
+        return; // le choix des dés sera géré par la popup dédiée
+      }
+
       const candidate = legal.find(
         (m) =>
           m.type === "MOVE" &&
@@ -89,6 +116,7 @@ export default function HomePage() {
               state={state}
               onCellClick={onCellClick}
               legalMoves={movesForSelected}
+              blockTargets={blockTargets}
               selectedPlayerId={state.selectedPlayerId}
             />
           </div>
@@ -164,6 +192,24 @@ export default function HomePage() {
             if (state.lastDiceResult && !state.lastDiceResult.success && (state.lastDiceResult.type === "dodge" || state.lastDiceResult.type === "pickup")) {
               setState((s) => applyMove(s, { type: "END_TURN" }, createRNG()));
             }
+          }}
+        />
+      )}
+
+      {/* Popup de choix de dé de blocage (règles officielles) */}
+      {state.pendingBlock && (
+        <BlockChoicePopup
+          attackerName={state.players.find(p => p.id === state.pendingBlock!.attackerId)?.name || 'Attaquant'}
+          defenderName={state.players.find(p => p.id === state.pendingBlock!.targetId)?.name || 'Défenseur'}
+          chooser={state.pendingBlock.chooser}
+          options={state.pendingBlock.options}
+          onChoose={(result) => {
+            setState((s) => applyMove(s, { type: 'BLOCK_CHOOSE', playerId: s.pendingBlock!.attackerId, targetId: s.pendingBlock!.targetId, result } as any, createRNG()));
+            // Afficher la popup de dés uniquement pour les jets d'armure consécutifs; ici on laisse le log faire foi
+          }}
+          onClose={() => {
+            // Permettre d'annuler (rare en règle, mais utile en UI) : on vide le pendingBlock
+            setState((s) => ({ ...s, pendingBlock: undefined } as any));
           }}
         />
       )}
