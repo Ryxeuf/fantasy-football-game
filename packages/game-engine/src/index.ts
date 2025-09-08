@@ -658,18 +658,27 @@ export function resolveBlockResult(
       break;
       
     case "PUSH_BACK":
-      // La cible est repoussée d'une case
-      const pushDirection = getPushDirection(attacker.pos, target.pos);
-      const newTargetPos = {
-        x: target.pos.x + pushDirection.x,
-        y: target.pos.y + pushDirection.y
-      };
+      // La cible est repoussée d'une case - essayer les 3 directions possibles
+      const pushDirections = getPushDirections(attacker.pos, target.pos);
+      let pushed = false;
       
-      // Vérifier si la case de destination est libre
-      if (inBounds(newState, newTargetPos) && !isPositionOccupied(newState, newTargetPos)) {
-        newState.players = newState.players.map(p => 
-          p.id === target.id ? { ...p, pos: newTargetPos } : p
-        );
+      for (const pushDirection of pushDirections) {
+        const newTargetPos = {
+          x: target.pos.x + pushDirection.x,
+          y: target.pos.y + pushDirection.y
+        };
+        
+        // Vérifier si la case de destination est libre
+        if (inBounds(newState, newTargetPos) && !isPositionOccupied(newState, newTargetPos)) {
+          newState.players = newState.players.map(p => 
+            p.id === target.id ? { ...p, pos: newTargetPos } : p
+          );
+          pushed = true;
+          break; // Arrêter dès qu'une direction fonctionne
+        }
+      }
+      
+      if (pushed) {
         
         // L'attaquant peut suivre (follow-up)
         newState.players = newState.players.map(p => 
@@ -699,17 +708,26 @@ export function resolveBlockResult(
     case "STUMBLE":
       // Si la cible a Dodge, c'est un Push Back, sinon c'est POW
       if (target.skills.includes("Dodge")) {
-        // Traiter comme un Push Back
-        const pushDirection = getPushDirection(attacker.pos, target.pos);
-        const newTargetPos = {
-          x: target.pos.x + pushDirection.x,
-          y: target.pos.y + pushDirection.y
-        };
+        // Traiter comme un Push Back - essayer les 3 directions possibles
+        const pushDirections = getPushDirections(attacker.pos, target.pos);
+        let pushed = false;
         
-        if (inBounds(newState, newTargetPos) && !isPositionOccupied(newState, newTargetPos)) {
-          newState.players = newState.players.map(p => 
-            p.id === target.id ? { ...p, pos: newTargetPos } : p
-          );
+        for (const pushDirection of pushDirections) {
+          const newTargetPos = {
+            x: target.pos.x + pushDirection.x,
+            y: target.pos.y + pushDirection.y
+          };
+          
+          if (inBounds(newState, newTargetPos) && !isPositionOccupied(newState, newTargetPos)) {
+            newState.players = newState.players.map(p => 
+              p.id === target.id ? { ...p, pos: newTargetPos } : p
+            );
+            pushed = true;
+            break;
+          }
+        }
+        
+        if (pushed) {
           
           // L'attaquant peut suivre
           newState.players = newState.players.map(p => 
@@ -754,8 +772,11 @@ export function resolveBlockResult(
         );
         newState.gameLog = [...newState.gameLog, targetArmorLog2];
         
-        // Repoussement et suivi
-        const pushDirection = getPushDirection(attacker.pos, target.pos);
+      // Repoussement et suivi - essayer les 3 directions possibles
+      const pushDirections = getPushDirections(attacker.pos, target.pos);
+      let pushed = false;
+      
+      for (const pushDirection of pushDirections) {
         const newTargetPos = {
           x: target.pos.x + pushDirection.x,
           y: target.pos.y + pushDirection.y
@@ -765,6 +786,12 @@ export function resolveBlockResult(
           newState.players = newState.players.map(p => 
             p.id === target.id ? { ...p, pos: newTargetPos } : p
           );
+          pushed = true;
+          break;
+        }
+      }
+      
+      if (pushed) {
           
           // L'attaquant peut suivre
           newState.players = newState.players.map(p => 
@@ -813,17 +840,26 @@ export function resolveBlockResult(
       );
       newState.gameLog = [...newState.gameLog, targetArmorLog3];
       
-      // Repoussement et suivi
-      const pushDirection2 = getPushDirection(attacker.pos, target.pos);
-      const newTargetPos2 = {
-        x: target.pos.x + pushDirection2.x,
-        y: target.pos.y + pushDirection2.y
-      };
+      // Repoussement et suivi - essayer les 3 directions possibles
+      const pushDirections2 = getPushDirections(attacker.pos, target.pos);
+      let pushed2 = false;
       
-      if (inBounds(newState, newTargetPos2) && !isPositionOccupied(newState, newTargetPos2)) {
-        newState.players = newState.players.map(p => 
-          p.id === target.id ? { ...p, pos: newTargetPos2 } : p
-        );
+      for (const pushDirection2 of pushDirections2) {
+        const newTargetPos2 = {
+          x: target.pos.x + pushDirection2.x,
+          y: target.pos.y + pushDirection2.y
+        };
+        
+        if (inBounds(newState, newTargetPos2) && !isPositionOccupied(newState, newTargetPos2)) {
+          newState.players = newState.players.map(p => 
+            p.id === target.id ? { ...p, pos: newTargetPos2 } : p
+          );
+          pushed2 = true;
+          break;
+        }
+      }
+      
+      if (pushed2) {
         
         // L'attaquant peut suivre
         newState.players = newState.players.map(p => 
@@ -855,6 +891,43 @@ export function getPushDirection(attackerPos: Position, targetPos: Position): Po
   const normalizedY = dy === 0 ? 0 : dy / Math.abs(dy);
   
   return { x: normalizedX, y: normalizedY };
+}
+
+// Fonction pour obtenir les 3 directions possibles de poussée
+export function getPushDirections(attackerPos: Position, targetPos: Position): Position[] {
+  const dx = targetPos.x - attackerPos.x;
+  const dy = targetPos.y - attackerPos.y;
+  
+  // Normaliser la direction principale
+  const normalizedX = dx === 0 ? 0 : dx / Math.abs(dx);
+  const normalizedY = dy === 0 ? 0 : dy / Math.abs(dy);
+  
+  // Les 3 directions possibles de poussée :
+  // 1. Direction directe
+  // 2. Direction directe + 45° dans le sens horaire
+  // 3. Direction directe + 45° dans le sens anti-horaire
+  
+  const directions: Position[] = [];
+  
+  // Direction directe
+  directions.push({ x: normalizedX, y: normalizedY });
+  
+  // Calculer les directions à 45°
+  if (normalizedX !== 0 && normalizedY !== 0) {
+    // Si on est en diagonale, les directions à 45° sont les directions cardinales
+    directions.push({ x: normalizedX, y: 0 });
+    directions.push({ x: 0, y: normalizedY });
+  } else if (normalizedX !== 0) {
+    // Si on est horizontal, les directions à 45° sont les diagonales
+    directions.push({ x: normalizedX, y: 1 });
+    directions.push({ x: normalizedX, y: -1 });
+  } else if (normalizedY !== 0) {
+    // Si on est vertical, les directions à 45° sont les diagonales
+    directions.push({ x: 1, y: normalizedY });
+    directions.push({ x: -1, y: normalizedY });
+  }
+  
+  return directions;
 }
 
 export function isPositionOccupied(state: GameState, pos: Position): boolean {
