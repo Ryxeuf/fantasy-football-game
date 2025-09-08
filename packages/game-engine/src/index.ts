@@ -60,6 +60,17 @@ export interface GameState {
     totalStrength: number;
     targetStrength: number;
   };
+  // Choix de direction de poussée en attente
+  pendingPushChoice?: {
+    attackerId: string;
+    targetId: string;
+    availableDirections: Position[];
+    blockResult: BlockResult;
+    offensiveAssists: number;
+    defensiveAssists: number;
+    totalStrength: number;
+    targetStrength: number;
+  };
   // Suivi des actions par joueur par tour
   playerActions: Map<string, ActionType>; // playerId -> action effectuée ce tour
   // Informations de match
@@ -93,7 +104,8 @@ export type Move =
   | { type: "DODGE"; playerId: string; from: Position; to: Position }
   | { type: "BLOCK"; playerId: string; targetId: string }
   | { type: "BLOCK_CHOOSE"; playerId: string; targetId: string; result: BlockResult }
-  | { type: "BLITZ"; playerId: string; to: Position; targetId: string };
+  | { type: "BLITZ"; playerId: string; to: Position; targetId: string }
+  | { type: "PUSH_CHOOSE"; playerId: string; targetId: string; direction: Position };
 
 export type BlockResult = "PLAYER_DOWN" | "BOTH_DOWN" | "PUSH_BACK" | "STUMBLE" | "POW";
 
@@ -658,9 +670,9 @@ export function resolveBlockResult(
       break;
       
     case "PUSH_BACK":
-      // La cible est repoussée d'une case - essayer les 3 directions possibles
+      // La cible est repoussée d'une case - vérifier les directions disponibles
       const pushDirections = getPushDirections(attacker.pos, target.pos);
-      let pushed = false;
+      const availableDirections: Position[] = [];
       
       for (const pushDirection of pushDirections) {
         const newTargetPos = {
@@ -670,47 +682,73 @@ export function resolveBlockResult(
         
         // Vérifier si la case de destination est libre
         if (inBounds(newState, newTargetPos) && !isPositionOccupied(newState, newTargetPos)) {
-          newState.players = newState.players.map(p => 
-            p.id === target.id ? { ...p, pos: newTargetPos } : p
-          );
-          pushed = true;
-          break; // Arrêter dès qu'une direction fonctionne
+          availableDirections.push(pushDirection);
         }
       }
       
-      if (pushed) {
+      if (availableDirections.length === 0) {
+        // Aucune direction disponible - ne pas pousser
+        const noPushLog = createLogEntry(
+          'action',
+          `${target.name} ne peut pas être repoussé (toutes les directions bloquées)`,
+          attacker.id,
+          attacker.team
+        );
+        newState.gameLog = [...newState.gameLog, noPushLog];
+      } else if (availableDirections.length === 1) {
+        // Une seule direction disponible - pousser automatiquement
+        const pushDirection = availableDirections[0];
+        const newTargetPos = {
+          x: target.pos.x + pushDirection.x,
+          y: target.pos.y + pushDirection.y
+        };
+        
+        newState.players = newState.players.map(p => 
+          p.id === target.id ? { ...p, pos: newTargetPos } : p
+        );
         
         // L'attaquant peut suivre (follow-up)
         newState.players = newState.players.map(p => 
           p.id === attacker.id ? { ...p, pos: target.pos } : p
         );
         
-        // Log du repoussement
         const pushLog = createLogEntry(
           'action',
-          `${target.name} est repoussé par ${attacker.name}`,
+          `${target.name} repoussé vers (${newTargetPos.x}, ${newTargetPos.y})`,
           attacker.id,
           attacker.team
         );
         newState.gameLog = [...newState.gameLog, pushLog];
       } else {
-        // Pas de case libre, la cible reste en place
-        const noPushLog = createLogEntry(
+        // Plusieurs directions disponibles - l'attaquant doit choisir
+        newState.pendingPushChoice = {
+          attackerId: attacker.id,
+          targetId: target.id,
+          availableDirections,
+          blockResult: "PUSH_BACK",
+          offensiveAssists: 0,
+          defensiveAssists: 0,
+          totalStrength: 3,
+          targetStrength: 2
+        };
+        
+        const choiceLog = createLogEntry(
           'action',
-          `${target.name} ne peut pas être repoussé (case occupée)`,
+          `${attacker.name} doit choisir la direction de poussée pour ${target.name}`,
           attacker.id,
           attacker.team
         );
-        newState.gameLog = [...newState.gameLog, noPushLog];
+        newState.gameLog = [...newState.gameLog, choiceLog];
+        return newState;
       }
       break;
       
     case "STUMBLE":
       // Si la cible a Dodge, c'est un Push Back, sinon c'est POW
       if (target.skills.includes("Dodge")) {
-        // Traiter comme un Push Back - essayer les 3 directions possibles
+        // Traiter comme un Push Back - vérifier les directions disponibles
         const pushDirections = getPushDirections(attacker.pos, target.pos);
-        let pushed = false;
+        const availableDirections: Position[] = [];
         
         for (const pushDirection of pushDirections) {
           const newTargetPos = {
@@ -719,31 +757,67 @@ export function resolveBlockResult(
           };
           
           if (inBounds(newState, newTargetPos) && !isPositionOccupied(newState, newTargetPos)) {
-            newState.players = newState.players.map(p => 
-              p.id === target.id ? { ...p, pos: newTargetPos } : p
-            );
-            pushed = true;
-            break;
+            availableDirections.push(pushDirection);
           }
         }
         
-        if (pushed) {
+        if (availableDirections.length === 0) {
+          // Aucune direction disponible - ne pas pousser
+          const noPushLog = createLogEntry(
+            'action',
+            `${target.name} ne peut pas être repoussé (toutes les directions bloquées)`,
+            attacker.id,
+            attacker.team
+          );
+          newState.gameLog = [...newState.gameLog, noPushLog];
+        } else if (availableDirections.length === 1) {
+          // Une seule direction disponible - pousser automatiquement
+          const pushDirection = availableDirections[0];
+          const newTargetPos = {
+            x: target.pos.x + pushDirection.x,
+            y: target.pos.y + pushDirection.y
+          };
+          
+          newState.players = newState.players.map(p => 
+            p.id === target.id ? { ...p, pos: newTargetPos } : p
+          );
           
           // L'attaquant peut suivre
           newState.players = newState.players.map(p => 
             p.id === attacker.id ? { ...p, pos: target.pos } : p
           );
           
-          const stumblePushLog = createLogEntry(
+          const pushLog = createLogEntry(
             'action',
-            `${target.name} utilise Dodge pour éviter la chute`,
+            `${target.name} repoussé vers (${newTargetPos.x}, ${newTargetPos.y})`,
             attacker.id,
             attacker.team
           );
-          newState.gameLog = [...newState.gameLog, stumblePushLog];
+          newState.gameLog = [...newState.gameLog, pushLog];
+        } else {
+          // Plusieurs directions disponibles - l'attaquant doit choisir
+          newState.pendingPushChoice = {
+            attackerId: attacker.id,
+            targetId: target.id,
+            availableDirections,
+            blockResult: "STUMBLE",
+            offensiveAssists: 0,
+            defensiveAssists: 0,
+            totalStrength: 3,
+            targetStrength: 2
+          };
+          
+          const choiceLog = createLogEntry(
+            'action',
+            `${attacker.name} doit choisir la direction de poussée pour ${target.name}`,
+            attacker.id,
+            attacker.team
+          );
+          newState.gameLog = [...newState.gameLog, choiceLog];
+          return newState;
         }
       } else {
-        // Traiter comme POW
+        // Pas de Dodge - traiter comme POW
         newState.players = newState.players.map(p => 
           p.id === target.id ? { ...p, stunned: true } : p
         );
@@ -1838,6 +1912,47 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
         modifiers: 0,
       };
       return newState;
+    }
+    case "PUSH_CHOOSE": {
+      const attacker = state.players.find(p => p.id === move.playerId);
+      const target = state.players.find(p => p.id === move.targetId);
+      if (!attacker || !target) return state;
+      if (!state.pendingPushChoice || state.pendingPushChoice.attackerId !== attacker.id || state.pendingPushChoice.targetId !== target.id) {
+        return state; // pas de choix de poussée attendu
+      }
+
+      // Vérifier que la direction choisie est valide
+      const isValidDirection = state.pendingPushChoice.availableDirections.some(dir => 
+        dir.x === move.direction.x && dir.y === move.direction.y
+      );
+      if (!isValidDirection) return state;
+
+      // Appliquer la poussée dans la direction choisie
+      const newTargetPos = {
+        x: target.pos.x + move.direction.x,
+        y: target.pos.y + move.direction.y
+      };
+
+      let newState = { ...state, pendingPushChoice: undefined };
+      newState.players = newState.players.map(p => 
+        p.id === target.id ? { ...p, pos: newTargetPos } : p
+      );
+
+      // L'attaquant peut suivre (follow-up)
+      newState.players = newState.players.map(p => 
+        p.id === attacker.id ? { ...p, pos: target.pos } : p
+      );
+
+      // Log de la poussée
+      const pushLog = createLogEntry(
+        'action',
+        `${target.name} repoussé vers (${newTargetPos.x}, ${newTargetPos.y}) par ${attacker.name}`,
+        attacker.id,
+        attacker.team
+      );
+      newState.gameLog = [...newState.gameLog, pushLog];
+
+      return checkTouchdowns(newState);
     }
     case "BLITZ": {
       const attacker = state.players.find(p => p.id === move.playerId);

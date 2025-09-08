@@ -222,13 +222,28 @@ describe('Système de blocage', () => {
       
       const resultState = resolveBlockResult(newState, blockResult, rng);
       
+      // Vérifier qu'il y a un pendingPushChoice (plusieurs directions disponibles)
+      expect(resultState.pendingPushChoice).toBeDefined();
+      expect(resultState.pendingPushChoice?.attackerId).toBe(attacker.id);
+      expect(resultState.pendingPushChoice?.targetId).toBe(target.id);
+      expect(resultState.pendingPushChoice?.availableDirections).toHaveLength(3);
+      
+      // Choisir la direction directe (1, 0)
+      const pushChooseMove = {
+        type: 'PUSH_CHOOSE' as const,
+        playerId: attacker.id,
+        targetId: target.id,
+        direction: { x: 1, y: 0 }
+      };
+      const finalState = applyMove(resultState, pushChooseMove, rng);
+      
       // La cible devrait être repoussée
-      const updatedTarget = resultState.players.find(p => p.id === target.id)!;
+      const updatedTarget = finalState.players.find(p => p.id === target.id)!;
       expect(updatedTarget.pos.x).toBe(12); // Repoussée d'une case vers la droite
       expect(updatedTarget.pos.y).toBe(7);
       
       // L'attaquant devrait suivre
-      const updatedAttacker = resultState.players.find(p => p.id === attacker.id)!;
+      const updatedAttacker = finalState.players.find(p => p.id === attacker.id)!;
       expect(updatedAttacker.pos.x).toBe(11); // Prend la place de la cible
       expect(updatedAttacker.pos.y).toBe(7);
     });

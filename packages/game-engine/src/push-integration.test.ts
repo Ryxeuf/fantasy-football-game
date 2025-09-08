@@ -30,9 +30,24 @@ describe('Intégration - Poussée avec 3 directions', () => {
       const chooseMove: Move = { type: 'BLOCK_CHOOSE', playerId: 'A1', targetId: 'B1', result: 'STUMBLE' };
       const result = applyMove(blockResult, chooseMove, rng);
 
-      // Vérifier que B1 a été poussé vers (7, 5) - direction directe
-      const pushedPlayer = result.players.find(p => p.id === 'B1');
-      expect(pushedPlayer?.pos).toEqual({ x: 7, y: 5 });
+      // Si il y a un pendingPushChoice, choisir la direction directe
+      if (result.pendingPushChoice) {
+        const pushChooseMove: Move = { 
+          type: 'PUSH_CHOOSE', 
+          playerId: 'A1', 
+          targetId: 'B1', 
+          direction: { x: 1, y: 0 } 
+        };
+        const finalResult = applyMove(result, pushChooseMove, rng);
+        
+        // Vérifier que B1 a été poussé vers (7, 5) - direction directe
+        const pushedPlayer = finalResult.players.find(p => p.id === 'B1');
+        expect(pushedPlayer?.pos).toEqual({ x: 7, y: 5 });
+      } else {
+        // Vérifier que B1 a été poussé automatiquement
+        const pushedPlayer = result.players.find(p => p.id === 'B1');
+        expect(pushedPlayer?.pos).toEqual({ x: 7, y: 5 });
+      }
     } else {
       // Si pas de pendingBlock, vérifier directement
       const pushedPlayer = blockResult.players.find(p => p.id === 'B1');
@@ -65,14 +80,28 @@ describe('Intégration - Poussée avec 3 directions', () => {
       const chooseMove: Move = { type: 'BLOCK_CHOOSE', playerId: 'A1', targetId: 'B1', result: 'STUMBLE' };
       const result = applyMove(blockResult, chooseMove, rng);
 
-      // Vérifier que B1 a été poussé dans une direction alternative
-      const pushedPlayer = result.players.find(p => p.id === 'B1');
-      expect(pushedPlayer?.pos).not.toEqual({ x: 6, y: 5 }); // Pas à la position originale
-      expect(pushedPlayer?.pos).not.toEqual({ x: 7, y: 5 }); // Pas bloqué par B2
-      
-      // Devrait être poussé vers (7, 6) ou (7, 4) - directions diagonales
-      const expectedPositions = [{ x: 7, y: 6 }, { x: 7, y: 4 }];
-      expect(expectedPositions).toContainEqual(pushedPlayer?.pos);
+      // Si il y a un pendingPushChoice, choisir une direction diagonale
+      if (result.pendingPushChoice) {
+        const pushChooseMove: Move = { 
+          type: 'PUSH_CHOOSE', 
+          playerId: 'A1', 
+          targetId: 'B1', 
+          direction: { x: 1, y: 1 } // Direction diagonale
+        };
+        const finalResult = applyMove(result, pushChooseMove, rng);
+        
+        // Vérifier que B1 a été poussé dans une direction alternative
+        const pushedPlayer = finalResult.players.find(p => p.id === 'B1');
+        expect(pushedPlayer?.pos).not.toEqual({ x: 6, y: 5 }); // Pas à la position originale
+        expect(pushedPlayer?.pos).not.toEqual({ x: 7, y: 5 }); // Pas bloqué par B2
+        
+        // Devrait être poussé vers (7, 6) - direction diagonale choisie
+        expect(pushedPlayer?.pos).toEqual({ x: 7, y: 6 });
+      } else {
+        // Vérifier que B1 a été poussé automatiquement
+        const pushedPlayer = result.players.find(p => p.id === 'B1');
+        expect(pushedPlayer?.pos).not.toEqual({ x: 6, y: 5 });
+      }
     } else {
       // Si pas de pendingBlock, vérifier directement
       const pushedPlayer = blockResult.players.find(p => p.id === 'B1');
@@ -131,9 +160,24 @@ describe('Intégration - Poussée avec 3 directions', () => {
       const chooseMove: Move = { type: 'BLOCK_CHOOSE', playerId: 'A1', targetId: 'B1', result: 'STUMBLE' };
       const result = applyMove(blockResult, chooseMove, rng);
 
-      // Vérifier que B1 a été poussé vers (7, 7) - direction directe
-      const pushedPlayer = result.players.find(p => p.id === 'B1');
-      expect(pushedPlayer?.pos).toEqual({ x: 7, y: 7 });
+      // Si il y a un pendingPushChoice, choisir la direction directe
+      if (result.pendingPushChoice) {
+        const pushChooseMove: Move = { 
+          type: 'PUSH_CHOOSE', 
+          playerId: 'A1', 
+          targetId: 'B1', 
+          direction: { x: 1, y: 1 } // Direction directe pour un blocage diagonal
+        };
+        const finalResult = applyMove(result, pushChooseMove, rng);
+        
+        // Vérifier que B1 a été poussé vers (7, 7) - direction directe
+        const pushedPlayer = finalResult.players.find(p => p.id === 'B1');
+        expect(pushedPlayer?.pos).toEqual({ x: 7, y: 7 });
+      } else {
+        // Vérifier que B1 a été poussé automatiquement
+        const pushedPlayer = result.players.find(p => p.id === 'B1');
+        expect(pushedPlayer?.pos).toEqual({ x: 7, y: 7 });
+      }
     } else {
       // Si pas de pendingBlock, vérifier directement
       const pushedPlayer = blockResult.players.find(p => p.id === 'B1');
