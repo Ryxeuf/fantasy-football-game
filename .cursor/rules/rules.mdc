@@ -1,0 +1,8 @@
+---
+description: Respect des regles de bloodbowl
+globs:
+alwaysApply: true
+---
+
+Les regles du jeu de bloodbowl sont stockees dans des fichier .md dans le dossier data/
+Quand on implemente des fonctionnalites, il faut que chaque focntionnalite soit testee et respecte les regles comme decrites dans les fichiers.md
