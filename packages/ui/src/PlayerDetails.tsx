@@ -4,13 +4,25 @@ import type { Player } from "@bb/game-engine";
 interface PlayerDetailsProps {
   player: Player | null;
   onClose: () => void;
+  /**
+   * Variante d'affichage:
+   * - "floating": encart flottant (positionné en overlay)
+   * - "sidebar": encart latéral intégré dans la mise en page
+   */
+  variant?: "floating" | "sidebar";
 }
 
-export default function PlayerDetails({ player, onClose }: PlayerDetailsProps) {
+export default function PlayerDetails({ player, onClose, variant = "floating" }: PlayerDetailsProps) {
   if (!player) return null;
 
   return (
-    <div className="fixed right-4 top-4 w-80 bg-white border border-gray-300 rounded-lg shadow-lg p-6 z-50">
+    <div
+      className={
+        variant === "floating"
+          ? "fixed right-4 top-4 w-80 bg-white border border-gray-300 rounded-lg shadow-lg p-6 z-50"
+          : "w-80 bg-white border border-gray-300 rounded-lg shadow p-6"
+      }
+    >
       {/* En-tête avec bouton de fermeture */}
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-bold text-gray-800">Détails du Joueur</h3>

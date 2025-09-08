@@ -83,13 +83,27 @@ export default function HomePage() {
           </p>
         </div>
         
-        <div className="flex justify-center mb-6">
-          <PixiBoard
-            state={state}
-            onCellClick={onCellClick}
-            legalMoves={movesForSelected}
-            selectedPlayerId={state.selectedPlayerId}
-          />
+        <div className="flex flex-col lg:flex-row items-start gap-6 mb-6">
+          <div className="flex-1 flex justify-center">
+            <PixiBoard
+              state={state}
+              onCellClick={onCellClick}
+              legalMoves={movesForSelected}
+              selectedPlayerId={state.selectedPlayerId}
+            />
+          </div>
+          <div className="w-full lg:w-auto">
+            {/* Encart des détails du joueur en sidebar (à droite du terrain) */}
+            {state.selectedPlayerId && (
+              <PlayerDetails
+                variant="sidebar"
+                player={
+                  state.players.find((p) => p.id === state.selectedPlayerId) || null
+                }
+                onClose={() => setState((s) => ({ ...s, selectedPlayerId: null }))}
+              />
+            )}
+          </div>
         </div>
         
         {state.selectedPlayerId && (
@@ -136,15 +150,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Encart des détails du joueur */}
-      {state.selectedPlayerId && (
-        <PlayerDetails
-          player={
-            state.players.find((p) => p.id === state.selectedPlayerId) || null
-          }
-          onClose={() => setState((s) => ({ ...s, selectedPlayerId: null }))}
-        />
-      )}
+      {/* L'encart des détails est désormais rendu à côté du terrain ci-dessus */}
 
       {/* Popup des résultats de jets */}
       {showDicePopup && state.lastDiceResult && (
