@@ -1,0 +1,7 @@
+---
+description: Regles tech d'execution
+globs:
+alwaysApply: true
+---
+
+Quand on lance des tests, ne les execute pas en mode watch pour eviter de rester bloque en attendant le resultat du terminal.
