@@ -36,4 +36,7 @@ export { default as PlayerDetails } from './PlayerDetails';
 export { default as DiceResultPopup } from './DiceResultPopup';
 export { default as GameScoreboard } from './GameScoreboard';
 export { default as GameLog } from './GameLog';
+export { default as ActionPickerPopup } from './ActionPickerPopup';
 export { default as BlockChoicePopup } from './BlockChoicePopup';
+export { default as BlockDiceIcon } from './BlockDiceIcon';
+export { default as DiceTestComponent } from './DiceTestComponent';

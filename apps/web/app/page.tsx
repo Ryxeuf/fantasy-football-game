@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { PixiBoard, PlayerDetails, DiceResultPopup, GameScoreboard, GameLog, BlockChoicePopup } from "@bb/ui";
+import { PixiBoard, PlayerDetails, DiceResultPopup, GameScoreboard, GameLog, BlockChoicePopup, ActionPickerPopup, DiceTestComponent } from "@bb/ui";
 import {
   setup,
   getLegalMoves,
@@ -17,6 +17,7 @@ import {
 export default function HomePage() {
   const [state, setState] = useState<GameState>(() => setup());
   const [showDicePopup, setShowDicePopup] = useState(false);
+  const [currentAction, setCurrentAction] = useState<"MOVE" | "BLOCK" | "BLITZ" | "PASS" | "HANDOFF" | "FOUL" | null>(null);
   const createRNG = () => makeRNG(`ui-seed-${Date.now()}-${Math.random()}`);
 
   const legal = useMemo(() => getLegalMoves(state), [state]);
@@ -52,6 +53,8 @@ export default function HomePage() {
     );
     if (player && player.team === state.currentPlayer) {
       setState((s) => ({ ...s, selectedPlayerId: player.id }));
+      // ouvrir le sélecteur d'action seulement si le joueur n'a pas encore agi
+      setCurrentAction(null);
       return;
     }
     if (state.selectedPlayerId) {
@@ -63,7 +66,7 @@ export default function HomePage() {
       const blockMove = legal.find(
         (m) => m.type === "BLOCK" && (m as any).playerId === attackerId && target && (m as any).targetId === target.id,
       ) as any;
-      if (blockMove && target) {
+      if (blockMove && target && (currentAction === "BLOCK" || currentAction === "BLITZ")) {
         setState((s) => applyMove(s, { type: "BLOCK", playerId: attackerId, targetId: target.id } as any, createRNG()));
         return; // le choix des dés sera géré par la popup dédiée
       }
@@ -75,7 +78,7 @@ export default function HomePage() {
           m.to.x === pos.x &&
           m.to.y === pos.y,
       );
-      if (candidate && candidate.type === "MOVE") {
+      if (candidate && candidate.type === "MOVE" && (currentAction === "MOVE" || currentAction === "BLITZ" || currentAction === null)) {
         setState((s) => {
           const s2 = applyMove(s, candidate, createRNG());
           const p = s2.players.find((pl) => pl.id === candidate.playerId);
@@ -176,6 +179,11 @@ export default function HomePage() {
             </div>
           </div>
         </div>
+        
+        {/* Composant de test des dés de blocage - temporaire */}
+        <div className="mt-8">
+          <DiceTestComponent />
+        </div>
       </div>
 
       {/* L'encart des détails est désormais rendu à côté du terrain ci-dessus */}
@@ -211,6 +219,16 @@ export default function HomePage() {
             // Permettre d'annuler (rare en règle, mais utile en UI) : on vide le pendingBlock
             setState((s) => ({ ...s, pendingBlock: undefined } as any));
           }}
+        />
+      )}
+
+      {/* Popup de sélection d'action à la sélection d'un joueur */}
+      {state.selectedPlayerId && currentAction === null && (
+        <ActionPickerPopup
+          playerName={state.players.find(p => p.id === state.selectedPlayerId)?.name || 'Joueur'}
+          available={["MOVE", "BLOCK", "BLITZ", "PASS", "HANDOFF", "FOUL"]}
+          onPick={(a) => setCurrentAction(a)}
+          onClose={() => setCurrentAction("MOVE")}
         />
       )}
     </div>

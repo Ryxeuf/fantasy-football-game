@@ -1,5 +1,6 @@
 import React from "react";
-import type { GameLogEntry } from "@bb/game-engine";
+import type { GameLogEntry, BlockResult } from "@bb/game-engine";
+import BlockDiceIcon from './BlockDiceIcon';
 
 interface GameLogProps {
   logEntries: GameLogEntry[];
@@ -114,6 +115,23 @@ export default function GameLog({ logEntries, maxEntries = 50 }: GameLogProps) {
                           <span> (mod: {(entry as any).details.modifiers > 0 ? '+' : ''}{(entry as any).details.modifiers})</span>
                         )}
                       </span>
+                    )}
+                    {entry.type === 'dice' && (entry as any).details?.result && (
+                      <div className="flex items-center gap-2 mt-1">
+                        <span>Résultat:</span>
+                        <BlockDiceIcon 
+                          result={(entry as any).details.result as BlockResult} 
+                          size={20} 
+                          className="border border-gray-300 rounded"
+                        />
+                        <span className="text-gray-600">
+                          {(entry as any).details.result === 'PLAYER_DOWN' && 'Player Down!'}
+                          {(entry as any).details.result === 'BOTH_DOWN' && 'Both Down'}
+                          {(entry as any).details.result === 'PUSH_BACK' && 'Push Back'}
+                          {(entry as any).details.result === 'STUMBLE' && 'Stumble'}
+                          {(entry as any).details.result === 'POW' && 'POW!'}
+                        </span>
+                      </div>
                     )}
                     {entry.type === 'score' && (entry as any).details?.score && (
                       <span className="block mt-1 text-yellow-800">
