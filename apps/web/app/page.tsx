@@ -8,6 +8,7 @@ import {
   applyMove,
   makeRNG,
   clearDiceResult,
+  hasPlayerActed,
   type GameState,
   type Position,
   type Move,
@@ -223,7 +224,7 @@ export default function HomePage() {
       )}
 
       {/* Popup de sélection d'action à la sélection d'un joueur */}
-      {state.selectedPlayerId && currentAction === null && (
+      {state.selectedPlayerId && currentAction === null && !hasPlayerActed(state, state.selectedPlayerId) && (
         <ActionPickerPopup
           playerName={state.players.find(p => p.id === state.selectedPlayerId)?.name || 'Joueur'}
           available={["MOVE", "BLOCK", "BLITZ", "PASS", "HANDOFF", "FOUL"]}
