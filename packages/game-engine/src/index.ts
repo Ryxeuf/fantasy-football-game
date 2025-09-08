@@ -66,7 +66,7 @@ export interface GameState {
 }
 
 export interface DiceResult {
-  type: "dodge" | "pickup" | "pass" | "catch" | "armor";
+  type: "dodge" | "pickup" | "pass" | "catch" | "armor" | "block";
   playerId: string;
   diceRoll: number;
   targetNumber: number;
@@ -79,7 +79,22 @@ export type ActionType = "MOVE" | "BLOCK" | "BLITZ" | "PASS" | "HANDOFF" | "THRO
 export type Move =
   | { type: "MOVE"; playerId: string; to: Position }
   | { type: "END_TURN" }
-  | { type: "DODGE"; playerId: string; from: Position; to: Position };
+  | { type: "DODGE"; playerId: string; from: Position; to: Position }
+  | { type: "BLOCK"; playerId: string; targetId: string };
+
+export type BlockResult = "PLAYER_DOWN" | "BOTH_DOWN" | "PUSH_BACK" | "STUMBLE" | "POW";
+
+export interface BlockDiceResult {
+  type: "block";
+  playerId: string;
+  targetId: string;
+  diceRoll: number;
+  result: BlockResult;
+  offensiveAssists: number;
+  defensiveAssists: number;
+  totalStrength: number;
+  targetStrength: number;
+}
 
 // --- RNG déterministe (mulberry32) ---
 export type RNG = () => number;
@@ -250,6 +265,499 @@ export function getAdjacentOpponents(state: GameState, position: Position, team:
   }
   
   return opponents;
+}
+
+// --- Fonctions pour le blocage ---
+export function getAdjacentPlayers(state: GameState, position: Position): Player[] {
+  const players: Player[] = [];
+  const dirs = [
+    { x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 },
+    { x: 1, y: 1 }, { x: 1, y: -1 }, { x: -1, y: 1 }, { x: -1, y: -1 }
+  ];
+  
+  for (const dir of dirs) {
+    const checkPos = { x: position.x + dir.x, y: position.y + dir.y };
+    const player = state.players.find(p => 
+      p.pos.x === checkPos.x && 
+      p.pos.y === checkPos.y &&
+      !p.stunned
+    );
+    if (player) {
+      players.push(player);
+    }
+  }
+  
+  return players;
+}
+
+export function isAdjacent(pos1: Position, pos2: Position): boolean {
+  const dx = Math.abs(pos1.x - pos2.x);
+  const dy = Math.abs(pos1.y - pos2.y);
+  return (dx <= 1 && dy <= 1) && !(dx === 0 && dy === 0);
+}
+
+export function canBlock(state: GameState, playerId: string, targetId: string): boolean {
+  const player = state.players.find(p => p.id === playerId);
+  const target = state.players.find(p => p.id === targetId);
+  
+  if (!player || !target) return false;
+  
+  // Le joueur doit être debout et non étourdi
+  if (player.stunned || player.pm <= 0) return false;
+  
+  // La cible doit être debout et non étourdie
+  if (target.stunned || target.pm <= 0) return false;
+  
+  // Les joueurs doivent être adjacents
+  if (!isAdjacent(player.pos, target.pos)) return false;
+  
+  // Les joueurs doivent être d'équipes différentes
+  if (player.team === target.team) return false;
+  
+  return true;
+}
+
+export function calculateOffensiveAssists(state: GameState, attacker: Player, target: Player): number {
+  let assists = 0;
+  
+  // Trouver tous les coéquipiers de l'attaquant qui marquent la cible
+  const teammates = state.players.filter(p => 
+    p.team === attacker.team && 
+    p.id !== attacker.id &&
+    !p.stunned &&
+    p.pm > 0
+  );
+  
+  for (const teammate of teammates) {
+    // Le coéquipier doit marquer la cible
+    if (isAdjacent(teammate.pos, target.pos)) {
+      // Vérifier que le coéquipier n'est pas marqué par un autre adversaire que la cible
+      const opponentsMarkingTeammate = getAdjacentOpponents(state, teammate.pos, teammate.team);
+      const isMarkedByOtherThanTarget = opponentsMarkingTeammate.some(opp => opp.id !== target.id);
+      
+      if (!isMarkedByOtherThanTarget) {
+        assists++;
+      }
+    }
+  }
+  
+  return assists;
+}
+
+export function calculateDefensiveAssists(state: GameState, attacker: Player, target: Player): number {
+  let assists = 0;
+  
+  // Trouver tous les coéquipiers de la cible qui marquent l'attaquant
+  const teammates = state.players.filter(p => 
+    p.team === target.team && 
+    p.id !== target.id &&
+    !p.stunned &&
+    p.pm > 0
+  );
+  
+  for (const teammate of teammates) {
+    // Le coéquipier doit marquer l'attaquant
+    if (isAdjacent(teammate.pos, attacker.pos)) {
+      // Vérifier que le coéquipier n'est pas marqué par un autre adversaire que l'attaquant
+      const opponentsMarkingTeammate = getAdjacentOpponents(state, teammate.pos, teammate.team);
+      const isMarkedByOtherThanAttacker = opponentsMarkingTeammate.some(opp => opp.id !== attacker.id);
+      
+      if (!isMarkedByOtherThanAttacker) {
+        assists++;
+      }
+    }
+  }
+  
+  return assists;
+}
+
+// --- Système de dés de blocage ---
+export function calculateBlockDiceCount(attackerStrength: number, targetStrength: number): number {
+  if (attackerStrength < targetStrength / 2) {
+    return 3; // 3 dés, le défenseur choisit
+  } else if (attackerStrength < targetStrength) {
+    return 2; // 2 dés, le défenseur choisit
+  } else if (attackerStrength === targetStrength) {
+    return 1; // 1 dé
+  } else if (attackerStrength < targetStrength * 2) {
+    return 2; // 2 dés, l'attaquant choisit
+  } else {
+    return 3; // 3 dés, l'attaquant choisit
+  }
+}
+
+export function getBlockDiceChooser(attackerStrength: number, targetStrength: number): "attacker" | "defender" {
+  if (attackerStrength < targetStrength) {
+    return "defender";
+  } else {
+    return "attacker";
+  }
+}
+
+export function rollBlockDice(rng: RNG): BlockResult {
+  const roll = Math.floor(rng() * 5) + 1; // 1-5 pour les 5 faces du dé de blocage
+  
+  switch (roll) {
+    case 1: return "PLAYER_DOWN";
+    case 2: return "BOTH_DOWN";
+    case 3: return "PUSH_BACK";
+    case 4: return "STUMBLE";
+    case 5: return "POW";
+    default: return "PUSH_BACK"; // Ne devrait jamais arriver
+  }
+}
+
+export function performBlockRoll(
+  attacker: Player, 
+  target: Player, 
+  rng: RNG, 
+  offensiveAssists: number, 
+  defensiveAssists: number
+): BlockDiceResult {
+  const attackerStrength = attacker.st + offensiveAssists;
+  const targetStrength = target.st + defensiveAssists;
+  
+  const diceCount = calculateBlockDiceCount(attackerStrength, targetStrength);
+  const chooser = getBlockDiceChooser(attackerStrength, targetStrength);
+  
+  // Pour simplifier, on lance un seul dé et on prend le résultat
+  // Dans un vrai jeu, on lancerait plusieurs dés et le chooser sélectionnerait
+  const diceRoll = Math.floor(rng() * 5) + 1;
+  const result = rollBlockDice(rng);
+  
+  return {
+    type: "block",
+    playerId: attacker.id,
+    targetId: target.id,
+    diceRoll,
+    result,
+    offensiveAssists,
+    defensiveAssists,
+    totalStrength: attackerStrength,
+    targetStrength: targetStrength
+  };
+}
+
+// --- Résolution des résultats de blocage ---
+export function resolveBlockResult(
+  state: GameState, 
+  blockResult: BlockDiceResult, 
+  rng: RNG
+): GameState {
+  const attacker = state.players.find(p => p.id === blockResult.playerId);
+  const target = state.players.find(p => p.id === blockResult.targetId);
+  
+  if (!attacker || !target) return state;
+  
+  let newState = structuredClone(state) as GameState;
+  
+  // Log du résultat de blocage
+  const blockLogEntry = createLogEntry(
+    'dice',
+    `Blocage: ${blockResult.result} (${blockResult.totalStrength} vs ${blockResult.targetStrength})`,
+    attacker.id,
+    attacker.team,
+    { 
+      result: blockResult.result, 
+      attackerStrength: blockResult.totalStrength, 
+      targetStrength: blockResult.targetStrength,
+      offensiveAssists: blockResult.offensiveAssists,
+      defensiveAssists: blockResult.defensiveAssists
+    }
+  );
+  newState.gameLog = [...newState.gameLog, blockLogEntry];
+  
+  switch (blockResult.result) {
+    case "PLAYER_DOWN":
+      // L'attaquant est mis au sol
+      newState.players = newState.players.map(p => 
+        p.id === attacker.id ? { ...p, stunned: true } : p
+      );
+      newState.isTurnover = true;
+      
+      // Log de la chute de l'attaquant
+      const attackerDownLog = createLogEntry(
+        'action',
+        `${attacker.name} est mis au sol par ${target.name}`,
+        attacker.id,
+        attacker.team
+      );
+      newState.gameLog = [...newState.gameLog, attackerDownLog];
+      
+      // Jet d'armure pour l'attaquant
+      const attackerArmorResult = performArmorRoll(attacker, rng);
+      newState.lastDiceResult = attackerArmorResult;
+      
+      // Log du jet d'armure
+      const attackerArmorLog = createLogEntry(
+        'dice',
+        `Jet d'armure: ${attackerArmorResult.diceRoll}/${attackerArmorResult.targetNumber} ${attackerArmorResult.success ? '✓' : '✗'}`,
+        attacker.id,
+        attacker.team,
+        { diceRoll: attackerArmorResult.diceRoll, targetNumber: attackerArmorResult.targetNumber, success: attackerArmorResult.success }
+      );
+      newState.gameLog = [...newState.gameLog, attackerArmorLog];
+      
+      // Si l'attaquant avait le ballon, le perdre
+      if (attacker.hasBall) {
+        newState.players = newState.players.map(p => 
+          p.id === attacker.id ? { ...p, hasBall: false } : p
+        );
+        newState.ball = { ...attacker.pos };
+        return bounceBall(newState, rng);
+      }
+      break;
+      
+    case "BOTH_DOWN":
+      // Les deux joueurs sont mis au sol
+      newState.players = newState.players.map(p => 
+        p.id === attacker.id || p.id === target.id ? { ...p, stunned: true } : p
+      );
+      newState.isTurnover = true;
+      
+      // Log de la chute des deux joueurs
+      const bothDownLog = createLogEntry(
+        'action',
+        `${attacker.name} et ${target.name} tombent tous les deux`,
+        attacker.id,
+        attacker.team
+      );
+      newState.gameLog = [...newState.gameLog, bothDownLog];
+      
+      // Jets d'armure pour les deux joueurs
+      const attackerArmorResult2 = performArmorRoll(attacker, rng);
+      const targetArmorResult = performArmorRoll(target, rng);
+      newState.lastDiceResult = attackerArmorResult2; // On stocke le dernier jet
+      
+      // Logs des jets d'armure
+      const attackerArmorLog2 = createLogEntry(
+        'dice',
+        `Jet d'armure attaquant: ${attackerArmorResult2.diceRoll}/${attackerArmorResult2.targetNumber} ${attackerArmorResult2.success ? '✓' : '✗'}`,
+        attacker.id,
+        attacker.team,
+        { diceRoll: attackerArmorResult2.diceRoll, targetNumber: attackerArmorResult2.targetNumber, success: attackerArmorResult2.success }
+      );
+      const targetArmorLog = createLogEntry(
+        'dice',
+        `Jet d'armure cible: ${targetArmorResult.diceRoll}/${targetArmorResult.targetNumber} ${targetArmorResult.success ? '✓' : '✗'}`,
+        target.id,
+        target.team,
+        { diceRoll: targetArmorResult.diceRoll, targetNumber: targetArmorResult.targetNumber, success: targetArmorResult.success }
+      );
+      newState.gameLog = [...newState.gameLog, attackerArmorLog2, targetArmorLog];
+      
+      // Si l'attaquant avait le ballon, le perdre
+      if (attacker.hasBall) {
+        newState.players = newState.players.map(p => 
+          p.id === attacker.id ? { ...p, hasBall: false } : p
+        );
+        newState.ball = { ...attacker.pos };
+        return bounceBall(newState, rng);
+      }
+      break;
+      
+    case "PUSH_BACK":
+      // La cible est repoussée d'une case
+      const pushDirection = getPushDirection(attacker.pos, target.pos);
+      const newTargetPos = {
+        x: target.pos.x + pushDirection.x,
+        y: target.pos.y + pushDirection.y
+      };
+      
+      // Vérifier si la case de destination est libre
+      if (inBounds(newState, newTargetPos) && !isPositionOccupied(newState, newTargetPos)) {
+        newState.players = newState.players.map(p => 
+          p.id === target.id ? { ...p, pos: newTargetPos } : p
+        );
+        
+        // L'attaquant peut suivre (follow-up)
+        newState.players = newState.players.map(p => 
+          p.id === attacker.id ? { ...p, pos: target.pos } : p
+        );
+        
+        // Log du repoussement
+        const pushLog = createLogEntry(
+          'action',
+          `${target.name} est repoussé par ${attacker.name}`,
+          attacker.id,
+          attacker.team
+        );
+        newState.gameLog = [...newState.gameLog, pushLog];
+      } else {
+        // Pas de case libre, la cible reste en place
+        const noPushLog = createLogEntry(
+          'action',
+          `${target.name} ne peut pas être repoussé (case occupée)`,
+          attacker.id,
+          attacker.team
+        );
+        newState.gameLog = [...newState.gameLog, noPushLog];
+      }
+      break;
+      
+    case "STUMBLE":
+      // Si la cible a Dodge, c'est un Push Back, sinon c'est POW
+      if (target.skills.includes("Dodge")) {
+        // Traiter comme un Push Back
+        const pushDirection = getPushDirection(attacker.pos, target.pos);
+        const newTargetPos = {
+          x: target.pos.x + pushDirection.x,
+          y: target.pos.y + pushDirection.y
+        };
+        
+        if (inBounds(newState, newTargetPos) && !isPositionOccupied(newState, newTargetPos)) {
+          newState.players = newState.players.map(p => 
+            p.id === target.id ? { ...p, pos: newTargetPos } : p
+          );
+          
+          // L'attaquant peut suivre
+          newState.players = newState.players.map(p => 
+            p.id === attacker.id ? { ...p, pos: target.pos } : p
+          );
+          
+          const stumblePushLog = createLogEntry(
+            'action',
+            `${target.name} utilise Dodge pour éviter la chute`,
+            attacker.id,
+            attacker.team
+          );
+          newState.gameLog = [...newState.gameLog, stumblePushLog];
+        }
+      } else {
+        // Traiter comme POW
+        newState.players = newState.players.map(p => 
+          p.id === target.id ? { ...p, stunned: true } : p
+        );
+        newState.isTurnover = true;
+        
+        // Log de la mise au sol
+        const stumbleDownLog = createLogEntry(
+          'action',
+          `${target.name} est mis au sol par ${attacker.name}`,
+          attacker.id,
+          attacker.team
+        );
+        newState.gameLog = [...newState.gameLog, stumbleDownLog];
+        
+        // Jet d'armure pour la cible
+        const targetArmorResult2 = performArmorRoll(target, rng);
+        newState.lastDiceResult = targetArmorResult2;
+        
+        // Log du jet d'armure
+        const targetArmorLog2 = createLogEntry(
+          'dice',
+          `Jet d'armure: ${targetArmorResult2.diceRoll}/${targetArmorResult2.targetNumber} ${targetArmorResult2.success ? '✓' : '✗'}`,
+          target.id,
+          target.team,
+          { diceRoll: targetArmorResult2.diceRoll, targetNumber: targetArmorResult2.targetNumber, success: targetArmorResult2.success }
+        );
+        newState.gameLog = [...newState.gameLog, targetArmorLog2];
+        
+        // Repoussement et suivi
+        const pushDirection = getPushDirection(attacker.pos, target.pos);
+        const newTargetPos = {
+          x: target.pos.x + pushDirection.x,
+          y: target.pos.y + pushDirection.y
+        };
+        
+        if (inBounds(newState, newTargetPos) && !isPositionOccupied(newState, newTargetPos)) {
+          newState.players = newState.players.map(p => 
+            p.id === target.id ? { ...p, pos: newTargetPos } : p
+          );
+          
+          // L'attaquant peut suivre
+          newState.players = newState.players.map(p => 
+            p.id === attacker.id ? { ...p, pos: target.pos } : p
+          );
+        }
+        
+        // Si la cible avait le ballon, le perdre
+        if (target.hasBall) {
+          newState.players = newState.players.map(p => 
+            p.id === target.id ? { ...p, hasBall: false } : p
+          );
+          newState.ball = { ...target.pos };
+          return bounceBall(newState, rng);
+        }
+      }
+      break;
+      
+    case "POW":
+      // La cible est repoussée puis mise au sol
+      newState.players = newState.players.map(p => 
+        p.id === target.id ? { ...p, stunned: true } : p
+      );
+      newState.isTurnover = true;
+      
+      // Log de la mise au sol
+      const powLog = createLogEntry(
+        'action',
+        `${target.name} est mis au sol par ${attacker.name} (POW!)`,
+        attacker.id,
+        attacker.team
+      );
+      newState.gameLog = [...newState.gameLog, powLog];
+      
+      // Jet d'armure pour la cible
+      const targetArmorResult3 = performArmorRoll(target, rng);
+      newState.lastDiceResult = targetArmorResult3;
+      
+      // Log du jet d'armure
+      const targetArmorLog3 = createLogEntry(
+        'dice',
+        `Jet d'armure: ${targetArmorResult3.diceRoll}/${targetArmorResult3.targetNumber} ${targetArmorResult3.success ? '✓' : '✗'}`,
+        target.id,
+        target.team,
+        { diceRoll: targetArmorResult3.diceRoll, targetNumber: targetArmorResult3.targetNumber, success: targetArmorResult3.success }
+      );
+      newState.gameLog = [...newState.gameLog, targetArmorLog3];
+      
+      // Repoussement et suivi
+      const pushDirection2 = getPushDirection(attacker.pos, target.pos);
+      const newTargetPos2 = {
+        x: target.pos.x + pushDirection2.x,
+        y: target.pos.y + pushDirection2.y
+      };
+      
+      if (inBounds(newState, newTargetPos2) && !isPositionOccupied(newState, newTargetPos2)) {
+        newState.players = newState.players.map(p => 
+          p.id === target.id ? { ...p, pos: newTargetPos2 } : p
+        );
+        
+        // L'attaquant peut suivre
+        newState.players = newState.players.map(p => 
+          p.id === attacker.id ? { ...p, pos: target.pos } : p
+        );
+      }
+      
+      // Si la cible avait le ballon, le perdre
+      if (target.hasBall) {
+        newState.players = newState.players.map(p => 
+          p.id === target.id ? { ...p, hasBall: false } : p
+        );
+        newState.ball = { ...target.pos };
+        return bounceBall(newState, rng);
+      }
+      break;
+  }
+  
+  return newState;
+}
+
+// --- Fonctions utilitaires pour le blocage ---
+export function getPushDirection(attackerPos: Position, targetPos: Position): Position {
+  const dx = targetPos.x - attackerPos.x;
+  const dy = targetPos.y - attackerPos.y;
+  
+  // Normaliser la direction
+  const normalizedX = dx === 0 ? 0 : dx / Math.abs(dx);
+  const normalizedY = dy === 0 ? 0 : dy / Math.abs(dy);
+  
+  return { x: normalizedX, y: normalizedY };
+}
+
+export function isPositionOccupied(state: GameState, pos: Position): boolean {
+  return state.players.some(p => p.pos.x === pos.x && p.pos.y === pos.y);
 }
 
 // --- Calcul des modificateurs de désquive ---
@@ -694,6 +1202,14 @@ export function getLegalMoves(state: GameState): Move[] {
       if (occ.has(`${to.x},${to.y}`)) continue; // pas de chevauchement
       moves.push({ type: "MOVE", playerId: p.id, to });
     }
+    
+    // Actions de blocage
+    const adjacentOpponents = getAdjacentOpponents(state, p.pos, p.team);
+    for (const opponent of adjacentOpponents) {
+      if (canBlock(state, p.id, opponent.id)) {
+        moves.push({ type: "BLOCK", playerId: p.id, targetId: opponent.id });
+      }
+    }
   }
   return moves;
 }
@@ -1000,6 +1516,40 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       
       return next;
     }
+    case "BLOCK": {
+      const attacker = state.players.find(p => p.id === move.playerId);
+      const target = state.players.find(p => p.id === move.targetId);
+      
+      if (!attacker || !target) return state;
+      
+      // Vérifier que le blocage est légal
+      if (!canBlock(state, move.playerId, move.targetId)) return state;
+      
+      // Calculer les assists
+      const offensiveAssists = calculateOffensiveAssists(state, attacker, target);
+      const defensiveAssists = calculateDefensiveAssists(state, attacker, target);
+      
+      // Effectuer le jet de blocage
+      const blockResult = performBlockRoll(attacker, target, rng, offensiveAssists, defensiveAssists);
+      
+      // Résoudre le résultat
+      let newState = resolveBlockResult(state, blockResult, rng);
+      
+      // Marquer le joueur comme ayant effectué une action
+      newState = setPlayerAction(newState, attacker.id, "BLOCK");
+      
+      // Stocker le résultat pour l'affichage
+      newState.lastDiceResult = {
+        type: "block",
+        playerId: attacker.id,
+        diceRoll: blockResult.diceRoll,
+        targetNumber: 0, // Pas de target number pour les dés de blocage
+        success: true, // Le blocage "réussit" toujours, c'est le résultat qui varie
+        modifiers: 0
+      };
+      
+      return newState;
+    }
     default:
       return state;
   }
@@ -1059,6 +1609,19 @@ export function toBGIOGame() {
         const s2 = applyMove(
           G,
           { type: "DODGE", playerId: args.playerId, from: args.from, to: args.to },
+          rng,
+        );
+        Object.assign(G, s2);
+      },
+      BLOCK: (
+        G: GameState,
+        ctx: Ctx,
+        args: { playerId: string; targetId: string },
+      ) => {
+        const rng = makeRNG(String(ctx.turn || 1));
+        const s2 = applyMove(
+          G,
+          { type: "BLOCK", playerId: args.playerId, targetId: args.targetId },
           rng,
         );
         Object.assign(G, s2);
