@@ -189,6 +189,42 @@ function awardTouchdown(state: GameState, scoringTeam: TeamId, scorer?: Player):
   };
 }
 
+// Gestion de la fin de tour et de mi-temps (8 tours par équipe / 8 "rounds")
+function advanceHalfIfNeeded(state: GameState): GameState {
+  // Si on a dépassé le 8e round, on passe à la mi‑temps suivante ou on termine le match
+  if (state.turn > 8) {
+    if (state.half === 1) {
+      const halftimeLog = createLogEntry(
+        'info',
+        `Mi-temps atteinte (8 tours par équipe). Début de la 2e mi-temps`,
+        undefined,
+        undefined
+      );
+
+      return {
+        ...state,
+        half: 2,
+        turn: 1,
+        currentPlayer: 'A',
+        gameLog: [...state.gameLog, halftimeLog],
+      };
+    } else {
+      const endLog = createLogEntry(
+        'info',
+        `Fin du match (2e mi-temps terminée)`,
+        undefined,
+        undefined
+      );
+      return {
+        ...state,
+        isTurnover: true,
+        gameLog: [...state.gameLog, endLog],
+      };
+    }
+  }
+  return state;
+}
+
 // Vérification continue des touchdowns
 function checkTouchdowns(state: GameState): GameState {
   // Vérifier tous les joueurs qui ont le ballon et sont debout
@@ -1259,7 +1295,8 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       newState.gameLog = [...newState.gameLog, turnLogEntry];
       
       // Le porteur de ballon garde le ballon lors du changement de tour
-      return checkTouchdowns(newState);
+      // Vérifier touchdowns, puis passage de mi-temps si besoin
+      return advanceHalfIfNeeded(checkTouchdowns(newState));
     case "MOVE": {
       const idx = state.players.findIndex((p) => p.id === move.playerId);
       if (idx === -1) return state;
