@@ -151,12 +151,12 @@ export function addLogEntry(state: GameState, entry: GameLogEntry): GameState {
 }
 
 // --- Touchdown & En-but ---
-function isInOpponentEndzone(state: GameState, player: Player): boolean {
-  // Hypothèse d'orientation du terrain (26x15) :
-  // L'équipe A marque dans la ligne d'en-but du haut (y = 0)
-  // L'équipe B marque dans la ligne d'en-but du bas (y = state.height - 1)
-  const endzoneY = player.team === "A" ? 0 : state.height - 1;
-  return player.pos.y === endzoneY;
+export function isInOpponentEndzone(state: GameState, player: Player): boolean {
+  // Orientation du terrain (26x15) :
+  // L'équipe A marque dans la ligne d'en-but de droite (x = state.width - 1)
+  // L'équipe B marque dans la ligne d'en-but de gauche (x = 0)
+  const endzoneX = player.team === "A" ? state.width - 1 : 0;
+  return player.pos.x === endzoneX;
 }
 
 function awardTouchdown(state: GameState, scoringTeam: TeamId, scorer?: Player): GameState {
@@ -187,6 +187,20 @@ function awardTouchdown(state: GameState, scoringTeam: TeamId, scorer?: Player):
     ...next,
     score: newScore,
   };
+}
+
+// Vérification continue des touchdowns
+function checkTouchdowns(state: GameState): GameState {
+  // Vérifier tous les joueurs qui ont le ballon et sont debout
+  const playersWithBall = state.players.filter(p => p.hasBall && !p.stunned);
+  
+  for (const player of playersWithBall) {
+    if (isInOpponentEndzone(state, player)) {
+      return awardTouchdown(state, player.team, player);
+    }
+  }
+  
+  return state;
 }
 
 // --- Système de jets de dés ---
@@ -741,7 +755,7 @@ export function resolveBlockResult(
       break;
   }
   
-  return newState;
+  return checkTouchdowns(newState);
 }
 
 // --- Fonctions utilitaires pour le blocage ---
@@ -928,7 +942,7 @@ export function bounceBall(state: GameState, rng: RNG): GameState {
     newState.gameLog = [...newState.gameLog, stopLogEntry];
   }
   
-  return newState;
+  return checkTouchdowns(newState);
 }
 
 export function requiresDodgeRoll(state: GameState, from: Position, to: Position, team: TeamId): boolean {
@@ -1120,7 +1134,7 @@ export function endPlayerTurn(state: GameState, playerId: string): GameState {
     newState.gameLog = [...newState.gameLog, logEntry];
   }
   
-  return newState;
+  return checkTouchdowns(newState);
 }
 
 export function checkPlayerTurnEnd(state: GameState, playerId: string): GameState {
@@ -1245,7 +1259,7 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       newState.gameLog = [...newState.gameLog, turnLogEntry];
       
       // Le porteur de ballon garde le ballon lors du changement de tour
-      return newState;
+      return checkTouchdowns(newState);
     case "MOVE": {
       const idx = state.players.findIndex((p) => p.id === move.playerId);
       if (idx === -1) return state;
@@ -1551,7 +1565,7 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       return newState;
     }
     default:
-      return state;
+      return checkTouchdowns(state);
   }
 }
 

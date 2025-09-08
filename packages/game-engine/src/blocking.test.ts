@@ -244,7 +244,7 @@ describe('Système de blocage', () => {
     });
 
     it('devrait vérifier si une position est occupée', () => {
-      const occupiedPos: Position = { x: 11, y: 7 }; // Position d'un joueur
+      const occupiedPos: Position = { x: 11, y: 7 }; // Position d'un joueur (A1)
       const freePos: Position = { x: 5, y: 5 }; // Position libre
       
       expect(isPositionOccupied(state, occupiedPos)).toBe(true);

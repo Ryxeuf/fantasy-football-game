@@ -8,6 +8,7 @@ import {
   performDodgeRoll,
   performArmorRoll,
   getAdjacentOpponents,
+  isInOpponentEndzone,
   calculateDodgeModifiers,
   calculatePickupModifiers,
   calculatePickupTarget,
@@ -1772,20 +1773,20 @@ describe('Touchdowns', () => {
   })
 
   it('marque un touchdown en entrant dans l\'en-but avec la balle', () => {
-    // Donner la balle à un joueur de l'équipe A et le placer en y=1 pour entrer en y=0
+    // Donner la balle à un joueur de l'équipe A et le placer en x=24 pour entrer en x=25
     const playerA = state.players.find(p => p.team === 'A')!
     let newState: GameState = {
       ...state,
       players: state.players.map(p =>
-        p.id === playerA.id ? { ...p, hasBall: true, pos: { x: 5, y: 1 } } : p
+        p.id === playerA.id ? { ...p, hasBall: true, pos: { x: 24, y: 7 } } : p
       ),
       ball: undefined,
       currentPlayer: 'A'
     }
 
-    // Le déplacement vers y=0 doit être légal
+    // Le déplacement vers x=25 doit être légal
     const legalMoves = getLegalMoves(newState)
-    const moveToEndzone = legalMoves.find(m => m.type === 'MOVE' && m.playerId === playerA.id && m.to.x === 5 && m.to.y === 0)
+    const moveToEndzone = legalMoves.find(m => m.type === 'MOVE' && m.playerId === playerA.id && m.to.x === 25 && m.to.y === 7)
     if (!moveToEndzone) return
 
     const result = applyMove(newState, moveToEndzone as Move, rng)
@@ -1801,20 +1802,20 @@ describe('Touchdowns', () => {
   })
 
   it('marque un touchdown en ramassant la balle dans l\'en-but', () => {
-    // Placer un joueur A dans l'en-but adverse (y=0) et la balle sur sa case
+    // Placer un joueur A dans l'en-but adverse (x=25) et la balle sur sa case
     const playerA = state.players.find(p => p.team === 'A')!
-    const posInEndzone: Position = { x: 6, y: 0 }
+    const posInEndzone: Position = { x: 25, y: 7 }
 
     let newState: GameState = {
       ...state,
       players: state.players.map(p =>
-        p.id === playerA.id ? { ...p, pos: { x: posInEndzone.x, y: 1 } } : p
+        p.id === playerA.id ? { ...p, pos: { x: 24, y: 7 } } : p
       ),
       ball: { ...posInEndzone },
       currentPlayer: 'A'
     }
 
-    // Mouvement sur la balle (vers y=0)
+    // Mouvement sur la balle (vers x=25)
     const legalMoves = getLegalMoves(newState)
     const moveToBall = legalMoves.find(m => m.type === 'MOVE' && m.playerId === playerA.id && m.to.x === posInEndzone.x && m.to.y === posInEndzone.y)
     if (!moveToBall) return
@@ -1840,13 +1841,13 @@ describe('Touchdowns', () => {
     let newState: GameState = {
       ...state,
       players: state.players.map(p =>
-        p.id === playerA.id ? { ...p, pos: { x: 10, y: 0 }, stunned: false, pm: 1, ag: 6 } : p
+        p.id === playerA.id ? { ...p, pos: { x: 25, y: 7 }, stunned: false, pm: 1, ag: 6 } : p
       ),
-      ball: { x: 9, y: 1 } // une case diagonale pour diriger vers (10,0)
+      ball: { x: 24, y: 7 } // une case à côté pour diriger vers (25, 7)
     }
 
-    // Mock RNG pour diriger le rebond vers Nord-Est (direction 2) afin d'atterrir sur (10,0)
-    const mockRng = () => 2 / 8
+    // Mock RNG pour diriger le rebond vers l'est (direction 1) afin d'atterrir sur (25, 7)
+    const mockRng = () => 1 / 8
     const result = bounceBall(newState, mockRng)
 
     // Si catch réussi dans l'en-but, touchdown immédiat
@@ -1858,4 +1859,32 @@ describe('Touchdowns', () => {
       expect(result.players.some(p => p.hasBall)).toBe(false)
     }
   })
+
+  it('marque un touchdown immédiatement si un joueur est déjà dans l\'en-but adverse avec le ballon', () => {
+    // Placer un joueur A dans l'en-but adverse (x=25) avec le ballon
+    const playerA = state.players.find(p => p.team === 'A')!
+    let newState: GameState = {
+      ...state,
+      players: state.players.map(p =>
+        p.id === playerA.id ? { ...p, hasBall: true, pos: { x: 25, y: 7 } } : p
+      ),
+      ball: undefined,
+      currentPlayer: 'A'
+    }
+
+    // Vérifier que le joueur est dans l'en-but adverse avec le ballon
+    expect(newState.players.find(p => p.id === playerA.id)?.hasBall).toBe(true)
+    expect(newState.players.find(p => p.id === playerA.id)?.pos.x).toBe(25)
+
+    // Simuler un changement d'état (par exemple, fin de tour) pour déclencher checkTouchdowns
+    const result = applyMove(newState, { type: 'END_TURN' }, rng)
+
+    // Le touchdown devrait être marqué immédiatement
+    expect(result.score.teamA).toBe(state.score.teamA + 1)
+    expect(result.isTurnover).toBe(true)
+    expect(result.ball).toBeUndefined()
+    expect(result.players.some(p => p.hasBall)).toBe(false)
+    expect(result.gameLog.some(l => l.type === 'score')).toBe(true)
+  })
+
 })
