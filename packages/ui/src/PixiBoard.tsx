@@ -93,12 +93,12 @@ export default function PixiBoard({
             }}
           />
 
-          {/* Zone de TOUCHDOWN en haut (rouge et blanc clair) - 1 case de hauteur */}
+          {/* Zone de TOUCHDOWN en haut (équipe A - rouge et blanc) - 1 case de hauteur */}
           <Graphics
             draw={(g: PixiGraphics) => {
               g.clear();
 
-              // Motif en damier rouge et blanc clair
+              // Motif en damier rouge et blanc clair pour l'équipe A
               const tdHeight = cellSize; // 1 case de hauteur
               const squareSize = cellSize / 2;
               const tdWidth = width; // Largeur complète du terrain
@@ -106,7 +106,7 @@ export default function PixiBoard({
               for (let x = 0; x < tdWidth; x += squareSize) {
                 for (let y = 0; y < tdHeight; y += squareSize) {
                   const isRed = (x / squareSize + y / squareSize) % 2 === 0;
-                  g.beginFill(isRed ? 0xff0000 : 0xf5f5f5); // Rouge et blanc clair
+                  g.beginFill(isRed ? 0xff0000 : 0xf5f5f5); // Rouge et blanc clair pour l'équipe A
                   g.drawRect(x, y, squareSize, squareSize);
                   g.endFill();
                 }
@@ -118,12 +118,12 @@ export default function PixiBoard({
             }}
           />
 
-          {/* Zone de TOUCHDOWN en bas (rouge et blanc clair) - 1 case de hauteur */}
+          {/* Zone de TOUCHDOWN en bas (équipe B - bleu et blanc) - 1 case de hauteur */}
           <Graphics
             draw={(g: PixiGraphics) => {
               g.clear();
 
-              // Motif en damier rouge et blanc clair
+              // Motif en damier bleu et blanc clair pour l'équipe B
               const tdHeight = cellSize; // 1 case de hauteur
               const squareSize = cellSize / 2;
               const startY = height - tdHeight;
@@ -131,8 +131,8 @@ export default function PixiBoard({
 
               for (let x = 0; x < tdWidth; x += squareSize) {
                 for (let y = 0; y < tdHeight; y += squareSize) {
-                  const isRed = (x / squareSize + y / squareSize) % 2 === 0;
-                  g.beginFill(isRed ? 0xff0000 : 0xf5f5f5); // Rouge et blanc clair
+                  const isBlue = (x / squareSize + y / squareSize) % 2 === 0;
+                  g.beginFill(isBlue ? 0x0000ff : 0xf5f5f5); // Bleu et blanc clair pour l'équipe B
                   g.drawRect(x, startY + y, squareSize, squareSize);
                   g.endFill();
                 }
