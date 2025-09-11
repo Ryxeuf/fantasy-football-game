@@ -520,6 +520,16 @@ export function rollBlockDiceMany(rng: RNG, count: number): BlockResult[] {
   return results;
 }
 
+export function rollBlockDiceManyWithRolls(rng: RNG, count: number): Array<{ diceRoll: number; result: BlockResult }> {
+  const results: Array<{ diceRoll: number; result: BlockResult }> = [];
+  for (let i = 0; i < count; i++) {
+    const diceRoll = Math.floor(rng() * 5) + 1; // 1-5 pour les 5 faces du dé de blocage
+    const result = rollBlockDice(rng);
+    results.push({ diceRoll, result });
+  }
+  return results;
+}
+
 export function performBlockRoll(
   attacker: Player, 
   target: Player, 
@@ -846,41 +856,19 @@ export function resolveBlockResult(
         );
         newState.gameLog = [...newState.gameLog, targetArmorLog2];
         
-      // Repoussement et suivi - essayer les 3 directions possibles
-      const pushDirections = getPushDirections(attacker.pos, target.pos);
-      let pushed = false;
-      
-      for (const pushDirection of pushDirections) {
-        const newTargetPos = {
-          x: target.pos.x + pushDirection.x,
-          y: target.pos.y + pushDirection.y
-        };
-        
-        if (inBounds(newState, newTargetPos) && !isPositionOccupied(newState, newTargetPos)) {
-          newState.players = newState.players.map(p => 
-            p.id === target.id ? { ...p, pos: newTargetPos } : p
-          );
-          pushed = true;
-          break;
-        }
-      }
-      
-      if (pushed) {
-          
-          // L'attaquant peut suivre
-          newState.players = newState.players.map(p => 
-            p.id === attacker.id ? { ...p, pos: target.pos } : p
-          );
-        }
+        // Gérer la poussée avec choix de direction
+        const pushResult = handlePushWithChoice(newState, attacker, target, "STUMBLE");
         
         // Si la cible avait le ballon, le perdre
         if (target.hasBall) {
-          newState.players = newState.players.map(p => 
+          pushResult.players = pushResult.players.map(p => 
             p.id === target.id ? { ...p, hasBall: false } : p
           );
-          newState.ball = { ...target.pos };
-          return bounceBall(newState, rng);
+          pushResult.ball = { ...target.pos };
+          return bounceBall(pushResult, rng);
         }
+        
+        return pushResult;
       }
       break;
       
@@ -914,42 +902,19 @@ export function resolveBlockResult(
       );
       newState.gameLog = [...newState.gameLog, targetArmorLog3];
       
-      // Repoussement et suivi - essayer les 3 directions possibles
-      const pushDirections2 = getPushDirections(attacker.pos, target.pos);
-      let pushed2 = false;
-      
-      for (const pushDirection2 of pushDirections2) {
-        const newTargetPos2 = {
-          x: target.pos.x + pushDirection2.x,
-          y: target.pos.y + pushDirection2.y
-        };
-        
-        if (inBounds(newState, newTargetPos2) && !isPositionOccupied(newState, newTargetPos2)) {
-          newState.players = newState.players.map(p => 
-            p.id === target.id ? { ...p, pos: newTargetPos2 } : p
-          );
-          pushed2 = true;
-          break;
-        }
-      }
-      
-      if (pushed2) {
-        
-        // L'attaquant peut suivre
-        newState.players = newState.players.map(p => 
-          p.id === attacker.id ? { ...p, pos: target.pos } : p
-        );
-      }
+      // Gérer la poussée avec choix de direction
+      const pushResult2 = handlePushWithChoice(newState, attacker, target, "POW");
       
       // Si la cible avait le ballon, le perdre
       if (target.hasBall) {
-        newState.players = newState.players.map(p => 
+        pushResult2.players = pushResult2.players.map(p => 
           p.id === target.id ? { ...p, hasBall: false } : p
         );
-        newState.ball = { ...target.pos };
-        return bounceBall(newState, rng);
+        pushResult2.ball = { ...target.pos };
+        return bounceBall(pushResult2, rng);
       }
-      break;
+      
+      return pushResult2;
   }
   
   return checkTouchdowns(newState);
@@ -965,6 +930,83 @@ export function getPushDirection(attackerPos: Position, targetPos: Position): Po
   const normalizedY = dy === 0 ? 0 : dy / Math.abs(dy);
   
   return { x: normalizedX, y: normalizedY };
+}
+
+// Fonction utilitaire pour gérer la poussée avec choix de direction
+function handlePushWithChoice(
+  state: GameState, 
+  attacker: Player, 
+  target: Player, 
+  blockResult: string
+): GameState {
+  const availableDirections = getPushDirections(attacker.pos, target.pos).filter(dir => {
+    const newPos = {
+      x: target.pos.x + dir.x,
+      y: target.pos.y + dir.y
+    };
+    return inBounds(state, newPos) && !isPositionOccupied(state, newPos);
+  });
+
+  if (availableDirections.length === 0) {
+    // Aucune direction disponible - pas de poussée possible
+    const noPushLog = createLogEntry(
+      'action',
+      `${target.name} ne peut pas être repoussé (aucune case libre)`,
+      attacker.id,
+      attacker.team
+    );
+    return { ...state, gameLog: [...state.gameLog, noPushLog] };
+  } else if (availableDirections.length === 1) {
+    // Une seule direction disponible - pousser automatiquement
+    const pushDirection = availableDirections[0];
+    const newTargetPos = {
+      x: target.pos.x + pushDirection.x,
+      y: target.pos.y + pushDirection.y
+    };
+    
+    let newState = { ...state };
+    newState.players = newState.players.map(p => 
+      p.id === target.id ? { ...p, pos: newTargetPos } : p
+    );
+    
+    // L'attaquant peut suivre
+    newState.players = newState.players.map(p => 
+      p.id === attacker.id ? { ...p, pos: target.pos } : p
+    );
+    
+    const pushLog = createLogEntry(
+      'action',
+      `${target.name} repoussé vers (${newTargetPos.x}, ${newTargetPos.y})`,
+      attacker.id,
+      attacker.team
+    );
+    newState.gameLog = [...newState.gameLog, pushLog];
+    
+    return newState;
+  } else {
+    // Plusieurs directions disponibles - l'attaquant doit choisir
+    const newState = { ...state };
+    newState.pendingPushChoice = {
+      attackerId: attacker.id,
+      targetId: target.id,
+      availableDirections,
+      blockResult: blockResult as any,
+      offensiveAssists: 0,
+      defensiveAssists: 0,
+      totalStrength: 3,
+      targetStrength: 2
+    };
+    
+    const choiceLog = createLogEntry(
+      'action',
+      `${attacker.name} doit choisir la direction de poussée pour ${target.name}`,
+      attacker.id,
+      attacker.team
+    );
+    newState.gameLog = [...newState.gameLog, choiceLog];
+    
+    return newState;
+  }
 }
 
 // Fonction pour obtenir les 3 directions possibles de poussée
@@ -1809,12 +1851,13 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       // Si un seul dé, résoudre immédiatement
       if (diceCount === 1) {
         const blockResult = rollBlockDice(rng);
+        const diceRoll = Math.floor(rng() * 5) + 1; // Simuler le jet de dé pour le log
         const blockDiceResult: BlockDiceResult = {
           type: "block",
           playerId: attacker.id,
           targetId: target.id,
-          diceRoll: blockResult.diceRoll,
-          result: blockResult.result,
+          diceRoll: diceRoll,
+          result: blockResult,
           offensiveAssists,
           defensiveAssists,
           totalStrength: attackerStrength,
@@ -1824,18 +1867,17 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
         // Log du résultat de blocage
         const blockLogEntry = createLogEntry(
           'dice',
-          `Blocage: ${blockResult.diceRoll} → ${blockResult.result}`,
+          `Blocage: ${diceRoll} → ${blockResult}`,
           attacker.id,
           attacker.team,
-          { diceRoll: blockResult.diceRoll, result: blockResult.result, offensiveAssists, defensiveAssists }
+          { diceRoll: diceRoll, result: blockResult, offensiveAssists, defensiveAssists }
         );
         newState.gameLog = [...newState.gameLog, blockLogEntry];
-        newState.lastDiceResult = blockDiceResult;
         
         return resolveBlockResult(newState, blockDiceResult, rng);
       } else {
         // Plusieurs dés : enregistrer un choix en attente
-        const options = rollBlockDiceMany(rng, diceCount);
+        const options = rollBlockDiceManyWithRolls(rng, diceCount);
         
         // Log des dés lancés
         const blockLogEntry = createLogEntry(
@@ -1847,25 +1889,14 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
         );
         newState.gameLog = [...newState.gameLog, blockLogEntry];
         
-        // Définir lastDiceResult avec le premier dé pour l'interface
-        newState.lastDiceResult = {
-          type: "block",
-          playerId: attacker.id,
-          targetId: target.id,
-          diceRoll: options[0].diceRoll,
-          result: options[0].result,
-          offensiveAssists,
-          defensiveAssists,
-          totalStrength: attackerStrength,
-          targetStrength
-        };
+        // Ne pas assigner lastDiceResult pour les choix de blocage multiples
         
         return {
           ...newState,
           pendingBlock: {
             attackerId: attacker.id,
             targetId: target.id,
-            options,
+            options: options.map(o => o.result),
             chooser,
             offensiveAssists,
             defensiveAssists,

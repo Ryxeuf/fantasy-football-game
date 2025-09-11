@@ -317,9 +317,9 @@ describe('Système de blocage', () => {
       // Vérifier que l'action a été enregistrée
       expect(resultState.playerActions.get('A1')).toBe('BLOCK');
       
-      // Vérifier qu'il y a un résultat de dés
-      expect(resultState.lastDiceResult).toBeDefined();
-      expect(resultState.lastDiceResult?.type).toBe('block');
+      // Vérifier qu'il y a des logs de blocage
+      const blockLogs = resultState.gameLog.filter(log => log.type === 'dice' && log.message.includes('Blocage:'));
+      expect(blockLogs.length).toBeGreaterThan(0);
     });
   });
 });
