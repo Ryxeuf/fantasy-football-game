@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { PixiBoard, PlayerDetails, DiceResultPopup, GameScoreboard, GameLog, BlockChoicePopup, ActionPickerPopup, DiceTestComponent } from "@bb/ui";
+import { PixiBoard, PlayerDetails, DiceResultPopup, GameScoreboard, GameLog, BlockChoicePopup, ActionPickerPopup, DiceTestComponent, PushChoicePopup } from "@bb/ui";
 import {
   setup,
   getLegalMoves,
@@ -219,6 +219,27 @@ export default function HomePage() {
           onClose={() => {
             // Permettre d'annuler (rare en règle, mais utile en UI) : on vide le pendingBlock
             setState((s) => ({ ...s, pendingBlock: undefined } as any));
+          }}
+        />
+      )}
+
+      {/* Popup de choix de direction de poussée */}
+      {state.pendingPushChoice && (
+        <PushChoicePopup
+          attackerName={state.players.find(p => p.id === state.pendingPushChoice!.attackerId)?.name || 'Attaquant'}
+          targetName={state.players.find(p => p.id === state.pendingPushChoice!.targetId)?.name || 'Cible'}
+          availableDirections={state.pendingPushChoice.availableDirections}
+          onChoose={(direction) => {
+            setState((s) => applyMove(s, { 
+              type: 'PUSH_CHOOSE', 
+              playerId: s.pendingPushChoice!.attackerId, 
+              targetId: s.pendingPushChoice!.targetId, 
+              direction 
+            } as any, createRNG()));
+          }}
+          onClose={() => {
+            // Annuler le choix de poussée - on ne peut pas vraiment annuler en règle, mais on peut au moins fermer la popup
+            setState((s) => ({ ...s, pendingPushChoice: undefined }));
           }}
         />
       )}

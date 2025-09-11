@@ -40,3 +40,4 @@ export { default as ActionPickerPopup } from './ActionPickerPopup';
 export { default as BlockChoicePopup } from './BlockChoicePopup';
 export { default as BlockDiceIcon } from './BlockDiceIcon';
 export { default as DiceTestComponent } from './DiceTestComponent';
+export { default as PushChoicePopup } from './PushChoicePopup';
