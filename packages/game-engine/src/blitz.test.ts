@@ -75,7 +75,7 @@ describe('Action de Blitz', () => {
       const newState = {
         ...state,
         players: state.players.map(p => {
-          if (p.id === 'A1') return { ...p, pos: { x: 10, y: 7 }, stunned: false, pm: 1 } // Pas assez de PM
+          if (p.id === 'A1') return { ...p, pos: { x: 10, y: 7 }, stunned: false, pm: 0 } // Pas de PM du tout
           if (p.id === 'B1') return { ...p, pos: { x: 12, y: 7 }, stunned: false, pm: 8 }
           return p
         })
@@ -83,7 +83,7 @@ describe('Action de Blitz', () => {
 
       const attacker = newState.players.find(p => p.id === 'A1')!
       const target = newState.players.find(p => p.id === 'B1')!
-      const to = { x: 11, y: 7 } // Distance 1 + 1 pour le blocage = 2 PM nécessaires
+      const to = { x: 11, y: 7 } // Distance 1, le blocage coûtera 1 PM supplémentaire après
 
       expect(canBlitz(newState, attacker.id, to, target.id)).toBe(false)
     })
@@ -194,8 +194,8 @@ describe('Action de Blitz', () => {
       const attacker = result.players.find(p => p.id === 'A1')!
       expect(attacker.pos).toEqual({ x: 11, y: 7 })
 
-      // Vérifier que les PM ont été consommés (distance 1 + 1 pour le blocage)
-      expect(attacker.pm).toBe(5) // 7 - 1 - 1 = 5
+      // Vérifier que les PM ont été consommés (distance 1 seulement, le blocage coûtera 1 PM supplémentaire après)
+      expect(attacker.pm).toBe(6) // 7 - 1 = 6
 
       // Vérifier qu'un blocage est en attente
       expect(result.pendingBlock).toBeDefined()
@@ -377,6 +377,51 @@ describe('Action de Blitz', () => {
 
       // Vérifier que l'action finale est bien BLITZ
       expect(result.playerActions.get('A1')).toBe('BLITZ')
+    })
+
+    it('devrait permettre de continuer à bouger après un blitz et consommer 1 PM pour le blocage', () => {
+      // Positionner les joueurs pour un blitz
+      const newState = {
+        ...state,
+        players: state.players.map(p => {
+          if (p.id === 'A1') return { ...p, pos: { x: 10, y: 7 }, stunned: false, pm: 7 }
+          if (p.id === 'B1') return { ...p, pos: { x: 12, y: 7 }, stunned: false, pm: 8 }
+          return p
+        })
+      }
+
+      // Effectuer le blitz
+      const blitzMove: Move = {
+        type: 'BLITZ',
+        playerId: 'A1',
+        to: { x: 11, y: 7 },
+        targetId: 'B1'
+      }
+
+      let result = applyMove(newState, blitzMove, rng)
+
+      // Vérifier que le joueur a 6 PM après le mouvement (7 - 1 = 6)
+      let attacker = result.players.find(p => p.id === 'A1')!
+      expect(attacker.pm).toBe(6)
+
+      // Choisir un résultat de blocage (PUSH_BACK pour éviter un turnover)
+      const blockChooseMove: Move = {
+        type: 'BLOCK_CHOOSE',
+        playerId: 'A1',
+        targetId: 'B1',
+        result: 'PUSH_BACK'
+      }
+
+      result = applyMove(result, blockChooseMove, rng)
+
+      // Vérifier que le joueur a maintenant 5 PM (6 - 1 pour le blocage = 5)
+      attacker = result.players.find(p => p.id === 'A1')!
+      expect(attacker.pm).toBe(5)
+
+      // Vérifier que le joueur peut continuer à bouger
+      const moves = getLegalMoves(result)
+      const continueMoves = moves.filter(m => m.type === 'MOVE' && m.playerId === 'A1')
+      expect(continueMoves.length).toBeGreaterThan(0)
     })
   })
 })

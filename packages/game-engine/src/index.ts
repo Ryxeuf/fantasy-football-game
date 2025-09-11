@@ -414,9 +414,9 @@ export function canBlitz(state: GameState, attackerId: string, to: Position, tar
   const occupied = state.players.some(p => p.pos.x === to.x && p.pos.y === to.y);
   if (occupied) return false;
   
-  // Vérifier que le joueur a assez de PM pour le mouvement + le blocage (coûte 1 PM supplémentaire)
+  // Vérifier que le joueur a assez de PM pour le mouvement (le blocage coûtera 1 PM supplémentaire)
   const distance = Math.abs(attacker.pos.x - to.x) + Math.abs(attacker.pos.y - to.y);
-  if (attacker.pm < distance + 1) return false; // +1 pour le coût du blocage
+  if (attacker.pm < distance) return false; // Pas de +1 ici, le blocage sera vérifié après
   
   // Vérifier que la cible sera adjacente après le mouvement
   return isAdjacent(to, target.pos);
@@ -1323,8 +1323,9 @@ export function canPlayerContinueMoving(state: GameState, playerId: string): boo
   if (!player) return false;
   
   // Un joueur peut continuer à bouger s'il n'est pas étourdi, a des PM, et 
-  // soit il n'a pas encore agi, soit il a déjà commencé à bouger
-  return !player.stunned && player.pm > 0 && (!hasPlayerActed(state, playerId) || getPlayerAction(state, playerId) === "MOVE");
+  // soit il n'a pas encore agi, soit il a déjà commencé à bouger ou fait un blitz
+  const playerAction = getPlayerAction(state, playerId);
+  return !player.stunned && player.pm > 0 && (!hasPlayerActed(state, playerId) || playerAction === "MOVE" || playerAction === "BLITZ");
 }
 
 export function getPlayerAction(state: GameState, playerId: string): ActionType | undefined {
@@ -1901,7 +1902,32 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       // Si le joueur a déjà l'action BLITZ enregistrée, c'est un blitz
       // Sinon, c'est un blocage normal
       const isBlitz = hasPlayerActed(state, attacker.id) && getPlayerAction(state, attacker.id) === "BLITZ";
-      newState = setPlayerAction(newState, attacker.id, isBlitz ? "BLITZ" : "BLOCK");
+      
+      if (isBlitz) {
+        // Pour un blitz, consommer 1 PM supplémentaire pour le blocage
+        const attackerIdx = newState.players.findIndex(p => p.id === attacker.id);
+        if (attackerIdx !== -1) {
+          newState.players[attackerIdx].pm = Math.max(0, newState.players[attackerIdx].pm - 1);
+        }
+        
+        // Enregistrer l'action de blitz
+        newState = setPlayerAction(newState, attacker.id, "BLITZ");
+        
+        // Pour un blitz, ne pas terminer l'activation du joueur - il peut continuer à bouger
+        // sauf si c'est un turnover (PLAYER_DOWN, BOTH_DOWN, etc.)
+        if (!newState.isTurnover) {
+          // Le joueur peut continuer à bouger après le blocage
+          // On ne termine pas son activation ici
+        } else {
+          // En cas de turnover, terminer l'activation
+          newState = checkPlayerTurnEnd(newState, attacker.id);
+        }
+      } else {
+        // Pour un blocage normal, terminer l'activation
+        newState = setPlayerAction(newState, attacker.id, "BLOCK");
+        newState = checkPlayerTurnEnd(newState, attacker.id);
+      }
+      
       // lastDiceResult est déjà renseigné par resolveBlockResult pour l'armure; on peut aussi logguer le block
       newState.lastDiceResult = {
         type: "block",
@@ -1996,9 +2022,9 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
         const attackerIdx = newState.players.findIndex(p => p.id === attacker.id);
         newState.players[attackerIdx].pos = { ...to };
         
-        // Calculer le coût en PM : distance + 1 pour le blocage
+        // Calculer le coût en PM : distance seulement (le blocage coûtera 1 PM supplémentaire)
         const distance = Math.abs(from.x - to.x) + Math.abs(from.y - to.y);
-        newState.players[attackerIdx].pm = Math.max(0, newState.players[attackerIdx].pm - distance - 1);
+        newState.players[attackerIdx].pm = Math.max(0, newState.players[attackerIdx].pm - distance);
         
         if (dodgeResult.success) {
           // Si le joueur porte la balle et atteint l'en-but adverse -> touchdown
@@ -2059,9 +2085,9 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
         const attackerIdx = newState.players.findIndex(p => p.id === attacker.id);
         newState.players[attackerIdx].pos = { ...to };
         
-        // Calculer le coût en PM : distance + 1 pour le blocage
+        // Calculer le coût en PM : distance seulement (le blocage coûtera 1 PM supplémentaire)
         const distance = Math.abs(from.x - to.x) + Math.abs(from.y - to.y);
-        newState.players[attackerIdx].pm = Math.max(0, newState.players[attackerIdx].pm - distance - 1);
+        newState.players[attackerIdx].pm = Math.max(0, newState.players[attackerIdx].pm - distance);
         
         // Si le joueur porte la balle et atteint l'en-but adverse -> touchdown
         const mover = newState.players[attackerIdx];
