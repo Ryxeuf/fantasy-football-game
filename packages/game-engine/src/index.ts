@@ -71,6 +71,13 @@ export interface GameState {
     totalStrength: number;
     targetStrength: number;
   };
+  // Choix de follow-up en attente
+  pendingFollowUpChoice?: {
+    attackerId: string;
+    targetId: string;
+    targetNewPosition: Position;
+    targetOldPosition: Position;
+  };
   // Suivi des actions par joueur par tour
   playerActions: Map<string, ActionType>; // playerId -> action effectuée ce tour
   // Informations de match
@@ -105,7 +112,8 @@ export type Move =
   | { type: "BLOCK"; playerId: string; targetId: string }
   | { type: "BLOCK_CHOOSE"; playerId: string; targetId: string; result: BlockResult }
   | { type: "BLITZ"; playerId: string; to: Position; targetId: string }
-  | { type: "PUSH_CHOOSE"; playerId: string; targetId: string; direction: Position };
+  | { type: "PUSH_CHOOSE"; playerId: string; targetId: string; direction: Position }
+  | { type: "FOLLOW_UP_CHOOSE"; playerId: string; targetId: string; followUp: boolean };
 
 export type BlockResult = "PLAYER_DOWN" | "BOTH_DOWN" | "PUSH_BACK" | "STUMBLE" | "POW";
 
@@ -792,10 +800,13 @@ export function resolveBlockResult(
             p.id === target.id ? { ...p, pos: newTargetPos } : p
           );
           
-          // L'attaquant peut suivre
-          newState.players = newState.players.map(p => 
-            p.id === attacker.id ? { ...p, pos: target.pos } : p
-          );
+          // Demander confirmation pour le follow-up
+          newState.pendingFollowUpChoice = {
+            attackerId: attacker.id,
+            targetId: target.id,
+            targetNewPosition: newTargetPos,
+            targetOldPosition: target.pos
+          };
           
           const pushLog = createLogEntry(
             'action',
@@ -969,10 +980,13 @@ function handlePushWithChoice(
       p.id === target.id ? { ...p, pos: newTargetPos } : p
     );
     
-    // L'attaquant peut suivre
-    newState.players = newState.players.map(p => 
-      p.id === attacker.id ? { ...p, pos: target.pos } : p
-    );
+    // Demander confirmation pour le follow-up
+    newState.pendingFollowUpChoice = {
+      attackerId: attacker.id,
+      targetId: target.id,
+      targetNewPosition: newTargetPos,
+      targetOldPosition: target.pos
+    };
     
     const pushLog = createLogEntry(
       'action',
@@ -1995,10 +2009,13 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
         p.id === target.id ? { ...p, pos: newTargetPos } : p
       );
 
-      // L'attaquant peut suivre (follow-up)
-      newState.players = newState.players.map(p => 
-        p.id === attacker.id ? { ...p, pos: target.pos } : p
-      );
+      // Demander confirmation pour le follow-up
+      newState.pendingFollowUpChoice = {
+        attackerId: attacker.id,
+        targetId: target.id,
+        targetNewPosition: newTargetPos,
+        targetOldPosition: target.pos
+      };
 
       // Log de la poussée
       const pushLog = createLogEntry(
@@ -2008,6 +2025,41 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
         attacker.team
       );
       newState.gameLog = [...newState.gameLog, pushLog];
+
+      return checkTouchdowns(newState);
+    }
+    case "FOLLOW_UP_CHOOSE": {
+      const attacker = state.players.find(p => p.id === move.playerId);
+      const target = state.players.find(p => p.id === move.targetId);
+      if (!attacker || !target) return state;
+      if (!state.pendingFollowUpChoice || state.pendingFollowUpChoice.attackerId !== attacker.id || state.pendingFollowUpChoice.targetId !== target.id) {
+        return state; // pas de choix de follow-up attendu
+      }
+
+      let newState = { ...state, pendingFollowUpChoice: undefined };
+
+      if (move.followUp) {
+        // L'attaquant suit le joueur poussé
+        newState.players = newState.players.map(p => 
+          p.id === attacker.id ? { ...p, pos: state.pendingFollowUpChoice!.targetOldPosition } : p
+        );
+        
+        const followUpLog = createLogEntry(
+          'action',
+          `${attacker.name} suit ${target.name} (follow-up)`,
+          attacker.id,
+          attacker.team
+        );
+        newState.gameLog = [...newState.gameLog, followUpLog];
+      } else {
+        const noFollowUpLog = createLogEntry(
+          'action',
+          `${attacker.name} ne suit pas ${target.name}`,
+          attacker.id,
+          attacker.team
+        );
+        newState.gameLog = [...newState.gameLog, noFollowUpLog];
+      }
 
       return checkTouchdowns(newState);
     }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { PixiBoard, PlayerDetails, DiceResultPopup, GameScoreboard, GameLog, BlockChoicePopup, ActionPickerPopup, DiceTestComponent, PushChoicePopup } from "@bb/ui";
+import { PixiBoard, PlayerDetails, DiceResultPopup, GameScoreboard, GameLog, BlockChoicePopup, ActionPickerPopup, DiceTestComponent, PushChoicePopup, FollowUpChoicePopup } from "@bb/ui";
 import {
   setup,
   getLegalMoves,
@@ -240,6 +240,28 @@ export default function HomePage() {
           onClose={() => {
             // Annuler le choix de poussée - on ne peut pas vraiment annuler en règle, mais on peut au moins fermer la popup
             setState((s) => ({ ...s, pendingPushChoice: undefined }));
+          }}
+        />
+      )}
+
+      {/* Popup de choix de follow-up */}
+      {state.pendingFollowUpChoice && (
+        <FollowUpChoicePopup
+          attackerName={state.players.find(p => p.id === state.pendingFollowUpChoice!.attackerId)?.name || 'Attaquant'}
+          targetName={state.players.find(p => p.id === state.pendingFollowUpChoice!.targetId)?.name || 'Cible'}
+          targetNewPosition={state.pendingFollowUpChoice.targetNewPosition}
+          targetOldPosition={state.pendingFollowUpChoice.targetOldPosition}
+          onChoose={(followUp) => {
+            setState((s) => applyMove(s, { 
+              type: 'FOLLOW_UP_CHOOSE', 
+              playerId: s.pendingFollowUpChoice!.attackerId, 
+              targetId: s.pendingFollowUpChoice!.targetId, 
+              followUp 
+            } as any, createRNG()));
+          }}
+          onClose={() => {
+            // Annuler le choix de follow-up - on ne peut pas vraiment annuler en règle, mais on peut au moins fermer la popup
+            setState((s) => ({ ...s, pendingFollowUpChoice: undefined }));
           }}
         />
       )}
