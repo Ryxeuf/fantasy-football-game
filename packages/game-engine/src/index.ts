@@ -1014,33 +1014,33 @@ export function getPushDirections(attackerPos: Position, targetPos: Position): P
   const dx = targetPos.x - attackerPos.x;
   const dy = targetPos.y - attackerPos.y;
   
-  // Normaliser la direction principale
-  const normalizedX = dx === 0 ? 0 : dx / Math.abs(dx);
-  const normalizedY = dy === 0 ? 0 : dy / Math.abs(dy);
+  // Normaliser la direction de l'attaquant vers la cible
+  const normalizedX = dx === 0 ? 0 : Math.sign(dx);
+  const normalizedY = dy === 0 ? 0 : Math.sign(dy);
   
-  // Les 3 directions possibles de poussée :
-  // 1. Direction directe
-  // 2. Direction directe + 45° dans le sens horaire
-  // 3. Direction directe + 45° dans le sens anti-horaire
+  // Les directions de poussée sont dans la direction opposée à l'attaquant
+  // (la cible est poussée dans la direction opposée à l'attaquant)
+  const pushX = normalizedX === 0 ? 0 : -normalizedX;
+  const pushY = normalizedY === 0 ? 0 : -normalizedY;
   
   const directions: Position[] = [];
   
-  // Direction directe
-  directions.push({ x: normalizedX, y: normalizedY });
+  // Direction directe (opposée à l'attaquant)
+  directions.push({ x: pushX, y: pushY });
   
-  // Calculer les directions à 45°
-  if (normalizedX !== 0 && normalizedY !== 0) {
+  // Calculer les directions à 45° de la direction directe
+  if (pushX !== 0 && pushY !== 0) {
     // Si on est en diagonale, les directions à 45° sont les directions cardinales
-    directions.push({ x: normalizedX, y: 0 });
-    directions.push({ x: 0, y: normalizedY });
-  } else if (normalizedX !== 0) {
+    directions.push({ x: pushX, y: 0 });
+    directions.push({ x: 0, y: pushY });
+  } else if (pushX !== 0) {
     // Si on est horizontal, les directions à 45° sont les diagonales
-    directions.push({ x: normalizedX, y: 1 });
-    directions.push({ x: normalizedX, y: -1 });
-  } else if (normalizedY !== 0) {
+    directions.push({ x: pushX, y: 1 });
+    directions.push({ x: pushX, y: -1 });
+  } else if (pushY !== 0) {
     // Si on est vertical, les directions à 45° sont les diagonales
-    directions.push({ x: 1, y: normalizedY });
-    directions.push({ x: -1, y: normalizedY });
+    directions.push({ x: 1, y: pushY });
+    directions.push({ x: -1, y: pushY });
   }
   
   return directions;

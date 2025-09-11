@@ -28,12 +28,12 @@ describe('Directions de poussée', () => {
       const directions = getPushDirections(attacker, target);
       expect(directions).toHaveLength(3);
       
-      // Direction directe
-      expect(directions[0]).toEqual({ x: 1, y: 0 });
+      // Direction directe (opposée à l'attaquant)
+      expect(directions[0]).toEqual({ x: -1, y: 0 });
       
       // Directions à 45° (diagonales)
-      expect(directions[1]).toEqual({ x: 1, y: 1 });
-      expect(directions[2]).toEqual({ x: 1, y: -1 });
+      expect(directions[1]).toEqual({ x: -1, y: 1 });
+      expect(directions[2]).toEqual({ x: -1, y: -1 });
     });
 
     it('devrait retourner 3 directions pour un blocage vertical', () => {
@@ -43,12 +43,12 @@ describe('Directions de poussée', () => {
       const directions = getPushDirections(attacker, target);
       expect(directions).toHaveLength(3);
       
-      // Direction directe
-      expect(directions[0]).toEqual({ x: 0, y: 1 });
+      // Direction directe (opposée à l'attaquant)
+      expect(directions[0]).toEqual({ x: 0, y: -1 });
       
       // Directions à 45° (diagonales)
-      expect(directions[1]).toEqual({ x: 1, y: 1 });
-      expect(directions[2]).toEqual({ x: -1, y: 1 });
+      expect(directions[1]).toEqual({ x: 1, y: -1 });
+      expect(directions[2]).toEqual({ x: -1, y: -1 });
     });
 
     it('devrait retourner 3 directions pour un blocage diagonal', () => {
@@ -58,12 +58,12 @@ describe('Directions de poussée', () => {
       const directions = getPushDirections(attacker, target);
       expect(directions).toHaveLength(3);
       
-      // Direction directe
-      expect(directions[0]).toEqual({ x: 1, y: 1 });
+      // Direction directe (opposée à l'attaquant)
+      expect(directions[0]).toEqual({ x: -1, y: -1 });
       
       // Directions à 45° (cardinales)
-      expect(directions[1]).toEqual({ x: 1, y: 0 });
-      expect(directions[2]).toEqual({ x: 0, y: 1 });
+      expect(directions[1]).toEqual({ x: -1, y: 0 });
+      expect(directions[2]).toEqual({ x: 0, y: -1 });
     });
 
     it('devrait gérer les directions négatives', () => {
@@ -73,12 +73,12 @@ describe('Directions de poussée', () => {
       const directions = getPushDirections(attacker, target);
       expect(directions).toHaveLength(3);
       
-      // Direction directe
-      expect(directions[0]).toEqual({ x: -1, y: 0 });
+      // Direction directe (opposée à l'attaquant)
+      expect(directions[0]).toEqual({ x: 1, y: 0 });
       
       // Directions à 45° (diagonales)
-      expect(directions[1]).toEqual({ x: -1, y: 1 });
-      expect(directions[2]).toEqual({ x: -1, y: -1 });
+      expect(directions[1]).toEqual({ x: 1, y: 1 });
+      expect(directions[2]).toEqual({ x: 1, y: -1 });
     });
   });
 });
