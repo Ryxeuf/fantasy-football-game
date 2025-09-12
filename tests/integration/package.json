@@ -1,0 +1,13 @@
+{
+  "name": "@bb/tests-integration",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest --config vitest.config.ts",
+    "test:watch": "vitest --watch --config vitest.config.ts"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.9"
+  }
+}

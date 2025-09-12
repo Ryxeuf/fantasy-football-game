@@ -10,6 +10,7 @@
     "format": "prettier -w .",
     "typecheck": "turbo run typecheck --continue",
     "test": "turbo run test --continue",
+    "test:integration": "npx vitest --config tests/integration/vitest.config.ts tests/integration",
     "changeset": "changeset",
     "changeset:version": "changeset version && pnpm install",
     "changeset:publish": "echo 'No registry publish (private)'; exit 0"

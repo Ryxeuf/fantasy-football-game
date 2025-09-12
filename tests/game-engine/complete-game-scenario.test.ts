@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { setup, applyMove, makeRNG, type GameState, type Move } from '../index';
+import { setup, applyMove, makeRNG, type GameState, type Move } from '@bb/game-engine';
 
 describe('Scénario de jeu complet - Actions spécifiques', () => {
   it('devrait simuler un scénario de jeu réaliste avec blocages et follow-ups', () => {

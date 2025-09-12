@@ -1,0 +1,20 @@
+{
+  "name": "@bb/tests",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest",
+    "test:ui": "vitest --config vitest.config.ts tests/ui",
+    "test:game-engine": "vitest --config vitest.config.ts tests/game-engine",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest --coverage"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^14.0.0",
+    "@testing-library/jest-dom": "^6.0.0",
+    "@types/react": "^18.0.0",
+    "jsdom": "^23.0.0",
+    "vitest": "^2.1.9"
+  }
+}
