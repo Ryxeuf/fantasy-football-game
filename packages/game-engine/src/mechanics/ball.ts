@@ -3,10 +3,10 @@
  * Gère le rebond, le ramassage, les touchdowns et les jets de réception
  */
 
-import { GameState, Player, Position, TeamId, RNG } from './types';
+import { GameState, Player, Position, TeamId, RNG } from '../core/types';
 import { samePos, calculatePickupModifiers } from './movement';
-import { performPickupRoll } from './dice';
-import { createLogEntry, addLogEntry } from './logging';
+import { performPickupRoll } from '../utils/dice';
+import { createLogEntry, addLogEntry } from '../utils/logging';
 
 /**
  * Vérifie si un joueur est dans l'en-but adverse

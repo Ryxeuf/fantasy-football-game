@@ -1,5 +1,5 @@
 import React from 'react';
-import BlockDiceIcon from './BlockDiceIcon';
+import BlockDiceIcon from '../components/BlockDiceIcon';
 
 type BlockResult = "PLAYER_DOWN" | "BOTH_DOWN" | "PUSH_BACK" | "STUMBLE" | "POW";
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { setup, applyMove, makeRNG, type GameState, type Move } from './index';
+import { setup, applyMove, makeRNG, type GameState, type Move } from '../index';
 
 describe('Système de follow-up', () => {
   it('devrait créer un pendingFollowUpChoice après une poussée', () => {

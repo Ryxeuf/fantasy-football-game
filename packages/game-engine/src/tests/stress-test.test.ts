@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { setup, applyMove, makeRNG } from './index';
-import { type GameState, type Move, type Player } from './types';
+import { setup, applyMove, makeRNG } from '../index';
+import { type GameState, type Move, type Player } from '../core/types';
 
 describe('Test de stress - Simulation intensive', () => {
   it('devrait simuler 20 tours avec des actions aléatoires', () => {

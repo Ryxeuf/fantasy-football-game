@@ -15,7 +15,7 @@ import {
   type GameState,
   type Player,
   type Position,
-} from './index';
+} from '../index';
 
 describe('Système de blocage', () => {
   let state: GameState;

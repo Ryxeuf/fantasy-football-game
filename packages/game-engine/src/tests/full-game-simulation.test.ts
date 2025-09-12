@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { setup, applyMove, makeRNG, type GameState, type Move } from './index';
+import { setup, applyMove, makeRNG, type GameState, type Move } from '../index';
 
 describe('Simulation complète de jeu - 4 tours', () => {
   it('devrait simuler 4 tours complets avec toutes les actions possibles', () => {

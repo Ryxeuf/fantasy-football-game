@@ -1,4 +1,4 @@
-import { setup, getLegalMoves, applyMove, makeRNG } from './index';
+import { setup, getLegalMoves, applyMove, makeRNG } from '../index';
 
 const s1 = setup();
 console.log('Initial:', s1);

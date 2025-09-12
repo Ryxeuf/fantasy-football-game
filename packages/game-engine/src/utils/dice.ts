@@ -3,7 +3,7 @@
  * Gère tous les types de dés : D6, 2D6, dés de blocage, etc.
  */
 
-import { RNG, Player, DiceResult, BlockResult, BlockDiceResult } from './types';
+import { RNG, Player, DiceResult, BlockResult, BlockDiceResult } from '../core/types';
 
 /**
  * Lance un dé à 6 faces

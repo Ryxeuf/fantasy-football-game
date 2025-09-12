@@ -3,7 +3,7 @@
  * Gère les déplacements, les zones de tacle, et les calculs de distance
  */
 
-import { GameState, Position, Player, TeamId } from './types';
+import { GameState, Position, Player, TeamId } from '../core/types';
 
 /**
  * Vérifie si une position est dans les limites du terrain

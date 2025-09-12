@@ -8,7 +8,7 @@ import {
   canTeamBlitz,
   incrementTeamBlitzCount,
   clearTeamBlitzCounts,
-} from './index';
+} from '../index';
 
 describe("Limitation d'une seule action de blitz par tour d'équipe", () => {
   let state: any;

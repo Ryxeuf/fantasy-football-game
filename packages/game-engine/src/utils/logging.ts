@@ -3,7 +3,7 @@
  * Gère la création et l'ajout d'entrées de log
  */
 
-import { GameState, GameLogEntry, TeamId } from './types';
+import { GameState, GameLogEntry, TeamId } from '../core/types';
 
 /**
  * Crée une nouvelle entrée de log

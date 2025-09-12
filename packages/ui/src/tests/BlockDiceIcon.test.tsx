@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import BlockDiceIcon from './BlockDiceIcon';
+import BlockDiceIcon from '../components/BlockDiceIcon';
 
 describe('BlockDiceIcon', () => {
   const testCases = [

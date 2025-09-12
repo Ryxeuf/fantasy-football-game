@@ -3,7 +3,7 @@
  * Utilise l'algorithme mulberry32 pour assurer la reproductibilité
  */
 
-import { RNG } from './types';
+import { RNG } from '../core/types';
 
 /**
  * Crée un générateur de nombres aléatoires déterministe à partir d'une graine

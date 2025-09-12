@@ -33,7 +33,7 @@ import {
   type Move,
   type Player,
   type ActionType,
-} from './index';
+} from '../index';
 
 describe('Mouvements de base', () => {
   let state: GameState;

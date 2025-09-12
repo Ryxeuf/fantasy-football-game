@@ -3,11 +3,11 @@
  * Gère les blocages, les assists, les dés de blocage et la résolution des résultats
  */
 
-import { GameState, Position, TeamId, BlockResult, BlockDiceResult, RNG, Player } from './types';
+import { GameState, Position, TeamId, BlockResult, BlockDiceResult, RNG, Player } from '../core/types';
 import { isAdjacent, inBounds, isPositionOccupied } from './movement';
-import { performArmorRoll } from './dice';
-import { createLogEntry } from './logging';
-import { canTeamBlitz } from './game-state';
+import { performArmorRoll } from '../utils/dice';
+import { createLogEntry } from '../utils/logging';
+import { canTeamBlitz } from '../core/game-state';
 
 /**
  * Vérifie si un joueur peut effectuer un blocage

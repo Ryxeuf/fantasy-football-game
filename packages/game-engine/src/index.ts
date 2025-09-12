@@ -5,16 +5,16 @@
  */
 
 // Export des types
-export * from './types';
+export * from './core/types';
 
 // Export des fonctions utilitaires
-export * from './rng';
-export * from './dice';
-export * from './logging';
-export * from './movement';
-export * from './ball';
-export * from './actions';
-export * from './boardgame-io';
+export * from './utils/rng';
+export * from './utils/dice';
+export * from './utils/logging';
+export * from './mechanics/movement';
+export * from './mechanics/ball';
+export * from './actions/actions';
+export * from './core/boardgame-io';
 
 // Export des fonctions de blocage (sans conflit)
 export {
@@ -28,7 +28,7 @@ export {
   getPushDirections,
   handlePushWithChoice,
   resolveBlockResult,
-} from './blocking';
+} from './mechanics/blocking';
 
 // Export des fonctions de gestion d'état (sans conflit)
 export {
@@ -51,4 +51,4 @@ export {
   shouldAutoEndTurn,
   handlePlayerSwitch,
   clearDiceResult,
-} from './game-state';
+} from './core/game-state';

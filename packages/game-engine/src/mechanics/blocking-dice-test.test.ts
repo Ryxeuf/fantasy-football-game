@@ -12,7 +12,7 @@ import {
   type GameState,
   type BlockResult,
   type BlockDiceResult,
-} from './index';
+} from '../index';
 
 describe('Tests des dés de blocage - Vérification complète', () => {
   let state: GameState;

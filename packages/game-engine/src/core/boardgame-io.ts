@@ -5,8 +5,8 @@
 
 import { GameState, Position } from './types';
 import { setup } from './game-state';
-import { applyMove } from './actions';
-import { makeRNG } from './rng';
+import { applyMove } from '../actions/actions';
+import { makeRNG } from '../utils/rng';
 import { clearDiceResult } from './game-state';
 
 /**

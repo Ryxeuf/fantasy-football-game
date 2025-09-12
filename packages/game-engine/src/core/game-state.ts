@@ -4,8 +4,8 @@
  */
 
 import { GameState, TeamId, ActionType } from './types';
-import { createLogEntry } from './logging';
-import { checkTouchdowns } from './ball';
+import { createLogEntry } from '../utils/logging';
+import { checkTouchdowns } from '../mechanics/ball';
 
 /**
  * Configuration initiale du jeu

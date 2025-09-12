@@ -3,23 +3,23 @@
  * Gère l'application des mouvements, les jets de dés et la logique de jeu
  */
 
-import { GameState, Move, Player, Position, TeamId, RNG, BlockResult } from './types';
+import { GameState, Move, Player, Position, TeamId, RNG, BlockResult } from '../core/types';
 import {
   inBounds,
   samePos,
   requiresDodgeRoll,
   calculateDodgeModifiers,
   calculatePickupModifiers,
-} from './movement';
+} from '../mechanics/movement';
 import {
   performDodgeRoll,
   performPickupRoll,
   performArmorRoll,
   rollBlockDice,
   rollBlockDiceManyWithRolls,
-} from './dice';
-import { createLogEntry } from './logging';
-import { checkTouchdowns, isInOpponentEndzone, awardTouchdown, bounceBall } from './ball';
+} from '../utils/dice';
+import { createLogEntry } from '../utils/logging';
+import { checkTouchdowns, isInOpponentEndzone, awardTouchdown, bounceBall } from '../mechanics/ball';
 import {
   canBlock,
   canBlitz,
@@ -28,7 +28,7 @@ import {
   calculateBlockDiceCount,
   getBlockDiceChooser,
   resolveBlockResult,
-} from './blocking';
+} from '../mechanics/blocking';
 import {
   hasPlayerActed,
   canPlayerMove,
@@ -40,7 +40,7 @@ import {
   getPlayerAction,
   incrementTeamBlitzCount,
   advanceHalfIfNeeded,
-} from './game-state';
+} from '../core/game-state';
 
 /**
  * Obtient tous les mouvements légaux pour l'état actuel

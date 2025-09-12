@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getPushDirections, getPushDirection } from './index';
+import { getPushDirections, getPushDirection } from '../index';
 
 describe('Directions de poussée', () => {
   describe('getPushDirection', () => {

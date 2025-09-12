@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getPushDirections } from './index';
+import { getPushDirections } from '../index';
 
 describe('Règles de poussée Blood Bowl', () => {
   describe('Directions de poussée selon la position relative', () => {

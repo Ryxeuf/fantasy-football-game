@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { setup, applyMove, makeRNG, type GameState, type Move } from './index';
+import { setup, applyMove, makeRNG, type GameState, type Move } from '../index';
 
 describe("Test de tous les types d'actions", () => {
   it('devrait tester tous les types de mouvements', () => {

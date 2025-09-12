@@ -8,7 +8,7 @@ import {
   type GameState,
   type Move,
   type TeamId,
-} from './index';
+} from '../index';
 
 describe('Action de Blitz', () => {
   let state: GameState;

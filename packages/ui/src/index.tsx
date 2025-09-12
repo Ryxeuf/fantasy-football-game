@@ -31,14 +31,21 @@ export function Board({ state, onCellClick }: {
   return <div className="inline-block">{rows}</div>;
 }
 
-export { default as PixiBoard } from './PixiBoard';
-export { default as PlayerDetails } from './PlayerDetails';
-export { default as DiceResultPopup } from './DiceResultPopup';
-export { default as GameScoreboard } from './GameScoreboard';
-export { default as GameLog } from './GameLog';
-export { default as ActionPickerPopup } from './ActionPickerPopup';
-export { default as BlockChoicePopup } from './BlockChoicePopup';
-export { default as BlockDiceIcon } from './BlockDiceIcon';
-export { default as DiceTestComponent } from './DiceTestComponent';
-export { default as PushChoicePopup } from './PushChoicePopup';
-export { default as FollowUpChoicePopup } from './FollowUpChoicePopup';
+// Board components
+export { default as PixiBoard } from './board/PixiBoard';
+
+// UI Components
+export { default as PlayerDetails } from './components/PlayerDetails';
+export { default as GameScoreboard } from './components/GameScoreboard';
+export { default as GameLog } from './components/GameLog';
+export { default as BlockDiceIcon } from './components/BlockDiceIcon';
+
+// Popup components
+export { default as DiceResultPopup } from './popups/DiceResultPopup';
+export { default as ActionPickerPopup } from './popups/ActionPickerPopup';
+export { default as BlockChoicePopup } from './popups/BlockChoicePopup';
+export { default as PushChoicePopup } from './popups/PushChoicePopup';
+export { default as FollowUpChoicePopup } from './popups/FollowUpChoicePopup';
+
+// Test components
+export { default as DiceTestComponent } from './tests/DiceTestComponent';
