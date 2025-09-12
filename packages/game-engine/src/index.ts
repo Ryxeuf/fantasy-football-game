@@ -80,6 +80,8 @@ export interface GameState {
   };
   // Suivi des actions par joueur par tour
   playerActions: Map<string, ActionType>; // playerId -> action effectuée ce tour
+  // Compteur de blitz par équipe par tour
+  teamBlitzCount: Map<TeamId, number>; // teamId -> nombre de blitz effectués ce tour
   // Informations de match
   half: number; // 1 ou 2
   score: {
@@ -405,6 +407,9 @@ export function canBlitz(state: GameState, attackerId: string, to: Position, tar
   const target = state.players.find(p => p.id === targetId);
   
   if (!attacker || !target) return false;
+  
+  // Vérifier que l'équipe n'a pas déjà utilisé son blitz ce tour
+  if (!canTeamBlitz(state, attacker.team)) return false;
   
   // Vérifier que l'attaquant peut bouger (pas étourdi, a des PM)
   if (attacker.stunned || attacker.pm <= 0) return false;
@@ -1336,6 +1341,7 @@ export function setup(seed = "seed"): GameState {
     selectedPlayerId: null,
     isTurnover: false,
     playerActions: new Map<string, ActionType>(),
+    teamBlitzCount: new Map<TeamId, number>(),
     // Informations de match
     half: 1,
     score: {
@@ -1401,6 +1407,33 @@ export function clearPlayerActions(state: GameState): GameState {
   return {
     ...state,
     playerActions: new Map<string, ActionType>()
+  };
+}
+
+// --- Gestion du compteur de blitz ---
+export function getTeamBlitzCount(state: GameState, team: TeamId): number {
+  return state.teamBlitzCount.get(team) || 0;
+}
+
+export function canTeamBlitz(state: GameState, team: TeamId): boolean {
+  return getTeamBlitzCount(state, team) < 1;
+}
+
+export function incrementTeamBlitzCount(state: GameState, team: TeamId): GameState {
+  const newTeamBlitzCount = new Map(state.teamBlitzCount);
+  const currentCount = newTeamBlitzCount.get(team) || 0;
+  newTeamBlitzCount.set(team, currentCount + 1);
+  
+  return {
+    ...state,
+    teamBlitzCount: newTeamBlitzCount
+  };
+}
+
+export function clearTeamBlitzCounts(state: GameState): GameState {
+  return {
+    ...state,
+    teamBlitzCount: new Map<TeamId, number>()
   };
 }
 
@@ -1555,6 +1588,7 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
         isTurnover: false,
         lastDiceResult: undefined,
         playerActions: new Map<string, ActionType>(), // Réinitialiser les actions
+        teamBlitzCount: new Map<TeamId, number>(), // Réinitialiser les compteurs de blitz
       };
       
       // Log du changement de tour
@@ -2217,6 +2251,9 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       
       // Enregistrer l'action de blitz AVANT de créer le pendingBlock
       newState = setPlayerAction(newState, attacker.id, "BLITZ");
+      
+      // Incrémenter le compteur de blitz de l'équipe
+      newState = incrementTeamBlitzCount(newState, attacker.team);
       
       // Vérifier si le joueur porte la balle et est dans l'en-but adverse après le mouvement
       const mover = newState.players.find(p => p.id === attacker.id);
