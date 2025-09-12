@@ -11,6 +11,7 @@ export * from './core/types';
 export * from './utils/rng';
 export * from './utils/dice';
 export * from './utils/logging';
+export * from './utils/dice-notifications';
 export * from './mechanics/movement';
 export * from './mechanics/ball';
 export * from './actions/actions';

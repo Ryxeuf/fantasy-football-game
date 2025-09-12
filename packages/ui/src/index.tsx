@@ -49,3 +49,8 @@ export { default as FollowUpChoicePopup } from './popups/FollowUpChoicePopup';
 
 // Test components
 export { default as DiceTestComponent } from './tests/DiceTestComponent';
+
+// Toast and notification components
+export { ToastProvider, useToast } from './components/Toaster';
+export { DiceNotification, BlockDiceNotification, useDiceNotifications } from './components/DiceNotification';
+export { DiceNotificationDemo } from './components/DiceNotificationDemo';
