@@ -57,10 +57,12 @@ export function rollD6WithNotification(rng: RNG, playerName: string): number {
   
   // Créer un DiceResult simple pour la notification
   const diceResult: DiceResult = {
-    type: 'dice',
+    type: 'block', // Utiliser 'block' comme type générique pour les dés simples
+    playerId: '',
     diceRoll: result,
     targetNumber: 0,
     success: false,
+    modifiers: 0,
   };
   
   notifyDiceResult(playerName, diceResult);
@@ -77,10 +79,12 @@ export function roll2D6WithNotification(rng: RNG, playerName: string): number {
   
   // Créer un DiceResult pour la notification
   const diceResult: DiceResult = {
-    type: 'dice',
+    type: 'block', // Utiliser 'block' comme type générique pour les dés simples
+    playerId: '',
     diceRoll: result,
     targetNumber: 0,
     success: false,
+    modifiers: 0,
   };
   
   notifyDiceResult(playerName, diceResult);
@@ -101,6 +105,7 @@ export function performDodgeRollWithNotification(
 
   const diceResult: DiceResult = {
     type: 'dodge',
+    playerId: player.id,
     diceRoll,
     targetNumber,
     success,
@@ -125,6 +130,7 @@ export function performPickupRollWithNotification(
 
   const diceResult: DiceResult = {
     type: 'pickup',
+    playerId: player.id,
     diceRoll,
     targetNumber,
     success,
@@ -149,6 +155,7 @@ export function performArmorRollWithNotification(
 
   const diceResult: DiceResult = {
     type: 'armor',
+    playerId: player.id,
     diceRoll,
     targetNumber,
     success,

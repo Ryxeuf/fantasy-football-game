@@ -1,6 +1,8 @@
 import React from 'react';
 import { 
-  useDiceNotifications,
+  useDiceNotifications
+} from './DiceNotification';
+import { 
   setDiceNotificationCallback,
   setBlockDiceNotificationCallback,
   makeRNG,
@@ -47,6 +49,7 @@ export const DiceNotificationDemo: React.FC = () => {
     
     const diceResult: DiceResult = {
       type: 'dodge',
+      playerId: 'demo-player',
       diceRoll,
       targetNumber,
       success,
@@ -63,6 +66,7 @@ export const DiceNotificationDemo: React.FC = () => {
     
     const diceResult: DiceResult = {
       type: 'pickup',
+      playerId: 'demo-player',
       diceRoll,
       targetNumber,
       success,
@@ -79,6 +83,7 @@ export const DiceNotificationDemo: React.FC = () => {
     
     const diceResult: DiceResult = {
       type: 'armor',
+      playerId: 'demo-player',
       diceRoll,
       targetNumber,
       success,
