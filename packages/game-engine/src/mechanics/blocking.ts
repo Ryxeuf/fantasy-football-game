@@ -6,6 +6,7 @@
 import { GameState, Position, TeamId, BlockResult, BlockDiceResult, RNG, Player } from '../core/types';
 import { isAdjacent, inBounds, isPositionOccupied } from './movement';
 import { performArmorRoll } from '../utils/dice';
+import { performArmorRollWithNotification } from '../utils/dice-notifications';
 import { createLogEntry } from '../utils/logging';
 import { canTeamBlitz } from '../core/game-state';
 import { movePlayerToDugoutZone } from './dugout';
@@ -442,7 +443,7 @@ function handlePlayerDown(state: GameState, attacker: Player, target: Player, rn
   state.gameLog = [...state.gameLog, attackerDownLog];
 
   // Jet d'armure pour l'attaquant
-  const attackerArmorResult = performArmorRoll(attacker, rng);
+  const attackerArmorResult = performArmorRollWithNotification(attacker, rng);
   state.lastDiceResult = attackerArmorResult;
 
   // Log du jet d'armure
@@ -458,6 +459,11 @@ function handlePlayerDown(state: GameState, attacker: Player, target: Player, rn
     }
   );
   state.gameLog = [...state.gameLog, attackerArmorLog];
+
+  // Si l'armure est percée (success = false), faire un jet de blessure
+  if (!attackerArmorResult.success) {
+    state = performInjuryRoll(state, attacker, rng);
+  }
 
   // Si l'attaquant avait le ballon, le perdre
   if (attacker.hasBall) {
@@ -489,8 +495,8 @@ function handleBothDown(state: GameState, attacker: Player, target: Player, rng:
   state.gameLog = [...state.gameLog, bothDownLog];
 
   // Jets d'armure pour les deux joueurs
-  const attackerArmorResult = performArmorRoll(attacker, rng);
-  const targetArmorResult = performArmorRoll(target, rng);
+  const attackerArmorResult = performArmorRollWithNotification(attacker, rng);
+  const targetArmorResult = performArmorRollWithNotification(target, rng);
   state.lastDiceResult = attackerArmorResult; // On stocke le dernier jet
 
   // Logs des jets d'armure
@@ -517,6 +523,16 @@ function handleBothDown(state: GameState, attacker: Player, target: Player, rng:
     }
   );
   state.gameLog = [...state.gameLog, attackerArmorLog, targetArmorLog];
+
+  // Si l'armure de l'attaquant est percée, faire un jet de blessure
+  if (!attackerArmorResult.success) {
+    state = performInjuryRoll(state, attacker, rng);
+  }
+  
+  // Si l'armure de la cible est percée, faire un jet de blessure
+  if (!targetArmorResult.success) {
+    state = performInjuryRoll(state, target, rng);
+  }
 
   // Si l'attaquant avait le ballon, le perdre
   if (attacker.hasBall) {

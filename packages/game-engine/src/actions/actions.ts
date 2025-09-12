@@ -18,6 +18,14 @@ import {
   rollBlockDice,
   rollBlockDiceManyWithRolls,
 } from '../utils/dice';
+import {
+  performDodgeRollWithNotification,
+  performPickupRollWithNotification,
+  performArmorRollWithNotification,
+  rollBlockDiceWithNotification,
+  rollBlockDiceManyWithNotification,
+} from '../utils/dice-notifications';
+import { performInjuryRoll } from '../mechanics/injury';
 import { createLogEntry } from '../utils/logging';
 import { checkTouchdowns, isInOpponentEndzone, awardTouchdown, bounceBall } from '../mechanics/ball';
 import {
@@ -50,6 +58,11 @@ import {
 export function getLegalMoves(state: GameState): Move[] {
   const moves: Move[] = [{ type: 'END_TURN' }];
   const team = state.currentPlayer;
+
+  // Si c'est un turnover, seul END_TURN est possible
+  if (state.isTurnover) {
+    return moves;
+  }
 
   // Si tous les joueurs de l'équipe ont agi ou ne peuvent plus agir, seul END_TURN est possible
   if (shouldAutoEndTurn(state)) {
@@ -233,6 +246,11 @@ function handleMove(
   const from = player.pos;
   const to = move.to;
 
+  // Si c'est un turnover, on ne peut pas faire de mouvement
+  if (newState.isTurnover) {
+    return newState;
+  }
+
   // Vérifier si un jet d'esquive est nécessaire
   const needsDodge = requiresDodgeRoll(newState, from, to, player.team);
 
@@ -258,7 +276,7 @@ function handleDodgeRoll(
   const dodgeModifiers = calculateDodgeModifiers(state, from, to, player.team);
 
   // Effectuer le jet d'esquive avec les modificateurs
-  const dodgeResult = performDodgeRoll(player, rng, dodgeModifiers);
+  const dodgeResult = performDodgeRollWithNotification(player, rng, dodgeModifiers);
 
   let next = structuredClone(state) as GameState;
   next.lastDiceResult = dodgeResult;
@@ -304,7 +322,7 @@ function handleDodgeRoll(
     next.players[idx].stunned = true;
 
     // Effectuer le jet d'armure
-    const armorResult = performArmorRoll(next.players[idx], rng);
+    const armorResult = performArmorRollWithNotification(next.players[idx], rng);
     next.lastDiceResult = armorResult;
 
     // Log du jet d'armure
@@ -390,7 +408,7 @@ function handleBallPickup(state: GameState, player: Player, rng: RNG, idx: numbe
   const pickupModifiers = calculatePickupModifiers(state, state.ball!, player.team);
 
   // Effectuer le jet de pickup
-  const pickupResult = performPickupRoll(player, rng, pickupModifiers);
+  const pickupResult = performPickupRollWithNotification(player, rng, pickupModifiers);
 
   // Stocker le résultat pour l'affichage
   state.lastDiceResult = pickupResult;
@@ -468,9 +486,9 @@ function handleDodge(
   // Calculer les modificateurs de désquive (malus pour adversaires à l'arrivée)
   const dodgeModifiers = calculateDodgeModifiers(state, from, to, player.team);
 
-  const dodgeResult = performDodgeRoll(player, rng, dodgeModifiers);
+  const dodgeResult = performDodgeRollWithNotification(player, rng, dodgeModifiers);
 
-  const next = structuredClone(state) as GameState;
+  let next = structuredClone(state) as GameState;
   next.lastDiceResult = dodgeResult;
 
   // Log du jet d'esquive
@@ -515,7 +533,7 @@ function handleDodge(
     next.gameLog = [...next.gameLog, fallLogEntry];
 
     // Effectuer le jet d'armure
-    const armorResult = performArmorRoll(next.players[idx], rng);
+    const armorResult = performArmorRollWithNotification(next.players[idx], rng);
     next.lastDiceResult = armorResult;
 
     // Log du jet d'armure
@@ -531,6 +549,11 @@ function handleDodge(
       }
     );
     next.gameLog = [...next.gameLog, armorLogEntry];
+
+    // Si l'armure est percée (success = false), faire un jet de blessure
+    if (!armorResult.success) {
+      next = performInjuryRoll(next, next.players[idx], rng);
+    }
 
     // Si le joueur avait le ballon, il le perd et le ballon rebondit
     if (next.players[idx].hasBall) {
@@ -585,7 +608,7 @@ function handleBlock(
 
   // Si un seul dé, résoudre immédiatement
   if (diceCount === 1) {
-    const blockResult = rollBlockDice(rng);
+    const blockResult = rollBlockDiceWithNotification(rng, attacker.name);
     const diceRoll = Math.floor(rng() * 6) + 1; // Simuler le jet de dé pour le log (1-6)
     const blockDiceResult = {
       type: 'block' as const,
@@ -612,7 +635,7 @@ function handleBlock(
     return resolveBlockResult(newState, blockDiceResult, rng);
   } else {
     // Plusieurs dés : enregistrer un choix en attente
-    const options = rollBlockDiceManyWithRolls(rng, diceCount);
+    const options = rollBlockDiceManyWithNotification(rng, diceCount, attacker.name);
 
     // Log des dés lancés
     const blockLogEntry = createLogEntry(
@@ -849,7 +872,7 @@ function handleBlitz(
     const dodgeModifiers = calculateDodgeModifiers(newState, from, to, attacker.team);
 
     // Effectuer le jet d'esquive
-    const dodgeResult = performDodgeRoll(attacker, rng, dodgeModifiers);
+    const dodgeResult = performDodgeRollWithNotification(attacker, rng, dodgeModifiers);
 
     newState.lastDiceResult = dodgeResult;
 
@@ -893,7 +916,7 @@ function handleBlitz(
       newState.players[attackerIdx].stunned = true;
 
       // Effectuer le jet d'armure
-      const armorResult = performArmorRoll(newState.players[attackerIdx], rng);
+      const armorResult = performArmorRollWithNotification(newState.players[attackerIdx], rng);
       newState.lastDiceResult = armorResult;
 
       // Log du jet d'armure
@@ -909,6 +932,11 @@ function handleBlitz(
         }
       );
       newState.gameLog = [...newState.gameLog, armorLogEntry];
+
+      // Si l'armure est percée (success = false), faire un jet de blessure
+      if (!armorResult.success) {
+        newState = performInjuryRoll(newState, newState.players[attackerIdx], rng);
+      }
 
       // Si le joueur avait le ballon, il le perd et le ballon rebondit
       // (même si l'armure n'est pas percée, le joueur chute et perd le ballon)
