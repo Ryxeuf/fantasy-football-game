@@ -172,7 +172,7 @@ describe('Scénario de jeu complet - Actions spécifiques', () => {
     
     // Vérifications finales
     log('\n=== RÉSULTATS FINAUX ===');
-    log(`Score: A=${gameState.score.A}, B=${gameState.score.B}`);
+    log(`Score: A=${gameState.score.teamA}, B=${gameState.score.teamB}`);
     log(`Tour actuel: ${gameState.turn}`);
     log(`Mi-temps: ${gameState.half}`);
     log(`Turnover: ${gameState.isTurnover}`);

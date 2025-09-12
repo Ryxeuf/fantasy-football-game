@@ -151,7 +151,7 @@ describe('Test de stress - Simulation intensive', () => {
     console.log(`Follow-ups: ${followUpCount}`);
     console.log(`Tour final: ${gameState.turn}`);
     console.log(`Mi-temps: ${gameState.half}`);
-    console.log(`Score: A=${gameState.score.A}, B=${gameState.score.B}`);
+    console.log(`Score: A=${gameState.score.teamA}, B=${gameState.score.teamB}`);
     
     // Vérifications finales
     expect(actionCount).toBeGreaterThan(0);

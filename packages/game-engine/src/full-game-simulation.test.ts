@@ -182,7 +182,7 @@ describe('Simulation complète de jeu - 4 tours', () => {
     
     // Vérifications finales
     console.log('\n=== RÉSULTATS FINAUX ===');
-    console.log(`Score: A=${gameState.score.A}, B=${gameState.score.B}`);
+    console.log(`Score: A=${gameState.score.teamA}, B=${gameState.score.teamB}`);
     console.log(`Tour actuel: ${gameState.turn}`);
     console.log(`Mi-temps: ${gameState.half}`);
     console.log(`Turnover: ${gameState.isTurnover}`);
