@@ -27,7 +27,7 @@ export {
   getPushDirection,
   getPushDirections,
   handlePushWithChoice,
-  resolveBlockResult
+  resolveBlockResult,
 } from './blocking';
 
 // Export des fonctions de gestion d'état (sans conflit)
@@ -50,5 +50,5 @@ export {
   checkPlayerTurnEnd,
   shouldAutoEndTurn,
   handlePlayerSwitch,
-  clearDiceResult
+  clearDiceResult,
 } from './game-state';

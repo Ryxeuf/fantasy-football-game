@@ -45,9 +45,9 @@ export function performDodgeRoll(player: Player, rng: RNG, modifiers: number = 0
   const diceRoll = rollD6(rng);
   const targetNumber = calculateDodgeTarget(player, modifiers);
   const success = diceRoll >= targetNumber;
-  
+
   return {
-    type: "dodge",
+    type: 'dodge',
     playerId: player.id,
     diceRoll,
     targetNumber,
@@ -83,9 +83,9 @@ export function performArmorRoll(player: Player, rng: RNG, modifiers: number = 0
   // En Blood Bowl, l'armure est percée (échec) si le résultat est >= à la valeur d'armure
   // Donc success = false si diceRoll >= targetNumber
   const success = diceRoll < targetNumber;
-  
+
   return {
-    type: "armor",
+    type: 'armor',
     playerId: player.id,
     diceRoll,
     targetNumber,
@@ -116,9 +116,9 @@ export function performPickupRoll(player: Player, rng: RNG, modifiers: number = 
   const diceRoll = rollD6(rng);
   const targetNumber = calculatePickupTarget(player, modifiers);
   const success = diceRoll >= targetNumber;
-  
+
   return {
-    type: "pickup",
+    type: 'pickup',
     playerId: player.id,
     diceRoll,
     targetNumber,
@@ -134,15 +134,22 @@ export function performPickupRoll(player: Player, rng: RNG, modifiers: number = 
  */
 export function rollBlockDice(rng: RNG): BlockResult {
   const roll = Math.floor(rng() * 6) + 1; // 1-6 pour les 6 faces du dé de blocage
-  
+
   switch (roll) {
-    case 1: return "PLAYER_DOWN";
-    case 2: return "BOTH_DOWN";
-    case 3: return "PUSH_BACK";  // Première face Push Back
-    case 4: return "STUMBLE";
-    case 5: return "POW";
-    case 6: return "PUSH_BACK";  // Deuxième face Push Back (dupliquée)
-    default: return "PUSH_BACK"; // Ne devrait jamais arriver
+    case 1:
+      return 'PLAYER_DOWN';
+    case 2:
+      return 'BOTH_DOWN';
+    case 3:
+      return 'PUSH_BACK'; // Première face Push Back
+    case 4:
+      return 'STUMBLE';
+    case 5:
+      return 'POW';
+    case 6:
+      return 'PUSH_BACK'; // Deuxième face Push Back (dupliquée)
+    default:
+      return 'PUSH_BACK'; // Ne devrait jamais arriver
   }
 }
 
@@ -166,7 +173,10 @@ export function rollBlockDiceMany(rng: RNG, count: number): BlockResult[] {
  * @param count - Nombre de dés à lancer
  * @returns Un tableau d'objets contenant la valeur du dé et le résultat
  */
-export function rollBlockDiceManyWithRolls(rng: RNG, count: number): Array<{ diceRoll: number; result: BlockResult }> {
+export function rollBlockDiceManyWithRolls(
+  rng: RNG,
+  count: number
+): Array<{ diceRoll: number; result: BlockResult }> {
   const results: Array<{ diceRoll: number; result: BlockResult }> = [];
   for (let i = 0; i < count; i++) {
     const diceRoll = Math.floor(rng() * 6) + 1; // 1-6 pour les 6 faces du dé de blocage
@@ -186,22 +196,22 @@ export function rollBlockDiceManyWithRolls(rng: RNG, count: number): Array<{ dic
  * @returns Le résultat complet du blocage
  */
 export function performBlockRoll(
-  attacker: Player, 
-  target: Player, 
-  rng: RNG, 
-  offensiveAssists: number, 
+  attacker: Player,
+  target: Player,
+  rng: RNG,
+  offensiveAssists: number,
   defensiveAssists: number
 ): BlockDiceResult {
   const attackerStrength = attacker.st + offensiveAssists;
   const targetStrength = target.st + defensiveAssists;
-  
+
   // Pour simplifier, on lance un seul dé et on prend le résultat
   // Dans un vrai jeu, on lancerait plusieurs dés et le chooser sélectionnerait
   const diceRoll = Math.floor(rng() * 6) + 1; // 1-6 pour les 6 faces du dé de blocage
   const result = rollBlockDice(rng);
-  
+
   return {
-    type: "block",
+    type: 'block',
     playerId: attacker.id,
     targetId: target.id,
     diceRoll,
@@ -209,6 +219,6 @@ export function performBlockRoll(
     offensiveAssists,
     defensiveAssists,
     totalStrength: attackerStrength,
-    targetStrength: targetStrength
+    targetStrength: targetStrength,
   };
 }

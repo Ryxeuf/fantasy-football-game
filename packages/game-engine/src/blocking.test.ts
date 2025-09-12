@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import {
   setup,
   applyMove,
@@ -14,7 +14,7 @@ import {
   isPositionOccupied,
   type GameState,
   type Player,
-  type Position
+  type Position,
 } from './index';
 
 describe('Système de blocage', () => {
@@ -22,7 +22,7 @@ describe('Système de blocage', () => {
   let rng: ReturnType<typeof makeRNG>;
 
   beforeEach(() => {
-    state = setup('test-seed');
+    state = setup();
     rng = makeRNG('test-seed');
   });
 
@@ -35,9 +35,9 @@ describe('Système de blocage', () => {
           if (p.id === 'A1') return { ...p, pos: { x: 10, y: 7 } };
           if (p.id === 'B1') return { ...p, pos: { x: 11, y: 7 } };
           return p;
-        })
+        }),
       };
-      
+
       const playerAPos = { x: 10, y: 7 };
       const adjacentOpponents = getAdjacentOpponents(newState, playerAPos, 'A');
       expect(adjacentOpponents).toHaveLength(1);
@@ -48,7 +48,7 @@ describe('Système de blocage', () => {
       const pos1: Position = { x: 10, y: 7 };
       const pos2: Position = { x: 11, y: 7 };
       const pos3: Position = { x: 12, y: 7 };
-      
+
       expect(isAdjacent(pos1, pos2)).toBe(true);
       expect(isAdjacent(pos1, pos3)).toBe(false);
       expect(isAdjacent(pos1, pos1)).toBe(false);
@@ -56,16 +56,16 @@ describe('Système de blocage', () => {
   });
 
   describe('Validation du blocage', () => {
-    it('devrait permettre le blocage entre joueurs adjacents d\'équipes différentes', () => {
+    it("devrait permettre le blocage entre joueurs adjacents d'équipes différentes", () => {
       const newState = {
         ...state,
         players: state.players.map(p => {
           if (p.id === 'A1') return { ...p, pos: { x: 10, y: 7 }, stunned: false, pm: 7 };
           if (p.id === 'B1') return { ...p, pos: { x: 11, y: 7 }, stunned: false, pm: 8 };
           return p;
-        })
+        }),
       };
-      
+
       expect(canBlock(newState, 'A1', 'B1')).toBe(true);
     });
 
@@ -76,22 +76,22 @@ describe('Système de blocage', () => {
           if (p.id === 'A1') return { ...p, pos: { x: 10, y: 7 }, stunned: false, pm: 7 };
           if (p.id === 'A2') return { ...p, pos: { x: 11, y: 7 }, stunned: false, pm: 6 };
           return p;
-        })
+        }),
       };
-      
+
       expect(canBlock(newState, 'A1', 'A2')).toBe(false);
     });
 
-    it('ne devrait pas permettre le blocage si l\'attaquant est étourdi', () => {
+    it("ne devrait pas permettre le blocage si l'attaquant est étourdi", () => {
       const newState = {
         ...state,
         players: state.players.map(p => {
           if (p.id === 'A1') return { ...p, pos: { x: 10, y: 7 }, stunned: true, pm: 7 };
           if (p.id === 'B1') return { ...p, pos: { x: 11, y: 7 }, stunned: false, pm: 8 };
           return p;
-        })
+        }),
       };
-      
+
       expect(canBlock(newState, 'A1', 'B1')).toBe(false);
     });
 
@@ -102,9 +102,9 @@ describe('Système de blocage', () => {
           if (p.id === 'A1') return { ...p, pos: { x: 10, y: 7 }, stunned: false, pm: 7 };
           if (p.id === 'B1') return { ...p, pos: { x: 11, y: 7 }, stunned: true, pm: 8 };
           return p;
-        })
+        }),
       };
-      
+
       expect(canBlock(newState, 'A1', 'B1')).toBe(false);
     });
   });
@@ -120,12 +120,12 @@ describe('Système de blocage', () => {
           if (p.id === 'B1') return { ...p, pos: { x: 11, y: 7 } };
           if (p.id === 'B2') return { ...p, pos: { x: 20, y: 20 } }; // Loin pour éviter les conflits
           return p;
-        })
+        }),
       };
-      
+
       const attacker = newState.players.find(p => p.id === 'A1')!;
       const target = newState.players.find(p => p.id === 'B1')!;
-      
+
       const assists = calculateOffensiveAssists(newState, attacker, target);
       expect(assists).toBe(1);
     });
@@ -139,12 +139,12 @@ describe('Système de blocage', () => {
           if (p.id === 'B1') return { ...p, pos: { x: 11, y: 7 } };
           if (p.id === 'B2') return { ...p, pos: { x: 10, y: 8 }, stunned: false, pm: 6 }; // Adjacent à l'attaquant
           return p;
-        })
+        }),
       };
-      
+
       const attacker = newState.players.find(p => p.id === 'A1')!;
       const target = newState.players.find(p => p.id === 'B1')!;
-      
+
       const assists = calculateDefensiveAssists(newState, attacker, target);
       expect(assists).toBe(1);
     });
@@ -154,9 +154,9 @@ describe('Système de blocage', () => {
     it('devrait lancer un dé de blocage', () => {
       const attacker = state.players.find(p => p.id === 'A1')!;
       const target = state.players.find(p => p.id === 'B1')!;
-      
+
       const blockResult = performBlockRoll(attacker, target, rng, 0, 0);
-      
+
       expect(blockResult.type).toBe('block');
       expect(blockResult.playerId).toBe('A1');
       expect(blockResult.targetId).toBe('B1');
@@ -171,7 +171,7 @@ describe('Système de blocage', () => {
     it('devrait gérer le résultat PLAYER_DOWN', () => {
       const attacker = state.players.find(p => p.id === 'A1')!;
       const target = state.players.find(p => p.id === 'B1')!;
-      
+
       const blockResult = {
         type: 'block' as const,
         playerId: attacker.id,
@@ -181,15 +181,15 @@ describe('Système de blocage', () => {
         offensiveAssists: 0,
         defensiveAssists: 0,
         totalStrength: attacker.st,
-        targetStrength: target.st
+        targetStrength: target.st,
       };
-      
+
       const newState = resolveBlockResult(state, blockResult, rng);
-      
+
       // L'attaquant devrait être étourdi
       const updatedAttacker = newState.players.find(p => p.id === attacker.id)!;
       expect(updatedAttacker.stunned).toBe(true);
-      
+
       // Il devrait y avoir un turnover
       expect(newState.isTurnover).toBe(true);
     });
@@ -197,7 +197,7 @@ describe('Système de blocage', () => {
     it('devrait gérer le résultat PUSH_BACK', () => {
       const attacker = state.players.find(p => p.id === 'A1')!;
       const target = state.players.find(p => p.id === 'B1')!;
-      
+
       // Positionner les joueurs pour un push back
       const newState = {
         ...state,
@@ -205,9 +205,9 @@ describe('Système de blocage', () => {
           if (p.id === 'A1') return { ...p, pos: { x: 10, y: 7 } };
           if (p.id === 'B1') return { ...p, pos: { x: 11, y: 7 } };
           return p;
-        })
+        }),
       };
-      
+
       const blockResult = {
         type: 'block' as const,
         playerId: attacker.id,
@@ -217,31 +217,31 @@ describe('Système de blocage', () => {
         offensiveAssists: 0,
         defensiveAssists: 0,
         totalStrength: attacker.st,
-        targetStrength: target.st
+        targetStrength: target.st,
       };
-      
+
       const resultState = resolveBlockResult(newState, blockResult, rng);
-      
+
       // Vérifier qu'il y a un pendingPushChoice (plusieurs directions disponibles)
       expect(resultState.pendingPushChoice).toBeDefined();
       expect(resultState.pendingPushChoice?.attackerId).toBe(attacker.id);
       expect(resultState.pendingPushChoice?.targetId).toBe(target.id);
       expect(resultState.pendingPushChoice?.availableDirections.length).toBeGreaterThan(0);
-      
+
       // Choisir la direction directe (1, 0)
       const pushChooseMove = {
         type: 'PUSH_CHOOSE' as const,
         playerId: attacker.id,
         targetId: target.id,
-        direction: { x: 1, y: 0 }
+        direction: { x: 1, y: 0 },
       };
       const finalState = applyMove(resultState, pushChooseMove, rng);
-      
+
       // La cible devrait être repoussée
       const updatedTarget = finalState.players.find(p => p.id === target.id)!;
       expect(updatedTarget.pos.x).toBeGreaterThan(10); // Repoussée vers la droite
       expect(updatedTarget.pos.y).toBe(7);
-      
+
       // L'attaquant devrait suivre (ou ne pas suivre selon le choix)
       const updatedAttacker = finalState.players.find(p => p.id === attacker.id)!;
       expect(updatedAttacker.pos.x).toBeGreaterThanOrEqual(10); // Position valide
@@ -253,7 +253,7 @@ describe('Système de blocage', () => {
     it('devrait calculer la direction de poussée', () => {
       const attackerPos: Position = { x: 10, y: 7 };
       const targetPos: Position = { x: 11, y: 7 };
-      
+
       const direction = getPushDirection(attackerPos, targetPos);
       expect(direction).toEqual({ x: 1, y: 0 });
     });
@@ -261,7 +261,7 @@ describe('Système de blocage', () => {
     it('devrait vérifier si une position est occupée', () => {
       const occupiedPos: Position = { x: 11, y: 7 }; // Position d'un joueur (A1)
       const freePos: Position = { x: 5, y: 5 }; // Position libre
-      
+
       expect(isPositionOccupied(state, occupiedPos)).toBe(true);
       expect(isPositionOccupied(state, freePos)).toBe(false);
     });
@@ -276,9 +276,9 @@ describe('Système de blocage', () => {
           if (p.id === 'A1') return { ...p, pos: { x: 10, y: 7 }, stunned: false, pm: 7 };
           if (p.id === 'B1') return { ...p, pos: { x: 11, y: 7 }, stunned: false, pm: 8 };
           return p;
-        })
+        }),
       };
-      
+
       const legalMoves = newState.players
         .filter(p => p.team === 'A')
         .flatMap(p => {
@@ -292,7 +292,7 @@ describe('Système de blocage', () => {
           }
           return moves;
         });
-      
+
       expect(legalMoves.length).toBeGreaterThan(0);
       expect(legalMoves[0].type).toBe('BLOCK');
     });
@@ -305,20 +305,22 @@ describe('Système de blocage', () => {
           if (p.id === 'A1') return { ...p, pos: { x: 10, y: 7 }, stunned: false, pm: 7 };
           if (p.id === 'B1') return { ...p, pos: { x: 11, y: 7 }, stunned: false, pm: 8 };
           return p;
-        })
+        }),
       };
-      
+
       const resultState = applyMove(
         newState,
         { type: 'BLOCK', playerId: 'A1', targetId: 'B1' },
         rng
       );
-      
+
       // Vérifier que l'action a été enregistrée
       expect(resultState.playerActions.get('A1')).toBe('BLOCK');
-      
+
       // Vérifier qu'il y a des logs de blocage
-      const blockLogs = resultState.gameLog.filter(log => log.type === 'dice' && log.message.includes('Blocage:'));
+      const blockLogs = resultState.gameLog.filter(
+        log => log.type === 'dice' && log.message.includes('Blocage:')
+      );
       expect(blockLogs.length).toBeGreaterThan(0);
     });
   });

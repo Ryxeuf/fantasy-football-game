@@ -44,7 +44,7 @@ export function isPositionOccupied(state: GameState, pos: Position): boolean {
 export function isAdjacent(pos1: Position, pos2: Position): boolean {
   const dx = Math.abs(pos1.x - pos2.x);
   const dy = Math.abs(pos1.y - pos2.y);
-  return (dx <= 1 && dy <= 1) && !(dx === 0 && dy === 0);
+  return dx <= 1 && dy <= 1 && !(dx === 0 && dy === 0);
 }
 
 /**
@@ -57,23 +57,26 @@ export function isAdjacent(pos1: Position, pos2: Position): boolean {
 export function getAdjacentOpponents(state: GameState, position: Position, team: TeamId): Player[] {
   const opponents: Player[] = [];
   const dirs = [
-    { x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 },
-    { x: 1, y: 1 }, { x: 1, y: -1 }, { x: -1, y: 1 }, { x: -1, y: -1 }
+    { x: 1, y: 0 },
+    { x: -1, y: 0 },
+    { x: 0, y: 1 },
+    { x: 0, y: -1 },
+    { x: 1, y: 1 },
+    { x: 1, y: -1 },
+    { x: -1, y: 1 },
+    { x: -1, y: -1 },
   ];
-  
+
   for (const dir of dirs) {
     const checkPos = { x: position.x + dir.x, y: position.y + dir.y };
-    const opponent = state.players.find(p => 
-      p.team !== team && 
-      p.pos.x === checkPos.x && 
-      p.pos.y === checkPos.y &&
-      !p.stunned
+    const opponent = state.players.find(
+      p => p.team !== team && p.pos.x === checkPos.x && p.pos.y === checkPos.y && !p.stunned
     );
     if (opponent) {
       opponents.push(opponent);
     }
   }
-  
+
   return opponents;
 }
 
@@ -86,22 +89,26 @@ export function getAdjacentOpponents(state: GameState, position: Position, team:
 export function getAdjacentPlayers(state: GameState, position: Position): Player[] {
   const players: Player[] = [];
   const dirs = [
-    { x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 },
-    { x: 1, y: 1 }, { x: 1, y: -1 }, { x: -1, y: 1 }, { x: -1, y: -1 }
+    { x: 1, y: 0 },
+    { x: -1, y: 0 },
+    { x: 0, y: 1 },
+    { x: 0, y: -1 },
+    { x: 1, y: 1 },
+    { x: 1, y: -1 },
+    { x: -1, y: 1 },
+    { x: -1, y: -1 },
   ];
-  
+
   for (const dir of dirs) {
     const checkPos = { x: position.x + dir.x, y: position.y + dir.y };
-    const player = state.players.find(p => 
-      p.pos.x === checkPos.x && 
-      p.pos.y === checkPos.y &&
-      !p.stunned
+    const player = state.players.find(
+      p => p.pos.x === checkPos.x && p.pos.y === checkPos.y && !p.stunned
     );
     if (player) {
       players.push(player);
     }
   }
-  
+
   return players;
 }
 
@@ -113,13 +120,18 @@ export function getAdjacentPlayers(state: GameState, position: Position): Player
  * @param team - Équipe du joueur
  * @returns Modificateurs de désquive (négatifs = malus)
  */
-export function calculateDodgeModifiers(state: GameState, from: Position, to: Position, team: TeamId): number {
+export function calculateDodgeModifiers(
+  state: GameState,
+  from: Position,
+  to: Position,
+  team: TeamId
+): number {
   let modifiers = 0;
-  
+
   // Malus pour chaque adversaire qui marque la case d'arrivée
   const opponentsAtTo = getAdjacentOpponents(state, to, team);
   modifiers -= opponentsAtTo.length; // -1 par adversaire adjacent à la case d'arrivée
-  
+
   return modifiers;
 }
 
@@ -130,13 +142,17 @@ export function calculateDodgeModifiers(state: GameState, from: Position, to: Po
  * @param team - Équipe du joueur
  * @returns Modificateurs de pickup (négatifs = malus)
  */
-export function calculatePickupModifiers(state: GameState, ballPosition: Position, team: TeamId): number {
+export function calculatePickupModifiers(
+  state: GameState,
+  ballPosition: Position,
+  team: TeamId
+): number {
   let modifiers = 0;
-  
+
   // Malus pour chaque adversaire qui marque la case où se trouve la balle
   const opponentsAtBall = getAdjacentOpponents(state, ballPosition, team);
   modifiers -= opponentsAtBall.length; // -1 par adversaire adjacent à la balle
-  
+
   return modifiers;
 }
 
@@ -148,25 +164,30 @@ export function calculatePickupModifiers(state: GameState, ballPosition: Positio
  * @param team - Équipe du joueur
  * @returns True si un jet d'esquive est nécessaire
  */
-export function requiresDodgeRoll(state: GameState, from: Position, to: Position, team: TeamId): boolean {
+export function requiresDodgeRoll(
+  state: GameState,
+  from: Position,
+  to: Position,
+  team: TeamId
+): boolean {
   // Vérifier si le joueur sort d'une case où il était marqué par un adversaire
   const opponentsAtFrom = getAdjacentOpponents(state, from, team);
-  
+
   // Pas de jet d'esquive si pas d'adversaires adjacents
   if (opponentsAtFrom.length === 0) {
     return false;
   }
-  
+
   // Calculer la distance de mouvement
   const dx = to.x - from.x;
   const dy = to.y - from.y;
   const distance = Math.abs(dx) + Math.abs(dy); // Distance Manhattan
-  
+
   // Si on ne bouge pas, pas de jet d'esquive
   if (distance === 0) {
     return false;
   }
-  
+
   // En Blood Bowl : jet d'esquive nécessaire si on quitte une case marquée
   // Peu importe où on va, dès qu'on sort d'une zone de marquage, c'est un jet d'esquive
   return true;

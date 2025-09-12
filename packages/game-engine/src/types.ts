@@ -2,7 +2,7 @@
  * Types et interfaces pour le moteur de jeu Blood Bowl
  */
 
-export type TeamId = "A" | "B";
+export type TeamId = 'A' | 'B';
 
 export interface Position {
   x: number; // 0..25
@@ -34,7 +34,7 @@ export interface GameLogEntry {
   message: string;
   playerId?: string;
   team?: TeamId;
-  details?: any;
+  details?: Record<string, unknown>;
 }
 
 export interface GameState {
@@ -52,7 +52,7 @@ export interface GameState {
     attackerId: string;
     targetId: string;
     options: BlockResult[]; // résultats tirés
-    chooser: "attacker" | "defender"; // qui choisit
+    chooser: 'attacker' | 'defender'; // qui choisit
     offensiveAssists: number;
     defensiveAssists: number;
     totalStrength: number;
@@ -95,7 +95,7 @@ export interface GameState {
 }
 
 export interface DiceResult {
-  type: "dodge" | "pickup" | "pass" | "catch" | "armor" | "block";
+  type: 'dodge' | 'pickup' | 'pass' | 'catch' | 'armor' | 'block';
   playerId: string;
   diceRoll: number;
   targetNumber: number;
@@ -103,22 +103,29 @@ export interface DiceResult {
   modifiers: number;
 }
 
-export type ActionType = "MOVE" | "BLOCK" | "BLITZ" | "PASS" | "HANDOFF" | "THROW_TEAM_MATE" | "FOUL";
+export type ActionType =
+  | 'MOVE'
+  | 'BLOCK'
+  | 'BLITZ'
+  | 'PASS'
+  | 'HANDOFF'
+  | 'THROW_TEAM_MATE'
+  | 'FOUL';
 
 export type Move =
-  | { type: "MOVE"; playerId: string; to: Position }
-  | { type: "END_TURN" }
-  | { type: "DODGE"; playerId: string; from: Position; to: Position }
-  | { type: "BLOCK"; playerId: string; targetId: string }
-  | { type: "BLOCK_CHOOSE"; playerId: string; targetId: string; result: BlockResult }
-  | { type: "BLITZ"; playerId: string; to: Position; targetId: string }
-  | { type: "PUSH_CHOOSE"; playerId: string; targetId: string; direction: Position }
-  | { type: "FOLLOW_UP_CHOOSE"; playerId: string; targetId: string; followUp: boolean };
+  | { type: 'MOVE'; playerId: string; to: Position }
+  | { type: 'END_TURN' }
+  | { type: 'DODGE'; playerId: string; from: Position; to: Position }
+  | { type: 'BLOCK'; playerId: string; targetId: string }
+  | { type: 'BLOCK_CHOOSE'; playerId: string; targetId: string; result: BlockResult }
+  | { type: 'BLITZ'; playerId: string; to: Position; targetId: string }
+  | { type: 'PUSH_CHOOSE'; playerId: string; targetId: string; direction: Position }
+  | { type: 'FOLLOW_UP_CHOOSE'; playerId: string; targetId: string; followUp: boolean };
 
-export type BlockResult = "PLAYER_DOWN" | "BOTH_DOWN" | "PUSH_BACK" | "STUMBLE" | "POW";
+export type BlockResult = 'PLAYER_DOWN' | 'BOTH_DOWN' | 'PUSH_BACK' | 'STUMBLE' | 'POW';
 
 export interface BlockDiceResult {
-  type: "block";
+  type: 'block';
   playerId: string;
   targetId: string;
   diceRoll: number;

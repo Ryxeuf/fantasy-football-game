@@ -19,7 +19,7 @@ export function createLogEntry(
   message: string,
   playerId?: string,
   team?: TeamId,
-  details?: any
+  details?: Record<string, unknown>
 ): GameLogEntry {
   return {
     id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,

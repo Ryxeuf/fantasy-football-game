@@ -3,8 +3,8 @@
  * Gère les tours, les mi-temps, les actions des joueurs et les compteurs
  */
 
-import { GameState, Player, TeamId, ActionType } from './types';
-import { createLogEntry, addLogEntry } from './logging';
+import { GameState, TeamId, ActionType } from './types';
+import { createLogEntry } from './logging';
 import { checkTouchdowns } from './ball';
 
 /**
@@ -12,34 +12,34 @@ import { checkTouchdowns } from './ball';
  * @param seed - Graine pour la reproductibilité (optionnel)
  * @returns État initial du jeu
  */
-export function setup(seed = "seed"): GameState {
+export function setup(): GameState {
   return {
     width: 26,
     height: 15,
     players: [
       {
-        id: "A1",
-        team: "A",
+        id: 'A1',
+        team: 'A',
         pos: { x: 11, y: 7 },
-        name: "Grim Ironjaw",
+        name: 'Grim Ironjaw',
         number: 1,
-        position: "Blitzer",
+        position: 'Blitzer',
         ma: 7,
         st: 3,
         ag: 3,
         pa: 4,
         av: 9,
-        skills: ["Block", "Tackle"],
+        skills: ['Block', 'Tackle'],
         pm: 7,
         hasBall: false,
       },
       {
-        id: "A2",
-        team: "A",
+        id: 'A2',
+        team: 'A',
         pos: { x: 10, y: 7 },
-        name: "Thunder Stonefist",
+        name: 'Thunder Stonefist',
         number: 2,
-        position: "Lineman",
+        position: 'Lineman',
         ma: 6,
         st: 3,
         ag: 3,
@@ -50,28 +50,28 @@ export function setup(seed = "seed"): GameState {
         hasBall: false,
       },
       {
-        id: "B1",
-        team: "B",
+        id: 'B1',
+        team: 'B',
         pos: { x: 15, y: 7 },
-        name: "Shadow Swift",
+        name: 'Shadow Swift',
         number: 1,
-        position: "Runner",
+        position: 'Runner',
         ma: 8,
         st: 2,
         ag: 4,
         pa: 3,
         av: 7,
-        skills: ["Dodge", "Sure Hands"],
+        skills: ['Dodge', 'Sure Hands'],
         pm: 8,
         hasBall: false,
       },
       {
-        id: "B2",
-        team: "B",
+        id: 'B2',
+        team: 'B',
         pos: { x: 16, y: 7 },
-        name: "Iron Hide",
+        name: 'Iron Hide',
         number: 2,
-        position: "Lineman",
+        position: 'Lineman',
         ma: 6,
         st: 3,
         ag: 3,
@@ -83,7 +83,7 @@ export function setup(seed = "seed"): GameState {
       },
     ],
     ball: { x: 13, y: 7 },
-    currentPlayer: "A",
+    currentPlayer: 'A',
     turn: 1,
     selectedPlayerId: null,
     isTurnover: false,
@@ -96,13 +96,11 @@ export function setup(seed = "seed"): GameState {
       teamB: 0,
     },
     teamNames: {
-      teamA: "Orcs de Fer",
-      teamB: "Elfes Sombres",
+      teamA: 'Orcs de Fer',
+      teamB: 'Elfes Sombres',
     },
     // Log du match
-    gameLog: [
-      createLogEntry('info', 'Match commencé - Orcs de Fer vs Elfes Sombres'),
-    ],
+    gameLog: [createLogEntry('info', 'Match commencé - Orcs de Fer vs Elfes Sombres')],
   };
 }
 
@@ -165,7 +163,7 @@ export function hasPlayerActed(state: GameState, playerId: string): boolean {
 export function canPlayerAct(state: GameState, playerId: string): boolean {
   const player = state.players.find(p => p.id === playerId);
   if (!player) return false;
-  
+
   // Un joueur ne peut pas agir s'il est étourdi ou n'a plus de PM
   return !player.stunned && player.pm > 0;
 }
@@ -179,7 +177,7 @@ export function canPlayerAct(state: GameState, playerId: string): boolean {
 export function canPlayerMove(state: GameState, playerId: string): boolean {
   const player = state.players.find(p => p.id === playerId);
   if (!player) return false;
-  
+
   // Un joueur peut bouger s'il n'est pas étourdi, a des PM, et n'a pas encore fait d'action principale
   return !player.stunned && player.pm > 0 && !hasPlayerActed(state, playerId);
 }
@@ -193,11 +191,15 @@ export function canPlayerMove(state: GameState, playerId: string): boolean {
 export function canPlayerContinueMoving(state: GameState, playerId: string): boolean {
   const player = state.players.find(p => p.id === playerId);
   if (!player) return false;
-  
-  // Un joueur peut continuer à bouger s'il n'est pas étourdi, a des PM, et 
+
+  // Un joueur peut continuer à bouger s'il n'est pas étourdi, a des PM, et
   // soit il n'a pas encore agi, soit il a déjà commencé à bouger ou fait un blitz
   const playerAction = getPlayerAction(state, playerId);
-  return !player.stunned && player.pm > 0 && (!hasPlayerActed(state, playerId) || playerAction === "MOVE" || playerAction === "BLITZ");
+  return (
+    !player.stunned &&
+    player.pm > 0 &&
+    (!hasPlayerActed(state, playerId) || playerAction === 'MOVE' || playerAction === 'BLITZ')
+  );
 }
 
 /**
@@ -222,7 +224,7 @@ export function setPlayerAction(state: GameState, playerId: string, action: Acti
   newPlayerActions.set(playerId, action);
   return {
     ...state,
-    playerActions: newPlayerActions
+    playerActions: newPlayerActions,
   };
 }
 
@@ -234,7 +236,7 @@ export function setPlayerAction(state: GameState, playerId: string, action: Acti
 export function clearPlayerActions(state: GameState): GameState {
   return {
     ...state,
-    playerActions: new Map<string, ActionType>()
+    playerActions: new Map<string, ActionType>(),
   };
 }
 
@@ -268,10 +270,10 @@ export function incrementTeamBlitzCount(state: GameState, team: TeamId): GameSta
   const newTeamBlitzCount = new Map(state.teamBlitzCount);
   const currentCount = newTeamBlitzCount.get(team) || 0;
   newTeamBlitzCount.set(team, currentCount + 1);
-  
+
   return {
     ...state,
-    teamBlitzCount: newTeamBlitzCount
+    teamBlitzCount: newTeamBlitzCount,
   };
 }
 
@@ -283,7 +285,7 @@ export function incrementTeamBlitzCount(state: GameState, team: TeamId): GameSta
 export function clearTeamBlitzCounts(state: GameState): GameState {
   return {
     ...state,
-    teamBlitzCount: new Map<TeamId, number>()
+    teamBlitzCount: new Map<TeamId, number>(),
   };
 }
 
@@ -306,8 +308,8 @@ export function shouldEndPlayerTurn(state: GameState, playerId: string): boolean
  */
 export function endPlayerTurn(state: GameState, playerId: string): GameState {
   // Marquer le joueur comme ayant fini son tour
-  const newState = setPlayerAction(state, playerId, "MOVE");
-  
+  const newState = setPlayerAction(state, playerId, 'MOVE');
+
   // Log de fin de tour du joueur
   const player = state.players.find(p => p.id === playerId);
   if (player) {
@@ -319,7 +321,7 @@ export function endPlayerTurn(state: GameState, playerId: string): GameState {
     );
     newState.gameLog = [...newState.gameLog, logEntry];
   }
-  
+
   return checkTouchdowns(newState);
 }
 
@@ -332,12 +334,16 @@ export function endPlayerTurn(state: GameState, playerId: string): GameState {
 export function checkPlayerTurnEnd(state: GameState, playerId: string): GameState {
   const player = state.players.find(p => p.id === playerId);
   if (!player) return state;
-  
+
   // Si le joueur n'a plus de PM et a commencé à bouger, finir son tour
-  if (player.pm <= 0 && hasPlayerActed(state, playerId) && getPlayerAction(state, playerId) === "MOVE") {
+  if (
+    player.pm <= 0 &&
+    hasPlayerActed(state, playerId) &&
+    getPlayerAction(state, playerId) === 'MOVE'
+  ) {
     return endPlayerTurn(state, playerId);
   }
-  
+
   return state;
 }
 
@@ -349,12 +355,10 @@ export function checkPlayerTurnEnd(state: GameState, playerId: string): GameStat
 export function shouldAutoEndTurn(state: GameState): boolean {
   const team = state.currentPlayer;
   const teamPlayers = state.players.filter(p => p.team === team);
-  
+
   // Vérifier si tous les joueurs de l'équipe ont agi ou ne peuvent plus agir
-  return teamPlayers.every(player => 
-    hasPlayerActed(state, player.id) || 
-    player.stunned || 
-    player.pm <= 0
+  return teamPlayers.every(
+    player => hasPlayerActed(state, player.id) || player.stunned || player.pm <= 0
   );
 }
 
@@ -372,14 +376,14 @@ export function handlePlayerSwitch(state: GameState, newPlayerId: string): GameS
       // Le joueur précédent a déjà agi, on ne peut pas le laisser actif
       return {
         ...state,
-        selectedPlayerId: newPlayerId
+        selectedPlayerId: newPlayerId,
       };
     }
   }
-  
+
   return {
     ...state,
-    selectedPlayerId: newPlayerId
+    selectedPlayerId: newPlayerId,
   };
 }
 
