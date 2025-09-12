@@ -513,14 +513,15 @@ export function getBlockDiceChooser(attackerStrength: number, targetStrength: nu
 }
 
 export function rollBlockDice(rng: RNG): BlockResult {
-  const roll = Math.floor(rng() * 5) + 1; // 1-5 pour les 5 faces du dé de blocage
+  const roll = Math.floor(rng() * 6) + 1; // 1-6 pour les 6 faces du dé de blocage
   
   switch (roll) {
     case 1: return "PLAYER_DOWN";
     case 2: return "BOTH_DOWN";
-    case 3: return "PUSH_BACK";
+    case 3: return "PUSH_BACK";  // Première face Push Back
     case 4: return "STUMBLE";
     case 5: return "POW";
+    case 6: return "PUSH_BACK";  // Deuxième face Push Back (dupliquée)
     default: return "PUSH_BACK"; // Ne devrait jamais arriver
   }
 }
@@ -536,7 +537,7 @@ export function rollBlockDiceMany(rng: RNG, count: number): BlockResult[] {
 export function rollBlockDiceManyWithRolls(rng: RNG, count: number): Array<{ diceRoll: number; result: BlockResult }> {
   const results: Array<{ diceRoll: number; result: BlockResult }> = [];
   for (let i = 0; i < count; i++) {
-    const diceRoll = Math.floor(rng() * 5) + 1; // 1-5 pour les 5 faces du dé de blocage
+    const diceRoll = Math.floor(rng() * 6) + 1; // 1-6 pour les 6 faces du dé de blocage
     const result = rollBlockDice(rng);
     results.push({ diceRoll, result });
   }
@@ -558,7 +559,7 @@ export function performBlockRoll(
   
   // Pour simplifier, on lance un seul dé et on prend le résultat
   // Dans un vrai jeu, on lancerait plusieurs dés et le chooser sélectionnerait
-  const diceRoll = Math.floor(rng() * 5) + 1;
+  const diceRoll = Math.floor(rng() * 6) + 1; // 1-6 pour les 6 faces du dé de blocage
   const result = rollBlockDice(rng);
   
   return {
@@ -1899,7 +1900,7 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       // Si un seul dé, résoudre immédiatement
       if (diceCount === 1) {
         const blockResult = rollBlockDice(rng);
-        const diceRoll = Math.floor(rng() * 5) + 1; // Simuler le jet de dé pour le log
+        const diceRoll = Math.floor(rng() * 6) + 1; // Simuler le jet de dé pour le log (1-6)
         const blockDiceResult: BlockDiceResult = {
           type: "block",
           playerId: attacker.id,
