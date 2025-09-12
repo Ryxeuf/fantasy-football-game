@@ -34,6 +34,11 @@ export function Board({ state, onCellClick }: {
 // Board components
 export { default as PixiBoard } from './board/PixiBoard';
 
+// Dugout components
+export { default as DugoutZone } from './components/DugoutZone';
+export { default as TeamDugout } from './components/TeamDugout';
+export { default as GameBoardWithDugouts } from './components/GameBoardWithDugouts';
+
 // UI Components
 export { default as PlayerDetails } from './components/PlayerDetails';
 export { default as GameScoreboard } from './components/GameScoreboard';

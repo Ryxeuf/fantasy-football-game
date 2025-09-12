@@ -6,6 +6,7 @@
 import { GameState, TeamId, ActionType } from './types';
 import { createLogEntry } from '../utils/logging';
 import { checkTouchdowns } from '../mechanics/ball';
+import { initializeDugouts } from '../mechanics/dugout';
 
 /**
  * Configuration initiale du jeu
@@ -13,6 +14,8 @@ import { checkTouchdowns } from '../mechanics/ball';
  * @returns État initial du jeu
  */
 export function setup(): GameState {
+  const dugouts = initializeDugouts();
+  
   return {
     width: 26,
     height: 15,
@@ -32,6 +35,7 @@ export function setup(): GameState {
         skills: ['Block', 'Tackle'],
         pm: 7,
         hasBall: false,
+        state: 'active',
       },
       {
         id: 'A2',
@@ -48,6 +52,7 @@ export function setup(): GameState {
         skills: [],
         pm: 6,
         hasBall: false,
+        state: 'active',
       },
       {
         id: 'B1',
@@ -64,6 +69,7 @@ export function setup(): GameState {
         skills: ['Dodge', 'Sure Hands'],
         pm: 8,
         hasBall: false,
+        state: 'active',
       },
       {
         id: 'B2',
@@ -80,6 +86,7 @@ export function setup(): GameState {
         skills: [],
         pm: 6,
         hasBall: false,
+        state: 'active',
       },
     ],
     ball: { x: 13, y: 7 },
@@ -87,6 +94,7 @@ export function setup(): GameState {
     turn: 1,
     selectedPlayerId: null,
     isTurnover: false,
+    dugouts,
     playerActions: new Map<string, ActionType>(),
     teamBlitzCount: new Map<TeamId, number>(),
     // Informations de match

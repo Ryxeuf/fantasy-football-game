@@ -8,6 +8,8 @@ import { isAdjacent, inBounds, isPositionOccupied } from './movement';
 import { performArmorRoll } from '../utils/dice';
 import { createLogEntry } from '../utils/logging';
 import { canTeamBlitz } from '../core/game-state';
+import { movePlayerToDugoutZone } from './dugout';
+import { performInjuryRoll, handleSentOff } from './injury';
 
 /**
  * Vérifie si un joueur peut effectuer un blocage

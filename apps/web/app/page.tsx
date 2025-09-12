@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { PixiBoard, PlayerDetails, DiceResultPopup, GameScoreboard, GameLog, BlockChoicePopup, ActionPickerPopup, DiceTestComponent, PushChoicePopup, FollowUpChoicePopup } from "@bb/ui";
+import { PixiBoard, PlayerDetails, DiceResultPopup, GameScoreboard, GameLog, BlockChoicePopup, ActionPickerPopup, DiceTestComponent, PushChoicePopup, FollowUpChoicePopup, GameBoardWithDugouts } from "@bb/ui";
 import {
   setup,
   getLegalMoves,
@@ -116,12 +116,19 @@ export default function HomePage() {
         
         <div className="flex flex-col lg:flex-row items-start gap-6 mb-6">
           <div className="flex-1 flex justify-center">
-            <PixiBoard
+            <GameBoardWithDugouts
               state={state}
               onCellClick={onCellClick}
               legalMoves={movesForSelected}
               blockTargets={blockTargets}
               selectedPlayerId={state.selectedPlayerId}
+              onPlayerClick={(playerId) => {
+                const player = state.players.find(p => p.id === playerId);
+                if (player && player.team === state.currentPlayer) {
+                  setState((s) => ({ ...s, selectedPlayerId: player.id }));
+                  setCurrentAction(null);
+                }
+              }}
             />
           </div>
           <div className="w-full lg:w-auto">

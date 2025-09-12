@@ -9,6 +9,8 @@ export interface Position {
   y: number; // 0..14
 }
 
+export type PlayerState = 'active' | 'stunned' | 'knocked_out' | 'casualty' | 'sent_off';
+
 export interface Player {
   id: string;
   team: TeamId;
@@ -25,6 +27,7 @@ export interface Player {
   skills: string[];
   pm: number; // points de mouvement restants
   hasBall?: boolean; // indique si le joueur a la balle
+  state?: PlayerState; // état du joueur pour les zones de dugout
 }
 
 export interface GameLogEntry {
@@ -37,6 +40,27 @@ export interface GameLogEntry {
   details?: Record<string, unknown>;
 }
 
+export interface DugoutZone {
+  id: string;
+  name: string;
+  color: string;
+  icon: string;
+  maxCapacity: number;
+  players: string[]; // IDs des joueurs dans cette zone
+  position: { x: number; y: number; width: number; height: number };
+}
+
+export interface TeamDugout {
+  teamId: TeamId;
+  zones: {
+    reserves: DugoutZone;
+    stunned: DugoutZone;
+    knockedOut: DugoutZone;
+    casualty: DugoutZone;
+    sentOff: DugoutZone;
+  };
+}
+
 export interface GameState {
   width: number;
   height: number;
@@ -47,6 +71,11 @@ export interface GameState {
   selectedPlayerId: string | null;
   lastDiceResult?: DiceResult;
   isTurnover: boolean;
+  // Zones de dugout pour chaque équipe
+  dugouts: {
+    teamA: TeamDugout;
+    teamB: TeamDugout;
+  };
   // Choix de blocage en attente (règles officielles 1/2/3 dés)
   pendingBlock?: {
     attackerId: string;
