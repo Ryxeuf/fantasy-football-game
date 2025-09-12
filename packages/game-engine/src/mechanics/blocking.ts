@@ -59,6 +59,9 @@ export function canBlitz(
 
   if (!attacker || !target) return false;
 
+  // Vérifier que c'est le tour de l'équipe du joueur
+  if (attacker.team !== state.currentPlayer) return false;
+
   // Vérifier que l'équipe n'a pas déjà utilisé son blitz ce tour
   if (!canTeamBlitz(state, attacker.team)) return false;
 
