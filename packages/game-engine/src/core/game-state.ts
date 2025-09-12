@@ -186,8 +186,9 @@ export function canPlayerMove(state: GameState, playerId: string): boolean {
   const player = state.players.find(p => p.id === playerId);
   if (!player) return false;
 
-  // Un joueur peut bouger s'il n'est pas étourdi, a des PM, et n'a pas encore fait d'action principale
-  return !player.stunned && player.pm > 0 && !hasPlayerActed(state, playerId);
+  // Un joueur peut bouger s'il n'est pas étourdi, a des PM, n'a pas encore fait d'action principale,
+  // et c'est le tour de son équipe
+  return !player.stunned && player.pm > 0 && !hasPlayerActed(state, playerId) && player.team === state.currentPlayer;
 }
 
 /**
@@ -200,12 +201,13 @@ export function canPlayerContinueMoving(state: GameState, playerId: string): boo
   const player = state.players.find(p => p.id === playerId);
   if (!player) return false;
 
-  // Un joueur peut continuer à bouger s'il n'est pas étourdi, a des PM, et
-  // soit il n'a pas encore agi, soit il a déjà commencé à bouger ou fait un blitz
+  // Un joueur peut continuer à bouger s'il n'est pas étourdi, a des PM, c'est le tour de son équipe,
+  // et soit il n'a pas encore agi, soit il a déjà commencé à bouger ou fait un blitz
   const playerAction = getPlayerAction(state, playerId);
   return (
     !player.stunned &&
     player.pm > 0 &&
+    player.team === state.currentPlayer &&
     (!hasPlayerActed(state, playerId) || playerAction === 'MOVE' || playerAction === 'BLITZ')
   );
 }
@@ -347,7 +349,7 @@ export function checkPlayerTurnEnd(state: GameState, playerId: string): GameStat
   if (
     player.pm <= 0 &&
     hasPlayerActed(state, playerId) &&
-    getPlayerAction(state, playerId) === 'MOVE'
+    (getPlayerAction(state, playerId) === 'MOVE' || getPlayerAction(state, playerId) === 'BLITZ')
   ) {
     return endPlayerTurn(state, playerId);
   }

@@ -81,9 +81,9 @@ export function canBlitz(
   const occupied = state.players.some(p => p.pos.x === to.x && p.pos.y === to.y);
   if (occupied) return false;
 
-  // Vérifier que le joueur a assez de PM pour le mouvement (le blocage coûtera 1 PM supplémentaire)
+  // Vérifier que le joueur a assez de PM pour le mouvement ET le blocage (le blocage coûte 1 PM supplémentaire)
   const distance = Math.abs(attacker.pos.x - to.x) + Math.abs(attacker.pos.y - to.y);
-  if (attacker.pm < distance) return false; // Pas de +1 ici, le blocage sera vérifié après
+  if (attacker.pm < distance + 1) return false; // +1 pour le blocage
 
   // Vérifier que la cible sera adjacente après le mouvement
   return isAdjacent(to, target.pos);
