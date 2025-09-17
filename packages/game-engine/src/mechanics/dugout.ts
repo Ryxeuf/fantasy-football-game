@@ -44,7 +44,7 @@ export function createTeamDugout(teamId: TeamId): TeamDugout {
         '#90EE90', // Vert clair
         '👥',
         16,
-        { x: baseX, y: 50, width: 150, height: 80 }
+        { x: baseX, y: 50, width: 150, height: 110 }
       ),
       stunned: createDugoutZone(
         `${teamId}-stunned`,
@@ -52,7 +52,7 @@ export function createTeamDugout(teamId: TeamId): TeamDugout {
         '#FFA500', // Orange
         '😵',
         16,
-        { x: baseX, y: 140, width: 150, height: 80 }
+        { x: baseX, y: 170, width: 150, height: 110 }
       ),
       knockedOut: createDugoutZone(
         `${teamId}-knocked-out`,
@@ -60,7 +60,7 @@ export function createTeamDugout(teamId: TeamId): TeamDugout {
         '#FF6B6B', // Rouge clair
         '🚑',
         16,
-        { x: baseX, y: 230, width: 150, height: 80 }
+        { x: baseX, y: 290, width: 150, height: 110 }
       ),
       casualty: createDugoutZone(
         `${teamId}-casualty`,
@@ -68,7 +68,7 @@ export function createTeamDugout(teamId: TeamId): TeamDugout {
         '#DC2626', // Rouge foncé
         '🩹',
         16,
-        { x: baseX, y: 320, width: 150, height: 80 }
+        { x: baseX, y: 410, width: 150, height: 110 }
       ),
       sentOff: createDugoutZone(
         `${teamId}-sent-off`,
@@ -76,7 +76,7 @@ export function createTeamDugout(teamId: TeamId): TeamDugout {
         '#374151', // Gris foncé
         '⚫',
         16,
-        { x: baseX, y: 410, width: 150, height: 80 }
+        { x: baseX, y: 530, width: 150, height: 110 }
       )
     }
   };
