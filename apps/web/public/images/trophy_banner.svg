@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 220" width="800" height="220">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0%" stop-color="#111827"/>
+      <stop offset="100%" stop-color="#1f2937"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#b45309"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="220" fill="url(#bg)"/>
+  <g transform="translate(280,30)">
+    <rect x="40" y="140" width="160" height="20" rx="6" fill="#374151"/>
+    <rect x="70" y="120" width="100" height="22" rx="6" fill="#4b5563"/>
+    <path d="M120,20 C120,20 150,20 160,40 C170,60 160,90 140,100 C140,120 100,120 100,100 C80,90 70,60 80,40 C90,20 120,20 120,20 Z" fill="url(#gold)" stroke="#78350f" stroke-width="3"/>
+  </g>
+  <text x="50%" y="50%" text-anchor="middle" fill="#e5e7eb" font-family="ui-sans-serif, system-ui" font-size="28" dy="8">Visez la victoire — bloquez, poussez, marquez !</text>
+  <text x="50%" y="70%" text-anchor="middle" fill="#93c5fd" font-family="ui-sans-serif, system-ui" font-size="14">Parties sécurisées par token de match • Règles fidèles • UI moderne</text>
+</svg>
+

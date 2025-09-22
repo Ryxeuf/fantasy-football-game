@@ -1,4 +1,15 @@
 services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=bb_user
+      - POSTGRES_PASSWORD=bb_pass
+      - POSTGRES_DB=bb_db
+    volumes:
+      - db_data:/var/lib/postgresql/data
   web:
     build:
       context: .
@@ -8,6 +19,7 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=3100
+      - NEXT_PUBLIC_API_BASE=http://localhost:8201
     volumes:
       - .:/app
       - /app/node_modules
@@ -22,6 +34,7 @@ services:
       "
     depends_on:
       - server
+      - db
 
   server:
     build:
@@ -34,16 +47,17 @@ services:
       - NODE_ENV=development
       - PORT=8202
       - API_PORT=8201
+      - DATABASE_URL=postgresql://bb_user:bb_pass@db:5432/bb_db?schema=public
     volumes:
       - .:/app
       - /app/node_modules
-      - /app/apps/server/node_modules
     working_dir: /app/apps/server
     command: >
       sh -c "
-        pnpm install &&
+        pnpm -w prisma generate &&
         pnpm run dev
       "
 
 volumes:
   node_modules:
+  db_data:

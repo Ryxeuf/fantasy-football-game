@@ -17,6 +17,9 @@ RUN pnpm install
 # Copy source code
 COPY . .
 
+# Generate Prisma client now that schema is present
+RUN pnpm -w prisma generate
+
 # Expose ports
 EXPOSE 8000 8001
 
