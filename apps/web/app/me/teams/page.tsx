@@ -39,18 +39,7 @@ export default function MyTeamsPage() {
             <option value="skaven">Skavens</option>
             <option value="lizardmen">Hommes-Lézards</option>
           </select>
-          <button
-            className="px-4 py-2 bg-emerald-600 text-white rounded"
-            onClick={async () => {
-              try {
-                const token = localStorage.getItem("auth_token");
-                const res = await fetch(`${API_BASE}/team/create-from-roster`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: token ? `Bearer ${token}` : '' }, body: JSON.stringify({ name, roster }) });
-                const json = await res.json();
-                if (!res.ok) throw new Error(json?.error || `Erreur ${res.status}`);
-                window.location.href = `/me/teams/${json.team.id}`;
-              } catch (e: any) { setError(e.message || 'Erreur'); }
-            }}
-          >Créer</button>
+          <a className="px-4 py-2 bg-emerald-600 text-white rounded text-center" href={`/me/teams/new?name=${encodeURIComponent(name)}&roster=${roster}`}>Ouvrir le builder</a>
         </div>
       </div>
       <div className="grid gap-3">

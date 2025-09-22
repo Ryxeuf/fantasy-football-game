@@ -6,6 +6,40 @@ const router = Router();
 const ALLOWED_TEAMS = ["skaven", "lizardmen"] as const;
 type AllowedRoster = typeof ALLOWED_TEAMS[number];
 
+const ROSTERS: Record<AllowedRoster, {
+  name: string;
+  budget: number; // 1000k
+  positions: Array<{
+    key: string;
+    name: string;
+    cost: number; // en k
+    min: number;
+    max: number;
+    ma: number; st: number; ag: number; pa: number; av: number; skills: string;
+  }>;
+}> = {
+  skaven: {
+    name: 'Skavens',
+    budget: 1000,
+    positions: [
+      { key: 'blitzer', name: 'Blitzer', cost: 90, min: 0, max: 2, ma: 7, st: 3, ag: 3, pa: 4, av: 9, skills: 'Block' },
+      { key: 'thrower', name: 'Thrower', cost: 85, min: 0, max: 2, ma: 7, st: 3, ag: 3, pa: 2, av: 8, skills: 'Pass,Sure Hands' },
+      { key: 'gutter', name: 'Gutter Runner', cost: 85, min: 0, max: 4, ma: 9, st: 2, ag: 2, pa: 4, av: 8, skills: 'Dodge' },
+      { key: 'lineman', name: 'Lineman', cost: 50, min: 0, max: 16, ma: 7, st: 3, ag: 3, pa: 4, av: 8, skills: '' },
+      { key: 'ratogre', name: 'Rat Ogre', cost: 150, min: 0, max: 1, ma: 6, st: 5, ag: 5, pa: 6, av: 9, skills: 'Frenzy,Animal Savagery' },
+    ],
+  },
+  lizardmen: {
+    name: 'Hommes-Lézards',
+    budget: 1000,
+    positions: [
+      { key: 'saurus', name: 'Saurus', cost: 85, min: 0, max: 6, ma: 6, st: 4, ag: 4, pa: 6, av: 10, skills: '' },
+      { key: 'skink', name: 'Skink', cost: 60, min: 0, max: 8, ma: 8, st: 2, ag: 3, pa: 5, av: 8, skills: 'Dodge' },
+      { key: 'kroxigor', name: 'Kroxigor', cost: 140, min: 0, max: 1, ma: 6, st: 5, ag: 5, pa: 6, av: 10, skills: 'Bone Head,Prehensile Tail' },
+    ],
+  },
+};
+
 function rosterTemplates(roster: AllowedRoster) {
   if (roster === "skaven") {
     return [
@@ -26,6 +60,12 @@ function rosterTemplates(roster: AllowedRoster) {
 
 router.get("/available", authUser, async (req: AuthenticatedRequest, res) => {
   res.json({ teams: ALLOWED_TEAMS });
+});
+
+router.get("/rosters/:id", authUser, async (req: AuthenticatedRequest, res) => {
+  const id = req.params.id as AllowedRoster;
+  if (!ALLOWED_TEAMS.includes(id)) return res.status(404).json({ error: 'Roster inconnu' });
+  res.json({ roster: ROSTERS[id] });
 });
 
 router.post("/choose", authUser, async (req: AuthenticatedRequest, res) => {
@@ -83,6 +123,34 @@ router.post("/create-from-roster", authUser, async (req: AuthenticatedRequest, r
   await prisma.teamPlayer.createMany({ data: players.slice(0, 16) });
   const withPlayers = await prisma.team.findUnique({ where: { id: team.id }, include: { players: true } });
   res.status(201).json({ team: withPlayers });
+});
+
+router.post('/build', authUser, async (req: AuthenticatedRequest, res) => {
+  const { name, roster, choices } = req.body ?? {} as { name?: string; roster?: AllowedRoster; choices?: Array<{ key: string; count: number }> };
+  if (!name || !roster || !Array.isArray(choices)) return res.status(400).json({ error: 'name, roster, choices requis' });
+  if (!ALLOWED_TEAMS.includes(roster)) return res.status(400).json({ error: 'Roster non autorisé' });
+  const def = ROSTERS[roster];
+  // Validation min/max et budget
+  let totalPlayers = 0; let totalCost = 0;
+  for (const p of def.positions) {
+    const c = Math.max(0, (choices.find(x => x.key === p.key)?.count ?? 0));
+    if (c < p.min || c > p.max) return res.status(400).json({ error: `Poste ${p.name}: min ${p.min}, max ${p.max}` });
+    totalPlayers += c; totalCost += c * p.cost;
+  }
+  if (totalPlayers < 11 || totalPlayers > 16) return res.status(400).json({ error: 'Il faut entre 11 et 16 joueurs' });
+  if (totalCost > def.budget) return res.status(400).json({ error: `Budget dépassé: ${totalCost}k / ${def.budget}k` });
+
+  const team = await prisma.team.create({ data: { ownerId: req.user!.id, name, roster } });
+  let number = 1; const players: any[] = [];
+  for (const p of def.positions) {
+    const c = Math.max(0, (choices.find(x => x.key === p.key)?.count ?? 0));
+    for (let i = 0; i < c; i += 1) {
+      players.push({ teamId: team.id, name: `${p.name} ${i + 1}` , position: p.name, number: number++, ma: p.ma, st: p.st, ag: p.ag, pa: p.pa, av: p.av, skills: p.skills });
+    }
+  }
+  await prisma.teamPlayer.createMany({ data: players });
+  const withPlayers = await prisma.team.findUnique({ where: { id: team.id }, include: { players: true } });
+  res.status(201).json({ team: withPlayers, cost: totalCost, budget: def.budget });
 });
 
 export default router;
