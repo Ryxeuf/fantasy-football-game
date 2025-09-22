@@ -2,6 +2,7 @@ import { Router } from "express";
 import { prisma } from "../prisma";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { authUser, AuthenticatedRequest } from "../middleware/authUser";
 
 const router = Router();
 
@@ -60,5 +61,17 @@ router.post("/login", async (req, res) => {
 });
 
 export default router;
+
+// Profil courant
+router.get("/me", authUser, async (req: AuthenticatedRequest, res) => {
+  try {
+    const user = await prisma.user.findUnique({ where: { id: req.user!.id }, select: { id: true, email: true, name: true, role: true, createdAt: true } });
+    if (!user) return res.status(404).json({ error: "Introuvable" });
+    res.json({ user });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
 
 
