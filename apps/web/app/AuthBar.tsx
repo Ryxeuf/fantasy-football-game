@@ -29,7 +29,10 @@ export default function AuthBar() {
     <div className="flex items-center gap-3 text-sm">
       {isAdmin && <a className="underline" href="/admin">Admin</a>}
       {hasToken ? (
-        <button onClick={logout} className="px-3 py-1 bg-neutral-800 text-white rounded">Se déconnecter</button>
+        <>
+          <a className="underline" href="/me">Mes parties</a>
+          <button onClick={logout} className="px-3 py-1 bg-neutral-800 text-white rounded">Se déconnecter</button>
+        </>
       ) : (
         <div className="flex items-center gap-3">
           <a className="underline" href="/login">Connexion</a>

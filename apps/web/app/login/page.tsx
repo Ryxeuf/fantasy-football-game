@@ -13,7 +13,7 @@ export default function LoginPage() {
     try {
       const { token } = await apiPost("/auth/login", { email, password });
       localStorage.setItem("auth_token", token);
-      window.location.href = "/";
+      window.location.href = "/me";
     } catch (err: any) {
       setError(err.message || "Erreur");
     }

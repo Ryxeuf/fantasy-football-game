@@ -14,7 +14,7 @@ export default function RegisterPage() {
     try {
       const { token } = await apiPost("/auth/register", { email, password, name });
       localStorage.setItem("auth_token", token);
-      window.location.href = "/";
+      window.location.href = "/me";
     } catch (err: any) {
       setError(err.message || "Erreur");
     }
