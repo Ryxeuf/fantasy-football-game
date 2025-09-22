@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 
 const router = Router();
 const MATCH_SECRET = process.env.MATCH_SECRET || "dev-match-secret";
+const ALLOWED_TEAMS = ["skaven", "lizardmen"] as const;
 
 // Créer une partie, le créateur reçoit un token de match
 router.post("/create", authUser, async (req: AuthenticatedRequest, res) => {

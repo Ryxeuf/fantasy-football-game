@@ -27,7 +27,7 @@ export default function LobbyPage() {
     try {
       const { match, matchToken } = await api("/match/create");
       localStorage.setItem("match_token", matchToken);
-      window.location.href = "/play";
+      window.location.href = `/team/select?matchId=${match.id}`;
     } catch (e: any) {
       setError(e.message || "Erreur");
     }
@@ -38,7 +38,7 @@ export default function LobbyPage() {
     try {
       const { match, matchToken } = await api("/match/join", { matchId });
       localStorage.setItem("match_token", matchToken);
-      window.location.href = "/play";
+      window.location.href = `/team/select?matchId=${match.id}`;
     } catch (e: any) {
       setError(e.message || "Erreur");
     }

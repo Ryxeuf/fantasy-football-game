@@ -6,6 +6,7 @@ import authRoutes from "./routes/auth";
 import matchRoutes from "./routes/match";
 import adminRoutes from "./routes/admin";
 import userRoutes from "./routes/user";
+import teamRoutes from "./routes/team";
 import dotenv from "dotenv";
 import { toBGIOGame } from "@bb/game-engine";
 
@@ -45,6 +46,7 @@ app.use("/auth", authRoutes);
 app.use("/match", matchRoutes);
 app.use("/admin", adminRoutes);
 app.use("/user", userRoutes);
+app.use("/team", teamRoutes);
 
 app.listen(API_PORT, () => {
   console.log(`Express API server listening on http://localhost:${API_PORT}`);

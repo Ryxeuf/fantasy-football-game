@@ -31,6 +31,7 @@ export default function AuthBar() {
       {hasToken ? (
         <>
           <a className="underline" href="/me">Mes parties</a>
+          <a className="underline" href="/me/teams">Mes équipes</a>
           <button onClick={logout} className="px-3 py-1 bg-neutral-800 text-white rounded">Se déconnecter</button>
         </>
       ) : (
