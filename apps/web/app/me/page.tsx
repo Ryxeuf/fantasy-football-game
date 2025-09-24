@@ -61,18 +61,19 @@ export default function MePage() {
                 <div className="font-semibold">Partie {m.id.slice(0,8)}…</div>
                 <div className="text-sm text-gray-600">Statut: {m.status} • {new Date(m.createdAt).toLocaleString()}</div>
               </div>
-              <button
-                className="px-3 py-1.5 bg-blue-600 text-white rounded"
-                onClick={async () => {
-                  try {
-                    const { matchToken } = await postJSON("/match/join", { matchId: m.id });
-                    localStorage.setItem("match_token", matchToken);
-                    window.location.href = "/play";
-                  } catch (e) {
-                    alert((e as any)?.message || "Erreur");
-                  }
-                }}
-              >
+            <button
+              className="px-3 py-1.5 bg-blue-600 text-white rounded"
+              onClick={async () => {
+                try {
+                  const { matchToken } = await postJSON("/match/join", { matchId: m.id });
+                  localStorage.setItem("match_token", matchToken);
+                  sessionStorage.setItem("current_match_id", m.id);
+                  window.location.href = `/play/${m.id}`;
+                } catch (e) {
+                  alert((e as any)?.message || "Erreur");
+                }
+              }}
+            >
                 Continuer
               </button>
             </div>

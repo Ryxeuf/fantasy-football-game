@@ -44,7 +44,12 @@ router.get("/details", async (req, res) => {
   try {
     const token = (req.headers["x-match-token"] as string) || "";
     if (!token) return res.status(401).json({ error: "x-match-token requis" });
-    const payload = jwt.verify(token, MATCH_SECRET) as any;
+    let payload: any;
+    try {
+      payload = jwt.verify(token, MATCH_SECRET) as any;
+    } catch {
+      return res.status(401).json({ error: "x-match-token invalide" });
+    }
     const matchId = payload?.matchId as string | undefined;
     if (!matchId) return res.status(400).json({ error: "matchId manquant dans le token" });
 
@@ -60,9 +65,15 @@ router.get("/details", async (req, res) => {
       }),
     ]);
 
-    // Déterminer local/visiteur via creatorId: local = créateur
-    const local = selections.find((s) => s.userId === match?.creatorId) || selections[0];
-    const visitor = selections.find((s) => s.userId !== match?.creatorId) || selections[1];
+    // Déterminer local/visiteur: par défaut l'utilisateur du token est "local"
+    const tokenUserId = (payload as any)?.userId as string | undefined;
+    let local = selections.find((s) => s.userId === tokenUserId) || null;
+    let visitor = selections.find((s) => s.userId !== tokenUserId) || null;
+    if (!local || !visitor) {
+      // Fallback si une des équipes manque: utiliser creatorId si dispo, sinon l'ordre de sélection
+      local = selections.find((s) => s.userId === match?.creatorId) || selections[0];
+      visitor = selections.find((s) => s.userId !== match?.creatorId) || selections[1];
+    }
 
     function teamName(sel: any): string {
       if (!sel) return "";
@@ -81,6 +92,41 @@ router.get("/details", async (req, res) => {
   } catch (e: any) {
     console.error(e);
     return res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// Détails du match (auth) par id
+router.get("/:id/details", authUser, async (req: AuthenticatedRequest, res) => {
+  try {
+    const matchId = req.params.id;
+    const [match, selections] = await Promise.all([
+      prisma.match.findUnique({ where: { id: matchId }, select: { id: true, creatorId: true } }),
+      prisma.teamSelection.findMany({
+        where: { matchId },
+        orderBy: { createdAt: "asc" },
+        include: { user: { select: { id: true, name: true, email: true } }, teamRef: { select: { name: true, roster: true } } },
+      }),
+    ]);
+    if (!match) return res.status(404).json({ error: 'Partie introuvable' });
+    // Déterminer local/visiteur: l'utilisateur authentifié est local
+    const authenticatedUserId = req.user!.id;
+    let local = selections.find((s) => s.userId === authenticatedUserId) || null;
+    let visitor = selections.find((s) => s.userId !== authenticatedUserId) || null;
+    if (!local || !visitor) {
+      // Fallback: creatorId puis ordre de sélection
+      local = selections.find((s) => s.userId === match.creatorId) || selections[0];
+      visitor = selections.find((s) => s.userId !== match.creatorId) || selections[1];
+    }
+    const teamName = (sel: any) => sel?.teamRef?.name || sel?.teamRef?.roster || sel?.team || '';
+    const coachName = (sel: any) => sel?.user?.name || sel?.user?.email || '';
+    return res.json({
+      matchId,
+      local: { teamName: teamName(local), coachName: coachName(local) },
+      visitor: { teamName: teamName(visitor), coachName: coachName(visitor) },
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 
