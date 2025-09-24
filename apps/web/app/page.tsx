@@ -16,6 +16,7 @@ export default function LandingPage() {
               <a href="/lobby" className="px-5 py-2.5 rounded bg-emerald-500 hover:bg-emerald-400 text-white font-semibold">Jouer maintenant</a>
               <a href="/login" className="px-5 py-2.5 rounded border border-white/20 text-white hover:bg-white/10">Connexion</a>
               <a href="/register" className="px-5 py-2.5 rounded border border-white/20 text-white/90 hover:text-white hover:bg-white/10">Inscription</a>
+              <a href="/play/demo" className="px-5 py-2.5 rounded border border-white/20 text-white/80 hover:text-white hover:bg-white/10">Démo du plateau</a>
             </div>
           </div>
           <div className="relative">

@@ -17,6 +17,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   matches   Match[]
+  createdMatches Match[] @relation("MatchCreator")
   teams     Team[]
   teamSelections TeamSelection[]
 }
@@ -26,6 +27,8 @@ model Match {
   createdAt DateTime @default(now())
   status    String
   seed      String
+  creator    User?   @relation("MatchCreator", fields: [creatorId], references: [id])
+  creatorId  String?
   players   User[]
   turns     Turn[]
   teamSelections TeamSelection[]

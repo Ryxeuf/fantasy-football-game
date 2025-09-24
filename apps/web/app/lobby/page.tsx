@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8001";
 
@@ -21,6 +21,24 @@ async function api(path: string, body?: unknown) {
 export default function LobbyPage() {
   const [matchId, setMatchId] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  // Redirige vers /login si non connecté ou token invalide
+  useEffect(() => {
+    (async () => {
+      try {
+        const t = localStorage.getItem("auth_token");
+        if (!t) { window.location.href = "/login"; return; }
+        const res = await fetch(`${API_BASE}/auth/me`, { headers: { Authorization: `Bearer ${t}` } });
+        if (!res.ok) {
+          localStorage.removeItem("auth_token");
+          window.location.href = "/login";
+        }
+      } catch {
+        localStorage.removeItem("auth_token");
+        window.location.href = "/login";
+      }
+    })();
+  }, []);
 
   async function createMatch() {
     setError(null);

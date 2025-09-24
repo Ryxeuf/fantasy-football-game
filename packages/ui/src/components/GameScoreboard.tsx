@@ -4,9 +4,13 @@ import type { GameState, GameLogEntry } from "@bb/game-engine";
 interface GameScoreboardProps {
   state: GameState;
   onEndTurn: () => void;
+  leftTeamName?: string;
+  rightTeamName?: string;
+  leftCoachName?: string;
+  rightCoachName?: string;
 }
 
-export default function GameScoreboard({ state, onEndTurn }: GameScoreboardProps) {
+export default function GameScoreboard({ state, onEndTurn, leftTeamName, rightTeamName, leftCoachName, rightCoachName }: GameScoreboardProps) {
   const getTeamColor = (team: "A" | "B") => {
     return team === "A" ? "bg-red-600" : "bg-blue-600";
   };
@@ -16,7 +20,9 @@ export default function GameScoreboard({ state, onEndTurn }: GameScoreboardProps
   };
 
   const getCurrentTeamName = () => {
-    return state.currentPlayer === "A" ? state.teamNames.teamA : state.teamNames.teamB;
+    const teamAName = leftTeamName || state.teamNames.teamA;
+    const teamBName = rightTeamName || state.teamNames.teamB;
+    return state.currentPlayer === "A" ? teamAName : teamBName;
   };
 
   const getCurrentTeamColor = () => {
@@ -87,7 +93,7 @@ export default function GameScoreboard({ state, onEndTurn }: GameScoreboardProps
           {/* Équipe A */}
           <div className="text-center">
             <div className="text-sm text-gray-300 mb-1">
-              {state.teamNames.teamA}
+              {leftTeamName || state.teamNames.teamA}
             </div>
             <div className={`text-4xl font-black ${getTeamTextColor("A")} ${showScoreAnim ? 'animate-ping' : ''}`}>
               {state.score.teamA}
@@ -102,7 +108,7 @@ export default function GameScoreboard({ state, onEndTurn }: GameScoreboardProps
           {/* Équipe B */}
           <div className="text-center">
             <div className="text-sm text-gray-300 mb-1">
-              {state.teamNames.teamB}
+              {rightTeamName || state.teamNames.teamB}
             </div>
             <div className={`text-4xl font-black ${getTeamTextColor("B")} ${showScoreAnim ? 'animate-ping' : ''}`}>
               {state.score.teamB}
@@ -161,6 +167,14 @@ export default function GameScoreboard({ state, onEndTurn }: GameScoreboardProps
             Blood Bowl Fantasy Football
           </div>
         </div>
+
+        {(leftCoachName || rightCoachName) && (
+          <div className="mt-2 text-center text-gray-300">
+            <span>Coach (local): {leftCoachName || '—'}</span>
+            <span className="mx-3">•</span>
+            <span>Coach (visiteur): {rightCoachName || '—'}</span>
+          </div>
+        )}
       </div>
     </div>
   );

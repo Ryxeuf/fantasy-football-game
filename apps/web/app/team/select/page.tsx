@@ -18,7 +18,7 @@ async function postJSON(path: string, body: unknown) {
 }
 
 export default function TeamSelectPage() {
-  const [teams, setTeams] = useState<string[]>([]);
+  const [teams, setTeams] = useState<Array<{ id: string; name: string; roster: string }>>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -28,10 +28,10 @@ export default function TeamSelectPage() {
   const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
   const matchId = params.get("matchId") || "";
 
-  async function choose(team: string) {
+  async function choose(teamId: string) {
     try {
       setError(null);
-      await postJSON(`/team/choose`, { matchId, team });
+      await postJSON(`/team/choose`, { matchId, teamId });
       window.location.href = "/me";
     } catch (e: any) {
       setError(e.message || "Erreur");
@@ -44,9 +44,9 @@ export default function TeamSelectPage() {
       {error && <p className="text-red-600 text-sm">{error}</p>}
       <div className="grid md:grid-cols-2 gap-4">
         {teams.map((t) => (
-          <button key={t} onClick={() => choose(t)} className="rounded-xl border p-6 bg-white hover:shadow text-left">
-            <div className="text-xl font-semibold capitalize">{t}</div>
-            <div className="text-sm text-gray-600 mt-1">Sélectionner {t}</div>
+          <button key={t.id} onClick={() => choose(t.id)} className="rounded-xl border p-6 bg-white hover:shadow text-left">
+            <div className="text-xl font-semibold">{t.name}</div>
+            <div className="text-sm text-gray-600 mt-1 capitalize">Roster: {t.roster}</div>
           </button>
         ))}
         {teams.length === 0 && <p className="text-sm text-gray-600">Aucune équipe disponible</p>}

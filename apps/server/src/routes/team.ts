@@ -59,7 +59,20 @@ function rosterTemplates(roster: AllowedRoster) {
 }
 
 router.get("/available", authUser, async (req: AuthenticatedRequest, res) => {
-  res.json({ teams: ALLOWED_TEAMS });
+  // Renvoie les équipes possédées par l'utilisateur et non engagées dans un match en cours
+  const teams = await prisma.team.findMany({
+    where: {
+      ownerId: req.user!.id,
+      selections: {
+        none: {
+          match: { status: { in: ["pending", "active"] } },
+        },
+      },
+    },
+    select: { id: true, name: true, roster: true, createdAt: true },
+    orderBy: { createdAt: "desc" },
+  });
+  res.json({ teams });
 });
 
 router.get("/rosters/:id", authUser, async (req: AuthenticatedRequest, res) => {

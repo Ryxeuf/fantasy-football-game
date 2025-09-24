@@ -17,6 +17,21 @@ router.get("/matches", async (_req, res) => {
   res.json({ matches });
 });
 
+// Purge toutes les parties (matches, turns, selections et liens joueurs)
+router.post("/matches/purge", async (_req, res) => {
+  try {
+    await prisma.turn.deleteMany({});
+    await prisma.teamSelection.deleteMany({});
+    // Supprimer les relations dans la table de jonction _MatchToUser
+    await (prisma as any).$executeRawUnsafe('DELETE FROM "_MatchToUser"');
+    await prisma.match.deleteMany({});
+    res.json({ ok: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Erreur lors de la purge des parties' });
+  }
+});
+
 router.get("/stats", async (_req, res) => {
   const [users, matches] = await Promise.all([
     prisma.user.count(),

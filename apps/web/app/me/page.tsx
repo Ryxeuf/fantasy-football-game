@@ -25,6 +25,7 @@ async function postJSON(path: string, body: unknown) {
 
 export default function MePage() {
   const [matches, setMatches] = useState<Match[]>([]);
+  const [summaries, setSummaries] = useState<Record<string, any>>({});
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -37,6 +38,11 @@ export default function MePage() {
         if (!me?.user) { window.location.href = "/login"; return; }
         const { matches } = await fetchJSON("/user/matches");
         setMatches(matches);
+        // Charger les résumés en parallèle
+        const entries = await Promise.all(matches.map((m: Match) => fetchJSON(`/match/${m.id}/summary`).then((s) => [m.id, s] as const).catch(() => [m.id, null] as const)));
+        const map: Record<string, any> = {};
+        for (const [id, s] of entries) map[id] = s;
+        setSummaries(map);
       } catch (e: any) {
         setError(e.message || "Erreur");
       }
@@ -49,25 +55,43 @@ export default function MePage() {
       {error && <p className="text-red-600 text-sm">{error}</p>}
       <div className="grid gap-3">
         {matches.map((m) => (
-          <div key={m.id} className="rounded border p-4 bg-white flex items-center justify-between">
-            <div>
-              <div className="font-semibold">Partie {m.id.slice(0,8)}…</div>
-              <div className="text-sm text-gray-600">Statut: {m.status} • {new Date(m.createdAt).toLocaleString()}</div>
+          <div key={m.id} className="rounded border p-4 bg-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-semibold">Partie {m.id.slice(0,8)}…</div>
+                <div className="text-sm text-gray-600">Statut: {m.status} • {new Date(m.createdAt).toLocaleString()}</div>
+              </div>
+              <button
+                className="px-3 py-1.5 bg-blue-600 text-white rounded"
+                onClick={async () => {
+                  try {
+                    const { matchToken } = await postJSON("/match/join", { matchId: m.id });
+                    localStorage.setItem("match_token", matchToken);
+                    window.location.href = "/play";
+                  } catch (e) {
+                    alert((e as any)?.message || "Erreur");
+                  }
+                }}
+              >
+                Continuer
+              </button>
             </div>
-            <button
-              className="px-3 py-1.5 bg-blue-600 text-white rounded"
-              onClick={async () => {
-                try {
-                  const { matchToken } = await postJSON("/match/join", { matchId: m.id });
-                  localStorage.setItem("match_token", matchToken);
-                  window.location.href = "/play";
-                } catch (e) {
-                  alert((e as any)?.message || "Erreur");
-                }
-              }}
-            >
-              Continuer
-            </button>
+            {summaries[m.id] && (
+              <div className="mt-3 text-sm text-gray-700">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium">{summaries[m.id].teams?.local?.name || '—'} <span className="text-gray-500">(Coach: {summaries[m.id].teams?.local?.coach || '—'})</span></div>
+                  </div>
+                  <div className="text-xl font-bold">
+                    {summaries[m.id].score?.teamA ?? 0} - {summaries[m.id].score?.teamB ?? 0}
+                  </div>
+                  <div className="text-right">
+                    <div className="font-medium">{summaries[m.id].teams?.visitor?.name || '—'} <span className="text-gray-500">(Coach: {summaries[m.id].teams?.visitor?.coach || '—'})</span></div>
+                  </div>
+                </div>
+                <div className="text-xs text-gray-500 mt-1">Mi-temps: {summaries[m.id].half} • Tour: {summaries[m.id].turn}</div>
+              </div>
+            )}
           </div>
         ))}
         {matches.length === 0 && <p className="text-sm text-gray-600">Aucune partie en cours.</p>}

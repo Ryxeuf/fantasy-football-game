@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { PixiBoard, PlayerDetails, DiceResultPopup, GameScoreboard, GameLog, BlockChoicePopup, ActionPickerPopup, DiceTestComponent, PushChoicePopup, FollowUpChoicePopup, GameBoardWithDugouts } from "@bb/ui";
+import { PixiBoard, PlayerDetails, DiceResultPopup, GameScoreboard, GameLog, BlockChoicePopup, ActionPickerPopup, PushChoicePopup, FollowUpChoicePopup, GameBoardWithDugouts } from "@bb/ui";
 import { setup, getLegalMoves, applyMove, makeRNG, clearDiceResult, hasPlayerActed, type GameState, type Position, type Move } from "@bb/game-engine";
+import { API_BASE } from "../auth-client";
 
 export default function PlayPage() {
   useEffect(() => {
@@ -15,6 +16,46 @@ export default function PlayPage() {
   const [showDicePopup, setShowDicePopup] = useState(false);
   const [currentAction, setCurrentAction] = useState<"MOVE" | "BLOCK" | "BLITZ" | "PASS" | "HANDOFF" | "FOUL" | null>(null);
   const createRNG = () => makeRNG(`ui-seed-${Date.now()}-${Math.random()}`);
+  const [coachNameA, setCoachNameA] = useState<string | null>(null); // local
+  const [coachNameB, setCoachNameB] = useState<string | null>(null); // visiteur
+  const [teamNameA, setTeamNameA] = useState<string | null>(null); // local
+  const [teamNameB, setTeamNameB] = useState<string | null>(null); // visiteur
+
+  useEffect(() => {
+    // Récupère le nom du coach connecté pour l'afficher
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE}/auth/me`, { credentials: "include" });
+        const data = await res.json().catch(() => ({} as any));
+        if (res.ok && data?.user?.name) {
+          setCoachNameA(data.user.name as string);
+        } else if (res.ok && data?.user?.email) {
+          setCoachNameA(data.user.email as string);
+        }
+      } catch {}
+    })();
+  }, []);
+
+  useEffect(() => {
+    // Récupère les noms d'équipes et coachs via le token de match
+    (async () => {
+      try {
+        const matchToken = localStorage.getItem("match_token");
+        if (!matchToken) return;
+        const res = await fetch(`${API_BASE}/match/details`, {
+          headers: { "X-Match-Token": matchToken },
+        });
+        const data = await res.json().catch(() => ({} as any));
+        if (res.ok && data) {
+          // local/visitor -> gauche/droite
+          setTeamNameA(data?.local?.teamName || null);
+          setTeamNameB(data?.visitor?.teamName || null);
+          setCoachNameA((prev) => prev ?? (data?.local?.coachName || null));
+          setCoachNameB(data?.visitor?.coachName || null);
+        }
+      } catch {}
+    })();
+  }, []);
 
   const legal = useMemo(() => getLegalMoves(state), [state]);
   const isMove = (m: Move, pid: string): m is Extract<Move, { type: "MOVE" }> => m.type === "MOVE" && (m as any).playerId === pid;
@@ -63,7 +104,14 @@ export default function PlayPage() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <GameScoreboard state={state} onEndTurn={() => setState((s) => applyMove(s, { type: "END_TURN" }, createRNG()))} />
+      <GameScoreboard
+        state={state}
+        leftTeamName={teamNameA || state.teamNames.teamA}
+        rightTeamName={teamNameB || state.teamNames.teamB}
+        leftCoachName={coachNameA || "Joueur"}
+        rightCoachName={coachNameB || "Adversaire"}
+        onEndTurn={() => setState((s) => applyMove(s, { type: "END_TURN" }, createRNG()))}
+      />
       <div className="pt-24">
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col lg:flex-row items-start gap-6 mb-6">
@@ -82,9 +130,7 @@ export default function PlayPage() {
               )}
             </div>
           </div>
-          <div className="mt-8">
-            <DiceTestComponent />
-          </div>
+          {/* Zone réservée pour des composants d'interface de match (pas de démo ici) */}
         </div>
       </div>
       {showDicePopup && state.lastDiceResult && (
