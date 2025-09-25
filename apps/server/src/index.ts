@@ -9,8 +9,23 @@ import userRoutes from "./routes/user";
 import teamRoutes from "./routes/team";
 import dotenv from "dotenv";
 import { toBGIOGame } from "@bb/game-engine";
+import { execSync } from "node:child_process";
 
 dotenv.config({ path: "../../prisma/.env" });
+// Si tests SQLite: pousser le schéma SQLite en mémoire partagée au démarrage
+if (process.env.TEST_SQLITE === '1') {
+  const url = process.env.TEST_DATABASE_URL || 'file:memdb1?mode=memory&cache=shared';
+  try {
+    execSync(`TEST_DATABASE_URL='${url}' npx prisma db push --schema prisma/sqlite/schema.prisma --skip-generate`, {
+      stdio: 'inherit',
+      cwd: process.cwd(),
+      env: { ...process.env, TEST_DATABASE_URL: url },
+    });
+    console.log(`SQLite schema pushed (TEST_DATABASE_URL=${url})`);
+  } catch (e) {
+    console.error('Failed to push SQLite schema for tests', e);
+  }
+}
 
 const BGIO_PORT = parseInt(process.env.BGIO_PORT || "8000", 10);
 const API_PORT = parseInt(process.env.API_PORT || "8001", 10);

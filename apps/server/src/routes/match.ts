@@ -2,6 +2,7 @@ import { Router } from "express";
 import { prisma } from "../prisma";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
 import jwt from "jsonwebtoken";
+import { acceptAndMaybeStartMatch } from "../services/match-start";
 
 const router = Router();
 const MATCH_SECRET = process.env.MATCH_SECRET || "dev-match-secret";
@@ -33,6 +34,20 @@ router.post("/join", authUser, async (req: AuthenticatedRequest, res) => {
   } catch (e: any) {
     console.error(e);
     return res.status(500).json({ error: e?.message || "Erreur serveur" });
+  }
+});
+
+// Accepter le match: chaque coach doit accepter. Au second accept, on lance la séquence de pré-match
+router.post("/accept", authUser, async (req: AuthenticatedRequest, res) => {
+  try {
+    const { matchId } = (req.body ?? {}) as { matchId?: string };
+    if (!matchId) return res.status(400).json({ error: "matchId requis" });
+    const result = await acceptAndMaybeStartMatch(prisma as any, { matchId, userId: req.user!.id });
+    if (!result.ok && 'status' in result && typeof result.status === 'number') return res.status(result.status).json({ error: result.error });
+    return res.json(result);
+  } catch (e: any) {
+    console.error(e);
+    return res.status(500).json({ error: e?.message || 'Erreur serveur' });
   }
 });
 
