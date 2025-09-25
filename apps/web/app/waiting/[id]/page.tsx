@@ -13,6 +13,8 @@ export default function WaitingPage({ params }: { params: { id: string } }) {
   const matchId = params.id;
   const [summary, setSummary] = useState<Summary | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [accepting, setAccepting] = useState(false);
+  const [acceptedOnce, setAcceptedOnce] = useState(false);
 
   useEffect(() => {
     let timer: any;
@@ -41,6 +43,31 @@ export default function WaitingPage({ params }: { params: { id: string } }) {
 
   const localAccepted = !!summary?.acceptances?.local;
   const visitorAccepted = !!summary?.acceptances?.visitor;
+
+  async function acceptMatch() {
+    try {
+      setAccepting(true);
+      setError(null);
+      const token = localStorage.getItem("auth_token");
+      if (!token) { window.location.href = "/login"; return; }
+      const res = await fetch(`${API_BASE}/match/accept`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ matchId }),
+      });
+      const data = await res.json().catch(() => ({} as any));
+      if (!res.ok) { throw new Error(data?.error || `HTTP ${res.status}`); }
+      setAcceptedOnce(true);
+      // Actualiser une fois immédiatement après acceptation
+      const sumRes = await fetch(`${API_BASE}/match/${matchId}/summary`, { headers: { Authorization: `Bearer ${token}` } });
+      const sumData = await sumRes.json().catch(() => ({} as any));
+      if (sumRes.ok) setSummary(sumData as Summary);
+    } catch (e: any) {
+      setError(e?.message || "Erreur lors de l'acceptation");
+    } finally {
+      setAccepting(false);
+    }
+  }
 
   return (
     <div className="max-w-lg mx-auto p-6 space-y-4">
@@ -72,6 +99,13 @@ export default function WaitingPage({ params }: { params: { id: string } }) {
       <div className="flex gap-2">
         <a className="px-3 py-2 bg-neutral-200 rounded" href="/lobby">Retour au lobby</a>
         <a className="px-3 py-2 bg-neutral-200 rounded" href={`/team/select?matchId=${matchId}`}>Choisir/Changer d'équipe</a>
+        <button
+          className={`px-3 py-2 rounded ${localAccepted || visitorAccepted ? 'bg-blue-600 text-white' : 'bg-blue-600 text-white'} disabled:opacity-50`}
+          onClick={acceptMatch}
+          disabled={accepting || acceptedOnce}
+        >
+          {accepting ? 'Validation…' : acceptedOnce ? 'Validé' : 'Valider le début'}
+        </button>
       </div>
     </div>
   );
