@@ -62,7 +62,8 @@ export default function MePage() {
                 <div className="text-sm text-gray-600">Statut: {m.status} • {new Date(m.createdAt).toLocaleString()}</div>
               </div>
             <button
-              className="px-3 py-1.5 bg-blue-600 text-white rounded"
+              className="px-3 py-1.5 bg-blue-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={summaries[m.id] && summaries[m.id].status !== 'active'}
               onClick={async () => {
                 try {
                   const { matchToken } = await postJSON("/match/join", { matchId: m.id });
@@ -74,7 +75,7 @@ export default function MePage() {
                 }
               }}
             >
-                Continuer
+                {summaries[m.id] && summaries[m.id].status !== 'active' ? 'En attente de l’autre joueur' : 'Continuer'}
               </button>
             </div>
             {summaries[m.id] && (
@@ -91,6 +92,11 @@ export default function MePage() {
                   </div>
                 </div>
                 <div className="text-xs text-gray-500 mt-1">Mi-temps: {summaries[m.id].half} • Tour: {summaries[m.id].turn}</div>
+                {summaries[m.id].status !== 'active' && (
+                  <div className="mt-2 text-xs">
+                    <a className="underline text-blue-700" href={`/waiting/${m.id}`}>Voir l’état des validations</a>
+                  </div>
+                )}
               </div>
             )}
           </div>

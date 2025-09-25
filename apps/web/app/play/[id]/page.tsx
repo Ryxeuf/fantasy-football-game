@@ -14,6 +14,26 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
     }
   }, []);
 
+  // Bloquer l'accès si le match n'est pas encore actif
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = localStorage.getItem("auth_token");
+        if (!token) { window.location.href = "/lobby"; return; }
+        const res = await fetch(`${API_BASE}/match/${matchId}/summary`, { headers: { Authorization: `Bearer ${token}` } });
+        const data = await res.json().catch(() => ({} as any));
+        if (!res.ok) { window.location.href = "/lobby"; return; }
+        if (data?.status !== 'active') {
+          // Tant que les deux joueurs n'ont pas accepté, on empêche l'accès
+          window.location.href = "/lobby";
+          return;
+        }
+      } catch {
+        window.location.href = "/lobby";
+      }
+    })();
+  }, [matchId]);
+
   const [state, setState] = useState<GameState>(() => setup());
   const [showDicePopup, setShowDicePopup] = useState(false);
   const [currentAction, setCurrentAction] = useState<"MOVE" | "BLOCK" | "BLITZ" | "PASS" | "HANDOFF" | "FOUL" | null>(null);

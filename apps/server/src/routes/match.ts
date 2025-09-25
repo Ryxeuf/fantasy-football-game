@@ -85,9 +85,15 @@ router.get("/details", async (req, res) => {
     let local = selections.find((s) => s.userId === tokenUserId) || null;
     let visitor = selections.find((s) => s.userId !== tokenUserId) || null;
     if (!local || !visitor) {
-      // Fallback si une des équipes manque: utiliser creatorId si dispo, sinon l'ordre de sélection
-      local = selections.find((s) => s.userId === match?.creatorId) || selections[0];
-      visitor = selections.find((s) => s.userId !== match?.creatorId) || selections[1];
+      // Fallback si une des équipes manque
+      if (match?.creatorId) {
+        local = selections.find((s) => s.userId === match.creatorId) || selections[0];
+        visitor = selections.find((s) => s.userId !== match.creatorId) || selections[1] || null;
+      } else {
+        // Pas de creatorId: ordonner simplement
+        local = selections[0] || null;
+        visitor = selections.length > 1 ? selections[1] : null;
+      }
     }
 
     function teamName(sel: any): string {
@@ -128,9 +134,14 @@ router.get("/:id/details", authUser, async (req: AuthenticatedRequest, res) => {
     let local = selections.find((s) => s.userId === authenticatedUserId) || null;
     let visitor = selections.find((s) => s.userId !== authenticatedUserId) || null;
     if (!local || !visitor) {
-      // Fallback: creatorId puis ordre de sélection
-      local = selections.find((s) => s.userId === match.creatorId) || selections[0];
-      visitor = selections.find((s) => s.userId !== match.creatorId) || selections[1];
+      // Fallback: creatorId si présent, sinon ordre de sélection
+      if (match.creatorId) {
+        local = selections.find((s) => s.userId === match.creatorId) || selections[0] || null;
+        visitor = selections.find((s) => s.userId !== match.creatorId) || selections[1] || null;
+      } else {
+        local = selections[0] || null;
+        visitor = selections.length > 1 ? selections[1] : null;
+      }
     }
     const teamName = (sel: any) => sel?.teamRef?.name || sel?.teamRef?.roster || sel?.team || '';
     const coachName = (sel: any) => sel?.user?.name || sel?.user?.email || '';
@@ -152,13 +163,25 @@ router.get("/:id/summary", authUser, async (req: AuthenticatedRequest, res) => {
     const match = await prisma.match.findUnique({ where: { id: matchId }, select: { id: true, status: true, seed: true, creatorId: true, createdAt: true } });
     if (!match) return res.status(404).json({ error: "Partie introuvable" });
 
-    const selections = await prisma.teamSelection.findMany({
-      where: { matchId },
-      include: { user: { select: { id: true, name: true, email: true } }, teamRef: { select: { id: true, name: true, roster: true } } },
-      orderBy: { createdAt: "asc" },
-    });
-    const local = selections.find(s => s.userId === match.creatorId) || selections[0] || null;
-    const visitor = selections.find(s => s.userId !== match.creatorId) || selections[1] || null;
+    const [selections, acceptTurns] = await Promise.all([
+      prisma.teamSelection.findMany({
+        where: { matchId },
+        include: { user: { select: { id: true, name: true, email: true } }, teamRef: { select: { id: true, name: true, roster: true } } },
+        orderBy: { createdAt: "asc" },
+      }),
+      prisma.turn.findMany({ where: { matchId } }),
+    ]);
+    let local = selections.find(s => s.userId === match.creatorId) || null;
+    let visitor = selections.find(s => s.userId !== match.creatorId) || null;
+    if (!local || !visitor) {
+      if (match.creatorId) {
+        local = selections.find(s => s.userId === match.creatorId) || selections[0] || null;
+        visitor = selections.find(s => s.userId !== match.creatorId) || selections[1] || null;
+      } else {
+        local = selections[0] || null;
+        visitor = selections.length > 1 ? selections[1] : null;
+      }
+    }
 
     const turnsCount = await prisma.turn.count({ where: { matchId } });
     const half = turnsCount < 16 ? 1 : 2; // approximation
@@ -166,6 +189,15 @@ router.get("/:id/summary", authUser, async (req: AuthenticatedRequest, res) => {
 
     const pickName = (sel: any) => sel?.teamRef?.name || sel?.teamRef?.roster || sel?.team || "";
     const pickCoach = (sel: any) => sel?.user?.name || sel?.user?.email || "";
+    const acceptedUserIds = Array.from(
+      new Set(
+        (acceptTurns || [])
+          .map((t: any) => (t as any)?.payload?.type === 'accept' ? (t as any)?.payload?.userId : null)
+          .filter(Boolean)
+      )
+    );
+    const localAccepted = !!(local && acceptedUserIds.includes(local.userId));
+    const visitorAccepted = !!(visitor && acceptedUserIds.includes(visitor.userId));
 
     return res.json({
       id: match.id,
@@ -178,6 +210,7 @@ router.get("/:id/summary", authUser, async (req: AuthenticatedRequest, res) => {
       score: { teamA: 0, teamB: 0 }, // TODO: remplacer par score réel quand disponible
       half,
       turn,
+      acceptances: { local: localAccepted, visitor: visitorAccepted },
     });
   } catch (e) {
     console.error(e);
