@@ -44,6 +44,8 @@ async function ensureUser(email: string, password: string) {
   return loginAs(email, password);
 }
 
+function wait(ms: number) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
 describe('Démarrage de match: acceptations + pré-match', () => {
   let aToken = '';
   let bToken = '';
@@ -51,28 +53,6 @@ describe('Démarrage de match: acceptations + pré-match', () => {
   let teamB: string = '';
 
   beforeAll(async () => {
-    // Vérifier si l'API répond déjà
-    let apiUp = false;
-    try {
-      const res = await fetch(`${API_BASE}/health`).catch(() => null);
-      apiUp = !!res && res.ok;
-    } catch {}
-    if (!apiUp) {
-      serverProc = spawn('pnpm', ['run', 'dev:nowatch'], {
-        cwd: '../../apps/server',
-        stdio: 'inherit',
-        shell: process.platform === 'win32',
-        env: {
-          ...process.env,
-          API_PORT,
-          BGIO_PORT: process.env.BGIO_PORT || '18000',
-          TEST_SQLITE: '1',
-          TEST_DATABASE_URL: process.env.TEST_DATABASE_URL || 'file:memdb1?mode=memory&cache=shared',
-        },
-      });
-      spawned = true;
-      await new Promise((r) => setTimeout(r, 2000));
-    }
     // Reset complet DB de test pour stabilité
     await fetch(`${API_BASE}/__test/reset`, { method: 'POST' }).catch(() => null);
     aToken = await ensureUser('coach.a@example.com', 'password-a');
@@ -89,7 +69,7 @@ describe('Démarrage de match: acceptations + pré-match', () => {
   }, 30000);
 
   afterAll(async () => {
-    if (spawned && serverProc) serverProc.kill();
+    // plus de gestion de process ici: setup.ts s'en charge
   });
 
   it('doit exiger deux équipes différentes et deux coachs distincts, puis lancer le pré-match', async () => {
@@ -100,8 +80,9 @@ describe('Démarrage de match: acceptations + pré-match', () => {
     const { match: match2, matchToken: bMatchToken } = await post('/match/join', bToken, { matchId: match.id });
     expect(match2.id).toBe(match.id);
 
-    // Chaque coach choisit son équipe
+    // Chaque coach choisit son équipe via teamId
     await post('/team/choose', aToken, { matchId: match.id, teamId: teamA });
+    await wait(150);
     await post('/team/choose', bToken, { matchId: match.id, teamId: teamB });
 
     // Accept A (attend B)

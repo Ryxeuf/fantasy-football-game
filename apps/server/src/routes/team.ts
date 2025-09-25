@@ -82,10 +82,9 @@ router.get("/rosters/:id", authUser, async (req: AuthenticatedRequest, res) => {
 });
 
 router.post("/choose", authUser, async (req: AuthenticatedRequest, res) => {
-  const { matchId, team, teamId } = req.body ?? {};
+  const { matchId, teamId } = req.body ?? {};
   if (!matchId) return res.status(400).json({ error: "matchId requis" });
-  if (!team && !teamId) return res.status(400).json({ error: "team ou teamId requis" });
-  if (team && !ALLOWED_TEAMS.includes(team)) return res.status(400).json({ error: "Équipe non autorisée" });
+  if (!teamId) return res.status(400).json({ error: "teamId requis" });
 
   try {
     // Valider match et statut
@@ -93,35 +92,27 @@ router.post("/choose", authUser, async (req: AuthenticatedRequest, res) => {
     if (!match) return res.status(404).json({ error: 'Partie introuvable' });
     if (match.status !== 'pending') return res.status(400).json({ error: `Match non modifiable (statut: ${match.status})` });
 
-    // Un utilisateur ne peut sélectionner qu'une seule fois pour ce match
-    const existingMine = await prisma.teamSelection.findFirst({ where: { matchId, userId: req.user!.id } });
-    if (existingMine) return res.status(409).json({ error: 'Vous avez déjà choisi une équipe pour ce match' });
+    // Transaction atomique: vérifie et crée la sélection
+    const selection = await prisma.$transaction(async (tx) => {
+      const existingMineTx = await tx.teamSelection.findFirst({ where: { matchId, userId: req.user!.id } });
+      if (existingMineTx) throw Object.assign(new Error('Vous avez déjà choisi une équipe pour ce match'), { status: 409 });
 
-    // Si teamId fourni: vérifier ownership et non-utilisation dans ce match
-    if (teamId) {
-      const myTeam = await prisma.team.findFirst({ where: { id: teamId, ownerId: req.user!.id }, select: { id: true } });
-      if (!myTeam) return res.status(404).json({ error: 'Équipe introuvable' });
-      const alreadyUsed = await prisma.teamSelection.findFirst({ where: { matchId, teamId } });
-      if (alreadyUsed) return res.status(409).json({ error: 'Cette équipe est déjà utilisée dans ce match' });
-    }
+      const alreadyUsedTx = await tx.teamSelection.findFirst({ where: { matchId, teamId } });
+      if (alreadyUsedTx) throw Object.assign(new Error('Cette équipe est déjà utilisée dans ce match'), { status: 409 });
 
-    // Upsert sur (matchId, userId) pour éviter les conflits d'unicité
-    const selection = await prisma.teamSelection.upsert({
-      where: { matchId_userId: { matchId, userId: req.user!.id } as any },
-      create: {
-        match: { connect: { id: matchId } },
-        user: { connect: { id: req.user!.id } },
-        ...(typeof team === 'string' ? { team } : {}),
-        ...(teamId ? { teamRef: { connect: { id: teamId } } } : {}),
-      },
-      update: {
-        ...(typeof team === 'string' ? { team } : {}),
-        ...(teamId ? { teamRef: { connect: { id: teamId } } } : {}),
-      },
-      include: { teamRef: true },
-    } as any);
+      return tx.teamSelection.create({
+        data: {
+          match: { connect: { id: matchId } },
+          user: { connect: { id: req.user!.id } },
+          team: teamId, // compat: certains schémas exigent NOT NULL + unicité (matchId, team)
+          teamRef: { connect: { id: teamId } },
+        },
+        include: { teamRef: true },
+      } as any);
+    });
     return res.status(201).json({ selection });
   } catch (e: any) {
+    if (e?.status) return res.status(e.status).json({ error: e.message });
     if (e?.code === "P2002") return res.status(409).json({ error: e?.meta?.target?.includes('userId') ? 'Vous avez déjà choisi une équipe pour ce match' : 'Conflit d\'unicité pour ce match' });
     console.error(e);
     return res.status(500).json({ error: "Erreur serveur" });

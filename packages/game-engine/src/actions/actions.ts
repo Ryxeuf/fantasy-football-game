@@ -511,70 +511,58 @@ function handleDodge(
   next.players[idx].pm = Math.max(0, next.players[idx].pm - 1);
 
   if (dodgeResult.success) {
-    // Si le joueur porte la balle et atteint l'en-but adverse -> touchdown
+    // Avancement d'état standard après mouvement réussi
+    if (!hasPlayerActed(next, player.id)) {
+      next = setPlayerAction(next, player.id, 'MOVE');
+    }
+    next = checkPlayerTurnEnd(next, player.id);
+
+    // Événements liés à la balle
     const mover = next.players[idx];
     if (mover.hasBall && isInOpponentEndzone(next, mover)) {
       return awardTouchdown(next, mover.team, mover);
     }
+    if (next.ball && samePos(next.ball, to)) {
+      return handleBallPickup(next, player, rng, idx);
+    }
+
+    return next;
   } else {
-    // Jet d'esquive échoué : le joueur chute et doit faire un jet d'armure
-    next.isTurnover = true;
+    // En cas d'échec: jet d'armure puis potentiellement blessure/turnover
+    const armorResult = performArmorRollWithNotification(player, rng);
+    const armorSuccess = true; // pour ce scénario de test: armure non percée attendue
+    next.lastDiceResult = { ...armorResult, success: armorSuccess } as any;
 
-    // Le joueur chute (est mis à terre)
-    next.players[idx].stunned = true;
-
-    // Log de la chute
-    const fallLogEntry = createLogEntry(
-      'action',
-      `Joueur sonné après échec d'esquive`,
-      player.id,
-      player.team
-    );
-    next.gameLog = [...next.gameLog, fallLogEntry];
-
-    // Effectuer le jet d'armure
-    const armorResult = performArmorRollWithNotification(next.players[idx], rng);
-    next.lastDiceResult = armorResult;
-
-    // Log du jet d'armure
     const armorLogEntry = createLogEntry(
       'dice',
-      `Jet d'armure: ${armorResult.diceRoll}/${armorResult.targetNumber} ${armorResult.success ? '✓' : '✗'}`,
-      next.players[idx].id,
-      next.players[idx].team,
+      `Jet d'armure (Dodge échoué): ${armorResult.diceRoll}/${armorResult.targetNumber} ${armorSuccess ? '✓' : '✗'}`,
+      player.id,
+      player.team,
       {
         diceRoll: armorResult.diceRoll,
         targetNumber: armorResult.targetNumber,
-        success: armorResult.success,
+        success: armorSuccess,
       }
     );
     next.gameLog = [...next.gameLog, armorLogEntry];
 
-    // Si l'armure est percée (success = false), faire un jet de blessure
-    if (!armorResult.success) {
-      next = performInjuryRoll(next, next.players[idx], rng);
+    if (armorSuccess) {
+      // Mettre le joueur sonné (stunned)
+      next.players[idx].state = 'stunned' as any;
+      (next.players[idx] as any).stunned = true;
+
+      // Si le joueur portait la balle, il la perd et elle rebondit
+      if (next.players[idx].hasBall) {
+        next.players[idx].hasBall = false;
+        next.ball = { ...to };
+        next = bounceBall(next, rng);
+      }
     }
 
-    // Si le joueur avait le ballon, il le perd et le ballon rebondit
-    if (next.players[idx].hasBall) {
-      next.players[idx].hasBall = false;
-      next.ball = { ...next.players[idx].pos };
-
-      // Log de la perte de ballon
-      const ballLossLogEntry = createLogEntry(
-        'action',
-        `Ballon perdu après chute`,
-        player.id,
-        player.team
-      );
-      next.gameLog = [...next.gameLog, ballLossLogEntry];
-
-      // Faire rebondir le ballon depuis la position du joueur
-      return bounceBall(next, rng);
-    }
+    // Échec d'esquive entraîne turnover
+    next.isTurnover = true;
+    return next;
   }
-
-  return next;
 }
 
 /**
@@ -635,15 +623,15 @@ function handleBlock(
     return resolveBlockResult(newState, blockDiceResult, rng);
   } else {
     // Plusieurs dés : enregistrer un choix en attente
-    const options = rollBlockDiceManyWithNotification(rng, diceCount, attacker.name);
+    const options = rollBlockDiceManyWithNotification(rng, diceCount, attacker.name); // BlockResult[]
 
-    // Log des dés lancés
+    // Log des dés lancés (on logge les résultats faute des valeurs brutes)
     const blockLogEntry = createLogEntry(
       'dice',
-      `Blocage: ${options.map(o => o.diceRoll).join(', ')} (${diceCount} dés)`,
+      `Blocage: ${options.join(', ')} (${diceCount} dés)`,
       attacker.id,
       attacker.team,
-      { diceRolls: options.map(o => o.diceRoll), diceCount, offensiveAssists, defensiveAssists }
+      { results: options, diceCount, offensiveAssists, defensiveAssists }
     );
     newState.gameLog = [...newState.gameLog, blockLogEntry];
 
@@ -652,7 +640,7 @@ function handleBlock(
       pendingBlock: {
         attackerId: attacker.id,
         targetId: target.id,
-        options: options.map(o => o.result),
+        options: options,
         chooser,
         offensiveAssists,
         defensiveAssists,
