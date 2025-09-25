@@ -32,6 +32,24 @@ router.post("/matches/purge", async (_req, res) => {
   }
 });
 
+// Endpoint de reset complet pour les tests (uniquement si TEST_SQLITE=1)
+router.post('/test/reset', async (_req, res) => {
+  try {
+    if (process.env.TEST_SQLITE !== '1') return res.status(403).json({ error: 'Reset tests interdit en prod' });
+    await prisma.turn.deleteMany({});
+    await prisma.teamSelection.deleteMany({});
+    await (prisma as any).$executeRawUnsafe('DELETE FROM "_MatchToUser"');
+    await prisma.match.deleteMany({});
+    await prisma.teamPlayer.deleteMany({});
+    await prisma.team.deleteMany({});
+    await prisma.user.deleteMany({});
+    res.json({ ok: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Erreur reset tests' });
+  }
+});
+
 router.get("/stats", async (_req, res) => {
   const [users, matches] = await Promise.all([
     prisma.user.count(),

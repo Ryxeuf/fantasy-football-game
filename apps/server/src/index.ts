@@ -10,6 +10,7 @@ import teamRoutes from "./routes/team";
 import dotenv from "dotenv";
 import { toBGIOGame } from "@bb/game-engine";
 import { execSync } from "node:child_process";
+import { prisma } from "./prisma";
 
 dotenv.config({ path: "../../prisma/.env" });
 // Si tests SQLite: pousser le schéma SQLite en mémoire partagée au démarrage
@@ -62,6 +63,25 @@ app.use("/match", matchRoutes);
 app.use("/admin", adminRoutes);
 app.use("/user", userRoutes);
 app.use("/team", teamRoutes);
+
+// Endpoint public de reset pour tests (uniquement en TEST_SQLITE=1)
+if (process.env.TEST_SQLITE === '1') {
+  app.post("/__test/reset", async (_req, res) => {
+    try {
+      await prisma.turn.deleteMany({});
+      await prisma.teamSelection.deleteMany({});
+      try { await (prisma as any).$executeRawUnsafe('DELETE FROM "_MatchToUser"'); } catch {}
+      await prisma.match.deleteMany({});
+      await prisma.teamPlayer.deleteMany({});
+      await prisma.team.deleteMany({});
+      await prisma.user.deleteMany({});
+      return res.json({ ok: true });
+    } catch (e: any) {
+      console.error(e);
+      return res.status(500).json({ error: e?.message || 'reset failed' });
+    }
+  });
+}
 
 app.listen(API_PORT, () => {
   console.log(`Express API server listening on http://localhost:${API_PORT}`);

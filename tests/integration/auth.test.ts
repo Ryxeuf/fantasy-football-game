@@ -1,34 +1,11 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect } from "vitest";
 import fetch from "node-fetch";
-import { spawn } from "child_process";
-
-let serverProc: any;
 
 const API_PORT = process.env.API_PORT || '18001';
 const API_BASE = `http://localhost:${API_PORT}`;
 
 describe("Auth API", () => {
-  beforeAll(async () => {
-    serverProc = spawn("pnpm", ["run", "dev:nowatch"], {
-      cwd: "../../apps/server",
-      stdio: "inherit",
-      shell: process.platform === "win32",
-      env: {
-        ...process.env,
-        API_PORT,
-        BGIO_PORT: process.env.BGIO_PORT || '18000',
-        TEST_SQLITE: '1',
-        TEST_DATABASE_URL: process.env.TEST_DATABASE_URL || 'file:memdb1?mode=memory&cache=shared',
-      },
-    });
-    await new Promise((r) => setTimeout(r, 3000));
-  }, 30000);
-
-  afterAll(async () => {
-    if (serverProc) {
-      serverProc.kill();
-    }
-  });
+  // setup/teardown géré globalement dans setup.ts
 
   it("doit permettre l'inscription puis la connexion", async () => {
     const email = `test_${Date.now()}@example.com`;

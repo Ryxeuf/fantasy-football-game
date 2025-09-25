@@ -1,12 +1,10 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import fetch from 'node-fetch';
-import { spawn } from 'child_process';
 
 const API_PORT = process.env.API_PORT || '18001';
 const API_BASE = process.env.API_BASE || `http://localhost:${API_PORT}`;
 
-let serverProc: any;
-let spawned = false;
+// serveur géré globalement dans setup.ts
 
 async function post(path: string, token: string | null, body: any) {
   const res = await fetch(`${API_BASE}${path}`, {
@@ -75,6 +73,8 @@ describe('Démarrage de match: acceptations + pré-match', () => {
       spawned = true;
       await new Promise((r) => setTimeout(r, 2000));
     }
+    // Reset complet DB de test pour stabilité
+    await fetch(`${API_BASE}/__test/reset`, { method: 'POST' }).catch(() => null);
     aToken = await ensureUser('coach.a@example.com', 'password-a');
     bToken = await ensureUser('coach.b@example.com', 'password-b');
 
