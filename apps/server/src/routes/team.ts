@@ -88,13 +88,41 @@ router.post("/choose", authUser, async (req: AuthenticatedRequest, res) => {
   if (team && !ALLOWED_TEAMS.includes(team)) return res.status(400).json({ error: "Équipe non autorisée" });
 
   try {
-    const data: any = { matchId, userId: req.user!.id };
-    if (team) data.team = team;
-    if (teamId) data.teamId = teamId;
-    const selection = await prisma.teamSelection.create({ data });
+    // Valider match et statut
+    const match = await prisma.match.findUnique({ where: { id: matchId }, select: { id: true, status: true } });
+    if (!match) return res.status(404).json({ error: 'Partie introuvable' });
+    if (match.status !== 'pending') return res.status(400).json({ error: `Match non modifiable (statut: ${match.status})` });
+
+    // Un utilisateur ne peut sélectionner qu'une seule fois pour ce match
+    const existingMine = await prisma.teamSelection.findFirst({ where: { matchId, userId: req.user!.id } });
+    if (existingMine) return res.status(409).json({ error: 'Vous avez déjà choisi une équipe pour ce match' });
+
+    // Si teamId fourni: vérifier ownership et non-utilisation dans ce match
+    if (teamId) {
+      const myTeam = await prisma.team.findFirst({ where: { id: teamId, ownerId: req.user!.id }, select: { id: true } });
+      if (!myTeam) return res.status(404).json({ error: 'Équipe introuvable' });
+      const alreadyUsed = await prisma.teamSelection.findFirst({ where: { matchId, teamId } });
+      if (alreadyUsed) return res.status(409).json({ error: 'Cette équipe est déjà utilisée dans ce match' });
+    }
+
+    // Upsert sur (matchId, userId) pour éviter les conflits d'unicité
+    const selection = await prisma.teamSelection.upsert({
+      where: { matchId_userId: { matchId, userId: req.user!.id } as any },
+      create: {
+        match: { connect: { id: matchId } },
+        user: { connect: { id: req.user!.id } },
+        ...(typeof team === 'string' ? { team } : {}),
+        ...(teamId ? { teamRef: { connect: { id: teamId } } } : {}),
+      },
+      update: {
+        ...(typeof team === 'string' ? { team } : {}),
+        ...(teamId ? { teamRef: { connect: { id: teamId } } } : {}),
+      },
+      include: { teamRef: true },
+    } as any);
     return res.status(201).json({ selection });
   } catch (e: any) {
-    if (e?.code === "P2002") return res.status(409).json({ error: "Équipe déjà choisie pour ce match" });
+    if (e?.code === "P2002") return res.status(409).json({ error: e?.meta?.target?.includes('userId') ? 'Vous avez déjà choisi une équipe pour ce match' : 'Conflit d\'unicité pour ce match' });
     console.error(e);
     return res.status(500).json({ error: "Erreur serveur" });
   }

@@ -1,7 +1,7 @@
 # BlooBowl - Makefile
 # Commandes utiles pour le développement du jeu Blood Bowl
 
-.PHONY: help install dev dev-web dev-mobile dev-server dev-engine build clean lint format typecheck test docker docker-up docker-down docker-logs setup
+.PHONY: help install dev dev-web dev-mobile dev-server dev-engine build clean lint format typecheck test docker docker-up docker-down docker-logs setup db-reset-pg
 
 # Variables
 PNPM := pnpm
@@ -32,6 +32,7 @@ setup: install ## Setup complet du projet
 	@echo "  make dev-web    - Démarrer seulement l'app web"
 	@echo "  make dev-mobile - Démarrer seulement l'app mobile"
 	@echo "  make help       - Voir toutes les commandes"
+	@echo "  make db-reset-pg - Réinitialiser Postgres (push + generate + seed)"
 
 # Développement
 dev: ## Démarre tout l'environnement de développement (web + mobile + server + engine)
@@ -248,3 +249,15 @@ help-docker: ## Aide pour Docker
 
 # Commande par défaut
 .DEFAULT_GOAL := help
+
+# Base de données Postgres
+db-reset-pg: ## Réinitialise complètement Postgres (drop + recreate schema + seed)
+	@echo "🗄️  Réinitialisation complète de la base Postgres..."
+	@npx prisma migrate reset --force --skip-seed --schema prisma/schema.prisma
+	@echo "📤 Synchronisation du schéma..."
+	@npx prisma db push --schema prisma/schema.prisma
+	@echo "🧬 Régénération du client Prisma..."
+	@npx prisma generate --schema prisma/schema.prisma
+	@echo "🌱 Import des fixtures (seed)..."
+	@cd apps/server && pnpm run db:seed
+	@echo "✅ Base Postgres réinitialisée depuis zéro avec les fixtures"
