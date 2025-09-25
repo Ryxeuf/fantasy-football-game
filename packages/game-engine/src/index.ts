@@ -34,6 +34,8 @@ export {
 // Export des fonctions de gestion d'état (sans conflit)
 export {
   setup,
+  setupPreMatch,
+  setupPreMatchWithTeams,
   advanceHalfIfNeeded,
   hasPlayerActed,
   canPlayerAct,
@@ -53,3 +55,13 @@ export {
   handlePlayerSwitch,
   clearDiceResult,
 } from './core/game-state';
+
+// Export des fonctions de dugout
+export {
+  movePlayerToDugoutZone,
+} from './mechanics/dugout';
+
+// Export des fonctions de blessure
+export {
+  performInjuryRoll,
+} from './mechanics/injury';

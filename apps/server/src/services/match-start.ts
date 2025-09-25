@@ -1,9 +1,11 @@
-import { makeRNG } from "@bb/game-engine";
+import { makeRNG, setupPreMatchWithTeams, TeamPlayerData } from "@bb/game-engine";
 
 type PrismaLike = {
   match: { findUnique: (args: any) => Promise<any>; update: (args: any) => Promise<any> };
   teamSelection: { findMany: (args: any) => Promise<any[]>; findFirst: (args: any) => Promise<any | null> };
   turn: { findMany: (args: any) => Promise<any[]>; count: (args: any) => Promise<number>; create: (args: any) => Promise<any> };
+  team: { findUnique: (args: any) => Promise<any> };
+  teamPlayer: { findMany: (args: any) => Promise<any[]> };
 };
 
 export async function acceptAndMaybeStartMatch(prisma: PrismaLike, params: { matchId: string; userId: string }) {
@@ -39,11 +41,73 @@ export async function acceptAndMaybeStartMatch(prisma: PrismaLike, params: { mat
   const kickingUserId = toss;
   const receivingUserId = kickingUserId === s1.userId ? s2.userId : s1.userId;
 
-  const nextNumber = (await prisma.turn.count({ where: { matchId } })) + 1;
-  await prisma.turn.create({ data: { matchId, number: nextNumber, payload: { type: 'prematch', coinTossWinnerUserId: toss, kickingUserId, receivingUserId, at: new Date().toISOString() } as any } });
+  // Récupérer les données des équipes sélectionnées
+  const teamAId = s1.teamId || (s1.team as string);
+  const teamBId = s2.teamId || (s2.team as string);
+  
+  const [teamA, teamB] = await Promise.all([
+    prisma.team.findUnique({ 
+      where: { id: teamAId }, 
+      include: { players: true } 
+    }),
+    prisma.team.findUnique({ 
+      where: { id: teamBId }, 
+      include: { players: true } 
+    })
+  ]);
 
-  await prisma.match.update({ where: { id: matchId }, data: { status: 'active' } });
-  return { ok: true, status: 'started', kickingUserId, receivingUserId } as const;
+  if (!teamA || !teamB) {
+    return { ok: false, error: "Équipes introuvables", status: 404 } as const;
+  }
+
+  // Convertir les données des joueurs
+  const teamAData: TeamPlayerData[] = teamA.players.map(p => ({
+    id: p.id,
+    name: p.name,
+    position: p.position,
+    number: p.number,
+    ma: p.ma,
+    st: p.st,
+    ag: p.ag,
+    pa: p.pa,
+    av: p.av,
+    skills: p.skills || '',
+  }));
+
+  const teamBData: TeamPlayerData[] = teamB.players.map(p => ({
+    id: p.id,
+    name: p.name,
+    position: p.position,
+    number: p.number,
+    ma: p.ma,
+    st: p.st,
+    ag: p.ag,
+    pa: p.pa,
+    av: p.av,
+    skills: p.skills || '',
+  }));
+
+  // Initialiser l'état du jeu en phase pré-match avec les vraies équipes
+  const gameState = setupPreMatchWithTeams(teamAData, teamBData, teamA.name, teamB.name);
+  
+  const nextNumber = (await prisma.turn.count({ where: { matchId } })) + 1;
+  await prisma.turn.create({ 
+    data: { 
+      matchId, 
+      number: nextNumber, 
+      payload: { 
+        type: 'prematch', 
+        coinTossWinnerUserId: toss, 
+        kickingUserId, 
+        receivingUserId, 
+        gameState,
+        at: new Date().toISOString() 
+      } as any 
+    } 
+  });
+
+  await prisma.match.update({ where: { id: matchId }, data: { status: 'prematch' } });
+  return { ok: true, status: 'prematch', kickingUserId, receivingUserId } as const;
 }
 
 

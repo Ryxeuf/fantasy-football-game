@@ -9,12 +9,12 @@ import {
   makeRNG,
   clearDiceResult,
   hasPlayerActed,
+  movePlayerToDugoutZone,
+  performInjuryRoll,
   type GameState,
   type Position,
   type Move,
 } from "@bb/game-engine";
-import { movePlayerToDugoutZone } from "@bb/game-engine/src/mechanics/dugout";
-import { performInjuryRoll } from "@bb/game-engine/src/mechanics/injury";
 
 export default function DugoutDemoPage() {
   const [state, setState] = useState<GameState>(() => setup());

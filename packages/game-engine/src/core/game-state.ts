@@ -3,13 +3,235 @@
  * Gère les tours, les mi-temps, les actions des joueurs et les compteurs
  */
 
-import { GameState, TeamId, ActionType } from './types';
+import { GameState, TeamId, ActionType, Player } from './types';
 import { createLogEntry } from '../utils/logging';
 import { checkTouchdowns } from '../mechanics/ball';
 import { initializeDugouts } from '../mechanics/dugout';
 
 /**
- * Configuration initiale du jeu
+ * Interface pour les données de joueur depuis la base de données
+ */
+export interface TeamPlayerData {
+  id: string;
+  name: string;
+  position: string;
+  number: number;
+  ma: number;
+  st: number;
+  ag: number;
+  pa: number;
+  av: number;
+  skills: string;
+}
+
+/**
+ * Configuration initiale du jeu en phase pré-match avec les vraies équipes
+ * Les joueurs commencent tous en réserves, pas sur le terrain
+ * @param teamAData - Données des joueurs de l'équipe A
+ * @param teamBData - Données des joueurs de l'équipe B
+ * @param teamAName - Nom de l'équipe A
+ * @param teamBName - Nom de l'équipe B
+ * @returns État initial du jeu en phase pré-match
+ */
+export function setupPreMatchWithTeams(
+  teamAData: TeamPlayerData[],
+  teamBData: TeamPlayerData[],
+  teamAName: string,
+  teamBName: string
+): GameState {
+  const dugouts = initializeDugouts();
+  
+  // Créer les joueurs de l'équipe A
+  const teamAPlayers: Player[] = teamAData.map((tp, index) => ({
+    id: `A${tp.number}`,
+    team: 'A' as TeamId,
+    pos: { x: -1, y: -1 }, // Position hors terrain
+    name: tp.name,
+    number: tp.number,
+    position: tp.position,
+    ma: tp.ma,
+    st: tp.st,
+    ag: tp.ag,
+    pa: tp.pa,
+    av: tp.av,
+    skills: tp.skills ? tp.skills.split(',').map(s => s.trim()).filter(Boolean) : [],
+    pm: tp.ma, // PM = MA au début
+    hasBall: false,
+    state: 'active',
+  }));
+
+  // Créer les joueurs de l'équipe B
+  const teamBPlayers: Player[] = teamBData.map((tp, index) => ({
+    id: `B${tp.number}`,
+    team: 'B' as TeamId,
+    pos: { x: -1, y: -1 }, // Position hors terrain
+    name: tp.name,
+    number: tp.number,
+    position: tp.position,
+    ma: tp.ma,
+    st: tp.st,
+    ag: tp.ag,
+    pa: tp.pa,
+    av: tp.av,
+    skills: tp.skills ? tp.skills.split(',').map(s => s.trim()).filter(Boolean) : [],
+    pm: tp.ma, // PM = MA au début
+    hasBall: false,
+    state: 'active',
+  }));
+
+  const allPlayers = [...teamAPlayers, ...teamBPlayers];
+
+  // Mettre tous les joueurs en réserves
+  allPlayers.forEach(player => {
+    const teamId = player.team;
+    const dugout = dugouts[teamId === 'A' ? 'teamA' : 'teamB'];
+    dugout.zones.reserves.players.push(player.id);
+  });
+  
+  return {
+    width: 26,
+    height: 15,
+    players: allPlayers,
+    ball: undefined, // Pas de ballon en phase pré-match
+    currentPlayer: 'A',
+    turn: 0, // Pas de tour en phase pré-match
+    selectedPlayerId: null,
+    isTurnover: false,
+    dugouts,
+    playerActions: new Map<string, ActionType>(),
+    teamBlitzCount: new Map<TeamId, number>(),
+    // Informations de match
+    half: 0, // Pas de mi-temps en phase pré-match
+    score: {
+      teamA: 0,
+      teamB: 0,
+    },
+    teamNames: {
+      teamA: teamAName,
+      teamB: teamBName,
+    },
+    // Log du match
+    gameLog: [createLogEntry('info', `Phase pré-match - ${teamAName} vs ${teamBName} - Les joueurs sont en réserves`)],
+  };
+}
+
+/**
+ * Configuration initiale du jeu en phase pré-match (version de test)
+ * Les joueurs commencent tous en réserves, pas sur le terrain
+ * @param seed - Graine pour la reproductibilité (optionnel)
+ * @returns État initial du jeu en phase pré-match
+ */
+export function setupPreMatch(): GameState {
+  const dugouts = initializeDugouts();
+  
+  // Créer les joueurs mais les mettre en réserves (pas sur le terrain)
+  const players: Player[] = [
+    {
+      id: 'A1',
+      team: 'A' as TeamId,
+      pos: { x: -1, y: -1 }, // Position hors terrain
+      name: 'Grim Ironjaw',
+      number: 1,
+      position: 'Blitzer',
+      ma: 7,
+      st: 3,
+      ag: 3,
+      pa: 4,
+      av: 9,
+      skills: ['Block', 'Tackle'],
+      pm: 7,
+      hasBall: false,
+      state: 'active',
+    },
+    {
+      id: 'A2',
+      team: 'A' as TeamId,
+      pos: { x: -1, y: -1 }, // Position hors terrain
+      name: 'Thunder Stonefist',
+      number: 2,
+      position: 'Lineman',
+      ma: 6,
+      st: 3,
+      ag: 3,
+      pa: 4,
+      av: 8,
+      skills: [],
+      pm: 6,
+      hasBall: false,
+      state: 'active',
+    },
+    {
+      id: 'B1',
+      team: 'B' as TeamId,
+      pos: { x: -1, y: -1 }, // Position hors terrain
+      name: 'Shadow Swift',
+      number: 1,
+      position: 'Runner',
+      ma: 8,
+      st: 2,
+      ag: 4,
+      pa: 3,
+      av: 7,
+      skills: ['Dodge', 'Sure Hands'],
+      pm: 8,
+      hasBall: false,
+      state: 'active',
+    },
+    {
+      id: 'B2',
+      team: 'B' as TeamId,
+      pos: { x: -1, y: -1 }, // Position hors terrain
+      name: 'Iron Hide',
+      number: 2,
+      position: 'Lineman',
+      ma: 6,
+      st: 3,
+      ag: 3,
+      pa: 4,
+      av: 8,
+      skills: [],
+      pm: 6,
+      hasBall: false,
+      state: 'active',
+    },
+  ];
+
+  // Mettre tous les joueurs en réserves
+  players.forEach(player => {
+    const teamId = player.team;
+    const dugout = dugouts[teamId === 'A' ? 'teamA' : 'teamB'];
+    dugout.zones.reserves.players.push(player.id);
+  });
+  
+  return {
+    width: 26,
+    height: 15,
+    players,
+    ball: undefined, // Pas de ballon en phase pré-match
+    currentPlayer: 'A',
+    turn: 0, // Pas de tour en phase pré-match
+    selectedPlayerId: null,
+    isTurnover: false,
+    dugouts,
+    playerActions: new Map<string, ActionType>(),
+    teamBlitzCount: new Map<TeamId, number>(),
+    // Informations de match
+    half: 0, // Pas de mi-temps en phase pré-match
+    score: {
+      teamA: 0,
+      teamB: 0,
+    },
+    teamNames: {
+      teamA: 'Orcs de Fer',
+      teamB: 'Elfes Sombres',
+    },
+    // Log du match
+    gameLog: [createLogEntry('info', 'Phase pré-match - Les joueurs sont en réserves')],
+  };
+}
+
+/**
+ * Configuration initiale du jeu (ancienne fonction pour compatibilité)
  * @param seed - Graine pour la reproductibilité (optionnel)
  * @returns État initial du jeu
  */

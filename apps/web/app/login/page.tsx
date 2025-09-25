@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { apiPost } from "../auth-client";
+import { apiPost, API_BASE } from "../auth-client";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
