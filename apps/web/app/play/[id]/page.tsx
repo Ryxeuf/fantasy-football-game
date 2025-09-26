@@ -8,10 +8,30 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
   const matchId = params.id;
 
   useEffect(() => {
-    const matchToken = localStorage.getItem("match_token");
-    if (!matchToken) {
-      window.location.href = "/lobby";
-    }
+    (async () => {
+      const matchToken = localStorage.getItem("match_token");
+      if (matchToken) return;
+      try {
+        const authToken = localStorage.getItem("auth_token");
+        if (!authToken) { window.location.href = "/lobby"; return; }
+        const res = await fetch(`${API_BASE}/match/join`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: JSON.stringify({ matchId }),
+        });
+        const data = await res.json().catch(() => ({} as any));
+        if (res.ok && data?.matchToken) {
+          localStorage.setItem("match_token", data.matchToken as string);
+        } else {
+          window.location.href = "/lobby";
+        }
+      } catch {
+        window.location.href = "/lobby";
+      }
+    })();
   }, []);
 
   // Bloquer l'accès si le match n'est pas encore actif
@@ -20,14 +40,15 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
       try {
         const token = localStorage.getItem("auth_token");
         if (!token) { window.location.href = "/lobby"; return; }
-        const res = await fetch(`${API_BASE}/match/${matchId}/summary`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch(`${API_BASE}/match/${matchId}/summary`, { headers: { Authorization: `Bearer ${token}` } });
         const data = await res.json().catch(() => ({} as any));
-        if (!res.ok) { window.location.href = "/lobby"; return; }
-        if (data?.status !== 'active') {
-          // Tant que les deux joueurs n'ont pas accepté, on empêche l'accès
-          window.location.href = "/lobby";
-          return;
-        }
+      if (!res.ok) { window.location.href = "/lobby"; return; }
+      const status = data?.status;
+      // Autoriser 'active' et 'prematch'. Sinon, renvoyer vers la salle d'attente de ce match
+      if (status !== 'active' && status !== 'prematch') {
+        window.location.href = `/waiting/${matchId}`;
+        return;
+      }
       } catch {
         window.location.href = "/lobby";
       }

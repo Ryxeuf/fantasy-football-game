@@ -27,8 +27,8 @@ export default function WaitingPage({ params }: { params: { id: string } }) {
         const data = await res.json().catch(() => ({} as any));
         if (!res.ok) { setError(data?.error || `Erreur ${res.status}`); return; }
         setSummary(data as Summary);
-        if (data?.status === 'active') {
-          // Dès que la partie devient active, rediriger vers /play/[id]
+        if (data?.status === 'active' || data?.status === 'prematch') {
+          // Dès que la partie devient active ou en pré-match, rediriger vers /play/[id]
           window.location.href = `/play/${matchId}`;
         }
       } catch (e: any) {
@@ -48,6 +48,13 @@ export default function WaitingPage({ params }: { params: { id: string } }) {
     try {
       setAccepting(true);
       setError(null);
+      
+      // Vérifier le statut avant d'essayer d'accepter
+      if (summary?.status === 'prematch' || summary?.status === 'active') {
+        setError("Le match a déjà commencé");
+        return;
+      }
+      
       const token = localStorage.getItem("auth_token");
       if (!token) { window.location.href = "/login"; return; }
       const res = await fetch(`${API_BASE}/match/accept`, {
@@ -102,9 +109,16 @@ export default function WaitingPage({ params }: { params: { id: string } }) {
         <button
           className={`px-3 py-2 rounded ${localAccepted || visitorAccepted ? 'bg-blue-600 text-white' : 'bg-blue-600 text-white'} disabled:opacity-50`}
           onClick={acceptMatch}
-          disabled={accepting || acceptedOnce}
+          disabled={accepting || acceptedOnce || summary?.status === 'prematch' || summary?.status === 'active'}
         >
-          {accepting ? 'Validation…' : acceptedOnce ? 'Validé' : 'Valider le début'}
+          {summary?.status === 'prematch' || summary?.status === 'active' 
+            ? 'Match en cours' 
+            : accepting 
+              ? 'Validation…' 
+              : acceptedOnce 
+                ? 'Validé' 
+                : 'Valider le début'
+          }
         </button>
       </div>
     </div>
