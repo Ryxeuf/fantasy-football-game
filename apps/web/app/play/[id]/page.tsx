@@ -55,8 +55,8 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
         const data = await res.json().catch(() => ({} as any));
       if (!res.ok) { window.location.href = "/lobby"; return; }
       const status = data?.status;
-      // Autoriser 'active' et 'prematch'. Sinon, renvoyer vers la salle d'attente de ce match
-      if (status !== 'active' && status !== 'prematch') {
+      // Autoriser 'active', 'prematch' et 'prematch-setup'. Sinon, renvoyer vers la salle d'attente de ce match
+      if (status !== 'active' && status !== 'prematch' && status !== 'prematch-setup') {
         window.location.href = `/waiting/${matchId}`;
         return;
       }

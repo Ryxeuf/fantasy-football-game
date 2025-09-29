@@ -27,7 +27,7 @@ export default function WaitingPage({ params }: { params: { id: string } }) {
         const data = await res.json().catch(() => ({} as any));
         if (!res.ok) { setError(data?.error || `Erreur ${res.status}`); return; }
         setSummary(data as Summary);
-        if (data?.status === 'active' || data?.status === 'prematch') {
+        if (data?.status === 'active' || data?.status === 'prematch' || data?.status === 'prematch-setup') {
           // Dès que la partie devient active ou en pré-match, rediriger vers /play/[id]
           window.location.href = `/play/${matchId}`;
         }
@@ -41,8 +41,9 @@ export default function WaitingPage({ params }: { params: { id: string } }) {
     return () => { if (timer) clearTimeout(timer); };
   }, [matchId]);
 
-  const localAccepted = !!summary?.acceptances?.local;
-  const visitorAccepted = !!summary?.acceptances?.visitor;
+  const safeAcceptances = summary?.acceptances || { local: false, visitor: false };
+  const localAccepted = safeAcceptances.local;
+  const visitorAccepted = safeAcceptances.visitor;
 
   async function acceptMatch() {
     try {
@@ -50,7 +51,7 @@ export default function WaitingPage({ params }: { params: { id: string } }) {
       setError(null);
       
       // Vérifier le statut avant d'essayer d'accepter
-      if (summary?.status === 'prematch' || summary?.status === 'active') {
+      if (summary?.status === 'prematch' || summary?.status === 'active' || summary?.status === 'prematch-setup') {
         setError("Le match a déjà commencé");
         return;
       }
@@ -68,7 +69,13 @@ export default function WaitingPage({ params }: { params: { id: string } }) {
       // Actualiser une fois immédiatement après acceptation
       const sumRes = await fetch(`${API_BASE}/match/${matchId}/summary`, { headers: { Authorization: `Bearer ${token}` } });
       const sumData = await sumRes.json().catch(() => ({} as any));
-      if (sumRes.ok) setSummary(sumData as Summary);
+      if (sumRes.ok) {
+        setSummary(sumData as Summary);
+        // Vérifier et rediriger manuellement si statut changé
+        if (sumData?.status === 'prematch-setup' || sumData?.status === 'prematch' || sumData?.status === 'active') {
+          window.location.href = `/play/${matchId}`;
+        }
+      }
     } catch (e: any) {
       setError(e?.message || "Erreur lors de l'acceptation");
     } finally {
@@ -106,20 +113,11 @@ export default function WaitingPage({ params }: { params: { id: string } }) {
       <div className="flex gap-2">
         <a className="px-3 py-2 bg-neutral-200 rounded" href="/lobby">Retour au lobby</a>
         <a className="px-3 py-2 bg-neutral-200 rounded" href={`/team/select?matchId=${matchId}`}>Choisir/Changer d'équipe</a>
-        <button
-          className={`px-3 py-2 rounded ${localAccepted || visitorAccepted ? 'bg-blue-600 text-white' : 'bg-blue-600 text-white'} disabled:opacity-50`}
-          onClick={acceptMatch}
-          disabled={accepting || acceptedOnce || summary?.status === 'prematch' || summary?.status === 'active'}
-        >
-          {summary?.status === 'prematch' || summary?.status === 'active' 
-            ? 'Match en cours' 
-            : accepting 
-              ? 'Validation…' 
-              : acceptedOnce 
-                ? 'Validé' 
-                : 'Valider le début'
-          }
-        </button>
+        {!acceptedOnce && summary?.status === 'pending' && (
+          <button onClick={acceptMatch} disabled={accepting} className="bg-green-500 text-white px-4 py-2 rounded">
+            Accepter
+          </button>
+        )}
       </div>
     </div>
   );

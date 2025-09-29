@@ -3,6 +3,7 @@ import { prisma } from "../prisma";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
 import jwt from "jsonwebtoken";
 import { acceptAndMaybeStartMatch } from "../services/match-start";
+import { enterSetupPhase } from '@bb/game-engine';
 
 const router = Router();
 const MATCH_SECRET = process.env.MATCH_SECRET || "dev-match-secret";
@@ -295,7 +296,8 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
     // Chercher le turn de start pour prematch ou initial
     const startTurn = match.turns.find((t: any) => t.payload?.type === 'start');
     if (startTurn) {
-      gameState = JSON.parse(startTurn.payload.gameState);
+      const gs = startTurn.payload.gameState;
+      gameState = typeof gs === 'string' ? JSON.parse(gs) : gs;
     } else if (match.status === 'prematch') {
       // Reconstruire si pas encore de turn start (cas edge)
       const selections = await prisma.teamSelection.findMany({
@@ -343,15 +345,16 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
       // Pour active, dernier turn
       const lastTurn = match.turns[match.turns.length - 1];
       if (!lastTurn.payload?.gameState) return res.status(500).json({ error: "État non trouvé" });
-      gameState = JSON.parse(lastTurn.payload.gameState);
+      const gs = lastTurn.payload.gameState;
+      gameState = typeof gs === 'string' ? JSON.parse(gs) : gs;
     }
 
-    // Dans /state, après chargement gameState
+    // Dans /state, après chargement gameState pour prematch-setup
     if (match.status === 'prematch-setup') {
       // Entrer en setup si idle
       const lastCoinToss = match.turns.find((t: any) => t.payload?.type === 'coin-toss');
       if (lastCoinToss && gameState.preMatch.phase === 'idle') {
-        const receivingTeam = lastCoinToss.payload.receivingUserId === local.userId ? 'A' : 'B'; // À ajuster avec local
+        const receivingTeam = lastCoinToss.payload.receivingUserId === req.user!.id ? 'A' : 'B';
         gameState = enterSetupPhase(gameState, receivingTeam);
       }
     }
