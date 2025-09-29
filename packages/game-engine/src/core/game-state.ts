@@ -335,6 +335,99 @@ export function setup(): GameState {
 }
 
 /**
+ * Transforme l'état pré-match en état de match démarré
+ * Place les 4 premiers joueurs de chaque dugout sur le terrain aux positions initiales
+ * @param state - État pré-match
+ * @returns État de match démarré
+ */
+export function startMatchFromPreMatch(state: GameState): GameState {
+  if (state.half !== 0) return state; // Déjà démarré
+
+  // Positions initiales pour équipe A (locale)
+  const positionsA = [
+    { x: 11, y: 7 },
+    { x: 10, y: 7 },
+    { x: 6, y: 3 },
+    { x: 6, y: 4 },
+  ];
+
+  // Positions initiales pour équipe B (visiteuse)
+  const positionsB = [
+    { x: 15, y: 7 },
+    { x: 16, y: 7 },
+    { x: 20, y: 3 },
+    { x: 20, y: 4 },
+  ];
+
+  // Récupérer les IDs des joueurs en réserves
+  const teamAReserves = [...state.dugouts.teamA.zones.reserves.players];
+  const teamBReserves = [...state.dugouts.teamB.zones.reserves.players];
+
+  // Les 4 premiers joueurs pour chaque équipe
+  const teamAFirstIds = teamAReserves.slice(0, 4);
+  const teamBFirstIds = teamBReserves.slice(0, 4);
+
+  // Mettre à jour les positions des joueurs sur le terrain
+  const newPlayers = state.players.map(player => {
+    const newPos = { x: -1, y: -1 }; // Par défaut hors terrain
+    if (teamAFirstIds.includes(player.id)) {
+      const index = teamAFirstIds.indexOf(player.id);
+      newPos.x = positionsA[index].x;
+      newPos.y = positionsA[index].y;
+    } else if (teamBFirstIds.includes(player.id)) {
+      const index = teamBFirstIds.indexOf(player.id);
+      newPos.x = positionsB[index].x;
+      newPos.y = positionsB[index].y;
+    }
+    return { ...player, pos: newPos };
+  });
+
+  // Mettre à jour les dugouts : enlever les 4 premiers de réserves
+  const newDugouts = {
+    ...state.dugouts,
+    teamA: {
+      ...state.dugouts.teamA,
+      zones: {
+        ...state.dugouts.teamA.zones,
+        reserves: {
+          ...state.dugouts.teamA.zones.reserves,
+          players: teamAReserves.slice(4),
+        },
+      },
+    },
+    teamB: {
+      ...state.dugouts.teamB,
+      zones: {
+        ...state.dugouts.teamB.zones,
+        reserves: {
+          ...state.dugouts.teamB.zones.reserves,
+          players: teamBReserves.slice(4),
+        },
+      },
+    },
+  };
+
+  // Log de démarrage
+  const startLog = createLogEntry('info', 'Match commencé - Placement initial des joueurs sur le terrain');
+
+  return {
+    ...state,
+    players: newPlayers,
+    dugouts: newDugouts,
+    half: 1,
+    turn: 1,
+    currentPlayer: 'A',
+    ball: { x: 13, y: 7 }, // Ballon au centre
+    selectedPlayerId: null,
+    isTurnover: false,
+    playerActions: new Map<string, ActionType>(),
+    teamBlitzCount: new Map<TeamId, number>(),
+    lastDiceResult: undefined,
+    gameLog: [...state.gameLog, startLog],
+  };
+}
+
+/**
  * Gère la fin de tour et de mi-temps (8 tours par équipe / 8 "rounds")
  * @param state - État du jeu
  * @returns Nouvel état du jeu après vérification de la mi-temps

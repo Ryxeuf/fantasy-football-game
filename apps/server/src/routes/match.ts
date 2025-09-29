@@ -156,6 +156,69 @@ router.get("/:id/details", authUser, async (req: AuthenticatedRequest, res) => {
   }
 });
 
+// Nouvel endpoint pour les équipes et joueurs (auth) par id - pour fallback prematch
+router.get("/:id/teams", authUser, async (req: AuthenticatedRequest, res) => {
+  try {
+    const matchId = req.params.id;
+    const match = await prisma.match.findUnique({ where: { id: matchId }, select: { id: true, creatorId: true } });
+    if (!match) return res.status(404).json({ error: 'Partie introuvable' });
+
+    const selections = await prisma.teamSelection.findMany({
+      where: { matchId },
+      orderBy: { createdAt: "asc" },
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        teamRef: { 
+          include: { players: true } 
+        }, // Changé de team à teamRef
+        teamRef: { select: { name: true, roster: true } }, // Gardé pour compatibilité, mais redondant
+      },
+    });
+
+    // Déterminer local/visiteur comme dans /details
+    const authenticatedUserId = req.user!.id;
+    let localSel = selections.find((s) => s.userId === authenticatedUserId) || null;
+    let visitorSel = selections.find((s) => s.userId !== authenticatedUserId) || null;
+    if (!localSel || !visitorSel) {
+      if (match.creatorId) {
+        localSel = selections.find((s) => s.userId === match.creatorId) || selections[0] || null;
+        visitorSel = selections.find((s) => s.userId !== match.creatorId) || selections[1] || null;
+      } else {
+        localSel = selections[0] || null;
+        visitorSel = selections.length > 1 ? selections[1] : null;
+      }
+    }
+
+    const getTeamData = (sel: any) => {
+      const teamName = sel?.teamRef?.name || sel.team || 'Équipe Inconnue'; // Utilise teamRef.name ou fallback au scalaire team
+      let players: any[] = [];
+      if (sel?.teamId && sel.teamRef?.players) {
+        players = (sel.teamRef.players || []).map((p: any) => ({ // Changé de sel.team à sel.teamRef
+          id: p.id,
+          name: p.name,
+          position: p.position,
+          number: p.number,
+          ma: p.ma,
+          st: p.st,
+          ag: p.ag,
+          pa: p.pa,
+          av: p.av,
+          skills: p.skills || '',
+        }));
+      } // TODO: Si pas teamId, générer depuis roster si besoin
+      return { teamName, players };
+    };
+
+    const local = getTeamData(localSel);
+    const visitor = getTeamData(visitorSel);
+
+    return res.json({ local, visitor });
+  } catch (e: any) {
+    console.error(e);
+    return res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // Résumé d'un match: équipes, coachs, score (approx), tour/mi-temps
 router.get("/:id/summary", authUser, async (req: AuthenticatedRequest, res) => {
   try {
@@ -215,6 +278,59 @@ router.get("/:id/summary", authUser, async (req: AuthenticatedRequest, res) => {
   } catch (e) {
     console.error(e);
     return res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// Nouvel endpoint pour l'état du jeu
+router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
+  try {
+    const matchId = req.params.id;
+    const match = await prisma.match.findUnique({ where: { id: matchId }, include: { turns: { orderBy: { number: 'asc' } } } });
+    if (!match) return res.status(404).json({ error: "Partie introuvable" });
+
+    if (match.status === 'pending') return res.status(400).json({ error: "Partie pas encore prête" });
+
+    let gameState: any;
+
+    // Chercher le turn de start pour prematch ou initial
+    const startTurn = match.turns.find((t: any) => t.payload?.type === 'start');
+    if (startTurn) {
+      gameState = JSON.parse(startTurn.payload.gameState);
+    } else if (match.status === 'prematch') {
+      // Reconstruire si pas encore de turn start (cas edge)
+      const selections = await prisma.teamSelection.findMany({
+        where: { matchId },
+        include: { 
+          user: true, 
+          teamRef: { 
+            include: { players: true } 
+          }, // Changé de team à teamRef
+          teamRef: true 
+        },
+        orderBy: { createdAt: 'asc' }
+      });
+      if (selections.length < 2) return res.status(400).json({ error: "Équipes pas prêtes" });
+
+      const [s1, s2] = selections;
+      const teamAData = s1.teamId ? (s1.teamRef?.players || []).map((p: any) => ({ // Ajouté || [] pour éviter map sur undefined
+        id: p.id, name: p.name, position: p.position, number: p.number, ma: p.ma, st: p.st, ag: p.ag, pa: p.pa, av: p.av, skills: p.skills || ''
+      })) : []; 
+      const teamBData = s2.teamId ? (s2.teamRef?.players || []).map((p: any) => ({ // Idem
+        id: p.id, name: p.name, position: p.position, number: p.number, ma: p.ma, st: p.st, ag: p.ag, pa: p.pa, av: p.av, skills: p.skills || ''
+      })) : [];
+      const { setupPreMatchWithTeams } = await import('@bb/game-engine');
+      gameState = setupPreMatchWithTeams(teamAData, teamBData, s1.teamRef?.name || s1.team || 'Team A', s2.teamRef?.name || s2.team || 'Team B'); // Utilise teamRef.name ou team scalaire
+    } else {
+      // Pour active, dernier turn
+      const lastTurn = match.turns[match.turns.length - 1];
+      if (!lastTurn.payload?.gameState) return res.status(500).json({ error: "État non trouvé" });
+      gameState = JSON.parse(lastTurn.payload.gameState);
+    }
+
+    res.json({ gameState });
+  } catch (e: any) {
+    console.error(e);
+    res.status(500).json({ error: "Erreur serveur" });
   }
 });
 

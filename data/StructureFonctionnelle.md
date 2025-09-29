@@ -14,11 +14,6 @@ Elle appartient a un joueur et possede un nom, un cout total, des choix d'option
 
 Elle peut joueur un match.
 
-## Match
-Il s'agit d'une rencontre entre 2 equipes de joueurs differents. 2 equipe d'un  meme joueur ne peuvent pas s'affronter dans un meme match.
-
-Une fois le match termine, les equipes sont libres pour en commencer un autre.
-
 ## Joueur
 Il s'agit d'une personne qui s'inscrit et se connecte sur le site.
 
@@ -27,3 +22,8 @@ Il peut creer des equipes a partir des roster disponibles. Il peut creer autant 
 Il peut creer ou rejoindre des partie en choisissant laquelle de ses equipes disponible va y participer.
 
 Si le joueur est le createur du match, il sera le "local". S'il rejoint un match, il sera "visiteur".
+
+## Match
+Il s'agit d'une rencontre entre 2 equipes de joueurs differents. 2 equipe d'un  meme joueur ne peuvent pas s'affronter dans un meme match.
+
+Une fois le match termine, les equipes sont libres pour en commencer un autre.
