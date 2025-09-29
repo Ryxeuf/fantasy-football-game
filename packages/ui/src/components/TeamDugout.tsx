@@ -9,71 +9,60 @@ import DugoutZoneComponent from './DugoutZone';
 interface TeamDugoutProps {
   dugout: TeamDugout;
   allPlayers: Player[];
+  placedPlayers?: string[]; // Nouvelle prop pour setup
   onPlayerClick?: (playerId: string) => void;
+  onDragStart?: (e: React.DragEvent, playerId: string) => void;
 }
 
 export default function TeamDugoutComponent({ 
   dugout, 
   allPlayers, 
-  onPlayerClick 
+  placedPlayers = [], // Default empty
+  onPlayerClick,
+  onDragStart,
 }: TeamDugoutProps) {
-  const teamColor = dugout.teamId === 'A' ? '#3B82F6' : '#EF4444';
   
-  // Récupérer les joueurs pour chaque zone
-  const getPlayersInZone = (zoneType: keyof TeamDugout['zones']) => {
-    return allPlayers.filter(player => 
-      player.team === dugout.teamId && 
-      dugout.zones[zoneType].players.includes(player.id)
-    );
-  };
+  // Pour reserve en setup : tous non placés
+  const reservePlayers = allPlayers.filter(p => p.team === dugout.team && !placedPlayers.includes(p.id));
 
   return (
-    <div className="flex flex-col gap-2">
-      {/* En-tête de l'équipe */}
-      <div 
-        className="text-center font-bold text-white py-2 rounded"
-        style={{ backgroundColor: teamColor }}
-      >
-        Équipe {dugout.teamId}
-      </div>
-
-      {/* Zones du dugout */}
-      <div className="flex flex-col gap-2">
+    <div className="bg-gray-200 p-2 rounded">
+      {/* Zone Reserve */}
+      <DugoutZoneComponent
+        zone={{ type: 'reserve', name: 'Réserve' }}
+        players={reservePlayers}
+        teamColor={dugout.team === 'A' ? 'red' : 'blue'}
+        onPlayerClick={onPlayerClick}
+        onDragStart={onDragStart}
+      />
+      
+      {/* Autres zones - fallback à filtre pos si pas setup */}
+      <DugoutZoneComponent
+        zone={{ type: 'ko', name: 'KO' }}
+        players={allPlayers.filter(p => p.pos.x === -2 && p.team === dugout.team)}
+        teamColor={dugout.team === 'A' ? 'red' : 'blue'}
+        onPlayerClick={onPlayerClick}
+        onDragStart={onDragStart}
+      />
+      
+      <DugoutZoneComponent
+        zone={{ type: 'stunned', name: 'Sonnés' }}
+        players={allPlayers.filter(p => p.stunned && p.team === dugout.team)}
+        teamColor={dugout.team === 'A' ? 'red' : 'blue'}
+        onPlayerClick={onPlayerClick}
+        onDragStart={onDragStart}
+      />
+      
+      {/* Casualty si besoin */}
+      {dugout.zones?.casualty && (
         <DugoutZoneComponent
-          zone={dugout.zones.reserves}
-          players={getPlayersInZone('reserves')}
-          teamColor={teamColor}
+          zone={{ type: 'casualty', name: 'Blessés' }}
+          players={allPlayers.filter(p => p.pos.x === -3 && p.team === dugout.team)} // Ex. pos.x = -3 pour casualty
+          teamColor={dugout.team === 'A' ? 'red' : 'blue'}
           onPlayerClick={onPlayerClick}
+          onDragStart={onDragStart}
         />
-        
-        <DugoutZoneComponent
-          zone={dugout.zones.stunned}
-          players={getPlayersInZone('stunned')}
-          teamColor={teamColor}
-          onPlayerClick={onPlayerClick}
-        />
-        
-        <DugoutZoneComponent
-          zone={dugout.zones.knockedOut}
-          players={getPlayersInZone('knockedOut')}
-          teamColor={teamColor}
-          onPlayerClick={onPlayerClick}
-        />
-        
-        <DugoutZoneComponent
-          zone={dugout.zones.casualty}
-          players={getPlayersInZone('casualty')}
-          teamColor={teamColor}
-          onPlayerClick={onPlayerClick}
-        />
-        
-        <DugoutZoneComponent
-          zone={dugout.zones.sentOff}
-          players={getPlayersInZone('sentOff')}
-          teamColor={teamColor}
-          onPlayerClick={onPlayerClick}
-        />
-      </div>
+      )}
     </div>
   );
 }

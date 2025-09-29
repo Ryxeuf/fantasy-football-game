@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { PlayerDetails, DiceResultPopup, GameScoreboard, ActionPickerPopup, GameBoardWithDugouts } from "@bb/ui";
 import { setup, getLegalMoves, applyMove, makeRNG, clearDiceResult, hasPlayerActed, type GameState, type Position, type Move, setupPreMatch, setupPreMatchWithTeams, startMatchFromPreMatch, enterSetupPhase, placePlayerInSetup, type ExtendedGameState } from "@bb/game-engine";
 import { API_BASE } from "../../auth-client";
@@ -66,15 +66,18 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
     })();
   }, [matchId]);
 
-  const [state, setState] = useState<GameState | null>(null);
+  const [state, setState] = useState<ExtendedGameState | null>(null);
   const [showDicePopup, setShowDicePopup] = useState(false);
   const [currentAction, setCurrentAction] = useState<"MOVE" | "BLOCK" | "BLITZ" | "PASS" | "HANDOFF" | "FOUL" | null>(null);
   const createRNG = () => makeRNG(`ui-seed-${Date.now()}-${Math.random()}`);
-  const [teamNameA, setTeamNameA] = useState<string | null>(null); // local
-  const [teamNameB, setTeamNameB] = useState<string | null>(null); // visiteur
+  const [teamNameA, setTeamNameA] = useState<string | undefined>(undefined); // local
+  const [teamNameB, setTeamNameB] = useState<string | undefined>(undefined); // visiteur
 
   // Ajouter state pour selectedFromReserve (pour setup)
   const [selectedFromReserve, setSelectedFromReserve] = useState<string | null>(null);
+
+  // Ajouter state après selectedFromReserve
+  const [draggedPlayerId, setDraggedPlayerId] = useState<string | null>(null);
 
   // useEffect pour charger les noms d'équipes et coaches via /details (prioritaire, indépendant)
   useEffect(() => {
@@ -89,8 +92,8 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
           const res = await fetch(`${API_BASE}/match/details`, { headers: { "X-Match-Token": matchToken } });
           data = await res.json().catch(() => ({} as any));
           if (res.ok && data) {
-            setTeamNameA(data?.local?.teamName || null);
-            setTeamNameB(data?.visitor?.teamName || null);
+            setTeamNameA(data?.local?.teamName || undefined);
+            setTeamNameB(data?.visitor?.teamName || undefined);
             return;
           }
         }
@@ -98,8 +101,8 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
         const res = await fetch(`${API_BASE}/match/${matchId}/details`, { headers: { Authorization: `Bearer ${token}` } });
         data = await res.json().catch(() => ({} as any));
         if (res.ok && data) {
-          setTeamNameA(data?.local?.teamName || null);
-          setTeamNameB(data?.visitor?.teamName || null);
+          setTeamNameA(data?.local?.teamName || undefined);
+          setTeamNameB(data?.visitor?.teamName || undefined);
         }
       } catch (e) {
         console.error('Failed to load team names:', e);
@@ -115,24 +118,8 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
     (async () => {
       try {
         const token = localStorage.getItem("auth_token");
-        if (!token) return;
-        const res = await fetch(`${API_BASE}/match/${matchId}/state`, { headers: { Authorization: `Bearer ${token}` } });
-        const data = await res.json().catch(() => ({} as any));
-        if (res.ok && data?.gameState) {
-          const normalized = normalizeState(data.gameState);
-          setState(normalized);
-          console.log('State players length:', normalized.players.length);
-          // Ne pas override teamNames si déjà set
-          return;
-        }
-      } catch (e) {
-        console.error('Failed to load game state:', e);
-      }
-      // Fallback: charger les équipes et setup prematch avec vrais data
-      try {
-        const token = localStorage.getItem("auth_token");
         if (!token) {
-          setState(setupPreMatch());
+          setState(setupPreMatchWithTeams([], [], 'Équipe Locale', 'Équipe Visiteuse'));
           return;
         }
         const teamsRes = await fetch(`${API_BASE}/match/${matchId}/teams`, { headers: { Authorization: `Bearer ${token}` } });
@@ -149,7 +136,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
         console.error('Failed to load teams for prematch:', e);
       }
       // Dernier fallback: démo, mais avec teamNames si disponibles
-      const demoState = setupPreMatch();
+      const demoState = setupPreMatchWithTeams([], [], teamNameA || 'Équipe Locale', teamNameB || 'Équipe Visiteuse');
       if (teamNameA) demoState.teamNames.teamA = teamNameA;
       if (teamNameB) demoState.teamNames.teamB = teamNameB;
       setState(demoState);
@@ -171,7 +158,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
         // Ne pas écraser half/turn si en phase pré-match (half=0)
         setState((prev) => {
           if (!prev) return prev;
-          return {
+          const updated = {
             ...prev,
             half: prev.half === 0 ? 0 : (typeof data.half === "number" ? data.half : prev.half),
             turn: prev.half === 0 ? 0 : (typeof data.turn === "number" ? data.turn : prev.turn),
@@ -179,12 +166,16 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
               teamA: typeof data?.score?.teamA === "number" ? data.score.teamA : prev.score.teamA,
               teamB: typeof data?.score?.teamB === "number" ? data.score.teamB : prev.score.teamB,
             },
-            // Ne pas override teamNames du state si déjà bons
             teamNames: {
               teamA: prev.teamNames.teamA || teamNameA || data?.teams?.local?.name || prev.teamNames.teamA,
               teamB: prev.teamNames.teamB || teamNameB || data?.teams?.visitor?.name || prev.teamNames.teamB,
             },
           };
+          // Copier preMatch si half === 0
+          if (prev.half === 0) {
+            (updated as any).preMatch = prev.preMatch;
+          }
+          return updated as ExtendedGameState;
         });
       } catch {
         // noop: on garde l'état courant (démo) si l'API échoue
@@ -210,8 +201,51 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
     return legal.filter((m) => isMove(m, state.selectedPlayerId!)).map((m) => m.to);
   }, [legal, state?.selectedPlayerId]);
 
-  // Modifier onCellClick pour gérer setup
+  // Ajouter handlers après onCellClick
+  const handleDragStart = (e: React.DragEvent, playerId: string) => {
+    if (!state || (state as ExtendedGameState).preMatch?.phase !== 'setup') return;
+    e.dataTransfer.setData('text/plain', playerId);
+    setDraggedPlayerId(playerId);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault(); // Permettre drop
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!state || !draggedPlayerId || !boardRef.current) return;
+
+    const extState = state as ExtendedGameState;
+    if (extState.preMatch?.phase !== 'setup') return;
+
+    // Utiliser rect du board (Pixi container)
+    const rect = boardRef.current.getBoundingClientRect();
+    const nativeEvent = e.nativeEvent;
+    const x = nativeEvent.clientX - rect.left;
+    const y = nativeEvent.clientY - rect.top;
+    const cellSize = 28;
+    const gridX = Math.floor(x / cellSize);
+    const gridY = Math.floor(y / cellSize);
+
+    if (gridX >= 0 && gridX < state.height && gridY >= 0 && gridY < state.width) {
+      const pos: Position = { x: gridY, y: gridX };
+
+      const legalPositions = extState.preMatch.legalSetupPositions;
+      if (legalPositions.some(p => p.x === pos.x && p.y === pos.y)) {
+        const newState = placePlayerInSetup(extState, draggedPlayerId, pos);
+        setState(newState);
+        if (newState.preMatch.placedPlayers.length === 11) {
+          setDraggedPlayerId(null);
+        }
+      }
+    }
+    setDraggedPlayerId(null);
+  };
+
+  // Modifier onCellClick pour ignorer si dragging (déjà géré par drop)
   function onCellClick(pos: Position) {
+    if (draggedPlayerId) return; // Ignorer clic si dragging en cours
     if (!state) return;
     const extState = state as ExtendedGameState;
     if (extState.preMatch?.phase === 'setup') {
@@ -305,6 +339,13 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
     </div>
   )}
 
+  const localSide = useMemo(() => {
+    if (!state || !teamNameA || !teamNameB || !state.teamNames) {
+      return undefined;
+    }
+    return teamNameA === state.teamNames.teamA ? 'A' : 'B';
+  }, [state, teamNameA, teamNameB]);
+
   if (!state) {
     return <div className="flex items-center justify-center min-h-screen">Chargement de la partie...</div>;
   }
@@ -315,6 +356,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
         state={state}
         leftTeamName={teamNameA}
         rightTeamName={teamNameB}
+        localSide={localSide}
         {...(state?.half > 0 ? { onEndTurn: handleEndTurn } : {})}
       />
       {/* Wrapper pour éléments pré-match, à l'intérieur du container principal */}
@@ -325,8 +367,20 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
             {state && state.half === 0 && (
               <div className="text-center text-sm text-gray-600 bg-gray-100 p-2 rounded w-full max-w-md">
                 <div>Phase pré-match</div>
-                <div>Receveuse : {state.preMatch?.receivingTeam === 'A' ? teamNameA : teamNameB} ({state.preMatch?.receivingTeam})</div>
-                <div>Au tour de {state.preMatch?.currentCoach === 'A' ? teamNameA : teamNameB} de placer ses joueurs</div>
+                <div>
+                  Receveuse : {(() => {
+                    if (!localSide || !state.preMatch?.receivingTeam) return 'Inconnu';
+                    const receivingSide = state.preMatch.receivingTeam;
+                    return receivingSide === localSide ? (teamNameA || 'Équipe A') : (teamNameB || 'Équipe B');
+                  })()} ({state.preMatch?.receivingTeam})
+                </div>
+                <div>
+                  Au tour de {(() => {
+                    if (!localSide || !state.preMatch?.currentCoach) return 'Inconnu';
+                    const currentCoachSide = state.preMatch.currentCoach;
+                    return currentCoachSide === localSide ? (teamNameA || 'Équipe A') : (teamNameB || 'Équipe B');
+                  })()} de placer ses joueurs
+                </div>
               </div>
             )}
             
@@ -372,29 +426,40 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
             )}
           </div>
           
-          <div className="flex flex-col lg:flex-row items-start gap-6 mb-6">
+          <div className="flex flex-col lg:flex-row items-start gap-6 mb-6" onDragOver={handleDragOver} onDrop={handleDrop}>
             {/* Board et sidebar */}
             <div className="flex-1 flex justify-center">
-              <GameBoardWithDugouts state={state} onCellClick={onCellClick} legalMoves={movesForSelected} blockTargets={[]} selectedPlayerId={state.selectedPlayerId} onPlayerClick={(playerId) => {
-                if (!state) return;
-                const extState = state as ExtendedGameState;
-                if (extState.preMatch?.phase === 'setup') {
-                  const player = state.players.find((p) => p.id === playerId);
-                  if (player && player.team === extState.preMatch.currentCoach && player.pos.x === -1 && !player.stunned && !extState.preMatch.placedPlayers.includes(playerId)) {
-                    setSelectedFromReserve(playerId);
-                    setState((s) => s ? ({ ...s, selectedPlayerId: null }) : null); // Deselect field player
-                    return;
+              <GameBoardWithDugouts 
+                state={state} 
+                onCellClick={onCellClick} 
+                legalMoves={draggedPlayerId && (state as ExtendedGameState).preMatch?.phase === 'setup' ? (state as ExtendedGameState).preMatch.legalSetupPositions : movesForSelected} 
+                blockTargets={[]} 
+                selectedPlayerId={state.selectedPlayerId} 
+                placedPlayers={(state as ExtendedGameState).preMatch?.placedPlayers || []} // Nouvelle prop
+                onPlayerClick={(playerId) => {
+                  if (!state) return;
+                  const extState = state as ExtendedGameState;
+                  if (extState.preMatch?.phase === 'setup') {
+                    const player = state.players.find((p) => p.id === playerId);
+                    if (player && player.team === extState.preMatch.currentCoach && player.pos.x < 0 && !extState.preMatch.placedPlayers.includes(playerId)) {
+                      // Au lieu de setSelectedFromReserve, simuler drag start si pas déjà dragging
+                      if (!draggedPlayerId) {
+                        // Pour compat click, setSelectedFromReserve(playerId); // Garder pour fallback non-drag
+                      }
+                      return;
+                    }
+                    return; // Ignore autres en setup
                   }
-                  return; // Ignore autres clics en setup
-                }
-                // Logique normale
-                const player = state.players.find((p) => p.id === playerId);
-                if (player && player.team === state.currentPlayer) {
-                  setState((s) => s ? ({ ...s, selectedPlayerId: player.id }) : null);
-                  setCurrentAction(null);
-                  setSelectedFromReserve(null);
-                }
-              }} />
+                  // Logique normale
+                  const player = state.players.find((p) => p.id === playerId);
+                  if (player && player.team === state.currentPlayer) {
+                    setState((s) => s ? ({ ...s, selectedPlayerId: player.id }) : null);
+                    setCurrentAction(null);
+                    setSelectedFromReserve(null);
+                  }
+                }}
+                onDragStart={handleDragStart} // Nouvelle prop
+              />
             </div>
             <div className="w-full lg:w-auto">
               {state.selectedPlayerId && (

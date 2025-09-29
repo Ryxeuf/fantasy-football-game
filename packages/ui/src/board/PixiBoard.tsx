@@ -11,6 +11,7 @@ type Props = {
   legalMoves?: Position[];
   blockTargets?: Position[];
   selectedPlayerId?: string | null;
+  ref?: React.RefObject<HTMLDivElement>; // Nouvelle prop pour drop coords
 };
 
 export default function PixiBoard({
@@ -20,6 +21,7 @@ export default function PixiBoard({
   legalMoves = [],
   blockTargets = [],
   selectedPlayerId,
+  ref, // Ajout ref
 }: Props) {
   // Orientation verticale : largeur devient hauteur et vice versa
   const width = state.height * cellSize; // 15 * cellSize = 420
@@ -76,7 +78,7 @@ export default function PixiBoard({
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+    <div ref={ref} style={{ display: "flex", flexDirection: "column", gap: "20px" }}> {/* Appliquer ref au div wrapper */}
       {/* Canvas Pixi.js */}
       <Stage
         width={width}

@@ -14,6 +14,8 @@ interface GameBoardWithDugoutsProps {
   legalMoves?: { x: number; y: number }[];
   blockTargets?: { x: number; y: number }[];
   selectedPlayerId?: string | null;
+  onDragStart?: (e: React.DragEvent, playerId: string) => void;
+  placedPlayers?: string[]; // Nouvelle prop pour setup
 }
 
 export default function GameBoardWithDugouts({
@@ -23,19 +25,24 @@ export default function GameBoardWithDugouts({
   legalMoves = [],
   blockTargets = [],
   selectedPlayerId,
+  onDragStart,
+  placedPlayers = [], // Default
 }: GameBoardWithDugoutsProps) {
+  
   return (
     <div className="flex items-start gap-4 p-4 bg-gray-100 min-h-screen">
-      {/* Dugout équipe A (gauche) */}
+      {/* Dugout équipe A */}
       <div className="flex-shrink-0">
         <TeamDugoutComponent
           dugout={state.dugouts.teamA}
           allPlayers={state.players}
+          placedPlayers={placedPlayers}
           onPlayerClick={onPlayerClick}
+          onDragStart={onDragStart}
         />
       </div>
 
-      {/* Terrain principal */}
+      {/* Terrain */}
       <div className="flex-shrink-0">
         <PixiBoard
           state={state}
@@ -46,12 +53,14 @@ export default function GameBoardWithDugouts({
         />
       </div>
 
-      {/* Dugout équipe B (droite) */}
+      {/* Dugout équipe B */}
       <div className="flex-shrink-0">
         <TeamDugoutComponent
           dugout={state.dugouts.teamB}
           allPlayers={state.players}
+          placedPlayers={placedPlayers}
           onPlayerClick={onPlayerClick}
+          onDragStart={onDragStart}
         />
       </div>
     </div>

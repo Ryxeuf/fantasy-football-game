@@ -3,14 +3,15 @@ import type { GameState, GameLogEntry } from "@bb/game-engine";
 
 interface GameScoreboardProps {
   state: GameState;
-  onEndTurn: () => void;
+  onEndTurn?: () => void;
   leftTeamName?: string;
   rightTeamName?: string;
   leftCoachName?: string;
   rightCoachName?: string;
+  localSide?: 'A' | 'B' | null;
 }
 
-export default function GameScoreboard({ state, onEndTurn, leftTeamName, rightTeamName, leftCoachName, rightCoachName }: GameScoreboardProps) {
+export default function GameScoreboard({ state, onEndTurn, leftTeamName, rightTeamName, leftCoachName, rightCoachName, localSide }: GameScoreboardProps) {
   const getTeamColor = (team: "A" | "B") => {
     return team === "A" ? "bg-red-600" : "bg-blue-600";
   };
@@ -20,9 +21,13 @@ export default function GameScoreboard({ state, onEndTurn, leftTeamName, rightTe
   };
 
   const getCurrentTeamName = () => {
-    const teamAName = leftTeamName || state.teamNames.teamA;
-    const teamBName = rightTeamName || state.teamNames.teamB;
-    return state.currentPlayer === "A" ? teamAName : teamBName;
+    if (!localSide || !leftTeamName || !rightTeamName) {
+      const teamAName = leftTeamName || state.teamNames.teamA;
+      const teamBName = rightTeamName || state.teamNames.teamB;
+      return state.currentPlayer === "A" ? teamAName : teamBName;
+    }
+    const activeSide = state.currentPlayer;
+    return activeSide === localSide ? leftTeamName : rightTeamName;
   };
 
   const getCurrentTeamColor = () => {
