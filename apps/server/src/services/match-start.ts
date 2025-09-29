@@ -89,25 +89,25 @@ export async function acceptAndMaybeStartMatch(prisma: PrismaLike, params: { mat
 
   // Initialiser l'état du jeu en phase pré-match avec les vraies équipes
   const gameState = setupPreMatchWithTeams(teamAData, teamBData, teamA.name, teamB.name);
-  
+
+  // Créer turn pour coin toss et setup initial
   const nextNumber = (await prisma.turn.count({ where: { matchId } })) + 1;
   await prisma.turn.create({ 
     data: { 
       matchId, 
       number: nextNumber, 
       payload: { 
-        type: 'prematch', 
-        coinTossWinnerUserId: toss, 
-        kickingUserId, 
+        type: 'coin-toss', 
         receivingUserId, 
-        gameState,
+        kickingUserId,
+        gameState, // État initial avec idle
         at: new Date().toISOString() 
       } as any 
     } 
   });
 
-  await prisma.match.update({ where: { id: matchId }, data: { status: 'prematch' } });
-  return { ok: true, status: 'prematch', kickingUserId, receivingUserId } as const;
+  await prisma.match.update({ where: { id: matchId }, data: { status: 'prematch-setup' } }); // Changé en prematch-setup
+  return { ok: true, status: 'prematch-setup', kickingUserId, receivingUserId, receivingTeam: receivingUserId === s1.userId ? 'A' : 'B' } as const;
 }
 
 

@@ -126,16 +126,18 @@ export default function GameScoreboard({ state, onEndTurn, leftTeamName, rightTe
           )}
 
           {/* Bouton fin de tour */}
-          <button
-            onClick={onEndTurn}
-            className={`px-6 py-2 rounded-lg font-bold text-white transition-all duration-200 ${
-              state.isTurnover
-                ? "bg-red-600 hover:bg-red-700"
-                : `bg-${getCurrentTeamColor()}-600 hover:bg-${getCurrentTeamColor()}-700`
-            } shadow-lg hover:shadow-xl transform hover:scale-105`}
-          >
-            {state.isTurnover ? "Tour terminé" : "Fin du tour"}
-          </button>
+          {onEndTurn && (
+            <button
+              onClick={onEndTurn}
+              className={`px-6 py-2 rounded-lg font-bold text-white transition-all duration-200 ${
+                state.isTurnover
+                  ? "bg-red-600 hover:bg-red-700"
+                  : `bg-${getCurrentTeamColor()}-600 hover:bg-${getCurrentTeamColor()}-700`
+              } shadow-lg hover:shadow-xl transform hover:scale-105`}
+            >
+              {state.isTurnover ? "Tour terminé" : "Fin du tour"}
+            </button>
+          )}
         </div>
       </div>
 

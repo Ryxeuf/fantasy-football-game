@@ -3,10 +3,24 @@
  * Gère les tours, les mi-temps, les actions des joueurs et les compteurs
  */
 
-import { GameState, TeamId, ActionType, Player } from './types';
+import { GameState, TeamId, ActionType, Player, Position } from './types';
 import { createLogEntry } from '../utils/logging';
 import { checkTouchdowns } from '../mechanics/ball';
 import { initializeDugouts } from '../mechanics/dugout';
+
+// Étendre GameState pour pré-match
+export interface PreMatchState {
+  phase: 'idle' | 'setup' | 'kickoff';
+  currentCoach: TeamId;
+  legalSetupPositions: Position[];
+  placedPlayers: string[]; // IDs des joueurs placés
+  kickingTeam: TeamId;
+  receivingTeam: TeamId;
+}
+
+export interface ExtendedGameState extends GameState {
+  preMatch: PreMatchState;
+}
 
 /**
  * Interface pour les données de joueur depuis la base de données
@@ -38,7 +52,7 @@ export function setupPreMatchWithTeams(
   teamBData: TeamPlayerData[],
   teamAName: string,
   teamBName: string
-): GameState {
+): ExtendedGameState {
   const dugouts = initializeDugouts();
   
   // Créer les joueurs de l'équipe A
@@ -88,7 +102,7 @@ export function setupPreMatchWithTeams(
     dugout.zones.reserves.players.push(player.id);
   });
   
-  return {
+  const existingState = {
     width: 26,
     height: 15,
     players: allPlayers,
@@ -113,6 +127,18 @@ export function setupPreMatchWithTeams(
     // Log du match
     gameLog: [createLogEntry('info', `Phase pré-match - ${teamAName} vs ${teamBName} - Les joueurs sont en réserves`)],
   };
+
+  return {
+    ...existingState,
+    preMatch: {
+      phase: 'idle',
+      currentCoach: 'A' as TeamId, // À set par backend après coin toss
+      legalSetupPositions: [],
+      placedPlayers: [],
+      kickingTeam: 'B' as TeamId, // Placeholder, set par backend
+      receivingTeam: 'A' as TeamId,
+    },
+  } as ExtendedGameState;
 }
 
 /**
@@ -473,7 +499,8 @@ export function advanceHalfIfNeeded(state: GameState): GameState {
  * @param playerId - ID du joueur
  * @returns True si le joueur a agi
  */
-export function hasPlayerActed(state: GameState, playerId: string): boolean {
+export function hasPlayerActed(state: GameState | ExtendedGameState, playerId: string): boolean {
+  if (!state.playerActions || typeof state.playerActions.has !== 'function') return false; // Guard pour JSON deserialized
   return state.playerActions.has(playerId);
 }
 
@@ -533,7 +560,8 @@ export function canPlayerContinueMoving(state: GameState, playerId: string): boo
  * @param playerId - ID du joueur
  * @returns Action du joueur ou undefined
  */
-export function getPlayerAction(state: GameState, playerId: string): ActionType | undefined {
+export function getPlayerAction(state: GameState | ExtendedGameState, playerId: string): ActionType | undefined {
+  if (!state.playerActions || typeof state.playerActions.get !== 'function') return undefined;
   return state.playerActions.get(playerId);
 }
 
@@ -571,8 +599,9 @@ export function clearPlayerActions(state: GameState): GameState {
  * @param team - Équipe
  * @returns Nombre de blitz effectués
  */
-export function getTeamBlitzCount(state: GameState, team: TeamId): number {
-  return state.teamBlitzCount?.get(team) || 0;
+export function getTeamBlitzCount(state: GameState | ExtendedGameState, team: TeamId): number {
+  if (!state.teamBlitzCount || typeof state.teamBlitzCount.get !== 'function') return 0;
+  return state.teamBlitzCount.get(team) || 0;
 }
 
 /**
@@ -722,4 +751,65 @@ export function clearDiceResult(state: GameState): GameState {
     ...state,
     lastDiceResult: undefined,
   };
+}
+
+// Fonction pour entrer en phase setup (appelée après accepts et coin toss)
+export function enterSetupPhase(state: ExtendedGameState, receivingTeam: TeamId): ExtendedGameState {
+  if (state.half !== 0 || state.preMatch.phase !== 'idle') return state;
+
+  // Positions setup pour receiving team (first half, zones 1-11 pour A, symétrique pour B)
+  let setupPositions: Position[] = [];
+  if (receivingTeam === 'A') {
+    // Exemple zones pour A (à raffiner d'après règles : dugout zones)
+    for (let y = 0; y < 4; y++) { // Lignes avant
+      for (let x = 6; x <= 20; x += 2) { // Colonnes setup
+        if (x >= 6 && x <= 11 && y <= 2 || x >= 15 && x <= 20 && y <= 2) continue; // Éviter zones adverses
+        setupPositions.push({ x, y });
+      }
+    }
+    // Ajouter wide zones, etc. - TODO: implémenter zones précises du pitch (half A)
+  } else {
+    // Symétrique pour B
+    setupPositions = setupPositions.map(p => ({ x: 25 - p.x, y: 14 - p.y })); // Miroir
+  }
+
+  return {
+    ...state,
+    preMatch: {
+      ...state.preMatch,
+      phase: 'setup',
+      currentCoach: receivingTeam,
+      legalSetupPositions: setupPositions,
+      placedPlayers: [],
+    },
+  };
+}
+
+// Fonction pour placer un joueur en setup (appelée onCellClick si phase='setup')
+export function placePlayerInSetup(state: ExtendedGameState, playerId: string, pos: Position): ExtendedGameState {
+  if (state.preMatch.phase !== 'setup' || state.preMatch.currentCoach !== state.players.find(p => p.id === playerId)?.team || state.preMatch.placedPlayers.length >= 11 || !state.preMatch.legalSetupPositions.some(l => l.x === pos.x && l.y === pos.y)) {
+    return state; // Invalid move
+  }
+
+  const player = state.players.find(p => p.id === playerId);
+  if (!player || player.pos.x !== -1) return state; // Déjà placé
+
+  const newPlayers = state.players.map(p => p.id === playerId ? { ...p, pos } : p);
+  const newPlaced = [...state.preMatch.placedPlayers, playerId];
+
+  let newState = { ...state, players: newPlayers, preMatch: { ...state.preMatch, placedPlayers: newPlaced } };
+
+  // Si 11 placés, switch to next coach or kickoff
+  if (newPlaced.length === 11) {
+    const nextCoach = state.preMatch.currentCoach === 'A' ? 'B' : 'A';
+    if (nextCoach === state.preMatch.kickingTeam) {
+      // Both placed, go to kickoff
+      newState.preMatch.phase = 'kickoff';
+    } else {
+      // Switch coach, reset legal positions for next
+      newState = enterSetupPhase(newState, nextCoach);
+    }
+  }
+
+  return newState;
 }

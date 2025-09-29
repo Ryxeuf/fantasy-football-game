@@ -302,9 +302,6 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
         where: { matchId },
         include: { 
           user: true, 
-          teamRef: { 
-            include: { players: true } 
-          }, // Changé de team à teamRef
           teamRef: true 
         },
         orderBy: { createdAt: 'asc' }
@@ -312,19 +309,51 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
       if (selections.length < 2) return res.status(400).json({ error: "Équipes pas prêtes" });
 
       const [s1, s2] = selections;
-      const teamAData = s1.teamId ? (s1.teamRef?.players || []).map((p: any) => ({ // Ajouté || [] pour éviter map sur undefined
+
+      // Fetch teams séparément pour players
+      const teamA = s1.teamId ? await prisma.team.findUnique({ 
+        where: { id: s1.teamId }, 
+        include: { players: true } 
+      }) : null;
+      const teamB = s2.teamId ? await prisma.team.findUnique({ 
+        where: { id: s2.teamId }, 
+        include: { players: true } 
+      }) : null;
+
+      if (!teamA || !teamB) {
+        console.log('Teams not found:', s1.teamId, s2.teamId);
+        return res.status(400).json({ error: "Équipes non trouvées" });
+      }
+
+      const teamAData = teamA.players.map((p: any) => ({
         id: p.id, name: p.name, position: p.position, number: p.number, ma: p.ma, st: p.st, ag: p.ag, pa: p.pa, av: p.av, skills: p.skills || ''
-      })) : []; 
-      const teamBData = s2.teamId ? (s2.teamRef?.players || []).map((p: any) => ({ // Idem
+      }));
+      const teamBData = teamB.players.map((p: any) => ({
         id: p.id, name: p.name, position: p.position, number: p.number, ma: p.ma, st: p.st, ag: p.ag, pa: p.pa, av: p.av, skills: p.skills || ''
-      })) : [];
+      }));
+
+      console.log('Players loaded for prematch:', teamAData.length, teamBData.length); // Trace
+
+      const teamAName = s1.teamRef?.name || s1.team || 'Team A';
+      const teamBName = s2.teamRef?.name || s2.team || 'Team B';
+
       const { setupPreMatchWithTeams } = await import('@bb/game-engine');
-      gameState = setupPreMatchWithTeams(teamAData, teamBData, s1.teamRef?.name || s1.team || 'Team A', s2.teamRef?.name || s2.team || 'Team B'); // Utilise teamRef.name ou team scalaire
+      gameState = setupPreMatchWithTeams(teamAData, teamBData, teamAName, teamBName);
     } else {
       // Pour active, dernier turn
       const lastTurn = match.turns[match.turns.length - 1];
       if (!lastTurn.payload?.gameState) return res.status(500).json({ error: "État non trouvé" });
       gameState = JSON.parse(lastTurn.payload.gameState);
+    }
+
+    // Dans /state, après chargement gameState
+    if (match.status === 'prematch-setup') {
+      // Entrer en setup si idle
+      const lastCoinToss = match.turns.find((t: any) => t.payload?.type === 'coin-toss');
+      if (lastCoinToss && gameState.preMatch.phase === 'idle') {
+        const receivingTeam = lastCoinToss.payload.receivingUserId === local.userId ? 'A' : 'B'; // À ajuster avec local
+        gameState = enterSetupPhase(gameState, receivingTeam);
+      }
     }
 
     res.json({ gameState });

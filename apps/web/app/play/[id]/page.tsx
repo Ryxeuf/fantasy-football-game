@@ -1,8 +1,19 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { PlayerDetails, DiceResultPopup, GameScoreboard, ActionPickerPopup, GameBoardWithDugouts } from "@bb/ui";
-import { setup, getLegalMoves, applyMove, makeRNG, clearDiceResult, hasPlayerActed, type GameState, type Position, type Move, setupPreMatch, setupPreMatchWithTeams, startMatchFromPreMatch } from "@bb/game-engine";
+import { setup, getLegalMoves, applyMove, makeRNG, clearDiceResult, hasPlayerActed, type GameState, type Position, type Move, setupPreMatch, setupPreMatchWithTeams, startMatchFromPreMatch, enterSetupPhase, placePlayerInSetup, type ExtendedGameState } from "@bb/game-engine";
 import { API_BASE } from "../../auth-client";
+
+// Ajouter fonction normalize après imports
+function normalizeState(state: any): ExtendedGameState {
+  if (state && typeof state.playerActions === 'object' && state.playerActions !== null && typeof state.playerActions.has !== 'function') {
+    state.playerActions = new Map(Object.entries(state.playerActions || {}));
+  }
+  if (state && typeof state.teamBlitzCount === 'object' && state.teamBlitzCount !== null && typeof state.teamBlitzCount.has !== 'function') {
+    state.teamBlitzCount = new Map(Object.entries(state.teamBlitzCount || {}));
+  }
+  return state as ExtendedGameState;
+}
 
 export default function PlayByIdPage({ params }: { params: { id: string } }) {
   const matchId = params.id;
@@ -62,6 +73,9 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
   const [teamNameA, setTeamNameA] = useState<string | null>(null); // local
   const [teamNameB, setTeamNameB] = useState<string | null>(null); // visiteur
 
+  // Ajouter state pour selectedFromReserve (pour setup)
+  const [selectedFromReserve, setSelectedFromReserve] = useState<string | null>(null);
+
   // useEffect pour charger les noms d'équipes et coaches via /details (prioritaire, indépendant)
   useEffect(() => {
     (async () => {
@@ -105,7 +119,9 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
         const res = await fetch(`${API_BASE}/match/${matchId}/state`, { headers: { Authorization: `Bearer ${token}` } });
         const data = await res.json().catch(() => ({} as any));
         if (res.ok && data?.gameState) {
-          setState(data.gameState);
+          const normalized = normalizeState(data.gameState);
+          setState(normalized);
+          console.log('State players length:', normalized.players.length);
           // Ne pas override teamNames si déjà set
           return;
         }
@@ -125,7 +141,8 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
           // Utiliser teamNameA/B déjà chargés, ou fallback aux data
           const teamAName = teamNameA || teamsData.local.teamName || 'Équipe Locale';
           const teamBName = teamNameB || teamsData.visitor.teamName || 'Équipe Visiteuse';
-          setState(setupPreMatchWithTeams(teamsData.local.players || [], teamsData.visitor.players || [], teamAName, teamBName));
+          setState(normalizeState(setupPreMatchWithTeams(teamsData.local.players || [], teamsData.visitor.players || [], teamAName, teamBName)));
+          console.log('Fallback players length:', (teamsData.local.players || []).length + (teamsData.visitor.players || []).length);
           return;
         }
       } catch (e) {
@@ -177,20 +194,48 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
 
   const legal = useMemo(() => {
     if (!state) return [];
+    const extState = state as ExtendedGameState;
+    if (extState.preMatch?.phase === 'setup') {
+      // En setup, legal moves = positions pour placer selectedFromReserve
+      if (selectedFromReserve) {
+        return extState.preMatch.legalSetupPositions.map(p => ({ type: 'PLACE' as const, playerId: selectedFromReserve, to: p } as any));
+      }
+      return []; // Pas de moves sans sélection
+    }
     return getLegalMoves(state);
-  }, [state]);
+  }, [state, selectedFromReserve]);
   const isMove = (m: Move, pid: string): m is Extract<Move, { type: "MOVE" }> => m.type === "MOVE" && (m as any).playerId === pid;
   const movesForSelected = useMemo(() => {
     if (!state || !state.selectedPlayerId) return [];
     return legal.filter((m) => isMove(m, state.selectedPlayerId!)).map((m) => m.to);
   }, [legal, state?.selectedPlayerId]);
 
+  // Modifier onCellClick pour gérer setup
   function onCellClick(pos: Position) {
     if (!state) return;
+    const extState = state as ExtendedGameState;
+    if (extState.preMatch?.phase === 'setup') {
+      // Mode setup : placer selectedFromReserve sur pos si légal
+      if (selectedFromReserve) {
+        const newState = placePlayerInSetup(extState, selectedFromReserve, pos);
+        setState(newState);
+        if (newState.preMatch.placedPlayers.length === 11) {
+          // TODO: Switch coach ou kickoff
+          setSelectedFromReserve(null);
+        }
+        setSelectedFromReserve(null); // Deselect après placement
+        return;
+      }
+      // Sinon, clic sur terrain vide : ignore ou deselect
+      setSelectedFromReserve(null);
+      return;
+    }
+    // Logique normale pour match en cours
     const player = state.players.find((p) => p.pos.x === pos.x && p.pos.y === pos.y);
     if (player && player.team === state.currentPlayer) {
       setState((s) => s ? ({ ...s, selectedPlayerId: player.id }) : null);
       setCurrentAction(null);
+      setSelectedFromReserve(null);
       return;
     }
     if (state.selectedPlayerId) {
@@ -202,27 +247,63 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
           const p = s2.players.find((pl) => pl.id === candidate.playerId);
           if (!p || p.pm <= 0) s2.selectedPlayerId = null;
           if (s2.lastDiceResult) setShowDicePopup(true);
+          setSelectedFromReserve(null);
           return s2;
         });
       }
     }
   }
 
+  // Modifier onPlayerClick pour sélection en setup
   const handleEndTurn = useMemo(() => {
-    if (!state || state.half <= 0) return undefined;
+    if (!state || state.half <= 0) return undefined; // Changé <= 0 pour cacher en prematch
     return () => setState((s) => s ? applyMove(s, { type: "END_TURN" }, createRNG()) : null);
   }, [state]);
 
-  const handleStartMatch = useMemo(() => {
+  // Modifier handleStartSetup pour entrer en setup
+  const handleStartSetup = useMemo(() => {
     if (state?.half !== 0) return undefined;
     return () => {
       setState((s) => {
         if (!s || s.half !== 0) return s;
-        const startedState = startMatchFromPreMatch(s);
-        return startedState;
+        // Déterminer receivingTeam (placeholder 'A' pour local)
+        const receivingTeam = 'A' as const;
+        const setupState = enterSetupPhase(s as ExtendedGameState, receivingTeam);
+        return setupState;
       });
     };
   }, [state]);
+
+  // Afficher compteur en setup
+  {state && ((state as ExtendedGameState).preMatch?.phase === 'setup') && (
+    <div className="flex justify-center mt-2">
+      <span className="text-sm text-gray-600">
+        Joueurs placés: {((state as ExtendedGameState).preMatch?.placedPlayers?.length || 0)} / 11
+      </span>
+    </div>
+  )}
+
+  // Si setup fini, bouton passer
+  {state && ((state as ExtendedGameState).preMatch?.phase === 'setup' && (state as ExtendedGameState).preMatch?.placedPlayers?.length === 11) && (
+    <div className="flex justify-center mt-4">
+      <button 
+        onClick={() => {
+          // TODO: Appel API pour switch coach ou kickoff
+          setState((s) => {
+            if (!s) return s;
+            // Placeholder: passe à kickoff
+            const kickoffState = { ...s, preMatch: { ...s.preMatch, phase: 'kickoff' } };
+            kickoffState.half = 1;
+            kickoffState.turn = 1;
+            return kickoffState;
+          });
+        }} 
+        className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded"
+      >
+        Lancer le kick-off
+      </button>
+    </div>
+  )}
 
   if (!state) {
     return <div className="flex items-center justify-center min-h-screen">Chargement de la partie...</div>;
@@ -234,29 +315,84 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
         state={state}
         leftTeamName={teamNameA}
         rightTeamName={teamNameB}
-        // Supprimé leftCoachName et rightCoachName
-        onEndTurn={handleEndTurn}
+        {...(state?.half > 0 ? { onEndTurn: handleEndTurn } : {})}
       />
-      {state.half === 0 && handleStartMatch && (
-        <div className="flex justify-center mt-4">
-          <button 
-            onClick={handleStartMatch} 
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          >
-            Commencer le match
-          </button>
-        </div>
-      )}
-      <div className="pt-24">
+      {/* Wrapper pour éléments pré-match, à l'intérieur du container principal */}
+      <div className="pt-32"> {/* Augmenté de pt-24 à pt-32 pour espace bouton */}
         <div className="container mx-auto px-4 py-6">
+          <div className="flex flex-col items-center space-y-4 mb-6"> {/* Wrapper centralisé pour pré-match */}
+            {/* Statut pré-match (si half=0) */}
+            {state && state.half === 0 && (
+              <div className="text-center text-sm text-gray-600 bg-gray-100 p-2 rounded w-full max-w-md">
+                <div>Phase pré-match</div>
+                <div>Receveuse : {state.preMatch?.receivingTeam === 'A' ? teamNameA : teamNameB} ({state.preMatch?.receivingTeam})</div>
+                <div>Au tour de {state.preMatch?.currentCoach === 'A' ? teamNameA : teamNameB} de placer ses joueurs</div>
+              </div>
+            )}
+            
+            {/* Bouton débuter si idle */}
+            {state?.half === 0 && state.preMatch?.phase === 'idle' && handleStartSetup && (
+              <div className="flex justify-center">
+                <button 
+                  onClick={handleStartSetup} 
+                  className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                >
+                  Débuter la configuration des joueurs
+                </button>
+              </div>
+            )}
+            
+            {/* Compteur si setup */}
+            {state && state.preMatch?.phase === 'setup' && (
+              <div className="text-sm text-gray-600">
+                Joueurs placés: {state.preMatch.placedPlayers.length} / 11
+              </div>
+            )}
+            
+            {/* Bouton kick-off si 11 placés */}
+            {state && state.preMatch?.phase === 'setup' && state.preMatch.placedPlayers.length === 11 && (
+              <div className="flex justify-center">
+                <button 
+                  onClick={() => {
+                    // TODO: Appel API pour switch coach ou kickoff
+                    setState((s) => {
+                      if (!s) return s;
+                      // Placeholder: passe à kickoff
+                      const kickoffState = { ...s, preMatch: { ...s.preMatch, phase: 'kickoff' } };
+                      kickoffState.half = 1;
+                      kickoffState.turn = 1;
+                      return kickoffState;
+                    });
+                  }} 
+                  className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded"
+                >
+                  Lancer le kick-off
+                </button>
+              </div>
+            )}
+          </div>
+          
           <div className="flex flex-col lg:flex-row items-start gap-6 mb-6">
+            {/* Board et sidebar */}
             <div className="flex-1 flex justify-center">
               <GameBoardWithDugouts state={state} onCellClick={onCellClick} legalMoves={movesForSelected} blockTargets={[]} selectedPlayerId={state.selectedPlayerId} onPlayerClick={(playerId) => {
                 if (!state) return;
+                const extState = state as ExtendedGameState;
+                if (extState.preMatch?.phase === 'setup') {
+                  const player = state.players.find((p) => p.id === playerId);
+                  if (player && player.team === extState.preMatch.currentCoach && player.pos.x === -1 && !player.stunned && !extState.preMatch.placedPlayers.includes(playerId)) {
+                    setSelectedFromReserve(playerId);
+                    setState((s) => s ? ({ ...s, selectedPlayerId: null }) : null); // Deselect field player
+                    return;
+                  }
+                  return; // Ignore autres clics en setup
+                }
+                // Logique normale
                 const player = state.players.find((p) => p.id === playerId);
                 if (player && player.team === state.currentPlayer) {
                   setState((s) => s ? ({ ...s, selectedPlayerId: player.id }) : null);
                   setCurrentAction(null);
+                  setSelectedFromReserve(null);
                 }
               }} />
             </div>

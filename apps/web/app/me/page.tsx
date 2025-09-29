@@ -54,53 +54,59 @@ export default function MePage() {
       <h1 className="text-2xl font-bold">Mes parties</h1>
       {error && <p className="text-red-600 text-sm">{error}</p>}
       <div className="grid gap-3">
-        {matches.map((m) => (
-          <div key={m.id} className="rounded border p-4 bg-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-semibold">Partie {m.id.slice(0,8)}…</div>
-                <div className="text-sm text-gray-600">Statut: {m.status} • {new Date(m.createdAt).toLocaleString()}</div>
-              </div>
-            <button
-              className="px-3 py-1.5 bg-blue-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={summaries[m.id] && summaries[m.id].status !== 'active'}
-              onClick={async () => {
-                try {
-                  const { matchToken } = await postJSON("/match/join", { matchId: m.id });
-                  localStorage.setItem("match_token", matchToken);
-                  sessionStorage.setItem("current_match_id", m.id);
-                  window.location.href = `/play/${m.id}`;
-                } catch (e) {
-                  alert((e as any)?.message || "Erreur");
-                }
-              }}
-            >
-                {summaries[m.id] && summaries[m.id].status !== 'active' ? 'En attente de l’autre joueur' : 'Continuer'}
-              </button>
-            </div>
-            {summaries[m.id] && (
-              <div className="mt-3 text-sm text-gray-700">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="font-medium">{summaries[m.id].teams?.local?.name || '—'} <span className="text-gray-500">(Coach: {summaries[m.id].teams?.local?.coach || '—'})</span></div>
-                  </div>
-                  <div className="text-xl font-bold">
-                    {summaries[m.id].score?.teamA ?? 0} - {summaries[m.id].score?.teamB ?? 0}
-                  </div>
-                  <div className="text-right">
-                    <div className="font-medium">{summaries[m.id].teams?.visitor?.name || '—'} <span className="text-gray-500">(Coach: {summaries[m.id].teams?.visitor?.coach || '—'})</span></div>
-                  </div>
+        {matches.map((m) => {
+          const summary = summaries[m.id];
+          const isReady = summary?.status === 'active' || summary?.status === 'prematch';
+          const buttonText = summary?.status === 'prematch' ? 'Commencer le match' : summary?.status === 'active' ? 'Continuer' : 'En attente de l’autre joueur';
+          const displayStatus = summary?.status === 'prematch' ? 'Prêt à jouer' : m.status;
+          return (
+            <div key={m.id} className="rounded border p-4 bg-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-semibold">Partie {m.id.slice(0,8)}…</div>
+                  <div className="text-sm text-gray-600">Statut: {displayStatus} • {new Date(m.createdAt).toLocaleString()}</div>
                 </div>
-                <div className="text-xs text-gray-500 mt-1">Mi-temps: {summaries[m.id].half} • Tour: {summaries[m.id].turn}</div>
-                {summaries[m.id].status !== 'active' && (
-                  <div className="mt-2 text-xs">
-                    <a className="underline text-blue-700" href={`/waiting/${m.id}`}>Voir l’état des validations</a>
-                  </div>
-                )}
+                <button
+                  className="px-3 py-1.5 bg-blue-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={!isReady} // Changé : active pour prematch
+                  onClick={async () => {
+                    try {
+                      const { matchToken } = await postJSON("/match/join", { matchId: m.id });
+                      localStorage.setItem("match_token", matchToken);
+                      sessionStorage.setItem("current_match_id", m.id);
+                      window.location.href = `/play/${m.id}`;
+                    } catch (e) {
+                      alert((e as any)?.message || "Erreur");
+                    }
+                  }}
+                >
+                  {buttonText}
+                </button>
               </div>
-            )}
-          </div>
-        ))}
+              {summary && (
+                <div className="mt-3 text-sm text-gray-700">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium">{summary.teams?.local?.name || '—'} <span className="text-gray-500">(Coach: {summary.teams?.local?.coach || '—'})</span></div>
+                    </div>
+                    <div className="text-xl font-bold">
+                      {summary.score?.teamA ?? 0} - {summary.score?.teamB ?? 0}
+                    </div>
+                    <div className="text-right">
+                      <div className="font-medium">{summary.teams?.visitor?.name || '—'} <span className="text-gray-500">(Coach: {summary.teams?.visitor?.coach || '—'})</span></div>
+                    </div>
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">Mi-temps: {summary.half} • Tour: {summary.turn}</div>
+                  {summary.status !== 'active' && summary.status !== 'prematch' && ( // Ajouté condition pour prematch
+                    <div className="mt-2 text-xs">
+                      <a className="underline text-blue-700" href={`/waiting/${m.id}`}>Voir l’état des validations</a>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
         {matches.length === 0 && <p className="text-sm text-gray-600">Aucune partie en cours.</p>}
       </div>
       <div>
