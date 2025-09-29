@@ -9,9 +9,10 @@ interface GameScoreboardProps {
   leftCoachName?: string;
   rightCoachName?: string;
   localSide?: 'A' | 'B' | null;
+  userName?: string;
 }
 
-export default function GameScoreboard({ state, onEndTurn, leftTeamName, rightTeamName, leftCoachName, rightCoachName, localSide }: GameScoreboardProps) {
+export default function GameScoreboard({ state, onEndTurn, leftTeamName, rightTeamName, leftCoachName, rightCoachName, localSide, userName }: GameScoreboardProps) {
   const getTeamColor = (team: "A" | "B") => {
     return team === "A" ? "bg-red-600" : "bg-blue-600";
   };
@@ -21,13 +22,9 @@ export default function GameScoreboard({ state, onEndTurn, leftTeamName, rightTe
   };
 
   const getCurrentTeamName = () => {
-    if (!localSide || !leftTeamName || !rightTeamName) {
-      const teamAName = leftTeamName || state.teamNames.teamA;
-      const teamBName = rightTeamName || state.teamNames.teamB;
-      return state.currentPlayer === "A" ? teamAName : teamBName;
-    }
-    const activeSide = state.currentPlayer;
-    return activeSide === localSide ? leftTeamName : rightTeamName;
+    const teamAName = state.teamNames.teamA;
+    const teamBName = state.teamNames.teamB;
+    return state.currentPlayer === "A" ? teamAName : teamBName;
   };
 
   const getCurrentTeamColor = () => {
@@ -171,7 +168,7 @@ export default function GameScoreboard({ state, onEndTurn, leftTeamName, rightTe
 
           {/* Informations de jeu */}
           <div className="text-gray-400">
-            Blood Bowl Fantasy Football
+            {userName || 'Blood Bowl Fantasy Football'}
           </div>
         </div>
 

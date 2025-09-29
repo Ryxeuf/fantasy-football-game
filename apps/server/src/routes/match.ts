@@ -158,62 +158,43 @@ router.get("/:id/details", authUser, async (req: AuthenticatedRequest, res) => {
 });
 
 // Nouvel endpoint pour les équipes et joueurs (auth) par id - pour fallback prematch
+// IMPORTANT: retourne une vue absolue A/B, indépendante de l'utilisateur connecté
 router.get("/:id/teams", authUser, async (req: AuthenticatedRequest, res) => {
   try {
     const matchId = req.params.id;
-    const match = await prisma.match.findUnique({ where: { id: matchId }, select: { id: true, creatorId: true } });
+    const match = await prisma.match.findUnique({ where: { id: matchId }, select: { id: true } });
     if (!match) return res.status(404).json({ error: 'Partie introuvable' });
 
     const selections = await prisma.teamSelection.findMany({
       where: { matchId },
       orderBy: { createdAt: "asc" },
-      include: {
-        user: { select: { id: true, name: true, email: true } },
-        teamRef: { 
-          include: { players: true } 
-        }, // Changé de team à teamRef
-        teamRef: { select: { name: true, roster: true } }, // Gardé pour compatibilité, mais redondant
-      },
+      include: { teamRef: { include: { players: true } } },
     });
 
-    // Déterminer local/visiteur comme dans /details
-    const authenticatedUserId = req.user!.id;
-    let localSel = selections.find((s) => s.userId === authenticatedUserId) || null;
-    let visitorSel = selections.find((s) => s.userId !== authenticatedUserId) || null;
-    if (!localSel || !visitorSel) {
-      if (match.creatorId) {
-        localSel = selections.find((s) => s.userId === match.creatorId) || selections[0] || null;
-        visitorSel = selections.find((s) => s.userId !== match.creatorId) || selections[1] || null;
-      } else {
-        localSel = selections[0] || null;
-        visitorSel = selections.length > 1 ? selections[1] : null;
-      }
-    }
+    const s1 = selections[0] || null;
+    const s2 = selections[1] || null;
 
     const getTeamData = (sel: any) => {
-      const teamName = sel?.teamRef?.name || sel.team || 'Équipe Inconnue'; // Utilise teamRef.name ou fallback au scalaire team
-      let players: any[] = [];
-      if (sel?.teamId && sel.teamRef?.players) {
-        players = (sel.teamRef.players || []).map((p: any) => ({ // Changé de sel.team à sel.teamRef
-          id: p.id,
-          name: p.name,
-          position: p.position,
-          number: p.number,
-          ma: p.ma,
-          st: p.st,
-          ag: p.ag,
-          pa: p.pa,
-          av: p.av,
-          skills: p.skills || '',
-        }));
-      } // TODO: Si pas teamId, générer depuis roster si besoin
+      const teamName = sel?.teamRef?.name || sel?.team || 'Équipe Inconnue';
+      const players = (sel?.teamRef?.players || []).map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        position: p.position,
+        number: p.number,
+        ma: p.ma,
+        st: p.st,
+        ag: p.ag,
+        pa: p.pa,
+        av: p.av,
+        skills: p.skills || '',
+      }));
       return { teamName, players };
     };
 
-    const local = getTeamData(localSel);
-    const visitor = getTeamData(visitorSel);
+    const teamA = getTeamData(s1);
+    const teamB = getTeamData(s2);
 
-    return res.json({ local, visitor });
+    return res.json({ teamA, teamB });
   } catch (e: any) {
     console.error(e);
     return res.status(500).json({ error: 'Erreur serveur' });
@@ -354,7 +335,19 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
       // Entrer en setup si idle
       const lastCoinToss = match.turns.find((t: any) => t.payload?.type === 'coin-toss');
       if (lastCoinToss && gameState.preMatch.phase === 'idle') {
-        const receivingTeam = lastCoinToss.payload.receivingUserId === req.user!.id ? 'A' : 'B';
+        // IMPORTANT: déterminer l'équipe receveuse selon le mapping A/B défini par l'ordre des sélections,
+        // pas selon l'utilisateur qui appelle la route (sinon chaque client verrait une équipe différente).
+        const selections = await prisma.teamSelection.findMany({
+          where: { matchId },
+          orderBy: { createdAt: 'asc' },
+          select: { userId: true },
+        });
+        const s1 = selections[0];
+        const s2 = selections[1];
+        let receivingTeam: 'A' | 'B' = 'A';
+        if (s1 && s2) {
+          receivingTeam = lastCoinToss.payload.receivingUserId === s1.userId ? 'A' : 'B';
+        }
         gameState = enterSetupPhase(gameState, receivingTeam);
       }
     }

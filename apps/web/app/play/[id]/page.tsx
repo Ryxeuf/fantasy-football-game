@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState, useRef } from "react";
 import { PlayerDetails, DiceResultPopup, GameScoreboard, ActionPickerPopup, GameBoardWithDugouts } from "@bb/ui";
-import { setup, getLegalMoves, applyMove, makeRNG, clearDiceResult, hasPlayerActed, type GameState, type Position, type Move, setupPreMatch, setupPreMatchWithTeams, startMatchFromPreMatch, enterSetupPhase, placePlayerInSetup, type ExtendedGameState } from "@bb/game-engine";
+import { setup, getLegalMoves, applyMove, makeRNG, clearDiceResult, hasPlayerActed, type GameState, type Position, type Move, setupPreMatch, setupPreMatchWithTeams, startMatchFromPreMatch, enterSetupPhase, placePlayerInSetup, type ExtendedGameState, type Player, type TeamId, type ActionType, createLogEntry, initializeDugouts } from "@bb/game-engine";
 import { API_BASE } from "../../auth-client";
 
 // Ajouter fonction normalize après imports
@@ -13,6 +13,82 @@ function normalizeState(state: any): ExtendedGameState {
     state.teamBlitzCount = new Map(Object.entries(state.teamBlitzCount || {}));
   }
   return state as ExtendedGameState;
+}
+
+// Ajouter une fonction helper avant le composant, après normalizeState (ligne ~16)
+function createDemoExtendedState(teamAName: string, teamBName: string): ExtendedGameState {
+  const dugouts = initializeDugouts(); // Assumer importé si besoin
+  
+  // Joueurs démo équipe A (11 joueurs)
+  const teamAPlayers: Player[] = [
+    { id: 'A1', team: 'A' as TeamId, pos: { x: -1, y: -1 }, name: 'Joueur A1', number: 1, position: 'Lineman', ma: 6, st: 3, ag: 3, pa: 4, av: 9, skills: [], pm: 6, hasBall: false, state: 'active' },
+    { id: 'A2', team: 'A' as TeamId, pos: { x: -1, y: -1 }, name: 'Joueur A2', number: 2, position: 'Blitzer', ma: 7, st: 3, ag: 3, pa: 4, av: 9, skills: ['Block'], pm: 7, hasBall: false, state: 'active' },
+    // ... Ajouter 9 autres pour A (similaire, numbers 3-11)
+    { id: 'A3', team: 'A' as TeamId, pos: { x: -1, y: -1 }, name: 'Joueur A3', number: 3, position: 'Lineman', ma: 6, st: 3, ag: 3, pa: 4, av: 9, skills: [], pm: 6, hasBall: false, state: 'active' },
+    { id: 'A4', team: 'A' as TeamId, pos: { x: -1, y: -1 }, name: 'Joueur A4', number: 4, position: 'Thrower', ma: 6, st: 2, ag: 3, pa: 4, av: 8, skills: ['Pass'], pm: 6, hasBall: false, state: 'active' },
+    { id: 'A5', team: 'A' as TeamId, pos: { x: -1, y: -1 }, name: 'Joueur A5', number: 5, position: 'Catcher', ma: 8, st: 2, ag: 3, pa: 4, av: 7, skills: ['Catch'], pm: 8, hasBall: false, state: 'active' },
+    { id: 'A6', team: 'A' as TeamId, pos: { x: -1, y: -1 }, name: 'Joueur A6', number: 6, position: 'Lineman', ma: 6, st: 3, ag: 3, pa: 4, av: 9, skills: [], pm: 6, hasBall: false, state: 'active' },
+    { id: 'A7', team: 'A' as TeamId, pos: { x: -1, y: -1 }, name: 'Joueur A7', number: 7, position: 'Blitzer', ma: 7, st: 3, ag: 3, pa: 4, av: 9, skills: ['Block'], pm: 7, hasBall: false, state: 'active' },
+    { id: 'A8', team: 'A' as TeamId, pos: { x: -1, y: -1 }, name: 'Joueur A8', number: 8, position: 'Lineman', ma: 6, st: 3, ag: 3, pa: 4, av: 9, skills: [], pm: 6, hasBall: false, state: 'active' },
+    { id: 'A9', team: 'A' as TeamId, pos: { x: -1, y: -1 }, name: 'Joueur A9', number: 9, position: 'Lineman', ma: 6, st: 3, ag: 3, pa: 4, av: 9, skills: [], pm: 6, hasBall: false, state: 'active' },
+    { id: 'A10', team: 'A' as TeamId, pos: { x: -1, y: -1 }, name: 'Joueur A10', number: 10, position: 'Lineman', ma: 6, st: 3, ag: 3, pa: 4, av: 9, skills: [], pm: 6, hasBall: false, state: 'active' },
+    { id: 'A11', team: 'A' as TeamId, pos: { x: -1, y: -1 }, name: 'Joueur A11', number: 11, position: 'Lineman', ma: 6, st: 3, ag: 3, pa: 4, av: 9, skills: [], pm: 6, hasBall: false, state: 'active' },
+  ];
+
+  // Joueurs démo équipe B (similaire, 11 joueurs)
+  const teamBPlayers: Player[] = [
+    { id: 'B1', team: 'B' as TeamId, pos: { x: -1, y: -1 }, name: 'Joueur B1', number: 1, position: 'Lineman', ma: 6, st: 3, ag: 3, pa: 4, av: 9, skills: [], pm: 6, hasBall: false, state: 'active' },
+    { id: 'B2', team: 'B' as TeamId, pos: { x: -1, y: -1 }, name: 'Joueur B2', number: 2, position: 'Blitzer', ma: 7, st: 3, ag: 3, pa: 4, av: 9, skills: ['Block'], pm: 7, hasBall: false, state: 'active' },
+    // ... Ajouter 9 autres pour B (similaire à A, numbers 3-11)
+    { id: 'B3', team: 'B' as TeamId, pos: { x: -1, y: -1 }, name: 'Joueur B3', number: 3, position: 'Lineman', ma: 6, st: 3, ag: 3, pa: 4, av: 9, skills: [], pm: 6, hasBall: false, state: 'active' },
+    { id: 'B4', team: 'B' as TeamId, pos: { x: -1, y: -1 }, name: 'Joueur B4', number: 4, position: 'Thrower', ma: 6, st: 2, ag: 3, pa: 4, av: 8, skills: ['Pass'], pm: 6, hasBall: false, state: 'active' },
+    { id: 'B5', team: 'B' as TeamId, pos: { x: -1, y: -1 }, name: 'Joueur B5', number: 5, position: 'Catcher', ma: 8, st: 2, ag: 3, pa: 4, av: 7, skills: ['Catch'], pm: 8, hasBall: false, state: 'active' },
+    { id: 'B6', team: 'B' as TeamId, pos: { x: -1, y: -1 }, name: 'Joueur B6', number: 6, position: 'Lineman', ma: 6, st: 3, ag: 3, pa: 4, av: 9, skills: [], pm: 6, hasBall: false, state: 'active' },
+    { id: 'B7', team: 'B' as TeamId, pos: { x: -1, y: -1 }, name: 'Joueur B7', number: 7, position: 'Blitzer', ma: 7, st: 3, ag: 3, pa: 4, av: 9, skills: ['Block'], pm: 7, hasBall: false, state: 'active' },
+    { id: 'B8', team: 'B' as TeamId, pos: { x: -1, y: -1 }, name: 'Joueur B8', number: 8, position: 'Lineman', ma: 6, st: 3, ag: 3, pa: 4, av: 9, skills: [], pm: 6, hasBall: false, state: 'active' },
+    { id: 'B9', team: 'B' as TeamId, pos: { x: -1, y: -1 }, name: 'Joueur B9', number: 9, position: 'Lineman', ma: 6, st: 3, ag: 3, pa: 4, av: 9, skills: [], pm: 6, hasBall: false, state: 'active' },
+    { id: 'B10', team: 'B' as TeamId, pos: { x: -1, y: -1 }, name: 'Joueur B10', number: 10, position: 'Lineman', ma: 6, st: 3, ag: 3, pa: 4, av: 9, skills: [], pm: 6, hasBall: false, state: 'active' },
+    { id: 'B11', team: 'B' as TeamId, pos: { x: -1, y: -1 }, name: 'Joueur B11', number: 11, position: 'Lineman', ma: 6, st: 3, ag: 3, pa: 4, av: 9, skills: [], pm: 6, hasBall: false, state: 'active' },
+  ];
+
+  const allPlayers = [...teamAPlayers, ...teamBPlayers];
+
+  // Placer tous en réserves
+  allPlayers.forEach(player => {
+    const teamId = player.team;
+    const dugout = dugouts[teamId === 'A' ? 'teamA' : 'teamB'];
+    dugout.zones.reserves.players.push(player.id);
+  });
+
+  const baseState = {
+    width: 26,
+    height: 15,
+    players: allPlayers,
+    ball: undefined,
+    currentPlayer: 'A',
+    turn: 0,
+    selectedPlayerId: null,
+    isTurnover: false,
+    dugouts,
+    playerActions: new Map<string, ActionType>(),
+    teamBlitzCount: new Map<TeamId, number>(),
+    half: 0,
+    score: { teamA: 0, teamB: 0 },
+    teamNames: { teamA: teamAName, teamB: teamBName },
+    gameLog: [createLogEntry('info', `Phase pré-match démo - ${teamAName} vs ${teamBName}`)],
+  };
+
+  return {
+    ...baseState,
+    preMatch: {
+      phase: 'idle' as const,
+      currentCoach: 'A' as TeamId,
+      legalSetupPositions: [], // Sera mis à jour quand enterSetupPhase appelé
+      placedPlayers: [],
+      kickingTeam: 'B' as TeamId,
+      receivingTeam: 'A' as TeamId,
+    },
+  } as ExtendedGameState;
 }
 
 export default function PlayByIdPage({ params }: { params: { id: string } }) {
@@ -67,11 +143,13 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
   }, [matchId]);
 
   const [state, setState] = useState<ExtendedGameState | null>(null);
+  const [stateSource, setStateSource] = useState<'server' | 'fallback' | null>(null);
   const [showDicePopup, setShowDicePopup] = useState(false);
   const [currentAction, setCurrentAction] = useState<"MOVE" | "BLOCK" | "BLITZ" | "PASS" | "HANDOFF" | "FOUL" | null>(null);
   const createRNG = () => makeRNG(`ui-seed-${Date.now()}-${Math.random()}`);
   const [teamNameA, setTeamNameA] = useState<string | undefined>(undefined); // local
   const [teamNameB, setTeamNameB] = useState<string | undefined>(undefined); // visiteur
+  const [userName, setUserName] = useState<string | undefined>(undefined);
 
   // Ajouter state pour selectedFromReserve (pour setup)
   const [selectedFromReserve, setSelectedFromReserve] = useState<string | null>(null);
@@ -118,18 +196,38 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
     (async () => {
       try {
         const token = localStorage.getItem("auth_token");
+        if (!token) return;
+        const res = await fetch(`${API_BASE}/match/${matchId}/state`, { headers: { Authorization: `Bearer ${token}` } });
+        const data = await res.json().catch(() => ({} as any));
+        if (res.ok && data?.gameState) {
+          const normalized = normalizeState(data.gameState);
+          setState(normalized);
+          setStateSource('server');
+          console.log('State players length:', normalized.players.length);
+          return;
+        }
+      } catch (e) {
+        console.error('Failed to load game state:', e);
+      }
+      // Fallback: charger les équipes et setup prematch avec vrais data
+      try {
+        const token = localStorage.getItem("auth_token");
         if (!token) {
           setState(setupPreMatchWithTeams([], [], 'Équipe Locale', 'Équipe Visiteuse'));
+          setStateSource('fallback');
           return;
         }
         const teamsRes = await fetch(`${API_BASE}/match/${matchId}/teams`, { headers: { Authorization: `Bearer ${token}` } });
         const teamsData = await teamsRes.json().catch(() => ({} as any));
-        if (teamsRes.ok && teamsData.local && teamsData.visitor) {
-          // Utiliser teamNameA/B déjà chargés, ou fallback aux data
-          const teamAName = teamNameA || teamsData.local.teamName || 'Équipe Locale';
-          const teamBName = teamNameB || teamsData.visitor.teamName || 'Équipe Visiteuse';
-          setState(normalizeState(setupPreMatchWithTeams(teamsData.local.players || [], teamsData.visitor.players || [], teamAName, teamBName)));
-          console.log('Fallback players length:', (teamsData.local.players || []).length + (teamsData.visitor.players || []).length);
+        if (teamsRes.ok && (teamsData.teamA || (teamsData.local && teamsData.visitor))) {
+          // Supporte anciens et nouveaux formats
+          const a = teamsData.teamA || teamsData.local;
+          const b = teamsData.teamB || teamsData.visitor;
+          const teamAName = teamNameA || a.teamName || 'Équipe Locale';
+          const teamBName = teamNameB || b.teamName || 'Équipe Visiteuse';
+          setState(normalizeState(setupPreMatchWithTeams(a.players || [], b.players || [], teamAName, teamBName)));
+          setStateSource('fallback');
+          console.log('Fallback players length:', (a.players || []).length + (b.players || []).length);
           return;
         }
       } catch (e) {
@@ -140,6 +238,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
       if (teamNameA) demoState.teamNames.teamA = teamNameA;
       if (teamNameB) demoState.teamNames.teamB = teamNameB;
       setState(demoState);
+      setStateSource('fallback');
     })();
   }, [matchId, teamNameA, teamNameB]); // Dépend des teamNames pour utiliser les bons noms dans fallback
 
@@ -166,12 +265,8 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
               teamA: typeof data?.score?.teamA === "number" ? data.score.teamA : prev.score.teamA,
               teamB: typeof data?.score?.teamB === "number" ? data.score.teamB : prev.score.teamB,
             },
-            teamNames: {
-              teamA: prev.teamNames.teamA || teamNameA || data?.teams?.local?.name || prev.teamNames.teamA,
-              teamB: prev.teamNames.teamB || teamNameB || data?.teams?.visitor?.name || prev.teamNames.teamB,
-            },
-          };
-          // Copier preMatch si half === 0
+            // IMPORTANT: ne pas écraser les teamNames absolus A/B déjà présents dans l'état
+          } as any;
           if (prev.half === 0) {
             (updated as any).preMatch = prev.preMatch;
           }
@@ -182,6 +277,22 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
       }
     })();
   }, [matchId]); // Retiré teamNameA/B des deps pour éviter loops
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = localStorage.getItem("auth_token");
+        if (!token) return;
+        const res = await fetch(`${API_BASE}/auth/me`, { headers: { Authorization: `Bearer ${token}` } });
+        const data = await res.json().catch(() => ({} as any));
+        if (res.ok && data?.user?.name) {
+          setUserName(data.user.name as string);
+        } else if (res.ok && data?.user?.email) {
+          setUserName(data.user.email as string);
+        }
+      } catch {}
+    })();
+  }, []);
 
   const legal = useMemo(() => {
     if (!state) return [];
@@ -357,6 +468,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
         leftTeamName={teamNameA}
         rightTeamName={teamNameB}
         localSide={localSide}
+        userName={userName}
         {...(state?.half > 0 ? { onEndTurn: handleEndTurn } : {})}
       />
       {/* Wrapper pour éléments pré-match, à l'intérieur du container principal */}
@@ -364,22 +476,14 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col items-center space-y-4 mb-6"> {/* Wrapper centralisé pour pré-match */}
             {/* Statut pré-match (si half=0) */}
-            {state && state.half === 0 && (
+            {state && state.half === 0 && stateSource === 'server' && (
               <div className="text-center text-sm text-gray-600 bg-gray-100 p-2 rounded w-full max-w-md">
                 <div>Phase pré-match</div>
                 <div>
-                  Receveuse : {(() => {
-                    if (!localSide || !state.preMatch?.receivingTeam) return 'Inconnu';
-                    const receivingSide = state.preMatch.receivingTeam;
-                    return receivingSide === localSide ? (teamNameA || 'Équipe A') : (teamNameB || 'Équipe B');
-                  })()} ({state.preMatch?.receivingTeam})
+                  Receveuse : {state.preMatch?.receivingTeam === 'A' ? state.teamNames.teamA : state.teamNames.teamB} ({state.preMatch?.receivingTeam})
                 </div>
                 <div>
-                  Au tour de {(() => {
-                    if (!localSide || !state.preMatch?.currentCoach) return 'Inconnu';
-                    const currentCoachSide = state.preMatch.currentCoach;
-                    return currentCoachSide === localSide ? (teamNameA || 'Équipe A') : (teamNameB || 'Équipe B');
-                  })()} de placer ses joueurs
+                  Au tour de {(state.preMatch?.currentCoach === 'A' ? state.teamNames.teamA : state.teamNames.teamB)} de placer ses joueurs
                 </div>
               </div>
             )}
