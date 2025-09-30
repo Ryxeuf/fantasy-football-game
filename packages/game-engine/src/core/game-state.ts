@@ -801,8 +801,38 @@ export function placePlayerInSetup(state: ExtendedGameState, playerId: string, p
   const player = state.players.find(p => p.id === playerId);
   if (!player || player.pos.x !== -1) return state; // Déjà placé
 
-  const newPlayers = state.players.map(p => p.id === playerId ? { ...p, pos } : p);
-  const newPlaced = [...state.preMatch.placedPlayers, playerId];
+  // Simuler la pose pour vérifier les contraintes
+  const simulatedPlayers = state.players.map(p => p.id === playerId ? { ...p, pos } : p);
+  const simulatedPlaced = [...state.preMatch.placedPlayers, playerId];
+
+  // Contraintes Blood Bowl (setup)
+  const teamId = player.team;
+  // Largeurs BB 2020: 3 colonnes de chaque côté sur un terrain 15 colonnes (0..14)
+  const isLeftWideZone = (y: number) => y >= 0 && y <= 2;
+  const isRightWideZone = (y: number) => y >= 12 && y <= 14;
+  const isOnLos = (x: number) => (teamId === 'A' ? x === 12 : x === 13);
+
+  const teamPlayersOnPitch = simulatedPlayers.filter(p => p.team === teamId && p.pos.x >= 0);
+  if (teamPlayersOnPitch.length > 11) {
+    return state; // max 11 sur le terrain
+  }
+
+  const leftWzCount = teamPlayersOnPitch.filter(p => isLeftWideZone(p.pos.y)).length;
+  const rightWzCount = teamPlayersOnPitch.filter(p => isRightWideZone(p.pos.y)).length;
+  if (leftWzCount > 2 || rightWzCount > 2) {
+    return state; // max 2 par wide zone
+  }
+
+  // Vérifier en continu (ou a minima au 11e) au moins 3 sur la LOS pour l'équipe
+  if (simulatedPlaced.length >= 3) {
+    const losCount = teamPlayersOnPitch.filter(p => isOnLos(p.pos.x)).length;
+    if (simulatedPlaced.length === 11 && losCount < 3) {
+      return state; // à la fin du placement, contraindre 3 sur LOS
+    }
+  }
+
+  const newPlayers = simulatedPlayers;
+  const newPlaced = simulatedPlaced;
 
   let newState = { ...state, players: newPlayers, preMatch: { ...state.preMatch, placedPlayers: newPlaced } };
 

@@ -157,6 +157,49 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
   // Ajouter state après selectedFromReserve
   const [draggedPlayerId, setDraggedPlayerId] = useState<string | null>(null);
   const boardRef = useRef<HTMLDivElement | null>(null);
+  const [setupError, setSetupError] = useState<string | null>(null);
+
+  function showSetupError(msg: string) {
+    setSetupError(msg);
+    setTimeout(() => setSetupError(null), 2500);
+  }
+
+  function getMySide(ext: ExtendedGameState): 'A' | 'B' | null {
+    if (!teamNameA || !teamNameB) return null;
+    return teamNameA === ext.teamNames.teamA ? 'A' : 'B';
+  }
+
+  function validatePlacement(ext: ExtendedGameState, playerId: string, pos: Position): string | null {
+    // Phase
+    if (ext.preMatch?.phase !== 'setup') return 'Placement uniquement en phase de configuration';
+    const player = ext.players.find(p => p.id === playerId);
+    if (!player) return 'Joueur introuvable';
+    const mySide = getMySide(ext);
+    if (mySide && mySide !== ext.preMatch.currentCoach) return "Ce n'est pas votre tour de placer";
+    if (mySide && player.team !== mySide) return "Vous ne pouvez placer que vos joueurs";
+    // Position légale
+    const legal = ext.preMatch.legalSetupPositions.some(p => p.x === pos.x && p.y === pos.y);
+    if (!legal) return 'Position illégale: hors de votre moitié (jusqu’à la LOS)';
+    // Max 11
+    const teamId = player.team;
+    const onPitch = ext.players.filter(p => p.team === teamId && p.pos.x >= 0).length;
+    if (onPitch >= 11) return 'Maximum 11 joueurs sur le terrain';
+    // Wide zones
+    const isLeftWZ = (y: number) => y >= 0 && y <= 2;
+    const isRightWZ = (y: number) => y >= 12 && y <= 14;
+    const teamPlayersAfter = ext.players.map(p => p.id === playerId ? { ...p, pos } : p).filter(p => p.team === teamId && p.pos.x >= 0);
+    const leftCount = teamPlayersAfter.filter(p => isLeftWZ(p.pos.y)).length;
+    const rightCount = teamPlayersAfter.filter(p => isRightWZ(p.pos.y)).length;
+    if (leftCount > 2) return 'Maximum 2 joueurs dans la large zone gauche';
+    if (rightCount > 2) return 'Maximum 2 joueurs dans la large zone droite';
+    // LOS (au 11e)
+    if (teamPlayersAfter.length === 11) {
+      const isOnLos = (x: number) => (teamId === 'A' ? x === 12 : x === 13);
+      const losCount = teamPlayersAfter.filter(p => isOnLos(p.pos.x)).length;
+      if (losCount < 3) return 'Au moins 3 joueurs doivent être sur la LOS';
+    }
+    return null;
+  }
 
   // useEffect pour charger les noms d'équipes et coaches via /details (prioritaire, indépendant)
   useEffect(() => {
@@ -315,7 +358,17 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
 
   // Ajouter handlers après onCellClick
   const handleDragStart = (e: React.DragEvent, playerId: string) => {
-    if (!state || (state as ExtendedGameState).preMatch?.phase !== 'setup') return;
+    const ext = state as ExtendedGameState | null;
+    if (!ext || ext.preMatch?.phase !== 'setup') return;
+    // Autoriser uniquement le coach courant et ses joueurs
+    const isMyTeam = (() => {
+      // On déduit mon côté via teamNameA/B comparés à state.teamNames
+      if (!teamNameA || !teamNameB) return true; // fallback permissif
+      const mySide: 'A' | 'B' = teamNameA === ext.teamNames.teamA ? 'A' : 'B';
+      const playerTeam = ext.players.find(p => p.id === playerId)?.team;
+      return mySide === ext.preMatch.currentCoach && playerTeam === mySide;
+    })();
+    if (!isMyTeam) return;
     e.dataTransfer.setData('text/plain', playerId);
     setDraggedPlayerId(playerId);
   };
@@ -330,6 +383,13 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
 
     const extState = state as ExtendedGameState;
     if (extState.preMatch?.phase !== 'setup') return;
+    // Bloquer si je ne suis pas le coach courant
+    if (teamNameA && teamNameB) {
+      const mySide: 'A' | 'B' = teamNameA === extState.teamNames.teamA ? 'A' : 'B';
+      if (mySide !== extState.preMatch.currentCoach) { setDraggedPlayerId(null); showSetupError("Ce n'est pas votre tour de placer"); return; }
+      const playerTeam = extState.players.find(p => p.id === draggedPlayerId)?.team;
+      if (playerTeam !== mySide) { setDraggedPlayerId(null); showSetupError('Vous ne pouvez placer que vos joueurs'); return; }
+    }
 
     // Utiliser rect du board (Pixi container)
     const rect = boardRef.current.getBoundingClientRect();
@@ -343,13 +403,14 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
     if (gridX >= 0 && gridX < state.height && gridY >= 0 && gridY < state.width) {
       const pos: Position = { x: gridY, y: gridX };
 
-      const legalPositions = extState.preMatch.legalSetupPositions;
-      if (legalPositions.some(p => p.x === pos.x && p.y === pos.y)) {
-        const newState = placePlayerInSetup(extState, draggedPlayerId, pos);
-        setState(newState);
-        if (newState.preMatch.placedPlayers.length === 11) {
-          setDraggedPlayerId(null);
-        }
+      const err = validatePlacement(extState, draggedPlayerId, pos);
+      if (err) { showSetupError(err); setDraggedPlayerId(null); return; }
+
+      const newState = placePlayerInSetup(extState, draggedPlayerId, pos);
+      if (newState === extState) { showSetupError('Placement refusé'); }
+      setState(newState);
+      if ((newState as ExtendedGameState).preMatch.placedPlayers.length === 11) {
+        setDraggedPlayerId(null);
       }
     }
     setDraggedPlayerId(null);
@@ -363,6 +424,8 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
     if (extState.preMatch?.phase === 'setup') {
       // Mode setup : placer selectedFromReserve sur pos si légal
       if (selectedFromReserve) {
+        const err = validatePlacement(extState, selectedFromReserve, pos);
+        if (err) { showSetupError(err); setSelectedFromReserve(null); return; }
         const newState = placePlayerInSetup(extState, selectedFromReserve, pos);
         setState(newState);
         if (newState.preMatch.placedPlayers.length === 11) {
@@ -486,6 +549,11 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
                 <div>
                   Au tour de {(state.preMatch?.currentCoach === 'A' ? state.teamNames.teamA : state.teamNames.teamB)} de placer ses joueurs
                 </div>
+                {setupError && (
+                  <div className="mt-2 px-3 py-2 bg-red-100 text-red-700 rounded border border-red-300">
+                    {setupError}
+                  </div>
+                )}
               </div>
             )}
             
