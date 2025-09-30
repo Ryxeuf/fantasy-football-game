@@ -16,6 +16,9 @@ interface GameBoardWithDugoutsProps {
   selectedPlayerId?: string | null;
   onDragStart?: (e: React.DragEvent, playerId: string) => void;
   placedPlayers?: string[]; // Nouvelle prop pour setup
+  boardContainerRef?: React.RefObject<HTMLDivElement>;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDrop?: (e: React.DragEvent) => void;
 }
 
 export default function GameBoardWithDugouts({
@@ -27,6 +30,9 @@ export default function GameBoardWithDugouts({
   selectedPlayerId,
   onDragStart,
   placedPlayers = [], // Default
+  boardContainerRef,
+  onDragOver,
+  onDrop,
 }: GameBoardWithDugoutsProps) {
   
   return (
@@ -39,11 +45,12 @@ export default function GameBoardWithDugouts({
           placedPlayers={placedPlayers}
           onPlayerClick={onPlayerClick}
           onDragStart={onDragStart}
+          teamName={state.teamNames.teamA}
         />
       </div>
 
       {/* Terrain */}
-      <div className="flex-shrink-0">
+      <div className="flex-shrink-0" ref={boardContainerRef} onDragOver={onDragOver} onDrop={onDrop}>
         <PixiBoard
           state={state}
           onCellClick={onCellClick}
@@ -61,6 +68,7 @@ export default function GameBoardWithDugouts({
           placedPlayers={placedPlayers}
           onPlayerClick={onPlayerClick}
           onDragStart={onDragStart}
+          teamName={state.teamNames.teamB}
         />
       </div>
     </div>

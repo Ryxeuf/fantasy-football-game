@@ -21,6 +21,12 @@ export default function GameScoreboard({ state, onEndTurn, leftTeamName, rightTe
     return team === "A" ? "text-red-600" : "text-blue-600";
   };
 
+  const getTeamBadgeClasses = (team: "A" | "B") => {
+    return team === "A"
+      ? "inline-flex items-center gap-2 px-2 py-0.5 rounded-full bg-red-900/10 text-red-600 border border-red-600"
+      : "inline-flex items-center gap-2 px-2 py-0.5 rounded-full bg-blue-900/10 text-blue-600 border border-blue-600";
+  };
+
   const getCurrentTeamName = () => {
     const teamAName = state.teamNames.teamA;
     const teamBName = state.teamNames.teamB;
@@ -95,7 +101,10 @@ export default function GameScoreboard({ state, onEndTurn, leftTeamName, rightTe
           {/* Équipe A */}
           <div className="text-center">
             <div className="text-sm text-gray-300 mb-1">
-              {leftTeamName || state.teamNames.teamA}
+              <span className={getTeamBadgeClasses("A")}>
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: '#dc2626' }}></span>
+                {leftTeamName || state.teamNames.teamA}
+              </span>
             </div>
             <div className={`text-4xl font-black ${getTeamTextColor("A")} ${showScoreAnim ? 'animate-ping' : ''}`}>
               {state.score.teamA}
@@ -110,7 +119,10 @@ export default function GameScoreboard({ state, onEndTurn, leftTeamName, rightTe
           {/* Équipe B */}
           <div className="text-center">
             <div className="text-sm text-gray-300 mb-1">
-              {rightTeamName || state.teamNames.teamB}
+              <span className={getTeamBadgeClasses("B")}>
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: '#2563eb' }}></span>
+                {rightTeamName || state.teamNames.teamB}
+              </span>
             </div>
             <div className={`text-4xl font-black ${getTeamTextColor("B")} ${showScoreAnim ? 'animate-ping' : ''}`}>
               {state.score.teamB}

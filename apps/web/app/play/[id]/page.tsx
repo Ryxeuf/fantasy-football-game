@@ -156,6 +156,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
 
   // Ajouter state après selectedFromReserve
   const [draggedPlayerId, setDraggedPlayerId] = useState<string | null>(null);
+  const boardRef = useRef<HTMLDivElement | null>(null);
 
   // useEffect pour charger les noms d'équipes et coaches via /details (prioritaire, indépendant)
   useEffect(() => {
@@ -465,8 +466,8 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
     <div className="min-h-screen bg-gray-100">
       <GameScoreboard
         state={state}
-        leftTeamName={teamNameA}
-        rightTeamName={teamNameB}
+        leftTeamName={state.teamNames.teamA}
+        rightTeamName={state.teamNames.teamB}
         localSide={localSide}
         userName={userName}
         {...(state?.half > 0 ? { onEndTurn: handleEndTurn } : {})}
@@ -538,7 +539,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
                 onCellClick={onCellClick} 
                 legalMoves={draggedPlayerId && (state as ExtendedGameState).preMatch?.phase === 'setup' ? (state as ExtendedGameState).preMatch.legalSetupPositions : movesForSelected} 
                 blockTargets={[]} 
-                selectedPlayerId={state.selectedPlayerId} 
+                selectedPlayerId={state.selectedPlayerId || undefined} 
                 placedPlayers={(state as ExtendedGameState).preMatch?.placedPlayers || []} // Nouvelle prop
                 onPlayerClick={(playerId) => {
                   if (!state) return;
@@ -563,6 +564,9 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
                   }
                 }}
                 onDragStart={handleDragStart} // Nouvelle prop
+                boardContainerRef={boardRef}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
               />
             </div>
             <div className="w-full lg:w-auto">

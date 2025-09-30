@@ -757,21 +757,28 @@ export function clearDiceResult(state: GameState): GameState {
 export function enterSetupPhase(state: ExtendedGameState, receivingTeam: TeamId): ExtendedGameState {
   if (state.half !== 0 || state.preMatch.phase !== 'idle') return state;
 
-  // Positions setup pour receiving team (first half, zones 1-11 pour A, symétrique pour B)
-  let setupPositions: Position[] = [];
-  if (receivingTeam === 'A') {
-    // Exemple zones pour A (à raffiner d'après règles : dugout zones)
-    for (let y = 0; y < 4; y++) { // Lignes avant
-      for (let x = 6; x <= 20; x += 2) { // Colonnes setup
-        if (x >= 6 && x <= 11 && y <= 2 || x >= 15 && x <= 20 && y <= 2) continue; // Éviter zones adverses
-        setupPositions.push({ x, y });
+  // Positions légales de setup pour toute la moitié de terrain de l'équipe
+  // Repère: board 26x15 (x: 0..25, y: 0..14). Bande touchdown sur y=0 (haut) et y=14 (bas).
+  // On autorise: équipe A (haut) sur y=1..6, équipe B (bas) sur y=8..13. Toutes colonnes x=0..25.
+  const buildHalf = (topHalf: boolean): Position[] => {
+    const positions: Position[] = [];
+    // IMPORTANT: dans notre orientation UI, 'x' (dans Position) correspond à la coordonnée verticale (lignes)
+    // et 'y' correspond à l'horizontale (colonnes). Pour surligner la partie supérieure de l'écran,
+    // il faut donc faire varier 'x' (vertical) sur les lignes du haut.
+    // Étirer jusqu'à la LOS (ligne médiane). Le plateau a 26 rangées (x: 0..25), LOS à 13 (milieu).
+    // Équipe A (haut): 1..12 (au-dessus de la LOS incluse côté haut)
+    // Équipe B (bas): 13..24 (en dessous de la LOS incluse côté bas)
+    const xStart = topHalf ? 1 : 13;   // exclure touchdown: 0 et 25
+    const xEnd = topHalf ? 12 : 24;
+    for (let x = xStart; x <= xEnd; x++) {
+      for (let y = 0; y < state.height; y++) {
+        positions.push({ x, y });
       }
     }
-    // Ajouter wide zones, etc. - TODO: implémenter zones précises du pitch (half A)
-  } else {
-    // Symétrique pour B
-    setupPositions = setupPositions.map(p => ({ x: 25 - p.x, y: 14 - p.y })); // Miroir
-  }
+    return positions;
+  };
+
+  const setupPositions: Position[] = buildHalf(receivingTeam === 'A');
 
   return {
     ...state,
@@ -813,3 +820,4 @@ export function placePlayerInSetup(state: ExtendedGameState, playerId: string, p
 
   return newState;
 }
+
