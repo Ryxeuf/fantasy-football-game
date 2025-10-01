@@ -1,12 +1,10 @@
-League and Exhibition Play
-==========================
+# League and Exhibition Play
 
 Playing a Blood Bowl league is great fun. Teams grow and develop, and rookie players blossom into mighty Star Players. Coaches are able to build upon their team's background and rivalries with others, all the while hoping to reach the play-offs, dreaming of winning lasting fame and fortune.
 
 In truth, although we call them leagues, what our teams are most likely doing is participating in the type of tournaments that happen around the Old World and beyond all the time. There haven't been many formal leagues since the NAF collapsed, and teams travel the known world taking part in numerous privately run tournaments, playing a series of linked games, hoping to qualify for the finals and to win the prizes on offer. The development seen is a team improving through the course of such a competition and becoming a more skilled and complete unit. Over several such league seasons a team will have played in several different competitions in very different locations, gained new players, lost old favourites, and changed and evolved over time.
 
-Running a League
-----------------
+## Running a League
 
 In order to set up a league, the first thing needed is a league commissioner. The league commissioner is the member of any group of regularly meeting coaches who takes up the responsibility for making sure that a league runs smoothly. Some league commissioners like to keep a central database of teams to keep track of how well everyone is doing, and some even write regular newsletters featuring game reports, league tables and anything else they can think of! Most league commissioners will take part in the league with a team of their own.
 
@@ -42,15 +40,15 @@ During the regular season, any two coaches that are not in the same division may
 
 Teams earn League points as follows:
 
-*   **Win:** 3 League points
-*   **Draw:** 1 League point
-*   **Loss:** 0 League points
+- **Win:** 3 League points
+- **Draw:** 1 League point
+- **Loss:** 0 League points
 
 Additionally, league commissioners may wish to award bonus League points for the following:
 
-*   **Score 3 or more touchdowns:** +1 League point
-*   **Concede 0 touchdowns:** +1 League point
-*   **Cause 3 or more Casualties (counting only those that generate SPP, as described in Step 3 of the post-game sequence):** +1 League point
+- **Score 3 or more touchdowns:** +1 League point
+- **Concede 0 touchdowns:** +1 League point
+- **Cause 3 or more Casualties (counting only those that generate SPP, as described in Step 3 of the post-game sequence):** +1 League point
 
 Each coach should record their League points on their Game Record sheet during step 1 of the post-game sequence, before reporting both the outcome of the game and the league points scored to the league commissioner.
 
@@ -58,14 +56,14 @@ Each coach should record their League points on their Game Record sheet during s
 
 Once all league fixtures have been played in each division, the regular season comes to a close. Once all the scores are in, the league commissioner ranks the teams in order of League points, from highest to lowest, using total touchdowns as the first tiebreaker and total casualties as the second tiebreaker, if required. The top four teams in the league will go through to the play-offs as follows:
 
-*   If the league consists of two divisions, the top two teams from each go through and the play-off season progresses straight to the semi-finals.
-*   If the league consists of four divisions:
+- If the league consists of two divisions, the top two teams from each go through and the play-off season progresses straight to the semi-finals.
+- If the league consists of four divisions:
 
  - The top team from each goes through and the play-off season progresses straight to the semi-finals.
 
  - The top two teams from each go through and the play-off season commences with the quarter finals.
 
-*   If the league consists of three divisions, the top team from each goes through. Additionally, the second place team with the highest number of league points will go through as a wild card. The play-off season progresses straight to the semi-finals.
+- If the league consists of three divisions, the top team from each goes through. Additionally, the second place team with the highest number of league points will go through as a wild card. The play-off season progresses straight to the semi-finals.
 
 As with the regular season, these games should be played to a schedule drawn up by the league commissioner and made available to all coaches. If quarter finals are being played, care should be taken to ensure that two teams from the same division do not meet in either the quarter finals or semi-finals.
 
@@ -75,9 +73,9 @@ Once the semi-finals have been played, the two winning teams will progress to th
 
 Prizes are awarded to the teams who finish in 1st 2nd and 3rd place, in addition to any winnings generated during the post-game sequence:
 
-*   The team in 3rd place receives 30,000 gold pieces.
-*   The team in 2nd place receives 60,000 gold pieces.
-*   The team who finished in 1st place, the season's champion, is awarded 100,000 gold pieces and the League Trophy.
+- The team in 3rd place receives 30,000 gold pieces.
+- The team in 2nd place receives 60,000 gold pieces.
+- The team who finished in 1st place, the season's champion, is awarded 100,000 gold pieces and the League Trophy.
 
 These winnings should not be placed in the team's Treasury until after the Expensive Mistakes step of the post-game sequence. Therefore, these winnings cannot be lost as soon as they are won!
 
@@ -105,7 +103,7 @@ During the off-season break, players have time to rest and recuperate from their
 
 When re-drafting, each team gets a Re-Draft Budget of 1,000,000 gold pieces. This represents money doled out by the league, the team's sponsors, fan clubs and generous patrons. A team that is re-drafting then adds to this anything they have left in their Treasury from the previous season, after which their Treasury is emptied (presumably having been used to cover the cost of the many unexpected expenses that arise during the off- season break). Finally, a team that is re-drafting adds the bonuses listed below:
 
-*   20,000 gold pieces for each game the team played last season (both friendlies and league fixtures).
+- 20,000 gold pieces for each game the team played last season (both friendlies and league fixtures).
 
  - +20,000 gold pieces for each league fixture the team won last season.
 
@@ -119,13 +117,13 @@ Once the Re-Draft Budget available has been worked out, the team can be re-draft
 
 To redraft your team, use a new Team Draft list and create a brand new version of your team using the Re-Draft Budget available, as described on [page 99](./#re-drafting). The following rules apply:
 
-*   Assistant coaches and cheerleaders may be carried over from your previous Team Draft list at a cost 10,000 gold pieces each, or they may be let go.
-*   Apothecaries may be carried over from your previous Team Draft list at a cost 50,000 gold pieces each, or they may be let go.
-*   Team re-rolls may be carried over from your previous Team Draft list at the cost shown on your team roster, or they may be let go.
+- Assistant coaches and cheerleaders may be carried over from your previous Team Draft list at a cost 10,000 gold pieces each, or they may be let go.
+- Apothecaries may be carried over from your previous Team Draft list at a cost 50,000 gold pieces each, or they may be let go.
+- Team re-rolls may be carried over from your previous Team Draft list at the cost shown on your team roster, or they may be let go.
 
 As well as hiring new players from your team roster, you can re-hire players from last season's Team Draft list. Players can be re-hired by paying their Current Value as shown on last season's Team Draft list, plus an agent's fee of 20,000 gold pieces for each previous season the player has taken part in. Simply copy the player's entire profile across from your old Team Draft list, including any Niggling Injuries, any characteristic reductions and any unspent Star Player points:
 
-*   If the player has any Niggling Injuries, roll a D6 for each, applying a +1 modifier to the dice roll if the team has an apothecary:
+- If the player has any Niggling Injuries, roll a D6 for each, applying a +1 modifier to the dice roll if the team has an apothecary:
 
  - On a roll of 4+, some rest and relaxation has worked wonders. The Niggling Injury you are rolling for is removed.
 
@@ -135,7 +133,7 @@ As well as hiring new players from your team roster, you can re-hire players fro
 
 Additionally, players that temporarily retired during the last season can be re-hired as described previously by paying the cost shown for them on that season's Team Draft list. Hopefully the time off has helped them to recover from their injuries:
 
-*   After the player has been re-drafted, roll a D6 for each characteristic reduction they have suffered, applying a +1 modifier to the dice roll if the team has an apothecary:
+- After the player has been re-drafted, roll a D6 for each characteristic reduction they have suffered, applying a +1 modifier to the dice roll if the team has an apothecary:
 
  - On a roll of 4+, some time off and some intensive therapy has done the job and the characteristic is restored. However, such injuries often leave their mark and the player will gain a Niggling Injury.
 
@@ -151,12 +149,11 @@ After the excitement of the play-off season and the thrill of the finals, the ob
 
 The answer, as ever, is up to the league commissioner. Starting a new season is as easy as following these three steps:
 
-*   The league commissioner establishes who will be taking part in the next season. This is a good chance for coaches to step down from the league if they're struggling to find the time to play, and it's an ideal opportunity for new teams to join in the fun.
-*   Each coach who is taking part in the new league season submits a Team Draft list.
-*   Teams are divided into divisions (if necessary) and dates are set. The season begins anew!
+- The league commissioner establishes who will be taking part in the next season. This is a good chance for coaches to step down from the league if they're struggling to find the time to play, and it's an ideal opportunity for new teams to join in the fun.
+- Each coach who is taking part in the new league season submits a Team Draft list.
+- Teams are divided into divisions (if necessary) and dates are set. The season begins anew!
 
-Exhibition Play
----------------
+## Exhibition Play
 
 Unfortunately, not everyone is able to commit the time required to take part in a league. Coaches may not live close to their gaming friends, work and family commitments might contrive to keep us away from our hobby, meaning that often we are only able to enjoy the occasional stand-alone game when time permits. Such stand-alone games are referred to as 'exhibition games'. What's more, there is no reason to miss out on the fun of many aspects of the game that appear to be designed for league play; it is possible to create teams for exhibition games complete with extra Skills, characteristic improvements and access to weird and wonderful Inducements, including Star Players. There is a lot of fun to be had in creating a team for an exhibition game, deciding what will be included and what will be left out, choosing Skills, creating names and backstories for the players, and so on.
 
@@ -279,4 +276,3 @@ RESULT
 **_Blessed Statue of Nuffle_** Choose one player on your team that is available to play during this drive and that does not have the Loner (X+) trait. Until the end of this game, that player gains the Pro skill.
 
 var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("\_\_tabbed\_"))
-

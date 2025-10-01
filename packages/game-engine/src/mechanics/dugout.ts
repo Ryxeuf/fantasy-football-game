@@ -23,7 +23,7 @@ function createDugoutZone(
     icon,
     maxCapacity,
     players: [],
-    position
+    position,
   };
 }
 
@@ -34,7 +34,7 @@ export function createTeamDugout(teamId: TeamId): TeamDugout {
   const isTeamA = teamId === 'A';
   const baseX = isTeamA ? -200 : 26 * 28 + 20; // Position à gauche pour A, droite pour B
   const teamColor = isTeamA ? '#3B82F6' : '#EF4444'; // Bleu pour A, Rouge pour B
-  
+
   return {
     teamId,
     zones: {
@@ -77,8 +77,8 @@ export function createTeamDugout(teamId: TeamId): TeamDugout {
         '⚫',
         16,
         { x: baseX, y: 530, width: 150, height: 110 }
-      )
-    }
+      ),
+    },
   };
 }
 
@@ -88,7 +88,7 @@ export function createTeamDugout(teamId: TeamId): TeamDugout {
 export function initializeDugouts(): { teamA: TeamDugout; teamB: TeamDugout } {
   return {
     teamA: createTeamDugout('A'),
-    teamB: createTeamDugout('B')
+    teamB: createTeamDugout('B'),
   };
 }
 
@@ -103,7 +103,7 @@ export function movePlayerToDugoutZone(
 ): GameState {
   const newState = structuredClone(state) as GameState;
   const player = newState.players.find(p => p.id === playerId);
-  
+
   if (!player) return state;
 
   const dugout = newState.dugouts[teamId === 'A' ? 'teamA' : 'teamB'];
@@ -117,18 +117,18 @@ export function movePlayerToDugoutZone(
   // Ajouter le joueur à la nouvelle zone
   if (zone.players.length < zone.maxCapacity) {
     zone.players.push(playerId);
-    
+
     // Mettre à jour l'état du joueur
     const playerStateMap: Record<keyof TeamDugout['zones'], PlayerState> = {
       reserves: 'active',
       stunned: 'stunned',
       knockedOut: 'knocked_out',
       casualty: 'casualty',
-      sentOff: 'sent_off'
+      sentOff: 'sent_off',
     };
-    
+
     player.state = playerStateMap[zoneType];
-    
+
     // Si le joueur n'est pas en réserves, le retirer du terrain
     if (zoneType !== 'reserves') {
       player.pos = { x: -1, y: -1 }; // Position hors terrain
@@ -148,21 +148,17 @@ export function getPlayersInDugoutZone(
 ): Player[] {
   const dugout = state.dugouts[teamId === 'A' ? 'teamA' : 'teamB'];
   const zone = dugout.zones[zoneType];
-  
-  return state.players.filter(player => 
-    player.team === teamId && zone.players.includes(player.id)
-  );
+
+  return state.players.filter(player => player.team === teamId && zone.players.includes(player.id));
 }
 
 /**
  * Récupère tous les joueurs actifs (sur le terrain) d'une équipe
  */
 export function getActivePlayers(state: GameState, teamId: TeamId): Player[] {
-  return state.players.filter(player => 
-    player.team === teamId && 
-    player.state === 'active' && 
-    player.pos.x >= 0 && 
-    player.pos.y >= 0
+  return state.players.filter(
+    player =>
+      player.team === teamId && player.state === 'active' && player.pos.x >= 0 && player.pos.y >= 0
   );
 }
 
@@ -200,7 +196,7 @@ export function getSentOffPlayers(state: GameState, teamId: TeamId): Player[] {
 export function canBringPlayerFromReserves(state: GameState, teamId: TeamId): boolean {
   const activePlayers = getActivePlayers(state, teamId);
   const reservePlayers = getReservePlayers(state, teamId);
-  
+
   return activePlayers.length < 11 && reservePlayers.length > 0;
 }
 
@@ -214,14 +210,14 @@ export function bringPlayerFromReserves(
 ): GameState {
   const newState = structuredClone(state) as GameState;
   const player = newState.players.find(p => p.id === playerId);
-  
+
   if (!player) return state;
 
   // Vérifier que le joueur est en réserves
   const teamId = player.team;
   const dugout = newState.dugouts[teamId === 'A' ? 'teamA' : 'teamB'];
   const reservesZone = dugout.zones.reserves;
-  
+
   if (!reservesZone.players.includes(playerId)) {
     return state; // Joueur pas en réserves
   }
@@ -234,7 +230,7 @@ export function bringPlayerFromReserves(
 
   // Retirer le joueur des réserves
   reservesZone.players = reservesZone.players.filter(id => id !== playerId);
-  
+
   // Mettre le joueur sur le terrain
   player.pos = position;
   player.state = 'active';
@@ -245,18 +241,24 @@ export function bringPlayerFromReserves(
 /**
  * Gère la récupération des joueurs KO à la fin d'un drive
  */
-export function recoverKnockedOutPlayers(state: GameState, teamId: TeamId, rng: () => number): GameState {
+export function recoverKnockedOutPlayers(
+  state: GameState,
+  teamId: TeamId,
+  rng: () => number
+): GameState {
   const newState = structuredClone(state) as GameState;
   const knockedOutPlayers = getKnockedOutPlayers(newState, teamId);
   const dugout = newState.dugouts[teamId === 'A' ? 'teamA' : 'teamB'];
-  
+
   knockedOutPlayers.forEach(player => {
     // Jet de D6, 4+ pour récupérer
     const recoveryRoll = Math.floor(rng() * 6) + 1;
-    
+
     if (recoveryRoll >= 4) {
       // Récupération réussie : aller en réserves
-      dugout.zones.knockedOut.players = dugout.zones.knockedOut.players.filter(id => id !== player.id);
+      dugout.zones.knockedOut.players = dugout.zones.knockedOut.players.filter(
+        id => id !== player.id
+      );
       dugout.zones.reserves.players.push(player.id);
       player.state = 'active';
     }

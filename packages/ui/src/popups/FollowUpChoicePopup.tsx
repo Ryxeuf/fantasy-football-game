@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface FollowUpChoicePopupProps {
   attackerName: string;
@@ -9,13 +9,13 @@ interface FollowUpChoicePopupProps {
   onClose: () => void;
 }
 
-export default function FollowUpChoicePopup({ 
-  attackerName, 
-  targetName, 
+export default function FollowUpChoicePopup({
+  attackerName,
+  targetName,
   targetNewPosition,
   targetOldPosition,
-  onChoose, 
-  onClose 
+  onChoose,
+  onClose,
 }: FollowUpChoicePopupProps) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -23,10 +23,12 @@ export default function FollowUpChoicePopup({
         <div className="text-center">
           <h3 className="text-xl font-bold mb-2">Choix de suivi (Follow-up)</h3>
           <div className="text-sm text-gray-600 mb-4">
-            {attackerName} a repoussé {targetName} vers ({targetNewPosition.x}, {targetNewPosition.y})
+            {attackerName} a repoussé {targetName} vers ({targetNewPosition.x},{" "}
+            {targetNewPosition.y})
           </div>
           <div className="text-sm text-gray-700 mb-6">
-            Voulez-vous que {attackerName} suive {targetName} dans la case qu'il vient de quitter ?
+            Voulez-vous que {attackerName} suive {targetName} dans la case qu'il
+            vient de quitter ?
           </div>
 
           <div className="flex gap-4 justify-center mb-6">
@@ -37,7 +39,7 @@ export default function FollowUpChoicePopup({
               <div className="text-lg mb-1">✓</div>
               <div className="text-sm">Suivre</div>
             </button>
-            
+
             <button
               onClick={() => onChoose(false)}
               className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 flex flex-col items-center min-w-[120px]"
@@ -51,8 +53,8 @@ export default function FollowUpChoicePopup({
             Le suivi est gratuit et ne consomme pas de points de mouvement
           </div>
 
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
             className="px-6 py-2 bg-gray-200 rounded hover:bg-gray-300"
           >
             Annuler

@@ -27,7 +27,12 @@ import {
 } from '../utils/dice-notifications';
 import { performInjuryRoll } from '../mechanics/injury';
 import { createLogEntry } from '../utils/logging';
-import { checkTouchdowns, isInOpponentEndzone, awardTouchdown, bounceBall } from '../mechanics/ball';
+import {
+  checkTouchdowns,
+  isInOpponentEndzone,
+  awardTouchdown,
+  bounceBall,
+} from '../mechanics/ball';
 import {
   canBlock,
   canBlitz,

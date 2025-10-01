@@ -1,11 +1,19 @@
-import { describe, it, expect } from 'vitest';
-import { setup, applyMove, makeRNG } from '../../packages/game-engine/src/index';
-import { type GameState, type Move, type Player } from '../../packages/game-engine/src/core/types';
+import { describe, it, expect } from "vitest";
+import {
+  setup,
+  applyMove,
+  makeRNG,
+} from "../../packages/game-engine/src/index";
+import {
+  type GameState,
+  type Move,
+  type Player,
+} from "../../packages/game-engine/src/core/types";
 
-describe('Test de stress - Simulation intensive', () => {
-  it('devrait simuler 20 tours avec des actions aléatoires', () => {
+describe("Test de stress - Simulation intensive", () => {
+  it("devrait simuler 20 tours avec des actions aléatoires", () => {
     const state = setup();
-    const rng = makeRNG('stress-test-seed');
+    const rng = makeRNG("stress-test-seed");
 
     let gameState = { ...state };
     let actionCount = 0;
@@ -15,7 +23,7 @@ describe('Test de stress - Simulation intensive', () => {
 
     // Fonction pour obtenir des actions légales
     const getRandomAction = (playerId: string): Move | null => {
-      const player = gameState.players.find(p => p.id === playerId);
+      const player = gameState.players.find((p) => p.id === playerId);
       if (!player) return null;
 
       const actions: Move[] = [];
@@ -32,7 +40,7 @@ describe('Test de stress - Simulation intensive', () => {
           y++
         ) {
           if (x !== player.pos.x || y !== player.pos.y) {
-            actions.push({ type: 'MOVE', playerId, to: { x, y } });
+            actions.push({ type: "MOVE", playerId, to: { x, y } });
           }
         }
       }
@@ -42,14 +50,16 @@ describe('Test de stress - Simulation intensive', () => {
         (p: Player) =>
           p.team !== player.team &&
           Math.abs(p.pos.x - player.pos.x) <= 1 &&
-          Math.abs(p.pos.y - player.pos.y) <= 1
+          Math.abs(p.pos.y - player.pos.y) <= 1,
       );
 
       for (const target of adjacentPlayers) {
-        actions.push({ type: 'BLOCK', playerId, targetId: target.id });
+        actions.push({ type: "BLOCK", playerId, targetId: target.id });
       }
 
-      return actions.length > 0 ? actions[Math.floor(Math.random() * actions.length)] : null;
+      return actions.length > 0
+        ? actions[Math.floor(Math.random() * actions.length)]
+        : null;
     };
 
     // Fonction pour exécuter une action et gérer toutes les popups
@@ -57,40 +67,42 @@ describe('Test de stress - Simulation intensive', () => {
       let currentState = applyMove(gameState, move, rng);
       actionCount++;
 
-      if (move.type === 'MOVE') moveCount++;
-      if (move.type === 'BLOCK') blockCount++;
+      if (move.type === "MOVE") moveCount++;
+      if (move.type === "BLOCK") blockCount++;
 
       // Gérer les popups de blocage
       while (currentState.pendingBlock) {
         const blockOptions = currentState.pendingBlock.options;
-        const chosenResult = blockOptions[Math.floor(Math.random() * blockOptions.length)];
+        const chosenResult =
+          blockOptions[Math.floor(Math.random() * blockOptions.length)];
 
         currentState = applyMove(
           currentState,
           {
-            type: 'BLOCK_CHOOSE',
+            type: "BLOCK_CHOOSE",
             playerId: currentState.pendingBlock.attackerId,
             targetId: currentState.pendingBlock.targetId,
             result: chosenResult,
           },
-          rng
+          rng,
         );
       }
 
       // Gérer les popups de choix de direction de poussée
       while (currentState.pendingPushChoice) {
         const directions = currentState.pendingPushChoice.availableDirections;
-        const chosenDirection = directions[Math.floor(Math.random() * directions.length)];
+        const chosenDirection =
+          directions[Math.floor(Math.random() * directions.length)];
 
         currentState = applyMove(
           currentState,
           {
-            type: 'PUSH_CHOOSE',
+            type: "PUSH_CHOOSE",
             playerId: currentState.pendingPushChoice.attackerId,
             targetId: currentState.pendingPushChoice.targetId,
             direction: chosenDirection,
           },
-          rng
+          rng,
         );
       }
 
@@ -103,12 +115,12 @@ describe('Test de stress - Simulation intensive', () => {
         currentState = applyMove(
           currentState,
           {
-            type: 'FOLLOW_UP_CHOOSE',
+            type: "FOLLOW_UP_CHOOSE",
             playerId: currentState.pendingFollowUpChoice.attackerId,
             targetId: currentState.pendingFollowUpChoice.targetId,
             followUp,
           },
-          rng
+          rng,
         );
       }
 
@@ -122,7 +134,7 @@ describe('Test de stress - Simulation intensive', () => {
 
       // Équipe A joue
       const teamAPlayers = gameState.players.filter(
-        (p: Player) => p.team === 'A' && !gameState.isTurnover
+        (p: Player) => p.team === "A" && !gameState.isTurnover,
       );
       for (const player of teamAPlayers) {
         if (gameState.isTurnover || actionsThisTurn >= maxActionsPerTurn) break;
@@ -136,12 +148,12 @@ describe('Test de stress - Simulation intensive', () => {
 
       // Fin du tour de l'équipe A
       if (!gameState.isTurnover) {
-        gameState = applyMove(gameState, { type: 'END_TURN' }, rng);
+        gameState = applyMove(gameState, { type: "END_TURN" }, rng);
       }
 
       // Équipe B joue
       const teamBPlayers = gameState.players.filter(
-        (p: Player) => p.team === 'B' && !gameState.isTurnover
+        (p: Player) => p.team === "B" && !gameState.isTurnover,
       );
       actionsThisTurn = 0;
 
@@ -157,7 +169,7 @@ describe('Test de stress - Simulation intensive', () => {
 
       // Fin du tour de l'équipe B
       if (!gameState.isTurnover) {
-        gameState = applyMove(gameState, { type: 'END_TURN' }, rng);
+        gameState = applyMove(gameState, { type: "END_TURN" }, rng);
       }
 
       // Vérifier que l'état reste cohérent
@@ -177,7 +189,9 @@ describe('Test de stress - Simulation intensive', () => {
     console.log(`Follow-ups: ${followUpCount}`);
     console.log(`Tour final: ${gameState.turn}`);
     console.log(`Mi-temps: ${gameState.half}`);
-    console.log(`Score: A=${gameState.score.teamA}, B=${gameState.score.teamB}`);
+    console.log(
+      `Score: A=${gameState.score.teamA}, B=${gameState.score.teamB}`,
+    );
 
     // Vérifications finales
     expect(actionCount).toBeGreaterThan(0);
@@ -192,18 +206,18 @@ describe('Test de stress - Simulation intensive', () => {
     }
   });
 
-  it('devrait tester la robustesse avec des actions invalides', () => {
+  it("devrait tester la robustesse avec des actions invalides", () => {
     const state = setup();
-    const rng = makeRNG('robustness-test-seed');
+    const rng = makeRNG("robustness-test-seed");
 
     const gameState = { ...state };
 
     // Test avec des mouvements vers des positions invalides
     const invalidMoves: Move[] = [
-      { type: 'MOVE', playerId: 'A1', to: { x: -1, y: 0 } }, // Position négative
-      { type: 'MOVE', playerId: 'A1', to: { x: 1000, y: 0 } }, // Position hors limites
-      { type: 'MOVE', playerId: 'INVALID_ID', to: { x: 5, y: 5 } }, // Joueur inexistant
-      { type: 'BLOCK', playerId: 'A1', targetId: 'INVALID_ID' }, // Cible inexistante
+      { type: "MOVE", playerId: "A1", to: { x: -1, y: 0 } }, // Position négative
+      { type: "MOVE", playerId: "A1", to: { x: 1000, y: 0 } }, // Position hors limites
+      { type: "MOVE", playerId: "INVALID_ID", to: { x: 5, y: 5 } }, // Joueur inexistant
+      { type: "BLOCK", playerId: "A1", targetId: "INVALID_ID" }, // Cible inexistante
     ];
 
     for (const move of invalidMoves) {
@@ -216,9 +230,24 @@ describe('Test de stress - Simulation intensive', () => {
 
     // Test avec des popups invalides
     const invalidPopupMoves: Move[] = [
-      { type: 'BLOCK_CHOOSE', playerId: 'A1', targetId: 'B1', result: 'INVALID' as any },
-      { type: 'PUSH_CHOOSE', playerId: 'A1', targetId: 'B1', direction: { x: 0, y: 0 } },
-      { type: 'FOLLOW_UP_CHOOSE', playerId: 'A1', targetId: 'B1', followUp: true },
+      {
+        type: "BLOCK_CHOOSE",
+        playerId: "A1",
+        targetId: "B1",
+        result: "INVALID" as any,
+      },
+      {
+        type: "PUSH_CHOOSE",
+        playerId: "A1",
+        targetId: "B1",
+        direction: { x: 0, y: 0 },
+      },
+      {
+        type: "FOLLOW_UP_CHOOSE",
+        playerId: "A1",
+        targetId: "B1",
+        followUp: true,
+      },
     ];
 
     for (const move of invalidPopupMoves) {
@@ -230,9 +259,9 @@ describe('Test de stress - Simulation intensive', () => {
     }
   });
 
-  it('devrait tester la performance avec de nombreuses actions', () => {
+  it("devrait tester la performance avec de nombreuses actions", () => {
     const state = setup();
-    const rng = makeRNG('performance-test-seed');
+    const rng = makeRNG("performance-test-seed");
 
     const startTime = Date.now();
     let gameState = { ...state };
@@ -242,7 +271,7 @@ describe('Test de stress - Simulation intensive', () => {
     for (let i = 0; i < 100; i++) {
       const player = gameState.players[i % gameState.players.length];
       const move: Move = {
-        type: 'MOVE',
+        type: "MOVE",
         playerId: player.id,
         to: {
           x: Math.floor(Math.random() * gameState.width),
@@ -260,7 +289,9 @@ describe('Test de stress - Simulation intensive', () => {
     console.log(`\n=== TEST DE PERFORMANCE ===`);
     console.log(`Actions exécutées: ${actionCount}`);
     console.log(`Durée: ${duration}ms`);
-    console.log(`Actions par seconde: ${((actionCount / duration) * 1000).toFixed(2)}`);
+    console.log(
+      `Actions par seconde: ${((actionCount / duration) * 1000).toFixed(2)}`,
+    );
 
     // Vérifier que la performance est acceptable (moins de 1 seconde pour 100 actions)
     expect(duration).toBeLessThan(1000);

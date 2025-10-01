@@ -12,7 +12,11 @@ interface PlayerDetailsProps {
   variant?: "floating" | "sidebar";
 }
 
-export default function PlayerDetails({ player, onClose, variant = "floating" }: PlayerDetailsProps) {
+export default function PlayerDetails({
+  player,
+  onClose,
+  variant = "floating",
+}: PlayerDetailsProps) {
   if (!player) return null;
 
   return (
@@ -139,7 +143,7 @@ export default function PlayerDetails({ player, onClose, variant = "floating" }:
                 {player.stunned ? "Sonné" : "Debout"}
               </span>
             </div>
-            
+
             {/* Ballon */}
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Ballon:</span>
@@ -153,7 +157,7 @@ export default function PlayerDetails({ player, onClose, variant = "floating" }:
                 {player.hasBall ? "Possède le ballon" : "Pas de ballon"}
               </span>
             </div>
-            
+
             {/* Points de mouvement */}
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">PM restants:</span>

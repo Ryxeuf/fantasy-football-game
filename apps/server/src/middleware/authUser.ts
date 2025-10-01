@@ -7,7 +7,11 @@ export interface AuthenticatedRequest extends Request {
   user?: { id: string; role?: string };
 }
 
-export function authUser(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+export function authUser(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+) {
   const header = req.headers.authorization || "";
   const [, token] = header.split(" ");
   if (!token) return res.status(401).json({ error: "Non authentifié" });
@@ -19,5 +23,3 @@ export function authUser(req: AuthenticatedRequest, res: Response, next: NextFun
     return res.status(401).json({ error: "Token invalide" });
   }
 }
-
-

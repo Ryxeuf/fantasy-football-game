@@ -2,12 +2,23 @@
 import { useEffect, useState } from "react";
 import { API_BASE } from "../../auth-client";
 
-type User = { id: string; email: string; name?: string | null; role: string; createdAt: string };
+type User = {
+  id: string;
+  email: string;
+  name?: string | null;
+  role: string;
+  createdAt: string;
+};
 
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");
-  const res = await fetch(`${API_BASE}${path}`, { headers: { Authorization: token ? `Bearer ${token}` : "" } });
-  if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error || `Erreur ${res.status}`);
+  const res = await fetch(`${API_BASE}${path}`, {
+    headers: { Authorization: token ? `Bearer ${token}` : "" },
+  });
+  if (!res.ok)
+    throw new Error(
+      (await res.json().catch(() => ({})))?.error || `Erreur ${res.status}`,
+    );
   return res.json();
 }
 
@@ -52,7 +63,9 @@ export default function AdminUsersPage() {
                 <td className="p-2 font-mono">{u.email}</td>
                 <td className="p-2">{u.name || "—"}</td>
                 <td className="p-2">{u.role}</td>
-                <td className="p-2">{new Date(u.createdAt).toLocaleString()}</td>
+                <td className="p-2">
+                  {new Date(u.createdAt).toLocaleString()}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -61,5 +74,3 @@ export default function AdminUsersPage() {
     </div>
   );
 }
-
-

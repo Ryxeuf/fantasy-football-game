@@ -23,10 +23,18 @@ router.post("/register", async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
       data: { email, passwordHash, name },
-      select: { id: true, email: true, name: true, role: true, createdAt: true },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        createdAt: true,
+      },
     });
 
-    const token = jwt.sign({ sub: user.id, role: user.role }, JWT_SECRET, { expiresIn: "7d" });
+    const token = jwt.sign({ sub: user.id, role: user.role }, JWT_SECRET, {
+      expiresIn: "7d",
+    });
     return res.status(201).json({ user, token });
   } catch (err) {
     console.error(err);
@@ -51,8 +59,16 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ error: "Identifiants invalides" });
     }
 
-    const publicUser = { id: user.id, email: user.email, name: user.name, role: user.role, createdAt: user.createdAt };
-    const token = jwt.sign({ sub: user.id, role: user.role }, JWT_SECRET, { expiresIn: "7d" });
+    const publicUser = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      createdAt: user.createdAt,
+    };
+    const token = jwt.sign({ sub: user.id, role: user.role }, JWT_SECRET, {
+      expiresIn: "7d",
+    });
     return res.json({ user: publicUser, token });
   } catch (err) {
     console.error(err);
@@ -65,7 +81,16 @@ export default router;
 // Profil courant
 router.get("/me", authUser, async (req: AuthenticatedRequest, res) => {
   try {
-    const user = await prisma.user.findUnique({ where: { id: req.user!.id }, select: { id: true, email: true, name: true, role: true, createdAt: true } });
+    const user = await prisma.user.findUnique({
+      where: { id: req.user!.id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        createdAt: true,
+      },
+    });
     if (!user) return res.status(404).json({ error: "Introuvable" });
     res.json({ user });
   } catch (e) {
@@ -73,5 +98,3 @@ router.get("/me", authUser, async (req: AuthenticatedRequest, res) => {
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
-
-

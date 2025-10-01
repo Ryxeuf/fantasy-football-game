@@ -5,6 +5,7 @@ Ce document décrit la suite de tests pour le moteur de jeu BlooBowl.
 ## 📋 Couverture des tests
 
 ### Mouvements de base
+
 - ✅ **getLegalMoves** : Génération des mouvements légaux
   - Mouvements pour l'équipe courante uniquement
   - Exclusion des joueurs étourdis et sans PM
@@ -23,6 +24,7 @@ Ce document décrit la suite de tests pour le moteur de jeu BlooBowl.
   - Gestion des turnovers
 
 ### Jets de désquive
+
 - ✅ **requiresDodgeRoll** : Détection des jets nécessaires
   - Pas de jet si pas d'adversaires adjacents
   - Jet requis lors de sortie de case marquée
@@ -48,12 +50,14 @@ Ce document décrit la suite de tests pour le moteur de jeu BlooBowl.
   - Tests complets pour tous les scénarios
 
 ### Intégration
+
 - ✅ **Mouvements avec jets de désquive** : Scénarios complexes
   - Jets automatiques lors de mouvements marqués
   - Gestion des mouvements DODGE explicites
   - Turnover en cas d'échec
 
 ### Conditions limites
+
 - ✅ **Gestion des erreurs** : Robustesse
   - Mouvements hors limites
   - Joueurs inexistants

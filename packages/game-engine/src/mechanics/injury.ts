@@ -15,16 +15,12 @@ import { movePlayerToDugoutZone } from './dugout';
  * @param rng - Générateur de nombres aléatoires
  * @returns Nouvel état du jeu après le jet de blessure
  */
-export function performInjuryRoll(
-  state: GameState, 
-  player: Player, 
-  rng: RNG
-): GameState {
+export function performInjuryRoll(state: GameState, player: Player, rng: RNG): GameState {
   const newState = structuredClone(state) as GameState;
-  
+
   // Jet de 2D6 pour la blessure
   const injuryRoll = Math.floor(rng() * 6) + 1 + Math.floor(rng() * 6) + 1;
-  
+
   // Log du jet de blessure
   const injuryLog = createLogEntry(
     'dice',
@@ -53,16 +49,11 @@ export function performInjuryRoll(
  */
 function handleStunned(state: GameState, player: Player): GameState {
   // Le joueur reste sur le terrain mais devient sonné
-  state.players = state.players.map(p => 
+  state.players = state.players.map(p =>
     p.id === player.id ? { ...p, stunned: true, state: 'stunned' } : p
   );
 
-  const stunnedLog = createLogEntry(
-    'action',
-    `${player.name} est sonné`,
-    player.id,
-    player.team
-  );
+  const stunnedLog = createLogEntry('action', `${player.name} est sonné`, player.id, player.team);
   state.gameLog = [...state.gameLog, stunnedLog];
 
   return state;
@@ -74,7 +65,7 @@ function handleStunned(state: GameState, player: Player): GameState {
 function handleKnockedOut(state: GameState, player: Player): GameState {
   // Le joueur va en zone KO
   const newState = movePlayerToDugoutZone(state, player.id, 'knockedOut', player.team);
-  
+
   const koLog = createLogEntry(
     'action',
     `${player.name} est KO et retiré du terrain`,
@@ -92,10 +83,10 @@ function handleKnockedOut(state: GameState, player: Player): GameState {
 function handleCasualty(state: GameState, player: Player, rng: RNG): GameState {
   // Le joueur va en zone blessés
   let newState = movePlayerToDugoutZone(state, player.id, 'casualty', player.team);
-  
+
   // Jet de casualty (D16)
   const casualtyRoll = Math.floor(rng() * 16) + 1;
-  
+
   const casualtyLog = createLogEntry(
     'dice',
     `Jet de casualty: ${casualtyRoll}`,
@@ -144,12 +135,7 @@ function handleCasualty(state: GameState, player: Player, rng: RNG): GameState {
     newState.gameLog = [...newState.gameLog, lastingInjuryLog];
   } else {
     // DEAD - mort
-    const deadLog = createLogEntry(
-      'action',
-      `${player.name} est MORT !`,
-      player.id,
-      player.team
-    );
+    const deadLog = createLogEntry('action', `${player.name} est MORT !`, player.id, player.team);
     newState.gameLog = [...newState.gameLog, deadLog];
   }
 
@@ -161,7 +147,7 @@ function handleCasualty(state: GameState, player: Player, rng: RNG): GameState {
  */
 export function handleSentOff(state: GameState, player: Player): GameState {
   const newState = movePlayerToDugoutZone(state, player.id, 'sentOff', player.team);
-  
+
   const sentOffLog = createLogEntry(
     'action',
     `${player.name} est exclu par l'arbitre`,

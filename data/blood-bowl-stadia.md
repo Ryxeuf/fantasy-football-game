@@ -1,12 +1,10 @@
-Blood Bowl Stadia
-=================
+# Blood Bowl Stadia
 
 Blood Bowl pitches can be found the world over, from the sweltering rainforests of Lustria, where archaic stadia occupy ancient temple cities, to the ice floes of Norsca, where rugged gridirons are carved from the glaciers and permafrost, and everything in between and beyond. They range from small and humble affairs, temporarily marked-out pitches surrounded by simple bleachers set up for a low budget tournament, to truly grand stadia such as the Emperor Luitpold I Memorial stadium in the heart of Altdorf, home of the Blood Bowl itself, the grandest tournament held in the finest arena in all the known world.
 
 This section explains the layout of a Blood Bowl pitch, the sideline area, and details the accessories needed to play the game.
 
-Nuffle's Sacred Turf
---------------------
+## Nuffle's Sacred Turf
 
 #### THE BLOOD BOWL PITCH
 
@@ -36,8 +34,7 @@ Each team has its own dugout, a safe haven at pitch side where reserves can warm
 5.  Team re-roll trackers, used to keep track of how many re-rolls a team still has to call upon in each half. Re-rolls are covered in more detail on [page 24](../rules_and_regulations/#re-rolls).
 6.  The Score tracker, where the coach keeps a record of each touchdown scored.
 
-Sporting Paraphernalia
-----------------------
+## Sporting Paraphernalia
 
 Blood Bowl teams rarely travel light. Be it the kit and armour of the players, the pom-poms and ribbons of the cheerleading squads or the bandages, saws and splints of the apothecaries, there is no end of equipment to be hauled from stadium to stadium. On the tabletop, games of Blood Bowl require somewhat less in the way of equipment, but there are certain accessories that are vital to the game.
 

@@ -8,11 +8,20 @@ interface GameScoreboardProps {
   rightTeamName?: string;
   leftCoachName?: string;
   rightCoachName?: string;
-  localSide?: 'A' | 'B' | null;
+  localSide?: "A" | "B" | null;
   userName?: string;
 }
 
-export default function GameScoreboard({ state, onEndTurn, leftTeamName, rightTeamName, leftCoachName, rightCoachName, localSide, userName }: GameScoreboardProps) {
+export default function GameScoreboard({
+  state,
+  onEndTurn,
+  leftTeamName,
+  rightTeamName,
+  leftCoachName,
+  rightCoachName,
+  localSide,
+  userName,
+}: GameScoreboardProps) {
   const getTeamColor = (team: "A" | "B") => {
     return team === "A" ? "bg-red-600" : "bg-blue-600";
   };
@@ -40,7 +49,7 @@ export default function GameScoreboard({ state, onEndTurn, leftTeamName, rightTe
   // Déterminer la dernière entrée de score
   const lastScore = useMemo(() => {
     const entries = [...state.gameLog].reverse();
-    return entries.find(e => e.type === 'score');
+    return entries.find((e) => e.type === "score");
   }, [state.gameLog]);
 
   // Afficher l'animation pendant 2.5s après un score
@@ -70,9 +79,7 @@ export default function GameScoreboard({ state, onEndTurn, leftTeamName, rightTe
             <div className="text-xs uppercase tracking-wider text-gray-300 mb-1">
               Mi-temps
             </div>
-            <div className="text-2xl font-bold">
-              {state.half}
-            </div>
+            <div className="text-2xl font-bold">{state.half}</div>
           </div>
 
           {/* Tour */}
@@ -80,9 +87,7 @@ export default function GameScoreboard({ state, onEndTurn, leftTeamName, rightTe
             <div className="text-xs uppercase tracking-wider text-gray-300 mb-1">
               Tour
             </div>
-            <div className="text-2xl font-bold">
-              {state.turn}
-            </div>
+            <div className="text-2xl font-bold">{state.turn}</div>
           </div>
 
           {/* Équipe active */}
@@ -90,7 +95,9 @@ export default function GameScoreboard({ state, onEndTurn, leftTeamName, rightTe
             <div className="text-xs uppercase tracking-wider text-gray-300 mb-1">
               Équipe active
             </div>
-            <div className={`text-lg font-bold ${getTeamTextColor(state.currentPlayer)}`}>
+            <div
+              className={`text-lg font-bold ${getTeamTextColor(state.currentPlayer)}`}
+            >
               {getCurrentTeamName()}
             </div>
           </div>
@@ -102,29 +109,37 @@ export default function GameScoreboard({ state, onEndTurn, leftTeamName, rightTe
           <div className="text-center">
             <div className="text-sm text-gray-300 mb-1">
               <span className={getTeamBadgeClasses("A")}>
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: '#dc2626' }}></span>
+                <span
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: "#dc2626" }}
+                ></span>
                 {leftTeamName || state.teamNames.teamA}
               </span>
             </div>
-            <div className={`text-4xl font-black ${getTeamTextColor("A")} ${showScoreAnim ? 'animate-ping' : ''}`}>
+            <div
+              className={`text-4xl font-black ${getTeamTextColor("A")} ${showScoreAnim ? "animate-ping" : ""}`}
+            >
               {state.score.teamA}
             </div>
           </div>
 
           {/* Séparateur */}
-          <div className="text-2xl font-bold text-gray-400">
-            -
-          </div>
+          <div className="text-2xl font-bold text-gray-400">-</div>
 
           {/* Équipe B */}
           <div className="text-center">
             <div className="text-sm text-gray-300 mb-1">
               <span className={getTeamBadgeClasses("B")}>
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: '#2563eb' }}></span>
+                <span
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: "#2563eb" }}
+                ></span>
                 {rightTeamName || state.teamNames.teamB}
               </span>
             </div>
-            <div className={`text-4xl font-black ${getTeamTextColor("B")} ${showScoreAnim ? 'animate-ping' : ''}`}>
+            <div
+              className={`text-4xl font-black ${getTeamTextColor("B")} ${showScoreAnim ? "animate-ping" : ""}`}
+            >
               {state.score.teamB}
             </div>
           </div>
@@ -180,15 +195,15 @@ export default function GameScoreboard({ state, onEndTurn, leftTeamName, rightTe
 
           {/* Informations de jeu */}
           <div className="text-gray-400">
-            {userName || 'Blood Bowl Fantasy Football'}
+            {userName || "Blood Bowl Fantasy Football"}
           </div>
         </div>
 
         {(leftCoachName || rightCoachName) && (
           <div className="mt-2 text-center text-gray-300">
-            <span>Coach (local): {leftCoachName || '—'}</span>
+            <span>Coach (local): {leftCoachName || "—"}</span>
             <span className="mx-3">•</span>
-            <span>Coach (visiteur): {rightCoachName || '—'}</span>
+            <span>Coach (visiteur): {rightCoachName || "—"}</span>
           </div>
         )}
       </div>

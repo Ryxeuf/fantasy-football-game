@@ -12,15 +12,15 @@
  * @returns Une nouvelle entrée de log
  */
 export function createLogEntry(type, message, playerId, team, details) {
-    return {
-        id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        timestamp: Date.now(),
-        type,
-        message,
-        playerId,
-        team,
-        details,
-    };
+  return {
+    id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    timestamp: Date.now(),
+    type,
+    message,
+    playerId,
+    team,
+    details,
+  };
 }
 /**
  * Ajoute une entrée de log à l'état du jeu
@@ -29,8 +29,8 @@ export function createLogEntry(type, message, playerId, team, details) {
  * @returns Nouvel état du jeu avec l'entrée de log ajoutée
  */
 export function addLogEntry(state, entry) {
-    return {
-        ...state,
-        gameLog: [...state.gameLog, entry],
-    };
+  return {
+    ...state,
+    gameLog: [...state.gameLog, entry],
+  };
 }

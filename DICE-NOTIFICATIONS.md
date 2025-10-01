@@ -27,25 +27,30 @@ Le système de notifications de dés affiche des toasts visuels pour tous les je
 ### Composants Principaux
 
 #### `ToastProvider`
+
 - Fournit le contexte de notification
 - Gère l'état des toasts
 - Affiche le conteneur de toasts
 
 #### `DiceNotification`
+
 - Composant pour les notifications de dés standard
 - Supporte tous les types de jets (esquive, ramassage, armure, etc.)
 
 #### `BlockDiceNotification`
+
 - Composant spécialisé pour les dés de blocage
 - Affiche les icônes spécifiques aux résultats de blocage
 
 #### `useDiceNotifications`
+
 - Hook personnalisé pour déclencher les notifications
 - Méthodes : `showDiceResult`, `showBlockDiceResult`, `showCustomDiceResult`
 
 ### Intégration Game Engine
 
 #### `dice-notifications.ts`
+
 - Fonctions wrapper avec notifications intégrées
 - Callbacks configurables pour l'intégration
 - Compatible avec le système de dés existant
@@ -55,24 +60,20 @@ Le système de notifications de dés affiche des toasts visuels pour tous les je
 ### Installation des Composants
 
 ```tsx
-import { ToastProvider, useDiceNotifications } from '@bb/ui';
+import { ToastProvider, useDiceNotifications } from "@bb/ui";
 
 function App() {
-  return (
-    <ToastProvider>
-      {/* Votre application */}
-    </ToastProvider>
-  );
+  return <ToastProvider>{/* Votre application */}</ToastProvider>;
 }
 ```
 
 ### Configuration des Callbacks
 
 ```tsx
-import { 
-  setDiceNotificationCallback, 
-  setBlockDiceNotificationCallback 
-} from '@bb/game-engine';
+import {
+  setDiceNotificationCallback,
+  setBlockDiceNotificationCallback,
+} from "@bb/game-engine";
 
 // Configuration des callbacks
 setDiceNotificationCallback((playerName, diceResult) => {
@@ -87,44 +88,40 @@ setBlockDiceNotificationCallback((playerName, blockResult) => {
 ### Utilisation des Hooks
 
 ```tsx
-import { useDiceNotifications } from '@bb/ui';
+import { useDiceNotifications } from "@bb/ui";
 
 function GameComponent() {
   const { showDiceResult, showBlockDiceResult } = useDiceNotifications();
 
   const handleDiceRoll = () => {
     const diceResult = {
-      type: 'dodge',
+      type: "dodge",
       diceRoll: 4,
       targetNumber: 3,
       success: true,
-      modifiers: 0
+      modifiers: 0,
     };
-    
-    showDiceResult('Joueur A', diceResult);
+
+    showDiceResult("Joueur A", diceResult);
   };
 
-  return (
-    <button onClick={handleDiceRoll}>
-      Lancer le dé
-    </button>
-  );
+  return <button onClick={handleDiceRoll}>Lancer le dé</button>;
 }
 ```
 
 ### Utilisation des Fonctions Wrapper
 
 ```tsx
-import { 
+import {
   rollD6WithNotification,
   performDodgeRollWithNotification,
-  rollBlockDiceWithNotification 
-} from '@bb/game-engine';
+  rollBlockDiceWithNotification,
+} from "@bb/game-engine";
 
 // Utilisation directe avec notifications
-const result = rollD6WithNotification(rng, 'Joueur A');
+const result = rollD6WithNotification(rng, "Joueur A");
 const dodgeResult = performDodgeRollWithNotification(player, rng, 0);
-const blockResult = rollBlockDiceWithNotification(rng, 'Joueur A');
+const blockResult = rollBlockDiceWithNotification(rng, "Joueur A");
 ```
 
 ## 🎨 Personnalisation
@@ -135,10 +132,10 @@ Les toasts utilisent Tailwind CSS et peuvent être personnalisés via les classe
 
 ```tsx
 // Couleurs de bordure
-border-green-400  // Success
-border-red-400    // Error
-border-yellow-400 // Warning
-border-blue-400   // Info
+border - green - 400; // Success
+border - red - 400; // Error
+border - yellow - 400; // Warning
+border - blue - 400; // Info
 
 // Icônes personnalisées
 const customIcon = <div>🎲</div>;
@@ -148,10 +145,10 @@ const customIcon = <div>🎲</div>;
 
 ```tsx
 const toast = {
-  type: 'success',
-  title: 'Jet réussi',
-  message: 'Résultat: 5',
-  duration: 3000 // 3 secondes
+  type: "success",
+  title: "Jet réussi",
+  message: "Résultat: 5",
+  duration: 3000, // 3 secondes
 };
 ```
 
@@ -185,7 +182,9 @@ Visitez `/dice-notifications` pour tester le système en action.
 ```tsx
 // Callback pour logs personnalisés
 setDiceNotificationCallback((playerName, diceResult) => {
-  console.log(`${playerName} a lancé un ${diceResult.type}: ${diceResult.diceRoll}`);
+  console.log(
+    `${playerName} a lancé un ${diceResult.type}: ${diceResult.diceRoll}`,
+  );
   showDiceResult(playerName, diceResult);
 });
 ```
@@ -197,7 +196,7 @@ setDiceNotificationCallback((playerName, diceResult) => {
 setDiceNotificationCallback((playerName, diceResult) => {
   // Log dans la base de données
   logDiceRoll(playerName, diceResult);
-  
+
   // Afficher la notification
   showDiceResult(playerName, diceResult);
 });

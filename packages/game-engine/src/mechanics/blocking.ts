@@ -3,7 +3,15 @@
  * Gère les blocages, les assists, les dés de blocage et la résolution des résultats
  */
 
-import { GameState, Position, TeamId, BlockResult, BlockDiceResult, RNG, Player } from '../core/types';
+import {
+  GameState,
+  Position,
+  TeamId,
+  BlockResult,
+  BlockDiceResult,
+  RNG,
+  Player,
+} from '../core/types';
 import { isAdjacent, inBounds, isPositionOccupied } from './movement';
 import { performArmorRoll } from '../utils/dice';
 import { performArmorRollWithNotification } from '../utils/dice-notifications';
@@ -531,7 +539,7 @@ function handleBothDown(state: GameState, attacker: Player, target: Player, rng:
   if (!attackerArmorResult.success) {
     state = performInjuryRoll(state, attacker, rng);
   }
-  
+
   // Si l'armure de la cible est percée, faire un jet de blessure
   if (!targetArmorResult.success) {
     state = performInjuryRoll(state, target, rng);

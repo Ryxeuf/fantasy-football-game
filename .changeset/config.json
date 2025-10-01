@@ -1,6 +1,9 @@
 {
   "$schema": "https://unpkg.com/@changesets/config/schema.json",
-  "changelog": ["@changesets/changelog-github", { "repo": "REPLACE_ME_ORG/REPLACE_ME_REPO" }],
+  "changelog": [
+    "@changesets/changelog-github",
+    { "repo": "REPLACE_ME_ORG/REPLACE_ME_REPO" }
+  ],
   "commit": false,
   "fixed": [],
   "linked": [],

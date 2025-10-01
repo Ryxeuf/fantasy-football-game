@@ -2,10 +2,10 @@
  * Composant principal du terrain avec les zones de dugout
  */
 
-import React from 'react';
-import { GameState } from '@bb/game-engine';
-import PixiBoard from '../board/PixiBoard';
-import TeamDugoutComponent from './TeamDugout';
+import React from "react";
+import { GameState } from "@bb/game-engine";
+import PixiBoard from "../board/PixiBoard";
+import TeamDugoutComponent from "./TeamDugout";
 
 interface GameBoardWithDugoutsProps {
   state: GameState;
@@ -38,7 +38,6 @@ export default function GameBoardWithDugouts({
   onDragOver,
   onDrop,
 }: GameBoardWithDugoutsProps) {
-  
   return (
     <div className="flex items-start gap-4 p-4 bg-gray-100 min-h-screen">
       {/* Dugout équipe A */}
@@ -55,7 +54,12 @@ export default function GameBoardWithDugouts({
       </div>
 
       {/* Terrain */}
-      <div className="flex-shrink-0" ref={boardContainerRef} onDragOver={onDragOver} onDrop={onDrop}>
+      <div
+        className="flex-shrink-0"
+        ref={boardContainerRef}
+        onDragOver={onDragOver}
+        onDrop={onDrop}
+      >
         <PixiBoard
           state={state}
           onCellClick={onCellClick}

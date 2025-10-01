@@ -54,7 +54,7 @@ function notifyBlockDiceResult(playerName: string, blockResult: BlockResult) {
  */
 export function rollD6WithNotification(rng: RNG, playerName: string): number {
   const result = Math.floor(rng() * 6) + 1;
-  
+
   // Créer un DiceResult simple pour la notification
   const diceResult: DiceResult = {
     type: 'block', // Utiliser 'block' comme type générique pour les dés simples
@@ -64,7 +64,7 @@ export function rollD6WithNotification(rng: RNG, playerName: string): number {
     success: false,
     modifiers: 0,
   };
-  
+
   notifyDiceResult(playerName, diceResult);
   return result;
 }
@@ -76,7 +76,7 @@ export function roll2D6WithNotification(rng: RNG, playerName: string): number {
   const die1 = Math.floor(rng() * 6) + 1;
   const die2 = Math.floor(rng() * 6) + 1;
   const result = die1 + die2;
-  
+
   // Créer un DiceResult pour la notification
   const diceResult: DiceResult = {
     type: 'block', // Utiliser 'block' comme type générique pour les dés simples
@@ -86,7 +86,7 @@ export function roll2D6WithNotification(rng: RNG, playerName: string): number {
     success: false,
     modifiers: 0,
   };
-  
+
   notifyDiceResult(playerName, diceResult);
   return result;
 }
@@ -95,8 +95,8 @@ export function roll2D6WithNotification(rng: RNG, playerName: string): number {
  * Effectue un jet d'esquive avec notification
  */
 export function performDodgeRollWithNotification(
-  player: Player, 
-  rng: RNG, 
+  player: Player,
+  rng: RNG,
   modifiers: number = 0
 ): DiceResult {
   const diceRoll = Math.floor(rng() * 6) + 1;
@@ -120,8 +120,8 @@ export function performDodgeRollWithNotification(
  * Effectue un jet de ramassage avec notification
  */
 export function performPickupRollWithNotification(
-  player: Player, 
-  rng: RNG, 
+  player: Player,
+  rng: RNG,
   modifiers: number = 0
 ): DiceResult {
   const diceRoll = Math.floor(rng() * 6) + 1;
@@ -145,8 +145,8 @@ export function performPickupRollWithNotification(
  * Effectue un jet d'armure avec notification
  */
 export function performArmorRollWithNotification(
-  player: Player, 
-  rng: RNG, 
+  player: Player,
+  rng: RNG,
   modifiers: number = 0
 ): DiceResult {
   const diceRoll = Math.floor(rng() * 6) + 1;
@@ -204,16 +204,16 @@ export function rollBlockDiceWithNotification(rng: RNG, playerName: string): Blo
  * Lance plusieurs dés de blocage avec notification
  */
 export function rollBlockDiceManyWithNotification(
-  rng: RNG, 
-  count: number, 
+  rng: RNG,
+  count: number,
   playerName: string
 ): BlockResult[] {
   const results: BlockResult[] = [];
-  
+
   for (let i = 0; i < count; i++) {
     const result = rollBlockDiceWithNotification(rng, playerName);
     results.push(result);
   }
-  
+
   return results;
 }

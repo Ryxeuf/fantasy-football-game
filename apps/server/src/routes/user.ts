@@ -14,5 +14,3 @@ router.get("/matches", authUser, async (req: AuthenticatedRequest, res) => {
 });
 
 export default router;
-
-

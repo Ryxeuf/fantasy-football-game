@@ -1,22 +1,15 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": [
-      "ES2022",
-      "DOM"
-    ],
+    "lib": ["ES2022", "DOM"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "strict": true,
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@bb/game-engine": [
-        "../game-engine/src"
-      ],
-      "@bb/ui": [
-        "../ui/src"
-      ]
+      "@bb/game-engine": ["../game-engine/src"],
+      "@bb/ui": ["../ui/src"]
     },
     "esModuleInterop": true,
     "skipLibCheck": true,

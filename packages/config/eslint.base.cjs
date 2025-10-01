@@ -7,9 +7,9 @@ module.exports = {
   parserOptions: { ecmaVersion: "latest", sourceType: "module" },
   env: { es6: true, node: true, browser: true },
   rules: {
-    "no-unused-vars": "warn"
+    "no-unused-vars": "warn",
   },
   settings: {
-    react: { version: "detect" }
-  }
+    react: { version: "detect" },
+  },
 };

@@ -1,7 +1,7 @@
 Saved at path
-  Relative: data/inducements.md
-  Absolute: /Users/remy/Sites/bloodbowl/fantasy-football-game/data/inducements.md
-e=new URL("../..",location),\_\_md\_hash=e=>\[...e\].reduce(((e,\_)=>(e<<5)-e+\_.charCodeAt(0)),0),\_\_md\_get=(e,\_=localStorage,t=\_\_md\_scope)=>JSON.parse(\_.getItem(t.pathname+"."+e)),\_\_md\_set=(e,\_,t=localStorage,a=\_\_md\_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(\_))}catch(e){}}  
+Relative: data/inducements.md
+Absolute: /Users/remy/Sites/bloodbowl/fantasy-football-game/data/inducements.md
+e=new URL("../..",location),\_\_md_hash=e=>\[...e\].reduce(((e,\_)=>(e<<5)-e+\_.charCodeAt(0)),0),\_\_md_get=(e,\_=localStorage,t=\_\_md_scope)=>JSON.parse(\_.getItem(t.pathname+"."+e)),\_\_md_set=(e,\_,t=localStorage,a=\_\_md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(\_))}catch(e){}}
 
 [Skip to content](#inducements)
 
@@ -11,297 +11,278 @@ Blood Bowl Base
 
 Inducements in Detail
 
- 
-
-var palette=\_\_md\_get("\_\_palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"\[data-md-color-media='(prefers-color-scheme: light)'\]":"\[data-md-color-media='(prefers-color-scheme: dark)'\]");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var\[key,value\]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}
+var palette=\_\_md_get("\_\_palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"\[data-md-color-media='(prefers-color-scheme: light)'\]":"\[data-md-color-media='(prefers-color-scheme: dark)'\]");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var\[key,value\]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}
 
 Initializing search
 
-*   [Core Rules](../)
-*   [Matched Play](../../matched_play/)
-*   [Death Zone](../../death_zone/)
-*   [Dungeon Bowl](../../dungeon_bowl/)
-*   [Blitz Bowl](../../blitz_bowl/)
-*   [Gutter Bowl](../../gutter_bowl/)
-*   [Spike! Journal](../../spike_journal/)
-*   [Teams](../../teams/)
-*   [Star Players](../../starplayers/)
+- [Core Rules](../)
+- [Matched Play](../../matched_play/)
+- [Death Zone](../../death_zone/)
+- [Dungeon Bowl](../../dungeon_bowl/)
+- [Blitz Bowl](../../blitz_bowl/)
+- [Gutter Bowl](../../gutter_bowl/)
+- [Spike! Journal](../../spike_journal/)
+- [Teams](../../teams/)
+- [Star Players](../../starplayers/)
 
- [![logo](../../assets/BB2020_Badge.png)](../.. "Blood Bowl Base")Blood Bowl Base
+[![logo](../../assets/BB2020_Badge.png)](../.. "Blood Bowl Base")Blood Bowl Base
 
-*   [Core Rules](../)
-    
-    Core Rules
-    
-    *   [Cheat Sheet](../cheat_sheet/)
-    *   [Blood Bowl Stadia](../blood_bowl_stadia/)
-    *   [Rules and Regulations](../rules_and_regulations/)
-    *   [The Rules of Blood Bowl](../the_rules_of_blood_bowl/)
-    *   [Post-game Sequence](../post-game_sequence/)
-    *   [Skills and Traits](../skills_and_traits/)
-    *    Inducements in Detail [Inducements in Detail](./)
-        
-        Table of contents
-        
-        *   [INDUCEMENTS](#inducements)
-            
-            *   [INDUCEMENTS IN LEAGUE PLAY](#inducements-in-league-play)
-            *   [INDUCEMENTS IN EXHIBITION PLAY](#inducements-in-exhibition-play)
-            
-        *   [COMMON INDUCEMENTS](#common-inducements)
-            
-            *   [0-4 TEMP AGENCY CHEERLEADERS](#0-4-temp-agency-cheerleaders)
-            *   [0-3 PART-TIME ASSISTANT COACHES](#0-3-part-time-assistant-coaches)
-            *   [0-1 WEATHER MAGE](#0-1-weather-mage)
-            *   [0-2 BLOODWEISER KEGS](#0-2-bloodweiser-kegs)
-            *   [0-5 SPECIAL PLAYS](#0-5-special-plays)
-            *   [0-8 EXTRA TEAM TRAINING](#0-8-extra-team-training)
-            *   [0-3 BRIBES](#0-3-bribes)
-            *   [0-2 WANDERING APOTHECARIES](#0-2-wandering-apothecaries)
-            *   [0-1 MORTUARY ASSISTANT](#0-1-mortuary-assistant)
-            *   [0-1 PLAGUE DOCTOR](#0-1-plague-doctor)
-            *   [0-1 RIOTOUS ROOKIES](#0-1-riotous-rookies)
-            *   [0-1 HALFLING MASTER CHEF](#0-1-halfling-master-chef)
-            *   [UNLIMITED MERCENARY PLAYERS](#unlimited-mercenary-players)
-            *   [0-2 STAR PLAYERS](#0-2-star-players)
-            
-        *   [0-2 (IN)FAMOUS COACHING STAFF](#0-2-infamous-coaching-staff)
-            
-            *   [0-1 (IN)FAMOUS COACHING STAFF INDUCEMENT: JOSEF BUGMAN](#0-1-infamous-coaching-staff-inducement-josef-bugman)
-            
-        *   [0-1 WIZARD](#0-1-wizard)
-            
-            *   [0-1 WIZARD INDUCEMENT: HIRELING SPORTS-WIZARD](#0-1-wizard-inducement-hireling-sports-wizard)
-            
-        *   [0-1 BIASED REFEREE](#0-1-biased-referee)
-            
-            *   [0-1 BIASED REFEREE INDUCEMENT](#0-1-biased-referee-inducement)
-            
-        
-    *   [League and Exhibition Play](../league_and_exhibition_play/)
-    *   [The Teams](../the_teams/)
-    *   [Special Plays Card Pack](../special_plays_card_pack/)
-    *   [Lastest FAQ](../faq_290525/)
-    
-*   [Matched Play](../../matched_play/)
-    
-    Matched Play
-    
-    *   [Guide](../../matched_play/guide/)
-    
-*   [Death Zone](../../death_zone/)
-    
-    Death Zone
-    
-    *   [New Inducements](../../death_zone/new_inducements/)
-    *   [Fabulous Freebooters](../../death_zone/fabulous_freebooters/)
-    *   [Titanic Effort.. The Biggest of the Big Guys](../../death_zone/titanic_effort/)
-    *   [Sponsorship](../../death_zone/sponsorship/)
-    *   [Blood Bowl Stadia](../../death_zone/blood_bowl_stadia/)
-    *   [A Load of Balls](../../death_zone/a_load_of_balls/)
-    *   [New Weather Tables](../../death_zone/new_weather_tables/)
-    *   [Match Events](../../death_zone/match_events/)
-    *   [Blood Bowl Sevens](../../death_zone/blood_bowl_sevens/)
-    
-*   [Dungeon Bowl](../../dungeon_bowl/)
-    
-    Dungeon Bowl
-    
-    *   [Cheat Sheet](../../dungeon_bowl/cheat_sheet/)
-    *   [The Game of Dungeon Bowl](../../dungeon_bowl/the_game_of_dungeon_bowl/)
-    *   [Rules and Regulations](../../dungeon_bowl/rules_and_regulations/)
-    *   [Set-Up](../../dungeon_bowl/set-up/)
-    *   [The Rules of Dungeon Bowl](../../dungeon_bowl/the_rules_of_dungeon_bowl/)
-    *   [Post-game Sequence](../../dungeon_bowl/post-game_sequence/)
-    *   [Skills and Traits](../../dungeon_bowl/skills_and_traits/)
-    *   [Inducements](../../dungeon_bowl/inducements/)
-    *   [League and Exhibition Play](../../dungeon_bowl/league_and_exhibition_play/)
-    *   [Death Zone](../../dungeon_bowl/death_zone/)
-    *   [The Teams](../../dungeon_bowl/the_teams/)
-    
-*   [Blitz Bowl](../../blitz_bowl/)
-    
-    Blitz Bowl
-    
-    *   [Contents of the Box](../../blitz_bowl/contents_of_the_box/)
-    *   [The Rules of Blitz Bowl](../../blitz_bowl/rules/)
-    *   [Drill Cards](../../blitz_bowl/drill_cards/)
-    *   [Teams](../../blitz_bowl/teams/)
-    *   [Cards](../../blitz_bowl/cards/)
-    
-*   [Gutter Bowl](../../gutter_bowl/)
-    
-    Gutter Bowl
-    
-    *   [The Rules](../../gutter_bowl/rules/)
-    *   [Gutter Bowl Leagues](../../gutter_bowl/leagues/)
-    
-*   [Spike! Journal](../../spike_journal/)
-    
-    Spike! Journal
-    
-    *   [Spike! Journal 11](../../spike_journal/issue_11/)
-    *   [Spike! Journal 12](../../spike_journal/issue_12/)
-    *   [Spike! Journal 13](../../spike_journal/issue_13/)
-    *   [Spike! Journal 14](../../spike_journal/issue_14/)
-    *   [Spike! Journal 15](../../spike_journal/issue_15/)
-    *   [Spike! Journal 16](../../spike_journal/issue_16/)
-    *   [Spike! Journal 17](../../spike_journal/issue_17/)
-    *   [Spike! Journal 18](../../spike_journal/issue_18/)
-    *   [Spike! Almanac 2021](../../spike_journal/almanac_2021/)
-    *   [Spike! Almanac 2024](../../spike_journal/almanac_2024/)
-    *   [Pitch Rules](../../spike_journal/pitch_rules/)
-    *   [Geheimnisnacht Special](../../spike_journal/geheimnisnacht_special/)
-    *   [Holiday Special](../../spike_journal/holiday_special/)
-    
-*   [Teams](../../teams/)
-    
-    Teams
-    
-    *   [Amazon](../../teams/Amazon/)
-    *   [Black Orc](../../teams/Black_Orc/)
-    *   [Chaos Chosen](../../teams/Chaos_Chosen/)
-    *   [Chaos Dwarf](../../teams/Chaos_Dwarf/)
-    *   [Chaos Renegades](../../teams/Chaos_Renegades/)
-    *   [Dark Elf](../../teams/Dark_Elf/)
-    *   [Dwarf](../../teams/Dwarf/)
-    *   [Elven Union](../../teams/Elven_Union/)
-    *   [Gnome](../../teams/Gnome/)
-    *   [Goblin](../../teams/Goblin/)
-    *   [Halfling](../../teams/Halfling/)
-    *   [High Elf](../../teams/High_Elf/)
-    *   [Human](../../teams/Human/)
-    *   [Imperial Nobility](../../teams/Imperial_Nobility/)
-    *   [Khorne](../../teams/Khorne/)
-    *   [Lizardmen](../../teams/Lizardmen/)
-    *   [Necromantic Horror](../../teams/Necromantic_Horror/)
-    *   [Norse](../../teams/Norse/)
-    *   [Nurgle](../../teams/Nurgle/)
-    *   [Ogre](../../teams/Ogre/)
-    *   [Old World Alliance](../../teams/Old_World_Alliance/)
-    *   [Orc](../../teams/Orc/)
-    *   [Shambling Undead](../../teams/Shambling_Undead/)
-    *   [Skaven](../../teams/Skaven/)
-    *   [Snotling](../../teams/Snotling/)
-    *   [Tomb Kings](../../teams/Tomb_Kings/)
-    *   [Underworld Denizens](../../teams/Underworld_Denizens/)
-    *   [Vampire](../../teams/Vampire/)
-    *   [Wood Elf](../../teams/Wood_Elf/)
-    
-*   [Star Players](../../starplayers/)
-    
-    Star Players
-    
-    *   [Akhorne The Squirrel](../../starplayers/Akhorne_The_Squirrel/)
-    *   [Anqi Panqi](../../starplayers/Anqi_Panqi/)
-    *   [Barik Farblast](../../starplayers/Barik_Farblast/)
-    *   [Bilerot Vomitflesh](../../starplayers/Bilerot_Vomitflesh/)
-    *   [Boa Kon'ssstriktr](../../starplayers/Boa_Kon%27ssstriktr/)
-    *   [Bomber Dribblesnot](../../starplayers/Bomber_Dribblesnot/)
-    *   [Bryce 'The Slice' Cambuel](../../starplayers/Bryce_%27The_Slice%27_Cambuel/)
-    *   ['Captain' Karina Von Riesz](../../starplayers/%27Captain%27_Karina_Von_Riesz/)
-    *   [Cindy Piewhistle](../../starplayers/Cindy_Piewhistle/)
-    *   [Count Luthor von Drakenborg](../../starplayers/Count_Luthor_von_Drakenborg/)
-    *   [Deeproot Strongbranch](../../starplayers/Deeproot_Strongbranch/)
-    *   [Dribl and Drull](../../starplayers/Dribl_and_Drull/)
-    *   [Eldril Sidewinder](../../starplayers/Eldril_Sidewinder/)
-    *   [Estelle la Veneaux](../../starplayers/Estelle_la_Veneaux/)
-    *   [Frank 'n' Stein](../../starplayers/Frank_%27n%27_Stein/)
-    *   [Fungus the Loon](../../starplayers/Fungus_the_Loon/)
-    *   [Glart Smashrip](../../starplayers/Glart_Smashrip/)
-    *   [Gloriel Summerbloom](../../starplayers/Gloriel_Summerbloom/)
-    *   [Glotl Stop](../../starplayers/Glotl_Stop/)
-    *   [Grak and Crumbleberry](../../starplayers/Grak_and_Crumbleberry/)
-    *   [Grashnak Blackhoof](../../starplayers/Grashnak_Blackhoof/)
-    *   [Gretchen Wächter 'The Blood Bowl Widow'](../../starplayers/Gretchen_W%C3%A4chter_%27The_Blood_Bowl_Widow%27/)
-    *   [Griff Oberwald](../../starplayers/Griff_Oberwald/)
-    *   [Grim Ironjaw](../../starplayers/Grim_Ironjaw/)
-    *   [Grombrindal, The White Dwarf](../../starplayers/Grombrindal%2C_The_White_Dwarf/)
-    *   [Guffle Pussmaw](../../starplayers/Guffle_Pussmaw/)
-    *   [Hakflem Skuttlespike](../../starplayers/Hakflem_Skuttlespike/)
-    *   [Helmut Wulf](../../starplayers/Helmut_Wulf/)
-    *   [H'thark the Unstoppable](../../starplayers/H%27thark_the_Unstoppable/)
-    *   [Ivan 'the Animal' Deathshroud](../../starplayers/Ivan_%27the_Animal%27_Deathshroud/)
-    *   [Ivar Eriksson](../../starplayers/Ivar_Eriksson/)
-    *   [Jeremiah Kool](../../starplayers/Jeremiah_Kool/)
-    *   [Jordell Freshbreeze](../../starplayers/Jordell_Freshbreeze/)
-    *   [Karla Von Kill](../../starplayers/Karla_Von_Kill/)
-    *   [Kiroth Krakeneye](../../starplayers/Kiroth_Krakeneye/)
-    *   [Kreek 'the Verminator' Rustgouger](../../starplayers/Kreek_%27the_Verminator%27_Rustgouger/)
-    *   [Lord Borak the Despoiler](../../starplayers/Lord_Borak_the_Despoiler/)
-    *   [Maple Highgrove](../../starplayers/Maple_Highgrove/)
-    *   [Max Spleenripper](../../starplayers/Max_Spleenripper/)
-    *   [Mighty Zug](../../starplayers/Mighty_Zug/)
-    *   [Morg 'n' Thorg](../../starplayers/Morg_%27n%27_Thorg/)
-    *   [Nobbla Blackwart](../../starplayers/Nobbla_Blackwart/)
-    *   [Puggy Baconbreath](../../starplayers/Puggy_Baconbreath/)
-    *   [Rashnak Backstabber](../../starplayers/Rashnak_Backstabber/)
-    *   [Ripper Bolgrot](../../starplayers/Ripper_Bolgrot/)
-    *   [Rodney Roachbait](../../starplayers/Rodney_Roachbait/)
-    *   [Rowana Forestfoot](../../starplayers/Rowana_Forestfoot/)
-    *   [Roxanna Darknail](../../starplayers/Roxanna_Darknail/)
-    *   [Rumbelow Sheepskin](../../starplayers/Rumbelow_Sheepskin/)
-    *   [Scrappa Sorehead](../../starplayers/Scrappa_Sorehead/)
-    *   [Scyla Anfingrimm](../../starplayers/Scyla_Anfingrimm/)
-    *   [Skitter Stab-stab](../../starplayers/Skitter_Stab-stab/)
-    *   [Skrorg Snowpelt](../../starplayers/Skrorg_Snowpelt/)
-    *   [Skrull Halfheight](../../starplayers/Skrull_Halfheight/)
-    *   [Swiftvine Glimmershard](../../starplayers/Swiftvine_Glimmershard/)
-    *   [The Black Gobbo](../../starplayers/The_Black_Gobbo/)
-    *   [The Swift Twins](../../starplayers/The_Swift_Twins/)
-    *   [Thorsson Stoutmead](../../starplayers/Thorsson_Stoutmead/)
-    *   [Varag Ghoul-Chewer](../../starplayers/Varag_Ghoul-Chewer/)
-    *   [Wilhelm Chaney](../../starplayers/Wilhelm_Chaney/)
-    *   [Willow Rosebark](../../starplayers/Willow_Rosebark/)
-    *   [Withergrasp Doubledrool](../../starplayers/Withergrasp_Doubledrool/)
-    *   [Zolcath the Zoat](../../starplayers/Zolcath_the_Zoat/)
-    *   [Zzharg Madeye](../../starplayers/Zzharg_Madeye/)
-    
+- [Core Rules](../)
+
+  Core Rules
+  - [Cheat Sheet](../cheat_sheet/)
+  - [Blood Bowl Stadia](../blood_bowl_stadia/)
+  - [Rules and Regulations](../rules_and_regulations/)
+  - [The Rules of Blood Bowl](../the_rules_of_blood_bowl/)
+  - [Post-game Sequence](../post-game_sequence/)
+  - [Skills and Traits](../skills_and_traits/)
+  - Inducements in Detail [Inducements in Detail](./)
+
+
+      Table of contents
+
+      *   [INDUCEMENTS](#inducements)
+
+          *   [INDUCEMENTS IN LEAGUE PLAY](#inducements-in-league-play)
+          *   [INDUCEMENTS IN EXHIBITION PLAY](#inducements-in-exhibition-play)
+
+      *   [COMMON INDUCEMENTS](#common-inducements)
+
+          *   [0-4 TEMP AGENCY CHEERLEADERS](#0-4-temp-agency-cheerleaders)
+          *   [0-3 PART-TIME ASSISTANT COACHES](#0-3-part-time-assistant-coaches)
+          *   [0-1 WEATHER MAGE](#0-1-weather-mage)
+          *   [0-2 BLOODWEISER KEGS](#0-2-bloodweiser-kegs)
+          *   [0-5 SPECIAL PLAYS](#0-5-special-plays)
+          *   [0-8 EXTRA TEAM TRAINING](#0-8-extra-team-training)
+          *   [0-3 BRIBES](#0-3-bribes)
+          *   [0-2 WANDERING APOTHECARIES](#0-2-wandering-apothecaries)
+          *   [0-1 MORTUARY ASSISTANT](#0-1-mortuary-assistant)
+          *   [0-1 PLAGUE DOCTOR](#0-1-plague-doctor)
+          *   [0-1 RIOTOUS ROOKIES](#0-1-riotous-rookies)
+          *   [0-1 HALFLING MASTER CHEF](#0-1-halfling-master-chef)
+          *   [UNLIMITED MERCENARY PLAYERS](#unlimited-mercenary-players)
+          *   [0-2 STAR PLAYERS](#0-2-star-players)
+
+      *   [0-2 (IN)FAMOUS COACHING STAFF](#0-2-infamous-coaching-staff)
+
+          *   [0-1 (IN)FAMOUS COACHING STAFF INDUCEMENT: JOSEF BUGMAN](#0-1-infamous-coaching-staff-inducement-josef-bugman)
+
+      *   [0-1 WIZARD](#0-1-wizard)
+
+          *   [0-1 WIZARD INDUCEMENT: HIRELING SPORTS-WIZARD](#0-1-wizard-inducement-hireling-sports-wizard)
+
+      *   [0-1 BIASED REFEREE](#0-1-biased-referee)
+
+          *   [0-1 BIASED REFEREE INDUCEMENT](#0-1-biased-referee-inducement)
+
+
+  - [League and Exhibition Play](../league_and_exhibition_play/)
+  - [The Teams](../the_teams/)
+  - [Special Plays Card Pack](../special_plays_card_pack/)
+  - [Lastest FAQ](../faq_290525/)
+
+- [Matched Play](../../matched_play/)
+
+  Matched Play
+  - [Guide](../../matched_play/guide/)
+
+- [Death Zone](../../death_zone/)
+
+  Death Zone
+  - [New Inducements](../../death_zone/new_inducements/)
+  - [Fabulous Freebooters](../../death_zone/fabulous_freebooters/)
+  - [Titanic Effort.. The Biggest of the Big Guys](../../death_zone/titanic_effort/)
+  - [Sponsorship](../../death_zone/sponsorship/)
+  - [Blood Bowl Stadia](../../death_zone/blood_bowl_stadia/)
+  - [A Load of Balls](../../death_zone/a_load_of_balls/)
+  - [New Weather Tables](../../death_zone/new_weather_tables/)
+  - [Match Events](../../death_zone/match_events/)
+  - [Blood Bowl Sevens](../../death_zone/blood_bowl_sevens/)
+
+- [Dungeon Bowl](../../dungeon_bowl/)
+
+  Dungeon Bowl
+  - [Cheat Sheet](../../dungeon_bowl/cheat_sheet/)
+  - [The Game of Dungeon Bowl](../../dungeon_bowl/the_game_of_dungeon_bowl/)
+  - [Rules and Regulations](../../dungeon_bowl/rules_and_regulations/)
+  - [Set-Up](../../dungeon_bowl/set-up/)
+  - [The Rules of Dungeon Bowl](../../dungeon_bowl/the_rules_of_dungeon_bowl/)
+  - [Post-game Sequence](../../dungeon_bowl/post-game_sequence/)
+  - [Skills and Traits](../../dungeon_bowl/skills_and_traits/)
+  - [Inducements](../../dungeon_bowl/inducements/)
+  - [League and Exhibition Play](../../dungeon_bowl/league_and_exhibition_play/)
+  - [Death Zone](../../dungeon_bowl/death_zone/)
+  - [The Teams](../../dungeon_bowl/the_teams/)
+
+- [Blitz Bowl](../../blitz_bowl/)
+
+  Blitz Bowl
+  - [Contents of the Box](../../blitz_bowl/contents_of_the_box/)
+  - [The Rules of Blitz Bowl](../../blitz_bowl/rules/)
+  - [Drill Cards](../../blitz_bowl/drill_cards/)
+  - [Teams](../../blitz_bowl/teams/)
+  - [Cards](../../blitz_bowl/cards/)
+
+- [Gutter Bowl](../../gutter_bowl/)
+
+  Gutter Bowl
+  - [The Rules](../../gutter_bowl/rules/)
+  - [Gutter Bowl Leagues](../../gutter_bowl/leagues/)
+
+- [Spike! Journal](../../spike_journal/)
+
+  Spike! Journal
+  - [Spike! Journal 11](../../spike_journal/issue_11/)
+  - [Spike! Journal 12](../../spike_journal/issue_12/)
+  - [Spike! Journal 13](../../spike_journal/issue_13/)
+  - [Spike! Journal 14](../../spike_journal/issue_14/)
+  - [Spike! Journal 15](../../spike_journal/issue_15/)
+  - [Spike! Journal 16](../../spike_journal/issue_16/)
+  - [Spike! Journal 17](../../spike_journal/issue_17/)
+  - [Spike! Journal 18](../../spike_journal/issue_18/)
+  - [Spike! Almanac 2021](../../spike_journal/almanac_2021/)
+  - [Spike! Almanac 2024](../../spike_journal/almanac_2024/)
+  - [Pitch Rules](../../spike_journal/pitch_rules/)
+  - [Geheimnisnacht Special](../../spike_journal/geheimnisnacht_special/)
+  - [Holiday Special](../../spike_journal/holiday_special/)
+
+- [Teams](../../teams/)
+
+  Teams
+  - [Amazon](../../teams/Amazon/)
+  - [Black Orc](../../teams/Black_Orc/)
+  - [Chaos Chosen](../../teams/Chaos_Chosen/)
+  - [Chaos Dwarf](../../teams/Chaos_Dwarf/)
+  - [Chaos Renegades](../../teams/Chaos_Renegades/)
+  - [Dark Elf](../../teams/Dark_Elf/)
+  - [Dwarf](../../teams/Dwarf/)
+  - [Elven Union](../../teams/Elven_Union/)
+  - [Gnome](../../teams/Gnome/)
+  - [Goblin](../../teams/Goblin/)
+  - [Halfling](../../teams/Halfling/)
+  - [High Elf](../../teams/High_Elf/)
+  - [Human](../../teams/Human/)
+  - [Imperial Nobility](../../teams/Imperial_Nobility/)
+  - [Khorne](../../teams/Khorne/)
+  - [Lizardmen](../../teams/Lizardmen/)
+  - [Necromantic Horror](../../teams/Necromantic_Horror/)
+  - [Norse](../../teams/Norse/)
+  - [Nurgle](../../teams/Nurgle/)
+  - [Ogre](../../teams/Ogre/)
+  - [Old World Alliance](../../teams/Old_World_Alliance/)
+  - [Orc](../../teams/Orc/)
+  - [Shambling Undead](../../teams/Shambling_Undead/)
+  - [Skaven](../../teams/Skaven/)
+  - [Snotling](../../teams/Snotling/)
+  - [Tomb Kings](../../teams/Tomb_Kings/)
+  - [Underworld Denizens](../../teams/Underworld_Denizens/)
+  - [Vampire](../../teams/Vampire/)
+  - [Wood Elf](../../teams/Wood_Elf/)
+
+- [Star Players](../../starplayers/)
+
+  Star Players
+  - [Akhorne The Squirrel](../../starplayers/Akhorne_The_Squirrel/)
+  - [Anqi Panqi](../../starplayers/Anqi_Panqi/)
+  - [Barik Farblast](../../starplayers/Barik_Farblast/)
+  - [Bilerot Vomitflesh](../../starplayers/Bilerot_Vomitflesh/)
+  - [Boa Kon'ssstriktr](../../starplayers/Boa_Kon%27ssstriktr/)
+  - [Bomber Dribblesnot](../../starplayers/Bomber_Dribblesnot/)
+  - [Bryce 'The Slice' Cambuel](../../starplayers/Bryce_%27The_Slice%27_Cambuel/)
+  - ['Captain' Karina Von Riesz](../../starplayers/%27Captain%27_Karina_Von_Riesz/)
+  - [Cindy Piewhistle](../../starplayers/Cindy_Piewhistle/)
+  - [Count Luthor von Drakenborg](../../starplayers/Count_Luthor_von_Drakenborg/)
+  - [Deeproot Strongbranch](../../starplayers/Deeproot_Strongbranch/)
+  - [Dribl and Drull](../../starplayers/Dribl_and_Drull/)
+  - [Eldril Sidewinder](../../starplayers/Eldril_Sidewinder/)
+  - [Estelle la Veneaux](../../starplayers/Estelle_la_Veneaux/)
+  - [Frank 'n' Stein](../../starplayers/Frank_%27n%27_Stein/)
+  - [Fungus the Loon](../../starplayers/Fungus_the_Loon/)
+  - [Glart Smashrip](../../starplayers/Glart_Smashrip/)
+  - [Gloriel Summerbloom](../../starplayers/Gloriel_Summerbloom/)
+  - [Glotl Stop](../../starplayers/Glotl_Stop/)
+  - [Grak and Crumbleberry](../../starplayers/Grak_and_Crumbleberry/)
+  - [Grashnak Blackhoof](../../starplayers/Grashnak_Blackhoof/)
+  - [Gretchen Wächter 'The Blood Bowl Widow'](../../starplayers/Gretchen_W%C3%A4chter_%27The_Blood_Bowl_Widow%27/)
+  - [Griff Oberwald](../../starplayers/Griff_Oberwald/)
+  - [Grim Ironjaw](../../starplayers/Grim_Ironjaw/)
+  - [Grombrindal, The White Dwarf](../../starplayers/Grombrindal%2C_The_White_Dwarf/)
+  - [Guffle Pussmaw](../../starplayers/Guffle_Pussmaw/)
+  - [Hakflem Skuttlespike](../../starplayers/Hakflem_Skuttlespike/)
+  - [Helmut Wulf](../../starplayers/Helmut_Wulf/)
+  - [H'thark the Unstoppable](../../starplayers/H%27thark_the_Unstoppable/)
+  - [Ivan 'the Animal' Deathshroud](../../starplayers/Ivan_%27the_Animal%27_Deathshroud/)
+  - [Ivar Eriksson](../../starplayers/Ivar_Eriksson/)
+  - [Jeremiah Kool](../../starplayers/Jeremiah_Kool/)
+  - [Jordell Freshbreeze](../../starplayers/Jordell_Freshbreeze/)
+  - [Karla Von Kill](../../starplayers/Karla_Von_Kill/)
+  - [Kiroth Krakeneye](../../starplayers/Kiroth_Krakeneye/)
+  - [Kreek 'the Verminator' Rustgouger](../../starplayers/Kreek_%27the_Verminator%27_Rustgouger/)
+  - [Lord Borak the Despoiler](../../starplayers/Lord_Borak_the_Despoiler/)
+  - [Maple Highgrove](../../starplayers/Maple_Highgrove/)
+  - [Max Spleenripper](../../starplayers/Max_Spleenripper/)
+  - [Mighty Zug](../../starplayers/Mighty_Zug/)
+  - [Morg 'n' Thorg](../../starplayers/Morg_%27n%27_Thorg/)
+  - [Nobbla Blackwart](../../starplayers/Nobbla_Blackwart/)
+  - [Puggy Baconbreath](../../starplayers/Puggy_Baconbreath/)
+  - [Rashnak Backstabber](../../starplayers/Rashnak_Backstabber/)
+  - [Ripper Bolgrot](../../starplayers/Ripper_Bolgrot/)
+  - [Rodney Roachbait](../../starplayers/Rodney_Roachbait/)
+  - [Rowana Forestfoot](../../starplayers/Rowana_Forestfoot/)
+  - [Roxanna Darknail](../../starplayers/Roxanna_Darknail/)
+  - [Rumbelow Sheepskin](../../starplayers/Rumbelow_Sheepskin/)
+  - [Scrappa Sorehead](../../starplayers/Scrappa_Sorehead/)
+  - [Scyla Anfingrimm](../../starplayers/Scyla_Anfingrimm/)
+  - [Skitter Stab-stab](../../starplayers/Skitter_Stab-stab/)
+  - [Skrorg Snowpelt](../../starplayers/Skrorg_Snowpelt/)
+  - [Skrull Halfheight](../../starplayers/Skrull_Halfheight/)
+  - [Swiftvine Glimmershard](../../starplayers/Swiftvine_Glimmershard/)
+  - [The Black Gobbo](../../starplayers/The_Black_Gobbo/)
+  - [The Swift Twins](../../starplayers/The_Swift_Twins/)
+  - [Thorsson Stoutmead](../../starplayers/Thorsson_Stoutmead/)
+  - [Varag Ghoul-Chewer](../../starplayers/Varag_Ghoul-Chewer/)
+  - [Wilhelm Chaney](../../starplayers/Wilhelm_Chaney/)
+  - [Willow Rosebark](../../starplayers/Willow_Rosebark/)
+  - [Withergrasp Doubledrool](../../starplayers/Withergrasp_Doubledrool/)
+  - [Zolcath the Zoat](../../starplayers/Zolcath_the_Zoat/)
+  - [Zzharg Madeye](../../starplayers/Zzharg_Madeye/)
 
 Table of contents
 
-*   [INDUCEMENTS](#inducements)
-    
-    *   [INDUCEMENTS IN LEAGUE PLAY](#inducements-in-league-play)
-    *   [INDUCEMENTS IN EXHIBITION PLAY](#inducements-in-exhibition-play)
-    
-*   [COMMON INDUCEMENTS](#common-inducements)
-    
-    *   [0-4 TEMP AGENCY CHEERLEADERS](#0-4-temp-agency-cheerleaders)
-    *   [0-3 PART-TIME ASSISTANT COACHES](#0-3-part-time-assistant-coaches)
-    *   [0-1 WEATHER MAGE](#0-1-weather-mage)
-    *   [0-2 BLOODWEISER KEGS](#0-2-bloodweiser-kegs)
-    *   [0-5 SPECIAL PLAYS](#0-5-special-plays)
-    *   [0-8 EXTRA TEAM TRAINING](#0-8-extra-team-training)
-    *   [0-3 BRIBES](#0-3-bribes)
-    *   [0-2 WANDERING APOTHECARIES](#0-2-wandering-apothecaries)
-    *   [0-1 MORTUARY ASSISTANT](#0-1-mortuary-assistant)
-    *   [0-1 PLAGUE DOCTOR](#0-1-plague-doctor)
-    *   [0-1 RIOTOUS ROOKIES](#0-1-riotous-rookies)
-    *   [0-1 HALFLING MASTER CHEF](#0-1-halfling-master-chef)
-    *   [UNLIMITED MERCENARY PLAYERS](#unlimited-mercenary-players)
-    *   [0-2 STAR PLAYERS](#0-2-star-players)
-    
-*   [0-2 (IN)FAMOUS COACHING STAFF](#0-2-infamous-coaching-staff)
-    
-    *   [0-1 (IN)FAMOUS COACHING STAFF INDUCEMENT: JOSEF BUGMAN](#0-1-infamous-coaching-staff-inducement-josef-bugman)
-    
-*   [0-1 WIZARD](#0-1-wizard)
-    
-    *   [0-1 WIZARD INDUCEMENT: HIRELING SPORTS-WIZARD](#0-1-wizard-inducement-hireling-sports-wizard)
-    
-*   [0-1 BIASED REFEREE](#0-1-biased-referee)
-    
-    *   [0-1 BIASED REFEREE INDUCEMENT](#0-1-biased-referee-inducement)
-    
+- [INDUCEMENTS](#inducements)
+  - [INDUCEMENTS IN LEAGUE PLAY](#inducements-in-league-play)
+  - [INDUCEMENTS IN EXHIBITION PLAY](#inducements-in-exhibition-play)
 
-Inducements in Detail
-=====================
+- [COMMON INDUCEMENTS](#common-inducements)
+  - [0-4 TEMP AGENCY CHEERLEADERS](#0-4-temp-agency-cheerleaders)
+  - [0-3 PART-TIME ASSISTANT COACHES](#0-3-part-time-assistant-coaches)
+  - [0-1 WEATHER MAGE](#0-1-weather-mage)
+  - [0-2 BLOODWEISER KEGS](#0-2-bloodweiser-kegs)
+  - [0-5 SPECIAL PLAYS](#0-5-special-plays)
+  - [0-8 EXTRA TEAM TRAINING](#0-8-extra-team-training)
+  - [0-3 BRIBES](#0-3-bribes)
+  - [0-2 WANDERING APOTHECARIES](#0-2-wandering-apothecaries)
+  - [0-1 MORTUARY ASSISTANT](#0-1-mortuary-assistant)
+  - [0-1 PLAGUE DOCTOR](#0-1-plague-doctor)
+  - [0-1 RIOTOUS ROOKIES](#0-1-riotous-rookies)
+  - [0-1 HALFLING MASTER CHEF](#0-1-halfling-master-chef)
+  - [UNLIMITED MERCENARY PLAYERS](#unlimited-mercenary-players)
+  - [0-2 STAR PLAYERS](#0-2-star-players)
+
+- [0-2 (IN)FAMOUS COACHING STAFF](#0-2-infamous-coaching-staff)
+  - [0-1 (IN)FAMOUS COACHING STAFF INDUCEMENT: JOSEF BUGMAN](#0-1-infamous-coaching-staff-inducement-josef-bugman)
+
+- [0-1 WIZARD](#0-1-wizard)
+  - [0-1 WIZARD INDUCEMENT: HIRELING SPORTS-WIZARD](#0-1-wizard-inducement-hireling-sports-wizard)
+
+- [0-1 BIASED REFEREE](#0-1-biased-referee)
+  - [0-1 BIASED REFEREE INDUCEMENT](#0-1-biased-referee-inducement)
+
+# Inducements in Detail
 
 There are always plenty of hangers-on loitering around a Blood Bowl stadium. Be it legendary free agents willing to play for anyone if the price is right, or officials happy to take extra payment in return for being somewhat biased in their rulings, to unemployed coaching staff looking for a break and even a few apothecaries willing to roll up their sleeves. All these and more are willing to sign on with a team temporarily, for a price of course! often, the stadium owners or promoters will foot the bill, willing to help out a disadvantaged team rather than risk a team refusing to play!
 
-INDUCEMENTS
------------
+## INDUCEMENTS
 
 Blood Bowl teams are always looking for an advantage, be it fair or otherwise! Coaches will pay all manner of shady characters to assist their team from the sidelines or on the pitch. During the pre-game sequence of a league fixture, coaches may purchase Inducements for the game ahead by spending gold awarded as Petty Cash, taken from their Treasury or both. When creating a team for exhibition play, a coach may purchase Inducements from their Team Draft Budget.
 
@@ -317,30 +298,29 @@ If you are drafting a team for exhibition play to be used at an event or tournam
 
 If two coaches are drafting teams for exhibition play between themselves, they should take a few minutes to discuss Inducements first. It is important to decide if there are any Inducements they feel should be included or any they would prefer to leave out.
 
-COMMON INDUCEMENTS
-------------------
+## COMMON INDUCEMENTS
 
 Below is a list of the common Inducements. There are many more Inducements and most teams have access to their own, unique Inducements as well.
 
 More Inducements can be found in the various Blood Bowl supplements available:
 
-*   **0-4 Temp Agency Cheerleaders** - 20,000 gold pieces each
-*   **0-3 Part-time Assistant Coaches** - 20,000 gold pieces each
-*   **0-1 Weather Mage** - 30,000 gold pieces
-*   **0-2 Bloodweiser Kegs** - 50,000 gold pieces each
-*   **0-5 Special Plays** - 100,000 gold pieces each
-*   **0-8 Extra Team Training** - 100,000 gold pieces each
-*   **0-3 Bribes** - 100,000 gold pieces each (50,000 gold pieces for teams with the [Bribery and Corruption](../the_teams/#bribery-and-corruption) special rule)
-*   **0-2 Wandering Apothecaries** - 100,000 gold pieces each (not available to teams that cannot hire an apothecary)
-*   **0-1 Mortuary Assistant** - 100,000 gold pieces (only available to teams with the [Sylvanian Spotlight](../the_teams/#sylvanian-spotlight) special rule)
-*   **0-1 Plague Doctor** - 100,000 gold pieces (only available to teams with the [Favoured of Nurgle](../the_teams/#favoured-of) special rule)
-*   **0-1 Riotous Rookies** - 100,000 gold pieces (only available to teams with the [Low Cost Linemen](../the_teams/#low-cost-linemen) special rule)
-*   **0-1 Halfling Master Chef** - 300,000 gold pieces (100,000 gold pieces for teams with the [Halfling Thimble Cup](../the_teams/#halfling-thimble-cup) special rule)
-*   **Unlimited Mercenary Players** - price varies
-*   **0-2 Star Players** - price varies
-*   **0-2 (In)Famous Coaching Staff** - price varies
-*   **0-1 Wizard** - price varies
-*   **0-1 Biased Referee** - price varies
+- **0-4 Temp Agency Cheerleaders** - 20,000 gold pieces each
+- **0-3 Part-time Assistant Coaches** - 20,000 gold pieces each
+- **0-1 Weather Mage** - 30,000 gold pieces
+- **0-2 Bloodweiser Kegs** - 50,000 gold pieces each
+- **0-5 Special Plays** - 100,000 gold pieces each
+- **0-8 Extra Team Training** - 100,000 gold pieces each
+- **0-3 Bribes** - 100,000 gold pieces each (50,000 gold pieces for teams with the [Bribery and Corruption](../the_teams/#bribery-and-corruption) special rule)
+- **0-2 Wandering Apothecaries** - 100,000 gold pieces each (not available to teams that cannot hire an apothecary)
+- **0-1 Mortuary Assistant** - 100,000 gold pieces (only available to teams with the [Sylvanian Spotlight](../the_teams/#sylvanian-spotlight) special rule)
+- **0-1 Plague Doctor** - 100,000 gold pieces (only available to teams with the [Favoured of Nurgle](../the_teams/#favoured-of) special rule)
+- **0-1 Riotous Rookies** - 100,000 gold pieces (only available to teams with the [Low Cost Linemen](../the_teams/#low-cost-linemen) special rule)
+- **0-1 Halfling Master Chef** - 300,000 gold pieces (100,000 gold pieces for teams with the [Halfling Thimble Cup](../the_teams/#halfling-thimble-cup) special rule)
+- **Unlimited Mercenary Players** - price varies
+- **0-2 Star Players** - price varies
+- **0-2 (In)Famous Coaching Staff** - price varies
+- **0-1 Wizard** - price varies
+- **0-1 Biased Referee** - price varies
 
 ### 0-4 TEMP AGENCY CHEERLEADERS
 
@@ -378,10 +358,10 @@ Nothing says "get back in the game" like a frosty Bloodweiser Ale served straigh
 
 Each Special Plays Inducement purchased gives you one Special Plays card to use during the game ahead. Cards are drawn from one or more of the Special Plays card decks during the Inducements step of the pre-game sequence:
 
-*   Each Special Plays Inducement purchased allows you to draw cards from a single deck.
-*   The deck from which cards are drawn is determined by rolling a D6 and consulting the table below.
-*   For each separate Special Plays Inducement purchased, roll again on the table below.
-*   There is no limit to how many cards may be drawn from each deck, but if the second roll or any subsequent rolls give a duplicated result, you may re-roll the D6. If the D6 is re-rolled, you must accept the result of the re-roll.
+- Each Special Plays Inducement purchased allows you to draw cards from a single deck.
+- The deck from which cards are drawn is determined by rolling a D6 and consulting the table below.
+- For each separate Special Plays Inducement purchased, roll again on the table below.
+- There is no limit to how many cards may be drawn from each deck, but if the second roll or any subsequent rolls give a duplicated result, you may re-roll the D6. If the D6 is re-rolled, you must accept the result of the re-roll.
 
 **SPECIAL PLAYS CARDS**
 
@@ -483,13 +463,12 @@ Star Players may not take the number of players in the team to more than 16. How
 
 It is possible for both teams to hire the services of the same Star Player:
 
-*   If this happens during a game that is part of a league, neither team can field the Star Player but the Star Player will keep both hiring fees.
-*   If this happens during exhibition play, both teams can field the Star Player - one team has clearly hired a ringer!
+- If this happens during a game that is part of a league, neither team can field the Star Player but the Star Player will keep both hiring fees.
+- If this happens during exhibition play, both teams can field the Star Player - one team has clearly hired a ringer!
 
 Star Players do not earn Star Player points and cannot be awarded the MVP for the game. Star Players can never gain advancements.
 
-0-2 (IN)FAMOUS COACHING STAFF
------------------------------
+## 0-2 (IN)FAMOUS COACHING STAFF
 
 **PRICE VARIES, AVAILABLE TO VARIOUS TEAMS**
 
@@ -499,8 +478,8 @@ Although most Blood Bowl celebrities are players, with the occasional ref thrown
 
 As with Star Players, it is possible for both teams to hire the services of the same named (In)Famous Coaching Staff (such as Josef Bugman):
 
-*   If this happens during a game that is part of a league, neither team can use the (In)Famous Coaching Staff but the (In)Famous Coaching Staff will keep both hiring fees.
-*   If this happens during exhibition play, both teams can use the (In)Famous Coaching Staff - one team has clearly hired a ringer!
+- If this happens during a game that is part of a league, neither team can use the (In)Famous Coaching Staff but the (In)Famous Coaching Staff will keep both hiring fees.
+- If this happens during exhibition play, both teams can use the (In)Famous Coaching Staff - one team has clearly hired a ringer!
 
 There are too many (In)Famous Coaching Staff to list here, and most are only available to certain teams. Details of further (In)Famous Coaching Staff can be found in the various Blood Bowl supplements available.
 
@@ -548,8 +527,7 @@ Bugman
 
 Skills & Traits: [Loner](../skills_and_traits/#loner-x) (5+), [Tackle](../skills_and_traits/#tackle), [Thick Skull](../skills_and_traits/#thick-skull), [Wrestle](../skills_and_traits/#wrestle)
 
-0-1 WIZARD
-----------
+## 0-1 WIZARD
 
 **PRICE VARIES, AVAILABLE TO VARIOUS TEAMS**
 
@@ -559,8 +537,8 @@ No team may purchase more than one Wizard Inducement per game.
 
 Some Wizards are named, although most are not. As with Star Players, it is possible for both teams to hire the services of the same named Wizard:
 
-*   If this happens during a game that is part of a league, neither team can use the named Wizard but the named Wizard will keep both hiring fees.
-*   If this happens during exhibition play, both teams can use the named Wizard- one team has clearly hired a ringer!
+- If this happens during a game that is part of a league, neither team can use the named Wizard but the named Wizard will keep both hiring fees.
+- If this happens during exhibition play, both teams can use the named Wizard- one team has clearly hired a ringer!
 
 If a Wizard Inducement is not named, there is no restriction on both teams fielding the same type.
 
@@ -578,8 +556,8 @@ Once per game, a Hireling Sports-Wizard may cast one of the following spells:
 
 You may cast this spell either at the start of any of the opposition's team turns, before any player is activated, or immediately after any of the opposition's team turns has ended. You may cast this spell at the end of either player's team turn, before the next team turn begins. Choose a target square anywhere on the pitch and roll a D6 for each Standing player (from either team) that occupies either the target square or a square adjacent to it:
 
-*   On a roll of 4+, the player has been hit by the Fireball.
-*   On a roll of 1-3, the player manages to avoid the Fireball.
+- On a roll of 4+, the player has been hit by the Fireball.
+- On a roll of 1-3, the player manages to avoid the Fireball.
 
 Any Standing players hit by the Fireball are Knocked Down. When a player is Knocked Down by a Fireball, you may apply a +1 modifier to either the Armour roll or Injury roll. This modifier may be applied after the roll has been made.
 
@@ -587,8 +565,8 @@ Any Standing players hit by the Fireball are Knocked Down. When a player is Knoc
 
 You may cast this spell either at the start of any of the opposition's team turns, before any player is activated, or immediately after any of the opposition's team turns has ended. Target any opposition player and roll a D6:
 
-*   If the roll is equal to or higher than the player's Strength characteristic, or is a natural 6, that player turns into a frog for the remainder of the drive, after which their coach will secure emergency magical assistance to turn the player back into their original form.
-*   If the roll is lower than the player's Strength characteristic, the player develops a fresh crop of warts, but the spell has no further effect.
+- If the roll is equal to or higher than the player's Strength characteristic, or is a natural 6, that player turns into a frog for the remainder of the drive, after which their coach will secure emergency magical assistance to turn the player back into their original form.
+- If the roll is lower than the player's Strength characteristic, the player develops a fresh crop of warts, but the spell has no further effect.
 
 If the player was in possession of the ball when they were turned into a frog, it is dropped and will bounce. When a roll on the Casualty table is required against the frog, no roll is made. Instead, it is automatically treated as if a Badly Hurt result had been rolled. The frog must miss the rest of the game and cannot be patched-up by an apothecary (because it's a frog!). At the end of the game, the player is returned to normal shape with no ill effects.
 
@@ -618,8 +596,7 @@ Frog
 
 Skills & Traits: [Dodge](../skills_and_traits/#dodge), [Leap](../skills_and_traits/#leap), [No Hands](../skills_and_traits/#no-hands), [Stunty](../skills_and_traits/#stunty), [Titchy](../skills_and_traits/#titchy), [Very Long Legs](../skills_and_traits/#very-long-legs)
 
-0-1 BIASED REFEREE
-------------------
+## 0-1 BIASED REFEREE
 
 **PRICE VARIES, AVAILABLE TO VARIOUS TEAMS**
 
@@ -631,8 +608,8 @@ For the most part, a Biased Referee will treat both teams equally, meaning that 
 
 Many Biased Referees are named celebrities, although most are not. As with Star Players, it is possible for both teams to hire the services of the same named Biased Referee:
 
-*   If this happens during a game that is part of a league, neither team can use the named Biased Referee but the named Biased Referee will keep both hiring fees.
-*   If this happens during exhibition play, both teams can use the named Biased Referee - they can dish out harsh rulings to both sides!
+- If this happens during a game that is part of a league, neither team can use the named Biased Referee but the named Biased Referee will keep both hiring fees.
+- If this happens during exhibition play, both teams can use the named Biased Referee - they can dish out harsh rulings to both sides!
 
 There are too many named Biased Referees to list here, and most are only available to certain teams. Details of further Biased Referees can be found in the various Blood Bowl supplements available.
 
@@ -646,8 +623,8 @@ In the years since the collapse of the NAF, there has been a marked increase of 
 
 Strict adherence to the rules is of paramount importance to all referees. This is especially true when one of the teams has paid them to watch the opposition closely! If any player on the opposing team commits a Foul without rolling a double when making either the Armour roll or Injury roll, roll a D6:
 
-*   On a roll of 5+, the Biased Referee spots the Foul and the player is Sent-off, exactly as if they had rolled a double (i.e., the opposing coach may use a Bribe if one is available and may attempt to Argue the Call).
-*   On a roll of 1-4, the player manages to avoid the ref's attention.
+- On a roll of 5+, the Biased Referee spots the Foul and the player is Sent-off, exactly as if they had rolled a double (i.e., the opposing coach may use a Bribe if one is available and may attempt to Argue the Call).
+- On a roll of 1-4, the player manages to avoid the ref's attention.
 
 **"I DIDN'T SEE A THING!"**
 

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from "vitest";
 import {
   setup,
   applyMove,
@@ -12,25 +12,25 @@ import {
   type GameState,
   type BlockResult,
   type BlockDiceResult,
-} from '@bb/game-engine';
+} from "@bb/game-engine";
 
-describe('Tests des dés de blocage - Vérification complète', () => {
+describe("Tests des dés de blocage - Vérification complète", () => {
   let state: GameState;
   let rng: ReturnType<typeof makeRNG>;
 
   beforeEach(() => {
     state = setup();
-    rng = makeRNG('dice-test-seed');
+    rng = makeRNG("dice-test-seed");
   });
 
-  describe('Vérification des faces de dés', () => {
-    it('devrait avoir exactement 5 faces de dés de blocage (6 faces avec Push Back dupliqué)', () => {
+  describe("Vérification des faces de dés", () => {
+    it("devrait avoir exactement 5 faces de dés de blocage (6 faces avec Push Back dupliqué)", () => {
       const expectedFaces: BlockResult[] = [
-        'PLAYER_DOWN',
-        'BOTH_DOWN',
-        'PUSH_BACK',
-        'STUMBLE',
-        'POW',
+        "PLAYER_DOWN",
+        "BOTH_DOWN",
+        "PUSH_BACK",
+        "STUMBLE",
+        "POW",
       ];
 
       // Tester plusieurs jets pour s'assurer que toutes les faces peuvent apparaître
@@ -48,7 +48,7 @@ describe('Tests des dés de blocage - Vérification complète', () => {
       expect(results.size).toBe(5);
     });
 
-    it('devrait avoir la distribution correcte des faces (Push Back sur 2 faces)', () => {
+    it("devrait avoir la distribution correcte des faces (Push Back sur 2 faces)", () => {
       const faceCounts: Record<BlockResult, number> = {
         PLAYER_DOWN: 0,
         BOTH_DOWN: 0,
@@ -64,18 +64,23 @@ describe('Tests des dés de blocage - Vérification complète', () => {
       }
 
       // Push Back devrait apparaître sur 2 faces sur 6 (1/3 des jets)
-      expect(faceCounts['PUSH_BACK']).toBeGreaterThan(1800); // ~2000 attendu
-      expect(faceCounts['PUSH_BACK']).toBeLessThan(2200);
+      expect(faceCounts["PUSH_BACK"]).toBeGreaterThan(1800); // ~2000 attendu
+      expect(faceCounts["PUSH_BACK"]).toBeLessThan(2200);
 
       // Les autres faces devraient apparaître sur 1 face sur 6 chacune (1/6 des jets)
-      const singleFaceFaces: BlockResult[] = ['PLAYER_DOWN', 'BOTH_DOWN', 'STUMBLE', 'POW'];
+      const singleFaceFaces: BlockResult[] = [
+        "PLAYER_DOWN",
+        "BOTH_DOWN",
+        "STUMBLE",
+        "POW",
+      ];
       for (const face of singleFaceFaces) {
         expect(faceCounts[face]).toBeGreaterThan(900); // ~1000 attendu
         expect(faceCounts[face]).toBeLessThan(1100);
       }
     });
 
-    it('devrait correspondre aux règles officielles de Blood Bowl', () => {
+    it("devrait correspondre aux règles officielles de Blood Bowl", () => {
       // Selon les règles, les dés de blocage ont 6 faces avec 5 icônes uniques :
       // 1. Player Down! - L'attaquant est mis au sol (1 face)
       // 2. Both Down - Les deux joueurs sont mis au sol (1 face)
@@ -84,11 +89,11 @@ describe('Tests des dés de blocage - Vérification complète', () => {
       // 5. POW! - La cible est repoussée puis mise au sol (1 face)
 
       const expectedFaces = [
-        'PLAYER_DOWN', // Player Down!
-        'BOTH_DOWN', // Both Down
-        'PUSH_BACK', // Push Back
-        'STUMBLE', // Stumble
-        'POW', // POW!
+        "PLAYER_DOWN", // Player Down!
+        "BOTH_DOWN", // Both Down
+        "PUSH_BACK", // Push Back
+        "STUMBLE", // Stumble
+        "POW", // POW!
       ];
 
       const actualFaces = new Set<BlockResult>();
@@ -102,8 +107,8 @@ describe('Tests des dés de blocage - Vérification complète', () => {
     });
   });
 
-  describe('Calcul du nombre de dés', () => {
-    it('devrait calculer correctement le nombre de dés selon les règles', () => {
+  describe("Calcul du nombre de dés", () => {
+    it("devrait calculer correctement le nombre de dés selon les règles", () => {
       // Force égale : 1 dé
       expect(calculateBlockDiceCount(3, 3)).toBe(1);
 
@@ -122,70 +127,84 @@ describe('Tests des dés de blocage - Vérification complète', () => {
       expect(calculateBlockDiceCount(1, 3)).toBe(3);
     });
 
-    it('devrait déterminer correctement qui choisit le résultat', () => {
+    it("devrait déterminer correctement qui choisit le résultat", () => {
       // Force égale : 1 dé (pas de choix)
-      expect(getBlockDiceChooser(3, 3)).toBe('attacker');
+      expect(getBlockDiceChooser(3, 3)).toBe("attacker");
 
       // Attaquant plus fort : attaquant choisit
-      expect(getBlockDiceChooser(4, 3)).toBe('attacker');
-      expect(getBlockDiceChooser(6, 3)).toBe('attacker');
+      expect(getBlockDiceChooser(4, 3)).toBe("attacker");
+      expect(getBlockDiceChooser(6, 3)).toBe("attacker");
 
       // Attaquant plus faible : défenseur choisit
-      expect(getBlockDiceChooser(2, 3)).toBe('defender');
-      expect(getBlockDiceChooser(1, 3)).toBe('defender');
+      expect(getBlockDiceChooser(2, 3)).toBe("defender");
+      expect(getBlockDiceChooser(1, 3)).toBe("defender");
     });
   });
 
-  describe('Tests des jets multiples', () => {
-    it('devrait lancer plusieurs dés correctement', () => {
+  describe("Tests des jets multiples", () => {
+    it("devrait lancer plusieurs dés correctement", () => {
       const results = rollBlockDiceMany(rng, 3);
       expect(results).toHaveLength(3);
 
       // Tous les résultats doivent être valides
       for (const result of results) {
-        expect(['PLAYER_DOWN', 'BOTH_DOWN', 'PUSH_BACK', 'STUMBLE', 'POW']).toContain(result);
+        expect([
+          "PLAYER_DOWN",
+          "BOTH_DOWN",
+          "PUSH_BACK",
+          "STUMBLE",
+          "POW",
+        ]).toContain(result);
       }
     });
 
-    it('devrait lancer plusieurs dés avec les numéros de jet', () => {
+    it("devrait lancer plusieurs dés avec les numéros de jet", () => {
       const results = rollBlockDiceManyWithRolls(rng, 2);
       expect(results).toHaveLength(2);
 
       for (const { diceRoll, result } of results) {
         expect(diceRoll).toBeGreaterThanOrEqual(1);
         expect(diceRoll).toBeLessThanOrEqual(5);
-        expect(['PLAYER_DOWN', 'BOTH_DOWN', 'PUSH_BACK', 'STUMBLE', 'POW']).toContain(result);
+        expect([
+          "PLAYER_DOWN",
+          "BOTH_DOWN",
+          "PUSH_BACK",
+          "STUMBLE",
+          "POW",
+        ]).toContain(result);
       }
     });
   });
 
   describe("Tests d'intégration avec le jeu", () => {
-    it('devrait exécuter un blocage complet avec tous les résultats possibles', () => {
+    it("devrait exécuter un blocage complet avec tous les résultats possibles", () => {
       // Positionner les joueurs adjacents
       const newState = {
         ...state,
-        players: state.players.map(p => {
-          if (p.id === 'A1') return { ...p, pos: { x: 10, y: 7 }, stunned: false, pm: 7 };
-          if (p.id === 'B1') return { ...p, pos: { x: 11, y: 7 }, stunned: false, pm: 8 };
+        players: state.players.map((p) => {
+          if (p.id === "A1")
+            return { ...p, pos: { x: 10, y: 7 }, stunned: false, pm: 7 };
+          if (p.id === "B1")
+            return { ...p, pos: { x: 11, y: 7 }, stunned: false, pm: 8 };
           return p;
         }),
       };
 
       // Tester chaque résultat de blocage
       const testResults: BlockResult[] = [
-        'PLAYER_DOWN',
-        'BOTH_DOWN',
-        'PUSH_BACK',
-        'STUMBLE',
-        'POW',
+        "PLAYER_DOWN",
+        "BOTH_DOWN",
+        "PUSH_BACK",
+        "STUMBLE",
+        "POW",
       ];
 
       for (const testResult of testResults) {
         // Créer un résultat de blocage simulé
         const blockResult: BlockDiceResult = {
-          type: 'block',
-          playerId: 'A1',
-          targetId: 'B1',
+          type: "block",
+          playerId: "A1",
+          targetId: "B1",
           diceRoll: 1,
           result: testResult,
           offensiveAssists: 0,
@@ -203,19 +222,21 @@ describe('Tests des dés de blocage - Vérification complète', () => {
 
         // Vérifier que le log contient l'information de blocage
         const blockLogs = resultState.gameLog.filter(
-          log => log.type === 'dice' && log.message.includes('Blocage:')
+          (log) => log.type === "dice" && log.message.includes("Blocage:"),
         );
         expect(blockLogs.length).toBeGreaterThan(0);
       }
     });
 
-    it('devrait gérer correctement les choix de blocage multiples', () => {
+    it("devrait gérer correctement les choix de blocage multiples", () => {
       // Positionner les joueurs pour un blocage avec 2 dés
       const newState = {
         ...state,
-        players: state.players.map(p => {
-          if (p.id === 'A1') return { ...p, pos: { x: 10, y: 7 }, stunned: false, pm: 7, st: 4 };
-          if (p.id === 'B1') return { ...p, pos: { x: 11, y: 7 }, stunned: false, pm: 8, st: 3 };
+        players: state.players.map((p) => {
+          if (p.id === "A1")
+            return { ...p, pos: { x: 10, y: 7 }, stunned: false, pm: 7, st: 4 };
+          if (p.id === "B1")
+            return { ...p, pos: { x: 11, y: 7 }, stunned: false, pm: 8, st: 3 };
           return p;
         }),
       };
@@ -223,42 +244,69 @@ describe('Tests des dés de blocage - Vérification complète', () => {
       // Exécuter un blocage (4 vs 3 = 2 dés, attaquant choisit)
       const resultState = applyMove(
         newState,
-        { type: 'BLOCK', playerId: 'A1', targetId: 'B1' },
-        rng
+        { type: "BLOCK", playerId: "A1", targetId: "B1" },
+        rng,
       );
 
       // Vérifier qu'il y a un choix en attente
       expect(resultState.pendingBlock).toBeDefined();
       expect(resultState.pendingBlock?.options).toHaveLength(2);
-      expect(resultState.pendingBlock?.chooser).toBe('attacker');
+      expect(resultState.pendingBlock?.chooser).toBe("attacker");
 
       // Vérifier que les options sont valides
       for (const option of resultState.pendingBlock!.options) {
-        expect(['PLAYER_DOWN', 'BOTH_DOWN', 'PUSH_BACK', 'STUMBLE', 'POW']).toContain(option);
+        expect([
+          "PLAYER_DOWN",
+          "BOTH_DOWN",
+          "PUSH_BACK",
+          "STUMBLE",
+          "POW",
+        ]).toContain(option);
       }
     });
   });
 
-  describe('Tests de conformité avec les règles', () => {
-    it('devrait respecter les règles de Blood Bowl pour les résultats', () => {
+  describe("Tests de conformité avec les règles", () => {
+    it("devrait respecter les règles de Blood Bowl pour les résultats", () => {
       // Tester que chaque résultat correspond aux règles
       const testCases = [
-        { result: 'PLAYER_DOWN', expected: "L'attaquant est mis au sol", probability: '1/6' },
-        { result: 'BOTH_DOWN', expected: 'Les deux joueurs sont mis au sol', probability: '1/6' },
-        { result: 'PUSH_BACK', expected: "La cible est repoussée d'1 case", probability: '2/6' },
         {
-          result: 'STUMBLE',
-          expected: "Si la cible utilise Dodge, cela devient Push ; sinon, c'est POW!",
-          probability: '1/6',
+          result: "PLAYER_DOWN",
+          expected: "L'attaquant est mis au sol",
+          probability: "1/6",
         },
-        { result: 'POW', expected: 'La cible est repoussée puis mise au sol', probability: '1/6' },
+        {
+          result: "BOTH_DOWN",
+          expected: "Les deux joueurs sont mis au sol",
+          probability: "1/6",
+        },
+        {
+          result: "PUSH_BACK",
+          expected: "La cible est repoussée d'1 case",
+          probability: "2/6",
+        },
+        {
+          result: "STUMBLE",
+          expected:
+            "Si la cible utilise Dodge, cela devient Push ; sinon, c'est POW!",
+          probability: "1/6",
+        },
+        {
+          result: "POW",
+          expected: "La cible est repoussée puis mise au sol",
+          probability: "1/6",
+        },
       ];
 
       for (const testCase of testCases) {
         // Vérifier que le résultat existe dans le type
-        expect(['PLAYER_DOWN', 'BOTH_DOWN', 'PUSH_BACK', 'STUMBLE', 'POW']).toContain(
-          testCase.result
-        );
+        expect([
+          "PLAYER_DOWN",
+          "BOTH_DOWN",
+          "PUSH_BACK",
+          "STUMBLE",
+          "POW",
+        ]).toContain(testCase.result);
 
         // Vérifier que le résultat peut être généré
         let found = false;

@@ -1,10 +1,8 @@
-Inducements in Detail
-=====================
+# Inducements in Detail
 
 There are always plenty of hangers-on loitering around a Blood Bowl stadium. Be it legendary free agents willing to play for anyone if the price is right, or officials happy to take extra payment in return for being somewhat biased in their rulings, to unemployed coaching staff looking for a break and even a few apothecaries willing to roll up their sleeves. All these and more are willing to sign on with a team temporarily, for a price of course! often, the stadium owners or promoters will foot the bill, willing to help out a disadvantaged team rather than risk a team refusing to play!
 
-INDUCEMENTS
------------
+## INDUCEMENTS
 
 Blood Bowl teams are always looking for an advantage, be it fair or otherwise! Coaches will pay all manner of shady characters to assist their team from the sidelines or on the pitch. During the pre-game sequence of a league fixture, coaches may purchase Inducements for the game ahead by spending gold awarded as Petty Cash, taken from their Treasury or both. When creating a team for exhibition play, a coach may purchase Inducements from their Team Draft Budget.
 
@@ -20,30 +18,29 @@ If you are drafting a team for exhibition play to be used at an event or tournam
 
 If two coaches are drafting teams for exhibition play between themselves, they should take a few minutes to discuss Inducements first. It is important to decide if there are any Inducements they feel should be included or any they would prefer to leave out.
 
-COMMON INDUCEMENTS
-------------------
+## COMMON INDUCEMENTS
 
 Below is a list of the common Inducements. There are many more Inducements and most teams have access to their own, unique Inducements as well.
 
 More Inducements can be found in the various Blood Bowl supplements available:
 
-*   **0-4 Temp Agency Cheerleaders** - 20,000 gold pieces each
-*   **0-3 Part-time Assistant Coaches** - 20,000 gold pieces each
-*   **0-1 Weather Mage** - 30,000 gold pieces
-*   **0-2 Bloodweiser Kegs** - 50,000 gold pieces each
-*   **0-5 Special Plays** - 100,000 gold pieces each
-*   **0-8 Extra Team Training** - 100,000 gold pieces each
-*   **0-3 Bribes** - 100,000 gold pieces each (50,000 gold pieces for teams with the [Bribery and Corruption](../the_teams/#bribery-and-corruption) special rule)
-*   **0-2 Wandering Apothecaries** - 100,000 gold pieces each (not available to teams that cannot hire an apothecary)
-*   **0-1 Mortuary Assistant** - 100,000 gold pieces (only available to teams with the [Sylvanian Spotlight](../the_teams/#sylvanian-spotlight) special rule)
-*   **0-1 Plague Doctor** - 100,000 gold pieces (only available to teams with the [Favoured of Nurgle](../the_teams/#favoured-of) special rule)
-*   **0-1 Riotous Rookies** - 100,000 gold pieces (only available to teams with the [Low Cost Linemen](../the_teams/#low-cost-linemen) special rule)
-*   **0-1 Halfling Master Chef** - 300,000 gold pieces (100,000 gold pieces for teams with the [Halfling Thimble Cup](../the_teams/#halfling-thimble-cup) special rule)
-*   **Unlimited Mercenary Players** - price varies
-*   **0-2 Star Players** - price varies
-*   **0-2 (In)Famous Coaching Staff** - price varies
-*   **0-1 Wizard** - price varies
-*   **0-1 Biased Referee** - price varies
+- **0-4 Temp Agency Cheerleaders** - 20,000 gold pieces each
+- **0-3 Part-time Assistant Coaches** - 20,000 gold pieces each
+- **0-1 Weather Mage** - 30,000 gold pieces
+- **0-2 Bloodweiser Kegs** - 50,000 gold pieces each
+- **0-5 Special Plays** - 100,000 gold pieces each
+- **0-8 Extra Team Training** - 100,000 gold pieces each
+- **0-3 Bribes** - 100,000 gold pieces each (50,000 gold pieces for teams with the [Bribery and Corruption](../the_teams/#bribery-and-corruption) special rule)
+- **0-2 Wandering Apothecaries** - 100,000 gold pieces each (not available to teams that cannot hire an apothecary)
+- **0-1 Mortuary Assistant** - 100,000 gold pieces (only available to teams with the [Sylvanian Spotlight](../the_teams/#sylvanian-spotlight) special rule)
+- **0-1 Plague Doctor** - 100,000 gold pieces (only available to teams with the [Favoured of Nurgle](../the_teams/#favoured-of) special rule)
+- **0-1 Riotous Rookies** - 100,000 gold pieces (only available to teams with the [Low Cost Linemen](../the_teams/#low-cost-linemen) special rule)
+- **0-1 Halfling Master Chef** - 300,000 gold pieces (100,000 gold pieces for teams with the [Halfling Thimble Cup](../the_teams/#halfling-thimble-cup) special rule)
+- **Unlimited Mercenary Players** - price varies
+- **0-2 Star Players** - price varies
+- **0-2 (In)Famous Coaching Staff** - price varies
+- **0-1 Wizard** - price varies
+- **0-1 Biased Referee** - price varies
 
 ### 0-4 TEMP AGENCY CHEERLEADERS
 
@@ -81,10 +78,10 @@ Nothing says "get back in the game" like a frosty Bloodweiser Ale served straigh
 
 Each Special Plays Inducement purchased gives you one Special Plays card to use during the game ahead. Cards are drawn from one or more of the Special Plays card decks during the Inducements step of the pre-game sequence:
 
-*   Each Special Plays Inducement purchased allows you to draw cards from a single deck.
-*   The deck from which cards are drawn is determined by rolling a D6 and consulting the table below.
-*   For each separate Special Plays Inducement purchased, roll again on the table below.
-*   There is no limit to how many cards may be drawn from each deck, but if the second roll or any subsequent rolls give a duplicated result, you may re-roll the D6. If the D6 is re-rolled, you must accept the result of the re-roll.
+- Each Special Plays Inducement purchased allows you to draw cards from a single deck.
+- The deck from which cards are drawn is determined by rolling a D6 and consulting the table below.
+- For each separate Special Plays Inducement purchased, roll again on the table below.
+- There is no limit to how many cards may be drawn from each deck, but if the second roll or any subsequent rolls give a duplicated result, you may re-roll the D6. If the D6 is re-rolled, you must accept the result of the re-roll.
 
 **SPECIAL PLAYS CARDS**
 
@@ -186,13 +183,12 @@ Star Players may not take the number of players in the team to more than 16. How
 
 It is possible for both teams to hire the services of the same Star Player:
 
-*   If this happens during a game that is part of a league, neither team can field the Star Player but the Star Player will keep both hiring fees.
-*   If this happens during exhibition play, both teams can field the Star Player - one team has clearly hired a ringer!
+- If this happens during a game that is part of a league, neither team can field the Star Player but the Star Player will keep both hiring fees.
+- If this happens during exhibition play, both teams can field the Star Player - one team has clearly hired a ringer!
 
 Star Players do not earn Star Player points and cannot be awarded the MVP for the game. Star Players can never gain advancements.
 
-0-2 (IN)FAMOUS COACHING STAFF
------------------------------
+## 0-2 (IN)FAMOUS COACHING STAFF
 
 **PRICE VARIES, AVAILABLE TO VARIOUS TEAMS**
 
@@ -202,8 +198,8 @@ Although most Blood Bowl celebrities are players, with the occasional ref thrown
 
 As with Star Players, it is possible for both teams to hire the services of the same named (In)Famous Coaching Staff (such as Josef Bugman):
 
-*   If this happens during a game that is part of a league, neither team can use the (In)Famous Coaching Staff but the (In)Famous Coaching Staff will keep both hiring fees.
-*   If this happens during exhibition play, both teams can use the (In)Famous Coaching Staff - one team has clearly hired a ringer!
+- If this happens during a game that is part of a league, neither team can use the (In)Famous Coaching Staff but the (In)Famous Coaching Staff will keep both hiring fees.
+- If this happens during exhibition play, both teams can use the (In)Famous Coaching Staff - one team has clearly hired a ringer!
 
 There are too many (In)Famous Coaching Staff to list here, and most are only available to certain teams. Details of further (In)Famous Coaching Staff can be found in the various Blood Bowl supplements available.
 
@@ -251,8 +247,7 @@ Bugman
 
 Skills & Traits: [Loner](../skills_and_traits/#loner-x) (5+), [Tackle](../skills_and_traits/#tackle), [Thick Skull](../skills_and_traits/#thick-skull), [Wrestle](../skills_and_traits/#wrestle)
 
-0-1 WIZARD
-----------
+## 0-1 WIZARD
 
 **PRICE VARIES, AVAILABLE TO VARIOUS TEAMS**
 
@@ -262,8 +257,8 @@ No team may purchase more than one Wizard Inducement per game.
 
 Some Wizards are named, although most are not. As with Star Players, it is possible for both teams to hire the services of the same named Wizard:
 
-*   If this happens during a game that is part of a league, neither team can use the named Wizard but the named Wizard will keep both hiring fees.
-*   If this happens during exhibition play, both teams can use the named Wizard- one team has clearly hired a ringer!
+- If this happens during a game that is part of a league, neither team can use the named Wizard but the named Wizard will keep both hiring fees.
+- If this happens during exhibition play, both teams can use the named Wizard- one team has clearly hired a ringer!
 
 If a Wizard Inducement is not named, there is no restriction on both teams fielding the same type.
 
@@ -281,8 +276,8 @@ Once per game, a Hireling Sports-Wizard may cast one of the following spells:
 
 You may cast this spell either at the start of any of the opposition's team turns, before any player is activated, or immediately after any of the opposition's team turns has ended. You may cast this spell at the end of either player's team turn, before the next team turn begins. Choose a target square anywhere on the pitch and roll a D6 for each Standing player (from either team) that occupies either the target square or a square adjacent to it:
 
-*   On a roll of 4+, the player has been hit by the Fireball.
-*   On a roll of 1-3, the player manages to avoid the Fireball.
+- On a roll of 4+, the player has been hit by the Fireball.
+- On a roll of 1-3, the player manages to avoid the Fireball.
 
 Any Standing players hit by the Fireball are Knocked Down. When a player is Knocked Down by a Fireball, you may apply a +1 modifier to either the Armour roll or Injury roll. This modifier may be applied after the roll has been made.
 
@@ -290,8 +285,8 @@ Any Standing players hit by the Fireball are Knocked Down. When a player is Knoc
 
 You may cast this spell either at the start of any of the opposition's team turns, before any player is activated, or immediately after any of the opposition's team turns has ended. Target any opposition player and roll a D6:
 
-*   If the roll is equal to or higher than the player's Strength characteristic, or is a natural 6, that player turns into a frog for the remainder of the drive, after which their coach will secure emergency magical assistance to turn the player back into their original form.
-*   If the roll is lower than the player's Strength characteristic, the player develops a fresh crop of warts, but the spell has no further effect.
+- If the roll is equal to or higher than the player's Strength characteristic, or is a natural 6, that player turns into a frog for the remainder of the drive, after which their coach will secure emergency magical assistance to turn the player back into their original form.
+- If the roll is lower than the player's Strength characteristic, the player develops a fresh crop of warts, but the spell has no further effect.
 
 If the player was in possession of the ball when they were turned into a frog, it is dropped and will bounce. When a roll on the Casualty table is required against the frog, no roll is made. Instead, it is automatically treated as if a Badly Hurt result had been rolled. The frog must miss the rest of the game and cannot be patched-up by an apothecary (because it's a frog!). At the end of the game, the player is returned to normal shape with no ill effects.
 
@@ -321,8 +316,7 @@ Frog
 
 Skills & Traits: [Dodge](../skills_and_traits/#dodge), [Leap](../skills_and_traits/#leap), [No Hands](../skills_and_traits/#no-hands), [Stunty](../skills_and_traits/#stunty), [Titchy](../skills_and_traits/#titchy), [Very Long Legs](../skills_and_traits/#very-long-legs)
 
-0-1 BIASED REFEREE
-------------------
+## 0-1 BIASED REFEREE
 
 **PRICE VARIES, AVAILABLE TO VARIOUS TEAMS**
 
@@ -334,8 +328,8 @@ For the most part, a Biased Referee will treat both teams equally, meaning that 
 
 Many Biased Referees are named celebrities, although most are not. As with Star Players, it is possible for both teams to hire the services of the same named Biased Referee:
 
-*   If this happens during a game that is part of a league, neither team can use the named Biased Referee but the named Biased Referee will keep both hiring fees.
-*   If this happens during exhibition play, both teams can use the named Biased Referee - they can dish out harsh rulings to both sides!
+- If this happens during a game that is part of a league, neither team can use the named Biased Referee but the named Biased Referee will keep both hiring fees.
+- If this happens during exhibition play, both teams can use the named Biased Referee - they can dish out harsh rulings to both sides!
 
 There are too many named Biased Referees to list here, and most are only available to certain teams. Details of further Biased Referees can be found in the various Blood Bowl supplements available.
 
@@ -349,12 +343,11 @@ In the years since the collapse of the NAF, there has been a marked increase of 
 
 Strict adherence to the rules is of paramount importance to all referees. This is especially true when one of the teams has paid them to watch the opposition closely! If any player on the opposing team commits a Foul without rolling a double when making either the Armour roll or Injury roll, roll a D6:
 
-*   On a roll of 5+, the Biased Referee spots the Foul and the player is Sent-off, exactly as if they had rolled a double (i.e., the opposing coach may use a Bribe if one is available and may attempt to Argue the Call).
-*   On a roll of 1-4, the player manages to avoid the ref's attention.
+- On a roll of 5+, the Biased Referee spots the Foul and the player is Sent-off, exactly as if they had rolled a double (i.e., the opposing coach may use a Bribe if one is available and may attempt to Argue the Call).
+- On a roll of 1-4, the player manages to avoid the ref's attention.
 
 **"I DIDN'T SEE A THING!"**
 
 Whilst watching one team incredibly closely, the Biased Referee can easily be forgiven for missing infractions perpetrated by the other. When rolling on the Argue the Call table, you may apply a +1 modifier to the dice roll.
 
 var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("\_\_tabbed\_"))
-

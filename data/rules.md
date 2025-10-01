@@ -1,7 +1,7 @@
 Saved at path
-  Relative: data/rules.md
-  Absolute: /Users/remy/Sites/bloodbowl/fantasy-football-game/data/rules.md
-  \_\_md\_scope=new URL("../..",location),\_\_md\_hash=e=>\[...e\].reduce(((e,\_)=>(e<<5)-e+\_.charCodeAt(0)),0),\_\_md\_get=(e,\_=localStorage,t=\_\_md\_scope)=>JSON.parse(\_.getItem(t.pathname+"."+e)),\_\_md\_set=(e,\_,t=localStorage,a=\_\_md\_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(\_))}catch(e){}}  
+Relative: data/rules.md
+Absolute: /Users/remy/Sites/bloodbowl/fantasy-football-game/data/rules.md
+\_\_md_scope=new URL("../..",location),\_\_md_hash=e=>\[...e\].reduce(((e,\_)=>(e<<5)-e+\_.charCodeAt(0)),0),\_\_md_get=(e,\_=localStorage,t=\_\_md_scope)=>JSON.parse(\_.getItem(t.pathname+"."+e)),\_\_md_set=(e,\_,t=localStorage,a=\_\_md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(\_))}catch(e){}}
 
 [Skip to content](#a-game-of-two-halves)
 
@@ -11,641 +11,594 @@ Blood Bowl Base
 
 The Rules of Blood Bowl
 
- 
-
-var palette=\_\_md\_get("\_\_palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"\[data-md-color-media='(prefers-color-scheme: light)'\]":"\[data-md-color-media='(prefers-color-scheme: dark)'\]");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var\[key,value\]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}
+var palette=\_\_md_get("\_\_palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"\[data-md-color-media='(prefers-color-scheme: light)'\]":"\[data-md-color-media='(prefers-color-scheme: dark)'\]");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var\[key,value\]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}
 
 Initializing search
 
-*   [Core Rules](../)
-*   [Matched Play](../../matched_play/)
-*   [Death Zone](../../death_zone/)
-*   [Dungeon Bowl](../../dungeon_bowl/)
-*   [Blitz Bowl](../../blitz_bowl/)
-*   [Gutter Bowl](../../gutter_bowl/)
-*   [Spike! Journal](../../spike_journal/)
-*   [Teams](../../teams/)
-*   [Star Players](../../starplayers/)
+- [Core Rules](../)
+- [Matched Play](../../matched_play/)
+- [Death Zone](../../death_zone/)
+- [Dungeon Bowl](../../dungeon_bowl/)
+- [Blitz Bowl](../../blitz_bowl/)
+- [Gutter Bowl](../../gutter_bowl/)
+- [Spike! Journal](../../spike_journal/)
+- [Teams](../../teams/)
+- [Star Players](../../starplayers/)
 
- [![logo](../../assets/BB2020_Badge.png)](../.. "Blood Bowl Base")Blood Bowl Base
+[![logo](../../assets/BB2020_Badge.png)](../.. "Blood Bowl Base")Blood Bowl Base
 
-*   [Core Rules](../)
-    
-    Core Rules
-    
-    *   [Cheat Sheet](../cheat_sheet/)
-    *   [Blood Bowl Stadia](../blood_bowl_stadia/)
-    *   [Rules and Regulations](../rules_and_regulations/)
-    *    The Rules of Blood Bowl [The Rules of Blood Bowl](./)
-        
-        Table of contents
-        
-        *   [A Game of Two Halves](#a-game-of-two-halves)
-            
-            *   [SETTING UP THE GAME](#setting-up-the-game)
-            *   [PRE-GAME SEQUENCE](#pre-game-sequence)
-            *   [1\. THE FANS](#1-the-fans)
-                
-                *   [FAN FACTOR (FF)](#fan-factor-ff)
-                
-            *   [2\. THE WEATHER](#2-the-weather)
-                
-                *   [WEATHER TABLE](#weather-table)
-                
-            *   [3\. TAKE ON JOURNEYMEN](#3-take-on-journeymen)
-            *   [4\. INDUCEMENTS](#4-inducements)
-                
-                *   [PETTY CASH](#petty-cash)
-                *   [TREASURY](#treasury)
-                *   [COMMON INDUCEMENTS](#common-inducements)
-                *   [THE UNDERDOG](#the-underdog)
-                
-            *   [5\. THE PRAYERS TO NUFFLE TABLE](#5-the-prayers-to-nuffle-table)
-            *   [6\. DETERMINE KICKING TEAM](#6-determine-kicking-team)
-                
-                *   [PRAYERS TO NUFFLE TABLE](#prayers-to-nuffle-table)
-                
-            
-        *   [The Start of A Drive](#the-start-of-a-drive)
-            
-            *   [START OF DRIVE SEQUENCE](#start-of-drive-sequence)
-            *   [TOO MANY PLAYERS](#too-many-players)
-            *   [1\. SET-UP](#1-set-up)
-            *   [2\. THE KICK-OFF](#2-the-kick-off)
-                
-                *   [NOMINATE KICKING PLAYER](#nominate-kicking-player)
-                *   [PLACE THE KICK](#place-the-kick)
-                *   [THE KICK DEVIATES](#the-kick-deviates)
-                
-            *   [3\. THE KICK-OFF EVENT](#3-the-kick-off-event)
-                
-                *   [WHAT GOES UP, MUST COME DOWN](#what-goes-up-must-come-down)
-                *   [TOUCHBACKS](#touchbacks)
-                *   [THE KICK-OFF EVENT TABLE](#the-kick-off-event-table)
-                
-            
-        *   [The Team Turn](#the-team-turn)
-            
-            *   [TEAM TURNS](#team-turns)
-            *   [ACTIVE AND INACTIVE TEAM](#active-and-inactive-team)
-            *   [MOVING THE TURN MARKER](#moving-the-turn-marker)
-            *   [PLAYER ACTIVATIONS](#player-activations)
-            *   [DECLARING ACTIONS](#declaring-actions)
-            *   [MOVE](#move)
-            *   [PASS](#pass)
-            *   [HAND-OFF](#hand-off)
-            *   [THROW TEAMMATE](#throw-teammate)
-            *   [BLOCK](#block)
-            *   [BLITZ](#blitz)
-            *   [FOUL](#foul)
-                
-                *   [SPECIAL ACTIONS](#special-actions)
-                
-            *   [ACTIVATED PLAYERS](#activated-players)
-            
-        *   [Movement](#movement)
-            
-            *   [MOVING PLAYERS](#moving-players)
-            *   [UNOCCUPIED SQUARES](#unoccupied-squares)
-                
-                *   [OCCUPIED SQUARES](#occupied-squares)
-                
-            *   [STANDING UP](#standing-up)
-            *   [RUSHING](#rushing)
-            *   [MARKED PLAYERS AND DODGING](#marked-players-and-dodging)
-            *   [OPEN PLAYERS](#open-players)
-            *   [JUMPING OVER PRONE OR STUNNED PLAYERS](#jumping-over-prone-or-stunned-players)
-            *   [BLITZ ACTIONS](#blitz-actions)
-            *   [PICKING UP THE BALL](#picking-up-the-ball)
-            
-        *   [Passing The Ball](#passing-the-ball)
-            
-            *   [PASS ACTIONS](#pass-actions)
-            *   [MEASURE RANGE AND DECLARE TARGET SQUARE](#measure-range-and-declare-target-square)
-            *   [MEASURING RANGE](#measuring-range)
-            *   [DECLARE TARGET SQUARE](#declare-target-square)
-            *   [TEST FOR ACCURACY](#test-for-accuracy)
-            *   [ACCURATE PASSES](#accurate-passes)
-            *   [INACCURATE PASSES](#inaccurate-passes)
-            *   [WILDLY INACCURATE PASSES](#wildly-inaccurate-passes)
-            *   [FUMBLED PASSES](#fumbled-passes)
-            *   [PASSING INTERFERENCE](#passing-interference)
-            *   [SUCCESSFUL PASSING INTERFERENCE](#successful-passing-interference)
-            *   [RESOLVE PASS ACTION](#resolve-pass-action)
-            *   [CATCHING THE BALL](#catching-the-ball)
-            *   [HAND-OFF](#hand-off_1)
-            *   [THROW-INS](#throw-ins)
-            *   [CORNER THROW-INS](#corner-throw-ins)
-            
-        *   [Throwing other Players](#throwing-other-players)
-            
-            *   [THROW TEAMMATE ACTIONS](#throw-teammate-actions)
-            *   [MEASURE RANGE AND DECLARE TARGET SQUARE](#measure-range-and-declare-target-square_1)
-            *   [MEASURING RANGE](#measuring-range_1)
-            *   [DECLARE TARGET SQUARE](#declare-target-square_1)
-            *   [TEST FOR QUALITY](#test-for-quality)
-            *   [SUPERB THROWS](#superb-throws)
-            *   [SUCCESSFUL THROWS](#successful-throws)
-                
-                *   [TERRIBLE THROWS](#terrible-throws)
-                
-            *   [FUMBLED THROWS](#fumbled-throws)
-            *   [RESOLVE THROW TEAMMATE ACTION](#resolve-throw-teammate-action)
-            *   [LANDING](#landing)
-            *   [LANDING IN AN OCCUPIED SQUARE](#landing-in-an-occupied-square)
-            *   [CRASH LANDING](#crash-landing)
-            *   [LANDING IN THE CROWD](#landing-in-the-crowd)
-            
-        *   [Blocking](#blocking)
-            
-            *   [BLOCK ACTIONS](#block-actions)
-            *   [STRENGTH](#strength)
-            *   [ASSISTING A BLOCK](#assisting-a-block)
-                
-                *   [OFFENSIVE ASSISTS](#offensive-assists)
-                *   [DEFENSIVE ASSISTS](#defensive-assists)
-                
-            *   [BLOCK DICE](#block-dice)
-                
-                *   [PLAYER DOWN!](#player-down)
-                *   [BOTH DOWN](#both-down)
-                *   [PUSH BACK](#push-back)
-                *   [STUMBLE](#stumble)
-                *   [POW!](#pow)
-                *   [SELECT AND APPLY RESULT](#select-and-apply-result)
-                
-            *   [PUSHED PLAYERS](#pushed-players)
-                
-                *   [CHAIN-PUSHES](#chain-pushes)
-                *   [PUSHED INTO THE CROWD](#pushed-into-the-crowd)
-                
-            *   [KNOCKED DOWN](#knocked-down)
-            *   [PLACED PRONE](#placed-prone)
-            *   [FOLLOW-UP](#follow-up)
-            *   [BLITZ ACTIONS](#blitz-actions_1)
-            
-        *   [Armour And Injuries](#armour-and-injuries)
-            
-            *   [RISKING INJURY](#risking-injury)
-            *   [ARMOUR ROLLS](#armour-rolls)
-            *   [INJURY ROLLS](#injury-rolls)
-                
-                *   [INJURY TABLE](#injury-table)
-                
-            *   [STUNTY PLAYERS](#stunty-players)
-                
-                *   [STUNTY INJURY TABLE](#stunty-injury-table)
-                
-            *   [INJURY BY THE CROWD](#injury-by-the-crowd)
-            *   [CASUALTY ROLLS](#casualty-rolls)
-                
-                *   [CASUALTY TABLE](#casualty-table)
-                *   [MNG (MISS NEXT GAME)](#mng-miss-next-game)
-                *   [NI (NIGGLING INJURY)](#ni-niggling-injury)
-                *   [CHARACTERISTIC REDUCTION](#characteristic-reduction)
-                *   [LASTING INJURY TABLE](#lasting-injury-table)
-                *   [DEAD](#dead)
-                
-            *   [SUBSTITUTIONS](#substitutions)
-            *   [APOTHECARIES](#apothecaries)
-                
-                *   [PATCHING-UP KNOCKED-OUT PLAYERS](#patching-up-knocked-out-players)
-                *   [PATCHING-UP CASUALTIES](#patching-up-casualties)
-                
-            
-        *   [Kicking Them While They're Down](#kicking-them-while-theyre-down)
-            
-            *   [FOUL ACTIONS](#foul-actions)
-            *   [FOULING](#fouling)
-            *   [BEING SENT-OFF](#being-sent-off)
-            *   [ARGUING THE CALL](#arguing-the-call)
-                
-                *   [ARGUE THE CALL](#argue-the-call)
-                
-            
-        *   [Touchdown!](#touchdown)
-            
-            *   [SCORING A TOUCHDOWN](#scoring-a-touchdown)
-            *   [SCORING DURING YOUR OPPONENT'S TURN](#scoring-during-your-opponents-turn)
-            *   [RECORD SCORE](#record-score)
-            *   [STALLING](#stalling)
-            
-        *   [The End of A Drive](#the-end-of-a-drive)
-            
-            *   [END OF DRIVE SEQUENCE](#end-of-drive-sequence)
-                
-                *   [1\. DEAL WITH SECRET WEAPONS](#1-deal-with-secret-weapons)
-                *   [2\. RECOVER KNOCKED-OUT PLAYERS](#2-recover-knocked-out-players)
-                *   [3\. THE DRIVE ENDS](#3-the-drive-ends)
-                
-            *   [RESTARTING THE GAME](#restarting-the-game)
-            *   [ENDING THE GAME](#ending-the-game)
-            *   [WINNING THE GAME](#winning-the-game)
-            *   [CONCEDING](#conceding)
-            *   [EXTRA TIME](#extra-time)
-            *   [SUDDEN DEATH](#sudden-death)
-            
-        
-    *   [Post-game Sequence](../post-game_sequence/)
-    *   [Skills and Traits](../skills_and_traits/)
-    *   [Inducements in Detail](../inducements_in_detail/)
-    *   [League and Exhibition Play](../league_and_exhibition_play/)
-    *   [The Teams](../the_teams/)
-    *   [Special Plays Card Pack](../special_plays_card_pack/)
-    *   [Lastest FAQ](../faq_290525/)
-    
-*   [Matched Play](../../matched_play/)
-    
-    Matched Play
-    
-    *   [Guide](../../matched_play/guide/)
-    
-*   [Death Zone](../../death_zone/)
-    
-    Death Zone
-    
-    *   [New Inducements](../../death_zone/new_inducements/)
-    *   [Fabulous Freebooters](../../death_zone/fabulous_freebooters/)
-    *   [Titanic Effort.. The Biggest of the Big Guys](../../death_zone/titanic_effort/)
-    *   [Sponsorship](../../death_zone/sponsorship/)
-    *   [Blood Bowl Stadia](../../death_zone/blood_bowl_stadia/)
-    *   [A Load of Balls](../../death_zone/a_load_of_balls/)
-    *   [New Weather Tables](../../death_zone/new_weather_tables/)
-    *   [Match Events](../../death_zone/match_events/)
-    *   [Blood Bowl Sevens](../../death_zone/blood_bowl_sevens/)
-    
-*   [Dungeon Bowl](../../dungeon_bowl/)
-    
-    Dungeon Bowl
-    
-    *   [Cheat Sheet](../../dungeon_bowl/cheat_sheet/)
-    *   [The Game of Dungeon Bowl](../../dungeon_bowl/the_game_of_dungeon_bowl/)
-    *   [Rules and Regulations](../../dungeon_bowl/rules_and_regulations/)
-    *   [Set-Up](../../dungeon_bowl/set-up/)
-    *   [The Rules of Dungeon Bowl](../../dungeon_bowl/the_rules_of_dungeon_bowl/)
-    *   [Post-game Sequence](../../dungeon_bowl/post-game_sequence/)
-    *   [Skills and Traits](../../dungeon_bowl/skills_and_traits/)
-    *   [Inducements](../../dungeon_bowl/inducements/)
-    *   [League and Exhibition Play](../../dungeon_bowl/league_and_exhibition_play/)
-    *   [Death Zone](../../dungeon_bowl/death_zone/)
-    *   [The Teams](../../dungeon_bowl/the_teams/)
-    
-*   [Blitz Bowl](../../blitz_bowl/)
-    
-    Blitz Bowl
-    
-    *   [Contents of the Box](../../blitz_bowl/contents_of_the_box/)
-    *   [The Rules of Blitz Bowl](../../blitz_bowl/rules/)
-    *   [Drill Cards](../../blitz_bowl/drill_cards/)
-    *   [Teams](../../blitz_bowl/teams/)
-    *   [Cards](../../blitz_bowl/cards/)
-    
-*   [Gutter Bowl](../../gutter_bowl/)
-    
-    Gutter Bowl
-    
-    *   [The Rules](../../gutter_bowl/rules/)
-    *   [Gutter Bowl Leagues](../../gutter_bowl/leagues/)
-    
-*   [Spike! Journal](../../spike_journal/)
-    
-    Spike! Journal
-    
-    *   [Spike! Journal 11](../../spike_journal/issue_11/)
-    *   [Spike! Journal 12](../../spike_journal/issue_12/)
-    *   [Spike! Journal 13](../../spike_journal/issue_13/)
-    *   [Spike! Journal 14](../../spike_journal/issue_14/)
-    *   [Spike! Journal 15](../../spike_journal/issue_15/)
-    *   [Spike! Journal 16](../../spike_journal/issue_16/)
-    *   [Spike! Journal 17](../../spike_journal/issue_17/)
-    *   [Spike! Journal 18](../../spike_journal/issue_18/)
-    *   [Spike! Almanac 2021](../../spike_journal/almanac_2021/)
-    *   [Spike! Almanac 2024](../../spike_journal/almanac_2024/)
-    *   [Pitch Rules](../../spike_journal/pitch_rules/)
-    *   [Geheimnisnacht Special](../../spike_journal/geheimnisnacht_special/)
-    *   [Holiday Special](../../spike_journal/holiday_special/)
-    
-*   [Teams](../../teams/)
-    
-    Teams
-    
-    *   [Amazon](../../teams/Amazon/)
-    *   [Black Orc](../../teams/Black_Orc/)
-    *   [Chaos Chosen](../../teams/Chaos_Chosen/)
-    *   [Chaos Dwarf](../../teams/Chaos_Dwarf/)
-    *   [Chaos Renegades](../../teams/Chaos_Renegades/)
-    *   [Dark Elf](../../teams/Dark_Elf/)
-    *   [Dwarf](../../teams/Dwarf/)
-    *   [Elven Union](../../teams/Elven_Union/)
-    *   [Gnome](../../teams/Gnome/)
-    *   [Goblin](../../teams/Goblin/)
-    *   [Halfling](../../teams/Halfling/)
-    *   [High Elf](../../teams/High_Elf/)
-    *   [Human](../../teams/Human/)
-    *   [Imperial Nobility](../../teams/Imperial_Nobility/)
-    *   [Khorne](../../teams/Khorne/)
-    *   [Lizardmen](../../teams/Lizardmen/)
-    *   [Necromantic Horror](../../teams/Necromantic_Horror/)
-    *   [Norse](../../teams/Norse/)
-    *   [Nurgle](../../teams/Nurgle/)
-    *   [Ogre](../../teams/Ogre/)
-    *   [Old World Alliance](../../teams/Old_World_Alliance/)
-    *   [Orc](../../teams/Orc/)
-    *   [Shambling Undead](../../teams/Shambling_Undead/)
-    *   [Skaven](../../teams/Skaven/)
-    *   [Snotling](../../teams/Snotling/)
-    *   [Tomb Kings](../../teams/Tomb_Kings/)
-    *   [Underworld Denizens](../../teams/Underworld_Denizens/)
-    *   [Vampire](../../teams/Vampire/)
-    *   [Wood Elf](../../teams/Wood_Elf/)
-    
-*   [Star Players](../../starplayers/)
-    
-    Star Players
-    
-    *   [Akhorne The Squirrel](../../starplayers/Akhorne_The_Squirrel/)
-    *   [Anqi Panqi](../../starplayers/Anqi_Panqi/)
-    *   [Barik Farblast](../../starplayers/Barik_Farblast/)
-    *   [Bilerot Vomitflesh](../../starplayers/Bilerot_Vomitflesh/)
-    *   [Boa Kon'ssstriktr](../../starplayers/Boa_Kon%27ssstriktr/)
-    *   [Bomber Dribblesnot](../../starplayers/Bomber_Dribblesnot/)
-    *   [Bryce 'The Slice' Cambuel](../../starplayers/Bryce_%27The_Slice%27_Cambuel/)
-    *   ['Captain' Karina Von Riesz](../../starplayers/%27Captain%27_Karina_Von_Riesz/)
-    *   [Cindy Piewhistle](../../starplayers/Cindy_Piewhistle/)
-    *   [Count Luthor von Drakenborg](../../starplayers/Count_Luthor_von_Drakenborg/)
-    *   [Deeproot Strongbranch](../../starplayers/Deeproot_Strongbranch/)
-    *   [Dribl and Drull](../../starplayers/Dribl_and_Drull/)
-    *   [Eldril Sidewinder](../../starplayers/Eldril_Sidewinder/)
-    *   [Estelle la Veneaux](../../starplayers/Estelle_la_Veneaux/)
-    *   [Frank 'n' Stein](../../starplayers/Frank_%27n%27_Stein/)
-    *   [Fungus the Loon](../../starplayers/Fungus_the_Loon/)
-    *   [Glart Smashrip](../../starplayers/Glart_Smashrip/)
-    *   [Gloriel Summerbloom](../../starplayers/Gloriel_Summerbloom/)
-    *   [Glotl Stop](../../starplayers/Glotl_Stop/)
-    *   [Grak and Crumbleberry](../../starplayers/Grak_and_Crumbleberry/)
-    *   [Grashnak Blackhoof](../../starplayers/Grashnak_Blackhoof/)
-    *   [Gretchen Wächter 'The Blood Bowl Widow'](../../starplayers/Gretchen_W%C3%A4chter_%27The_Blood_Bowl_Widow%27/)
-    *   [Griff Oberwald](../../starplayers/Griff_Oberwald/)
-    *   [Grim Ironjaw](../../starplayers/Grim_Ironjaw/)
-    *   [Grombrindal, The White Dwarf](../../starplayers/Grombrindal%2C_The_White_Dwarf/)
-    *   [Guffle Pussmaw](../../starplayers/Guffle_Pussmaw/)
-    *   [Hakflem Skuttlespike](../../starplayers/Hakflem_Skuttlespike/)
-    *   [Helmut Wulf](../../starplayers/Helmut_Wulf/)
-    *   [H'thark the Unstoppable](../../starplayers/H%27thark_the_Unstoppable/)
-    *   [Ivan 'the Animal' Deathshroud](../../starplayers/Ivan_%27the_Animal%27_Deathshroud/)
-    *   [Ivar Eriksson](../../starplayers/Ivar_Eriksson/)
-    *   [Jeremiah Kool](../../starplayers/Jeremiah_Kool/)
-    *   [Jordell Freshbreeze](../../starplayers/Jordell_Freshbreeze/)
-    *   [Karla Von Kill](../../starplayers/Karla_Von_Kill/)
-    *   [Kiroth Krakeneye](../../starplayers/Kiroth_Krakeneye/)
-    *   [Kreek 'the Verminator' Rustgouger](../../starplayers/Kreek_%27the_Verminator%27_Rustgouger/)
-    *   [Lord Borak the Despoiler](../../starplayers/Lord_Borak_the_Despoiler/)
-    *   [Maple Highgrove](../../starplayers/Maple_Highgrove/)
-    *   [Max Spleenripper](../../starplayers/Max_Spleenripper/)
-    *   [Mighty Zug](../../starplayers/Mighty_Zug/)
-    *   [Morg 'n' Thorg](../../starplayers/Morg_%27n%27_Thorg/)
-    *   [Nobbla Blackwart](../../starplayers/Nobbla_Blackwart/)
-    *   [Puggy Baconbreath](../../starplayers/Puggy_Baconbreath/)
-    *   [Rashnak Backstabber](../../starplayers/Rashnak_Backstabber/)
-    *   [Ripper Bolgrot](../../starplayers/Ripper_Bolgrot/)
-    *   [Rodney Roachbait](../../starplayers/Rodney_Roachbait/)
-    *   [Rowana Forestfoot](../../starplayers/Rowana_Forestfoot/)
-    *   [Roxanna Darknail](../../starplayers/Roxanna_Darknail/)
-    *   [Rumbelow Sheepskin](../../starplayers/Rumbelow_Sheepskin/)
-    *   [Scrappa Sorehead](../../starplayers/Scrappa_Sorehead/)
-    *   [Scyla Anfingrimm](../../starplayers/Scyla_Anfingrimm/)
-    *   [Skitter Stab-stab](../../starplayers/Skitter_Stab-stab/)
-    *   [Skrorg Snowpelt](../../starplayers/Skrorg_Snowpelt/)
-    *   [Skrull Halfheight](../../starplayers/Skrull_Halfheight/)
-    *   [Swiftvine Glimmershard](../../starplayers/Swiftvine_Glimmershard/)
-    *   [The Black Gobbo](../../starplayers/The_Black_Gobbo/)
-    *   [The Swift Twins](../../starplayers/The_Swift_Twins/)
-    *   [Thorsson Stoutmead](../../starplayers/Thorsson_Stoutmead/)
-    *   [Varag Ghoul-Chewer](../../starplayers/Varag_Ghoul-Chewer/)
-    *   [Wilhelm Chaney](../../starplayers/Wilhelm_Chaney/)
-    *   [Willow Rosebark](../../starplayers/Willow_Rosebark/)
-    *   [Withergrasp Doubledrool](../../starplayers/Withergrasp_Doubledrool/)
-    *   [Zolcath the Zoat](../../starplayers/Zolcath_the_Zoat/)
-    *   [Zzharg Madeye](../../starplayers/Zzharg_Madeye/)
-    
+- [Core Rules](../)
+
+  Core Rules
+  - [Cheat Sheet](../cheat_sheet/)
+  - [Blood Bowl Stadia](../blood_bowl_stadia/)
+  - [Rules and Regulations](../rules_and_regulations/)
+  - The Rules of Blood Bowl [The Rules of Blood Bowl](./)
+
+
+      Table of contents
+
+      *   [A Game of Two Halves](#a-game-of-two-halves)
+
+          *   [SETTING UP THE GAME](#setting-up-the-game)
+          *   [PRE-GAME SEQUENCE](#pre-game-sequence)
+          *   [1\. THE FANS](#1-the-fans)
+
+              *   [FAN FACTOR (FF)](#fan-factor-ff)
+
+          *   [2\. THE WEATHER](#2-the-weather)
+
+              *   [WEATHER TABLE](#weather-table)
+
+          *   [3\. TAKE ON JOURNEYMEN](#3-take-on-journeymen)
+          *   [4\. INDUCEMENTS](#4-inducements)
+
+              *   [PETTY CASH](#petty-cash)
+              *   [TREASURY](#treasury)
+              *   [COMMON INDUCEMENTS](#common-inducements)
+              *   [THE UNDERDOG](#the-underdog)
+
+          *   [5\. THE PRAYERS TO NUFFLE TABLE](#5-the-prayers-to-nuffle-table)
+          *   [6\. DETERMINE KICKING TEAM](#6-determine-kicking-team)
+
+              *   [PRAYERS TO NUFFLE TABLE](#prayers-to-nuffle-table)
+
+
+      *   [The Start of A Drive](#the-start-of-a-drive)
+
+          *   [START OF DRIVE SEQUENCE](#start-of-drive-sequence)
+          *   [TOO MANY PLAYERS](#too-many-players)
+          *   [1\. SET-UP](#1-set-up)
+          *   [2\. THE KICK-OFF](#2-the-kick-off)
+
+              *   [NOMINATE KICKING PLAYER](#nominate-kicking-player)
+              *   [PLACE THE KICK](#place-the-kick)
+              *   [THE KICK DEVIATES](#the-kick-deviates)
+
+          *   [3\. THE KICK-OFF EVENT](#3-the-kick-off-event)
+
+              *   [WHAT GOES UP, MUST COME DOWN](#what-goes-up-must-come-down)
+              *   [TOUCHBACKS](#touchbacks)
+              *   [THE KICK-OFF EVENT TABLE](#the-kick-off-event-table)
+
+
+      *   [The Team Turn](#the-team-turn)
+
+          *   [TEAM TURNS](#team-turns)
+          *   [ACTIVE AND INACTIVE TEAM](#active-and-inactive-team)
+          *   [MOVING THE TURN MARKER](#moving-the-turn-marker)
+          *   [PLAYER ACTIVATIONS](#player-activations)
+          *   [DECLARING ACTIONS](#declaring-actions)
+          *   [MOVE](#move)
+          *   [PASS](#pass)
+          *   [HAND-OFF](#hand-off)
+          *   [THROW TEAMMATE](#throw-teammate)
+          *   [BLOCK](#block)
+          *   [BLITZ](#blitz)
+          *   [FOUL](#foul)
+
+              *   [SPECIAL ACTIONS](#special-actions)
+
+          *   [ACTIVATED PLAYERS](#activated-players)
+
+      *   [Movement](#movement)
+
+          *   [MOVING PLAYERS](#moving-players)
+          *   [UNOCCUPIED SQUARES](#unoccupied-squares)
+
+              *   [OCCUPIED SQUARES](#occupied-squares)
+
+          *   [STANDING UP](#standing-up)
+          *   [RUSHING](#rushing)
+          *   [MARKED PLAYERS AND DODGING](#marked-players-and-dodging)
+          *   [OPEN PLAYERS](#open-players)
+          *   [JUMPING OVER PRONE OR STUNNED PLAYERS](#jumping-over-prone-or-stunned-players)
+          *   [BLITZ ACTIONS](#blitz-actions)
+          *   [PICKING UP THE BALL](#picking-up-the-ball)
+
+      *   [Passing The Ball](#passing-the-ball)
+
+          *   [PASS ACTIONS](#pass-actions)
+          *   [MEASURE RANGE AND DECLARE TARGET SQUARE](#measure-range-and-declare-target-square)
+          *   [MEASURING RANGE](#measuring-range)
+          *   [DECLARE TARGET SQUARE](#declare-target-square)
+          *   [TEST FOR ACCURACY](#test-for-accuracy)
+          *   [ACCURATE PASSES](#accurate-passes)
+          *   [INACCURATE PASSES](#inaccurate-passes)
+          *   [WILDLY INACCURATE PASSES](#wildly-inaccurate-passes)
+          *   [FUMBLED PASSES](#fumbled-passes)
+          *   [PASSING INTERFERENCE](#passing-interference)
+          *   [SUCCESSFUL PASSING INTERFERENCE](#successful-passing-interference)
+          *   [RESOLVE PASS ACTION](#resolve-pass-action)
+          *   [CATCHING THE BALL](#catching-the-ball)
+          *   [HAND-OFF](#hand-off_1)
+          *   [THROW-INS](#throw-ins)
+          *   [CORNER THROW-INS](#corner-throw-ins)
+
+      *   [Throwing other Players](#throwing-other-players)
+
+          *   [THROW TEAMMATE ACTIONS](#throw-teammate-actions)
+          *   [MEASURE RANGE AND DECLARE TARGET SQUARE](#measure-range-and-declare-target-square_1)
+          *   [MEASURING RANGE](#measuring-range_1)
+          *   [DECLARE TARGET SQUARE](#declare-target-square_1)
+          *   [TEST FOR QUALITY](#test-for-quality)
+          *   [SUPERB THROWS](#superb-throws)
+          *   [SUCCESSFUL THROWS](#successful-throws)
+
+              *   [TERRIBLE THROWS](#terrible-throws)
+
+          *   [FUMBLED THROWS](#fumbled-throws)
+          *   [RESOLVE THROW TEAMMATE ACTION](#resolve-throw-teammate-action)
+          *   [LANDING](#landing)
+          *   [LANDING IN AN OCCUPIED SQUARE](#landing-in-an-occupied-square)
+          *   [CRASH LANDING](#crash-landing)
+          *   [LANDING IN THE CROWD](#landing-in-the-crowd)
+
+      *   [Blocking](#blocking)
+
+          *   [BLOCK ACTIONS](#block-actions)
+          *   [STRENGTH](#strength)
+          *   [ASSISTING A BLOCK](#assisting-a-block)
+
+              *   [OFFENSIVE ASSISTS](#offensive-assists)
+              *   [DEFENSIVE ASSISTS](#defensive-assists)
+
+          *   [BLOCK DICE](#block-dice)
+
+              *   [PLAYER DOWN!](#player-down)
+              *   [BOTH DOWN](#both-down)
+              *   [PUSH BACK](#push-back)
+              *   [STUMBLE](#stumble)
+              *   [POW!](#pow)
+              *   [SELECT AND APPLY RESULT](#select-and-apply-result)
+
+          *   [PUSHED PLAYERS](#pushed-players)
+
+              *   [CHAIN-PUSHES](#chain-pushes)
+              *   [PUSHED INTO THE CROWD](#pushed-into-the-crowd)
+
+          *   [KNOCKED DOWN](#knocked-down)
+          *   [PLACED PRONE](#placed-prone)
+          *   [FOLLOW-UP](#follow-up)
+          *   [BLITZ ACTIONS](#blitz-actions_1)
+
+      *   [Armour And Injuries](#armour-and-injuries)
+
+          *   [RISKING INJURY](#risking-injury)
+          *   [ARMOUR ROLLS](#armour-rolls)
+          *   [INJURY ROLLS](#injury-rolls)
+
+              *   [INJURY TABLE](#injury-table)
+
+          *   [STUNTY PLAYERS](#stunty-players)
+
+              *   [STUNTY INJURY TABLE](#stunty-injury-table)
+
+          *   [INJURY BY THE CROWD](#injury-by-the-crowd)
+          *   [CASUALTY ROLLS](#casualty-rolls)
+
+              *   [CASUALTY TABLE](#casualty-table)
+              *   [MNG (MISS NEXT GAME)](#mng-miss-next-game)
+              *   [NI (NIGGLING INJURY)](#ni-niggling-injury)
+              *   [CHARACTERISTIC REDUCTION](#characteristic-reduction)
+              *   [LASTING INJURY TABLE](#lasting-injury-table)
+              *   [DEAD](#dead)
+
+          *   [SUBSTITUTIONS](#substitutions)
+          *   [APOTHECARIES](#apothecaries)
+
+              *   [PATCHING-UP KNOCKED-OUT PLAYERS](#patching-up-knocked-out-players)
+              *   [PATCHING-UP CASUALTIES](#patching-up-casualties)
+
+
+      *   [Kicking Them While They're Down](#kicking-them-while-theyre-down)
+
+          *   [FOUL ACTIONS](#foul-actions)
+          *   [FOULING](#fouling)
+          *   [BEING SENT-OFF](#being-sent-off)
+          *   [ARGUING THE CALL](#arguing-the-call)
+
+              *   [ARGUE THE CALL](#argue-the-call)
+
+
+      *   [Touchdown!](#touchdown)
+
+          *   [SCORING A TOUCHDOWN](#scoring-a-touchdown)
+          *   [SCORING DURING YOUR OPPONENT'S TURN](#scoring-during-your-opponents-turn)
+          *   [RECORD SCORE](#record-score)
+          *   [STALLING](#stalling)
+
+      *   [The End of A Drive](#the-end-of-a-drive)
+
+          *   [END OF DRIVE SEQUENCE](#end-of-drive-sequence)
+
+              *   [1\. DEAL WITH SECRET WEAPONS](#1-deal-with-secret-weapons)
+              *   [2\. RECOVER KNOCKED-OUT PLAYERS](#2-recover-knocked-out-players)
+              *   [3\. THE DRIVE ENDS](#3-the-drive-ends)
+
+          *   [RESTARTING THE GAME](#restarting-the-game)
+          *   [ENDING THE GAME](#ending-the-game)
+          *   [WINNING THE GAME](#winning-the-game)
+          *   [CONCEDING](#conceding)
+          *   [EXTRA TIME](#extra-time)
+          *   [SUDDEN DEATH](#sudden-death)
+
+
+  - [Post-game Sequence](../post-game_sequence/)
+  - [Skills and Traits](../skills_and_traits/)
+  - [Inducements in Detail](../inducements_in_detail/)
+  - [League and Exhibition Play](../league_and_exhibition_play/)
+  - [The Teams](../the_teams/)
+  - [Special Plays Card Pack](../special_plays_card_pack/)
+  - [Lastest FAQ](../faq_290525/)
+
+- [Matched Play](../../matched_play/)
+
+  Matched Play
+  - [Guide](../../matched_play/guide/)
+
+- [Death Zone](../../death_zone/)
+
+  Death Zone
+  - [New Inducements](../../death_zone/new_inducements/)
+  - [Fabulous Freebooters](../../death_zone/fabulous_freebooters/)
+  - [Titanic Effort.. The Biggest of the Big Guys](../../death_zone/titanic_effort/)
+  - [Sponsorship](../../death_zone/sponsorship/)
+  - [Blood Bowl Stadia](../../death_zone/blood_bowl_stadia/)
+  - [A Load of Balls](../../death_zone/a_load_of_balls/)
+  - [New Weather Tables](../../death_zone/new_weather_tables/)
+  - [Match Events](../../death_zone/match_events/)
+  - [Blood Bowl Sevens](../../death_zone/blood_bowl_sevens/)
+
+- [Dungeon Bowl](../../dungeon_bowl/)
+
+  Dungeon Bowl
+  - [Cheat Sheet](../../dungeon_bowl/cheat_sheet/)
+  - [The Game of Dungeon Bowl](../../dungeon_bowl/the_game_of_dungeon_bowl/)
+  - [Rules and Regulations](../../dungeon_bowl/rules_and_regulations/)
+  - [Set-Up](../../dungeon_bowl/set-up/)
+  - [The Rules of Dungeon Bowl](../../dungeon_bowl/the_rules_of_dungeon_bowl/)
+  - [Post-game Sequence](../../dungeon_bowl/post-game_sequence/)
+  - [Skills and Traits](../../dungeon_bowl/skills_and_traits/)
+  - [Inducements](../../dungeon_bowl/inducements/)
+  - [League and Exhibition Play](../../dungeon_bowl/league_and_exhibition_play/)
+  - [Death Zone](../../dungeon_bowl/death_zone/)
+  - [The Teams](../../dungeon_bowl/the_teams/)
+
+- [Blitz Bowl](../../blitz_bowl/)
+
+  Blitz Bowl
+  - [Contents of the Box](../../blitz_bowl/contents_of_the_box/)
+  - [The Rules of Blitz Bowl](../../blitz_bowl/rules/)
+  - [Drill Cards](../../blitz_bowl/drill_cards/)
+  - [Teams](../../blitz_bowl/teams/)
+  - [Cards](../../blitz_bowl/cards/)
+
+- [Gutter Bowl](../../gutter_bowl/)
+
+  Gutter Bowl
+  - [The Rules](../../gutter_bowl/rules/)
+  - [Gutter Bowl Leagues](../../gutter_bowl/leagues/)
+
+- [Spike! Journal](../../spike_journal/)
+
+  Spike! Journal
+  - [Spike! Journal 11](../../spike_journal/issue_11/)
+  - [Spike! Journal 12](../../spike_journal/issue_12/)
+  - [Spike! Journal 13](../../spike_journal/issue_13/)
+  - [Spike! Journal 14](../../spike_journal/issue_14/)
+  - [Spike! Journal 15](../../spike_journal/issue_15/)
+  - [Spike! Journal 16](../../spike_journal/issue_16/)
+  - [Spike! Journal 17](../../spike_journal/issue_17/)
+  - [Spike! Journal 18](../../spike_journal/issue_18/)
+  - [Spike! Almanac 2021](../../spike_journal/almanac_2021/)
+  - [Spike! Almanac 2024](../../spike_journal/almanac_2024/)
+  - [Pitch Rules](../../spike_journal/pitch_rules/)
+  - [Geheimnisnacht Special](../../spike_journal/geheimnisnacht_special/)
+  - [Holiday Special](../../spike_journal/holiday_special/)
+
+- [Teams](../../teams/)
+
+  Teams
+  - [Amazon](../../teams/Amazon/)
+  - [Black Orc](../../teams/Black_Orc/)
+  - [Chaos Chosen](../../teams/Chaos_Chosen/)
+  - [Chaos Dwarf](../../teams/Chaos_Dwarf/)
+  - [Chaos Renegades](../../teams/Chaos_Renegades/)
+  - [Dark Elf](../../teams/Dark_Elf/)
+  - [Dwarf](../../teams/Dwarf/)
+  - [Elven Union](../../teams/Elven_Union/)
+  - [Gnome](../../teams/Gnome/)
+  - [Goblin](../../teams/Goblin/)
+  - [Halfling](../../teams/Halfling/)
+  - [High Elf](../../teams/High_Elf/)
+  - [Human](../../teams/Human/)
+  - [Imperial Nobility](../../teams/Imperial_Nobility/)
+  - [Khorne](../../teams/Khorne/)
+  - [Lizardmen](../../teams/Lizardmen/)
+  - [Necromantic Horror](../../teams/Necromantic_Horror/)
+  - [Norse](../../teams/Norse/)
+  - [Nurgle](../../teams/Nurgle/)
+  - [Ogre](../../teams/Ogre/)
+  - [Old World Alliance](../../teams/Old_World_Alliance/)
+  - [Orc](../../teams/Orc/)
+  - [Shambling Undead](../../teams/Shambling_Undead/)
+  - [Skaven](../../teams/Skaven/)
+  - [Snotling](../../teams/Snotling/)
+  - [Tomb Kings](../../teams/Tomb_Kings/)
+  - [Underworld Denizens](../../teams/Underworld_Denizens/)
+  - [Vampire](../../teams/Vampire/)
+  - [Wood Elf](../../teams/Wood_Elf/)
+
+- [Star Players](../../starplayers/)
+
+  Star Players
+  - [Akhorne The Squirrel](../../starplayers/Akhorne_The_Squirrel/)
+  - [Anqi Panqi](../../starplayers/Anqi_Panqi/)
+  - [Barik Farblast](../../starplayers/Barik_Farblast/)
+  - [Bilerot Vomitflesh](../../starplayers/Bilerot_Vomitflesh/)
+  - [Boa Kon'ssstriktr](../../starplayers/Boa_Kon%27ssstriktr/)
+  - [Bomber Dribblesnot](../../starplayers/Bomber_Dribblesnot/)
+  - [Bryce 'The Slice' Cambuel](../../starplayers/Bryce_%27The_Slice%27_Cambuel/)
+  - ['Captain' Karina Von Riesz](../../starplayers/%27Captain%27_Karina_Von_Riesz/)
+  - [Cindy Piewhistle](../../starplayers/Cindy_Piewhistle/)
+  - [Count Luthor von Drakenborg](../../starplayers/Count_Luthor_von_Drakenborg/)
+  - [Deeproot Strongbranch](../../starplayers/Deeproot_Strongbranch/)
+  - [Dribl and Drull](../../starplayers/Dribl_and_Drull/)
+  - [Eldril Sidewinder](../../starplayers/Eldril_Sidewinder/)
+  - [Estelle la Veneaux](../../starplayers/Estelle_la_Veneaux/)
+  - [Frank 'n' Stein](../../starplayers/Frank_%27n%27_Stein/)
+  - [Fungus the Loon](../../starplayers/Fungus_the_Loon/)
+  - [Glart Smashrip](../../starplayers/Glart_Smashrip/)
+  - [Gloriel Summerbloom](../../starplayers/Gloriel_Summerbloom/)
+  - [Glotl Stop](../../starplayers/Glotl_Stop/)
+  - [Grak and Crumbleberry](../../starplayers/Grak_and_Crumbleberry/)
+  - [Grashnak Blackhoof](../../starplayers/Grashnak_Blackhoof/)
+  - [Gretchen Wächter 'The Blood Bowl Widow'](../../starplayers/Gretchen_W%C3%A4chter_%27The_Blood_Bowl_Widow%27/)
+  - [Griff Oberwald](../../starplayers/Griff_Oberwald/)
+  - [Grim Ironjaw](../../starplayers/Grim_Ironjaw/)
+  - [Grombrindal, The White Dwarf](../../starplayers/Grombrindal%2C_The_White_Dwarf/)
+  - [Guffle Pussmaw](../../starplayers/Guffle_Pussmaw/)
+  - [Hakflem Skuttlespike](../../starplayers/Hakflem_Skuttlespike/)
+  - [Helmut Wulf](../../starplayers/Helmut_Wulf/)
+  - [H'thark the Unstoppable](../../starplayers/H%27thark_the_Unstoppable/)
+  - [Ivan 'the Animal' Deathshroud](../../starplayers/Ivan_%27the_Animal%27_Deathshroud/)
+  - [Ivar Eriksson](../../starplayers/Ivar_Eriksson/)
+  - [Jeremiah Kool](../../starplayers/Jeremiah_Kool/)
+  - [Jordell Freshbreeze](../../starplayers/Jordell_Freshbreeze/)
+  - [Karla Von Kill](../../starplayers/Karla_Von_Kill/)
+  - [Kiroth Krakeneye](../../starplayers/Kiroth_Krakeneye/)
+  - [Kreek 'the Verminator' Rustgouger](../../starplayers/Kreek_%27the_Verminator%27_Rustgouger/)
+  - [Lord Borak the Despoiler](../../starplayers/Lord_Borak_the_Despoiler/)
+  - [Maple Highgrove](../../starplayers/Maple_Highgrove/)
+  - [Max Spleenripper](../../starplayers/Max_Spleenripper/)
+  - [Mighty Zug](../../starplayers/Mighty_Zug/)
+  - [Morg 'n' Thorg](../../starplayers/Morg_%27n%27_Thorg/)
+  - [Nobbla Blackwart](../../starplayers/Nobbla_Blackwart/)
+  - [Puggy Baconbreath](../../starplayers/Puggy_Baconbreath/)
+  - [Rashnak Backstabber](../../starplayers/Rashnak_Backstabber/)
+  - [Ripper Bolgrot](../../starplayers/Ripper_Bolgrot/)
+  - [Rodney Roachbait](../../starplayers/Rodney_Roachbait/)
+  - [Rowana Forestfoot](../../starplayers/Rowana_Forestfoot/)
+  - [Roxanna Darknail](../../starplayers/Roxanna_Darknail/)
+  - [Rumbelow Sheepskin](../../starplayers/Rumbelow_Sheepskin/)
+  - [Scrappa Sorehead](../../starplayers/Scrappa_Sorehead/)
+  - [Scyla Anfingrimm](../../starplayers/Scyla_Anfingrimm/)
+  - [Skitter Stab-stab](../../starplayers/Skitter_Stab-stab/)
+  - [Skrorg Snowpelt](../../starplayers/Skrorg_Snowpelt/)
+  - [Skrull Halfheight](../../starplayers/Skrull_Halfheight/)
+  - [Swiftvine Glimmershard](../../starplayers/Swiftvine_Glimmershard/)
+  - [The Black Gobbo](../../starplayers/The_Black_Gobbo/)
+  - [The Swift Twins](../../starplayers/The_Swift_Twins/)
+  - [Thorsson Stoutmead](../../starplayers/Thorsson_Stoutmead/)
+  - [Varag Ghoul-Chewer](../../starplayers/Varag_Ghoul-Chewer/)
+  - [Wilhelm Chaney](../../starplayers/Wilhelm_Chaney/)
+  - [Willow Rosebark](../../starplayers/Willow_Rosebark/)
+  - [Withergrasp Doubledrool](../../starplayers/Withergrasp_Doubledrool/)
+  - [Zolcath the Zoat](../../starplayers/Zolcath_the_Zoat/)
+  - [Zzharg Madeye](../../starplayers/Zzharg_Madeye/)
 
 Table of contents
 
-*   [A Game of Two Halves](#a-game-of-two-halves)
-    
-    *   [SETTING UP THE GAME](#setting-up-the-game)
-    *   [PRE-GAME SEQUENCE](#pre-game-sequence)
-    *   [1\. THE FANS](#1-the-fans)
-        
-        *   [FAN FACTOR (FF)](#fan-factor-ff)
-        
-    *   [2\. THE WEATHER](#2-the-weather)
-        
-        *   [WEATHER TABLE](#weather-table)
-        
-    *   [3\. TAKE ON JOURNEYMEN](#3-take-on-journeymen)
-    *   [4\. INDUCEMENTS](#4-inducements)
-        
-        *   [PETTY CASH](#petty-cash)
-        *   [TREASURY](#treasury)
-        *   [COMMON INDUCEMENTS](#common-inducements)
-        *   [THE UNDERDOG](#the-underdog)
-        
-    *   [5\. THE PRAYERS TO NUFFLE TABLE](#5-the-prayers-to-nuffle-table)
-    *   [6\. DETERMINE KICKING TEAM](#6-determine-kicking-team)
-        
-        *   [PRAYERS TO NUFFLE TABLE](#prayers-to-nuffle-table)
-        
-    
-*   [The Start of A Drive](#the-start-of-a-drive)
-    
-    *   [START OF DRIVE SEQUENCE](#start-of-drive-sequence)
-    *   [TOO MANY PLAYERS](#too-many-players)
-    *   [1\. SET-UP](#1-set-up)
-    *   [2\. THE KICK-OFF](#2-the-kick-off)
-        
-        *   [NOMINATE KICKING PLAYER](#nominate-kicking-player)
-        *   [PLACE THE KICK](#place-the-kick)
-        *   [THE KICK DEVIATES](#the-kick-deviates)
-        
-    *   [3\. THE KICK-OFF EVENT](#3-the-kick-off-event)
-        
-        *   [WHAT GOES UP, MUST COME DOWN](#what-goes-up-must-come-down)
-        *   [TOUCHBACKS](#touchbacks)
-        *   [THE KICK-OFF EVENT TABLE](#the-kick-off-event-table)
-        
-    
-*   [The Team Turn](#the-team-turn)
-    
-    *   [TEAM TURNS](#team-turns)
-    *   [ACTIVE AND INACTIVE TEAM](#active-and-inactive-team)
-    *   [MOVING THE TURN MARKER](#moving-the-turn-marker)
-    *   [PLAYER ACTIVATIONS](#player-activations)
-    *   [DECLARING ACTIONS](#declaring-actions)
-    *   [MOVE](#move)
-    *   [PASS](#pass)
-    *   [HAND-OFF](#hand-off)
-    *   [THROW TEAMMATE](#throw-teammate)
-    *   [BLOCK](#block)
-    *   [BLITZ](#blitz)
-    *   [FOUL](#foul)
-        
-        *   [SPECIAL ACTIONS](#special-actions)
-        
-    *   [ACTIVATED PLAYERS](#activated-players)
-    
-*   [Movement](#movement)
-    
-    *   [MOVING PLAYERS](#moving-players)
-    *   [UNOCCUPIED SQUARES](#unoccupied-squares)
-        
-        *   [OCCUPIED SQUARES](#occupied-squares)
-        
-    *   [STANDING UP](#standing-up)
-    *   [RUSHING](#rushing)
-    *   [MARKED PLAYERS AND DODGING](#marked-players-and-dodging)
-    *   [OPEN PLAYERS](#open-players)
-    *   [JUMPING OVER PRONE OR STUNNED PLAYERS](#jumping-over-prone-or-stunned-players)
-    *   [BLITZ ACTIONS](#blitz-actions)
-    *   [PICKING UP THE BALL](#picking-up-the-ball)
-    
-*   [Passing The Ball](#passing-the-ball)
-    
-    *   [PASS ACTIONS](#pass-actions)
-    *   [MEASURE RANGE AND DECLARE TARGET SQUARE](#measure-range-and-declare-target-square)
-    *   [MEASURING RANGE](#measuring-range)
-    *   [DECLARE TARGET SQUARE](#declare-target-square)
-    *   [TEST FOR ACCURACY](#test-for-accuracy)
-    *   [ACCURATE PASSES](#accurate-passes)
-    *   [INACCURATE PASSES](#inaccurate-passes)
-    *   [WILDLY INACCURATE PASSES](#wildly-inaccurate-passes)
-    *   [FUMBLED PASSES](#fumbled-passes)
-    *   [PASSING INTERFERENCE](#passing-interference)
-    *   [SUCCESSFUL PASSING INTERFERENCE](#successful-passing-interference)
-    *   [RESOLVE PASS ACTION](#resolve-pass-action)
-    *   [CATCHING THE BALL](#catching-the-ball)
-    *   [HAND-OFF](#hand-off_1)
-    *   [THROW-INS](#throw-ins)
-    *   [CORNER THROW-INS](#corner-throw-ins)
-    
-*   [Throwing other Players](#throwing-other-players)
-    
-    *   [THROW TEAMMATE ACTIONS](#throw-teammate-actions)
-    *   [MEASURE RANGE AND DECLARE TARGET SQUARE](#measure-range-and-declare-target-square_1)
-    *   [MEASURING RANGE](#measuring-range_1)
-    *   [DECLARE TARGET SQUARE](#declare-target-square_1)
-    *   [TEST FOR QUALITY](#test-for-quality)
-    *   [SUPERB THROWS](#superb-throws)
-    *   [SUCCESSFUL THROWS](#successful-throws)
-        
-        *   [TERRIBLE THROWS](#terrible-throws)
-        
-    *   [FUMBLED THROWS](#fumbled-throws)
-    *   [RESOLVE THROW TEAMMATE ACTION](#resolve-throw-teammate-action)
-    *   [LANDING](#landing)
-    *   [LANDING IN AN OCCUPIED SQUARE](#landing-in-an-occupied-square)
-    *   [CRASH LANDING](#crash-landing)
-    *   [LANDING IN THE CROWD](#landing-in-the-crowd)
-    
-*   [Blocking](#blocking)
-    
-    *   [BLOCK ACTIONS](#block-actions)
-    *   [STRENGTH](#strength)
-    *   [ASSISTING A BLOCK](#assisting-a-block)
-        
-        *   [OFFENSIVE ASSISTS](#offensive-assists)
-        *   [DEFENSIVE ASSISTS](#defensive-assists)
-        
-    *   [BLOCK DICE](#block-dice)
-        
-        *   [PLAYER DOWN!](#player-down)
-        *   [BOTH DOWN](#both-down)
-        *   [PUSH BACK](#push-back)
-        *   [STUMBLE](#stumble)
-        *   [POW!](#pow)
-        *   [SELECT AND APPLY RESULT](#select-and-apply-result)
-        
-    *   [PUSHED PLAYERS](#pushed-players)
-        
-        *   [CHAIN-PUSHES](#chain-pushes)
-        *   [PUSHED INTO THE CROWD](#pushed-into-the-crowd)
-        
-    *   [KNOCKED DOWN](#knocked-down)
-    *   [PLACED PRONE](#placed-prone)
-    *   [FOLLOW-UP](#follow-up)
-    *   [BLITZ ACTIONS](#blitz-actions_1)
-    
-*   [Armour And Injuries](#armour-and-injuries)
-    
-    *   [RISKING INJURY](#risking-injury)
-    *   [ARMOUR ROLLS](#armour-rolls)
-    *   [INJURY ROLLS](#injury-rolls)
-        
-        *   [INJURY TABLE](#injury-table)
-        
-    *   [STUNTY PLAYERS](#stunty-players)
-        
-        *   [STUNTY INJURY TABLE](#stunty-injury-table)
-        
-    *   [INJURY BY THE CROWD](#injury-by-the-crowd)
-    *   [CASUALTY ROLLS](#casualty-rolls)
-        
-        *   [CASUALTY TABLE](#casualty-table)
-        *   [MNG (MISS NEXT GAME)](#mng-miss-next-game)
-        *   [NI (NIGGLING INJURY)](#ni-niggling-injury)
-        *   [CHARACTERISTIC REDUCTION](#characteristic-reduction)
-        *   [LASTING INJURY TABLE](#lasting-injury-table)
-        *   [DEAD](#dead)
-        
-    *   [SUBSTITUTIONS](#substitutions)
-    *   [APOTHECARIES](#apothecaries)
-        
-        *   [PATCHING-UP KNOCKED-OUT PLAYERS](#patching-up-knocked-out-players)
-        *   [PATCHING-UP CASUALTIES](#patching-up-casualties)
-        
-    
-*   [Kicking Them While They're Down](#kicking-them-while-theyre-down)
-    
-    *   [FOUL ACTIONS](#foul-actions)
-    *   [FOULING](#fouling)
-    *   [BEING SENT-OFF](#being-sent-off)
-    *   [ARGUING THE CALL](#arguing-the-call)
-        
-        *   [ARGUE THE CALL](#argue-the-call)
-        
-    
-*   [Touchdown!](#touchdown)
-    
-    *   [SCORING A TOUCHDOWN](#scoring-a-touchdown)
-    *   [SCORING DURING YOUR OPPONENT'S TURN](#scoring-during-your-opponents-turn)
-    *   [RECORD SCORE](#record-score)
-    *   [STALLING](#stalling)
-    
-*   [The End of A Drive](#the-end-of-a-drive)
-    
-    *   [END OF DRIVE SEQUENCE](#end-of-drive-sequence)
-        
-        *   [1\. DEAL WITH SECRET WEAPONS](#1-deal-with-secret-weapons)
-        *   [2\. RECOVER KNOCKED-OUT PLAYERS](#2-recover-knocked-out-players)
-        *   [3\. THE DRIVE ENDS](#3-the-drive-ends)
-        
-    *   [RESTARTING THE GAME](#restarting-the-game)
-    *   [ENDING THE GAME](#ending-the-game)
-    *   [WINNING THE GAME](#winning-the-game)
-    *   [CONCEDING](#conceding)
-    *   [EXTRA TIME](#extra-time)
-    *   [SUDDEN DEATH](#sudden-death)
-    
+- [A Game of Two Halves](#a-game-of-two-halves)
+  - [SETTING UP THE GAME](#setting-up-the-game)
+  - [PRE-GAME SEQUENCE](#pre-game-sequence)
+  - [1\. THE FANS](#1-the-fans)
+    - [FAN FACTOR (FF)](#fan-factor-ff)
 
-The Rules of Blood Bowl
-=======================
+  - [2\. THE WEATHER](#2-the-weather)
+    - [WEATHER TABLE](#weather-table)
+
+  - [3\. TAKE ON JOURNEYMEN](#3-take-on-journeymen)
+  - [4\. INDUCEMENTS](#4-inducements)
+    - [PETTY CASH](#petty-cash)
+    - [TREASURY](#treasury)
+    - [COMMON INDUCEMENTS](#common-inducements)
+    - [THE UNDERDOG](#the-underdog)
+
+  - [5\. THE PRAYERS TO NUFFLE TABLE](#5-the-prayers-to-nuffle-table)
+  - [6\. DETERMINE KICKING TEAM](#6-determine-kicking-team)
+    - [PRAYERS TO NUFFLE TABLE](#prayers-to-nuffle-table)
+
+- [The Start of A Drive](#the-start-of-a-drive)
+  - [START OF DRIVE SEQUENCE](#start-of-drive-sequence)
+  - [TOO MANY PLAYERS](#too-many-players)
+  - [1\. SET-UP](#1-set-up)
+  - [2\. THE KICK-OFF](#2-the-kick-off)
+    - [NOMINATE KICKING PLAYER](#nominate-kicking-player)
+    - [PLACE THE KICK](#place-the-kick)
+    - [THE KICK DEVIATES](#the-kick-deviates)
+
+  - [3\. THE KICK-OFF EVENT](#3-the-kick-off-event)
+    - [WHAT GOES UP, MUST COME DOWN](#what-goes-up-must-come-down)
+    - [TOUCHBACKS](#touchbacks)
+    - [THE KICK-OFF EVENT TABLE](#the-kick-off-event-table)
+
+- [The Team Turn](#the-team-turn)
+  - [TEAM TURNS](#team-turns)
+  - [ACTIVE AND INACTIVE TEAM](#active-and-inactive-team)
+  - [MOVING THE TURN MARKER](#moving-the-turn-marker)
+  - [PLAYER ACTIVATIONS](#player-activations)
+  - [DECLARING ACTIONS](#declaring-actions)
+  - [MOVE](#move)
+  - [PASS](#pass)
+  - [HAND-OFF](#hand-off)
+  - [THROW TEAMMATE](#throw-teammate)
+  - [BLOCK](#block)
+  - [BLITZ](#blitz)
+  - [FOUL](#foul)
+    - [SPECIAL ACTIONS](#special-actions)
+
+  - [ACTIVATED PLAYERS](#activated-players)
+
+- [Movement](#movement)
+  - [MOVING PLAYERS](#moving-players)
+  - [UNOCCUPIED SQUARES](#unoccupied-squares)
+    - [OCCUPIED SQUARES](#occupied-squares)
+
+  - [STANDING UP](#standing-up)
+  - [RUSHING](#rushing)
+  - [MARKED PLAYERS AND DODGING](#marked-players-and-dodging)
+  - [OPEN PLAYERS](#open-players)
+  - [JUMPING OVER PRONE OR STUNNED PLAYERS](#jumping-over-prone-or-stunned-players)
+  - [BLITZ ACTIONS](#blitz-actions)
+  - [PICKING UP THE BALL](#picking-up-the-ball)
+
+- [Passing The Ball](#passing-the-ball)
+  - [PASS ACTIONS](#pass-actions)
+  - [MEASURE RANGE AND DECLARE TARGET SQUARE](#measure-range-and-declare-target-square)
+  - [MEASURING RANGE](#measuring-range)
+  - [DECLARE TARGET SQUARE](#declare-target-square)
+  - [TEST FOR ACCURACY](#test-for-accuracy)
+  - [ACCURATE PASSES](#accurate-passes)
+  - [INACCURATE PASSES](#inaccurate-passes)
+  - [WILDLY INACCURATE PASSES](#wildly-inaccurate-passes)
+  - [FUMBLED PASSES](#fumbled-passes)
+  - [PASSING INTERFERENCE](#passing-interference)
+  - [SUCCESSFUL PASSING INTERFERENCE](#successful-passing-interference)
+  - [RESOLVE PASS ACTION](#resolve-pass-action)
+  - [CATCHING THE BALL](#catching-the-ball)
+  - [HAND-OFF](#hand-off_1)
+  - [THROW-INS](#throw-ins)
+  - [CORNER THROW-INS](#corner-throw-ins)
+
+- [Throwing other Players](#throwing-other-players)
+  - [THROW TEAMMATE ACTIONS](#throw-teammate-actions)
+  - [MEASURE RANGE AND DECLARE TARGET SQUARE](#measure-range-and-declare-target-square_1)
+  - [MEASURING RANGE](#measuring-range_1)
+  - [DECLARE TARGET SQUARE](#declare-target-square_1)
+  - [TEST FOR QUALITY](#test-for-quality)
+  - [SUPERB THROWS](#superb-throws)
+  - [SUCCESSFUL THROWS](#successful-throws)
+    - [TERRIBLE THROWS](#terrible-throws)
+
+  - [FUMBLED THROWS](#fumbled-throws)
+  - [RESOLVE THROW TEAMMATE ACTION](#resolve-throw-teammate-action)
+  - [LANDING](#landing)
+  - [LANDING IN AN OCCUPIED SQUARE](#landing-in-an-occupied-square)
+  - [CRASH LANDING](#crash-landing)
+  - [LANDING IN THE CROWD](#landing-in-the-crowd)
+
+- [Blocking](#blocking)
+  - [BLOCK ACTIONS](#block-actions)
+  - [STRENGTH](#strength)
+  - [ASSISTING A BLOCK](#assisting-a-block)
+    - [OFFENSIVE ASSISTS](#offensive-assists)
+    - [DEFENSIVE ASSISTS](#defensive-assists)
+
+  - [BLOCK DICE](#block-dice)
+    - [PLAYER DOWN!](#player-down)
+    - [BOTH DOWN](#both-down)
+    - [PUSH BACK](#push-back)
+    - [STUMBLE](#stumble)
+    - [POW!](#pow)
+    - [SELECT AND APPLY RESULT](#select-and-apply-result)
+
+  - [PUSHED PLAYERS](#pushed-players)
+    - [CHAIN-PUSHES](#chain-pushes)
+    - [PUSHED INTO THE CROWD](#pushed-into-the-crowd)
+
+  - [KNOCKED DOWN](#knocked-down)
+  - [PLACED PRONE](#placed-prone)
+  - [FOLLOW-UP](#follow-up)
+  - [BLITZ ACTIONS](#blitz-actions_1)
+
+- [Armour And Injuries](#armour-and-injuries)
+  - [RISKING INJURY](#risking-injury)
+  - [ARMOUR ROLLS](#armour-rolls)
+  - [INJURY ROLLS](#injury-rolls)
+    - [INJURY TABLE](#injury-table)
+
+  - [STUNTY PLAYERS](#stunty-players)
+    - [STUNTY INJURY TABLE](#stunty-injury-table)
+
+  - [INJURY BY THE CROWD](#injury-by-the-crowd)
+  - [CASUALTY ROLLS](#casualty-rolls)
+    - [CASUALTY TABLE](#casualty-table)
+    - [MNG (MISS NEXT GAME)](#mng-miss-next-game)
+    - [NI (NIGGLING INJURY)](#ni-niggling-injury)
+    - [CHARACTERISTIC REDUCTION](#characteristic-reduction)
+    - [LASTING INJURY TABLE](#lasting-injury-table)
+    - [DEAD](#dead)
+
+  - [SUBSTITUTIONS](#substitutions)
+  - [APOTHECARIES](#apothecaries)
+    - [PATCHING-UP KNOCKED-OUT PLAYERS](#patching-up-knocked-out-players)
+    - [PATCHING-UP CASUALTIES](#patching-up-casualties)
+
+- [Kicking Them While They're Down](#kicking-them-while-theyre-down)
+  - [FOUL ACTIONS](#foul-actions)
+  - [FOULING](#fouling)
+  - [BEING SENT-OFF](#being-sent-off)
+  - [ARGUING THE CALL](#arguing-the-call)
+    - [ARGUE THE CALL](#argue-the-call)
+
+- [Touchdown!](#touchdown)
+  - [SCORING A TOUCHDOWN](#scoring-a-touchdown)
+  - [SCORING DURING YOUR OPPONENT'S TURN](#scoring-during-your-opponents-turn)
+  - [RECORD SCORE](#record-score)
+  - [STALLING](#stalling)
+
+- [The End of A Drive](#the-end-of-a-drive)
+  - [END OF DRIVE SEQUENCE](#end-of-drive-sequence)
+    - [1\. DEAL WITH SECRET WEAPONS](#1-deal-with-secret-weapons)
+    - [2\. RECOVER KNOCKED-OUT PLAYERS](#2-recover-knocked-out-players)
+    - [3\. THE DRIVE ENDS](#3-the-drive-ends)
+
+  - [RESTARTING THE GAME](#restarting-the-game)
+  - [ENDING THE GAME](#ending-the-game)
+  - [WINNING THE GAME](#winning-the-game)
+  - [CONCEDING](#conceding)
+  - [EXTRA TIME](#extra-time)
+  - [SUDDEN DEATH](#sudden-death)
+
+# The Rules of Blood Bowl
 
 Traditionally, a game of Blood Bowl unfolds with one team kicking the ball to the other. The receiving team, the offence, will then attempt to move the ball the length of the pitch, through a series of dramatic passes and daring rushes, into the opposition's End Zone, thus scoring a touchdown. The team that kicked-off, the defence, will attempt to stop this and gain possession of the ball, so that they may instead score a touchdown.
 
 Once a touchdown has been scored, both of the teams line up once more and the scoring team kick off. And so the game progresses until the final whistle is blown, when the victors celebrate, the losers commiserate and the stadium owners and sports promoters retire to count the money they made from ticket sales and concession stands!
 
-A Game of Two Halves
---------------------
+## A Game of Two Halves
 
 Blood Bowl game is split into two halves of roughly equal length, with a third period played should an important game that needs a clear winner be tied at the end of the second half. The third period is referred to as 'extra time'. In emulation of this tradition, a game of Blood Bowl played on the tabletop is split into two halves, each consisting of eight team turns. Therefore each half consists of 16 turns and the game overall of 32 turns.
 
@@ -674,8 +627,8 @@ Blood Bowl games are always well attended. As well as the Dedicated Fans, many '
 
 This is a combination of Dedicated Fans and fair-weather fans in attendance. To determine Fan Factor:
 
-*   Each coach rolls a D3. This represents how many fair-weather fans are cheering for their team.
-*   Each coach adds their Dedicated Fans characteristic to the number of fair-weather fans cheering their team.
+- Each coach rolls a D3. This represents how many fair-weather fans are cheering for their team.
+- Each coach adds their Dedicated Fans characteristic to the number of fair-weather fans cheering their team.
 
 The total indicates how many thousands of fans are cheering for your team and should be recorded in the 'FF' (Fan Factor) section of your Game Record sheet.
 
@@ -716,10 +669,10 @@ Additionally, the poor visibility means that only Quick and Short passes can be 
 
 If, during the pre-game sequence of a league fixture or cross division friendly, a team is unable to field 11 players it will make use of temporary players known as 'Journeymen':
 
-*   A Journeyman is always a Lineman positional player, selected from the team's 0-12 or 0-16 option.
-*   A Journeyman is always a normal player of their type, with the exception that they gain the Loner (4+) trait (see [page 85](../skills_and_traits/#loner-x)), representing their lack of familiarity with their temporary teammates.
-*   Journeymen may take the total number of players on the team temporarily above 16 including injured players, but cannot take the number of players available for this game above 11.
-*   Each Journeyman counts towards CTV. The value they add is equal to the hiring cost of an ordinary player of their type as detailed in the team roster. Once you know how many Journeymen your team will include, you should recalculate your CTV.
+- A Journeyman is always a Lineman positional player, selected from the team's 0-12 or 0-16 option.
+- A Journeyman is always a normal player of their type, with the exception that they gain the Loner (4+) trait (see [page 85](../skills_and_traits/#loner-x)), representing their lack of familiarity with their temporary teammates.
+- Journeymen may take the total number of players on the team temporarily above 16 including injured players, but cannot take the number of players available for this game above 11.
+- Each Journeyman counts towards CTV. The value they add is equal to the hiring cost of an ordinary player of their type as detailed in the team roster. Once you know how many Journeymen your team will include, you should recalculate your CTV.
 
 Note that a team drafted for exhibition play must contain at least 11 players. This step can be skipped during exhibition play.
 
@@ -729,9 +682,9 @@ Ahead of any league fixture, play-off season game or cross division friendly, ea
 
 Ahead of any league fixture, play-off game, or friendly, teams may get the opportunity to spend gold pieces from their Treasury or Petty Cash (or both) to purchase Inducements. If one team has a lower CTV (including the value of any Journeymen players) then it will be given 'petty cash' to spend on Inducements. To work out how much petty cash a team will receive, follow the steps below in order:
 
-*   The team with the higher CTV gets the opportunity to spend any gold pieces from their Treasury to purchase any Inducements.
-*   The team with the lower CTV then gets an amount of petty cash equal to the difference in CTV between the two teams, plus an amount equal to the amount of gold the other team spent from its Treasury.
-*   The team with the lower CTV can then spend this petty cash on Inducements, though any petty cash not spent is lost. They may not spend gold pieces from their Treasury.
+- The team with the higher CTV gets the opportunity to spend any gold pieces from their Treasury to purchase any Inducements.
+- The team with the lower CTV then gets an amount of petty cash equal to the difference in CTV between the two teams, plus an amount equal to the amount of gold the other team spent from its Treasury.
+- The team with the lower CTV can then spend this petty cash on Inducements, though any petty cash not spent is lost. They may not spend gold pieces from their Treasury.
 
 Note that, as described on [page 102](../league_and_exhibition_play/#inducements-in-exhibition-play), Inducements are handled differently in exhibition play.
 
@@ -837,8 +790,7 @@ RESULT
 
 **_Intensive Training:_** Randomly select one player on your team that is available to play during this drive and that does not have the Loner (X+) trait. Until the end of this game, that player gains a single Primary skill of your choice.
 
-The Start of A Drive
---------------------
+## The Start of A Drive
 
 Once the coin toss or roll-off to determine which team will kick and which will receive is resolved, the coaches will take turns to set up their teams, ready for action and with the shouted instructions of coaching staff ringing in their ears. The coach of the kicking team then places the ball, determines how accurate (or how wildly inaccurate) the kick is, and rolls on the Kick- off Event table.
 
@@ -862,9 +814,9 @@ In later drives, the number of available players is likely to be reduced, with p
 
 The kicking team set up first, followed by the receiving team, as follows:
 
-*   Both teams set up fully within the area between their own End Zone and the Line of Scrimmage. Neither team may set up any players beyond the Line of Scrimmage in the opposition's half.
-*   Each team can set up a maximum of two players in each Wide Zone. In other words, each team can set up four players in Wide Zones, providing they are split equally with two players per Widezone.
-*   A team must set up a minimum of three players in squares within the Centre Field, directly adjacent to the Line of Scrimmage.
+- Both teams set up fully within the area between their own End Zone and the Line of Scrimmage. Neither team may set up any players beyond the Line of Scrimmage in the opposition's half.
+- Each team can set up a maximum of two players in each Wide Zone. In other words, each team can set up four players in Wide Zones, providing they are split equally with two players per Widezone.
+- A team must set up a minimum of three players in squares within the Centre Field, directly adjacent to the Line of Scrimmage.
 
 Note that should a team find itself reduced to only three players or fewer, it may concede without penalty before setting-up, as described on [page 67](./#conceding). Should you wish to play on, the available players should be set up on the Line of Scrimmage, as described above.
 
@@ -876,8 +828,8 @@ Once both teams have been set-up ready for the drive ahead, the coach of the kic
 
 Although not always essential, certain rules require a specific player to be nominated as the kicking player. It is therefore useful to adopt the habit of nominating a kicking player:
 
-*   The kicking player cannot be on the Line of Scrimmage (unless there are only three, or fewer, players belonging to their team on the pitch).
-*   The kicking player cannot be in either Wide Zone.
+- The kicking player cannot be on the Line of Scrimmage (unless there are only three, or fewer, players belonging to their team on the pitch).
+- The kicking player cannot be in either Wide Zone.
 
 #### PLACE THE KICK
 
@@ -951,8 +903,7 @@ RESULT
 
 **_Pitch Invasion:_** Both coaches roll a D6 and add their Fan Factor to the result. The coach that rolls the lowest randomly selects D3 of their players from among those on the pitch. In the case of a tie, both coaches randomly select D3 of their players from among those on the pitch. All of the randomly selected players are Placed Prone and become Stunned.
 
-The Team Turn
--------------
+## The Team Turn
 
 A game of Blood Bowl is a hectic affair, and to make sense of all of the action, the game on the tabletop is broken down into a series of team turns, during which each coach will activate their players one at a time. In this way, the drama of the game is recreated in a manageable and controlled way.
 
@@ -965,9 +916,9 @@ Once the Kick-off has been resolved, the game continues in a simple but strict s
 
 This sequence is repeated until the drive ends with a touchdown, the end of a half or the end of the game:
 
-*   At the beginning of the first half, which team kicks-off and which team receives will have been decided by the coin toss, as described on [page 38](./#6-determine-kicking-team).
-*   At the beginning of the second half, play is reversed, with the team that received and played offence at the start of the game now becoming the kicking team, and vice versa.
-*   Should any drive end with a touchdown before the end of the half, the team that scored the touchdown will kick to the team that conceded the touchdown.
+- At the beginning of the first half, which team kicks-off and which team receives will have been decided by the coin toss, as described on [page 38](./#6-determine-kicking-team).
+- At the beginning of the second half, play is reversed, with the team that received and played offence at the start of the game now becoming the kicking team, and vice versa.
+- Should any drive end with a touchdown before the end of the half, the team that scored the touchdown will kick to the team that conceded the touchdown.
 
 A team turn ends either once all eligible players have been activated, or as the result of a Turnover (see [page 23](../rules_and_regulations/#the-turnover)).
 
@@ -1031,8 +982,7 @@ To help with this, at the start of each team turn you should make sure that all 
 
 A Standing player that loses their Tackle Zone should be turned to face one of the Sidelines. The player should be left facing the Sideline until their next activation begins.
 
-Movement
---------
+## Movement
 
 During their team turn, a number of actions allow a player to move about the pitch when activated, as mentioned previously. Sometimes a player may even be moved involuntarily as a result of a block or another in-game effect. This section deals with how players are moved around the pitch and how other players, particularly the opposition, can hinder their progress.
 
@@ -1052,9 +1002,9 @@ If there is a Standing, Prone or Stunned player from either team in a square, th
 
 A Prone player can do nothing without first standing up. A Prone player can stand up when they are activated to perform any action that includes movement:
 
-*   The only time a Prone player can stand up is during their team turn, at the start of their activation.
-*   Standing up costs a Prone player three (3) squares of their Movement Allowance.
-*   If a Prone Player with a Movement Allowance of 2 or less (before or after modification) wishes to stand up, roll a D6:
+- The only time a Prone player can stand up is during their team turn, at the start of their activation.
+- Standing up costs a Prone player three (3) squares of their Movement Allowance.
+- If a Prone Player with a Movement Allowance of 2 or less (before or after modification) wishes to stand up, roll a D6:
 
  - On a roll of 4+, the player is able to stand up, using their full Movement Allowance to do so.
 
@@ -1068,8 +1018,8 @@ If a Prone player is not activated during their team turn, they will remain Pron
 
 Whenever a player performs any action that includes movement, they may attempt to gain an extra one or two squares of Movement Allowance. This is called 'Rushing'. These extra squares of Movement Allowance may be used to move, to perform a Block action as part of a Blitz action (see [page 59](./#blitz)), to Jump over a Prone or Stunned player (see [page 45](./#jumping-over-prone-or-stunned-players)) and so on, just as if they were normal movement:
 
-*   At the end of the player's movement, declare that they will Rush and move them one more square.
-*   After the Rushing player has been moved, roll a D6:
+- At the end of the player's movement, declare that they will Rush and move them one more square.
+- After the Rushing player has been moved, roll a D6:
 
  - On a roll of 2+, the Rushing player moves without mishap.
 
@@ -1085,9 +1035,9 @@ If an active player is being Marked, as described on [page 26](../rules_and_regu
 
 To Dodge, a player must test against their Agility as described on [page 29](../rules_and_regulations/#agility-tests). Declare that the player will Dodge from the square in which they are being Marked, and move them into any adjacent, unoccupied square:
 
-*   The Agility test is made after the dodging player has been moved, Rushing first if necessary.
-*   No matter how many players were Marking them, the dodging player is only required to make one Agility test to Dodge.
-*   If the dodging player is being Marked in the square they have moved into, apply a -1 modifier per player Marking them.
+- The Agility test is made after the dodging player has been moved, Rushing first if necessary.
+- No matter how many players were Marking them, the dodging player is only required to make one Agility test to Dodge.
+- If the dodging player is being Marked in the square they have moved into, apply a -1 modifier per player Marking them.
 
 Note that if the player is Open in the square they have moved into, there are no modifiers to apply for being Marked. However, there may be modifiers to apply for other reasons, such as Skills and Traits being used by an opposing player.
 
@@ -1103,9 +1053,9 @@ Once during their activation, a moving player can attempt to Jump over a single 
 
 Jumping over a square in this way uses Movement Allowance exactly as if the player had moved into and out of the square they are jumping over. To Jump over a square that contains a Prone or Stunned player, a player must test against their Agility as described on [page 29](../rules_and_regulations/#agility-tests):
 
-*   The Agility test is made after the jumping player has been moved, Rushing first if necessary.
-*   Apply a negative modifier equal to the number of players that were Marking the jumping player in the square they jumped from or equal to the number of players that are Marking the jumping player in the square they have jumped into, whichever is the greatest. For example, if a player jumps from a square in which they were being Marked by one player into a square in which they are being Marked by two players, a -2 modifier is applied.
-*   If the jumping player was being Marked in the square they jumped from, they are not required to Dodge.
+- The Agility test is made after the jumping player has been moved, Rushing first if necessary.
+- Apply a negative modifier equal to the number of players that were Marking the jumping player in the square they jumped from or equal to the number of players that are Marking the jumping player in the square they have jumped into, whichever is the greatest. For example, if a player jumps from a square in which they were being Marked by one player into a square in which they are being Marked by two players, a -2 modifier is applied.
+- If the jumping player was being Marked in the square they jumped from, they are not required to Dodge.
 
 Note that if the jumping player was Open in the square they have jumped from and is Open in the square they have jumped into, there are no modifiers to apply for being Marked. However, there may be modifiers to apply for other reasons.
 
@@ -1123,16 +1073,15 @@ If a player voluntarily moves into a square in which the ball is placed, they mu
 
 To pick up the ball, a player must test against their Agility as described on [page 29](../rules_and_regulations/#agility-tests):
 
-*   If the player is Open when attempting to pick up the ball, there are no modifiers to apply.
-*   If the player is being Marked, apply a -1 modifier per player Marking them.
-*   If a player attempts to pick up the ball and fails, the ball will bounce as described on [page 25](../rules_and_regulations/#bounce). Should this happen, a Turnover is caused, even if the bounce is caught by another player on the active team.
+- If the player is Open when attempting to pick up the ball, there are no modifiers to apply.
+- If the player is being Marked, apply a -1 modifier per player Marking them.
+- If a player attempts to pick up the ball and fails, the ball will bounce as described on [page 25](../rules_and_regulations/#bounce). Should this happen, a Turnover is caused, even if the bounce is caught by another player on the active team.
 
 After successfully picking up the ball, the player may continue moving if they wish and if they are able.
 
 Note that should a player ever be moved involuntarily into a square in which the ball is placed, they cannot attempt to pick it up. Instead the ball will bounce, but no Turnover is caused.
 
-Passing The Ball
-----------------
+## Passing The Ball
 
 Traditionally in Blood Bowl, play progresses with a series of dramatic passes and catches. Throwers endeavour to get the ball safely to a teammate, who, thanks to their strength, speed and agility, is in position to run with the ball into the opposition End Zone. Whilst in recent years many players that prefer to run with the ball have risen to superstardom, it is still the spectacle of the passing game that excites the crowds the most!
 
@@ -1144,10 +1093,10 @@ A Pass action can be further defined as being a 'Quick pass', a 'Short pass', a 
 
 The player may move before performing the action following all of the normal movement rules, but once the pass has been resolved they may not move further and their activation comes to an end. The player performing the action does not need to be in possession of the ball when activated, they may pick the ball up as they move (see [page 46](./#picking-up-the-ball)):
 
-*   MEASURE RANGE AND DECLARE TARGET SQUARE: The range ruler is used to measure the range to any possible target squares, before the target square is chosen and declared.
-*   TEST FOR ACCURACY: The coach of the player performing the action rolls a D6 to determine the accuracy of the pass.
-*   PASSING INTERFERENCE: Unless the pass was fumbled, one opposition player may be able to attempt to interfere with the pass, hoping to 'Deflect' or 'Intercept' it.
-*   RESOLVE PASS ACTION: If the pass was neither fumbled nor interfered with, the pass itself is resolved!
+- MEASURE RANGE AND DECLARE TARGET SQUARE: The range ruler is used to measure the range to any possible target squares, before the target square is chosen and declared.
+- TEST FOR ACCURACY: The coach of the player performing the action rolls a D6 to determine the accuracy of the pass.
+- PASSING INTERFERENCE: Unless the pass was fumbled, one opposition player may be able to attempt to interfere with the pass, hoping to 'Deflect' or 'Intercept' it.
+- RESOLVE PASS ACTION: If the pass was neither fumbled nor interfered with, the pass itself is resolved!
 
 ### MEASURE RANGE AND DECLARE TARGET SQUARE
 
@@ -1157,10 +1106,10 @@ Once you have activated a player and declared that they will perform a Pass acti
 
 Range is measured by placing the circle at the end of the range ruler over the centre of the square occupied by the player performing the action. The other end of the range ruler is positioned so that the ruler covers the target square, with the line along the centre of the range ruler passing through the centre of the target square. The target square will fall into one of the four bands marked on the range ruler:
 
-*   I: Quick pass
-*   II: Short pass
-*   III: Long pass
-*   IIII: Long bomb
+- I: Quick pass
+- II: Short pass
+- III: Long pass
+- IIII: Long bomb
 
 Any squares that are beyond the reach of the range ruler or that are intersected by the end of the range ruler are out of range and cannot be the target square. If the line between two range bands intersects the target square, it is considered to fall within the higher range band. If it is not clear which range band the target square falls into, refer to the Passing Range chart shown below:
 
@@ -1174,14 +1123,14 @@ After you have measured for range and moved the player, you must indicate and de
 
 The player performing the action now tests against their Passing Ability to see if the pass is 'accurate', 'inaccurate', 'wildly inaccurate' or is 'fumbled'. A Passing Ability test is made as described on [page 29](../rules_and_regulations/#passing-ability-tests), applying the following modifiers based on range:
 
-*   If the player is attempting a Quick pass, there is no modifier.
-*   If the player is attempting a Short pass, apply a -1 modifier.
-*   If the player is attempting a Long pass, apply a -2 modifier.
-*   If the player is attempting a Long bomb, apply a -3 modifier.
+- If the player is attempting a Quick pass, there is no modifier.
+- If the player is attempting a Short pass, apply a -1 modifier.
+- If the player is attempting a Long pass, apply a -2 modifier.
+- If the player is attempting a Long bomb, apply a -3 modifier.
 
 In addition, the following modifiers may also apply:
 
-*   If the player is being Marked, apply an additional -1 modifier per player Marking them.
+- If the player is being Marked, apply an additional -1 modifier per player Marking them.
 
 ### ACCURATE PASSES
 
@@ -1199,8 +1148,8 @@ If, when making the Passing Ability test, the dice roll is a 1 after modifiers h
 
 There is always a chance something will go horribly wrong and the pass will be fumbled:
 
-*   If, when making the Passing Ability test, a natural 1 is rolled, the pass has been fumbled.
-*   If the player has a PA of '-', the pass is automatically fumbled.
+- If, when making the Passing Ability test, a natural 1 is rolled, the pass has been fumbled.
+- If the player has a PA of '-', the pass is automatically fumbled.
 
 When a Pass action is fumbled, the activation of the player performing it ends immediately. The ball is dropped, bouncing from the square occupied by the player performing the action, and a Turnover is caused.
 
@@ -1210,18 +1159,18 @@ If the pass was not fumbled, a single player from the opposing team may be able 
 
 To attempt to interfere with a pass, an opposition player must be:
 
-*   A Standing player that has not lost their Tackle Zone (as described on [page 26](../rules_and_regulations/#losing-tackle-zones)).
-*   Occupying a square that is between the square occupied by the player performing the Pass action and the square in which the ball will land.
-*   In a square that is at least partially beneath the range ruler when placed as described above.
+- A Standing player that has not lost their Tackle Zone (as described on [page 26](../rules_and_regulations/#losing-tackle-zones)).
+- Occupying a square that is between the square occupied by the player performing the Pass action and the square in which the ball will land.
+- In a square that is at least partially beneath the range ruler when placed as described above.
 
 ![](../../media/core_rules/passing_interference.jpg)
 
 If any opposition players are in a position to attempt to interfere with a pass, the coach of the opposing team nominates one to make the attempt and tests against their Agility, applying the following modifiers to represent the difficulty of attempting to snatch the ball from the air:
 
-*   If the player is attempting to interfere with an accurate pass, apply a -3 modifier.
-*   If the player is attempting to interfere with an inaccurate pass, apply a -2 modifier.
-*   If the player is attempting to interfere with a wildly inaccurate pass, apply a -1 modifier.
-*   Apply an additional -1 modifier if the player is being Marked.
+- If the player is attempting to interfere with an accurate pass, apply a -3 modifier.
+- If the player is attempting to interfere with an inaccurate pass, apply a -2 modifier.
+- If the player is attempting to interfere with a wildly inaccurate pass, apply a -1 modifier.
+- Apply an additional -1 modifier if the player is being Marked.
 
 ### SUCCESSFUL PASSING INTERFERENCE
 
@@ -1241,15 +1190,15 @@ There are many instances when the rules will call upon a player to attempt to ca
 
 To catch the ball, a player must test against their Agility as described on [page 29](../rules_and_regulations/#agility-tests), applying the following modifiers:
 
-*   If the player is attempting to catch an accurate pass or a Hand-off (see [page 49](./#accurate-passes) and [below](#hand-off_1)), there are no modifiers.
-*   If the player is attempting to convert a Deflection into an Interception, apply a -1 modifier.
-*   If the player is attempting to catch a bouncing ball, apply a -1 modifier.
-*   If the player is attempting to catch a ball that has been thrown-in by the crowd (see [opposite](#throw-ins)), apply a -1 modifier.
-*   If the player is attempting to catch a ball that has scattered or deviated into the square they occupy, apply a -1 modifier.
+- If the player is attempting to catch an accurate pass or a Hand-off (see [page 49](./#accurate-passes) and [below](#hand-off_1)), there are no modifiers.
+- If the player is attempting to convert a Deflection into an Interception, apply a -1 modifier.
+- If the player is attempting to catch a bouncing ball, apply a -1 modifier.
+- If the player is attempting to catch a ball that has been thrown-in by the crowd (see [opposite](#throw-ins)), apply a -1 modifier.
+- If the player is attempting to catch a ball that has scattered or deviated into the square they occupy, apply a -1 modifier.
 
 In addition to the above, the following modifiers may also apply:
 
-*   If the player is being Marked, apply an additional -1 modifier per player Marking them.
+- If the player is being Marked, apply an additional -1 modifier per player Marking them.
 
 ### HAND-OFF
 
@@ -1261,9 +1210,9 @@ A Hand-off action is not a Pass action, and there is no test required to perform
 
 Should the ball leave the pitch at any time, the crowd will throw it back into play. This is done using the Throw-in template:
 
-*   Position the Throw-in template (as shown in the diagram below) with the Blood Bowl logo over the last square the ball occupied before leaving the pitch and roll a D6 to determine the direction the ball travels in.
-*   When the ball is thrown-in by the crowd, it travels 2D6 squares from the last square it occupied before leaving the pitch, in the direction indicated by the Throw-in template, before landing.
-*   If the ball lands in a square that is occupied by a Standing player that has not lost their Tackle Zone, that player must attempt to catch it. If they fail, or if the ball lands in an unoccupied square or a square that is occupied either by a Standing player that has lost their Tackle Zone or by a Prone or Stunned player, it will bounce before it comes to rest on the ground.
+- Position the Throw-in template (as shown in the diagram below) with the Blood Bowl logo over the last square the ball occupied before leaving the pitch and roll a D6 to determine the direction the ball travels in.
+- When the ball is thrown-in by the crowd, it travels 2D6 squares from the last square it occupied before leaving the pitch, in the direction indicated by the Throw-in template, before landing.
+- If the ball lands in a square that is occupied by a Standing player that has not lost their Tackle Zone, that player must attempt to catch it. If they fail, or if the ball lands in an unoccupied square or a square that is occupied either by a Standing player that has lost their Tackle Zone or by a Prone or Stunned player, it will bounce before it comes to rest on the ground.
 
 Should the ball leave the pitch again following an over-enthusiastic throw-in, repeat the above process.
 
@@ -1273,8 +1222,7 @@ Should the ball leave the pitch again following an over-enthusiastic throw-in, r
 
 Should the ball leave the pitch from a corner square, the direction of the throw-in is determined by placing the Random Direction template, as shown in the diagram on [page 21](../blood_bowl_stadia/#corner-throw-ins), and rolling a D3.
 
-Throwing other Players
-----------------------
+## Throwing other Players
 
 One tactic that has proven a hit with fans the world over is one that seems to have been first employed in aggression, rather than as a cunning way to score. In the old days, it was not uncommon for Big Guy players to pick up particularly diminutive opponents and simply toss them into the waiting crowds! These days it is normal to see a Big Guy pitching a puny pal towards the opposition End Zone, or simply forgetting what's going on and eating them!
 
@@ -1288,9 +1236,9 @@ If they are Prone or Stunned, they can still be thrown but cannot land safely.
 
 The player performing the action may move first following all of the normal movement rules, but must be in a square adjacent to the player they wish to throw when the throw is made; they cannot pick up and carry a teammate before throwing them. Once the throw has been resolved, they may not move further and their activation comes to an end:
 
-*   MEASURE RANGE AND DECLARE TARGET SQUARE: The range ruler may be used to determine the range between the throwing player and any possible target squares, before the target square is chosen and declared.
-*   TEST FOR QUALITY: The coach of the player performing the action rolls a D6 to determine the quality of the throw.
-*   RESOLVE THROW: Where the thrown player lands, and how easily, depends upon the quality of the throw. If the throw is fumbled, the thrown player is dropped and will bounce.
+- MEASURE RANGE AND DECLARE TARGET SQUARE: The range ruler may be used to determine the range between the throwing player and any possible target squares, before the target square is chosen and declared.
+- TEST FOR QUALITY: The coach of the player performing the action rolls a D6 to determine the quality of the throw.
+- RESOLVE THROW: Where the thrown player lands, and how easily, depends upon the quality of the throw. If the throw is fumbled, the thrown player is dropped and will bounce.
 
 ### MEASURE RANGE AND DECLARE TARGET SQUARE
 
@@ -1300,8 +1248,8 @@ As with a Pass action, once the player performing the Throw teammate action has 
 
 When throwing a teammate, range is measured using the range ruler exactly as described on [page 48](./#measuring-range). However, when throwing a teammate, only half of the range ruler is used. Therefore the target square will fall into one of the two bands marked on the first half of the range ruler:
 
-*   I: Quick throw
-*   II: Short throw
+- I: Quick throw
+- II: Short throw
 
 Any squares that are beyond the reach of the range ruler or that are intersected by the end of the range ruler are out of range and cannot be the target square. If the line between the two range bands intersects the target square, the target square is considered to be within the higher range band. If it is not clear which range band the target square falls into, refer to the Throw Range chart shown below:
 
@@ -1315,12 +1263,12 @@ Once range has been measured and the player performing the action has completed 
 
 Once the range has been measured and the target square declared, a Passing Ability test is made to determine if the throw is 'superb', 'successful', 'terrible' or is 'fumbled'. The player performing the action makes a Passing Ability test as described on [page 29](../rules_and_regulations/#passing-ability-tests), applying the following modifiers based on range:
 
-*   If the player is attempting a quick throw, there is no modifier.
-*   If the player is attempting a short throw, apply a -1 modifier.
+- If the player is attempting a quick throw, there is no modifier.
+- If the player is attempting a short throw, apply a -1 modifier.
 
 In addition to the above, the following modifiers may also apply:
 
-*   If the player is being Marked, apply an additional -1 modifier per player Marking them.
+- If the player is being Marked, apply an additional -1 modifier per player Marking them.
 
 ### SUPERB THROWS
 
@@ -1338,8 +1286,8 @@ If, when making the Passing Ability test, the dice roll is a 1 after modifiers h
 
 Often, smaller players object to being thrown and will squirm a bit. When they do, there is a chance that the throw will be fumbled:
 
-*   If, when making the Passing Ability test, a natural 1 is rolled, the throw has been fumbled.
-*   If the player performing the Throw teammate action has a PA of '-', the throw is automatically fumbled.
+- If, when making the Passing Ability test, a natural 1 is rolled, the throw has been fumbled.
+- If the player performing the Throw teammate action has a PA of '-', the throw is automatically fumbled.
 
 When a Throw teammate action is fumbled, the action is unsuccessful and the activation of the player performing it ends immediately. The player that was to be thrown is dropped and will bounce (as if they were a ball) from the square occupied by the player performing the action, after which they must attempt to land, as described on [page 54](./#landing).
 
@@ -1351,14 +1299,14 @@ A Throw teammate action cannot be interfered with. Therefore, if the throw was n
 
 If the thrown player was Standing and had not lost their Tackle Zone before they were thrown, and if the player lands in an unoccupied square, they will attempt to land safely. To land safely, the thrown player must pass an Agility test, applying the following modifiers:
 
-*   If the throw was superb, there are no modifiers.
-*   If the throw was fumbled, apply a -1 modifier.
-*   If the throw was successful, apply a -1 modifier.
-*   If the throw was terrible, apply a -2 modifier.
+- If the throw was superb, there are no modifiers.
+- If the throw was fumbled, apply a -1 modifier.
+- If the throw was successful, apply a -1 modifier.
+- If the throw was terrible, apply a -2 modifier.
 
 In addition, the following modifiers may also apply:
 
-*   If the player is being Marked in the square they land in, apply an additional -1 modifier per player Marking them.
+- If the player is being Marked in the square they land in, apply an additional -1 modifier per player Marking them.
 
 If the Agility test is passed, or if the roll is a natural 6, the thrown player will land safely and is considered to have moved voluntarily.
 
@@ -1370,22 +1318,22 @@ If the thrown player has not yet been activated this turn, they may be activated
 
 If after the scatter has been resolved, the thrown player lands in an occupied square:
 
-*   The player occupying the square is Knocked Down (an Armour roll and possible Injury roll is made against them even if they were already Prone or Stunned).
-*   The thrown player will bounce (as if they were a ball) from the square they land in and will automatically Fall Over upon landing, as described on [page 27](../rules_and_regulations/#falling-over).
-*   Should the thrown player bounce into another occupied square, the above process is repeated.
+- The player occupying the square is Knocked Down (an Armour roll and possible Injury roll is made against them even if they were already Prone or Stunned).
+- The thrown player will bounce (as if they were a ball) from the square they land in and will automatically Fall Over upon landing, as described on [page 27](../rules_and_regulations/#falling-over).
+- Should the thrown player bounce into another occupied square, the above process is repeated.
 
 If after the scatter has been resolved, the thrown player lands in an occupied square:
 
-*   The player occupying the square is Knocked Down (an Armour roll and possible Injury roll is made against them even if they were already Prone or Stunned). If the player occupying the square is a team-mate then a Turnover will be caused.
-*   The thrown player will bounce (as if they were the ball) from the square they land in and will automatically be Knocked Down upon landing; however, unlike normally when a player is Knocked Down during their own team turn, this will not cause a Turnover unless the thrown player was holding the ball.
-*   Should the thrown player bounce into another occupied square, the above process is repeated.
+- The player occupying the square is Knocked Down (an Armour roll and possible Injury roll is made against them even if they were already Prone or Stunned). If the player occupying the square is a team-mate then a Turnover will be caused.
+- The thrown player will bounce (as if they were the ball) from the square they land in and will automatically be Knocked Down upon landing; however, unlike normally when a player is Knocked Down during their own team turn, this will not cause a Turnover unless the thrown player was holding the ball.
+- Should the thrown player bounce into another occupied square, the above process is repeated.
 
 ### CRASH LANDING
 
 If the thrown player was Prone or Stunned, or had lost their Tackle Zone before they were thrown, they cannot attempt to land safely:
 
-*   Once the scatter has been resolved, the player will bounce (as if they were a ball) from the square they land in.
-*   The player will automatically Fall Over after bouncing and an Armour roll and possible Injury roll is made against them.
+- Once the scatter has been resolved, the player will bounce (as if they were a ball) from the square they land in.
+- The player will automatically Fall Over after bouncing and an Armour roll and possible Injury roll is made against them.
 
 ### LANDING IN THE CROWD
 
@@ -1393,8 +1341,7 @@ Should the thrown player scatter off the pitch, they will land in the crowd. The
 
 If a player in possession of the ball lands in the crowd after being thrown, a Turnover is caused and the ball will be thrown-in by the crowd as described on [page 51](./#throw-ins).
 
-Blocking
---------
+## Blocking
 
 At its most basic, a block is a very rough tackle. The rules of Blood Bowl allow players to do almost anything to bring down an opponent, and provided weapons aren't used, the officials rarely make any distinction between a skilled tackle and a frenzied rain of pummelling blows that leave a player unconscious. This is part of the game's charm. After all, who wouldn't want to watch a violent, full contact bloodsport that happens to include some ball related drama!
 
@@ -1412,9 +1359,9 @@ Block actions are resolved using special block dice, unique to Blood Bowl. How m
 
 Once an active player has declared they will perform a Block action and nominated their target, the next thing to do is to compare the Strength characteristic of both players, including any Strength modifiers granted by Skills or Traits or offered by 'assists' from teammates (see [opposite](#assisting-a-block)). If one player is stronger than the other, they are more likely to knock their opponent down:
 
-*   If both players have the same Strength characteristic, after modification, one block dice is rolled.
-*   If one player has a higher Strength characteristic, after modification, a pool of two block dice is rolled and the coach of the stronger player selects which result to apply.
-*   If one player has a Strength characteristic that is more than double that of their opponent, after modification, a pool of three block dice is rolled and the coach of the stronger player selects which result to apply.
+- If both players have the same Strength characteristic, after modification, one block dice is rolled.
+- If one player has a higher Strength characteristic, after modification, a pool of two block dice is rolled and the coach of the stronger player selects which result to apply.
+- If one player has a Strength characteristic that is more than double that of their opponent, after modification, a pool of three block dice is rolled and the coach of the stronger player selects which result to apply.
 
 ### ASSISTING A BLOCK
 
@@ -1524,8 +1471,7 @@ Performing the Block action (or a Special action granted by a Skill or Trait tha
 
 During their movement, a player performing a Blitz action may attempt to gain extra squares of Movement Allowance by Rushing, as described on [page 44](./#rushing). If after moving the player does not have sufficient Movement Allowance remaining to perform the Block action (or a Special action granted by a Skill or Trait that can be performed instead of a Block action), they may Rush to gain the square of Movement Allowance required. If they cannot Rush, they cannot perform the Block action (or a Special action).
 
-Armour And Injuries
--------------------
+## Armour And Injuries
 
 There are many ways in which a Blood Bowl player can get injured. From being gored by a rampaging Minotaur, to tripping and breaking an ankle whilst Rushing, Blood Bowl is a game that provides almost limitless opportunity to get seriously hurt! Even death is an ever-present threat! Most Blood Bowl players proudly sport impressive scars, and it is widely said that an old pro can be easily identified by the way they wince and grumble about their aches and pains during wet weather.
 
@@ -1591,9 +1537,9 @@ RESULT
 
 When a player is pushed back into the crowd or lands in the crowd there is no telling how the fans will treat them, and they risk Injury by the Crowd. No Armour roll is made against the player. Instead the coach of the opposing team immediately rolls on the Injury table to see what the crowd does to the player:
 
-*   If the player is Stunned, they are placed in the Reserves box.
-*   If the player is Knocked-out, they are placed in the Knocked-out box. They may recover as usual at the end of the drive.
-*   If the player becomes a casualty, they are placed in the Casualty box. A roll is made against them on the Casualty table, as described below.
+- If the player is Stunned, they are placed in the Reserves box.
+- If the player is Knocked-out, they are placed in the Knocked-out box. They may recover as usual at the end of the drive.
+- If the player becomes a casualty, they are placed in the Casualty box. A roll is made against them on the Casualty table, as described below.
 
 ### CASUALTY ROLLS
 
@@ -1709,21 +1655,20 @@ Once per game, a team with an apothecary may use them to 'patch-up' any permanen
 
 Once per game, an apothecary can be used immediately when a player becomes Knocked-out:
 
-*   If the player was on the pitch when they were Knocked-out, they are not removed from play. Instead, they remain on the pitch and become Stunned.
-*   If the player was Knocked-out as a result of being pushed back into the crowd or landing in the crowd, place them directly into the Reserves box rather than the Knocked-out box.
+- If the player was on the pitch when they were Knocked-out, they are not removed from play. Instead, they remain on the pitch and become Stunned.
+- If the player was Knocked-out as a result of being pushed back into the crowd or landing in the crowd, place them directly into the Reserves box rather than the Knocked-out box.
 
 #### PATCHING-UP CASUALTIES
 
 Alternatively, once per game an apothecary can be used when a Casualty roll is made against a player:
 
-*   Immediately after the Casualty roll is made against your player, you may declare the use of an apothecary.
-*   The coach of the opposing team rolls again on the Casualty table, giving two possible outcomes. You may choose which result is applied to your player.
-*   If a Badly Hurt result is applied, the apothecary has been able to patch the player up and pump them full of painkillers. The player is removed from the Casualty box and placed in the Reserves box.
+- Immediately after the Casualty roll is made against your player, you may declare the use of an apothecary.
+- The coach of the opposing team rolls again on the Casualty table, giving two possible outcomes. You may choose which result is applied to your player.
+- If a Badly Hurt result is applied, the apothecary has been able to patch the player up and pump them full of painkillers. The player is removed from the Casualty box and placed in the Reserves box.
 
 Note that the use of an apothecary comes before any other attempts to heal the player. This includes the use of any Skills or Traits, or any other in-game effect or special rule that may modify the Casualty roll or its effect.
 
-Kicking Them While They're Down
--------------------------------
+## Kicking Them While They're Down
 
 Fouling is strictly against the rules of Blood Bowl, and any player tempted to stick the boot in risks the wrath of the referees. Not that this stops anyone of course! Many teams are renowned for being dirty and devious, and more than a few players have built a career upon the art of the foul. Indeed, fouling is now such an established part of the game that the RARG has established guidelines allowing members to turn a blind eye.
 
@@ -1735,8 +1680,8 @@ As mentioned previously, once per team turn, a single player on the active team 
 
 To commit a Foul, simply make an Armour roll (and possible Injury roll) against the nominated victim. Offensive and defensive assists are worked out before this Armour roll is made, exactly as when performing a Block action, as described on [page 57](./#assisting-a-block). Rather than modifying Strength, these assists will modify the Armour roll:
 
-*   Apply a +1 modifier to the Armour roll for each offensive assist.
-*   Apply a -1 modifier to the Armour roll for each defensive assist.
+- Apply a +1 modifier to the Armour roll for each offensive assist.
+- Apply a -1 modifier to the Armour roll for each defensive assist.
 
 ### BEING SENT-OFF
 
@@ -1764,8 +1709,7 @@ RESULT
 
 **_"Well, When You Put It Like That.."_** The referee is swayed by your argument. A Turnover is still caused, but the player that committed the Foul is not Sent-off.
 
-Touchdown!
-----------
+## Touchdown!
 
 The game of Blood Bowl is won by scoring touchdowns. If one team can score more than the other team, they will win. True, there are many, many teams that consider scoring touchdowns secondary to committing acts of violence, but even the most bloodthirsty of teams will start scoring some touchdowns once the opposition has been satisfactorily dealt with. Proof indeed that the basic premise of the game is so simple that even an orc can understand it!
 
@@ -1773,8 +1717,8 @@ The game of Blood Bowl is won by scoring touchdowns. If one team can score more 
 
 A touchdown can be scored by any player, even players that are not currently active themselves or that belong to the inactive team. A touchdown is scored when:
 
-*   A Standing player in possession of the ball enters a square that is within the opposing team's End Zone without Falling Over or being Knocked Down.
-*   A Standing player picks up or catches the ball whilst occupying a square within the opposing team's End Zone.
+- A Standing player in possession of the ball enters a square that is within the opposing team's End Zone without Falling Over or being Knocked Down.
+- A Standing player picks up or catches the ball whilst occupying a square within the opposing team's End Zone.
 
 _For example, a player that occupies a square within the opposing team's End Zone who catches the ball will immediately score a touchdown. Alternatively, a player in possession of the ball may be chain-pushed into the opposing team's End Zone._
 
@@ -1805,8 +1749,7 @@ If at any point during your team turn a player belonging to your team meets all 
 
 Failing to activate a Stalling player before your turn ends (even if it ends unexpectedly with a Turnover), or activating that player but declining to score a touchdown, is Stalling.
 
-The End of A Drive
-------------------
+## The End of A Drive
 
 When a drive comes to an end, either as the result of a touchdown being scored, or when time runs out for the half and the referee blows their whistle, play will halt. Unless the full-time whistle has been blown, there will be another drive to come, and both teams will make use of the lull in activity. This gives both teams time to make substitutions, talk tactics, and for cheerleaders and sideline performers to entertain the crowds and enthuse their supporters.
 
@@ -1828,8 +1771,8 @@ When a player is Sent-off in this way, their coach may attempt to Argue the Call
 
 If either coach has any players in the Knocked-out box of their dugout, they may now see if they have recovered enough to take part in the next drive. Roll a D6 for each player that is currently Knocked-out:
 
-*   On a roll of 4+, the player has recovered and is raring to go. Recovered players are immediately placed in the Reserves box of their team dugout.
-*   On a roll of 1-3, the player is still far too insensible to take to the pitch again.
+- On a roll of 4+, the player has recovered and is raring to go. Recovered players are immediately placed in the Reserves box of their team dugout.
+- On a roll of 1-3, the player is still far too insensible to take to the pitch again.
 
 #### 3\. THE DRIVE ENDS
 
@@ -1851,15 +1794,15 @@ The team that has scored the most touchdowns at the end of the game is declared 
 
 It is very rare for a Blood Bowl team to concede a game, most would sooner play to the death than quit the pitch in shame. But sometimes a coach may put discretion before valour and say they've had enough. You may concede at the start of any of your team turns. However, doing so means that:
 
-*   The opposition is awarded one touchdown, and any touchdowns your team has scored are voided and awarded to the opposition.
-*   You are unable to award an MVP to any of your players.
-*   You do not generate any winnings.
-*   Your Dedicated Fans characteristic is reduced by D3 (to a minimum of 1).
+- The opposition is awarded one touchdown, and any touchdowns your team has scored are voided and awarded to the opposition.
+- You are unable to award an MVP to any of your players.
+- You do not generate any winnings.
+- Your Dedicated Fans characteristic is reduced by D3 (to a minimum of 1).
 
 Finally, roll a D6 for each of your players that has gained three or more advancements:
 
-*   On a roll of 1-3, the player quits the team in disgust. Immediately delete the player from your Team Draft list.
-*   On a roll of 4+, the player remains with the team.
+- On a roll of 1-3, the player quits the team in disgust. Immediately delete the player from your Team Draft list.
+- On a roll of 4+, the player remains with the team.
 
 ### EXTRA TIME
 

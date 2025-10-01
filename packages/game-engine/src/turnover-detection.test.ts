@@ -27,7 +27,7 @@ describe('Détection du Turnover', () => {
       };
 
       const moves = getLegalMoves(turnoverState);
-      
+
       // Seul END_TURN devrait être disponible
       expect(moves).toHaveLength(1);
       expect(moves[0]).toEqual({ type: 'END_TURN' });
@@ -35,11 +35,11 @@ describe('Détection du Turnover', () => {
 
     it('devrait retourner des mouvements normaux quand isTurnover est false', () => {
       const moves = getLegalMoves(state);
-      
+
       // Devrait avoir plus que juste END_TURN
       expect(moves.length).toBeGreaterThan(1);
       expect(moves).toContainEqual({ type: 'END_TURN' });
-      
+
       // Devrait avoir des mouvements MOVE
       const moveMoves = moves.filter(m => m.type === 'MOVE');
       expect(moveMoves.length).toBeGreaterThan(0);
@@ -55,14 +55,14 @@ describe('Détection du Turnover', () => {
       };
 
       // Essayer de faire un mouvement
-      const move: Move = { 
-        type: 'MOVE', 
-        playerId: 'A1', 
-        to: { x: 1, y: 1 } 
+      const move: Move = {
+        type: 'MOVE',
+        playerId: 'A1',
+        to: { x: 1, y: 1 },
       };
 
       const result = applyMove(turnoverState, move, rng);
-      
+
       // L'état ne devrait pas changer
       expect(result).toBe(turnoverState);
     });
@@ -76,7 +76,7 @@ describe('Détection du Turnover', () => {
 
       const move: Move = { type: 'END_TURN' };
       const result = applyMove(turnoverState, move, rng);
-      
+
       // L'état devrait changer (fin de tour)
       expect(result).not.toBe(turnoverState);
       expect(result.isTurnover).toBe(false);
@@ -104,7 +104,7 @@ describe('Détection du Turnover', () => {
         type: 'BLITZ',
         playerId: 'A1',
         to: { x: 11, y: 7 },
-        targetId: 'B1'
+        targetId: 'B1',
       };
 
       // Utiliser un RNG qui va faire échouer le jet d'esquive (retourne toujours 1)
@@ -117,12 +117,12 @@ describe('Détection du Turnover', () => {
         playerA1: result.players.find(p => p.id === 'A1'),
         canBlitz: canBlitz(testState, 'A1', { x: 11, y: 7 }, 'B1'),
         teamBlitzCount: testState.teamBlitzCount,
-        gameLog: result.gameLog.slice(-5) // Derniers 5 logs
+        gameLog: result.gameLog.slice(-5), // Derniers 5 logs
       });
 
       // Vérifier que le turnover est déclenché
       expect(result.isTurnover).toBe(true);
-      
+
       // Vérifier que seul END_TURN est disponible
       const moves = getLegalMoves(result);
       expect(moves).toHaveLength(1);

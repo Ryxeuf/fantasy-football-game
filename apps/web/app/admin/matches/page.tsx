@@ -6,8 +6,13 @@ type Match = { id: string; status: string; seed: string; createdAt: string };
 
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");
-  const res = await fetch(`${API_BASE}${path}`, { headers: { Authorization: token ? `Bearer ${token}` : "" } });
-  if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error || `Erreur ${res.status}`);
+  const res = await fetch(`${API_BASE}${path}`, {
+    headers: { Authorization: token ? `Bearer ${token}` : "" },
+  });
+  if (!res.ok)
+    throw new Error(
+      (await res.json().catch(() => ({})))?.error || `Erreur ${res.status}`,
+    );
   return res.json();
 }
 
@@ -52,7 +57,9 @@ export default function AdminMatchesPage() {
                 <td className="p-2 font-mono">{m.id}</td>
                 <td className="p-2">{m.status}</td>
                 <td className="p-2 font-mono">{m.seed}</td>
-                <td className="p-2">{new Date(m.createdAt).toLocaleString()}</td>
+                <td className="p-2">
+                  {new Date(m.createdAt).toLocaleString()}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -61,5 +68,3 @@ export default function AdminMatchesPage() {
     </div>
   );
 }
-
-

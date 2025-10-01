@@ -5,6 +5,7 @@ Ce document décrit les standards de code appliqués au moteur de jeu Blood Bowl
 ## Configuration
 
 ### Prettier
+
 - **Fichier de config** : `.prettierrc`
 - **Règles** :
   - Semicolons obligatoires
@@ -14,6 +15,7 @@ Ce document décrit les standards de code appliqués au moteur de jeu Blood Bowl
   - Virgules finales : ES5
 
 ### ESLint
+
 - **Fichier de config** : `eslint.config.js`
 - **Règles principales** :
   - `@typescript-eslint/no-unused-vars` : warning
@@ -45,6 +47,7 @@ npm run test:run
 ## Structure des fichiers
 
 ### Organisation
+
 - **`types.ts`** : Toutes les interfaces et types
 - **`rng.ts`** : Générateur de nombres aléatoires
 - **`dice.ts`** : Système de jets de dés
@@ -58,24 +61,28 @@ npm run test:run
 - **`index.ts`** : Point d'entrée
 
 ### Conventions de nommage
+
 - **Fonctions** : camelCase
 - **Types/Interfaces** : PascalCase
 - **Constantes** : UPPER_SNAKE_CASE
 - **Fichiers** : kebab-case.ts
 
 ### Documentation
+
 - Toutes les fonctions publiques doivent avoir une documentation JSDoc
 - Inclure les paramètres, le type de retour et une description
 
 ## Qualité du code
 
 ### Métriques actuelles
+
 - ✅ **Tests** : 161/161 passent
 - ✅ **Performance** : 100,000 actions/seconde
 - ✅ **Linting** : 67 warnings (principalement des non-null assertions dans les tests)
 - ✅ **Types** : Aucune erreur TypeScript
 
 ### Bonnes pratiques
+
 1. **Imports** : Supprimer les imports inutilisés
 2. **Types** : Éviter `any`, utiliser `Record<string, unknown>` ou des types spécifiques
 3. **Assertions** : Minimiser l'usage de `!` (non-null assertion)
@@ -85,6 +92,7 @@ npm run test:run
 ## Workflow de développement
 
 1. **Avant de commiter** :
+
    ```bash
    npm run format:all
    ```

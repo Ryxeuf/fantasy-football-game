@@ -1,10 +1,8 @@
-Post-game Sequence
-==================
+# Post-game Sequence
 
 Over the course of a league, Blood Bowl teams will grow and evolve with every game played; some rookie players will learn new skills and develop as players, others will suffer injuries that may threaten their career, and some will even die! Whilst fatalities are not unexpected in a violent bloodsport, they can be a trifle annoying for any coach, particularly if the deceased player was beginning to show promise or, even worse, if they were a valued and talented veteran of the gridiron. Fortunately, the sorrow of loss can be eased by counting the winnings, allowing new players to be recruited, providing fresh blood for an under strength team, and existing players can be trained and developed into the stars of the future!
 
-The Aftermath
--------------
+## The Aftermath
 
 Once the final whistle has blown on a game played during a league and the exuberant crowds have left the stadium, both coaches will run their teams through the post-game sequence. This is when winnings are counted and spent on new players and Sideline Staff, when casualties are assessed and either treated or dismissed, and when players and their various skills evaluated and, invariably, team tactics are reviewed.
 
@@ -23,19 +21,19 @@ After a league fixture, both coaches should run through the full post-game seque
 
 At the end of each and every league fixture, both coaches are responsible for correctly recording on their Game Record sheet the details of how their team performed and the outcome of the match. Each coach should record the following information in the appropriate sections of their Game Record sheet so that it can be passed on to the league commissioner:
 
-*   The result of the game (win, lose or draw).
-*   How many touchdowns were scored (by each team).
-*   How many Casualties were caused (counting only those that generate SPP, as described in Step 3).
-*   How many League points were earned (see [page 98](../league_and_exhibition_play/#league-scoring)).
-*   Finally, any players that suffered a DEAD result on the Casualty table during this game are deleted from your Team Draft list (see [page 60](../the_rules_of_blood_bowl/#dead)).
+- The result of the game (win, lose or draw).
+- How many touchdowns were scored (by each team).
+- How many Casualties were caused (counting only those that generate SPP, as described in Step 3).
+- How many League points were earned (see [page 98](../league_and_exhibition_play/#league-scoring)).
+- Finally, any players that suffered a DEAD result on the Casualty table during this game are deleted from your Team Draft list (see [page 60](../the_rules_of_blood_bowl/#dead)).
 
 #### WINNINGS
 
 At the end of every game, each team receives a fee for playing, usually paid by the stadium owner from ticket sales. To work out how much each team wins:
 
-*   Divide the Fan Attendance for the game (see [below](#fan-attendance)) by two.
-*   Add the number of touchdowns your team scored to this figure.
-*   Multiply the total by 10,000.
+- Divide the Fan Attendance for the game (see [below](#fan-attendance)) by two.
+- Add the number of touchdowns your team scored to this figure.
+- Multiply the total by 10,000.
 
 The result is how many gold pieces your team has won for this game. This is recorded in the 'Winnings' section of the Game Record sheet and is added immediately to the team's Treasury.
 
@@ -49,9 +47,9 @@ This is worked out by simply adding together the Fan Factor of both teams to det
 
 A good result can see a team's fan following increase, and a prolonged winning streak can bring the fans flocking to buy tickets and merchandise. This sort of popularity can really help a team financially:
 
-*   If your team won the game, roll a D6. If the result is equal to or higher than your current Dedicated Fans characteristic, increase your Dedicated Fans characteristic by 1.
-*   If your team lost the game, roll a D6. If the result is lower than your current Dedicated Fans characteristic, reduce your Dedicated Fans characteristic by 1.
-*   If the game was a draw, neither team's Dedicated Fans characteristic will increase or decrease.
+- If your team won the game, roll a D6. If the result is equal to or higher than your current Dedicated Fans characteristic, increase your Dedicated Fans characteristic by 1.
+- If your team lost the game, roll a D6. If the result is lower than your current Dedicated Fans characteristic, reduce your Dedicated Fans characteristic by 1.
+- If the game was a draw, neither team's Dedicated Fans characteristic will increase or decrease.
 
 ### 3\. PLAYER ADVANCEMENT
 
@@ -71,15 +69,15 @@ Be it for scoring touchdowns or for earning Most Valuable Player awards, the ful
 
 Often when a player passes the ball or throws a teammate, something can go wrong. When it goes right, however, it is called a Completion, and the fans love it!
 
-*   **_PASSING COMPLETIONS:_** When a player makes an accurate Pass action which is caught by a teammate occupying the target square, they are said to have made a 'Passing Completion'. A Passing Completion earns the player 1 SPP.
-*   **_THROWING COMPLETIONS:_** When a player makes a superb Throw teammate action, and if the thrown player lands safely, they are said to have made a 'Throwing Completion'. A Throwing Completion earns the player 1 SPP.
+- **_PASSING COMPLETIONS:_** When a player makes an accurate Pass action which is caught by a teammate occupying the target square, they are said to have made a 'Passing Completion'. A Passing Completion earns the player 1 SPP.
+- **_THROWING COMPLETIONS:_** When a player makes a superb Throw teammate action, and if the thrown player lands safely, they are said to have made a 'Throwing Completion'. A Throwing Completion earns the player 1 SPP.
 
 #### PASSING INTERFERENCE
 
 When a player successfully interferes with a Pass action, the effect can be dramatic indeed! A Simple Deflection can have a huge impact upon a game, whilst an Interception can completely reverse the flow of play!
 
-*   **_DEFLECTIONS:_** A Deflection earns the player 1 SPP.
-*   **_INTERCEPTIONS:_** An Interception earns the player 2 SPP.
+- **_DEFLECTIONS:_** A Deflection earns the player 1 SPP.
+- **_INTERCEPTIONS:_** An Interception earns the player 2 SPP.
 
 #### CASUALTY (CAS)
 
@@ -263,10 +261,10 @@ Value Increase
 
 Players are prone to injury, and even the biggest superstars can find themselves looking for work elsewhere if their injuries outweigh their abilities. After all, there are always fresh-faced rookies looking to make a name for themselves for a fraction of the cost! Similarly, coaches will often hire and fire Sideline Staff on a regular basis to manage their overheads. During this step of the post-game sequence a team may:
 
-*   Spend any amount of gold from the Treasury to buy new players from your team roster and/or Sideline Staff and increase Team Value accordingly.
-*   Fire any players and/or Sideline Staff who are no longer required, deleting them from the Team Draft list and reducing Team Value accordingly.
-*   Purchase additional team re-rolls, but must pay double to do so, as described on [page 34](../rules_and_regulations/#purchasing-team-re-rolls).
-*   Permanently hire any Journeymen that played for the team during this game:
+- Spend any amount of gold from the Treasury to buy new players from your team roster and/or Sideline Staff and increase Team Value accordingly.
+- Fire any players and/or Sideline Staff who are no longer required, deleting them from the Team Draft list and reducing Team Value accordingly.
+- Purchase additional team re-rolls, but must pay double to do so, as described on [page 34](../rules_and_regulations/#purchasing-team-re-rolls).
+- Permanently hire any Journeymen that played for the team during this game:
 
  - A team must have fewer than 16 players on its Team Draft list to permanently hire Journeymen.
 
@@ -386,10 +384,10 @@ Crisis Averted
 
 Minor Incident
 
-*   **_CRISIS AVERTED:_** Thanks to some careful management, your team behaves itself for once!
-*   **_MINOR INCIDENT:_** The team gets up to some mischief and you lose D3 x 10,000 gold pieces from your Treasury.
-*   **_MAJOR INCIDENT:_** Half the gold in your Treasury (rounding down to the nearest 5,000 gold pieces) is lost to an unfortunate mishap.
-*   **_CATASTROPHE:_** Your Treasury is emptied, except for 2D6 x 10,000 gold pieces which you sensibly squirreled away for just such an occurrence.
+- **_CRISIS AVERTED:_** Thanks to some careful management, your team behaves itself for once!
+- **_MINOR INCIDENT:_** The team gets up to some mischief and you lose D3 x 10,000 gold pieces from your Treasury.
+- **_MAJOR INCIDENT:_** Half the gold in your Treasury (rounding down to the nearest 5,000 gold pieces) is lost to an unfortunate mishap.
+- **_CATASTROPHE:_** Your Treasury is emptied, except for 2D6 x 10,000 gold pieces which you sensibly squirreled away for just such an occurrence.
 
 ### 6\. PREPARE FOR NEXT FIXTURE
 
@@ -400,4 +398,3 @@ In preparation for the next fixture, make sure both your Team Value and Current 
 **_CURRENT TEAM VALUE (CTV):_** This is worked out exactly as above, but minus the current value of any players that suffered a Miss Next Game Casualty table result during this game and will be unavailable to play next game. Remember to include the current value of any players that missed this game; they have now recovered from their injuries and are fit to play in the next game.
 
 var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("\_\_tabbed\_"))
-

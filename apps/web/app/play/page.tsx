@@ -1,31 +1,56 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { PixiBoard, PlayerDetails, DiceResultPopup, GameScoreboard, GameLog, BlockChoicePopup, ActionPickerPopup, PushChoicePopup, FollowUpChoicePopup, GameBoardWithDugouts } from "@bb/ui";
-import { setup, getLegalMoves, applyMove, makeRNG, clearDiceResult, hasPlayerActed, type GameState, type Position, type Move } from "@bb/game-engine";
+import {
+  PixiBoard,
+  PlayerDetails,
+  DiceResultPopup,
+  GameScoreboard,
+  GameLog,
+  BlockChoicePopup,
+  ActionPickerPopup,
+  PushChoicePopup,
+  FollowUpChoicePopup,
+  GameBoardWithDugouts,
+} from "@bb/ui";
+import {
+  setup,
+  getLegalMoves,
+  applyMove,
+  makeRNG,
+  clearDiceResult,
+  hasPlayerActed,
+  type GameState,
+  type Position,
+  type Move,
+} from "@bb/game-engine";
 import { API_BASE } from "../auth-client";
 
 export default function PlayPage() {
   // Redirige vers la nouvelle route paramétrée si un match_token est présent
   useEffect(() => {
-    const matchId = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('matchId');
+    const matchId = new URLSearchParams(
+      typeof window !== "undefined" ? window.location.search : "",
+    ).get("matchId");
     if (matchId) {
       window.location.replace(`/play/${matchId}`);
       return;
     }
-    const token = localStorage.getItem('match_token');
+    const token = localStorage.getItem("match_token");
     if (token) {
       // si on a aussi le matchId en storage (optionnel), redirige; sinon retour lobby
-      const mid = sessionStorage.getItem('current_match_id');
+      const mid = sessionStorage.getItem("current_match_id");
       if (mid) window.location.replace(`/play/${mid}`);
-      else window.location.href = '/lobby';
+      else window.location.href = "/lobby";
     } else {
-      window.location.href = '/lobby';
+      window.location.href = "/lobby";
     }
   }, []);
 
   const [state, setState] = useState<GameState>(() => setup());
   const [showDicePopup, setShowDicePopup] = useState(false);
-  const [currentAction, setCurrentAction] = useState<"MOVE" | "BLOCK" | "BLITZ" | "PASS" | "HANDOFF" | "FOUL" | null>(null);
+  const [currentAction, setCurrentAction] = useState<
+    "MOVE" | "BLOCK" | "BLITZ" | "PASS" | "HANDOFF" | "FOUL" | null
+  >(null);
   const createRNG = () => makeRNG(`ui-seed-${Date.now()}-${Math.random()}`);
   const [coachNameA, setCoachNameA] = useState<string | null>(null); // local
   const [coachNameB, setCoachNameB] = useState<string | null>(null); // visiteur
@@ -36,8 +61,10 @@ export default function PlayPage() {
     // Récupère le nom du coach connecté pour l'afficher
     (async () => {
       try {
-        const res = await fetch(`${API_BASE}/auth/me`, { credentials: "include" });
-        const data = await res.json().catch(() => ({} as any));
+        const res = await fetch(`${API_BASE}/auth/me`, {
+          credentials: "include",
+        });
+        const data = await res.json().catch(() => ({}) as any);
         if (res.ok && data?.user?.name) {
           setCoachNameA(data.user.name as string);
         } else if (res.ok && data?.user?.email) {
@@ -56,7 +83,7 @@ export default function PlayPage() {
         const res = await fetch(`${API_BASE}/match/details`, {
           headers: { "X-Match-Token": matchToken },
         });
-        const data = await res.json().catch(() => ({} as any));
+        const data = await res.json().catch(() => ({}) as any);
         if (res.ok && data) {
           // local/visitor -> gauche/droite
           setTeamNameA(data?.local?.teamName || null);
@@ -69,8 +96,17 @@ export default function PlayPage() {
   }, []);
 
   const legal = useMemo(() => getLegalMoves(state), [state]);
-  const isMove = (m: Move, pid: string): m is Extract<Move, { type: "MOVE" }> => m.type === "MOVE" && (m as any).playerId === pid;
-  const movesForSelected = useMemo(() => (state.selectedPlayerId ? legal.filter((m) => isMove(m, state.selectedPlayerId!)).map((m) => m.to) : []), [legal, state.selectedPlayerId]);
+  const isMove = (m: Move, pid: string): m is Extract<Move, { type: "MOVE" }> =>
+    m.type === "MOVE" && (m as any).playerId === pid;
+  const movesForSelected = useMemo(
+    () =>
+      state.selectedPlayerId
+        ? legal
+            .filter((m) => isMove(m, state.selectedPlayerId!))
+            .map((m) => m.to)
+        : [],
+    [legal, state.selectedPlayerId],
+  );
 
   const blockTargets = useMemo(() => {
     if (!state.selectedPlayerId) return [] as Position[];
@@ -86,7 +122,9 @@ export default function PlayPage() {
   }, [legal, state.selectedPlayerId, state.players]);
 
   function onCellClick(pos: Position) {
-    const player = state.players.find((p) => p.pos.x === pos.x && p.pos.y === pos.y);
+    const player = state.players.find(
+      (p) => p.pos.x === pos.x && p.pos.y === pos.y,
+    );
     if (player && player.team === state.currentPlayer) {
       setState((s) => ({ ...s, selectedPlayerId: player.id }));
       setCurrentAction(null);
@@ -94,14 +132,47 @@ export default function PlayPage() {
     }
     if (state.selectedPlayerId) {
       const attackerId = state.selectedPlayerId;
-      const target = state.players.find((p) => p.team !== state.currentPlayer && p.pos.x === pos.x && p.pos.y === pos.y);
-      const blockMove = legal.find((m) => m.type === "BLOCK" && (m as any).playerId === attackerId && target && (m as any).targetId === target.id) as any;
-      if (blockMove && target && (currentAction === "BLOCK" || currentAction === "BLITZ")) {
-        setState((s) => applyMove(s, { type: "BLOCK", playerId: attackerId, targetId: target.id } as any, createRNG()));
+      const target = state.players.find(
+        (p) =>
+          p.team !== state.currentPlayer &&
+          p.pos.x === pos.x &&
+          p.pos.y === pos.y,
+      );
+      const blockMove = legal.find(
+        (m) =>
+          m.type === "BLOCK" &&
+          (m as any).playerId === attackerId &&
+          target &&
+          (m as any).targetId === target.id,
+      ) as any;
+      if (
+        blockMove &&
+        target &&
+        (currentAction === "BLOCK" || currentAction === "BLITZ")
+      ) {
+        setState((s) =>
+          applyMove(
+            s,
+            { type: "BLOCK", playerId: attackerId, targetId: target.id } as any,
+            createRNG(),
+          ),
+        );
         return;
       }
-      const candidate = legal.find((m) => m.type === "MOVE" && m.playerId === state.selectedPlayerId && m.to.x === pos.x && m.to.y === pos.y);
-      if (candidate && candidate.type === "MOVE" && (currentAction === "MOVE" || currentAction === "BLITZ" || currentAction === null)) {
+      const candidate = legal.find(
+        (m) =>
+          m.type === "MOVE" &&
+          m.playerId === state.selectedPlayerId &&
+          m.to.x === pos.x &&
+          m.to.y === pos.y,
+      );
+      if (
+        candidate &&
+        candidate.type === "MOVE" &&
+        (currentAction === "MOVE" ||
+          currentAction === "BLITZ" ||
+          currentAction === null)
+      ) {
         setState((s) => {
           const s2 = applyMove(s, candidate, createRNG());
           const p = s2.players.find((pl) => pl.id === candidate.playerId);
@@ -121,23 +192,42 @@ export default function PlayPage() {
         rightTeamName={teamNameB || state.teamNames.teamB}
         leftCoachName={coachNameA || "Joueur"}
         rightCoachName={coachNameB || "Adversaire"}
-        onEndTurn={() => setState((s) => applyMove(s, { type: "END_TURN" }, createRNG()))}
+        onEndTurn={() =>
+          setState((s) => applyMove(s, { type: "END_TURN" }, createRNG()))
+        }
       />
       <div className="pt-24">
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col lg:flex-row items-start gap-6 mb-6">
             <div className="flex-1 flex justify-center">
-              <GameBoardWithDugouts state={state} onCellClick={onCellClick} legalMoves={movesForSelected} blockTargets={[]} selectedPlayerId={state.selectedPlayerId} onPlayerClick={(playerId) => {
-                const player = state.players.find((p) => p.id === playerId);
-                if (player && player.team === state.currentPlayer) {
-                  setState((s) => ({ ...s, selectedPlayerId: player.id }));
-                  setCurrentAction(null);
-                }
-              }} />
+              <GameBoardWithDugouts
+                state={state}
+                onCellClick={onCellClick}
+                legalMoves={movesForSelected}
+                blockTargets={[]}
+                selectedPlayerId={state.selectedPlayerId}
+                onPlayerClick={(playerId) => {
+                  const player = state.players.find((p) => p.id === playerId);
+                  if (player && player.team === state.currentPlayer) {
+                    setState((s) => ({ ...s, selectedPlayerId: player.id }));
+                    setCurrentAction(null);
+                  }
+                }}
+              />
             </div>
             <div className="w-full lg:w-auto">
               {state.selectedPlayerId && (
-                <PlayerDetails variant="sidebar" player={state.players.find((p) => p.id === state.selectedPlayerId) || null} onClose={() => setState((s) => ({ ...s, selectedPlayerId: null }))} />
+                <PlayerDetails
+                  variant="sidebar"
+                  player={
+                    state.players.find(
+                      (p) => p.id === state.selectedPlayerId,
+                    ) || null
+                  }
+                  onClose={() =>
+                    setState((s) => ({ ...s, selectedPlayerId: null }))
+                  }
+                />
               )}
             </div>
           </div>
@@ -145,13 +235,27 @@ export default function PlayPage() {
         </div>
       </div>
       {showDicePopup && state.lastDiceResult && (
-        <DiceResultPopup result={state.lastDiceResult} onClose={() => { setShowDicePopup(false); setState((s) => clearDiceResult(s)); }} />
+        <DiceResultPopup
+          result={state.lastDiceResult}
+          onClose={() => {
+            setShowDicePopup(false);
+            setState((s) => clearDiceResult(s));
+          }}
+        />
       )}
-      {state.selectedPlayerId && currentAction === null && !hasPlayerActed(state, state.selectedPlayerId) && (
-        <ActionPickerPopup playerName={state.players.find(p => p.id === state.selectedPlayerId)?.name || 'Joueur'} available={["MOVE", "BLOCK", "BLITZ", "PASS", "HANDOFF", "FOUL"]} onPick={(a) => setCurrentAction(a)} onClose={() => setCurrentAction("MOVE")} />
-      )}
+      {state.selectedPlayerId &&
+        currentAction === null &&
+        !hasPlayerActed(state, state.selectedPlayerId) && (
+          <ActionPickerPopup
+            playerName={
+              state.players.find((p) => p.id === state.selectedPlayerId)
+                ?.name || "Joueur"
+            }
+            available={["MOVE", "BLOCK", "BLITZ", "PASS", "HANDOFF", "FOUL"]}
+            onPick={(a) => setCurrentAction(a)}
+            onClose={() => setCurrentAction("MOVE")}
+          />
+        )}
     </div>
   );
 }
-
-

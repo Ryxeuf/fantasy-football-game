@@ -66,11 +66,7 @@ export {
 } from './core/game-state';
 
 // Export des fonctions de dugout
-export {
-  movePlayerToDugoutZone,
-} from './mechanics/dugout';
+export { movePlayerToDugoutZone } from './mechanics/dugout';
 
 // Export des fonctions de blessure
-export {
-  performInjuryRoll,
-} from './mechanics/injury';
+export { performInjuryRoll } from './mechanics/injury';

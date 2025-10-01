@@ -7,6 +7,7 @@
 ## 🎯 Objectif de la Vérification
 
 Vérifier et tester l'implémentation complète des dés de blocage dans le jeu Blood Bowl, incluant :
+
 - Les 5 faces de dés officielles
 - Le mapping correct des résultats
 - L'intégration avec le système de jeu
@@ -17,6 +18,7 @@ Vérifier et tester l'implémentation complète des dés de blocage dans le jeu 
 ### 1. Faces des Dés de Blocage ✅ CONFORME
 
 **Faces implémentées :**
+
 - ✅ **Player Down!** (`PLAYER_DOWN`) - L'attaquant est mis au sol
 - ✅ **Both Down** (`BOTH_DOWN`) - Les deux joueurs sont mis au sol
 - ✅ **Push Back** (`PUSH_BACK`) - La cible est repoussée d'1 case
@@ -28,6 +30,7 @@ Vérifier et tester l'implémentation complète des dés de blocage dans le jeu 
 ### 2. Images des Dés ✅ CONFORME
 
 **Images disponibles :**
+
 ```
 apps/web/public/images/blocking_dice/
 ├── player_down.png      ✅ Présent
@@ -43,6 +46,7 @@ apps/web/public/images/blocking_dice/
 ### 3. Implémentation du Code ✅ CONFORME
 
 **Fonctions implémentées :**
+
 - ✅ `rollBlockDice()` - Lance un dé de blocage
 - ✅ `rollBlockDiceMany()` - Lance plusieurs dés
 - ✅ `rollBlockDiceManyWithRolls()` - Lance plusieurs dés avec numéros
@@ -51,18 +55,26 @@ apps/web/public/images/blocking_dice/
 - ✅ `resolveBlockResult()` - Résout les résultats de blocage
 
 **Types TypeScript :**
+
 ```typescript
-export type BlockResult = "PLAYER_DOWN" | "BOTH_DOWN" | "PUSH_BACK" | "STUMBLE" | "POW";
+export type BlockResult =
+  | "PLAYER_DOWN"
+  | "BOTH_DOWN"
+  | "PUSH_BACK"
+  | "STUMBLE"
+  | "POW";
 ```
 
 ### 4. Tests de Validation ✅ CONFORME
 
 **Tests créés :**
+
 - ✅ `blocking-dice-test.test.ts` - 10 tests spécifiques aux dés
 - ✅ `BlockDiceIcon.test.tsx` - Tests du composant UI
 - ✅ Tests d'intégration existants validés
 
 **Résultats des tests :**
+
 ```
 ✓ Tests des dés de blocage - Vérification complète (10)
   ✓ Vérification des faces de dés (3)
@@ -78,6 +90,7 @@ export type BlockResult = "PLAYER_DOWN" | "BOTH_DOWN" | "PUSH_BACK" | "STUMBLE" 
 ### 5. Conformité aux Règles ✅ CONFORME
 
 **Règles vérifiées :**
+
 - ✅ 5 faces de dés exactement (selon les règles officielles)
 - ✅ Distribution équitable (1/5 chance pour chaque face)
 - ✅ Calcul correct du nombre de dés selon la force
@@ -90,6 +103,7 @@ export type BlockResult = "PLAYER_DOWN" | "BOTH_DOWN" | "PUSH_BACK" | "STUMBLE" 
 ### 6. Interface Utilisateur ✅ CONFORME
 
 **Composant `BlockDiceIcon` :**
+
 - ✅ Mapping correct des résultats vers les images
 - ✅ Descriptions en français conformes aux règles
 - ✅ Support des tailles personnalisables
@@ -99,6 +113,7 @@ export type BlockResult = "PLAYER_DOWN" | "BOTH_DOWN" | "PUSH_BACK" | "STUMBLE" 
 ## 🧪 Tests d'Intégration
 
 **Fichier de test créé :** `test-dice-integration.html`
+
 - Test visuel de toutes les images
 - Vérification du chargement des images
 - Test du mapping des dés

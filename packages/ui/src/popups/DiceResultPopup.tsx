@@ -1,38 +1,51 @@
-import React from 'react';
-import { DiceResult } from '@bb/game-engine';
+import React from "react";
+import { DiceResult } from "@bb/game-engine";
 
 interface DiceResultPopupProps {
   result: DiceResult;
   onClose: () => void;
 }
 
-export default function DiceResultPopup({ result, onClose }: DiceResultPopupProps) {
-  const getDiceTypeLabel = (type: DiceResult['type']) => {
+export default function DiceResultPopup({
+  result,
+  onClose,
+}: DiceResultPopupProps) {
+  const getDiceTypeLabel = (type: DiceResult["type"]) => {
     switch (type) {
-      case 'dodge': return 'Jet d\'esquive';
-      case 'pickup': return 'Récupération de balle';
-      case 'pass': return 'Passe';
-      case 'catch': return 'Réception';
-      default: return 'Jet de dés';
+      case "dodge":
+        return "Jet d'esquive";
+      case "pickup":
+        return "Récupération de balle";
+      case "pass":
+        return "Passe";
+      case "catch":
+        return "Réception";
+      default:
+        return "Jet de dés";
     }
   };
 
   const getSuccessMessage = (result: DiceResult) => {
     if (result.success) {
-      return '✅ Réussi !';
+      return "✅ Réussi !";
     } else {
-      return '❌ Échec !';
+      return "❌ Échec !";
     }
   };
 
   const getFailureConsequence = (result: DiceResult) => {
     if (!result.success) {
       switch (result.type) {
-        case 'dodge': return 'TURNOVER !';
-        case 'pickup': return 'Balle perdue !';
-        case 'pass': return 'Passe interceptée !';
-        case 'catch': return 'Balle au sol !';
-        default: return 'Action échouée !';
+        case "dodge":
+          return "TURNOVER !";
+        case "pickup":
+          return "Balle perdue !";
+        case "pass":
+          return "Passe interceptée !";
+        case "catch":
+          return "Balle au sol !";
+        default:
+          return "Action échouée !";
       }
     }
     return null;
@@ -45,25 +58,29 @@ export default function DiceResultPopup({ result, onClose }: DiceResultPopupProp
           <h3 className="text-xl font-bold mb-4">
             {getDiceTypeLabel(result.type)}
           </h3>
-          
+
           <div className="mb-4">
             <div className="text-6xl font-bold text-blue-600 mb-2">
               {result.diceRoll}
             </div>
             <div className="text-sm text-gray-600">
-              Jet: {result.diceRoll} / Cible: {result.targetNumber}+ (AG du joueur)
+              Jet: {result.diceRoll} / Cible: {result.targetNumber}+ (AG du
+              joueur)
             </div>
             {result.modifiers !== 0 && (
               <div className="text-sm text-gray-500">
-                Modificateurs: {result.modifiers > 0 ? '+' : ''}{result.modifiers}
+                Modificateurs: {result.modifiers > 0 ? "+" : ""}
+                {result.modifiers}
               </div>
             )}
           </div>
 
           <div className="mb-4">
-            <div className={`text-lg font-semibold ${
-              result.success ? 'text-green-600' : 'text-red-600'
-            }`}>
+            <div
+              className={`text-lg font-semibold ${
+                result.success ? "text-green-600" : "text-red-600"
+              }`}
+            >
               {getSuccessMessage(result)}
             </div>
             {!result.success && (
@@ -77,7 +94,7 @@ export default function DiceResultPopup({ result, onClose }: DiceResultPopupProp
             onClick={onClose}
             className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
           >
-            {result.success ? 'Continuer' : 'Fin du tour'}
+            {result.success ? "Continuer" : "Fin du tour"}
           </button>
         </div>
       </div>

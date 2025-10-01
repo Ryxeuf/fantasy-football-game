@@ -95,6 +95,7 @@ fantasy-football-game/
 ## 🎯 Principes d'Organisation
 
 ### 1. **Séparation des Responsabilités**
+
 - **`core/`** : Types fondamentaux et gestion d'état
 - **`actions/`** : Actions et mouvements des joueurs
 - **`mechanics/`** : Mécaniques de jeu (mouvement, blocage, balle)
@@ -102,12 +103,14 @@ fantasy-football-game/
 - **`tests/`** : Tests d'intégration et de performance
 
 ### 2. **Organisation par Fonctionnalité (UI)**
+
 - **`board/`** : Composants de plateau de jeu
 - **`components/`** : Composants UI réutilisables
 - **`popups/`** : Popups et modales interactives
 - **`tests/`** : Tests des composants
 
 ### 3. **Structure Modulaire**
+
 - Chaque package a son propre `index.ts` pour les exports
 - Imports relatifs clairs entre les modules
 - Séparation claire entre code de production et tests
@@ -136,21 +139,25 @@ fantasy-football-game/
 ## 📋 Avantages de cette Architecture
 
 ### ✅ **Maintenabilité**
+
 - Code organisé par responsabilité
 - Imports clairs et explicites
 - Séparation des préoccupations
 
 ### ✅ **Évolutivité**
+
 - Structure modulaire facilement extensible
 - Packages indépendants
 - Tests organisés par fonctionnalité
 
 ### ✅ **Lisibilité**
+
 - Dossiers avec des noms explicites
 - Structure logique et intuitive
 - Documentation intégrée
 
 ### ✅ **Réutilisabilité**
+
 - Composants UI partagés
 - Logique de jeu centralisée
 - Configuration commune

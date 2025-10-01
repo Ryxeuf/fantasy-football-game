@@ -7,21 +7,25 @@ Le joueur peut maintenant ramasser le ballon quand il passe sur la case où il s
 ## 🎯 Fonctionnalités implémentées
 
 ### ✅ Jet d'agilité pour le ramassage
+
 - **Target basé sur l'AG** du joueur (AG = 3 → target 3+)
 - **Modificateurs négatifs** pour chaque adversaire adjacent à la balle
 - **Limitation du target** entre 2+ et 6+ (règles Blood Bowl)
 
 ### ✅ Calcul des modificateurs
+
 - **-1 par adversaire** non-étourdi adjacent à la balle
 - **Malus cumulatif** pour plusieurs adversaires
 - **Exclusion des adversaires étourdis** des calculs
 
 ### ✅ Gestion des résultats
+
 - **Succès** : Balle ramassée et attachée au joueur
 - **Échec** : Turnover automatique
 - **Popup de résultat** avec détails du jet
 
 ### ✅ Interface utilisateur
+
 - **Popup dédiée** pour les résultats de pickup
 - **Affichage des modificateurs** appliqués
 - **Messages contextuels** selon le succès/échec
@@ -29,23 +33,27 @@ Le joueur peut maintenant ramasser le ballon quand il passe sur la case où il s
 ## 🔧 Fonctions techniques ajoutées
 
 ### Nouvelles fonctions
+
 - `calculatePickupModifiers()` - Calcul des modificateurs de pickup
 - `calculatePickupTarget()` - Calcul du target basé sur l'AG
 - `performPickupRoll()` - Exécution du jet de pickup
 
 ### Modifications apportées
+
 - `applyMove()` - Intégration du système de pickup
 - Interface web - Affichage des résultats de pickup
 
 ## 📊 Tests et qualité
 
 ### Tests complets
+
 - **12 nouveaux tests** pour le ramassage de balle
 - **40 tests au total** (28 précédents + 12 nouveaux)
 - **91.06% de couverture** de code
 - **Tests d'intégration** pour les scénarios complexes
 
 ### Couverture des cas
+
 - ✅ Pickup sans adversaires (target = AG)
 - ✅ Pickup avec 1 adversaire (target = AG + 1)
 - ✅ Pickup avec 2+ adversaires (target = AG + nombre d'adversaires)
@@ -65,14 +73,17 @@ Le joueur peut maintenant ramasser le ballon quand il passe sur la case où il s
 ## 🚀 Exemples de fonctionnement
 
 ### Scénario 1 : Pickup simple
+
 - **Joueur AG 3** sans adversaires → Target 3+
 - **Jet : 4** → ✅ Succès, balle ramassée
 
 ### Scénario 2 : Pickup sous pression
+
 - **Joueur AG 3** avec 2 adversaires → Target 5+ (3 + 2)
 - **Jet : 3** → ❌ Échec, turnover
 
 ### Scénario 3 : Pickup avec adversaire étourdi
+
 - **Joueur AG 3** avec 1 adversaire étourdi → Target 3+ (pas de malus)
 - **Jet : 4** → ✅ Succès, balle ramassée
 

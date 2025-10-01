@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { ToastProvider, DiceNotificationDemo } from '@bb/ui';
+import React from "react";
+import { ToastProvider, DiceNotificationDemo } from "@bb/ui";
 
 export default function DiceNotificationsPage() {
   return (
@@ -11,14 +11,17 @@ export default function DiceNotificationsPage() {
           <h1 className="text-3xl font-bold text-gray-900 mb-8">
             Notifications de Dés - Blood Bowl
           </h1>
-          
+
           <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <h2 className="text-xl font-semibold mb-4">Système de Notifications</h2>
+            <h2 className="text-xl font-semibold mb-4">
+              Système de Notifications
+            </h2>
             <p className="text-gray-600 mb-4">
-              Ce système affiche des notifications toaster pour tous les jets de dés effectués dans le jeu.
-              Les notifications incluent le type de dé, le résultat, et si le jet a réussi ou échoué.
+              Ce système affiche des notifications toaster pour tous les jets de
+              dés effectués dans le jeu. Les notifications incluent le type de
+              dé, le résultat, et si le jet a réussi ou échoué.
             </p>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <h3 className="font-semibold mb-2">Types de Dés Supportés :</h3>
@@ -31,7 +34,7 @@ export default function DiceNotificationsPage() {
                   <li>Blocage - Dés de blocage spéciaux</li>
                 </ul>
               </div>
-              
+
               <div>
                 <h3 className="font-semibold mb-2">Fonctionnalités :</h3>
                 <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
@@ -44,15 +47,25 @@ export default function DiceNotificationsPage() {
               </div>
             </div>
           </div>
-          
+
           <DiceNotificationDemo />
-          
+
           <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
             <h3 className="font-semibold text-blue-900 mb-2">💡 Intégration</h3>
             <p className="text-blue-800 text-sm">
-              Pour intégrer les notifications dans votre jeu, utilisez le hook <code className="bg-blue-100 px-1 rounded">useDiceNotifications</code> 
-              et configurez les callbacks avec <code className="bg-blue-100 px-1 rounded">setDiceNotificationCallback</code> et 
-              <code className="bg-blue-100 px-1 rounded">setBlockDiceNotificationCallback</code>.
+              Pour intégrer les notifications dans votre jeu, utilisez le hook{" "}
+              <code className="bg-blue-100 px-1 rounded">
+                useDiceNotifications
+              </code>
+              et configurez les callbacks avec{" "}
+              <code className="bg-blue-100 px-1 rounded">
+                setDiceNotificationCallback
+              </code>{" "}
+              et
+              <code className="bg-blue-100 px-1 rounded">
+                setBlockDiceNotificationCallback
+              </code>
+              .
             </p>
           </div>
         </div>

@@ -14,17 +14,21 @@ import { prisma } from "./prisma";
 
 dotenv.config({ path: "../../prisma/.env" });
 // Si tests SQLite: pousser le schéma SQLite en mémoire partagée au démarrage
-if (process.env.TEST_SQLITE === '1') {
-  const url = process.env.TEST_DATABASE_URL || 'file:memdb1?mode=memory&cache=shared';
+if (process.env.TEST_SQLITE === "1") {
+  const url =
+    process.env.TEST_DATABASE_URL || "file:memdb1?mode=memory&cache=shared";
   try {
-    execSync(`TEST_DATABASE_URL='${url}' npx prisma db push --schema prisma/sqlite/schema.prisma --skip-generate`, {
-      stdio: 'inherit',
-      cwd: process.cwd(),
-      env: { ...process.env, TEST_DATABASE_URL: url },
-    });
+    execSync(
+      `TEST_DATABASE_URL='${url}' npx prisma db push --schema prisma/sqlite/schema.prisma --skip-generate`,
+      {
+        stdio: "inherit",
+        cwd: process.cwd(),
+        env: { ...process.env, TEST_DATABASE_URL: url },
+      },
+    );
     console.log(`SQLite schema pushed (TEST_DATABASE_URL=${url})`);
   } catch (e) {
-    console.error('Failed to push SQLite schema for tests', e);
+    console.error("Failed to push SQLite schema for tests", e);
   }
 }
 
@@ -39,9 +43,13 @@ const bgioServer = Server({
   // Validation du token de match transmis côté client via `credentials`
   authenticate: async (credentials: any) => {
     try {
-      const token = typeof credentials === "string" ? credentials : credentials?.matchToken;
+      const token =
+        typeof credentials === "string" ? credentials : credentials?.matchToken;
       if (!token) throw new Error("matchToken manquant");
-      const payload: any = (await import("jsonwebtoken")).default.verify(token, MATCH_SECRET);
+      const payload: any = (await import("jsonwebtoken")).default.verify(
+        token,
+        MATCH_SECRET,
+      );
       // Optionnel: retourner des métadonnées utiles
       return { matchId: payload.matchId, userId: payload.userId } as any;
     } catch (e) {
@@ -65,12 +73,14 @@ app.use("/user", userRoutes);
 app.use("/team", teamRoutes);
 
 // Endpoint public de reset pour tests (uniquement en TEST_SQLITE=1)
-if (process.env.TEST_SQLITE === '1') {
+if (process.env.TEST_SQLITE === "1") {
   app.post("/__test/reset", async (_req, res) => {
     try {
       await prisma.turn.deleteMany({});
       await prisma.teamSelection.deleteMany({});
-      try { await (prisma as any).$executeRawUnsafe('DELETE FROM "_MatchToUser"'); } catch {}
+      try {
+        await (prisma as any).$executeRawUnsafe('DELETE FROM "_MatchToUser"');
+      } catch {}
       await prisma.match.deleteMany({});
       await prisma.teamPlayer.deleteMany({});
       await prisma.team.deleteMany({});
@@ -78,7 +88,7 @@ if (process.env.TEST_SQLITE === '1') {
       return res.json({ ok: true });
     } catch (e: any) {
       console.error(e);
-      return res.status(500).json({ error: e?.message || 'reset failed' });
+      return res.status(500).json({ error: e?.message || "reset failed" });
     }
   });
 }

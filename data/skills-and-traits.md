@@ -1,5 +1,4 @@
-Skills and Traits
-=================
+# Skills and Traits
 
 The following pages feature the complete list of Skills and Traits available to players. Be they Skills a player starts with, or Skills gained during the course of a league, all players will have a degree of access to General, Agility, Strength and Passing skills, and many will have access to Mutations. Traits are more unique, the result of a player's nature rather than something they can learn.
 
@@ -7,11 +6,11 @@ The following pages feature the complete list of Skills and Traits available to 
 
 Players that are Standing and have not lost their Tackle Zone can use their Skills or Traits at any time, not just during their own activation. Players that are Prone or Stunned, or that have lost their Tackle Zone for any reason, cannot use any Skills or Traits unless otherwise stated in the Skill or Trait description:
 
-*   You can choose to use a Skill or Trait that modifies a dice roll after the dice roll has been made.
-*   All bonuses and/or modifiers from Skills or Traits can be combined.
-*   Unless the description states otherwise, a Skill or Trait can be used by more than one player per team turn.
-*   Unless the description states otherwise, a Skill or Trait can be used multiple times during each team turn.
-*   Unless a Skill or Trait is marked with an asterisk (\*), its use is not compulsory (i.e., you do not have to use that Skill or Trait if you do not wish to). However, the use of a Skill or Trait marked with an asterisk (\*) is compulsory.
+- You can choose to use a Skill or Trait that modifies a dice roll after the dice roll has been made.
+- All bonuses and/or modifiers from Skills or Traits can be combined.
+- Unless the description states otherwise, a Skill or Trait can be used by more than one player per team turn.
+- Unless the description states otherwise, a Skill or Trait can be used multiple times during each team turn.
+- Unless a Skill or Trait is marked with an asterisk (\*), its use is not compulsory (i.e., you do not have to use that Skill or Trait if you do not wish to). However, the use of a Skill or Trait marked with an asterisk (\*) is compulsory.
 
 #### SKILL CATEGORIES
 
@@ -257,8 +256,7 @@ TRAITS
 
 [Unchannelled Fury](./#unchannelled-fury)\*
 
-Skills
-------
+## Skills
 
 ### AGILITY SKILLS
 
@@ -368,8 +366,8 @@ If this player is nominated to be the kicking player during a kick-off, you may 
 
 During their activation, this player may attempt to re-roll one dice. This dice may have been rolled either as a single dice roll, as part of a multiple dice roll or as part of a dice pool, but cannot be a dice that was rolled as part of an Armour, Injury or Casualty roll. Roll a D6:
 
-*   On a roll of 3+, the dice can be re-rolled.
-*   On a roll of 1 or 2, the dice cannot be re-rolled.
+- On a roll of 3+, the dice can be re-rolled.
+- On a roll of 1 or 2, the dice cannot be re-rolled.
 
 Once this player has attempted to use this Skill, they may not use a re-roll from any other source to re-roll this one dice.
 
@@ -575,20 +573,19 @@ A player that does not have the Throw Team-mate trait cannot have this Skill.
 
 When an Injury roll is made against this player (even if this player is Prone, Stunned or has lost their Tackle Zone), they can only be KO'd on a roll of 9, and will treat a roll of 8 as a Stunned result. If this player also has the Stunty trait, they can only be KO'd on a roll of 8, and will treat a roll of 7 as a Stunned result. All other results are unaffected.
 
-Traits
-------
+## Traits
 
 #### ANIMAL SAVAGERY\*
 
 When this player is activated, even if they are Prone or have lost their Tackle Zone, immediately after declaring the action they will perform but before performing the action, roll a D6, applying a +2 modifier to the dice roll if you declared the player would perform a Block or Blitz action (or a Special action granted by a Skill or Trait that can be performed instead of a Block action):
 
-*   On a roll of 1-3, this player lashes out at their Team-mates:
+- On a roll of 1-3, this player lashes out at their Team-mates:
 
  - One Standing Team-mate of your choice that is currently adjacent to this player is immediately Knocked Down by this player. This does not cause a Turnover unless the Knocked Down player was in possession of the ball. After making an Armour roll (and possible Injury roll) against the Knocked Down player, this player may continue their activation and complete their declared action if able. Note that, if this player has any applicable Skills, the coach of the opposing team may use them when making an Armour roll (and possible Injury roll) against the Knocked Down player.
 
  - If this player is not currently adjacent to any Standing Team-mates, this player's activation ends immediately. Additionally, this player loses their Tackle Zone until they are next activated.
 
-*   On a roll of 4+, this player continues their activation as normal and completes their declared action.
+- On a roll of 4+, this player continues their activation as normal and completes their declared action.
 
 If you declared that this player would perform an action which can only be performed once per team turn and this player's activation ended before the action could be completed, the action is considered to have been performed and no other player on your team may perform the same action this team turn.
 
@@ -602,8 +599,8 @@ When this player wishes to perform a Hand-off action to a Team-mate of the type 
 
 If this player wishes to perform a Throw Team-mate action, roll a D6 after they have finished moving, but before they throw their Team-mate. On a roll of 2+, continue with the throw as normal. On a roll of 1, this player will attempt to eat their Team-mate. Roll another D6:
 
-*   On a roll of 1, the Team-mate has been eaten and is immediately removed from the Team Draft list. No apothecary can save them and no Regeneration attempts can be made. If the Team-mate was in possession of the ball, it will bounce from the square this player occupies.
-*   On a roll of 2+, the Team-mate squirms free and the Throw Team-mate action is automatically fumbled, as described on [page 53](../the_rules_of_blood_bowl/#fumbled-throws).
+- On a roll of 1, the Team-mate has been eaten and is immediately removed from the Team Draft list. No apothecary can save them and no Regeneration attempts can be made. If the Team-mate was in possession of the ball, it will bounce from the square this player occupies.
+- On a roll of 2+, the Team-mate squirms free and the Throw Team-mate action is automatically fumbled, as described on [page 53](../the_rules_of_blood_bowl/#fumbled-throws).
 
 #### BALL AND CHAIN\*
 
@@ -611,30 +608,30 @@ When this player is activated, the only action they may perform is a 'Ball & Cha
 
 When this player performs this Special action:
 
-*   Place the Throw-in template over the player, facing towards either End Zone or either sideline as you wish.
-*   Roll a D6 and move the player one square in the direction indicated.
-*   A player with a Ball & Chain automatically passes any Agility tests they may be required to make in order to Dodge, regardless of any modifiers.
-*   If this movement takes the player off the pitch, they risk Injury by the Crowd.
-*   If this movement takes the player into a square in which the ball is placed, the player is considered to have moved involuntarily. Therefore, they may not attempt to pick the ball up and the ball will bounce.
+- Place the Throw-in template over the player, facing towards either End Zone or either sideline as you wish.
+- Roll a D6 and move the player one square in the direction indicated.
+- A player with a Ball & Chain automatically passes any Agility tests they may be required to make in order to Dodge, regardless of any modifiers.
+- If this movement takes the player off the pitch, they risk Injury by the Crowd.
+- If this movement takes the player into a square in which the ball is placed, the player is considered to have moved involuntarily. Therefore, they may not attempt to pick the ball up and the ball will bounce.
 
 Repeat this process for each square the player moves.
 
 If this player would move into a square that is occupied by a Standing player from either team, they must perform a Block action against that player, following the normal rules, but with the following exceptions:
 
-*   A Ball & Chain player ignores the Foul Appearance skill.
-*   A Ball & Chain player must follow-up if they push-back another player.
+- A Ball & Chain player ignores the Foul Appearance skill.
+- A Ball & Chain player must follow-up if they push-back another player.
 
 If this player moves into a square that is occupied by a Prone or Stunned player from either team, for any reason, that player is immediately pushed back and an Armour roll is made against them.
 
 This player may Rush. Declare that the player will Rush before placing the Throw-in template and rolling the D6 to determine direction:
 
-*   If this player Rushes into an unoccupied square, move them as normal and roll a D6:
+- If this player Rushes into an unoccupied square, move them as normal and roll a D6:
 
  - On a roll of 2+, this player moves without mishap.
 
  - On a roll of 1 (before or after modification), the player Falls Over.
 
-*   If this player Rushes into a square that is occupied by a standing player from either team, roll a D6:
+- If this player Rushes into a square that is occupied by a standing player from either team, roll a D6:
 
  - On a roll of 2+, this player moves without mishap and will perform a Block action against the player occupying the square as described previously.
 
@@ -652,17 +649,17 @@ When activated and if they are Standing, this player can perform a 'Throw Bomb' 
 
 A Bomb can be thrown and caught, and the throw interfered with, just like a ball, using the rules for Pass actions as described on [page 48](../the_rules_of_blood_bowl/#pass-actions), with the following exceptions:
 
-*   A player may not stand up or move before performing a Throw Bomb action.
-*   Bombs do not bounce and can come to rest on the ground in an occupied square. Should a player fail to catch a Bomb, it will come to rest on the ground in the square that player occupies.
-*   If a Bomb is fumbled, it will explode immediately in the square occupied by the player attempting to throw it.
-*   If a Bomb comes to rest on the ground in an empty square or is caught by an opposition player, no Turnover is caused.
-*   A player that is in possession of the ball can still catch a Bomb.
-*   Any Skills that can be used when performing a Pass action can also be used when performing a Throw Bomb Special action, with the exception of On the Ball.
+- A player may not stand up or move before performing a Throw Bomb action.
+- Bombs do not bounce and can come to rest on the ground in an occupied square. Should a player fail to catch a Bomb, it will come to rest on the ground in the square that player occupies.
+- If a Bomb is fumbled, it will explode immediately in the square occupied by the player attempting to throw it.
+- If a Bomb comes to rest on the ground in an empty square or is caught by an opposition player, no Turnover is caused.
+- A player that is in possession of the ball can still catch a Bomb.
+- Any Skills that can be used when performing a Pass action can also be used when performing a Throw Bomb Special action, with the exception of On the Ball.
 
 If a Bomb is caught by a player on either team, roll a D6:
 
-*   On a roll of 4+, the Bomb explodes immediately, as described below.
-*   On a roll of 1-3, that player must throw the Bomb again immediately.
+- On a roll of 4+, the Bomb explodes immediately, as described below.
+- On a roll of 1-3, that player must throw the Bomb again immediately.
 
 This throw takes place out of the normal sequence of play.
 
@@ -670,17 +667,17 @@ Should a Bomb ever leave the pitch, it explodes in the crowd with no effect (on 
 
 When a Bomb comes to rest on the ground, in either an unoccupied square, in a square occupied by a player that failed to catch the Bomb or in a square occupied by a Prone or Stunned player, it will explode immediately:
 
-*   If the Bomb explodes in an occupied square, that player is automatically hit by the explosion.
-*   Roll a D6 for each player (from either team) that occupies a square adjacent to the one in which the Bomb exploded:
+- If the Bomb explodes in an occupied square, that player is automatically hit by the explosion.
+- Roll a D6 for each player (from either team) that occupies a square adjacent to the one in which the Bomb exploded:
 
  - On a roll of 4+, the player has been hit by the explosion.
 
  - On a roll of 1-3, the player manages to avoid the explosion.
 
-*   Any Standing players hit by the explosion are Knocked Down. Any Standing players hit by the explosion are Placed Prone.
-*   An Armour roll (and possibly an Injury roll as well) is made against any player hit by the explosion, even if they were already Prone or Stunned.
-*   You may apply a +1 modifier to either the Armour roll or Injury roll.
-*   If the player performing the Throw Bomb Special action is hit by their bomb and Placed Prone, either as the result of a Fumbled throw or by being hit by the explosion, then a Turnover is caused.
+- Any Standing players hit by the explosion are Knocked Down. Any Standing players hit by the explosion are Placed Prone.
+- An Armour roll (and possibly an Injury roll as well) is made against any player hit by the explosion, even if they were already Prone or Stunned.
+- You may apply a +1 modifier to either the Armour roll or Injury roll.
+- If the player performing the Throw Bomb Special action is hit by their bomb and Placed Prone, either as the result of a Fumbled throw or by being hit by the explosion, then a Turnover is caused.
 
 This modifier may be applied after the roll has been made.
 
@@ -688,8 +685,8 @@ This modifier may be applied after the roll has been made.
 
 When this player is activated, even if they are Prone or have lost their Tackle Zone, immediately after declaring the action they will perform but before performing the action, roll a D6:
 
-*   On a roll of 1, this player forgets what they are doing and their activation ends immediately. Additionally, this player loses their Tackle Zone until they are next activated.
-*   On a roll of 2+, this player continues their activation as normal and completes their declared action.
+- On a roll of 1, this player forgets what they are doing and their activation ends immediately. Additionally, this player loses their Tackle Zone until they are next activated.
+- On a roll of 2+, this player continues their activation as normal and completes their declared action.
 
 If you declared that this player would perform an action which can only be performed once per team turn and this player's activation ended before the action could be completed, the action is considered to have been performed and no other player on your team may perform the same action this team turn.
 
@@ -699,11 +696,11 @@ Instead of performing a Block action (on its own or as part of a Blitz action), 
 
 To perform a Chainsaw Attack Special action, roll a D6:
 
-*   On a roll of 2+, the nominated target is hit by a Chainsaw!
-*   On a roll of 1, the Chainsaw will violently 'kick-back' and hit the player wielding it. This will result in a Turnover.
-*   In either case, an Armour roll is made against the player hit by the Chainsaw, adding +3 to the result.
-*   If the armour of the player hit is broken, they become Prone and an Injury roll is made against them. This Injury roll cannot be modified in any way.
-*   If the armour of the player hit is not broken, this Trait has no effect.
+- On a roll of 2+, the nominated target is hit by a Chainsaw!
+- On a roll of 1, the Chainsaw will violently 'kick-back' and hit the player wielding it. This will result in a Turnover.
+- In either case, an Armour roll is made against the player hit by the Chainsaw, adding +3 to the result.
+- If the armour of the player hit is broken, they become Prone and an Injury roll is made against them. This Injury roll cannot be modified in any way.
+- If the armour of the player hit is not broken, this Trait has no effect.
 
 This player can only use the Chainsaw once per turn (i.e., a Chainsaw cannot be used with Frenzy or Multiple Block) and if used as part of a Blitz action, this player cannot continue moving after using it.
 
@@ -763,11 +760,11 @@ Instead of performing a Block action (on its own or as part of a Blitz action), 
 
 To perform a Projectile Vomit Special action, roll a D6:
 
-*   On a roll of 2+, this player regurgitates acidic bile onto the nominated target.
-*   On a roll of 1, this player belches and snorts, before covering itself in acidic bile.
-*   In either case, an Armour roll is made against the player hit by the Projectile Vomit. This Armour roll cannot be modified in any way.
-*   If the armour of the player hit is broken, they become Prone and an Injury roll is made against them. This Injury roll cannot be modified in any way.
-*   If the armour of the player hit is not broken, this Trait has no effect.
+- On a roll of 2+, this player regurgitates acidic bile onto the nominated target.
+- On a roll of 1, this player belches and snorts, before covering itself in acidic bile.
+- In either case, an Armour roll is made against the player hit by the Projectile Vomit. This Armour roll cannot be modified in any way.
+- If the armour of the player hit is broken, they become Prone and an Injury roll is made against them. This Injury roll cannot be modified in any way.
+- If the armour of the player hit is not broken, this Trait has no effect.
 
 A player can only perform this Special action once per turn (i.e., Projectile Vomit cannot be used with Frenzy or Multiple Block).
 
@@ -775,8 +772,8 @@ A player can only perform this Special action once per turn (i.e., Projectile Vo
 
 When this player is activated, even if they are Prone or have lost their Tackle Zone, immediately after declaring the action they will perform but before performing the action, roll a D6, applying a +2 modifier to the dice roll if this player is currently adjacent to one or more Standing Team-mates that do not have this Trait:
 
-*   On a roll of 1-3, this player forgets what they are doing and their activation ends immediately. Additionally, this player loses their Tackle Zone until they are next activated.
-*   On a roll of 4+, this player continues their activation as normal and completes their declared action.
+- On a roll of 1-3, this player forgets what they are doing and their activation ends immediately. Additionally, this player loses their Tackle Zone until they are next activated.
+- On a roll of 4+, this player continues their activation as normal and completes their declared action.
 
 Note that if you declared that this player would perform an action which can only be performed once per team turn and this player's activation ended before the action could be completed, the action is considered to have been performed and no other player on your team may perform the same action this team turn.
 
@@ -802,9 +799,9 @@ Instead of performing a Block action (on its own or as part of a Blitz action), 
 
 To perform a Stab Special action, make an unmodified Armour roll against the target:
 
-*   If the Armour of the player hit is broken, they become Prone and an Injury roll is made against them. This Injury roll cannot be modified in any way.
-*   If the Armour of the player hit is not broken, this Trait has no effect.
-*   If Stab is used as part of a Blitz action, the player cannot continue moving after using it.
+- If the Armour of the player hit is broken, they become Prone and an Injury roll is made against them. This Injury roll cannot be modified in any way.
+- If the Armour of the player hit is not broken, this Trait has no effect.
+- If Stab is used as part of a Blitz action, the player cannot continue moving after using it.
 
 #### STUNTY\*
 
@@ -832,13 +829,13 @@ If this player is thrown by a Team-mate, as described on [page 52](../the_rules_
 
 When this player is activated, even if they are Prone or have lost their Tackle Zone, immediately after declaring the action they will perform but before performing the action, roll a D6:
 
-*   On a roll of 1, this player becomes 'Rooted':
+- On a roll of 1, this player becomes 'Rooted':
 
  - A Rooted player cannot move from the square they currently occupy for any reason, voluntarily or otherwise, until the end of this drive, or until they are Knocked Down or Placed Prone.
 
  - A Rooted player may perform any action available to them provided they can do so without moving. For example, a Rooted player may perform a Pass action but may not move before making the pass, and so on.
 
-*   On a roll of 2+, this player continues their activation as normal.
+- On a roll of 2+, this player continues their activation as normal.
 
 If you declared that this player would perform any action that includes movement (Pass, Hand-off, Blitz or Foul) prior to them becoming Rooted, they may complete the action if possible. If they cannot, the action is considered to have been performed and no other player on your team may perform the same action this team turn.
 
@@ -860,13 +857,12 @@ This Trait may still be used if the player is Prone or has lost their Tackle Zon
 
 When this player is activated, even if they are Prone or have lost their Tackle Zone, immediately after declaring the action they will perform but before performing the action, roll a D6, applying a +2 modifier to the dice roll if you declared the player would perform a Block or Blitz action (or a Special action granted by a Skill or Trait that can be performed instead of a Block action):
 
-*   On a roll of 1-3, this player rages incoherently at others but achieves little else. Their activation ends immediately.
-*   On a roll of 4+, this player continues their activation as normal and completes their declared action.
+- On a roll of 1-3, this player rages incoherently at others but achieves little else. Their activation ends immediately.
+- On a roll of 4+, this player continues their activation as normal and completes their declared action.
 
 If you declared that this player would perform an action which can only be performed once per team turn and this player's activation ended before the action could be completed, the action is considered to have been performed and no other player on your team may perform the same action this team turn.
 
-EXTRAORDINARY
--------------
+## EXTRAORDINARY
 
 #### HIT AND RUN
 
@@ -897,4 +893,3 @@ When this player is about to be hit by a Block action or a Special action that r
 Once per activation, instead of performing a Block action (either on its own or as part of a Blitz action), this player may perform a Breathe Fire Special action. When a player makes a Breathe Fire Special action, they may choose one Standing opposition player they are Marking and roll a D6, applying a -1 modifier if the target has a Strength of 5 or higher. On a 1, the player gets overeager, engulfing themself in flame and is immediately Knocked Down. On a 1 or lower, the player gets overeager, engulfing themself in flame and is immediately Knocked Down. On a 2-3, the opposition player ducks the gout of flame and nothing happens. On a 4+, the opposition player takes a ball of fire straight to the face and is immediately Placed Prone. However, if the roll is a natural 6, the potent pyro has taken its toll and the opposition player is Knocked Down instead. After the Breathe Fire Special action has been resolved, this player's activation immediately ends.
 
 var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("\_\_tabbed\_"))
-

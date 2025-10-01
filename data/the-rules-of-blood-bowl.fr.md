@@ -1,12 +1,10 @@
-Les Règles de Blood Bowl
-=========================
+# Les Règles de Blood Bowl
 
 Traditionnellement, un match de Blood Bowl commence par l’engagement d’une équipe qui botte le ballon vers l’autre. L’équipe receveuse, en attaque, tente alors d’amener le ballon sur toute la longueur du terrain, via une série de passes spectaculaires et de courses audacieuses, jusqu’à l’En-but adverse afin de marquer un touchdown. L’équipe qui a engagé, en défense, va tenter d’empêcher cela et de récupérer la balle pour, à son tour, marquer un touchdown.
 
 Une fois un touchdown marqué, les deux équipes se repositionnent et l’équipe qui vient de marquer engage. Le jeu progresse ainsi jusqu’au coup de sifflet final : les vainqueurs célèbrent, les perdants se consolent, et les propriétaires du stade ainsi que les promoteurs comptent l’argent récolté aux guichets et buvettes !
 
-Un match en deux mi‑temps
--------------------------
+## Un match en deux mi‑temps
 
 Un match de Blood Bowl se joue en deux mi‑temps de durée à peu près égale, avec une troisième période éventuelle en cas d’égalité dans une rencontre qui exige un vainqueur. Cette troisième période est appelée « prolongations ». Sur table, une partie de Blood Bowl est découpée en deux mi‑temps de huit tours d’équipe chacune. Chaque mi‑temps comprend donc 16 tours, et la partie au total 32 tours.
 
@@ -34,6 +32,7 @@ Les matches de Blood Bowl attirent toujours la foule. En plus des Fans Dévoués
 #### Fan Factor (FF)
 
 C’est la combinaison des Fans Dévoués et des spectateurs occasionnels. Pour déterminer le Fan Factor :
+
 - Chaque coach lance 1D3 : ce sont les spectateurs occasionnels pour son équipe.
 - Chaque coach ajoute sa caractéristique de Fans Dévoués à ce nombre.
 
@@ -60,6 +59,7 @@ Chaque coach lance 1D6. Additionnez les résultats et consultez la table Météo
 ### 3. Journaliers (Take On Journeymen)
 
 Si, pendant la séquence pré‑match d’une rencontre de ligue ou d’un amical inter‑division, une équipe ne peut pas aligner 11 joueurs, elle utilise des Journaliers temporaires :
+
 - Un Journalier est toujours un joueur de type Trois‑quarts (Lineman) choisi dans l’option 0‑12 ou 0‑16 de l’équipe.
 - Un Journalier est un joueur normal de ce type, sauf qu’il gagne le trait Loner (4+) pour représenter son manque d’automatismes avec l’équipe.
 - Les Journaliers peuvent faire dépasser temporairement l’effectif total de 16 (joueurs blessés inclus), mais ne peuvent pas faire dépasser 11 le nombre de joueurs disponibles pour ce match.
@@ -72,6 +72,7 @@ Note : en exhibition, une équipe doit contenir au moins 11 joueurs. Cette ét
 Avant tout match de ligue, de play‑offs ou amical, chaque équipe peut dépenser de l’or depuis sa Trésorerie, sa Petite Caisse (voir ci‑dessous) ou les deux pour acheter des Inducements, qui sont notés sur la feuille de match.
 
 Si une équipe a un CTV plus faible (valeur des Journaliers comprise), elle reçoit une Petite Caisse égale à la différence de CTV. Procédez ainsi :
+
 - L’équipe au CTV le plus élevé peut d’abord dépenser de la Trésorerie pour acheter des Inducements.
 - L’équipe au CTV le plus faible reçoit ensuite une Petite Caisse égale à la différence de CTV entre les deux équipes, plus le montant que l’adversaire a dépensé depuis sa Trésorerie.
 - L’équipe au CTV le plus faible dépense alors cette Petite Caisse en Inducements (tout reliquat est perdu) ; elle ne peut pas dépenser sa Trésorerie.
@@ -140,8 +141,7 @@ Lancez 1D16 et consultez la table ci‑dessous (relancez les doublons). Tous les
 
 Chaque match commence par un toss (pile ou face) pour décider qui est l’« équipe qui engage » (défense) et qui est l’« équipe qui reçoit » (attaque). Sur table, on peut utiliser une pièce Blood Bowl ou un jet opposé au D6. Une fois les rôles définis, le premier drive commence avec la mise en place et le coup d’envoi (voir la section correspondante).
 
-Début de drive
---------------
+## Début de drive
 
 Une fois le toss (ou le jet opposé) résolu pour savoir qui engage et qui reçoit, les coachs se relaient pour mettre en place leurs équipes, prêtes à agir, tandis que les consignes fusent depuis la ligne de touche. Le coach de l’équipe qui engage place ensuite le ballon, détermine la précision (ou l’imprécision) du coup de pied et lance sur la table des Événements de Coup d’envoi.
 
@@ -164,6 +164,7 @@ Les deux coachs placent tous leurs joueurs disponibles sur le terrain. S’il y 
 Sur les drives suivants, le nombre de joueurs disponibles peut diminuer (KO, Blessures). C’est autorisé, même si peu enviable. Si vous ne pouvez pas aligner 11 joueurs, vous devez placer tous les joueurs disponibles ; aucun ne peut rester en Réserves s’il y a moins de 11 disponibles.
 
 L’équipe qui botte se place en premier, puis l’équipe qui reçoit, selon :
+
 - Les deux équipes se placent intégralement entre leur propre En‑but et la Ligne d’Engagement (Line of Scrimmage). Aucun joueur ne peut commencer au‑delà de la LoS, dans le camp adverse.
 - Chaque équipe peut placer au maximum deux joueurs dans chaque Large Zone (Wide Zone), soit quatre au total, répartis strictement 2 et 2.
 - Une équipe doit placer au moins trois joueurs sur des cases du Centre, directement adjacentes à la LoS.
@@ -177,6 +178,7 @@ Quand les deux équipes sont en place, le coach de l’équipe qui botte effectu
 #### Désigner le botteur
 
 Ce n’est pas toujours obligatoire, mais certaines règles l’exigent. Prenez l’habitude de désigner un botteur :
+
 - Le botteur ne peut pas être sur la LoS (sauf si l’équipe n’a que trois joueurs ou moins sur le terrain).
 - Le botteur ne peut pas être dans une Large Zone.
 
@@ -226,8 +228,7 @@ Le coup d’envoi doit atterrir en sécurité dans la moitié de terrain de l’
 
 12 — Invasion de terrain (Pitch Invasion) : les deux coachs lancent 1D6 + Fan Factor. Le plus bas sélectionne D3 de ses joueurs sur le terrain (égalité : chacun D3). Tous ces joueurs sont Placés À Terre et deviennent Sonné.
 
-Le tour d’équipe
-----------------
+## Le tour d’équipe
 
 Un match de Blood Bowl est trépidant ; pour en gérer l’action sur table, on alterne des tours d’équipe, durant lesquels chaque coach active ses joueurs un par un. Ainsi, on recrée le déroulé du jeu de manière lisible et contrôlée.
 
@@ -239,6 +240,7 @@ Une fois le coup d’envoi résolu, la partie se poursuit selon une alternance s
 2.  Tour de l’équipe qui botte : ensuite, c’est au tour de l’équipe qui a botté (la défense).
 
 On répète cette alternance jusqu’à ce que le drive se termine par un touchdown, la fin d’une mi‑temps ou la fin du match :
+
 - En première mi‑temps, qui engage et qui reçoit a été décidé au toss.
 - En seconde mi‑temps, on inverse : l’équipe qui avait reçu engage, et inversement.
 - Si un drive se termine par un touchdown avant la fin de la mi‑temps, l’équipe qui a marqué engage vers l’adversaire.
@@ -279,35 +281,37 @@ Une fois par tour d’équipe, un joueur actif peut remettre la balle à un coé
 
 Une fois par tour d’équipe, à la place d’une Pass ordinaire, un joueur avec le trait Throw Team‑mate peut lancer un coéquipier ayant Right Stuff. On ne peut pas effectuer Pass et Throw Team‑mate au même tour. Voir la section correspondante.
 
-Lancer de coéquipier (Throw Team‑mate)
---------------------------------------
+## Lancer de coéquipier (Throw Team‑mate)
 
 Une fois par tour d’équipe, à la place d’une Pass, un joueur avec le trait Throw Team‑mate peut tenter de lancer un coéquipier avec le trait Right Stuff comme s’il s’agissait du ballon. La case cible peut être occupée ou vide. Contrairement à une Pass, un lancer de coéquipier non fumble se disperse toujours avant d’atterrir. Si le joueur lancé était Debout, il pourra tenter un atterrissage.
 
 Étapes :
+
 - Mesurer la portée et déclarer la case cible (on n’utilise que la moitié du gabarit : I Quick Throw, II Short Throw)
 - Tester la qualité du lancer (PA, avec modifs de portée et −1 par marqueur sur le lanceur)
 - Résoudre le lancer (puis tentative d’atterrissage)
 
 Résultats du test de PA :
+
 - Superb : après le scatter, l’atterrissage est plus facile (pas de malus)
 - Successful (échec) : après le scatter, l’atterrissage est plus difficile (−1)
 - Terrible (résultat final 1) : le coéquipier dévie depuis la case du lanceur
 - Fumbled (1 naturel ou PA « – ») : l’action échoue, l’activation du lanceur se termine, le coéquipier est lâché et rebondit depuis la case du lanceur, puis devra tenter d’atterrir
 
 Atterrissage (Landing)
+
 - Si le joueur lancé était Debout avec Zone de Tacle, et atterrit dans une case libre, il tente un test d’Agilité : Superb : 0 ; Successful : −1 ; Terrible : −2 ; Fumbled : −1. −1 par marqueur dans la case d’atterrissage.
 - Réussite (ou 6 naturel) : il atterrit sans encombre, mouvement volontaire.
 - Échec : atterrissage raté, mouvement involontaire, chute (Falls Over). S’il portait la balle : Turnover ; sinon, pas de Turnover.
 - S’il n’a pas encore été activé ce tour et n’est pas Sonné, il pourra être activé plus tard.
 
 Cas particuliers
+
 - Atterrissage sur une case occupée : le joueur occupant est mis au sol (Armure/Blessure) ; le lancé rebondit puis est mis au sol à l’atterrissage. Si l’occupant était un coéquipier : Turnover.
 - Crash landing (si À Terre/Sonné ou sans Zone de Tacle avant le lancer) : pas d’atterrissage possible ; après scatter, le joueur rebondit puis tombe automatiquement (Armure/Blessure).
 - Dans la foule : retiré du jeu et placé au dugout ; « Blessure par la foule » s’applique. S’il portait la balle : Turnover, et remise en touche de la balle.
 
-Blocage
--------
+## Blocage
 
 Un « block » est une mise au sol musclée. Les joueurs peuvent faire presque tout pour abattre un adversaire, tant qu’aucune arme n’est utilisée.
 
@@ -320,6 +324,7 @@ Une fois par tour d’équipe, un joueur peut effectuer un Blitz, combinant Move
 ### Force (Strength)
 
 Après avoir déclaré la cible, comparez la Force (ST), incluant modifs (Compétences/Traits, assists) :
+
 - ST égales : 1 dé de block
 - Attaquant plus fort : 2 dés, l’attaquant choisit
 - Attaquant plus du double de la cible : 3 dés, l’attaquant choisit
@@ -339,6 +344,7 @@ Un coéquipier de la cible peut assister s’il Marque l’attaquant. Il ne peut
 ### Dés de block – résultats
 
 Les dés de block ont cinq icônes ; certaines sont modifiées par des Compétences/Traits.
+
 - Player Down! : l’attaquant est mis au sol
 - Both Down : les deux sont mis au sol (un joueur avec Block peut ignorer pour lui‑même)
 - Push Back : la cible est repoussée d’1 case, l’attaquant peut suivre
@@ -349,8 +355,7 @@ Les dés de block ont cinq icônes ; certaines sont modifiées par des Compét
 
 Un joueur repoussé doit être déplacé vers une case libre adjacente, en priorité selon les règles (y compris hors du terrain, entraînant la « Foule »). Les chaînes de poussées (chain‑pushes) peuvent se produire en cascade. Le suivi (follow‑up) est optionnel sauf règles contraires.
 
-Mouvement
----------
+## Mouvement
 
 ### Déplacer les joueurs
 
@@ -363,11 +368,13 @@ Une case sans joueur est « libre » ; la balle seule ou une trappe ne l’occ
 ### Se relever (Standing Up)
 
 Un joueur À Terre ne peut rien faire avant de se relever, uniquement au début de sa propre activation. Se relever coûte 3 cases de MA.
+
 - Si son MA est 2 ou moins (avant/après modif.), lancez 1D6 : sur 4+, il se relève (en utilisant tout son MA) ; sur 1‑3, il reste À Terre et son activation se termine. Un joueur de MA ≤2 peut tenter du Rush après s’être relevé.
 
 ### Sprint (Rushing)
 
 Lors d’une action incluant du mouvement, un joueur peut tenter de gagner 1 à 2 cases de MA supplémentaires (Rush).
+
 - En fin de mouvement, déclarez un Rush et avancez d’1 case, puis lancez 1D6 : sur 2+, OK ; sur 1 (naturel), il trébuche et tombe (Falls Over). Si Debout après 1er Rush, il peut tenter un second Rush.
 - Le jet de Rush se fait avant tout autre jet (Dodge, pick‑up, etc.).
 
@@ -387,8 +394,7 @@ Une fois par activation, un joueur en mouvement peut tenter de Sauter par‑dess
 
 Si un joueur entre volontairement dans une case contenant la balle, il doit tenter de la ramasser (après Rush/Esquive/Saut, avant tout autre jet). Test d’Agilité : pas de malus s’il est Libre ; −1 par marqueur s’il est Marqué. Échec : la balle rebondit et c’est un Turnover, même si un coéquipier l’attrape ensuite. Après réussite, il peut continuer à se déplacer. Si le déplacement est involontaire, pas de pick‑up : la balle rebondit sans Turnover.
 
-Passe
------
+## Passe
 
 Le jeu de passe reste au cœur du spectacle : les lanceurs cherchent à transmettre la balle à un coéquipier en position de filer vers l’En‑but.
 
@@ -401,6 +407,7 @@ Une Pass est classée selon la portée : Quick, Short, Long, Long Bomb.
 Le joueur peut se déplacer avant de lancer, mais son activation se termine une fois la passe résolue. Il n’a pas besoin d’avoir la balle au moment de l’activation ; il peut la ramasser avant durant son mouvement.
 
 Étapes :
+
 - Mesurer la portée et déclarer la case cible
 - Tester la précision
 - Interférence de passe (si non fumble)
@@ -415,13 +422,16 @@ Après mesure et mouvement, indiquez la case cible (occupée ou vide).
 ### Test de précision
 
 Faites un test de PA (Passing Ability) pour déterminer : Accurate, Inaccurate, Wildly Inaccurate, ou Fumbled.
+
 - Quick : 0
 - Short : −1
 - Long : −2
 - Long Bomb : −3
-+ Malus supplémentaire −1 par marqueur si le lanceur est Marqué.
+
+* Malus supplémentaire −1 par marqueur si le lanceur est Marqué.
 
 Résultats :
+
 - Accurate : la balle arrive sur la case cible.
 - Inaccurate (échec du test) : la balle se disperse (scatter) depuis la case cible avant d’atterrir.
 - Wildly Inaccurate (résultat final 1 après modifs) : la balle dévie depuis la case du lanceur.
@@ -433,6 +443,7 @@ Si la passe n’est pas fumble, un seul joueur adverse peut tenter d’interfér
 Conditions : joueur Debout avec Zone de Tacle, placé entre le lanceur et la case où la balle atterrira, et sous le gabarit de portée.
 
 Test d’Agilité avec modificateurs :
+
 - Passe Accurate : −3
 - Passe Inaccurate : −2
 - Passe Wildly Inaccurate : −1
@@ -447,12 +458,14 @@ Si la passe n’a pas été fumble ni interceptée/déviée avec rattrapage, ré
 ### Attraper la balle (Catching)
 
 Un joueur en mesure d’attraper doit tenter de le faire. Test d’Agilité :
+
 - Accurate pass ou Hand‑off : 0
 - Conversion d’une Deflection en Interception : −1
 - Balle bondissante (bouncing) : −1
 - Balle jetée par la foule (Throw‑in) : −1
 - Balle ayant « scatter » ou « deviate » dans la case : −1
-+ Malus −1 par marqueur si le receveur est Marqué.
+
+* Malus −1 par marqueur si le receveur est Marqué.
 
 ### Hand‑off
 
@@ -461,6 +474,7 @@ Une fois par tour d’équipe, un joueur actif peut faire un Hand‑off (remise 
 ### Remises en touche (Throw‑ins)
 
 Si la balle sort du terrain, la foule la renvoie :
+
 - Placez le gabarit de remise en touche (logo sur la dernière case occupée par la balle) et lancez 1D6 pour la direction.
 - La balle parcourt 2D6 cases dans cette direction puis atterrit.
 - Si elle atterrit sur un joueur Debout avec Zone de Tacle, il doit tenter d’attraper. Sinon (ou échec), elle rebondit. Si elle ressort, répétez.
@@ -469,8 +483,7 @@ Si la balle sort du terrain, la foule la renvoie :
 
 Si la balle sort par un coin, déterminez la direction avec le gabarit de Direction Aléatoire et 1D3.
 
-Armure et Blessures
--------------------
+## Armure et Blessures
 
 ### Risque de blessure
 
@@ -495,6 +508,7 @@ Les joueurs avec le trait Stunty utilisent une table de blessure différente ;
 ### Blessure par la foule
 
 Si un joueur est poussé ou atterrit dans la foule, aucun jet d’Armure ; lancez directement sur la table de Blessure :
+
 - Stunned : placez en Réserves
 - KO’d : placez en Knocked‑out (peut récupérer en fin de drive)
 - Casualty : placez en Casualty puis lancez sur la table des Casualties
@@ -512,6 +526,7 @@ Si un joueur est poussé ou atterrit dans la foule, aucun jet d’Armure ; lan
 15‑16 — DEAD : mort
 
 Détails :
+
 - MNG : manquera le prochain match (en ligue). Le CTV s’ajuste en conséquence.
 - NI (Niggling Injury) : notez une Blessure Gênante ; +1 à tous les futurs jets de Casualty contre ce joueur, par NI.
 - Réduction de caractéristique (D6) : 1‑2 : −1 AV ; 3 : −1 MA ; 4 : −1 PA ; 5 : −1 AG ; 6 : −1 ST. Jamais sous les minima des règles.
@@ -523,14 +538,14 @@ Détails :
   - Sur un KO : immédiatement transformé en Sonné et reste en jeu, ou placé en Réserves si venu de la foule.
   - Sur une Casualty : relance le jet de Casualty ; choisissez le meilleur des deux. Si « Badly Hurt », remettez en Réserves.
 
-Agression, Exclusion et Discuter la décision
--------------------------------------------
+## Agression, Exclusion et Discuter la décision
 
 ### Agression (Foul)
 
 Une fois par tour d’équipe, un joueur actif peut commettre une Agression contre un adversaire À Terre ou Sonné. Il peut se déplacer avant, mais doit être adjacent au moment de l’action. Après l’Agression, son activation se termine.
 
 Faites un jet d’Armure (puis éventuellement de Blessure) contre la victime. Calculez les assists comme pour un Block, mais ils modifient le jet d’Armure :
+
 - +1 par assist offensive
 - −1 par assist défensive
 
@@ -542,13 +557,13 @@ Si un double naturel est obtenu sur le jet d’Armure ou d’Injury lors d’une
 
 Quand un joueur est Exclu, le coach peut tenter de Discuter la décision. Lancez 1D6 et appliquez le résultat selon la table de référence ; selon le jet, le joueur peut rester exclu, l’arbitre peut expulser le coach, ou la sanction peut être levée/atténuée (selon les règles de votre référence en cours).
 
-Touchdown, marquer et temporiser
---------------------------------
+## Touchdown, marquer et temporiser
 
 ### Marquer un touchdown
 
 Un touchdown peut être marqué par n’importe quel joueur, même pendant le tour adverse dans certains cas.
 Un touchdown est marqué quand :
+
 - Un joueur Debout en possession de la balle entre dans une case de l’En‑but adverse sans tomber ni être mis au sol ;
 - Un joueur Debout ramasse ou attrape la balle alors qu’il se trouve dans l’En‑but adverse.
 
@@ -565,22 +580,23 @@ Quand un touchdown est marqué, déplacez le marqueur de score d’une case sur 
 ### Temporiser (Stalling)
 
 Un joueur est considéré « Stalling » si, à un moment de votre tour, il remplit toutes les conditions :
-1) il est Libre (Open) ;
-2) il porte la balle ;
-3) il peut s’activer et effectuer l’action déclarée sans devoir d’abord lancer 1D6 ;
-4) il peut entrer dans l’En‑but adverse sans devoir lancer aucun dé (y compris Dodge, Leap, Rush, Jump, Blitz, etc.).
+
+1. il est Libre (Open) ;
+2. il porte la balle ;
+3. il peut s’activer et effectuer l’action déclarée sans devoir d’abord lancer 1D6 ;
+4. il peut entrer dans l’En‑but adverse sans devoir lancer aucun dé (y compris Dodge, Leap, Rush, Jump, Blitz, etc.).
 
 Ne pas activer un joueur en situation de Stalling avant la fin de votre tour (même en cas de Turnover) ou l’activer mais refuser de marquer est considéré comme temporiser.
 
-Fin de drive et fin de match
-----------------------------
+## Fin de drive et fin de match
 
 ### Fin de drive
 
 Un drive se termine lorsqu’un touchdown est marqué ou à la fin du dernier tour de la mi‑temps. Ensuite :
-1) Armes secrètes : gérer les Secret Weapons (éventuelles expulsions, etc.).
-2) Récupération des KOs : tenter la récupération des joueurs KO.
-3) Le drive s’achève : les effets « jusqu’à la fin du drive » expirent.
+
+1. Armes secrètes : gérer les Secret Weapons (éventuelles expulsions, etc.).
+2. Récupération des KOs : tenter la récupération des joueurs KO.
+3. Le drive s’achève : les effets « jusqu’à la fin du drive » expirent.
 
 ### Reprise du jeu
 
@@ -597,6 +613,7 @@ L’équipe qui a le plus de touchdowns remporte la partie. En cas d’égalité
 ### Concession
 
 Un coach peut concéder au début de n’importe lequel de ses tours. Effets typiques :
+
 - L’adversaire gagne un touchdown, et vos touchdowns sont annulés et accordés à l’adversaire.
 - Pas d’MVP pour vos joueurs, pas de gains.
 - Vos Fans Dévoués (Dedicated Fans) diminuent de D3 (min 1).

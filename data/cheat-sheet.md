@@ -1,10 +1,8 @@
-Cheat Sheet
-===========
+# Cheat Sheet
 
 [\[Download Cheat Sheet PDF\]](../../media/core_rules/blood_bowl_cheat_sheet.pdf)
 
-SEQUENCE OF PLAY
-----------------
+## SEQUENCE OF PLAY
 
 ### PRE-GAME SEQUENCE
 
@@ -55,20 +53,19 @@ After a league fixture, both coaches should run through the full post-game seque
 
 A Turnover is caused:
 
-*   If a player on the active team Falls Over during their own activation.
-*   If a player on the active team is Knocked Down during their team turn.
-*   If a player on the active team that is in possession of the ball is Placed Prone during their team turn.
-*   If a player on the active team that is in possession of the ball is forced to move off the pitch for any reason.
-*   If a player on the active team attempts to pick up the ball from the ground and fails, even if the bouncing ball is then caught by a player from the active team.
-*   If a player on the active team fumbles a Pass action, even if the bouncing ball is then caught by a player on the active team.
-*   If no player on the active team catches the ball after a Pass action or a Hand-off action and the ball comes to rest on the ground or in the possession of a player from the opposing team.
-*   If a Pass action is Deflected or Intercepted and the ball comes to rest either on the ground or in the possession of a player from the opposing team.
-*   If a player on the active team that is in possession of the ball is thrown by a team-mate and either fails to land safely, lands in the crowd or is eaten, even if the bouncing ball is then caught by a player from the active team.
-*   If a player on the active team is Sent-off by the referee for committing a Foul.
-*   If a touchdown is scored.
+- If a player on the active team Falls Over during their own activation.
+- If a player on the active team is Knocked Down during their team turn.
+- If a player on the active team that is in possession of the ball is Placed Prone during their team turn.
+- If a player on the active team that is in possession of the ball is forced to move off the pitch for any reason.
+- If a player on the active team attempts to pick up the ball from the ground and fails, even if the bouncing ball is then caught by a player from the active team.
+- If a player on the active team fumbles a Pass action, even if the bouncing ball is then caught by a player on the active team.
+- If no player on the active team catches the ball after a Pass action or a Hand-off action and the ball comes to rest on the ground or in the possession of a player from the opposing team.
+- If a Pass action is Deflected or Intercepted and the ball comes to rest either on the ground or in the possession of a player from the opposing team.
+- If a player on the active team that is in possession of the ball is thrown by a team-mate and either fails to land safely, lands in the crowd or is eaten, even if the bouncing ball is then caught by a player from the active team.
+- If a player on the active team is Sent-off by the referee for committing a Foul.
+- If a touchdown is scored.
 
-WEATHER TABLE
--------------
+## WEATHER TABLE
 
 2D6
 
@@ -95,8 +92,7 @@ RESULT
 **_Blizzard:_** Freezing conditions and heavy falls of snow make the footing treacherous. Apply a -1 modifier every time a player attempts to Rush an extra square.  
 Additionally, the poor visibility means that only Quick and Short passes can be attempted .
 
-THE KICK-OFF EVENT TABLE
-------------------------
+## THE KICK-OFF EVENT TABLE
 
 2D6
 
@@ -146,8 +142,7 @@ RESULT
 
 **_Pitch Invasion:_** Both coaches roll a D6 and add their Fan Factor to the result. The coach that rolls the lowest randomly selects D3 of their players from among those on the pitch. In the case of a tie, both coaches randomly select D3 of their players from among those on the pitch. All of the randomly selected players are Placed Prone and become Stunned.
 
-PLAYER ACTIVATIONS
-------------------
+## PLAYER ACTIVATIONS
 
 During your team turn, you may activate each Standing and/or Prone player to perform one action available to them. Players that begin their team turn Stunned cannot be activated.
 
@@ -187,8 +182,7 @@ In addition to these seven main actions, there are numerous Skills and Traits a 
 
 Such actions are called "Special actions" and are detailed in the appropriate Skill or Trait description. A full list of Skills, Traits and descriptions of how they work can be found on [page 74 of the Blood Bowl rulebook](../skills_and_traits/#skills).
 
-PASS ACTIONS
-------------
+## PASS ACTIONS
 
 Once per team turn, a player on the active team may perform a Pass action in order to pass the ball to another square, as described on [page 48 of the Blood Bowl rulebook](../the_rules_of_blood_bowl/#passing-the-ball):
 
@@ -200,8 +194,7 @@ Once per team turn, a player on the active team may perform a Pass action in ord
 
 **RESOLVE PASS:** If the pass was neither fumbled nor interfered with, the pass itself is resolved!
 
-THROW TEAM-MATE ACTIONS
------------------------
+## THROW TEAM-MATE ACTIONS
 
 Once per team turn, instead of performing a Pass action, a player on the active team with the 'Throw Team-mate' trait can attempt to throw a team-mate with the 'Right Stuff' trait as if they were a ball, as described on [page 52 of the Blood Bowl rulebook](../the_rules_of_blood_bowl/#throwing-other-players):
 
@@ -211,8 +204,7 @@ Once per team turn, instead of performing a Pass action, a player on the active 
 
 **RESOLVE THROW:** Where the thrown player lands, and how easily, depends upon the quality of the throw. If the throw is fumbled, the thrown player is dropped and will bounce.
 
-BLOCK ACTIONS
--------------
+## BLOCK ACTIONS
 
 When a Standing player is activated they can immediately nominate a single Standing opposition player that they are currently Marking and declare that they will target them with a Block action. Unlike other actions, there is no limit to how many players may perform a Block action each team turn.
 
@@ -234,11 +226,9 @@ Block dice feature five icons, each representing an outcome. Some of these outco
 
 #### PLAYER DOWN!
 
-
 The active player is immediately Knocked Down by the player they were attempting to Block!
 
 #### BOTH DOWN
-
 
 Both the active player and the target of the Block action are Knocked Down by one another.
 
@@ -246,21 +236,17 @@ If one or both of the players has the Block skill, they may choose to ignore thi
 
 #### PUSH BACK
 
-
 The target of the Block action is pushed back one square by the active player. The active player may follow up into the square vacated.
 
 #### STUMBLE
-
 
 If the target of the Block action has and chooses to use the Dodge skill, this result becomes a Push Back. Otherwise, this result becomes a POW!, as described below.
 
 #### POW!
 
-
 The target of the Block action is pushed back by the active player and is then Knocked Down in the square they have been moved into. The active player may follow up into the square vacated.
 
-RISKING INJURY
---------------
+## RISKING INJURY
 
 Whenever one player is Knocked Down or Falls Over, they become Prone and risk injury. When a player is Knocked Down or Falls Over, the coach of the opposing team will make an Armour roll against that player. Note that when a player is Placed Prone, perhaps having wrestled an opponent to the ground, there is no risk of injury and no Armour roll is made against them.
 
@@ -294,9 +280,9 @@ RESULT
 
 When a player is pushed back into the crowd or lands in the crowd, they risk Injury by the Crowd. No Armour roll is made against the player. Instead the coach of the opposing team rolls immediately on the Injury table to see what the crowd does to the player:
 
-*   If the player is Stunned, they are placed in the Reserves box.
-*   If the player is Knocked-out, they are placed in the Knocked-out box. They may recover as usual at the end of the drive.
-*   If the player becomes a Casualty, they are placed in the Casualty box. A roll is made against them on the Casualty table, as described below.
+- If the player is Stunned, they are placed in the Reserves box.
+- If the player is Knocked-out, they are placed in the Knocked-out box. They may recover as usual at the end of the drive.
+- If the player becomes a Casualty, they are placed in the Casualty box. A roll is made against them on the Casualty table, as described below.
 
 ### CASUALTY TABLE
 

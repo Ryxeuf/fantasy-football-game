@@ -1,5 +1,4 @@
-The Teams
-=========
+# The Teams
 
 #### BLOOD BOWL TEAMS
 
@@ -13,8 +12,7 @@ Special rules to help represent the different nuances of races and teams fall in
 
 The second category, 'Team' special rules, contains more complex rules. These deal with a unique characteristic of the team, something that sets it apart from others. These special rules grant the team certain benefits not enjoyed by other teams.
 
-REGIONAL SPECIAL RULES
-----------------------
+## REGIONAL SPECIAL RULES
 
 As noted in their description, some Inducements are available only to teams with one of the following special rules. Other Inducements may be available for a reduced rate to teams with one of the following special rules.
 
@@ -24,74 +22,73 @@ All teams have one or more of the following special rules:
 
 _The Badlands Brawl is home to a great many Greenskin and Ogreteams. Unsurprisingly, Blood Bowl in the Badlands is a brutal, violent and extremely dishonest affair, but these are virtues that make it ever popular with the fans!_
 
-*   [Black Orc](../../teams/Black_Orc/)
-*   [Chaos Dwarf](../../teams/Chaos_Dwarf/)
-*   [Goblin](../../teams/Goblin/)
-*   [Ogre](../../teams/Ogre/)
-*   [Orc](../../teams/Orc/)
+- [Black Orc](../../teams/Black_Orc/)
+- [Chaos Dwarf](../../teams/Chaos_Dwarf/)
+- [Goblin](../../teams/Goblin/)
+- [Ogre](../../teams/Ogre/)
+- [Orc](../../teams/Orc/)
 
 ### ELVEN KINGDOMS LEAGUE
 
 _One of the oldest leagues in the known world, the Elven KingdomsLeague prides itself on upholding the traditions of classically-correct Blood Bowl. Many find it dull but, in terms of elegance and expertise, it is second to none._
 
-*   [Dark Elf](../../teams/Dark_Elf/)
-*   [Elven Union](../../teams/Elven_Union/)
-*   [High Elf](../../teams/High_Elf/)
-*   [Wood Elf](../../teams/Wood_Elf/)
+- [Dark Elf](../../teams/Dark_Elf/)
+- [Elven Union](../../teams/Elven_Union/)
+- [High Elf](../../teams/High_Elf/)
+- [Wood Elf](../../teams/Wood_Elf/)
 
 ### HALFLING THIMBLE CUP
 
 _Traditionally, Halflings have been associated more closely with the culinary arts than the world of professional sport. In recent years this has changed greatly, and the Thimble Cup has become a main stay on the Blood Bowl calendar._
 
-*   [Halfling](../../teams/Halfling/)
-*   [Gnome](../../teams/Gnome/)
+- [Halfling](../../teams/Halfling/)
+- [Gnome](../../teams/Gnome/)
 
 ### LUSTRIAN SUPERLEAGUE
 
 _The Lustrian Superleague is the oldest competition in the world, and home to many of the sport's most ancient teams.For millennia it was closed to all except Lizardmen teams, but in recent years has opened its ranks to welcome other races._
 
-*   [Amazon](../../teams/Amazon/)
-*   [Lizardmen](../../teams/Lizardmen/)
+- [Amazon](../../teams/Amazon/)
+- [Lizardmen](../../teams/Lizardmen/)
 
 ### OLD WORLD CLASSIC
 
 _Since the collapse of the NAF, Blood Bowl in the Old World has struggled. But in recent years the sport's fortunes have improved, largely thanks to the founding of the Old World Classic, a competition that draws together many minor leagues._
 
-*   [Dwarf](../../teams/Dwarf/)
-*   [Halfling](../../teams/Halfling/)
-*   [Human](../../teams/Human/)
-*   [Imperial Nobility](../../teams/Imperial_Nobility/)
-*   [Norse](../../teams/Norse/)
-*   [Ogre](../../teams/Ogre/)
-*   [Old World Alliance](../../teams/Old_World_Alliance/)
+- [Dwarf](../../teams/Dwarf/)
+- [Halfling](../../teams/Halfling/)
+- [Human](../../teams/Human/)
+- [Imperial Nobility](../../teams/Imperial_Nobility/)
+- [Norse](../../teams/Norse/)
+- [Ogre](../../teams/Ogre/)
+- [Old World Alliance](../../teams/Old_World_Alliance/)
 
 ### SYLVANIAN SPOTLIGHT
 
 _For many decades the Sylvanian Spotlight was the only place most Undead teams could hope to compete. In recent years, the development of sun protection magic has changed this, allowing the athletically inclined Undead to play at anytime, anywhere!_
 
-*   [Necromantic Horror](../../teams/Necromantic_Horror/)
-*   [Tomb Kings](../../teams/Tomb_Kings/)
-*   [Shambling Undead](../../teams/Shambling_Undead/)
-*   [Vampire](../../teams/Vampire/)
+- [Necromantic Horror](../../teams/Necromantic_Horror/)
+- [Tomb Kings](../../teams/Tomb_Kings/)
+- [Shambling Undead](../../teams/Shambling_Undead/)
+- [Vampire](../../teams/Vampire/)
 
 ### UNDERWORLD CHALLENGE
 
 _A secretive league that, until only recently, many pundits refused to believe even existed! The Underworld Challenge hosts many strange and diverse teams, the likes of which are rarely seen in day light. For a horrifying spectacle, it is second to none!_
 
-*   [Goblin](../../teams/Goblin/)
-*   [Skaven](../../teams/Skaven/)
-*   [Snotling](../../teams/Snotling/)
-*   [Underworld Denizens](../../teams/Underworld_Denizens/)
+- [Goblin](../../teams/Goblin/)
+- [Skaven](../../teams/Skaven/)
+- [Snotling](../../teams/Snotling/)
+- [Underworld Denizens](../../teams/Underworld_Denizens/)
 
 ### WORLDS EDGE SUPERLEAGUE
 
 _Played on high peaks under clear skies, the Superleague is the pride of the Dwarfen realm. Games last many hours as rules are carefully checked and checked again, ensuring that the purity of Roze-El's sacred work is maintained. Interestingly, in Dwarfish'venerable' and 'dull' are spelled the same._
 
-*   [Chaos Dwarf](../../teams/Chaos_Dwarf/)
-*   [Dwarf](../../teams/Dwarf/)
+- [Chaos Dwarf](../../teams/Chaos_Dwarf/)
+- [Dwarf](../../teams/Dwarf/)
 
-Team Special Rules
-------------------
+## Team Special Rules
 
 Some teams may have one or more of the following special rules. These detail unique characteristics that set the team apart from others, be it the ability to reanimate the dead or the blessings of a patron Chaos deity.
 
@@ -103,14 +100,14 @@ _Many teams are legendarily unscrupulous. Such teams excel in violence and dirty
 
 It takes a strong-willed referee indeed to risk making an enemy of a team so renowned for reacting... poorly towards any official that would rebuke its behaviour:
 
-*   Once per game, when rolling on the Argue the Call table, you may re-roll a roll of a natural 1.
+- Once per game, when rolling on the Argue the Call table, you may re-roll a roll of a natural 1.
 
 In addition, a team with this special rule can purchase certain Inducements for a reduced price, as noted in the description of that Inducement.
 
-*   [Black Orc](../../teams/Black_Orc/)
-*   [Goblin](../../teams/Goblin/)
-*   [Snotling](../../teams/Snotling/)
-*   [Underworld Denizens](../../teams/Underworld_Denizens/)
+- [Black Orc](../../teams/Black_Orc/)
+- [Goblin](../../teams/Goblin/)
+- [Snotling](../../teams/Snotling/)
+- [Underworld Denizens](../../teams/Underworld_Denizens/)
 
 ### FAVOURED OF..
 
@@ -120,12 +117,12 @@ Certain Inducements are only available to teams that are 'Favoured of' a specifi
 
 A team with this special rule cannot change its alignment.
 
-*   [Chaos Chosen](../../teams/Chaos_Chosen/)
-*   [Chaos Dwarf](../../teams/Chaos_Dwarf/)
-*   [Chaos Renegades](../../teams/Chaos_Renegades/)
-*   [Khorne](../../teams/Khorne/)
-*   [Norse](../../teams/Norse/)
-*   [Nurgle](../../teams/Nurgle/)
+- [Chaos Chosen](../../teams/Chaos_Chosen/)
+- [Chaos Dwarf](../../teams/Chaos_Dwarf/)
+- [Chaos Renegades](../../teams/Chaos_Renegades/)
+- [Khorne](../../teams/Khorne/)
+- [Norse](../../teams/Norse/)
+- [Nurgle](../../teams/Nurgle/)
 
 ### LOW COST LINEMEN
 
@@ -133,12 +130,12 @@ _Some teams field Linemen of great skill and ability. Other teams do not and wil
 
 Teams with this special rule are not very particular about the Linemen they hire. To make up for this, they don't usually bother to pay them:
 
-*   In league play (but not in exhibition play), when calculating the Current Value of any permanently hired
+- In league play (but not in exhibition play), when calculating the Current Value of any permanently hired
 
 Lineman players on a team with this special rule, the Hiring Fee of that player is not included.
 
-*   [Ogre](../../teams/Ogre/)
-*   [Snotling](../../teams/Snotling/)
+- [Ogre](../../teams/Ogre/)
+- [Snotling](../../teams/Snotling/)
 
 ### MASTERS OF UNDEATH
 
@@ -146,26 +143,25 @@ _Teams with this special rule all fall into the broader category of 'Undead'. Us
 
 The Head Coach of this team is replaced by a Necromancer. Once per game, they can 'Raise the Dead':
 
-*   If a player on the opposing team with a Strength characteristic of 4 or less and that does not have the Regeneration or Stunty traits suffers a Casualty result of 15-16, DEAD, and if they cannot be saved by an apothecary, a new rookie Zombie Lineman player can be placed immediately in the Reserves box of this team's dugout. Note that this may cause the team to have more than 16 players for the remainder of the game.
-*   During Step 4 of the post-game sequence, this player may be permanently hired for free if the team has fewer than 16 players on its Team Draft list, otherwise it will be lost. The player's full value still counts towards the Team Value.
+- If a player on the opposing team with a Strength characteristic of 4 or less and that does not have the Regeneration or Stunty traits suffers a Casualty result of 15-16, DEAD, and if they cannot be saved by an apothecary, a new rookie Zombie Lineman player can be placed immediately in the Reserves box of this team's dugout. Note that this may cause the team to have more than 16 players for the remainder of the game.
+- During Step 4 of the post-game sequence, this player may be permanently hired for free if the team has fewer than 16 players on its Team Draft list, otherwise it will be lost. The player's full value still counts towards the Team Value.
 
 Additionally, just like the Head Coach of any other team, a Necromancer can Argue the Call when one of their players is Sent-off for committing a Foul, as long as they haven't been sent off themselves.
 
-*   [Necromantic Horror](../../teams/Necromantic_Horror/)
-*   [Shambling Undead](../../teams/Shambling_Undead/)
+- [Necromantic Horror](../../teams/Necromantic_Horror/)
+- [Shambling Undead](../../teams/Shambling_Undead/)
 
 ### VAMPIRE LORD
 
 The Head Coach of this team is replaced by a Vampire Lord. Once per game, during the post-game sequence, they can 'Summon a Thrall':
 
-*   If a player on the opposing team with a Strength characteristic of 4 or less and that did not have the Regeneration or Stunty traits suffered a Casualty result of 15 or 16, DEAD during the game, and if they could not be saved by an apothecary, during Step 4 of the post-game sequence a single new rookie Thrall Lineman player may be permanently hired for free if the team has fewer than 16 players on its team draft list, otherwise it will be lost. The Thrall Lineman's full value still counts towards the Team Value.
+- If a player on the opposing team with a Strength characteristic of 4 or less and that did not have the Regeneration or Stunty traits suffered a Casualty result of 15 or 16, DEAD during the game, and if they could not be saved by an apothecary, during Step 4 of the post-game sequence a single new rookie Thrall Lineman player may be permanently hired for free if the team has fewer than 16 players on its team draft list, otherwise it will be lost. The Thrall Lineman's full value still counts towards the Team Value.
 
 Additionally, just like the Head Coach of any other team, a Vampire Lord can Argue the Call when one of their players is Sent-off for committing a Foul, as long as they haven't been Sent-off themselves.
 
-*   [Vampire](../../teams/Vampire/)
+- [Vampire](../../teams/Vampire/)
 
-Team Tiers
-----------
+## Team Tiers
 
 Not all teams are created equal. Some rookie teams are more challenging to coach than others, either because of the way in which players and their different skills interact, or because background-wise they would struggle to win (after all, what chance would a Halfling team really have against a Dark Elf team?).
 
@@ -173,9 +169,8 @@ This is entirely intentional, and over the years a great many experienced coache
 
 All teams belong to one of three tiers, as detailed on their Team roster:
 
-*   Tier 1 is occupied by the strongest and most forgiving of teams, those that can easily recover from mistakes and mishaps.
-*   Tier 2 consists of those teams that often require a bit more experience on the part of the coach to excel. They are all highly competitive teams, but often a small mistake can prove costly!
-*   Tier 3, otherwise known as the 'Stunty teams', is home to the most difficult of teams to master. Halfling, Goblins and more, such teams are often victim to a hard time from bigger, tougher players, but they can still perform well in the hands of an experienced coach. To anyone who wants a real challenge but a truly entertaining game, Stunty teams are it!
+- Tier 1 is occupied by the strongest and most forgiving of teams, those that can easily recover from mistakes and mishaps.
+- Tier 2 consists of those teams that often require a bit more experience on the part of the coach to excel. They are all highly competitive teams, but often a small mistake can prove costly!
+- Tier 3, otherwise known as the 'Stunty teams', is home to the most difficult of teams to master. Halfling, Goblins and more, such teams are often victim to a hard time from bigger, tougher players, but they can still perform well in the hands of an experienced coach. To anyone who wants a real challenge but a truly entertaining game, Stunty teams are it!
 
 var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("\_\_tabbed\_"))
-

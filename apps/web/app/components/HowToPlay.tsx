@@ -19,12 +19,13 @@ export default function HowToPlay() {
   return (
     <div className="prose max-w-none">
       <h2>Comment jouer</h2>
-      <pre className="whitespace-pre-wrap bg-gray-50 border border-gray-200 p-4 rounded">{excerpt}</pre>
+      <pre className="whitespace-pre-wrap bg-gray-50 border border-gray-200 p-4 rounded">
+        {excerpt}
+      </pre>
       <p>
-        Pour aller plus loin, consultez les documents de règles dans <code>data/</code>.
+        Pour aller plus loin, consultez les documents de règles dans{" "}
+        <code>data/</code>.
       </p>
     </div>
   );
 }
-
-

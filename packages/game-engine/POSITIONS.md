@@ -27,14 +27,15 @@ Les joueurs de test ont été repositionnés près de la Line of Scrimmage (LOS)
 
 ### Positions des joueurs
 
-| Équipe | Joueur | Position | Nom | Rôle | Coordonnées |
-|--------|--------|----------|-----|------|-------------|
-| **A** | A2 | x=10, y=7 | Thunder Stonefist | Lineman | ⚪ |
-| **A** | A1 | x=11, y=7 | Grim Ironjaw | Blitzer | 🔵 |
-| **B** | B1 | x=15, y=7 | Shadow Swift | Runner | 🔴 |
-| **B** | B2 | x=16, y=7 | Iron Hide | Lineman | ⚪ |
+| Équipe | Joueur | Position  | Nom               | Rôle    | Coordonnées |
+| ------ | ------ | --------- | ----------------- | ------- | ----------- |
+| **A**  | A2     | x=10, y=7 | Thunder Stonefist | Lineman | ⚪          |
+| **A**  | A1     | x=11, y=7 | Grim Ironjaw      | Blitzer | 🔵          |
+| **B**  | B1     | x=15, y=7 | Shadow Swift      | Runner  | 🔴          |
+| **B**  | B2     | x=16, y=7 | Iron Hide         | Lineman | ⚪          |
 
 ### Balle
+
 - **Position** : x=13, y=7 (centre de la LOS)
 
 ## Avantages de cette configuration

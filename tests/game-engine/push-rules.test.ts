@@ -1,8 +1,8 @@
-import { describe, it, expect } from 'vitest';
-import { getPushDirections } from '@bb/game-engine';
+import { describe, it, expect } from "vitest";
+import { getPushDirections } from "@bb/game-engine";
 
-describe('Règles de poussée Blood Bowl', () => {
-  describe('Directions de poussée selon la position relative', () => {
+describe("Règles de poussée Blood Bowl", () => {
+  describe("Directions de poussée selon la position relative", () => {
     it("devrait donner les bonnes directions quand l'attaquant est au nord du défenseur", () => {
       // Attaquant au nord du défenseur
       const attacker = { x: 5, y: 4 }; // Nord

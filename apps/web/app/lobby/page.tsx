@@ -27,8 +27,13 @@ export default function LobbyPage() {
     (async () => {
       try {
         const t = localStorage.getItem("auth_token");
-        if (!t) { window.location.href = "/login"; return; }
-        const res = await fetch(`${API_BASE}/auth/me`, { headers: { Authorization: `Bearer ${t}` } });
+        if (!t) {
+          window.location.href = "/login";
+          return;
+        }
+        const res = await fetch(`${API_BASE}/auth/me`, {
+          headers: { Authorization: `Bearer ${t}` },
+        });
         if (!res.ok) {
           localStorage.removeItem("auth_token");
           window.location.href = "/login";
@@ -65,15 +70,27 @@ export default function LobbyPage() {
   return (
     <div className="max-w-md mx-auto p-6 space-y-4">
       <h1 className="text-2xl font-bold">Lobby</h1>
-      <button onClick={createMatch} className="w-full bg-blue-600 text-white py-2">Créer une partie</button>
+      <button
+        onClick={createMatch}
+        className="w-full bg-blue-600 text-white py-2"
+      >
+        Créer une partie
+      </button>
       <div className="flex gap-2">
-        <input className="flex-1 border p-2" placeholder="ID de partie" value={matchId} onChange={(e) => setMatchId(e.target.value)} />
-        <button onClick={joinMatch} className="bg-green-600 text-white px-3">Rejoindre</button>
+        <input
+          className="flex-1 border p-2"
+          placeholder="ID de partie"
+          value={matchId}
+          onChange={(e) => setMatchId(e.target.value)}
+        />
+        <button onClick={joinMatch} className="bg-green-600 text-white px-3">
+          Rejoindre
+        </button>
       </div>
       {error && <p className="text-red-600 text-sm">{error}</p>}
-      <p className="text-sm text-neutral-600">Vous devez être connecté pour créer/rejoindre une partie.</p>
+      <p className="text-sm text-neutral-600">
+        Vous devez être connecté pour créer/rejoindre une partie.
+      </p>
     </div>
   );
 }
-
-

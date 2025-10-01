@@ -86,6 +86,7 @@ fantasy-football-game/
 Le `.gitignore` est configuré pour exclure tous les fichiers qui ne doivent **JAMAIS** être versionnés :
 
 #### **Dépendances et cache :**
+
 ```gitignore
 # Dependencies
 node_modules
@@ -99,6 +100,7 @@ node_modules
 ```
 
 #### **Builds et compilations :**
+
 ```gitignore
 # Builds
 .next
@@ -113,6 +115,7 @@ tsconfig.tsbuildinfo
 ```
 
 #### **Environnement :**
+
 ```gitignore
 # Environment
 .env
@@ -124,6 +127,7 @@ tsconfig.tsbuildinfo
 ```
 
 #### **IDE et OS :**
+
 ```gitignore
 # IDE and Editor
 .idea
@@ -150,15 +154,15 @@ Desktop.ini
 
 ### **Stack technologique :**
 
-| Composant | Technologie | Version | Description |
-|-----------|-------------|---------|-------------|
-| **Monorepo** | Turborepo + pnpm | 2.1.3 | Gestion des packages |
-| **Frontend Web** | Next.js + React | 14.2.11 + 18.3.1 | Interface utilisateur |
-| **Rendu 2D** | Pixi.js | 7.4.3 | Moteur graphique |
-| **Mobile** | Expo + React Native | 51.0.0 + 0.75.4 | Application mobile |
-| **Backend** | Express + Boardgame.io | 4.21.2 + 0.50.2 | Serveur de jeu |
-| **TypeScript** | TS | 5.9.2 | Typage statique |
-| **Styling** | Tailwind CSS | 3.4.10 | Framework CSS |
+| Composant        | Technologie            | Version          | Description           |
+| ---------------- | ---------------------- | ---------------- | --------------------- |
+| **Monorepo**     | Turborepo + pnpm       | 2.1.3            | Gestion des packages  |
+| **Frontend Web** | Next.js + React        | 14.2.11 + 18.3.1 | Interface utilisateur |
+| **Rendu 2D**     | Pixi.js                | 7.4.3            | Moteur graphique      |
+| **Mobile**       | Expo + React Native    | 51.0.0 + 0.75.4  | Application mobile    |
+| **Backend**      | Express + Boardgame.io | 4.21.2 + 0.50.2  | Serveur de jeu        |
+| **TypeScript**   | TS                     | 5.9.2            | Typage statique       |
+| **Styling**      | Tailwind CSS           | 3.4.10           | Framework CSS         |
 
 ### **Architecture des services :**
 
@@ -183,6 +187,7 @@ Desktop.ini
 ## 🚀 Installation et setup
 
 ### **Prérequis :**
+
 - Node.js 18+ (recommandé 20+)
 - pnpm 9.7.0+ (recommandé 10.15.0+)
 - Git
@@ -269,12 +274,12 @@ pnpm update
 
 ## 🌐 Services et ports
 
-| Service | Port | URL | Description | Statut |
-|---------|------|-----|-------------|---------|
-| **Web App** | 3100 | `http://localhost:3100` | Interface Next.js + Pixi.js | ✅ Actif |
-| **API Express** | 8001 | `http://localhost:8001/health` | Endpoints API et health check | ✅ Actif |
-| **Boardgame.io** | 8000 | `http://localhost:8000` | Serveur de jeu principal | ✅ Actif |
-| **Expo Mobile** | 8082 | `http://localhost:8082` | Développement mobile | ✅ Actif |
+| Service          | Port | URL                            | Description                   | Statut   |
+| ---------------- | ---- | ------------------------------ | ----------------------------- | -------- |
+| **Web App**      | 3100 | `http://localhost:3100`        | Interface Next.js + Pixi.js   | ✅ Actif |
+| **API Express**  | 8001 | `http://localhost:8001/health` | Endpoints API et health check | ✅ Actif |
+| **Boardgame.io** | 8000 | `http://localhost:8000`        | Serveur de jeu principal      | ✅ Actif |
+| **Expo Mobile**  | 8082 | `http://localhost:8082`        | Développement mobile          | ✅ Actif |
 
 ### **Vérification des services :**
 
@@ -378,10 +383,10 @@ Pour réactiver les workflows, décommenter les déclencheurs dans chaque fichie
 on:
   # Décommenter ces lignes :
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
-  
+    branches: [main, develop]
+
   # Et supprimer :
   workflow_dispatch:
 ```
@@ -403,7 +408,7 @@ cd apps/mobile && pnpm dev -- --port 8082
 # Ouvrir dans le simulateur iOS
 # Appuyez sur 'i' dans le terminal Expo
 
-# Ouvrir dans l'émulateur Android  
+# Ouvrir dans l'émulateur Android
 # Appuyez sur 'a' dans le terminal Expo
 
 # Ouvrir dans le navigateur web
@@ -505,13 +510,14 @@ module.exports = {
   extends: ["@remix-run/eslint-config"],
   rules: {
     // Règles personnalisées
-  }
+  },
 };
 ```
 
 ## 📚 Ressources utiles
 
 ### **Documentation officielle :**
+
 - [Turborepo](https://turbo.build/repo/docs)
 - [Next.js](https://nextjs.org/docs)
 - [Expo](https://docs.expo.dev/)
@@ -519,11 +525,13 @@ module.exports = {
 - [Pixi.js](https://pixijs.io/docs/)
 
 ### **Outils de développement :**
+
 - [TypeScript](https://www.typescriptlang.org/docs/)
 - [Tailwind CSS](https://tailwindcss.com/docs)
 - [pnpm](https://pnpm.io/fr/)
 
 ### **Communauté :**
+
 - [Discord Turborepo](https://discord.gg/V6y4Xr6N)
 - [Expo Discord](https://discord.gg/expo)
 - [Next.js Discord](https://discord.gg/nextjs)

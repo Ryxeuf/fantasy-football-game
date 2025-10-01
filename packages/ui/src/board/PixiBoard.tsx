@@ -69,8 +69,10 @@ export default function PixiBoard({
       };
 
       // Vérifier s'il y a un joueur à cette position
-      const playerAtPosition = state.players.find(p => p.pos.x === position.x && p.pos.y === position.y);
-      
+      const playerAtPosition = state.players.find(
+        (p) => p.pos.x === position.x && p.pos.y === position.y,
+      );
+
       if (playerAtPosition && onPlayerClick) {
         // Clic sur un joueur
         onPlayerClick(playerAtPosition.id);
@@ -82,7 +84,12 @@ export default function PixiBoard({
   };
 
   return (
-    <div ref={ref} style={{ display: "flex", flexDirection: "column", gap: "20px" }}> {/* Appliquer ref au div wrapper */}
+    <div
+      ref={ref}
+      style={{ display: "flex", flexDirection: "column", gap: "20px" }}
+    >
+      {" "}
+      {/* Appliquer ref au div wrapper */}
       {/* Canvas Pixi.js */}
       <Stage
         width={width}
@@ -255,7 +262,8 @@ export default function PixiBoard({
           {/* Joueurs */}
           {state.players.map((player) => {
             const isSelected = player.id === selectedPlayerId;
-            const isSelectedForRepositioning = player.id === selectedForRepositioning;
+            const isSelectedForRepositioning =
+              player.id === selectedForRepositioning;
             const isCurrentTeam = player.team === state.currentPlayer;
 
             return (
@@ -271,9 +279,11 @@ export default function PixiBoard({
 
                     // Cercle du joueur
                     // Joueurs sonnés en gris, sinon couleur d'équipe
-                    const playerColor = player.stunned 
+                    const playerColor = player.stunned
                       ? 0x808080 // Gris pour joueurs sonnés
-                      : (player.team === "A" ? 0xff0000 : 0x0000ff); // Rouge pour équipe A, Bleu pour équipe B
+                      : player.team === "A"
+                        ? 0xff0000
+                        : 0x0000ff; // Rouge pour équipe A, Bleu pour équipe B
                     g.beginFill(playerColor);
                     g.drawCircle(x, y, radius);
                     g.endFill();
@@ -312,7 +322,7 @@ export default function PixiBoard({
                       // Cercle doré pour indiquer que le joueur a la balle
                       g.lineStyle(3, 0xffd700, 1); // Or
                       g.drawCircle(x, y, radius + 5);
-                      
+
                       // Petit cercle intérieur pour la balle
                       g.beginFill(0xffd700, 0.8);
                       g.drawCircle(x, y, 4);
@@ -371,7 +381,10 @@ export default function PixiBoard({
                     const bx = player.pos.y * cellSize + cellSize - r;
                     const by = player.pos.x * cellSize + r;
                     // Badge plus visible pour joueurs sonnés
-                    g.beginFill(player.stunned ? 0xffffff : 0x000000, player.stunned ? 0.9 : 0.7);
+                    g.beginFill(
+                      player.stunned ? 0xffffff : 0x000000,
+                      player.stunned ? 0.9 : 0.7,
+                    );
                     g.drawCircle(bx, by, r);
                     g.endFill();
                   }}
@@ -424,7 +437,6 @@ export default function PixiBoard({
           )}
         </Container>
       </Stage>
-
       {/* Boîte de debug */}
       <div
         style={{

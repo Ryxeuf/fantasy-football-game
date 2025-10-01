@@ -19,7 +19,9 @@ import {
 export default function DugoutDemoPage() {
   const [state, setState] = useState<GameState>(() => setup());
   const [showDicePopup, setShowDicePopup] = useState(false);
-  const [currentAction, setCurrentAction] = useState<"MOVE" | "BLOCK" | "BLITZ" | "PASS" | "HANDOFF" | "FOUL" | null>(null);
+  const [currentAction, setCurrentAction] = useState<
+    "MOVE" | "BLOCK" | "BLITZ" | "PASS" | "HANDOFF" | "FOUL" | null
+  >(null);
   const createRNG = () => makeRNG(`ui-seed-${Date.now()}-${Math.random()}`);
 
   const legal = useMemo(() => getLegalMoves(state), [state]);
@@ -62,13 +64,30 @@ export default function DugoutDemoPage() {
       // Si on clique sur un adversaire qui est une cible de blocage, lancer BLOCK
       const attackerId = state.selectedPlayerId;
       const target = state.players.find(
-        (p) => p.team !== state.currentPlayer && p.pos.x === pos.x && p.pos.y === pos.y,
+        (p) =>
+          p.team !== state.currentPlayer &&
+          p.pos.x === pos.x &&
+          p.pos.y === pos.y,
       );
       const blockMove = legal.find(
-        (m) => m.type === "BLOCK" && (m as any).playerId === attackerId && target && (m as any).targetId === target.id,
+        (m) =>
+          m.type === "BLOCK" &&
+          (m as any).playerId === attackerId &&
+          target &&
+          (m as any).targetId === target.id,
       ) as any;
-      if (blockMove && target && (currentAction === "BLOCK" || currentAction === "BLITZ")) {
-        setState((s) => applyMove(s, { type: "BLOCK", playerId: attackerId, targetId: target.id } as any, createRNG()));
+      if (
+        blockMove &&
+        target &&
+        (currentAction === "BLOCK" || currentAction === "BLITZ")
+      ) {
+        setState((s) =>
+          applyMove(
+            s,
+            { type: "BLOCK", playerId: attackerId, targetId: target.id } as any,
+            createRNG(),
+          ),
+        );
         return;
       }
 
@@ -79,16 +98,22 @@ export default function DugoutDemoPage() {
           m.to.x === pos.x &&
           m.to.y === pos.y,
       );
-      if (candidate && candidate.type === "MOVE" && (currentAction === "MOVE" || currentAction === "BLITZ" || currentAction === null)) {
+      if (
+        candidate &&
+        candidate.type === "MOVE" &&
+        (currentAction === "MOVE" ||
+          currentAction === "BLITZ" ||
+          currentAction === null)
+      ) {
         setState((s) => {
           const s2 = applyMove(s, candidate, createRNG());
           const p = s2.players.find((pl) => pl.id === candidate.playerId);
           if (!p || p.pm <= 0) s2.selectedPlayerId = null;
-          
+
           if (s2.lastDiceResult) {
             setShowDicePopup(true);
           }
-          
+
           return s2;
         });
       }
@@ -96,32 +121,55 @@ export default function DugoutDemoPage() {
   }
 
   // Fonctions de démonstration pour les zones de dugout
-  const simulateInjury = (playerId: string, injuryType: 'stunned' | 'ko' | 'casualty' | 'sent_off') => {
-    const player = state.players.find(p => p.id === playerId);
+  const simulateInjury = (
+    playerId: string,
+    injuryType: "stunned" | "ko" | "casualty" | "sent_off",
+  ) => {
+    const player = state.players.find((p) => p.id === playerId);
     if (!player) return;
 
     let newState = { ...state };
-    
+
     switch (injuryType) {
-      case 'stunned':
-        newState = movePlayerToDugoutZone(state, playerId, 'stunned', player.team);
+      case "stunned":
+        newState = movePlayerToDugoutZone(
+          state,
+          playerId,
+          "stunned",
+          player.team,
+        );
         break;
-      case 'ko':
-        newState = movePlayerToDugoutZone(state, playerId, 'knockedOut', player.team);
+      case "ko":
+        newState = movePlayerToDugoutZone(
+          state,
+          playerId,
+          "knockedOut",
+          player.team,
+        );
         break;
-      case 'casualty':
-        newState = movePlayerToDugoutZone(state, playerId, 'casualty', player.team);
+      case "casualty":
+        newState = movePlayerToDugoutZone(
+          state,
+          playerId,
+          "casualty",
+          player.team,
+        );
         break;
-      case 'sent_off':
-        newState = movePlayerToDugoutZone(state, playerId, 'sentOff', player.team);
+      case "sent_off":
+        newState = movePlayerToDugoutZone(
+          state,
+          playerId,
+          "sentOff",
+          player.team,
+        );
         break;
     }
-    
+
     setState(newState);
   };
 
   const simulateInjuryRoll = (playerId: string) => {
-    const player = state.players.find(p => p.id === playerId);
+    const player = state.players.find((p) => p.id === playerId);
     if (!player) return;
 
     const newState = performInjuryRoll(state, player, createRNG());
@@ -132,12 +180,15 @@ export default function DugoutDemoPage() {
     <div className="min-h-screen bg-gray-100">
       <div className="container mx-auto px-4 py-6">
         <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Démonstration des Zones de Dugout</h1>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+            Démonstration des Zones de Dugout
+          </h1>
           <p className="text-gray-600">
-            Cliquez sur un joueur pour le sélectionner, puis utilisez les boutons pour simuler des blessures.
+            Cliquez sur un joueur pour le sélectionner, puis utilisez les
+            boutons pour simuler des blessures.
           </p>
         </div>
-        
+
         <div className="flex flex-col lg:flex-row items-start gap-6 mb-6">
           <div className="flex-1 flex justify-center">
             <GameBoardWithDugouts
@@ -147,7 +198,7 @@ export default function DugoutDemoPage() {
               blockTargets={blockTargets}
               selectedPlayerId={state.selectedPlayerId}
               onPlayerClick={(playerId) => {
-                const player = state.players.find(p => p.id === playerId);
+                const player = state.players.find((p) => p.id === playerId);
                 if (player && player.team === state.currentPlayer) {
                   setState((s) => ({ ...s, selectedPlayerId: player.id }));
                   setCurrentAction(null);
@@ -160,9 +211,12 @@ export default function DugoutDemoPage() {
               <PlayerDetails
                 variant="sidebar"
                 player={
-                  state.players.find((p) => p.id === state.selectedPlayerId) || null
+                  state.players.find((p) => p.id === state.selectedPlayerId) ||
+                  null
                 }
-                onClose={() => setState((s) => ({ ...s, selectedPlayerId: null }))}
+                onClose={() =>
+                  setState((s) => ({ ...s, selectedPlayerId: null }))
+                }
               />
             )}
           </div>
@@ -172,29 +226,36 @@ export default function DugoutDemoPage() {
         {state.selectedPlayerId && (
           <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6 mb-6">
             <h3 className="text-lg font-bold text-gray-800 mb-4">
-              Simuler des blessures pour {state.players.find(p => p.id === state.selectedPlayerId)?.name}
+              Simuler des blessures pour{" "}
+              {state.players.find((p) => p.id === state.selectedPlayerId)?.name}
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <button
-                onClick={() => simulateInjury(state.selectedPlayerId!, 'stunned')}
+                onClick={() =>
+                  simulateInjury(state.selectedPlayerId!, "stunned")
+                }
                 className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition-colors"
               >
                 Sonné (2-7)
               </button>
               <button
-                onClick={() => simulateInjury(state.selectedPlayerId!, 'ko')}
+                onClick={() => simulateInjury(state.selectedPlayerId!, "ko")}
                 className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
               >
                 KO (8-9)
               </button>
               <button
-                onClick={() => simulateInjury(state.selectedPlayerId!, 'casualty')}
+                onClick={() =>
+                  simulateInjury(state.selectedPlayerId!, "casualty")
+                }
                 className="px-4 py-2 bg-red-700 text-white rounded hover:bg-red-800 transition-colors"
               >
                 Blessé (10+)
               </button>
               <button
-                onClick={() => simulateInjury(state.selectedPlayerId!, 'sent_off')}
+                onClick={() =>
+                  simulateInjury(state.selectedPlayerId!, "sent_off")
+                }
                 className="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors"
               >
                 Exclu
@@ -213,55 +274,91 @@ export default function DugoutDemoPage() {
 
         {/* Informations sur les zones */}
         <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">Zones de Dugout</h3>
+          <h3 className="text-lg font-bold text-gray-800 mb-4">
+            Zones de Dugout
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h4 className="font-semibold text-gray-700 mb-2">Équipe A (Bleue)</h4>
+              <h4 className="font-semibold text-gray-700 mb-2">
+                Équipe A (Bleue)
+              </h4>
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 bg-green-200 rounded"></div>
-                  <span>Réserves: {state.dugouts.teamA.zones.reserves.players.length} joueurs</span>
+                  <span>
+                    Réserves:{" "}
+                    {state.dugouts.teamA.zones.reserves.players.length} joueurs
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 bg-yellow-500 rounded"></div>
-                  <span>Sonnés: {state.dugouts.teamA.zones.stunned.players.length} joueurs</span>
+                  <span>
+                    Sonnés: {state.dugouts.teamA.zones.stunned.players.length}{" "}
+                    joueurs
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 bg-red-500 rounded"></div>
-                  <span>KO: {state.dugouts.teamA.zones.knockedOut.players.length} joueurs</span>
+                  <span>
+                    KO: {state.dugouts.teamA.zones.knockedOut.players.length}{" "}
+                    joueurs
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 bg-red-700 rounded"></div>
-                  <span>Blessés: {state.dugouts.teamA.zones.casualty.players.length} joueurs</span>
+                  <span>
+                    Blessés: {state.dugouts.teamA.zones.casualty.players.length}{" "}
+                    joueurs
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 bg-gray-800 rounded"></div>
-                  <span>Exclus: {state.dugouts.teamA.zones.sentOff.players.length} joueurs</span>
+                  <span>
+                    Exclus: {state.dugouts.teamA.zones.sentOff.players.length}{" "}
+                    joueurs
+                  </span>
                 </div>
               </div>
             </div>
             <div>
-              <h4 className="font-semibold text-gray-700 mb-2">Équipe B (Rouge)</h4>
+              <h4 className="font-semibold text-gray-700 mb-2">
+                Équipe B (Rouge)
+              </h4>
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 bg-green-200 rounded"></div>
-                  <span>Réserves: {state.dugouts.teamB.zones.reserves.players.length} joueurs</span>
+                  <span>
+                    Réserves:{" "}
+                    {state.dugouts.teamB.zones.reserves.players.length} joueurs
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 bg-yellow-500 rounded"></div>
-                  <span>Sonnés: {state.dugouts.teamB.zones.stunned.players.length} joueurs</span>
+                  <span>
+                    Sonnés: {state.dugouts.teamB.zones.stunned.players.length}{" "}
+                    joueurs
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 bg-red-500 rounded"></div>
-                  <span>KO: {state.dugouts.teamB.zones.knockedOut.players.length} joueurs</span>
+                  <span>
+                    KO: {state.dugouts.teamB.zones.knockedOut.players.length}{" "}
+                    joueurs
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 bg-red-700 rounded"></div>
-                  <span>Blessés: {state.dugouts.teamB.zones.casualty.players.length} joueurs</span>
+                  <span>
+                    Blessés: {state.dugouts.teamB.zones.casualty.players.length}{" "}
+                    joueurs
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 bg-gray-800 rounded"></div>
-                  <span>Exclus: {state.dugouts.teamB.zones.sentOff.players.length} joueurs</span>
+                  <span>
+                    Exclus: {state.dugouts.teamB.zones.sentOff.players.length}{" "}
+                    joueurs
+                  </span>
                 </div>
               </div>
             </div>

@@ -4,13 +4,57 @@ import { setupPreMatchWithTeams, TeamPlayerData } from './game-state';
 describe('setupPreMatchWithTeams', () => {
   it('devrait créer un état de jeu en phase pré-match avec les joueurs en réserves', () => {
     const teamAData: TeamPlayerData[] = [
-      { id: 'p1', name: 'Player A1', position: 'Lineman', number: 1, ma: 6, st: 3, ag: 3, pa: 4, av: 9, skills: 'Block' },
-      { id: 'p2', name: 'Player A2', position: 'Blitzer', number: 2, ma: 7, st: 3, ag: 3, pa: 4, av: 9, skills: 'Tackle' },
+      {
+        id: 'p1',
+        name: 'Player A1',
+        position: 'Lineman',
+        number: 1,
+        ma: 6,
+        st: 3,
+        ag: 3,
+        pa: 4,
+        av: 9,
+        skills: 'Block',
+      },
+      {
+        id: 'p2',
+        name: 'Player A2',
+        position: 'Blitzer',
+        number: 2,
+        ma: 7,
+        st: 3,
+        ag: 3,
+        pa: 4,
+        av: 9,
+        skills: 'Tackle',
+      },
     ];
 
     const teamBData: TeamPlayerData[] = [
-      { id: 'p3', name: 'Player B1', position: 'Runner', number: 1, ma: 8, st: 2, ag: 4, pa: 3, av: 7, skills: 'Dodge,Sure Hands' },
-      { id: 'p4', name: 'Player B2', position: 'Lineman', number: 2, ma: 6, st: 3, ag: 3, pa: 4, av: 8, skills: '' },
+      {
+        id: 'p3',
+        name: 'Player B1',
+        position: 'Runner',
+        number: 1,
+        ma: 8,
+        st: 2,
+        ag: 4,
+        pa: 3,
+        av: 7,
+        skills: 'Dodge,Sure Hands',
+      },
+      {
+        id: 'p4',
+        name: 'Player B2',
+        position: 'Lineman',
+        number: 2,
+        ma: 6,
+        st: 3,
+        ag: 3,
+        pa: 4,
+        av: 8,
+        skills: '',
+      },
     ];
 
     const gameState = setupPreMatchWithTeams(teamAData, teamBData, 'Team A', 'Team B');
@@ -26,7 +70,7 @@ describe('setupPreMatchWithTeams', () => {
 
     // Vérifier que tous les joueurs sont créés
     expect(gameState.players).toHaveLength(4);
-    
+
     // Vérifier les joueurs de l'équipe A
     const teamAPlayers = gameState.players.filter(p => p.team === 'A');
     expect(teamAPlayers).toHaveLength(2);
@@ -51,16 +95,40 @@ describe('setupPreMatchWithTeams', () => {
 
     // Vérifier le log
     expect(gameState.gameLog).toHaveLength(1);
-    expect(gameState.gameLog[0].message).toContain('Phase pré-match - Team A vs Team B - Les joueurs sont en réserves');
+    expect(gameState.gameLog[0].message).toContain(
+      'Phase pré-match - Team A vs Team B - Les joueurs sont en réserves'
+    );
   });
 
   it('devrait gérer les skills vides correctement', () => {
     const teamAData: TeamPlayerData[] = [
-      { id: 'p1', name: 'Player A1', position: 'Lineman', number: 1, ma: 6, st: 3, ag: 3, pa: 4, av: 9, skills: '' },
+      {
+        id: 'p1',
+        name: 'Player A1',
+        position: 'Lineman',
+        number: 1,
+        ma: 6,
+        st: 3,
+        ag: 3,
+        pa: 4,
+        av: 9,
+        skills: '',
+      },
     ];
 
     const teamBData: TeamPlayerData[] = [
-      { id: 'p2', name: 'Player B1', position: 'Lineman', number: 1, ma: 6, st: 3, ag: 3, pa: 4, av: 9, skills: '' },
+      {
+        id: 'p2',
+        name: 'Player B1',
+        position: 'Lineman',
+        number: 1,
+        ma: 6,
+        st: 3,
+        ag: 3,
+        pa: 4,
+        av: 9,
+        skills: '',
+      },
     ];
 
     const gameState = setupPreMatchWithTeams(teamAData, teamBData, 'Team A', 'Team B');

@@ -10,8 +10,10 @@ export default function AuthBar() {
     const t = localStorage.getItem("auth_token");
     setHasToken(!!t);
     if (t) {
-      fetch(`${API_BASE}/auth/me`, { headers: { Authorization: `Bearer ${t}` } })
-        .then((r) => r.ok ? r.json() : Promise.reject())
+      fetch(`${API_BASE}/auth/me`, {
+        headers: { Authorization: `Bearer ${t}` },
+      })
+        .then((r) => (r.ok ? r.json() : Promise.reject()))
         .then((data) => setIsAdmin(data?.user?.role === "admin"))
         .catch(() => setIsAdmin(false));
     } else {
@@ -27,17 +29,34 @@ export default function AuthBar() {
 
   return (
     <div className="flex items-center gap-3 text-sm">
-      {isAdmin && <a className="underline" href="/admin">Admin</a>}
+      {isAdmin && (
+        <a className="underline" href="/admin">
+          Admin
+        </a>
+      )}
       {hasToken ? (
         <>
-          <a className="underline" href="/me">Mes parties</a>
-          <a className="underline" href="/me/teams">Mes équipes</a>
-          <button onClick={logout} className="px-3 py-1 bg-neutral-800 text-white rounded">Se déconnecter</button>
+          <a className="underline" href="/me">
+            Mes parties
+          </a>
+          <a className="underline" href="/me/teams">
+            Mes équipes
+          </a>
+          <button
+            onClick={logout}
+            className="px-3 py-1 bg-neutral-800 text-white rounded"
+          >
+            Se déconnecter
+          </button>
         </>
       ) : (
         <div className="flex items-center gap-3">
-          <a className="underline" href="/login">Connexion</a>
-          <a className="underline" href="/register">Inscription</a>
+          <a className="underline" href="/login">
+            Connexion
+          </a>
+          <a className="underline" href="/register">
+            Inscription
+          </a>
         </div>
       )}
     </div>

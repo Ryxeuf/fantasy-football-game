@@ -1,9 +1,9 @@
-import { describe, it, expect } from 'vitest';
-import { getPushDirections, getPushDirection } from '@bb/game-engine';
+import { describe, it, expect } from "vitest";
+import { getPushDirections, getPushDirection } from "@bb/game-engine";
 
-describe('Directions de poussée', () => {
-  describe('getPushDirection', () => {
-    it('devrait calculer la direction directe', () => {
+describe("Directions de poussée", () => {
+  describe("getPushDirection", () => {
+    it("devrait calculer la direction directe", () => {
       const attacker = { x: 5, y: 5 };
       const target = { x: 6, y: 5 };
 
@@ -11,7 +11,7 @@ describe('Directions de poussée', () => {
       expect(direction).toEqual({ x: 1, y: 0 });
     });
 
-    it('devrait calculer la direction diagonale', () => {
+    it("devrait calculer la direction diagonale", () => {
       const attacker = { x: 5, y: 5 };
       const target = { x: 6, y: 6 };
 
@@ -20,8 +20,8 @@ describe('Directions de poussée', () => {
     });
   });
 
-  describe('getPushDirections', () => {
-    it('devrait retourner 3 directions pour un blocage horizontal', () => {
+  describe("getPushDirections", () => {
+    it("devrait retourner 3 directions pour un blocage horizontal", () => {
       const attacker = { x: 5, y: 5 };
       const target = { x: 6, y: 5 };
 
@@ -36,7 +36,7 @@ describe('Directions de poussée', () => {
       expect(directions[2]).toEqual({ x: -1, y: -1 });
     });
 
-    it('devrait retourner 3 directions pour un blocage vertical', () => {
+    it("devrait retourner 3 directions pour un blocage vertical", () => {
       const attacker = { x: 5, y: 5 };
       const target = { x: 5, y: 6 };
 
@@ -51,7 +51,7 @@ describe('Directions de poussée', () => {
       expect(directions[2]).toEqual({ x: -1, y: -1 });
     });
 
-    it('devrait retourner 3 directions pour un blocage diagonal', () => {
+    it("devrait retourner 3 directions pour un blocage diagonal", () => {
       const attacker = { x: 5, y: 5 };
       const target = { x: 6, y: 6 };
 
@@ -66,7 +66,7 @@ describe('Directions de poussée', () => {
       expect(directions[2]).toEqual({ x: 0, y: -1 });
     });
 
-    it('devrait gérer les directions négatives', () => {
+    it("devrait gérer les directions négatives", () => {
       const attacker = { x: 5, y: 5 };
       const target = { x: 4, y: 5 };
 

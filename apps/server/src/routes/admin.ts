@@ -8,12 +8,16 @@ const router = Router();
 router.use(authUser, adminOnly);
 
 router.get("/users", async (_req, res) => {
-  const users = await prisma.user.findMany({ select: { id: true, email: true, name: true, role: true, createdAt: true } });
+  const users = await prisma.user.findMany({
+    select: { id: true, email: true, name: true, role: true, createdAt: true },
+  });
   res.json({ users });
 });
 
 router.get("/matches", async (_req, res) => {
-  const matches = await prisma.match.findMany({ select: { id: true, status: true, seed: true, createdAt: true } });
+  const matches = await prisma.match.findMany({
+    select: { id: true, status: true, seed: true, createdAt: true },
+  });
   res.json({ matches });
 });
 
@@ -28,14 +32,15 @@ router.post("/matches/purge", async (_req, res) => {
     res.json({ ok: true });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: 'Erreur lors de la purge des parties' });
+    res.status(500).json({ error: "Erreur lors de la purge des parties" });
   }
 });
 
 // Endpoint de reset complet pour les tests (uniquement si TEST_SQLITE=1)
-router.post('/test/reset', async (_req, res) => {
+router.post("/test/reset", async (_req, res) => {
   try {
-    if (process.env.TEST_SQLITE !== '1') return res.status(403).json({ error: 'Reset tests interdit en prod' });
+    if (process.env.TEST_SQLITE !== "1")
+      return res.status(403).json({ error: "Reset tests interdit en prod" });
     await prisma.turn.deleteMany({});
     await prisma.teamSelection.deleteMany({});
     await (prisma as any).$executeRawUnsafe('DELETE FROM "_MatchToUser"');
@@ -46,7 +51,7 @@ router.post('/test/reset', async (_req, res) => {
     res.json({ ok: true });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: 'Erreur reset tests' });
+    res.status(500).json({ error: "Erreur reset tests" });
   }
 });
 
@@ -59,5 +64,3 @@ router.get("/stats", async (_req, res) => {
 });
 
 export default router;
-
-

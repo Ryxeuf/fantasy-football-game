@@ -54,7 +54,7 @@ export function setupPreMatchWithTeams(
   teamBName: string
 ): ExtendedGameState {
   const dugouts = initializeDugouts();
-  
+
   // Créer les joueurs de l'équipe A
   const teamAPlayers: Player[] = teamAData.map((tp, index) => ({
     id: `A${tp.number}`,
@@ -68,7 +68,12 @@ export function setupPreMatchWithTeams(
     ag: tp.ag,
     pa: tp.pa,
     av: tp.av,
-    skills: tp.skills ? tp.skills.split(',').map(s => s.trim()).filter(Boolean) : [],
+    skills: tp.skills
+      ? tp.skills
+          .split(',')
+          .map(s => s.trim())
+          .filter(Boolean)
+      : [],
     pm: tp.ma, // PM = MA au début
     hasBall: false,
     state: 'active',
@@ -87,7 +92,12 @@ export function setupPreMatchWithTeams(
     ag: tp.ag,
     pa: tp.pa,
     av: tp.av,
-    skills: tp.skills ? tp.skills.split(',').map(s => s.trim()).filter(Boolean) : [],
+    skills: tp.skills
+      ? tp.skills
+          .split(',')
+          .map(s => s.trim())
+          .filter(Boolean)
+      : [],
     pm: tp.ma, // PM = MA au début
     hasBall: false,
     state: 'active',
@@ -101,7 +111,7 @@ export function setupPreMatchWithTeams(
     const dugout = dugouts[teamId === 'A' ? 'teamA' : 'teamB'];
     dugout.zones.reserves.players.push(player.id);
   });
-  
+
   const existingState = {
     width: 26,
     height: 15,
@@ -125,7 +135,12 @@ export function setupPreMatchWithTeams(
       teamB: teamBName,
     },
     // Log du match
-    gameLog: [createLogEntry('info', `Phase pré-match - ${teamAName} vs ${teamBName} - Les joueurs sont en réserves`)],
+    gameLog: [
+      createLogEntry(
+        'info',
+        `Phase pré-match - ${teamAName} vs ${teamBName} - Les joueurs sont en réserves`
+      ),
+    ],
   };
 
   return {
@@ -149,7 +164,7 @@ export function setupPreMatchWithTeams(
  */
 export function setupPreMatch(): GameState {
   const dugouts = initializeDugouts();
-  
+
   // Créer les joueurs mais les mettre en réserves (pas sur le terrain)
   const players: Player[] = [
     {
@@ -228,7 +243,7 @@ export function setupPreMatch(): GameState {
     const dugout = dugouts[teamId === 'A' ? 'teamA' : 'teamB'];
     dugout.zones.reserves.players.push(player.id);
   });
-  
+
   return {
     width: 26,
     height: 15,
@@ -263,7 +278,7 @@ export function setupPreMatch(): GameState {
  */
 export function setup(): GameState {
   const dugouts = initializeDugouts();
-  
+
   return {
     width: 26,
     height: 15,
@@ -434,7 +449,10 @@ export function startMatchFromPreMatch(state: GameState): GameState {
   };
 
   // Log de démarrage
-  const startLog = createLogEntry('info', 'Match commencé - Placement initial des joueurs sur le terrain');
+  const startLog = createLogEntry(
+    'info',
+    'Match commencé - Placement initial des joueurs sur le terrain'
+  );
 
   return {
     ...state,
@@ -530,7 +548,12 @@ export function canPlayerMove(state: GameState, playerId: string): boolean {
 
   // Un joueur peut bouger s'il n'est pas étourdi, a des PM, n'a pas encore fait d'action principale,
   // et c'est le tour de son équipe
-  return !player.stunned && player.pm > 0 && !hasPlayerActed(state, playerId) && player.team === state.currentPlayer;
+  return (
+    !player.stunned &&
+    player.pm > 0 &&
+    !hasPlayerActed(state, playerId) &&
+    player.team === state.currentPlayer
+  );
 }
 
 /**
@@ -560,7 +583,10 @@ export function canPlayerContinueMoving(state: GameState, playerId: string): boo
  * @param playerId - ID du joueur
  * @returns Action du joueur ou undefined
  */
-export function getPlayerAction(state: GameState | ExtendedGameState, playerId: string): ActionType | undefined {
+export function getPlayerAction(
+  state: GameState | ExtendedGameState,
+  playerId: string
+): ActionType | undefined {
   if (!state.playerActions || typeof state.playerActions.get !== 'function') return undefined;
   return state.playerActions.get(playerId);
 }
@@ -754,7 +780,10 @@ export function clearDiceResult(state: GameState): GameState {
 }
 
 // Fonction pour entrer en phase setup (appelée après accepts et coin toss)
-export function enterSetupPhase(state: ExtendedGameState, receivingTeam: TeamId): ExtendedGameState {
+export function enterSetupPhase(
+  state: ExtendedGameState,
+  receivingTeam: TeamId
+): ExtendedGameState {
   if (state.half !== 0 || state.preMatch.phase !== 'idle') return state;
 
   // Positions légales de setup pour toute la moitié de terrain de l'équipe
@@ -764,7 +793,7 @@ export function enterSetupPhase(state: ExtendedGameState, receivingTeam: TeamId)
     const positions: Position[] = [];
     // Corriger la logique : équipe A (haut) sur x=1..12, équipe B (bas) sur x=13..24
     // Toutes les colonnes y=0..14 sont autorisées
-    const xStart = topHalf ? 1 : 13;   // exclure touchdown: 0 et 25
+    const xStart = topHalf ? 1 : 13; // exclure touchdown: 0 et 25
     const xEnd = topHalf ? 12 : 24;
     for (let x = xStart; x <= xEnd; x++) {
       for (let y = 0; y < state.height; y++) {
@@ -789,8 +818,16 @@ export function enterSetupPhase(state: ExtendedGameState, receivingTeam: TeamId)
 }
 
 // Fonction pour placer un joueur en setup (appelée onCellClick si phase='setup')
-export function placePlayerInSetup(state: ExtendedGameState, playerId: string, pos: Position): ExtendedGameState {
-  if (state.preMatch.phase !== 'setup' || state.preMatch.currentCoach !== state.players.find(p => p.id === playerId)?.team || !state.preMatch.legalSetupPositions.some(l => l.x === pos.x && l.y === pos.y)) {
+export function placePlayerInSetup(
+  state: ExtendedGameState,
+  playerId: string,
+  pos: Position
+): ExtendedGameState {
+  if (
+    state.preMatch.phase !== 'setup' ||
+    state.preMatch.currentCoach !== state.players.find(p => p.id === playerId)?.team ||
+    !state.preMatch.legalSetupPositions.some(l => l.x === pos.x && l.y === pos.y)
+  ) {
     return state; // Invalid move
   }
 
@@ -800,20 +837,22 @@ export function placePlayerInSetup(state: ExtendedGameState, playerId: string, p
   // Permettre le repositionnement : si le joueur est déjà placé, on le retire d'abord
   const isRepositioning = player.pos.x >= 0;
   let currentPlacedPlayers = [...state.preMatch.placedPlayers];
-  
+
   if (isRepositioning) {
     // Retirer le joueur de la liste des placés
     currentPlacedPlayers = currentPlacedPlayers.filter(id => id !== playerId);
   }
 
   // Vérifier qu'aucun autre joueur n'occupe déjà cette position
-  const existingPlayerAtPos = state.players.find(p => p.pos.x === pos.x && p.pos.y === pos.y && p.id !== playerId);
+  const existingPlayerAtPos = state.players.find(
+    p => p.pos.x === pos.x && p.pos.y === pos.y && p.id !== playerId
+  );
   if (existingPlayerAtPos) {
     return state; // Position déjà occupée
   }
 
   // Simuler la pose pour vérifier les contraintes
-  const simulatedPlayers = state.players.map(p => p.id === playerId ? { ...p, pos } : p);
+  const simulatedPlayers = state.players.map(p => (p.id === playerId ? { ...p, pos } : p));
   const simulatedPlaced = [...currentPlacedPlayers, playerId];
 
   // Contraintes Blood Bowl (setup)
@@ -840,9 +879,9 @@ export function placePlayerInSetup(state: ExtendedGameState, playerId: string, p
     const losCount = teamPlayersOnPitch.filter(p => isOnLos(p.pos.x)).length;
     const remainingPlayers = 11 - simulatedPlaced.length;
     const minLosRequired = 3;
-    
+
     // Si on n'a pas assez de joueurs sur la LOS et qu'il ne reste pas assez de joueurs pour atteindre 3
-    if (losCount < minLosRequired && (losCount + remainingPlayers) < minLosRequired) {
+    if (losCount < minLosRequired && losCount + remainingPlayers < minLosRequired) {
       return state; // Impossible d'atteindre 3 joueurs sur la LOS
     }
   }
@@ -850,7 +889,11 @@ export function placePlayerInSetup(state: ExtendedGameState, playerId: string, p
   const newPlayers = simulatedPlayers;
   const newPlaced = simulatedPlaced;
 
-  let newState = { ...state, players: newPlayers, preMatch: { ...state.preMatch, placedPlayers: newPlaced } };
+  let newState = {
+    ...state,
+    players: newPlayers,
+    preMatch: { ...state.preMatch, placedPlayers: newPlaced },
+  };
 
   // Si 11 placés, switch to next coach or kickoff
   if (newPlaced.length === 11) {
@@ -866,4 +909,3 @@ export function placePlayerInSetup(state: ExtendedGameState, playerId: string, p
 
   return newState;
 }
-
