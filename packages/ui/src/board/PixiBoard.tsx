@@ -7,20 +7,24 @@ import type { GameState, Position } from "@bb/game-engine";
 type Props = {
   state: GameState;
   onCellClick?: (pos: Position) => void;
+  onPlayerClick?: (playerId: string) => void; // Nouvelle prop pour clics sur joueurs
   cellSize?: number;
   legalMoves?: Position[];
   blockTargets?: Position[];
   selectedPlayerId?: string | null;
+  selectedForRepositioning?: string | null; // Nouvelle prop pour joueur sélectionné pour repositionnement
   ref?: React.RefObject<HTMLDivElement>; // Nouvelle prop pour drop coords
 };
 
 export default function PixiBoard({
   state,
   onCellClick,
+  onPlayerClick,
   cellSize = 28,
   legalMoves = [],
   blockTargets = [],
   selectedPlayerId,
+  selectedForRepositioning,
   ref, // Ajout ref
 }: Props) {
   // Orientation verticale : largeur devient hauteur et vice versa
@@ -37,8 +41,6 @@ export default function PixiBoard({
 
   // Fonction pour gérer les clics sur le terrain
   const handleStageClick = (event: any) => {
-    if (!onCellClick) return;
-
     // Dans Pixi.js avec React, l'événement a une structure différente
     // event.nativeEvent contient les informations de la souris
     const nativeEvent = event.nativeEvent;
@@ -66,14 +68,16 @@ export default function PixiBoard({
         y: gridX,
       };
 
-      console.log("Clic sur la cellule:", {
-        gridX,
-        gridY,
-        position,
-        clientX: nativeEvent.clientX,
-        clientY: nativeEvent.clientY,
-      });
-      onCellClick(position);
+      // Vérifier s'il y a un joueur à cette position
+      const playerAtPosition = state.players.find(p => p.pos.x === position.x && p.pos.y === position.y);
+      
+      if (playerAtPosition && onPlayerClick) {
+        // Clic sur un joueur
+        onPlayerClick(playerAtPosition.id);
+      } else if (onCellClick) {
+        // Clic sur une cellule vide
+        onCellClick(position);
+      }
     }
   };
 
@@ -251,6 +255,7 @@ export default function PixiBoard({
           {/* Joueurs */}
           {state.players.map((player) => {
             const isSelected = player.id === selectedPlayerId;
+            const isSelectedForRepositioning = player.id === selectedForRepositioning;
             const isCurrentTeam = player.team === state.currentPlayer;
 
             return (
@@ -281,6 +286,14 @@ export default function PixiBoard({
 
                       // Halo de sélection
                       g.lineStyle(2, 0xffff00, 0.5);
+                      g.drawCircle(x, y, radius + 8);
+                    } else if (isSelectedForRepositioning) {
+                      // Bordure orange pour le joueur sélectionné pour repositionnement
+                      g.lineStyle(4, 0xff8800, 1);
+                      g.drawCircle(x, y, radius + 2);
+
+                      // Halo de repositionnement
+                      g.lineStyle(2, 0xff8800, 0.5);
                       g.drawCircle(x, y, radius + 8);
                     } else {
                       // Bordure blanche normale

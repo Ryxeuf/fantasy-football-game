@@ -189,10 +189,13 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
       return 'Position déjà occupée par un autre joueur';
     }
     
-    // Max 11
+    // Max 11 (prendre en compte le repositionnement)
     const teamId = player.team;
+    const isRepositioning = player.pos.x >= 0;
     const onPitch = ext.players.filter(p => p.team === teamId && p.pos.x >= 0).length;
-    if (onPitch >= 11) return 'Maximum 11 joueurs sur le terrain';
+    // Si on repositionne, on ne compte pas le joueur actuel car il sera déplacé
+    const effectiveOnPitch = isRepositioning ? onPitch : onPitch + 1;
+    if (effectiveOnPitch > 11) return 'Maximum 11 joueurs sur le terrain';
     // Wide zones
     const isLeftWZ = (y: number) => y >= 0 && y <= 2;
     const isRightWZ = (y: number) => y >= 12 && y <= 14;
@@ -445,7 +448,11 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
       // Mode setup : placer selectedFromReserve sur pos si légal
       if (selectedFromReserve) {
         const err = validatePlacement(extState, selectedFromReserve, pos);
-        if (err) { showSetupError(err); setSelectedFromReserve(null); return; }
+        if (err) { 
+          showSetupError(err); 
+          setSelectedFromReserve(null); 
+          return; 
+        }
         const newState = placePlayerInSetup(extState, selectedFromReserve, pos);
         setState(newState);
         if (newState.preMatch.placedPlayers.length === 11) {
@@ -628,6 +635,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
                 legalMoves={draggedPlayerId && (state as ExtendedGameState).preMatch?.phase === 'setup' ? (state as ExtendedGameState).preMatch.legalSetupPositions : movesForSelected} 
                 blockTargets={[]} 
                 selectedPlayerId={state.selectedPlayerId || undefined} 
+                selectedForRepositioning={selectedFromReserve}
                 placedPlayers={(state as ExtendedGameState).preMatch?.placedPlayers || []} // Nouvelle prop
                 onPlayerClick={(playerId) => {
                   if (!state) return;
@@ -655,6 +663,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
                 boardContainerRef={boardRef}
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
+                isSetupPhase={(state as ExtendedGameState).preMatch?.phase === 'setup'}
               />
             </div>
             <div className="w-full lg:w-auto">

@@ -11,6 +11,7 @@ interface DugoutZoneProps {
   teamColor: string;
   onPlayerClick?: (playerId: string) => void;
   onDragStart?: (e: React.DragEvent, playerId: string) => void;
+  isSetupPhase?: boolean; // Nouvelle prop pour indiquer si on est en phase setup
 }
 
 export default function DugoutZoneComponent({ 
@@ -19,6 +20,7 @@ export default function DugoutZoneComponent({
   teamColor, 
   onPlayerClick,
   onDragStart,
+  isSetupPhase = false,
 }: DugoutZoneProps) {
   
   const zoneType = zone?.type || 'zone';
@@ -35,7 +37,7 @@ export default function DugoutZoneComponent({
               player.stunned ? 'bg-gray-400 text-white' : teamColor === 'red' ? 'bg-red-500 text-white' : 'bg-blue-500 text-white'
             } ${player.hasBall ? 'ring-2 ring-yellow-400' : ''}`}
             onClick={() => onPlayerClick?.(player.id)}
-            draggable={zoneType === 'reserve' || player.pos.x < 0}
+            draggable={zoneType === 'reserve' || player.pos.x < 0 || isSetupPhase}
             onDragStart={(e) => onDragStart?.(e, player.id)}
             title={`${player.name} (#${player.number}) - ${player.position}`}
           >

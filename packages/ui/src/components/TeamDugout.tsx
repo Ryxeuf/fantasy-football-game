@@ -13,6 +13,7 @@ interface TeamDugoutProps {
   onPlayerClick?: (playerId: string) => void;
   onDragStart?: (e: React.DragEvent, playerId: string) => void;
   teamName?: string;
+  isSetupPhase?: boolean; // Nouvelle prop pour indiquer si on est en phase setup
 }
 
 export default function TeamDugoutComponent({ 
@@ -22,6 +23,7 @@ export default function TeamDugoutComponent({
   onPlayerClick,
   onDragStart,
   teamName,
+  isSetupPhase = false,
 }: TeamDugoutProps) {
   
   // Pour reserve en setup : tous non placés
@@ -47,6 +49,7 @@ export default function TeamDugoutComponent({
         teamColor={dugout.teamId === 'A' ? 'red' : 'blue'}
         onPlayerClick={onPlayerClick}
         onDragStart={onDragStart}
+        isSetupPhase={isSetupPhase}
       />
       
       {/* Autres zones - fallback à filtre pos si pas setup */}
@@ -56,6 +59,7 @@ export default function TeamDugoutComponent({
         teamColor={dugout.teamId === 'A' ? 'red' : 'blue'}
         onPlayerClick={onPlayerClick}
         onDragStart={onDragStart}
+        isSetupPhase={isSetupPhase}
       />
       
       <DugoutZoneComponent
@@ -64,6 +68,7 @@ export default function TeamDugoutComponent({
         teamColor={dugout.teamId === 'A' ? 'red' : 'blue'}
         onPlayerClick={onPlayerClick}
         onDragStart={onDragStart}
+        isSetupPhase={isSetupPhase}
       />
       
       {/* Casualty si besoin */}
@@ -74,6 +79,7 @@ export default function TeamDugoutComponent({
           teamColor={dugout.teamId === 'A' ? 'red' : 'blue'}
           onPlayerClick={onPlayerClick}
           onDragStart={onDragStart}
+          isSetupPhase={isSetupPhase}
         />
       )}
     </div>

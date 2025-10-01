@@ -14,9 +14,11 @@ interface GameBoardWithDugoutsProps {
   legalMoves?: { x: number; y: number }[];
   blockTargets?: { x: number; y: number }[];
   selectedPlayerId?: string | null;
+  selectedForRepositioning?: string | null; // Nouvelle prop pour joueur sélectionné pour repositionnement
   onDragStart?: (e: React.DragEvent, playerId: string) => void;
   placedPlayers?: string[]; // Nouvelle prop pour setup
   boardContainerRef?: React.RefObject<HTMLDivElement>;
+  isSetupPhase?: boolean; // Nouvelle prop pour indiquer si on est en phase setup
   onDragOver?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent) => void;
 }
@@ -28,9 +30,11 @@ export default function GameBoardWithDugouts({
   legalMoves = [],
   blockTargets = [],
   selectedPlayerId,
+  selectedForRepositioning,
   onDragStart,
   placedPlayers = [], // Default
   boardContainerRef,
+  isSetupPhase = false,
   onDragOver,
   onDrop,
 }: GameBoardWithDugoutsProps) {
@@ -46,6 +50,7 @@ export default function GameBoardWithDugouts({
           onPlayerClick={onPlayerClick}
           onDragStart={onDragStart}
           teamName={state.teamNames.teamA}
+          isSetupPhase={isSetupPhase}
         />
       </div>
 
@@ -54,9 +59,11 @@ export default function GameBoardWithDugouts({
         <PixiBoard
           state={state}
           onCellClick={onCellClick}
+          onPlayerClick={onPlayerClick}
           legalMoves={legalMoves}
           blockTargets={blockTargets}
           selectedPlayerId={selectedPlayerId}
+          selectedForRepositioning={selectedForRepositioning}
         />
       </div>
 
@@ -69,6 +76,7 @@ export default function GameBoardWithDugouts({
           onPlayerClick={onPlayerClick}
           onDragStart={onDragStart}
           teamName={state.teamNames.teamB}
+          isSetupPhase={isSetupPhase}
         />
       </div>
     </div>
