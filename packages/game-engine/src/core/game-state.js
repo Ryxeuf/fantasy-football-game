@@ -657,23 +657,23 @@ export function clearDiceResult(state) {
 export function enterSetupPhase(state, receivingTeam) {
     if (state.half !== 0 || state.preMatch.phase !== 'idle')
         return state;
-    // Positions setup pour receiving team (first half, zones 1-11 pour A, symétrique pour B)
-    let setupPositions = [];
-    if (receivingTeam === 'A') {
-        // Exemple zones pour A (à raffiner d'après règles : dugout zones)
-        for (let y = 0; y < 4; y++) { // Lignes avant
-            for (let x = 6; x <= 20; x += 2) { // Colonnes setup
-                if (x >= 6 && x <= 11 && y <= 2 || x >= 15 && x <= 20 && y <= 2)
-                    continue; // Éviter zones adverses
-                setupPositions.push({ x, y });
+    // Positions légales de setup pour toute la moitié de terrain de l'équipe
+    // Repère: board 26x15 (x: 0..25, y: 0..14). Bande touchdown sur y=0 (haut) et y=14 (bas).
+    // On autorise: équipe A (haut) sur y=1..6, équipe B (bas) sur y=8..13. Toutes colonnes x=0..25.
+    const buildHalf = (topHalf) => {
+        const positions = [];
+        // Corriger la logique : équipe A (haut) sur x=1..12, équipe B (bas) sur x=13..24
+        // Toutes les colonnes y=0..14 sont autorisées
+        const xStart = topHalf ? 1 : 13; // exclure touchdown: 0 et 25
+        const xEnd = topHalf ? 12 : 24;
+        for (let x = xStart; x <= xEnd; x++) {
+            for (let y = 0; y < state.height; y++) {
+                positions.push({ x, y });
             }
         }
-        // Ajouter wide zones, etc. - TODO: implémenter zones précises du pitch (half A)
-    }
-    else {
-        // Symétrique pour B
-        setupPositions = setupPositions.map(p => ({ x: 25 - p.x, y: 14 - p.y })); // Miroir
-    }
+        return positions;
+    };
+    const setupPositions = buildHalf(receivingTeam === 'A');
     return {
         ...state,
         preMatch: {
@@ -687,14 +687,55 @@ export function enterSetupPhase(state, receivingTeam) {
 }
 // Fonction pour placer un joueur en setup (appelée onCellClick si phase='setup')
 export function placePlayerInSetup(state, playerId, pos) {
-    if (state.preMatch.phase !== 'setup' || state.preMatch.currentCoach !== state.players.find(p => p.id === playerId)?.team || state.preMatch.placedPlayers.length >= 11 || !state.preMatch.legalSetupPositions.some(l => l.x === pos.x && l.y === pos.y)) {
+    if (state.preMatch.phase !== 'setup' || state.preMatch.currentCoach !== state.players.find(p => p.id === playerId)?.team || !state.preMatch.legalSetupPositions.some(l => l.x === pos.x && l.y === pos.y)) {
         return state; // Invalid move
     }
     const player = state.players.find(p => p.id === playerId);
-    if (!player || player.pos.x !== -1)
-        return state; // Déjà placé
-    const newPlayers = state.players.map(p => p.id === playerId ? { ...p, pos } : p);
-    const newPlaced = [...state.preMatch.placedPlayers, playerId];
+    if (!player)
+        return state;
+    // Permettre le repositionnement : si le joueur est déjà placé, on le retire d'abord
+    const isRepositioning = player.pos.x >= 0;
+    let currentPlacedPlayers = [...state.preMatch.placedPlayers];
+    if (isRepositioning) {
+        // Retirer le joueur de la liste des placés
+        currentPlacedPlayers = currentPlacedPlayers.filter(id => id !== playerId);
+    }
+    // Vérifier qu'aucun autre joueur n'occupe déjà cette position
+    const existingPlayerAtPos = state.players.find(p => p.pos.x === pos.x && p.pos.y === pos.y && p.id !== playerId);
+    if (existingPlayerAtPos) {
+        return state; // Position déjà occupée
+    }
+    // Simuler la pose pour vérifier les contraintes
+    const simulatedPlayers = state.players.map(p => p.id === playerId ? { ...p, pos } : p);
+    const simulatedPlaced = [...currentPlacedPlayers, playerId];
+    // Contraintes Blood Bowl (setup)
+    const teamId = player.team;
+    // Largeurs BB 2020: 3 colonnes de chaque côté sur un terrain 15 colonnes (0..14)
+    const isLeftWideZone = (y) => y >= 0 && y <= 2;
+    const isRightWideZone = (y) => y >= 12 && y <= 14;
+    const isOnLos = (x) => (teamId === 'A' ? x === 12 : x === 13);
+    const teamPlayersOnPitch = simulatedPlayers.filter(p => p.team === teamId && p.pos.x >= 0);
+    if (teamPlayersOnPitch.length > 11) {
+        return state; // max 11 sur le terrain
+    }
+    const leftWzCount = teamPlayersOnPitch.filter(p => isLeftWideZone(p.pos.y)).length;
+    const rightWzCount = teamPlayersOnPitch.filter(p => isRightWideZone(p.pos.y)).length;
+    if (leftWzCount > 2 || rightWzCount > 2) {
+        return state; // max 2 par wide zone
+    }
+    // Vérifier à partir de l'avant-dernier joueur (quand il reste 2 joueurs à placer)
+    // Si on a placé 9 joueurs ou plus, vérifier qu'on peut encore respecter la contrainte LOS
+    if (simulatedPlaced.length >= 9) {
+        const losCount = teamPlayersOnPitch.filter(p => isOnLos(p.pos.x)).length;
+        const remainingPlayers = 11 - simulatedPlaced.length;
+        const minLosRequired = 3;
+        // Si on n'a pas assez de joueurs sur la LOS et qu'il ne reste pas assez de joueurs pour atteindre 3
+        if (losCount < minLosRequired && (losCount + remainingPlayers) < minLosRequired) {
+            return state; // Impossible d'atteindre 3 joueurs sur la LOS
+        }
+    }
+    const newPlayers = simulatedPlayers;
+    const newPlaced = simulatedPlaced;
     let newState = { ...state, players: newPlayers, preMatch: { ...state.preMatch, placedPlayers: newPlaced } };
     // Si 11 placés, switch to next coach or kickoff
     if (newPlaced.length === 11) {

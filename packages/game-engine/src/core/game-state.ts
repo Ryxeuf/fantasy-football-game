@@ -762,12 +762,8 @@ export function enterSetupPhase(state: ExtendedGameState, receivingTeam: TeamId)
   // On autorise: équipe A (haut) sur y=1..6, équipe B (bas) sur y=8..13. Toutes colonnes x=0..25.
   const buildHalf = (topHalf: boolean): Position[] => {
     const positions: Position[] = [];
-    // IMPORTANT: dans notre orientation UI, 'x' (dans Position) correspond à la coordonnée verticale (lignes)
-    // et 'y' correspond à l'horizontale (colonnes). Pour surligner la partie supérieure de l'écran,
-    // il faut donc faire varier 'x' (vertical) sur les lignes du haut.
-    // Étirer jusqu'à la LOS (ligne médiane). Le plateau a 26 rangées (x: 0..25), LOS à 13 (milieu).
-    // Équipe A (haut): 1..12 (au-dessus de la LOS incluse côté haut)
-    // Équipe B (bas): 13..24 (en dessous de la LOS incluse côté bas)
+    // Corriger la logique : équipe A (haut) sur x=1..12, équipe B (bas) sur x=13..24
+    // Toutes les colonnes y=0..14 sont autorisées
     const xStart = topHalf ? 1 : 13;   // exclure touchdown: 0 et 25
     const xEnd = topHalf ? 12 : 24;
     for (let x = xStart; x <= xEnd; x++) {
@@ -794,16 +790,31 @@ export function enterSetupPhase(state: ExtendedGameState, receivingTeam: TeamId)
 
 // Fonction pour placer un joueur en setup (appelée onCellClick si phase='setup')
 export function placePlayerInSetup(state: ExtendedGameState, playerId: string, pos: Position): ExtendedGameState {
-  if (state.preMatch.phase !== 'setup' || state.preMatch.currentCoach !== state.players.find(p => p.id === playerId)?.team || state.preMatch.placedPlayers.length >= 11 || !state.preMatch.legalSetupPositions.some(l => l.x === pos.x && l.y === pos.y)) {
+  if (state.preMatch.phase !== 'setup' || state.preMatch.currentCoach !== state.players.find(p => p.id === playerId)?.team || !state.preMatch.legalSetupPositions.some(l => l.x === pos.x && l.y === pos.y)) {
     return state; // Invalid move
   }
 
   const player = state.players.find(p => p.id === playerId);
-  if (!player || player.pos.x !== -1) return state; // Déjà placé
+  if (!player) return state;
+
+  // Permettre le repositionnement : si le joueur est déjà placé, on le retire d'abord
+  const isRepositioning = player.pos.x >= 0;
+  let currentPlacedPlayers = [...state.preMatch.placedPlayers];
+  
+  if (isRepositioning) {
+    // Retirer le joueur de la liste des placés
+    currentPlacedPlayers = currentPlacedPlayers.filter(id => id !== playerId);
+  }
+
+  // Vérifier qu'aucun autre joueur n'occupe déjà cette position
+  const existingPlayerAtPos = state.players.find(p => p.pos.x === pos.x && p.pos.y === pos.y && p.id !== playerId);
+  if (existingPlayerAtPos) {
+    return state; // Position déjà occupée
+  }
 
   // Simuler la pose pour vérifier les contraintes
   const simulatedPlayers = state.players.map(p => p.id === playerId ? { ...p, pos } : p);
-  const simulatedPlaced = [...state.preMatch.placedPlayers, playerId];
+  const simulatedPlaced = [...currentPlacedPlayers, playerId];
 
   // Contraintes Blood Bowl (setup)
   const teamId = player.team;
@@ -823,11 +834,16 @@ export function placePlayerInSetup(state: ExtendedGameState, playerId: string, p
     return state; // max 2 par wide zone
   }
 
-  // Vérifier en continu (ou a minima au 11e) au moins 3 sur la LOS pour l'équipe
-  if (simulatedPlaced.length >= 3) {
+  // Vérifier à partir de l'avant-dernier joueur (quand il reste 2 joueurs à placer)
+  // Si on a placé 9 joueurs ou plus, vérifier qu'on peut encore respecter la contrainte LOS
+  if (simulatedPlaced.length >= 9) {
     const losCount = teamPlayersOnPitch.filter(p => isOnLos(p.pos.x)).length;
-    if (simulatedPlaced.length === 11 && losCount < 3) {
-      return state; // à la fin du placement, contraindre 3 sur LOS
+    const remainingPlayers = 11 - simulatedPlaced.length;
+    const minLosRequired = 3;
+    
+    // Si on n'a pas assez de joueurs sur la LOS et qu'il ne reste pas assez de joueurs pour atteindre 3
+    if (losCount < minLosRequired && (losCount + remainingPlayers) < minLosRequired) {
+      return state; // Impossible d'atteindre 3 joueurs sur la LOS
     }
   }
 

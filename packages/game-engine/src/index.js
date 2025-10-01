@@ -24,27 +24,7 @@ export * from './core/boardgame-io';
 // Export des fonctions de blocage (sans conflit)
 export { canBlock, canBlitz, calculateOffensiveAssists, calculateDefensiveAssists, calculateBlockDiceCount, getBlockDiceChooser, getPushDirection, getPushDirections, handlePushWithChoice, resolveBlockResult, } from './mechanics/blocking';
 // Export des fonctions de gestion d'état (sans conflit)
-export {
-  setup,
-  setupPreMatch,
-  setupPreMatchWithTeams,
-  advanceHalfIfNeeded,
-  canPlayerAct,
-  canPlayerMove,
-  canPlayerContinueMoving,
-  getPlayerAction,
-  setPlayerAction,
-  clearPlayerActions,
-  getTeamBlitzCount,
-  canTeamBlitz,
-  incrementTeamBlitzCount,
-  clearTeamBlitzCounts,
-  shouldEndPlayerTurn,
-  endPlayerTurn,
-  checkPlayerTurnEnd,
-  shouldAutoEndTurn,
-  handlePlayerSwitch,
-} from './core/game-state';
+export { setup, setupPreMatch, setupPreMatchWithTeams, advanceHalfIfNeeded, canPlayerAct, canPlayerMove, canPlayerContinueMoving, getPlayerAction, setPlayerAction, clearPlayerActions, getTeamBlitzCount, canTeamBlitz, incrementTeamBlitzCount, clearTeamBlitzCounts, shouldEndPlayerTurn, endPlayerTurn, checkPlayerTurnEnd, shouldAutoEndTurn, handlePlayerSwitch, } from './core/game-state';
 // Export des fonctions de dugout
 export { movePlayerToDugoutZone, } from './mechanics/dugout';
 // Export des fonctions de blessure

@@ -1634,6 +1634,7 @@ describe('Gestion des actions par joueur', () => {
         selectedPlayerId: state.selectedPlayerId,
         lastDiceResult: state.lastDiceResult,
         isTurnover: state.isTurnover,
+        dugouts: state.dugouts,
         playerActions: state.playerActions,
         teamBlitzCount: state.teamBlitzCount,
         half: state.half,

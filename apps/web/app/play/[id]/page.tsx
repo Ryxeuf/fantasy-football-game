@@ -179,7 +179,16 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
     if (mySide && player.team !== mySide) return "Vous ne pouvez placer que vos joueurs";
     // Position légale
     const legal = ext.preMatch.legalSetupPositions.some(p => p.x === pos.x && p.y === pos.y);
-    if (!legal) return 'Position illégale: hors de votre moitié (jusqu’à la LOS)';
+    if (!legal) return 'Position illégale: hors de votre moitié (jusqu\'à la LOS)';
+    
+    // Vérifier qu'aucun autre joueur n'occupe déjà cette position
+    // Simuler la position du joueur pour vérifier les conflits
+    const simulatedPlayers = ext.players.map(p => p.id === playerId ? { ...p, pos } : p);
+    const existingPlayerAtPos = simulatedPlayers.find(p => p.pos.x === pos.x && p.pos.y === pos.y && p.id !== playerId);
+    if (existingPlayerAtPos) {
+      return 'Position déjà occupée par un autre joueur';
+    }
+    
     // Max 11
     const teamId = player.team;
     const onPitch = ext.players.filter(p => p.team === teamId && p.pos.x >= 0).length;
@@ -192,11 +201,17 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
     const rightCount = teamPlayersAfter.filter(p => isRightWZ(p.pos.y)).length;
     if (leftCount > 2) return 'Maximum 2 joueurs dans la large zone gauche';
     if (rightCount > 2) return 'Maximum 2 joueurs dans la large zone droite';
-    // LOS (au 11e)
-    if (teamPlayersAfter.length === 11) {
+    // LOS (vérifier à partir de l'avant-dernier joueur)
+    if (teamPlayersAfter.length >= 9) {
       const isOnLos = (x: number) => (teamId === 'A' ? x === 12 : x === 13);
       const losCount = teamPlayersAfter.filter(p => isOnLos(p.pos.x)).length;
-      if (losCount < 3) return 'Au moins 3 joueurs doivent être sur la LOS';
+      const remainingPlayers = 11 - teamPlayersAfter.length;
+      const minLosRequired = 3;
+      
+      // Si on n'a pas assez de joueurs sur la LOS et qu'il ne reste pas assez de joueurs pour atteindre 3
+      if (losCount < minLosRequired && (losCount + remainingPlayers) < minLosRequired) {
+        return 'Au moins 3 joueurs doivent être sur la LOS';
+      }
     }
     return null;
   }
@@ -369,6 +384,11 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
       return mySide === ext.preMatch.currentCoach && playerTeam === mySide;
     })();
     if (!isMyTeam) return;
+    
+    // Permettre de déplacer les joueurs déjà placés ou ceux en réserves
+    const player = ext.players.find(p => p.id === playerId);
+    if (!player) return;
+    
     e.dataTransfer.setData('text/plain', playerId);
     setDraggedPlayerId(playerId);
   };
@@ -457,7 +477,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
           if (!p || p.pm <= 0) s2.selectedPlayerId = null;
           if (s2.lastDiceResult) setShowDicePopup(true);
           setSelectedFromReserve(null);
-          return s2;
+          return s2 as ExtendedGameState;
         });
       }
     }
@@ -466,7 +486,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
   // Modifier onPlayerClick pour sélection en setup
   const handleEndTurn = useMemo(() => {
     if (!state || state.half <= 0) return undefined; // Changé <= 0 pour cacher en prematch
-    return () => setState((s) => s ? applyMove(s, { type: "END_TURN" }, createRNG()) : null);
+    return () => setState((s) => s ? applyMove(s, { type: "END_TURN" }, createRNG()) as ExtendedGameState : null);
   }, [state]);
 
   // Modifier handleStartSetup pour entrer en setup
@@ -501,10 +521,10 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
           setState((s) => {
             if (!s) return s;
             // Placeholder: passe à kickoff
-            const kickoffState = { ...s, preMatch: { ...s.preMatch, phase: 'kickoff' } };
+            const kickoffState = { ...s, preMatch: { ...s.preMatch, phase: 'kickoff' as const } };
             kickoffState.half = 1;
             kickoffState.turn = 1;
-            return kickoffState;
+            return kickoffState as ExtendedGameState;
           });
         }} 
         className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded"
@@ -585,10 +605,10 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
                     setState((s) => {
                       if (!s) return s;
                       // Placeholder: passe à kickoff
-                      const kickoffState = { ...s, preMatch: { ...s.preMatch, phase: 'kickoff' } };
+                      const kickoffState = { ...s, preMatch: { ...s.preMatch, phase: 'kickoff' as const } };
                       kickoffState.half = 1;
                       kickoffState.turn = 1;
-                      return kickoffState;
+                      return kickoffState as ExtendedGameState;
                     });
                   }} 
                   className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded"
@@ -614,10 +634,10 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
                   const extState = state as ExtendedGameState;
                   if (extState.preMatch?.phase === 'setup') {
                     const player = state.players.find((p) => p.id === playerId);
-                    if (player && player.team === extState.preMatch.currentCoach && player.pos.x < 0 && !extState.preMatch.placedPlayers.includes(playerId)) {
-                      // Au lieu de setSelectedFromReserve, simuler drag start si pas déjà dragging
+                    if (player && player.team === extState.preMatch.currentCoach) {
+                      // Permettre de sélectionner les joueurs déjà placés ou ceux en réserves
                       if (!draggedPlayerId) {
-                        // Pour compat click, setSelectedFromReserve(playerId); // Garder pour fallback non-drag
+                        setSelectedFromReserve(playerId);
                       }
                       return;
                     }
@@ -646,7 +666,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
         </div>
       </div>
       {showDicePopup && state.lastDiceResult && (
-        <DiceResultPopup result={state.lastDiceResult} onClose={() => { setShowDicePopup(false); setState((s) => s ? clearDiceResult(s) : null); }} />
+        <DiceResultPopup result={state.lastDiceResult} onClose={() => { setShowDicePopup(false); setState((s) => s ? clearDiceResult(s) as ExtendedGameState : null); }} />
       )}
       {state.selectedPlayerId && currentAction === null && !hasPlayerActed(state, state.selectedPlayerId) && (
         <ActionPickerPopup playerName={state.players.find(p => p.id === state.selectedPlayerId)?.name || 'Joueur'} available={["MOVE", "BLOCK", "BLITZ", "PASS", "HANDOFF", "FOUL"]} onPick={(a) => setCurrentAction(a)} onClose={() => setCurrentAction("MOVE")} />
