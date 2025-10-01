@@ -50,6 +50,12 @@ function normalizeState(state: any): ExtendedGameState {
     state.teamBlitzCount = new Map(Object.entries(state.teamBlitzCount || {}));
   }
 
+  // S'assurer que les dimensions du terrain sont définies
+  if (state && (typeof state.width !== "number" || typeof state.height !== "number")) {
+    state.width = 26;
+    state.height = 15;
+  }
+
   // S'assurer que selectedPlayerId est null en phase setup
   if (state && state.preMatch && state.preMatch.phase === "setup") {
     state.selectedPlayerId = null;
@@ -968,19 +974,135 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
     setDraggedPlayerId(null);
   };
 
+  // Fonction pour placer le ballon de kickoff
+  const handlePlaceKickoffBall = async (position: Position) => {
+    if (!state) return;
+
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        window.location.href = "/lobby";
+        return;
+      }
+
+      const response = await fetch(
+        `${API_BASE}/match/${matchId}/place-kickoff-ball`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ position }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Erreur lors du placement du ballon");
+      }
+
+      const responseData = await response.json();
+      const normalizedState = normalizeState(responseData.gameState);
+      setState(normalizedState);
+
+      console.log("Ballon placé:", responseData.message);
+    } catch (error) {
+      console.error("Erreur lors du placement du ballon:", error);
+    }
+  };
+
+  // Fonction pour calculer la déviation
+  const handleCalculateDeviation = async () => {
+    if (!state) return;
+
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        window.location.href = "/lobby";
+        return;
+      }
+
+      const response = await fetch(
+        `${API_BASE}/match/${matchId}/calculate-kick-deviation`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Erreur lors du calcul de déviation");
+      }
+
+      const responseData = await response.json();
+      const normalizedState = normalizeState(responseData.gameState);
+      setState(normalizedState);
+
+      console.log("Déviation calculée:", responseData.message);
+    } catch (error) {
+      console.error("Erreur lors du calcul de déviation:", error);
+    }
+  };
+
+  // Fonction pour résoudre l'événement de kickoff
+  const handleResolveKickoffEvent = async () => {
+    if (!state) return;
+
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        window.location.href = "/lobby";
+        return;
+      }
+
+      const response = await fetch(
+        `${API_BASE}/match/${matchId}/resolve-kickoff-event`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Erreur lors de la résolution de l'événement");
+      }
+
+      const responseData = await response.json();
+      const normalizedState = normalizeState(responseData.gameState);
+      setState(normalizedState);
+
+      console.log("Événement résolu:", responseData.message);
+    } catch (error) {
+      console.error("Erreur lors de la résolution de l'événement:", error);
+    }
+  };
+
   // Fonction pour valider le placement et sauvegarder en base
   const handleValidatePlacement = async () => {
     if (!state) return;
     const extState = state as ExtendedGameState;
 
     try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        window.location.href = "/lobby";
+        return;
+      }
+
       // Sauvegarder le placement en base de données
       const response = await fetch(
-        `${API_BASE}/matches/${matchId}/validate-setup`,
+        `${API_BASE}/match/${matchId}/validate-setup`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             placedPlayers: extState.preMatch.placedPlayers,
@@ -996,11 +1118,14 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
       }
 
       // Mettre à jour l'état local
-      const updatedState = await response.json();
-      setState(updatedState);
+      const responseData = await response.json();
+      const normalizedState = normalizeState(responseData.gameState);
+      setState(normalizedState);
 
-      // Optionnel : passer au coach suivant ou commencer le match
-      // Pour l'instant, on reste en phase setup
+      // Afficher un message de succès
+      if (responseData.message) {
+        console.log("Validation réussie:", responseData.message);
+      }
     } catch (error) {
       console.error("Erreur lors de la validation du placement:", error);
       showSetupError("Erreur lors de la sauvegarde du placement");
@@ -1129,18 +1254,25 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
       <div className="flex justify-center mt-2">
         <span className="text-sm text-gray-600">
           Joueurs placés:{" "}
-          {(state as ExtendedGameState).preMatch?.placedPlayers?.length || 0} /
-          11
+          {(() => {
+            const currentCoach = (state as ExtendedGameState).preMatch?.currentCoach;
+            return state.players?.filter(p => p.team === currentCoach && p.pos.x >= 0).length || 0;
+          })()} / 11
         </span>
       </div>
     );
   }
 
-  // Si setup fini, bouton passer
+  // Si setup fini, bouton passer (vérifier que les deux équipes ont placé leurs joueurs)
   {
     state &&
       (state as ExtendedGameState).preMatch?.phase === "setup" &&
-      (state as ExtendedGameState).preMatch?.placedPlayers?.length === 11 && (
+      (() => {
+        // Vérifier que les deux équipes ont placé leurs 11 joueurs
+        const teamAPlayersOnField = state.players.filter(p => p.team === 'A' && p.pos.x >= 0).length;
+        const teamBPlayersOnField = state.players.filter(p => p.team === 'B' && p.pos.x >= 0).length;
+        return teamAPlayersOnField === 11 && teamBPlayersOnField === 11;
+      })() && (
         <div className="flex justify-center mt-4">
           <button
             onClick={() => {
@@ -1184,8 +1316,8 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
     <div className="min-h-screen bg-gray-100">
       <GameScoreboard
         state={state}
-        leftTeamName={state.teamNames.teamA}
-        rightTeamName={state.teamNames.teamB}
+        leftTeamName={state.teamNames?.teamA}
+        rightTeamName={state.teamNames?.teamB}
         localSide={localSide}
         userName={userName}
         {...(state?.half > 0 ? { onEndTurn: handleEndTurn } : {})}
@@ -1201,35 +1333,66 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
             {/* Statut pré-match (si half=0) */}
             {state && state.half === 0 && stateSource === "server" && (
               <div className="text-center text-sm text-gray-600 bg-gray-100 p-2 rounded w-full max-w-md">
-                <div>Phase pré-match</div>
-                <div>
-                  Receveuse :{" "}
-                  {state.preMatch?.receivingTeam === "A"
-                    ? state.teamNames.teamA
-                    : state.teamNames.teamB}{" "}
-                  ({state.preMatch?.receivingTeam})
-                </div>
-                <div>
-                  Au tour de{" "}
-                  {state.preMatch?.currentCoach === "A"
-                    ? state.teamNames.teamA
-                    : state.teamNames.teamB}{" "}
-                  de placer ses joueurs
-                </div>
-                {setupError && (
-                  <div className="mt-2 px-3 py-2 bg-red-100 text-red-700 rounded border border-red-300">
-                    {setupError}
+                {state.preMatch?.phase === "kickoff" ? (
+                  <div>
+                    <div className="text-lg font-bold text-green-600 mb-2">🎉 Le match commence !</div>
+                    <div>Phase kickoff terminée</div>
+                    <div>
+                      Équipe qui frappe :{" "}
+                      {state.preMatch?.kickingTeam === "A"
+                        ? state.teamNames.teamA
+                        : state.teamNames.teamB}
+                    </div>
+                    <div>
+                      Équipe qui reçoit :{" "}
+                      {state.preMatch?.receivingTeam === "A"
+                        ? state.teamNames.teamA
+                        : state.teamNames.teamB}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-2">
+                      Le match va commencer automatiquement...
+                    </div>
                   </div>
-                )}
-                {/* Bouton de validation du placement */}
-                {state.preMatch?.placedPlayers.length === 11 && (
-                  <div className="mt-3">
-                    <button
-                      onClick={handleValidatePlacement}
-                      className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
-                    >
-                      Valider le placement
-                    </button>
+                ) : (
+                  <div>
+                    <div>Phase pré-match</div>
+                    <div>
+                      Receveuse :{" "}
+                      {state.preMatch?.receivingTeam === "A"
+                        ? state.teamNames.teamA
+                        : state.teamNames.teamB}{" "}
+                      ({state.preMatch?.receivingTeam})
+                    </div>
+                    <div>
+                      Au tour de{" "}
+                      {state.preMatch?.currentCoach === "A"
+                        ? state.teamNames.teamA
+                        : state.teamNames.teamB}{" "}
+                      de placer ses joueurs
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      Joueurs placés: {state.players?.filter(p => p.team === state.preMatch?.currentCoach && p.pos.x >= 0).length || 0}/11
+                    </div>
+                    {setupError && (
+                      <div className="mt-2 px-3 py-2 bg-red-100 text-red-700 rounded border border-red-300">
+                        {setupError}
+                      </div>
+                    )}
+                    {/* Bouton de validation du placement */}
+                    {(() => {
+                      const currentCoach = state.preMatch?.currentCoach;
+                      const playersOnField = state.players?.filter(p => p.team === currentCoach && p.pos.x >= 0).length || 0;
+                      return playersOnField === 11;
+                    })() && (
+                      <div className="mt-3">
+                        <button
+                          onClick={handleValidatePlacement}
+                          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                        >
+                          Valider le placement
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -1250,13 +1413,21 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
             {/* Compteur si setup */}
             {state && state.preMatch?.phase === "setup" && (
               <div className="text-sm text-gray-600">
-                Joueurs placés: {state.preMatch.placedPlayers.length} / 11
+                Joueurs placés: {(() => {
+                  const currentCoach = state.preMatch?.currentCoach;
+                  return state.players?.filter(p => p.team === currentCoach && p.pos.x >= 0).length || 0;
+                })()} / 11
               </div>
             )}
-            {/* Bouton kick-off si 11 placés */}
+            {/* Bouton kick-off si les deux équipes ont placé leurs 11 joueurs */}
             {state &&
               state.preMatch?.phase === "setup" &&
-              state.preMatch.placedPlayers.length === 11 && (
+              (() => {
+                // Vérifier que les deux équipes ont placé leurs 11 joueurs
+                const teamAPlayersOnField = state.players.filter(p => p.team === 'A' && p.pos.x >= 0).length;
+                const teamBPlayersOnField = state.players.filter(p => p.team === 'B' && p.pos.x >= 0).length;
+                return teamAPlayersOnField === 11 && teamBPlayersOnField === 11;
+              })() && (
                 <div className="flex justify-center">
                   <button
                     onClick={() => {

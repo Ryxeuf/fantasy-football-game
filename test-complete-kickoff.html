@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Séquence Kickoff Complète</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f0f0;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .simulation {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .step {
+            background-color: #e2e3e5;
+            color: #383d41;
+            border: 1px solid #d6d8db;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test de la Séquence Kickoff Complète</h1>
+    
+    <div class="test-container">
+        <h2>Simulation du Flux Complet</h2>
+        <div id="simulation-result" class="test-result simulation">En cours...</div>
+    </div>
+    
+    <div class="test-container">
+        <h2>Test 1: Placement des joueurs</h2>
+        <div id="test1-result" class="test-result info">En cours...</div>
+    </div>
+    
+    <div class="test-container">
+        <h2>Test 2: Début de séquence kickoff</h2>
+        <div id="test2-result" class="test-result info">En cours...</div>
+    </div>
+    
+    <div class="test-container">
+        <h2>Test 3: Placement du ballon</h2>
+        <div id="test3-result" class="test-result step">En cours...</div>
+    </div>
+    
+    <div class="test-container">
+        <h2>Test 4: Calcul de déviation</h2>
+        <div id="test4-result" class="test-result step">En cours...</div>
+    </div>
+    
+    <div class="test-container">
+        <h2>Test 5: Événement de kickoff</h2>
+        <div id="test5-result" class="test-result step">En cours...</div>
+    </div>
+    
+    <div class="test-container">
+        <h2>Test 6: Début du match</h2>
+        <div id="test6-result" class="test-result info">En cours...</div>
+    </div>
+
+    <script>
+        // Simulation des fonctions du game-engine
+        function createLogEntry(type, message, playerId, teamId) {
+            return {
+                type,
+                message,
+                playerId,
+                teamId,
+                timestamp: new Date().toISOString()
+            };
+        }
+
+        function startKickoffSequence(state) {
+            if (state.half !== 0 || state.preMatch.phase !== 'kickoff') return state;
+
+            const kickoffLog = createLogEntry(
+                'info',
+                `Kickoff - ${state.teamNames.teamA} vs ${state.teamNames.teamB} - Début de la séquence de kickoff`
+            );
+
+            return {
+                ...state,
+                preMatch: {
+                    ...state.preMatch,
+                    phase: 'kickoff-sequence',
+                    kickoffStep: 'place-ball',
+                    ballPosition: null,
+                    kickDeviation: null,
+                    kickoffEvent: null,
+                },
+                gameLog: [...state.gameLog, kickoffLog],
+            };
+        }
+
+        function placeKickoffBall(state, position) {
+            if (state.preMatch.phase !== 'kickoff-sequence' || state.preMatch.kickoffStep !== 'place-ball') {
+                return state;
+            }
+
+            const receivingTeam = state.preMatch.receivingTeam;
+            const isValidPosition = receivingTeam === 'A' ? 
+                position.x >= 1 && position.x <= 12 :
+                position.x >= 13 && position.x <= 24;
+
+            if (!isValidPosition) {
+                return state;
+            }
+
+            const logEntry = createLogEntry(
+                'action',
+                `Ballon placé en position (${position.x}, ${position.y}) pour le kickoff`,
+                undefined,
+                state.preMatch.kickingTeam
+            );
+
+            return {
+                ...state,
+                preMatch: {
+                    ...state.preMatch,
+                    kickoffStep: 'kick-deviation',
+                    ballPosition: position,
+                },
+                gameLog: [...state.gameLog, logEntry],
+            };
+        }
+
+        function calculateKickDeviation(state, rng) {
+            if (state.preMatch.phase !== 'kickoff-sequence' || state.preMatch.kickoffStep !== 'kick-deviation') {
+                return state;
+            }
+
+            const d8 = Math.floor(rng() * 8) + 1;
+            const d6 = Math.floor(rng() * 6) + 1;
+            
+            const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+            const direction = directions[d8 - 1];
+
+            const originalPos = state.preMatch.ballPosition;
+            let newX = originalPos.x;
+            let newY = originalPos.y;
+
+            switch (direction) {
+                case 'N': newY -= d6; break;
+                case 'NE': newX += d6; newY -= d6; break;
+                case 'E': newX += d6; break;
+                case 'SE': newX += d6; newY += d6; break;
+                case 'S': newY += d6; break;
+                case 'SW': newX -= d6; newY += d6; break;
+                case 'W': newX -= d6; break;
+                case 'NW': newX -= d6; newY -= d6; break;
+            }
+
+            newX = Math.max(0, Math.min(25, newX));
+            newY = Math.max(0, Math.min(14, newY));
+
+            const finalPosition = { x: newX, y: newY };
+
+            const logEntry = createLogEntry(
+                'action',
+                `Déviation du kickoff: D8=${d8} (${direction}), D6=${d6} → Ballon en (${finalPosition.x}, ${finalPosition.y})`,
+                undefined,
+                state.preMatch.kickingTeam
+            );
+
+            return {
+                ...state,
+                preMatch: {
+                    ...state.preMatch,
+                    kickoffStep: 'kickoff-event',
+                    kickDeviation: { d8, d6, direction },
+                    finalBallPosition: finalPosition,
+                },
+                gameLog: [...state.gameLog, logEntry],
+            };
+        }
+
+        function resolveKickoffEvent(state, rng) {
+            if (state.preMatch.phase !== 'kickoff-sequence' || state.preMatch.kickoffStep !== 'kickoff-event') {
+                return state;
+            }
+
+            const dice1 = Math.floor(rng() * 6) + 1;
+            const dice2 = Math.floor(rng() * 6) + 1;
+            const total = dice1 + dice2;
+
+            const events = {
+                2: { event: 'Get the Ref', description: 'Chaque équipe gagne un Bribe gratuit' },
+                3: { event: 'Riot', description: 'Les fans envahissent le terrain' },
+                4: { event: 'Perfect Defense', description: 'L\'équipe qui frappe peut repositionner D3 joueurs' },
+                5: { event: 'High Kick', description: 'Le ballon est lancé haut - +1 pour attraper' },
+                6: { event: 'Cheering Fans', description: 'Les fans encouragent' },
+                7: { event: 'Changing Weather', description: 'Le temps change' },
+                8: { event: 'Brilliant Coaching', description: 'L\'équipe qui frappe peut utiliser une reroll gratuite' },
+                9: { event: 'Quick Snap', description: 'L\'équipe qui reçoit peut activer un joueur supplémentaire' },
+                10: { event: 'Blitz', description: 'L\'équipe qui frappe peut activer D3+3 joueurs' },
+                11: { event: 'Officious Ref', description: 'L\'arbitre est strict' },
+                12: { event: 'Pitch Invasion', description: 'Invasion du terrain' },
+            };
+
+            const eventData = events[total] || { event: 'Normal', description: 'Kickoff normal' };
+
+            const logEntry = createLogEntry(
+                'action',
+                `Événement de kickoff: ${dice1}+${dice2}=${total} - ${eventData.event}: ${eventData.description}`,
+                undefined,
+                state.preMatch.kickingTeam
+            );
+
+            return {
+                ...state,
+                preMatch: {
+                    ...state.preMatch,
+                    kickoffEvent: { dice: total, event: eventData.event, description: eventData.description },
+                },
+                gameLog: [...state.gameLog, logEntry],
+            };
+        }
+
+        function startMatchFromKickoff(state) {
+            if (state.half !== 0 || state.preMatch.phase !== 'kickoff-sequence') return state;
+
+            const matchStartLog = createLogEntry(
+                'info',
+                `Match commencé - ${state.teamNames.teamA} vs ${state.teamNames.teamB} - Le jeu commence !`
+            );
+
+            const { preMatch, ...matchState } = state;
+
+            return {
+                ...matchState,
+                half: 1,
+                turn: 1,
+                currentPlayer: state.preMatch.receivingTeam,
+                ball: state.preMatch.finalBallPosition || { x: 13, y: 7 },
+                selectedPlayerId: null,
+                isTurnover: false,
+                playerActions: new Map(),
+                teamBlitzCount: new Map(),
+                lastDiceResult: undefined,
+                gameLog: [...state.gameLog, matchStartLog],
+            };
+        }
+
+        // Créer un état de test
+        function createTestGameState() {
+            return {
+                width: 26,
+                height: 15,
+                half: 0,
+                players: [
+                    { id: 'A1', team: 'A', pos: { x: 5, y: 7 }, name: 'Joueur A1' },
+                    { id: 'A2', team: 'A', pos: { x: 6, y: 7 }, name: 'Joueur A2' },
+                    { id: 'B1', team: 'B', pos: { x: 15, y: 7 }, name: 'Joueur B1' },
+                    { id: 'B2', team: 'B', pos: { x: 16, y: 7 }, name: 'Joueur B2' },
+                ],
+                teamNames: {
+                    teamA: 'Équipe A',
+                    teamB: 'Équipe B'
+                },
+                gameLog: [],
+                preMatch: {
+                    phase: 'kickoff',
+                    currentCoach: 'A',
+                    receivingTeam: 'A',
+                    kickingTeam: 'B',
+                    legalSetupPositions: [],
+                    placedPlayers: []
+                }
+            };
+        }
+
+        // Test complet
+        function runCompleteFlow() {
+            let gameState = createTestGameState();
+
+            const simulationDiv = document.getElementById('simulation-result');
+            simulationDiv.innerHTML = `
+                <strong>État initial:</strong><br>
+                Phase: ${gameState.preMatch.phase}<br>
+                Équipe receveuse: ${gameState.preMatch.receivingTeam}<br>
+                Équipe frappeuse: ${gameState.preMatch.kickingTeam}<br>
+                Joueurs: ${gameState.players.length}
+            `;
+
+            // Test 1: Placement des joueurs (simulé)
+            test1(gameState);
+            
+            // Test 2: Début de séquence kickoff
+            test2(gameState);
+            
+            // Test 3: Placement du ballon
+            test3(gameState);
+            
+            // Test 4: Calcul de déviation
+            test4(gameState);
+            
+            // Test 5: Événement de kickoff
+            test5(gameState);
+            
+            // Test 6: Début du match
+            test6(gameState);
+        }
+
+        function test1(initialState) {
+            const testDiv = document.getElementById('test1-result');
+            testDiv.className = 'test-result success';
+            testDiv.innerHTML = `✅ SUCCÈS: Placement des joueurs simulé<br>
+                Joueurs équipe A: ${initialState.players.filter(p => p.team === 'A').length}<br>
+                Joueurs équipe B: ${initialState.players.filter(p => p.team === 'B').length}<br>
+                Phase: ${initialState.preMatch.phase}`;
+        }
+
+        function test2(initialState) {
+            const newState = startKickoffSequence(initialState);
+            
+            const testDiv = document.getElementById('test2-result');
+            if (newState.preMatch.phase === 'kickoff-sequence' && newState.preMatch.kickoffStep === 'place-ball') {
+                testDiv.className = 'test-result success';
+                testDiv.innerHTML = `✅ SUCCÈS: Séquence kickoff démarrée<br>
+                    Phase: ${newState.preMatch.phase}<br>
+                    Étape: ${newState.preMatch.kickoffStep}<br>
+                    Logs: ${newState.gameLog.length}`;
+            } else {
+                testDiv.className = 'test-result error';
+                testDiv.innerHTML = `❌ ÉCHEC: Séquence kickoff non démarrée<br>
+                    Phase: ${newState.preMatch.phase}<br>
+                    Étape: ${newState.preMatch.kickoffStep}`;
+            }
+        }
+
+        function test3(initialState) {
+            let gameState = startKickoffSequence(initialState);
+            const ballPosition = { x: 8, y: 7 }; // Position valide pour équipe A
+            gameState = placeKickoffBall(gameState, ballPosition);
+            
+            const testDiv = document.getElementById('test3-result');
+            if (gameState.preMatch.kickoffStep === 'kick-deviation' && gameState.preMatch.ballPosition) {
+                testDiv.className = 'test-result success';
+                testDiv.innerHTML = `✅ SUCCÈS: Ballon placé<br>
+                    Position: (${gameState.preMatch.ballPosition.x}, ${gameState.preMatch.ballPosition.y})<br>
+                    Étape suivante: ${gameState.preMatch.kickoffStep}`;
+            } else {
+                testDiv.className = 'test-result error';
+                testDiv.innerHTML = `❌ ÉCHEC: Ballon non placé<br>
+                    Étape: ${gameState.preMatch.kickoffStep}<br>
+                    Position: ${gameState.preMatch.ballPosition ? 'définie' : 'non définie'}`;
+            }
+        }
+
+        function test4(initialState) {
+            let gameState = startKickoffSequence(initialState);
+            gameState = placeKickoffBall(gameState, { x: 8, y: 7 });
+            gameState = calculateKickDeviation(gameState, () => Math.random());
+            
+            const testDiv = document.getElementById('test4-result');
+            if (gameState.preMatch.kickoffStep === 'kickoff-event' && gameState.preMatch.kickDeviation) {
+                testDiv.className = 'test-result success';
+                testDiv.innerHTML = `✅ SUCCÈS: Déviation calculée<br>
+                    D8: ${gameState.preMatch.kickDeviation.d8}, D6: ${gameState.preMatch.kickDeviation.d6}<br>
+                    Direction: ${gameState.preMatch.kickDeviation.direction}<br>
+                    Position finale: (${gameState.preMatch.finalBallPosition.x}, ${gameState.preMatch.finalBallPosition.y})<br>
+                    Étape suivante: ${gameState.preMatch.kickoffStep}`;
+            } else {
+                testDiv.className = 'test-result error';
+                testDiv.innerHTML = `❌ ÉCHEC: Déviation non calculée<br>
+                    Étape: ${gameState.preMatch.kickoffStep}<br>
+                    Déviation: ${gameState.preMatch.kickDeviation ? 'calculée' : 'non calculée'}`;
+            }
+        }
+
+        function test5(initialState) {
+            let gameState = startKickoffSequence(initialState);
+            gameState = placeKickoffBall(gameState, { x: 8, y: 7 });
+            gameState = calculateKickDeviation(gameState, () => Math.random());
+            gameState = resolveKickoffEvent(gameState, () => Math.random());
+            
+            const testDiv = document.getElementById('test5-result');
+            if (gameState.preMatch.kickoffEvent) {
+                testDiv.className = 'test-result success';
+                testDiv.innerHTML = `✅ SUCCÈS: Événement résolu<br>
+                    Dés: ${gameState.preMatch.kickoffEvent.dice}<br>
+                    Événement: ${gameState.preMatch.kickoffEvent.event}<br>
+                    Description: ${gameState.preMatch.kickoffEvent.description}`;
+            } else {
+                testDiv.className = 'test-result error';
+                testDiv.innerHTML = `❌ ÉCHEC: Événement non résolu<br>
+                    Événement: ${gameState.preMatch.kickoffEvent ? 'résolu' : 'non résolu'}`;
+            }
+        }
+
+        function test6(initialState) {
+            let gameState = startKickoffSequence(initialState);
+            gameState = placeKickoffBall(gameState, { x: 8, y: 7 });
+            gameState = calculateKickDeviation(gameState, () => Math.random());
+            gameState = resolveKickoffEvent(gameState, () => Math.random());
+            gameState = startMatchFromKickoff(gameState);
+            
+            const testDiv = document.getElementById('test6-result');
+            if (gameState.half === 1 && gameState.turn === 1 && !gameState.preMatch) {
+                testDiv.className = 'test-result success';
+                testDiv.innerHTML = `✅ SUCCÈS: Match démarré<br>
+                    Mi-temps: ${gameState.half}<br>
+                    Tour: ${gameState.turn}<br>
+                    Joueur actuel: ${gameState.currentPlayer}<br>
+                    Ballon: (${gameState.ball.x}, ${gameState.ball.y})<br>
+                    PreMatch supprimé: ${!gameState.preMatch}`;
+            } else {
+                testDiv.className = 'test-result error';
+                testDiv.innerHTML = `❌ ÉCHEC: Match non démarré<br>
+                    Mi-temps: ${gameState.half}<br>
+                    Tour: ${gameState.turn}<br>
+                    PreMatch: ${gameState.preMatch ? 'présent' : 'absent'}`;
+            }
+        }
+
+        // Exécuter les tests
+        runCompleteFlow();
+    </script>
+</body>
+</html>

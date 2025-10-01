@@ -28,12 +28,17 @@ export default function PixiBoard({
   ref, // Ajout ref
 }: Props) {
   // Orientation verticale : largeur devient hauteur et vice versa
-  const width = state.height * cellSize; // 15 * cellSize = 420
-  const height = state.width * cellSize; // 26 * cellSize = 728
+  // Protection contre les dimensions NaN ou undefined
+  const safeWidth = typeof state.width === "number" && !isNaN(state.width) ? state.width : 26;
+  const safeHeight = typeof state.height === "number" && !isNaN(state.height) ? state.height : 15;
+  const width = safeHeight * cellSize; // 15 * cellSize = 420
+  const height = safeWidth * cellSize; // 26 * cellSize = 728
 
   console.log("Terrain dimensions:", {
     stateWidth: state.width,
     stateHeight: state.height,
+    safeWidth,
+    safeHeight,
     cellSize,
     width,
     height,
@@ -58,9 +63,9 @@ export default function PixiBoard({
     // Vérifier que la position est dans les limites du terrain
     if (
       gridX >= 0 &&
-      gridX < state.height &&
+      gridX < safeHeight &&
       gridY >= 0 &&
-      gridY < state.width
+      gridY < safeWidth
     ) {
       // Créer la position (orientation verticale : inverser x et y)
       const position: Position = {
@@ -69,7 +74,7 @@ export default function PixiBoard({
       };
 
       // Vérifier s'il y a un joueur à cette position
-      const playerAtPosition = state.players.find(
+      const playerAtPosition = state.players?.find(
         (p) => p.pos.x === position.x && p.pos.y === position.y,
       );
 
@@ -260,7 +265,7 @@ export default function PixiBoard({
           />
 
           {/* Joueurs */}
-          {state.players.map((player) => {
+          {state.players?.map((player) => {
             const isSelected = player.id === selectedPlayerId;
             const isSelectedForRepositioning =
               player.id === selectedForRepositioning;
@@ -454,13 +459,13 @@ export default function PixiBoard({
           <strong>Dimensions:</strong> {width} x {height} pixels
         </p>
         <p>
-          <strong>Grille:</strong> {state.width} x {state.height} cases
+          <strong>Grille:</strong> {safeWidth} x {safeHeight} cases
         </p>
         <p>
           <strong>Taille case:</strong> {cellSize} pixels
         </p>
         <p>
-          <strong>Joueurs:</strong> {state.players.length}
+          <strong>Joueurs:</strong> {state.players?.length || 0}
         </p>
         <p>
           <strong>Balle:</strong> ({state.ball?.x}, {state.ball?.y})

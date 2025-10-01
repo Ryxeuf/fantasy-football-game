@@ -556,6 +556,30 @@ router.post(
         });
       }
 
+      // Vérifier si le coach actuel a placé tous ses joueurs (11)
+      const currentCoach = gameState.preMatch?.currentCoach;
+      const playersOnField = gameState.players?.filter(
+        (p: any) => p.team === currentCoach && p.pos.x >= 0
+      ).length || 0;
+
+      // Si 11 joueurs sont placés, passer au coach suivant ou à la phase kickoff
+      if (playersOnField === 11) {
+        const { enterSetupPhase } = await import("@bb/game-engine");
+        
+        if (gameState.preMatch.currentCoach === gameState.preMatch.receivingTeam) {
+          // L'équipe receveuse a terminé, passer à l'équipe frappeuse
+          const nextCoach = gameState.preMatch.currentCoach === 'A' ? 'B' : 'A';
+          gameState = enterSetupPhase(gameState, nextCoach);
+        } else {
+          // L'équipe frappeuse a terminé, les deux équipes ont placé leurs joueurs
+          gameState.preMatch.phase = 'kickoff';
+          
+          // Commencer la séquence de kickoff
+          const { startKickoffSequence } = await import("@bb/game-engine");
+          gameState = startKickoffSequence(gameState);
+        }
+      }
+
       // Sauvegarder l'état mis à jour dans le nouveau turn
       await prisma.turn.update({
         where: { id: newTurn.id },
@@ -567,16 +591,218 @@ router.post(
         },
       });
 
-      // Optionnel : passer au coach suivant ou marquer comme terminé
-      // Pour l'instant, on retourne l'état mis à jour
+      // Déterminer le message approprié
+      let message = "Placement validé et sauvegardé";
+      if (playersOnField === 11) {
+        if (gameState.preMatch?.phase === 'kickoff') {
+          message = "Placement validé - Le match commence !";
+        } else {
+          message = "Placement validé - Passage au coach suivant";
+        }
+      }
+
       return res.json({
         success: true,
         gameState,
-        message: "Placement validé et sauvegardé",
+        message,
       });
     } catch (e: any) {
       console.error("Erreur lors de la validation du setup:", e);
       return res.status(500).json({ error: "Erreur serveur" });
     }
   },
+);
+
+// Placer le ballon pour le kickoff
+router.post(
+  "/:id/place-kickoff-ball",
+  authUser,
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      const matchId = req.params.id;
+      const { position } = req.body;
+
+      if (!position || typeof position.x !== "number" || typeof position.y !== "number") {
+        return res.status(400).json({ error: "Position requise" });
+      }
+
+      // Vérifier que le match existe et est en phase kickoff-sequence
+      const match = await prisma.match.findUnique({
+        where: { id: matchId },
+        include: { turns: { orderBy: { number: "asc" } } },
+      });
+
+      if (!match) {
+        return res.status(404).json({ error: "Partie introuvable" });
+      }
+
+      if (match.status !== "prematch-setup") {
+        return res.status(400).json({ error: "La partie n'est pas en phase de kickoff" });
+      }
+
+      // Récupérer l'état du jeu
+      const lastTurn = match.turns[match.turns.length - 1];
+      let gameState = lastTurn?.payload?.gameState;
+      if (typeof gameState === "string") {
+        gameState = JSON.parse(gameState);
+      }
+
+      if (gameState.preMatch?.phase !== "kickoff-sequence") {
+        return res.status(400).json({ error: "Pas en phase de séquence de kickoff" });
+      }
+
+      // Placer le ballon
+      const { placeKickoffBall } = await import("@bb/game-engine");
+      const newState = placeKickoffBall(gameState, position);
+
+      // Sauvegarder le nouvel état
+      const newTurn = await prisma.turn.create({
+        data: {
+          matchId,
+          number: match.turns.length + 1,
+          payload: {
+            type: "place-kickoff-ball",
+            userId: req.user!.id,
+            position,
+            gameState: newState,
+            timestamp: new Date().toISOString(),
+          },
+        },
+      });
+
+      return res.json({
+        success: true,
+        gameState: newState,
+        message: "Ballon placé pour le kickoff",
+      });
+    } catch (e: any) {
+      console.error("Erreur lors du placement du ballon:", e);
+      return res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+);
+
+// Calculer la déviation du kickoff
+router.post(
+  "/:id/calculate-kick-deviation",
+  authUser,
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      const matchId = req.params.id;
+
+      // Vérifier que le match existe
+      const match = await prisma.match.findUnique({
+        where: { id: matchId },
+        include: { turns: { orderBy: { number: "asc" } } },
+      });
+
+      if (!match) {
+        return res.status(404).json({ error: "Partie introuvable" });
+      }
+
+      // Récupérer l'état du jeu
+      const lastTurn = match.turns[match.turns.length - 1];
+      let gameState = lastTurn?.payload?.gameState;
+      if (typeof gameState === "string") {
+        gameState = JSON.parse(gameState);
+      }
+
+      if (gameState.preMatch?.phase !== "kickoff-sequence" || gameState.preMatch?.kickoffStep !== "kick-deviation") {
+        return res.status(400).json({ error: "Pas en phase de calcul de déviation" });
+      }
+
+      // Calculer la déviation
+      const { calculateKickDeviation } = await import("@bb/game-engine");
+      const rng = () => Math.random();
+      const newState = calculateKickDeviation(gameState, rng);
+
+      // Sauvegarder le nouvel état
+      const newTurn = await prisma.turn.create({
+        data: {
+          matchId,
+          number: match.turns.length + 1,
+          payload: {
+            type: "calculate-kick-deviation",
+            userId: req.user!.id,
+            deviation: newState.preMatch.kickDeviation,
+            gameState: newState,
+            timestamp: new Date().toISOString(),
+          },
+        },
+      });
+
+      return res.json({
+        success: true,
+        gameState: newState,
+        message: "Déviation du kickoff calculée",
+      });
+    } catch (e: any) {
+      console.error("Erreur lors du calcul de déviation:", e);
+      return res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+);
+
+// Résoudre l'événement de kickoff
+router.post(
+  "/:id/resolve-kickoff-event",
+  authUser,
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      const matchId = req.params.id;
+
+      // Vérifier que le match existe
+      const match = await prisma.match.findUnique({
+        where: { id: matchId },
+        include: { turns: { orderBy: { number: "asc" } } },
+      });
+
+      if (!match) {
+        return res.status(404).json({ error: "Partie introuvable" });
+      }
+
+      // Récupérer l'état du jeu
+      const lastTurn = match.turns[match.turns.length - 1];
+      let gameState = lastTurn?.payload?.gameState;
+      if (typeof gameState === "string") {
+        gameState = JSON.parse(gameState);
+      }
+
+      if (gameState.preMatch?.phase !== "kickoff-sequence" || gameState.preMatch?.kickoffStep !== "kickoff-event") {
+        return res.status(400).json({ error: "Pas en phase d'événement de kickoff" });
+      }
+
+      // Résoudre l'événement
+      const { resolveKickoffEvent, startMatchFromKickoff } = await import("@bb/game-engine");
+      const rng = () => Math.random();
+      let newState = resolveKickoffEvent(gameState, rng);
+
+      // Démarrer le match après résolution de l'événement
+      const matchState = startMatchFromKickoff(newState);
+
+      // Sauvegarder le nouvel état
+      const newTurn = await prisma.turn.create({
+        data: {
+          matchId,
+          number: match.turns.length + 1,
+          payload: {
+            type: "resolve-kickoff-event",
+            userId: req.user!.id,
+            kickoffEvent: gameState.preMatch.kickoffEvent,
+            gameState: matchState,
+            timestamp: new Date().toISOString(),
+          },
+        },
+      });
+
+      return res.json({
+        success: true,
+        gameState: matchState,
+        message: "Événement de kickoff résolu - Le match commence !",
+      });
+    } catch (e: any) {
+      console.error("Erreur lors de la résolution de l'événement:", e);
+      return res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
 );

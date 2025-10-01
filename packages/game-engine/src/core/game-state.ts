@@ -10,12 +10,18 @@ import { initializeDugouts } from '../mechanics/dugout';
 
 // Étendre GameState pour pré-match
 export interface PreMatchState {
-  phase: 'idle' | 'setup' | 'kickoff';
+  phase: 'idle' | 'setup' | 'kickoff' | 'kickoff-sequence';
   currentCoach: TeamId;
   legalSetupPositions: Position[];
   placedPlayers: string[]; // IDs des joueurs placés
   kickingTeam: TeamId;
   receivingTeam: TeamId;
+  // Nouvelles propriétés pour la séquence de kickoff
+  kickoffStep?: 'place-ball' | 'kick-deviation' | 'kickoff-event';
+  ballPosition?: Position | null; // Position initiale du ballon
+  kickDeviation?: { d8: number; d6: number; direction: string } | null;
+  kickoffEvent?: { dice: number; event: string; description: string } | null;
+  finalBallPosition?: Position; // Position finale du ballon après déviation
 }
 
 export interface ExtendedGameState extends GameState {
@@ -734,6 +740,12 @@ export function checkPlayerTurnEnd(state: GameState, playerId: string): GameStat
  */
 export function shouldAutoEndTurn(state: GameState): boolean {
   const team = state.currentPlayer;
+  
+  // Vérifier que state.players existe
+  if (!state.players || !Array.isArray(state.players)) {
+    return false;
+  }
+  
   const teamPlayers = state.players.filter(p => p.team === team);
 
   // Vérifier si tous les joueurs de l'équipe ont agi ou ne peuvent plus agir
@@ -784,7 +796,7 @@ export function enterSetupPhase(
   state: ExtendedGameState,
   receivingTeam: TeamId
 ): ExtendedGameState {
-  if (state.half !== 0 || state.preMatch.phase !== 'idle') return state;
+  if (state.half !== 0 || (state.preMatch.phase !== 'idle' && state.preMatch.phase !== 'setup')) return state;
 
   // Positions légales de setup pour toute la moitié de terrain de l'équipe
   // Repère: board 26x15 (x: 0..25, y: 0..14). Bande touchdown sur y=0 (haut) et y=14 (bas).
@@ -812,7 +824,7 @@ export function enterSetupPhase(
       phase: 'setup',
       currentCoach: receivingTeam,
       legalSetupPositions: setupPositions,
-      placedPlayers: [],
+      placedPlayers: state.preMatch.phase === 'idle' ? [] : state.preMatch.placedPlayers, // Ne pas réinitialiser si on passe d'une équipe à l'autre
     },
   };
 }
@@ -898,14 +910,224 @@ export function placePlayerInSetup(
   // Si 11 placés, switch to next coach or kickoff
   if (newPlaced.length === 11) {
     const nextCoach = state.preMatch.currentCoach === 'A' ? 'B' : 'A';
-    if (nextCoach === state.preMatch.kickingTeam) {
-      // Both placed, go to kickoff
-      newState.preMatch.phase = 'kickoff';
-    } else {
-      // Switch coach, reset legal positions for next
+    // Toujours passer à l'autre équipe, puis vérifier si les deux ont terminé
+    if (state.preMatch.currentCoach === state.preMatch.receivingTeam) {
+      // L'équipe receveuse a terminé, passer à l'équipe frappeuse
       newState = enterSetupPhase(newState, nextCoach);
+    } else {
+      // L'équipe frappeuse a terminé, les deux équipes ont placé leurs joueurs
+      newState.preMatch.phase = 'kickoff';
     }
   }
 
   return newState;
+}
+
+/**
+ * Transforme l'état pré-match en état de kickoff avec les étapes manquantes
+ * Tous les joueurs sont déjà placés sur le terrain
+ * @param state - État pré-match en phase kickoff
+ * @returns État de kickoff avec les étapes à suivre
+ */
+export function startKickoffSequence(state: ExtendedGameState): ExtendedGameState {
+  if (state.half !== 0 || state.preMatch.phase !== 'kickoff') return state;
+
+  // Créer un log de début de kickoff
+  const kickoffLog = createLogEntry(
+    'info',
+    `Kickoff - ${state.teamNames.teamA} vs ${state.teamNames.teamB} - Début de la séquence de kickoff`
+  );
+
+  return {
+    ...state,
+    preMatch: {
+      ...state.preMatch,
+      phase: 'kickoff-sequence',
+      kickoffStep: 'place-ball', // Étapes: place-ball, kick-deviation, kickoff-event
+      ballPosition: null, // Position initiale du ballon (à définir par le coach)
+      kickDeviation: null, // Déviation du kick (D8 + D6)
+      kickoffEvent: null, // Événement de kickoff (2D6)
+    },
+    gameLog: [...state.gameLog, kickoffLog],
+  };
+}
+
+/**
+ * Transforme l'état de kickoff en état de match démarré après résolution complète
+ * @param state - État de kickoff avec toutes les étapes résolues
+ * @returns État de match démarré
+ */
+export function startMatchFromKickoff(state: ExtendedGameState): GameState {
+  if (state.half !== 0 || state.preMatch.phase !== 'kickoff-sequence') return state;
+
+  // Créer un log de début de match
+  const matchStartLog = createLogEntry(
+    'info',
+    `Match commencé - ${state.teamNames.teamA} vs ${state.teamNames.teamB} - Le jeu commence !`
+  );
+
+  // Retirer la propriété preMatch pour passer en mode match normal
+  const { preMatch, ...matchState } = state;
+
+  return {
+    ...matchState,
+    half: 1,
+    turn: 1,
+    currentPlayer: state.preMatch.receivingTeam, // L'équipe qui reçoit commence
+    ball: state.preMatch.finalBallPosition || { x: 13, y: 7 }, // Position finale du ballon
+    selectedPlayerId: null,
+    isTurnover: false,
+    playerActions: new Map<string, ActionType>(),
+    teamBlitzCount: new Map<TeamId, number>(),
+    lastDiceResult: undefined,
+    gameLog: [...state.gameLog, matchStartLog],
+  };
+}
+
+/**
+ * Place le ballon pour le kickoff
+ * @param state - État de kickoff
+ * @param position - Position où placer le ballon
+ * @returns Nouvel état avec ballon placé
+ */
+export function placeKickoffBall(state: ExtendedGameState, position: Position): ExtendedGameState {
+  if (state.preMatch.phase !== 'kickoff-sequence' || state.preMatch.kickoffStep !== 'place-ball') {
+    return state;
+  }
+
+  // Vérifier que la position est dans la moitié de l'équipe receveuse
+  const receivingTeam = state.preMatch.receivingTeam;
+  const isValidPosition = receivingTeam === 'A' ? 
+    position.x >= 1 && position.x <= 12 : // Équipe A (haut)
+    position.x >= 13 && position.x <= 24; // Équipe B (bas)
+
+  if (!isValidPosition) {
+    return state; // Position invalide
+  }
+
+  const logEntry = createLogEntry(
+    'action',
+    `Ballon placé en position (${position.x}, ${position.y}) pour le kickoff`,
+    undefined,
+    state.preMatch.kickingTeam
+  );
+
+  return {
+    ...state,
+    preMatch: {
+      ...state.preMatch,
+      kickoffStep: 'kick-deviation',
+      ballPosition: position,
+    },
+    gameLog: [...state.gameLog, logEntry],
+  };
+}
+
+/**
+ * Calcule la déviation du kickoff
+ * @param state - État de kickoff avec ballon placé
+ * @param rng - Générateur de nombres aléatoires
+ * @returns Nouvel état avec déviation calculée
+ */
+export function calculateKickDeviation(state: ExtendedGameState, rng: () => number): ExtendedGameState {
+  if (state.preMatch.phase !== 'kickoff-sequence' || state.preMatch.kickoffStep !== 'kick-deviation') {
+    return state;
+  }
+
+  const d8 = Math.floor(rng() * 8) + 1;
+  const d6 = Math.floor(rng() * 6) + 1;
+  
+  // Déterminer la direction basée sur le D8
+  const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+  const direction = directions[d8 - 1];
+
+  // Calculer la nouvelle position du ballon
+  const originalPos = state.preMatch.ballPosition!;
+  let newX = originalPos.x;
+  let newY = originalPos.y;
+
+  // Appliquer la déviation selon la direction
+  switch (direction) {
+    case 'N': newY -= d6; break;
+    case 'NE': newX += d6; newY -= d6; break;
+    case 'E': newX += d6; break;
+    case 'SE': newX += d6; newY += d6; break;
+    case 'S': newY += d6; break;
+    case 'SW': newX -= d6; newY += d6; break;
+    case 'W': newX -= d6; break;
+    case 'NW': newX -= d6; newY -= d6; break;
+  }
+
+  // Vérifier les limites du terrain
+  newX = Math.max(0, Math.min(25, newX));
+  newY = Math.max(0, Math.min(14, newY));
+
+  const finalPosition = { x: newX, y: newY };
+
+  const logEntry = createLogEntry(
+    'action',
+    `Déviation du kickoff: D8=${d8} (${direction}), D6=${d6} → Ballon en (${finalPosition.x}, ${finalPosition.y})`,
+    undefined,
+    state.preMatch.kickingTeam
+  );
+
+  return {
+    ...state,
+    preMatch: {
+      ...state.preMatch,
+      kickoffStep: 'kickoff-event',
+      kickDeviation: { d8, d6, direction },
+      finalBallPosition: finalPosition,
+    },
+    gameLog: [...state.gameLog, logEntry],
+  };
+}
+
+/**
+ * Résout l'événement de kickoff
+ * @param state - État de kickoff avec déviation calculée
+ * @param rng - Générateur de nombres aléatoires
+ * @returns Nouvel état avec événement résolu
+ */
+export function resolveKickoffEvent(state: ExtendedGameState, rng: () => number): ExtendedGameState {
+  if (state.preMatch.phase !== 'kickoff-sequence' || state.preMatch.kickoffStep !== 'kickoff-event') {
+    return state;
+  }
+
+  const dice1 = Math.floor(rng() * 6) + 1;
+  const dice2 = Math.floor(rng() * 6) + 1;
+  const total = dice1 + dice2;
+
+  // Table des événements de kickoff (simplifiée)
+  const events: { [key: number]: { event: string; description: string } } = {
+    2: { event: 'Get the Ref', description: 'Chaque équipe gagne un Bribe gratuit' },
+    3: { event: 'Riot', description: 'Les fans envahissent le terrain - tous les joueurs sont repoussés' },
+    4: { event: 'Perfect Defense', description: 'L\'équipe qui frappe peut repositionner D3 joueurs' },
+    5: { event: 'High Kick', description: 'Le ballon est lancé haut - +1 pour attraper' },
+    6: { event: 'Cheering Fans', description: 'Les fans encouragent - +1 Fan Factor pour cette mi-temps' },
+    7: { event: 'Changing Weather', description: 'Le temps change - relancer la météo' },
+    8: { event: 'Brilliant Coaching', description: 'L\'équipe qui frappe peut utiliser une reroll gratuite' },
+    9: { event: 'Quick Snap', description: 'L\'équipe qui reçoit peut activer un joueur supplémentaire' },
+    10: { event: 'Blitz', description: 'L\'équipe qui frappe peut activer D3+3 joueurs immédiatement' },
+    11: { event: 'Officious Ref', description: 'L\'arbitre est strict - risque d\'exclusion' },
+    12: { event: 'Pitch Invasion', description: 'Invasion du terrain - D3 joueurs de chaque équipe sont sonnés' },
+  };
+
+  const eventData = events[total] || { event: 'Normal', description: 'Kickoff normal' };
+
+  const logEntry = createLogEntry(
+    'action',
+    `Événement de kickoff: ${dice1}+${dice2}=${total} - ${eventData.event}: ${eventData.description}`,
+    undefined,
+    state.preMatch.kickingTeam
+  );
+
+  return {
+    ...state,
+    preMatch: {
+      ...state.preMatch,
+      kickoffEvent: { dice: total, event: eventData.event, description: eventData.description },
+    },
+    gameLog: [...state.gameLog, logEntry],
+  };
 }

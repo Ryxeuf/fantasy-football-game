@@ -37,6 +37,9 @@ export default function GameScoreboard({
   };
 
   const getCurrentTeamName = () => {
+    if (!state.teamNames) {
+      return "Équipe";
+    }
     const teamAName = state.teamNames.teamA;
     const teamBName = state.teamNames.teamB;
     return state.currentPlayer === "A" ? teamAName : teamBName;
@@ -48,6 +51,9 @@ export default function GameScoreboard({
 
   // Déterminer la dernière entrée de score
   const lastScore = useMemo(() => {
+    if (!state.gameLog || !Array.isArray(state.gameLog)) {
+      return undefined;
+    }
     const entries = [...state.gameLog].reverse();
     return entries.find((e) => e.type === "score");
   }, [state.gameLog]);
@@ -113,13 +119,13 @@ export default function GameScoreboard({
                   className="w-2 h-2 rounded-full"
                   style={{ backgroundColor: "#dc2626" }}
                 ></span>
-                {leftTeamName || state.teamNames.teamA}
+                {leftTeamName || state.teamNames?.teamA || "Équipe A"}
               </span>
             </div>
             <div
               className={`text-4xl font-black ${getTeamTextColor("A")} ${showScoreAnim ? "animate-ping" : ""}`}
             >
-              {state.score.teamA}
+              {state.score?.teamA || 0}
             </div>
           </div>
 
@@ -134,13 +140,13 @@ export default function GameScoreboard({
                   className="w-2 h-2 rounded-full"
                   style={{ backgroundColor: "#2563eb" }}
                 ></span>
-                {rightTeamName || state.teamNames.teamB}
+                {rightTeamName || state.teamNames?.teamB || "Équipe B"}
               </span>
             </div>
             <div
               className={`text-4xl font-black ${getTeamTextColor("B")} ${showScoreAnim ? "animate-ping" : ""}`}
             >
-              {state.score.teamB}
+              {state.score?.teamB || 0}
             </div>
           </div>
         </div>
@@ -195,7 +201,16 @@ export default function GameScoreboard({
 
           {/* Informations de jeu */}
           <div className="text-gray-400">
-            {userName || "Blood Bowl Fantasy Football"}
+            {userName ? (
+              <a 
+                href="/me" 
+                className="text-gray-400 hover:text-white underline transition-colors"
+              >
+                {userName}
+              </a>
+            ) : (
+              "Blood Bowl Fantasy Football"
+            )}
           </div>
         </div>
 

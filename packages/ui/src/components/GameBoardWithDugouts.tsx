@@ -43,12 +43,12 @@ export default function GameBoardWithDugouts({
       {/* Dugout équipe A */}
       <div className="flex-shrink-0">
         <TeamDugoutComponent
-          dugout={state.dugouts.teamA}
+          dugout={state.dugouts?.teamA}
           allPlayers={state.players}
           placedPlayers={placedPlayers}
           onPlayerClick={onPlayerClick}
           onDragStart={onDragStart}
-          teamName={state.teamNames.teamA}
+          teamName={state.teamNames?.teamA}
           isSetupPhase={isSetupPhase}
         />
       </div>
@@ -74,12 +74,12 @@ export default function GameBoardWithDugouts({
       {/* Dugout équipe B */}
       <div className="flex-shrink-0">
         <TeamDugoutComponent
-          dugout={state.dugouts.teamB}
+          dugout={state.dugouts?.teamB}
           allPlayers={state.players}
           placedPlayers={placedPlayers}
           onPlayerClick={onPlayerClick}
           onDragStart={onDragStart}
-          teamName={state.teamNames.teamB}
+          teamName={state.teamNames?.teamB}
           isSetupPhase={isSetupPhase}
         />
       </div>

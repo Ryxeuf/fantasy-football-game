@@ -64,6 +64,11 @@ export function getLegalMoves(state: GameState): Move[] {
   const moves: Move[] = [{ type: 'END_TURN' }];
   const team = state.currentPlayer;
 
+  // Vérifier que state.players existe
+  if (!state.players || !Array.isArray(state.players)) {
+    return moves;
+  }
+
   // Si c'est un turnover, seul END_TURN est possible
   if (state.isTurnover) {
     return moves;
