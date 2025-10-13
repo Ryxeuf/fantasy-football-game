@@ -289,6 +289,11 @@ export const SKILLS_DESCRIPTIONS: Record<string, SkillDescription> = {
     description: "When an opposition player is Knocked Down as the result of a Block action performed by this player, you may apply a +1 modifier to either the Armour roll or Injury roll made against them.",
     category: "Strength"
   },
+  "Mighty Blow (+1)": {
+    name: "Mighty Blow (+1)",
+    description: "When an opponent is Knocked Down as the result of a Block action performed by this player, the Injury roll made against them may be modified by +1. This modifier may be applied after the roll has been made.",
+    category: "Strength"
+  },
   "Multiple Block": {
     name: "Multiple Block",
     description: "When this player performs a Block action, they may target two adjacent opposition players instead of one. Both targets must be adjacent to this player and to each other.",
@@ -359,6 +364,16 @@ export const SKILLS_DESCRIPTIONS: Record<string, SkillDescription> = {
   "Titchy": {
     name: "Titchy",
     description: "This player may Dodge on a roll of 2+ instead of 3+. However, this player may not use the Dodge skill.",
+    category: "Trait"
+  },
+  "Loner (4+)": {
+    name: "Loner (4+)",
+    description: "This player may only use team re-rolls if they roll a 4+ on a D6. If they fail this roll, they cannot use the team re-roll and the original result stands.",
+    category: "Trait"
+  },
+  "Throw Team-mate": {
+    name: "Throw Team-mate",
+    description: "This player may perform a Throw Team-mate action. This is a Pass action that may be performed against an adjacent team-mate with the Right Stuff trait.",
     category: "Trait"
   }
 };

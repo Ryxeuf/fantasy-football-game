@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { getSkillDescription, parseSkills, type SkillDescription } from "../skills-data";
-import { separateSkills } from "../base-skills-data";
+import { separateSkills, getBaseSkills } from "../base-skills-data";
 
 interface SkillTooltipProps {
   skillsString: string;
@@ -14,14 +14,25 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
   const [hoveredSkill, setHoveredSkill] = useState<string | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
-  const skills = parseSkills(skillsString);
+  // Utiliser les compétences de base comme source de vérité si disponibles
+  const baseSkillsFromData = teamName && position ? getBaseSkills(teamName, position) : [];
+  const skillsFromDB = parseSkills(skillsString);
   
-  // Séparer les compétences de base et acquises si on a les infos d'équipe et position
-  const { baseSkills, acquiredSkills } = teamName && position 
-    ? separateSkills(teamName, position, skills)
-    : { baseSkills: [], acquiredSkills: skills };
+  // Si on a des compétences de base définies, les utiliser comme compétences de base
+  // Sinon, utiliser la logique de séparation existante
+  const { baseSkills, acquiredSkills } = baseSkillsFromData.length > 0
+    ? { 
+        baseSkills: baseSkillsFromData, 
+        acquiredSkills: skillsFromDB.filter(skill => !baseSkillsFromData.includes(skill))
+      }
+    : teamName && position 
+      ? separateSkills(teamName, position, skillsFromDB)
+      : { baseSkills: [], acquiredSkills: skillsFromDB };
 
-  if (skills.length === 0) {
+  // Afficher au moins les compétences de base même si la DB est vide
+  const allSkills = [...baseSkills, ...acquiredSkills];
+  
+  if (allSkills.length === 0) {
     return <span className="text-gray-400 text-sm">Aucune</span>;
   }
 
