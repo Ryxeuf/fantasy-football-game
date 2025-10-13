@@ -32,8 +32,8 @@ if (process.env.TEST_SQLITE === "1") {
   }
 }
 
-const BGIO_PORT = parseInt(process.env.BGIO_PORT || "8000", 10);
-const API_PORT = parseInt(process.env.API_PORT || "8001", 10);
+const BGIO_PORT = parseInt(process.env.BGIO_PORT || "8200", 10);
+const API_PORT = parseInt(process.env.API_PORT || "8201", 10);
 const MATCH_SECRET = process.env.MATCH_SECRET || "dev-match-secret";
 
 // Serveur boardgame.io

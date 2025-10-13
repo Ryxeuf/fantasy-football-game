@@ -19,6 +19,7 @@ export default function MyTeamsPage() {
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [roster, setRoster] = useState("skaven");
+  const [teamValue, setTeamValue] = useState(1000);
 
   useEffect(() => {
     (async () => {
@@ -43,27 +44,52 @@ export default function MyTeamsPage() {
       {error && <p className="text-red-600 text-sm">{error}</p>}
       <div className="rounded border p-4 bg-white">
         <h2 className="font-semibold mb-2">Créer une équipe</h2>
-        <div className="flex flex-col md:flex-row gap-2">
-          <input
-            className="border p-2 flex-1"
-            placeholder="Nom de l'équipe"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <select
-            className="border p-2"
-            value={roster}
-            onChange={(e) => setRoster(e.target.value)}
-          >
-            <option value="skaven">Skavens</option>
-            <option value="lizardmen">Hommes-Lézards</option>
-          </select>
-          <a
-            className="px-4 py-2 bg-emerald-600 text-white rounded text-center"
-            href={`/me/teams/new?name=${encodeURIComponent(name)}&roster=${roster}`}
-          >
-            Ouvrir le builder
-          </a>
+        <div className="space-y-3">
+          <div className="flex flex-col md:flex-row gap-2">
+            <input
+              className="border p-2 flex-1"
+              placeholder="Nom de l'équipe"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+            <select
+              className="border p-2"
+              value={roster}
+              onChange={(e) => setRoster(e.target.value)}
+            >
+              <option value="skaven">Skavens</option>
+              <option value="lizardmen">Hommes-Lézards</option>
+            </select>
+          </div>
+          
+          <div className="flex flex-col md:flex-row gap-2">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Valeur d'équipe (kpo)
+              </label>
+              <input
+                type="number"
+                min="100"
+                max="2000"
+                step="50"
+                className="border p-2 w-full"
+                placeholder="1000"
+                value={teamValue}
+                onChange={(e) => setTeamValue(parseInt(e.target.value) || 1000)}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Budget disponible pour acheter joueurs et équipement (100-2000k po)
+              </p>
+            </div>
+            <div className="flex items-end">
+              <a
+                className="px-4 py-2 bg-emerald-600 text-white rounded text-center hover:bg-emerald-700 transition-colors"
+                href={`/me/teams/new?name=${encodeURIComponent(name)}&roster=${roster}&teamValue=${teamValue}`}
+              >
+                Ouvrir le builder
+              </a>
+            </div>
+          </div>
         </div>
       </div>
       <div className="grid gap-3">

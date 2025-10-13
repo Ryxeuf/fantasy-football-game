@@ -67,6 +67,18 @@ model Team {
   createdAt  DateTime        @default(now())
   players    TeamPlayer[]
   selections TeamSelection[]
+
+  // Informations d'équipe Blood Bowl
+  treasury      Int     @default(0) // Trésorerie en pièces d'or
+  rerolls       Int     @default(0) // Nombre de relances (0-8)
+  cheerleaders  Int     @default(0) // Nombre de cheerleaders (0-12)
+  assistants    Int     @default(0) // Nombre d'assistants (0-6)
+  apothecary    Boolean @default(false) // Présence d'un apothicaire
+  dedicatedFans Int     @default(1) // Nombre de fans dévoués (1-6)
+
+  // Valeurs calculées (pour affichage)
+  teamValue    Int @default(0) // Valeur d'équipe (VE)
+  currentValue Int @default(0) // Valeur d'équipe actuelle (VEA)
 }
 
 model TeamPlayer {

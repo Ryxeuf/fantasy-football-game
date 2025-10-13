@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { API_BASE } from "../../../auth-client";
 import SkillTooltip from "../components/SkillTooltip";
+import TeamInfoDisplay from "../components/TeamInfoDisplay";
 
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");
@@ -191,6 +192,19 @@ export default function TeamDetailPage() {
               </div>
             </div>
           )}
+
+          {/* Informations d'équipe */}
+        <TeamInfoDisplay
+          info={{
+            treasury: team.treasury || 0,
+            rerolls: team.rerolls || 0,
+            cheerleaders: team.cheerleaders || 0,
+            assistants: team.assistants || 0,
+            apothecary: team.apothecary || false,
+            dedicatedFans: team.dedicatedFans || 1,
+            teamValue: team.teamValue || 0,
+          }}
+        />
         </>
       )}
     </div>

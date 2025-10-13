@@ -329,15 +329,31 @@ router.post(
   "/create-from-roster",
   authUser,
   async (req: AuthenticatedRequest, res) => {
-    const { name, roster } =
-      req.body ?? ({} as { name?: string; roster?: AllowedRoster });
+    const { name, roster, teamValue } =
+      req.body ?? ({} as { name?: string; roster?: AllowedRoster; teamValue?: number });
     if (!name || !roster)
       return res.status(400).json({ error: "name et roster requis" });
     if (!ALLOWED_TEAMS.includes(roster))
       return res.status(400).json({ error: "Roster non autorisé" });
+    
+    const finalTeamValue = teamValue || 1000;
+    if (finalTeamValue < 100 || finalTeamValue > 2000)
+      return res.status(400).json({ error: "La valeur d'équipe doit être entre 100 et 2000k po" });
 
     const team = await prisma.team.create({
-      data: { ownerId: req.user!.id, name, roster },
+      data: { 
+        ownerId: req.user!.id, 
+        name, 
+        roster,
+        teamValue: finalTeamValue,
+        // Initialiser les informations d'équipe par défaut
+        treasury: 0,
+        rerolls: 0,
+        cheerleaders: 0,
+        assistants: 0,
+        apothecary: false,
+        dedicatedFans: 1,
+      },
     });
     const templates = rosterTemplates(roster);
     const players: any[] = [];
@@ -385,17 +401,23 @@ router.post(
 );
 
 router.post("/build", authUser, async (req: AuthenticatedRequest, res) => {
-  const { name, roster, choices } =
+  const { name, roster, teamValue, choices } =
     req.body ??
     ({} as {
       name?: string;
       roster?: AllowedRoster;
+      teamValue?: number;
       choices?: Array<{ key: string; count: number }>;
     });
   if (!name || !roster || !Array.isArray(choices))
     return res.status(400).json({ error: "name, roster, choices requis" });
   if (!ALLOWED_TEAMS.includes(roster))
     return res.status(400).json({ error: "Roster non autorisé" });
+  
+  const finalTeamValue = teamValue || 1000;
+  if (finalTeamValue < 100 || finalTeamValue > 2000)
+    return res.status(400).json({ error: "La valeur d'équipe doit être entre 100 et 2000k po" });
+    
   const def = ROSTERS[roster as AllowedRoster];
   // Validation min/max et budget
   let totalPlayers = 0;
@@ -411,13 +433,25 @@ router.post("/build", authUser, async (req: AuthenticatedRequest, res) => {
   }
   if (totalPlayers < 11 || totalPlayers > 16)
     return res.status(400).json({ error: "Il faut entre 11 et 16 joueurs" });
-  if (totalCost > def.budget)
+  if (totalCost > finalTeamValue)
     return res
       .status(400)
-      .json({ error: `Budget dépassé: ${totalCost}k / ${def.budget}k` });
+      .json({ error: `Budget dépassé: ${totalCost}k / ${finalTeamValue}k` });
 
   const team = await prisma.team.create({
-    data: { ownerId: req.user!.id, name, roster },
+    data: { 
+      ownerId: req.user!.id, 
+      name, 
+      roster,
+      teamValue: finalTeamValue,
+      // Initialiser les informations d'équipe par défaut
+      treasury: 0,
+      rerolls: 0,
+      cheerleaders: 0,
+      assistants: 0,
+      apothecary: false,
+      dedicatedFans: 1,
+    },
   });
   let number = 1;
   const players: any[] = [];
@@ -445,7 +479,92 @@ router.post("/build", authUser, async (req: AuthenticatedRequest, res) => {
   });
   res
     .status(201)
-    .json({ team: withPlayers, cost: totalCost, budget: def.budget });
+    .json({ team: withPlayers, cost: totalCost, budget: finalTeamValue });
+});
+
+// Endpoint pour mettre à jour les informations d'équipe (fans, coachs, relances, etc.)
+router.put("/:id/info", authUser, async (req: AuthenticatedRequest, res) => {
+  const teamId = req.params.id;
+  const { 
+    treasury, 
+    rerolls, 
+    cheerleaders, 
+    assistants, 
+    apothecary, 
+    dedicatedFans 
+  } = req.body ?? ({} as {
+    treasury?: number;
+    rerolls?: number;
+    cheerleaders?: number;
+    assistants?: number;
+    apothecary?: boolean;
+    dedicatedFans?: number;
+  });
+
+  try {
+    // Vérifier que l'équipe appartient à l'utilisateur
+    const team = await prisma.team.findFirst({
+      where: { id: teamId, ownerId: req.user!.id }
+    });
+
+    if (!team) {
+      return res.status(404).json({ error: "Équipe introuvable" });
+    }
+
+    // Vérifier que l'équipe n'est pas engagée dans un match actif
+    const activeSelection = await prisma.teamSelection.findFirst({
+      where: { 
+        teamId: teamId,
+        match: { status: { in: ["pending", "active"] } }
+      }
+    });
+
+    if (activeSelection) {
+      return res.status(400).json({ 
+        error: "Impossible de modifier cette équipe car elle est engagée dans un match en cours" 
+      });
+    }
+
+    // Validation des données selon les règles Blood Bowl
+    if (treasury !== undefined && (treasury < 0 || !Number.isInteger(treasury))) {
+      return res.status(400).json({ error: "La trésorerie doit être un entier positif" });
+    }
+
+    if (rerolls !== undefined && (rerolls < 0 || rerolls > 8 || !Number.isInteger(rerolls))) {
+      return res.status(400).json({ error: "Le nombre de relances doit être entre 0 et 8" });
+    }
+
+    if (cheerleaders !== undefined && (cheerleaders < 0 || cheerleaders > 12 || !Number.isInteger(cheerleaders))) {
+      return res.status(400).json({ error: "Le nombre de cheerleaders doit être entre 0 et 12" });
+    }
+
+    if (assistants !== undefined && (assistants < 0 || assistants > 6 || !Number.isInteger(assistants))) {
+      return res.status(400).json({ error: "Le nombre d'assistants doit être entre 0 et 6" });
+    }
+
+    if (dedicatedFans !== undefined && (dedicatedFans < 1 || dedicatedFans > 6 || !Number.isInteger(dedicatedFans))) {
+      return res.status(400).json({ error: "Le nombre de fans dévoués doit être entre 1 et 6" });
+    }
+
+    // Mise à jour de l'équipe
+    const updatedTeam = await prisma.team.update({
+      where: { id: teamId },
+      data: {
+        ...(treasury !== undefined && { treasury }),
+        ...(rerolls !== undefined && { rerolls }),
+        ...(cheerleaders !== undefined && { cheerleaders }),
+        ...(assistants !== undefined && { assistants }),
+        ...(apothecary !== undefined && { apothecary }),
+        ...(dedicatedFans !== undefined && { dedicatedFans }),
+      },
+      include: { players: true }
+    });
+
+    res.json({ team: updatedTeam });
+  } catch (e: any) {
+    console.error("Erreur lors de la modification des informations d'équipe:", e);
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
 });
 
 router.put("/:id", authUser, async (req: AuthenticatedRequest, res) => {

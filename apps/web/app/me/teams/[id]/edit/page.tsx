@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { API_BASE } from "../../../../auth-client";
 import SkillTooltip from "../../components/SkillTooltip";
+import TeamInfoEditor from "../../components/TeamInfoEditor";
 
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");
@@ -299,6 +300,28 @@ export default function TeamEditPage() {
           </table>
         </div>
       </div>
+
+      {/* Informations d'équipe */}
+      {team && (
+        <TeamInfoEditor
+          teamId={team.id}
+          initialInfo={{
+            treasury: team.treasury || 0,
+            rerolls: team.rerolls || 0,
+            cheerleaders: team.cheerleaders || 0,
+            assistants: team.assistants || 0,
+            apothecary: team.apothecary || false,
+            dedicatedFans: team.dedicatedFans || 1,
+          }}
+          onUpdate={(info) => {
+            setData((prev: any) => ({
+              ...prev,
+              team: { ...prev.team, ...info }
+            }));
+          }}
+          disabled={!canEdit}
+        />
+      )}
 
       <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded">
         <div className="font-semibold">ℹ️ Informations</div>

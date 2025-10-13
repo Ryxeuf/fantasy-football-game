@@ -20,8 +20,21 @@ export default function NewTeamBuilder() {
   const [rosterId, setRosterId] = useState("skaven");
   const [positions, setPositions] = useState<Position[]>([]);
   const [name, setName] = useState("");
+  const [teamValue, setTeamValue] = useState(1000);
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Récupérer les paramètres de l'URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlName = urlParams.get('name');
+    const urlRoster = urlParams.get('roster');
+    const urlTeamValue = urlParams.get('teamValue');
+    
+    if (urlName) setName(urlName);
+    if (urlRoster) setRosterId(urlRoster);
+    if (urlTeamValue) setTeamValue(parseInt(urlTeamValue) || 1000);
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem("auth_token");
@@ -78,6 +91,7 @@ export default function NewTeamBuilder() {
         body: JSON.stringify({
           name,
           roster: rosterId,
+          teamValue,
           choices: Object.entries(counts).map(([key, count]) => ({
             key,
             count,
@@ -103,14 +117,30 @@ export default function NewTeamBuilder() {
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
-        <select
-          className="border p-2 w-48"
-          value={rosterId}
-          onChange={(e) => setRosterId(e.target.value)}
-        >
-          <option value="skaven">Skavens</option>
-          <option value="lizardmen">Hommes-Lézards</option>
-        </select>
+        <div className="flex gap-3">
+          <select
+            className="border p-2 w-48"
+            value={rosterId}
+            onChange={(e) => setRosterId(e.target.value)}
+          >
+            <option value="skaven">Skavens</option>
+            <option value="lizardmen">Hommes-Lézards</option>
+          </select>
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Valeur d'équipe (kpo)
+            </label>
+            <input
+              type="number"
+              min="100"
+              max="2000"
+              step="50"
+              className="border p-2 w-full"
+              value={teamValue}
+              onChange={(e) => setTeamValue(parseInt(e.target.value) || 1000)}
+            />
+          </div>
+        </div>
       </div>
       <div className="rounded border bg-white">
         <table className="min-w-full text-sm">
@@ -153,14 +183,27 @@ export default function NewTeamBuilder() {
       </div>
       <div className="flex items-center gap-4">
         <div className="text-lg">
-          Total: <span className="font-semibold">{total}k</span> • Joueurs:{" "}
+          Total: <span className="font-semibold">{total}k</span> • Budget: <span className="font-semibold">{teamValue}k</span> • Joueurs:{" "}
           {totalPlayers}
         </div>
+        <div className="flex-1">
+          {total > teamValue && (
+            <div className="text-red-600 text-sm">
+              ⚠️ Budget dépassé de {total - teamValue}k po
+            </div>
+          )}
+          {total <= teamValue && (
+            <div className="text-green-600 text-sm">
+              ✅ {teamValue - total}k po restants
+            </div>
+          )}
+        </div>
         <button
-          className="px-4 py-2 bg-emerald-600 text-white rounded"
+          className="px-4 py-2 bg-emerald-600 text-white rounded disabled:bg-gray-400 disabled:cursor-not-allowed"
           onClick={submit}
+          disabled={total > teamValue || totalPlayers < 11}
         >
-          Créer l’équipe
+          Créer l'équipe
         </button>
       </div>
     </div>
