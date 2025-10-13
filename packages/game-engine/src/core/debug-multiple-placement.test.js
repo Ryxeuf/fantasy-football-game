@@ -34,13 +34,13 @@ describe('Debug placement multiple', () => {
       const playerId = `A${i + 1}`;
       const pos = legalPositions[i * 15]; // Positions espacées
       console.log(`Placement ${playerId} sur:`, pos);
-      const newState = placePlayerInSetup(currentState, playerId, pos);
+      const result = placePlayerInSetup(currentState, playerId, pos);
       console.log('Résultat:', {
-        success: newState !== currentState,
-        placedPlayers: newState.preMatch.placedPlayers.length,
+        success: result.success,
+        placedPlayers: result.state.preMatch.placedPlayers.length,
       });
-      expect(newState).not.toBe(currentState);
-      currentState = newState;
+      expect(result.success).toBe(true);
+      currentState = result.state;
     }
     expect(currentState.preMatch.placedPlayers.length).toBe(4);
   });

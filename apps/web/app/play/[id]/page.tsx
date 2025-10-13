@@ -787,6 +787,33 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
     })();
   }, [matchId, teamNameA, teamNameB]); // Dépend des teamNames pour utiliser les bons noms dans fallback
 
+  // Rafraîchir l'état du jeu périodiquement pour synchroniser les joueurs
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const token = localStorage.getItem("auth_token");
+        if (!token) return;
+        
+        const res = await fetch(`${API_BASE}/match/${matchId}/state`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.gameState) {
+            const normalized = normalizeState(data.gameState);
+            setState(normalized);
+            setStateSource("server");
+          }
+        }
+      } catch (e) {
+        console.error("Failed to refresh game state:", e);
+      }
+    }, 2000); // Rafraîchir toutes les 2 secondes
+
+    return () => clearInterval(interval);
+  }, [matchId]);
+
   // Charger le résumé (tour/mi-temps/score) depuis l'API pour refléter l'état en base
   useEffect(() => {
     (async () => {
@@ -960,14 +987,16 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
         return;
       }
 
-      const newState = placePlayerInSetup(extState, draggedPlayerId, pos);
-      if (newState === extState) {
+      const result = placePlayerInSetup(extState, draggedPlayerId, pos);
+      if (!result.success) {
         showSetupError("Placement refusé");
+        setDraggedPlayerId(null);
+        return;
       }
+      
+      const newState = result.state;
       setState(newState);
-      if (
-        (newState as ExtendedGameState).preMatch.placedPlayers.length === 11
-      ) {
+      if (newState.preMatch.placedPlayers.length === 11) {
         setDraggedPlayerId(null);
       }
     }
@@ -1125,6 +1154,8 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
       // Afficher un message de succès
       if (responseData.message) {
         console.log("Validation réussie:", responseData.message);
+        console.log("Nouvelle phase:", normalizedState.preMatch?.phase);
+        console.log("Coach actuel:", normalizedState.preMatch?.currentCoach);
       }
     } catch (error) {
       console.error("Erreur lors de la validation du placement:", error);
@@ -1146,7 +1177,14 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
           setSelectedFromReserve(null);
           return;
         }
-        const newState = placePlayerInSetup(extState, selectedFromReserve, pos);
+        const result = placePlayerInSetup(extState, selectedFromReserve, pos);
+        if (!result.success) {
+          showSetupError("Placement refusé");
+          setSelectedFromReserve(null);
+          return;
+        }
+        
+        const newState = result.state;
         setState(newState);
         if (newState.preMatch.placedPlayers.length === 11) {
           // TODO: Switch coach ou kickoff
@@ -1363,11 +1401,15 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
                         : state.teamNames.teamB}{" "}
                       ({state.preMatch?.receivingTeam})
                     </div>
-                    <div>
+                    <div className="font-semibold">
                       Au tour de{" "}
-                      {state.preMatch?.currentCoach === "A"
-                        ? state.teamNames.teamA
-                        : state.teamNames.teamB}{" "}
+                      <span className={`px-2 py-1 rounded text-white ${
+                        state.preMatch?.currentCoach === "A" ? "bg-gray-600" : "bg-gray-700"
+                      }`}>
+                        {state.preMatch?.currentCoach === "A"
+                          ? state.teamNames.teamA
+                          : state.teamNames.teamB}
+                      </span>{" "}
                       de placer ses joueurs
                     </div>
                     <div className="text-xs text-gray-500 mt-1">
@@ -1382,7 +1424,12 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
                     {(() => {
                       const currentCoach = state.preMatch?.currentCoach;
                       const playersOnField = state.players?.filter(p => p.team === currentCoach && p.pos.x >= 0).length || 0;
-                      return playersOnField === 11;
+                      const mySide = getMySide(state as ExtendedGameState);
+                      
+                      // Le bouton n'apparaît que si :
+                      // 1. Il y a 11 joueurs placés pour l'équipe courante
+                      // 2. C'est le tour du joueur connecté
+                      return playersOnField === 11 && mySide === currentCoach;
                     })() && (
                       <div className="mt-3">
                         <button

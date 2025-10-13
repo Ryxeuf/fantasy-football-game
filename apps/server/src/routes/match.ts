@@ -562,21 +562,27 @@ router.post(
         (p: any) => p.team === currentCoach && p.pos.x >= 0
       ).length || 0;
 
-      // Si 11 joueurs sont placés, passer au coach suivant ou à la phase kickoff
+      // Si 11 joueurs sont placés, utiliser la fonction de validation explicite
       if (playersOnField === 11) {
-        const { enterSetupPhase } = await import("@bb/game-engine");
+        const { validatePlayerPlacement, startKickoffSequence, enterSetupPhase } = await import("@bb/game-engine");
         
-        if (gameState.preMatch.currentCoach === gameState.preMatch.receivingTeam) {
-          // L'équipe receveuse a terminé, passer à l'équipe frappeuse
-          const nextCoach = gameState.preMatch.currentCoach === 'A' ? 'B' : 'A';
-          gameState = enterSetupPhase(gameState, nextCoach);
-        } else {
-          // L'équipe frappeuse a terminé, les deux équipes ont placé leurs joueurs
-          gameState.preMatch.phase = 'kickoff';
-          
-          // Commencer la séquence de kickoff
-          const { startKickoffSequence } = await import("@bb/game-engine");
+        console.log("Avant validation - gameState.preMatch:", gameState.preMatch);
+        
+        // S'assurer que l'état est en phase setup avant validation
+        if (gameState.preMatch.phase === 'idle') {
+          gameState = enterSetupPhase(gameState, gameState.preMatch.receivingTeam);
+          console.log("Après enterSetupPhase - gameState.preMatch:", gameState.preMatch);
+        }
+        
+        // Valider le placement et passer à la phase suivante
+        gameState = validatePlayerPlacement(gameState);
+        
+        console.log("Après validation - gameState.preMatch:", gameState.preMatch);
+        
+        // Si on arrive en phase kickoff, commencer la séquence
+        if (gameState.preMatch.phase === 'kickoff') {
           gameState = startKickoffSequence(gameState);
+          console.log("Après kickoff sequence - gameState.preMatch:", gameState.preMatch);
         }
       }
 
@@ -601,6 +607,8 @@ router.post(
         }
       }
 
+      console.log("Retour au client - gameState.preMatch:", gameState.preMatch);
+      
       return res.json({
         success: true,
         gameState,

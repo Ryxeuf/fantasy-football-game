@@ -10,12 +10,47 @@ import { initializeDugouts } from '../mechanics/dugout';
 
 // Étendre GameState pour pré-match
 export interface PreMatchState {
-  phase: 'idle' | 'setup' | 'kickoff' | 'kickoff-sequence';
+  phase: 'idle' | 'fans' | 'weather' | 'journeymen' | 'inducements' | 'prayers' | 'kicking-team' | 'setup' | 'kickoff' | 'kickoff-sequence';
   currentCoach: TeamId;
   legalSetupPositions: Position[];
   placedPlayers: string[]; // IDs des joueurs placés
   kickingTeam: TeamId;
   receivingTeam: TeamId;
+  
+  // Phase des fans dévoués
+  fanFactor?: {
+    teamA: { d3: number; dedicatedFans: number; total: number };
+    teamB: { d3: number; dedicatedFans: number; total: number };
+  };
+  
+  // Phase météo
+  weather?: {
+    dice1: number;
+    dice2: number;
+    total: number;
+    condition: string;
+    description: string;
+  };
+  
+  // Phase joueurs de passage
+  journeymen?: {
+    teamA: { count: number; players: string[] };
+    teamB: { count: number; players: string[] };
+  };
+  
+  // Phase incitations
+  inducements?: {
+    teamA: { pettyCash: number; treasurySpent: number; items: any[] };
+    teamB: { pettyCash: number; treasurySpent: number; items: any[] };
+  };
+  
+  // Phase prières à Nuffle
+  prayers?: {
+    underdogTeam: TeamId;
+    ctvDifference: number;
+    rolls: { dice: number; result: string; description: string }[];
+  };
+  
   // Nouvelles propriétés pour la séquence de kickoff
   kickoffStep?: 'place-ball' | 'kick-deviation' | 'kickoff-event';
   ballPosition?: Position | null; // Position initiale du ballon
@@ -834,17 +869,17 @@ export function placePlayerInSetup(
   state: ExtendedGameState,
   playerId: string,
   pos: Position
-): ExtendedGameState {
+): { success: boolean; state: ExtendedGameState } {
   if (
     state.preMatch.phase !== 'setup' ||
     state.preMatch.currentCoach !== state.players.find(p => p.id === playerId)?.team ||
     !state.preMatch.legalSetupPositions.some(l => l.x === pos.x && l.y === pos.y)
   ) {
-    return state; // Invalid move
+    return { success: false, state }; // Invalid move
   }
 
   const player = state.players.find(p => p.id === playerId);
-  if (!player) return state;
+  if (!player) return { success: false, state };
 
   // Permettre le repositionnement : si le joueur est déjà placé, on le retire d'abord
   const isRepositioning = player.pos.x >= 0;
@@ -860,7 +895,7 @@ export function placePlayerInSetup(
     p => p.pos.x === pos.x && p.pos.y === pos.y && p.id !== playerId
   );
   if (existingPlayerAtPos) {
-    return state; // Position déjà occupée
+    return { success: false, state }; // Position déjà occupée
   }
 
   // Simuler la pose pour vérifier les contraintes
@@ -876,13 +911,13 @@ export function placePlayerInSetup(
 
   const teamPlayersOnPitch = simulatedPlayers.filter(p => p.team === teamId && p.pos.x >= 0);
   if (teamPlayersOnPitch.length > 11) {
-    return state; // max 11 sur le terrain
+    return { success: false, state }; // max 11 sur le terrain
   }
 
   const leftWzCount = teamPlayersOnPitch.filter(p => isLeftWideZone(p.pos.y)).length;
   const rightWzCount = teamPlayersOnPitch.filter(p => isRightWideZone(p.pos.y)).length;
   if (leftWzCount > 2 || rightWzCount > 2) {
-    return state; // max 2 par wide zone
+    return { success: false, state }; // max 2 par wide zone
   }
 
   // Vérifier à partir de l'avant-dernier joueur (quand il reste 2 joueurs à placer)
@@ -894,7 +929,7 @@ export function placePlayerInSetup(
 
     // Si on n'a pas assez de joueurs sur la LOS et qu'il ne reste pas assez de joueurs pour atteindre 3
     if (losCount < minLosRequired && losCount + remainingPlayers < minLosRequired) {
-      return state; // Impossible d'atteindre 3 joueurs sur la LOS
+      return { success: false, state }; // Impossible d'atteindre 3 joueurs sur la LOS
     }
   }
 
@@ -907,20 +942,62 @@ export function placePlayerInSetup(
     preMatch: { ...state.preMatch, placedPlayers: newPlaced },
   };
 
-  // Si 11 placés, switch to next coach or kickoff
-  if (newPlaced.length === 11) {
-    const nextCoach = state.preMatch.currentCoach === 'A' ? 'B' : 'A';
-    // Toujours passer à l'autre équipe, puis vérifier si les deux ont terminé
-    if (state.preMatch.currentCoach === state.preMatch.receivingTeam) {
-      // L'équipe receveuse a terminé, passer à l'équipe frappeuse
-      newState = enterSetupPhase(newState, nextCoach);
-    } else {
-      // L'équipe frappeuse a terminé, les deux équipes ont placé leurs joueurs
-      newState.preMatch.phase = 'kickoff';
-    }
+  // Si 11 placés, ne pas passer automatiquement - attendre la validation
+  // Le coach doit cliquer sur "Valider le placement" pour continuer
+
+  return { success: true, state: newState };
+}
+
+/**
+ * Valide le placement des joueurs et passe à la phase suivante
+ * @param state - État en phase setup avec 11 joueurs placés
+ * @returns État avec phase suivante activée
+ */
+export function validatePlayerPlacement(state: ExtendedGameState): ExtendedGameState {
+  if (state.preMatch.phase !== 'setup') return state;
+  
+  const currentCoach = state.preMatch.currentCoach;
+  const placedPlayers = state.preMatch.placedPlayers;
+  
+  // Vérifier que le coach actuel a bien placé 11 joueurs
+  const coachPlayersOnField = state.players.filter(
+    p => p.team === currentCoach && p.pos.x >= 0
+  ).length;
+  
+  if (coachPlayersOnField !== 11) {
+    return state; // Pas assez de joueurs placés
   }
 
-  return newState;
+  const logEntry = createLogEntry(
+    'action',
+    `Placement validé par l'équipe ${state.teamNames[currentCoach === 'A' ? 'teamA' : 'teamB']} - 11 joueurs placés`
+  );
+
+  // Déterminer la phase suivante
+  const nextCoach = currentCoach === 'A' ? 'B' : 'A';
+  
+  if (currentCoach === state.preMatch.receivingTeam) {
+      // L'équipe receveuse a terminé, passer à l'équipe frappeuse
+    return {
+      ...state,
+      preMatch: {
+        ...state.preMatch,
+        currentCoach: nextCoach,
+        placedPlayers: [], // Reset pour l'autre équipe
+      },
+      gameLog: [...state.gameLog, logEntry],
+    };
+    } else {
+      // L'équipe frappeuse a terminé, les deux équipes ont placé leurs joueurs
+    return {
+      ...state,
+      preMatch: {
+        ...state.preMatch,
+        phase: 'kickoff',
+      },
+      gameLog: [...state.gameLog, logEntry],
+    };
+  }
 }
 
 /**

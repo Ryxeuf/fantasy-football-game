@@ -258,7 +258,7 @@ router.post("/choose", authUser, async (req: AuthenticatedRequest, res) => {
         .json({ error: `Match non modifiable (statut: ${match.status})` });
 
     // Transaction atomique: vérifie et crée la sélection
-    const selection = await prisma.$transaction(async (tx) => {
+    const selection = await prisma.$transaction(async (tx: any) => {
       const existingMineTx = await tx.teamSelection.findFirst({
         where: { matchId, userId: req.user!.id },
       });
@@ -396,7 +396,7 @@ router.post("/build", authUser, async (req: AuthenticatedRequest, res) => {
     return res.status(400).json({ error: "name, roster, choices requis" });
   if (!ALLOWED_TEAMS.includes(roster))
     return res.status(400).json({ error: "Roster non autorisé" });
-  const def = ROSTERS[roster];
+  const def = ROSTERS[roster as AllowedRoster];
   // Validation min/max et budget
   let totalPlayers = 0;
   let totalCost = 0;
@@ -446,6 +446,103 @@ router.post("/build", authUser, async (req: AuthenticatedRequest, res) => {
   res
     .status(201)
     .json({ team: withPlayers, cost: totalCost, budget: def.budget });
+});
+
+router.put("/:id", authUser, async (req: AuthenticatedRequest, res) => {
+  const teamId = req.params.id;
+  const { players } = req.body ?? ({} as { players?: Array<{ id: string; name: string; number: number }> });
+
+  if (!players || !Array.isArray(players)) {
+    return res.status(400).json({ error: "players requis (array)" });
+  }
+
+  try {
+    // Vérifier que l'équipe appartient à l'utilisateur
+    const team = await prisma.team.findFirst({
+      where: { id: teamId, ownerId: req.user!.id },
+      include: { players: true }
+    });
+
+    if (!team) {
+      return res.status(404).json({ error: "Équipe introuvable" });
+    }
+
+    // Vérifier que l'équipe n'est pas engagée dans un match actif
+    const activeSelection = await prisma.teamSelection.findFirst({
+      where: { 
+        teamId: teamId,
+        match: { status: { in: ["pending", "active"] } }
+      }
+    });
+
+    if (activeSelection) {
+      return res.status(400).json({ 
+        error: "Impossible de modifier cette équipe car elle est engagée dans un match en cours" 
+      });
+    }
+
+    // Validation des données
+    const playerIds = team.players.map((p: any) => p.id);
+    const providedPlayerIds = players.map((p: any) => p.id);
+    
+    // Vérifier que tous les joueurs fournis appartiennent à cette équipe
+    const invalidPlayerIds = providedPlayerIds.filter((id: any) => !playerIds.includes(id));
+    if (invalidPlayerIds.length > 0) {
+      return res.status(400).json({ 
+        error: `Joueurs invalides: ${invalidPlayerIds.join(", ")}` 
+      });
+    }
+
+    // Vérifier que tous les joueurs de l'équipe sont présents
+    const missingPlayerIds = playerIds.filter((id: any) => !providedPlayerIds.includes(id));
+    if (missingPlayerIds.length > 0) {
+      return res.status(400).json({ 
+        error: `Joueurs manquants: ${missingPlayerIds.join(", ")}` 
+      });
+    }
+
+    // Validation des numéros (unique dans l'équipe, entre 1-99)
+    const numbers = players.map(p => p.number);
+    const uniqueNumbers = new Set(numbers);
+    if (uniqueNumbers.size !== numbers.length) {
+      return res.status(400).json({ error: "Les numéros de joueurs doivent être uniques" });
+    }
+
+    const invalidNumbers = numbers.filter(n => n < 1 || n > 99 || !Number.isInteger(n));
+    if (invalidNumbers.length > 0) {
+      return res.status(400).json({ error: "Les numéros doivent être des entiers entre 1 et 99" });
+    }
+
+    // Validation des noms (non vides)
+    const emptyNames = players.filter(p => !p.name || p.name.trim() === "");
+    if (emptyNames.length > 0) {
+      return res.status(400).json({ error: "Tous les joueurs doivent avoir un nom" });
+    }
+
+    // Mise à jour des joueurs
+    const updatePromises = players.map(player => 
+      prisma.teamPlayer.update({
+        where: { id: player.id },
+        data: { 
+          name: player.name.trim(),
+          number: player.number
+        }
+      })
+    );
+
+    await Promise.all(updatePromises);
+
+    // Retourner l'équipe mise à jour
+    const updatedTeam = await prisma.team.findUnique({
+      where: { id: teamId },
+      include: { players: true }
+    });
+
+    res.json({ team: updatedTeam });
+  } catch (e: any) {
+    console.error("Erreur lors de la modification de l'équipe:", e);
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
 });
 
 export default router;
