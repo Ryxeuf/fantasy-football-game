@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { API_BASE } from "../../../../auth-client";
 import SkillTooltip from "../../components/SkillTooltip";
 import TeamInfoEditor from "../../components/TeamInfoEditor";
+import { getPlayerCost } from "@bb/game-engine";
 
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");
@@ -237,6 +238,7 @@ export default function TeamEditPage() {
                 <th className="text-left p-4 font-medium text-gray-900">#</th>
                 <th className="text-left p-4 font-medium text-gray-900">Nom</th>
                 <th className="text-left p-4 font-medium text-gray-900">Position</th>
+                <th className="text-left p-4 font-medium text-gray-900">Coût</th>
                 <th className="text-left p-4 font-medium text-gray-900">MA</th>
                 <th className="text-left p-4 font-medium text-gray-900">ST</th>
                 <th className="text-left p-4 font-medium text-gray-900">AG</th>
@@ -282,6 +284,9 @@ export default function TeamEditPage() {
                     )}
                   </td>
                   <td className="p-4 text-gray-600">{player.position}</td>
+                  <td className="p-4 text-center font-mono text-sm">
+                    {getPlayerCost(player.position, data?.roster || '').toLocaleString()} po
+                  </td>
                   <td className="p-4 text-center font-mono">{player.ma}</td>
                   <td className="p-4 text-center font-mono">{player.st}</td>
                   <td className="p-4 text-center font-mono">{player.ag}</td>
@@ -306,7 +311,6 @@ export default function TeamEditPage() {
         <TeamInfoEditor
           teamId={team.id}
           initialInfo={{
-            treasury: team.treasury || 0,
             rerolls: team.rerolls || 0,
             cheerleaders: team.cheerleaders || 0,
             assistants: team.assistants || 0,

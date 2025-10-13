@@ -1,14 +1,15 @@
 "use client";
 import { useState } from "react";
 import { API_BASE } from "../../../auth-client";
+import { getRerollCost } from "@bb/game-engine";
 
 interface TeamInfo {
-  treasury: number;
   rerolls: number;
   cheerleaders: number;
   assistants: number;
   apothecary: boolean;
   dedicatedFans: number;
+  roster?: string; // Roster pour calculer le coût des relances
 }
 
 interface TeamInfoEditorProps {
@@ -27,6 +28,8 @@ export default function TeamInfoEditor({
   const [info, setInfo] = useState<TeamInfo>(initialInfo);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  const rerollCost = getRerollCost(info.roster || '');
   const [success, setSuccess] = useState(false);
 
   const handleSave = async () => {
@@ -88,25 +91,6 @@ export default function TeamInfoEditor({
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Trésorerie */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Trésorerie (pièces d'or)
-            </label>
-            <input
-              type="number"
-              min="0"
-              step="1000"
-              value={info.treasury}
-              onChange={(e) => updateInfo("treasury", parseInt(e.target.value) || 0)}
-              disabled={disabled}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Pièces d'or non dépensées lors de la création d'équipe
-            </p>
-          </div>
-
           {/* Relances */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -221,7 +205,7 @@ export default function TeamInfoEditor({
         <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded">
           <div className="font-semibold">ℹ️ Informations sur les coûts</div>
           <div className="text-sm mt-1">
-            • Relances : coût variable selon l'équipe (voir liste d'équipe)
+            • Relances : {rerollCost.toLocaleString()} po chacune (coût variable selon l'équipe)
             <br />
             • Cheerleaders : 10k po chacune (max 12)
             <br />

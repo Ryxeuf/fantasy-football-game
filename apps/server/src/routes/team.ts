@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { prisma } from "../prisma";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
+import { updateTeamValues } from "../utils/team-values";
 
 const router = Router();
 const ALLOWED_TEAMS = ["skaven", "lizardmen"] as const;
@@ -347,12 +348,13 @@ router.post(
         roster,
         teamValue: finalTeamValue,
         // Initialiser les informations d'équipe par défaut
-        treasury: 0,
+        treasury: 0, // Calculée automatiquement après chaque match
         rerolls: 0,
         cheerleaders: 0,
         assistants: 0,
         apothecary: false,
         dedicatedFans: 1,
+        currentValue: 0, // Sera calculée après création des joueurs
       },
     });
     const templates = rosterTemplates(roster);
@@ -392,6 +394,10 @@ router.post(
       });
     }
     await prisma.teamPlayer.createMany({ data: players.slice(0, 16) });
+    
+    // Calculer automatiquement les valeurs d'équipe
+    await updateTeamValues(prisma, team.id);
+    
     const withPlayers = await prisma.team.findUnique({
       where: { id: team.id },
       include: { players: true },
@@ -445,12 +451,13 @@ router.post("/build", authUser, async (req: AuthenticatedRequest, res) => {
       roster,
       teamValue: finalTeamValue,
       // Initialiser les informations d'équipe par défaut
-      treasury: 0,
+      treasury: 0, // Calculée automatiquement après chaque match
       rerolls: 0,
       cheerleaders: 0,
       assistants: 0,
       apothecary: false,
       dedicatedFans: 1,
+      currentValue: 0, // Sera calculée après création des joueurs
     },
   });
   let number = 1;
@@ -473,6 +480,10 @@ router.post("/build", authUser, async (req: AuthenticatedRequest, res) => {
     }
   }
   await prisma.teamPlayer.createMany({ data: players });
+  
+  // Calculer automatiquement les valeurs d'équipe
+  await updateTeamValues(prisma, team.id);
+  
   const withPlayers = await prisma.team.findUnique({
     where: { id: team.id },
     include: { players: true },
@@ -486,14 +497,12 @@ router.post("/build", authUser, async (req: AuthenticatedRequest, res) => {
 router.put("/:id/info", authUser, async (req: AuthenticatedRequest, res) => {
   const teamId = req.params.id;
   const { 
-    treasury, 
     rerolls, 
     cheerleaders, 
     assistants, 
     apothecary, 
     dedicatedFans 
   } = req.body ?? ({} as {
-    treasury?: number;
     rerolls?: number;
     cheerleaders?: number;
     assistants?: number;
@@ -526,10 +535,6 @@ router.put("/:id/info", authUser, async (req: AuthenticatedRequest, res) => {
     }
 
     // Validation des données selon les règles Blood Bowl
-    if (treasury !== undefined && (treasury < 0 || !Number.isInteger(treasury))) {
-      return res.status(400).json({ error: "La trésorerie doit être un entier positif" });
-    }
-
     if (rerolls !== undefined && (rerolls < 0 || rerolls > 8 || !Number.isInteger(rerolls))) {
       return res.status(400).json({ error: "Le nombre de relances doit être entre 0 et 8" });
     }
@@ -550,7 +555,6 @@ router.put("/:id/info", authUser, async (req: AuthenticatedRequest, res) => {
     const updatedTeam = await prisma.team.update({
       where: { id: teamId },
       data: {
-        ...(treasury !== undefined && { treasury }),
         ...(rerolls !== undefined && { rerolls }),
         ...(cheerleaders !== undefined && { cheerleaders }),
         ...(assistants !== undefined && { assistants }),
@@ -560,9 +564,51 @@ router.put("/:id/info", authUser, async (req: AuthenticatedRequest, res) => {
       include: { players: true }
     });
 
-    res.json({ team: updatedTeam });
+    // Recalculer les valeurs d'équipe après modification
+    await updateTeamValues(prisma, teamId);
+
+    // Récupérer l'équipe mise à jour avec les nouvelles valeurs
+    const finalTeam = await prisma.team.findUnique({
+      where: { id: teamId },
+      include: { players: true }
+    });
+
+    res.json({ team: finalTeam });
   } catch (e: any) {
     console.error("Erreur lors de la modification des informations d'équipe:", e);
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// Endpoint pour recalculer les valeurs d'équipe
+router.post("/:id/recalculate", authUser, async (req: AuthenticatedRequest, res) => {
+  const teamId = req.params.id;
+
+  try {
+    // Vérifier que l'équipe appartient à l'utilisateur
+    const team = await prisma.team.findFirst({
+      where: { id: teamId, ownerId: req.user!.id }
+    });
+
+    if (!team) {
+      return res.status(404).json({ error: "Équipe introuvable" });
+    }
+
+    // Recalculer les valeurs d'équipe
+    const { teamValue, currentValue } = await updateTeamValues(prisma, teamId);
+
+    // Récupérer l'équipe mise à jour
+    const updatedTeam = await prisma.team.findUnique({
+      where: { id: teamId },
+      include: { players: true }
+    });
+
+    res.json({ 
+      team: updatedTeam,
+      message: `Valeurs recalculées: VE=${teamValue.toLocaleString()} po, VEA=${currentValue.toLocaleString()} po`
+    });
+  } catch (e: any) {
+    console.error("Erreur lors du recalcul des valeurs d'équipe:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });

@@ -24,6 +24,7 @@ export type { GameState, Position, Move } from './core/types';
 export * from './utils/rng';
 export * from './utils/dice';
 export * from './utils/dice-notifications';
+export * from './utils/team-value-calculator';
 export * from './mechanics/movement';
 export * from './actions/actions';
 export * from './core/boardgame-io';
