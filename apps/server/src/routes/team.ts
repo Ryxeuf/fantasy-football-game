@@ -94,7 +94,7 @@ const ROSTERS: Record<
         ag: 5,
         pa: 6,
         av: 9,
-        skills: "Frenzy,Animal Savagery",
+        skills: "Animal Savagery,Frenzy,Loner (4+),Mighty Blow (+1),Prehensile Tail",
       },
     ],
   },
@@ -126,7 +126,7 @@ const ROSTERS: Record<
         ag: 3,
         pa: 5,
         av: 8,
-        skills: "Dodge",
+        skills: "Dodge,Stunty",
       },
       {
         key: "kroxigor",
@@ -139,7 +139,7 @@ const ROSTERS: Record<
         ag: 5,
         pa: 6,
         av: 10,
-        skills: "Bone Head,Prehensile Tail",
+        skills: "Bone Head,Loner (4+),Mighty Blow (+1),Prehensile Tail,Thick Skull,Throw Team-mate",
       },
     ],
   },
@@ -211,7 +211,7 @@ function rosterTemplates(roster: AllowedRoster) {
       ag: 3,
       pa: 5,
       av: 8,
-      skills: "Dodge",
+      skills: "Dodge,Stunty",
     },
     // Kroxigor optionnel (non inclus par défaut)
   ];
