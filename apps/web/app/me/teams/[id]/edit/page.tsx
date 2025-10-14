@@ -4,6 +4,7 @@ import { API_BASE } from "../../../../auth-client";
 import SkillTooltip from "../../components/SkillTooltip";
 import TeamInfoEditor from "../../components/TeamInfoEditor";
 import { getPlayerCost } from "@bb/game-engine";
+import { getPositionDisplayName } from "../../utils/position-utils";
 
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");
@@ -78,6 +79,28 @@ export default function TeamEditPage() {
     name: '',
     number: 1
   });
+
+  // Gestion du modal - empêcher le scroll de la page et gérer la touche Échap
+  useEffect(() => {
+    if (showAddPlayerForm) {
+      // Empêcher le scroll de la page
+      document.body.style.overflow = 'hidden';
+      
+      // Gérer la touche Échap
+      const handleEscape = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          setShowAddPlayerForm(false);
+        }
+      };
+      
+      document.addEventListener('keydown', handleEscape);
+      
+      return () => {
+        document.body.style.overflow = 'unset';
+        document.removeEventListener('keydown', handleEscape);
+      };
+    }
+  }, [showAddPlayerForm]);
 
   const id =
     typeof window !== "undefined"
@@ -414,7 +437,7 @@ export default function TeamEditPage() {
                       </div>
                     )}
                   </td>
-                  <td className="p-4 text-gray-600">{player.position}</td>
+                  <td className="p-4 text-gray-600">{getPositionDisplayName(player.position)}</td>
                   <td className="p-4 text-center font-mono text-sm">
                     {getPlayerCost(player.position, data?.roster || '').toLocaleString()} po
                   </td>
@@ -447,108 +470,115 @@ export default function TeamEditPage() {
         </div>
       </div>
 
-      {/* Formulaire d'ajout de joueur */}
+      {/* Modal d'ajout de joueur */}
       {showAddPlayerForm && (
-        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded mb-4">
-          <div className="font-semibold">🐛 Debug: Formulaire d'ajout affiché</div>
-          <div className="text-sm mt-1">
-            showAddPlayerForm: {showAddPlayerForm.toString()}
-            <br />
-            availablePositions.length: {availablePositions.length}
-            <br />
-            players.length: {players.length}
-          </div>
-        </div>
-      )}
-      {showAddPlayerForm && (
-        <div className="bg-white rounded-lg border overflow-hidden">
-          <div className="bg-blue-50 px-6 py-3 border-b">
-            <h3 className="text-lg font-semibold">Ajouter un nouveau joueur</h3>
-          </div>
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Position
-                </label>
-                <select
-                  value={newPlayerForm.position}
-                  onChange={(e) => setNewPlayerForm({ ...newPlayerForm, position: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Sélectionner une position</option>
-                  {availablePositions
-                    .filter(pos => pos.canAdd)
-                    .map(pos => (
-                      <option key={pos.key} value={pos.key}>
-                        {pos.name} ({pos.currentCount}/{pos.maxCount}) - {pos.cost}k po
-                      </option>
-                    ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nom du joueur
-                </label>
-                <input
-                  type="text"
-                  value={newPlayerForm.name}
-                  onChange={(e) => setNewPlayerForm({ ...newPlayerForm, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Nom du joueur"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Numéro
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="99"
-                  value={newPlayerForm.number}
-                  onChange={(e) => setNewPlayerForm({ ...newPlayerForm, number: parseInt(e.target.value) || 1 })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-            
-            {/* Aperçu des statistiques */}
-            {newPlayerForm.position && (
-              <div className="mt-4 p-4 bg-gray-50 rounded-md">
-                <h4 className="font-medium text-gray-900 mb-2">Aperçu des statistiques :</h4>
-                {(() => {
-                  const position = availablePositions.find(p => p.key === newPlayerForm.position);
-                  if (!position) return null;
-                  
-                  return (
-                    <div className="grid grid-cols-6 gap-4 text-sm">
-                      <div><span className="font-medium">MA:</span> {position.stats.ma}</div>
-                      <div><span className="font-medium">ST:</span> {position.stats.st}</div>
-                      <div><span className="font-medium">AG:</span> {position.stats.ag}</div>
-                      <div><span className="font-medium">PA:</span> {position.stats.pa}</div>
-                      <div><span className="font-medium">AV:</span> {position.stats.av}</div>
-                      <div><span className="font-medium">Compétences:</span> {position.stats.skills || "Aucune"}</div>
-                    </div>
-                  );
-                })()}
-              </div>
-            )}
-
-            <div className="flex gap-3 mt-4">
-              <button
-                onClick={handleAddPlayer}
-                disabled={!newPlayerForm.position || !newPlayerForm.name.trim()}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-              >
-                Ajouter le joueur
-              </button>
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={(e) => {
+            // Fermer le modal si on clique sur l'arrière-plan
+            if (e.target === e.currentTarget) {
+              setShowAddPlayerForm(false);
+            }
+          }}
+        >
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-blue-50 px-6 py-4 border-b flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Ajouter un nouveau joueur</h3>
               <button
                 onClick={() => setShowAddPlayerForm(false)}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
+                className="text-gray-500 hover:text-gray-700 text-xl font-bold w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 transition-colors"
+                aria-label="Fermer le modal"
+                title="Fermer (Échap)"
               >
-                Annuler
+                ×
               </button>
+            </div>
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Position
+                  </label>
+                  <select
+                    value={newPlayerForm.position}
+                    onChange={(e) => setNewPlayerForm({ ...newPlayerForm, position: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    autoFocus
+                  >
+                    <option value="">Sélectionner une position</option>
+                    {availablePositions
+                      .filter(pos => pos.canAdd)
+                      .map(pos => (
+                        <option key={pos.key} value={pos.key}>
+                          {pos.name} ({pos.currentCount}/{pos.maxCount}) - {pos.cost}k po
+                        </option>
+                      ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nom du joueur
+                  </label>
+                  <input
+                    type="text"
+                    value={newPlayerForm.name}
+                    onChange={(e) => setNewPlayerForm({ ...newPlayerForm, name: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Nom du joueur"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Numéro
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="99"
+                    value={newPlayerForm.number}
+                    onChange={(e) => setNewPlayerForm({ ...newPlayerForm, number: parseInt(e.target.value) || 1 })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+              
+              {/* Aperçu des statistiques */}
+              {newPlayerForm.position && (
+                <div className="mt-4 p-4 bg-gray-50 rounded-md">
+                  <h4 className="font-medium text-gray-900 mb-2">Aperçu des statistiques :</h4>
+                  {(() => {
+                    const position = availablePositions.find(p => p.key === newPlayerForm.position);
+                    if (!position) return null;
+                    
+                    return (
+                      <div className="grid grid-cols-6 gap-4 text-sm">
+                        <div><span className="font-medium">MA:</span> {position.stats.ma}</div>
+                        <div><span className="font-medium">ST:</span> {position.stats.st}</div>
+                        <div><span className="font-medium">AG:</span> {position.stats.ag}</div>
+                        <div><span className="font-medium">PA:</span> {position.stats.pa}</div>
+                        <div><span className="font-medium">AV:</span> {position.stats.av}</div>
+                        <div><span className="font-medium">Compétences:</span> {position.stats.skills || "Aucune"}</div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+
+              <div className="flex gap-3 mt-6 justify-end">
+                <button
+                  onClick={() => setShowAddPlayerForm(false)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleAddPlayer}
+                  disabled={!newPlayerForm.position || !newPlayerForm.name.trim()}
+                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                >
+                  Ajouter le joueur
+                </button>
+              </div>
             </div>
           </div>
         </div>

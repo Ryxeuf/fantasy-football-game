@@ -188,11 +188,19 @@ export function calculateAllValues(data: TeamValueData): CalculatedValues {
   };
 }
 
+import { getPositionBySlug } from '../rosters/positions';
+
 /**
  * Obtient le coût d'un joueur selon sa position et le roster
  */
 export function getPlayerCost(position: string, roster: string): number {
-  // Coûts des joueurs selon les règles officielles Blood Bowl
+  // Utiliser le nouveau système de slugs
+  const positionData = getPositionBySlug(position);
+  if (positionData) {
+    return positionData.cost * 1000; // Convertir de kpo en po
+  }
+
+  // Fallback vers l'ancien système pour compatibilité
   const costs: Record<string, Record<string, number>> = {
     skaven: {
       'Lineman': 50000,

@@ -3,8 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import { API_BASE } from "../../../auth-client";
 
 type Position = {
-  key: string;
-  name: string;
+  slug: string;
+  displayName: string;
   cost: number;
   min: number;
   max: number;
@@ -46,7 +46,7 @@ export default function NewTeamBuilder() {
         setPositions(d.roster.positions || []);
         const init: Record<string, number> = {};
         (d.roster.positions || []).forEach((p: Position) => {
-          init[p.key] = p.min || 0;
+          init[p.slug] = p.min || 0;
         });
         setCounts(init);
       })
@@ -57,7 +57,7 @@ export default function NewTeamBuilder() {
     () =>
       Object.entries(counts).reduce(
         (acc, [k, c]) =>
-          acc + (positions.find((p) => p.key === k)?.cost || 0) * (c || 0),
+          acc + (positions.find((p) => p.slug === k)?.cost || 0) * (c || 0),
         0,
       ),
     [counts, positions],
@@ -67,14 +67,14 @@ export default function NewTeamBuilder() {
     [counts],
   );
 
-  function change(key: string, delta: number) {
+  function change(slug: string, delta: number) {
     setCounts((prev) => {
-      const pos = positions.find((p) => p.key === key);
+      const pos = positions.find((p) => p.slug === slug);
       const next = Math.max(
         pos?.min ?? 0,
-        Math.min(pos?.max ?? 16, (prev[key] || 0) + delta),
+        Math.min(pos?.max ?? 16, (prev[slug] || 0) + delta),
       );
-      return { ...prev, [key]: next };
+      return { ...prev, [slug]: next };
     });
   }
 
@@ -92,8 +92,8 @@ export default function NewTeamBuilder() {
           name,
           roster: rosterId,
           teamValue,
-          choices: Object.entries(counts).map(([key, count]) => ({
-            key,
+          choices: Object.entries(counts).map(([slug, count]) => ({
+            key: slug,
             count,
           })),
         }),
@@ -156,22 +156,22 @@ export default function NewTeamBuilder() {
           </thead>
           <tbody>
             {positions.map((p) => (
-              <tr key={p.key} className="odd:bg-white even:bg-gray-50">
-                <td className="p-2">{p.name}</td>
+              <tr key={p.slug} className="odd:bg-white even:bg-gray-50">
+                <td className="p-2">{p.displayName}</td>
                 <td className="p-2">{p.cost}k</td>
                 <td className="p-2">{p.min}</td>
                 <td className="p-2">{p.max}</td>
-                <td className="p-2">{counts[p.key] || 0}</td>
+                <td className="p-2">{counts[p.slug] || 0}</td>
                 <td className="p-2">
                   <button
                     className="px-2 py-1 border mr-2"
-                    onClick={() => change(p.key, -1)}
+                    onClick={() => change(p.slug, -1)}
                   >
                     -
                   </button>
                   <button
                     className="px-2 py-1 border"
-                    onClick={() => change(p.key, 1)}
+                    onClick={() => change(p.slug, 1)}
                   >
                     +
                   </button>

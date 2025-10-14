@@ -2,154 +2,19 @@ import { Router } from "express";
 import { prisma } from "../prisma";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
 import { updateTeamValues } from "../utils/team-values";
+import { TEAM_ROSTERS, getPositionBySlug, getDisplayName, LEGACY_POSITION_MAPPING, type AllowedRoster } from "@bb/game-engine";
 
 const router = Router();
 const ALLOWED_TEAMS = ["skaven", "lizardmen"] as const;
-type AllowedRoster = (typeof ALLOWED_TEAMS)[number];
 
-const ROSTERS: Record<
-  AllowedRoster,
-  {
-    name: string;
-    budget: number; // 1000k
-    positions: Array<{
-      key: string;
-      name: string;
-      cost: number; // en k
-      min: number;
-      max: number;
-      ma: number;
-      st: number;
-      ag: number;
-      pa: number;
-      av: number;
-      skills: string;
-    }>;
-  }
-> = {
-  skaven: {
-    name: "Skavens",
-    budget: 1000,
-    positions: [
-      {
-        key: "blitzer",
-        name: "Blitzer",
-        cost: 90,
-        min: 0,
-        max: 2,
-        ma: 7,
-        st: 3,
-        ag: 3,
-        pa: 4,
-        av: 9,
-        skills: "Block",
-      },
-      {
-        key: "thrower",
-        name: "Thrower",
-        cost: 85,
-        min: 0,
-        max: 2,
-        ma: 7,
-        st: 3,
-        ag: 3,
-        pa: 2,
-        av: 8,
-        skills: "Pass,Sure Hands",
-      },
-      {
-        key: "gutter",
-        name: "Gutter Runner",
-        cost: 85,
-        min: 0,
-        max: 4,
-        ma: 9,
-        st: 2,
-        ag: 2,
-        pa: 4,
-        av: 8,
-        skills: "Dodge",
-      },
-      {
-        key: "lineman",
-        name: "Lineman",
-        cost: 50,
-        min: 0,
-        max: 16,
-        ma: 7,
-        st: 3,
-        ag: 3,
-        pa: 4,
-        av: 8,
-        skills: "",
-      },
-      {
-        key: "ratogre",
-        name: "Rat Ogre",
-        cost: 150,
-        min: 0,
-        max: 1,
-        ma: 6,
-        st: 5,
-        ag: 5,
-        pa: 6,
-        av: 9,
-        skills: "Animal Savagery,Frenzy,Loner (4+),Mighty Blow (+1),Prehensile Tail",
-      },
-    ],
-  },
-  lizardmen: {
-    name: "Hommes-Lézards",
-    budget: 1000,
-    positions: [
-      {
-        key: "saurus",
-        name: "Saurus",
-        cost: 85,
-        min: 0,
-        max: 6,
-        ma: 6,
-        st: 4,
-        ag: 4,
-        pa: 6,
-        av: 10,
-        skills: "",
-      },
-      {
-        key: "skink",
-        name: "Skink",
-        cost: 60,
-        min: 0,
-        max: 8,
-        ma: 8,
-        st: 2,
-        ag: 3,
-        pa: 5,
-        av: 8,
-        skills: "Dodge,Stunty",
-      },
-      {
-        key: "kroxigor",
-        name: "Kroxigor",
-        cost: 140,
-        min: 0,
-        max: 1,
-        ma: 6,
-        st: 5,
-        ag: 5,
-        pa: 6,
-        av: 10,
-        skills: "Bone Head,Loner (4+),Mighty Blow (+1),Prehensile Tail,Thick Skull,Throw Team-mate",
-      },
-    ],
-  },
-};
+// Utiliser le nouveau système de rosters
+const ROSTERS = TEAM_ROSTERS;
 
 function rosterTemplates(roster: AllowedRoster) {
   if (roster === "skaven") {
     return [
       {
-        position: "Blitzer",
+        position: "skaven_blitzer",
         count: 2,
         ma: 7,
         st: 3,
@@ -159,7 +24,7 @@ function rosterTemplates(roster: AllowedRoster) {
         skills: "Block",
       },
       {
-        position: "Thrower",
+        position: "skaven_thrower",
         count: 1,
         ma: 7,
         st: 3,
@@ -169,7 +34,7 @@ function rosterTemplates(roster: AllowedRoster) {
         skills: "Pass,Sure Hands",
       },
       {
-        position: "Gutter Runner",
+        position: "skaven_gutter_runner",
         count: 2,
         ma: 9,
         st: 2,
@@ -179,7 +44,7 @@ function rosterTemplates(roster: AllowedRoster) {
         skills: "Dodge",
       },
       {
-        position: "Lineman",
+        position: "skaven_lineman",
         count: 6,
         ma: 7,
         st: 3,
@@ -194,7 +59,7 @@ function rosterTemplates(roster: AllowedRoster) {
   // lizardmen
   return [
     {
-      position: "Saurus",
+      position: "lizardmen_saurus",
       count: 6,
       ma: 6,
       st: 4,
@@ -204,7 +69,7 @@ function rosterTemplates(roster: AllowedRoster) {
       skills: "",
     },
     {
-      position: "Skink",
+      position: "lizardmen_skink",
       count: 5,
       ma: 8,
       st: 2,
@@ -429,11 +294,11 @@ router.post("/build", authUser, async (req: AuthenticatedRequest, res) => {
   let totalPlayers = 0;
   let totalCost = 0;
   for (const p of def.positions) {
-    const c = Math.max(0, choices.find((x) => x.key === p.key)?.count ?? 0);
+    const c = Math.max(0, choices.find((x) => x.key === p.slug)?.count ?? 0);
     if (c < p.min || c > p.max)
       return res
         .status(400)
-        .json({ error: `Poste ${p.name}: min ${p.min}, max ${p.max}` });
+        .json({ error: `Poste ${p.displayName}: min ${p.min}, max ${p.max}` });
     totalPlayers += c;
     totalCost += c * p.cost;
   }
@@ -463,12 +328,12 @@ router.post("/build", authUser, async (req: AuthenticatedRequest, res) => {
   let number = 1;
   const players: any[] = [];
   for (const p of def.positions) {
-    const c = Math.max(0, choices.find((x) => x.key === p.key)?.count ?? 0);
+    const c = Math.max(0, choices.find((x) => x.key === p.slug)?.count ?? 0);
     for (let i = 0; i < c; i += 1) {
       players.push({
         teamId: team.id,
-        name: `${p.name} ${i + 1}`,
-        position: p.name,
+        name: `${p.displayName} ${i + 1}`,
+        position: p.slug,
         number: number++,
         ma: p.ma,
         st: p.st,
@@ -783,7 +648,7 @@ router.post("/:id/players", authUser, async (req: AuthenticatedRequest, res) => 
       return res.status(400).json({ error: "Roster non reconnu" });
     }
 
-    const positionData = rosterData.positions.find(p => p.key === position);
+    const positionData = rosterData.positions.find((p: any) => p.slug === position);
     if (!positionData) {
       return res.status(400).json({ 
         error: `Position '${position}' non trouvée dans le roster ${team.roster}` 
@@ -794,7 +659,7 @@ router.post("/:id/players", authUser, async (req: AuthenticatedRequest, res) => 
     const currentPositionCount = team.players.filter((p: any) => p.position === position).length;
     if (currentPositionCount >= positionData.max) {
       return res.status(400).json({ 
-        error: `Limite maximale atteinte pour la position ${positionData.name} (${positionData.max})` 
+        error: `Limite maximale atteinte pour la position ${positionData.displayName} (${positionData.max})` 
       });
     }
 
@@ -919,13 +784,13 @@ router.get("/:id/available-positions", authUser, async (req: AuthenticatedReques
     }
 
     // Calculer les positions disponibles
-    const availablePositions = rosterData.positions.map(position => {
-      const currentCount = team.players.filter((p: any) => p.position === position.key).length;
+    const availablePositions = rosterData.positions.map((position: any) => {
+      const currentCount = team.players.filter((p: any) => p.position === position.slug).length;
       const canAdd = currentCount < position.max && team.players.length < 16;
       
       return {
-        key: position.key,
-        name: position.name,
+        key: position.slug,
+        name: position.displayName,
         cost: position.cost,
         currentCount,
         maxCount: position.max,

@@ -71,3 +71,6 @@ export { movePlayerToDugoutZone } from './mechanics/dugout';
 
 // Export des fonctions de blessure
 export { performInjuryRoll } from './mechanics/injury';
+
+// Export des rosters et positions
+export * from './rosters';

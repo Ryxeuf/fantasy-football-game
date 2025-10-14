@@ -4,6 +4,7 @@ import { API_BASE } from "../../../auth-client";
 import SkillTooltip from "../components/SkillTooltip";
 import TeamInfoDisplay from "../components/TeamInfoDisplay";
 import { getPlayerCost } from "@bb/game-engine";
+import { getPositionDisplayName } from "../utils/position-utils";
 
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");
@@ -190,7 +191,7 @@ export default function TeamDetailPage() {
                     <tr key={p.id} className="hover:bg-gray-50">
                       <td className="p-4 font-mono text-lg font-semibold">{p.number}</td>
                       <td className="p-4 font-medium">{p.name}</td>
-                      <td className="p-4 text-gray-600">{p.position}</td>
+                      <td className="p-4 text-gray-600">{getPositionDisplayName(p.position)}</td>
                       <td className="p-4 text-center font-mono text-sm">
                         {getPlayerCost(p.position, team.roster).toLocaleString()} po
                       </td>

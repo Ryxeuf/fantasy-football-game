@@ -143,11 +143,17 @@ export function calculateAllValues(data) {
         treasury: 0 // La trésorerie sera calculée après chaque match
     };
 }
+import { getPositionBySlug } from '../rosters/positions';
 /**
  * Obtient le coût d'un joueur selon sa position et le roster
  */
 export function getPlayerCost(position, roster) {
-    // Coûts des joueurs selon les règles officielles Blood Bowl
+    // Utiliser le nouveau système de slugs
+    const positionData = getPositionBySlug(position);
+    if (positionData) {
+        return positionData.cost * 1000; // Convertir de kpo en po
+    }
+    // Fallback vers l'ancien système pour compatibilité
     const costs = {
         skaven: {
             'Lineman': 50000,
