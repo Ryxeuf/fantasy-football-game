@@ -47,6 +47,23 @@ interface Player {
   skills: string;
 }
 
+interface AvailablePosition {
+  key: string;
+  name: string;
+  cost: number;
+  currentCount: number;
+  maxCount: number;
+  canAdd: boolean;
+  stats: {
+    ma: number;
+    st: number;
+    ag: number;
+    pa: number;
+    av: number;
+    skills: string;
+  };
+}
+
 export default function TeamEditPage() {
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
@@ -54,6 +71,13 @@ export default function TeamEditPage() {
   const [saving, setSaving] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [availablePositions, setAvailablePositions] = useState<AvailablePosition[]>([]);
+  const [showAddPlayerForm, setShowAddPlayerForm] = useState(false);
+  const [newPlayerForm, setNewPlayerForm] = useState({
+    position: '',
+    name: '',
+    number: 1
+  });
 
   const id =
     typeof window !== "undefined"
@@ -71,9 +95,16 @@ export default function TeamEditPage() {
           return;
         }
         const d = await fetchJSON(`/team/${id}`);
+        console.log("Données équipe chargées:", d);
         setData(d);
         setPlayers(d.team?.players || []);
+        
+        // Charger les positions disponibles
+        const positionsData = await fetchJSON(`/team/${id}/available-positions`);
+        console.log("Positions disponibles:", positionsData);
+        setAvailablePositions(positionsData.availablePositions || []);
       } catch (e: any) {
+        console.error("Erreur lors du chargement:", e);
         setError(e.message || "Erreur");
       } finally {
         setLoading(false);
@@ -159,6 +190,83 @@ export default function TeamEditPage() {
     }
   };
 
+  const handleDeletePlayer = async (playerId: string) => {
+    if (!confirm("Êtes-vous sûr de vouloir supprimer ce joueur ?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/team/${id}/players/${playerId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: localStorage.getItem("auth_token") ? `Bearer ${localStorage.getItem("auth_token")}` : "",
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Erreur lors de la suppression");
+      }
+
+      // Recharger les données
+      const d = await fetchJSON(`/team/${id}`);
+      setData(d);
+      setPlayers(d.team?.players || []);
+      
+      const positionsData = await fetchJSON(`/team/${id}/available-positions`);
+      setAvailablePositions(positionsData.availablePositions || []);
+    } catch (e: any) {
+      setError(e.message || "Erreur lors de la suppression du joueur");
+    }
+  };
+
+  const handleAddPlayer = async () => {
+    if (!newPlayerForm.position || !newPlayerForm.name.trim()) {
+      setError("Veuillez remplir tous les champs");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/team/${id}/players`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: localStorage.getItem("auth_token") ? `Bearer ${localStorage.getItem("auth_token")}` : "",
+        },
+        body: JSON.stringify(newPlayerForm),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Erreur lors de l'ajout du joueur");
+      }
+
+      // Recharger les données
+      const d = await fetchJSON(`/team/${id}`);
+      setData(d);
+      setPlayers(d.team?.players || []);
+      
+      const positionsData = await fetchJSON(`/team/${id}/available-positions`);
+      setAvailablePositions(positionsData.availablePositions || []);
+
+      // Réinitialiser le formulaire
+      setNewPlayerForm({ position: '', name: '', number: 1 });
+      setShowAddPlayerForm(false);
+    } catch (e: any) {
+      setError(e.message || "Erreur lors de l'ajout du joueur");
+    }
+  };
+
+  const getNextAvailableNumber = () => {
+    const usedNumbers = players.map(p => p.number);
+    for (let i = 1; i <= 99; i++) {
+      if (!usedNumbers.includes(i)) {
+        return i;
+      }
+    }
+    return 1;
+  };
+
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto p-6">
@@ -216,9 +324,28 @@ export default function TeamEditPage() {
 
       <div className="bg-white rounded-lg border overflow-hidden">
         <div className="bg-gray-50 px-6 py-3 border-b">
-          <h2 className="text-lg font-semibold">Modification des joueurs</h2>
-          <div className="text-sm text-gray-600 mt-1">
-            Vous pouvez modifier le nom et le numéro de chaque joueur
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-lg font-semibold">Modification des joueurs</h2>
+              <div className="text-sm text-gray-600 mt-1">
+                Vous pouvez modifier le nom et le numéro de chaque joueur, ou ajouter/supprimer des joueurs
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  console.log("Clic sur ajouter joueur, players.length:", players.length);
+                  const nextNumber = getNextAvailableNumber();
+                  console.log("Prochain numéro disponible:", nextNumber);
+                  setNewPlayerForm({ position: '', name: '', number: nextNumber });
+                  setShowAddPlayerForm(true);
+                }}
+                disabled={players.length >= 16}
+                className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              >
+                + Ajouter un joueur ({players.length}/16)
+              </button>
+            </div>
           </div>
           <div className="text-xs text-gray-500 mt-2">
             <span className="inline-flex items-center gap-1">
@@ -228,6 +355,9 @@ export default function TeamEditPage() {
             <span className="ml-4 inline-flex items-center gap-1">
               <span className="w-3 h-3 border-2 border-yellow-400 bg-blue-100 rounded"></span>
               Compétences acquises
+            </span>
+            <span className="ml-4 text-gray-600">
+              Joueurs: {players.length}/16
             </span>
           </div>
         </div>
@@ -245,6 +375,7 @@ export default function TeamEditPage() {
                 <th className="text-left p-4 font-medium text-gray-900">PA</th>
                 <th className="text-left p-4 font-medium text-gray-900">AV</th>
                 <th className="text-left p-4 font-medium text-gray-900">Compétences</th>
+                <th className="text-left p-4 font-medium text-gray-900">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -295,9 +426,19 @@ export default function TeamEditPage() {
                   <td className="p-4">
                     <SkillTooltip 
                       skillsString={player.skills} 
-                      teamName={team.roster}
+                      teamName={team?.roster}
                       position={player.position}
                     />
+                  </td>
+                  <td className="p-4">
+                    <button
+                      onClick={() => handleDeletePlayer(player.id)}
+                      disabled={players.length <= 11}
+                      className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                      title={players.length <= 11 ? "Une équipe doit avoir au minimum 11 joueurs" : "Supprimer ce joueur"}
+                    >
+                      Supprimer
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -305,6 +446,113 @@ export default function TeamEditPage() {
           </table>
         </div>
       </div>
+
+      {/* Formulaire d'ajout de joueur */}
+      {showAddPlayerForm && (
+        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded mb-4">
+          <div className="font-semibold">🐛 Debug: Formulaire d'ajout affiché</div>
+          <div className="text-sm mt-1">
+            showAddPlayerForm: {showAddPlayerForm.toString()}
+            <br />
+            availablePositions.length: {availablePositions.length}
+            <br />
+            players.length: {players.length}
+          </div>
+        </div>
+      )}
+      {showAddPlayerForm && (
+        <div className="bg-white rounded-lg border overflow-hidden">
+          <div className="bg-blue-50 px-6 py-3 border-b">
+            <h3 className="text-lg font-semibold">Ajouter un nouveau joueur</h3>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Position
+                </label>
+                <select
+                  value={newPlayerForm.position}
+                  onChange={(e) => setNewPlayerForm({ ...newPlayerForm, position: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Sélectionner une position</option>
+                  {availablePositions
+                    .filter(pos => pos.canAdd)
+                    .map(pos => (
+                      <option key={pos.key} value={pos.key}>
+                        {pos.name} ({pos.currentCount}/{pos.maxCount}) - {pos.cost}k po
+                      </option>
+                    ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nom du joueur
+                </label>
+                <input
+                  type="text"
+                  value={newPlayerForm.name}
+                  onChange={(e) => setNewPlayerForm({ ...newPlayerForm, name: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Nom du joueur"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Numéro
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="99"
+                  value={newPlayerForm.number}
+                  onChange={(e) => setNewPlayerForm({ ...newPlayerForm, number: parseInt(e.target.value) || 1 })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+            
+            {/* Aperçu des statistiques */}
+            {newPlayerForm.position && (
+              <div className="mt-4 p-4 bg-gray-50 rounded-md">
+                <h4 className="font-medium text-gray-900 mb-2">Aperçu des statistiques :</h4>
+                {(() => {
+                  const position = availablePositions.find(p => p.key === newPlayerForm.position);
+                  if (!position) return null;
+                  
+                  return (
+                    <div className="grid grid-cols-6 gap-4 text-sm">
+                      <div><span className="font-medium">MA:</span> {position.stats.ma}</div>
+                      <div><span className="font-medium">ST:</span> {position.stats.st}</div>
+                      <div><span className="font-medium">AG:</span> {position.stats.ag}</div>
+                      <div><span className="font-medium">PA:</span> {position.stats.pa}</div>
+                      <div><span className="font-medium">AV:</span> {position.stats.av}</div>
+                      <div><span className="font-medium">Compétences:</span> {position.stats.skills || "Aucune"}</div>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+
+            <div className="flex gap-3 mt-4">
+              <button
+                onClick={handleAddPlayer}
+                disabled={!newPlayerForm.position || !newPlayerForm.name.trim()}
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              >
+                Ajouter le joueur
+              </button>
+              <button
+                onClick={() => setShowAddPlayerForm(false)}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
+              >
+                Annuler
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Informations d'équipe */}
       {team && (
@@ -335,6 +583,12 @@ export default function TeamEditPage() {
           • Les numéros de joueurs doivent être uniques et compris entre 1 et 99
           <br />
           • Tous les joueurs doivent avoir un nom
+          <br />
+          • Une équipe doit avoir entre 11 et 16 joueurs (règles Blood Bowl)
+          <br />
+          • Chaque position a des limites min/max selon le roster
+          <br />
+          • Vous pouvez ajouter/supprimer des joueurs tant que l'équipe n'est pas engagée dans un match
         </div>
       </div>
     </div>

@@ -710,4 +710,246 @@ router.put("/:id", authUser, async (req: AuthenticatedRequest, res) => {
   }
 });
 
+// Endpoint pour ajouter un joueur à une équipe
+router.post("/:id/players", authUser, async (req: AuthenticatedRequest, res) => {
+  const teamId = req.params.id;
+  const { position, name, number } = req.body ?? ({} as { 
+    position?: string; 
+    name?: string; 
+    number?: number; 
+  });
+
+  if (!position || !name || !number) {
+    return res.status(400).json({ error: "position, name et number requis" });
+  }
+
+  try {
+    // Vérifier que l'équipe appartient à l'utilisateur
+    const team = await prisma.team.findFirst({
+      where: { id: teamId, ownerId: req.user!.id },
+      include: { players: true }
+    });
+
+    if (!team) {
+      return res.status(404).json({ error: "Équipe introuvable" });
+    }
+
+    // Vérifier que l'équipe n'est pas engagée dans un match actif
+    const activeSelection = await prisma.teamSelection.findFirst({
+      where: { 
+        teamId: teamId,
+        match: { status: { in: ["pending", "active"] } }
+      }
+    });
+
+    if (activeSelection) {
+      return res.status(400).json({ 
+        error: "Impossible de modifier cette équipe car elle est engagée dans un match en cours" 
+      });
+    }
+
+    // Vérifier que l'équipe n'a pas déjà 16 joueurs (limite Blood Bowl)
+    if (team.players.length >= 16) {
+      return res.status(400).json({ 
+        error: "Une équipe ne peut pas avoir plus de 16 joueurs" 
+      });
+    }
+
+    // Vérifier que le numéro n'est pas déjà utilisé
+    const existingPlayer = team.players.find((p: any) => p.number === number);
+    if (existingPlayer) {
+      return res.status(400).json({ 
+        error: `Le numéro ${number} est déjà utilisé par ${existingPlayer.name}` 
+      });
+    }
+
+    // Validation du numéro (entre 1-99)
+    if (number < 1 || number > 99 || !Number.isInteger(number)) {
+      return res.status(400).json({ 
+        error: "Le numéro doit être un entier entre 1 et 99" 
+      });
+    }
+
+    // Validation du nom (non vide)
+    if (!name.trim()) {
+      return res.status(400).json({ 
+        error: "Le nom ne peut pas être vide" 
+      });
+    }
+
+    // Récupérer les informations de la position depuis le roster
+    const rosterData = ROSTERS[team.roster as AllowedRoster];
+    if (!rosterData) {
+      return res.status(400).json({ error: "Roster non reconnu" });
+    }
+
+    const positionData = rosterData.positions.find(p => p.key === position);
+    if (!positionData) {
+      return res.status(400).json({ 
+        error: `Position '${position}' non trouvée dans le roster ${team.roster}` 
+      });
+    }
+
+    // Vérifier les limites min/max pour cette position
+    const currentPositionCount = team.players.filter((p: any) => p.position === position).length;
+    if (currentPositionCount >= positionData.max) {
+      return res.status(400).json({ 
+        error: `Limite maximale atteinte pour la position ${positionData.name} (${positionData.max})` 
+      });
+    }
+
+    // Créer le nouveau joueur
+    const newPlayer = await prisma.teamPlayer.create({
+      data: {
+        teamId: teamId,
+        name: name.trim(),
+        position: position,
+        number: number,
+        ma: positionData.ma,
+        st: positionData.st,
+        ag: positionData.ag,
+        pa: positionData.pa,
+        av: positionData.av,
+        skills: positionData.skills,
+      }
+    });
+
+    // Recalculer les valeurs d'équipe
+    await updateTeamValues(prisma, teamId);
+
+    // Retourner l'équipe mise à jour
+    const updatedTeam = await prisma.team.findUnique({
+      where: { id: teamId },
+      include: { players: true }
+    });
+
+    res.status(201).json({ 
+      team: updatedTeam,
+      newPlayer: newPlayer
+    });
+  } catch (e: any) {
+    console.error("Erreur lors de l'ajout du joueur:", e);
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// Endpoint pour supprimer un joueur d'une équipe
+router.delete("/:id/players/:playerId", authUser, async (req: AuthenticatedRequest, res) => {
+  const teamId = req.params.id;
+  const playerId = req.params.playerId;
+
+  try {
+    // Vérifier que l'équipe appartient à l'utilisateur
+    const team = await prisma.team.findFirst({
+      where: { id: teamId, ownerId: req.user!.id },
+      include: { players: true }
+    });
+
+    if (!team) {
+      return res.status(404).json({ error: "Équipe introuvable" });
+    }
+
+    // Vérifier que l'équipe n'est pas engagée dans un match actif
+    const activeSelection = await prisma.teamSelection.findFirst({
+      where: { 
+        teamId: teamId,
+        match: { status: { in: ["pending", "active"] } }
+      }
+    });
+
+    if (activeSelection) {
+      return res.status(400).json({ 
+        error: "Impossible de modifier cette équipe car elle est engagée dans un match en cours" 
+      });
+    }
+
+    // Vérifier que le joueur existe et appartient à cette équipe
+    const player = team.players.find((p: any) => p.id === playerId);
+    if (!player) {
+      return res.status(404).json({ error: "Joueur introuvable" });
+    }
+
+    // Vérifier qu'il reste au moins 11 joueurs après suppression (minimum Blood Bowl)
+    if (team.players.length <= 11) {
+      return res.status(400).json({ 
+        error: "Une équipe doit avoir au minimum 11 joueurs" 
+      });
+    }
+
+    // Supprimer le joueur
+    await prisma.teamPlayer.delete({
+      where: { id: playerId }
+    });
+
+    // Recalculer les valeurs d'équipe
+    await updateTeamValues(prisma, teamId);
+
+    // Retourner l'équipe mise à jour
+    const updatedTeam = await prisma.team.findUnique({
+      where: { id: teamId },
+      include: { players: true }
+    });
+
+    res.json({ team: updatedTeam });
+  } catch (e: any) {
+    console.error("Erreur lors de la suppression du joueur:", e);
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// Endpoint pour obtenir les positions disponibles pour ajout
+router.get("/:id/available-positions", authUser, async (req: AuthenticatedRequest, res) => {
+  const teamId = req.params.id;
+
+  try {
+    // Vérifier que l'équipe appartient à l'utilisateur
+    const team = await prisma.team.findFirst({
+      where: { id: teamId, ownerId: req.user!.id },
+      include: { players: true }
+    });
+
+    if (!team) {
+      return res.status(404).json({ error: "Équipe introuvable" });
+    }
+
+    // Récupérer les informations du roster
+    const rosterData = ROSTERS[team.roster as AllowedRoster];
+    if (!rosterData) {
+      return res.status(400).json({ error: "Roster non reconnu" });
+    }
+
+    // Calculer les positions disponibles
+    const availablePositions = rosterData.positions.map(position => {
+      const currentCount = team.players.filter((p: any) => p.position === position.key).length;
+      const canAdd = currentCount < position.max && team.players.length < 16;
+      
+      return {
+        key: position.key,
+        name: position.name,
+        cost: position.cost,
+        currentCount,
+        maxCount: position.max,
+        canAdd,
+        stats: {
+          ma: position.ma,
+          st: position.st,
+          ag: position.ag,
+          pa: position.pa,
+          av: position.av,
+          skills: position.skills
+        }
+      };
+    });
+
+    res.json({ 
+      availablePositions,
+      currentPlayerCount: team.players.length,
+      maxPlayers: 16
+    });
+  } catch (e: any) {
+    console.error("Erreur lors de la récupération des positions disponibles:", e);
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
 export default router;
