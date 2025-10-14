@@ -11,173 +11,173 @@ export interface BaseSkillsData {
 export const BASE_SKILLS_DATA: BaseSkillsData = {
   skaven: {
     "Clanrat Linemen": [],
-    "skaven_thrower": ["Pass", "Sure Hands"],
-    "skaven_gutter_runner": ["Dodge"],
-    "skaven_blitzer": ["Block"],
-    "skaven_rat_ogre": ["Animal Savagery", "Frenzy", "Loner (4+)", "Mighty Blow (+1)", "Prehensile Tail"]
+    "skaven_thrower": ["Passe", "Prise Sûre"],
+    "skaven_gutter_runner": ["Esquive"],
+    "skaven_blitzer": ["Blocage"],
+    "skaven_rat_ogre": ["Sauvagerie Animale*", "Frénésie", "Solitaire (4+)*", "Coup Puissant (+1)", "Queue Préhensile"]
   },
   lizardmen: {
     "Skink Linemen": [],
     "lizardmen_saurus": [],
-    "lizardmen_skink": ["Dodge", "Stunty"],
-    "lizardmen_kroxigor": ["Bone Head", "Loner (4+)", "Mighty Blow (+1)", "Prehensile Tail", "Thick Skull", "Throw Team-mate"]
+    "lizardmen_skink": ["Esquive", "Microbe*"],
+    "lizardmen_kroxigor": ["Tête de Bois", "Solitaire (4+)*", "Coup Puissant (+1)", "Queue Préhensile", "Crâne Épais", "Lancer d'Équipier"]
   },
   human: {
     "Human Linemen": [],
-    "Thrower": ["Pass", "Sure Hands"],
-    "Catcher": ["Catch", "Dodge"],
-    "Blitzer": ["Block"],
-    "Halfling Hopeful": ["Dodge", "Stunty", "Right Stuff"],
-    "Ogre": ["Bone Head", "Loner (4+)", "Mighty Blow (+1)", "Thick Skull", "Throw Team-mate"]
+    "Thrower": ["Passe", "Prise Sûre"],
+    "Catcher": ["Réception", "Esquive"],
+    "Blitzer": ["Blocage"],
+    "Halfling Hopeful": ["Esquive", "Microbe*", "Poids Plume*"],
+    "Ogre": ["Tête de Bois", "Solitaire (4+)*", "Coup Puissant (+1)", "Crâne Épais", "Lancer d'Équipier"]
   },
   orc: {
     "Orc Linemen": [],
-    "Thrower": ["Pass", "Sure Hands"],
-    "Blitzer": ["Block"],
+    "Thrower": ["Passe", "Prise Sûre"],
+    "Blitzer": ["Blocage"],
     "Black Orc Blocker": [],
-    "Goblin Linemen": ["Dodge", "Stunty", "Right Stuff"],
-    "Troll": ["Always Hungry", "Loner (4+)", "Mighty Blow (+1)", "Really Stupid", "Regeneration", "Throw Team-mate"]
+    "Goblin Linemen": ["Esquive", "Microbe*", "Poids Plume*"],
+    "Troll": ["Toujours Affamé*", "Solitaire (4+)*", "Coup Puissant (+1)", "Gros Débile*", "Régénération", "Lancer d'Équipier"]
   },
   dwarf: {
     "Dwarf Linemen": [],
-    "Runner": ["Sure Hands"],
-    "Blitzer": ["Block", "Thick Skull"],
-    "Longbeard": ["Block", "Thick Skull"],
-    "Deathroller": ["Break Tackle", "Loner (4+)", "Mighty Blow (+1)", "No Hands", "Secret Weapon", "Stand Firm", "Thick Skull"]
+    "Runner": ["Prise Sûre"],
+    "Blitzer": ["Blocage", "Crâne Épais"],
+    "Longbeard": ["Blocage", "Crâne Épais"],
+    "Deathroller": ["Esquive en Force", "Solitaire (4+)*", "Coup Puissant (+1)", "Sans les Mains*", "Arme Secrète*", "Stabilité", "Crâne Épais"]
   },
   elf: {
     "Elf Linemen": [],
-    "Thrower": ["Pass"],
-    "Catcher": ["Catch", "Nerves of Steel"],
-    "Blitzer": ["Block"]
+    "Thrower": ["Passe"],
+    "Catcher": ["Réception", "Nerfs d'Acier"],
+    "Blitzer": ["Blocage"]
   },
   "dark elf": {
     "Dark Elf Linemen": [],
-    "Thrower": ["Pass"],
-    "Runner": ["Sure Hands"],
-    "Blitzer": ["Block"],
-    "Assassin": ["Shadowing", "Stab"]
+    "Thrower": ["Passe"],
+    "Runner": ["Prise Sûre"],
+    "Blitzer": ["Blocage"],
+    "Assassin": ["Poursuite", "Poignard"]
   },
   "wood elf": {
     "Wood Elf Linemen": [],
-    "Thrower": ["Pass"],
-    "Catcher": ["Catch", "Dodge"],
-    "Wardancer": ["Block", "Dodge", "Leap"]
+    "Thrower": ["Passe"],
+    "Catcher": ["Réception", "Esquive"],
+    "Wardancer": ["Blocage", "Esquive", "Saut"]
   },
   "high elf": {
     "High Elf Linemen": [],
-    "Thrower": ["Pass", "Safe Throw"],
-    "Catcher": ["Catch", "Dodge"],
-    "Blitzer": ["Block"]
+    "Thrower": ["Passe", "Passe Assurée"],
+    "Catcher": ["Réception", "Esquive"],
+    "Blitzer": ["Blocage"]
   },
   "chaos": {
     "Chaos Linemen": [],
     "Beastman": [],
     "Chaos Warrior": [],
-    "Minotaur": ["Frenzy", "Horns", "Loner (4+)", "Mighty Blow (+1)", "Thick Skull", "Wild Animal"]
+    "Minotaur": ["Frénésie", "Cornes", "Solitaire (4+)*", "Coup Puissant (+1)", "Crâne Épais", "Fureur Débridée*"]
   },
   "chaos dwarf": {
     "Chaos Dwarf Linemen": [],
     "Bull Centaur": ["Sprint"],
     "Hobgoblin Linemen": [],
-    "Minotaur": ["Frenzy", "Horns", "Loner (4+)", "Mighty Blow (+1)", "Thick Skull", "Wild Animal"]
+    "Minotaur": ["Frénésie", "Cornes", "Solitaire (4+)*", "Coup Puissant (+1)", "Crâne Épais", "Fureur Débridée*"]
   },
   "undead": {
-    "Skeleton Linemen": ["Regeneration", "Thick Skull"],
-    "Zombie Linemen": ["Regeneration"],
-    "Ghoul Runner": ["Dodge"],
-    "Wight Blitzer": ["Block", "Regeneration"],
-    "Mummy": ["Mighty Blow (+1)", "Regeneration", "Stand Firm", "Thick Skull"]
+    "Skeleton Linemen": ["Régénération", "Crâne Épais"],
+    "Zombie Linemen": ["Régénération"],
+    "Ghoul Runner": ["Esquive"],
+    "Wight Blitzer": ["Blocage", "Régénération"],
+    "Mummy": ["Coup Puissant (+1)", "Régénération", "Stabilité", "Crâne Épais"]
   },
   "necromantic": {
-    "Zombie Linemen": ["Regeneration"],
-    "Ghoul Runner": ["Dodge"],
-    "Wraith": ["Block", "Disturbing Presence", "No Hands", "Regeneration", "Sidestep"],
-    "Werewolf": ["Claws", "Frenzy", "Regeneration"],
-    "Flesh Golem": ["Regeneration", "Stand Firm", "Thick Skull"]
+    "Zombie Linemen": ["Régénération"],
+    "Ghoul Runner": ["Esquive"],
+    "Wraith": ["Blocage", "Présence Perturbante", "Sans les Mains*", "Régénération", "Glissade Contrôlée"],
+    "Werewolf": ["Griffes", "Frénésie", "Régénération"],
+    "Flesh Golem": ["Régénération", "Stabilité", "Crâne Épais"]
   },
   "norse": {
-    "Norse Linemen": ["Block"],
-    "Thrower": ["Pass", "Sure Hands"],
-    "Catcher": ["Catch", "Dodge"],
-    "Berserker": ["Block", "Frenzy"],
-    "Yhetee": ["Disturbing Presence", "Loner (4+)", "Mighty Blow (+1)", "Thick Skull", "Wild Animal"]
+    "Norse Linemen": ["Blocage"],
+    "Thrower": ["Passe", "Prise Sûre"],
+    "Catcher": ["Réception", "Esquive"],
+    "Berserker": ["Blocage", "Frénésie"],
+    "Yhetee": ["Présence Perturbante", "Solitaire (4+)*", "Coup Puissant (+1)", "Crâne Épais", "Fureur Débridée*"]
   },
   "amazon": {
     "Amazon Linemen": [],
-    "Thrower": ["Pass", "Sure Hands"],
-    "Catcher": ["Catch", "Dodge"],
-    "Blitzer": ["Block"]
+    "Thrower": ["Passe", "Prise Sûre"],
+    "Catcher": ["Réception", "Esquive"],
+    "Blitzer": ["Blocage"]
   },
   "halfling": {
-    "Halfling Linemen": ["Dodge", "Stunty", "Right Stuff"],
-    "Treeman": ["Loner (4+)", "Mighty Blow (+1)", "Stand Firm", "Take Root", "Thick Skull", "Throw Team-mate"]
+    "Halfling Linemen": ["Esquive", "Microbe*", "Poids Plume*"],
+    "Treeman": ["Solitaire (4+)*", "Coup Puissant (+1)", "Stabilité", "Prendre Racine*", "Crâne Épais", "Lancer d'Équipier"]
   },
   "goblin": {
-    "Goblin Linemen": ["Dodge", "Stunty", "Right Stuff"],
-    "Looney": ["Chainsaw", "Loner (4+)", "Mighty Blow (+1)", "No Hands", "Secret Weapon"],
-    "Fanatic": ["Ball & Chain", "Loner (4+)", "Mighty Blow (+1)", "No Hands", "Secret Weapon"],
-    "Pogoer": ["Dodge", "Jump Up", "Stunty", "Very Long Legs"],
-    "Troll": ["Always Hungry", "Loner (4+)", "Mighty Blow (+1)", "Really Stupid", "Regeneration", "Throw Team-mate"]
+    "Goblin Linemen": ["Esquive", "Microbe*", "Poids Plume*"],
+    "Looney": ["Tronçonneuse*", "Solitaire (4+)*", "Coup Puissant (+1)", "Sans les Mains*", "Arme Secrète*"],
+    "Fanatic": ["Chaîne et Boulet*", "Solitaire (4+)*", "Coup Puissant (+1)", "Sans les Mains*", "Arme Secrète*"],
+    "Pogoer": ["Esquive", "Rétablissement", "Microbe*", "Très Longues Jambes"],
+    "Troll": ["Toujours Affamé*", "Solitaire (4+)*", "Coup Puissant (+1)", "Gros Débile*", "Régénération", "Lancer d'Équipier"]
   },
   "ogre": {
-    "Ogre Linemen": ["Bone Head", "Mighty Blow (+1)", "Thick Skull"],
-    "Gnoblar Linemen": ["Dodge", "Right Stuff", "Stunty", "Titchy"],
-    "Runt Punter": ["Dodge", "Right Stuff", "Stunty", "Titchy"]
+    "Ogre Linemen": ["Tête de Bois", "Coup Puissant (+1)", "Crâne Épais"],
+    "Gnoblar Linemen": ["Esquive", "Poids Plume*", "Microbe*", "Minus*"],
+    "Runt Punter": ["Esquive", "Poids Plume*", "Microbe*", "Minus*"]
   },
   "vampire": {
     "Thrall Linemen": [],
-    "Vampire": ["Hypnotic Gaze", "Regeneration"]
+    "Vampire": ["Regard Hypnotique", "Régénération"]
   },
   "khemri": {
-    "Skeleton Linemen": ["Regeneration", "Thick Skull"],
-    "Thrower": ["Pass", "Regeneration", "Sure Hands", "Thick Skull"],
-    "Blitzer": ["Block", "Regeneration", "Thick Skull"],
-    "Tomb Guardian": ["Decay", "Regeneration"]
+    "Skeleton Linemen": ["Régénération", "Crâne Épais"],
+    "Thrower": ["Passe", "Régénération", "Prise Sûre", "Crâne Épais"],
+    "Blitzer": ["Blocage", "Régénération", "Crâne Épais"],
+    "Tomb Guardian": ["Décomposition*", "Régénération"]
   },
   "nurgle": {
-    "Rotter Linemen": ["Decay"],
-    "Pestigor": ["Horns"],
-    "Rotters": ["Decay"],
-    "Beast of Nurgle": ["Disturbing Presence", "Loner (4+)", "Mighty Blow (+1)", "Really Stupid", "Regeneration", "Tentacles"]
+    "Rotter Linemen": ["Décomposition*"],
+    "Pestigor": ["Cornes"],
+    "Rotters": ["Décomposition*"],
+    "Beast of Nurgle": ["Présence Perturbante", "Solitaire (4+)*", "Coup Puissant (+1)", "Gros Débile*", "Régénération", "Tentacules"]
   },
   "khorne": {
-    "Bloodborn Marauder Linemen": ["Frenzy"],
-    "Khorngor": ["Horns", "Juggernaut"],
-    "Bloodseeker": ["Frenzy"],
-    "Bloodspawn": ["Claws", "Frenzy", "Loner (4+)", "Mighty Blow (+1)", "Wild Animal"]
+    "Bloodborn Marauder Linemen": ["Frénésie"],
+    "Khorngor": ["Cornes", "Boulet de Canon"],
+    "Bloodseeker": ["Frénésie"],
+    "Bloodspawn": ["Griffes", "Frénésie", "Solitaire (4+)*", "Coup Puissant (+1)", "Fureur Débridée*"]
   },
   "underworld": {
-    "Goblin Linemen": ["Dodge", "Stunty", "Right Stuff"],
+    "Goblin Linemen": ["Esquive", "Microbe*", "Poids Plume*"],
     "Skaven Linemen": [],
-    "Thrower": ["Pass", "Sure Hands"],
-    "Blitzer": ["Block"],
-    "Troll": ["Always Hungry", "Loner (4+)", "Mighty Blow (+1)", "Really Stupid", "Regeneration", "Throw Team-mate"]
+    "Thrower": ["Passe", "Prise Sûre"],
+    "Blitzer": ["Blocage"],
+    "Troll": ["Toujours Affamé*", "Solitaire (4+)*", "Coup Puissant (+1)", "Gros Débile*", "Régénération", "Lancer d'Équipier"]
   },
   "snotling": {
-    "Snotling Linemen": ["Dodge", "Right Stuff", "Stunty", "Titchy"],
-    "Pump Wagon": ["Loner (4+)", "Mighty Blow (+1)", "No Hands", "Secret Weapon"],
-    "Troll": ["Always Hungry", "Loner (4+)", "Mighty Blow (+1)", "Really Stupid", "Regeneration", "Throw Team-mate"]
+    "Snotling Linemen": ["Esquive", "Poids Plume*", "Microbe*", "Minus*"],
+    "Pump Wagon": ["Solitaire (4+)*", "Coup Puissant (+1)", "Sans les Mains*", "Arme Secrète*"],
+    "Troll": ["Toujours Affamé*", "Solitaire (4+)*", "Coup Puissant (+1)", "Gros Débile*", "Régénération", "Lancer d'Équipier"]
   },
   "black orc": {
-    "Goblin Linemen": ["Dodge", "Stunty", "Right Stuff"],
+    "Goblin Linemen": ["Esquive", "Microbe*", "Poids Plume*"],
     "Black Orc": [],
-    "Troll": ["Always Hungry", "Loner (4+)", "Mighty Blow (+1)", "Really Stupid", "Regeneration", "Throw Team-mate"]
+    "Troll": ["Toujours Affamé*", "Solitaire (4+)*", "Coup Puissant (+1)", "Gros Débile*", "Régénération", "Lancer d'Équipier"]
   },
   "imperial nobility": {
     "Imperial Retainer Linemen": [],
-    "Thrower": ["Pass", "Safe Throw"],
-    "Noble Blitzer": ["Block"],
-    "Bodyguard": ["Guard"]
+    "Thrower": ["Passe", "Passe Assurée"],
+    "Noble Blitzer": ["Blocage"],
+    "Bodyguard": ["Garde"]
   },
   "old world alliance": {
     "Human Linemen": [],
     "Dwarf Linemen": [],
-    "Halfling Linemen": ["Dodge", "Stunty", "Right Stuff"],
-    "Thrower": ["Pass", "Sure Hands"],
-    "Catcher": ["Catch", "Dodge"],
-    "Blitzer": ["Block"],
-    "Ogre": ["Bone Head", "Loner (4+)", "Mighty Blow (+1)", "Thick Skull", "Throw Team-mate"]
+    "Halfling Linemen": ["Esquive", "Microbe*", "Poids Plume*"],
+    "Thrower": ["Passe", "Prise Sûre"],
+    "Catcher": ["Réception", "Esquive"],
+    "Blitzer": ["Blocage"],
+    "Ogre": ["Tête de Bois", "Solitaire (4+)*", "Coup Puissant (+1)", "Crâne Épais", "Lancer d'Équipier"]
   }
 };
 

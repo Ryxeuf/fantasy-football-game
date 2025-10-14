@@ -6,374 +6,374 @@ export interface SkillDescription {
 
 export const SKILLS_DESCRIPTIONS: Record<string, SkillDescription> = {
   // GENERAL SKILLS
-  "Block": {
-    name: "Block",
-    description: "When a Both Down result is applied during a Block action, this player may choose to ignore it and not be Knocked Down.",
+  "Blocage": {
+    name: "Blocage",
+    description: "Quand on obtient le résultat Les Deux Plaqués lors d'une action de Blocage, ce joueur peut choisir de l'ignorer et ne pas être Plaqué (voir page 57).",
     category: "General"
   },
-  "Dauntless": {
-    name: "Dauntless",
-    description: "When this player performs a Block action, if the nominated target has a higher Strength characteristic than this player, roll a D6 and add this player's Strength characteristic to the result. If the total is higher than the target's Strength characteristic, this player increases their Strength characteristic to be equal to that of the target for the duration of this Block action.",
+  "Intrépide": {
+    name: "Intrépide",
+    description: "Quand ce joueur fait une action de Blocage (y compris pendant une action de Blitz), si la cible désignée a une caractéristique de Force supérieure à celle de ce joueur avant de compter les soutiens offensifs ou défensifs, mais après avoir appliqué les autres modificateurs, jetez un D6 et ajoutez la caractéristique de Force de ce joueur au résultat. Si le total est supérieur à la caractéristique de Force de la cible, ce joueur augmente sa caractéristique de Force jusqu'à être égale à celle de la cible de l'action de Blocage, avant de compter les soutiens offensifs ou défensifs, pour la durée de cette action de Blocage.",
     category: "General"
   },
-  "Dirty Player": {
-    name: "Dirty Player",
-    description: "When this player commits a Foul action, either the Armour roll or Injury roll made against the victim may be modified by +1. This modifier may be applied after the roll has been made.",
+  "Joueur Déloyal (+1)": {
+    name: "Joueur Déloyal (+1)",
+    description: "Quand ce joueur fait une action d'Agression, vous pouvez modifier soit le jet d'Armure, soit le jet de Blessure, effectué contre la victime, du montant indiqué entre parenthèses. Ce modificateur peut être appliqué après avoir fait le jet.",
     category: "General"
   },
-  "Fend": {
-    name: "Fend",
-    description: "If this player is pushed back as the result of any block dice result being applied against them, they may choose to prevent the player that pushed them back from following-up.",
+  "Parade": {
+    name: "Parade",
+    description: "Si ce joueur est repoussé à cause d'un résultat de dé de blocage s'appliquant à lui, il peut choisir d'empêcher le joueur qui l'a repoussé de le poursuivre. Toutefois, le joueur qui l'a repoussé peut continuer de se déplacer s'il est en train de faire une action de Blitz s'il lui reste du Mouvement ou en Fonçant.",
     category: "General"
   },
-  "Frenzy": {
-    name: "Frenzy",
-    description: "Every time this player performs a Block action, they must follow-up if the target is pushed back and if they are able. If the target is still Standing after being pushed back, this player must then perform a second Block action against the same target.",
+  "Frénésie": {
+    name: "Frénésie",
+    description: "Chaque fois que ce joueur fait une action de Blocage (y compris pendant une action de Blitz), il doit poursuivre si la cible est repoussée et s'il en est capable. Si la cible est encore Debout après avoir été repoussée, et si ce joueur a pu poursuivre, il doit faire une seconde action de Blocage contre la même cible, et la poursuivre à nouveau si elle est repoussée.",
     category: "General"
   },
-  "Kick": {
-    name: "Kick",
-    description: "If this player is nominated to be the kicking player during a kick-off, you may choose to halve the result of the D6 to determine the number of squares that the ball deviates, rounding any fractions down.",
+  "Frappe Précise": {
+    name: "Frappe Précise",
+    description: "Si ce joueur est désigné pour donner un coup d'envoi, vous pouvez décider de diviser par deux le résultat du D6 déterminant le nombre de cases sur lesquelles le ballon dévie, en arrondissant à l'entier inférieur.",
     category: "General"
   },
   "Pro": {
     name: "Pro",
-    description: "During their activation, this player may attempt to re-roll one dice. Roll a D6: on a roll of 3+, the dice can be re-rolled; on a roll of 1 or 2, the dice cannot be re-rolled.",
+    description: "Pendant son activation, ce joueur peut tenter de relancer 1 dé. Ce dé peut être celui d'un jet de dé unique, faire partie d'un jet de plusieurs dés, ou faire partie d'un groupe de dés, mais ne peut pas être un dé d'un jet d'Armure, de Blessure ni d'Élimination.",
     category: "General"
   },
-  "Shadowing": {
-    name: "Shadowing",
-    description: "This player can use this Skill when an opposition player they are Marking voluntarily moves out of a square within this player's Tackle Zone. Roll a D6, adding the MA of this player to the roll and then subtracting the MA of the opposition player. If the result is 6 or higher, this player may immediately move into the square vacated by the opposition player.",
+  "Poursuite": {
+    name: "Poursuite",
+    description: "Ce joueur peut utiliser cette compétence quand un joueur adverse qu'il Marque se déplace volontairement hors d'une case située dans sa Zone de Tacle. Jetez un D6, ajoutez le MA de ce joueur au résultat et soustrayez ensuite le MA du joueur adverse. Si le résultat est de 6 ou plus, ce joueur peut immédiatement se déplacer dans la case libérée par le joueur adverse.",
     category: "General"
   },
-  "Strip Ball": {
-    name: "Strip Ball",
-    description: "When this player targets an opposition player that is in possession of the ball with a Block action, choosing to apply a Push Back result will cause that player to drop the ball in the square they are pushed back into.",
+  "Arracher le Ballon": {
+    name: "Arracher le Ballon",
+    description: "Si ce joueur fait tomber un joueur adverse lors d'une action de Blocage, le joueur adverse doit jeter un D6. Sur un résultat de 1, il lâche le ballon.",
     category: "General"
   },
-  "Sure Hands": {
-    name: "Sure Hands",
-    description: "This player may re-roll any failed attempt to pick up the ball. In addition, the Strip Ball skill cannot be used against a player with this Skill.",
+  "Prise Sûre": {
+    name: "Prise Sûre",
+    description: "Ce joueur peut relancer n'importe quel dé lors d'une tentative de ramassage du ballon.",
     category: "General"
   },
-  "Tackle": {
-    name: "Tackle",
-    description: "When an active opposition player attempts to Dodge from a square in which they were being Marked by one or more players on your team with this Skill, that player cannot use the Dodge skill.",
+  "Tacle": {
+    name: "Tacle",
+    description: "Quand un joueur adverse actif tente de faire un Esquive depuis une case dans laquelle il était Marqué par un ou plusieurs joueurs de votre équipe ayant cette compétence, ce joueur adverse ne peut pas utiliser la compétence Esquive.",
     category: "General"
   },
-  "Wrestle": {
-    name: "Wrestle",
-    description: "This player may use this Skill when a Both Down result is applied, either when they perform a Block action or when they are the target of a Block action. Instead of applying the Both Down result as normal, both players are Placed Prone.",
+  "Lutte": {
+    name: "Lutte",
+    description: "Ce joueur peut utiliser cette compétence quand le résultat Les Deux Plaqués est appliqué, soit quand il effectue une action de Blocage, soit quand il est la cible d'une action de Blocage. Au lieu d'appliquer le résultat Les Deux Plaqués normalement, les deux joueurs sont Placés À Terre.",
     category: "General"
   },
 
   // AGILITY SKILLS
-  "Catch": {
-    name: "Catch",
-    description: "This player may re-roll a failed Agility test when attempting to catch the ball.",
+  "Réception": {
+    name: "Réception",
+    description: "Ce joueur peut relancer un test d'Agilité raté lors d'une tentative de réception du ballon.",
     category: "Agility"
   },
-  "Diving Catch": {
-    name: "Diving Catch",
-    description: "This player may attempt to catch the ball if a pass, throw-in or kick-off causes it to land in a square within their Tackle Zone after scattering or deviating. Additionally, this player may apply a +1 modifier to any attempt to catch an accurate pass if they occupy the target square.",
+  "Réception Plongée": {
+    name: "Réception Plongée",
+    description: "Ce joueur peut tenter de réceptionner le ballon si une passe, une remise en jeu ou un coup d'envoi le fait atterrir dans une case située dans sa Zone de Tacle après dispersion ou déviation. De plus, ce joueur peut appliquer un modificateur de +1 à toute tentative de réceptionner une passe précise s'il occupe la case cible.",
     category: "Agility"
   },
-  "Diving Tackle": {
-    name: "Diving Tackle",
-    description: "Should an active opposition player that is attempting to Dodge, Jump or Leap in order to vacate a square in which they are being Marked by this player pass their Agility test, you may declare that this player will use this Skill. Your opponent must immediately subtract 2 from the result of the Agility test.",
+  "Tacle Plongé": {
+    name: "Tacle Plongé",
+    description: "Si un joueur adverse actif qui tente de faire un Esquive, Saut ou Bond pour quitter une case dans laquelle il est Marqué par ce joueur réussit son test d'Agilité, vous pouvez déclarer que ce joueur va utiliser cette compétence. Votre adversaire doit immédiatement soustraire 2 au résultat du test d'Agilité.",
     category: "Agility"
   },
-  "Dodge": {
-    name: "Dodge",
-    description: "Once per team turn, during their activation, this player may re-roll a failed Agility test when attempting to Dodge. Additionally, this player may choose to use this Skill when they are the target of a Block action and a Stumble result is applied against them.",
+  "Esquive": {
+    name: "Esquive",
+    description: "Une fois par tour d'équipe, pendant son activation, ce joueur peut relancer un test d'Agilité raté lors d'une tentative d'Esquive. De plus, ce joueur peut choisir d'utiliser cette compétence quand il est la cible d'une action de Blocage et qu'un résultat de Trébuchement est appliqué contre lui.",
     category: "Agility"
   },
-  "Defensive": {
-    name: "Defensive",
-    description: "During your opponent's team turn (but not during your own team turn), any opposition players being Marked by this player cannot use the Guard skill.",
+  "Compétences d'Agilité Défenseur": {
+    name: "Compétences d'Agilité Défenseur",
+    description: "Pendant le tour d'équipe de votre adversaire (mais pas pendant votre propre tour d'équipe), tous les joueurs adverses Marqués par ce joueur ne peuvent pas utiliser la compétence Garde.",
     category: "Agility"
   },
-  "Jump Up": {
-    name: "Jump Up",
-    description: "If this player is Prone they may stand up for free. Additionally, if this player is Prone when activated, they may attempt to Jump Up and perform a Block action. This player makes an Agility test, applying a +1 modifier.",
+  "Rétablissement": {
+    name: "Rétablissement",
+    description: "Si ce joueur est À Terre, il peut se relever gratuitement. De plus, si ce joueur est À Terre quand il est activé, il peut tenter de se Rétablir et effectuer une action de Blocage. Ce joueur fait un test d'Agilité, en appliquant un modificateur de +1.",
     category: "Agility"
   },
-  "Leap": {
-    name: "Leap",
-    description: "During their movement, instead of jumping over a single square that is occupied by a Prone or Stunned player, a player with this Skill may choose to Leap over any single adjacent square, including unoccupied squares and squares occupied by Standing players.",
+  "Saut": {
+    name: "Saut",
+    description: "Pendant son mouvement, au lieu de sauter par-dessus une seule case occupée par un joueur À Terre ou Étourdi, un joueur avec cette compétence peut choisir de Sauter par-dessus n'importe quelle case adjacente, y compris les cases libres et les cases occupées par des joueurs Debout.",
     category: "Agility"
   },
-  "Safe Pair of Hands": {
-    name: "Safe Pair of Hands",
-    description: "If this player is Knocked Down or Placed Prone whilst in possession of the ball, the ball does not bounce. Instead, you may place the ball in an unoccupied square adjacent to the one this player occupies when they become Prone.",
+  "Libération Contrôlée": {
+    name: "Libération Contrôlée",
+    description: "Si ce joueur est Renversé ou Placé À Terre alors qu'il est en possession du ballon, le ballon ne rebondit pas. Au lieu de cela, vous pouvez placer le ballon dans une case libre adjacente à celle qu'occupe ce joueur quand il devient À Terre.",
     category: "Agility"
   },
-  "Sidestep": {
-    name: "Sidestep",
-    description: "If this player is pushed back for any reason, they are not moved into a square chosen by the opposing coach. Instead you may choose any unoccupied square adjacent to this player.",
+  "Glissade Contrôlée": {
+    name: "Glissade Contrôlée",
+    description: "Si ce joueur est repoussé pour quelque raison que ce soit, il n'est pas déplacé dans une case choisie par l'entraîneur adverse. Au lieu de cela, vous pouvez choisir n'importe quelle case libre adjacente à ce joueur.",
     category: "Agility"
   },
-  "Sneaky Git": {
-    name: "Sneaky Git",
-    description: "When this player performs a Foul action, they are not Sent-off for committing a Foul should they roll a natural double on the Armour roll. Additionally, the activation of this player does not have to end once the Foul has been committed.",
+  "Sournois": {
+    name: "Sournois",
+    description: "Quand ce joueur effectue une action d'Agression, il n'est pas Expulsé pour avoir commis une Agression s'il obtient un double naturel sur le jet d'Armure. De plus, l'activation de ce joueur n'a pas besoin de se terminer une fois l'Agression commise.",
     category: "Agility"
   },
   "Sprint": {
     name: "Sprint",
-    description: "When this player performs any action that includes movement, they may attempt to Rush three times, rather than the usual two.",
+    description: "Quand ce joueur effectue une action qui inclut du mouvement, il peut tenter de Foncer trois fois, plutôt que les deux habituelles.",
     category: "Agility"
   },
-  "Sure Feet": {
-    name: "Sure Feet",
-    description: "Once per team turn, during their activation, this player may re-roll the D6 when attempting to Rush.",
+  "Équilibre": {
+    name: "Équilibre",
+    description: "Une fois par tour d'équipe, pendant son activation, ce joueur peut relancer le D6 lors d'une tentative de Foncer.",
     category: "Agility"
   },
 
   // MUTATIONS
-  "Big Hand": {
-    name: "Big Hand",
-    description: "This player may ignore any modifier(s) for being Marked or for Pouring Rain weather conditions when they attempt to pick up the ball.",
+  "Grande Main": {
+    name: "Grande Main",
+    description: "Ce joueur peut ignorer tout modificateur pour être Marqué ou pour les conditions météorologiques de Pluie Battante quand il tente de ramasser le ballon.",
     category: "Mutation"
   },
-  "Claws": {
-    name: "Claws",
-    description: "When you make an Armour roll against an opposition player that was Knocked Down as the result of a Block action performed by this player, a roll of 8+ before applying any modifiers will break their armour, regardless of their actual Armour Value.",
+  "Griffes": {
+    name: "Griffes",
+    description: "Quand vous faites un jet d'Armure contre un joueur adverse qui a été Renversé à la suite d'une action de Blocage effectuée par ce joueur, un résultat de 8+ avant d'appliquer tout modificateur brisera son armure, peu importe sa valeur d'Armure réelle.",
     category: "Mutation"
   },
-  "Disturbing Presence": {
-    name: "Disturbing Presence",
-    description: "When an opposition player performs either a Pass action, a Throw Team-mate action or a Throw Bomb Special action, or attempts to either interfere with a pass or to catch the ball, they must apply a -1 modifier to the test for each player on your team with this Skill that is within three squares of them.",
+  "Présence Perturbante": {
+    name: "Présence Perturbante",
+    description: "Quand un joueur adverse effectue soit une action de Passe, soit une action de Lancer d'Équipier, soit une action Spéciale de Lancer de Bombe, ou tente soit d'interférer avec une passe soit de réceptionner le ballon, il doit appliquer un modificateur de -1 au test pour chaque joueur de votre équipe ayant cette compétence qui se trouve à trois cases de lui.",
     category: "Mutation"
   },
-  "Extra Arms": {
-    name: "Extra Arms",
-    description: "This player may apply a +1 modifier when they attempt to pick up or catch the ball, or when they attempt to interfere with a pass.",
+  "Bras Supplémentaires": {
+    name: "Bras Supplémentaires",
+    description: "Ce joueur peut appliquer un modificateur de +1 quand il tente de ramasser ou de réceptionner le ballon, ou quand il tente d'interférer avec une passe.",
     category: "Mutation"
   },
-  "Foul Appearance": {
-    name: "Foul Appearance",
-    description: "When an opposition player declares a Block action targeting this player, their coach must first roll a D6. On a roll of 1, the player cannot perform the declared action and the action is wasted.",
+  "Répulsion*": {
+    name: "Répulsion*",
+    description: "Quand un joueur adverse déclare une action de Blocage ciblant ce joueur, son entraîneur doit d'abord jeter un D6. Sur un résultat de 1, le joueur ne peut pas effectuer l'action déclarée et l'action est gaspillée.",
     category: "Mutation"
   },
-  "Horns": {
-    name: "Horns",
-    description: "When this player performs a Block action as part of a Blitz action (but not on its own), you may apply a +1 modifier to this player's Strength characteristic.",
+  "Cornes": {
+    name: "Cornes",
+    description: "Quand ce joueur effectue une action de Blocage dans le cadre d'une action de Blitz (mais pas seule), vous pouvez appliquer un modificateur de +1 à la caractéristique de Force de ce joueur.",
     category: "Mutation"
   },
-  "Iron Hard Skin": {
-    name: "Iron Hard Skin",
-    description: "The Claws skill cannot be used when making an Armour roll against this player. Opposing players cannot modify any Armour rolls made against this player.",
+  "Peau de Fer": {
+    name: "Peau de Fer",
+    description: "La compétence Griffes ne peut pas être utilisée lors d'un jet d'Armure contre ce joueur. Les joueurs adverses ne peuvent pas modifier les jets d'Armure effectués contre ce joueur.",
     category: "Mutation"
   },
-  "Monstrous Mouth": {
-    name: "Monstrous Mouth",
-    description: "This player may re-roll any failed attempt to catch the ball. In addition, the Strip Ball skill cannot be used against this player.",
+  "Grande Gueule": {
+    name: "Grande Gueule",
+    description: "Ce joueur peut relancer toute tentative ratée de réceptionner le ballon. De plus, la compétence Arracher le Ballon ne peut pas être utilisée contre ce joueur.",
     category: "Mutation"
   },
-  "Prehensile Tail": {
-    name: "Prehensile Tail",
-    description: "When an active opposition player attempts to Dodge, Jump or Leap in order to vacate a square in which they are being Marked by this player, there is an additional -1 modifier applied to the active player's Agility test.",
+  "Queue Préhensile": {
+    name: "Queue Préhensile",
+    description: "Quand un joueur adverse actif tente de faire un Esquive, Saut ou Bond pour quitter une case dans laquelle il est Marqué par ce joueur, il y a un modificateur supplémentaire de -1 appliqué au test d'Agilité du joueur actif.",
     category: "Mutation"
   },
-  "Tentacles": {
-    name: "Tentacles",
-    description: "This player can use this Skill when an opposition player they are Marking voluntarily moves out of a square within this player's Tackle Zone. Roll a D6, adding the ST of this player to the roll and then subtracting the ST of the opposition player. If the result is 6 or higher, the opposition player is held firmly in place and their movement comes to an end.",
+  "Tentacules": {
+    name: "Tentacules",
+    description: "Ce joueur peut utiliser cette compétence quand un joueur adverse qu'il Marque se déplace volontairement hors d'une case située dans sa Zone de Tacle. Jetez un D6, ajoutez la FO de ce joueur au résultat et soustrayez ensuite la FO du joueur adverse. Si le résultat est de 6 ou plus, le joueur adverse est fermement retenu en place et son mouvement se termine.",
     category: "Mutation"
   },
-  "Two Heads": {
-    name: "Two Heads",
-    description: "This player may apply a +1 modifier to the Agility test when they attempt to Dodge.",
+  "Deux Têtes": {
+    name: "Deux Têtes",
+    description: "Ce joueur peut appliquer un modificateur de +1 au test d'Agilité quand il tente de faire un Esquive.",
     category: "Mutation"
   },
-  "Very Long Legs": {
-    name: "Very Long Legs",
-    description: "This player may reduce any negative modifier applied to the Agility test when they attempt to Jump over a Prone or Stunned player by 1, to a minimum of -1. Additionally, this player may apply a +2 modifier to any attempts to interfere with a pass they make.",
+  "Très Longues Jambes": {
+    name: "Très Longues Jambes",
+    description: "Ce joueur peut réduire tout modificateur négatif appliqué au test d'Agilité quand il tente de Sauter par-dessus un joueur À Terre ou Étourdi de 1, jusqu'à un minimum de -1. De plus, ce joueur peut appliquer un modificateur de +2 à toute tentative d'interférer avec une passe qu'il effectue.",
     category: "Mutation"
   },
 
   // PASSING SKILLS
-  "Accurate": {
-    name: "Accurate",
-    description: "When this player performs a Quick Pass action or a Short Pass action, you may apply an additional +1 modifier to the Passing Ability test.",
+  "Précision": {
+    name: "Précision",
+    description: "Quand ce joueur effectue une action de Passe Rapide ou une action de Passe Courte, vous pouvez appliquer un modificateur supplémentaire de +1 au test de Capacité de Passe.",
     category: "Passing"
   },
-  "Cannoneer": {
-    name: "Cannoneer",
-    description: "When this player performs a Long Pass action or a Long Bomb Pass action, you may apply an additional +1 modifier to the Passing Ability test.",
+  "Canonnier": {
+    name: "Canonnier",
+    description: "Quand ce joueur effectue une action de Passe Longue ou une action de Passe Bombe Longue, vous pouvez appliquer un modificateur supplémentaire de +1 au test de Capacité de Passe.",
     category: "Passing"
   },
-  "Cloud Burster": {
-    name: "Cloud Burster",
-    description: "When this player performs a Long Pass action or a Long Bomb Pass action, you may choose to make the opposing coach re-roll a successful attempt to interfere with the pass.",
+  "Perce-Nuages": {
+    name: "Perce-Nuages",
+    description: "Quand ce joueur effectue une action de Passe Longue ou une action de Passe Bombe Longue, vous pouvez choisir de faire relancer à l'entraîneur adverse une tentative réussie d'interférer avec la passe.",
     category: "Passing"
   },
-  "Dump-off": {
-    name: "Dump-off",
-    description: "If this player is nominated as the target of a Block action and if they are in possession of the ball, they may immediately perform a Quick Pass action, interrupting the activation of the opposition player performing the Block action.",
+  "Délestage": {
+    name: "Délestage",
+    description: "Si ce joueur est désigné comme cible d'une action de Blocage et s'il est en possession du ballon, il peut immédiatement effectuer une action de Passe Rapide, interrompant l'activation du joueur adverse effectuant l'action de Blocage.",
     category: "Passing"
   },
   "Fumblerooskie": {
     name: "Fumblerooskie",
-    description: "When this player performs a Move or Blitz action whilst in possession of the ball, they may choose to 'drop' the ball. The ball may be placed in any square the player vacates during their movement and does not bounce.",
+    description: "Quand ce joueur effectue une action de Mouvement ou de Blitz alors qu'il est en possession du ballon, il peut choisir de 'lâcher' le ballon. Le ballon peut être placé dans n'importe quelle case que le joueur quitte pendant son mouvement et ne rebondit pas.",
     category: "Passing"
   },
-  "Hail Mary Pass": {
-    name: "Hail Mary Pass",
-    description: "When this player performs a Pass action, the target square can be anywhere on the pitch and the range ruler does not need to be used. A Hail Mary pass is never accurate, regardless of the result of the Passing Ability test.",
+  "Passe Désespérée": {
+    name: "Passe Désespérée",
+    description: "Quand ce joueur effectue une action de Passe, la case cible peut être n'importe où sur le terrain et la règle de portée n'a pas besoin d'être utilisée. Une passe désespérée n'est jamais précise, peu importe le résultat du test de Capacité de Passe.",
     category: "Passing"
   },
-  "Leader": {
-    name: "Leader",
-    description: "A team which has one or more players with this Skill gains a single extra team re-roll, called a Leader re-roll. However, the Leader re-roll can only be used if there is at least one player with this Skill on the pitch.",
+  "Chef": {
+    name: "Chef",
+    description: "Une équipe qui a un ou plusieurs joueurs avec cette compétence gagne un seul relance d'équipe supplémentaire, appelé relance de Chef. Cependant, la relance de Chef ne peut être utilisée que s'il y a au moins un joueur avec cette compétence sur le terrain.",
     category: "Passing"
   },
-  "Nerves of Steel": {
-    name: "Nerves of Steel",
-    description: "This player may ignore any modifier(s) for being Marked when they attempt to perform a Pass action, attempt to catch the ball or attempt to interfere with a pass.",
+  "Nerfs d'Acier": {
+    name: "Nerfs d'Acier",
+    description: "Ce joueur peut ignorer tout modificateur pour être Marqué quand il tente d'effectuer une action de Passe, tente de réceptionner le ballon ou tente d'interférer avec une passe.",
     category: "Passing"
   },
-  "On the Ball": {
-    name: "On the Ball",
-    description: "This player may move up to three squares when the opposing coach declares that one of their players is going to perform a Pass action. This move is made after the range has been measured and the target square declared, but before the active player makes a Passing Ability test.",
+  "Sur le Ballon": {
+    name: "Sur le Ballon",
+    description: "Ce joueur peut se déplacer jusqu'à trois cases quand l'entraîneur adverse déclare qu'un de ses joueurs va effectuer une action de Passe. Ce mouvement est effectué après que la portée ait été mesurée et la case cible déclarée, mais avant que le joueur actif fasse un test de Capacité de Passe.",
     category: "Passing"
   },
-  "Pass": {
-    name: "Pass",
-    description: "This player may re-roll a failed Passing Ability test when performing a Pass action.",
+  "Passe": {
+    name: "Passe",
+    description: "Ce joueur peut relancer un test de Capacité de Passe raté lors d'une action de Passe.",
     category: "Passing"
   },
-  "Running Pass": {
-    name: "Running Pass",
-    description: "If this player performs a Quick Pass action, their activation does not have to end once the pass is resolved. If you wish and if this player has not used their full Movement Allowance, they may continue to move after resolving the pass.",
+  "Passe dans la Course": {
+    name: "Passe dans la Course",
+    description: "Si ce joueur effectue une action de Passe Rapide, son activation n'a pas besoin de se terminer une fois la passe résolue. Si vous le souhaitez et si ce joueur n'a pas utilisé sa totalité d'Allocation de Mouvement, il peut continuer à se déplacer après avoir résolu la passe.",
     category: "Passing"
   },
-  "Safe Pass": {
-    name: "Safe Pass",
-    description: "Should this player fumble a Pass action, the ball is not dropped, does not bounce from the square this player occupies, and no Turnover is caused. Instead, this player retains possession of the ball and their activation ends.",
+  "Passe Assurée": {
+    name: "Passe Assurée",
+    description: "Si ce joueur échoue une action de Passe, le ballon n'est pas lâché, ne rebondit pas depuis la case qu'occupe ce joueur, et aucun Renversement n'est causé. Au lieu de cela, ce joueur garde possession du ballon et son activation se termine.",
     category: "Passing"
   },
 
   // STRENGTH SKILLS
-  "Arm Bar": {
-    name: "Arm Bar",
-    description: "If an opposition player Falls Over as the result of failing their Agility test when attempting to Dodge, Jump or Leap out of a square in which they were being Marked by this player, you may apply a +1 modifier to either the Armour roll or Injury roll.",
+  "Clé de Bras": {
+    name: "Clé de Bras",
+    description: "Si un joueur adverse Tombe à la suite d'un échec de son test d'Agilité en tentant de faire un Esquive, Saut ou Bond pour quitter une case dans laquelle il était Marqué par ce joueur, vous pouvez appliquer un modificateur de +1 soit au jet d'Armure soit au jet de Blessure.",
     category: "Strength"
   },
-  "Brawler": {
-    name: "Brawler",
-    description: "When this player performs a Block action on its own (but not as part of a Blitz action), this player may re-roll a single Both Down result.",
+  "Bagarreur": {
+    name: "Bagarreur",
+    description: "Quand ce joueur effectue une action de Blocage seule (mais pas dans le cadre d'une action de Blitz), ce joueur peut relancer un seul résultat Les Deux Plaqués.",
     category: "Strength"
   },
-  "Break Tackle": {
-    name: "Break Tackle",
-    description: "Once during their activation, after making an Agility test in order to Dodge, this player may modify the dice roll by +1 if their Strength characteristic is 4 or less, or by +2 if their Strength characteristic is 5 or more.",
+  "Esquive en Force": {
+    name: "Esquive en Force",
+    description: "Une fois pendant son activation, après avoir fait un test d'Agilité pour faire un Esquive, ce joueur peut modifier le jet de dé de +1 si sa caractéristique de Force est de 4 ou moins, ou de +2 si sa caractéristique de Force est de 5 ou plus.",
     category: "Strength"
   },
-  "Grab": {
-    name: "Grab",
-    description: "When this player performs a Block action, they may choose to apply a Push Back result to any square adjacent to the target, rather than the square the target was pushed back into.",
+  "Projection": {
+    name: "Projection",
+    description: "Quand ce joueur effectue une action de Blocage, il peut choisir d'appliquer un résultat de Repoussement à n'importe quelle case adjacente à la cible, plutôt qu'à la case dans laquelle la cible était repoussée.",
     category: "Strength"
   },
-  "Guard": {
-    name: "Guard",
-    description: "This player may use this Skill when an opposition player performs a Block action against a team-mate that is adjacent to this player. This player may assist the team-mate for the purposes of that Block action.",
+  "Garde": {
+    name: "Garde",
+    description: "Ce joueur peut utiliser cette compétence quand un joueur adverse effectue une action de Blocage contre un coéquipier qui est adjacent à ce joueur. Ce joueur peut assister le coéquipier aux fins de cette action de Blocage.",
     category: "Strength"
   },
-  "Juggernaut": {
-    name: "Juggernaut",
-    description: "When this player performs a Block action, they may choose to treat a Both Down result as a Push Back result instead.",
+  "Boulet de Canon": {
+    name: "Boulet de Canon",
+    description: "Quand ce joueur effectue une action de Blocage, il peut choisir de traiter un résultat Les Deux Plaqués comme un résultat de Repoussement à la place.",
     category: "Strength"
   },
-  "Mighty Blow": {
-    name: "Mighty Blow",
-    description: "When an opposition player is Knocked Down as the result of a Block action performed by this player, you may apply a +1 modifier to either the Armour roll or Injury roll made against them.",
+  "Coup Puissant": {
+    name: "Coup Puissant",
+    description: "Quand un joueur adverse est Renversé à la suite d'une action de Blocage effectuée par ce joueur, vous pouvez appliquer un modificateur de +1 soit au jet d'Armure soit au jet de Blessure effectué contre lui.",
     category: "Strength"
   },
-  "Mighty Blow (+1)": {
-    name: "Mighty Blow (+1)",
-    description: "When an opponent is Knocked Down as the result of a Block action performed by this player, the Injury roll made against them may be modified by +1. This modifier may be applied after the roll has been made.",
+  "Coup Puissant (+1)": {
+    name: "Coup Puissant (+1)",
+    description: "Quand un adversaire est Renversé à la suite d'une action de Blocage effectuée par ce joueur, le jet de Blessure effectué contre lui peut être modifié de +1. Ce modificateur peut être appliqué après que le jet ait été effectué.",
     category: "Strength"
   },
-  "Multiple Block": {
-    name: "Multiple Block",
-    description: "When this player performs a Block action, they may target two adjacent opposition players instead of one. Both targets must be adjacent to this player and to each other.",
+  "Blocage Multiple": {
+    name: "Blocage Multiple",
+    description: "Quand ce joueur effectue une action de Blocage, il peut cibler deux joueurs adverses adjacents au lieu d'un. Les deux cibles doivent être adjacentes à ce joueur et l'une à l'autre.",
     category: "Strength"
   },
-  "Pile Driver": {
-    name: "Pile Driver",
-    description: "When an opposition player is Knocked Down as the result of a Block action performed by this player, you may apply a +1 modifier to the Injury roll made against them.",
+  "Pilonneur": {
+    name: "Pilonneur",
+    description: "Quand un joueur adverse est Renversé à la suite d'une action de Blocage effectuée par ce joueur, vous pouvez appliquer un modificateur de +1 au jet de Blessure effectué contre lui.",
     category: "Strength"
   },
-  "Stand Firm": {
-    name: "Stand Firm",
-    description: "This player may choose not to be pushed back as the result of a Block action. If they choose not to be pushed back, they are Placed Prone instead.",
+  "Stabilité": {
+    name: "Stabilité",
+    description: "Ce joueur peut choisir de ne pas être repoussé à la suite d'une action de Blocage. S'il choisit de ne pas être repoussé, il est Placé À Terre à la place.",
     category: "Strength"
   },
-  "Strong Arm": {
-    name: "Strong Arm",
-    description: "When this player performs a Pass action, you may reduce the range by one step (e.g., a Long Pass becomes a Short Pass).",
+  "Bras Musclé": {
+    name: "Bras Musclé",
+    description: "Quand ce joueur effectue une action de Passe, vous pouvez réduire la portée d'un niveau (par exemple, une Passe Longue devient une Passe Courte).",
     category: "Strength"
   },
-  "Thick Skull": {
-    name: "Thick Skull",
-    description: "When this player is Knocked Down, you may apply a +1 modifier to the Injury roll made against them.",
+  "Crâne Épais": {
+    name: "Crâne Épais",
+    description: "Quand ce joueur est Renversé, vous pouvez appliquer un modificateur de +1 au jet de Blessure effectué contre lui.",
     category: "Strength"
   },
 
   // TRAITS
-  "Animal Savagery": {
-    name: "Animal Savagery",
-    description: "At the start of this player's activation, roll a D6. On a roll of 1, this player must perform a Block action against a random adjacent team-mate if one is present.",
+  "Sauvagerie Animale*": {
+    name: "Sauvagerie Animale*",
+    description: "Au début de l'activation de ce joueur, jetez un D6. Sur un résultat de 1, ce joueur doit effectuer une action de Blocage contre un coéquipier adjacent aléatoire s'il y en a un présent.",
     category: "Trait"
   },
-  "Bone Head": {
-    name: "Bone Head",
-    description: "At the start of this player's activation, roll a D6. On a roll of 1, this player cannot perform any actions and their activation ends immediately.",
+  "Tête de Bois": {
+    name: "Tête de Bois",
+    description: "Au début de l'activation de ce joueur, jetez un D6. Sur un résultat de 1, ce joueur ne peut effectuer aucune action et son activation se termine immédiatement.",
     category: "Trait"
   },
-  "Really Stupid": {
-    name: "Really Stupid",
-    description: "At the start of this player's activation, roll a D6. On a roll of 1, this player cannot perform any actions and their activation ends immediately.",
+  "Gros Débile*": {
+    name: "Gros Débile*",
+    description: "Au début de l'activation de ce joueur, jetez un D6. Sur un résultat de 1, ce joueur ne peut effectuer aucune action et son activation se termine immédiatement.",
     category: "Trait"
   },
-  "Regeneration": {
-    name: "Regeneration",
-    description: "When this player is removed from play as the result of an Injury roll, roll a D6. On a roll of 4+, this player is not removed from play and may return to play later in the match.",
+  "Régénération": {
+    name: "Régénération",
+    description: "Quand ce joueur est retiré du jeu à la suite d'un jet de Blessure, jetez un D6. Sur un résultat de 4+, ce joueur n'est pas retiré du jeu et peut revenir jouer plus tard dans le match.",
     category: "Trait"
   },
-  "Right Stuff": {
-    name: "Right Stuff",
-    description: "This player may be thrown by a team-mate with the Throw Team-mate skill.",
+  "Poids Plume*": {
+    name: "Poids Plume*",
+    description: "Ce joueur peut être lancé par un coéquipier ayant la compétence Lancer d'Équipier.",
     category: "Trait"
   },
-  "Stunty": {
-    name: "Stunty",
-    description: "This player may Dodge on a roll of 2+ instead of 3+. However, this player may not use the Dodge skill.",
+  "Microbe*": {
+    name: "Microbe*",
+    description: "Ce joueur peut faire un Esquive sur un résultat de 2+ au lieu de 3+. Cependant, ce joueur ne peut pas utiliser la compétence Esquive.",
     category: "Trait"
   },
-  "Swarming": {
-    name: "Swarming",
-    description: "This player may be placed on the pitch at the start of the match even if doing so would exceed the maximum number of players allowed on the pitch.",
+  "Essaimage": {
+    name: "Essaimage",
+    description: "Ce joueur peut être placé sur le terrain au début du match même si cela dépasserait le nombre maximum de joueurs autorisés sur le terrain.",
     category: "Trait"
   },
-  "Take Root": {
-    name: "Take Root",
-    description: "At the start of this player's activation, roll a D6. On a roll of 1, this player cannot perform any actions and their activation ends immediately.",
+  "Prendre Racine*": {
+    name: "Prendre Racine*",
+    description: "Au début de l'activation de ce joueur, jetez un D6. Sur un résultat de 1, ce joueur ne peut effectuer aucune action et son activation se termine immédiatement.",
     category: "Trait"
   },
-  "Titchy": {
-    name: "Titchy",
-    description: "This player may Dodge on a roll of 2+ instead of 3+. However, this player may not use the Dodge skill.",
+  "Minus*": {
+    name: "Minus*",
+    description: "Ce joueur peut faire un Esquive sur un résultat de 2+ au lieu de 3+. Cependant, ce joueur ne peut pas utiliser la compétence Esquive.",
     category: "Trait"
   },
-  "Loner (4+)": {
-    name: "Loner (4+)",
-    description: "This player may only use team re-rolls if they roll a 4+ on a D6. If they fail this roll, they cannot use the team re-roll and the original result stands.",
+  "Solitaire (4+)*": {
+    name: "Solitaire (4+)*",
+    description: "Ce joueur ne peut utiliser les relances d'équipe que s'il obtient un 4+ sur un D6. S'il échoue à ce jet, il ne peut pas utiliser la relance d'équipe et le résultat original reste.",
     category: "Trait"
   },
-  "Throw Team-mate": {
-    name: "Throw Team-mate",
-    description: "This player may perform a Throw Team-mate action. This is a Pass action that may be performed against an adjacent team-mate with the Right Stuff trait.",
+  "Lancer d'Équipier": {
+    name: "Lancer d'Équipier",
+    description: "Ce joueur peut effectuer une action de Lancer d'Équipier. C'est une action de Passe qui peut être effectuée contre un coéquipier adjacent ayant le trait Poids Plume*.",
     category: "Trait"
   }
 };
