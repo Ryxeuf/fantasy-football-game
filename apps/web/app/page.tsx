@@ -17,10 +17,10 @@ export default function LandingPage() {
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <a
-                href="/lobby"
+                href="/me/teams"
                 className="px-5 py-2.5 rounded bg-emerald-500 hover:bg-emerald-400 text-white font-semibold"
               >
-                Jouer maintenant
+                Gérer mes équipes
               </a>
               <a
                 href="/login"
@@ -33,12 +33,6 @@ export default function LandingPage() {
                 className="px-5 py-2.5 rounded border border-white/20 text-white/90 hover:text-white hover:bg-white/10"
               >
                 Inscription
-              </a>
-              <a
-                href="/play/demo"
-                className="px-5 py-2.5 rounded border border-white/20 text-white/80 hover:text-white hover:bg-white/10"
-              >
-                Démo du plateau
               </a>
             </div>
           </div>

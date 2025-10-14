@@ -36,9 +36,6 @@ export default function AuthBar() {
       )}
       {hasToken ? (
         <>
-          <a className="underline" href="/me">
-            Mes parties
-          </a>
           <a className="underline" href="/me/teams">
             Mes équipes
           </a>
