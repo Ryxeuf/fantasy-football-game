@@ -18,21 +18,12 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
   const baseSkillsFromData = teamName && position ? getBaseSkills(teamName, position) : [];
   const skillsFromDB = parseSkills(skillsString);
   
-  // Si on a des compétences de base définies, les utiliser comme compétences de base
-  // Sinon, utiliser la logique de séparation existante
-  const { baseSkills, acquiredSkills } = baseSkillsFromData.length > 0
-    ? { 
-        baseSkills: baseSkillsFromData, 
-        acquiredSkills: skillsFromDB.filter(skill => !baseSkillsFromData.includes(skill))
-      }
-    : teamName && position 
-      ? separateSkills(teamName, position, skillsFromDB)
-      : { baseSkills: [], acquiredSkills: skillsFromDB };
+  // Séparer les compétences : celles qui sont dans la DB et qui sont des compétences de base vs acquises
+  const baseSkills = skillsFromDB.filter(skill => baseSkillsFromData.includes(skill));
+  const acquiredSkills = skillsFromDB.filter(skill => !baseSkillsFromData.includes(skill));
 
-  // Afficher au moins les compétences de base même si la DB est vide
-  const allSkills = [...baseSkills, ...acquiredSkills];
-  
-  if (allSkills.length === 0) {
+  // Si aucune compétence dans la DB, afficher "Aucune"
+  if (skillsFromDB.length === 0) {
     return <span className="text-gray-400 text-sm">Aucune</span>;
   }
 
@@ -57,6 +48,7 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
         {/* Compétences de base */}
         {baseSkills.map((skillName, index) => {
           const skillInfo = getSkillDescription(skillName);
+          // Les compétences de base ont la couleur de leur catégorie avec une bordure grise
           const categoryColor = skillInfo?.category === "General" ? "bg-blue-100 text-blue-800" :
                               skillInfo?.category === "Agility" ? "bg-green-100 text-green-800" :
                               skillInfo?.category === "Strength" ? "bg-red-100 text-red-800" :
@@ -81,6 +73,7 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
         {/* Compétences acquises */}
         {acquiredSkills.map((skillName, index) => {
           const skillInfo = getSkillDescription(skillName);
+          // Les compétences acquises ont la couleur de leur catégorie avec une bordure orange
           const categoryColor = skillInfo?.category === "General" ? "bg-blue-100 text-blue-800" :
                               skillInfo?.category === "Agility" ? "bg-green-100 text-green-800" :
                               skillInfo?.category === "Strength" ? "bg-red-100 text-red-800" :
@@ -92,7 +85,7 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
           return (
             <span
               key={`acquired-${index}`}
-              className={`px-2 py-1 rounded text-xs font-medium cursor-help border-2 border-yellow-400 ${categoryColor}`}
+              className={`px-2 py-1 rounded text-xs font-medium cursor-help border-2 border-orange-400 ${categoryColor}`}
               onMouseEnter={(e) => handleMouseEnter(skillName, e)}
               onMouseLeave={handleMouseLeave}
               title={`${skillInfo?.description || skillName} (Compétence acquise)`}

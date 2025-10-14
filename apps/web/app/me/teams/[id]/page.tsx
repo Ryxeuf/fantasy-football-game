@@ -158,12 +158,15 @@ export default function TeamDetailPage() {
               <div className="text-xs text-gray-500 mt-2">
                 <span className="inline-flex items-center gap-1">
                   <span className="w-3 h-3 border border-gray-300 bg-blue-100 rounded"></span>
-                  Compétences de base
+                  Compétences de base (bordure grise)
                 </span>
                 <span className="ml-4 inline-flex items-center gap-1">
-                  <span className="w-3 h-3 border-2 border-yellow-400 bg-blue-100 rounded"></span>
-                  Compétences acquises
+                  <span className="w-3 h-3 border-2 border-orange-400 bg-blue-100 rounded"></span>
+                  Compétences acquises (bordure orange)
                 </span>
+                <div className="mt-1 text-xs text-gray-400">
+                  Couleurs de fond selon la catégorie : General (bleu), Agility (vert), Strength (rouge), Passing (violet), Mutation (orange), Trait (gris)
+                </div>
               </div>
             </div>
             <div className="overflow-x-auto">

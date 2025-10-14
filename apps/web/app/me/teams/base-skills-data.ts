@@ -11,16 +11,16 @@ export interface BaseSkillsData {
 export const BASE_SKILLS_DATA: BaseSkillsData = {
   skaven: {
     "Clanrat Linemen": [],
-    "Thrower": ["Pass", "Sure Hands"],
-    "Gutter Runner": ["Dodge"],
-    "Blitzer": ["Block"],
-    "Rat Ogre": ["Animal Savagery", "Frenzy", "Loner (4+)", "Mighty Blow (+1)", "Prehensile Tail"]
+    "thrower": ["Pass", "Sure Hands"],
+    "gutter": ["Dodge"],
+    "blitzer": ["Block"],
+    "ratogre": ["Animal Savagery", "Frenzy", "Loner (4+)", "Mighty Blow (+1)", "Prehensile Tail"]
   },
   lizardmen: {
     "Skink Linemen": [],
-    "Saurus Linemen": [],
-    "Chameleon Skink": ["Diving Catch", "Stunty"],
-    "Kroxigor": ["Bone Head", "Loner (4+)", "Mighty Blow (+1)", "Prehensile Tail", "Thick Skull", "Throw Team-mate"]
+    "saurus": [],
+    "skink": ["Dodge", "Stunty"],
+    "kroxigor": ["Bone Head", "Loner (4+)", "Mighty Blow (+1)", "Prehensile Tail", "Thick Skull", "Throw Team-mate"]
   },
   human: {
     "Human Linemen": [],
