@@ -29,6 +29,9 @@ export default function AuthBar() {
 
   return (
     <div className="flex items-center gap-3 text-sm">
+      <a className="underline" href="/skills">
+        Compétences
+      </a>
       {isAdmin && (
         <a className="underline" href="/admin">
           Admin
