@@ -165,7 +165,8 @@ exports.Prisma.TeamScalarFieldEnum = {
   apothecary: 'apothecary',
   dedicatedFans: 'dedicatedFans',
   teamValue: 'teamValue',
-  currentValue: 'currentValue'
+  currentValue: 'currentValue',
+  initialBudget: 'initialBudget'
 };
 
 exports.Prisma.TeamPlayerScalarFieldEnum = {

@@ -212,6 +212,7 @@ router.post(
         name, 
         roster,
         teamValue: finalTeamValue,
+        initialBudget: finalTeamValue, // Conserver le budget initial saisi par l'utilisateur
         // Initialiser les informations d'équipe par défaut
         treasury: 0, // Calculée automatiquement après chaque match
         rerolls: 0,
@@ -315,6 +316,7 @@ router.post("/build", authUser, async (req: AuthenticatedRequest, res) => {
       name, 
       roster,
       teamValue: finalTeamValue,
+      initialBudget: finalTeamValue, // Conserver le budget initial saisi par l'utilisateur
       // Initialiser les informations d'équipe par défaut
       treasury: 0, // Calculée automatiquement après chaque match
       rerolls: 0,
@@ -660,6 +662,20 @@ router.post("/:id/players", authUser, async (req: AuthenticatedRequest, res) => 
     if (currentPositionCount >= positionData.max) {
       return res.status(400).json({ 
         error: `Limite maximale atteinte pour la position ${positionData.displayName} (${positionData.max})` 
+      });
+    }
+
+    // Vérifier le budget avant d'ajouter le joueur
+    const { getPlayerCost } = await import('../../../../packages/game-engine/src/utils/team-value-calculator');
+    const currentTotalCost = team.players.reduce((total: number, player: any) => {
+      return total + getPlayerCost(player.position, team.roster);
+    }, 0);
+    
+    const newTotalCost = currentTotalCost + positionData.cost;
+    const budgetInPo = team.initialBudget * 1000; // Convertir le budget de kpo en po
+    if (newTotalCost > budgetInPo) {
+      return res.status(400).json({ 
+        error: `Budget dépassé ! Coût actuel: ${Math.round(currentTotalCost / 1000)}k po, nouveau coût: ${Math.round(newTotalCost / 1000)}k po, budget: ${team.initialBudget}k po` 
       });
     }
 

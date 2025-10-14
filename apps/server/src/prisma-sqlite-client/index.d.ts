@@ -6010,6 +6010,7 @@ export namespace Prisma {
     dedicatedFans: number | null
     teamValue: number | null
     currentValue: number | null
+    initialBudget: number | null
   }
 
   export type TeamSumAggregateOutputType = {
@@ -6020,6 +6021,7 @@ export namespace Prisma {
     dedicatedFans: number | null
     teamValue: number | null
     currentValue: number | null
+    initialBudget: number | null
   }
 
   export type TeamMinAggregateOutputType = {
@@ -6036,6 +6038,7 @@ export namespace Prisma {
     dedicatedFans: number | null
     teamValue: number | null
     currentValue: number | null
+    initialBudget: number | null
   }
 
   export type TeamMaxAggregateOutputType = {
@@ -6052,6 +6055,7 @@ export namespace Prisma {
     dedicatedFans: number | null
     teamValue: number | null
     currentValue: number | null
+    initialBudget: number | null
   }
 
   export type TeamCountAggregateOutputType = {
@@ -6068,6 +6072,7 @@ export namespace Prisma {
     dedicatedFans: number
     teamValue: number
     currentValue: number
+    initialBudget: number
     _all: number
   }
 
@@ -6080,6 +6085,7 @@ export namespace Prisma {
     dedicatedFans?: true
     teamValue?: true
     currentValue?: true
+    initialBudget?: true
   }
 
   export type TeamSumAggregateInputType = {
@@ -6090,6 +6096,7 @@ export namespace Prisma {
     dedicatedFans?: true
     teamValue?: true
     currentValue?: true
+    initialBudget?: true
   }
 
   export type TeamMinAggregateInputType = {
@@ -6106,6 +6113,7 @@ export namespace Prisma {
     dedicatedFans?: true
     teamValue?: true
     currentValue?: true
+    initialBudget?: true
   }
 
   export type TeamMaxAggregateInputType = {
@@ -6122,6 +6130,7 @@ export namespace Prisma {
     dedicatedFans?: true
     teamValue?: true
     currentValue?: true
+    initialBudget?: true
   }
 
   export type TeamCountAggregateInputType = {
@@ -6138,6 +6147,7 @@ export namespace Prisma {
     dedicatedFans?: true
     teamValue?: true
     currentValue?: true
+    initialBudget?: true
     _all?: true
   }
 
@@ -6241,6 +6251,7 @@ export namespace Prisma {
     dedicatedFans: number
     teamValue: number
     currentValue: number
+    initialBudget: number
     _count: TeamCountAggregateOutputType | null
     _avg: TeamAvgAggregateOutputType | null
     _sum: TeamSumAggregateOutputType | null
@@ -6276,6 +6287,7 @@ export namespace Prisma {
     dedicatedFans?: boolean
     teamValue?: boolean
     currentValue?: boolean
+    initialBudget?: boolean
     owner?: boolean | UserDefaultArgs<ExtArgs>
     players?: boolean | Team$playersArgs<ExtArgs>
     selections?: boolean | Team$selectionsArgs<ExtArgs>
@@ -6296,6 +6308,7 @@ export namespace Prisma {
     dedicatedFans?: boolean
     teamValue?: boolean
     currentValue?: boolean
+    initialBudget?: boolean
     owner?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["team"]>
 
@@ -6313,6 +6326,7 @@ export namespace Prisma {
     dedicatedFans?: boolean
     teamValue?: boolean
     currentValue?: boolean
+    initialBudget?: boolean
     owner?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["team"]>
 
@@ -6330,9 +6344,10 @@ export namespace Prisma {
     dedicatedFans?: boolean
     teamValue?: boolean
     currentValue?: boolean
+    initialBudget?: boolean
   }
 
-  export type TeamOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "ownerId" | "name" | "roster" | "createdAt" | "treasury" | "rerolls" | "cheerleaders" | "assistants" | "apothecary" | "dedicatedFans" | "teamValue" | "currentValue", ExtArgs["result"]["team"]>
+  export type TeamOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "ownerId" | "name" | "roster" | "createdAt" | "treasury" | "rerolls" | "cheerleaders" | "assistants" | "apothecary" | "dedicatedFans" | "teamValue" | "currentValue" | "initialBudget", ExtArgs["result"]["team"]>
   export type TeamInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     owner?: boolean | UserDefaultArgs<ExtArgs>
     players?: boolean | Team$playersArgs<ExtArgs>
@@ -6367,6 +6382,7 @@ export namespace Prisma {
       dedicatedFans: number
       teamValue: number
       currentValue: number
+      initialBudget: number
     }, ExtArgs["result"]["team"]>
     composites: {}
   }
@@ -6806,6 +6822,7 @@ export namespace Prisma {
     readonly dedicatedFans: FieldRef<"Team", 'Int'>
     readonly teamValue: FieldRef<"Team", 'Int'>
     readonly currentValue: FieldRef<"Team", 'Int'>
+    readonly initialBudget: FieldRef<"Team", 'Int'>
   }
     
 
@@ -8525,7 +8542,8 @@ export namespace Prisma {
     apothecary: 'apothecary',
     dedicatedFans: 'dedicatedFans',
     teamValue: 'teamValue',
-    currentValue: 'currentValue'
+    currentValue: 'currentValue',
+    initialBudget: 'initialBudget'
   };
 
   export type TeamScalarFieldEnum = (typeof TeamScalarFieldEnum)[keyof typeof TeamScalarFieldEnum]
@@ -8925,6 +8943,7 @@ export namespace Prisma {
     dedicatedFans?: IntFilter<"Team"> | number
     teamValue?: IntFilter<"Team"> | number
     currentValue?: IntFilter<"Team"> | number
+    initialBudget?: IntFilter<"Team"> | number
     owner?: XOR<UserScalarRelationFilter, UserWhereInput>
     players?: TeamPlayerListRelationFilter
     selections?: TeamSelectionListRelationFilter
@@ -8944,6 +8963,7 @@ export namespace Prisma {
     dedicatedFans?: SortOrder
     teamValue?: SortOrder
     currentValue?: SortOrder
+    initialBudget?: SortOrder
     owner?: UserOrderByWithRelationInput
     players?: TeamPlayerOrderByRelationAggregateInput
     selections?: TeamSelectionOrderByRelationAggregateInput
@@ -8966,6 +8986,7 @@ export namespace Prisma {
     dedicatedFans?: IntFilter<"Team"> | number
     teamValue?: IntFilter<"Team"> | number
     currentValue?: IntFilter<"Team"> | number
+    initialBudget?: IntFilter<"Team"> | number
     owner?: XOR<UserScalarRelationFilter, UserWhereInput>
     players?: TeamPlayerListRelationFilter
     selections?: TeamSelectionListRelationFilter
@@ -8985,6 +9006,7 @@ export namespace Prisma {
     dedicatedFans?: SortOrder
     teamValue?: SortOrder
     currentValue?: SortOrder
+    initialBudget?: SortOrder
     _count?: TeamCountOrderByAggregateInput
     _avg?: TeamAvgOrderByAggregateInput
     _max?: TeamMaxOrderByAggregateInput
@@ -9009,6 +9031,7 @@ export namespace Prisma {
     dedicatedFans?: IntWithAggregatesFilter<"Team"> | number
     teamValue?: IntWithAggregatesFilter<"Team"> | number
     currentValue?: IntWithAggregatesFilter<"Team"> | number
+    initialBudget?: IntWithAggregatesFilter<"Team"> | number
   }
 
   export type TeamPlayerWhereInput = {
@@ -9379,6 +9402,7 @@ export namespace Prisma {
     dedicatedFans?: number
     teamValue?: number
     currentValue?: number
+    initialBudget?: number
     owner: UserCreateNestedOneWithoutTeamsInput
     players?: TeamPlayerCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionCreateNestedManyWithoutTeamRefInput
@@ -9398,6 +9422,7 @@ export namespace Prisma {
     dedicatedFans?: number
     teamValue?: number
     currentValue?: number
+    initialBudget?: number
     players?: TeamPlayerUncheckedCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionUncheckedCreateNestedManyWithoutTeamRefInput
   }
@@ -9415,6 +9440,7 @@ export namespace Prisma {
     dedicatedFans?: IntFieldUpdateOperationsInput | number
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
+    initialBudget?: IntFieldUpdateOperationsInput | number
     owner?: UserUpdateOneRequiredWithoutTeamsNestedInput
     players?: TeamPlayerUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUpdateManyWithoutTeamRefNestedInput
@@ -9434,6 +9460,7 @@ export namespace Prisma {
     dedicatedFans?: IntFieldUpdateOperationsInput | number
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
+    initialBudget?: IntFieldUpdateOperationsInput | number
     players?: TeamPlayerUncheckedUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUncheckedUpdateManyWithoutTeamRefNestedInput
   }
@@ -9452,6 +9479,7 @@ export namespace Prisma {
     dedicatedFans?: number
     teamValue?: number
     currentValue?: number
+    initialBudget?: number
   }
 
   export type TeamUpdateManyMutationInput = {
@@ -9467,6 +9495,7 @@ export namespace Prisma {
     dedicatedFans?: IntFieldUpdateOperationsInput | number
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
+    initialBudget?: IntFieldUpdateOperationsInput | number
   }
 
   export type TeamUncheckedUpdateManyInput = {
@@ -9483,6 +9512,7 @@ export namespace Prisma {
     dedicatedFans?: IntFieldUpdateOperationsInput | number
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
+    initialBudget?: IntFieldUpdateOperationsInput | number
   }
 
   export type TeamPlayerCreateInput = {
@@ -9960,6 +9990,7 @@ export namespace Prisma {
     dedicatedFans?: SortOrder
     teamValue?: SortOrder
     currentValue?: SortOrder
+    initialBudget?: SortOrder
   }
 
   export type TeamAvgOrderByAggregateInput = {
@@ -9970,6 +10001,7 @@ export namespace Prisma {
     dedicatedFans?: SortOrder
     teamValue?: SortOrder
     currentValue?: SortOrder
+    initialBudget?: SortOrder
   }
 
   export type TeamMaxOrderByAggregateInput = {
@@ -9986,6 +10018,7 @@ export namespace Prisma {
     dedicatedFans?: SortOrder
     teamValue?: SortOrder
     currentValue?: SortOrder
+    initialBudget?: SortOrder
   }
 
   export type TeamMinOrderByAggregateInput = {
@@ -10002,6 +10035,7 @@ export namespace Prisma {
     dedicatedFans?: SortOrder
     teamValue?: SortOrder
     currentValue?: SortOrder
+    initialBudget?: SortOrder
   }
 
   export type TeamSumOrderByAggregateInput = {
@@ -10012,6 +10046,7 @@ export namespace Prisma {
     dedicatedFans?: SortOrder
     teamValue?: SortOrder
     currentValue?: SortOrder
+    initialBudget?: SortOrder
   }
 
   export type BoolWithAggregatesFilter<$PrismaModel = never> = {
@@ -10817,6 +10852,7 @@ export namespace Prisma {
     dedicatedFans?: number
     teamValue?: number
     currentValue?: number
+    initialBudget?: number
     players?: TeamPlayerCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionCreateNestedManyWithoutTeamRefInput
   }
@@ -10834,6 +10870,7 @@ export namespace Prisma {
     dedicatedFans?: number
     teamValue?: number
     currentValue?: number
+    initialBudget?: number
     players?: TeamPlayerUncheckedCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionUncheckedCreateNestedManyWithoutTeamRefInput
   }
@@ -10948,6 +10985,7 @@ export namespace Prisma {
     dedicatedFans?: IntFilter<"Team"> | number
     teamValue?: IntFilter<"Team"> | number
     currentValue?: IntFilter<"Team"> | number
+    initialBudget?: IntFilter<"Team"> | number
   }
 
   export type TeamSelectionUpsertWithWhereUniqueWithoutUserInput = {
@@ -11322,6 +11360,7 @@ export namespace Prisma {
     dedicatedFans?: number
     teamValue?: number
     currentValue?: number
+    initialBudget?: number
     owner: UserCreateNestedOneWithoutTeamsInput
     players?: TeamPlayerCreateNestedManyWithoutTeamInput
   }
@@ -11340,6 +11379,7 @@ export namespace Prisma {
     dedicatedFans?: number
     teamValue?: number
     currentValue?: number
+    initialBudget?: number
     players?: TeamPlayerUncheckedCreateNestedManyWithoutTeamInput
   }
 
@@ -11440,6 +11480,7 @@ export namespace Prisma {
     dedicatedFans?: IntFieldUpdateOperationsInput | number
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
+    initialBudget?: IntFieldUpdateOperationsInput | number
     owner?: UserUpdateOneRequiredWithoutTeamsNestedInput
     players?: TeamPlayerUpdateManyWithoutTeamNestedInput
   }
@@ -11458,6 +11499,7 @@ export namespace Prisma {
     dedicatedFans?: IntFieldUpdateOperationsInput | number
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
+    initialBudget?: IntFieldUpdateOperationsInput | number
     players?: TeamPlayerUncheckedUpdateManyWithoutTeamNestedInput
   }
 
@@ -11651,6 +11693,7 @@ export namespace Prisma {
     dedicatedFans?: number
     teamValue?: number
     currentValue?: number
+    initialBudget?: number
     owner: UserCreateNestedOneWithoutTeamsInput
     selections?: TeamSelectionCreateNestedManyWithoutTeamRefInput
   }
@@ -11669,6 +11712,7 @@ export namespace Prisma {
     dedicatedFans?: number
     teamValue?: number
     currentValue?: number
+    initialBudget?: number
     selections?: TeamSelectionUncheckedCreateNestedManyWithoutTeamRefInput
   }
 
@@ -11701,6 +11745,7 @@ export namespace Prisma {
     dedicatedFans?: IntFieldUpdateOperationsInput | number
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
+    initialBudget?: IntFieldUpdateOperationsInput | number
     owner?: UserUpdateOneRequiredWithoutTeamsNestedInput
     selections?: TeamSelectionUpdateManyWithoutTeamRefNestedInput
   }
@@ -11719,6 +11764,7 @@ export namespace Prisma {
     dedicatedFans?: IntFieldUpdateOperationsInput | number
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
+    initialBudget?: IntFieldUpdateOperationsInput | number
     selections?: TeamSelectionUncheckedUpdateManyWithoutTeamRefNestedInput
   }
 
@@ -11742,6 +11788,7 @@ export namespace Prisma {
     dedicatedFans?: number
     teamValue?: number
     currentValue?: number
+    initialBudget?: number
   }
 
   export type TeamSelectionCreateManyUserInput = {
@@ -11820,6 +11867,7 @@ export namespace Prisma {
     dedicatedFans?: IntFieldUpdateOperationsInput | number
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
+    initialBudget?: IntFieldUpdateOperationsInput | number
     players?: TeamPlayerUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUpdateManyWithoutTeamRefNestedInput
   }
@@ -11837,6 +11885,7 @@ export namespace Prisma {
     dedicatedFans?: IntFieldUpdateOperationsInput | number
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
+    initialBudget?: IntFieldUpdateOperationsInput | number
     players?: TeamPlayerUncheckedUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUncheckedUpdateManyWithoutTeamRefNestedInput
   }
@@ -11854,6 +11903,7 @@ export namespace Prisma {
     dedicatedFans?: IntFieldUpdateOperationsInput | number
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
+    initialBudget?: IntFieldUpdateOperationsInput | number
   }
 
   export type TeamSelectionUpdateWithoutUserInput = {

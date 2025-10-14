@@ -33,6 +33,8 @@ export async function updateTeamValues(prisma: PrismaClient, teamId: string) {
   const currentValue = calculateCurrentValue(teamValueData);
 
   // Mettre à jour la base de données
+  // teamValue = VE calculée des joueurs actuels
+  // initialBudget reste inchangé (budget saisi par l'utilisateur)
   await prisma.team.update({
     where: { id: teamId },
     data: {

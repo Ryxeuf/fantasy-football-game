@@ -79,6 +79,7 @@ model Team {
   // Valeurs calculées automatiquement selon les règles Blood Bowl
   teamValue     Int @default(0)        // VE - Valeur d'Équipe (calculée)
   currentValue  Int @default(0)        // VEA - Valeur d'Équipe Actuelle (calculée)
+  initialBudget Int @default(0)        // Budget initial saisi par l'utilisateur lors de la création
 }
 
 model TeamPlayer {

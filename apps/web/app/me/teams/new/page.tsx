@@ -70,10 +70,25 @@ export default function NewTeamBuilder() {
   function change(slug: string, delta: number) {
     setCounts((prev) => {
       const pos = positions.find((p) => p.slug === slug);
+      const currentCount = prev[slug] || 0;
       const next = Math.max(
         pos?.min ?? 0,
-        Math.min(pos?.max ?? 16, (prev[slug] || 0) + delta),
+        Math.min(pos?.max ?? 16, currentCount + delta),
       );
+      
+      // Si on ajoute un joueur (delta > 0), vérifier le budget
+      if (delta > 0) {
+        const currentTotal = Object.entries(prev).reduce(
+          (acc, [k, c]) => acc + (positions.find((p) => p.slug === k)?.cost || 0) * (c || 0),
+          0,
+        );
+        const newTotal = currentTotal + (pos?.cost || 0);
+        if (newTotal > teamValue) {
+          // Budget dépassé, ne pas ajouter le joueur
+          return prev;
+        }
+      }
+      
       return { ...prev, [slug]: next };
     });
   }
@@ -166,12 +181,19 @@ export default function NewTeamBuilder() {
                   <button
                     className="px-2 py-1 border mr-2"
                     onClick={() => change(p.slug, -1)}
+                    disabled={(counts[p.slug] || 0) <= (p.min || 0)}
                   >
                     -
                   </button>
                   <button
-                    className="px-2 py-1 border"
+                    className={`px-2 py-1 border ${
+                      (counts[p.slug] || 0) >= (p.max || 16) || 
+                      total + p.cost > teamValue 
+                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
+                        : 'hover:bg-gray-100'
+                    }`}
                     onClick={() => change(p.slug, 1)}
+                    disabled={(counts[p.slug] || 0) >= (p.max || 16) || total + p.cost > teamValue}
                   >
                     +
                   </button>
@@ -183,7 +205,7 @@ export default function NewTeamBuilder() {
       </div>
       <div className="flex items-center gap-4">
         <div className="text-lg">
-          Total: <span className="font-semibold">{total}k</span> • Budget: <span className="font-semibold">{teamValue}k</span> • Joueurs:{" "}
+          Total: <span className="font-semibold">{total}k</span> • Budget: <span className="font-semibold">{teamValue}k</span> • Restant: <span className={`font-semibold ${teamValue - total < 0 ? 'text-red-600' : 'text-green-600'}`}>{teamValue - total}k</span> • Joueurs:{" "}
           {totalPlayers}
         </div>
         <div className="flex-1">

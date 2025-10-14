@@ -249,6 +249,21 @@ export default function TeamEditPage() {
       return;
     }
 
+    // Vérifier le budget avant d'ajouter le joueur
+    const selectedPosition = availablePositions.find(pos => pos.key === newPlayerForm.position);
+    if (selectedPosition) {
+      const currentTotalCost = players.reduce((total, player) => {
+        return total + getPlayerCost(player.position, team?.roster || '');
+      }, 0);
+      
+      const newTotalCost = currentTotalCost + selectedPosition.cost;
+      const budgetInPo = (team?.initialBudget || 0) * 1000; // Convertir le budget de kpo en po
+      if (newTotalCost > budgetInPo) {
+        setError(`Budget dépassé ! Coût actuel: ${Math.round(currentTotalCost / 1000)}k po, nouveau coût: ${Math.round(newTotalCost / 1000)}k po, budget: ${team?.initialBudget || 0}k po`);
+        return;
+      }
+    }
+
     try {
       const response = await fetch(`${API_BASE}/team/${id}/players`, {
         method: "POST",
@@ -315,6 +330,9 @@ export default function TeamEditPage() {
           <div className="text-sm text-gray-500 mt-1">
             Roster: <span className="capitalize">{team?.roster}</span>
           </div>
+          <div className="text-sm text-gray-500 mt-1">
+            Budget initial: <span className="font-semibold">{team?.initialBudget?.toLocaleString()}k po</span>
+          </div>
         </div>
         <div className="flex gap-3">
           <button
@@ -365,6 +383,7 @@ export default function TeamEditPage() {
                 }}
                 disabled={players.length >= 16}
                 className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                title={players.length >= 16 ? "Maximum 16 joueurs par équipe" : "Ajouter un nouveau joueur"}
               >
                 + Ajouter un joueur ({players.length}/16)
               </button>
@@ -381,6 +400,15 @@ export default function TeamEditPage() {
             </span>
             <span className="ml-4 text-gray-600">
               Joueurs: {players.length}/16
+            </span>
+            <span className="ml-4 text-gray-600">
+              Coût actuel: {Math.round(players.reduce((total, player) => total + getPlayerCost(player.position, team?.roster || ''), 0) / 1000)}k po
+            </span>
+            <span className="ml-4 text-gray-600">
+              Budget: {team?.initialBudget?.toLocaleString()}k po
+            </span>
+            <span className={`ml-4 ${players.reduce((total, player) => total + getPlayerCost(player.position, team?.roster || ''), 0) > (team?.initialBudget || 0) * 1000 ? 'text-red-600' : 'text-green-600'}`}>
+              Restant: {Math.round(((team?.initialBudget || 0) * 1000 - players.reduce((total, player) => total + getPlayerCost(player.position, team?.roster || ''), 0)) / 1000)}k po
             </span>
           </div>
         </div>
@@ -439,7 +467,7 @@ export default function TeamEditPage() {
                   </td>
                   <td className="p-4 text-gray-600">{getPositionDisplayName(player.position)}</td>
                   <td className="p-4 text-center font-mono text-sm">
-                    {getPlayerCost(player.position, data?.roster || '').toLocaleString()} po
+                    {Math.round(getPlayerCost(player.position, data?.roster || '') / 1000)}k po
                   </td>
                   <td className="p-4 text-center font-mono">{player.ma}</td>
                   <td className="p-4 text-center font-mono">{player.st}</td>
@@ -510,7 +538,7 @@ export default function TeamEditPage() {
                       .filter(pos => pos.canAdd)
                       .map(pos => (
                         <option key={pos.key} value={pos.key}>
-                          {pos.name} ({pos.currentCount}/{pos.maxCount}) - {pos.cost}k po
+                          {pos.name} ({pos.currentCount}/{pos.maxCount}) - {Math.round(pos.cost / 1000)}k po
                         </option>
                       ))}
                   </select>
