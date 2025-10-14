@@ -389,7 +389,7 @@ export default function TeamEditPage() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="text-left p-4 font-medium text-gray-900">#</th>
-                <th className="text-left p-4 font-medium text-gray-900">Nom</th>
+                <th className="text-left p-4 font-medium text-gray-900 w-48">Nom</th>
                 <th className="text-left p-4 font-medium text-gray-900">Position</th>
                 <th className="text-left p-4 font-medium text-gray-900">Coût</th>
                 <th className="text-left p-4 font-medium text-gray-900">MA</th>
@@ -426,7 +426,7 @@ export default function TeamEditPage() {
                       type="text"
                       value={player.name}
                       onChange={(e) => handlePlayerChange(index, "name", e.target.value)}
-                      className={`px-2 py-1 border rounded w-full ${
+                      className={`px-3 py-2 border rounded w-full ${
                         validationErrors[`name_${index}`] ? "border-red-500" : "border-gray-300"
                       }`}
                       placeholder="Nom du joueur"
