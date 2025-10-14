@@ -402,7 +402,7 @@ export default function TeamEditPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {players.map((player, index) => (
+              {players.sort((a, b) => a.number - b.number).map((player, index) => (
                 <tr key={player.id} className="hover:bg-gray-50">
                   <td className="p-4">
                     <input

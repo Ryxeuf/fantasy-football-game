@@ -187,7 +187,7 @@ export default function TeamDetailPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {team.players?.map((p: any) => (
+                  {team.players?.sort((a: any, b: any) => a.number - b.number).map((p: any) => (
                     <tr key={p.id} className="hover:bg-gray-50">
                       <td className="p-4 font-mono text-lg font-semibold">{p.number}</td>
                       <td className="p-4 font-medium">{p.name}</td>
