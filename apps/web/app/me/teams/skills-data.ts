@@ -382,9 +382,118 @@ export function getSkillDescription(skillName: string): SkillDescription | null 
   return SKILLS_DESCRIPTIONS[skillName] || null;
 }
 
+// Mapping des anciens noms anglais vers les nouveaux noms français
+const SKILL_NAME_MAPPING: Record<string, string> = {
+  // Compétences générales
+  "Block": "Blocage",
+  "Dauntless": "Intrépide",
+  "Dirty Player (+1)": "Joueur Déloyal (+1)",
+  "Fend": "Parade",
+  "Frenzy": "Frénésie",
+  "Kick": "Frappe Précise",
+  "Pro": "Pro",
+  "Shadowing": "Poursuite",
+  "Strip Ball": "Arracher le Ballon",
+  "Sure Hands": "Prise Sûre",
+  "Tackle": "Tacle",
+  "Wrestle": "Lutte",
+  
+  // Compétences d'agilité
+  "Catch": "Réception",
+  "Diving Catch": "Réception Plongée",
+  "Diving Tackle": "Tacle Plongé",
+  "Dodge": "Esquive",
+  "Defensive": "Défenseur",
+  "Jump Up": "Rétablissement",
+  "Leap": "Saut",
+  "Safe Pair of Hands": "Libération Contrôlée",
+  "Sidestep": "Glissade Contrôlée",
+  "Sneaky Git": "Sournois",
+  "Sprint": "Sprint",
+  "Sure Feet": "Équilibre",
+  
+  // Mutations
+  "Big Hand": "Grande Main",
+  "Claws": "Griffes",
+  "Disturbing Presence": "Présence Perturbante",
+  "Extra Arms": "Bras Supplémentaires",
+  "Foul Appearance": "Répulsion*",
+  "Horns": "Cornes",
+  "Iron Hard Skin": "Peau de Fer",
+  "Monstrous Mouth": "Grande Gueule",
+  "Prehensile Tail": "Queue Préhensile",
+  "Tentacles": "Tentacules",
+  "Two Heads": "Deux Têtes",
+  "Very Long Legs": "Très Longues Jambes",
+  
+  // Compétences de passe
+  "Accurate": "Précision",
+  "Cannoneer": "Canonnier",
+  "Cloud Burster": "Perce-Nuages",
+  "Dump-off": "Délestage",
+  "Fumblerooskie": "Fumblerooskie",
+  "Hail Mary Pass": "Passe Désespérée",
+  "Leader": "Chef",
+  "Nerves of Steel": "Nerfs d'Acier",
+  "On the Ball": "Sur le Ballon",
+  "Pass": "Passe",
+  "Running Pass": "Passe dans la Course",
+  "Safe Pass": "Passe Assurée",
+  
+  // Compétences de force
+  "Arm Bar": "Clé de Bras",
+  "Brawler": "Bagarreur",
+  "Break Tackle": "Esquive en Force",
+  "Grab": "Projection",
+  "Guard": "Garde",
+  "Juggernaut": "Boulet de Canon",
+  "Mighty Blow": "Coup Puissant",
+  "Mighty Blow (+1)": "Coup Puissant (+1)",
+  "Multiple Block": "Blocage Multiple",
+  "Pile Driver": "Pilonneur",
+  "Stand Firm": "Stabilité",
+  "Strong Arm": "Bras Musclé",
+  "Thick Skull": "Crâne Épais",
+  
+  // Traits
+  "Animal Savagery": "Sauvagerie Animale*",
+  "Bone Head": "Tête de Bois",
+  "Really Stupid": "Gros Débile*",
+  "Regeneration": "Régénération",
+  "Right Stuff": "Poids Plume*",
+  "Stunty": "Microbe*",
+  "Swarming": "Essaimage",
+  "Take Root": "Prendre Racine*",
+  "Titchy": "Minus*",
+  "Loner (4+)": "Solitaire (4+)*",
+  "Throw Team-mate": "Lancer d'Équipier",
+  "Wild Animal": "Fureur Débridée*",
+  "Always Hungry": "Toujours Affamé*",
+  "No Hands": "Sans les Mains*",
+  "Secret Weapon": "Arme Secrète*",
+  "Chainsaw": "Tronçonneuse*",
+  "Ball & Chain": "Chaîne et Boulet*",
+  "Hypnotic Gaze": "Regard Hypnotique",
+  "Decay": "Décomposition*",
+  "Slow Learner": "Cerveau Lent*",
+  "Bombardier": "Bombardier",
+  "Team-mate Kicker": "Botter de Coéquipier",
+  "Animosity (X)": "Animosité (X)*",
+  "Contagious": "Contagieux",
+  "Vomit": "Gerbe de Vomi",
+  "Spring Heeled": "Échasse à Ressort",
+  "Onslaught": "Déferlement",
+  "Stab": "Poignard",
+  "Pile On": "Piqué"
+};
+
 export function parseSkills(skillsString: string): string[] {
   if (!skillsString || skillsString.trim() === "") {
     return [];
   }
-  return skillsString.split(",").map(skill => skill.trim()).filter(skill => skill.length > 0);
+  return skillsString.split(",").map(skill => {
+    const trimmedSkill = skill.trim();
+    // Convertir les anciens noms anglais vers les nouveaux noms français
+    return SKILL_NAME_MAPPING[trimmedSkill] || trimmedSkill;
+  }).filter(skill => skill.length > 0);
 }

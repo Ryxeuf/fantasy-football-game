@@ -59,6 +59,7 @@ export default function MyTeamsPage() {
             >
               <option value="skaven">Skavens</option>
               <option value="lizardmen">Hommes-Lézards</option>
+              <option value="wood_elf">Elfes Sylvains</option>
             </select>
           </div>
           

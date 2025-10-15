@@ -5,7 +5,7 @@ import { updateTeamValues } from "../utils/team-values";
 import { TEAM_ROSTERS, getPositionBySlug, getDisplayName, LEGACY_POSITION_MAPPING, type AllowedRoster } from "@bb/game-engine";
 
 const router = Router();
-const ALLOWED_TEAMS = ["skaven", "lizardmen"] as const;
+const ALLOWED_TEAMS = ["skaven", "lizardmen", "wood_elf"] as const;
 
 // Utiliser le nouveau système de rosters
 const ROSTERS = TEAM_ROSTERS;
@@ -56,6 +56,53 @@ function rosterTemplates(roster: AllowedRoster) {
       // Big Guy optionnel (non inclus par défaut)
     ];
   }
+  
+  if (roster === "wood_elf") {
+    return [
+      {
+        position: "wood_elf_wardancer",
+        count: 2,
+        ma: 8,
+        st: 3,
+        ag: 2,
+        pa: 4,
+        av: 8,
+        skills: "Block,Dodge,Leap",
+      },
+      {
+        position: "wood_elf_catcher",
+        count: 2,
+        ma: 8,
+        st: 2,
+        ag: 2,
+        pa: 4,
+        av: 8,
+        skills: "Catch,Dodge",
+      },
+      {
+        position: "wood_elf_thrower",
+        count: 1,
+        ma: 7,
+        st: 3,
+        ag: 2,
+        pa: 2,
+        av: 8,
+        skills: "Pass,Sure Hands",
+      },
+      {
+        position: "wood_elf_lineman",
+        count: 6,
+        ma: 7,
+        st: 3,
+        ag: 2,
+        pa: 4,
+        av: 8,
+        skills: "",
+      },
+      // Treeman optionnel (non inclus par défaut)
+    ];
+  }
+  
   // lizardmen
   return [
     {
@@ -69,14 +116,24 @@ function rosterTemplates(roster: AllowedRoster) {
       skills: "",
     },
     {
-      position: "lizardmen_skink",
-      count: 5,
+      position: "lizardmen_skink_runner",
+      count: 4,
       ma: 8,
       st: 2,
       ag: 3,
-      pa: 5,
+      pa: 4,
       av: 8,
       skills: "Dodge,Stunty",
+    },
+    {
+      position: "lizardmen_chameleon_skink",
+      count: 1,
+      ma: 7,
+      st: 2,
+      ag: 3,
+      pa: 3,
+      av: 8,
+      skills: "Dodge,On the Ball,Shadowing,Stunty",
     },
     // Kroxigor optionnel (non inclus par défaut)
   ];

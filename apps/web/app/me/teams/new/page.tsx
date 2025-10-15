@@ -140,6 +140,7 @@ export default function NewTeamBuilder() {
           >
             <option value="skaven">Skavens</option>
             <option value="lizardmen">Hommes-Lézards</option>
+            <option value="wood_elf">Elfes Sylvains</option>
           </select>
           <div className="flex-1">
             <label className="block text-sm font-medium text-gray-700 mb-1">
