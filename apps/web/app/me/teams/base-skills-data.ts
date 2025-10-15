@@ -182,23 +182,50 @@ export const BASE_SKILLS_DATA: BaseSkillsData = {
 };
 
 /**
+ * Normalise un nom d'équipe ou de position pour la recherche
+ */
+function normalizeKey(key: string): string {
+  return key.toLowerCase().replace(/_/g, ' ').trim();
+}
+
+/**
  * Obtient les compétences de base pour un joueur selon son équipe et sa position
  */
 export function getBaseSkills(teamName: string, position: string): string[] {
-  const teamData = BASE_SKILLS_DATA[teamName.toLowerCase()];
+  // Normaliser le nom de l'équipe (enlever les underscores, mettre en minuscules)
+  const normalizedTeamName = normalizeKey(teamName);
+  
+  // Chercher l'équipe dans BASE_SKILLS_DATA
+  let teamData = BASE_SKILLS_DATA[normalizedTeamName];
+  
+  // Si pas trouvé, chercher dans toutes les clés en normalisant
+  if (!teamData) {
+    for (const [key, data] of Object.entries(BASE_SKILLS_DATA)) {
+      if (normalizeKey(key) === normalizedTeamName) {
+        teamData = data;
+        break;
+      }
+    }
+  }
+  
   if (!teamData) {
     return [];
   }
+  
+  // Normaliser le nom de position
+  const normalizedPosition = normalizeKey(position);
   
   // Recherche exacte d'abord
   if (teamData[position]) {
     return teamData[position];
   }
   
-  // Recherche partielle si pas de correspondance exacte
+  // Recherche en normalisant les clés
   for (const [pos, skills] of Object.entries(teamData)) {
-    if (pos.toLowerCase().includes(position.toLowerCase()) || 
-        position.toLowerCase().includes(pos.toLowerCase())) {
+    const normalizedPos = normalizeKey(pos);
+    if (normalizedPos === normalizedPosition || 
+        normalizedPos.includes(normalizedPosition) || 
+        normalizedPosition.includes(normalizedPos)) {
       return skills;
     }
   }

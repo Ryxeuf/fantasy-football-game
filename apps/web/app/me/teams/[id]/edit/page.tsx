@@ -3,8 +3,7 @@ import { useEffect, useState } from "react";
 import { API_BASE } from "../../../../auth-client";
 import SkillTooltip from "../../components/SkillTooltip";
 import TeamInfoEditor from "../../components/TeamInfoEditor";
-import { getPlayerCost } from "@bb/game-engine";
-import { getPositionDisplayName } from "../../utils/position-utils";
+import { getPlayerCost, getDisplayName } from "@bb/game-engine";
 
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");
@@ -33,6 +32,43 @@ async function putJSON(path: string, body: any) {
       (await res.json().catch(() => ({})))?.error || `Erreur ${res.status}`,
     );
   return res.json();
+}
+
+// Mapping des slugs de rosters vers leurs noms d'affichage
+const ROSTER_DISPLAY_NAMES: Record<string, string> = {
+  skaven: "Skaven",
+  lizardmen: "Lizardmen",
+  woodelf: "Wood Elf",
+  darkelf: "Dark Elf",
+  highelf: "High Elf",
+  human: "Human",
+  orc: "Orc",
+  dwarf: "Dwarf",
+  chaos: "Chaos",
+  undead: "Undead",
+  necromantic: "Necromantic Horror",
+  norse: "Norse",
+  amazon: "Amazon",
+  elvenunion: "Elven Union",
+  underworld: "Underworld Denizens",
+  vampire: "Vampire",
+  khorne: "Khorne",
+  nurgle: "Nurgle",
+  chaosdwarf: "Chaos Dwarf",
+  goblin: "Goblin",
+  halfling: "Halfling",
+  ogre: "Ogre",
+  snotling: "Snotling",
+  blackorc: "Black Orc",
+  chaosrenegades: "Chaos Renegades",
+  oldworldalliance: "Old World Alliance",
+  tombkings: "Tomb Kings",
+  imperial: "Imperial Nobility",
+  gnome: "Gnome",
+};
+
+function getRosterDisplayName(slug: string): string {
+  return ROSTER_DISPLAY_NAMES[slug] || slug;
 }
 
 interface Player {
@@ -328,7 +364,7 @@ export default function TeamEditPage() {
           <h1 className="text-3xl font-bold">Modifier l'équipe</h1>
           <div className="text-lg text-gray-600 mt-1">{team?.name}</div>
           <div className="text-sm text-gray-500 mt-1">
-            Roster: <span className="capitalize">{team?.roster}</span>
+            Roster: <span className="font-semibold">{getRosterDisplayName(team?.roster || '')}</span>
           </div>
           <div className="text-sm text-gray-500 mt-1">
             Budget initial: <span className="font-semibold">{team?.initialBudget?.toLocaleString()}k po</span>
@@ -465,7 +501,7 @@ export default function TeamEditPage() {
                       </div>
                     )}
                   </td>
-                  <td className="p-4 text-gray-600">{getPositionDisplayName(player.position)}</td>
+                  <td className="p-4 text-gray-600">{getDisplayName(player.position)}</td>
                   <td className="p-4 text-center font-mono text-sm">
                     {Math.round(getPlayerCost(player.position, data?.roster || '') / 1000)}k po
                   </td>
@@ -522,7 +558,7 @@ export default function TeamEditPage() {
               </button>
             </div>
             <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Position
@@ -538,35 +574,37 @@ export default function TeamEditPage() {
                       .filter(pos => pos.canAdd)
                       .map(pos => (
                         <option key={pos.key} value={pos.key}>
-                          {pos.name} ({pos.currentCount}/{pos.maxCount}) - {Math.round(pos.cost / 1000)}k po
+                          {pos.name} ({pos.currentCount}/{pos.maxCount}) - {pos.cost}k po
                         </option>
                       ))}
                   </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Nom du joueur
-                  </label>
-                  <input
-                    type="text"
-                    value={newPlayerForm.name}
-                    onChange={(e) => setNewPlayerForm({ ...newPlayerForm, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Nom du joueur"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Numéro
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="99"
-                    value={newPlayerForm.number}
-                    onChange={(e) => setNewPlayerForm({ ...newPlayerForm, number: parseInt(e.target.value) || 1 })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Nom du joueur
+                    </label>
+                    <input
+                      type="text"
+                      value={newPlayerForm.name}
+                      onChange={(e) => setNewPlayerForm({ ...newPlayerForm, name: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Nom du joueur"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Numéro
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="99"
+                      value={newPlayerForm.number}
+                      onChange={(e) => setNewPlayerForm({ ...newPlayerForm, number: parseInt(e.target.value) || 1 })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
                 </div>
               </div>
               

@@ -728,7 +728,8 @@ router.post("/:id/players", authUser, async (req: AuthenticatedRequest, res) => 
       return total + getPlayerCost(player.position, team.roster);
     }, 0);
     
-    const newTotalCost = currentTotalCost + positionData.cost;
+    const newPlayerCost = positionData.cost * 1000; // Convertir le coût de kpo en po
+    const newTotalCost = currentTotalCost + newPlayerCost;
     const budgetInPo = team.initialBudget * 1000; // Convertir le budget de kpo en po
     if (newTotalCost > budgetInPo) {
       return res.status(400).json({ 

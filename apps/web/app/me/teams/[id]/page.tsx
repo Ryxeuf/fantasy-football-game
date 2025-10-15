@@ -3,8 +3,7 @@ import { useEffect, useState } from "react";
 import { API_BASE } from "../../../auth-client";
 import SkillTooltip from "../components/SkillTooltip";
 import TeamInfoDisplay from "../components/TeamInfoDisplay";
-import { getPlayerCost } from "@bb/game-engine";
-import { getPositionDisplayName } from "../utils/position-utils";
+import { getPlayerCost, getDisplayName } from "@bb/game-engine";
 
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");
@@ -16,6 +15,43 @@ async function fetchJSON(path: string) {
       (await res.json().catch(() => ({})))?.error || `Erreur ${res.status}`,
     );
   return res.json();
+}
+
+// Mapping des slugs de rosters vers leurs noms d'affichage
+const ROSTER_DISPLAY_NAMES: Record<string, string> = {
+  skaven: "Skaven",
+  lizardmen: "Lizardmen",
+  woodelf: "Wood Elf",
+  darkelf: "Dark Elf",
+  highelf: "High Elf",
+  human: "Human",
+  orc: "Orc",
+  dwarf: "Dwarf",
+  chaos: "Chaos",
+  undead: "Undead",
+  necromantic: "Necromantic Horror",
+  norse: "Norse",
+  amazon: "Amazon",
+  elvenunion: "Elven Union",
+  underworld: "Underworld Denizens",
+  vampire: "Vampire",
+  khorne: "Khorne",
+  nurgle: "Nurgle",
+  chaosdwarf: "Chaos Dwarf",
+  goblin: "Goblin",
+  halfling: "Halfling",
+  ogre: "Ogre",
+  snotling: "Snotling",
+  blackorc: "Black Orc",
+  chaosrenegades: "Chaos Renegades",
+  oldworldalliance: "Old World Alliance",
+  tombkings: "Tomb Kings",
+  imperial: "Imperial Nobility",
+  gnome: "Gnome",
+};
+
+function getRosterDisplayName(slug: string): string {
+  return ROSTER_DISPLAY_NAMES[slug] || slug;
 }
 
 export default function TeamDetailPage() {
@@ -94,7 +130,7 @@ export default function TeamDetailPage() {
         <div>
           <h1 className="text-3xl font-bold">{team?.name || "Équipe"}</h1>
           <div className="text-sm text-gray-600 mt-1">
-            Roster: <span className="capitalize font-medium">{team?.roster}</span>
+            Roster: <span className="font-semibold">{getRosterDisplayName(team?.roster || '')}</span>
           </div>
         </div>
         <div className="flex gap-3">
@@ -251,7 +287,7 @@ export default function TeamDetailPage() {
                     <tr key={p.id} className="hover:bg-gray-50">
                       <td className="p-4 font-mono text-lg font-semibold">{p.number}</td>
                       <td className="p-4 font-medium">{p.name}</td>
-                      <td className="p-4 text-gray-600">{getPositionDisplayName(p.position)}</td>
+                      <td className="p-4 text-gray-600">{getDisplayName(p.position)}</td>
                       <td className="p-4 text-center font-mono text-sm">
                         {Math.round(getPlayerCost(p.position, team.roster) / 1000)}k po
                       </td>
