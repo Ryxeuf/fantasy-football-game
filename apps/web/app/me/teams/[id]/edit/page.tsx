@@ -39,8 +39,14 @@ const ROSTER_DISPLAY_NAMES: Record<string, string> = {
   skaven: "Skaven",
   lizardmen: "Lizardmen",
   woodelf: "Wood Elf",
+  wood_elf: "Wood Elf",
+  "wood elf": "Wood Elf",
   darkelf: "Dark Elf",
+  dark_elf: "Dark Elf",
+  "dark elf": "Dark Elf",
   highelf: "High Elf",
+  high_elf: "High Elf",
+  "high elf": "High Elf",
   human: "Human",
   orc: "Orc",
   dwarf: "Dwarf",
@@ -50,19 +56,25 @@ const ROSTER_DISPLAY_NAMES: Record<string, string> = {
   norse: "Norse",
   amazon: "Amazon",
   elvenunion: "Elven Union",
+  elven_union: "Elven Union",
   underworld: "Underworld Denizens",
   vampire: "Vampire",
   khorne: "Khorne",
   nurgle: "Nurgle",
   chaosdwarf: "Chaos Dwarf",
+  chaos_dwarf: "Chaos Dwarf",
   goblin: "Goblin",
   halfling: "Halfling",
   ogre: "Ogre",
   snotling: "Snotling",
   blackorc: "Black Orc",
+  black_orc: "Black Orc",
   chaosrenegades: "Chaos Renegades",
+  chaos_renegades: "Chaos Renegades",
   oldworldalliance: "Old World Alliance",
+  old_world_alliance: "Old World Alliance",
   tombkings: "Tomb Kings",
+  tomb_kings: "Tomb Kings",
   imperial: "Imperial Nobility",
   gnome: "Gnome",
 };
@@ -431,7 +443,7 @@ export default function TeamEditPage() {
               Compétences de base
             </span>
             <span className="ml-4 inline-flex items-center gap-1">
-              <span className="w-3 h-3 border-2 border-yellow-400 bg-blue-100 rounded"></span>
+              <span className="w-3 h-3 border-2 border-orange-400 bg-blue-100 rounded"></span>
               Compétences acquises
             </span>
             <span className="ml-4 text-gray-600">

@@ -20,6 +20,8 @@ export const BASE_SKILLS_DATA: BaseSkillsData = {
     "Skink Linemen": [],
     "lizardmen_saurus": [],
     "lizardmen_skink": ["Esquive", "Microbe*"],
+    "lizardmen_skink_runner": ["Esquive", "Microbe*"],
+    "lizardmen_chameleon_skink": ["Esquive", "Sur le Ballon", "Poursuite", "Microbe*"],
     "lizardmen_kroxigor": ["Tête de Bois", "Solitaire (4+)*", "Coup Puissant (+1)", "Queue Préhensile", "Crâne Épais", "Lancer d'Équipier"]
   },
   human: {
@@ -60,9 +62,24 @@ export const BASE_SKILLS_DATA: BaseSkillsData = {
   },
   "wood elf": {
     "Wood Elf Linemen": [],
-    "Thrower": ["Passe"],
+    "Thrower": ["Passe", "Prise Sûre"],
     "Catcher": ["Réception", "Esquive"],
-    "Wardancer": ["Blocage", "Esquive", "Saut"]
+    "Wardancer": ["Blocage", "Esquive", "Saut"],
+    "Treeman": ["Solitaire (4+)*", "Coup Puissant (+1)", "Stabilité", "Bras Musclé", "Prendre Racine*", "Crâne Épais", "Lancer d'Équipier"]
+  },
+  "wood_elf": {
+    "wood_elf_lineman": [],
+    "wood_elf_thrower": ["Passe", "Prise Sûre"],
+    "wood_elf_catcher": ["Réception", "Esquive"],
+    "wood_elf_wardancer": ["Blocage", "Esquive", "Saut"],
+    "wood_elf_treeman": ["Solitaire (4+)*", "Coup Puissant (+1)", "Stabilité", "Bras Musclé", "Prendre Racine*", "Crâne Épais", "Lancer d'Équipier"]
+  },
+  woodelf: {
+    "wood_elf_lineman": [],
+    "wood_elf_thrower": ["Passe", "Prise Sûre"],
+    "wood_elf_catcher": ["Réception", "Esquive"],
+    "wood_elf_wardancer": ["Blocage", "Esquive", "Saut"],
+    "wood_elf_treeman": ["Solitaire (4+)*", "Coup Puissant (+1)", "Stabilité", "Bras Musclé", "Prendre Racine*", "Crâne Épais", "Lancer d'Équipier"]
   },
   "high elf": {
     "High Elf Linemen": [],
