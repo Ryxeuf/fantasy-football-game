@@ -21,7 +21,7 @@ function rosterTemplates(roster: AllowedRoster) {
         ag: 3,
         pa: 4,
         av: 9,
-        skills: "Block",
+        skills: "block",
       },
       {
         position: "skaven_thrower",
@@ -31,7 +31,7 @@ function rosterTemplates(roster: AllowedRoster) {
         ag: 3,
         pa: 2,
         av: 8,
-        skills: "Pass,Sure Hands",
+        skills: "pass,sure-hands",
       },
       {
         position: "skaven_gutter_runner",
@@ -41,7 +41,7 @@ function rosterTemplates(roster: AllowedRoster) {
         ag: 2,
         pa: 4,
         av: 8,
-        skills: "Dodge",
+        skills: "dodge",
       },
       {
         position: "skaven_lineman",
@@ -67,7 +67,7 @@ function rosterTemplates(roster: AllowedRoster) {
         ag: 2,
         pa: 4,
         av: 8,
-        skills: "Block,Dodge,Leap",
+        skills: "block,dodge,leap",
       },
       {
         position: "wood_elf_catcher",
@@ -77,7 +77,7 @@ function rosterTemplates(roster: AllowedRoster) {
         ag: 2,
         pa: 4,
         av: 8,
-        skills: "Catch,Dodge",
+        skills: "catch,dodge",
       },
       {
         position: "wood_elf_thrower",
@@ -87,7 +87,7 @@ function rosterTemplates(roster: AllowedRoster) {
         ag: 2,
         pa: 2,
         av: 8,
-        skills: "Pass,Sure Hands",
+        skills: "pass,sure-hands",
       },
       {
         position: "wood_elf_lineman",
@@ -123,7 +123,7 @@ function rosterTemplates(roster: AllowedRoster) {
       ag: 3,
       pa: 4,
       av: 8,
-      skills: "Dodge,Stunty",
+      skills: "dodge,stunty",
     },
     {
       position: "lizardmen_chameleon_skink",
@@ -133,7 +133,7 @@ function rosterTemplates(roster: AllowedRoster) {
       ag: 3,
       pa: 3,
       av: 8,
-      skills: "Dodge,On the Ball,Shadowing,Stunty",
+      skills: "dodge,on-the-ball,shadowing,stunty",
     },
     // Kroxigor optionnel (non inclus par défaut)
   ];

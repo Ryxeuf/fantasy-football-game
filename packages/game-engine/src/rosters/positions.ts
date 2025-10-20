@@ -53,7 +53,7 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 2,
         av: 8,
-        skills: "Pass,Sure Hands",
+        skills: "pass,sure-hands",
       },
       {
         slug: "skaven_blitzer",
@@ -66,7 +66,7 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 4,
         av: 9,
-        skills: "Block",
+        skills: "block",
       },
       {
         slug: "skaven_gutter_runner",
@@ -79,7 +79,7 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
         ag: 2,
         pa: 4,
         av: 8,
-        skills: "Dodge",
+        skills: "dodge",
       },
       {
         slug: "skaven_rat_ogre",
@@ -92,7 +92,7 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
         ag: 5,
         pa: 6,
         av: 9,
-        skills: "Animal Savagery,Frenzy,Loner (4+),Mighty Blow (+1),Prehensile Tail",
+        skills: "animal-savagery,frenzy,loner-4,mighty-blow-1,prehensile-tail",
       },
     ],
   },
@@ -111,7 +111,7 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 4,
         av: 8,
-        skills: "Dodge,Stunty",
+        skills: "dodge,stunty",
       },
       {
         slug: "lizardmen_chameleon_skink",
@@ -124,7 +124,7 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 3,
         av: 8,
-        skills: "Dodge,On the Ball,Shadowing,Stunty",
+        skills: "dodge,on-the-ball,shadowing,stunty",
       },
       {
         slug: "lizardmen_saurus",
@@ -150,7 +150,7 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
         ag: 5,
         pa: 6,
         av: 10,
-        skills: "Bone Head,Loner (4+),Mighty Blow (+1),Prehensile Tail,Thick Skull,Throw Team-mate",
+        skills: "bone-head,loner-4,mighty-blow-1,prehensile-tail,thick-skull,throw-team-mate",
       },
     ],
   },
@@ -182,7 +182,7 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
         ag: 2,
         pa: 2,
         av: 8,
-        skills: "Pass,Sure Hands",
+        skills: "pass,sure-hands",
       },
       {
         slug: "wood_elf_catcher",
@@ -195,7 +195,7 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
         ag: 2,
         pa: 4,
         av: 8,
-        skills: "Catch,Dodge",
+        skills: "catch,dodge",
       },
       {
         slug: "wood_elf_wardancer",
@@ -208,7 +208,7 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
         ag: 2,
         pa: 4,
         av: 8,
-        skills: "Block,Dodge,Leap",
+        skills: "block,dodge,leap",
       },
       {
         slug: "wood_elf_treeman",
@@ -221,7 +221,7 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
         ag: 5,
         pa: 5,
         av: 11,
-        skills: "Loner (4+),Mighty Blow (+1),Stand Firm,Strong Arm,Take Root,Thick Skull,Throw Team-mate",
+        skills: "loner-4,mighty-blow-1,stand-firm,strong-arm,take-root,thick-skull,throw-team-mate",
       },
     ],
   },
