@@ -5,7 +5,29 @@ import { updateTeamValues } from "../utils/team-values";
 import { TEAM_ROSTERS, getPositionBySlug, getDisplayName, LEGACY_POSITION_MAPPING, type AllowedRoster } from "@bb/game-engine";
 
 const router = Router();
-const ALLOWED_TEAMS = ["skaven", "lizardmen", "wood_elf"] as const;
+const ALLOWED_TEAMS = [
+  "skaven", 
+  "lizardmen", 
+  "wood_elf",
+  "dark_elf",
+  "dwarf",
+  "goblin",
+  "undead",
+  "chaos_renegade",
+  "ogre",
+  "halfling",
+  "underworld",
+  "chaos_chosen",
+  "imperial_nobility",
+  "necromantic_horror",
+  "orc",
+  "nurgle",
+  "old_world_alliance",
+  "elven_union",
+  "human",
+  "black_orc",
+  "snotling"
+] as const;
 
 // Utiliser le nouveau système de rosters
 const ROSTERS = TEAM_ROSTERS;

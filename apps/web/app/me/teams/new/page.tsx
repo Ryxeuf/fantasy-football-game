@@ -141,6 +141,24 @@ export default function NewTeamBuilder() {
             <option value="skaven">Skavens</option>
             <option value="lizardmen">Hommes-Lézards</option>
             <option value="wood_elf">Elfes Sylvains</option>
+            <option value="dark_elf">Elfes Noirs</option>
+            <option value="dwarf">Nains</option>
+            <option value="goblin">Gobelins</option>
+            <option value="undead">Morts-Vivants</option>
+            <option value="chaos_renegade">Renégats du Chaos</option>
+            <option value="ogre">Ogres</option>
+            <option value="halfling">Halflings</option>
+            <option value="underworld">Bas-Fonds</option>
+            <option value="chaos_chosen">Élus du Chaos</option>
+            <option value="imperial_nobility">Noblesse Impériale</option>
+            <option value="necromantic_horror">Horreurs Nécromantiques</option>
+            <option value="orc">Orques</option>
+            <option value="nurgle">Nurgle</option>
+            <option value="old_world_alliance">Alliance du Vieux Monde</option>
+            <option value="elven_union">Union Elfique</option>
+            <option value="human">Humains</option>
+            <option value="black_orc">Orques Noirs</option>
+            <option value="snotling">Snotlings</option>
           </select>
           <div className="flex-1">
             <label className="block text-sm font-medium text-gray-700 mb-1">
