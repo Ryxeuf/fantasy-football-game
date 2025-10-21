@@ -17,24 +17,35 @@ type Position = {
 };
 
 export default function NewTeamBuilder() {
-  const [rosterId, setRosterId] = useState("skaven");
+  // Initialiser les valeurs directement depuis l'URL
+  const [rosterId, setRosterId] = useState(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('roster') || "skaven";
+    }
+    return "skaven";
+  });
+  
+  const [name, setName] = useState(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('name') || "";
+    }
+    return "";
+  });
+  
+  const [teamValue, setTeamValue] = useState(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const value = urlParams.get('teamValue');
+      return value ? parseInt(value) : 1000;
+    }
+    return 1000;
+  });
+  
   const [positions, setPositions] = useState<Position[]>([]);
-  const [name, setName] = useState("");
-  const [teamValue, setTeamValue] = useState(1000);
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Récupérer les paramètres de l'URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlName = urlParams.get('name');
-    const urlRoster = urlParams.get('roster');
-    const urlTeamValue = urlParams.get('teamValue');
-    
-    if (urlName) setName(urlName);
-    if (urlRoster) setRosterId(urlRoster);
-    if (urlTeamValue) setTeamValue(parseInt(urlTeamValue) || 1000);
-  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem("auth_token");
