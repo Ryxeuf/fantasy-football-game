@@ -67,6 +67,7 @@ model Team {
   roster    String   // 'skaven' | 'lizardmen'
   createdAt DateTime @default(now())
   players   TeamPlayer[]
+  starPlayers TeamStarPlayer[]
   selections TeamSelection[]
 
   // Informations d'équipe Blood Bowl
@@ -96,4 +97,16 @@ model TeamPlayer {
   pa        Int
   av        Int
   skills    String
+}
+
+model TeamStarPlayer {
+  id            String   @id @default(cuid())
+  team          Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId        String
+  starPlayerSlug String  // Slug du Star Player (ex: 'griff_oberwald')
+  cost          Int      // Coût en po au moment du recrutement
+  hiredAt       DateTime @default(now())
+  
+  @@unique([teamId, starPlayerSlug]) // Un même Star Player ne peut être recruté qu'une fois par équipe
+  @@index([teamId])
 }

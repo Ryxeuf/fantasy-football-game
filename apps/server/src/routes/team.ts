@@ -2,7 +2,15 @@ import { Router } from "express";
 import { prisma } from "../prisma";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
 import { updateTeamValues } from "../utils/team-values";
-import { TEAM_ROSTERS, getPositionBySlug, getDisplayName, LEGACY_POSITION_MAPPING, type AllowedRoster } from "@bb/game-engine";
+import { TEAM_ROSTERS, getPositionBySlug, getDisplayName, LEGACY_POSITION_MAPPING, type AllowedRoster, getStarPlayerBySlug } from "@bb/game-engine";
+import {
+  validateStarPlayerHire,
+  validateStarPlayerPairs,
+  validateStarPlayersForTeam,
+  getTeamAvailableStarPlayers,
+  calculateStarPlayersCost,
+  requiresPair,
+} from "../utils/star-player-validation";
 
 const router = Router();
 const ALLOWED_TEAMS = [
@@ -259,15 +267,38 @@ router.get("/mine", authUser, async (req: AuthenticatedRequest, res) => {
 router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
   const team = await prisma.team.findFirst({
     where: { id: req.params.id, ownerId: req.user!.id },
-    include: { players: true },
+    include: { 
+      players: true,
+      starPlayers: true
+    },
   });
   if (!team) return res.status(404).json({ error: "Introuvable" });
+  
+  // Enrichir les Star Players avec leurs données complètes
+  const enrichedStarPlayers = team.starPlayers.map((sp: any) => {
+    const starPlayerData = getStarPlayerBySlug(sp.starPlayerSlug);
+    return {
+      id: sp.id,
+      slug: sp.starPlayerSlug,
+      cost: sp.cost,
+      hiredAt: sp.hiredAt,
+      ...starPlayerData
+    };
+  });
+  
   // état de match si sélectionnée
   const selection = await prisma.teamSelection.findFirst({
     where: { teamId: team.id },
     include: { match: true },
   });
-  res.json({ team, currentMatch: selection?.match || null });
+  
+  res.json({ 
+    team: {
+      ...team,
+      starPlayers: enrichedStarPlayers
+    }, 
+    currentMatch: selection?.match || null 
+  });
 });
 
 router.post(
@@ -909,6 +940,384 @@ router.get("/:id/available-positions", authUser, async (req: AuthenticatedReques
     });
   } catch (e: any) {
     console.error("Erreur lors de la récupération des positions disponibles:", e);
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// =============================================================================
+// STAR PLAYERS ENDPOINTS
+// =============================================================================
+
+// Endpoint pour obtenir les Star Players d'une équipe
+router.get("/:id/star-players", authUser, async (req: AuthenticatedRequest, res) => {
+  const teamId = req.params.id;
+
+  try {
+    // Vérifier que l'équipe appartient à l'utilisateur
+    const team = await prisma.team.findFirst({
+      where: { id: teamId, ownerId: req.user!.id },
+      include: { starPlayers: true }
+    });
+
+    if (!team) {
+      return res.status(404).json({ error: "Équipe introuvable" });
+    }
+
+    // Enrichir les Star Players avec leurs données complètes
+    const enrichedStarPlayers = team.starPlayers.map((sp: any) => {
+      const starPlayerData = getStarPlayerBySlug(sp.starPlayerSlug);
+      return {
+        id: sp.id,
+        slug: sp.starPlayerSlug,
+        cost: sp.cost,
+        hiredAt: sp.hiredAt,
+        ...starPlayerData
+      };
+    });
+
+    res.json({
+      starPlayers: enrichedStarPlayers,
+      count: enrichedStarPlayers.length
+    });
+  } catch (e: any) {
+    console.error("Erreur lors de la récupération des Star Players:", e);
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// Endpoint pour obtenir les Star Players disponibles pour une équipe
+router.get("/:id/available-star-players", authUser, async (req: AuthenticatedRequest, res) => {
+  const teamId = req.params.id;
+
+  try {
+    // Vérifier que l'équipe appartient à l'utilisateur
+    const team = await prisma.team.findFirst({
+      where: { id: teamId, ownerId: req.user!.id },
+      include: { 
+        players: true,
+        starPlayers: true
+      }
+    });
+
+    if (!team) {
+      return res.status(404).json({ error: "Équipe introuvable" });
+    }
+
+    // Obtenir les Star Players disponibles pour ce roster
+    const availableStarPlayers = getTeamAvailableStarPlayers(team.roster);
+
+    // Calculer le budget disponible
+    const { getPlayerCost } = await import('../../../../packages/game-engine/src/utils/team-value-calculator');
+    const currentPlayersCost = team.players.reduce((total: number, player: any) => {
+      return total + getPlayerCost(player.position, team.roster);
+    }, 0);
+    
+    const currentStarPlayersCost = team.starPlayers.reduce((total: number, sp: any) => {
+      return total + sp.cost;
+    }, 0);
+
+    const budgetInPo = team.initialBudget * 1000;
+    const availableBudget = budgetInPo - currentPlayersCost - currentStarPlayersCost;
+
+    // Marquer ceux qui sont déjà recrutés
+    const hiredSlugs = new Set(team.starPlayers.map((sp: any) => sp.starPlayerSlug));
+    const totalPlayers = team.players.length + team.starPlayers.length;
+
+    const enrichedStarPlayers = availableStarPlayers.map((sp: any) => {
+      const isHired = hiredSlugs.has(sp.slug);
+      const canAfford = sp.cost <= availableBudget;
+      const hasRoomForOne = totalPlayers < 16;
+      
+      // Vérifier les paires obligatoires
+      const pairSlug = requiresPair(sp.slug);
+      let needsPair = false;
+      let pairStatus = null;
+      
+      if (pairSlug) {
+        needsPair = true;
+        const pairHired = hiredSlugs.has(pairSlug);
+        const pairData = getStarPlayerBySlug(pairSlug);
+        pairStatus = {
+          slug: pairSlug,
+          name: pairData?.displayName,
+          hired: pairHired,
+          cost: pairData?.cost || 0
+        };
+      }
+
+      // Pour les paires, vérifier si on peut recruter les deux
+      let canHire = !isHired && hasRoomForOne && canAfford;
+      if (needsPair && !pairStatus?.hired) {
+        const totalPairCost = sp.cost + (pairStatus?.cost || 0);
+        const hasRoomForPair = totalPlayers + 1 < 16; // +1 car on recrute 2 à la fois
+        canHire = !isHired && hasRoomForPair && totalPairCost <= availableBudget;
+      }
+
+      return {
+        ...sp,
+        isHired,
+        canHire,
+        needsPair,
+        pairStatus
+      };
+    });
+
+    res.json({
+      availableStarPlayers: enrichedStarPlayers,
+      currentPlayerCount: team.players.length,
+      currentStarPlayerCount: team.starPlayers.length,
+      totalPlayers,
+      maxPlayers: 16,
+      availableBudget: Math.round(availableBudget / 1000), // en K po
+      totalBudget: team.initialBudget
+    });
+  } catch (e: any) {
+    console.error("Erreur lors de la récupération des Star Players disponibles:", e);
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// Endpoint pour recruter un Star Player
+router.post("/:id/star-players", authUser, async (req: AuthenticatedRequest, res) => {
+  const teamId = req.params.id;
+  const { starPlayerSlug } = req.body ?? ({} as { starPlayerSlug?: string });
+
+  if (!starPlayerSlug) {
+    return res.status(400).json({ error: "starPlayerSlug requis" });
+  }
+
+  try {
+    // Vérifier que l'équipe appartient à l'utilisateur
+    const team = await prisma.team.findFirst({
+      where: { id: teamId, ownerId: req.user!.id },
+      include: { 
+        players: true,
+        starPlayers: true
+      }
+    });
+
+    if (!team) {
+      return res.status(404).json({ error: "Équipe introuvable" });
+    }
+
+    // Vérifier que l'équipe n'est pas engagée dans un match actif
+    const activeSelection = await prisma.teamSelection.findFirst({
+      where: { 
+        teamId: teamId,
+        match: { status: { in: ["pending", "active"] } }
+      }
+    });
+
+    if (activeSelection) {
+      return res.status(400).json({ 
+        error: "Impossible de modifier cette équipe car elle est engagée dans un match en cours" 
+      });
+    }
+
+    // Calculer le budget disponible
+    const { getPlayerCost } = await import('../../../../packages/game-engine/src/utils/team-value-calculator');
+    const currentPlayersCost = team.players.reduce((total: number, player: any) => {
+      return total + getPlayerCost(player.position, team.roster);
+    }, 0);
+    
+    const currentStarPlayersCost = team.starPlayers.reduce((total: number, sp: any) => {
+      return total + sp.cost;
+    }, 0);
+
+    const budgetInPo = team.initialBudget * 1000;
+    const availableBudget = budgetInPo - currentPlayersCost - currentStarPlayersCost;
+
+    // Valider le recrutement
+    const validation = validateStarPlayerHire(
+      starPlayerSlug,
+      team.roster,
+      team.players.length,
+      team.starPlayers,
+      availableBudget
+    );
+
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.error });
+    }
+
+    const starPlayer = validation.starPlayer!;
+
+    // Vérifier les paires obligatoires
+    const pairSlug = requiresPair(starPlayerSlug);
+    const starPlayersToHire: Array<{ slug: string; cost: number }> = [
+      { slug: starPlayerSlug, cost: starPlayer.cost }
+    ];
+
+    if (pairSlug) {
+      // Vérifier que le partenaire n'est pas déjà recruté
+      const pairAlreadyHired = team.starPlayers.some((sp: any) => sp.starPlayerSlug === pairSlug);
+      
+      if (!pairAlreadyHired) {
+        const pairData = getStarPlayerBySlug(pairSlug);
+        if (!pairData) {
+          return res.status(400).json({ 
+            error: `Star Player partenaire '${pairSlug}' introuvable` 
+          });
+        }
+
+        // Vérifier qu'on a la place pour les deux
+        const totalPlayers = team.players.length + team.starPlayers.length;
+        if (totalPlayers + 1 >= 16) { // +1 car on recrute 2
+          return res.status(400).json({ 
+            error: "Pas assez de place pour recruter la paire (limite de 16 joueurs)" 
+          });
+        }
+
+        // Vérifier le budget pour les deux
+        const totalCost = starPlayer.cost + pairData.cost;
+        if (totalCost > availableBudget) {
+          return res.status(400).json({ 
+            error: `Budget insuffisant pour recruter la paire. Coût: ${(totalCost / 1000).toLocaleString()} K po, disponible: ${(availableBudget / 1000).toLocaleString()} K po` 
+          });
+        }
+
+        starPlayersToHire.push({ slug: pairSlug, cost: pairData.cost });
+      }
+    }
+
+    // Recruter le(s) Star Player(s)
+    const createdStarPlayers = await Promise.all(
+      starPlayersToHire.map((sp) =>
+        prisma.teamStarPlayer.create({
+          data: {
+            teamId: teamId,
+            starPlayerSlug: sp.slug,
+            cost: sp.cost
+          }
+        })
+      )
+    );
+
+    // Recalculer les valeurs d'équipe
+    await updateTeamValues(prisma, teamId);
+
+    // Retourner l'équipe mise à jour
+    const updatedTeam = await prisma.team.findUnique({
+      where: { id: teamId },
+      include: { 
+        players: true,
+        starPlayers: true
+      }
+    });
+
+    // Enrichir les Star Players recrutés
+    const enrichedNewStarPlayers = createdStarPlayers.map((sp: any) => {
+      const starPlayerData = getStarPlayerBySlug(sp.starPlayerSlug);
+      return {
+        id: sp.id,
+        slug: sp.starPlayerSlug,
+        cost: sp.cost,
+        hiredAt: sp.hiredAt,
+        ...starPlayerData
+      };
+    });
+
+    res.status(201).json({ 
+      team: updatedTeam,
+      newStarPlayers: enrichedNewStarPlayers,
+      message: enrichedNewStarPlayers.length > 1 
+        ? `${enrichedNewStarPlayers.map((sp: any) => sp.displayName).join(" et ")} recrutés avec succès`
+        : `${enrichedNewStarPlayers[0].displayName} recruté avec succès`
+    });
+  } catch (e: any) {
+    console.error("Erreur lors du recrutement du Star Player:", e);
+    
+    // Gérer les erreurs de contrainte unique
+    if (e?.code === "P2002") {
+      return res.status(409).json({ 
+        error: "Ce Star Player est déjà recruté dans cette équipe" 
+      });
+    }
+    
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// Endpoint pour retirer un Star Player
+router.delete("/:id/star-players/:starPlayerId", authUser, async (req: AuthenticatedRequest, res) => {
+  const teamId = req.params.id;
+  const starPlayerId = req.params.starPlayerId;
+
+  try {
+    // Vérifier que l'équipe appartient à l'utilisateur
+    const team = await prisma.team.findFirst({
+      where: { id: teamId, ownerId: req.user!.id },
+      include: { 
+        players: true,
+        starPlayers: true
+      }
+    });
+
+    if (!team) {
+      return res.status(404).json({ error: "Équipe introuvable" });
+    }
+
+    // Vérifier que l'équipe n'est pas engagée dans un match actif
+    const activeSelection = await prisma.teamSelection.findFirst({
+      where: { 
+        teamId: teamId,
+        match: { status: { in: ["pending", "active"] } }
+      }
+    });
+
+    if (activeSelection) {
+      return res.status(400).json({ 
+        error: "Impossible de modifier cette équipe car elle est engagée dans un match en cours" 
+      });
+    }
+
+    // Vérifier que le Star Player existe et appartient à cette équipe
+    const starPlayer = team.starPlayers.find((sp: any) => sp.id === starPlayerId);
+    if (!starPlayer) {
+      return res.status(404).json({ error: "Star Player introuvable" });
+    }
+
+    // Vérifier les paires obligatoires
+    const pairSlug = requiresPair(starPlayer.starPlayerSlug);
+    const starPlayersToRemove: string[] = [starPlayerId];
+
+    if (pairSlug) {
+      // Trouver le partenaire
+      const pairStarPlayer = team.starPlayers.find((sp: any) => sp.starPlayerSlug === pairSlug);
+      
+      if (pairStarPlayer) {
+        starPlayersToRemove.push(pairStarPlayer.id);
+      }
+    }
+
+    // Supprimer le(s) Star Player(s)
+    await prisma.teamStarPlayer.deleteMany({
+      where: {
+        id: { in: starPlayersToRemove }
+      }
+    });
+
+    // Recalculer les valeurs d'équipe
+    await updateTeamValues(prisma, teamId);
+
+    // Retourner l'équipe mise à jour
+    const updatedTeam = await prisma.team.findUnique({
+      where: { id: teamId },
+      include: { 
+        players: true,
+        starPlayers: true
+      }
+    });
+
+    const removedCount = starPlayersToRemove.length;
+    res.json({ 
+      team: updatedTeam,
+      message: removedCount > 1 
+        ? `${removedCount} Star Players retirés avec succès`
+        : "Star Player retiré avec succès"
+    });
+  } catch (e: any) {
+    console.error("Erreur lors du retrait du Star Player:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
