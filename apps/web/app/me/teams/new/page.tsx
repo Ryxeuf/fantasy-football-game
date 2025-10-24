@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { API_BASE } from "../../../auth-client";
+import StarPlayerSelector from "../../../components/StarPlayerSelector";
 
 type Position = {
   slug: string;
@@ -45,6 +46,7 @@ export default function NewTeamBuilder() {
   
   const [positions, setPositions] = useState<Position[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
+  const [selectedStarPlayers, setSelectedStarPlayers] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -78,6 +80,18 @@ export default function NewTeamBuilder() {
     [counts],
   );
 
+  // Calculer le coût des Star Players (sera mis à jour par le composant)
+  const starPlayersCost = useMemo(() => {
+    // Le coût sera calculé dans le composant StarPlayerSelector
+    // Pour l'instant on ne l'utilise pas ici car le composant gère déjà la validation
+    return 0;
+  }, [selectedStarPlayers]);
+
+  const totalPlayersWithStars = useMemo(
+    () => totalPlayers + selectedStarPlayers.length,
+    [totalPlayers, selectedStarPlayers],
+  );
+
   function change(slug: string, delta: number) {
     setCounts((prev) => {
       const pos = positions.find((p) => p.slug === slug);
@@ -86,19 +100,6 @@ export default function NewTeamBuilder() {
         pos?.min ?? 0,
         Math.min(pos?.max ?? 16, currentCount + delta),
       );
-      
-      // Si on ajoute un joueur (delta > 0), vérifier le budget
-      if (delta > 0) {
-        const currentTotal = Object.entries(prev).reduce(
-          (acc, [k, c]) => acc + (positions.find((p) => p.slug === k)?.cost || 0) * (c || 0),
-          0,
-        );
-        const newTotal = currentTotal + (pos?.cost || 0);
-        if (newTotal > teamValue) {
-          // Budget dépassé, ne pas ajouter le joueur
-          return prev;
-        }
-      }
       
       return { ...prev, [slug]: next };
     });
@@ -122,6 +123,7 @@ export default function NewTeamBuilder() {
             key: slug,
             count,
           })),
+          starPlayers: selectedStarPlayers, // ✨ Ajout des Star Players
         }),
       });
       const json = await res.json();
@@ -233,30 +235,65 @@ export default function NewTeamBuilder() {
           </tbody>
         </table>
       </div>
-      <div className="flex items-center gap-4">
-        <div className="text-lg">
-          Total: <span className="font-semibold">{total}k</span> • Budget: <span className="font-semibold">{teamValue}k</span> • Restant: <span className={`font-semibold ${teamValue - total < 0 ? 'text-red-600' : 'text-green-600'}`}>{teamValue - total}k</span> • Joueurs:{" "}
-          {totalPlayers}
-        </div>
-        <div className="flex-1">
-          {total > teamValue && (
-            <div className="text-red-600 text-sm">
-              ⚠️ Budget dépassé de {total - teamValue}k po
+
+      <StarPlayerSelector
+        roster={rosterId}
+        selectedStarPlayers={selectedStarPlayers}
+        onSelectionChange={setSelectedStarPlayers}
+        currentPlayerCount={totalPlayers}
+        availableBudget={(teamValue - total) * 1000}
+      />
+
+      <div className="rounded border bg-gray-50 p-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3 text-sm">
+          <div>
+            <div className="text-gray-600">Coût joueurs</div>
+            <div className="font-semibold text-lg">{total}K po</div>
+          </div>
+          <div>
+            <div className="text-gray-600">Budget total</div>
+            <div className="font-semibold text-lg">{teamValue}K po</div>
+          </div>
+          <div>
+            <div className="text-gray-600">Budget restant</div>
+            <div className={`font-semibold text-lg ${teamValue - total < 0 ? 'text-red-600' : 'text-green-600'}`}>
+              {teamValue - total}K po
             </div>
-          )}
-          {total <= teamValue && (
-            <div className="text-green-600 text-sm">
-              ✅ {teamValue - total}k po restants
+          </div>
+          <div>
+            <div className="text-gray-600">Joueurs total</div>
+            <div className={`font-semibold text-lg ${totalPlayersWithStars < 11 || totalPlayersWithStars > 16 ? 'text-red-600' : 'text-green-600'}`}>
+              {totalPlayersWithStars} / 16
             </div>
-          )}
+          </div>
         </div>
-        <button
-          className="px-4 py-2 bg-emerald-600 text-white rounded disabled:bg-gray-400 disabled:cursor-not-allowed"
-          onClick={submit}
-          disabled={total > teamValue || totalPlayers < 11}
-        >
-          Créer l'équipe
-        </button>
+        
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            {totalPlayersWithStars < 11 && (
+              <div className="text-red-600 text-sm">
+                ⚠️ Il vous faut au moins 11 joueurs (actuellement {totalPlayersWithStars})
+              </div>
+            )}
+            {totalPlayersWithStars > 16 && (
+              <div className="text-red-600 text-sm">
+                ⚠️ Maximum 16 joueurs autorisés (actuellement {totalPlayersWithStars})
+              </div>
+            )}
+            {totalPlayersWithStars >= 11 && totalPlayersWithStars <= 16 && (
+              <div className="text-green-600 text-sm">
+                ✅ Équipe valide ({totalPlayers} joueurs + {selectedStarPlayers.length} Star Players)
+              </div>
+            )}
+          </div>
+          <button
+            className="px-6 py-3 bg-emerald-600 text-white rounded font-medium disabled:bg-gray-400 disabled:cursor-not-allowed hover:bg-emerald-700 transition-colors"
+            onClick={submit}
+            disabled={totalPlayersWithStars < 11 || totalPlayersWithStars > 16}
+          >
+            Créer l'équipe
+          </button>
+        </div>
       </div>
     </div>
   );
