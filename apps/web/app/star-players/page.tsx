@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import StarPlayerCard from '../components/StarPlayerCard';
 import type { StarPlayerDefinition } from '@bb/game-engine';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_URL = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8201';
 
 /**
  * Page de listing des Star Players
