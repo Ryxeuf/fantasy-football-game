@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import CopyrightFooter from '../../components/CopyrightFooter';
+import SkillTooltip from '../../components/SkillTooltip';
 import type { StarPlayerDefinition } from '@bb/game-engine';
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8201';
@@ -114,87 +115,7 @@ export default function StarPlayerDetailPage() {
     );
   }
 
-  const convertSkillToFrench = (skill: string): string => {
-    const skillMapping: Record<string, string> = {
-      'claws': 'Griffes',
-      'dauntless': 'Intrépide',
-      'dodge': 'Esquive',
-      'frenzy': 'Frénésie',
-      'jump-up': 'Rétablissement',
-      'loner-4': 'Solitaire (4+)',
-      'loner-3': 'Solitaire (3+)',
-      'no-hands': 'Sans les mains',
-      'side-step': 'Glissade Contrôlée',
-      'stunty': 'Minus',
-      'microbe': 'Microbe',
-      'block': 'Blocage',
-      'grab': 'Projection',
-      'stand-firm': 'Stabilité',
-      'hail-mary-pass': 'Passe Désespérée',
-      'pass': 'Passe',
-      'secret-weapon': 'Arme Secrète',
-      'cannoneer': 'Cannonier',
-      'sure-hands': 'Prise Sûre',
-      'thick-skull': 'Crâne Épais',
-      'disturbing-presence': 'Présence Perturbante',
-      'foul-appearance': 'Apparence Répugnante',
-      'nurgles-rot': 'Pourriture de Nurgle',
-      'plague-ridden': 'Porteur de Peste',
-      'regeneration': 'Régénération',
-      'dirty-player-2': 'Joueur Sale (+2)',
-      'mighty-blow-1': 'Châtaigne (+1)',
-      'mighty-blow-2': 'Châtaigne (+2)',
-      'tentacles': 'Tentacules',
-      'two-heads': 'Deux Têtes',
-      'prehensile-tail': 'Queue Préhensile',
-      'wrestle': 'Lutte',
-      'tackle': 'Tacle',
-      'catch': 'Réception',
-      'hypnotic-gaze': 'Regard Hypnotique',
-      'nerves-of-steel': 'Nerfs d\'Acier',
-      'safe-pair-of-hands': 'Paire de Mains Sûre',
-      'accurate': 'Précision',
-      'diving-catch': 'Réception Plongée',
-      'on-the-ball': 'Sur le Ballon',
-      'sprint': 'Sprint',
-      'sure-feet': 'Pieds Sûrs',
-      'leap': 'Bond',
-      'juggernaut': 'Juggernaut',
-      'fend': 'Repousser',
-      'multiple-block': 'Blocage Multiple',
-      'extra-arms': 'Bras Supplémentaires',
-      'chainsaw': 'Tronçonneuse',
-      'pro': 'Pro',
-      'break-tackle': 'Briser le Tacle',
-      'really-stupid': 'Vraiment Stupide',
-      'bone-head': 'Tête d\'Os',
-      'wild-animal': 'Animal Sauvage',
-      'animosity-all': 'Animosité (Tous)',
-      'horns': 'Cornes',
-      'bloodlust-3': 'Soif de Sang (3+)',
-      'stakes': 'Pieu',
-      'right-stuff': 'Bon Matériel',
-      'very-long-legs': 'Très Longues Jambes',
-      'shadowing': 'Filature',
-      'stab': 'Poignarder',
-      'sneaky-git': 'Salaud Sournois',
-      'bombardier': 'Bombardier',
-      'ball-chain': 'Chaîne de Ballon',
-      'hurl-teammate': 'Lancer de Coéquipier',
-      'throw-team-mate': 'Lancer de Coéquipier',
-      'strong-arm': 'Bras Fort',
-      'timmm-ber': 'Timmm-ber!',
-      'take-root': 'Prendre Racine',
-      'guard': 'Garde',
-      'pile-driver': 'Marteau-Pilon',
-      'pass-block': 'Blocage de Passe',
-      'dump-off': 'Dégagement'
-    };
-    
-    return skillMapping[skill.toLowerCase()] || skill;
-  };
-
-  const skills = starPlayer.skills.split(',').map(s => convertSkillToFrench(s.trim()));
+  const skills = starPlayer.skills.split(',').map(s => s.trim());
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -283,12 +204,10 @@ export default function StarPlayerDetailPage() {
               <h2 className="text-2xl font-bold mb-4">Compétences et Traits</h2>
               <div className="flex flex-wrap gap-2">
                 {skills.map((skill, index) => (
-                  <span
+                  <SkillTooltip
                     key={index}
-                    className="bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium border border-blue-300 hover:bg-blue-200 transition-colors"
-                  >
-                    {skill}
-                  </span>
+                    skillSlug={skill}
+                  />
                 ))}
               </div>
             </div>
