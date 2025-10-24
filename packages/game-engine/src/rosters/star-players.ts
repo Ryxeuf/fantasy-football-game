@@ -596,6 +596,370 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     hirableBy: ["sylvanian_spotlight"],
     specialRule: "Brutal Block: Améliore les blessures causées"
   },
+
+  glotl_stop: {
+    slug: "glotl_stop",
+    displayName: "Glotl Stop",
+    cost: 270000,
+    ma: 6,
+    st: 6,
+    ag: 5,
+    pa: null,
+    av: 10,
+    skills: "frenzy,loner-4,mighty-blow-1,prehensile-tail,thick-skull,wild-animal",
+    hirableBy: ["lustrian_superleague"],
+    specialRule: "Frenzied Rush: Améliore Frenzy"
+  },
+
+  grashnak_blackhoof: {
+    slug: "grashnak_blackhoof",
+    displayName: "Grashnak Noirsabot",
+    cost: 240000,
+    ma: 6,
+    st: 6,
+    ag: 4,
+    pa: null,
+    av: 9,
+    skills: "frenzy,horns,loner-4,mighty-blow-1,thick-skull",
+    hirableBy: ["badlands_brawl"],
+    specialRule: "Devastating Charge: Bonus sur les charges"
+  },
+
+  ivan_deathshroud: {
+    slug: "ivan_deathshroud",
+    displayName: "Ivan 'l'Animal' Deathshroud",
+    cost: 190000,
+    ma: 6,
+    st: 4,
+    ag: 4,
+    pa: null,
+    av: 9,
+    skills: "block,loner-4,regeneration,thick-skull",
+    hirableBy: ["sylvanian_spotlight"],
+    specialRule: "Unkillable: Améliore Regeneration"
+  },
+
+  ivar_eriksson: {
+    slug: "ivar_eriksson",
+    displayName: "Ivar Eriksson",
+    cost: 245000,
+    ma: 6,
+    st: 4,
+    ag: 3,
+    pa: 4,
+    av: 9,
+    skills: "block,dauntless,jump-up,loner-4,pile-driver,stand-firm,thick-skull",
+    hirableBy: ["old_world_classic", "favoured_of"],
+    specialRule: "Bladestorm: Peut affecter plusieurs joueurs adjacents"
+  },
+
+  jeremiah_kool: {
+    slug: "jeremiah_kool",
+    displayName: "Jeremiah Kool",
+    cost: 120000,
+    ma: 7,
+    st: 2,
+    ag: 3,
+    pa: 2,
+    av: 8,
+    skills: "animosity-all,cannoneer,dodge,hail-mary-pass,loner-4,pass,stunty",
+    hirableBy: ["badlands_brawl", "underworld_challenge"],
+    specialRule: "Hospital Pass: Peut passer malgré les marquages"
+  },
+
+  jordell_freshbreeze: {
+    slug: "jordell_freshbreeze",
+    displayName: "Jordell Flechevive",
+    cost: 250000,
+    ma: 8,
+    st: 3,
+    ag: 2,
+    pa: 4,
+    av: 8,
+    skills: "block,diving-catch,dodge,jump-up,loner-4,side-step",
+    hirableBy: ["elven_kingdoms_league"],
+    specialRule: "Catch of the Day: Améliore les réceptions"
+  },
+
+  karina_von_riesz: {
+    slug: "karina_von_riesz",
+    displayName: "Capitaine Karina von Riesz",
+    cost: 230000,
+    ma: 6,
+    st: 4,
+    ag: 3,
+    pa: 4,
+    av: 9,
+    skills: "block,bloodlust-3,dauntless,hypnotic-gaze,jump-up,loner-4,stakes",
+    hirableBy: ["sylvanian_spotlight"],
+    specialRule: "Blood Frenzy: Peut mordre les joueurs ST≤3"
+  },
+
+  kiroth_krakeneye: {
+    slug: "kiroth_krakeneye",
+    displayName: "Kiroth Krakeneye",
+    cost: 160000,
+    ma: 7,
+    st: 3,
+    ag: 3,
+    pa: 3,
+    av: 9,
+    skills: "foul-appearance,loner-4,pass,safe-pair-of-hands,sure-hands,tackle,tentacles",
+    hirableBy: ["favoured_of"],
+    specialRule: "Kraken's Embrace: Améliore Tentacles"
+  },
+
+  lord_borak_the_despoiler: {
+    slug: "lord_borak_the_despoiler",
+    displayName: "Lord Borak le Destructeur",
+    cost: 260000,
+    ma: 4,
+    st: 5,
+    ag: 4,
+    pa: null,
+    av: 10,
+    skills: "block,dirty-player-2,loner-4,mighty-blow-1,sneaky-git",
+    hirableBy: ["favoured_of"],
+    specialRule: "Despoiler: Améliore Dirty Player"
+  },
+
+  max_spleenripper: {
+    slug: "max_spleenripper",
+    displayName: "Max Eclaterate",
+    cost: 130000,
+    ma: 5,
+    st: 4,
+    ag: 4,
+    pa: null,
+    av: 9,
+    skills: "chainsaw,loner-4,secret-weapon",
+    hirableBy: ["favoured_of"],
+    specialRule: "Frenzied Chainsaw: Chainsaw améliorée"
+  },
+
+  puggy_baconbreath: {
+    slug: "puggy_baconbreath",
+    displayName: "Puggy Haleinedebacon",
+    cost: 120000,
+    ma: 5,
+    st: 3,
+    ag: 3,
+    pa: 6,
+    av: 8,
+    skills: "block,dodge,loner-4,nerves-of-steel,right-stuff,stunty,thick-skull",
+    hirableBy: ["halfling_thimble_cup", "old_world_classic"],
+    specialRule: "Halfling Toss Master: Améliore Right Stuff"
+  },
+
+  rashnak_backstabber: {
+    slug: "rashnak_backstabber",
+    displayName: "Rashnak Backstabber",
+    cost: 130000,
+    ma: 7,
+    st: 2,
+    ag: 3,
+    pa: 6,
+    av: 8,
+    skills: "animosity-all,dodge,loner-4,side-step,sneaky-git,stab,stunty",
+    hirableBy: ["badlands_brawl", "underworld_challenge"],
+    specialRule: "Treacherous: Double dommage sur Stab"
+  },
+
+  rodney_roachbait: {
+    slug: "rodney_roachbait",
+    displayName: "Rodney Roachbait",
+    cost: 70000,
+    ma: 6,
+    st: 2,
+    ag: 3,
+    pa: 5,
+    av: 8,
+    skills: "dodge,loner-4,right-stuff,stunty,wrestle",
+    hirableBy: ["underworld_challenge"],
+    specialRule: "Scurry: Améliore Dodge"
+  },
+
+  rowana_forestfoot: {
+    slug: "rowana_forestfoot",
+    displayName: "Rowana Forestfoot",
+    cost: 160000,
+    ma: 8,
+    st: 2,
+    ag: 2,
+    pa: 5,
+    av: 8,
+    skills: "dodge,hypnotic-gaze,jump-up,loner-4,side-step,sprint,stunty",
+    hirableBy: ["halfling_thimble_cup"],
+    specialRule: "Forest's Blessing: Améliore Sprint"
+  },
+
+  scyla_anfingrimm: {
+    slug: "scyla_anfingrimm",
+    displayName: "Scyla Anfingrimm",
+    cost: 200000,
+    ma: 5,
+    st: 5,
+    ag: 4,
+    pa: null,
+    av: 9,
+    skills: "claws,frenzy,loner-4,mighty-blow-1,prehensile-tail,thick-skull,wild-animal",
+    hirableBy: ["favoured_of"],
+    specialRule: "Savage Mauler: Améliore Claw + Frenzy"
+  },
+
+  skrorg_snowpelt: {
+    slug: "skrorg_snowpelt",
+    displayName: "Skrorg Gelfourure",
+    cost: 250000,
+    ma: 5,
+    st: 5,
+    ag: 4,
+    pa: null,
+    av: 9,
+    skills: "block,claw,frenzy,loner-4,prehensile-tail,thick-skull",
+    hirableBy: ["old_world_classic", "favoured_of"],
+    specialRule: "Snow Troll Rage: Améliore Block"
+  },
+
+  swiftvine_glimmershard: {
+    slug: "swiftvine_glimmershard",
+    displayName: "Swiftvine Glimmershard",
+    cost: 110000,
+    ma: 8,
+    st: 2,
+    ag: 2,
+    pa: 2,
+    av: 8,
+    skills: "dodge,hypnotic-gaze,loner-4,side-step,stunty",
+    hirableBy: ["elven_kingdoms_league"],
+    specialRule: "Fey Charm: Améliore Hypnotic Gaze"
+  },
+
+  thorsson_stoutmead: {
+    slug: "thorsson_stoutmead",
+    displayName: "Thorsson Gueuledebière",
+    cost: 170000,
+    ma: 5,
+    st: 3,
+    ag: 3,
+    pa: 6,
+    av: 9,
+    skills: "block,loner-4,mighty-blow-1,pass-block,thick-skull",
+    hirableBy: ["old_world_classic", "worlds_edge_superleague"],
+    specialRule: "Dwarven Resilience: Améliore Block"
+  },
+
+  wilhelm_chaney: {
+    slug: "wilhelm_chaney",
+    displayName: "Wilhelm Chaney",
+    cost: 220000,
+    ma: 8,
+    st: 4,
+    ag: 3,
+    pa: null,
+    av: 8,
+    skills: "catch,claw,frenzy,loner-4,regeneration,wrestle",
+    hirableBy: ["sylvanian_spotlight"],
+    specialRule: "Werewolf Form: Peut se transformer"
+  },
+
+  withergrasp_doubledrool: {
+    slug: "withergrasp_doubledrool",
+    displayName: "Withergrasp Doubledrool",
+    cost: 170000,
+    ma: 6,
+    st: 3,
+    ag: 4,
+    pa: 4,
+    av: 9,
+    skills: "loner-4,prehensile-tail,tackle,tentacles,two-heads,wrestle",
+    hirableBy: ["favoured_of"],
+    specialRule: "Watch Out!: Esquive au premier blocage reçu"
+  },
+
+  guffle_pusmaw: {
+    slug: "guffle_pusmaw",
+    displayName: "Guffle Pusmaw",
+    cost: 200000,
+    ma: 5,
+    st: 3,
+    ag: 3,
+    pa: null,
+    av: 10,
+    skills: "foul-appearance,loner-4,mighty-blow-1,nurgles-rot,regeneration,tentacles",
+    hirableBy: ["favoured_of"],
+    specialRule: "Nurgle's Blessing: Améliore Nurgle's Rot"
+  },
+
+  hthark_unstoppable: {
+    slug: "hthark_unstoppable",
+    displayName: "H'thark l'Imparable",
+    cost: 300000,
+    ma: 6,
+    st: 5,
+    ag: 4,
+    pa: 5,
+    av: 10,
+    skills: "break-tackle,juggernaut,loner-4,mighty-blow-2,prehensile-tail,sprint,sure-feet,thick-skull",
+    hirableBy: ["lustrian_superleague"],
+    specialRule: "Unstoppable Charge: Améliore Juggernaut"
+  },
+
+  dribl_and_drull: {
+    slug: "dribl_and_drull",
+    displayName: "Dribl et Drull",
+    cost: 190000,
+    ma: 6,
+    st: 2,
+    ag: 3,
+    pa: 3,
+    av: 8,
+    skills: "animosity-all,dodge,loner-4,right-stuff,stunty,sure-hands,two-heads",
+    hirableBy: ["badlands_brawl", "underworld_challenge"],
+    specialRule: "Two Heads Are Better: Améliore Two Heads"
+  },
+
+  zzharg_madeye: {
+    slug: "zzharg_madeye",
+    displayName: "Zzharg Madeye",
+    cost: 130000,
+    ma: 4,
+    st: 4,
+    ag: 4,
+    pa: 3,
+    av: 10,
+    skills: "cannoneer,hail-mary-pass,loner-4,nerves-of-steel,secret-weapon,sure-hands,thick-skull",
+    hirableBy: ["badlands_brawl", "favoured_of"],
+    specialRule: "Blunderbuss Blast: Action spéciale de tir"
+  },
+
+  bilerot_vomitflesh: {
+    slug: "bilerot_vomitflesh",
+    displayName: "Bilerot Vomipeau",
+    cost: 180000,
+    ma: 4,
+    st: 5,
+    ag: 4,
+    pa: 6,
+    av: 10,
+    skills: "dirty-player-2,disturbing-presence,foul-appearance,loner-4,mighty-blow-1,nurgles-rot,plague-ridden,regeneration",
+    hirableBy: ["favoured_of"],
+    specialRule: "Vomit: Peut vomir sur les adversaires"
+  },
+
+  maple_highgrove: {
+    slug: "maple_highgrove",
+    displayName: "Mapple Hihgrove",
+    cost: 210000,
+    ma: 2,
+    st: 6,
+    ag: 5,
+    pa: 6,
+    av: 11,
+    skills: "block,grab,loner-4,mighty-blow-1,stand-firm,strong-arm,take-root,thick-skull,throw-team-mate,timmm-ber",
+    hirableBy: ["halfling_thimble_cup"],
+    specialRule: "Treeman Strength: Améliore Throw Team-Mate"
+  },
 };
 
 /**

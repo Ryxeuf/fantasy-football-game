@@ -24,14 +24,15 @@ describe('Star Players', () => {
                 expect(Array.isArray(starPlayer.hirableBy)).toBe(true);
             });
         });
-        it('devrait avoir des coûts cohérents avec les règles (entre 140,000 et 340,000 po)', () => {
+        it('devrait avoir des coûts cohérents avec les règles (entre 70,000 et 340,000 po)', () => {
             Object.values(STAR_PLAYERS).forEach(starPlayer => {
                 // Crumbleberry est gratuit car inclus avec Grak
                 if (starPlayer.slug === 'crumbleberry') {
                     expect(starPlayer.cost).toBe(0);
                 }
                 else {
-                    expect(starPlayer.cost).toBeGreaterThanOrEqual(140000);
+                    // Akhorne l'Écureuil est le moins cher à 80k
+                    expect(starPlayer.cost).toBeGreaterThanOrEqual(70000);
                     expect(starPlayer.cost).toBeLessThanOrEqual(340000);
                 }
             });
@@ -41,8 +42,8 @@ describe('Star Players', () => {
                 // MA entre 1 et 9 (Deeproot a 2, le plus lent)
                 expect(starPlayer.ma).toBeGreaterThanOrEqual(1);
                 expect(starPlayer.ma).toBeLessThanOrEqual(9);
-                // ST entre 2 et 7 (Deeproot a 7, le plus fort)
-                expect(starPlayer.st).toBeGreaterThanOrEqual(2);
+                // ST entre 1 et 7 (Akhorne a 1, Deeproot a 7)
+                expect(starPlayer.st).toBeGreaterThanOrEqual(1);
                 expect(starPlayer.st).toBeLessThanOrEqual(7);
                 // AG entre 1 et 6 (valeurs cibles)
                 expect(starPlayer.ag).toBeGreaterThanOrEqual(1);

@@ -34,13 +34,14 @@ describe('Star Players', () => {
       });
     });
 
-    it('devrait avoir des coûts cohérents avec les règles (entre 140,000 et 340,000 po)', () => {
+    it('devrait avoir des coûts cohérents avec les règles (entre 50,000 et 340,000 po)', () => {
       Object.values(STAR_PLAYERS).forEach(starPlayer => {
         // Crumbleberry est gratuit car inclus avec Grak
         if (starPlayer.slug === 'crumbleberry') {
           expect(starPlayer.cost).toBe(0);
         } else {
-          expect(starPlayer.cost).toBeGreaterThanOrEqual(140000);
+          // Les moins chers sont Bomber & Cindy à 50k
+          expect(starPlayer.cost).toBeGreaterThanOrEqual(50000);
           expect(starPlayer.cost).toBeLessThanOrEqual(340000);
         }
       });
@@ -52,8 +53,8 @@ describe('Star Players', () => {
         expect(starPlayer.ma).toBeGreaterThanOrEqual(1);
         expect(starPlayer.ma).toBeLessThanOrEqual(9);
 
-        // ST entre 2 et 7 (Deeproot a 7, le plus fort)
-        expect(starPlayer.st).toBeGreaterThanOrEqual(2);
+        // ST entre 1 et 7 (Akhorne a 1, Deeproot a 7)
+        expect(starPlayer.st).toBeGreaterThanOrEqual(1);
         expect(starPlayer.st).toBeLessThanOrEqual(7);
 
         // AG entre 1 et 6 (valeurs cibles)
@@ -66,8 +67,8 @@ describe('Star Players', () => {
           expect(starPlayer.pa).toBeLessThanOrEqual(6);
         }
 
-        // AV entre 7 et 11
-        expect(starPlayer.av).toBeGreaterThanOrEqual(7);
+        // AV entre 6 et 11 (Akhorne a 6, Maple Highgrove a 11)
+        expect(starPlayer.av).toBeGreaterThanOrEqual(6);
         expect(starPlayer.av).toBeLessThanOrEqual(11);
       });
     });
