@@ -85,7 +85,7 @@ router.get("/available/:roster", (req, res) => {
       roster,
       regionalRules,
       count: availablePlayers.length,
-      data: availablePlayers
+      starPlayers: availablePlayers // ✨ Changé de "data" à "starPlayers"
     });
   } catch (error) {
     console.error("Error fetching available star players:", error);
