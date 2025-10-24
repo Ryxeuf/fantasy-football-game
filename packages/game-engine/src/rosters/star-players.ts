@@ -15,488 +15,26 @@ export interface StarPlayerDefinition {
   skills: string;         // Compétences (séparées par virgules)
   hirableBy: string[];    // Équipes ou règles spéciales qui peuvent recruter ce joueur
   specialRule?: string;   // Règle spéciale du joueur
+  imageUrl?: string;      // URL de l'image du joueur
 }
 
 /**
  * Liste complète des Star Players disponibles
  */
 export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
-  glart_smashrip: {
-    slug: "glart_smashrip",
-    displayName: "Glart Smashrip",
-    cost: 195000,
-    ma: 9,
-    st: 4,
-    ag: 4,
-    pa: 4,
-    av: 9,
-    skills: "block,claw,juggernaut,loner-4,stand-firm",
-    hirableBy: ["all"], // Favori de... ou Défi des Bas-fonds
-    specialRule: "Joue pour toute équipe avec la règle spéciale 'Favoris de...' ou 'Défi des Bas-fonds'. Une fois par match, quand Glart effectue un Blitz, il peut gagner la compétence Frénésie. Vous devez déclarer que cette règle spéciale est utilisée quand Glart est activé. Glart ne peut pas utiliser la compétence Projection pendant qu'il utilise cette règle spéciale."
-  },
-
-  gloriel_summerbloom: {
-    slug: "gloriel_summerbloom",
-    displayName: "Gloriel Summerbloom",
-    cost: 150000,
-    ma: 7,
-    st: 2,
-    ag: 2,
-    pa: 2,
-    av: 8,
-    skills: "accurate,dodge,loner-3,pass,side-step,safe-pair-of-hands",
-    hirableBy: ["elven_kingdoms_league"],
-    specialRule: "Joue pour toute équipe avec la règle spéciale 'Ligue des Royaumes Elfiques'. Tout ou Rien: Une fois par match, quand Gloriel effectue une Passe, elle peut gagner la compétence Passe Désespérée. Vous devez déclarer que cette règle spéciale est utilisée quand Gloriel est activée."
-  },
-
-  grak: {
-    slug: "grak",
-    displayName: "Grak",
-    cost: 250000,
-    ma: 5,
-    st: 5,
-    ag: 4,
-    pa: 4,
-    av: 10,
-    skills: "bone-head,hurl-teammate,loner-4,mighty-blow-1,thick-skull",
-    hirableBy: ["all"],
-    specialRule: "Joue pour toute équipe. Deux pour Un!: Grak et Crumbleberry doivent être recrutés ensemble et comptent comme deux Star Players. Cependant, si Grak ou Crumbleberry est retiré du jeu à cause d'un résultat KO ou Éliminé! sur le tableau de Blessures, l'autre remplace le trait Solitaire (4+) par Solitaire (2+)."
-  },
-
-  crumbleberry: {
-    slug: "crumbleberry",
-    displayName: "Crumbleberry",
-    cost: 0, // Inclus avec Grak
-    ma: 5,
-    st: 2,
-    ag: 3,
-    pa: 6,
-    av: 7,
-    skills: "dodge,loner-4,right-stuff,stunty,sure-feet",
-    hirableBy: ["all"],
-    specialRule: "Voir Grak - ils sont recrutés ensemble."
-  },
-
-  gretchen_wachter: {
-    slug: "gretchen_wachter",
-    displayName: "Gretchen Wächter 'La Veuve du Blood Bowl'",
-    cost: 260000,
-    ma: 7,
-    st: 3,
-    ag: 2,
-    pa: null,
-    av: 9,
-    skills: "disturbing-presence,dodge,fend,jump-up,loner-4,no-hands,regeneration,side-step",
-    hirableBy: ["sylvanian_spotlight"],
-    specialRule: "Joue pour toute équipe avec la règle spéciale 'Spot de Sylvanie'. Éthérée: Une fois par match, après un test d'Agilité pour esquiver, Gretchen peut décider de modifier le résultat en y ajoutant sa valeur de caractéristique Force."
-  },
-
-  griff_oberwald: {
-    slug: "griff_oberwald",
-    displayName: "Griff Oberwald",
-    cost: 280000,
-    ma: 7,
-    st: 4,
-    ag: 2,
-    pa: 3,
-    av: 9,
-    skills: "block,dodge,fend,loner-3,sprint,sure-feet",
-    hirableBy: ["old_world_classic", "halfling_thimble_cup"],
-    specialRule: "Joue pour toute équipe avec la règle spéciale 'Coupe Dé à Coudre Halfling' ou 'Classique du Vieux Monde'. Grand Professionnel: Une fois par match, Griff peut relancer un dé qui a été jeté soit pour un jet d'un seul dé, soit pour un jet de plusieurs dés ou faisant partie d'un groupe de dés (il ne peut pas s'agir d'un jeté pour un jet d'Armure, de Blessure ou d'Élimination)."
-  },
-
-  mighty_zug: {
-    slug: "mighty_zug",
-    displayName: "Mighty Zug",
-    cost: 220000,
-    ma: 4,
-    st: 5,
-    ag: 4,
-    pa: 6,
-    av: 10,
-    skills: "block,loner-4,mighty-blow-1",
-    hirableBy: ["old_world_classic", "halfling_thimble_cup"],
-    specialRule: "Joue pour toute équipe avec la règle spéciale 'Coupe Dé à Coudre Halfling', 'Classique du Vieux Monde' ou 'Super-ligue du Bord du Monde'. Coup Destructeur: Une fois par match, quand un joueur adverse est Plaqué en résultat d'un Blocage de Zug, vous pouvez appliquer un modificateur additionnel de +1 au jet d'Armure. Ce modificateur peut être appliqué après le jet de dés."
-  },
-
-  morg_n_thorg: {
-    slug: "morg_n_thorg",
-    displayName: "Morg 'n' Thorg",
-    cost: 340000,
-    ma: 6,
-    st: 6,
-    ag: 3,
-    pa: 4,
-    av: 11,
-    skills: "block,hurl-teammate,loner-4,mighty-blow-2,thick-skull",
-    hirableBy: ["all"],
-    specialRule: "Joue pour toute équipe avec la règle spéciale 'Spot de Sylvanie'. La Baliste: Une fois par match, si Morg rate le test de Passe quand il effectue une Passe ou un Lancer de Coéquipier, vous pouvez relancer le D6."
-  },
-
-  roxanna_darknail: {
-    slug: "roxanna_darknail",
-    displayName: "Roxanna Darknail",
-    cost: 270000,
-    ma: 8,
-    st: 3,
-    ag: 1,
-    pa: 4,
-    av: 8,
-    skills: "dodge,frenzy,jump-up,juggernaut,leap,loner-4",
-    hirableBy: ["elven_kingdoms_league"],
-    specialRule: "Joue pour toute équipe avec la règle spéciale 'Ligue des Royaumes Elfiques'. Pointe de Vitesse: Une fois par match, Roxanna peut tenter de Foncer trois fois au lieu de deux. Vous devez déclarer que vous utilisez cette règle spéciale après que Roxanna a Foncé deux fois."
-  },
-
-  rumbelow_sheepskin: {
-    slug: "rumbelow_sheepskin",
-    displayName: "Rumbelow Sheepskin",
-    cost: 170000,
-    ma: 6,
-    st: 3,
-    ag: 3,
-    pa: null,
-    av: 8,
-    skills: "block,horns,juggernaut,loner-4,no-hands,tackle,thick-skull",
-    hirableBy: ["old_world_classic", "halfling_thimble_cup"],
-    specialRule: "Joue pour toute équipe avec la règle spéciale 'Coupe Dé à Coudre Halfling', 'Classique du Vieux Monde' ou 'Super-ligue du Bord du Monde'. Bélier: Une fois par match, quand un joueur adverse est Plaqué en résultat d'un Blocage de Rumbelow, vous pouvez appliquer un modificateur additionnel de +1 au jet d'Armure ou au jet de Blessure. Ce modificateur peut être appliqué après le jet de dés."
-  },
-
-  skrull_halfheight: {
-    slug: "skrull_halfheight",
-    displayName: "Skrull Halfheight",
-    cost: 150000,
-    ma: 6,
-    st: 3,
-    ag: 4,
-    pa: 4,
-    av: 9,
-    skills: "accurate,loner-4,nerves-of-steel,pass,regeneration,sure-hands,thick-skull",
-    hirableBy: ["sylvanian_spotlight", "worlds_edge_superleague"],
-    specialRule: "Joue pour toute équipe avec la règle spéciale 'Spot de Sylvanie' ou 'Super-ligue du Bord du Monde'. Jeu de Passe Suprême: Une fois par match, après avoir effectué le test de Passe quand il effectue une Passe, Skrull peut décider de modifier le jet de dé en lui ajoutant sa valeur de caractéristique de Force."
-  },
-
-  grim_ironjaw: {
-    slug: "grim_ironjaw",
-    displayName: "Grim Ironjaw",
-    cost: 200000,
-    ma: 5,
-    st: 4,
-    ag: 3,
-    pa: null,
-    av: 9,
-    skills: "block,dauntless,frenzy,loner-4,multiple-block,thick-skull",
-    hirableBy: ["old_world_classic", "halfling_thimble_cup"],
-    specialRule: "Joue pour toute équipe avec la règle spéciale 'Coupe Dé à Coudre Halfling', 'Classique du Vieux Monde' ou 'Super-ligue du Bord du Monde'. Tueur: Une fois par match, quand un joueur adverse avec une caractéristique Force de 5 ou plus est Plaqué en résultat d'un Blocage de Grim, vous pouvez appliquer un modificateur additionnel de +1 au jet d'Armure ou de Blessure. Ce modificateur peut être appliqué après le jet de dés."
-  },
-
-  hakflem_skuttlespike: {
-    slug: "hakflem_skuttlespike",
-    displayName: "Hakflem Skuttlespike",
-    cost: 180000,
-    ma: 9,
-    st: 3,
-    ag: 2,
-    pa: 3,
-    av: 8,
-    skills: "dodge,extra-arms,loner-4,prehensile-tail,two-heads",
-    hirableBy: ["underworld_challenge"],
-    specialRule: "Joue pour toute équipe avec la règle spéciale 'Favoris de...' ou 'Défi des Bas-fonds'. Traître: Une fois par match, si un équipier sur une case adjacente à Hakflem est en possession du ballon quand Hakflem est activé, ce joueur peut être immédiatement Plaqué et Hakflem peut prendre possession du ballon. L'utilisation de cette règle spéciale n'entraîne pas de Turnover."
-  },
-
-  helmut_wulf: {
-    slug: "helmut_wulf",
-    displayName: "Helmut Wulf",
-    cost: 140000,
-    ma: 6,
-    st: 3,
-    ag: 3,
-    pa: null,
-    av: 9,
-    skills: "chainsaw,loner-4,pro,secret-weapon,stand-firm",
-    hirableBy: ["all"],
-    specialRule: "Joue pour toute équipe. Vieux Pro: Une fois par match, Helmut peut utiliser sa compétence Pro pour relancer un seul dé d'un jet d'Armure."
-  },
-
-  karla_von_kill: {
-    slug: "karla_von_kill",
-    displayName: "Karla Von Kill",
-    cost: 210000,
-    ma: 6,
-    st: 4,
-    ag: 3,
-    pa: 4,
-    av: 9,
-    skills: "block,dauntless,dodge,jump-up,loner-4",
-    hirableBy: ["old_world_classic", "lustrian_superleague"],
-    specialRule: "Joue pour toute équipe avec la règle spéciale 'Coupe Dé à Coudre Halfling', 'Super-ligue de Lustrie' ou 'Classique du Vieux Monde'. Indomptable: Une fois par match, quand Karla réussit son jet pour utiliser sa compétence Intrépide, elle peut augmenter sa caractéristique de Force pour être le double de celle de la cible de ce Blocage."
-  },
-
-  lord_borak: {
-    slug: "lord_borak",
-    displayName: "Lord Borak the Despoiler",
-    cost: 260000,
-    ma: 5,
-    st: 5,
-    ag: 3,
-    pa: 5,
-    av: 10,
-    skills: "block,dirty-player-2,loner-4,mighty-blow-1,sneaky-git",
-    hirableBy: ["favoured_of"],
-    specialRule: "Joue pour toute équipe avec la règle spéciale 'Favoris de...'. Seigneur du Chaos: Une équipe qui inclut Lord Borak gagne une relance d'Équipe supplémentaire pour la première mi-temps. Si elle n'est pas utilisée pendant la première mi-temps, elle est transférée pour la seconde mi-temps. Cependant, si Lord Borak est retiré du jeu avant l'utilisation de cette relance, elle est alors perdue."
-  },
-
-  the_black_gobbo: {
-    slug: "the_black_gobbo",
-    displayName: "The Black Gobbo",
-    cost: 225000,
-    ma: 6,
-    st: 2,
-    ag: 3,
-    pa: 3,
-    av: 9,
-    skills: "bombardier,disturbing-presence,dodge,loner-3,side-step,sneaky-git,stab,stunty",
-    hirableBy: ["badlands_brawl", "underworld_challenge"],
-    specialRule: "Joue pour toute équipe avec la règle spéciale 'Bagarre des Terres Arides' ou 'Défi des Bas-fonds'. Le Plus Sournois de Tous: Si votre équipe inclut le Black Gobbo, vous pouvez relancer un jet d'Agression par tour d'équipe, tant que l'une d'elles est commise par le Black Gobbo."
-  },
-
-  deeproot_strongbranch: {
-    slug: "deeproot_strongbranch",
-    displayName: "Deeproot Strongbranch",
-    cost: 280000,
-    ma: 2,
-    st: 7,
-    ag: 5,
-    pa: 4,
-    av: 11,
-    skills: "block,loner-4,mighty-blow-2,stand-firm,strong-arm,thick-skull,throw-team-mate,timmm-ber",
-    hirableBy: ["old_world_classic", "halfling_thimble_cup"],
-    specialRule: "Joue pour toute équipe avec la règle spéciale 'Coupe Dé à Coudre Halfling' ou 'Classique du Vieux Monde'. Fiable: Si Deeproot commet une maladresse avec l'action Lancer de Coéquipier, le joueur lancé rebondit automatiquement mais atterrit automatiquement sans pieds. L'utilisation de cette règle spéciale n'entraîne pas de Turnover."
-  },
-
-  eldril_sidewinder: {
-    slug: "eldril_sidewinder",
-    displayName: "Eldril Sidewinder",
-    cost: 230000,
-    ma: 8,
-    st: 3,
-    ag: 2,
-    pa: 5,
-    av: 8,
-    skills: "catch,dodge,hypnotic-gaze,loner-4,nerves-of-steel,on-the-ball",
-    hirableBy: ["elven_kingdoms_league"],
-    specialRule: "Joue pour toute équipe avec la règle spéciale 'Ligue des Royaumes Elfiques'. Danse Hypnotisante: Une fois par match, Eldril peut relancer un test d'Agilité raté quand il tente d'utiliser le trait Regard Hypnotique."
-  },
-
-  lucien_swift: {
-    slug: "lucien_swift",
-    displayName: "Lucien Swift",
-    cost: 340000,
-    ma: 7,
-    st: 3,
-    ag: 2,
-    pa: 5,
-    av: 9,
-    skills: "block,loner-4,mighty-blow-1,tackle",
-    hirableBy: ["elven_kingdoms_league"],
-    specialRule: "Joue pour toute équipe avec la règle spéciale 'Ligue des Royaumes Elfiques'. Deux pour Un: St Lucien ou Valen est retiré du jeu à cause d'un résultat K.-O. ou Éliminé! sur le tableau de Blessures, l'autre remplace le trait Solitaire (4+) par Solitaire (2+)."
-  },
-
-  valen_swift: {
-    slug: "valen_swift",
-    displayName: "Valen Swift",
-    cost: 340000,
-    ma: 7,
-    st: 3,
-    ag: 2,
-    pa: 2,
-    av: 8,
-    skills: "accurate,loner-4,nerves-of-steel,pass,safe-pair-of-hands,sure-hands",
-    hirableBy: ["elven_kingdoms_league"],
-    specialRule: "Voir Lucien Swift - ils sont recrutés ensemble."
-  },
-
-  varag_ghoul_chewer: {
-    slug: "varag_ghoul_chewer",
-    displayName: "Varag Ghoul-Chewer",
-    cost: 280000,
-    ma: 6,
-    st: 5,
-    ag: 3,
-    pa: 5,
-    av: 10,
-    skills: "block,jump-up,loner-4,mighty-blow-1,thick-skull",
-    hirableBy: ["badlands_brawl", "underworld_challenge"],
-    specialRule: "Joue pour toute équipe avec la règle spéciale 'Bagarre des Terres Arides' ou 'Défi des Bas-fonds'. Coup Destructeur: Une fois par match, quand un joueur adverse est Plaqué en résultat d'un Blocage de Varag, vous pouvez appliquer un modificateur additionnel de +1 au jet d'Armure. Ce modificateur peut être appliqué après le jet de dés."
-  },
-
-  grombrindal: {
-    slug: "grombrindal",
-    displayName: "Grombrindal, the White Dwarf",
-    cost: 210000,
-    ma: 5,
-    st: 3,
-    ag: 3,
-    pa: 4,
-    av: 10,
-    skills: "block,dauntless,loner-4,mighty-blow-1,stand-firm,thick-skull",
-    hirableBy: ["old_world_classic", "worlds_edge_superleague"],
-    specialRule: "Joue pour toute équipe avec la règle spéciale 'Coupe Dé à Coudre Halfling', 'Super-ligue de Lustrie' ou 'Classique du Vieux Monde' ou 'Super-ligue du Bord du Monde'. Sagesse du Nain Blanc: Une fois par tour d'équipe, quand un des coéquipiers de Grombrindal se trouvant sur une case adjacente à lui est activé, ce joueur gagne la compétence Esquive en Force, Intrépide, Châtaigne (+1) ou Équilibre jusqu'à la fin de son activation."
-  },
-
-  willow_rosebark: {
-    slug: "willow_rosebark",
-    displayName: "Willow Rosebark",
-    cost: 150000,
-    ma: 5,
-    st: 4,
-    ag: 3,
-    pa: 6,
-    av: 9,
-    skills: "dauntless,loner-4,side-step,thick-skull",
-    hirableBy: ["elven_kingdoms_league"],
-    specialRule: "Joue pour toute équipe avec la règle spéciale 'Ligue des Royaumes Elfiques'. Indomptable: Une fois par match, quand Willow réussit son jet pour utiliser sa compétence Intrépide, elle peut augmenter sa caractéristique de Force pour être le double de celle de la cible de ce Blocage."
-  },
-
-  zolcath_the_zoat: {
-    slug: "zolcath_the_zoat",
-    displayName: "Zolcath le Zoat",
-    cost: 230000,
-    ma: 5,
-    st: 5,
-    ag: 4,
-    pa: 5,
-    av: 10,
-    skills: "disturbing-presence,juggernaut,loner-4,mighty-blow-1,prehensile-tail,regeneration,sure-feet",
-    hirableBy: ["lustrian_superleague", "elven_kingdoms_league"],
-    specialRule: "Joue pour toute équipe avec la règle spéciale 'Super-ligue de Lustrie' ou 'Ligue des Royaumes Elfiques'. 'Êtes-vous un Zoat?': Une fois par match, quand Zolcath est activé, il peut gagner le trait Regard Hypnotique. Vous devez déclarer que cette règle spéciale est utilisée quand Zolcath est activé."
-  },
-
-  // ===== STAR PLAYERS ADDITIONNELS (nufflezone.com) =====
-  
   akhorne_the_squirrel: {
     slug: "akhorne_the_squirrel",
-    displayName: "Akhorne l'Écureuil",
+    displayName: "Akhorne The Squirrel",
     cost: 80000,
     ma: 7,
     st: 1,
     ag: 2,
     pa: null,
     av: 6,
-    skills: "claws,dauntless,dodge,frenzy,jump-up,loner-4,no-hands,side-step,stunty,titchy",
+    skills: "claws,dauntless,dodge,frenzy,jump-up,loner-4,no-hands,side-step,stunty,microbe.",
     hirableBy: ["all"],
-    specialRule: "Blind Rage: Peut relancer le D6 pour Dauntless"
-  },
-
-  barik_farblast: {
-    slug: "barik_farblast",
-    displayName: "Barik Tireloin",
-    cost: 80000,
-    ma: 6,
-    st: 3,
-    ag: 4,
-    pa: 3,
-    av: 9,
-    skills: "cannoneer,hail-mary-pass,loner-4,pass,secret-weapon,sure-hands,thick-skull",
-    hirableBy: ["halfling_thimble_cup", "old_world_classic", "worlds_edge_superleague"],
-    specialRule: "Blast It!: Peut relancer les résultats de déviation sur Hail Mary Pass"
-  },
-
-  bomber_dribblesnot: {
-    slug: "bomber_dribblesnot",
-    displayName: "Bomber Morvonez",
-    cost: 50000,
-    ma: 6,
-    st: 2,
-    ag: 3,
-    pa: 4,
-    av: 8,
-    skills: "bombardier,dodge,loner-4,secret-weapon,stunty",
-    hirableBy: ["badlands_brawl", "underworld_challenge"],
-    specialRule: "Kaboom!: Résultats de bombes améliorés"
-  },
-
-  fungus_the_loon: {
-    slug: "fungus_the_loon",
-    displayName: "Fungus le Cinglé",
-    cost: 80000,
-    ma: 4,
-    st: 7,
-    ag: 3,
-    pa: null,
-    av: 8,
-    skills: "ball-chain,loner-4,mighty-blow-1,no-hands,secret-weapon,stunty",
-    hirableBy: ["badlands_brawl", "underworld_challenge"],
-    specialRule: "Whirling Dervish: Peut affecter plusieurs joueurs adjacents"
-  },
-
-  nobbla_blackwart: {
-    slug: "nobbla_blackwart",
-    displayName: "Nobbla La Teigne",
-    cost: 120000,
-    ma: 6,
-    st: 2,
-    ag: 3,
-    pa: 6,
-    av: 9,
-    skills: "block,chainsaw,dodge,loner-4,secret-weapon,stunty",
-    hirableBy: ["badlands_brawl", "underworld_challenge"],
-    specialRule: "Chainsaw Expert: Améliore l'utilisation de la tronçonneuse"
-  },
-
-  ripper_bolgrot: {
-    slug: "ripper_bolgrot",
-    displayName: "Bolgrot l'Écrabouilleur",
-    cost: 250000,
-    ma: 4,
-    st: 6,
-    ag: 3,
-    pa: null,
-    av: 10,
-    skills: "break-tackle,grab,juggernaut,loner-4,mighty-blow-1,really-stupid,thick-skull",
-    hirableBy: ["badlands_brawl", "underworld_challenge"],
-    specialRule: "Crushing Blow: Bonus aux jets de blessure"
-  },
-
-  scrappa_sorehead: {
-    slug: "scrappa_sorehead",
-    displayName: "Scrappa Malocrâne",
-    cost: 130000,
-    ma: 7,
-    st: 2,
-    ag: 3,
-    pa: 4,
-    av: 8,
-    skills: "dodge,leap,loner-4,right-stuff,sprint,stunty,sure-feet,very-long-legs",
-    hirableBy: ["badlands_brawl", "underworld_challenge"],
-    specialRule: "Kaboom!: Améliore les lancers de bombe"
-  },
-
-  skitter_stab_stab: {
-    slug: "skitter_stab_stab",
-    displayName: "Skitter Stab-Stab",
-    cost: 150000,
-    ma: 9,
-    st: 2,
-    ag: 3,
-    pa: 5,
-    av: 8,
-    skills: "dodge,loner-4,shadowing,stab,stunty",
-    hirableBy: ["badlands_brawl", "underworld_challenge"],
-    specialRule: "Stab-Stab: Améliore l'efficacité de Stab"
-  },
-
-  kreek_rustgouger: {
-    slug: "kreek_rustgouger",
-    displayName: "Kreek Arracherouille",
-    cost: 170000,
-    ma: 5,
-    st: 4,
-    ag: 4,
-    pa: 4,
-    av: 9,
-    skills: "loner-4,prehensile-tail,tackle,tentacles,two-heads,wrestle",
-    hirableBy: ["favoured_of"],
-    specialRule: "Watch Out!: Esquive gratuite lors du premier blocage reçu"
+    imageUrl: "/data/Star-Players_files/Fungus-the-Loon.webp",
+    specialRule: "Blind Rage: Peut relancer le D6 pour Intrépide."
   },
 
   anqi_panqi: {
@@ -510,91 +48,204 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 10,
     skills: "block,grab,loner-4,stand-firm",
     hirableBy: ["lustrian_superleague"],
-    specialRule: "Savage Blow: Peut relancer les dés de bloc"
+    imageUrl: "/data/Star-Players_files/Anqi-Panqi-star-player-.webp",
+    specialRule: "Coup Sauvage: Une fois par partie, lorsqu'Anqi effectue une action de Blocage contre un joueur adverse, il peut choisir de relancer n'importe quel nombre de dés de Blocage."
   },
 
-  boa_konssstriktor: {
-    slug: "boa_konssstriktor",
-    displayName: "Boa Kon'ssstriktor",
+  barik_farblast: {
+    slug: "barik_farblast",
+    displayName: "Barik Farblast",
+    cost: 80000,
+    ma: 6,
+    st: 3,
+    ag: 4,
+    pa: 3,
+    av: 9,
+    skills: "hail-mary-pass,loner-4,pass,secret-weapon,cannoneer,sure-hands,crâne-épais.",
+    hirableBy: ["old_world_classic"],
+    imageUrl: "/data/Star-Players_files/barik-farblast.webp"
+  },
+
+  bilerot_vomitflesh: {
+    slug: "bilerot_vomitflesh",
+    displayName: "Bilerot Vomitflesh",
+    cost: 180000,
+    ma: 4,
+    st: 5,
+    ag: 4,
+    pa: 6,
+    av: 10,
+    skills: "jouer-déloyal,présence-perturbante,répulsion,loner-4",
+    hirableBy: ["all"],
+    imageUrl: undefined
+  },
+
+  the_black_gobbo: {
+    slug: "the_black_gobbo",
+    displayName: "The Black Gobbo",
+    cost: 225000,
+    ma: 6,
+    st: 2,
+    ag: 3,
+    pa: 3,
+    av: 9,
+    skills: "bombardier,présence-perturbante,dodge,loner-3,side-step,sournois,poignard,stunty",
+    hirableBy: ["underworld_challenge", "badlands_brawl"],
+    imageUrl: "/data/Star-Players_files/Fungus-the-Loon.webp"
+  },
+
+  boa_konssstriktr: {
+    slug: "boa_konssstriktr",
+    displayName: "Boa Kon’ssstriktr",
     cost: 200000,
     ma: 6,
-    st: 5,
-    ag: 2,
-    pa: null,
-    av: 10,
-    skills: "bone-head,disturbing-presence,guard,loner-4,mighty-blow-1,prehensile-tail",
+    st: 3,
+    ag: 3,
+    pa: 4,
+    av: 9,
+    skills: "dodge,side-step,libration-contrôlée,queue-phréhensile,loner-4,regard-hypnotique,<strong>regarde-dans-mes-yeux</strong>",
     hirableBy: ["lustrian_superleague"],
-    specialRule: "Constrict: Peut immobiliser les adversaires"
+    imageUrl: undefined
+  },
+
+  bomber_dribblesnot: {
+    slug: "bomber_dribblesnot",
+    displayName: "Bomber Dribblesnot",
+    cost: 50000,
+    ma: 6,
+    st: 2,
+    ag: 3,
+    pa: 3,
+    av: 8,
+    skills: "précision,bombardier,dodge,loner-4,stunty,poids-plume,secret-weapon",
+    hirableBy: ["underworld_challenge", "badlands_brawl"],
+    imageUrl: "/data/Star-Players_files/Bomber-Dribblesnot.webp"
+  },
+
+  bryce_the_slice_cambuel: {
+    slug: "bryce_the_slice_cambuel",
+    displayName: "Bryce ‘The Slice’ Cambuel",
+    cost: 130000,
+    ma: 5,
+    st: 3,
+    ag: 4,
+    pa: null,
+    av: 9,
+    skills: "tronçonneuse,loner-4,regeneration,secret-weapon,stand-firm,crâne-épais.",
+    hirableBy: ["sylvanian_spotlight"],
+    imageUrl: "/data/Star-Players_files/Bryce-The-Slice-Cambuel-2023.webp"
   },
 
   cindy_piewhistle: {
     slug: "cindy_piewhistle",
-    displayName: "Cindy Piffretarte",
+    displayName: "Cindy Piewhistle",
     cost: 50000,
     ma: 5,
     st: 2,
     ag: 3,
     pa: 3,
     av: 7,
-    skills: "dodge,loner-4,right-stuff,stunty,sure-hands",
-    hirableBy: ["halfling_thimble_cup"],
-    specialRule: "Master Chef Assistant: Bonus aux relances"
-  },
-
-  count_luthor_von_drakenborg: {
-    slug: "count_luthor_von_drakenborg",
-    displayName: "Comte Luthor von Drakenborg",
-    cost: 340000,
-    ma: 6,
-    st: 5,
-    ag: 4,
-    pa: 5,
-    av: 10,
-    skills: "block,hypnotic-gaze,juggernaut,loner-4,regeneration,side-step",
-    hirableBy: ["sylvanian_spotlight"],
-    specialRule: "Lord of the Undead: Améliore les jets de régénération"
-  },
-
-  bryce_cambuel: {
-    slug: "bryce_cambuel",
-    displayName: "Bryce 'Le tronçon' Cambuel",
-    cost: 130000,
-    ma: 5,
-    st: 3,
-    ag: 3,
-    pa: 6,
-    av: 9,
-    skills: "chainsaw,loner-4,secret-weapon,stand-firm,thick-skull",
+    skills: "secret-weapon,bombardier,dodge,stunty,précision,loner-4",
     hirableBy: ["old_world_classic"],
-    specialRule: "Lumberjack: Bonus avec la tronçonneuse"
+    imageUrl: "/data/Star-Players_files/Cindy_Piewhistle.webp"
+  },
+
+  deeproot_strongbranch: {
+    slug: "deeproot_strongbranch",
+    displayName: "Deeproot Strongbranch",
+    cost: 280000,
+    ma: 2,
+    st: 7,
+    ag: 5,
+    pa: 4,
+    av: 11,
+    skills: "block,loner-4,châtaigne-+2,stand-firm,bras-musclé,thick-skull,lancer-de-coéquipier,timmm–-ber-!",
+    hirableBy: ["old_world_classic"],
+    imageUrl: "/data/Star-Players_files/deeproot-strongbranch.webp"
+  },
+
+  eldril_sidewinder: {
+    slug: "eldril_sidewinder",
+    displayName: "Eldril Sidewinder",
+    cost: 230000,
+    ma: 8,
+    st: 3,
+    ag: 2,
+    pa: 5,
+    av: 8,
+    skills: "loner-4,dodge,nerfs-d’acier,réception,regard-hypnotique,sur-le-ballon",
+    hirableBy: ["elven_kingdoms_league"],
+    imageUrl: "/data/Star-Players_files/Eldril-Sidewinder.webp"
   },
 
   estelle_la_veneaux: {
     slug: "estelle_la_veneaux",
     displayName: "Estelle la Veneaux",
     cost: 190000,
-    ma: 7,
+    ma: 6,
     st: 3,
-    ag: 2,
-    pa: 2,
-    av: 9,
-    skills: "dodge,dump-off,jump-up,loner-4,no-hands,pass,safe-pair-of-hands",
-    hirableBy: ["old_world_classic"],
-    specialRule: "Incorporeal: Ignore certains blocages"
+    ag: 3,
+    pa: 4,
+    av: 8,
+    skills: "dodge,&nbsp;garde,side-step,présence-perturbante,loner-4",
+    hirableBy: ["lustrian_superleague"],
+    imageUrl: "/data/Star-Players_files/star-player-whitergrasp-doubledrool.webp"
   },
 
   frank_n_stein: {
     slug: "frank_n_stein",
-    displayName: "Frank 'n' Stein",
+    displayName: "Frank ‘n’ Stein",
     cost: 250000,
     ma: 4,
     st: 5,
     ag: 4,
     pa: null,
     av: 10,
-    skills: "block,juggernaut,loner-4,mighty-blow-1,regeneration,stand-firm,thick-skull",
-    hirableBy: ["sylvanian_spotlight"],
-    specialRule: "Brutal Block: Améliore les blessures causées"
+    skills: "esquive-en-force,loner-4,châtaigne-+1,regeneration,stand-firm,thick-skull",
+    hirableBy: ["old_world_classic", "sylvanian_spotlight"],
+    imageUrl: "/data/Star-Players_files/frank-n-stein.webp"
+  },
+
+  fungus_the_loon: {
+    slug: "fungus_the_loon",
+    displayName: "Fungus The Loon",
+    cost: 80000,
+    ma: 4,
+    st: 7,
+    ag: 3,
+    pa: null,
+    av: 8,
+    skills: "arme-secrète,chaînes-et-boulet,golpe-mortifero-+1,stunty,loner-4,no-hands",
+    hirableBy: ["underworld_challenge", "badlands_brawl"],
+    imageUrl: "/data/Star-Players_files/Fungus-the-Loon.webp"
+  },
+
+  glart_smashrip: {
+    slug: "glart_smashrip",
+    displayName: "Glart Smashrip",
+    cost: 195000,
+    ma: 5,
+    st: 4,
+    ag: 4,
+    pa: null,
+    av: 9,
+    skills: "block,claws,juggernaut,grab,loner-4,stand-firm",
+    hirableBy: ["underworld_challenge"],
+    imageUrl: "/data/Star-Players_files/Glart-Smashrip.webp"
+  },
+
+  gloriel_summerbloom: {
+    slug: "gloriel_summerbloom",
+    displayName: "Gloriel Summerbloom",
+    cost: 150000,
+    ma: 7,
+    st: 2,
+    ag: 2,
+    pa: 2,
+    av: 8,
+    skills: "précision,dodge,loner-3,pass,side-step,sure-hands",
+    hirableBy: ["elven_kingdoms_league"],
+    imageUrl: undefined
   },
 
   glotl_stop: {
@@ -606,37 +257,149 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 5,
     pa: null,
     av: 10,
-    skills: "frenzy,loner-4,mighty-blow-1,prehensile-tail,thick-skull,wild-animal",
+    skills: "châtaigne-+1,thick-skull,frenzy,sauvagerie-animale,prehensile-tail,loner-4,stand-firm",
     hirableBy: ["lustrian_superleague"],
-    specialRule: "Frenzied Rush: Améliore Frenzy"
+    imageUrl: undefined
   },
 
   grashnak_blackhoof: {
     slug: "grashnak_blackhoof",
-    displayName: "Grashnak Noirsabot",
+    displayName: "Grashnak Blackhoof",
     cost: 240000,
     ma: 6,
     st: 6,
     ag: 4,
     pa: null,
     av: 9,
-    skills: "frenzy,horns,loner-4,mighty-blow-1,thick-skull",
-    hirableBy: ["badlands_brawl"],
-    specialRule: "Devastating Charge: Bonus sur les charges"
+    skills: "frenzy,cornes,loner-4,châtaigne-+1,<br>crâne-épais,fureur-débridée",
+    hirableBy: ["all"],
+    imageUrl: "/data/Star-Players_files/Grashnak-Blackhoof.webp"
   },
 
-  ivan_deathshroud: {
-    slug: "ivan_deathshroud",
-    displayName: "Ivan 'l'Animal' Deathshroud",
+  gretchen_wachter_the_blood_bowl_widow: {
+    slug: "gretchen_wachter_the_blood_bowl_widow",
+    displayName: "Gretchen Wachter “The Blood Bowl Widow”",
+    cost: 260000,
+    ma: 7,
+    st: 3,
+    ag: 2,
+    pa: null,
+    av: 9,
+    skills: "présence-perturbante,dodge,répulsion,jump-up,loner-4,sans-les-mains,regeneration,poursuite,side-step",
+    hirableBy: ["sylvanian_spotlight"],
+    imageUrl: "/data/Star-Players_files/Skitter-Stab-Stab-blood-bowl-star-player.webp"
+  },
+
+  griff_oberwald: {
+    slug: "griff_oberwald",
+    displayName: "Griff Oberwald",
+    cost: 280000,
+    ma: 7,
+    st: 4,
+    ag: 2,
+    pa: 3,
+    av: 9,
+    skills: "loner-3,block,équilibre,dodge,parade,sprint",
+    hirableBy: ["old_world_classic"],
+    imageUrl: undefined
+  },
+
+  grim_ironjaw: {
+    slug: "grim_ironjaw",
+    displayName: "Grim Ironjaw",
+    cost: 200000,
+    ma: 5,
+    st: 4,
+    ag: 3,
+    pa: null,
+    av: 9,
+    skills: "loner-4,block,dauntless,frenzy,blocage-multiple,thick-skull",
+    hirableBy: ["old_world_classic"],
+    imageUrl: "/data/Star-Players_files/grim-ironjaw-card.webp"
+  },
+
+  grombrindal_the_white_dwarf: {
+    slug: "grombrindal_the_white_dwarf",
+    displayName: "Grombrindal, the White Dwarf",
+    cost: 210000,
+    ma: 5,
+    st: 3,
+    ag: 3,
+    pa: 4,
+    av: 10,
+    skills: "block,dauntless,loner-4,châtaigne-+1,stand-firm,thick-skull",
+    hirableBy: ["lustrian_superleague", "old_world_classic"],
+    imageUrl: "/data/Star-Players_files/Fungus-the-Loon.webp"
+  },
+
+  guffle_pussmaw: {
+    slug: "guffle_pussmaw",
+    displayName: "Guffle Pussmaw",
+    cost: 180000,
+    ma: 5,
+    st: 4,
+    ag: 4,
+    pa: 6,
+    av: 10,
+    skills: "contagieux,grande-gueule,<strong>morsure-rapide</strong>,répulsion,loner-4",
+    hirableBy: ["all"],
+    imageUrl: "/data/Star-Players_files/Guffle-Pussmaw-Star-Player.webp"
+  },
+
+  hakflem_skuttlespike: {
+    slug: "hakflem_skuttlespike",
+    displayName: "Hakflem Skuttlespike",
+    cost: 210000,
+    ma: 9,
+    st: 3,
+    ag: 2,
+    pa: 3,
+    av: 8,
+    skills: "loner-4,bras-supplémentaires,two-heads,dodge,queue-phréhensile",
+    hirableBy: ["underworld_challenge"],
+    imageUrl: "/data/Star-Players_files/Hakflem-Skuttlespike.webp"
+  },
+
+  helmut_wulf: {
+    slug: "helmut_wulf",
+    displayName: "Helmut Wulf",
+    cost: 140000,
+    ma: 6,
+    st: 3,
+    ag: 3,
+    pa: null,
+    av: 9,
+    skills: "tronçonneuse,loner-4,secret-weapon,pro,stand-firm",
+    hirableBy: ["all"],
+    imageUrl: undefined
+  },
+
+  hthark_the_unstoppable: {
+    slug: "hthark_the_unstoppable",
+    displayName: "H’thark the Unstoppable",
+    cost: 300000,
+    ma: 6,
+    st: 6,
+    ag: 4,
+    pa: 6,
+    av: 10,
+    skills: "block,thick-skull,défenseur,&nbsp;équilibre,esquive-en-force,juggernaut,sprint,loner-4",
+    hirableBy: ["badlands_brawl"],
+    imageUrl: "/data/Star-Players_files/Fungus-the-Loon.webp"
+  },
+
+  ivan_the_animal_deathshroud: {
+    slug: "ivan_the_animal_deathshroud",
+    displayName: "Ivan ‘the Animal’ Deathshroud",
     cost: 190000,
     ma: 6,
     st: 4,
     ag: 4,
-    pa: null,
+    pa: 4,
     av: 9,
-    skills: "block,loner-4,regeneration,thick-skull",
+    skills: "block,juggernaut,présence-perturbante,prise-sûre,regeneration,&nbsp;solitaire-4+,tacle",
     hirableBy: ["sylvanian_spotlight"],
-    specialRule: "Unkillable: Améliore Regeneration"
+    imageUrl: undefined
   },
 
   ivar_eriksson: {
@@ -648,107 +411,220 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 3,
     pa: 4,
     av: 9,
-    skills: "block,dauntless,jump-up,loner-4,pile-driver,stand-firm,thick-skull",
-    hirableBy: ["old_world_classic", "favoured_of"],
-    specialRule: "Bladestorm: Peut affecter plusieurs joueurs adjacents"
+    skills: "block,garde,loner-4,tacle",
+    hirableBy: ["old_world_classic"],
+    imageUrl: undefined
   },
 
   jeremiah_kool: {
     slug: "jeremiah_kool",
     displayName: "Jeremiah Kool",
-    cost: 120000,
-    ma: 7,
-    st: 2,
-    ag: 3,
+    cost: 320000,
+    ma: 8,
+    st: 3,
+    ag: 1,
     pa: 2,
-    av: 8,
-    skills: "animosity-all,cannoneer,dodge,hail-mary-pass,loner-4,pass,stunty",
-    hirableBy: ["badlands_brawl", "underworld_challenge"],
-    specialRule: "Hospital Pass: Peut passer malgré les marquages"
+    av: 9,
+    skills: "block,délestage,dodge,side-step,nerfs-d’acier,pass,réception-plongeante,loner-4,sur-le-ballon",
+    hirableBy: ["elven_kingdoms_league"],
+    imageUrl: undefined
   },
 
   jordell_freshbreeze: {
     slug: "jordell_freshbreeze",
-    displayName: "Jordell Flechevive",
+    displayName: "Jordell Freshbreeze",
     cost: 250000,
     ma: 8,
     st: 3,
-    ag: 2,
-    pa: 4,
+    ag: 1,
+    pa: 3,
     av: 8,
-    skills: "block,diving-catch,dodge,jump-up,loner-4,side-step",
+    skills: "block,dodge,side-step,réception-plongeante,saut,loner-4",
     hirableBy: ["elven_kingdoms_league"],
-    specialRule: "Catch of the Day: Améliore les réceptions"
+    imageUrl: undefined
   },
 
   karina_von_riesz: {
     slug: "karina_von_riesz",
-    displayName: "Capitaine Karina von Riesz",
+    displayName: "Karina von Riesz",
     cost: 230000,
+    ma: 7,
+    st: 4,
+    ag: 2,
+    pa: 4,
+    av: 9,
+    skills: "soif-de-sang-2+,dodge,regard-hypnotique,jump-up,loner-4,regeneration",
+    hirableBy: ["sylvanian_spotlight"],
+    imageUrl: undefined
+  },
+
+  karla_von_kill: {
+    slug: "karla_von_kill",
+    displayName: "Karla Von Kill",
+    cost: 210000,
     ma: 6,
     st: 4,
     ag: 3,
     pa: 4,
     av: 9,
-    skills: "block,bloodlust-3,dauntless,hypnotic-gaze,jump-up,loner-4,stakes",
-    hirableBy: ["sylvanian_spotlight"],
-    specialRule: "Blood Frenzy: Peut mordre les joueurs ST≤3"
+    skills: "block,dauntless,dodge,jump-up,loner-4",
+    hirableBy: ["lustrian_superleague", "old_world_classic"],
+    imageUrl: undefined
   },
 
   kiroth_krakeneye: {
     slug: "kiroth_krakeneye",
     displayName: "Kiroth Krakeneye",
-    cost: 160000,
+    cost: 170000,
     ma: 7,
     st: 3,
-    ag: 3,
+    ag: 2,
     pa: 3,
     av: 9,
-    skills: "foul-appearance,loner-4,pass,safe-pair-of-hands,sure-hands,tackle,tentacles",
-    hirableBy: ["favoured_of"],
-    specialRule: "Kraken's Embrace: Améliore Tentacles"
+    skills: "présence-perturbante,répulsion,loner-4,sur-le-ballon,tacle,tentacles",
+    hirableBy: ["elven_kingdoms_league"],
+    imageUrl: "/data/Star-Players_files/Kiroth-Krakeneye.webp"
+  },
+
+  kreek_rustgouger: {
+    slug: "kreek_rustgouger",
+    displayName: "Kreek Rustgouger",
+    cost: 170000,
+    ma: 5,
+    st: 7,
+    ag: 4,
+    pa: null,
+    av: 10,
+    skills: "chaîne-&amp;-boulet,loner-4,châtaigne-+1,sans-les-mains,queue-phréhensile,secret-weapon",
+    hirableBy: ["underworld_challenge"],
+    imageUrl: "/data/Star-Players_files/Kreek-Rustgouger.webp"
   },
 
   lord_borak_the_despoiler: {
     slug: "lord_borak_the_despoiler",
-    displayName: "Lord Borak le Destructeur",
+    displayName: "Lord Borak The Despoiler",
     cost: 260000,
-    ma: 4,
+    ma: 5,
     st: 5,
-    ag: 4,
-    pa: null,
+    ag: 3,
+    pa: 5,
     av: 10,
-    skills: "block,dirty-player-2,loner-4,mighty-blow-1,sneaky-git",
-    hirableBy: ["favoured_of"],
-    specialRule: "Despoiler: Améliore Dirty Player"
+    skills: "block,châtaigne+1,joueur-déloyal-+2,loner-4,sournois",
+    hirableBy: ["all"],
+    imageUrl: "/data/Star-Players_files/Lord-borak.webp"
+  },
+
+  luthor_von_drakenborg: {
+    slug: "luthor_von_drakenborg",
+    displayName: "Luthor von Drakenborg",
+    cost: 340000,
+    ma: 6,
+    st: 5,
+    ag: 2,
+    pa: 3,
+    av: 10,
+    skills: "block,regard-hypnotique,loner-4,regeneration,glissade-controlée",
+    hirableBy: ["sylvanian_spotlight"],
+    imageUrl: undefined
+  },
+
+  maple_highgrove: {
+    slug: "maple_highgrove",
+    displayName: "Maple Highgrove",
+    cost: 210000,
+    ma: 3,
+    st: 5,
+    ag: 5,
+    pa: 5,
+    av: 11,
+    skills: "bagarreur,châtaigne-+1,thick-skull,grab,loner-4,stand-firm,tentacles",
+    hirableBy: ["elven_kingdoms_league", "old_world_classic"],
+    imageUrl: undefined
   },
 
   max_spleenripper: {
     slug: "max_spleenripper",
-    displayName: "Max Eclaterate",
+    displayName: "Max Spleenripper",
     cost: 130000,
     ma: 5,
     st: 4,
     ag: 4,
     pa: null,
     av: 9,
-    skills: "chainsaw,loner-4,secret-weapon",
-    hirableBy: ["favoured_of"],
-    specialRule: "Frenzied Chainsaw: Chainsaw améliorée"
+    skills: "tronçonneuse,loner-4,secret-weapon",
+    hirableBy: ["all"],
+    imageUrl: undefined
+  },
+
+  mighty_zug: {
+    slug: "mighty_zug",
+    displayName: "Mighty Zug",
+    cost: 220000,
+    ma: 4,
+    st: 5,
+    ag: 4,
+    pa: 6,
+    av: 10,
+    skills: "loner-4,block,châtaigne-+1",
+    hirableBy: ["lustrian_superleague", "old_world_classic"],
+    imageUrl: undefined
+  },
+
+  prince_moranion: {
+    slug: "prince_moranion",
+    displayName: "Prince Moranion",
+    cost: 230000,
+    ma: 7,
+    st: 4,
+    ag: 2,
+    pa: 3,
+    av: 9,
+    skills: "block,dauntless,lutte,loner-4,tacle",
+    hirableBy: ["elven_kingdoms_league"],
+    imageUrl: undefined
+  },
+
+  morg_n_thorg: {
+    slug: "morg_n_thorg",
+    displayName: "Morg 'n' Thorg",
+    cost: 380000,
+    ma: 6,
+    st: 6,
+    ag: 3,
+    pa: 4,
+    av: 11,
+    skills: "loner-4,block,châtaigne-+2,thick-skull,lancer-de-coéquipier",
+    hirableBy: ["sylvanian_spotlight"],
+    imageUrl: "/data/Star-Players_files/Morg-'n-Thorg.webp",
+    specialRule: "La Baliste: Une fois par match, si Morg rate le test de Passe quand il effectue une Passe ou un Lancer de Coéquipier, vous pouvez relancer le D6."
+  },
+
+  nobbla_blackwart: {
+    slug: "nobbla_blackwart",
+    displayName: "Nobbla Blackwart",
+    cost: 120000,
+    ma: 6,
+    st: 2,
+    ag: 3,
+    pa: null,
+    av: 8,
+    skills: "secret-weapon,block,&nbsp;esquive,stunty,loner-4,tronçonneuse",
+    hirableBy: ["underworld_challenge", "badlands_brawl"],
+    imageUrl: "/data/Star-Players_files/Nobbla-Blackwart-3rd-Edition.webp"
   },
 
   puggy_baconbreath: {
     slug: "puggy_baconbreath",
-    displayName: "Puggy Haleinedebacon",
+    displayName: "Puggy Baconbreath",
     cost: 120000,
     ma: 5,
     st: 3,
     ag: 3,
-    pa: 6,
-    av: 8,
-    skills: "block,dodge,loner-4,nerves-of-steel,right-stuff,stunty,thick-skull",
-    hirableBy: ["halfling_thimble_cup", "old_world_classic"],
-    specialRule: "Halfling Toss Master: Améliore Right Stuff"
+    pa: 4,
+    av: 7,
+    skills: "&nbsp;esquive,&nbsp;minus,&nbsp;nerfs-d’acier,&nbsp;poids-plume,&nbsp;solitaire-4+",
+    hirableBy: ["old_world_classic"],
+    imageUrl: "/data/Star-Players_files/Puggy_Baconbreath.webp"
   },
 
   rashnak_backstabber: {
@@ -756,13 +632,27 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     displayName: "Rashnak Backstabber",
     cost: 130000,
     ma: 7,
-    st: 2,
+    st: 3,
     ag: 3,
-    pa: 6,
+    pa: 5,
     av: 8,
-    skills: "animosity-all,dodge,loner-4,side-step,sneaky-git,stab,stunty",
-    hirableBy: ["badlands_brawl", "underworld_challenge"],
-    specialRule: "Treacherous: Double dommage sur Stab"
+    skills: "side-step,sournois,poursuite,poignard,loner-4",
+    hirableBy: ["badlands_brawl"],
+    imageUrl: "/data/Star-Players_files/Grashnak-Blackhoof.webp"
+  },
+
+  ripper_bolgrot: {
+    slug: "ripper_bolgrot",
+    displayName: "Ripper Bolgrot",
+    cost: 250000,
+    ma: 4,
+    st: 6,
+    ag: 5,
+    pa: 4,
+    av: 10,
+    skills: "lancer-de-coéquipier,&nbsp;projection,&nbsp;régénération,&nbsp;solitaire-4+&nbsp;",
+    hirableBy: ["underworld_challenge", "badlands_brawl"],
+    imageUrl: undefined
   },
 
   rodney_roachbait: {
@@ -772,25 +662,67 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ma: 6,
     st: 2,
     ag: 3,
-    pa: 5,
-    av: 8,
-    skills: "dodge,loner-4,right-stuff,stunty,wrestle",
-    hirableBy: ["underworld_challenge"],
-    specialRule: "Scurry: Améliore Dodge"
+    pa: 4,
+    av: 7,
+    skills: "réception,réception-plongeante,jump-up,loner-4,sur-le-ballon,side-step,stunty,lutte,<strong>prise-du-jour</strong>",
+    hirableBy: ["all"],
+    imageUrl: undefined
   },
 
   rowana_forestfoot: {
     slug: "rowana_forestfoot",
-    displayName: "Rowana Forestfoot",
+    displayName: "Rowana ForestFoot",
     cost: 160000,
+    ma: 6,
+    st: 3,
+    ag: 3,
+    pa: 4,
+    av: 8,
+    skills: "cornes,délestage,dodge,garde,jump-up,saut,loner-4,<strong>bounding-leap</strong>",
+    hirableBy: ["all"],
+    imageUrl: undefined
+  },
+
+  roxanna_darknail: {
+    slug: "roxanna_darknail",
+    displayName: "Roxanna Darknail",
+    cost: 270000,
     ma: 8,
+    st: 3,
+    ag: 1,
+    pa: 4,
+    av: 8,
+    skills: "loner-4,dodge,frenzy,jump-up,juggernaut,saut",
+    hirableBy: ["elven_kingdoms_league"],
+    imageUrl: undefined
+  },
+
+  rumbelow_sheepskin: {
+    slug: "rumbelow_sheepskin",
+    displayName: "Rumbelow Sheepskin",
+    cost: 170000,
+    ma: 6,
+    st: 3,
+    ag: 3,
+    pa: null,
+    av: 8,
+    skills: "block,cornes,juggernaut,loner-4,sans-les-mains,tacle,thick-skull",
+    hirableBy: ["old_world_classic"],
+    imageUrl: undefined
+  },
+
+  scrappa_sorehead: {
+    slug: "scrappa_sorehead",
+    displayName: "Scrappa Sorehead",
+    cost: 130000,
+    ma: 7,
     st: 2,
-    ag: 2,
+    ag: 3,
     pa: 5,
     av: 8,
-    skills: "dodge,hypnotic-gaze,jump-up,loner-4,side-step,sprint,stunty",
-    hirableBy: ["halfling_thimble_cup"],
-    specialRule: "Forest's Blessing: Améliore Sprint"
+    skills: "échasses-à-ressort,dodge,équilibre,joueur-déloyal-+1,stunty,poids-plume,loner-4,sprint",
+    hirableBy: ["underworld_challenge", "badlands_brawl"],
+    imageUrl: undefined
   },
 
   scyla_anfingrimm: {
@@ -801,52 +733,94 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     st: 5,
     ag: 4,
     pa: null,
-    av: 9,
-    skills: "claws,frenzy,loner-4,mighty-blow-1,prehensile-tail,thick-skull,wild-animal",
-    hirableBy: ["favoured_of"],
-    specialRule: "Savage Mauler: Améliore Claw + Frenzy"
+    av: 10,
+    skills: "claws,frenzy,loner-4,châtaigne-+1,queue-phréhensile,thick-skull,fureur-débridée",
+    hirableBy: ["all"],
+    imageUrl: "/data/Star-Players_files/Scyla-Anfingrimm.webp"
   },
 
-  skrorg_snowpelt: {
-    slug: "skrorg_snowpelt",
-    displayName: "Skrorg Gelfourure",
+  skitter_stab_stab: {
+    slug: "skitter_stab_stab",
+    displayName: "Skitter Stab-Stab",
+    cost: 150000,
+    ma: 9,
+    st: 2,
+    ag: 2,
+    pa: 4,
+    av: 8,
+    skills: "dodge,poignard,poursuite,prehensile-tail,solitaire4+",
+    hirableBy: ["underworld_challenge"],
+    imageUrl: "/data/Star-Players_files/Skitter-Stab-Stab-blood-bowl-star-player.webp"
+  },
+
+  skorg_snowpelt: {
+    slug: "skorg_snowpelt",
+    displayName: "Skorg Snowpelt",
     cost: 250000,
     ma: 5,
     st: 5,
     ag: 4,
     pa: null,
     av: 9,
-    skills: "block,claw,frenzy,loner-4,prehensile-tail,thick-skull",
-    hirableBy: ["old_world_classic", "favoured_of"],
-    specialRule: "Snow Troll Rage: Améliore Block"
+    skills: "châtaigne-+1,claws,juggernaut,présence-perturbante,solitaire-4+.",
+    hirableBy: ["old_world_classic"],
+    imageUrl: undefined
+  },
+
+  skrull_halfheight: {
+    slug: "skrull_halfheight",
+    displayName: "Skrull Halfheight",
+    cost: 150000,
+    ma: 6,
+    st: 3,
+    ag: 4,
+    pa: 4,
+    av: 9,
+    skills: "précision,loner-4,nerfs-d’acier,pass,regeneration,sure-hands,thick-skull",
+    hirableBy: ["sylvanian_spotlight"],
+    imageUrl: undefined
   },
 
   swiftvine_glimmershard: {
     slug: "swiftvine_glimmershard",
     displayName: "Swiftvine Glimmershard",
     cost: 110000,
-    ma: 8,
+    ma: 7,
     st: 2,
-    ag: 2,
-    pa: 2,
-    av: 8,
-    skills: "dodge,hypnotic-gaze,loner-4,side-step,stunty",
+    ag: 3,
+    pa: 5,
+    av: 7,
+    skills: "side-step,stunty,parade,poignard,présence-perturbante,loner-4",
     hirableBy: ["elven_kingdoms_league"],
-    specialRule: "Fey Charm: Améliore Hypnotic Gaze"
+    imageUrl: undefined
   },
 
   thorsson_stoutmead: {
     slug: "thorsson_stoutmead",
-    displayName: "Thorsson Gueuledebière",
+    displayName: "Thorsson Stoutmead",
     cost: 170000,
-    ma: 5,
+    ma: 6,
     st: 3,
+    ag: 4,
+    pa: 3,
+    av: 8,
+    skills: "block,thick-skull,poivrot,solitaire-4+.",
+    hirableBy: ["old_world_classic"],
+    imageUrl: undefined
+  },
+
+  varag_ghoul_chewer: {
+    slug: "varag_ghoul_chewer",
+    displayName: "Varag Ghoul-Chewer",
+    cost: 280000,
+    ma: 6,
+    st: 5,
     ag: 3,
-    pa: 6,
-    av: 9,
-    skills: "block,loner-4,mighty-blow-1,pass-block,thick-skull",
-    hirableBy: ["old_world_classic", "worlds_edge_superleague"],
-    specialRule: "Dwarven Resilience: Améliore Block"
+    pa: 5,
+    av: 10,
+    skills: "loner-4,block,jump-up,châtaigne-+1,crâne-épais.",
+    hirableBy: ["underworld_challenge", "badlands_brawl"],
+    imageUrl: undefined
   },
 
   wilhelm_chaney: {
@@ -856,11 +830,25 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ma: 8,
     st: 4,
     ag: 3,
-    pa: null,
-    av: 8,
-    skills: "catch,claw,frenzy,loner-4,regeneration,wrestle",
+    pa: 4,
+    av: 9,
+    skills: "réception,claws,frenzy,loner-4,regeneration,lutte",
     hirableBy: ["sylvanian_spotlight"],
-    specialRule: "Werewolf Form: Peut se transformer"
+    imageUrl: "/data/Star-Players_files/Wilhelm-Chaney.webp"
+  },
+
+  willow_rosebark: {
+    slug: "willow_rosebark",
+    displayName: "Willow Rosebark",
+    cost: 150000,
+    ma: 5,
+    st: 4,
+    ag: 3,
+    pa: 6,
+    av: 9,
+    skills: "dauntless,loner-4,side-step,crâne-épais.",
+    hirableBy: ["elven_kingdoms_league"],
+    imageUrl: "/data/Star-Players_files/Willow-Rosebark.webp"
   },
 
   withergrasp_doubledrool: {
@@ -872,51 +860,23 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 4,
     pa: 4,
     av: 9,
-    skills: "loner-4,prehensile-tail,tackle,tentacles,two-heads,wrestle",
-    hirableBy: ["favoured_of"],
-    specialRule: "Watch Out!: Esquive au premier blocage reçu"
+    skills: "loner-4,queue-phréhensile,tacle,tentacles,two-heads,lutte,&nbsp;watch-out!",
+    hirableBy: ["all"],
+    imageUrl: "/data/Star-Players_files/star-player-whitergrasp-doubledrool.webp"
   },
 
-  guffle_pusmaw: {
-    slug: "guffle_pusmaw",
-    displayName: "Guffle Pusmaw",
-    cost: 200000,
+  zolcath_the_zoat: {
+    slug: "zolcath_the_zoat",
+    displayName: "Zolcath the Zoat",
+    cost: 230000,
     ma: 5,
-    st: 3,
-    ag: 3,
-    pa: null,
-    av: 10,
-    skills: "foul-appearance,loner-4,mighty-blow-1,nurgles-rot,regeneration,tentacles",
-    hirableBy: ["favoured_of"],
-    specialRule: "Nurgle's Blessing: Améliore Nurgle's Rot"
-  },
-
-  hthark_unstoppable: {
-    slug: "hthark_unstoppable",
-    displayName: "H'thark l'Imparable",
-    cost: 300000,
-    ma: 6,
     st: 5,
     ag: 4,
     pa: 5,
     av: 10,
-    skills: "break-tackle,juggernaut,loner-4,mighty-blow-2,prehensile-tail,sprint,sure-feet,thick-skull",
-    hirableBy: ["lustrian_superleague"],
-    specialRule: "Unstoppable Charge: Améliore Juggernaut"
-  },
-
-  dribl_and_drull: {
-    slug: "dribl_and_drull",
-    displayName: "Dribl et Drull",
-    cost: 190000,
-    ma: 6,
-    st: 2,
-    ag: 3,
-    pa: 3,
-    av: 8,
-    skills: "animosity-all,dodge,loner-4,right-stuff,stunty,sure-hands,two-heads",
-    hirableBy: ["badlands_brawl", "underworld_challenge"],
-    specialRule: "Two Heads Are Better: Améliore Two Heads"
+    skills: "présence-perturbante,juggernaut,loner-4,châtaigne-+1,queue-phréhensile,regeneration,équilibre",
+    hirableBy: ["lustrian_superleague", "elven_kingdoms_league"],
+    imageUrl: "/data/Star-Players_files/Fungus-the-Loon.webp"
   },
 
   zzharg_madeye: {
@@ -928,38 +888,11 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 4,
     pa: 3,
     av: 10,
-    skills: "cannoneer,hail-mary-pass,loner-4,nerves-of-steel,secret-weapon,sure-hands,thick-skull",
-    hirableBy: ["badlands_brawl", "favoured_of"],
-    specialRule: "Blunderbuss Blast: Action spéciale de tir"
+    skills: "nerfs-d’acier,hail-mary-pass,loner-4,secret-weapon,cannoneer,sure-hands,crâne-épais.",
+    hirableBy: ["badlands_brawl"],
+    imageUrl: "/data/Star-Players_files/Zzharg-Madeye-star-player-blood-bowl.webp"
   },
 
-  bilerot_vomitflesh: {
-    slug: "bilerot_vomitflesh",
-    displayName: "Bilerot Vomipeau",
-    cost: 180000,
-    ma: 4,
-    st: 5,
-    ag: 4,
-    pa: 6,
-    av: 10,
-    skills: "dirty-player-2,disturbing-presence,foul-appearance,loner-4,mighty-blow-1,nurgles-rot,plague-ridden,regeneration",
-    hirableBy: ["favoured_of"],
-    specialRule: "Vomit: Peut vomir sur les adversaires"
-  },
-
-  maple_highgrove: {
-    slug: "maple_highgrove",
-    displayName: "Mapple Hihgrove",
-    cost: 210000,
-    ma: 2,
-    st: 6,
-    ag: 5,
-    pa: 6,
-    av: 11,
-    skills: "block,grab,loner-4,mighty-blow-1,stand-firm,strong-arm,take-root,thick-skull,throw-team-mate,timmm-ber",
-    hirableBy: ["halfling_thimble_cup"],
-    specialRule: "Treeman Strength: Améliore Throw Team-Mate"
-  },
 };
 
 /**
@@ -1037,4 +970,3 @@ export type RegionalRule =
   | "underworld_challenge"
   | "worlds_edge_superleague"
   | "favoured_of";
-

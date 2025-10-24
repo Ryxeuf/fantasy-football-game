@@ -17,7 +17,9 @@ interface StarPlayer {
   pa: number | null;
   av: number;
   skills: string;
+  hirableBy: string[];
   specialRule?: string;
+  imageUrl?: string;
   isHired?: boolean;
   canHire?: boolean;
   needsPair?: boolean;

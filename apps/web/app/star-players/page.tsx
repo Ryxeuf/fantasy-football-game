@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import StarPlayerCard from '../components/StarPlayerCard';
+import CopyrightFooter from '../components/CopyrightFooter';
 import type { StarPlayerDefinition } from '@bb/game-engine';
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8201';
@@ -22,8 +24,8 @@ export default function StarPlayersPage() {
   const [maxCost, setMaxCost] = useState<number>(400000);
   const [selectedSkill, setSelectedSkill] = useState<string>('');
   
-  // Star players sélectionnés
-  const [selectedPlayers, setSelectedPlayers] = useState<StarPlayerDefinition[]>([]);
+  // Navigation
+  const router = useRouter();
 
   // Charger tous les star players au montage du composant
   useEffect(() => {
@@ -88,17 +90,9 @@ export default function StarPlayersPage() {
     setFilteredPlayers(filtered);
   };
 
-  const handleSelectPlayer = (player: StarPlayerDefinition) => {
-    const isSelected = selectedPlayers.some(p => p.slug === player.slug);
-    
-    if (isSelected) {
-      setSelectedPlayers(selectedPlayers.filter(p => p.slug !== player.slug));
-    } else {
-      setSelectedPlayers([...selectedPlayers, player]);
-    }
+  const handlePlayerClick = (player: StarPlayerDefinition) => {
+    router.push(`/star-players/${player.slug}`);
   };
-
-  const totalCost = selectedPlayers.reduce((sum, p) => sum + p.cost, 0);
 
   if (loading) {
     return (
@@ -232,28 +226,14 @@ export default function StarPlayersPage() {
           </button>
         </div>
 
-        {/* Sélection actuelle */}
-        {selectedPlayers.length > 0 && (
-          <div className="bg-blue-100 border-2 border-blue-500 rounded-lg p-6 mb-8">
-            <h2 className="text-xl font-bold mb-2">Sélection actuelle</h2>
-            <p className="mb-2">
-              {selectedPlayers.length} star player{selectedPlayers.length > 1 ? 's' : ''} sélectionné{selectedPlayers.length > 1 ? 's' : ''}
-            </p>
-            <p className="text-2xl font-bold">
-              Coût total: {(totalCost / 1000).toLocaleString()} K po
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {selectedPlayers.map(player => (
-                <span
-                  key={player.slug}
-                  className="bg-white px-3 py-1 rounded-full text-sm font-medium"
-                >
-                  {player.displayName}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Information */}
+        <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6 mb-8">
+          <h2 className="text-xl font-bold mb-2">ℹ️ Information</h2>
+          <p className="text-gray-700">
+            Cliquez sur les cartes des Star Players pour voir leurs détails complets et leurs règles spéciales.
+            Les Star Players sont des mercenaires légendaires qui peuvent être recrutés temporairement.
+          </p>
+        </div>
 
         {/* Grille de cartes */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -261,8 +241,7 @@ export default function StarPlayersPage() {
             <StarPlayerCard
               key={player.slug}
               starPlayer={player}
-              onSelect={handleSelectPlayer}
-              selected={selectedPlayers.some(p => p.slug === player.slug)}
+              onClick={handlePlayerClick}
             />
           ))}
         </div>
@@ -276,6 +255,8 @@ export default function StarPlayersPage() {
           </div>
         )}
       </div>
+      
+      <CopyrightFooter />
     </div>
   );
 }

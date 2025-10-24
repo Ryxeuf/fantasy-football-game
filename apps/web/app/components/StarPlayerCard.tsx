@@ -5,14 +5,13 @@ import type { StarPlayerDefinition } from '@bb/game-engine';
 
 interface StarPlayerCardProps {
   starPlayer: StarPlayerDefinition;
-  onSelect?: (starPlayer: StarPlayerDefinition) => void;
-  selected?: boolean;
+  onClick?: (starPlayer: StarPlayerDefinition) => void;
 }
 
 /**
  * Composant pour afficher une carte de Star Player
  */
-export default function StarPlayerCard({ starPlayer, onSelect, selected }: StarPlayerCardProps) {
+export default function StarPlayerCard({ starPlayer, onClick }: StarPlayerCardProps) {
   const formatCost = (cost: number) => {
     if (cost === 0) return 'Gratuit (avec Grak)';
     return `${(cost / 1000).toLocaleString()} K po`;
@@ -48,11 +47,10 @@ export default function StarPlayerCard({ starPlayer, onSelect, selected }: StarP
   return (
     <div
       className={`
-        rounded-lg border-2 p-4 cursor-pointer transition-all
+        rounded-lg border-2 p-4 cursor-pointer transition-all hover:shadow-lg hover:scale-105
         ${getRarityColor(starPlayer.cost)}
-        ${selected ? 'ring-4 ring-blue-500 shadow-lg' : 'hover:shadow-md'}
       `}
-      onClick={() => onSelect?.(starPlayer)}
+      onClick={() => onClick?.(starPlayer)}
     >
       {/* En-tête */}
       <div className="flex justify-between items-start mb-3">
@@ -116,24 +114,15 @@ export default function StarPlayerCard({ starPlayer, onSelect, selected }: StarP
         </div>
       )}
 
-      {/* Bouton de sélection */}
-      {onSelect && (
-        <button
-          className={`
-            w-full mt-3 py-2 px-4 rounded font-semibold transition-colors
-            ${
-              selected
-                ? 'bg-blue-600 text-white hover:bg-blue-700'
-                : 'bg-white text-gray-800 border-2 border-gray-300 hover:border-blue-500'
-            }
-          `}
-          onClick={(e) => {
-            e.stopPropagation();
-            onSelect(starPlayer);
-          }}
-        >
-          {selected ? '✓ Sélectionné' : 'Recruter'}
-        </button>
+      {/* Bouton d'action */}
+      {onClick && (
+        <div className="mt-3 pt-3 border-t border-gray-300">
+          <div className="text-center">
+            <span className="text-sm text-blue-600 font-semibold">
+              👆 Cliquer pour voir les détails
+            </span>
+          </div>
+        </div>
       )}
     </div>
   );
