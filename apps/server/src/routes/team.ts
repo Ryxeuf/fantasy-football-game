@@ -305,8 +305,13 @@ router.post(
   "/create-from-roster",
   authUser,
   async (req: AuthenticatedRequest, res) => {
-    const { name, roster, teamValue } =
-      req.body ?? ({} as { name?: string; roster?: AllowedRoster; teamValue?: number });
+    const { name, roster, teamValue, starPlayers: starPlayerSlugs } =
+      req.body ?? ({} as { 
+        name?: string; 
+        roster?: AllowedRoster; 
+        teamValue?: number;
+        starPlayers?: string[];
+      });
     if (!name || !roster)
       return res.status(400).json({ error: "name et roster requis" });
     if (!ALLOWED_TEAMS.includes(roster))
@@ -316,23 +321,75 @@ router.post(
     if (finalTeamValue < 100 || finalTeamValue > 2000)
       return res.status(400).json({ error: "La valeur d'équipe doit être entre 100 et 2000k po" });
 
+    // Valider les Star Players si fournis
+    const starPlayersToHire = starPlayerSlugs || [];
+    if (starPlayersToHire.length > 0) {
+      // Valider les paires obligatoires
+      const pairValidation = validateStarPlayerPairs(starPlayersToHire);
+      if (!pairValidation.valid) {
+        return res.status(400).json({ error: pairValidation.error });
+      }
+
+      // Calculer le nombre de joueurs du template
+      const templates = rosterTemplates(roster);
+      let playerCount = 0;
+      for (const t of templates) {
+        playerCount += t.count;
+        if (playerCount >= 16) {
+          playerCount = 16;
+          break;
+        }
+      }
+      playerCount = Math.max(11, playerCount); // Au moins 11 joueurs
+
+      // Valider que Star Players + joueurs ne dépassent pas 16
+      if (playerCount + starPlayersToHire.length > 16) {
+        return res.status(400).json({ 
+          error: `Trop de joueurs ! ${playerCount} joueurs + ${starPlayersToHire.length} Star Players = ${playerCount + starPlayersToHire.length} (maximum: 16)` 
+        });
+      }
+
+      // Calculer le coût des Star Players
+      const starPlayersCost = calculateStarPlayersCost(starPlayersToHire);
+      const budgetInPo = finalTeamValue * 1000;
+      
+      if (starPlayersCost > budgetInPo) {
+        return res.status(400).json({ 
+          error: `Budget insuffisant pour les Star Players. Coût: ${(starPlayersCost / 1000).toLocaleString()} K po, budget: ${finalTeamValue} K po` 
+        });
+      }
+
+      // Valider la disponibilité pour ce roster
+      const validation = validateStarPlayersForTeam(
+        starPlayersToHire,
+        roster,
+        playerCount,
+        budgetInPo
+      );
+      
+      if (!validation.valid) {
+        return res.status(400).json({ error: validation.error });
+      }
+    }
+
     const team = await prisma.team.create({
       data: { 
         ownerId: req.user!.id, 
         name, 
         roster,
         teamValue: finalTeamValue,
-        initialBudget: finalTeamValue, // Conserver le budget initial saisi par l'utilisateur
-        // Initialiser les informations d'équipe par défaut
-        treasury: 0, // Calculée automatiquement après chaque match
+        initialBudget: finalTeamValue,
+        treasury: 0,
         rerolls: 0,
         cheerleaders: 0,
         assistants: 0,
         apothecary: false,
         dedicatedFans: 1,
-        currentValue: 0, // Sera calculée après création des joueurs
+        currentValue: 0,
       },
     });
+
+    // Créer les joueurs
     const templates = rosterTemplates(roster);
     const players: any[] = [];
     let number = 1;
@@ -354,6 +411,7 @@ router.post(
       }
       if (number > 16) break;
     }
+
     // Assurer au moins 11 joueurs
     while (players.length < 11) {
       players.push({
@@ -369,27 +427,62 @@ router.post(
         skills: "",
       });
     }
+    
     await prisma.teamPlayer.createMany({ data: players.slice(0, 16) });
+
+    // Recruter les Star Players si fournis
+    if (starPlayersToHire.length > 0) {
+      const starPlayersData = starPlayersToHire.map((slug: string) => {
+        const sp = getStarPlayerBySlug(slug);
+        return {
+          teamId: team.id,
+          starPlayerSlug: slug,
+          cost: sp?.cost || 0
+        };
+      });
+
+      await prisma.teamStarPlayer.createMany({ data: starPlayersData });
+    }
     
     // Calculer automatiquement les valeurs d'équipe
     await updateTeamValues(prisma, team.id);
     
     const withPlayers = await prisma.team.findUnique({
       where: { id: team.id },
-      include: { players: true },
+      include: { 
+        players: true,
+        starPlayers: true
+      },
     });
-    res.status(201).json({ team: withPlayers });
+
+    // Enrichir les Star Players
+    const enrichedTeam = {
+      ...withPlayers,
+      starPlayers: withPlayers?.starPlayers.map((sp: any) => {
+        const starPlayerData = getStarPlayerBySlug(sp.starPlayerSlug);
+        return {
+          id: sp.id,
+          slug: sp.starPlayerSlug,
+          cost: sp.cost,
+          hiredAt: sp.hiredAt,
+          ...starPlayerData
+        };
+      }) || []
+    };
+
+    res.status(201).json({ team: enrichedTeam });
   },
 );
 
 router.post("/build", authUser, async (req: AuthenticatedRequest, res) => {
-  const { name, roster, teamValue, choices } =
+  const { name, roster, teamValue, choices, starPlayers: starPlayerSlugs } =
     req.body ??
     ({} as {
       name?: string;
       roster?: AllowedRoster;
       teamValue?: number;
       choices?: Array<{ key: string; count: number }>;
+      starPlayers?: string[];
     });
   if (!name || !roster || !Array.isArray(choices))
     return res.status(400).json({ error: "name, roster, choices requis" });
@@ -401,6 +494,7 @@ router.post("/build", authUser, async (req: AuthenticatedRequest, res) => {
     return res.status(400).json({ error: "La valeur d'équipe doit être entre 100 et 2000k po" });
     
   const def = ROSTERS[roster as AllowedRoster];
+  
   // Validation min/max et budget
   let totalPlayers = 0;
   let totalCost = 0;
@@ -415,10 +509,50 @@ router.post("/build", authUser, async (req: AuthenticatedRequest, res) => {
   }
   if (totalPlayers < 11 || totalPlayers > 16)
     return res.status(400).json({ error: "Il faut entre 11 et 16 joueurs" });
-  if (totalCost > finalTeamValue)
+
+  // Valider les Star Players si fournis
+  const starPlayersToHire = starPlayerSlugs || [];
+  let starPlayersCost = 0;
+  
+  if (starPlayersToHire.length > 0) {
+    // Valider les paires obligatoires
+    const pairValidation = validateStarPlayerPairs(starPlayersToHire);
+    if (!pairValidation.valid) {
+      return res.status(400).json({ error: pairValidation.error });
+    }
+
+    // Valider que Star Players + joueurs ne dépassent pas 16
+    if (totalPlayers + starPlayersToHire.length > 16) {
+      return res.status(400).json({ 
+        error: `Trop de joueurs ! ${totalPlayers} joueurs + ${starPlayersToHire.length} Star Players = ${totalPlayers + starPlayersToHire.length} (maximum: 16)` 
+      });
+    }
+
+    // Calculer le coût des Star Players
+    starPlayersCost = calculateStarPlayersCost(starPlayersToHire) / 1000; // Convertir en K po
+    
+    // Valider la disponibilité pour ce roster
+    const budgetInPo = finalTeamValue * 1000;
+    const validation = validateStarPlayersForTeam(
+      starPlayersToHire,
+      roster,
+      totalPlayers,
+      budgetInPo - (totalCost * 1000)
+    );
+    
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.error });
+    }
+  }
+
+  // Vérifier le budget total (joueurs + Star Players)
+  const totalBudgetUsed = totalCost + starPlayersCost;
+  if (totalBudgetUsed > finalTeamValue)
     return res
       .status(400)
-      .json({ error: `Budget dépassé: ${totalCost}k / ${finalTeamValue}k` });
+      .json({ 
+        error: `Budget dépassé: ${totalBudgetUsed}k (${totalCost}k joueurs + ${starPlayersCost}k Star Players) / ${finalTeamValue}k` 
+      });
 
   const team = await prisma.team.create({
     data: { 
@@ -426,17 +560,18 @@ router.post("/build", authUser, async (req: AuthenticatedRequest, res) => {
       name, 
       roster,
       teamValue: finalTeamValue,
-      initialBudget: finalTeamValue, // Conserver le budget initial saisi par l'utilisateur
-      // Initialiser les informations d'équipe par défaut
-      treasury: 0, // Calculée automatiquement après chaque match
+      initialBudget: finalTeamValue,
+      treasury: 0,
       rerolls: 0,
       cheerleaders: 0,
       assistants: 0,
       apothecary: false,
       dedicatedFans: 1,
-      currentValue: 0, // Sera calculée après création des joueurs
+      currentValue: 0,
     },
   });
+
+  // Créer les joueurs
   let number = 1;
   const players: any[] = [];
   for (const p of def.positions) {
@@ -457,17 +592,58 @@ router.post("/build", authUser, async (req: AuthenticatedRequest, res) => {
     }
   }
   await prisma.teamPlayer.createMany({ data: players });
+
+  // Recruter les Star Players si fournis
+  if (starPlayersToHire.length > 0) {
+    const starPlayersData = starPlayersToHire.map((slug: string) => {
+      const sp = getStarPlayerBySlug(slug);
+      return {
+        teamId: team.id,
+        starPlayerSlug: slug,
+        cost: sp?.cost || 0
+      };
+    });
+
+    await prisma.teamStarPlayer.createMany({ data: starPlayersData });
+  }
   
   // Calculer automatiquement les valeurs d'équipe
   await updateTeamValues(prisma, team.id);
   
   const withPlayers = await prisma.team.findUnique({
     where: { id: team.id },
-    include: { players: true },
+    include: { 
+      players: true,
+      starPlayers: true
+    },
   });
+
+  // Enrichir les Star Players
+  const enrichedTeam = {
+    ...withPlayers,
+    starPlayers: withPlayers?.starPlayers.map((sp: any) => {
+      const starPlayerData = getStarPlayerBySlug(sp.starPlayerSlug);
+      return {
+        id: sp.id,
+        slug: sp.starPlayerSlug,
+        cost: sp.cost,
+        hiredAt: sp.hiredAt,
+        ...starPlayerData
+      };
+    }) || []
+  };
+
   res
     .status(201)
-    .json({ team: withPlayers, cost: totalCost, budget: finalTeamValue });
+    .json({ 
+      team: enrichedTeam, 
+      cost: totalBudgetUsed, 
+      budget: finalTeamValue,
+      breakdown: {
+        players: totalCost,
+        starPlayers: starPlayersCost
+      }
+    });
 });
 
 // Endpoint pour mettre à jour les informations d'équipe (fans, coachs, relances, etc.)
