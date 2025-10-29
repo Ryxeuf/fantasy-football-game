@@ -40,6 +40,8 @@ async function main() {
         ownerId: u.id,
         name: `${u.name || u.email}-Skavens`,
         roster: "skaven",
+        initialBudget: 1000000, // 1000k po
+        treasury: 1000000,      // 1000k po
       },
     });
     const teamB = await prisma.team.create({
@@ -47,6 +49,8 @@ async function main() {
         ownerId: u.id,
         name: `${u.name || u.email}-Lizardmen`,
         roster: "lizardmen",
+        initialBudget: 1000000, // 1000k po
+        treasury: 1000000,      // 1000k po
       },
     });
     // Créer une équipe Skaven réaliste : 1 Rat Ogre, 2 Blitzers, 2 Gutter Runners, 1 Thrower, 6 Linemen
