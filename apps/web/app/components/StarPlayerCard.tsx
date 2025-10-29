@@ -2,6 +2,7 @@
 
 import React from 'react';
 import type { StarPlayerDefinition } from '@bb/game-engine';
+import { getStarPlayerSkillDisplayNames } from '@bb/game-engine';
 
 interface StarPlayerCardProps {
   starPlayer: StarPlayerDefinition;
@@ -17,16 +18,8 @@ export default function StarPlayerCard({ starPlayer, onClick }: StarPlayerCardPr
     return `${(cost / 1000).toLocaleString()} K po`;
   };
 
-  const formatSkills = (skills: string) => {
-    return skills.split(',').map(skill => {
-      // Convertir les slugs en noms lisibles
-      const skillName = skill
-        .split('-')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-      return skillName;
-    });
-  };
+  // Utiliser la fonction centralisée pour obtenir les noms d'affichage
+  const skillDisplayNames = getStarPlayerSkillDisplayNames(starPlayer);
 
   const getRarityColor = (cost: number) => {
     if (cost === 0) return 'bg-gray-100 border-gray-400';
@@ -93,7 +86,7 @@ export default function StarPlayerCard({ starPlayer, onClick }: StarPlayerCardPr
       <div className="mb-3">
         <div className="text-xs text-gray-600 mb-1 font-semibold">Compétences :</div>
         <div className="flex flex-wrap gap-1">
-          {formatSkills(starPlayer.skills).map((skill, index) => (
+          {skillDisplayNames.map((skill, index) => (
             <span
               key={index}
               className="bg-white text-xs px-2 py-1 rounded border border-gray-300"

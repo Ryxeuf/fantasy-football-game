@@ -31,7 +31,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 2,
     pa: null,
     av: 6,
-    skills: "claws,dauntless,dodge,frenzy,jump-up,loner-4,no-hands,side-step,stunty,microbe.",
+    skills: "claws,dauntless,dodge,frenzy,jump-up,loner-4,no-hands,sidestep,stunty",
     hirableBy: ["all"],
     imageUrl: "/data/Star-Players_files/Fungus-the-Loon.webp",
     specialRule: "Blind Rage: Peut relancer le D6 pour Intrépide."
@@ -61,7 +61,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 4,
     pa: 3,
     av: 9,
-    skills: "hail-mary-pass,loner-4,pass,secret-weapon,cannoneer,sure-hands,crâne-épais.",
+    skills: "hail-mary-pass,loner-4,pass,secret-weapon,cannoneer,sure-hands,thick-skull",
     hirableBy: ["old_world_classic"],
     imageUrl: "/data/Star-Players_files/barik-farblast.webp"
   },
@@ -75,7 +75,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 4,
     pa: 6,
     av: 10,
-    skills: "jouer-déloyal,présence-perturbante,répulsion,loner-4",
+    skills: "dirty-player-1,disturbing-presence,foul-appearance,loner-4",
     hirableBy: ["all"],
     imageUrl: undefined
   },
@@ -89,7 +89,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 3,
     pa: 3,
     av: 9,
-    skills: "bombardier,présence-perturbante,dodge,loner-3,side-step,sournois,poignard,stunty",
+    skills: "secret-weapon,disturbing-presence,dodge,loner-4,sidestep,sneaky-git,stab,stunty",
     hirableBy: ["underworld_challenge", "badlands_brawl"],
     imageUrl: "/data/Star-Players_files/Fungus-the-Loon.webp"
   },
@@ -103,7 +103,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 3,
     pa: 4,
     av: 9,
-    skills: "dodge,side-step,libration-contrôlée,queue-phréhensile,loner-4,regard-hypnotique,<strong>regarde-dans-mes-yeux</strong>",
+    skills: "dodge,sidestep,prehensile-tail,loner-4,hypnotic-gaze",
     hirableBy: ["lustrian_superleague"],
     imageUrl: undefined
   },
@@ -117,7 +117,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 3,
     pa: 3,
     av: 8,
-    skills: "précision,bombardier,dodge,loner-4,stunty,poids-plume,secret-weapon",
+    skills: "accurate,secret-weapon,dodge,loner-4,stunty,right-stuff",
     hirableBy: ["underworld_challenge", "badlands_brawl"],
     imageUrl: "/data/Star-Players_files/Bomber-Dribblesnot.webp"
   },
@@ -131,7 +131,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 4,
     pa: null,
     av: 9,
-    skills: "tronçonneuse,loner-4,regeneration,secret-weapon,stand-firm,crâne-épais.",
+    skills: "chainsaw,loner-4,regeneration,secret-weapon,stand-firm,thick-skull",
     hirableBy: ["sylvanian_spotlight"],
     imageUrl: "/data/Star-Players_files/Bryce-The-Slice-Cambuel-2023.webp"
   },
@@ -145,7 +145,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 3,
     pa: 3,
     av: 7,
-    skills: "secret-weapon,bombardier,dodge,stunty,précision,loner-4",
+    skills: "secret-weapon,dodge,stunty,accurate,loner-4",
     hirableBy: ["old_world_classic"],
     imageUrl: "/data/Star-Players_files/Cindy_Piewhistle.webp"
   },
@@ -159,7 +159,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 5,
     pa: 4,
     av: 11,
-    skills: "block,loner-4,châtaigne-+2,stand-firm,bras-musclé,thick-skull,lancer-de-coéquipier,timmm–-ber-!",
+    skills: "block,loner-4,mighty-blow-1,stand-firm,strong-arm,thick-skull,throw-team-mate,timmm-ber",
     hirableBy: ["old_world_classic"],
     imageUrl: "/data/Star-Players_files/deeproot-strongbranch.webp"
   },
@@ -173,7 +173,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 2,
     pa: 5,
     av: 8,
-    skills: "loner-4,dodge,nerfs-d’acier,réception,regard-hypnotique,sur-le-ballon",
+    skills: "loner-4,dodge,nerfs-d’acier,catch,hypnotic-gaze,on-the-ball",
     hirableBy: ["elven_kingdoms_league"],
     imageUrl: "/data/Star-Players_files/Eldril-Sidewinder.webp"
   },
@@ -187,7 +187,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 3,
     pa: 4,
     av: 8,
-    skills: "dodge,&nbsp;garde,side-step,présence-perturbante,loner-4",
+    skills: "dodge,guard,sidestep,disturbing-presence,loner-4",
     hirableBy: ["lustrian_superleague"],
     imageUrl: "/data/Star-Players_files/star-player-whitergrasp-doubledrool.webp"
   },
@@ -201,7 +201,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 4,
     pa: null,
     av: 10,
-    skills: "esquive-en-force,loner-4,châtaigne-+1,regeneration,stand-firm,thick-skull",
+    skills: "break-tackle,loner-4,mighty-blow-1,regeneration,stand-firm,thick-skull",
     hirableBy: ["old_world_classic", "sylvanian_spotlight"],
     imageUrl: "/data/Star-Players_files/frank-n-stein.webp"
   },
@@ -215,7 +215,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 3,
     pa: null,
     av: 8,
-    skills: "arme-secrète,chaînes-et-boulet,golpe-mortifero-+1,stunty,loner-4,no-hands",
+    skills: "secret-weapon,ball-and-chain,mighty-blow-1,stunty,loner-4,no-hands",
     hirableBy: ["underworld_challenge", "badlands_brawl"],
     imageUrl: "/data/Star-Players_files/Fungus-the-Loon.webp"
   },
@@ -243,7 +243,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 2,
     pa: 2,
     av: 8,
-    skills: "précision,dodge,loner-3,pass,side-step,sure-hands",
+    skills: "accurate,dodge,loner-4,pass,sidestep,sure-hands",
     hirableBy: ["elven_kingdoms_league"],
     imageUrl: undefined
   },
@@ -257,7 +257,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 5,
     pa: null,
     av: 10,
-    skills: "châtaigne-+1,thick-skull,frenzy,sauvagerie-animale,prehensile-tail,loner-4,stand-firm",
+    skills: "mighty-blow-1,thick-skull,frenzy,animal-savagery,prehensile-tail,loner-4,stand-firm",
     hirableBy: ["lustrian_superleague"],
     imageUrl: undefined
   },
@@ -271,7 +271,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 4,
     pa: null,
     av: 9,
-    skills: "frenzy,cornes,loner-4,châtaigne-+1,<br>crâne-épais,fureur-débridée",
+    skills: "frenzy,horns,loner-4,mighty-blow-1,thick-skull,wild-animal",
     hirableBy: ["all"],
     imageUrl: "/data/Star-Players_files/Grashnak-Blackhoof.webp"
   },
@@ -285,7 +285,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 2,
     pa: null,
     av: 9,
-    skills: "présence-perturbante,dodge,répulsion,jump-up,loner-4,sans-les-mains,regeneration,poursuite,side-step",
+    skills: "disturbing-presence,dodge,foul-appearance,jump-up,loner-4,no-hands,regeneration,shadowing,sidestep",
     hirableBy: ["sylvanian_spotlight"],
     imageUrl: "/data/Star-Players_files/Skitter-Stab-Stab-blood-bowl-star-player.webp"
   },
@@ -299,7 +299,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 2,
     pa: 3,
     av: 9,
-    skills: "loner-3,block,équilibre,dodge,parade,sprint",
+    skills: "loner-4,block,sure-feet,dodge,fend,sprint",
     hirableBy: ["old_world_classic"],
     imageUrl: undefined
   },
@@ -313,7 +313,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 3,
     pa: null,
     av: 9,
-    skills: "loner-4,block,dauntless,frenzy,blocage-multiple,thick-skull",
+    skills: "loner-4,block,dauntless,frenzy,multiple-block,thick-skull",
     hirableBy: ["old_world_classic"],
     imageUrl: "/data/Star-Players_files/grim-ironjaw-card.webp"
   },
@@ -327,7 +327,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 3,
     pa: 4,
     av: 10,
-    skills: "block,dauntless,loner-4,châtaigne-+1,stand-firm,thick-skull",
+    skills: "block,dauntless,loner-4,mighty-blow-1,stand-firm,thick-skull",
     hirableBy: ["lustrian_superleague", "old_world_classic"],
     imageUrl: "/data/Star-Players_files/Fungus-the-Loon.webp"
   },
@@ -341,7 +341,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 4,
     pa: 6,
     av: 10,
-    skills: "contagieux,grande-gueule,<strong>morsure-rapide</strong>,répulsion,loner-4",
+    skills: "plague-ridden,monstrous-mouth,bloodlust,foul-appearance,loner-4",
     hirableBy: ["all"],
     imageUrl: "/data/Star-Players_files/Guffle-Pussmaw-Star-Player.webp"
   },
@@ -355,7 +355,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 2,
     pa: 3,
     av: 8,
-    skills: "loner-4,bras-supplémentaires,two-heads,dodge,queue-phréhensile",
+    skills: "loner-4,extra-arms,two-heads,dodge,prehensile-tail",
     hirableBy: ["underworld_challenge"],
     imageUrl: "/data/Star-Players_files/Hakflem-Skuttlespike.webp"
   },
@@ -369,7 +369,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 3,
     pa: null,
     av: 9,
-    skills: "tronçonneuse,loner-4,secret-weapon,pro,stand-firm",
+    skills: "chainsaw,loner-4,secret-weapon,pro,stand-firm",
     hirableBy: ["all"],
     imageUrl: undefined
   },
@@ -383,7 +383,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 4,
     pa: 6,
     av: 10,
-    skills: "block,thick-skull,défenseur,&nbsp;équilibre,esquive-en-force,juggernaut,sprint,loner-4",
+    skills: "block,thick-skull,defensive,sure-feet,break-tackle,juggernaut,sprint,loner-4",
     hirableBy: ["badlands_brawl"],
     imageUrl: "/data/Star-Players_files/Fungus-the-Loon.webp"
   },
@@ -397,7 +397,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 4,
     pa: 4,
     av: 9,
-    skills: "block,juggernaut,présence-perturbante,prise-sûre,regeneration,&nbsp;solitaire-4+,tacle",
+    skills: "block,juggernaut,disturbing-presence,sure-hands,regeneration,loner-4,tackle",
     hirableBy: ["sylvanian_spotlight"],
     imageUrl: undefined
   },
@@ -411,7 +411,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 3,
     pa: 4,
     av: 9,
-    skills: "block,garde,loner-4,tacle",
+    skills: "block,guard,loner-4,tackle",
     hirableBy: ["old_world_classic"],
     imageUrl: undefined
   },
@@ -425,7 +425,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 1,
     pa: 2,
     av: 9,
-    skills: "block,délestage,dodge,side-step,nerfs-d’acier,pass,réception-plongeante,loner-4,sur-le-ballon",
+    skills: "block,dump-off,dodge,sidestep,nerfs-d’acier,pass,diving-catch,loner-4,on-the-ball",
     hirableBy: ["elven_kingdoms_league"],
     imageUrl: undefined
   },
@@ -439,7 +439,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 1,
     pa: 3,
     av: 8,
-    skills: "block,dodge,side-step,réception-plongeante,saut,loner-4",
+    skills: "block,dodge,sidestep,diving-catch,leap,loner-4",
     hirableBy: ["elven_kingdoms_league"],
     imageUrl: undefined
   },
@@ -453,7 +453,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 2,
     pa: 4,
     av: 9,
-    skills: "soif-de-sang-2+,dodge,regard-hypnotique,jump-up,loner-4,regeneration",
+    skills: "bloodlust,dodge,hypnotic-gaze,jump-up,loner-4,regeneration",
     hirableBy: ["sylvanian_spotlight"],
     imageUrl: undefined
   },
@@ -481,7 +481,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 2,
     pa: 3,
     av: 9,
-    skills: "présence-perturbante,répulsion,loner-4,sur-le-ballon,tacle,tentacles",
+    skills: "disturbing-presence,foul-appearance,loner-4,on-the-ball,tackle,tentacles",
     hirableBy: ["elven_kingdoms_league"],
     imageUrl: "/data/Star-Players_files/Kiroth-Krakeneye.webp"
   },
@@ -495,7 +495,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 4,
     pa: null,
     av: 10,
-    skills: "chaîne-&amp;-boulet,loner-4,châtaigne-+1,sans-les-mains,queue-phréhensile,secret-weapon",
+    skills: "ball-and-chain,loner-4,mighty-blow-1,no-hands,prehensile-tail,secret-weapon",
     hirableBy: ["underworld_challenge"],
     imageUrl: "/data/Star-Players_files/Kreek-Rustgouger.webp"
   },
@@ -509,7 +509,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 3,
     pa: 5,
     av: 10,
-    skills: "block,châtaigne+1,joueur-déloyal-+2,loner-4,sournois",
+    skills: "block,mighty-blow-1,dirty-player-1,loner-4,sneaky-git",
     hirableBy: ["all"],
     imageUrl: "/data/Star-Players_files/Lord-borak.webp"
   },
@@ -523,7 +523,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 2,
     pa: 3,
     av: 10,
-    skills: "block,regard-hypnotique,loner-4,regeneration,glissade-controlée",
+    skills: "block,hypnotic-gaze,loner-4,regeneration,sidestep",
     hirableBy: ["sylvanian_spotlight"],
     imageUrl: undefined
   },
@@ -537,7 +537,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 5,
     pa: 5,
     av: 11,
-    skills: "bagarreur,châtaigne-+1,thick-skull,grab,loner-4,stand-firm,tentacles",
+    skills: "brawler,mighty-blow-1,thick-skull,grab,loner-4,stand-firm,tentacles",
     hirableBy: ["elven_kingdoms_league", "old_world_classic"],
     imageUrl: undefined
   },
@@ -551,7 +551,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 4,
     pa: null,
     av: 9,
-    skills: "tronçonneuse,loner-4,secret-weapon",
+    skills: "chainsaw,loner-4,secret-weapon",
     hirableBy: ["all"],
     imageUrl: undefined
   },
@@ -565,7 +565,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 4,
     pa: 6,
     av: 10,
-    skills: "loner-4,block,châtaigne-+1",
+    skills: "loner-4,block,mighty-blow-1",
     hirableBy: ["lustrian_superleague", "old_world_classic"],
     imageUrl: undefined
   },
@@ -579,7 +579,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 2,
     pa: 3,
     av: 9,
-    skills: "block,dauntless,lutte,loner-4,tacle",
+    skills: "block,dauntless,wrestle,loner-4,tackle",
     hirableBy: ["elven_kingdoms_league"],
     imageUrl: undefined
   },
@@ -593,7 +593,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 3,
     pa: 4,
     av: 11,
-    skills: "loner-4,block,châtaigne-+2,thick-skull,lancer-de-coéquipier",
+    skills: "loner-4,block,mighty-blow-1,thick-skull,throw-team-mate",
     hirableBy: ["sylvanian_spotlight"],
     imageUrl: "/data/Star-Players_files/Morg-'n-Thorg.webp",
     specialRule: "La Baliste: Une fois par match, si Morg rate le test de Passe quand il effectue une Passe ou un Lancer de Coéquipier, vous pouvez relancer le D6."
@@ -608,7 +608,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 3,
     pa: null,
     av: 8,
-    skills: "secret-weapon,block,&nbsp;esquive,stunty,loner-4,tronçonneuse",
+    skills: "secret-weapon,block,dodge,stunty,loner-4,chainsaw",
     hirableBy: ["underworld_challenge", "badlands_brawl"],
     imageUrl: "/data/Star-Players_files/Nobbla-Blackwart-3rd-Edition.webp"
   },
@@ -622,7 +622,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 3,
     pa: 4,
     av: 7,
-    skills: "&nbsp;esquive,&nbsp;minus,&nbsp;nerfs-d’acier,&nbsp;poids-plume,&nbsp;solitaire-4+",
+    skills: "dodge,titchy,nerfs-d’acier,right-stuff,loner-4",
     hirableBy: ["old_world_classic"],
     imageUrl: "/data/Star-Players_files/Puggy_Baconbreath.webp"
   },
@@ -636,7 +636,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 3,
     pa: 5,
     av: 8,
-    skills: "side-step,sournois,poursuite,poignard,loner-4",
+    skills: "sidestep,sneaky-git,shadowing,stab,loner-4",
     hirableBy: ["badlands_brawl"],
     imageUrl: "/data/Star-Players_files/Grashnak-Blackhoof.webp"
   },
@@ -650,7 +650,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 5,
     pa: 4,
     av: 10,
-    skills: "lancer-de-coéquipier,&nbsp;projection,&nbsp;régénération,&nbsp;solitaire-4+&nbsp;",
+    skills: "throw-team-mate,grab,regeneration,loner-4",
     hirableBy: ["underworld_challenge", "badlands_brawl"],
     imageUrl: undefined
   },
@@ -664,7 +664,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 3,
     pa: 4,
     av: 7,
-    skills: "réception,réception-plongeante,jump-up,loner-4,sur-le-ballon,side-step,stunty,lutte,<strong>prise-du-jour</strong>",
+    skills: "catch,diving-catch,jump-up,loner-4,on-the-ball,sidestep,stunty,wrestle",
     hirableBy: ["all"],
     imageUrl: undefined
   },
@@ -678,7 +678,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 3,
     pa: 4,
     av: 8,
-    skills: "cornes,délestage,dodge,garde,jump-up,saut,loner-4,<strong>bounding-leap</strong>",
+    skills: "horns,dump-off,dodge,guard,jump-up,leap,loner-4",
     hirableBy: ["all"],
     imageUrl: undefined
   },
@@ -692,7 +692,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 1,
     pa: 4,
     av: 8,
-    skills: "loner-4,dodge,frenzy,jump-up,juggernaut,saut",
+    skills: "loner-4,dodge,frenzy,jump-up,juggernaut,leap",
     hirableBy: ["elven_kingdoms_league"],
     imageUrl: undefined
   },
@@ -706,7 +706,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 3,
     pa: null,
     av: 8,
-    skills: "block,cornes,juggernaut,loner-4,sans-les-mains,tacle,thick-skull",
+    skills: "block,horns,juggernaut,loner-4,no-hands,tackle,thick-skull",
     hirableBy: ["old_world_classic"],
     imageUrl: undefined
   },
@@ -720,7 +720,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 3,
     pa: 5,
     av: 8,
-    skills: "échasses-à-ressort,dodge,équilibre,joueur-déloyal-+1,stunty,poids-plume,loner-4,sprint",
+    skills: "pogo-stick,dodge,sure-feet,dirty-player-1,stunty,right-stuff,loner-4,sprint",
     hirableBy: ["underworld_challenge", "badlands_brawl"],
     imageUrl: undefined
   },
@@ -734,7 +734,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 4,
     pa: null,
     av: 10,
-    skills: "claws,frenzy,loner-4,châtaigne-+1,queue-phréhensile,thick-skull,fureur-débridée",
+    skills: "claws,frenzy,loner-4,mighty-blow-1,prehensile-tail,thick-skull,wild-animal",
     hirableBy: ["all"],
     imageUrl: "/data/Star-Players_files/Scyla-Anfingrimm.webp"
   },
@@ -748,7 +748,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 2,
     pa: 4,
     av: 8,
-    skills: "dodge,poignard,poursuite,prehensile-tail,solitaire4+",
+    skills: "dodge,stab,shadowing,prehensile-tail,loner-4",
     hirableBy: ["underworld_challenge"],
     imageUrl: "/data/Star-Players_files/Skitter-Stab-Stab-blood-bowl-star-player.webp"
   },
@@ -762,7 +762,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 4,
     pa: null,
     av: 9,
-    skills: "châtaigne-+1,claws,juggernaut,présence-perturbante,solitaire-4+.",
+    skills: "mighty-blow-1,claws,juggernaut,disturbing-presence,loner-4",
     hirableBy: ["old_world_classic"],
     imageUrl: undefined
   },
@@ -776,7 +776,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 4,
     pa: 4,
     av: 9,
-    skills: "précision,loner-4,nerfs-d’acier,pass,regeneration,sure-hands,thick-skull",
+    skills: "accurate,loner-4,nerfs-d’acier,pass,regeneration,sure-hands,thick-skull",
     hirableBy: ["sylvanian_spotlight"],
     imageUrl: undefined
   },
@@ -790,7 +790,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 3,
     pa: 5,
     av: 7,
-    skills: "side-step,stunty,parade,poignard,présence-perturbante,loner-4",
+    skills: "sidestep,stunty,fend,stab,disturbing-presence,loner-4",
     hirableBy: ["elven_kingdoms_league"],
     imageUrl: undefined
   },
@@ -804,7 +804,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 4,
     pa: 3,
     av: 8,
-    skills: "block,thick-skull,poivrot,solitaire-4+.",
+    skills: "block,thick-skull,drunkard,loner-4",
     hirableBy: ["old_world_classic"],
     imageUrl: undefined
   },
@@ -818,7 +818,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 3,
     pa: 5,
     av: 10,
-    skills: "loner-4,block,jump-up,châtaigne-+1,crâne-épais.",
+    skills: "loner-4,block,jump-up,mighty-blow-1,thick-skull",
     hirableBy: ["underworld_challenge", "badlands_brawl"],
     imageUrl: undefined
   },
@@ -832,7 +832,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 3,
     pa: 4,
     av: 9,
-    skills: "réception,claws,frenzy,loner-4,regeneration,lutte",
+    skills: "catch,claws,frenzy,loner-4,regeneration,wrestle",
     hirableBy: ["sylvanian_spotlight"],
     imageUrl: "/data/Star-Players_files/Wilhelm-Chaney.webp"
   },
@@ -846,7 +846,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 3,
     pa: 6,
     av: 9,
-    skills: "dauntless,loner-4,side-step,crâne-épais.",
+    skills: "dauntless,loner-4,sidestep,thick-skull",
     hirableBy: ["elven_kingdoms_league"],
     imageUrl: "/data/Star-Players_files/Willow-Rosebark.webp"
   },
@@ -860,7 +860,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 4,
     pa: 4,
     av: 9,
-    skills: "loner-4,queue-phréhensile,tacle,tentacles,two-heads,lutte,&nbsp;watch-out!",
+    skills: "loner-4,prehensile-tail,tackle,tentacles,two-heads,wrestle,hypnotic-gaze",
     hirableBy: ["all"],
     imageUrl: "/data/Star-Players_files/star-player-whitergrasp-doubledrool.webp"
   },
@@ -874,7 +874,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 4,
     pa: 5,
     av: 10,
-    skills: "présence-perturbante,juggernaut,loner-4,châtaigne-+1,queue-phréhensile,regeneration,équilibre",
+    skills: "disturbing-presence,juggernaut,loner-4,mighty-blow-1,prehensile-tail,regeneration,sure-feet",
     hirableBy: ["lustrian_superleague", "elven_kingdoms_league"],
     imageUrl: "/data/Star-Players_files/Fungus-the-Loon.webp"
   },
@@ -888,7 +888,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 4,
     pa: 3,
     av: 10,
-    skills: "nerfs-d’acier,hail-mary-pass,loner-4,secret-weapon,cannoneer,sure-hands,crâne-épais.",
+    skills: "nerfs-d’acier,hail-mary-pass,loner-4,secret-weapon,cannoneer,sure-hands,thick-skull",
     hirableBy: ["badlands_brawl"],
     imageUrl: "/data/Star-Players_files/Zzharg-Madeye-star-player-blood-bowl.webp"
   },

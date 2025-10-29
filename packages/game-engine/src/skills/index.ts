@@ -598,6 +598,55 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
     description: "Ce joueur peut se jeter sur un adversaire à terre pour lui infliger des dégâts supplémentaires.",
     category: "Trait"
   },
+  {
+    slug: "animosity",
+    nameFr: "Animosité*",
+    nameEn: "Animosity",
+    description: "Ce joueur est jaloux de et n'aime pas certains autres joueurs de son équipe, comme indiqué entre parenthèses après le nom de la compétence. Lorsque ce joueur souhaite effectuer une action de Remise à un coéquipier du type listé, ou tente d'effectuer une action de Passe et que la case cible est occupée par un coéquipier du type listé, ce joueur peut refuser de le faire. Lancez un D6. Sur un résultat de 1, ce joueur refuse d'effectuer l'action et son activation se termine.",
+    category: "Trait"
+  },
+  {
+    slug: "bloodlust",
+    nameFr: "Soif de Sang*",
+    nameEn: "Bloodlust",
+    description: "Pour garder le contrôle de leur esprit, les Vampires ont besoin d'un approvisionnement en sang frais. Chaque fois qu'un joueur avec ce trait est activé, après avoir déclaré son action, il doit lancer un D6, en ajoutant 1 au jet s'il a déclaré une action de Blocage ou de Blitz. S'il obtient un résultat égal ou supérieur au nombre indiqué entre parenthèses, il peut s'activer normalement. Si le joueur obtient un résultat inférieur au nombre indiqué entre parenthèses, ou obtient un 1 naturel, il peut choisir de mordre un coéquipier Thrall adjacent.",
+    category: "Trait"
+  },
+  {
+    slug: "plague-ridden",
+    nameFr: "Porteur de Peste*",
+    nameEn: "Plague Ridden",
+    description: "Une fois par match, si un joueur adverse avec une caractéristique de Force de 4 ou moins qui n'a pas les traits Décomposition, Régénération ou Microbe subit un résultat de Blessure de 15-16, MORT suite à une action de Blocage effectuée ou une action d'Agression commise par un joueur avec ce trait appartenant à votre équipe, et si ce joueur ne peut pas être sauvé par un apothicaire, vous pouvez choisir d'utiliser ce trait. Si vous le faites, ce joueur ne meurt pas ; il a été infecté par une peste virulente !",
+    category: "Trait"
+  },
+  {
+    slug: "stakes",
+    nameFr: "Pieux*",
+    nameEn: "Stakes",
+    description: "Ce joueur est armé de pieux spéciaux bénis pour causer des dégâts supplémentaires aux morts-vivants et à ceux qui travaillent avec eux. Ce joueur peut ajouter 1 au jet d'Armure lorsqu'il effectue une attaque de Poignard contre tout joueur jouant pour une équipe Khemri, Nécromantique, Mort-Vivant ou Vampire.",
+    category: "Trait"
+  },
+  {
+    slug: "timmm-ber",
+    nameFr: "Timmm-ber!*",
+    nameEn: "Timmm-ber!",
+    description: "Si le joueur a une Allocation de Mouvement de 2 ou moins, appliquez un modificateur de +1 au jet de dé lorsqu'il tente de se relever pour chaque coéquipier Debout et en position ouverte actuellement adjacent à lui. Un 1 naturel est toujours un échec, peu importe le nombre de coéquipiers qui aident. Ce trait peut toujours être utilisé si le joueur est À Terre ou a perdu sa Zone de Tacle.",
+    category: "Trait"
+  },
+  {
+    slug: "pogo-stick",
+    nameFr: "Échasses à Ressort*",
+    nameEn: "Pogo Stick",
+    description: "Pendant son mouvement, au lieu de sauter par-dessus une seule case occupée par un joueur À Terre ou Étourdi, un joueur avec ce trait peut choisir de Sauter par-dessus n'importe quelle case adjacente, y compris les cases libres et les cases occupées par des joueurs Debout. De plus, lorsque ce joueur effectue un test d'Agilité pour sauter par-dessus un joueur À Terre ou Étourdi, ou pour Sauter par-dessus une case vide ou occupée par un joueur Debout, il peut appliquer un modificateur de +1.",
+    category: "Trait"
+  },
+  {
+    slug: "drunkard",
+    nameFr: "Poivrot*",
+    nameEn: "Drunkard",
+    description: "Ce joueur subit une pénalité de -1 au jet de dé lorsqu'il tente de Foncer.",
+    category: "Trait"
+  },
 ];
 
 // Index par slug pour accès rapide

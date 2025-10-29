@@ -16,6 +16,16 @@ export {
   type RegionalRule
 } from './star-players';
 
+// Export des utilitaires Star Players
+export * from './star-players-utils';
+export {
+  parseStarPlayerSkills,
+  getStarPlayerSkillDefinitions,
+  getStarPlayerSkillDisplayNames,
+  getStarPlayerSkillSlugs,
+  formatStarPlayerSkills
+} from './star-players-utils';
+
 // Types pour compatibilité
 export type AllowedRoster = 'skaven' | 'lizardmen' | 'wood_elf';
 export const ALLOWED_TEAMS: AllowedRoster[] = ['skaven', 'lizardmen', 'wood_elf'];

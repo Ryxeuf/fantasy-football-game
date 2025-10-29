@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import CopyrightFooter from '../../components/CopyrightFooter';
 import SkillTooltip from '../../components/SkillTooltip';
 import type { StarPlayerDefinition } from '@bb/game-engine';
+import { getStarPlayerSkillSlugs } from '@bb/game-engine';
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8201';
 
@@ -115,7 +116,8 @@ export default function StarPlayerDetailPage() {
     );
   }
 
-  const skills = starPlayer.skills.split(',').map(s => s.trim());
+  // Utiliser la fonction centralisée pour parser les compétences
+  const skills = getStarPlayerSkillSlugs(starPlayer);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
