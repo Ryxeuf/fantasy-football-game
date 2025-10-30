@@ -69,6 +69,7 @@ function getRosterDisplayName(slug: string): string {
 
 export default function TeamDetailPage() {
   const [data, setData] = useState<any>(null);
+  const [userName, setUserName] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [recalculating, setRecalculating] = useState(false);
@@ -87,6 +88,7 @@ export default function TeamDetailPage() {
           window.location.href = "/login";
           return;
         }
+        setUserName(me.user.name || me.user.username || me.user.email || "");
         const d = await fetchJSON(`/team/${id}`);
         setData(d);
       } catch (e: any) {
@@ -124,7 +126,7 @@ export default function TeamDetailPage() {
   const handleExportPDF = async () => {
     if (!team) return;
     try {
-      await exportTeamToPDF(team, getPlayerCost);
+      await exportTeamToPDF(team, getPlayerCost, userName);
     } catch (error) {
       console.error('Erreur lors de l\'export PDF:', error);
       alert('Erreur lors de la génération du PDF');
