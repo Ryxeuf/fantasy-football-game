@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { API_BASE } from "../../../auth-client";
 import StarPlayerSelector from "../../../components/StarPlayerSelector";
+import SkillTooltip from "../components/SkillTooltip";
 
 type Position = {
   slug: string;
@@ -197,6 +198,7 @@ export default function NewTeamBuilder() {
               <th className="text-left p-2">Coût</th>
               <th className="text-left p-2">Min</th>
               <th className="text-left p-2">Max</th>
+              <th className="text-left p-2">Compétences</th>
               <th className="text-left p-2">Qté</th>
               <th className="text-left p-2">Actions</th>
             </tr>
@@ -208,6 +210,13 @@ export default function NewTeamBuilder() {
                 <td className="p-2">{p.cost}k</td>
                 <td className="p-2">{p.min}</td>
                 <td className="p-2">{p.max}</td>
+                <td className="p-2">
+                  <SkillTooltip 
+                    skillsString={p.skills} 
+                    position={p.slug}
+                    className="text-xs"
+                  />
+                </td>
                 <td className="p-2">{counts[p.slug] || 0}</td>
                 <td className="p-2">
                   <button

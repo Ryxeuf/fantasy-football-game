@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "vitest",
+    "test:run": "vitest run",
     "test:ui": "vitest --config vitest.config.ts tests/ui",
     "test:game-engine": "vitest --config vitest.config.ts tests/game-engine",
     "test:watch": "vitest --watch",

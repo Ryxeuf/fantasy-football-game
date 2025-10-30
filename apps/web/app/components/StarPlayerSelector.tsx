@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { API_BASE } from "../auth-client";
+import SkillTooltip from "../me/teams/components/SkillTooltip";
 
 export interface StarPlayer {
   slug: string;
@@ -257,8 +258,13 @@ export default function StarPlayerSelector({
                   {expandedPlayer === sp.slug && (
                     <div className="mt-2 text-sm space-y-1">
                       <div className="text-gray-700">
-                        <span className="font-medium">Compétences :</span>{" "}
-                        {sp.skills}
+                        <span className="font-medium">Compétences :</span>
+                        <div className="mt-1">
+                          <SkillTooltip 
+                            skillsString={sp.skills}
+                            className="text-xs"
+                          />
+                        </div>
                       </div>
                       {sp.specialRule && (
                         <div className="text-gray-700">

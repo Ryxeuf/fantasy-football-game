@@ -24,15 +24,15 @@ describe('Star Players', () => {
                 expect(Array.isArray(starPlayer.hirableBy)).toBe(true);
             });
         });
-        it('devrait avoir des coûts cohérents avec les règles (entre 70,000 et 340,000 po)', () => {
+        it('devrait avoir des coûts cohérents avec les règles (entre 50,000 et 340,000 po)', () => {
             Object.values(STAR_PLAYERS).forEach(starPlayer => {
                 // Crumbleberry est gratuit car inclus avec Grak
                 if (starPlayer.slug === 'crumbleberry') {
                     expect(starPlayer.cost).toBe(0);
                 }
                 else {
-                    // Akhorne l'Écureuil est le moins cher à 80k
-                    expect(starPlayer.cost).toBeGreaterThanOrEqual(70000);
+                    // Les moins chers sont Bomber & Cindy à 50k
+                    expect(starPlayer.cost).toBeGreaterThanOrEqual(50000);
                     expect(starPlayer.cost).toBeLessThanOrEqual(340000);
                 }
             });
@@ -53,8 +53,8 @@ describe('Star Players', () => {
                     expect(starPlayer.pa).toBeGreaterThanOrEqual(1);
                     expect(starPlayer.pa).toBeLessThanOrEqual(6);
                 }
-                // AV entre 7 et 11
-                expect(starPlayer.av).toBeGreaterThanOrEqual(7);
+                // AV entre 6 et 11 (Akhorne a 6, Maple Highgrove a 11)
+                expect(starPlayer.av).toBeGreaterThanOrEqual(6);
                 expect(starPlayer.av).toBeLessThanOrEqual(11);
             });
         });

@@ -4,6 +4,7 @@ import { API_BASE } from "../../../auth-client";
 import SkillTooltip from "../components/SkillTooltip";
 import TeamInfoDisplay from "../components/TeamInfoDisplay";
 import { getPlayerCost, getDisplayName } from "@bb/game-engine";
+import { exportTeamToPDF } from "../utils/exportPDF";
 
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");
@@ -120,6 +121,16 @@ export default function TeamDetailPage() {
     }
   };
 
+  const handleExportPDF = async () => {
+    if (!team) return;
+    try {
+      await exportTeamToPDF(team, getPlayerCost);
+    } catch (error) {
+      console.error('Erreur lors de l\'export PDF:', error);
+      alert('Erreur lors de la génération du PDF');
+    }
+  };
+
   const team = data?.team;
   const match = data?.currentMatch;
   const canEdit = !match || (match.status !== "pending" && match.status !== "active");
@@ -164,6 +175,12 @@ export default function TeamDetailPage() {
             className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             {recalculating ? "Recalcul..." : "🔄 Recalculer VE"}
+          </button>
+          <button
+            onClick={handleExportPDF}
+            className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
+          >
+            📄 Export PDF
           </button>
           <a
             href="/me/teams"
