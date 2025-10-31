@@ -90,6 +90,7 @@ prisma/migrations/
 *.save
 logs/
 screenshots/
+data/
 
 # Development tools
 .vscode/settings.json
