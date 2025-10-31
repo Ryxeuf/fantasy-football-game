@@ -1,3 +1,12 @@
+## [1.2.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.1.0...v1.2.0) (2025-10-31)
+
+
+### ✨ Features
+
+* ajout des tiers et statut NAF pour les équipes + pages de consultation ([6166af2](https://github.com/Ryxeuf/fantasy-football-game/commit/6166af28974968a2035e8423e6cc9de564c4b7d9))
+* ajout du champ Patreon au modèle User et mise à jour des routes associées ([161f9ec](https://github.com/Ryxeuf/fantasy-football-game/commit/161f9ec30879533288de901204c17d96540db2fa))
+* ajout du support multilingue avec le contexte de langue ([8eb666c](https://github.com/Ryxeuf/fantasy-football-game/commit/8eb666c5c952702f3997895c129dd717e1b6b79c))
+
 ## [1.1.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.0.0...v1.1.0) (2025-10-31)
 
 
