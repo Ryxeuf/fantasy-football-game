@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { API_BASE } from "../../../auth-client";
 import { getRerollCost } from "@bb/game-engine";
 
@@ -17,20 +17,40 @@ interface TeamInfoEditorProps {
   initialInfo: TeamInfo;
   onUpdate: (info: TeamInfo) => void;
   disabled?: boolean;
+  roster?: string;
+  initialBudgetK?: number; // en milliers (k po)
+  playersCost?: number; // en po
 }
 
 export default function TeamInfoEditor({ 
   teamId, 
   initialInfo, 
   onUpdate, 
-  disabled = false 
+  disabled = false,
+  roster,
+  initialBudgetK = 0,
+  playersCost = 0,
 }: TeamInfoEditorProps) {
   const [info, setInfo] = useState<TeamInfo>(initialInfo);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  const rerollCost = getRerollCost(info.roster || '');
+  const rerollCost = getRerollCost((info.roster || roster || ''));
   const [success, setSuccess] = useState(false);
+
+  // Calculs en temps réel
+  const { staffCost, rerollsCost, fansCost, rosterTotal, treasury } = useMemo(() => {
+    const rerolls = (info.rerolls || 0) * rerollCost;
+    const cheer = (info.cheerleaders || 0) * 10000;
+    const assistants = (info.assistants || 0) * 10000;
+    const apo = info.apothecary ? 50000 : 0;
+    const fansCount = typeof info.dedicatedFans === 'number' ? info.dedicatedFans : 1;
+    const fans = Math.max(0, fansCount - 1) * 10000;
+    const staff = rerolls + cheer + assistants + apo + fans;
+    const total = (playersCost || 0) + staff;
+    const treasuryPo = (initialBudgetK || 0) * 1000 - total;
+    return { staffCost: staff, rerollsCost: rerolls, fansCost: fans, rosterTotal: total, treasury: treasuryPo };
+  }, [info, rerollCost, playersCost, initialBudgetK]);
 
   const handleSave = async () => {
     setLoading(true);
@@ -78,6 +98,22 @@ export default function TeamInfoEditor({
       </div>
 
       <div className="p-6 space-y-6">
+        {/* Récap en temps réel */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="text-center p-4 bg-purple-50 rounded-lg border border-purple-200">
+            <div className="text-sm text-purple-700 font-medium">Coût joueurs</div>
+            <div className="text-2xl font-bold text-purple-900">{Math.round((playersCost || 0)/1000)}k po</div>
+          </div>
+          <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="text-sm text-blue-700 font-medium">VE (valeur d'équipe)</div>
+            <div className="text-2xl font-bold text-blue-900">{Math.round(rosterTotal/1000)}k po</div>
+          </div>
+          <div className={`text-center p-4 rounded-lg border ${treasury >= 0 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}> 
+            <div className={`text-sm font-medium ${treasury >= 0 ? 'text-green-700' : 'text-red-700'}`}>Trésorerie restante</div>
+            <div className={`text-2xl font-bold ${treasury >= 0 ? 'text-green-900' : 'text-red-900'}`}>{Math.round(treasury/1000)}k po</div>
+          </div>
+        </div>
+
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
             {error}
@@ -162,7 +198,7 @@ export default function TeamInfoEditor({
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:bg-gray-100"
               />
               <span className="text-sm text-gray-700">
-                {info.apothecary ? "Présent" : "Absent"}
+                Présent
               </span>
             </div>
             <p className="text-xs text-gray-500 mt-1">

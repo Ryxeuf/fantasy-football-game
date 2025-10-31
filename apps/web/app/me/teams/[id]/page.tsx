@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { API_BASE } from "../../../auth-client";
 import SkillTooltip from "../components/SkillTooltip";
 import TeamInfoDisplay from "../components/TeamInfoDisplay";
-import { getPlayerCost, getDisplayName } from "@bb/game-engine";
+import { getPlayerCost, getDisplayName, getRerollCost } from "@bb/game-engine";
 import { exportTeamToPDF } from "../utils/exportPDF";
 
 async function fetchJSON(path: string) {
@@ -103,7 +103,7 @@ export default function TeamDetailPage() {
     setRecalculating(true);
     try {
       const token = localStorage.getItem("auth_token");
-      const res = await fetch(`${API_BASE}/teams/${id}/recalculate`, {
+      const res = await fetch(`${API_BASE}/team/${id}/recalculate`, {
         method: "POST",
         headers: { Authorization: token ? `Bearer ${token}` : "" },
       });
@@ -114,7 +114,11 @@ export default function TeamDetailPage() {
       }
       
       const result = await res.json();
-      setData(result.team);
+      // Mettre à jour les données en conservant currentMatch si présent
+      setData(prev => ({
+        ...prev,
+        team: result.team
+      }));
       alert(result.message);
     } catch (e: any) {
       alert(`Erreur: ${e.message}`);
@@ -171,10 +175,11 @@ export default function TeamDetailPage() {
               Équipe en match
             </div>
           )}
+          {/* Bouton temporairement caché */}
           <button
             onClick={handleRecalculate}
             disabled={recalculating}
-            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="hidden px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             {recalculating ? "Recalcul..." : "🔄 Recalculer VE"}
           </button>
@@ -186,7 +191,7 @@ export default function TeamDetailPage() {
           </button>
           <a
             href="/me/teams"
-            className="px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
+            className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors border border-gray-500"
           >
             Retour
           </a>
@@ -243,30 +248,30 @@ export default function TeamDetailPage() {
                     {Math.round((team.teamValue || 0) / 1000)}k po
                   </div>
                 </div>
-                <div className={`text-center p-4 rounded-lg border ${
-                  ((team.initialBudget || 0) * 1000 - (team.players?.reduce((total: number, player: any) => 
-                    total + getPlayerCost(player.position, team.roster), 0) || 0)) >= 0 
-                    ? 'bg-green-50 border-green-200' 
-                    : 'bg-red-50 border-red-200'
-                }`}>
+                {(() => {
+                  const playersCost = (team.players?.reduce((total: number, player: any) => 
+                    total + getPlayerCost(player.position, team.roster), 0) || 0);
+                  const rerolls = (team.rerolls || 0) * getRerollCost(team.roster || '');
+                  const cheer = (team.cheerleaders || 0) * 10000;
+                  const assistants = (team.assistants || 0) * 10000;
+                  const apo = team.apothecary ? 50000 : 0;
+                  const fans = Math.max(0, (team.dedicatedFans || 1) - 1) * 10000;
+                  const rosterTotal = playersCost + rerolls + cheer + assistants + apo + fans;
+                  const remaining = (team.initialBudget || 0) * 1000 - rosterTotal;
+                  const positive = remaining >= 0;
+                  return (
+                    <div className={`text-center p-4 rounded-lg border ${positive ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
                   <div className={`text-sm font-medium ${
-                    ((team.initialBudget || 0) * 1000 - (team.players?.reduce((total: number, player: any) => 
-                      total + getPlayerCost(player.position, team.roster), 0) || 0)) >= 0 
-                      ? 'text-green-600' 
-                      : 'text-red-600'
+                    positive ? 'text-green-600' : 'text-red-600'
                   }`}>
                     Budget restant
                   </div>
-                  <div className={`text-2xl font-bold ${
-                    ((team.initialBudget || 0) * 1000 - (team.players?.reduce((total: number, player: any) => 
-                      total + getPlayerCost(player.position, team.roster), 0) || 0)) >= 0 
-                      ? 'text-green-900' 
-                      : 'text-red-900'
-                  }`}>
-                    {Math.round(((team.initialBudget || 0) * 1000 - (team.players?.reduce((total: number, player: any) => 
-                      total + getPlayerCost(player.position, team.roster), 0) || 0)) / 1000)}k po
+                  <div className={`text-2xl font-bold ${positive ? 'text-green-900' : 'text-red-900'}`}>
+                    {Math.round(remaining / 1000)}k po
                   </div>
                 </div>
+                  );
+                })()}
               </div>
               <div className="mt-4 text-xs text-gray-500">
                 <p><strong>Budget initial</strong> : Montant saisi lors de la création de l'équipe</p>
