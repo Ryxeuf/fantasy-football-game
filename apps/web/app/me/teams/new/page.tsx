@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { API_BASE } from "../../../auth-client";
 import StarPlayerSelector from "../../../components/StarPlayerSelector";
 import SkillTooltip from "../components/SkillTooltip";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 type Position = {
   slug: string;
@@ -19,6 +20,7 @@ type Position = {
 };
 
 export default function NewTeamBuilder() {
+  const { t } = useLanguage();
   // Initialiser les valeurs directement depuis l'URL
   const [rosterId, setRosterId] = useState(() => {
     if (typeof window !== "undefined") {
@@ -64,8 +66,8 @@ export default function NewTeamBuilder() {
         });
         setCounts(init);
       })
-      .catch(() => setError("Impossible de charger le roster"));
-  }, [rosterId]);
+      .catch(() => setError(t.teams.errorLoadingRoster));
+  }, [rosterId, t]);
 
   const total = useMemo(
     () =>
@@ -128,21 +130,21 @@ export default function NewTeamBuilder() {
         }),
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json?.error || `Erreur ${res.status}`);
+      if (!res.ok) throw new Error(json?.error || `${t.teams.error} ${res.status}`);
       window.location.href = `/me/teams/${json.team.id}`;
     } catch (e: any) {
-      setError(e.message || "Erreur");
+      setError(e.message || t.teams.error);
     }
   }
 
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-6">
-      <h1 className="text-2xl font-bold">Créer une équipe</h1>
+      <h1 className="text-2xl font-bold">{t.teams.createTeamTitle}</h1>
       {error && <p className="text-red-600 text-sm">{error}</p>}
       <div className="grid gap-3">
         <input
-          className="border p-2"
-          placeholder="Nom de l'équipe"
+          className="border p-2 rounded"
+          placeholder={t.teams.teamNamePlaceholder}
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
@@ -176,14 +178,14 @@ export default function NewTeamBuilder() {
           </select>
           <div className="flex-1">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Valeur d'équipe (kpo)
+              {t.teams.teamValue}
             </label>
             <input
               type="number"
               min="100"
               max="2000"
               step="50"
-              className="border p-2 w-full"
+              className="border p-2 w-full rounded"
               value={teamValue}
               onChange={(e) => setTeamValue(parseInt(e.target.value) || 1000)}
             />
@@ -194,13 +196,13 @@ export default function NewTeamBuilder() {
         <table className="min-w-full text-sm">
           <thead className="bg-gray-50">
             <tr>
-              <th className="text-left p-2">Poste</th>
-              <th className="text-left p-2">Coût</th>
-              <th className="text-left p-2">Min</th>
-              <th className="text-left p-2">Max</th>
-              <th className="text-left p-2">Compétences</th>
-              <th className="text-left p-2">Qté</th>
-              <th className="text-left p-2">Actions</th>
+              <th className="text-left p-2">{t.teams.position}</th>
+              <th className="text-left p-2">{t.teams.cost}</th>
+              <th className="text-left p-2">{t.teams.min}</th>
+              <th className="text-left p-2">{t.teams.max}</th>
+              <th className="text-left p-2">{t.teams.skills}</th>
+              <th className="text-left p-2">{t.teams.quantity}</th>
+              <th className="text-left p-2">{t.teams.actions}</th>
             </tr>
           </thead>
           <tbody>
@@ -220,18 +222,18 @@ export default function NewTeamBuilder() {
                 <td className="p-2">{counts[p.slug] || 0}</td>
                 <td className="p-2">
                   <button
-                    className="px-2 py-1 border mr-2"
+                    className="px-2 py-1 border mr-2 rounded hover:bg-gray-100 transition-colors"
                     onClick={() => change(p.slug, -1)}
                     disabled={(counts[p.slug] || 0) <= (p.min || 0)}
                   >
                     -
                   </button>
                   <button
-                    className={`px-2 py-1 border ${
+                    className={`px-2 py-1 border rounded ${
                       (counts[p.slug] || 0) >= (p.max || 16) || 
                       total + p.cost > teamValue 
                         ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
-                        : 'hover:bg-gray-100'
+                        : 'hover:bg-gray-100 transition-colors'
                     }`}
                     onClick={() => change(p.slug, 1)}
                     disabled={(counts[p.slug] || 0) >= (p.max || 16) || total + p.cost > teamValue}
@@ -256,21 +258,21 @@ export default function NewTeamBuilder() {
       <div className="rounded border bg-gray-50 p-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3 text-sm">
           <div>
-            <div className="text-gray-600">Coût joueurs</div>
-            <div className="font-semibold text-lg">{total}K po</div>
+            <div className="text-gray-600">{t.teams.playersCost}</div>
+            <div className="font-semibold text-lg">{total}{t.teams.kpo}</div>
           </div>
           <div>
-            <div className="text-gray-600">Budget total</div>
-            <div className="font-semibold text-lg">{teamValue}K po</div>
+            <div className="text-gray-600">{t.teams.totalBudget}</div>
+            <div className="font-semibold text-lg">{teamValue}{t.teams.kpo}</div>
           </div>
           <div>
-            <div className="text-gray-600">Budget restant</div>
+            <div className="text-gray-600">{t.teams.remainingBudget}</div>
             <div className={`font-semibold text-lg ${teamValue - total < 0 ? 'text-red-600' : 'text-green-600'}`}>
-              {teamValue - total}K po
+              {teamValue - total}{t.teams.kpo}
             </div>
           </div>
           <div>
-            <div className="text-gray-600">Joueurs total</div>
+            <div className="text-gray-600">{t.teams.totalPlayers}</div>
             <div className={`font-semibold text-lg ${totalPlayersWithStars < 11 || totalPlayersWithStars > 16 ? 'text-red-600' : 'text-green-600'}`}>
               {totalPlayersWithStars} / 16
             </div>
@@ -281,17 +283,17 @@ export default function NewTeamBuilder() {
           <div className="flex-1">
             {totalPlayersWithStars < 11 && (
               <div className="text-red-600 text-sm">
-                ⚠️ Il vous faut au moins 11 joueurs (actuellement {totalPlayersWithStars})
+                ⚠️ {t.teams.needMinPlayers.replace("{count}", totalPlayersWithStars.toString())}
               </div>
             )}
             {totalPlayersWithStars > 16 && (
               <div className="text-red-600 text-sm">
-                ⚠️ Maximum 16 joueurs autorisés (actuellement {totalPlayersWithStars})
+                ⚠️ {t.teams.maxPlayersExceeded.replace("{count}", totalPlayersWithStars.toString())}
               </div>
             )}
             {totalPlayersWithStars >= 11 && totalPlayersWithStars <= 16 && (
               <div className="text-green-600 text-sm">
-                ✅ Équipe valide ({totalPlayers} joueurs + {selectedStarPlayers.length} Star Players)
+                ✅ {t.teams.validTeam.replace("{players}", totalPlayers.toString()).replace("{stars}", selectedStarPlayers.length.toString())}
               </div>
             )}
           </div>
@@ -300,7 +302,7 @@ export default function NewTeamBuilder() {
             onClick={submit}
             disabled={totalPlayersWithStars < 11 || totalPlayersWithStars > 16}
           >
-            Créer l'équipe
+            {t.teams.createTeamButton}
           </button>
         </div>
       </div>

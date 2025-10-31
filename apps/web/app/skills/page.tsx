@@ -1,5 +1,6 @@
 "use client";
 import { useState, useMemo } from "react";
+import { useLanguage } from "../contexts/LanguageContext";
 
 // Types pour les compétences et traits
 interface Skill {
@@ -780,7 +781,7 @@ const skillsData: SkillCategory[] = [
 export default function SkillsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [language, setLanguage] = useState<"fr" | "en">("fr");
+  const { language, t } = useLanguage();
 
   // Filtrer les compétences basé sur la recherche et la catégorie
   const filteredData = useMemo(() => {
@@ -813,50 +814,18 @@ export default function SkillsPage() {
     <div className="max-w-6xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-4">
-          {language === "fr" ? "Compétences, Mutations et Traits" : "Skills, Mutations and Traits"}
+          {t.skills.title}
         </h1>
         <p className="text-gray-600 mb-6">
-          {language === "fr" 
-            ? "Découvrez toutes les compétences, mutations et traits disponibles dans Blood Bowl, organisés par catégories avec leurs descriptions complètes."
-            : "Discover all skills, mutations and traits available in Blood Bowl, organized by categories with their complete descriptions."
-          }
+          {t.skills.description}
         </p>
-
-        {/* Sélecteur de langue */}
-        <div className="mb-6">
-          <div className="flex items-center gap-4">
-            <label className="text-sm font-medium text-gray-700">{language === "fr" ? "Langue :" : "Language:"}</label>
-            <div className="flex bg-gray-100 rounded-lg p-1">
-              <button
-                onClick={() => setLanguage("fr")}
-                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                  language === "fr"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                Français
-              </button>
-              <button
-                onClick={() => setLanguage("en")}
-                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                  language === "en"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                English
-              </button>
-            </div>
-          </div>
-        </div>
 
         {/* Barre de recherche */}
         <div className="mb-6">
           <div className="relative">
             <input
               type="text"
-              placeholder={language === "fr" ? "Rechercher une compétence, mutation ou trait..." : "Search for a skill, mutation or trait..."}
+              placeholder={t.skills.searchPlaceholder}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -880,7 +849,7 @@ export default function SkillsPage() {
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               }`}
             >
-              {language === "fr" ? "Toutes les catégories" : "All categories"}
+              {t.skills.allCategories}
             </button>
             {categories.map((category) => (
               <button
@@ -902,12 +871,12 @@ export default function SkillsPage() {
         <div className="mb-6 text-sm text-gray-600">
           {searchTerm || selectedCategory ? (
             <>
-              {filteredData.reduce((total, category) => total + category.skills.length, 0)} {language === "fr" ? "résultat(s) trouvé(s)" : "result(s) found"}
-              {searchTerm && ` ${language === "fr" ? "pour" : "for"} "${searchTerm}"`}
-              {selectedCategory && ` ${language === "fr" ? "dans" : "in"} "${language === "fr" ? selectedCategory : skillsData.find(c => c.name === selectedCategory)?.nameEn}"`}
+              {filteredData.reduce((total, category) => total + category.skills.length, 0)} {t.skills.resultsFound}
+              {searchTerm && ` ${t.skills.for} "${searchTerm}"`}
+              {selectedCategory && ` ${t.skills.in} "${language === "fr" ? selectedCategory : skillsData.find(c => c.name === selectedCategory)?.nameEn}"`}
             </>
           ) : (
-            `${skillsData.reduce((total, category) => total + category.skills.length, 0)} ${language === "fr" ? "compétences, mutations et traits au total" : "skills, mutations and traits in total"}`
+            t.skills.total.replace("{count}", skillsData.reduce((total, category) => total + category.skills.length, 0).toString())
           )}
         </div>
       </div>
@@ -921,7 +890,7 @@ export default function SkillsPage() {
                 {language === "fr" ? category.name : category.nameEn}
               </h2>
               <p className="text-sm text-gray-600 mt-1">
-                {category.skills.length} {language === "fr" ? (category.skills.length === 1 ? 'élément' : 'éléments') : (category.skills.length === 1 ? 'item' : 'items')}
+                {category.skills.length} {category.skills.length === 1 ? t.footer.items : t.footer.itemsPlural}
               </p>
             </div>
             <div className="p-6">
@@ -937,7 +906,7 @@ export default function SkillsPage() {
                           }
                           {skill.isCompulsory && (
                             <span className="ml-2 text-red-600 text-sm font-normal">
-                              ({language === "fr" ? "Obligatoire" : "Compulsory"})
+                              ({t.footer.compulsory})
                             </span>
                           )}
                         </h3>

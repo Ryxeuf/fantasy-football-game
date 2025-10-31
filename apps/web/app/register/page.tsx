@@ -1,8 +1,10 @@
 "use client";
 import { useState } from "react";
 import { apiPost } from "../auth-client";
+import { useLanguage } from "../contexts/LanguageContext";
 
 export default function RegisterPage() {
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [coachName, setCoachName] = useState("");
@@ -26,17 +28,17 @@ export default function RegisterPage() {
       localStorage.setItem("auth_token", token);
       window.location.href = "/me";
     } catch (err: any) {
-      setError(err.message || "Erreur");
+      setError(err.message || t.register.error);
     }
   }
 
   return (
     <div className="max-w-md mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">Inscription</h1>
+      <h1 className="text-2xl font-bold mb-4">{t.register.title}</h1>
       <form onSubmit={onSubmit} className="space-y-3">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Email <span className="text-red-500">*</span>
+            {t.register.email} <span className="text-red-500">*</span>
           </label>
           <input
             className="w-full border p-2 rounded"
@@ -49,12 +51,12 @@ export default function RegisterPage() {
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Nom de coach <span className="text-red-500">*</span>
+            {t.register.coachName} <span className="text-red-500">*</span>
           </label>
           <input
             className="w-full border p-2 rounded"
             type="text"
-            placeholder="Nom de coach"
+            placeholder={t.register.coachNamePlaceholder}
             value={coachName}
             onChange={(e) => setCoachName(e.target.value)}
             required
@@ -62,31 +64,31 @@ export default function RegisterPage() {
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Prénom
+            {t.register.firstName}
           </label>
           <input
             className="w-full border p-2 rounded"
             type="text"
-            placeholder="Prénom"
+            placeholder={t.register.firstNamePlaceholder}
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
           />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Nom
+            {t.register.lastName}
           </label>
           <input
             className="w-full border p-2 rounded"
             type="text"
-            placeholder="Nom"
+            placeholder={t.register.lastNamePlaceholder}
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
           />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Date de naissance
+            {t.register.dateOfBirth}
           </label>
           <input
             className="w-full border p-2 rounded"
@@ -97,12 +99,12 @@ export default function RegisterPage() {
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Mot de passe <span className="text-red-500">*</span>
+            {t.register.password} <span className="text-red-500">*</span>
           </label>
           <input
             className="w-full border p-2 rounded"
             type="password"
-            placeholder="Mot de passe"
+            placeholder={t.register.passwordPlaceholder}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -113,13 +115,13 @@ export default function RegisterPage() {
           className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition-colors"
           disabled={!email || !password || !coachName}
         >
-          Créer le compte
+          {t.register.submit}
         </button>
       </form>
       <p className="text-sm mt-3">
-        Déjà un compte ?{" "}
+        {t.register.hasAccount}{" "}
         <a className="underline" href="/login">
-          Connectez-vous
+          {t.register.login}
         </a>
       </p>
     </div>

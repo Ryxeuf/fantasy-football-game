@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { getSkillDescription } from "../me/teams/skills-data";
+import { useLanguage } from "../contexts/LanguageContext";
 
 interface SkillTooltipProps {
   skillSlug: string;
@@ -8,6 +9,7 @@ interface SkillTooltipProps {
 }
 
 export default function SkillTooltip({ skillSlug, className = "" }: SkillTooltipProps) {
+  const { language } = useLanguage();
   const [hoveredSkill, setHoveredSkill] = useState<string | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
@@ -24,7 +26,7 @@ export default function SkillTooltip({ skillSlug, className = "" }: SkillTooltip
     setHoveredSkill(null);
   };
 
-  const skillDescription = hoveredSkill ? getSkillDescription(hoveredSkill) : null;
+  const skillDescription = hoveredSkill ? getSkillDescription(hoveredSkill, language) : null;
 
   // Fonction pour obtenir la couleur selon la catégorie
   const getCategoryColor = (category: string) => {
@@ -38,7 +40,7 @@ export default function SkillTooltip({ skillSlug, className = "" }: SkillTooltip
     }
   };
 
-  const skillInfo = getSkillDescription(skillSlug);
+  const skillInfo = getSkillDescription(skillSlug, language);
   const displayName = skillInfo?.name || skillSlug;
   const categoryColor = skillInfo ? getCategoryColor(skillInfo.category) : "bg-gray-100 text-gray-600";
 
@@ -69,7 +71,7 @@ export default function SkillTooltip({ skillSlug, className = "" }: SkillTooltip
             {skillDescription.description}
           </div>
           <div className="text-gray-400 text-xs mt-1">
-            Catégorie: {skillDescription.category}
+            {language === "fr" ? "Catégorie" : "Category"}: {skillDescription.category}
           </div>
           
           {/* Flèche vers le bas */}

@@ -1,9 +1,9 @@
 import "./globals.css";
 import type { ReactNode } from "react";
 import type { Metadata } from "next";
-import AuthBar from "./AuthBar";
 import Footer from "./components/Footer";
-import Logo from "./components/Logo";
+import Header from "./components/Header";
+import { ClientLayout } from "./components/ClientLayout";
 
 export const metadata: Metadata = {
   title: "Nuffle Arena",
@@ -26,32 +26,15 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body className="min-h-screen bg-nuffle-ivory text-nuffle-anthracite flex flex-col font-body antialiased">
-        <div className="flex-1">
-          <div className="max-w-5xl mx-auto p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-8">
-                <Logo variant="compact" showText={true} />
-                <nav className="flex items-center gap-6">
-                  <a 
-                    href="/skills" 
-                    className="text-sm font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold hover:underline transition-colors"
-                  >
-                    📚 Compétences
-                  </a>
-                  <a 
-                    href="/star-players" 
-                    className="text-sm font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold hover:underline transition-colors"
-                  >
-                    ⭐ Star Players
-                  </a>
-                </nav>
-              </div>
-              <AuthBar />
+        <ClientLayout>
+          <div className="flex-1">
+            <div className="max-w-5xl mx-auto p-6">
+              <Header />
+              {children}
             </div>
-            {children}
           </div>
-        </div>
-        <Footer />
+          <Footer />
+        </ClientLayout>
       </body>
     </html>
   );

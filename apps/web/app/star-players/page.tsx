@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import StarPlayerCard from '../components/StarPlayerCard';
 import CopyrightFooter from '../components/CopyrightFooter';
 import type { StarPlayerDefinition } from '@bb/game-engine';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8201';
 
@@ -12,6 +13,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_
  * Page de listing des Star Players
  */
 export default function StarPlayersPage() {
+  const { t } = useLanguage();
   const [starPlayers, setStarPlayers] = useState<StarPlayerDefinition[]>([]);
   const [filteredPlayers, setFilteredPlayers] = useState<StarPlayerDefinition[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,10 +49,10 @@ export default function StarPlayersPage() {
         setStarPlayers(data.data);
         setFilteredPlayers(data.data);
       } else {
-        setError('Erreur lors du chargement des star players');
+        setError(t.starPlayers.error);
       }
     } catch (err) {
-      setError('Impossible de se connecter au serveur');
+      setError(t.starPlayers.serverError);
       console.error(err);
     } finally {
       setLoading(false);
@@ -114,7 +116,7 @@ export default function StarPlayersPage() {
             onClick={loadStarPlayers}
             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
           >
-            Réessayer
+            {t.starPlayers.retry}
           </button>
         </div>
       </div>
@@ -126,23 +128,23 @@ export default function StarPlayersPage() {
       <div className="container mx-auto px-4 py-8">
         {/* En-tête */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Star Players Blood Bowl</h1>
+          <h1 className="text-4xl font-bold mb-2">{t.starPlayers.title}</h1>
           <p className="text-gray-600">
-            {filteredPlayers.length} mercenaire{filteredPlayers.length > 1 ? 's' : ''} légendaire{filteredPlayers.length > 1 ? 's' : ''} disponible{filteredPlayers.length > 1 ? 's' : ''}
+            {filteredPlayers.length} {filteredPlayers.length === 1 ? t.starPlayers.available : t.starPlayers.availablePlural}
           </p>
         </div>
 
         {/* Filtres */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <h2 className="text-xl font-bold mb-4">Filtres</h2>
+          <h2 className="text-xl font-bold mb-4">{t.starPlayers.filters}</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Recherche */}
             <div>
-              <label className="block text-sm font-medium mb-2">Recherche</label>
+              <label className="block text-sm font-medium mb-2">{t.starPlayers.search}</label>
               <input
                 type="text"
-                placeholder="Nom du joueur..."
+                placeholder={t.starPlayers.searchPlaceholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
@@ -151,13 +153,13 @@ export default function StarPlayersPage() {
 
             {/* Roster */}
             <div>
-              <label className="block text-sm font-medium mb-2">Équipe</label>
+              <label className="block text-sm font-medium mb-2">{t.starPlayers.team}</label>
               <select
                 value={selectedRoster}
                 onChange={(e) => setSelectedRoster(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
               >
-                <option value="all">Toutes les équipes</option>
+                <option value="all">{t.starPlayers.allTeams}</option>
                 <option value="skaven">Skavens</option>
                 <option value="wood_elf">Elfes Sylvains</option>
                 <option value="dwarf">Nains</option>
@@ -169,7 +171,7 @@ export default function StarPlayersPage() {
             {/* Coût minimum */}
             <div>
               <label className="block text-sm font-medium mb-2">
-                Coût min: {(minCost / 1000).toLocaleString()} K
+                {t.starPlayers.minCost}: {(minCost / 1000).toLocaleString()} K
               </label>
               <input
                 type="range"
@@ -185,7 +187,7 @@ export default function StarPlayersPage() {
             {/* Coût maximum */}
             <div>
               <label className="block text-sm font-medium mb-2">
-                Coût max: {(maxCost / 1000).toLocaleString()} K
+                {t.starPlayers.maxCost}: {(maxCost / 1000).toLocaleString()} K
               </label>
               <input
                 type="range"
@@ -201,7 +203,7 @@ export default function StarPlayersPage() {
 
           {/* Compétence */}
           <div className="mt-4">
-            <label className="block text-sm font-medium mb-2">Compétence</label>
+            <label className="block text-sm font-medium mb-2">{t.starPlayers.skill}</label>
             <input
               type="text"
               placeholder="block, dodge, mighty-blow..."
@@ -222,16 +224,15 @@ export default function StarPlayersPage() {
             }}
             className="mt-4 bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300"
           >
-            Réinitialiser les filtres
+            {t.starPlayers.resetFilters}
           </button>
         </div>
 
         {/* Information */}
         <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6 mb-8">
-          <h2 className="text-xl font-bold mb-2">ℹ️ Information</h2>
+          <h2 className="text-xl font-bold mb-2">ℹ️ {t.starPlayers.info}</h2>
           <p className="text-gray-700">
-            Cliquez sur les cartes des Star Players pour voir leurs détails complets et leurs règles spéciales.
-            Les Star Players sont des mercenaires légendaires qui peuvent être recrutés temporairement.
+            {t.starPlayers.infoText}
           </p>
         </div>
 
@@ -250,7 +251,7 @@ export default function StarPlayersPage() {
         {filteredPlayers.length === 0 && (
           <div className="text-center py-12">
             <p className="text-xl text-gray-600">
-              Aucun star player ne correspond aux critères de recherche.
+              {t.starPlayers.noResults}
             </p>
           </div>
         )}

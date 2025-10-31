@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import { API_BASE } from "./auth-client";
+import { useLanguage } from "./contexts/LanguageContext";
 
 type UserData = {
   email: string;
@@ -9,6 +10,7 @@ type UserData = {
 };
 
 export default function AuthBar() {
+  const { t } = useLanguage();
   const [hasToken, setHasToken] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -16,11 +18,11 @@ export default function AuthBar() {
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const t = localStorage.getItem("auth_token");
-    setHasToken(!!t);
-    if (t) {
+    const token = localStorage.getItem("auth_token");
+    setHasToken(!!token);
+    if (token) {
       fetch(`${API_BASE}/auth/me`, {
-        headers: { Authorization: `Bearer ${t}` },
+        headers: { Authorization: `Bearer ${token}` },
       })
         .then((r) => (r.ok ? r.json() : Promise.reject()))
         .then((data) => {
@@ -89,7 +91,7 @@ export default function AuthBar() {
             <div className="w-8 h-8 rounded-full bg-nuffle-bronze text-white flex items-center justify-center font-semibold text-xs">
               {getInitials(userData?.name, userData?.email)}
             </div>
-            <span className="hidden md:block text-sm">{userData?.name || userData?.email || "Utilisateur"}</span>
+            <span className="hidden md:block text-sm">{userData?.name || userData?.email || t.auth.user}</span>
             <svg
               className={`w-4 h-4 transition-transform ${menuOpen ? "rotate-180" : ""}`}
               fill="none"
@@ -103,7 +105,7 @@ export default function AuthBar() {
           {menuOpen && (
             <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
               <div className="p-3 border-b border-gray-200">
-                <div className="font-semibold text-sm">{userData?.name || "Utilisateur"}</div>
+                <div className="font-semibold text-sm">{userData?.name || t.auth.user}</div>
                 <div className="text-xs text-gray-600 font-mono">{userData?.email}</div>
               </div>
               <div className="py-1">
@@ -112,14 +114,14 @@ export default function AuthBar() {
                   className="block px-4 py-2 text-sm hover:bg-gray-100 transition-colors"
                   onClick={() => setMenuOpen(false)}
                 >
-                  👤 Mon profil
+                  👤 {t.auth.profile}
                 </a>
                 <a
                   href="/me/teams"
                   className="block px-4 py-2 text-sm hover:bg-gray-100 transition-colors"
                   onClick={() => setMenuOpen(false)}
                 >
-                  ⚽ Mes équipes
+                  ⚽ {t.auth.myTeams}
                 </a>
                 {isAdmin && (
                   <a
@@ -127,14 +129,14 @@ export default function AuthBar() {
                     className="block px-4 py-2 text-sm hover:bg-gray-100 transition-colors text-purple-600 font-semibold"
                     onClick={() => setMenuOpen(false)}
                   >
-                    🔧 Administration
+                    🔧 {t.auth.admin}
                   </a>
                 )}
                 <button
                   onClick={logout}
                   className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition-colors text-red-600"
                 >
-                  🚪 Se déconnecter
+                  🚪 {t.auth.logout}
                 </button>
               </div>
             </div>
@@ -143,10 +145,10 @@ export default function AuthBar() {
       ) : (
         <div className="flex items-center gap-3">
           <a className="underline" href="/login">
-            Connexion
+            {t.auth.login}
           </a>
           <a className="underline" href="/register">
-            Inscription
+            {t.auth.register}
           </a>
         </div>
       )}

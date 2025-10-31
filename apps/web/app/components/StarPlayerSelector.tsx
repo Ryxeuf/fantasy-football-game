@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { API_BASE } from "../auth-client";
 import SkillTooltip from "../me/teams/components/SkillTooltip";
+import { useLanguage } from "../contexts/LanguageContext";
 
 export interface StarPlayer {
   slug: string;
@@ -42,6 +43,7 @@ export default function StarPlayerSelector({
   availableBudget,
   disabled = false,
 }: StarPlayerSelectorProps) {
+  const { t } = useLanguage();
   const [availableStarPlayers, setAvailableStarPlayers] = useState<StarPlayer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -66,10 +68,10 @@ export default function StarPlayerSelector({
         setLoading(false);
       })
       .catch((e) => {
-        setError(e.message || "Erreur lors du chargement des Star Players");
+        setError(e.message || t.teams.errorLoading);
         setLoading(false);
       });
-  }, [roster]);
+  }, [roster, t]);
 
   const handleToggle = (slug: string) => {
     if (disabled) return;
@@ -149,8 +151,8 @@ export default function StarPlayerSelector({
   if (loading) {
     return (
       <div className="rounded border bg-white p-4">
-        <h3 className="font-semibold mb-2">⭐ Star Players</h3>
-        <p className="text-sm text-gray-500">Chargement...</p>
+        <h3 className="font-semibold mb-2">⭐ {t.starPlayers.title}</h3>
+        <p className="text-sm text-gray-500">{t.teams.loading}</p>
       </div>
     );
   }
@@ -158,7 +160,7 @@ export default function StarPlayerSelector({
   if (error) {
     return (
       <div className="rounded border bg-white p-4">
-        <h3 className="font-semibold mb-2">⭐ Star Players</h3>
+        <h3 className="font-semibold mb-2">⭐ {t.starPlayers.title}</h3>
         <p className="text-sm text-red-600">{error}</p>
       </div>
     );
@@ -167,9 +169,9 @@ export default function StarPlayerSelector({
   if (availableStarPlayers.length === 0) {
     return (
       <div className="rounded border bg-white p-4">
-        <h3 className="font-semibold mb-2">⭐ Star Players</h3>
+        <h3 className="font-semibold mb-2">⭐ {t.starPlayers.title}</h3>
         <p className="text-sm text-gray-500">
-          Aucun Star Player disponible pour ce roster.
+          {t.teams.noStarPlayersAvailable}
         </p>
       </div>
     );
@@ -178,30 +180,30 @@ export default function StarPlayerSelector({
   return (
     <div className="rounded border bg-white p-4">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold">⭐ Star Players Disponibles</h3>
+        <h3 className="font-semibold">⭐ {t.teams.starPlayersAvailable}</h3>
         <div className="text-sm text-gray-600">
-          {selectedStarPlayers.length} sélectionné(s)
+          {selectedStarPlayers.length} {t.teams.selected}
         </div>
       </div>
 
       {(budgetExceeded || playerLimitExceeded) && (
         <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700">
           {budgetExceeded && (
-            <div>⚠️ Budget dépassé de {((totalCost - availableBudget) / 1000).toFixed(0)}K po</div>
+            <div>⚠️ {t.teams.budgetExceeded.replace("{amount}", ((totalCost - availableBudget) / 1000).toFixed(0))}</div>
           )}
           {playerLimitExceeded && (
-            <div>⚠️ Limite de 16 joueurs dépassée ({totalPlayers} joueurs)</div>
+            <div>⚠️ {t.teams.playerLimitExceeded.replace("{count}", totalPlayers.toString())}</div>
           )}
         </div>
       )}
 
       <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded text-sm">
         <div className="flex justify-between">
-          <span>Coût total des Star Players :</span>
-          <span className="font-semibold">{(totalCost / 1000).toFixed(0)}K po</span>
+          <span>{t.teams.totalStarPlayersCost}</span>
+          <span className="font-semibold">{(totalCost / 1000).toFixed(0)}{t.teams.kpo}</span>
         </div>
         <div className="flex justify-between">
-          <span>Nombre de joueurs total :</span>
+          <span>{t.teams.totalPlayersCount}</span>
           <span className="font-semibold">{totalPlayers} / 16</span>
         </div>
       </div>
@@ -238,7 +240,7 @@ export default function StarPlayerSelector({
                       <span className="font-semibold">{sp.displayName}</span>
                       {paired && (
                         <span className="ml-2 text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">
-                          Paire avec {partnerName}
+                          {t.teams.pairWith.replace("{partner}", partnerName || "")}
                         </span>
                       )}
                     </div>
@@ -258,7 +260,7 @@ export default function StarPlayerSelector({
                   {expandedPlayer === sp.slug && (
                     <div className="mt-2 text-sm space-y-1">
                       <div className="text-gray-700">
-                        <span className="font-medium">Compétences :</span>
+                        <span className="font-medium">{t.teams.skills}</span>
                         <div className="mt-1">
                           <SkillTooltip 
                             skillsString={sp.skills}
@@ -268,7 +270,7 @@ export default function StarPlayerSelector({
                       </div>
                       {sp.specialRule && (
                         <div className="text-gray-700">
-                          <span className="font-medium">Règle spéciale :</span>{" "}
+                          <span className="font-medium">{t.teams.specialRule}</span>{" "}
                           {sp.specialRule}
                         </div>
                       )}
@@ -281,7 +283,7 @@ export default function StarPlayerSelector({
                     }
                     className="text-xs text-blue-600 hover:text-blue-800 mt-1"
                   >
-                    {expandedPlayer === sp.slug ? "Masquer les détails" : "Voir les détails"}
+                    {expandedPlayer === sp.slug ? t.teams.hideDetails : t.teams.showDetails}
                   </button>
                 </div>
               </div>
@@ -293,7 +295,7 @@ export default function StarPlayerSelector({
       {selectedStarPlayers.length > 0 && (
         <div className="mt-3 pt-3 border-t">
           <div className="text-sm text-gray-600">
-            <strong>Star Players sélectionnés :</strong>
+            <strong>{t.teams.selectedStarPlayers}</strong>
             <ul className="mt-1 space-y-1">
               {selectedStarPlayers.map((slug) => {
                 const sp = availableStarPlayers.find((p) => p.slug === slug);

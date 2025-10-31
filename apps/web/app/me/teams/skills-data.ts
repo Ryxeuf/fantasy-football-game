@@ -22,7 +22,7 @@ export interface SkillDescription {
 /**
  * Obtient la description d'une compétence par son slug
  */
-export function getSkillDescription(slugOrName: string): SkillDescription | null {
+export function getSkillDescription(slugOrName: string, language: "fr" | "en" = "fr"): SkillDescription | null {
   // Essayer d'abord comme slug
   let skill = getSkillBySlug(slugOrName);
   
@@ -41,7 +41,7 @@ export function getSkillDescription(slugOrName: string): SkillDescription | null
   }
   
   return {
-    name: skill.nameFr,
+    name: language === "fr" ? skill.nameFr : skill.nameEn,
     description: skill.description,
     category: skill.category
   };

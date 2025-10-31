@@ -1,6 +1,9 @@
+"use client";
 import Logo from "./components/Logo";
+import { useLanguage } from "./contexts/LanguageContext";
 
 export default function LandingPage() {
+  const { t } = useLanguage();
   return (
     <div className="min-h-screen">
       {/* Hero */}
@@ -11,32 +14,32 @@ export default function LandingPage() {
               <Logo variant="default" showText={true} textColor="text-nuffle-ivory" />
             </div>
             <p className="mt-6 text-xl text-nuffle-ivory/90 leading-relaxed font-subtitle">
-              L'arène où le hasard devient divin.
+              {t.home.title}
             </p>
             <p className="mt-4 text-lg text-nuffle-ivory/80 leading-relaxed font-body">
-              Plateforme digitale pour créer et gérer vos équipes Blood Bowl. Construisez vos rosters, recrutez des Star Players légendaires, et exportez vos équipes en PDF.
+              {t.home.description}
             </p>
             <p className="mt-3 text-nuffle-ivory/70 leading-relaxed font-body">
-              Conformité aux règles officielles Blood Bowl 2020 : 28 rosters disponibles, gestion complète des budgets, trésorerie, et export PDF pour vos parties.
+              {t.home.subtitle}
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <a
                 href="/me/teams"
                 className="px-6 py-3 rounded-lg bg-nuffle-gold hover:bg-nuffle-gold/90 text-nuffle-anthracite font-subtitle font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
               >
-                Gérer mes équipes
+                {t.home.manageTeams}
               </a>
               <a
                 href="/login"
                 className="px-6 py-3 rounded-lg border-2 border-nuffle-gold/50 text-nuffle-ivory hover:bg-nuffle-gold/20 font-subtitle font-semibold transition-all"
               >
-                Connexion
+                {t.home.login}
               </a>
               <a
                 href="/register"
                 className="px-6 py-3 rounded-lg border-2 border-nuffle-bronze/50 text-nuffle-ivory/90 hover:text-nuffle-ivory hover:bg-nuffle-bronze/20 font-subtitle font-semibold transition-all"
               >
-                Inscription
+                {t.home.register}
               </a>
             </div>
           </div>
@@ -79,9 +82,9 @@ export default function LandingPage() {
               />
             </div>
             <div className="p-5 bg-white">
-              <h3 className="font-heading font-bold text-lg text-nuffle-anthracite">28 Rosters disponibles</h3>
+              <h3 className="font-heading font-bold text-lg text-nuffle-anthracite">{t.home.rosters.title}</h3>
               <p className="text-nuffle-anthracite/80 mt-1 font-body">
-                Toutes les équipes officielles : Skaven, Elfes, Orques, Nains, et bien plus. Chaque roster respecte les règles et budgets officiels.
+                {t.home.rosters.description}
               </p>
             </div>
           </div>
@@ -94,9 +97,9 @@ export default function LandingPage() {
               />
             </div>
             <div className="p-5 bg-white">
-              <h3 className="font-heading font-bold text-lg text-nuffle-anthracite">Star Players légendaires</h3>
+              <h3 className="font-heading font-bold text-lg text-nuffle-anthracite">{t.home.starPlayers.title}</h3>
               <p className="text-nuffle-anthracite/80 mt-1 font-body">
-                Recrutez parmi 25 Star Players emblématiques comme Griff Oberwald, Morg 'n' Thorg, ou Hakflem Skuttlespike selon les règles de disponibilité.
+                {t.home.starPlayers.description}
               </p>
             </div>
           </div>
@@ -109,9 +112,9 @@ export default function LandingPage() {
               />
             </div>
             <div className="p-5 bg-white">
-              <h3 className="font-heading font-bold text-lg text-nuffle-anthracite">Export PDF</h3>
+              <h3 className="font-heading font-bold text-lg text-nuffle-anthracite">{t.home.exportPdf.title}</h3>
               <p className="text-nuffle-anthracite/80 mt-1 font-body">
-                Exportez vos rosters d'équipe au format PDF avec toutes les informations : joueurs, Star Players, budgets et statistiques.
+                {t.home.exportPdf.description}
               </p>
             </div>
           </div>
@@ -123,17 +126,17 @@ export default function LandingPage() {
         <div className="rounded-2xl bg-gradient-to-r from-nuffle-gold via-nuffle-bronze to-nuffle-gold text-nuffle-anthracite p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl border-2 border-nuffle-bronze/50">
           <div>
             <h3 className="text-2xl md:text-3xl font-heading font-bold">
-              Créez votre première équipe
+              {t.home.createFirstTeam}
             </h3>
             <p className="text-nuffle-anthracite/90 mt-2 font-body">
-              Choisissez parmi 28 rosters disponibles, recrutez vos joueurs et des Star Players, puis exportez votre équipe en PDF.
+              {t.home.createFirstTeamDesc}
             </p>
           </div>
           <a
             href="/me/teams"
             className="px-6 py-3 bg-nuffle-anthracite text-nuffle-ivory font-subtitle font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
           >
-            Gérer mes équipes
+            {t.home.manageTeams}
           </a>
         </div>
       </section>

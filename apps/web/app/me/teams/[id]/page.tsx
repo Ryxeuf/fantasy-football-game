@@ -5,6 +5,7 @@ import SkillTooltip from "../components/SkillTooltip";
 import TeamInfoDisplay from "../components/TeamInfoDisplay";
 import { getPlayerCost, getDisplayName, getRerollCost } from "@bb/game-engine";
 import { exportTeamToPDF } from "../utils/exportPDF";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");
@@ -68,6 +69,7 @@ function getRosterDisplayName(slug: string): string {
 }
 
 export default function TeamDetailPage() {
+  const { t } = useLanguage();
   const [data, setData] = useState<any>(null);
   const [userName, setUserName] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
@@ -92,12 +94,12 @@ export default function TeamDetailPage() {
         const d = await fetchJSON(`/team/${id}`);
         setData(d);
       } catch (e: any) {
-        setError(e.message || "Erreur");
+        setError(e.message || t.teams.error);
       } finally {
         setLoading(false);
       }
     })();
-  }, [id]);
+  }, [id, t]);
 
   const handleRecalculate = async () => {
     setRecalculating(true);
@@ -110,18 +112,18 @@ export default function TeamDetailPage() {
       
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData?.error || `Erreur ${res.status}`);
+        throw new Error(errorData?.error || `${t.teams.error} ${res.status}`);
       }
       
       const result = await res.json();
       // Mettre à jour les données en conservant currentMatch si présent
-      setData(prev => ({
+      setData((prev: any) => ({
         ...prev,
         team: result.team
       }));
       alert(result.message);
     } catch (e: any) {
-      alert(`Erreur: ${e.message}`);
+      alert(`${t.teams.error}: ${e.message}`);
     } finally {
       setRecalculating(false);
     }
@@ -133,7 +135,7 @@ export default function TeamDetailPage() {
       await exportTeamToPDF(team, getPlayerCost, userName);
     } catch (error) {
       console.error('Erreur lors de l\'export PDF:', error);
-      alert('Erreur lors de la génération du PDF');
+      alert(t.teams.exportPDFError);
     }
   };
 
@@ -157,9 +159,9 @@ export default function TeamDetailPage() {
     <div className="max-w-6xl mx-auto p-6 space-y-6">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold">{team?.name || "Équipe"}</h1>
+          <h1 className="text-3xl font-bold">{team?.name || t.teams.team}</h1>
           <div className="text-sm text-gray-600 mt-1">
-            Roster: <span className="font-semibold">{getRosterDisplayName(team?.roster || '')}</span>
+            {t.teams.roster}: <span className="font-semibold">{getRosterDisplayName(team?.roster || '')}</span>
           </div>
         </div>
         <div className="flex gap-3">
@@ -168,11 +170,11 @@ export default function TeamDetailPage() {
               href={`/me/teams/${id}/edit`}
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
             >
-              Modifier l'équipe
+              {t.teams.modifyTeam}
             </a>
           ) : (
             <div className="px-4 py-2 bg-gray-300 text-gray-600 rounded cursor-not-allowed">
-              Équipe en match
+              {t.teams.teamInMatch}
             </div>
           )}
           {/* Bouton temporairement caché */}
@@ -181,19 +183,19 @@ export default function TeamDetailPage() {
             disabled={recalculating}
             className="hidden px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            {recalculating ? "Recalcul..." : "🔄 Recalculer VE"}
+            {recalculating ? t.teams.recalculating : t.teams.recalculateVE}
           </button>
           <button
             onClick={handleExportPDF}
             className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
           >
-            📄 Export PDF
+            {t.teams.exportPDF}
           </button>
           <a
             href="/me/teams"
             className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors border border-gray-500"
           >
-            Retour
+            {t.teams.back}
           </a>
         </div>
       </div>
@@ -206,16 +208,15 @@ export default function TeamDetailPage() {
 
       {!canEdit && match && (
         <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded">
-          <div className="font-semibold">⚠️ Équipe engagée dans un match</div>
+          <div className="font-semibold">{t.teams.teamEngagedInMatch}</div>
           <div className="text-sm mt-1">
-            Cette équipe est actuellement utilisée dans un match ({match.status}). 
-            La modification n'est pas autorisée tant que le match n'est pas terminé.
+            {t.teams.teamEngagedDescription.replace("{status}", match.status)}
           </div>
           <a
             href="/play"
             className="mt-2 inline-block px-3 py-1.5 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
           >
-            Aller au match
+            {t.teams.goToMatch}
           </a>
         </div>
       )}
@@ -225,27 +226,27 @@ export default function TeamDetailPage() {
           {/* Résumé du budget */}
           <div className="bg-white rounded-lg border overflow-hidden">
             <div className="bg-gray-50 px-6 py-3 border-b">
-              <h2 className="text-lg font-semibold">Résumé du budget</h2>
+              <h2 className="text-lg font-semibold">{t.teams.budgetSummary}</h2>
             </div>
             <div className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="text-sm text-blue-600 font-medium">Budget initial</div>
+                  <div className="text-sm text-blue-600 font-medium">{t.teams.initialBudget}</div>
                   <div className="text-2xl font-bold text-blue-900">
-                    {team.initialBudget?.toLocaleString()}k po
+                    {team.initialBudget?.toLocaleString()}{t.teams.kpo}
                   </div>
                 </div>
                 <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
-                  <div className="text-sm text-green-600 font-medium">Coût actuel</div>
+                  <div className="text-sm text-green-600 font-medium">{t.teams.currentCost}</div>
                   <div className="text-2xl font-bold text-green-900">
                     {Math.round((team.players?.reduce((total: number, player: any) => 
-                      total + getPlayerCost(player.position, team.roster), 0) || 0) / 1000)}k po
+                      total + getPlayerCost(player.position, team.roster), 0) || 0) / 1000)}{t.teams.kpo}
                   </div>
                 </div>
                 <div className="text-center p-4 bg-purple-50 rounded-lg border border-purple-200">
-                  <div className="text-sm text-purple-600 font-medium">VE (Valeur d'Équipe)</div>
+                  <div className="text-sm text-purple-600 font-medium">{t.teams.teamValue}</div>
                   <div className="text-2xl font-bold text-purple-900">
-                    {Math.round((team.teamValue || 0) / 1000)}k po
+                    {Math.round((team.teamValue || 0) / 1000)}{t.teams.kpo}
                   </div>
                 </div>
                 {(() => {
@@ -264,41 +265,41 @@ export default function TeamDetailPage() {
                   <div className={`text-sm font-medium ${
                     positive ? 'text-green-600' : 'text-red-600'
                   }`}>
-                    Budget restant
+                    {t.teams.remainingBudget}
                   </div>
                   <div className={`text-2xl font-bold ${positive ? 'text-green-900' : 'text-red-900'}`}>
-                    {Math.round(remaining / 1000)}k po
+                    {Math.round(remaining / 1000)}{t.teams.kpo}
                   </div>
                 </div>
                   );
                 })()}
               </div>
               <div className="mt-4 text-xs text-gray-500">
-                <p><strong>Budget initial</strong> : Montant saisi lors de la création de l'équipe</p>
-                <p><strong>Coût actuel</strong> : Coût total des joueurs actuels</p>
-                <p><strong>VE</strong> : Valeur d'Équipe calculée selon les règles Blood Bowl</p>
-                <p><strong>Budget restant</strong> : Montant disponible pour ajouter des joueurs</p>
+                <p><strong>{t.teams.initialBudget}</strong> : {t.teams.initialBudgetDesc}</p>
+                <p><strong>{t.teams.currentCost}</strong> : {t.teams.currentCostDesc}</p>
+                <p><strong>{t.teams.teamValue}</strong> : {t.teams.teamValueDesc}</p>
+                <p><strong>{t.teams.remainingBudget}</strong> : {t.teams.remainingBudgetDesc}</p>
               </div>
             </div>
           </div>
 
           <div className="bg-white rounded-lg border overflow-hidden">
             <div className="bg-gray-50 px-6 py-3 border-b">
-              <h2 className="text-lg font-semibold">Composition de l'équipe</h2>
+              <h2 className="text-lg font-semibold">{t.teams.teamComposition}</h2>
               <div className="text-sm text-gray-600 mt-1">
-                {team.players?.length || 0} joueurs
+                {team.players?.length || 0} {t.teams.players}
               </div>
               <div className="text-xs text-gray-500 mt-2">
                 <span className="inline-flex items-center gap-1">
                   <span className="w-3 h-3 border border-gray-300 bg-blue-100 rounded"></span>
-                  Compétences de base (bordure grise)
+                  {t.teams.baseSkillsLegend}
                 </span>
                 <span className="ml-4 inline-flex items-center gap-1">
                   <span className="w-3 h-3 border-2 border-orange-400 bg-blue-100 rounded"></span>
-                  Compétences acquises (bordure orange)
+                  {t.teams.acquiredSkillsLegend}
                 </span>
                 <div className="mt-1 text-xs text-gray-400">
-                  Couleurs de fond selon la catégorie : General (bleu), Agility (vert), Strength (rouge), Passing (violet), Mutation (orange), Trait (gris)
+                  {t.teams.skillColorsLegend}
                 </div>
               </div>
             </div>
@@ -306,16 +307,16 @@ export default function TeamDetailPage() {
               <table className="min-w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="text-left p-4 font-medium text-gray-900">#</th>
-                    <th className="text-left p-4 font-medium text-gray-900">Nom</th>
-                    <th className="text-left p-4 font-medium text-gray-900">Position</th>
-                    <th className="text-left p-4 font-medium text-gray-900">Coût</th>
+                    <th className="text-left p-4 font-medium text-gray-900">{t.teams.tableNumber}</th>
+                    <th className="text-left p-4 font-medium text-gray-900">{t.teams.tableName}</th>
+                    <th className="text-left p-4 font-medium text-gray-900">{t.teams.tablePosition}</th>
+                    <th className="text-left p-4 font-medium text-gray-900">{t.teams.tableCost}</th>
                     <th className="text-left p-4 font-medium text-gray-900">MA</th>
                     <th className="text-left p-4 font-medium text-gray-900">ST</th>
                     <th className="text-left p-4 font-medium text-gray-900">AG</th>
                     <th className="text-left p-4 font-medium text-gray-900">PA</th>
                     <th className="text-left p-4 font-medium text-gray-900">AV</th>
-                    <th className="text-left p-4 font-medium text-gray-900">Compétences</th>
+                    <th className="text-left p-4 font-medium text-gray-900">{t.teams.tableSkills}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -325,7 +326,7 @@ export default function TeamDetailPage() {
                       <td className="p-4 font-medium">{p.name}</td>
                       <td className="p-4 text-gray-600">{getDisplayName(p.position)}</td>
                       <td className="p-4 text-center font-mono text-sm">
-                        {Math.round(getPlayerCost(p.position, team.roster) / 1000)}k po
+                        {Math.round(getPlayerCost(p.position, team.roster) / 1000)}{t.teams.kpo}
                       </td>
                       <td className="p-4 text-center font-mono">{p.ma}</td>
                       <td className="p-4 text-center font-mono">{p.st}</td>
@@ -350,9 +351,9 @@ export default function TeamDetailPage() {
             <div className="bg-white rounded-lg border p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="font-semibold text-lg">Partie en cours</div>
+                  <div className="font-semibold text-lg">{t.teams.matchInProgress}</div>
                   <div className="text-sm text-gray-600 mt-1">
-                    Match ID: {match.id} • Statut: {match.status} •{" "}
+                    {t.teams.matchID}: {match.id} • {t.teams.status}: {match.status} •{" "}
                     {new Date(match.createdAt).toLocaleString()}
                   </div>
                 </div>
@@ -360,7 +361,7 @@ export default function TeamDetailPage() {
                   className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
                   href="/play"
                 >
-                  Aller jouer
+                  {t.teams.goToPlay}
                 </a>
               </div>
             </div>

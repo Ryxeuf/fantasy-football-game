@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { getSkillDescription, parseSkills, slugsToDisplayNames } from "../skills-data";
 import { separateSkills } from "../base-skills-data";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 interface SkillTooltipProps {
   skillsString: string;  // Chaîne de slugs séparés par des virgules (ex: "block,dodge,leap")
@@ -11,6 +12,7 @@ interface SkillTooltipProps {
 }
 
 export default function SkillTooltip({ skillsString, teamName, position, className = "" }: SkillTooltipProps) {
+  const { language } = useLanguage();
   const [hoveredSkill, setHoveredSkill] = useState<string | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
@@ -30,9 +32,9 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
     baseSkillSlugs = skillSlugs;
   }
 
-  // Si aucune compétence, afficher "Aucune"
+  // Si aucune compétence, afficher "Aucune" / "None"
   if (skillSlugs.length === 0) {
-    return <span className="text-gray-400 text-sm">Aucune</span>;
+    return <span className="text-gray-400 text-sm">{language === "fr" ? "Aucune" : "None"}</span>;
   }
 
   const handleMouseEnter = (skillSlug: string, event: React.MouseEvent) => {
@@ -48,7 +50,7 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
     setHoveredSkill(null);
   };
 
-  const skillDescription = hoveredSkill ? getSkillDescription(hoveredSkill) : null;
+  const skillDescription = hoveredSkill ? getSkillDescription(hoveredSkill, language) : null;
 
   // Fonction pour obtenir la couleur selon la catégorie
   const getCategoryColor = (category: string) => {
@@ -68,9 +70,10 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
       <div className={`flex flex-wrap gap-1 ${className}`}>
         {/* Compétences de base */}
         {baseSkillSlugs.map((skillSlug, index) => {
-          const skillInfo = getSkillDescription(skillSlug);
+          const skillInfo = getSkillDescription(skillSlug, language);
           const displayName = skillInfo?.name || skillSlug;
           const categoryColor = skillInfo ? getCategoryColor(skillInfo.category) : "bg-gray-100 text-gray-600";
+          const baseSkillText = language === "fr" ? "Compétence de base" : "Base skill";
 
           return (
             <span
@@ -78,7 +81,7 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
               className={`px-2 py-1 rounded text-xs font-medium cursor-help border border-gray-300 ${categoryColor}`}
               onMouseEnter={(e) => handleMouseEnter(skillSlug, e)}
               onMouseLeave={handleMouseLeave}
-              title={`${skillInfo?.description || displayName} (Compétence de base)`}
+              title={`${skillInfo?.description || displayName} (${baseSkillText})`}
             >
               {displayName}
             </span>
@@ -87,9 +90,10 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
         
         {/* Compétences acquises */}
         {acquiredSkillSlugs.map((skillSlug, index) => {
-          const skillInfo = getSkillDescription(skillSlug);
+          const skillInfo = getSkillDescription(skillSlug, language);
           const displayName = skillInfo?.name || skillSlug;
           const categoryColor = skillInfo ? getCategoryColor(skillInfo.category) : "bg-gray-100 text-gray-600";
+          const acquiredSkillText = language === "fr" ? "Compétence acquise" : "Acquired skill";
 
           return (
             <span
@@ -97,7 +101,7 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
               className={`px-2 py-1 rounded text-xs font-medium cursor-help border-2 border-orange-400 ${categoryColor}`}
               onMouseEnter={(e) => handleMouseEnter(skillSlug, e)}
               onMouseLeave={handleMouseLeave}
-              title={`${skillInfo?.description || displayName} (Compétence acquise)`}
+              title={`${skillInfo?.description || displayName} (${acquiredSkillText})`}
             >
               {displayName}
             </span>
