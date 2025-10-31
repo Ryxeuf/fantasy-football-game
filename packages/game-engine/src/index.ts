@@ -77,3 +77,18 @@ export * from './rosters';
 
 // Export des compétences (skills)
 export * from './skills';
+
+// Export des utilitaires d'avancements
+export { 
+  getNextAdvancementPspCost, 
+  calculateAdvancementsSurcharge, 
+  calculatePlayerCurrentValue,
+  SURCHARGE_PER_ADVANCEMENT,
+  isRandomAdvancement,
+  getCategoryAccessType,
+  type AdvancementType,
+  type PlayerAdvancement
+} from './utils/advancements';
+
+// Accès de catégories par position
+export { getPositionCategoryAccess, type CategoryAccess, type SkillCategory } from './utils/skill-access';

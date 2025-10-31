@@ -34,3 +34,7 @@ export { performInjuryRoll } from './mechanics/injury';
 export * from './rosters';
 // Export des compétences (skills)
 export * from './skills';
+// Export des utilitaires d'avancements
+export { getNextAdvancementPspCost, calculateAdvancementsSurcharge, calculatePlayerCurrentValue, SURCHARGE_PER_ADVANCEMENT, isRandomAdvancement, getCategoryAccessType } from './utils/advancements';
+// Accès de catégories par position
+export { getPositionCategoryAccess } from './utils/skill-access';

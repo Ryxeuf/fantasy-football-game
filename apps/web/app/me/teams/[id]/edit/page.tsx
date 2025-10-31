@@ -9,7 +9,8 @@ import {
   SKILLS_DEFINITIONS,
   getNextAdvancementPspCost, 
   SURCHARGE_PER_ADVANCEMENT,
-  getPositionCategoryAccess
+  getPositionCategoryAccess,
+  type AdvancementType
 } from "@bb/game-engine";
 
 async function fetchJSON(path: string) {
@@ -139,7 +140,8 @@ export default function TeamEditPage() {
   const [addingSkillFor, setAddingSkillFor] = useState<string | null>(null);
   const [selectedSkillSlug, setSelectedSkillSlug] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<"General"|"Agility"|"Strength"|"Passing"|"Mutation"|"Trait"|"">("");
-  const [selectedAdvType, setSelectedAdvType] = useState('primary' as 'primary' | 'secondary');
+  const [selectedAdvType, setSelectedAdvType] = useState<AdvancementType>('primary');
+  const [isRandom, setIsRandom] = useState(false);
 
   // Gestion du modal d'ajout de joueur - empêcher le scroll de la page et gérer la touche Échap
   useEffect(() => {
@@ -483,7 +485,7 @@ export default function TeamEditPage() {
             <span className="ml-4 text-gray-600">
               Coût actuel: {Math.round(players.reduce((total, player: any) => {
                 const base = getPlayerCost(player.position, team?.roster || '');
-                let adv = 0; try { const a = JSON.parse(player.advancements || '[]'); adv = a.reduce((s: number, x: any) => s + (x?.type === 'secondary' ? SURCHARGE_PER_ADVANCEMENT.secondary : SURCHARGE_PER_ADVANCEMENT.primary), 0); } catch {}
+                let adv = 0; try { const a = JSON.parse(player.advancements || '[]'); adv = a.reduce((s: number, x: any) => s + (SURCHARGE_PER_ADVANCEMENT[x?.type] || 0), 0); } catch {}
                 return total + base + adv;
               }, 0) / 1000)}k po
             </span>
@@ -497,7 +499,7 @@ export default function TeamEditPage() {
             }, 0) > (team?.initialBudget || 0) * 1000 ? 'text-red-600' : 'text-green-600'}`}>
               Restant: {Math.round(((team?.initialBudget || 0) * 1000 - players.reduce((total, player: any) => {
                 const base = getPlayerCost(player.position, team?.roster || '');
-                let adv = 0; try { const a = JSON.parse(player.advancements || '[]'); adv = a.reduce((s: number, x: any) => s + (x?.type === 'secondary' ? SURCHARGE_PER_ADVANCEMENT.secondary : SURCHARGE_PER_ADVANCEMENT.primary), 0); } catch {}
+                let adv = 0; try { const a = JSON.parse(player.advancements || '[]'); adv = a.reduce((s: number, x: any) => s + (SURCHARGE_PER_ADVANCEMENT[x?.type] || 0), 0); } catch {}
                 return total + base + adv;
               }, 0)) / 1000)}k po
             </span>
@@ -560,7 +562,7 @@ export default function TeamEditPage() {
                   <td className="p-4 text-center font-mono text-sm">
                     {(() => {
                       const base = getPlayerCost(player.position, data?.roster || '');
-                      let adv = 0; try { const a = JSON.parse((player as any).advancements || '[]'); adv = a.reduce((s: number, x: any) => s + (x?.type === 'secondary' ? SURCHARGE_PER_ADVANCEMENT.secondary : SURCHARGE_PER_ADVANCEMENT.primary), 0); } catch {}
+                      let adv = 0; try { const a = JSON.parse((player as any).advancements || '[]'); adv = a.reduce((s: number, x: any) => s + (SURCHARGE_PER_ADVANCEMENT[x?.type] || 0), 0); } catch {}
                       return `${Math.round((base + adv)/1000)}k po`;
                     })()}
                   </td>
@@ -733,10 +735,18 @@ export default function TeamEditPage() {
               const player = players.find(p => p.id === addingSkillFor)! as any;
               let advCount = 0;
               try { advCount = JSON.parse(player.advancements || '[]')?.length || 0; } catch {}
-              const psp = getNextAdvancementPspCost(advCount, selectedAdvType);
-              const surchargeK = (SURCHARGE_PER_ADVANCEMENT[selectedAdvType] / 1000);
+              
+              // Déterminer le type d'avancement réel (avec random ou non)
+              const actualAdvType: AdvancementType = isRandom 
+                ? (selectedAdvType === 'primary' ? 'random-primary' : 'random-secondary')
+                : (selectedAdvType === 'primary' ? 'primary' : 'secondary');
+              
+              const psp = getNextAdvancementPspCost(advCount, actualAdvType);
+              const surchargeK = (SURCHARGE_PER_ADVANCEMENT[actualAdvType] / 1000);
               const access = getPositionCategoryAccess(player.position);
-              const allowedCategories = selectedAdvType === 'primary' ? access.primary : access.secondary;
+              // Déterminer le type d'accès (primary ou secondary) en fonction du type d'avancement
+              const categoryAccessType = (actualAdvType === 'random-primary' || actualAdvType === 'primary') ? 'primary' : 'secondary';
+              const allowedCategories = categoryAccessType === 'primary' ? access.primary : access.secondary;
               
               // Catégories avec leurs codes et couleurs
               const categoryConfig: Record<string, { code: string; name: string; color: string; bgColor: string }> = {
@@ -761,7 +771,7 @@ export default function TeamEditPage() {
                   {/* En-tête avec gradient */}
                   <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 px-8 py-6 text-white relative">
                     <button
-                      onClick={() => { setAddingSkillFor(null); setSelectedSkillSlug(""); }}
+                      onClick={() => { setAddingSkillFor(null); setSelectedSkillSlug(""); setIsRandom(false); }}
                       className="absolute top-4 right-4 text-white/80 hover:text-white w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/20 transition-all text-2xl font-light"
                       aria-label="Fermer"
                     >
@@ -802,8 +812,22 @@ export default function TeamEditPage() {
                   <div className="flex-1 overflow-y-auto p-6">
                     {/* Sélecteur Type d'avancement */}
                     <div className="mb-6">
-                      <div className="flex items-center gap-3 mb-3">
+                      <div className="flex items-center justify-between mb-3">
                         <span className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Type d'avancement</span>
+                        {/* Toggle Random */}
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <span className="text-sm text-gray-600">Au hasard</span>
+                          <div 
+                            onClick={() => { setIsRandom(!isRandom); setSelectedSkillSlug(""); }}
+                            className={`relative w-12 h-6 rounded-full transition-colors ${
+                              isRandom ? 'bg-purple-600' : 'bg-gray-300'
+                            }`}
+                          >
+                            <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                              isRandom ? 'transform translate-x-6' : ''
+                            }`}></div>
+                          </div>
+                        </label>
                       </div>
                       <div className="flex gap-3">
                         <button
@@ -814,8 +838,10 @@ export default function TeamEditPage() {
                               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                           }`}
                         >
-                          Primaire
-                          <span className="block text-xs font-normal mt-1 opacity-90">6 SPP</span>
+                          {isRandom ? 'Aléatoire Primaire' : 'Primaire'}
+                          <span className="block text-xs font-normal mt-1 opacity-90">
+                            {isRandom ? `${getNextAdvancementPspCost(advCount, 'random-primary')} SPP` : `${getNextAdvancementPspCost(advCount, 'primary')} SPP`}
+                          </span>
                         </button>
                         <button
                           onClick={() => { setSelectedAdvType('secondary'); setSelectedSkillSlug(""); setSelectedCategory(""); }}
@@ -825,10 +851,17 @@ export default function TeamEditPage() {
                               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                           }`}
                         >
-                          Secondaire
-                          <span className="block text-xs font-normal mt-1 opacity-90">12 SPP</span>
+                          {isRandom ? 'Aléatoire Secondaire' : 'Secondaire'}
+                          <span className="block text-xs font-normal mt-1 opacity-90">
+                            {isRandom ? `${getNextAdvancementPspCost(advCount, 'random-secondary')} SPP` : `${getNextAdvancementPspCost(advCount, 'secondary')} SPP`}
+                          </span>
                         </button>
                       </div>
+                      {isRandom && (
+                        <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
+                          <span className="font-semibold">ℹ️</span> Les compétences choisies au hasard coûtent moins en SPP et augmentent moins la valeur d'équipe (VE) : +10k pour Primaire aléatoire, +20k pour Secondaire aléatoire (au lieu de +20k/+40k pour les choix spécifiques).
+                        </div>
+                      )}
                     </div>
 
                     {/* Filtres de catégories */}
@@ -885,51 +918,82 @@ export default function TeamEditPage() {
                       </div>
                     </div>
 
-                    {/* Grille de compétences */}
+                    {/* Grille de compétences ou bouton aléatoire */}
                     {selectedCategory && (
                       <div className="mb-4">
                         <h3 className="text-lg font-bold text-gray-800 mb-4">
                           {categoryConfig[selectedCategory]?.name || selectedCategory} - {psp} SPP
                         </h3>
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                          {availableSkills.map((skill) => {
-                            const config = categoryConfig[skill.category];
-                            const isOwned = currentSkills.includes(skill.slug);
-                            const isSelected = selectedSkillSlug === skill.slug;
-                            
-                            return (
-                              <button
-                                key={skill.slug}
-                                onClick={() => {
-                                  if (!isOwned) {
-                                    setSelectedSkillSlug(skill.slug);
-                                  }
-                                }}
-                                disabled={isOwned}
-                                className={`
-                                  relative px-4 py-3 rounded-xl border-2 transition-all text-left
-                                  ${isOwned 
-                                    ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed opacity-60' 
-                                    : isSelected
-                                    ? `${config?.bgColor || 'bg-blue-100'} ${config?.color || 'text-blue-700'} border-blue-500 shadow-lg scale-105`
-                                    : 'bg-white border-gray-200 text-gray-700 hover:border-blue-300 hover:shadow-md'
-                                  }
-                                `}
-                                title={isOwned ? 'Compétence déjà acquise' : skill.description}
-                              >
-                                {isOwned && (
-                                  <span className="absolute top-1 right-1 text-xs bg-green-500 text-white px-2 py-0.5 rounded-full">
-                                    ✓
-                                  </span>
-                                )}
-                                <div className="font-semibold text-sm mb-1">{skill.nameFr}</div>
-                                {isSelected && (
-                                  <div className="absolute bottom-2 right-2 w-2 h-2 bg-red-500 rounded-full"></div>
-                                )}
-                              </button>
-                            );
-                          })}
-                        </div>
+                        {isRandom ? (
+                          <div className="flex flex-col items-center justify-center py-8 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border-2 border-dashed border-purple-300">
+                            <div className="text-4xl mb-4">🎲</div>
+                            <p className="text-gray-700 mb-4 text-center">
+                              Cliquez sur "Lancer les dés" pour sélectionner une compétence aléatoirement dans cette catégorie.
+                            </p>
+                            <button
+                              onClick={() => {
+                                // Sélectionner une compétence aléatoire parmi celles disponibles et non possédées
+                                const availableInCategory = availableSkills.filter(s => !currentSkills.includes(s.slug));
+                                if (availableInCategory.length > 0) {
+                                  const randomIndex = Math.floor(Math.random() * availableInCategory.length);
+                                  setSelectedSkillSlug(availableInCategory[randomIndex].slug);
+                                }
+                              }}
+                              className="px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-bold text-lg hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg shadow-purple-500/30"
+                            >
+                              🎲 Lancer les dés
+                            </button>
+                            {selectedSkill && (
+                              <div className="mt-6 p-4 bg-white rounded-lg border-2 border-purple-400 shadow-md">
+                                <div className="font-bold text-lg text-purple-700 mb-2">
+                                  Compétence sélectionnée :
+                                </div>
+                                <div className="text-xl font-semibold">{selectedSkill.nameFr}</div>
+                                <div className="text-sm text-gray-600 mt-2">{selectedSkill.description}</div>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                            {availableSkills.map((skill) => {
+                              const config = categoryConfig[skill.category];
+                              const isOwned = currentSkills.includes(skill.slug);
+                              const isSelected = selectedSkillSlug === skill.slug;
+                              
+                              return (
+                                <button
+                                  key={skill.slug}
+                                  onClick={() => {
+                                    if (!isOwned) {
+                                      setSelectedSkillSlug(skill.slug);
+                                    }
+                                  }}
+                                  disabled={isOwned}
+                                  className={`
+                                    relative px-4 py-3 rounded-xl border-2 transition-all text-left
+                                    ${isOwned 
+                                      ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed opacity-60' 
+                                      : isSelected
+                                      ? `${config?.bgColor || 'bg-blue-100'} ${config?.color || 'text-blue-700'} border-blue-500 shadow-lg scale-105`
+                                      : 'bg-white border-gray-200 text-gray-700 hover:border-blue-300 hover:shadow-md'
+                                    }
+                                  `}
+                                  title={isOwned ? 'Compétence déjà acquise' : skill.description}
+                                >
+                                  {isOwned && (
+                                    <span className="absolute top-1 right-1 text-xs bg-green-500 text-white px-2 py-0.5 rounded-full">
+                                      ✓
+                                    </span>
+                                  )}
+                                  <div className="font-semibold text-sm mb-1">{skill.nameFr}</div>
+                                  {isSelected && (
+                                    <div className="absolute bottom-2 right-2 w-2 h-2 bg-red-500 rounded-full"></div>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -944,7 +1008,11 @@ export default function TeamEditPage() {
                   {/* Footer avec actions */}
                   <div className="border-t border-gray-200 px-8 py-4 bg-gray-50 flex justify-end gap-3">
                     <button
-                      onClick={() => { setAddingSkillFor(null); setSelectedSkillSlug(""); }}
+                      onClick={() => { 
+                        setAddingSkillFor(null); 
+                        setSelectedSkillSlug(""); 
+                        setIsRandom(false);
+                      }}
                       className="px-6 py-2 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-100 transition-all font-medium"
                     >
                       Annuler
@@ -958,18 +1026,24 @@ export default function TeamEditPage() {
                           const newSkills = [...currentSkills, selectedSkillSlug].join(',');
                           let currentAdv: any[] = [];
                           try { currentAdv = JSON.parse(player.advancements || '[]'); } catch {}
-                          const newAdv = [...currentAdv, { skillSlug: selectedSkillSlug, type: selectedAdvType, at: Date.now() }];
+                          const newAdv = [...currentAdv, { 
+                            skillSlug: selectedSkillSlug, 
+                            type: actualAdvType, 
+                            isRandom: isRandom,
+                            at: Date.now() 
+                          }];
                           await putJSON(`/team/${id}/players/${player.id}/skills`, { skills: newSkills, advancements: newAdv });
                           setPlayers(prev => prev.map(p => p.id === player.id ? { ...p, skills: newSkills, advancements: JSON.stringify(newAdv) } as any : p));
                           setAddingSkillFor(null);
                           setSelectedSkillSlug("");
+                          setIsRandom(false);
                         } catch (e: any) {
                           alert(e?.message || "Erreur lors de l'ajout de la compétence");
                         }
                       }}
                       className="px-8 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed transition-all font-semibold shadow-lg shadow-green-500/30 disabled:shadow-none"
                     >
-                      Ajouter la compétence
+                      {isRandom ? 'Ajouter la compétence (aléatoire)' : 'Ajouter la compétence'}
                     </button>
                   </div>
                 </>
