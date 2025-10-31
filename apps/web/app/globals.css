@@ -3,5 +3,30 @@
 @tailwind utilities;
 
 :root {
-  --bg: #fafafa;
+  /* Palette Nuffle Arena */
+  --color-gold: #CBA135;
+  --color-deep-red: #7A1F1F;
+  --color-ivory: #E9E2D0;
+  --color-anthracite: #1E1E1E;
+  --color-bronze: #6B4E2E;
+  
+  /* Light mode par défaut */
+  --bg-primary: var(--color-ivory);
+  --bg-secondary: #ffffff;
+  --text-primary: var(--color-anthracite);
+  --text-secondary: #4a5568;
+  --accent: var(--color-gold);
+  --border: var(--color-bronze);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Dark mode */
+    --bg-primary: var(--color-anthracite);
+    --bg-secondary: #2d3748;
+    --text-primary: var(--color-ivory);
+    --text-secondary: #cbd5e0;
+    --accent: var(--color-gold);
+    --border: var(--color-bronze);
+  }
 }
