@@ -20,6 +20,8 @@ export interface PositionDefinition {
 export interface TeamRoster {
   name: string;
   budget: number;
+  tier: "I" | "II" | "III";
+  naf: boolean;
   positions: PositionDefinition[];
 }
 
@@ -28,6 +30,8 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
   skaven: {
     name: "Skavens",
     budget: 1000,
+    tier: "I",
+    naf: false,
     positions: [
       {
         slug: "skaven_lineman",
@@ -99,6 +103,8 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
   lizardmen: {
     name: "Hommes-Lézards",
     budget: 1000,
+    tier: "I",
+    naf: false,
     positions: [
       {
         slug: "lizardmen_skink_runner",
@@ -157,6 +163,8 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
   wood_elf: {
     name: "Elfes Sylvains",
     budget: 1000,
+    tier: "I",
+    naf: false,
     positions: [
       {
         slug: "wood_elf_lineman",
@@ -228,6 +236,8 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
   dark_elf: {
     name: "Elfes Noirs",
     budget: 1000,
+    tier: "I",
+    naf: false,
     positions: [
       {
         slug: "dark_elf_lineman",
@@ -299,6 +309,8 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
   dwarf: {
     name: "Nains",
     budget: 1000,
+    tier: "I",
+    naf: false,
     positions: [
       {
         slug: "dwarf_blocker_lineman",
@@ -370,6 +382,8 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
   goblin: {
     name: "Gobelins",
     budget: 1000,
+    tier: "III",
+    naf: false,
     positions: [
       {
         slug: "goblin_lineman",
@@ -480,6 +494,8 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
   undead: {
     name: "Morts-Vivants",
     budget: 1000,
+    tier: "I",
+    naf: false,
     positions: [
       {
         slug: "undead_skeleton_lineman",
@@ -551,6 +567,8 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
   chaos_renegade: {
     name: "Renégats du Chaos",
     budget: 1000,
+    tier: "II",
+    naf: false,
     positions: [
       {
         slug: "chaos_renegade_human_lineman",
@@ -687,6 +705,8 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
   ogre: {
     name: "Ogres",
     budget: 1000,
+    tier: "III",
+    naf: false,
     positions: [
       {
         slug: "ogre_gnoblar_lineman",
@@ -732,6 +752,8 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
   halfling: {
     name: "Halflings",
     budget: 1000,
+    tier: "III",
+    naf: false,
     positions: [
       {
         slug: "halfling_hopeful_lineman",
@@ -790,6 +812,8 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
   underworld: {
     name: "Bas-Fonds",
     budget: 1000,
+    tier: "I",
+    naf: false,
     positions: [
       {
         slug: "underworld_underworld_goblin_lineman",
@@ -900,6 +924,8 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
   chaos_chosen: {
     name: "Élus du Chaos",
     budget: 1000,
+    tier: "II",
+    naf: false,
     positions: [
       {
         slug: "chaos_chosen_beastman_runner_lineman",
@@ -971,6 +997,8 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
   imperial_nobility: {
     name: "Noblesse Impériale",
     budget: 1000,
+    tier: "II",
+    naf: false,
     positions: [
       {
         slug: "imperial_nobility_imperial_retainer_lineman",
@@ -1042,6 +1070,8 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
   necromantic_horror: {
     name: "Horreurs Nécromantiques",
     budget: 1000,
+    tier: "II",
+    naf: false,
     positions: [
       {
         slug: "necromantic_horror_zombie_lineman",
@@ -1113,6 +1143,8 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
   orc: {
     name: "Orques",
     budget: 1000,
+    tier: "II",
+    naf: false,
     positions: [
       {
         slug: "orc_orc_lineman",
@@ -1197,6 +1229,8 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
   nurgle: {
     name: "Nurgle",
     budget: 1000,
+    tier: "II",
+    naf: false,
     positions: [
       {
         slug: "nurgle_rotter_lineman",
@@ -1255,6 +1289,8 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
   old_world_alliance: {
     name: "Alliance du Vieux Monde",
     budget: 1000,
+    tier: "II",
+    naf: false,
     positions: [
       {
         slug: "old_world_alliance_old_world_human_lineman",
@@ -1404,6 +1440,8 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
   elven_union: {
     name: "Union Elfique",
     budget: 1000,
+    tier: "II",
+    naf: false,
     positions: [
       {
         slug: "elven_union_lineman",
@@ -1462,6 +1500,8 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
   human: {
     name: "Humains",
     budget: 1000,
+    tier: "II",
+    naf: false,
     positions: [
       {
         slug: "human_human_lineman",
@@ -1546,6 +1586,8 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
   black_orc: {
     name: "Orques Noirs",
     budget: 1000,
+    tier: "II",
+    naf: false,
     positions: [
       {
         slug: "black_orc_goblin_bruiser_lineman",
@@ -1591,6 +1633,8 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
   snotling: {
     name: "Snotlings",
     budget: 1000,
+    tier: "III",
+    naf: false,
     positions: [
       {
         slug: "snotling_snotling_lineman",

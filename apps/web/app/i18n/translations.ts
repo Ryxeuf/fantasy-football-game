@@ -2,6 +2,7 @@ export const translations = {
   fr: {
     // Navigation
     nav: {
+      teams: "Équipes",
       skills: "Compétences",
       starPlayers: "Star Players",
     },
@@ -246,6 +247,7 @@ export const translations = {
   en: {
     // Navigation
     nav: {
+      teams: "Teams",
       skills: "Skills",
       starPlayers: "Star Players",
     },

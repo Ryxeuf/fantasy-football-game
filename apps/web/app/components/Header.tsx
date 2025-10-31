@@ -13,6 +13,12 @@ export default function Header() {
         <Logo variant="compact" showText={true} />
         <nav className="flex items-center gap-6">
           <a 
+            href="/teams" 
+            className="text-sm font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold hover:underline transition-colors"
+          >
+            ⚽ {t.nav.teams}
+          </a>
+          <a 
             href="/skills" 
             className="text-sm font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold hover:underline transition-colors"
           >

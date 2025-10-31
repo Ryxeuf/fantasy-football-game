@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { API_BASE } from "../../auth-client";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { TEAM_ROSTERS } from "@bb/game-engine";
 
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");
@@ -41,46 +42,61 @@ export default function MyTeamsPage() {
   }, [t]);
 
   return (
-    <div className="max-w-3xl mx-auto p-6 space-y-6">
+    <div className="max-w-7xl mx-auto p-6 space-y-6">
       <h1 className="text-2xl font-bold">{t.teams.title}</h1>
       {error && <p className="text-red-600 text-sm">{error}</p>}
       <div className="rounded border p-4 bg-white">
         <h2 className="font-semibold mb-2">{t.teams.createTeam}</h2>
         <div className="space-y-3">
-          <div className="flex flex-col md:flex-row gap-2">
+          <div className="flex flex-col gap-2">
             <input
               className="border p-2 flex-1 rounded"
               placeholder={t.teams.teamNamePlaceholder}
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
-            <select
-              className="border p-2"
-              value={roster}
-              onChange={(e) => setRoster(e.target.value)}
-            >
-              <option value="skaven">Skavens</option>
-              <option value="lizardmen">Hommes-Lézards</option>
-              <option value="wood_elf">Elfes Sylvains</option>
-              <option value="dark_elf">Elfes Noirs</option>
-              <option value="dwarf">Nains</option>
-              <option value="goblin">Gobelins</option>
-              <option value="undead">Morts-Vivants</option>
-              <option value="chaos_renegade">Renégats du Chaos</option>
-              <option value="ogre">Ogres</option>
-              <option value="halfling">Halflings</option>
-              <option value="underworld">Bas-Fonds</option>
-              <option value="chaos_chosen">Élus du Chaos</option>
-              <option value="imperial_nobility">Noblesse Impériale</option>
-              <option value="necromantic_horror">Horreurs Nécromantiques</option>
-              <option value="orc">Orques</option>
-              <option value="nurgle">Nurgle</option>
-              <option value="old_world_alliance">Alliance du Vieux Monde</option>
-              <option value="elven_union">Union Elfique</option>
-              <option value="human">Humains</option>
-              <option value="black_orc">Orques Noirs</option>
-              <option value="snotling">Snotlings</option>
-            </select>
+          </div>
+          
+          {/* Grille de sélection des équipes avec tiers */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              {t.teams.selectRoster || "Sélectionner un roster"}
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              {Object.entries(TEAM_ROSTERS).map(([slug, teamData]) => {
+                const isSelected = roster === slug;
+                return (
+                  <button
+                    key={slug}
+                    type="button"
+                    onClick={() => setRoster(slug)}
+                    className={`
+                      rounded-xl border-2 p-4 text-left transition-all
+                      ${isSelected 
+                        ? 'bg-blue-600 border-blue-700 text-white' 
+                        : 'bg-white border-blue-200 text-blue-900 hover:border-blue-400 hover:shadow-md'
+                      }
+                    `}
+                  >
+                    <div className="font-semibold text-sm mb-1">{teamData.name}</div>
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className={`px-2 py-0.5 rounded ${
+                        isSelected ? 'bg-blue-700 text-white' : 'bg-gray-100 text-gray-700'
+                      }`}>
+                        Tier {teamData.tier}
+                      </span>
+                      {teamData.naf && (
+                        <span className={`px-2 py-0.5 rounded ${
+                          isSelected ? 'bg-yellow-600 text-white' : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          NAF
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
           
           <div className="flex flex-col md:flex-row gap-2">
