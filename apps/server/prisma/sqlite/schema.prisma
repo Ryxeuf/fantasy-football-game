@@ -12,7 +12,11 @@ model User {
   id        String   @id @default(cuid())
   email     String   @unique
   passwordHash String
-  name      String?
+  name      String?  // Conservé pour rétrocompatibilité
+  coachName String   // Nom de coach (obligatoire)
+  firstName String?  // Prénom (optionnel)
+  lastName  String?  // Nom (optionnel)
+  dateOfBirth DateTime? // Date de naissance (optionnel)
   role      String   @default("user")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

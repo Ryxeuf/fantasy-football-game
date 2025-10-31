@@ -6,6 +6,10 @@ type UserProfile = {
   id: string;
   email: string;
   name?: string | null;
+  coachName: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  dateOfBirth?: string | null;
   role: string;
   createdAt: string;
   updatedAt: string;
@@ -40,6 +44,9 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [formData, setFormData] = useState<Partial<UserProfile>>({});
 
   useEffect(() => {
     (async () => {
@@ -48,6 +55,7 @@ export default function ProfilePage() {
       try {
         const data = await fetchJSON("/auth/me");
         setProfile(data.user);
+        setFormData(data.user);
       } catch (e: any) {
         setError(e.message || "Erreur lors du chargement du profil");
       } finally {
@@ -56,9 +64,49 @@ export default function ProfilePage() {
     })();
   }, []);
 
-  const getInitials = (name?: string | null, email?: string) => {
-    if (name) {
-      return name
+  const handleSave = async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        window.location.href = "/login";
+        throw new Error("Non authentifié");
+      }
+      const res = await fetch(`${API_BASE}/auth/me`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(formData),
+      });
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({}));
+        throw new Error(error?.error || `Erreur ${res.status}`);
+      }
+      const data = await res.json();
+      setProfile(data.user);
+      setEditing(false);
+    } catch (e: any) {
+      setError(e.message || "Erreur lors de la sauvegarde");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    if (profile) {
+      setFormData(profile);
+    }
+    setEditing(false);
+    setError(null);
+  };
+
+  const getInitials = (coachName?: string, name?: string | null, email?: string) => {
+    const nameToUse = coachName || name;
+    if (nameToUse) {
+      return nameToUse
         .split(" ")
         .map((n) => n[0])
         .join("")
@@ -97,16 +145,118 @@ export default function ProfilePage() {
 
       {/* Informations principales */}
       <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <div className="flex items-start gap-6">
-          <div className="w-20 h-20 rounded-full bg-nuffle-bronze text-white flex items-center justify-center font-bold text-2xl">
-            {getInitials(profile.name, profile.email)}
+        <div className="flex items-start justify-between gap-6">
+          <div className="flex items-start gap-6 flex-1">
+            <div className="w-20 h-20 rounded-full bg-nuffle-bronze text-white flex items-center justify-center font-bold text-2xl">
+              {getInitials(profile.coachName, profile.name, profile.email)}
+            </div>
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold mb-2">{profile.coachName || profile.name || "Utilisateur"}</h2>
+              <p className="text-gray-600 font-mono">{profile.email}</p>
+              {(profile.firstName || profile.lastName) && (
+                <p className="text-gray-600 mt-1">
+                  {profile.firstName} {profile.lastName}
+                </p>
+              )}
+            </div>
           </div>
-          <div className="flex-1">
-            <h2 className="text-2xl font-bold mb-2">{profile.name || "Utilisateur"}</h2>
-            <p className="text-gray-600 font-mono">{profile.email}</p>
-          </div>
+          {!editing && (
+            <button
+              onClick={() => setEditing(true)}
+              className="px-4 py-2 bg-nuffle-bronze text-white rounded hover:bg-nuffle-gold transition-colors"
+            >
+              ✏️ Modifier
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Formulaire d'édition */}
+      {editing && (
+        <div className="bg-white border border-gray-200 rounded-lg p-6">
+          <h3 className="text-xl font-bold mb-4">Modifier mon profil</h3>
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+              <p className="text-red-800">{error}</p>
+            </div>
+          )}
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Email <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="email"
+                value={formData.email || ""}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-nuffle-bronze"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Nom de coach <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.coachName || ""}
+                onChange={(e) => setFormData({ ...formData, coachName: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-nuffle-bronze"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Prénom
+              </label>
+              <input
+                type="text"
+                value={formData.firstName || ""}
+                onChange={(e) => setFormData({ ...formData, firstName: e.target.value || null })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-nuffle-bronze"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Nom
+              </label>
+              <input
+                type="text"
+                value={formData.lastName || ""}
+                onChange={(e) => setFormData({ ...formData, lastName: e.target.value || null })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-nuffle-bronze"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Date de naissance
+              </label>
+              <input
+                type="date"
+                value={formData.dateOfBirth ? formData.dateOfBirth.split("T")[0] : ""}
+                onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value || null })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-nuffle-bronze"
+              />
+            </div>
+            <div className="flex gap-3 pt-4">
+              <button
+                onClick={handleSave}
+                disabled={saving || !formData.email || !formData.coachName}
+                className="px-4 py-2 bg-nuffle-bronze text-white rounded hover:bg-nuffle-gold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {saving ? "Enregistrement..." : "Enregistrer"}
+              </button>
+              <button
+                onClick={handleCancel}
+                disabled={saving}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors disabled:opacity-50"
+              >
+                Annuler
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Statistiques - masquées pour le moment */}
       {/* <div className="bg-white border border-gray-200 rounded-lg p-6">
@@ -132,31 +282,45 @@ export default function ProfilePage() {
       </div> */}
 
       {/* Informations de compte */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h3 className="text-xl font-bold mb-4">Informations du compte</h3>
-        <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <dt className="text-sm font-medium text-gray-600">Date d'inscription</dt>
-            <dd className="mt-1 text-sm text-gray-900">
-              {new Date(profile.createdAt).toLocaleDateString("fr-FR", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-sm font-medium text-gray-600">Dernière mise à jour</dt>
-            <dd className="mt-1 text-sm text-gray-900">
-              {new Date(profile.updatedAt).toLocaleDateString("fr-FR", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </dd>
-          </div>
-        </dl>
-      </div>
+      {!editing && (
+        <div className="bg-white border border-gray-200 rounded-lg p-6">
+          <h3 className="text-xl font-bold mb-4">Informations du compte</h3>
+          <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <dt className="text-sm font-medium text-gray-600">Date d'inscription</dt>
+              <dd className="mt-1 text-sm text-gray-900">
+                {new Date(profile.createdAt).toLocaleDateString("fr-FR", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-sm font-medium text-gray-600">Dernière mise à jour</dt>
+              <dd className="mt-1 text-sm text-gray-900">
+                {new Date(profile.updatedAt).toLocaleDateString("fr-FR", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </dd>
+            </div>
+            {profile.dateOfBirth && (
+              <div>
+                <dt className="text-sm font-medium text-gray-600">Date de naissance</dt>
+                <dd className="mt-1 text-sm text-gray-900">
+                  {new Date(profile.dateOfBirth).toLocaleDateString("fr-FR", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </dd>
+              </div>
+            )}
+          </dl>
+        </div>
+      )}
 
       {/* Actions rapides */}
       <div className="bg-white border border-gray-200 rounded-lg p-6">

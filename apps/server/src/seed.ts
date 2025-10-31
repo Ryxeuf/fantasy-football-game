@@ -6,12 +6,18 @@ async function main() {
     {
       email: "admin@example.com",
       name: "Admin",
+      coachName: "Admin",
+      firstName: "Admin",
+      lastName: "User",
       role: "admin",
       password: "admin123",
     },
     {
       email: "user@example.com",
       name: "User",
+      coachName: "User",
+      firstName: "John",
+      lastName: "Doe",
       role: "user",
       password: "user123",
     },
@@ -24,7 +30,15 @@ async function main() {
     if (existing) continue;
     const passwordHash = await bcrypt.hash(u.password, 10);
     await prisma.user.create({
-      data: { email: u.email, name: u.name, role: u.role, passwordHash },
+      data: { 
+        email: u.email, 
+        name: u.name, 
+        coachName: u.coachName,
+        firstName: u.firstName,
+        lastName: u.lastName,
+        role: u.role, 
+        passwordHash 
+      },
     });
   }
 
@@ -38,7 +52,7 @@ async function main() {
     const teamA = await prisma.team.create({
       data: {
         ownerId: u.id,
-        name: `${u.name || u.email}-Skavens`,
+        name: `${u.coachName || u.name || u.email}-Skavens`,
         roster: "skaven",
         initialBudget: 1000000, // 1000k po
         treasury: 1000000,      // 1000k po
@@ -47,7 +61,7 @@ async function main() {
     const teamB = await prisma.team.create({
       data: {
         ownerId: u.id,
-        name: `${u.name || u.email}-Lizardmen`,
+        name: `${u.coachName || u.name || u.email}-Lizardmen`,
         roster: "lizardmen",
         initialBudget: 1000000, // 1000k po
         treasury: 1000000,      // 1000k po
