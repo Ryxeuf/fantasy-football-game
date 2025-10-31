@@ -4,6 +4,34 @@
  */
 import { getSkillBySlug } from '../skills/index';
 /**
+ * Mapping des slugs français/alternatifs vers les slugs anglais officiels
+ * Les clés sont normalisées (apostrophes typographiques converties en apostrophes droites)
+ */
+const SKILL_SLUG_MAPPING = {
+    // Variantes normalisées (après conversion des apostrophes)
+    "nerfs-d'acier": "nerves-of-steel",  // toutes les variantes d'apostrophes sont normalisées vers '
+    "nerfs-dacier": "nerves-of-steel",   // sans apostrophe
+    // Autres variantes possibles
+    "loner-3": "loner-4",
+    "loner-5": "loner-4",
+};
+/**
+ * Normalise un slug de compétence vers le slug officiel
+ */
+function normalizeSkillSlug(slug) {
+    // Normaliser les apostrophes typographiques vers apostrophes droites
+    // U+2019 (') → U+0027 (')
+    let normalized = slug.replace(/\u2019/g, "'");
+    // Nettoyer les espaces et caractères invisibles
+    normalized = normalized.trim();
+    // Vérifier dans le mapping avec la version normalisée
+    if (SKILL_SLUG_MAPPING[normalized]) {
+        return SKILL_SLUG_MAPPING[normalized];
+    }
+    // Retourner le slug normalisé si pas de mapping
+    return normalized;
+}
+/**
  * Parse les compétences d'un star player (qui sont stockées comme string)
  * et retourne un tableau de slugs
  */
@@ -23,12 +51,19 @@ export function getStarPlayerSkillDefinitions(starPlayer) {
     const slugs = parseStarPlayerSkills(starPlayer.skills);
     const definitions = [];
     for (const slug of slugs) {
-        const skill = getSkillBySlug(slug);
+        // Normaliser le slug d'abord
+        const normalizedSlug = normalizeSkillSlug(slug);
+        // Essayer avec le slug normalisé
+        let skill = getSkillBySlug(normalizedSlug);
+        // Si toujours pas trouvé, essayer avec le slug original
+        if (!skill) {
+            skill = getSkillBySlug(slug);
+        }
         if (skill) {
             definitions.push(skill);
         }
         else {
-            console.warn(`Compétence non trouvée pour le slug: ${slug} (Star Player: ${starPlayer.displayName})`);
+            console.warn(`Compétence non trouvée pour le slug: ${slug} (normalisé: ${normalizedSlug}) (Star Player: ${starPlayer.displayName})`);
         }
     }
     return definitions;
