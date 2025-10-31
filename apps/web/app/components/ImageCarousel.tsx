@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 
 const images = [
   "/images/stadium_illustration.svg",
-  "/images/trophy_banner.svg",
   "/images/bb_dice_sides.png",
   "/images/blocking_dice/pow.png",
 ];

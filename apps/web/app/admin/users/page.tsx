@@ -7,6 +7,7 @@ type User = {
   email: string;
   name?: string | null;
   role: string;
+  patreon?: boolean;
   createdAt: string;
   updatedAt: string;
   _count: {
@@ -126,8 +127,29 @@ export default function AdminUsersPage() {
         body: JSON.stringify({ role: newRole }),
       });
       await loadUsers();
+      if (selectedUser === userId && userDetails) {
+        await loadUserDetails(userId);
+      }
     } catch (e: any) {
       alert(e.message || "Erreur lors de la modification du rôle");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handlePatreonChange = async (userId: string, patreon: boolean) => {
+    setActionLoading(userId);
+    try {
+      await fetchJSON(`/admin/users/${userId}/patreon`, {
+        method: "PATCH",
+        body: JSON.stringify({ patreon }),
+      });
+      await loadUsers();
+      if (selectedUser === userId && userDetails) {
+        await loadUserDetails(userId);
+      }
+    } catch (e: any) {
+      alert(e.message || "Erreur lors de la modification du statut Patreon");
     } finally {
       setActionLoading(null);
     }
@@ -390,6 +412,21 @@ export default function AdminUsersPage() {
                     >
                       {userDetails.role}
                     </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Patreon:</span>{" "}
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={userDetails.patreon || false}
+                        onChange={(e) => handlePatreonChange(userDetails.id, e.target.checked)}
+                        disabled={actionLoading === userDetails.id}
+                        className="rounded"
+                      />
+                      <span className={`text-xs ${userDetails.patreon ? "text-green-700 font-semibold" : "text-gray-600"}`}>
+                        {userDetails.patreon ? "Oui" : "Non"}
+                      </span>
+                    </label>
                   </div>
                   <div>
                     <span className="text-gray-600">Créé le:</span>{" "}

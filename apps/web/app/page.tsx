@@ -1,4 +1,3 @@
-import ImageCarousel from "./components/ImageCarousel";
 import Logo from "./components/Logo";
 
 export default function LandingPage() {
@@ -68,22 +67,15 @@ export default function LandingPage() {
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_left,rgba(203,161,53,0.15),transparent_40%),radial-gradient(ellipse_at_bottom_right,rgba(107,78,46,0.15),transparent_40%)]" />
       </section>
 
-      {/* Carousel */}
-      <section className="max-w-6xl mx-auto px-6 -mt-10">
-        <div className="rounded-2xl overflow-hidden border border-gray-200 shadow bg-white">
-          <ImageCarousel />
-        </div>
-      </section>
-
       {/* Features */}
       <section className="max-w-6xl mx-auto px-6 py-16">
         <div className="grid md:grid-cols-3 gap-6">
           <div className="rounded-xl bg-white shadow-lg border-2 border-nuffle-bronze/30 overflow-hidden hover:border-nuffle-gold/50 transition-all">
-            <div className="h-40 bg-nuffle-ivory flex items-center justify-center">
+            <div className="h-40 flex items-center justify-center overflow-hidden" style={{ backgroundColor: '#e8d6ae' }}>
               <img
-                src="/images/blocking_dice/both_down.png"
-                alt="Both Down"
-                className="h-24"
+                src="/images/rosters.png"
+                alt="Rosters"
+                className="h-full w-full object-contain"
               />
             </div>
             <div className="p-5 bg-white">
@@ -94,11 +86,11 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="rounded-xl bg-white shadow-lg border-2 border-nuffle-bronze/30 overflow-hidden hover:border-nuffle-gold/50 transition-all">
-            <div className="h-40 bg-nuffle-ivory flex items-center justify-center">
+            <div className="h-40 flex items-center justify-center overflow-hidden" style={{ backgroundColor: '#e8d6ae' }}>
               <img
-                src="/images/blocking_dice/stumble.png"
-                alt="Stumble"
-                className="h-24"
+                src="/images/star-players.png"
+                alt="Star Players"
+                className="h-full w-full object-contain"
               />
             </div>
             <div className="p-5 bg-white">
@@ -109,10 +101,12 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="rounded-xl bg-white shadow-lg border-2 border-nuffle-bronze/30 overflow-hidden hover:border-nuffle-gold/50 transition-all">
-            <div className="h-40 bg-nuffle-ivory flex items-center justify-center">
-              <svg className="h-16 w-16 text-nuffle-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
+            <div className="h-40 flex items-center justify-center overflow-hidden" style={{ backgroundColor: '#e8d6ae' }}>
+              <img
+                src="/images/export-pdf.png"
+                alt="Export PDF"
+                className="h-full w-full object-contain"
+              />
             </div>
             <div className="p-5 bg-white">
               <h3 className="font-heading font-bold text-lg text-nuffle-anthracite">Export PDF</h3>

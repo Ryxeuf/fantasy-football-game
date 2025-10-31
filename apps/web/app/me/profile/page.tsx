@@ -11,6 +11,7 @@ type UserProfile = {
   lastName?: string | null;
   dateOfBirth?: string | null;
   role: string;
+  patreon?: boolean;
   createdAt: string;
   updatedAt: string;
   _count: {
@@ -151,7 +152,14 @@ export default function ProfilePage() {
               {getInitials(profile.coachName, profile.name, profile.email)}
             </div>
             <div className="flex-1">
-              <h2 className="text-2xl font-bold mb-2">{profile.coachName || profile.name || "Utilisateur"}</h2>
+              <div className="flex items-center gap-3 mb-2">
+                <h2 className="text-2xl font-bold">{profile.coachName || profile.name || "Utilisateur"}</h2>
+                {profile.patreon && (
+                  <span className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-semibold">
+                    Patreon
+                  </span>
+                )}
+              </div>
               <p className="text-gray-600 font-mono">{profile.email}</p>
               {(profile.firstName || profile.lastName) && (
                 <p className="text-gray-600 mt-1">

@@ -111,6 +111,7 @@ router.get("/me", authUser, async (req: AuthenticatedRequest, res) => {
         lastName: true,
         dateOfBirth: true,
         role: true,
+        patreon: true,
         createdAt: true,
         updatedAt: true,
         _count: {
