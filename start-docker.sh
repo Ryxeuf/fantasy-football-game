@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🐳 Démarrage de BlooBowl dans Docker..."
+echo "🐳 Démarrage de Nuffle Arena dans Docker..."
 echo "📱 Port public: 8200"
 echo "🔌 Port serveur: 8000"
 echo ""
@@ -18,7 +18,7 @@ echo "🔨 Construction et démarrage des conteneurs..."
 docker-compose up --build
 
 echo ""
-echo "✅ BlooBowl est maintenant accessible sur:"
+echo "✅ Nuffle Arena est maintenant accessible sur:"
 echo "   🌐 Web: http://localhost:8200"
 echo "   🔌 API: http://localhost:8000"
 echo ""

@@ -17,7 +17,7 @@ export function toBGIOGame() {
   // lazy import type pour ne pas obliger la dépendance côté client
   type Ctx = Record<string, unknown>;
   return {
-    name: 'bloobowl',
+    name: 'nuffle-arena',
     setup: () => setup(),
     moves: {
       MOVE: (G: GameState, ctx: Ctx, args: { playerId: string; to: Position }) => {

@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Mentions légales - BlooBowl",
-  description: "Mentions légales de BlooBowl",
+  title: "Mentions légales - Nuffle Arena",
+  description: "Mentions légales de Nuffle Arena",
 };
 
 export default function MentionsLegalesPage() {
@@ -24,7 +24,7 @@ export default function MentionsLegalesPage() {
           <h2 className="text-2xl font-semibold mb-4">1. Informations légales</h2>
           <p className="mb-4">
             Conformément aux dispositions de la loi n° 2004-575 du 21 juin 2004 pour la confiance
-            en l'économie numérique, il est précisé aux utilisateurs du site BlooBowl l'identité
+            en l'économie numérique, il est précisé aux utilisateurs du site Nuffle Arena l'identité
             des différents intervenants dans le cadre de sa réalisation et de son suivi.
           </p>
           <div className="bg-gray-50 p-4 rounded-lg">
@@ -42,7 +42,7 @@ export default function MentionsLegalesPage() {
             éléments du jeu Blood Bowl sont la propriété intellectuelle de Games Workshop Limited.
           </p>
           <p className="mb-4">
-            Ce site web, BlooBowl, n'est pas affilié à, approuvé par, ni lié à Games Workshop Limited
+            Ce site web, Nuffle Arena, n'est pas affilié à, approuvé par, ni lié à Games Workshop Limited
             ou à ses filiales. Ce site est créé et maintenu par des fans de Blood Bowl à des fins
             éducatives et de référence uniquement.
           </p>
@@ -77,7 +77,7 @@ export default function MentionsLegalesPage() {
           </p>
           <p className="mb-4">
             Les données collectées lors de votre inscription sont utilisées uniquement dans le cadre du
-            fonctionnement de la plateforme BlooBowl. Elles ne sont pas communiquées à des tiers et sont
+            fonctionnement de la plateforme Nuffle Arena. Elles ne sont pas communiquées à des tiers et sont
             stockées de manière sécurisée.
           </p>
           <p className="mb-4">
@@ -88,7 +88,7 @@ export default function MentionsLegalesPage() {
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">5. Cookies</h2>
           <p className="mb-4">
-            Le site BlooBowl peut utiliser des cookies pour améliorer l'expérience utilisateur et
+            Le site Nuffle Arena peut utiliser des cookies pour améliorer l'expérience utilisateur et
             permettre le fonctionnement de certaines fonctionnalités. Les cookies sont de petits fichiers
             texte stockés sur votre appareil.
           </p>
@@ -115,7 +115,7 @@ export default function MentionsLegalesPage() {
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">7. Hébergement</h2>
           <p className="mb-4">
-            Le site BlooBowl est hébergé par un prestataire d'hébergement. L'éditeur décline toute
+            Le site Nuffle Arena est hébergé par un prestataire d'hébergement. L'éditeur décline toute
             responsabilité en cas de défaillance, panne ou interruption du service d'hébergement.
           </p>
         </section>

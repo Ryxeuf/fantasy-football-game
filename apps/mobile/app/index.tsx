@@ -63,7 +63,7 @@ export default function Home() {
       }}
     >
       <Text style={{ fontSize: 20, fontWeight: "bold" }}>
-        BlooBowl – Mobile MVP
+        Nuffle Arena – Mobile MVP
       </Text>
       <PixiBoard
         state={state}

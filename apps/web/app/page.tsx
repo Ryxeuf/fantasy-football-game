@@ -9,7 +9,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-6 py-20 flex flex-col-reverse md:flex-row items-center gap-10">
           <div className="text-white max-w-xl">
             <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
-              BlooBowl
+              Nuffle Arena
             </h1>
             <p className="mt-4 text-xl text-gray-300 leading-relaxed">
               Plateforme digitale pour créer et gérer vos équipes Blood Bowl. Construisez vos rosters, recrutez des Star Players légendaires, et exportez vos équipes en PDF.

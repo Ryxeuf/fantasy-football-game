@@ -1,6 +1,6 @@
 # 🧪 Tests du Game Engine
 
-Ce document décrit la suite de tests pour le moteur de jeu BlooBowl.
+Ce document décrit la suite de tests pour le moteur de jeu Nuffle Arena.
 
 ## 📋 Couverture des tests
 

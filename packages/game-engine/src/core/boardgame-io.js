@@ -12,7 +12,7 @@ import { clearDiceResult } from './game-state';
  */
 export function toBGIOGame() {
     return {
-        name: 'bloobowl',
+        name: 'nuffle-arena',
         setup: () => setup(),
         moves: {
             MOVE: (G, ctx, args) => {

@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "BlooBowl",
-    "slug": "bloobowl",
-    "scheme": "bloobowl",
+    "name": "Nuffle Arena",
+    "slug": "nuffle-arena",
+    "scheme": "nuffle-arena",
     "version": "0.1.0",
     "orientation": "portrait",
     "sdkVersion": "51.0.0"

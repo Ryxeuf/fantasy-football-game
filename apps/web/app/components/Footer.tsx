@@ -8,7 +8,7 @@ export default function Footer() {
       <div className="max-w-5xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <h3 className="font-semibold text-gray-900 mb-3">BlooBowl</h3>
+            <h3 className="font-semibold text-gray-900 mb-3">Nuffle Arena</h3>
             <p className="text-sm text-gray-600">
               Plateforme digitale complète pour jouer à Blood Bowl selon les règles officielles 2020.
             </p>
@@ -64,11 +64,11 @@ export default function Footer() {
         </div>
         <div className="mt-8 pt-6 border-t border-gray-200">
           <p className="text-xs text-gray-500 text-center">
-            BlooBowl - Blood Bowl Fantasy Football Game. 
+            Nuffle Arena - Blood Bowl Fantasy Football Game. 
             Basé sur les règles officielles de Blood Bowl 2020.
           </p>
           <p className="text-xs text-gray-500 text-center mt-2">
-            © {new Date().getFullYear()} Ryxeuf • <VersionInfo />
+            © {new Date().getFullYear()} NuffleArena • <VersionInfo />
           </p>
         </div>
       </div>

@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Conditions d'utilisation - BlooBowl",
-  description: "Conditions d'utilisation de BlooBowl",
+  title: "Conditions d'utilisation - Nuffle Arena",
+  description: "Conditions d'utilisation de Nuffle Arena",
 };
 
 export default function ConditionsUtilisationPage() {
@@ -23,7 +23,7 @@ export default function ConditionsUtilisationPage() {
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">1. Acceptation des conditions</h2>
           <p className="mb-4">
-            En accédant et en utilisant le site BlooBowl, vous acceptez d'être lié par les présentes
+            En accédant et en utilisant le site Nuffle Arena, vous acceptez d'être lié par les présentes
             conditions d'utilisation. Si vous n'acceptez pas ces conditions, veuillez ne pas utiliser
             ce site.
           </p>
@@ -37,7 +37,7 @@ export default function ConditionsUtilisationPage() {
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">2. Description du service</h2>
           <p className="mb-4">
-            BlooBowl est une plateforme digitale permettant de créer et gérer des équipes Blood Bowl
+            Nuffle Arena est une plateforme digitale permettant de créer et gérer des équipes Blood Bowl
             selon les règles officielles. Le service permet notamment de :
           </p>
           <ul className="list-disc list-inside mb-4 space-y-2 ml-4">
@@ -53,7 +53,7 @@ export default function ConditionsUtilisationPage() {
           <h2 className="text-2xl font-semibold mb-4">3. Utilisation du service</h2>
           <h3 className="text-xl font-semibold mb-3 mt-4">3.1. Accès au service</h3>
           <p className="mb-4">
-            L'utilisation de BlooBowl nécessite la création d'un compte utilisateur. Vous êtes
+            L'utilisation de Nuffle Arena nécessite la création d'un compte utilisateur. Vous êtes
             responsable de maintenir la confidentialité de vos identifiants de connexion.
           </p>
           <p className="mb-4">
@@ -62,7 +62,7 @@ export default function ConditionsUtilisationPage() {
           </p>
 
           <h3 className="text-xl font-semibold mb-3 mt-4">3.2. Utilisation autorisée</h3>
-          <p className="mb-4">Vous vous engagez à utiliser BlooBowl uniquement pour :</p>
+          <p className="mb-4">Vous vous engagez à utiliser Nuffle Arena uniquement pour :</p>
           <ul className="list-disc list-inside mb-4 space-y-2 ml-4">
             <li>Des fins légales et conformes aux présentes conditions</li>
             <li>Créer et gérer vos propres équipes Blood Bowl</li>
@@ -86,16 +86,16 @@ export default function ConditionsUtilisationPage() {
           <h2 className="text-2xl font-semibold mb-4">4. Propriété intellectuelle</h2>
           <p className="mb-4">
             <strong>Blood Bowl</strong> et tous les éléments associés (règles, noms de joueurs,
-            statistiques, etc.) sont la propriété exclusive de Games Workshop Limited. BlooBowl
+            statistiques, etc.) sont la propriété exclusive de Games Workshop Limited. Nuffle Arena
             n'est pas affilié à Games Workshop et utilise ces éléments avec respect dans le cadre
             d'un site de fans.
           </p>
           <p className="mb-4">
-            L'interface, le code, le design et tous les éléments créés spécifiquement pour BlooBowl
+            L'interface, le code, le design et tous les éléments créés spécifiquement pour Nuffle Arena
             restent la propriété de l'éditeur. Toute reproduction non autorisée est interdite.
           </p>
           <p className="mb-4">
-            Les équipes et données que vous créez via BlooBowl vous appartiennent, mais vous
+            Les équipes et données que vous créez via Nuffle Arena vous appartiennent, mais vous
             accordez à l'éditeur une licence d'utilisation pour le fonctionnement du service.
           </p>
         </section>
@@ -103,7 +103,7 @@ export default function ConditionsUtilisationPage() {
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">5. Disponibilité du service</h2>
           <p className="mb-4">
-            L'éditeur s'efforce d'assurer la continuité et la qualité du service BlooBowl, mais
+            L'éditeur s'efforce d'assurer la continuité et la qualité du service Nuffle Arena, mais
             ne peut garantir une disponibilité ininterrompue. Le service peut être temporairement
             indisponible pour des raisons de maintenance, de mise à jour ou en cas de force majeure.
           </p>
@@ -116,7 +116,7 @@ export default function ConditionsUtilisationPage() {
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">6. Limitation de responsabilité</h2>
           <p className="mb-4">
-            Le service BlooBowl est fourni "tel quel", sans garantie d'aucune sorte. L'éditeur ne
+            Le service Nuffle Arena est fourni "tel quel", sans garantie d'aucune sorte. L'éditeur ne
             garantit pas que :
           </p>
           <ul className="list-disc list-inside mb-4 space-y-2 ml-4">
@@ -135,7 +135,7 @@ export default function ConditionsUtilisationPage() {
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">7. Données utilisateur</h2>
           <p className="mb-4">
-            Vous êtes seul responsable des équipes et données que vous créez via BlooBowl. L'éditeur
+            Vous êtes seul responsable des équipes et données que vous créez via Nuffle Arena. L'éditeur
             ne garantit pas la sauvegarde permanente de vos données et ne pourra être tenu responsable
             en cas de perte de données.
           </p>

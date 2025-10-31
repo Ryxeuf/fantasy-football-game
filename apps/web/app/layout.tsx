@@ -4,7 +4,7 @@ import AuthBar from "./AuthBar";
 import Footer from "./components/Footer";
 
 export const metadata = {
-  title: "BlooBowl",
+  title: "Nuffle Arena",
   description: "Jeu tour-par-tour web + mobile",
 };
 
@@ -17,7 +17,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-8">
                 <a href="/" className="text-lg font-semibold hover:underline">
-                  BlooBowl
+                  Nuffle Arena
                 </a>
                 <nav className="flex items-center gap-6">
                   <a 
