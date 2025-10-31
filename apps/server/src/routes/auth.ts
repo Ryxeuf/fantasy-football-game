@@ -89,6 +89,15 @@ router.get("/me", authUser, async (req: AuthenticatedRequest, res) => {
         name: true,
         role: true,
         createdAt: true,
+        updatedAt: true,
+        _count: {
+          select: {
+            teams: true,
+            matches: true,
+            createdMatches: true,
+            teamSelections: true,
+          },
+        },
       },
     });
     if (!user) return res.status(404).json({ error: "Introuvable" });

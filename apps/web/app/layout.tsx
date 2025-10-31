@@ -33,6 +33,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 <Logo variant="compact" showText={true} />
                 <nav className="flex items-center gap-6">
                   <a 
+                    href="/skills" 
+                    className="text-sm font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold hover:underline transition-colors"
+                  >
+                    📚 Compétences
+                  </a>
+                  <a 
                     href="/star-players" 
                     className="text-sm font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold hover:underline transition-colors"
                   >
