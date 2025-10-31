@@ -24,6 +24,9 @@ importers:
       '@semantic-release/git':
         specifier: ^10.0.1
         version: 10.0.1(semantic-release@23.1.1(typescript@5.9.2))
+      conventional-changelog-conventionalcommits:
+        specifier: ^7.0.0
+        version: 7.0.2
       eslint:
         specifier: ^9.8.0
         version: 9.34.0(jiti@2.5.1)
@@ -3295,6 +3298,10 @@ packages:
 
   conventional-changelog-angular@7.0.0:
     resolution: {integrity: sha512-ROjNchA9LgfNMTTFSIWPzebCwOGFdgkEq45EnvvrmSLvCtAw0HSmrCs7/ty+wAeYUZyNay0YMUNYFTRL72PkBQ==}
+    engines: {node: '>=16'}
+
+  conventional-changelog-conventionalcommits@7.0.2:
+    resolution: {integrity: sha512-NKXYmMR/Hr1DevQegFB4MwfM5Vv0m4UIxKZTTYuD98lpTknaZlSRrDOG4X7wIXpGkfsYxZTghUN+Qq+T0YQI7w==}
     engines: {node: '>=16'}
 
   conventional-changelog-writer@7.0.1:
@@ -11645,6 +11652,10 @@ snapshots:
   content-type@1.0.5: {}
 
   conventional-changelog-angular@7.0.0:
+    dependencies:
+      compare-func: 2.0.0
+
+  conventional-changelog-conventionalcommits@7.0.2:
     dependencies:
       compare-func: 2.0.0
 
