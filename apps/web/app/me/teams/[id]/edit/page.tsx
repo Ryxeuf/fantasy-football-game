@@ -717,10 +717,10 @@ export default function TeamEditPage() {
         </div>
       )}
 
-      {/* Modal d'ajout de compétence */}
+      {/* Modal d'ajout de compétence - Version moderne */}
       {addingSkillFor && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setAddingSkillFor(null);
@@ -728,110 +728,253 @@ export default function TeamEditPage() {
             }
           }}
         >
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full">
-            <div className="bg-blue-50 px-6 py-4 border-b flex justify-between items-center">
-              <h3 className="text-lg font-semibold">Ajouter une compétence</h3>
-              <button
-                onClick={() => { setAddingSkillFor(null); setSelectedSkillSlug(""); }}
-                className="text-gray-500 hover:text-gray-700 text-xl font-bold w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 transition-colors"
-                aria-label="Fermer le modal"
-                title="Fermer (Échap)"
-              >
-                ×
-              </button>
-            </div>
-            <div className="p-6">
-              {(() => {
-                const player = players.find(p => p.id === addingSkillFor)! as any;
-                let advCount = 0;
-                try { advCount = JSON.parse(player.advancements || '[]')?.length || 0; } catch {}
-                const psp = getNextAdvancementPspCost(advCount, selectedAdvType);
-                const surchargeK = (SURCHARGE_PER_ADVANCEMENT[selectedAdvType] / 1000);
-                const access = getPositionCategoryAccess(player.position);
-                const allowedCategories = selectedAdvType === 'primary' ? access.primary : access.secondary;
-                return (
-                  <>
-                    <div className="space-y-4">
-                      <div className="flex flex-col md:flex-row gap-3">
-                        <select
-                          value={selectedCategory}
-                          onChange={(e) => { setSelectedCategory(e.target.value as any); setSelectedSkillSlug(""); }}
-                          className="px-3 py-2 border rounded w-full"
-                        >
-                          <option value="">Choisir une catégorie…</option>
-                          {(() => {
-                            const cats = (allowedCategories as any[]);
-                            return cats.map((c) => (
-                              <option key={c} value={c}>
-                                {c === 'General' ? 'Générale' : c === 'Agility' ? 'Agilité' : c === 'Strength' ? 'Force' : c === 'Passing' ? 'Passe' : c === 'Mutation' ? 'Mutation' : 'Traits'}
-                              </option>
-                            ));
-                          })()}
-                        </select>
-                        <select
-                          value={selectedSkillSlug}
-                          disabled={!selectedCategory}
-                          onChange={(e) => setSelectedSkillSlug(e.target.value)}
-                          className="px-3 py-2 border rounded disabled:bg-gray-100 w-full"
-                        >
-                          <option value="">{selectedCategory ? "Choisir une compétence…" : "Choisir une catégorie d'abord"}</option>
-                          {SKILLS_DEFINITIONS
-                            .filter(s => (!selectedCategory || s.category === selectedCategory) && allowedCategories.includes(s.category as any))
-                            .map(s => (
-                              <option key={s.slug} value={s.slug}>{s.nameFr}</option>
-                            ))}
-                        </select>
+          <div className="bg-gradient-to-br from-slate-50 to-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            {(() => {
+              const player = players.find(p => p.id === addingSkillFor)! as any;
+              let advCount = 0;
+              try { advCount = JSON.parse(player.advancements || '[]')?.length || 0; } catch {}
+              const psp = getNextAdvancementPspCost(advCount, selectedAdvType);
+              const surchargeK = (SURCHARGE_PER_ADVANCEMENT[selectedAdvType] / 1000);
+              const access = getPositionCategoryAccess(player.position);
+              const allowedCategories = selectedAdvType === 'primary' ? access.primary : access.secondary;
+              
+              // Catégories avec leurs codes et couleurs
+              const categoryConfig: Record<string, { code: string; name: string; color: string; bgColor: string }> = {
+                'General': { code: 'G', name: 'Générale', color: 'text-blue-700', bgColor: 'bg-blue-100 hover:bg-blue-200' },
+                'Agility': { code: 'A', name: 'Agilité', color: 'text-green-700', bgColor: 'bg-green-100 hover:bg-green-200' },
+                'Strength': { code: 'S', name: 'Force', color: 'text-red-700', bgColor: 'bg-red-100 hover:bg-red-200' },
+                'Passing': { code: 'P', name: 'Passe', color: 'text-purple-700', bgColor: 'bg-purple-100 hover:bg-purple-200' },
+                'Mutation': { code: 'M', name: 'Mutation', color: 'text-orange-700', bgColor: 'bg-orange-100 hover:bg-orange-200' },
+                'Trait': { code: 'T', name: 'Traits', color: 'text-indigo-700', bgColor: 'bg-indigo-100 hover:bg-indigo-200' },
+              };
+
+              // Compétences disponibles filtrées
+              const availableSkills = SKILLS_DEFINITIONS
+                .filter(s => allowedCategories.includes(s.category as any))
+                .filter(s => !selectedCategory || s.category === selectedCategory);
+
+              const selectedSkill = selectedSkillSlug ? SKILLS_DEFINITIONS.find(s => s.slug === selectedSkillSlug) : null;
+              const currentSkills = (player.skills || '').split(',').filter(Boolean);
+
+              return (
+                <>
+                  {/* En-tête avec gradient */}
+                  <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 px-8 py-6 text-white relative">
+                    <button
+                      onClick={() => { setAddingSkillFor(null); setSelectedSkillSlug(""); }}
+                      className="absolute top-4 right-4 text-white/80 hover:text-white w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/20 transition-all text-2xl font-light"
+                      aria-label="Fermer"
+                    >
+                      ×
+                    </button>
+                    
+                    <div className="flex items-center gap-4 mb-3">
+                      <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm border-2 border-white/30">
+                        <span className="text-2xl font-bold">#{player.number}</span>
                       </div>
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                        <div className="flex items-center gap-4">
-                          <label className="inline-flex items-center gap-1 text-sm">
-                            <input type="radio" name="advtype" checked={selectedAdvType==='primary'} onChange={() => setSelectedAdvType('primary')} />
-                            Primaire
-                          </label>
-                          <label className="inline-flex items-center gap-1 text-sm">
-                            <input type="radio" name="advtype" checked={selectedAdvType==='secondary'} onChange={() => setSelectedAdvType('secondary')} />
-                            Secondaire
-                          </label>
-                        </div>
-                        <div className="text-sm text-gray-700 md:text-right">
-                          Coût PSP: <span className="font-semibold">{psp}</span> · Surcoût VE: <span className="font-semibold">+{surchargeK}k</span>
+                      <div className="flex-1">
+                        <h2 className="text-2xl font-bold mb-1">{player.name}</h2>
+                        <div className="flex items-center gap-3 text-sm text-blue-100">
+                          <span className="font-medium">{getDisplayName(player.position)}</span>
+                          <span className="text-blue-200">•</span>
+                          <span className="flex items-center gap-1">
+                            <span className="w-2 h-2 bg-yellow-400 rounded-full"></span>
+                            {advCount > 0 ? `Expérimenté (${advCount})` : 'Recrue'}
+                          </span>
                         </div>
                       </div>
                     </div>
-                    <div className="mt-6 flex justify-end gap-3">
-                      <button
-                        onClick={() => { setAddingSkillFor(null); setSelectedSkillSlug(""); }}
-                        className="px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
-                      >
-                        Annuler
-                      </button>
-                      <button
-                        disabled={!selectedSkillSlug || !selectedCategory}
-                        onClick={async () => {
-                          try {
-                            const currentSkills = (player.skills || '').split(',').filter(Boolean);
-                            if (currentSkills.includes(selectedSkillSlug)) return;
-                            const newSkills = [...currentSkills, selectedSkillSlug].join(',');
-                            let currentAdv: any[] = [];
-                            try { currentAdv = JSON.parse(player.advancements || '[]'); } catch {}
-                            const newAdv = [...currentAdv, { skillSlug: selectedSkillSlug, type: selectedAdvType, at: Date.now() }];
-                            await putJSON(`/team/${id}/players/${player.id}/skills`, { skills: newSkills, advancements: newAdv });
-                            setPlayers(prev => prev.map(p => p.id === player.id ? { ...p, skills: newSkills, advancements: JSON.stringify(newAdv) } as any : p));
-                            setAddingSkillFor(null);
-                            setSelectedSkillSlug("");
-                          } catch (e: any) {
-                            alert(e?.message || "Erreur lors de l'ajout de la compétence");
-                          }
-                        }}
-                        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                      >
-                        Ajouter
-                      </button>
+                    
+                    {/* Badge de compétence sélectionnée */}
+                    {selectedSkill && (
+                      <div className="mt-4 inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2 border border-white/30">
+                        <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                        <span className="font-semibold">{selectedSkill.nameFr}</span>
+                        <span className="text-blue-200 text-sm">•</span>
+                        <span className="text-sm text-blue-100">
+                          {selectedAdvType === 'primary' ? 'Primaire' : 'Secondaire'} • {psp} SPP
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Corps de la modal */}
+                  <div className="flex-1 overflow-y-auto p-6">
+                    {/* Sélecteur Type d'avancement */}
+                    <div className="mb-6">
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Type d'avancement</span>
+                      </div>
+                      <div className="flex gap-3">
+                        <button
+                          onClick={() => { setSelectedAdvType('primary'); setSelectedSkillSlug(""); setSelectedCategory(""); }}
+                          className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all ${
+                            selectedAdvType === 'primary'
+                              ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30 scale-105'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          Primaire
+                          <span className="block text-xs font-normal mt-1 opacity-90">6 SPP</span>
+                        </button>
+                        <button
+                          onClick={() => { setSelectedAdvType('secondary'); setSelectedSkillSlug(""); setSelectedCategory(""); }}
+                          className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all ${
+                            selectedAdvType === 'secondary'
+                              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 scale-105'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          Secondaire
+                          <span className="block text-xs font-normal mt-1 opacity-90">12 SPP</span>
+                        </button>
+                      </div>
                     </div>
-                  </>
-                );
-              })()}
-            </div>
+
+                    {/* Filtres de catégories */}
+                    <div className="mb-6">
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Catégorie</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          onClick={() => { setSelectedCategory(""); setSelectedSkillSlug(""); }}
+                          className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                            !selectedCategory
+                              ? 'bg-gray-800 text-white shadow-md'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          Toutes
+                        </button>
+                        {allowedCategories.map((cat) => {
+                          const config = categoryConfig[cat as string];
+                          if (!config) return null;
+                          return (
+                            <button
+                              key={cat}
+                              onClick={() => { setSelectedCategory(cat as string); setSelectedSkillSlug(""); }}
+                              className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 ${
+                                selectedCategory === cat
+                                  ? `${config.bgColor} ${config.color} shadow-md scale-105`
+                                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                              }`}
+                            >
+                              <span className="w-6 h-6 rounded-full bg-white/80 flex items-center justify-center text-xs font-bold">
+                                {config.code}
+                              </span>
+                              {config.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Informations de coût */}
+                    <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="text-sm text-gray-600">Coût PSP: </span>
+                          <span className="text-xl font-bold text-blue-700">{psp}</span>
+                        </div>
+                        <div className="text-sm text-gray-500">•</div>
+                        <div>
+                          <span className="text-sm text-gray-600">Surcoût VE: </span>
+                          <span className="text-xl font-bold text-indigo-700">+{surchargeK}k</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Grille de compétences */}
+                    {selectedCategory && (
+                      <div className="mb-4">
+                        <h3 className="text-lg font-bold text-gray-800 mb-4">
+                          {categoryConfig[selectedCategory]?.name || selectedCategory} - {psp} SPP
+                        </h3>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                          {availableSkills.map((skill) => {
+                            const config = categoryConfig[skill.category];
+                            const isOwned = currentSkills.includes(skill.slug);
+                            const isSelected = selectedSkillSlug === skill.slug;
+                            
+                            return (
+                              <button
+                                key={skill.slug}
+                                onClick={() => {
+                                  if (!isOwned) {
+                                    setSelectedSkillSlug(skill.slug);
+                                  }
+                                }}
+                                disabled={isOwned}
+                                className={`
+                                  relative px-4 py-3 rounded-xl border-2 transition-all text-left
+                                  ${isOwned 
+                                    ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed opacity-60' 
+                                    : isSelected
+                                    ? `${config?.bgColor || 'bg-blue-100'} ${config?.color || 'text-blue-700'} border-blue-500 shadow-lg scale-105`
+                                    : 'bg-white border-gray-200 text-gray-700 hover:border-blue-300 hover:shadow-md'
+                                  }
+                                `}
+                                title={isOwned ? 'Compétence déjà acquise' : skill.description}
+                              >
+                                {isOwned && (
+                                  <span className="absolute top-1 right-1 text-xs bg-green-500 text-white px-2 py-0.5 rounded-full">
+                                    ✓
+                                  </span>
+                                )}
+                                <div className="font-semibold text-sm mb-1">{skill.nameFr}</div>
+                                {isSelected && (
+                                  <div className="absolute bottom-2 right-2 w-2 h-2 bg-red-500 rounded-full"></div>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {!selectedCategory && (
+                      <div className="text-center py-12 text-gray-400">
+                        <div className="text-4xl mb-4">🎯</div>
+                        <p className="text-lg">Sélectionnez une catégorie pour voir les compétences disponibles</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Footer avec actions */}
+                  <div className="border-t border-gray-200 px-8 py-4 bg-gray-50 flex justify-end gap-3">
+                    <button
+                      onClick={() => { setAddingSkillFor(null); setSelectedSkillSlug(""); }}
+                      className="px-6 py-2 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-100 transition-all font-medium"
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      disabled={!selectedSkillSlug || !selectedCategory}
+                      onClick={async () => {
+                        try {
+                          const currentSkills = (player.skills || '').split(',').filter(Boolean);
+                          if (currentSkills.includes(selectedSkillSlug)) return;
+                          const newSkills = [...currentSkills, selectedSkillSlug].join(',');
+                          let currentAdv: any[] = [];
+                          try { currentAdv = JSON.parse(player.advancements || '[]'); } catch {}
+                          const newAdv = [...currentAdv, { skillSlug: selectedSkillSlug, type: selectedAdvType, at: Date.now() }];
+                          await putJSON(`/team/${id}/players/${player.id}/skills`, { skills: newSkills, advancements: newAdv });
+                          setPlayers(prev => prev.map(p => p.id === player.id ? { ...p, skills: newSkills, advancements: JSON.stringify(newAdv) } as any : p));
+                          setAddingSkillFor(null);
+                          setSelectedSkillSlug("");
+                        } catch (e: any) {
+                          alert(e?.message || "Erreur lors de l'ajout de la compétence");
+                        }
+                      }}
+                      className="px-8 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed transition-all font-semibold shadow-lg shadow-green-500/30 disabled:shadow-none"
+                    >
+                      Ajouter la compétence
+                    </button>
+                  </div>
+                </>
+              );
+            })()}
           </div>
         </div>
       )}
