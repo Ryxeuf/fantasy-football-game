@@ -485,7 +485,10 @@ export default function TeamEditPage() {
             <span className="ml-4 text-gray-600">
               Coût actuel: {Math.round(players.reduce((total, player: any) => {
                 const base = getPlayerCost(player.position, team?.roster || '');
-                let adv = 0; try { const a = JSON.parse(player.advancements || '[]'); adv = a.reduce((s: number, x: any) => s + (SURCHARGE_PER_ADVANCEMENT[x?.type] || 0), 0); } catch {}
+                let adv = 0; try { const a = JSON.parse(player.advancements || '[]'); adv = a.reduce((s: number, x: any) => {
+                  const type = x?.type as keyof typeof SURCHARGE_PER_ADVANCEMENT | undefined;
+                  return s + (type && SURCHARGE_PER_ADVANCEMENT[type] ? SURCHARGE_PER_ADVANCEMENT[type] : 0);
+                }, 0); } catch {}
                 return total + base + adv;
               }, 0) / 1000)}k po
             </span>
@@ -499,7 +502,10 @@ export default function TeamEditPage() {
             }, 0) > (team?.initialBudget || 0) * 1000 ? 'text-red-600' : 'text-green-600'}`}>
               Restant: {Math.round(((team?.initialBudget || 0) * 1000 - players.reduce((total, player: any) => {
                 const base = getPlayerCost(player.position, team?.roster || '');
-                let adv = 0; try { const a = JSON.parse(player.advancements || '[]'); adv = a.reduce((s: number, x: any) => s + (SURCHARGE_PER_ADVANCEMENT[x?.type] || 0), 0); } catch {}
+                let adv = 0; try { const a = JSON.parse(player.advancements || '[]'); adv = a.reduce((s: number, x: any) => {
+                  const type = x?.type as keyof typeof SURCHARGE_PER_ADVANCEMENT | undefined;
+                  return s + (type && SURCHARGE_PER_ADVANCEMENT[type] ? SURCHARGE_PER_ADVANCEMENT[type] : 0);
+                }, 0); } catch {}
                 return total + base + adv;
               }, 0)) / 1000)}k po
             </span>
@@ -562,7 +568,10 @@ export default function TeamEditPage() {
                   <td className="p-4 text-center font-mono text-sm">
                     {(() => {
                       const base = getPlayerCost(player.position, data?.roster || '');
-                      let adv = 0; try { const a = JSON.parse((player as any).advancements || '[]'); adv = a.reduce((s: number, x: any) => s + (SURCHARGE_PER_ADVANCEMENT[x?.type] || 0), 0); } catch {}
+                      let adv = 0; try { const a = JSON.parse((player as any).advancements || '[]'); adv = a.reduce((s: number, x: any) => {
+                        const type = x?.type as keyof typeof SURCHARGE_PER_ADVANCEMENT | undefined;
+                        return s + (type && SURCHARGE_PER_ADVANCEMENT[type] ? SURCHARGE_PER_ADVANCEMENT[type] : 0);
+                      }, 0); } catch {}
                       return `${Math.round((base + adv)/1000)}k po`;
                     })()}
                   </td>
@@ -886,7 +895,7 @@ export default function TeamEditPage() {
                           return (
                             <button
                               key={cat}
-                              onClick={() => { setSelectedCategory(cat as string); setSelectedSkillSlug(""); }}
+                              onClick={() => { setSelectedCategory(cat as "General"|"Agility"|"Strength"|"Passing"|"Mutation"|"Trait"|""); setSelectedSkillSlug(""); }}
                               className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 ${
                                 selectedCategory === cat
                                   ? `${config.bgColor} ${config.color} shadow-md scale-105`
@@ -1069,7 +1078,10 @@ export default function TeamEditPage() {
           initialBudgetK={team.initialBudget || 0}
           playersCost={(team.players || []).reduce((total: number, player: any) => {
             const base = getPlayerCost(player.position, team.roster);
-            let adv = 0; try { const a = JSON.parse(player.advancements || '[]'); adv = a.reduce((s: number, x: any) => s + (x?.type === 'secondary' ? SURCHARGE_PER_ADVANCEMENT.secondary : SURCHARGE_PER_ADVANCEMENT.primary), 0); } catch {}
+            let adv = 0; try { const a = JSON.parse(player.advancements || '[]'); adv = a.reduce((s: number, x: any) => {
+              const type = x?.type as keyof typeof SURCHARGE_PER_ADVANCEMENT | undefined;
+              return s + (type && SURCHARGE_PER_ADVANCEMENT[type] ? SURCHARGE_PER_ADVANCEMENT[type] : (x?.type === 'secondary' ? SURCHARGE_PER_ADVANCEMENT.secondary : SURCHARGE_PER_ADVANCEMENT.primary));
+            }, 0); } catch {}
             return total + base + adv;
           }, 0)}
           onUpdate={(info) => {

@@ -9,11 +9,13 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-6 py-20 flex flex-col-reverse md:flex-row items-center gap-10">
           <div className="text-white max-w-xl">
             <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
-              Blood Bowl Fantasy Football
+              BlooBowl
             </h1>
-            <p className="mt-4 text-gray-300 leading-relaxed">
-              Un jeu tour-par-tour inspiré de Blood Bowl: lancez les dés,
-              bloquez, poussez et marquez des touchdowns.
+            <p className="mt-4 text-xl text-gray-300 leading-relaxed">
+              Plateforme digitale pour créer et gérer vos équipes Blood Bowl. Construisez vos rosters, recrutez des Star Players légendaires, et exportez vos équipes en PDF.
+            </p>
+            <p className="mt-3 text-gray-400 leading-relaxed">
+              Conformité aux règles officielles Blood Bowl 2020 : 28 rosters disponibles, gestion complète des budgets, trésorerie, et export PDF pour vos parties.
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <a
@@ -82,10 +84,9 @@ export default function LandingPage() {
               />
             </div>
             <div className="p-5">
-              <h3 className="font-bold text-lg">Blocages et Poussées</h3>
+              <h3 className="font-bold text-lg">28 Rosters disponibles</h3>
               <p className="text-gray-600 mt-1">
-                Résolutions conformes aux règles officielles: choix des dés,
-                directions de poussée et follow-up.
+                Toutes les équipes officielles : Skaven, Elfes, Orques, Nains, et bien plus. Chaque roster respecte les règles et budgets officiels.
               </p>
             </div>
           </div>
@@ -98,26 +99,22 @@ export default function LandingPage() {
               />
             </div>
             <div className="p-5">
-              <h3 className="font-bold text-lg">Dés et Probabilités</h3>
+              <h3 className="font-bold text-lg">Star Players légendaires</h3>
               <p className="text-gray-600 mt-1">
-                Tirages contrôlés, logs détaillés et popups de résultats pour
-                une lisibilité optimale.
+                Recrutez parmi 25 Star Players emblématiques comme Griff Oberwald, Morg 'n' Thorg, ou Hakflem Skuttlespike selon les règles de disponibilité.
               </p>
             </div>
           </div>
           <div className="rounded-xl bg-white shadow border border-gray-200 overflow-hidden">
             <div className="h-40 bg-gray-50 flex items-center justify-center">
-              <img
-                src="/images/blocking_dice/player_down.png"
-                alt="Player Down"
-                className="h-24"
-              />
+              <svg className="h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
             </div>
             <div className="p-5">
-              <h3 className="font-bold text-lg">Parties sécurisées</h3>
+              <h3 className="font-bold text-lg">Export PDF</h3>
               <p className="text-gray-600 mt-1">
-                Accès aux matchs via un token dédié aux participants.
-                Authentification utilisateur par JWT.
+                Exportez vos rosters d'équipe au format PDF avec toutes les informations : joueurs, Star Players, budgets et statistiques.
               </p>
             </div>
           </div>
@@ -129,17 +126,17 @@ export default function LandingPage() {
         <div className="rounded-2xl bg-gradient-to-r from-emerald-500 to-blue-600 text-white p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-6">
           <div>
             <h3 className="text-2xl md:text-3xl font-extrabold">
-              Prêt à lancer le coup d’envoi ?
+              Créez votre première équipe
             </h3>
             <p className="text-white/90 mt-2">
-              Créez une partie et invitez un ami avec l’ID du match.
+              Choisissez parmi 28 rosters disponibles, recrutez vos joueurs et des Star Players, puis exportez votre équipe en PDF.
             </p>
           </div>
           <a
-            href="/lobby"
+            href="/me/teams"
             className="px-6 py-3 bg-white text-gray-900 font-semibold rounded shadow hover:shadow-md"
           >
-            Aller au Lobby
+            Gérer mes équipes
           </a>
         </div>
       </section>
