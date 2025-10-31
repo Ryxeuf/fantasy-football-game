@@ -1,3 +1,10 @@
+## [1.1.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.0.0...v1.1.0) (2025-10-31)
+
+
+### ✨ Features
+
+* ajout des champs profil utilisateur (coachName, firstName, lastName, dateOfBirth) ([f7cce0f](https://github.com/Ryxeuf/fantasy-football-game/commit/f7cce0f7c6587a5726d4888ab3bcc8245b91e809))
+
 ## 1.0.0 (2025-10-31)
 
 
