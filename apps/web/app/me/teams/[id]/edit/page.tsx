@@ -3,7 +3,14 @@ import { useEffect, useState } from "react";
 import { API_BASE } from "../../../../auth-client";
 import SkillTooltip from "../../components/SkillTooltip";
 import TeamInfoEditor from "../../components/TeamInfoEditor";
-import { getPlayerCost, getDisplayName } from "@bb/game-engine";
+import { 
+  getPlayerCost, 
+  getDisplayName,
+  SKILLS_DEFINITIONS,
+  getNextAdvancementPspCost, 
+  SURCHARGE_PER_ADVANCEMENT,
+  getPositionCategoryAccess
+} from "@bb/game-engine";
 
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");
@@ -128,7 +135,13 @@ export default function TeamEditPage() {
     number: 1
   });
 
-  // Gestion du modal - empêcher le scroll de la page et gérer la touche Échap
+  // UI ajout de compétence
+  const [addingSkillFor, setAddingSkillFor] = useState<string | null>(null);
+  const [selectedSkillSlug, setSelectedSkillSlug] = useState<string>("");
+  const [selectedCategory, setSelectedCategory] = useState<"General"|"Agility"|"Strength"|"Passing"|"Mutation"|"Trait"|"">("");
+  const [selectedAdvType, setSelectedAdvType] = useState('primary' as 'primary' | 'secondary');
+
+  // Gestion du modal d'ajout de joueur - empêcher le scroll de la page et gérer la touche Échap
   useEffect(() => {
     if (showAddPlayerForm) {
       // Empêcher le scroll de la page
@@ -149,6 +162,24 @@ export default function TeamEditPage() {
       };
     }
   }, [showAddPlayerForm]);
+
+  // Gestion du modal d'ajout de compétence
+  useEffect(() => {
+    if (addingSkillFor) {
+      document.body.style.overflow = 'hidden';
+      const handleEscape = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          setAddingSkillFor(null);
+          setSelectedSkillSlug("");
+        }
+      };
+      document.addEventListener('keydown', handleEscape);
+      return () => {
+        document.body.style.overflow = 'unset';
+        document.removeEventListener('keydown', handleEscape);
+      };
+    }
+  }, [addingSkillFor]);
 
   const id =
     typeof window !== "undefined"
@@ -450,13 +481,25 @@ export default function TeamEditPage() {
               Joueurs: {players.length}/16
             </span>
             <span className="ml-4 text-gray-600">
-              Coût actuel: {Math.round(players.reduce((total, player) => total + getPlayerCost(player.position, team?.roster || ''), 0) / 1000)}k po
+              Coût actuel: {Math.round(players.reduce((total, player: any) => {
+                const base = getPlayerCost(player.position, team?.roster || '');
+                let adv = 0; try { const a = JSON.parse(player.advancements || '[]'); adv = a.reduce((s: number, x: any) => s + (x?.type === 'secondary' ? SURCHARGE_PER_ADVANCEMENT.secondary : SURCHARGE_PER_ADVANCEMENT.primary), 0); } catch {}
+                return total + base + adv;
+              }, 0) / 1000)}k po
             </span>
             <span className="ml-4 text-gray-600">
               Budget: {team?.initialBudget?.toLocaleString()}k po
             </span>
-            <span className={`ml-4 ${players.reduce((total, player) => total + getPlayerCost(player.position, team?.roster || ''), 0) > (team?.initialBudget || 0) * 1000 ? 'text-red-600' : 'text-green-600'}`}>
-              Restant: {Math.round(((team?.initialBudget || 0) * 1000 - players.reduce((total, player) => total + getPlayerCost(player.position, team?.roster || ''), 0)) / 1000)}k po
+            <span className={`ml-4 ${players.reduce((total, player: any) => {
+              const base = getPlayerCost(player.position, team?.roster || '');
+              let adv = 0; try { const a = JSON.parse(player.advancements || '[]'); adv = a.reduce((s: number, x: any) => s + (x?.type === 'secondary' ? SURCHARGE_PER_ADVANCEMENT.secondary : SURCHARGE_PER_ADVANCEMENT.primary), 0); } catch {}
+              return total + base + adv;
+            }, 0) > (team?.initialBudget || 0) * 1000 ? 'text-red-600' : 'text-green-600'}`}>
+              Restant: {Math.round(((team?.initialBudget || 0) * 1000 - players.reduce((total, player: any) => {
+                const base = getPlayerCost(player.position, team?.roster || '');
+                let adv = 0; try { const a = JSON.parse(player.advancements || '[]'); adv = a.reduce((s: number, x: any) => s + (x?.type === 'secondary' ? SURCHARGE_PER_ADVANCEMENT.secondary : SURCHARGE_PER_ADVANCEMENT.primary), 0); } catch {}
+                return total + base + adv;
+              }, 0)) / 1000)}k po
             </span>
           </div>
         </div>
@@ -515,7 +558,11 @@ export default function TeamEditPage() {
                   </td>
                   <td className="p-4 text-gray-600">{getDisplayName(player.position)}</td>
                   <td className="p-4 text-center font-mono text-sm">
-                    {Math.round(getPlayerCost(player.position, data?.roster || '') / 1000)}k po
+                    {(() => {
+                      const base = getPlayerCost(player.position, data?.roster || '');
+                      let adv = 0; try { const a = JSON.parse((player as any).advancements || '[]'); adv = a.reduce((s: number, x: any) => s + (x?.type === 'secondary' ? SURCHARGE_PER_ADVANCEMENT.secondary : SURCHARGE_PER_ADVANCEMENT.primary), 0); } catch {}
+                      return `${Math.round((base + adv)/1000)}k po`;
+                    })()}
                   </td>
                   <td className="p-4 text-center font-mono">{player.ma}</td>
                   <td className="p-4 text-center font-mono">{player.st}</td>
@@ -530,14 +577,22 @@ export default function TeamEditPage() {
                     />
                   </td>
                   <td className="p-4">
-                    <button
-                      onClick={() => handleDeletePlayer(player.id)}
-                      disabled={players.length <= 11}
-                      className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                      title={players.length <= 11 ? "Une équipe doit avoir au minimum 11 joueurs" : "Supprimer ce joueur"}
-                    >
-                      Supprimer
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setAddingSkillFor(player.id)}
+                        className="px-2 py-1 bg-indigo-600 text-white text-xs rounded hover:bg-indigo-700 transition-colors"
+                      >
+                        + Compétence
+                      </button>
+                      <button
+                        onClick={() => handleDeletePlayer(player.id)}
+                        disabled={players.length <= 11}
+                        className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                        title={players.length <= 11 ? "Une équipe doit avoir au minimum 11 joueurs" : "Supprimer ce joueur"}
+                      >
+                        Supprimer
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -662,6 +717,125 @@ export default function TeamEditPage() {
         </div>
       )}
 
+      {/* Modal d'ajout de compétence */}
+      {addingSkillFor && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setAddingSkillFor(null);
+              setSelectedSkillSlug("");
+            }
+          }}
+        >
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full">
+            <div className="bg-blue-50 px-6 py-4 border-b flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Ajouter une compétence</h3>
+              <button
+                onClick={() => { setAddingSkillFor(null); setSelectedSkillSlug(""); }}
+                className="text-gray-500 hover:text-gray-700 text-xl font-bold w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 transition-colors"
+                aria-label="Fermer le modal"
+                title="Fermer (Échap)"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-6">
+              {(() => {
+                const player = players.find(p => p.id === addingSkillFor)! as any;
+                let advCount = 0;
+                try { advCount = JSON.parse(player.advancements || '[]')?.length || 0; } catch {}
+                const psp = getNextAdvancementPspCost(advCount, selectedAdvType);
+                const surchargeK = (SURCHARGE_PER_ADVANCEMENT[selectedAdvType] / 1000);
+                const access = getPositionCategoryAccess(player.position);
+                const allowedCategories = selectedAdvType === 'primary' ? access.primary : access.secondary;
+                return (
+                  <>
+                    <div className="space-y-4">
+                      <div className="flex flex-col md:flex-row gap-3">
+                        <select
+                          value={selectedCategory}
+                          onChange={(e) => { setSelectedCategory(e.target.value as any); setSelectedSkillSlug(""); }}
+                          className="px-3 py-2 border rounded w-full"
+                        >
+                          <option value="">Choisir une catégorie…</option>
+                          {(() => {
+                            const cats = (allowedCategories as any[]);
+                            return cats.map((c) => (
+                              <option key={c} value={c}>
+                                {c === 'General' ? 'Générale' : c === 'Agility' ? 'Agilité' : c === 'Strength' ? 'Force' : c === 'Passing' ? 'Passe' : c === 'Mutation' ? 'Mutation' : 'Traits'}
+                              </option>
+                            ));
+                          })()}
+                        </select>
+                        <select
+                          value={selectedSkillSlug}
+                          disabled={!selectedCategory}
+                          onChange={(e) => setSelectedSkillSlug(e.target.value)}
+                          className="px-3 py-2 border rounded disabled:bg-gray-100 w-full"
+                        >
+                          <option value="">{selectedCategory ? "Choisir une compétence…" : "Choisir une catégorie d'abord"}</option>
+                          {SKILLS_DEFINITIONS
+                            .filter(s => (!selectedCategory || s.category === selectedCategory) && allowedCategories.includes(s.category as any))
+                            .map(s => (
+                              <option key={s.slug} value={s.slug}>{s.nameFr}</option>
+                            ))}
+                        </select>
+                      </div>
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                        <div className="flex items-center gap-4">
+                          <label className="inline-flex items-center gap-1 text-sm">
+                            <input type="radio" name="advtype" checked={selectedAdvType==='primary'} onChange={() => setSelectedAdvType('primary')} />
+                            Primaire
+                          </label>
+                          <label className="inline-flex items-center gap-1 text-sm">
+                            <input type="radio" name="advtype" checked={selectedAdvType==='secondary'} onChange={() => setSelectedAdvType('secondary')} />
+                            Secondaire
+                          </label>
+                        </div>
+                        <div className="text-sm text-gray-700 md:text-right">
+                          Coût PSP: <span className="font-semibold">{psp}</span> · Surcoût VE: <span className="font-semibold">+{surchargeK}k</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-6 flex justify-end gap-3">
+                      <button
+                        onClick={() => { setAddingSkillFor(null); setSelectedSkillSlug(""); }}
+                        className="px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
+                      >
+                        Annuler
+                      </button>
+                      <button
+                        disabled={!selectedSkillSlug || !selectedCategory}
+                        onClick={async () => {
+                          try {
+                            const currentSkills = (player.skills || '').split(',').filter(Boolean);
+                            if (currentSkills.includes(selectedSkillSlug)) return;
+                            const newSkills = [...currentSkills, selectedSkillSlug].join(',');
+                            let currentAdv: any[] = [];
+                            try { currentAdv = JSON.parse(player.advancements || '[]'); } catch {}
+                            const newAdv = [...currentAdv, { skillSlug: selectedSkillSlug, type: selectedAdvType, at: Date.now() }];
+                            await putJSON(`/team/${id}/players/${player.id}/skills`, { skills: newSkills, advancements: newAdv });
+                            setPlayers(prev => prev.map(p => p.id === player.id ? { ...p, skills: newSkills, advancements: JSON.stringify(newAdv) } as any : p));
+                            setAddingSkillFor(null);
+                            setSelectedSkillSlug("");
+                          } catch (e: any) {
+                            alert(e?.message || "Erreur lors de l'ajout de la compétence");
+                          }
+                        }}
+                        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                      >
+                        Ajouter
+                      </button>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Informations d'équipe */}
       {team && (
         <TeamInfoEditor
@@ -672,7 +846,15 @@ export default function TeamEditPage() {
             assistants: team.assistants || 0,
             apothecary: team.apothecary || false,
             dedicatedFans: team.dedicatedFans || 1,
+            roster: team.roster,
           }}
+          roster={team.roster}
+          initialBudgetK={team.initialBudget || 0}
+          playersCost={(team.players || []).reduce((total: number, player: any) => {
+            const base = getPlayerCost(player.position, team.roster);
+            let adv = 0; try { const a = JSON.parse(player.advancements || '[]'); adv = a.reduce((s: number, x: any) => s + (x?.type === 'secondary' ? SURCHARGE_PER_ADVANCEMENT.secondary : SURCHARGE_PER_ADVANCEMENT.primary), 0); } catch {}
+            return total + base + adv;
+          }, 0)}
           onUpdate={(info) => {
             setData((prev: any) => ({
               ...prev,
