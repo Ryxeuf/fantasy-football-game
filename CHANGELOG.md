@@ -1,3 +1,10 @@
+## [1.3.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.2.0...v1.3.0) (2025-11-01)
+
+
+### ✨ Features
+
+* ajout de 7 nouvelles équipes (Amazones, Hauts Elfes, Khorne, Vampires, Rois des Tombes, Gnomes, Nordiques) ([7bbabdd](https://github.com/Ryxeuf/fantasy-football-game/commit/7bbabdd520b8ea64abf97ef8a2bb56a3191f070b))
+
 ## [1.2.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.1.0...v1.2.0) (2025-10-31)
 
 
