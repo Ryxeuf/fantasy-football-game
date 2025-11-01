@@ -34,7 +34,16 @@ const ALLOWED_TEAMS = [
   "elven_union",
   "human",
   "black_orc",
-  "snotling"
+  "snotling",
+  "chaos_dwarf",
+  "slann",
+  "amazon",
+  "high_elf",
+  "khorne",
+  "vampire",
+  "tomb_kings",
+  "gnome",
+  "norse"
 ] as const;
 
 // Utiliser le nouveau système de rosters
