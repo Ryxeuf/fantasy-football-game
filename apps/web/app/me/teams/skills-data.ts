@@ -53,7 +53,9 @@ export function getSkillDescription(slugOrName: string, language: "fr" | "en" = 
 const FRENCH_TO_ENGLISH_SLUGS: Record<string, string> = {
   // Traductions courantes
   "jouer-déloyal": "dirty-player-1",
-  "joueur-déloyal-+2": "dirty-player-1", // dirty-player-2 n'existe pas, fallback vers dirty-player-1
+  "joueur-déloyal-+1": "dirty-player-1",
+  "joueur-déloyal-+2": "dirty-player-2",
+  "dirty-player-2": "dirty-player-2",
   "présence-perturbante": "disturbing-presence",
   "répulsion": "foul-appearance",
   "sans-les-mains": "no-hands",
@@ -152,20 +154,27 @@ const FRENCH_TO_ENGLISH_SLUGS: Record<string, string> = {
   "mains": "no-hands",
   "solitaire": "loner-4",
   "crâne-épais.": "thick-skull",
-  // Gestion des variantes loner
-  "loner-3": "loner-4", // Fallback vers loner-4 si loner-3 n'existe pas
-  "loner-5": "loner-4", // Fallback vers loner-4 si loner-5 n'existe pas
-  "solitaire (3+)": "loner-4",
-  "solitaire (5+)": "loner-4",
+  // Variantes loner (toutes existent maintenant)
+  "loner-3": "loner-3",
+  "loner-4": "loner-4",
+  "loner-5": "loner-5",
+  "solitaire (3+)": "loner-3",
+  "solitaire (4+)": "loner-4",
+  "solitaire (5+)": "loner-5",
   // Corrections de variantes de compétences
   "claw": "claws",
   "side-step": "sidestep",
-  "mighty-blow-2": "mighty-blow-1", // mighty-blow-2 n'existe pas, fallback vers mighty-blow-1
-  "châtaigne-+2": "mighty-blow-1", // Version française de mighty-blow-2
+  // Variantes mighty-blow (toutes existent maintenant)
+  "mighty-blow-2": "mighty-blow-2",
+  "châtaigne-+2": "mighty-blow-2",
   // Compétences spéciales qui n'ont pas encore de slug dans le système
   "hurl-teammate": "throw-team-mate",
   "animosity-all": "animosity", // Variante d'animosity
-  "bloodlust-3": "bloodlust", // Variante de bloodlust avec 3+
+  // Variantes bloodlust (toutes existent maintenant)
+  "bloodlust-2": "bloodlust-2",
+  "bloodlust-3": "bloodlust-3",
+  "soif-de-sang-2+": "bloodlust-2",
+  "soif-de-sang-3+": "bloodlust-3",
   "plague-ridden": "plague-ridden", // Trait spécial Nurgle
   "stakes": "stakes", // Trait spécial anti-undead
   "timmm-ber": "timmm-ber", // Trait spécial Treeman
@@ -185,6 +194,26 @@ const FRENCH_TO_ENGLISH_SLUGS: Record<string, string> = {
   "boulet de canon": "juggernaut",
   "soif-de-sang-2+": "bloodlust",
   "soif-de-sang": "bloodlust",
+  // Nouvelles compétences ajoutées
+  "animosity-underworld": "animosity-underworld",
+  "animosity-all-dwarf-halfling": "animosity-all-dwarf-halfling",
+  "animosity-all-dwarf-human": "animosity-all-dwarf-human",
+  "animosité-underworld": "animosity-underworld",
+  "animosité-all-dwarf-halfling": "animosity-all-dwarf-halfling",
+  "animosité-all-dwarf-human": "animosity-all-dwarf-human",
+  "projectile-vomit": "projectile-vomit",
+  "vomissement-projectile": "projectile-vomit",
+  "vomissement projectile": "projectile-vomit",
+  "really-stupid-2": "really-stupid-2",
+  "gros-débile-+2": "really-stupid-2",
+  "gros-débile-+2*": "really-stupid-2",
+  "kick-team-mate": "kick-team-mate",
+  "kick team-mate": "kick-team-mate",
+  "kick team mate": "kick-team-mate",
+  // Alias et variantes
+  "armored-skull": "thick-skull", // Alias probable pour Thick Skull
+  "armoured-skull": "thick-skull",
+  "crâne-blindé": "thick-skull",
 };
 
 /**
@@ -245,15 +274,9 @@ export function parseSkills(skillsString: string): string[] {
       if (skill) {
         slugs.push(skill.slug);
       } else {
-        // Gestion spéciale pour les variantes de loner qui n'existent pas
-        // loner-3 et loner-5 n'existent pas dans le système, on les mappe vers loner-4
-        if (cleanPart === "loner-3" || cleanPart === "loner-5") {
-          slugs.push("loner-4");
-        } else {
-          // Si on ne trouve pas la compétence, garder le texte original nettoyé
-          // (pour debug ou compétences non encore ajoutées)
-          slugs.push(cleanPart);
-        }
+        // Si on ne trouve pas la compétence, garder le texte original nettoyé
+        // (pour debug ou compétences non encore ajoutées)
+        slugs.push(cleanPart);
       }
     }
   }

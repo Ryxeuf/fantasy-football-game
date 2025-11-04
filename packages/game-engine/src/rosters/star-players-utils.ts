@@ -15,9 +15,8 @@ const SKILL_SLUG_MAPPING: Record<string, string> = {
   // Variantes normalisées (après conversion des apostrophes)
   "nerfs-d'acier": "nerves-of-steel",  // toutes les variantes d'apostrophes sont normalisées vers '
   "nerfs-dacier": "nerves-of-steel",   // sans apostrophe
-  // Autres variantes possibles
-  "loner-3": "loner-4",
-  "loner-5": "loner-4",
+  // Les variantes loner-3, loner-4, loner-5 existent maintenant comme compétences distinctes
+  // Pas besoin de mapping
 };
 
 /**

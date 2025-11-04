@@ -2255,7 +2255,7 @@ export const TEAM_ROSTERS = {
                 ag: 5,
                 pa: 6,
                 av: 9,
-                skills: "dirty-player-1,juggernaut,loner-5,mighty-blow-1,secret-weapon,stand-firm",
+                skills: "dirty-player-1,juggernaut,loner-4,mighty-blow-1,secret-weapon,stand-firm",
             },
             {
                 slug: "snotling_trained_troll",
@@ -2268,7 +2268,7 @@ export const TEAM_ROSTERS = {
                 ag: 5,
                 pa: 5,
                 av: 10,
-                skills: "always-hungry,loner-5,mighty-blow-1,projectile-vomit,really-stupid-2,regeneration,throw-team-mate",
+                skills: "always-hungry,loner-3,mighty-blow-1,projectile-vomit,really-stupid-2,regeneration,throw-team-mate",
             },
         ],
     },

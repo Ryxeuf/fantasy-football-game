@@ -5,15 +5,15 @@
 import { getSkillBySlug } from '../skills/index';
 /**
  * Mapping des slugs français/alternatifs vers les slugs anglais officiels
+ * Utilisé pour convertir les compétences des Star Players qui utilisent parfois des variantes
  * Les clés sont normalisées (apostrophes typographiques converties en apostrophes droites)
  */
 const SKILL_SLUG_MAPPING = {
     // Variantes normalisées (après conversion des apostrophes)
-    "nerfs-d'acier": "nerves-of-steel",  // toutes les variantes d'apostrophes sont normalisées vers '
-    "nerfs-dacier": "nerves-of-steel",   // sans apostrophe
-    // Autres variantes possibles
-    "loner-3": "loner-4",
-    "loner-5": "loner-4",
+    "nerfs-d'acier": "nerves-of-steel", // toutes les variantes d'apostrophes sont normalisées vers '
+    "nerfs-dacier": "nerves-of-steel", // sans apostrophe
+    // Les variantes loner-3, loner-4, loner-5 existent maintenant comme compétences distinctes
+    // Pas besoin de mapping
 };
 /**
  * Normalise un slug de compétence vers le slug officiel

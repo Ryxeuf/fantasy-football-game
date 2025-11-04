@@ -27,6 +27,13 @@ export const SKILLS_DEFINITIONS = [
         category: "General"
     },
     {
+        slug: "dirty-player-2",
+        nameFr: "Joueur Déloyal (+2)",
+        nameEn: "Dirty Player (+2)",
+        description: "Quand ce joueur fait une action d'Agression, vous pouvez modifier soit le jet d'Armure, soit le jet de Blessure, effectué contre la victime, du montant indiqué entre parenthèses. Ce modificateur peut être appliqué après avoir fait le jet.",
+        category: "General"
+    },
+    {
         slug: "fend",
         nameFr: "Parade",
         nameEn: "Fend",
@@ -402,6 +409,13 @@ export const SKILLS_DEFINITIONS = [
         category: "Strength"
     },
     {
+        slug: "mighty-blow-2",
+        nameFr: "Coup Puissant (+2)",
+        nameEn: "Mighty Blow (+2)",
+        description: "Quand un adversaire est Renversé à la suite d'une action de Blocage effectuée par ce joueur, le jet de Blessure effectué contre lui peut être modifié de +2. Ce modificateur peut être appliqué après que le jet ait été effectué.",
+        category: "Strength"
+    },
+    {
         slug: "multiple-block",
         nameFr: "Blocage Multiple",
         nameEn: "Multiple Block",
@@ -501,10 +515,24 @@ export const SKILLS_DEFINITIONS = [
         category: "Trait"
     },
     {
+        slug: "loner-3",
+        nameFr: "Solitaire (3+)*",
+        nameEn: "Loner (3+)",
+        description: "Ce joueur ne peut utiliser les relances d'équipe que s'il obtient un 3+ sur un D6. S'il échoue à ce jet, il ne peut pas utiliser la relance d'équipe et le résultat original reste.",
+        category: "Trait"
+    },
+    {
         slug: "loner-4",
         nameFr: "Solitaire (4+)*",
         nameEn: "Loner (4+)",
         description: "Ce joueur ne peut utiliser les relances d'équipe que s'il obtient un 4+ sur un D6. S'il échoue à ce jet, il ne peut pas utiliser la relance d'équipe et le résultat original reste.",
+        category: "Trait"
+    },
+    {
+        slug: "loner-5",
+        nameFr: "Solitaire (5+)*",
+        nameEn: "Loner (5+)",
+        description: "Ce joueur ne peut utiliser les relances d'équipe que s'il obtient un 5+ sur un D6. S'il échoue à ce jet, il ne peut pas utiliser la relance d'équipe et le résultat original reste.",
         category: "Trait"
     },
     {
@@ -599,6 +627,20 @@ export const SKILLS_DEFINITIONS = [
         category: "Trait"
     },
     {
+        slug: "bloodlust-2",
+        nameFr: "Soif de Sang (2+)*",
+        nameEn: "Bloodlust (2+)",
+        description: "Pour garder le contrôle de leur esprit, les Vampires ont besoin d'un approvisionnement en sang frais. Chaque fois qu'un joueur avec ce trait est activé, après avoir déclaré son action, il doit lancer un D6, en ajoutant 1 au jet s'il a déclaré une action de Blocage ou de Blitz. S'il obtient un résultat égal ou supérieur au nombre indiqué entre parenthèses (2+), il peut s'activer normalement. Si le joueur obtient un résultat inférieur au nombre indiqué entre parenthèses, ou obtient un 1 naturel, il peut choisir de mordre un coéquipier Thrall adjacent.",
+        category: "Trait"
+    },
+    {
+        slug: "bloodlust-3",
+        nameFr: "Soif de Sang (3+)*",
+        nameEn: "Bloodlust (3+)",
+        description: "Pour garder le contrôle de leur esprit, les Vampires ont besoin d'un approvisionnement en sang frais. Chaque fois qu'un joueur avec ce trait est activé, après avoir déclaré son action, il doit lancer un D6, en ajoutant 1 au jet s'il a déclaré une action de Blocage ou de Blitz. S'il obtient un résultat égal ou supérieur au nombre indiqué entre parenthèses (3+), il peut s'activer normalement. Si le joueur obtient un résultat inférieur au nombre indiqué entre parenthèses, ou obtient un 1 naturel, il peut choisir de mordre un coéquipier Thrall adjacent.",
+        category: "Trait"
+    },
+    {
         slug: "plague-ridden",
         nameFr: "Porteur de Peste*",
         nameEn: "Plague Ridden",
@@ -631,6 +673,48 @@ export const SKILLS_DEFINITIONS = [
         nameFr: "Poivrot*",
         nameEn: "Drunkard",
         description: "Ce joueur subit une pénalité de -1 au jet de dé lorsqu'il tente de Foncer.",
+        category: "Trait"
+    },
+    {
+        slug: "animosity-underworld",
+        nameFr: "Animosité (Underworld)*",
+        nameEn: "Animosity (Underworld)",
+        description: "Ce joueur est jaloux de et n'aime pas certains autres joueurs de son équipe, comme indiqué entre parenthèses après le nom de la compétence. Lorsque ce joueur souhaite effectuer une action de Remise à un coéquipier du type listé, ou tente d'effectuer une action de Passe et que la case cible est occupée par un coéquipier du type listé, ce joueur peut refuser de le faire. Lancez un D6. Sur un résultat de 1, ce joueur refuse d'effectuer l'action et son activation se termine.",
+        category: "Trait"
+    },
+    {
+        slug: "animosity-all-dwarf-halfling",
+        nameFr: "Animosité (Tous Nains & Demi-Hommes)*",
+        nameEn: "Animosity (All Dwarfs & Halflings)",
+        description: "Ce joueur est jaloux de et n'aime pas certains autres joueurs de son équipe, comme indiqué entre parenthèses après le nom de la compétence. Lorsque ce joueur souhaite effectuer une action de Remise à un coéquipier du type listé, ou tente d'effectuer une action de Passe et que la case cible est occupée par un coéquipier du type listé, ce joueur peut refuser de le faire. Lancez un D6. Sur un résultat de 1, ce joueur refuse d'effectuer l'action et son activation se termine.",
+        category: "Trait"
+    },
+    {
+        slug: "animosity-all-dwarf-human",
+        nameFr: "Animosité (Tous Nains & Humains)*",
+        nameEn: "Animosity (All Dwarfs & Humans)",
+        description: "Ce joueur est jaloux de et n'aime pas certains autres joueurs de son équipe, comme indiqué entre parenthèses après le nom de la compétence. Lorsque ce joueur souhaite effectuer une action de Remise à un coéquipier du type listé, ou tente d'effectuer une action de Passe et que la case cible est occupée par un coéquipier du type listé, ce joueur peut refuser de le faire. Lancez un D6. Sur un résultat de 1, ce joueur refuse d'effectuer l'action et son activation se termine.",
+        category: "Trait"
+    },
+    {
+        slug: "projectile-vomit",
+        nameFr: "Vomissement Projectile*",
+        nameEn: "Projectile Vomit",
+        description: "Au lieu d'effectuer une action de Blocage, ce joueur peut effectuer une action Spéciale 'Vomissement Projectile'.",
+        category: "Trait"
+    },
+    {
+        slug: "really-stupid-2",
+        nameFr: "Gros Débile (+2)*",
+        nameEn: "Really Stupid (+2)",
+        description: "Quand ce joueur est activé, même s'il est À Terre ou a perdu sa Zone de Tacle, jetez un D6 juste après avoir annoncé l'action qu'il va faire mais avant d'effectuer l'action, en appliquant un modificateur de +2 au jet si ce joueur est actuellement adjacent à un ou plusieurs coéquipiers Debout et n'ayant pas ce trait: Sur 1-3, ce joueur oublie ce qu'il était censé faire et son activation se termine immédiatement. De plus, il perd sa Zone de Tacle jusqu'à sa prochaine activation. Sur 4+, il continue normalement son activation et effectue l'action annoncée.",
+        category: "Trait"
+    },
+    {
+        slug: "kick-team-mate",
+        nameFr: "Kick Team-mate*",
+        nameEn: "Kick Team-mate",
+        description: "Une fois par tour d'équipe, en plus d'un autre joueur effectuant soit une Passe soit une action de Lancer d'Équipier, un seul joueur avec ce trait sur l'équipe active peut effectuer une action Spéciale 'Kick Team-mate'.",
         category: "Trait"
     },
 ];

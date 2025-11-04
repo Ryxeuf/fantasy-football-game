@@ -5,18 +5,18 @@
 // Tableau des coûts en SPP (PSP) par numéro d'avancement (1..6)
 // Index 0 non utilisé pour aligner l'indice avec le numéro d'avancement
 const SPP_COST_TABLE = {
-    'primary': [0, 6, 8, 12, 16, 20, 30],           // "Choose a Primary" par avancement #1..#6
-    'secondary': [0, 12, 14, 18, 22, 26, 40],      // "Choose a Secondary" par avancement #1..#6
-    'random-primary': [0, 3, 4, 6, 8, 10, 15],      // "Randomly select a Primary" par avancement #1..#6
+    'primary': [0, 6, 8, 12, 16, 20, 30], // "Choose a Primary" par avancement #1..#6
+    'secondary': [0, 12, 14, 18, 22, 26, 40], // "Choose a Secondary" par avancement #1..#6
+    'random-primary': [0, 3, 4, 6, 8, 10, 15], // "Randomly select a Primary" par avancement #1..#6
     'random-secondary': [0, 6, 8, 12, 16, 20, 30], // "Randomly select a Secondary" (même coût que Choose Primary)
 };
 // Surcoûts de valeur joueur par compétence selon les règles BB2020
 // Référence: data/post-game-sequence.md - CURRENT VALUE INCREASE TABLE
 export const SURCHARGE_PER_ADVANCEMENT = {
-    primary: 20000,         // +20k po - Chosen Primary skill
-    secondary: 40000,       // +40k po - Chosen Secondary skill
-    'random-primary': 10000,     // +10k po - Randomly selected Primary skill
-    'random-secondary': 20000,   // +20k po - Randomly selected Secondary skill
+    primary: 20000, // +20k po - Chosen Primary skill
+    secondary: 40000, // +40k po - Chosen Secondary skill
+    'random-primary': 10000, // +10k po - Randomly selected Primary skill
+    'random-secondary': 20000, // +20k po - Randomly selected Secondary skill
 };
 /**
  * Retourne le coût en PSP pour le prochain avancement donné le nombre d'avancements déjà acquis.
@@ -29,10 +29,10 @@ export function getNextAdvancementPspCost(alreadyTaken, type) {
 }
 /**
  * Calcule le surcoût total en po d'un ensemble d'avancements choisis.
- * @param advancements tableau des types d'avancement pris
+ * @param advancements tableau des types d'avancement pris ('primary' | 'secondary')
  */
 export function calculateAdvancementsSurcharge(advancements) {
-    return advancements.reduce((sum, t) => sum + (SURCHARGE_PER_ADVANCEMENT[t] || 0), 0);
+    return advancements.reduce((sum, t) => sum + SURCHARGE_PER_ADVANCEMENT[t], 0);
 }
 /**
  * Calcule la valeur courante d'un joueur = coût de base + surcoûts d'avancements
