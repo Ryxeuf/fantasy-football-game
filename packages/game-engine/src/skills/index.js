@@ -450,6 +450,13 @@ export const SKILLS_DEFINITIONS = [
         description: "Quand ce joueur est Renversé, vous pouvez appliquer un modificateur de +1 au jet de Blessure effectué contre lui.",
         category: "Strength"
     },
+    {
+        slug: "armored-skull",
+        nameFr: "Armure Blindée",
+        nameEn: "Armored Skull",
+        description: "Ce joueur bénéficie d'une protection supplémentaire grâce à son armure blindée.",
+        category: "Strength"
+    },
     // TRAITS
     {
         slug: "animal-savagery",
@@ -568,6 +575,13 @@ export const SKILLS_DEFINITIONS = [
         nameFr: "Arme Secrète*",
         nameEn: "Secret Weapon",
         description: "Ce joueur est expulsé après avoir effectué une action ou à la fin du tour.",
+        category: "Trait"
+    },
+    {
+        slug: "bombardier",
+        nameFr: "Bombardier*",
+        nameEn: "Bombardier",
+        description: "Lorsqu'il est activé et s'il est Debout, ce joueur peut effectuer une action Spéciale 'Lancer de Bombe'.",
         category: "Trait"
     },
     {

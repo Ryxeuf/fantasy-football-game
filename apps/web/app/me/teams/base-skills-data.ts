@@ -52,23 +52,26 @@ export function separateSkills(positionSlug: string, allSkillSlugs: string[]): {
   acquiredSkills: string[];
 } {
   const baseSkills = getBaseSkillSlugs(positionSlug);
-  // Normaliser les compétences de base pour la comparaison
-  const normalizedBaseSkills = baseSkills.map(normalizeSkillSlug);
-  const acquiredSkills: string[] = [];
+  // Créer un Set pour une recherche plus rapide
+  const baseSkillsSet = new Set(baseSkills);
+  const normalizedBaseSkillsSet = new Set(baseSkills.map(normalizeSkillSlug));
+  
+  const baseSkillsResult: string[] = [];
+  const acquiredSkillsResult: string[] = [];
   
   for (const skillSlug of allSkillSlugs) {
     const normalizedSlug = normalizeSkillSlug(skillSlug);
-    if (!normalizedBaseSkills.includes(normalizedSlug) && !baseSkills.includes(skillSlug)) {
-      acquiredSkills.push(skillSlug);
+    // Vérifier si la compétence est une compétence de base (exacte ou normalisée)
+    if (baseSkillsSet.has(skillSlug) || normalizedBaseSkillsSet.has(normalizedSlug)) {
+      baseSkillsResult.push(skillSlug);
+    } else {
+      acquiredSkillsResult.push(skillSlug);
     }
   }
   
   return {
-    baseSkills: allSkillSlugs.filter(slug => {
-      const normalizedSlug = normalizeSkillSlug(slug);
-      return baseSkills.includes(slug) || normalizedBaseSkills.includes(normalizedSlug);
-    }),
-    acquiredSkills
+    baseSkills: baseSkillsResult,
+    acquiredSkills: acquiredSkillsResult
   };
 }
 

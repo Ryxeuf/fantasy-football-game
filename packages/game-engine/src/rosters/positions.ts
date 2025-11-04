@@ -2217,7 +2217,7 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
     positions: [
       {
         slug: "snotling_snotling_lineman",
-        displayName: "Snotling Linemen",
+        displayName: "Snotling",
         cost: 15,
         min: 0,
         max: 16,
@@ -2226,7 +2226,7 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 5,
         av: 6,
-        skills: "dodge,right-stuff,sidestep,stunty,swarming,titchy",
+        skills: "animosity-underworld,projectile-vomit,animal-savagery,always-hungry,really-stupid-2,right-stuff,stunty,titchy",
       },
       {
         slug: "snotling_fungus_flinga",
@@ -2239,11 +2239,11 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 4,
         av: 6,
-        skills: "bombardier,dodge,right-stuff,secret-weapon,sidestep,stunty",
+        skills: "animosity-underworld,projectile-vomit,animal-savagery,really-stupid-2,right-stuff,secret-weapon",
       },
       {
         slug: "snotling_fun_hoppa",
-        displayName: "Fun-hoppa",
+        displayName: "Fan Happa",
         cost: 20,
         min: 0,
         max: 2,
@@ -2252,11 +2252,11 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 5,
         av: 6,
-        skills: "dodge,pogo-stick,right-stuff,sidestep,stunty,swarming",
+        skills: "animosity-all-dwarf-halfling,animosity-all-dwarf-human,pogo-stick,animal-savagery,really-stupid-2,right-stuff",
       },
       {
         slug: "snotling_stilty_runna",
-        displayName: "Stilty Runna",
+        displayName: "Milky Snotling",
         cost: 20,
         min: 0,
         max: 2,
@@ -2265,7 +2265,7 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
         ag: 3,
         pa: 5,
         av: 6,
-        skills: "dodge,right-stuff,sidestep,sprint,stunty,swarming",
+        skills: "animosity-underworld,pogo-stick,animal-savagery,really-stupid-2,right-stuff,swarming",
       },
       {
         slug: "snotling_pump_wagon",
@@ -2278,7 +2278,7 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
         ag: 5,
         pa: 6,
         av: 9,
-        skills: "dirty-player-1,juggernaut,loner-4,mighty-blow-1,secret-weapon,stand-firm",
+        skills: "armored-skull,dirty-player-1,juggernaut,mighty-blow-1,secret-weapon,stand-firm,thick-skull",
       },
       {
         slug: "snotling_trained_troll",

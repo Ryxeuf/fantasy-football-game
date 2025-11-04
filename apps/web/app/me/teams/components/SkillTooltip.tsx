@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { parseSkillSlugs } from "@bb/game-engine";
 import { getSkillDescription, parseSkills, slugsToDisplayNames } from "../skills-data";
 import { separateSkills } from "../base-skills-data";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -9,15 +10,18 @@ interface SkillTooltipProps {
   teamName?: string;
   position?: string;     // Slug de la position (ex: "skaven_thrower")
   className?: string;
+  useDirectParsing?: boolean; // Si true, utilise parseSkillSlugs directement (pour les positions du roster)
 }
 
-export default function SkillTooltip({ skillsString, teamName, position, className = "" }: SkillTooltipProps) {
+export default function SkillTooltip({ skillsString, teamName, position, className = "", useDirectParsing = false }: SkillTooltipProps) {
   const { language } = useLanguage();
   const [hoveredSkill, setHoveredSkill] = useState<string | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
   // Parser les slugs de compétences
-  const skillSlugs = parseSkills(skillsString);
+  // Si useDirectParsing est true, on utilise parseSkillSlugs directement (pour les positions du roster)
+  // Sinon, on utilise parseSkills qui peut transformer les noms français en slugs (pour les joueurs)
+  const skillSlugs = useDirectParsing ? parseSkillSlugs(skillsString) : parseSkills(skillsString);
   
   // Séparer les compétences de base et acquises si on a une position
   let baseSkillSlugs: string[] = [];

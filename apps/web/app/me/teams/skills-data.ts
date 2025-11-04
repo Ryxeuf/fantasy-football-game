@@ -211,9 +211,10 @@ const FRENCH_TO_ENGLISH_SLUGS: Record<string, string> = {
   "kick team-mate": "kick-team-mate",
   "kick team mate": "kick-team-mate",
   // Alias et variantes
-  "armored-skull": "thick-skull", // Alias probable pour Thick Skull
-  "armoured-skull": "thick-skull",
-  "crâne-blindé": "thick-skull",
+  "armored-skull": "armored-skull",
+  "armoured-skull": "armored-skull",
+  "crâne-blindé": "armored-skull",
+  "armure-blindée": "armored-skull",
 };
 
 /**

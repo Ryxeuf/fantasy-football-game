@@ -1,8 +1,18 @@
 "use client";
-import { TEAM_ROSTERS } from "@bb/game-engine";
+import { TEAM_ROSTERS, getRerollCost } from "@bb/game-engine";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import SkillTooltip from "../../me/teams/components/SkillTooltip";
+
+// Règles spéciales par équipe
+const TEAM_SPECIAL_RULES: Record<string, Array<{ name: string; description: string }>> = {
+  snotling: [
+    { name: "Charge & Concussion", description: "Règle spéciale des Snotlings concernant les charges et les commotions." },
+    { name: "Dédicace des Fans", description: "Règle spéciale liée aux fans dévoués." },
+    { name: "L'Union fait la Force", description: "Règle spéciale sur l'unité de l'équipe." }
+  ],
+  // Ajouter d'autres équipes au fur et à mesure
+};
 
 export default function TeamDetailPage() {
   const params = useParams();
@@ -150,12 +160,71 @@ export default function TeamDetailPage() {
                       skillsString={position.skills}
                       position={position.slug}
                       teamName={slug}
+                      useDirectParsing={true}
                     />
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {/* Règles spéciales */}
+      {TEAM_SPECIAL_RULES[slug] && TEAM_SPECIAL_RULES[slug].length > 0 && (
+        <div className="bg-white rounded-lg border overflow-hidden">
+          <div className="bg-gray-50 px-6 py-3 border-b">
+            <h2 className="text-lg font-semibold">Règles spéciales</h2>
+          </div>
+          <div className="p-6">
+            <div className="flex flex-wrap gap-3">
+              {TEAM_SPECIAL_RULES[slug].map((rule, index) => (
+                <button
+                  key={index}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  title={rule.description}
+                >
+                  {rule.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Staff */}
+      <div className="bg-white rounded-lg border overflow-hidden">
+        <div className="bg-gray-50 px-6 py-3 border-b">
+          <h2 className="text-lg font-semibold">Staff</h2>
+          <p className="text-sm text-gray-600 mt-1">
+            Options disponibles pour équiper votre équipe
+          </p>
+        </div>
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+              <div className="font-semibold text-lg mb-2">Cheerleader</div>
+              <div className="text-2xl font-bold text-emerald-600 mb-1">10k po</div>
+              <div className="text-sm text-gray-600">Par cheerleader (max 12)</div>
+            </div>
+            <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+              <div className="font-semibold text-lg mb-2">Assistant coach</div>
+              <div className="text-2xl font-bold text-emerald-600 mb-1">10k po</div>
+              <div className="text-sm text-gray-600">Par assistant (max 6)</div>
+            </div>
+            <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+              <div className="font-semibold text-lg mb-2">Relance(s)</div>
+              <div className="text-2xl font-bold text-emerald-600 mb-1">
+                {Math.round(getRerollCost(slug) / 1000)}k po
+              </div>
+              <div className="text-sm text-gray-600">Par relance (max 8)</div>
+            </div>
+            <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+              <div className="font-semibold text-lg mb-2">Apothicaire</div>
+              <div className="text-2xl font-bold text-emerald-600 mb-1">50k po</div>
+              <div className="text-sm text-gray-600">Un seul par équipe</div>
+            </div>
+          </div>
         </div>
       </div>
 
