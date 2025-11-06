@@ -1,3 +1,15 @@
+## [1.4.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.3.0...v1.4.0) (2025-11-06)
+
+
+### ✨ Features
+
+* ajout de nouvelles compétences et mise à jour des slugs pour les variantes loner ([afa12fc](https://github.com/Ryxeuf/fantasy-football-game/commit/afa12fc9c1e368cd259482a366916e804b911f7a))
+
+
+### 🐛 Bug Fixes
+
+* corrections roster Snotlings et amélioration affichage compétences ([2563cc3](https://github.com/Ryxeuf/fantasy-football-game/commit/2563cc39b86db94b7499ebf712a72808a84e7ce2))
+
 ## [1.3.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.2.0...v1.3.0) (2025-11-01)
 
 
