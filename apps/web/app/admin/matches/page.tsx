@@ -38,32 +38,70 @@ export default function AdminMatchesPage() {
   }, []);
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Parties</h1>
-      {error && <p className="text-red-600 text-sm">{error}</p>}
-      <div className="overflow-x-auto border rounded">
-        <table className="min-w-full text-sm">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="text-left p-2">ID</th>
-              <th className="text-left p-2">Statut</th>
-              <th className="text-left p-2">Seed</th>
-              <th className="text-left p-2">Créée le</th>
-            </tr>
-          </thead>
-          <tbody>
-            {matches.map((m) => (
-              <tr key={m.id} className="odd:bg-white even:bg-gray-50">
-                <td className="p-2 font-mono">{m.id}</td>
-                <td className="p-2">{m.status}</td>
-                <td className="p-2 font-mono">{m.seed}</td>
-                <td className="p-2">
-                  {new Date(m.createdAt).toLocaleString()}
-                </td>
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-heading font-bold text-nuffle-anthracite mb-1">
+          🎮 Parties
+        </h1>
+        <p className="text-sm text-gray-600">
+          Liste de toutes les parties
+        </p>
+      </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-center gap-2">
+          <span>⚠️</span>
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* Table */}
+      <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead className="bg-gradient-to-r from-nuffle-gold/10 to-nuffle-gold/5">
+              <tr>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
+                  ID
+                </th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
+                  Statut
+                </th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
+                  Seed
+                </th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
+                  Créée le
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {matches.map((m) => (
+                <tr
+                  key={m.id}
+                  className="hover:bg-gray-50 transition-colors duration-150"
+                >
+                  <td className="px-6 py-4 font-mono text-xs text-gray-600">
+                    {m.id}
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {m.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 font-mono text-xs text-gray-600">
+                    {m.seed}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-600">
+                    {new Date(m.createdAt).toLocaleString()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

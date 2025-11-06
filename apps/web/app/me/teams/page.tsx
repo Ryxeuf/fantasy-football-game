@@ -17,8 +17,9 @@ async function fetchJSON(path: string) {
 }
 
 export default function MyTeamsPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [teams, setTeams] = useState<any[]>([]);
+  const [rosterNames, setRosterNames] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [roster, setRoster] = useState("skaven");
@@ -35,11 +36,28 @@ export default function MyTeamsPage() {
         }
         const { teams } = await fetchJSON("/team/mine");
         setTeams(teams);
+        
+        // Charger les noms des rosters depuis l'API selon la langue
+        const lang = language === "en" ? "en" : "fr";
+        try {
+          const API_BASE = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8201';
+          const rostersResponse = await fetch(`${API_BASE}/api/rosters?lang=${lang}`);
+          if (rostersResponse.ok) {
+            const rostersData = await rostersResponse.json();
+            const namesMap: Record<string, string> = {};
+            rostersData.rosters.forEach((r: { slug: string; name: string }) => {
+              namesMap[r.slug] = r.name;
+            });
+            setRosterNames(namesMap);
+          }
+        } catch (err) {
+          console.error("Erreur lors du chargement des noms de rosters:", err);
+        }
       } catch (e: any) {
         setError(e.message || t.teams.error);
       }
     })();
-  }, [t]);
+  }, [t, language]);
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
@@ -137,7 +155,7 @@ export default function MyTeamsPage() {
             href={`/me/teams/${team.id}`}
           >
             <div className="font-semibold">{team.name}</div>
-            <div className="text-sm text-gray-600">{t.teams.roster}: {team.roster}</div>
+            <div className="text-sm text-gray-600">{t.teams.roster}: {rosterNames[team.roster] || team.roster}</div>
           </a>
         ))}
       </div>

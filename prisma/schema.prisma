@@ -115,3 +115,124 @@ model TeamStarPlayer {
   @@unique([teamId, starPlayerSlug]) // Un même Star Player ne peut être recruté qu'une fois par équipe
   @@index([teamId])
 }
+
+// Modèle pour les compétences (skills)
+model Skill {
+  id          String   @id @default(cuid())
+  slug        String   @unique // Identifiant unique (ex: "block", "dodge")
+  nameFr      String   // Nom français (ex: "Blocage")
+  nameEn      String   // Nom anglais (ex: "Block")
+  description String   // Description française de la compétence
+  descriptionEn String? // Description anglaise de la compétence (optionnelle pour compatibilité)
+  category    String   // "General" | "Agility" | "Strength" | "Passing" | "Mutation" | "Trait"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  positionSkills    PositionSkill[]
+  starPlayerSkills  StarPlayerSkill[]
+}
+
+// Modèle pour les rosters d'équipes
+model Roster {
+  id          String   @id @default(cuid())
+  slug        String   @unique // Identifiant unique (ex: "skaven", "lizardmen")
+  name        String   // Nom d'affichage en français (ex: "Skavens")
+  nameEn      String   // Nom d'affichage en anglais (ex: "Skaven")
+  budget      Int      // Budget de départ en kpo
+  tier        String   // "I" | "II" | "III"
+  naf         Boolean  @default(false) // Disponible dans NAF
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  positions     Position[]
+  hirableBy     StarPlayerHirableBy[] // Règles régionales qui peuvent recruter des star players
+}
+
+// Modèle pour les positions dans les rosters
+model Position {
+  id          String   @id @default(cuid())
+  roster      Roster   @relation(fields: [rosterId], references: [id], onDelete: Cascade)
+  rosterId    String
+  slug        String   // Slug unique (ex: "skaven_lineman")
+  displayName String   // Nom d'affichage (ex: "Lineman")
+  cost        Int      // Coût en kpo
+  min         Int      // Minimum requis
+  max         Int      // Maximum autorisé
+  ma          Int      // Movement Allowance
+  st          Int      // Strength
+  ag          Int      // Agility
+  pa          Int      // Passing
+  av          Int      // Armour Value
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  skills      PositionSkill[]
+  
+  @@unique([rosterId, slug])
+  @@index([rosterId])
+}
+
+// Relation many-to-many entre Position et Skill
+model PositionSkill {
+  id         String   @id @default(cuid())
+  position   Position @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  positionId String
+  skill      Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  skillId    String
+  
+  @@unique([positionId, skillId])
+  @@index([positionId])
+  @@index([skillId])
+}
+
+// Modèle pour les Star Players
+model StarPlayer {
+  id          String   @id @default(cuid())
+  slug        String   @unique // Identifiant unique (ex: "griff_oberwald")
+  displayName String   // Nom d'affichage
+  cost        Int      // Coût en po (pièces d'or)
+  ma          Int      // Movement Allowance
+  st          Int      // Strength
+  ag          Int      // Agility (valeur cible, ex: 3 pour 3+)
+  pa          Int?     // Passing (valeur cible, ex: 2 pour 2+, null pour -)
+  av          Int      // Armour Value (valeur cible, ex: 9 pour 9+)
+  specialRule String? // Règle spéciale du joueur
+  imageUrl    String? // URL de l'image du joueur
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  skills      StarPlayerSkill[]
+  hirableBy   StarPlayerHirableBy[]
+}
+
+// Relation many-to-many entre StarPlayer et Skill
+model StarPlayerSkill {
+  id          String     @id @default(cuid())
+  starPlayer  StarPlayer @relation(fields: [starPlayerId], references: [id], onDelete: Cascade)
+  starPlayerId String
+  skill       Skill      @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  skillId     String
+  
+  @@unique([starPlayerId, skillId])
+  @@index([starPlayerId])
+  @@index([skillId])
+}
+
+// Relation many-to-many entre StarPlayer et Roster (pour les règles régionales)
+model StarPlayerHirableBy {
+  id          String     @id @default(cuid())
+  starPlayer  StarPlayer @relation(fields: [starPlayerId], references: [id], onDelete: Cascade)
+  starPlayerId String
+  roster      Roster?    @relation(fields: [rosterId], references: [id], onDelete: Cascade)
+  rosterId    String?
+  rule        String     // Règle régionale (ex: "all", "old_world_classic", etc.)
+  
+  @@unique([starPlayerId, rosterId, rule])
+  @@index([starPlayerId])
+  @@index([rosterId])
+  @@index([rule])
+}

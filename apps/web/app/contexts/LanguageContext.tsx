@@ -11,25 +11,19 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  // Initialiser la langue depuis localStorage de manière synchrone si possible
-  const getInitialLanguage = (): Language => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("language") as Language | null;
-      if (stored === "fr" || stored === "en") {
-        return stored;
-      }
-    }
-    return "fr";
-  };
-
-  const [language, setLanguageState] = useState<Language>(getInitialLanguage);
+  // Toujours initialiser à "fr" pour éviter les erreurs d'hydratation
+  // La langue sera mise à jour après le montage côté client
+  const [language, setLanguageState] = useState<Language>("fr");
 
   useEffect(() => {
-    // S'assurer que la langue est chargée au montage
+    // Après le montage, charger la langue depuis localStorage
     const stored = localStorage.getItem("language") as Language | null;
-    if ((stored === "fr" || stored === "en") && stored !== language) {
+    if (stored === "fr" || stored === "en") {
       setLanguageState(stored);
     }
+  }, []);
+
+  useEffect(() => {
     // Mettre à jour l'attribut lang du html
     if (typeof document !== "undefined") {
       document.documentElement.lang = language;

@@ -1,8 +1,12 @@
 "use client";
-import { TEAM_ROSTERS, getRerollCost } from "@bb/game-engine";
+import { getRerollCost } from "@bb/game-engine";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import SkillTooltip from "../../me/teams/components/SkillTooltip";
+import { useLanguage } from "../../contexts/LanguageContext";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8201';
 
 // Règles spéciales par équipe
 const TEAM_SPECIAL_RULES: Record<string, Array<{ name: string; description: string }>> = {
@@ -14,15 +18,61 @@ const TEAM_SPECIAL_RULES: Record<string, Array<{ name: string; description: stri
   // Ajouter d'autres équipes au fur et à mesure
 };
 
+// Fonction pour traduire les noms de positions en français
+function translatePositionName(displayName: string): string {
+  const translations: Record<string, string> = {
+    // Hommes-Lézards
+    "Skink Runner": "Skink Coureur",
+    "Chameleon Skink": "Skink Caméléon",
+    "Saurus": "Saurus",
+    "Kroxigor": "Kroxigor",
+    // Ajouter d'autres traductions au besoin
+  };
+  return translations[displayName] || displayName;
+}
+
 export default function TeamDetailPage() {
   const params = useParams();
   const slug = params?.slug as string;
+  const { language } = useLanguage();
+  const [team, setTeam] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!slug || !TEAM_ROSTERS[slug]) {
+  useEffect(() => {
+    async function fetchRoster() {
+      if (!slug) return;
+      try {
+        setLoading(true);
+        const lang = language === "en" ? "en" : "fr";
+        const response = await fetch(`${API_BASE}/api/rosters/${slug}?lang=${lang}`);
+        if (!response.ok) {
+          throw new Error("Équipe introuvable");
+        }
+        const data = await response.json();
+        setTeam(data.roster);
+      } catch (err: any) {
+        setError(err.message || "Erreur lors du chargement");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchRoster();
+  }, [slug, language]);
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto p-6">
+        <p>Chargement...</p>
+      </div>
+    );
+  }
+
+  if (error || !team) {
     return (
       <div className="max-w-7xl mx-auto p-6">
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-          Équipe introuvable
+          {error || "Équipe introuvable"}
         </div>
         <Link
           href="/teams"
@@ -34,8 +84,7 @@ export default function TeamDetailPage() {
     );
   }
 
-  const team = TEAM_ROSTERS[slug];
-  const positions = team.positions.sort((a, b) => a.displayName.localeCompare(b.displayName));
+  const positions = team.positions.sort((a: any, b: any) => a.displayName.localeCompare(b.displayName));
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
@@ -53,7 +102,7 @@ export default function TeamDetailPage() {
           <h1 className="text-4xl font-bold">{team.name}</h1>
           <div className="flex items-center gap-3 mt-2">
             <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-sm font-medium">
-              Tier {team.tier}
+              Niveau {team.tier}
             </span>
             {team.naf && (
               <span className="px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 text-sm font-medium">
@@ -81,8 +130,8 @@ export default function TeamDetailPage() {
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <div className="text-sm font-medium text-gray-700 mb-1">Tier</div>
-              <div className="text-lg font-semibold text-gray-900">Tier {team.tier}</div>
+              <div className="text-sm font-medium text-gray-700 mb-1">Niveau</div>
+              <div className="text-lg font-semibold text-gray-900">Niveau {team.tier}</div>
               <div className="text-xs text-gray-500 mt-1">
                 {team.tier === "I" && "Équipe de niveau supérieur"}
                 {team.tier === "II" && "Équipe de niveau moyen"}
@@ -144,7 +193,7 @@ export default function TeamDetailPage() {
             <tbody className="divide-y divide-gray-200">
               {positions.map((position) => (
                 <tr key={position.slug} className="hover:bg-gray-50">
-                  <td className="p-4 font-medium">{position.displayName}</td>
+                  <td className="p-4 font-medium">{translatePositionName(position.displayName)}</td>
                   <td className="p-4 text-center font-mono text-sm">
                     {position.cost}k po
                   </td>
@@ -208,7 +257,7 @@ export default function TeamDetailPage() {
               <div className="text-sm text-gray-600">Par cheerleader (max 12)</div>
             </div>
             <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-              <div className="font-semibold text-lg mb-2">Assistant coach</div>
+              <div className="font-semibold text-lg mb-2">Assistant entraîneur</div>
               <div className="text-2xl font-bold text-emerald-600 mb-1">10k po</div>
               <div className="text-sm text-gray-600">Par assistant (max 6)</div>
             </div>

@@ -1,7 +1,7 @@
 # BlooBowl - Makefile
 # Commandes utiles pour le développement du jeu Blood Bowl
 
-.PHONY: help install dev dev-web dev-mobile dev-server dev-engine build clean lint format typecheck test docker docker-up docker-down docker-logs setup db-reset-pg
+.PHONY: help install dev dev-web dev-mobile dev-server dev-engine build clean lint format typecheck test docker docker-up docker-down docker-logs setup db-seed db-reset-pg db-migrate db-migrate-deploy db-migrate-status db-migrate-data
 
 # Variables
 PNPM := pnpm
@@ -251,13 +251,41 @@ help-docker: ## Aide pour Docker
 .DEFAULT_GOAL := help
 
 # Base de données Postgres
+db-seed: ## Exécute le seed pour remplir la base de données (rosters, positions, star players, compétences)
+	@echo "🌱 Exécution du seed de la base de données..."
+	@cd apps/server && $(PNPM) run db:seed
+	@echo "✅ Seed terminé avec succès"
+
 db-reset-pg: ## Réinitialise complètement Postgres (drop + recreate schema + seed)
 	@echo "🗄️  Réinitialisation complète de la base Postgres..."
-	@npx prisma migrate reset --force --skip-seed --schema prisma/schema.prisma
-	@echo "📤 Synchronisation du schéma..."
-	@npx prisma db push --schema prisma/schema.prisma
+	@echo "⚠️  Suppression de toutes les données..."
+	@echo "📤 Synchronisation du schéma (db push avec force-reset)..."
+	@PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION="oui" npx prisma db push --schema prisma/schema.prisma --accept-data-loss --force-reset
 	@echo "🧬 Régénération du client Prisma..."
 	@npx prisma generate --schema prisma/schema.prisma
 	@echo "🌱 Import des fixtures (seed)..."
 	@cd apps/server && pnpm run db:seed
 	@echo "✅ Base Postgres réinitialisée depuis zéro avec les fixtures"
+
+db-migrate: ## Applique les migrations Prisma en développement (crée et applique les nouvelles migrations)
+	@echo "🔄 Application des migrations Prisma en développement..."
+	@npx prisma migrate dev --schema prisma/schema.prisma
+	@echo "🧬 Régénération du client Prisma..."
+	@npx prisma generate --schema prisma/schema.prisma
+	@echo "✅ Migrations appliquées et client régénéré"
+
+db-migrate-deploy: ## Applique les migrations Prisma en production (sans créer de nouvelles migrations)
+	@echo "🚀 Application des migrations Prisma en production..."
+	@npx prisma migrate deploy --schema prisma/schema.prisma
+	@echo "🧬 Régénération du client Prisma..."
+	@npx prisma generate --schema prisma/schema.prisma
+	@echo "✅ Migrations appliquées et client régénéré"
+
+db-migrate-status: ## Vérifie le statut des migrations Prisma
+	@echo "📊 Statut des migrations Prisma..."
+	@npx prisma migrate status --schema prisma/schema.prisma
+
+db-migrate-data: ## Exécute le script de migration des données statiques (rosters, positions, star players, compétences)
+	@echo "📦 Migration des données statiques vers la base de données..."
+	@cd apps/server && $(PNPM) exec tsx migrate-static-data-to-db.ts
+	@echo "✅ Migration des données terminée"

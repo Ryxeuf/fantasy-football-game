@@ -193,55 +193,75 @@ export default function AdminUsersPage() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Header */}
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Gestion des Utilisateurs</h1>
+        <div>
+          <h1 className="text-3xl font-heading font-bold text-nuffle-anthracite mb-1">
+            👥 Gestion des Utilisateurs
+          </h1>
+          <p className="text-sm text-gray-600">
+            Gérez les utilisateurs et leurs permissions
+          </p>
+        </div>
         {pagination && (
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-gray-600 bg-white px-4 py-2 rounded-lg border border-gray-200">
             {pagination.total} utilisateur{pagination.total !== 1 ? "s" : ""}
           </div>
         )}
       </div>
 
       {/* Filtres et recherche */}
-      <div className="flex gap-4 items-center flex-wrap">
-        <div className="flex-1 min-w-[200px]">
-          <input
-            type="text"
-            placeholder="Rechercher (email, nom)..."
-            value={search}
-            onChange={(e) => handleSearch(e.target.value)}
-            className="w-full px-3 py-2 border rounded text-sm"
-          />
+      <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4">
+        <div className="flex gap-4 items-center flex-wrap">
+          <div className="flex-1 min-w-[200px]">
+            <input
+              type="text"
+              placeholder="Rechercher (email, nom)..."
+              value={search}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all"
+            />
+          </div>
+          <select
+            value={roleFilter}
+            onChange={(e) => {
+              setRoleFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all bg-white"
+          >
+            <option value="">Tous les rôles</option>
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+          </select>
         </div>
-        <select
-          value={roleFilter}
-          onChange={(e) => {
-            setRoleFilter(e.target.value);
-            setCurrentPage(1);
-          }}
-          className="px-3 py-2 border rounded text-sm"
-        >
-          <option value="">Tous les rôles</option>
-          <option value="user">User</option>
-          <option value="admin">Admin</option>
-        </select>
       </div>
 
-      {error && <p className="text-red-600 text-sm">{error}</p>}
+      {/* Error Message */}
+      {error && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-center gap-2">
+          <span>⚠️</span>
+          <span>{error}</span>
+        </div>
+      )}
 
       {/* Tableau */}
-      <div className="overflow-x-auto border rounded bg-white">
+      <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-gray-500">Chargement...</div>
+          <div className="p-8 text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-nuffle-gold mb-4"></div>
+            <p className="text-gray-500">Chargement...</p>
+          </div>
         ) : users.length === 0 ? (
           <div className="p-8 text-center text-gray-500">Aucun utilisateur trouvé</div>
         ) : (
-          <table className="min-w-full text-sm">
-            <thead className="bg-gray-50">
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead className="bg-gradient-to-r from-nuffle-gold/10 to-nuffle-gold/5">
               <tr>
                 <th
-                  className="text-left p-3 cursor-pointer hover:bg-gray-100"
+                  className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider cursor-pointer hover:bg-nuffle-gold/20 transition-colors"
                   onClick={() => handleSort("email")}
                 >
                   <div className="flex items-center gap-2">
@@ -249,7 +269,7 @@ export default function AdminUsersPage() {
                   </div>
                 </th>
                 <th
-                  className="text-left p-3 cursor-pointer hover:bg-gray-100"
+                  className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider cursor-pointer hover:bg-nuffle-gold/20 transition-colors"
                   onClick={() => handleSort("name")}
                 >
                   <div className="flex items-center gap-2">
@@ -257,66 +277,74 @@ export default function AdminUsersPage() {
                   </div>
                 </th>
                 <th
-                  className="text-left p-3 cursor-pointer hover:bg-gray-100"
+                  className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider cursor-pointer hover:bg-nuffle-gold/20 transition-colors"
                   onClick={() => handleSort("role")}
                 >
                   <div className="flex items-center gap-2">
                     Rôle <SortIcon column="role" />
                   </div>
                 </th>
-                <th className="text-left p-3">Statistiques</th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
+                  Statistiques
+                </th>
                 <th
-                  className="text-left p-3 cursor-pointer hover:bg-gray-100"
+                  className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider cursor-pointer hover:bg-nuffle-gold/20 transition-colors"
                   onClick={() => handleSort("createdAt")}
                 >
                   <div className="flex items-center gap-2">
                     Créé le <SortIcon column="createdAt" />
                   </div>
                 </th>
-                <th className="text-left p-3">Actions</th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-gray-200">
               {users.map((u) => (
                 <tr
                   key={u.id}
-                  className="odd:bg-white even:bg-gray-50 hover:bg-blue-50 cursor-pointer"
+                  className="hover:bg-gray-50 cursor-pointer transition-colors duration-150"
                   onClick={() => loadUserDetails(u.id)}
                 >
-                  <td className="p-3 font-mono text-xs">{u.email}</td>
-                  <td className="p-3">{u.name || "—"}</td>
-                  <td className="p-3">
+                  <td className="px-6 py-4 font-mono text-xs text-gray-600">
+                    {u.email}
+                  </td>
+                  <td className="px-6 py-4 font-medium text-gray-900">
+                    {u.name || "—"}
+                  </td>
+                  <td className="px-6 py-4">
                     <span
-                      className={`px-2 py-1 rounded text-xs font-semibold ${
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         u.role === "admin"
-                          ? "bg-purple-100 text-purple-700"
-                          : "bg-gray-100 text-gray-700"
+                          ? "bg-purple-100 text-purple-800"
+                          : "bg-gray-100 text-gray-800"
                       }`}
                     >
                       {u.role}
                     </span>
                   </td>
-                  <td className="p-3">
+                  <td className="px-6 py-4">
                     <div className="flex gap-3 text-xs text-gray-600">
                       <span title="Équipes">⚽ {u._count.teams}</span>
                       <span title="Parties">🎲 {u._count.matches}</span>
                       <span title="Parties créées">➕ {u._count.createdMatches}</span>
                     </div>
                   </td>
-                  <td className="p-3 text-xs text-gray-600">
+                  <td className="px-6 py-4 text-sm text-gray-600">
                     {new Date(u.createdAt).toLocaleDateString("fr-FR", {
                       year: "numeric",
                       month: "short",
                       day: "numeric",
                     })}
                   </td>
-                  <td className="p-3" onClick={(e) => e.stopPropagation()}>
+                  <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                     <div className="flex gap-2">
                       <select
                         value={u.role}
                         onChange={(e) => handleRoleChange(u.id, e.target.value)}
                         disabled={actionLoading === u.id}
-                        className="px-2 py-1 border rounded text-xs"
+                        className="px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all bg-white disabled:opacity-50"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <option value="user">User</option>
@@ -325,10 +353,11 @@ export default function AdminUsersPage() {
                       <button
                         onClick={() => handleDelete(u.id, u.email)}
                         disabled={actionLoading === u.id}
-                        className="px-2 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700 disabled:opacity-50"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 disabled:opacity-50 transition-colors text-sm font-medium"
                         title="Supprimer"
                       >
-                        {actionLoading === u.id ? "..." : "🗑️"}
+                        <span>{actionLoading === u.id ? "⏳" : "🗑️"}</span>
+                        <span>Supprimer</span>
                       </button>
                     </div>
                   </td>
@@ -336,27 +365,28 @@ export default function AdminUsersPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 
       {/* Pagination */}
       {pagination && pagination.totalPages > 1 && (
-        <div className="flex justify-between items-center">
-          <div className="text-sm text-gray-600">
+        <div className="flex justify-between items-center bg-white rounded-xl shadow-lg border border-gray-200 p-4">
+          <div className="text-sm text-gray-600 font-medium">
             Page {pagination.page} sur {pagination.totalPages}
           </div>
           <div className="flex gap-2">
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="px-3 py-1 border rounded disabled:opacity-50"
+              className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Précédent
             </button>
             <button
               onClick={() => setCurrentPage((p) => Math.min(pagination.totalPages, p + 1))}
               disabled={currentPage === pagination.totalPages}
-              className="px-3 py-1 border rounded disabled:opacity-50"
+              className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Suivant
             </button>
@@ -374,17 +404,19 @@ export default function AdminUsersPage() {
           }}
         >
           <div
-            className="bg-white rounded-lg p-6 max-w-3xl max-h-[90vh] overflow-y-auto w-full mx-4"
+            className="bg-white rounded-xl shadow-2xl p-6 max-w-3xl max-h-[90vh] overflow-y-auto w-full mx-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Détails de l'utilisateur</h2>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-heading font-bold text-nuffle-anthracite">
+                👤 Détails de l'utilisateur
+              </h2>
               <button
                 onClick={() => {
                   setSelectedUser(null);
                   setUserDetails(null);
                 }}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-500 hover:text-gray-700 text-2xl leading-none transition-colors"
               >
                 ✕
               </button>

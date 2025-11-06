@@ -1,8 +1,7 @@
 import { Router } from "express";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
+import { prisma } from "../prisma";
 import { 
-  STAR_PLAYERS, 
-  getStarPlayerBySlug, 
   getAvailableStarPlayers, 
   TEAM_REGIONAL_RULES,
   type StarPlayerDefinition 
@@ -12,15 +11,42 @@ const router = Router();
 
 /**
  * GET /api/star-players
- * Obtenir la liste complète des star players
+ * Obtenir la liste complète des star players depuis la base de données
  */
-router.get("/", (req, res) => {
+router.get("/", async (req, res) => {
   try {
-    const starPlayers = Object.values(STAR_PLAYERS);
+    const starPlayers = await prisma.starPlayer.findMany({
+      include: {
+        skills: {
+          include: { skill: true },
+        },
+        hirableBy: {
+          include: { roster: true },
+        },
+      },
+      orderBy: { displayName: "asc" },
+    });
+
+    // Transformer les données pour correspondre au format attendu
+    const transformedStarPlayers = starPlayers.map((sp) => ({
+      slug: sp.slug,
+      displayName: sp.displayName,
+      cost: sp.cost,
+      ma: sp.ma,
+      st: sp.st,
+      ag: sp.ag,
+      pa: sp.pa,
+      av: sp.av,
+      specialRule: sp.specialRule,
+      imageUrl: sp.imageUrl,
+      skills: sp.skills.map((sps) => sps.skill.slug).join(","),
+      hirableBy: sp.hirableBy.map((h) => h.roster?.slug || h.rule),
+    }));
+
     res.json({
       success: true,
-      count: starPlayers.length,
-      data: starPlayers
+      count: transformedStarPlayers.length,
+      data: transformedStarPlayers
     });
   } catch (error) {
     console.error("Error fetching star players:", error);
@@ -33,12 +59,22 @@ router.get("/", (req, res) => {
 
 /**
  * GET /api/star-players/:slug
- * Obtenir les détails d'un star player spécifique
+ * Obtenir les détails d'un star player spécifique depuis la base de données
  */
-router.get("/:slug", (req, res) => {
+router.get("/:slug", async (req, res) => {
   try {
     const { slug } = req.params;
-    const starPlayer = getStarPlayerBySlug(slug);
+    const starPlayer = await prisma.starPlayer.findUnique({
+      where: { slug },
+      include: {
+        skills: {
+          include: { skill: true },
+        },
+        hirableBy: {
+          include: { roster: true },
+        },
+      },
+    });
 
     if (!starPlayer) {
       return res.status(404).json({
@@ -47,9 +83,25 @@ router.get("/:slug", (req, res) => {
       });
     }
 
+    // Transformer les données
+    const transformedStarPlayer = {
+      slug: starPlayer.slug,
+      displayName: starPlayer.displayName,
+      cost: starPlayer.cost,
+      ma: starPlayer.ma,
+      st: starPlayer.st,
+      ag: starPlayer.ag,
+      pa: starPlayer.pa,
+      av: starPlayer.av,
+      specialRule: starPlayer.specialRule,
+      imageUrl: starPlayer.imageUrl,
+      skills: starPlayer.skills.map((sps) => sps.skill.slug).join(","),
+      hirableBy: starPlayer.hirableBy.map((h) => h.roster?.slug || h.rule),
+    };
+
     res.json({
       success: true,
-      data: starPlayer
+      data: transformedStarPlayer
     });
   } catch (error) {
     console.error("Error fetching star player:", error);
@@ -62,30 +114,75 @@ router.get("/:slug", (req, res) => {
 
 /**
  * GET /api/star-players/available/:roster
- * Obtenir les star players disponibles pour un roster d'équipe donné
+ * Obtenir les star players disponibles pour un roster d'équipe donné depuis la base de données
  */
-router.get("/available/:roster", (req, res) => {
+router.get("/available/:roster", async (req, res) => {
   try {
     const { roster } = req.params;
     
-    // Vérifier que le roster existe dans TEAM_REGIONAL_RULES
-    const regionalRules = TEAM_REGIONAL_RULES[roster];
+    // Vérifier que le roster existe
+    const rosterExists = await prisma.roster.findUnique({
+      where: { slug: roster },
+    });
     
-    if (!regionalRules) {
+    if (!rosterExists) {
       return res.status(404).json({
         success: false,
         error: "Unknown team roster"
       });
     }
 
-    const availablePlayers = getAvailableStarPlayers(roster, regionalRules);
+    // Récupérer les règles régionales depuis le game-engine (pour l'instant)
+    const regionalRules = TEAM_REGIONAL_RULES[roster];
+    
+    // Récupérer tous les star players disponibles pour ce roster
+    // Un star player est disponible si :
+    // - hirableBy contient "all"
+    // - hirableBy contient le slug du roster
+    // - hirableBy contient une règle régionale qui correspond au roster
+    const starPlayers = await prisma.starPlayer.findMany({
+      where: {
+        OR: [
+          { hirableBy: { some: { rule: "all" } } },
+          { hirableBy: { some: { roster: { slug: roster } } } },
+          ...(regionalRules ? regionalRules.map((rule) => ({
+            hirableBy: { some: { rule } },
+          })) : []),
+        ],
+      },
+      include: {
+        skills: {
+          include: { skill: true },
+        },
+        hirableBy: {
+          include: { roster: true },
+        },
+      },
+      orderBy: { displayName: "asc" },
+    });
+
+    // Transformer les données
+    const transformedStarPlayers = starPlayers.map((sp) => ({
+      slug: sp.slug,
+      displayName: sp.displayName,
+      cost: sp.cost,
+      ma: sp.ma,
+      st: sp.st,
+      ag: sp.ag,
+      pa: sp.pa,
+      av: sp.av,
+      specialRule: sp.specialRule,
+      imageUrl: sp.imageUrl,
+      skills: sp.skills.map((sps) => sps.skill.slug).join(","),
+      hirableBy: sp.hirableBy.map((h) => h.roster?.slug || h.rule),
+    }));
 
     res.json({
       success: true,
       roster,
       regionalRules,
-      count: availablePlayers.length,
-      starPlayers: availablePlayers // ✨ Changé de "data" à "starPlayers"
+      count: transformedStarPlayers.length,
+      starPlayers: transformedStarPlayers
     });
   } catch (error) {
     console.error("Error fetching available star players:", error);
@@ -128,45 +225,80 @@ router.get("/regional-rules/:roster", (req, res) => {
 
 /**
  * GET /api/star-players/search
- * Rechercher des star players par nom ou compétences
+ * Rechercher des star players par nom ou compétences depuis la base de données
  */
-router.get("/search", (req, res) => {
+router.get("/search", async (req, res) => {
   try {
     const { q, skill, minCost, maxCost } = req.query;
-    let starPlayers = Object.values(STAR_PLAYERS);
+    const where: any = {};
 
     // Filtrer par nom
     if (q && typeof q === 'string') {
-      const query = q.toLowerCase();
-      starPlayers = starPlayers.filter(sp => 
-        sp.displayName.toLowerCase().includes(query) ||
-        sp.slug.toLowerCase().includes(query)
-      );
+      where.OR = [
+        { displayName: { contains: q, mode: "insensitive" } },
+        { slug: { contains: q, mode: "insensitive" } },
+      ];
     }
 
     // Filtrer par compétence
     if (skill && typeof skill === 'string') {
-      const skillQuery = skill.toLowerCase();
-      starPlayers = starPlayers.filter(sp => 
-        sp.skills.toLowerCase().includes(skillQuery)
-      );
+      where.skills = {
+        some: {
+          skill: {
+            OR: [
+              { slug: { contains: skill, mode: "insensitive" } },
+              { nameFr: { contains: skill, mode: "insensitive" } },
+              { nameEn: { contains: skill, mode: "insensitive" } },
+            ],
+          },
+        },
+      };
     }
 
     // Filtrer par coût minimum
     if (minCost && !isNaN(Number(minCost))) {
-      starPlayers = starPlayers.filter(sp => sp.cost >= Number(minCost));
+      where.cost = { ...where.cost, gte: Number(minCost) };
     }
 
     // Filtrer par coût maximum
     if (maxCost && !isNaN(Number(maxCost))) {
-      starPlayers = starPlayers.filter(sp => sp.cost <= Number(maxCost));
+      where.cost = { ...where.cost, lte: Number(maxCost) };
     }
+
+    const starPlayers = await prisma.starPlayer.findMany({
+      where,
+      include: {
+        skills: {
+          include: { skill: true },
+        },
+        hirableBy: {
+          include: { roster: true },
+        },
+      },
+      orderBy: { displayName: "asc" },
+    });
+
+    // Transformer les données
+    const transformedStarPlayers = starPlayers.map((sp) => ({
+      slug: sp.slug,
+      displayName: sp.displayName,
+      cost: sp.cost,
+      ma: sp.ma,
+      st: sp.st,
+      ag: sp.ag,
+      pa: sp.pa,
+      av: sp.av,
+      specialRule: sp.specialRule,
+      imageUrl: sp.imageUrl,
+      skills: sp.skills.map((sps) => sps.skill.slug).join(","),
+      hirableBy: sp.hirableBy.map((h) => h.roster?.slug || h.rule),
+    }));
 
     res.json({
       success: true,
-      count: starPlayers.length,
+      count: transformedStarPlayers.length,
       filters: { q, skill, minCost, maxCost },
-      data: starPlayers
+      data: transformedStarPlayers
     });
   } catch (error) {
     console.error("Error searching star players:", error);

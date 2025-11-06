@@ -5,9 +5,13 @@ import bodyParser from "body-parser";
 import authRoutes from "./routes/auth";
 import matchRoutes from "./routes/match";
 import adminRoutes from "./routes/admin";
+import adminDataRoutes from "./routes/admin-data";
 import userRoutes from "./routes/user";
 import teamRoutes from "./routes/team";
 import starPlayersRoutes from "./routes/star-players";
+import publicSkillsRoutes from "./routes/public-skills";
+import publicRostersRoutes from "./routes/public-rosters";
+import publicPositionsRoutes from "./routes/public-positions";
 import dotenv from "dotenv";
 import { toBGIOGame } from "@bb/game-engine";
 import { execSync } from "node:child_process";
@@ -70,9 +74,13 @@ app.get("/health", (_req, res) => res.json({ ok: true }));
 app.use("/auth", authRoutes);
 app.use("/match", matchRoutes);
 app.use("/admin", adminRoutes);
+app.use("/admin/data", adminDataRoutes);
 app.use("/user", userRoutes);
 app.use("/team", teamRoutes);
 app.use("/star-players", starPlayersRoutes);
+app.use("/api", publicSkillsRoutes);
+app.use("/api", publicRostersRoutes);
+app.use("/api", publicPositionsRoutes);
 
 // Endpoint public de reset pour tests (uniquement en TEST_SQLITE=1)
 if (process.env.TEST_SQLITE === "1") {

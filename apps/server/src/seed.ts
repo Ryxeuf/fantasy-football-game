@@ -69,17 +69,54 @@ async function main() {
   let rostersCreated = 0;
   let rostersSkipped = 0;
   
+  // Mapping des noms en anglais pour chaque roster
+  const rosterNamesEn: Record<string, string> = {
+    skaven: "Skaven",
+    lizardmen: "Lizardmen",
+    wood_elf: "Wood Elf",
+    dark_elf: "Dark Elf",
+    dwarf: "Dwarf",
+    goblin: "Goblin",
+    undead: "Undead",
+    chaos_renegade: "Chaos Renegades",
+    ogre: "Ogre",
+    halfling: "Halfling",
+    underworld: "Underworld Denizens",
+    chaos_chosen: "Chaos",
+    imperial_nobility: "Imperial Nobility",
+    necromantic_horror: "Necromantic Horror",
+    orc: "Orc",
+    nurgle: "Nurgle",
+    old_world_alliance: "Old World Alliance",
+    elven_union: "Elven Union",
+    human: "Human",
+    black_orc: "Black Orc",
+    chaos_dwarf: "Chaos Dwarf",
+    slann: "Slann",
+    amazon: "Amazon",
+    high_elf: "High Elf",
+    khorne: "Khorne",
+    vampire: "Vampire",
+    tomb_kings: "Tomb Kings",
+    gnome: "Gnome",
+    norse: "Norse",
+    snotling: "Snotling",
+  };
+  
   for (const [slug, rosterDef] of Object.entries(TEAM_ROSTERS)) {
     try {
       const existing = await prisma.roster.findUnique({
         where: { slug }
       });
 
+      const nameEn = rosterNamesEn[slug] || rosterDef.name; // Fallback sur le nom français si pas de traduction
+
       if (existing) {
         await prisma.roster.update({
           where: { slug },
           data: {
             name: rosterDef.name,
+            nameEn: nameEn,
             budget: rosterDef.budget,
             tier: rosterDef.tier,
             naf: rosterDef.naf,
@@ -91,6 +128,7 @@ async function main() {
           data: {
             slug,
             name: rosterDef.name,
+            nameEn: nameEn,
             budget: rosterDef.budget,
             tier: rosterDef.tier,
             naf: rosterDef.naf,

@@ -12,6 +12,7 @@ import {
   getPositionCategoryAccess,
   type AdvancementType
 } from "@bb/game-engine";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");
@@ -42,54 +43,6 @@ async function putJSON(path: string, body: any) {
   return res.json();
 }
 
-// Mapping des slugs de rosters vers leurs noms d'affichage
-const ROSTER_DISPLAY_NAMES: Record<string, string> = {
-  skaven: "Skaven",
-  lizardmen: "Lizardmen",
-  woodelf: "Wood Elf",
-  wood_elf: "Wood Elf",
-  "wood elf": "Wood Elf",
-  darkelf: "Dark Elf",
-  dark_elf: "Dark Elf",
-  "dark elf": "Dark Elf",
-  highelf: "High Elf",
-  high_elf: "High Elf",
-  "high elf": "High Elf",
-  human: "Human",
-  orc: "Orc",
-  dwarf: "Dwarf",
-  chaos: "Chaos",
-  undead: "Undead",
-  necromantic: "Necromantic Horror",
-  norse: "Norse",
-  amazon: "Amazon",
-  elvenunion: "Elven Union",
-  elven_union: "Elven Union",
-  underworld: "Underworld Denizens",
-  vampire: "Vampire",
-  khorne: "Khorne",
-  nurgle: "Nurgle",
-  chaosdwarf: "Chaos Dwarf",
-  chaos_dwarf: "Chaos Dwarf",
-  goblin: "Goblin",
-  halfling: "Halfling",
-  ogre: "Ogre",
-  snotling: "Snotling",
-  blackorc: "Black Orc",
-  black_orc: "Black Orc",
-  chaosrenegades: "Chaos Renegades",
-  chaos_renegades: "Chaos Renegades",
-  oldworldalliance: "Old World Alliance",
-  old_world_alliance: "Old World Alliance",
-  tombkings: "Tomb Kings",
-  tomb_kings: "Tomb Kings",
-  imperial: "Imperial Nobility",
-  gnome: "Gnome",
-};
-
-function getRosterDisplayName(slug: string): string {
-  return ROSTER_DISPLAY_NAMES[slug] || slug;
-}
 
 interface Player {
   id: string;
@@ -122,7 +75,9 @@ interface AvailablePosition {
 }
 
 export default function TeamEditPage() {
+  const { language } = useLanguage();
   const [data, setData] = useState<any>(null);
+  const [rosterName, setRosterName] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -203,6 +158,23 @@ export default function TeamEditPage() {
         setData(d);
         setPlayers(d.team?.players || []);
         
+        // Charger le nom du roster depuis l'API selon la langue
+        if (d?.team?.roster) {
+          const lang = language === "en" ? "en" : "fr";
+          try {
+            const API_BASE_PUBLIC = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8201';
+            const rosterResponse = await fetch(`${API_BASE_PUBLIC}/api/rosters/${d.team.roster}?lang=${lang}`);
+            if (rosterResponse.ok) {
+              const rosterData = await rosterResponse.json();
+              setRosterName(rosterData.roster?.name || d.team.roster);
+            } else {
+              setRosterName(d.team.roster);
+            }
+          } catch {
+            setRosterName(d.team.roster);
+          }
+        }
+        
         // Charger les positions disponibles
         const positionsData = await fetchJSON(`/team/${id}/available-positions`);
         console.log("Positions disponibles:", positionsData);
@@ -214,7 +186,7 @@ export default function TeamEditPage() {
         setLoading(false);
       }
     })();
-  }, [id]);
+  }, [id, language]);
 
   const team = data?.team;
   const match = data?.currentMatch;
@@ -409,7 +381,7 @@ export default function TeamEditPage() {
           <h1 className="text-3xl font-bold">Modifier l'équipe</h1>
           <div className="text-lg text-gray-600 mt-1">{team?.name}</div>
           <div className="text-sm text-gray-500 mt-1">
-            Roster: <span className="font-semibold">{getRosterDisplayName(team?.roster || '')}</span>
+            Roster: <span className="font-semibold">{rosterName || team?.roster || ''}</span>
           </div>
           <div className="text-sm text-gray-500 mt-1">
             Budget initial: <span className="font-semibold">{team?.initialBudget?.toLocaleString()}k po</span>

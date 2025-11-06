@@ -1,12 +1,46 @@
 "use client";
-import { TEAM_ROSTERS } from "@bb/game-engine";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useLanguage } from "../contexts/LanguageContext";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8201';
 
 export default function TeamsListPage() {
-  const teams = Object.entries(TEAM_ROSTERS).map(([slug, data]) => ({
-    slug,
-    ...data,
-  }));
+  const { language } = useLanguage();
+  const [teams, setTeams] = useState<Array<{ slug: string; name: string; budget: number; tier: string; naf: boolean; positions: any[] }>>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchRosters() {
+      try {
+        setLoading(true);
+        const lang = language === "en" ? "en" : "fr";
+        const response = await fetch(`${API_BASE}/api/rosters?lang=${lang}`);
+        if (!response.ok) {
+          throw new Error("Erreur lors du chargement des rosters");
+        }
+        const data = await response.json();
+        // Récupérer les détails de chaque roster pour avoir les positions
+        const rostersWithDetails = await Promise.all(
+          data.rosters.map(async (roster: { slug: string }) => {
+            const detailResponse = await fetch(`${API_BASE}/api/rosters/${roster.slug}?lang=${lang}`);
+            if (detailResponse.ok) {
+              const detailData = await detailResponse.json();
+              return { ...detailData.roster, slug: roster.slug };
+            }
+            return { ...roster, positions: [] };
+          })
+        );
+        setTeams(rostersWithDetails);
+      } catch (err: any) {
+        setError(err.message || "Erreur lors du chargement");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchRosters();
+  }, [language]);
 
   // Trier par tier puis par nom
   const sortedTeams = teams.sort((a, b) => {
@@ -15,6 +49,22 @@ export default function TeamsListPage() {
     }
     return a.name.localeCompare(b.name);
   });
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto p-6">
+        <p>Chargement...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto p-6">
+        <p className="text-red-600">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">

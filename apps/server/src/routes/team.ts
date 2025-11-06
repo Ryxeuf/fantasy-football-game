@@ -2,7 +2,7 @@ import { Router } from "express";
 import { prisma } from "../prisma";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
 import { updateTeamValues } from "../utils/team-values";
-import { TEAM_ROSTERS, getPositionBySlug, getDisplayName, LEGACY_POSITION_MAPPING, type AllowedRoster, getStarPlayerBySlug } from "@bb/game-engine";
+import { getPositionBySlug, getDisplayName, LEGACY_POSITION_MAPPING, type AllowedRoster, getStarPlayerBySlug } from "@bb/game-engine";
 import {
   validateStarPlayerHire,
   validateStarPlayerPairs,
@@ -11,6 +11,7 @@ import {
   calculateStarPlayersCost,
   requiresPair,
 } from "../utils/star-player-validation";
+import { getRosterFromDb } from "../utils/roster-helpers";
 
 const router = Router();
 const ALLOWED_TEAMS = [
@@ -45,9 +46,6 @@ const ALLOWED_TEAMS = [
   "gnome",
   "norse"
 ] as const;
-
-// Utiliser le nouveau système de rosters
-const ROSTERS = TEAM_ROSTERS;
 
 function rosterTemplates(roster: AllowedRoster) {
   if (roster === "skaven") {
@@ -199,7 +197,13 @@ router.get("/rosters/:id", authUser, async (req: AuthenticatedRequest, res) => {
   const id = req.params.id as AllowedRoster;
   if (!ALLOWED_TEAMS.includes(id))
     return res.status(404).json({ error: "Roster inconnu" });
-  res.json({ roster: ROSTERS[id] });
+  
+  const roster = await getRosterFromDb(id);
+  if (!roster) {
+    return res.status(404).json({ error: "Roster non trouvé en base de données" });
+  }
+  
+  res.json({ roster });
 });
 
 router.post("/choose", authUser, async (req: AuthenticatedRequest, res) => {
@@ -502,7 +506,10 @@ router.post("/build", authUser, async (req: AuthenticatedRequest, res) => {
   if (finalTeamValue < 100 || finalTeamValue > 2000)
     return res.status(400).json({ error: "La valeur d'équipe doit être entre 100 et 2000k po" });
     
-  const def = ROSTERS[roster as AllowedRoster];
+  const def = await getRosterFromDb(roster as AllowedRoster);
+  if (!def) {
+    return res.status(400).json({ error: "Roster non trouvé" });
+  }
   
   // Validation min/max et budget
   let totalPlayers = 0;
@@ -940,7 +947,7 @@ router.post("/:id/players", authUser, async (req: AuthenticatedRequest, res) => 
     }
 
     // Récupérer les informations de la position depuis le roster
-    const rosterData = ROSTERS[team.roster as AllowedRoster];
+    const rosterData = await getRosterFromDb(team.roster as AllowedRoster);
     if (!rosterData) {
       return res.status(400).json({ error: "Roster non reconnu" });
     }
@@ -1090,7 +1097,7 @@ router.get("/:id/available-positions", authUser, async (req: AuthenticatedReques
     }
 
     // Récupérer les informations du roster
-    const rosterData = ROSTERS[team.roster as AllowedRoster];
+    const rosterData = await getRosterFromDb(team.roster as AllowedRoster);
     if (!rosterData) {
       return res.status(400).json({ error: "Roster non reconnu" });
     }

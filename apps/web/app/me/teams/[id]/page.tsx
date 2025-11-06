@@ -19,59 +19,11 @@ async function fetchJSON(path: string) {
   return res.json();
 }
 
-// Mapping des slugs de rosters vers leurs noms d'affichage
-const ROSTER_DISPLAY_NAMES: Record<string, string> = {
-  skaven: "Skaven",
-  lizardmen: "Lizardmen",
-  woodelf: "Wood Elf",
-  wood_elf: "Wood Elf",
-  "wood elf": "Wood Elf",
-  darkelf: "Dark Elf",
-  dark_elf: "Dark Elf",
-  "dark elf": "Dark Elf",
-  highelf: "High Elf",
-  high_elf: "High Elf",
-  "high elf": "High Elf",
-  human: "Human",
-  orc: "Orc",
-  dwarf: "Dwarf",
-  chaos: "Chaos",
-  undead: "Undead",
-  necromantic: "Necromantic Horror",
-  norse: "Norse",
-  amazon: "Amazon",
-  elvenunion: "Elven Union",
-  elven_union: "Elven Union",
-  underworld: "Underworld Denizens",
-  vampire: "Vampire",
-  khorne: "Khorne",
-  nurgle: "Nurgle",
-  chaosdwarf: "Chaos Dwarf",
-  chaos_dwarf: "Chaos Dwarf",
-  goblin: "Goblin",
-  halfling: "Halfling",
-  ogre: "Ogre",
-  snotling: "Snotling",
-  blackorc: "Black Orc",
-  black_orc: "Black Orc",
-  chaosrenegades: "Chaos Renegades",
-  chaos_renegades: "Chaos Renegades",
-  oldworldalliance: "Old World Alliance",
-  old_world_alliance: "Old World Alliance",
-  tombkings: "Tomb Kings",
-  tomb_kings: "Tomb Kings",
-  imperial: "Imperial Nobility",
-  gnome: "Gnome",
-};
-
-function getRosterDisplayName(slug: string): string {
-  return ROSTER_DISPLAY_NAMES[slug] || slug;
-}
-
 export default function TeamDetailPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [data, setData] = useState<any>(null);
   const [userName, setUserName] = useState<string>("");
+  const [rosterName, setRosterName] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [recalculating, setRecalculating] = useState(false);
@@ -93,13 +45,29 @@ export default function TeamDetailPage() {
         setUserName(me.user.name || me.user.username || me.user.email || "");
         const d = await fetchJSON(`/team/${id}`);
         setData(d);
+        
+        // Charger le nom du roster depuis l'API selon la langue
+        if (d?.team?.roster) {
+          const lang = language === "en" ? "en" : "fr";
+          try {
+            const rosterResponse = await fetch(`${API_BASE}/api/rosters/${d.team.roster}?lang=${lang}`);
+            if (rosterResponse.ok) {
+              const rosterData = await rosterResponse.json();
+              setRosterName(rosterData.roster?.name || d.team.roster);
+            } else {
+              setRosterName(d.team.roster);
+            }
+          } catch {
+            setRosterName(d.team.roster);
+          }
+        }
       } catch (e: any) {
         setError(e.message || t.teams.error);
       } finally {
         setLoading(false);
       }
     })();
-  }, [id, t]);
+  }, [id, t, language]);
 
   const handleRecalculate = async () => {
     setRecalculating(true);
@@ -161,7 +129,7 @@ export default function TeamDetailPage() {
         <div>
           <h1 className="text-3xl font-bold">{team?.name || t.teams.team}</h1>
           <div className="text-sm text-gray-600 mt-1">
-            {t.teams.roster}: <span className="font-semibold">{getRosterDisplayName(team?.roster || '')}</span>
+            {t.teams.roster}: <span className="font-semibold">{rosterName || team?.roster || ''}</span>
           </div>
         </div>
         <div className="flex gap-3">
