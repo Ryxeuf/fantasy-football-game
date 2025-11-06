@@ -1,3 +1,10 @@
+## [1.5.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.4.0...v1.5.0) (2025-11-06)
+
+
+### ✨ Features
+
+* Ajout de la gestion des noms EN pour les rosters ([c4ce82d](https://github.com/Ryxeuf/fantasy-football-game/commit/c4ce82d5852b5f6ab16499ca53701befc9ec6983))
+
 ## [1.4.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.3.0...v1.4.0) (2025-11-06)
 
 
