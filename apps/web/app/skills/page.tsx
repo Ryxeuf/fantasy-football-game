@@ -112,7 +112,7 @@ export default function SkillsPage() {
 
   if (loading) {
     return (
-      <div className="max-w-6xl mx-auto">
+      <div className="w-full">
         <div className="text-center py-12">
           <p className="text-gray-600">Chargement des compétences...</p>
         </div>
@@ -122,7 +122,7 @@ export default function SkillsPage() {
 
   if (error) {
     return (
-      <div className="max-w-6xl mx-auto">
+      <div className="w-full">
         <div className="text-center py-12">
           <p className="text-red-600 mb-4">{error}</p>
           <button
@@ -137,7 +137,7 @@ export default function SkillsPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="w-full">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-4">
           {t.skills.title}

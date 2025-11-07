@@ -62,7 +62,7 @@ export default function TeamDetailPage() {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto p-6">
+      <div className="w-full p-6">
         <p>{t.common.loading}</p>
       </div>
     );
@@ -70,7 +70,7 @@ export default function TeamDetailPage() {
 
   if (error || !team) {
     return (
-      <div className="max-w-7xl mx-auto p-6">
+      <div className="w-full p-6">
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
           {error || t.teams.teamNotFound}
         </div>
@@ -87,7 +87,7 @@ export default function TeamDetailPage() {
   const positions = team.positions.sort((a: any, b: any) => a.displayName.localeCompare(b.displayName));
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
+    <div className="w-full p-6 space-y-6">
       {/* En-tête */}
       <div className="flex items-start justify-between">
         <div>

@@ -21,6 +21,14 @@ export default function AuthBar() {
     const token = localStorage.getItem("auth_token");
     setHasToken(!!token);
     if (token) {
+      // Synchronise le token dans les cookies pour le middleware
+      const cookieExists = document.cookie
+        .split("; ")
+        .some((cookie) => cookie.startsWith("auth_token="));
+      if (!cookieExists) {
+        document.cookie = `auth_token=${token}; path=/; max-age=86400; SameSite=Lax`;
+      }
+
       fetch(`${API_BASE}/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
       })
@@ -58,6 +66,8 @@ export default function AuthBar() {
 
   function logout() {
     localStorage.removeItem("auth_token");
+    // Supprime aussi le cookie
+    document.cookie = "auth_token=; path=/; max-age=0";
     setHasToken(false);
     setUserData(null);
     setMenuOpen(false);

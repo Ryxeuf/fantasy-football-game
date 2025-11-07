@@ -784,7 +784,10 @@ router.post("/:id/recalculate", authUser, async (req: AuthenticatedRequest, res)
 
 router.put("/:id", authUser, async (req: AuthenticatedRequest, res) => {
   const teamId = req.params.id;
-  const { players } = req.body ?? ({} as { players?: Array<{ id: string; name: string; number: number }> });
+  const { players, name } = req.body ?? ({} as { 
+    players?: Array<{ id: string; name: string; number: number }>;
+    name?: string;
+  });
 
   if (!players || !Array.isArray(players)) {
     return res.status(400).json({ error: "players requis (array)" });
@@ -851,6 +854,24 @@ router.put("/:id", authUser, async (req: AuthenticatedRequest, res) => {
     const emptyNames = players.filter(p => !p.name || p.name.trim() === "");
     if (emptyNames.length > 0) {
       return res.status(400).json({ error: "Tous les joueurs doivent avoir un nom" });
+    }
+
+    // Validation du nom de l'équipe si fourni
+    if (name !== undefined) {
+      if (!name || name.trim() === "") {
+        return res.status(400).json({ error: "Le nom de l'équipe ne peut pas être vide" });
+      }
+      if (name.trim().length > 100) {
+        return res.status(400).json({ error: "Le nom de l'équipe ne peut pas dépasser 100 caractères" });
+      }
+    }
+
+    // Mise à jour de l'équipe si le nom est fourni
+    if (name !== undefined) {
+      await prisma.team.update({
+        where: { id: teamId },
+        data: { name: name.trim() }
+      });
     }
 
     // Mise à jour des joueurs

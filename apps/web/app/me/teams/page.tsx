@@ -56,7 +56,7 @@ export default function MyTeamsPage() {
   }, [t, language]);
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
+    <div className="w-full p-6 space-y-6">
       <h1 className="text-2xl font-bold">{t.teams.title}</h1>
       {error && <p className="text-red-600 text-sm">{error}</p>}
       

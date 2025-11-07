@@ -122,6 +122,9 @@ importers:
       '@pixi/react':
         specifier: ^7.1.1
         version: 7.1.2(6gaheioi73g27xpaxxrttpwfei)
+      jose:
+        specifier: ^6.1.0
+        version: 6.1.0
       jspdf:
         specifier: ^3.0.3
         version: 3.0.3
@@ -4876,6 +4879,9 @@ packages:
 
   join-component@1.1.0:
     resolution: {integrity: sha512-bF7vcQxbODoGK1imE2P9GS9aw4zD0Sd+Hni68IMZLj7zRnquH7dXUmMw9hDI5S/Jzt7q+IyTXN0rSg2GI0IKhQ==}
+
+  jose@6.1.0:
+    resolution: {integrity: sha512-TTQJyoEoKcC1lscpVDCSsVgYzUDg/0Bt3WE//WiTPK6uOCQC2KZS4MpugbMWt/zyjkopgZoXhZuCi00gLudfUA==}
 
   js-binary-schema-parser@2.0.3:
     resolution: {integrity: sha512-xezGJmOb4lk/M1ZZLTR/jaBHQ4gG/lqQnJqdIv4721DMggsa1bDVlHXNeHYogaIEHD9vCRv0fcL4hMA+Coarkg==}
@@ -13510,6 +13516,8 @@ snapshots:
       '@sideway/pinpoint': 2.0.0
 
   join-component@1.1.0: {}
+
+  jose@6.1.0: {}
 
   js-binary-schema-parser@2.0.3: {}
 

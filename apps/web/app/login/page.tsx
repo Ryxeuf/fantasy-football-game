@@ -15,6 +15,8 @@ export default function LoginPage() {
     try {
       const { token } = await apiPost("/auth/login", { email, password });
       localStorage.setItem("auth_token", token);
+      // Stocke aussi dans les cookies pour le middleware Next.js
+      document.cookie = `auth_token=${token}; path=/; max-age=86400; SameSite=Lax`;
       window.location.href = "/me";
     } catch (err: any) {
       setError(err.message || t.login.error);
@@ -22,7 +24,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="max-w-sm mx-auto p-6">
+    <div className="w-full p-6 flex justify-center">
+      <div className="max-w-sm w-full">
       <h1 className="text-2xl font-bold mb-4">{t.login.title}</h1>
       <form onSubmit={onSubmit} className="space-y-3">
         <input
@@ -49,6 +52,7 @@ export default function LoginPage() {
           {t.login.register}
         </a>
       </p>
+      </div>
     </div>
   );
 }

@@ -175,7 +175,7 @@ export default function NewTeamBuilder() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto p-6 space-y-6">
+    <div className="w-full p-6 space-y-6">
       <h1 className="text-2xl font-bold">{t.teams.createTeamTitle}</h1>
       {error && <p className="text-red-600 text-sm">{error}</p>}
       <div className="grid gap-3">

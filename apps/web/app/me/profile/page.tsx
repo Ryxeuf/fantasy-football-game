@@ -122,7 +122,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="w-full p-6">
         <div className="text-center py-12">
           <div className="text-gray-500">Chargement du profil...</div>
         </div>
@@ -132,7 +132,7 @@ export default function ProfilePage() {
 
   if (error || !profile) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="w-full p-6">
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <p className="text-red-800">{error || "Profil non trouvé"}</p>
         </div>
@@ -141,7 +141,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
+    <div className="w-full p-6 space-y-6">
       <h1 className="text-3xl font-bold">Mon Profil</h1>
 
       {/* Informations principales */}

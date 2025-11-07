@@ -57,7 +57,7 @@ export default function TeamSelectPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto p-6 space-y-6">
+    <div className="w-full p-6 space-y-6">
       <h1 className="text-2xl font-bold">Choisir une équipe</h1>
       {error && <p className="text-red-600 text-sm">{error}</p>}
       <div className="grid md:grid-cols-2 gap-4">

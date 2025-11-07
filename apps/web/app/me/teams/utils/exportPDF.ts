@@ -186,7 +186,6 @@ export async function exportTeamToPDF(
       lineWidth: 0.1,
     },
     headStyles: {
-      fillColor: [255, 255, 255],
       textColor: [0, 0, 0],
       fontStyle: 'bold',
       halign: 'center',
@@ -488,149 +487,327 @@ export async function exportSkillsSheet(
 
 /**
  * Exporte une feuille de match pour l'équipe
+ * Format inspiré des feuilles de match officielles Blood Bowl
  */
 export async function exportMatchSheet(
   team: TeamData,
+  opponentTeam?: TeamData,
   language: 'fr' | 'en' = 'fr',
 ) {
   const { default: jsPDF } = await import('jspdf');
   const { default: autoTable } = await import('jspdf-autotable');
   
   const doc = new jsPDF({
-    orientation: 'landscape',
+    orientation: 'portrait',
     unit: 'mm',
     format: 'a4'
   });
 
   const margin = 10;
   const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
   
   const translations = {
     fr: {
-      title: 'Feuille de match',
-      team: 'Équipe',
-      opponent: 'Adversaire',
-      date: 'Date',
-      player: 'Joueur',
-      position: 'Position',
-      number: '#',
+      team1: 'Equipe 1',
+      team2: 'Equipe 2',
       name: 'Nom',
-      ma: 'MA',
-      st: 'ST',
-      ag: 'AG',
-      pa: 'PA',
-      av: 'AV',
-      skills: 'Compétences',
-      spp: 'PSP',
-      tds: 'RPM',
-      cas: 'BP',
-      int: 'RC',
-      mv: 'MV',
-      notes: 'Notes',
+      coach: 'Coach',
+      popularityFactor: 'Facteur popularité (1d3+Fan dévoués)',
+      weather: 'Météo',
+      score: 'Score',
+      playerNumber: 'N° du Joueur',
+      td: 'TD',
+      pass: 'Passe',
+      elimination: 'Elimination',
+      aggression: 'Agression',
+      injuries: 'Blessures',
     },
     en: {
-      title: 'Match sheet',
-      team: 'Team',
-      opponent: 'Opponent',
-      date: 'Date',
-      player: 'Player',
-      position: 'Position',
-      number: '#',
+      team1: 'Team 1',
+      team2: 'Team 2',
       name: 'Name',
-      ma: 'MA',
-      st: 'ST',
-      ag: 'AG',
-      pa: 'PA',
-      av: 'AV',
-      skills: 'Skills',
-      spp: 'SPP',
-      tds: 'TDS',
-      cas: 'CAS',
-      int: 'INT',
-      mv: 'MV',
-      notes: 'Notes',
+      coach: 'Coach',
+      popularityFactor: 'Popularity Factor (1d3+Dedicated Fans)',
+      weather: 'Weather',
+      score: 'Score',
+      playerNumber: 'Player #',
+      td: 'TD',
+      pass: 'Pass',
+      elimination: 'Elimination',
+      aggression: 'Aggression',
+      injuries: 'Injuries',
     },
   };
   const t = translations[language];
 
-  // En-tête
-  doc.setFontSize(16);
-  doc.setFont('helvetica', 'bold');
-  doc.text(t.title, margin, 15);
+  let currentY = margin;
+
+  // Section d'informations générales en haut
+  const headerRowHeight = 8;
+  const infoRowHeight = 6;
+  const headerStartY = currentY;
+
+  // Ligne d'en-tête avec "Equipe 1" et "Equipe 2"
+  const col1Width = 60; // Colonne de gauche pour les labels
+  const col2Width = (pageWidth - margin - col1Width - margin) / 2; // Colonnes équipes
+  const col3Width = col2Width;
+
+  // Dessiner les bordures de la section d'en-tête
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.1);
+
+  // Ligne d'en-tête principale
+  const headerY = headerStartY;
+  // Cellule gauche (vide, pour le logo qui n'est pas inclus)
+  doc.rect(margin, headerY, col1Width, headerRowHeight);
   
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`${t.team}: ${team.name}`, margin, 22);
-  doc.text(`${t.opponent}: ________________`, margin + 80, 22);
-  doc.text(`${t.date}: ${new Date().toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US')}`, pageWidth - margin - 50, 22);
+  // Cellule Equipe 1 (fond bleu foncé)
+  const team1X = margin + col1Width;
+  doc.setFillColor(0, 51, 102); // Bleu foncé
+  doc.rect(team1X, headerY, col2Width, headerRowHeight, 'F');
+  doc.setFillColor(255, 255, 255);
+  doc.setDrawColor(0, 0, 0);
+  doc.rect(team1X, headerY, col2Width, headerRowHeight);
+  
+  // Cellule Equipe 2 (fond rouge)
+  const team2X = team1X + col2Width;
+  doc.setFillColor(204, 0, 0); // Rouge
+  doc.rect(team2X, headerY, col3Width, headerRowHeight, 'F');
+  doc.setFillColor(255, 255, 255);
+  doc.setDrawColor(0, 0, 0);
+  doc.rect(team2X, headerY, col3Width, headerRowHeight);
 
-  // Tableau des joueurs pour le match
-  const playersData = team.players
+  // Texte "Equipe 1" et "Equipe 2"
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(255, 255, 255);
+  doc.text(t.team1, team1X + col2Width / 2, headerY + headerRowHeight / 2 + 2, { align: 'center' });
+  doc.text(t.team2, team2X + col3Width / 2, headerY + headerRowHeight / 2 + 2, { align: 'center' });
+  doc.setTextColor(0, 0, 0);
+
+  // Lignes d'informations
+  const infoLabels = [
+    { key: 'name', label: t.name },
+    { key: 'coach', label: t.coach },
+    { key: 'popularityFactor', label: t.popularityFactor },
+    { key: 'weather', label: t.weather },
+    { key: 'score', label: t.score },
+  ];
+
+  let infoY = headerY + headerRowHeight;
+  infoLabels.forEach((info, index) => {
+    // Label à gauche
+    doc.rect(margin, infoY, col1Width, infoRowHeight);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text(info.label, margin + 2, infoY + infoRowHeight / 2 + 2);
+    
+    // Cellule Equipe 1
+    doc.rect(team1X, infoY, col2Width, infoRowHeight);
+    // Remplir avec le nom de l'équipe si c'est la première ligne
+    if (info.key === 'name') {
+      doc.setFontSize(9);
+      doc.text(team.name || '', team1X + 2, infoY + infoRowHeight / 2 + 2);
+    }
+    
+    // Cellule Equipe 2
+    doc.rect(team2X, infoY, col3Width, infoRowHeight);
+    if (info.key === 'name' && opponentTeam) {
+      doc.setFontSize(9);
+      doc.text(opponentTeam.name || '', team2X + 2, infoY + infoRowHeight / 2 + 2);
+    }
+    
+    infoY += infoRowHeight;
+  });
+
+  currentY = infoY + 5;
+
+  // Tableau des statistiques - Équipe 1
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Équipe 1', pageWidth / 2, currentY, { align: 'center' });
+  currentY += 5;
+
+  const playersData1 = (team.players && Array.isArray(team.players) ? team.players : [])
     .sort((a, b) => a.number - b.number)
-    .map(player => {
-      const skills = player.skills || '';
-      const skillsArray = getDisplayNames(skills, language);
-      const skillsText = skillsArray.length > 0 ? skillsArray.join(', ') : '-';
-      
-      return [
-        player.number.toString(),
-        player.name,
-        getDisplayName(player.position),
-        player.ma.toString(),
-        player.st.toString(),
-        `${player.ag}+`,
-        player.pa ? `${player.pa}+` : '-',
-        `${player.av}+`,
-        skillsText,
-        '', // PSP
-        '', // RPM
-        '', // BP
-        '', // RC
-        '', // MV
-        '', // Notes
-      ];
-    });
+    .slice(0, 10) // Limiter à 10 joueurs
+    .map(player => [
+      '', // N° du Joueur - laisser vide
+      '', // TD
+      '', // Passe
+      '', // Elimination
+      '', // Agression
+      '', // Blessures
+    ]);
 
-  // Tableau principal
+  // Ajouter des lignes vides si moins de 10 joueurs
+  while (playersData1.length < 10) {
+    playersData1.push(['', '', '', '', '', '']);
+  }
+
   autoTable(doc, {
-    startY: 28,
-    head: [[t.number, t.name, t.position, t.ma, t.st, t.ag, t.pa, t.av, t.skills, t.spp, t.tds, t.cas, t.int, t.mv, t.notes]],
-    body: playersData,
+    startY: currentY,
+    head: [[t.playerNumber, t.td, t.pass, t.elimination, t.aggression, t.injuries]],
+    body: playersData1,
     theme: 'grid',
     styles: {
-      fontSize: 7,
-      cellPadding: 1.5,
+      fontSize: 8,
+      cellPadding: 2,
       lineColor: [0, 0, 0],
       lineWidth: 0.1,
     },
     headStyles: {
-      fillColor: [66, 139, 202],
-      textColor: [255, 255, 255],
       fontStyle: 'bold',
       halign: 'center',
       valign: 'middle',
+      lineWidth: 0.2,
+      textColor: [0, 0, 0], // Par défaut noir, sera modifié dans willDrawCell
     },
     columnStyles: {
-      0: { halign: 'center', cellWidth: 8 },
-      1: { halign: 'left', cellWidth: 25 },
-      2: { halign: 'left', cellWidth: 25 },
-      3: { halign: 'center', cellWidth: 8 },
-      4: { halign: 'center', cellWidth: 8 },
-      5: { halign: 'center', cellWidth: 8 },
-      6: { halign: 'center', cellWidth: 8 },
-      7: { halign: 'center', cellWidth: 8 },
-      8: { halign: 'left', cellWidth: 40 },
-      9: { halign: 'center', cellWidth: 10 },
-      10: { halign: 'center', cellWidth: 10 },
-      11: { halign: 'center', cellWidth: 10 },
-      12: { halign: 'center', cellWidth: 10 },
-      13: { halign: 'center', cellWidth: 10 },
-      14: { halign: 'left', cellWidth: 30 },
+      0: { halign: 'center', cellWidth: 25 }, // N° du Joueur
+      1: { halign: 'center', cellWidth: 20 }, // TD
+      2: { halign: 'center', cellWidth: 20 }, // Passe
+      3: { halign: 'center', cellWidth: 25 }, // Elimination
+      4: { halign: 'center', cellWidth: 25 }, // Agression
+      5: { halign: 'center', cellWidth: 30 }, // Blessures
     },
     margin: { left: margin, right: margin },
-    didParseCell: (data) => {
-      if (data.column.index === 8 || data.column.index === 14) {
-        data.cell.styles.cellWidth = 'wrap';
+    willDrawCell: (data) => {
+      // Colorier les en-têtes selon l'image
+      if (data.section === 'head') {
+        if (data.column.index === 0) {
+          // N° du Joueur - fond bleu foncé
+          doc.setFillColor(0, 51, 102);
+          doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'F');
+        } else if (data.column.index === 5) {
+          // Blessures - fond rouge
+          doc.setFillColor(204, 0, 0);
+          doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'F');
+        } else {
+          // Autres colonnes - fond bleu clair
+          doc.setFillColor(173, 216, 230);
+          doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'F');
+        }
+      }
+    },
+    didDrawCell: (data) => {
+      // Redessiner le texte en blanc pour les colonnes avec fond sombre
+      if (data.section === 'head' && (data.column.index === 0 || data.column.index === 5)) {
+        // Effacer le texte noir en redessinant le fond avec les bordures
+        if (data.column.index === 0) {
+          doc.setFillColor(0, 51, 102);
+        } else {
+          doc.setFillColor(204, 0, 0);
+        }
+        doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'FD');
+        
+        // Redessiner le texte en blanc
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'bold');
+        const text = Array.isArray(data.cell.text) ? data.cell.text[0] : (data.cell.text || '');
+        const textX = data.cell.x + data.cell.width / 2;
+        const textY = data.cell.y + data.cell.height / 2 + 2;
+        doc.text(text, textX, textY, { align: 'center' });
+        doc.setTextColor(0, 0, 0);
+      }
+    },
+  });
+
+  const finalYTeam1 = (doc as any).lastAutoTable?.finalY || currentY + 50;
+  currentY = finalYTeam1 + 8;
+
+  // Tableau des statistiques - Équipe 2
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Équipe 2', pageWidth / 2, currentY, { align: 'center' });
+  currentY += 5;
+
+  const playersData2 = opponentTeam && opponentTeam.players && Array.isArray(opponentTeam.players)
+    ? opponentTeam.players
+        .sort((a, b) => a.number - b.number)
+        .slice(0, 10)
+        .map(player => [
+          '', // N° du Joueur - laisser vide
+          '', // TD
+          '', // Passe
+          '', // Elimination
+          '', // Agression
+          '', // Blessures
+        ])
+    : [];
+
+  // Ajouter des lignes vides si moins de 10 joueurs
+  while (playersData2.length < 10) {
+    playersData2.push(['', '', '', '', '', '']);
+  }
+
+  autoTable(doc, {
+    startY: currentY,
+    head: [[t.playerNumber, t.td, t.pass, t.elimination, t.aggression, t.injuries]],
+    body: playersData2,
+    theme: 'grid',
+    styles: {
+      fontSize: 8,
+      cellPadding: 2,
+      lineColor: [0, 0, 0],
+      lineWidth: 0.1,
+    },
+    headStyles: {
+      fontStyle: 'bold',
+      halign: 'center',
+      valign: 'middle',
+      lineWidth: 0.2,
+      textColor: [0, 0, 0], // Par défaut noir, sera modifié dans willDrawCell
+    },
+    columnStyles: {
+      0: { halign: 'center', cellWidth: 25 }, // N° du Joueur
+      1: { halign: 'center', cellWidth: 20 }, // TD
+      2: { halign: 'center', cellWidth: 20 }, // Passe
+      3: { halign: 'center', cellWidth: 25 }, // Elimination
+      4: { halign: 'center', cellWidth: 25 }, // Agression
+      5: { halign: 'center', cellWidth: 30 }, // Blessures
+    },
+    margin: { left: margin, right: margin },
+    willDrawCell: (data) => {
+      // Colorier les en-têtes selon l'image
+      if (data.section === 'head') {
+        if (data.column.index === 0) {
+          // N° du Joueur - fond bleu foncé
+          doc.setFillColor(0, 51, 102);
+          doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'F');
+        } else if (data.column.index === 5) {
+          // Blessures - fond rouge
+          doc.setFillColor(204, 0, 0);
+          doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'F');
+        } else {
+          // Autres colonnes - fond bleu clair
+          doc.setFillColor(173, 216, 230);
+          doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'F');
+        }
+      }
+    },
+    didDrawCell: (data) => {
+      // Redessiner le texte en blanc pour les colonnes avec fond sombre
+      if (data.section === 'head' && (data.column.index === 0 || data.column.index === 5)) {
+        // Effacer le texte noir en redessinant le fond avec les bordures
+        if (data.column.index === 0) {
+          doc.setFillColor(0, 51, 102);
+        } else {
+          doc.setFillColor(204, 0, 0);
+        }
+        doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'FD');
+        
+        // Redessiner le texte en blanc
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'bold');
+        const text = Array.isArray(data.cell.text) ? data.cell.text[0] : (data.cell.text || '');
+        const textX = data.cell.x + data.cell.width / 2;
+        const textY = data.cell.y + data.cell.height / 2 + 2;
+        doc.text(text, textX, textY, { align: 'center' });
+        doc.setTextColor(0, 0, 0);
       }
     },
   });

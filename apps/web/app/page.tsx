@@ -8,7 +8,7 @@ export default function LandingPage() {
     <div className="min-h-screen">
       {/* Hero */}
       <section className="relative isolate overflow-hidden bg-gradient-to-br from-nuffle-anthracite via-nuffle-bronze to-nuffle-anthracite">
-        <div className="max-w-6xl mx-auto px-6 py-20 flex flex-col-reverse md:flex-row items-center gap-10">
+        <div className="w-full px-6 py-20 flex flex-col-reverse md:flex-row items-center gap-10">
           <div className="text-nuffle-ivory max-w-xl">
             <div className="mb-6">
               <Logo variant="default" showText={true} textColor="text-nuffle-ivory" />
@@ -71,7 +71,7 @@ export default function LandingPage() {
       </section>
 
       {/* Features */}
-      <section className="max-w-6xl mx-auto px-6 py-16">
+      <section className="w-full px-6 py-16">
         <div className="grid md:grid-cols-3 gap-6">
           <div className="rounded-xl bg-white shadow-lg border-2 border-nuffle-bronze/30 overflow-hidden hover:border-nuffle-gold/50 transition-all">
             <div className="h-40 flex items-center justify-center overflow-hidden" style={{ backgroundColor: '#e8d6ae' }}>
@@ -122,7 +122,7 @@ export default function LandingPage() {
       </section>
 
       {/* Callout */}
-      <section className="max-w-6xl mx-auto px-6 pb-16">
+      <section className="w-full px-6 pb-16">
         <div className="rounded-2xl bg-gradient-to-r from-nuffle-gold via-nuffle-bronze to-nuffle-gold text-nuffle-anthracite p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl border-2 border-nuffle-bronze/50">
           <div>
             <h3 className="text-2xl md:text-3xl font-heading font-bold">

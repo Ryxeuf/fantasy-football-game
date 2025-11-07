@@ -26,6 +26,8 @@ export default function RegisterPage() {
         dateOfBirth: dateOfBirth || undefined,
       });
       localStorage.setItem("auth_token", token);
+      // Stocke aussi dans les cookies pour le middleware Next.js
+      document.cookie = `auth_token=${token}; path=/; max-age=86400; SameSite=Lax`;
       window.location.href = "/me";
     } catch (err: any) {
       setError(err.message || t.register.error);
@@ -33,7 +35,8 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="max-w-md mx-auto p-6">
+    <div className="w-full p-6 flex justify-center">
+      <div className="max-w-md w-full">
       <h1 className="text-2xl font-bold mb-4">{t.register.title}</h1>
       <form onSubmit={onSubmit} className="space-y-3">
         <div>
@@ -124,6 +127,7 @@ export default function RegisterPage() {
           {t.register.login}
         </a>
       </p>
+      </div>
     </div>
   );
 }

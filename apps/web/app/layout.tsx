@@ -27,8 +27,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </head>
       <body className="min-h-screen bg-nuffle-ivory text-nuffle-anthracite flex flex-col font-body antialiased">
         <ClientLayout>
-          <div className="flex-1">
-            <div className="max-w-5xl mx-auto p-6">
+          <div className="flex-1 w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
+            <div className="w-full p-6">
               <Header />
               {children}
             </div>

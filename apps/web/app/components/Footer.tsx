@@ -7,8 +7,8 @@ import { useLanguage } from "../contexts/LanguageContext";
 export default function Footer() {
   const { t } = useLanguage();
   return (
-    <footer className="border-t-2 border-nuffle-bronze/30 bg-white mt-auto">
-      <div className="max-w-5xl mx-auto px-6 py-8">
+    <footer className="border-t-2 border-nuffle-bronze/30 bg-white mt-auto w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
+      <div className="w-full px-6 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
             <Logo variant="compact" showText={false} className="mb-3" />

@@ -7,7 +7,7 @@ export const metadata = {
 
 export default function ConditionsUtilisationPage() {
   return (
-    <div className="max-w-4xl mx-auto px-6 py-12">
+    <div className="w-full px-6 py-12">
       <div className="mb-8">
         <Link
           href="/"

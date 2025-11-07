@@ -2,9 +2,25 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect } from "react";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+
+  // Synchronise le token depuis localStorage vers les cookies pour les utilisateurs déjà connectés
+  useEffect(() => {
+    const token = localStorage.getItem("auth_token");
+    if (token) {
+      // Vérifie si le cookie n'existe pas déjà
+      const cookieExists = document.cookie
+        .split("; ")
+        .some((cookie) => cookie.startsWith("auth_token="));
+      if (!cookieExists) {
+        // Crée le cookie si il n'existe pas
+        document.cookie = `auth_token=${token}; path=/; max-age=86400; SameSite=Lax`;
+      }
+    }
+  }, []);
 
   const isActive = (path: string) => {
     if (path === "/admin") {

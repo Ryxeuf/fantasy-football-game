@@ -124,7 +124,7 @@ export default function TeamDetailPage() {
   const handleExportMatch = async () => {
     if (!team) return;
     try {
-      await exportMatchSheet(team, language);
+      await exportMatchSheet(team, undefined, language);
       setExportMenuOpen(false);
     } catch (error) {
       console.error('Erreur lors de l\'export de la feuille de match:', error);
@@ -138,7 +138,7 @@ export default function TeamDetailPage() {
 
   if (loading) {
     return (
-      <div className="max-w-3xl mx-auto p-6">
+      <div className="w-full p-6">
         <div className="animate-pulse">
           <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
           <div className="h-4 bg-gray-200 rounded w-1/4 mb-6"></div>
@@ -149,7 +149,7 @@ export default function TeamDetailPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
+    <div className="w-full p-6 space-y-6">
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-bold">{team?.name || t.teams.team}</h1>
@@ -208,12 +208,13 @@ export default function TeamDetailPage() {
                     >
                       {t.teams.exportSkillsSheet}
                     </button>
-                    <button
+                    {/* Bouton d'export de la feuille de match masqué temporairement */}
+                    {/* <button
                       onClick={handleExportMatch}
                       className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                     >
                       {t.teams.exportMatchSheet}
-                    </button>
+                    </button> */}
                   </div>
                 </div>
               </>

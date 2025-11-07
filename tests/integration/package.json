@@ -10,5 +10,9 @@
   "devDependencies": {
     "node-fetch": "2",
     "vitest": "^2.1.9"
+  },
+  "dependencies": {
+    "jose": "^6.1.0",
+    "jsonwebtoken": "^9.0.2"
   }
 }
