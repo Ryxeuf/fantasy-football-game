@@ -12,7 +12,7 @@ import {
   getPositionCategoryAccess,
   type AdvancementType
 } from "@bb/game-engine";
-import { useLanguage } from "../../../contexts/LanguageContext";
+import { useLanguage } from "../../../../contexts/LanguageContext";
 
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");

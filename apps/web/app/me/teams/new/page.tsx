@@ -19,8 +19,13 @@ type Position = {
   skills: string;
 };
 
+type Roster = {
+  slug: string;
+  name: string;
+};
+
 export default function NewTeamBuilder() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   // Initialiser les valeurs directement depuis l'URL
   const [rosterId, setRosterId] = useState(() => {
     if (typeof window !== "undefined") {
@@ -51,7 +56,39 @@ export default function NewTeamBuilder() {
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [selectedStarPlayers, setSelectedStarPlayers] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [rosters, setRosters] = useState<Roster[]>([]);
+  const [loadingRosters, setLoadingRosters] = useState(true);
 
+  // Charger la liste des rosters depuis l'API selon la langue
+  useEffect(() => {
+    const lang = language === "en" ? "en" : "fr";
+    const API_BASE_PUBLIC = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8201';
+    
+    fetch(`${API_BASE_PUBLIC}/api/rosters?lang=${lang}`)
+      .then((r) => r.json())
+      .then((data) => {
+        const rostersList = (data.rosters || []).map((r: { slug: string; name: string }) => ({
+          slug: r.slug,
+          name: r.name,
+        }));
+        setRosters(rostersList);
+        setLoadingRosters(false);
+        
+        // Vérifier que le rosterId actuel est dans la liste, sinon utiliser le premier
+        if (rostersList.length > 0) {
+          setRosterId((currentRosterId) => {
+            const currentRoster = rostersList.find(r => r.slug === currentRosterId);
+            return currentRoster ? currentRosterId : rostersList[0].slug;
+          });
+        }
+      })
+      .catch((err) => {
+        console.error("Erreur lors du chargement des rosters:", err);
+        setLoadingRosters(false);
+      });
+  }, [language]);
+
+  // Charger les positions du roster sélectionné
   useEffect(() => {
     const token = localStorage.getItem("auth_token");
     fetch(`${API_BASE}/team/rosters/${rosterId}`, {
@@ -153,28 +190,17 @@ export default function NewTeamBuilder() {
             className="border p-2 w-48"
             value={rosterId}
             onChange={(e) => setRosterId(e.target.value)}
+            disabled={loadingRosters}
           >
-            <option value="skaven">Skavens</option>
-            <option value="lizardmen">Hommes-Lézards</option>
-            <option value="wood_elf">Elfes Sylvains</option>
-            <option value="dark_elf">Elfes Noirs</option>
-            <option value="dwarf">Nains</option>
-            <option value="goblin">Gobelins</option>
-            <option value="undead">Morts-Vivants</option>
-            <option value="chaos_renegade">Renégats du Chaos</option>
-            <option value="ogre">Ogres</option>
-            <option value="halfling">Halflings</option>
-            <option value="underworld">Bas-Fonds</option>
-            <option value="chaos_chosen">Élus du Chaos</option>
-            <option value="imperial_nobility">Noblesse Impériale</option>
-            <option value="necromantic_horror">Horreurs Nécromantiques</option>
-            <option value="orc">Orques</option>
-            <option value="nurgle">Nurgle</option>
-            <option value="old_world_alliance">Alliance du Vieux Monde</option>
-            <option value="elven_union">Union Elfique</option>
-            <option value="human">Humains</option>
-            <option value="black_orc">Orques Noirs</option>
-            <option value="snotling">Snotlings</option>
+            {loadingRosters ? (
+              <option value="">{t.common.loading}</option>
+            ) : (
+              rosters.map((roster) => (
+                <option key={roster.slug} value={roster.slug}>
+                  {roster.name}
+                </option>
+              ))
+            )}
           </select>
           <div className="flex-1">
             <label className="block text-sm font-medium text-gray-700 mb-1">

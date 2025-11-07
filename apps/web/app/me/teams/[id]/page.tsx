@@ -4,7 +4,7 @@ import { API_BASE } from "../../../auth-client";
 import SkillTooltip from "../components/SkillTooltip";
 import TeamInfoDisplay from "../components/TeamInfoDisplay";
 import { getPlayerCost, getDisplayName, getRerollCost } from "@bb/game-engine";
-import { exportTeamToPDF } from "../utils/exportPDF";
+import { exportTeamToPDF, exportSkillsSheet, exportMatchSheet } from "../utils/exportPDF";
 import { useLanguage } from "../../../contexts/LanguageContext";
 
 async function fetchJSON(path: string) {
@@ -97,12 +97,37 @@ export default function TeamDetailPage() {
     }
   };
 
-  const handleExportPDF = async () => {
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
+
+  const handleExportRoster = async () => {
     if (!team) return;
     try {
-      await exportTeamToPDF(team, getPlayerCost, userName);
+      await exportTeamToPDF(team, getPlayerCost, userName, language);
+      setExportMenuOpen(false);
     } catch (error) {
       console.error('Erreur lors de l\'export PDF:', error);
+      alert(t.teams.exportPDFError);
+    }
+  };
+
+  const handleExportSkills = async () => {
+    if (!team) return;
+    try {
+      await exportSkillsSheet(team, language);
+      setExportMenuOpen(false);
+    } catch (error) {
+      console.error('Erreur lors de l\'export des compétences:', error);
+      alert(t.teams.exportPDFError);
+    }
+  };
+
+  const handleExportMatch = async () => {
+    if (!team) return;
+    try {
+      await exportMatchSheet(team, language);
+      setExportMenuOpen(false);
+    } catch (error) {
+      console.error('Erreur lors de l\'export de la feuille de match:', error);
       alert(t.teams.exportPDFError);
     }
   };
@@ -153,12 +178,47 @@ export default function TeamDetailPage() {
           >
             {recalculating ? t.teams.recalculating : t.teams.recalculateVE}
           </button>
-          <button
-            onClick={handleExportPDF}
-            className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
-          >
-            {t.teams.exportPDF}
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setExportMenuOpen(!exportMenuOpen)}
+              className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors flex items-center gap-2"
+            >
+              {t.teams.exportOptions}
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {exportMenuOpen && (
+              <>
+                <div 
+                  className="fixed inset-0 z-10" 
+                  onClick={() => setExportMenuOpen(false)}
+                ></div>
+                <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-20">
+                  <div className="py-1">
+                    <button
+                      onClick={handleExportRoster}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                    >
+                      {t.teams.exportRosterPDF}
+                    </button>
+                    <button
+                      onClick={handleExportSkills}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                    >
+                      {t.teams.exportSkillsSheet}
+                    </button>
+                    <button
+                      onClick={handleExportMatch}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                    >
+                      {t.teams.exportMatchSheet}
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
           <a
             href="/me/teams"
             className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors border border-gray-500"

@@ -19,19 +19,130 @@ export interface SkillDescription {
   category: string;
 }
 
+interface SkillFromAPI {
+  id: string;
+  slug: string;
+  nameFr: string;
+  nameEn: string;
+  description: string;
+  descriptionEn?: string | null;
+  category: string;
+}
+
+// Cache pour les compétences chargées depuis l'API
+let skillsCache: SkillFromAPI[] | null = null;
+let skillsCachePromise: Promise<SkillFromAPI[]> | null = null;
+
+/**
+ * Réinitialise le cache (utile pour forcer un rechargement)
+ */
+export function clearSkillsCache() {
+  skillsCache = null;
+  skillsCachePromise = null;
+}
+
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8201';
+
+/**
+ * Charge les compétences depuis l'API et les met en cache
+ */
+async function loadSkillsFromAPI(): Promise<SkillFromAPI[]> {
+  if (skillsCache) {
+    return skillsCache;
+  }
+  
+  if (skillsCachePromise) {
+    return skillsCachePromise;
+  }
+  
+  skillsCachePromise = fetch(`${API_BASE}/api/skills`)
+    .then(res => res.json())
+    .then(data => {
+      skillsCache = data.skills || [];
+      return skillsCache;
+    })
+    .catch(err => {
+      console.error("Erreur lors du chargement des compétences depuis l'API:", err);
+      skillsCachePromise = null;
+      return [];
+    });
+  
+  return skillsCachePromise;
+}
+
 /**
  * Obtient la description d'une compétence par son slug
  */
-export function getSkillDescription(slugOrName: string, language: "fr" | "en" = "fr"): SkillDescription | null {
-  // Essayer d'abord comme slug
+export async function getSkillDescriptionAsync(slugOrName: string, language: "fr" | "en" = "fr"): Promise<SkillDescription | null> {
+  // Charger les compétences depuis l'API si nécessaire
+  const apiSkills = await loadSkillsFromAPI();
+  
+  // Chercher dans l'API d'abord (pour avoir les descriptions EN)
+  const apiSkill = apiSkills.find(s => 
+    s.slug === slugOrName || 
+    s.nameFr === slugOrName || 
+    s.nameEn === slugOrName
+  );
+  
+  if (apiSkill) {
+    return {
+      name: language === "fr" ? apiSkill.nameFr : apiSkill.nameEn,
+      description: language === "en" && apiSkill.descriptionEn ? apiSkill.descriptionEn : apiSkill.description,
+      category: apiSkill.category
+    };
+  }
+  
+  // Fallback sur le game-engine si pas trouvé dans l'API
   let skill = getSkillBySlug(slugOrName);
   
-  // Si pas trouvé, essayer comme nom français (pour compatibilité)
   if (!skill) {
     skill = getSkillByNameFr(slugOrName);
   }
   
-  // Si toujours pas trouvé, essayer comme nom anglais
+  if (!skill) {
+    skill = getSkillByNameEn(slugOrName);
+  }
+  
+  if (!skill) {
+    return null;
+  }
+  
+  return {
+    name: language === "fr" ? skill.nameFr : skill.nameEn,
+    description: skill.description,
+    category: skill.category
+  };
+}
+
+/**
+ * Obtient la description d'une compétence par son slug (version synchrone avec cache)
+ * Utilise le cache si disponible, sinon fait un appel API asynchrone
+ */
+export function getSkillDescription(slugOrName: string, language: "fr" | "en" = "fr"): SkillDescription | null {
+  // Si on a le cache et qu'on trouve la compétence dedans, l'utiliser
+  if (skillsCache) {
+    const apiSkill = skillsCache.find(s => 
+      s.slug === slugOrName || 
+      s.nameFr === slugOrName || 
+      s.nameEn === slugOrName
+    );
+    
+    if (apiSkill) {
+      return {
+        name: language === "fr" ? apiSkill.nameFr : apiSkill.nameEn,
+        description: language === "en" && apiSkill.descriptionEn ? apiSkill.descriptionEn : apiSkill.description,
+        category: apiSkill.category
+      };
+    }
+  }
+  
+  // Sinon, fallback sur le game-engine (synchronisé)
+  let skill = getSkillBySlug(slugOrName);
+  
+  if (!skill) {
+    skill = getSkillByNameFr(slugOrName);
+  }
+  
   if (!skill) {
     skill = getSkillByNameEn(slugOrName);
   }

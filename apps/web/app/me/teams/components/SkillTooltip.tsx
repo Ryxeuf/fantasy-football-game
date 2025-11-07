@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { parseSkillSlugs } from "@bb/game-engine";
-import { getSkillDescription, parseSkills, slugsToDisplayNames } from "../skills-data";
+import { getSkillDescription, getSkillDescriptionAsync, parseSkills, slugsToDisplayNames } from "../skills-data";
 import { separateSkills } from "../base-skills-data";
 import { useLanguage } from "../../../contexts/LanguageContext";
 
@@ -17,6 +17,13 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
   const { language } = useLanguage();
   const [hoveredSkill, setHoveredSkill] = useState<string | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+  const [skillDescription, setSkillDescription] = useState<{ name: string; description: string; category: string } | null>(null);
+
+  // Charger les compétences depuis l'API au montage pour avoir les descriptions EN
+  useEffect(() => {
+    // Précharger le cache au montage et quand la langue change
+    getSkillDescriptionAsync("block", language).catch(() => {});
+  }, [language]);
 
   // Parser les slugs de compétences
   // Si useDirectParsing est true, on utilise parseSkillSlugs directement (pour les positions du roster)
@@ -41,20 +48,23 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
     return <span className="text-gray-400 text-sm">{language === "fr" ? "Aucune" : "None"}</span>;
   }
 
-  const handleMouseEnter = (skillSlug: string, event: React.MouseEvent) => {
+  const handleMouseEnter = async (skillSlug: string, event: React.MouseEvent) => {
     const rect = event.currentTarget.getBoundingClientRect();
     setTooltipPosition({
       x: rect.left + rect.width / 2,
       y: rect.top - 10
     });
     setHoveredSkill(skillSlug);
+    
+    // Charger la description depuis l'API pour avoir la bonne langue
+    const desc = await getSkillDescriptionAsync(skillSlug, language);
+    setSkillDescription(desc);
   };
 
   const handleMouseLeave = () => {
     setHoveredSkill(null);
+    setSkillDescription(null);
   };
-
-  const skillDescription = hoveredSkill ? getSkillDescription(hoveredSkill, language) : null;
 
   // Fonction pour obtenir la couleur selon la catégorie
   const getCategoryColor = (category: string) => {
@@ -85,7 +95,6 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
               className={`px-2 py-1 rounded text-xs font-medium cursor-help border border-gray-300 ${categoryColor}`}
               onMouseEnter={(e) => handleMouseEnter(skillSlug, e)}
               onMouseLeave={handleMouseLeave}
-              title={`${skillInfo?.description || displayName} (${baseSkillText})`}
             >
               {displayName}
             </span>
@@ -105,7 +114,6 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
               className={`px-2 py-1 rounded text-xs font-medium cursor-help border-2 border-orange-400 ${categoryColor}`}
               onMouseEnter={(e) => handleMouseEnter(skillSlug, e)}
               onMouseLeave={handleMouseLeave}
-              title={`${skillInfo?.description || displayName} (${acquiredSkillText})`}
             >
               {displayName}
             </span>
