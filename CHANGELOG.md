@@ -1,3 +1,10 @@
+## [1.7.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.6.0...v1.7.0) (2025-11-07)
+
+
+### ✨ Features
+
+* mise à jour de toutes les pages pour utiliser la largeur totale de l'écran ([342c0a1](https://github.com/Ryxeuf/fantasy-football-game/commit/342c0a1ae197edb357bfecb1e7aa94a8bc8ac3ee))
+
 ## [1.6.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.5.0...v1.6.0) (2025-11-07)
 
 
