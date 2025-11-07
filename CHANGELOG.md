@@ -1,3 +1,11 @@
+## [1.6.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.5.0...v1.6.0) (2025-11-07)
+
+
+### ✨ Features
+
+* Ajout des traductions EN pour les pages teams ([54fec86](https://github.com/Ryxeuf/fantasy-football-game/commit/54fec86e1cc5029e7df9537a47bfdf422b4c85c0))
+* amélioration de la page des équipes et ajout d'exports PDF multiples ([4a21df1](https://github.com/Ryxeuf/fantasy-football-game/commit/4a21df1490938cb1949f4f83b6b301ba7daa528e))
+
 ## [1.5.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.4.0...v1.5.0) (2025-11-06)
 
 
