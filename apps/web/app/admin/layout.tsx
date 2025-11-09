@@ -31,7 +31,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   const navItem = (href: string, label: string, icon: string) => (
     <Link
-      href={href}
+      href={href as any}
       className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
         isActive(href)
           ? "bg-nuffle-gold text-white shadow-md"

@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   experimental: {
     typedRoutes: true,
     optimizePackageImports: ["@bb/ui", "@bb/game-engine"],

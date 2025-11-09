@@ -86,7 +86,6 @@ export default function EditPositionPage() {
           .map(s => {
             if (typeof s === 'string') return s;
             if (s.skill?.slug) return s.skill.slug;
-            if (s.slug) return s.slug;
             return null;
           })
           .filter(Boolean) as string[];

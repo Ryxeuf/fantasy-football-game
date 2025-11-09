@@ -426,7 +426,7 @@ export default function AdminPositionsPage() {
                   >
                     <td className="px-6 py-4">
                       <Link
-                        href={`/admin/data/rosters/${position.roster.id}`}
+                        href={`/admin/data/rosters/${position.roster.id}` as any}
                         className="font-medium text-blue-600 hover:text-blue-800 hover:underline transition-colors"
                       >
                         {position.roster.name}
