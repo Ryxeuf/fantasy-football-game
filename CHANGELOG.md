@@ -1,3 +1,10 @@
+## [1.10.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.9.0...v1.10.0) (2025-11-10)
+
+
+### ✨ Features
+
+* enhance docker-compose and auth-client configuration ([42cc27c](https://github.com/Ryxeuf/fantasy-football-game/commit/42cc27cf0f610c3a2ea5248d412cfb62dc6ee7ae))
+
 ## [1.9.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.8.0...v1.9.0) (2025-11-10)
 
 
