@@ -36,6 +36,12 @@ services:
       "
     networks:
       - traefik-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nufflearena.rule=Host(`nufflearena.fr`)"
+      - "traefik.http.routers.nufflearena.entrypoints=websecure"
+      - "traefik.http.routers.nufflearena.tls.certresolver=letsencrypt"
+      - "traefik.http.services.nufflearena.loadbalancer.server.port=3100"
     depends_on:
       - server
       - db
@@ -64,17 +70,6 @@ services:
         pnpm run dev
       "
 
-  nufflearena:
-    image: nginx:alpine
-    restart: unless-stopped
-    networks:
-      - traefik-network
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.nufflearena.rule=Host(`nufflearena.fr`)"
-      - "traefik.http.routers.nufflearena.entrypoints=websecure"
-      - "traefik.http.routers.nufflearena.tls.certresolver=letsencrypt"
-      - "traefik.http.services.nufflearena.loadbalancer.server.port=8080"
 
 volumes:
   node_modules:
