@@ -1,0 +1,21 @@
+# robots.txt pour Nuffle Arena
+User-agent: *
+Allow: /
+
+# Interdire l'indexation des pages privées
+Disallow: /me/
+Disallow: /api/
+Disallow: /login
+Disallow: /register
+
+# Autoriser les pages publiques importantes
+Allow: /teams
+Allow: /teams/*
+Allow: /star-players
+Allow: /star-players/*
+Allow: /skills
+Allow: /skills/*
+
+# Sitemap
+Sitemap: https://nufflearena.fr/sitemap.xml
+

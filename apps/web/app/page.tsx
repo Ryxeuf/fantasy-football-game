@@ -1,11 +1,14 @@
 "use client";
 import Logo from "./components/Logo";
 import { useLanguage } from "./contexts/LanguageContext";
+import HomeStructuredData from "./components/HomeStructuredData";
 
 export default function LandingPage() {
   const { t } = useLanguage();
   return (
-    <div className="min-h-screen">
+    <>
+      <HomeStructuredData />
+      <div className="min-h-screen">
       {/* Hero */}
       <section className="relative isolate overflow-hidden bg-gradient-to-br from-nuffle-anthracite via-nuffle-bronze to-nuffle-anthracite">
         <div className="w-full px-6 py-20 flex flex-col-reverse md:flex-row items-center gap-10">
@@ -141,5 +144,6 @@ export default function LandingPage() {
         </div>
       </section>
     </div>
+    </>
   );
 }

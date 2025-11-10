@@ -1,0 +1,28 @@
+{
+  "name": "Nuffle Arena - Gestionnaire d'équipes Blood Bowl",
+  "short_name": "Nuffle Arena",
+  "description": "Formez vos équipes Blood Bowl. Défiez le destin. L'arène où le hasard devient divin.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#2C2416",
+  "theme_color": "#CB9E35",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/images/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["games", "entertainment"],
+  "lang": "fr-FR",
+  "dir": "ltr"
+}
+
