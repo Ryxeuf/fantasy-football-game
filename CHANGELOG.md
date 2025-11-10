@@ -1,3 +1,15 @@
+## [1.8.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.7.0...v1.8.0) (2025-11-10)
+
+
+### ✨ Features
+
+* ajout d'améliorations SEO pour Nuffle Arena ([fc19557](https://github.com/Ryxeuf/fantasy-football-game/commit/fc195570a5105dfde318ceb29131e7c2f2cafcb2))
+
+
+### 🐛 Bug Fixes
+
+* update PostgreSQL port mapping in docker-compose.yml ([867d02a](https://github.com/Ryxeuf/fantasy-football-game/commit/867d02a512ce61b0afbd71264cadf3dad00808ce))
+
 ## [1.7.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.6.0...v1.7.0) (2025-11-07)
 
 
