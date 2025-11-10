@@ -1,3 +1,10 @@
+## [1.11.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.10.0...v1.11.0) (2025-11-10)
+
+
+### ✨ Features
+
+* add routes management page and update admin layout ([e80f77b](https://github.com/Ryxeuf/fantasy-football-game/commit/e80f77ba3ac3d10b5c4752df89a7f29f395d2c1e))
+
 ## [1.10.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.9.0...v1.10.0) (2025-11-10)
 
 
