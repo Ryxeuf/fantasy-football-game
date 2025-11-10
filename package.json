@@ -2,7 +2,7 @@
   "name": "nuffle-arena",
   "private": true,
   "packageManager": "pnpm@9.7.0",
-  "version": "1.12.0",
+  "version": "1.13.0",
   "scripts": {
     "dev": "turbo run dev --parallel",
     "dev:web": "cd apps/web && npm run dev",
