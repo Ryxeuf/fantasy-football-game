@@ -1,3 +1,10 @@
+## [1.9.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.8.0...v1.9.0) (2025-11-10)
+
+
+### ✨ Features
+
+* update nufflearena service configuration in docker-compose.yml ([ed4a285](https://github.com/Ryxeuf/fantasy-football-game/commit/ed4a2853e4dbbf3fb2613868d75c3160f697ef6c))
+
 ## [1.8.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.7.0...v1.8.0) (2025-11-10)
 
 
