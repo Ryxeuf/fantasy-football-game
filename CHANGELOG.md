@@ -1,3 +1,10 @@
+## [1.12.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.11.0...v1.12.0) (2025-11-10)
+
+
+### ✨ Features
+
+* implement roster and skill management pages in admin panel ([68b6c2d](https://github.com/Ryxeuf/fantasy-football-game/commit/68b6c2d7fb5f709ee7d9032665c15cce923e2a6a))
+
 ## [1.11.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.10.0...v1.11.0) (2025-11-10)
 
 
