@@ -44,10 +44,12 @@ services:
       - "traefik.http.routers.nufflearena.rule=Host(`nufflearena.fr`)"
       - "traefik.http.routers.nufflearena.entrypoints=websecure"
       - "traefik.http.routers.nufflearena.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.nufflearena.middlewares=secure-headers@file"
       - "traefik.http.services.nufflearena.loadbalancer.server.port=3100"
       - "traefik.http.routers.nufflearena-local.rule=Host(`nufflearena.local`)"
       - "traefik.http.routers.nufflearena-local.entrypoints=web"
       - "traefik.http.services.nufflearena-local.loadbalancer.server.port=3100"
+      - "traefik.docker.network=traefik-network"
     depends_on:
       - server
       - db
