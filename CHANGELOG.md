@@ -1,3 +1,10 @@
+## [1.16.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.15.0...v1.16.0) (2025-11-13)
+
+
+### ✨ Features
+
+* amélioration de la création de matchs locaux avec validation par deux joueurs ([907a4ad](https://github.com/Ryxeuf/fantasy-football-game/commit/907a4ad819467813349c30c21742e3cd4ca3c9dd))
+
 ## [1.15.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.14.1...v1.15.0) (2025-11-13)
 
 
