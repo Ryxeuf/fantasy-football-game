@@ -1,3 +1,10 @@
+## [1.15.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.14.1...v1.15.0) (2025-11-13)
+
+
+### ✨ Features
+
+* amélioration du dashboard admin et gestion complète des coupes ([ace7975](https://github.com/Ryxeuf/fantasy-football-game/commit/ace7975d48f488b6c115bb8918e7de59dadc1664))
+
 ## [1.14.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.14.0...v1.14.1) (2025-11-13)
 
 
