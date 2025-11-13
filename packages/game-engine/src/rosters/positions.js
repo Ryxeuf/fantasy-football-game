@@ -412,7 +412,7 @@ export const TEAM_ROSTERS = {
                 ag: 3,
                 pa: 6,
                 av: 8,
-                skills: "ball-chain,no-hands,secret-weapon,stunty",
+                skills: "ball-and-chain,no-hands,secret-weapon,stunty",
             },
             {
                 slug: "goblin_pogoer",
@@ -451,7 +451,7 @@ export const TEAM_ROSTERS = {
                 ag: 3,
                 pa: 6,
                 av: 8,
-                skills: "right-stuff,stunty,swoop",
+                skills: "right-stuff,stunty",
             },
             {
                 slug: "goblin_trained_troll",
@@ -571,7 +571,7 @@ export const TEAM_ROSTERS = {
                 ag: 3,
                 pa: 3,
                 av: 9,
-                skills: "animosity-all,pass,safe-pair-of-hands",
+                skills: "animosity,pass,safe-pair-of-hands",
             },
             {
                 slug: "chaos_renegade_goblin",
@@ -584,7 +584,7 @@ export const TEAM_ROSTERS = {
                 ag: 3,
                 pa: 4,
                 av: 8,
-                skills: "animosity-all,dodge,right-stuff,stunty",
+                skills: "animosity,dodge,right-stuff,stunty",
             },
             {
                 slug: "chaos_renegade_orc",
@@ -597,7 +597,7 @@ export const TEAM_ROSTERS = {
                 ag: 3,
                 pa: 5,
                 av: 10,
-                skills: "animosity-all",
+                skills: "animosity",
             },
             {
                 slug: "chaos_renegade_skaven",
@@ -610,7 +610,7 @@ export const TEAM_ROSTERS = {
                 ag: 3,
                 pa: 4,
                 av: 8,
-                skills: "animosity-all",
+                skills: "animosity",
             },
             {
                 slug: "chaos_renegade_dark_elf",
@@ -623,7 +623,7 @@ export const TEAM_ROSTERS = {
                 ag: 2,
                 pa: 3,
                 av: 9,
-                skills: "animosity-all",
+                skills: "animosity",
             },
             {
                 slug: "chaos_renegade_troll",
@@ -1087,7 +1087,7 @@ export const TEAM_ROSTERS = {
                 ag: 3,
                 pa: 6,
                 av: 9,
-                skills: "block,foul-appearance,no-hands,regeneration,side-step",
+                skills: "block,foul-appearance,no-hands,regeneration,sidestep",
             },
             {
                 slug: "necromantic_horror_werewolf",
@@ -1134,7 +1134,7 @@ export const TEAM_ROSTERS = {
                 ag: 3,
                 pa: 4,
                 av: 10,
-                skills: "animosity-orc",
+                skills: "animosity",
             },
             {
                 slug: "orc_thrower",
@@ -1173,7 +1173,7 @@ export const TEAM_ROSTERS = {
                 ag: 4,
                 pa: 6,
                 av: 10,
-                skills: "animosity-big-un",
+                skills: "animosity",
             },
             {
                 slug: "orc_goblin",
@@ -1470,7 +1470,7 @@ export const TEAM_ROSTERS = {
                 ag: 2,
                 pa: 3,
                 av: 9,
-                skills: "block,side-step",
+                skills: "block,sidestep",
             },
         ],
     },

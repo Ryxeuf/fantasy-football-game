@@ -173,7 +173,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 2,
     pa: 5,
     av: 8,
-    skills: "loner-4,dodge,nerfs-d’acier,catch,hypnotic-gaze,on-the-ball",
+    skills: "loner-4,dodge,nerves-of-steel,catch,hypnotic-gaze,on-the-ball",
     hirableBy: ["elven_kingdoms_league"],
     imageUrl: "/data/Star-Players_files/Eldril-Sidewinder.webp"
   },
@@ -425,7 +425,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 1,
     pa: 2,
     av: 9,
-    skills: "block,dump-off,dodge,sidestep,nerfs-d’acier,pass,diving-catch,loner-4,on-the-ball",
+    skills: "block,dump-off,dodge,sidestep,nerves-of-steel,pass,diving-catch,loner-4,on-the-ball",
     hirableBy: ["elven_kingdoms_league"],
     imageUrl: undefined
   },
@@ -622,7 +622,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 3,
     pa: 4,
     av: 7,
-    skills: "dodge,titchy,nerfs-d’acier,right-stuff,loner-4",
+    skills: "dodge,titchy,nerves-of-steel,right-stuff,loner-4",
     hirableBy: ["old_world_classic"],
     imageUrl: "/data/Star-Players_files/Puggy_Baconbreath.webp"
   },
@@ -776,7 +776,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 4,
     pa: 4,
     av: 9,
-    skills: "accurate,loner-4,nerfs-d’acier,pass,regeneration,sure-hands,thick-skull",
+    skills: "accurate,loner-4,nerves-of-steel,pass,regeneration,sure-hands,thick-skull",
     hirableBy: ["sylvanian_spotlight"],
     imageUrl: undefined
   },
@@ -888,7 +888,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 4,
     pa: 3,
     av: 10,
-    skills: "nerfs-d’acier,hail-mary-pass,loner-4,secret-weapon,cannoneer,sure-hands,thick-skull",
+    skills: "nerves-of-steel,hail-mary-pass,loner-4,secret-weapon,cannoneer,sure-hands,thick-skull",
     hirableBy: ["badlands_brawl"],
     imageUrl: "/data/Star-Players_files/Zzharg-Madeye-star-player-blood-bowl.webp"
   },
