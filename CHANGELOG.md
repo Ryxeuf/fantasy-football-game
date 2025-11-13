@@ -1,3 +1,10 @@
+## [1.14.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.13.0...v1.14.0) (2025-11-13)
+
+
+### ✨ Features
+
+* Make it work on prod ([185f2ae](https://github.com/Ryxeuf/fantasy-football-game/commit/185f2ae6e156cd3bcbcc4972e20e5157a01ff1fa))
+
 ## [1.13.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.12.0...v1.13.0) (2025-11-10)
 
 
