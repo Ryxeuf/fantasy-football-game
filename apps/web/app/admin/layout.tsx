@@ -66,6 +66,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               {navItem("/admin", "Aperçu", "📊")}
               {navItem("/admin/users", "Utilisateurs", "👥")}
               {navItem("/admin/matches", "Parties", "🎮")}
+              {navItem("/admin/cups", "Coupes", "🏆")}
               {navItem("/admin/routes", "Routes", "📋")}
             </div>
 

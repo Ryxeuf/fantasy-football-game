@@ -69,17 +69,24 @@ router.post("/login", async (req, res) => {
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
+      console.log(`[LOGIN] Utilisateur non trouvé: ${email}`);
       return res.status(401).json({ error: "Identifiants invalides" });
     }
 
+    console.log(`[LOGIN] Tentative de connexion pour ${email}: valid=${user.valid}, role=${user.role}`);
+    
     if (!user.valid) {
+      console.log(`[LOGIN] Compte non validé pour ${email}`);
       return res.status(403).json({ error: "Votre compte n'est pas encore validé. Veuillez contacter un administrateur." });
     }
 
     const ok = await bcrypt.compare(password, user.passwordHash);
     if (!ok) {
+      console.log(`[LOGIN] Mot de passe incorrect pour ${email}`);
       return res.status(401).json({ error: "Identifiants invalides" });
     }
+    
+    console.log(`[LOGIN] Connexion réussie pour ${email}`);
 
     const publicUser = {
       id: user.id,

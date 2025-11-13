@@ -12,6 +12,7 @@ import starPlayersRoutes from "./routes/star-players";
 import publicSkillsRoutes from "./routes/public-skills";
 import publicRostersRoutes from "./routes/public-rosters";
 import publicPositionsRoutes from "./routes/public-positions";
+import cupRoutes from "./routes/cup";
 import dotenv from "dotenv";
 import { toBGIOGame } from "@bb/game-engine";
 import { execSync } from "node:child_process";
@@ -81,6 +82,7 @@ app.use("/star-players", starPlayersRoutes);
 app.use("/api", publicSkillsRoutes);
 app.use("/api", publicRostersRoutes);
 app.use("/api", publicPositionsRoutes);
+app.use("/cup", cupRoutes);
 
 // Endpoint public de reset pour tests (uniquement en TEST_SQLITE=1)
 if (process.env.TEST_SQLITE === "1") {

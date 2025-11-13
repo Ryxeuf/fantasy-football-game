@@ -357,6 +357,7 @@ async function main() {
       lastName: "User",
       role: "admin",
       password: "admin123",
+      valid: true,
     },
     {
       email: "user@example.com",
@@ -366,6 +367,7 @@ async function main() {
       lastName: "Doe",
       role: "user",
       password: "user123",
+      valid: true,
     },
   ];
 

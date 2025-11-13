@@ -254,11 +254,21 @@ router.delete("/users/:id", async (req, res) => {
   }
 });
 
-router.get("/matches", async (_req, res) => {
-  const matches = await prisma.match.findMany({
-    select: { id: true, status: true, seed: true, createdAt: true },
-  });
-  res.json({ matches });
+router.get("/matches", async (req, res) => {
+  try {
+    const { limit } = req.query;
+    const limitNum = limit ? parseInt(limit as string, 10) : undefined;
+    
+    const matches = await prisma.match.findMany({
+      select: { id: true, status: true, seed: true, createdAt: true },
+      orderBy: { createdAt: "desc" },
+      take: limitNum,
+    });
+    res.json({ matches });
+  } catch (e: any) {
+    console.error("Erreur lors de la récupération des parties:", e);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
 });
 
 // Purge toutes les parties (matches, turns, selections et liens joueurs)
@@ -296,11 +306,71 @@ router.post("/test/reset", async (_req, res) => {
 });
 
 router.get("/stats", async (_req, res) => {
-  const [users, matches] = await Promise.all([
-    prisma.user.count(),
-    prisma.match.count(),
-  ]);
-  res.json({ users, matches, health: "ok", time: new Date().toISOString() });
+  try {
+    const [
+      totalUsers,
+      validUsers,
+      adminUsers,
+      totalMatches,
+      totalTeams,
+      totalCups,
+      openCups,
+      closedCups,
+      archivedCups,
+      recentUsers,
+      recentMatches,
+    ] = await Promise.all([
+      prisma.user.count(),
+      prisma.user.count({ where: { valid: true } }),
+      prisma.user.count({ where: { role: "admin" } }),
+      prisma.match.count(),
+      prisma.team.count(),
+      prisma.cup.count(),
+      prisma.cup.count({ where: { status: "ouverte" } }),
+      prisma.cup.count({ where: { status: { in: ["en_cours", "terminee"] } } }),
+      prisma.cup.count({ where: { status: "archivee" } }),
+      prisma.user.findMany({
+        take: 5,
+        orderBy: { createdAt: "desc" },
+        select: { id: true, email: true, coachName: true, createdAt: true },
+      }),
+      prisma.match.findMany({
+        take: 5,
+        orderBy: { createdAt: "desc" },
+        select: { id: true, status: true, createdAt: true },
+      }),
+    ]);
+
+    res.json({
+      users: {
+        total: totalUsers,
+        valid: validUsers,
+        admins: adminUsers,
+        pending: totalUsers - validUsers,
+      },
+      matches: {
+        total: totalMatches,
+      },
+      teams: {
+        total: totalTeams,
+      },
+      cups: {
+        total: totalCups,
+        open: openCups,
+        closed: closedCups,
+        archived: archivedCups,
+      },
+      recent: {
+        users: recentUsers,
+        matches: recentMatches,
+      },
+      health: "ok",
+      time: new Date().toISOString(),
+    });
+  } catch (e: any) {
+    console.error("Erreur lors de la récupération des statistiques:", e);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
 });
 
 export default router;

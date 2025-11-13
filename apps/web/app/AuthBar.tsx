@@ -133,6 +133,13 @@ export default function AuthBar() {
                 >
                   ⚽ {t.auth.myTeams}
                 </a>
+                <a
+                  href="/cups"
+                  className="block px-4 py-2 text-sm hover:bg-gray-100 transition-colors"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  🏆 Coupes
+                </a>
                 {isAdmin && (
                   <a
                     href="/admin"

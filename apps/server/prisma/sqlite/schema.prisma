@@ -24,6 +24,7 @@ model User {
   createdMatches Match[] @relation("MatchCreator")
   teams     Team[]
   teamSelections TeamSelection[]
+  createdCups Cup[] @relation("CupCreator")
 }
 
 model Match {
@@ -71,6 +72,7 @@ model Team {
   createdAt DateTime @default(now())
   players   TeamPlayer[]
   selections TeamSelection[]
+  cupParticipants CupParticipant[]
   
   // Informations d'équipe Blood Bowl
   treasury      Int @default(0)        // Trésorerie en pièces d'or (calculée automatiquement)
@@ -99,6 +101,41 @@ model TeamPlayer {
   pa        Int
   av        Int
   skills    String
+}
+
+// Modèle pour les coupes (tournois)
+model Cup {
+  id        String   @id @default(cuid())
+  name      String   // Nom de la coupe (obligatoire)
+  creator   User     @relation("CupCreator", fields: [creatorId], references: [id])
+  creatorId String
+  validated Boolean  @default(false) // Si true, la coupe est validée et fermée aux inscriptions
+  isPublic  Boolean  @default(true)  // Si true, la coupe est publique et apparaît dans la liste
+  status    String   @default("ouverte") // Statut: "ouverte", "en_cours", "terminee", "archivee"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  participants CupParticipant[]
+  
+  @@index([creatorId])
+  @@index([validated])
+  @@index([isPublic])
+  @@index([status])
+}
+
+// Relation many-to-many entre Cup et Team (participants)
+model CupParticipant {
+  id        String   @id @default(cuid())
+  cup       Cup      @relation(fields: [cupId], references: [id], onDelete: Cascade)
+  cupId     String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId    String
+  createdAt DateTime @default(now())
+  
+  @@unique([cupId, teamId])
+  @@index([cupId])
+  @@index([teamId])
 }
 
 
