@@ -383,7 +383,8 @@ async function main() {
         firstName: u.firstName,
         lastName: u.lastName,
         role: u.role, 
-        passwordHash 
+        passwordHash,
+        valid: true,
       },
     });
   }

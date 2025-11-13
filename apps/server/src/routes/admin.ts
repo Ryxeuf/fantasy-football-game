@@ -50,6 +50,7 @@ router.get("/users", async (req, res) => {
         name: true,
         role: true,
         patreon: true,
+        valid: true,
         createdAt: true,
         updatedAt: true,
         _count: {
@@ -93,6 +94,7 @@ router.get("/users/:id", async (req, res) => {
         name: true,
         role: true,
         patreon: true,
+        valid: true,
         createdAt: true,
         updatedAt: true,
         teams: {
@@ -163,7 +165,7 @@ router.patch("/users/:id/role", async (req, res) => {
     const user = await prisma.user.update({
       where: { id },
       data: { role },
-      select: { id: true, email: true, name: true, role: true, patreon: true },
+      select: { id: true, email: true, name: true, role: true, patreon: true, valid: true },
     });
 
     res.json({ user });
@@ -189,7 +191,7 @@ router.patch("/users/:id/patreon", async (req, res) => {
     const user = await prisma.user.update({
       where: { id },
       data: { patreon },
-      select: { id: true, email: true, name: true, role: true, patreon: true },
+      select: { id: true, email: true, name: true, role: true, patreon: true, valid: true },
     });
 
     res.json({ user });
@@ -199,6 +201,32 @@ router.patch("/users/:id/patreon", async (req, res) => {
     }
     console.error(e);
     res.status(500).json({ error: "Erreur lors de la modification du statut Patreon" });
+  }
+});
+
+// Route pour modifier le statut de validation d'un utilisateur
+router.patch("/users/:id/valid", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { valid } = req.body;
+
+    if (typeof valid !== "boolean") {
+      return res.status(400).json({ error: "Valeur valid invalide" });
+    }
+
+    const user = await prisma.user.update({
+      where: { id },
+      data: { valid },
+      select: { id: true, email: true, name: true, role: true, patreon: true, valid: true },
+    });
+
+    res.json({ user });
+  } catch (e: any) {
+    if (e.code === "P2025") {
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+    }
+    console.error(e);
+    res.status(500).json({ error: "Erreur lors de la modification du statut de validation" });
   }
 });
 

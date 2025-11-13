@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { apiPost, API_BASE } from "../auth-client";
 import { useLanguage } from "../contexts/LanguageContext";
 
@@ -8,6 +8,18 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [infoMessage, setInfoMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Récupérer le message depuis l'URL si présent
+    const params = new URLSearchParams(window.location.search);
+    const message = params.get("message");
+    if (message) {
+      setInfoMessage(decodeURIComponent(message));
+      // Nettoyer l'URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -27,6 +39,11 @@ export default function LoginPage() {
     <div className="w-full p-6 flex justify-center">
       <div className="max-w-sm w-full">
       <h1 className="text-2xl font-bold mb-4">{t.login.title}</h1>
+      {infoMessage && (
+        <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-800 text-sm">
+          {infoMessage}
+        </div>
+      )}
       <form onSubmit={onSubmit} className="space-y-3">
         <input
           className="w-full border p-2 rounded"

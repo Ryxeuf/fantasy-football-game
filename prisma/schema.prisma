@@ -19,6 +19,7 @@ model User {
   dateOfBirth DateTime? // Date de naissance (optionnel)
   role      String   @default("user")
   patreon   Boolean  @default(false)
+  valid     Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   matches   Match[]

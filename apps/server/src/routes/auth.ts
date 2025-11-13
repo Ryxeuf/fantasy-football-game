@@ -33,6 +33,7 @@ router.post("/register", async (req, res) => {
         firstName: typeof firstName === "string" ? firstName : null,
         lastName: typeof lastName === "string" ? lastName : null,
         dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+        valid: false,
       },
       select: {
         id: true,
@@ -43,14 +44,16 @@ router.post("/register", async (req, res) => {
         lastName: true,
         dateOfBirth: true,
         role: true,
+        valid: true,
         createdAt: true,
       },
     });
 
-    const token = jwt.sign({ sub: user.id, role: user.role }, JWT_SECRET, {
-      expiresIn: "7d",
+    // Ne pas donner de token si le compte n'est pas validé
+    return res.status(201).json({ 
+      user, 
+      message: "Votre compte a été créé avec succès. Un administrateur doit valider votre compte avant que vous puissiez vous connecter." 
     });
-    return res.status(201).json({ user, token });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: "Erreur serveur" });
@@ -67,6 +70,10 @@ router.post("/login", async (req, res) => {
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
       return res.status(401).json({ error: "Identifiants invalides" });
+    }
+
+    if (!user.valid) {
+      return res.status(403).json({ error: "Votre compte n'est pas encore validé. Veuillez contacter un administrateur." });
     }
 
     const ok = await bcrypt.compare(password, user.passwordHash);
@@ -112,6 +119,7 @@ router.get("/me", authUser, async (req: AuthenticatedRequest, res) => {
         dateOfBirth: true,
         role: true,
         patreon: true,
+        valid: true,
         createdAt: true,
         updatedAt: true,
         _count: {

@@ -8,6 +8,7 @@ type User = {
   name?: string | null;
   role: string;
   patreon?: boolean;
+  valid?: boolean;
   createdAt: string;
   updatedAt: string;
   _count: {
@@ -155,6 +156,24 @@ export default function AdminUsersPage() {
     }
   };
 
+  const handleValidChange = async (userId: string, valid: boolean) => {
+    setActionLoading(userId);
+    try {
+      await fetchJSON(`/admin/users/${userId}/valid`, {
+        method: "PATCH",
+        body: JSON.stringify({ valid }),
+      });
+      await loadUsers();
+      if (selectedUser === userId && userDetails) {
+        await loadUserDetails(userId);
+      }
+    } catch (e: any) {
+      alert(e.message || "Erreur lors de la modification du statut de validation");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const handleDelete = async (userId: string, userEmail: string) => {
     if (
       !confirm(
@@ -285,6 +304,9 @@ export default function AdminUsersPage() {
                   </div>
                 </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
+                  Validé
+                </th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
                   Statistiques
                 </th>
                 <th
@@ -325,6 +347,17 @@ export default function AdminUsersPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4">
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        u.valid
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {u.valid ? "✓ Validé" : "✗ Non validé"}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
                     <div className="flex gap-3 text-xs text-gray-600">
                       <span title="Équipes">⚽ {u._count.teams}</span>
                       <span title="Parties">🎲 {u._count.matches}</span>
@@ -339,7 +372,7 @@ export default function AdminUsersPage() {
                     })}
                   </td>
                   <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       <select
                         value={u.role}
                         onChange={(e) => handleRoleChange(u.id, e.target.value)}
@@ -351,9 +384,22 @@ export default function AdminUsersPage() {
                         <option value="admin">Admin</option>
                       </select>
                       <button
+                        onClick={() => handleValidChange(u.id, !u.valid)}
+                        disabled={actionLoading === u.id}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg disabled:opacity-50 transition-colors text-xs font-medium ${
+                          u.valid
+                            ? "bg-yellow-50 text-yellow-700 hover:bg-yellow-100"
+                            : "bg-green-50 text-green-700 hover:bg-green-100"
+                        }`}
+                        title={u.valid ? "Invalider le compte" : "Valider le compte"}
+                      >
+                        <span>{u.valid ? "✗" : "✓"}</span>
+                        <span>{u.valid ? "Invalider" : "Valider"}</span>
+                      </button>
+                      <button
                         onClick={() => handleDelete(u.id, u.email)}
                         disabled={actionLoading === u.id}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 disabled:opacity-50 transition-colors text-sm font-medium"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 disabled:opacity-50 transition-colors text-xs font-medium"
                         title="Supprimer"
                       >
                         <span>{actionLoading === u.id ? "⏳" : "🗑️"}</span>
@@ -457,6 +503,21 @@ export default function AdminUsersPage() {
                       />
                       <span className={`text-xs ${userDetails.patreon ? "text-green-700 font-semibold" : "text-gray-600"}`}>
                         {userDetails.patreon ? "Oui" : "Non"}
+                      </span>
+                    </label>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Validé:</span>{" "}
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={userDetails.valid || false}
+                        onChange={(e) => handleValidChange(userDetails.id, e.target.checked)}
+                        disabled={actionLoading === userDetails.id}
+                        className="rounded"
+                      />
+                      <span className={`text-xs ${userDetails.valid ? "text-green-700 font-semibold" : "text-red-700 font-semibold"}`}>
+                        {userDetails.valid ? "Oui" : "Non"}
                       </span>
                     </label>
                   </div>

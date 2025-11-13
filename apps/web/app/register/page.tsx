@@ -17,7 +17,7 @@ export default function RegisterPage() {
     e.preventDefault();
     setError(null);
     try {
-      const { token } = await apiPost("/auth/register", {
+      const response = await apiPost("/auth/register", {
         email,
         password,
         coachName,
@@ -25,10 +25,9 @@ export default function RegisterPage() {
         lastName: lastName || undefined,
         dateOfBirth: dateOfBirth || undefined,
       });
-      localStorage.setItem("auth_token", token);
-      // Stocke aussi dans les cookies pour le middleware Next.js
-      document.cookie = `auth_token=${token}; path=/; max-age=86400; SameSite=Lax`;
-      window.location.href = "/me";
+      // Le compte est créé mais non validé, rediriger vers la page de login avec un message
+      const message = response.message || "Votre compte a été créé avec succès. Un administrateur doit valider votre compte avant que vous puissiez vous connecter.";
+      window.location.href = `/login?message=${encodeURIComponent(message)}`;
     } catch (err: any) {
       setError(err.message || t.register.error);
     }
