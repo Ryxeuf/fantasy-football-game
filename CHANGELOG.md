@@ -1,3 +1,10 @@
+## [1.14.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.14.0...v1.14.1) (2025-11-13)
+
+
+### 🐛 Bug Fixes
+
+* correction des slugs de compétences dans les positions et star players ([4b0cc4e](https://github.com/Ryxeuf/fantasy-football-game/commit/4b0cc4e28a536eb7bf6cfde4ea2da65e8667c86d))
+
 ## [1.14.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.13.0...v1.14.0) (2025-11-13)
 
 
