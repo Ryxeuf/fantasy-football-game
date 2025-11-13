@@ -23,7 +23,7 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=3100
-      - NEXT_PUBLIC_API_BASE=http://localhost:8201
+      - NEXT_PUBLIC_API_BASE=https://api.nufflearena.fr
       - SERVER_API_BASE=http://server:8201
     volumes:
       - .:/app
@@ -45,9 +45,12 @@ services:
       - "traefik.http.routers.nufflearena.entrypoints=websecure"
       - "traefik.http.routers.nufflearena.tls.certresolver=letsencrypt"
       - "traefik.http.routers.nufflearena.middlewares=secure-headers@file"
+      - "traefik.http.routers.nufflearena.service=nufflearena"
+      - "traefik.http.routers.nufflearena.priority=1"
       - "traefik.http.services.nufflearena.loadbalancer.server.port=3100"
       - "traefik.http.routers.nufflearena-local.rule=Host(`nufflearena.local`)"
       - "traefik.http.routers.nufflearena-local.entrypoints=web"
+      - "traefik.http.routers.nufflearena-local.service=nufflearena-local"
       - "traefik.http.services.nufflearena-local.loadbalancer.server.port=3100"
       - "traefik.docker.network=traefik-network"
     depends_on:
@@ -59,6 +62,8 @@ services:
       context: .
       dockerfile: Dockerfile.server
     container_name: nufflearena_server
+    healthcheck:
+      disable: true
     ports:
       - "8202:8202"
       - "8201:8201"
@@ -73,6 +78,16 @@ services:
     working_dir: /app/apps/server
     networks:
       - traefik-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nufflearena-api.rule=Host(`api.nufflearena.fr`)"
+      - "traefik.http.routers.nufflearena-api.entrypoints=websecure"
+      - "traefik.http.routers.nufflearena-api.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.nufflearena-api.middlewares=secure-headers@file"
+      - "traefik.http.routers.nufflearena-api.service=nufflearena-api"
+      - "traefik.http.routers.nufflearena-api.priority=1"
+      - "traefik.http.services.nufflearena-api.loadbalancer.server.port=8201"
+      - "traefik.docker.network=traefik-network"
     command: >
       sh -c "
         pnpm -w prisma generate &&

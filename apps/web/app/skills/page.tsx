@@ -49,6 +49,7 @@ export default function SkillsPage() {
       try {
         setLoading(true);
         setError(null);
+        // Construire l'URL : API_URL est https://api.nufflearena.fr, on ajoute /api/skills
         const response = await fetch(`${API_URL}/api/skills`);
         if (!response.ok) {
           throw new Error("Erreur lors du chargement des compétences");
