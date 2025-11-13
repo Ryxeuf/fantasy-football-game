@@ -9,21 +9,23 @@ datasource db {
 }
 
 model User {
-  id             String          @id @default(cuid())
-  email          String          @unique
-  passwordHash   String
-  name           String? // Conservé pour rétrocompatibilité
-  coachName      String // Nom de coach (obligatoire)
-  firstName      String? // Prénom (optionnel)
-  lastName       String? // Nom (optionnel)
-  dateOfBirth    DateTime? // Date de naissance (optionnel)
-  role           String          @default("user")
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  matches        Match[]
-  createdMatches Match[]         @relation("MatchCreator")
-  teams          Team[]
-  teamSelections TeamSelection[]
+  id                  String          @id @default(cuid())
+  email               String          @unique
+  passwordHash        String
+  name                String? // Conservé pour rétrocompatibilité
+  coachName           String // Nom de coach (obligatoire)
+  firstName           String? // Prénom (optionnel)
+  lastName            String? // Nom (optionnel)
+  dateOfBirth         DateTime? // Date de naissance (optionnel)
+  role                String          @default("user")
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  matches             Match[]
+  createdMatches      Match[]         @relation("MatchCreator")
+  teams               Team[]
+  teamSelections      TeamSelection[]
+  createdCups         Cup[]           @relation("CupCreator")
+  createdLocalMatches LocalMatch[]    @relation("LocalMatchCreator")
 }
 
 model Match {
@@ -63,14 +65,17 @@ model TeamSelection {
 }
 
 model Team {
-  id         String          @id @default(cuid())
-  owner      User            @relation(fields: [ownerId], references: [id])
-  ownerId    String
-  name       String
-  roster     String
-  createdAt  DateTime        @default(now())
-  players    TeamPlayer[]
-  selections TeamSelection[]
+  id                  String           @id @default(cuid())
+  owner               User             @relation(fields: [ownerId], references: [id])
+  ownerId             String
+  name                String
+  roster              String
+  createdAt           DateTime         @default(now())
+  players             TeamPlayer[]
+  selections          TeamSelection[]
+  cupParticipants     CupParticipant[]
+  localMatchesAsTeamA LocalMatch[]     @relation("LocalMatchTeamA")
+  localMatchesAsTeamB LocalMatch[]     @relation("LocalMatchTeamB")
 
   // Informations d'équipe Blood Bowl
   treasury      Int     @default(0) // Trésorerie en pièces d'or (calculée automatiquement)
@@ -99,4 +104,87 @@ model TeamPlayer {
   pa       Int
   av       Int
   skills   String
+}
+
+// Modèle pour les coupes (tournois)
+model Cup {
+  id        String   @id @default(cuid())
+  name      String // Nom de la coupe (obligatoire)
+  creator   User     @relation("CupCreator", fields: [creatorId], references: [id])
+  creatorId String
+  validated Boolean  @default(false) // Si true, la coupe est validée et fermée aux inscriptions
+  isPublic  Boolean  @default(true) // Si true, la coupe est publique et apparaît dans la liste
+  status    String   @default("ouverte") // Statut: "ouverte", "en_cours", "terminee", "archivee"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  participants CupParticipant[]
+  localMatches LocalMatch[]
+
+  @@index([creatorId])
+  @@index([validated])
+  @@index([isPublic])
+  @@index([status])
+}
+
+// Relation many-to-many entre Cup et Team (participants)
+model CupParticipant {
+  id        String   @id @default(cuid())
+  cup       Cup      @relation(fields: [cupId], references: [id], onDelete: Cascade)
+  cupId     String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId    String
+  createdAt DateTime @default(now())
+
+  @@unique([cupId, teamId])
+  @@index([cupId])
+  @@index([teamId])
+}
+
+// Modèle pour les parties offline (Match Local)
+model LocalMatch {
+  id          String    @id @default(cuid())
+  name        String? // Nom optionnel pour la partie
+  status      String    @default("pending") // "pending", "waiting_for_player", "in_progress", "completed", "cancelled"
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  startedAt   DateTime? // Date de début de la partie
+  completedAt DateTime? // Date de fin de la partie
+
+  // Créateur de la partie
+  creator   User   @relation("LocalMatchCreator", fields: [creatorId], references: [id])
+  creatorId String
+
+  // Les deux équipes qui s'affrontent
+  teamA   Team   @relation("LocalMatchTeamA", fields: [teamAId], references: [id])
+  teamAId String
+  teamB   Team?  @relation("LocalMatchTeamB", fields: [teamBId], references: [id], onDelete: SetNull)
+  teamBId String?
+
+  // Relation optionnelle avec une coupe
+  cup   Cup?    @relation(fields: [cupId], references: [id], onDelete: SetNull)
+  cupId String?
+
+  // Lien de partage pour inviter le second joueur
+  shareToken String? @unique // Token unique pour le lien de partage
+
+  // Validation de participation des propriétaires des équipes
+  teamAOwnerValidated Boolean @default(false) // Le propriétaire de l'équipe A a validé sa participation
+  teamBOwnerValidated Boolean @default(false) // Le propriétaire de l'équipe B a validé sa participation
+
+  // État du jeu sauvegardé (JSON)
+  gameState Json? // État complet du jeu pour reprise
+
+  // Résultat du match (optionnel, rempli à la fin)
+  scoreTeamA Int? // Score de l'équipe A
+  scoreTeamB Int? // Score de l'équipe B
+
+  @@index([creatorId])
+  @@index([teamAId])
+  @@index([teamBId])
+  @@index([cupId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([shareToken])
 }

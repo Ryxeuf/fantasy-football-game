@@ -25,6 +25,7 @@ model User {
   teams     Team[]
   teamSelections TeamSelection[]
   createdCups Cup[] @relation("CupCreator")
+  createdLocalMatches LocalMatch[] @relation("LocalMatchCreator")
 }
 
 model Match {
@@ -73,6 +74,8 @@ model Team {
   players   TeamPlayer[]
   selections TeamSelection[]
   cupParticipants CupParticipant[]
+  localMatchesAsTeamA LocalMatch[] @relation("LocalMatchTeamA")
+  localMatchesAsTeamB LocalMatch[] @relation("LocalMatchTeamB")
   
   // Informations d'équipe Blood Bowl
   treasury      Int @default(0)        // Trésorerie en pièces d'or (calculée automatiquement)
@@ -117,6 +120,7 @@ model Cup {
   
   // Relations
   participants CupParticipant[]
+  localMatches LocalMatch[]
   
   @@index([creatorId])
   @@index([validated])
@@ -136,6 +140,53 @@ model CupParticipant {
   @@unique([cupId, teamId])
   @@index([cupId])
   @@index([teamId])
+}
+
+// Modèle pour les parties offline (Match Local)
+model LocalMatch {
+  id        String   @id @default(cuid())
+  name      String?  // Nom optionnel pour la partie
+  status    String   @default("pending") // "pending", "waiting_for_player", "in_progress", "completed", "cancelled"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  startedAt DateTime? // Date de début de la partie
+  completedAt DateTime? // Date de fin de la partie
+  
+  // Créateur de la partie
+  creator   User     @relation("LocalMatchCreator", fields: [creatorId], references: [id])
+  creatorId String
+  
+  // Les deux équipes qui s'affrontent
+  teamA     Team     @relation("LocalMatchTeamA", fields: [teamAId], references: [id])
+  teamAId   String
+  teamB     Team?    @relation("LocalMatchTeamB", fields: [teamBId], references: [id], onDelete: SetNull)
+  teamBId   String?
+  
+  // Relation optionnelle avec une coupe
+  cup       Cup?     @relation(fields: [cupId], references: [id], onDelete: SetNull)
+  cupId     String?
+  
+  // Lien de partage pour inviter le second joueur
+  shareToken String? @unique // Token unique pour le lien de partage
+  
+  // Validation de participation des propriétaires des équipes
+  teamAOwnerValidated Boolean @default(false) // Le propriétaire de l'équipe A a validé sa participation
+  teamBOwnerValidated Boolean @default(false) // Le propriétaire de l'équipe B a validé sa participation
+  
+  // État du jeu sauvegardé (JSON)
+  gameState Json?    // État complet du jeu pour reprise
+  
+  // Résultat du match (optionnel, rempli à la fin)
+  scoreTeamA Int?    // Score de l'équipe A
+  scoreTeamB Int?    // Score de l'équipe B
+  
+  @@index([creatorId])
+  @@index([teamAId])
+  @@index([teamBId])
+  @@index([cupId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([shareToken])
 }
 
 

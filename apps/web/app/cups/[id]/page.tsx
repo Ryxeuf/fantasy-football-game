@@ -460,6 +460,14 @@ export default function CupDetailPage() {
             </a>
           </div>
         )}
+        {cup.status === "en_cours" && cup.participants.length >= 2 && (
+          <button
+            onClick={() => router.push(`/local-matches/new?cupId=${cup.id}`)}
+            className="w-full px-5 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-all"
+          >
+            Créer un match local pour cette coupe
+          </button>
+        )}
       </div>
     </div>
   );
