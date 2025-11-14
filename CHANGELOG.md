@@ -1,3 +1,10 @@
+## [1.19.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.18.0...v1.19.0) (2025-11-14)
+
+
+### ✨ Features
+
+* ajout récapitulatif match local terminé avec export PDF ([a62d1e4](https://github.com/Ryxeuf/fantasy-football-game/commit/a62d1e4dc3d0193f0729b2edb40976d23d110505))
+
 ## [1.18.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.17.0...v1.18.0) (2025-11-14)
 
 
