@@ -1,3 +1,10 @@
+## [1.20.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.19.0...v1.20.0) (2025-11-14)
+
+
+### ✨ Features
+
+* ajout des informations de pré-match (fans et météo) dans l'interface et l'export PDF ([b8a662a](https://github.com/Ryxeuf/fantasy-football-game/commit/b8a662a694ccb900ba484b48c1a7a0188b363a14))
+
 ## [1.19.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.18.0...v1.19.0) (2025-11-14)
 
 
