@@ -140,6 +140,13 @@ export default function AuthBar() {
                 >
                   🏆 Coupes
                 </a>
+                <a
+                  href="/local-matches"
+                  className="block px-4 py-2 text-sm hover:bg-gray-100 transition-colors"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  🎮 Parties Offline
+                </a>
                 {isAdmin && (
                   <a
                     href="/admin"

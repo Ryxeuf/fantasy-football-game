@@ -43,6 +43,21 @@ export type Team = $Result.DefaultSelection<Prisma.$TeamPayload>
  * 
  */
 export type TeamPlayer = $Result.DefaultSelection<Prisma.$TeamPlayerPayload>
+/**
+ * Model Cup
+ * 
+ */
+export type Cup = $Result.DefaultSelection<Prisma.$CupPayload>
+/**
+ * Model CupParticipant
+ * 
+ */
+export type CupParticipant = $Result.DefaultSelection<Prisma.$CupParticipantPayload>
+/**
+ * Model LocalMatch
+ * 
+ */
+export type LocalMatch = $Result.DefaultSelection<Prisma.$LocalMatchPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -221,6 +236,36 @@ export class PrismaClient<
     * ```
     */
   get teamPlayer(): Prisma.TeamPlayerDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.cup`: Exposes CRUD operations for the **Cup** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Cups
+    * const cups = await prisma.cup.findMany()
+    * ```
+    */
+  get cup(): Prisma.CupDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.cupParticipant`: Exposes CRUD operations for the **CupParticipant** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more CupParticipants
+    * const cupParticipants = await prisma.cupParticipant.findMany()
+    * ```
+    */
+  get cupParticipant(): Prisma.CupParticipantDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.localMatch`: Exposes CRUD operations for the **LocalMatch** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more LocalMatches
+    * const localMatches = await prisma.localMatch.findMany()
+    * ```
+    */
+  get localMatch(): Prisma.LocalMatchDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -666,7 +711,10 @@ export namespace Prisma {
     Turn: 'Turn',
     TeamSelection: 'TeamSelection',
     Team: 'Team',
-    TeamPlayer: 'TeamPlayer'
+    TeamPlayer: 'TeamPlayer',
+    Cup: 'Cup',
+    CupParticipant: 'CupParticipant',
+    LocalMatch: 'LocalMatch'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -685,7 +733,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer"
+      modelProps: "user" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "cup" | "cupParticipant" | "localMatch"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1133,6 +1181,228 @@ export namespace Prisma {
           }
         }
       }
+      Cup: {
+        payload: Prisma.$CupPayload<ExtArgs>
+        fields: Prisma.CupFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.CupFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CupPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.CupFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CupPayload>
+          }
+          findFirst: {
+            args: Prisma.CupFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CupPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.CupFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CupPayload>
+          }
+          findMany: {
+            args: Prisma.CupFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CupPayload>[]
+          }
+          create: {
+            args: Prisma.CupCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CupPayload>
+          }
+          createMany: {
+            args: Prisma.CupCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.CupCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CupPayload>[]
+          }
+          delete: {
+            args: Prisma.CupDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CupPayload>
+          }
+          update: {
+            args: Prisma.CupUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CupPayload>
+          }
+          deleteMany: {
+            args: Prisma.CupDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.CupUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.CupUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CupPayload>[]
+          }
+          upsert: {
+            args: Prisma.CupUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CupPayload>
+          }
+          aggregate: {
+            args: Prisma.CupAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateCup>
+          }
+          groupBy: {
+            args: Prisma.CupGroupByArgs<ExtArgs>
+            result: $Utils.Optional<CupGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.CupCountArgs<ExtArgs>
+            result: $Utils.Optional<CupCountAggregateOutputType> | number
+          }
+        }
+      }
+      CupParticipant: {
+        payload: Prisma.$CupParticipantPayload<ExtArgs>
+        fields: Prisma.CupParticipantFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.CupParticipantFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CupParticipantPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.CupParticipantFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CupParticipantPayload>
+          }
+          findFirst: {
+            args: Prisma.CupParticipantFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CupParticipantPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.CupParticipantFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CupParticipantPayload>
+          }
+          findMany: {
+            args: Prisma.CupParticipantFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CupParticipantPayload>[]
+          }
+          create: {
+            args: Prisma.CupParticipantCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CupParticipantPayload>
+          }
+          createMany: {
+            args: Prisma.CupParticipantCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.CupParticipantCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CupParticipantPayload>[]
+          }
+          delete: {
+            args: Prisma.CupParticipantDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CupParticipantPayload>
+          }
+          update: {
+            args: Prisma.CupParticipantUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CupParticipantPayload>
+          }
+          deleteMany: {
+            args: Prisma.CupParticipantDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.CupParticipantUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.CupParticipantUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CupParticipantPayload>[]
+          }
+          upsert: {
+            args: Prisma.CupParticipantUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CupParticipantPayload>
+          }
+          aggregate: {
+            args: Prisma.CupParticipantAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateCupParticipant>
+          }
+          groupBy: {
+            args: Prisma.CupParticipantGroupByArgs<ExtArgs>
+            result: $Utils.Optional<CupParticipantGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.CupParticipantCountArgs<ExtArgs>
+            result: $Utils.Optional<CupParticipantCountAggregateOutputType> | number
+          }
+        }
+      }
+      LocalMatch: {
+        payload: Prisma.$LocalMatchPayload<ExtArgs>
+        fields: Prisma.LocalMatchFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.LocalMatchFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LocalMatchPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.LocalMatchFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LocalMatchPayload>
+          }
+          findFirst: {
+            args: Prisma.LocalMatchFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LocalMatchPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.LocalMatchFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LocalMatchPayload>
+          }
+          findMany: {
+            args: Prisma.LocalMatchFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LocalMatchPayload>[]
+          }
+          create: {
+            args: Prisma.LocalMatchCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LocalMatchPayload>
+          }
+          createMany: {
+            args: Prisma.LocalMatchCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.LocalMatchCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LocalMatchPayload>[]
+          }
+          delete: {
+            args: Prisma.LocalMatchDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LocalMatchPayload>
+          }
+          update: {
+            args: Prisma.LocalMatchUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LocalMatchPayload>
+          }
+          deleteMany: {
+            args: Prisma.LocalMatchDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.LocalMatchUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.LocalMatchUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LocalMatchPayload>[]
+          }
+          upsert: {
+            args: Prisma.LocalMatchUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LocalMatchPayload>
+          }
+          aggregate: {
+            args: Prisma.LocalMatchAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateLocalMatch>
+          }
+          groupBy: {
+            args: Prisma.LocalMatchGroupByArgs<ExtArgs>
+            result: $Utils.Optional<LocalMatchGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.LocalMatchCountArgs<ExtArgs>
+            result: $Utils.Optional<LocalMatchCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -1235,6 +1505,9 @@ export namespace Prisma {
     teamSelection?: TeamSelectionOmit
     team?: TeamOmit
     teamPlayer?: TeamPlayerOmit
+    cup?: CupOmit
+    cupParticipant?: CupParticipantOmit
+    localMatch?: LocalMatchOmit
   }
 
   /* Types for Logging */
@@ -1319,6 +1592,8 @@ export namespace Prisma {
     createdMatches: number
     teams: number
     teamSelections: number
+    createdCups: number
+    createdLocalMatches: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -1326,6 +1601,8 @@ export namespace Prisma {
     createdMatches?: boolean | UserCountOutputTypeCountCreatedMatchesArgs
     teams?: boolean | UserCountOutputTypeCountTeamsArgs
     teamSelections?: boolean | UserCountOutputTypeCountTeamSelectionsArgs
+    createdCups?: boolean | UserCountOutputTypeCountCreatedCupsArgs
+    createdLocalMatches?: boolean | UserCountOutputTypeCountCreatedLocalMatchesArgs
   }
 
   // Custom InputTypes
@@ -1365,6 +1642,20 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountTeamSelectionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: TeamSelectionWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountCreatedCupsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CupWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountCreatedLocalMatchesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: LocalMatchWhereInput
   }
 
 
@@ -1424,11 +1715,17 @@ export namespace Prisma {
   export type TeamCountOutputType = {
     players: number
     selections: number
+    cupParticipants: number
+    localMatchesAsTeamA: number
+    localMatchesAsTeamB: number
   }
 
   export type TeamCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     players?: boolean | TeamCountOutputTypeCountPlayersArgs
     selections?: boolean | TeamCountOutputTypeCountSelectionsArgs
+    cupParticipants?: boolean | TeamCountOutputTypeCountCupParticipantsArgs
+    localMatchesAsTeamA?: boolean | TeamCountOutputTypeCountLocalMatchesAsTeamAArgs
+    localMatchesAsTeamB?: boolean | TeamCountOutputTypeCountLocalMatchesAsTeamBArgs
   }
 
   // Custom InputTypes
@@ -1454,6 +1751,67 @@ export namespace Prisma {
    */
   export type TeamCountOutputTypeCountSelectionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: TeamSelectionWhereInput
+  }
+
+  /**
+   * TeamCountOutputType without action
+   */
+  export type TeamCountOutputTypeCountCupParticipantsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CupParticipantWhereInput
+  }
+
+  /**
+   * TeamCountOutputType without action
+   */
+  export type TeamCountOutputTypeCountLocalMatchesAsTeamAArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: LocalMatchWhereInput
+  }
+
+  /**
+   * TeamCountOutputType without action
+   */
+  export type TeamCountOutputTypeCountLocalMatchesAsTeamBArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: LocalMatchWhereInput
+  }
+
+
+  /**
+   * Count Type CupCountOutputType
+   */
+
+  export type CupCountOutputType = {
+    participants: number
+    localMatches: number
+  }
+
+  export type CupCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    participants?: boolean | CupCountOutputTypeCountParticipantsArgs
+    localMatches?: boolean | CupCountOutputTypeCountLocalMatchesArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * CupCountOutputType without action
+   */
+  export type CupCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CupCountOutputType
+     */
+    select?: CupCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * CupCountOutputType without action
+   */
+  export type CupCountOutputTypeCountParticipantsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CupParticipantWhereInput
+  }
+
+  /**
+   * CupCountOutputType without action
+   */
+  export type CupCountOutputTypeCountLocalMatchesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: LocalMatchWhereInput
   }
 
 
@@ -1677,6 +2035,8 @@ export namespace Prisma {
     createdMatches?: boolean | User$createdMatchesArgs<ExtArgs>
     teams?: boolean | User$teamsArgs<ExtArgs>
     teamSelections?: boolean | User$teamSelectionsArgs<ExtArgs>
+    createdCups?: boolean | User$createdCupsArgs<ExtArgs>
+    createdLocalMatches?: boolean | User$createdLocalMatchesArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -1728,6 +2088,8 @@ export namespace Prisma {
     createdMatches?: boolean | User$createdMatchesArgs<ExtArgs>
     teams?: boolean | User$teamsArgs<ExtArgs>
     teamSelections?: boolean | User$teamSelectionsArgs<ExtArgs>
+    createdCups?: boolean | User$createdCupsArgs<ExtArgs>
+    createdLocalMatches?: boolean | User$createdLocalMatchesArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -1740,6 +2102,8 @@ export namespace Prisma {
       createdMatches: Prisma.$MatchPayload<ExtArgs>[]
       teams: Prisma.$TeamPayload<ExtArgs>[]
       teamSelections: Prisma.$TeamSelectionPayload<ExtArgs>[]
+      createdCups: Prisma.$CupPayload<ExtArgs>[]
+      createdLocalMatches: Prisma.$LocalMatchPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -2151,6 +2515,8 @@ export namespace Prisma {
     createdMatches<T extends User$createdMatchesArgs<ExtArgs> = {}>(args?: Subset<T, User$createdMatchesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MatchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     teams<T extends User$teamsArgs<ExtArgs> = {}>(args?: Subset<T, User$teamsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeamPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     teamSelections<T extends User$teamSelectionsArgs<ExtArgs> = {}>(args?: Subset<T, User$teamSelectionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeamSelectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    createdCups<T extends User$createdCupsArgs<ExtArgs> = {}>(args?: Subset<T, User$createdCupsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CupPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    createdLocalMatches<T extends User$createdLocalMatchesArgs<ExtArgs> = {}>(args?: Subset<T, User$createdLocalMatchesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LocalMatchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2670,6 +3036,54 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: TeamSelectionScalarFieldEnum | TeamSelectionScalarFieldEnum[]
+  }
+
+  /**
+   * User.createdCups
+   */
+  export type User$createdCupsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Cup
+     */
+    select?: CupSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Cup
+     */
+    omit?: CupOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupInclude<ExtArgs> | null
+    where?: CupWhereInput
+    orderBy?: CupOrderByWithRelationInput | CupOrderByWithRelationInput[]
+    cursor?: CupWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: CupScalarFieldEnum | CupScalarFieldEnum[]
+  }
+
+  /**
+   * User.createdLocalMatches
+   */
+  export type User$createdLocalMatchesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LocalMatch
+     */
+    select?: LocalMatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LocalMatch
+     */
+    omit?: LocalMatchOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LocalMatchInclude<ExtArgs> | null
+    where?: LocalMatchWhereInput
+    orderBy?: LocalMatchOrderByWithRelationInput | LocalMatchOrderByWithRelationInput[]
+    cursor?: LocalMatchWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: LocalMatchScalarFieldEnum | LocalMatchScalarFieldEnum[]
   }
 
   /**
@@ -6343,6 +6757,9 @@ export namespace Prisma {
     owner?: boolean | UserDefaultArgs<ExtArgs>
     players?: boolean | Team$playersArgs<ExtArgs>
     selections?: boolean | Team$selectionsArgs<ExtArgs>
+    cupParticipants?: boolean | Team$cupParticipantsArgs<ExtArgs>
+    localMatchesAsTeamA?: boolean | Team$localMatchesAsTeamAArgs<ExtArgs>
+    localMatchesAsTeamB?: boolean | Team$localMatchesAsTeamBArgs<ExtArgs>
     _count?: boolean | TeamCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["team"]>
 
@@ -6404,6 +6821,9 @@ export namespace Prisma {
     owner?: boolean | UserDefaultArgs<ExtArgs>
     players?: boolean | Team$playersArgs<ExtArgs>
     selections?: boolean | Team$selectionsArgs<ExtArgs>
+    cupParticipants?: boolean | Team$cupParticipantsArgs<ExtArgs>
+    localMatchesAsTeamA?: boolean | Team$localMatchesAsTeamAArgs<ExtArgs>
+    localMatchesAsTeamB?: boolean | Team$localMatchesAsTeamBArgs<ExtArgs>
     _count?: boolean | TeamCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type TeamIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -6419,6 +6839,9 @@ export namespace Prisma {
       owner: Prisma.$UserPayload<ExtArgs>
       players: Prisma.$TeamPlayerPayload<ExtArgs>[]
       selections: Prisma.$TeamSelectionPayload<ExtArgs>[]
+      cupParticipants: Prisma.$CupParticipantPayload<ExtArgs>[]
+      localMatchesAsTeamA: Prisma.$LocalMatchPayload<ExtArgs>[]
+      localMatchesAsTeamB: Prisma.$LocalMatchPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -6832,6 +7255,9 @@ export namespace Prisma {
     owner<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     players<T extends Team$playersArgs<ExtArgs> = {}>(args?: Subset<T, Team$playersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeamPlayerPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     selections<T extends Team$selectionsArgs<ExtArgs> = {}>(args?: Subset<T, Team$selectionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeamSelectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    cupParticipants<T extends Team$cupParticipantsArgs<ExtArgs> = {}>(args?: Subset<T, Team$cupParticipantsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CupParticipantPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    localMatchesAsTeamA<T extends Team$localMatchesAsTeamAArgs<ExtArgs> = {}>(args?: Subset<T, Team$localMatchesAsTeamAArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LocalMatchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    localMatchesAsTeamB<T extends Team$localMatchesAsTeamBArgs<ExtArgs> = {}>(args?: Subset<T, Team$localMatchesAsTeamBArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LocalMatchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -7314,6 +7740,78 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: TeamSelectionScalarFieldEnum | TeamSelectionScalarFieldEnum[]
+  }
+
+  /**
+   * Team.cupParticipants
+   */
+  export type Team$cupParticipantsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CupParticipant
+     */
+    select?: CupParticipantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CupParticipant
+     */
+    omit?: CupParticipantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupParticipantInclude<ExtArgs> | null
+    where?: CupParticipantWhereInput
+    orderBy?: CupParticipantOrderByWithRelationInput | CupParticipantOrderByWithRelationInput[]
+    cursor?: CupParticipantWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: CupParticipantScalarFieldEnum | CupParticipantScalarFieldEnum[]
+  }
+
+  /**
+   * Team.localMatchesAsTeamA
+   */
+  export type Team$localMatchesAsTeamAArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LocalMatch
+     */
+    select?: LocalMatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LocalMatch
+     */
+    omit?: LocalMatchOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LocalMatchInclude<ExtArgs> | null
+    where?: LocalMatchWhereInput
+    orderBy?: LocalMatchOrderByWithRelationInput | LocalMatchOrderByWithRelationInput[]
+    cursor?: LocalMatchWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: LocalMatchScalarFieldEnum | LocalMatchScalarFieldEnum[]
+  }
+
+  /**
+   * Team.localMatchesAsTeamB
+   */
+  export type Team$localMatchesAsTeamBArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LocalMatch
+     */
+    select?: LocalMatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LocalMatch
+     */
+    omit?: LocalMatchOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LocalMatchInclude<ExtArgs> | null
+    where?: LocalMatchWhereInput
+    orderBy?: LocalMatchOrderByWithRelationInput | LocalMatchOrderByWithRelationInput[]
+    cursor?: LocalMatchWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: LocalMatchScalarFieldEnum | LocalMatchScalarFieldEnum[]
   }
 
   /**
@@ -8524,6 +9022,3460 @@ export namespace Prisma {
 
 
   /**
+   * Model Cup
+   */
+
+  export type AggregateCup = {
+    _count: CupCountAggregateOutputType | null
+    _min: CupMinAggregateOutputType | null
+    _max: CupMaxAggregateOutputType | null
+  }
+
+  export type CupMinAggregateOutputType = {
+    id: string | null
+    name: string | null
+    creatorId: string | null
+    validated: boolean | null
+    isPublic: boolean | null
+    status: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type CupMaxAggregateOutputType = {
+    id: string | null
+    name: string | null
+    creatorId: string | null
+    validated: boolean | null
+    isPublic: boolean | null
+    status: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type CupCountAggregateOutputType = {
+    id: number
+    name: number
+    creatorId: number
+    validated: number
+    isPublic: number
+    status: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type CupMinAggregateInputType = {
+    id?: true
+    name?: true
+    creatorId?: true
+    validated?: true
+    isPublic?: true
+    status?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type CupMaxAggregateInputType = {
+    id?: true
+    name?: true
+    creatorId?: true
+    validated?: true
+    isPublic?: true
+    status?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type CupCountAggregateInputType = {
+    id?: true
+    name?: true
+    creatorId?: true
+    validated?: true
+    isPublic?: true
+    status?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type CupAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Cup to aggregate.
+     */
+    where?: CupWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Cups to fetch.
+     */
+    orderBy?: CupOrderByWithRelationInput | CupOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: CupWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Cups from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Cups.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Cups
+    **/
+    _count?: true | CupCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: CupMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: CupMaxAggregateInputType
+  }
+
+  export type GetCupAggregateType<T extends CupAggregateArgs> = {
+        [P in keyof T & keyof AggregateCup]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateCup[P]>
+      : GetScalarType<T[P], AggregateCup[P]>
+  }
+
+
+
+
+  export type CupGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CupWhereInput
+    orderBy?: CupOrderByWithAggregationInput | CupOrderByWithAggregationInput[]
+    by: CupScalarFieldEnum[] | CupScalarFieldEnum
+    having?: CupScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: CupCountAggregateInputType | true
+    _min?: CupMinAggregateInputType
+    _max?: CupMaxAggregateInputType
+  }
+
+  export type CupGroupByOutputType = {
+    id: string
+    name: string
+    creatorId: string
+    validated: boolean
+    isPublic: boolean
+    status: string
+    createdAt: Date
+    updatedAt: Date
+    _count: CupCountAggregateOutputType | null
+    _min: CupMinAggregateOutputType | null
+    _max: CupMaxAggregateOutputType | null
+  }
+
+  type GetCupGroupByPayload<T extends CupGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<CupGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof CupGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], CupGroupByOutputType[P]>
+            : GetScalarType<T[P], CupGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type CupSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    name?: boolean
+    creatorId?: boolean
+    validated?: boolean
+    isPublic?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    creator?: boolean | UserDefaultArgs<ExtArgs>
+    participants?: boolean | Cup$participantsArgs<ExtArgs>
+    localMatches?: boolean | Cup$localMatchesArgs<ExtArgs>
+    _count?: boolean | CupCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["cup"]>
+
+  export type CupSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    name?: boolean
+    creatorId?: boolean
+    validated?: boolean
+    isPublic?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    creator?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["cup"]>
+
+  export type CupSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    name?: boolean
+    creatorId?: boolean
+    validated?: boolean
+    isPublic?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    creator?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["cup"]>
+
+  export type CupSelectScalar = {
+    id?: boolean
+    name?: boolean
+    creatorId?: boolean
+    validated?: boolean
+    isPublic?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type CupOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "creatorId" | "validated" | "isPublic" | "status" | "createdAt" | "updatedAt", ExtArgs["result"]["cup"]>
+  export type CupInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    creator?: boolean | UserDefaultArgs<ExtArgs>
+    participants?: boolean | Cup$participantsArgs<ExtArgs>
+    localMatches?: boolean | Cup$localMatchesArgs<ExtArgs>
+    _count?: boolean | CupCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type CupIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    creator?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type CupIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    creator?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $CupPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Cup"
+    objects: {
+      creator: Prisma.$UserPayload<ExtArgs>
+      participants: Prisma.$CupParticipantPayload<ExtArgs>[]
+      localMatches: Prisma.$LocalMatchPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      name: string
+      creatorId: string
+      validated: boolean
+      isPublic: boolean
+      status: string
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["cup"]>
+    composites: {}
+  }
+
+  type CupGetPayload<S extends boolean | null | undefined | CupDefaultArgs> = $Result.GetResult<Prisma.$CupPayload, S>
+
+  type CupCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<CupFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: CupCountAggregateInputType | true
+    }
+
+  export interface CupDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Cup'], meta: { name: 'Cup' } }
+    /**
+     * Find zero or one Cup that matches the filter.
+     * @param {CupFindUniqueArgs} args - Arguments to find a Cup
+     * @example
+     * // Get one Cup
+     * const cup = await prisma.cup.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends CupFindUniqueArgs>(args: SelectSubset<T, CupFindUniqueArgs<ExtArgs>>): Prisma__CupClient<$Result.GetResult<Prisma.$CupPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Cup that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {CupFindUniqueOrThrowArgs} args - Arguments to find a Cup
+     * @example
+     * // Get one Cup
+     * const cup = await prisma.cup.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends CupFindUniqueOrThrowArgs>(args: SelectSubset<T, CupFindUniqueOrThrowArgs<ExtArgs>>): Prisma__CupClient<$Result.GetResult<Prisma.$CupPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Cup that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CupFindFirstArgs} args - Arguments to find a Cup
+     * @example
+     * // Get one Cup
+     * const cup = await prisma.cup.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends CupFindFirstArgs>(args?: SelectSubset<T, CupFindFirstArgs<ExtArgs>>): Prisma__CupClient<$Result.GetResult<Prisma.$CupPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Cup that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CupFindFirstOrThrowArgs} args - Arguments to find a Cup
+     * @example
+     * // Get one Cup
+     * const cup = await prisma.cup.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends CupFindFirstOrThrowArgs>(args?: SelectSubset<T, CupFindFirstOrThrowArgs<ExtArgs>>): Prisma__CupClient<$Result.GetResult<Prisma.$CupPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Cups that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CupFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Cups
+     * const cups = await prisma.cup.findMany()
+     * 
+     * // Get first 10 Cups
+     * const cups = await prisma.cup.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const cupWithIdOnly = await prisma.cup.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends CupFindManyArgs>(args?: SelectSubset<T, CupFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CupPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Cup.
+     * @param {CupCreateArgs} args - Arguments to create a Cup.
+     * @example
+     * // Create one Cup
+     * const Cup = await prisma.cup.create({
+     *   data: {
+     *     // ... data to create a Cup
+     *   }
+     * })
+     * 
+     */
+    create<T extends CupCreateArgs>(args: SelectSubset<T, CupCreateArgs<ExtArgs>>): Prisma__CupClient<$Result.GetResult<Prisma.$CupPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Cups.
+     * @param {CupCreateManyArgs} args - Arguments to create many Cups.
+     * @example
+     * // Create many Cups
+     * const cup = await prisma.cup.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends CupCreateManyArgs>(args?: SelectSubset<T, CupCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Cups and returns the data saved in the database.
+     * @param {CupCreateManyAndReturnArgs} args - Arguments to create many Cups.
+     * @example
+     * // Create many Cups
+     * const cup = await prisma.cup.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Cups and only return the `id`
+     * const cupWithIdOnly = await prisma.cup.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends CupCreateManyAndReturnArgs>(args?: SelectSubset<T, CupCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CupPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a Cup.
+     * @param {CupDeleteArgs} args - Arguments to delete one Cup.
+     * @example
+     * // Delete one Cup
+     * const Cup = await prisma.cup.delete({
+     *   where: {
+     *     // ... filter to delete one Cup
+     *   }
+     * })
+     * 
+     */
+    delete<T extends CupDeleteArgs>(args: SelectSubset<T, CupDeleteArgs<ExtArgs>>): Prisma__CupClient<$Result.GetResult<Prisma.$CupPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Cup.
+     * @param {CupUpdateArgs} args - Arguments to update one Cup.
+     * @example
+     * // Update one Cup
+     * const cup = await prisma.cup.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends CupUpdateArgs>(args: SelectSubset<T, CupUpdateArgs<ExtArgs>>): Prisma__CupClient<$Result.GetResult<Prisma.$CupPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Cups.
+     * @param {CupDeleteManyArgs} args - Arguments to filter Cups to delete.
+     * @example
+     * // Delete a few Cups
+     * const { count } = await prisma.cup.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends CupDeleteManyArgs>(args?: SelectSubset<T, CupDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Cups.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CupUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Cups
+     * const cup = await prisma.cup.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends CupUpdateManyArgs>(args: SelectSubset<T, CupUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Cups and returns the data updated in the database.
+     * @param {CupUpdateManyAndReturnArgs} args - Arguments to update many Cups.
+     * @example
+     * // Update many Cups
+     * const cup = await prisma.cup.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Cups and only return the `id`
+     * const cupWithIdOnly = await prisma.cup.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends CupUpdateManyAndReturnArgs>(args: SelectSubset<T, CupUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CupPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one Cup.
+     * @param {CupUpsertArgs} args - Arguments to update or create a Cup.
+     * @example
+     * // Update or create a Cup
+     * const cup = await prisma.cup.upsert({
+     *   create: {
+     *     // ... data to create a Cup
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Cup we want to update
+     *   }
+     * })
+     */
+    upsert<T extends CupUpsertArgs>(args: SelectSubset<T, CupUpsertArgs<ExtArgs>>): Prisma__CupClient<$Result.GetResult<Prisma.$CupPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Cups.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CupCountArgs} args - Arguments to filter Cups to count.
+     * @example
+     * // Count the number of Cups
+     * const count = await prisma.cup.count({
+     *   where: {
+     *     // ... the filter for the Cups we want to count
+     *   }
+     * })
+    **/
+    count<T extends CupCountArgs>(
+      args?: Subset<T, CupCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], CupCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Cup.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CupAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends CupAggregateArgs>(args: Subset<T, CupAggregateArgs>): Prisma.PrismaPromise<GetCupAggregateType<T>>
+
+    /**
+     * Group by Cup.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CupGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends CupGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: CupGroupByArgs['orderBy'] }
+        : { orderBy?: CupGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, CupGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetCupGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Cup model
+   */
+  readonly fields: CupFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Cup.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__CupClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    creator<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    participants<T extends Cup$participantsArgs<ExtArgs> = {}>(args?: Subset<T, Cup$participantsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CupParticipantPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    localMatches<T extends Cup$localMatchesArgs<ExtArgs> = {}>(args?: Subset<T, Cup$localMatchesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LocalMatchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Cup model
+   */
+  interface CupFieldRefs {
+    readonly id: FieldRef<"Cup", 'String'>
+    readonly name: FieldRef<"Cup", 'String'>
+    readonly creatorId: FieldRef<"Cup", 'String'>
+    readonly validated: FieldRef<"Cup", 'Boolean'>
+    readonly isPublic: FieldRef<"Cup", 'Boolean'>
+    readonly status: FieldRef<"Cup", 'String'>
+    readonly createdAt: FieldRef<"Cup", 'DateTime'>
+    readonly updatedAt: FieldRef<"Cup", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Cup findUnique
+   */
+  export type CupFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Cup
+     */
+    select?: CupSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Cup
+     */
+    omit?: CupOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupInclude<ExtArgs> | null
+    /**
+     * Filter, which Cup to fetch.
+     */
+    where: CupWhereUniqueInput
+  }
+
+  /**
+   * Cup findUniqueOrThrow
+   */
+  export type CupFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Cup
+     */
+    select?: CupSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Cup
+     */
+    omit?: CupOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupInclude<ExtArgs> | null
+    /**
+     * Filter, which Cup to fetch.
+     */
+    where: CupWhereUniqueInput
+  }
+
+  /**
+   * Cup findFirst
+   */
+  export type CupFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Cup
+     */
+    select?: CupSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Cup
+     */
+    omit?: CupOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupInclude<ExtArgs> | null
+    /**
+     * Filter, which Cup to fetch.
+     */
+    where?: CupWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Cups to fetch.
+     */
+    orderBy?: CupOrderByWithRelationInput | CupOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Cups.
+     */
+    cursor?: CupWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Cups from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Cups.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Cups.
+     */
+    distinct?: CupScalarFieldEnum | CupScalarFieldEnum[]
+  }
+
+  /**
+   * Cup findFirstOrThrow
+   */
+  export type CupFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Cup
+     */
+    select?: CupSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Cup
+     */
+    omit?: CupOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupInclude<ExtArgs> | null
+    /**
+     * Filter, which Cup to fetch.
+     */
+    where?: CupWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Cups to fetch.
+     */
+    orderBy?: CupOrderByWithRelationInput | CupOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Cups.
+     */
+    cursor?: CupWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Cups from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Cups.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Cups.
+     */
+    distinct?: CupScalarFieldEnum | CupScalarFieldEnum[]
+  }
+
+  /**
+   * Cup findMany
+   */
+  export type CupFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Cup
+     */
+    select?: CupSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Cup
+     */
+    omit?: CupOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupInclude<ExtArgs> | null
+    /**
+     * Filter, which Cups to fetch.
+     */
+    where?: CupWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Cups to fetch.
+     */
+    orderBy?: CupOrderByWithRelationInput | CupOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Cups.
+     */
+    cursor?: CupWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Cups from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Cups.
+     */
+    skip?: number
+    distinct?: CupScalarFieldEnum | CupScalarFieldEnum[]
+  }
+
+  /**
+   * Cup create
+   */
+  export type CupCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Cup
+     */
+    select?: CupSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Cup
+     */
+    omit?: CupOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Cup.
+     */
+    data: XOR<CupCreateInput, CupUncheckedCreateInput>
+  }
+
+  /**
+   * Cup createMany
+   */
+  export type CupCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Cups.
+     */
+    data: CupCreateManyInput | CupCreateManyInput[]
+  }
+
+  /**
+   * Cup createManyAndReturn
+   */
+  export type CupCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Cup
+     */
+    select?: CupSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Cup
+     */
+    omit?: CupOmit<ExtArgs> | null
+    /**
+     * The data used to create many Cups.
+     */
+    data: CupCreateManyInput | CupCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Cup update
+   */
+  export type CupUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Cup
+     */
+    select?: CupSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Cup
+     */
+    omit?: CupOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Cup.
+     */
+    data: XOR<CupUpdateInput, CupUncheckedUpdateInput>
+    /**
+     * Choose, which Cup to update.
+     */
+    where: CupWhereUniqueInput
+  }
+
+  /**
+   * Cup updateMany
+   */
+  export type CupUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Cups.
+     */
+    data: XOR<CupUpdateManyMutationInput, CupUncheckedUpdateManyInput>
+    /**
+     * Filter which Cups to update
+     */
+    where?: CupWhereInput
+    /**
+     * Limit how many Cups to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Cup updateManyAndReturn
+   */
+  export type CupUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Cup
+     */
+    select?: CupSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Cup
+     */
+    omit?: CupOmit<ExtArgs> | null
+    /**
+     * The data used to update Cups.
+     */
+    data: XOR<CupUpdateManyMutationInput, CupUncheckedUpdateManyInput>
+    /**
+     * Filter which Cups to update
+     */
+    where?: CupWhereInput
+    /**
+     * Limit how many Cups to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Cup upsert
+   */
+  export type CupUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Cup
+     */
+    select?: CupSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Cup
+     */
+    omit?: CupOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Cup to update in case it exists.
+     */
+    where: CupWhereUniqueInput
+    /**
+     * In case the Cup found by the `where` argument doesn't exist, create a new Cup with this data.
+     */
+    create: XOR<CupCreateInput, CupUncheckedCreateInput>
+    /**
+     * In case the Cup was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<CupUpdateInput, CupUncheckedUpdateInput>
+  }
+
+  /**
+   * Cup delete
+   */
+  export type CupDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Cup
+     */
+    select?: CupSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Cup
+     */
+    omit?: CupOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupInclude<ExtArgs> | null
+    /**
+     * Filter which Cup to delete.
+     */
+    where: CupWhereUniqueInput
+  }
+
+  /**
+   * Cup deleteMany
+   */
+  export type CupDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Cups to delete
+     */
+    where?: CupWhereInput
+    /**
+     * Limit how many Cups to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Cup.participants
+   */
+  export type Cup$participantsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CupParticipant
+     */
+    select?: CupParticipantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CupParticipant
+     */
+    omit?: CupParticipantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupParticipantInclude<ExtArgs> | null
+    where?: CupParticipantWhereInput
+    orderBy?: CupParticipantOrderByWithRelationInput | CupParticipantOrderByWithRelationInput[]
+    cursor?: CupParticipantWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: CupParticipantScalarFieldEnum | CupParticipantScalarFieldEnum[]
+  }
+
+  /**
+   * Cup.localMatches
+   */
+  export type Cup$localMatchesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LocalMatch
+     */
+    select?: LocalMatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LocalMatch
+     */
+    omit?: LocalMatchOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LocalMatchInclude<ExtArgs> | null
+    where?: LocalMatchWhereInput
+    orderBy?: LocalMatchOrderByWithRelationInput | LocalMatchOrderByWithRelationInput[]
+    cursor?: LocalMatchWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: LocalMatchScalarFieldEnum | LocalMatchScalarFieldEnum[]
+  }
+
+  /**
+   * Cup without action
+   */
+  export type CupDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Cup
+     */
+    select?: CupSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Cup
+     */
+    omit?: CupOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model CupParticipant
+   */
+
+  export type AggregateCupParticipant = {
+    _count: CupParticipantCountAggregateOutputType | null
+    _min: CupParticipantMinAggregateOutputType | null
+    _max: CupParticipantMaxAggregateOutputType | null
+  }
+
+  export type CupParticipantMinAggregateOutputType = {
+    id: string | null
+    cupId: string | null
+    teamId: string | null
+    createdAt: Date | null
+  }
+
+  export type CupParticipantMaxAggregateOutputType = {
+    id: string | null
+    cupId: string | null
+    teamId: string | null
+    createdAt: Date | null
+  }
+
+  export type CupParticipantCountAggregateOutputType = {
+    id: number
+    cupId: number
+    teamId: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type CupParticipantMinAggregateInputType = {
+    id?: true
+    cupId?: true
+    teamId?: true
+    createdAt?: true
+  }
+
+  export type CupParticipantMaxAggregateInputType = {
+    id?: true
+    cupId?: true
+    teamId?: true
+    createdAt?: true
+  }
+
+  export type CupParticipantCountAggregateInputType = {
+    id?: true
+    cupId?: true
+    teamId?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type CupParticipantAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which CupParticipant to aggregate.
+     */
+    where?: CupParticipantWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CupParticipants to fetch.
+     */
+    orderBy?: CupParticipantOrderByWithRelationInput | CupParticipantOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: CupParticipantWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CupParticipants from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CupParticipants.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned CupParticipants
+    **/
+    _count?: true | CupParticipantCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: CupParticipantMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: CupParticipantMaxAggregateInputType
+  }
+
+  export type GetCupParticipantAggregateType<T extends CupParticipantAggregateArgs> = {
+        [P in keyof T & keyof AggregateCupParticipant]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateCupParticipant[P]>
+      : GetScalarType<T[P], AggregateCupParticipant[P]>
+  }
+
+
+
+
+  export type CupParticipantGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CupParticipantWhereInput
+    orderBy?: CupParticipantOrderByWithAggregationInput | CupParticipantOrderByWithAggregationInput[]
+    by: CupParticipantScalarFieldEnum[] | CupParticipantScalarFieldEnum
+    having?: CupParticipantScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: CupParticipantCountAggregateInputType | true
+    _min?: CupParticipantMinAggregateInputType
+    _max?: CupParticipantMaxAggregateInputType
+  }
+
+  export type CupParticipantGroupByOutputType = {
+    id: string
+    cupId: string
+    teamId: string
+    createdAt: Date
+    _count: CupParticipantCountAggregateOutputType | null
+    _min: CupParticipantMinAggregateOutputType | null
+    _max: CupParticipantMaxAggregateOutputType | null
+  }
+
+  type GetCupParticipantGroupByPayload<T extends CupParticipantGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<CupParticipantGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof CupParticipantGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], CupParticipantGroupByOutputType[P]>
+            : GetScalarType<T[P], CupParticipantGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type CupParticipantSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    cupId?: boolean
+    teamId?: boolean
+    createdAt?: boolean
+    cup?: boolean | CupDefaultArgs<ExtArgs>
+    team?: boolean | TeamDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["cupParticipant"]>
+
+  export type CupParticipantSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    cupId?: boolean
+    teamId?: boolean
+    createdAt?: boolean
+    cup?: boolean | CupDefaultArgs<ExtArgs>
+    team?: boolean | TeamDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["cupParticipant"]>
+
+  export type CupParticipantSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    cupId?: boolean
+    teamId?: boolean
+    createdAt?: boolean
+    cup?: boolean | CupDefaultArgs<ExtArgs>
+    team?: boolean | TeamDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["cupParticipant"]>
+
+  export type CupParticipantSelectScalar = {
+    id?: boolean
+    cupId?: boolean
+    teamId?: boolean
+    createdAt?: boolean
+  }
+
+  export type CupParticipantOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "cupId" | "teamId" | "createdAt", ExtArgs["result"]["cupParticipant"]>
+  export type CupParticipantInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    cup?: boolean | CupDefaultArgs<ExtArgs>
+    team?: boolean | TeamDefaultArgs<ExtArgs>
+  }
+  export type CupParticipantIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    cup?: boolean | CupDefaultArgs<ExtArgs>
+    team?: boolean | TeamDefaultArgs<ExtArgs>
+  }
+  export type CupParticipantIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    cup?: boolean | CupDefaultArgs<ExtArgs>
+    team?: boolean | TeamDefaultArgs<ExtArgs>
+  }
+
+  export type $CupParticipantPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "CupParticipant"
+    objects: {
+      cup: Prisma.$CupPayload<ExtArgs>
+      team: Prisma.$TeamPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      cupId: string
+      teamId: string
+      createdAt: Date
+    }, ExtArgs["result"]["cupParticipant"]>
+    composites: {}
+  }
+
+  type CupParticipantGetPayload<S extends boolean | null | undefined | CupParticipantDefaultArgs> = $Result.GetResult<Prisma.$CupParticipantPayload, S>
+
+  type CupParticipantCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<CupParticipantFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: CupParticipantCountAggregateInputType | true
+    }
+
+  export interface CupParticipantDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['CupParticipant'], meta: { name: 'CupParticipant' } }
+    /**
+     * Find zero or one CupParticipant that matches the filter.
+     * @param {CupParticipantFindUniqueArgs} args - Arguments to find a CupParticipant
+     * @example
+     * // Get one CupParticipant
+     * const cupParticipant = await prisma.cupParticipant.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends CupParticipantFindUniqueArgs>(args: SelectSubset<T, CupParticipantFindUniqueArgs<ExtArgs>>): Prisma__CupParticipantClient<$Result.GetResult<Prisma.$CupParticipantPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one CupParticipant that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {CupParticipantFindUniqueOrThrowArgs} args - Arguments to find a CupParticipant
+     * @example
+     * // Get one CupParticipant
+     * const cupParticipant = await prisma.cupParticipant.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends CupParticipantFindUniqueOrThrowArgs>(args: SelectSubset<T, CupParticipantFindUniqueOrThrowArgs<ExtArgs>>): Prisma__CupParticipantClient<$Result.GetResult<Prisma.$CupParticipantPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first CupParticipant that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CupParticipantFindFirstArgs} args - Arguments to find a CupParticipant
+     * @example
+     * // Get one CupParticipant
+     * const cupParticipant = await prisma.cupParticipant.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends CupParticipantFindFirstArgs>(args?: SelectSubset<T, CupParticipantFindFirstArgs<ExtArgs>>): Prisma__CupParticipantClient<$Result.GetResult<Prisma.$CupParticipantPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first CupParticipant that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CupParticipantFindFirstOrThrowArgs} args - Arguments to find a CupParticipant
+     * @example
+     * // Get one CupParticipant
+     * const cupParticipant = await prisma.cupParticipant.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends CupParticipantFindFirstOrThrowArgs>(args?: SelectSubset<T, CupParticipantFindFirstOrThrowArgs<ExtArgs>>): Prisma__CupParticipantClient<$Result.GetResult<Prisma.$CupParticipantPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more CupParticipants that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CupParticipantFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all CupParticipants
+     * const cupParticipants = await prisma.cupParticipant.findMany()
+     * 
+     * // Get first 10 CupParticipants
+     * const cupParticipants = await prisma.cupParticipant.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const cupParticipantWithIdOnly = await prisma.cupParticipant.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends CupParticipantFindManyArgs>(args?: SelectSubset<T, CupParticipantFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CupParticipantPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a CupParticipant.
+     * @param {CupParticipantCreateArgs} args - Arguments to create a CupParticipant.
+     * @example
+     * // Create one CupParticipant
+     * const CupParticipant = await prisma.cupParticipant.create({
+     *   data: {
+     *     // ... data to create a CupParticipant
+     *   }
+     * })
+     * 
+     */
+    create<T extends CupParticipantCreateArgs>(args: SelectSubset<T, CupParticipantCreateArgs<ExtArgs>>): Prisma__CupParticipantClient<$Result.GetResult<Prisma.$CupParticipantPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many CupParticipants.
+     * @param {CupParticipantCreateManyArgs} args - Arguments to create many CupParticipants.
+     * @example
+     * // Create many CupParticipants
+     * const cupParticipant = await prisma.cupParticipant.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends CupParticipantCreateManyArgs>(args?: SelectSubset<T, CupParticipantCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many CupParticipants and returns the data saved in the database.
+     * @param {CupParticipantCreateManyAndReturnArgs} args - Arguments to create many CupParticipants.
+     * @example
+     * // Create many CupParticipants
+     * const cupParticipant = await prisma.cupParticipant.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many CupParticipants and only return the `id`
+     * const cupParticipantWithIdOnly = await prisma.cupParticipant.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends CupParticipantCreateManyAndReturnArgs>(args?: SelectSubset<T, CupParticipantCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CupParticipantPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a CupParticipant.
+     * @param {CupParticipantDeleteArgs} args - Arguments to delete one CupParticipant.
+     * @example
+     * // Delete one CupParticipant
+     * const CupParticipant = await prisma.cupParticipant.delete({
+     *   where: {
+     *     // ... filter to delete one CupParticipant
+     *   }
+     * })
+     * 
+     */
+    delete<T extends CupParticipantDeleteArgs>(args: SelectSubset<T, CupParticipantDeleteArgs<ExtArgs>>): Prisma__CupParticipantClient<$Result.GetResult<Prisma.$CupParticipantPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one CupParticipant.
+     * @param {CupParticipantUpdateArgs} args - Arguments to update one CupParticipant.
+     * @example
+     * // Update one CupParticipant
+     * const cupParticipant = await prisma.cupParticipant.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends CupParticipantUpdateArgs>(args: SelectSubset<T, CupParticipantUpdateArgs<ExtArgs>>): Prisma__CupParticipantClient<$Result.GetResult<Prisma.$CupParticipantPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more CupParticipants.
+     * @param {CupParticipantDeleteManyArgs} args - Arguments to filter CupParticipants to delete.
+     * @example
+     * // Delete a few CupParticipants
+     * const { count } = await prisma.cupParticipant.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends CupParticipantDeleteManyArgs>(args?: SelectSubset<T, CupParticipantDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more CupParticipants.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CupParticipantUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many CupParticipants
+     * const cupParticipant = await prisma.cupParticipant.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends CupParticipantUpdateManyArgs>(args: SelectSubset<T, CupParticipantUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more CupParticipants and returns the data updated in the database.
+     * @param {CupParticipantUpdateManyAndReturnArgs} args - Arguments to update many CupParticipants.
+     * @example
+     * // Update many CupParticipants
+     * const cupParticipant = await prisma.cupParticipant.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more CupParticipants and only return the `id`
+     * const cupParticipantWithIdOnly = await prisma.cupParticipant.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends CupParticipantUpdateManyAndReturnArgs>(args: SelectSubset<T, CupParticipantUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CupParticipantPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one CupParticipant.
+     * @param {CupParticipantUpsertArgs} args - Arguments to update or create a CupParticipant.
+     * @example
+     * // Update or create a CupParticipant
+     * const cupParticipant = await prisma.cupParticipant.upsert({
+     *   create: {
+     *     // ... data to create a CupParticipant
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the CupParticipant we want to update
+     *   }
+     * })
+     */
+    upsert<T extends CupParticipantUpsertArgs>(args: SelectSubset<T, CupParticipantUpsertArgs<ExtArgs>>): Prisma__CupParticipantClient<$Result.GetResult<Prisma.$CupParticipantPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of CupParticipants.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CupParticipantCountArgs} args - Arguments to filter CupParticipants to count.
+     * @example
+     * // Count the number of CupParticipants
+     * const count = await prisma.cupParticipant.count({
+     *   where: {
+     *     // ... the filter for the CupParticipants we want to count
+     *   }
+     * })
+    **/
+    count<T extends CupParticipantCountArgs>(
+      args?: Subset<T, CupParticipantCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], CupParticipantCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a CupParticipant.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CupParticipantAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends CupParticipantAggregateArgs>(args: Subset<T, CupParticipantAggregateArgs>): Prisma.PrismaPromise<GetCupParticipantAggregateType<T>>
+
+    /**
+     * Group by CupParticipant.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CupParticipantGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends CupParticipantGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: CupParticipantGroupByArgs['orderBy'] }
+        : { orderBy?: CupParticipantGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, CupParticipantGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetCupParticipantGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the CupParticipant model
+   */
+  readonly fields: CupParticipantFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for CupParticipant.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__CupParticipantClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    cup<T extends CupDefaultArgs<ExtArgs> = {}>(args?: Subset<T, CupDefaultArgs<ExtArgs>>): Prisma__CupClient<$Result.GetResult<Prisma.$CupPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    team<T extends TeamDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TeamDefaultArgs<ExtArgs>>): Prisma__TeamClient<$Result.GetResult<Prisma.$TeamPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the CupParticipant model
+   */
+  interface CupParticipantFieldRefs {
+    readonly id: FieldRef<"CupParticipant", 'String'>
+    readonly cupId: FieldRef<"CupParticipant", 'String'>
+    readonly teamId: FieldRef<"CupParticipant", 'String'>
+    readonly createdAt: FieldRef<"CupParticipant", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * CupParticipant findUnique
+   */
+  export type CupParticipantFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CupParticipant
+     */
+    select?: CupParticipantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CupParticipant
+     */
+    omit?: CupParticipantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupParticipantInclude<ExtArgs> | null
+    /**
+     * Filter, which CupParticipant to fetch.
+     */
+    where: CupParticipantWhereUniqueInput
+  }
+
+  /**
+   * CupParticipant findUniqueOrThrow
+   */
+  export type CupParticipantFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CupParticipant
+     */
+    select?: CupParticipantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CupParticipant
+     */
+    omit?: CupParticipantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupParticipantInclude<ExtArgs> | null
+    /**
+     * Filter, which CupParticipant to fetch.
+     */
+    where: CupParticipantWhereUniqueInput
+  }
+
+  /**
+   * CupParticipant findFirst
+   */
+  export type CupParticipantFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CupParticipant
+     */
+    select?: CupParticipantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CupParticipant
+     */
+    omit?: CupParticipantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupParticipantInclude<ExtArgs> | null
+    /**
+     * Filter, which CupParticipant to fetch.
+     */
+    where?: CupParticipantWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CupParticipants to fetch.
+     */
+    orderBy?: CupParticipantOrderByWithRelationInput | CupParticipantOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for CupParticipants.
+     */
+    cursor?: CupParticipantWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CupParticipants from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CupParticipants.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CupParticipants.
+     */
+    distinct?: CupParticipantScalarFieldEnum | CupParticipantScalarFieldEnum[]
+  }
+
+  /**
+   * CupParticipant findFirstOrThrow
+   */
+  export type CupParticipantFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CupParticipant
+     */
+    select?: CupParticipantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CupParticipant
+     */
+    omit?: CupParticipantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupParticipantInclude<ExtArgs> | null
+    /**
+     * Filter, which CupParticipant to fetch.
+     */
+    where?: CupParticipantWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CupParticipants to fetch.
+     */
+    orderBy?: CupParticipantOrderByWithRelationInput | CupParticipantOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for CupParticipants.
+     */
+    cursor?: CupParticipantWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CupParticipants from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CupParticipants.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CupParticipants.
+     */
+    distinct?: CupParticipantScalarFieldEnum | CupParticipantScalarFieldEnum[]
+  }
+
+  /**
+   * CupParticipant findMany
+   */
+  export type CupParticipantFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CupParticipant
+     */
+    select?: CupParticipantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CupParticipant
+     */
+    omit?: CupParticipantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupParticipantInclude<ExtArgs> | null
+    /**
+     * Filter, which CupParticipants to fetch.
+     */
+    where?: CupParticipantWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CupParticipants to fetch.
+     */
+    orderBy?: CupParticipantOrderByWithRelationInput | CupParticipantOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing CupParticipants.
+     */
+    cursor?: CupParticipantWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CupParticipants from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CupParticipants.
+     */
+    skip?: number
+    distinct?: CupParticipantScalarFieldEnum | CupParticipantScalarFieldEnum[]
+  }
+
+  /**
+   * CupParticipant create
+   */
+  export type CupParticipantCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CupParticipant
+     */
+    select?: CupParticipantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CupParticipant
+     */
+    omit?: CupParticipantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupParticipantInclude<ExtArgs> | null
+    /**
+     * The data needed to create a CupParticipant.
+     */
+    data: XOR<CupParticipantCreateInput, CupParticipantUncheckedCreateInput>
+  }
+
+  /**
+   * CupParticipant createMany
+   */
+  export type CupParticipantCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many CupParticipants.
+     */
+    data: CupParticipantCreateManyInput | CupParticipantCreateManyInput[]
+  }
+
+  /**
+   * CupParticipant createManyAndReturn
+   */
+  export type CupParticipantCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CupParticipant
+     */
+    select?: CupParticipantSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the CupParticipant
+     */
+    omit?: CupParticipantOmit<ExtArgs> | null
+    /**
+     * The data used to create many CupParticipants.
+     */
+    data: CupParticipantCreateManyInput | CupParticipantCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupParticipantIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * CupParticipant update
+   */
+  export type CupParticipantUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CupParticipant
+     */
+    select?: CupParticipantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CupParticipant
+     */
+    omit?: CupParticipantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupParticipantInclude<ExtArgs> | null
+    /**
+     * The data needed to update a CupParticipant.
+     */
+    data: XOR<CupParticipantUpdateInput, CupParticipantUncheckedUpdateInput>
+    /**
+     * Choose, which CupParticipant to update.
+     */
+    where: CupParticipantWhereUniqueInput
+  }
+
+  /**
+   * CupParticipant updateMany
+   */
+  export type CupParticipantUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update CupParticipants.
+     */
+    data: XOR<CupParticipantUpdateManyMutationInput, CupParticipantUncheckedUpdateManyInput>
+    /**
+     * Filter which CupParticipants to update
+     */
+    where?: CupParticipantWhereInput
+    /**
+     * Limit how many CupParticipants to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * CupParticipant updateManyAndReturn
+   */
+  export type CupParticipantUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CupParticipant
+     */
+    select?: CupParticipantSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the CupParticipant
+     */
+    omit?: CupParticipantOmit<ExtArgs> | null
+    /**
+     * The data used to update CupParticipants.
+     */
+    data: XOR<CupParticipantUpdateManyMutationInput, CupParticipantUncheckedUpdateManyInput>
+    /**
+     * Filter which CupParticipants to update
+     */
+    where?: CupParticipantWhereInput
+    /**
+     * Limit how many CupParticipants to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupParticipantIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * CupParticipant upsert
+   */
+  export type CupParticipantUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CupParticipant
+     */
+    select?: CupParticipantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CupParticipant
+     */
+    omit?: CupParticipantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupParticipantInclude<ExtArgs> | null
+    /**
+     * The filter to search for the CupParticipant to update in case it exists.
+     */
+    where: CupParticipantWhereUniqueInput
+    /**
+     * In case the CupParticipant found by the `where` argument doesn't exist, create a new CupParticipant with this data.
+     */
+    create: XOR<CupParticipantCreateInput, CupParticipantUncheckedCreateInput>
+    /**
+     * In case the CupParticipant was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<CupParticipantUpdateInput, CupParticipantUncheckedUpdateInput>
+  }
+
+  /**
+   * CupParticipant delete
+   */
+  export type CupParticipantDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CupParticipant
+     */
+    select?: CupParticipantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CupParticipant
+     */
+    omit?: CupParticipantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupParticipantInclude<ExtArgs> | null
+    /**
+     * Filter which CupParticipant to delete.
+     */
+    where: CupParticipantWhereUniqueInput
+  }
+
+  /**
+   * CupParticipant deleteMany
+   */
+  export type CupParticipantDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which CupParticipants to delete
+     */
+    where?: CupParticipantWhereInput
+    /**
+     * Limit how many CupParticipants to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * CupParticipant without action
+   */
+  export type CupParticipantDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CupParticipant
+     */
+    select?: CupParticipantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CupParticipant
+     */
+    omit?: CupParticipantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupParticipantInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model LocalMatch
+   */
+
+  export type AggregateLocalMatch = {
+    _count: LocalMatchCountAggregateOutputType | null
+    _avg: LocalMatchAvgAggregateOutputType | null
+    _sum: LocalMatchSumAggregateOutputType | null
+    _min: LocalMatchMinAggregateOutputType | null
+    _max: LocalMatchMaxAggregateOutputType | null
+  }
+
+  export type LocalMatchAvgAggregateOutputType = {
+    scoreTeamA: number | null
+    scoreTeamB: number | null
+  }
+
+  export type LocalMatchSumAggregateOutputType = {
+    scoreTeamA: number | null
+    scoreTeamB: number | null
+  }
+
+  export type LocalMatchMinAggregateOutputType = {
+    id: string | null
+    name: string | null
+    status: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+    startedAt: Date | null
+    completedAt: Date | null
+    creatorId: string | null
+    teamAId: string | null
+    teamBId: string | null
+    cupId: string | null
+    scoreTeamA: number | null
+    scoreTeamB: number | null
+  }
+
+  export type LocalMatchMaxAggregateOutputType = {
+    id: string | null
+    name: string | null
+    status: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+    startedAt: Date | null
+    completedAt: Date | null
+    creatorId: string | null
+    teamAId: string | null
+    teamBId: string | null
+    cupId: string | null
+    scoreTeamA: number | null
+    scoreTeamB: number | null
+  }
+
+  export type LocalMatchCountAggregateOutputType = {
+    id: number
+    name: number
+    status: number
+    createdAt: number
+    updatedAt: number
+    startedAt: number
+    completedAt: number
+    creatorId: number
+    teamAId: number
+    teamBId: number
+    cupId: number
+    gameState: number
+    scoreTeamA: number
+    scoreTeamB: number
+    _all: number
+  }
+
+
+  export type LocalMatchAvgAggregateInputType = {
+    scoreTeamA?: true
+    scoreTeamB?: true
+  }
+
+  export type LocalMatchSumAggregateInputType = {
+    scoreTeamA?: true
+    scoreTeamB?: true
+  }
+
+  export type LocalMatchMinAggregateInputType = {
+    id?: true
+    name?: true
+    status?: true
+    createdAt?: true
+    updatedAt?: true
+    startedAt?: true
+    completedAt?: true
+    creatorId?: true
+    teamAId?: true
+    teamBId?: true
+    cupId?: true
+    scoreTeamA?: true
+    scoreTeamB?: true
+  }
+
+  export type LocalMatchMaxAggregateInputType = {
+    id?: true
+    name?: true
+    status?: true
+    createdAt?: true
+    updatedAt?: true
+    startedAt?: true
+    completedAt?: true
+    creatorId?: true
+    teamAId?: true
+    teamBId?: true
+    cupId?: true
+    scoreTeamA?: true
+    scoreTeamB?: true
+  }
+
+  export type LocalMatchCountAggregateInputType = {
+    id?: true
+    name?: true
+    status?: true
+    createdAt?: true
+    updatedAt?: true
+    startedAt?: true
+    completedAt?: true
+    creatorId?: true
+    teamAId?: true
+    teamBId?: true
+    cupId?: true
+    gameState?: true
+    scoreTeamA?: true
+    scoreTeamB?: true
+    _all?: true
+  }
+
+  export type LocalMatchAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which LocalMatch to aggregate.
+     */
+    where?: LocalMatchWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LocalMatches to fetch.
+     */
+    orderBy?: LocalMatchOrderByWithRelationInput | LocalMatchOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: LocalMatchWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LocalMatches from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LocalMatches.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned LocalMatches
+    **/
+    _count?: true | LocalMatchCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: LocalMatchAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: LocalMatchSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: LocalMatchMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: LocalMatchMaxAggregateInputType
+  }
+
+  export type GetLocalMatchAggregateType<T extends LocalMatchAggregateArgs> = {
+        [P in keyof T & keyof AggregateLocalMatch]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateLocalMatch[P]>
+      : GetScalarType<T[P], AggregateLocalMatch[P]>
+  }
+
+
+
+
+  export type LocalMatchGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: LocalMatchWhereInput
+    orderBy?: LocalMatchOrderByWithAggregationInput | LocalMatchOrderByWithAggregationInput[]
+    by: LocalMatchScalarFieldEnum[] | LocalMatchScalarFieldEnum
+    having?: LocalMatchScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: LocalMatchCountAggregateInputType | true
+    _avg?: LocalMatchAvgAggregateInputType
+    _sum?: LocalMatchSumAggregateInputType
+    _min?: LocalMatchMinAggregateInputType
+    _max?: LocalMatchMaxAggregateInputType
+  }
+
+  export type LocalMatchGroupByOutputType = {
+    id: string
+    name: string | null
+    status: string
+    createdAt: Date
+    updatedAt: Date
+    startedAt: Date | null
+    completedAt: Date | null
+    creatorId: string
+    teamAId: string
+    teamBId: string
+    cupId: string | null
+    gameState: JsonValue | null
+    scoreTeamA: number | null
+    scoreTeamB: number | null
+    _count: LocalMatchCountAggregateOutputType | null
+    _avg: LocalMatchAvgAggregateOutputType | null
+    _sum: LocalMatchSumAggregateOutputType | null
+    _min: LocalMatchMinAggregateOutputType | null
+    _max: LocalMatchMaxAggregateOutputType | null
+  }
+
+  type GetLocalMatchGroupByPayload<T extends LocalMatchGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<LocalMatchGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof LocalMatchGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], LocalMatchGroupByOutputType[P]>
+            : GetScalarType<T[P], LocalMatchGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type LocalMatchSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    name?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    startedAt?: boolean
+    completedAt?: boolean
+    creatorId?: boolean
+    teamAId?: boolean
+    teamBId?: boolean
+    cupId?: boolean
+    gameState?: boolean
+    scoreTeamA?: boolean
+    scoreTeamB?: boolean
+    creator?: boolean | UserDefaultArgs<ExtArgs>
+    teamA?: boolean | TeamDefaultArgs<ExtArgs>
+    teamB?: boolean | TeamDefaultArgs<ExtArgs>
+    cup?: boolean | LocalMatch$cupArgs<ExtArgs>
+  }, ExtArgs["result"]["localMatch"]>
+
+  export type LocalMatchSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    name?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    startedAt?: boolean
+    completedAt?: boolean
+    creatorId?: boolean
+    teamAId?: boolean
+    teamBId?: boolean
+    cupId?: boolean
+    gameState?: boolean
+    scoreTeamA?: boolean
+    scoreTeamB?: boolean
+    creator?: boolean | UserDefaultArgs<ExtArgs>
+    teamA?: boolean | TeamDefaultArgs<ExtArgs>
+    teamB?: boolean | TeamDefaultArgs<ExtArgs>
+    cup?: boolean | LocalMatch$cupArgs<ExtArgs>
+  }, ExtArgs["result"]["localMatch"]>
+
+  export type LocalMatchSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    name?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    startedAt?: boolean
+    completedAt?: boolean
+    creatorId?: boolean
+    teamAId?: boolean
+    teamBId?: boolean
+    cupId?: boolean
+    gameState?: boolean
+    scoreTeamA?: boolean
+    scoreTeamB?: boolean
+    creator?: boolean | UserDefaultArgs<ExtArgs>
+    teamA?: boolean | TeamDefaultArgs<ExtArgs>
+    teamB?: boolean | TeamDefaultArgs<ExtArgs>
+    cup?: boolean | LocalMatch$cupArgs<ExtArgs>
+  }, ExtArgs["result"]["localMatch"]>
+
+  export type LocalMatchSelectScalar = {
+    id?: boolean
+    name?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    startedAt?: boolean
+    completedAt?: boolean
+    creatorId?: boolean
+    teamAId?: boolean
+    teamBId?: boolean
+    cupId?: boolean
+    gameState?: boolean
+    scoreTeamA?: boolean
+    scoreTeamB?: boolean
+  }
+
+  export type LocalMatchOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "status" | "createdAt" | "updatedAt" | "startedAt" | "completedAt" | "creatorId" | "teamAId" | "teamBId" | "cupId" | "gameState" | "scoreTeamA" | "scoreTeamB", ExtArgs["result"]["localMatch"]>
+  export type LocalMatchInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    creator?: boolean | UserDefaultArgs<ExtArgs>
+    teamA?: boolean | TeamDefaultArgs<ExtArgs>
+    teamB?: boolean | TeamDefaultArgs<ExtArgs>
+    cup?: boolean | LocalMatch$cupArgs<ExtArgs>
+  }
+  export type LocalMatchIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    creator?: boolean | UserDefaultArgs<ExtArgs>
+    teamA?: boolean | TeamDefaultArgs<ExtArgs>
+    teamB?: boolean | TeamDefaultArgs<ExtArgs>
+    cup?: boolean | LocalMatch$cupArgs<ExtArgs>
+  }
+  export type LocalMatchIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    creator?: boolean | UserDefaultArgs<ExtArgs>
+    teamA?: boolean | TeamDefaultArgs<ExtArgs>
+    teamB?: boolean | TeamDefaultArgs<ExtArgs>
+    cup?: boolean | LocalMatch$cupArgs<ExtArgs>
+  }
+
+  export type $LocalMatchPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "LocalMatch"
+    objects: {
+      creator: Prisma.$UserPayload<ExtArgs>
+      teamA: Prisma.$TeamPayload<ExtArgs>
+      teamB: Prisma.$TeamPayload<ExtArgs>
+      cup: Prisma.$CupPayload<ExtArgs> | null
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      name: string | null
+      status: string
+      createdAt: Date
+      updatedAt: Date
+      startedAt: Date | null
+      completedAt: Date | null
+      creatorId: string
+      teamAId: string
+      teamBId: string
+      cupId: string | null
+      gameState: Prisma.JsonValue | null
+      scoreTeamA: number | null
+      scoreTeamB: number | null
+    }, ExtArgs["result"]["localMatch"]>
+    composites: {}
+  }
+
+  type LocalMatchGetPayload<S extends boolean | null | undefined | LocalMatchDefaultArgs> = $Result.GetResult<Prisma.$LocalMatchPayload, S>
+
+  type LocalMatchCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<LocalMatchFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: LocalMatchCountAggregateInputType | true
+    }
+
+  export interface LocalMatchDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['LocalMatch'], meta: { name: 'LocalMatch' } }
+    /**
+     * Find zero or one LocalMatch that matches the filter.
+     * @param {LocalMatchFindUniqueArgs} args - Arguments to find a LocalMatch
+     * @example
+     * // Get one LocalMatch
+     * const localMatch = await prisma.localMatch.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends LocalMatchFindUniqueArgs>(args: SelectSubset<T, LocalMatchFindUniqueArgs<ExtArgs>>): Prisma__LocalMatchClient<$Result.GetResult<Prisma.$LocalMatchPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one LocalMatch that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {LocalMatchFindUniqueOrThrowArgs} args - Arguments to find a LocalMatch
+     * @example
+     * // Get one LocalMatch
+     * const localMatch = await prisma.localMatch.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends LocalMatchFindUniqueOrThrowArgs>(args: SelectSubset<T, LocalMatchFindUniqueOrThrowArgs<ExtArgs>>): Prisma__LocalMatchClient<$Result.GetResult<Prisma.$LocalMatchPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first LocalMatch that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LocalMatchFindFirstArgs} args - Arguments to find a LocalMatch
+     * @example
+     * // Get one LocalMatch
+     * const localMatch = await prisma.localMatch.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends LocalMatchFindFirstArgs>(args?: SelectSubset<T, LocalMatchFindFirstArgs<ExtArgs>>): Prisma__LocalMatchClient<$Result.GetResult<Prisma.$LocalMatchPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first LocalMatch that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LocalMatchFindFirstOrThrowArgs} args - Arguments to find a LocalMatch
+     * @example
+     * // Get one LocalMatch
+     * const localMatch = await prisma.localMatch.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends LocalMatchFindFirstOrThrowArgs>(args?: SelectSubset<T, LocalMatchFindFirstOrThrowArgs<ExtArgs>>): Prisma__LocalMatchClient<$Result.GetResult<Prisma.$LocalMatchPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more LocalMatches that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LocalMatchFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all LocalMatches
+     * const localMatches = await prisma.localMatch.findMany()
+     * 
+     * // Get first 10 LocalMatches
+     * const localMatches = await prisma.localMatch.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const localMatchWithIdOnly = await prisma.localMatch.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends LocalMatchFindManyArgs>(args?: SelectSubset<T, LocalMatchFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LocalMatchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a LocalMatch.
+     * @param {LocalMatchCreateArgs} args - Arguments to create a LocalMatch.
+     * @example
+     * // Create one LocalMatch
+     * const LocalMatch = await prisma.localMatch.create({
+     *   data: {
+     *     // ... data to create a LocalMatch
+     *   }
+     * })
+     * 
+     */
+    create<T extends LocalMatchCreateArgs>(args: SelectSubset<T, LocalMatchCreateArgs<ExtArgs>>): Prisma__LocalMatchClient<$Result.GetResult<Prisma.$LocalMatchPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many LocalMatches.
+     * @param {LocalMatchCreateManyArgs} args - Arguments to create many LocalMatches.
+     * @example
+     * // Create many LocalMatches
+     * const localMatch = await prisma.localMatch.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends LocalMatchCreateManyArgs>(args?: SelectSubset<T, LocalMatchCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many LocalMatches and returns the data saved in the database.
+     * @param {LocalMatchCreateManyAndReturnArgs} args - Arguments to create many LocalMatches.
+     * @example
+     * // Create many LocalMatches
+     * const localMatch = await prisma.localMatch.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many LocalMatches and only return the `id`
+     * const localMatchWithIdOnly = await prisma.localMatch.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends LocalMatchCreateManyAndReturnArgs>(args?: SelectSubset<T, LocalMatchCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LocalMatchPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a LocalMatch.
+     * @param {LocalMatchDeleteArgs} args - Arguments to delete one LocalMatch.
+     * @example
+     * // Delete one LocalMatch
+     * const LocalMatch = await prisma.localMatch.delete({
+     *   where: {
+     *     // ... filter to delete one LocalMatch
+     *   }
+     * })
+     * 
+     */
+    delete<T extends LocalMatchDeleteArgs>(args: SelectSubset<T, LocalMatchDeleteArgs<ExtArgs>>): Prisma__LocalMatchClient<$Result.GetResult<Prisma.$LocalMatchPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one LocalMatch.
+     * @param {LocalMatchUpdateArgs} args - Arguments to update one LocalMatch.
+     * @example
+     * // Update one LocalMatch
+     * const localMatch = await prisma.localMatch.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends LocalMatchUpdateArgs>(args: SelectSubset<T, LocalMatchUpdateArgs<ExtArgs>>): Prisma__LocalMatchClient<$Result.GetResult<Prisma.$LocalMatchPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more LocalMatches.
+     * @param {LocalMatchDeleteManyArgs} args - Arguments to filter LocalMatches to delete.
+     * @example
+     * // Delete a few LocalMatches
+     * const { count } = await prisma.localMatch.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends LocalMatchDeleteManyArgs>(args?: SelectSubset<T, LocalMatchDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more LocalMatches.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LocalMatchUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many LocalMatches
+     * const localMatch = await prisma.localMatch.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends LocalMatchUpdateManyArgs>(args: SelectSubset<T, LocalMatchUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more LocalMatches and returns the data updated in the database.
+     * @param {LocalMatchUpdateManyAndReturnArgs} args - Arguments to update many LocalMatches.
+     * @example
+     * // Update many LocalMatches
+     * const localMatch = await prisma.localMatch.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more LocalMatches and only return the `id`
+     * const localMatchWithIdOnly = await prisma.localMatch.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends LocalMatchUpdateManyAndReturnArgs>(args: SelectSubset<T, LocalMatchUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LocalMatchPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one LocalMatch.
+     * @param {LocalMatchUpsertArgs} args - Arguments to update or create a LocalMatch.
+     * @example
+     * // Update or create a LocalMatch
+     * const localMatch = await prisma.localMatch.upsert({
+     *   create: {
+     *     // ... data to create a LocalMatch
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the LocalMatch we want to update
+     *   }
+     * })
+     */
+    upsert<T extends LocalMatchUpsertArgs>(args: SelectSubset<T, LocalMatchUpsertArgs<ExtArgs>>): Prisma__LocalMatchClient<$Result.GetResult<Prisma.$LocalMatchPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of LocalMatches.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LocalMatchCountArgs} args - Arguments to filter LocalMatches to count.
+     * @example
+     * // Count the number of LocalMatches
+     * const count = await prisma.localMatch.count({
+     *   where: {
+     *     // ... the filter for the LocalMatches we want to count
+     *   }
+     * })
+    **/
+    count<T extends LocalMatchCountArgs>(
+      args?: Subset<T, LocalMatchCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], LocalMatchCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a LocalMatch.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LocalMatchAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends LocalMatchAggregateArgs>(args: Subset<T, LocalMatchAggregateArgs>): Prisma.PrismaPromise<GetLocalMatchAggregateType<T>>
+
+    /**
+     * Group by LocalMatch.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LocalMatchGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends LocalMatchGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: LocalMatchGroupByArgs['orderBy'] }
+        : { orderBy?: LocalMatchGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, LocalMatchGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetLocalMatchGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the LocalMatch model
+   */
+  readonly fields: LocalMatchFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for LocalMatch.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__LocalMatchClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    creator<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    teamA<T extends TeamDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TeamDefaultArgs<ExtArgs>>): Prisma__TeamClient<$Result.GetResult<Prisma.$TeamPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    teamB<T extends TeamDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TeamDefaultArgs<ExtArgs>>): Prisma__TeamClient<$Result.GetResult<Prisma.$TeamPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    cup<T extends LocalMatch$cupArgs<ExtArgs> = {}>(args?: Subset<T, LocalMatch$cupArgs<ExtArgs>>): Prisma__CupClient<$Result.GetResult<Prisma.$CupPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the LocalMatch model
+   */
+  interface LocalMatchFieldRefs {
+    readonly id: FieldRef<"LocalMatch", 'String'>
+    readonly name: FieldRef<"LocalMatch", 'String'>
+    readonly status: FieldRef<"LocalMatch", 'String'>
+    readonly createdAt: FieldRef<"LocalMatch", 'DateTime'>
+    readonly updatedAt: FieldRef<"LocalMatch", 'DateTime'>
+    readonly startedAt: FieldRef<"LocalMatch", 'DateTime'>
+    readonly completedAt: FieldRef<"LocalMatch", 'DateTime'>
+    readonly creatorId: FieldRef<"LocalMatch", 'String'>
+    readonly teamAId: FieldRef<"LocalMatch", 'String'>
+    readonly teamBId: FieldRef<"LocalMatch", 'String'>
+    readonly cupId: FieldRef<"LocalMatch", 'String'>
+    readonly gameState: FieldRef<"LocalMatch", 'Json'>
+    readonly scoreTeamA: FieldRef<"LocalMatch", 'Int'>
+    readonly scoreTeamB: FieldRef<"LocalMatch", 'Int'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * LocalMatch findUnique
+   */
+  export type LocalMatchFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LocalMatch
+     */
+    select?: LocalMatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LocalMatch
+     */
+    omit?: LocalMatchOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LocalMatchInclude<ExtArgs> | null
+    /**
+     * Filter, which LocalMatch to fetch.
+     */
+    where: LocalMatchWhereUniqueInput
+  }
+
+  /**
+   * LocalMatch findUniqueOrThrow
+   */
+  export type LocalMatchFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LocalMatch
+     */
+    select?: LocalMatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LocalMatch
+     */
+    omit?: LocalMatchOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LocalMatchInclude<ExtArgs> | null
+    /**
+     * Filter, which LocalMatch to fetch.
+     */
+    where: LocalMatchWhereUniqueInput
+  }
+
+  /**
+   * LocalMatch findFirst
+   */
+  export type LocalMatchFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LocalMatch
+     */
+    select?: LocalMatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LocalMatch
+     */
+    omit?: LocalMatchOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LocalMatchInclude<ExtArgs> | null
+    /**
+     * Filter, which LocalMatch to fetch.
+     */
+    where?: LocalMatchWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LocalMatches to fetch.
+     */
+    orderBy?: LocalMatchOrderByWithRelationInput | LocalMatchOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for LocalMatches.
+     */
+    cursor?: LocalMatchWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LocalMatches from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LocalMatches.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of LocalMatches.
+     */
+    distinct?: LocalMatchScalarFieldEnum | LocalMatchScalarFieldEnum[]
+  }
+
+  /**
+   * LocalMatch findFirstOrThrow
+   */
+  export type LocalMatchFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LocalMatch
+     */
+    select?: LocalMatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LocalMatch
+     */
+    omit?: LocalMatchOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LocalMatchInclude<ExtArgs> | null
+    /**
+     * Filter, which LocalMatch to fetch.
+     */
+    where?: LocalMatchWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LocalMatches to fetch.
+     */
+    orderBy?: LocalMatchOrderByWithRelationInput | LocalMatchOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for LocalMatches.
+     */
+    cursor?: LocalMatchWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LocalMatches from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LocalMatches.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of LocalMatches.
+     */
+    distinct?: LocalMatchScalarFieldEnum | LocalMatchScalarFieldEnum[]
+  }
+
+  /**
+   * LocalMatch findMany
+   */
+  export type LocalMatchFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LocalMatch
+     */
+    select?: LocalMatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LocalMatch
+     */
+    omit?: LocalMatchOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LocalMatchInclude<ExtArgs> | null
+    /**
+     * Filter, which LocalMatches to fetch.
+     */
+    where?: LocalMatchWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LocalMatches to fetch.
+     */
+    orderBy?: LocalMatchOrderByWithRelationInput | LocalMatchOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing LocalMatches.
+     */
+    cursor?: LocalMatchWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LocalMatches from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LocalMatches.
+     */
+    skip?: number
+    distinct?: LocalMatchScalarFieldEnum | LocalMatchScalarFieldEnum[]
+  }
+
+  /**
+   * LocalMatch create
+   */
+  export type LocalMatchCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LocalMatch
+     */
+    select?: LocalMatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LocalMatch
+     */
+    omit?: LocalMatchOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LocalMatchInclude<ExtArgs> | null
+    /**
+     * The data needed to create a LocalMatch.
+     */
+    data: XOR<LocalMatchCreateInput, LocalMatchUncheckedCreateInput>
+  }
+
+  /**
+   * LocalMatch createMany
+   */
+  export type LocalMatchCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many LocalMatches.
+     */
+    data: LocalMatchCreateManyInput | LocalMatchCreateManyInput[]
+  }
+
+  /**
+   * LocalMatch createManyAndReturn
+   */
+  export type LocalMatchCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LocalMatch
+     */
+    select?: LocalMatchSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the LocalMatch
+     */
+    omit?: LocalMatchOmit<ExtArgs> | null
+    /**
+     * The data used to create many LocalMatches.
+     */
+    data: LocalMatchCreateManyInput | LocalMatchCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LocalMatchIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * LocalMatch update
+   */
+  export type LocalMatchUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LocalMatch
+     */
+    select?: LocalMatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LocalMatch
+     */
+    omit?: LocalMatchOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LocalMatchInclude<ExtArgs> | null
+    /**
+     * The data needed to update a LocalMatch.
+     */
+    data: XOR<LocalMatchUpdateInput, LocalMatchUncheckedUpdateInput>
+    /**
+     * Choose, which LocalMatch to update.
+     */
+    where: LocalMatchWhereUniqueInput
+  }
+
+  /**
+   * LocalMatch updateMany
+   */
+  export type LocalMatchUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update LocalMatches.
+     */
+    data: XOR<LocalMatchUpdateManyMutationInput, LocalMatchUncheckedUpdateManyInput>
+    /**
+     * Filter which LocalMatches to update
+     */
+    where?: LocalMatchWhereInput
+    /**
+     * Limit how many LocalMatches to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * LocalMatch updateManyAndReturn
+   */
+  export type LocalMatchUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LocalMatch
+     */
+    select?: LocalMatchSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the LocalMatch
+     */
+    omit?: LocalMatchOmit<ExtArgs> | null
+    /**
+     * The data used to update LocalMatches.
+     */
+    data: XOR<LocalMatchUpdateManyMutationInput, LocalMatchUncheckedUpdateManyInput>
+    /**
+     * Filter which LocalMatches to update
+     */
+    where?: LocalMatchWhereInput
+    /**
+     * Limit how many LocalMatches to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LocalMatchIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * LocalMatch upsert
+   */
+  export type LocalMatchUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LocalMatch
+     */
+    select?: LocalMatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LocalMatch
+     */
+    omit?: LocalMatchOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LocalMatchInclude<ExtArgs> | null
+    /**
+     * The filter to search for the LocalMatch to update in case it exists.
+     */
+    where: LocalMatchWhereUniqueInput
+    /**
+     * In case the LocalMatch found by the `where` argument doesn't exist, create a new LocalMatch with this data.
+     */
+    create: XOR<LocalMatchCreateInput, LocalMatchUncheckedCreateInput>
+    /**
+     * In case the LocalMatch was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<LocalMatchUpdateInput, LocalMatchUncheckedUpdateInput>
+  }
+
+  /**
+   * LocalMatch delete
+   */
+  export type LocalMatchDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LocalMatch
+     */
+    select?: LocalMatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LocalMatch
+     */
+    omit?: LocalMatchOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LocalMatchInclude<ExtArgs> | null
+    /**
+     * Filter which LocalMatch to delete.
+     */
+    where: LocalMatchWhereUniqueInput
+  }
+
+  /**
+   * LocalMatch deleteMany
+   */
+  export type LocalMatchDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which LocalMatches to delete
+     */
+    where?: LocalMatchWhereInput
+    /**
+     * Limit how many LocalMatches to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * LocalMatch.cup
+   */
+  export type LocalMatch$cupArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Cup
+     */
+    select?: CupSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Cup
+     */
+    omit?: CupOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupInclude<ExtArgs> | null
+    where?: CupWhereInput
+  }
+
+  /**
+   * LocalMatch without action
+   */
+  export type LocalMatchDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LocalMatch
+     */
+    select?: LocalMatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LocalMatch
+     */
+    omit?: LocalMatchOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LocalMatchInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -8622,6 +12574,50 @@ export namespace Prisma {
   export type TeamPlayerScalarFieldEnum = (typeof TeamPlayerScalarFieldEnum)[keyof typeof TeamPlayerScalarFieldEnum]
 
 
+  export const CupScalarFieldEnum: {
+    id: 'id',
+    name: 'name',
+    creatorId: 'creatorId',
+    validated: 'validated',
+    isPublic: 'isPublic',
+    status: 'status',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type CupScalarFieldEnum = (typeof CupScalarFieldEnum)[keyof typeof CupScalarFieldEnum]
+
+
+  export const CupParticipantScalarFieldEnum: {
+    id: 'id',
+    cupId: 'cupId',
+    teamId: 'teamId',
+    createdAt: 'createdAt'
+  };
+
+  export type CupParticipantScalarFieldEnum = (typeof CupParticipantScalarFieldEnum)[keyof typeof CupParticipantScalarFieldEnum]
+
+
+  export const LocalMatchScalarFieldEnum: {
+    id: 'id',
+    name: 'name',
+    status: 'status',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt',
+    startedAt: 'startedAt',
+    completedAt: 'completedAt',
+    creatorId: 'creatorId',
+    teamAId: 'teamAId',
+    teamBId: 'teamBId',
+    cupId: 'cupId',
+    gameState: 'gameState',
+    scoreTeamA: 'scoreTeamA',
+    scoreTeamB: 'scoreTeamB'
+  };
+
+  export type LocalMatchScalarFieldEnum = (typeof LocalMatchScalarFieldEnum)[keyof typeof LocalMatchScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
@@ -8635,6 +12631,14 @@ export namespace Prisma {
   };
 
   export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
+
+
+  export const NullableJsonNullValueInput: {
+    DbNull: typeof DbNull,
+    JsonNull: typeof JsonNull
+  };
+
+  export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
   export const NullsOrder: {
@@ -8738,6 +12742,8 @@ export namespace Prisma {
     createdMatches?: MatchListRelationFilter
     teams?: TeamListRelationFilter
     teamSelections?: TeamSelectionListRelationFilter
+    createdCups?: CupListRelationFilter
+    createdLocalMatches?: LocalMatchListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -8756,6 +12762,8 @@ export namespace Prisma {
     createdMatches?: MatchOrderByRelationAggregateInput
     teams?: TeamOrderByRelationAggregateInput
     teamSelections?: TeamSelectionOrderByRelationAggregateInput
+    createdCups?: CupOrderByRelationAggregateInput
+    createdLocalMatches?: LocalMatchOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -8777,6 +12785,8 @@ export namespace Prisma {
     createdMatches?: MatchListRelationFilter
     teams?: TeamListRelationFilter
     teamSelections?: TeamSelectionListRelationFilter
+    createdCups?: CupListRelationFilter
+    createdLocalMatches?: LocalMatchListRelationFilter
   }, "id" | "email">
 
   export type UserOrderByWithAggregationInput = {
@@ -9023,6 +13033,9 @@ export namespace Prisma {
     owner?: XOR<UserScalarRelationFilter, UserWhereInput>
     players?: TeamPlayerListRelationFilter
     selections?: TeamSelectionListRelationFilter
+    cupParticipants?: CupParticipantListRelationFilter
+    localMatchesAsTeamA?: LocalMatchListRelationFilter
+    localMatchesAsTeamB?: LocalMatchListRelationFilter
   }
 
   export type TeamOrderByWithRelationInput = {
@@ -9043,6 +13056,9 @@ export namespace Prisma {
     owner?: UserOrderByWithRelationInput
     players?: TeamPlayerOrderByRelationAggregateInput
     selections?: TeamSelectionOrderByRelationAggregateInput
+    cupParticipants?: CupParticipantOrderByRelationAggregateInput
+    localMatchesAsTeamA?: LocalMatchOrderByRelationAggregateInput
+    localMatchesAsTeamB?: LocalMatchOrderByRelationAggregateInput
   }
 
   export type TeamWhereUniqueInput = Prisma.AtLeast<{
@@ -9066,6 +13082,9 @@ export namespace Prisma {
     owner?: XOR<UserScalarRelationFilter, UserWhereInput>
     players?: TeamPlayerListRelationFilter
     selections?: TeamSelectionListRelationFilter
+    cupParticipants?: CupParticipantListRelationFilter
+    localMatchesAsTeamA?: LocalMatchListRelationFilter
+    localMatchesAsTeamB?: LocalMatchListRelationFilter
   }, "id">
 
   export type TeamOrderByWithAggregationInput = {
@@ -9197,6 +13216,247 @@ export namespace Prisma {
     skills?: StringWithAggregatesFilter<"TeamPlayer"> | string
   }
 
+  export type CupWhereInput = {
+    AND?: CupWhereInput | CupWhereInput[]
+    OR?: CupWhereInput[]
+    NOT?: CupWhereInput | CupWhereInput[]
+    id?: StringFilter<"Cup"> | string
+    name?: StringFilter<"Cup"> | string
+    creatorId?: StringFilter<"Cup"> | string
+    validated?: BoolFilter<"Cup"> | boolean
+    isPublic?: BoolFilter<"Cup"> | boolean
+    status?: StringFilter<"Cup"> | string
+    createdAt?: DateTimeFilter<"Cup"> | Date | string
+    updatedAt?: DateTimeFilter<"Cup"> | Date | string
+    creator?: XOR<UserScalarRelationFilter, UserWhereInput>
+    participants?: CupParticipantListRelationFilter
+    localMatches?: LocalMatchListRelationFilter
+  }
+
+  export type CupOrderByWithRelationInput = {
+    id?: SortOrder
+    name?: SortOrder
+    creatorId?: SortOrder
+    validated?: SortOrder
+    isPublic?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    creator?: UserOrderByWithRelationInput
+    participants?: CupParticipantOrderByRelationAggregateInput
+    localMatches?: LocalMatchOrderByRelationAggregateInput
+  }
+
+  export type CupWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: CupWhereInput | CupWhereInput[]
+    OR?: CupWhereInput[]
+    NOT?: CupWhereInput | CupWhereInput[]
+    name?: StringFilter<"Cup"> | string
+    creatorId?: StringFilter<"Cup"> | string
+    validated?: BoolFilter<"Cup"> | boolean
+    isPublic?: BoolFilter<"Cup"> | boolean
+    status?: StringFilter<"Cup"> | string
+    createdAt?: DateTimeFilter<"Cup"> | Date | string
+    updatedAt?: DateTimeFilter<"Cup"> | Date | string
+    creator?: XOR<UserScalarRelationFilter, UserWhereInput>
+    participants?: CupParticipantListRelationFilter
+    localMatches?: LocalMatchListRelationFilter
+  }, "id">
+
+  export type CupOrderByWithAggregationInput = {
+    id?: SortOrder
+    name?: SortOrder
+    creatorId?: SortOrder
+    validated?: SortOrder
+    isPublic?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: CupCountOrderByAggregateInput
+    _max?: CupMaxOrderByAggregateInput
+    _min?: CupMinOrderByAggregateInput
+  }
+
+  export type CupScalarWhereWithAggregatesInput = {
+    AND?: CupScalarWhereWithAggregatesInput | CupScalarWhereWithAggregatesInput[]
+    OR?: CupScalarWhereWithAggregatesInput[]
+    NOT?: CupScalarWhereWithAggregatesInput | CupScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Cup"> | string
+    name?: StringWithAggregatesFilter<"Cup"> | string
+    creatorId?: StringWithAggregatesFilter<"Cup"> | string
+    validated?: BoolWithAggregatesFilter<"Cup"> | boolean
+    isPublic?: BoolWithAggregatesFilter<"Cup"> | boolean
+    status?: StringWithAggregatesFilter<"Cup"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"Cup"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"Cup"> | Date | string
+  }
+
+  export type CupParticipantWhereInput = {
+    AND?: CupParticipantWhereInput | CupParticipantWhereInput[]
+    OR?: CupParticipantWhereInput[]
+    NOT?: CupParticipantWhereInput | CupParticipantWhereInput[]
+    id?: StringFilter<"CupParticipant"> | string
+    cupId?: StringFilter<"CupParticipant"> | string
+    teamId?: StringFilter<"CupParticipant"> | string
+    createdAt?: DateTimeFilter<"CupParticipant"> | Date | string
+    cup?: XOR<CupScalarRelationFilter, CupWhereInput>
+    team?: XOR<TeamScalarRelationFilter, TeamWhereInput>
+  }
+
+  export type CupParticipantOrderByWithRelationInput = {
+    id?: SortOrder
+    cupId?: SortOrder
+    teamId?: SortOrder
+    createdAt?: SortOrder
+    cup?: CupOrderByWithRelationInput
+    team?: TeamOrderByWithRelationInput
+  }
+
+  export type CupParticipantWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    cupId_teamId?: CupParticipantCupIdTeamIdCompoundUniqueInput
+    AND?: CupParticipantWhereInput | CupParticipantWhereInput[]
+    OR?: CupParticipantWhereInput[]
+    NOT?: CupParticipantWhereInput | CupParticipantWhereInput[]
+    cupId?: StringFilter<"CupParticipant"> | string
+    teamId?: StringFilter<"CupParticipant"> | string
+    createdAt?: DateTimeFilter<"CupParticipant"> | Date | string
+    cup?: XOR<CupScalarRelationFilter, CupWhereInput>
+    team?: XOR<TeamScalarRelationFilter, TeamWhereInput>
+  }, "id" | "cupId_teamId">
+
+  export type CupParticipantOrderByWithAggregationInput = {
+    id?: SortOrder
+    cupId?: SortOrder
+    teamId?: SortOrder
+    createdAt?: SortOrder
+    _count?: CupParticipantCountOrderByAggregateInput
+    _max?: CupParticipantMaxOrderByAggregateInput
+    _min?: CupParticipantMinOrderByAggregateInput
+  }
+
+  export type CupParticipantScalarWhereWithAggregatesInput = {
+    AND?: CupParticipantScalarWhereWithAggregatesInput | CupParticipantScalarWhereWithAggregatesInput[]
+    OR?: CupParticipantScalarWhereWithAggregatesInput[]
+    NOT?: CupParticipantScalarWhereWithAggregatesInput | CupParticipantScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"CupParticipant"> | string
+    cupId?: StringWithAggregatesFilter<"CupParticipant"> | string
+    teamId?: StringWithAggregatesFilter<"CupParticipant"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"CupParticipant"> | Date | string
+  }
+
+  export type LocalMatchWhereInput = {
+    AND?: LocalMatchWhereInput | LocalMatchWhereInput[]
+    OR?: LocalMatchWhereInput[]
+    NOT?: LocalMatchWhereInput | LocalMatchWhereInput[]
+    id?: StringFilter<"LocalMatch"> | string
+    name?: StringNullableFilter<"LocalMatch"> | string | null
+    status?: StringFilter<"LocalMatch"> | string
+    createdAt?: DateTimeFilter<"LocalMatch"> | Date | string
+    updatedAt?: DateTimeFilter<"LocalMatch"> | Date | string
+    startedAt?: DateTimeNullableFilter<"LocalMatch"> | Date | string | null
+    completedAt?: DateTimeNullableFilter<"LocalMatch"> | Date | string | null
+    creatorId?: StringFilter<"LocalMatch"> | string
+    teamAId?: StringFilter<"LocalMatch"> | string
+    teamBId?: StringFilter<"LocalMatch"> | string
+    cupId?: StringNullableFilter<"LocalMatch"> | string | null
+    gameState?: JsonNullableFilter<"LocalMatch">
+    scoreTeamA?: IntNullableFilter<"LocalMatch"> | number | null
+    scoreTeamB?: IntNullableFilter<"LocalMatch"> | number | null
+    creator?: XOR<UserScalarRelationFilter, UserWhereInput>
+    teamA?: XOR<TeamScalarRelationFilter, TeamWhereInput>
+    teamB?: XOR<TeamScalarRelationFilter, TeamWhereInput>
+    cup?: XOR<CupNullableScalarRelationFilter, CupWhereInput> | null
+  }
+
+  export type LocalMatchOrderByWithRelationInput = {
+    id?: SortOrder
+    name?: SortOrderInput | SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    startedAt?: SortOrderInput | SortOrder
+    completedAt?: SortOrderInput | SortOrder
+    creatorId?: SortOrder
+    teamAId?: SortOrder
+    teamBId?: SortOrder
+    cupId?: SortOrderInput | SortOrder
+    gameState?: SortOrderInput | SortOrder
+    scoreTeamA?: SortOrderInput | SortOrder
+    scoreTeamB?: SortOrderInput | SortOrder
+    creator?: UserOrderByWithRelationInput
+    teamA?: TeamOrderByWithRelationInput
+    teamB?: TeamOrderByWithRelationInput
+    cup?: CupOrderByWithRelationInput
+  }
+
+  export type LocalMatchWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: LocalMatchWhereInput | LocalMatchWhereInput[]
+    OR?: LocalMatchWhereInput[]
+    NOT?: LocalMatchWhereInput | LocalMatchWhereInput[]
+    name?: StringNullableFilter<"LocalMatch"> | string | null
+    status?: StringFilter<"LocalMatch"> | string
+    createdAt?: DateTimeFilter<"LocalMatch"> | Date | string
+    updatedAt?: DateTimeFilter<"LocalMatch"> | Date | string
+    startedAt?: DateTimeNullableFilter<"LocalMatch"> | Date | string | null
+    completedAt?: DateTimeNullableFilter<"LocalMatch"> | Date | string | null
+    creatorId?: StringFilter<"LocalMatch"> | string
+    teamAId?: StringFilter<"LocalMatch"> | string
+    teamBId?: StringFilter<"LocalMatch"> | string
+    cupId?: StringNullableFilter<"LocalMatch"> | string | null
+    gameState?: JsonNullableFilter<"LocalMatch">
+    scoreTeamA?: IntNullableFilter<"LocalMatch"> | number | null
+    scoreTeamB?: IntNullableFilter<"LocalMatch"> | number | null
+    creator?: XOR<UserScalarRelationFilter, UserWhereInput>
+    teamA?: XOR<TeamScalarRelationFilter, TeamWhereInput>
+    teamB?: XOR<TeamScalarRelationFilter, TeamWhereInput>
+    cup?: XOR<CupNullableScalarRelationFilter, CupWhereInput> | null
+  }, "id">
+
+  export type LocalMatchOrderByWithAggregationInput = {
+    id?: SortOrder
+    name?: SortOrderInput | SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    startedAt?: SortOrderInput | SortOrder
+    completedAt?: SortOrderInput | SortOrder
+    creatorId?: SortOrder
+    teamAId?: SortOrder
+    teamBId?: SortOrder
+    cupId?: SortOrderInput | SortOrder
+    gameState?: SortOrderInput | SortOrder
+    scoreTeamA?: SortOrderInput | SortOrder
+    scoreTeamB?: SortOrderInput | SortOrder
+    _count?: LocalMatchCountOrderByAggregateInput
+    _avg?: LocalMatchAvgOrderByAggregateInput
+    _max?: LocalMatchMaxOrderByAggregateInput
+    _min?: LocalMatchMinOrderByAggregateInput
+    _sum?: LocalMatchSumOrderByAggregateInput
+  }
+
+  export type LocalMatchScalarWhereWithAggregatesInput = {
+    AND?: LocalMatchScalarWhereWithAggregatesInput | LocalMatchScalarWhereWithAggregatesInput[]
+    OR?: LocalMatchScalarWhereWithAggregatesInput[]
+    NOT?: LocalMatchScalarWhereWithAggregatesInput | LocalMatchScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"LocalMatch"> | string
+    name?: StringNullableWithAggregatesFilter<"LocalMatch"> | string | null
+    status?: StringWithAggregatesFilter<"LocalMatch"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"LocalMatch"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"LocalMatch"> | Date | string
+    startedAt?: DateTimeNullableWithAggregatesFilter<"LocalMatch"> | Date | string | null
+    completedAt?: DateTimeNullableWithAggregatesFilter<"LocalMatch"> | Date | string | null
+    creatorId?: StringWithAggregatesFilter<"LocalMatch"> | string
+    teamAId?: StringWithAggregatesFilter<"LocalMatch"> | string
+    teamBId?: StringWithAggregatesFilter<"LocalMatch"> | string
+    cupId?: StringNullableWithAggregatesFilter<"LocalMatch"> | string | null
+    gameState?: JsonNullableWithAggregatesFilter<"LocalMatch">
+    scoreTeamA?: IntNullableWithAggregatesFilter<"LocalMatch"> | number | null
+    scoreTeamB?: IntNullableWithAggregatesFilter<"LocalMatch"> | number | null
+  }
+
   export type UserCreateInput = {
     id?: string
     email: string
@@ -9213,6 +13473,8 @@ export namespace Prisma {
     createdMatches?: MatchCreateNestedManyWithoutCreatorInput
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
+    createdCups?: CupCreateNestedManyWithoutCreatorInput
+    createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -9231,6 +13493,8 @@ export namespace Prisma {
     createdMatches?: MatchUncheckedCreateNestedManyWithoutCreatorInput
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
+    createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
   }
 
   export type UserUpdateInput = {
@@ -9249,6 +13513,8 @@ export namespace Prisma {
     createdMatches?: MatchUpdateManyWithoutCreatorNestedInput
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
+    createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -9267,6 +13533,8 @@ export namespace Prisma {
     createdMatches?: MatchUncheckedUpdateManyWithoutCreatorNestedInput
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
+    createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -9510,6 +13778,9 @@ export namespace Prisma {
     owner: UserCreateNestedOneWithoutTeamsInput
     players?: TeamPlayerCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionCreateNestedManyWithoutTeamRefInput
+    cupParticipants?: CupParticipantCreateNestedManyWithoutTeamInput
+    localMatchesAsTeamA?: LocalMatchCreateNestedManyWithoutTeamAInput
+    localMatchesAsTeamB?: LocalMatchCreateNestedManyWithoutTeamBInput
   }
 
   export type TeamUncheckedCreateInput = {
@@ -9529,6 +13800,9 @@ export namespace Prisma {
     initialBudget?: number
     players?: TeamPlayerUncheckedCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionUncheckedCreateNestedManyWithoutTeamRefInput
+    cupParticipants?: CupParticipantUncheckedCreateNestedManyWithoutTeamInput
+    localMatchesAsTeamA?: LocalMatchUncheckedCreateNestedManyWithoutTeamAInput
+    localMatchesAsTeamB?: LocalMatchUncheckedCreateNestedManyWithoutTeamBInput
   }
 
   export type TeamUpdateInput = {
@@ -9548,6 +13822,9 @@ export namespace Prisma {
     owner?: UserUpdateOneRequiredWithoutTeamsNestedInput
     players?: TeamPlayerUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUpdateManyWithoutTeamRefNestedInput
+    cupParticipants?: CupParticipantUpdateManyWithoutTeamNestedInput
+    localMatchesAsTeamA?: LocalMatchUpdateManyWithoutTeamANestedInput
+    localMatchesAsTeamB?: LocalMatchUpdateManyWithoutTeamBNestedInput
   }
 
   export type TeamUncheckedUpdateInput = {
@@ -9567,6 +13844,9 @@ export namespace Prisma {
     initialBudget?: IntFieldUpdateOperationsInput | number
     players?: TeamPlayerUncheckedUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUncheckedUpdateManyWithoutTeamRefNestedInput
+    cupParticipants?: CupParticipantUncheckedUpdateManyWithoutTeamNestedInput
+    localMatchesAsTeamA?: LocalMatchUncheckedUpdateManyWithoutTeamANestedInput
+    localMatchesAsTeamB?: LocalMatchUncheckedUpdateManyWithoutTeamBNestedInput
   }
 
   export type TeamCreateManyInput = {
@@ -9716,6 +13996,252 @@ export namespace Prisma {
     skills?: StringFieldUpdateOperationsInput | string
   }
 
+  export type CupCreateInput = {
+    id?: string
+    name: string
+    validated?: boolean
+    isPublic?: boolean
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    creator: UserCreateNestedOneWithoutCreatedCupsInput
+    participants?: CupParticipantCreateNestedManyWithoutCupInput
+    localMatches?: LocalMatchCreateNestedManyWithoutCupInput
+  }
+
+  export type CupUncheckedCreateInput = {
+    id?: string
+    name: string
+    creatorId: string
+    validated?: boolean
+    isPublic?: boolean
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    participants?: CupParticipantUncheckedCreateNestedManyWithoutCupInput
+    localMatches?: LocalMatchUncheckedCreateNestedManyWithoutCupInput
+  }
+
+  export type CupUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    validated?: BoolFieldUpdateOperationsInput | boolean
+    isPublic?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    creator?: UserUpdateOneRequiredWithoutCreatedCupsNestedInput
+    participants?: CupParticipantUpdateManyWithoutCupNestedInput
+    localMatches?: LocalMatchUpdateManyWithoutCupNestedInput
+  }
+
+  export type CupUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    creatorId?: StringFieldUpdateOperationsInput | string
+    validated?: BoolFieldUpdateOperationsInput | boolean
+    isPublic?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    participants?: CupParticipantUncheckedUpdateManyWithoutCupNestedInput
+    localMatches?: LocalMatchUncheckedUpdateManyWithoutCupNestedInput
+  }
+
+  export type CupCreateManyInput = {
+    id?: string
+    name: string
+    creatorId: string
+    validated?: boolean
+    isPublic?: boolean
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type CupUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    validated?: BoolFieldUpdateOperationsInput | boolean
+    isPublic?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CupUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    creatorId?: StringFieldUpdateOperationsInput | string
+    validated?: BoolFieldUpdateOperationsInput | boolean
+    isPublic?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CupParticipantCreateInput = {
+    id?: string
+    createdAt?: Date | string
+    cup: CupCreateNestedOneWithoutParticipantsInput
+    team: TeamCreateNestedOneWithoutCupParticipantsInput
+  }
+
+  export type CupParticipantUncheckedCreateInput = {
+    id?: string
+    cupId: string
+    teamId: string
+    createdAt?: Date | string
+  }
+
+  export type CupParticipantUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    cup?: CupUpdateOneRequiredWithoutParticipantsNestedInput
+    team?: TeamUpdateOneRequiredWithoutCupParticipantsNestedInput
+  }
+
+  export type CupParticipantUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    cupId?: StringFieldUpdateOperationsInput | string
+    teamId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CupParticipantCreateManyInput = {
+    id?: string
+    cupId: string
+    teamId: string
+    createdAt?: Date | string
+  }
+
+  export type CupParticipantUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CupParticipantUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    cupId?: StringFieldUpdateOperationsInput | string
+    teamId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LocalMatchCreateInput = {
+    id?: string
+    name?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    startedAt?: Date | string | null
+    completedAt?: Date | string | null
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: number | null
+    scoreTeamB?: number | null
+    creator: UserCreateNestedOneWithoutCreatedLocalMatchesInput
+    teamA: TeamCreateNestedOneWithoutLocalMatchesAsTeamAInput
+    teamB: TeamCreateNestedOneWithoutLocalMatchesAsTeamBInput
+    cup?: CupCreateNestedOneWithoutLocalMatchesInput
+  }
+
+  export type LocalMatchUncheckedCreateInput = {
+    id?: string
+    name?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    startedAt?: Date | string | null
+    completedAt?: Date | string | null
+    creatorId: string
+    teamAId: string
+    teamBId: string
+    cupId?: string | null
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: number | null
+    scoreTeamB?: number | null
+  }
+
+  export type LocalMatchUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: NullableIntFieldUpdateOperationsInput | number | null
+    scoreTeamB?: NullableIntFieldUpdateOperationsInput | number | null
+    creator?: UserUpdateOneRequiredWithoutCreatedLocalMatchesNestedInput
+    teamA?: TeamUpdateOneRequiredWithoutLocalMatchesAsTeamANestedInput
+    teamB?: TeamUpdateOneRequiredWithoutLocalMatchesAsTeamBNestedInput
+    cup?: CupUpdateOneWithoutLocalMatchesNestedInput
+  }
+
+  export type LocalMatchUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    creatorId?: StringFieldUpdateOperationsInput | string
+    teamAId?: StringFieldUpdateOperationsInput | string
+    teamBId?: StringFieldUpdateOperationsInput | string
+    cupId?: NullableStringFieldUpdateOperationsInput | string | null
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: NullableIntFieldUpdateOperationsInput | number | null
+    scoreTeamB?: NullableIntFieldUpdateOperationsInput | number | null
+  }
+
+  export type LocalMatchCreateManyInput = {
+    id?: string
+    name?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    startedAt?: Date | string | null
+    completedAt?: Date | string | null
+    creatorId: string
+    teamAId: string
+    teamBId: string
+    cupId?: string | null
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: number | null
+    scoreTeamB?: number | null
+  }
+
+  export type LocalMatchUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: NullableIntFieldUpdateOperationsInput | number | null
+    scoreTeamB?: NullableIntFieldUpdateOperationsInput | number | null
+  }
+
+  export type LocalMatchUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    creatorId?: StringFieldUpdateOperationsInput | string
+    teamAId?: StringFieldUpdateOperationsInput | string
+    teamBId?: StringFieldUpdateOperationsInput | string
+    cupId?: NullableStringFieldUpdateOperationsInput | string | null
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: NullableIntFieldUpdateOperationsInput | number | null
+    scoreTeamB?: NullableIntFieldUpdateOperationsInput | number | null
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -9784,6 +14310,18 @@ export namespace Prisma {
     none?: TeamSelectionWhereInput
   }
 
+  export type CupListRelationFilter = {
+    every?: CupWhereInput
+    some?: CupWhereInput
+    none?: CupWhereInput
+  }
+
+  export type LocalMatchListRelationFilter = {
+    every?: LocalMatchWhereInput
+    some?: LocalMatchWhereInput
+    none?: LocalMatchWhereInput
+  }
+
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
@@ -9798,6 +14336,14 @@ export namespace Prisma {
   }
 
   export type TeamSelectionOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type CupOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type LocalMatchOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -10113,7 +14659,17 @@ export namespace Prisma {
     none?: TeamPlayerWhereInput
   }
 
+  export type CupParticipantListRelationFilter = {
+    every?: CupParticipantWhereInput
+    some?: CupParticipantWhereInput
+    none?: CupParticipantWhereInput
+  }
+
   export type TeamPlayerOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type CupParticipantOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -10263,6 +14819,200 @@ export namespace Prisma {
     av?: SortOrder
   }
 
+  export type CupCountOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    creatorId?: SortOrder
+    validated?: SortOrder
+    isPublic?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type CupMaxOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    creatorId?: SortOrder
+    validated?: SortOrder
+    isPublic?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type CupMinOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    creatorId?: SortOrder
+    validated?: SortOrder
+    isPublic?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type CupScalarRelationFilter = {
+    is?: CupWhereInput
+    isNot?: CupWhereInput
+  }
+
+  export type CupParticipantCupIdTeamIdCompoundUniqueInput = {
+    cupId: string
+    teamId: string
+  }
+
+  export type CupParticipantCountOrderByAggregateInput = {
+    id?: SortOrder
+    cupId?: SortOrder
+    teamId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type CupParticipantMaxOrderByAggregateInput = {
+    id?: SortOrder
+    cupId?: SortOrder
+    teamId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type CupParticipantMinOrderByAggregateInput = {
+    id?: SortOrder
+    cupId?: SortOrder
+    teamId?: SortOrder
+    createdAt?: SortOrder
+  }
+  export type JsonNullableFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type IntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type CupNullableScalarRelationFilter = {
+    is?: CupWhereInput | null
+    isNot?: CupWhereInput | null
+  }
+
+  export type LocalMatchCountOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    startedAt?: SortOrder
+    completedAt?: SortOrder
+    creatorId?: SortOrder
+    teamAId?: SortOrder
+    teamBId?: SortOrder
+    cupId?: SortOrder
+    gameState?: SortOrder
+    scoreTeamA?: SortOrder
+    scoreTeamB?: SortOrder
+  }
+
+  export type LocalMatchAvgOrderByAggregateInput = {
+    scoreTeamA?: SortOrder
+    scoreTeamB?: SortOrder
+  }
+
+  export type LocalMatchMaxOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    startedAt?: SortOrder
+    completedAt?: SortOrder
+    creatorId?: SortOrder
+    teamAId?: SortOrder
+    teamBId?: SortOrder
+    cupId?: SortOrder
+    scoreTeamA?: SortOrder
+    scoreTeamB?: SortOrder
+  }
+
+  export type LocalMatchMinOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    startedAt?: SortOrder
+    completedAt?: SortOrder
+    creatorId?: SortOrder
+    teamAId?: SortOrder
+    teamBId?: SortOrder
+    cupId?: SortOrder
+    scoreTeamA?: SortOrder
+    scoreTeamB?: SortOrder
+  }
+
+  export type LocalMatchSumOrderByAggregateInput = {
+    scoreTeamA?: SortOrder
+    scoreTeamB?: SortOrder
+  }
+  export type JsonNullableWithAggregatesFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableWithAggregatesFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedJsonNullableFilter<$PrismaModel>
+    _max?: NestedJsonNullableFilter<$PrismaModel>
+  }
+
+  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+
   export type MatchCreateNestedManyWithoutPlayersInput = {
     create?: XOR<MatchCreateWithoutPlayersInput, MatchUncheckedCreateWithoutPlayersInput> | MatchCreateWithoutPlayersInput[] | MatchUncheckedCreateWithoutPlayersInput[]
     connectOrCreate?: MatchCreateOrConnectWithoutPlayersInput | MatchCreateOrConnectWithoutPlayersInput[]
@@ -10290,6 +15040,20 @@ export namespace Prisma {
     connect?: TeamSelectionWhereUniqueInput | TeamSelectionWhereUniqueInput[]
   }
 
+  export type CupCreateNestedManyWithoutCreatorInput = {
+    create?: XOR<CupCreateWithoutCreatorInput, CupUncheckedCreateWithoutCreatorInput> | CupCreateWithoutCreatorInput[] | CupUncheckedCreateWithoutCreatorInput[]
+    connectOrCreate?: CupCreateOrConnectWithoutCreatorInput | CupCreateOrConnectWithoutCreatorInput[]
+    createMany?: CupCreateManyCreatorInputEnvelope
+    connect?: CupWhereUniqueInput | CupWhereUniqueInput[]
+  }
+
+  export type LocalMatchCreateNestedManyWithoutCreatorInput = {
+    create?: XOR<LocalMatchCreateWithoutCreatorInput, LocalMatchUncheckedCreateWithoutCreatorInput> | LocalMatchCreateWithoutCreatorInput[] | LocalMatchUncheckedCreateWithoutCreatorInput[]
+    connectOrCreate?: LocalMatchCreateOrConnectWithoutCreatorInput | LocalMatchCreateOrConnectWithoutCreatorInput[]
+    createMany?: LocalMatchCreateManyCreatorInputEnvelope
+    connect?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+  }
+
   export type MatchUncheckedCreateNestedManyWithoutPlayersInput = {
     create?: XOR<MatchCreateWithoutPlayersInput, MatchUncheckedCreateWithoutPlayersInput> | MatchCreateWithoutPlayersInput[] | MatchUncheckedCreateWithoutPlayersInput[]
     connectOrCreate?: MatchCreateOrConnectWithoutPlayersInput | MatchCreateOrConnectWithoutPlayersInput[]
@@ -10315,6 +15079,20 @@ export namespace Prisma {
     connectOrCreate?: TeamSelectionCreateOrConnectWithoutUserInput | TeamSelectionCreateOrConnectWithoutUserInput[]
     createMany?: TeamSelectionCreateManyUserInputEnvelope
     connect?: TeamSelectionWhereUniqueInput | TeamSelectionWhereUniqueInput[]
+  }
+
+  export type CupUncheckedCreateNestedManyWithoutCreatorInput = {
+    create?: XOR<CupCreateWithoutCreatorInput, CupUncheckedCreateWithoutCreatorInput> | CupCreateWithoutCreatorInput[] | CupUncheckedCreateWithoutCreatorInput[]
+    connectOrCreate?: CupCreateOrConnectWithoutCreatorInput | CupCreateOrConnectWithoutCreatorInput[]
+    createMany?: CupCreateManyCreatorInputEnvelope
+    connect?: CupWhereUniqueInput | CupWhereUniqueInput[]
+  }
+
+  export type LocalMatchUncheckedCreateNestedManyWithoutCreatorInput = {
+    create?: XOR<LocalMatchCreateWithoutCreatorInput, LocalMatchUncheckedCreateWithoutCreatorInput> | LocalMatchCreateWithoutCreatorInput[] | LocalMatchUncheckedCreateWithoutCreatorInput[]
+    connectOrCreate?: LocalMatchCreateOrConnectWithoutCreatorInput | LocalMatchCreateOrConnectWithoutCreatorInput[]
+    createMany?: LocalMatchCreateManyCreatorInputEnvelope
+    connect?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -10388,6 +15166,34 @@ export namespace Prisma {
     deleteMany?: TeamSelectionScalarWhereInput | TeamSelectionScalarWhereInput[]
   }
 
+  export type CupUpdateManyWithoutCreatorNestedInput = {
+    create?: XOR<CupCreateWithoutCreatorInput, CupUncheckedCreateWithoutCreatorInput> | CupCreateWithoutCreatorInput[] | CupUncheckedCreateWithoutCreatorInput[]
+    connectOrCreate?: CupCreateOrConnectWithoutCreatorInput | CupCreateOrConnectWithoutCreatorInput[]
+    upsert?: CupUpsertWithWhereUniqueWithoutCreatorInput | CupUpsertWithWhereUniqueWithoutCreatorInput[]
+    createMany?: CupCreateManyCreatorInputEnvelope
+    set?: CupWhereUniqueInput | CupWhereUniqueInput[]
+    disconnect?: CupWhereUniqueInput | CupWhereUniqueInput[]
+    delete?: CupWhereUniqueInput | CupWhereUniqueInput[]
+    connect?: CupWhereUniqueInput | CupWhereUniqueInput[]
+    update?: CupUpdateWithWhereUniqueWithoutCreatorInput | CupUpdateWithWhereUniqueWithoutCreatorInput[]
+    updateMany?: CupUpdateManyWithWhereWithoutCreatorInput | CupUpdateManyWithWhereWithoutCreatorInput[]
+    deleteMany?: CupScalarWhereInput | CupScalarWhereInput[]
+  }
+
+  export type LocalMatchUpdateManyWithoutCreatorNestedInput = {
+    create?: XOR<LocalMatchCreateWithoutCreatorInput, LocalMatchUncheckedCreateWithoutCreatorInput> | LocalMatchCreateWithoutCreatorInput[] | LocalMatchUncheckedCreateWithoutCreatorInput[]
+    connectOrCreate?: LocalMatchCreateOrConnectWithoutCreatorInput | LocalMatchCreateOrConnectWithoutCreatorInput[]
+    upsert?: LocalMatchUpsertWithWhereUniqueWithoutCreatorInput | LocalMatchUpsertWithWhereUniqueWithoutCreatorInput[]
+    createMany?: LocalMatchCreateManyCreatorInputEnvelope
+    set?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+    disconnect?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+    delete?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+    connect?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+    update?: LocalMatchUpdateWithWhereUniqueWithoutCreatorInput | LocalMatchUpdateWithWhereUniqueWithoutCreatorInput[]
+    updateMany?: LocalMatchUpdateManyWithWhereWithoutCreatorInput | LocalMatchUpdateManyWithWhereWithoutCreatorInput[]
+    deleteMany?: LocalMatchScalarWhereInput | LocalMatchScalarWhereInput[]
+  }
+
   export type MatchUncheckedUpdateManyWithoutPlayersNestedInput = {
     create?: XOR<MatchCreateWithoutPlayersInput, MatchUncheckedCreateWithoutPlayersInput> | MatchCreateWithoutPlayersInput[] | MatchUncheckedCreateWithoutPlayersInput[]
     connectOrCreate?: MatchCreateOrConnectWithoutPlayersInput | MatchCreateOrConnectWithoutPlayersInput[]
@@ -10441,6 +15247,34 @@ export namespace Prisma {
     update?: TeamSelectionUpdateWithWhereUniqueWithoutUserInput | TeamSelectionUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: TeamSelectionUpdateManyWithWhereWithoutUserInput | TeamSelectionUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: TeamSelectionScalarWhereInput | TeamSelectionScalarWhereInput[]
+  }
+
+  export type CupUncheckedUpdateManyWithoutCreatorNestedInput = {
+    create?: XOR<CupCreateWithoutCreatorInput, CupUncheckedCreateWithoutCreatorInput> | CupCreateWithoutCreatorInput[] | CupUncheckedCreateWithoutCreatorInput[]
+    connectOrCreate?: CupCreateOrConnectWithoutCreatorInput | CupCreateOrConnectWithoutCreatorInput[]
+    upsert?: CupUpsertWithWhereUniqueWithoutCreatorInput | CupUpsertWithWhereUniqueWithoutCreatorInput[]
+    createMany?: CupCreateManyCreatorInputEnvelope
+    set?: CupWhereUniqueInput | CupWhereUniqueInput[]
+    disconnect?: CupWhereUniqueInput | CupWhereUniqueInput[]
+    delete?: CupWhereUniqueInput | CupWhereUniqueInput[]
+    connect?: CupWhereUniqueInput | CupWhereUniqueInput[]
+    update?: CupUpdateWithWhereUniqueWithoutCreatorInput | CupUpdateWithWhereUniqueWithoutCreatorInput[]
+    updateMany?: CupUpdateManyWithWhereWithoutCreatorInput | CupUpdateManyWithWhereWithoutCreatorInput[]
+    deleteMany?: CupScalarWhereInput | CupScalarWhereInput[]
+  }
+
+  export type LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput = {
+    create?: XOR<LocalMatchCreateWithoutCreatorInput, LocalMatchUncheckedCreateWithoutCreatorInput> | LocalMatchCreateWithoutCreatorInput[] | LocalMatchUncheckedCreateWithoutCreatorInput[]
+    connectOrCreate?: LocalMatchCreateOrConnectWithoutCreatorInput | LocalMatchCreateOrConnectWithoutCreatorInput[]
+    upsert?: LocalMatchUpsertWithWhereUniqueWithoutCreatorInput | LocalMatchUpsertWithWhereUniqueWithoutCreatorInput[]
+    createMany?: LocalMatchCreateManyCreatorInputEnvelope
+    set?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+    disconnect?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+    delete?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+    connect?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+    update?: LocalMatchUpdateWithWhereUniqueWithoutCreatorInput | LocalMatchUpdateWithWhereUniqueWithoutCreatorInput[]
+    updateMany?: LocalMatchUpdateManyWithWhereWithoutCreatorInput | LocalMatchUpdateManyWithWhereWithoutCreatorInput[]
+    deleteMany?: LocalMatchScalarWhereInput | LocalMatchScalarWhereInput[]
   }
 
   export type UserCreateNestedOneWithoutCreatedMatchesInput = {
@@ -10667,6 +15501,27 @@ export namespace Prisma {
     connect?: TeamSelectionWhereUniqueInput | TeamSelectionWhereUniqueInput[]
   }
 
+  export type CupParticipantCreateNestedManyWithoutTeamInput = {
+    create?: XOR<CupParticipantCreateWithoutTeamInput, CupParticipantUncheckedCreateWithoutTeamInput> | CupParticipantCreateWithoutTeamInput[] | CupParticipantUncheckedCreateWithoutTeamInput[]
+    connectOrCreate?: CupParticipantCreateOrConnectWithoutTeamInput | CupParticipantCreateOrConnectWithoutTeamInput[]
+    createMany?: CupParticipantCreateManyTeamInputEnvelope
+    connect?: CupParticipantWhereUniqueInput | CupParticipantWhereUniqueInput[]
+  }
+
+  export type LocalMatchCreateNestedManyWithoutTeamAInput = {
+    create?: XOR<LocalMatchCreateWithoutTeamAInput, LocalMatchUncheckedCreateWithoutTeamAInput> | LocalMatchCreateWithoutTeamAInput[] | LocalMatchUncheckedCreateWithoutTeamAInput[]
+    connectOrCreate?: LocalMatchCreateOrConnectWithoutTeamAInput | LocalMatchCreateOrConnectWithoutTeamAInput[]
+    createMany?: LocalMatchCreateManyTeamAInputEnvelope
+    connect?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+  }
+
+  export type LocalMatchCreateNestedManyWithoutTeamBInput = {
+    create?: XOR<LocalMatchCreateWithoutTeamBInput, LocalMatchUncheckedCreateWithoutTeamBInput> | LocalMatchCreateWithoutTeamBInput[] | LocalMatchUncheckedCreateWithoutTeamBInput[]
+    connectOrCreate?: LocalMatchCreateOrConnectWithoutTeamBInput | LocalMatchCreateOrConnectWithoutTeamBInput[]
+    createMany?: LocalMatchCreateManyTeamBInputEnvelope
+    connect?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+  }
+
   export type TeamPlayerUncheckedCreateNestedManyWithoutTeamInput = {
     create?: XOR<TeamPlayerCreateWithoutTeamInput, TeamPlayerUncheckedCreateWithoutTeamInput> | TeamPlayerCreateWithoutTeamInput[] | TeamPlayerUncheckedCreateWithoutTeamInput[]
     connectOrCreate?: TeamPlayerCreateOrConnectWithoutTeamInput | TeamPlayerCreateOrConnectWithoutTeamInput[]
@@ -10679,6 +15534,27 @@ export namespace Prisma {
     connectOrCreate?: TeamSelectionCreateOrConnectWithoutTeamRefInput | TeamSelectionCreateOrConnectWithoutTeamRefInput[]
     createMany?: TeamSelectionCreateManyTeamRefInputEnvelope
     connect?: TeamSelectionWhereUniqueInput | TeamSelectionWhereUniqueInput[]
+  }
+
+  export type CupParticipantUncheckedCreateNestedManyWithoutTeamInput = {
+    create?: XOR<CupParticipantCreateWithoutTeamInput, CupParticipantUncheckedCreateWithoutTeamInput> | CupParticipantCreateWithoutTeamInput[] | CupParticipantUncheckedCreateWithoutTeamInput[]
+    connectOrCreate?: CupParticipantCreateOrConnectWithoutTeamInput | CupParticipantCreateOrConnectWithoutTeamInput[]
+    createMany?: CupParticipantCreateManyTeamInputEnvelope
+    connect?: CupParticipantWhereUniqueInput | CupParticipantWhereUniqueInput[]
+  }
+
+  export type LocalMatchUncheckedCreateNestedManyWithoutTeamAInput = {
+    create?: XOR<LocalMatchCreateWithoutTeamAInput, LocalMatchUncheckedCreateWithoutTeamAInput> | LocalMatchCreateWithoutTeamAInput[] | LocalMatchUncheckedCreateWithoutTeamAInput[]
+    connectOrCreate?: LocalMatchCreateOrConnectWithoutTeamAInput | LocalMatchCreateOrConnectWithoutTeamAInput[]
+    createMany?: LocalMatchCreateManyTeamAInputEnvelope
+    connect?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+  }
+
+  export type LocalMatchUncheckedCreateNestedManyWithoutTeamBInput = {
+    create?: XOR<LocalMatchCreateWithoutTeamBInput, LocalMatchUncheckedCreateWithoutTeamBInput> | LocalMatchCreateWithoutTeamBInput[] | LocalMatchUncheckedCreateWithoutTeamBInput[]
+    connectOrCreate?: LocalMatchCreateOrConnectWithoutTeamBInput | LocalMatchCreateOrConnectWithoutTeamBInput[]
+    createMany?: LocalMatchCreateManyTeamBInputEnvelope
+    connect?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
   }
 
   export type BoolFieldUpdateOperationsInput = {
@@ -10721,6 +15597,48 @@ export namespace Prisma {
     deleteMany?: TeamSelectionScalarWhereInput | TeamSelectionScalarWhereInput[]
   }
 
+  export type CupParticipantUpdateManyWithoutTeamNestedInput = {
+    create?: XOR<CupParticipantCreateWithoutTeamInput, CupParticipantUncheckedCreateWithoutTeamInput> | CupParticipantCreateWithoutTeamInput[] | CupParticipantUncheckedCreateWithoutTeamInput[]
+    connectOrCreate?: CupParticipantCreateOrConnectWithoutTeamInput | CupParticipantCreateOrConnectWithoutTeamInput[]
+    upsert?: CupParticipantUpsertWithWhereUniqueWithoutTeamInput | CupParticipantUpsertWithWhereUniqueWithoutTeamInput[]
+    createMany?: CupParticipantCreateManyTeamInputEnvelope
+    set?: CupParticipantWhereUniqueInput | CupParticipantWhereUniqueInput[]
+    disconnect?: CupParticipantWhereUniqueInput | CupParticipantWhereUniqueInput[]
+    delete?: CupParticipantWhereUniqueInput | CupParticipantWhereUniqueInput[]
+    connect?: CupParticipantWhereUniqueInput | CupParticipantWhereUniqueInput[]
+    update?: CupParticipantUpdateWithWhereUniqueWithoutTeamInput | CupParticipantUpdateWithWhereUniqueWithoutTeamInput[]
+    updateMany?: CupParticipantUpdateManyWithWhereWithoutTeamInput | CupParticipantUpdateManyWithWhereWithoutTeamInput[]
+    deleteMany?: CupParticipantScalarWhereInput | CupParticipantScalarWhereInput[]
+  }
+
+  export type LocalMatchUpdateManyWithoutTeamANestedInput = {
+    create?: XOR<LocalMatchCreateWithoutTeamAInput, LocalMatchUncheckedCreateWithoutTeamAInput> | LocalMatchCreateWithoutTeamAInput[] | LocalMatchUncheckedCreateWithoutTeamAInput[]
+    connectOrCreate?: LocalMatchCreateOrConnectWithoutTeamAInput | LocalMatchCreateOrConnectWithoutTeamAInput[]
+    upsert?: LocalMatchUpsertWithWhereUniqueWithoutTeamAInput | LocalMatchUpsertWithWhereUniqueWithoutTeamAInput[]
+    createMany?: LocalMatchCreateManyTeamAInputEnvelope
+    set?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+    disconnect?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+    delete?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+    connect?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+    update?: LocalMatchUpdateWithWhereUniqueWithoutTeamAInput | LocalMatchUpdateWithWhereUniqueWithoutTeamAInput[]
+    updateMany?: LocalMatchUpdateManyWithWhereWithoutTeamAInput | LocalMatchUpdateManyWithWhereWithoutTeamAInput[]
+    deleteMany?: LocalMatchScalarWhereInput | LocalMatchScalarWhereInput[]
+  }
+
+  export type LocalMatchUpdateManyWithoutTeamBNestedInput = {
+    create?: XOR<LocalMatchCreateWithoutTeamBInput, LocalMatchUncheckedCreateWithoutTeamBInput> | LocalMatchCreateWithoutTeamBInput[] | LocalMatchUncheckedCreateWithoutTeamBInput[]
+    connectOrCreate?: LocalMatchCreateOrConnectWithoutTeamBInput | LocalMatchCreateOrConnectWithoutTeamBInput[]
+    upsert?: LocalMatchUpsertWithWhereUniqueWithoutTeamBInput | LocalMatchUpsertWithWhereUniqueWithoutTeamBInput[]
+    createMany?: LocalMatchCreateManyTeamBInputEnvelope
+    set?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+    disconnect?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+    delete?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+    connect?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+    update?: LocalMatchUpdateWithWhereUniqueWithoutTeamBInput | LocalMatchUpdateWithWhereUniqueWithoutTeamBInput[]
+    updateMany?: LocalMatchUpdateManyWithWhereWithoutTeamBInput | LocalMatchUpdateManyWithWhereWithoutTeamBInput[]
+    deleteMany?: LocalMatchScalarWhereInput | LocalMatchScalarWhereInput[]
+  }
+
   export type TeamPlayerUncheckedUpdateManyWithoutTeamNestedInput = {
     create?: XOR<TeamPlayerCreateWithoutTeamInput, TeamPlayerUncheckedCreateWithoutTeamInput> | TeamPlayerCreateWithoutTeamInput[] | TeamPlayerUncheckedCreateWithoutTeamInput[]
     connectOrCreate?: TeamPlayerCreateOrConnectWithoutTeamInput | TeamPlayerCreateOrConnectWithoutTeamInput[]
@@ -10749,6 +15667,48 @@ export namespace Prisma {
     deleteMany?: TeamSelectionScalarWhereInput | TeamSelectionScalarWhereInput[]
   }
 
+  export type CupParticipantUncheckedUpdateManyWithoutTeamNestedInput = {
+    create?: XOR<CupParticipantCreateWithoutTeamInput, CupParticipantUncheckedCreateWithoutTeamInput> | CupParticipantCreateWithoutTeamInput[] | CupParticipantUncheckedCreateWithoutTeamInput[]
+    connectOrCreate?: CupParticipantCreateOrConnectWithoutTeamInput | CupParticipantCreateOrConnectWithoutTeamInput[]
+    upsert?: CupParticipantUpsertWithWhereUniqueWithoutTeamInput | CupParticipantUpsertWithWhereUniqueWithoutTeamInput[]
+    createMany?: CupParticipantCreateManyTeamInputEnvelope
+    set?: CupParticipantWhereUniqueInput | CupParticipantWhereUniqueInput[]
+    disconnect?: CupParticipantWhereUniqueInput | CupParticipantWhereUniqueInput[]
+    delete?: CupParticipantWhereUniqueInput | CupParticipantWhereUniqueInput[]
+    connect?: CupParticipantWhereUniqueInput | CupParticipantWhereUniqueInput[]
+    update?: CupParticipantUpdateWithWhereUniqueWithoutTeamInput | CupParticipantUpdateWithWhereUniqueWithoutTeamInput[]
+    updateMany?: CupParticipantUpdateManyWithWhereWithoutTeamInput | CupParticipantUpdateManyWithWhereWithoutTeamInput[]
+    deleteMany?: CupParticipantScalarWhereInput | CupParticipantScalarWhereInput[]
+  }
+
+  export type LocalMatchUncheckedUpdateManyWithoutTeamANestedInput = {
+    create?: XOR<LocalMatchCreateWithoutTeamAInput, LocalMatchUncheckedCreateWithoutTeamAInput> | LocalMatchCreateWithoutTeamAInput[] | LocalMatchUncheckedCreateWithoutTeamAInput[]
+    connectOrCreate?: LocalMatchCreateOrConnectWithoutTeamAInput | LocalMatchCreateOrConnectWithoutTeamAInput[]
+    upsert?: LocalMatchUpsertWithWhereUniqueWithoutTeamAInput | LocalMatchUpsertWithWhereUniqueWithoutTeamAInput[]
+    createMany?: LocalMatchCreateManyTeamAInputEnvelope
+    set?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+    disconnect?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+    delete?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+    connect?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+    update?: LocalMatchUpdateWithWhereUniqueWithoutTeamAInput | LocalMatchUpdateWithWhereUniqueWithoutTeamAInput[]
+    updateMany?: LocalMatchUpdateManyWithWhereWithoutTeamAInput | LocalMatchUpdateManyWithWhereWithoutTeamAInput[]
+    deleteMany?: LocalMatchScalarWhereInput | LocalMatchScalarWhereInput[]
+  }
+
+  export type LocalMatchUncheckedUpdateManyWithoutTeamBNestedInput = {
+    create?: XOR<LocalMatchCreateWithoutTeamBInput, LocalMatchUncheckedCreateWithoutTeamBInput> | LocalMatchCreateWithoutTeamBInput[] | LocalMatchUncheckedCreateWithoutTeamBInput[]
+    connectOrCreate?: LocalMatchCreateOrConnectWithoutTeamBInput | LocalMatchCreateOrConnectWithoutTeamBInput[]
+    upsert?: LocalMatchUpsertWithWhereUniqueWithoutTeamBInput | LocalMatchUpsertWithWhereUniqueWithoutTeamBInput[]
+    createMany?: LocalMatchCreateManyTeamBInputEnvelope
+    set?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+    disconnect?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+    delete?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+    connect?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+    update?: LocalMatchUpdateWithWhereUniqueWithoutTeamBInput | LocalMatchUpdateWithWhereUniqueWithoutTeamBInput[]
+    updateMany?: LocalMatchUpdateManyWithWhereWithoutTeamBInput | LocalMatchUpdateManyWithWhereWithoutTeamBInput[]
+    deleteMany?: LocalMatchScalarWhereInput | LocalMatchScalarWhereInput[]
+  }
+
   export type TeamCreateNestedOneWithoutPlayersInput = {
     create?: XOR<TeamCreateWithoutPlayersInput, TeamUncheckedCreateWithoutPlayersInput>
     connectOrCreate?: TeamCreateOrConnectWithoutPlayersInput
@@ -10761,6 +15721,198 @@ export namespace Prisma {
     upsert?: TeamUpsertWithoutPlayersInput
     connect?: TeamWhereUniqueInput
     update?: XOR<XOR<TeamUpdateToOneWithWhereWithoutPlayersInput, TeamUpdateWithoutPlayersInput>, TeamUncheckedUpdateWithoutPlayersInput>
+  }
+
+  export type UserCreateNestedOneWithoutCreatedCupsInput = {
+    create?: XOR<UserCreateWithoutCreatedCupsInput, UserUncheckedCreateWithoutCreatedCupsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutCreatedCupsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type CupParticipantCreateNestedManyWithoutCupInput = {
+    create?: XOR<CupParticipantCreateWithoutCupInput, CupParticipantUncheckedCreateWithoutCupInput> | CupParticipantCreateWithoutCupInput[] | CupParticipantUncheckedCreateWithoutCupInput[]
+    connectOrCreate?: CupParticipantCreateOrConnectWithoutCupInput | CupParticipantCreateOrConnectWithoutCupInput[]
+    createMany?: CupParticipantCreateManyCupInputEnvelope
+    connect?: CupParticipantWhereUniqueInput | CupParticipantWhereUniqueInput[]
+  }
+
+  export type LocalMatchCreateNestedManyWithoutCupInput = {
+    create?: XOR<LocalMatchCreateWithoutCupInput, LocalMatchUncheckedCreateWithoutCupInput> | LocalMatchCreateWithoutCupInput[] | LocalMatchUncheckedCreateWithoutCupInput[]
+    connectOrCreate?: LocalMatchCreateOrConnectWithoutCupInput | LocalMatchCreateOrConnectWithoutCupInput[]
+    createMany?: LocalMatchCreateManyCupInputEnvelope
+    connect?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+  }
+
+  export type CupParticipantUncheckedCreateNestedManyWithoutCupInput = {
+    create?: XOR<CupParticipantCreateWithoutCupInput, CupParticipantUncheckedCreateWithoutCupInput> | CupParticipantCreateWithoutCupInput[] | CupParticipantUncheckedCreateWithoutCupInput[]
+    connectOrCreate?: CupParticipantCreateOrConnectWithoutCupInput | CupParticipantCreateOrConnectWithoutCupInput[]
+    createMany?: CupParticipantCreateManyCupInputEnvelope
+    connect?: CupParticipantWhereUniqueInput | CupParticipantWhereUniqueInput[]
+  }
+
+  export type LocalMatchUncheckedCreateNestedManyWithoutCupInput = {
+    create?: XOR<LocalMatchCreateWithoutCupInput, LocalMatchUncheckedCreateWithoutCupInput> | LocalMatchCreateWithoutCupInput[] | LocalMatchUncheckedCreateWithoutCupInput[]
+    connectOrCreate?: LocalMatchCreateOrConnectWithoutCupInput | LocalMatchCreateOrConnectWithoutCupInput[]
+    createMany?: LocalMatchCreateManyCupInputEnvelope
+    connect?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+  }
+
+  export type UserUpdateOneRequiredWithoutCreatedCupsNestedInput = {
+    create?: XOR<UserCreateWithoutCreatedCupsInput, UserUncheckedCreateWithoutCreatedCupsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutCreatedCupsInput
+    upsert?: UserUpsertWithoutCreatedCupsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutCreatedCupsInput, UserUpdateWithoutCreatedCupsInput>, UserUncheckedUpdateWithoutCreatedCupsInput>
+  }
+
+  export type CupParticipantUpdateManyWithoutCupNestedInput = {
+    create?: XOR<CupParticipantCreateWithoutCupInput, CupParticipantUncheckedCreateWithoutCupInput> | CupParticipantCreateWithoutCupInput[] | CupParticipantUncheckedCreateWithoutCupInput[]
+    connectOrCreate?: CupParticipantCreateOrConnectWithoutCupInput | CupParticipantCreateOrConnectWithoutCupInput[]
+    upsert?: CupParticipantUpsertWithWhereUniqueWithoutCupInput | CupParticipantUpsertWithWhereUniqueWithoutCupInput[]
+    createMany?: CupParticipantCreateManyCupInputEnvelope
+    set?: CupParticipantWhereUniqueInput | CupParticipantWhereUniqueInput[]
+    disconnect?: CupParticipantWhereUniqueInput | CupParticipantWhereUniqueInput[]
+    delete?: CupParticipantWhereUniqueInput | CupParticipantWhereUniqueInput[]
+    connect?: CupParticipantWhereUniqueInput | CupParticipantWhereUniqueInput[]
+    update?: CupParticipantUpdateWithWhereUniqueWithoutCupInput | CupParticipantUpdateWithWhereUniqueWithoutCupInput[]
+    updateMany?: CupParticipantUpdateManyWithWhereWithoutCupInput | CupParticipantUpdateManyWithWhereWithoutCupInput[]
+    deleteMany?: CupParticipantScalarWhereInput | CupParticipantScalarWhereInput[]
+  }
+
+  export type LocalMatchUpdateManyWithoutCupNestedInput = {
+    create?: XOR<LocalMatchCreateWithoutCupInput, LocalMatchUncheckedCreateWithoutCupInput> | LocalMatchCreateWithoutCupInput[] | LocalMatchUncheckedCreateWithoutCupInput[]
+    connectOrCreate?: LocalMatchCreateOrConnectWithoutCupInput | LocalMatchCreateOrConnectWithoutCupInput[]
+    upsert?: LocalMatchUpsertWithWhereUniqueWithoutCupInput | LocalMatchUpsertWithWhereUniqueWithoutCupInput[]
+    createMany?: LocalMatchCreateManyCupInputEnvelope
+    set?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+    disconnect?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+    delete?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+    connect?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+    update?: LocalMatchUpdateWithWhereUniqueWithoutCupInput | LocalMatchUpdateWithWhereUniqueWithoutCupInput[]
+    updateMany?: LocalMatchUpdateManyWithWhereWithoutCupInput | LocalMatchUpdateManyWithWhereWithoutCupInput[]
+    deleteMany?: LocalMatchScalarWhereInput | LocalMatchScalarWhereInput[]
+  }
+
+  export type CupParticipantUncheckedUpdateManyWithoutCupNestedInput = {
+    create?: XOR<CupParticipantCreateWithoutCupInput, CupParticipantUncheckedCreateWithoutCupInput> | CupParticipantCreateWithoutCupInput[] | CupParticipantUncheckedCreateWithoutCupInput[]
+    connectOrCreate?: CupParticipantCreateOrConnectWithoutCupInput | CupParticipantCreateOrConnectWithoutCupInput[]
+    upsert?: CupParticipantUpsertWithWhereUniqueWithoutCupInput | CupParticipantUpsertWithWhereUniqueWithoutCupInput[]
+    createMany?: CupParticipantCreateManyCupInputEnvelope
+    set?: CupParticipantWhereUniqueInput | CupParticipantWhereUniqueInput[]
+    disconnect?: CupParticipantWhereUniqueInput | CupParticipantWhereUniqueInput[]
+    delete?: CupParticipantWhereUniqueInput | CupParticipantWhereUniqueInput[]
+    connect?: CupParticipantWhereUniqueInput | CupParticipantWhereUniqueInput[]
+    update?: CupParticipantUpdateWithWhereUniqueWithoutCupInput | CupParticipantUpdateWithWhereUniqueWithoutCupInput[]
+    updateMany?: CupParticipantUpdateManyWithWhereWithoutCupInput | CupParticipantUpdateManyWithWhereWithoutCupInput[]
+    deleteMany?: CupParticipantScalarWhereInput | CupParticipantScalarWhereInput[]
+  }
+
+  export type LocalMatchUncheckedUpdateManyWithoutCupNestedInput = {
+    create?: XOR<LocalMatchCreateWithoutCupInput, LocalMatchUncheckedCreateWithoutCupInput> | LocalMatchCreateWithoutCupInput[] | LocalMatchUncheckedCreateWithoutCupInput[]
+    connectOrCreate?: LocalMatchCreateOrConnectWithoutCupInput | LocalMatchCreateOrConnectWithoutCupInput[]
+    upsert?: LocalMatchUpsertWithWhereUniqueWithoutCupInput | LocalMatchUpsertWithWhereUniqueWithoutCupInput[]
+    createMany?: LocalMatchCreateManyCupInputEnvelope
+    set?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+    disconnect?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+    delete?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+    connect?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+    update?: LocalMatchUpdateWithWhereUniqueWithoutCupInput | LocalMatchUpdateWithWhereUniqueWithoutCupInput[]
+    updateMany?: LocalMatchUpdateManyWithWhereWithoutCupInput | LocalMatchUpdateManyWithWhereWithoutCupInput[]
+    deleteMany?: LocalMatchScalarWhereInput | LocalMatchScalarWhereInput[]
+  }
+
+  export type CupCreateNestedOneWithoutParticipantsInput = {
+    create?: XOR<CupCreateWithoutParticipantsInput, CupUncheckedCreateWithoutParticipantsInput>
+    connectOrCreate?: CupCreateOrConnectWithoutParticipantsInput
+    connect?: CupWhereUniqueInput
+  }
+
+  export type TeamCreateNestedOneWithoutCupParticipantsInput = {
+    create?: XOR<TeamCreateWithoutCupParticipantsInput, TeamUncheckedCreateWithoutCupParticipantsInput>
+    connectOrCreate?: TeamCreateOrConnectWithoutCupParticipantsInput
+    connect?: TeamWhereUniqueInput
+  }
+
+  export type CupUpdateOneRequiredWithoutParticipantsNestedInput = {
+    create?: XOR<CupCreateWithoutParticipantsInput, CupUncheckedCreateWithoutParticipantsInput>
+    connectOrCreate?: CupCreateOrConnectWithoutParticipantsInput
+    upsert?: CupUpsertWithoutParticipantsInput
+    connect?: CupWhereUniqueInput
+    update?: XOR<XOR<CupUpdateToOneWithWhereWithoutParticipantsInput, CupUpdateWithoutParticipantsInput>, CupUncheckedUpdateWithoutParticipantsInput>
+  }
+
+  export type TeamUpdateOneRequiredWithoutCupParticipantsNestedInput = {
+    create?: XOR<TeamCreateWithoutCupParticipantsInput, TeamUncheckedCreateWithoutCupParticipantsInput>
+    connectOrCreate?: TeamCreateOrConnectWithoutCupParticipantsInput
+    upsert?: TeamUpsertWithoutCupParticipantsInput
+    connect?: TeamWhereUniqueInput
+    update?: XOR<XOR<TeamUpdateToOneWithWhereWithoutCupParticipantsInput, TeamUpdateWithoutCupParticipantsInput>, TeamUncheckedUpdateWithoutCupParticipantsInput>
+  }
+
+  export type UserCreateNestedOneWithoutCreatedLocalMatchesInput = {
+    create?: XOR<UserCreateWithoutCreatedLocalMatchesInput, UserUncheckedCreateWithoutCreatedLocalMatchesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutCreatedLocalMatchesInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type TeamCreateNestedOneWithoutLocalMatchesAsTeamAInput = {
+    create?: XOR<TeamCreateWithoutLocalMatchesAsTeamAInput, TeamUncheckedCreateWithoutLocalMatchesAsTeamAInput>
+    connectOrCreate?: TeamCreateOrConnectWithoutLocalMatchesAsTeamAInput
+    connect?: TeamWhereUniqueInput
+  }
+
+  export type TeamCreateNestedOneWithoutLocalMatchesAsTeamBInput = {
+    create?: XOR<TeamCreateWithoutLocalMatchesAsTeamBInput, TeamUncheckedCreateWithoutLocalMatchesAsTeamBInput>
+    connectOrCreate?: TeamCreateOrConnectWithoutLocalMatchesAsTeamBInput
+    connect?: TeamWhereUniqueInput
+  }
+
+  export type CupCreateNestedOneWithoutLocalMatchesInput = {
+    create?: XOR<CupCreateWithoutLocalMatchesInput, CupUncheckedCreateWithoutLocalMatchesInput>
+    connectOrCreate?: CupCreateOrConnectWithoutLocalMatchesInput
+    connect?: CupWhereUniqueInput
+  }
+
+  export type NullableIntFieldUpdateOperationsInput = {
+    set?: number | null
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
+  export type UserUpdateOneRequiredWithoutCreatedLocalMatchesNestedInput = {
+    create?: XOR<UserCreateWithoutCreatedLocalMatchesInput, UserUncheckedCreateWithoutCreatedLocalMatchesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutCreatedLocalMatchesInput
+    upsert?: UserUpsertWithoutCreatedLocalMatchesInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutCreatedLocalMatchesInput, UserUpdateWithoutCreatedLocalMatchesInput>, UserUncheckedUpdateWithoutCreatedLocalMatchesInput>
+  }
+
+  export type TeamUpdateOneRequiredWithoutLocalMatchesAsTeamANestedInput = {
+    create?: XOR<TeamCreateWithoutLocalMatchesAsTeamAInput, TeamUncheckedCreateWithoutLocalMatchesAsTeamAInput>
+    connectOrCreate?: TeamCreateOrConnectWithoutLocalMatchesAsTeamAInput
+    upsert?: TeamUpsertWithoutLocalMatchesAsTeamAInput
+    connect?: TeamWhereUniqueInput
+    update?: XOR<XOR<TeamUpdateToOneWithWhereWithoutLocalMatchesAsTeamAInput, TeamUpdateWithoutLocalMatchesAsTeamAInput>, TeamUncheckedUpdateWithoutLocalMatchesAsTeamAInput>
+  }
+
+  export type TeamUpdateOneRequiredWithoutLocalMatchesAsTeamBNestedInput = {
+    create?: XOR<TeamCreateWithoutLocalMatchesAsTeamBInput, TeamUncheckedCreateWithoutLocalMatchesAsTeamBInput>
+    connectOrCreate?: TeamCreateOrConnectWithoutLocalMatchesAsTeamBInput
+    upsert?: TeamUpsertWithoutLocalMatchesAsTeamBInput
+    connect?: TeamWhereUniqueInput
+    update?: XOR<XOR<TeamUpdateToOneWithWhereWithoutLocalMatchesAsTeamBInput, TeamUpdateWithoutLocalMatchesAsTeamBInput>, TeamUncheckedUpdateWithoutLocalMatchesAsTeamBInput>
+  }
+
+  export type CupUpdateOneWithoutLocalMatchesNestedInput = {
+    create?: XOR<CupCreateWithoutLocalMatchesInput, CupUncheckedCreateWithoutLocalMatchesInput>
+    connectOrCreate?: CupCreateOrConnectWithoutLocalMatchesInput
+    upsert?: CupUpsertWithoutLocalMatchesInput
+    disconnect?: CupWhereInput | boolean
+    delete?: CupWhereInput | boolean
+    connect?: CupWhereUniqueInput
+    update?: XOR<XOR<CupUpdateToOneWithWhereWithoutLocalMatchesInput, CupUpdateWithoutLocalMatchesInput>, CupUncheckedUpdateWithoutLocalMatchesInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -10954,6 +16106,51 @@ export namespace Prisma {
     _min?: NestedBoolFilter<$PrismaModel>
     _max?: NestedBoolFilter<$PrismaModel>
   }
+  export type NestedJsonNullableFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<NestedJsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<NestedJsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type NestedJsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+
+  export type NestedFloatNullableFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
+  }
 
   export type MatchCreateWithoutPlayersInput = {
     id?: string
@@ -11025,6 +16222,9 @@ export namespace Prisma {
     initialBudget?: number
     players?: TeamPlayerCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionCreateNestedManyWithoutTeamRefInput
+    cupParticipants?: CupParticipantCreateNestedManyWithoutTeamInput
+    localMatchesAsTeamA?: LocalMatchCreateNestedManyWithoutTeamAInput
+    localMatchesAsTeamB?: LocalMatchCreateNestedManyWithoutTeamBInput
   }
 
   export type TeamUncheckedCreateWithoutOwnerInput = {
@@ -11043,6 +16243,9 @@ export namespace Prisma {
     initialBudget?: number
     players?: TeamPlayerUncheckedCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionUncheckedCreateNestedManyWithoutTeamRefInput
+    cupParticipants?: CupParticipantUncheckedCreateNestedManyWithoutTeamInput
+    localMatchesAsTeamA?: LocalMatchUncheckedCreateNestedManyWithoutTeamAInput
+    localMatchesAsTeamB?: LocalMatchUncheckedCreateNestedManyWithoutTeamBInput
   }
 
   export type TeamCreateOrConnectWithoutOwnerInput = {
@@ -11077,6 +16280,80 @@ export namespace Prisma {
 
   export type TeamSelectionCreateManyUserInputEnvelope = {
     data: TeamSelectionCreateManyUserInput | TeamSelectionCreateManyUserInput[]
+  }
+
+  export type CupCreateWithoutCreatorInput = {
+    id?: string
+    name: string
+    validated?: boolean
+    isPublic?: boolean
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    participants?: CupParticipantCreateNestedManyWithoutCupInput
+    localMatches?: LocalMatchCreateNestedManyWithoutCupInput
+  }
+
+  export type CupUncheckedCreateWithoutCreatorInput = {
+    id?: string
+    name: string
+    validated?: boolean
+    isPublic?: boolean
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    participants?: CupParticipantUncheckedCreateNestedManyWithoutCupInput
+    localMatches?: LocalMatchUncheckedCreateNestedManyWithoutCupInput
+  }
+
+  export type CupCreateOrConnectWithoutCreatorInput = {
+    where: CupWhereUniqueInput
+    create: XOR<CupCreateWithoutCreatorInput, CupUncheckedCreateWithoutCreatorInput>
+  }
+
+  export type CupCreateManyCreatorInputEnvelope = {
+    data: CupCreateManyCreatorInput | CupCreateManyCreatorInput[]
+  }
+
+  export type LocalMatchCreateWithoutCreatorInput = {
+    id?: string
+    name?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    startedAt?: Date | string | null
+    completedAt?: Date | string | null
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: number | null
+    scoreTeamB?: number | null
+    teamA: TeamCreateNestedOneWithoutLocalMatchesAsTeamAInput
+    teamB: TeamCreateNestedOneWithoutLocalMatchesAsTeamBInput
+    cup?: CupCreateNestedOneWithoutLocalMatchesInput
+  }
+
+  export type LocalMatchUncheckedCreateWithoutCreatorInput = {
+    id?: string
+    name?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    startedAt?: Date | string | null
+    completedAt?: Date | string | null
+    teamAId: string
+    teamBId: string
+    cupId?: string | null
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: number | null
+    scoreTeamB?: number | null
+  }
+
+  export type LocalMatchCreateOrConnectWithoutCreatorInput = {
+    where: LocalMatchWhereUniqueInput
+    create: XOR<LocalMatchCreateWithoutCreatorInput, LocalMatchUncheckedCreateWithoutCreatorInput>
+  }
+
+  export type LocalMatchCreateManyCreatorInputEnvelope = {
+    data: LocalMatchCreateManyCreatorInput | LocalMatchCreateManyCreatorInput[]
   }
 
   export type MatchUpsertWithWhereUniqueWithoutPlayersInput = {
@@ -11186,6 +16463,72 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"TeamSelection"> | Date | string
   }
 
+  export type CupUpsertWithWhereUniqueWithoutCreatorInput = {
+    where: CupWhereUniqueInput
+    update: XOR<CupUpdateWithoutCreatorInput, CupUncheckedUpdateWithoutCreatorInput>
+    create: XOR<CupCreateWithoutCreatorInput, CupUncheckedCreateWithoutCreatorInput>
+  }
+
+  export type CupUpdateWithWhereUniqueWithoutCreatorInput = {
+    where: CupWhereUniqueInput
+    data: XOR<CupUpdateWithoutCreatorInput, CupUncheckedUpdateWithoutCreatorInput>
+  }
+
+  export type CupUpdateManyWithWhereWithoutCreatorInput = {
+    where: CupScalarWhereInput
+    data: XOR<CupUpdateManyMutationInput, CupUncheckedUpdateManyWithoutCreatorInput>
+  }
+
+  export type CupScalarWhereInput = {
+    AND?: CupScalarWhereInput | CupScalarWhereInput[]
+    OR?: CupScalarWhereInput[]
+    NOT?: CupScalarWhereInput | CupScalarWhereInput[]
+    id?: StringFilter<"Cup"> | string
+    name?: StringFilter<"Cup"> | string
+    creatorId?: StringFilter<"Cup"> | string
+    validated?: BoolFilter<"Cup"> | boolean
+    isPublic?: BoolFilter<"Cup"> | boolean
+    status?: StringFilter<"Cup"> | string
+    createdAt?: DateTimeFilter<"Cup"> | Date | string
+    updatedAt?: DateTimeFilter<"Cup"> | Date | string
+  }
+
+  export type LocalMatchUpsertWithWhereUniqueWithoutCreatorInput = {
+    where: LocalMatchWhereUniqueInput
+    update: XOR<LocalMatchUpdateWithoutCreatorInput, LocalMatchUncheckedUpdateWithoutCreatorInput>
+    create: XOR<LocalMatchCreateWithoutCreatorInput, LocalMatchUncheckedCreateWithoutCreatorInput>
+  }
+
+  export type LocalMatchUpdateWithWhereUniqueWithoutCreatorInput = {
+    where: LocalMatchWhereUniqueInput
+    data: XOR<LocalMatchUpdateWithoutCreatorInput, LocalMatchUncheckedUpdateWithoutCreatorInput>
+  }
+
+  export type LocalMatchUpdateManyWithWhereWithoutCreatorInput = {
+    where: LocalMatchScalarWhereInput
+    data: XOR<LocalMatchUpdateManyMutationInput, LocalMatchUncheckedUpdateManyWithoutCreatorInput>
+  }
+
+  export type LocalMatchScalarWhereInput = {
+    AND?: LocalMatchScalarWhereInput | LocalMatchScalarWhereInput[]
+    OR?: LocalMatchScalarWhereInput[]
+    NOT?: LocalMatchScalarWhereInput | LocalMatchScalarWhereInput[]
+    id?: StringFilter<"LocalMatch"> | string
+    name?: StringNullableFilter<"LocalMatch"> | string | null
+    status?: StringFilter<"LocalMatch"> | string
+    createdAt?: DateTimeFilter<"LocalMatch"> | Date | string
+    updatedAt?: DateTimeFilter<"LocalMatch"> | Date | string
+    startedAt?: DateTimeNullableFilter<"LocalMatch"> | Date | string | null
+    completedAt?: DateTimeNullableFilter<"LocalMatch"> | Date | string | null
+    creatorId?: StringFilter<"LocalMatch"> | string
+    teamAId?: StringFilter<"LocalMatch"> | string
+    teamBId?: StringFilter<"LocalMatch"> | string
+    cupId?: StringNullableFilter<"LocalMatch"> | string | null
+    gameState?: JsonNullableFilter<"LocalMatch">
+    scoreTeamA?: IntNullableFilter<"LocalMatch"> | number | null
+    scoreTeamB?: IntNullableFilter<"LocalMatch"> | number | null
+  }
+
   export type UserCreateWithoutCreatedMatchesInput = {
     id?: string
     email: string
@@ -11201,6 +16544,8 @@ export namespace Prisma {
     matches?: MatchCreateNestedManyWithoutPlayersInput
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
+    createdCups?: CupCreateNestedManyWithoutCreatorInput
+    createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
   }
 
   export type UserUncheckedCreateWithoutCreatedMatchesInput = {
@@ -11218,6 +16563,8 @@ export namespace Prisma {
     matches?: MatchUncheckedCreateNestedManyWithoutPlayersInput
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
+    createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
   }
 
   export type UserCreateOrConnectWithoutCreatedMatchesInput = {
@@ -11240,6 +16587,8 @@ export namespace Prisma {
     createdMatches?: MatchCreateNestedManyWithoutCreatorInput
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
+    createdCups?: CupCreateNestedManyWithoutCreatorInput
+    createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
   }
 
   export type UserUncheckedCreateWithoutMatchesInput = {
@@ -11257,6 +16606,8 @@ export namespace Prisma {
     createdMatches?: MatchUncheckedCreateNestedManyWithoutCreatorInput
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
+    createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
   }
 
   export type UserCreateOrConnectWithoutMatchesInput = {
@@ -11338,6 +16689,8 @@ export namespace Prisma {
     matches?: MatchUpdateManyWithoutPlayersNestedInput
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
+    createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutCreatedMatchesInput = {
@@ -11355,6 +16708,8 @@ export namespace Prisma {
     matches?: MatchUncheckedUpdateManyWithoutPlayersNestedInput
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
+    createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
   }
 
   export type UserUpsertWithWhereUniqueWithoutMatchesInput = {
@@ -11529,6 +16884,8 @@ export namespace Prisma {
     matches?: MatchCreateNestedManyWithoutPlayersInput
     createdMatches?: MatchCreateNestedManyWithoutCreatorInput
     teams?: TeamCreateNestedManyWithoutOwnerInput
+    createdCups?: CupCreateNestedManyWithoutCreatorInput
+    createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
   }
 
   export type UserUncheckedCreateWithoutTeamSelectionsInput = {
@@ -11546,6 +16903,8 @@ export namespace Prisma {
     matches?: MatchUncheckedCreateNestedManyWithoutPlayersInput
     createdMatches?: MatchUncheckedCreateNestedManyWithoutCreatorInput
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
+    createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
   }
 
   export type UserCreateOrConnectWithoutTeamSelectionsInput = {
@@ -11569,6 +16928,9 @@ export namespace Prisma {
     initialBudget?: number
     owner: UserCreateNestedOneWithoutTeamsInput
     players?: TeamPlayerCreateNestedManyWithoutTeamInput
+    cupParticipants?: CupParticipantCreateNestedManyWithoutTeamInput
+    localMatchesAsTeamA?: LocalMatchCreateNestedManyWithoutTeamAInput
+    localMatchesAsTeamB?: LocalMatchCreateNestedManyWithoutTeamBInput
   }
 
   export type TeamUncheckedCreateWithoutSelectionsInput = {
@@ -11587,6 +16949,9 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     players?: TeamPlayerUncheckedCreateNestedManyWithoutTeamInput
+    cupParticipants?: CupParticipantUncheckedCreateNestedManyWithoutTeamInput
+    localMatchesAsTeamA?: LocalMatchUncheckedCreateNestedManyWithoutTeamAInput
+    localMatchesAsTeamB?: LocalMatchUncheckedCreateNestedManyWithoutTeamBInput
   }
 
   export type TeamCreateOrConnectWithoutSelectionsInput = {
@@ -11651,6 +17016,8 @@ export namespace Prisma {
     matches?: MatchUpdateManyWithoutPlayersNestedInput
     createdMatches?: MatchUpdateManyWithoutCreatorNestedInput
     teams?: TeamUpdateManyWithoutOwnerNestedInput
+    createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutTeamSelectionsInput = {
@@ -11668,6 +17035,8 @@ export namespace Prisma {
     matches?: MatchUncheckedUpdateManyWithoutPlayersNestedInput
     createdMatches?: MatchUncheckedUpdateManyWithoutCreatorNestedInput
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
+    createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
   }
 
   export type TeamUpsertWithoutSelectionsInput = {
@@ -11697,6 +17066,9 @@ export namespace Prisma {
     initialBudget?: IntFieldUpdateOperationsInput | number
     owner?: UserUpdateOneRequiredWithoutTeamsNestedInput
     players?: TeamPlayerUpdateManyWithoutTeamNestedInput
+    cupParticipants?: CupParticipantUpdateManyWithoutTeamNestedInput
+    localMatchesAsTeamA?: LocalMatchUpdateManyWithoutTeamANestedInput
+    localMatchesAsTeamB?: LocalMatchUpdateManyWithoutTeamBNestedInput
   }
 
   export type TeamUncheckedUpdateWithoutSelectionsInput = {
@@ -11715,6 +17087,9 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     players?: TeamPlayerUncheckedUpdateManyWithoutTeamNestedInput
+    cupParticipants?: CupParticipantUncheckedUpdateManyWithoutTeamNestedInput
+    localMatchesAsTeamA?: LocalMatchUncheckedUpdateManyWithoutTeamANestedInput
+    localMatchesAsTeamB?: LocalMatchUncheckedUpdateManyWithoutTeamBNestedInput
   }
 
   export type UserCreateWithoutTeamsInput = {
@@ -11732,6 +17107,8 @@ export namespace Prisma {
     matches?: MatchCreateNestedManyWithoutPlayersInput
     createdMatches?: MatchCreateNestedManyWithoutCreatorInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
+    createdCups?: CupCreateNestedManyWithoutCreatorInput
+    createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
   }
 
   export type UserUncheckedCreateWithoutTeamsInput = {
@@ -11749,6 +17126,8 @@ export namespace Prisma {
     matches?: MatchUncheckedCreateNestedManyWithoutPlayersInput
     createdMatches?: MatchUncheckedCreateNestedManyWithoutCreatorInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
+    createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
   }
 
   export type UserCreateOrConnectWithoutTeamsInput = {
@@ -11816,6 +17195,109 @@ export namespace Prisma {
     data: TeamSelectionCreateManyTeamRefInput | TeamSelectionCreateManyTeamRefInput[]
   }
 
+  export type CupParticipantCreateWithoutTeamInput = {
+    id?: string
+    createdAt?: Date | string
+    cup: CupCreateNestedOneWithoutParticipantsInput
+  }
+
+  export type CupParticipantUncheckedCreateWithoutTeamInput = {
+    id?: string
+    cupId: string
+    createdAt?: Date | string
+  }
+
+  export type CupParticipantCreateOrConnectWithoutTeamInput = {
+    where: CupParticipantWhereUniqueInput
+    create: XOR<CupParticipantCreateWithoutTeamInput, CupParticipantUncheckedCreateWithoutTeamInput>
+  }
+
+  export type CupParticipantCreateManyTeamInputEnvelope = {
+    data: CupParticipantCreateManyTeamInput | CupParticipantCreateManyTeamInput[]
+  }
+
+  export type LocalMatchCreateWithoutTeamAInput = {
+    id?: string
+    name?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    startedAt?: Date | string | null
+    completedAt?: Date | string | null
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: number | null
+    scoreTeamB?: number | null
+    creator: UserCreateNestedOneWithoutCreatedLocalMatchesInput
+    teamB: TeamCreateNestedOneWithoutLocalMatchesAsTeamBInput
+    cup?: CupCreateNestedOneWithoutLocalMatchesInput
+  }
+
+  export type LocalMatchUncheckedCreateWithoutTeamAInput = {
+    id?: string
+    name?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    startedAt?: Date | string | null
+    completedAt?: Date | string | null
+    creatorId: string
+    teamBId: string
+    cupId?: string | null
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: number | null
+    scoreTeamB?: number | null
+  }
+
+  export type LocalMatchCreateOrConnectWithoutTeamAInput = {
+    where: LocalMatchWhereUniqueInput
+    create: XOR<LocalMatchCreateWithoutTeamAInput, LocalMatchUncheckedCreateWithoutTeamAInput>
+  }
+
+  export type LocalMatchCreateManyTeamAInputEnvelope = {
+    data: LocalMatchCreateManyTeamAInput | LocalMatchCreateManyTeamAInput[]
+  }
+
+  export type LocalMatchCreateWithoutTeamBInput = {
+    id?: string
+    name?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    startedAt?: Date | string | null
+    completedAt?: Date | string | null
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: number | null
+    scoreTeamB?: number | null
+    creator: UserCreateNestedOneWithoutCreatedLocalMatchesInput
+    teamA: TeamCreateNestedOneWithoutLocalMatchesAsTeamAInput
+    cup?: CupCreateNestedOneWithoutLocalMatchesInput
+  }
+
+  export type LocalMatchUncheckedCreateWithoutTeamBInput = {
+    id?: string
+    name?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    startedAt?: Date | string | null
+    completedAt?: Date | string | null
+    creatorId: string
+    teamAId: string
+    cupId?: string | null
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: number | null
+    scoreTeamB?: number | null
+  }
+
+  export type LocalMatchCreateOrConnectWithoutTeamBInput = {
+    where: LocalMatchWhereUniqueInput
+    create: XOR<LocalMatchCreateWithoutTeamBInput, LocalMatchUncheckedCreateWithoutTeamBInput>
+  }
+
+  export type LocalMatchCreateManyTeamBInputEnvelope = {
+    data: LocalMatchCreateManyTeamBInput | LocalMatchCreateManyTeamBInput[]
+  }
+
   export type UserUpsertWithoutTeamsInput = {
     update: XOR<UserUpdateWithoutTeamsInput, UserUncheckedUpdateWithoutTeamsInput>
     create: XOR<UserCreateWithoutTeamsInput, UserUncheckedCreateWithoutTeamsInput>
@@ -11842,6 +17324,8 @@ export namespace Prisma {
     matches?: MatchUpdateManyWithoutPlayersNestedInput
     createdMatches?: MatchUpdateManyWithoutCreatorNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
+    createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutTeamsInput = {
@@ -11859,6 +17343,8 @@ export namespace Prisma {
     matches?: MatchUncheckedUpdateManyWithoutPlayersNestedInput
     createdMatches?: MatchUncheckedUpdateManyWithoutCreatorNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
+    createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
   }
 
   export type TeamPlayerUpsertWithWhereUniqueWithoutTeamInput = {
@@ -11910,6 +17396,64 @@ export namespace Prisma {
     data: XOR<TeamSelectionUpdateManyMutationInput, TeamSelectionUncheckedUpdateManyWithoutTeamRefInput>
   }
 
+  export type CupParticipantUpsertWithWhereUniqueWithoutTeamInput = {
+    where: CupParticipantWhereUniqueInput
+    update: XOR<CupParticipantUpdateWithoutTeamInput, CupParticipantUncheckedUpdateWithoutTeamInput>
+    create: XOR<CupParticipantCreateWithoutTeamInput, CupParticipantUncheckedCreateWithoutTeamInput>
+  }
+
+  export type CupParticipantUpdateWithWhereUniqueWithoutTeamInput = {
+    where: CupParticipantWhereUniqueInput
+    data: XOR<CupParticipantUpdateWithoutTeamInput, CupParticipantUncheckedUpdateWithoutTeamInput>
+  }
+
+  export type CupParticipantUpdateManyWithWhereWithoutTeamInput = {
+    where: CupParticipantScalarWhereInput
+    data: XOR<CupParticipantUpdateManyMutationInput, CupParticipantUncheckedUpdateManyWithoutTeamInput>
+  }
+
+  export type CupParticipantScalarWhereInput = {
+    AND?: CupParticipantScalarWhereInput | CupParticipantScalarWhereInput[]
+    OR?: CupParticipantScalarWhereInput[]
+    NOT?: CupParticipantScalarWhereInput | CupParticipantScalarWhereInput[]
+    id?: StringFilter<"CupParticipant"> | string
+    cupId?: StringFilter<"CupParticipant"> | string
+    teamId?: StringFilter<"CupParticipant"> | string
+    createdAt?: DateTimeFilter<"CupParticipant"> | Date | string
+  }
+
+  export type LocalMatchUpsertWithWhereUniqueWithoutTeamAInput = {
+    where: LocalMatchWhereUniqueInput
+    update: XOR<LocalMatchUpdateWithoutTeamAInput, LocalMatchUncheckedUpdateWithoutTeamAInput>
+    create: XOR<LocalMatchCreateWithoutTeamAInput, LocalMatchUncheckedCreateWithoutTeamAInput>
+  }
+
+  export type LocalMatchUpdateWithWhereUniqueWithoutTeamAInput = {
+    where: LocalMatchWhereUniqueInput
+    data: XOR<LocalMatchUpdateWithoutTeamAInput, LocalMatchUncheckedUpdateWithoutTeamAInput>
+  }
+
+  export type LocalMatchUpdateManyWithWhereWithoutTeamAInput = {
+    where: LocalMatchScalarWhereInput
+    data: XOR<LocalMatchUpdateManyMutationInput, LocalMatchUncheckedUpdateManyWithoutTeamAInput>
+  }
+
+  export type LocalMatchUpsertWithWhereUniqueWithoutTeamBInput = {
+    where: LocalMatchWhereUniqueInput
+    update: XOR<LocalMatchUpdateWithoutTeamBInput, LocalMatchUncheckedUpdateWithoutTeamBInput>
+    create: XOR<LocalMatchCreateWithoutTeamBInput, LocalMatchUncheckedCreateWithoutTeamBInput>
+  }
+
+  export type LocalMatchUpdateWithWhereUniqueWithoutTeamBInput = {
+    where: LocalMatchWhereUniqueInput
+    data: XOR<LocalMatchUpdateWithoutTeamBInput, LocalMatchUncheckedUpdateWithoutTeamBInput>
+  }
+
+  export type LocalMatchUpdateManyWithWhereWithoutTeamBInput = {
+    where: LocalMatchScalarWhereInput
+    data: XOR<LocalMatchUpdateManyMutationInput, LocalMatchUncheckedUpdateManyWithoutTeamBInput>
+  }
+
   export type TeamCreateWithoutPlayersInput = {
     id?: string
     name: string
@@ -11926,6 +17470,9 @@ export namespace Prisma {
     initialBudget?: number
     owner: UserCreateNestedOneWithoutTeamsInput
     selections?: TeamSelectionCreateNestedManyWithoutTeamRefInput
+    cupParticipants?: CupParticipantCreateNestedManyWithoutTeamInput
+    localMatchesAsTeamA?: LocalMatchCreateNestedManyWithoutTeamAInput
+    localMatchesAsTeamB?: LocalMatchCreateNestedManyWithoutTeamBInput
   }
 
   export type TeamUncheckedCreateWithoutPlayersInput = {
@@ -11944,6 +17491,9 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     selections?: TeamSelectionUncheckedCreateNestedManyWithoutTeamRefInput
+    cupParticipants?: CupParticipantUncheckedCreateNestedManyWithoutTeamInput
+    localMatchesAsTeamA?: LocalMatchUncheckedCreateNestedManyWithoutTeamAInput
+    localMatchesAsTeamB?: LocalMatchUncheckedCreateNestedManyWithoutTeamBInput
   }
 
   export type TeamCreateOrConnectWithoutPlayersInput = {
@@ -11978,6 +17528,9 @@ export namespace Prisma {
     initialBudget?: IntFieldUpdateOperationsInput | number
     owner?: UserUpdateOneRequiredWithoutTeamsNestedInput
     selections?: TeamSelectionUpdateManyWithoutTeamRefNestedInput
+    cupParticipants?: CupParticipantUpdateManyWithoutTeamNestedInput
+    localMatchesAsTeamA?: LocalMatchUpdateManyWithoutTeamANestedInput
+    localMatchesAsTeamB?: LocalMatchUpdateManyWithoutTeamBNestedInput
   }
 
   export type TeamUncheckedUpdateWithoutPlayersInput = {
@@ -11996,6 +17549,715 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     selections?: TeamSelectionUncheckedUpdateManyWithoutTeamRefNestedInput
+    cupParticipants?: CupParticipantUncheckedUpdateManyWithoutTeamNestedInput
+    localMatchesAsTeamA?: LocalMatchUncheckedUpdateManyWithoutTeamANestedInput
+    localMatchesAsTeamB?: LocalMatchUncheckedUpdateManyWithoutTeamBNestedInput
+  }
+
+  export type UserCreateWithoutCreatedCupsInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name?: string | null
+    coachName: string
+    firstName?: string | null
+    lastName?: string | null
+    dateOfBirth?: Date | string | null
+    role?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    matches?: MatchCreateNestedManyWithoutPlayersInput
+    createdMatches?: MatchCreateNestedManyWithoutCreatorInput
+    teams?: TeamCreateNestedManyWithoutOwnerInput
+    teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
+    createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
+  }
+
+  export type UserUncheckedCreateWithoutCreatedCupsInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name?: string | null
+    coachName: string
+    firstName?: string | null
+    lastName?: string | null
+    dateOfBirth?: Date | string | null
+    role?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    matches?: MatchUncheckedCreateNestedManyWithoutPlayersInput
+    createdMatches?: MatchUncheckedCreateNestedManyWithoutCreatorInput
+    teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
+    teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
+    createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
+  }
+
+  export type UserCreateOrConnectWithoutCreatedCupsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutCreatedCupsInput, UserUncheckedCreateWithoutCreatedCupsInput>
+  }
+
+  export type CupParticipantCreateWithoutCupInput = {
+    id?: string
+    createdAt?: Date | string
+    team: TeamCreateNestedOneWithoutCupParticipantsInput
+  }
+
+  export type CupParticipantUncheckedCreateWithoutCupInput = {
+    id?: string
+    teamId: string
+    createdAt?: Date | string
+  }
+
+  export type CupParticipantCreateOrConnectWithoutCupInput = {
+    where: CupParticipantWhereUniqueInput
+    create: XOR<CupParticipantCreateWithoutCupInput, CupParticipantUncheckedCreateWithoutCupInput>
+  }
+
+  export type CupParticipantCreateManyCupInputEnvelope = {
+    data: CupParticipantCreateManyCupInput | CupParticipantCreateManyCupInput[]
+  }
+
+  export type LocalMatchCreateWithoutCupInput = {
+    id?: string
+    name?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    startedAt?: Date | string | null
+    completedAt?: Date | string | null
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: number | null
+    scoreTeamB?: number | null
+    creator: UserCreateNestedOneWithoutCreatedLocalMatchesInput
+    teamA: TeamCreateNestedOneWithoutLocalMatchesAsTeamAInput
+    teamB: TeamCreateNestedOneWithoutLocalMatchesAsTeamBInput
+  }
+
+  export type LocalMatchUncheckedCreateWithoutCupInput = {
+    id?: string
+    name?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    startedAt?: Date | string | null
+    completedAt?: Date | string | null
+    creatorId: string
+    teamAId: string
+    teamBId: string
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: number | null
+    scoreTeamB?: number | null
+  }
+
+  export type LocalMatchCreateOrConnectWithoutCupInput = {
+    where: LocalMatchWhereUniqueInput
+    create: XOR<LocalMatchCreateWithoutCupInput, LocalMatchUncheckedCreateWithoutCupInput>
+  }
+
+  export type LocalMatchCreateManyCupInputEnvelope = {
+    data: LocalMatchCreateManyCupInput | LocalMatchCreateManyCupInput[]
+  }
+
+  export type UserUpsertWithoutCreatedCupsInput = {
+    update: XOR<UserUpdateWithoutCreatedCupsInput, UserUncheckedUpdateWithoutCreatedCupsInput>
+    create: XOR<UserCreateWithoutCreatedCupsInput, UserUncheckedCreateWithoutCreatedCupsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutCreatedCupsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutCreatedCupsInput, UserUncheckedUpdateWithoutCreatedCupsInput>
+  }
+
+  export type UserUpdateWithoutCreatedCupsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    coachName?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    matches?: MatchUpdateManyWithoutPlayersNestedInput
+    createdMatches?: MatchUpdateManyWithoutCreatorNestedInput
+    teams?: TeamUpdateManyWithoutOwnerNestedInput
+    teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
+    createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutCreatedCupsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    coachName?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    matches?: MatchUncheckedUpdateManyWithoutPlayersNestedInput
+    createdMatches?: MatchUncheckedUpdateManyWithoutCreatorNestedInput
+    teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
+    teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
+    createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
+  }
+
+  export type CupParticipantUpsertWithWhereUniqueWithoutCupInput = {
+    where: CupParticipantWhereUniqueInput
+    update: XOR<CupParticipantUpdateWithoutCupInput, CupParticipantUncheckedUpdateWithoutCupInput>
+    create: XOR<CupParticipantCreateWithoutCupInput, CupParticipantUncheckedCreateWithoutCupInput>
+  }
+
+  export type CupParticipantUpdateWithWhereUniqueWithoutCupInput = {
+    where: CupParticipantWhereUniqueInput
+    data: XOR<CupParticipantUpdateWithoutCupInput, CupParticipantUncheckedUpdateWithoutCupInput>
+  }
+
+  export type CupParticipantUpdateManyWithWhereWithoutCupInput = {
+    where: CupParticipantScalarWhereInput
+    data: XOR<CupParticipantUpdateManyMutationInput, CupParticipantUncheckedUpdateManyWithoutCupInput>
+  }
+
+  export type LocalMatchUpsertWithWhereUniqueWithoutCupInput = {
+    where: LocalMatchWhereUniqueInput
+    update: XOR<LocalMatchUpdateWithoutCupInput, LocalMatchUncheckedUpdateWithoutCupInput>
+    create: XOR<LocalMatchCreateWithoutCupInput, LocalMatchUncheckedCreateWithoutCupInput>
+  }
+
+  export type LocalMatchUpdateWithWhereUniqueWithoutCupInput = {
+    where: LocalMatchWhereUniqueInput
+    data: XOR<LocalMatchUpdateWithoutCupInput, LocalMatchUncheckedUpdateWithoutCupInput>
+  }
+
+  export type LocalMatchUpdateManyWithWhereWithoutCupInput = {
+    where: LocalMatchScalarWhereInput
+    data: XOR<LocalMatchUpdateManyMutationInput, LocalMatchUncheckedUpdateManyWithoutCupInput>
+  }
+
+  export type CupCreateWithoutParticipantsInput = {
+    id?: string
+    name: string
+    validated?: boolean
+    isPublic?: boolean
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    creator: UserCreateNestedOneWithoutCreatedCupsInput
+    localMatches?: LocalMatchCreateNestedManyWithoutCupInput
+  }
+
+  export type CupUncheckedCreateWithoutParticipantsInput = {
+    id?: string
+    name: string
+    creatorId: string
+    validated?: boolean
+    isPublic?: boolean
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    localMatches?: LocalMatchUncheckedCreateNestedManyWithoutCupInput
+  }
+
+  export type CupCreateOrConnectWithoutParticipantsInput = {
+    where: CupWhereUniqueInput
+    create: XOR<CupCreateWithoutParticipantsInput, CupUncheckedCreateWithoutParticipantsInput>
+  }
+
+  export type TeamCreateWithoutCupParticipantsInput = {
+    id?: string
+    name: string
+    roster: string
+    createdAt?: Date | string
+    treasury?: number
+    rerolls?: number
+    cheerleaders?: number
+    assistants?: number
+    apothecary?: boolean
+    dedicatedFans?: number
+    teamValue?: number
+    currentValue?: number
+    initialBudget?: number
+    owner: UserCreateNestedOneWithoutTeamsInput
+    players?: TeamPlayerCreateNestedManyWithoutTeamInput
+    selections?: TeamSelectionCreateNestedManyWithoutTeamRefInput
+    localMatchesAsTeamA?: LocalMatchCreateNestedManyWithoutTeamAInput
+    localMatchesAsTeamB?: LocalMatchCreateNestedManyWithoutTeamBInput
+  }
+
+  export type TeamUncheckedCreateWithoutCupParticipantsInput = {
+    id?: string
+    ownerId: string
+    name: string
+    roster: string
+    createdAt?: Date | string
+    treasury?: number
+    rerolls?: number
+    cheerleaders?: number
+    assistants?: number
+    apothecary?: boolean
+    dedicatedFans?: number
+    teamValue?: number
+    currentValue?: number
+    initialBudget?: number
+    players?: TeamPlayerUncheckedCreateNestedManyWithoutTeamInput
+    selections?: TeamSelectionUncheckedCreateNestedManyWithoutTeamRefInput
+    localMatchesAsTeamA?: LocalMatchUncheckedCreateNestedManyWithoutTeamAInput
+    localMatchesAsTeamB?: LocalMatchUncheckedCreateNestedManyWithoutTeamBInput
+  }
+
+  export type TeamCreateOrConnectWithoutCupParticipantsInput = {
+    where: TeamWhereUniqueInput
+    create: XOR<TeamCreateWithoutCupParticipantsInput, TeamUncheckedCreateWithoutCupParticipantsInput>
+  }
+
+  export type CupUpsertWithoutParticipantsInput = {
+    update: XOR<CupUpdateWithoutParticipantsInput, CupUncheckedUpdateWithoutParticipantsInput>
+    create: XOR<CupCreateWithoutParticipantsInput, CupUncheckedCreateWithoutParticipantsInput>
+    where?: CupWhereInput
+  }
+
+  export type CupUpdateToOneWithWhereWithoutParticipantsInput = {
+    where?: CupWhereInput
+    data: XOR<CupUpdateWithoutParticipantsInput, CupUncheckedUpdateWithoutParticipantsInput>
+  }
+
+  export type CupUpdateWithoutParticipantsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    validated?: BoolFieldUpdateOperationsInput | boolean
+    isPublic?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    creator?: UserUpdateOneRequiredWithoutCreatedCupsNestedInput
+    localMatches?: LocalMatchUpdateManyWithoutCupNestedInput
+  }
+
+  export type CupUncheckedUpdateWithoutParticipantsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    creatorId?: StringFieldUpdateOperationsInput | string
+    validated?: BoolFieldUpdateOperationsInput | boolean
+    isPublic?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    localMatches?: LocalMatchUncheckedUpdateManyWithoutCupNestedInput
+  }
+
+  export type TeamUpsertWithoutCupParticipantsInput = {
+    update: XOR<TeamUpdateWithoutCupParticipantsInput, TeamUncheckedUpdateWithoutCupParticipantsInput>
+    create: XOR<TeamCreateWithoutCupParticipantsInput, TeamUncheckedCreateWithoutCupParticipantsInput>
+    where?: TeamWhereInput
+  }
+
+  export type TeamUpdateToOneWithWhereWithoutCupParticipantsInput = {
+    where?: TeamWhereInput
+    data: XOR<TeamUpdateWithoutCupParticipantsInput, TeamUncheckedUpdateWithoutCupParticipantsInput>
+  }
+
+  export type TeamUpdateWithoutCupParticipantsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    roster?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    treasury?: IntFieldUpdateOperationsInput | number
+    rerolls?: IntFieldUpdateOperationsInput | number
+    cheerleaders?: IntFieldUpdateOperationsInput | number
+    assistants?: IntFieldUpdateOperationsInput | number
+    apothecary?: BoolFieldUpdateOperationsInput | boolean
+    dedicatedFans?: IntFieldUpdateOperationsInput | number
+    teamValue?: IntFieldUpdateOperationsInput | number
+    currentValue?: IntFieldUpdateOperationsInput | number
+    initialBudget?: IntFieldUpdateOperationsInput | number
+    owner?: UserUpdateOneRequiredWithoutTeamsNestedInput
+    players?: TeamPlayerUpdateManyWithoutTeamNestedInput
+    selections?: TeamSelectionUpdateManyWithoutTeamRefNestedInput
+    localMatchesAsTeamA?: LocalMatchUpdateManyWithoutTeamANestedInput
+    localMatchesAsTeamB?: LocalMatchUpdateManyWithoutTeamBNestedInput
+  }
+
+  export type TeamUncheckedUpdateWithoutCupParticipantsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ownerId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    roster?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    treasury?: IntFieldUpdateOperationsInput | number
+    rerolls?: IntFieldUpdateOperationsInput | number
+    cheerleaders?: IntFieldUpdateOperationsInput | number
+    assistants?: IntFieldUpdateOperationsInput | number
+    apothecary?: BoolFieldUpdateOperationsInput | boolean
+    dedicatedFans?: IntFieldUpdateOperationsInput | number
+    teamValue?: IntFieldUpdateOperationsInput | number
+    currentValue?: IntFieldUpdateOperationsInput | number
+    initialBudget?: IntFieldUpdateOperationsInput | number
+    players?: TeamPlayerUncheckedUpdateManyWithoutTeamNestedInput
+    selections?: TeamSelectionUncheckedUpdateManyWithoutTeamRefNestedInput
+    localMatchesAsTeamA?: LocalMatchUncheckedUpdateManyWithoutTeamANestedInput
+    localMatchesAsTeamB?: LocalMatchUncheckedUpdateManyWithoutTeamBNestedInput
+  }
+
+  export type UserCreateWithoutCreatedLocalMatchesInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name?: string | null
+    coachName: string
+    firstName?: string | null
+    lastName?: string | null
+    dateOfBirth?: Date | string | null
+    role?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    matches?: MatchCreateNestedManyWithoutPlayersInput
+    createdMatches?: MatchCreateNestedManyWithoutCreatorInput
+    teams?: TeamCreateNestedManyWithoutOwnerInput
+    teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
+    createdCups?: CupCreateNestedManyWithoutCreatorInput
+  }
+
+  export type UserUncheckedCreateWithoutCreatedLocalMatchesInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name?: string | null
+    coachName: string
+    firstName?: string | null
+    lastName?: string | null
+    dateOfBirth?: Date | string | null
+    role?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    matches?: MatchUncheckedCreateNestedManyWithoutPlayersInput
+    createdMatches?: MatchUncheckedCreateNestedManyWithoutCreatorInput
+    teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
+    teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
+    createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+  }
+
+  export type UserCreateOrConnectWithoutCreatedLocalMatchesInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutCreatedLocalMatchesInput, UserUncheckedCreateWithoutCreatedLocalMatchesInput>
+  }
+
+  export type TeamCreateWithoutLocalMatchesAsTeamAInput = {
+    id?: string
+    name: string
+    roster: string
+    createdAt?: Date | string
+    treasury?: number
+    rerolls?: number
+    cheerleaders?: number
+    assistants?: number
+    apothecary?: boolean
+    dedicatedFans?: number
+    teamValue?: number
+    currentValue?: number
+    initialBudget?: number
+    owner: UserCreateNestedOneWithoutTeamsInput
+    players?: TeamPlayerCreateNestedManyWithoutTeamInput
+    selections?: TeamSelectionCreateNestedManyWithoutTeamRefInput
+    cupParticipants?: CupParticipantCreateNestedManyWithoutTeamInput
+    localMatchesAsTeamB?: LocalMatchCreateNestedManyWithoutTeamBInput
+  }
+
+  export type TeamUncheckedCreateWithoutLocalMatchesAsTeamAInput = {
+    id?: string
+    ownerId: string
+    name: string
+    roster: string
+    createdAt?: Date | string
+    treasury?: number
+    rerolls?: number
+    cheerleaders?: number
+    assistants?: number
+    apothecary?: boolean
+    dedicatedFans?: number
+    teamValue?: number
+    currentValue?: number
+    initialBudget?: number
+    players?: TeamPlayerUncheckedCreateNestedManyWithoutTeamInput
+    selections?: TeamSelectionUncheckedCreateNestedManyWithoutTeamRefInput
+    cupParticipants?: CupParticipantUncheckedCreateNestedManyWithoutTeamInput
+    localMatchesAsTeamB?: LocalMatchUncheckedCreateNestedManyWithoutTeamBInput
+  }
+
+  export type TeamCreateOrConnectWithoutLocalMatchesAsTeamAInput = {
+    where: TeamWhereUniqueInput
+    create: XOR<TeamCreateWithoutLocalMatchesAsTeamAInput, TeamUncheckedCreateWithoutLocalMatchesAsTeamAInput>
+  }
+
+  export type TeamCreateWithoutLocalMatchesAsTeamBInput = {
+    id?: string
+    name: string
+    roster: string
+    createdAt?: Date | string
+    treasury?: number
+    rerolls?: number
+    cheerleaders?: number
+    assistants?: number
+    apothecary?: boolean
+    dedicatedFans?: number
+    teamValue?: number
+    currentValue?: number
+    initialBudget?: number
+    owner: UserCreateNestedOneWithoutTeamsInput
+    players?: TeamPlayerCreateNestedManyWithoutTeamInput
+    selections?: TeamSelectionCreateNestedManyWithoutTeamRefInput
+    cupParticipants?: CupParticipantCreateNestedManyWithoutTeamInput
+    localMatchesAsTeamA?: LocalMatchCreateNestedManyWithoutTeamAInput
+  }
+
+  export type TeamUncheckedCreateWithoutLocalMatchesAsTeamBInput = {
+    id?: string
+    ownerId: string
+    name: string
+    roster: string
+    createdAt?: Date | string
+    treasury?: number
+    rerolls?: number
+    cheerleaders?: number
+    assistants?: number
+    apothecary?: boolean
+    dedicatedFans?: number
+    teamValue?: number
+    currentValue?: number
+    initialBudget?: number
+    players?: TeamPlayerUncheckedCreateNestedManyWithoutTeamInput
+    selections?: TeamSelectionUncheckedCreateNestedManyWithoutTeamRefInput
+    cupParticipants?: CupParticipantUncheckedCreateNestedManyWithoutTeamInput
+    localMatchesAsTeamA?: LocalMatchUncheckedCreateNestedManyWithoutTeamAInput
+  }
+
+  export type TeamCreateOrConnectWithoutLocalMatchesAsTeamBInput = {
+    where: TeamWhereUniqueInput
+    create: XOR<TeamCreateWithoutLocalMatchesAsTeamBInput, TeamUncheckedCreateWithoutLocalMatchesAsTeamBInput>
+  }
+
+  export type CupCreateWithoutLocalMatchesInput = {
+    id?: string
+    name: string
+    validated?: boolean
+    isPublic?: boolean
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    creator: UserCreateNestedOneWithoutCreatedCupsInput
+    participants?: CupParticipantCreateNestedManyWithoutCupInput
+  }
+
+  export type CupUncheckedCreateWithoutLocalMatchesInput = {
+    id?: string
+    name: string
+    creatorId: string
+    validated?: boolean
+    isPublic?: boolean
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    participants?: CupParticipantUncheckedCreateNestedManyWithoutCupInput
+  }
+
+  export type CupCreateOrConnectWithoutLocalMatchesInput = {
+    where: CupWhereUniqueInput
+    create: XOR<CupCreateWithoutLocalMatchesInput, CupUncheckedCreateWithoutLocalMatchesInput>
+  }
+
+  export type UserUpsertWithoutCreatedLocalMatchesInput = {
+    update: XOR<UserUpdateWithoutCreatedLocalMatchesInput, UserUncheckedUpdateWithoutCreatedLocalMatchesInput>
+    create: XOR<UserCreateWithoutCreatedLocalMatchesInput, UserUncheckedCreateWithoutCreatedLocalMatchesInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutCreatedLocalMatchesInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutCreatedLocalMatchesInput, UserUncheckedUpdateWithoutCreatedLocalMatchesInput>
+  }
+
+  export type UserUpdateWithoutCreatedLocalMatchesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    coachName?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    matches?: MatchUpdateManyWithoutPlayersNestedInput
+    createdMatches?: MatchUpdateManyWithoutCreatorNestedInput
+    teams?: TeamUpdateManyWithoutOwnerNestedInput
+    teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
+    createdCups?: CupUpdateManyWithoutCreatorNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutCreatedLocalMatchesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    coachName?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    matches?: MatchUncheckedUpdateManyWithoutPlayersNestedInput
+    createdMatches?: MatchUncheckedUpdateManyWithoutCreatorNestedInput
+    teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
+    teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
+    createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+  }
+
+  export type TeamUpsertWithoutLocalMatchesAsTeamAInput = {
+    update: XOR<TeamUpdateWithoutLocalMatchesAsTeamAInput, TeamUncheckedUpdateWithoutLocalMatchesAsTeamAInput>
+    create: XOR<TeamCreateWithoutLocalMatchesAsTeamAInput, TeamUncheckedCreateWithoutLocalMatchesAsTeamAInput>
+    where?: TeamWhereInput
+  }
+
+  export type TeamUpdateToOneWithWhereWithoutLocalMatchesAsTeamAInput = {
+    where?: TeamWhereInput
+    data: XOR<TeamUpdateWithoutLocalMatchesAsTeamAInput, TeamUncheckedUpdateWithoutLocalMatchesAsTeamAInput>
+  }
+
+  export type TeamUpdateWithoutLocalMatchesAsTeamAInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    roster?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    treasury?: IntFieldUpdateOperationsInput | number
+    rerolls?: IntFieldUpdateOperationsInput | number
+    cheerleaders?: IntFieldUpdateOperationsInput | number
+    assistants?: IntFieldUpdateOperationsInput | number
+    apothecary?: BoolFieldUpdateOperationsInput | boolean
+    dedicatedFans?: IntFieldUpdateOperationsInput | number
+    teamValue?: IntFieldUpdateOperationsInput | number
+    currentValue?: IntFieldUpdateOperationsInput | number
+    initialBudget?: IntFieldUpdateOperationsInput | number
+    owner?: UserUpdateOneRequiredWithoutTeamsNestedInput
+    players?: TeamPlayerUpdateManyWithoutTeamNestedInput
+    selections?: TeamSelectionUpdateManyWithoutTeamRefNestedInput
+    cupParticipants?: CupParticipantUpdateManyWithoutTeamNestedInput
+    localMatchesAsTeamB?: LocalMatchUpdateManyWithoutTeamBNestedInput
+  }
+
+  export type TeamUncheckedUpdateWithoutLocalMatchesAsTeamAInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ownerId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    roster?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    treasury?: IntFieldUpdateOperationsInput | number
+    rerolls?: IntFieldUpdateOperationsInput | number
+    cheerleaders?: IntFieldUpdateOperationsInput | number
+    assistants?: IntFieldUpdateOperationsInput | number
+    apothecary?: BoolFieldUpdateOperationsInput | boolean
+    dedicatedFans?: IntFieldUpdateOperationsInput | number
+    teamValue?: IntFieldUpdateOperationsInput | number
+    currentValue?: IntFieldUpdateOperationsInput | number
+    initialBudget?: IntFieldUpdateOperationsInput | number
+    players?: TeamPlayerUncheckedUpdateManyWithoutTeamNestedInput
+    selections?: TeamSelectionUncheckedUpdateManyWithoutTeamRefNestedInput
+    cupParticipants?: CupParticipantUncheckedUpdateManyWithoutTeamNestedInput
+    localMatchesAsTeamB?: LocalMatchUncheckedUpdateManyWithoutTeamBNestedInput
+  }
+
+  export type TeamUpsertWithoutLocalMatchesAsTeamBInput = {
+    update: XOR<TeamUpdateWithoutLocalMatchesAsTeamBInput, TeamUncheckedUpdateWithoutLocalMatchesAsTeamBInput>
+    create: XOR<TeamCreateWithoutLocalMatchesAsTeamBInput, TeamUncheckedCreateWithoutLocalMatchesAsTeamBInput>
+    where?: TeamWhereInput
+  }
+
+  export type TeamUpdateToOneWithWhereWithoutLocalMatchesAsTeamBInput = {
+    where?: TeamWhereInput
+    data: XOR<TeamUpdateWithoutLocalMatchesAsTeamBInput, TeamUncheckedUpdateWithoutLocalMatchesAsTeamBInput>
+  }
+
+  export type TeamUpdateWithoutLocalMatchesAsTeamBInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    roster?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    treasury?: IntFieldUpdateOperationsInput | number
+    rerolls?: IntFieldUpdateOperationsInput | number
+    cheerleaders?: IntFieldUpdateOperationsInput | number
+    assistants?: IntFieldUpdateOperationsInput | number
+    apothecary?: BoolFieldUpdateOperationsInput | boolean
+    dedicatedFans?: IntFieldUpdateOperationsInput | number
+    teamValue?: IntFieldUpdateOperationsInput | number
+    currentValue?: IntFieldUpdateOperationsInput | number
+    initialBudget?: IntFieldUpdateOperationsInput | number
+    owner?: UserUpdateOneRequiredWithoutTeamsNestedInput
+    players?: TeamPlayerUpdateManyWithoutTeamNestedInput
+    selections?: TeamSelectionUpdateManyWithoutTeamRefNestedInput
+    cupParticipants?: CupParticipantUpdateManyWithoutTeamNestedInput
+    localMatchesAsTeamA?: LocalMatchUpdateManyWithoutTeamANestedInput
+  }
+
+  export type TeamUncheckedUpdateWithoutLocalMatchesAsTeamBInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ownerId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    roster?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    treasury?: IntFieldUpdateOperationsInput | number
+    rerolls?: IntFieldUpdateOperationsInput | number
+    cheerleaders?: IntFieldUpdateOperationsInput | number
+    assistants?: IntFieldUpdateOperationsInput | number
+    apothecary?: BoolFieldUpdateOperationsInput | boolean
+    dedicatedFans?: IntFieldUpdateOperationsInput | number
+    teamValue?: IntFieldUpdateOperationsInput | number
+    currentValue?: IntFieldUpdateOperationsInput | number
+    initialBudget?: IntFieldUpdateOperationsInput | number
+    players?: TeamPlayerUncheckedUpdateManyWithoutTeamNestedInput
+    selections?: TeamSelectionUncheckedUpdateManyWithoutTeamRefNestedInput
+    cupParticipants?: CupParticipantUncheckedUpdateManyWithoutTeamNestedInput
+    localMatchesAsTeamA?: LocalMatchUncheckedUpdateManyWithoutTeamANestedInput
+  }
+
+  export type CupUpsertWithoutLocalMatchesInput = {
+    update: XOR<CupUpdateWithoutLocalMatchesInput, CupUncheckedUpdateWithoutLocalMatchesInput>
+    create: XOR<CupCreateWithoutLocalMatchesInput, CupUncheckedCreateWithoutLocalMatchesInput>
+    where?: CupWhereInput
+  }
+
+  export type CupUpdateToOneWithWhereWithoutLocalMatchesInput = {
+    where?: CupWhereInput
+    data: XOR<CupUpdateWithoutLocalMatchesInput, CupUncheckedUpdateWithoutLocalMatchesInput>
+  }
+
+  export type CupUpdateWithoutLocalMatchesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    validated?: BoolFieldUpdateOperationsInput | boolean
+    isPublic?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    creator?: UserUpdateOneRequiredWithoutCreatedCupsNestedInput
+    participants?: CupParticipantUpdateManyWithoutCupNestedInput
+  }
+
+  export type CupUncheckedUpdateWithoutLocalMatchesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    creatorId?: StringFieldUpdateOperationsInput | string
+    validated?: BoolFieldUpdateOperationsInput | boolean
+    isPublic?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    participants?: CupParticipantUncheckedUpdateManyWithoutCupNestedInput
   }
 
   export type MatchCreateManyCreatorInput = {
@@ -12027,6 +18289,32 @@ export namespace Prisma {
     team?: string | null
     teamId?: string | null
     createdAt?: Date | string
+  }
+
+  export type CupCreateManyCreatorInput = {
+    id?: string
+    name: string
+    validated?: boolean
+    isPublic?: boolean
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type LocalMatchCreateManyCreatorInput = {
+    id?: string
+    name?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    startedAt?: Date | string | null
+    completedAt?: Date | string | null
+    teamAId: string
+    teamBId: string
+    cupId?: string | null
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: number | null
+    scoreTeamB?: number | null
   }
 
   export type MatchUpdateWithoutPlayersInput = {
@@ -12100,6 +18388,9 @@ export namespace Prisma {
     initialBudget?: IntFieldUpdateOperationsInput | number
     players?: TeamPlayerUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUpdateManyWithoutTeamRefNestedInput
+    cupParticipants?: CupParticipantUpdateManyWithoutTeamNestedInput
+    localMatchesAsTeamA?: LocalMatchUpdateManyWithoutTeamANestedInput
+    localMatchesAsTeamB?: LocalMatchUpdateManyWithoutTeamBNestedInput
   }
 
   export type TeamUncheckedUpdateWithoutOwnerInput = {
@@ -12118,6 +18409,9 @@ export namespace Prisma {
     initialBudget?: IntFieldUpdateOperationsInput | number
     players?: TeamPlayerUncheckedUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUncheckedUpdateManyWithoutTeamRefNestedInput
+    cupParticipants?: CupParticipantUncheckedUpdateManyWithoutTeamNestedInput
+    localMatchesAsTeamA?: LocalMatchUncheckedUpdateManyWithoutTeamANestedInput
+    localMatchesAsTeamB?: LocalMatchUncheckedUpdateManyWithoutTeamBNestedInput
   }
 
   export type TeamUncheckedUpdateManyWithoutOwnerInput = {
@@ -12160,6 +18454,88 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type CupUpdateWithoutCreatorInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    validated?: BoolFieldUpdateOperationsInput | boolean
+    isPublic?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    participants?: CupParticipantUpdateManyWithoutCupNestedInput
+    localMatches?: LocalMatchUpdateManyWithoutCupNestedInput
+  }
+
+  export type CupUncheckedUpdateWithoutCreatorInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    validated?: BoolFieldUpdateOperationsInput | boolean
+    isPublic?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    participants?: CupParticipantUncheckedUpdateManyWithoutCupNestedInput
+    localMatches?: LocalMatchUncheckedUpdateManyWithoutCupNestedInput
+  }
+
+  export type CupUncheckedUpdateManyWithoutCreatorInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    validated?: BoolFieldUpdateOperationsInput | boolean
+    isPublic?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LocalMatchUpdateWithoutCreatorInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: NullableIntFieldUpdateOperationsInput | number | null
+    scoreTeamB?: NullableIntFieldUpdateOperationsInput | number | null
+    teamA?: TeamUpdateOneRequiredWithoutLocalMatchesAsTeamANestedInput
+    teamB?: TeamUpdateOneRequiredWithoutLocalMatchesAsTeamBNestedInput
+    cup?: CupUpdateOneWithoutLocalMatchesNestedInput
+  }
+
+  export type LocalMatchUncheckedUpdateWithoutCreatorInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    teamAId?: StringFieldUpdateOperationsInput | string
+    teamBId?: StringFieldUpdateOperationsInput | string
+    cupId?: NullableStringFieldUpdateOperationsInput | string | null
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: NullableIntFieldUpdateOperationsInput | number | null
+    scoreTeamB?: NullableIntFieldUpdateOperationsInput | number | null
+  }
+
+  export type LocalMatchUncheckedUpdateManyWithoutCreatorInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    teamAId?: StringFieldUpdateOperationsInput | string
+    teamBId?: StringFieldUpdateOperationsInput | string
+    cupId?: NullableStringFieldUpdateOperationsInput | string | null
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: NullableIntFieldUpdateOperationsInput | number | null
+    scoreTeamB?: NullableIntFieldUpdateOperationsInput | number | null
+  }
+
   export type TurnCreateManyMatchInput = {
     id?: string
     number: number
@@ -12190,6 +18566,8 @@ export namespace Prisma {
     createdMatches?: MatchUpdateManyWithoutCreatorNestedInput
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
+    createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
   }
 
   export type UserUncheckedUpdateWithoutMatchesInput = {
@@ -12207,6 +18585,8 @@ export namespace Prisma {
     createdMatches?: MatchUncheckedUpdateManyWithoutCreatorNestedInput
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
+    createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
   }
 
   export type UserUncheckedUpdateManyWithoutMatchesInput = {
@@ -12289,6 +18669,44 @@ export namespace Prisma {
     createdAt?: Date | string
   }
 
+  export type CupParticipantCreateManyTeamInput = {
+    id?: string
+    cupId: string
+    createdAt?: Date | string
+  }
+
+  export type LocalMatchCreateManyTeamAInput = {
+    id?: string
+    name?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    startedAt?: Date | string | null
+    completedAt?: Date | string | null
+    creatorId: string
+    teamBId: string
+    cupId?: string | null
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: number | null
+    scoreTeamB?: number | null
+  }
+
+  export type LocalMatchCreateManyTeamBInput = {
+    id?: string
+    name?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    startedAt?: Date | string | null
+    completedAt?: Date | string | null
+    creatorId: string
+    teamAId: string
+    cupId?: string | null
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: number | null
+    scoreTeamB?: number | null
+  }
+
   export type TeamPlayerUpdateWithoutTeamInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
@@ -12350,6 +18768,208 @@ export namespace Prisma {
     userId?: StringFieldUpdateOperationsInput | string
     team?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CupParticipantUpdateWithoutTeamInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    cup?: CupUpdateOneRequiredWithoutParticipantsNestedInput
+  }
+
+  export type CupParticipantUncheckedUpdateWithoutTeamInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    cupId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CupParticipantUncheckedUpdateManyWithoutTeamInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    cupId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LocalMatchUpdateWithoutTeamAInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: NullableIntFieldUpdateOperationsInput | number | null
+    scoreTeamB?: NullableIntFieldUpdateOperationsInput | number | null
+    creator?: UserUpdateOneRequiredWithoutCreatedLocalMatchesNestedInput
+    teamB?: TeamUpdateOneRequiredWithoutLocalMatchesAsTeamBNestedInput
+    cup?: CupUpdateOneWithoutLocalMatchesNestedInput
+  }
+
+  export type LocalMatchUncheckedUpdateWithoutTeamAInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    creatorId?: StringFieldUpdateOperationsInput | string
+    teamBId?: StringFieldUpdateOperationsInput | string
+    cupId?: NullableStringFieldUpdateOperationsInput | string | null
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: NullableIntFieldUpdateOperationsInput | number | null
+    scoreTeamB?: NullableIntFieldUpdateOperationsInput | number | null
+  }
+
+  export type LocalMatchUncheckedUpdateManyWithoutTeamAInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    creatorId?: StringFieldUpdateOperationsInput | string
+    teamBId?: StringFieldUpdateOperationsInput | string
+    cupId?: NullableStringFieldUpdateOperationsInput | string | null
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: NullableIntFieldUpdateOperationsInput | number | null
+    scoreTeamB?: NullableIntFieldUpdateOperationsInput | number | null
+  }
+
+  export type LocalMatchUpdateWithoutTeamBInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: NullableIntFieldUpdateOperationsInput | number | null
+    scoreTeamB?: NullableIntFieldUpdateOperationsInput | number | null
+    creator?: UserUpdateOneRequiredWithoutCreatedLocalMatchesNestedInput
+    teamA?: TeamUpdateOneRequiredWithoutLocalMatchesAsTeamANestedInput
+    cup?: CupUpdateOneWithoutLocalMatchesNestedInput
+  }
+
+  export type LocalMatchUncheckedUpdateWithoutTeamBInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    creatorId?: StringFieldUpdateOperationsInput | string
+    teamAId?: StringFieldUpdateOperationsInput | string
+    cupId?: NullableStringFieldUpdateOperationsInput | string | null
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: NullableIntFieldUpdateOperationsInput | number | null
+    scoreTeamB?: NullableIntFieldUpdateOperationsInput | number | null
+  }
+
+  export type LocalMatchUncheckedUpdateManyWithoutTeamBInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    creatorId?: StringFieldUpdateOperationsInput | string
+    teamAId?: StringFieldUpdateOperationsInput | string
+    cupId?: NullableStringFieldUpdateOperationsInput | string | null
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: NullableIntFieldUpdateOperationsInput | number | null
+    scoreTeamB?: NullableIntFieldUpdateOperationsInput | number | null
+  }
+
+  export type CupParticipantCreateManyCupInput = {
+    id?: string
+    teamId: string
+    createdAt?: Date | string
+  }
+
+  export type LocalMatchCreateManyCupInput = {
+    id?: string
+    name?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    startedAt?: Date | string | null
+    completedAt?: Date | string | null
+    creatorId: string
+    teamAId: string
+    teamBId: string
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: number | null
+    scoreTeamB?: number | null
+  }
+
+  export type CupParticipantUpdateWithoutCupInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    team?: TeamUpdateOneRequiredWithoutCupParticipantsNestedInput
+  }
+
+  export type CupParticipantUncheckedUpdateWithoutCupInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    teamId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CupParticipantUncheckedUpdateManyWithoutCupInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    teamId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LocalMatchUpdateWithoutCupInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: NullableIntFieldUpdateOperationsInput | number | null
+    scoreTeamB?: NullableIntFieldUpdateOperationsInput | number | null
+    creator?: UserUpdateOneRequiredWithoutCreatedLocalMatchesNestedInput
+    teamA?: TeamUpdateOneRequiredWithoutLocalMatchesAsTeamANestedInput
+    teamB?: TeamUpdateOneRequiredWithoutLocalMatchesAsTeamBNestedInput
+  }
+
+  export type LocalMatchUncheckedUpdateWithoutCupInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    creatorId?: StringFieldUpdateOperationsInput | string
+    teamAId?: StringFieldUpdateOperationsInput | string
+    teamBId?: StringFieldUpdateOperationsInput | string
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: NullableIntFieldUpdateOperationsInput | number | null
+    scoreTeamB?: NullableIntFieldUpdateOperationsInput | number | null
+  }
+
+  export type LocalMatchUncheckedUpdateManyWithoutCupInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    creatorId?: StringFieldUpdateOperationsInput | string
+    teamAId?: StringFieldUpdateOperationsInput | string
+    teamBId?: StringFieldUpdateOperationsInput | string
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: NullableIntFieldUpdateOperationsInput | number | null
+    scoreTeamB?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
 

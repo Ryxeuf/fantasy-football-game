@@ -187,12 +187,52 @@ exports.Prisma.TeamPlayerScalarFieldEnum = {
   skills: 'skills'
 };
 
+exports.Prisma.CupScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  creatorId: 'creatorId',
+  validated: 'validated',
+  isPublic: 'isPublic',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.CupParticipantScalarFieldEnum = {
+  id: 'id',
+  cupId: 'cupId',
+  teamId: 'teamId',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.LocalMatchScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  startedAt: 'startedAt',
+  completedAt: 'completedAt',
+  creatorId: 'creatorId',
+  teamAId: 'teamAId',
+  teamBId: 'teamBId',
+  cupId: 'cupId',
+  gameState: 'gameState',
+  scoreTeamA: 'scoreTeamA',
+  scoreTeamB: 'scoreTeamB'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
 };
 
 exports.Prisma.JsonNullValueInput = {
+  JsonNull: Prisma.JsonNull
+};
+
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
   JsonNull: Prisma.JsonNull
 };
 
@@ -219,7 +259,10 @@ exports.Prisma.ModelName = {
   Turn: 'Turn',
   TeamSelection: 'TeamSelection',
   Team: 'Team',
-  TeamPlayer: 'TeamPlayer'
+  TeamPlayer: 'TeamPlayer',
+  Cup: 'Cup',
+  CupParticipant: 'CupParticipant',
+  LocalMatch: 'LocalMatch'
 };
 
 /**
