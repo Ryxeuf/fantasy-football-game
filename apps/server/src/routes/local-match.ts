@@ -558,6 +558,110 @@ router.post("/:id/complete", authUser, async (req: AuthenticatedRequest, res) =>
   }
 });
 
+// PATCH /local-match/:id/status - Changer le statut d'un match (admin uniquement)
+router.patch("/:id/status", authUser, async (req: AuthenticatedRequest, res) => {
+  try {
+    const { status } = req.body;
+    
+    if (!status) {
+      return res.status(400).json({ error: "Le statut est requis" });
+    }
+    
+    const validStatuses = ["pending", "waiting_for_player", "in_progress", "completed", "cancelled"];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ error: `Statut invalide. Doit être l'un de: ${validStatuses.join(", ")}` });
+    }
+    
+    const isAdmin = req.user!.role === "admin";
+    if (!isAdmin) {
+      return res.status(403).json({ error: "Seuls les administrateurs peuvent modifier le statut d'un match" });
+    }
+    
+    const localMatch = await prisma.localMatch.findUnique({
+      where: { id: req.params.id },
+    });
+    
+    if (!localMatch) {
+      return res.status(404).json({ error: "Partie offline introuvable" });
+    }
+    
+    // Préparer les données de mise à jour
+    const updateData: any = {
+      status,
+      updatedAt: new Date(),
+    };
+    
+    // Si on remet en cours, réinitialiser completedAt
+    if (status === "in_progress" && localMatch.status === "completed") {
+      updateData.completedAt = null;
+      // Si startedAt n'existe pas, le définir maintenant
+      if (!localMatch.startedAt) {
+        updateData.startedAt = new Date();
+      }
+    }
+    
+    // Si on termine le match, définir completedAt
+    if (status === "completed" && localMatch.status !== "completed") {
+      updateData.completedAt = new Date();
+      if (!localMatch.startedAt) {
+        updateData.startedAt = new Date();
+      }
+    }
+    
+    const updatedMatch = await prisma.localMatch.update({
+      where: { id: req.params.id },
+      data: updateData,
+      include: {
+        teamA: {
+          select: {
+            id: true,
+            name: true,
+            roster: true,
+            owner: {
+              select: {
+                id: true,
+                coachName: true,
+              },
+            },
+          },
+        },
+        teamB: {
+          select: {
+            id: true,
+            name: true,
+            roster: true,
+            owner: {
+              select: {
+                id: true,
+                coachName: true,
+              },
+            },
+          },
+        },
+        cup: {
+          select: {
+            id: true,
+            name: true,
+            status: true,
+          },
+        },
+        creator: {
+          select: {
+            id: true,
+            coachName: true,
+            email: true,
+          },
+        },
+      },
+    });
+    
+    res.json({ localMatch: updatedMatch });
+  } catch (e: any) {
+    console.error("Erreur lors de la modification du statut:", e);
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
 // DELETE /local-match/:id - Supprimer une partie offline
 router.delete("/:id", authUser, async (req: AuthenticatedRequest, res) => {
   try {

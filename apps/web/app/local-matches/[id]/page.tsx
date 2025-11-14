@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { API_BASE } from "../../auth-client";
 import LocalMatchActions from "./LocalMatchActions";
+import LocalMatchSummary from "./LocalMatchSummary";
 
 type LocalMatch = {
   id: string;
@@ -61,7 +62,7 @@ type LocalMatch = {
       id: string;
       coachName: string;
     };
-  };
+  } | null;
   cup: {
     id: string;
     name: string;
@@ -157,7 +158,7 @@ export default function LocalMatchPage() {
       const { localMatch: data } = await fetchJSON(`/local-match/${matchId}`);
       console.log("Match chargé:", {
         teamA: data?.teamA?.name,
-        teamB: data?.teamB?.name,
+        teamB: data?.teamB?.name || null,
         teamAPlayers: data?.teamA?.players?.length || 0,
         teamBPlayers: data?.teamB?.players?.length || 0,
         teamAPlayersDefined: data?.teamA?.players !== undefined,
@@ -257,7 +258,8 @@ export default function LocalMatchPage() {
               {localMatch.name || "Partie offline"}
             </h1>
             <p className="text-gray-600 mt-1">
-              {localMatch.teamA.name} vs {localMatch.teamB.name}
+              {localMatch.teamA.name}
+              {localMatch.teamB ? ` vs ${localMatch.teamB.name}` : " (en attente d'une équipe adverse)"}
             </p>
             {localMatch.cup && (
               <p className="text-sm text-gray-600">
@@ -284,7 +286,7 @@ export default function LocalMatchPage() {
             )}
             {localMatch.status === "completed" && (
               <div className="px-4 py-2 bg-green-100 text-green-800 rounded-lg font-semibold">
-                Terminée: {localMatch.scoreTeamA} - {localMatch.scoreTeamB}
+                Partie terminée
               </div>
             )}
           </div>
@@ -332,24 +334,36 @@ export default function LocalMatchPage() {
                     </span>
                   )}
                 </div>
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-600 mb-1">Équipe B</p>
-                  <p className="font-semibold text-nuffle-anthracite">
-                    {localMatch.teamB.name}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {localMatch.teamB.owner.coachName}
-                  </p>
-                  {localMatch.teamBOwnerValidated ? (
-                    <span className="inline-block mt-2 px-2 py-1 bg-green-100 text-green-800 rounded text-xs">
-                      ✓ Validé
-                    </span>
-                  ) : (
-                    <span className="inline-block mt-2 px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs">
-                      En attente
-                    </span>
-                  )}
-                </div>
+                {localMatch.teamB ? (
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <p className="text-sm text-gray-600 mb-1">Équipe B</p>
+                    <p className="font-semibold text-nuffle-anthracite">
+                      {localMatch.teamB.name}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {localMatch.teamB.owner.coachName}
+                    </p>
+                    {localMatch.teamBOwnerValidated ? (
+                      <span className="inline-block mt-2 px-2 py-1 bg-green-100 text-green-800 rounded text-xs">
+                        ✓ Validé
+                      </span>
+                    ) : (
+                      <span className="inline-block mt-2 px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs">
+                        En attente
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <p className="text-sm text-gray-600 mb-1">Équipe B</p>
+                    <p className="font-semibold text-gray-400 italic">
+                      En attente d'une équipe
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Partagez le lien ci-dessous pour inviter un joueur
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
             {localMatch.shareToken && (
@@ -392,7 +406,7 @@ export default function LocalMatchPage() {
                 Cette partie se joue en mode offline. Enregistrez manuellement toutes les actions effectuées pendant la partie.
               </p>
             </div>
-            {localMatch.teamA?.players !== undefined && localMatch.teamB?.players !== undefined ? (
+            {localMatch.teamA?.players !== undefined && localMatch.teamB?.players !== undefined && localMatch.teamB ? (
               <LocalMatchActions
                 matchId={matchId}
                 teamA={{
@@ -408,24 +422,39 @@ export default function LocalMatchPage() {
               />
             ) : (
               <div className="bg-white border border-gray-200 rounded-lg p-8 text-center shadow-sm">
-                <p className="text-nuffle-anthracite">Chargement des joueurs...</p>
+                <p className="text-nuffle-anthracite">
+                  {!localMatch.teamB ? "En attente d'une équipe adverse..." : "Chargement des joueurs..."}
+                </p>
               </div>
             )}
           </div>
         )}
 
-        {localMatch.status === "completed" && (
+        {localMatch.status === "completed" && localMatch.teamB && (
+          <LocalMatchSummary
+            matchId={matchId}
+            match={{
+              id: localMatch.id,
+              name: localMatch.name,
+              teamA: {
+                id: localMatch.teamA.id,
+                name: localMatch.teamA.name,
+              },
+              teamB: {
+                id: localMatch.teamB.id,
+                name: localMatch.teamB.name,
+              },
+              scoreTeamA: localMatch.scoreTeamA,
+              scoreTeamB: localMatch.scoreTeamB,
+              startedAt: localMatch.startedAt,
+              completedAt: localMatch.completedAt,
+              cup: localMatch.cup,
+            }}
+          />
+        )}
+        {localMatch.status === "completed" && !localMatch.teamB && (
           <div className="bg-white border border-gray-200 rounded-lg p-8 text-center shadow-sm">
-            <h2 className="text-2xl font-bold text-nuffle-anthracite mb-4">
-              Partie terminée
-            </h2>
-            <p className="text-4xl font-bold text-nuffle-anthracite mb-4">
-              {localMatch.scoreTeamA} - {localMatch.scoreTeamB}
-            </p>
-            <p className="text-gray-600">
-              {localMatch.completedAt &&
-                `Terminée le ${new Date(localMatch.completedAt).toLocaleDateString("fr-FR")}`}
-            </p>
+            <p className="text-nuffle-anthracite">Le match ne peut pas être terminé sans équipe adverse.</p>
           </div>
         )}
       </div>

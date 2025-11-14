@@ -68,6 +68,23 @@ async function deleteJSON(path: string) {
   return res.json();
 }
 
+async function patchJSON(path: string, data: any) {
+  const token = localStorage.getItem("auth_token");
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: token ? `Bearer ${token}` : "",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok)
+    throw new Error(
+      (await res.json().catch(() => ({})))?.error || `Erreur ${res.status}`,
+    );
+  return res.json();
+}
+
 export default function AdminLocalMatchesPage() {
   const router = useRouter();
   const [localMatches, setLocalMatches] = useState<LocalMatch[]>([]);
@@ -119,6 +136,25 @@ export default function AdminLocalMatchesPage() {
       loadLocalMatches();
     } catch (e: any) {
       setError(e.message || "Erreur lors de la suppression");
+    }
+  };
+
+  const handleResumeMatch = async (matchId: string, matchName: string | null) => {
+    if (
+      !confirm(
+        `Êtes-vous sûr de vouloir remettre en cours la partie "${
+          matchName || "sans nom"
+        }" ?`,
+      )
+    ) {
+      return;
+    }
+    setError(null);
+    try {
+      await patchJSON(`/local-match/${matchId}/status`, { status: "in_progress" });
+      loadLocalMatches();
+    } catch (e: any) {
+      setError(e.message || "Erreur lors de la reprise du match");
     }
   };
 
@@ -370,6 +406,17 @@ export default function AdminLocalMatchesPage() {
                         >
                           Voir
                         </button>
+                        {match.status === "completed" && (
+                          <button
+                            onClick={() =>
+                              handleResumeMatch(match.id, match.name)
+                            }
+                            className="text-blue-600 hover:text-blue-800"
+                            title="Remettre en cours"
+                          >
+                            Reprendre
+                          </button>
+                        )}
                         <button
                           onClick={() =>
                             handleDelete(match.id, match.name)

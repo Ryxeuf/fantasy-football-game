@@ -753,7 +753,7 @@ async function main() {
       }
 
       // Créer un match local associé à la coupe
-      const existingMatch = await prisma.localMatch.findFirst({
+      let localMatch = await prisma.localMatch.findFirst({
         where: {
           cupId: cup.id,
           teamAId: adminSkavenTeam.id,
@@ -761,8 +761,8 @@ async function main() {
         },
       });
 
-      if (!existingMatch) {
-        await prisma.localMatch.create({
+      if (!localMatch) {
+        localMatch = await prisma.localMatch.create({
           data: {
             name: null, // Pas de nom spécifique
             creatorId: adminUser.id,
@@ -777,6 +777,651 @@ async function main() {
         console.log("   ✅ Match local créé (Admin-Skavens vs User-Lizardmen)");
       } else {
         console.log("   ⚠️  Le match local existe déjà");
+      }
+
+      // Valider le match et générer les actions
+      if (localMatch) {
+        // Valider le match (les deux propriétaires ont validé)
+        await prisma.localMatch.update({
+          where: { id: localMatch.id },
+          data: {
+            status: "completed",
+            teamAOwnerValidated: true,
+            teamBOwnerValidated: true,
+            scoreTeamA: 2,
+            scoreTeamB: 1,
+            startedAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // Il y a 2 heures
+            completedAt: new Date(),
+          },
+        });
+        console.log("   ✅ Match validé et complété");
+
+        // Récupérer les joueurs des deux équipes
+        const skavenPlayers = await prisma.teamPlayer.findMany({
+          where: { teamId: adminSkavenTeam.id },
+          orderBy: { number: "asc" },
+        });
+        const lizardmenPlayers = await prisma.teamPlayer.findMany({
+          where: { teamId: userLizardmenTeam.id },
+          orderBy: { number: "asc" },
+        });
+
+        // Vérifier s'il y a déjà des actions
+        const existingActions = await prisma.localMatchAction.findMany({
+          where: { matchId: localMatch.id },
+        });
+
+        if (existingActions.length === 0) {
+          // Générer au moins 40 actions pour un match réaliste
+          const actions = [];
+
+          // MI-TEMPS 1 - Tour 1 (Équipe A - Skavens)
+          actions.push({
+            matchId: localMatch.id,
+            half: 1,
+            turn: 1,
+            actionType: "blocage",
+            playerId: skavenPlayers[1].id, // Blitzer 1
+            playerName: skavenPlayers[1].name,
+            playerTeam: "A",
+            opponentId: lizardmenPlayers[2].id, // Saurus 1
+            opponentName: lizardmenPlayers[2].name,
+            diceResult: 5,
+            fumble: false,
+            armorBroken: true,
+            opponentState: "ko",
+          });
+
+          actions.push({
+            matchId: localMatch.id,
+            half: 1,
+            turn: 1,
+            actionType: "sprint",
+            playerId: skavenPlayers[3].id, // Gutter Runner 1
+            playerName: skavenPlayers[3].name,
+            playerTeam: "A",
+            diceResult: 3,
+            fumble: false,
+          });
+
+          actions.push({
+            matchId: localMatch.id,
+            half: 1,
+            turn: 1,
+            actionType: "esquive",
+            playerId: skavenPlayers[3].id, // Gutter Runner 1
+            playerName: skavenPlayers[3].name,
+            playerTeam: "A",
+            diceResult: 2,
+            fumble: false,
+          });
+
+          // MI-TEMPS 1 - Tour 2 (Équipe B - Lizardmen)
+          actions.push({
+            matchId: localMatch.id,
+            half: 1,
+            turn: 2,
+            actionType: "blitz",
+            playerId: lizardmenPlayers[2].id, // Kroxigor
+            playerName: lizardmenPlayers[2].name,
+            playerTeam: "B",
+            opponentId: skavenPlayers[0].id, // Rat Ogre
+            opponentName: skavenPlayers[0].name,
+            diceResult: 6,
+            fumble: false,
+            armorBroken: true,
+            opponentState: "sonne",
+          });
+
+          actions.push({
+            matchId: localMatch.id,
+            half: 1,
+            turn: 2,
+            actionType: "blocage",
+            playerId: lizardmenPlayers[3].id, // Saurus 1
+            playerName: lizardmenPlayers[3].name,
+            playerTeam: "B",
+            opponentId: skavenPlayers[6].id, // Lineman 1
+            opponentName: skavenPlayers[6].name,
+            diceResult: 4,
+            fumble: false,
+            armorBroken: false,
+          });
+
+          // MI-TEMPS 1 - Tour 3 (Équipe A - Skavens)
+          actions.push({
+            matchId: localMatch.id,
+            half: 1,
+            turn: 3,
+            actionType: "passe",
+            playerId: skavenPlayers[5].id, // Thrower
+            playerName: skavenPlayers[5].name,
+            playerTeam: "A",
+            diceResult: 5,
+            fumble: false,
+            passType: "courte",
+          });
+
+          actions.push({
+            matchId: localMatch.id,
+            half: 1,
+            turn: 3,
+            actionType: "reception",
+            playerId: skavenPlayers[4].id, // Gutter Runner 2
+            playerName: skavenPlayers[4].name,
+            playerTeam: "A",
+            diceResult: 3,
+            fumble: false,
+          });
+
+          actions.push({
+            matchId: localMatch.id,
+            half: 1,
+            turn: 3,
+            actionType: "sprint",
+            playerId: skavenPlayers[4].id, // Gutter Runner 2
+            playerName: skavenPlayers[4].name,
+            playerTeam: "A",
+            diceResult: 4,
+            fumble: false,
+          });
+
+          actions.push({
+            matchId: localMatch.id,
+            half: 1,
+            turn: 3,
+            actionType: "td",
+            playerId: skavenPlayers[4].id, // Gutter Runner 2
+            playerName: skavenPlayers[4].name,
+            playerTeam: "A",
+          });
+
+          // MI-TEMPS 1 - Tour 4 (Équipe B - Lizardmen)
+          actions.push({
+            matchId: localMatch.id,
+            half: 1,
+            turn: 4,
+            actionType: "aggression",
+            playerId: lizardmenPlayers[0].id, // Chameleon Skink 1
+            playerName: lizardmenPlayers[0].name,
+            playerTeam: "B",
+            opponentId: skavenPlayers[7].id, // Lineman 2
+            opponentName: skavenPlayers[7].name,
+            diceResult: 6,
+            fumble: false,
+            armorBroken: true,
+            opponentState: "ko",
+          });
+
+          actions.push({
+            matchId: localMatch.id,
+            half: 1,
+            turn: 4,
+            actionType: "blocage",
+            playerId: lizardmenPlayers[4].id, // Saurus 2
+            playerName: lizardmenPlayers[4].name,
+            playerTeam: "B",
+            opponentId: skavenPlayers[8].id, // Lineman 3
+            opponentName: skavenPlayers[8].name,
+            diceResult: 3,
+            fumble: false,
+            armorBroken: false,
+          });
+
+          // MI-TEMPS 1 - Tour 5 (Équipe A - Skavens)
+          actions.push({
+            matchId: localMatch.id,
+            half: 1,
+            turn: 5,
+            actionType: "blitz",
+            playerId: skavenPlayers[2].id, // Blitzer 2
+            playerName: skavenPlayers[2].name,
+            playerTeam: "A",
+            opponentId: lizardmenPlayers[5].id, // Saurus 3
+            opponentName: lizardmenPlayers[5].name,
+            diceResult: 5,
+            fumble: false,
+            armorBroken: true,
+            opponentState: "sonne",
+          });
+
+          actions.push({
+            matchId: localMatch.id,
+            half: 1,
+            turn: 5,
+            actionType: "esquive",
+            playerId: skavenPlayers[3].id, // Gutter Runner 1
+            playerName: skavenPlayers[3].name,
+            playerTeam: "A",
+            diceResult: 1,
+            fumble: true,
+            playerState: "ko",
+          });
+
+          actions.push({
+            matchId: localMatch.id,
+            half: 1,
+            turn: 5,
+            actionType: "apothicaire",
+            playerId: skavenPlayers[3].id, // Gutter Runner 1
+            playerName: skavenPlayers[3].name,
+            playerTeam: "A",
+            diceResult: 4,
+            fumble: false,
+          });
+
+          // MI-TEMPS 1 - Tour 6 (Équipe B - Lizardmen)
+          actions.push({
+            matchId: localMatch.id,
+            half: 1,
+            turn: 6,
+            actionType: "transmission",
+            playerId: lizardmenPlayers[8].id, // Skink Runner 1
+            playerName: lizardmenPlayers[8].name,
+            playerTeam: "B",
+            opponentId: lizardmenPlayers[9].id, // Skink Runner 2
+            opponentName: lizardmenPlayers[9].name,
+            diceResult: 2,
+            fumble: false,
+          });
+
+          actions.push({
+            matchId: localMatch.id,
+            half: 1,
+            turn: 6,
+            actionType: "sprint",
+            playerId: lizardmenPlayers[9].id, // Skink Runner 2
+            playerName: lizardmenPlayers[9].name,
+            playerTeam: "B",
+            diceResult: 5,
+            fumble: false,
+          });
+
+          actions.push({
+            matchId: localMatch.id,
+            half: 1,
+            turn: 6,
+            actionType: "esquive",
+            playerId: lizardmenPlayers[9].id, // Skink Runner 2
+            playerName: lizardmenPlayers[9].name,
+            playerTeam: "B",
+            diceResult: 3,
+            fumble: false,
+          });
+
+          actions.push({
+            matchId: localMatch.id,
+            half: 1,
+            turn: 6,
+            actionType: "td",
+            playerId: lizardmenPlayers[9].id, // Skink Runner 2
+            playerName: lizardmenPlayers[9].name,
+            playerTeam: "B",
+          });
+
+          // MI-TEMPS 1 - Tour 7 (Équipe A - Skavens)
+          actions.push({
+            matchId: localMatch.id,
+            half: 1,
+            turn: 7,
+            actionType: "blocage",
+            playerId: skavenPlayers[0].id, // Rat Ogre
+            playerName: skavenPlayers[0].name,
+            playerTeam: "A",
+            opponentId: lizardmenPlayers[2].id, // Kroxigor
+            opponentName: lizardmenPlayers[2].name,
+            diceResult: 6,
+            fumble: false,
+            armorBroken: true,
+            opponentState: "ko",
+          });
+
+          actions.push({
+            matchId: localMatch.id,
+            half: 1,
+            turn: 7,
+            actionType: "blocage",
+            playerId: skavenPlayers[1].id, // Blitzer 1
+            playerName: skavenPlayers[1].name,
+            playerTeam: "A",
+            opponentId: lizardmenPlayers[4].id, // Saurus 2
+            opponentName: lizardmenPlayers[4].name,
+            diceResult: 4,
+            fumble: false,
+            armorBroken: false,
+          });
+
+          // MI-TEMPS 1 - Tour 8 (Équipe B - Lizardmen)
+          actions.push({
+            matchId: localMatch.id,
+            half: 1,
+            turn: 8,
+            actionType: "blitz",
+            playerId: lizardmenPlayers[3].id, // Saurus 1
+            playerName: lizardmenPlayers[3].name,
+            playerTeam: "B",
+            opponentId: skavenPlayers[9].id, // Lineman 4
+            opponentName: skavenPlayers[9].name,
+            diceResult: 5,
+            fumble: false,
+            armorBroken: true,
+            opponentState: "elimine",
+          });
+
+          actions.push({
+            matchId: localMatch.id,
+            half: 1,
+            turn: 8,
+            actionType: "apothicaire",
+            playerId: skavenPlayers[9].id, // Lineman 4
+            playerName: skavenPlayers[9].name,
+            playerTeam: "A",
+            diceResult: 2,
+            fumble: true,
+          });
+
+          // MI-TEMPS 2 - Tour 1 (Équipe B - Lizardmen)
+          actions.push({
+            matchId: localMatch.id,
+            half: 2,
+            turn: 1,
+            actionType: "blocage",
+            playerId: lizardmenPlayers[2].id, // Kroxigor
+            playerName: lizardmenPlayers[2].name,
+            playerTeam: "B",
+            opponentId: skavenPlayers[0].id, // Rat Ogre
+            opponentName: skavenPlayers[0].name,
+            diceResult: 5,
+            fumble: false,
+            armorBroken: true,
+            opponentState: "sonne",
+          });
+
+          actions.push({
+            matchId: localMatch.id,
+            half: 2,
+            turn: 1,
+            actionType: "passe",
+            playerId: lizardmenPlayers[8].id, // Skink Runner 1
+            playerName: lizardmenPlayers[8].name,
+            playerTeam: "B",
+            diceResult: 4,
+            fumble: false,
+            passType: "rapide",
+          });
+
+          actions.push({
+            matchId: localMatch.id,
+            half: 2,
+            turn: 1,
+            actionType: "interception",
+            playerId: skavenPlayers[3].id, // Gutter Runner 1
+            playerName: skavenPlayers[3].name,
+            playerTeam: "A",
+            opponentId: lizardmenPlayers[8].id, // Skink Runner 1
+            opponentName: lizardmenPlayers[8].name,
+            diceResult: 6,
+            fumble: false,
+          });
+
+          // MI-TEMPS 2 - Tour 2 (Équipe A - Skavens)
+          actions.push({
+            matchId: localMatch.id,
+            half: 2,
+            turn: 2,
+            actionType: "sprint",
+            playerId: skavenPlayers[3].id, // Gutter Runner 1
+            playerName: skavenPlayers[3].name,
+            playerTeam: "A",
+            diceResult: 2,
+            fumble: false,
+          });
+
+          actions.push({
+            matchId: localMatch.id,
+            half: 2,
+            turn: 2,
+            actionType: "esquive",
+            playerId: skavenPlayers[3].id, // Gutter Runner 1
+            playerName: skavenPlayers[3].name,
+            playerTeam: "A",
+            diceResult: 4,
+            fumble: false,
+          });
+
+          actions.push({
+            matchId: localMatch.id,
+            half: 2,
+            turn: 2,
+            actionType: "td",
+            playerId: skavenPlayers[3].id, // Gutter Runner 1
+            playerName: skavenPlayers[3].name,
+            playerTeam: "A",
+          });
+
+          // MI-TEMPS 2 - Tour 3 (Équipe B - Lizardmen)
+          actions.push({
+            matchId: localMatch.id,
+            half: 2,
+            turn: 3,
+            actionType: "blitz",
+            playerId: lizardmenPlayers[4].id, // Saurus 2
+            playerName: lizardmenPlayers[4].name,
+            playerTeam: "B",
+            opponentId: skavenPlayers[1].id, // Blitzer 1
+            opponentName: skavenPlayers[1].name,
+            diceResult: 3,
+            fumble: false,
+            armorBroken: false,
+          });
+
+          actions.push({
+            matchId: localMatch.id,
+            half: 2,
+            turn: 3,
+            actionType: "blocage",
+            playerId: lizardmenPlayers[5].id, // Saurus 3
+            playerName: lizardmenPlayers[5].name,
+            playerTeam: "B",
+            opponentId: skavenPlayers[2].id, // Blitzer 2
+            opponentName: skavenPlayers[2].name,
+            diceResult: 6,
+            fumble: false,
+            armorBroken: true,
+            opponentState: "ko",
+          });
+
+          // MI-TEMPS 2 - Tour 4 (Équipe A - Skavens)
+          actions.push({
+            matchId: localMatch.id,
+            half: 2,
+            turn: 4,
+            actionType: "aggression",
+            playerId: skavenPlayers[0].id, // Rat Ogre
+            playerName: skavenPlayers[0].name,
+            playerTeam: "A",
+            opponentId: lizardmenPlayers[3].id, // Saurus 1
+            opponentName: lizardmenPlayers[3].name,
+            diceResult: 5,
+            fumble: false,
+            armorBroken: true,
+            opponentState: "ko",
+          });
+
+          actions.push({
+            matchId: localMatch.id,
+            half: 2,
+            turn: 4,
+            actionType: "blocage",
+            playerId: skavenPlayers[1].id, // Blitzer 1
+            playerName: skavenPlayers[1].name,
+            playerTeam: "A",
+            opponentId: lizardmenPlayers[8].id, // Skink Runner 1
+            opponentName: lizardmenPlayers[8].name,
+            diceResult: 4,
+            fumble: false,
+            armorBroken: true,
+            opponentState: "sonne",
+          });
+
+          // MI-TEMPS 2 - Tour 5 (Équipe B - Lizardmen)
+          actions.push({
+            matchId: localMatch.id,
+            half: 2,
+            turn: 5,
+            actionType: "passe",
+            playerId: lizardmenPlayers[9].id, // Skink Runner 2
+            playerName: lizardmenPlayers[9].name,
+            playerTeam: "B",
+            diceResult: 3,
+            fumble: false,
+            passType: "courte",
+          });
+
+          actions.push({
+            matchId: localMatch.id,
+            half: 2,
+            turn: 5,
+            actionType: "reception",
+            playerId: lizardmenPlayers[10].id, // Skink Runner 3
+            playerName: lizardmenPlayers[10].name,
+            playerTeam: "B",
+            diceResult: 2,
+            fumble: false,
+          });
+
+          actions.push({
+            matchId: localMatch.id,
+            half: 2,
+            turn: 5,
+            actionType: "sprint",
+            playerId: lizardmenPlayers[10].id, // Skink Runner 3
+            playerName: lizardmenPlayers[10].name,
+            playerTeam: "B",
+            diceResult: 4,
+            fumble: false,
+          });
+
+          // MI-TEMPS 2 - Tour 6 (Équipe A - Skavens)
+          actions.push({
+            matchId: localMatch.id,
+            half: 2,
+            turn: 6,
+            actionType: "blitz",
+            playerId: skavenPlayers[2].id, // Blitzer 2
+            playerName: skavenPlayers[2].name,
+            playerTeam: "A",
+            opponentId: lizardmenPlayers[10].id, // Skink Runner 3
+            opponentName: lizardmenPlayers[10].name,
+            diceResult: 5,
+            fumble: false,
+            armorBroken: true,
+            opponentState: "ko",
+          });
+
+          actions.push({
+            matchId: localMatch.id,
+            half: 2,
+            turn: 6,
+            actionType: "esquive",
+            playerId: skavenPlayers[4].id, // Gutter Runner 2
+            playerName: skavenPlayers[4].name,
+            playerTeam: "A",
+            diceResult: 1,
+            fumble: true,
+            playerState: "sonne",
+          });
+
+          // MI-TEMPS 2 - Tour 7 (Équipe B - Lizardmen)
+          actions.push({
+            matchId: localMatch.id,
+            half: 2,
+            turn: 7,
+            actionType: "blocage",
+            playerId: lizardmenPlayers[4].id, // Saurus 2
+            playerName: lizardmenPlayers[4].name,
+            playerTeam: "B",
+            opponentId: skavenPlayers[10].id, // Lineman 5
+            opponentName: skavenPlayers[10].name,
+            diceResult: 4,
+            fumble: false,
+            armorBroken: false,
+          });
+
+          actions.push({
+            matchId: localMatch.id,
+            half: 2,
+            turn: 7,
+            actionType: "blocage",
+            playerId: lizardmenPlayers[5].id, // Saurus 3
+            playerName: lizardmenPlayers[5].name,
+            playerTeam: "B",
+            opponentId: skavenPlayers[11].id, // Lineman 6
+            opponentName: skavenPlayers[11].name,
+            diceResult: 5,
+            fumble: false,
+            armorBroken: true,
+            opponentState: "ko",
+          });
+
+          // MI-TEMPS 2 - Tour 8 (Équipe A - Skavens)
+          actions.push({
+            matchId: localMatch.id,
+            half: 2,
+            turn: 8,
+            actionType: "passe",
+            playerId: skavenPlayers[5].id, // Thrower
+            playerName: skavenPlayers[5].name,
+            playerTeam: "A",
+            diceResult: 6,
+            fumble: false,
+            passType: "longue",
+          });
+
+          actions.push({
+            matchId: localMatch.id,
+            half: 2,
+            turn: 8,
+            actionType: "reception",
+            playerId: skavenPlayers[3].id, // Gutter Runner 1
+            playerName: skavenPlayers[3].name,
+            playerTeam: "A",
+            diceResult: 4,
+            fumble: false,
+          });
+
+          actions.push({
+            matchId: localMatch.id,
+            half: 2,
+            turn: 8,
+            actionType: "sprint",
+            playerId: skavenPlayers[3].id, // Gutter Runner 1
+            playerName: skavenPlayers[3].name,
+            playerTeam: "A",
+            diceResult: 3,
+            fumble: false,
+          });
+
+          actions.push({
+            matchId: localMatch.id,
+            half: 2,
+            turn: 8,
+            actionType: "esquive",
+            playerId: skavenPlayers[3].id, // Gutter Runner 1
+            playerName: skavenPlayers[3].name,
+            playerTeam: "A",
+            diceResult: 2,
+            fumble: false,
+          });
+
+          // Créer toutes les actions
+          await prisma.localMatchAction.createMany({
+            data: actions,
+          });
+          console.log(`   ✅ ${actions.length} actions générées pour le match`);
+        } else {
+          console.log(`   ⚠️  Le match a déjà ${existingActions.length} actions`);
+        }
       }
     } else {
       console.log("   ⚠️  Impossible de créer la coupe : équipes non trouvées");

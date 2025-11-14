@@ -28,7 +28,7 @@ type LocalMatch = {
       id: string;
       coachName: string;
     };
-  };
+  } | null;
   cup: {
     id: string;
     name: string;
@@ -221,12 +221,20 @@ export default function LocalMatchesPage() {
                         <p className="text-sm text-gray-600 mb-1">
                           Équipe B
                         </p>
-                        <p className="font-semibold text-nuffle-anthracite">
-                          {match.teamB.name}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {match.teamB.roster}
-                        </p>
+                        {match.teamB ? (
+                          <>
+                            <p className="font-semibold text-nuffle-anthracite">
+                              {match.teamB.name}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {match.teamB.roster}
+                            </p>
+                          </>
+                        ) : (
+                          <p className="font-semibold text-gray-400 italic">
+                            En attente d'une équipe
+                          </p>
+                        )}
                       </div>
                     </div>
                     {match.status === "completed" &&
