@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { API_BASE } from "../../auth-client";
 
-type ActionType = "passe" | "reception" | "td" | "blocage" | "blitz" | "elimination" | "aggression" | "sprint" | "esquive" | "apothicaire";
+type ActionType = "passe" | "reception" | "td" | "blocage" | "blitz" | "transmission" | "aggression" | "sprint" | "esquive" | "apothicaire" | "interception";
 
 type LocalMatchAction = {
   id: string;
@@ -16,6 +16,10 @@ type LocalMatchAction = {
   opponentName: string | null;
   diceResult: number | null;
   fumble: boolean;
+  playerState: string | null;
+  armorBroken: boolean;
+  opponentState: string | null;
+  passType: string | null;
   createdAt: string;
 };
 
@@ -102,6 +106,10 @@ export default function LocalMatchActions({
     opponentTeam: "A" as "A" | "B",
     diceResult: "" as string | number,
     fumble: false,
+    playerState: "" as string,
+    armorBroken: false,
+    opponentState: "" as string,
+    passType: "" as string,
   });
 
   useEffect(() => {
@@ -137,11 +145,11 @@ export default function LocalMatchActions({
       return;
     }
 
-    // Trouver l'adversaire si nécessaire (pour élimination, blocage, blitz, agression)
+    // Trouver l'adversaire si nécessaire (pour blocage, blitz, agression)
     let opponentId: string | null = null;
     let opponentName: string | null = null;
     
-    const actionsWithOpponent = ["elimination", "blocage", "blitz", "aggression"];
+    const actionsWithOpponent = ["blocage", "blitz", "aggression"];
     if (actionsWithOpponent.includes(formData.actionType) && formData.opponentId) {
       const opponentTeam = formData.opponentTeam === "A" ? teamA : teamB;
       const opponent = opponentTeam?.players?.find((p) => p.id === formData.opponentId);
@@ -160,6 +168,30 @@ export default function LocalMatchActions({
       }
     }
 
+    // Traiter les champs spécifiques pour blitz et blocage
+    let armorBroken = false;
+    let opponentState: string | null = null;
+    if (["blitz", "blocage"].includes(formData.actionType)) {
+      armorBroken = formData.armorBroken;
+      if (armorBroken && formData.opponentState) {
+        opponentState = formData.opponentState;
+      }
+    }
+
+    // Traiter le type de passe
+    let passType: string | null = null;
+    if (formData.actionType === "passe" && formData.passType) {
+      passType = formData.passType;
+    }
+
+    // Traiter l'état du joueur en cas d'échec
+    // Sauf pour passe, transmission, réception, apothicaire, interception
+    const actionsWithoutPlayerState = ["passe", "transmission", "reception", "apothicaire", "interception"];
+    let playerState: string | null = null;
+    if (formData.fumble && !actionsWithoutPlayerState.includes(formData.actionType) && formData.playerState) {
+      playerState = formData.playerState;
+    }
+
     setSaving(true);
     setError(null);
     try {
@@ -174,6 +206,10 @@ export default function LocalMatchActions({
         opponentName,
         diceResult,
         fumble: formData.fumble,
+        playerState,
+        armorBroken,
+        opponentState,
+        passType,
       });
       
       // Réinitialiser le formulaire
@@ -187,6 +223,10 @@ export default function LocalMatchActions({
         opponentTeam: "A",
         diceResult: "",
         fumble: false,
+        playerState: "",
+        armorBroken: false,
+        opponentState: "",
+        passType: "",
       });
       loadActions();
     } catch (e: any) {
@@ -223,8 +263,8 @@ export default function LocalMatchActions({
         return "Blocage";
       case "blitz":
         return "Blitz";
-      case "elimination":
-        return "Élimination";
+      case "transmission":
+        return "Transmission";
       case "aggression":
         return "Agression";
       case "sprint":
@@ -233,6 +273,8 @@ export default function LocalMatchActions({
         return "Esquive";
       case "apothicaire":
         return "Apothicaire";
+      case "interception":
+        return "Interception";
       default:
         return type;
     }
@@ -248,7 +290,8 @@ export default function LocalMatchActions({
       case "blocage":
       case "blitz":
         return "bg-yellow-100 text-yellow-800";
-      case "elimination":
+      case "transmission":
+        return "bg-cyan-100 text-cyan-800";
       case "aggression":
         return "bg-red-100 text-red-800";
       case "sprint":
@@ -256,6 +299,8 @@ export default function LocalMatchActions({
         return "bg-purple-100 text-purple-800";
       case "apothicaire":
         return "bg-indigo-100 text-indigo-800";
+      case "interception":
+        return "bg-orange-100 text-orange-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -265,8 +310,13 @@ export default function LocalMatchActions({
   const opponentTeam = formData.opponentTeam === "A" ? teamA : teamB;
 
   // Vérifier que les équipes ont des joueurs
-  const currentTeamPlayers = Array.isArray(currentTeam?.players) ? currentTeam.players : [];
-  const opponentTeamPlayers = Array.isArray(opponentTeam?.players) ? opponentTeam.players : [];
+  // S'assurer que les joueurs sont bien chargés avant de les utiliser
+  const currentTeamPlayers = Array.isArray(currentTeam?.players) && currentTeam.players.length > 0 
+    ? currentTeam.players 
+    : (currentTeam?.players === undefined ? [] : []);
+  const opponentTeamPlayers = Array.isArray(opponentTeam?.players) && opponentTeam.players.length > 0
+    ? opponentTeam.players
+    : (opponentTeam?.players === undefined ? [] : []);
 
   // Debug: afficher un message si pas de joueurs
   useEffect(() => {
@@ -354,13 +404,36 @@ export default function LocalMatchActions({
                 <option value="td">Touchdown</option>
                 <option value="blocage">Blocage</option>
                 <option value="blitz">Blitz</option>
-                <option value="elimination">Élimination</option>
+                <option value="transmission">Transmission</option>
                 <option value="aggression">Agression</option>
                 <option value="sprint">Sprint</option>
                 <option value="esquive">Esquive</option>
                 <option value="apothicaire">Apothicaire</option>
+                <option value="interception">Interception</option>
               </select>
             </div>
+
+            {/* Type de passe - affiché uniquement pour les passes */}
+            {formData.actionType === "passe" && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Type de passe
+                </label>
+                <select
+                  value={formData.passType}
+                  onChange={(e) =>
+                    setFormData({ ...formData, passType: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                >
+                  <option value="">Aucun type spécifique</option>
+                  <option value="rapide">Passe rapide</option>
+                  <option value="courte">Passe courte</option>
+                  <option value="longue">Passe longue</option>
+                  <option value="longue_bombe">Longue bombe</option>
+                </select>
+              </div>
+            )}
 
             {/* Équipe et Joueur sur la même ligne */}
             <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -412,7 +485,7 @@ export default function LocalMatchActions({
               </div>
             </div>
 
-            {["elimination", "blocage", "blitz", "aggression"].includes(formData.actionType) && (
+            {["blocage", "blitz", "aggression"].includes(formData.actionType) && (
               <>
                 {/* Équipe et Adversaire sur la même ligne */}
                 <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -459,6 +532,51 @@ export default function LocalMatchActions({
               </>
             )}
 
+            {/* Champs spécifiques pour blitz et blocage */}
+            {["blitz", "blocage"].includes(formData.actionType) && (
+              <>
+                <div className="md:col-span-2">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.armorBroken}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          armorBroken: e.target.checked,
+                          opponentState: e.target.checked ? formData.opponentState : "", // Réinitialiser si armure non passée
+                        })
+                      }
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <span className="text-sm font-medium text-gray-700">
+                      Armure passée
+                    </span>
+                  </label>
+                </div>
+
+                {formData.armorBroken && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      État de l'adversaire
+                    </label>
+                    <select
+                      value={formData.opponentState}
+                      onChange={(e) =>
+                        setFormData({ ...formData, opponentState: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    >
+                      <option value="">Sélectionner un état</option>
+                      <option value="sonne">Sonné</option>
+                      <option value="ko">KO</option>
+                      <option value="elimine">Éliminé</option>
+                    </select>
+                  </div>
+                )}
+              </>
+            )}
+
             {/* Résultat du dé et Fumble sur la même ligne */}
             <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -486,7 +604,11 @@ export default function LocalMatchActions({
                     type="checkbox"
                     checked={formData.fumble}
                     onChange={(e) =>
-                      setFormData({ ...formData, fumble: e.target.checked })
+                      setFormData({
+                        ...formData,
+                        fumble: e.target.checked,
+                        playerState: e.target.checked ? formData.playerState : "", // Réinitialiser si fumble désactivé
+                      })
                     }
                     className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
                   />
@@ -496,6 +618,27 @@ export default function LocalMatchActions({
                 </label>
               </div>
             </div>
+
+            {/* État du joueur en cas d'échec - affiché uniquement si fumble est true et que l'action n'est pas dans la liste des exceptions */}
+            {formData.fumble && !["passe", "transmission", "reception", "apothicaire", "interception"].includes(formData.actionType) && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  État du joueur (en cas d'échec)
+                </label>
+                <select
+                  value={formData.playerState}
+                  onChange={(e) =>
+                    setFormData({ ...formData, playerState: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                >
+                  <option value="">Aucun état (pas de dégâts)</option>
+                  <option value="sonne">Sonné</option>
+                  <option value="ko">KO</option>
+                  <option value="elimine">Éliminé</option>
+                </select>
+              </div>
+            )}
           </div>
 
           <div className="mt-4 flex justify-end">
@@ -543,10 +686,22 @@ export default function LocalMatchActions({
                   Adversaire
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                  Type passe
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                  Armure
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                  État adv.
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
                   Dé
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
                   Fumble
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                  État joueur
                 </th>
                 <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">
                   Actions
@@ -588,6 +743,40 @@ export default function LocalMatchActions({
                   <td className="px-4 py-3 text-sm text-gray-600">
                     {action.opponentName || "—"}
                   </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">
+                    {action.passType ? (
+                      <span className="text-xs">
+                        {action.passType === "rapide" ? "Rapide" :
+                         action.passType === "courte" ? "Courte" :
+                         action.passType === "longue" ? "Longue" :
+                         action.passType === "longue_bombe" ? "Longue bombe" :
+                         action.passType}
+                      </span>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    {action.armorBroken ? (
+                      <span className="inline-flex px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                        ✓
+                      </span>
+                    ) : (
+                      <span className="text-gray-400">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">
+                    {action.opponentState ? (
+                      <span className="text-xs">
+                        {action.opponentState === "sonne" ? "Sonné" :
+                         action.opponentState === "ko" ? "KO" :
+                         action.opponentState === "elimine" ? "Éliminé" :
+                         action.opponentState}
+                      </span>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-sm text-gray-900">
                     {action.diceResult !== null && action.diceResult !== undefined ? (
                       <span className="font-mono font-semibold">{action.diceResult}</span>
@@ -602,6 +791,18 @@ export default function LocalMatchActions({
                       </span>
                     ) : (
                       <span className="text-gray-400">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">
+                    {action.playerState ? (
+                      <span className="text-xs">
+                        {action.playerState === "sonne" ? "Sonné" :
+                         action.playerState === "ko" ? "KO" :
+                         action.playerState === "elimine" ? "Éliminé" :
+                         action.playerState}
+                      </span>
+                    ) : (
+                      "—"
                     )}
                   </td>
                   <td className="px-4 py-3 text-right">

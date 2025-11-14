@@ -201,7 +201,7 @@ model LocalMatchAction {
   // Informations sur l'action
   half      Int      // Mi-temps (1 ou 2)
   turn      Int      // Tour (1-8)
-  actionType String   // Type d'action: "passe", "reception", "td", "blocage", "blitz", "elimination", "aggression", "sprint", "esquive", "apothicaire"
+  actionType String   // Type d'action: "passe", "reception", "td", "blocage", "blitz", "transmission", "aggression", "sprint", "esquive", "apothicaire", "interception"
   
   // Joueur qui effectue l'action
   playerId  String   // ID du joueur (peut être un ID de joueur de l'équipe A ou B)
@@ -217,6 +217,16 @@ model LocalMatchAction {
   
   // Échec (fumble)
   fumble     Boolean @default(false) // Si true, l'action a échoué (fumble)
+  
+  // État du joueur en cas d'échec (sauf pour passe, transmission, réception, apothicaire, interception)
+  playerState String? // État du joueur si l'action échoue: "sonne", "ko", "elimine"
+  
+  // Champs spécifiques pour blitz et blocage
+  armorBroken Boolean @default(false) // Si true, l'armure de l'adversaire est passée
+  opponentState String? // État de l'adversaire si armure passée: "sonne", "ko", "elimine"
+  
+  // Champ spécifique pour passe
+  passType String? // Type de passe: "rapide", "courte", "longue", "longue_bombe"
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

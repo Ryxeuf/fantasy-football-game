@@ -131,6 +131,25 @@ export default function LocalMatchPage() {
     loadLocalMatch();
   }, [matchId]);
 
+  // Recharger si les joueurs ne sont pas disponibles
+  useEffect(() => {
+    if (localMatch && localMatch.status === "in_progress") {
+      const hasPlayers = 
+        localMatch.teamA?.players !== undefined && 
+        localMatch.teamB?.players !== undefined &&
+        Array.isArray(localMatch.teamA.players) &&
+        Array.isArray(localMatch.teamB.players);
+      
+      if (!hasPlayers) {
+        // Recharger après un court délai pour laisser le temps à l'API de répondre
+        const timer = setTimeout(() => {
+          loadLocalMatch();
+        }, 100);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [localMatch]);
+
   const loadLocalMatch = async () => {
     setLoading(true);
     setError(null);
@@ -141,6 +160,10 @@ export default function LocalMatchPage() {
         teamB: data?.teamB?.name,
         teamAPlayers: data?.teamA?.players?.length || 0,
         teamBPlayers: data?.teamB?.players?.length || 0,
+        teamAPlayersDefined: data?.teamA?.players !== undefined,
+        teamBPlayersDefined: data?.teamB?.players !== undefined,
+        teamAPlayersIsArray: Array.isArray(data?.teamA?.players),
+        teamBPlayersIsArray: Array.isArray(data?.teamB?.players),
       });
       setLocalMatch(data);
     } catch (e: any) {
@@ -369,19 +392,25 @@ export default function LocalMatchPage() {
                 Cette partie se joue en mode offline. Enregistrez manuellement toutes les actions effectuées pendant la partie.
               </p>
             </div>
-            <LocalMatchActions
-              matchId={matchId}
-              teamA={{
-                id: localMatch.teamA.id,
-                name: localMatch.teamA.name,
-                players: Array.isArray(localMatch.teamA.players) ? localMatch.teamA.players : [],
-              }}
-              teamB={{
-                id: localMatch.teamB.id,
-                name: localMatch.teamB.name,
-                players: Array.isArray(localMatch.teamB.players) ? localMatch.teamB.players : [],
-              }}
-            />
+            {localMatch.teamA?.players !== undefined && localMatch.teamB?.players !== undefined ? (
+              <LocalMatchActions
+                matchId={matchId}
+                teamA={{
+                  id: localMatch.teamA.id,
+                  name: localMatch.teamA.name,
+                  players: Array.isArray(localMatch.teamA.players) ? localMatch.teamA.players : [],
+                }}
+                teamB={{
+                  id: localMatch.teamB.id,
+                  name: localMatch.teamB.name,
+                  players: Array.isArray(localMatch.teamB.players) ? localMatch.teamB.players : [],
+                }}
+              />
+            ) : (
+              <div className="bg-white border border-gray-200 rounded-lg p-8 text-center shadow-sm">
+                <p className="text-nuffle-anthracite">Chargement des joueurs...</p>
+              </div>
+            )}
           </div>
         )}
 

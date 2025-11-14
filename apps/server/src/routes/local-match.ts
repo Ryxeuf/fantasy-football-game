@@ -631,7 +631,7 @@ router.get("/:id/actions", authUser, async (req: AuthenticatedRequest, res) => {
 // POST /local-match/:id/actions - Créer une nouvelle action
 router.post("/:id/actions", authUser, async (req: AuthenticatedRequest, res) => {
   try {
-    const { half, turn, actionType, playerId, playerName, playerTeam, opponentId, opponentName, diceResult, fumble } = req.body;
+    const { half, turn, actionType, playerId, playerName, playerTeam, opponentId, opponentName, diceResult, fumble, armorBroken, opponentState, passType, playerState } = req.body;
     
     // Validation
     if (!half || !turn || !actionType || !playerId || !playerName || !playerTeam) {
@@ -646,7 +646,7 @@ router.post("/:id/actions", authUser, async (req: AuthenticatedRequest, res) => 
       return res.status(400).json({ error: "Le tour doit être entre 1 et 8" });
     }
     
-    const validActionTypes = ["passe", "reception", "td", "blocage", "blitz", "elimination", "aggression", "sprint", "esquive", "apothicaire"];
+    const validActionTypes = ["passe", "reception", "td", "blocage", "blitz", "transmission", "aggression", "sprint", "esquive", "apothicaire", "interception"];
     if (!validActionTypes.includes(actionType)) {
       return res.status(400).json({ error: `Type d'action invalide. Doit être l'un de: ${validActionTypes.join(", ")}` });
     }
@@ -659,6 +659,37 @@ router.post("/:id/actions", authUser, async (req: AuthenticatedRequest, res) => 
     if (diceResult !== undefined && diceResult !== null) {
       if (typeof diceResult !== "number" || diceResult < 1) {
         return res.status(400).json({ error: "Le résultat du dé doit être un nombre positif" });
+      }
+    }
+    
+    // Validation des champs spécifiques pour blitz et blocage
+    if (["blitz", "blocage"].includes(actionType)) {
+      if (armorBroken !== undefined && typeof armorBroken !== "boolean") {
+        return res.status(400).json({ error: "armorBroken doit être un booléen" });
+      }
+      if (armorBroken === true && opponentState) {
+        const validStates = ["sonne", "ko", "elimine"];
+        if (!validStates.includes(opponentState)) {
+          return res.status(400).json({ error: `opponentState invalide. Doit être l'un de: ${validStates.join(", ")}` });
+        }
+      }
+    }
+    
+    // Validation du type de passe
+    if (actionType === "passe" && passType) {
+      const validPassTypes = ["rapide", "courte", "longue", "longue_bombe"];
+      if (!validPassTypes.includes(passType)) {
+        return res.status(400).json({ error: `passType invalide. Doit être l'un de: ${validPassTypes.join(", ")}` });
+      }
+    }
+    
+    // Validation de l'état du joueur en cas d'échec
+    // Sauf pour passe, transmission, réception, apothicaire, interception
+    const actionsWithoutPlayerState = ["passe", "transmission", "reception", "apothicaire", "interception"];
+    if (fumble === true && !actionsWithoutPlayerState.includes(actionType) && playerState) {
+      const validPlayerStates = ["sonne", "ko", "elimine"];
+      if (!validPlayerStates.includes(playerState)) {
+        return res.status(400).json({ error: `playerState invalide. Doit être l'un de: ${validPlayerStates.join(", ")}` });
       }
     }
     
@@ -684,6 +715,10 @@ router.post("/:id/actions", authUser, async (req: AuthenticatedRequest, res) => 
       return res.status(403).json({ error: "Accès non autorisé" });
     }
     
+    // Déterminer si playerState doit être enregistré
+    // (actionsWithoutPlayerState est déjà déclarée plus haut)
+    const shouldSavePlayerState = fumble === true && !actionsWithoutPlayerState.includes(actionType) && playerState;
+    
     const action = await prisma.localMatchAction.create({
       data: {
         matchId: req.params.id,
@@ -697,6 +732,10 @@ router.post("/:id/actions", authUser, async (req: AuthenticatedRequest, res) => 
         opponentName: opponentName || null,
         diceResult: diceResult !== undefined && diceResult !== null ? diceResult : null,
         fumble: fumble === true,
+        playerState: shouldSavePlayerState ? playerState : null,
+        armorBroken: ["blitz", "blocage"].includes(actionType) ? (armorBroken === true) : false,
+        opponentState: ["blitz", "blocage"].includes(actionType) && armorBroken === true && opponentState ? opponentState : null,
+        passType: actionType === "passe" && passType ? passType : null,
       },
     });
     

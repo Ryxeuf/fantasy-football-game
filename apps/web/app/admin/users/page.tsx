@@ -76,6 +76,8 @@ export default function AdminUsersPage() {
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
+  const [teamDetails, setTeamDetails] = useState<any | null>(null);
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
@@ -204,6 +206,21 @@ export default function AdminUsersPage() {
       alert(e.message || "Erreur lors du chargement des détails");
       setSelectedUser(null);
     }
+  };
+
+  const loadTeamDetails = async (teamId: string) => {
+    setSelectedTeam(teamId);
+    try {
+      const data = await fetchJSON(`/admin/teams/${teamId}`);
+      setTeamDetails(data.team);
+    } catch (e: any) {
+      alert(e.message || "Erreur lors du chargement des détails de l'équipe");
+      setSelectedTeam(null);
+    }
+  };
+
+  const formatCurrency = (value: number) => {
+    return `${(value / 1000).toFixed(0)}k po`;
   };
 
   const SortIcon = ({ column }: { column: string }) => {
@@ -570,7 +587,17 @@ export default function AdminUsersPage() {
                       <tbody>
                         {userDetails.teams.map((team) => (
                           <tr key={team.id} className="odd:bg-white even:bg-gray-50">
-                            <td className="p-2">{team.name}</td>
+                            <td className="p-2">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  loadTeamDetails(team.id);
+                                }}
+                                className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                              >
+                                {team.name}
+                              </button>
+                            </td>
                             <td className="p-2">{team.roster}</td>
                             <td className="p-2">{team._count.players}</td>
                             <td className="p-2 text-xs text-gray-600">
@@ -615,6 +642,176 @@ export default function AdminUsersPage() {
                             </td>
                             <td className="p-2 text-xs text-gray-600">
                               {new Date(match.createdAt).toLocaleDateString("fr-FR")}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de détails d'équipe */}
+      {selectedTeam && teamDetails && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          onClick={() => {
+            setSelectedTeam(null);
+            setTeamDetails(null);
+          }}
+        >
+          <div
+            className="bg-white rounded-xl shadow-2xl p-6 max-w-4xl max-h-[90vh] overflow-y-auto w-full mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-heading font-bold text-nuffle-anthracite">
+                ⚽ Détails de l'équipe
+              </h2>
+              <button
+                onClick={() => {
+                  setSelectedTeam(null);
+                  setTeamDetails(null);
+                }}
+                className="text-gray-500 hover:text-gray-700 text-2xl leading-none transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <h3 className="font-semibold mb-2">Informations générales</h3>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-600">Nom:</span>{" "}
+                    <span className="font-medium">{teamDetails.name}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Roster:</span>{" "}
+                    <span className="px-2 py-1 rounded text-xs bg-blue-100 text-blue-700">
+                      {teamDetails.roster}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Propriétaire:</span>{" "}
+                    <span className="font-medium">
+                      {teamDetails.owner?.coachName || teamDetails.owner?.name || teamDetails.owner?.email || "—"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Email:</span>{" "}
+                    <span className="font-mono text-xs">{teamDetails.owner?.email || "—"}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Valeur d'équipe:</span>{" "}
+                    <span className="font-medium">{formatCurrency(teamDetails.teamValue || teamDetails.currentValue || 0)}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Trésor:</span>{" "}
+                    <span className="font-medium">{formatCurrency(teamDetails.treasury || 0)}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Budget initial:</span>{" "}
+                    <span className="font-medium">{formatCurrency(teamDetails.initialBudget || 0)}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Créée le:</span>{" "}
+                    {new Date(teamDetails.createdAt).toLocaleString("fr-FR")}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-2">Équipement</h3>
+                <div className="grid grid-cols-4 gap-4 text-sm">
+                  <div className="bg-blue-50 p-3 rounded">
+                    <div className="text-gray-600">Relances</div>
+                    <div className="text-2xl font-bold">{teamDetails.rerolls || 0}</div>
+                  </div>
+                  <div className="bg-green-50 p-3 rounded">
+                    <div className="text-gray-600">Pom-pom girls</div>
+                    <div className="text-2xl font-bold">{teamDetails.cheerleaders || 0}</div>
+                  </div>
+                  <div className="bg-yellow-50 p-3 rounded">
+                    <div className="text-gray-600">Assistants</div>
+                    <div className="text-2xl font-bold">{teamDetails.assistants || 0}</div>
+                  </div>
+                  <div className="bg-purple-50 p-3 rounded">
+                    <div className="text-gray-600">Fans dévoués</div>
+                    <div className="text-2xl font-bold">{teamDetails.dedicatedFans || 1}</div>
+                  </div>
+                </div>
+                {teamDetails.apothecary && (
+                  <div className="mt-2 text-sm text-green-700 font-medium">
+                    ✓ Apothicaire disponible
+                  </div>
+                )}
+              </div>
+
+              {teamDetails.players && teamDetails.players.length > 0 && (
+                <div>
+                  <h3 className="font-semibold mb-2">Joueurs ({teamDetails.players.length})</h3>
+                  <div className="border rounded overflow-hidden max-h-96 overflow-y-auto">
+                    <table className="min-w-full text-sm">
+                      <thead className="bg-gray-50 sticky top-0">
+                        <tr>
+                          <th className="text-left p-2">#</th>
+                          <th className="text-left p-2">Nom</th>
+                          <th className="text-left p-2">Position</th>
+                          <th className="text-left p-2">MA</th>
+                          <th className="text-left p-2">ST</th>
+                          <th className="text-left p-2">AG</th>
+                          <th className="text-left p-2">PA</th>
+                          <th className="text-left p-2">AV</th>
+                          <th className="text-left p-2">Compétences</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {teamDetails.players.map((player: any) => (
+                          <tr key={player.id} className="odd:bg-white even:bg-gray-50">
+                            <td className="p-2 font-medium">{player.number}</td>
+                            <td className="p-2">{player.name}</td>
+                            <td className="p-2 text-xs text-gray-600">{player.position}</td>
+                            <td className="p-2">{player.ma}</td>
+                            <td className="p-2">{player.st}</td>
+                            <td className="p-2">{player.ag}</td>
+                            <td className="p-2">{player.pa}</td>
+                            <td className="p-2">{player.av}</td>
+                            <td className="p-2 text-xs text-gray-600">
+                              {player.skills || "—"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {teamDetails.starPlayers && teamDetails.starPlayers.length > 0 && (
+                <div>
+                  <h3 className="font-semibold mb-2">Star Players ({teamDetails.starPlayers.length})</h3>
+                  <div className="border rounded overflow-hidden">
+                    <table className="min-w-full text-sm">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="text-left p-2">Slug</th>
+                          <th className="text-left p-2">Coût</th>
+                          <th className="text-left p-2">Recruté le</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {teamDetails.starPlayers.map((sp: any) => (
+                          <tr key={sp.id} className="odd:bg-white even:bg-gray-50">
+                            <td className="p-2 font-mono text-xs">{sp.starPlayerSlug}</td>
+                            <td className="p-2">{formatCurrency(sp.cost)}</td>
+                            <td className="p-2 text-xs text-gray-600">
+                              {new Date(sp.hiredAt).toLocaleDateString("fr-FR")}
                             </td>
                           </tr>
                         ))}

@@ -373,4 +373,172 @@ router.get("/stats", async (_req, res) => {
   }
 });
 
+// =============================================================================
+// ROUTES ADMIN POUR LES ÉQUIPES
+// =============================================================================
+
+// Route pour lister toutes les équipes avec filtres et pagination
+router.get("/teams", async (req, res) => {
+  try {
+    const {
+      search = "",
+      roster = "",
+      ownerId = "",
+      sortBy = "createdAt",
+      sortOrder = "desc",
+      page = "1",
+      limit = "50",
+    } = req.query;
+
+    const pageNum = parseInt(page as string, 10) || 1;
+    const limitNum = parseInt(limit as string, 10) || 50;
+    const skip = (pageNum - 1) * limitNum;
+
+    // Construire les filtres
+    const where: any = {};
+    if (search) {
+      const isPostgres = process.env.TEST_SQLITE !== "1";
+      const searchMode = isPostgres ? { mode: "insensitive" as const } : {};
+      where.name = { contains: search as string, ...searchMode };
+    }
+    if (roster) {
+      where.roster = roster;
+    }
+    if (ownerId) {
+      where.ownerId = ownerId;
+    }
+
+    // Compter le total
+    const total = await prisma.team.count({ where });
+
+    // Récupérer les équipes avec leurs statistiques
+    const teams = await prisma.team.findMany({
+      where,
+      select: {
+        id: true,
+        name: true,
+        roster: true,
+        initialBudget: true,
+        treasury: true,
+        currentValue: true,
+        teamValue: true,
+        rerolls: true,
+        cheerleaders: true,
+        assistants: true,
+        apothecary: true,
+        dedicatedFans: true,
+        createdAt: true,
+        owner: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            coachName: true,
+          },
+        },
+        _count: {
+          select: {
+            players: true,
+            starPlayers: true,
+          },
+        },
+      },
+      orderBy: { [sortBy as string]: sortOrder as "asc" | "desc" },
+      skip,
+      take: limitNum,
+    });
+
+    res.json({
+      teams,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum),
+      },
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Erreur lors de la récupération des équipes" });
+  }
+});
+
+// Route pour obtenir les détails complets d'une équipe
+router.get("/teams/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const team = await prisma.team.findUnique({
+      where: { id },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            coachName: true,
+          },
+        },
+        players: {
+          orderBy: { number: "asc" },
+        },
+        starPlayers: true,
+      },
+    });
+
+    if (!team) {
+      return res.status(404).json({ error: "Équipe non trouvée" });
+    }
+
+    res.json({ team });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Erreur lors de la récupération de l'équipe" });
+  }
+});
+
+// Route pour supprimer une équipe
+router.delete("/teams/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Vérifier si l'équipe existe
+    const team = await prisma.team.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: {
+            selections: true,
+          },
+        },
+      },
+    });
+
+    if (!team) {
+      return res.status(404).json({ error: "Équipe non trouvée" });
+    }
+
+    // Vérifier si l'équipe est utilisée dans des sélections
+    if (team._count.selections > 0) {
+      return res.status(400).json({
+        error: "Impossible de supprimer cette équipe car elle est utilisée dans des matchs",
+      });
+    }
+
+    // Supprimer les joueurs et Star Players associés
+    await prisma.teamPlayer.deleteMany({ where: { teamId: id } });
+    await prisma.teamStarPlayer.deleteMany({ where: { teamId: id } });
+
+    // Supprimer l'équipe
+    await prisma.team.delete({ where: { id } });
+
+    res.json({ ok: true });
+  } catch (e: any) {
+    if (e.code === "P2025") {
+      return res.status(404).json({ error: "Équipe non trouvée" });
+    }
+    console.error(e);
+    res.status(500).json({ error: "Erreur lors de la suppression de l'équipe" });
+  }
+});
+
 export default router;
