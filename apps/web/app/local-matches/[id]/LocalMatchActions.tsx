@@ -4,6 +4,21 @@ import { API_BASE } from "../../auth-client";
 
 type ActionType = "passe" | "reception" | "td" | "blocage" | "blitz" | "transmission" | "aggression" | "sprint" | "esquive" | "apothicaire" | "interception";
 
+// Icônes pour les types d'actions
+const ActionIcons: Record<ActionType, string> = {
+  passe: "🏈",
+  reception: "✋",
+  td: "🏆",
+  blocage: "💥",
+  blitz: "⚡",
+  transmission: "🔄",
+  aggression: "👊",
+  sprint: "💨",
+  esquive: "🌀",
+  apothicaire: "💉",
+  interception: "🛡️",
+};
+
 type LocalMatchAction = {
   id: string;
   half: number;
@@ -332,166 +347,233 @@ export default function LocalMatchActions({
   }, [formData.playerTeam, teamA, teamB, currentTeamPlayers.length]);
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-      <div className="mb-6">
-        <h2 className="text-xl font-bold text-nuffle-anthracite mb-4">
-          Actions de la partie
-        </h2>
+    <div className="space-y-6">
+      {/* Header avec style scoreboard */}
+      <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-xl p-6 shadow-2xl border-4 border-gray-700">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-3xl font-bold text-white tracking-wider uppercase">
+            📊 Actions de la partie
+          </h2>
+          <div className="flex items-center gap-4">
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 border-2 border-white/20">
+              <div className="text-xs text-gray-300 uppercase tracking-wider">Mi-temps</div>
+              <div className="text-2xl font-bold text-white">{formData.half}</div>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 border-2 border-white/20">
+              <div className="text-xs text-gray-300 uppercase tracking-wider">Tour</div>
+              <div className="text-2xl font-bold text-white">{formData.turn}</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-          {error}
+        <div className="mb-4 p-4 bg-red-500/10 border-2 border-red-500 text-red-700 rounded-xl backdrop-blur-sm">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">⚠️</span>
+            <span className="font-semibold">{error}</span>
+          </div>
         </div>
       )}
 
-      {/* Formulaire d'ajout d'action - toujours visible */}
-      <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-        <h3 className="text-lg font-semibold mb-4">Ajouter une action</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Mi-temps
-              </label>
-              <select
-                value={formData.half}
-                onChange={(e) =>
-                  setFormData({ ...formData, half: parseInt(e.target.value) })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-              >
-                <option value={1}>1</option>
-                <option value={2}>2</option>
-              </select>
+      {/* Formulaire d'ajout d'action - style carte de jeu */}
+      <div className="bg-gradient-to-br from-white via-gray-50 to-white rounded-2xl p-6 shadow-xl border-2 border-gray-200 relative overflow-hidden">
+        {/* Effet de terrain en arrière-plan */}
+        <div className="absolute inset-0 opacity-5 pointer-events-none">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(0,0,0,0.1) 20px, rgba(0,0,0,0.1) 21px),
+                              repeating-linear-gradient(90deg, transparent, transparent 20px, rgba(0,0,0,0.1) 20px, rgba(0,0,0,0.1) 21px)`,
+          }}></div>
+        </div>
+        
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="text-4xl">{ActionIcons[formData.actionType]}</div>
+            <h3 className="text-2xl font-bold text-gray-900">Ajouter une action</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Sélecteurs de mi-temps et tour - style scoreboard */}
+            <div className="md:col-span-2 grid grid-cols-2 gap-4">
+              <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 border-2 border-gray-700 shadow-lg">
+                <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">
+                  Mi-temps
+                </label>
+                <select
+                  value={formData.half}
+                  onChange={(e) =>
+                    setFormData({ ...formData, half: parseInt(e.target.value) })
+                  }
+                  className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg font-bold text-lg text-gray-900 focus:ring-4 focus:ring-nuffle-gold focus:border-nuffle-gold transition-all cursor-pointer hover:border-nuffle-gold"
+                >
+                  <option value={1}>1ère mi-temps</option>
+                  <option value={2}>2ème mi-temps</option>
+                </select>
+              </div>
+
+              <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 border-2 border-gray-700 shadow-lg">
+                <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">
+                  Tour
+                </label>
+                <select
+                  value={formData.turn}
+                  onChange={(e) =>
+                    setFormData({ ...formData, turn: parseInt(e.target.value) })
+                  }
+                  className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg font-bold text-lg text-gray-900 focus:ring-4 focus:ring-nuffle-gold focus:border-nuffle-gold transition-all cursor-pointer hover:border-nuffle-gold"
+                >
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map((t) => (
+                    <option key={t} value={t}>
+                      Tour {t}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tour
-              </label>
-              <select
-                value={formData.turn}
-                onChange={(e) =>
-                  setFormData({ ...formData, turn: parseInt(e.target.value) })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-              >
-                {[1, 2, 3, 4, 5, 6, 7, 8].map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+            {/* Type d'action - carte visuelle */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-bold text-gray-900 mb-3 uppercase tracking-wide">
                 Type d'action
               </label>
-              <select
-                value={formData.actionType}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    actionType: e.target.value as ActionType,
-                    opponentId: "", // Réinitialiser l'adversaire si on change le type
-                  })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-              >
-                <option value="passe">Passe</option>
-                <option value="reception">Réception</option>
-                <option value="td">Touchdown</option>
-                <option value="blocage">Blocage</option>
-                <option value="blitz">Blitz</option>
-                <option value="transmission">Transmission</option>
-                <option value="aggression">Agression</option>
-                <option value="sprint">Sprint</option>
-                <option value="esquive">Esquive</option>
-                <option value="apothicaire">Apothicaire</option>
-                <option value="interception">Interception</option>
-              </select>
+              <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+                {(["passe", "reception", "td", "blocage", "blitz", "transmission", "aggression", "sprint", "esquive", "apothicaire", "interception"] as ActionType[]).map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        actionType: type,
+                        opponentId: "",
+                      })
+                    }
+                    className={`p-4 rounded-xl border-2 transition-all transform hover:scale-105 active:scale-95 ${
+                      formData.actionType === type
+                        ? "bg-gradient-to-br from-nuffle-gold to-nuffle-bronze border-nuffle-gold shadow-lg scale-105"
+                        : "bg-white border-gray-300 hover:border-nuffle-gold hover:shadow-md"
+                    }`}
+                  >
+                    <div className="text-3xl mb-2">{ActionIcons[type]}</div>
+                    <div className={`text-xs font-semibold ${
+                      formData.actionType === type ? "text-white" : "text-gray-700"
+                    }`}>
+                      {getActionTypeLabel(type)}
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Type de passe - affiché uniquement pour les passes */}
             {formData.actionType === "passe" && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="md:col-span-2">
+                <label className="block text-sm font-bold text-gray-900 mb-3 uppercase tracking-wide">
                   Type de passe
                 </label>
-                <select
-                  value={formData.passType}
-                  onChange={(e) =>
-                    setFormData({ ...formData, passType: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                >
-                  <option value="">Aucun type spécifique</option>
-                  <option value="rapide">Passe rapide</option>
-                  <option value="courte">Passe courte</option>
-                  <option value="longue">Passe longue</option>
-                  <option value="longue_bombe">Longue bombe</option>
-                </select>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {[
+                    { value: "", label: "Standard", icon: "🏈" },
+                    { value: "rapide", label: "Rapide", icon: "⚡" },
+                    { value: "courte", label: "Courte", icon: "📏" },
+                    { value: "longue", label: "Longue", icon: "📐" },
+                    { value: "longue_bombe", label: "Longue bombe", icon: "💣" },
+                  ].map((pass) => (
+                    <button
+                      key={pass.value}
+                      type="button"
+                      onClick={() =>
+                        setFormData({ ...formData, passType: pass.value })
+                      }
+                      className={`p-3 rounded-xl border-2 transition-all transform hover:scale-105 ${
+                        formData.passType === pass.value
+                          ? "bg-gradient-to-br from-blue-500 to-blue-600 border-blue-600 text-white shadow-lg"
+                          : "bg-white border-gray-300 hover:border-blue-400 text-gray-700"
+                      }`}
+                    >
+                      <div className="text-2xl mb-1">{pass.icon}</div>
+                      <div className="text-xs font-semibold">{pass.label}</div>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
-            {/* Équipe et Joueur sur la même ligne */}
-            <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Équipe du joueur
-                </label>
-                <select
-                  value={formData.playerTeam}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      playerTeam: e.target.value as "A" | "B",
-                      playerId: "", // Réinitialiser le joueur si on change d'équipe
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                >
-                  <option value="A">{teamA.name} (A)</option>
-                  <option value="B">{teamB.name} (B)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Joueur
-                </label>
-                {currentTeamPlayers.length === 0 ? (
-                  <div className="w-full px-3 py-2 border border-red-300 rounded-lg bg-red-50 text-red-700 text-sm">
-                    ⚠️ Aucun joueur disponible pour cette équipe
-                  </div>
-                ) : (
+            {/* Équipe et Joueur - style carte de joueur */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-bold text-gray-900 mb-3 uppercase tracking-wide">
+                Joueur
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-4 border-2 border-red-200">
+                  <label className="block text-xs font-semibold text-red-700 uppercase tracking-wider mb-2">
+                    Équipe
+                  </label>
                   <select
-                    value={formData.playerId}
+                    value={formData.playerTeam}
                     onChange={(e) =>
-                      setFormData({ ...formData, playerId: e.target.value })
+                      setFormData({
+                        ...formData,
+                        playerTeam: e.target.value as "A" | "B",
+                        playerId: "",
+                      })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                    required
+                    className={`w-full px-4 py-3 rounded-lg font-semibold text-gray-900 border-2 transition-all ${
+                      formData.playerTeam === "A"
+                        ? "border-red-500 bg-red-50"
+                        : "border-blue-500 bg-blue-50"
+                    } focus:ring-4 focus:ring-nuffle-gold`}
                   >
-                    <option value="">Sélectionner un joueur</option>
-                    {currentTeamPlayers.map((player) => (
-                      <option key={player.id} value={player.id}>
-                        #{player.number} - {player.name}
-                      </option>
-                    ))}
+                    <option value="A" className="bg-white">{teamA.name} (A)</option>
+                    <option value="B" className="bg-white">{teamB.name} (B)</option>
                   </select>
-                )}
+                </div>
+
+                <div className={`bg-gradient-to-br rounded-xl p-4 border-2 ${
+                  formData.playerTeam === "A"
+                    ? "from-red-50 to-red-100 border-red-200"
+                    : "from-blue-50 to-blue-100 border-blue-200"
+                }`}>
+                  <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+                    Sélectionner un joueur
+                  </label>
+                  {currentTeamPlayers.length === 0 ? (
+                    <div className="w-full px-4 py-3 border-2 border-red-300 rounded-lg bg-red-50 text-red-700 text-sm font-semibold">
+                      ⚠️ Aucun joueur disponible
+                    </div>
+                  ) : (
+                    <select
+                      value={formData.playerId}
+                      onChange={(e) =>
+                        setFormData({ ...formData, playerId: e.target.value })
+                      }
+                      className={`w-full px-4 py-3 rounded-lg font-semibold text-gray-900 border-2 transition-all ${
+                        formData.playerTeam === "A"
+                          ? "border-red-500 bg-white focus:border-red-600"
+                          : "border-blue-500 bg-white focus:border-blue-600"
+                      } focus:ring-4 focus:ring-nuffle-gold`}
+                      required
+                    >
+                      <option value="">Choisir un joueur...</option>
+                      {currentTeamPlayers.map((player) => (
+                        <option key={player.id} value={player.id}>
+                          #{player.number} - {player.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
               </div>
             </div>
 
             {["blocage", "blitz", "aggression"].includes(formData.actionType) && (
-              <>
-                {/* Équipe et Adversaire sur la même ligne */}
-                <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Équipe de l'adversaire
+              <div className="md:col-span-2">
+                <label className="block text-sm font-bold text-gray-900 mb-3 uppercase tracking-wide">
+                  Adversaire
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4 border-2 border-orange-200">
+                    <label className="block text-xs font-semibold text-orange-700 uppercase tracking-wider mb-2">
+                      Équipe adverse
                     </label>
                     <select
                       value={formData.opponentTeam}
@@ -499,26 +581,38 @@ export default function LocalMatchActions({
                         setFormData({
                           ...formData,
                           opponentTeam: e.target.value as "A" | "B",
-                          opponentId: "", // Réinitialiser l'adversaire si on change d'équipe
+                          opponentId: "",
                         })
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      className={`w-full px-4 py-3 rounded-lg font-semibold text-gray-900 border-2 transition-all ${
+                        formData.opponentTeam === "A"
+                          ? "border-red-500 bg-red-50"
+                          : "border-blue-500 bg-blue-50"
+                      } focus:ring-4 focus:ring-nuffle-gold`}
                     >
-                      <option value="A">{teamA.name} (A)</option>
-                      <option value="B">{teamB.name} (B)</option>
+                      <option value="A" className="bg-white">{teamA.name} (A)</option>
+                      <option value="B" className="bg-white">{teamB.name} (B)</option>
                     </select>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Adversaire (optionnel)
+                  <div className={`bg-gradient-to-br rounded-xl p-4 border-2 ${
+                    formData.opponentTeam === "A"
+                      ? "from-red-50 to-red-100 border-red-200"
+                      : "from-blue-50 to-blue-100 border-blue-200"
+                  }`}>
+                    <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+                      Sélectionner l'adversaire
                     </label>
                     <select
                       value={formData.opponentId}
                       onChange={(e) =>
                         setFormData({ ...formData, opponentId: e.target.value })
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      className={`w-full px-4 py-3 rounded-lg font-semibold text-gray-900 border-2 transition-all ${
+                        formData.opponentTeam === "A"
+                          ? "border-red-500 bg-white focus:border-red-600"
+                          : "border-blue-500 bg-white focus:border-blue-600"
+                      } focus:ring-4 focus:ring-nuffle-gold`}
                     >
                       <option value="">Aucun adversaire</option>
                       {opponentTeamPlayers.map((player) => (
@@ -529,14 +623,14 @@ export default function LocalMatchActions({
                     </select>
                   </div>
                 </div>
-              </>
+              </div>
             )}
 
             {/* Champs spécifiques pour blitz et blocage */}
             {["blitz", "blocage"].includes(formData.actionType) && (
-              <>
-                <div className="md:col-span-2">
-                  <label className="flex items-center space-x-2 cursor-pointer">
+              <div className="md:col-span-2 space-y-4">
+                <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl p-4 border-2 border-yellow-300">
+                  <label className="flex items-center space-x-3 cursor-pointer group">
                     <input
                       type="checkbox"
                       checked={formData.armorBroken}
@@ -544,44 +638,59 @@ export default function LocalMatchActions({
                         setFormData({
                           ...formData,
                           armorBroken: e.target.checked,
-                          opponentState: e.target.checked ? formData.opponentState : "", // Réinitialiser si armure non passée
+                          opponentState: e.target.checked ? formData.opponentState : "",
                         })
                       }
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      className="w-6 h-6 text-yellow-600 border-2 border-gray-400 rounded focus:ring-4 focus:ring-yellow-500 cursor-pointer transform group-hover:scale-110 transition-transform"
                     />
-                    <span className="text-sm font-medium text-gray-700">
-                      Armure passée
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl">🛡️</span>
+                      <span className="text-lg font-bold text-gray-900">
+                        Armure passée
+                      </span>
+                    </div>
                   </label>
                 </div>
 
                 {formData.armorBroken && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-4 border-2 border-red-300">
+                    <label className="block text-sm font-bold text-gray-900 mb-3 uppercase tracking-wide">
                       État de l'adversaire
                     </label>
-                    <select
-                      value={formData.opponentState}
-                      onChange={(e) =>
-                        setFormData({ ...formData, opponentState: e.target.value })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                    >
-                      <option value="">Sélectionner un état</option>
-                      <option value="sonne">Sonné</option>
-                      <option value="ko">KO</option>
-                      <option value="elimine">Éliminé</option>
-                    </select>
+                    <div className="grid grid-cols-3 gap-3">
+                      {[
+                        { value: "", label: "Aucun", icon: "➖" },
+                        { value: "sonne", label: "Sonné", icon: "😵" },
+                        { value: "ko", label: "KO", icon: "💤" },
+                        { value: "elimine", label: "Éliminé", icon: "💀" },
+                      ].map((state) => (
+                        <button
+                          key={state.value}
+                          type="button"
+                          onClick={() =>
+                            setFormData({ ...formData, opponentState: state.value })
+                          }
+                          className={`p-3 rounded-xl border-2 transition-all transform hover:scale-105 ${
+                            formData.opponentState === state.value
+                              ? "bg-gradient-to-br from-red-500 to-red-600 border-red-600 text-white shadow-lg"
+                              : "bg-white border-gray-300 hover:border-red-400 text-gray-700"
+                          }`}
+                        >
+                          <div className="text-2xl mb-1">{state.icon}</div>
+                          <div className="text-xs font-semibold">{state.label}</div>
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
-              </>
+              </div>
             )}
 
-            {/* Résultat du dé et Fumble sur la même ligne */}
+            {/* Résultat du dé et Fumble */}
             <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Résultat du dé (optionnel, 2D6)
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border-2 border-purple-300">
+                <label className="block text-xs font-semibold text-purple-700 uppercase tracking-wider mb-2">
+                  🎲 Résultat du dé (2D6)
                 </label>
                 <input
                   type="number"
@@ -593,13 +702,13 @@ export default function LocalMatchActions({
                       diceResult: e.target.value === "" ? "" : parseInt(e.target.value, 10),
                     })
                   }
-                  placeholder="2-12 (2D6)"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  placeholder="2-12"
+                  className="w-full px-4 py-3 border-2 border-purple-400 rounded-lg font-bold text-xl text-center text-gray-900 focus:ring-4 focus:ring-purple-500 focus:border-purple-600"
                 />
               </div>
 
-              <div className="flex items-end">
-                <label className="flex items-center space-x-2 cursor-pointer">
+              <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-4 border-2 border-red-300 flex items-center justify-center">
+                <label className="flex items-center space-x-3 cursor-pointer group">
                   <input
                     type="checkbox"
                     checked={formData.fumble}
@@ -607,218 +716,224 @@ export default function LocalMatchActions({
                       setFormData({
                         ...formData,
                         fumble: e.target.checked,
-                        playerState: e.target.checked ? formData.playerState : "", // Réinitialiser si fumble désactivé
+                        playerState: e.target.checked ? formData.playerState : "",
                       })
                     }
-                    className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                    className="w-6 h-6 text-red-600 border-2 border-gray-400 rounded focus:ring-4 focus:ring-red-500 cursor-pointer transform group-hover:scale-110 transition-transform"
                   />
-                  <span className="text-sm font-medium text-gray-700">
-                    Échec (Fumble)
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">💥</span>
+                    <span className="text-lg font-bold text-gray-900">
+                      Échec (Fumble)
+                    </span>
+                  </div>
                 </label>
               </div>
             </div>
 
-            {/* État du joueur en cas d'échec - affiché uniquement si fumble est true et que l'action n'est pas dans la liste des exceptions */}
+            {/* État du joueur en cas d'échec */}
             {formData.fumble && !["passe", "transmission", "reception", "apothicaire", "interception"].includes(formData.actionType) && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="md:col-span-2 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4 border-2 border-orange-300">
+                <label className="block text-sm font-bold text-gray-900 mb-3 uppercase tracking-wide">
                   État du joueur (en cas d'échec)
                 </label>
-                <select
-                  value={formData.playerState}
-                  onChange={(e) =>
-                    setFormData({ ...formData, playerState: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                >
-                  <option value="">Aucun état (pas de dégâts)</option>
-                  <option value="sonne">Sonné</option>
-                  <option value="ko">KO</option>
-                  <option value="elimine">Éliminé</option>
-                </select>
+                <div className="grid grid-cols-4 gap-3">
+                  {[
+                    { value: "", label: "Aucun", icon: "✅" },
+                    { value: "sonne", label: "Sonné", icon: "😵" },
+                    { value: "ko", label: "KO", icon: "💤" },
+                    { value: "elimine", label: "Éliminé", icon: "💀" },
+                  ].map((state) => (
+                    <button
+                      key={state.value}
+                      type="button"
+                      onClick={() =>
+                        setFormData({ ...formData, playerState: state.value })
+                      }
+                      className={`p-3 rounded-xl border-2 transition-all transform hover:scale-105 ${
+                        formData.playerState === state.value
+                          ? "bg-gradient-to-br from-orange-500 to-orange-600 border-orange-600 text-white shadow-lg"
+                          : "bg-white border-gray-300 hover:border-orange-400 text-gray-700"
+                      }`}
+                    >
+                      <div className="text-2xl mb-1">{state.icon}</div>
+                      <div className="text-xs font-semibold">{state.label}</div>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>
 
-          <div className="mt-4 flex justify-end">
+          <div className="mt-6 flex justify-end">
             <button
               onClick={handleAddAction}
               disabled={saving || !formData.playerId}
-              className="px-6 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors disabled:opacity-50"
+              className="px-8 py-4 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center gap-3 border-2 border-green-800"
             >
-              {saving ? "Ajout..." : "Ajouter l'action"}
+              {saving ? (
+                <>
+                  <span className="animate-spin">⏳</span>
+                  <span>Enregistrement...</span>
+                </>
+              ) : (
+                <>
+                  <span>✅</span>
+                  <span>Enregistrer l'action</span>
+                </>
+              )}
             </button>
           </div>
         </div>
-
-      {/* Liste des actions */}
-      <div className="mt-6">
-        <h3 className="text-lg font-semibold mb-4">Actions enregistrées</h3>
       </div>
 
-      {loading ? (
-        <div className="text-center py-8">
-          <p className="text-gray-600">Chargement des actions...</p>
+      {/* Liste des actions - style timeline de match */}
+      <div className="bg-gradient-to-br from-white via-gray-50 to-white rounded-2xl p-6 shadow-xl border-2 border-gray-200">
+        <div className="flex items-center gap-3 mb-6">
+          <span className="text-3xl">📋</span>
+          <h3 className="text-2xl font-bold text-gray-900">Actions enregistrées</h3>
+          {actions.length > 0 && (
+            <span className="ml-auto px-4 py-2 bg-nuffle-gold text-nuffle-anthracite rounded-full font-bold text-sm">
+              {actions.length} action{actions.length > 1 ? "s" : ""}
+            </span>
+          )}
         </div>
-      ) : actions.length === 0 ? (
-        <div className="text-center py-8">
-          <p className="text-gray-600">Aucune action enregistrée</p>
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                  Mi-temps
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                  Tour
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                  Type
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                  Joueur
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                  Adversaire
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                  Type passe
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                  Armure
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                  État adv.
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                  Dé
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                  Fumble
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                  État joueur
-                </th>
-                <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {actions.map((action) => (
-                <tr
-                  key={action.id}
-                  className="border-b border-gray-100 hover:bg-gray-50"
-                >
-                  <td className="px-4 py-3 text-sm text-gray-900">
-                    {action.half}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-900">
-                    {action.turn}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${getActionTypeColor(
-                        action.actionType,
-                      )}`}
-                    >
-                      {getActionTypeLabel(action.actionType)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-900">
-                    <span
-                      className={
+
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-nuffle-gold mb-4"></div>
+            <p className="text-gray-600 font-semibold">Chargement des actions...</p>
+          </div>
+        ) : actions.length === 0 ? (
+          <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+            <div className="text-6xl mb-4">🏈</div>
+            <p className="text-gray-600 font-semibold text-lg">Aucune action enregistrée</p>
+            <p className="text-gray-500 text-sm mt-2">Les actions apparaîtront ici</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {actions.map((action, index) => (
+              <div
+                key={action.id}
+                className="bg-white rounded-xl p-5 border-2 border-gray-200 hover:border-nuffle-gold hover:shadow-lg transition-all transform hover:scale-[1.01]"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  {/* Informations principales */}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-3">
+                      {/* Badge mi-temps et tour */}
+                      <div className="flex items-center gap-2">
+                        <div className="bg-gradient-to-br from-gray-800 to-gray-900 text-white px-3 py-1 rounded-lg font-bold text-sm">
+                          MT{action.half}
+                        </div>
+                        <div className="bg-gradient-to-br from-gray-700 to-gray-800 text-white px-3 py-1 rounded-lg font-bold text-sm">
+                          T{action.turn}
+                        </div>
+                      </div>
+                      
+                      {/* Type d'action avec icône */}
+                      <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm ${getActionTypeColor(action.actionType)}`}>
+                        <span className="text-lg">{ActionIcons[action.actionType]}</span>
+                        <span>{getActionTypeLabel(action.actionType)}</span>
+                      </div>
+                    </div>
+
+                    {/* Joueur */}
+                    <div className="mb-2">
+                      <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold ${
                         action.playerTeam === "A"
-                          ? "text-red-600 font-semibold"
-                          : "text-blue-600 font-semibold"
-                      }
-                    >
-                      {action.playerName} ({action.playerTeam})
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">
-                    {action.opponentName || "—"}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">
-                    {action.passType ? (
-                      <span className="text-xs">
-                        {action.passType === "rapide" ? "Rapide" :
-                         action.passType === "courte" ? "Courte" :
-                         action.passType === "longue" ? "Longue" :
-                         action.passType === "longue_bombe" ? "Longue bombe" :
-                         action.passType}
-                      </span>
-                    ) : (
-                      "—"
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    {action.armorBroken ? (
-                      <span className="inline-flex px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
-                        ✓
-                      </span>
-                    ) : (
-                      <span className="text-gray-400">—</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">
-                    {action.opponentState ? (
-                      <span className="text-xs">
-                        {action.opponentState === "sonne" ? "Sonné" :
-                         action.opponentState === "ko" ? "KO" :
-                         action.opponentState === "elimine" ? "Éliminé" :
-                         action.opponentState}
-                      </span>
-                    ) : (
-                      "—"
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-900">
-                    {action.diceResult !== null && action.diceResult !== undefined ? (
-                      <span className="font-mono font-semibold">{action.diceResult}</span>
-                    ) : (
-                      "—"
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    {action.fumble ? (
-                      <span className="inline-flex px-2 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
-                        Oui
-                      </span>
-                    ) : (
-                      <span className="text-gray-400">—</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">
-                    {action.playerState ? (
-                      <span className="text-xs">
-                        {action.playerState === "sonne" ? "Sonné" :
-                         action.playerState === "ko" ? "KO" :
-                         action.playerState === "elimine" ? "Éliminé" :
-                         action.playerState}
-                      </span>
-                    ) : (
-                      "—"
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <button
-                      onClick={() => handleDeleteAction(action.id)}
-                      className="px-3 py-1 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
-                    >
-                      Supprimer
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+                          ? "bg-red-100 text-red-800 border-2 border-red-300"
+                          : "bg-blue-100 text-blue-800 border-2 border-blue-300"
+                      }`}>
+                        <span className="text-lg">👤</span>
+                        <span>{action.playerName}</span>
+                        <span className="text-xs opacity-75">({action.playerTeam})</span>
+                      </div>
+                    </div>
+
+                    {/* Détails supplémentaires */}
+                    <div className="flex flex-wrap items-center gap-3 mt-3">
+                      {action.opponentName && (
+                        <div className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 text-orange-800 rounded-lg text-xs font-semibold border border-orange-300">
+                          <span>⚔️</span>
+                          <span>vs {action.opponentName}</span>
+                        </div>
+                      )}
+                      
+                      {action.diceResult !== null && action.diceResult !== undefined && (
+                        <div className="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-800 rounded-lg text-xs font-bold border border-purple-300">
+                          <span>🎲</span>
+                          <span className="font-mono">{action.diceResult}</span>
+                        </div>
+                      )}
+                      
+                      {action.armorBroken && (
+                        <div className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 rounded-lg text-xs font-semibold border border-green-300">
+                          <span>🛡️</span>
+                          <span>Armure passée</span>
+                        </div>
+                      )}
+                      
+                      {action.fumble && (
+                        <div className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-800 rounded-lg text-xs font-semibold border border-red-300">
+                          <span>💥</span>
+                          <span>Fumble</span>
+                        </div>
+                      )}
+                      
+                      {action.passType && (
+                        <div className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-xs font-semibold border border-blue-300">
+                          <span>🏈</span>
+                          <span>
+                            {action.passType === "rapide" ? "Rapide" :
+                             action.passType === "courte" ? "Courte" :
+                             action.passType === "longue" ? "Longue" :
+                             action.passType === "longue_bombe" ? "Longue bombe" :
+                             action.passType}
+                          </span>
+                        </div>
+                      )}
+                      
+                      {action.opponentState && (
+                        <div className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-800 rounded-lg text-xs font-semibold border border-red-300">
+                          <span>😵</span>
+                          <span>
+                            {action.opponentState === "sonne" ? "Sonné" :
+                             action.opponentState === "ko" ? "KO" :
+                             action.opponentState === "elimine" ? "Éliminé" :
+                             action.opponentState}
+                          </span>
+                        </div>
+                      )}
+                      
+                      {action.playerState && (
+                        <div className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 text-orange-800 rounded-lg text-xs font-semibold border border-orange-300">
+                          <span>⚠️</span>
+                          <span>
+                            {action.playerState === "sonne" ? "Sonné" :
+                             action.playerState === "ko" ? "KO" :
+                             action.playerState === "elimine" ? "Éliminé" :
+                             action.playerState}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Bouton supprimer */}
+                  <button
+                    onClick={() => handleDeleteAction(action.id)}
+                    className="px-4 py-2 text-red-600 hover:text-white hover:bg-red-600 rounded-lg font-semibold transition-all transform hover:scale-110 border-2 border-red-300 hover:border-red-600"
+                    title="Supprimer cette action"
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
