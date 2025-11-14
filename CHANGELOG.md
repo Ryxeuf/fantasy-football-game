@@ -1,3 +1,11 @@
+## [1.17.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.16.0...v1.17.0) (2025-11-14)
+
+
+### ✨ Features
+
+* ajout de la gestion des matchs locaux dans l'interface admin ([3abb207](https://github.com/Ryxeuf/fantasy-football-game/commit/3abb2071dbb4bda40134217b28b4895445449552))
+* système de gestion manuelle des actions pour matchs locaux ([53904c0](https://github.com/Ryxeuf/fantasy-football-game/commit/53904c0b4d71e604629c7c45e27bcede6f7d6f2b))
+
 ## [1.16.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.15.0...v1.16.0) (2025-11-13)
 
 
