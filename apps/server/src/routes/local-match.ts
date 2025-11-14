@@ -1,7 +1,19 @@
 import { Router } from "express";
 import { prisma } from "../prisma";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
-import { setupPreMatchWithTeams } from "@bb/game-engine";
+import { 
+  setupPreMatchWithTeams, 
+  startPreMatchSequence, 
+  calculateFanFactor, 
+  determineWeather,
+  addJourneymen,
+  processInducements,
+  processPrayersToNuffle,
+  determineKickingTeam,
+  enterSetupPhase,
+  makeRNG,
+  type WeatherType
+} from "@bb/game-engine";
 import { randomBytes } from "crypto";
 
 const router = Router();
@@ -317,6 +329,14 @@ router.post("/", authUser, async (req: AuthenticatedRequest, res) => {
 // POST /local-match/:id/start - Démarrer une partie offline
 router.post("/:id/start", authUser, async (req: AuthenticatedRequest, res) => {
   try {
+    // Paramètres optionnels pour saisie manuelle
+    const { 
+      manualD3A, 
+      manualD3B, 
+      weatherType,
+      manualWeatherTotal 
+    } = req.body;
+    
     const localMatch = await prisma.localMatch.findUnique({
       where: { id: req.params.id },
       include: {
@@ -343,7 +363,13 @@ router.post("/:id/start", authUser, async (req: AuthenticatedRequest, res) => {
       return res.status(403).json({ error: "Accès non autorisé" });
     }
     
-    if (localMatch.status !== "pending") {
+    // Vérifier si la partie est déjà démarrée
+    // Si le gameState existe et que la phase pré-match n'est pas 'idle', la partie est déjà démarrée
+    const existingGameState = localMatch.gameState as any;
+    const isAlreadyStarted = existingGameState?.preMatch?.phase && 
+                             existingGameState.preMatch.phase !== 'idle';
+    
+    if (localMatch.status !== "pending" || isAlreadyStarted) {
       return res.status(400).json({ error: "La partie a déjà été démarrée ou terminée" });
     }
     
@@ -374,20 +400,83 @@ router.post("/:id/start", authUser, async (req: AuthenticatedRequest, res) => {
       skills: p.skills || "",
     }));
     
+    // Récupérer les fans dévoués des équipes
+    const dedicatedFansA = localMatch.teamA.dedicatedFans || 1;
+    const dedicatedFansB = localMatch.teamB.dedicatedFans || 1;
+    
     // Initialiser l'état du jeu en phase pré-match
-    const gameState = setupPreMatchWithTeams(
+    let gameState = setupPreMatchWithTeams(
       teamAData,
       teamBData,
       localMatch.teamA.name,
       localMatch.teamB.name,
     );
     
+    // Démarrer la séquence de pré-match : fans -> weather
+    gameState = startPreMatchSequence(gameState);
+    
+    // Créer un générateur de nombres aléatoires
+    const rng = makeRNG(`local-match-${req.params.id}-${Date.now()}`);
+    
+    // Calculer le Fan Factor et passer en phase weather
+    // Utiliser les valeurs manuelles si fournies, sinon générer automatiquement
+    gameState = calculateFanFactor(
+      gameState,
+      rng,
+      dedicatedFansA,
+      dedicatedFansB,
+      manualD3A !== undefined ? Number(manualD3A) : undefined,
+      manualD3B !== undefined ? Number(manualD3B) : undefined
+    );
+    
+    // Déterminer la météo
+    // Le type de météo est requis, utiliser 'classique' par défaut si non fourni
+    const selectedWeatherType = (weatherType || 'classique') as WeatherType;
+    gameState = determineWeather(
+      gameState, 
+      rng,
+      selectedWeatherType,
+      manualWeatherTotal !== undefined ? Number(manualWeatherTotal) : undefined
+    );
+    
+    // Continuer automatiquement la séquence pré-match jusqu'à la phase setup
+    // Journeymen : ajouter les joueurs de passage si nécessaire (11 joueurs par équipe)
+    if (gameState.preMatch.phase === 'journeymen') {
+      gameState = addJourneymen(gameState, 11, 11);
+    }
+    
+    // Inducements : traiter automatiquement (pas d'incitations pour l'instant)
+    if (gameState.preMatch.phase === 'inducements') {
+      gameState = processInducements(gameState, 0, 0, 0, 0);
+    }
+    
+    // Prayers : traiter automatiquement (pas de prières pour l'instant)
+    if (gameState.preMatch.phase === 'prayers') {
+      gameState = processPrayersToNuffle(gameState, rng, 0);
+    }
+    
+    // Kicking team : déterminer automatiquement
+    if (gameState.preMatch.phase === 'kicking-team') {
+      gameState = determineKickingTeam(gameState, rng);
+    }
+    
+    // Si on arrive en phase setup, entrer dans la phase setup
+    if (gameState.preMatch.phase === 'setup') {
+      gameState = enterSetupPhase(gameState, gameState.preMatch.receivingTeam);
+    }
+    
+    // Ne pas mettre le statut à "in_progress" tant que la phase pré-match n'est pas terminée
+    // La phase pré-match se termine quand on arrive à la phase 'setup'
+    // Pour l'instant, on reste en "pending" pour permettre l'affichage de la phase pré-match
+    const isPreMatchComplete = gameState.preMatch.phase === 'setup' || gameState.preMatch.phase === 'kickoff' || gameState.preMatch.phase === 'kickoff-sequence';
+    const matchStatus = isPreMatchComplete ? "in_progress" : "pending";
+    
     // Mettre à jour la partie
     const updatedMatch = await prisma.localMatch.update({
       where: { id: req.params.id },
       data: {
-        status: "in_progress",
-        startedAt: new Date(),
+        status: matchStatus,
+        ...(isPreMatchComplete && { startedAt: new Date() }),
         gameState: gameState as any,
       },
       include: {

@@ -66,6 +66,27 @@ export {
   handlePlayerSwitch,
 } from './core/game-state';
 
+// Export des fonctions de pré-match
+export {
+  startPreMatchSequence,
+  calculateFanFactor,
+  determineWeather,
+  addJourneymen,
+  processInducements,
+  processPrayersToNuffle,
+  determineKickingTeam,
+} from './core/pre-match-sequence';
+
+// Export des types de météo
+export {
+  WEATHER_TYPES,
+  getWeatherType,
+  getWeatherCondition,
+  type WeatherType,
+  type WeatherTypeDefinition,
+  type WeatherCondition,
+} from './core/weather-types';
+
 // Export des fonctions de dugout
 export { movePlayerToDugoutZone } from './mechanics/dugout';
 

@@ -26,6 +26,10 @@ export * from './core/boardgame-io';
 export { canBlock, canBlitz, calculateOffensiveAssists, calculateDefensiveAssists, calculateBlockDiceCount, getBlockDiceChooser, getPushDirection, getPushDirections, handlePushWithChoice, resolveBlockResult, } from './mechanics/blocking';
 // Export des fonctions de gestion d'état (sans conflit)
 export { setup, setupPreMatch, setupPreMatchWithTeams, advanceHalfIfNeeded, canPlayerAct, canPlayerMove, canPlayerContinueMoving, getPlayerAction, setPlayerAction, clearPlayerActions, getTeamBlitzCount, canTeamBlitz, incrementTeamBlitzCount, clearTeamBlitzCounts, shouldEndPlayerTurn, endPlayerTurn, checkPlayerTurnEnd, shouldAutoEndTurn, handlePlayerSwitch, } from './core/game-state';
+// Export des fonctions de pré-match
+export { startPreMatchSequence, calculateFanFactor, determineWeather, } from './core/pre-match-sequence';
+// Export des types de météo
+export { WEATHER_TYPES, getWeatherType, getWeatherCondition, } from './core/weather-types';
 // Export des fonctions de dugout
 export { movePlayerToDugoutZone } from './mechanics/dugout';
 // Export des fonctions de blessure

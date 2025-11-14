@@ -56,6 +56,18 @@ interface LocalMatchActionsProps {
     name: string;
     players: Player[];
   };
+  preMatch?: {
+    fanFactor?: {
+      teamA: { d3: number; dedicatedFans: number; total: number };
+      teamB: { d3: number; dedicatedFans: number; total: number };
+    };
+    weatherType?: string;
+    weather?: {
+      total: number;
+      condition: string;
+      description: string;
+    };
+  };
 }
 
 async function fetchJSON(path: string) {
@@ -104,6 +116,7 @@ export default function LocalMatchActions({
   matchId,
   teamA,
   teamB,
+  preMatch,
 }: LocalMatchActionsProps) {
   const [actions, setActions] = useState<LocalMatchAction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -931,6 +944,68 @@ export default function LocalMatchActions({
                 </div>
               </div>
             ))}
+          </div>
+        )}
+        
+        {/* Section Informations de pré-match */}
+        {preMatch && (preMatch.fanFactor || preMatch.weather) && (
+          <div className="mt-8 space-y-4">
+            <h3 className="text-xl font-bold text-nuffle-anthracite border-b-2 border-nuffle-gold pb-2">
+              Informations d'avant-match
+            </h3>
+            
+            {/* Fans dévoués */}
+            {preMatch.fanFactor && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <h4 className="text-lg font-semibold text-nuffle-anthracite mb-4">
+                  Fans dévoués
+                </h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-2">
+                      {teamA.name}
+                    </p>
+                    <p className="text-2xl font-bold text-nuffle-anthracite">
+                      Fan Factor: {preMatch.fanFactor.teamA.total}
+                    </p>
+                    <p className="text-sm text-gray-500 mt-2">
+                      D3: {preMatch.fanFactor.teamA.d3} + Fans: {preMatch.fanFactor.teamA.dedicatedFans}
+                    </p>
+                  </div>
+                  <div className="bg-white rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-2">
+                      {teamB.name}
+                    </p>
+                    <p className="text-2xl font-bold text-nuffle-anthracite">
+                      Fan Factor: {preMatch.fanFactor.teamB.total}
+                    </p>
+                    <p className="text-sm text-gray-500 mt-2">
+                      D3: {preMatch.fanFactor.teamB.d3} + Fans: {preMatch.fanFactor.teamB.dedicatedFans}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Conditions météorologiques */}
+            {preMatch.weather && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                <h4 className="text-lg font-semibold text-nuffle-anthracite mb-4">
+                  Conditions météorologiques
+                </h4>
+                <div className="bg-white rounded-lg p-4">
+                  <p className="text-lg font-semibold text-nuffle-anthracite mb-2">
+                    {preMatch.weather.condition}
+                  </p>
+                  <p className="text-sm text-gray-600 mb-3">
+                    {preMatch.weather.description}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Type: {preMatch.weatherType || 'classique'} | Total 2D6: {preMatch.weather.total}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

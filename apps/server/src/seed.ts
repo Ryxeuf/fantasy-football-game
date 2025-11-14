@@ -781,6 +781,31 @@ async function main() {
 
       // Valider le match et générer les actions
       if (localMatch) {
+        // Créer un gameState avec les informations de pré-match
+        const gameState = {
+          preMatch: {
+            phase: 'setup',
+            fanFactor: {
+              teamA: {
+                d3: 2,
+                dedicatedFans: adminSkavenTeam.dedicatedFans || 1,
+                total: 2 + (adminSkavenTeam.dedicatedFans || 1),
+              },
+              teamB: {
+                d3: 1,
+                dedicatedFans: userLizardmenTeam.dedicatedFans || 1,
+                total: 1 + (userLizardmenTeam.dedicatedFans || 1),
+              },
+            },
+            weatherType: 'classique',
+            weather: {
+              total: 7,
+              condition: 'Conditions parfaites',
+              description: 'Ni trop froid ni trop chaud. Une journée chaude, sèche et légèrement nuageuse offre des conditions parfaites pour Blood Bowl.',
+            },
+          },
+        };
+
         // Valider le match (les deux propriétaires ont validé)
         await prisma.localMatch.update({
           where: { id: localMatch.id },
@@ -792,9 +817,10 @@ async function main() {
             scoreTeamB: 1,
             startedAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // Il y a 2 heures
             completedAt: new Date(),
+            gameState: gameState as any,
           },
         });
-        console.log("   ✅ Match validé et complété");
+        console.log("   ✅ Match validé et complété avec informations de pré-match");
 
         // Récupérer les joueurs des deux équipes
         const skavenPlayers = await prisma.teamPlayer.findMany({

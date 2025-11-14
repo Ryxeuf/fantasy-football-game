@@ -1,4 +1,5 @@
 import { createLogEntry } from '../utils/logging';
+import { getWeatherCondition } from './weather-types';
 /**
  * Démarre la séquence de pré-match complète
  * @param state - État initial du jeu
@@ -23,13 +24,19 @@ export function startPreMatchSequence(state) {
  * @param rng - Générateur de nombres aléatoires
  * @param dedicatedFansA - Nombre de fans dévoués équipe A
  * @param dedicatedFansB - Nombre de fans dévoués équipe B
+ * @param manualD3A - Valeur D3 manuelle pour l'équipe A (optionnel, 1-3)
+ * @param manualD3B - Valeur D3 manuelle pour l'équipe B (optionnel, 1-3)
  * @returns État avec Fan Factor calculé
  */
-export function calculateFanFactor(state, rng, dedicatedFansA, dedicatedFansB) {
+export function calculateFanFactor(state, rng, dedicatedFansA, dedicatedFansB, manualD3A, manualD3B) {
     if (state.preMatch.phase !== 'fans')
         return state;
-    const d3A = Math.floor(rng() * 3) + 1;
-    const d3B = Math.floor(rng() * 3) + 1;
+    const d3A = manualD3A !== undefined ? manualD3A : Math.floor(rng() * 3) + 1;
+    const d3B = manualD3B !== undefined ? manualD3B : Math.floor(rng() * 3) + 1;
+    // Validation des valeurs D3
+    if (d3A < 1 || d3A > 3 || d3B < 1 || d3B > 3) {
+        return state; // Valeur invalide, on ne modifie pas l'état
+    }
     const fanFactorA = d3A + dedicatedFansA;
     const fanFactorB = d3B + dedicatedFansB;
     const logEntry = createLogEntry('action', `Fan Factor calculé - ${state.teamNames.teamA}: ${fanFactorA} (D3:${d3A} + Fans:${dedicatedFansA}), ${state.teamNames.teamB}: ${fanFactorB} (D3:${d3B} + Fans:${dedicatedFansB})`);
@@ -50,37 +57,39 @@ export function calculateFanFactor(state, rng, dedicatedFansA, dedicatedFansB) {
  * Détermine la météo
  * @param state - État en phase weather
  * @param rng - Générateur de nombres aléatoires
+ * @param weatherType - Type de météo choisi (classique, printaniere, etc.)
+ * @param manualTotal - Valeur totale manuelle (optionnel, 2-12)
  * @returns État avec météo déterminée
  */
-export function determineWeather(state, rng) {
+export function determineWeather(state, rng, weatherType, manualTotal) {
     if (state.preMatch.phase !== 'weather')
         return state;
-    const dice1 = Math.floor(rng() * 6) + 1;
-    const dice2 = Math.floor(rng() * 6) + 1;
-    const total = dice1 + dice2;
-    const weatherTable = {
-        2: { condition: 'Sweltering Heat', description: 'Certains joueurs s\'évanouissent dans la chaleur insupportable ! D3 joueurs aléatoires de chaque équipe sont placés en Réserve à la fin de chaque drive.' },
-        3: { condition: 'Very Sunny', description: 'Un jour glorieux, mais le ciel clair et le soleil brillant interfèrent avec le jeu de passe ! -1 modificateur pour tous les tests de Passing Ability.' },
-        4: { condition: 'Perfect Conditions', description: 'Ni trop froid ni trop chaud. Une journée chaude, sèche et légèrement nuageuse offre des conditions parfaites pour Blood Bowl.' },
-        5: { condition: 'Perfect Conditions', description: 'Ni trop froid ni trop chaud. Une journée chaude, sèche et légèrement nuageuse offre des conditions parfaites pour Blood Bowl.' },
-        6: { condition: 'Perfect Conditions', description: 'Ni trop froid ni trop chaud. Une journée chaude, sèche et légèrement nuageuse offre des conditions parfaites pour Blood Bowl.' },
-        7: { condition: 'Perfect Conditions', description: 'Ni trop froid ni trop chaud. Une journée chaude, sèche et légèrement nuageuse offre des conditions parfaites pour Blood Bowl.' },
-        8: { condition: 'Perfect Conditions', description: 'Ni trop froid ni trop chaud. Une journée chaude, sèche et légèrement nuageuse offre des conditions parfaites pour Blood Bowl.' },
-        9: { condition: 'Perfect Conditions', description: 'Ni trop froid ni trop chaud. Une journée chaude, sèche et légèrement nuageuse offre des conditions parfaites pour Blood Bowl.' },
-        10: { condition: 'Perfect Conditions', description: 'Ni trop froid ni trop chaud. Une journée chaude, sèche et légèrement nuageuse offre des conditions parfaites pour Blood Bowl.' },
-        11: { condition: 'Pouring Rain', description: 'Une pluie torrentielle laisse les joueurs trempés et le ballon très glissant ! -1 modificateur pour tous les tests d\'Agilité pour attraper ou ramasser le ballon.' },
-        12: { condition: 'Blizzard', description: 'Des conditions glaciales et de fortes chutes de neige rendent le terrain dangereux. -1 modificateur pour tous les Rush supplémentaires. Seuls les passes Rapides et Courtes sont possibles.' },
-    };
-    const weatherData = weatherTable[total];
-    const logEntry = createLogEntry('action', `Météo déterminée: ${dice1}+${dice2}=${total} - ${weatherData.condition}: ${weatherData.description}`);
+    let total;
+    if (manualTotal !== undefined) {
+        // Utiliser la valeur totale manuelle
+        total = manualTotal;
+        if (total < 2 || total > 12) {
+            return state; // Valeur invalide
+        }
+    }
+    else {
+        // Génération aléatoire (2D6)
+        const dice1 = Math.floor(rng() * 6) + 1;
+        const dice2 = Math.floor(rng() * 6) + 1;
+        total = dice1 + dice2;
+    }
+    const weatherData = getWeatherCondition(weatherType, total);
+    if (!weatherData) {
+        return state; // Type de météo invalide ou total hors limites
+    }
+    const logEntry = createLogEntry('action', `Météo déterminée (${weatherType}): 2D6=${total} - ${weatherData.condition}: ${weatherData.description}`);
     return {
         ...state,
         preMatch: {
             ...state.preMatch,
             phase: 'journeymen',
+            weatherType,
             weather: {
-                dice1,
-                dice2,
                 total,
                 condition: weatherData.condition,
                 description: weatherData.description,

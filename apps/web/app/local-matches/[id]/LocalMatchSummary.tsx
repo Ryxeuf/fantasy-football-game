@@ -70,6 +70,20 @@ type LocalMatch = {
     id: string;
     name: string;
   } | null;
+  gameState?: {
+    preMatch?: {
+      fanFactor?: {
+        teamA: { d3: number; dedicatedFans: number; total: number };
+        teamB: { d3: number; dedicatedFans: number; total: number };
+      };
+      weatherType?: string;
+      weather?: {
+        total: number;
+        condition: string;
+        description: string;
+      };
+    };
+  };
 };
 
 interface LocalMatchSummaryProps {
@@ -184,6 +198,17 @@ export default function LocalMatchSummary({ matchId, match }: LocalMatchSummaryP
     loadActions();
   }, [matchId]);
 
+  // Debug: vérifier les données de pré-match
+  useEffect(() => {
+    console.log("LocalMatchSummary - match data:", {
+      hasGameState: !!match.gameState,
+      hasPreMatch: !!match.gameState?.preMatch,
+      hasFanFactor: !!match.gameState?.preMatch?.fanFactor,
+      hasWeather: !!match.gameState?.preMatch?.weather,
+      preMatch: match.gameState?.preMatch,
+    });
+  }, [match]);
+
   const loadActions = async () => {
     setLoading(true);
     setError(null);
@@ -277,6 +302,60 @@ export default function LocalMatchSummary({ matchId, match }: LocalMatchSummaryP
         doc.setFont('helvetica', 'normal');
         doc.text(`Fin: ${new Date(match.completedAt).toLocaleString('fr-FR')}`, 20, yPos);
         yPos += 12;
+      }
+
+      // Informations de pré-match
+      if (match.gameState?.preMatch && (match.gameState.preMatch.fanFactor || match.gameState.preMatch.weather)) {
+        // Nouvelle page si nécessaire
+        if (yPos > 250) {
+          doc.addPage();
+          yPos = 20;
+        }
+
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('INFORMATIONS D\'AVANT-MATCH', 105, yPos, { align: 'center' });
+        yPos += 12;
+
+        // Fans dévoués
+        if (match.gameState.preMatch.fanFactor) {
+          doc.setFontSize(12);
+          doc.setFont('helvetica', 'bold');
+          doc.text('Fans dévoués', 20, yPos);
+          yPos += 8;
+
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'normal');
+          const fanFactorA = match.gameState.preMatch.fanFactor.teamA;
+          const fanFactorB = match.gameState.preMatch.fanFactor.teamB;
+          doc.text(`${match.teamA.name}: Fan Factor ${fanFactorA.total} (D3: ${fanFactorA.d3} + Fans: ${fanFactorA.dedicatedFans})`, 25, yPos);
+          yPos += 6;
+          doc.text(`${match.teamB.name}: Fan Factor ${fanFactorB.total} (D3: ${fanFactorB.d3} + Fans: ${fanFactorB.dedicatedFans})`, 25, yPos);
+          yPos += 10;
+        }
+
+        // Conditions météorologiques
+        if (match.gameState.preMatch.weather) {
+          doc.setFontSize(12);
+          doc.setFont('helvetica', 'bold');
+          doc.text('Conditions météorologiques', 20, yPos);
+          yPos += 8;
+
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'normal');
+          const weather = match.gameState.preMatch.weather;
+          doc.text(`Type: ${match.gameState.preMatch.weatherType || 'classique'}`, 25, yPos);
+          yPos += 6;
+          doc.text(`Total 2D6: ${weather.total}`, 25, yPos);
+          yPos += 6;
+          doc.setFont('helvetica', 'bold');
+          doc.text(weather.condition, 25, yPos);
+          yPos += 6;
+          doc.setFont('helvetica', 'normal');
+          const descLines = doc.splitTextToSize(weather.description, 160);
+          doc.text(descLines, 25, yPos);
+          yPos += descLines.length * 5 + 10;
+        }
       }
 
       // Liste des actions par mi-temps
@@ -459,6 +538,68 @@ export default function LocalMatchSummary({ matchId, match }: LocalMatchSummaryP
           )}
         </div>
       </div>
+
+      {/* Informations de pré-match */}
+      {match.gameState?.preMatch && (match.gameState.preMatch.fanFactor || match.gameState.preMatch.weather) && (
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold text-nuffle-anthracite border-b-2 border-nuffle-gold pb-2">
+            Informations d'avant-match
+          </h2>
+          
+          {/* Fans dévoués */}
+          {match.gameState.preMatch.fanFactor && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+              <h3 className="text-xl font-semibold text-nuffle-anthracite mb-4">
+                Fans dévoués
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white rounded-lg p-4">
+                  <p className="text-sm text-gray-600 mb-2">
+                    {match.teamA.name}
+                  </p>
+                  <p className="text-2xl font-bold text-nuffle-anthracite">
+                    Fan Factor: {match.gameState.preMatch.fanFactor.teamA.total}
+                  </p>
+                  <p className="text-sm text-gray-500 mt-2">
+                    D3: {match.gameState.preMatch.fanFactor.teamA.d3} + Fans: {match.gameState.preMatch.fanFactor.teamA.dedicatedFans}
+                  </p>
+                </div>
+                <div className="bg-white rounded-lg p-4">
+                  <p className="text-sm text-gray-600 mb-2">
+                    {match.teamB.name}
+                  </p>
+                  <p className="text-2xl font-bold text-nuffle-anthracite">
+                    Fan Factor: {match.gameState.preMatch.fanFactor.teamB.total}
+                  </p>
+                  <p className="text-sm text-gray-500 mt-2">
+                    D3: {match.gameState.preMatch.fanFactor.teamB.d3} + Fans: {match.gameState.preMatch.fanFactor.teamB.dedicatedFans}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Conditions météorologiques */}
+          {match.gameState.preMatch.weather && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+              <h3 className="text-xl font-semibold text-nuffle-anthracite mb-4">
+                Conditions météorologiques
+              </h3>
+              <div className="bg-white rounded-lg p-4">
+                <p className="text-lg font-semibold text-nuffle-anthracite mb-2">
+                  {match.gameState.preMatch.weather.condition}
+                </p>
+                <p className="text-sm text-gray-600 mb-3">
+                  {match.gameState.preMatch.weather.description}
+                </p>
+                <p className="text-xs text-gray-500">
+                  Type: {match.gameState.preMatch.weatherType || 'classique'} | Total 2D6: {match.gameState.preMatch.weather.total}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Bouton d'export PDF */}
       <div className="flex justify-center">

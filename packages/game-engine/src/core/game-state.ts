@@ -24,9 +24,8 @@ export interface PreMatchState {
   };
   
   // Phase météo
+  weatherType?: string; // Type de météo choisi (classique, printaniere, etc.)
   weather?: {
-    dice1: number;
-    dice2: number;
     total: number;
     condition: string;
     description: string;
