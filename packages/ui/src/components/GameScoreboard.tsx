@@ -2,7 +2,7 @@ import React, { useMemo, useEffect, useState } from "react";
 import type { GameState, GameLogEntry } from "@bb/game-engine";
 
 interface GameScoreboardProps {
-  state: GameState;
+  state: GameState | null | undefined;
   onEndTurn?: () => void;
   leftTeamName?: string;
   rightTeamName?: string;
@@ -22,6 +22,19 @@ export default function GameScoreboard({
   localSide,
   userName,
 }: GameScoreboardProps) {
+  // Si state n'est pas disponible, afficher un message de chargement
+  if (!state) {
+    return (
+      <div className="fixed top-0 left-0 right-0 z-50 w-full bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white shadow-2xl">
+        <div className="flex items-center justify-center px-6 py-4">
+          <div className="text-center">
+            <div className="text-sm text-gray-300">Chargement de la partie...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const getTeamColor = (team: "A" | "B") => {
     return team === "A" ? "bg-red-600" : "bg-blue-600";
   };
@@ -51,12 +64,12 @@ export default function GameScoreboard({
 
   // Déterminer la dernière entrée de score
   const lastScore = useMemo(() => {
-    if (!state.gameLog || !Array.isArray(state.gameLog)) {
+    if (!state || !state.gameLog || !Array.isArray(state.gameLog)) {
       return undefined;
     }
     const entries = [...state.gameLog].reverse();
     return entries.find((e) => e.type === "score");
-  }, [state.gameLog]);
+  }, [state?.gameLog ?? null]);
 
   // Afficher l'animation pendant 2.5s après un score
   const [showScoreAnim, setShowScoreAnim] = useState(false);

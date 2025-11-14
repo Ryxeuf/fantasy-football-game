@@ -2,12 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { API_BASE } from "../../auth-client";
-import {
-  GameBoardWithDugouts,
-  GameScoreboard,
-  PlayerDetails,
-} from "@bb/ui";
-import type { ExtendedGameState } from "@bb/game-engine";
+import LocalMatchActions from "./LocalMatchActions";
 
 type LocalMatch = {
   id: string;
@@ -72,7 +67,6 @@ type LocalMatch = {
     name: string;
     status: string;
   } | null;
-  gameState: ExtendedGameState | null;
   scoreTeamA: number | null;
   scoreTeamB: number | null;
 };
@@ -123,35 +117,6 @@ async function putJSON(path: string, data: any) {
   return res.json();
 }
 
-function normalizeState(state: any): ExtendedGameState {
-  if (
-    state &&
-    typeof state.playerActions === "object" &&
-    state.playerActions !== null &&
-    typeof state.playerActions.has !== "function"
-  ) {
-    state.playerActions = new Map(Object.entries(state.playerActions || {}));
-  }
-  if (
-    state &&
-    typeof state.teamBlitzCount === "object" &&
-    state.teamBlitzCount !== null &&
-    typeof state.teamBlitzCount.has !== "function"
-  ) {
-    state.teamBlitzCount = new Map(Object.entries(state.teamBlitzCount || {}));
-  }
-
-  if (state && (typeof state.width !== "number" || typeof state.height !== "number")) {
-    state.width = 26;
-    state.height = 15;
-  }
-
-  if (state && state.preMatch && state.preMatch.phase === "setup") {
-    state.selectedPlayerId = null;
-  }
-
-  return state as ExtendedGameState;
-}
 
 export default function LocalMatchPage() {
   const router = useRouter();
@@ -159,11 +124,8 @@ export default function LocalMatchPage() {
   const matchId = params.id as string;
 
   const [localMatch, setLocalMatch] = useState<LocalMatch | null>(null);
-  const [gameState, setGameState] = useState<ExtendedGameState | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
 
   useEffect(() => {
     loadLocalMatch();
@@ -174,10 +136,13 @@ export default function LocalMatchPage() {
     setError(null);
     try {
       const { localMatch: data } = await fetchJSON(`/local-match/${matchId}`);
+      console.log("Match chargé:", {
+        teamA: data?.teamA?.name,
+        teamB: data?.teamB?.name,
+        teamAPlayers: data?.teamA?.players?.length || 0,
+        teamBPlayers: data?.teamB?.players?.length || 0,
+      });
       setLocalMatch(data);
-      if (data.gameState) {
-        setGameState(normalizeState(data.gameState));
-      }
     } catch (e: any) {
       console.error("Erreur lors du chargement:", e);
       setError(e.message || "Erreur lors du chargement");
@@ -189,44 +154,32 @@ export default function LocalMatchPage() {
   const handleStart = async () => {
     setError(null);
     try {
-      const { localMatch: updated, gameState: newGameState } = await postJSON(
+      const { localMatch: updated } = await postJSON(
         `/local-match/${matchId}/start`,
         {},
       );
       setLocalMatch(updated);
-      if (newGameState) {
-        setGameState(normalizeState(newGameState));
-      }
     } catch (e: any) {
       console.error("Erreur lors du démarrage:", e);
       setError(e.message || "Erreur lors du démarrage");
     }
   };
 
-  const handleSaveState = async () => {
-    if (!gameState) return;
-    setSaving(true);
-    try {
-      const scoreTeamA = gameState.score?.teamA || 0;
-      const scoreTeamB = gameState.score?.teamB || 0;
-      await putJSON(`/local-match/${matchId}/state`, {
-        gameState,
-        scoreTeamA,
-        scoreTeamB,
-      });
-      alert("État sauvegardé avec succès");
-    } catch (e: any) {
-      console.error("Erreur lors de la sauvegarde:", e);
-      setError(e.message || "Erreur lors de la sauvegarde");
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const handleComplete = async () => {
-    if (!gameState) return;
-    const scoreTeamA = gameState.score?.teamA || 0;
-    const scoreTeamB = gameState.score?.teamB || 0;
+    const scoreTeamAStr = prompt("Score de l'équipe A :", "0");
+    const scoreTeamBStr = prompt("Score de l'équipe B :", "0");
+    
+    if (scoreTeamAStr === null || scoreTeamBStr === null) {
+      return; // L'utilisateur a annulé
+    }
+    
+    const scoreTeamA = parseInt(scoreTeamAStr, 10);
+    const scoreTeamB = parseInt(scoreTeamBStr, 10);
+    
+    if (isNaN(scoreTeamA) || isNaN(scoreTeamB)) {
+      alert("Les scores doivent être des nombres valides");
+      return;
+    }
     
     if (!confirm(`Terminer la partie avec le score ${scoreTeamA} - ${scoreTeamB} ?`)) {
       return;
@@ -299,21 +252,12 @@ export default function LocalMatchPage() {
               </button>
             )}
             {localMatch.status === "in_progress" && (
-              <>
-                <button
-                  onClick={handleSaveState}
-                  disabled={saving}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
-                >
-                  {saving ? "Sauvegarde..." : "Sauvegarder"}
-                </button>
-                <button
-                  onClick={handleComplete}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors"
-                >
-                  Terminer la partie
-                </button>
-              </>
+              <button
+                onClick={handleComplete}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors"
+              >
+                Terminer la partie
+              </button>
             )}
             {localMatch.status === "completed" && (
               <div className="px-4 py-2 bg-green-100 text-green-800 rounded-lg font-semibold">
@@ -417,42 +361,27 @@ export default function LocalMatchPage() {
           </div>
         )}
 
-        {localMatch.status === "in_progress" && gameState && (
+        {localMatch.status === "in_progress" && (
           <div className="space-y-4">
-            <GameScoreboard
-              teamAName={gameState.teamNames.teamA}
-              teamBName={gameState.teamNames.teamB}
-              scoreA={gameState.score.teamA}
-              scoreB={gameState.score.teamB}
-              turn={gameState.turn}
-              half={gameState.half}
-              currentPlayer={gameState.currentPlayer}
-            />
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-              <div className="lg:col-span-3">
-                <GameBoardWithDugouts
-                  gameState={gameState}
-                  onPlayerClick={(playerId) => setSelectedPlayerId(playerId)}
-                  selectedPlayerId={selectedPlayerId}
-                />
-              </div>
-              <div>
-                {selectedPlayerId && (
-                  <PlayerDetails
-                    player={
-                      gameState.players.find((p) => p.id === selectedPlayerId) ||
-                      null
-                    }
-                  />
-                )}
-              </div>
-            </div>
             <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 p-4 rounded">
               <p className="font-semibold mb-2">Mode Offline</p>
               <p className="text-sm">
-                Cette partie se joue en mode offline. N'oubliez pas de sauvegarder régulièrement votre progression.
+                Cette partie se joue en mode offline. Enregistrez manuellement toutes les actions effectuées pendant la partie.
               </p>
             </div>
+            <LocalMatchActions
+              matchId={matchId}
+              teamA={{
+                id: localMatch.teamA.id,
+                name: localMatch.teamA.name,
+                players: Array.isArray(localMatch.teamA.players) ? localMatch.teamA.players : [],
+              }}
+              teamB={{
+                id: localMatch.teamB.id,
+                name: localMatch.teamB.name,
+                players: Array.isArray(localMatch.teamB.players) ? localMatch.teamB.players : [],
+              }}
+            />
           </div>
         )}
 

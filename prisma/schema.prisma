@@ -317,6 +317,9 @@ model LocalMatch {
   scoreTeamA Int?    // Score de l'équipe A
   scoreTeamB Int?    // Score de l'équipe B
   
+  // Actions manuelles enregistrées pour le match
+  actions LocalMatchAction[]
+
   @@index([creatorId])
   @@index([teamAId])
   @@index([teamBId])
@@ -324,4 +327,38 @@ model LocalMatch {
   @@index([status])
   @@index([createdAt])
   @@index([shareToken])
+}
+
+// Modèle pour les actions manuelles d'un match local
+model LocalMatchAction {
+  id        String   @id @default(cuid())
+  match     LocalMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  matchId   String
+  
+  // Informations sur l'action
+  half      Int      // Mi-temps (1 ou 2)
+  turn      Int      // Tour (1-8)
+  actionType String   // Type d'action: "passe", "reception", "td", "blocage", "blitz", "elimination", "aggression", "sprint", "esquive", "apothicaire"
+  
+  // Joueur qui effectue l'action
+  playerId  String   // ID du joueur (peut être un ID de joueur de l'équipe A ou B)
+  playerName String  // Nom du joueur (pour référence)
+  playerTeam String  // "A" ou "B"
+  
+  // Adversaire concerné (optionnel)
+  opponentId String? // ID du joueur adverse (si applicable)
+  opponentName String? // Nom du joueur adverse (si applicable)
+  
+  // Résultat du dé (optionnel)
+  diceResult Int?    // Résultat du dé (1-6, ou autre selon le type d'action)
+  
+  // Échec (fumble)
+  fumble     Boolean @default(false) // Si true, l'action a échoué (fumble)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([matchId])
+  @@index([half, turn])
+  @@index([createdAt])
 }

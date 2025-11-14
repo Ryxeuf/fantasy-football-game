@@ -587,6 +587,173 @@ router.delete("/:id", authUser, async (req: AuthenticatedRequest, res) => {
   }
 });
 
+// GET /local-match/:id/actions - Récupérer toutes les actions d'un match
+router.get("/:id/actions", authUser, async (req: AuthenticatedRequest, res) => {
+  try {
+    const localMatch = await prisma.localMatch.findUnique({
+      where: { id: req.params.id },
+      include: {
+        teamA: { select: { ownerId: true } },
+        teamB: { select: { ownerId: true } },
+      },
+    });
+    
+    if (!localMatch) {
+      return res.status(404).json({ error: "Partie offline introuvable" });
+    }
+    
+    // Vérifier que l'utilisateur est le créateur ou propriétaire d'une des équipes
+    const isCreator = localMatch.creatorId === req.user!.id;
+    const isTeamOwner = 
+      localMatch.teamA.ownerId === req.user!.id || 
+      (localMatch.teamB && localMatch.teamB.ownerId === req.user!.id);
+    
+    if (!isCreator && !isTeamOwner && req.user!.role !== "admin") {
+      return res.status(403).json({ error: "Accès non autorisé" });
+    }
+    
+    const actions = await prisma.localMatchAction.findMany({
+      where: { matchId: req.params.id },
+      orderBy: [
+        { half: "asc" },
+        { turn: "asc" },
+        { createdAt: "asc" },
+      ],
+    });
+    
+    res.json({ actions });
+  } catch (e: any) {
+    console.error("Erreur lors de la récupération des actions:", e);
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// POST /local-match/:id/actions - Créer une nouvelle action
+router.post("/:id/actions", authUser, async (req: AuthenticatedRequest, res) => {
+  try {
+    const { half, turn, actionType, playerId, playerName, playerTeam, opponentId, opponentName, diceResult, fumble } = req.body;
+    
+    // Validation
+    if (!half || !turn || !actionType || !playerId || !playerName || !playerTeam) {
+      return res.status(400).json({ error: "Paramètres manquants" });
+    }
+    
+    if (half < 1 || half > 2) {
+      return res.status(400).json({ error: "La mi-temps doit être 1 ou 2" });
+    }
+    
+    if (turn < 1 || turn > 8) {
+      return res.status(400).json({ error: "Le tour doit être entre 1 et 8" });
+    }
+    
+    const validActionTypes = ["passe", "reception", "td", "blocage", "blitz", "elimination", "aggression", "sprint", "esquive", "apothicaire"];
+    if (!validActionTypes.includes(actionType)) {
+      return res.status(400).json({ error: `Type d'action invalide. Doit être l'un de: ${validActionTypes.join(", ")}` });
+    }
+    
+    if (!["A", "B"].includes(playerTeam)) {
+      return res.status(400).json({ error: "L'équipe du joueur doit être A ou B" });
+    }
+    
+    // Validation du résultat du dé si fourni (2D6 = 2 à 12, mais on accepte n'importe quel nombre)
+    if (diceResult !== undefined && diceResult !== null) {
+      if (typeof diceResult !== "number" || diceResult < 1) {
+        return res.status(400).json({ error: "Le résultat du dé doit être un nombre positif" });
+      }
+    }
+    
+    const localMatch = await prisma.localMatch.findUnique({
+      where: { id: req.params.id },
+      include: {
+        teamA: { select: { ownerId: true } },
+        teamB: { select: { ownerId: true } },
+      },
+    });
+    
+    if (!localMatch) {
+      return res.status(404).json({ error: "Partie offline introuvable" });
+    }
+    
+    // Vérifier que l'utilisateur est le créateur ou propriétaire d'une des équipes
+    const isCreator = localMatch.creatorId === req.user!.id;
+    const isTeamOwner = 
+      localMatch.teamA.ownerId === req.user!.id || 
+      (localMatch.teamB && localMatch.teamB.ownerId === req.user!.id);
+    
+    if (!isCreator && !isTeamOwner && req.user!.role !== "admin") {
+      return res.status(403).json({ error: "Accès non autorisé" });
+    }
+    
+    const action = await prisma.localMatchAction.create({
+      data: {
+        matchId: req.params.id,
+        half,
+        turn,
+        actionType,
+        playerId,
+        playerName,
+        playerTeam,
+        opponentId: opponentId || null,
+        opponentName: opponentName || null,
+        diceResult: diceResult !== undefined && diceResult !== null ? diceResult : null,
+        fumble: fumble === true,
+      },
+    });
+    
+    res.json({ action });
+  } catch (e: any) {
+    console.error("Erreur lors de la création de l'action:", e);
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// DELETE /local-match/:id/actions/:actionId - Supprimer une action
+router.delete("/:id/actions/:actionId", authUser, async (req: AuthenticatedRequest, res) => {
+  try {
+    const { id, actionId } = req.params;
+    
+    const localMatch = await prisma.localMatch.findUnique({
+      where: { id },
+      include: {
+        teamA: { select: { ownerId: true } },
+        teamB: { select: { ownerId: true } },
+      },
+    });
+    
+    if (!localMatch) {
+      return res.status(404).json({ error: "Partie offline introuvable" });
+    }
+    
+    // Vérifier que l'action existe
+    const action = await prisma.localMatchAction.findUnique({
+      where: { id: actionId },
+    });
+    
+    if (!action || action.matchId !== id) {
+      return res.status(404).json({ error: "Action introuvable" });
+    }
+    
+    // Vérifier que l'utilisateur est le créateur ou propriétaire d'une des équipes
+    const isCreator = localMatch.creatorId === req.user!.id;
+    const isTeamOwner = 
+      localMatch.teamA.ownerId === req.user!.id || 
+      (localMatch.teamB && localMatch.teamB.ownerId === req.user!.id);
+    
+    if (!isCreator && !isTeamOwner && req.user!.role !== "admin") {
+      return res.status(403).json({ error: "Accès non autorisé" });
+    }
+    
+    await prisma.localMatchAction.delete({
+      where: { id: actionId },
+    });
+    
+    res.json({ message: "Action supprimée avec succès" });
+  } catch (e: any) {
+    console.error("Erreur lors de la suppression de l'action:", e);
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
 // GET /local-match/share/:token - Récupérer les détails d'un match via le token de partage
 router.get("/share/:token", async (req, res) => {
   try {

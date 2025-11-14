@@ -530,6 +530,123 @@ async function main() {
       data: Array.from({ length: 11 }, (_, i) => mk(teamB.id, i + 1)),
     });
   }
+
+  // =============================================================================
+  // 6. SEED D'UNE COUPE ET D'UN MATCH LOCAL (fixtures de test)
+  // =============================================================================
+  console.log("🏆 Seed d'une coupe et d'un match local de test...");
+  
+  const adminUser = await prisma.user.findUnique({
+    where: { email: "admin@example.com" },
+  });
+  const userUser = await prisma.user.findUnique({
+    where: { email: "user@example.com" },
+  });
+
+  if (adminUser && userUser) {
+    // Récupérer les équipes
+    const adminSkavenTeam = await prisma.team.findFirst({
+      where: {
+        ownerId: adminUser.id,
+        roster: "skaven",
+      },
+    });
+    const userLizardmenTeam = await prisma.team.findFirst({
+      where: {
+        ownerId: userUser.id,
+        roster: "lizardmen",
+      },
+    });
+
+    if (adminSkavenTeam && userLizardmenTeam) {
+      // Créer la coupe "Test 1"
+      const existingCup = await prisma.cup.findFirst({
+        where: { name: "Test 1" },
+      });
+
+      let cup;
+      if (existingCup) {
+        console.log("   ⚠️  La coupe 'Test 1' existe déjà, utilisation de celle-ci");
+        cup = existingCup;
+      } else {
+        cup = await prisma.cup.create({
+          data: {
+            name: "Test 1",
+            creatorId: adminUser.id,
+            validated: true,
+            isPublic: true,
+            status: "en_cours",
+          },
+        });
+        console.log("   ✅ Coupe 'Test 1' créée");
+      }
+
+      // Inscrire les équipes à la coupe
+      const existingParticipant1 = await prisma.cupParticipant.findFirst({
+        where: {
+          cupId: cup.id,
+          teamId: adminSkavenTeam.id,
+        },
+      });
+      if (!existingParticipant1) {
+        await prisma.cupParticipant.create({
+          data: {
+            cupId: cup.id,
+            teamId: adminSkavenTeam.id,
+          },
+        });
+        console.log("   ✅ Équipe Admin-Skavens inscrite à la coupe");
+      }
+
+      const existingParticipant2 = await prisma.cupParticipant.findFirst({
+        where: {
+          cupId: cup.id,
+          teamId: userLizardmenTeam.id,
+        },
+      });
+      if (!existingParticipant2) {
+        await prisma.cupParticipant.create({
+          data: {
+            cupId: cup.id,
+            teamId: userLizardmenTeam.id,
+          },
+        });
+        console.log("   ✅ Équipe User-Lizardmen inscrite à la coupe");
+      }
+
+      // Créer un match local associé à la coupe
+      const existingMatch = await prisma.localMatch.findFirst({
+        where: {
+          cupId: cup.id,
+          teamAId: adminSkavenTeam.id,
+          teamBId: userLizardmenTeam.id,
+        },
+      });
+
+      if (!existingMatch) {
+        await prisma.localMatch.create({
+          data: {
+            name: null, // Pas de nom spécifique
+            creatorId: adminUser.id,
+            teamAId: adminSkavenTeam.id,
+            teamBId: userLizardmenTeam.id,
+            cupId: cup.id,
+            status: "pending",
+            teamAOwnerValidated: false,
+            teamBOwnerValidated: false,
+          },
+        });
+        console.log("   ✅ Match local créé (Admin-Skavens vs User-Lizardmen)");
+      } else {
+        console.log("   ⚠️  Le match local existe déjà");
+      }
+    } else {
+      console.log("   ⚠️  Impossible de créer la coupe : équipes non trouvées");
+    }
+  } else {
+    console.log("   ⚠️  Impossible de créer la coupe : utilisateurs non trouvés");
+  }
+  console.log("✅ Fixtures de coupe et match local terminées\n");
 }
 
 main()
@@ -541,6 +658,7 @@ main()
     console.log("   - Toutes les positions ont été importées");
     console.log("   - Tous les Star Players ont été importés");
     console.log("   - Les comptes par défaut sont prêts");
+    console.log("   - La coupe 'Test 1' et un match local ont été créés");
   })
   .catch(async (e) => {
     console.error("❌ Erreur lors du seed:", e);

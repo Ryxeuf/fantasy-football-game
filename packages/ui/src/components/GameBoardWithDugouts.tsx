@@ -8,7 +8,7 @@ import PixiBoard from "../board/PixiBoard";
 import TeamDugoutComponent from "./TeamDugout";
 
 interface GameBoardWithDugoutsProps {
-  state: GameState;
+  state: GameState | null | undefined;
   onCellClick?: (pos: { x: number; y: number }) => void;
   onPlayerClick?: (playerId: string) => void;
   legalMoves?: { x: number; y: number }[];
@@ -38,6 +38,17 @@ export default function GameBoardWithDugouts({
   onDragOver,
   onDrop,
 }: GameBoardWithDugoutsProps) {
+  // Si state n'est pas disponible, afficher un message de chargement
+  if (!state) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center">
+          <div className="text-gray-600">Chargement du terrain...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-start gap-4 p-4 bg-gray-100 min-h-screen">
       {/* Dugout équipe A */}
