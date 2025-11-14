@@ -1,3 +1,10 @@
+## [1.18.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.17.0...v1.18.0) (2025-11-14)
+
+
+### ✨ Features
+
+* ajout administration équipes, action interception et gestion état joueur en cas d'échec ([39e5b7b](https://github.com/Ryxeuf/fantasy-football-game/commit/39e5b7bd5a94075e38fd0555fb39dc55176febdf))
+
 ## [1.17.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.16.0...v1.17.0) (2025-11-14)
 
 
