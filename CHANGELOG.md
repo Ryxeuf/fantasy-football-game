@@ -1,3 +1,10 @@
+## [1.21.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.20.0...v1.21.0) (2025-11-19)
+
+
+### ✨ Features
+
+* ajout de nouvelles fonctionnalités et améliorations pour les rosters et les joueurs ([7385944](https://github.com/Ryxeuf/fantasy-football-game/commit/73859443b29d800c5adb026cea526de084f53312))
+
 ## [1.20.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.19.0...v1.20.0) (2025-11-14)
 
 
