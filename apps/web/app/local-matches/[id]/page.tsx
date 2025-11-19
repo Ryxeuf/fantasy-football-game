@@ -320,6 +320,17 @@ export default function LocalMatchPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-nuffle-ivory via-white to-nuffle-ivory/50 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto">
+        <div className="mb-4 sm:mb-6">
+          <button
+            onClick={() => router.push("/local-matches")}
+            className="flex items-center gap-2 text-nuffle-anthracite hover:text-nuffle-gold transition-colors mb-4 group"
+          >
+            <svg className="w-5 h-5 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            <span className="font-semibold">Retour à la liste des parties</span>
+          </button>
+        </div>
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4 sm:mb-6">
           <div className="flex-1 min-w-0">
             <h1 className="text-2xl sm:text-3xl font-bold text-nuffle-anthracite">
