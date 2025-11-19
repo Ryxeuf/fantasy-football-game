@@ -34,7 +34,7 @@ export const translations = {
     home: {
       title: "L'arène où le hasard devient divin.",
       description: "Plateforme digitale pour créer et gérer vos équipes Blood Bowl. Construisez vos rosters, recrutez des Star Players légendaires, et exportez vos équipes en PDF.",
-      subtitle: "Conformité aux règles officielles Blood Bowl 2020 : 28 rosters disponibles, gestion complète des budgets, trésorerie, et export PDF pour vos parties.",
+      subtitle: "Conformité aux règles officielles Blood Bowl 2025 : 28 rosters disponibles, gestion complète des budgets, trésorerie, et export PDF pour vos parties.",
       manageTeams: "Gérer mes équipes",
       login: "Connexion",
       register: "Inscription",
@@ -66,7 +66,7 @@ export const translations = {
     },
     // Footer
     footer: {
-      description: "Plateforme digitale complète pour jouer à Blood Bowl selon les règles officielles 2020.",
+      description: "Plateforme digitale complète pour jouer à Blood Bowl selon les règles officielles 2025.",
       features: "Fonctionnalités",
       teamManagement: "Gestion d'équipes",
       starPlayers: "Star Players",
@@ -75,7 +75,7 @@ export const translations = {
       legal: "Légal",
       legalNotice: "Mentions légales",
       termsOfService: "Conditions d'utilisation",
-      basedOn: "Basé sur les règles officielles de Blood Bowl 2020.",
+      basedOn: "Basé sur les règles officielles de Blood Bowl 2025.",
       items: "élément",
       itemsPlural: "éléments",
       compulsory: "Obligatoire",
@@ -318,7 +318,7 @@ export const translations = {
     home: {
       title: "The arena where chance becomes divine.",
       description: "Digital platform to create and manage your Blood Bowl teams. Build your rosters, recruit legendary Star Players, and export your teams as PDF.",
-      subtitle: "Compliance with official Blood Bowl 2020 rules: 28 available rosters, complete budget management, treasury, and PDF export for your games.",
+      subtitle: "Compliance with official Blood Bowl 2025 rules: 28 available rosters, complete budget management, treasury, and PDF export for your games.",
       manageTeams: "Manage my teams",
       login: "Login",
       register: "Register",
@@ -350,7 +350,7 @@ export const translations = {
     },
     // Footer
     footer: {
-      description: "Complete digital platform to play Blood Bowl according to official 2020 rules.",
+      description: "Complete digital platform to play Blood Bowl according to official 2025 rules.",
       features: "Features",
       teamManagement: "Team Management",
       starPlayers: "Star Players",
@@ -359,7 +359,7 @@ export const translations = {
       legal: "Legal",
       legalNotice: "Legal Notice",
       termsOfService: "Terms of Service",
-      basedOn: "Based on official Blood Bowl 2020 rules.",
+      basedOn: "Based on official Blood Bowl 2025 rules.",
       items: "item",
       itemsPlural: "items",
       compulsory: "Compulsory",

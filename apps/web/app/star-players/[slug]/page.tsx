@@ -154,7 +154,14 @@ export default function StarPlayerDetailPage() {
 
               {/* Nom et coût */}
               <div className="flex-1 text-center md:text-left">
-                <h1 className="text-5xl font-bold mb-4">{starPlayer.displayName}</h1>
+                <div className="flex items-center justify-center md:justify-start gap-4 mb-4">
+                  <h1 className="text-5xl font-bold">{starPlayer.displayName}</h1>
+                  {starPlayer.isMegaStar && (
+                    <span className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black text-lg font-bold px-4 py-2 rounded-full shadow-lg border-2 border-yellow-700 animate-pulse">
+                      ⭐ MEGA STAR
+                    </span>
+                  )}
+                </div>
                 <div className="flex items-center justify-center md:justify-start gap-4">
                   <span className="text-3xl font-bold bg-yellow-400 text-black px-6 py-3 rounded-lg shadow-lg">
                     {(starPlayer.cost / 1000).toLocaleString()} K po
@@ -250,6 +257,22 @@ export default function StarPlayerDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* Badge Mega Star */}
+        {starPlayer.isMegaStar && (
+          <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 border-4 border-yellow-400 rounded-xl p-6 mb-8 shadow-lg">
+            <div className="flex items-center gap-4">
+              <div className="text-5xl">⭐</div>
+              <div>
+                <h3 className="text-2xl font-bold text-yellow-900 mb-2">MEGA STAR</h3>
+                <p className="text-yellow-800">
+                  Ce Star Player fait partie des légendes les plus emblématiques de Blood Bowl.
+                  Les Mega Stars sont des joueurs d'exception reconnus dans tout le Vieux Monde.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Informations complémentaires */}
         <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">

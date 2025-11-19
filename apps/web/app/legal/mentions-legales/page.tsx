@@ -47,7 +47,7 @@ export default function MentionsLegalesPage() {
             éducatives et de référence uniquement.
           </p>
           <p className="mb-4">
-            Les références aux règles officielles de Blood Bowl 2020 et les noms des joueurs utilisés
+            Les références aux règles officielles de Blood Bowl 2025 et les noms des joueurs utilisés
             sur ce site sont la propriété exclusive de Games Workshop. Aucune revendication de propriété
             n'est faite concernant ces éléments.
           </p>

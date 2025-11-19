@@ -136,8 +136,12 @@ router.get("/rosters", async (req, res) => {
         slug: true,
         name: true,
         nameEn: true,
+        descriptionFr: true,
+        descriptionEn: true,
         budget: true,
         tier: true,
+        regionalRules: true,
+        specialRules: true,
         naf: true,
         createdAt: true,
         updatedAt: true,
@@ -147,7 +151,12 @@ router.get("/rosters", async (req, res) => {
       },
       orderBy: { name: "asc" },
     });
-    res.json({ rosters });
+    // Parse regionalRules JSON string to array for each roster
+    const rostersWithParsedRules = rosters.map((roster: any) => ({
+      ...roster,
+      regionalRules: roster.regionalRules ? JSON.parse(roster.regionalRules) : null,
+    }));
+    res.json({ rosters: rostersWithParsedRules });
   } catch (error: any) {
     console.error("Erreur lors de la récupération des rosters:", error);
     res.status(500).json({ error: error.message || "Erreur serveur" });
@@ -163,8 +172,12 @@ router.get("/rosters/:id", async (req, res) => {
         slug: true,
         name: true,
         nameEn: true,
+        descriptionFr: true,
+        descriptionEn: true,
         budget: true,
         tier: true,
+        regionalRules: true,
+        specialRules: true,
         naf: true,
         createdAt: true,
         updatedAt: true,
@@ -181,7 +194,12 @@ router.get("/rosters/:id", async (req, res) => {
     if (!roster) {
       return res.status(404).json({ error: "Roster non trouvé" });
     }
-    res.json({ roster });
+    // Parse regionalRules JSON string to array
+    const rosterWithParsedRules = {
+      ...roster,
+      regionalRules: roster.regionalRules ? JSON.parse(roster.regionalRules) : null,
+    };
+    res.json({ roster: rosterWithParsedRules });
   } catch (error: any) {
     console.error("Erreur lors de la récupération du roster:", error);
     res.status(500).json({ error: error.message || "Erreur serveur" });
@@ -190,14 +208,27 @@ router.get("/rosters/:id", async (req, res) => {
 
 router.post("/rosters", async (req, res) => {
   try {
-    const { slug, name, nameEn, budget, tier, naf } = req.body;
+    const { slug, name, nameEn, descriptionFr, descriptionEn, budget, tier, regionalRules, specialRules, naf } = req.body;
     
     if (!slug || !name || !nameEn || budget === undefined || !tier) {
       return res.status(400).json({ error: "Tous les champs sont requis (slug, name, nameEn, budget, tier)" });
     }
 
+    const regionalRulesJson = regionalRules ? JSON.stringify(regionalRules) : null;
+
     const roster = await prisma.roster.create({
-      data: { slug, name, nameEn, budget, tier, naf: naf || false },
+      data: { 
+        slug, 
+        name, 
+        nameEn, 
+        descriptionFr: descriptionFr || null,
+        descriptionEn: descriptionEn || null,
+        budget, 
+        tier, 
+        regionalRules: regionalRulesJson,
+        specialRules: specialRules || null,
+        naf: naf || false 
+      },
     });
     res.status(201).json({ roster });
   } catch (error: any) {
@@ -211,15 +242,27 @@ router.post("/rosters", async (req, res) => {
 
 router.put("/rosters/:id", async (req, res) => {
   try {
-    const { name, nameEn, budget, tier, naf } = req.body;
+    const { name, nameEn, descriptionFr, descriptionEn, budget, tier, regionalRules, specialRules, naf } = req.body;
     
     if (!name || !nameEn) {
       return res.status(400).json({ error: "Les champs name et nameEn sont requis" });
     }
     
+    const regionalRulesJson = regionalRules ? JSON.stringify(regionalRules) : null;
+
     const roster = await prisma.roster.update({
       where: { id: req.params.id },
-      data: { name, nameEn, budget, tier, naf },
+      data: { 
+        name, 
+        nameEn, 
+        descriptionFr: descriptionFr || null,
+        descriptionEn: descriptionEn || null,
+        budget, 
+        tier, 
+        regionalRules: regionalRulesJson,
+        specialRules: specialRules || null,
+        naf 
+      },
     });
     res.json({ roster });
   } catch (error: any) {
@@ -299,7 +342,7 @@ router.get("/positions/:id", async (req, res) => {
 
 router.post("/positions", async (req, res) => {
   try {
-    const { rosterId, slug, displayName, cost, min, max, ma, st, ag, pa, av, skillSlugs } = req.body;
+    const { rosterId, slug, displayName, cost, min, max, ma, st, ag, pa, av, keywords, skillSlugs } = req.body;
     
     if (!rosterId || !slug || !displayName || cost === undefined || min === undefined || 
         max === undefined || ma === undefined || st === undefined || ag === undefined || 
@@ -320,6 +363,7 @@ router.post("/positions", async (req, res) => {
         ag,
         pa,
         av,
+        keywords: keywords || null,
         skills: {
           create: skillSlugs?.map((skillSlug: string) => ({
             skill: {
@@ -346,7 +390,7 @@ router.post("/positions", async (req, res) => {
 
 router.put("/positions/:id", async (req, res) => {
   try {
-    const { displayName, cost, min, max, ma, st, ag, pa, av, skillSlugs } = req.body;
+    const { displayName, cost, min, max, ma, st, ag, pa, av, keywords, skillSlugs } = req.body;
     
     // Supprimer les anciennes relations de compétences
     await prisma.positionSkill.deleteMany({
@@ -366,6 +410,7 @@ router.put("/positions/:id", async (req, res) => {
         ag,
         pa,
         av,
+        keywords: keywords || null,
         skills: {
           create: skillSlugs?.map((skillSlug: string) => ({
             skill: {

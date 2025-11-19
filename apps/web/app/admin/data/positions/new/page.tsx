@@ -105,6 +105,7 @@ export default function NewPositionPage() {
         ag: parseInt(formData.get("ag") as string),
         pa: parseInt(formData.get("pa") as string),
         av: parseInt(formData.get("av") as string),
+        keywords: formData.get("keywords") as string || null,
         skillSlugs: selectedSkillSlugs,
       };
       await postJSON("/admin/data/positions", data);
@@ -239,6 +240,18 @@ export default function NewPositionPage() {
               required
               className="w-full border rounded px-3 py-2"
             />
+          </div>
+          <div className="col-span-3">
+            <label className="block text-sm font-medium mb-1">Mots-clés (séparés par des virgules)</label>
+            <input
+              type="text"
+              name="keywords"
+              placeholder="ex: elite,passive"
+              className="w-full border rounded px-3 py-2"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Mots-clés pour cette position (ex: elite, passive, etc.)
+            </p>
           </div>
           <div className="col-span-3">
             {skills.length > 0 ? (

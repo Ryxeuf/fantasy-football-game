@@ -48,7 +48,14 @@ export default function StarPlayerCard({ starPlayer, onClick }: StarPlayerCardPr
       {/* En-tête */}
       <div className="flex justify-between items-start mb-3">
         <div>
-          <h3 className="font-bold text-lg">{starPlayer.displayName}</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="font-bold text-lg">{starPlayer.displayName}</h3>
+            {starPlayer.isMegaStar && (
+              <span className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black text-xs font-bold px-2 py-1 rounded-full shadow-md border-2 border-yellow-700">
+                ⭐ MEGA STAR
+              </span>
+            )}
+          </div>
           <span className="text-xs font-semibold text-gray-600">
             {getRarityLabel(starPlayer.cost)}
           </span>

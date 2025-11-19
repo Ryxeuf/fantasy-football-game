@@ -24,8 +24,12 @@ type Roster = {
   slug: string;
   name: string;
   nameEn: string;
+  descriptionFr?: string | null;
+  descriptionEn?: string | null;
   budget: number;
   tier: string;
+  regionalRules?: string[] | null;
+  specialRules?: string | null;
   naf: boolean;
   createdAt: string;
   updatedAt: string;
@@ -97,11 +101,18 @@ export default function AdminRosterDetailPage() {
     if (!roster) return;
     const formData = new FormData(e.currentTarget);
     try {
+      const regionalRulesStr = formData.get("regionalRules") as string;
+      const regionalRules = regionalRulesStr ? regionalRulesStr.split(",").map(r => r.trim()).filter(r => r) : null;
+      
       const data = {
         name: formData.get("name"),
         nameEn: formData.get("nameEn"),
+        descriptionFr: formData.get("descriptionFr") || null,
+        descriptionEn: formData.get("descriptionEn") || null,
         budget: parseInt(formData.get("budget") as string),
         tier: formData.get("tier"),
+        regionalRules: regionalRules,
+        specialRules: formData.get("specialRules") || null,
         naf: formData.get("naf") === "on",
       };
       await putJSON(`/admin/data/rosters/${roster.id}`, data);
@@ -256,6 +267,60 @@ export default function AdminRosterDetailPage() {
                 </label>
               </div>
             </div>
+            
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Description (FR)
+              </label>
+              <textarea
+                name="descriptionFr"
+                defaultValue={roster.descriptionFr || ""}
+                rows={4}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all"
+              />
+            </div>
+            
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Description (EN)
+              </label>
+              <textarea
+                name="descriptionEn"
+                defaultValue={roster.descriptionEn || ""}
+                rows={4}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all"
+              />
+            </div>
+            
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Règles régionales (séparées par des virgules)
+              </label>
+              <input
+                type="text"
+                name="regionalRules"
+                defaultValue={roster.regionalRules?.join(", ") || ""}
+                placeholder="ex: elven_kingdoms_league, old_world_classic"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Exemples: elven_kingdoms_league, old_world_classic, badlands_brawl, lustrian_superleague, sylvanian_spotlight, underworld_challenge, worlds_edge_superleague, favoured_of, halfling_thimble_cup
+              </p>
+            </div>
+            
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Règles spéciales
+              </label>
+              <input
+                type="text"
+                name="specialRules"
+                defaultValue={roster.specialRules || ""}
+                placeholder="ex: NONE"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all"
+              />
+            </div>
+            
             <div className="flex gap-3">
               <button
                 type="submit"
@@ -320,6 +385,40 @@ export default function AdminRosterDetailPage() {
             </div>
           </div>
         </div>
+        
+        {roster.descriptionFr && (
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <div className="text-sm font-medium text-gray-600 mb-2">Description (FR)</div>
+            <div className="text-gray-900 whitespace-pre-wrap">{roster.descriptionFr}</div>
+          </div>
+        )}
+        
+        {roster.descriptionEn && (
+          <div className="mt-4">
+            <div className="text-sm font-medium text-gray-600 mb-2">Description (EN)</div>
+            <div className="text-gray-900 whitespace-pre-wrap">{roster.descriptionEn}</div>
+          </div>
+        )}
+        
+        {roster.regionalRules && roster.regionalRules.length > 0 && (
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <div className="text-sm font-medium text-gray-600 mb-2">Règles régionales</div>
+            <div className="flex flex-wrap gap-2">
+              {roster.regionalRules.map((rule, idx) => (
+                <span key={idx} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                  {rule}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {roster.specialRules && (
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <div className="text-sm font-medium text-gray-600 mb-2">Règles spéciales</div>
+            <div className="text-gray-900">{roster.specialRules}</div>
+          </div>
+        )}
       </div>
 
       {/* Positions */}

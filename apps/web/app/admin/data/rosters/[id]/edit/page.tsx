@@ -8,8 +8,12 @@ type Roster = {
   slug: string;
   name: string;
   nameEn: string;
+  descriptionFr?: string | null;
+  descriptionEn?: string | null;
   budget: number;
   tier: string;
+  regionalRules?: string[] | null;
+  specialRules?: string | null;
   naf: boolean;
 };
 
@@ -81,11 +85,18 @@ export default function EditRosterPage() {
     setError(null);
     const formData = new FormData(e.currentTarget);
     try {
+      const regionalRulesStr = formData.get("regionalRules") as string;
+      const regionalRules = regionalRulesStr ? regionalRulesStr.split(",").map(r => r.trim()).filter(r => r) : null;
+      
       const data = {
         name: formData.get("name"),
         nameEn: formData.get("nameEn"),
+        descriptionFr: formData.get("descriptionFr") || null,
+        descriptionEn: formData.get("descriptionEn") || null,
         budget: parseInt(formData.get("budget") as string),
         tier: formData.get("tier"),
+        regionalRules: regionalRules,
+        specialRules: formData.get("specialRules") || null,
         naf: formData.get("naf") === "on",
       };
       await putJSON(`/admin/data/rosters/${roster.id}`, data);
@@ -163,6 +174,7 @@ export default function EditRosterPage() {
               <option value="I">I</option>
               <option value="II">II</option>
               <option value="III">III</option>
+              <option value="IV">IV</option>
             </select>
           </div>
           <div>
@@ -176,6 +188,51 @@ export default function EditRosterPage() {
               <span className="text-sm font-medium">NAF</span>
             </label>
           </div>
+        </div>
+        
+        <div className="mb-6">
+          <label className="block text-sm font-medium mb-1">Description (FR)</label>
+          <textarea
+            name="descriptionFr"
+            defaultValue={roster.descriptionFr || ""}
+            rows={4}
+            className="w-full border rounded px-3 py-2"
+          />
+        </div>
+        
+        <div className="mb-6">
+          <label className="block text-sm font-medium mb-1">Description (EN)</label>
+          <textarea
+            name="descriptionEn"
+            defaultValue={roster.descriptionEn || ""}
+            rows={4}
+            className="w-full border rounded px-3 py-2"
+          />
+        </div>
+        
+        <div className="mb-6">
+          <label className="block text-sm font-medium mb-1">Règles régionales (séparées par des virgules)</label>
+          <input
+            type="text"
+            name="regionalRules"
+            defaultValue={roster.regionalRules?.join(", ") || ""}
+            placeholder="ex: elven_kingdoms_league, old_world_classic"
+            className="w-full border rounded px-3 py-2"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Exemples: elven_kingdoms_league, old_world_classic, badlands_brawl, lustrian_superleague, sylvanian_spotlight, underworld_challenge, worlds_edge_superleague, favoured_of, halfling_thimble_cup
+          </p>
+        </div>
+        
+        <div className="mb-6">
+          <label className="block text-sm font-medium mb-1">Règles spéciales</label>
+          <input
+            type="text"
+            name="specialRules"
+            defaultValue={roster.specialRules || ""}
+            placeholder="ex: NONE"
+            className="w-full border rounded px-3 py-2"
+          />
         </div>
         <div className="flex gap-2">
           <button

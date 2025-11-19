@@ -38,7 +38,7 @@ export default function ConditionsUtilisationPage() {
           <h2 className="text-2xl font-semibold mb-4">2. Description du service</h2>
           <p className="mb-4">
             Nuffle Arena est une plateforme digitale permettant de créer et gérer des équipes Blood Bowl
-            selon les règles officielles. Le service permet notamment de :
+            selon les règles officielles 2025. Le service permet notamment de :
           </p>
           <ul className="list-disc list-inside mb-4 space-y-2 ml-4">
             <li>Créer et gérer des équipes Blood Bowl</li>

@@ -16,6 +16,7 @@ export interface StarPlayerDefinition {
   hirableBy: string[];    // Équipes ou règles spéciales qui peuvent recruter ce joueur
   specialRule?: string;   // Règle spéciale du joueur
   imageUrl?: string;      // URL de l'image du joueur
+  isMegaStar?: boolean;    // Flag Mega Star
 }
 
 /**
@@ -301,7 +302,8 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "loner-4,block,sure-feet,dodge,fend,sprint",
     hirableBy: ["old_world_classic"],
-    imageUrl: undefined
+    imageUrl: undefined,
+    isMegaStar: true
   },
 
   grim_ironjaw: {
@@ -376,7 +378,7 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
 
   hthark_the_unstoppable: {
     slug: "hthark_the_unstoppable",
-    displayName: "H’thark the Unstoppable",
+    displayName: "H'thark the Unstoppable",
     cost: 300000,
     ma: 6,
     st: 6,
@@ -385,12 +387,13 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 10,
     skills: "block,thick-skull,defensive,sure-feet,break-tackle,juggernaut,sprint,loner-4",
     hirableBy: ["badlands_brawl"],
-    imageUrl: "/data/Star-Players_files/Fungus-the-Loon.webp"
+    imageUrl: "/data/Star-Players_files/Fungus-the-Loon.webp",
+    isMegaStar: true
   },
 
   ivan_the_animal_deathshroud: {
     slug: "ivan_the_animal_deathshroud",
-    displayName: "Ivan ‘the Animal’ Deathshroud",
+    displayName: "Ivan 'the Animal' Deathshroud",
     cost: 190000,
     ma: 6,
     st: 4,
@@ -399,7 +402,8 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "block,juggernaut,disturbing-presence,sure-hands,regeneration,loner-4,tackle",
     hirableBy: ["sylvanian_spotlight"],
-    imageUrl: undefined
+    imageUrl: undefined,
+    isMegaStar: true
   },
 
   ivar_eriksson: {
@@ -596,7 +600,8 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     skills: "loner-4,block,mighty-blow-1,thick-skull,throw-team-mate",
     hirableBy: ["sylvanian_spotlight"],
     imageUrl: "/data/Star-Players_files/Morg-'n-Thorg.webp",
-    specialRule: "La Baliste: Une fois par match, si Morg rate le test de Passe quand il effectue une Passe ou un Lancer de Coéquipier, vous pouvez relancer le D6."
+    specialRule: "La Baliste: Une fois par match, si Morg rate le test de Passe quand il effectue une Passe ou un Lancer de Coéquipier, vous pouvez relancer le D6.",
+    isMegaStar: true
   },
 
   nobbla_blackwart: {

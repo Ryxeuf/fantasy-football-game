@@ -39,6 +39,7 @@ router.get("/", async (req, res) => {
       av: sp.av,
       specialRule: sp.specialRule,
       imageUrl: sp.imageUrl,
+      isMegaStar: sp.isMegaStar,
       skills: sp.skills.map((sps) => sps.skill.slug).join(","),
       hirableBy: sp.hirableBy.map((h) => h.roster?.slug || h.rule),
     }));
@@ -95,6 +96,7 @@ router.get("/:slug", async (req, res) => {
       av: starPlayer.av,
       specialRule: starPlayer.specialRule,
       imageUrl: starPlayer.imageUrl,
+      isMegaStar: starPlayer.isMegaStar,
       skills: starPlayer.skills.map((sps) => sps.skill.slug).join(","),
       hirableBy: starPlayer.hirableBy.map((h) => h.roster?.slug || h.rule),
     };
@@ -173,6 +175,7 @@ router.get("/available/:roster", async (req, res) => {
       av: sp.av,
       specialRule: sp.specialRule,
       imageUrl: sp.imageUrl,
+      isMegaStar: sp.isMegaStar,
       skills: sp.skills.map((sps) => sps.skill.slug).join(","),
       hirableBy: sp.hirableBy.map((h) => h.roster?.slug || h.rule),
     }));
@@ -290,6 +293,7 @@ router.get("/search", async (req, res) => {
       av: sp.av,
       specialRule: sp.specialRule,
       imageUrl: sp.imageUrl,
+      isMegaStar: sp.isMegaStar,
       skills: sp.skills.map((sps) => sps.skill.slug).join(","),
       hirableBy: sp.hirableBy.map((h) => h.roster?.slug || h.rule),
     }));

@@ -7,7 +7,7 @@ export const TEAM_ROSTERS = {
     skaven: {
         name: "Skavens",
         budget: 1000,
-        tier: "I",
+        tier: "II",
         naf: false,
         positions: [
             {
@@ -359,7 +359,7 @@ export const TEAM_ROSTERS = {
     goblin: {
         name: "Gobelins",
         budget: 1000,
-        tier: "III",
+        tier: "IV",
         naf: false,
         positions: [
             {
@@ -471,7 +471,7 @@ export const TEAM_ROSTERS = {
     undead: {
         name: "Morts-Vivants",
         budget: 1000,
-        tier: "I",
+        tier: "II",
         naf: false,
         positions: [
             {
@@ -544,7 +544,7 @@ export const TEAM_ROSTERS = {
     chaos_renegade: {
         name: "Renégats du Chaos",
         budget: 1000,
-        tier: "II",
+        tier: "III",
         naf: false,
         positions: [
             {
@@ -682,7 +682,7 @@ export const TEAM_ROSTERS = {
     ogre: {
         name: "Ogres",
         budget: 1000,
-        tier: "III",
+        tier: "IV",
         naf: false,
         positions: [
             {
@@ -729,7 +729,7 @@ export const TEAM_ROSTERS = {
     halfling: {
         name: "Halflings",
         budget: 1000,
-        tier: "III",
+        tier: "IV",
         naf: false,
         positions: [
             {
@@ -901,7 +901,7 @@ export const TEAM_ROSTERS = {
     chaos_chosen: {
         name: "Élus du Chaos",
         budget: 1000,
-        tier: "II",
+        tier: "III",
         naf: false,
         positions: [
             {
@@ -1206,7 +1206,7 @@ export const TEAM_ROSTERS = {
     nurgle: {
         name: "Nurgle",
         budget: 1000,
-        tier: "II",
+        tier: "III",
         naf: false,
         positions: [
             {
@@ -1266,7 +1266,7 @@ export const TEAM_ROSTERS = {
     old_world_alliance: {
         name: "Alliance du Vieux Monde",
         budget: 1000,
-        tier: "II",
+        tier: "I",
         naf: false,
         positions: [
             {
@@ -1563,7 +1563,7 @@ export const TEAM_ROSTERS = {
     black_orc: {
         name: "Orques Noirs",
         budget: 1000,
-        tier: "II",
+        tier: "III",
         naf: false,
         positions: [
             {
@@ -1876,7 +1876,7 @@ export const TEAM_ROSTERS = {
     khorne: {
         name: "Khorne",
         budget: 1000,
-        tier: "II",
+        tier: "III",
         naf: false,
         positions: [
             {
@@ -2030,7 +2030,7 @@ export const TEAM_ROSTERS = {
     gnome: {
         name: "Gnomes",
         budget: 1000,
-        tier: "III",
+        tier: "IV",
         naf: false,
         positions: [
             {
@@ -2189,7 +2189,7 @@ export const TEAM_ROSTERS = {
     snotling: {
         name: "Snotlings",
         budget: 1000,
-        tier: "III",
+        tier: "IV",
         naf: false,
         positions: [
             {

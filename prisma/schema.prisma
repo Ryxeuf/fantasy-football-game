@@ -130,7 +130,10 @@ model Skill {
   nameEn      String   // Nom anglais (ex: "Block")
   description String   // Description française de la compétence
   descriptionEn String? // Description anglaise de la compétence (optionnelle pour compatibilité)
-  category    String   // "General" | "Agility" | "Strength" | "Passing" | "Mutation" | "Trait"
+  category    String   // "General" | "Agility" | "Strength" | "Passing" | "Mutation" | "Trait" | "Scélérates"
+  isElite     Boolean  @default(false) // Compétence Elite (+10 000 de valeur d'équipe)
+  isPassive   Boolean  @default(false) // Compétence passive (soulignée)
+  isModified  Boolean  @default(false) // Compétence modifiée ou nouveau nom (astérisque)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
@@ -141,15 +144,19 @@ model Skill {
 
 // Modèle pour les rosters d'équipes
 model Roster {
-  id          String   @id @default(cuid())
-  slug        String   @unique // Identifiant unique (ex: "skaven", "lizardmen")
-  name        String   // Nom d'affichage en français (ex: "Skavens")
-  nameEn      String   // Nom d'affichage en anglais (ex: "Skaven")
-  budget      Int      // Budget de départ en kpo
-  tier        String   // "I" | "II" | "III"
-  naf         Boolean  @default(false) // Disponible dans NAF
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  slug          String   @unique // Identifiant unique (ex: "skaven", "lizardmen")
+  name          String   // Nom d'affichage en français (ex: "Skavens")
+  nameEn        String   // Nom d'affichage en anglais (ex: "Skaven")
+  descriptionFr String?  // Description en français
+  descriptionEn String?  // Description en anglais
+  budget        Int      // Budget de départ en kpo
+  tier          String   // "I" | "II" | "III" | "IV"
+  regionalRules String?  // Règles régionales (JSON array, ex: ["elven_kingdoms_league"])
+  specialRules  String?  // Règles spéciales (texte libre)
+  naf           Boolean  @default(false) // Disponible dans NAF
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
   
   // Relations
   positions     Position[]
@@ -171,6 +178,7 @@ model Position {
   ag          Int      // Agility
   pa          Int      // Passing
   av          Int      // Armour Value
+  keywords    String?  // Mots-clés séparés par des virgules (ex: "elite,passive")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
@@ -207,6 +215,7 @@ model StarPlayer {
   av          Int      // Armour Value (valeur cible, ex: 9 pour 9+)
   specialRule String? // Règle spéciale du joueur
   imageUrl    String? // URL de l'image du joueur
+  isMegaStar  Boolean  @default(false) // Flag Mega Star
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   

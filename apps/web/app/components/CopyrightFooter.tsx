@@ -18,7 +18,7 @@ export default function CopyrightFooter() {
         </p>
         <p className="text-xs text-gray-500 mt-2">
           Sources : <a href="https://nufflezone.com" className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">NuffleZone</a>, 
-          Blood Bowl 2020 Rulebook, Death Zone supplements.
+          Blood Bowl 2025 Rulebook, Death Zone supplements.
         </p>
       </div>
     </footer>

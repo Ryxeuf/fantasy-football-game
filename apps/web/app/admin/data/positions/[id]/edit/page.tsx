@@ -16,6 +16,7 @@ type Position = {
   ag: number;
   pa: number;
   av: number;
+  keywords?: string | null;
   roster: { id: string; slug: string; name: string };
   skills: Array<{ skill: { slug: string; nameFr: string } }>;
 };
@@ -141,6 +142,7 @@ export default function EditPositionPage() {
         ag: parseInt(formData.get("ag") as string),
         pa: parseInt(formData.get("pa") as string),
         av: parseInt(formData.get("av") as string),
+        keywords: formData.get("keywords") as string || null,
         skillSlugs: selectedSkillSlugs,
       };
       await putJSON(`/admin/data/positions/${position.id}`, data);
@@ -269,6 +271,19 @@ export default function EditPositionPage() {
               required
               className="w-full border rounded px-3 py-2"
             />
+          </div>
+          <div className="col-span-3">
+            <label className="block text-sm font-medium mb-1">Mots-clés (séparés par des virgules)</label>
+            <input
+              type="text"
+              name="keywords"
+              defaultValue={position.keywords || ""}
+              placeholder="ex: elite,passive"
+              className="w-full border rounded px-3 py-2"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Mots-clés pour cette position (ex: elite, passive, etc.)
+            </p>
           </div>
           <div className="col-span-3">
             {skills.length > 0 ? (

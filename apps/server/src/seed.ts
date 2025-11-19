@@ -30,6 +30,9 @@ async function main() {
       const finalDescription = staticData?.description || skillDef.description;
       const finalDescriptionEn = staticData?.descriptionEn || null;
       const finalCategory = staticData?.category || skillDef.category;
+      const finalIsElite = skillDef.isElite || false;
+      const finalIsPassive = skillDef.isPassive || false;
+      const finalIsModified = skillDef.isModified || false;
 
       if (existing) {
         await prisma.skill.update({
@@ -40,6 +43,9 @@ async function main() {
             description: finalDescription,
             descriptionEn: finalDescriptionEn,
             category: finalCategory,
+            isElite: finalIsElite,
+            isPassive: finalIsPassive,
+            isModified: finalIsModified,
           }
         });
         skillsSkipped++;
@@ -52,6 +58,9 @@ async function main() {
             description: finalDescription,
             descriptionEn: finalDescriptionEn,
             category: finalCategory,
+            isElite: finalIsElite,
+            isPassive: finalIsPassive,
+            isModified: finalIsModified,
           }
         });
         skillsCreated++;
@@ -110,6 +119,7 @@ async function main() {
       });
 
       const nameEn = rosterNamesEn[slug] || rosterDef.name; // Fallback sur le nom français si pas de traduction
+      const regionalRulesJson = rosterDef.regionalRules ? JSON.stringify(rosterDef.regionalRules) : null;
 
       if (existing) {
         await prisma.roster.update({
@@ -117,8 +127,12 @@ async function main() {
           data: {
             name: rosterDef.name,
             nameEn: nameEn,
+            descriptionFr: rosterDef.descriptionFr || null,
+            descriptionEn: rosterDef.descriptionEn || null,
             budget: rosterDef.budget,
             tier: rosterDef.tier,
+            regionalRules: regionalRulesJson,
+            specialRules: rosterDef.specialRules || null,
             naf: rosterDef.naf,
           }
         });
@@ -129,8 +143,12 @@ async function main() {
             slug,
             name: rosterDef.name,
             nameEn: nameEn,
+            descriptionFr: rosterDef.descriptionFr || null,
+            descriptionEn: rosterDef.descriptionEn || null,
             budget: rosterDef.budget,
             tier: rosterDef.tier,
+            regionalRules: regionalRulesJson,
+            specialRules: rosterDef.specialRules || null,
             naf: rosterDef.naf,
           }
         });
@@ -253,6 +271,7 @@ async function main() {
         av: starPlayerDef.av,
         specialRule: starPlayerDef.specialRule ?? null,
         imageUrl: starPlayerDef.imageUrl ?? null,
+        isMegaStar: starPlayerDef.isMegaStar ?? false,
       };
 
       let starPlayer;
