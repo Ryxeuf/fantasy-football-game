@@ -360,21 +360,21 @@ export default function LocalMatchActions({
   }, [formData.playerTeam, teamA, teamB, currentTeamPlayers.length]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header avec style scoreboard */}
-      <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-xl p-6 shadow-2xl border-4 border-gray-700">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-3xl font-bold text-white tracking-wider uppercase">
+      <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-xl p-4 sm:p-6 shadow-2xl border-2 sm:border-4 border-gray-700">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white tracking-wider uppercase">
             📊 Actions de la partie
           </h2>
-          <div className="flex items-center gap-4">
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 border-2 border-white/20">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg px-3 sm:px-4 py-2 border-2 border-white/20 flex-1 sm:flex-none">
               <div className="text-xs text-gray-300 uppercase tracking-wider">Mi-temps</div>
-              <div className="text-2xl font-bold text-white">{formData.half}</div>
+              <div className="text-xl sm:text-2xl font-bold text-white">{formData.half}</div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 border-2 border-white/20">
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg px-3 sm:px-4 py-2 border-2 border-white/20 flex-1 sm:flex-none">
               <div className="text-xs text-gray-300 uppercase tracking-wider">Tour</div>
-              <div className="text-2xl font-bold text-white">{formData.turn}</div>
+              <div className="text-xl sm:text-2xl font-bold text-white">{formData.turn}</div>
             </div>
           </div>
         </div>
@@ -390,7 +390,7 @@ export default function LocalMatchActions({
       )}
 
       {/* Formulaire d'ajout d'action - style carte de jeu */}
-      <div className="bg-gradient-to-br from-white via-gray-50 to-white rounded-2xl p-6 shadow-xl border-2 border-gray-200 relative overflow-hidden">
+      <div className="bg-gradient-to-br from-white via-gray-50 to-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-xl border-2 border-gray-200 relative overflow-hidden">
         {/* Effet de terrain en arrière-plan */}
         <div className="absolute inset-0 opacity-5 pointer-events-none">
           <div className="absolute inset-0" style={{
@@ -400,14 +400,14 @@ export default function LocalMatchActions({
         </div>
         
         <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="text-4xl">{ActionIcons[formData.actionType]}</div>
-            <h3 className="text-2xl font-bold text-gray-900">Ajouter une action</h3>
+          <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+            <div className="text-2xl sm:text-3xl lg:text-4xl">{ActionIcons[formData.actionType]}</div>
+            <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">Ajouter une action</h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             {/* Sélecteurs de mi-temps et tour - style scoreboard */}
-            <div className="md:col-span-2 grid grid-cols-2 gap-4">
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 border-2 border-gray-700 shadow-lg">
+            <div className="md:col-span-2 grid grid-cols-2 gap-3 sm:gap-4">
+              <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg sm:rounded-xl p-3 sm:p-4 border-2 border-gray-700 shadow-lg">
                 <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">
                   Mi-temps
                 </label>
@@ -416,14 +416,14 @@ export default function LocalMatchActions({
                   onChange={(e) =>
                     setFormData({ ...formData, half: parseInt(e.target.value) })
                   }
-                  className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg font-bold text-lg text-gray-900 focus:ring-4 focus:ring-nuffle-gold focus:border-nuffle-gold transition-all cursor-pointer hover:border-nuffle-gold"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border-2 border-gray-300 rounded-lg font-bold text-base sm:text-lg text-gray-900 focus:ring-4 focus:ring-nuffle-gold focus:border-nuffle-gold transition-all cursor-pointer hover:border-nuffle-gold text-sm sm:text-base"
                 >
                   <option value={1}>1ère mi-temps</option>
                   <option value={2}>2ème mi-temps</option>
                 </select>
               </div>
 
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 border-2 border-gray-700 shadow-lg">
+              <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg sm:rounded-xl p-3 sm:p-4 border-2 border-gray-700 shadow-lg">
                 <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">
                   Tour
                 </label>
@@ -432,7 +432,7 @@ export default function LocalMatchActions({
                   onChange={(e) =>
                     setFormData({ ...formData, turn: parseInt(e.target.value) })
                   }
-                  className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg font-bold text-lg text-gray-900 focus:ring-4 focus:ring-nuffle-gold focus:border-nuffle-gold transition-all cursor-pointer hover:border-nuffle-gold"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border-2 border-gray-300 rounded-lg font-bold text-base sm:text-lg text-gray-900 focus:ring-4 focus:ring-nuffle-gold focus:border-nuffle-gold transition-all cursor-pointer hover:border-nuffle-gold text-sm sm:text-base"
                 >
                   {[1, 2, 3, 4, 5, 6, 7, 8].map((t) => (
                     <option key={t} value={t}>
@@ -445,10 +445,10 @@ export default function LocalMatchActions({
 
             {/* Type d'action - carte visuelle */}
             <div className="md:col-span-2">
-              <label className="block text-sm font-bold text-gray-900 mb-3 uppercase tracking-wide">
+              <label className="block text-xs sm:text-sm font-bold text-gray-900 mb-3 uppercase tracking-wide">
                 Type d'action
               </label>
-              <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 sm:gap-3">
                 {(["passe", "reception", "td", "blocage", "blitz", "transmission", "aggression", "sprint", "esquive", "apothicaire", "interception"] as ActionType[]).map((type) => (
                   <button
                     key={type}
@@ -460,14 +460,14 @@ export default function LocalMatchActions({
                         opponentId: "",
                       })
                     }
-                    className={`p-4 rounded-xl border-2 transition-all transform hover:scale-105 active:scale-95 ${
+                    className={`p-2 sm:p-3 md:p-4 rounded-lg sm:rounded-xl border-2 transition-all transform hover:scale-105 active:scale-95 ${
                       formData.actionType === type
                         ? "bg-gradient-to-br from-nuffle-gold to-nuffle-bronze border-nuffle-gold shadow-lg scale-105"
                         : "bg-white border-gray-300 hover:border-nuffle-gold hover:shadow-md"
                     }`}
                   >
-                    <div className="text-3xl mb-2">{ActionIcons[type]}</div>
-                    <div className={`text-xs font-semibold ${
+                    <div className="text-xl sm:text-2xl md:text-3xl mb-1 sm:mb-2">{ActionIcons[type]}</div>
+                    <div className={`text-[10px] sm:text-xs font-semibold leading-tight ${
                       formData.actionType === type ? "text-white" : "text-gray-700"
                     }`}>
                       {getActionTypeLabel(type)}
@@ -480,10 +480,10 @@ export default function LocalMatchActions({
             {/* Type de passe - affiché uniquement pour les passes */}
             {formData.actionType === "passe" && (
               <div className="md:col-span-2">
-                <label className="block text-sm font-bold text-gray-900 mb-3 uppercase tracking-wide">
+                <label className="block text-xs sm:text-sm font-bold text-gray-900 mb-3 uppercase tracking-wide">
                   Type de passe
                 </label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-3">
                   {[
                     { value: "", label: "Standard", icon: "🏈" },
                     { value: "rapide", label: "Rapide", icon: "⚡" },
@@ -497,14 +497,14 @@ export default function LocalMatchActions({
                       onClick={() =>
                         setFormData({ ...formData, passType: pass.value })
                       }
-                      className={`p-3 rounded-xl border-2 transition-all transform hover:scale-105 ${
+                      className={`p-2 sm:p-3 rounded-lg sm:rounded-xl border-2 transition-all transform hover:scale-105 ${
                         formData.passType === pass.value
                           ? "bg-gradient-to-br from-blue-500 to-blue-600 border-blue-600 text-white shadow-lg"
                           : "bg-white border-gray-300 hover:border-blue-400 text-gray-700"
                       }`}
                     >
-                      <div className="text-2xl mb-1">{pass.icon}</div>
-                      <div className="text-xs font-semibold">{pass.label}</div>
+                      <div className="text-xl sm:text-2xl mb-1">{pass.icon}</div>
+                      <div className="text-[10px] sm:text-xs font-semibold leading-tight">{pass.label}</div>
                     </button>
                   ))}
                 </div>
@@ -513,11 +513,11 @@ export default function LocalMatchActions({
 
             {/* Équipe et Joueur - style carte de joueur */}
             <div className="md:col-span-2">
-              <label className="block text-sm font-bold text-gray-900 mb-3 uppercase tracking-wide">
+              <label className="block text-xs sm:text-sm font-bold text-gray-900 mb-3 uppercase tracking-wide">
                 Joueur
               </label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-4 border-2 border-red-200">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-lg sm:rounded-xl p-3 sm:p-4 border-2 border-red-200">
                   <label className="block text-xs font-semibold text-red-700 uppercase tracking-wider mb-2">
                     Équipe
                   </label>
@@ -530,18 +530,18 @@ export default function LocalMatchActions({
                         playerId: "",
                       })
                     }
-                    className={`w-full px-4 py-3 rounded-lg font-semibold text-gray-900 border-2 transition-all ${
+                    className={`w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-semibold text-sm sm:text-base text-gray-900 border-2 transition-all ${
                       formData.playerTeam === "A"
                         ? "border-red-500 bg-red-50"
                         : "border-blue-500 bg-blue-50"
                     } focus:ring-4 focus:ring-nuffle-gold`}
                   >
-                    <option value="A" className="bg-white">{teamA.name} (A)</option>
-                    <option value="B" className="bg-white">{teamB.name} (B)</option>
+                    <option value="A" className="bg-white break-words">{teamA.name} (A)</option>
+                    <option value="B" className="bg-white break-words">{teamB.name} (B)</option>
                   </select>
                 </div>
 
-                <div className={`bg-gradient-to-br rounded-xl p-4 border-2 ${
+                <div className={`bg-gradient-to-br rounded-lg sm:rounded-xl p-3 sm:p-4 border-2 ${
                   formData.playerTeam === "A"
                     ? "from-red-50 to-red-100 border-red-200"
                     : "from-blue-50 to-blue-100 border-blue-200"
@@ -550,7 +550,7 @@ export default function LocalMatchActions({
                     Sélectionner un joueur
                   </label>
                   {currentTeamPlayers.length === 0 ? (
-                    <div className="w-full px-4 py-3 border-2 border-red-300 rounded-lg bg-red-50 text-red-700 text-sm font-semibold">
+                    <div className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-red-300 rounded-lg bg-red-50 text-red-700 text-xs sm:text-sm font-semibold">
                       ⚠️ Aucun joueur disponible
                     </div>
                   ) : (
@@ -559,7 +559,7 @@ export default function LocalMatchActions({
                       onChange={(e) =>
                         setFormData({ ...formData, playerId: e.target.value })
                       }
-                      className={`w-full px-4 py-3 rounded-lg font-semibold text-gray-900 border-2 transition-all ${
+                      className={`w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-semibold text-sm sm:text-base text-gray-900 border-2 transition-all ${
                         formData.playerTeam === "A"
                           ? "border-red-500 bg-white focus:border-red-600"
                           : "border-blue-500 bg-white focus:border-blue-600"
@@ -580,11 +580,11 @@ export default function LocalMatchActions({
 
             {["blocage", "blitz", "aggression"].includes(formData.actionType) && (
               <div className="md:col-span-2">
-                <label className="block text-sm font-bold text-gray-900 mb-3 uppercase tracking-wide">
+                <label className="block text-xs sm:text-sm font-bold text-gray-900 mb-3 uppercase tracking-wide">
                   Adversaire
                 </label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4 border-2 border-orange-200">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg sm:rounded-xl p-3 sm:p-4 border-2 border-orange-200">
                     <label className="block text-xs font-semibold text-orange-700 uppercase tracking-wider mb-2">
                       Équipe adverse
                     </label>
@@ -597,18 +597,18 @@ export default function LocalMatchActions({
                           opponentId: "",
                         })
                       }
-                      className={`w-full px-4 py-3 rounded-lg font-semibold text-gray-900 border-2 transition-all ${
+                      className={`w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-semibold text-sm sm:text-base text-gray-900 border-2 transition-all ${
                         formData.opponentTeam === "A"
                           ? "border-red-500 bg-red-50"
                           : "border-blue-500 bg-blue-50"
                       } focus:ring-4 focus:ring-nuffle-gold`}
                     >
-                      <option value="A" className="bg-white">{teamA.name} (A)</option>
-                      <option value="B" className="bg-white">{teamB.name} (B)</option>
+                      <option value="A" className="bg-white break-words">{teamA.name} (A)</option>
+                      <option value="B" className="bg-white break-words">{teamB.name} (B)</option>
                     </select>
                   </div>
 
-                  <div className={`bg-gradient-to-br rounded-xl p-4 border-2 ${
+                  <div className={`bg-gradient-to-br rounded-lg sm:rounded-xl p-3 sm:p-4 border-2 ${
                     formData.opponentTeam === "A"
                       ? "from-red-50 to-red-100 border-red-200"
                       : "from-blue-50 to-blue-100 border-blue-200"
@@ -621,7 +621,7 @@ export default function LocalMatchActions({
                       onChange={(e) =>
                         setFormData({ ...formData, opponentId: e.target.value })
                       }
-                      className={`w-full px-4 py-3 rounded-lg font-semibold text-gray-900 border-2 transition-all ${
+                      className={`w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-semibold text-sm sm:text-base text-gray-900 border-2 transition-all ${
                         formData.opponentTeam === "A"
                           ? "border-red-500 bg-white focus:border-red-600"
                           : "border-blue-500 bg-white focus:border-blue-600"
@@ -641,9 +641,9 @@ export default function LocalMatchActions({
 
             {/* Champs spécifiques pour blitz et blocage */}
             {["blitz", "blocage"].includes(formData.actionType) && (
-              <div className="md:col-span-2 space-y-4">
-                <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl p-4 border-2 border-yellow-300">
-                  <label className="flex items-center space-x-3 cursor-pointer group">
+              <div className="md:col-span-2 space-y-3 sm:space-y-4">
+                <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg sm:rounded-xl p-3 sm:p-4 border-2 border-yellow-300">
+                  <label className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group">
                     <input
                       type="checkbox"
                       checked={formData.armorBroken}
@@ -654,11 +654,11 @@ export default function LocalMatchActions({
                           opponentState: e.target.checked ? formData.opponentState : "",
                         })
                       }
-                      className="w-6 h-6 text-yellow-600 border-2 border-gray-400 rounded focus:ring-4 focus:ring-yellow-500 cursor-pointer transform group-hover:scale-110 transition-transform"
+                      className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600 border-2 border-gray-400 rounded focus:ring-4 focus:ring-yellow-500 cursor-pointer transform group-hover:scale-110 transition-transform flex-shrink-0"
                     />
                     <div className="flex items-center gap-2">
-                      <span className="text-2xl">🛡️</span>
-                      <span className="text-lg font-bold text-gray-900">
+                      <span className="text-xl sm:text-2xl">🛡️</span>
+                      <span className="text-base sm:text-lg font-bold text-gray-900">
                         Armure passée
                       </span>
                     </div>
@@ -666,11 +666,11 @@ export default function LocalMatchActions({
                 </div>
 
                 {formData.armorBroken && (
-                  <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-4 border-2 border-red-300">
-                    <label className="block text-sm font-bold text-gray-900 mb-3 uppercase tracking-wide">
+                  <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-lg sm:rounded-xl p-3 sm:p-4 border-2 border-red-300">
+                    <label className="block text-xs sm:text-sm font-bold text-gray-900 mb-3 uppercase tracking-wide">
                       État de l'adversaire
                     </label>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
                       {[
                         { value: "", label: "Aucun", icon: "➖" },
                         { value: "sonne", label: "Sonné", icon: "😵" },
@@ -683,14 +683,14 @@ export default function LocalMatchActions({
                           onClick={() =>
                             setFormData({ ...formData, opponentState: state.value })
                           }
-                          className={`p-3 rounded-xl border-2 transition-all transform hover:scale-105 ${
+                          className={`p-2 sm:p-3 rounded-lg sm:rounded-xl border-2 transition-all transform hover:scale-105 ${
                             formData.opponentState === state.value
                               ? "bg-gradient-to-br from-red-500 to-red-600 border-red-600 text-white shadow-lg"
                               : "bg-white border-gray-300 hover:border-red-400 text-gray-700"
                           }`}
                         >
-                          <div className="text-2xl mb-1">{state.icon}</div>
-                          <div className="text-xs font-semibold">{state.label}</div>
+                          <div className="text-xl sm:text-2xl mb-1">{state.icon}</div>
+                          <div className="text-[10px] sm:text-xs font-semibold">{state.label}</div>
                         </button>
                       ))}
                     </div>
@@ -700,8 +700,8 @@ export default function LocalMatchActions({
             )}
 
             {/* Résultat du dé et Fumble */}
-            <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border-2 border-purple-300">
+            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg sm:rounded-xl p-3 sm:p-4 border-2 border-purple-300">
                 <label className="block text-xs font-semibold text-purple-700 uppercase tracking-wider mb-2">
                   🎲 Résultat du dé (2D6)
                 </label>
@@ -716,12 +716,12 @@ export default function LocalMatchActions({
                     })
                   }
                   placeholder="2-12"
-                  className="w-full px-4 py-3 border-2 border-purple-400 rounded-lg font-bold text-xl text-center text-gray-900 focus:ring-4 focus:ring-purple-500 focus:border-purple-600"
+                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-purple-400 rounded-lg font-bold text-lg sm:text-xl text-center text-gray-900 focus:ring-4 focus:ring-purple-500 focus:border-purple-600"
                 />
               </div>
 
-              <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-4 border-2 border-red-300 flex items-center justify-center">
-                <label className="flex items-center space-x-3 cursor-pointer group">
+              <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-lg sm:rounded-xl p-3 sm:p-4 border-2 border-red-300 flex items-center justify-center">
+                <label className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group">
                   <input
                     type="checkbox"
                     checked={formData.fumble}
@@ -732,11 +732,11 @@ export default function LocalMatchActions({
                         playerState: e.target.checked ? formData.playerState : "",
                       })
                     }
-                    className="w-6 h-6 text-red-600 border-2 border-gray-400 rounded focus:ring-4 focus:ring-red-500 cursor-pointer transform group-hover:scale-110 transition-transform"
+                    className="w-5 h-5 sm:w-6 sm:h-6 text-red-600 border-2 border-gray-400 rounded focus:ring-4 focus:ring-red-500 cursor-pointer transform group-hover:scale-110 transition-transform flex-shrink-0"
                   />
                   <div className="flex items-center gap-2">
-                    <span className="text-2xl">💥</span>
-                    <span className="text-lg font-bold text-gray-900">
+                    <span className="text-xl sm:text-2xl">💥</span>
+                    <span className="text-base sm:text-lg font-bold text-gray-900">
                       Échec (Fumble)
                     </span>
                   </div>
@@ -746,11 +746,11 @@ export default function LocalMatchActions({
 
             {/* État du joueur en cas d'échec */}
             {formData.fumble && !["passe", "transmission", "reception", "apothicaire", "interception"].includes(formData.actionType) && (
-              <div className="md:col-span-2 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4 border-2 border-orange-300">
-                <label className="block text-sm font-bold text-gray-900 mb-3 uppercase tracking-wide">
+              <div className="md:col-span-2 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg sm:rounded-xl p-3 sm:p-4 border-2 border-orange-300">
+                <label className="block text-xs sm:text-sm font-bold text-gray-900 mb-3 uppercase tracking-wide">
                   État du joueur (en cas d'échec)
                 </label>
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
                   {[
                     { value: "", label: "Aucun", icon: "✅" },
                     { value: "sonne", label: "Sonné", icon: "😵" },
@@ -763,14 +763,14 @@ export default function LocalMatchActions({
                       onClick={() =>
                         setFormData({ ...formData, playerState: state.value })
                       }
-                      className={`p-3 rounded-xl border-2 transition-all transform hover:scale-105 ${
+                      className={`p-2 sm:p-3 rounded-lg sm:rounded-xl border-2 transition-all transform hover:scale-105 ${
                         formData.playerState === state.value
                           ? "bg-gradient-to-br from-orange-500 to-orange-600 border-orange-600 text-white shadow-lg"
                           : "bg-white border-gray-300 hover:border-orange-400 text-gray-700"
                       }`}
                     >
-                      <div className="text-2xl mb-1">{state.icon}</div>
-                      <div className="text-xs font-semibold">{state.label}</div>
+                      <div className="text-xl sm:text-2xl mb-1">{state.icon}</div>
+                      <div className="text-[10px] sm:text-xs font-semibold">{state.label}</div>
                     </button>
                   ))}
                 </div>
@@ -778,11 +778,11 @@ export default function LocalMatchActions({
             )}
           </div>
 
-          <div className="mt-6 flex justify-end">
+          <div className="mt-4 sm:mt-6 flex justify-end">
             <button
               onClick={handleAddAction}
               disabled={saving || !formData.playerId}
-              className="px-8 py-4 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center gap-3 border-2 border-green-800"
+              className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg sm:rounded-xl font-bold text-base sm:text-lg shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 sm:gap-3 border-2 border-green-800"
             >
               {saving ? (
                 <>
@@ -801,101 +801,103 @@ export default function LocalMatchActions({
       </div>
 
       {/* Liste des actions - style timeline de match */}
-      <div className="bg-gradient-to-br from-white via-gray-50 to-white rounded-2xl p-6 shadow-xl border-2 border-gray-200">
-        <div className="flex items-center gap-3 mb-6">
-          <span className="text-3xl">📋</span>
-          <h3 className="text-2xl font-bold text-gray-900">Actions enregistrées</h3>
+      <div className="bg-gradient-to-br from-white via-gray-50 to-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-xl border-2 border-gray-200">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-3 mb-4 sm:mb-6">
+          <div className="flex items-center gap-2 sm:gap-3 flex-1">
+            <span className="text-2xl sm:text-3xl">📋</span>
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-900">Actions enregistrées</h3>
+          </div>
           {actions.length > 0 && (
-            <span className="ml-auto px-4 py-2 bg-nuffle-gold text-nuffle-anthracite rounded-full font-bold text-sm">
+            <span className="px-3 sm:px-4 py-1.5 sm:py-2 bg-nuffle-gold text-nuffle-anthracite rounded-full font-bold text-xs sm:text-sm whitespace-nowrap">
               {actions.length} action{actions.length > 1 ? "s" : ""}
             </span>
           )}
         </div>
 
         {loading ? (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-nuffle-gold mb-4"></div>
-            <p className="text-gray-600 font-semibold">Chargement des actions...</p>
+          <div className="text-center py-8 sm:py-12">
+            <div className="inline-block animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-nuffle-gold mb-4"></div>
+            <p className="text-gray-600 font-semibold text-sm sm:text-base">Chargement des actions...</p>
           </div>
         ) : actions.length === 0 ? (
-          <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
-            <div className="text-6xl mb-4">🏈</div>
-            <p className="text-gray-600 font-semibold text-lg">Aucune action enregistrée</p>
-            <p className="text-gray-500 text-sm mt-2">Les actions apparaîtront ici</p>
+          <div className="text-center py-8 sm:py-12 bg-gray-50 rounded-lg sm:rounded-xl border-2 border-dashed border-gray-300">
+            <div className="text-4xl sm:text-6xl mb-4">🏈</div>
+            <p className="text-gray-600 font-semibold text-base sm:text-lg">Aucune action enregistrée</p>
+            <p className="text-gray-500 text-xs sm:text-sm mt-2">Les actions apparaîtront ici</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {actions.map((action, index) => (
               <div
                 key={action.id}
-                className="bg-white rounded-xl p-5 border-2 border-gray-200 hover:border-nuffle-gold hover:shadow-lg transition-all transform hover:scale-[1.01]"
+                className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 border-2 border-gray-200 hover:border-nuffle-gold hover:shadow-lg transition-all transform hover:scale-[1.01]"
               >
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
                   {/* Informations principales */}
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
                       {/* Badge mi-temps et tour */}
-                      <div className="flex items-center gap-2">
-                        <div className="bg-gradient-to-br from-gray-800 to-gray-900 text-white px-3 py-1 rounded-lg font-bold text-sm">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <div className="bg-gradient-to-br from-gray-800 to-gray-900 text-white px-2 sm:px-3 py-1 rounded-lg font-bold text-xs sm:text-sm">
                           MT{action.half}
                         </div>
-                        <div className="bg-gradient-to-br from-gray-700 to-gray-800 text-white px-3 py-1 rounded-lg font-bold text-sm">
+                        <div className="bg-gradient-to-br from-gray-700 to-gray-800 text-white px-2 sm:px-3 py-1 rounded-lg font-bold text-xs sm:text-sm">
                           T{action.turn}
                         </div>
                       </div>
                       
                       {/* Type d'action avec icône */}
-                      <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm ${getActionTypeColor(action.actionType)}`}>
-                        <span className="text-lg">{ActionIcons[action.actionType]}</span>
-                        <span>{getActionTypeLabel(action.actionType)}</span>
+                      <div className={`inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-1 sm:py-2 rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm ${getActionTypeColor(action.actionType)}`}>
+                        <span className="text-base sm:text-lg">{ActionIcons[action.actionType]}</span>
+                        <span className="whitespace-nowrap">{getActionTypeLabel(action.actionType)}</span>
                       </div>
                     </div>
 
                     {/* Joueur */}
                     <div className="mb-2">
-                      <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold ${
+                      <div className={`inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-1 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm ${
                         action.playerTeam === "A"
                           ? "bg-red-100 text-red-800 border-2 border-red-300"
                           : "bg-blue-100 text-blue-800 border-2 border-blue-300"
                       }`}>
-                        <span className="text-lg">👤</span>
-                        <span>{action.playerName}</span>
-                        <span className="text-xs opacity-75">({action.playerTeam})</span>
+                        <span className="text-base sm:text-lg">👤</span>
+                        <span className="break-words">{action.playerName}</span>
+                        <span className="text-[10px] sm:text-xs opacity-75 whitespace-nowrap">({action.playerTeam})</span>
                       </div>
                     </div>
 
                     {/* Détails supplémentaires */}
-                    <div className="flex flex-wrap items-center gap-3 mt-3">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-2 sm:mt-3">
                       {action.opponentName && (
-                        <div className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 text-orange-800 rounded-lg text-xs font-semibold border border-orange-300">
+                        <div className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 bg-orange-100 text-orange-800 rounded-lg text-[10px] sm:text-xs font-semibold border border-orange-300">
                           <span>⚔️</span>
-                          <span>vs {action.opponentName}</span>
+                          <span className="break-words">vs {action.opponentName}</span>
                         </div>
                       )}
                       
                       {action.diceResult !== null && action.diceResult !== undefined && (
-                        <div className="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-800 rounded-lg text-xs font-bold border border-purple-300">
+                        <div className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 bg-purple-100 text-purple-800 rounded-lg text-[10px] sm:text-xs font-bold border border-purple-300">
                           <span>🎲</span>
                           <span className="font-mono">{action.diceResult}</span>
                         </div>
                       )}
                       
                       {action.armorBroken && (
-                        <div className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 rounded-lg text-xs font-semibold border border-green-300">
+                        <div className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 bg-green-100 text-green-800 rounded-lg text-[10px] sm:text-xs font-semibold border border-green-300">
                           <span>🛡️</span>
                           <span>Armure passée</span>
                         </div>
                       )}
                       
                       {action.fumble && (
-                        <div className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-800 rounded-lg text-xs font-semibold border border-red-300">
+                        <div className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 bg-red-100 text-red-800 rounded-lg text-[10px] sm:text-xs font-semibold border border-red-300">
                           <span>💥</span>
                           <span>Fumble</span>
                         </div>
                       )}
                       
                       {action.passType && (
-                        <div className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-xs font-semibold border border-blue-300">
+                        <div className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-[10px] sm:text-xs font-semibold border border-blue-300">
                           <span>🏈</span>
                           <span>
                             {action.passType === "rapide" ? "Rapide" :
@@ -908,7 +910,7 @@ export default function LocalMatchActions({
                       )}
                       
                       {action.opponentState && (
-                        <div className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-800 rounded-lg text-xs font-semibold border border-red-300">
+                        <div className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 bg-red-100 text-red-800 rounded-lg text-[10px] sm:text-xs font-semibold border border-red-300">
                           <span>😵</span>
                           <span>
                             {action.opponentState === "sonne" ? "Sonné" :
@@ -920,7 +922,7 @@ export default function LocalMatchActions({
                       )}
                       
                       {action.playerState && (
-                        <div className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 text-orange-800 rounded-lg text-xs font-semibold border border-orange-300">
+                        <div className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 bg-orange-100 text-orange-800 rounded-lg text-[10px] sm:text-xs font-semibold border border-orange-300">
                           <span>⚠️</span>
                           <span>
                             {action.playerState === "sonne" ? "Sonné" :
@@ -936,7 +938,7 @@ export default function LocalMatchActions({
                   {/* Bouton supprimer */}
                   <button
                     onClick={() => handleDeleteAction(action.id)}
-                    className="px-4 py-2 text-red-600 hover:text-white hover:bg-red-600 rounded-lg font-semibold transition-all transform hover:scale-110 border-2 border-red-300 hover:border-red-600"
+                    className="px-3 sm:px-4 py-2 text-red-600 hover:text-white hover:bg-red-600 rounded-lg font-semibold transition-all transform hover:scale-110 border-2 border-red-300 hover:border-red-600 self-start sm:self-auto flex-shrink-0"
                     title="Supprimer cette action"
                   >
                     🗑️
@@ -949,37 +951,37 @@ export default function LocalMatchActions({
         
         {/* Section Informations de pré-match */}
         {preMatch && (preMatch.fanFactor || preMatch.weather) && (
-          <div className="mt-8 space-y-4">
-            <h3 className="text-xl font-bold text-nuffle-anthracite border-b-2 border-nuffle-gold pb-2">
+          <div className="mt-6 sm:mt-8 space-y-3 sm:space-y-4">
+            <h3 className="text-lg sm:text-xl font-bold text-nuffle-anthracite border-b-2 border-nuffle-gold pb-2">
               Informations d'avant-match
             </h3>
             
             {/* Fans dévoués */}
             {preMatch.fanFactor && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                <h4 className="text-lg font-semibold text-nuffle-anthracite mb-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 sm:p-6">
+                <h4 className="text-base sm:text-lg font-semibold text-nuffle-anthracite mb-3 sm:mb-4">
                   Fans dévoués
                 </h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white rounded-lg p-4">
-                    <p className="text-sm text-gray-600 mb-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="bg-white rounded-lg p-3 sm:p-4">
+                    <p className="text-xs sm:text-sm text-gray-600 mb-2 break-words">
                       {teamA.name}
                     </p>
-                    <p className="text-2xl font-bold text-nuffle-anthracite">
+                    <p className="text-xl sm:text-2xl font-bold text-nuffle-anthracite">
                       Fan Factor: {preMatch.fanFactor.teamA.total}
                     </p>
-                    <p className="text-sm text-gray-500 mt-2">
+                    <p className="text-xs sm:text-sm text-gray-500 mt-2">
                       D3: {preMatch.fanFactor.teamA.d3} + Fans: {preMatch.fanFactor.teamA.dedicatedFans}
                     </p>
                   </div>
-                  <div className="bg-white rounded-lg p-4">
-                    <p className="text-sm text-gray-600 mb-2">
+                  <div className="bg-white rounded-lg p-3 sm:p-4">
+                    <p className="text-xs sm:text-sm text-gray-600 mb-2 break-words">
                       {teamB.name}
                     </p>
-                    <p className="text-2xl font-bold text-nuffle-anthracite">
+                    <p className="text-xl sm:text-2xl font-bold text-nuffle-anthracite">
                       Fan Factor: {preMatch.fanFactor.teamB.total}
                     </p>
-                    <p className="text-sm text-gray-500 mt-2">
+                    <p className="text-xs sm:text-sm text-gray-500 mt-2">
                       D3: {preMatch.fanFactor.teamB.d3} + Fans: {preMatch.fanFactor.teamB.dedicatedFans}
                     </p>
                   </div>
@@ -989,15 +991,15 @@ export default function LocalMatchActions({
             
             {/* Conditions météorologiques */}
             {preMatch.weather && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-                <h4 className="text-lg font-semibold text-nuffle-anthracite mb-4">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 sm:p-6">
+                <h4 className="text-base sm:text-lg font-semibold text-nuffle-anthracite mb-3 sm:mb-4">
                   Conditions météorologiques
                 </h4>
-                <div className="bg-white rounded-lg p-4">
-                  <p className="text-lg font-semibold text-nuffle-anthracite mb-2">
+                <div className="bg-white rounded-lg p-3 sm:p-4">
+                  <p className="text-base sm:text-lg font-semibold text-nuffle-anthracite mb-2">
                     {preMatch.weather.condition}
                   </p>
-                  <p className="text-sm text-gray-600 mb-3">
+                  <p className="text-xs sm:text-sm text-gray-600 mb-3">
                     {preMatch.weather.description}
                   </p>
                   <p className="text-xs text-gray-500">

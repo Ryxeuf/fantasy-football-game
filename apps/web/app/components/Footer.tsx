@@ -8,8 +8,8 @@ export default function Footer() {
   const { t } = useLanguage();
   return (
     <footer className="border-t-2 border-nuffle-bronze/30 bg-white mt-auto w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
-      <div className="w-full px-6 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="w-full px-4 sm:px-6 py-6 sm:py-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
           <div>
             <Logo variant="compact" showText={false} className="mb-3" />
             <h3 className="font-heading font-semibold text-nuffle-anthracite mb-3">Nuffle Arena</h3>
@@ -66,12 +66,12 @@ export default function Footer() {
             </ul>
           </div>
         </div>
-        <div className="mt-8 pt-6 border-t-2 border-nuffle-bronze/30">
-          <p className="text-xs text-nuffle-anthracite/70 text-center font-body">
+        <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t-2 border-nuffle-bronze/30">
+          <p className="text-xs text-nuffle-anthracite/70 text-center font-body px-2">
             Nuffle Arena - Blood Bowl Fantasy Football Game. 
             {t.footer.basedOn}
           </p>
-          <p className="text-xs text-nuffle-anthracite/70 text-center mt-2 font-body">
+          <p className="text-xs text-nuffle-anthracite/70 text-center mt-2 font-body px-2">
             © {new Date().getFullYear()} NuffleArena • <VersionInfo />
           </p>
         </div>

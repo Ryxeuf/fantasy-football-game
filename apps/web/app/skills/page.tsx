@@ -139,23 +139,23 @@ export default function SkillsPage() {
 
   return (
     <div className="w-full">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">
           {t.skills.title}
         </h1>
-        <p className="text-gray-600 mb-6">
+        <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
           {t.skills.description}
         </p>
 
         {/* Barre de recherche */}
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <div className="relative">
             <input
               type="text"
               placeholder={t.skills.searchPlaceholder}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2.5 sm:py-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
             />
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -166,7 +166,7 @@ export default function SkillsPage() {
         </div>
 
         {/* Filtres par catégorie */}
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setSelectedCategory(null)}
@@ -195,7 +195,7 @@ export default function SkillsPage() {
         </div>
 
         {/* Statistiques */}
-        <div className="mb-6 text-sm text-gray-600">
+        <div className="mb-4 sm:mb-6 text-xs sm:text-sm text-gray-600">
           {searchTerm || selectedCategory ? (
             <>
               {filteredData.reduce((total, category) => total + category.skills.length, 0)} {t.skills.resultsFound}
@@ -209,37 +209,37 @@ export default function SkillsPage() {
       </div>
 
       {/* Liste des compétences par catégorie */}
-      <div className="space-y-8">
+      <div className="space-y-6 sm:space-y-8">
         {filteredData.map((category) => (
           <div key={category.name} className="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">
+            <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
                 {language === "fr" ? category.name : category.nameEn}
               </h2>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-xs sm:text-sm text-gray-600 mt-1">
                 {category.skills.length} {category.skills.length === 1 ? t.footer.items : t.footer.itemsPlural}
               </p>
             </div>
-            <div className="p-6">
-              <div className="grid gap-4">
+            <div className="p-4 sm:p-6">
+              <div className="grid gap-3 sm:gap-4">
                 {category.skills.map((skill) => (
-                  <div key={skill.id || skill.slug} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                    <div className="flex items-start justify-between">
+                  <div key={skill.id || skill.slug} className="border border-gray-200 rounded-lg p-3 sm:p-4 hover:shadow-md transition-shadow">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
                           {language === "fr" 
                             ? `${skill.nameFr} (${skill.nameEn})` 
                             : `${skill.nameEn} (${skill.nameFr})`
                           }
                         </h3>
-                        <p className="text-gray-700 leading-relaxed">
+                        <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
                           {language === "fr" 
                             ? skill.description 
                             : (skill.descriptionEn || skill.description)
                           }
                         </p>
                       </div>
-                      <div className="ml-4 flex-shrink-0">
+                      <div className="sm:ml-4 flex-shrink-0">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           skill.category === "General" ? "bg-blue-100 text-blue-800" :
                           skill.category === "Agility" ? "bg-green-100 text-green-800" :
@@ -274,9 +274,9 @@ export default function SkillsPage() {
       )}
 
       {/* Légende des couleurs */}
-      <div className="mt-12 bg-gray-50 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">{language === "fr" ? "Légende des couleurs" : "Color Legend"}</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+      <div className="mt-8 sm:mt-12 bg-gray-50 rounded-lg p-4 sm:p-6">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">{language === "fr" ? "Légende des couleurs" : "Color Legend"}</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 text-xs sm:text-sm">
           <div className="flex items-center gap-2">
             <span className="w-4 h-4 bg-blue-100 border border-blue-300 rounded"></span>
             <span className="text-gray-700">General</span>

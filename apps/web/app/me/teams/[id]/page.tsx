@@ -149,24 +149,24 @@ export default function TeamDetailPage() {
   }
 
   return (
-    <div className="w-full p-6 space-y-6">
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-3xl font-bold">{team?.name || t.teams.team}</h1>
-          <div className="text-sm text-gray-600 mt-1">
+    <div className="w-full p-4 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+        <div className="flex-1">
+          <h1 className="text-2xl sm:text-3xl font-bold">{team?.name || t.teams.team}</h1>
+          <div className="text-xs sm:text-sm text-gray-600 mt-1">
             {t.teams.roster}: <span className="font-semibold">{rosterName || team?.roster || ''}</span>
           </div>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-2 sm:gap-3">
           {canEdit ? (
             <a
               href={`/me/teams/${id}/edit`}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+              className="px-3 sm:px-4 py-2 text-sm sm:text-base bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-center"
             >
               {t.teams.modifyTeam}
             </a>
           ) : (
-            <div className="px-4 py-2 bg-gray-300 text-gray-600 rounded cursor-not-allowed">
+            <div className="px-3 sm:px-4 py-2 text-sm sm:text-base bg-gray-300 text-gray-600 rounded cursor-not-allowed text-center">
               {t.teams.teamInMatch}
             </div>
           )}
@@ -181,9 +181,10 @@ export default function TeamDetailPage() {
           <div className="relative">
             <button
               onClick={() => setExportMenuOpen(!exportMenuOpen)}
-              className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors flex items-center gap-2"
+              className="px-3 sm:px-4 py-2 text-sm sm:text-base bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors flex items-center gap-2"
             >
-              {t.teams.exportOptions}
+              <span className="hidden sm:inline">{t.teams.exportOptions}</span>
+              <span className="sm:hidden">📥</span>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
@@ -194,7 +195,7 @@ export default function TeamDetailPage() {
                   className="fixed inset-0 z-10" 
                   onClick={() => setExportMenuOpen(false)}
                 ></div>
-                <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-20">
+                <div className="absolute right-0 mt-2 w-56 sm:w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-20">
                   <div className="py-1">
                     <button
                       onClick={handleExportRoster}
@@ -222,7 +223,7 @@ export default function TeamDetailPage() {
           </div>
           <a
             href="/me/teams"
-            className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors border border-gray-500"
+            className="px-3 sm:px-4 py-2 text-sm sm:text-base bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors border border-gray-500 text-center"
           >
             {t.teams.back}
           </a>
@@ -254,27 +255,27 @@ export default function TeamDetailPage() {
         <>
           {/* Résumé du budget */}
           <div className="bg-white rounded-lg border overflow-hidden">
-            <div className="bg-gray-50 px-6 py-3 border-b">
-              <h2 className="text-lg font-semibold">{t.teams.budgetSummary}</h2>
+            <div className="bg-gray-50 px-4 sm:px-6 py-3 border-b">
+              <h2 className="text-base sm:text-lg font-semibold">{t.teams.budgetSummary}</h2>
             </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="text-sm text-blue-600 font-medium">{t.teams.initialBudget}</div>
-                  <div className="text-2xl font-bold text-blue-900">
+            <div className="p-4 sm:p-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                <div className="text-center p-3 sm:p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="text-xs sm:text-sm text-blue-600 font-medium">{t.teams.initialBudget}</div>
+                  <div className="text-xl sm:text-2xl font-bold text-blue-900">
                     {team.initialBudget?.toLocaleString()}{t.teams.kpo}
                   </div>
                 </div>
-                <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
-                  <div className="text-sm text-green-600 font-medium">{t.teams.currentCost}</div>
-                  <div className="text-2xl font-bold text-green-900">
+                <div className="text-center p-3 sm:p-4 bg-green-50 rounded-lg border border-green-200">
+                  <div className="text-xs sm:text-sm text-green-600 font-medium">{t.teams.currentCost}</div>
+                  <div className="text-xl sm:text-2xl font-bold text-green-900">
                     {Math.round((team.players?.reduce((total: number, player: any) => 
                       total + getPlayerCost(player.position, team.roster), 0) || 0) / 1000)}{t.teams.kpo}
                   </div>
                 </div>
-                <div className="text-center p-4 bg-purple-50 rounded-lg border border-purple-200">
-                  <div className="text-sm text-purple-600 font-medium">{t.teams.teamValue}</div>
-                  <div className="text-2xl font-bold text-purple-900">
+                <div className="text-center p-3 sm:p-4 bg-purple-50 rounded-lg border border-purple-200">
+                  <div className="text-xs sm:text-sm text-purple-600 font-medium">{t.teams.teamValue}</div>
+                  <div className="text-xl sm:text-2xl font-bold text-purple-900">
                     {Math.round((team.teamValue || 0) / 1000)}{t.teams.kpo}
                   </div>
                 </div>
@@ -290,20 +291,20 @@ export default function TeamDetailPage() {
                   const remaining = (team.initialBudget || 0) * 1000 - rosterTotal;
                   const positive = remaining >= 0;
                   return (
-                    <div className={`text-center p-4 rounded-lg border ${positive ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
-                  <div className={`text-sm font-medium ${
+                    <div className={`text-center p-3 sm:p-4 rounded-lg border ${positive ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                  <div className={`text-xs sm:text-sm font-medium ${
                     positive ? 'text-green-600' : 'text-red-600'
                   }`}>
                     {t.teams.remainingBudget}
                   </div>
-                  <div className={`text-2xl font-bold ${positive ? 'text-green-900' : 'text-red-900'}`}>
+                  <div className={`text-xl sm:text-2xl font-bold ${positive ? 'text-green-900' : 'text-red-900'}`}>
                     {Math.round(remaining / 1000)}{t.teams.kpo}
                   </div>
                 </div>
                   );
                 })()}
               </div>
-              <div className="mt-4 text-xs text-gray-500">
+              <div className="mt-3 sm:mt-4 text-xs text-gray-500">
                 <p><strong>{t.teams.initialBudget}</strong> : {t.teams.initialBudgetDesc}</p>
                 <p><strong>{t.teams.currentCost}</strong> : {t.teams.currentCostDesc}</p>
                 <p><strong>{t.teams.teamValue}</strong> : {t.teams.teamValueDesc}</p>
@@ -313,12 +314,12 @@ export default function TeamDetailPage() {
           </div>
 
           <div className="bg-white rounded-lg border overflow-hidden">
-            <div className="bg-gray-50 px-6 py-3 border-b">
-              <h2 className="text-lg font-semibold">{t.teams.teamComposition}</h2>
-              <div className="text-sm text-gray-600 mt-1">
+            <div className="bg-gray-50 px-4 sm:px-6 py-3 border-b">
+              <h2 className="text-base sm:text-lg font-semibold">{t.teams.teamComposition}</h2>
+              <div className="text-xs sm:text-sm text-gray-600 mt-1">
                 {team.players?.length || 0} {t.teams.players}
               </div>
-              <div className="text-xs text-gray-500 mt-2">
+              <div className="text-xs text-gray-500 mt-2 hidden sm:block">
                 <span className="inline-flex items-center gap-1">
                   <span className="w-3 h-3 border border-gray-300 bg-blue-100 rounded"></span>
                   {t.teams.baseSkillsLegend}
@@ -333,36 +334,37 @@ export default function TeamDetailPage() {
               </div>
             </div>
             <div className="overflow-x-auto">
-              <table className="min-w-full">
+              {/* Version desktop : tableau */}
+              <table className="min-w-full hidden md:table">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="text-left p-4 font-medium text-gray-900">{t.teams.tableNumber}</th>
-                    <th className="text-left p-4 font-medium text-gray-900">{t.teams.tableName}</th>
-                    <th className="text-left p-4 font-medium text-gray-900">{t.teams.tablePosition}</th>
-                    <th className="text-left p-4 font-medium text-gray-900">{t.teams.tableCost}</th>
-                    <th className="text-left p-4 font-medium text-gray-900">MA</th>
-                    <th className="text-left p-4 font-medium text-gray-900">ST</th>
-                    <th className="text-left p-4 font-medium text-gray-900">AG</th>
-                    <th className="text-left p-4 font-medium text-gray-900">PA</th>
-                    <th className="text-left p-4 font-medium text-gray-900">AV</th>
-                    <th className="text-left p-4 font-medium text-gray-900">{t.teams.tableSkills}</th>
+                    <th className="text-left p-3 sm:p-4 font-medium text-gray-900 text-xs sm:text-sm">{t.teams.tableNumber}</th>
+                    <th className="text-left p-3 sm:p-4 font-medium text-gray-900 text-xs sm:text-sm">{t.teams.tableName}</th>
+                    <th className="text-left p-3 sm:p-4 font-medium text-gray-900 text-xs sm:text-sm">{t.teams.tablePosition}</th>
+                    <th className="text-left p-3 sm:p-4 font-medium text-gray-900 text-xs sm:text-sm">{t.teams.tableCost}</th>
+                    <th className="text-left p-3 sm:p-4 font-medium text-gray-900 text-xs sm:text-sm">MA</th>
+                    <th className="text-left p-3 sm:p-4 font-medium text-gray-900 text-xs sm:text-sm">ST</th>
+                    <th className="text-left p-3 sm:p-4 font-medium text-gray-900 text-xs sm:text-sm">AG</th>
+                    <th className="text-left p-3 sm:p-4 font-medium text-gray-900 text-xs sm:text-sm">PA</th>
+                    <th className="text-left p-3 sm:p-4 font-medium text-gray-900 text-xs sm:text-sm">AV</th>
+                    <th className="text-left p-3 sm:p-4 font-medium text-gray-900 text-xs sm:text-sm">{t.teams.tableSkills}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {team.players?.sort((a: any, b: any) => a.number - b.number).map((p: any) => (
                     <tr key={p.id} className="hover:bg-gray-50">
-                      <td className="p-4 font-mono text-lg font-semibold">{p.number}</td>
-                      <td className="p-4 font-medium">{p.name}</td>
-                      <td className="p-4 text-gray-600">{getDisplayName(p.position)}</td>
-                      <td className="p-4 text-center font-mono text-sm">
+                      <td className="p-3 sm:p-4 font-mono text-base sm:text-lg font-semibold">{p.number}</td>
+                      <td className="p-3 sm:p-4 font-medium text-sm sm:text-base">{p.name}</td>
+                      <td className="p-3 sm:p-4 text-gray-600 text-xs sm:text-sm">{getDisplayName(p.position)}</td>
+                      <td className="p-3 sm:p-4 text-center font-mono text-xs sm:text-sm">
                         {Math.round(getPlayerCost(p.position, team.roster) / 1000)}{t.teams.kpo}
                       </td>
-                      <td className="p-4 text-center font-mono">{p.ma}</td>
-                      <td className="p-4 text-center font-mono">{p.st}</td>
-                      <td className="p-4 text-center font-mono">{p.ag}</td>
-                      <td className="p-4 text-center font-mono">{p.pa}</td>
-                      <td className="p-4 text-center font-mono">{p.av}</td>
-                      <td className="p-4">
+                      <td className="p-3 sm:p-4 text-center font-mono text-xs sm:text-sm">{p.ma}</td>
+                      <td className="p-3 sm:p-4 text-center font-mono text-xs sm:text-sm">{p.st}</td>
+                      <td className="p-3 sm:p-4 text-center font-mono text-xs sm:text-sm">{p.ag}</td>
+                      <td className="p-3 sm:p-4 text-center font-mono text-xs sm:text-sm">{p.pa}</td>
+                      <td className="p-3 sm:p-4 text-center font-mono text-xs sm:text-sm">{p.av}</td>
+                      <td className="p-3 sm:p-4">
                         <SkillTooltip 
                           skillsString={p.skills} 
                           teamName={team.roster}
@@ -373,21 +375,74 @@ export default function TeamDetailPage() {
                   ))}
                 </tbody>
               </table>
+              
+              {/* Version mobile : cartes */}
+              <div className="md:hidden space-y-3 p-4">
+                {team.players?.sort((a: any, b: any) => a.number - b.number).map((p: any) => (
+                  <div key={p.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <span className="font-mono text-xl font-bold text-gray-900">{p.number}</span>
+                        <div>
+                          <div className="font-semibold text-base">{p.name}</div>
+                          <div className="text-xs text-gray-600">{getDisplayName(p.position)}</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xs text-gray-500">{t.teams.tableCost}</div>
+                        <div className="font-mono text-sm font-semibold">
+                          {Math.round(getPlayerCost(p.position, team.roster) / 1000)}{t.teams.kpo}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-5 gap-2 mb-3 text-xs">
+                      <div className="text-center">
+                        <div className="text-gray-500">MA</div>
+                        <div className="font-mono font-semibold">{p.ma}</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-gray-500">ST</div>
+                        <div className="font-mono font-semibold">{p.st}</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-gray-500">AG</div>
+                        <div className="font-mono font-semibold">{p.ag}</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-gray-500">PA</div>
+                        <div className="font-mono font-semibold">{p.pa}</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-gray-500">AV</div>
+                        <div className="font-mono font-semibold">{p.av}</div>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-500 mb-1">{t.teams.tableSkills}</div>
+                      <SkillTooltip 
+                        skillsString={p.skills} 
+                        teamName={team.roster}
+                        position={p.position}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
           {match && (
-            <div className="bg-white rounded-lg border p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-semibold text-lg">{t.teams.matchInProgress}</div>
-                  <div className="text-sm text-gray-600 mt-1">
+            <div className="bg-white rounded-lg border p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="flex-1">
+                  <div className="font-semibold text-base sm:text-lg">{t.teams.matchInProgress}</div>
+                  <div className="text-xs sm:text-sm text-gray-600 mt-1">
                     {t.teams.matchID}: {match.id} • {t.teams.status}: {match.status} •{" "}
                     {new Date(match.createdAt).toLocaleString()}
                   </div>
                 </div>
                 <a
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-center text-sm sm:text-base"
                   href="/play"
                 >
                   {t.teams.goToPlay}

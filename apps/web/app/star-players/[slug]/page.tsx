@@ -121,22 +121,25 @@ export default function StarPlayerDetailPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Bouton retour */}
         <button
           onClick={() => router.push('/star-players')}
-          className="mb-6 text-blue-600 hover:text-blue-800 flex items-center gap-2"
+          className="mb-4 sm:mb-6 text-blue-600 hover:text-blue-800 flex items-center gap-2 text-sm sm:text-base transition-colors"
         >
-          ← Retour à la liste
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Retour à la liste
         </button>
 
         {/* En-tête avec image */}
-        <div className="bg-white rounded-xl shadow-2xl overflow-hidden mb-8">
-          <div className="bg-gradient-to-r from-red-800 to-red-600 text-white p-8">
-            <div className="flex flex-col md:flex-row items-center gap-8">
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6 sm:mb-8">
+          <div className="bg-gradient-to-r from-red-800 to-red-600 text-white p-4 sm:p-6 md:p-8">
+            <div className="flex flex-col md:flex-row items-center gap-4 sm:gap-6 md:gap-8">
               {/* Image */}
               <div className="flex-shrink-0">
-                <div className="w-48 h-48 bg-gray-200 rounded-lg overflow-hidden shadow-lg">
+                <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 bg-gray-200 rounded-lg overflow-hidden shadow-lg">
                   {!imageError ? (
                     <img
                       src={starPlayer.imageUrl?.replace('/data/Star-Players_files/', '/images/star-players/') || `/images/star-players/${slug}.jpg`}
@@ -146,7 +149,7 @@ export default function StarPlayerDetailPage() {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gray-300">
-                      <span className="text-6xl">⭐</span>
+                      <span className="text-4xl sm:text-5xl md:text-6xl">⭐</span>
                     </div>
                   )}
                 </div>
@@ -154,99 +157,111 @@ export default function StarPlayerDetailPage() {
 
               {/* Nom et coût */}
               <div className="flex-1 text-center md:text-left">
-                <div className="flex items-center justify-center md:justify-start gap-4 mb-4">
-                  <h1 className="text-5xl font-bold">{starPlayer.displayName}</h1>
+                <div className="flex flex-col sm:flex-row items-center md:items-start justify-center md:justify-start gap-3 sm:gap-4 mb-3 sm:mb-4">
+                  <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold">{starPlayer.displayName}</h1>
                   {starPlayer.isMegaStar && (
-                    <span className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black text-lg font-bold px-4 py-2 rounded-full shadow-lg border-2 border-yellow-700 animate-pulse">
+                    <span className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black text-xs sm:text-sm md:text-base font-bold px-3 sm:px-4 py-1.5 sm:py-2 rounded-full shadow-lg border-2 border-yellow-700 whitespace-nowrap">
                       ⭐ MEGA STAR
                     </span>
                   )}
                 </div>
-                <div className="flex items-center justify-center md:justify-start gap-4">
-                  <span className="text-3xl font-bold bg-yellow-400 text-black px-6 py-3 rounded-lg shadow-lg">
+                <div className="flex flex-col sm:flex-row items-center md:items-start justify-center md:justify-start gap-3 sm:gap-4">
+                  <span className="text-xl sm:text-2xl md:text-3xl font-bold bg-yellow-400 text-black px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-lg">
                     {(starPlayer.cost / 1000).toLocaleString()} K po
                   </span>
-                  <span className="text-xl opacity-90">Star Player</span>
+                  <span className="text-base sm:text-lg md:text-xl opacity-90">Star Player</span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Caractéristiques */}
-          <div className="p-8">
-            <h2 className="text-2xl font-bold mb-6">Caractéristiques</h2>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-              <div className="bg-blue-50 p-6 rounded-lg text-center border-2 border-blue-200">
-                <div className="text-gray-600 text-sm font-medium mb-2">MA</div>
-                <div className={`text-4xl font-bold ${getStatColor(starPlayer.ma, 'ma')}`}>
-                  {starPlayer.ma}
+          {/* Contenu principal */}
+          <div className="p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8">
+            {/* Caractéristiques */}
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-gray-900">Caractéristiques</h2>
+              <div className="grid grid-cols-5 gap-2 sm:gap-3 md:gap-4">
+                <div className="bg-blue-50 p-3 sm:p-4 md:p-6 rounded-lg text-center border-2 border-blue-200 hover:shadow-md transition-shadow">
+                  <div className="text-gray-600 text-xs sm:text-sm font-medium mb-1 sm:mb-2">MA</div>
+                  <div className={`text-2xl sm:text-3xl md:text-4xl font-bold ${getStatColor(starPlayer.ma, 'ma')}`}>
+                    {starPlayer.ma}
+                  </div>
                 </div>
-              </div>
-              <div className="bg-red-50 p-6 rounded-lg text-center border-2 border-red-200">
-                <div className="text-gray-600 text-sm font-medium mb-2">ST</div>
-                <div className={`text-4xl font-bold ${getStatColor(starPlayer.st, 'st')}`}>
-                  {starPlayer.st}
+                <div className="bg-red-50 p-3 sm:p-4 md:p-6 rounded-lg text-center border-2 border-red-200 hover:shadow-md transition-shadow">
+                  <div className="text-gray-600 text-xs sm:text-sm font-medium mb-1 sm:mb-2">ST</div>
+                  <div className={`text-2xl sm:text-3xl md:text-4xl font-bold ${getStatColor(starPlayer.st, 'st')}`}>
+                    {starPlayer.st}
+                  </div>
                 </div>
-              </div>
-              <div className="bg-green-50 p-6 rounded-lg text-center border-2 border-green-200">
-                <div className="text-gray-600 text-sm font-medium mb-2">AG</div>
-                <div className={`text-4xl font-bold ${getStatColor(starPlayer.ag, 'ag')}`}>
-                  {starPlayer.ag}+
+                <div className="bg-green-50 p-3 sm:p-4 md:p-6 rounded-lg text-center border-2 border-green-200 hover:shadow-md transition-shadow">
+                  <div className="text-gray-600 text-xs sm:text-sm font-medium mb-1 sm:mb-2">AG</div>
+                  <div className={`text-2xl sm:text-3xl md:text-4xl font-bold ${getStatColor(starPlayer.ag, 'ag')}`}>
+                    {starPlayer.ag}+
+                  </div>
                 </div>
-              </div>
-              <div className="bg-purple-50 p-6 rounded-lg text-center border-2 border-purple-200">
-                <div className="text-gray-600 text-sm font-medium mb-2">PA</div>
-                <div className={`text-4xl font-bold ${starPlayer.pa ? getStatColor(starPlayer.pa, 'pa') : 'text-gray-400'}`}>
-                  {starPlayer.pa ? `${starPlayer.pa}+` : '—'}
+                <div className="bg-purple-50 p-3 sm:p-4 md:p-6 rounded-lg text-center border-2 border-purple-200 hover:shadow-md transition-shadow">
+                  <div className="text-gray-600 text-xs sm:text-sm font-medium mb-1 sm:mb-2">PA</div>
+                  <div className={`text-2xl sm:text-3xl md:text-4xl font-bold ${starPlayer.pa ? getStatColor(starPlayer.pa, 'pa') : 'text-gray-400'}`}>
+                    {starPlayer.pa ? `${starPlayer.pa}+` : '—'}
+                  </div>
                 </div>
-              </div>
-              <div className="bg-orange-50 p-6 rounded-lg text-center border-2 border-orange-200">
-                <div className="text-gray-600 text-sm font-medium mb-2">AV</div>
-                <div className={`text-4xl font-bold ${getStatColor(starPlayer.av, 'av')}`}>
-                  {starPlayer.av}+
+                <div className="bg-orange-50 p-3 sm:p-4 md:p-6 rounded-lg text-center border-2 border-orange-200 hover:shadow-md transition-shadow">
+                  <div className="text-gray-600 text-xs sm:text-sm font-medium mb-1 sm:mb-2">AV</div>
+                  <div className={`text-2xl sm:text-3xl md:text-4xl font-bold ${getStatColor(starPlayer.av, 'av')}`}>
+                    {starPlayer.av}+
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Compétences */}
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold mb-4">Compétences et Traits</h2>
-              <div className="flex flex-wrap gap-2">
-                {skills.map((skill, index) => (
-                  <SkillTooltip
-                    key={index}
-                    skillSlug={skill}
-                  />
-                ))}
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-900">Compétences et Traits</h2>
+              <div className="bg-gray-50 rounded-lg p-3 sm:p-4 md:p-5">
+                {skills.length > 0 ? (
+                  <div className="flex flex-wrap gap-2 sm:gap-3">
+                    {skills.map((skill, index) => (
+                      <SkillTooltip
+                        key={`${skill}-${index}`}
+                        skillSlug={skill}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-sm italic">Aucune compétence spéciale</p>
+                )}
               </div>
             </div>
 
             {/* Règle spéciale */}
             {starPlayer.specialRule && (
-              <div className="mb-8">
-                <h2 className="text-2xl font-bold mb-4">⭐ Règle Spéciale</h2>
-                <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-6">
-                  <p className="text-gray-800 leading-relaxed">{starPlayer.specialRule}</p>
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-900 flex items-center gap-2">
+                  <span className="text-2xl">⭐</span>
+                  Règle Spéciale
+                </h2>
+                <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4 sm:p-6">
+                  <p className="text-gray-800 leading-relaxed text-sm sm:text-base">{starPlayer.specialRule}</p>
                 </div>
               </div>
             )}
 
             {/* Équipes éligibles */}
             <div>
-              <h2 className="text-2xl font-bold mb-4">Équipes Éligibles</h2>
-              <div className="bg-gray-50 rounded-lg p-6">
+              <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-900">Équipes Éligibles</h2>
+              <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
                 {starPlayer.hirableBy.includes('all') ? (
                   <div className="text-center">
-                    <span className="inline-block bg-green-100 text-green-800 px-6 py-3 rounded-lg font-bold text-lg border-2 border-green-300">
+                    <span className="inline-block bg-green-100 text-green-800 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-bold text-base sm:text-lg border-2 border-green-300">
                       ✅ Toutes les équipes
                     </span>
                   </div>
                 ) : (
-                  <div className="flex flex-wrap gap-3">
+                  <div className="flex flex-wrap gap-2 sm:gap-3">
                     {starPlayer.hirableBy.map((rule, index) => (
                       <span
                         key={index}
-                        className="bg-white text-gray-800 px-4 py-2 rounded-lg font-medium border-2 border-gray-300 shadow-sm"
+                        className="bg-white text-gray-800 px-3 sm:px-4 py-2 rounded-lg font-medium border-2 border-gray-300 shadow-sm text-sm sm:text-base hover:shadow-md transition-shadow"
                       >
                         {getRegionalRuleLabel(rule)}
                       </span>
@@ -260,12 +275,12 @@ export default function StarPlayerDetailPage() {
 
         {/* Badge Mega Star */}
         {starPlayer.isMegaStar && (
-          <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 border-4 border-yellow-400 rounded-xl p-6 mb-8 shadow-lg">
-            <div className="flex items-center gap-4">
-              <div className="text-5xl">⭐</div>
-              <div>
-                <h3 className="text-2xl font-bold text-yellow-900 mb-2">MEGA STAR</h3>
-                <p className="text-yellow-800">
+          <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 border-4 border-yellow-400 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8 shadow-lg">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+              <div className="text-4xl sm:text-5xl">⭐</div>
+              <div className="flex-1">
+                <h3 className="text-xl sm:text-2xl font-bold text-yellow-900 mb-2">MEGA STAR</h3>
+                <p className="text-yellow-800 text-sm sm:text-base">
                   Ce Star Player fait partie des légendes les plus emblématiques de Blood Bowl.
                   Les Mega Stars sont des joueurs d'exception reconnus dans tout le Vieux Monde.
                 </p>
@@ -275,9 +290,12 @@ export default function StarPlayerDetailPage() {
         )}
 
         {/* Informations complémentaires */}
-        <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
-          <h3 className="font-bold text-lg mb-2">ℹ️ Note</h3>
-          <p className="text-gray-700">
+        <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 sm:p-6">
+          <h3 className="font-bold text-base sm:text-lg mb-2 flex items-center gap-2">
+            <span>ℹ️</span>
+            Note
+          </h3>
+          <p className="text-gray-700 text-sm sm:text-base">
             Les Star Players sont des mercenaires légendaires qui peuvent être recrutés temporairement.
             Ils apportent des compétences exceptionnelles mais coûtent cher et ne peuvent être utilisés
             qu'une fois par match.

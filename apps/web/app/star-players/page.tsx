@@ -125,20 +125,20 @@ export default function StarPlayersPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* En-tête */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">{t.starPlayers.title}</h1>
-          <p className="text-gray-600">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">{t.starPlayers.title}</h1>
+          <p className="text-sm sm:text-base text-gray-600">
             {filteredPlayers.length} {filteredPlayers.length === 1 ? t.starPlayers.available : t.starPlayers.availablePlural}
           </p>
         </div>
 
         {/* Filtres */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <h2 className="text-xl font-bold mb-4">{t.starPlayers.filters}</h2>
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-6 sm:mb-8">
+          <h2 className="text-lg sm:text-xl font-bold mb-4">{t.starPlayers.filters}</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Recherche */}
             <div>
               <label className="block text-sm font-medium mb-2">{t.starPlayers.search}</label>
@@ -237,7 +237,7 @@ export default function StarPlayersPage() {
         </div>
 
         {/* Grille de cartes */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
           {filteredPlayers.map(player => (
             <StarPlayerCard
               key={player.slug}

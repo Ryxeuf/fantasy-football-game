@@ -318,47 +318,48 @@ export default function LocalMatchPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-nuffle-ivory via-white to-nuffle-ivory/50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-nuffle-ivory via-white to-nuffle-ivory/50 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-nuffle-anthracite">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4 sm:mb-6">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-nuffle-anthracite">
               {localMatch.name || "Partie offline"}
             </h1>
-            <p className="text-gray-600 mt-1">
+            <p className="text-sm sm:text-base text-gray-600 mt-1 break-words">
               {localMatch.teamA.name}
               {localMatch.teamB ? ` vs ${localMatch.teamB.name}` : " (en attente d'une équipe adverse)"}
             </p>
             {localMatch.cup && (
-              <p className="text-sm text-gray-600">
+              <p className="text-xs sm:text-sm text-gray-600 mt-1">
                 Coupe: {localMatch.cup.name}
               </p>
             )}
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-shrink-0">
             {localMatch.status === "pending" && 
              (!localMatch.gameState?.preMatch || localMatch.gameState.preMatch.phase === 'idle') && (
               <button
                 onClick={handleStart}
-                className="px-6 py-3 bg-gradient-to-r from-nuffle-gold to-nuffle-bronze text-nuffle-anthracite rounded-lg font-bold hover:from-nuffle-bronze hover:to-nuffle-gold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-2"
+                className="px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-nuffle-gold to-nuffle-bronze text-nuffle-anthracite rounded-lg font-bold hover:from-nuffle-bronze hover:to-nuffle-gold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-2 text-sm sm:text-base whitespace-nowrap"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                Démarrer la partie
+                <span className="hidden sm:inline">Démarrer la partie</span>
+                <span className="sm:hidden">Démarrer</span>
               </button>
             )}
             {localMatch.status === "in_progress" && (
               <button
                 onClick={handleComplete}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors"
+                className="px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors text-sm sm:text-base whitespace-nowrap"
               >
                 Terminer la partie
               </button>
             )}
             {localMatch.status === "completed" && (
-              <div className="px-4 py-2 bg-green-100 text-green-800 rounded-lg font-semibold">
+              <div className="px-3 sm:px-4 py-2 bg-green-100 text-green-800 rounded-lg font-semibold text-sm sm:text-base whitespace-nowrap">
                 Partie terminée
               </div>
             )}
@@ -372,31 +373,31 @@ export default function LocalMatchPage() {
         )}
 
         {localMatch.status === "pending" && (
-          <div className="bg-white border border-gray-200 rounded-lg p-8 shadow-lg">
+          <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 lg:p-8 shadow-lg">
             {!localMatch.gameState?.preMatch || 
              localMatch.gameState.preMatch.phase === 'idle' ? (
               // Formulaire pour démarrer la partie avec choix automatique/manuel
-              <div className="space-y-8">
-                <div className="text-center mb-6">
-                  <h2 className="text-3xl font-bold text-nuffle-anthracite mb-2 font-heading">
+              <div className="space-y-6 sm:space-y-8">
+                <div className="text-center mb-4 sm:mb-6">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-nuffle-anthracite mb-2 font-heading">
                     Configuration de l'avant-match
                   </h2>
-                  <p className="text-gray-600 text-sm">
+                  <p className="text-gray-600 text-xs sm:text-sm px-2">
                     Configurez les paramètres de début de partie ou laissez-les être générés automatiquement
                   </p>
                 </div>
                 
                 {/* Section Fans */}
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 border-2 border-blue-300 rounded-xl p-6 shadow-md">
-                  <div className="flex items-center justify-between mb-5">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 border-2 border-blue-300 rounded-xl p-4 sm:p-6 shadow-md">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-5">
+                    <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
                       </div>
-                      <div>
-                        <h3 className="text-xl font-bold text-nuffle-anthracite">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-lg sm:text-xl font-bold text-nuffle-anthracite">
                           Fans dévoués
                         </h3>
                         <p className="text-xs text-gray-600 mt-0.5">
@@ -404,7 +405,7 @@ export default function LocalMatchPage() {
                         </p>
                       </div>
                     </div>
-                    <label className="flex items-center gap-3 cursor-pointer group">
+                    <label className="flex items-center gap-2 sm:gap-3 cursor-pointer group flex-shrink-0">
                       <div className="relative">
                         <input
                           type="checkbox"
@@ -412,15 +413,15 @@ export default function LocalMatchPage() {
                           onChange={(e) => setUseManualFans(e.target.checked)}
                           className="sr-only"
                         />
-                        <div className={`w-14 h-7 rounded-full transition-colors duration-200 ${
+                        <div className={`w-12 h-6 sm:w-14 sm:h-7 rounded-full transition-colors duration-200 ${
                           useManualFans ? 'bg-nuffle-gold' : 'bg-gray-300'
                         }`}>
-                          <div className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-200 mt-0.5 ${
-                            useManualFans ? 'translate-x-7' : 'translate-x-0.5'
+                          <div className={`w-5 h-5 sm:w-6 sm:h-6 bg-white rounded-full shadow-md transform transition-transform duration-200 mt-0.5 ${
+                            useManualFans ? 'translate-x-6 sm:translate-x-7' : 'translate-x-0.5'
                           }`} />
                         </div>
                       </div>
-                      <span className={`text-sm font-medium transition-colors ${
+                      <span className={`text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
                         useManualFans ? 'text-nuffle-anthracite' : 'text-gray-600'
                       }`}>
                         {useManualFans ? 'Manuel' : 'Auto'}
@@ -429,10 +430,10 @@ export default function LocalMatchPage() {
                   </div>
                   
                   {useManualFans ? (
-                    <div className="grid grid-cols-2 gap-4 mt-4">
-                      <div className="bg-white rounded-lg p-5 shadow-sm border-2 border-blue-200">
-                        <label className="block text-sm font-semibold text-gray-700 mb-3">
-                          <span className="text-blue-600">D3</span> {localMatch.teamA.name}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                      <div className="bg-white rounded-lg p-4 sm:p-5 shadow-sm border-2 border-blue-200">
+                        <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-3">
+                          <span className="text-blue-600">D3</span> <span className="break-words">{localMatch.teamA.name}</span>
                         </label>
                         <div className="flex gap-2">
                           {[1, 2, 3].map((value) => (
@@ -440,7 +441,7 @@ export default function LocalMatchPage() {
                               key={value}
                               type="button"
                               onClick={() => setManualD3A(value)}
-                              className={`flex-1 py-3 text-2xl font-bold rounded-lg transition-all ${
+                              className={`flex-1 py-2.5 sm:py-3 text-xl sm:text-2xl font-bold rounded-lg transition-all ${
                                 manualD3A === value
                                   ? 'bg-blue-600 text-white shadow-lg transform scale-105'
                                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border-2 border-gray-300'
@@ -453,16 +454,16 @@ export default function LocalMatchPage() {
                         {manualD3A !== null && (
                           <div className="mt-3 pt-3 border-t border-gray-200">
                             <p className="text-xs text-gray-500">Fan Factor prévu:</p>
-                            <p className="text-lg font-bold text-nuffle-anthracite">
+                            <p className="text-base sm:text-lg font-bold text-nuffle-anthracite">
                               {manualD3A + 1}
                             </p>
                             <p className="text-xs text-gray-400 mt-1">(D3: {manualD3A} + Fans: 1)</p>
                           </div>
                         )}
                       </div>
-                      <div className="bg-white rounded-lg p-5 shadow-sm border-2 border-blue-200">
-                        <label className="block text-sm font-semibold text-gray-700 mb-3">
-                          <span className="text-blue-600">D3</span> {localMatch.teamB?.name || "Équipe B"}
+                      <div className="bg-white rounded-lg p-4 sm:p-5 shadow-sm border-2 border-blue-200">
+                        <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-3">
+                          <span className="text-blue-600">D3</span> <span className="break-words">{localMatch.teamB?.name || "Équipe B"}</span>
                         </label>
                         <div className="flex gap-2">
                           {[1, 2, 3].map((value) => (
@@ -470,7 +471,7 @@ export default function LocalMatchPage() {
                               key={value}
                               type="button"
                               onClick={() => setManualD3B(value)}
-                              className={`flex-1 py-3 text-2xl font-bold rounded-lg transition-all ${
+                              className={`flex-1 py-2.5 sm:py-3 text-xl sm:text-2xl font-bold rounded-lg transition-all ${
                                 manualD3B === value
                                   ? 'bg-blue-600 text-white shadow-lg transform scale-105'
                                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border-2 border-gray-300'
@@ -483,7 +484,7 @@ export default function LocalMatchPage() {
                         {manualD3B !== null && localMatch.teamB && (
                           <div className="mt-3 pt-3 border-t border-gray-200">
                             <p className="text-xs text-gray-500">Fan Factor prévu:</p>
-                            <p className="text-lg font-bold text-nuffle-anthracite">
+                            <p className="text-base sm:text-lg font-bold text-nuffle-anthracite">
                               {manualD3B + 1}
                             </p>
                             <p className="text-xs text-gray-400 mt-1">(D3: {manualD3B} + Fans: 1)</p>
@@ -492,12 +493,12 @@ export default function LocalMatchPage() {
                       </div>
                     </div>
                   ) : (
-                    <div className="bg-white/60 rounded-lg p-4 border border-blue-200">
-                      <div className="flex items-center gap-3">
-                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="bg-white/60 rounded-lg p-3 sm:p-4 border border-blue-200">
+                      <div className="flex items-start gap-2 sm:gap-3">
+                        <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <p className="text-sm text-gray-700">
+                        <p className="text-xs sm:text-sm text-gray-700">
                           Les valeurs D3 seront générées <strong>automatiquement</strong> (1-3) lors du démarrage
                         </p>
                       </div>
@@ -506,16 +507,16 @@ export default function LocalMatchPage() {
                 </div>
                 
                 {/* Section Météo */}
-                <div className="bg-gradient-to-br from-green-50 to-green-100/50 border-2 border-green-300 rounded-xl p-6 shadow-md">
-                  <div className="flex items-center justify-between mb-5">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="bg-gradient-to-br from-green-50 to-green-100/50 border-2 border-green-300 rounded-xl p-4 sm:p-6 shadow-md">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-5">
+                    <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
                         </svg>
                       </div>
-                      <div>
-                        <h3 className="text-xl font-bold text-nuffle-anthracite">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-lg sm:text-xl font-bold text-nuffle-anthracite">
                           Conditions météorologiques
                         </h3>
                         <p className="text-xs text-gray-600 mt-0.5">
@@ -523,7 +524,7 @@ export default function LocalMatchPage() {
                         </p>
                       </div>
                     </div>
-                    <label className="flex items-center gap-3 cursor-pointer group">
+                    <label className="flex items-center gap-2 sm:gap-3 cursor-pointer group flex-shrink-0">
                       <div className="relative">
                         <input
                           type="checkbox"
@@ -531,15 +532,15 @@ export default function LocalMatchPage() {
                           onChange={(e) => setUseManualWeather(e.target.checked)}
                           className="sr-only"
                         />
-                        <div className={`w-14 h-7 rounded-full transition-colors duration-200 ${
+                        <div className={`w-12 h-6 sm:w-14 sm:h-7 rounded-full transition-colors duration-200 ${
                           useManualWeather ? 'bg-nuffle-gold' : 'bg-gray-300'
                         }`}>
-                          <div className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-200 mt-0.5 ${
-                            useManualWeather ? 'translate-x-7' : 'translate-x-0.5'
+                          <div className={`w-5 h-5 sm:w-6 sm:h-6 bg-white rounded-full shadow-md transform transition-transform duration-200 mt-0.5 ${
+                            useManualWeather ? 'translate-x-6 sm:translate-x-7' : 'translate-x-0.5'
                           }`} />
                         </div>
                       </div>
-                      <span className={`text-sm font-medium transition-colors ${
+                      <span className={`text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
                         useManualWeather ? 'text-nuffle-anthracite' : 'text-gray-600'
                       }`}>
                         {useManualWeather ? 'Manuel' : 'Auto'}
@@ -549,13 +550,13 @@ export default function LocalMatchPage() {
                   
                   {/* Sélecteur de type de météo */}
                   <div className="mb-4">
-                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-3">
                       <span className="text-green-600">Type de météo</span>
                     </label>
                     <select
                       value={weatherType}
                       onChange={(e) => setWeatherType(e.target.value)}
-                      className="w-full px-4 py-3 text-base font-medium border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold transition-all bg-white"
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base font-medium border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold transition-all bg-white"
                     >
                       {WEATHER_TYPES.map((type) => (
                         <option key={type.id} value={type.id}>
@@ -567,8 +568,8 @@ export default function LocalMatchPage() {
                   
                   {useManualWeather ? (
                     <div className="mt-4">
-                      <div className="bg-white rounded-lg p-5 shadow-sm border-2 border-green-200">
-                        <label className="block text-sm font-semibold text-gray-700 mb-3">
+                      <div className="bg-white rounded-lg p-4 sm:p-5 shadow-sm border-2 border-green-200">
+                        <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-3">
                           <span className="text-green-600">Total 2D6</span> (2-12)
                         </label>
                         <input
@@ -582,23 +583,23 @@ export default function LocalMatchPage() {
                               setManualWeatherTotal(val as number | '');
                             }
                           }}
-                          className="w-full px-4 py-3 text-2xl font-bold text-center border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold transition-all"
+                          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-xl sm:text-2xl font-bold text-center border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold transition-all"
                         />
-                        <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <p className="text-xs text-gray-500 mt-2 flex items-start gap-1.5">
+                          <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
-                          Saisissez le résultat total du jet de 2D6
+                          <span>Saisissez le résultat total du jet de 2D6</span>
                         </p>
                       </div>
                     </div>
                   ) : (
-                    <div className="bg-white/60 rounded-lg p-4 border border-green-200">
-                      <div className="flex items-center gap-3">
-                        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="bg-white/60 rounded-lg p-3 sm:p-4 border border-green-200">
+                      <div className="flex items-start gap-2 sm:gap-3">
+                        <svg className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <p className="text-sm text-gray-700">
+                        <p className="text-xs sm:text-sm text-gray-700">
                           Le résultat sera déterminé <strong>automatiquement</strong> par un jet de 2D6 (2-12) lors du démarrage
                         </p>
                       </div>
@@ -609,38 +610,38 @@ export default function LocalMatchPage() {
             ) : localMatch.gameState?.preMatch && 
              localMatch.gameState.preMatch.phase !== 'idle' ? (
               // Afficher la phase pré-match
-              <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-nuffle-anthracite mb-4">
+              <div className="space-y-4 sm:space-y-6">
+                <h2 className="text-xl sm:text-2xl font-bold text-nuffle-anthracite mb-3 sm:mb-4">
                   Phase d'avant-match
                 </h2>
                 
                 {/* Phase Fans */}
                 {localMatch.gameState.preMatch.fanFactor && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                    <h3 className="text-xl font-semibold text-nuffle-anthracite mb-4">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 sm:p-6">
+                    <h3 className="text-lg sm:text-xl font-semibold text-nuffle-anthracite mb-3 sm:mb-4">
                       Fans dévoués
                     </h3>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="bg-white rounded-lg p-4">
-                        <p className="text-sm text-gray-600 mb-2">
+                        <p className="text-xs sm:text-sm text-gray-600 mb-2 break-words">
                           {localMatch.teamA.name}
                         </p>
-                        <p className="text-2xl font-bold text-nuffle-anthracite">
+                        <p className="text-xl sm:text-2xl font-bold text-nuffle-anthracite">
                           Fan Factor: {localMatch.gameState.preMatch.fanFactor.teamA.total}
                         </p>
-                        <p className="text-sm text-gray-500 mt-2">
+                        <p className="text-xs sm:text-sm text-gray-500 mt-2">
                           D3: {localMatch.gameState.preMatch.fanFactor.teamA.d3} + 
                           Fans: {localMatch.gameState.preMatch.fanFactor.teamA.dedicatedFans}
                         </p>
                       </div>
                       <div className="bg-white rounded-lg p-4">
-                        <p className="text-sm text-gray-600 mb-2">
+                        <p className="text-xs sm:text-sm text-gray-600 mb-2 break-words">
                           {localMatch.teamB?.name || "Équipe B"}
                         </p>
-                        <p className="text-2xl font-bold text-nuffle-anthracite">
+                        <p className="text-xl sm:text-2xl font-bold text-nuffle-anthracite">
                           Fan Factor: {localMatch.gameState.preMatch.fanFactor.teamB.total}
                         </p>
-                        <p className="text-sm text-gray-500 mt-2">
+                        <p className="text-xs sm:text-sm text-gray-500 mt-2">
                           D3: {localMatch.gameState.preMatch.fanFactor.teamB.d3} + 
                           Fans: {localMatch.gameState.preMatch.fanFactor.teamB.dedicatedFans}
                         </p>
@@ -651,15 +652,15 @@ export default function LocalMatchPage() {
                 
                 {/* Phase Météo */}
                 {localMatch.gameState.preMatch.weather && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-                    <h3 className="text-xl font-semibold text-nuffle-anthracite mb-4">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 sm:p-6">
+                    <h3 className="text-lg sm:text-xl font-semibold text-nuffle-anthracite mb-3 sm:mb-4">
                       Conditions météorologiques
                     </h3>
                     <div className="bg-white rounded-lg p-4">
-                      <p className="text-lg font-semibold text-nuffle-anthracite mb-2">
+                      <p className="text-base sm:text-lg font-semibold text-nuffle-anthracite mb-2">
                         {localMatch.gameState.preMatch.weather.condition}
                       </p>
-                      <p className="text-sm text-gray-600 mb-3">
+                      <p className="text-xs sm:text-sm text-gray-600 mb-3">
                         {localMatch.gameState.preMatch.weather.description}
                       </p>
                       <p className="text-xs text-gray-500">

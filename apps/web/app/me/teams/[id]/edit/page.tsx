@@ -385,14 +385,32 @@ export default function TeamEditPage() {
     return null; // Redirection en cours
   }
 
+  // Calculer les coûts
+  const playersCost = players.reduce((total, player: any) => {
+    const base = getPlayerCost(player.position, team?.roster || '');
+    let adv = 0;
+    try {
+      const a = JSON.parse(player.advancements || '[]');
+      adv = a.reduce((s: number, x: any) => {
+        const type = x?.type as keyof typeof SURCHARGE_PER_ADVANCEMENT | undefined;
+        return s + (type && SURCHARGE_PER_ADVANCEMENT[type] ? SURCHARGE_PER_ADVANCEMENT[type] : 0);
+      }, 0);
+    } catch {}
+    return total + base + adv;
+  }, 0);
+  const budgetInPo = (team?.initialBudget || 0) * 1000;
+  const remaining = budgetInPo - playersCost;
+  const isOverBudget = remaining < 0;
+
   return (
-    <div className="w-full p-6 space-y-6">
-      <div className="flex justify-between items-start">
+    <div className="w-full p-4 sm:p-6 space-y-4 sm:space-y-6">
+      {/* Header avec actions */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
         <div className="flex-1">
-          <h1 className="text-3xl font-bold mb-4">Modifier l'équipe</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold mb-4">Modifier l'équipe</h1>
           
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
               Nom de l'équipe
             </label>
             <input
@@ -406,7 +424,7 @@ export default function TeamEditPage() {
                   setValidationErrors(newErrors);
                 }
               }}
-              className={`w-full max-w-md px-3 py-2 border rounded ${
+              className={`w-full max-w-md px-3 py-2 border rounded-lg text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                 validationErrors["teamName"] ? "border-red-500" : "border-gray-300"
               }`}
               placeholder="Nom de l'équipe"
@@ -418,248 +436,403 @@ export default function TeamEditPage() {
             )}
           </div>
           
-          <div className="text-sm text-gray-500 mt-1">
-            Roster: <span className="font-semibold">{rosterName || team?.roster || ''}</span>
-          </div>
-          <div className="text-sm text-gray-500 mt-1">
-            Budget initial: <span className="font-semibold">{team?.initialBudget?.toLocaleString()}k po</span>
+          <div className="flex flex-wrap gap-3 sm:gap-4 text-xs sm:text-sm text-gray-600">
+            <div>
+              Roster: <span className="font-semibold text-gray-900">{rosterName || team?.roster || ''}</span>
+            </div>
+            <div>
+              Budget initial: <span className="font-semibold text-gray-900">{team?.initialBudget?.toLocaleString()}k po</span>
+            </div>
           </div>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+            className="px-4 sm:px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium text-sm sm:text-base"
           >
-            {saving ? "Enregistrement..." : "Enregistrer"}
+            {saving ? "Enregistrement..." : "💾 Enregistrer"}
           </button>
           <a
             href={`/me/teams/${id}`}
-            className="px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
+            className="px-4 sm:px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-center text-sm sm:text-base"
           >
             Annuler
           </a>
         </div>
       </div>
 
+      {/* Résumé budgétaire amélioré */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200 p-4 sm:p-6">
+        <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">Résumé budgétaire</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+          <div className="bg-white rounded-lg p-3 sm:p-4 text-center border border-blue-100">
+            <div className="text-xs sm:text-sm text-gray-600 font-medium mb-1">Budget initial</div>
+            <div className="text-xl sm:text-2xl font-bold text-blue-900">
+              {team?.initialBudget?.toLocaleString()}k
+            </div>
+          </div>
+          <div className="bg-white rounded-lg p-3 sm:p-4 text-center border border-purple-100">
+            <div className="text-xs sm:text-sm text-gray-600 font-medium mb-1">Coût actuel</div>
+            <div className="text-xl sm:text-2xl font-bold text-purple-900">
+              {Math.round(playersCost / 1000)}k
+            </div>
+          </div>
+          <div className={`bg-white rounded-lg p-3 sm:p-4 text-center border ${
+            isOverBudget ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50'
+          }`}>
+            <div className={`text-xs sm:text-sm font-medium mb-1 ${
+              isOverBudget ? 'text-red-600' : 'text-green-600'
+            }`}>
+              Restant
+            </div>
+            <div className={`text-xl sm:text-2xl font-bold ${
+              isOverBudget ? 'text-red-900' : 'text-green-900'
+            }`}>
+              {Math.round(remaining / 1000)}k
+            </div>
+          </div>
+          <div className="bg-white rounded-lg p-3 sm:p-4 text-center border border-orange-100">
+            <div className="text-xs sm:text-sm text-gray-600 font-medium mb-1">Joueurs</div>
+            <div className="text-xl sm:text-2xl font-bold text-orange-900">
+              {players.length}/16
+            </div>
+          </div>
+        </div>
+        {isOverBudget && (
+          <div className="mt-4 p-3 bg-red-100 border border-red-300 rounded-lg">
+            <p className="text-sm text-red-800 font-semibold">
+              ⚠️ Budget dépassé ! Vous devez supprimer des joueurs ou réduire les coûts.
+            </p>
+          </div>
+        )}
+      </div>
+
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-          {error}
+        <div className="bg-red-50 border-2 border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <div className="font-semibold">❌ Erreur</div>
+          <div className="text-sm mt-1">{error}</div>
         </div>
       )}
 
       {validationErrors.teamName && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+        <div className="bg-red-50 border-2 border-red-200 text-red-700 px-4 py-3 rounded-lg">
           {validationErrors.teamName}
         </div>
       )}
       {validationErrors.numbers && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+        <div className="bg-red-50 border-2 border-red-200 text-red-700 px-4 py-3 rounded-lg">
           {validationErrors.numbers}
         </div>
       )}
 
-      <div className="bg-white rounded-lg border overflow-hidden">
-        <div className="bg-gray-50 px-6 py-3 border-b">
-          <div className="flex justify-between items-center">
-            <div>
-              <h2 className="text-lg font-semibold">Modification des joueurs</h2>
-              <div className="text-sm text-gray-600 mt-1">
+      {/* Section modification des joueurs */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+        <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-4 sm:px-6 py-4 border-b border-gray-200">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+            <div className="flex-1">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">Modification des joueurs</h2>
+              <p className="text-xs sm:text-sm text-gray-600">
                 Vous pouvez modifier le nom et le numéro de chaque joueur, ou ajouter/supprimer des joueurs
+              </p>
+              <div className="flex flex-wrap gap-3 sm:gap-4 mt-3 text-xs text-gray-500">
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="w-3 h-3 border border-gray-300 bg-blue-100 rounded"></span>
+                  Compétences de base
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="w-3 h-3 border-2 border-orange-400 bg-blue-100 rounded"></span>
+                  Compétences acquises
+                </span>
               </div>
             </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  console.log("Clic sur ajouter joueur, players.length:", players.length);
-                  const nextNumber = getNextAvailableNumber();
-                  console.log("Prochain numéro disponible:", nextNumber);
-                  setNewPlayerForm({ position: '', name: '', number: nextNumber });
-                  setShowAddPlayerForm(true);
-                }}
-                disabled={players.length >= 16}
-                className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                title={players.length >= 16 ? "Maximum 16 joueurs par équipe" : "Ajouter un nouveau joueur"}
-              >
-                + Ajouter un joueur ({players.length}/16)
-              </button>
-            </div>
-          </div>
-          <div className="text-xs text-gray-500 mt-2">
-            <span className="inline-flex items-center gap-1">
-              <span className="w-3 h-3 border border-gray-300 bg-blue-100 rounded"></span>
-              Compétences de base
-            </span>
-            <span className="ml-4 inline-flex items-center gap-1">
-              <span className="w-3 h-3 border-2 border-orange-400 bg-blue-100 rounded"></span>
-              Compétences acquises
-            </span>
-            <span className="ml-4 text-gray-600">
-              Joueurs: {players.length}/16
-            </span>
-            <span className="ml-4 text-gray-600">
-              Coût actuel: {Math.round(players.reduce((total, player: any) => {
-                const base = getPlayerCost(player.position, team?.roster || '');
-                let adv = 0; try { const a = JSON.parse(player.advancements || '[]'); adv = a.reduce((s: number, x: any) => {
-                  const type = x?.type as keyof typeof SURCHARGE_PER_ADVANCEMENT | undefined;
-                  return s + (type && SURCHARGE_PER_ADVANCEMENT[type] ? SURCHARGE_PER_ADVANCEMENT[type] : 0);
-                }, 0); } catch {}
-                return total + base + adv;
-              }, 0) / 1000)}k po
-            </span>
-            <span className="ml-4 text-gray-600">
-              Budget: {team?.initialBudget?.toLocaleString()}k po
-            </span>
-            <span className={`ml-4 ${players.reduce((total, player: any) => {
-              const base = getPlayerCost(player.position, team?.roster || '');
-              let adv = 0; try { const a = JSON.parse(player.advancements || '[]'); adv = a.reduce((s: number, x: any) => s + (x?.type === 'secondary' ? SURCHARGE_PER_ADVANCEMENT.secondary : SURCHARGE_PER_ADVANCEMENT.primary), 0); } catch {}
-              return total + base + adv;
-            }, 0) > (team?.initialBudget || 0) * 1000 ? 'text-red-600' : 'text-green-600'}`}>
-              Restant: {Math.round(((team?.initialBudget || 0) * 1000 - players.reduce((total, player: any) => {
-                const base = getPlayerCost(player.position, team?.roster || '');
-                let adv = 0; try { const a = JSON.parse(player.advancements || '[]'); adv = a.reduce((s: number, x: any) => {
-                  const type = x?.type as keyof typeof SURCHARGE_PER_ADVANCEMENT | undefined;
-                  return s + (type && SURCHARGE_PER_ADVANCEMENT[type] ? SURCHARGE_PER_ADVANCEMENT[type] : 0);
-                }, 0); } catch {}
-                return total + base + adv;
-              }, 0)) / 1000)}k po
-            </span>
+            <button
+              onClick={() => {
+                const nextNumber = getNextAvailableNumber();
+                setNewPlayerForm({ position: '', name: '', number: nextNumber });
+                setShowAddPlayerForm(true);
+              }}
+              disabled={players.length >= 16}
+              className="px-4 sm:px-6 py-2.5 sm:py-3 bg-blue-600 text-white text-sm sm:text-base rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium shadow-md hover:shadow-lg disabled:shadow-none whitespace-nowrap"
+              title={players.length >= 16 ? "Maximum 16 joueurs par équipe" : "Ajouter un nouveau joueur"}
+            >
+              ➕ Ajouter un joueur ({players.length}/16)
+            </button>
           </div>
         </div>
-        <div className="overflow-x-auto">
+
+        {/* Version Desktop : Tableau */}
+        <div className="hidden lg:block overflow-x-auto">
           <table className="min-w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="text-left p-4 font-medium text-gray-900">#</th>
-                <th className="text-left p-4 font-medium text-gray-900 w-48">Nom</th>
-                <th className="text-left p-4 font-medium text-gray-900">Position</th>
-                <th className="text-left p-4 font-medium text-gray-900">Coût</th>
-                <th className="text-left p-4 font-medium text-gray-900">MA</th>
-                <th className="text-left p-4 font-medium text-gray-900">ST</th>
-                <th className="text-left p-4 font-medium text-gray-900">AG</th>
-                <th className="text-left p-4 font-medium text-gray-900">PA</th>
-                <th className="text-left p-4 font-medium text-gray-900">AV</th>
-                <th className="text-left p-4 font-medium text-gray-900">Compétences</th>
-                <th className="text-left p-4 font-medium text-gray-900">Actions</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-900 text-xs sm:text-sm">#</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-900 text-xs sm:text-sm w-48">Nom</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-900 text-xs sm:text-sm">Position</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-900 text-xs sm:text-sm">Coût</th>
+                <th className="text-center px-4 py-3 font-semibold text-gray-900 text-xs sm:text-sm">MA</th>
+                <th className="text-center px-4 py-3 font-semibold text-gray-900 text-xs sm:text-sm">ST</th>
+                <th className="text-center px-4 py-3 font-semibold text-gray-900 text-xs sm:text-sm">AG</th>
+                <th className="text-center px-4 py-3 font-semibold text-gray-900 text-xs sm:text-sm">PA</th>
+                <th className="text-center px-4 py-3 font-semibold text-gray-900 text-xs sm:text-sm">AV</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-900 text-xs sm:text-sm">Compétences</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-900 text-xs sm:text-sm">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {players.sort((a, b) => a.number - b.number).map((player, index) => (
-                <tr key={player.id} className="hover:bg-gray-50">
-                  <td className="p-4">
-                    <input
-                      type="number"
-                      min="1"
-                      max="99"
-                      value={player.number}
-                      onChange={(e) => handlePlayerChange(index, "number", parseInt(e.target.value) || 0)}
-                      className={`w-16 px-2 py-1 border rounded text-center font-mono ${
-                        validationErrors[`number_${index}`] ? "border-red-500" : "border-gray-300"
-                      }`}
-                    />
+              {players.sort((a, b) => a.number - b.number).map((player, index) => {
+                const base = getPlayerCost(player.position, team?.roster || '');
+                let adv = 0;
+                try {
+                  const a = JSON.parse((player as any).advancements || '[]');
+                  adv = a.reduce((s: number, x: any) => {
+                    const type = x?.type as keyof typeof SURCHARGE_PER_ADVANCEMENT | undefined;
+                    return s + (type && SURCHARGE_PER_ADVANCEMENT[type] ? SURCHARGE_PER_ADVANCEMENT[type] : 0);
+                  }, 0);
+                } catch {}
+                const cost = Math.round((base + adv) / 1000);
+                
+                return (
+                  <tr key={player.id} className="hover:bg-blue-50 transition-colors">
+                    <td className="px-4 py-3">
+                      <input
+                        type="number"
+                        min="1"
+                        max="99"
+                        value={player.number}
+                        onChange={(e) => handlePlayerChange(index, "number", parseInt(e.target.value) || 0)}
+                        className={`w-16 px-2 py-1.5 border rounded-lg text-center font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                          validationErrors[`number_${index}`] ? "border-red-500 bg-red-50" : "border-gray-300"
+                        }`}
+                      />
+                      {validationErrors[`number_${index}`] && (
+                        <div className="text-xs text-red-600 mt-1">
+                          {validationErrors[`number_${index}`]}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <input
+                        type="text"
+                        value={player.name}
+                        onChange={(e) => handlePlayerChange(index, "name", e.target.value)}
+                        className={`px-3 py-1.5 border rounded-lg w-full text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                          validationErrors[`name_${index}`] ? "border-red-500 bg-red-50" : "border-gray-300"
+                        }`}
+                        placeholder="Nom du joueur"
+                      />
+                      {validationErrors[`name_${index}`] && (
+                        <div className="text-xs text-red-600 mt-1">
+                          {validationErrors[`name_${index}`]}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-gray-700 font-medium text-sm">{getDisplayName(player.position)}</td>
+                    <td className="px-4 py-3 text-center">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-mono text-xs font-semibold">
+                        {cost}k
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-center font-mono text-sm">{player.ma}</td>
+                    <td className="px-4 py-3 text-center font-mono text-sm">{player.st}</td>
+                    <td className="px-4 py-3 text-center font-mono text-sm">{player.ag}</td>
+                    <td className="px-4 py-3 text-center font-mono text-sm">{player.pa || '—'}</td>
+                    <td className="px-4 py-3 text-center font-mono text-sm">{player.av}</td>
+                    <td className="px-4 py-3">
+                      <SkillTooltip 
+                        skillsString={player.skills} 
+                        teamName={team?.roster}
+                        position={player.position}
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setAddingSkillFor(player.id)}
+                          className="px-3 py-1.5 bg-indigo-600 text-white text-xs rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+                        >
+                          + Compétence
+                        </button>
+                        <button
+                          onClick={() => handleDeletePlayer(player.id)}
+                          disabled={players.length <= 11}
+                          className="px-3 py-1.5 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
+                          title={players.length <= 11 ? "Une équipe doit avoir au minimum 11 joueurs" : "Supprimer ce joueur"}
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Version Mobile/Tablet : Cartes */}
+        <div className="lg:hidden p-4 sm:p-6 space-y-4">
+          {players.sort((a, b) => a.number - b.number).map((player, index) => {
+            const base = getPlayerCost(player.position, team?.roster || '');
+            let adv = 0;
+            try {
+              const a = JSON.parse((player as any).advancements || '[]');
+              adv = a.reduce((s: number, x: any) => {
+                const type = x?.type as keyof typeof SURCHARGE_PER_ADVANCEMENT | undefined;
+                return s + (type && SURCHARGE_PER_ADVANCEMENT[type] ? SURCHARGE_PER_ADVANCEMENT[type] : 0);
+              }, 0);
+            } catch {}
+            const cost = Math.round((base + adv) / 1000);
+            
+            return (
+              <div
+                key={player.id}
+                className="bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 p-4 sm:p-5 shadow-sm hover:shadow-md transition-all"
+              >
+                {/* En-tête de la carte */}
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="flex-shrink-0">
+                      <input
+                        type="number"
+                        min="1"
+                        max="99"
+                        value={player.number}
+                        onChange={(e) => handlePlayerChange(index, "number", parseInt(e.target.value) || 0)}
+                        className={`w-14 px-2 py-2 border rounded-lg text-center font-mono text-base font-bold focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                          validationErrors[`number_${index}`] ? "border-red-500 bg-red-50" : "border-gray-300 bg-gray-50"
+                        }`}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <input
+                        type="text"
+                        value={player.name}
+                        onChange={(e) => handlePlayerChange(index, "name", e.target.value)}
+                        className={`w-full px-3 py-2 border rounded-lg text-base font-semibold focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                          validationErrors[`name_${index}`] ? "border-red-500 bg-red-50" : "border-gray-300"
+                        }`}
+                        placeholder="Nom du joueur"
+                      />
+                      <div className="text-xs text-gray-600 mt-1">{getDisplayName(player.position)}</div>
+                    </div>
+                  </div>
+                  <div className="flex-shrink-0 ml-3">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-mono text-xs font-semibold">
+                      {cost}k
+                    </span>
+                  </div>
+                </div>
+
+                {/* Erreurs de validation */}
+                {(validationErrors[`number_${index}`] || validationErrors[`name_${index}`]) && (
+                  <div className="mb-3 space-y-1">
                     {validationErrors[`number_${index}`] && (
-                      <div className="text-xs text-red-600 mt-1">
-                        {validationErrors[`number_${index}`]}
-                      </div>
+                      <div className="text-xs text-red-600">{validationErrors[`number_${index}`]}</div>
                     )}
-                  </td>
-                  <td className="p-4">
-                    <input
-                      type="text"
-                      value={player.name}
-                      onChange={(e) => handlePlayerChange(index, "name", e.target.value)}
-                      className={`px-3 py-2 border rounded w-full ${
-                        validationErrors[`name_${index}`] ? "border-red-500" : "border-gray-300"
-                      }`}
-                      placeholder="Nom du joueur"
-                    />
                     {validationErrors[`name_${index}`] && (
-                      <div className="text-xs text-red-600 mt-1">
-                        {validationErrors[`name_${index}`]}
-                      </div>
+                      <div className="text-xs text-red-600">{validationErrors[`name_${index}`]}</div>
                     )}
-                  </td>
-                  <td className="p-4 text-gray-600">{getDisplayName(player.position)}</td>
-                  <td className="p-4 text-center font-mono text-sm">
-                    {(() => {
-                      const base = getPlayerCost(player.position, data?.roster || '');
-                      let adv = 0; try { const a = JSON.parse((player as any).advancements || '[]'); adv = a.reduce((s: number, x: any) => {
-                        const type = x?.type as keyof typeof SURCHARGE_PER_ADVANCEMENT | undefined;
-                        return s + (type && SURCHARGE_PER_ADVANCEMENT[type] ? SURCHARGE_PER_ADVANCEMENT[type] : 0);
-                      }, 0); } catch {}
-                      return `${Math.round((base + adv)/1000)}k po`;
-                    })()}
-                  </td>
-                  <td className="p-4 text-center font-mono">{player.ma}</td>
-                  <td className="p-4 text-center font-mono">{player.st}</td>
-                  <td className="p-4 text-center font-mono">{player.ag}</td>
-                  <td className="p-4 text-center font-mono">{player.pa}</td>
-                  <td className="p-4 text-center font-mono">{player.av}</td>
-                  <td className="p-4">
+                  </div>
+                )}
+
+                {/* Statistiques */}
+                <div className="mb-4">
+                  <div className="grid grid-cols-5 gap-2">
+                    <div className="bg-blue-50 rounded-lg p-2 text-center">
+                      <div className="text-xs text-blue-600 font-medium mb-0.5">MA</div>
+                      <div className="text-base font-bold text-blue-900 font-mono">{player.ma}</div>
+                    </div>
+                    <div className="bg-red-50 rounded-lg p-2 text-center">
+                      <div className="text-xs text-red-600 font-medium mb-0.5">ST</div>
+                      <div className="text-base font-bold text-red-900 font-mono">{player.st}</div>
+                    </div>
+                    <div className="bg-green-50 rounded-lg p-2 text-center">
+                      <div className="text-xs text-green-600 font-medium mb-0.5">AG</div>
+                      <div className="text-base font-bold text-green-900 font-mono">{player.ag}</div>
+                    </div>
+                    <div className="bg-purple-50 rounded-lg p-2 text-center">
+                      <div className="text-xs text-purple-600 font-medium mb-0.5">PA</div>
+                      <div className="text-base font-bold text-purple-900 font-mono">{player.pa || '—'}</div>
+                    </div>
+                    <div className="bg-orange-50 rounded-lg p-2 text-center">
+                      <div className="text-xs text-orange-600 font-medium mb-0.5">AV</div>
+                      <div className="text-base font-bold text-orange-900 font-mono">{player.av}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Compétences */}
+                <div className="mb-4">
+                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Compétences</div>
+                  <div className="bg-gray-50 rounded-lg p-3">
                     <SkillTooltip 
                       skillsString={player.skills} 
                       teamName={team?.roster}
                       position={player.position}
                     />
-                  </td>
-                  <td className="p-4">
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setAddingSkillFor(player.id)}
-                        className="px-2 py-1 bg-indigo-600 text-white text-xs rounded hover:bg-indigo-700 transition-colors"
-                      >
-                        + Compétence
-                      </button>
-                      <button
-                        onClick={() => handleDeletePlayer(player.id)}
-                        disabled={players.length <= 11}
-                        className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                        title={players.length <= 11 ? "Une équipe doit avoir au minimum 11 joueurs" : "Supprimer ce joueur"}
-                      >
-                        Supprimer
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setAddingSkillFor(player.id)}
+                    className="flex-1 px-3 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+                  >
+                    ➕ Compétence
+                  </button>
+                  <button
+                    onClick={() => handleDeletePlayer(player.id)}
+                    disabled={players.length <= 11}
+                    className="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
+                    title={players.length <= 11 ? "Une équipe doit avoir au minimum 11 joueurs" : "Supprimer ce joueur"}
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      {/* Modal d'ajout de joueur */}
+      {/* Modal d'ajout de joueur amélioré */}
       {showAddPlayerForm && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={(e) => {
-            // Fermer le modal si on clique sur l'arrière-plan
             if (e.target === e.currentTarget) {
               setShowAddPlayerForm(false);
             }
           }}
         >
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="bg-blue-50 px-6 py-4 border-b flex justify-between items-center">
-              <h3 className="text-lg font-semibold">Ajouter un nouveau joueur</h3>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            {/* En-tête */}
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 sm:px-6 py-4 sm:py-5 text-white flex justify-between items-center">
+              <h3 className="text-lg sm:text-xl font-bold">➕ Ajouter un nouveau joueur</h3>
               <button
                 onClick={() => setShowAddPlayerForm(false)}
-                className="text-gray-500 hover:text-gray-700 text-xl font-bold w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 transition-colors"
+                className="text-white/80 hover:text-white w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full hover:bg-white/20 transition-all text-xl sm:text-2xl font-light"
                 aria-label="Fermer le modal"
                 title="Fermer (Échap)"
               >
                 ×
               </button>
             </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 gap-4">
+            
+            {/* Contenu */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+              <div className="space-y-4 sm:space-y-6">
+                {/* Sélection de position */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Position
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Position <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={newPlayerForm.position}
                     onChange={(e) => setNewPlayerForm({ ...newPlayerForm, position: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                     autoFocus
                   >
                     <option value="">Sélectionner une position</option>
@@ -672,21 +845,23 @@ export default function TeamEditPage() {
                       ))}
                   </select>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+
+                {/* Nom et numéro */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Nom du joueur
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Nom du joueur <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={newPlayerForm.name}
                       onChange={(e) => setNewPlayerForm({ ...newPlayerForm, name: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Nom du joueur"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Numéro
                     </label>
                     <input
@@ -695,49 +870,80 @@ export default function TeamEditPage() {
                       max="99"
                       value={newPlayerForm.number}
                       onChange={(e) => setNewPlayerForm({ ...newPlayerForm, number: parseInt(e.target.value) || 1 })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-center font-mono text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
                 </div>
-              </div>
-              
-              {/* Aperçu des statistiques */}
-              {newPlayerForm.position && (
-                <div className="mt-4 p-4 bg-gray-50 rounded-md">
-                  <h4 className="font-medium text-gray-900 mb-2">Aperçu des statistiques :</h4>
-                  {(() => {
-                    const position = availablePositions.find(p => p.key === newPlayerForm.position);
-                    if (!position) return null;
-                    
-                    return (
-                      <div className="grid grid-cols-6 gap-4 text-sm">
-                        <div><span className="font-medium">MA:</span> {position.stats.ma}</div>
-                        <div><span className="font-medium">ST:</span> {position.stats.st}</div>
-                        <div><span className="font-medium">AG:</span> {position.stats.ag}</div>
-                        <div><span className="font-medium">PA:</span> {position.stats.pa}</div>
-                        <div><span className="font-medium">AV:</span> {position.stats.av}</div>
-                        <div><span className="font-medium">Compétences:</span> {position.stats.skills || "Aucune"}</div>
+                
+                {/* Aperçu des statistiques amélioré */}
+                {newPlayerForm.position && (() => {
+                  const position = availablePositions.find(p => p.key === newPlayerForm.position);
+                  if (!position) return null;
+                  
+                  return (
+                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200 p-4 sm:p-5">
+                      <h4 className="font-semibold text-gray-900 mb-3 text-sm sm:text-base">📊 Aperçu des statistiques</h4>
+                      <div className="grid grid-cols-5 gap-2 sm:gap-3 mb-3">
+                        <div className="bg-white rounded-lg p-2 sm:p-3 text-center border border-blue-100">
+                          <div className="text-xs text-blue-600 font-medium mb-1">MA</div>
+                          <div className="text-lg sm:text-xl font-bold text-blue-900 font-mono">{position.stats.ma}</div>
+                        </div>
+                        <div className="bg-white rounded-lg p-2 sm:p-3 text-center border border-red-100">
+                          <div className="text-xs text-red-600 font-medium mb-1">ST</div>
+                          <div className="text-lg sm:text-xl font-bold text-red-900 font-mono">{position.stats.st}</div>
+                        </div>
+                        <div className="bg-white rounded-lg p-2 sm:p-3 text-center border border-green-100">
+                          <div className="text-xs text-green-600 font-medium mb-1">AG</div>
+                          <div className="text-lg sm:text-xl font-bold text-green-900 font-mono">{position.stats.ag}</div>
+                        </div>
+                        <div className="bg-white rounded-lg p-2 sm:p-3 text-center border border-purple-100">
+                          <div className="text-xs text-purple-600 font-medium mb-1">PA</div>
+                          <div className="text-lg sm:text-xl font-bold text-purple-900 font-mono">{position.stats.pa || '—'}</div>
+                        </div>
+                        <div className="bg-white rounded-lg p-2 sm:p-3 text-center border border-orange-100">
+                          <div className="text-xs text-orange-600 font-medium mb-1">AV</div>
+                          <div className="text-lg sm:text-xl font-bold text-orange-900 font-mono">{position.stats.av}</div>
+                        </div>
                       </div>
-                    );
-                  })()}
-                </div>
-              )}
-
-              <div className="flex gap-3 mt-6 justify-end">
-                <button
-                  onClick={() => setShowAddPlayerForm(false)}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
-                >
-                  Annuler
-                </button>
-                <button
-                  onClick={handleAddPlayer}
-                  disabled={!newPlayerForm.position || !newPlayerForm.name.trim()}
-                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                >
-                  Ajouter le joueur
-                </button>
+                      {position.stats.skills && (
+                        <div className="mt-3 pt-3 border-t border-blue-200">
+                          <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Compétences de base</div>
+                          <div className="bg-white rounded-lg p-3">
+                            <SkillTooltip 
+                              skillsString={position.stats.skills} 
+                              teamName={team?.roster}
+                              position={position.key}
+                            />
+                          </div>
+                        </div>
+                      )}
+                      <div className="mt-3 flex items-center justify-between pt-3 border-t border-blue-200">
+                        <span className="text-sm text-gray-600">Coût:</span>
+                        <span className="inline-flex items-center px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 font-mono text-sm font-semibold">
+                          {position.cost}k po
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
+            </div>
+
+            {/* Footer avec actions */}
+            <div className="border-t border-gray-200 px-4 sm:px-6 py-4 bg-gray-50 flex flex-col sm:flex-row gap-3 justify-end">
+              <button
+                onClick={() => setShowAddPlayerForm(false)}
+                className="px-4 sm:px-6 py-2.5 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors font-medium text-sm sm:text-base"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleAddPlayer}
+                disabled={!newPlayerForm.position || !newPlayerForm.name.trim()}
+                className="px-4 sm:px-6 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed transition-all font-semibold text-sm sm:text-base shadow-lg shadow-green-500/30 disabled:shadow-none"
+              >
+                ➕ Ajouter le joueur
+              </button>
             </div>
           </div>
         </div>
@@ -1109,20 +1315,37 @@ export default function TeamEditPage() {
         />
       )}
 
-      <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded">
-        <div className="font-semibold">ℹ️ Informations</div>
-        <div className="text-sm mt-1">
-          • Les statistiques (MA, ST, AG, PA, AV) et les compétences ne peuvent pas être modifiées
-          <br />
-          • Les numéros de joueurs doivent être uniques et compris entre 1 et 99
-          <br />
-          • Tous les joueurs doivent avoir un nom
-          <br />
-          • Une équipe doit avoir entre 11 et 16 joueurs (règles Blood Bowl)
-          <br />
-          • Chaque position a des limites min/max selon le roster
-          <br />
-          • Vous pouvez ajouter/supprimer des joueurs tant que l'équipe n'est pas engagée dans un match
+      {/* Informations */}
+      <div className="bg-blue-50 border-2 border-blue-200 text-blue-800 px-4 sm:px-6 py-4 sm:py-5 rounded-xl">
+        <div className="font-semibold text-base sm:text-lg mb-3 flex items-center gap-2">
+          <span>ℹ️</span>
+          Informations importantes
+        </div>
+        <div className="text-xs sm:text-sm space-y-2">
+          <div className="flex items-start gap-2">
+            <span className="text-blue-600">•</span>
+            <span>Les statistiques (MA, ST, AG, PA, AV) et les compétences ne peuvent pas être modifiées</span>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="text-blue-600">•</span>
+            <span>Les numéros de joueurs doivent être uniques et compris entre 1 et 99</span>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="text-blue-600">•</span>
+            <span>Tous les joueurs doivent avoir un nom</span>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="text-blue-600">•</span>
+            <span>Une équipe doit avoir entre 11 et 16 joueurs (règles Blood Bowl)</span>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="text-blue-600">•</span>
+            <span>Chaque position a des limites min/max selon le roster</span>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="text-blue-600">•</span>
+            <span>Vous pouvez ajouter/supprimer des joueurs tant que l'équipe n'est pas engagée dans un match</span>
+          </div>
         </div>
       </div>
     </div>

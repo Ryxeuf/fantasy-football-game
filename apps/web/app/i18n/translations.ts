@@ -260,6 +260,10 @@ export const translations = {
       exportPDFError: "Erreur lors de la génération du PDF",
       // Team Info Display
       treasury: "Trésorerie",
+      teamValue: "Valeur d'équipe",
+      currentValue: "Valeur d'Équipe Actuelle",
+      rerolls: "Relance(s)",
+      cheerleaders: "Cheerleaders",
       assistants: "Assistants",
       apothecaryPresent: "Présent",
       apothecaryAbsent: "Absent",

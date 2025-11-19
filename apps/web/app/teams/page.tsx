@@ -67,16 +67,16 @@ export default function TeamsListPage() {
   }
 
   return (
-    <div className="w-full p-6 space-y-6">
+    <div className="w-full p-4 sm:p-6 space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-3xl font-bold mb-2">{t.teams.allTeams}</h1>
-        <p className="text-gray-600">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">{t.teams.allTeams}</h1>
+        <p className="text-sm sm:text-base text-gray-600">
           {t.teams.allTeamsDescription}
         </p>
       </div>
 
       {/* Grille des équipes */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
         {sortedTeams.map((team) => (
           <Link
             key={team.slug}
@@ -107,7 +107,7 @@ export default function TeamsListPage() {
       </div>
 
       {/* Statistiques globales */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mt-6 sm:mt-8">
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="text-sm text-blue-600 font-medium">{t.teams.totalTeams}</div>
           <div className="text-2xl font-bold text-blue-900">{teams.length}</div>

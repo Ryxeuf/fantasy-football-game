@@ -87,36 +87,36 @@ export default function TeamDetailPage() {
   const positions = team.positions.sort((a: any, b: any) => a.displayName.localeCompare(b.displayName));
 
   return (
-    <div className="w-full p-6 space-y-6">
+    <div className="w-full p-4 sm:p-6 space-y-4 sm:space-y-6">
       {/* En-tête */}
-      <div className="flex items-start justify-between">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
             <Link
               href="/teams"
-              className="text-blue-600 hover:text-blue-800 text-sm"
+              className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm"
             >
               ← {t.teams.backToList}
             </Link>
           </div>
-          <h1 className="text-4xl font-bold">{team.name}</h1>
-          <div className="flex items-center gap-3 mt-2">
-            <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-sm font-medium">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">{team.name}</h1>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-2">
+            <span className="px-2 sm:px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-xs sm:text-sm font-medium">
               {t.teams.tier} {team.tier}
             </span>
             {team.naf && (
-              <span className="px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 text-sm font-medium">
+              <span className="px-2 sm:px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 text-xs sm:text-sm font-medium">
                 NAF
               </span>
             )}
-            <span className="text-gray-600 text-sm">
+            <span className="text-gray-600 text-xs sm:text-sm">
               {t.teams.budgetLabel.replace(/\{budget\}/g, team.budget.toString())}
             </span>
           </div>
         </div>
         <Link
           href={`/me/teams/new?roster=${slug}`}
-          className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
+          className="px-4 sm:px-6 py-2.5 sm:py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium text-sm sm:text-base text-center whitespace-nowrap"
         >
           {t.teams.createTeamWithName.replace(/\{name\}/g, team.name)}
         </Link>
@@ -124,11 +124,11 @@ export default function TeamDetailPage() {
 
       {/* Informations générales */}
       <div className="bg-white rounded-lg border overflow-hidden">
-        <div className="bg-gray-50 px-6 py-3 border-b">
-          <h2 className="text-lg font-semibold">{t.teams.teamInfo}</h2>
+        <div className="bg-gray-50 px-4 sm:px-6 py-3 border-b">
+          <h2 className="text-base sm:text-lg font-semibold">{t.teams.teamInfo}</h2>
         </div>
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="p-4 sm:p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
             <div>
               <div className="text-sm font-medium text-gray-700 mb-1">{t.teams.tier}</div>
               <div className="text-lg font-semibold text-gray-900">{t.teams.tier} {team.tier}</div>
@@ -163,46 +163,69 @@ export default function TeamDetailPage() {
       </div>
 
       {/* Roster - Positions disponibles */}
-      <div className="bg-white rounded-lg border overflow-hidden">
-        <div className="bg-gray-50 px-6 py-3 border-b">
-          <h2 className="text-lg font-semibold">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+        <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-4 sm:px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
             {t.teams.rosterPositions.replace(/\{count\}/g, positions.length.toString())}
           </h2>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-xs sm:text-sm text-gray-600 mt-1.5">
             {t.teams.rosterPositionsDesc}
           </p>
         </div>
-        <div className="overflow-x-auto">
+        
+        {/* Version Desktop : Tableau amélioré */}
+        <div className="hidden lg:block overflow-x-auto">
           <table className="min-w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="text-left p-4 font-medium text-gray-900">{t.teams.position}</th>
-                <th className="text-left p-4 font-medium text-gray-900">{t.teams.cost}</th>
-                <th className="text-left p-4 font-medium text-gray-900">{t.teams.min}</th>
-                <th className="text-left p-4 font-medium text-gray-900">{t.teams.max}</th>
-                <th className="text-left p-4 font-medium text-gray-900">MA</th>
-                <th className="text-left p-4 font-medium text-gray-900">ST</th>
-                <th className="text-left p-4 font-medium text-gray-900">AG</th>
-                <th className="text-left p-4 font-medium text-gray-900">PA</th>
-                <th className="text-left p-4 font-medium text-gray-900">AV</th>
-                <th className="text-left p-4 font-medium text-gray-900">{t.teams.skills}</th>
+                <th className="text-left px-6 py-4 font-semibold text-gray-900 text-sm">{t.teams.position}</th>
+                <th className="text-center px-4 py-4 font-semibold text-gray-900 text-sm">{t.teams.cost}</th>
+                <th className="text-center px-4 py-4 font-semibold text-gray-900 text-sm">{t.teams.min}</th>
+                <th className="text-center px-4 py-4 font-semibold text-gray-900 text-sm">{t.teams.max}</th>
+                <th className="text-center px-4 py-4 font-semibold text-gray-900 text-sm">MA</th>
+                <th className="text-center px-4 py-4 font-semibold text-gray-900 text-sm">ST</th>
+                <th className="text-center px-4 py-4 font-semibold text-gray-900 text-sm">AG</th>
+                <th className="text-center px-4 py-4 font-semibold text-gray-900 text-sm">PA</th>
+                <th className="text-center px-4 py-4 font-semibold text-gray-900 text-sm">AV</th>
+                <th className="text-left px-6 py-4 font-semibold text-gray-900 text-sm">{t.teams.skills}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {positions.map((position) => (
-                <tr key={position.slug} className="hover:bg-gray-50">
-                  <td className="p-4 font-medium">{translatePositionName(position.displayName)}</td>
-                  <td className="p-4 text-center font-mono text-sm">
-                    {position.cost}k {t.teams.po}
+              {positions.map((position, index) => (
+                <tr 
+                  key={position.slug} 
+                  className={`hover:bg-blue-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}
+                >
+                  <td className="px-6 py-4">
+                    <div className="font-semibold text-gray-900">{translatePositionName(position.displayName)}</div>
                   </td>
-                  <td className="p-4 text-center font-mono">{position.min}</td>
-                  <td className="p-4 text-center font-mono">{position.max}</td>
-                  <td className="p-4 text-center font-mono">{position.ma}</td>
-                  <td className="p-4 text-center font-mono">{position.st}</td>
-                  <td className="p-4 text-center font-mono">{position.ag}</td>
-                  <td className="p-4 text-center font-mono">{position.pa}</td>
-                  <td className="p-4 text-center font-mono">{position.av}</td>
-                  <td className="p-4">
+                  <td className="px-4 py-4 text-center">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-mono text-sm font-semibold">
+                      {position.cost}k
+                    </span>
+                  </td>
+                  <td className="px-4 py-4 text-center">
+                    <span className="font-mono text-sm text-gray-700">{position.min}</span>
+                  </td>
+                  <td className="px-4 py-4 text-center">
+                    <span className="font-mono text-sm text-gray-700">{position.max}</span>
+                  </td>
+                  <td className="px-4 py-4 text-center">
+                    <span className="font-mono text-sm font-semibold text-gray-900">{position.ma}</span>
+                  </td>
+                  <td className="px-4 py-4 text-center">
+                    <span className="font-mono text-sm font-semibold text-gray-900">{position.st}</span>
+                  </td>
+                  <td className="px-4 py-4 text-center">
+                    <span className="font-mono text-sm font-semibold text-gray-900">{position.ag}</span>
+                  </td>
+                  <td className="px-4 py-4 text-center">
+                    <span className="font-mono text-sm font-semibold text-gray-900">{position.pa}</span>
+                  </td>
+                  <td className="px-4 py-4 text-center">
+                    <span className="font-mono text-sm font-semibold text-gray-900">{position.av}</span>
+                  </td>
+                  <td className="px-6 py-4">
                     <SkillTooltip
                       skillsString={position.skills}
                       position={position.slug}
@@ -215,20 +238,91 @@ export default function TeamDetailPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Version Mobile/Tablet : Cartes élégantes */}
+        <div className="lg:hidden p-4 sm:p-6 space-y-4">
+          {positions.map((position) => (
+            <div
+              key={position.slug}
+              className="bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 p-4 sm:p-5 shadow-sm hover:shadow-md transition-all duration-200"
+            >
+              {/* En-tête de la carte */}
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1">
+                    {translatePositionName(position.displayName)}
+                  </h3>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-mono text-xs sm:text-sm font-semibold">
+                      {position.cost}k {t.teams.po}
+                    </span>
+                    <span className="inline-flex items-center px-2 py-1 rounded-md bg-gray-100 text-gray-700 text-xs font-medium">
+                      {position.min}-{position.max} {t.teams.players}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Statistiques */}
+              <div className="mb-4">
+                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                  Statistiques
+                </div>
+                <div className="grid grid-cols-5 gap-2">
+                  <div className="bg-blue-50 rounded-lg p-2 text-center">
+                    <div className="text-xs text-blue-600 font-medium mb-0.5">MA</div>
+                    <div className="text-base sm:text-lg font-bold text-blue-900 font-mono">{position.ma}</div>
+                  </div>
+                  <div className="bg-red-50 rounded-lg p-2 text-center">
+                    <div className="text-xs text-red-600 font-medium mb-0.5">ST</div>
+                    <div className="text-base sm:text-lg font-bold text-red-900 font-mono">{position.st}</div>
+                  </div>
+                  <div className="bg-green-50 rounded-lg p-2 text-center">
+                    <div className="text-xs text-green-600 font-medium mb-0.5">AG</div>
+                    <div className="text-base sm:text-lg font-bold text-green-900 font-mono">{position.ag}</div>
+                  </div>
+                  <div className="bg-purple-50 rounded-lg p-2 text-center">
+                    <div className="text-xs text-purple-600 font-medium mb-0.5">PA</div>
+                    <div className="text-base sm:text-lg font-bold text-purple-900 font-mono">{position.pa}</div>
+                  </div>
+                  <div className="bg-orange-50 rounded-lg p-2 text-center">
+                    <div className="text-xs text-orange-600 font-medium mb-0.5">AV</div>
+                    <div className="text-base sm:text-lg font-bold text-orange-900 font-mono">{position.av}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Compétences */}
+              <div>
+                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                  {t.teams.skills}
+                </div>
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <SkillTooltip
+                    skillsString={position.skills}
+                    position={position.slug}
+                    teamName={slug}
+                    useDirectParsing={true}
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Règles spéciales */}
       {TEAM_SPECIAL_RULES[slug] && TEAM_SPECIAL_RULES[slug].length > 0 && (
         <div className="bg-white rounded-lg border overflow-hidden">
-          <div className="bg-gray-50 px-6 py-3 border-b">
-            <h2 className="text-lg font-semibold">{t.teams.specialRules}</h2>
+          <div className="bg-gray-50 px-4 sm:px-6 py-3 border-b">
+            <h2 className="text-base sm:text-lg font-semibold">{t.teams.specialRules}</h2>
           </div>
-          <div className="p-6">
-            <div className="flex flex-wrap gap-3">
+          <div className="p-4 sm:p-6">
+            <div className="flex flex-wrap gap-2 sm:gap-3">
               {TEAM_SPECIAL_RULES[slug].map((rule, index) => (
                 <button
                   key={index}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-xs sm:text-sm"
                   title={rule.description}
                 >
                   {rule.name}
@@ -241,14 +335,14 @@ export default function TeamDetailPage() {
 
       {/* Staff */}
       <div className="bg-white rounded-lg border overflow-hidden">
-        <div className="bg-gray-50 px-6 py-3 border-b">
-          <h2 className="text-lg font-semibold">{t.teams.staff}</h2>
-          <p className="text-sm text-gray-600 mt-1">
+        <div className="bg-gray-50 px-4 sm:px-6 py-3 border-b">
+          <h2 className="text-base sm:text-lg font-semibold">{t.teams.staff}</h2>
+          <p className="text-xs sm:text-sm text-gray-600 mt-1">
             {t.teams.staffDesc}
           </p>
         </div>
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="p-4 sm:p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
               <div className="font-semibold text-lg mb-2">{t.teams.cheerleader}</div>
               <div className="text-2xl font-bold text-emerald-600 mb-1">10k {t.teams.po}</div>
@@ -277,11 +371,11 @@ export default function TeamDetailPage() {
 
       {/* Résumé des statistiques */}
       <div className="bg-white rounded-lg border overflow-hidden">
-        <div className="bg-gray-50 px-6 py-3 border-b">
-          <h2 className="text-lg font-semibold">{t.teams.rosterStats}</h2>
+        <div className="bg-gray-50 px-4 sm:px-6 py-3 border-b">
+          <h2 className="text-base sm:text-lg font-semibold">{t.teams.rosterStats}</h2>
         </div>
-        <div className="p-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="p-4 sm:p-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             <div className="text-center p-4 bg-blue-50 rounded-lg">
               <div className="text-sm text-blue-600 font-medium">{t.teams.uniquePositions}</div>
               <div className="text-2xl font-bold text-blue-900">{positions.length}</div>
@@ -309,16 +403,16 @@ export default function TeamDetailPage() {
       </div>
 
       {/* Actions */}
-      <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <Link
           href={`/me/teams/new?roster=${slug}`}
-          className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
+          className="px-4 sm:px-6 py-2.5 sm:py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium text-sm sm:text-base text-center"
         >
           {t.teams.createTeamWithName.replace(/\{name\}/g, team.name)}
         </Link>
         <Link
           href="/teams"
-          className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium"
+          className="px-4 sm:px-6 py-2.5 sm:py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium text-sm sm:text-base text-center"
         >
           {t.teams.backToList}
         </Link>

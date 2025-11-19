@@ -56,8 +56,8 @@ export default function MyTeamsPage() {
   }, [t, language]);
 
   return (
-    <div className="w-full p-6 space-y-6">
-      <h1 className="text-2xl font-bold">{t.teams.title}</h1>
+    <div className="w-full p-4 sm:p-6 space-y-4 sm:space-y-6">
+      <h1 className="text-xl sm:text-2xl font-bold">{t.teams.title}</h1>
       {error && <p className="text-red-600 text-sm">{error}</p>}
       
       {/* Liste des équipes existantes */}
@@ -66,21 +66,21 @@ export default function MyTeamsPage() {
           {teams.map((team) => (
             <a
               key={team.id}
-              className="rounded border p-4 bg-white hover:shadow transition-shadow"
+              className="rounded border p-4 bg-white hover:shadow transition-shadow active:scale-[0.98]"
               href={`/me/teams/${team.id}`}
             >
-              <div className="font-semibold">{team.name}</div>
-              <div className="text-sm text-gray-600">{t.teams.roster}: {rosterNames[team.roster] || team.roster}</div>
+              <div className="font-semibold text-base sm:text-lg">{team.name}</div>
+              <div className="text-xs sm:text-sm text-gray-600 mt-1">{t.teams.roster}: {rosterNames[team.roster] || team.roster}</div>
             </a>
           ))}
         </div>
       )}
       
       {/* Bloc de création d'équipe */}
-      <div className="rounded border p-4 bg-white">
-        <p className="mb-4">{t.teams.createNewTeamMessage}</p>
+      <div className="rounded border p-4 sm:p-6 bg-white">
+        <p className="mb-4 text-sm sm:text-base">{t.teams.createNewTeamMessage}</p>
         <a
-          className="inline-block px-4 py-2 bg-emerald-600 text-white rounded text-center hover:bg-emerald-700 transition-colors"
+          className="inline-block w-full sm:w-auto px-4 py-2.5 bg-emerald-600 text-white rounded text-center hover:bg-emerald-700 transition-colors font-medium"
           href="/me/teams/new"
         >
           {t.teams.openBuilder}
