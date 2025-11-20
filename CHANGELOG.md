@@ -1,3 +1,10 @@
+## [1.22.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.21.0...v1.22.0) (2025-11-20)
+
+
+### ✨ Features
+
+* scoring coupes et visibilité des matchs locaux ([101160a](https://github.com/Ryxeuf/fantasy-football-game/commit/101160a4746805ce7d1b9550b916541221202cdc))
+
 ## [1.21.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.20.0...v1.21.0) (2025-11-19)
 
 
