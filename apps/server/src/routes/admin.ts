@@ -2,6 +2,7 @@ import { Router } from "express";
 import { prisma } from "../prisma";
 import { authUser } from "../middleware/authUser";
 import { adminOnly } from "../middleware/adminOnly";
+import { normalizeRoles } from "../utils/roles";
 
 const router = Router();
 
@@ -35,7 +36,12 @@ router.get("/users", async (req, res) => {
       ];
     }
     if (role) {
-      where.role = role;
+      // Compat : filtrer sur le rôle principal ET la liste des rôles
+      where.OR = [
+        ...(where.OR ?? []),
+        { role },
+        { roles: { has: role } },
+      ];
     }
 
     // Compter le total
@@ -49,6 +55,7 @@ router.get("/users", async (req, res) => {
         email: true,
         name: true,
         role: true,
+        roles: true,
         patreon: true,
         valid: true,
         createdAt: true,
@@ -67,8 +74,13 @@ router.get("/users", async (req, res) => {
       take: limitNum,
     });
 
+    const usersWithRoles = users.map((u) => ({
+      ...u,
+      roles: normalizeRoles((u as any).roles ?? u.role),
+    }));
+
     res.json({
-      users,
+      users: usersWithRoles,
       pagination: {
         total,
         page: pageNum,
@@ -93,6 +105,7 @@ router.get("/users/:id", async (req, res) => {
         email: true,
         name: true,
         role: true,
+        roles: true,
         patreon: true,
         valid: true,
         createdAt: true,
@@ -140,7 +153,12 @@ router.get("/users/:id", async (req, res) => {
       return res.status(404).json({ error: "Utilisateur non trouvé" });
     }
 
-    res.json({ user });
+    const userWithRoles = {
+      ...user,
+      roles: normalizeRoles((user as any).roles ?? user.role),
+    };
+
+    res.json({ user: userWithRoles });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Erreur lors de la récupération de l'utilisateur" });
@@ -151,9 +169,20 @@ router.get("/users/:id", async (req, res) => {
 router.patch("/users/:id/role", async (req, res) => {
   try {
     const { id } = req.params;
-    const { role } = req.body;
+    const { role, roles } = req.body ?? {};
 
-    if (!role || !["user", "admin"].includes(role)) {
+    const rolesArray: string[] = Array.isArray(roles)
+      ? roles
+      : role
+        ? [role]
+        : [];
+
+    const allowedRoles = ["user", "admin", "moderator"];
+
+    if (
+      rolesArray.length === 0 ||
+      !rolesArray.every((r) => allowedRoles.includes(r))
+    ) {
       return res.status(400).json({ error: "Rôle invalide" });
     }
 
@@ -162,13 +191,28 @@ router.patch("/users/:id/role", async (req, res) => {
       return res.status(400).json({ error: "Vous ne pouvez pas modifier votre propre rôle" });
     }
 
+    const primaryRole = rolesArray.includes("admin") ? "admin" : "user";
+
     const user = await prisma.user.update({
       where: { id },
-      data: { role },
-      select: { id: true, email: true, name: true, role: true, patreon: true, valid: true },
+      data: { role: primaryRole, roles: rolesArray },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        roles: true,
+        patreon: true,
+        valid: true,
+      },
     });
 
-    res.json({ user });
+    const userWithRoles = {
+      ...user,
+      roles: normalizeRoles(user.roles ?? user.role),
+    };
+
+    res.json({ user: userWithRoles });
   } catch (e: any) {
     if (e.code === "P2025") {
       return res.status(404).json({ error: "Utilisateur non trouvé" });
@@ -322,7 +366,11 @@ router.get("/stats", async (_req, res) => {
     ] = await Promise.all([
       prisma.user.count(),
       prisma.user.count({ where: { valid: true } }),
-      prisma.user.count({ where: { role: "admin" } }),
+      prisma.user.count({
+        where: {
+          OR: [{ role: "admin" }, { roles: { has: "admin" } }],
+        },
+      }),
       prisma.match.count(),
       prisma.team.count(),
       prisma.cup.count(),

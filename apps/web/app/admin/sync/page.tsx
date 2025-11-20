@@ -35,8 +35,15 @@ export default function AdminSyncPage() {
       })
       .then((data) => {
         if (!data) return;
-        
-        if (data?.user?.role !== "admin") {
+
+        const user = data?.user;
+        const roles: string[] | undefined = Array.isArray(user?.roles)
+          ? user.roles
+          : user?.role
+            ? [user.role]
+            : undefined;
+
+        if (!roles || !roles.includes("admin")) {
           // Pas admin, redirige vers la page d'accueil
           router.push("/");
           return;

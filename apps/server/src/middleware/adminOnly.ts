@@ -1,6 +1,7 @@
 import { Response, NextFunction } from "express";
 import { AuthenticatedRequest } from "./authUser";
 import { prisma } from "../prisma";
+import { hasRole, normalizeRoles } from "../utils/roles";
 
 export async function adminOnly(
   req: AuthenticatedRequest,
@@ -16,10 +17,12 @@ export async function adminOnly(
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.id },
-      select: { role: true },
+      select: { role: true, roles: true },
     });
 
-    if (!user || user.role !== "admin") {
+    const roles = user ? normalizeRoles((user as any).roles ?? user.role) : [];
+
+    if (!user || !hasRole(roles, "admin")) {
       return res.status(403).json({ error: "Accès refusé : droits administrateur requis" });
     }
 

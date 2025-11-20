@@ -127,6 +127,7 @@ exports.Prisma.UserScalarFieldEnum = {
   lastName: 'lastName',
   dateOfBirth: 'dateOfBirth',
   role: 'role',
+  roles: 'roles',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -217,9 +218,33 @@ exports.Prisma.LocalMatchScalarFieldEnum = {
   teamAId: 'teamAId',
   teamBId: 'teamBId',
   cupId: 'cupId',
+  shareToken: 'shareToken',
+  teamAOwnerValidated: 'teamAOwnerValidated',
+  teamBOwnerValidated: 'teamBOwnerValidated',
   gameState: 'gameState',
   scoreTeamA: 'scoreTeamA',
   scoreTeamB: 'scoreTeamB'
+};
+
+exports.Prisma.LocalMatchActionScalarFieldEnum = {
+  id: 'id',
+  matchId: 'matchId',
+  half: 'half',
+  turn: 'turn',
+  actionType: 'actionType',
+  playerId: 'playerId',
+  playerName: 'playerName',
+  playerTeam: 'playerTeam',
+  opponentId: 'opponentId',
+  opponentName: 'opponentName',
+  diceResult: 'diceResult',
+  fumble: 'fumble',
+  playerState: 'playerState',
+  armorBroken: 'armorBroken',
+  opponentState: 'opponentState',
+  passType: 'passType',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.SortOrder = {
@@ -262,7 +287,8 @@ exports.Prisma.ModelName = {
   TeamPlayer: 'TeamPlayer',
   Cup: 'Cup',
   CupParticipant: 'CupParticipant',
-  LocalMatch: 'LocalMatch'
+  LocalMatch: 'LocalMatch',
+  LocalMatchAction: 'LocalMatchAction'
 };
 
 /**

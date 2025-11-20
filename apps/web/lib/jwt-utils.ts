@@ -28,7 +28,7 @@ function base64UrlDecode(str: string): string {
  * Note: Moins sécurisé mais nécessaire pour Edge Runtime qui ne supporte pas jose
  * La vérification de signature complète est faite côté serveur dans les routes API
  */
-export function decodeJWT(token: string): { sub?: string; role?: string; exp?: number } | null {
+export function decodeJWT(token: string): { sub?: string; role?: string; roles?: string[]; exp?: number } | null {
   try {
     const parts = token.split(".");
     if (parts.length !== 3) {
@@ -43,6 +43,17 @@ export function decodeJWT(token: string): { sub?: string; role?: string; exp?: n
     }
 
     const parsed = JSON.parse(decoded);
+
+    // Normalise les rôles pour supporter à la fois `role` simple et `roles` tableau
+    if (Array.isArray(parsed.roles)) {
+      parsed.roles = parsed.roles.filter(
+        (r: unknown) => typeof r === "string" && r.trim() !== "",
+      );
+    } else if (typeof parsed.role === "string" && parsed.role.trim() !== "") {
+      parsed.roles = [parsed.role.trim()];
+    } else {
+      parsed.roles = [];
+    }
 
     // Vérifie l'expiration si présente
     if (parsed.exp && parsed.exp < Date.now() / 1000) {
@@ -61,6 +72,14 @@ export function decodeJWT(token: string): { sub?: string; role?: string; exp?: n
  */
 export function isAdminToken(token: string): boolean {
   const payload = decodeJWT(token);
-  return payload?.role === "admin" || false;
+  if (!payload) return false;
+
+  const roles: string[] = Array.isArray(payload.roles)
+    ? payload.roles
+    : payload.role
+      ? [payload.role]
+      : [];
+
+  return roles.includes("admin");
 }
 

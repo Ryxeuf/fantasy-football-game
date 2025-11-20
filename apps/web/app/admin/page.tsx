@@ -7,7 +7,8 @@ type User = {
   id: string;
   email: string;
   name?: string | null;
-  role: string;
+  role?: string;
+  roles?: string[];
   createdAt: string;
 };
 type Match = { id: string; status: string; seed: string; createdAt: string };
@@ -65,7 +66,13 @@ export default function AdminPage() {
       setLoading(true);
       try {
         const me = await fetchJSON("/auth/me");
-        if (me?.user?.role !== "admin") {
+        const user = me?.user;
+        const roles: string[] | undefined = Array.isArray(user?.roles)
+          ? user.roles
+          : user?.role
+            ? [user.role]
+            : undefined;
+        if (!roles || !roles.includes("admin")) {
           window.location.href = "/";
           return;
         }
@@ -363,7 +370,9 @@ export default function AdminPage() {
                       </td>
                       <td className="px-6 py-4">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                          {u.role}
+                          {Array.isArray(u.roles) && u.roles.length > 0
+                            ? u.roles.join(", ")
+                            : u.role ?? "user"}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">

@@ -15,6 +15,7 @@ import {
   type WeatherType
 } from "@bb/game-engine";
 import { randomBytes } from "crypto";
+import { hasRole } from "../utils/roles";
 
 const router = Router();
 
@@ -25,7 +26,7 @@ const router = Router();
 router.get("/", authUser, async (req: AuthenticatedRequest, res) => {
   try {
     const { status, cupId, all, scope } = req.query;
-    const isAdmin = req.user!.role === "admin";
+    const isAdmin = hasRole(req.user!.roles, "admin");
     const showAll = all === "true" && isAdmin;
     const scopeValue =
       typeof scope === "string" && scope === "mine_and_public"
@@ -209,8 +210,9 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
       localMatch.teamB.ownerId === req.user!.id;
     const isCupCreator =
       !!localMatch.cup && localMatch.cup.creatorId === req.user!.id;
+    const isAdmin = hasRole(req.user!.roles, "admin");
     
-    if (!isCreator && !isTeamOwner && !isCupCreator && req.user!.role !== "admin") {
+    if (!isCreator && !isTeamOwner && !isCupCreator && !isAdmin) {
       return res.status(403).json({ error: "Accès non autorisé" });
     }
     
@@ -727,7 +729,7 @@ router.patch("/:id/status", authUser, async (req: AuthenticatedRequest, res) => 
       return res.status(400).json({ error: `Statut invalide. Doit être l'un de: ${validStatuses.join(", ")}` });
     }
     
-    const isAdmin = req.user!.role === "admin";
+    const isAdmin = hasRole(req.user!.roles, "admin");
     if (!isAdmin) {
       return res.status(403).json({ error: "Seuls les administrateurs peuvent modifier le statut d'un match" });
     }
@@ -828,7 +830,7 @@ router.delete("/:id", authUser, async (req: AuthenticatedRequest, res) => {
       return res.status(404).json({ error: "Partie offline introuvable" });
     }
     
-    const isAdmin = req.user!.role === "admin";
+    const isAdmin = hasRole(req.user!.roles, "admin");
     
     // Seul le créateur ou un admin peut supprimer
     if (localMatch.creatorId !== req.user!.id && !isAdmin) {
@@ -870,8 +872,9 @@ router.get("/:id/actions", authUser, async (req: AuthenticatedRequest, res) => {
       (localMatch.teamB && localMatch.teamB.ownerId === req.user!.id);
     const isCupCreator =
       !!localMatch.cup && localMatch.cup.creatorId === req.user!.id;
+    const isAdmin = hasRole(req.user!.roles, "admin");
     
-    if (!isCreator && !isTeamOwner && !isCupCreator && req.user!.role !== "admin") {
+    if (!isCreator && !isTeamOwner && !isCupCreator && !isAdmin) {
       return res.status(403).json({ error: "Accès non autorisé" });
     }
     
@@ -973,8 +976,9 @@ router.post("/:id/actions", authUser, async (req: AuthenticatedRequest, res) => 
     const isTeamOwner = 
       localMatch.teamA.ownerId === req.user!.id || 
       (localMatch.teamB && localMatch.teamB.ownerId === req.user!.id);
+    const isAdmin = hasRole(req.user!.roles, "admin");
     
-    if (!isCreator && !isTeamOwner && req.user!.role !== "admin") {
+    if (!isCreator && !isTeamOwner && !isAdmin) {
       return res.status(403).json({ error: "Accès non autorisé" });
     }
     
@@ -1040,8 +1044,9 @@ router.delete("/:id/actions/:actionId", authUser, async (req: AuthenticatedReque
     const isTeamOwner = 
       localMatch.teamA.ownerId === req.user!.id || 
       (localMatch.teamB && localMatch.teamB.ownerId === req.user!.id);
+    const isAdmin = hasRole(req.user!.roles, "admin");
     
-    if (!isCreator && !isTeamOwner && req.user!.role !== "admin") {
+    if (!isCreator && !isTeamOwner && !isAdmin) {
       return res.status(403).json({ error: "Accès non autorisé" });
     }
     

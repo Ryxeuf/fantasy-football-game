@@ -21,7 +21,7 @@ function base64UrlDecode(str: string): string {
   }
 }
 
-function decodeJWT(token: string): { sub?: string; role?: string; exp?: number } | null {
+function decodeJWT(token: string): { sub?: string; role?: string; roles?: string[]; exp?: number } | null {
   try {
     const parts = token.split(".");
     if (parts.length !== 3) return null;
@@ -37,7 +37,9 @@ function decodeJWT(token: string): { sub?: string; role?: string; exp?: number }
 
 function isAdminToken(token: string): boolean {
   const payload = decodeJWT(token);
-  return payload?.role === "admin" || false;
+  if (!payload) return false;
+  const roles = Array.isArray(payload.roles) ? payload.roles : (payload.role ? [payload.role] : []);
+  return roles.includes("admin");
 }
 
 describe("Admin Middleware Protection - Token Verification", () => {
@@ -67,7 +69,7 @@ describe("Admin Middleware Protection - Token Verification", () => {
 
     // Créer un token admin directement
     adminToken = jwt.sign(
-      { sub: adminUserId, role: "admin" },
+      { sub: adminUserId, role: "admin", roles: ["admin"] },
       JWT_SECRET,
       { expiresIn: "7d" }
     );
@@ -105,7 +107,10 @@ describe("Admin Middleware Protection - Token Verification", () => {
     // Vérifie aussi que le décodage fonctionne
     const payload = decodeJWT(userToken);
     expect(payload).not.toBeNull();
-    expect(payload?.role).not.toBe("admin");
+    const roles = Array.isArray(payload?.roles)
+      ? payload!.roles
+      : (payload?.role ? [payload.role] : []);
+    expect(roles.includes("admin")).toBe(false);
   });
 
   it("devrait accepter un token admin valide", () => {
@@ -115,13 +120,16 @@ describe("Admin Middleware Protection - Token Verification", () => {
     // Vérifie aussi que le décodage fonctionne
     const payload = decodeJWT(adminToken);
     expect(payload).not.toBeNull();
-    expect(payload?.role).toBe("admin");
+    const roles = Array.isArray(payload?.roles)
+      ? payload!.roles
+      : (payload?.role ? [payload.role] : []);
+    expect(roles.includes("admin")).toBe(true);
     expect(payload?.sub).toBe(adminUserId);
   });
 
   it("devrait rejeter un token expiré", () => {
     const expiredToken = jwt.sign(
-      { sub: adminUserId, role: "admin" },
+      { sub: adminUserId, role: "admin", roles: ["admin"] },
       JWT_SECRET,
       { expiresIn: "-1h" } // Expiré il y a 1 heure
     );

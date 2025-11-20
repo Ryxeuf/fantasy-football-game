@@ -6,7 +6,8 @@ import { useLanguage } from "./contexts/LanguageContext";
 type UserData = {
   email: string;
   name?: string | null;
-  role: string;
+  role?: string;
+  roles?: string[];
 };
 
 interface AuthBarProps {
@@ -38,7 +39,13 @@ export default function AuthBar({ isMobileMenu = false }: AuthBarProps) {
       })
         .then((r) => (r.ok ? r.json() : Promise.reject()))
         .then((data) => {
-          setIsAdmin(data?.user?.role === "admin");
+          const user = data?.user;
+          const roles: string[] | undefined = Array.isArray(user?.roles)
+            ? user.roles
+            : user?.role
+              ? [user.role]
+              : undefined;
+          setIsAdmin(!!roles && roles.includes("admin"));
           setUserData(data?.user);
         })
         .catch(() => {

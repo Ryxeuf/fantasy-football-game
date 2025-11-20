@@ -377,6 +377,7 @@ async function main() {
       role: "admin",
       password: "admin123",
       valid: true,
+      roles: ["user", "admin"],
     },
     {
       email: "user@example.com",
@@ -387,6 +388,18 @@ async function main() {
       role: "user",
       password: "user123",
       valid: true,
+      roles: ["user"],
+    },
+    {
+      email: "moderator@example.com",
+      name: "Moderator",
+      coachName: "Moderator",
+      firstName: "Mod",
+      lastName: "User",
+      role: "user",
+      password: "moderator123",
+      valid: true,
+      roles: ["user", "moderator"],
     },
   ];
 
@@ -403,7 +416,15 @@ async function main() {
         coachName: u.coachName,
         firstName: u.firstName,
         lastName: u.lastName,
-        role: u.role, 
+        role: u.role,
+        roles: Array.from(
+          new Set(
+            (u.roles && Array.isArray(u.roles) && u.roles.length > 0
+              ? u.roles
+              : [u.role]
+            ).concat("user"),
+          ),
+        ),
         passwordHash,
         valid: true,
       },
@@ -724,6 +745,7 @@ async function main() {
           firstName: rosterDef.name,
           lastName: "Coach",
           role: "user",
+          roles: ["user"],
           valid: true,
         },
       });

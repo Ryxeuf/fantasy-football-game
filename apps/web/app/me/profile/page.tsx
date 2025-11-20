@@ -10,7 +10,8 @@ type UserProfile = {
   firstName?: string | null;
   lastName?: string | null;
   dateOfBirth?: string | null;
-  role: string;
+  role?: string;
+  roles?: string[];
   patreon?: boolean;
   createdAt: string;
   updatedAt: string;
@@ -340,7 +341,14 @@ export default function ProfilePage() {
           >
             ⚽ Gérer mes équipes
           </a>
-          {profile.role === "admin" && (
+          {(() => {
+            const roles: string[] | undefined = Array.isArray(profile.roles)
+              ? profile.roles
+              : profile.role
+                ? [profile.role]
+                : undefined;
+            return !!roles && roles.includes("admin");
+          })() && (
             <a
               href="/admin"
               className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"

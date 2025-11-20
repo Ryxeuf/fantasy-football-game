@@ -6,11 +6,7 @@ import {
   type CupWithParticipantsAndScoring,
   type LocalMatchWithRelations,
 } from "../cupScoring";
-import {
-  computeCupStandings,
-  type CupWithParticipantsAndScoring,
-  type LocalMatchWithRelations,
-} from "../cupScoring";
+import { hasRole } from "../utils/roles";
 
 const router = Router();
 
@@ -684,7 +680,7 @@ router.post(
   async (req: AuthenticatedRequest, res) => {
     const cupId = req.params.id;
     const { teamId, force } = req.body ?? ({} as { teamId?: string; force?: boolean });
-    const isAdmin = req.user!.role === "admin";
+    const isAdmin = hasRole(req.user!.roles, "admin");
     const forceRemove = force === true && isAdmin;
 
     if (!teamId || typeof teamId !== "string") {
@@ -915,7 +911,7 @@ router.post(
         return res.status(404).json({ error: "Coupe introuvable" });
       }
 
-      const isAdmin = req.user!.role === "admin";
+      const isAdmin = hasRole(req.user!.roles, "admin");
       
       // Seul le créateur ou un admin peut modifier le statut
       if (cup.creatorId !== req.user!.id && !isAdmin) {

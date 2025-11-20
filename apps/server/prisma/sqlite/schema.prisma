@@ -17,7 +17,10 @@ model User {
   firstName String?  // Prénom (optionnel)
   lastName  String?  // Nom (optionnel)
   dateOfBirth DateTime? // Date de naissance (optionnel)
+  /// Rôle principal (conservé pour compatibilité, ex: "user" | "admin")
   role      String   @default("user")
+  /// Liste complète des rôles (stockée en JSON, ex: '["user","admin"]')
+  roles     String   @default("[]")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   matches   Match[]

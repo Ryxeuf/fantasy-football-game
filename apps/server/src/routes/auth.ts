@@ -3,6 +3,7 @@ import { prisma } from "../prisma";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
+import { normalizeRoles } from "../utils/roles";
 
 const router = Router();
 
@@ -44,14 +45,21 @@ router.post("/register", async (req, res) => {
         lastName: true,
         dateOfBirth: true,
         role: true,
+        roles: true,
         valid: true,
         createdAt: true,
       },
     });
 
+    const roles = normalizeRoles(user.roles ?? user.role);
+    const publicUser = {
+      ...user,
+      roles,
+    };
+
     // Ne pas donner de token si le compte n'est pas validé
     return res.status(201).json({ 
-      user, 
+      user: publicUser, 
       message: "Votre compte a été créé avec succès. Un administrateur doit valider votre compte avant que vous puissiez vous connecter." 
     });
   } catch (err) {
@@ -73,7 +81,9 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ error: "Identifiants invalides" });
     }
 
-    console.log(`[LOGIN] Tentative de connexion pour ${email}: valid=${user.valid}, role=${user.role}`);
+    console.log(
+      `[LOGIN] Tentative de connexion pour ${email}: valid=${user.valid}, role=${user.role}`,
+    );
     
     if (!user.valid) {
       console.log(`[LOGIN] Compte non validé pour ${email}`);
@@ -88,6 +98,9 @@ router.post("/login", async (req, res) => {
     
     console.log(`[LOGIN] Connexion réussie pour ${email}`);
 
+    const roles = normalizeRoles((user as any).roles ?? user.role);
+    const primaryRole = roles[0];
+
     const publicUser = {
       id: user.id,
       email: user.email,
@@ -96,12 +109,17 @@ router.post("/login", async (req, res) => {
       firstName: user.firstName,
       lastName: user.lastName,
       dateOfBirth: user.dateOfBirth,
-      role: user.role,
+      role: primaryRole,
+      roles,
       createdAt: user.createdAt,
     };
-    const token = jwt.sign({ sub: user.id, role: user.role }, JWT_SECRET, {
-      expiresIn: "7d",
-    });
+    const token = jwt.sign(
+      { sub: user.id, role: primaryRole, roles },
+      JWT_SECRET,
+      {
+        expiresIn: "7d",
+      },
+    );
     return res.json({ user: publicUser, token });
   } catch (err) {
     console.error(err);
@@ -140,7 +158,14 @@ router.get("/me", authUser, async (req: AuthenticatedRequest, res) => {
       },
     });
     if (!user) return res.status(404).json({ error: "Introuvable" });
-    res.json({ user });
+
+    const roles = normalizeRoles(user.role);
+    const publicUser = {
+      ...user,
+      roles,
+    };
+
+    res.json({ user: publicUser });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Erreur serveur" });
@@ -194,7 +219,13 @@ router.put("/me", authUser, async (req: AuthenticatedRequest, res) => {
       },
     });
 
-    res.json({ user: updatedUser });
+    const roles = normalizeRoles(updatedUser.role);
+    const publicUser = {
+      ...updatedUser,
+      roles,
+    };
+
+    res.json({ user: publicUser });
   } catch (e: any) {
     if (e.code === "P2002") {
       return res.status(409).json({ error: "Email déjà utilisé" });

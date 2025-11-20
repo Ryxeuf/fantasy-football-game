@@ -25,7 +25,13 @@ export default function AdminMatchesPage() {
       setError(null);
       try {
         const me = await fetchJSON("/auth/me");
-        if (me?.user?.role !== "admin") {
+        const user = me?.user;
+        const roles: string[] | undefined = Array.isArray(user?.roles)
+          ? user.roles
+          : user?.role
+            ? [user.role]
+            : undefined;
+        if (!roles || !roles.includes("admin")) {
           window.location.href = "/";
           return;
         }

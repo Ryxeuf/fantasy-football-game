@@ -6,7 +6,8 @@ type User = {
   id: string;
   email: string;
   name?: string | null;
-  role: string;
+  role?: string;
+  roles?: string[];
   patreon?: boolean;
   valid?: boolean;
   createdAt: string;
@@ -119,22 +120,42 @@ export default function AdminUsersPage() {
     setCurrentPage(1);
   };
 
-  const handleRoleChange = async (userId: string, newRole: string) => {
-    if (!confirm(`Voulez-vous vraiment changer le rôle de cet utilisateur en "${newRole}" ?`)) {
+  const getEffectiveRoles = (user: { role?: string; roles?: string[] }): string[] => {
+    if (Array.isArray(user.roles) && user.roles.length > 0) {
+      return user.roles;
+    }
+    if (user.role) {
+      return [user.role];
+    }
+    return ["user"];
+  };
+
+  const handleRolesChange = async (userId: string, nextRoles: string[]) => {
+    if (nextRoles.length === 0) {
+      alert("Un utilisateur doit avoir au moins un rôle.");
+      return;
+    }
+    if (
+      !confirm(
+        `Voulez-vous vraiment appliquer les rôles suivants à cet utilisateur : ${nextRoles.join(
+          ", ",
+        )} ?`,
+      )
+    ) {
       return;
     }
     setActionLoading(userId);
     try {
       await fetchJSON(`/admin/users/${userId}/role`, {
         method: "PATCH",
-        body: JSON.stringify({ role: newRole }),
+        body: JSON.stringify({ roles: nextRoles }),
       });
       await loadUsers();
       if (selectedUser === userId && userDetails) {
         await loadUserDetails(userId);
       }
     } catch (e: any) {
-      alert(e.message || "Erreur lors de la modification du rôle");
+      alert(e.message || "Erreur lors de la modification des rôles");
     } finally {
       setActionLoading(null);
     }
@@ -270,6 +291,7 @@ export default function AdminUsersPage() {
             <option value="">Tous les rôles</option>
             <option value="user">User</option>
             <option value="admin">Admin</option>
+            <option value="moderator">Moderator</option>
           </select>
         </div>
       </div>
@@ -355,12 +377,15 @@ export default function AdminUsersPage() {
                   <td className="px-6 py-4">
                     <span
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        u.role === "admin"
+                        (Array.isArray(u.roles) ? u.roles.includes("admin") : u.role === "admin")
                           ? "bg-purple-100 text-purple-800"
                           : "bg-gray-100 text-gray-800"
                       }`}
                     >
-                      {u.role}
+                      {(() => {
+                        const roles = getEffectiveRoles(u);
+                        return roles.join(", ");
+                      })()}
                     </span>
                   </td>
                   <td className="px-6 py-4">
@@ -390,16 +415,56 @@ export default function AdminUsersPage() {
                   </td>
                   <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                     <div className="flex gap-2 flex-wrap">
-                      <select
-                        value={u.role}
-                        onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                        disabled={actionLoading === u.id}
-                        className="px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all bg-white disabled:opacity-50"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <option value="user">User</option>
-                        <option value="admin">Admin</option>
-                      </select>
+                      <div className="flex items-center gap-2 px-2 py-1 border border-gray-200 rounded-lg bg-white">
+                        <label className="flex items-center gap-1 text-xs">
+                          <input
+                            type="checkbox"
+                            checked={getEffectiveRoles(u).includes("user")}
+                            onChange={() => {
+                              const current = getEffectiveRoles(u);
+                              const has = current.includes("user");
+                              const next = has
+                                ? current.filter((r) => r !== "user")
+                                : [...current, "user"];
+                              handleRolesChange(u.id, next);
+                            }}
+                            disabled={actionLoading === u.id}
+                          />
+                          <span>User</span>
+                        </label>
+                        <label className="flex items-center gap-1 text-xs">
+                          <input
+                            type="checkbox"
+                            checked={getEffectiveRoles(u).includes("admin")}
+                            onChange={() => {
+                              const current = getEffectiveRoles(u);
+                              const has = current.includes("admin");
+                              const next = has
+                                ? current.filter((r) => r !== "admin")
+                                : [...current, "admin"];
+                              handleRolesChange(u.id, next);
+                            }}
+                            disabled={actionLoading === u.id}
+                          />
+                          <span>Admin</span>
+                        </label>
+                        <label className="flex items-center gap-1 text-xs">
+                          <input
+                            type="checkbox"
+                            checked={getEffectiveRoles(u).includes("moderator")}
+                            onChange={() => {
+                              const current = getEffectiveRoles(u);
+                              const has = current.includes("moderator");
+                              const next = has
+                                ? current.filter((r) => r !== "moderator")
+                                : [...current, "moderator"];
+                              handleRolesChange(u.id, next);
+                            }}
+                            disabled={actionLoading === u.id}
+                          />
+                          <span>Moderator</span>
+                        </label>
+                      </div>
                       <button
                         onClick={() => handleValidChange(u.id, !u.valid)}
                         disabled={actionLoading === u.id}
@@ -498,15 +563,25 @@ export default function AdminUsersPage() {
                   </div>
                   <div>
                     <span className="text-gray-600">Rôle:</span>{" "}
-                    <span
-                      className={`px-2 py-1 rounded text-xs ${
-                        userDetails.role === "admin"
-                          ? "bg-purple-100 text-purple-700"
-                          : "bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      {userDetails.role}
-                    </span>
+                    {(() => {
+                      const roles: string[] | undefined = Array.isArray(userDetails.roles)
+                        ? userDetails.roles
+                        : userDetails.role
+                          ? [userDetails.role]
+                          : undefined;
+                      const isAdmin = !!roles && roles.includes("admin");
+                      return (
+                        <span
+                          className={`px-2 py-1 rounded text-xs ${
+                            isAdmin
+                              ? "bg-purple-100 text-purple-700"
+                              : "bg-gray-100 text-gray-700"
+                          }`}
+                        >
+                          {roles && roles.length > 0 ? roles.join(", ") : userDetails.role ?? "user"}
+                        </span>
+                      );
+                    })()}
                   </div>
                   <div>
                     <span className="text-gray-600">Patreon:</span>{" "}

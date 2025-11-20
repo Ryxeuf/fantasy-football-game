@@ -20,8 +20,13 @@ export async function GET(request: NextRequest) {
 
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET);
-    const isAdmin = payload.role === "admin";
-    return NextResponse.json({ isAdmin, role: payload.role });
+    const roles = Array.isArray(payload.roles)
+      ? (payload.roles as string[])
+      : payload.role
+        ? [payload.role as string]
+        : [];
+    const isAdmin = roles.includes("admin");
+    return NextResponse.json({ isAdmin, roles, role: payload.role });
   } catch (error) {
     return NextResponse.json({ isAdmin: false }, { status: 401 });
   }

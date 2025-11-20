@@ -58,6 +58,11 @@ export type CupParticipant = $Result.DefaultSelection<Prisma.$CupParticipantPayl
  * 
  */
 export type LocalMatch = $Result.DefaultSelection<Prisma.$LocalMatchPayload>
+/**
+ * Model LocalMatchAction
+ * 
+ */
+export type LocalMatchAction = $Result.DefaultSelection<Prisma.$LocalMatchActionPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -266,6 +271,16 @@ export class PrismaClient<
     * ```
     */
   get localMatch(): Prisma.LocalMatchDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.localMatchAction`: Exposes CRUD operations for the **LocalMatchAction** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more LocalMatchActions
+    * const localMatchActions = await prisma.localMatchAction.findMany()
+    * ```
+    */
+  get localMatchAction(): Prisma.LocalMatchActionDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -714,7 +729,8 @@ export namespace Prisma {
     TeamPlayer: 'TeamPlayer',
     Cup: 'Cup',
     CupParticipant: 'CupParticipant',
-    LocalMatch: 'LocalMatch'
+    LocalMatch: 'LocalMatch',
+    LocalMatchAction: 'LocalMatchAction'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -733,7 +749,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "cup" | "cupParticipant" | "localMatch"
+      modelProps: "user" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "cup" | "cupParticipant" | "localMatch" | "localMatchAction"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1403,6 +1419,80 @@ export namespace Prisma {
           }
         }
       }
+      LocalMatchAction: {
+        payload: Prisma.$LocalMatchActionPayload<ExtArgs>
+        fields: Prisma.LocalMatchActionFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.LocalMatchActionFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LocalMatchActionPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.LocalMatchActionFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LocalMatchActionPayload>
+          }
+          findFirst: {
+            args: Prisma.LocalMatchActionFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LocalMatchActionPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.LocalMatchActionFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LocalMatchActionPayload>
+          }
+          findMany: {
+            args: Prisma.LocalMatchActionFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LocalMatchActionPayload>[]
+          }
+          create: {
+            args: Prisma.LocalMatchActionCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LocalMatchActionPayload>
+          }
+          createMany: {
+            args: Prisma.LocalMatchActionCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.LocalMatchActionCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LocalMatchActionPayload>[]
+          }
+          delete: {
+            args: Prisma.LocalMatchActionDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LocalMatchActionPayload>
+          }
+          update: {
+            args: Prisma.LocalMatchActionUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LocalMatchActionPayload>
+          }
+          deleteMany: {
+            args: Prisma.LocalMatchActionDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.LocalMatchActionUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.LocalMatchActionUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LocalMatchActionPayload>[]
+          }
+          upsert: {
+            args: Prisma.LocalMatchActionUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LocalMatchActionPayload>
+          }
+          aggregate: {
+            args: Prisma.LocalMatchActionAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateLocalMatchAction>
+          }
+          groupBy: {
+            args: Prisma.LocalMatchActionGroupByArgs<ExtArgs>
+            result: $Utils.Optional<LocalMatchActionGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.LocalMatchActionCountArgs<ExtArgs>
+            result: $Utils.Optional<LocalMatchActionCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -1508,6 +1598,7 @@ export namespace Prisma {
     cup?: CupOmit
     cupParticipant?: CupParticipantOmit
     localMatch?: LocalMatchOmit
+    localMatchAction?: LocalMatchActionOmit
   }
 
   /* Types for Logging */
@@ -1816,6 +1907,37 @@ export namespace Prisma {
 
 
   /**
+   * Count Type LocalMatchCountOutputType
+   */
+
+  export type LocalMatchCountOutputType = {
+    actions: number
+  }
+
+  export type LocalMatchCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    actions?: boolean | LocalMatchCountOutputTypeCountActionsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * LocalMatchCountOutputType without action
+   */
+  export type LocalMatchCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LocalMatchCountOutputType
+     */
+    select?: LocalMatchCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * LocalMatchCountOutputType without action
+   */
+  export type LocalMatchCountOutputTypeCountActionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: LocalMatchActionWhereInput
+  }
+
+
+  /**
    * Models
    */
 
@@ -1839,6 +1961,7 @@ export namespace Prisma {
     lastName: string | null
     dateOfBirth: Date | null
     role: string | null
+    roles: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -1853,6 +1976,7 @@ export namespace Prisma {
     lastName: string | null
     dateOfBirth: Date | null
     role: string | null
+    roles: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -1867,6 +1991,7 @@ export namespace Prisma {
     lastName: number
     dateOfBirth: number
     role: number
+    roles: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -1883,6 +2008,7 @@ export namespace Prisma {
     lastName?: true
     dateOfBirth?: true
     role?: true
+    roles?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -1897,6 +2023,7 @@ export namespace Prisma {
     lastName?: true
     dateOfBirth?: true
     role?: true
+    roles?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -1911,6 +2038,7 @@ export namespace Prisma {
     lastName?: true
     dateOfBirth?: true
     role?: true
+    roles?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -1998,6 +2126,7 @@ export namespace Prisma {
     lastName: string | null
     dateOfBirth: Date | null
     role: string
+    roles: string
     createdAt: Date
     updatedAt: Date
     _count: UserCountAggregateOutputType | null
@@ -2029,6 +2158,7 @@ export namespace Prisma {
     lastName?: boolean
     dateOfBirth?: boolean
     role?: boolean
+    roles?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     matches?: boolean | User$matchesArgs<ExtArgs>
@@ -2050,6 +2180,7 @@ export namespace Prisma {
     lastName?: boolean
     dateOfBirth?: boolean
     role?: boolean
+    roles?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["user"]>
@@ -2064,6 +2195,7 @@ export namespace Prisma {
     lastName?: boolean
     dateOfBirth?: boolean
     role?: boolean
+    roles?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["user"]>
@@ -2078,11 +2210,12 @@ export namespace Prisma {
     lastName?: boolean
     dateOfBirth?: boolean
     role?: boolean
+    roles?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "passwordHash" | "name" | "coachName" | "firstName" | "lastName" | "dateOfBirth" | "role" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "passwordHash" | "name" | "coachName" | "firstName" | "lastName" | "dateOfBirth" | "role" | "roles" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     matches?: boolean | User$matchesArgs<ExtArgs>
     createdMatches?: boolean | User$createdMatchesArgs<ExtArgs>
@@ -2114,7 +2247,14 @@ export namespace Prisma {
       firstName: string | null
       lastName: string | null
       dateOfBirth: Date | null
+      /**
+       * Rôle principal (conservé pour compatibilité, ex: "user" | "admin")
+       */
       role: string
+      /**
+       * Liste complète des rôles (stockée en JSON, ex: '["user","admin"]')
+       */
+      roles: string
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["user"]>
@@ -2555,6 +2695,7 @@ export namespace Prisma {
     readonly lastName: FieldRef<"User", 'String'>
     readonly dateOfBirth: FieldRef<"User", 'DateTime'>
     readonly role: FieldRef<"User", 'String'>
+    readonly roles: FieldRef<"User", 'String'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
   }
@@ -11259,6 +11400,9 @@ export namespace Prisma {
     teamAId: string | null
     teamBId: string | null
     cupId: string | null
+    shareToken: string | null
+    teamAOwnerValidated: boolean | null
+    teamBOwnerValidated: boolean | null
     scoreTeamA: number | null
     scoreTeamB: number | null
   }
@@ -11275,6 +11419,9 @@ export namespace Prisma {
     teamAId: string | null
     teamBId: string | null
     cupId: string | null
+    shareToken: string | null
+    teamAOwnerValidated: boolean | null
+    teamBOwnerValidated: boolean | null
     scoreTeamA: number | null
     scoreTeamB: number | null
   }
@@ -11291,6 +11438,9 @@ export namespace Prisma {
     teamAId: number
     teamBId: number
     cupId: number
+    shareToken: number
+    teamAOwnerValidated: number
+    teamBOwnerValidated: number
     gameState: number
     scoreTeamA: number
     scoreTeamB: number
@@ -11320,6 +11470,9 @@ export namespace Prisma {
     teamAId?: true
     teamBId?: true
     cupId?: true
+    shareToken?: true
+    teamAOwnerValidated?: true
+    teamBOwnerValidated?: true
     scoreTeamA?: true
     scoreTeamB?: true
   }
@@ -11336,6 +11489,9 @@ export namespace Prisma {
     teamAId?: true
     teamBId?: true
     cupId?: true
+    shareToken?: true
+    teamAOwnerValidated?: true
+    teamBOwnerValidated?: true
     scoreTeamA?: true
     scoreTeamB?: true
   }
@@ -11352,6 +11508,9 @@ export namespace Prisma {
     teamAId?: true
     teamBId?: true
     cupId?: true
+    shareToken?: true
+    teamAOwnerValidated?: true
+    teamBOwnerValidated?: true
     gameState?: true
     scoreTeamA?: true
     scoreTeamB?: true
@@ -11454,8 +11613,11 @@ export namespace Prisma {
     completedAt: Date | null
     creatorId: string
     teamAId: string
-    teamBId: string
+    teamBId: string | null
     cupId: string | null
+    shareToken: string | null
+    teamAOwnerValidated: boolean
+    teamBOwnerValidated: boolean
     gameState: JsonValue | null
     scoreTeamA: number | null
     scoreTeamB: number | null
@@ -11492,13 +11654,18 @@ export namespace Prisma {
     teamAId?: boolean
     teamBId?: boolean
     cupId?: boolean
+    shareToken?: boolean
+    teamAOwnerValidated?: boolean
+    teamBOwnerValidated?: boolean
     gameState?: boolean
     scoreTeamA?: boolean
     scoreTeamB?: boolean
     creator?: boolean | UserDefaultArgs<ExtArgs>
     teamA?: boolean | TeamDefaultArgs<ExtArgs>
-    teamB?: boolean | TeamDefaultArgs<ExtArgs>
+    teamB?: boolean | LocalMatch$teamBArgs<ExtArgs>
     cup?: boolean | LocalMatch$cupArgs<ExtArgs>
+    actions?: boolean | LocalMatch$actionsArgs<ExtArgs>
+    _count?: boolean | LocalMatchCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["localMatch"]>
 
   export type LocalMatchSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -11513,12 +11680,15 @@ export namespace Prisma {
     teamAId?: boolean
     teamBId?: boolean
     cupId?: boolean
+    shareToken?: boolean
+    teamAOwnerValidated?: boolean
+    teamBOwnerValidated?: boolean
     gameState?: boolean
     scoreTeamA?: boolean
     scoreTeamB?: boolean
     creator?: boolean | UserDefaultArgs<ExtArgs>
     teamA?: boolean | TeamDefaultArgs<ExtArgs>
-    teamB?: boolean | TeamDefaultArgs<ExtArgs>
+    teamB?: boolean | LocalMatch$teamBArgs<ExtArgs>
     cup?: boolean | LocalMatch$cupArgs<ExtArgs>
   }, ExtArgs["result"]["localMatch"]>
 
@@ -11534,12 +11704,15 @@ export namespace Prisma {
     teamAId?: boolean
     teamBId?: boolean
     cupId?: boolean
+    shareToken?: boolean
+    teamAOwnerValidated?: boolean
+    teamBOwnerValidated?: boolean
     gameState?: boolean
     scoreTeamA?: boolean
     scoreTeamB?: boolean
     creator?: boolean | UserDefaultArgs<ExtArgs>
     teamA?: boolean | TeamDefaultArgs<ExtArgs>
-    teamB?: boolean | TeamDefaultArgs<ExtArgs>
+    teamB?: boolean | LocalMatch$teamBArgs<ExtArgs>
     cup?: boolean | LocalMatch$cupArgs<ExtArgs>
   }, ExtArgs["result"]["localMatch"]>
 
@@ -11555,28 +11728,33 @@ export namespace Prisma {
     teamAId?: boolean
     teamBId?: boolean
     cupId?: boolean
+    shareToken?: boolean
+    teamAOwnerValidated?: boolean
+    teamBOwnerValidated?: boolean
     gameState?: boolean
     scoreTeamA?: boolean
     scoreTeamB?: boolean
   }
 
-  export type LocalMatchOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "status" | "createdAt" | "updatedAt" | "startedAt" | "completedAt" | "creatorId" | "teamAId" | "teamBId" | "cupId" | "gameState" | "scoreTeamA" | "scoreTeamB", ExtArgs["result"]["localMatch"]>
+  export type LocalMatchOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "status" | "createdAt" | "updatedAt" | "startedAt" | "completedAt" | "creatorId" | "teamAId" | "teamBId" | "cupId" | "shareToken" | "teamAOwnerValidated" | "teamBOwnerValidated" | "gameState" | "scoreTeamA" | "scoreTeamB", ExtArgs["result"]["localMatch"]>
   export type LocalMatchInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     creator?: boolean | UserDefaultArgs<ExtArgs>
     teamA?: boolean | TeamDefaultArgs<ExtArgs>
-    teamB?: boolean | TeamDefaultArgs<ExtArgs>
+    teamB?: boolean | LocalMatch$teamBArgs<ExtArgs>
     cup?: boolean | LocalMatch$cupArgs<ExtArgs>
+    actions?: boolean | LocalMatch$actionsArgs<ExtArgs>
+    _count?: boolean | LocalMatchCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type LocalMatchIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     creator?: boolean | UserDefaultArgs<ExtArgs>
     teamA?: boolean | TeamDefaultArgs<ExtArgs>
-    teamB?: boolean | TeamDefaultArgs<ExtArgs>
+    teamB?: boolean | LocalMatch$teamBArgs<ExtArgs>
     cup?: boolean | LocalMatch$cupArgs<ExtArgs>
   }
   export type LocalMatchIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     creator?: boolean | UserDefaultArgs<ExtArgs>
     teamA?: boolean | TeamDefaultArgs<ExtArgs>
-    teamB?: boolean | TeamDefaultArgs<ExtArgs>
+    teamB?: boolean | LocalMatch$teamBArgs<ExtArgs>
     cup?: boolean | LocalMatch$cupArgs<ExtArgs>
   }
 
@@ -11585,8 +11763,9 @@ export namespace Prisma {
     objects: {
       creator: Prisma.$UserPayload<ExtArgs>
       teamA: Prisma.$TeamPayload<ExtArgs>
-      teamB: Prisma.$TeamPayload<ExtArgs>
+      teamB: Prisma.$TeamPayload<ExtArgs> | null
       cup: Prisma.$CupPayload<ExtArgs> | null
+      actions: Prisma.$LocalMatchActionPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -11598,8 +11777,11 @@ export namespace Prisma {
       completedAt: Date | null
       creatorId: string
       teamAId: string
-      teamBId: string
+      teamBId: string | null
       cupId: string | null
+      shareToken: string | null
+      teamAOwnerValidated: boolean
+      teamBOwnerValidated: boolean
       gameState: Prisma.JsonValue | null
       scoreTeamA: number | null
       scoreTeamB: number | null
@@ -11999,8 +12181,9 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     creator<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     teamA<T extends TeamDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TeamDefaultArgs<ExtArgs>>): Prisma__TeamClient<$Result.GetResult<Prisma.$TeamPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-    teamB<T extends TeamDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TeamDefaultArgs<ExtArgs>>): Prisma__TeamClient<$Result.GetResult<Prisma.$TeamPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    teamB<T extends LocalMatch$teamBArgs<ExtArgs> = {}>(args?: Subset<T, LocalMatch$teamBArgs<ExtArgs>>): Prisma__TeamClient<$Result.GetResult<Prisma.$TeamPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     cup<T extends LocalMatch$cupArgs<ExtArgs> = {}>(args?: Subset<T, LocalMatch$cupArgs<ExtArgs>>): Prisma__CupClient<$Result.GetResult<Prisma.$CupPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    actions<T extends LocalMatch$actionsArgs<ExtArgs> = {}>(args?: Subset<T, LocalMatch$actionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LocalMatchActionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -12041,6 +12224,9 @@ export namespace Prisma {
     readonly teamAId: FieldRef<"LocalMatch", 'String'>
     readonly teamBId: FieldRef<"LocalMatch", 'String'>
     readonly cupId: FieldRef<"LocalMatch", 'String'>
+    readonly shareToken: FieldRef<"LocalMatch", 'String'>
+    readonly teamAOwnerValidated: FieldRef<"LocalMatch", 'Boolean'>
+    readonly teamBOwnerValidated: FieldRef<"LocalMatch", 'Boolean'>
     readonly gameState: FieldRef<"LocalMatch", 'Json'>
     readonly scoreTeamA: FieldRef<"LocalMatch", 'Int'>
     readonly scoreTeamB: FieldRef<"LocalMatch", 'Int'>
@@ -12438,6 +12624,25 @@ export namespace Prisma {
   }
 
   /**
+   * LocalMatch.teamB
+   */
+  export type LocalMatch$teamBArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Team
+     */
+    select?: TeamSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Team
+     */
+    omit?: TeamOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamInclude<ExtArgs> | null
+    where?: TeamWhereInput
+  }
+
+  /**
    * LocalMatch.cup
    */
   export type LocalMatch$cupArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -12457,6 +12662,30 @@ export namespace Prisma {
   }
 
   /**
+   * LocalMatch.actions
+   */
+  export type LocalMatch$actionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LocalMatchAction
+     */
+    select?: LocalMatchActionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LocalMatchAction
+     */
+    omit?: LocalMatchActionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LocalMatchActionInclude<ExtArgs> | null
+    where?: LocalMatchActionWhereInput
+    orderBy?: LocalMatchActionOrderByWithRelationInput | LocalMatchActionOrderByWithRelationInput[]
+    cursor?: LocalMatchActionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: LocalMatchActionScalarFieldEnum | LocalMatchActionScalarFieldEnum[]
+  }
+
+  /**
    * LocalMatch without action
    */
   export type LocalMatchDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -12472,6 +12701,1273 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: LocalMatchInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model LocalMatchAction
+   */
+
+  export type AggregateLocalMatchAction = {
+    _count: LocalMatchActionCountAggregateOutputType | null
+    _avg: LocalMatchActionAvgAggregateOutputType | null
+    _sum: LocalMatchActionSumAggregateOutputType | null
+    _min: LocalMatchActionMinAggregateOutputType | null
+    _max: LocalMatchActionMaxAggregateOutputType | null
+  }
+
+  export type LocalMatchActionAvgAggregateOutputType = {
+    half: number | null
+    turn: number | null
+    diceResult: number | null
+  }
+
+  export type LocalMatchActionSumAggregateOutputType = {
+    half: number | null
+    turn: number | null
+    diceResult: number | null
+  }
+
+  export type LocalMatchActionMinAggregateOutputType = {
+    id: string | null
+    matchId: string | null
+    half: number | null
+    turn: number | null
+    actionType: string | null
+    playerId: string | null
+    playerName: string | null
+    playerTeam: string | null
+    opponentId: string | null
+    opponentName: string | null
+    diceResult: number | null
+    fumble: boolean | null
+    playerState: string | null
+    armorBroken: boolean | null
+    opponentState: string | null
+    passType: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type LocalMatchActionMaxAggregateOutputType = {
+    id: string | null
+    matchId: string | null
+    half: number | null
+    turn: number | null
+    actionType: string | null
+    playerId: string | null
+    playerName: string | null
+    playerTeam: string | null
+    opponentId: string | null
+    opponentName: string | null
+    diceResult: number | null
+    fumble: boolean | null
+    playerState: string | null
+    armorBroken: boolean | null
+    opponentState: string | null
+    passType: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type LocalMatchActionCountAggregateOutputType = {
+    id: number
+    matchId: number
+    half: number
+    turn: number
+    actionType: number
+    playerId: number
+    playerName: number
+    playerTeam: number
+    opponentId: number
+    opponentName: number
+    diceResult: number
+    fumble: number
+    playerState: number
+    armorBroken: number
+    opponentState: number
+    passType: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type LocalMatchActionAvgAggregateInputType = {
+    half?: true
+    turn?: true
+    diceResult?: true
+  }
+
+  export type LocalMatchActionSumAggregateInputType = {
+    half?: true
+    turn?: true
+    diceResult?: true
+  }
+
+  export type LocalMatchActionMinAggregateInputType = {
+    id?: true
+    matchId?: true
+    half?: true
+    turn?: true
+    actionType?: true
+    playerId?: true
+    playerName?: true
+    playerTeam?: true
+    opponentId?: true
+    opponentName?: true
+    diceResult?: true
+    fumble?: true
+    playerState?: true
+    armorBroken?: true
+    opponentState?: true
+    passType?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type LocalMatchActionMaxAggregateInputType = {
+    id?: true
+    matchId?: true
+    half?: true
+    turn?: true
+    actionType?: true
+    playerId?: true
+    playerName?: true
+    playerTeam?: true
+    opponentId?: true
+    opponentName?: true
+    diceResult?: true
+    fumble?: true
+    playerState?: true
+    armorBroken?: true
+    opponentState?: true
+    passType?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type LocalMatchActionCountAggregateInputType = {
+    id?: true
+    matchId?: true
+    half?: true
+    turn?: true
+    actionType?: true
+    playerId?: true
+    playerName?: true
+    playerTeam?: true
+    opponentId?: true
+    opponentName?: true
+    diceResult?: true
+    fumble?: true
+    playerState?: true
+    armorBroken?: true
+    opponentState?: true
+    passType?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type LocalMatchActionAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which LocalMatchAction to aggregate.
+     */
+    where?: LocalMatchActionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LocalMatchActions to fetch.
+     */
+    orderBy?: LocalMatchActionOrderByWithRelationInput | LocalMatchActionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: LocalMatchActionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LocalMatchActions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LocalMatchActions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned LocalMatchActions
+    **/
+    _count?: true | LocalMatchActionCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: LocalMatchActionAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: LocalMatchActionSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: LocalMatchActionMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: LocalMatchActionMaxAggregateInputType
+  }
+
+  export type GetLocalMatchActionAggregateType<T extends LocalMatchActionAggregateArgs> = {
+        [P in keyof T & keyof AggregateLocalMatchAction]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateLocalMatchAction[P]>
+      : GetScalarType<T[P], AggregateLocalMatchAction[P]>
+  }
+
+
+
+
+  export type LocalMatchActionGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: LocalMatchActionWhereInput
+    orderBy?: LocalMatchActionOrderByWithAggregationInput | LocalMatchActionOrderByWithAggregationInput[]
+    by: LocalMatchActionScalarFieldEnum[] | LocalMatchActionScalarFieldEnum
+    having?: LocalMatchActionScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: LocalMatchActionCountAggregateInputType | true
+    _avg?: LocalMatchActionAvgAggregateInputType
+    _sum?: LocalMatchActionSumAggregateInputType
+    _min?: LocalMatchActionMinAggregateInputType
+    _max?: LocalMatchActionMaxAggregateInputType
+  }
+
+  export type LocalMatchActionGroupByOutputType = {
+    id: string
+    matchId: string
+    half: number
+    turn: number
+    actionType: string
+    playerId: string
+    playerName: string
+    playerTeam: string
+    opponentId: string | null
+    opponentName: string | null
+    diceResult: number | null
+    fumble: boolean
+    playerState: string | null
+    armorBroken: boolean
+    opponentState: string | null
+    passType: string | null
+    createdAt: Date
+    updatedAt: Date
+    _count: LocalMatchActionCountAggregateOutputType | null
+    _avg: LocalMatchActionAvgAggregateOutputType | null
+    _sum: LocalMatchActionSumAggregateOutputType | null
+    _min: LocalMatchActionMinAggregateOutputType | null
+    _max: LocalMatchActionMaxAggregateOutputType | null
+  }
+
+  type GetLocalMatchActionGroupByPayload<T extends LocalMatchActionGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<LocalMatchActionGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof LocalMatchActionGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], LocalMatchActionGroupByOutputType[P]>
+            : GetScalarType<T[P], LocalMatchActionGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type LocalMatchActionSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    matchId?: boolean
+    half?: boolean
+    turn?: boolean
+    actionType?: boolean
+    playerId?: boolean
+    playerName?: boolean
+    playerTeam?: boolean
+    opponentId?: boolean
+    opponentName?: boolean
+    diceResult?: boolean
+    fumble?: boolean
+    playerState?: boolean
+    armorBroken?: boolean
+    opponentState?: boolean
+    passType?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    match?: boolean | LocalMatchDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["localMatchAction"]>
+
+  export type LocalMatchActionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    matchId?: boolean
+    half?: boolean
+    turn?: boolean
+    actionType?: boolean
+    playerId?: boolean
+    playerName?: boolean
+    playerTeam?: boolean
+    opponentId?: boolean
+    opponentName?: boolean
+    diceResult?: boolean
+    fumble?: boolean
+    playerState?: boolean
+    armorBroken?: boolean
+    opponentState?: boolean
+    passType?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    match?: boolean | LocalMatchDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["localMatchAction"]>
+
+  export type LocalMatchActionSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    matchId?: boolean
+    half?: boolean
+    turn?: boolean
+    actionType?: boolean
+    playerId?: boolean
+    playerName?: boolean
+    playerTeam?: boolean
+    opponentId?: boolean
+    opponentName?: boolean
+    diceResult?: boolean
+    fumble?: boolean
+    playerState?: boolean
+    armorBroken?: boolean
+    opponentState?: boolean
+    passType?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    match?: boolean | LocalMatchDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["localMatchAction"]>
+
+  export type LocalMatchActionSelectScalar = {
+    id?: boolean
+    matchId?: boolean
+    half?: boolean
+    turn?: boolean
+    actionType?: boolean
+    playerId?: boolean
+    playerName?: boolean
+    playerTeam?: boolean
+    opponentId?: boolean
+    opponentName?: boolean
+    diceResult?: boolean
+    fumble?: boolean
+    playerState?: boolean
+    armorBroken?: boolean
+    opponentState?: boolean
+    passType?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type LocalMatchActionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "matchId" | "half" | "turn" | "actionType" | "playerId" | "playerName" | "playerTeam" | "opponentId" | "opponentName" | "diceResult" | "fumble" | "playerState" | "armorBroken" | "opponentState" | "passType" | "createdAt" | "updatedAt", ExtArgs["result"]["localMatchAction"]>
+  export type LocalMatchActionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    match?: boolean | LocalMatchDefaultArgs<ExtArgs>
+  }
+  export type LocalMatchActionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    match?: boolean | LocalMatchDefaultArgs<ExtArgs>
+  }
+  export type LocalMatchActionIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    match?: boolean | LocalMatchDefaultArgs<ExtArgs>
+  }
+
+  export type $LocalMatchActionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "LocalMatchAction"
+    objects: {
+      match: Prisma.$LocalMatchPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      matchId: string
+      half: number
+      turn: number
+      actionType: string
+      playerId: string
+      playerName: string
+      playerTeam: string
+      opponentId: string | null
+      opponentName: string | null
+      diceResult: number | null
+      fumble: boolean
+      playerState: string | null
+      armorBroken: boolean
+      opponentState: string | null
+      passType: string | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["localMatchAction"]>
+    composites: {}
+  }
+
+  type LocalMatchActionGetPayload<S extends boolean | null | undefined | LocalMatchActionDefaultArgs> = $Result.GetResult<Prisma.$LocalMatchActionPayload, S>
+
+  type LocalMatchActionCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<LocalMatchActionFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: LocalMatchActionCountAggregateInputType | true
+    }
+
+  export interface LocalMatchActionDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['LocalMatchAction'], meta: { name: 'LocalMatchAction' } }
+    /**
+     * Find zero or one LocalMatchAction that matches the filter.
+     * @param {LocalMatchActionFindUniqueArgs} args - Arguments to find a LocalMatchAction
+     * @example
+     * // Get one LocalMatchAction
+     * const localMatchAction = await prisma.localMatchAction.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends LocalMatchActionFindUniqueArgs>(args: SelectSubset<T, LocalMatchActionFindUniqueArgs<ExtArgs>>): Prisma__LocalMatchActionClient<$Result.GetResult<Prisma.$LocalMatchActionPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one LocalMatchAction that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {LocalMatchActionFindUniqueOrThrowArgs} args - Arguments to find a LocalMatchAction
+     * @example
+     * // Get one LocalMatchAction
+     * const localMatchAction = await prisma.localMatchAction.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends LocalMatchActionFindUniqueOrThrowArgs>(args: SelectSubset<T, LocalMatchActionFindUniqueOrThrowArgs<ExtArgs>>): Prisma__LocalMatchActionClient<$Result.GetResult<Prisma.$LocalMatchActionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first LocalMatchAction that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LocalMatchActionFindFirstArgs} args - Arguments to find a LocalMatchAction
+     * @example
+     * // Get one LocalMatchAction
+     * const localMatchAction = await prisma.localMatchAction.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends LocalMatchActionFindFirstArgs>(args?: SelectSubset<T, LocalMatchActionFindFirstArgs<ExtArgs>>): Prisma__LocalMatchActionClient<$Result.GetResult<Prisma.$LocalMatchActionPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first LocalMatchAction that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LocalMatchActionFindFirstOrThrowArgs} args - Arguments to find a LocalMatchAction
+     * @example
+     * // Get one LocalMatchAction
+     * const localMatchAction = await prisma.localMatchAction.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends LocalMatchActionFindFirstOrThrowArgs>(args?: SelectSubset<T, LocalMatchActionFindFirstOrThrowArgs<ExtArgs>>): Prisma__LocalMatchActionClient<$Result.GetResult<Prisma.$LocalMatchActionPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more LocalMatchActions that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LocalMatchActionFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all LocalMatchActions
+     * const localMatchActions = await prisma.localMatchAction.findMany()
+     * 
+     * // Get first 10 LocalMatchActions
+     * const localMatchActions = await prisma.localMatchAction.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const localMatchActionWithIdOnly = await prisma.localMatchAction.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends LocalMatchActionFindManyArgs>(args?: SelectSubset<T, LocalMatchActionFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LocalMatchActionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a LocalMatchAction.
+     * @param {LocalMatchActionCreateArgs} args - Arguments to create a LocalMatchAction.
+     * @example
+     * // Create one LocalMatchAction
+     * const LocalMatchAction = await prisma.localMatchAction.create({
+     *   data: {
+     *     // ... data to create a LocalMatchAction
+     *   }
+     * })
+     * 
+     */
+    create<T extends LocalMatchActionCreateArgs>(args: SelectSubset<T, LocalMatchActionCreateArgs<ExtArgs>>): Prisma__LocalMatchActionClient<$Result.GetResult<Prisma.$LocalMatchActionPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many LocalMatchActions.
+     * @param {LocalMatchActionCreateManyArgs} args - Arguments to create many LocalMatchActions.
+     * @example
+     * // Create many LocalMatchActions
+     * const localMatchAction = await prisma.localMatchAction.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends LocalMatchActionCreateManyArgs>(args?: SelectSubset<T, LocalMatchActionCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many LocalMatchActions and returns the data saved in the database.
+     * @param {LocalMatchActionCreateManyAndReturnArgs} args - Arguments to create many LocalMatchActions.
+     * @example
+     * // Create many LocalMatchActions
+     * const localMatchAction = await prisma.localMatchAction.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many LocalMatchActions and only return the `id`
+     * const localMatchActionWithIdOnly = await prisma.localMatchAction.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends LocalMatchActionCreateManyAndReturnArgs>(args?: SelectSubset<T, LocalMatchActionCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LocalMatchActionPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a LocalMatchAction.
+     * @param {LocalMatchActionDeleteArgs} args - Arguments to delete one LocalMatchAction.
+     * @example
+     * // Delete one LocalMatchAction
+     * const LocalMatchAction = await prisma.localMatchAction.delete({
+     *   where: {
+     *     // ... filter to delete one LocalMatchAction
+     *   }
+     * })
+     * 
+     */
+    delete<T extends LocalMatchActionDeleteArgs>(args: SelectSubset<T, LocalMatchActionDeleteArgs<ExtArgs>>): Prisma__LocalMatchActionClient<$Result.GetResult<Prisma.$LocalMatchActionPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one LocalMatchAction.
+     * @param {LocalMatchActionUpdateArgs} args - Arguments to update one LocalMatchAction.
+     * @example
+     * // Update one LocalMatchAction
+     * const localMatchAction = await prisma.localMatchAction.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends LocalMatchActionUpdateArgs>(args: SelectSubset<T, LocalMatchActionUpdateArgs<ExtArgs>>): Prisma__LocalMatchActionClient<$Result.GetResult<Prisma.$LocalMatchActionPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more LocalMatchActions.
+     * @param {LocalMatchActionDeleteManyArgs} args - Arguments to filter LocalMatchActions to delete.
+     * @example
+     * // Delete a few LocalMatchActions
+     * const { count } = await prisma.localMatchAction.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends LocalMatchActionDeleteManyArgs>(args?: SelectSubset<T, LocalMatchActionDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more LocalMatchActions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LocalMatchActionUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many LocalMatchActions
+     * const localMatchAction = await prisma.localMatchAction.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends LocalMatchActionUpdateManyArgs>(args: SelectSubset<T, LocalMatchActionUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more LocalMatchActions and returns the data updated in the database.
+     * @param {LocalMatchActionUpdateManyAndReturnArgs} args - Arguments to update many LocalMatchActions.
+     * @example
+     * // Update many LocalMatchActions
+     * const localMatchAction = await prisma.localMatchAction.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more LocalMatchActions and only return the `id`
+     * const localMatchActionWithIdOnly = await prisma.localMatchAction.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends LocalMatchActionUpdateManyAndReturnArgs>(args: SelectSubset<T, LocalMatchActionUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LocalMatchActionPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one LocalMatchAction.
+     * @param {LocalMatchActionUpsertArgs} args - Arguments to update or create a LocalMatchAction.
+     * @example
+     * // Update or create a LocalMatchAction
+     * const localMatchAction = await prisma.localMatchAction.upsert({
+     *   create: {
+     *     // ... data to create a LocalMatchAction
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the LocalMatchAction we want to update
+     *   }
+     * })
+     */
+    upsert<T extends LocalMatchActionUpsertArgs>(args: SelectSubset<T, LocalMatchActionUpsertArgs<ExtArgs>>): Prisma__LocalMatchActionClient<$Result.GetResult<Prisma.$LocalMatchActionPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of LocalMatchActions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LocalMatchActionCountArgs} args - Arguments to filter LocalMatchActions to count.
+     * @example
+     * // Count the number of LocalMatchActions
+     * const count = await prisma.localMatchAction.count({
+     *   where: {
+     *     // ... the filter for the LocalMatchActions we want to count
+     *   }
+     * })
+    **/
+    count<T extends LocalMatchActionCountArgs>(
+      args?: Subset<T, LocalMatchActionCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], LocalMatchActionCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a LocalMatchAction.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LocalMatchActionAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends LocalMatchActionAggregateArgs>(args: Subset<T, LocalMatchActionAggregateArgs>): Prisma.PrismaPromise<GetLocalMatchActionAggregateType<T>>
+
+    /**
+     * Group by LocalMatchAction.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LocalMatchActionGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends LocalMatchActionGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: LocalMatchActionGroupByArgs['orderBy'] }
+        : { orderBy?: LocalMatchActionGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, LocalMatchActionGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetLocalMatchActionGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the LocalMatchAction model
+   */
+  readonly fields: LocalMatchActionFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for LocalMatchAction.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__LocalMatchActionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    match<T extends LocalMatchDefaultArgs<ExtArgs> = {}>(args?: Subset<T, LocalMatchDefaultArgs<ExtArgs>>): Prisma__LocalMatchClient<$Result.GetResult<Prisma.$LocalMatchPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the LocalMatchAction model
+   */
+  interface LocalMatchActionFieldRefs {
+    readonly id: FieldRef<"LocalMatchAction", 'String'>
+    readonly matchId: FieldRef<"LocalMatchAction", 'String'>
+    readonly half: FieldRef<"LocalMatchAction", 'Int'>
+    readonly turn: FieldRef<"LocalMatchAction", 'Int'>
+    readonly actionType: FieldRef<"LocalMatchAction", 'String'>
+    readonly playerId: FieldRef<"LocalMatchAction", 'String'>
+    readonly playerName: FieldRef<"LocalMatchAction", 'String'>
+    readonly playerTeam: FieldRef<"LocalMatchAction", 'String'>
+    readonly opponentId: FieldRef<"LocalMatchAction", 'String'>
+    readonly opponentName: FieldRef<"LocalMatchAction", 'String'>
+    readonly diceResult: FieldRef<"LocalMatchAction", 'Int'>
+    readonly fumble: FieldRef<"LocalMatchAction", 'Boolean'>
+    readonly playerState: FieldRef<"LocalMatchAction", 'String'>
+    readonly armorBroken: FieldRef<"LocalMatchAction", 'Boolean'>
+    readonly opponentState: FieldRef<"LocalMatchAction", 'String'>
+    readonly passType: FieldRef<"LocalMatchAction", 'String'>
+    readonly createdAt: FieldRef<"LocalMatchAction", 'DateTime'>
+    readonly updatedAt: FieldRef<"LocalMatchAction", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * LocalMatchAction findUnique
+   */
+  export type LocalMatchActionFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LocalMatchAction
+     */
+    select?: LocalMatchActionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LocalMatchAction
+     */
+    omit?: LocalMatchActionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LocalMatchActionInclude<ExtArgs> | null
+    /**
+     * Filter, which LocalMatchAction to fetch.
+     */
+    where: LocalMatchActionWhereUniqueInput
+  }
+
+  /**
+   * LocalMatchAction findUniqueOrThrow
+   */
+  export type LocalMatchActionFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LocalMatchAction
+     */
+    select?: LocalMatchActionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LocalMatchAction
+     */
+    omit?: LocalMatchActionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LocalMatchActionInclude<ExtArgs> | null
+    /**
+     * Filter, which LocalMatchAction to fetch.
+     */
+    where: LocalMatchActionWhereUniqueInput
+  }
+
+  /**
+   * LocalMatchAction findFirst
+   */
+  export type LocalMatchActionFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LocalMatchAction
+     */
+    select?: LocalMatchActionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LocalMatchAction
+     */
+    omit?: LocalMatchActionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LocalMatchActionInclude<ExtArgs> | null
+    /**
+     * Filter, which LocalMatchAction to fetch.
+     */
+    where?: LocalMatchActionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LocalMatchActions to fetch.
+     */
+    orderBy?: LocalMatchActionOrderByWithRelationInput | LocalMatchActionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for LocalMatchActions.
+     */
+    cursor?: LocalMatchActionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LocalMatchActions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LocalMatchActions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of LocalMatchActions.
+     */
+    distinct?: LocalMatchActionScalarFieldEnum | LocalMatchActionScalarFieldEnum[]
+  }
+
+  /**
+   * LocalMatchAction findFirstOrThrow
+   */
+  export type LocalMatchActionFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LocalMatchAction
+     */
+    select?: LocalMatchActionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LocalMatchAction
+     */
+    omit?: LocalMatchActionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LocalMatchActionInclude<ExtArgs> | null
+    /**
+     * Filter, which LocalMatchAction to fetch.
+     */
+    where?: LocalMatchActionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LocalMatchActions to fetch.
+     */
+    orderBy?: LocalMatchActionOrderByWithRelationInput | LocalMatchActionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for LocalMatchActions.
+     */
+    cursor?: LocalMatchActionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LocalMatchActions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LocalMatchActions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of LocalMatchActions.
+     */
+    distinct?: LocalMatchActionScalarFieldEnum | LocalMatchActionScalarFieldEnum[]
+  }
+
+  /**
+   * LocalMatchAction findMany
+   */
+  export type LocalMatchActionFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LocalMatchAction
+     */
+    select?: LocalMatchActionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LocalMatchAction
+     */
+    omit?: LocalMatchActionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LocalMatchActionInclude<ExtArgs> | null
+    /**
+     * Filter, which LocalMatchActions to fetch.
+     */
+    where?: LocalMatchActionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LocalMatchActions to fetch.
+     */
+    orderBy?: LocalMatchActionOrderByWithRelationInput | LocalMatchActionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing LocalMatchActions.
+     */
+    cursor?: LocalMatchActionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LocalMatchActions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LocalMatchActions.
+     */
+    skip?: number
+    distinct?: LocalMatchActionScalarFieldEnum | LocalMatchActionScalarFieldEnum[]
+  }
+
+  /**
+   * LocalMatchAction create
+   */
+  export type LocalMatchActionCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LocalMatchAction
+     */
+    select?: LocalMatchActionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LocalMatchAction
+     */
+    omit?: LocalMatchActionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LocalMatchActionInclude<ExtArgs> | null
+    /**
+     * The data needed to create a LocalMatchAction.
+     */
+    data: XOR<LocalMatchActionCreateInput, LocalMatchActionUncheckedCreateInput>
+  }
+
+  /**
+   * LocalMatchAction createMany
+   */
+  export type LocalMatchActionCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many LocalMatchActions.
+     */
+    data: LocalMatchActionCreateManyInput | LocalMatchActionCreateManyInput[]
+  }
+
+  /**
+   * LocalMatchAction createManyAndReturn
+   */
+  export type LocalMatchActionCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LocalMatchAction
+     */
+    select?: LocalMatchActionSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the LocalMatchAction
+     */
+    omit?: LocalMatchActionOmit<ExtArgs> | null
+    /**
+     * The data used to create many LocalMatchActions.
+     */
+    data: LocalMatchActionCreateManyInput | LocalMatchActionCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LocalMatchActionIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * LocalMatchAction update
+   */
+  export type LocalMatchActionUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LocalMatchAction
+     */
+    select?: LocalMatchActionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LocalMatchAction
+     */
+    omit?: LocalMatchActionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LocalMatchActionInclude<ExtArgs> | null
+    /**
+     * The data needed to update a LocalMatchAction.
+     */
+    data: XOR<LocalMatchActionUpdateInput, LocalMatchActionUncheckedUpdateInput>
+    /**
+     * Choose, which LocalMatchAction to update.
+     */
+    where: LocalMatchActionWhereUniqueInput
+  }
+
+  /**
+   * LocalMatchAction updateMany
+   */
+  export type LocalMatchActionUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update LocalMatchActions.
+     */
+    data: XOR<LocalMatchActionUpdateManyMutationInput, LocalMatchActionUncheckedUpdateManyInput>
+    /**
+     * Filter which LocalMatchActions to update
+     */
+    where?: LocalMatchActionWhereInput
+    /**
+     * Limit how many LocalMatchActions to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * LocalMatchAction updateManyAndReturn
+   */
+  export type LocalMatchActionUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LocalMatchAction
+     */
+    select?: LocalMatchActionSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the LocalMatchAction
+     */
+    omit?: LocalMatchActionOmit<ExtArgs> | null
+    /**
+     * The data used to update LocalMatchActions.
+     */
+    data: XOR<LocalMatchActionUpdateManyMutationInput, LocalMatchActionUncheckedUpdateManyInput>
+    /**
+     * Filter which LocalMatchActions to update
+     */
+    where?: LocalMatchActionWhereInput
+    /**
+     * Limit how many LocalMatchActions to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LocalMatchActionIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * LocalMatchAction upsert
+   */
+  export type LocalMatchActionUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LocalMatchAction
+     */
+    select?: LocalMatchActionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LocalMatchAction
+     */
+    omit?: LocalMatchActionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LocalMatchActionInclude<ExtArgs> | null
+    /**
+     * The filter to search for the LocalMatchAction to update in case it exists.
+     */
+    where: LocalMatchActionWhereUniqueInput
+    /**
+     * In case the LocalMatchAction found by the `where` argument doesn't exist, create a new LocalMatchAction with this data.
+     */
+    create: XOR<LocalMatchActionCreateInput, LocalMatchActionUncheckedCreateInput>
+    /**
+     * In case the LocalMatchAction was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<LocalMatchActionUpdateInput, LocalMatchActionUncheckedUpdateInput>
+  }
+
+  /**
+   * LocalMatchAction delete
+   */
+  export type LocalMatchActionDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LocalMatchAction
+     */
+    select?: LocalMatchActionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LocalMatchAction
+     */
+    omit?: LocalMatchActionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LocalMatchActionInclude<ExtArgs> | null
+    /**
+     * Filter which LocalMatchAction to delete.
+     */
+    where: LocalMatchActionWhereUniqueInput
+  }
+
+  /**
+   * LocalMatchAction deleteMany
+   */
+  export type LocalMatchActionDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which LocalMatchActions to delete
+     */
+    where?: LocalMatchActionWhereInput
+    /**
+     * Limit how many LocalMatchActions to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * LocalMatchAction without action
+   */
+  export type LocalMatchActionDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LocalMatchAction
+     */
+    select?: LocalMatchActionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LocalMatchAction
+     */
+    omit?: LocalMatchActionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LocalMatchActionInclude<ExtArgs> | null
   }
 
 
@@ -12496,6 +13992,7 @@ export namespace Prisma {
     lastName: 'lastName',
     dateOfBirth: 'dateOfBirth',
     role: 'role',
+    roles: 'roles',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -12610,12 +14107,39 @@ export namespace Prisma {
     teamAId: 'teamAId',
     teamBId: 'teamBId',
     cupId: 'cupId',
+    shareToken: 'shareToken',
+    teamAOwnerValidated: 'teamAOwnerValidated',
+    teamBOwnerValidated: 'teamBOwnerValidated',
     gameState: 'gameState',
     scoreTeamA: 'scoreTeamA',
     scoreTeamB: 'scoreTeamB'
   };
 
   export type LocalMatchScalarFieldEnum = (typeof LocalMatchScalarFieldEnum)[keyof typeof LocalMatchScalarFieldEnum]
+
+
+  export const LocalMatchActionScalarFieldEnum: {
+    id: 'id',
+    matchId: 'matchId',
+    half: 'half',
+    turn: 'turn',
+    actionType: 'actionType',
+    playerId: 'playerId',
+    playerName: 'playerName',
+    playerTeam: 'playerTeam',
+    opponentId: 'opponentId',
+    opponentName: 'opponentName',
+    diceResult: 'diceResult',
+    fumble: 'fumble',
+    playerState: 'playerState',
+    armorBroken: 'armorBroken',
+    opponentState: 'opponentState',
+    passType: 'passType',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type LocalMatchActionScalarFieldEnum = (typeof LocalMatchActionScalarFieldEnum)[keyof typeof LocalMatchActionScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -12736,6 +14260,7 @@ export namespace Prisma {
     lastName?: StringNullableFilter<"User"> | string | null
     dateOfBirth?: DateTimeNullableFilter<"User"> | Date | string | null
     role?: StringFilter<"User"> | string
+    roles?: StringFilter<"User"> | string
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     matches?: MatchListRelationFilter
@@ -12756,6 +14281,7 @@ export namespace Prisma {
     lastName?: SortOrderInput | SortOrder
     dateOfBirth?: SortOrderInput | SortOrder
     role?: SortOrder
+    roles?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     matches?: MatchOrderByRelationAggregateInput
@@ -12779,6 +14305,7 @@ export namespace Prisma {
     lastName?: StringNullableFilter<"User"> | string | null
     dateOfBirth?: DateTimeNullableFilter<"User"> | Date | string | null
     role?: StringFilter<"User"> | string
+    roles?: StringFilter<"User"> | string
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     matches?: MatchListRelationFilter
@@ -12799,6 +14326,7 @@ export namespace Prisma {
     lastName?: SortOrderInput | SortOrder
     dateOfBirth?: SortOrderInput | SortOrder
     role?: SortOrder
+    roles?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: UserCountOrderByAggregateInput
@@ -12819,6 +14347,7 @@ export namespace Prisma {
     lastName?: StringNullableWithAggregatesFilter<"User"> | string | null
     dateOfBirth?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
     role?: StringWithAggregatesFilter<"User"> | string
+    roles?: StringWithAggregatesFilter<"User"> | string
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
   }
@@ -13359,15 +14888,19 @@ export namespace Prisma {
     completedAt?: DateTimeNullableFilter<"LocalMatch"> | Date | string | null
     creatorId?: StringFilter<"LocalMatch"> | string
     teamAId?: StringFilter<"LocalMatch"> | string
-    teamBId?: StringFilter<"LocalMatch"> | string
+    teamBId?: StringNullableFilter<"LocalMatch"> | string | null
     cupId?: StringNullableFilter<"LocalMatch"> | string | null
+    shareToken?: StringNullableFilter<"LocalMatch"> | string | null
+    teamAOwnerValidated?: BoolFilter<"LocalMatch"> | boolean
+    teamBOwnerValidated?: BoolFilter<"LocalMatch"> | boolean
     gameState?: JsonNullableFilter<"LocalMatch">
     scoreTeamA?: IntNullableFilter<"LocalMatch"> | number | null
     scoreTeamB?: IntNullableFilter<"LocalMatch"> | number | null
     creator?: XOR<UserScalarRelationFilter, UserWhereInput>
     teamA?: XOR<TeamScalarRelationFilter, TeamWhereInput>
-    teamB?: XOR<TeamScalarRelationFilter, TeamWhereInput>
+    teamB?: XOR<TeamNullableScalarRelationFilter, TeamWhereInput> | null
     cup?: XOR<CupNullableScalarRelationFilter, CupWhereInput> | null
+    actions?: LocalMatchActionListRelationFilter
   }
 
   export type LocalMatchOrderByWithRelationInput = {
@@ -13380,8 +14913,11 @@ export namespace Prisma {
     completedAt?: SortOrderInput | SortOrder
     creatorId?: SortOrder
     teamAId?: SortOrder
-    teamBId?: SortOrder
+    teamBId?: SortOrderInput | SortOrder
     cupId?: SortOrderInput | SortOrder
+    shareToken?: SortOrderInput | SortOrder
+    teamAOwnerValidated?: SortOrder
+    teamBOwnerValidated?: SortOrder
     gameState?: SortOrderInput | SortOrder
     scoreTeamA?: SortOrderInput | SortOrder
     scoreTeamB?: SortOrderInput | SortOrder
@@ -13389,10 +14925,12 @@ export namespace Prisma {
     teamA?: TeamOrderByWithRelationInput
     teamB?: TeamOrderByWithRelationInput
     cup?: CupOrderByWithRelationInput
+    actions?: LocalMatchActionOrderByRelationAggregateInput
   }
 
   export type LocalMatchWhereUniqueInput = Prisma.AtLeast<{
     id?: string
+    shareToken?: string
     AND?: LocalMatchWhereInput | LocalMatchWhereInput[]
     OR?: LocalMatchWhereInput[]
     NOT?: LocalMatchWhereInput | LocalMatchWhereInput[]
@@ -13404,16 +14942,19 @@ export namespace Prisma {
     completedAt?: DateTimeNullableFilter<"LocalMatch"> | Date | string | null
     creatorId?: StringFilter<"LocalMatch"> | string
     teamAId?: StringFilter<"LocalMatch"> | string
-    teamBId?: StringFilter<"LocalMatch"> | string
+    teamBId?: StringNullableFilter<"LocalMatch"> | string | null
     cupId?: StringNullableFilter<"LocalMatch"> | string | null
+    teamAOwnerValidated?: BoolFilter<"LocalMatch"> | boolean
+    teamBOwnerValidated?: BoolFilter<"LocalMatch"> | boolean
     gameState?: JsonNullableFilter<"LocalMatch">
     scoreTeamA?: IntNullableFilter<"LocalMatch"> | number | null
     scoreTeamB?: IntNullableFilter<"LocalMatch"> | number | null
     creator?: XOR<UserScalarRelationFilter, UserWhereInput>
     teamA?: XOR<TeamScalarRelationFilter, TeamWhereInput>
-    teamB?: XOR<TeamScalarRelationFilter, TeamWhereInput>
+    teamB?: XOR<TeamNullableScalarRelationFilter, TeamWhereInput> | null
     cup?: XOR<CupNullableScalarRelationFilter, CupWhereInput> | null
-  }, "id">
+    actions?: LocalMatchActionListRelationFilter
+  }, "id" | "shareToken">
 
   export type LocalMatchOrderByWithAggregationInput = {
     id?: SortOrder
@@ -13425,8 +14966,11 @@ export namespace Prisma {
     completedAt?: SortOrderInput | SortOrder
     creatorId?: SortOrder
     teamAId?: SortOrder
-    teamBId?: SortOrder
+    teamBId?: SortOrderInput | SortOrder
     cupId?: SortOrderInput | SortOrder
+    shareToken?: SortOrderInput | SortOrder
+    teamAOwnerValidated?: SortOrder
+    teamBOwnerValidated?: SortOrder
     gameState?: SortOrderInput | SortOrder
     scoreTeamA?: SortOrderInput | SortOrder
     scoreTeamB?: SortOrderInput | SortOrder
@@ -13450,11 +14994,136 @@ export namespace Prisma {
     completedAt?: DateTimeNullableWithAggregatesFilter<"LocalMatch"> | Date | string | null
     creatorId?: StringWithAggregatesFilter<"LocalMatch"> | string
     teamAId?: StringWithAggregatesFilter<"LocalMatch"> | string
-    teamBId?: StringWithAggregatesFilter<"LocalMatch"> | string
+    teamBId?: StringNullableWithAggregatesFilter<"LocalMatch"> | string | null
     cupId?: StringNullableWithAggregatesFilter<"LocalMatch"> | string | null
+    shareToken?: StringNullableWithAggregatesFilter<"LocalMatch"> | string | null
+    teamAOwnerValidated?: BoolWithAggregatesFilter<"LocalMatch"> | boolean
+    teamBOwnerValidated?: BoolWithAggregatesFilter<"LocalMatch"> | boolean
     gameState?: JsonNullableWithAggregatesFilter<"LocalMatch">
     scoreTeamA?: IntNullableWithAggregatesFilter<"LocalMatch"> | number | null
     scoreTeamB?: IntNullableWithAggregatesFilter<"LocalMatch"> | number | null
+  }
+
+  export type LocalMatchActionWhereInput = {
+    AND?: LocalMatchActionWhereInput | LocalMatchActionWhereInput[]
+    OR?: LocalMatchActionWhereInput[]
+    NOT?: LocalMatchActionWhereInput | LocalMatchActionWhereInput[]
+    id?: StringFilter<"LocalMatchAction"> | string
+    matchId?: StringFilter<"LocalMatchAction"> | string
+    half?: IntFilter<"LocalMatchAction"> | number
+    turn?: IntFilter<"LocalMatchAction"> | number
+    actionType?: StringFilter<"LocalMatchAction"> | string
+    playerId?: StringFilter<"LocalMatchAction"> | string
+    playerName?: StringFilter<"LocalMatchAction"> | string
+    playerTeam?: StringFilter<"LocalMatchAction"> | string
+    opponentId?: StringNullableFilter<"LocalMatchAction"> | string | null
+    opponentName?: StringNullableFilter<"LocalMatchAction"> | string | null
+    diceResult?: IntNullableFilter<"LocalMatchAction"> | number | null
+    fumble?: BoolFilter<"LocalMatchAction"> | boolean
+    playerState?: StringNullableFilter<"LocalMatchAction"> | string | null
+    armorBroken?: BoolFilter<"LocalMatchAction"> | boolean
+    opponentState?: StringNullableFilter<"LocalMatchAction"> | string | null
+    passType?: StringNullableFilter<"LocalMatchAction"> | string | null
+    createdAt?: DateTimeFilter<"LocalMatchAction"> | Date | string
+    updatedAt?: DateTimeFilter<"LocalMatchAction"> | Date | string
+    match?: XOR<LocalMatchScalarRelationFilter, LocalMatchWhereInput>
+  }
+
+  export type LocalMatchActionOrderByWithRelationInput = {
+    id?: SortOrder
+    matchId?: SortOrder
+    half?: SortOrder
+    turn?: SortOrder
+    actionType?: SortOrder
+    playerId?: SortOrder
+    playerName?: SortOrder
+    playerTeam?: SortOrder
+    opponentId?: SortOrderInput | SortOrder
+    opponentName?: SortOrderInput | SortOrder
+    diceResult?: SortOrderInput | SortOrder
+    fumble?: SortOrder
+    playerState?: SortOrderInput | SortOrder
+    armorBroken?: SortOrder
+    opponentState?: SortOrderInput | SortOrder
+    passType?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    match?: LocalMatchOrderByWithRelationInput
+  }
+
+  export type LocalMatchActionWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: LocalMatchActionWhereInput | LocalMatchActionWhereInput[]
+    OR?: LocalMatchActionWhereInput[]
+    NOT?: LocalMatchActionWhereInput | LocalMatchActionWhereInput[]
+    matchId?: StringFilter<"LocalMatchAction"> | string
+    half?: IntFilter<"LocalMatchAction"> | number
+    turn?: IntFilter<"LocalMatchAction"> | number
+    actionType?: StringFilter<"LocalMatchAction"> | string
+    playerId?: StringFilter<"LocalMatchAction"> | string
+    playerName?: StringFilter<"LocalMatchAction"> | string
+    playerTeam?: StringFilter<"LocalMatchAction"> | string
+    opponentId?: StringNullableFilter<"LocalMatchAction"> | string | null
+    opponentName?: StringNullableFilter<"LocalMatchAction"> | string | null
+    diceResult?: IntNullableFilter<"LocalMatchAction"> | number | null
+    fumble?: BoolFilter<"LocalMatchAction"> | boolean
+    playerState?: StringNullableFilter<"LocalMatchAction"> | string | null
+    armorBroken?: BoolFilter<"LocalMatchAction"> | boolean
+    opponentState?: StringNullableFilter<"LocalMatchAction"> | string | null
+    passType?: StringNullableFilter<"LocalMatchAction"> | string | null
+    createdAt?: DateTimeFilter<"LocalMatchAction"> | Date | string
+    updatedAt?: DateTimeFilter<"LocalMatchAction"> | Date | string
+    match?: XOR<LocalMatchScalarRelationFilter, LocalMatchWhereInput>
+  }, "id">
+
+  export type LocalMatchActionOrderByWithAggregationInput = {
+    id?: SortOrder
+    matchId?: SortOrder
+    half?: SortOrder
+    turn?: SortOrder
+    actionType?: SortOrder
+    playerId?: SortOrder
+    playerName?: SortOrder
+    playerTeam?: SortOrder
+    opponentId?: SortOrderInput | SortOrder
+    opponentName?: SortOrderInput | SortOrder
+    diceResult?: SortOrderInput | SortOrder
+    fumble?: SortOrder
+    playerState?: SortOrderInput | SortOrder
+    armorBroken?: SortOrder
+    opponentState?: SortOrderInput | SortOrder
+    passType?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: LocalMatchActionCountOrderByAggregateInput
+    _avg?: LocalMatchActionAvgOrderByAggregateInput
+    _max?: LocalMatchActionMaxOrderByAggregateInput
+    _min?: LocalMatchActionMinOrderByAggregateInput
+    _sum?: LocalMatchActionSumOrderByAggregateInput
+  }
+
+  export type LocalMatchActionScalarWhereWithAggregatesInput = {
+    AND?: LocalMatchActionScalarWhereWithAggregatesInput | LocalMatchActionScalarWhereWithAggregatesInput[]
+    OR?: LocalMatchActionScalarWhereWithAggregatesInput[]
+    NOT?: LocalMatchActionScalarWhereWithAggregatesInput | LocalMatchActionScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"LocalMatchAction"> | string
+    matchId?: StringWithAggregatesFilter<"LocalMatchAction"> | string
+    half?: IntWithAggregatesFilter<"LocalMatchAction"> | number
+    turn?: IntWithAggregatesFilter<"LocalMatchAction"> | number
+    actionType?: StringWithAggregatesFilter<"LocalMatchAction"> | string
+    playerId?: StringWithAggregatesFilter<"LocalMatchAction"> | string
+    playerName?: StringWithAggregatesFilter<"LocalMatchAction"> | string
+    playerTeam?: StringWithAggregatesFilter<"LocalMatchAction"> | string
+    opponentId?: StringNullableWithAggregatesFilter<"LocalMatchAction"> | string | null
+    opponentName?: StringNullableWithAggregatesFilter<"LocalMatchAction"> | string | null
+    diceResult?: IntNullableWithAggregatesFilter<"LocalMatchAction"> | number | null
+    fumble?: BoolWithAggregatesFilter<"LocalMatchAction"> | boolean
+    playerState?: StringNullableWithAggregatesFilter<"LocalMatchAction"> | string | null
+    armorBroken?: BoolWithAggregatesFilter<"LocalMatchAction"> | boolean
+    opponentState?: StringNullableWithAggregatesFilter<"LocalMatchAction"> | string | null
+    passType?: StringNullableWithAggregatesFilter<"LocalMatchAction"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"LocalMatchAction"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"LocalMatchAction"> | Date | string
   }
 
   export type UserCreateInput = {
@@ -13467,6 +15136,7 @@ export namespace Prisma {
     lastName?: string | null
     dateOfBirth?: Date | string | null
     role?: string
+    roles?: string
     createdAt?: Date | string
     updatedAt?: Date | string
     matches?: MatchCreateNestedManyWithoutPlayersInput
@@ -13487,6 +15157,7 @@ export namespace Prisma {
     lastName?: string | null
     dateOfBirth?: Date | string | null
     role?: string
+    roles?: string
     createdAt?: Date | string
     updatedAt?: Date | string
     matches?: MatchUncheckedCreateNestedManyWithoutPlayersInput
@@ -13507,6 +15178,7 @@ export namespace Prisma {
     lastName?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     matches?: MatchUpdateManyWithoutPlayersNestedInput
@@ -13527,6 +15199,7 @@ export namespace Prisma {
     lastName?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     matches?: MatchUncheckedUpdateManyWithoutPlayersNestedInput
@@ -13547,6 +15220,7 @@ export namespace Prisma {
     lastName?: string | null
     dateOfBirth?: Date | string | null
     role?: string
+    roles?: string
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -13561,6 +15235,7 @@ export namespace Prisma {
     lastName?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -13575,6 +15250,7 @@ export namespace Prisma {
     lastName?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -14135,13 +15811,17 @@ export namespace Prisma {
     updatedAt?: Date | string
     startedAt?: Date | string | null
     completedAt?: Date | string | null
+    shareToken?: string | null
+    teamAOwnerValidated?: boolean
+    teamBOwnerValidated?: boolean
     gameState?: NullableJsonNullValueInput | InputJsonValue
     scoreTeamA?: number | null
     scoreTeamB?: number | null
     creator: UserCreateNestedOneWithoutCreatedLocalMatchesInput
     teamA: TeamCreateNestedOneWithoutLocalMatchesAsTeamAInput
-    teamB: TeamCreateNestedOneWithoutLocalMatchesAsTeamBInput
+    teamB?: TeamCreateNestedOneWithoutLocalMatchesAsTeamBInput
     cup?: CupCreateNestedOneWithoutLocalMatchesInput
+    actions?: LocalMatchActionCreateNestedManyWithoutMatchInput
   }
 
   export type LocalMatchUncheckedCreateInput = {
@@ -14154,11 +15834,15 @@ export namespace Prisma {
     completedAt?: Date | string | null
     creatorId: string
     teamAId: string
-    teamBId: string
+    teamBId?: string | null
     cupId?: string | null
+    shareToken?: string | null
+    teamAOwnerValidated?: boolean
+    teamBOwnerValidated?: boolean
     gameState?: NullableJsonNullValueInput | InputJsonValue
     scoreTeamA?: number | null
     scoreTeamB?: number | null
+    actions?: LocalMatchActionUncheckedCreateNestedManyWithoutMatchInput
   }
 
   export type LocalMatchUpdateInput = {
@@ -14169,13 +15853,17 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    shareToken?: NullableStringFieldUpdateOperationsInput | string | null
+    teamAOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
+    teamBOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
     gameState?: NullableJsonNullValueInput | InputJsonValue
     scoreTeamA?: NullableIntFieldUpdateOperationsInput | number | null
     scoreTeamB?: NullableIntFieldUpdateOperationsInput | number | null
     creator?: UserUpdateOneRequiredWithoutCreatedLocalMatchesNestedInput
     teamA?: TeamUpdateOneRequiredWithoutLocalMatchesAsTeamANestedInput
-    teamB?: TeamUpdateOneRequiredWithoutLocalMatchesAsTeamBNestedInput
+    teamB?: TeamUpdateOneWithoutLocalMatchesAsTeamBNestedInput
     cup?: CupUpdateOneWithoutLocalMatchesNestedInput
+    actions?: LocalMatchActionUpdateManyWithoutMatchNestedInput
   }
 
   export type LocalMatchUncheckedUpdateInput = {
@@ -14188,11 +15876,15 @@ export namespace Prisma {
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     creatorId?: StringFieldUpdateOperationsInput | string
     teamAId?: StringFieldUpdateOperationsInput | string
-    teamBId?: StringFieldUpdateOperationsInput | string
+    teamBId?: NullableStringFieldUpdateOperationsInput | string | null
     cupId?: NullableStringFieldUpdateOperationsInput | string | null
+    shareToken?: NullableStringFieldUpdateOperationsInput | string | null
+    teamAOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
+    teamBOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
     gameState?: NullableJsonNullValueInput | InputJsonValue
     scoreTeamA?: NullableIntFieldUpdateOperationsInput | number | null
     scoreTeamB?: NullableIntFieldUpdateOperationsInput | number | null
+    actions?: LocalMatchActionUncheckedUpdateManyWithoutMatchNestedInput
   }
 
   export type LocalMatchCreateManyInput = {
@@ -14205,8 +15897,11 @@ export namespace Prisma {
     completedAt?: Date | string | null
     creatorId: string
     teamAId: string
-    teamBId: string
+    teamBId?: string | null
     cupId?: string | null
+    shareToken?: string | null
+    teamAOwnerValidated?: boolean
+    teamBOwnerValidated?: boolean
     gameState?: NullableJsonNullValueInput | InputJsonValue
     scoreTeamA?: number | null
     scoreTeamB?: number | null
@@ -14220,6 +15915,9 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    shareToken?: NullableStringFieldUpdateOperationsInput | string | null
+    teamAOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
+    teamBOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
     gameState?: NullableJsonNullValueInput | InputJsonValue
     scoreTeamA?: NullableIntFieldUpdateOperationsInput | number | null
     scoreTeamB?: NullableIntFieldUpdateOperationsInput | number | null
@@ -14235,11 +15933,160 @@ export namespace Prisma {
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     creatorId?: StringFieldUpdateOperationsInput | string
     teamAId?: StringFieldUpdateOperationsInput | string
-    teamBId?: StringFieldUpdateOperationsInput | string
+    teamBId?: NullableStringFieldUpdateOperationsInput | string | null
     cupId?: NullableStringFieldUpdateOperationsInput | string | null
+    shareToken?: NullableStringFieldUpdateOperationsInput | string | null
+    teamAOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
+    teamBOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
     gameState?: NullableJsonNullValueInput | InputJsonValue
     scoreTeamA?: NullableIntFieldUpdateOperationsInput | number | null
     scoreTeamB?: NullableIntFieldUpdateOperationsInput | number | null
+  }
+
+  export type LocalMatchActionCreateInput = {
+    id?: string
+    half: number
+    turn: number
+    actionType: string
+    playerId: string
+    playerName: string
+    playerTeam: string
+    opponentId?: string | null
+    opponentName?: string | null
+    diceResult?: number | null
+    fumble?: boolean
+    playerState?: string | null
+    armorBroken?: boolean
+    opponentState?: string | null
+    passType?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    match: LocalMatchCreateNestedOneWithoutActionsInput
+  }
+
+  export type LocalMatchActionUncheckedCreateInput = {
+    id?: string
+    matchId: string
+    half: number
+    turn: number
+    actionType: string
+    playerId: string
+    playerName: string
+    playerTeam: string
+    opponentId?: string | null
+    opponentName?: string | null
+    diceResult?: number | null
+    fumble?: boolean
+    playerState?: string | null
+    armorBroken?: boolean
+    opponentState?: string | null
+    passType?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type LocalMatchActionUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    half?: IntFieldUpdateOperationsInput | number
+    turn?: IntFieldUpdateOperationsInput | number
+    actionType?: StringFieldUpdateOperationsInput | string
+    playerId?: StringFieldUpdateOperationsInput | string
+    playerName?: StringFieldUpdateOperationsInput | string
+    playerTeam?: StringFieldUpdateOperationsInput | string
+    opponentId?: NullableStringFieldUpdateOperationsInput | string | null
+    opponentName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceResult?: NullableIntFieldUpdateOperationsInput | number | null
+    fumble?: BoolFieldUpdateOperationsInput | boolean
+    playerState?: NullableStringFieldUpdateOperationsInput | string | null
+    armorBroken?: BoolFieldUpdateOperationsInput | boolean
+    opponentState?: NullableStringFieldUpdateOperationsInput | string | null
+    passType?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    match?: LocalMatchUpdateOneRequiredWithoutActionsNestedInput
+  }
+
+  export type LocalMatchActionUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    matchId?: StringFieldUpdateOperationsInput | string
+    half?: IntFieldUpdateOperationsInput | number
+    turn?: IntFieldUpdateOperationsInput | number
+    actionType?: StringFieldUpdateOperationsInput | string
+    playerId?: StringFieldUpdateOperationsInput | string
+    playerName?: StringFieldUpdateOperationsInput | string
+    playerTeam?: StringFieldUpdateOperationsInput | string
+    opponentId?: NullableStringFieldUpdateOperationsInput | string | null
+    opponentName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceResult?: NullableIntFieldUpdateOperationsInput | number | null
+    fumble?: BoolFieldUpdateOperationsInput | boolean
+    playerState?: NullableStringFieldUpdateOperationsInput | string | null
+    armorBroken?: BoolFieldUpdateOperationsInput | boolean
+    opponentState?: NullableStringFieldUpdateOperationsInput | string | null
+    passType?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LocalMatchActionCreateManyInput = {
+    id?: string
+    matchId: string
+    half: number
+    turn: number
+    actionType: string
+    playerId: string
+    playerName: string
+    playerTeam: string
+    opponentId?: string | null
+    opponentName?: string | null
+    diceResult?: number | null
+    fumble?: boolean
+    playerState?: string | null
+    armorBroken?: boolean
+    opponentState?: string | null
+    passType?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type LocalMatchActionUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    half?: IntFieldUpdateOperationsInput | number
+    turn?: IntFieldUpdateOperationsInput | number
+    actionType?: StringFieldUpdateOperationsInput | string
+    playerId?: StringFieldUpdateOperationsInput | string
+    playerName?: StringFieldUpdateOperationsInput | string
+    playerTeam?: StringFieldUpdateOperationsInput | string
+    opponentId?: NullableStringFieldUpdateOperationsInput | string | null
+    opponentName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceResult?: NullableIntFieldUpdateOperationsInput | number | null
+    fumble?: BoolFieldUpdateOperationsInput | boolean
+    playerState?: NullableStringFieldUpdateOperationsInput | string | null
+    armorBroken?: BoolFieldUpdateOperationsInput | boolean
+    opponentState?: NullableStringFieldUpdateOperationsInput | string | null
+    passType?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LocalMatchActionUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    matchId?: StringFieldUpdateOperationsInput | string
+    half?: IntFieldUpdateOperationsInput | number
+    turn?: IntFieldUpdateOperationsInput | number
+    actionType?: StringFieldUpdateOperationsInput | string
+    playerId?: StringFieldUpdateOperationsInput | string
+    playerName?: StringFieldUpdateOperationsInput | string
+    playerTeam?: StringFieldUpdateOperationsInput | string
+    opponentId?: NullableStringFieldUpdateOperationsInput | string | null
+    opponentName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceResult?: NullableIntFieldUpdateOperationsInput | number | null
+    fumble?: BoolFieldUpdateOperationsInput | boolean
+    playerState?: NullableStringFieldUpdateOperationsInput | string | null
+    armorBroken?: BoolFieldUpdateOperationsInput | boolean
+    opponentState?: NullableStringFieldUpdateOperationsInput | string | null
+    passType?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -14357,6 +16204,7 @@ export namespace Prisma {
     lastName?: SortOrder
     dateOfBirth?: SortOrder
     role?: SortOrder
+    roles?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -14371,6 +16219,7 @@ export namespace Prisma {
     lastName?: SortOrder
     dateOfBirth?: SortOrder
     role?: SortOrder
+    roles?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -14385,6 +16234,7 @@ export namespace Prisma {
     lastName?: SortOrder
     dateOfBirth?: SortOrder
     role?: SortOrder
+    roles?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -14917,6 +16767,16 @@ export namespace Prisma {
     isNot?: CupWhereInput | null
   }
 
+  export type LocalMatchActionListRelationFilter = {
+    every?: LocalMatchActionWhereInput
+    some?: LocalMatchActionWhereInput
+    none?: LocalMatchActionWhereInput
+  }
+
+  export type LocalMatchActionOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
   export type LocalMatchCountOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
@@ -14929,6 +16789,9 @@ export namespace Prisma {
     teamAId?: SortOrder
     teamBId?: SortOrder
     cupId?: SortOrder
+    shareToken?: SortOrder
+    teamAOwnerValidated?: SortOrder
+    teamBOwnerValidated?: SortOrder
     gameState?: SortOrder
     scoreTeamA?: SortOrder
     scoreTeamB?: SortOrder
@@ -14951,6 +16814,9 @@ export namespace Prisma {
     teamAId?: SortOrder
     teamBId?: SortOrder
     cupId?: SortOrder
+    shareToken?: SortOrder
+    teamAOwnerValidated?: SortOrder
+    teamBOwnerValidated?: SortOrder
     scoreTeamA?: SortOrder
     scoreTeamB?: SortOrder
   }
@@ -14967,6 +16833,9 @@ export namespace Prisma {
     teamAId?: SortOrder
     teamBId?: SortOrder
     cupId?: SortOrder
+    shareToken?: SortOrder
+    teamAOwnerValidated?: SortOrder
+    teamBOwnerValidated?: SortOrder
     scoreTeamA?: SortOrder
     scoreTeamB?: SortOrder
   }
@@ -15011,6 +16880,86 @@ export namespace Prisma {
     _sum?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedIntNullableFilter<$PrismaModel>
     _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+
+  export type LocalMatchScalarRelationFilter = {
+    is?: LocalMatchWhereInput
+    isNot?: LocalMatchWhereInput
+  }
+
+  export type LocalMatchActionCountOrderByAggregateInput = {
+    id?: SortOrder
+    matchId?: SortOrder
+    half?: SortOrder
+    turn?: SortOrder
+    actionType?: SortOrder
+    playerId?: SortOrder
+    playerName?: SortOrder
+    playerTeam?: SortOrder
+    opponentId?: SortOrder
+    opponentName?: SortOrder
+    diceResult?: SortOrder
+    fumble?: SortOrder
+    playerState?: SortOrder
+    armorBroken?: SortOrder
+    opponentState?: SortOrder
+    passType?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type LocalMatchActionAvgOrderByAggregateInput = {
+    half?: SortOrder
+    turn?: SortOrder
+    diceResult?: SortOrder
+  }
+
+  export type LocalMatchActionMaxOrderByAggregateInput = {
+    id?: SortOrder
+    matchId?: SortOrder
+    half?: SortOrder
+    turn?: SortOrder
+    actionType?: SortOrder
+    playerId?: SortOrder
+    playerName?: SortOrder
+    playerTeam?: SortOrder
+    opponentId?: SortOrder
+    opponentName?: SortOrder
+    diceResult?: SortOrder
+    fumble?: SortOrder
+    playerState?: SortOrder
+    armorBroken?: SortOrder
+    opponentState?: SortOrder
+    passType?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type LocalMatchActionMinOrderByAggregateInput = {
+    id?: SortOrder
+    matchId?: SortOrder
+    half?: SortOrder
+    turn?: SortOrder
+    actionType?: SortOrder
+    playerId?: SortOrder
+    playerName?: SortOrder
+    playerTeam?: SortOrder
+    opponentId?: SortOrder
+    opponentName?: SortOrder
+    diceResult?: SortOrder
+    fumble?: SortOrder
+    playerState?: SortOrder
+    armorBroken?: SortOrder
+    opponentState?: SortOrder
+    passType?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type LocalMatchActionSumOrderByAggregateInput = {
+    half?: SortOrder
+    turn?: SortOrder
+    diceResult?: SortOrder
   }
 
   export type MatchCreateNestedManyWithoutPlayersInput = {
@@ -15873,6 +17822,20 @@ export namespace Prisma {
     connect?: CupWhereUniqueInput
   }
 
+  export type LocalMatchActionCreateNestedManyWithoutMatchInput = {
+    create?: XOR<LocalMatchActionCreateWithoutMatchInput, LocalMatchActionUncheckedCreateWithoutMatchInput> | LocalMatchActionCreateWithoutMatchInput[] | LocalMatchActionUncheckedCreateWithoutMatchInput[]
+    connectOrCreate?: LocalMatchActionCreateOrConnectWithoutMatchInput | LocalMatchActionCreateOrConnectWithoutMatchInput[]
+    createMany?: LocalMatchActionCreateManyMatchInputEnvelope
+    connect?: LocalMatchActionWhereUniqueInput | LocalMatchActionWhereUniqueInput[]
+  }
+
+  export type LocalMatchActionUncheckedCreateNestedManyWithoutMatchInput = {
+    create?: XOR<LocalMatchActionCreateWithoutMatchInput, LocalMatchActionUncheckedCreateWithoutMatchInput> | LocalMatchActionCreateWithoutMatchInput[] | LocalMatchActionUncheckedCreateWithoutMatchInput[]
+    connectOrCreate?: LocalMatchActionCreateOrConnectWithoutMatchInput | LocalMatchActionCreateOrConnectWithoutMatchInput[]
+    createMany?: LocalMatchActionCreateManyMatchInputEnvelope
+    connect?: LocalMatchActionWhereUniqueInput | LocalMatchActionWhereUniqueInput[]
+  }
+
   export type NullableIntFieldUpdateOperationsInput = {
     set?: number | null
     increment?: number
@@ -15897,10 +17860,12 @@ export namespace Prisma {
     update?: XOR<XOR<TeamUpdateToOneWithWhereWithoutLocalMatchesAsTeamAInput, TeamUpdateWithoutLocalMatchesAsTeamAInput>, TeamUncheckedUpdateWithoutLocalMatchesAsTeamAInput>
   }
 
-  export type TeamUpdateOneRequiredWithoutLocalMatchesAsTeamBNestedInput = {
+  export type TeamUpdateOneWithoutLocalMatchesAsTeamBNestedInput = {
     create?: XOR<TeamCreateWithoutLocalMatchesAsTeamBInput, TeamUncheckedCreateWithoutLocalMatchesAsTeamBInput>
     connectOrCreate?: TeamCreateOrConnectWithoutLocalMatchesAsTeamBInput
     upsert?: TeamUpsertWithoutLocalMatchesAsTeamBInput
+    disconnect?: TeamWhereInput | boolean
+    delete?: TeamWhereInput | boolean
     connect?: TeamWhereUniqueInput
     update?: XOR<XOR<TeamUpdateToOneWithWhereWithoutLocalMatchesAsTeamBInput, TeamUpdateWithoutLocalMatchesAsTeamBInput>, TeamUncheckedUpdateWithoutLocalMatchesAsTeamBInput>
   }
@@ -15913,6 +17878,48 @@ export namespace Prisma {
     delete?: CupWhereInput | boolean
     connect?: CupWhereUniqueInput
     update?: XOR<XOR<CupUpdateToOneWithWhereWithoutLocalMatchesInput, CupUpdateWithoutLocalMatchesInput>, CupUncheckedUpdateWithoutLocalMatchesInput>
+  }
+
+  export type LocalMatchActionUpdateManyWithoutMatchNestedInput = {
+    create?: XOR<LocalMatchActionCreateWithoutMatchInput, LocalMatchActionUncheckedCreateWithoutMatchInput> | LocalMatchActionCreateWithoutMatchInput[] | LocalMatchActionUncheckedCreateWithoutMatchInput[]
+    connectOrCreate?: LocalMatchActionCreateOrConnectWithoutMatchInput | LocalMatchActionCreateOrConnectWithoutMatchInput[]
+    upsert?: LocalMatchActionUpsertWithWhereUniqueWithoutMatchInput | LocalMatchActionUpsertWithWhereUniqueWithoutMatchInput[]
+    createMany?: LocalMatchActionCreateManyMatchInputEnvelope
+    set?: LocalMatchActionWhereUniqueInput | LocalMatchActionWhereUniqueInput[]
+    disconnect?: LocalMatchActionWhereUniqueInput | LocalMatchActionWhereUniqueInput[]
+    delete?: LocalMatchActionWhereUniqueInput | LocalMatchActionWhereUniqueInput[]
+    connect?: LocalMatchActionWhereUniqueInput | LocalMatchActionWhereUniqueInput[]
+    update?: LocalMatchActionUpdateWithWhereUniqueWithoutMatchInput | LocalMatchActionUpdateWithWhereUniqueWithoutMatchInput[]
+    updateMany?: LocalMatchActionUpdateManyWithWhereWithoutMatchInput | LocalMatchActionUpdateManyWithWhereWithoutMatchInput[]
+    deleteMany?: LocalMatchActionScalarWhereInput | LocalMatchActionScalarWhereInput[]
+  }
+
+  export type LocalMatchActionUncheckedUpdateManyWithoutMatchNestedInput = {
+    create?: XOR<LocalMatchActionCreateWithoutMatchInput, LocalMatchActionUncheckedCreateWithoutMatchInput> | LocalMatchActionCreateWithoutMatchInput[] | LocalMatchActionUncheckedCreateWithoutMatchInput[]
+    connectOrCreate?: LocalMatchActionCreateOrConnectWithoutMatchInput | LocalMatchActionCreateOrConnectWithoutMatchInput[]
+    upsert?: LocalMatchActionUpsertWithWhereUniqueWithoutMatchInput | LocalMatchActionUpsertWithWhereUniqueWithoutMatchInput[]
+    createMany?: LocalMatchActionCreateManyMatchInputEnvelope
+    set?: LocalMatchActionWhereUniqueInput | LocalMatchActionWhereUniqueInput[]
+    disconnect?: LocalMatchActionWhereUniqueInput | LocalMatchActionWhereUniqueInput[]
+    delete?: LocalMatchActionWhereUniqueInput | LocalMatchActionWhereUniqueInput[]
+    connect?: LocalMatchActionWhereUniqueInput | LocalMatchActionWhereUniqueInput[]
+    update?: LocalMatchActionUpdateWithWhereUniqueWithoutMatchInput | LocalMatchActionUpdateWithWhereUniqueWithoutMatchInput[]
+    updateMany?: LocalMatchActionUpdateManyWithWhereWithoutMatchInput | LocalMatchActionUpdateManyWithWhereWithoutMatchInput[]
+    deleteMany?: LocalMatchActionScalarWhereInput | LocalMatchActionScalarWhereInput[]
+  }
+
+  export type LocalMatchCreateNestedOneWithoutActionsInput = {
+    create?: XOR<LocalMatchCreateWithoutActionsInput, LocalMatchUncheckedCreateWithoutActionsInput>
+    connectOrCreate?: LocalMatchCreateOrConnectWithoutActionsInput
+    connect?: LocalMatchWhereUniqueInput
+  }
+
+  export type LocalMatchUpdateOneRequiredWithoutActionsNestedInput = {
+    create?: XOR<LocalMatchCreateWithoutActionsInput, LocalMatchUncheckedCreateWithoutActionsInput>
+    connectOrCreate?: LocalMatchCreateOrConnectWithoutActionsInput
+    upsert?: LocalMatchUpsertWithoutActionsInput
+    connect?: LocalMatchWhereUniqueInput
+    update?: XOR<XOR<LocalMatchUpdateToOneWithWhereWithoutActionsInput, LocalMatchUpdateWithoutActionsInput>, LocalMatchUncheckedUpdateWithoutActionsInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -16323,12 +18330,16 @@ export namespace Prisma {
     updatedAt?: Date | string
     startedAt?: Date | string | null
     completedAt?: Date | string | null
+    shareToken?: string | null
+    teamAOwnerValidated?: boolean
+    teamBOwnerValidated?: boolean
     gameState?: NullableJsonNullValueInput | InputJsonValue
     scoreTeamA?: number | null
     scoreTeamB?: number | null
     teamA: TeamCreateNestedOneWithoutLocalMatchesAsTeamAInput
-    teamB: TeamCreateNestedOneWithoutLocalMatchesAsTeamBInput
+    teamB?: TeamCreateNestedOneWithoutLocalMatchesAsTeamBInput
     cup?: CupCreateNestedOneWithoutLocalMatchesInput
+    actions?: LocalMatchActionCreateNestedManyWithoutMatchInput
   }
 
   export type LocalMatchUncheckedCreateWithoutCreatorInput = {
@@ -16340,11 +18351,15 @@ export namespace Prisma {
     startedAt?: Date | string | null
     completedAt?: Date | string | null
     teamAId: string
-    teamBId: string
+    teamBId?: string | null
     cupId?: string | null
+    shareToken?: string | null
+    teamAOwnerValidated?: boolean
+    teamBOwnerValidated?: boolean
     gameState?: NullableJsonNullValueInput | InputJsonValue
     scoreTeamA?: number | null
     scoreTeamB?: number | null
+    actions?: LocalMatchActionUncheckedCreateNestedManyWithoutMatchInput
   }
 
   export type LocalMatchCreateOrConnectWithoutCreatorInput = {
@@ -16522,8 +18537,11 @@ export namespace Prisma {
     completedAt?: DateTimeNullableFilter<"LocalMatch"> | Date | string | null
     creatorId?: StringFilter<"LocalMatch"> | string
     teamAId?: StringFilter<"LocalMatch"> | string
-    teamBId?: StringFilter<"LocalMatch"> | string
+    teamBId?: StringNullableFilter<"LocalMatch"> | string | null
     cupId?: StringNullableFilter<"LocalMatch"> | string | null
+    shareToken?: StringNullableFilter<"LocalMatch"> | string | null
+    teamAOwnerValidated?: BoolFilter<"LocalMatch"> | boolean
+    teamBOwnerValidated?: BoolFilter<"LocalMatch"> | boolean
     gameState?: JsonNullableFilter<"LocalMatch">
     scoreTeamA?: IntNullableFilter<"LocalMatch"> | number | null
     scoreTeamB?: IntNullableFilter<"LocalMatch"> | number | null
@@ -16539,6 +18557,7 @@ export namespace Prisma {
     lastName?: string | null
     dateOfBirth?: Date | string | null
     role?: string
+    roles?: string
     createdAt?: Date | string
     updatedAt?: Date | string
     matches?: MatchCreateNestedManyWithoutPlayersInput
@@ -16558,6 +18577,7 @@ export namespace Prisma {
     lastName?: string | null
     dateOfBirth?: Date | string | null
     role?: string
+    roles?: string
     createdAt?: Date | string
     updatedAt?: Date | string
     matches?: MatchUncheckedCreateNestedManyWithoutPlayersInput
@@ -16582,6 +18602,7 @@ export namespace Prisma {
     lastName?: string | null
     dateOfBirth?: Date | string | null
     role?: string
+    roles?: string
     createdAt?: Date | string
     updatedAt?: Date | string
     createdMatches?: MatchCreateNestedManyWithoutCreatorInput
@@ -16601,6 +18622,7 @@ export namespace Prisma {
     lastName?: string | null
     dateOfBirth?: Date | string | null
     role?: string
+    roles?: string
     createdAt?: Date | string
     updatedAt?: Date | string
     createdMatches?: MatchUncheckedCreateNestedManyWithoutCreatorInput
@@ -16684,6 +18706,7 @@ export namespace Prisma {
     lastName?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     matches?: MatchUpdateManyWithoutPlayersNestedInput
@@ -16703,6 +18726,7 @@ export namespace Prisma {
     lastName?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     matches?: MatchUncheckedUpdateManyWithoutPlayersNestedInput
@@ -16741,6 +18765,7 @@ export namespace Prisma {
     lastName?: StringNullableFilter<"User"> | string | null
     dateOfBirth?: DateTimeNullableFilter<"User"> | Date | string | null
     role?: StringFilter<"User"> | string
+    roles?: StringFilter<"User"> | string
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
   }
@@ -16879,6 +18904,7 @@ export namespace Prisma {
     lastName?: string | null
     dateOfBirth?: Date | string | null
     role?: string
+    roles?: string
     createdAt?: Date | string
     updatedAt?: Date | string
     matches?: MatchCreateNestedManyWithoutPlayersInput
@@ -16898,6 +18924,7 @@ export namespace Prisma {
     lastName?: string | null
     dateOfBirth?: Date | string | null
     role?: string
+    roles?: string
     createdAt?: Date | string
     updatedAt?: Date | string
     matches?: MatchUncheckedCreateNestedManyWithoutPlayersInput
@@ -17011,6 +19038,7 @@ export namespace Prisma {
     lastName?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     matches?: MatchUpdateManyWithoutPlayersNestedInput
@@ -17030,6 +19058,7 @@ export namespace Prisma {
     lastName?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     matches?: MatchUncheckedUpdateManyWithoutPlayersNestedInput
@@ -17102,6 +19131,7 @@ export namespace Prisma {
     lastName?: string | null
     dateOfBirth?: Date | string | null
     role?: string
+    roles?: string
     createdAt?: Date | string
     updatedAt?: Date | string
     matches?: MatchCreateNestedManyWithoutPlayersInput
@@ -17121,6 +19151,7 @@ export namespace Prisma {
     lastName?: string | null
     dateOfBirth?: Date | string | null
     role?: string
+    roles?: string
     createdAt?: Date | string
     updatedAt?: Date | string
     matches?: MatchUncheckedCreateNestedManyWithoutPlayersInput
@@ -17224,12 +19255,16 @@ export namespace Prisma {
     updatedAt?: Date | string
     startedAt?: Date | string | null
     completedAt?: Date | string | null
+    shareToken?: string | null
+    teamAOwnerValidated?: boolean
+    teamBOwnerValidated?: boolean
     gameState?: NullableJsonNullValueInput | InputJsonValue
     scoreTeamA?: number | null
     scoreTeamB?: number | null
     creator: UserCreateNestedOneWithoutCreatedLocalMatchesInput
-    teamB: TeamCreateNestedOneWithoutLocalMatchesAsTeamBInput
+    teamB?: TeamCreateNestedOneWithoutLocalMatchesAsTeamBInput
     cup?: CupCreateNestedOneWithoutLocalMatchesInput
+    actions?: LocalMatchActionCreateNestedManyWithoutMatchInput
   }
 
   export type LocalMatchUncheckedCreateWithoutTeamAInput = {
@@ -17241,11 +19276,15 @@ export namespace Prisma {
     startedAt?: Date | string | null
     completedAt?: Date | string | null
     creatorId: string
-    teamBId: string
+    teamBId?: string | null
     cupId?: string | null
+    shareToken?: string | null
+    teamAOwnerValidated?: boolean
+    teamBOwnerValidated?: boolean
     gameState?: NullableJsonNullValueInput | InputJsonValue
     scoreTeamA?: number | null
     scoreTeamB?: number | null
+    actions?: LocalMatchActionUncheckedCreateNestedManyWithoutMatchInput
   }
 
   export type LocalMatchCreateOrConnectWithoutTeamAInput = {
@@ -17265,12 +19304,16 @@ export namespace Prisma {
     updatedAt?: Date | string
     startedAt?: Date | string | null
     completedAt?: Date | string | null
+    shareToken?: string | null
+    teamAOwnerValidated?: boolean
+    teamBOwnerValidated?: boolean
     gameState?: NullableJsonNullValueInput | InputJsonValue
     scoreTeamA?: number | null
     scoreTeamB?: number | null
     creator: UserCreateNestedOneWithoutCreatedLocalMatchesInput
     teamA: TeamCreateNestedOneWithoutLocalMatchesAsTeamAInput
     cup?: CupCreateNestedOneWithoutLocalMatchesInput
+    actions?: LocalMatchActionCreateNestedManyWithoutMatchInput
   }
 
   export type LocalMatchUncheckedCreateWithoutTeamBInput = {
@@ -17284,9 +19327,13 @@ export namespace Prisma {
     creatorId: string
     teamAId: string
     cupId?: string | null
+    shareToken?: string | null
+    teamAOwnerValidated?: boolean
+    teamBOwnerValidated?: boolean
     gameState?: NullableJsonNullValueInput | InputJsonValue
     scoreTeamA?: number | null
     scoreTeamB?: number | null
+    actions?: LocalMatchActionUncheckedCreateNestedManyWithoutMatchInput
   }
 
   export type LocalMatchCreateOrConnectWithoutTeamBInput = {
@@ -17319,6 +19366,7 @@ export namespace Prisma {
     lastName?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     matches?: MatchUpdateManyWithoutPlayersNestedInput
@@ -17338,6 +19386,7 @@ export namespace Prisma {
     lastName?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     matches?: MatchUncheckedUpdateManyWithoutPlayersNestedInput
@@ -17564,6 +19613,7 @@ export namespace Prisma {
     lastName?: string | null
     dateOfBirth?: Date | string | null
     role?: string
+    roles?: string
     createdAt?: Date | string
     updatedAt?: Date | string
     matches?: MatchCreateNestedManyWithoutPlayersInput
@@ -17583,6 +19633,7 @@ export namespace Prisma {
     lastName?: string | null
     dateOfBirth?: Date | string | null
     role?: string
+    roles?: string
     createdAt?: Date | string
     updatedAt?: Date | string
     matches?: MatchUncheckedCreateNestedManyWithoutPlayersInput
@@ -17626,12 +19677,16 @@ export namespace Prisma {
     updatedAt?: Date | string
     startedAt?: Date | string | null
     completedAt?: Date | string | null
+    shareToken?: string | null
+    teamAOwnerValidated?: boolean
+    teamBOwnerValidated?: boolean
     gameState?: NullableJsonNullValueInput | InputJsonValue
     scoreTeamA?: number | null
     scoreTeamB?: number | null
     creator: UserCreateNestedOneWithoutCreatedLocalMatchesInput
     teamA: TeamCreateNestedOneWithoutLocalMatchesAsTeamAInput
-    teamB: TeamCreateNestedOneWithoutLocalMatchesAsTeamBInput
+    teamB?: TeamCreateNestedOneWithoutLocalMatchesAsTeamBInput
+    actions?: LocalMatchActionCreateNestedManyWithoutMatchInput
   }
 
   export type LocalMatchUncheckedCreateWithoutCupInput = {
@@ -17644,10 +19699,14 @@ export namespace Prisma {
     completedAt?: Date | string | null
     creatorId: string
     teamAId: string
-    teamBId: string
+    teamBId?: string | null
+    shareToken?: string | null
+    teamAOwnerValidated?: boolean
+    teamBOwnerValidated?: boolean
     gameState?: NullableJsonNullValueInput | InputJsonValue
     scoreTeamA?: number | null
     scoreTeamB?: number | null
+    actions?: LocalMatchActionUncheckedCreateNestedManyWithoutMatchInput
   }
 
   export type LocalMatchCreateOrConnectWithoutCupInput = {
@@ -17680,6 +19739,7 @@ export namespace Prisma {
     lastName?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     matches?: MatchUpdateManyWithoutPlayersNestedInput
@@ -17699,6 +19759,7 @@ export namespace Prisma {
     lastName?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     matches?: MatchUncheckedUpdateManyWithoutPlayersNestedInput
@@ -17914,6 +19975,7 @@ export namespace Prisma {
     lastName?: string | null
     dateOfBirth?: Date | string | null
     role?: string
+    roles?: string
     createdAt?: Date | string
     updatedAt?: Date | string
     matches?: MatchCreateNestedManyWithoutPlayersInput
@@ -17933,6 +19995,7 @@ export namespace Prisma {
     lastName?: string | null
     dateOfBirth?: Date | string | null
     role?: string
+    roles?: string
     createdAt?: Date | string
     updatedAt?: Date | string
     matches?: MatchUncheckedCreateNestedManyWithoutPlayersInput
@@ -18070,6 +20133,55 @@ export namespace Prisma {
     create: XOR<CupCreateWithoutLocalMatchesInput, CupUncheckedCreateWithoutLocalMatchesInput>
   }
 
+  export type LocalMatchActionCreateWithoutMatchInput = {
+    id?: string
+    half: number
+    turn: number
+    actionType: string
+    playerId: string
+    playerName: string
+    playerTeam: string
+    opponentId?: string | null
+    opponentName?: string | null
+    diceResult?: number | null
+    fumble?: boolean
+    playerState?: string | null
+    armorBroken?: boolean
+    opponentState?: string | null
+    passType?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type LocalMatchActionUncheckedCreateWithoutMatchInput = {
+    id?: string
+    half: number
+    turn: number
+    actionType: string
+    playerId: string
+    playerName: string
+    playerTeam: string
+    opponentId?: string | null
+    opponentName?: string | null
+    diceResult?: number | null
+    fumble?: boolean
+    playerState?: string | null
+    armorBroken?: boolean
+    opponentState?: string | null
+    passType?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type LocalMatchActionCreateOrConnectWithoutMatchInput = {
+    where: LocalMatchActionWhereUniqueInput
+    create: XOR<LocalMatchActionCreateWithoutMatchInput, LocalMatchActionUncheckedCreateWithoutMatchInput>
+  }
+
+  export type LocalMatchActionCreateManyMatchInputEnvelope = {
+    data: LocalMatchActionCreateManyMatchInput | LocalMatchActionCreateManyMatchInput[]
+  }
+
   export type UserUpsertWithoutCreatedLocalMatchesInput = {
     update: XOR<UserUpdateWithoutCreatedLocalMatchesInput, UserUncheckedUpdateWithoutCreatedLocalMatchesInput>
     create: XOR<UserCreateWithoutCreatedLocalMatchesInput, UserUncheckedCreateWithoutCreatedLocalMatchesInput>
@@ -18091,6 +20203,7 @@ export namespace Prisma {
     lastName?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     matches?: MatchUpdateManyWithoutPlayersNestedInput
@@ -18110,6 +20223,7 @@ export namespace Prisma {
     lastName?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     matches?: MatchUncheckedUpdateManyWithoutPlayersNestedInput
@@ -18260,6 +20374,142 @@ export namespace Prisma {
     participants?: CupParticipantUncheckedUpdateManyWithoutCupNestedInput
   }
 
+  export type LocalMatchActionUpsertWithWhereUniqueWithoutMatchInput = {
+    where: LocalMatchActionWhereUniqueInput
+    update: XOR<LocalMatchActionUpdateWithoutMatchInput, LocalMatchActionUncheckedUpdateWithoutMatchInput>
+    create: XOR<LocalMatchActionCreateWithoutMatchInput, LocalMatchActionUncheckedCreateWithoutMatchInput>
+  }
+
+  export type LocalMatchActionUpdateWithWhereUniqueWithoutMatchInput = {
+    where: LocalMatchActionWhereUniqueInput
+    data: XOR<LocalMatchActionUpdateWithoutMatchInput, LocalMatchActionUncheckedUpdateWithoutMatchInput>
+  }
+
+  export type LocalMatchActionUpdateManyWithWhereWithoutMatchInput = {
+    where: LocalMatchActionScalarWhereInput
+    data: XOR<LocalMatchActionUpdateManyMutationInput, LocalMatchActionUncheckedUpdateManyWithoutMatchInput>
+  }
+
+  export type LocalMatchActionScalarWhereInput = {
+    AND?: LocalMatchActionScalarWhereInput | LocalMatchActionScalarWhereInput[]
+    OR?: LocalMatchActionScalarWhereInput[]
+    NOT?: LocalMatchActionScalarWhereInput | LocalMatchActionScalarWhereInput[]
+    id?: StringFilter<"LocalMatchAction"> | string
+    matchId?: StringFilter<"LocalMatchAction"> | string
+    half?: IntFilter<"LocalMatchAction"> | number
+    turn?: IntFilter<"LocalMatchAction"> | number
+    actionType?: StringFilter<"LocalMatchAction"> | string
+    playerId?: StringFilter<"LocalMatchAction"> | string
+    playerName?: StringFilter<"LocalMatchAction"> | string
+    playerTeam?: StringFilter<"LocalMatchAction"> | string
+    opponentId?: StringNullableFilter<"LocalMatchAction"> | string | null
+    opponentName?: StringNullableFilter<"LocalMatchAction"> | string | null
+    diceResult?: IntNullableFilter<"LocalMatchAction"> | number | null
+    fumble?: BoolFilter<"LocalMatchAction"> | boolean
+    playerState?: StringNullableFilter<"LocalMatchAction"> | string | null
+    armorBroken?: BoolFilter<"LocalMatchAction"> | boolean
+    opponentState?: StringNullableFilter<"LocalMatchAction"> | string | null
+    passType?: StringNullableFilter<"LocalMatchAction"> | string | null
+    createdAt?: DateTimeFilter<"LocalMatchAction"> | Date | string
+    updatedAt?: DateTimeFilter<"LocalMatchAction"> | Date | string
+  }
+
+  export type LocalMatchCreateWithoutActionsInput = {
+    id?: string
+    name?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    startedAt?: Date | string | null
+    completedAt?: Date | string | null
+    shareToken?: string | null
+    teamAOwnerValidated?: boolean
+    teamBOwnerValidated?: boolean
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: number | null
+    scoreTeamB?: number | null
+    creator: UserCreateNestedOneWithoutCreatedLocalMatchesInput
+    teamA: TeamCreateNestedOneWithoutLocalMatchesAsTeamAInput
+    teamB?: TeamCreateNestedOneWithoutLocalMatchesAsTeamBInput
+    cup?: CupCreateNestedOneWithoutLocalMatchesInput
+  }
+
+  export type LocalMatchUncheckedCreateWithoutActionsInput = {
+    id?: string
+    name?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    startedAt?: Date | string | null
+    completedAt?: Date | string | null
+    creatorId: string
+    teamAId: string
+    teamBId?: string | null
+    cupId?: string | null
+    shareToken?: string | null
+    teamAOwnerValidated?: boolean
+    teamBOwnerValidated?: boolean
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: number | null
+    scoreTeamB?: number | null
+  }
+
+  export type LocalMatchCreateOrConnectWithoutActionsInput = {
+    where: LocalMatchWhereUniqueInput
+    create: XOR<LocalMatchCreateWithoutActionsInput, LocalMatchUncheckedCreateWithoutActionsInput>
+  }
+
+  export type LocalMatchUpsertWithoutActionsInput = {
+    update: XOR<LocalMatchUpdateWithoutActionsInput, LocalMatchUncheckedUpdateWithoutActionsInput>
+    create: XOR<LocalMatchCreateWithoutActionsInput, LocalMatchUncheckedCreateWithoutActionsInput>
+    where?: LocalMatchWhereInput
+  }
+
+  export type LocalMatchUpdateToOneWithWhereWithoutActionsInput = {
+    where?: LocalMatchWhereInput
+    data: XOR<LocalMatchUpdateWithoutActionsInput, LocalMatchUncheckedUpdateWithoutActionsInput>
+  }
+
+  export type LocalMatchUpdateWithoutActionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    shareToken?: NullableStringFieldUpdateOperationsInput | string | null
+    teamAOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
+    teamBOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: NullableIntFieldUpdateOperationsInput | number | null
+    scoreTeamB?: NullableIntFieldUpdateOperationsInput | number | null
+    creator?: UserUpdateOneRequiredWithoutCreatedLocalMatchesNestedInput
+    teamA?: TeamUpdateOneRequiredWithoutLocalMatchesAsTeamANestedInput
+    teamB?: TeamUpdateOneWithoutLocalMatchesAsTeamBNestedInput
+    cup?: CupUpdateOneWithoutLocalMatchesNestedInput
+  }
+
+  export type LocalMatchUncheckedUpdateWithoutActionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    creatorId?: StringFieldUpdateOperationsInput | string
+    teamAId?: StringFieldUpdateOperationsInput | string
+    teamBId?: NullableStringFieldUpdateOperationsInput | string | null
+    cupId?: NullableStringFieldUpdateOperationsInput | string | null
+    shareToken?: NullableStringFieldUpdateOperationsInput | string | null
+    teamAOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
+    teamBOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
+    gameState?: NullableJsonNullValueInput | InputJsonValue
+    scoreTeamA?: NullableIntFieldUpdateOperationsInput | number | null
+    scoreTeamB?: NullableIntFieldUpdateOperationsInput | number | null
+  }
+
   export type MatchCreateManyCreatorInput = {
     id?: string
     createdAt?: Date | string
@@ -18310,8 +20560,11 @@ export namespace Prisma {
     startedAt?: Date | string | null
     completedAt?: Date | string | null
     teamAId: string
-    teamBId: string
+    teamBId?: string | null
     cupId?: string | null
+    shareToken?: string | null
+    teamAOwnerValidated?: boolean
+    teamBOwnerValidated?: boolean
     gameState?: NullableJsonNullValueInput | InputJsonValue
     scoreTeamA?: number | null
     scoreTeamB?: number | null
@@ -18496,12 +20749,16 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    shareToken?: NullableStringFieldUpdateOperationsInput | string | null
+    teamAOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
+    teamBOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
     gameState?: NullableJsonNullValueInput | InputJsonValue
     scoreTeamA?: NullableIntFieldUpdateOperationsInput | number | null
     scoreTeamB?: NullableIntFieldUpdateOperationsInput | number | null
     teamA?: TeamUpdateOneRequiredWithoutLocalMatchesAsTeamANestedInput
-    teamB?: TeamUpdateOneRequiredWithoutLocalMatchesAsTeamBNestedInput
+    teamB?: TeamUpdateOneWithoutLocalMatchesAsTeamBNestedInput
     cup?: CupUpdateOneWithoutLocalMatchesNestedInput
+    actions?: LocalMatchActionUpdateManyWithoutMatchNestedInput
   }
 
   export type LocalMatchUncheckedUpdateWithoutCreatorInput = {
@@ -18513,11 +20770,15 @@ export namespace Prisma {
     startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     teamAId?: StringFieldUpdateOperationsInput | string
-    teamBId?: StringFieldUpdateOperationsInput | string
+    teamBId?: NullableStringFieldUpdateOperationsInput | string | null
     cupId?: NullableStringFieldUpdateOperationsInput | string | null
+    shareToken?: NullableStringFieldUpdateOperationsInput | string | null
+    teamAOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
+    teamBOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
     gameState?: NullableJsonNullValueInput | InputJsonValue
     scoreTeamA?: NullableIntFieldUpdateOperationsInput | number | null
     scoreTeamB?: NullableIntFieldUpdateOperationsInput | number | null
+    actions?: LocalMatchActionUncheckedUpdateManyWithoutMatchNestedInput
   }
 
   export type LocalMatchUncheckedUpdateManyWithoutCreatorInput = {
@@ -18529,8 +20790,11 @@ export namespace Prisma {
     startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     teamAId?: StringFieldUpdateOperationsInput | string
-    teamBId?: StringFieldUpdateOperationsInput | string
+    teamBId?: NullableStringFieldUpdateOperationsInput | string | null
     cupId?: NullableStringFieldUpdateOperationsInput | string | null
+    shareToken?: NullableStringFieldUpdateOperationsInput | string | null
+    teamAOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
+    teamBOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
     gameState?: NullableJsonNullValueInput | InputJsonValue
     scoreTeamA?: NullableIntFieldUpdateOperationsInput | number | null
     scoreTeamB?: NullableIntFieldUpdateOperationsInput | number | null
@@ -18561,6 +20825,7 @@ export namespace Prisma {
     lastName?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdMatches?: MatchUpdateManyWithoutCreatorNestedInput
@@ -18580,6 +20845,7 @@ export namespace Prisma {
     lastName?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdMatches?: MatchUncheckedUpdateManyWithoutCreatorNestedInput
@@ -18599,6 +20865,7 @@ export namespace Prisma {
     lastName?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -18684,8 +20951,11 @@ export namespace Prisma {
     startedAt?: Date | string | null
     completedAt?: Date | string | null
     creatorId: string
-    teamBId: string
+    teamBId?: string | null
     cupId?: string | null
+    shareToken?: string | null
+    teamAOwnerValidated?: boolean
+    teamBOwnerValidated?: boolean
     gameState?: NullableJsonNullValueInput | InputJsonValue
     scoreTeamA?: number | null
     scoreTeamB?: number | null
@@ -18702,6 +20972,9 @@ export namespace Prisma {
     creatorId: string
     teamAId: string
     cupId?: string | null
+    shareToken?: string | null
+    teamAOwnerValidated?: boolean
+    teamBOwnerValidated?: boolean
     gameState?: NullableJsonNullValueInput | InputJsonValue
     scoreTeamA?: number | null
     scoreTeamB?: number | null
@@ -18796,12 +21069,16 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    shareToken?: NullableStringFieldUpdateOperationsInput | string | null
+    teamAOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
+    teamBOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
     gameState?: NullableJsonNullValueInput | InputJsonValue
     scoreTeamA?: NullableIntFieldUpdateOperationsInput | number | null
     scoreTeamB?: NullableIntFieldUpdateOperationsInput | number | null
     creator?: UserUpdateOneRequiredWithoutCreatedLocalMatchesNestedInput
-    teamB?: TeamUpdateOneRequiredWithoutLocalMatchesAsTeamBNestedInput
+    teamB?: TeamUpdateOneWithoutLocalMatchesAsTeamBNestedInput
     cup?: CupUpdateOneWithoutLocalMatchesNestedInput
+    actions?: LocalMatchActionUpdateManyWithoutMatchNestedInput
   }
 
   export type LocalMatchUncheckedUpdateWithoutTeamAInput = {
@@ -18813,11 +21090,15 @@ export namespace Prisma {
     startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     creatorId?: StringFieldUpdateOperationsInput | string
-    teamBId?: StringFieldUpdateOperationsInput | string
+    teamBId?: NullableStringFieldUpdateOperationsInput | string | null
     cupId?: NullableStringFieldUpdateOperationsInput | string | null
+    shareToken?: NullableStringFieldUpdateOperationsInput | string | null
+    teamAOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
+    teamBOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
     gameState?: NullableJsonNullValueInput | InputJsonValue
     scoreTeamA?: NullableIntFieldUpdateOperationsInput | number | null
     scoreTeamB?: NullableIntFieldUpdateOperationsInput | number | null
+    actions?: LocalMatchActionUncheckedUpdateManyWithoutMatchNestedInput
   }
 
   export type LocalMatchUncheckedUpdateManyWithoutTeamAInput = {
@@ -18829,8 +21110,11 @@ export namespace Prisma {
     startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     creatorId?: StringFieldUpdateOperationsInput | string
-    teamBId?: StringFieldUpdateOperationsInput | string
+    teamBId?: NullableStringFieldUpdateOperationsInput | string | null
     cupId?: NullableStringFieldUpdateOperationsInput | string | null
+    shareToken?: NullableStringFieldUpdateOperationsInput | string | null
+    teamAOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
+    teamBOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
     gameState?: NullableJsonNullValueInput | InputJsonValue
     scoreTeamA?: NullableIntFieldUpdateOperationsInput | number | null
     scoreTeamB?: NullableIntFieldUpdateOperationsInput | number | null
@@ -18844,12 +21128,16 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    shareToken?: NullableStringFieldUpdateOperationsInput | string | null
+    teamAOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
+    teamBOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
     gameState?: NullableJsonNullValueInput | InputJsonValue
     scoreTeamA?: NullableIntFieldUpdateOperationsInput | number | null
     scoreTeamB?: NullableIntFieldUpdateOperationsInput | number | null
     creator?: UserUpdateOneRequiredWithoutCreatedLocalMatchesNestedInput
     teamA?: TeamUpdateOneRequiredWithoutLocalMatchesAsTeamANestedInput
     cup?: CupUpdateOneWithoutLocalMatchesNestedInput
+    actions?: LocalMatchActionUpdateManyWithoutMatchNestedInput
   }
 
   export type LocalMatchUncheckedUpdateWithoutTeamBInput = {
@@ -18863,9 +21151,13 @@ export namespace Prisma {
     creatorId?: StringFieldUpdateOperationsInput | string
     teamAId?: StringFieldUpdateOperationsInput | string
     cupId?: NullableStringFieldUpdateOperationsInput | string | null
+    shareToken?: NullableStringFieldUpdateOperationsInput | string | null
+    teamAOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
+    teamBOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
     gameState?: NullableJsonNullValueInput | InputJsonValue
     scoreTeamA?: NullableIntFieldUpdateOperationsInput | number | null
     scoreTeamB?: NullableIntFieldUpdateOperationsInput | number | null
+    actions?: LocalMatchActionUncheckedUpdateManyWithoutMatchNestedInput
   }
 
   export type LocalMatchUncheckedUpdateManyWithoutTeamBInput = {
@@ -18879,6 +21171,9 @@ export namespace Prisma {
     creatorId?: StringFieldUpdateOperationsInput | string
     teamAId?: StringFieldUpdateOperationsInput | string
     cupId?: NullableStringFieldUpdateOperationsInput | string | null
+    shareToken?: NullableStringFieldUpdateOperationsInput | string | null
+    teamAOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
+    teamBOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
     gameState?: NullableJsonNullValueInput | InputJsonValue
     scoreTeamA?: NullableIntFieldUpdateOperationsInput | number | null
     scoreTeamB?: NullableIntFieldUpdateOperationsInput | number | null
@@ -18900,7 +21195,10 @@ export namespace Prisma {
     completedAt?: Date | string | null
     creatorId: string
     teamAId: string
-    teamBId: string
+    teamBId?: string | null
+    shareToken?: string | null
+    teamAOwnerValidated?: boolean
+    teamBOwnerValidated?: boolean
     gameState?: NullableJsonNullValueInput | InputJsonValue
     scoreTeamA?: number | null
     scoreTeamB?: number | null
@@ -18932,12 +21230,16 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    shareToken?: NullableStringFieldUpdateOperationsInput | string | null
+    teamAOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
+    teamBOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
     gameState?: NullableJsonNullValueInput | InputJsonValue
     scoreTeamA?: NullableIntFieldUpdateOperationsInput | number | null
     scoreTeamB?: NullableIntFieldUpdateOperationsInput | number | null
     creator?: UserUpdateOneRequiredWithoutCreatedLocalMatchesNestedInput
     teamA?: TeamUpdateOneRequiredWithoutLocalMatchesAsTeamANestedInput
-    teamB?: TeamUpdateOneRequiredWithoutLocalMatchesAsTeamBNestedInput
+    teamB?: TeamUpdateOneWithoutLocalMatchesAsTeamBNestedInput
+    actions?: LocalMatchActionUpdateManyWithoutMatchNestedInput
   }
 
   export type LocalMatchUncheckedUpdateWithoutCupInput = {
@@ -18950,10 +21252,14 @@ export namespace Prisma {
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     creatorId?: StringFieldUpdateOperationsInput | string
     teamAId?: StringFieldUpdateOperationsInput | string
-    teamBId?: StringFieldUpdateOperationsInput | string
+    teamBId?: NullableStringFieldUpdateOperationsInput | string | null
+    shareToken?: NullableStringFieldUpdateOperationsInput | string | null
+    teamAOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
+    teamBOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
     gameState?: NullableJsonNullValueInput | InputJsonValue
     scoreTeamA?: NullableIntFieldUpdateOperationsInput | number | null
     scoreTeamB?: NullableIntFieldUpdateOperationsInput | number | null
+    actions?: LocalMatchActionUncheckedUpdateManyWithoutMatchNestedInput
   }
 
   export type LocalMatchUncheckedUpdateManyWithoutCupInput = {
@@ -18966,10 +21272,93 @@ export namespace Prisma {
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     creatorId?: StringFieldUpdateOperationsInput | string
     teamAId?: StringFieldUpdateOperationsInput | string
-    teamBId?: StringFieldUpdateOperationsInput | string
+    teamBId?: NullableStringFieldUpdateOperationsInput | string | null
+    shareToken?: NullableStringFieldUpdateOperationsInput | string | null
+    teamAOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
+    teamBOwnerValidated?: BoolFieldUpdateOperationsInput | boolean
     gameState?: NullableJsonNullValueInput | InputJsonValue
     scoreTeamA?: NullableIntFieldUpdateOperationsInput | number | null
     scoreTeamB?: NullableIntFieldUpdateOperationsInput | number | null
+  }
+
+  export type LocalMatchActionCreateManyMatchInput = {
+    id?: string
+    half: number
+    turn: number
+    actionType: string
+    playerId: string
+    playerName: string
+    playerTeam: string
+    opponentId?: string | null
+    opponentName?: string | null
+    diceResult?: number | null
+    fumble?: boolean
+    playerState?: string | null
+    armorBroken?: boolean
+    opponentState?: string | null
+    passType?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type LocalMatchActionUpdateWithoutMatchInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    half?: IntFieldUpdateOperationsInput | number
+    turn?: IntFieldUpdateOperationsInput | number
+    actionType?: StringFieldUpdateOperationsInput | string
+    playerId?: StringFieldUpdateOperationsInput | string
+    playerName?: StringFieldUpdateOperationsInput | string
+    playerTeam?: StringFieldUpdateOperationsInput | string
+    opponentId?: NullableStringFieldUpdateOperationsInput | string | null
+    opponentName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceResult?: NullableIntFieldUpdateOperationsInput | number | null
+    fumble?: BoolFieldUpdateOperationsInput | boolean
+    playerState?: NullableStringFieldUpdateOperationsInput | string | null
+    armorBroken?: BoolFieldUpdateOperationsInput | boolean
+    opponentState?: NullableStringFieldUpdateOperationsInput | string | null
+    passType?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LocalMatchActionUncheckedUpdateWithoutMatchInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    half?: IntFieldUpdateOperationsInput | number
+    turn?: IntFieldUpdateOperationsInput | number
+    actionType?: StringFieldUpdateOperationsInput | string
+    playerId?: StringFieldUpdateOperationsInput | string
+    playerName?: StringFieldUpdateOperationsInput | string
+    playerTeam?: StringFieldUpdateOperationsInput | string
+    opponentId?: NullableStringFieldUpdateOperationsInput | string | null
+    opponentName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceResult?: NullableIntFieldUpdateOperationsInput | number | null
+    fumble?: BoolFieldUpdateOperationsInput | boolean
+    playerState?: NullableStringFieldUpdateOperationsInput | string | null
+    armorBroken?: BoolFieldUpdateOperationsInput | boolean
+    opponentState?: NullableStringFieldUpdateOperationsInput | string | null
+    passType?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LocalMatchActionUncheckedUpdateManyWithoutMatchInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    half?: IntFieldUpdateOperationsInput | number
+    turn?: IntFieldUpdateOperationsInput | number
+    actionType?: StringFieldUpdateOperationsInput | string
+    playerId?: StringFieldUpdateOperationsInput | string
+    playerName?: StringFieldUpdateOperationsInput | string
+    playerTeam?: StringFieldUpdateOperationsInput | string
+    opponentId?: NullableStringFieldUpdateOperationsInput | string | null
+    opponentName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceResult?: NullableIntFieldUpdateOperationsInput | number | null
+    fumble?: BoolFieldUpdateOperationsInput | boolean
+    playerState?: NullableStringFieldUpdateOperationsInput | string | null
+    armorBroken?: BoolFieldUpdateOperationsInput | boolean
+    opponentState?: NullableStringFieldUpdateOperationsInput | string | null
+    passType?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
 
