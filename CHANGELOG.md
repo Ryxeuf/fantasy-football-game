@@ -1,3 +1,10 @@
+## [1.23.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.22.0...v1.23.0) (2025-11-20)
+
+
+### ✨ Features
+
+* **web:** affiche la version depuis le package.json racine dans le footer ([55b1263](https://github.com/Ryxeuf/fantasy-football-game/commit/55b126389e7688596ee45feccbcaa97f901b0080))
+
 ## [1.22.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.21.0...v1.22.0) (2025-11-20)
 
 
