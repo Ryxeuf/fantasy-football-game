@@ -410,31 +410,41 @@ async function main() {
     });
   }
 
-  // Créer 2 équipes par défaut par utilisateur: skaven et lizardmen
+  // Créer des équipes par défaut par utilisateur
+  // - Admin: seulement Skaven (pas d'équipe Lizardmen)
+  // - Autres utilisateurs: Skaven + Lizardmen
   const allUsers = await prisma.user.findMany();
   for (const u of allUsers) {
-    const existingTeams = await prisma.team.findMany({
-      where: { ownerId: u.id },
-    });
-    if (existingTeams.length >= 2) continue;
-    const teamA = await prisma.team.create({
-      data: {
-        ownerId: u.id,
-        name: `${u.coachName || u.name || u.email}-Skavens`,
-        roster: "skaven",
-        initialBudget: 1000000, // 1000k po
-        treasury: 1000000,      // 1000k po
-      },
-    });
-    const teamB = await prisma.team.create({
-      data: {
-        ownerId: u.id,
-        name: `${u.coachName || u.name || u.email}-Lizardmen`,
-        roster: "lizardmen",
-        initialBudget: 1000000, // 1000k po
-        treasury: 1000000,      // 1000k po
-      },
-    });
+    const existingTeams = await prisma.team.findMany({ where: { ownerId: u.id } });
+    const hasSkaven = existingTeams.some((t: { roster: string }) => t.roster === "skaven");
+    const hasLizardmen = existingTeams.some((t: { roster: string }) => t.roster === "lizardmen");
+
+    let teamA = existingTeams.find((t: { roster: string }) => t.roster === "skaven") as any;
+
+    if (!hasSkaven) {
+      teamA = await prisma.team.create({
+        data: {
+          ownerId: u.id,
+          name: `${u.coachName || u.name || u.email}-Skavens`,
+          roster: "skaven",
+          initialBudget: 1000000, // 1000k po
+          treasury: 1000000, // 1000k po
+        },
+      });
+    }
+
+    let teamB: any = null;
+    if (u.role !== "admin" && !hasLizardmen) {
+      teamB = await prisma.team.create({
+        data: {
+          ownerId: u.id,
+          name: `${u.coachName || u.name || u.email}-Lizardmen`,
+          roster: "lizardmen",
+          initialBudget: 1000000, // 1000k po
+          treasury: 1000000, // 1000k po
+        },
+      });
+    }
     // Créer une équipe Skaven réaliste : 1 Rat Ogre, 2 Blitzers, 2 Gutter Runners, 1 Thrower, 6 Linemen
     const skavenPlayers = [
       // 1 Rat Ogre
@@ -529,7 +539,8 @@ async function main() {
     ];
 
     // Équipe Lizardmen selon le roster: 2 Chameleon Skink, 1 Kroxigor, 5 Saurus, 4 Skink Runner
-    const lizardmenPlayers = [
+    const lizardmenPlayers = teamB
+      ? [
       // 2 Chameleon Skink
       {
         teamId: teamB.id,
@@ -678,18 +689,68 @@ async function main() {
         av: 8,
         skills: "dodge,stunty",
       },
-    ];
+    ]
+      : [];
 
     await prisma.teamPlayer.createMany({
       data: skavenPlayers,
     });
-    await prisma.teamPlayer.createMany({
-      data: lizardmenPlayers,
-    });
+    if (lizardmenPlayers.length > 0) {
+      await prisma.teamPlayer.createMany({
+        data: lizardmenPlayers,
+      });
+    }
   }
 
   // =============================================================================
-  // 6. SEED D'UNE COUPE ET D'UN MATCH LOCAL (fixtures de test)
+  // 6. SEED D'UN COACH ET D'UNE ÉQUIPE PAR ROSTER
+  // =============================================================================
+  console.log("👥 Seed d'un coach et d'une équipe type par roster...");
+  for (const [rosterSlug, rosterDef] of Object.entries(TEAM_ROSTERS)) {
+    const email = `coach+${rosterSlug}@example.com`;
+    let coach = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!coach) {
+      const passwordHash = await bcrypt.hash("coach123", 10);
+      const coachName = `Coach ${rosterDef.name}`;
+      coach = await prisma.user.create({
+        data: {
+          email,
+          passwordHash,
+          name: coachName,
+          coachName,
+          firstName: rosterDef.name,
+          lastName: "Coach",
+          role: "user",
+          valid: true,
+        },
+      });
+    }
+
+    const existingTeamForRoster = await prisma.team.findFirst({
+      where: {
+        ownerId: coach.id,
+        roster: rosterSlug,
+      },
+    });
+
+    if (!existingTeamForRoster) {
+      await prisma.team.create({
+        data: {
+          ownerId: coach.id,
+          name: `${rosterDef.name} All-Stars`,
+          roster: rosterSlug,
+          initialBudget: 1000000,
+          treasury: 1000000,
+        },
+      });
+    }
+  }
+
+  // =============================================================================
+  // 7. SEED D'UNE COUPE ET D'UN MATCH LOCAL (fixtures de test)
   // =============================================================================
   console.log("🏆 Seed d'une coupe et d'un match local de test...");
   
@@ -716,15 +777,31 @@ async function main() {
     });
 
     if (adminSkavenTeam && userLizardmenTeam) {
-      // Créer la coupe "Test 1"
+      // Créer la coupe "Test 1" avec un système de points de type Kraken Cup
+      const defaultCupScoring = {
+        winPoints: 1000,
+        drawPoints: 400,
+        lossPoints: 0,
+        forfeitPoints: -100,
+        touchdownPoints: 5,
+        blockCasualtyPoints: 3,
+        foulCasualtyPoints: 2,
+        passPoints: 2,
+      };
+
       const existingCup = await prisma.cup.findFirst({
         where: { name: "Test 1" },
       });
 
       let cup;
       if (existingCup) {
-        console.log("   ⚠️  La coupe 'Test 1' existe déjà, utilisation de celle-ci");
-        cup = existingCup;
+        console.log("   ⚠️  La coupe 'Test 1' existe déjà, mise à jour de la configuration de points");
+        cup = await prisma.cup.update({
+          where: { id: existingCup.id },
+          data: {
+            ...defaultCupScoring,
+          },
+        });
       } else {
         cup = await prisma.cup.create({
           data: {
@@ -733,45 +810,68 @@ async function main() {
             validated: true,
             isPublic: true,
             status: "en_cours",
+            ...defaultCupScoring,
           },
         });
         console.log("   ✅ Coupe 'Test 1' créée");
       }
 
-      // Inscrire les équipes à la coupe
-      const existingParticipant1 = await prisma.cupParticipant.findFirst({
-        where: {
-          cupId: cup.id,
-          teamId: adminSkavenTeam.id,
-        },
-      });
-      if (!existingParticipant1) {
-        await prisma.cupParticipant.create({
-          data: {
-            cupId: cup.id,
-            teamId: adminSkavenTeam.id,
-          },
+      // Inscrire les équipes à la coupe : Admin (Skaven) + 11 rosters différents
+      const participantTeams: any[] = [];
+      participantTeams.push(adminSkavenTeam);
+      participantTeams.push(userLizardmenTeam);
+
+      const rosterSlugsForCup = [
+        "lizardmen",
+        "dwarf",
+        "human",
+        "orc",
+        "dark_elf",
+        "wood_elf",
+        "undead",
+        "nurgle",
+        "amazon",
+        "chaos_chosen",
+        "imperial_nobility",
+      ];
+
+      for (const rosterSlug of rosterSlugsForCup) {
+        // Skaven déjà couvert par adminSkavenTeam
+        if (rosterSlug === "skaven") continue;
+        const team = await prisma.team.findFirst({
+          where: { roster: rosterSlug },
+          orderBy: { createdAt: "asc" },
         });
-        console.log("   ✅ Équipe Admin-Skavens inscrite à la coupe");
+        if (team && !participantTeams.some((t) => t.id === team.id)) {
+          participantTeams.push(team);
+        }
       }
 
-      const existingParticipant2 = await prisma.cupParticipant.findFirst({
-        where: {
-          cupId: cup.id,
-          teamId: userLizardmenTeam.id,
-        },
-      });
-      if (!existingParticipant2) {
-        await prisma.cupParticipant.create({
-          data: {
+      console.log(
+        `   ✅ ${participantTeams.length} équipes sélectionnées pour la coupe (objectif 12)`,
+      );
+
+      for (const team of participantTeams) {
+        const existingParticipant = await prisma.cupParticipant.findFirst({
+          where: {
             cupId: cup.id,
-            teamId: userLizardmenTeam.id,
+            teamId: team.id,
           },
         });
-        console.log("   ✅ Équipe User-Lizardmen inscrite à la coupe");
+        if (!existingParticipant) {
+          await prisma.cupParticipant.create({
+            data: {
+              cupId: cup.id,
+              teamId: team.id,
+            },
+          });
+          console.log(
+            `   ✅ Équipe ${team.name} (${team.roster}) inscrite à la coupe`,
+          );
+        }
       }
 
-      // Créer un match local associé à la coupe
+      // Créer un match local associé à la coupe entre Admin-Skavens et User-Lizardmen
       let localMatch = await prisma.localMatch.findFirst({
         where: {
           cupId: cup.id,
@@ -1466,6 +1566,130 @@ async function main() {
           console.log(`   ✅ ${actions.length} actions générées pour le match`);
         } else {
           console.log(`   ⚠️  Le match a déjà ${existingActions.length} actions`);
+        }
+      }
+
+      // Générer un premier round d'appariement 2 par 2 pour les autres équipes
+      const allCupTeams = await prisma.cupParticipant.findMany({
+        where: { cupId: cup.id },
+        include: { team: true },
+      });
+
+      const teamsWithoutThisMatch = allCupTeams
+        .map((p: { team: any }) => p.team)
+        .filter(
+          (t: { id: string }) =>
+            t.id !== adminSkavenTeam.id && t.id !== userLizardmenTeam.id,
+        );
+
+      // Mélanger légèrement puis appairer 2 par 2
+      const remainingTeams = [...teamsWithoutThisMatch];
+      // tri déterministe par nom pour rester reproductible
+      remainingTeams.sort((a, b) => a.name.localeCompare(b.name));
+
+      for (let i = 0; i + 1 < remainingTeams.length; i += 2) {
+        const teamA = remainingTeams[i];
+        const teamB = remainingTeams[i + 1];
+
+        let match = await prisma.localMatch.findFirst({
+          where: {
+            cupId: cup.id,
+            teamAId: teamA.id,
+            teamBId: teamB.id,
+          },
+        });
+
+        if (!match) {
+          match = await prisma.localMatch.create({
+            data: {
+              name: `${teamA.name} vs ${teamB.name}`,
+              creatorId: adminUser.id,
+              teamAId: teamA.id,
+              teamBId: teamB.id,
+              cupId: cup.id,
+              status: "completed",
+              teamAOwnerValidated: true,
+              teamBOwnerValidated: true,
+              scoreTeamA: 2,
+              scoreTeamB: 1,
+              startedAt: new Date(Date.now() - 90 * 60 * 1000),
+              completedAt: new Date(Date.now() - 60 * 60 * 1000),
+            },
+          });
+          console.log(
+            `   ✅ Match local créé pour le premier round: ${teamA.name} vs ${teamB.name}`,
+          );
+        }
+
+        const existingActionsForPair = await prisma.localMatchAction.count({
+          where: { matchId: match.id },
+        });
+
+        if (existingActionsForPair === 0) {
+          const simpleActions = [
+            // Une passe de l'équipe A
+            {
+              matchId: match.id,
+              half: 1,
+              turn: 1,
+              actionType: "passe",
+              playerId: `${teamA.id}-p1`,
+              playerName: "Lanceur A",
+              playerTeam: "A" as const,
+              diceResult: 4,
+              fumble: false,
+              passType: "courte",
+            },
+            // Un touchdown de l'équipe A
+            {
+              matchId: match.id,
+              half: 1,
+              turn: 2,
+              actionType: "td",
+              playerId: `${teamA.id}-p2`,
+              playerName: "Scoreur A",
+              playerTeam: "A" as const,
+            },
+            // Une sortie sur bloc de l'équipe B
+            {
+              matchId: match.id,
+              half: 2,
+              turn: 3,
+              actionType: "blocage",
+              playerId: `${teamB.id}-p1`,
+              playerName: "Blocker B",
+              playerTeam: "B" as const,
+              opponentId: `${teamA.id}-p3`,
+              opponentName: "Victime A",
+              diceResult: 5,
+              fumble: false,
+              armorBroken: true,
+              opponentState: "elimine",
+            },
+            // Une agression de l'équipe A
+            {
+              matchId: match.id,
+              half: 2,
+              turn: 4,
+              actionType: "aggression",
+              playerId: `${teamA.id}-p3`,
+              playerName: "Dirty A",
+              playerTeam: "A" as const,
+              opponentId: `${teamB.id}-p2`,
+              opponentName: "Victime B",
+              diceResult: 6,
+              fumble: false,
+              armorBroken: true,
+              opponentState: "elimine",
+            },
+          ];
+
+          await prisma.localMatchAction.createMany({
+            data: simpleActions,
+          });
+          console.log(
+            `   ✅ Actions générées pour le match ${teamA.name} vs ${teamB.name}`,
+          );
         }
       }
     } else {

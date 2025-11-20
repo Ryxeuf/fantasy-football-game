@@ -18,34 +18,95 @@ import { randomBytes } from "crypto";
 
 const router = Router();
 
-// GET /local-match - Liste les parties offline de l'utilisateur (ou toutes si admin)
+// GET /local-match - Liste les parties offline visibles pour l'utilisateur
+// - Par défaut : uniquement ses propres matchs (créateur ou propriétaire d'une des équipes)
+// - scope=mine_and_public : ses matchs + les matchs publics
+// - Si l'utilisateur est créateur d'une coupe et cupId fourni : il voit tous les matchs de cette coupe
 router.get("/", authUser, async (req: AuthenticatedRequest, res) => {
   try {
-    const { status, cupId, all } = req.query;
+    const { status, cupId, all, scope } = req.query;
     const isAdmin = req.user!.role === "admin";
     const showAll = all === "true" && isAdmin;
+    const scopeValue =
+      typeof scope === "string" && scope === "mine_and_public"
+        ? "mine_and_public"
+        : "mine";
     
-    // Construire la condition where
-    const whereClause: any = showAll ? {} : { creatorId: req.user!.id };
-    
-    if (status && typeof status === "string") {
-      whereClause.status = status;
-    }
-    
-    if (cupId && typeof cupId === "string") {
-      whereClause.cupId = cupId;
+    let whereClause: any = {};
+
+    if (showAll) {
+      // Admin avec all=true : peut tout voir, avec filtres éventuels
+      if (status && typeof status === "string") {
+        whereClause.status = status;
+      }
+      if (cupId && typeof cupId === "string") {
+        whereClause.cupId = cupId;
+      }
+    } else {
+      const filters: any[] = [];
+
+      if (status && typeof status === "string") {
+        filters.push({ status });
+      }
+      if (cupId && typeof cupId === "string") {
+        filters.push({ cupId });
+      }
+
+      // Si on filtre par coupe, vérifier si l'utilisateur en est le créateur
+      let isCupCreator = false;
+      if (cupId && typeof cupId === "string") {
+        const cup = await prisma.cup.findUnique({
+          where: { id: cupId },
+          select: { creatorId: true },
+        });
+        isCupCreator = !!cup && cup.creatorId === req.user!.id;
+      }
+
+      if (isCupCreator) {
+        // Le créateur de la coupe voit tous les matchs associés à cette coupe
+        if (filters.length === 1) {
+          whereClause = filters[0];
+        } else if (filters.length > 1) {
+          whereClause = { AND: filters };
+        } else {
+          whereClause = {};
+        }
+      } else {
+        // Visibilité standard : ses matchs (créateur ou propriétaire d'une équipe)
+        // + éventuellement les matchs publics
+        const visibilityOr: any[] = [
+          { creatorId: req.user!.id },
+          { teamA: { ownerId: req.user!.id } },
+          { teamB: { ownerId: req.user!.id } },
+        ];
+
+        if (scopeValue === "mine_and_public") {
+          visibilityOr.push({ isPublic: true });
+        }
+
+        if (filters.length > 0) {
+          whereClause = {
+            AND: [
+              ...(filters.length === 1 ? filters : [{ AND: filters }]),
+              { OR: visibilityOr },
+            ],
+          };
+        } else {
+          whereClause = { OR: visibilityOr };
+        }
+      }
     }
     
     const localMatches = await prisma.localMatch.findMany({
       where: whereClause,
       include: {
-        creator: showAll ? {
+        creator: {
           select: {
             id: true,
             coachName: true,
             email: true,
           },
-        } : undefined,
+        },
         teamA: {
           select: {
             id: true,
@@ -129,6 +190,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
           select: {
             id: true,
             name: true,
+            creatorId: true,
             status: true,
           },
         },
@@ -139,13 +201,16 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
       return res.status(404).json({ error: "Partie offline introuvable" });
     }
     
-    // Vérifier que l'utilisateur est le créateur ou propriétaire d'une des équipes
+    // Vérifier que l'utilisateur est le créateur, propriétaire d'une des équipes
+    // ou créateur de la coupe associée
     const isCreator = localMatch.creatorId === req.user!.id;
     const isTeamOwner = 
       localMatch.teamA.ownerId === req.user!.id || 
       localMatch.teamB.ownerId === req.user!.id;
+    const isCupCreator =
+      !!localMatch.cup && localMatch.cup.creatorId === req.user!.id;
     
-    if (!isCreator && !isTeamOwner) {
+    if (!isCreator && !isTeamOwner && !isCupCreator && req.user!.role !== "admin") {
       return res.status(403).json({ error: "Accès non autorisé" });
     }
     
@@ -159,7 +224,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
 // POST /local-match - Créer une nouvelle partie offline
 router.post("/", authUser, async (req: AuthenticatedRequest, res) => {
   try {
-    const { name, teamAId, teamBId, cupId } = req.body;
+    const { name, teamAId, teamBId, cupId, isPublic } = req.body;
     
     if (!teamAId) {
       return res.status(400).json({ error: "teamAId est requis" });
@@ -279,6 +344,7 @@ router.post("/", authUser, async (req: AuthenticatedRequest, res) => {
         teamBId: teamBId || null,
         cupId: cupId || null,
         status,
+        isPublic: isPublic === false ? false : true,
         shareToken,
         teamAOwnerValidated,
         teamBOwnerValidated,
@@ -788,6 +854,7 @@ router.get("/:id/actions", authUser, async (req: AuthenticatedRequest, res) => {
       include: {
         teamA: { select: { ownerId: true } },
         teamB: { select: { ownerId: true } },
+        cup: { select: { creatorId: true } },
       },
     });
     
@@ -795,13 +862,16 @@ router.get("/:id/actions", authUser, async (req: AuthenticatedRequest, res) => {
       return res.status(404).json({ error: "Partie offline introuvable" });
     }
     
-    // Vérifier que l'utilisateur est le créateur ou propriétaire d'une des équipes
+    // Vérifier que l'utilisateur est le créateur, propriétaire d'une des équipes
+    // ou créateur de la coupe associée
     const isCreator = localMatch.creatorId === req.user!.id;
     const isTeamOwner = 
       localMatch.teamA.ownerId === req.user!.id || 
       (localMatch.teamB && localMatch.teamB.ownerId === req.user!.id);
+    const isCupCreator =
+      !!localMatch.cup && localMatch.cup.creatorId === req.user!.id;
     
-    if (!isCreator && !isTeamOwner && req.user!.role !== "admin") {
+    if (!isCreator && !isTeamOwner && !isCupCreator && req.user!.role !== "admin") {
       return res.status(403).json({ error: "Accès non autorisé" });
     }
     

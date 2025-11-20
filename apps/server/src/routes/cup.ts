@@ -1,6 +1,16 @@
 import { Router } from "express";
 import { prisma } from "../prisma";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
+import {
+  computeCupStandings,
+  type CupWithParticipantsAndScoring,
+  type LocalMatchWithRelations,
+} from "../cupScoring";
+import {
+  computeCupStandings,
+  type CupWithParticipantsAndScoring,
+  type LocalMatchWithRelations,
+} from "../cupScoring";
 
 const router = Router();
 
@@ -237,6 +247,26 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
             },
           },
         },
+        localMatches: {
+          where: { status: "completed" },
+          include: {
+            teamA: {
+              select: {
+                id: true,
+                name: true,
+                roster: true,
+              },
+            },
+            teamB: {
+              select: {
+                id: true,
+                name: true,
+                roster: true,
+              },
+            },
+            actions: true,
+          },
+        },
       },
     });
 
@@ -275,6 +305,26 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
               },
             },
           },
+          localMatches: {
+            where: { status: "completed" },
+            include: {
+              teamA: {
+                select: {
+                  id: true,
+                  name: true,
+                  roster: true,
+                },
+              },
+              teamB: {
+                select: {
+                  id: true,
+                  name: true,
+                  roster: true,
+                },
+              },
+              actions: true,
+            },
+          },
         },
       });
     }
@@ -290,6 +340,12 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
     const userParticipatingTeamIds = cup.participants
       .filter((p) => userTeamIds.has(p.team.id))
       .map((p) => p.team.id);
+
+    // Calculer le classement de la coupe à partir des matchs terminés
+    const standingsResult = computeCupStandings(
+      cup as unknown as CupWithParticipantsAndScoring,
+      (cup.localMatches || []) as unknown as LocalMatchWithRelations[],
+    );
 
     const formattedCup = {
       id: cup.id,
@@ -311,6 +367,30 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
       isCreator: cup.creatorId === req.user!.id,
       hasTeamParticipating: cup.participants.some((p) => userTeamIds.has(p.team.id)),
       userParticipatingTeamIds, // Liste des IDs des équipes de l'utilisateur qui participent
+      scoringConfig: standingsResult.scoringConfig,
+      standings: standingsResult.teamStats,
+      actionAwards: standingsResult.awards,
+      matches: (cup.localMatches || []).map((m: any) => ({
+        id: m.id,
+        name: m.name,
+        status: m.status,
+        isPublic: m.isPublic ?? true,
+        teamA: {
+          id: m.teamA.id,
+          name: m.teamA.name,
+          roster: m.teamA.roster,
+        },
+        teamB: m.teamB
+          ? {
+              id: m.teamB.id,
+              name: m.teamB.name,
+              roster: m.teamB.roster,
+            }
+          : null,
+        scoreTeamA: m.scoreTeamA ?? null,
+        scoreTeamB: m.scoreTeamB ?? null,
+        createdAt: m.createdAt,
+      })),
     };
 
     res.json({ cup: formattedCup });
@@ -322,7 +402,31 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
 
 // POST /cup - Créer une nouvelle coupe
 router.post("/", authUser, async (req: AuthenticatedRequest, res) => {
-  const { name, isPublic } = req.body ?? ({} as { name?: string; isPublic?: boolean });
+  const body = (req.body ?? {}) as {
+    name?: string;
+    isPublic?: boolean;
+    scoringConfig?: Partial<{
+      winPoints: number;
+      drawPoints: number;
+      lossPoints: number;
+      forfeitPoints: number;
+      touchdownPoints: number;
+      blockCasualtyPoints: number;
+      foulCasualtyPoints: number;
+      passPoints: number;
+    }>;
+    // Compatibilité : on accepte aussi les champs à plat
+    winPoints?: number;
+    drawPoints?: number;
+    lossPoints?: number;
+    forfeitPoints?: number;
+    touchdownPoints?: number;
+    blockCasualtyPoints?: number;
+    foulCasualtyPoints?: number;
+    passPoints?: number;
+  };
+
+  const { name, isPublic } = body;
 
   if (!name || typeof name !== "string" || name.trim() === "") {
     return res.status(400).json({ error: "Le nom de la coupe est requis" });
@@ -337,6 +441,64 @@ router.post("/", authUser, async (req: AuthenticatedRequest, res) => {
   // Par défaut, la coupe est publique
   const cupIsPublic = isPublic !== undefined ? Boolean(isPublic) : true;
 
+  // Configuration de points : on part des valeurs par défaut et on applique
+  // ce qui est fourni soit dans scoringConfig, soit à plat.
+  const scoringFromBody = {
+    ...(body.scoringConfig ?? {}),
+    winPoints: body.winPoints ?? body.scoringConfig?.winPoints,
+    drawPoints: body.drawPoints ?? body.scoringConfig?.drawPoints,
+    lossPoints: body.lossPoints ?? body.scoringConfig?.lossPoints,
+    forfeitPoints: body.forfeitPoints ?? body.scoringConfig?.forfeitPoints,
+    touchdownPoints: body.touchdownPoints ?? body.scoringConfig?.touchdownPoints,
+    blockCasualtyPoints:
+      body.blockCasualtyPoints ?? body.scoringConfig?.blockCasualtyPoints,
+    foulCasualtyPoints:
+      body.foulCasualtyPoints ?? body.scoringConfig?.foulCasualtyPoints,
+    passPoints: body.passPoints ?? body.scoringConfig?.passPoints,
+  };
+
+  const defaultScoring = {
+    winPoints: 1000,
+    drawPoints: 400,
+    lossPoints: 0,
+    forfeitPoints: -100,
+    touchdownPoints: 5,
+    blockCasualtyPoints: 3,
+    foulCasualtyPoints: 2,
+    passPoints: 2,
+  };
+
+  const finalScoring = {
+    winPoints: Number.isFinite(Number(scoringFromBody.winPoints))
+      ? Number(scoringFromBody.winPoints)
+      : defaultScoring.winPoints,
+    drawPoints: Number.isFinite(Number(scoringFromBody.drawPoints))
+      ? Number(scoringFromBody.drawPoints)
+      : defaultScoring.drawPoints,
+    lossPoints: Number.isFinite(Number(scoringFromBody.lossPoints))
+      ? Number(scoringFromBody.lossPoints)
+      : defaultScoring.lossPoints,
+    forfeitPoints: Number.isFinite(Number(scoringFromBody.forfeitPoints))
+      ? Number(scoringFromBody.forfeitPoints)
+      : defaultScoring.forfeitPoints,
+    touchdownPoints: Number.isFinite(Number(scoringFromBody.touchdownPoints))
+      ? Number(scoringFromBody.touchdownPoints)
+      : defaultScoring.touchdownPoints,
+    blockCasualtyPoints: Number.isFinite(
+      Number(scoringFromBody.blockCasualtyPoints),
+    )
+      ? Number(scoringFromBody.blockCasualtyPoints)
+      : defaultScoring.blockCasualtyPoints,
+    foulCasualtyPoints: Number.isFinite(
+      Number(scoringFromBody.foulCasualtyPoints),
+    )
+      ? Number(scoringFromBody.foulCasualtyPoints)
+      : defaultScoring.foulCasualtyPoints,
+    passPoints: Number.isFinite(Number(scoringFromBody.passPoints))
+      ? Number(scoringFromBody.passPoints)
+      : defaultScoring.passPoints,
+  };
+
   try {
     const cup = await prisma.cup.create({
       data: {
@@ -344,6 +506,7 @@ router.post("/", authUser, async (req: AuthenticatedRequest, res) => {
         creatorId: req.user!.id,
         validated: false,
         isPublic: cupIsPublic,
+        ...finalScoring,
       },
       include: {
         creator: {
@@ -369,6 +532,16 @@ router.post("/", authUser, async (req: AuthenticatedRequest, res) => {
       participants: [],
       createdAt: cup.createdAt,
       updatedAt: cup.updatedAt,
+      scoringConfig: {
+        winPoints: cup.winPoints,
+        drawPoints: cup.drawPoints,
+        lossPoints: cup.lossPoints,
+        forfeitPoints: cup.forfeitPoints,
+        touchdownPoints: cup.touchdownPoints,
+        blockCasualtyPoints: cup.blockCasualtyPoints,
+        foulCasualtyPoints: cup.foulCasualtyPoints,
+        passPoints: cup.passPoints,
+      },
     };
 
     res.status(201).json({ cup: formattedCup });

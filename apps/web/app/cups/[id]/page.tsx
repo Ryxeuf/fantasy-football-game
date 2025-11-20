@@ -3,6 +3,55 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { API_BASE } from "../../auth-client";
 
+type CupScoringConfig = {
+  winPoints: number;
+  drawPoints: number;
+  lossPoints: number;
+  forfeitPoints: number;
+  touchdownPoints: number;
+  blockCasualtyPoints: number;
+  foulCasualtyPoints: number;
+  passPoints: number;
+};
+
+type CupTeamStats = {
+  teamId: string;
+  teamName: string;
+  roster: string;
+  matchesPlayed: number;
+  wins: number;
+  draws: number;
+  losses: number;
+  forfeits: number;
+  touchdownsFor: number;
+  touchdownsAgainst: number;
+  touchdownDiff: number;
+  passes: number;
+  blockCasualties: number;
+  foulCasualties: number;
+  resultPoints: number;
+  actionPoints: number;
+  totalPoints: number;
+};
+
+type CupAwardEntry = {
+  teamId: string;
+  teamName: string;
+  roster: string;
+  value: number;
+};
+
+type CupActionAwards = {
+  topScorers?: CupAwardEntry[];
+  bestDefense?: CupAwardEntry[];
+  bashers?: CupAwardEntry[];
+  shamePassers?: CupAwardEntry[];
+  foulExperts?: CupAwardEntry[];
+  indestructible?: CupAwardEntry[];
+  martyrs?: CupAwardEntry[];
+  permeable?: CupAwardEntry[];
+};
+
 type Cup = {
   id: string;
   name: string;
@@ -31,6 +80,20 @@ type Cup = {
   isCreator?: boolean;
   hasTeamParticipating?: boolean;
   userParticipatingTeamIds?: string[]; // Liste des IDs des équipes de l'utilisateur qui participent
+  scoringConfig?: CupScoringConfig;
+  standings?: CupTeamStats[];
+  actionAwards?: CupActionAwards;
+  matches?: Array<{
+    id: string;
+    name: string | null;
+    status: string;
+    isPublic: boolean;
+    teamA: { id: string; name: string; roster: string };
+    teamB: { id: string; name: string; roster: string } | null;
+    scoreTeamA: number | null;
+    scoreTeamB: number | null;
+    createdAt: string;
+  }>;
 };
 
 type Team = {
@@ -315,6 +378,69 @@ export default function CupDetailPage() {
                   )}
                 </span>
               </div>
+              {cup.scoringConfig && (
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                    Système de points
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                    <div className="space-y-1">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Victoire :</span>
+                        <span className="font-medium">
+                          {cup.scoringConfig.winPoints} pts
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Nul :</span>
+                        <span className="font-medium">
+                          {cup.scoringConfig.drawPoints} pts
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Défaite :</span>
+                        <span className="font-medium">
+                          {cup.scoringConfig.lossPoints} pts
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Forfait :</span>
+                        <span className="font-medium">
+                          {cup.scoringConfig.forfeitPoints} pts
+                        </span>
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Touchdown :</span>
+                        <span className="font-medium">
+                          {cup.scoringConfig.touchdownPoints} pts
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">
+                          Sortie sur bloc :
+                        </span>
+                        <span className="font-medium">
+                          {cup.scoringConfig.blockCasualtyPoints} pts
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Agression :</span>
+                        <span className="font-medium">
+                          {cup.scoringConfig.foulCasualtyPoints} pts
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Passe :</span>
+                        <span className="font-medium">
+                          {cup.scoringConfig.passPoints} pts
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
               {cup.isCreator && cup.status !== "archivee" && cup.status !== "ouverte" && (
                 <div className="flex justify-between items-center pt-2 border-t border-gray-200">
                   {cup.status === "terminee" ? (
@@ -403,6 +529,319 @@ export default function CupDetailPage() {
               </div>
             )}
           </div>
+
+          {cup.standings && cup.standings.length > 0 && (
+            <div className="pt-6 border-t border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900 mb-3">
+                Classement
+              </h2>
+              <div className="overflow-x-auto -mx-2 sm:mx-0">
+                <table className="min-w-full text-sm">
+                  <thead>
+                    <tr className="bg-gray-100 text-gray-700">
+                      <th className="px-2 py-2 text-left font-semibold">#</th>
+                      <th className="px-2 py-2 text-left font-semibold">
+                        Équipe
+                      </th>
+                      <th className="px-2 py-2 text-center font-semibold">
+                        MJ
+                      </th>
+                      <th className="px-2 py-2 text-center font-semibold">
+                        V
+                      </th>
+                      <th className="px-2 py-2 text-center font-semibold">
+                        N
+                      </th>
+                      <th className="px-2 py-2 text-center font-semibold">
+                        D
+                      </th>
+                      <th className="px-2 py-2 text-center font-semibold">
+                        TD+
+                      </th>
+                      <th className="px-2 py-2 text-center font-semibold">
+                        TD-
+                      </th>
+                      <th className="px-2 py-2 text-center font-semibold">
+                        Diff TD
+                      </th>
+                      <th className="px-2 py-2 text-center font-semibold">
+                        Passe
+                      </th>
+                      <th className="px-2 py-2 text-center font-semibold">
+                        Sorties
+                      </th>
+                      <th className="px-2 py-2 text-center font-semibold">
+                        Agr
+                      </th>
+                      <th className="px-2 py-2 text-center font-semibold">
+                        Pts
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {cup.standings.map((team, index) => (
+                      <tr
+                        key={team.teamId}
+                        className={
+                          index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                        }
+                      >
+                        <td className="px-2 py-1 text-center text-gray-700">
+                          {index + 1}
+                        </td>
+                        <td className="px-2 py-1 text-gray-900 font-medium">
+                          {team.teamName}
+                        </td>
+                        <td className="px-2 py-1 text-center">
+                          {team.matchesPlayed}
+                        </td>
+                        <td className="px-2 py-1 text-center">{team.wins}</td>
+                        <td className="px-2 py-1 text-center">{team.draws}</td>
+                        <td className="px-2 py-1 text-center">{team.losses}</td>
+                        <td className="px-2 py-1 text-center">
+                          {team.touchdownsFor}
+                        </td>
+                        <td className="px-2 py-1 text-center">
+                          {team.touchdownsAgainst}
+                        </td>
+                        <td className="px-2 py-1 text-center">
+                          {team.touchdownDiff}
+                        </td>
+                        <td className="px-2 py-1 text-center">
+                          {team.passes}
+                        </td>
+                        <td className="px-2 py-1 text-center">
+                          {team.blockCasualties}
+                        </td>
+                        <td className="px-2 py-1 text-center">
+                          {team.foulCasualties}
+                        </td>
+                        <td className="px-2 py-1 text-center font-semibold text-nuffle-anthracite">
+                          {team.totalPoints}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+          {cup.matches && cup.matches.length > 0 && (
+            <div className="pt-6 border-t border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900 mb-3">
+                Matchs de la coupe
+              </h2>
+              <div className="space-y-3">
+                {cup.matches.map((match) => (
+                  <button
+                    key={match.id}
+                    onClick={() => router.push(`/local-matches/${match.id}`)}
+                    className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors text-left"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-gray-900">
+                          {match.teamA.name}
+                        </span>
+                        <span className="text-xs text-gray-500">vs</span>
+                        <span className="font-medium text-gray-900">
+                          {match.teamB?.name || "??"}
+                        </span>
+                        {match.status === "completed" &&
+                          match.scoreTeamA !== null &&
+                          match.scoreTeamB !== null && (
+                            <span className="ml-2 text-sm font-semibold text-gray-800">
+                              {match.scoreTeamA} - {match.scoreTeamB}
+                            </span>
+                          )}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {new Date(match.createdAt).toLocaleDateString("fr-FR", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </div>
+                    </div>
+                    <div className="text-xs text-gray-600 text-right">
+                      <div>
+                        {match.status === "completed"
+                          ? "Terminée"
+                          : match.status === "in_progress"
+                            ? "En cours"
+                            : "En préparation"}
+                      </div>
+                      <div className="mt-1">
+                        {match.isPublic ? "🌍 Public" : "🔒 Privé"}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {cup.actionAwards && (
+            <div className="pt-6 border-t border-gray-200 space-y-4">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Podiums par type d'action
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Le Pichichi du TD */}
+                {cup.actionAwards.topScorers && cup.actionAwards.topScorers.length > 0 && (
+                  <div className="bg-yellow-100 border border-yellow-300 rounded-xl p-4 shadow-sm">
+                    <h3 className="text-sm font-bold text-yellow-900 mb-2">
+                      Le Pichichi du TD
+                    </h3>
+                    {cup.actionAwards.topScorers.map((entry) => (
+                      <div key={entry.teamId} className="flex justify-between text-sm">
+                        <span className="font-medium text-gray-900">
+                          {entry.teamName}
+                        </span>
+                        <span className="font-semibold text-gray-800">
+                          {entry.value} TD
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* The Wall */}
+                {cup.actionAwards.bestDefense && cup.actionAwards.bestDefense.length > 0 && (
+                  <div className="bg-blue-100 border border-blue-300 rounded-xl p-4 shadow-sm">
+                    <h3 className="text-sm font-bold text-blue-900 mb-2">
+                      The Wall
+                    </h3>
+                    {cup.actionAwards.bestDefense.map((entry) => (
+                      <div key={entry.teamId} className="flex justify-between text-sm">
+                        <span className="font-medium text-gray-900">
+                          {entry.teamName}
+                        </span>
+                        <span className="font-semibold text-gray-800">
+                          {entry.value} TD encaissé{entry.value > 1 ? "s" : ""}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* La BASH ! */}
+                {cup.actionAwards.bashers && cup.actionAwards.bashers.length > 0 && (
+                  <div className="bg-red-100 border border-red-300 rounded-xl p-4 shadow-sm">
+                    <h3 className="text-sm font-bold text-red-900 mb-2">
+                      La BASH !
+                    </h3>
+                    {cup.actionAwards.bashers.map((entry) => (
+                      <div key={entry.teamId} className="flex justify-between text-sm">
+                        <span className="font-medium text-gray-900">
+                          {entry.teamName}
+                        </span>
+                        <span className="font-semibold text-gray-800">
+                          {entry.value} élimination{entry.value > 1 ? "s" : ""}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* La Honte */}
+                {cup.actionAwards.shamePassers && cup.actionAwards.shamePassers.length > 0 && (
+                  <div className="bg-purple-100 border border-purple-300 rounded-xl p-4 shadow-sm">
+                    <h3 className="text-sm font-bold text-purple-900 mb-2">
+                      La Honte
+                    </h3>
+                    {cup.actionAwards.shamePassers.map((entry) => (
+                      <div key={entry.teamId} className="flex justify-between text-sm">
+                        <span className="font-medium text-gray-900">
+                          {entry.teamName}
+                        </span>
+                        <span className="font-semibold text-gray-800">
+                          {entry.value} passe{entry.value > 1 ? "s" : ""}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Crampons affûtés */}
+                {cup.actionAwards.foulExperts && cup.actionAwards.foulExperts.length > 0 && (
+                  <div className="bg-orange-100 border border-orange-300 rounded-xl p-4 shadow-sm">
+                    <h3 className="text-sm font-bold text-orange-900 mb-2">
+                      Crampons affûtés
+                    </h3>
+                    {cup.actionAwards.foulExperts.map((entry) => (
+                      <div key={entry.teamId} className="flex justify-between text-sm">
+                        <span className="font-medium text-gray-900">
+                          {entry.teamName}
+                        </span>
+                        <span className="font-semibold text-gray-800">
+                          {entry.value} agression{entry.value > 1 ? "s" : ""}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Les Indestructibles */}
+                {cup.actionAwards.indestructible && cup.actionAwards.indestructible.length > 0 && (
+                  <div className="bg-emerald-100 border border-emerald-300 rounded-xl p-4 shadow-sm">
+                    <h3 className="text-sm font-bold text-emerald-900 mb-2">
+                      Les Indestructibles
+                    </h3>
+                    {cup.actionAwards.indestructible.map((entry) => (
+                      <div key={entry.teamId} className="flex justify-between text-sm">
+                        <span className="font-medium text-gray-900">
+                          {entry.teamName}
+                        </span>
+                        <span className="font-semibold text-gray-800">
+                          {entry.value} sortie{entry.value > 1 ? "s" : ""} subie{entry.value > 1 ? "s" : ""}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Les Martyrs */}
+                {cup.actionAwards.martyrs && cup.actionAwards.martyrs.length > 0 && (
+                  <div className="bg-rose-100 border border-rose-300 rounded-xl p-4 shadow-sm">
+                    <h3 className="text-sm font-bold text-rose-900 mb-2">
+                      Les Martyrs
+                    </h3>
+                    {cup.actionAwards.martyrs.map((entry) => (
+                      <div key={entry.teamId} className="flex justify-between text-sm">
+                        <span className="font-medium text-gray-900">
+                          {entry.teamName}
+                        </span>
+                        <span className="font-semibold text-gray-800">
+                          {entry.value} victime{entry.value > 1 ? "s" : ""}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Les Perméables */}
+                {cup.actionAwards.permeable && cup.actionAwards.permeable.length > 0 && (
+                  <div className="bg-sky-100 border border-sky-300 rounded-xl p-4 shadow-sm">
+                    <h3 className="text-sm font-bold text-sky-900 mb-2">
+                      Les Perméables
+                    </h3>
+                    {cup.actionAwards.permeable.map((entry) => (
+                      <div key={entry.teamId} className="flex justify-between text-sm">
+                        <span className="font-medium text-gray-900">
+                          {entry.teamName}
+                        </span>
+                        <span className="font-semibold text-gray-800">
+                          {entry.value} TD encaissé{entry.value > 1 ? "s" : ""}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

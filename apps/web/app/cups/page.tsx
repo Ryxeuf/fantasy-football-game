@@ -30,6 +30,16 @@ type Cup = {
   updatedAt: string;
   isCreator?: boolean;
   hasTeamParticipating?: boolean;
+  scoringConfig?: {
+    winPoints: number;
+    drawPoints: number;
+    lossPoints: number;
+    forfeitPoints: number;
+    touchdownPoints: number;
+    blockCasualtyPoints: number;
+    foulCasualtyPoints: number;
+    passPoints: number;
+  };
 };
 
 type Team = {
@@ -77,6 +87,14 @@ export default function CupsPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newCupName, setNewCupName] = useState("");
   const [newCupIsPublic, setNewCupIsPublic] = useState(true);
+  const [winPoints, setWinPoints] = useState(1000);
+  const [drawPoints, setDrawPoints] = useState(400);
+  const [lossPoints, setLossPoints] = useState(0);
+  const [forfeitPoints, setForfeitPoints] = useState(-100);
+  const [touchdownPoints, setTouchdownPoints] = useState(5);
+  const [blockCasualtyPoints, setBlockCasualtyPoints] = useState(3);
+  const [foulCasualtyPoints, setFoulCasualtyPoints] = useState(2);
+  const [passPoints, setPassPoints] = useState(2);
   const [creating, setCreating] = useState(false);
   const [selectedTeamForRegistration, setSelectedTeamForRegistration] = useState<Record<string, string>>({});
 
@@ -135,10 +153,28 @@ export default function CupsPage() {
     try {
       const response = await postJSON("/cup", { 
         name: newCupName.trim(),
-        isPublic: newCupIsPublic
+        isPublic: newCupIsPublic,
+        scoringConfig: {
+          winPoints,
+          drawPoints,
+          lossPoints,
+          forfeitPoints,
+          touchdownPoints,
+          blockCasualtyPoints,
+          foulCasualtyPoints,
+          passPoints,
+        },
       });
       setNewCupName("");
       setNewCupIsPublic(true);
+      setWinPoints(1000);
+      setDrawPoints(400);
+      setLossPoints(0);
+      setForfeitPoints(-100);
+      setTouchdownPoints(5);
+      setBlockCasualtyPoints(3);
+      setFoulCasualtyPoints(2);
+      setPassPoints(2);
       setShowCreateForm(false);
       
       // Si la coupe est privée, rediriger vers la page de la coupe avec le lien
@@ -250,6 +286,114 @@ export default function CupsPage() {
                 maxLength={100}
                 required
               />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-gray-200">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-800 mb-2">
+                  Points par résultat
+                </h3>
+                <div className="space-y-2">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Victoire
+                    </label>
+                    <input
+                      type="number"
+                      value={winPoints}
+                      onChange={(e) => setWinPoints(Number(e.target.value))}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Nul
+                    </label>
+                    <input
+                      type="number"
+                      value={drawPoints}
+                      onChange={(e) => setDrawPoints(Number(e.target.value))}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Défaite
+                    </label>
+                    <input
+                      type="number"
+                      value={lossPoints}
+                      onChange={(e) => setLossPoints(Number(e.target.value))}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Forfait
+                    </label>
+                    <input
+                      type="number"
+                      value={forfeitPoints}
+                      onChange={(e) => setForfeitPoints(Number(e.target.value))}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-gray-800 mb-2">
+                  Points par action
+                </h3>
+                <div className="space-y-2">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Touchdown
+                    </label>
+                    <input
+                      type="number"
+                      value={touchdownPoints}
+                      onChange={(e) => setTouchdownPoints(Number(e.target.value))}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Sortie sur bloc
+                    </label>
+                    <input
+                      type="number"
+                      value={blockCasualtyPoints}
+                      onChange={(e) =>
+                        setBlockCasualtyPoints(Number(e.target.value))
+                      }
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Agression
+                    </label>
+                    <input
+                      type="number"
+                      value={foulCasualtyPoints}
+                      onChange={(e) =>
+                        setFoulCasualtyPoints(Number(e.target.value))
+                      }
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Passe
+                    </label>
+                    <input
+                      type="number"
+                      value={passPoints}
+                      onChange={(e) => setPassPoints(Number(e.target.value))}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
             <div>
               <label className="flex items-center gap-2 cursor-pointer">

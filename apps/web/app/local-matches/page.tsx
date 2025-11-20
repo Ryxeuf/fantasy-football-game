@@ -7,6 +7,7 @@ type LocalMatch = {
   id: string;
   name: string | null;
   status: string; // "pending", "in_progress", "completed", "cancelled"
+   isPublic: boolean;
   createdAt: string;
   updatedAt: string;
   startedAt: string | null;
@@ -56,17 +57,27 @@ export default function LocalMatchesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [ownershipFilter, setOwnershipFilter] = useState<"mine" | "mine_and_public">("mine");
 
   useEffect(() => {
     loadLocalMatches();
-  }, [statusFilter]);
+  }, [statusFilter, ownershipFilter]);
 
   const loadLocalMatches = async () => {
     setLoading(true);
     setError(null);
     try {
-      const params = statusFilter !== "all" ? `?status=${statusFilter}` : "";
-      const { localMatches: data } = await fetchJSON(`/local-match${params}`);
+      const params = new URLSearchParams();
+      if (statusFilter !== "all") {
+        params.set("status", statusFilter);
+      }
+      if (ownershipFilter === "mine_and_public") {
+        params.set("scope", "mine_and_public");
+      }
+      const query = params.toString();
+      const { localMatches: data } = await fetchJSON(
+        `/local-match${query ? `?${query}` : ""}`,
+      );
       setLocalMatches(data);
     } catch (e: any) {
       console.error("Erreur lors du chargement des parties offline:", e);
@@ -154,21 +165,42 @@ export default function LocalMatchesPage() {
         )}
 
         <div className="mb-4">
-          <label className="block text-sm font-medium text-nuffle-anthracite mb-2">
-            Filtrer par statut:
-          </label>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 bg-white text-nuffle-anthracite rounded-lg border border-gray-300"
-          >
-            <option value="all">Toutes</option>
-            <option value="pending">En attente</option>
-            <option value="waiting_for_player">En attente de joueur</option>
-            <option value="in_progress">En cours</option>
-            <option value="completed">Terminées</option>
-            <option value="cancelled">Annulées</option>
-          </select>
+          <div className="flex flex-col md:flex-row md:items-end gap-4">
+            <div>
+              <label className="block text-sm font-medium text-nuffle-anthracite mb-2">
+                Filtrer par statut:
+              </label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-4 py-2 bg-white text-nuffle-anthracite rounded-lg border border-gray-300"
+              >
+                <option value="all">Toutes</option>
+                <option value="pending">En attente</option>
+                <option value="waiting_for_player">En attente de joueur</option>
+                <option value="in_progress">En cours</option>
+                <option value="completed">Terminées</option>
+                <option value="cancelled">Annulées</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-nuffle-anthracite mb-2">
+                Portée:
+              </label>
+              <select
+                value={ownershipFilter}
+                onChange={(e) =>
+                  setOwnershipFilter(e.target.value as "mine" | "mine_and_public")
+                }
+                className="px-4 py-2 bg-white text-nuffle-anthracite rounded-lg border border-gray-300"
+              >
+                <option value="mine">Mes matchs uniquement</option>
+                <option value="mine_and_public">
+                  Mes matchs + matchs publics
+                </option>
+              </select>
+            </div>
+          </div>
         </div>
 
         {localMatches.length === 0 ? (
@@ -261,6 +293,9 @@ export default function LocalMatchesPage() {
                       {match.completedAt && (
                         <> • Terminée le {formatDate(match.completedAt)}</>
                       )}
+                      <span className="ml-2">
+                        {match.isPublic ? "• 🌍 Public" : "• 🔒 Privé"}
+                      </span>
                     </div>
                   </div>
                 </div>

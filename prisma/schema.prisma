@@ -264,6 +264,19 @@ model Cup {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
+  /// Configuration des points pour cette coupe
+  /// Ces valeurs sont utilisées pour calculer le classement, mais
+  /// les compteurs d'actions restent dérivés des matchs et ne sont pas éditables.
+  winPoints          Int @default(1000)  // Points pour une victoire
+  drawPoints         Int @default(400)   // Points pour un match nul
+  lossPoints         Int @default(0)     // Points pour une défaite
+  forfeitPoints      Int @default(-100)  // Points pour un forfait
+
+  touchdownPoints    Int @default(5)     // Points par touchdown marqué
+  blockCasualtyPoints Int @default(3)    // Points par sortie sur blocage/blitz
+  foulCasualtyPoints  Int @default(2)    // Points par sortie sur agression
+  passPoints         Int @default(2)     // Points par passe réussie
+  
   // Relations
   participants CupParticipant[]
   localMatches LocalMatch[]
@@ -293,6 +306,7 @@ model LocalMatch {
   id        String   @id @default(cuid())
   name      String?  // Nom optionnel pour la partie
   status    String   @default("pending") // "pending", "waiting_for_player", "in_progress", "completed", "cancelled"
+  isPublic  Boolean  @default(true) // Si true, le match est visible publiquement dans la liste
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   startedAt DateTime? // Date de début de la partie
@@ -333,6 +347,7 @@ model LocalMatch {
   @@index([teamAId])
   @@index([teamBId])
   @@index([cupId])
+  @@index([isPublic])
   @@index([status])
   @@index([createdAt])
   @@index([shareToken])
