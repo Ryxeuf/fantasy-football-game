@@ -1,33 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-interface VersionData {
-  version: string;
-  buildDate?: string;
-}
+import rootPackageJson from "../../../../package.json";
 
 export default function VersionInfo() {
-  const [version, setVersion] = useState<string>("0.1.0");
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch("/version.json")
-      .then((res) => res.json())
-      .then((data: VersionData) => {
-        setVersion(data.version || "0.1.0");
-        setLoading(false);
-      })
-      .catch(() => {
-        // Fallback si le fichier n'existe pas encore
-        setVersion("0.1.0");
-        setLoading(false);
-      });
-  }, []);
-
-  if (loading) {
-    return null;
-  }
+  const version = rootPackageJson.version ?? "0.1.0";
 
   return <span>v{version}</span>;
 }
