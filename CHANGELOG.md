@@ -1,3 +1,10 @@
+## [1.24.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.23.0...v1.24.0) (2025-11-21)
+
+
+### ✨ Features
+
+* **auth:** add password change functionality with validation and error handling ([5430bf1](https://github.com/Ryxeuf/fantasy-football-game/commit/5430bf102b93b034de93360629224338da57bae9))
+
 ## [1.23.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.22.0...v1.23.0) (2025-11-20)
 
 
