@@ -49,6 +49,15 @@ export default function ProfilePage() {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<Partial<UserProfile>>({});
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
+  const [savingPassword, setSavingPassword] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -103,6 +112,62 @@ export default function ProfilePage() {
     }
     setEditing(false);
     setError(null);
+  };
+
+  const handlePasswordChange = async () => {
+    setPasswordError(null);
+    setPasswordSuccess(null);
+    
+    // Validation
+    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      setPasswordError("Tous les champs sont requis");
+      return;
+    }
+    
+    if (passwordData.newPassword.length < 8) {
+      setPasswordError("Le nouveau mot de passe doit contenir au moins 8 caractères");
+      return;
+    }
+    
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordError("Les nouveaux mots de passe ne correspondent pas");
+      return;
+    }
+    
+    setSavingPassword(true);
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        window.location.href = "/login";
+        throw new Error("Non authentifié");
+      }
+      const res = await fetch(`${API_BASE}/auth/me/password`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword,
+        }),
+      });
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({}));
+        throw new Error(error?.error || `Erreur ${res.status}`);
+      }
+      setPasswordSuccess("Mot de passe modifié avec succès");
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+      setChangingPassword(false);
+    } catch (e: any) {
+      setPasswordError(e.message || "Erreur lors du changement de mot de passe");
+    } finally {
+      setSavingPassword(false);
+    }
   };
 
   const getInitials = (coachName?: string, name?: string | null, email?: string) => {
@@ -330,6 +395,109 @@ export default function ProfilePage() {
           </dl>
         </div>
       )}
+
+      {/* Changement de mot de passe */}
+      <div className="bg-white border border-gray-200 rounded-lg p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-bold">Sécurité</h3>
+          {!changingPassword && (
+            <button
+              onClick={() => {
+                setChangingPassword(true);
+                setPasswordError(null);
+                setPasswordSuccess(null);
+                setPasswordData({
+                  currentPassword: "",
+                  newPassword: "",
+                  confirmPassword: "",
+                });
+              }}
+              className="px-4 py-2 bg-nuffle-bronze text-white rounded hover:bg-nuffle-gold transition-colors"
+            >
+              🔒 Changer le mot de passe
+            </button>
+          )}
+        </div>
+        
+        {changingPassword && (
+          <div className="space-y-4">
+            {passwordError && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-red-800">{passwordError}</p>
+              </div>
+            )}
+            {passwordSuccess && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <p className="text-green-800">{passwordSuccess}</p>
+              </div>
+            )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Mot de passe actuel <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="password"
+                value={passwordData.currentPassword}
+                onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-nuffle-bronze"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Nouveau mot de passe <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="password"
+                value={passwordData.newPassword}
+                onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-nuffle-bronze"
+                required
+                minLength={8}
+              />
+              <p className="text-xs text-gray-500 mt-1">Au moins 8 caractères</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Confirmer le nouveau mot de passe <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="password"
+                value={passwordData.confirmPassword}
+                onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-nuffle-bronze"
+                required
+                minLength={8}
+              />
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={handlePasswordChange}
+                disabled={savingPassword || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
+                className="px-4 py-2 bg-nuffle-bronze text-white rounded hover:bg-nuffle-gold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {savingPassword ? "Enregistrement..." : "Enregistrer"}
+              </button>
+              <button
+                onClick={() => {
+                  setChangingPassword(false);
+                  setPasswordError(null);
+                  setPasswordSuccess(null);
+                  setPasswordData({
+                    currentPassword: "",
+                    newPassword: "",
+                    confirmPassword: "",
+                  });
+                }}
+                disabled={savingPassword}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors disabled:opacity-50"
+              >
+                Annuler
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Actions rapides */}
       <div className="bg-white border border-gray-200 rounded-lg p-6">

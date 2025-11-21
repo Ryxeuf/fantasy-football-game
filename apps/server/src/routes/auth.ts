@@ -234,3 +234,62 @@ router.put("/me", authUser, async (req: AuthenticatedRequest, res) => {
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
+
+// Changer le mot de passe
+router.put("/me/password", authUser, async (req: AuthenticatedRequest, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body ?? {};
+    
+    // Validation des champs obligatoires
+    if (typeof currentPassword !== "string" || currentPassword.trim() === "") {
+      return res.status(400).json({ error: "Mot de passe actuel requis" });
+    }
+    if (typeof newPassword !== "string" || newPassword.trim() === "") {
+      return res.status(400).json({ error: "Nouveau mot de passe requis" });
+    }
+    
+    // Validation de la longueur du nouveau mot de passe
+    if (newPassword.length < 8) {
+      return res.status(400).json({ error: "Le nouveau mot de passe doit contenir au moins 8 caractères" });
+    }
+    
+    // Récupérer l'utilisateur avec son mot de passe hashé
+    const user = await prisma.user.findUnique({
+      where: { id: req.user!.id },
+      select: {
+        id: true,
+        passwordHash: true,
+      },
+    });
+    
+    if (!user) {
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+    }
+    
+    // Vérifier l'ancien mot de passe
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isCurrentPasswordValid) {
+      return res.status(401).json({ error: "Mot de passe actuel incorrect" });
+    }
+    
+    // Vérifier que le nouveau mot de passe est différent de l'ancien
+    const isSamePassword = await bcrypt.compare(newPassword, user.passwordHash);
+    if (isSamePassword) {
+      return res.status(400).json({ error: "Le nouveau mot de passe doit être différent de l'ancien" });
+    }
+    
+    // Hasher le nouveau mot de passe
+    const newPasswordHash = await bcrypt.hash(newPassword, 10);
+    
+    // Mettre à jour le mot de passe
+    await prisma.user.update({
+      where: { id: req.user!.id },
+      data: { passwordHash: newPasswordHash },
+    });
+    
+    res.json({ message: "Mot de passe modifié avec succès" });
+  } catch (e: any) {
+    console.error(e);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
