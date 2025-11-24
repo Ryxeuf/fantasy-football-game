@@ -17,6 +17,7 @@ type User = {
     matches: number;
     createdMatches: number;
     teamSelections: number;
+    createdLocalMatches?: number;
   };
 };
 
@@ -38,6 +39,7 @@ type UserDetails = User & {
     status: string;
     createdAt: string;
   }>;
+  // On pourrait plus tard enrichir avec la liste détaillée des matchs locaux créés
 };
 
 type Pagination = {
@@ -404,6 +406,9 @@ export default function AdminUsersPage() {
                       <span title="Équipes">⚽ {u._count.teams}</span>
                       <span title="Parties">🎲 {u._count.matches}</span>
                       <span title="Parties créées">➕ {u._count.createdMatches}</span>
+                      {typeof u._count.createdLocalMatches === "number" && (
+                        <span title="Matchs locaux créés">🎯 {u._count.createdLocalMatches}</span>
+                      )}
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600">
@@ -626,7 +631,7 @@ export default function AdminUsersPage() {
 
               <div>
                 <h3 className="font-semibold mb-2">Statistiques</h3>
-                <div className="grid grid-cols-4 gap-4 text-sm">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
                   <div className="bg-blue-50 p-3 rounded">
                     <div className="text-gray-600">Équipes</div>
                     <div className="text-2xl font-bold">{userDetails._count.teams}</div>
@@ -643,6 +648,12 @@ export default function AdminUsersPage() {
                     <div className="text-gray-600">Sélections</div>
                     <div className="text-2xl font-bold">{userDetails._count.teamSelections}</div>
                   </div>
+                  {typeof userDetails._count.createdLocalMatches === "number" && (
+                    <div className="bg-pink-50 p-3 rounded">
+                      <div className="text-gray-600">Matchs locaux créés</div>
+                      <div className="text-2xl font-bold">{userDetails._count.createdLocalMatches}</div>
+                    </div>
+                  )}
                 </div>
               </div>
 

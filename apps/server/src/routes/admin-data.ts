@@ -10,6 +10,7 @@ import { Router } from "express";
 import { prisma } from "../prisma";
 import { adminOnly } from "../middleware/adminOnly";
 import { authUser } from "../middleware/authUser";
+import { resolveRuleset } from "../utils/ruleset-helpers";
 
 const router = Router();
 
@@ -130,10 +131,19 @@ router.delete("/skills/:id", async (req, res) => {
 
 router.get("/rosters", async (req, res) => {
   try {
+    const { ruleset } = req.query;
+    const where: any = {};
+
+    if (ruleset && ruleset !== "all") {
+      where.ruleset = resolveRuleset(ruleset as string);
+    }
+
     const rosters = await prisma.roster.findMany({
+      where,
       select: {
         id: true,
         slug: true,
+        ruleset: true,
         name: true,
         nameEn: true,
         descriptionFr: true,
@@ -149,7 +159,11 @@ router.get("/rosters", async (req, res) => {
           select: { positions: true },
         },
       },
-      orderBy: { name: "asc" },
+      orderBy: [
+        { slug: "asc" },
+        { ruleset: "asc" },
+        { name: "asc" },
+      ],
     });
     // Parse regionalRules JSON string to array for each roster
     const rostersWithParsedRules = rosters.map((roster: any) => ({
@@ -170,6 +184,7 @@ router.get("/rosters/:id", async (req, res) => {
       select: {
         id: true,
         slug: true,
+        ruleset: true,
         name: true,
         nameEn: true,
         descriptionFr: true,
@@ -208,17 +223,31 @@ router.get("/rosters/:id", async (req, res) => {
 
 router.post("/rosters", async (req, res) => {
   try {
-    const { slug, name, nameEn, descriptionFr, descriptionEn, budget, tier, regionalRules, specialRules, naf } = req.body;
+    const {
+      slug,
+      name,
+      nameEn,
+      descriptionFr,
+      descriptionEn,
+      budget,
+      tier,
+      regionalRules,
+      specialRules,
+      naf,
+      ruleset: rawRuleset,
+    } = req.body;
     
     if (!slug || !name || !nameEn || budget === undefined || !tier) {
       return res.status(400).json({ error: "Tous les champs sont requis (slug, name, nameEn, budget, tier)" });
     }
 
+    const ruleset = resolveRuleset(rawRuleset);
     const regionalRulesJson = regionalRules ? JSON.stringify(regionalRules) : null;
 
     const roster = await prisma.roster.create({
       data: { 
         slug, 
+        ruleset,
         name, 
         nameEn, 
         descriptionFr: descriptionFr || null,
@@ -233,7 +262,7 @@ router.post("/rosters", async (req, res) => {
     res.status(201).json({ roster });
   } catch (error: any) {
     if (error.code === "P2002") {
-      return res.status(409).json({ error: "Ce roster existe déjà" });
+      return res.status(409).json({ error: "Ce roster existe déjà pour ce ruleset" });
     }
     console.error("Erreur lors de la création du roster:", error);
     res.status(500).json({ error: error.message || "Erreur serveur" });
@@ -242,32 +271,51 @@ router.post("/rosters", async (req, res) => {
 
 router.put("/rosters/:id", async (req, res) => {
   try {
-    const { name, nameEn, descriptionFr, descriptionEn, budget, tier, regionalRules, specialRules, naf } = req.body;
+    const {
+      name,
+      nameEn,
+      descriptionFr,
+      descriptionEn,
+      budget,
+      tier,
+      regionalRules,
+      specialRules,
+      naf,
+      ruleset: rawRuleset,
+    } = req.body;
     
     if (!name || !nameEn) {
       return res.status(400).json({ error: "Les champs name et nameEn sont requis" });
     }
     
     const regionalRulesJson = regionalRules ? JSON.stringify(regionalRules) : null;
+    const data: any = {
+      name, 
+      nameEn, 
+      descriptionFr: descriptionFr || null,
+      descriptionEn: descriptionEn || null,
+      budget, 
+      tier, 
+      regionalRules: regionalRulesJson,
+      specialRules: specialRules || null,
+      naf,
+    };
+
+    if (rawRuleset) {
+      data.ruleset = resolveRuleset(rawRuleset);
+    }
 
     const roster = await prisma.roster.update({
       where: { id: req.params.id },
-      data: { 
-        name, 
-        nameEn, 
-        descriptionFr: descriptionFr || null,
-        descriptionEn: descriptionEn || null,
-        budget, 
-        tier, 
-        regionalRules: regionalRulesJson,
-        specialRules: specialRules || null,
-        naf 
-      },
+      data,
     });
     res.json({ roster });
   } catch (error: any) {
     if (error.code === "P2025") {
       return res.status(404).json({ error: "Roster non trouvé" });
+    }
+    if (error.code === "P2002") {
+      return res.status(409).json({ error: "Slug déjà utilisé pour ce ruleset" });
     }
     console.error("Erreur lors de la mise à jour du roster:", error);
     res.status(500).json({ error: error.message || "Erreur serveur" });
@@ -295,22 +343,36 @@ router.delete("/rosters/:id", async (req, res) => {
 
 router.get("/positions", async (req, res) => {
   try {
-    const { rosterId } = req.query;
+    const { rosterId, ruleset } = req.query;
     const where: any = {};
     
     if (rosterId) {
       where.rosterId = rosterId;
     }
+    if (ruleset && ruleset !== "all") {
+      where.roster = {
+        ...(where.roster || {}),
+        ruleset: resolveRuleset(ruleset as string),
+      };
+    }
 
     const positions = await prisma.position.findMany({
       where,
       include: {
-        roster: true,
+        roster: {
+          select: {
+            id: true,
+            slug: true,
+            name: true,
+            nameEn: true,
+            ruleset: true,
+          },
+        },
         skills: {
           include: { skill: true },
         },
       },
-      orderBy: [{ roster: { name: "asc" } }, { displayName: "asc" }],
+      orderBy: [{ roster: { slug: "asc" } }, { displayName: "asc" }],
     });
     res.json({ positions });
   } catch (error: any) {
@@ -324,7 +386,15 @@ router.get("/positions/:id", async (req, res) => {
     const position = await prisma.position.findUnique({
       where: { id: req.params.id },
       include: {
-        roster: true,
+        roster: {
+          select: {
+            id: true,
+            slug: true,
+            name: true,
+            nameEn: true,
+            ruleset: true,
+          },
+        },
         skills: {
           include: { skill: true },
         },

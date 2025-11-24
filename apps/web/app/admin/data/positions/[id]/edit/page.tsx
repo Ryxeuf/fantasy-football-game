@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { API_BASE } from "../../../../../auth-client";
 import SkillSelector from "../../SkillSelector";
+import { getRulesetLabel } from "../../../ruleset-utils";
 
 type Position = {
   id: string;
@@ -17,7 +18,7 @@ type Position = {
   pa: number;
   av: number;
   keywords?: string | null;
-  roster: { id: string; slug: string; name: string };
+  roster: { id: string; slug: string; name: string; ruleset: string };
   skills: Array<{ skill: { slug: string; nameFr: string } }>;
 };
 
@@ -184,6 +185,9 @@ export default function EditPositionPage() {
           </div>
           <div className="text-sm text-gray-600">
             <strong>Slug:</strong> {position.slug}
+          </div>
+          <div className="text-sm text-gray-600">
+            <strong>Ruleset:</strong> {getRulesetLabel(position.roster.ruleset)}
           </div>
         </div>
 

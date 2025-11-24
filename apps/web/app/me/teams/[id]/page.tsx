@@ -27,6 +27,10 @@ export default function TeamDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [recalculating, setRecalculating] = useState(false);
+  const rulesetLabels: Record<string, string> = {
+    season_2: t.teams.rulesetSeason2 ?? "Saison 2",
+    season_3: t.teams.rulesetSeason3 ?? "Saison 3",
+  };
   const id =
     typeof window !== "undefined"
       ? window.location.pathname.split("/").pop()
@@ -50,7 +54,8 @@ export default function TeamDetailPage() {
         if (d?.team?.roster) {
           const lang = language === "en" ? "en" : "fr";
           try {
-            const rosterResponse = await fetch(`${API_BASE}/api/rosters/${d.team.roster}?lang=${lang}`);
+            const rulesetQuery = d.team.ruleset ? `&ruleset=${encodeURIComponent(d.team.ruleset)}` : "";
+            const rosterResponse = await fetch(`${API_BASE}/api/rosters/${d.team.roster}?lang=${lang}${rulesetQuery}`);
             if (rosterResponse.ok) {
               const rosterData = await rosterResponse.json();
               setRosterName(rosterData.roster?.name || d.team.roster);
@@ -134,6 +139,7 @@ export default function TeamDetailPage() {
 
   const team = data?.team;
   const match = data?.currentMatch;
+  const localMatchStats = data?.localMatchStats;
   const canEdit = !match || (match.status !== "pending" && match.status !== "active");
 
   if (loading) {
@@ -156,6 +162,14 @@ export default function TeamDetailPage() {
           <div className="text-xs sm:text-sm text-gray-600 mt-1">
             {t.teams.roster}: <span className="font-semibold">{rosterName || team?.roster || ''}</span>
           </div>
+          {team?.ruleset && (
+            <div className="text-xs sm:text-sm text-emerald-700 font-semibold mt-1 uppercase tracking-wide">
+              {t.teams.rulesetBadge.replace(
+                "{label}",
+                rulesetLabels[team.ruleset] || team.ruleset,
+              )}
+            </div>
+          )}
         </div>
         <div className="flex flex-wrap gap-2 sm:gap-3">
           {canEdit ? (
@@ -312,6 +326,57 @@ export default function TeamDetailPage() {
               </div>
             </div>
           </div>
+
+          {/* Statistiques de l'équipe */}
+          {localMatchStats && (
+            <div className="bg-white rounded-lg border overflow-hidden">
+              <div className="bg-gray-50 px-4 sm:px-6 py-3 border-b">
+                <h2 className="text-base sm:text-lg font-semibold">
+                  {t.teams.teamStatsTitle}
+                </h2>
+              </div>
+              <div className="p-4 sm:p-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                  <div className="text-center p-3 sm:p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="text-xs sm:text-sm text-blue-600 font-medium">
+                      {t.teams.teamStatsLocalMatches}
+                    </div>
+                    <div className="text-xl sm:text-2xl font-bold text-blue-900">
+                      {localMatchStats.total}
+                    </div>
+                  </div>
+                  <div className="text-center p-3 sm:p-4 bg-green-50 rounded-lg border border-green-200">
+                    <div className="text-xs sm:text-sm text-green-600 font-medium">
+                      {t.teams.teamStatsCompleted}
+                    </div>
+                    <div className="text-xl sm:text-2xl font-bold text-green-900">
+                      {localMatchStats.completed}
+                    </div>
+                  </div>
+                  <div className="text-center p-3 sm:p-4 bg-purple-50 rounded-lg border border-purple-200">
+                    <div className="text-xs sm:text-sm text-purple-600 font-medium">
+                      {t.teams.teamStatsRecord}
+                    </div>
+                    <div className="text-xl sm:text-2xl font-bold text-purple-900 font-mono">
+                      {localMatchStats.wins} / {localMatchStats.draws} / {localMatchStats.losses}
+                    </div>
+                  </div>
+                  <div className="text-center p-3 sm:p-4 bg-orange-50 rounded-lg border border-orange-200">
+                    <div className="text-xs sm:text-sm text-orange-600 font-medium">
+                      {t.teams.teamStatsTouchdowns}
+                    </div>
+                    <div className="text-xl sm:text-2xl font-bold text-orange-900 font-mono">
+                      {localMatchStats.touchdownsFor} / {localMatchStats.touchdownsAgainst}{" "}
+                      <span className="text-sm">
+                        ({localMatchStats.touchdownDiff >= 0 ? "+" : ""}
+                        {localMatchStats.touchdownDiff})
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="bg-white rounded-lg border overflow-hidden">
             <div className="bg-gray-50 px-4 sm:px-6 py-3 border-b">

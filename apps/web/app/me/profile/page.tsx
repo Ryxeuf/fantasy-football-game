@@ -20,6 +20,7 @@ type UserProfile = {
     matches: number;
     createdMatches: number;
     teamSelections: number;
+    createdLocalMatches?: number;
   };
 };
 
@@ -58,6 +59,8 @@ export default function ProfilePage() {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
   const [savingPassword, setSavingPassword] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -184,6 +187,46 @@ export default function ProfilePage() {
       return email[0].toUpperCase();
     }
     return "?";
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeleteError(null);
+
+    const confirmed = window.confirm(
+      "Êtes-vous sûr de vouloir supprimer votre compte ? Cette action désactivera définitivement votre accès."
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setDeletingAccount(true);
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        window.location.href = "/login";
+        throw new Error("Non authentifié");
+      }
+
+      const res = await fetch(`${API_BASE}/auth/me`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({}));
+        throw new Error(error?.error || `Erreur ${res.status}`);
+      }
+
+      // On supprime le token local et on redirige vers la page d'accueil
+      localStorage.removeItem("auth_token");
+      window.location.href = "/";
+    } catch (e: any) {
+      setDeleteError(e.message || "Erreur lors de la suppression du compte");
+    } finally {
+      setDeletingAccount(false);
+    }
   };
 
   if (loading) {
@@ -332,28 +375,40 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* Statistiques - masquées pour le moment */}
-      {/* <div className="bg-white border border-gray-200 rounded-lg p-6">
+      {/* Statistiques joueur */}
+      <div className="bg-white border border-gray-200 rounded-lg p-6">
         <h3 className="text-xl font-bold mb-4">Statistiques</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <div className="bg-blue-50 p-4 rounded-lg">
-            <div className="text-3xl font-bold text-blue-700">{profile._count.teams}</div>
-            <div className="text-sm text-gray-600 mt-1">Équipes</div>
+            <div className="text-3xl font-bold text-blue-700">{profile._count?.teams ?? 0}</div>
+            <div className="text-sm text-gray-600 mt-1">Équipes créées</div>
           </div>
-          <div className="bg-green-50 p-4 rounded-lg">
-            <div className="text-3xl font-bold text-green-700">{profile._count.matches}</div>
-            <div className="text-sm text-gray-600 mt-1">Parties jouées</div>
-          </div>
-          <div className="bg-yellow-50 p-4 rounded-lg">
-            <div className="text-3xl font-bold text-yellow-700">{profile._count.createdMatches}</div>
-            <div className="text-sm text-gray-600 mt-1">Parties créées</div>
-          </div>
+          {(profile._count?.matches ?? 0) > 0 && (
+            <div className="bg-green-50 p-4 rounded-lg">
+              <div className="text-3xl font-bold text-green-700">
+                {profile._count.matches}
+              </div>
+              <div className="text-sm text-gray-600 mt-1">Parties jouées (en ligne)</div>
+            </div>
+          )}
+          {(profile._count?.createdMatches ?? 0) > 0 && (
+            <div className="bg-yellow-50 p-4 rounded-lg">
+              <div className="text-3xl font-bold text-yellow-700">
+                {profile._count.createdMatches}
+              </div>
+              <div className="text-sm text-gray-600 mt-1">Parties créées (en ligne)</div>
+            </div>
+          )}
           <div className="bg-purple-50 p-4 rounded-lg">
-            <div className="text-3xl font-bold text-purple-700">{profile._count.teamSelections}</div>
-            <div className="text-sm text-gray-600 mt-1">Sélections</div>
+            <div className="text-3xl font-bold text-purple-700">{profile._count?.teamSelections ?? 0}</div>
+            <div className="text-sm text-gray-600 mt-1">Sélections d'équipe</div>
+          </div>
+          <div className="bg-pink-50 p-4 rounded-lg">
+            <div className="text-3xl font-bold text-pink-700">{profile._count?.createdLocalMatches ?? 0}</div>
+            <div className="text-sm text-gray-600 mt-1">Matchs locaux créés</div>
           </div>
         </div>
-      </div> */}
+      </div>
 
       {/* Informations de compte */}
       {!editing && (
@@ -525,6 +580,27 @@ export default function ProfilePage() {
             </a>
           )}
         </div>
+      </div>
+
+      {/* Suppression du compte */}
+      <div className="bg-white border border-gray-200 rounded-lg p-6">
+        <h3 className="text-xl font-bold mb-4 text-red-600">Suppression du compte</h3>
+        {deleteError && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+            <p className="text-red-800">{deleteError}</p>
+          </div>
+        )}
+        <p className="text-sm text-gray-700 mb-4">
+          La suppression de votre compte désactive votre accès à la plateforme. Vos données de jeu
+          existantes peuvent être conservées pour les statistiques, mais vous ne pourrez plus vous reconnecter.
+        </p>
+        <button
+          onClick={handleDeleteAccount}
+          disabled={deletingAccount}
+          className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {deletingAccount ? "Suppression en cours..." : "🗑️ Supprimer mon compte"}
+        </button>
       </div>
     </div>
   );

@@ -55,6 +55,7 @@ type CupActionAwards = {
 type Cup = {
   id: string;
   name: string;
+  ruleset: string;
   creator: {
     id: string;
     coachName: string;
@@ -69,6 +70,7 @@ type Cup = {
     id: string;
     name: string;
     roster: string;
+    ruleset: string;
     owner: {
       id: string;
       coachName: string;
@@ -88,8 +90,8 @@ type Cup = {
     name: string | null;
     status: string;
     isPublic: boolean;
-    teamA: { id: string; name: string; roster: string };
-    teamB: { id: string; name: string; roster: string } | null;
+    teamA: { id: string; name: string; roster: string; ruleset: string };
+    teamB: { id: string; name: string; roster: string; ruleset: string } | null;
     scoreTeamA: number | null;
     scoreTeamB: number | null;
     createdAt: string;
@@ -100,6 +102,7 @@ type Team = {
   id: string;
   name: string;
   roster: string;
+  ruleset: string;
   createdAt: string;
 };
 
@@ -141,6 +144,10 @@ export default function CupDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTeamId, setSelectedTeamId] = useState<string>("");
+  const rulesetLabels: Record<string, string> = {
+    season_2: "Saison 2",
+    season_3: "Saison 3",
+  };
 
   useEffect(() => {
     if (cupId) {
@@ -291,6 +298,9 @@ export default function CupDetailPage() {
                 Créateur
               </span>
             )}
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">
+              {rulesetLabels[cup.ruleset] || cup.ruleset}
+            </span>
             {!cup.isPublic && (
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                 🔒 Privée
@@ -855,7 +865,7 @@ export default function CupDetailPage() {
             Fermer les inscriptions
           </button>
         )}
-        {!cup.hasTeamParticipating && cup.status === "ouverte" && teams.length > 0 && (
+        {!cup.hasTeamParticipating && cup.status === "ouverte" && eligibleTeams.length > 0 && (
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">
               Choisir une équipe à inscrire
@@ -867,7 +877,7 @@ export default function CupDetailPage() {
                 className="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all"
               >
                 <option value="">-- Sélectionner une équipe --</option>
-                {teams.map((team) => (
+                {eligibleTeams.map((team) => (
                   <option key={team.id} value={team.id}>
                     {team.name} ({team.roster})
                   </option>
@@ -881,6 +891,11 @@ export default function CupDetailPage() {
                 Inscrire l'équipe
               </button>
             </div>
+          </div>
+        )}
+        {!cup.hasTeamParticipating && cup.status === "ouverte" && eligibleTeams.length === 0 && (
+          <div className="text-sm text-gray-600 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            Aucune équipe disponible avec le ruleset {rulesetLabels[cup.ruleset] || cup.ruleset}. Créez-en une ou modifiez une équipe existante.
           </div>
         )}
         {cup.hasTeamParticipating && (

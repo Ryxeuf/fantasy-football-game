@@ -4,6 +4,7 @@ import { API_BASE } from "../../../auth-client";
 import StarPlayerSelector from "../../../components/StarPlayerSelector";
 import SkillTooltip from "../components/SkillTooltip";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { DEFAULT_RULESET, RULESETS, type Ruleset } from "@bb/game-engine";
 
 type Position = {
   slug: string;
@@ -27,6 +28,16 @@ type Roster = {
 export default function NewTeamBuilder() {
   const { t, language } = useLanguage();
   // Initialiser les valeurs directement depuis l'URL
+  const [ruleset, setRuleset] = useState<Ruleset>(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const value = urlParams.get("ruleset") as Ruleset | null;
+      if (value && RULESETS.includes(value)) {
+        return value;
+      }
+    }
+    return DEFAULT_RULESET;
+  });
   const [rosterId, setRosterId] = useState(() => {
     if (typeof window !== "undefined") {
       const urlParams = new URLSearchParams(window.location.search);
@@ -64,7 +75,7 @@ export default function NewTeamBuilder() {
     const lang = language === "en" ? "en" : "fr";
     const API_BASE_PUBLIC = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8201';
     
-    fetch(`${API_BASE_PUBLIC}/api/rosters?lang=${lang}`)
+    fetch(`${API_BASE_PUBLIC}/api/rosters?lang=${lang}&ruleset=${ruleset}`)
       .then((r) => r.json())
       .then((data) => {
         const rostersList = (data.rosters || []).map((r: { slug: string; name: string }) => ({
@@ -86,12 +97,13 @@ export default function NewTeamBuilder() {
         console.error("Erreur lors du chargement des rosters:", err);
         setLoadingRosters(false);
       });
-  }, [language]);
+  }, [language, ruleset]);
 
   // Charger les positions du roster sélectionné
   useEffect(() => {
     const token = localStorage.getItem("auth_token");
-    fetch(`${API_BASE}/team/rosters/${rosterId}`, {
+    const query = ruleset ? `?ruleset=${encodeURIComponent(ruleset)}` : "";
+    fetch(`${API_BASE}/team/rosters/${rosterId}${query}`, {
       headers: { Authorization: token ? `Bearer ${token}` : "" },
     })
       .then((r) => r.json())
@@ -104,7 +116,7 @@ export default function NewTeamBuilder() {
         setCounts(init);
       })
       .catch(() => setError(t.teams.errorLoadingRoster));
-  }, [rosterId, t]);
+  }, [rosterId, ruleset, t]);
 
   const total = useMemo(
     () =>
@@ -131,6 +143,11 @@ export default function NewTeamBuilder() {
     () => totalPlayers + selectedStarPlayers.length,
     [totalPlayers, selectedStarPlayers],
   );
+
+  const rulesetLabels: Record<Ruleset, string> = {
+    season_2: t.teams.rulesetSeason2 ?? "Saison 2",
+    season_3: t.teams.rulesetSeason3 ?? "Saison 3",
+  };
 
   function change(slug: string, delta: number) {
     setCounts((prev) => {
@@ -159,6 +176,7 @@ export default function NewTeamBuilder() {
           name,
           roster: rosterId,
           teamValue,
+          ruleset,
           choices: Object.entries(counts).map(([slug, count]) => ({
             key: slug,
             count,
@@ -185,24 +203,45 @@ export default function NewTeamBuilder() {
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
-        <div className="flex gap-3">
-          <select
-            className="border p-2 w-48"
-            value={rosterId}
-            onChange={(e) => setRosterId(e.target.value)}
-            disabled={loadingRosters}
-          >
-            {loadingRosters ? (
-              <option value="">{t.common.loading}</option>
-            ) : (
-              rosters.map((roster) => (
-                <option key={roster.slug} value={roster.slug}>
-                  {roster.name}
+        <div className="flex gap-3 flex-wrap">
+          <div className="w-full sm:w-48">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {t.teams.rulesetLabel}
+            </label>
+            <select
+              className="border p-2 w-full rounded"
+              value={ruleset}
+              onChange={(e) => setRuleset(e.target.value as Ruleset)}
+            >
+              {RULESETS.map((value) => (
+                <option key={value} value={value}>
+                  {rulesetLabels[value]}
                 </option>
-              ))
-            )}
-          </select>
-          <div className="flex-1">
+              ))}
+            </select>
+          </div>
+          <div className="w-full sm:w-48">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {t.teams.roster}
+            </label>
+            <select
+              className="border p-2 w-full rounded"
+              value={rosterId}
+              onChange={(e) => setRosterId(e.target.value)}
+              disabled={loadingRosters}
+            >
+              {loadingRosters ? (
+                <option value="">{t.common.loading}</option>
+              ) : (
+                rosters.map((roster) => (
+                  <option key={roster.slug} value={roster.slug}>
+                    {roster.name}
+                  </option>
+                ))
+              )}
+            </select>
+          </div>
+          <div className="flex-1 min-w-[200px]">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               {t.teams.teamValue}
             </label>
@@ -275,6 +314,7 @@ export default function NewTeamBuilder() {
 
       <StarPlayerSelector
         roster={rosterId}
+        ruleset={ruleset}
         selectedStarPlayers={selectedStarPlayers}
         onSelectionChange={setSelectedStarPlayers}
         currentPlayerCount={totalPlayers}

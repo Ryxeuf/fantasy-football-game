@@ -15,6 +15,11 @@ const createTestPlayers = (teamPrefix, count) => {
         skills: '',
     }));
 };
+const expectPlacementSuccess = (state, playerId, pos) => {
+    const result = placePlayerInSetup(state, playerId, pos);
+    expect(result.success).toBe(true);
+    return result.state;
+};
 describe('Prévention des chevauchements de joueurs', () => {
     it('devrait empêcher de placer deux joueurs sur la même case', () => {
         const teamAData = createTestPlayers('A', 11);
@@ -25,15 +30,16 @@ describe('Prévention des chevauchements de joueurs', () => {
         const pos = { x: 12, y: 0 };
         // Placer le premier joueur
         const playerId1 = 'A1';
-        let currentState = placePlayerInSetup(setupState, playerId1, pos);
+        let currentState = expectPlacementSuccess(setupState, playerId1, pos);
         expect(currentState).not.toBe(setupState);
         expect(currentState.preMatch.placedPlayers.length).toBe(1);
         // Essayer de placer un deuxième joueur sur la même position
         const playerId2 = 'A2';
-        const result = placePlayerInSetup(currentState, playerId2, pos);
+        const failResult = placePlayerInSetup(currentState, playerId2, pos);
+        expect(failResult.success).toBe(false);
         // Le placement doit échouer (retourner le même état)
-        expect(result).toBe(currentState);
-        expect(result.preMatch.placedPlayers.length).toBe(1); // Toujours 1 joueur
+        expect(failResult.state).toBe(currentState);
+        expect(failResult.state.preMatch.placedPlayers.length).toBe(1); // Toujours 1 joueur
     });
     it('devrait permettre de repositionner un joueur sur une case libre', () => {
         const teamAData = createTestPlayers('A', 11);
@@ -45,10 +51,10 @@ describe('Prévention des chevauchements de joueurs', () => {
         const pos2 = legalPositions[1];
         // Placer le premier joueur
         const playerId = 'A1';
-        let currentState = placePlayerInSetup(setupState, playerId, pos1);
+        let currentState = expectPlacementSuccess(setupState, playerId, pos1);
         expect(currentState.preMatch.placedPlayers.length).toBe(1);
         // Repositionner le joueur sur une autre position libre
-        const result = placePlayerInSetup(currentState, playerId, pos2);
+        const result = expectPlacementSuccess(currentState, playerId, pos2);
         expect(result).not.toBe(currentState);
         expect(result.preMatch.placedPlayers.length).toBe(1); // Toujours 1 joueur
         expect(result.players.find(p => p.id === playerId)?.pos).toEqual(pos2);
@@ -63,11 +69,11 @@ describe('Prévention des chevauchements de joueurs', () => {
         const pos2 = legalPositions[1];
         // Placer le premier joueur
         const playerId1 = 'A1';
-        let currentState = placePlayerInSetup(setupState, playerId1, pos1);
+        let currentState = expectPlacementSuccess(setupState, playerId1, pos1);
         expect(currentState.preMatch.placedPlayers.length).toBe(1);
         // Placer le deuxième joueur sur une position différente
         const playerId2 = 'A2';
-        const result = placePlayerInSetup(currentState, playerId2, pos2);
+        const result = expectPlacementSuccess(currentState, playerId2, pos2);
         expect(result).not.toBe(currentState);
         expect(result.preMatch.placedPlayers.length).toBe(2); // Maintenant 2 joueurs
     });

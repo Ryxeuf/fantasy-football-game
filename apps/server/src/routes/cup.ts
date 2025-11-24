@@ -7,6 +7,7 @@ import {
   type LocalMatchWithRelations,
 } from "../cupScoring";
 import { hasRole } from "../utils/roles";
+import { resolveRuleset } from "../utils/ruleset-helpers";
 
 const router = Router();
 
@@ -77,6 +78,7 @@ router.get("/", authUser, async (req: AuthenticatedRequest, res) => {
                 id: true,
                 name: true,
                 roster: true,
+            ruleset: true,
                 owner: {
                   select: {
                     id: true,
@@ -109,6 +111,7 @@ router.get("/", authUser, async (req: AuthenticatedRequest, res) => {
       name: cup.name,
       creator: cup.creator,
       creatorId: cup.creatorId,
+      ruleset: cup.ruleset,
       validated: cup.validated,
       isPublic: cup.isPublic,
       status: cup.status,
@@ -117,6 +120,7 @@ router.get("/", authUser, async (req: AuthenticatedRequest, res) => {
         id: p.team.id,
         name: p.team.name,
         roster: p.team.roster,
+        ruleset: p.team.ruleset,
         owner: p.team.owner,
       })),
       createdAt: cup.createdAt,
@@ -171,6 +175,7 @@ router.get("/archived", authUser, async (req: AuthenticatedRequest, res) => {
                 id: true,
                 name: true,
                 roster: true,
+            ruleset: true,
                 owner: {
                   select: {
                     id: true,
@@ -191,6 +196,7 @@ router.get("/archived", authUser, async (req: AuthenticatedRequest, res) => {
       name: cup.name,
       creator: cup.creator,
       creatorId: cup.creatorId,
+      ruleset: cup.ruleset,
       validated: cup.validated,
       isPublic: cup.isPublic,
       status: cup.status,
@@ -199,6 +205,7 @@ router.get("/archived", authUser, async (req: AuthenticatedRequest, res) => {
         id: p.team.id,
         name: p.team.name,
         roster: p.team.roster,
+        ruleset: p.team.ruleset,
         owner: p.team.owner,
       })),
       createdAt: cup.createdAt,
@@ -232,6 +239,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
                 id: true,
                 name: true,
                 roster: true,
+            ruleset: true,
                 owner: {
                   select: {
                     id: true,
@@ -251,6 +259,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
                 id: true,
                 name: true,
                 roster: true,
+            ruleset: true,
               },
             },
             teamB: {
@@ -258,6 +267,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
                 id: true,
                 name: true,
                 roster: true,
+            ruleset: true,
               },
             },
             actions: true,
@@ -348,6 +358,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
       name: cup.name,
       creator: cup.creator,
       creatorId: cup.creatorId,
+      ruleset: cup.ruleset,
       validated: cup.validated,
       isPublic: cup.isPublic,
       status: cup.status,
@@ -356,6 +367,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
         id: p.team.id,
         name: p.team.name,
         roster: p.team.roster,
+        ruleset: p.team.ruleset,
         owner: p.team.owner,
       })),
       createdAt: cup.createdAt,
@@ -375,12 +387,14 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
           id: m.teamA.id,
           name: m.teamA.name,
           roster: m.teamA.roster,
+          ruleset: m.teamA.ruleset,
         },
         teamB: m.teamB
           ? {
               id: m.teamB.id,
               name: m.teamB.name,
               roster: m.teamB.roster,
+              ruleset: m.teamB.ruleset,
             }
           : null,
         scoreTeamA: m.scoreTeamA ?? null,
@@ -401,6 +415,7 @@ router.post("/", authUser, async (req: AuthenticatedRequest, res) => {
   const body = (req.body ?? {}) as {
     name?: string;
     isPublic?: boolean;
+    ruleset?: string;
     scoringConfig?: Partial<{
       winPoints: number;
       drawPoints: number;
@@ -423,6 +438,7 @@ router.post("/", authUser, async (req: AuthenticatedRequest, res) => {
   };
 
   const { name, isPublic } = body;
+  const ruleset = resolveRuleset(body.ruleset);
 
   if (!name || typeof name !== "string" || name.trim() === "") {
     return res.status(400).json({ error: "Le nom de la coupe est requis" });
@@ -500,6 +516,7 @@ router.post("/", authUser, async (req: AuthenticatedRequest, res) => {
       data: {
         name: name.trim(),
         creatorId: req.user!.id,
+        ruleset,
         validated: false,
         isPublic: cupIsPublic,
         ...finalScoring,
@@ -521,6 +538,7 @@ router.post("/", authUser, async (req: AuthenticatedRequest, res) => {
       name: cup.name,
       creator: cup.creator,
       creatorId: cup.creatorId,
+      ruleset: cup.ruleset,
       validated: cup.validated,
       isPublic: cup.isPublic,
       status: cup.status || "ouverte",
@@ -586,6 +604,12 @@ router.post(
 
       if (!team) {
         return res.status(404).json({ error: "Équipe introuvable ou vous n'en êtes pas le propriétaire" });
+      }
+
+      if (team.ruleset !== cup.ruleset) {
+        return res.status(400).json({
+          error: "Cette équipe utilise un ruleset différent de la coupe",
+        });
       }
 
       // Vérifier que l'équipe n'est pas déjà inscrite

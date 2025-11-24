@@ -8,6 +8,11 @@ datasource db {
   url      = env("TEST_DATABASE_URL")
 }
 
+enum Ruleset {
+  season_2
+  season_3
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -73,6 +78,7 @@ model Team {
   ownerId   String
   name      String
   roster    String
+  ruleset   Ruleset  @default(season_2)
   createdAt DateTime @default(now())
   players   TeamPlayer[]
   selections TeamSelection[]
@@ -115,6 +121,7 @@ model Cup {
   name      String   // Nom de la coupe (obligatoire)
   creator   User     @relation("CupCreator", fields: [creatorId], references: [id])
   creatorId String
+  ruleset   Ruleset  @default(season_2)
   validated Boolean  @default(false) // Si true, la coupe est validée et fermée aux inscriptions
   isPublic  Boolean  @default(true)  // Si true, la coupe est publique et apparaît dans la liste
   status    String   @default("ouverte") // Statut: "ouverte", "en_cours", "terminee", "archivee"

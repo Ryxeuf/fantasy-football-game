@@ -2,10 +2,15 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { API_BASE } from "../../../../../auth-client";
+import {
+  RULESET_OPTIONS,
+  type Ruleset,
+} from "../../../ruleset-utils";
 
 type Roster = {
   id: string;
   slug: string;
+  ruleset: Ruleset;
   name: string;
   nameEn: string;
   descriptionFr?: string | null;
@@ -104,6 +109,7 @@ export default function EditRosterPage() {
         regionalRules: regionalRules,
         specialRules: formData.get("specialRules") || null,
         naf: formData.get("naf") === "on",
+        ruleset: formData.get("ruleset"),
       };
       await putJSON(`/admin/data/rosters/${roster.id}`, data);
       router.push("/admin/data/rosters");
@@ -139,6 +145,20 @@ export default function EditRosterPage() {
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-6">
+          <div>
+            <label className="block text-sm font-medium mb-1">Ruleset *</label>
+            <select
+              name="ruleset"
+              defaultValue={roster.ruleset}
+              className="w-full border rounded px-3 py-2"
+            >
+              {RULESET_OPTIONS.map(({ value, label }) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
           <div>
             <label className="block text-sm font-medium mb-1">Nom (FR) *</label>
             <input

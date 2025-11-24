@@ -6,6 +6,7 @@ type Team = {
   id: string;
   name: string;
   roster: string;
+  ruleset: string;
   initialBudget: number;
   treasury: number;
   currentValue: number;
@@ -81,6 +82,7 @@ export default function AdminTeamsPage() {
   const [search, setSearch] = useState("");
   const [rosterFilter, setRosterFilter] = useState("");
   const [ownerFilter, setOwnerFilter] = useState("");
+  const [rulesetFilter, setRulesetFilter] = useState("");
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [currentPage, setCurrentPage] = useState(1);
@@ -99,6 +101,7 @@ export default function AdminTeamsPage() {
         ...(search && { search }),
         ...(rosterFilter && { roster: rosterFilter }),
         ...(ownerFilter && { ownerId: ownerFilter }),
+        ...(rulesetFilter && { ruleset: rulesetFilter }),
       });
       const data = await fetchJSON(`/admin/teams?${params}`);
       setTeams(data.teams);
@@ -255,6 +258,18 @@ export default function AdminTeamsPage() {
             <option value="norse">Nordiques</option>
             <option value="snotling">Snotlings</option>
           </select>
+          <select
+            value={rulesetFilter}
+            onChange={(e) => {
+              setRulesetFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all bg-white"
+          >
+            <option value="">Tous les rulesets</option>
+            <option value="season_2">Saison 2</option>
+            <option value="season_3">Saison 3</option>
+          </select>
         </div>
       </div>
 
@@ -296,6 +311,9 @@ export default function AdminTeamsPage() {
                     Roster <SortIcon column="roster" />
                   </div>
                 </th>
+              <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
+                Ruleset
+              </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
                   Propriétaire
                 </th>
@@ -331,6 +349,11 @@ export default function AdminTeamsPage() {
                   <td className="px-6 py-4">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                       {team.roster}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">
+                      {team.ruleset === "season_3" ? "Saison 3" : "Saison 2"}
                     </span>
                   </td>
                   <td className="px-6 py-4">

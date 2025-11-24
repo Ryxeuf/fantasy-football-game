@@ -1,30 +1,33 @@
 import { describe, it, expect } from 'vitest';
+import { DEFAULT_RULESET } from '../rosters/positions';
 import { getPlayerCost, calculateTeamValue, type TeamValueData } from '../utils/team-value-calculator';
 
 describe('Team Value Calculator - Consistency Check', () => {
   it('should calculate correct total for Skaven team', () => {
     // Équipe Skaven avec les joueurs de l'image
+    const ruleset = DEFAULT_RULESET;
     const skavenTeam: TeamValueData = {
       players: [
-        { cost: getPlayerCost('Lineman', 'skaven'), available: true }, // 50k
-        { cost: getPlayerCost('Lineman', 'skaven'), available: true }, // 50k
-        { cost: getPlayerCost('Lineman', 'skaven'), available: true }, // 50k
-        { cost: getPlayerCost('Lineman', 'skaven'), available: true }, // 50k
-        { cost: getPlayerCost('Thrower', 'skaven'), available: true }, // 85k
-        { cost: getPlayerCost('Blitzer', 'skaven'), available: true }, // 90k
-        { cost: getPlayerCost('Blitzer', 'skaven'), available: true }, // 90k
-        { cost: getPlayerCost('Gutter Runner', 'skaven'), available: true }, // 85k
-        { cost: getPlayerCost('Gutter Runner', 'skaven'), available: true }, // 85k
-        { cost: getPlayerCost('Gutter Runner', 'skaven'), available: true }, // 85k
-        { cost: getPlayerCost('Gutter Runner', 'skaven'), available: true }, // 85k
-        { cost: getPlayerCost('Rat Ogre', 'skaven'), available: true }, // 150k
+        { cost: getPlayerCost('Lineman', 'skaven', ruleset), available: true }, // 50k
+        { cost: getPlayerCost('Lineman', 'skaven', ruleset), available: true }, // 50k
+        { cost: getPlayerCost('Lineman', 'skaven', ruleset), available: true }, // 50k
+        { cost: getPlayerCost('Lineman', 'skaven', ruleset), available: true }, // 50k
+        { cost: getPlayerCost('Thrower', 'skaven', ruleset), available: true }, // 85k
+        { cost: getPlayerCost('Blitzer', 'skaven', ruleset), available: true }, // 90k
+        { cost: getPlayerCost('Blitzer', 'skaven', ruleset), available: true }, // 90k
+        { cost: getPlayerCost('Gutter Runner', 'skaven', ruleset), available: true }, // 85k
+        { cost: getPlayerCost('Gutter Runner', 'skaven', ruleset), available: true }, // 85k
+        { cost: getPlayerCost('Gutter Runner', 'skaven', ruleset), available: true }, // 85k
+        { cost: getPlayerCost('Gutter Runner', 'skaven', ruleset), available: true }, // 85k
+        { cost: getPlayerCost('Rat Ogre', 'skaven', ruleset), available: true }, // 150k
       ],
       rerolls: 1,
       cheerleaders: 0,
       assistants: 0,
       apothecary: false,
       dedicatedFans: 1,
-      roster: 'skaven'
+      roster: 'skaven',
+      ruleset,
     };
 
     // Calcul manuel : 4×50k + 1×85k + 2×90k + 4×85k + 1×150k = 200k + 85k + 180k + 340k + 150k = 955k
@@ -48,9 +51,10 @@ describe('Team Value Calculator - Consistency Check', () => {
     // Vérifier que les coûts affichés correspondent aux coûts calculés
     const positions = ['Lineman', 'Thrower', 'Blitzer', 'Gutter Runner', 'Rat Ogre'];
     const roster = 'skaven';
+    const ruleset = DEFAULT_RULESET;
     
     positions.forEach(position => {
-      const cost = getPlayerCost(position, roster);
+      const cost = getPlayerCost(position, roster, ruleset);
       expect(cost).toBeGreaterThan(0);
       expect(cost).toBeLessThan(200000); // Vérification raisonnable
     });

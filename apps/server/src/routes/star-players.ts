@@ -1,11 +1,12 @@
 import { Router } from "express";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
 import { prisma } from "../prisma";
-import { 
-  getAvailableStarPlayers, 
-  TEAM_REGIONAL_RULES,
-  type StarPlayerDefinition 
+import {
+  getAvailableStarPlayers,
+  getRegionalRulesForTeam,
+  type StarPlayerDefinition,
 } from "@bb/game-engine";
+import { resolveRuleset, DEFAULT_RULESET } from "../utils/ruleset-helpers";
 
 const router = Router();
 
@@ -121,21 +122,34 @@ router.get("/:slug", async (req, res) => {
 router.get("/available/:roster", async (req, res) => {
   try {
     const { roster } = req.params;
+    const ruleset = resolveRuleset(req.query.ruleset as string | undefined);
     
     // Vérifier que le roster existe
-    const rosterExists = await prisma.roster.findUnique({
-      where: { slug: roster },
+    const rosterExists = await prisma.roster.findFirst({
+      where: { slug: roster, ruleset },
     });
     
     if (!rosterExists) {
-      return res.status(404).json({
-        success: false,
-        error: "Unknown team roster"
-      });
+      if (ruleset !== DEFAULT_RULESET) {
+        const fallback = await prisma.roster.findFirst({
+          where: { slug: roster, ruleset: DEFAULT_RULESET },
+        });
+        if (!fallback) {
+          return res.status(404).json({
+            success: false,
+            error: "Unknown team roster",
+          });
+        }
+      } else {
+        return res.status(404).json({
+          success: false,
+          error: "Unknown team roster",
+        });
+      }
     }
 
     // Récupérer les règles régionales depuis le game-engine (pour l'instant)
-    const regionalRules = TEAM_REGIONAL_RULES[roster];
+    const regionalRules = getRegionalRulesForTeam(roster, ruleset);
     
     // Récupérer tous les star players disponibles pour ce roster
     // Un star player est disponible si :
@@ -183,6 +197,7 @@ router.get("/available/:roster", async (req, res) => {
     res.json({
       success: true,
       roster,
+      ruleset,
       regionalRules,
       count: transformedStarPlayers.length,
       starPlayers: transformedStarPlayers
@@ -203,7 +218,8 @@ router.get("/available/:roster", async (req, res) => {
 router.get("/regional-rules/:roster", (req, res) => {
   try {
     const { roster } = req.params;
-    const regionalRules = TEAM_REGIONAL_RULES[roster];
+    const ruleset = resolveRuleset(req.query.ruleset as string | undefined);
+    const regionalRules = getRegionalRulesForTeam(roster, ruleset);
 
     if (!regionalRules) {
       return res.status(404).json({

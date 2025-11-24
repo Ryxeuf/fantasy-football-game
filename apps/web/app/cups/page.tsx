@@ -2,10 +2,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { API_BASE } from "../auth-client";
+import { RULESETS } from "@bb/game-engine";
 
 type Cup = {
   id: string;
   name: string;
+  ruleset: string;
   creator: {
     id: string;
     coachName: string;
@@ -20,6 +22,7 @@ type Cup = {
     id: string;
     name: string;
     roster: string;
+    ruleset: string;
     owner: {
       id: string;
       coachName: string;
@@ -46,6 +49,7 @@ type Team = {
   id: string;
   name: string;
   roster: string;
+  ruleset: string;
   createdAt: string;
 };
 
@@ -87,6 +91,7 @@ export default function CupsPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newCupName, setNewCupName] = useState("");
   const [newCupIsPublic, setNewCupIsPublic] = useState(true);
+  const [newCupRuleset, setNewCupRuleset] = useState<string>("season_2");
   const [winPoints, setWinPoints] = useState(1000);
   const [drawPoints, setDrawPoints] = useState(400);
   const [lossPoints, setLossPoints] = useState(0);
@@ -97,6 +102,10 @@ export default function CupsPage() {
   const [passPoints, setPassPoints] = useState(2);
   const [creating, setCreating] = useState(false);
   const [selectedTeamForRegistration, setSelectedTeamForRegistration] = useState<Record<string, string>>({});
+  const rulesetLabels: Record<string, string> = {
+    season_2: "Saison 2",
+    season_3: "Saison 3",
+  };
 
   useEffect(() => {
     loadCups();
@@ -154,6 +163,7 @@ export default function CupsPage() {
       const response = await postJSON("/cup", { 
         name: newCupName.trim(),
         isPublic: newCupIsPublic,
+        ruleset: newCupRuleset,
         scoringConfig: {
           winPoints,
           drawPoints,
@@ -286,6 +296,22 @@ export default function CupsPage() {
                 maxLength={100}
                 required
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Ruleset
+              </label>
+              <select
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all"
+                value={newCupRuleset}
+                onChange={(e) => setNewCupRuleset(e.target.value)}
+              >
+                {RULESETS.map((value) => (
+                  <option key={value} value={value}>
+                    {value === "season_3" ? "Saison 3" : "Saison 2"}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-gray-200">
               <div>
@@ -445,7 +471,9 @@ export default function CupsPage() {
             </p>
           </div>
         ) : (
-          cups.map((cup) => (
+          cups.map((cup) => {
+            const eligibleTeams = teams.filter((team) => team.ruleset === cup.ruleset);
+            return (
             <div
               key={cup.id}
               className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-shadow"
@@ -486,6 +514,9 @@ export default function CupsPage() {
                         Créateur
                       </span>
                     )}
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">
+                      {rulesetLabels[cup.ruleset] || cup.ruleset}
+                    </span>
                   </div>
                   <p className="text-sm text-gray-600">
                     Créée par <span className="font-medium">{cup.creator.coachName}</span>
@@ -534,7 +565,7 @@ export default function CupsPage() {
                     Fermer les inscriptions
                   </button>
                 )}
-                {!cup.hasTeamParticipating && cup.status === "ouverte" && teams.length > 0 && (
+                {!cup.hasTeamParticipating && cup.status === "ouverte" && eligibleTeams.length > 0 && (
                   <div className="flex gap-2 items-end">
                     <div className="flex-1">
                       <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -546,7 +577,8 @@ export default function CupsPage() {
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all"
                       >
                         <option value="">-- Sélectionner une équipe --</option>
-                        {teams.map((team) => (
+                        <option value="">-- Sélectionner une équipe --</option>
+                        {eligibleTeams.map((team) => (
                           <option key={team.id} value={team.id}>
                             {team.name} ({team.roster})
                           </option>
@@ -560,6 +592,11 @@ export default function CupsPage() {
                     >
                       Inscrire l'équipe
                     </button>
+                  </div>
+                )}
+                {!cup.hasTeamParticipating && cup.status === "ouverte" && eligibleTeams.length === 0 && (
+                  <div className="text-sm text-gray-600">
+                    Aucune équipe avec le ruleset {rulesetLabels[cup.ruleset] || cup.ruleset}. Créez-en une avant de vous inscrire.
                   </div>
                 )}
                 {cup.hasTeamParticipating && (

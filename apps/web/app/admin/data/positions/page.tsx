@@ -3,6 +3,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { API_BASE } from "../../../auth-client";
+import { RULESET_OPTIONS, getRulesetLabel } from "../ruleset-utils";
 
 type Position = {
   id: string;
@@ -16,7 +17,7 @@ type Position = {
   ag: number;
   pa: number;
   av: number;
-  roster: { id: string; slug: string; name: string };
+  roster: { id: string; slug: string; name: string; ruleset: string };
   skills: Array<{ skill: { slug: string; nameFr: string } }>;
 };
 
@@ -24,6 +25,7 @@ type Roster = {
   id: string;
   slug: string;
   name: string;
+  ruleset: string;
 };
 
 async function fetchJSON(path: string) {
@@ -59,6 +61,7 @@ export default function AdminPositionsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [rosterFilter, setRosterFilter] = useState<string>("");
+  const [rulesetFilter, setRulesetFilter] = useState<string>("");
   const [nameSearch, setNameSearch] = useState<string>("");
   const [skillSearch, setSkillSearch] = useState<string>("");
   const [costMin, setCostMin] = useState<string>("");
@@ -67,7 +70,7 @@ export default function AdminPositionsPage() {
 
   useEffect(() => {
     loadData();
-  }, [rosterFilter]);
+  }, [rosterFilter, rulesetFilter]);
 
   const loadData = async () => {
     setLoading(true);
@@ -86,6 +89,7 @@ export default function AdminPositionsPage() {
       }
       const params = new URLSearchParams();
       if (rosterFilter) params.append("rosterId", rosterFilter);
+      if (rulesetFilter) params.append("ruleset", rulesetFilter);
       const [{ positions: posData }, { rosters: rostData }] = await Promise.all([
         fetchJSON(`/admin/data/positions?${params}`),
         fetchJSON("/admin/data/rosters"),
@@ -208,6 +212,9 @@ export default function AdminPositionsPage() {
       if (rosterFilter && position.roster.id !== rosterFilter) {
         return false;
       }
+      if (rulesetFilter && position.roster.ruleset !== rulesetFilter) {
+        return false;
+      }
 
       // Name search
       if (nameSearch && !position.displayName.toLowerCase().includes(nameSearch.toLowerCase())) {
@@ -260,7 +267,7 @@ export default function AdminPositionsPage() {
 
       return true;
     });
-  }, [positions, rosterFilter, nameSearch, skillSearch, costMin, costMax, statsSearch]);
+  }, [positions, rosterFilter, rulesetFilter, nameSearch, skillSearch, costMin, costMax, statsSearch]);
 
 
   if (loading) {
@@ -308,6 +315,26 @@ export default function AdminPositionsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
+              Ruleset
+            </label>
+            <select
+              value={rulesetFilter}
+              onChange={(e) => {
+                setRulesetFilter(e.target.value);
+                setRosterFilter("");
+              }}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all bg-white"
+            >
+              <option value="">Tous les rulesets</option>
+              {RULESET_OPTIONS.map(({ value, label }) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Roster
             </label>
             <select
@@ -318,7 +345,7 @@ export default function AdminPositionsPage() {
               <option value="">Tous les rosters</option>
               {rosters.map((r) => (
                 <option key={r.id} value={r.id}>
-                  {r.name}
+                  {r.name} • {getRulesetLabel(r.ruleset)}
                 </option>
               ))}
             </select>
@@ -369,7 +396,7 @@ export default function AdminPositionsPage() {
             </p>
           </div>
         </div>
-        {(nameSearch || skillSearch || costMin || costMax || statsSearch || rosterFilter) && (
+        {(nameSearch || skillSearch || costMin || costMax || statsSearch || rosterFilter || rulesetFilter) && (
           <div className="mt-4 pt-4 border-t border-gray-200">
             <button
               onClick={() => {
@@ -379,6 +406,7 @@ export default function AdminPositionsPage() {
                 setCostMax("");
                 setStatsSearch("");
                 setRosterFilter("");
+                setRulesetFilter("");
               }}
               className="text-sm text-gray-600 hover:text-gray-800 underline"
             >
@@ -396,6 +424,9 @@ export default function AdminPositionsPage() {
               <tr>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
                   Roster
+                </th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
+                  Ruleset
                 </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
                   Nom
@@ -420,7 +451,7 @@ export default function AdminPositionsPage() {
             <tbody className="divide-y divide-gray-200">
               {filteredPositions.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
                     Aucune position trouvée
                   </td>
                 </tr>
@@ -437,6 +468,11 @@ export default function AdminPositionsPage() {
                       >
                         {position.roster.name}
                       </Link>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                        {getRulesetLabel(position.roster.ruleset)}
+                      </span>
                     </td>
                     <td className="px-6 py-4 font-medium text-gray-900">
                       {position.displayName}

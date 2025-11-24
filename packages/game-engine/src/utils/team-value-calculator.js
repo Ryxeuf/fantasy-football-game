@@ -1,6 +1,7 @@
 /**
  * Calculateur de valeurs d'équipe selon les règles Blood Bowl
  */
+import { DEFAULT_RULESET, getPositionBySlug } from '../rosters/positions';
 /**
  * Obtient le coût d'une relance selon l'équipe
  */
@@ -143,13 +144,12 @@ export function calculateAllValues(data) {
         treasury: 0 // La trésorerie sera calculée après chaque match
     };
 }
-import { getPositionBySlug } from '../rosters/positions';
 /**
  * Obtient le coût d'un joueur selon sa position et le roster
  */
-export function getPlayerCost(position, roster) {
+export function getPlayerCost(position, roster, ruleset = DEFAULT_RULESET) {
     // Utiliser le nouveau système de slugs
-    const positionData = getPositionBySlug(position);
+    const positionData = getPositionBySlug(position, ruleset);
     if (positionData) {
         return positionData.cost * 1000; // Convertir de kpo en po
     }

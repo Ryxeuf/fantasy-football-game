@@ -3,7 +3,18 @@
  */
 
 export * from './positions';
-export { TEAM_ROSTERS, getPositionBySlug, getTeamPositions, getDisplayName, getSlugFromDisplayName, LEGACY_POSITION_MAPPING } from './positions';
+export {
+  TEAM_ROSTERS,
+  TEAM_ROSTERS_BY_RULESET,
+  RULESETS,
+  DEFAULT_RULESET,
+  getPositionBySlug,
+  getTeamPositions,
+  getDisplayName,
+  getSlugFromDisplayName,
+  LEGACY_POSITION_MAPPING,
+  type Ruleset,
+} from './positions';
 
 // Export des Star Players
 export * from './star-players';
@@ -12,6 +23,8 @@ export {
   getStarPlayerBySlug, 
   getAvailableStarPlayers, 
   TEAM_REGIONAL_RULES,
+  TEAM_REGIONAL_RULES_BY_RULESET,
+  getRegionalRulesForTeam,
   type StarPlayerDefinition,
   type RegionalRule
 } from './star-players';
@@ -27,5 +40,5 @@ export {
 } from './star-players-utils';
 
 // Types pour compatibilité
-export type AllowedRoster = 'skaven' | 'lizardmen' | 'wood_elf';
-export const ALLOWED_TEAMS: AllowedRoster[] = ['skaven', 'lizardmen', 'wood_elf'];
+export type AllowedRoster = keyof typeof TEAM_ROSTERS;
+export const ALLOWED_TEAMS: AllowedRoster[] = Object.keys(TEAM_ROSTERS) as AllowedRoster[];

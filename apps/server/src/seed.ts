@@ -1,9 +1,16 @@
 import { prisma } from "./prisma";
 import bcrypt from "bcryptjs";
 import { SKILLS_DEFINITIONS } from "../../../packages/game-engine/src/skills/index";
-import { TEAM_ROSTERS } from "../../../packages/game-engine/src/rosters/positions";
+import {
+  TEAM_ROSTERS,
+  TEAM_ROSTERS_BY_RULESET,
+  RULESETS,
+  DEFAULT_RULESET,
+  type Ruleset,
+} from "../../../packages/game-engine/src/rosters/positions";
 import { STAR_PLAYERS } from "../../../packages/game-engine/src/rosters/star-players";
 import { STATIC_SKILLS_DATA } from "./static-skills-data";
+import { UNKNOWN_USER_ID } from "./utils/user-constants";
 
 async function main() {
   console.log("🌱 Début du seed...\n");
@@ -112,50 +119,59 @@ async function main() {
     snotling: "Snotling",
   };
   
-  for (const [slug, rosterDef] of Object.entries(TEAM_ROSTERS)) {
-    try {
-      const existing = await prisma.roster.findUnique({
-        where: { slug }
-      });
-
-      const nameEn = rosterNamesEn[slug] || rosterDef.name; // Fallback sur le nom français si pas de traduction
-      const regionalRulesJson = rosterDef.regionalRules ? JSON.stringify(rosterDef.regionalRules) : null;
-
-      if (existing) {
-        await prisma.roster.update({
-          where: { slug },
-          data: {
-            name: rosterDef.name,
-            nameEn: nameEn,
-            descriptionFr: rosterDef.descriptionFr || null,
-            descriptionEn: rosterDef.descriptionEn || null,
-            budget: rosterDef.budget,
-            tier: rosterDef.tier,
-            regionalRules: regionalRulesJson,
-            specialRules: rosterDef.specialRules || null,
-            naf: rosterDef.naf,
-          }
+  for (const ruleset of RULESETS) {
+    const rosterMap = TEAM_ROSTERS_BY_RULESET[ruleset] || TEAM_ROSTERS;
+    for (const [slug, rosterDef] of Object.entries(rosterMap)) {
+      try {
+        const existing = await prisma.roster.findUnique({
+          where: { slug_ruleset: { slug, ruleset } },
         });
-        rostersSkipped++;
-      } else {
-        await prisma.roster.create({
-          data: {
-            slug,
-            name: rosterDef.name,
-            nameEn: nameEn,
-            descriptionFr: rosterDef.descriptionFr || null,
-            descriptionEn: rosterDef.descriptionEn || null,
-            budget: rosterDef.budget,
-            tier: rosterDef.tier,
-            regionalRules: regionalRulesJson,
-            specialRules: rosterDef.specialRules || null,
-            naf: rosterDef.naf,
-          }
-        });
-        rostersCreated++;
+
+        const nameEn = rosterNamesEn[slug] || rosterDef.name; // Fallback sur le nom français si pas de traduction
+        const regionalRulesJson = rosterDef.regionalRules
+          ? JSON.stringify(rosterDef.regionalRules)
+          : null;
+
+        if (existing) {
+          await prisma.roster.update({
+            where: { slug_ruleset: { slug, ruleset } },
+            data: {
+              name: rosterDef.name,
+              nameEn,
+              descriptionFr: rosterDef.descriptionFr || null,
+              descriptionEn: rosterDef.descriptionEn || null,
+              budget: rosterDef.budget,
+              tier: rosterDef.tier,
+              regionalRules: regionalRulesJson,
+              specialRules: rosterDef.specialRules || null,
+              naf: rosterDef.naf,
+            },
+          });
+          rostersSkipped++;
+        } else {
+          await prisma.roster.create({
+            data: {
+              slug,
+              ruleset,
+              name: rosterDef.name,
+              nameEn,
+              descriptionFr: rosterDef.descriptionFr || null,
+              descriptionEn: rosterDef.descriptionEn || null,
+              budget: rosterDef.budget,
+              tier: rosterDef.tier,
+              regionalRules: regionalRulesJson,
+              specialRules: rosterDef.specialRules || null,
+              naf: rosterDef.naf,
+            },
+          });
+          rostersCreated++;
+        }
+      } catch (error) {
+        console.error(
+          `❌ Erreur lors du seed du roster ${slug} (${ruleset}):`,
+          error,
+        );
       }
-    } catch (error) {
-      console.error(`❌ Erreur lors du seed du roster ${slug}:`, error);
     }
   }
   console.log(`✅ Rosters: ${rostersCreated} créés, ${rostersSkipped} mis à jour\n`);
@@ -167,81 +183,94 @@ async function main() {
   let positionsCreated = 0;
   let positionsSkipped = 0;
   
-  for (const [rosterSlug, rosterDef] of Object.entries(TEAM_ROSTERS)) {
-    const roster = await prisma.roster.findUnique({
-      where: { slug: rosterSlug }
-    });
+  for (const ruleset of RULESETS) {
+    const rosterMap = TEAM_ROSTERS_BY_RULESET[ruleset] || TEAM_ROSTERS;
+    for (const [rosterSlug, rosterDef] of Object.entries(rosterMap)) {
+      const roster = await prisma.roster.findUnique({
+        where: { slug_ruleset: { slug: rosterSlug, ruleset } },
+      });
 
-    if (!roster) {
-      console.error(`❌ Roster ${rosterSlug} non trouvé, impossible de créer les positions`);
-      continue;
-    }
+      if (!roster) {
+        console.error(
+          `❌ Roster ${rosterSlug} (${ruleset}) non trouvé, impossible de créer les positions`,
+        );
+        continue;
+      }
 
-    for (const positionDef of rosterDef.positions) {
-      try {
-        const existing = await prisma.position.findFirst({
-          where: {
+      for (const positionDef of rosterDef.positions) {
+        try {
+          const existing = await prisma.position.findFirst({
+            where: {
+              rosterId: roster.id,
+              slug: positionDef.slug,
+            },
+          });
+
+          const positionData = {
             rosterId: roster.id,
-            slug: positionDef.slug
-          }
-        });
+            slug: positionDef.slug,
+            displayName: positionDef.displayName,
+            cost: positionDef.cost,
+            min: positionDef.min,
+            max: positionDef.max,
+            ma: positionDef.ma,
+            st: positionDef.st,
+            ag: positionDef.ag,
+            pa: positionDef.pa,
+            av: positionDef.av,
+          };
 
-        const positionData = {
-          rosterId: roster.id,
-          slug: positionDef.slug,
-          displayName: positionDef.displayName,
-          cost: positionDef.cost,
-          min: positionDef.min,
-          max: positionDef.max,
-          ma: positionDef.ma,
-          st: positionDef.st,
-          ag: positionDef.ag,
-          pa: positionDef.pa,
-          av: positionDef.av,
-        };
-
-        let position;
-        if (existing) {
-          position = await prisma.position.update({
-            where: { id: existing.id },
-            data: positionData
-          });
-          positionsSkipped++;
-        } else {
-          position = await prisma.position.create({
-            data: positionData
-          });
-          positionsCreated++;
-        }
-
-        // Supprimer les anciennes relations de compétences pour cette position
-        await prisma.positionSkill.deleteMany({
-          where: { positionId: position.id }
-        });
-
-        // Créer les nouvelles relations de compétences
-        if (positionDef.skills && positionDef.skills.trim() !== '') {
-          const skillSlugs = positionDef.skills.split(',').map(s => s.trim()).filter(s => s.length > 0);
-          
-          for (const skillSlug of skillSlugs) {
-            const skill = await prisma.skill.findUnique({
-              where: { slug: skillSlug }
+          let position;
+          if (existing) {
+            position = await prisma.position.update({
+              where: { id: existing.id },
+              data: positionData,
             });
+            positionsSkipped++;
+          } else {
+            position = await prisma.position.create({
+              data: positionData,
+            });
+            positionsCreated++;
+          }
 
-            if (skill) {
-              await prisma.positionSkill.create({
-                data: {
-                  positionId: position.id,
-                  skillId: skill.id,
-                }
+          // Supprimer les anciennes relations de compétences pour cette position
+          await prisma.positionSkill.deleteMany({
+            where: { positionId: position.id },
+          });
+
+          // Créer les nouvelles relations de compétences
+          if (positionDef.skills && positionDef.skills.trim() !== "") {
+            const skillSlugs = positionDef.skills
+              .split(",")
+              .map((s) => s.trim())
+              .filter((s) => s.length > 0);
+
+            for (const skillSlug of skillSlugs) {
+              const skill = await prisma.skill.findUnique({
+                where: { slug: skillSlug },
               });
-            } else {
-              console.warn(`⚠️  Compétence ${skillSlug} non trouvée pour la position ${positionDef.slug}`);
+
+              if (skill) {
+                await prisma.positionSkill.create({
+                  data: {
+                    positionId: position.id,
+                    skillId: skill.id,
+                  },
+                });
+              } else {
+                console.warn(
+                  `⚠️  Compétence ${skillSlug} non trouvée pour la position ${positionDef.slug}`,
+                );
+              }
             }
           }
+        } catch (error) {
+          console.error(
+            `❌ Erreur lors du seed de la position ${positionDef.slug} (${ruleset}):`,
+            error,
+          );
         }
-      } catch (error) {
-        console.error(`❌ Erreur lors du seed de la position ${positionDef.slug}:`, error);
       }
     }
   }
@@ -332,27 +361,30 @@ async function main() {
             }
           });
         } else {
-          // Chercher si c'est un slug de roster
-          const roster = await prisma.roster.findUnique({
-            where: { slug: rule }
+          // Chercher si c'est un slug de roster (toutes déclinaisons de ruleset)
+          const rosters = await prisma.roster.findMany({
+            where: { slug: rule },
+            select: { id: true },
           });
 
-          if (roster) {
-            await prisma.starPlayerHirableBy.create({
-              data: {
-                starPlayerId: starPlayer.id,
-                rule: rule,
-                rosterId: roster.id,
-              }
-            });
+          if (rosters.length > 0) {
+            for (const roster of rosters) {
+              await prisma.starPlayerHirableBy.create({
+                data: {
+                  starPlayerId: starPlayer.id,
+                  rule,
+                  rosterId: roster.id,
+                },
+              });
+            }
           } else {
             // C'est une règle régionale (ex: "old_world_classic", "lustrian_superleague", etc.)
             await prisma.starPlayerHirableBy.create({
               data: {
                 starPlayerId: starPlayer.id,
-                rule: rule,
+                rule,
                 rosterId: null,
-              }
+              },
             });
           }
         }
@@ -367,6 +399,29 @@ async function main() {
   // 5. SEED DES UTILISATEURS ET ÉQUIPES (code existant)
   // =============================================================================
   console.log("👤 Seed des utilisateurs et équipes...");
+
+  // Utilisateur technique "Unknown" utilisé pour représenter un compte inconnu/supprimé
+  // Cet utilisateur possède un ID fixe défini dans UNKNOWN_USER_ID pour pouvoir
+  // être référencé de manière stable dans le code applicatif.
+  console.log("👤 Seed de l'utilisateur technique 'Unknown'...");
+  const unknownPasswordHash = await bcrypt.hash("unknown123", 10);
+  await prisma.user.upsert({
+    where: { id: UNKNOWN_USER_ID },
+    update: {},
+    create: {
+      id: UNKNOWN_USER_ID,
+      email: "unknown@example.com",
+      name: "Unknown",
+      coachName: "Unknown",
+      firstName: "Unknown",
+      lastName: "User",
+      role: "user",
+      roles: ["user"],
+      passwordHash: unknownPasswordHash,
+      valid: true,
+    },
+  });
+
   const users = [
     {
       email: "admin@example.com",
@@ -448,6 +503,7 @@ async function main() {
           ownerId: u.id,
           name: `${u.coachName || u.name || u.email}-Skavens`,
           roster: "skaven",
+          ruleset: "season_2",
           initialBudget: 1000000, // 1000k po
           treasury: 1000000, // 1000k po
         },
@@ -461,6 +517,7 @@ async function main() {
           ownerId: u.id,
           name: `${u.coachName || u.name || u.email}-Lizardmen`,
           roster: "lizardmen",
+          ruleset: "season_2",
           initialBudget: 1000000, // 1000k po
           treasury: 1000000, // 1000k po
         },
@@ -764,6 +821,7 @@ async function main() {
           ownerId: coach.id,
           name: `${rosterDef.name} All-Stars`,
           roster: rosterSlug,
+          ruleset: "season_2",
           initialBudget: 1000000,
           treasury: 1000000,
         },
@@ -829,6 +887,7 @@ async function main() {
           data: {
             name: "Test 1",
             creatorId: adminUser.id,
+            ruleset: "season_2",
             validated: true,
             isPublic: true,
             status: "en_cours",

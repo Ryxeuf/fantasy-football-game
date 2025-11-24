@@ -29,8 +29,14 @@ export interface TeamRoster {
   positions: PositionDefinition[];
 }
 
+export type Ruleset = "season_2" | "season_3";
+export const RULESETS: Ruleset[] = ["season_2", "season_3"];
+export const DEFAULT_RULESET: Ruleset = "season_2";
+
+type TeamRosterMap = Record<string, TeamRoster>;
+
 // Mapping complet des équipes avec leurs positions
-export const TEAM_ROSTERS: Record<string, TeamRoster> = {
+const SEASON_TWO_ROSTERS: TeamRosterMap = {
   skaven: {
     name: "Skavens",
     budget: 1000,
@@ -2421,32 +2427,79 @@ export const TEAM_ROSTERS: Record<string, TeamRoster> = {
   },
 };
 
+const cloneRoster = (roster: TeamRoster): TeamRoster => ({
+  ...roster,
+  positions: roster.positions.map((position) => ({ ...position })),
+});
+
+const cloneRosterMap = (source: TeamRosterMap): TeamRosterMap =>
+  Object.fromEntries(
+    Object.entries(source).map(([slug, roster]) => [slug, cloneRoster(roster)]),
+  );
+
+export const TEAM_ROSTERS_BY_RULESET: Record<Ruleset, TeamRosterMap> = {
+  season_2: SEASON_TWO_ROSTERS,
+  season_3: cloneRosterMap(SEASON_TWO_ROSTERS),
+};
+
+export const TEAM_ROSTERS = TEAM_ROSTERS_BY_RULESET[DEFAULT_RULESET];
+
+const getRostersForRuleset = (ruleset: Ruleset = DEFAULT_RULESET): TeamRosterMap => {
+  return TEAM_ROSTERS_BY_RULESET[ruleset] ?? TEAM_ROSTERS_BY_RULESET[DEFAULT_RULESET];
+};
+
 // Fonction utilitaire pour obtenir une position par son slug
-export function getPositionBySlug(slug: string): PositionDefinition | null {
-  for (const roster of Object.values(TEAM_ROSTERS)) {
-    const position = roster.positions.find(p => p.slug === slug);
+export function getPositionBySlug(
+  slug: string,
+  ruleset: Ruleset = DEFAULT_RULESET,
+): PositionDefinition | null {
+  const rosterMap = getRostersForRuleset(ruleset);
+  for (const roster of Object.values(rosterMap)) {
+    const position = roster.positions.find((p) => p.slug === slug);
     if (position) return position;
+  }
+  if (ruleset !== DEFAULT_RULESET) {
+    return getPositionBySlug(slug, DEFAULT_RULESET);
   }
   return null;
 }
 
 // Fonction utilitaire pour obtenir toutes les positions d'une équipe
-export function getTeamPositions(teamRoster: string): PositionDefinition[] {
-  const roster = TEAM_ROSTERS[teamRoster];
-  return roster ? roster.positions : [];
+export function getTeamPositions(
+  teamRoster: string,
+  ruleset: Ruleset = DEFAULT_RULESET,
+): PositionDefinition[] {
+  const roster = getRostersForRuleset(ruleset)[teamRoster];
+  if (roster) {
+    return roster.positions;
+  }
+  if (ruleset !== DEFAULT_RULESET) {
+    return getTeamPositions(teamRoster, DEFAULT_RULESET);
+  }
+  return [];
 }
 
 // Fonction utilitaire pour obtenir le nom d'affichage d'un slug
-export function getDisplayName(slug: string): string {
-  const position = getPositionBySlug(slug);
+export function getDisplayName(slug: string, ruleset: Ruleset = DEFAULT_RULESET): string {
+  const position = getPositionBySlug(slug, ruleset);
   return position ? position.displayName : slug;
 }
 
 // Fonction utilitaire pour obtenir le slug à partir du nom d'affichage et de l'équipe
-export function getSlugFromDisplayName(displayName: string, teamRoster: string): string | null {
-  const positions = getTeamPositions(teamRoster);
-  const position = positions.find(p => p.displayName === displayName);
-  return position ? position.slug : null;
+export function getSlugFromDisplayName(
+  displayName: string,
+  teamRoster: string,
+  ruleset: Ruleset = DEFAULT_RULESET,
+): string | null {
+  const positions = getTeamPositions(teamRoster, ruleset);
+  const position = positions.find((p) => p.displayName === displayName);
+  if (position) {
+    return position.slug;
+  }
+  if (ruleset !== DEFAULT_RULESET) {
+    return getSlugFromDisplayName(displayName, teamRoster, DEFAULT_RULESET);
+  }
+  return null;
 }
 
 // Mapping des anciennes clés vers les nouveaux slugs (pour migration)

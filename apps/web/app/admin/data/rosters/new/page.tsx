@@ -2,6 +2,11 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { API_BASE } from "../../../../auth-client";
+import {
+  RULESET_OPTIONS,
+  DEFAULT_RULESET,
+  type Ruleset,
+} from "../../ruleset-utils";
 
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");
@@ -37,6 +42,7 @@ export default function NewRosterPage() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [ruleset, setRuleset] = useState<Ruleset>(DEFAULT_RULESET);
 
   useEffect(() => {
     checkAuth();
@@ -67,6 +73,7 @@ export default function NewRosterPage() {
     try {
       const data = {
         slug: formData.get("slug"),
+        ruleset,
         name: formData.get("name"),
         nameEn: formData.get("nameEn"),
         budget: parseInt(formData.get("budget") as string),
@@ -100,6 +107,21 @@ export default function NewRosterPage() {
 
       <form onSubmit={handleSubmit} className="bg-white p-6 border rounded shadow-sm">
         <div className="grid grid-cols-2 gap-4 mb-6">
+          <div>
+            <label className="block text-sm font-medium mb-1">Ruleset *</label>
+            <select
+              name="ruleset"
+              value={ruleset}
+              onChange={(e) => setRuleset(e.target.value as Ruleset)}
+              className="w-full border rounded px-3 py-2"
+            >
+              {RULESET_OPTIONS.map(({ value, label }) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
           <div>
             <label className="block text-sm font-medium mb-1">Slug *</label>
             <input
@@ -137,7 +159,7 @@ export default function NewRosterPage() {
               className="w-full border rounded px-3 py-2"
             />
           </div>
-          <div>
+          <div className="col-span-2">
             <label className="block text-sm font-medium mb-1">Tier *</label>
             <select
               name="tier"

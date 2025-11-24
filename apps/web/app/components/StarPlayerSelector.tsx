@@ -25,6 +25,7 @@ interface StarPlayerSelectorProps {
   currentPlayerCount: number;
   availableBudget: number; // En po (pas en K po)
   disabled?: boolean;
+  ruleset?: string;
 }
 
 // Paires obligatoires de Star Players
@@ -42,6 +43,7 @@ export default function StarPlayerSelector({
   currentPlayerCount,
   availableBudget,
   disabled = false,
+  ruleset = "season_2",
 }: StarPlayerSelectorProps) {
   const { t } = useLanguage();
   const [availableStarPlayers, setAvailableStarPlayers] = useState<StarPlayer[]>([]);
@@ -56,7 +58,8 @@ export default function StarPlayerSelector({
     setError(null);
     
     const token = localStorage.getItem("auth_token");
-    fetch(`${API_BASE}/star-players/available/${roster}`, {
+    const query = ruleset ? `?ruleset=${encodeURIComponent(ruleset)}` : "";
+    fetch(`${API_BASE}/star-players/available/${roster}${query}`, {
       headers: { Authorization: token ? `Bearer ${token}` : "" },
     })
       .then((r) => {
@@ -71,7 +74,7 @@ export default function StarPlayerSelector({
         setError(e.message || t.teams.errorLoading);
         setLoading(false);
       });
-  }, [roster, t]);
+  }, [roster, ruleset, t]);
 
   const handleToggle = (slug: string) => {
     if (disabled) return;

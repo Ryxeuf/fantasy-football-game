@@ -8,6 +8,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Ruleset {
+  season_2
+  season_3
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -76,6 +81,7 @@ model Team {
   ownerId   String
   name      String
   roster    String   // 'skaven' | 'lizardmen'
+  ruleset   Ruleset  @default(season_2)
   createdAt DateTime @default(now())
   players   TeamPlayer[]
   starPlayers TeamStarPlayer[]
@@ -148,7 +154,8 @@ model Skill {
 // Modèle pour les rosters d'équipes
 model Roster {
   id            String   @id @default(cuid())
-  slug          String   @unique // Identifiant unique (ex: "skaven", "lizardmen")
+  slug          String   // Identifiant unique (ex: "skaven", "lizardmen")
+  ruleset       Ruleset  @default(season_2)
   name          String   // Nom d'affichage en français (ex: "Skavens")
   nameEn        String   // Nom d'affichage en anglais (ex: "Skaven")
   descriptionFr String?  // Description en français
@@ -164,6 +171,8 @@ model Roster {
   // Relations
   positions     Position[]
   hirableBy     StarPlayerHirableBy[] // Règles régionales qui peuvent recruter des star players
+
+  @@unique([slug, ruleset])
 }
 
 // Modèle pour les positions dans les rosters
@@ -261,6 +270,7 @@ model Cup {
   name      String   // Nom de la coupe (obligatoire)
   creator   User     @relation("CupCreator", fields: [creatorId], references: [id])
   creatorId String
+  ruleset   Ruleset  @default(season_2)
   validated Boolean  @default(false) // Si true, la coupe est validée et fermée aux inscriptions
   isPublic  Boolean  @default(true)  // Si true, la coupe est publique et apparaît dans la liste
   status    String   @default("ouverte") // Statut: "ouverte", "en_cours", "terminee", "archivee"

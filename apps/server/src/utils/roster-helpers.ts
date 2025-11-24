@@ -2,16 +2,22 @@
  * Fonctions helpers pour récupérer les rosters depuis la base de données
  */
 
+import { DEFAULT_RULESET, type Ruleset } from "@bb/game-engine";
 import { prisma } from "../prisma";
 
 /**
  * Récupère un roster complet depuis la base de données avec ses positions et leurs compétences
  * @param slug - Le slug du roster
  * @param lang - La langue ('fr' ou 'en', par défaut 'fr')
+ * @param ruleset - Le ruleset ciblé (par défaut Saison 2)
  */
-export async function getRosterFromDb(slug: string, lang: string = "fr") {
-  const roster = await prisma.roster.findUnique({
-    where: { slug },
+export async function getRosterFromDb(
+  slug: string,
+  lang: string = "fr",
+  ruleset: Ruleset = DEFAULT_RULESET,
+) {
+  const roster = await prisma.roster.findFirst({
+    where: { slug, ruleset },
     include: {
       positions: {
         include: {
@@ -25,6 +31,9 @@ export async function getRosterFromDb(slug: string, lang: string = "fr") {
   });
 
   if (!roster) {
+    if (ruleset !== DEFAULT_RULESET) {
+      return getRosterFromDb(slug, lang, DEFAULT_RULESET);
+    }
     return null;
   }
 
@@ -57,9 +66,14 @@ export async function getRosterFromDb(slug: string, lang: string = "fr") {
 /**
  * Récupère tous les rosters depuis la base de données
  * @param lang - La langue ('fr' ou 'en', par défaut 'fr')
+ * @param ruleset - Le ruleset ciblé
  */
-export async function getAllRostersFromDb(lang: string = "fr") {
+export async function getAllRostersFromDb(
+  lang: string = "fr",
+  ruleset: Ruleset = DEFAULT_RULESET,
+) {
   const rosters = await prisma.roster.findMany({
+    where: { ruleset },
     include: {
       positions: {
         include: {

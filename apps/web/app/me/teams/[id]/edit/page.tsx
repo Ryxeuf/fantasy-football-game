@@ -165,7 +165,8 @@ export default function TeamEditPage() {
           const lang = language === "en" ? "en" : "fr";
           try {
             const API_BASE_PUBLIC = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8201';
-            const rosterResponse = await fetch(`${API_BASE_PUBLIC}/api/rosters/${d.team.roster}?lang=${lang}`);
+            const rulesetQuery = d.team.ruleset ? `&ruleset=${encodeURIComponent(d.team.ruleset)}` : "";
+            const rosterResponse = await fetch(`${API_BASE_PUBLIC}/api/rosters/${d.team.roster}?lang=${lang}${rulesetQuery}`);
             if (rosterResponse.ok) {
               const rosterData = await rosterResponse.json();
               setRosterName(rosterData.roster?.name || d.team.roster);

@@ -3,6 +3,14 @@ import { useEffect, useState } from "react";
 import { API_BASE } from "../../auth-client";
 import { useLanguage } from "../../contexts/LanguageContext";
 
+type Team = {
+  id: string;
+  name: string;
+  roster: string;
+  ruleset?: string;
+  createdAt: string;
+};
+
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");
   const res = await fetch(`${API_BASE}${path}`, {
@@ -17,7 +25,7 @@ async function fetchJSON(path: string) {
 
 export default function MyTeamsPage() {
   const { t, language } = useLanguage();
-  const [teams, setTeams] = useState<any[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
   const [rosterNames, setRosterNames] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
 
@@ -59,6 +67,9 @@ export default function MyTeamsPage() {
     <div className="w-full p-4 sm:p-6 space-y-4 sm:space-y-6">
       <h1 className="text-xl sm:text-2xl font-bold">{t.teams.title}</h1>
       {error && <p className="text-red-600 text-sm">{error}</p>}
+      {teams.length > 0 && (
+        <p className="text-xs text-gray-500">{t.teams.rulesetInfoList}</p>
+      )}
       
       {/* Liste des équipes existantes */}
       {teams.length > 0 && (
@@ -70,7 +81,15 @@ export default function MyTeamsPage() {
               href={`/me/teams/${team.id}`}
             >
               <div className="font-semibold text-base sm:text-lg">{team.name}</div>
-              <div className="text-xs sm:text-sm text-gray-600 mt-1">{t.teams.roster}: {rosterNames[team.roster] || team.roster}</div>
+              <div className="text-xs sm:text-sm text-gray-600 mt-1">
+                {t.teams.roster}: {rosterNames[team.roster] || team.roster}
+              </div>
+              <div className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 mt-2">
+                {t.teams.rulesetBadge.replace(
+                  "{label}",
+                  team.ruleset === "season_3" ? t.teams.rulesetSeason3 : t.teams.rulesetSeason2,
+                )}
+              </div>
             </a>
           ))}
         </div>

@@ -2,9 +2,11 @@
  * Système de Star Players de Blood Bowl
  * Les Star Players sont des mercenaires légendaires pouvant être recrutés par plusieurs équipes
  */
+import { DEFAULT_RULESET } from "./positions";
 /**
  * Liste complète des Star Players disponibles
  */
+const getFallbackSpecialRule = (name) => `Consultez le Livre de Règles Blood Bowl pour connaître la règle spéciale complète de ${name}.`;
 export const STAR_PLAYERS = {
     akhorne_the_squirrel: {
         slug: "akhorne_the_squirrel",
@@ -194,10 +196,10 @@ export const STAR_PLAYERS = {
         slug: "glart_smashrip",
         displayName: "Glart Smashrip",
         cost: 195000,
-        ma: 5,
+        ma: 9,
         st: 4,
         ag: 4,
-        pa: null,
+        pa: 4,
         av: 9,
         skills: "block,claws,juggernaut,grab,loner-4,stand-firm",
         hirableBy: ["underworld_challenge"],
@@ -242,8 +244,34 @@ export const STAR_PLAYERS = {
         hirableBy: ["all"],
         imageUrl: "/data/Star-Players_files/Grashnak-Blackhoof.webp"
     },
-    gretchen_wachter_the_blood_bowl_widow: {
-        slug: "gretchen_wachter_the_blood_bowl_widow",
+    grak: {
+        slug: "grak",
+        displayName: "Grak",
+        cost: 250000,
+        ma: 5,
+        st: 5,
+        ag: 4,
+        pa: 5,
+        av: 10,
+        skills: "bone-head,kick-team-mate,loner-4,mighty-blow-1,thick-skull,throw-team-mate",
+        hirableBy: ["all"],
+        specialRule: "Grak & Crumbleberry : Grak ne se présente jamais sans Crumbleberry et excelle lorsqu'il le propulse sur le terrain."
+    },
+    crumbleberry: {
+        slug: "crumbleberry",
+        displayName: "Crumbleberry",
+        cost: 0,
+        ma: 5,
+        st: 2,
+        ag: 3,
+        pa: 4,
+        av: 7,
+        skills: "dodge,loner-4,right-stuff,stunty,sure-hands,sure-feet,titchy",
+        hirableBy: ["all"],
+        specialRule: "Grak & Crumbleberry : Crumbleberry est sanglé au dos de Grak et profite d'un lancer spécial lorsqu'il joue avec lui."
+    },
+    gretchen_wachter: {
+        slug: "gretchen_wachter",
         displayName: "Gretchen Wachter “The Blood Bowl Widow”",
         cost: 260000,
         ma: 7,
@@ -282,8 +310,8 @@ export const STAR_PLAYERS = {
         hirableBy: ["old_world_classic"],
         imageUrl: "/data/Star-Players_files/grim-ironjaw-card.webp"
     },
-    grombrindal_the_white_dwarf: {
-        slug: "grombrindal_the_white_dwarf",
+    grombrindal: {
+        slug: "grombrindal",
         displayName: "Grombrindal, the White Dwarf",
         cost: 210000,
         ma: 5,
@@ -311,7 +339,7 @@ export const STAR_PLAYERS = {
     hakflem_skuttlespike: {
         slug: "hakflem_skuttlespike",
         displayName: "Hakflem Skuttlespike",
-        cost: 210000,
+        cost: 180000,
         ma: 9,
         st: 3,
         ag: 2,
@@ -454,8 +482,8 @@ export const STAR_PLAYERS = {
         hirableBy: ["underworld_challenge"],
         imageUrl: "/data/Star-Players_files/Kreek-Rustgouger.webp"
     },
-    lord_borak_the_despoiler: {
-        slug: "lord_borak_the_despoiler",
+    lord_borak: {
+        slug: "lord_borak",
         displayName: "Lord Borak The Despoiler",
         cost: 260000,
         ma: 5,
@@ -466,6 +494,32 @@ export const STAR_PLAYERS = {
         skills: "block,mighty-blow-1,dirty-player-1,loner-4,sneaky-git",
         hirableBy: ["all"],
         imageUrl: "/data/Star-Players_files/Lord-borak.webp"
+    },
+    lucien_swift: {
+        slug: "lucien_swift",
+        displayName: "Lucien Swift",
+        cost: 340000,
+        ma: 7,
+        st: 4,
+        ag: 2,
+        pa: 3,
+        av: 9,
+        skills: "block,dauntless,loner-4,sidestep,tackle",
+        hirableBy: ["elven_kingdoms_league"],
+        specialRule: "Les Swift Twins : Lucien forme un duo inséparable avec Valen et bénéficie d'un bonus lorsqu'ils jouent ensemble."
+    },
+    valen_swift: {
+        slug: "valen_swift",
+        displayName: "Valen Swift",
+        cost: 340000,
+        ma: 8,
+        st: 3,
+        ag: 2,
+        pa: 4,
+        av: 8,
+        skills: "catch,dodge,loner-4,nerves-of-steel,sidestep,sure-feet",
+        hirableBy: ["elven_kingdoms_league"],
+        specialRule: "Les Swift Twins : Valen joue en tandem avec Lucien et profite d'actions combinées lorsqu'il est aligné avec lui."
     },
     luthor_von_drakenborg: {
         slug: "luthor_von_drakenborg",
@@ -535,14 +589,14 @@ export const STAR_PLAYERS = {
     morg_n_thorg: {
         slug: "morg_n_thorg",
         displayName: "Morg 'n' Thorg",
-        cost: 380000,
+        cost: 340000,
         ma: 6,
         st: 6,
         ag: 3,
         pa: 4,
         av: 11,
-        skills: "loner-4,block,mighty-blow-1,thick-skull,throw-team-mate",
-        hirableBy: ["sylvanian_spotlight"],
+        skills: "loner-4,block,mighty-blow-2,thick-skull,throw-team-mate",
+        hirableBy: ["all"],
         imageUrl: "/data/Star-Players_files/Morg-'n-Thorg.webp",
         specialRule: "La Baliste: Une fois par match, si Morg rate le test de Passe quand il effectue une Passe ou un Lancer de Coéquipier, vous pouvez relancer le D6.",
         isMegaStar: true
@@ -821,6 +875,11 @@ export const STAR_PLAYERS = {
         imageUrl: "/data/Star-Players_files/Zzharg-Madeye-star-player-blood-bowl.webp"
     },
 };
+Object.values(STAR_PLAYERS).forEach((player) => {
+    if (!player.specialRule || player.specialRule.trim() === "") {
+        player.specialRule = getFallbackSpecialRule(player.displayName);
+    }
+});
 /**
  * Obtenir un Star Player par son slug
  */
@@ -832,14 +891,15 @@ export function getStarPlayerBySlug(slug) {
  * @param teamRoster - Le roster de l'équipe (ex: "skaven")
  * @param teamRegionalRules - Les règles régionales de l'équipe (ex: ["underworld_challenge"])
  */
-export function getAvailableStarPlayers(teamRoster, teamRegionalRules = []) {
+export function getAvailableStarPlayers(teamRoster, teamRegionalRules = [], ruleset = DEFAULT_RULESET) {
+    const rules = teamRegionalRules.length > 0 ? teamRegionalRules : getRegionalRulesForTeam(teamRoster, ruleset);
     return Object.values(STAR_PLAYERS).filter(starPlayer => {
         // Si le Star Player est disponible pour tous
         if (starPlayer.hirableBy.includes("all")) {
             return true;
         }
         // Vérifier si l'équipe a une des règles régionales requises
-        return starPlayer.hirableBy.some(rule => teamRegionalRules.includes(rule));
+        return starPlayer.hirableBy.some(rule => rules.includes(rule));
     });
 }
 /**
@@ -875,4 +935,13 @@ export const TEAM_REGIONAL_RULES = {
     khorne: ["favoured_of"],
     chaos_dwarf: ["badlands_brawl", "worlds_edge_superleague", "favoured_of"],
     gnome: ["halfling_thimble_cup"],
+};
+const cloneRegionalRules = (source) => Object.fromEntries(Object.entries(source).map(([slug, rules]) => [slug, [...rules]]));
+export const TEAM_REGIONAL_RULES_BY_RULESET = {
+    season_2: TEAM_REGIONAL_RULES,
+    season_3: cloneRegionalRules(TEAM_REGIONAL_RULES),
+};
+export const getRegionalRulesForTeam = (teamRoster, ruleset = DEFAULT_RULESET) => {
+    const map = TEAM_REGIONAL_RULES_BY_RULESET[ruleset] ?? TEAM_REGIONAL_RULES_BY_RULESET[DEFAULT_RULESET];
+    return (map[teamRoster] ?? TEAM_REGIONAL_RULES[teamRoster]) ?? [];
 };

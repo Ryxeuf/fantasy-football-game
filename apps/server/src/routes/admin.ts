@@ -66,6 +66,7 @@ router.get("/users", async (req, res) => {
             matches: true,
             createdMatches: true,
             teamSelections: true,
+            createdLocalMatches: true,
           },
         },
       },
@@ -144,6 +145,7 @@ router.get("/users/:id", async (req, res) => {
             matches: true,
             createdMatches: true,
             teamSelections: true,
+            createdLocalMatches: true,
           },
         },
       },
@@ -363,6 +365,11 @@ router.get("/stats", async (_req, res) => {
       archivedCups,
       recentUsers,
       recentMatches,
+      totalLocalMatches,
+      pendingLocalMatches,
+      inProgressLocalMatches,
+      completedLocalMatches,
+      cancelledLocalMatches,
     ] = await Promise.all([
       prisma.user.count(),
       prisma.user.count({ where: { valid: true } }),
@@ -387,6 +394,14 @@ router.get("/stats", async (_req, res) => {
         orderBy: { createdAt: "desc" },
         select: { id: true, status: true, createdAt: true },
       }),
+      prisma.localMatch.count(),
+      // En attente = pending + waiting_for_player
+      prisma.localMatch.count({
+        where: { status: { in: ["pending", "waiting_for_player"] } },
+      }),
+      prisma.localMatch.count({ where: { status: "in_progress" } }),
+      prisma.localMatch.count({ where: { status: "completed" } }),
+      prisma.localMatch.count({ where: { status: "cancelled" } }),
     ]);
 
     res.json({
@@ -407,6 +422,13 @@ router.get("/stats", async (_req, res) => {
         open: openCups,
         closed: closedCups,
         archived: archivedCups,
+      },
+      localMatches: {
+        total: totalLocalMatches,
+        pending: pendingLocalMatches,
+        inProgress: inProgressLocalMatches,
+        completed: completedLocalMatches,
+        cancelled: cancelledLocalMatches,
       },
       recent: {
         users: recentUsers,
@@ -432,6 +454,7 @@ router.get("/teams", async (req, res) => {
       search = "",
       roster = "",
       ownerId = "",
+      ruleset,
       sortBy = "createdAt",
       sortOrder = "desc",
       page = "1",
@@ -455,6 +478,9 @@ router.get("/teams", async (req, res) => {
     if (ownerId) {
       where.ownerId = ownerId;
     }
+    if (ruleset && typeof ruleset === "string") {
+      where.ruleset = ruleset;
+    }
 
     // Compter le total
     const total = await prisma.team.count({ where });
@@ -466,6 +492,7 @@ router.get("/teams", async (req, res) => {
         id: true,
         name: true,
         roster: true,
+        ruleset: true,
         initialBudget: true,
         treasury: true,
         currentValue: true,

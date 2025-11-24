@@ -2,7 +2,15 @@ import { Router } from "express";
 import { prisma } from "../prisma";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
 import { updateTeamValues } from "../utils/team-values";
-import { getPositionBySlug, getDisplayName, LEGACY_POSITION_MAPPING, type AllowedRoster, getStarPlayerBySlug } from "@bb/game-engine";
+import {
+  getPositionBySlug,
+  getDisplayName,
+  LEGACY_POSITION_MAPPING,
+  type AllowedRoster,
+  getStarPlayerBySlug,
+  DEFAULT_RULESET,
+  type Ruleset,
+} from "@bb/game-engine";
 import {
   validateStarPlayerHire,
   validateStarPlayerPairs,
@@ -12,6 +20,7 @@ import {
   requiresPair,
 } from "../utils/star-player-validation";
 import { getRosterFromDb } from "../utils/roster-helpers";
+import { resolveRuleset } from "../utils/ruleset-helpers";
 
 const router = Router();
 const ALLOWED_TEAMS = [
@@ -177,18 +186,37 @@ function rosterTemplates(roster: AllowedRoster) {
 }
 
 router.get("/available", authUser, async (req: AuthenticatedRequest, res) => {
-  // Renvoie les équipes possédées par l'utilisateur et non engagées dans un match en cours
+  const requestedRuleset = req.query.ruleset as string | undefined;
+  const filterRuleset = isValidRuleset(requestedRuleset)
+    ? (requestedRuleset as Ruleset)
+    : undefined;
   const teams = await prisma.team.findMany({
     where: {
       ownerId: req.user!.id,
+      ...(filterRuleset && { ruleset: filterRuleset }),
       selections: {
         none: {
           match: { status: { in: ["pending", "active"] } },
         },
       },
     },
-    select: { id: true, name: true, roster: true, createdAt: true },
+    select: { id: true, name: true, roster: true, ruleset: true, createdAt: true },
     orderBy: { createdAt: "desc" },
+  });
+  res.json({ teams });
+});
+
+router.get("/mine", authUser, async (req: AuthenticatedRequest, res) => {
+  const requestedRuleset = req.query.ruleset as string | undefined;
+  const filterRuleset = isValidRuleset(requestedRuleset)
+    ? (requestedRuleset as Ruleset)
+    : undefined;
+  const teams = await prisma.team.findMany({
+    where: {
+      ownerId: req.user!.id,
+      ...(filterRuleset && { ruleset: filterRuleset }),
+    },
+    select: { id: true, name: true, roster: true, ruleset: true, createdAt: true },
   });
   res.json({ teams });
 });
@@ -197,13 +225,14 @@ router.get("/rosters/:id", authUser, async (req: AuthenticatedRequest, res) => {
   const id = req.params.id as AllowedRoster;
   if (!ALLOWED_TEAMS.includes(id))
     return res.status(404).json({ error: "Roster inconnu" });
+  const ruleset = resolveRuleset(req.query.ruleset as string | undefined);
   
-  const roster = await getRosterFromDb(id);
+  const roster = await getRosterFromDb(id, "fr", ruleset);
   if (!roster) {
     return res.status(404).json({ error: "Roster non trouvé en base de données" });
   }
   
-  res.json({ roster });
+  res.json({ roster, ruleset });
 });
 
 router.post("/choose", authUser, async (req: AuthenticatedRequest, res) => {
@@ -269,14 +298,6 @@ router.post("/choose", authUser, async (req: AuthenticatedRequest, res) => {
   }
 });
 
-router.get("/mine", authUser, async (req: AuthenticatedRequest, res) => {
-  const teams = await prisma.team.findMany({
-    where: { ownerId: req.user!.id },
-    select: { id: true, name: true, roster: true, createdAt: true },
-  });
-  res.json({ teams });
-});
-
 router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
   const team = await prisma.team.findFirst({
     where: { id: req.params.id, ownerId: req.user!.id },
@@ -304,13 +325,96 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
     where: { teamId: team.id },
     include: { match: true },
   });
-  
+
+  // Statistiques de matchs locaux pour cette équipe
+  const localMatches = await prisma.localMatch.findMany({
+    where: {
+      OR: [{ teamAId: team.id }, { teamBId: team.id }],
+    },
+    select: {
+      id: true,
+      status: true,
+      teamAId: true,
+      teamBId: true,
+      scoreTeamA: true,
+      scoreTeamB: true,
+    },
+  });
+
+  let pending = 0;
+  let waitingForPlayer = 0;
+  let inProgress = 0;
+  let completed = 0;
+  let cancelled = 0;
+
+  let wins = 0;
+  let draws = 0;
+  let losses = 0;
+  let touchdownsFor = 0;
+  let touchdownsAgainst = 0;
+
+  for (const match of localMatches) {
+    switch (match.status) {
+      case "pending":
+        pending += 1;
+        break;
+      case "waiting_for_player":
+        waitingForPlayer += 1;
+        break;
+      case "in_progress":
+        inProgress += 1;
+        break;
+      case "completed":
+        completed += 1;
+        break;
+      case "cancelled":
+        cancelled += 1;
+        break;
+      default:
+        break;
+    }
+
+    if (match.status === "completed") {
+      const isTeamA = match.teamAId === team.id;
+      const myScore = isTeamA ? match.scoreTeamA ?? 0 : match.scoreTeamB ?? 0;
+      const oppScore = isTeamA ? match.scoreTeamB ?? 0 : match.scoreTeamA ?? 0;
+
+      touchdownsFor += myScore;
+      touchdownsAgainst += oppScore;
+
+      if (myScore > oppScore) {
+        wins += 1;
+      } else if (myScore < oppScore) {
+        losses += 1;
+      } else {
+        draws += 1;
+      }
+    }
+  }
+
+  const localMatchStats = {
+    total: localMatches.length,
+    pending,
+    waitingForPlayer,
+    inProgress,
+    completed,
+    cancelled,
+    matchesPlayed: completed,
+    wins,
+    draws,
+    losses,
+    touchdownsFor,
+    touchdownsAgainst,
+    touchdownDiff: touchdownsFor - touchdownsAgainst,
+  };
+
   res.json({ 
     team: {
       ...team,
       starPlayers: enrichedStarPlayers
     }, 
-    currentMatch: selection?.match || null 
+    currentMatch: selection?.match || null,
+    localMatchStats,
   });
 });
 
@@ -318,17 +422,27 @@ router.post(
   "/create-from-roster",
   authUser,
   async (req: AuthenticatedRequest, res) => {
-    const { name, roster, teamValue, starPlayers: starPlayerSlugs } =
-      req.body ?? ({} as { 
-        name?: string; 
-        roster?: AllowedRoster; 
+    const {
+      name,
+      roster,
+      teamValue,
+      starPlayers: starPlayerSlugs,
+      ruleset: bodyRuleset,
+    } =
+      req.body ??
+      ({} as {
+        name?: string;
+        roster?: AllowedRoster;
         teamValue?: number;
         starPlayers?: string[];
+        ruleset?: string;
       });
     if (!name || !roster)
       return res.status(400).json({ error: "name et roster requis" });
     if (!ALLOWED_TEAMS.includes(roster))
       return res.status(400).json({ error: "Roster non autorisé" });
+
+    const ruleset = resolveRuleset(bodyRuleset);
     
     const finalTeamValue = teamValue || 1000;
     if (finalTeamValue < 100 || finalTeamValue > 2000)
@@ -377,7 +491,8 @@ router.post(
         starPlayersToHire,
         roster,
         playerCount,
-        budgetInPo
+        budgetInPo,
+        ruleset,
       );
       
       if (!validation.valid) {
@@ -390,6 +505,7 @@ router.post(
         ownerId: req.user!.id, 
         name, 
         roster,
+        ruleset,
         teamValue: finalTeamValue,
         initialBudget: finalTeamValue,
         treasury: 0,
@@ -488,7 +604,7 @@ router.post(
 );
 
 router.post("/build", authUser, async (req: AuthenticatedRequest, res) => {
-  const { name, roster, teamValue, choices, starPlayers: starPlayerSlugs } =
+  const { name, roster, teamValue, choices, starPlayers: starPlayerSlugs, ruleset: bodyRuleset } =
     req.body ??
     ({} as {
       name?: string;
@@ -496,17 +612,19 @@ router.post("/build", authUser, async (req: AuthenticatedRequest, res) => {
       teamValue?: number;
       choices?: Array<{ key: string; count: number }>;
       starPlayers?: string[];
+      ruleset?: string;
     });
   if (!name || !roster || !Array.isArray(choices))
     return res.status(400).json({ error: "name, roster, choices requis" });
   if (!ALLOWED_TEAMS.includes(roster))
     return res.status(400).json({ error: "Roster non autorisé" });
+  const ruleset = resolveRuleset(bodyRuleset);
   
   const finalTeamValue = teamValue || 1000;
   if (finalTeamValue < 100 || finalTeamValue > 2000)
     return res.status(400).json({ error: "La valeur d'équipe doit être entre 100 et 2000k po" });
     
-  const def = await getRosterFromDb(roster as AllowedRoster);
+  const def = await getRosterFromDb(roster as AllowedRoster, "fr", ruleset);
   if (!def) {
     return res.status(400).json({ error: "Roster non trouvé" });
   }
@@ -553,7 +671,8 @@ router.post("/build", authUser, async (req: AuthenticatedRequest, res) => {
       starPlayersToHire,
       roster,
       totalPlayers,
-      budgetInPo - (totalCost * 1000)
+      budgetInPo - (totalCost * 1000),
+      ruleset,
     );
     
     if (!validation.valid) {
@@ -575,6 +694,7 @@ router.post("/build", authUser, async (req: AuthenticatedRequest, res) => {
       ownerId: req.user!.id, 
       name, 
       roster,
+      ruleset,
       teamValue: finalTeamValue,
       initialBudget: finalTeamValue,
       treasury: 0,
@@ -968,7 +1088,11 @@ router.post("/:id/players", authUser, async (req: AuthenticatedRequest, res) => 
     }
 
     // Récupérer les informations de la position depuis le roster
-    const rosterData = await getRosterFromDb(team.roster as AllowedRoster);
+    const rosterData = await getRosterFromDb(
+      team.roster as AllowedRoster,
+      "fr",
+      (team.ruleset as Ruleset) ?? DEFAULT_RULESET,
+    );
     if (!rosterData) {
       return res.status(400).json({ error: "Roster non reconnu" });
     }
@@ -990,8 +1114,9 @@ router.post("/:id/players", authUser, async (req: AuthenticatedRequest, res) => 
 
     // Vérifier le budget avant d'ajouter le joueur
     const { getPlayerCost } = await import('../../../../packages/game-engine/src/utils/team-value-calculator');
+    const teamRuleset = (team.ruleset as Ruleset) ?? DEFAULT_RULESET;
     const currentTotalCost = team.players.reduce((total: number, player: any) => {
-      return total + getPlayerCost(player.position, team.roster);
+      return total + getPlayerCost(player.position, team.roster, teamRuleset);
     }, 0);
     
     const newPlayerCost = positionData.cost * 1000; // Convertir le coût de kpo en po
@@ -1118,7 +1243,11 @@ router.get("/:id/available-positions", authUser, async (req: AuthenticatedReques
     }
 
     // Récupérer les informations du roster
-    const rosterData = await getRosterFromDb(team.roster as AllowedRoster);
+    const rosterData = await getRosterFromDb(
+      team.roster as AllowedRoster,
+      "fr",
+      (team.ruleset as Ruleset) ?? DEFAULT_RULESET,
+    );
     if (!rosterData) {
       return res.status(400).json({ error: "Roster non reconnu" });
     }
@@ -1216,13 +1345,19 @@ router.get("/:id/available-star-players", authUser, async (req: AuthenticatedReq
       return res.status(404).json({ error: "Équipe introuvable" });
     }
 
+    const teamRuleset = (team.ruleset as Ruleset) ?? DEFAULT_RULESET;
     // Obtenir les Star Players disponibles pour ce roster
-    const availableStarPlayers = getTeamAvailableStarPlayers(team.roster);
+    const availableStarPlayers = getTeamAvailableStarPlayers(
+      team.roster,
+      teamRuleset,
+    );
 
     // Calculer le budget disponible
-    const { getPlayerCost } = await import('../../../../packages/game-engine/src/utils/team-value-calculator');
+    const { getPlayerCost } = await import(
+      "../../../../packages/game-engine/src/utils/team-value-calculator"
+    );
     const currentPlayersCost = team.players.reduce((total: number, player: any) => {
-      return total + getPlayerCost(player.position, team.roster);
+      return total + getPlayerCost(player.position, team.roster, teamRuleset);
     }, 0);
     
     const currentStarPlayersCost = team.starPlayers.reduce((total: number, sp: any) => {
@@ -1329,8 +1464,9 @@ router.post("/:id/star-players", authUser, async (req: AuthenticatedRequest, res
 
     // Calculer le budget disponible
     const { getPlayerCost } = await import('../../../../packages/game-engine/src/utils/team-value-calculator');
+    const teamRuleset = (team.ruleset as Ruleset) ?? DEFAULT_RULESET;
     const currentPlayersCost = team.players.reduce((total: number, player: any) => {
-      return total + getPlayerCost(player.position, team.roster);
+      return total + getPlayerCost(player.position, team.roster, teamRuleset);
     }, 0);
     
     const currentStarPlayersCost = team.starPlayers.reduce((total: number, sp: any) => {
@@ -1346,7 +1482,8 @@ router.post("/:id/star-players", authUser, async (req: AuthenticatedRequest, res
       team.roster,
       team.players.length,
       team.starPlayers,
-      availableBudget
+      availableBudget,
+      teamRuleset,
     );
 
     if (!validation.valid) {

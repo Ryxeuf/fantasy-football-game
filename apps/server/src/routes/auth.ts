@@ -127,6 +127,34 @@ router.post("/login", async (req, res) => {
   }
 });
 
+// Désactiver le compte courant (suppression logique)
+router.delete("/me", authUser, async (req: AuthenticatedRequest, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user!.id },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+    }
+
+    await prisma.user.update({
+      where: { id: req.user!.id },
+      data: {
+        valid: false,
+      },
+    });
+
+    return res.json({
+      message:
+        "Votre compte a été désactivé avec succès. Vous ne pourrez plus vous connecter avec cet accès.",
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
 export default router;
 
 // Profil courant
@@ -153,6 +181,7 @@ router.get("/me", authUser, async (req: AuthenticatedRequest, res) => {
             matches: true,
             createdMatches: true,
             teamSelections: true,
+            createdLocalMatches: true,
           },
         },
       },

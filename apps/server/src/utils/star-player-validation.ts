@@ -1,7 +1,9 @@
 import {
   getStarPlayerBySlug,
   getAvailableStarPlayers,
-  TEAM_REGIONAL_RULES,
+  getRegionalRulesForTeam,
+  DEFAULT_RULESET,
+  type Ruleset,
   type StarPlayerDefinition,
 } from "@bb/game-engine";
 
@@ -24,7 +26,8 @@ export function validateStarPlayerHire(
   teamRoster: string,
   currentPlayerCount: number,
   currentStarPlayers: TeamStarPlayerData[],
-  availableBudget: number
+  availableBudget: number,
+  ruleset: Ruleset = DEFAULT_RULESET,
 ): StarPlayerValidationResult {
   // 1. Vérifier que le Star Player existe
   const starPlayer = getStarPlayerBySlug(starPlayerSlug);
@@ -47,15 +50,19 @@ export function validateStarPlayerHire(
   }
 
   // 3. Vérifier la disponibilité selon les règles régionales
-  const regionalRules = TEAM_REGIONAL_RULES[teamRoster];
-  if (!regionalRules) {
+  const regionalRules = getRegionalRulesForTeam(teamRoster, ruleset);
+  if (!regionalRules || regionalRules.length === 0) {
     return {
       valid: false,
       error: `Roster '${teamRoster}' non reconnu`,
     };
   }
 
-  const availablePlayers = getAvailableStarPlayers(teamRoster, regionalRules);
+  const availablePlayers = getAvailableStarPlayers(
+    teamRoster,
+    regionalRules,
+    ruleset,
+  );
   const isAvailable = availablePlayers.some((sp) => sp.slug === starPlayerSlug);
 
   if (!isAvailable) {
@@ -142,14 +149,15 @@ export function calculateStarPlayersCost(starPlayerSlugs: string[]): number {
  * Obtient les Star Players disponibles pour une équipe donnée
  */
 export function getTeamAvailableStarPlayers(
-  teamRoster: string
+  teamRoster: string,
+  ruleset: Ruleset = DEFAULT_RULESET,
 ): StarPlayerDefinition[] {
-  const regionalRules = TEAM_REGIONAL_RULES[teamRoster];
-  if (!regionalRules) {
+  const regionalRules = getRegionalRulesForTeam(teamRoster, ruleset);
+  if (!regionalRules || regionalRules.length === 0) {
     return [];
   }
 
-  return getAvailableStarPlayers(teamRoster, regionalRules);
+  return getAvailableStarPlayers(teamRoster, regionalRules, ruleset);
 }
 
 /**
@@ -173,7 +181,8 @@ export function validateStarPlayersForTeam(
   starPlayerSlugs: string[],
   teamRoster: string,
   currentPlayerCount: number,
-  availableBudget: number
+  availableBudget: number,
+  ruleset: Ruleset = DEFAULT_RULESET,
 ): { valid: boolean; error?: string; totalCost?: number } {
   // 1. Vérifier les paires obligatoires
   const pairValidation = validateStarPlayerPairs(starPlayerSlugs);
@@ -191,15 +200,19 @@ export function validateStarPlayersForTeam(
   }
 
   // 3. Vérifier que tous les Star Players existent et sont disponibles
-  const regionalRules = TEAM_REGIONAL_RULES[teamRoster];
-  if (!regionalRules) {
+  const regionalRules = getRegionalRulesForTeam(teamRoster, ruleset);
+  if (!regionalRules || regionalRules.length === 0) {
     return {
       valid: false,
       error: `Roster '${teamRoster}' non reconnu`,
     };
   }
 
-  const availablePlayers = getAvailableStarPlayers(teamRoster, regionalRules);
+  const availablePlayers = getAvailableStarPlayers(
+    teamRoster,
+    regionalRules,
+    ruleset,
+  );
   const availableSlugs = new Set(availablePlayers.map((sp) => sp.slug));
 
   for (const slug of starPlayerSlugs) {

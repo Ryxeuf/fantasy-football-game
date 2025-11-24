@@ -3,10 +3,12 @@ import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { API_BASE } from "../../../auth-client";
+import { RULESET_OPTIONS, getRulesetLabel } from "../ruleset-utils";
 
 type Roster = {
   id: string;
   slug: string;
+  ruleset: string;
   name: string;
   nameEn: string;
   budget: number;
@@ -48,10 +50,11 @@ export default function AdminRostersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [nameSearch, setNameSearch] = useState<string>("");
+  const [rulesetFilter, setRulesetFilter] = useState<string>("");
 
   useEffect(() => {
     loadRosters();
-  }, []);
+  }, [rulesetFilter]);
 
   const loadRosters = async () => {
     setLoading(true);
@@ -68,7 +71,13 @@ export default function AdminRostersPage() {
         window.location.href = "/";
         return;
       }
-      const { rosters: data } = await fetchJSON("/admin/data/rosters");
+      const params = new URLSearchParams();
+      if (rulesetFilter) {
+        params.append("ruleset", rulesetFilter);
+      }
+      const query = params.toString();
+      const endpoint = query ? `/admin/data/rosters?${query}` : "/admin/data/rosters";
+      const { rosters: data } = await fetchJSON(endpoint);
       setRosters(data);
     } catch (e: any) {
       setError(e.message || "Erreur");
@@ -141,19 +150,44 @@ export default function AdminRostersPage() {
 
       {/* Filters */}
       <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4">
-        <div className="flex gap-4">
-          <input
-            type="text"
-            placeholder="Rechercher par nom..."
-            value={nameSearch}
-            onChange={(e) => setNameSearch(e.target.value)}
-            className="border border-gray-300 rounded-lg px-4 py-2.5 flex-1 focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all"
-          />
+        <div className="flex flex-col gap-4 md:flex-row">
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Rechercher par nom
+            </label>
+            <input
+              type="text"
+              placeholder="Rechercher par nom..."
+              value={nameSearch}
+              onChange={(e) => setNameSearch(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all"
+            />
+          </div>
+          <div className="w-full md:w-64">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Ruleset
+            </label>
+            <select
+              value={rulesetFilter}
+              onChange={(e) => setRulesetFilter(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all bg-white"
+            >
+              <option value="">Tous les rulesets</option>
+              {RULESET_OPTIONS.map(({ value, label }) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-        {nameSearch && (
+        {(nameSearch || rulesetFilter) && (
           <div className="mt-4 pt-4 border-t border-gray-200">
             <button
-              onClick={() => setNameSearch("")}
+              onClick={() => {
+                setNameSearch("");
+                setRulesetFilter("");
+              }}
               className="text-sm text-gray-600 hover:text-gray-800 underline"
             >
               Réinitialiser les filtres
@@ -178,6 +212,9 @@ export default function AdminRostersPage() {
                   Nom (EN)
                 </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
+                  Ruleset
+                </th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
                   Budget
                 </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
@@ -197,7 +234,7 @@ export default function AdminRostersPage() {
             <tbody className="divide-y divide-gray-200">
               {filteredRosters.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={9} className="px-6 py-8 text-center text-gray-500">
                     Aucun roster trouvé
                   </td>
                 </tr>
@@ -215,6 +252,11 @@ export default function AdminRostersPage() {
                   </td>
                   <td className="px-6 py-4 font-medium text-gray-700">
                     {roster.nameEn}
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                      {getRulesetLabel(roster.ruleset)}
+                    </span>
                   </td>
                   <td className="px-6 py-4 text-gray-700">{roster.budget}k</td>
                   <td className="px-6 py-4">

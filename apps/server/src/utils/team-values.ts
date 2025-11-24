@@ -1,4 +1,5 @@
 import { PrismaClient } from '../prisma-sqlite-client';
+import { DEFAULT_RULESET, type Ruleset } from '@bb/game-engine';
 import { calculateTeamValue, calculateCurrentValue, getPlayerCost, type TeamValueData } from '../../../../packages/game-engine/src/utils/team-value-calculator';
 
 /**
@@ -17,7 +18,7 @@ export async function updateTeamValues(prisma: PrismaClient, teamId: string) {
   // Préparer les données pour le calcul
   const teamValueData: TeamValueData = {
     players: team.players.map(player => ({
-      cost: getPlayerCost(player.position, team.roster),
+      cost: getPlayerCost(player.position, team.roster, (team.ruleset as Ruleset) ?? DEFAULT_RULESET),
       available: true // Pour l'instant, tous les joueurs sont disponibles
     })),
     rerolls: team.rerolls,
@@ -25,7 +26,8 @@ export async function updateTeamValues(prisma: PrismaClient, teamId: string) {
     assistants: team.assistants,
     apothecary: team.apothecary,
     dedicatedFans: team.dedicatedFans, // Ajout des fans dévoués
-    roster: team.roster // Ajout du roster pour le calcul des relances
+    roster: team.roster, // Ajout du roster pour le calcul des relances
+    ruleset: (team.ruleset as Ruleset) ?? DEFAULT_RULESET,
   };
 
   // Calculer les valeurs

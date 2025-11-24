@@ -23,6 +23,13 @@ type Stats = {
   matches: {
     total: number;
   };
+  localMatches?: {
+    total: number;
+    pending: number;
+    inProgress: number;
+    completed: number;
+    cancelled: number;
+  };
   teams: {
     total: number;
   };
@@ -154,6 +161,25 @@ export default function AdminPage() {
             </div>
             <div className="text-4xl font-bold text-green-900">
               {stats?.matches.total ?? "—"}
+            </div>
+          </div>
+
+          {/* Matchs locaux */}
+          <div
+            className="rounded-xl p-6 bg-gradient-to-br from-pink-50 to-pink-100 border border-pink-200 shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer"
+            onClick={() => router.push("/admin/local-matches")}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-sm font-medium text-pink-700">Matchs locaux</div>
+              <span className="text-3xl">🎯</span>
+            </div>
+            <div className="text-4xl font-bold text-pink-900 mb-2">
+              {stats?.localMatches?.total ?? "—"}
+            </div>
+            <div className="flex flex-wrap gap-2 text-xs text-pink-700">
+              <span>⏳ {stats?.localMatches?.pending ?? 0} en attente</span>
+              <span>▶️ {stats?.localMatches?.inProgress ?? 0} en cours</span>
+              <span>✅ {stats?.localMatches?.completed ?? 0} terminés</span>
             </div>
           </div>
 

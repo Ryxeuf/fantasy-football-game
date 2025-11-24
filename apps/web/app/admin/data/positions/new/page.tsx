@@ -3,11 +3,18 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { API_BASE } from "../../../../auth-client";
 import SkillSelector from "../SkillSelector";
+import {
+  RULESET_OPTIONS,
+  DEFAULT_RULESET,
+  type Ruleset,
+  getRulesetLabel,
+} from "../../ruleset-utils";
 
 type Roster = {
   id: string;
   slug: string;
   name: string;
+  ruleset: string;
 };
 
 type Skill = {
@@ -54,6 +61,8 @@ export default function NewPositionPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedSkillSlugs, setSelectedSkillSlugs] = useState<string[]>([]);
+  const [rulesetFilter, setRulesetFilter] = useState<Ruleset>(DEFAULT_RULESET);
+  const filteredRosters = rosters.filter((r) => !rulesetFilter || r.ruleset === rulesetFilter);
 
   useEffect(() => {
     loadData();
@@ -142,6 +151,22 @@ export default function NewPositionPage() {
       <form onSubmit={handleSubmit} className="bg-white p-6 border rounded shadow-sm">
         <div className="grid grid-cols-3 gap-4 mb-6">
           <div>
+            <label className="block text-sm font-medium mb-1">Ruleset *</label>
+            <select
+              value={rulesetFilter}
+              onChange={(e) => {
+                setRulesetFilter(e.target.value as Ruleset);
+              }}
+              className="w-full border rounded px-3 py-2"
+            >
+              {RULESET_OPTIONS.map(({ value, label }) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
             <label className="block text-sm font-medium mb-1">Roster *</label>
             <select
               name="rosterId"
@@ -149,9 +174,9 @@ export default function NewPositionPage() {
               className="w-full border rounded px-3 py-2"
             >
               <option value="">Sélectionner un roster</option>
-              {rosters.map((r) => (
+              {filteredRosters.map((r) => (
                 <option key={r.id} value={r.id}>
-                  {r.name}
+                  {r.name} • {getRulesetLabel(r.ruleset)}
                 </option>
               ))}
             </select>

@@ -19,6 +19,11 @@ function createTestPlayers(team, count) {
         team: team,
     }));
 }
+const applyPlacement = (state, playerId, pos) => {
+    const result = placePlayerInSetup(state, playerId, pos);
+    expect(result.success).toBe(true);
+    return result.state;
+};
 describe('Setup Modal Prevention', () => {
     it('ne doit pas définir selectedPlayerId pendant la phase setup', () => {
         // Créer un état pré-match avec des équipes
@@ -31,7 +36,7 @@ describe('Setup Modal Prevention', () => {
         // Placer quelques joueurs
         let currentState = setupState;
         for (let i = 0; i < 3; i++) {
-            currentState = placePlayerInSetup(currentState, players[i].id, { x: 10 + i, y: 3 });
+            currentState = applyPlacement(currentState, players[i].id, { x: 10 + i, y: 3 });
         }
         // Vérifier que selectedPlayerId reste null après placement
         expect(currentState.selectedPlayerId).toBeNull();
@@ -45,7 +50,7 @@ describe('Setup Modal Prevention', () => {
         // Entrer en phase setup
         const setupState = enterSetupPhase(state, 'A');
         // Placer un joueur
-        const stateWithPlayer = placePlayerInSetup(setupState, players[0].id, { x: 10, y: 3 });
+        const stateWithPlayer = applyPlacement(setupState, players[0].id, { x: 10, y: 3 });
         // Simuler un clic sur le joueur placé
         // En phase setup, cela ne devrait pas définir selectedPlayerId
         const player = stateWithPlayer.players.find(p => p.id === players[0].id);
@@ -67,7 +72,7 @@ describe('Setup Modal Prevention', () => {
         // Placer tous les joueurs
         let currentState = setupState;
         for (let i = 0; i < 11; i++) {
-            currentState = placePlayerInSetup(currentState, players[i].id, { x: 10 + i, y: 3 });
+            currentState = applyPlacement(currentState, players[i].id, { x: 10 + i, y: 3 });
         }
         // Passer à la phase kickoff
         const kickoffState = {

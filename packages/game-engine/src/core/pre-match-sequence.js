@@ -61,7 +61,7 @@ export function calculateFanFactor(state, rng, dedicatedFansA, dedicatedFansB, m
  * @param manualTotal - Valeur totale manuelle (optionnel, 2-12)
  * @returns État avec météo déterminée
  */
-export function determineWeather(state, rng, weatherType, manualTotal) {
+export function determineWeather(state, rng, weatherType = "classique", manualTotal) {
     if (state.preMatch.phase !== 'weather')
         return state;
     let total;

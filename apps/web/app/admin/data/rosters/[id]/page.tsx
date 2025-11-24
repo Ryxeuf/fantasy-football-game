@@ -3,6 +3,11 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { API_BASE } from "../../../../auth-client";
 import Link from "next/link";
+import {
+  RULESET_OPTIONS,
+  getRulesetLabel,
+  type Ruleset,
+} from "../../ruleset-utils";
 
 type Position = {
   id: string;
@@ -22,6 +27,7 @@ type Position = {
 type Roster = {
   id: string;
   slug: string;
+  ruleset: Ruleset;
   name: string;
   nameEn: string;
   descriptionFr?: string | null;
@@ -120,6 +126,7 @@ export default function AdminRosterDetailPage() {
         regionalRules: regionalRules,
         specialRules: formData.get("specialRules") || null,
         naf: formData.get("naf") === "on",
+        ruleset: formData.get("ruleset"),
       };
       await putJSON(`/admin/data/rosters/${roster.id}`, data);
       setEditing(false);
@@ -173,9 +180,14 @@ export default function AdminRosterDetailPage() {
             <span>Retour</span>
           </Link>
           <div>
-            <h1 className="text-3xl font-heading font-bold text-nuffle-anthracite mb-1">
-              ⚽ {roster.name}
-            </h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-heading font-bold text-nuffle-anthracite mb-1">
+                ⚽ {roster.name}
+              </h1>
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                {getRulesetLabel(roster.ruleset)}
+              </span>
+            </div>
             <p className="text-sm text-gray-600">
               Détails du roster
             </p>
@@ -209,6 +221,22 @@ export default function AdminRosterDetailPage() {
                   disabled
                   className="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-gray-100 text-gray-500 cursor-not-allowed"
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Ruleset
+                </label>
+                <select
+                  name="ruleset"
+                  defaultValue={roster.ruleset}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all bg-white"
+                >
+                  {RULESET_OPTIONS.map(({ value, label }) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -367,6 +395,14 @@ export default function AdminRosterDetailPage() {
           <div>
             <div className="text-sm font-medium text-gray-600 mb-1">Budget</div>
             <div className="text-lg font-bold text-gray-900">{roster.budget}k</div>
+          </div>
+          <div>
+            <div className="text-sm font-medium text-gray-600 mb-1">Ruleset</div>
+            <div>
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                {getRulesetLabel(roster.ruleset)}
+              </span>
+            </div>
           </div>
           <div>
             <div className="text-sm font-medium text-gray-600 mb-1">Tier</div>

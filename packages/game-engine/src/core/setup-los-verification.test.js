@@ -15,6 +15,11 @@ const createTestPlayers = (teamPrefix, count) => {
         skills: '',
     }));
 };
+const applyPlacement = (currentState, playerId, pos) => {
+    const result = placePlayerInSetup(currentState, playerId, pos);
+    expect(result.success).toBe(true);
+    return result.state;
+};
 describe('Vérification LOS en phase setup', () => {
     it('devrait permettre le repositionnement des joueurs', () => {
         const teamAData = createTestPlayers('A', 11);
@@ -24,11 +29,11 @@ describe('Vérification LOS en phase setup', () => {
         // Utiliser une position légale
         const playerId = 'A1';
         const pos1 = setupState.preMatch.legalSetupPositions[0];
-        let currentState = placePlayerInSetup(setupState, playerId, pos1);
+        let currentState = applyPlacement(setupState, playerId, pos1);
         expect(currentState.preMatch.placedPlayers.length).toBe(1);
         // Repositionner le même joueur sur une autre position légale
         const pos2 = setupState.preMatch.legalSetupPositions[1];
-        const repositionedState = placePlayerInSetup(currentState, playerId, pos2);
+        const repositionedState = applyPlacement(currentState, playerId, pos2);
         expect(repositionedState).not.toBe(currentState);
         expect(repositionedState.preMatch.placedPlayers.length).toBe(1); // Toujours 1 joueur
         expect(repositionedState.players.find(p => p.id === playerId)?.pos).toEqual(pos2);
@@ -63,7 +68,7 @@ describe('Vérification LOS en phase setup', () => {
         for (let i = 0; i < 8; i++) {
             const playerId = `A${i + 1}`;
             const pos = spacedPositions[i];
-            const newState = placePlayerInSetup(currentState, playerId, pos);
+            const newState = applyPlacement(currentState, playerId, pos);
             expect(newState).not.toBe(currentState);
             currentState = newState;
         }
@@ -72,7 +77,7 @@ describe('Vérification LOS en phase setup', () => {
         // Utiliser une position sur la LOS qui n'est pas dans une wide zone (y=3..11)
         const posSurLos = legalPositions.find(p => p.x === 12 && p.y >= 3 && p.y <= 11);
         if (posSurLos) {
-            const resultSurLos = placePlayerInSetup(currentState, playerId, posSurLos);
+            const resultSurLos = applyPlacement(currentState, playerId, posSurLos);
             expect(resultSurLos).not.toBe(currentState); // Doit être accepté
         }
     });

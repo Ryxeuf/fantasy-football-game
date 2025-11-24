@@ -2,6 +2,8 @@
  * Calculateur de valeurs d'équipe selon les règles Blood Bowl
  */
 
+import { DEFAULT_RULESET, type Ruleset, getPositionBySlug } from '../rosters/positions';
+
 export interface TeamValueData {
   players: Array<{
     cost: number;
@@ -13,6 +15,7 @@ export interface TeamValueData {
   apothecary: boolean;
   dedicatedFans: number; // Ajout des fans dévoués
   roster: string; // Ajout du roster pour calculer le coût des relances
+  ruleset?: Ruleset; // Ruleset utilisé pour récupérer les données associées au roster
 }
 
 export interface CalculatedValues {
@@ -188,14 +191,16 @@ export function calculateAllValues(data: TeamValueData): CalculatedValues {
   };
 }
 
-import { getPositionBySlug } from '../rosters/positions';
-
 /**
  * Obtient le coût d'un joueur selon sa position et le roster
  */
-export function getPlayerCost(position: string, roster: string): number {
+export function getPlayerCost(
+  position: string,
+  roster: string,
+  ruleset: Ruleset = DEFAULT_RULESET,
+): number {
   // Utiliser le nouveau système de slugs
-  const positionData = getPositionBySlug(position);
+  const positionData = getPositionBySlug(position, ruleset);
   if (positionData) {
     return positionData.cost * 1000; // Convertir de kpo en po
   }

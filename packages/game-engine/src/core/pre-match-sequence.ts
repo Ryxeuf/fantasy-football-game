@@ -86,7 +86,7 @@ export function calculateFanFactor(
 export function determineWeather(
   state: ExtendedGameState, 
   rng: () => number,
-  weatherType: WeatherType,
+  weatherType: WeatherType = "classique",
   manualTotal?: number
 ): ExtendedGameState {
   if (state.preMatch.phase !== 'weather') return state;
