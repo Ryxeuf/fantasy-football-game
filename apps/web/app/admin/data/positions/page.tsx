@@ -54,6 +54,23 @@ async function deleteJSON(path: string) {
   return res.json();
 }
 
+async function postJSON(path: string, data: any) {
+  const token = localStorage.getItem("auth_token");
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers: {
+      Authorization: token ? `Bearer ${token}` : "",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok)
+    throw new Error(
+      (await res.json().catch(() => ({})))?.error || `Erreur ${res.status}`,
+    );
+  return res.json();
+}
+
 export default function AdminPositionsPage() {
   const router = useRouter();
   const [positions, setPositions] = useState<Position[]>([]);
@@ -67,6 +84,10 @@ export default function AdminPositionsPage() {
   const [costMin, setCostMin] = useState<string>("");
   const [costMax, setCostMax] = useState<string>("");
   const [statsSearch, setStatsSearch] = useState<string>("");
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
+  const [targetRosterId, setTargetRosterId] = useState<string>("");
+  const [duplicating, setDuplicating] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -111,6 +132,31 @@ export default function AdminPositionsPage() {
       loadData();
     } catch (e: any) {
       setError(e.message || "Erreur lors de la suppression");
+    }
+  };
+
+  const handleDuplicateClick = (position: Position) => {
+    setSelectedPosition(position);
+    setTargetRosterId(position.roster.id);
+    setShowDuplicateModal(true);
+  };
+
+  const handleDuplicate = async () => {
+    if (!selectedPosition || !targetRosterId) return;
+    setDuplicating(true);
+    setError(null);
+    try {
+      await postJSON(`/admin/data/positions/${selectedPosition.id}/duplicate`, {
+        targetRosterId,
+      });
+      setShowDuplicateModal(false);
+      setSelectedPosition(null);
+      alert("Position dupliquée avec succès");
+      loadData();
+    } catch (e: any) {
+      setError(e.message || "Erreur lors de la duplication");
+    } finally {
+      setDuplicating(false);
     }
   };
 
@@ -496,6 +542,14 @@ export default function AdminPositionsPage() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <button
+                          onClick={() => handleDuplicateClick(position)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium"
+                          title="Dupliquer"
+                        >
+                          <span>📋</span>
+                          <span>Dupliquer</span>
+                        </button>
+                        <button
                           onClick={() => router.push(`/admin/data/positions/${position.id}/edit`)}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-nuffle-gold/10 text-nuffle-bronze rounded-lg hover:bg-nuffle-gold/20 transition-colors text-sm font-medium"
                           title="Modifier"
@@ -520,6 +574,57 @@ export default function AdminPositionsPage() {
           </table>
         </div>
       </div>
+
+      {/* Duplicate Modal */}
+      {showDuplicateModal && selectedPosition && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 p-6">
+            <h3 className="text-xl font-heading font-bold text-nuffle-anthracite mb-4">
+              Dupliquer la position
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Dupliquer "{selectedPosition.displayName}" ({selectedPosition.roster.name}) vers un autre roster.
+            </p>
+            
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Roster cible
+              </label>
+              <select
+                value={targetRosterId}
+                onChange={(e) => setTargetRosterId(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white"
+              >
+                {rosters.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.name} • {getRulesetLabel(r.ruleset)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleDuplicate}
+                disabled={duplicating}
+                className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {duplicating ? "Duplication..." : "Dupliquer"}
+              </button>
+              <button
+                onClick={() => {
+                  setShowDuplicateModal(false);
+                  setSelectedPosition(null);
+                }}
+                disabled={duplicating}
+                className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Annuler
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

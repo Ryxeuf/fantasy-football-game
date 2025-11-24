@@ -322,6 +322,99 @@ router.put("/rosters/:id", async (req, res) => {
   }
 });
 
+router.post("/rosters/:id/duplicate", async (req, res) => {
+  try {
+    const sourceRoster = await prisma.roster.findUnique({
+      where: { id: req.params.id },
+      include: {
+        positions: {
+          include: {
+            skills: {
+              include: { skill: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!sourceRoster) {
+      return res.status(404).json({ error: "Roster source non trouvé" });
+    }
+
+    const { targetRuleset } = req.body;
+    const newRuleset = resolveRuleset(targetRuleset);
+
+    // Vérifier si le roster existe déjà pour ce ruleset
+    const existing = await prisma.roster.findFirst({
+      where: {
+        slug: sourceRoster.slug,
+        ruleset: newRuleset,
+      },
+    });
+
+    if (existing) {
+      return res.status(409).json({ 
+        error: `Le roster "${sourceRoster.slug}" existe déjà pour le ruleset ${newRuleset}` 
+      });
+    }
+
+    // Dupliquer le roster
+    const newRoster = await prisma.roster.create({
+      data: {
+        slug: sourceRoster.slug,
+        ruleset: newRuleset,
+        name: sourceRoster.name,
+        nameEn: sourceRoster.nameEn,
+        descriptionFr: sourceRoster.descriptionFr,
+        descriptionEn: sourceRoster.descriptionEn,
+        budget: sourceRoster.budget,
+        tier: sourceRoster.tier,
+        regionalRules: sourceRoster.regionalRules,
+        specialRules: sourceRoster.specialRules,
+        naf: sourceRoster.naf,
+      },
+    });
+
+    // Dupliquer les positions
+    for (const position of sourceRoster.positions) {
+      const newPosition = await prisma.position.create({
+        data: {
+          rosterId: newRoster.id,
+          slug: position.slug,
+          displayName: position.displayName,
+          cost: position.cost,
+          min: position.min,
+          max: position.max,
+          ma: position.ma,
+          st: position.st,
+          ag: position.ag,
+          pa: position.pa,
+          av: position.av,
+          keywords: position.keywords,
+        },
+      });
+
+      // Dupliquer les skills de la position
+      for (const positionSkill of position.skills) {
+        await prisma.positionSkill.create({
+          data: {
+            positionId: newPosition.id,
+            skillId: positionSkill.skillId,
+          },
+        });
+      }
+    }
+
+    res.status(201).json({ 
+      roster: newRoster,
+      message: `Roster dupliqué avec succès vers ${newRuleset}`,
+    });
+  } catch (error: any) {
+    console.error("Erreur lors de la duplication du roster:", error);
+    res.status(500).json({ error: error.message || "Erreur serveur" });
+  }
+});
+
 router.delete("/rosters/:id", async (req, res) => {
   try {
     await prisma.roster.delete({
@@ -501,6 +594,85 @@ router.put("/positions/:id", async (req, res) => {
       return res.status(404).json({ error: "Position non trouvée" });
     }
     console.error("Erreur lors de la mise à jour de la position:", error);
+    res.status(500).json({ error: error.message || "Erreur serveur" });
+  }
+});
+
+router.post("/positions/:id/duplicate", async (req, res) => {
+  try {
+    const sourcePosition = await prisma.position.findUnique({
+      where: { id: req.params.id },
+      include: {
+        roster: true,
+        skills: {
+          include: { skill: true },
+        },
+      },
+    });
+
+    if (!sourcePosition) {
+      return res.status(404).json({ error: "Position source non trouvée" });
+    }
+
+    const { targetRosterId } = req.body;
+
+    if (!targetRosterId) {
+      return res.status(400).json({ error: "Le roster cible est requis" });
+    }
+
+    // Vérifier que le roster cible existe
+    const targetRoster = await prisma.roster.findUnique({
+      where: { id: targetRosterId },
+    });
+
+    if (!targetRoster) {
+      return res.status(404).json({ error: "Roster cible non trouvé" });
+    }
+
+    // Dupliquer la position
+    const newPosition = await prisma.position.create({
+      data: {
+        rosterId: targetRosterId,
+        slug: sourcePosition.slug,
+        displayName: sourcePosition.displayName,
+        cost: sourcePosition.cost,
+        min: sourcePosition.min,
+        max: sourcePosition.max,
+        ma: sourcePosition.ma,
+        st: sourcePosition.st,
+        ag: sourcePosition.ag,
+        pa: sourcePosition.pa,
+        av: sourcePosition.av,
+        keywords: sourcePosition.keywords,
+      },
+    });
+
+    // Dupliquer les skills
+    for (const positionSkill of sourcePosition.skills) {
+      await prisma.positionSkill.create({
+        data: {
+          positionId: newPosition.id,
+          skillId: positionSkill.skillId,
+        },
+      });
+    }
+
+    const result = await prisma.position.findUnique({
+      where: { id: newPosition.id },
+      include: {
+        roster: true,
+        skills: {
+          include: { skill: true },
+        },
+      },
+    });
+
+    res.status(201).json({ 
+      position: result,
+      message: `Position dupliquée avec succès vers le roster ${targetRoster.name}`,
+    });
+  } catch (error: any) {
+    console.error("Erreur lors de la duplication de la position:", error);
     res.status(500).json({ error: error.message || "Erreur serveur" });
   }
 });

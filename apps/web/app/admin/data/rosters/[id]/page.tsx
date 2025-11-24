@@ -71,6 +71,23 @@ async function putJSON(path: string, data: any) {
   return res.json();
 }
 
+async function postJSON(path: string, data: any) {
+  const token = localStorage.getItem("auth_token");
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers: {
+      Authorization: token ? `Bearer ${token}` : "",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok)
+    throw new Error(
+      (await res.json().catch(() => ({})))?.error || `Erreur ${res.status}`,
+    );
+  return res.json();
+}
+
 export default function AdminRosterDetailPage() {
   const router = useRouter();
   const params = useParams();
@@ -79,6 +96,9 @@ export default function AdminRosterDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  const [targetRuleset, setTargetRuleset] = useState<Ruleset>("season_3");
+  const [duplicating, setDuplicating] = useState(false);
 
   useEffect(() => {
     loadRoster();
@@ -133,6 +153,24 @@ export default function AdminRosterDetailPage() {
       loadRoster();
     } catch (e: any) {
       setError(e.message || "Erreur lors de la mise à jour");
+    }
+  };
+
+  const handleDuplicate = async () => {
+    if (!roster) return;
+    setDuplicating(true);
+    setError(null);
+    try {
+      await postJSON(`/admin/data/rosters/${roster.id}/duplicate`, {
+        targetRuleset,
+      });
+      setShowDuplicateModal(false);
+      alert(`Roster dupliqué avec succès vers ${getRulesetLabel(targetRuleset)}`);
+      router.push("/admin/data/rosters");
+    } catch (e: any) {
+      setError(e.message || "Erreur lors de la duplication");
+    } finally {
+      setDuplicating(false);
     }
   };
 
@@ -193,13 +231,22 @@ export default function AdminRosterDetailPage() {
             </p>
           </div>
         </div>
-        <button
-          onClick={() => setEditing(!editing)}
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-nuffle-gold text-white rounded-lg font-medium hover:bg-nuffle-gold/90 shadow-md hover:shadow-lg transition-all duration-200"
-        >
-          <span>{editing ? "✖️" : "✏️"}</span>
-          <span>{editing ? "Annuler" : "Modifier"}</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowDuplicateModal(true)}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 shadow-md hover:shadow-lg transition-all duration-200"
+          >
+            <span>📋</span>
+            <span>Dupliquer</span>
+          </button>
+          <button
+            onClick={() => setEditing(!editing)}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-nuffle-gold text-white rounded-lg font-medium hover:bg-nuffle-gold/90 shadow-md hover:shadow-lg transition-all duration-200"
+          >
+            <span>{editing ? "✖️" : "✏️"}</span>
+            <span>{editing ? "Annuler" : "Modifier"}</span>
+          </button>
+        </div>
       </div>
 
       {/* Edit Form */}
@@ -537,6 +584,54 @@ export default function AdminRosterDetailPage() {
           </table>
         </div>
       </div>
+
+      {/* Duplicate Modal */}
+      {showDuplicateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 p-6">
+            <h3 className="text-xl font-heading font-bold text-nuffle-anthracite mb-4">
+              Dupliquer le roster
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Sélectionnez le ruleset cible pour dupliquer "{roster.name}" avec toutes ses positions et compétences.
+            </p>
+            
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Ruleset cible
+              </label>
+              <select
+                value={targetRuleset}
+                onChange={(e) => setTargetRuleset(e.target.value as Ruleset)}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white"
+              >
+                {RULESET_OPTIONS.filter(opt => opt.value !== roster.ruleset).map(({ value, label }) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleDuplicate}
+                disabled={duplicating}
+                className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {duplicating ? "Duplication..." : "Dupliquer"}
+              </button>
+              <button
+                onClick={() => setShowDuplicateModal(false)}
+                disabled={duplicating}
+                className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Annuler
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
