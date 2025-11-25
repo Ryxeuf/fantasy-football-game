@@ -1,3 +1,17 @@
+## [1.27.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.26.0...v1.27.0) (2025-11-25)
+
+
+### ✨ Features
+
+* add script to scrape Blood Bowl team data from mordorbihan.fr ([d92fa96](https://github.com/Ryxeuf/fantasy-football-game/commit/d92fa96cf8e7bcb7ddce9286fb169db3688bb9c9))
+* add Season 3 rosters from mordorbihan.fr ([73fdc7b](https://github.com/Ryxeuf/fantasy-football-game/commit/73fdc7b5f488f0d41268d694395601713b42d5c3))
+
+
+### 🐛 Bug Fixes
+
+* suppression de la catégorie Scélérates en Saison 2 ([6e66c90](https://github.com/Ryxeuf/fantasy-football-game/commit/6e66c90d0999a011b7f78b8c3645d05c336abb45))
+* update seed to use ruleset for skills lookup ([ca882ea](https://github.com/Ryxeuf/fantasy-football-game/commit/ca882ea693095ae197e4ab991248c1387738b0b0))
+
 ## [1.26.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.25.0...v1.26.0) (2025-11-25)
 
 
