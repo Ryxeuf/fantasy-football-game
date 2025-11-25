@@ -934,6 +934,13 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
     description: "À la fin du tour d'équipe adverse, lancez un D6 pour chaque équipier à Terre et non-Étourdi dans les trois cases d'un joueur debout avec ce trait.",
     category: "Trait"
   },
+  {
+    slug: "hit-and-run",
+    nameFr: "Frappe-et-cours",
+    nameEn: "Hit and Run",
+    description: "Ce joueur peut effectuer un mouvement après avoir effectué une action de Blocage.",
+    category: "Agility"
+  },
 ];
 
 // Index par slug pour accès rapide

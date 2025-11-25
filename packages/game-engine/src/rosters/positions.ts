@@ -2427,6 +2427,8 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
   },
 };
 
+import { SEASON_THREE_ROSTERS } from './season3-rosters';
+
 const cloneRoster = (roster: TeamRoster): TeamRoster => ({
   ...roster,
   positions: roster.positions.map((position) => ({ ...position })),
@@ -2439,7 +2441,7 @@ const cloneRosterMap = (source: TeamRosterMap): TeamRosterMap =>
 
 export const TEAM_ROSTERS_BY_RULESET: Record<Ruleset, TeamRosterMap> = {
   season_2: SEASON_TWO_ROSTERS,
-  season_3: cloneRosterMap(SEASON_TWO_ROSTERS),
+  season_3: SEASON_THREE_ROSTERS,
 };
 
 export const TEAM_ROSTERS = TEAM_ROSTERS_BY_RULESET[DEFAULT_RULESET];
