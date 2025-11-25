@@ -6,12 +6,19 @@ import { useLanguage } from "../contexts/LanguageContext";
 interface Skill {
   id: string;
   slug: string;
+  ruleset: string;
   nameFr: string;
   nameEn: string;
   description: string;
   descriptionEn?: string | null;
   category: string;
 }
+
+// Options de ruleset
+const RULESET_OPTIONS = [
+  { value: "season_2", label: "Saison 2 (2020)", labelEn: "Season 2 (2020)" },
+  { value: "season_3", label: "Saison 3 (2025)", labelEn: "Season 3 (2025)" },
+];
 
 interface SkillCategory {
   name: string;
@@ -38,19 +45,20 @@ const categoryNames: Record<string, { fr: string; en: string }> = {
 export default function SkillsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedRuleset, setSelectedRuleset] = useState<string>("season_2");
   const [skills, setSkills] = useState<Skill[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { language, t } = useLanguage();
 
-  // Charger les compétences depuis l'API
+  // Charger les compétences depuis l'API avec le ruleset sélectionné
   useEffect(() => {
     const loadSkills = async () => {
       try {
         setLoading(true);
         setError(null);
-        // Construire l'URL : API_URL est https://api.nufflearena.fr, on ajoute /api/skills
-        const response = await fetch(`${API_URL}/api/skills`);
+        // Construire l'URL avec le paramètre ruleset
+        const response = await fetch(`${API_URL}/api/skills?ruleset=${selectedRuleset}`);
         if (!response.ok) {
           throw new Error("Erreur lors du chargement des compétences");
         }
@@ -64,7 +72,7 @@ export default function SkillsPage() {
       }
     };
     loadSkills();
-  }, []);
+  }, [selectedRuleset]);
 
   // Organiser les compétences par catégorie
   const skillsByCategory = useMemo(() => {
@@ -146,6 +154,30 @@ export default function SkillsPage() {
         <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
           {t.skills.description}
         </p>
+
+        {/* Sélecteur de Ruleset */}
+        <div className="mb-4 sm:mb-6">
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-sm font-medium text-gray-700 mr-2">
+              {language === "fr" ? "Édition des règles :" : "Rules Edition:"}
+            </span>
+            {RULESET_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => setSelectedRuleset(option.value)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  selectedRuleset === option.value
+                    ? option.value === "season_3"
+                      ? "bg-emerald-500 text-white shadow-md"
+                      : "bg-amber-500 text-white shadow-md"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                {language === "fr" ? option.label : option.labelEn}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Barre de recherche */}
         <div className="mb-4 sm:mb-6">

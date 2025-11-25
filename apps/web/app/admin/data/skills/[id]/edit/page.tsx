@@ -2,12 +2,14 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { API_BASE } from "../../../../../auth-client";
+import { RULESET_OPTIONS, getRulesetLabel } from "../../../ruleset-utils";
 
-const categories = ["General", "Agility", "Strength", "Passing", "Mutation", "Trait"];
+const categories = ["General", "Agility", "Strength", "Passing", "Mutation", "Trait", "Scélérates"];
 
 type Skill = {
   id: string;
   slug: string;
+  ruleset: string;
   nameFr: string;
   nameEn: string;
   description: string;
@@ -124,8 +126,18 @@ export default function EditSkillPage() {
 
       <form onSubmit={handleSubmit} className="bg-white p-6 border rounded shadow-sm">
         <div className="mb-4 p-3 bg-gray-50 rounded">
-          <div className="text-sm text-gray-600">
-            <strong>Slug:</strong> {skill.slug}
+          <div className="text-sm text-gray-600 flex gap-6">
+            <div><strong>Slug:</strong> {skill.slug}</div>
+            <div>
+              <strong>Ruleset:</strong>{" "}
+              <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                skill.ruleset === "season_3" 
+                  ? "bg-emerald-100 text-emerald-800" 
+                  : "bg-amber-100 text-amber-800"
+              }`}>
+                {getRulesetLabel(skill.ruleset)}
+              </span>
+            </div>
           </div>
         </div>
 

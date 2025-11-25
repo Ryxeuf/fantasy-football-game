@@ -5,17 +5,21 @@
 
 import { Router } from "express";
 import { prisma } from "../prisma";
+import { resolveRuleset } from "../utils/ruleset-helpers";
 
 const router = Router();
 
 router.get("/skills", async (req, res) => {
   try {
-    const { category, search } = req.query;
+    const { category, search, ruleset } = req.query;
     const where: any = {};
     
     if (category) {
       where.category = category;
     }
+
+    // Filtre obligatoire par ruleset (par défaut season_2)
+    where.ruleset = resolveRuleset(ruleset as string | undefined);
     
     if (search) {
       where.OR = [
@@ -33,6 +37,7 @@ router.get("/skills", async (req, res) => {
       select: {
         id: true,
         slug: true,
+        ruleset: true,
         nameFr: true,
         nameEn: true,
         description: true,

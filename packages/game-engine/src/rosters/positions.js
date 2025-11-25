@@ -4,12 +4,17 @@
  */
 export const RULESETS = ["season_2", "season_3"];
 export const DEFAULT_RULESET = "season_2";
+// Mapping complet des équipes avec leurs positions
 const SEASON_TWO_ROSTERS = {
     skaven: {
         name: "Skavens",
         budget: 1000,
         tier: "II",
         naf: false,
+        descriptionFr: "Les Skavens sont une race de rats humanoïdes qui se reproduisent rapidement et sont connus pour leur agilité et leur vitesse. Leurs équipes Blood Bowl sont réputées pour leur jeu rapide et leur capacité à marquer rapidement.",
+        descriptionEn: "Skaven are a race of humanoid rats that breed quickly and are known for their agility and speed. Their Blood Bowl teams are renowned for their fast play and ability to score quickly.",
+        regionalRules: ["underworld_challenge"],
+        specialRules: undefined,
         positions: [
             {
                 slug: "skaven_lineman",
@@ -83,6 +88,10 @@ const SEASON_TWO_ROSTERS = {
         budget: 1000,
         tier: "I",
         naf: false,
+        descriptionFr: "Les Hommes-Lézards sont une race ancienne de Lustrie, combinant la force brute des Saurus avec l'agilité des Skinks. Leurs équipes sont équilibrées entre puissance et vitesse.",
+        descriptionEn: "Lizardmen are an ancient race from Lustria, combining the brute strength of Saurus with the agility of Skinks. Their teams are balanced between power and speed.",
+        regionalRules: ["lustrian_superleague"],
+        specialRules: undefined,
         positions: [
             {
                 slug: "lizardmen_skink_runner",
@@ -143,6 +152,10 @@ const SEASON_TWO_ROSTERS = {
         budget: 1000,
         tier: "I",
         naf: false,
+        descriptionFr: "Les Elfes Sylvains sont des maîtres de l'agilité et de la vitesse. Leurs équipes Blood Bowl excellent dans le jeu de passe et la mobilité, mais sont fragiles.",
+        descriptionEn: "Wood Elves are masters of agility and speed. Their Blood Bowl teams excel at passing and mobility, but are fragile.",
+        regionalRules: ["elven_kingdoms_league"],
+        specialRules: undefined,
         positions: [
             {
                 slug: "wood_elf_lineman",
@@ -216,6 +229,10 @@ const SEASON_TWO_ROSTERS = {
         budget: 1000,
         tier: "I",
         naf: false,
+        descriptionFr: "Les Elfes Noirs sont une race cruelle et agressive qui combine agilité et violence. Leurs équipes Blood Bowl sont rapides et dangereuses, spécialisées dans le blocage et la blessure.",
+        descriptionEn: "Dark Elves are a cruel and aggressive race that combines agility with violence. Their Blood Bowl teams are fast and dangerous, specializing in blocking and injuring.",
+        regionalRules: ["elven_kingdoms_league"],
+        specialRules: undefined,
         positions: [
             {
                 slug: "dark_elf_lineman",
@@ -289,6 +306,10 @@ const SEASON_TWO_ROSTERS = {
         budget: 1000,
         tier: "I",
         naf: false,
+        descriptionFr: "Les Nains sont une race robuste et résistante, connue pour leur force et leur endurance. Leurs équipes Blood Bowl sont lentes mais très résistantes, spécialisées dans le blocage défensif.",
+        descriptionEn: "Dwarves are a sturdy and resilient race, known for their strength and endurance. Their Blood Bowl teams are slow but very tough, specializing in defensive blocking.",
+        regionalRules: ["old_world_classic", "worlds_edge_superleague"],
+        specialRules: undefined,
         positions: [
             {
                 slug: "dwarf_blocker_lineman",
@@ -362,6 +383,10 @@ const SEASON_TWO_ROSTERS = {
         budget: 1000,
         tier: "IV",
         naf: false,
+        descriptionFr: "Les Gobelins sont de petits joueurs agiles mais fragiles, connus pour leur utilisation d'armes secrètes et de tactiques déloyales. Leurs équipes Blood Bowl sont imprévisibles et dangereuses.",
+        descriptionEn: "Goblins are small, agile but fragile players, known for their use of secret weapons and underhanded tactics. Their Blood Bowl teams are unpredictable and dangerous.",
+        regionalRules: ["badlands_brawl", "underworld_challenge"],
+        specialRules: undefined,
         positions: [
             {
                 slug: "goblin_lineman",
@@ -474,6 +499,10 @@ const SEASON_TWO_ROSTERS = {
         budget: 1000,
         tier: "II",
         naf: false,
+        descriptionFr: "Les Morts-Vivants sont une équipe composée de squelettes, zombies et autres créatures ressuscitées. Leurs équipes sont résistantes et bénéficient de la régénération, mais manquent d'agilité.",
+        descriptionEn: "The Undead are a team composed of skeletons, zombies and other resurrected creatures. Their teams are resilient and benefit from regeneration, but lack agility.",
+        regionalRules: ["sylvanian_spotlight"],
+        specialRules: undefined,
         positions: [
             {
                 slug: "undead_skeleton_lineman",
@@ -547,6 +576,10 @@ const SEASON_TWO_ROSTERS = {
         budget: 1000,
         tier: "III",
         naf: false,
+        descriptionFr: "Les Renégats du Chaos sont des équipes composées de joueurs de différentes races unis par leur rejet de l'ordre. Leurs équipes sont variées et imprévisibles.",
+        descriptionEn: "Chaos Renegades are teams composed of players from different races united by their rejection of order. Their teams are varied and unpredictable.",
+        regionalRules: ["favoured_of"],
+        specialRules: undefined,
         positions: [
             {
                 slug: "chaos_renegade_human_lineman",
@@ -685,6 +718,10 @@ const SEASON_TWO_ROSTERS = {
         budget: 1000,
         tier: "IV",
         naf: false,
+        descriptionFr: "Les Ogres sont des géants puissants mais peu intelligents, accompagnés de leurs serviteurs Gnoblars. Leurs équipes sont très fortes mais manquent de finesse.",
+        descriptionEn: "Ogres are powerful but unintelligent giants, accompanied by their Gnoblar servants. Their teams are very strong but lack finesse.",
+        regionalRules: ["badlands_brawl", "old_world_classic"],
+        specialRules: undefined,
         positions: [
             {
                 slug: "ogre_gnoblar_lineman",
@@ -732,6 +769,10 @@ const SEASON_TWO_ROSTERS = {
         budget: 1000,
         tier: "IV",
         naf: false,
+        descriptionFr: "Les Halflings sont de petits joueurs agiles mais très fragiles. Leurs équipes Blood Bowl sont rapides mais vulnérables, souvent accompagnées d'un Treeman pour la protection.",
+        descriptionEn: "Halflings are small, agile but very fragile players. Their Blood Bowl teams are fast but vulnerable, often accompanied by a Treeman for protection.",
+        regionalRules: ["halfling_thimble_cup", "old_world_classic"],
+        specialRules: undefined,
         positions: [
             {
                 slug: "halfling_hopeful_lineman",
@@ -792,6 +833,10 @@ const SEASON_TWO_ROSTERS = {
         budget: 1000,
         tier: "I",
         naf: false,
+        descriptionFr: "Les Bas-Fonds sont une équipe mixte composée de Skavens et de Gobelins mutants. Leurs équipes combinent agilité et utilisation d'armes secrètes.",
+        descriptionEn: "Underworld Denizens are a mixed team composed of Skaven and mutant Goblins. Their teams combine agility with the use of secret weapons.",
+        regionalRules: ["underworld_challenge"],
+        specialRules: undefined,
         positions: [
             {
                 slug: "underworld_underworld_goblin_lineman",
@@ -904,6 +949,10 @@ const SEASON_TWO_ROSTERS = {
         budget: 1000,
         tier: "III",
         naf: false,
+        descriptionFr: "Les Élus du Chaos sont des guerriers dévoués aux dieux du Chaos, développant des mutations au fil du temps. Leurs équipes deviennent plus puissantes avec l'expérience.",
+        descriptionEn: "Chaos Chosen are warriors dedicated to the Chaos gods, developing mutations over time. Their teams become more powerful with experience.",
+        regionalRules: ["favoured_of"],
+        specialRules: undefined,
         positions: [
             {
                 slug: "chaos_chosen_beastman_runner_lineman",
@@ -977,6 +1026,10 @@ const SEASON_TWO_ROSTERS = {
         budget: 1000,
         tier: "II",
         naf: false,
+        descriptionFr: "La Noblesse Impériale représente l'élite de l'Empire, combinant compétences nobles et serviteurs dévoués. Leurs équipes sont équilibrées et polyvalentes.",
+        descriptionEn: "Imperial Nobility represents the elite of the Empire, combining noble skills and devoted servants. Their teams are balanced and versatile.",
+        regionalRules: ["old_world_classic"],
+        specialRules: undefined,
         positions: [
             {
                 slug: "imperial_nobility_imperial_retainer_lineman",
@@ -1050,6 +1103,10 @@ const SEASON_TWO_ROSTERS = {
         budget: 1000,
         tier: "II",
         naf: false,
+        descriptionFr: "Les Horreurs Nécromantiques sont des créatures ressuscitées par la magie nécromantique, combinant morts-vivants et créatures monstrueuses. Leurs équipes sont résistantes et dangereuses.",
+        descriptionEn: "Necromantic Horrors are creatures resurrected by necromantic magic, combining undead and monstrous creatures. Their teams are resilient and dangerous.",
+        regionalRules: ["sylvanian_spotlight"],
+        specialRules: undefined,
         positions: [
             {
                 slug: "necromantic_horror_zombie_lineman",
@@ -1123,6 +1180,10 @@ const SEASON_TWO_ROSTERS = {
         budget: 1000,
         tier: "II",
         naf: false,
+        descriptionFr: "Les Orques sont une race brutale et agressive, connue pour leur force et leur violence. Leurs équipes Blood Bowl sont puissantes et spécialisées dans le blocage offensif.",
+        descriptionEn: "Orcs are a brutal and aggressive race, known for their strength and violence. Their Blood Bowl teams are powerful and specialize in offensive blocking.",
+        regionalRules: ["badlands_brawl"],
+        specialRules: undefined,
         positions: [
             {
                 slug: "orc_orc_lineman",
@@ -1209,6 +1270,10 @@ const SEASON_TWO_ROSTERS = {
         budget: 1000,
         tier: "III",
         naf: false,
+        descriptionFr: "Les équipes de Nurgle sont dédiées au dieu de la peste et de la décomposition. Leurs joueurs sont résistants et peuvent transmettre des maladies à leurs adversaires.",
+        descriptionEn: "Nurgle teams are dedicated to the god of plague and decay. Their players are resilient and can spread diseases to their opponents.",
+        regionalRules: ["favoured_of"],
+        specialRules: undefined,
         positions: [
             {
                 slug: "nurgle_rotter_lineman",
@@ -1269,6 +1334,10 @@ const SEASON_TWO_ROSTERS = {
         budget: 1000,
         tier: "I",
         naf: false,
+        descriptionFr: "L'Alliance du Vieux Monde est une équipe mixte composée de Humains, Nains et Halflings. Leurs équipes combinent les forces de différentes races pour créer une équipe équilibrée.",
+        descriptionEn: "The Old World Alliance is a mixed team composed of Humans, Dwarves and Halflings. Their teams combine the strengths of different races to create a balanced team.",
+        regionalRules: ["old_world_classic"],
+        specialRules: undefined,
         positions: [
             {
                 slug: "old_world_alliance_old_world_human_lineman",
@@ -1420,6 +1489,10 @@ const SEASON_TWO_ROSTERS = {
         budget: 1000,
         tier: "II",
         naf: false,
+        descriptionFr: "L'Union Elfique est une équipe composée d'elfes de différentes nations unies. Leurs équipes combinent agilité et compétences de passe pour un jeu rapide et élégant.",
+        descriptionEn: "The Elven Union is a team composed of elves from different united nations. Their teams combine agility and passing skills for fast and elegant play.",
+        regionalRules: ["elven_kingdoms_league"],
+        specialRules: undefined,
         positions: [
             {
                 slug: "elven_union_lineman",
@@ -1480,6 +1553,10 @@ const SEASON_TWO_ROSTERS = {
         budget: 1000,
         tier: "II",
         naf: false,
+        descriptionFr: "Les Humains sont une race polyvalente et adaptable, capable de jouer tous les styles de jeu. Leurs équipes Blood Bowl sont équilibrées et peuvent s'adapter à différentes stratégies.",
+        descriptionEn: "Humans are a versatile and adaptable race, capable of playing all styles of play. Their Blood Bowl teams are balanced and can adapt to different strategies.",
+        regionalRules: ["old_world_classic"],
+        specialRules: undefined,
         positions: [
             {
                 slug: "human_human_lineman",
@@ -1566,6 +1643,10 @@ const SEASON_TWO_ROSTERS = {
         budget: 1000,
         tier: "III",
         naf: false,
+        descriptionFr: "Les Orques Noirs sont des guerriers disciplinés et bien équipés, plus organisés que les Orques standards. Leurs équipes Blood Bowl sont puissantes et mieux structurées.",
+        descriptionEn: "Black Orcs are disciplined and well-equipped warriors, more organized than standard Orcs. Their Blood Bowl teams are powerful and better structured.",
+        regionalRules: ["badlands_brawl"],
+        specialRules: undefined,
         positions: [
             {
                 slug: "black_orc_goblin_bruiser_lineman",
@@ -1613,6 +1694,10 @@ const SEASON_TWO_ROSTERS = {
         budget: 1000,
         tier: "I",
         naf: false,
+        descriptionFr: "Les Nains du Chaos sont des nains corrompus par le Chaos, combinant la résistance des nains avec la brutalité du Chaos. Leurs équipes sont résistantes et agressives.",
+        descriptionEn: "Chaos Dwarves are dwarves corrupted by Chaos, combining dwarven resilience with Chaos brutality. Their teams are resilient and aggressive.",
+        regionalRules: ["badlands_brawl", "worlds_edge_superleague", "favoured_of"],
+        specialRules: undefined,
         positions: [
             {
                 slug: "chaos_dwarf_hobgoblin_lineman",
@@ -1699,6 +1784,10 @@ const SEASON_TWO_ROSTERS = {
         budget: 1000,
         tier: "II",
         naf: true,
+        descriptionFr: "Les Slann sont une race ancienne de grenouilles humanoïdes de Lustrie, connus pour leur agilité et leur capacité de saut exceptionnelle. Leurs équipes Blood Bowl sont rapides et acrobatiques.",
+        descriptionEn: "Slann are an ancient race of humanoid frogs from Lustria, known for their agility and exceptional jumping ability. Their Blood Bowl teams are fast and acrobatic.",
+        regionalRules: ["lustrian_superleague"],
+        specialRules: undefined,
         positions: [
             {
                 slug: "slann_lineman",
@@ -1759,6 +1848,10 @@ const SEASON_TWO_ROSTERS = {
         budget: 1000,
         tier: "I",
         naf: false,
+        descriptionFr: "Les Amazones sont des guerrières féroces de Lustrie, connues pour leur agilité et leur compétence au combat. Leurs équipes Blood Bowl sont rapides et agressives.",
+        descriptionEn: "Amazons are fierce warriors from Lustria, known for their agility and combat prowess. Their Blood Bowl teams are fast and aggressive.",
+        regionalRules: ["lustrian_superleague"],
+        specialRules: undefined,
         positions: [
             {
                 slug: "amazon_lineman",
@@ -1819,49 +1912,53 @@ const SEASON_TWO_ROSTERS = {
         budget: 1000,
         tier: "I",
         naf: false,
+        descriptionFr: "Quand Blood Bowl atteignit Ulthuan pour la première fois, il y eut beaucoup de nez retroussés et de 'tut' méprisants, car cela semblait n'être rien de plus que deux équipes de voyous incivilisés qui se frappaient sans raison. Il devint rapidement évident que ce n'était pas la seule façon de jouer, cependant, et dans les années qui suivirent, les équipes de Hauts Elfes révolutionnèrent le jeu de passe du sport. Ils ont de nombreux avantages quand il s'agit de gagner (par opposition à massacrer l'adversaire, ce qui n'est pas toujours la même chose !), et leurs excellents joueurs sont l'épitomé du côté le plus gracieux du jeu. Le seul vrai problème avec les équipes de Hauts Elfes est qu'elles peuvent être très pointilleuses sur qui, quand ou où elles jouent, alors nous devons être reconnaissants qu'elles daignent jouer contre des races inférieures !",
+        descriptionEn: "When Blood Bowl first reached Ulthuan, there was much turning up of noses and loud disdainful tutting, for it appeared as nothing more than two teams of uncivilised yobs pummelling each other senseless. It quickly became apparent that this was not the sole way of playing, however, and in the years that followed High Elf teams revolutionised the sport's passing game. They have many advantages when it comes to winning (as opposed to slaughtering the opposition, which isn't always the same thing!), and their fine players are the epitome of the more graceful side of the game. The only real problem with High Elf teams is that they can be very picky about who, when or where they play, so we must be thankful they deign to play lesser races at all!",
+        regionalRules: ["elven_kingdoms_league"],
+        specialRules: "NONE",
         positions: [
             {
                 slug: "high_elf_lineman",
-                displayName: "Ligne-Quart",
-                cost: 70,
+                displayName: "High Elf Lineman",
+                cost: 65,
                 min: 0,
                 max: 16,
                 ma: 6,
                 st: 3,
-                ag: 3,
-                pa: 4,
-                av: 8,
+                ag: 2,
+                pa: 3,
+                av: 9,
                 skills: "",
             },
             {
-                slug: "high_elf_catcher",
-                displayName: "Receveur",
-                cost: 90,
-                min: 0,
-                max: 4,
-                ma: 7,
-                st: 2,
-                ag: 2,
-                pa: 4,
-                av: 8,
-                skills: "catch",
-            },
-            {
                 slug: "high_elf_thrower",
-                displayName: "Lanceur",
+                displayName: "High Elf Thrower",
                 cost: 100,
                 min: 0,
                 max: 2,
                 ma: 6,
                 st: 3,
                 ag: 2,
+                pa: 2,
+                av: 9,
+                skills: "cloud-burster,pass,safe-pass",
+            },
+            {
+                slug: "high_elf_catcher",
+                displayName: "High Elf Catcher",
+                cost: 90,
+                min: 0,
+                max: 4,
+                ma: 8,
+                st: 3,
+                ag: 2,
                 pa: 3,
                 av: 8,
-                skills: "pass,accurate",
+                skills: "catch",
             },
             {
                 slug: "high_elf_blitzer",
-                displayName: "Blitzer",
+                displayName: "High Elf Blitzer",
                 cost: 100,
                 min: 0,
                 max: 2,
@@ -1879,6 +1976,10 @@ const SEASON_TWO_ROSTERS = {
         budget: 1000,
         tier: "III",
         naf: false,
+        descriptionFr: "Les équipes de Khorne sont dédiées au dieu du sang et du combat. Leurs joueurs sont des berserkers violents qui recherchent la destruction de leurs adversaires.",
+        descriptionEn: "Khorne teams are dedicated to the god of blood and combat. Their players are violent berserkers who seek the destruction of their opponents.",
+        regionalRules: ["favoured_of"],
+        specialRules: undefined,
         positions: [
             {
                 slug: "khorne_marauder",
@@ -1939,6 +2040,10 @@ const SEASON_TWO_ROSTERS = {
         budget: 1000,
         tier: "II",
         naf: false,
+        descriptionFr: "Les équipes de Vampires sont composées de maîtres vampires et de leurs serviteurs Thralls. Les vampires sont puissants mais doivent contrôler leur soif de sang.",
+        descriptionEn: "Vampire teams are composed of master vampires and their Thrall servants. Vampires are powerful but must control their bloodlust.",
+        regionalRules: ["sylvanian_spotlight"],
+        specialRules: undefined,
         positions: [
             {
                 slug: "vampire_vampire",
@@ -1973,6 +2078,10 @@ const SEASON_TWO_ROSTERS = {
         budget: 1000,
         tier: "II",
         naf: false,
+        descriptionFr: "Les Rois des Tombes sont des équipes de morts-vivants égyptiens ressuscités, combinant squelettes et créatures momifiées. Leurs équipes sont résistantes et mystérieuses.",
+        descriptionEn: "Tomb Kings are teams of resurrected Egyptian undead, combining skeletons and mummified creatures. Their teams are resilient and mysterious.",
+        regionalRules: ["sylvanian_spotlight"],
+        specialRules: undefined,
         positions: [
             {
                 slug: "tomb_kings_skeleton",
@@ -2033,6 +2142,10 @@ const SEASON_TWO_ROSTERS = {
         budget: 1000,
         tier: "IV",
         naf: false,
+        descriptionFr: "Les Gnomes sont de petits joueurs agiles mais très fragiles, souvent accompagnés de créatures sauvages. Leurs équipes Blood Bowl sont imprévisibles et excentriques.",
+        descriptionEn: "Gnomes are small, agile but very fragile players, often accompanied by wild creatures. Their Blood Bowl teams are unpredictable and eccentric.",
+        regionalRules: ["halfling_thimble_cup"],
+        specialRules: undefined,
         positions: [
             {
                 slug: "gnome_lineman",
@@ -2106,6 +2219,10 @@ const SEASON_TWO_ROSTERS = {
         budget: 1000,
         tier: "I",
         naf: false,
+        descriptionFr: "Les Nordiques sont des guerriers vikings féroces des terres du nord, connus pour leur bravoure et leur résistance au froid. Leurs équipes Blood Bowl sont agressives et résistantes.",
+        descriptionEn: "Norse are fierce Viking warriors from the northern lands, known for their bravery and cold resistance. Their Blood Bowl teams are aggressive and resilient.",
+        regionalRules: ["old_world_classic", "favoured_of"],
+        specialRules: undefined,
         positions: [
             {
                 slug: "norse_lineman",
@@ -2192,6 +2309,10 @@ const SEASON_TWO_ROSTERS = {
         budget: 1000,
         tier: "IV",
         naf: false,
+        descriptionFr: "Les Snotlings sont les plus petits et les plus faibles des gobelinoïdes, mais ils compensent par leur nombre et leur utilisation d'armes secrètes. Leurs équipes sont chaotiques et imprévisibles.",
+        descriptionEn: "Snotlings are the smallest and weakest of goblinoids, but they compensate with their numbers and use of secret weapons. Their teams are chaotic and unpredictable.",
+        regionalRules: ["underworld_challenge"],
+        specialRules: undefined,
         positions: [
             {
                 slug: "snotling_snotling_lineman",
@@ -2274,17 +2395,15 @@ const SEASON_TWO_ROSTERS = {
         ],
     },
 };
+import { SEASON_THREE_ROSTERS } from './season3-rosters';
 const cloneRoster = (roster) => ({
     ...roster,
     positions: roster.positions.map((position) => ({ ...position })),
 });
-const cloneRosterMap = (source) => Object.fromEntries(Object.entries(source).map(([slug, roster]) => [
-    slug,
-    cloneRoster(roster),
-]));
+const cloneRosterMap = (source) => Object.fromEntries(Object.entries(source).map(([slug, roster]) => [slug, cloneRoster(roster)]));
 export const TEAM_ROSTERS_BY_RULESET = {
     season_2: SEASON_TWO_ROSTERS,
-    season_3: cloneRosterMap(SEASON_TWO_ROSTERS),
+    season_3: SEASON_THREE_ROSTERS,
 };
 export const TEAM_ROSTERS = TEAM_ROSTERS_BY_RULESET[DEFAULT_RULESET];
 const getRostersForRuleset = (ruleset = DEFAULT_RULESET) => {
@@ -2322,7 +2441,7 @@ export function getDisplayName(slug, ruleset = DEFAULT_RULESET) {
 // Fonction utilitaire pour obtenir le slug à partir du nom d'affichage et de l'équipe
 export function getSlugFromDisplayName(displayName, teamRoster, ruleset = DEFAULT_RULESET) {
     const positions = getTeamPositions(teamRoster, ruleset);
-    const position = positions.find(p => p.displayName === displayName);
+    const position = positions.find((p) => p.displayName === displayName);
     if (position) {
         return position.slug;
     }

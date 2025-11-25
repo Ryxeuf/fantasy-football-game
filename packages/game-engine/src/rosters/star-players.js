@@ -3,11 +3,11 @@
  * Les Star Players sont des mercenaires légendaires pouvant être recrutés par plusieurs équipes
  */
 import { DEFAULT_RULESET } from "./positions";
-/**
- * Liste complète des Star Players disponibles
- */
 const getFallbackSpecialRule = (name) => `Consultez le Livre de Règles Blood Bowl pour connaître la règle spéciale complète de ${name}.`;
-export const STAR_PLAYERS = {
+/**
+ * Liste complète des Star Players disponibles pour la saison 2
+ */
+const SEASON_TWO_STAR_PLAYERS = {
     akhorne_the_squirrel: {
         slug: "akhorne_the_squirrel",
         displayName: "Akhorne The Squirrel",
@@ -347,8 +347,7 @@ export const STAR_PLAYERS = {
         av: 8,
         skills: "loner-4,extra-arms,two-heads,dodge,prehensile-tail",
         hirableBy: ["underworld_challenge"],
-        imageUrl: "/data/Star-Players_files/Hakflem-Skuttlespike.webp",
-        isMegaStar: true
+        imageUrl: "/data/Star-Players_files/Hakflem-Skuttlespike.webp"
     },
     helmut_wulf: {
         slug: "helmut_wulf",
@@ -875,16 +874,34 @@ export const STAR_PLAYERS = {
         imageUrl: "/data/Star-Players_files/Zzharg-Madeye-star-player-blood-bowl.webp"
     },
 };
-Object.values(STAR_PLAYERS).forEach((player) => {
-    if (!player.specialRule || player.specialRule.trim() === "") {
-        player.specialRule = getFallbackSpecialRule(player.displayName);
-    }
+// Fonction pour cloner un Star Player
+const cloneStarPlayer = (source) => ({
+    ...source,
+    hirableBy: [...source.hirableBy],
+});
+// Fonction pour cloner tout le mapping de Star Players
+const cloneStarPlayersMap = (source) => Object.fromEntries(Object.entries(source).map(([slug, player]) => [slug, cloneStarPlayer(player)]));
+// Export du mapping des Star Players par ruleset
+export const STAR_PLAYERS_BY_RULESET = {
+    season_2: SEASON_TWO_STAR_PLAYERS,
+    season_3: cloneStarPlayersMap(SEASON_TWO_STAR_PLAYERS),
+};
+// Export de STAR_PLAYERS pour la compatibilité avec le code existant (utilise le ruleset par défaut)
+export const STAR_PLAYERS = STAR_PLAYERS_BY_RULESET[DEFAULT_RULESET];
+// Appliquer les règles spéciales par défaut pour tous les rulesets
+Object.values(STAR_PLAYERS_BY_RULESET).forEach((starPlayersMap) => {
+    Object.values(starPlayersMap).forEach((player) => {
+        if (!player.specialRule || player.specialRule.trim() === "") {
+            player.specialRule = getFallbackSpecialRule(player.displayName);
+        }
+    });
 });
 /**
  * Obtenir un Star Player par son slug
  */
-export function getStarPlayerBySlug(slug) {
-    return STAR_PLAYERS[slug];
+export function getStarPlayerBySlug(slug, ruleset = DEFAULT_RULESET) {
+    const starPlayersMap = STAR_PLAYERS_BY_RULESET[ruleset] ?? STAR_PLAYERS_BY_RULESET[DEFAULT_RULESET];
+    return starPlayersMap[slug];
 }
 /**
  * Obtenir tous les Star Players disponibles pour une équipe donnée
@@ -892,8 +909,11 @@ export function getStarPlayerBySlug(slug) {
  * @param teamRegionalRules - Les règles régionales de l'équipe (ex: ["underworld_challenge"])
  */
 export function getAvailableStarPlayers(teamRoster, teamRegionalRules = [], ruleset = DEFAULT_RULESET) {
-    const rules = teamRegionalRules.length > 0 ? teamRegionalRules : getRegionalRulesForTeam(teamRoster, ruleset);
-    return Object.values(STAR_PLAYERS).filter(starPlayer => {
+    const starPlayersMap = STAR_PLAYERS_BY_RULESET[ruleset] ?? STAR_PLAYERS_BY_RULESET[DEFAULT_RULESET];
+    const rules = teamRegionalRules.length > 0
+        ? teamRegionalRules
+        : getRegionalRulesForTeam(teamRoster, ruleset);
+    return Object.values(starPlayersMap).filter(starPlayer => {
         // Si le Star Player est disponible pour tous
         if (starPlayer.hirableBy.includes("all")) {
             return true;
@@ -941,7 +961,8 @@ export const TEAM_REGIONAL_RULES_BY_RULESET = {
     season_2: TEAM_REGIONAL_RULES,
     season_3: cloneRegionalRules(TEAM_REGIONAL_RULES),
 };
-export const getRegionalRulesForTeam = (teamRoster, ruleset = DEFAULT_RULESET) => {
-    const map = TEAM_REGIONAL_RULES_BY_RULESET[ruleset] ?? TEAM_REGIONAL_RULES_BY_RULESET[DEFAULT_RULESET];
-    return (map[teamRoster] ?? TEAM_REGIONAL_RULES[teamRoster]) ?? [];
-};
+export function getRegionalRulesForTeam(teamRoster, ruleset = DEFAULT_RULESET) {
+    const map = TEAM_REGIONAL_RULES_BY_RULESET[ruleset] ??
+        TEAM_REGIONAL_RULES_BY_RULESET[DEFAULT_RULESET];
+    return map[teamRoster] ?? TEAM_REGIONAL_RULES[teamRoster] ?? [];
+}

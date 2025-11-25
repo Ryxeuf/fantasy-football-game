@@ -2,10 +2,12 @@
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { API_BASE } from "../../../auth-client";
+import { RULESET_OPTIONS, getRulesetLabel } from "../ruleset-utils";
 
 type Skill = {
   id: string;
   slug: string;
+  ruleset: string;
   nameFr: string;
   nameEn: string;
   description: string;
@@ -80,9 +82,10 @@ export default function AdminSkillsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>("");
+  const [rulesetFilter, setRulesetFilter] = useState<string>("");
   const [search, setSearch] = useState<string>("");
 
-  const categories = ["General", "Agility", "Strength", "Passing", "Mutation", "Trait"];
+  const categories = ["General", "Agility", "Strength", "Passing", "Mutation", "Trait", "Scélérates"];
 
   useEffect(() => {
     loadSkills();
@@ -119,6 +122,11 @@ export default function AdminSkillsPage() {
       if (categoryFilter && skill.category !== categoryFilter) {
         return false;
       }
+
+      // Ruleset filter
+      if (rulesetFilter && skill.ruleset !== rulesetFilter) {
+        return false;
+      }
       
       // Search filter
       if (search) {
@@ -132,7 +140,7 @@ export default function AdminSkillsPage() {
       
       return true;
     });
-  }, [skills, categoryFilter, search]);
+  }, [skills, categoryFilter, rulesetFilter, search]);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Êtes-vous sûr de vouloir supprimer cette compétence ?")) return;
@@ -186,7 +194,19 @@ export default function AdminSkillsPage() {
 
       {/* Filters */}
       <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4">
-        <div className="flex gap-4">
+        <div className="flex gap-4 flex-wrap">
+          <select
+            value={rulesetFilter}
+            onChange={(e) => setRulesetFilter(e.target.value)}
+            className="border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all bg-white"
+          >
+            <option value="">Tous les rulesets</option>
+            {RULESET_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
@@ -207,11 +227,12 @@ export default function AdminSkillsPage() {
             className="border border-gray-300 rounded-lg px-4 py-2.5 flex-1 focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all"
           />
         </div>
-        {(categoryFilter || search) && (
+        {(categoryFilter || rulesetFilter || search) && (
           <div className="mt-4 pt-4 border-t border-gray-200">
             <button
               onClick={() => {
                 setCategoryFilter("");
+                setRulesetFilter("");
                 setSearch("");
               }}
               className="text-sm text-gray-600 hover:text-gray-800 underline"
@@ -232,6 +253,9 @@ export default function AdminSkillsPage() {
                   Slug
                 </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
+                  Ruleset
+                </th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
                   Nom (FR)
                 </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
@@ -248,7 +272,7 @@ export default function AdminSkillsPage() {
             <tbody className="divide-y divide-gray-200">
               {filteredSkills.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
                     Aucune compétence trouvée
                   </td>
                 </tr>
@@ -260,6 +284,15 @@ export default function AdminSkillsPage() {
                 >
                   <td className="px-6 py-4 font-mono text-xs text-gray-600">
                     {skill.slug}
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      skill.ruleset === "season_3" 
+                        ? "bg-emerald-100 text-emerald-800" 
+                        : "bg-amber-100 text-amber-800"
+                    }`}>
+                      {getRulesetLabel(skill.ruleset)}
+                    </span>
                   </td>
                   <td className="px-6 py-4 font-medium text-gray-900">
                     {skill.nameFr}

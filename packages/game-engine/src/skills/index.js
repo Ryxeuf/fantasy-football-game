@@ -10,7 +10,8 @@ export const SKILLS_DEFINITIONS = [
         nameFr: "Blocage",
         nameEn: "Block",
         description: "Quand on obtient le résultat Les Deux Plaqués lors d'une action de Blocage, ce joueur peut choisir de l'ignorer et ne pas être Plaqué (voir page 57).",
-        category: "General"
+        category: "General",
+        isElite: true
     },
     {
         slug: "dauntless",
@@ -45,7 +46,8 @@ export const SKILLS_DEFINITIONS = [
         nameFr: "Frénésie",
         nameEn: "Frenzy",
         description: "Chaque fois que ce joueur fait une action de Blocage (y compris pendant une action de Blitz), il doit poursuivre si la cible est repoussée et s'il en est capable. Si la cible est encore Debout après avoir été repoussée, et si ce joueur a pu poursuivre, il doit faire une seconde action de Blocage contre la même cible, et la poursuivre à nouveau si elle est repoussée.",
-        category: "General"
+        category: "General",
+        isModified: true
     },
     {
         slug: "kick",
@@ -123,7 +125,8 @@ export const SKILLS_DEFINITIONS = [
         nameFr: "Esquive",
         nameEn: "Dodge",
         description: "Une fois par tour d'équipe, pendant son activation, ce joueur peut relancer un test d'Agilité raté lors d'une tentative d'Esquive. De plus, ce joueur peut choisir d'utiliser cette compétence quand il est la cible d'une action de Blocage et qu'un résultat de Trébuchement est appliqué contre lui.",
-        category: "Agility"
+        category: "Agility",
+        isElite: true
     },
     {
         slug: "defensive",
@@ -194,14 +197,16 @@ export const SKILLS_DEFINITIONS = [
         nameFr: "Griffes",
         nameEn: "Claws",
         description: "Quand vous faites un jet d'Armure contre un joueur adverse qui a été Renversé à la suite d'une action de Blocage effectuée par ce joueur, un résultat de 8+ avant d'appliquer tout modificateur brisera son armure, peu importe sa valeur d'Armure réelle.",
-        category: "Mutation"
+        category: "Mutation",
+        isPassive: true
     },
     {
         slug: "disturbing-presence",
         nameFr: "Présence Perturbante",
         nameEn: "Disturbing Presence",
         description: "Quand un joueur adverse effectue soit une action de Passe, soit une action de Lancer d'Équipier, soit une action Spéciale de Lancer de Bombe, ou tente soit d'interférer avec une passe soit de réceptionner le ballon, il doit appliquer un modificateur de -1 au test pour chaque joueur de votre équipe ayant cette compétence qui se trouve à trois cases de lui.",
-        category: "Mutation"
+        category: "Mutation",
+        isModified: true
     },
     {
         slug: "extra-arms",
@@ -215,7 +220,8 @@ export const SKILLS_DEFINITIONS = [
         nameFr: "Répulsion*",
         nameEn: "Foul Appearance",
         description: "Quand un joueur adverse déclare une action de Blocage ciblant ce joueur, son entraîneur doit d'abord jeter un D6. Sur un résultat de 1, le joueur ne peut pas effectuer l'action déclarée et l'action est gaspillée.",
-        category: "Mutation"
+        category: "Mutation",
+        isModified: true
     },
     {
         slug: "horns",
@@ -342,7 +348,8 @@ export const SKILLS_DEFINITIONS = [
         nameFr: "Passe dans la Course",
         nameEn: "Running Pass",
         description: "Si ce joueur effectue une action de Passe Rapide, son activation n'a pas besoin de se terminer une fois la passe résolue. Si vous le souhaitez et si ce joueur n'a pas utilisé sa totalité d'Allocation de Mouvement, il peut continuer à se déplacer après avoir résolu la passe.",
-        category: "Passing"
+        category: "Passing",
+        isModified: true
     },
     {
         slug: "safe-pass",
@@ -357,7 +364,8 @@ export const SKILLS_DEFINITIONS = [
         nameFr: "Clé de Bras",
         nameEn: "Arm Bar",
         description: "Si un joueur adverse Tombe à la suite d'un échec de son test d'Agilité en tentant de faire un Esquive, Saut ou Bond pour quitter une case dans laquelle il était Marqué par ce joueur, vous pouvez appliquer un modificateur de +1 soit au jet d'Armure soit au jet de Blessure.",
-        category: "Strength"
+        category: "Strength",
+        isElite: true
     },
     {
         slug: "brawler",
@@ -385,7 +393,8 @@ export const SKILLS_DEFINITIONS = [
         nameFr: "Garde",
         nameEn: "Guard",
         description: "Ce joueur peut utiliser cette compétence quand un joueur adverse effectue une action de Blocage contre un coéquipier qui est adjacent à ce joueur. Ce joueur peut assister le coéquipier aux fins de cette action de Blocage.",
-        category: "Strength"
+        category: "Strength",
+        isElite: true
     },
     {
         slug: "juggernaut",
@@ -399,7 +408,8 @@ export const SKILLS_DEFINITIONS = [
         nameFr: "Coup Puissant",
         nameEn: "Mighty Blow",
         description: "Quand un joueur adverse est Renversé à la suite d'une action de Blocage effectuée par ce joueur, vous pouvez appliquer un modificateur de +1 soit au jet d'Armure soit au jet de Blessure effectué contre lui.",
-        category: "Strength"
+        category: "Strength",
+        isElite: true
     },
     {
         slug: "mighty-blow-1",
@@ -463,42 +473,48 @@ export const SKILLS_DEFINITIONS = [
         nameFr: "Sauvagerie Animale*",
         nameEn: "Animal Savagery",
         description: "Au début de l'activation de ce joueur, jetez un D6. Sur un résultat de 1, ce joueur doit effectuer une action de Blocage contre un coéquipier adjacent aléatoire s'il y en a un présent.",
-        category: "Trait"
+        category: "Trait",
+        isModified: true
     },
     {
         slug: "bone-head",
-        nameFr: "Tête de Bois",
+        nameFr: "Cerveau Lent*",
         nameEn: "Bone Head",
         description: "Au début de l'activation de ce joueur, jetez un D6. Sur un résultat de 1, ce joueur ne peut effectuer aucune action et son activation se termine immédiatement.",
-        category: "Trait"
+        category: "Trait",
+        isModified: true
     },
     {
         slug: "really-stupid",
         nameFr: "Gros Débile*",
         nameEn: "Really Stupid",
         description: "Au début de l'activation de ce joueur, jetez un D6. Sur un résultat de 1, ce joueur ne peut effectuer aucune action et son activation se termine immédiatement.",
-        category: "Trait"
+        category: "Trait",
+        isModified: true
     },
     {
         slug: "regeneration",
         nameFr: "Régénération",
         nameEn: "Regeneration",
-        description: "Quand ce joueur est retiré du jeu à la suite d'un jet de Blessure, jetez un D6. Sur un résultat de 4+, ce joueur n'est pas retiré du jeu et peut revenir jouer plus tard dans le match.",
-        category: "Trait"
+        description: "Quand ce joueur est retiré du jeu à la suite d'un jet de Blessure, jetez un D6. Sur un résultat de 4+, ce joueur n'est pas retiré du jeu et peut revenir jouer plus tard dans le match. Faire le jet de D6 de régénération avant le jet d'élimination => le jet pour apothicaire se fait donc après.",
+        category: "Trait",
+        isModified: true
     },
     {
         slug: "right-stuff",
         nameFr: "Poids Plume*",
         nameEn: "Right Stuff",
         description: "Ce joueur peut être lancé par un coéquipier ayant la compétence Lancer d'Équipier.",
-        category: "Trait"
+        category: "Trait",
+        isModified: true
     },
     {
         slug: "stunty",
         nameFr: "Microbe*",
         nameEn: "Stunty",
         description: "Ce joueur peut faire un Esquive sur un résultat de 2+ au lieu de 3+. Cependant, ce joueur ne peut pas utiliser la compétence Esquive.",
-        category: "Trait"
+        category: "Trait",
+        isModified: true
     },
     {
         slug: "swarming",
@@ -512,35 +528,40 @@ export const SKILLS_DEFINITIONS = [
         nameFr: "Prendre Racine*",
         nameEn: "Take Root",
         description: "Au début de l'activation de ce joueur, jetez un D6. Sur un résultat de 1, ce joueur ne peut effectuer aucune action et son activation se termine immédiatement.",
-        category: "Trait"
+        category: "Trait",
+        isModified: true
     },
     {
         slug: "titchy",
         nameFr: "Minus*",
         nameEn: "Titchy",
-        description: "Ce joueur peut faire un Esquive sur un résultat de 2+ au lieu de 3+. Cependant, ce joueur ne peut pas utiliser la compétence Esquive.",
-        category: "Trait"
+        description: "Ce joueur peut faire un Esquive sur un résultat de 2+ au lieu de 3+. Cependant, ce joueur ne peut pas utiliser la compétence Esquive. Plus de bonus pour intercepter leur passe; malus de -1 pour tenter d'intercepter et le bonus d'esquive s'applique toujours (même si bombardier...).",
+        category: "Trait",
+        isModified: true
     },
     {
         slug: "loner-3",
         nameFr: "Solitaire (3+)*",
         nameEn: "Loner (3+)",
         description: "Ce joueur ne peut utiliser les relances d'équipe que s'il obtient un 3+ sur un D6. S'il échoue à ce jet, il ne peut pas utiliser la relance d'équipe et le résultat original reste.",
-        category: "Trait"
+        category: "Trait",
+        isModified: true
     },
     {
         slug: "loner-4",
         nameFr: "Solitaire (4+)*",
         nameEn: "Loner (4+)",
         description: "Ce joueur ne peut utiliser les relances d'équipe que s'il obtient un 4+ sur un D6. S'il échoue à ce jet, il ne peut pas utiliser la relance d'équipe et le résultat original reste.",
-        category: "Trait"
+        category: "Trait",
+        isModified: true
     },
     {
         slug: "loner-5",
         nameFr: "Solitaire (5+)*",
         nameEn: "Loner (5+)",
         description: "Ce joueur ne peut utiliser les relances d'équipe que s'il obtient un 5+ sur un D6. S'il échoue à ce jet, il ne peut pas utiliser la relance d'équipe et le résultat original reste.",
-        category: "Trait"
+        category: "Trait",
+        isModified: true
     },
     {
         slug: "throw-team-mate",
@@ -554,63 +575,72 @@ export const SKILLS_DEFINITIONS = [
         nameFr: "Fureur Débridée*",
         nameEn: "Wild Animal",
         description: "Au début de l'activation de ce joueur, jetez un D6. Sur un résultat de 1, ce joueur ne peut effectuer aucune action et son activation se termine immédiatement.",
-        category: "Trait"
+        category: "Trait",
+        isModified: true
     },
     {
         slug: "always-hungry",
         nameFr: "Toujours Affamé*",
         nameEn: "Always Hungry",
         description: "Ce joueur doit effectuer un test lorsqu'il tente de lancer un coéquipier. Sur un résultat de 1, il essaie de manger le coéquipier à la place.",
-        category: "Trait"
+        category: "Trait",
+        isModified: true
     },
     {
         slug: "no-hands",
-        nameFr: "Sans les Mains*",
+        nameFr: "Sans Ballon",
         nameEn: "No Hands",
         description: "Ce joueur ne peut ni ramasser, ni attraper, ni transporter le ballon.",
-        category: "Trait"
+        category: "Trait",
+        isModified: true
     },
     {
         slug: "secret-weapon",
         nameFr: "Arme Secrète*",
         nameEn: "Secret Weapon",
         description: "Ce joueur est expulsé après avoir effectué une action ou à la fin du tour.",
-        category: "Trait"
+        category: "Trait",
+        isModified: true
     },
     {
         slug: "bombardier",
         nameFr: "Bombardier*",
         nameEn: "Bombardier",
         description: "Lorsqu'il est activé et s'il est Debout, ce joueur peut effectuer une action Spéciale 'Lancer de Bombe'.",
-        category: "Trait"
+        category: "Trait",
+        isModified: true
     },
     {
         slug: "chainsaw",
         nameFr: "Tronçonneuse*",
         nameEn: "Chainsaw",
         description: "Ce joueur possède une tronçonneuse qui lui donne des avantages au combat mais nécessite des jets spéciaux.",
-        category: "Trait"
+        category: "Trait",
+        isModified: true
     },
     {
         slug: "ball-and-chain",
-        nameFr: "Chaîne et Boulet*",
+        nameFr: "Chaînes et Boulet*",
         nameEn: "Ball & Chain",
         description: "Ce joueur possède une chaîne et un boulet qui le font se déplacer de manière aléatoire.",
-        category: "Trait"
+        category: "Trait",
+        isModified: true
     },
     {
         slug: "hypnotic-gaze",
         nameFr: "Regard Hypnotique",
         nameEn: "Hypnotic Gaze",
-        description: "Ce joueur peut tenter d'hypnotiser un joueur adverse adjacent.",
-        category: "Trait"
+        description: "Ce joueur peut tenter d'hypnotiser un joueur adverse adjacent. Il faut un 3+ pour réussir tout le temps. Plus de malus pour marquage.",
+        category: "Trait",
+        isModified: true
     },
     {
         slug: "decay",
         nameFr: "Décomposition*",
         nameEn: "Decay",
         description: "Ce joueur se décompose progressivement au cours du match.",
-        category: "Trait"
+        category: "Trait",
+        isModified: true
     },
     {
         slug: "stab",
@@ -623,36 +653,41 @@ export const SKILLS_DEFINITIONS = [
         slug: "pile-on",
         nameFr: "Piqué",
         nameEn: "Pile On",
-        description: "Ce joueur peut se jeter sur un adversaire à terre pour lui infliger des dégâts supplémentaires.",
-        category: "Trait"
+        description: "Ce joueur peut se jeter sur un adversaire à terre pour lui infliger des dégâts supplémentaires. Si choisi de ne pas valdinger, D6 et gabarit de renvois puis 1D6 cases. Et permet de relancer un jet d'agilité d'atterrissage raté.",
+        category: "Trait",
+        isModified: true
     },
     {
         slug: "animosity",
         nameFr: "Animosité*",
         nameEn: "Animosity",
         description: "Ce joueur est jaloux de et n'aime pas certains autres joueurs de son équipe, comme indiqué entre parenthèses après le nom de la compétence. Lorsque ce joueur souhaite effectuer une action de Remise à un coéquipier du type listé, ou tente d'effectuer une action de Passe et que la case cible est occupée par un coéquipier du type listé, ce joueur peut refuser de le faire. Lancez un D6. Sur un résultat de 1, ce joueur refuse d'effectuer l'action et son activation se termine.",
-        category: "Trait"
+        category: "Trait",
+        isModified: true
     },
     {
         slug: "bloodlust",
         nameFr: "Soif de Sang*",
         nameEn: "Bloodlust",
         description: "Pour garder le contrôle de leur esprit, les Vampires ont besoin d'un approvisionnement en sang frais. Chaque fois qu'un joueur avec ce trait est activé, après avoir déclaré son action, il doit lancer un D6, en ajoutant 1 au jet s'il a déclaré une action de Blocage ou de Blitz. S'il obtient un résultat égal ou supérieur au nombre indiqué entre parenthèses, il peut s'activer normalement. Si le joueur obtient un résultat inférieur au nombre indiqué entre parenthèses, ou obtient un 1 naturel, il peut choisir de mordre un coéquipier Thrall adjacent.",
-        category: "Trait"
+        category: "Trait",
+        isModified: true
     },
     {
         slug: "bloodlust-2",
         nameFr: "Soif de Sang (2+)*",
         nameEn: "Bloodlust (2+)",
         description: "Pour garder le contrôle de leur esprit, les Vampires ont besoin d'un approvisionnement en sang frais. Chaque fois qu'un joueur avec ce trait est activé, après avoir déclaré son action, il doit lancer un D6, en ajoutant 1 au jet s'il a déclaré une action de Blocage ou de Blitz. S'il obtient un résultat égal ou supérieur au nombre indiqué entre parenthèses (2+), il peut s'activer normalement. Si le joueur obtient un résultat inférieur au nombre indiqué entre parenthèses, ou obtient un 1 naturel, il peut choisir de mordre un coéquipier Thrall adjacent.",
-        category: "Trait"
+        category: "Trait",
+        isModified: true
     },
     {
         slug: "bloodlust-3",
         nameFr: "Soif de Sang (3+)*",
         nameEn: "Bloodlust (3+)",
         description: "Pour garder le contrôle de leur esprit, les Vampires ont besoin d'un approvisionnement en sang frais. Chaque fois qu'un joueur avec ce trait est activé, après avoir déclaré son action, il doit lancer un D6, en ajoutant 1 au jet s'il a déclaré une action de Blocage ou de Blitz. S'il obtient un résultat égal ou supérieur au nombre indiqué entre parenthèses (3+), il peut s'activer normalement. Si le joueur obtient un résultat inférieur au nombre indiqué entre parenthèses, ou obtient un 1 naturel, il peut choisir de mordre un coéquipier Thrall adjacent.",
-        category: "Trait"
+        category: "Trait",
+        isModified: true
     },
     {
         slug: "plague-ridden",
@@ -677,7 +712,7 @@ export const SKILLS_DEFINITIONS = [
     },
     {
         slug: "pogo-stick",
-        nameFr: "Échasses à Ressort*",
+        nameFr: "Monté sur Ressort",
         nameEn: "Pogo Stick",
         description: "Pendant son mouvement, au lieu de sauter par-dessus une seule case occupée par un joueur À Terre ou Étourdi, un joueur avec ce trait peut choisir de Sauter par-dessus n'importe quelle case adjacente, y compris les cases libres et les cases occupées par des joueurs Debout. De plus, lorsque ce joueur effectue un test d'Agilité pour sauter par-dessus un joueur À Terre ou Étourdi, ou pour Sauter par-dessus une case vide ou occupée par un joueur Debout, il peut appliquer un modificateur de +1.",
         category: "Trait"
@@ -712,7 +747,7 @@ export const SKILLS_DEFINITIONS = [
     },
     {
         slug: "projectile-vomit",
-        nameFr: "Vomissement Projectile*",
+        nameFr: "Gerbe de Vomi",
         nameEn: "Projectile Vomit",
         description: "Au lieu d'effectuer une action de Blocage, ce joueur peut effectuer une action Spéciale 'Vomissement Projectile'.",
         category: "Trait"
@@ -726,10 +761,165 @@ export const SKILLS_DEFINITIONS = [
     },
     {
         slug: "kick-team-mate",
-        nameFr: "Kick Team-mate*",
+        nameFr: "Botter de Coéquipier",
         nameEn: "Kick Team-mate",
         description: "Une fois par tour d'équipe, en plus d'un autre joueur effectuant soit une Passe soit une action de Lancer d'Équipier, un seul joueur avec ce trait sur l'équipe active peut effectuer une action Spéciale 'Kick Team-mate'.",
         category: "Trait"
+    },
+    // NOUVELLES COMPÉTENCES SAISON 3 - SCÉLÉRATES
+    {
+        slug: "solitary-aggressor",
+        nameFr: "Agresseur Solitaire",
+        nameEn: "Solitary Aggressor",
+        description: "Quand ce joueur effectue une Action d'Agression sans Soutien Offensif ou Défensif, alors ce joueur peut relancer un Jet d'Armure raté.",
+        category: "Scélérates"
+    },
+    {
+        slug: "lightning-aggression",
+        nameFr: "Agression Eclair",
+        nameEn: "Lightning Aggression",
+        description: "L'Activation de ce joueur ne prend pas fin après qu'il a effectué une Action d'Agression, et il peut continuer son Action de Mouvement avec son mouvement restant.",
+        category: "Scélérates"
+    },
+    {
+        slug: "boot-to-the-head",
+        nameFr: "Coup de Crampons",
+        nameEn: "Boot to the Head",
+        description: "Ce joueur peut fournir un Soutien Offensif quand un coéquipier effectue une Action d'Agression, quel que soit le nombre de joueurs adverse qui Marquent ce joueur",
+        category: "Scélérates"
+    },
+    {
+        slug: "fork",
+        nameFr: "Fourchette",
+        nameEn: "Fork",
+        description: "Quand un joueur adverse est Repoussée par ce joueur, le joueur adverse ne peut plus fournir de soutien Offensif ni Défensif jusqu'à la fin de sa prochaine activation",
+        category: "Scélérates"
+    },
+    {
+        slug: "violent-innovator",
+        nameFr: "Innovateur Violent",
+        nameEn: "Violent Innovator",
+        description: "Si un joueur adverse subit une Élimination suite à une Action Spéciale que ce joueur à effectuée, ce joueur gagne des PSP correspondants pour avoir infligé une Élimination.",
+        category: "Scélérates",
+        isModified: true
+    },
+    {
+        slug: "provocation",
+        nameFr: "Provocation",
+        nameEn: "Provocation",
+        description: "Quand un joueur ayant cette Compétence est Repoussée suite à un blocage contre lui, il peut forcer le joueur adverse à Poursuivre. (sauf si enraciné)",
+        category: "Scélérates",
+        isModified: true
+    },
+    {
+        slug: "saboteur",
+        nameFr: "Saboteur",
+        nameEn: "Saboteur",
+        description: "Quand ce joueur est Plaqué suite à l'Action de Blocage d'un joueur Adverse, avant de faire le jet d'Armure, il peut jeter un D6. Sur un 1-3, rien et on fait le jet d'Armure. Sur 4+, l'arme sabotée de joueur explose et le joueur adverse est aussi Plaquée, sans provoquer de Turnover sauf si le joueur adverse était en possession du Ballon. Si l'arme de ce joueur explose, le joueur est automatiquement KO et pas de jet d'Armure pour lui. Nécessite le trait Arme Secrète",
+        category: "Scélérates"
+    },
+    {
+        slug: "fatal-flight",
+        nameFr: "Vol Fatal",
+        nameEn: "Fatal Flight",
+        description: "Lors d'un Lancer de Coéquipier, permet au joueur lancé, s'il atterrit ou rebondit sur une case occupée et si le joueur adverse est plaqué, d'appliquer un +1 au jet d'Armure ou au jet de Blessure. Si le joueur adverse subit une Élimination, ce joueur gagne des PSP correspondants pour avoir infligé une Élimination.",
+        category: "Scélérates"
+    },
+    {
+        slug: "clearance",
+        nameFr: "Dégagement",
+        nameEn: "Clearance",
+        description: "Ce joueur peut annoncer une Action Spéciale de Dégagement. 1 seul par tour. Peut faire d'abord un mouvement. Choisir une direction, utiliser le Gabarit de Renvois et un D6 pour déterminer la direction et un D6 pour le nombre de cases. Pas de Turnover si ballon au sol.",
+        category: "Scélérates",
+        isModified: true
+    },
+    // NOUVELLES COMPÉTENCES SAISON 3 - AUTRES CATÉGORIES
+    {
+        slug: "surefoot",
+        nameFr: "Appuis Sûrs",
+        nameEn: "Surefoot",
+        description: "Chaque fois que ce joueur est censé être Plaqué ou Chute, jetez un D6. Sur un 6, ce joueur n'est pas Plaqué ou ne Chute pas. Si ceci se produit pendant son activation, il peut la continuer normalement, sans Turnover.",
+        category: "General",
+        isModified: true
+    },
+    {
+        slug: "bullseye",
+        nameFr: "Dans le Mille",
+        nameEn: "Bullseye",
+        description: "Lors d'une Action de Lancer de Coéquipier de joueur, si le résultat du lancer est un Lancer Superbe, alors le joueur lancé ne Valdingue pas et atterrit sur la case ciblée.",
+        category: "Strength"
+    },
+    {
+        slug: "running-pass-2025",
+        nameFr: "Transmission dans la course",
+        nameEn: "Running Pass",
+        description: "Si ce joueur effectue une Action de Passe qui est une Passe Rapide ou une Action de Transmission, son activation ne prend pas fin et il peut continuer son Action de Mouvement.",
+        category: "Passing",
+        isModified: true
+    },
+    // NOUVEAUX TRAITS SAISON 3
+    {
+        slug: "trickster",
+        nameFr: "Farceur",
+        nameEn: "Trickster",
+        description: "Lorsque ce joueur est sur le point d'être touché par une action de Bloc ou une action Spéciale qui remplace une action de Bloc, avant de déterminer combien de dés sont lancés, il peut être retiré du terrain et placé dans n'importe quelle autre case inoccupée adjacente au joueur effectuant l'action de Bloc.",
+        category: "Trait"
+    },
+    {
+        slug: "hate",
+        nameFr: "Haine (X)",
+        nameEn: "Hate (X)",
+        description: "Chaque fois que ce joueur effectue une Action de Blocage contre un joueur ayant le même Mot-Clé que celui entre parenthèses, ce joueur peut relancer un résultat Attaquant Plaqué.",
+        category: "Trait"
+    },
+    {
+        slug: "insignifiant",
+        nameFr: "Insignifiant",
+        nameEn: "Insignificant",
+        description: "Quand vous créez une Liste d'Équipe, vous ne pouvez pas inclure plus de joueurs ayant ce Trait que de joueurs n'ayant pas ce Trait.",
+        category: "Trait"
+    },
+    {
+        slug: "contagieux",
+        nameFr: "Contagieux",
+        nameEn: "Contagious",
+        description: "Ce trait permet au joueur de transmettre une maladie ou une infection aux joueurs adverses.",
+        category: "Trait"
+    },
+    {
+        slug: "instable",
+        nameFr: "Instable",
+        nameEn: "Unstable",
+        description: "Ce joueur ne peut pas déclarer d'Action Sécurisation du Ballon",
+        category: "Trait"
+    },
+    {
+        slug: "breathe-fire",
+        nameFr: "Souffle Ardent",
+        nameEn: "Breathe Fire",
+        description: "Une fois par activation, au lieu d'effectuer une action de Bloc, ce joueur peut effectuer une action Spéciale Souffle de Feu.",
+        category: "Trait"
+    },
+    {
+        slug: "my-ball",
+        nameFr: "Mon Ballon",
+        nameEn: "My Ball",
+        description: "Un joueur avec ce trait ne peut pas abandonner volontairement le ballon quand il en est en possession, et ne peut donc pas faire d'actions de Passe, d'actions de Passe à la main, ou utiliser toute autre compétence ou trait qui lui permettrait de renoncer à la possession du ballon.",
+        category: "Trait"
+    },
+    {
+        slug: "pick-me-up",
+        nameFr: "Petit remontant",
+        nameEn: "Pick-me-up",
+        description: "À la fin du tour d'équipe adverse, lancez un D6 pour chaque équipier à Terre et non-Étourdi dans les trois cases d'un joueur debout avec ce trait.",
+        category: "Trait"
+    },
+    {
+        slug: "hit-and-run",
+        nameFr: "Frappe-et-cours",
+        nameEn: "Hit and Run",
+        description: "Ce joueur peut effectuer un mouvement après avoir effectué une action de Blocage.",
+        category: "Agility"
     },
 ];
 // Index par slug pour accès rapide

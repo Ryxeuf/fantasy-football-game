@@ -22,11 +22,15 @@ router.use(authUser, adminOnly);
 
 router.get("/skills", async (req, res) => {
   try {
-    const { category, search } = req.query;
+    const { category, search, ruleset } = req.query;
     const where: any = {};
     
     if (category) {
       where.category = category;
+    }
+
+    if (ruleset && ruleset !== "all") {
+      where.ruleset = resolveRuleset(ruleset as string);
     }
     
     if (search) {
@@ -39,7 +43,7 @@ router.get("/skills", async (req, res) => {
 
     const skills = await prisma.skill.findMany({
       where,
-      orderBy: [{ category: "asc" }, { nameFr: "asc" }],
+      orderBy: [{ ruleset: "asc" }, { category: "asc" }, { nameFr: "asc" }],
     });
     res.json({ skills });
   } catch (error: any) {
@@ -73,19 +77,21 @@ router.get("/skills/:id", async (req, res) => {
 
 router.post("/skills", async (req, res) => {
   try {
-    const { slug, nameFr, nameEn, description, descriptionEn, category } = req.body;
+    const { slug, nameFr, nameEn, description, descriptionEn, category, ruleset: rawRuleset } = req.body;
     
     if (!slug || !nameFr || !nameEn || !description || !category) {
       return res.status(400).json({ error: "Tous les champs sont requis" });
     }
 
+    const ruleset = resolveRuleset(rawRuleset);
+
     const skill = await prisma.skill.create({
-      data: { slug, nameFr, nameEn, description, descriptionEn: descriptionEn || null, category },
+      data: { slug, ruleset, nameFr, nameEn, description, descriptionEn: descriptionEn || null, category },
     });
     res.status(201).json({ skill });
   } catch (error: any) {
     if (error.code === "P2002") {
-      return res.status(409).json({ error: "Cette compétence existe déjà" });
+      return res.status(409).json({ error: "Cette compétence existe déjà pour ce ruleset" });
     }
     console.error("Erreur lors de la création de la compétence:", error);
     res.status(500).json({ error: error.message || "Erreur serveur" });
@@ -94,18 +100,86 @@ router.post("/skills", async (req, res) => {
 
 router.put("/skills/:id", async (req, res) => {
   try {
-    const { nameFr, nameEn, description, descriptionEn, category } = req.body;
+    const { nameFr, nameEn, description, descriptionEn, category, ruleset: rawRuleset } = req.body;
     
+    const data: any = { 
+      nameFr, 
+      nameEn, 
+      description, 
+      descriptionEn: descriptionEn || null, 
+      category 
+    };
+
+    if (rawRuleset) {
+      data.ruleset = resolveRuleset(rawRuleset);
+    }
+
     const skill = await prisma.skill.update({
       where: { id: req.params.id },
-      data: { nameFr, nameEn, description, descriptionEn: descriptionEn || null, category },
+      data,
     });
     res.json({ skill });
   } catch (error: any) {
     if (error.code === "P2025") {
       return res.status(404).json({ error: "Compétence non trouvée" });
     }
+    if (error.code === "P2002") {
+      return res.status(409).json({ error: "Ce slug existe déjà pour ce ruleset" });
+    }
     console.error("Erreur lors de la mise à jour de la compétence:", error);
+    res.status(500).json({ error: error.message || "Erreur serveur" });
+  }
+});
+
+router.post("/skills/:id/duplicate", async (req, res) => {
+  try {
+    const sourceSkill = await prisma.skill.findUnique({
+      where: { id: req.params.id },
+    });
+
+    if (!sourceSkill) {
+      return res.status(404).json({ error: "Compétence source non trouvée" });
+    }
+
+    const { targetRuleset } = req.body;
+    const newRuleset = resolveRuleset(targetRuleset);
+
+    // Vérifier si la compétence existe déjà pour ce ruleset
+    const existing = await prisma.skill.findFirst({
+      where: {
+        slug: sourceSkill.slug,
+        ruleset: newRuleset,
+      },
+    });
+
+    if (existing) {
+      return res.status(409).json({ 
+        error: `La compétence "${sourceSkill.slug}" existe déjà pour le ruleset ${newRuleset}` 
+      });
+    }
+
+    // Dupliquer la compétence
+    const newSkill = await prisma.skill.create({
+      data: {
+        slug: sourceSkill.slug,
+        ruleset: newRuleset,
+        nameFr: sourceSkill.nameFr,
+        nameEn: sourceSkill.nameEn,
+        description: sourceSkill.description,
+        descriptionEn: sourceSkill.descriptionEn,
+        category: sourceSkill.category,
+        isElite: sourceSkill.isElite,
+        isPassive: sourceSkill.isPassive,
+        isModified: sourceSkill.isModified,
+      },
+    });
+
+    res.status(201).json({ 
+      skill: newSkill,
+      message: `Compétence dupliquée avec succès vers ${newRuleset}`,
+    });
+  } catch (error: any) {
+    console.error("Erreur lors de la duplication de la compétence:", error);
     res.status(500).json({ error: error.message || "Erreur serveur" });
   }
 });

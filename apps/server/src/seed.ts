@@ -16,64 +16,70 @@ async function main() {
   console.log("🌱 Début du seed...\n");
 
   // =============================================================================
-  // 1. SEED DES COMPÉTENCES (Skills)
+  // 1. SEED DES COMPÉTENCES (Skills) - Pour chaque ruleset
   // =============================================================================
   console.log("📚 Seed des compétences...");
   let skillsCreated = 0;
   let skillsSkipped = 0;
   
-  for (const skillDef of SKILLS_DEFINITIONS) {
-    try {
-      const existing = await prisma.skill.findUnique({
-        where: { slug: skillDef.slug }
-      });
-
-      // Récupérer toutes les données depuis les données statiques (description FR et EN mises à jour)
-      const staticData = STATIC_SKILLS_DATA[skillDef.nameEn];
-      
-      // Utiliser les données statiques si disponibles, sinon utiliser les données du game-engine
-      const finalNameFr = staticData?.nameFr || skillDef.nameFr;
-      const finalNameEn = staticData?.nameEn || skillDef.nameEn;
-      const finalDescription = staticData?.description || skillDef.description;
-      const finalDescriptionEn = staticData?.descriptionEn || null;
-      const finalCategory = staticData?.category || skillDef.category;
-      const finalIsElite = skillDef.isElite || false;
-      const finalIsPassive = skillDef.isPassive || false;
-      const finalIsModified = skillDef.isModified || false;
-
-      if (existing) {
-        await prisma.skill.update({
-          where: { slug: skillDef.slug },
-          data: {
-            nameFr: finalNameFr,
-            nameEn: finalNameEn,
-            description: finalDescription,
-            descriptionEn: finalDescriptionEn,
-            category: finalCategory,
-            isElite: finalIsElite,
-            isPassive: finalIsPassive,
-            isModified: finalIsModified,
-          }
+  // Créer les compétences pour chaque ruleset (season_2 et season_3)
+  for (const ruleset of RULESETS) {
+    console.log(`   📖 Seed des compétences pour ${ruleset}...`);
+    
+    for (const skillDef of SKILLS_DEFINITIONS) {
+      try {
+        const existing = await prisma.skill.findUnique({
+          where: { slug_ruleset: { slug: skillDef.slug, ruleset } }
         });
-        skillsSkipped++;
-      } else {
-        await prisma.skill.create({
-          data: {
-            slug: skillDef.slug,
-            nameFr: finalNameFr,
-            nameEn: finalNameEn,
-            description: finalDescription,
-            descriptionEn: finalDescriptionEn,
-            category: finalCategory,
-            isElite: finalIsElite,
-            isPassive: finalIsPassive,
-            isModified: finalIsModified,
-          }
-        });
-        skillsCreated++;
+
+        // Récupérer toutes les données depuis les données statiques (description FR et EN mises à jour)
+        const staticData = STATIC_SKILLS_DATA[skillDef.nameEn];
+        
+        // Utiliser les données statiques si disponibles, sinon utiliser les données du game-engine
+        const finalNameFr = staticData?.nameFr || skillDef.nameFr;
+        const finalNameEn = staticData?.nameEn || skillDef.nameEn;
+        const finalDescription = staticData?.description || skillDef.description;
+        const finalDescriptionEn = staticData?.descriptionEn || null;
+        const finalCategory = staticData?.category || skillDef.category;
+        const finalIsElite = skillDef.isElite || false;
+        const finalIsPassive = skillDef.isPassive || false;
+        const finalIsModified = skillDef.isModified || false;
+
+        if (existing) {
+          await prisma.skill.update({
+            where: { slug_ruleset: { slug: skillDef.slug, ruleset } },
+            data: {
+              nameFr: finalNameFr,
+              nameEn: finalNameEn,
+              description: finalDescription,
+              descriptionEn: finalDescriptionEn,
+              category: finalCategory,
+              isElite: finalIsElite,
+              isPassive: finalIsPassive,
+              isModified: finalIsModified,
+            }
+          });
+          skillsSkipped++;
+        } else {
+          await prisma.skill.create({
+            data: {
+              slug: skillDef.slug,
+              ruleset,
+              nameFr: finalNameFr,
+              nameEn: finalNameEn,
+              description: finalDescription,
+              descriptionEn: finalDescriptionEn,
+              category: finalCategory,
+              isElite: finalIsElite,
+              isPassive: finalIsPassive,
+              isModified: finalIsModified,
+            }
+          });
+          skillsCreated++;
+        }
+      } catch (error) {
+        console.error(`❌ Erreur lors du seed de la compétence ${skillDef.slug} (${ruleset}):`, error);
       }
-    } catch (error) {
-      console.error(`❌ Erreur lors du seed de la compétence ${skillDef.slug}:`, error);
     }
   }
   console.log(`✅ Compétences: ${skillsCreated} créées, ${skillsSkipped} mises à jour\n`);
@@ -248,7 +254,7 @@ async function main() {
 
             for (const skillSlug of skillSlugs) {
               const skill = await prisma.skill.findUnique({
-                where: { slug: skillSlug },
+                where: { slug_ruleset: { slug: skillSlug, ruleset } },
               });
 
               if (skill) {
@@ -260,7 +266,7 @@ async function main() {
                 });
               } else {
                 console.warn(
-                  `⚠️  Compétence ${skillSlug} non trouvée pour la position ${positionDef.slug}`,
+                  `⚠️  Compétence ${skillSlug} non trouvée pour la position ${positionDef.slug} (${ruleset})`,
                 );
               }
             }
@@ -331,7 +337,7 @@ async function main() {
           
           for (const skillSlug of skillSlugs) {
             const skill = await prisma.skill.findUnique({
-              where: { slug: skillSlug }
+              where: { slug_ruleset: { slug: skillSlug, ruleset } }
             });
 
             if (skill) {

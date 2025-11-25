@@ -134,7 +134,8 @@ model TeamStarPlayer {
 // Modèle pour les compétences (skills)
 model Skill {
   id            String   @id @default(cuid())
-  slug          String   @unique // Identifiant unique (ex: "block", "dodge")
+  slug          String // Identifiant unique (ex: "block", "dodge")
+  ruleset       Ruleset  @default(season_2) // Ruleset de la compétence
   nameFr        String // Nom français (ex: "Blocage")
   nameEn        String // Nom anglais (ex: "Block")
   description   String // Description française de la compétence
@@ -149,6 +150,8 @@ model Skill {
   // Relations
   positionSkills   PositionSkill[]
   starPlayerSkills StarPlayerSkill[]
+
+  @@unique([slug, ruleset])
 }
 
 // Modèle pour les rosters d'équipes
