@@ -15,6 +15,9 @@ type Skill = {
   description: string;
   descriptionEn?: string | null;
   category: string;
+  isElite: boolean;
+  isPassive: boolean;
+  isModified: boolean;
 };
 
 async function fetchJSON(path: string) {
@@ -97,6 +100,9 @@ export default function EditSkillPage() {
         description: formData.get("description"),
         descriptionEn: formData.get("descriptionEn") || null,
         category: formData.get("category"),
+        isElite: formData.get("isElite") === "on",
+        isPassive: formData.get("isPassive") === "on",
+        isModified: formData.get("isModified") === "on",
       };
       await putJSON(`/admin/data/skills/${skill.id}`, data);
       router.push("/admin/data/skills");
@@ -157,7 +163,37 @@ export default function EditSkillPage() {
               ))}
             </select>
           </div>
-          <div></div>
+          <div className="flex items-end gap-6 pb-2">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                name="isElite"
+                defaultChecked={skill.isElite}
+                className="w-5 h-5 text-yellow-500 border-gray-300 rounded focus:ring-yellow-500"
+              />
+              <span className="text-sm font-medium flex items-center gap-1">
+                <span className="text-yellow-500">⭐</span> Elite
+              </span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                name="isPassive"
+                defaultChecked={skill.isPassive}
+                className="w-5 h-5 text-blue-500 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <span className="text-sm font-medium">Passive</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                name="isModified"
+                defaultChecked={skill.isModified}
+                className="w-5 h-5 text-purple-500 border-gray-300 rounded focus:ring-purple-500"
+              />
+              <span className="text-sm font-medium">Modifiée *</span>
+            </label>
+          </div>
           <div>
             <label className="block text-sm font-medium mb-1">Nom (FR) *</label>
             <input

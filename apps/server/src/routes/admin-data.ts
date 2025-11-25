@@ -100,7 +100,7 @@ router.post("/skills", async (req, res) => {
 
 router.put("/skills/:id", async (req, res) => {
   try {
-    const { nameFr, nameEn, description, descriptionEn, category, ruleset: rawRuleset } = req.body;
+    const { nameFr, nameEn, description, descriptionEn, category, ruleset: rawRuleset, isElite, isPassive, isModified } = req.body;
     
     const data: any = { 
       nameFr, 
@@ -112,6 +112,17 @@ router.put("/skills/:id", async (req, res) => {
 
     if (rawRuleset) {
       data.ruleset = resolveRuleset(rawRuleset);
+    }
+
+    // Gestion des booléens (isElite, isPassive, isModified)
+    if (typeof isElite === "boolean") {
+      data.isElite = isElite;
+    }
+    if (typeof isPassive === "boolean") {
+      data.isPassive = isPassive;
+    }
+    if (typeof isModified === "boolean") {
+      data.isModified = isModified;
     }
 
     const skill = await prisma.skill.update({

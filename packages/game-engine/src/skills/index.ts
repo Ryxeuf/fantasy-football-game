@@ -12,6 +12,7 @@ export interface SkillDefinition {
   isElite?: boolean;      // Compétence Elite (+10 000 de valeur d'équipe)
   isPassive?: boolean;     // Compétence passive (soulignée)
   isModified?: boolean;    // Compétence modifiée ou nouveau nom (astérisque)
+  season3Only?: boolean;  // Compétence qui n'existe qu'en Saison 3 (pas en Saison 2)
 }
 
 // Définition de toutes les compétences avec leurs slugs
@@ -22,8 +23,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
     nameFr: "Blocage",
     nameEn: "Block",
     description: "Quand on obtient le résultat Les Deux Plaqués lors d'une action de Blocage, ce joueur peut choisir de l'ignorer et ne pas être Plaqué (voir page 57).",
-    category: "General",
-    isElite: true
+    category: "General"
   },
   {
     slug: "dauntless",
@@ -138,8 +138,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
     nameFr: "Esquive",
     nameEn: "Dodge",
     description: "Une fois par tour d'équipe, pendant son activation, ce joueur peut relancer un test d'Agilité raté lors d'une tentative d'Esquive. De plus, ce joueur peut choisir d'utiliser cette compétence quand il est la cible d'une action de Blocage et qu'un résultat de Trébuchement est appliqué contre lui.",
-    category: "Agility",
-    isElite: true
+    category: "Agility"
   },
   {
     slug: "defensive",
@@ -380,8 +379,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
     nameFr: "Clé de Bras",
     nameEn: "Arm Bar",
     description: "Si un joueur adverse Tombe à la suite d'un échec de son test d'Agilité en tentant de faire un Esquive, Saut ou Bond pour quitter une case dans laquelle il était Marqué par ce joueur, vous pouvez appliquer un modificateur de +1 soit au jet d'Armure soit au jet de Blessure.",
-    category: "Strength",
-    isElite: true
+    category: "Strength"
   },
   {
     slug: "brawler",
@@ -409,8 +407,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
     nameFr: "Garde",
     nameEn: "Guard",
     description: "Ce joueur peut utiliser cette compétence quand un joueur adverse effectue une action de Blocage contre un coéquipier qui est adjacent à ce joueur. Ce joueur peut assister le coéquipier aux fins de cette action de Blocage.",
-    category: "Strength",
-    isElite: true
+    category: "Strength"
   },
   {
     slug: "juggernaut",
@@ -424,8 +421,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
     nameFr: "Coup Puissant",
     nameEn: "Mighty Blow",
     description: "Quand un joueur adverse est Renversé à la suite d'une action de Blocage effectuée par ce joueur, vous pouvez appliquer un modificateur de +1 soit au jet d'Armure soit au jet de Blessure effectué contre lui.",
-    category: "Strength",
-    isElite: true
+    category: "Strength"
   },
   {
     slug: "mighty-blow-1",
@@ -637,11 +633,10 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "ball-and-chain",
-    nameFr: "Chaînes et Boulet*",
-    nameEn: "Ball & Chain",
+    nameFr: "Chaîne et Boulet",
+    nameEn: "Ball and Chain",
     description: "Ce joueur possède une chaîne et un boulet qui le font se déplacer de manière aléatoire.",
-    category: "Trait",
-    isModified: true
+    category: "Trait"
   },
   {
     slug: "hypnotic-gaze",
@@ -790,28 +785,32 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
     nameFr: "Agresseur Solitaire",
     nameEn: "Solitary Aggressor",
     description: "Quand ce joueur effectue une Action d'Agression sans Soutien Offensif ou Défensif, alors ce joueur peut relancer un Jet d'Armure raté.",
-    category: "Scélérates"
+    category: "Scélérates",
+    season3Only: true
   },
   {
     slug: "lightning-aggression",
     nameFr: "Agression Eclair",
     nameEn: "Lightning Aggression",
     description: "L'Activation de ce joueur ne prend pas fin après qu'il a effectué une Action d'Agression, et il peut continuer son Action de Mouvement avec son mouvement restant.",
-    category: "Scélérates"
+    category: "Scélérates",
+    season3Only: true
   },
   {
     slug: "boot-to-the-head",
     nameFr: "Coup de Crampons",
     nameEn: "Boot to the Head",
     description: "Ce joueur peut fournir un Soutien Offensif quand un coéquipier effectue une Action d'Agression, quel que soit le nombre de joueurs adverse qui Marquent ce joueur",
-    category: "Scélérates"
+    category: "Scélérates",
+    season3Only: true
   },
   {
     slug: "fork",
     nameFr: "Fourchette",
     nameEn: "Fork",
     description: "Quand un joueur adverse est Repoussée par ce joueur, le joueur adverse ne peut plus fournir de soutien Offensif ni Défensif jusqu'à la fin de sa prochaine activation",
-    category: "Scélérates"
+    category: "Scélérates",
+    season3Only: true
   },
   {
     slug: "violent-innovator",
@@ -819,7 +818,8 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
     nameEn: "Violent Innovator",
     description: "Si un joueur adverse subit une Élimination suite à une Action Spéciale que ce joueur à effectuée, ce joueur gagne des PSP correspondants pour avoir infligé une Élimination.",
     category: "Scélérates",
-    isModified: true
+    isModified: true,
+    season3Only: true
   },
   {
     slug: "provocation",
@@ -827,21 +827,24 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
     nameEn: "Provocation",
     description: "Quand un joueur ayant cette Compétence est Repoussée suite à un blocage contre lui, il peut forcer le joueur adverse à Poursuivre. (sauf si enraciné)",
     category: "Scélérates",
-    isModified: true
+    isModified: true,
+    season3Only: true
   },
   {
     slug: "saboteur",
     nameFr: "Saboteur",
     nameEn: "Saboteur",
     description: "Quand ce joueur est Plaqué suite à l'Action de Blocage d'un joueur Adverse, avant de faire le jet d'Armure, il peut jeter un D6. Sur un 1-3, rien et on fait le jet d'Armure. Sur 4+, l'arme sabotée de joueur explose et le joueur adverse est aussi Plaquée, sans provoquer de Turnover sauf si le joueur adverse était en possession du Ballon. Si l'arme de ce joueur explose, le joueur est automatiquement KO et pas de jet d'Armure pour lui. Nécessite le trait Arme Secrète",
-    category: "Scélérates"
+    category: "Scélérates",
+    season3Only: true
   },
   {
     slug: "fatal-flight",
     nameFr: "Vol Fatal",
     nameEn: "Fatal Flight",
     description: "Lors d'un Lancer de Coéquipier, permet au joueur lancé, s'il atterrit ou rebondit sur une case occupée et si le joueur adverse est plaqué, d'appliquer un +1 au jet d'Armure ou au jet de Blessure. Si le joueur adverse subit une Élimination, ce joueur gagne des PSP correspondants pour avoir infligé une Élimination.",
-    category: "Scélérates"
+    category: "Scélérates",
+    season3Only: true
   },
   {
     slug: "clearance",
@@ -849,7 +852,8 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
     nameEn: "Clearance",
     description: "Ce joueur peut annoncer une Action Spéciale de Dégagement. 1 seul par tour. Peut faire d'abord un mouvement. Choisir une direction, utiliser le Gabarit de Renvois et un D6 pour déterminer la direction et un D6 pour le nombre de cases. Pas de Turnover si ballon au sol.",
     category: "Scélérates",
-    isModified: true
+    isModified: true,
+    season3Only: true
   },
 
   // NOUVELLES COMPÉTENCES SAISON 3 - AUTRES CATÉGORIES
@@ -859,14 +863,16 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
     nameEn: "Surefoot",
     description: "Chaque fois que ce joueur est censé être Plaqué ou Chute, jetez un D6. Sur un 6, ce joueur n'est pas Plaqué ou ne Chute pas. Si ceci se produit pendant son activation, il peut la continuer normalement, sans Turnover.",
     category: "General",
-    isModified: true
+    isModified: true,
+    season3Only: true
   },
   {
     slug: "bullseye",
     nameFr: "Dans le Mille",
     nameEn: "Bullseye",
     description: "Lors d'une Action de Lancer de Coéquipier de joueur, si le résultat du lancer est un Lancer Superbe, alors le joueur lancé ne Valdingue pas et atterrit sur la case ciblée.",
-    category: "Strength"
+    category: "Strength",
+    season3Only: true
   },
   {
     slug: "running-pass-2025",
@@ -874,7 +880,8 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
     nameEn: "Running Pass",
     description: "Si ce joueur effectue une Action de Passe qui est une Passe Rapide ou une Action de Transmission, son activation ne prend pas fin et il peut continuer son Action de Mouvement.",
     category: "Passing",
-    isModified: true
+    isModified: true,
+    season3Only: true
   },
 
   // NOUVEAUX TRAITS SAISON 3
@@ -883,63 +890,72 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
     nameFr: "Farceur",
     nameEn: "Trickster",
     description: "Lorsque ce joueur est sur le point d'être touché par une action de Bloc ou une action Spéciale qui remplace une action de Bloc, avant de déterminer combien de dés sont lancés, il peut être retiré du terrain et placé dans n'importe quelle autre case inoccupée adjacente au joueur effectuant l'action de Bloc.",
-    category: "Trait"
+    category: "Trait",
+    season3Only: true
   },
   {
     slug: "hate",
     nameFr: "Haine (X)",
     nameEn: "Hate (X)",
     description: "Chaque fois que ce joueur effectue une Action de Blocage contre un joueur ayant le même Mot-Clé que celui entre parenthèses, ce joueur peut relancer un résultat Attaquant Plaqué.",
-    category: "Trait"
+    category: "Trait",
+    season3Only: true
   },
   {
     slug: "insignifiant",
     nameFr: "Insignifiant",
     nameEn: "Insignificant",
     description: "Quand vous créez une Liste d'Équipe, vous ne pouvez pas inclure plus de joueurs ayant ce Trait que de joueurs n'ayant pas ce Trait.",
-    category: "Trait"
+    category: "Trait",
+    season3Only: true
   },
   {
     slug: "contagieux",
     nameFr: "Contagieux",
     nameEn: "Contagious",
     description: "Ce trait permet au joueur de transmettre une maladie ou une infection aux joueurs adverses.",
-    category: "Trait"
+    category: "Trait",
+    season3Only: true
   },
   {
     slug: "instable",
     nameFr: "Instable",
     nameEn: "Unstable",
     description: "Ce joueur ne peut pas déclarer d'Action Sécurisation du Ballon",
-    category: "Trait"
+    category: "Trait",
+    season3Only: true
   },
   {
     slug: "breathe-fire",
     nameFr: "Souffle Ardent",
     nameEn: "Breathe Fire",
     description: "Une fois par activation, au lieu d'effectuer une action de Bloc, ce joueur peut effectuer une action Spéciale Souffle de Feu.",
-    category: "Trait"
+    category: "Trait",
+    season3Only: true
   },
   {
     slug: "my-ball",
     nameFr: "Mon Ballon",
     nameEn: "My Ball",
     description: "Un joueur avec ce trait ne peut pas abandonner volontairement le ballon quand il en est en possession, et ne peut donc pas faire d'actions de Passe, d'actions de Passe à la main, ou utiliser toute autre compétence ou trait qui lui permettrait de renoncer à la possession du ballon.",
-    category: "Trait"
+    category: "Trait",
+    season3Only: true
   },
   {
     slug: "pick-me-up",
     nameFr: "Petit remontant",
     nameEn: "Pick-me-up",
     description: "À la fin du tour d'équipe adverse, lancez un D6 pour chaque équipier à Terre et non-Étourdi dans les trois cases d'un joueur debout avec ce trait.",
-    category: "Trait"
+    category: "Trait",
+    season3Only: true
   },
   {
     slug: "hit-and-run",
     nameFr: "Frappe-et-cours",
     nameEn: "Hit and Run",
     description: "Ce joueur peut effectuer un mouvement après avoir effectué une action de Blocage.",
-    category: "Agility"
+    category: "Agility",
+    season3Only: true
   },
 ];
 

@@ -200,9 +200,9 @@ export const STATIC_SKILLS_DATA: Record<string, StaticSkillData> = {
   
   // Mutations
   "Big Hand": {
-    nameFr: "Grande Main",
+    nameFr: "Main Démesurée",
     nameEn: "Big Hand",
-    description: "Ce joueur peut ignorer tout modificateur pour être Marquage ou pour les conditions météorologiques de Pluie Battante lorsqu'il tente de ramasser le ballon.",
+    description: "Ignore les modificateurs de « Marquage » et de « Pluie Battante » pour Ramasser le Ballon.",
     descriptionEn: "This player may ignore any modifier(s) for being Marked or for Pouring Rain weather conditions when they attempt to pick up the ball.",
     category: "Mutation"
   },
@@ -228,9 +228,9 @@ export const STATIC_SKILLS_DATA: Record<string, StaticSkillData> = {
     category: "Mutation"
   },
   "Foul Appearance": {
-    nameFr: "Apparence Répugnante",
+    nameFr: "Répulsion",
     nameEn: "Foul Appearance",
-    description: "Lorsqu'un joueur adverse déclare une action de Bloc ciblant ce joueur, ou toute action Spéciale qui cible ce joueur, son entraîneur doit d'abord lancer un D6, même si ce joueur a perdu sa Zone de Tackle. Sur un jet de 1, le joueur ne peut pas effectuer l'action déclarée et l'action est gaspillée.",
+    description: "Quand un joueur adverse déclare un Bloc ou une Action Spéciale ciblant ce joueur (même s'il a perdu sa ZdT), l'adversaire jette 1D6. Sur 1, l'action est annulée (perdue si Action unique comme Blitz).",
     descriptionEn: "When an opposition player declares a Block action targeting this player, or any Special action that targets this player, their coach must first roll a D6, even if this player has lost their Tackle Zone. On a roll of 1, the player cannot perform the declared action and the action is wasted.",
     category: "Mutation"
   },
@@ -493,9 +493,9 @@ export const STATIC_SKILLS_DATA: Record<string, StaticSkillData> = {
     category: "Trait"
   },
   "Ball and Chain": {
-    nameFr: "Boule et Chaîne",
+    nameFr: "Chaîne et Boulet",
     nameEn: "Ball and Chain",
-    description: "Lorsque ce joueur est activé, la seule action qu'il peut effectuer est une action Spéciale 'Mouvement de Ball & Chain'.",
+    description: "Lorsque ce joueur est activé, la seule action qu'il peut effectuer est une action Spéciale 'Mouvement de Chaîne et Boulet'. Le joueur se déplace d'1D6 cases dans une direction aléatoire. Il effectue automatiquement un Bloc contre tout joueur sur son passage (amis ou adverses). Ne peut pas être ciblé par Poursuite.",
     descriptionEn: "When this player is activated, the only action they may perform is a 'Ball & Chain Move' Special action.",
     category: "Trait"
   },
@@ -507,9 +507,9 @@ export const STATIC_SKILLS_DATA: Record<string, StaticSkillData> = {
     category: "Trait"
   },
   "Bone Head": {
-    nameFr: "Tête de Bois",
+    nameFr: "Cerveau Lent",
     nameEn: "Bone Head",
-    description: "Lorsque ce joueur est activé, immédiatement après avoir déclaré l'action qu'il va effectuer mais avant d'effectuer l'action, lancez un D6.",
+    description: "Lorsque ce joueur est activé, immédiatement après avoir déclaré l'action qu'il va effectuer mais avant d'effectuer l'action, lancez un D6. Sur 1, il oublie ce qu'il devait faire. Son action se termine immédiatement et il perd sa ZdT. S'il s'agit d'1 Action unique (Passe, Blitz, Lancer de Coéquipier…) l'Action est perdue pour l'équipe.",
     descriptionEn: "When this player is activated, immediately after declaring the action they will perform but before performing the action, roll a D6.",
     category: "Trait"
   },
@@ -535,9 +535,9 @@ export const STATIC_SKILLS_DATA: Record<string, StaticSkillData> = {
     category: "Trait"
   },
   "Kick Team-mate": {
-    nameFr: "Kick Team-mate",
+    nameFr: "Botter de Coéquipier",
     nameEn: "Kick Team-mate",
-    description: "Une fois par tour d'équipe, en plus d'un autre joueur effectuant soit une Passe soit une action de Lancer d'Équipier, un seul joueur avec ce trait sur l'équipe active peut effectuer une action Spéciale 'Kick Team-mate'.",
+    description: "Une fois par tour d'équipe, en plus d'un autre joueur effectuant soit une Passe soit une action de Lancer d'Équipier, un seul joueur avec ce trait sur l'équipe active peut effectuer une action Spéciale 'Botter de Coéquipier'. Peut Botter un Poids Plume adjacent. Déviation: D6 (1-3: gauche du Botteur, 4-6: droite), distance D6 cases.",
     descriptionEn: "Once per team turn, in addition to another player performing either a Pass or a Throw Team-mate action, a single player with this Trait on the active team can perform a 'Kick Team-mate' Special action.",
     category: "Trait"
   },
@@ -549,37 +549,37 @@ export const STATIC_SKILLS_DATA: Record<string, StaticSkillData> = {
     category: "Trait"
   },
   "No Hands": {
-    nameFr: "Pas de Mains",
+    nameFr: "Sans les mains",
     nameEn: "No Hands",
-    description: "Ce joueur est incapable de prendre possession du ballon. Il ne peut pas tenter de le ramasser, de l'attraper, ou de tenter d'interférer avec une passe.",
+    description: "Ne peut Ramasser, Attraper ou Interférer avec une Passe. S'il entre dans une case où se trouve la balle, il y a Turnover. Le ballon rebondit lors de toute interaction avec ce joueur.",
     descriptionEn: "This player is unable to take possession of the ball. They may not attempt to pick it up, to catch it, or attempt to interfere with a pass.",
     category: "Trait"
   },
   "Plague Ridden": {
-    nameFr: "Porteur de Peste",
+    nameFr: "Contagieux",
     nameEn: "Plague Ridden",
-    description: "Une fois par match, si un joueur adverse avec une caractéristique de Force de 4 ou moins qui n'a pas les traits Decay, Regeneration ou Stunty subit un résultat de Casualty de 15-16, MORT à la suite d'une action de Bloc effectuée ou d'une action de Faute commise par un joueur avec ce trait qui appartient à votre équipe.",
+    description: "Une fois par match, si un joueur adverse avec F4 ou moins (sans Décomposition, Régénération ou Minus) est tué suite à un Bloc ou une Agression de ce joueur, il peut être ajouté à votre équipe en tant que Zombie gratuitement (si vous n'avez pas atteint la limite de 16 joueurs ou le maximum de Zombies du roster).",
     descriptionEn: "Once per game, if an opposition player with a Strength characteristic of 4 or less that does not have the Decay, Regeneration or Stunty traits suffers a Casualty result of 15-16, DEAD as the result of a Block action performed or a Foul action committed by a player with this Trait that belongs to your team.",
     category: "Trait"
   },
   "Pogo Stick": {
-    nameFr: "Pogo Stick",
+    nameFr: "Échasse à Ressort",
     nameEn: "Pogo Stick",
-    description: "Pendant son mouvement, au lieu de sauter par-dessus une seule case occupée par un joueur à Terre ou Étourdi, un joueur avec ce trait peut choisir de Bondir par-dessus n'importe quelle case adjacente.",
+    description: "Incompatible avec Saut. Pendant son mouvement, peut Enjamber n'importe quelle case adjacente (vide ou occupée, même par un joueur Debout). Réduit de 1 (mini = -1) les modificateurs négatifs des tests d'AG pour Enjamber.",
     descriptionEn: "During their movement, instead of jumping over a single square that is occupied by a Prone or Stunned player, a player with this Trait may choose to Leap over any single adjacent square.",
     category: "Trait"
   },
   "Projectile Vomit": {
-    nameFr: "Vomissement Projectile",
+    nameFr: "Gerbe de Vomi",
     nameEn: "Projectile Vomit",
-    description: "Au lieu d'effectuer une action de Bloc, ce joueur peut effectuer une action Spéciale 'Vomissement Projectile'.",
+    description: "Au lieu d'effectuer une action de Bloc (même durant 1 Blitz), effectue un test d'AG. Si réussi, la cible (adjacente et Debout) est renversée sans jet d'AR et subit un jet de Blessure. Si raté, ce joueur subit un jet de Blessure sans jet d'AR. Si utilisé en Blitz, ne peut pas continuer le mouvement.",
     descriptionEn: "Instead of performing a Block action, this player may perform a 'Projectile Vomit' Special action.",
     category: "Trait"
   },
   "Really Stupid": {
-    nameFr: "Gros Débile*",
+    nameFr: "Gros Débile",
     nameEn: "Really Stupid",
-    description: "Quand ce joueur est activé, même s'il est À Terre ou a perdu sa Zone de Tacle, jetez un D6 juste après avoir annoncé l'action qu'il va faire mais avant d'effectuer l'action, en appliquant un modificateur de +2 au jet si ce joueur est actuellement adjacent à un ou plusieurs coéquipiers Debout et n'ayant pas ce trait: Sur 1-3, ce joueur oublie ce qu'il était censé faire et son activation se termine immédiatement. De plus, il perd sa Zone de Tacle jusqu'à sa prochaine activation. Sur 4+, il continue normalement son activation et effectue l'action annoncée. Si vous avez annoncé que ce joueur allait faire une action qui ne peut être effectuée qu'une seule fois par tour d'équipe et si l'activation de ce joueur s'est terminée avant de pouvoir effectuer l'action, l'action est considérée comme ayant été effectuée et aucun autre joueur de votre équipe ne peut faire la même action à ce tour d'équipe.",
+    description: "Avant toutes actions (même si « Mis à Terre », ou sans ZdT), jette 1D6 (+2 si adjacent à un coéquipier Debout sans ce trait). Sur 1-3, son activation se termine et il perd sa ZdT. S'il s'agit d'1 Action unique (Passe, Blitz, Lancer de Coéquipier…) l'Action est perdue pour l'équipe.",
     descriptionEn: "When this player is activated, immediately after declaring the action they will perform but before performing the action, roll a D6, applying a +2 modifier to the dice roll if this player is currently adjacent to one or more Standing Team-mates that do not have this Trait.",
     category: "Trait"
   },
@@ -591,9 +591,9 @@ export const STATIC_SKILLS_DATA: Record<string, StaticSkillData> = {
     category: "Trait"
   },
   "Right Stuff": {
-    nameFr: "Poids Plume*",
+    nameFr: "Poids Plume",
     nameEn: "Right Stuff",
-    description: "Si ce joueur a une caractéristique de Force de 3 ou moins, il peut être lancé par un coéquipier ayant la compétence Lancer de Coéquipier, comme décrit page 52.",
+    description: "Permet d'être lancé si F3 ou moins.",
     descriptionEn: "If this player also has a Strength characteristic of 3 or less, they can be thrown by a Team-mate with the Throw Team-mate skill.",
     category: "Trait"
   },
@@ -612,16 +612,16 @@ export const STATIC_SKILLS_DATA: Record<string, StaticSkillData> = {
     category: "Trait"
   },
   "Stunty": {
-    nameFr: "Microbe*",
+    nameFr: "Minus",
     nameEn: "Stunty",
-    description: "Ce joueur peut appliquer un modificateur de +1 à ses tests d'Agilité pour Esquiver. Toutefois, si un joueur adverse esquive sur une case de la Zone de Tacle de ce joueur, celui-ci ne compte pas comme Marquant le joueur en mouvement en ce qui concerne le calcul des modificateurs au test d'Agilité.",
+    description: "Ignore les modificateurs liés au « Marquage » quand il Esquive (sauf si Bombardier, Tronçonneuse ou Piqué). Un adversaire tentant d'Interférer avec la Passe d'un Minus reçoit +1 à son test d'AG. Les jets de Blessure se font sur 1 table dédiée.",
     descriptionEn: "When this player makes an Agility test in order to Dodge, they ignore any -1 modifiers for being Marked in the square they have moved into, unless they also have either the Bombardier trait, the Chainsaw trait or the Swoop trait.",
     category: "Trait"
   },
   "Swarming": {
-    nameFr: "Essaim",
+    nameFr: "Déferlement",
     nameEn: "Swarming",
-    description: "Pendant chaque séquence de Début de Manche, après l'Étape 2 mais avant l'Étape 3, vous pouvez retirer D3 joueurs avec ce trait de la boîte Réserves de votre équipe et les mettre en place sur le terrain.",
+    description: "Pendant chaque séquence de Début de Manche, après l'Étape 2 mais avant l'Étape 3, vous pouvez retirer D3 joueurs avec ce trait de la boîte Réserves de votre équipe et les mettre en place sur le terrain (dans votre Demi-terrain ou Zone d'En-but). Le nombre total de joueurs sur le terrain ne peut pas dépasser 11.",
     descriptionEn: "During each Start of Drive sequence, after Step 2 but before Step 3, you may remove D3 players with this Trait from the Reserves box of your dugout and set them up on the pitch.",
     category: "Trait"
   },
@@ -633,16 +633,16 @@ export const STATIC_SKILLS_DATA: Record<string, StaticSkillData> = {
     category: "Trait"
   },
   "Take Root": {
-    nameFr: "Prendre Racine*",
+    nameFr: "Prendre Racine",
     nameEn: "Take Root",
-    description: "Quand ce joueur est activé, même s'il est À Terre ou a perdu sa Zone de Tacle, jetez un D6 juste après avoir annoncé l'action qu'il va faire mais avant d'effectuer l'action: Sur un jet de 1, ce joueur devient Enraciné: Un joueur Enraciné ne peut pas se déplacer hors de la case qu'il occupe quelle qu'en soit la raison, volontairement ou non, jusqu'à la fin de cette phase de jeu, ou jusqu'à ce qu'il soit Plaqué ou Mis À Terre. Un joueur Enraciné peut effectuer toute action éligible à condition qu'il puisse la faire sans se déplacer. Par exemple, un joueur Enraciné peut faire une action de Passe mais ne peut pas se déplacer avant de faire la passe. Sur 2+, ce joueur continue normalement son activation. Si vous avez annoncé que ce joueur allait faire une action qui inclut un mouvement (Passe, Transmission, Blitz ou Agression) avant qu'il devienne Enraciné, il peut effectuer l'action si c'est possible. Si c'est impossible, l'action est considérée comme ayant été effectuée et aucun autre joueur de votre équipe ne peut faire la même action à ce tour d'équipe.",
+    description: "Avant toutes actions (même si « Mis à Terre », ou sans ZdT), jette 1D6. Sur 1, ne peut pas se déplacer jusqu'à la fin de la Phase ou s'il est « Plaqué » ou « Mis à Terre ». Ne peut faire des actions que s'il peut les faire sans se mouvoir. S'il s'agit d'1 Action unique (Passe, Blitz, Lancer de Coéquipier…) l'Action est perdue pour l'équipe si elle ne peut être réalisée sans mouvement.",
     descriptionEn: "When this player is activated, immediately after declaring the action they will perform but before performing the action, roll a D6.",
     category: "Trait"
   },
   "Titchy": {
-    nameFr: "Titchy",
+    nameFr: "Microbe",
     nameEn: "Titchy",
-    description: "Ce joueur peut appliquer un modificateur +1 à tous les tests d'Agilité qu'il fait pour Esquiver.",
+    description: "+1 à toutes ses Esquives. N'applique pas le -1 de « marquage » sur les adversaires entrant dans sa ZdT lors d'une Esquive.",
     descriptionEn: "This player may apply a +1 modifier to any Agility tests they make in order to Dodge.",
     category: "Trait"
   },
@@ -661,9 +661,9 @@ export const STATIC_SKILLS_DATA: Record<string, StaticSkillData> = {
     category: "Trait"
   },
   "Unchannelled Fury": {
-    nameFr: "Fureur Débridée*",
+    nameFr: "Fureur Débridée",
     nameEn: "Unchannelled Fury",
-    description: "Quand ce joueur est activé, même s'il est À Terre ou a perdu sa Zone de Tacle, jetez un D6 juste après avoir annoncé l'action qu'il va faire mais avant d'effectuer l'action, en appliquant un modificateur de +2 au jet si vous avez annoncé une action de Blocage ou de Blitz (ou une action Spéciale accordée par un trait ou une compétence s'effectuant à la place d'une action de Blocage): Sur 1-3, il plonge dans une rage incohérente et improductive. Son activation se termine immédiatement. Sur 4+, il continue normalement son activation et effectue l'action annoncée. Si vous avez annoncé que ce joueur allait faire une action qui ne peut être effectuée qu'une seule fois par tour d'équipe et si l'activation de ce joueur s'est terminée avant de pouvoir effectuer l'action, l'action est considérée comme ayant été effectuée et aucun autre joueur de votre équipe ne peut faire la même action à ce tour d'équipe.",
+    description: "Avant toutes actions (même si « Mis à Terre », ou sans ZdT), jette 1D6 (+2 si Bloc/Blitz ou Action Spéciale remplaçant le Bloc). Sur 1-3, son activation se termine immédiatement. S'il s'agit d'1 Action unique (Passe, Blitz, Lancer de Coéquipier…) l'Action est perdue pour l'équipe.",
     descriptionEn: "When this player is activated, immediately after declaring the action they will perform but before performing the action, roll a D6, applying a +2 modifier to the dice roll if you declared the player would perform a Block or Blitz action.",
     category: "Trait"
   },
@@ -672,23 +672,23 @@ export const STATIC_SKILLS_DATA: Record<string, StaticSkillData> = {
   "Hit and Run": {
     nameFr: "Frappe et Cours",
     nameEn: "Hit and Run",
-    description: "Après qu'un joueur avec ce trait ait effectué une action de Bloc, il peut immédiatement bouger d'une case gratuite en ignorant les Zones de Tackle tant qu'il est toujours Debout.",
+    description: "Après un Bloc (pas un Blitz), si ce joueur est toujours Debout, il peut se déplacer d'1 case gratuite en ignorant les ZdT. Ne provoque pas de Turnover s'il Chute. Ne peut pas Foncer.",
     descriptionEn: "After a player with this Trait performs a Block action, they may immediately move one free square ignoring Tackle Zones so long as they are still Standing.",
-    category: "Extraordinary"
+    category: "Trait"
   },
   "Drunkard": {
-    nameFr: "Ivrogne",
+    nameFr: "Poivrot",
     nameEn: "Drunkard",
-    description: "Ce joueur subit une pénalité de -1 au jet de dé lorsqu'il tente de Courir.",
+    description: "-1 au jet de dé pour « Foncer ».",
     descriptionEn: "This player suffers a -1 penalty to the dice roll when attempting to Rush.",
-    category: "Extraordinary"
+    category: "Trait"
   },
   "Pick-me-up": {
-    nameFr: "Pick-me-up",
+    nameFr: "Choppe-moi",
     nameEn: "Pick-me-up",
-    description: "À la fin du tour d'équipe adverse, lancez un D6 pour chaque équipier à Terre et non-Étourdi dans les trois cases d'un joueur debout avec ce trait.",
+    description: "À la fin du tour d'équipe adverse, lancez 1D6 pour chaque coéquipier « Mis à Terre » mais pas « Sonné » à 3 cases ou moins de ce joueur Debout. Sur 5+, le coéquipier se relève gratuitement.",
     descriptionEn: "At the end of the opposition's team turn, roll a D6 for each Prone, non-Stunned team-mate within three squares of a standing player with this Trait.",
-    category: "Extraordinary"
+    category: "Trait"
   },
   "Bloodlust (X+)": {
     nameFr: "Soif de Sang (X+)",
@@ -705,18 +705,18 @@ export const STATIC_SKILLS_DATA: Record<string, StaticSkillData> = {
     category: "Extraordinary"
   },
   "Trickster": {
-    nameFr: "Tricheur",
+    nameFr: "Farceur",
     nameEn: "Trickster",
-    description: "Lorsque ce joueur est sur le point d'être touché par une action de Bloc ou une action Spéciale qui remplace une action de Bloc, avant de déterminer combien de dés sont lancés, il peut être retiré du terrain et placé dans n'importe quelle autre case inoccupée adjacente au joueur effectuant l'action de Bloc.",
+    description: "Quand ce joueur va être ciblé par un Bloc ou une Action Spéciale remplaçant un Bloc, avant de déterminer le nombre de dés, il peut être placé sur une case adjacente vide au joueur effectuant le Bloc. Le bloqueur peut annuler ou continuer (nouveau test de Répulsion si applicable).",
     descriptionEn: "When this player is about to be hit by a Block action or a Special action that replaces a Block action, before determining how many dice are rolled, they may be removed from the pitch and placed in any other unoccupied square adjacent to the player performing the Block action.",
-    category: "Extraordinary"
+    category: "Trait"
   },
   "Breathe Fire": {
-    nameFr: "Souffle de Feu",
+    nameFr: "Cracheur de Feu",
     nameEn: "Breathe Fire",
-    description: "Une fois par activation, au lieu d'effectuer une action de Bloc, ce joueur peut effectuer une action Spéciale Souffle de Feu.",
+    description: "Une fois par activation, au lieu d'effectuer une action de Bloc, ce joueur peut effectuer une action Spéciale 'Souffle de Feu'. Cible un joueur adjacent Debout. Jet de 2+ sur 1D6 : succès = jet d'AR avec +2. Échec sur 1 = ce joueur subit le jet d'AR avec +2.",
     descriptionEn: "Once per activation, instead of performing a Block action, this player may perform a Breathe Fire Special action.",
-    category: "Extraordinary"
+    category: "Trait"
   },
 };
 

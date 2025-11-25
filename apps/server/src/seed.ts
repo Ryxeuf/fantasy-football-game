@@ -10,6 +10,12 @@ import {
 } from "../../../packages/game-engine/src/rosters/positions";
 import { STAR_PLAYERS_BY_RULESET } from "../../../packages/game-engine/src/rosters/star-players";
 import { STATIC_SKILLS_DATA } from "./static-skills-data";
+import { 
+  SEASON_3_NEW_SKILLS, 
+  SEASON_3_CATEGORY_CHANGES, 
+  SEASON_3_ELITE_SKILLS,
+  SEASON_3_RENAMED_SKILLS 
+} from "./static-skills-data-s3";
 import { UNKNOWN_USER_ID } from "./utils/user-constants";
 
 async function main() {
@@ -22,11 +28,35 @@ async function main() {
   let skillsCreated = 0;
   let skillsSkipped = 0;
   
+  // Supprimer les compétences S3-only qui ont été créées par erreur en S2
+  console.log("   🧹 Nettoyage des compétences S3-only créées par erreur en S2...");
+  const s3OnlySlugs = SKILLS_DEFINITIONS
+    .filter(s => s.season3Only)
+    .map(s => s.slug);
+  
+  if (s3OnlySlugs.length > 0) {
+    const deleted = await prisma.skill.deleteMany({
+      where: {
+        ruleset: "season_2",
+        slug: { in: s3OnlySlugs }
+      }
+    });
+    if (deleted.count > 0) {
+      console.log(`   ✅ ${deleted.count} compétences S3-only supprimées de S2`);
+    }
+  }
+
   // Créer les compétences pour chaque ruleset (season_2 et season_3)
   for (const ruleset of RULESETS) {
     console.log(`   📖 Seed des compétences pour ${ruleset}...`);
+    const isSeason3 = ruleset === "season_3";
     
     for (const skillDef of SKILLS_DEFINITIONS) {
+      // Ignorer les compétences S3-only quand on seed pour S2
+      if (!isSeason3 && skillDef.season3Only) {
+        continue;
+      }
+      
       try {
         const existing = await prisma.skill.findUnique({
           where: { slug_ruleset: { slug: skillDef.slug, ruleset } }
@@ -36,14 +66,34 @@ async function main() {
         const staticData = STATIC_SKILLS_DATA[skillDef.nameEn];
         
         // Utiliser les données statiques si disponibles, sinon utiliser les données du game-engine
-        const finalNameFr = staticData?.nameFr || skillDef.nameFr;
-        const finalNameEn = staticData?.nameEn || skillDef.nameEn;
+        let finalNameFr = staticData?.nameFr || skillDef.nameFr;
+        let finalNameEn = staticData?.nameEn || skillDef.nameEn;
         const finalDescription = staticData?.description || skillDef.description;
         const finalDescriptionEn = staticData?.descriptionEn || null;
-        const finalCategory = staticData?.category || skillDef.category;
-        const finalIsElite = skillDef.isElite || false;
+        let finalCategory = staticData?.category || skillDef.category;
+        // En Saison 2, aucune compétence n'est Elite
+        // En Saison 3, on applique SEASON_3_ELITE_SKILLS
+        let finalIsElite = false;
         const finalIsPassive = skillDef.isPassive || false;
         const finalIsModified = skillDef.isModified || false;
+
+        // Appliquer les modifications spécifiques à la Saison 3
+        if (isSeason3) {
+          // Changements de catégorie pour la Saison 3
+          if (SEASON_3_CATEGORY_CHANGES[skillDef.slug]) {
+            finalCategory = SEASON_3_CATEGORY_CHANGES[skillDef.slug];
+          }
+          // Compétences Elite pour la Saison 3 uniquement
+          if (SEASON_3_ELITE_SKILLS.includes(skillDef.slug)) {
+            finalIsElite = true;
+          }
+          // Renommages pour la Saison 3
+          const renamed = SEASON_3_RENAMED_SKILLS[skillDef.slug];
+          if (renamed) {
+            if (renamed.nameFr) finalNameFr = renamed.nameFr;
+            if (renamed.nameEn) finalNameEn = renamed.nameEn;
+          }
+        }
 
         if (existing) {
           await prisma.skill.update({
@@ -82,7 +132,57 @@ async function main() {
       }
     }
   }
-  console.log(`✅ Compétences: ${skillsCreated} créées, ${skillsSkipped} mises à jour\n`);
+
+  // =============================================================================
+  // 1b. SEED DES NOUVELLES COMPÉTENCES SAISON 3
+  // =============================================================================
+  console.log("📚 Seed des nouvelles compétences Saison 3...");
+  let s3SkillsCreated = 0;
+  let s3SkillsUpdated = 0;
+
+  for (const s3Skill of SEASON_3_NEW_SKILLS) {
+    try {
+      const existing = await prisma.skill.findUnique({
+        where: { slug_ruleset: { slug: s3Skill.slug, ruleset: "season_3" } }
+      });
+
+      if (existing) {
+        await prisma.skill.update({
+          where: { slug_ruleset: { slug: s3Skill.slug, ruleset: "season_3" } },
+          data: {
+            nameFr: s3Skill.nameFr,
+            nameEn: s3Skill.nameEn,
+            description: s3Skill.description,
+            descriptionEn: s3Skill.descriptionEn || null,
+            category: s3Skill.category,
+            isElite: s3Skill.isElite || false,
+            isPassive: s3Skill.isPassive || false,
+          }
+        });
+        s3SkillsUpdated++;
+      } else {
+        await prisma.skill.create({
+          data: {
+            slug: s3Skill.slug,
+            ruleset: "season_3",
+            nameFr: s3Skill.nameFr,
+            nameEn: s3Skill.nameEn,
+            description: s3Skill.description,
+            descriptionEn: s3Skill.descriptionEn || null,
+            category: s3Skill.category,
+            isElite: s3Skill.isElite || false,
+            isPassive: s3Skill.isPassive || false,
+          }
+        });
+        s3SkillsCreated++;
+      }
+    } catch (error) {
+      console.error(`❌ Erreur lors du seed de la compétence S3 ${s3Skill.slug}:`, error);
+    }
+  }
+
+  console.log(`✅ Compétences: ${skillsCreated} créées, ${skillsSkipped} mises à jour`);
+  console.log(`✅ Nouvelles compétences S3: ${s3SkillsCreated} créées, ${s3SkillsUpdated} mises à jour\n`);
 
   // =============================================================================
   // 2. SEED DES ROSTERS
