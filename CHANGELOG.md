@@ -1,3 +1,10 @@
+## [1.26.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.25.0...v1.26.0) (2025-11-25)
+
+
+### ✨ Features
+
+* refactor star player management for multi-ruleset support ([2af9fc6](https://github.com/Ryxeuf/fantasy-football-game/commit/2af9fc62aea99e970ef01241e6f8d089e3cd50ed))
+
 ## [1.25.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.24.0...v1.25.0) (2025-11-25)
 
 
