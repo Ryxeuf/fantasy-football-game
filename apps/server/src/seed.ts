@@ -8,7 +8,7 @@ import {
   DEFAULT_RULESET,
   type Ruleset,
 } from "../../../packages/game-engine/src/rosters/positions";
-import { STAR_PLAYERS } from "../../../packages/game-engine/src/rosters/star-players";
+import { STAR_PLAYERS_BY_RULESET } from "../../../packages/game-engine/src/rosters/star-players";
 import { STATIC_SKILLS_DATA } from "./static-skills-data";
 import { UNKNOWN_USER_ID } from "./utils/user-constants";
 
@@ -283,92 +283,94 @@ async function main() {
   let starPlayersCreated = 0;
   let starPlayersSkipped = 0;
   
-  for (const [slug, starPlayerDef] of Object.entries(STAR_PLAYERS)) {
-    try {
-      const existing = await prisma.starPlayer.findUnique({
-        where: { slug }
-      });
-
-      const starPlayerData = {
-        slug,
-        displayName: starPlayerDef.displayName,
-        cost: starPlayerDef.cost,
-        ma: starPlayerDef.ma,
-        st: starPlayerDef.st,
-        ag: starPlayerDef.ag,
-        pa: starPlayerDef.pa ?? null,
-        av: starPlayerDef.av,
-        specialRule: starPlayerDef.specialRule ?? null,
-        imageUrl: starPlayerDef.imageUrl ?? null,
-        isMegaStar: starPlayerDef.isMegaStar ?? false,
-      };
-
-      let starPlayer;
-      if (existing) {
-        starPlayer = await prisma.starPlayer.update({
-          where: { slug },
-          data: starPlayerData
+  for (const ruleset of RULESETS) {
+    const starPlayersMap = STAR_PLAYERS_BY_RULESET[ruleset];
+    for (const [slug, starPlayerDef] of Object.entries(starPlayersMap)) {
+      try {
+        const existing = await prisma.starPlayer.findUnique({
+          where: { slug_ruleset: { slug, ruleset } }
         });
-        starPlayersSkipped++;
-      } else {
-        starPlayer = await prisma.starPlayer.create({
-          data: starPlayerData
-        });
-        starPlayersCreated++;
-      }
 
-      // Supprimer les anciennes relations de compétences pour ce Star Player
-      await prisma.starPlayerSkill.deleteMany({
-        where: { starPlayerId: starPlayer.id }
-      });
+        const starPlayerData = {
+          slug,
+          ruleset,
+          displayName: starPlayerDef.displayName,
+          cost: starPlayerDef.cost,
+          ma: starPlayerDef.ma,
+          st: starPlayerDef.st,
+          ag: starPlayerDef.ag,
+          pa: starPlayerDef.pa ?? null,
+          av: starPlayerDef.av,
+          specialRule: starPlayerDef.specialRule ?? null,
+          imageUrl: starPlayerDef.imageUrl ?? null,
+          isMegaStar: starPlayerDef.isMegaStar ?? false,
+        };
 
-      // Créer les nouvelles relations de compétences
-      if (starPlayerDef.skills && starPlayerDef.skills.trim() !== '') {
-        const skillSlugs = starPlayerDef.skills.split(',').map(s => s.trim()).filter(s => s.length > 0);
-        
-        for (const skillSlug of skillSlugs) {
-          const skill = await prisma.skill.findUnique({
-            where: { slug: skillSlug }
+        let starPlayer;
+        if (existing) {
+          starPlayer = await prisma.starPlayer.update({
+            where: { slug_ruleset: { slug, ruleset } },
+            data: starPlayerData
           });
+          starPlayersSkipped++;
+        } else {
+          starPlayer = await prisma.starPlayer.create({
+            data: starPlayerData
+          });
+          starPlayersCreated++;
+        }
 
-          if (skill) {
-            await prisma.starPlayerSkill.create({
+        // Supprimer les anciennes relations de compétences pour ce Star Player
+        await prisma.starPlayerSkill.deleteMany({
+          where: { starPlayerId: starPlayer.id }
+        });
+
+        // Créer les nouvelles relations de compétences
+        if (starPlayerDef.skills && starPlayerDef.skills.trim() !== '') {
+          const skillSlugs = starPlayerDef.skills.split(',').map(s => s.trim()).filter(s => s.length > 0);
+          
+          for (const skillSlug of skillSlugs) {
+            const skill = await prisma.skill.findUnique({
+              where: { slug: skillSlug }
+            });
+
+            if (skill) {
+              await prisma.starPlayerSkill.create({
+                data: {
+                  starPlayerId: starPlayer.id,
+                  skillId: skill.id,
+                }
+              });
+            } else {
+              console.warn(`⚠️  Compétence ${skillSlug} non trouvée pour le Star Player ${slug} (${ruleset})`);
+            }
+          }
+        }
+
+        // Supprimer les anciennes relations hirableBy
+        await prisma.starPlayerHirableBy.deleteMany({
+          where: { starPlayerId: starPlayer.id }
+        });
+
+        // Créer les nouvelles relations hirableBy
+        for (const rule of starPlayerDef.hirableBy) {
+          // Si la règle est "all", on ne crée pas de relation avec un roster spécifique
+          if (rule === 'all') {
+            await prisma.starPlayerHirableBy.create({
               data: {
                 starPlayerId: starPlayer.id,
-                skillId: skill.id,
+                rule: 'all',
+                rosterId: null,
               }
             });
           } else {
-            console.warn(`⚠️  Compétence ${skillSlug} non trouvée pour le Star Player ${slug}`);
-          }
-        }
-      }
+            // Chercher si c'est un slug de roster pour le même ruleset
+            const roster = await prisma.roster.findUnique({
+              where: { slug_ruleset: { slug: rule, ruleset } },
+              select: { id: true },
+            });
 
-      // Supprimer les anciennes relations hirableBy
-      await prisma.starPlayerHirableBy.deleteMany({
-        where: { starPlayerId: starPlayer.id }
-      });
-
-      // Créer les nouvelles relations hirableBy
-      for (const rule of starPlayerDef.hirableBy) {
-        // Si la règle est "all", on ne crée pas de relation avec un roster spécifique
-        if (rule === 'all') {
-          await prisma.starPlayerHirableBy.create({
-            data: {
-              starPlayerId: starPlayer.id,
-              rule: 'all',
-              rosterId: null,
-            }
-          });
-        } else {
-          // Chercher si c'est un slug de roster (toutes déclinaisons de ruleset)
-          const rosters = await prisma.roster.findMany({
-            where: { slug: rule },
-            select: { id: true },
-          });
-
-          if (rosters.length > 0) {
-            for (const roster of rosters) {
+            if (roster) {
               await prisma.starPlayerHirableBy.create({
                 data: {
                   starPlayerId: starPlayer.id,
@@ -376,21 +378,21 @@ async function main() {
                   rosterId: roster.id,
                 },
               });
+            } else {
+              // C'est une règle régionale (ex: "old_world_classic", "lustrian_superleague", etc.)
+              await prisma.starPlayerHirableBy.create({
+                data: {
+                  starPlayerId: starPlayer.id,
+                  rule,
+                  rosterId: null,
+                },
+              });
             }
-          } else {
-            // C'est une règle régionale (ex: "old_world_classic", "lustrian_superleague", etc.)
-            await prisma.starPlayerHirableBy.create({
-              data: {
-                starPlayerId: starPlayer.id,
-                rule,
-                rosterId: null,
-              },
-            });
           }
         }
+      } catch (error) {
+        console.error(`❌ Erreur lors du seed du Star Player ${slug} (${ruleset}):`, error);
       }
-    } catch (error) {
-      console.error(`❌ Erreur lors du seed du Star Player ${slug}:`, error);
     }
   }
   console.log(`✅ Star Players: ${starPlayersCreated} créés, ${starPlayersSkipped} mis à jour\n`);

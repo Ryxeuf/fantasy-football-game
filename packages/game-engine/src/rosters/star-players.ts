@@ -23,9 +23,9 @@ const getFallbackSpecialRule = (name: string) =>
   `Consultez le Livre de Règles Blood Bowl pour connaître la règle spéciale complète de ${name}.`;
 
 /**
- * Liste complète des Star Players disponibles
+ * Liste complète des Star Players disponibles pour la saison 2
  */
-export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
+const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
   akhorne_the_squirrel: {
     slug: "akhorne_the_squirrel",
     displayName: "Akhorne The Squirrel",
@@ -959,17 +959,42 @@ export const STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
 
 };
 
-Object.values(STAR_PLAYERS).forEach((player) => {
-  if (!player.specialRule || player.specialRule.trim() === "") {
-    player.specialRule = getFallbackSpecialRule(player.displayName);
-  }
+// Fonction pour cloner un Star Player
+const cloneStarPlayer = (source: StarPlayerDefinition): StarPlayerDefinition => ({
+  ...source,
+  hirableBy: [...source.hirableBy],
+});
+
+// Fonction pour cloner tout le mapping de Star Players
+const cloneStarPlayersMap = (source: Record<string, StarPlayerDefinition>): Record<string, StarPlayerDefinition> =>
+  Object.fromEntries(
+    Object.entries(source).map(([slug, player]) => [slug, cloneStarPlayer(player)]),
+  );
+
+// Export du mapping des Star Players par ruleset
+export const STAR_PLAYERS_BY_RULESET: Record<Ruleset, Record<string, StarPlayerDefinition>> = {
+  season_2: SEASON_TWO_STAR_PLAYERS,
+  season_3: cloneStarPlayersMap(SEASON_TWO_STAR_PLAYERS),
+};
+
+// Export de STAR_PLAYERS pour la compatibilité avec le code existant (utilise le ruleset par défaut)
+export const STAR_PLAYERS = STAR_PLAYERS_BY_RULESET[DEFAULT_RULESET];
+
+// Appliquer les règles spéciales par défaut pour tous les rulesets
+Object.values(STAR_PLAYERS_BY_RULESET).forEach((starPlayersMap) => {
+  Object.values(starPlayersMap).forEach((player) => {
+    if (!player.specialRule || player.specialRule.trim() === "") {
+      player.specialRule = getFallbackSpecialRule(player.displayName);
+    }
+  });
 });
 
 /**
  * Obtenir un Star Player par son slug
  */
-export function getStarPlayerBySlug(slug: string): StarPlayerDefinition | undefined {
-  return STAR_PLAYERS[slug];
+export function getStarPlayerBySlug(slug: string, ruleset: Ruleset = DEFAULT_RULESET): StarPlayerDefinition | undefined {
+  const starPlayersMap = STAR_PLAYERS_BY_RULESET[ruleset] ?? STAR_PLAYERS_BY_RULESET[DEFAULT_RULESET];
+  return starPlayersMap[slug];
 }
 
 /**
@@ -982,11 +1007,12 @@ export function getAvailableStarPlayers(
   teamRegionalRules: string[] = [],
   ruleset: Ruleset = DEFAULT_RULESET,
 ): StarPlayerDefinition[] {
+  const starPlayersMap = STAR_PLAYERS_BY_RULESET[ruleset] ?? STAR_PLAYERS_BY_RULESET[DEFAULT_RULESET];
   const rules =
     teamRegionalRules.length > 0
       ? teamRegionalRules
       : getRegionalRulesForTeam(teamRoster, ruleset);
-  return Object.values(STAR_PLAYERS).filter(starPlayer => {
+  return Object.values(starPlayersMap).filter(starPlayer => {
     // Si le Star Player est disponible pour tous
     if (starPlayer.hirableBy.includes("all")) {
       return true;

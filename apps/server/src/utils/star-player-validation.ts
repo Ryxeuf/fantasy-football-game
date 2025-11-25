@@ -30,7 +30,7 @@ export function validateStarPlayerHire(
   ruleset: Ruleset = DEFAULT_RULESET,
 ): StarPlayerValidationResult {
   // 1. Vérifier que le Star Player existe
-  const starPlayer = getStarPlayerBySlug(starPlayerSlug);
+  const starPlayer = getStarPlayerBySlug(starPlayerSlug, ruleset);
   if (!starPlayer) {
     return {
       valid: false,
@@ -132,11 +132,11 @@ export function validateStarPlayerPairs(
 /**
  * Calcule le coût total des Star Players en incluant les paires
  */
-export function calculateStarPlayersCost(starPlayerSlugs: string[]): number {
+export function calculateStarPlayersCost(starPlayerSlugs: string[], ruleset: Ruleset = DEFAULT_RULESET): number {
   let totalCost = 0;
 
   for (const slug of starPlayerSlugs) {
-    const starPlayer = getStarPlayerBySlug(slug);
+    const starPlayer = getStarPlayerBySlug(slug, ruleset);
     if (starPlayer) {
       totalCost += starPlayer.cost;
     }
@@ -216,7 +216,7 @@ export function validateStarPlayersForTeam(
   const availableSlugs = new Set(availablePlayers.map((sp) => sp.slug));
 
   for (const slug of starPlayerSlugs) {
-    const starPlayer = getStarPlayerBySlug(slug);
+    const starPlayer = getStarPlayerBySlug(slug, ruleset);
     if (!starPlayer) {
       return {
         valid: false,
@@ -242,7 +242,7 @@ export function validateStarPlayersForTeam(
   }
 
   // 5. Vérifier le budget
-  const totalCost = calculateStarPlayersCost(starPlayerSlugs);
+  const totalCost = calculateStarPlayersCost(starPlayerSlugs, ruleset);
   if (totalCost > availableBudget) {
     return {
       valid: false,

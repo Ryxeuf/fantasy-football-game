@@ -14,39 +14,39 @@ enum Ruleset {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  passwordHash String
-  name      String?  // Conservé pour rétrocompatibilité
-  coachName String   // Nom de coach (obligatoire)
-  firstName String?  // Prénom (optionnel)
-  lastName  String?  // Nom (optionnel)
-  dateOfBirth DateTime? // Date de naissance (optionnel)
+  id                  String          @id @default(cuid())
+  email               String          @unique
+  passwordHash        String
+  name                String? // Conservé pour rétrocompatibilité
+  coachName           String // Nom de coach (obligatoire)
+  firstName           String? // Prénom (optionnel)
+  lastName            String? // Nom (optionnel)
+  dateOfBirth         DateTime? // Date de naissance (optionnel)
   /// Rôle principal (conservé pour compatibilité, ex: "user" | "admin")
-  role      String   @default("user")
+  role                String          @default("user")
   /// Liste complète des rôles (ex: ["user","admin"])
-  roles     String[] @default([])
-  patreon   Boolean  @default(false)
-  valid     Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  matches   Match[]
-  createdMatches Match[] @relation("MatchCreator")
-  teams     Team[]
-  teamSelections TeamSelection[]
-  createdCups Cup[] @relation("CupCreator")
-  createdLocalMatches LocalMatch[] @relation("LocalMatchCreator")
+  roles               String[]        @default([])
+  patreon             Boolean         @default(false)
+  valid               Boolean         @default(false)
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  matches             Match[]
+  createdMatches      Match[]         @relation("MatchCreator")
+  teams               Team[]
+  teamSelections      TeamSelection[]
+  createdCups         Cup[]           @relation("CupCreator")
+  createdLocalMatches LocalMatch[]    @relation("LocalMatchCreator")
 }
 
 model Match {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  status    String
-  seed      String
-  creator    User?   @relation("MatchCreator", fields: [creatorId], references: [id])
-  creatorId  String?
-  players   User[]
-  turns     Turn[]
+  id             String          @id @default(cuid())
+  createdAt      DateTime        @default(now())
+  status         String
+  seed           String
+  creator        User?           @relation("MatchCreator", fields: [creatorId], references: [id])
+  creatorId      String?
+  players        User[]
+  turns          Turn[]
   teamSelections TeamSelection[]
 }
 
@@ -76,101 +76,101 @@ model TeamSelection {
 }
 
 model Team {
-  id        String   @id @default(cuid())
-  owner     User     @relation(fields: [ownerId], references: [id])
-  ownerId   String
-  name      String
-  roster    String   // 'skaven' | 'lizardmen'
-  ruleset   Ruleset  @default(season_2)
-  createdAt DateTime @default(now())
-  players   TeamPlayer[]
-  starPlayers TeamStarPlayer[]
-  selections TeamSelection[]
-  cupParticipants CupParticipant[]
-  localMatchesAsTeamA LocalMatch[] @relation("LocalMatchTeamA")
-  localMatchesAsTeamB LocalMatch[] @relation("LocalMatchTeamB")
+  id                  String           @id @default(cuid())
+  owner               User             @relation(fields: [ownerId], references: [id])
+  ownerId             String
+  name                String
+  roster              String // 'skaven' | 'lizardmen'
+  ruleset             Ruleset          @default(season_2)
+  createdAt           DateTime         @default(now())
+  players             TeamPlayer[]
+  starPlayers         TeamStarPlayer[]
+  selections          TeamSelection[]
+  cupParticipants     CupParticipant[]
+  localMatchesAsTeamA LocalMatch[]     @relation("LocalMatchTeamA")
+  localMatchesAsTeamB LocalMatch[]     @relation("LocalMatchTeamB")
 
   // Informations d'équipe Blood Bowl
-  treasury      Int @default(0)        // Trésorerie en pièces d'or (calculée automatiquement)
-  rerolls       Int @default(0)        // Nombre de relances (0-8)
-  cheerleaders  Int @default(0)        // Nombre de cheerleaders (0-12)
-  assistants    Int @default(0)        // Nombre d'assistants (0-6)
+  treasury      Int     @default(0) // Trésorerie en pièces d'or (calculée automatiquement)
+  rerolls       Int     @default(0) // Nombre de relances (0-8)
+  cheerleaders  Int     @default(0) // Nombre de cheerleaders (0-12)
+  assistants    Int     @default(0) // Nombre d'assistants (0-6)
   apothecary    Boolean @default(false) // Présence d'un apothicaire
-  dedicatedFans Int @default(1)        // Nombre de fans dévoués (1-6)
+  dedicatedFans Int     @default(1) // Nombre de fans dévoués (1-6)
 
   // Valeurs calculées automatiquement selon les règles Blood Bowl
-  teamValue     Int @default(0)        // VE - Valeur d'Équipe (calculée)
-  currentValue  Int @default(0)        // VEA - Valeur d'Équipe Actuelle (calculée)
-  initialBudget Int @default(0)        // Budget initial saisi par l'utilisateur lors de la création
+  teamValue     Int @default(0) // VE - Valeur d'Équipe (calculée)
+  currentValue  Int @default(0) // VEA - Valeur d'Équipe Actuelle (calculée)
+  initialBudget Int @default(0) // Budget initial saisi par l'utilisateur lors de la création
 }
 
 model TeamPlayer {
-  id        String   @id @default(cuid())
-  team      Team     @relation(fields: [teamId], references: [id])
-  teamId    String
-  name      String
-  position  String
-  number    Int
-  ma        Int
-  st        Int
-  ag        Int
-  pa        Int
-  av        Int
-  skills    String
+  id       String @id @default(cuid())
+  team     Team   @relation(fields: [teamId], references: [id])
+  teamId   String
+  name     String
+  position String
+  number   Int
+  ma       Int
+  st       Int
+  ag       Int
+  pa       Int
+  av       Int
+  skills   String
 }
 
 model TeamStarPlayer {
-  id            String   @id @default(cuid())
-  team          Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId        String
-  starPlayerSlug String  // Slug du Star Player (ex: 'griff_oberwald')
-  cost          Int      // Coût en po au moment du recrutement
-  hiredAt       DateTime @default(now())
-  
+  id             String   @id @default(cuid())
+  team           Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId         String
+  starPlayerSlug String // Slug du Star Player (ex: 'griff_oberwald')
+  cost           Int // Coût en po au moment du recrutement
+  hiredAt        DateTime @default(now())
+
   @@unique([teamId, starPlayerSlug]) // Un même Star Player ne peut être recruté qu'une fois par équipe
   @@index([teamId])
 }
 
 // Modèle pour les compétences (skills)
 model Skill {
-  id          String   @id @default(cuid())
-  slug        String   @unique // Identifiant unique (ex: "block", "dodge")
-  nameFr      String   // Nom français (ex: "Blocage")
-  nameEn      String   // Nom anglais (ex: "Block")
-  description String   // Description française de la compétence
+  id            String   @id @default(cuid())
+  slug          String   @unique // Identifiant unique (ex: "block", "dodge")
+  nameFr        String // Nom français (ex: "Blocage")
+  nameEn        String // Nom anglais (ex: "Block")
+  description   String // Description française de la compétence
   descriptionEn String? // Description anglaise de la compétence (optionnelle pour compatibilité)
-  category    String   // "General" | "Agility" | "Strength" | "Passing" | "Mutation" | "Trait" | "Scélérates"
-  isElite     Boolean  @default(false) // Compétence Elite (+10 000 de valeur d'équipe)
-  isPassive   Boolean  @default(false) // Compétence passive (soulignée)
-  isModified  Boolean  @default(false) // Compétence modifiée ou nouveau nom (astérisque)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  category      String // "General" | "Agility" | "Strength" | "Passing" | "Mutation" | "Trait" | "Scélérates"
+  isElite       Boolean  @default(false) // Compétence Elite (+10 000 de valeur d'équipe)
+  isPassive     Boolean  @default(false) // Compétence passive (soulignée)
+  isModified    Boolean  @default(false) // Compétence modifiée ou nouveau nom (astérisque)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
   // Relations
-  positionSkills    PositionSkill[]
-  starPlayerSkills  StarPlayerSkill[]
+  positionSkills   PositionSkill[]
+  starPlayerSkills StarPlayerSkill[]
 }
 
 // Modèle pour les rosters d'équipes
 model Roster {
   id            String   @id @default(cuid())
-  slug          String   // Identifiant unique (ex: "skaven", "lizardmen")
+  slug          String // Identifiant unique (ex: "skaven", "lizardmen")
   ruleset       Ruleset  @default(season_2)
-  name          String   // Nom d'affichage en français (ex: "Skavens")
-  nameEn        String   // Nom d'affichage en anglais (ex: "Skaven")
-  descriptionFr String?  // Description en français
-  descriptionEn String?  // Description en anglais
-  budget        Int      // Budget de départ en kpo
-  tier          String   // "I" | "II" | "III" | "IV"
-  regionalRules String?  // Règles régionales (JSON array, ex: ["elven_kingdoms_league"])
-  specialRules  String?  // Règles spéciales (texte libre)
+  name          String // Nom d'affichage en français (ex: "Skavens")
+  nameEn        String // Nom d'affichage en anglais (ex: "Skaven")
+  descriptionFr String? // Description en français
+  descriptionEn String? // Description en anglais
+  budget        Int // Budget de départ en kpo
+  tier          String // "I" | "II" | "III" | "IV"
+  regionalRules String? // Règles régionales (JSON array, ex: ["elven_kingdoms_league"])
+  specialRules  String? // Règles spéciales (texte libre)
   naf           Boolean  @default(false) // Disponible dans NAF
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  
+
   // Relations
-  positions     Position[]
-  hirableBy     StarPlayerHirableBy[] // Règles régionales qui peuvent recruter des star players
+  positions Position[]
+  hirableBy StarPlayerHirableBy[] // Règles régionales qui peuvent recruter des star players
 
   @@unique([slug, ruleset])
 }
@@ -180,23 +180,23 @@ model Position {
   id          String   @id @default(cuid())
   roster      Roster   @relation(fields: [rosterId], references: [id], onDelete: Cascade)
   rosterId    String
-  slug        String   // Slug unique (ex: "skaven_lineman")
-  displayName String   // Nom d'affichage (ex: "Lineman")
-  cost        Int      // Coût en kpo
-  min         Int      // Minimum requis
-  max         Int      // Maximum autorisé
-  ma          Int      // Movement Allowance
-  st          Int      // Strength
-  ag          Int      // Agility
-  pa          Int      // Passing
-  av          Int      // Armour Value
-  keywords    String?  // Mots-clés séparés par des virgules (ex: "elite,passive")
+  slug        String // Slug unique (ex: "skaven_lineman")
+  displayName String // Nom d'affichage (ex: "Lineman")
+  cost        Int // Coût en kpo
+  min         Int // Minimum requis
+  max         Int // Maximum autorisé
+  ma          Int // Movement Allowance
+  st          Int // Strength
+  ag          Int // Agility
+  pa          Int // Passing
+  av          Int // Armour Value
+  keywords    String? // Mots-clés séparés par des virgules (ex: "elite,passive")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   // Relations
-  skills      PositionSkill[]
-  
+  skills PositionSkill[]
+
   @@unique([rosterId, slug])
   @@index([rosterId])
 }
@@ -208,7 +208,7 @@ model PositionSkill {
   positionId String
   skill      Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
   skillId    String
-  
+
   @@unique([positionId, skillId])
   @@index([positionId])
   @@index([skillId])
@@ -217,33 +217,36 @@ model PositionSkill {
 // Modèle pour les Star Players
 model StarPlayer {
   id          String   @id @default(cuid())
-  slug        String   @unique // Identifiant unique (ex: "griff_oberwald")
-  displayName String   // Nom d'affichage
-  cost        Int      // Coût en po (pièces d'or)
-  ma          Int      // Movement Allowance
-  st          Int      // Strength
-  ag          Int      // Agility (valeur cible, ex: 3 pour 3+)
-  pa          Int?     // Passing (valeur cible, ex: 2 pour 2+, null pour -)
-  av          Int      // Armour Value (valeur cible, ex: 9 pour 9+)
+  slug        String // Identifiant unique (ex: "griff_oberwald")
+  ruleset     Ruleset  @default(season_2)
+  displayName String // Nom d'affichage
+  cost        Int // Coût en po (pièces d'or)
+  ma          Int // Movement Allowance
+  st          Int // Strength
+  ag          Int // Agility (valeur cible, ex: 3 pour 3+)
+  pa          Int? // Passing (valeur cible, ex: 2 pour 2+, null pour -)
+  av          Int // Armour Value (valeur cible, ex: 9 pour 9+)
   specialRule String? // Règle spéciale du joueur
   imageUrl    String? // URL de l'image du joueur
   isMegaStar  Boolean  @default(false) // Flag Mega Star
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   // Relations
-  skills      StarPlayerSkill[]
-  hirableBy   StarPlayerHirableBy[]
+  skills    StarPlayerSkill[]
+  hirableBy StarPlayerHirableBy[]
+
+  @@unique([slug, ruleset])
 }
 
 // Relation many-to-many entre StarPlayer et Skill
 model StarPlayerSkill {
-  id          String     @id @default(cuid())
-  starPlayer  StarPlayer @relation(fields: [starPlayerId], references: [id], onDelete: Cascade)
+  id           String     @id @default(cuid())
+  starPlayer   StarPlayer @relation(fields: [starPlayerId], references: [id], onDelete: Cascade)
   starPlayerId String
-  skill       Skill      @relation(fields: [skillId], references: [id], onDelete: Cascade)
-  skillId     String
-  
+  skill        Skill      @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  skillId      String
+
   @@unique([starPlayerId, skillId])
   @@index([starPlayerId])
   @@index([skillId])
@@ -251,13 +254,13 @@ model StarPlayerSkill {
 
 // Relation many-to-many entre StarPlayer et Roster (pour les règles régionales)
 model StarPlayerHirableBy {
-  id          String     @id @default(cuid())
-  starPlayer  StarPlayer @relation(fields: [starPlayerId], references: [id], onDelete: Cascade)
+  id           String     @id @default(cuid())
+  starPlayer   StarPlayer @relation(fields: [starPlayerId], references: [id], onDelete: Cascade)
   starPlayerId String
-  roster      Roster?    @relation(fields: [rosterId], references: [id], onDelete: Cascade)
-  rosterId    String?
-  rule        String     // Règle régionale (ex: "all", "old_world_classic", etc.)
-  
+  roster       Roster?    @relation(fields: [rosterId], references: [id], onDelete: Cascade)
+  rosterId     String?
+  rule         String // Règle régionale (ex: "all", "old_world_classic", etc.)
+
   @@unique([starPlayerId, rosterId, rule])
   @@index([starPlayerId])
   @@index([rosterId])
@@ -267,33 +270,33 @@ model StarPlayerHirableBy {
 // Modèle pour les coupes (tournois)
 model Cup {
   id        String   @id @default(cuid())
-  name      String   // Nom de la coupe (obligatoire)
+  name      String // Nom de la coupe (obligatoire)
   creator   User     @relation("CupCreator", fields: [creatorId], references: [id])
   creatorId String
   ruleset   Ruleset  @default(season_2)
   validated Boolean  @default(false) // Si true, la coupe est validée et fermée aux inscriptions
-  isPublic  Boolean  @default(true)  // Si true, la coupe est publique et apparaît dans la liste
+  isPublic  Boolean  @default(true) // Si true, la coupe est publique et apparaît dans la liste
   status    String   @default("ouverte") // Statut: "ouverte", "en_cours", "terminee", "archivee"
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   /// Configuration des points pour cette coupe
   /// Ces valeurs sont utilisées pour calculer le classement, mais
   /// les compteurs d'actions restent dérivés des matchs et ne sont pas éditables.
-  winPoints          Int @default(1000)  // Points pour une victoire
-  drawPoints         Int @default(400)   // Points pour un match nul
-  lossPoints         Int @default(0)     // Points pour une défaite
-  forfeitPoints      Int @default(-100)  // Points pour un forfait
+  winPoints     Int @default(1000) // Points pour une victoire
+  drawPoints    Int @default(400) // Points pour un match nul
+  lossPoints    Int @default(0) // Points pour une défaite
+  forfeitPoints Int @default(-100) // Points pour un forfait
 
-  touchdownPoints    Int @default(5)     // Points par touchdown marqué
-  blockCasualtyPoints Int @default(3)    // Points par sortie sur blocage/blitz
-  foulCasualtyPoints  Int @default(2)    // Points par sortie sur agression
-  passPoints         Int @default(2)     // Points par passe réussie
-  
+  touchdownPoints     Int @default(5) // Points par touchdown marqué
+  blockCasualtyPoints Int @default(3) // Points par sortie sur blocage/blitz
+  foulCasualtyPoints  Int @default(2) // Points par sortie sur agression
+  passPoints          Int @default(2) // Points par passe réussie
+
   // Relations
   participants CupParticipant[]
   localMatches LocalMatch[]
-  
+
   @@index([creatorId])
   @@index([validated])
   @@index([isPublic])
@@ -308,7 +311,7 @@ model CupParticipant {
   team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
   teamId    String
   createdAt DateTime @default(now())
-  
+
   @@unique([cupId, teamId])
   @@index([cupId])
   @@index([teamId])
@@ -316,43 +319,43 @@ model CupParticipant {
 
 // Modèle pour les parties offline (Match Local)
 model LocalMatch {
-  id        String   @id @default(cuid())
-  name      String?  // Nom optionnel pour la partie
-  status    String   @default("pending") // "pending", "waiting_for_player", "in_progress", "completed", "cancelled"
-  isPublic  Boolean  @default(true) // Si true, le match est visible publiquement dans la liste
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  startedAt DateTime? // Date de début de la partie
+  id          String    @id @default(cuid())
+  name        String? // Nom optionnel pour la partie
+  status      String    @default("pending") // "pending", "waiting_for_player", "in_progress", "completed", "cancelled"
+  isPublic    Boolean   @default(true) // Si true, le match est visible publiquement dans la liste
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  startedAt   DateTime? // Date de début de la partie
   completedAt DateTime? // Date de fin de la partie
-  
+
   // Créateur de la partie
-  creator   User     @relation("LocalMatchCreator", fields: [creatorId], references: [id])
+  creator   User   @relation("LocalMatchCreator", fields: [creatorId], references: [id])
   creatorId String
-  
+
   // Les deux équipes qui s'affrontent
-  teamA     Team     @relation("LocalMatchTeamA", fields: [teamAId], references: [id])
-  teamAId   String
-  teamB     Team?    @relation("LocalMatchTeamB", fields: [teamBId], references: [id], onDelete: SetNull)
-  teamBId   String?
-  
+  teamA   Team    @relation("LocalMatchTeamA", fields: [teamAId], references: [id])
+  teamAId String
+  teamB   Team?   @relation("LocalMatchTeamB", fields: [teamBId], references: [id], onDelete: SetNull)
+  teamBId String?
+
   // Relation optionnelle avec une coupe
-  cup       Cup?     @relation(fields: [cupId], references: [id], onDelete: SetNull)
-  cupId     String?
-  
+  cup   Cup?    @relation(fields: [cupId], references: [id], onDelete: SetNull)
+  cupId String?
+
   // Lien de partage pour inviter le second joueur
   shareToken String? @unique // Token unique pour le lien de partage
-  
+
   // Validation de participation des propriétaires des équipes
   teamAOwnerValidated Boolean @default(false) // Le propriétaire de l'équipe A a validé sa participation
   teamBOwnerValidated Boolean @default(false) // Le propriétaire de l'équipe B a validé sa participation
-  
+
   // État du jeu sauvegardé (JSON)
-  gameState Json?    // État complet du jeu pour reprise
-  
+  gameState Json? // État complet du jeu pour reprise
+
   // Résultat du match (optionnel, rempli à la fin)
-  scoreTeamA Int?    // Score de l'équipe A
-  scoreTeamB Int?    // Score de l'équipe B
-  
+  scoreTeamA Int? // Score de l'équipe A
+  scoreTeamB Int? // Score de l'équipe B
+
   // Actions manuelles enregistrées pour le match
   actions LocalMatchAction[]
 
@@ -368,43 +371,43 @@ model LocalMatch {
 
 // Modèle pour les actions manuelles d'un match local
 model LocalMatchAction {
-  id        String   @id @default(cuid())
-  match     LocalMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
-  matchId   String
-  
+  id      String     @id @default(cuid())
+  match   LocalMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  matchId String
+
   // Informations sur l'action
-  half      Int      // Mi-temps (1 ou 2)
-  turn      Int      // Tour (1-8)
-  actionType String   // Type d'action: "passe", "reception", "td", "blocage", "blitz", "transmission", "aggression", "sprint", "esquive", "apothicaire", "interception"
-  
+  half       Int // Mi-temps (1 ou 2)
+  turn       Int // Tour (1-8)
+  actionType String // Type d'action: "passe", "reception", "td", "blocage", "blitz", "transmission", "aggression", "sprint", "esquive", "apothicaire", "interception"
+
   // Joueur qui effectue l'action
-  playerId  String   // ID du joueur (peut être un ID de joueur de l'équipe A ou B)
-  playerName String  // Nom du joueur (pour référence)
-  playerTeam String  // "A" ou "B"
-  
+  playerId   String // ID du joueur (peut être un ID de joueur de l'équipe A ou B)
+  playerName String // Nom du joueur (pour référence)
+  playerTeam String // "A" ou "B"
+
   // Adversaire concerné (optionnel)
-  opponentId String? // ID du joueur adverse (si applicable)
+  opponentId   String? // ID du joueur adverse (si applicable)
   opponentName String? // Nom du joueur adverse (si applicable)
-  
+
   // Résultat du dé (optionnel)
-  diceResult Int?    // Résultat du dé (1-6, ou autre selon le type d'action)
-  
+  diceResult Int? // Résultat du dé (1-6, ou autre selon le type d'action)
+
   // Échec (fumble)
-  fumble     Boolean @default(false) // Si true, l'action a échoué (fumble)
-  
+  fumble Boolean @default(false) // Si true, l'action a échoué (fumble)
+
   // État du joueur en cas d'échec (sauf pour passe, transmission, réception, apothicaire, interception)
   playerState String? // État du joueur si l'action échoue: "sonne", "ko", "elimine"
-  
+
   // Champs spécifiques pour blitz et blocage
-  armorBroken Boolean @default(false) // Si true, l'armure de l'adversaire est passée
+  armorBroken   Boolean @default(false) // Si true, l'armure de l'adversaire est passée
   opponentState String? // État de l'adversaire si armure passée: "sonne", "ko", "elimine"
-  
+
   // Champ spécifique pour passe
   passType String? // Type de passe: "rapide", "courte", "longue", "longue_bombe"
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@index([matchId])
   @@index([half, turn])
   @@index([createdAt])
