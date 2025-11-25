@@ -1,5 +1,9 @@
 import { DEFAULT_RULESET, RULESETS, type Ruleset } from "@bb/game-engine";
 
+export function isValidRuleset(value?: string | null): value is Ruleset {
+  return !!value && RULESETS.includes(value.toLowerCase() as Ruleset);
+}
+
 export function resolveRuleset(value?: string | null): Ruleset {
   if (value) {
     const normalized = value.toLowerCase() as Ruleset;

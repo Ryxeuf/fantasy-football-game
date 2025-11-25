@@ -20,7 +20,7 @@ import {
   requiresPair,
 } from "../utils/star-player-validation";
 import { getRosterFromDb } from "../utils/roster-helpers";
-import { resolveRuleset } from "../utils/ruleset-helpers";
+import { resolveRuleset, isValidRuleset } from "../utils/ruleset-helpers";
 
 const router = Router();
 const ALLOWED_TEAMS = [
@@ -310,7 +310,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
   
   // Enrichir les Star Players avec leurs données complètes
   const enrichedStarPlayers = team.starPlayers.map((sp: any) => {
-    const starPlayerData = getStarPlayerBySlug(sp.starPlayerSlug);
+    const starPlayerData = getStarPlayerBySlug(sp.starPlayerSlug, team.ruleset);
     return {
       id: sp.id,
       slug: sp.starPlayerSlug,
@@ -562,7 +562,7 @@ router.post(
     // Recruter les Star Players si fournis
     if (starPlayersToHire.length > 0) {
       const starPlayersData = starPlayersToHire.map((slug: string) => {
-        const sp = getStarPlayerBySlug(slug);
+        const sp = getStarPlayerBySlug(slug, ruleset);
         return {
           teamId: team.id,
           starPlayerSlug: slug,
@@ -588,7 +588,7 @@ router.post(
     const enrichedTeam = {
       ...withPlayers,
       starPlayers: withPlayers?.starPlayers.map((sp: any) => {
-        const starPlayerData = getStarPlayerBySlug(sp.starPlayerSlug);
+        const starPlayerData = getStarPlayerBySlug(sp.starPlayerSlug, withPlayers.ruleset);
         return {
           id: sp.id,
           slug: sp.starPlayerSlug,
@@ -663,7 +663,7 @@ router.post("/build", authUser, async (req: AuthenticatedRequest, res) => {
     }
 
     // Calculer le coût des Star Players
-    starPlayersCost = calculateStarPlayersCost(starPlayersToHire) / 1000; // Convertir en K po
+    starPlayersCost = calculateStarPlayersCost(starPlayersToHire, ruleset) / 1000; // Convertir en K po
     
     // Valider la disponibilité pour ce roster
     const budgetInPo = finalTeamValue * 1000;
@@ -732,7 +732,7 @@ router.post("/build", authUser, async (req: AuthenticatedRequest, res) => {
   // Recruter les Star Players si fournis
   if (starPlayersToHire.length > 0) {
     const starPlayersData = starPlayersToHire.map((slug: string) => {
-      const sp = getStarPlayerBySlug(slug);
+      const sp = getStarPlayerBySlug(slug, ruleset);
       return {
         teamId: team.id,
         starPlayerSlug: slug,
@@ -758,7 +758,7 @@ router.post("/build", authUser, async (req: AuthenticatedRequest, res) => {
   const enrichedTeam = {
     ...withPlayers,
     starPlayers: withPlayers?.starPlayers.map((sp: any) => {
-      const starPlayerData = getStarPlayerBySlug(sp.starPlayerSlug);
+      const starPlayerData = getStarPlayerBySlug(sp.starPlayerSlug, ruleset);
       return {
         id: sp.id,
         slug: sp.starPlayerSlug,
@@ -1384,7 +1384,7 @@ router.get("/:id/available-star-players", authUser, async (req: AuthenticatedReq
       if (pairSlug) {
         needsPair = true;
         const pairHired = hiredSlugs.has(pairSlug);
-        const pairData = getStarPlayerBySlug(pairSlug);
+        const pairData = getStarPlayerBySlug(pairSlug, team.ruleset);
         pairStatus = {
           slug: pairSlug,
           name: pairData?.displayName,
@@ -1503,7 +1503,7 @@ router.post("/:id/star-players", authUser, async (req: AuthenticatedRequest, res
       const pairAlreadyHired = team.starPlayers.some((sp: any) => sp.starPlayerSlug === pairSlug);
       
       if (!pairAlreadyHired) {
-        const pairData = getStarPlayerBySlug(pairSlug);
+        const pairData = getStarPlayerBySlug(pairSlug, team.ruleset);
         if (!pairData) {
           return res.status(400).json({ 
             error: `Star Player partenaire '${pairSlug}' introuvable` 
@@ -1557,7 +1557,7 @@ router.post("/:id/star-players", authUser, async (req: AuthenticatedRequest, res
 
     // Enrichir les Star Players recrutés
     const enrichedNewStarPlayers = createdStarPlayers.map((sp: any) => {
-      const starPlayerData = getStarPlayerBySlug(sp.starPlayerSlug);
+      const starPlayerData = getStarPlayerBySlug(sp.starPlayerSlug, team.ruleset);
       return {
         id: sp.id,
         slug: sp.starPlayerSlug,
