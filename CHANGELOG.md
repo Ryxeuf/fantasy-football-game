@@ -1,3 +1,16 @@
+## [1.25.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.24.0...v1.25.0) (2025-11-25)
+
+
+### ✨ Features
+
+* ajout duplication rosters/positions et édition ruleset ([e51b715](https://github.com/Ryxeuf/fantasy-football-game/commit/e51b715645e5c74b780a883ccf56bdaa27178a4d))
+* support multi-ruleset (S2/S3) avec administration complète ([7c6026a](https://github.com/Ryxeuf/fantasy-football-game/commit/7c6026a621c762579426094b4a6384373bfae3d3))
+
+
+### 🐛 Bug Fixes
+
+* add missing isValidRuleset function ([fb273c7](https://github.com/Ryxeuf/fantasy-football-game/commit/fb273c74ffcf054b0a4c55ce3306ba7429b3d43c))
+
 ## [1.24.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.23.0...v1.24.0) (2025-11-21)
 
 
