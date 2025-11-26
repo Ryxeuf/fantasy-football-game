@@ -1,5 +1,5 @@
 "use client";
-import { getRerollCost } from "@bb/game-engine";
+import { getRerollCost, RULESETS, DEFAULT_RULESET, type Ruleset } from "@bb/game-engine";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -38,6 +38,13 @@ export default function TeamDetailPage() {
   const [team, setTeam] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedRuleset, setSelectedRuleset] = useState<Ruleset>(DEFAULT_RULESET);
+  const [actualRuleset, setActualRuleset] = useState<Ruleset>(DEFAULT_RULESET);
+
+  const rulesetLabels: Record<string, string> = {
+    season_2: t.teams.rulesetSeason2 ?? "Saison 2 (2020)",
+    season_3: t.teams.rulesetSeason3 ?? "Saison 3 (2025)",
+  };
 
   useEffect(() => {
     async function fetchRoster() {
@@ -45,12 +52,13 @@ export default function TeamDetailPage() {
       try {
         setLoading(true);
         const lang = language === "en" ? "en" : "fr";
-        const response = await fetch(`${API_BASE}/api/rosters/${slug}?lang=${lang}`);
+        const response = await fetch(`${API_BASE}/api/rosters/${slug}?lang=${lang}&ruleset=${selectedRuleset}`);
         if (!response.ok) {
           throw new Error("Équipe introuvable");
         }
         const data = await response.json();
         setTeam(data.roster);
+        setActualRuleset(data.ruleset || selectedRuleset);
       } catch (err: any) {
         setError(err.message || "Erreur lors du chargement");
       } finally {
@@ -58,7 +66,7 @@ export default function TeamDetailPage() {
       }
     }
     fetchRoster();
-  }, [slug, language]);
+  }, [slug, language, selectedRuleset]);
 
   if (loading) {
     return (
@@ -114,13 +122,39 @@ export default function TeamDetailPage() {
             </span>
           </div>
         </div>
-        <Link
-          href={`/me/teams/new?roster=${slug}`}
-          className="px-4 sm:px-6 py-2.5 sm:py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium text-sm sm:text-base text-center whitespace-nowrap"
-        >
-          {t.teams.createTeamWithName.replace(/\{name\}/g, team.name)}
-        </Link>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          {/* Sélecteur de Ruleset */}
+          <div className="flex rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+            {RULESETS.map((ruleset) => (
+              <button
+                key={ruleset}
+                onClick={() => setSelectedRuleset(ruleset)}
+                className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
+                  selectedRuleset === ruleset
+                    ? "bg-emerald-600 text-white"
+                    : "bg-white text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                {rulesetLabels[ruleset]}
+              </button>
+            ))}
+          </div>
+          <Link
+            href={`/me/teams/new?roster=${slug}&ruleset=${selectedRuleset}`}
+            className="px-4 sm:px-6 py-2.5 sm:py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium text-sm sm:text-base text-center whitespace-nowrap"
+          >
+            {t.teams.createTeamWithName.replace(/\{name\}/g, team.name)}
+          </Link>
+        </div>
       </div>
+      
+      {/* Indicateur de fallback si le ruleset affiché diffère de celui sélectionné */}
+      {actualRuleset !== selectedRuleset && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-lg text-sm">
+          ⚠️ {t.teams.rulesetFallback?.replace("{selected}", rulesetLabels[selectedRuleset]).replace("{actual}", rulesetLabels[actualRuleset]) ?? 
+              `Ce roster n'est pas disponible en ${rulesetLabels[selectedRuleset]}. Affichage de la version ${rulesetLabels[actualRuleset]}.`}
+        </div>
+      )}
 
       {/* Informations générales */}
       <div className="bg-white rounded-lg border overflow-hidden">
@@ -231,6 +265,7 @@ export default function TeamDetailPage() {
                       position={position.slug}
                       teamName={slug}
                       useDirectParsing={true}
+                      showAsBaseSkillsOnly={true}
                     />
                   </td>
                 </tr>
@@ -303,6 +338,7 @@ export default function TeamDetailPage() {
                     position={position.slug}
                     teamName={slug}
                     useDirectParsing={true}
+                    showAsBaseSkillsOnly={true}
                   />
                 </div>
               </div>
@@ -405,7 +441,7 @@ export default function TeamDetailPage() {
       {/* Actions */}
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <Link
-          href={`/me/teams/new?roster=${slug}`}
+          href={`/me/teams/new?roster=${slug}&ruleset=${selectedRuleset}`}
           className="px-4 sm:px-6 py-2.5 sm:py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium text-sm sm:text-base text-center"
         >
           {t.teams.createTeamWithName.replace(/\{name\}/g, team.name)}

@@ -11,9 +11,10 @@ interface SkillTooltipProps {
   position?: string;     // Slug de la position (ex: "skaven_thrower")
   className?: string;
   useDirectParsing?: boolean; // Si true, utilise parseSkillSlugs directement (pour les positions du roster)
+  showAsBaseSkillsOnly?: boolean; // Si true, toutes les compétences sont affichées comme compétences de base (pour les définitions de roster)
 }
 
-export default function SkillTooltip({ skillsString, teamName, position, className = "", useDirectParsing = false }: SkillTooltipProps) {
+export default function SkillTooltip({ skillsString, teamName, position, className = "", useDirectParsing = false, showAsBaseSkillsOnly = false }: SkillTooltipProps) {
   const { language } = useLanguage();
   const [hoveredSkill, setHoveredSkill] = useState<string | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
@@ -34,7 +35,11 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
   let baseSkillSlugs: string[] = [];
   let acquiredSkillSlugs: string[] = [];
   
-  if (position && skillSlugs.length > 0) {
+  // Si showAsBaseSkillsOnly est true, on considère toutes les compétences comme de base
+  // (utile pour afficher les définitions de roster où il n'y a pas de compétences acquises)
+  if (showAsBaseSkillsOnly) {
+    baseSkillSlugs = skillSlugs;
+  } else if (position && skillSlugs.length > 0) {
     const separated = separateSkills(position, skillSlugs);
     baseSkillSlugs = separated.baseSkills;
     acquiredSkillSlugs = separated.acquiredSkills;
