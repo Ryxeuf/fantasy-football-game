@@ -1,3 +1,10 @@
+## [1.28.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.27.0...v1.28.0) (2025-11-26)
+
+
+### ✨ Features
+
+* add ruleset selection and fallback indicator in team detail page ([5753e93](https://github.com/Ryxeuf/fantasy-football-game/commit/5753e931de0645e2e2ef2b0a3f49c607ec6e0412))
+
 ## [1.27.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.26.0...v1.27.0) (2025-11-25)
 
 
