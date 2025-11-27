@@ -1,3 +1,10 @@
+## [1.29.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.28.0...v1.29.0) (2025-11-27)
+
+
+### ✨ Features
+
+* enhance team filtering and translations for tiers and seasons ([4654e63](https://github.com/Ryxeuf/fantasy-football-game/commit/4654e63cc4a06304422a3b05309953c369deac56))
+
 ## [1.28.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.27.0...v1.28.0) (2025-11-26)
 
 
