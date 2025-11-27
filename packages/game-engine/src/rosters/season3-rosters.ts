@@ -12,7 +12,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
   old_world_alliance: {
     name: "Alliance du Vieux Monde",
     budget: 1000,
-    tier: "II",
+    tier: "I",
     naf: false,
     positions: [
       {
@@ -164,7 +164,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
   amazon: {
     name: "Amazones",
     budget: 1000,
-    tier: "II",
+    tier: "I",
     naf: false,
     positions: [
       {
@@ -225,7 +225,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
   underworld: {
     name: "Bas-Fonds",
     budget: 1000,
-    tier: "II",
+    tier: "I",
     naf: false,
     positions: [
       {
@@ -338,7 +338,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
   dark_elf: {
     name: "Elfes noirs",
     budget: 1000,
-    tier: "II",
+    tier: "I",
     naf: false,
     positions: [
       {
@@ -412,7 +412,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
   wood_elf: {
     name: "Elfes sylvains",
     budget: 1000,
-    tier: "II",
+    tier: "I",
     naf: false,
     positions: [
       {
@@ -486,7 +486,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
   chaos_chosen: {
     name: "Élus du Chaos",
     budget: 1000,
-    tier: "II",
+    tier: "III",
     naf: false,
     positions: [
       {
@@ -560,7 +560,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
   gnome: {
     name: "Gnomes",
     budget: 1000,
-    tier: "II",
+    tier: "IV",
     naf: false,
     positions: [
       {
@@ -634,7 +634,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
   goblin: {
     name: "Gobelins",
     budget: 1000,
-    tier: "II",
+    tier: "IV",
     naf: false,
     positions: [
       {
@@ -747,7 +747,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
   halfling: {
     name: "Halflings",
     budget: 1000,
-    tier: "II",
+    tier: "IV",
     naf: false,
     positions: [
       {
@@ -808,7 +808,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
   high_elf: {
     name: "Hauts elfes",
     budget: 1000,
-    tier: "II",
+    tier: "I",
     naf: false,
     positions: [
       {
@@ -869,7 +869,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
   lizardmen: {
     name: "Hommes Lézard",
     budget: 1000,
-    tier: "II",
+    tier: "I",
     naf: false,
     positions: [
       {
@@ -1091,7 +1091,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
   khorne: {
     name: "Khorne",
     budget: 1000,
-    tier: "II",
+    tier: "III",
     naf: false,
     positions: [
       {
@@ -1226,7 +1226,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
   chaos_dwarf: {
     name: "Nains du chaos",
     budget: 1000,
-    tier: "II",
+    tier: "I",
     naf: false,
     positions: [
       {
@@ -1313,7 +1313,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
   dwarf: {
     name: "Nains",
     budget: 1000,
-    tier: "II",
+    tier: "I",
     naf: false,
     positions: [
       {
@@ -1461,7 +1461,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
   norse: {
     name: "Nordiques",
     budget: 1000,
-    tier: "II",
+    tier: "I",
     naf: false,
     positions: [
       {
@@ -1548,7 +1548,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
   nurgle: {
     name: "Nurgle",
     budget: 1000,
-    tier: "II",
+    tier: "III",
     naf: false,
     positions: [
       {
@@ -1609,7 +1609,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
   ogre: {
     name: "Ogres",
     budget: 1000,
-    tier: "II",
+    tier: "IV",
     naf: false,
     positions: [
       {
@@ -1657,7 +1657,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
   black_orc: {
     name: "Orques Noirs",
     budget: 1000,
-    tier: "II",
+    tier: "III",
     naf: false,
     positions: [
       {
@@ -1792,7 +1792,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
   chaos_renegade: {
     name: "Renégats du Chaos",
     budget: 1000,
-    tier: "II",
+    tier: "III",
     naf: false,
     positions: [
       {
@@ -2066,7 +2066,7 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
   snotling: {
     name: "Snotlings",
     budget: 1000,
-    tier: "II",
+    tier: "IV",
     naf: false,
     positions: [
       {

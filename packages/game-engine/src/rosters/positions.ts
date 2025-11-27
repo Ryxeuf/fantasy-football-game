@@ -40,7 +40,7 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
   skaven: {
     name: "Skavens",
     budget: 1000,
-    tier: "II",
+    tier: "I",
     naf: false,
     descriptionFr: "Les Skavens sont une race de rats humanoïdes qui se reproduisent rapidement et sont connus pour leur agilité et leur vitesse. Leurs équipes Blood Bowl sont réputées pour leur jeu rapide et leur capacité à marquer rapidement.",
     descriptionEn: "Skaven are a race of humanoid rats that breed quickly and are known for their agility and speed. Their Blood Bowl teams are renowned for their fast play and ability to score quickly.",
@@ -412,7 +412,7 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
   goblin: {
     name: "Gobelins",
     budget: 1000,
-    tier: "IV",
+    tier: "III",
     naf: false,
     descriptionFr: "Les Gobelins sont de petits joueurs agiles mais fragiles, connus pour leur utilisation d'armes secrètes et de tactiques déloyales. Leurs équipes Blood Bowl sont imprévisibles et dangereuses.",
     descriptionEn: "Goblins are small, agile but fragile players, known for their use of secret weapons and underhanded tactics. Their Blood Bowl teams are unpredictable and dangerous.",
@@ -528,7 +528,7 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
   undead: {
     name: "Morts-Vivants",
     budget: 1000,
-    tier: "II",
+    tier: "I",
     naf: false,
     descriptionFr: "Les Morts-Vivants sont une équipe composée de squelettes, zombies et autres créatures ressuscitées. Leurs équipes sont résistantes et bénéficient de la régénération, mais manquent d'agilité.",
     descriptionEn: "The Undead are a team composed of skeletons, zombies and other resurrected creatures. Their teams are resilient and benefit from regeneration, but lack agility.",
@@ -605,7 +605,7 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
   chaos_renegade: {
     name: "Renégats du Chaos",
     budget: 1000,
-    tier: "III",
+    tier: "II",
     naf: false,
     descriptionFr: "Les Renégats du Chaos sont des équipes composées de joueurs de différentes races unis par leur rejet de l'ordre. Leurs équipes sont variées et imprévisibles.",
     descriptionEn: "Chaos Renegades are teams composed of players from different races united by their rejection of order. Their teams are varied and unpredictable.",
@@ -747,7 +747,7 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
   ogre: {
     name: "Ogres",
     budget: 1000,
-    tier: "IV",
+    tier: "III",
     naf: false,
     descriptionFr: "Les Ogres sont des géants puissants mais peu intelligents, accompagnés de leurs serviteurs Gnoblars. Leurs équipes sont très fortes mais manquent de finesse.",
     descriptionEn: "Ogres are powerful but unintelligent giants, accompanied by their Gnoblar servants. Their teams are very strong but lack finesse.",
@@ -798,7 +798,7 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
   halfling: {
     name: "Halflings",
     budget: 1000,
-    tier: "IV",
+    tier: "III",
     naf: false,
     descriptionFr: "Les Halflings sont de petits joueurs agiles mais très fragiles. Leurs équipes Blood Bowl sont rapides mais vulnérables, souvent accompagnées d'un Treeman pour la protection.",
     descriptionEn: "Halflings are small, agile but very fragile players. Their Blood Bowl teams are fast but vulnerable, often accompanied by a Treeman for protection.",
@@ -862,7 +862,7 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
   underworld: {
     name: "Bas-Fonds",
     budget: 1000,
-    tier: "I",
+    tier: "II",
     naf: false,
     descriptionFr: "Les Bas-Fonds sont une équipe mixte composée de Skavens et de Gobelins mutants. Leurs équipes combinent agilité et utilisation d'armes secrètes.",
     descriptionEn: "Underworld Denizens are a mixed team composed of Skaven and mutant Goblins. Their teams combine agility with the use of secret weapons.",
@@ -978,7 +978,7 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
   chaos_chosen: {
     name: "Élus du Chaos",
     budget: 1000,
-    tier: "III",
+    tier: "II",
     naf: false,
     descriptionFr: "Les Élus du Chaos sont des guerriers dévoués aux dieux du Chaos, développant des mutations au fil du temps. Leurs équipes deviennent plus puissantes avec l'expérience.",
     descriptionEn: "Chaos Chosen are warriors dedicated to the Chaos gods, developing mutations over time. Their teams become more powerful with experience.",
@@ -1209,7 +1209,7 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
   orc: {
     name: "Orques",
     budget: 1000,
-    tier: "II",
+    tier: "I",
     naf: false,
     descriptionFr: "Les Orques sont une race brutale et agressive, connue pour leur force et leur violence. Leurs équipes Blood Bowl sont puissantes et spécialisées dans le blocage offensif.",
     descriptionEn: "Orcs are a brutal and aggressive race, known for their strength and violence. Their Blood Bowl teams are powerful and specialize in offensive blocking.",
@@ -1299,7 +1299,7 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
   nurgle: {
     name: "Nurgle",
     budget: 1000,
-    tier: "III",
+    tier: "II",
     naf: false,
     descriptionFr: "Les équipes de Nurgle sont dédiées au dieu de la peste et de la décomposition. Leurs joueurs sont résistants et peuvent transmettre des maladies à leurs adversaires.",
     descriptionEn: "Nurgle teams are dedicated to the god of plague and decay. Their players are resilient and can spread diseases to their opponents.",
@@ -1363,7 +1363,7 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
   old_world_alliance: {
     name: "Alliance du Vieux Monde",
     budget: 1000,
-    tier: "I",
+    tier: "II",
     naf: false,
     descriptionFr: "L'Alliance du Vieux Monde est une équipe mixte composée de Humains, Nains et Halflings. Leurs équipes combinent les forces de différentes races pour créer une équipe équilibrée.",
     descriptionEn: "The Old World Alliance is a mixed team composed of Humans, Dwarves and Halflings. Their teams combine the strengths of different races to create a balanced team.",
@@ -1672,7 +1672,7 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
   black_orc: {
     name: "Orques Noirs",
     budget: 1000,
-    tier: "III",
+    tier: "II",
     naf: false,
     descriptionFr: "Les Orques Noirs sont des guerriers disciplinés et bien équipés, plus organisés que les Orques standards. Leurs équipes Blood Bowl sont puissantes et mieux structurées.",
     descriptionEn: "Black Orcs are disciplined and well-equipped warriors, more organized than standard Orcs. Their Blood Bowl teams are powerful and better structured.",
@@ -1941,7 +1941,7 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
   high_elf: {
     name: "Hauts Elfes",
     budget: 1000,
-    tier: "I",
+    tier: "II",
     naf: false,
     descriptionFr: "Quand Blood Bowl atteignit Ulthuan pour la première fois, il y eut beaucoup de nez retroussés et de 'tut' méprisants, car cela semblait n'être rien de plus que deux équipes de voyous incivilisés qui se frappaient sans raison. Il devint rapidement évident que ce n'était pas la seule façon de jouer, cependant, et dans les années qui suivirent, les équipes de Hauts Elfes révolutionnèrent le jeu de passe du sport. Ils ont de nombreux avantages quand il s'agit de gagner (par opposition à massacrer l'adversaire, ce qui n'est pas toujours la même chose !), et leurs excellents joueurs sont l'épitomé du côté le plus gracieux du jeu. Le seul vrai problème avec les équipes de Hauts Elfes est qu'elles peuvent être très pointilleuses sur qui, quand ou où elles jouent, alors nous devons être reconnaissants qu'elles daignent jouer contre des races inférieures !",
     descriptionEn: "When Blood Bowl first reached Ulthuan, there was much turning up of noses and loud disdainful tutting, for it appeared as nothing more than two teams of uncivilised yobs pummelling each other senseless. It quickly became apparent that this was not the sole way of playing, however, and in the years that followed High Elf teams revolutionised the sport's passing game. They have many advantages when it comes to winning (as opposed to slaughtering the opposition, which isn't always the same thing!), and their fine players are the epitome of the more graceful side of the game. The only real problem with High Elf teams is that they can be very picky about who, when or where they play, so we must be thankful they deign to play lesser races at all!",
@@ -2005,7 +2005,7 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
   khorne: {
     name: "Khorne",
     budget: 1000,
-    tier: "III",
+    tier: "II",
     naf: false,
     descriptionFr: "Les équipes de Khorne sont dédiées au dieu du sang et du combat. Leurs joueurs sont des berserkers violents qui recherchent la destruction de leurs adversaires.",
     descriptionEn: "Khorne teams are dedicated to the god of blood and combat. Their players are violent berserkers who seek the destruction of their opponents.",
@@ -2171,7 +2171,7 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
   gnome: {
     name: "Gnomes",
     budget: 1000,
-    tier: "IV",
+    tier: "III",
     naf: false,
     descriptionFr: "Les Gnomes sont de petits joueurs agiles mais très fragiles, souvent accompagnés de créatures sauvages. Leurs équipes Blood Bowl sont imprévisibles et excentriques.",
     descriptionEn: "Gnomes are small, agile but very fragile players, often accompanied by wild creatures. Their Blood Bowl teams are unpredictable and eccentric.",
@@ -2338,7 +2338,7 @@ const SEASON_TWO_ROSTERS: TeamRosterMap = {
   snotling: {
     name: "Snotlings",
     budget: 1000,
-    tier: "IV",
+    tier: "III",
     naf: false,
     descriptionFr: "Les Snotlings sont les plus petits et les plus faibles des gobelinoïdes, mais ils compensent par leur nombre et leur utilisation d'armes secrètes. Leurs équipes sont chaotiques et imprévisibles.",
     descriptionEn: "Snotlings are the smallest and weakest of goblinoids, but they compensate with their numbers and use of secret weapons. Their teams are chaotic and unpredictable.",
