@@ -98,6 +98,74 @@ export { executePass, executeHandoff, getPassRange, getDistance, findInterceptor
 // Export des fonctions de faute
 export { canFoul, executeFoul, calculateFoulAssists } from './mechanics/foul';
 
+// Export des effets météo
+export {
+  getWeatherModifiers,
+  applyWeatherDriveEffects,
+  isPassRangeAllowed,
+  type WeatherModifiers,
+} from './mechanics/weather-effects';
+
+// Export des événements de kickoff
+export {
+  KICKOFF_EVENTS,
+  rollKickoffEvent,
+  applyKickoffEvent,
+  type KickoffEvent,
+} from './mechanics/kickoff-events';
+
+// Export du calcul de zones de tacle (heatmap)
+export {
+  calculateTackleZoneHeatmap,
+  getTeamTackleZones,
+  countTackleZonesAt,
+  type TackleZoneCell,
+  type TackleZoneHeatmap,
+} from './mechanics/tackle-zones';
+
+// Export du simulateur de probabilités
+export {
+  calculateMoveProbability,
+  calculateBlockProbability,
+  calculatePassProbability,
+  calculateFoulProbability,
+  calculateAllProbabilities,
+  type ActionProbability,
+  type ProbabilityBreakdown,
+} from './utils/probability-calculator';
+
+// Export de la configuration des règles
+export {
+  FULL_RULES,
+  SIMPLIFIED_RULES,
+  getRulesConfig,
+  createCustomRules,
+  type RulesMode,
+  type RulesConfig,
+} from './core/rules-config';
+
+// Export du système de validation (arbitre IA)
+export {
+  validateMove,
+  validateGameState,
+  type ValidationResult,
+  type ValidationError,
+  type ValidationWarning,
+} from './utils/referee';
+
+// Export du registre de compétences modulaire
+export {
+  registerSkill,
+  getSkillEffect,
+  getAllRegisteredSkills,
+  getSkillsForTrigger,
+  collectModifiers,
+  type SkillEffect,
+  type SkillTrigger,
+  type SkillContext,
+  type SkillModifier,
+} from './skills/skill-registry';
+
 // Export des rosters et positions
 export * from './rosters';
 

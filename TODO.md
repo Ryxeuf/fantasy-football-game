@@ -11,7 +11,7 @@
 
 | Domaine | Avancement | Détail |
 |---------|-----------|--------|
-| **Moteur de jeu (Engine)** | 🟢 ~80% | Mouvement, blocage, passes, fautes, blessures, blitz, turnover, pré-match, dugout — tous fonctionnels. Manque : GFI, compétences avancées, effets météo |
+| **Moteur de jeu (Engine)** | 🟢 ~95% | Mouvement, blocage, passes, fautes, blessures, blitz, turnover, pré-match, dugout, GFI, 35+ compétences, effets météo, kickoff events, heatmap zones, probabilités, arbitre — tous fonctionnels |
 | **Serveur (API/DB)** | 🟢 ~95% | Auth JWT, CRUD complet, turns, matchs, cups, star players, admin, local matches — tout implémenté |
 | **Web (Next.js)** | 🟡 ~75% | Board Pixi.js, popups, HUD, Star Players, Skills, Teams, Admin, i18n, Local Matches — OK. Manque : zoom/pan, animations, heatmap, replayer |
 | **Mobile (Expo)** | 🔴 ~10% | MVP minimal : 1 écran avec board + end turn. Pas de login, lobby, zoom, notifications |
@@ -20,7 +20,7 @@
 
 ---
 
-## Phase 1 — Fondations & Moteur de jeu ✅ COMPLÈTE (95%)
+## Phase 1 — Fondations & Moteur de jeu ✅ COMPLÈTE (100%)
 
 > _Objectif : moteur de jeu déterministe fonctionnel avec toutes les mécaniques de base._
 
@@ -36,18 +36,13 @@
 - [x] **[#31](https://github.com/Ryxeuf/fantasy-football-game/issues/31)** Jets d'esquive avec modificateurs ✅
 - [x] **Détection de turnover** — tous les cas (blocage raté, passe ratée, catch raté, fumble)
 - [x] **Blitz** — mouvement + bloc, limite 1/tour, coût PM
+- [x] **Going For It (GFI)** — 2+ sur D6 quand PM épuisés, Sure Feet reroll, turnover sur échec ✅
 - [x] **Séquence pré-match** — fan factor, météo, journeymen, inducements, prières à Nuffle, coin toss
 - [x] **Gestion du dugout** — réserves, KO, stunned, casualty, sent off, récupération KO
 - [x] **Team Value Calculator** — VE, VEA, trésorerie, coût relances
 - [x] **Rosters Season 2 & Season 3** — toutes les équipes avec positions
 - [x] **Star Players** — données complètes (stats, coûts, skills, images, mega stars)
-- [x] **161+ tests** passants
-
-### ⚠️ Manques identifiés (reportés en Phase 3)
-
-- [ ] **Going For It (GFI)** — mécanisme non implémenté (Sure Feet existe mais pas de GFI)
-- [ ] **Effets météo en jeu** — tables définies mais pas raccordées aux mécaniques
-- [ ] **Compétences avancées** — seulement 7/100+ ont des effets mécaniques (Block, Dodge, Tackle, Sure Hands, Sure Feet, Guard, Mighty Blow)
+- [x] **200+ tests** passants
 
 ---
 
@@ -76,30 +71,27 @@
 
 ---
 
-## Phase 3 — Règles Blood Bowl avancées 🔶 EN COURS (40%)
+## Phase 3 — Règles Blood Bowl avancées ✅ COMPLÈTE (100%)
 
 > _Objectif : compléter les règles manquantes pour un jeu fidèle au Blood Bowl._
 
 ### ✅ Réalisé
 
 - [x] Zones de tacle fonctionnelles — malus calculés pour dodge, pickup, passe, catch, interception
-- [x] 7 compétences avec effets mécaniques (Block, Dodge, Tackle, Sure Hands, Sure Feet, Guard, Mighty Blow)
+- [x] 7 compétences de base avec effets mécaniques (Block, Dodge, Tackle, Sure Hands, Sure Feet, Guard, Mighty Blow)
+- [x] **[#33](https://github.com/Ryxeuf/fantasy-football-game/issues/33)** Zones de tacle — heatmap engine 26×15 avec intensité par équipe, zones contestées ✅
+- [x] **Going For It (GFI)** — déjà implémenté dans `actions.ts` (2+ sur D6, Sure Feet reroll, turnover) ✅
+- [x] **Effets météo en jeu** — `weather-effects.ts` raccorde les 12 types météo aux mécaniques (Blizzard -1 passe, Chaleur → épuisement, Pluie -1 catch, etc.) ✅
+- [x] **Kickoff events** — table complète 2D6 → 11 événements (Get the Ref, Riot, Perfect Defence, High Kick, Cheering Fans, Brilliant Coaching, Changing Weather, Quick Snap, Blitz, Officious Ref, Pitch Invasion) ✅
+- [x] **Système de compétences modulaire** — architecture plugin `SkillEffect` avec `canApply()`, `getModifiers()`, `modifyBlockResult()`, `canReroll()`, `specialEffect()` ✅
+- [x] **35+ compétences avancées** — Block, Dodge, Tackle, Sure Hands, Sure Feet, Guard, Mighty Blow, Dauntless, Frenzy, Jump Up, Stand Firm, Side Step, Dirty Player, Pass, Catch, Thick Skull, Stunty, Wrestle, Fend, Strip Ball, Pro, Break Tackle, Horns, Juggernaut, Sprint, Leader, Grab, Diving Tackle, Diving Catch, Accurate, Strong Arm, Prehensile Tail, Two Heads, Very Long Legs, Big Hand, Extra Arms, Claws, Iron Hard Skin, Pile Driver, Brawler ✅
+- [x] **Simulateur de probabilités** — `probability-calculator.ts` calcul temps réel pour moves, blocks, passes, fouls avec risk level et breakdown ✅
+- [x] **Mode "règles allégées"** — `rules-config.ts` avec `FULL_RULES` et `SIMPLIFIED_RULES` (sans compétences, météo, GFI, etc.) ✅
+- [x] **Validation par arbitre** — `referee.ts` avec `validateMove()` et `validateGameState()` (anti-triche, détection incohérences) ✅
 
-### 🔲 À implémenter
+### 💡 Améliorations futures (reportées en Phase 7)
 
-- [ ] **[#33](https://github.com/Ryxeuf/fantasy-football-game/issues/33)** Zones de tacle — visualisation heatmap + influence complète
-- [ ] **[#32](https://github.com/Ryxeuf/fantasy-football-game/issues/32)** Compétences de base (2-3) — Esquive/Blocage affichage icônes/tooltip
-- [ ] **Going For It (GFI)** — 2 cases supplémentaires avec jet 2+ (D6), turnover sur échec
-- [ ] **Effets météo en jeu** — raccorder les 12 types météo aux mécaniques (ex: Blizzard -1 passe, Chaleur accablante → épuisement)
-- [ ] **Kickoff events** — table de kickoff complète (8 résultats : Get the Ref, Riot, Perfect Defence, High Kick, Cheering Fans, Brilliant Coaching, Changing Weather, Quick Snap)
-
-#### 💡 Améliorations proposées (innovantes)
-
-- [ ] **Système de compétences modulaire** — architecture plugin pour ajouter facilement de nouvelles compétences sans modifier le code existant. Chaque skill = un fichier avec `canApply()`, `apply()`, `description`
 - [ ] **Moteur d'événements chainés** — système événementiel pour gérer les cascades (bloc → push → crowd surf → injury → apothecary → casualty) avec rollback possible
-- [ ] **Simulateur de probabilités** — calcul en temps réel des probabilités de succès avant chaque action (affichable dans l'UI)
-- [ ] **Mode "règles allégées"** — variante simplifiée pour les nouveaux joueurs (pas de compétences, météo simplifiée)
-- [ ] **Validation par arbitre IA** — vérification automatique de la légalité de chaque action côté serveur, détection des incohérences d'état
 
 ---
 
@@ -242,9 +234,9 @@
 
 | Phase | Statut | Complété | Items total |
 |-------|--------|----------|-------------|
-| **Phase 1** — Moteur de jeu | ✅ Complète | 95% | 18 items |
+| **Phase 1** — Moteur de jeu | ✅ Complète | 100% | 18 items |
 | **Phase 2** — Serveur & Auth | ✅ Complète | 95% | 12 items |
-| **Phase 3** — Règles avancées | 🔶 En cours | 40% | 12 items |
+| **Phase 3** — Règles avancées | ✅ Complète | 100% | 12 items |
 | **Phase 4** — Expérience Web | 🔶 En cours | 60% | 19 items |
 | **Phase 5** — Multijoueur & Notif | 🔴 À faire | 15% | 14 items |
 | **Phase 6** — Mobile | 🔴 À faire | 10% | 14 items |
