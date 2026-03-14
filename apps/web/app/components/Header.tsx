@@ -59,11 +59,17 @@ export default function Header() {
           >
             📚 {t.nav.skills}
           </a>
-          <a 
-            href="/star-players" 
+          <a
+            href="/star-players"
             className="text-sm font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold hover:underline transition-colors whitespace-nowrap"
           >
             ⭐ {t.nav.starPlayers}
+          </a>
+          <a
+            href="/play"
+            className="text-sm font-subtitle font-semibold text-nuffle-gold hover:text-nuffle-bronze hover:underline transition-colors whitespace-nowrap"
+          >
+            🎮 {t.nav.play}
           </a>
         </nav>
       </div>
@@ -139,12 +145,19 @@ export default function Header() {
               >
                 📚 {t.nav.skills}
               </a>
-              <a 
+              <a
                 href="/star-players"
                 onClick={() => setMobileMenuOpen(false)}
                 className="block text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors py-2 active:text-nuffle-gold"
               >
                 ⭐ {t.nav.starPlayers}
+              </a>
+              <a
+                href="/play"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-base font-subtitle font-semibold text-nuffle-gold hover:text-nuffle-bronze transition-colors py-2 active:text-nuffle-bronze"
+              >
+                🎮 {t.nav.play}
               </a>
             </nav>
 

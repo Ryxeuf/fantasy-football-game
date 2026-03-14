@@ -135,6 +135,36 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Play Online */}
+      <section className="w-full px-4 sm:px-6 pb-8 md:pb-12">
+        <div className="rounded-2xl bg-gradient-to-br from-nuffle-anthracite via-nuffle-bronze/90 to-nuffle-anthracite text-nuffle-ivory p-6 sm:p-8 md:p-12 shadow-xl border-2 border-nuffle-bronze/50">
+          <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
+            <div className="flex-1 text-center md:text-left">
+              <h3 className="text-xl sm:text-2xl md:text-3xl font-heading font-bold">
+                {t.play?.playOnline || "Jouer en ligne"}
+              </h3>
+              <p className="text-nuffle-ivory/80 mt-2 font-body text-sm sm:text-base">
+                {t.play?.playOnlineDesc || "Affrontez d'autres coachs en ligne ! Créez une partie ou rejoignez un match existant."}
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+              <a
+                href="/play"
+                className="px-6 py-3 bg-nuffle-gold text-nuffle-anthracite font-subtitle font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105 text-center whitespace-nowrap"
+              >
+                🎮 {t.play?.playOnlineButton || "Accéder au lobby"}
+              </a>
+              <a
+                href="/me/matches"
+                className="px-6 py-3 border-2 border-nuffle-gold/50 text-nuffle-ivory hover:bg-nuffle-gold/20 font-subtitle font-semibold rounded-lg transition-all text-center whitespace-nowrap"
+              >
+                📊 {t.play?.myOnlineMatches || "Mes matchs en ligne"}
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Callout */}
       <section className="w-full px-4 sm:px-6 pb-12 md:pb-16">
         <div className="rounded-2xl bg-gradient-to-r from-nuffle-gold via-nuffle-bronze to-nuffle-gold text-nuffle-anthracite p-6 sm:p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6 shadow-xl border-2 border-nuffle-bronze/50">

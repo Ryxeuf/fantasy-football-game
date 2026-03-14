@@ -44,7 +44,7 @@ export default function WaitingPage({ params }: { params: { id: string } }) {
           data?.status === "prematch-setup"
         ) {
           // Dès que la partie devient active ou en pré-match, rediriger vers /play/[id]
-          window.location.href = `/play/${matchId}`;
+          window.location.href = `/play-hidden/${matchId}`;
         }
       } catch (e: any) {
         setError(e?.message || "Erreur");
@@ -111,7 +111,7 @@ export default function WaitingPage({ params }: { params: { id: string } }) {
           sumData?.status === "prematch" ||
           sumData?.status === "active"
         ) {
-          window.location.href = `/play/${matchId}`;
+          window.location.href = `/play-hidden/${matchId}`;
         }
       }
     } catch (e: any) {
@@ -161,7 +161,7 @@ export default function WaitingPage({ params }: { params: { id: string } }) {
         La page se mettra à jour automatiquement.
       </p>
       <div className="flex gap-2">
-        <a className="px-3 py-2 bg-neutral-200 rounded" href="/lobby">
+        <a className="px-3 py-2 bg-neutral-200 rounded" href="/play">
           Retour au lobby
         </a>
         <a

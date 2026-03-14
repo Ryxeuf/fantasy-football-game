@@ -147,6 +147,18 @@ export default function AuthBar({ isMobileMenu = false }: AuthBarProps) {
           >
             🎮 Parties Offline
           </a>
+          <a
+            href="/play"
+            className="block px-4 py-2.5 text-sm text-nuffle-gold font-semibold hover:bg-yellow-50 rounded-lg transition-colors"
+          >
+            ⚔️ {t.play?.playOnline || "Jouer en ligne"}
+          </a>
+          <a
+            href="/me/matches"
+            className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            📊 {t.play?.myOnlineMatches || "Mes matchs en ligne"}
+          </a>
           {isAdmin && (
             <a
               href="/admin"
@@ -223,6 +235,20 @@ export default function AuthBar({ isMobileMenu = false }: AuthBarProps) {
                   onClick={() => setMenuOpen(false)}
                 >
                   🎮 Parties Offline
+                </a>
+                <a
+                  href="/play"
+                  className="block px-4 py-2.5 text-sm hover:bg-gray-100 transition-colors text-nuffle-gold font-semibold"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  ⚔️ {t.play?.playOnline || "Jouer en ligne"}
+                </a>
+                <a
+                  href="/me/matches"
+                  className="block px-4 py-2.5 text-sm hover:bg-gray-100 transition-colors"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  📊 {t.play?.myOnlineMatches || "Mes matchs en ligne"}
                 </a>
                 {isAdmin && (
                   <a

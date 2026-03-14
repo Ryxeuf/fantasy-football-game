@@ -50,7 +50,7 @@ export default function TeamSelectPage() {
     try {
       setError(null);
       await postJSON(`/team/choose`, { matchId, teamId });
-      window.location.href = "/me";
+      window.location.href = `/waiting-hidden/${matchId}`;
     } catch (e: any) {
       setError(e.message || "Erreur");
     }

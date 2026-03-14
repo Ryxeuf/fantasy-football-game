@@ -30,6 +30,11 @@ export default function Footer() {
                   {t.footer.starPlayers}
                 </a>
               </li>
+              <li>
+                <a href="/play" className="hover:text-nuffle-gold hover:underline transition-colors">
+                  {t.play?.playOnline || "Jouer en ligne"}
+                </a>
+              </li>
             </ul>
           </div>
           <div>
