@@ -13,12 +13,79 @@ import {
   Player,
 } from '../core/types';
 import { isAdjacent, inBounds, isPositionOccupied } from './movement';
-import { performArmorRoll } from '../utils/dice';
+import { hasGuard, blockNegatesBothDown, dodgeNegatesStumble, getMightyBlowBonus } from '../skills/skill-effects';
+import { performArmorRoll, roll2D6 } from '../utils/dice';
 import { performArmorRollWithNotification } from '../utils/dice-notifications';
 import { createLogEntry } from '../utils/logging';
 import { canTeamBlitz } from '../core/game-state';
 import { movePlayerToDugoutZone } from './dugout';
 import { performInjuryRoll, handleSentOff } from './injury';
+
+/**
+ * Effectue le jet d'armure + blessure avec Mighty Blow.
+ * Mighty Blow (+1) s'applique soit au jet d'armure, soit au jet de blessure.
+ * Stratégie optimale : si l'armure casse naturellement, le bonus est gardé pour la blessure.
+ */
+function armorAndInjuryWithMightyBlow(
+  state: GameState,
+  victim: Player,
+  attacker: Player,
+  rng: RNG
+): GameState {
+  const mbBonus = getMightyBlowBonus(attacker);
+  const diceRoll = roll2D6(rng);
+  const armorTarget = victim.av;
+
+  const armorBrokenNaturally = diceRoll >= armorTarget;
+  const armorBrokenWithMB = (diceRoll + mbBonus) >= armorTarget;
+
+  let armorBroken: boolean;
+  let mbUsedOnArmor: boolean;
+
+  if (armorBrokenNaturally) {
+    armorBroken = true;
+    mbUsedOnArmor = false; // Garder MB pour la blessure
+  } else if (armorBrokenWithMB) {
+    armorBroken = true;
+    mbUsedOnArmor = true;
+  } else {
+    armorBroken = false;
+    mbUsedOnArmor = true; // Dépensé sur l'armure (sans effet)
+  }
+
+  // Log du jet d'armure
+  const effectiveRoll = mbUsedOnArmor ? diceRoll + mbBonus : diceRoll;
+  const armorLog = createLogEntry(
+    'dice',
+    `Jet d'armure: ${effectiveRoll}/${armorTarget} ${armorBroken ? '✗ (percée)' : '✓ (tient)'}${mbBonus > 0 && mbUsedOnArmor ? ' [Mighty Blow +1]' : ''}`,
+    victim.id,
+    victim.team,
+    {
+      diceRoll: effectiveRoll,
+      targetNumber: armorTarget,
+      success: !armorBroken,
+      mightyBlow: mbBonus > 0,
+      mightyBlowAppliedTo: mbUsedOnArmor ? 'armor' : 'injury',
+    }
+  );
+  state.gameLog = [...state.gameLog, armorLog];
+
+  state.lastDiceResult = {
+    type: 'armor',
+    playerId: victim.id,
+    diceRoll: effectiveRoll,
+    targetNumber: armorTarget,
+    success: !armorBroken,
+    modifiers: mbUsedOnArmor ? mbBonus : 0,
+  };
+
+  if (armorBroken) {
+    const injuryBonus = mbUsedOnArmor ? 0 : mbBonus;
+    state = performInjuryRoll(state, victim, rng, injuryBonus, attacker.id);
+  }
+
+  return state;
+}
 
 /**
  * Vérifie si un joueur peut effectuer un blocage
@@ -119,12 +186,17 @@ export function calculateOffensiveAssists(
   for (const teammate of teammates) {
     // Le coéquipier doit marquer la cible
     if (isAdjacent(teammate.pos, target.pos)) {
-      // Vérifier que le coéquipier n'est pas marqué par un autre adversaire que la cible
-      const opponentsMarkingTeammate = getAdjacentOpponents(state, teammate.pos, teammate.team);
-      const isMarkedByOtherThanTarget = opponentsMarkingTeammate.some(opp => opp.id !== target.id);
-
-      if (!isMarkedByOtherThanTarget) {
+      // Guard : un joueur avec Guard peut assister même s'il est marqué par d'autres adversaires
+      if (hasGuard(teammate)) {
         assists++;
+      } else {
+        // Vérifier que le coéquipier n'est pas marqué par un autre adversaire que la cible
+        const opponentsMarkingTeammate = getAdjacentOpponents(state, teammate.pos, teammate.team);
+        const isMarkedByOtherThanTarget = opponentsMarkingTeammate.some(opp => opp.id !== target.id);
+
+        if (!isMarkedByOtherThanTarget) {
+          assists++;
+        }
       }
     }
   }
@@ -154,14 +226,19 @@ export function calculateDefensiveAssists(
   for (const teammate of teammates) {
     // Le coéquipier doit marquer l'attaquant
     if (isAdjacent(teammate.pos, attacker.pos)) {
-      // Vérifier que le coéquipier n'est pas marqué par un autre adversaire que l'attaquant
-      const opponentsMarkingTeammate = getAdjacentOpponents(state, teammate.pos, teammate.team);
-      const isMarkedByOtherThanAttacker = opponentsMarkingTeammate.some(
-        opp => opp.id !== attacker.id
-      );
-
-      if (!isMarkedByOtherThanAttacker) {
+      // Guard : un joueur avec Guard peut assister même s'il est marqué par d'autres adversaires
+      if (hasGuard(teammate)) {
         assists++;
+      } else {
+        // Vérifier que le coéquipier n'est pas marqué par un autre adversaire que l'attaquant
+        const opponentsMarkingTeammate = getAdjacentOpponents(state, teammate.pos, teammate.team);
+        const isMarkedByOtherThanAttacker = opponentsMarkingTeammate.some(
+          opp => opp.id !== attacker.id
+        );
+
+        if (!isMarkedByOtherThanAttacker) {
+          assists++;
+        }
       }
     }
   }
@@ -488,65 +565,79 @@ function handlePlayerDown(state: GameState, attacker: Player, target: Player, rn
 
 /**
  * Gère le résultat BOTH_DOWN
+ * Skill Block : un joueur avec Block peut choisir de ne pas tomber sur BOTH_DOWN
  */
 function handleBothDown(state: GameState, attacker: Player, target: Player, rng: RNG): GameState {
-  // Les deux joueurs sont mis au sol
-  state.players = state.players.map(p =>
-    p.id === attacker.id || p.id === target.id ? { ...p, stunned: true } : p
-  );
-  state.isTurnover = true;
+  const attackerHasBlock = blockNegatesBothDown(attacker);
+  const targetHasBlock = blockNegatesBothDown(target);
 
-  // Log de la chute des deux joueurs
+  // Déterminer qui tombe
+  const attackerFalls = !attackerHasBlock;
+  const targetFalls = !targetHasBlock;
+
+  // Si personne ne tombe (les deux ont Block), simple push ou rien
+  if (!attackerFalls && !targetFalls) {
+    const blockLog = createLogEntry(
+      'action',
+      `Les Deux Plaqués — ${attacker.name} (Block) et ${target.name} (Block) restent debout`,
+      attacker.id,
+      attacker.team
+    );
+    state.gameLog = [...state.gameLog, blockLog];
+    // Pas de turnover si l'attaquant ne tombe pas
+    return state;
+  }
+
+  // Mettre au sol ceux qui tombent
+  state.players = state.players.map(p => {
+    if (p.id === attacker.id && attackerFalls) return { ...p, stunned: true };
+    if (p.id === target.id && targetFalls) return { ...p, stunned: true };
+    return p;
+  });
+
+  // Turnover uniquement si l'attaquant tombe
+  if (attackerFalls) {
+    state.isTurnover = true;
+  }
+
+  // Log
   const bothDownLog = createLogEntry(
     'action',
-    `${attacker.name} et ${target.name} tombent tous les deux`,
+    attackerHasBlock && !targetHasBlock
+      ? `Les Deux Plaqués — ${attacker.name} (Block) reste debout, ${target.name} tombe`
+      : !attackerHasBlock && targetHasBlock
+        ? `Les Deux Plaqués — ${attacker.name} tombe, ${target.name} (Block) reste debout`
+        : `${attacker.name} et ${target.name} tombent tous les deux`,
     attacker.id,
     attacker.team
   );
   state.gameLog = [...state.gameLog, bothDownLog];
 
-  // Jets d'armure pour les deux joueurs
-  const attackerArmorResult = performArmorRollWithNotification(attacker, rng);
-  const targetArmorResult = performArmorRollWithNotification(target, rng);
-  state.lastDiceResult = attackerArmorResult; // On stocke le dernier jet
-
-  // Logs des jets d'armure
-  const attackerArmorLog = createLogEntry(
-    'dice',
-    `Jet d'armure attaquant: ${attackerArmorResult.diceRoll}/${attackerArmorResult.targetNumber} ${attackerArmorResult.success ? '✓' : '✗'}`,
-    attacker.id,
-    attacker.team,
-    {
-      diceRoll: attackerArmorResult.diceRoll,
-      targetNumber: attackerArmorResult.targetNumber,
-      success: attackerArmorResult.success,
+  // Jets d'armure pour ceux qui tombent
+  if (attackerFalls) {
+    // Pas de Mighty Blow du défenseur sur l'attaquant (MB ne s'applique qu'au joueur bloqué)
+    const attackerArmorResult = performArmorRollWithNotification(attacker, rng);
+    state.lastDiceResult = attackerArmorResult;
+    const attackerArmorLog = createLogEntry(
+      'dice',
+      `Jet d'armure attaquant: ${attackerArmorResult.diceRoll}/${attackerArmorResult.targetNumber} ${attackerArmorResult.success ? '✓' : '✗'}`,
+      attacker.id,
+      attacker.team,
+      { diceRoll: attackerArmorResult.diceRoll, targetNumber: attackerArmorResult.targetNumber, success: attackerArmorResult.success }
+    );
+    state.gameLog = [...state.gameLog, attackerArmorLog];
+    if (!attackerArmorResult.success) {
+      state = performInjuryRoll(state, attacker, rng);
     }
-  );
-  const targetArmorLog = createLogEntry(
-    'dice',
-    `Jet d'armure cible: ${targetArmorResult.diceRoll}/${targetArmorResult.targetNumber} ${targetArmorResult.success ? '✓' : '✗'}`,
-    target.id,
-    target.team,
-    {
-      diceRoll: targetArmorResult.diceRoll,
-      targetNumber: targetArmorResult.targetNumber,
-      success: targetArmorResult.success,
-    }
-  );
-  state.gameLog = [...state.gameLog, attackerArmorLog, targetArmorLog];
-
-  // Si l'armure de l'attaquant est percée, faire un jet de blessure
-  if (!attackerArmorResult.success) {
-    state = performInjuryRoll(state, attacker, rng);
   }
 
-  // Si l'armure de la cible est percée, faire un jet de blessure
-  if (!targetArmorResult.success) {
-    state = performInjuryRoll(state, target, rng);
+  if (targetFalls) {
+    // Mighty Blow de l'attaquant s'applique au jet d'armure/blessure de la cible
+    state = armorAndInjuryWithMightyBlow(state, target, attacker, rng);
   }
 
-  // Si l'attaquant avait le ballon, le perdre
-  if (attacker.hasBall) {
+  // Si l'attaquant avait le ballon et tombe, le perdre
+  if (attacker.hasBall && attackerFalls) {
     state.players = state.players.map(p => (p.id === attacker.id ? { ...p, hasBall: false } : p));
     state.ball = { ...attacker.pos };
     // Note: bounceBall sera appelé par la fonction appelante
@@ -633,13 +724,12 @@ function handlePushBack(state: GameState, attacker: Player, target: Player): Gam
  * Gère le résultat STUMBLE
  */
 function handleStumble(state: GameState, attacker: Player, target: Player, rng: RNG): GameState {
-  // Si la cible a Dodge, c'est un Push Back, sinon c'est POW
-  if (target.skills.includes('Dodge')) {
+  // Si la cible a Dodge (et l'attaquant n'a pas Tackle), c'est un Push Back
+  if (dodgeNegatesStumble(target, attacker)) {
     return handlePushBack(state, attacker, target);
   } else {
-    // Pas de Dodge - traiter comme POW
+    // Pas de Dodge - traiter comme POW (le défenseur tombe, PAS un turnover)
     state.players = state.players.map(p => (p.id === target.id ? { ...p, stunned: true } : p));
-    state.isTurnover = true;
 
     // Log de la mise au sol
     const stumbleDownLog = createLogEntry(
@@ -650,23 +740,8 @@ function handleStumble(state: GameState, attacker: Player, target: Player, rng: 
     );
     state.gameLog = [...state.gameLog, stumbleDownLog];
 
-    // Jet d'armure pour la cible
-    const targetArmorResult = performArmorRoll(target, rng);
-    state.lastDiceResult = targetArmorResult;
-
-    // Log du jet d'armure
-    const targetArmorLog = createLogEntry(
-      'dice',
-      `Jet d'armure: ${targetArmorResult.diceRoll}/${targetArmorResult.targetNumber} ${targetArmorResult.success ? '✓' : '✗'}`,
-      target.id,
-      target.team,
-      {
-        diceRoll: targetArmorResult.diceRoll,
-        targetNumber: targetArmorResult.targetNumber,
-        success: targetArmorResult.success,
-      }
-    );
-    state.gameLog = [...state.gameLog, targetArmorLog];
+    // Jet d'armure + blessure avec Mighty Blow
+    state = armorAndInjuryWithMightyBlow(state, target, attacker, rng);
 
     // Gérer la poussée avec choix de direction
     const pushResult = handlePushWithChoice(state, attacker, target, 'STUMBLE');
@@ -688,9 +763,8 @@ function handleStumble(state: GameState, attacker: Player, target: Player, rng: 
  * Gère le résultat POW
  */
 function handlePow(state: GameState, attacker: Player, target: Player, rng: RNG): GameState {
-  // La cible est repoussée puis mise au sol
+  // La cible est repoussée puis mise au sol (le défenseur tombe, PAS un turnover)
   state.players = state.players.map(p => (p.id === target.id ? { ...p, stunned: true } : p));
-  state.isTurnover = true;
 
   // Log de la mise au sol
   const powLog = createLogEntry(
@@ -701,23 +775,8 @@ function handlePow(state: GameState, attacker: Player, target: Player, rng: RNG)
   );
   state.gameLog = [...state.gameLog, powLog];
 
-  // Jet d'armure pour la cible
-  const targetArmorResult = performArmorRoll(target, rng);
-  state.lastDiceResult = targetArmorResult;
-
-  // Log du jet d'armure
-  const targetArmorLog = createLogEntry(
-    'dice',
-    `Jet d'armure: ${targetArmorResult.diceRoll}/${targetArmorResult.targetNumber} ${targetArmorResult.success ? '✓' : '✗'}`,
-    target.id,
-    target.team,
-    {
-      diceRoll: targetArmorResult.diceRoll,
-      targetNumber: targetArmorResult.targetNumber,
-      success: targetArmorResult.success,
-    }
-  );
-  state.gameLog = [...state.gameLog, targetArmorLog];
+  // Jet d'armure + blessure avec Mighty Blow
+  state = armorAndInjuryWithMightyBlow(state, target, attacker, rng);
 
   // Gérer la poussée avec choix de direction
   const pushResult = handlePushWithChoice(state, attacker, target, 'POW');

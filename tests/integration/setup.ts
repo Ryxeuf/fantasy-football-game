@@ -1,7 +1,6 @@
 import { spawn } from "child_process";
 
 const API_PORT = process.env.API_PORT || "18001";
-const BGIO_PORT = process.env.BGIO_PORT || "18000";
 const TEST_DATABASE_URL =
   process.env.TEST_DATABASE_URL || "file:memdb1?mode=memory&cache=shared";
 
@@ -31,7 +30,6 @@ export async function setup() {
     env: {
       ...process.env,
       API_PORT,
-      BGIO_PORT,
       TEST_SQLITE: "1",
       TEST_DATABASE_URL,
     },

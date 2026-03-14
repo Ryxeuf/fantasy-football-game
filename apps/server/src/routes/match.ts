@@ -3,7 +3,9 @@ import { prisma } from "../prisma";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
 import jwt from "jsonwebtoken";
 import { acceptAndMaybeStartMatch } from "../services/match-start";
-import { enterSetupPhase } from "@bb/game-engine";
+import { enterSetupPhase, applyMove, makeRNG } from "@bb/game-engine";
+import type { Move } from "@bb/game-engine";
+import { getUserTeamSide } from "../services/turn-ownership";
 
 const router = Router();
 const MATCH_SECRET = process.env.MATCH_SECRET || "dev-match-secret";
@@ -72,6 +74,122 @@ router.post("/accept", authUser, async (req: AuthenticatedRequest, res) => {
     return res.status(500).json({ error: e?.message || "Erreur serveur" });
   }
 });
+
+// Soumettre un coup pendant la phase active du match
+router.post(
+  "/:id/move",
+  authUser,
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      const matchId = req.params.id;
+      const { move } = req.body as { move?: Move };
+
+      if (!move || !move.type) {
+        return res.status(400).json({ error: "move requis avec un type valide" });
+      }
+
+      // Charger le match
+      const match = await prisma.match.findUnique({
+        where: { id: matchId },
+        include: { turns: { orderBy: { number: "asc" } } },
+      });
+
+      if (!match) {
+        return res.status(404).json({ error: "Partie introuvable" });
+      }
+
+      if (match.status !== "active") {
+        return res.status(400).json({ error: `Statut invalide: ${match.status}. Le match doit etre actif.` });
+      }
+
+      // Determiner le cote du joueur (A ou B)
+      const userTeamSide = await getUserTeamSide(prisma as any, matchId, req.user!.id);
+      if (!userTeamSide) {
+        return res.status(403).json({ error: "Vous n'etes pas un joueur de cette partie" });
+      }
+
+      // Recuperer le dernier gameState
+      const lastTurnWithState = [...match.turns]
+        .reverse()
+        .find((t: any) => t.payload?.gameState);
+      if (!lastTurnWithState) {
+        return res.status(500).json({ error: "Etat de jeu introuvable" });
+      }
+
+      let gameState = (lastTurnWithState as any).payload.gameState;
+      if (typeof gameState === "string") {
+        gameState = JSON.parse(gameState);
+      }
+
+      // Verifier que c'est le tour de ce joueur
+      if (gameState.currentPlayer !== userTeamSide) {
+        return res.status(403).json({
+          error: `Ce n'est pas votre tour. C'est au tour de l'equipe ${gameState.currentPlayer}.`,
+        });
+      }
+
+      // Compter les moves pour le seed RNG deterministe
+      const moveCount = match.turns.filter(
+        (t: any) => t.payload?.type === "gameplay-move",
+      ).length;
+      const rng = makeRNG(`${match.seed}-move-${moveCount}`);
+
+      // Appliquer le coup
+      const newState = applyMove(gameState, move, rng);
+
+      // Persister le nouvel etat
+      const turnNumber = match.turns.length + 1;
+      await prisma.turn.create({
+        data: {
+          matchId,
+          number: turnNumber,
+          payload: {
+            type: "gameplay-move",
+            userId: req.user!.id,
+            move,
+            gameState: newState,
+            timestamp: new Date().toISOString(),
+          },
+        },
+      });
+
+      // Déterminer le prochain joueur à partir du state
+      const nextTeamSide = newState.currentPlayer;
+      const selections = await prisma.teamSelection.findMany({
+        where: { matchId },
+        orderBy: { createdAt: "asc" },
+        select: { userId: true },
+      });
+      const nextUserId = nextTeamSide === "A"
+        ? selections[0]?.userId
+        : selections[1]?.userId;
+
+      // Verifier si le match est termine (half 2, turn > 8)
+      const matchEnded = newState.half === 2 && newState.turn > 8 && newState.isTurnover;
+      await prisma.match.update({
+        where: { id: matchId },
+        data: {
+          ...(matchEnded ? { status: "ended" } : {}),
+          currentTurnUserId: matchEnded ? null : (nextUserId || null),
+          lastMoveAt: new Date(),
+        },
+      });
+
+      // Determiner si c'est toujours le tour de ce joueur
+      const isMyTurn = newState.currentPlayer === userTeamSide;
+
+      return res.json({
+        success: true,
+        gameState: newState,
+        isMyTurn,
+        moveCount: moveCount + 1,
+      });
+    } catch (e: any) {
+      console.error("Erreur lors de l'application du coup:", e);
+      return res.status(500).json({ error: e?.message || "Erreur serveur" });
+    }
+  },
+);
 
 export default router;
 
@@ -249,6 +367,81 @@ router.get("/:id/teams", authUser, async (req: AuthenticatedRequest, res) => {
     const teamB = getTeamData(s2);
 
     return res.json({ teamA, teamB });
+  } catch (e: any) {
+    console.error(e);
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// Liste des matchs de l'utilisateur connecté
+router.get("/my-matches", authUser, async (req: AuthenticatedRequest, res) => {
+  try {
+    const userId = req.user!.id;
+
+    const matches = await prisma.match.findMany({
+      where: {
+        players: { some: { id: userId } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+      include: {
+        teamSelections: {
+          include: {
+            user: { select: { id: true, coachName: true } },
+            teamRef: { select: { id: true, name: true, rosterName: true } },
+          },
+        },
+        turns: {
+          orderBy: { number: "desc" },
+          take: 1,
+          select: { payload: true },
+        },
+      },
+    });
+
+    const result = matches.map((m) => {
+      // Extraire le score depuis le dernier turn si disponible
+      const lastTurn = m.turns[0];
+      const gameState = (lastTurn?.payload as any)?.gameState;
+      const score = gameState?.score || { teamA: 0, teamB: 0 };
+      const half = gameState?.half || 0;
+      const turn = gameState?.turn || 0;
+
+      // Déterminer le côté de l'utilisateur
+      const selections = m.teamSelections.sort(
+        (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
+      );
+      const mySelection = selections.find((s) => s.userId === userId);
+      const opponentSelection = selections.find((s) => s.userId !== userId);
+      const isMyTurn = m.currentTurnUserId === userId;
+
+      return {
+        id: m.id,
+        status: m.status,
+        createdAt: m.createdAt,
+        lastMoveAt: m.lastMoveAt,
+        isMyTurn,
+        score,
+        half,
+        turn,
+        myTeam: mySelection
+          ? {
+              coachName: mySelection.user.coachName,
+              teamName: mySelection.teamRef?.name || mySelection.team,
+              rosterName: mySelection.teamRef?.rosterName,
+            }
+          : null,
+        opponent: opponentSelection
+          ? {
+              coachName: opponentSelection.user.coachName,
+              teamName: opponentSelection.teamRef?.name || opponentSelection.team,
+              rosterName: opponentSelection.teamRef?.rosterName,
+            }
+          : null,
+      };
+    });
+
+    return res.json({ matches: result });
   } catch (e: any) {
     console.error(e);
     return res.status(500).json({ error: "Erreur serveur" });
@@ -444,6 +637,28 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
         return res.status(500).json({ error: "État non trouvé" });
       const gs = lastTurn.payload.gameState;
       gameState = typeof gs === "string" ? JSON.parse(gs) : gs;
+    }
+
+    // Pour les matchs actifs, enrichir la réponse avec des métadonnées
+    if (match.status === "active" && gameState) {
+      const userTeamSide = await getUserTeamSide(prisma as any, matchId, req.user!.id);
+      const isMyTurn = userTeamSide ? gameState.currentPlayer === userTeamSide : false;
+      const moveCount = match.turns.filter(
+        (t: any) => t.payload?.type === "gameplay-move",
+      ).length;
+      const lastMoveTurn = [...match.turns]
+        .reverse()
+        .find((t: any) => t.payload?.type === "gameplay-move");
+
+      return res.json({
+        gameState,
+        matchStatus: match.status,
+        currentTeam: gameState.currentPlayer,
+        isMyTurn,
+        myTeamSide: userTeamSide,
+        moveCount,
+        lastMoveAt: lastMoveTurn?.createdAt || null,
+      });
     }
 
     // Dans /state, après chargement gameState pour prematch-setup
@@ -719,10 +934,10 @@ router.post(
         return res.status(400).json({ error: "Pas en phase de calcul de déviation" });
       }
 
-      // Calculer la déviation
+      // Calculer la déviation avec un RNG déterministe
       const { calculateKickDeviation } = await import("@bb/game-engine");
-      const rng = () => Math.random();
-      const newState = calculateKickDeviation(gameState, rng);
+      const deviationRng = makeRNG(`${match.seed}-kick-deviation`);
+      const newState = calculateKickDeviation(gameState, deviationRng);
 
       // Sauvegarder le nouvel état
       const newTurn = await prisma.turn.create({
@@ -780,13 +995,33 @@ router.post(
         return res.status(400).json({ error: "Pas en phase d'événement de kickoff" });
       }
 
-      // Résoudre l'événement
+      // Résoudre l'événement avec un RNG déterministe
       const { resolveKickoffEvent, startMatchFromKickoff } = await import("@bb/game-engine");
-      const rng = () => Math.random();
-      let newState = resolveKickoffEvent(gameState, rng);
+      const kickoffRng = makeRNG(`${match.seed}-kickoff-event`);
+      let newState = resolveKickoffEvent(gameState, kickoffRng);
 
       // Démarrer le match après résolution de l'événement
       const matchState = startMatchFromKickoff(newState);
+
+      // Déterminer qui joue en premier (l'équipe receveuse = currentPlayer)
+      const selections = await prisma.teamSelection.findMany({
+        where: { matchId },
+        orderBy: { createdAt: "asc" },
+        select: { userId: true },
+      });
+      const firstPlayerUserId = matchState.currentPlayer === "A"
+        ? selections[0]?.userId
+        : selections[1]?.userId;
+
+      // Passer le match en statut "active" pour autoriser les coups
+      await prisma.match.update({
+        where: { id: matchId },
+        data: {
+          status: "active",
+          currentTurnUserId: firstPlayerUserId || null,
+          lastMoveAt: new Date(),
+        },
+      });
 
       // Sauvegarder le nouvel état
       const newTurn = await prisma.turn.create({

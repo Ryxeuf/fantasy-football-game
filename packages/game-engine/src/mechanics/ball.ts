@@ -38,6 +38,14 @@ export function awardTouchdown(state: GameState, scoringTeam: TeamId, scorer?: P
     teamB: scoringTeam === 'B' ? next.score.teamB + 1 : next.score.teamB,
   };
 
+  // Tracker le TD dans les stats du match
+  if (scorer) {
+    if (!next.matchStats[scorer.id]) {
+      next.matchStats[scorer.id] = { touchdowns: 0, casualties: 0, completions: 0, interceptions: 0, mvp: false };
+    }
+    next.matchStats[scorer.id].touchdowns += 1;
+  }
+
   // Nettoyer la balle et arrêter le drive (Turnover satisfaisant)
   next.ball = undefined;
   next.players = next.players.map(p => ({ ...p, hasBall: false }));
@@ -56,6 +64,7 @@ export function awardTouchdown(state: GameState, scoringTeam: TeamId, scorer?: P
   return {
     ...next,
     score: newScore,
+    gamePhase: 'post-td' as const,
   };
 }
 

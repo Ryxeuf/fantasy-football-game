@@ -26,6 +26,7 @@ export interface Player {
   av: number;
   skills: string[];
   pm: number; // points de mouvement restants
+  gfiUsed?: number; // nombre de GFI (Going For It) utilisés ce tour (max 2)
   hasBall?: boolean; // indique si le joueur a la balle
   state?: PlayerState; // état du joueur pour les zones de dugout
 }
@@ -106,10 +107,14 @@ export interface GameState {
     targetOldPosition: Position;
   };
   // Suivi des actions par joueur par tour
-  playerActions: Map<string, ActionType>; // playerId -> action effectuée ce tour
+  playerActions: Record<string, ActionType>; // playerId -> action effectuée ce tour
   // Compteur de blitz par équipe par tour
-  teamBlitzCount: Map<TeamId, number>; // teamId -> nombre de blitz effectués ce tour
+  teamBlitzCount: Record<string, number>; // teamId -> nombre de blitz effectués ce tour
+  // Compteur de foul par équipe par tour
+  teamFoulCount: Record<string, number>;
   // Informations de match
+  gamePhase: 'playing' | 'post-td' | 'halftime' | 'ended';
+  kickingTeam?: TeamId; // Équipe qui frappe (kick)
   half: number; // 1 ou 2
   score: {
     teamA: number;
@@ -118,6 +123,32 @@ export interface GameState {
   teamNames: {
     teamA: string;
     teamB: string;
+  };
+  // Système de relances (rerolls)
+  teamRerolls: { teamA: number; teamB: number };
+  rerollUsedThisTurn: boolean;
+  pendingReroll?: {
+    rollType: 'dodge' | 'pickup' | 'gfi';
+    playerId: string;
+    team: TeamId;
+    targetNumber: number;
+    modifiers: number;
+    playerIndex: number;
+    from?: Position; // pour dodge
+    to?: Position; // pour dodge/gfi
+  };
+  // Statistiques de match par joueur (pour calcul SPP en fin de match)
+  matchStats: Record<string, {
+    touchdowns: number;
+    casualties: number;
+    completions: number;
+    interceptions: number;
+    mvp: boolean;
+  }>;
+  // Résultats finaux (rempli en fin de match)
+  matchResult?: {
+    winner?: TeamId;
+    spp: Record<string, number>; // playerId -> SPP earned
   };
   // Log du match
   gameLog: GameLogEntry[];
@@ -149,7 +180,11 @@ export type Move =
   | { type: 'BLOCK_CHOOSE'; playerId: string; targetId: string; result: BlockResult }
   | { type: 'BLITZ'; playerId: string; to: Position; targetId: string }
   | { type: 'PUSH_CHOOSE'; playerId: string; targetId: string; direction: Position }
-  | { type: 'FOLLOW_UP_CHOOSE'; playerId: string; targetId: string; followUp: boolean };
+  | { type: 'FOLLOW_UP_CHOOSE'; playerId: string; targetId: string; followUp: boolean }
+  | { type: 'REROLL_CHOOSE'; useReroll: boolean }
+  | { type: 'PASS'; playerId: string; targetId: string }
+  | { type: 'HANDOFF'; playerId: string; targetId: string }
+  | { type: 'FOUL'; playerId: string; targetId: string };
 
 export type BlockResult = 'PLAYER_DOWN' | 'BOTH_DOWN' | 'PUSH_BACK' | 'STUMBLE' | 'POW';
 

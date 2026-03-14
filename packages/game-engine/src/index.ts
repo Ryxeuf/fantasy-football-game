@@ -27,8 +27,6 @@ export * from './utils/dice-notifications';
 export * from './utils/team-value-calculator';
 export * from './mechanics/movement';
 export * from './actions/actions';
-export * from './core/boardgame-io';
-
 // Export des fonctions de blocage (sans conflit)
 export {
   canBlock,
@@ -64,6 +62,7 @@ export {
   checkPlayerTurnEnd,
   shouldAutoEndTurn,
   handlePlayerSwitch,
+  handlePostTouchdown,
 } from './core/game-state';
 
 // Export des fonctions de pré-match
@@ -93,11 +92,18 @@ export { movePlayerToDugoutZone } from './mechanics/dugout';
 // Export des fonctions de blessure
 export { performInjuryRoll } from './mechanics/injury';
 
+// Export des fonctions de passe et remise
+export { executePass, executeHandoff, getPassRange, getDistance, findInterceptors } from './mechanics/passing';
+
+// Export des fonctions de faute
+export { canFoul, executeFoul, calculateFoulAssists } from './mechanics/foul';
+
 // Export des rosters et positions
 export * from './rosters';
 
 // Export des compétences (skills)
 export * from './skills';
+export * from './skills/skill-effects';
 
 // Export des utilitaires d'avancements
 export { 

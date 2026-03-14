@@ -20,8 +20,8 @@ const createExtendedGameState = (overrides: Partial<ExtendedGameState> = {}): Ex
   gameLog: [],
   ball: null,
   lastDiceResult: undefined,
-  playerActions: new Map(),
-  teamBlitzCount: new Map(),
+  playerActions: {},
+  teamBlitzCount: {},
   dugouts: {
     teamA: {
       zones: {

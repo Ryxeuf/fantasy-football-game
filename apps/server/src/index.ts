@@ -1,4 +1,3 @@
-import { Server, Origins } from "boardgame.io/dist/cjs/server";
 import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
@@ -15,7 +14,6 @@ import publicPositionsRoutes from "./routes/public-positions";
 import cupRoutes from "./routes/cup";
 import localMatchRoutes from "./routes/local-match";
 import dotenv from "dotenv";
-import { toBGIOGame } from "@bb/game-engine";
 import { execSync } from "node:child_process";
 import { prisma } from "./prisma";
 
@@ -39,34 +37,7 @@ if (process.env.TEST_SQLITE === "1") {
   }
 }
 
-const BGIO_PORT = parseInt(process.env.BGIO_PORT || "8200", 10);
 const API_PORT = parseInt(process.env.API_PORT || "8201", 10);
-const MATCH_SECRET = process.env.MATCH_SECRET || "dev-match-secret";
-
-// Serveur boardgame.io
-const bgioServer = Server({
-  games: [toBGIOGame() as any],
-  origins: [Origins.LOCALHOST, Origins.LOCALHOST_IN_DEVELOPMENT],
-  // Validation du token de match transmis côté client via `credentials`
-  authenticate: async (credentials: any) => {
-    try {
-      const token =
-        typeof credentials === "string" ? credentials : credentials?.matchToken;
-      if (!token) throw new Error("matchToken manquant");
-      const payload: any = (await import("jsonwebtoken")).default.verify(
-        token,
-        MATCH_SECRET,
-      );
-      // Optionnel: retourner des métadonnées utiles
-      return { matchId: payload.matchId, userId: payload.userId } as any;
-    } catch (e) {
-      throw new Error("Authentification match invalide");
-    }
-  },
-});
-
-bgioServer.run({ port: BGIO_PORT });
-console.log(`boardgame.io server listening on http://localhost:${BGIO_PORT}`);
 
 // Serveur Express API
 const app = express();

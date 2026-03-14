@@ -3,7 +3,8 @@
  * Gère l'application des mouvements, les jets de dés et la logique de jeu
  */
 
-import { GameState, Move, Player, Position, TeamId, RNG, BlockResult } from '../core/types';
+import { GameState, Move, Player, Position, TeamId, RNG, BlockResult, ActionType } from '../core/types';
+import { canRerollGFI, canRerollPickup, canRerollDodge } from '../skills/skill-effects';
 import {
   inBounds,
   samePos,
@@ -53,7 +54,11 @@ import {
   getPlayerAction,
   incrementTeamBlitzCount,
   advanceHalfIfNeeded,
+  handlePostTouchdown,
 } from '../core/game-state';
+import { executePass, executeHandoff, getPassRange } from '../mechanics/passing';
+import { canFoul, executeFoul } from '../mechanics/foul';
+import { isAdjacent } from '../mechanics/movement';
 
 /**
  * Obtient tous les mouvements légaux pour l'état actuel
@@ -64,9 +69,22 @@ export function getLegalMoves(state: GameState): Move[] {
   const moves: Move[] = [{ type: 'END_TURN' }];
   const team = state.currentPlayer;
 
+  // Si le match est terminé, aucune action possible
+  if (state.gamePhase === 'ended') {
+    return [];
+  }
+
   // Vérifier que state.players existe
   if (!state.players || !Array.isArray(state.players)) {
     return moves;
+  }
+
+  // Si un pendingReroll est en attente, seules les relances sont possibles
+  if (state.pendingReroll) {
+    return [
+      { type: 'REROLL_CHOOSE', useReroll: true } as Move,
+      { type: 'REROLL_CHOOSE', useReroll: false } as Move,
+    ];
   }
 
   // Si c'est un turnover, seul END_TURN est possible
@@ -130,6 +148,41 @@ export function getLegalMoves(state: GameState): Move[] {
         }
       }
     }
+
+    // Actions de passe (PASS) - le joueur doit avoir le ballon et pas encore agi
+    if (p.hasBall && !hasPlayerActed(state, p.id)) {
+      const teammates = state.players.filter(
+        t => t.team === team && t.id !== p.id && !t.stunned && t.state === 'active'
+      );
+      for (const target of teammates) {
+        const range = getPassRange(p.pos, target.pos);
+        if (range) {
+          moves.push({ type: 'PASS', playerId: p.id, targetId: target.id });
+        }
+      }
+    }
+
+    // Actions de remise (HANDOFF) - le joueur doit avoir le ballon, cible adjacente
+    if (p.hasBall && !hasPlayerActed(state, p.id)) {
+      const teammates = state.players.filter(
+        t => t.team === team && t.id !== p.id && !t.stunned && t.state === 'active'
+      );
+      for (const target of teammates) {
+        if (isAdjacent(p.pos, target.pos)) {
+          moves.push({ type: 'HANDOFF', playerId: p.id, targetId: target.id });
+        }
+      }
+    }
+
+    // Actions de faute (FOUL) - sur un joueur au sol, max 1 par tour
+    if (!hasPlayerActed(state, p.id) && ((state.teamFoulCount && state.teamFoulCount[team]) || 0) === 0) {
+      const groundedOpponents = state.players.filter(
+        opp => opp.team !== team && opp.stunned && isAdjacent(p.pos, opp.pos)
+      );
+      for (const target of groundedOpponents) {
+        moves.push({ type: 'FOUL', playerId: p.id, targetId: target.id });
+      }
+    }
   }
   return moves;
 }
@@ -168,6 +221,73 @@ function getAdjacentOpponents(state: GameState, position: Position, team: TeamId
 }
 
 /**
+ * Vérifie si une équipe peut utiliser une relance d'équipe
+ */
+function canUseTeamReroll(state: GameState, team: TeamId): boolean {
+  if (state.rerollUsedThisTurn) return false;
+  const rerolls = team === 'A' ? state.teamRerolls?.teamA : state.teamRerolls?.teamB;
+  return (rerolls ?? 0) > 0;
+}
+
+/**
+ * Consomme une relance d'équipe
+ */
+function consumeTeamReroll(state: GameState, team: TeamId): GameState {
+  const newRerolls = { ...state.teamRerolls };
+  if (team === 'A') {
+    newRerolls.teamA = Math.max(0, (newRerolls.teamA ?? 0) - 1);
+  } else {
+    newRerolls.teamB = Math.max(0, (newRerolls.teamB ?? 0) - 1);
+  }
+  return { ...state, teamRerolls: newRerolls, rerollUsedThisTurn: true };
+}
+
+/**
+ * Applique les conséquences d'un échec de jet (chute, turnover, armure, perte de balle)
+ */
+function applyRollFailure(state: GameState, playerIndex: number, rng: RNG): GameState {
+  const player = state.players[playerIndex];
+  state.isTurnover = true;
+  state.players[playerIndex] = { ...player, stunned: true };
+
+  // Jet d'armure
+  const armorResult = performArmorRollWithNotification(state.players[playerIndex], rng);
+  state.lastDiceResult = armorResult;
+  const armorLog = createLogEntry(
+    'dice',
+    `Jet d'armure: ${armorResult.diceRoll}/${armorResult.targetNumber} ${armorResult.success ? '✓' : '✗'}`,
+    player.id,
+    player.team,
+    { diceRoll: armorResult.diceRoll, targetNumber: armorResult.targetNumber, success: armorResult.success }
+  );
+  state.gameLog = [...state.gameLog, armorLog];
+
+  // Perte de balle si le joueur la portait
+  if (player.hasBall) {
+    state.players[playerIndex] = { ...state.players[playerIndex], hasBall: false };
+    state.ball = { ...state.players[playerIndex].pos };
+    return bounceBall(state, rng);
+  }
+
+  return state;
+}
+
+/**
+ * Applique les conséquences d'un échec de pickup (rebond + turnover)
+ */
+function applyPickupFailure(state: GameState, playerIndex: number, rng: RNG): GameState {
+  state.isTurnover = true;
+  const failLog = createLogEntry(
+    'turnover',
+    `Échec du ramassage - Turnover`,
+    state.players[playerIndex].id,
+    state.players[playerIndex].team
+  );
+  state.gameLog = [...state.gameLog, failLog];
+  return bounceBall(state, rng);
+}
+
+/**
  * Applique un mouvement à l'état du jeu
  * @param state - État du jeu
  * @param move - Mouvement à appliquer
@@ -175,8 +295,14 @@ function getAdjacentOpponents(state: GameState, position: Position, team: TeamId
  * @returns Nouvel état du jeu
  */
 export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
+  // Si un pendingReroll est en attente, seuls REROLL_CHOOSE et END_TURN sont acceptés
+  if (state.pendingReroll && move.type !== 'REROLL_CHOOSE' && move.type !== 'END_TURN') {
+    return state;
+  }
+
   // Si c'est un turnover, on ne peut que finir le tour
-  if (state.isTurnover && move.type !== 'END_TURN') {
+  // Exception : PUSH_CHOOSE, FOLLOW_UP_CHOOSE et REROLL_CHOOSE font partie de la résolution
+  if (state.isTurnover && move.type !== 'END_TURN' && move.type !== 'PUSH_CHOOSE' && move.type !== 'FOLLOW_UP_CHOOSE' && move.type !== 'REROLL_CHOOSE') {
     return state;
   }
 
@@ -197,6 +323,14 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       return handleFollowUpChoose(state, move);
     case 'BLITZ':
       return handleBlitz(state, move, rng);
+    case 'REROLL_CHOOSE':
+      return handleRerollChoose(state, move, rng);
+    case 'PASS':
+      return handlePass(state, move, rng);
+    case 'HANDOFF':
+      return handleHandoff(state, move, rng);
+    case 'FOUL':
+      return handleFoul(state, move, rng);
     default:
       return checkTouchdowns(state);
   }
@@ -206,17 +340,27 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
  * Gère la fin de tour
  */
 function handleEndTurn(state: GameState): GameState {
+  // Si le match est terminé, ne rien faire
+  if (state.gamePhase === 'ended') return state;
+
+  // Si on est en phase post-TD, faire le reset et kickoff
+  if (state.gamePhase === 'post-td') {
+    return handlePostTouchdown(state);
+  }
+
   // Changement de tour - le porteur de ballon garde le ballon
   const newState: GameState = {
     ...state,
     currentPlayer: state.currentPlayer === 'A' ? 'B' : 'A',
     turn: state.currentPlayer === 'B' ? state.turn + 1 : state.turn,
     selectedPlayerId: null,
-    players: state.players.map(p => ({ ...p, pm: p.ma })),
+    players: state.players.map(p => ({ ...p, pm: p.ma, gfiUsed: 0 })),
     isTurnover: false,
     lastDiceResult: undefined,
-    playerActions: new Map<string, any>(), // Réinitialiser les actions
-    teamBlitzCount: new Map<TeamId, number>(), // Réinitialiser les compteurs de blitz
+    playerActions: {} as Record<string, ActionType>, // Réinitialiser les actions
+    teamBlitzCount: {} as Record<string, number>, // Réinitialiser les compteurs de blitz
+    teamFoulCount: {} as Record<string, number>, // Réinitialiser les compteurs de foul
+    rerollUsedThisTurn: false, // Réinitialiser le flag de relance
   };
 
   // Log du changement de tour
@@ -307,8 +451,13 @@ function handleDodgeRoll(
   next.gameLog = [...next.gameLog, logEntry];
 
   // Le joueur se déplace toujours, que le jet d'esquive réussisse ou échoue
+  const isDodgeGFI = next.players[idx].pm <= 0;
   next.players[idx].pos = { ...to };
-  next.players[idx].pm = Math.max(0, next.players[idx].pm - 1);
+  if (isDodgeGFI) {
+    next.players[idx].gfiUsed = (next.players[idx].gfiUsed ?? 0) + 1;
+  } else {
+    next.players[idx].pm = Math.max(0, next.players[idx].pm - 1);
+  }
 
   // Enregistrer l'action de mouvement seulement si c'est le premier mouvement
   if (!hasPlayerActed(next, player.id)) {
@@ -318,44 +467,69 @@ function handleDodgeRoll(
   // Vérifier si le tour du joueur doit se terminer
   next = checkPlayerTurnEnd(next, player.id);
 
-  if (dodgeResult.success) {
+  // Dodge skill auto-reroll si échec
+  let finalDodgeSuccess = dodgeResult.success;
+  if (!finalDodgeSuccess && canRerollDodge(player)) {
+    const rerollLog = createLogEntry('dice', `Dodge : relance de l'esquive (${dodgeResult.diceRoll} raté)`, player.id, player.team);
+    next.gameLog = [...next.gameLog, rerollLog];
+    const rerollResult = performDodgeRollWithNotification(player, rng, dodgeModifiers);
+    next.lastDiceResult = rerollResult;
+    const rerollLogEntry = createLogEntry(
+      'dice',
+      `Relance esquive: ${rerollResult.diceRoll}/${rerollResult.targetNumber} ${rerollResult.success ? '✓' : '✗'}`,
+      player.id, player.team,
+      { diceRoll: rerollResult.diceRoll, targetNumber: rerollResult.targetNumber, success: rerollResult.success }
+    );
+    next.gameLog = [...next.gameLog, rerollLogEntry];
+    finalDodgeSuccess = rerollResult.success;
+  }
+
+  if (finalDodgeSuccess) {
+    // Si c'est aussi un GFI, jet supplémentaire de GFI (2+ sur D6)
+    if (isDodgeGFI) {
+      let gfiRoll = Math.floor(rng() * 6) + 1;
+      let gfiSuccess = gfiRoll >= 2;
+
+      // Sure Feet auto-reroll
+      if (!gfiSuccess && canRerollGFI(player)) {
+        const sfLog = createLogEntry('dice', `Sure Feet : relance du GFI (${gfiRoll} raté)`, player.id, player.team);
+        next.gameLog = [...next.gameLog, sfLog];
+        gfiRoll = Math.floor(rng() * 6) + 1;
+        gfiSuccess = gfiRoll >= 2;
+      }
+
+      const gfiLogEntry = createLogEntry(
+        'dice',
+        `GFI (Going For It) après esquive: ${gfiRoll}/2 ${gfiSuccess ? '✓' : '✗'}`,
+        player.id, player.team,
+        { diceRoll: gfiRoll, targetNumber: 2, success: gfiSuccess }
+      );
+      next.gameLog = [...next.gameLog, gfiLogEntry];
+      next.lastDiceResult = { type: 'dodge' as any, diceRoll: gfiRoll, targetNumber: 2, success: gfiSuccess, modifiers: 0, playerName: player.name };
+
+      if (!gfiSuccess) {
+        // Offrir relance d'équipe si disponible
+        if (canUseTeamReroll(next, player.team)) {
+          next.pendingReroll = { rollType: 'gfi', playerId: player.id, team: player.team, targetNumber: 2, modifiers: 0, playerIndex: idx, to };
+          return next;
+        }
+        return applyRollFailure(next, idx, rng);
+      }
+    }
+
     // Si le joueur porte la balle et atteint l'en-but adverse -> touchdown
     const mover = next.players[idx];
     if (mover.hasBall && isInOpponentEndzone(next, mover)) {
       return awardTouchdown(next, mover.team, mover);
     }
   } else {
-    // Jet d'esquive échoué : le joueur chute et doit faire un jet d'armure
-    next.isTurnover = true;
-
-    // Le joueur chute (est mis à terre)
-    next.players[idx].stunned = true;
-
-    // Effectuer le jet d'armure
-    const armorResult = performArmorRollWithNotification(next.players[idx], rng);
-    next.lastDiceResult = armorResult;
-
-    // Log du jet d'armure
-    const armorLogEntry = createLogEntry(
-      'dice',
-      `Jet d'armure: ${armorResult.diceRoll}/${armorResult.targetNumber} ${armorResult.success ? '✓' : '✗'}`,
-      next.players[idx].id,
-      next.players[idx].team,
-      {
-        diceRoll: armorResult.diceRoll,
-        targetNumber: armorResult.targetNumber,
-        success: armorResult.success,
-      }
-    );
-    next.gameLog = [...next.gameLog, armorLogEntry];
-
-    // Si le joueur avait le ballon, il le perd et le ballon rebondit
-    if (next.players[idx].hasBall) {
-      next.players[idx].hasBall = false;
-      next.ball = { ...next.players[idx].pos };
-      // Faire rebondir le ballon depuis la position du joueur
-      return bounceBall(next, rng);
+    // Esquive échouée (après skill reroll éventuel) : offrir relance d'équipe
+    if (canUseTeamReroll(next, player.team)) {
+      next.pendingReroll = { rollType: 'dodge', playerId: player.id, team: player.team, targetNumber: dodgeResult.targetNumber, modifiers: dodgeModifiers, playerIndex: idx, from, to };
+      return next;
     }
+    // Pas de relance disponible : appliquer l'échec
+    return applyRollFailure(next, idx, rng);
   }
 
   return next;
@@ -372,9 +546,83 @@ function handleNormalMove(
   rng: RNG,
   idx: number
 ): GameState {
-  // Pas de jet nécessaire : mouvement normal
   let next = structuredClone(state) as GameState;
+  const isGFI = next.players[idx].pm <= 0;
+
+  // Déplacer le joueur
   next.players[idx].pos = { ...to };
+
+  if (isGFI) {
+    // GFI : ne décrémente pas pm, incrémente gfiUsed
+    next.players[idx].gfiUsed = (next.players[idx].gfiUsed ?? 0) + 1;
+
+    // Jet de GFI : 2+ sur D6
+    let gfiRoll = Math.floor(rng() * 6) + 1;
+    let gfiSuccess = gfiRoll >= 2;
+
+    // Sure Feet : relance automatique du GFI raté (1x par activation)
+    if (!gfiSuccess && canRerollGFI(player)) {
+      const rerollLog = createLogEntry(
+        'dice',
+        `Sure Feet : relance du GFI (${gfiRoll} raté)`,
+        player.id,
+        player.team
+      );
+      next.gameLog = [...next.gameLog, rerollLog];
+      gfiRoll = Math.floor(rng() * 6) + 1;
+      gfiSuccess = gfiRoll >= 2;
+    }
+
+    const gfiLogEntry = createLogEntry(
+      'dice',
+      `GFI (Going For It): ${gfiRoll}/2 ${gfiSuccess ? '✓' : '✗'}`,
+      player.id,
+      player.team,
+      { diceRoll: gfiRoll, targetNumber: 2, success: gfiSuccess }
+    );
+    next.gameLog = [...next.gameLog, gfiLogEntry];
+    next.lastDiceResult = {
+      type: 'dodge' as any,
+      diceRoll: gfiRoll,
+      targetNumber: 2,
+      success: gfiSuccess,
+      modifiers: 0,
+      playerName: player.name,
+    };
+
+    // Enregistrer l'action
+    if (!hasPlayerActed(next, player.id)) {
+      next = setPlayerAction(next, player.id, 'MOVE');
+    }
+
+    if (!gfiSuccess) {
+      // GFI échoué : offrir relance d'équipe si disponible
+      if (canUseTeamReroll(next, player.team)) {
+        next.pendingReroll = { rollType: 'gfi', playerId: player.id, team: player.team, targetNumber: 2, modifiers: 0, playerIndex: idx, to };
+        return next;
+      }
+      // Pas de relance : appliquer l'échec
+      return applyRollFailure(next, idx, rng);
+    }
+
+    // GFI réussi : continuer normalement
+    next = checkPlayerTurnEnd(next, player.id);
+
+    // Touchdown check
+    const mover = next.players[idx];
+    if (mover.hasBall && isInOpponentEndzone(next, mover)) {
+      return awardTouchdown(next, mover.team, mover);
+    }
+
+    // Ramassage de balle
+    if (next.ball && samePos(next.ball, to)) {
+      return handleBallPickup(next, player, rng, idx);
+    }
+
+    return next;
+  }
+
+  // Mouvement normal (a des PM)
   next.players[idx].pm = Math.max(0, next.players[idx].pm - 1);
 
   // Enregistrer l'action de mouvement seulement si c'est le premier mouvement
@@ -418,7 +666,19 @@ function handleBallPickup(state: GameState, player: Player, rng: RNG, idx: numbe
   const pickupModifiers = calculatePickupModifiers(state, state.ball!, player.team);
 
   // Effectuer le jet de pickup
-  const pickupResult = performPickupRollWithNotification(player, rng, pickupModifiers);
+  let pickupResult = performPickupRollWithNotification(player, rng, pickupModifiers);
+
+  // Sure Hands : relance automatique du pickup raté
+  if (!pickupResult.success && canRerollPickup(player)) {
+    const rerollLog = createLogEntry(
+      'dice',
+      `Sure Hands : relance du ramassage (${pickupResult.diceRoll} raté)`,
+      player.id,
+      player.team
+    );
+    state.gameLog = [...state.gameLog, rerollLog];
+    pickupResult = performPickupRollWithNotification(player, rng, pickupModifiers);
+  }
 
   // Stocker le résultat pour l'affichage
   state.lastDiceResult = pickupResult;
@@ -458,7 +718,12 @@ function handleBallPickup(state: GameState, player: Player, rng: RNG, idx: numbe
       return awardTouchdown(state, picker.team, picker);
     }
   } else {
-    // Échec de pickup : la balle rebondit et turnover
+    // Échec de pickup : offrir relance d'équipe si disponible
+    if (canUseTeamReroll(state, player.team)) {
+      state.pendingReroll = { rollType: 'pickup', playerId: player.id, team: player.team, targetNumber: pickupResult.targetNumber, modifiers: pickupModifiers, playerIndex: idx };
+      return state;
+    }
+    // Pas de relance : la balle rebondit et turnover
     state.isTurnover = true;
 
     // Log du ramassage échoué
@@ -840,6 +1105,127 @@ function handleFollowUpChoose(
 }
 
 /**
+ * Gère le choix de relance d'équipe
+ */
+function handleRerollChoose(
+  state: GameState,
+  move: { type: 'REROLL_CHOOSE'; useReroll: boolean },
+  rng: RNG
+): GameState {
+  if (!state.pendingReroll) return state;
+
+  const { rollType, playerId, team, targetNumber, modifiers, playerIndex, from, to } = state.pendingReroll;
+  let newState: GameState = { ...state, pendingReroll: undefined };
+
+  if (!move.useReroll) {
+    // Relance refusée : appliquer les conséquences de l'échec
+    const declineLog = createLogEntry('action', `Relance refusée`, playerId, team);
+    newState.gameLog = [...newState.gameLog, declineLog];
+
+    if (rollType === 'pickup') {
+      return applyPickupFailure(newState, playerIndex, rng);
+    } else {
+      // dodge ou gfi : chute + turnover
+      return applyRollFailure(newState, playerIndex, rng);
+    }
+  }
+
+  // Relance acceptée : consommer la relance
+  newState = consumeTeamReroll(newState, team);
+  const rerollLog = createLogEntry('action', `Relance d'équipe utilisée !`, playerId, team);
+  newState.gameLog = [...newState.gameLog, rerollLog];
+
+  if (rollType === 'dodge') {
+    // Relancer le jet d'esquive
+    const dodgeResult = performDodgeRollWithNotification(
+      newState.players[playerIndex],
+      rng,
+      modifiers
+    );
+    newState.lastDiceResult = dodgeResult;
+    const logEntry = createLogEntry(
+      'dice',
+      `Relance esquive: ${dodgeResult.diceRoll}/${dodgeResult.targetNumber} ${dodgeResult.success ? '✓' : '✗'}`,
+      playerId,
+      team,
+      { diceRoll: dodgeResult.diceRoll, targetNumber: dodgeResult.targetNumber, success: dodgeResult.success }
+    );
+    newState.gameLog = [...newState.gameLog, logEntry];
+
+    if (dodgeResult.success) {
+      // Touchdown check
+      const mover = newState.players[playerIndex];
+      if (mover.hasBall && isInOpponentEndzone(newState, mover)) {
+        return awardTouchdown(newState, mover.team, mover);
+      }
+      return newState;
+    } else {
+      return applyRollFailure(newState, playerIndex, rng);
+    }
+  } else if (rollType === 'gfi') {
+    // Relancer le jet de GFI
+    const gfiRoll = Math.floor(rng() * 6) + 1;
+    const gfiSuccess = gfiRoll >= 2;
+    const logEntry = createLogEntry(
+      'dice',
+      `Relance GFI: ${gfiRoll}/2 ${gfiSuccess ? '✓' : '✗'}`,
+      playerId,
+      team,
+      { diceRoll: gfiRoll, targetNumber: 2, success: gfiSuccess }
+    );
+    newState.gameLog = [...newState.gameLog, logEntry];
+
+    if (gfiSuccess) {
+      // Touchdown check
+      const mover = newState.players[playerIndex];
+      if (mover.hasBall && isInOpponentEndzone(newState, mover)) {
+        return awardTouchdown(newState, mover.team, mover);
+      }
+      // Ball pickup check
+      if (newState.ball && to && samePos(newState.ball, to)) {
+        return handleBallPickup(newState, mover, rng, playerIndex);
+      }
+      return newState;
+    } else {
+      return applyRollFailure(newState, playerIndex, rng);
+    }
+  } else if (rollType === 'pickup') {
+    // Relancer le jet de pickup
+    const pickupResult = performPickupRollWithNotification(
+      newState.players[playerIndex],
+      rng,
+      modifiers
+    );
+    newState.lastDiceResult = pickupResult;
+    const logEntry = createLogEntry(
+      'dice',
+      `Relance pickup: ${pickupResult.diceRoll}/${pickupResult.targetNumber} ${pickupResult.success ? '✓' : '✗'}`,
+      playerId,
+      team,
+      { diceRoll: pickupResult.diceRoll, targetNumber: pickupResult.targetNumber, success: pickupResult.success }
+    );
+    newState.gameLog = [...newState.gameLog, logEntry];
+
+    if (pickupResult.success) {
+      newState.ball = undefined;
+      newState.players[playerIndex] = { ...newState.players[playerIndex], hasBall: true };
+      const successLog = createLogEntry('action', `Ballon ramassé avec succès (relance)`, playerId, team);
+      newState.gameLog = [...newState.gameLog, successLog];
+      // Touchdown check
+      const picker = newState.players[playerIndex];
+      if (isInOpponentEndzone(newState, picker)) {
+        return awardTouchdown(newState, picker.team, picker);
+      }
+      return newState;
+    } else {
+      return applyPickupFailure(newState, playerIndex, rng);
+    }
+  }
+
+  return newState;
+}
+
+/**
  * Gère un blitz
  */
 function handleBlitz(
@@ -1037,4 +1423,72 @@ function handleBlitz(
       targetStrength,
     },
   };
+}
+
+/**
+ * Gère une action de passe
+ */
+function handlePass(state: GameState, move: { type: 'PASS'; playerId: string; targetId: string }, rng: RNG): GameState {
+  const passer = state.players.find(p => p.id === move.playerId);
+  const target = state.players.find(p => p.id === move.targetId);
+
+  if (!passer || !target) return state;
+  if (!passer.hasBall) return state;
+  if (passer.team !== state.currentPlayer) return state;
+  if (hasPlayerActed(state, passer.id)) return state;
+
+  let newState = executePass(state, passer, target, rng);
+  newState = setPlayerAction(newState, passer.id, 'PASS');
+  newState = checkPlayerTurnEnd(newState, passer.id);
+  return newState;
+}
+
+/**
+ * Gère une action de remise (handoff)
+ */
+function handleHandoff(state: GameState, move: { type: 'HANDOFF'; playerId: string; targetId: string }, rng: RNG): GameState {
+  const passer = state.players.find(p => p.id === move.playerId);
+  const target = state.players.find(p => p.id === move.targetId);
+
+  if (!passer || !target) return state;
+  if (!passer.hasBall) return state;
+  if (passer.team !== state.currentPlayer) return state;
+  if (hasPlayerActed(state, passer.id)) return state;
+  if (!isAdjacent(passer.pos, target.pos)) return state;
+
+  let newState = executeHandoff(state, passer, target, rng);
+  newState = setPlayerAction(newState, passer.id, 'HANDOFF');
+  newState = checkPlayerTurnEnd(newState, passer.id);
+  return newState;
+}
+
+/**
+ * Gère une action de faute
+ */
+function handleFoul(state: GameState, move: { type: 'FOUL'; playerId: string; targetId: string }, rng: RNG): GameState {
+  const attacker = state.players.find(p => p.id === move.playerId);
+  const target = state.players.find(p => p.id === move.targetId);
+
+  if (!attacker || !target) return state;
+  if (attacker.team !== state.currentPlayer) return state;
+  if (hasPlayerActed(state, attacker.id)) return state;
+
+  // Vérifier la limite de 1 foul par tour
+  const team = attacker.team;
+  if ((state.teamFoulCount && state.teamFoulCount[team] || 0) >= 1) return state;
+
+  if (!canFoul(state, attacker, target)) return state;
+
+  let newState = executeFoul(state, attacker, target, rng);
+
+  // Incrémenter le compteur de foul
+  const currentFoulCount = newState.teamFoulCount || {};
+  newState.teamFoulCount = {
+    ...currentFoulCount,
+    [team]: (currentFoulCount[team] || 0) + 1,
+  };
+
+  newState = setPlayerAction(newState, attacker.id, 'FOUL');
+  newState = checkPlayerTurnEnd(newState, attacker.id);
+  return newState;
 }

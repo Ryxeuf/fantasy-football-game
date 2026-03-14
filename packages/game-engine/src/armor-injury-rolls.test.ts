@@ -65,12 +65,12 @@ describe("Jets d'armure et de blessure", () => {
     });
 
     it('devrait déclencher des jets de blessure pour les deux joueurs en cas de BOTH_DOWN', () => {
-      // Positionner les joueurs pour un blocage
+      // Positionner les joueurs sans skill Block pour que BOTH_DOWN les renverse
       const testState = {
         ...state,
         players: state.players.map(p => {
-          if (p.id === 'A1') return { ...p, pos: { x: 10, y: 7 }, stunned: false, pm: 7 };
-          if (p.id === 'B1') return { ...p, pos: { x: 11, y: 7 }, stunned: false, pm: 8 };
+          if (p.id === 'A1') return { ...p, pos: { x: 10, y: 7 }, stunned: false, pm: 7, skills: [] };
+          if (p.id === 'B1') return { ...p, pos: { x: 11, y: 7 }, stunned: false, pm: 8, skills: [] };
           return p;
         }),
       };

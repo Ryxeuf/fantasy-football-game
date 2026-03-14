@@ -16,8 +16,8 @@ const createMinimalGameState = (overrides = {}) => ({
     gameLog: [],
     ball: null,
     lastDiceResult: undefined,
-    playerActions: new Map(),
-    teamBlitzCount: new Map(),
+    playerActions: {},
+    teamBlitzCount: {},
     dugouts: {
         teamA: {
             zones: {

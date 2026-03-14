@@ -205,7 +205,7 @@ describe('Action de Blitz', () => {
       expect(result.pendingBlock?.targetId).toBe('B1');
 
       // Vérifier que l'action a été enregistrée
-      expect(result.playerActions.get('A1')).toBe('BLITZ');
+      expect(result.playerActions['A1']).toBe('BLITZ');
     });
 
     it("devrait gérer l'échec d'esquive lors d'un blitz", () => {
@@ -340,7 +340,7 @@ describe('Action de Blitz', () => {
       const result = applyMove(newState, blitzMove, rng);
 
       // Vérifier que l'action de blitz a été enregistrée
-      expect(result.playerActions.get('A1')).toBe('BLITZ');
+      expect(result.playerActions['A1']).toBe('BLITZ');
     });
   });
 
@@ -380,7 +380,7 @@ describe('Action de Blitz', () => {
       result = applyMove(result, blockChooseMove, rng);
 
       // Vérifier que l'action finale est bien BLITZ
-      expect(result.playerActions.get('A1')).toBe('BLITZ');
+      expect(result.playerActions['A1']).toBe('BLITZ');
     });
 
     it('devrait permettre de continuer à bouger après un blitz et consommer 1 PM pour le blocage', () => {

@@ -91,24 +91,41 @@ describe('Mouvements de base', () => {
       }
     });
 
-    it('ne devrait pas retourner de mouvements pour les joueurs sans PM', () => {
-      // Épuiser les PM d'un joueur
+    it('ne devrait pas retourner de mouvements pour les joueurs sans PM et sans GFI', () => {
+      // Épuiser les PM et GFI d'un joueur
       const tiredPlayer = state.players.find(p => p.team === state.currentPlayer);
       if (tiredPlayer) {
         const newState = {
           ...state,
-          players: state.players.map(p => (p.id === tiredPlayer.id ? { ...p, pm: 0 } : p)),
+          players: state.players.map(p => (p.id === tiredPlayer.id ? { ...p, pm: 0, gfiUsed: 2 } : p)),
         };
 
         const moves = getLegalMoves(newState);
         const moveMoves = moves.filter(m => m.type === 'MOVE');
 
-        // Aucun mouvement ne devrait être pour le joueur fatigué
+        // Aucun mouvement ne devrait être pour le joueur épuisé (pm=0 + gfi=2)
         moveMoves.forEach(move => {
           if (move.type === 'MOVE') {
             expect(move.playerId).not.toBe(tiredPlayer.id);
           }
         });
+      }
+    });
+
+    it('devrait retourner des mouvements GFI pour les joueurs sans PM mais avec GFI disponible', () => {
+      // Joueur avec pm=0 mais gfi encore disponible
+      const player = state.players.find(p => p.team === state.currentPlayer);
+      if (player) {
+        const newState = {
+          ...state,
+          players: state.players.map(p => (p.id === player.id ? { ...p, pm: 0, gfiUsed: 0 } : p)),
+        };
+
+        const moves = getLegalMoves(newState);
+        const playerMoves = moves.filter(m => m.type === 'MOVE' && m.playerId === player.id);
+
+        // Le joueur peut encore bouger via GFI
+        expect(playerMoves.length).toBeGreaterThan(0);
       }
     });
 
@@ -826,9 +843,10 @@ describe('Intégration des mouvements avec jets de désquive', () => {
 
     if (!playerA || !playerB) return;
 
-    // Placer l'adversaire adjacent au joueur A
+    // Placer l'adversaire adjacent au joueur A (sans relances d'équipe pour tester l'échec direct)
     const newState = {
       ...state,
+      teamRerolls: { teamA: 0, teamB: 0 },
       players: state.players.map(p =>
         p.id === playerB.id ? { ...p, pos: { x: playerA.pos.x + 1, y: playerA.pos.y } } : p
       ),
@@ -1206,9 +1224,10 @@ describe('Système de rebond de balle', () => {
         ball: undefined,
       };
 
-      // Placer un adversaire adjacent pour déclencher un jet d'esquive
+      // Placer un adversaire adjacent pour déclencher un jet d'esquive (sans relances)
       const newState = {
         ...stateWithBall,
+        teamRerolls: { teamA: 0, teamB: 0 },
         players: stateWithBall.players.map(p =>
           p.id === playerB.id ? { ...p, pos: { x: playerA.pos.x + 1, y: playerA.pos.y } } : p
         ),
@@ -1576,13 +1595,13 @@ describe('Gestion des actions par joueur', () => {
       expect(playerMoves.length).toBeGreaterThan(0);
     });
 
-    it("devrait finir le tour du joueur quand il n'a plus de PM", () => {
+    it("devrait finir le tour du joueur quand il n'a plus de PM ni de GFI", () => {
       const player = state.players[0];
 
-      // Réduire les PM du joueur à 1
+      // Réduire les PM du joueur à 1 et épuiser ses GFI
       let newState = {
         ...state,
-        players: state.players.map(p => (p.id === player.id ? { ...p, pm: 1 } : p)),
+        players: state.players.map(p => (p.id === player.id ? { ...p, pm: 1, gfiUsed: 2 } : p)),
       };
 
       // Faire bouger le joueur (consomme 1 PM)
@@ -1594,10 +1613,34 @@ describe('Gestion des actions par joueur', () => {
 
       newState = applyMove(newState, move, rng);
 
-      // Vérifier que le joueur n'a plus de PM et ne peut plus bouger
+      // Vérifier que le joueur n'a plus de PM et ne peut plus bouger (GFI épuisés aussi)
       const playerAfterMove = newState.players.find(p => p.id === player.id)!;
       expect(playerAfterMove.pm).toBe(0);
       expect(canPlayerContinueMoving(newState, player.id)).toBe(false);
+    });
+
+    it("devrait permettre le GFI quand le joueur n'a plus de PM mais a du GFI", () => {
+      const player = state.players[0];
+
+      // Réduire les PM du joueur à 1 avec GFI disponible
+      let newState = {
+        ...state,
+        players: state.players.map(p => (p.id === player.id ? { ...p, pm: 1, gfiUsed: 0 } : p)),
+      };
+
+      // Faire bouger le joueur (consomme 1 PM)
+      const move: Move = {
+        type: 'MOVE',
+        playerId: player.id,
+        to: { x: player.pos.x + 1, y: player.pos.y },
+      };
+
+      newState = applyMove(newState, move, rng);
+
+      // Le joueur a pm=0 mais peut encore bouger via GFI
+      const playerAfterMove = newState.players.find(p => p.id === player.id)!;
+      expect(playerAfterMove.pm).toBe(0);
+      expect(canPlayerContinueMoving(newState, player.id)).toBe(true);
     });
   });
 

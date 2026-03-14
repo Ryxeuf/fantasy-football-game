@@ -162,9 +162,13 @@ export function setupPreMatchWithTeams(
     selectedPlayerId: null,
     isTurnover: false,
     dugouts,
-    playerActions: new Map<string, ActionType>(),
-    teamBlitzCount: new Map<TeamId, number>(),
+    playerActions: {} as Record<string, ActionType>,
+    teamBlitzCount: {} as Record<string, number>,
+    teamFoulCount: {} as Record<string, number>,
+    teamRerolls: { teamA: 3, teamB: 3 },
+    rerollUsedThisTurn: false,
     // Informations de match
+    gamePhase: 'playing' as const,
     half: 0, // Pas de mi-temps en phase pré-match
     score: {
       teamA: 0,
@@ -174,6 +178,7 @@ export function setupPreMatchWithTeams(
       teamA: teamAName,
       teamB: teamBName,
     },
+    matchStats: {},
     // Log du match
     gameLog: [
       createLogEntry(
@@ -294,9 +299,13 @@ export function setupPreMatch(): GameState {
     selectedPlayerId: null,
     isTurnover: false,
     dugouts,
-    playerActions: new Map<string, ActionType>(),
-    teamBlitzCount: new Map<TeamId, number>(),
+    playerActions: {} as Record<string, ActionType>,
+    teamBlitzCount: {} as Record<string, number>,
+    teamFoulCount: {} as Record<string, number>,
+    teamRerolls: { teamA: 3, teamB: 3 },
+    rerollUsedThisTurn: false,
     // Informations de match
+    gamePhase: 'playing' as const,
     half: 0, // Pas de mi-temps en phase pré-match
     score: {
       teamA: 0,
@@ -306,6 +315,7 @@ export function setupPreMatch(): GameState {
       teamA: 'Orcs de Fer',
       teamB: 'Elfes Sombres',
     },
+    matchStats: {},
     // Log du match
     gameLog: [createLogEntry('info', 'Phase pré-match - Les joueurs sont en réserves')],
   };
@@ -398,9 +408,14 @@ export function setup(): GameState {
     selectedPlayerId: null,
     isTurnover: false,
     dugouts,
-    playerActions: new Map<string, ActionType>(),
-    teamBlitzCount: new Map<TeamId, number>(),
+    playerActions: {} as Record<string, ActionType>,
+    teamBlitzCount: {} as Record<string, number>,
+    teamFoulCount: {} as Record<string, number>,
+    // Relances d'équipe (3 par défaut pour les matchs de démonstration)
+    teamRerolls: { teamA: 3, teamB: 3 },
+    rerollUsedThisTurn: false,
     // Informations de match
+    gamePhase: 'playing' as const,
     half: 1,
     score: {
       teamA: 0,
@@ -410,6 +425,7 @@ export function setup(): GameState {
       teamA: 'Orcs de Fer',
       teamB: 'Elfes Sombres',
     },
+    matchStats: {},
     // Log du match
     gameLog: [createLogEntry('info', 'Match commencé - Orcs de Fer vs Elfes Sombres')],
   };
@@ -504,8 +520,9 @@ export function startMatchFromPreMatch(state: GameState): GameState {
     ball: { x: 13, y: 7 }, // Ballon au centre
     selectedPlayerId: null,
     isTurnover: false,
-    playerActions: new Map<string, ActionType>(),
-    teamBlitzCount: new Map<TeamId, number>(),
+    playerActions: {} as Record<string, ActionType>,
+    teamBlitzCount: {} as Record<string, number>,
+    teamFoulCount: {} as Record<string, number>,
     lastDiceResult: undefined,
     gameLog: [...state.gameLog, startLog],
   };
@@ -527,28 +544,201 @@ export function advanceHalfIfNeeded(state: GameState): GameState {
         undefined
       );
 
+      // Récupération des joueurs KO (4+ sur D6)
+      let newState = { ...state, gameLog: [...state.gameLog, halftimeLog] };
+      newState = recoverKOPlayers(newState);
+
+      // L'équipe qui a frappé en 1ère mi-temps reçoit en 2e, et vice versa
+      const newKickingTeam: TeamId = state.kickingTeam === 'A' ? 'B' : 'A';
+      const receivingTeam: TeamId = newKickingTeam === 'A' ? 'B' : 'A';
+
+      // Reset positions for second half
+      newState = resetPlayerPositions(newState);
+
       return {
-        ...state,
+        ...newState,
+        gamePhase: 'playing' as const,
         half: 2,
         turn: 1,
-        currentPlayer: 'A',
-        gameLog: [...state.gameLog, halftimeLog],
+        currentPlayer: receivingTeam,
+        kickingTeam: newKickingTeam,
+        isTurnover: false,
+        ball: { x: 13, y: 7 }, // Centre du terrain
+        playerActions: {} as Record<string, ActionType>,
+        teamBlitzCount: {} as Record<string, number>,
+        teamFoulCount: {} as Record<string, number>,
+        rerollUsedThisTurn: false,
       };
     } else {
       const endLog = createLogEntry(
         'info',
-        `Fin du match (2e mi-temps terminée)`,
+        `Fin du match (2e mi-temps terminée). Score final: ${state.teamNames.teamA} ${state.score.teamA} - ${state.score.teamB} ${state.teamNames.teamB}`,
         undefined,
         undefined
       );
+
+      // Calculer les résultats finaux (SPP + MVP)
+      const matchResult = calculateMatchResult(state);
+
       return {
         ...state,
+        gamePhase: 'ended' as const,
         isTurnover: true,
+        matchResult,
         gameLog: [...state.gameLog, endLog],
       };
     }
   }
   return state;
+}
+
+/**
+ * Calcule les résultats finaux du match : vainqueur, SPP et MVP
+ */
+function calculateMatchResult(state: GameState): { winner?: TeamId; spp: Record<string, number> } {
+  // Déterminer le vainqueur
+  let winner: TeamId | undefined;
+  if (state.score.teamA > state.score.teamB) winner = 'A';
+  else if (state.score.teamB > state.score.teamA) winner = 'B';
+
+  // Calculer les SPP pour chaque joueur
+  const spp: Record<string, number> = {};
+  const stats = state.matchStats;
+
+  for (const [playerId, playerStats] of Object.entries(stats)) {
+    spp[playerId] =
+      playerStats.touchdowns * 3 +
+      playerStats.casualties * 2 +
+      playerStats.completions * 1 +
+      playerStats.interceptions * 1;
+  }
+
+  // Attribuer le MVP (1 joueur aléatoire par équipe, 4 SPP chacun)
+  const activePlayers = state.players.filter(p => p.state !== 'casualty' && p.state !== 'sent_off');
+  for (const teamId of ['A', 'B'] as TeamId[]) {
+    const teamPlayers = activePlayers.filter(p => p.team === teamId);
+    if (teamPlayers.length > 0) {
+      // Simple sélection du premier joueur (sera déterministe avec seed en prod)
+      const mvpPlayer = teamPlayers[Math.floor(Math.random() * teamPlayers.length)];
+      if (!spp[mvpPlayer.id]) spp[mvpPlayer.id] = 0;
+      spp[mvpPlayer.id] += 4;
+      if (!stats[mvpPlayer.id]) {
+        stats[mvpPlayer.id] = { touchdowns: 0, casualties: 0, completions: 0, interceptions: 0, mvp: false };
+      }
+      stats[mvpPlayer.id].mvp = true;
+    }
+  }
+
+  return { winner, spp };
+}
+
+/**
+ * Récupération des joueurs KO (4+ sur D6)
+ */
+function recoverKOPlayers(state: GameState): GameState {
+  const newState = { ...state };
+
+  for (const teamId of ['A', 'B'] as TeamId[]) {
+    const dugoutKey = teamId === 'A' ? 'teamA' : 'teamB';
+    const dugout = newState.dugouts[dugoutKey];
+    const koZone = dugout.zones.knockedOut;
+
+    if (koZone.players.length > 0) {
+      const recoveredIds: string[] = [];
+      const stillKOIds: string[] = [];
+
+      for (const playerId of koZone.players) {
+        // Simple 4+ check (using random, will be deterministic with RNG later)
+        const roll = Math.floor(Math.random() * 6) + 1;
+        if (roll >= 4) {
+          recoveredIds.push(playerId);
+        } else {
+          stillKOIds.push(playerId);
+        }
+      }
+
+      if (recoveredIds.length > 0) {
+        // Move recovered players back to reserves
+        const reservesZone = dugout.zones.reserves;
+        newState.dugouts = {
+          ...newState.dugouts,
+          [dugoutKey]: {
+            ...dugout,
+            zones: {
+              ...dugout.zones,
+              knockedOut: { ...koZone, players: stillKOIds },
+              reserves: { ...reservesZone, players: [...reservesZone.players, ...recoveredIds] },
+            },
+          },
+        };
+
+        const recoveryLog = createLogEntry(
+          'info',
+          `${recoveredIds.length} joueur(s) de l'équipe ${teamId} récupèrent du KO`,
+          undefined,
+          teamId
+        );
+        newState.gameLog = [...newState.gameLog, recoveryLog];
+      }
+    }
+  }
+
+  return newState;
+}
+
+/**
+ * Remet les joueurs actifs sur le terrain à des positions par défaut
+ */
+function resetPlayerPositions(state: GameState): GameState {
+  const newPlayers = state.players.map(p => {
+    // Seuls les joueurs actifs (state === 'active' ou pas de state) sont repositionnés
+    if (p.state && p.state !== 'active') return p;
+    if (p.stunned) return { ...p, stunned: false, pm: p.ma, gfiUsed: 0 };
+
+    // Position par défaut basée sur l'équipe
+    return { ...p, stunned: false, pm: p.ma, gfiUsed: 0, hasBall: false };
+  });
+
+  return { ...state, players: newPlayers };
+}
+
+/**
+ * Gère le reset après un touchdown : repositionne les joueurs et prépare le kickoff
+ */
+export function handlePostTouchdown(state: GameState): GameState {
+  // L'équipe qui a marqué frappe (kick)
+  const lastScoreLog = state.gameLog.findLast(log => log.type === 'score');
+  const scoringTeam = lastScoreLog?.team;
+
+  // L'équipe qui marque frappe au kickoff suivant
+  const newKickingTeam: TeamId = scoringTeam === 'A' ? 'A' : 'B';
+  const receivingTeam: TeamId = newKickingTeam === 'A' ? 'B' : 'A';
+
+  // Reset players
+  let newState = resetPlayerPositions(state);
+
+  const resetLog = createLogEntry(
+    'info',
+    `Touchdown marqué ! ${state.teamNames[newKickingTeam === 'A' ? 'teamA' : 'teamB']} frappe au pied. ${state.teamNames[receivingTeam === 'A' ? 'teamA' : 'teamB']} reçoit.`,
+    undefined,
+    undefined
+  );
+
+  return {
+    ...newState,
+    gamePhase: 'playing' as const,
+    kickingTeam: newKickingTeam,
+    currentPlayer: receivingTeam,
+    isTurnover: false,
+    ball: { x: 13, y: 7 }, // Centre du terrain pour le kickoff
+    selectedPlayerId: null,
+    playerActions: {} as Record<string, ActionType>,
+    teamBlitzCount: {} as Record<string, number>,
+    teamFoulCount: {} as Record<string, number>,
+    rerollUsedThisTurn: false,
+    lastDiceResult: undefined,
+    gameLog: [...newState.gameLog, resetLog],
+  };
 }
 
 /**
@@ -558,8 +748,8 @@ export function advanceHalfIfNeeded(state: GameState): GameState {
  * @returns True si le joueur a agi
  */
 export function hasPlayerActed(state: GameState | ExtendedGameState, playerId: string): boolean {
-  if (!state.playerActions || typeof state.playerActions.has !== 'function') return false; // Guard pour JSON deserialized
-  return state.playerActions.has(playerId);
+  if (!state.playerActions) return false;
+  return playerId in state.playerActions;
 }
 
 /**
@@ -586,11 +776,12 @@ export function canPlayerMove(state: GameState, playerId: string): boolean {
   const player = state.players.find(p => p.id === playerId);
   if (!player) return false;
 
-  // Un joueur peut bouger s'il n'est pas étourdi, a des PM, n'a pas encore fait d'action principale,
-  // et c'est le tour de son équipe
+  // Un joueur peut bouger s'il n'est pas étourdi, a des PM (ou du GFI disponible),
+  // n'a pas encore fait d'action principale, et c'est le tour de son équipe
+  const hasMovement = player.pm > 0 || (player.gfiUsed ?? 0) < 2;
   return (
     !player.stunned &&
-    player.pm > 0 &&
+    hasMovement &&
     !hasPlayerActed(state, playerId) &&
     player.team === state.currentPlayer
   );
@@ -606,12 +797,13 @@ export function canPlayerContinueMoving(state: GameState, playerId: string): boo
   const player = state.players.find(p => p.id === playerId);
   if (!player) return false;
 
-  // Un joueur peut continuer à bouger s'il n'est pas étourdi, a des PM, c'est le tour de son équipe,
-  // et soit il n'a pas encore agi, soit il a déjà commencé à bouger ou fait un blitz
+  // Un joueur peut continuer à bouger s'il n'est pas étourdi, a des PM (ou du GFI disponible),
+  // c'est le tour de son équipe, et soit il n'a pas encore agi, soit il a déjà commencé à bouger ou fait un blitz
   const playerAction = getPlayerAction(state, playerId);
+  const hasMovement = player.pm > 0 || (player.gfiUsed ?? 0) < 2;
   return (
     !player.stunned &&
-    player.pm > 0 &&
+    hasMovement &&
     player.team === state.currentPlayer &&
     (!hasPlayerActed(state, playerId) || playerAction === 'MOVE' || playerAction === 'BLITZ')
   );
@@ -627,8 +819,8 @@ export function getPlayerAction(
   state: GameState | ExtendedGameState,
   playerId: string
 ): ActionType | undefined {
-  if (!state.playerActions || typeof state.playerActions.get !== 'function') return undefined;
-  return state.playerActions.get(playerId);
+  if (!state.playerActions) return undefined;
+  return state.playerActions[playerId];
 }
 
 /**
@@ -639,11 +831,9 @@ export function getPlayerAction(
  * @returns Nouvel état du jeu
  */
 export function setPlayerAction(state: GameState, playerId: string, action: ActionType): GameState {
-  const newPlayerActions = new Map(state.playerActions);
-  newPlayerActions.set(playerId, action);
   return {
     ...state,
-    playerActions: newPlayerActions,
+    playerActions: { ...state.playerActions, [playerId]: action },
   };
 }
 
@@ -655,7 +845,7 @@ export function setPlayerAction(state: GameState, playerId: string, action: Acti
 export function clearPlayerActions(state: GameState): GameState {
   return {
     ...state,
-    playerActions: new Map<string, ActionType>(),
+    playerActions: {} as Record<string, ActionType>,
   };
 }
 
@@ -666,8 +856,8 @@ export function clearPlayerActions(state: GameState): GameState {
  * @returns Nombre de blitz effectués
  */
 export function getTeamBlitzCount(state: GameState | ExtendedGameState, team: TeamId): number {
-  if (!state.teamBlitzCount || typeof state.teamBlitzCount.get !== 'function') return 0;
-  return state.teamBlitzCount.get(team) || 0;
+  if (!state.teamBlitzCount) return 0;
+  return state.teamBlitzCount[team] || 0;
 }
 
 /**
@@ -687,13 +877,10 @@ export function canTeamBlitz(state: GameState, team: TeamId): boolean {
  * @returns Nouvel état du jeu
  */
 export function incrementTeamBlitzCount(state: GameState, team: TeamId): GameState {
-  const newTeamBlitzCount = new Map(state.teamBlitzCount);
-  const currentCount = newTeamBlitzCount.get(team) || 0;
-  newTeamBlitzCount.set(team, currentCount + 1);
-
+  const currentCount = (state.teamBlitzCount && state.teamBlitzCount[team]) || 0;
   return {
     ...state,
-    teamBlitzCount: newTeamBlitzCount,
+    teamBlitzCount: { ...state.teamBlitzCount, [team]: currentCount + 1 },
   };
 }
 
@@ -705,7 +892,8 @@ export function incrementTeamBlitzCount(state: GameState, team: TeamId): GameSta
 export function clearTeamBlitzCounts(state: GameState): GameState {
   return {
     ...state,
-    teamBlitzCount: new Map<TeamId, number>(),
+    teamBlitzCount: {} as Record<string, number>,
+    teamFoulCount: {} as Record<string, number>,
   };
 }
 
@@ -1047,15 +1235,19 @@ export function startMatchFromKickoff(state: ExtendedGameState): GameState {
 
   return {
     ...matchState,
+    gamePhase: 'playing' as const,
+    kickingTeam: state.preMatch.kickingTeam,
     half: 1,
     turn: 1,
     currentPlayer: state.preMatch.receivingTeam, // L'équipe qui reçoit commence
     ball: state.preMatch.finalBallPosition || { x: 13, y: 7 }, // Position finale du ballon
     selectedPlayerId: null,
     isTurnover: false,
-    playerActions: new Map<string, ActionType>(),
-    teamBlitzCount: new Map<TeamId, number>(),
+    playerActions: {} as Record<string, ActionType>,
+    teamBlitzCount: {} as Record<string, number>,
+    teamFoulCount: {} as Record<string, number>,
     lastDiceResult: undefined,
+    matchStats: {},
     gameLog: [...state.gameLog, matchStartLog],
   };
 }

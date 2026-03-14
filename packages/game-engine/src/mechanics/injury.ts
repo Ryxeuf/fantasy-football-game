@@ -15,11 +15,11 @@ import { movePlayerToDugoutZone } from './dugout';
  * @param rng - Générateur de nombres aléatoires
  * @returns Nouvel état du jeu après le jet de blessure
  */
-export function performInjuryRoll(state: GameState, player: Player, rng: RNG): GameState {
+export function performInjuryRoll(state: GameState, player: Player, rng: RNG, bonus: number = 0, causedById?: string): GameState {
   const newState = structuredClone(state) as GameState;
 
-  // Jet de 2D6 pour la blessure
-  const injuryRoll = Math.floor(rng() * 6) + 1 + Math.floor(rng() * 6) + 1;
+  // Jet de 2D6 pour la blessure (+ bonus de Mighty Blow éventuel)
+  const injuryRoll = Math.floor(rng() * 6) + 1 + Math.floor(rng() * 6) + 1 + bonus;
 
   // Log du jet de blessure
   const injuryLog = createLogEntry(
@@ -40,7 +40,7 @@ export function performInjuryRoll(state: GameState, player: Player, rng: RNG): G
     return handleKnockedOut(newState, player);
   } else {
     // 10+: Casualty - va en zone blessés
-    return handleCasualty(newState, player, rng);
+    return handleCasualty(newState, player, rng, causedById);
   }
 }
 
@@ -80,7 +80,15 @@ function handleKnockedOut(state: GameState, player: Player): GameState {
 /**
  * Gère un joueur blessé (10+)
  */
-function handleCasualty(state: GameState, player: Player, rng: RNG): GameState {
+function handleCasualty(state: GameState, player: Player, rng: RNG, causedById?: string): GameState {
+  // Tracker la casualty dans les stats (SPP pour l'attaquant)
+  if (causedById) {
+    if (!state.matchStats[causedById]) {
+      state.matchStats[causedById] = { touchdowns: 0, casualties: 0, completions: 0, interceptions: 0, mvp: false };
+    }
+    state.matchStats[causedById].casualties += 1;
+  }
+
   // Le joueur va en zone blessés
   let newState = movePlayerToDugoutZone(state, player.id, 'casualty', player.team);
 
