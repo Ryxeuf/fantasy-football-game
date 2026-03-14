@@ -1,3 +1,12 @@
+## [1.30.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.29.0...v1.30.0) (2026-03-14)
+
+
+### ✨ Features
+
+* enhance match management and gameplay features ([fb9ebdd](https://github.com/Ryxeuf/fantasy-football-game/commit/fb9ebdd48d7cc4c8297b720b3cb2ecdbaaabf729))
+* **game-engine:** complete phases 1-3 to 100% — skills, weather, kickoff, probabilities, referee ([a92697b](https://github.com/Ryxeuf/fantasy-football-game/commit/a92697b5df7f992d6b0d1592fa470659c4b23dbf))
+* implement online play features and enhance navigation ([1058191](https://github.com/Ryxeuf/fantasy-football-game/commit/1058191f908950be005cdee7e8ebc15c99a1c4bf))
+
 ## [1.29.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.28.0...v1.29.0) (2025-11-27)
 
 
