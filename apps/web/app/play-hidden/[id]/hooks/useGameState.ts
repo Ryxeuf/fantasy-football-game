@@ -151,8 +151,10 @@ export function useGameState(matchId: string): GameStateInfo {
     })();
   }, [matchId]);
 
-  // Load initial game state
+  // Load initial game state (une seule fois)
+  const initialLoadDone = useRef(false);
   useEffect(() => {
+    if (initialLoadDone.current) return;
     (async () => {
       try {
         const token = localStorage.getItem("auth_token");
@@ -167,6 +169,7 @@ export function useGameState(matchId: string): GameStateInfo {
           if (data.matchStatus) setMatchStatus(data.matchStatus);
           if (data.myTeamSide) setMyTeamSide(data.myTeamSide);
           if (typeof data.isMyTurn === "boolean") setIsMyTurn(data.isMyTurn);
+          initialLoadDone.current = true;
           return;
         }
       } catch {}
@@ -177,6 +180,7 @@ export function useGameState(matchId: string): GameStateInfo {
         if (!token) {
           setState(setupPreMatchWithTeams([], [], "Équipe Locale", "Équipe Visiteuse"));
           setStateSource("fallback");
+          initialLoadDone.current = true;
           return;
         }
         const teamsRes = await fetch(`${API_BASE}/match/${matchId}/teams`, {
@@ -190,17 +194,23 @@ export function useGameState(matchId: string): GameStateInfo {
             setupPreMatchWithTeams(a.players || [], b.players || [], teamNameA || a.teamName || "Équipe Locale", teamNameB || b.teamName || "Équipe Visiteuse")
           ));
           setStateSource("fallback");
+          initialLoadDone.current = true;
           return;
         }
       } catch {}
 
       setState(setupPreMatchWithTeams([], [], teamNameA || "Équipe Locale", teamNameB || "Équipe Visiteuse"));
       setStateSource("fallback");
+      initialLoadDone.current = true;
     })();
   }, [matchId, teamNameA, teamNameB]);
 
-  // Polling
+  // Polling — désactivé quand c'est notre tour de placer en setup
+  const isMySetupTurn = state?.preMatch?.phase === "setup" && state?.preMatch?.currentCoach === myTeamSide;
   useEffect(() => {
+    // Pas de polling pendant notre phase de placement
+    if (isMySetupTurn) return;
+
     const pollInterval = isActiveMatch && !isMyTurn ? 3000 : 10000;
     const interval = setInterval(async () => {
       try {
@@ -222,7 +232,7 @@ export function useGameState(matchId: string): GameStateInfo {
       } catch {}
     }, pollInterval);
     return () => clearInterval(interval);
-  }, [matchId, isActiveMatch, isMyTurn]);
+  }, [matchId, isActiveMatch, isMyTurn, isMySetupTurn]);
 
   // Load summary
   useEffect(() => {

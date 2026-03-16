@@ -388,7 +388,7 @@ router.get("/my-matches", authUser, async (req: AuthenticatedRequest, res) => {
         teamSelections: {
           include: {
             user: { select: { id: true, coachName: true } },
-            teamRef: { select: { id: true, name: true, rosterName: true } },
+            teamRef: { select: { id: true, name: true, roster: true } },
           },
         },
         turns: {
@@ -428,14 +428,14 @@ router.get("/my-matches", authUser, async (req: AuthenticatedRequest, res) => {
           ? {
               coachName: mySelection.user.coachName,
               teamName: mySelection.teamRef?.name || mySelection.team,
-              rosterName: mySelection.teamRef?.rosterName,
+              rosterName: mySelection.teamRef?.roster,
             }
           : null,
         opponent: opponentSelection
           ? {
               coachName: opponentSelection.user.coachName,
               teamName: opponentSelection.teamRef?.name || opponentSelection.team,
-              rosterName: opponentSelection.teamRef?.rosterName,
+              rosterName: opponentSelection.teamRef?.roster,
             }
           : null,
       };
@@ -684,6 +684,14 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
         }
         gameState = enterSetupPhase(gameState, receivingTeam);
       }
+
+      const userTeamSide = await getUserTeamSide(prisma as any, matchId, req.user!.id);
+      return res.json({
+        gameState,
+        matchStatus: match.status,
+        myTeamSide: userTeamSide,
+        isMyTurn: userTeamSide ? gameState.preMatch?.currentCoach === userTeamSide : false,
+      });
     }
 
     res.json({ gameState });
