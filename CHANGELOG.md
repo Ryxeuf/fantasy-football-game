@@ -1,3 +1,10 @@
+## [1.30.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.30.1...v1.30.2) (2026-03-16)
+
+
+### 🐛 Bug Fixes
+
+* update match route to use 'roster' instead of 'rosterName' and enhance game state retrieval ([204a477](https://github.com/Ryxeuf/fantasy-football-game/commit/204a477539b3d55b31302ccbb9751b5544ecdb5e))
+
 ## [1.30.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.30.0...v1.30.1) (2026-03-16)
 
 
