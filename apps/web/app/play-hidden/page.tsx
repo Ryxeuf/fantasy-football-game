@@ -2,7 +2,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   PixiBoard,
-  PlayerDetails,
   DiceResultPopup,
   GameScoreboard,
   GameLog,
@@ -215,21 +214,7 @@ export default function PlayPage() {
                 }}
               />
             </div>
-            <div className="w-full lg:w-auto">
-              {state.selectedPlayerId && (
-                <PlayerDetails
-                  variant="sidebar"
-                  player={
-                    state.players.find(
-                      (p) => p.id === state.selectedPlayerId,
-                    ) || null
-                  }
-                  onClose={() =>
-                    setState((s) => ({ ...s, selectedPlayerId: null }))
-                  }
-                />
-              )}
-            </div>
+            {/* PlayerDetails is now integrated in GameBoardWithDugouts */}
           </div>
           {/* Zone réservée pour des composants d'interface de match (pas de démo ici) */}
         </div>

@@ -1,7 +1,6 @@
 "use client";
 import { useMemo, useState, useRef } from "react";
 import {
-  PlayerDetails,
   DiceResultPopup,
   GameScoreboard,
   ActionPickerPopup,
@@ -905,24 +904,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
                 }
               />
             </div>
-            <div className="w-full lg:w-auto">
-              {state.selectedPlayerId &&
-                (state as ExtendedGameState).preMatch?.phase !== "setup" && (
-                  <PlayerDetails
-                    variant="sidebar"
-                    player={
-                      state.players.find(
-                        (p) => p.id === state.selectedPlayerId,
-                      ) || null
-                    }
-                    onClose={() =>
-                      setState((s) =>
-                        s ? { ...s, selectedPlayerId: null } : null,
-                      )
-                    }
-                  />
-                )}
-            </div>
+            {/* PlayerDetails is now integrated in GameBoardWithDugouts */}
           </div>
         </div>
       </div>
