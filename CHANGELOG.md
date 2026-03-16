@@ -1,3 +1,10 @@
+## [1.30.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.30.0...v1.30.1) (2026-03-16)
+
+
+### 🐛 Bug Fixes
+
+* remove production API_BASE override that broke /match/* routes ([a15c562](https://github.com/Ryxeuf/fantasy-football-game/commit/a15c56205f823b3ba4201149fcbaa4c7137d196d))
+
 ## [1.30.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.29.0...v1.30.0) (2026-03-14)
 
 
