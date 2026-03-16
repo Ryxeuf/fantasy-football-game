@@ -16,10 +16,6 @@ const inferApiBase = () => {
       // Domaine du service API exposé dans OrbStack (voir capture: server ... ports 8201/8202)
       return "https://server.fantasy-football-game.orb.local:8201";
     }
-    // En production, utilise les routes API Next.js qui proxy vers le backend
-    if (hostname === "nufflearena.fr" || hostname.endsWith(".nufflearena.fr")) {
-      return ""; // Utilise les routes relatives /api
-    }
   }
   return "http://localhost:8201";
 };
