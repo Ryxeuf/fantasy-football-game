@@ -29,7 +29,7 @@ describe('Vérification LOS en phase setup', () => {
         // Utiliser une position légale
         const playerId = 'A1';
         const pos1 = setupState.preMatch.legalSetupPositions[0];
-        let currentState = applyPlacement(setupState, playerId, pos1);
+        const currentState = applyPlacement(setupState, playerId, pos1);
         expect(currentState.preMatch.placedPlayers.length).toBe(1);
         // Repositionner le même joueur sur une autre position légale
         const pos2 = setupState.preMatch.legalSetupPositions[1];

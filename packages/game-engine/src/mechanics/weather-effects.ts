@@ -96,7 +96,7 @@ export function applyWeatherDriveEffects(
 
   // D3 joueurs aléatoires de chaque équipe en réserves
   const d3 = Math.floor(rng() * 3) + 1;
-  let newState = { ...state, players: [...state.players] };
+  const newState = { ...state, players: [...state.players] };
 
   for (const team of ['A', 'B'] as const) {
     const activePlayers = newState.players.filter(

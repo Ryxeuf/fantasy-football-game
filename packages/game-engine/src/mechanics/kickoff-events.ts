@@ -104,7 +104,7 @@ export function applyKickoffEvent(
   rng: RNG,
   kickingTeam: TeamId
 ): GameState {
-  let newState = structuredClone(state) as GameState;
+  const newState = structuredClone(state) as GameState;
   const receivingTeam: TeamId = kickingTeam === 'A' ? 'B' : 'A';
 
   const eventLog = createLogEntry(

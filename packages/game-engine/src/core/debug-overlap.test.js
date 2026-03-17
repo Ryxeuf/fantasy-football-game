@@ -25,7 +25,7 @@ describe('Debug chevauchement', () => {
     const pos = { x: 12, y: 0 };
     // Placer le premier joueur
     const playerId1 = 'A1';
-    let currentState = placePlayerInSetup(setupState, playerId1, pos);
+    const currentState = placePlayerInSetup(setupState, playerId1, pos);
     console.log('Après placement A1:', {
       success: currentState !== setupState,
       placedPlayers: currentState.preMatch.placedPlayers,
