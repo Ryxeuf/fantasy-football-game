@@ -1,11 +1,7 @@
 name: CI
 on:
-  # CI temporairement désactivée
-  # push:
-  #   branches: [ main, develop ]
-  # pull_request:
-  #   branches: [ main, develop ]
-  # Désactiver temporairement en utilisant un événement qui ne se produira jamais
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
