@@ -87,7 +87,7 @@ services:
       sh -c "
         npx prisma generate --schema /app/prisma/schema.prisma &&
         npx prisma migrate deploy --schema /app/prisma/schema.prisma &&
-        node dist/index.js
+        pnpm run dev:nowatch
       "
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8201/health"]

@@ -27,11 +27,11 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
       - name: Typecheck
-        run: pnpm typecheck || true
+        run: pnpm typecheck
       - name: Build
         run: pnpm build
       - name: Tests
-        run: pnpm test || true
+        run: pnpm test
 
   # Étape 2 : Déployer sur le serveur
   deploy:
@@ -69,27 +69,41 @@ jobs:
             docker compose -f docker-compose.prod.yml build --no-cache
             docker compose -f docker-compose.prod.yml up -d
 
-            # Attendre que les services soient prêts
-            echo "⏳ Attente du démarrage des services..."
-            sleep 15
+            # Attendre que les health checks passent (max 90s)
+            echo "⏳ Attente que les services soient healthy..."
+            TIMEOUT=90
+            ELAPSED=0
+            while [ $ELAPSED -lt $TIMEOUT ]; do
+              WEB_HEALTH=$(docker inspect --format='{{.State.Health.Status}}' nufflearena_web 2>/dev/null || echo "unknown")
+              SERVER_HEALTH=$(docker inspect --format='{{.State.Health.Status}}' nufflearena_server 2>/dev/null || echo "unknown")
 
-            # Vérifier que les services sont en bonne santé
-            echo "🏥 Vérification de la santé des services..."
-            WEB_STATUS=$(docker compose -f docker-compose.prod.yml ps web --format "{{.Status}}" | head -1)
-            SERVER_STATUS=$(docker compose -f docker-compose.prod.yml ps server --format "{{.Status}}" | head -1)
+              echo "  Web: $WEB_HEALTH | Server: $SERVER_HEALTH (${ELAPSED}s/${TIMEOUT}s)"
 
-            if echo "$WEB_STATUS" | grep -q "Up" && echo "$SERVER_STATUS" | grep -q "Up"; then
-              echo "✅ Déploiement réussi!"
-              echo "Web: $WEB_STATUS"
-              echo "Server: $SERVER_STATUS"
-            else
-              echo "❌ Problème détecté, rollback..."
-              git reset --hard $PREVIOUS_COMMIT
-              docker compose -f docker-compose.prod.yml build --no-cache
-              docker compose -f docker-compose.prod.yml up -d
-              echo "⚠️ Rollback effectué vers $PREVIOUS_COMMIT"
-              exit 1
-            fi
+              if [ "$WEB_HEALTH" = "healthy" ] && [ "$SERVER_HEALTH" = "healthy" ]; then
+                echo "✅ Déploiement réussi! Tous les services sont healthy."
+                exit 0
+              fi
+
+              # Échec immédiat si un container a crashé
+              WEB_RUNNING=$(docker inspect --format='{{.State.Running}}' nufflearena_web 2>/dev/null || echo "false")
+              SERVER_RUNNING=$(docker inspect --format='{{.State.Running}}' nufflearena_server 2>/dev/null || echo "false")
+              if [ "$WEB_RUNNING" = "false" ] || [ "$SERVER_RUNNING" = "false" ]; then
+                echo "❌ Un container a crashé!"
+                docker compose -f docker-compose.prod.yml logs --tail=30
+                break
+              fi
+
+              sleep 5
+              ELAPSED=$((ELAPSED + 5))
+            done
+
+            echo "❌ Les services ne sont pas healthy après ${TIMEOUT}s, rollback..."
+            docker compose -f docker-compose.prod.yml logs --tail=50
+            git reset --hard $PREVIOUS_COMMIT
+            docker compose -f docker-compose.prod.yml build --no-cache
+            docker compose -f docker-compose.prod.yml up -d
+            echo "⚠️ Rollback effectué vers $PREVIOUS_COMMIT"
+            exit 1
 
       - name: Notify deployment status
         if: always()
