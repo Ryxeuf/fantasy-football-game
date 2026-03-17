@@ -1,3 +1,13 @@
+## [1.32.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.32.0...v1.32.1) (2026-03-17)
+
+
+### 🐛 Bug Fixes
+
+* **ci:** remove explicit pnpm version, use packageManager from package.json ([6a159fc](https://github.com/Ryxeuf/fantasy-football-game/commit/6a159fcf01c1f0b27a6e4d4580b6d34bc349cbee))
+* **ci:** resolve CI failures and address PR review feedback ([6c5ece1](https://github.com/Ryxeuf/fantasy-football-game/commit/6c5ece1c24735267152aa879b42e794176ebc8ee))
+* **lint:** fix all lint errors in game-engine ([5b6c85d](https://github.com/Ryxeuf/fantasy-football-game/commit/5b6c85dca2c7c38120921743e49534d145e62b88))
+* resolve build errors across game-engine and web app ([72658af](https://github.com/Ryxeuf/fantasy-football-game/commit/72658afa925a960587c99a332e3bb59d04f00768))
+
 ## [1.32.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.31.0...v1.32.0) (2026-03-17)
 
 
