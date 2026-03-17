@@ -84,6 +84,10 @@ docker-compose.override.yml
 # Prisma
 prisma/migrations/
 !prisma/migrations/.gitkeep
+*.so.node
+
+# Compiled JS in source (tsc build artifacts)
+packages/game-engine/src/**/*.js
 
 # Game specific
 *.replay
