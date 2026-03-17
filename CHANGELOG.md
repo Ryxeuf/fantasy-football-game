@@ -1,3 +1,10 @@
+## [1.32.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.31.0...v1.32.0) (2026-03-17)
+
+
+### ✨ Features
+
+* **admin:** add full match management to admin panel ([3dbb4d4](https://github.com/Ryxeuf/fantasy-football-game/commit/3dbb4d4282fb593002029ddbfa2db2b4829a6f8a))
+
 ## [1.31.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.30.2...v1.31.0) (2026-03-17)
 
 
