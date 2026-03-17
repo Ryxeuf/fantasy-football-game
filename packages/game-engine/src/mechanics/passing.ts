@@ -192,7 +192,7 @@ export function executePass(
   target: Player,
   rng: RNG
 ): GameState {
-  let newState = structuredClone(state) as GameState;
+  const newState = structuredClone(state) as GameState;
 
   // Retirer le ballon du passeur
   newState.players = newState.players.map(p =>
@@ -333,7 +333,7 @@ export function executeHandoff(
   target: Player,
   rng: RNG
 ): GameState {
-  let newState = structuredClone(state) as GameState;
+  const newState = structuredClone(state) as GameState;
 
   // Retirer le ballon du passeur
   newState.players = newState.players.map(p =>

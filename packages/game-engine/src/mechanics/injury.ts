@@ -90,7 +90,7 @@ function handleCasualty(state: GameState, player: Player, rng: RNG, causedById?:
   }
 
   // Le joueur va en zone blessés
-  let newState = movePlayerToDugoutZone(state, player.id, 'casualty', player.team);
+  const newState = movePlayerToDugoutZone(state, player.id, 'casualty', player.team);
 
   // Jet de casualty (D16)
   const casualtyRoll = Math.floor(rng() * 16) + 1;

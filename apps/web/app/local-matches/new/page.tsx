@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { API_BASE } from "../../auth-client";
 
@@ -62,6 +62,14 @@ type Cup = {
 };
 
 export default function NewLocalMatchPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-nuffle-ivory via-white to-nuffle-ivory/50 p-6"><div className="max-w-4xl mx-auto text-center py-12"><p>Chargement...</p></div></div>}>
+      <NewLocalMatchContent />
+    </Suspense>
+  );
+}
+
+function NewLocalMatchContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const cupId = searchParams.get("cupId");

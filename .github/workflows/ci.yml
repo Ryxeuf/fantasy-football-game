@@ -1,11 +1,7 @@
 name: CI
 on:
-  # CI temporairement désactivée
-  # push:
-  #   branches: [ main, develop ]
-  # pull_request:
-  #   branches: [ main, develop ]
-  # Désactiver temporairement en utilisant un événement qui ne se produira jamais
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
@@ -18,10 +14,9 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with: { node-version: 20, cache: "pnpm" }
-      - uses: pnpm/action-setup@v4
-        with: { version: 9 }
       - name: Cache turbo
         uses: actions/cache@v4
         with:

@@ -30,7 +30,7 @@ describe('Prévention des chevauchements de joueurs', () => {
         const pos = { x: 12, y: 0 };
         // Placer le premier joueur
         const playerId1 = 'A1';
-        let currentState = expectPlacementSuccess(setupState, playerId1, pos);
+        const currentState = expectPlacementSuccess(setupState, playerId1, pos);
         expect(currentState).not.toBe(setupState);
         expect(currentState.preMatch.placedPlayers.length).toBe(1);
         // Essayer de placer un deuxième joueur sur la même position
@@ -51,7 +51,7 @@ describe('Prévention des chevauchements de joueurs', () => {
         const pos2 = legalPositions[1];
         // Placer le premier joueur
         const playerId = 'A1';
-        let currentState = expectPlacementSuccess(setupState, playerId, pos1);
+        const currentState = expectPlacementSuccess(setupState, playerId, pos1);
         expect(currentState.preMatch.placedPlayers.length).toBe(1);
         // Repositionner le joueur sur une autre position libre
         const result = expectPlacementSuccess(currentState, playerId, pos2);
@@ -69,7 +69,7 @@ describe('Prévention des chevauchements de joueurs', () => {
         const pos2 = legalPositions[1];
         // Placer le premier joueur
         const playerId1 = 'A1';
-        let currentState = expectPlacementSuccess(setupState, playerId1, pos1);
+        const currentState = expectPlacementSuccess(setupState, playerId1, pos1);
         expect(currentState.preMatch.placedPlayers.length).toBe(1);
         // Placer le deuxième joueur sur une position différente
         const playerId2 = 'A2';

@@ -623,7 +623,7 @@ export default function CupsPage() {
                 </button>
               </div>
             </div>
-          ))
+          )})
         )}
       </div>
     </div>

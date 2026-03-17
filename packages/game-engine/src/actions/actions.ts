@@ -505,7 +505,7 @@ function handleDodgeRoll(
         { diceRoll: gfiRoll, targetNumber: 2, success: gfiSuccess }
       );
       next.gameLog = [...next.gameLog, gfiLogEntry];
-      next.lastDiceResult = { type: 'dodge' as any, diceRoll: gfiRoll, targetNumber: 2, success: gfiSuccess, modifiers: 0, playerName: player.name };
+      next.lastDiceResult = { type: 'dodge' as any, playerId: player.id, diceRoll: gfiRoll, targetNumber: 2, success: gfiSuccess, modifiers: 0, playerName: player.name };
 
       if (!gfiSuccess) {
         // Offrir relance d'équipe si disponible
@@ -583,6 +583,7 @@ function handleNormalMove(
     next.gameLog = [...next.gameLog, gfiLogEntry];
     next.lastDiceResult = {
       type: 'dodge' as any,
+      playerId: player.id,
       diceRoll: gfiRoll,
       targetNumber: 2,
       success: gfiSuccess,

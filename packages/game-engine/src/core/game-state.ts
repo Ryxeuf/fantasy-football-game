@@ -715,7 +715,7 @@ export function handlePostTouchdown(state: GameState): GameState {
   const receivingTeam: TeamId = newKickingTeam === 'A' ? 'B' : 'A';
 
   // Reset players
-  let newState = resetPlayerPositions(state);
+  const newState = resetPlayerPositions(state);
 
   const resetLog = createLogEntry(
     'info',
@@ -1123,7 +1123,7 @@ export function placePlayerInSetup(
   const newPlayers = simulatedPlayers;
   const newPlaced = simulatedPlaced;
 
-  let newState = {
+  const newState = {
     ...state,
     players: newPlayers,
     preMatch: { ...state.preMatch, placedPlayers: newPlaced },
