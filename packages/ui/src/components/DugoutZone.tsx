@@ -6,12 +6,20 @@ import React from "react";
 import { DugoutZone, Player } from "@bb/game-engine";
 
 interface DugoutZoneProps {
-  zone: any; // Flexible pour { type: string, name?: string, players?: string[] }
+  zone: any;
   players: Player[];
   teamColor: string;
   onPlayerClick?: (playerId: string) => void;
   onDragStart?: (e: React.DragEvent, playerId: string) => void;
-  isSetupPhase?: boolean; // Nouvelle prop pour indiquer si on est en phase setup
+  isSetupPhase?: boolean;
+}
+
+/** Extract initials from player name */
+function getInitials(player: Player): string {
+  if (!player.name) return String(player.number);
+  const parts = player.name.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return player.name.slice(0, 2).toUpperCase();
 }
 
 export default function DugoutZoneComponent({
@@ -28,22 +36,22 @@ export default function DugoutZoneComponent({
 
   return (
     <div
-      className={`dugout-zone ${zoneType} p-1 border ${teamColor === "red" ? "border-red-300" : "border-blue-300"}`}
+      className={`dugout-zone ${zoneType} p-1.5 border rounded ${teamColor === "red" ? "border-red-300" : "border-blue-300"}`}
     >
       <h4 className="text-xs font-bold text-gray-700 mb-1 capitalize">
         {zoneName}
       </h4>
-      <div className="flex flex-wrap gap-1">
+      <div className="flex flex-wrap gap-1.5">
         {players.map((player) => (
           <div
             key={player.id}
-            className={`player-token w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold cursor-pointer border-2 ${
+            className={`player-token w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold cursor-pointer border-2 transition-transform active:scale-95 ${
               player.stunned
-                ? "bg-gray-400 text-white"
+                ? "bg-gray-400 text-white border-gray-500"
                 : teamColor === "red"
-                  ? "bg-red-500 text-white"
-                  : "bg-blue-500 text-white"
-            } ${player.hasBall ? "ring-2 ring-yellow-400" : ""}`}
+                  ? "bg-red-500 text-white border-red-600"
+                  : "bg-blue-500 text-white border-blue-600"
+            } ${player.hasBall ? "ring-2 ring-yellow-400 ring-offset-1" : ""}`}
             onClick={() => onPlayerClick?.(player.id)}
             draggable={
               zoneType === "reserve" || player.pos.x < 0 || isSetupPhase
@@ -51,7 +59,7 @@ export default function DugoutZoneComponent({
             onDragStart={(e) => onDragStart?.(e, player.id)}
             title={`${player.name} (#${player.number}) - ${player.position}`}
           >
-            {player.number}
+            {getInitials(player)}
           </div>
         ))}
       </div>

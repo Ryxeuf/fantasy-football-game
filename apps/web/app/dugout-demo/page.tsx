@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { GameBoardWithDugouts, PlayerDetails } from "@bb/ui";
+import { GameBoardWithDugouts } from "@bb/ui";
 import {
   setup,
   getLegalMoves,
@@ -206,20 +206,7 @@ export default function DugoutDemoPage() {
               }}
             />
           </div>
-          <div className="w-full lg:w-auto">
-            {state.selectedPlayerId && (
-              <PlayerDetails
-                variant="sidebar"
-                player={
-                  state.players.find((p) => p.id === state.selectedPlayerId) ||
-                  null
-                }
-                onClose={() =>
-                  setState((s) => ({ ...s, selectedPlayerId: null }))
-                }
-              />
-            )}
-          </div>
+          {/* PlayerDetails is now integrated in GameBoardWithDugouts */}
         </div>
 
         {/* Contrôles de démonstration */}
