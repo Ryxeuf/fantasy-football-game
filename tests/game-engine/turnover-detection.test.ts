@@ -83,15 +83,19 @@ describe("Détection du Turnover", () => {
   });
 
   describe("Scénario complet: échec de blitz", () => {
-    it("devrait déclencher un turnover après un échec de blitz", () => {
-      // Positionner les joueurs pour un blitz
+    it("devrait déclencher un turnover après un échec de blitz (esquive échouée)", () => {
+      // Positionner les joueurs pour un blitz qui nécessite une esquive
+      // B2 est adjacent à A1 pour déclencher un jet d'esquive lors du mouvement
       const testState = {
         ...state,
+        teamRerolls: { teamA: 0, teamB: 0 }, // Pas de relances pour forcer l'échec
         players: state.players.map((p) => {
           if (p.id === "A1")
             return { ...p, pos: { x: 10, y: 7 }, stunned: false, pm: 7 };
           if (p.id === "B1")
             return { ...p, pos: { x: 12, y: 7 }, stunned: false, pm: 8 };
+          if (p.id === "B2")
+            return { ...p, pos: { x: 10, y: 8 }, stunned: false, pm: 6 }; // Adjacent à A1
           return p;
         }),
       };
@@ -105,7 +109,7 @@ describe("Détection du Turnover", () => {
       };
 
       // Utiliser un RNG qui va faire échouer le jet d'esquive
-      const failingRng = makeRNG("failing-dodge-seed");
+      const failingRng = () => 0.1; // Valeur basse pour échouer
       const result = applyMove(testState, blitzMove, failingRng);
 
       // Vérifier que le turnover est déclenché

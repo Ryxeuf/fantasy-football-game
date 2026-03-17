@@ -25,9 +25,10 @@ export default function TeamDugoutComponent({
   teamName,
   isSetupPhase = false,
 }: TeamDugoutProps) {
+  const safePlacedPlayers = placedPlayers || [];
   const reservePlayers = allPlayers?.filter(
     (p) => p.team === dugout?.teamId &&
-           !placedPlayers.includes(p.id) &&
+           !safePlacedPlayers.includes(p.id) &&
            p.pos && p.pos.x < 0,
   ) || [];
 

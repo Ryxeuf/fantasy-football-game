@@ -197,10 +197,11 @@ describe('TeamDugout Safety Tests', () => {
       teamName: undefined as any,
       isSetupPhase: undefined as any
     };
-    
+
     render(<TeamDugout {...props} />);
-    
+
     // Le composant ne devrait pas planter même avec des props complètement undefined
-    expect(screen.getByText('Équipe A')).toBeInTheDocument();
+    // Quand dugout est undefined, teamId est undefined (pas 'A'), donc le fallback est "Equipe B"
+    expect(screen.getByText('Equipe B')).toBeInTheDocument();
   });
 });

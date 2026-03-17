@@ -60,10 +60,17 @@ describe('Core Game Functions', () => {
         ], 'Équipe A', 'Équipe B');
         let state = initialState;
         state = enterSetupPhase(state, 'A');
-        // Placer tous les joueurs de l'équipe A
+        // Placer tous les joueurs de l'équipe A avec des positions valides
+        // Wide zone constraint: max 2 players in y=0..2 and max 2 in y=12..14
         const teamAPlayers = state.players.filter(p => p.team === 'A');
+        const positions = [
+            { x: 12, y: 3 }, { x: 12, y: 4 }, { x: 12, y: 5 },
+            { x: 12, y: 6 }, { x: 12, y: 7 }, { x: 12, y: 8 },
+            { x: 12, y: 9 }, { x: 12, y: 10 }, { x: 12, y: 11 },
+            { x: 11, y: 3 }, { x: 11, y: 4 },
+        ];
         for (let i = 0; i < 11; i++) {
-            const result = placePlayerInSetup(state, teamAPlayers[i].id, { x: 12, y: i });
+            const result = placePlayerInSetup(state, teamAPlayers[i].id, positions[i]);
             expect(result.success).toBe(true);
             state = result.state;
         }

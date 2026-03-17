@@ -57,10 +57,11 @@ describe('GameScoreboard', () => {
   it('should render without crashing with minimal state', () => {
     const state = createMinimalGameState();
     render(<GameScoreboard state={state} />);
-    
-    expect(screen.getByText('Équipe A')).toBeInTheDocument();
-    expect(screen.getByText('Équipe B')).toBeInTheDocument();
-    expect(screen.getByText('0')).toBeInTheDocument(); // Score
+
+    // "Équipe A" appears in both active team area and score badge
+    expect(screen.getAllByText('Équipe A').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Équipe B').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('0').length).toBeGreaterThanOrEqual(1); // Score
   });
 
   it('should handle undefined teamNames gracefully', () => {
@@ -145,10 +146,11 @@ describe('GameScoreboard', () => {
       }
     });
     render(<GameScoreboard state={state} />);
-    
+
     // Le composant ne devrait pas planter
-    expect(screen.getByText('Équipe A')).toBeInTheDocument();
-    expect(screen.getByText('Équipe B')).toBeInTheDocument(); // Fallback
+    // "Équipe A" appears in active team and score badge areas
+    expect(screen.getAllByText('Équipe A').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Équipe B').length).toBeGreaterThanOrEqual(1); // Fallback
   });
 
   it('should handle partial score', () => {
@@ -159,10 +161,11 @@ describe('GameScoreboard', () => {
       }
     });
     render(<GameScoreboard state={state} />);
-    
+
     // Le composant ne devrait pas planter
-    expect(screen.getByText('1')).toBeInTheDocument();
-    expect(screen.getByText('0')).toBeInTheDocument(); // Fallback pour teamB
+    // '1' appears in score, half, and turn areas
+    expect(screen.getAllByText('1').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('0').length).toBeGreaterThanOrEqual(1); // Fallback pour teamB
   });
 
   it('should handle empty gameLog array', () => {
@@ -189,24 +192,30 @@ describe('GameScoreboard', () => {
   it('should handle completely undefined state gracefully', () => {
     const state = undefined as any;
     render(<GameScoreboard state={state} />);
-    
+
     // Le composant ne devrait pas planter même avec un état complètement undefined
-    expect(screen.getByText('Blood Bowl Fantasy Football')).toBeInTheDocument();
+    // Quand state est undefined, le composant affiche le message de chargement
+    expect(screen.getByText('Chargement de la partie...')).toBeInTheDocument();
   });
 
   it('should handle state with only required properties', () => {
     const state = {
       currentPlayer: 'A',
       players: [],
-      teamNames: { teamA: 'A', teamB: 'B' },
+      teamNames: { teamA: 'Team Alpha', teamB: 'Team Beta' },
       score: { teamA: 0, teamB: 0 },
-      gameLog: []
+      gameLog: [],
+      half: 1,
+      turn: 1,
+      isTurnover: false,
+      selectedPlayerId: null,
     } as any;
     render(<GameScoreboard state={state} />);
-    
+
     // Le composant ne devrait pas planter
-    expect(screen.getByText('A')).toBeInTheDocument();
-    expect(screen.getByText('B')).toBeInTheDocument();
+    // Team names appear in both active team and score badge areas
+    expect(screen.getAllByText('Team Alpha').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Team Beta').length).toBeGreaterThanOrEqual(1);
   });
 
   it('should display custom team names when provided as props', () => {

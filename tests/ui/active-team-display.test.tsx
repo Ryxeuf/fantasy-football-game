@@ -33,13 +33,13 @@ describe("Affichage de l'équipe active (scoreboard)", () => {
   it("affiche le nom de l'équipe A quand currentPlayer === 'A'", () => {
     const state = makeState({ currentPlayer: "A" });
     render(<GameScoreboard state={state} onEndTurn={() => {}} />);
-    expect(screen.getByText("User-Skavens")).toBeTruthy();
+    expect(screen.getAllByText("User-Skavens").length).toBeGreaterThan(0);
   });
 
   it("affiche le nom de l'équipe B quand currentPlayer === 'B'", () => {
     const state = makeState({ currentPlayer: "B" });
     render(<GameScoreboard state={state} onEndTurn={() => {}} />);
-    expect(screen.getByText("Admin-Lizardmen")).toBeTruthy();
+    expect(screen.getAllByText("Admin-Lizardmen").length).toBeGreaterThan(0);
   });
 });
 

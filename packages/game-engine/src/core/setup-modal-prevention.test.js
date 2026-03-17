@@ -69,10 +69,16 @@ describe('Setup Modal Prevention', () => {
         const state = setupPreMatchWithTeams(players, createTestPlayers('B', 11), 'Équipe A', 'Équipe B');
         // Entrer en phase setup
         const setupState = enterSetupPhase(state, 'A');
-        // Placer tous les joueurs
+        // Placer tous les joueurs (positions valides dans la moitié de terrain de l'équipe A: x=1..12)
         let currentState = setupState;
+        const setupPositions = [
+            { x: 12, y: 3 }, { x: 12, y: 4 }, { x: 12, y: 5 },
+            { x: 12, y: 6 }, { x: 12, y: 7 }, { x: 12, y: 8 },
+            { x: 12, y: 9 }, { x: 12, y: 10 }, { x: 12, y: 11 },
+            { x: 11, y: 3 }, { x: 11, y: 4 },
+        ];
         for (let i = 0; i < 11; i++) {
-            currentState = applyPlacement(currentState, players[i].id, { x: 10 + i, y: 3 });
+            currentState = applyPlacement(currentState, players[i].id, setupPositions[i]);
         }
         // Passer à la phase kickoff
         const kickoffState = {

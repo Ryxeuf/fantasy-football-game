@@ -44,7 +44,7 @@ describe('Pre-Match Sequence Complete', () => {
         state = determineWeather(state, weatherRng);
         expect(state.preMatch.phase).toBe('journeymen');
         expect(state.preMatch.weather?.total).toBe(4); // 2 + 2
-        expect(state.preMatch.weather?.condition).toBe('Perfect Conditions');
+        expect(state.preMatch.weather?.condition).toBe('Conditions parfaites');
         // === PHASE 4: Joueurs de passage ===
         state = addJourneymen(state, 11, 11); // Les deux équipes ont besoin de 11 joueurs
         expect(state.preMatch.phase).toBe('inducements');
@@ -87,13 +87,13 @@ describe('Pre-Match Sequence Complete', () => {
         const extremeWeatherRng = () => 0.1; // D6 = 1 pour les deux dés
         state = determineWeather(state, extremeWeatherRng);
         expect(state.preMatch.weather?.total).toBe(2);
-        expect(state.preMatch.weather?.condition).toBe('Sweltering Heat');
+        expect(state.preMatch.weather?.condition).toBe('Chaleur écrasante');
         // Test météo parfaite (2D6 = 7)
         state.preMatch.phase = 'weather';
         const perfectWeatherRng = () => 0.5; // D6 = 4 et 4
         state = determineWeather(state, perfectWeatherRng);
         expect(state.preMatch.weather?.total).toBe(8);
-        expect(state.preMatch.weather?.condition).toBe('Perfect Conditions');
+        expect(state.preMatch.weather?.condition).toBe('Conditions parfaites');
         // Test blizzard (2D6 = 12)
         state.preMatch.phase = 'weather';
         const blizzardRng = () => 0.9; // D6 = 6 et 6

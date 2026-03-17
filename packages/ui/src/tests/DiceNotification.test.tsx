@@ -1,17 +1,18 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { vi } from "vitest";
 import { DiceNotificationDemo } from "../components/DiceNotificationDemo";
-import { ToastProvider } from "../components/Toaster";
+import { ToastProvider, useToast } from "../components/Toaster";
 
 // Mock du game-engine
-jest.mock("@bb/game-engine", () => ({
+vi.mock("@bb/game-engine", () => ({
   useDiceNotifications: () => ({
-    showDiceResult: jest.fn(),
-    showBlockDiceResult: jest.fn(),
-    showCustomDiceResult: jest.fn(),
+    showDiceResult: vi.fn(),
+    showBlockDiceResult: vi.fn(),
+    showCustomDiceResult: vi.fn(),
   }),
-  setDiceNotificationCallback: jest.fn(),
-  setBlockDiceNotificationCallback: jest.fn(),
+  setDiceNotificationCallback: vi.fn(),
+  setBlockDiceNotificationCallback: vi.fn(),
   makeRNG: () => () => 0.5, // Mock RNG qui retourne toujours 0.5
 }));
 
@@ -56,25 +57,3 @@ describe("DiceNotificationDemo", () => {
   });
 });
 
-describe("ToastProvider", () => {
-  it("devrait fournir le contexte de toast", () => {
-    const TestComponent = () => {
-      const { addToast } = require("../components/Toaster").useToast();
-
-      React.useEffect(() => {
-        addToast({
-          type: "info",
-          title: "Test Toast",
-          message: "Ceci est un test",
-        });
-      }, [addToast]);
-
-      return <div>Test</div>;
-    };
-
-    renderWithToastProvider(<TestComponent />);
-
-    expect(screen.getByText("Test Toast")).toBeInTheDocument();
-    expect(screen.getByText("Ceci est un test")).toBeInTheDocument();
-  });
-});

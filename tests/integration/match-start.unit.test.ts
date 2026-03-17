@@ -150,7 +150,7 @@ describe("acceptAndMaybeStartMatch (unitaire, sans DB)", () => {
       userId: "u2",
     });
     expect(r.ok).toBe(true);
-    expect(r.status).toBe("prematch");
+    expect(r.status).toBe("prematch-setup");
     expect(r.kickingUserId).toBeTruthy();
     expect(r.receivingUserId).toBeTruthy();
   });
