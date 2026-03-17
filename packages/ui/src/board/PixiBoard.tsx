@@ -25,6 +25,8 @@ type Props = {
   selectedPlayerId?: string | null;
   selectedForRepositioning?: string | null;
   ref?: React.RefObject<HTMLDivElement>;
+  /** Called when the responsive cell size changes (for drop coordinate math) */
+  onCellSizeChange?: (cellSize: number) => void;
 };
 
 export default function PixiBoard({
@@ -37,6 +39,7 @@ export default function PixiBoard({
   selectedPlayerId,
   selectedForRepositioning,
   ref,
+  onCellSizeChange,
 }: Props) {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [responsiveCellSize, setResponsiveCellSize] = React.useState(cellSize);
@@ -57,6 +60,7 @@ export default function PixiBoard({
       // Clamp between 18 (min usable) and the prop cellSize
       const newCellSize = Math.max(18, Math.min(maxCellSize, cellSize));
       setResponsiveCellSize(newCellSize);
+      onCellSizeChange?.(newCellSize);
     }
     updateSize();
     window.addEventListener("resize", updateSize);

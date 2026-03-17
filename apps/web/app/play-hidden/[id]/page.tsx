@@ -65,6 +65,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
   // Ajouter state après selectedFromReserve
   const [draggedPlayerId, setDraggedPlayerId] = useState<string | null>(null);
   const boardRef = useRef<HTMLDivElement | null>(null);
+  const [currentCellSize, setCurrentCellSize] = useState(28);
   const [setupError, setSetupError] = useState<string | null>(null);
 
   function showSetupError(msg: string) {
@@ -234,9 +235,8 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
     const nativeEvent = e.nativeEvent;
     const x = nativeEvent.clientX - rect.left;
     const y = nativeEvent.clientY - rect.top;
-    const cellSize = 28;
-    const gridX = Math.floor(x / cellSize);
-    const gridY = Math.floor(y / cellSize);
+    const gridX = Math.floor(x / currentCellSize);
+    const gridY = Math.floor(y / currentCellSize);
 
     if (
       gridX >= 0 &&
@@ -895,10 +895,11 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
                     });
                   }
                 }}
-                onDragStart={handleDragStart} // Nouvelle prop
+                onDragStart={handleDragStart}
                 boardContainerRef={boardRef}
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
+                onCellSizeChange={setCurrentCellSize}
                 isSetupPhase={
                   (state as ExtendedGameState).preMatch?.phase === "setup"
                 }

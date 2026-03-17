@@ -23,6 +23,8 @@ interface GameBoardWithDugoutsProps {
   isSetupPhase?: boolean;
   onDragOver?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent) => void;
+  /** Called when the responsive cell size changes (for drop coordinate math) */
+  onCellSizeChange?: (cellSize: number) => void;
 }
 
 export default function GameBoardWithDugouts({
@@ -39,6 +41,7 @@ export default function GameBoardWithDugouts({
   isSetupPhase = false,
   onDragOver,
   onDrop,
+  onCellSizeChange,
 }: GameBoardWithDugoutsProps) {
   const [showDugoutA, setShowDugoutA] = useState(false);
   const [showDugoutB, setShowDugoutB] = useState(false);
@@ -52,124 +55,78 @@ export default function GameBoardWithDugouts({
     );
   }
 
-  const selectedPlayer = selectedPlayerId
-    ? state.players?.find((p) => p.id === selectedPlayerId) || null
-    : null;
-
   const handlePlayerClick = (playerId: string) => {
-    // Find the player to show info
     const player = state.players?.find((p) => p.id === playerId) || null;
     setInspectedPlayer(player);
-    // Propagate original click
     onPlayerClick?.(playerId);
   };
 
+  const dugoutA = (
+    <TeamDugoutComponent
+      dugout={state.dugouts?.teamA}
+      allPlayers={state.players}
+      placedPlayers={placedPlayers}
+      onPlayerClick={handlePlayerClick}
+      onDragStart={onDragStart}
+      teamName={state.teamNames?.teamA}
+      isSetupPhase={isSetupPhase}
+    />
+  );
+
+  const dugoutB = (
+    <TeamDugoutComponent
+      dugout={state.dugouts?.teamB}
+      allPlayers={state.players}
+      placedPlayers={placedPlayers}
+      onPlayerClick={handlePlayerClick}
+      onDragStart={onDragStart}
+      teamName={state.teamNames?.teamB}
+      isSetupPhase={isSetupPhase}
+    />
+  );
+
   return (
     <div className="relative bg-gray-100 min-h-screen">
-      {/* Desktop: side-by-side layout */}
-      <div className="hidden lg:flex items-start gap-4 p-4">
-        {/* Dugout equipe A */}
-        <div className="flex-shrink-0">
-          <TeamDugoutComponent
-            dugout={state.dugouts?.teamA}
-            allPlayers={state.players}
-            placedPlayers={placedPlayers}
-            onPlayerClick={handlePlayerClick}
-            onDragStart={onDragStart}
-            teamName={state.teamNames?.teamA}
-            isSetupPhase={isSetupPhase}
-          />
-        </div>
-
-        {/* Terrain */}
-        <div
-          className="flex-shrink-0"
-          ref={boardContainerRef}
-          onDragOver={onDragOver}
-          onDrop={onDrop}
+      {/* Mobile: dugout toggle buttons (hidden on desktop) */}
+      <div className="lg:hidden flex gap-2 px-3 pt-3 pb-1">
+        <button
+          onClick={() => { setShowDugoutA(!showDugoutA); setShowDugoutB(false); }}
+          className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
+            showDugoutA
+              ? "bg-red-600 text-white"
+              : "bg-red-100 text-red-800 border border-red-300"
+          }`}
         >
-          <PixiBoard
-            state={state}
-            onCellClick={onCellClick}
-            onPlayerClick={handlePlayerClick}
-            legalMoves={legalMoves}
-            blockTargets={blockTargets}
-            selectedPlayerId={selectedPlayerId}
-            selectedForRepositioning={selectedForRepositioning}
-          />
-        </div>
-
-        {/* Dugout equipe B */}
-        <div className="flex-shrink-0">
-          <TeamDugoutComponent
-            dugout={state.dugouts?.teamB}
-            allPlayers={state.players}
-            placedPlayers={placedPlayers}
-            onPlayerClick={handlePlayerClick}
-            onDragStart={onDragStart}
-            teamName={state.teamNames?.teamB}
-            isSetupPhase={isSetupPhase}
-          />
-        </div>
+          {state.teamNames?.teamA || "Equipe A"}
+        </button>
+        <button
+          onClick={() => { setShowDugoutB(!showDugoutB); setShowDugoutA(false); }}
+          className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
+            showDugoutB
+              ? "bg-blue-600 text-white"
+              : "bg-blue-100 text-blue-800 border border-blue-300"
+          }`}
+        >
+          {state.teamNames?.teamB || "Equipe B"}
+        </button>
       </div>
 
-      {/* Mobile: stacked layout */}
-      <div className="lg:hidden flex flex-col">
-        {/* Dugout toggles */}
-        <div className="flex gap-2 px-3 pt-3 pb-1">
-          <button
-            onClick={() => { setShowDugoutA(!showDugoutA); setShowDugoutB(false); }}
-            className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
-              showDugoutA
-                ? "bg-red-600 text-white"
-                : "bg-red-100 text-red-800 border border-red-300"
-            }`}
-          >
-            {state.teamNames?.teamA || "Equipe A"}
-          </button>
-          <button
-            onClick={() => { setShowDugoutB(!showDugoutB); setShowDugoutA(false); }}
-            className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
-              showDugoutB
-                ? "bg-blue-600 text-white"
-                : "bg-blue-100 text-blue-800 border border-blue-300"
-            }`}
-          >
-            {state.teamNames?.teamB || "Equipe B"}
-          </button>
-        </div>
+      {/* Mobile: collapsible dugout panels (hidden on desktop) */}
+      {showDugoutA && (
+        <div className="lg:hidden px-3 pb-2">{dugoutA}</div>
+      )}
+      {showDugoutB && (
+        <div className="lg:hidden px-3 pb-2">{dugoutB}</div>
+      )}
 
-        {/* Dugout panel (collapsible) */}
-        {showDugoutA && (
-          <div className="px-3 pb-2 animate-in slide-in-from-top">
-            <TeamDugoutComponent
-              dugout={state.dugouts?.teamA}
-              allPlayers={state.players}
-              placedPlayers={placedPlayers}
-              onPlayerClick={handlePlayerClick}
-              onDragStart={onDragStart}
-              teamName={state.teamNames?.teamA}
-              isSetupPhase={isSetupPhase}
-            />
-          </div>
-        )}
-        {showDugoutB && (
-          <div className="px-3 pb-2 animate-in slide-in-from-top">
-            <TeamDugoutComponent
-              dugout={state.dugouts?.teamB}
-              allPlayers={state.players}
-              placedPlayers={placedPlayers}
-              onPlayerClick={handlePlayerClick}
-              onDragStart={onDragStart}
-              teamName={state.teamNames?.teamB}
-              isSetupPhase={isSetupPhase}
-            />
-          </div>
-        )}
+      {/* Main layout: desktop side-by-side, mobile board-only */}
+      <div className="flex flex-col lg:flex-row items-start gap-4 p-2 lg:p-4">
+        {/* Dugout A - desktop only */}
+        <div className="hidden lg:block flex-shrink-0">{dugoutA}</div>
 
-        {/* Terrain (full width, auto-scales) */}
+        {/* Board - single instance, always rendered */}
         <div
-          className="w-full px-1"
+          className="w-full lg:w-auto lg:flex-shrink-0"
           ref={boardContainerRef}
           onDragOver={onDragOver}
           onDrop={onDrop}
@@ -182,8 +139,12 @@ export default function GameBoardWithDugouts({
             blockTargets={blockTargets}
             selectedPlayerId={selectedPlayerId}
             selectedForRepositioning={selectedForRepositioning}
+            onCellSizeChange={onCellSizeChange}
           />
         </div>
+
+        {/* Dugout B - desktop only */}
+        <div className="hidden lg:block flex-shrink-0">{dugoutB}</div>
       </div>
 
       {/* Player info bottom sheet (mobile) / floating panel (desktop) */}
