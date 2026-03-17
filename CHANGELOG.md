@@ -1,3 +1,15 @@
+## [1.31.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.30.2...v1.31.0) (2026-03-17)
+
+
+### ✨ Features
+
+* redesign mobile game UI with responsive layout and player initials ([637dbe8](https://github.com/Ryxeuf/fantasy-football-game/commit/637dbe8e2191b1c48473b64b2bb211f6390427cf))
+
+
+### 🐛 Bug Fixes
+
+* single board instance for ref + dynamic cellSize for drop coords ([b27ec95](https://github.com/Ryxeuf/fantasy-football-game/commit/b27ec950cbb139781e193231be4d5f14eae8878a))
+
 ## [1.30.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.30.1...v1.30.2) (2026-03-16)
 
 
