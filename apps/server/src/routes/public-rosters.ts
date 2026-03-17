@@ -38,7 +38,7 @@ router.get("/rosters", async (req, res) => {
     });
     
     // Transformer les rosters pour utiliser le nom approprié selon la langue
-    const transformedRosters = rosters.map(roster => ({
+    const transformedRosters = rosters.map((roster: any) => ({
       slug: roster.slug,
       name: isEnglish ? roster.nameEn : roster.name,
       budget: roster.budget,

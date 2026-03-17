@@ -225,15 +225,15 @@ router.get("/details", async (req, res) => {
 
     // Déterminer local/visiteur: par défaut l'utilisateur du token est "local"
     const tokenUserId = (payload as any)?.userId as string | undefined;
-    let local = selections.find((s) => s.userId === tokenUserId) || null;
-    let visitor = selections.find((s) => s.userId !== tokenUserId) || null;
+    let local = selections.find((s: any) => s.userId === tokenUserId) || null;
+    let visitor = selections.find((s: any) => s.userId !== tokenUserId) || null;
     if (!local || !visitor) {
       // Fallback si une des équipes manque
       if (match?.creatorId) {
         local =
-          selections.find((s) => s.userId === match.creatorId) || selections[0];
+          selections.find((s: any) => s.userId === match.creatorId) || selections[0];
         visitor =
-          selections.find((s) => s.userId !== match.creatorId) ||
+          selections.find((s: any) => s.userId !== match.creatorId) ||
           selections[1] ||
           null;
       } else {
@@ -293,18 +293,18 @@ router.get("/:id/details", authUser, async (req: AuthenticatedRequest, res) => {
     // Déterminer local/visiteur: l'utilisateur authentifié est local
     const authenticatedUserId = req.user!.id;
     let local =
-      selections.find((s) => s.userId === authenticatedUserId) || null;
+      selections.find((s: any) => s.userId === authenticatedUserId) || null;
     let visitor =
-      selections.find((s) => s.userId !== authenticatedUserId) || null;
+      selections.find((s: any) => s.userId !== authenticatedUserId) || null;
     if (!local || !visitor) {
       // Fallback: creatorId si présent, sinon ordre de sélection
       if (match.creatorId) {
         local =
-          selections.find((s) => s.userId === match.creatorId) ||
+          selections.find((s: any) => s.userId === match.creatorId) ||
           selections[0] ||
           null;
         visitor =
-          selections.find((s) => s.userId !== match.creatorId) ||
+          selections.find((s: any) => s.userId !== match.creatorId) ||
           selections[1] ||
           null;
       } else {
@@ -399,7 +399,7 @@ router.get("/my-matches", authUser, async (req: AuthenticatedRequest, res) => {
       },
     });
 
-    const result = matches.map((m) => {
+    const result = matches.map((m: any) => {
       // Extraire le score depuis le dernier turn si disponible
       const lastTurn = m.turns[0];
       const gameState = (lastTurn?.payload as any)?.gameState;
@@ -409,10 +409,10 @@ router.get("/my-matches", authUser, async (req: AuthenticatedRequest, res) => {
 
       // Déterminer le côté de l'utilisateur
       const selections = m.teamSelections.sort(
-        (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
+        (a: any, b: any) => a.createdAt.getTime() - b.createdAt.getTime(),
       );
-      const mySelection = selections.find((s) => s.userId === userId);
-      const opponentSelection = selections.find((s) => s.userId !== userId);
+      const mySelection = selections.find((s: any) => s.userId === userId);
+      const opponentSelection = selections.find((s: any) => s.userId !== userId);
       const isMyTurn = m.currentTurnUserId === userId;
 
       return {
@@ -475,16 +475,16 @@ router.get("/:id/summary", authUser, async (req: AuthenticatedRequest, res) => {
       }),
       prisma.turn.findMany({ where: { matchId } }),
     ]);
-    let local = selections.find((s) => s.userId === match.creatorId) || null;
-    let visitor = selections.find((s) => s.userId !== match.creatorId) || null;
+    let local = selections.find((s: any) => s.userId === match.creatorId) || null;
+    let visitor = selections.find((s: any) => s.userId !== match.creatorId) || null;
     if (!local || !visitor) {
       if (match.creatorId) {
         local =
-          selections.find((s) => s.userId === match.creatorId) ||
+          selections.find((s: any) => s.userId === match.creatorId) ||
           selections[0] ||
           null;
         visitor =
-          selections.find((s) => s.userId !== match.creatorId) ||
+          selections.find((s: any) => s.userId !== match.creatorId) ||
           selections[1] ||
           null;
       } else {
@@ -738,7 +738,7 @@ router.post(
         select: { userId: true },
       });
 
-      const userIds = selections.map((s) => s.userId);
+      const userIds = selections.map((s: any) => s.userId);
       if (!userIds.includes(req.user!.id)) {
         return res
           .status(403)

@@ -1,5 +1,5 @@
 {
   "extends": "../config/tsconfig.base.json",
   "include": ["src"],
-  "exclude": ["src/PixiBoard.native.tsx"]
+  "exclude": ["src/board/PixiBoard.native.tsx", "src/**/__tests__", "src/**/tests", "src/**/*.test.ts", "src/**/*.test.tsx"]
 }

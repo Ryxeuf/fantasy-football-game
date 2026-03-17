@@ -45,7 +45,7 @@ export async function getRosterFromDb(
     budget: roster.budget,
     tier: roster.tier,
     naf: roster.naf,
-    positions: roster.positions.map((position) => ({
+    positions: roster.positions.map((position: any) => ({
       slug: position.slug,
       displayName: position.displayName,
       cost: position.cost,
@@ -57,7 +57,7 @@ export async function getRosterFromDb(
       pa: position.pa,
       av: position.av,
       skills: position.skills
-        .map((ps) => ps.skill.slug)
+        .map((ps: any) => ps.skill.slug)
         .join(","),
     })),
   };
@@ -97,7 +97,7 @@ export async function getAllRostersFromDb(
       budget: roster.budget,
       tier: roster.tier,
       naf: roster.naf,
-      positions: roster.positions.map((position) => ({
+      positions: roster.positions.map((position: any) => ({
         slug: position.slug,
         displayName: position.displayName,
         cost: position.cost,
@@ -109,7 +109,7 @@ export async function getAllRostersFromDb(
         pa: position.pa,
         av: position.av,
         skills: position.skills
-          .map((ps) => ps.skill.slug)
+          .map((ps: any) => ps.skill.slug)
           .join(","),
       })),
     };

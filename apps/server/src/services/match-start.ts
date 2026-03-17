@@ -128,7 +128,7 @@ export async function acceptAndMaybeStartMatch(
   }
 
   // Convertir les données des joueurs
-  const teamAData: TeamPlayerData[] = teamA.players.map((p) => ({
+  const teamAData: TeamPlayerData[] = teamA.players.map((p: any) => ({
     id: p.id,
     name: p.name,
     position: p.position,
@@ -141,7 +141,7 @@ export async function acceptAndMaybeStartMatch(
     skills: p.skills || "",
   }));
 
-  const teamBData: TeamPlayerData[] = teamB.players.map((p) => ({
+  const teamBData: TeamPlayerData[] = teamB.players.map((p: any) => ({
     id: p.id,
     name: p.name,
     position: p.position,

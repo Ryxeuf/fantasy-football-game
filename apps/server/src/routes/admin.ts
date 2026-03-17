@@ -75,7 +75,7 @@ router.get("/users", async (req, res) => {
       take: limitNum,
     });
 
-    const usersWithRoles = users.map((u) => ({
+    const usersWithRoles = users.map((u: typeof users[number]) => ({
       ...u,
       roles: normalizeRoles((u as any).roles ?? u.role),
     }));

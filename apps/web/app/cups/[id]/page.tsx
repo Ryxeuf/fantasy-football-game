@@ -258,6 +258,8 @@ export default function CupDetailPage() {
     return null;
   }
 
+  const eligibleTeams = teams.filter((team: Team) => team.ruleset === cup.ruleset);
+
   return (
     <div className="w-full p-6 space-y-6">
       {/* Header */}

@@ -59,14 +59,14 @@ async function loadSkillsFromAPI(): Promise<SkillFromAPI[]> {
     .then(res => res.json())
     .then(data => {
       skillsCache = data.skills || [];
-      return skillsCache;
+      return skillsCache!;
     })
     .catch(err => {
       console.error("Erreur lors du chargement des compétences depuis l'API:", err);
       skillsCachePromise = null;
-      return [];
+      return [] as SkillFromAPI[];
     });
-  
+
   return skillsCachePromise;
 }
 
@@ -236,7 +236,6 @@ const FRENCH_TO_ENGLISH_SLUGS: Record<string, string> = {
   "prise-du-jour": "catch", // Probablement une erreur dans les données, mapping vers catch
   "prise du jour": "catch",
   // Gestion dirty-player-2 (n'existe pas, fallback vers dirty-player-1)
-  "dirty-player-2": "dirty-player-1",
   // Compétences qui pourraient être manquantes dans certaines versions
   "bloodlust": "bloodlust", // Si n'existe pas, sera gardé tel quel
   "nurgles-rot": "nurgles-rot", // Si n'existe pas, sera gardé tel quel
@@ -270,14 +269,12 @@ const FRENCH_TO_ENGLISH_SLUGS: Record<string, string> = {
   "loner-4": "loner-4",
   "loner-5": "loner-5",
   "solitaire (3+)": "loner-3",
-  "solitaire (4+)": "loner-4",
   "solitaire (5+)": "loner-5",
   // Corrections de variantes de compétences
   "claw": "claws",
   "side-step": "sidestep",
   // Variantes mighty-blow (toutes existent maintenant)
   "mighty-blow-2": "mighty-blow-2",
-  "châtaigne-+2": "mighty-blow-2",
   // Compétences spéciales qui n'ont pas encore de slug dans le système
   "hurl-teammate": "throw-team-mate",
   "animosity-all": "animosity", // Variante d'animosity
@@ -295,7 +292,6 @@ const FRENCH_TO_ENGLISH_SLUGS: Record<string, string> = {
   "blocage multiple": "multiple-block",
   "régénération": "regeneration",
   "stabilité": "stand-firm",
-  "réception-plongeante": "diving-catch",
   "nerfs-d'acier": "nerves-of-steel",
   "projection": "grab",
   "poivrot": "drunkard",
@@ -303,7 +299,6 @@ const FRENCH_TO_ENGLISH_SLUGS: Record<string, string> = {
   "défenseur": "defensive",
   "boulet-de-canon": "juggernaut",
   "boulet de canon": "juggernaut",
-  "soif-de-sang-2+": "bloodlust",
   "soif-de-sang": "bloodlust",
   // Nouvelles compétences ajoutées
   "animosity-underworld": "animosity-underworld",

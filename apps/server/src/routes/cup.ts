@@ -23,11 +23,11 @@ router.get("/", authUser, async (req: AuthenticatedRequest, res) => {
       where: { ownerId: req.user!.id },
       select: { id: true },
     });
-    const userTeamIds = userTeams.map((t) => t.id);
+    const userTeamIds = userTeams.map((t: typeof userTeams[number]) => t.id);
 
     // Construire la condition where
     let whereClause: any = {};
-    
+
     if (!showAll) {
       // Pour les utilisateurs normaux : coupes publiques ET ouvertes, OU coupes auxquelles ils participent
       // Si userTeamIds est vide, on ne peut pas participer, donc on ne montre que les coupes publiques ouvertes
@@ -106,7 +106,7 @@ router.get("/", authUser, async (req: AuthenticatedRequest, res) => {
     }
 
     // Formater la réponse pour inclure le nombre de participants
-    const formattedCups = cups.map((cup) => ({
+    const formattedCups = cups.map((cup: typeof cups[number]) => ({
       id: cup.id,
       name: cup.name,
       creator: cup.creator,
@@ -116,7 +116,7 @@ router.get("/", authUser, async (req: AuthenticatedRequest, res) => {
       isPublic: cup.isPublic,
       status: cup.status,
       participantCount: cup.participants.length,
-      participants: cup.participants.map((p) => ({
+      participants: cup.participants.map((p: typeof cup.participants[number]) => ({
         id: p.team.id,
         name: p.team.name,
         roster: p.team.roster,
@@ -142,7 +142,7 @@ router.get("/archived", authUser, async (req: AuthenticatedRequest, res) => {
       where: { ownerId: req.user!.id },
       select: { id: true },
     });
-    const userTeamIds = userTeams.map((t) => t.id);
+    const userTeamIds = userTeams.map((t: typeof userTeams[number]) => t.id);
 
     const cups = await prisma.cup.findMany({
       where: {
@@ -191,7 +191,7 @@ router.get("/archived", authUser, async (req: AuthenticatedRequest, res) => {
       orderBy: { createdAt: "desc" },
     });
 
-    const formattedCups = cups.map((cup) => ({
+    const formattedCups = cups.map((cup: typeof cups[number]) => ({
       id: cup.id,
       name: cup.name,
       creator: cup.creator,
@@ -201,7 +201,7 @@ router.get("/archived", authUser, async (req: AuthenticatedRequest, res) => {
       isPublic: cup.isPublic,
       status: cup.status,
       participantCount: cup.participants.length,
-      participants: cup.participants.map((p) => ({
+      participants: cup.participants.map((p: typeof cup.participants[number]) => ({
         id: p.team.id,
         name: p.team.name,
         roster: p.team.roster,
@@ -340,12 +340,12 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
       where: { ownerId: req.user!.id },
       select: { id: true },
     });
-    const userTeamIds = new Set(userTeams.map((t) => t.id));
+    const userTeamIds = new Set(userTeams.map((t: typeof userTeams[number]) => t.id));
 
     // Trouver les équipes de l'utilisateur qui participent à cette coupe
     const userParticipatingTeamIds = cup.participants
-      .filter((p) => userTeamIds.has(p.team.id))
-      .map((p) => p.team.id);
+      .filter((p: any) => userTeamIds.has(p.team.id))
+      .map((p: any) => p.team.id);
 
     // Calculer le classement de la coupe à partir des matchs terminés
     const standingsResult = computeCupStandings(
@@ -363,7 +363,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
       isPublic: cup.isPublic,
       status: cup.status,
       participantCount: cup.participants.length,
-      participants: cup.participants.map((p) => ({
+      participants: cup.participants.map((p: any) => ({
         id: p.team.id,
         name: p.team.name,
         roster: p.team.roster,
@@ -373,7 +373,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
       createdAt: cup.createdAt,
       updatedAt: cup.updatedAt,
       isCreator: cup.creatorId === req.user!.id,
-      hasTeamParticipating: cup.participants.some((p) => userTeamIds.has(p.team.id)),
+      hasTeamParticipating: cup.participants.some((p: any) => userTeamIds.has(p.team.id)),
       userParticipatingTeamIds, // Liste des IDs des équipes de l'utilisateur qui participent
       scoringConfig: standingsResult.scoringConfig,
       standings: standingsResult.teamStats,
@@ -614,7 +614,7 @@ router.post(
 
       // Vérifier que l'équipe n'est pas déjà inscrite
       const alreadyParticipant = cup.participants.some(
-        (p) => p.teamId === teamId,
+        (p: any) => p.teamId === teamId,
       );
       if (alreadyParticipant) {
         return res
@@ -671,7 +671,7 @@ router.post(
         isPublic: updatedCup!.isPublic,
         status: updatedCup!.status,
         participantCount: updatedCup!.participants.length,
-        participants: updatedCup!.participants.map((p) => ({
+        participants: updatedCup!.participants.map((p: any) => ({
           id: p.team.id,
           name: p.team.name,
           roster: p.team.roster,
@@ -741,7 +741,7 @@ router.post(
       }
 
       // Vérifier que l'équipe est bien inscrite
-      const participant = cup.participants.find((p) => p.teamId === teamId);
+      const participant = cup.participants.find((p: any) => p.teamId === teamId);
       if (!participant) {
         return res
           .status(400)
@@ -794,7 +794,7 @@ router.post(
         isPublic: updatedCup!.isPublic,
         status: updatedCup!.status,
         participantCount: updatedCup!.participants.length,
-        participants: updatedCup!.participants.map((p) => ({
+        participants: updatedCup!.participants.map((p: any) => ({
           id: p.team.id,
           name: p.team.name,
           roster: p.team.roster,
@@ -889,7 +889,7 @@ router.post(
         isPublic: updatedCup.isPublic,
         status: updatedCup.status,
         participantCount: updatedCup.participants.length,
-        participants: updatedCup.participants.map((p) => ({
+        participants: updatedCup.participants.map((p: any) => ({
           id: p.team.id,
           name: p.team.name,
           roster: p.team.roster,
@@ -1007,7 +1007,7 @@ router.post(
         isPublic: updatedCup.isPublic,
         status: updatedCup.status,
         participantCount: updatedCup.participants.length,
-        participants: updatedCup.participants.map((p) => ({
+        participants: updatedCup.participants.map((p: any) => ({
           id: p.team.id,
           name: p.team.name,
           roster: p.team.roster,

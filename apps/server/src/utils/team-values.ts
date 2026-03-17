@@ -1,4 +1,4 @@
-import { PrismaClient } from '../prisma-sqlite-client';
+import { PrismaClient } from '@prisma/client';
 import { DEFAULT_RULESET, type Ruleset } from '@bb/game-engine';
 import { calculateTeamValue, calculateCurrentValue, getPlayerCost, type TeamValueData } from '../../../../packages/game-engine/src/utils/team-value-calculator';
 

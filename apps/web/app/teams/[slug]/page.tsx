@@ -225,9 +225,9 @@ export default function TeamDetailPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {positions.map((position, index) => (
-                <tr 
-                  key={position.slug} 
+              {positions.map((position: any, index: number) => (
+                <tr
+                  key={position.slug}
                   className={`hover:bg-blue-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}
                 >
                   <td className="px-6 py-4">
@@ -276,7 +276,7 @@ export default function TeamDetailPage() {
 
         {/* Version Mobile/Tablet : Cartes élégantes */}
         <div className="lg:hidden p-4 sm:p-6 space-y-4">
-          {positions.map((position) => (
+          {positions.map((position: any) => (
             <div
               key={position.slug}
               className="bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 p-4 sm:p-5 shadow-sm hover:shadow-md transition-all duration-200"
@@ -419,19 +419,19 @@ export default function TeamDetailPage() {
             <div className="text-center p-4 bg-green-50 rounded-lg">
               <div className="text-sm text-green-600 font-medium">{t.teams.minCost}</div>
               <div className="text-2xl font-bold text-green-900">
-                {Math.min(...positions.map(p => p.cost * p.min))}k {t.teams.po}
+                {Math.min(...positions.map((p: any) => p.cost * p.min))}k {t.teams.po}
               </div>
             </div>
             <div className="text-center p-4 bg-purple-50 rounded-lg">
               <div className="text-sm text-purple-600 font-medium">{t.teams.maxCost}</div>
               <div className="text-2xl font-bold text-purple-900">
-                {positions.reduce((sum, p) => sum + (p.cost * p.max), 0)}k {t.teams.po}
+                {positions.reduce((sum: number, p: any) => sum + (p.cost * p.max), 0)}k {t.teams.po}
               </div>
             </div>
             <div className="text-center p-4 bg-orange-50 rounded-lg">
               <div className="text-sm text-orange-600 font-medium">{t.teams.maxPlayers}</div>
               <div className="text-2xl font-bold text-orange-900">
-                {positions.reduce((sum, p) => sum + p.max, 0)}
+                {positions.reduce((sum: number, p: any) => sum + p.max, 0)}
               </div>
             </div>
           </div>

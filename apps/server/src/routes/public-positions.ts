@@ -51,7 +51,7 @@ router.get("/positions", async (req, res) => {
     });
 
     // Transformer les données pour correspondre au format attendu
-    const transformedPositions = positions.map((position) => ({
+    const transformedPositions = positions.map((position: any) => ({
       slug: position.slug,
       displayName: position.displayName,
       cost: position.cost,
@@ -63,7 +63,7 @@ router.get("/positions", async (req, res) => {
       pa: position.pa,
       av: position.av,
       skills: position.skills
-        .map((ps) => ps.skill.slug)
+        .map((ps: any) => ps.skill.slug)
         .join(","),
       rosterSlug: position.roster.slug,
       rosterName: isEnglish ? position.roster.nameEn : position.roster.name,
@@ -148,7 +148,7 @@ router.get("/positions/:slug", async (req, res) => {
       pa: position.pa,
       av: position.av,
       skills: position.skills
-        .map((ps) => ps.skill.slug)
+        .map((ps: any) => ps.skill.slug)
         .join(","),
       rosterSlug: position.roster.slug,
       rosterName: isEnglish ? position.roster.nameEn : position.roster.name,

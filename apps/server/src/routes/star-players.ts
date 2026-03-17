@@ -29,7 +29,7 @@ router.get("/", async (req, res) => {
     });
 
     // Transformer les données pour correspondre au format attendu
-    const transformedStarPlayers = starPlayers.map((sp) => ({
+    const transformedStarPlayers = starPlayers.map((sp: any) => ({
       slug: sp.slug,
       displayName: sp.displayName,
       cost: sp.cost,
@@ -41,8 +41,8 @@ router.get("/", async (req, res) => {
       specialRule: sp.specialRule,
       imageUrl: sp.imageUrl,
       isMegaStar: sp.isMegaStar,
-      skills: sp.skills.map((sps) => sps.skill.slug).join(","),
-      hirableBy: sp.hirableBy.map((h) => h.roster?.slug || h.rule),
+      skills: sp.skills.map((sps: any) => sps.skill.slug).join(","),
+      hirableBy: sp.hirableBy.map((h: any) => h.roster?.slug || h.rule),
     }));
 
     res.json({
@@ -98,8 +98,8 @@ router.get("/:slug", async (req, res) => {
       specialRule: starPlayer.specialRule,
       imageUrl: starPlayer.imageUrl,
       isMegaStar: starPlayer.isMegaStar,
-      skills: starPlayer.skills.map((sps) => sps.skill.slug).join(","),
-      hirableBy: starPlayer.hirableBy.map((h) => h.roster?.slug || h.rule),
+      skills: starPlayer.skills.map((sps: any) => sps.skill.slug).join(","),
+      hirableBy: starPlayer.hirableBy.map((h: any) => h.roster?.slug || h.rule),
     };
 
     res.json({
@@ -178,7 +178,7 @@ router.get("/available/:roster", async (req, res) => {
     });
 
     // Transformer les données
-    const transformedStarPlayers = starPlayers.map((sp) => ({
+    const transformedStarPlayers = starPlayers.map((sp: any) => ({
       slug: sp.slug,
       displayName: sp.displayName,
       cost: sp.cost,
@@ -190,8 +190,8 @@ router.get("/available/:roster", async (req, res) => {
       specialRule: sp.specialRule,
       imageUrl: sp.imageUrl,
       isMegaStar: sp.isMegaStar,
-      skills: sp.skills.map((sps) => sps.skill.slug).join(","),
-      hirableBy: sp.hirableBy.map((h) => h.roster?.slug || h.rule),
+      skills: sp.skills.map((sps: any) => sps.skill.slug).join(","),
+      hirableBy: sp.hirableBy.map((h: any) => h.roster?.slug || h.rule),
     }));
 
     res.json({
@@ -298,7 +298,7 @@ router.get("/search", async (req, res) => {
     });
 
     // Transformer les données
-    const transformedStarPlayers = starPlayers.map((sp) => ({
+    const transformedStarPlayers = starPlayers.map((sp: any) => ({
       slug: sp.slug,
       displayName: sp.displayName,
       cost: sp.cost,
@@ -310,8 +310,8 @@ router.get("/search", async (req, res) => {
       specialRule: sp.specialRule,
       imageUrl: sp.imageUrl,
       isMegaStar: sp.isMegaStar,
-      skills: sp.skills.map((sps) => sps.skill.slug).join(","),
-      hirableBy: sp.hirableBy.map((h) => h.roster?.slug || h.rule),
+      skills: sp.skills.map((sps: any) => sps.skill.slug).join(","),
+      hirableBy: sp.hirableBy.map((h: any) => h.roster?.slug || h.rule),
     }));
 
     res.json({
