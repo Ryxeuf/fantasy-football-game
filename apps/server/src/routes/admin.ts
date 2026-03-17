@@ -302,18 +302,211 @@ router.delete("/users/:id", async (req, res) => {
 
 router.get("/matches", async (req, res) => {
   try {
-    const { limit } = req.query;
-    const limitNum = limit ? parseInt(limit as string, 10) : undefined;
-    
+    const {
+      limit,
+      status,
+      search = "",
+      sortBy = "createdAt",
+      sortOrder = "desc",
+      page = "1",
+    } = req.query;
+    const limitNum = limit ? parseInt(limit as string, 10) : 50;
+    const pageNum = parseInt(page as string, 10) || 1;
+    const skip = (pageNum - 1) * limitNum;
+
+    const where: any = {};
+    if (status) {
+      where.status = status as string;
+    }
+    if (search) {
+      const searchStr = search as string;
+      where.OR = [
+        { id: { contains: searchStr } },
+        { seed: { contains: searchStr } },
+        { status: { contains: searchStr } },
+        { creator: { coachName: { contains: searchStr, mode: "insensitive" } } },
+        { creator: { email: { contains: searchStr, mode: "insensitive" } } },
+        {
+          teamSelections: {
+            some: {
+              OR: [
+                { user: { coachName: { contains: searchStr, mode: "insensitive" } } },
+                { teamRef: { name: { contains: searchStr, mode: "insensitive" } } },
+              ],
+            },
+          },
+        },
+      ];
+    }
+
+    const total = await prisma.match.count({ where });
+
     const matches = await prisma.match.findMany({
-      select: { id: true, status: true, seed: true, createdAt: true },
-      orderBy: { createdAt: "desc" },
+      where,
+      select: {
+        id: true,
+        status: true,
+        seed: true,
+        createdAt: true,
+        lastMoveAt: true,
+        currentTurnUserId: true,
+        creator: {
+          select: { id: true, email: true, coachName: true },
+        },
+        teamSelections: {
+          orderBy: { createdAt: "asc" },
+          include: {
+            user: { select: { id: true, coachName: true, email: true } },
+            teamRef: { select: { id: true, name: true, roster: true } },
+          },
+        },
+        _count: {
+          select: { turns: true, players: true },
+        },
+      },
+      orderBy: { [sortBy as string]: sortOrder as "asc" | "desc" },
+      skip,
       take: limitNum,
     });
-    res.json({ matches });
+
+    // Count by status
+    const [pendingCount, prematchCount, prematchSetupCount, activeCount, endedCount, cancelledCount] =
+      await Promise.all([
+        prisma.match.count({ where: { status: "pending" } }),
+        prisma.match.count({ where: { status: "prematch" } }),
+        prisma.match.count({ where: { status: "prematch-setup" } }),
+        prisma.match.count({ where: { status: "active" } }),
+        prisma.match.count({ where: { status: "ended" } }),
+        prisma.match.count({ where: { status: "cancelled" } }),
+      ]);
+
+    res.json({
+      matches,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum),
+      },
+      statusCounts: {
+        pending: pendingCount,
+        prematch: prematchCount,
+        "prematch-setup": prematchSetupCount,
+        active: activeCount,
+        ended: endedCount,
+        cancelled: cancelledCount,
+      },
+    });
   } catch (e: any) {
     console.error("Erreur lors de la récupération des parties:", e);
     res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// Détails d'un match spécifique
+router.get("/matches/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const match = await prisma.match.findUnique({
+      where: { id },
+      include: {
+        creator: {
+          select: { id: true, email: true, coachName: true },
+        },
+        players: {
+          select: { id: true, email: true, coachName: true },
+        },
+        teamSelections: {
+          orderBy: { createdAt: "asc" },
+          include: {
+            user: { select: { id: true, coachName: true, email: true } },
+            teamRef: { select: { id: true, name: true, roster: true } },
+          },
+        },
+        turns: {
+          orderBy: { number: "desc" },
+          take: 10,
+          select: {
+            id: true,
+            number: true,
+            createdAt: true,
+            payload: true,
+          },
+        },
+        _count: {
+          select: { turns: true, players: true, teamSelections: true },
+        },
+      },
+    });
+
+    if (!match) {
+      return res.status(404).json({ error: "Partie non trouvée" });
+    }
+
+    res.json({ match });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Erreur lors de la récupération de la partie" });
+  }
+});
+
+// Modifier le statut d'un match
+router.patch("/matches/:id/status", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body ?? {};
+
+    const allowedStatuses = ["pending", "prematch", "prematch-setup", "active", "ended", "cancelled"];
+    if (!status || !allowedStatuses.includes(status)) {
+      return res.status(400).json({ error: "Statut invalide" });
+    }
+
+    const match = await prisma.match.update({
+      where: { id },
+      data: { status },
+      select: { id: true, status: true },
+    });
+
+    res.json({ match });
+  } catch (e: any) {
+    if (e.code === "P2025") {
+      return res.status(404).json({ error: "Partie non trouvée" });
+    }
+    console.error(e);
+    res.status(500).json({ error: "Erreur lors de la modification du statut" });
+  }
+});
+
+// Supprimer un match et ses données associées
+router.delete("/matches/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const match = await prisma.match.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+
+    if (!match) {
+      return res.status(404).json({ error: "Partie non trouvée" });
+    }
+
+    // Supprimer dans l'ordre: turns, selections, relation joueurs, puis match
+    await prisma.turn.deleteMany({ where: { matchId: id } });
+    await prisma.teamSelection.deleteMany({ where: { matchId: id } });
+    await (prisma as any).$executeRawUnsafe(
+      `DELETE FROM "_MatchToUser" WHERE "A" = $1 OR "B" = $1`,
+      id,
+    );
+    await prisma.match.delete({ where: { id } });
+
+    res.json({ ok: true });
+  } catch (e: any) {
+    if (e.code === "P2025") {
+      return res.status(404).json({ error: "Partie non trouvée" });
+    }
+    console.error(e);
+    res.status(500).json({ error: "Erreur lors de la suppression de la partie" });
   }
 });
 
