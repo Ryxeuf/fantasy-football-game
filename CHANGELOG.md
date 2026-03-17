@@ -1,3 +1,10 @@
+## [1.36.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.35.0...v1.36.0) (2026-03-17)
+
+
+### ✨ Features
+
+* enhance deployment commands and improve game state handling ([6fd3165](https://github.com/Ryxeuf/fantasy-football-game/commit/6fd31656feaf1a004529e4a0cbab3c8e2f2510e9))
+
 ## [1.35.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.34.0...v1.35.0) (2026-03-17)
 
 
