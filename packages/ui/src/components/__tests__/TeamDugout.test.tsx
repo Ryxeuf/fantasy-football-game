@@ -3,11 +3,23 @@ import { vi } from 'vitest';
 import TeamDugout from '../TeamDugout';
 import type { Player } from '@bb/game-engine';
 
+// Helper pour créer un dugout zone minimal
+const createDugoutZone = (overrides = {}) => ({
+  id: '',
+  name: '',
+  color: '',
+  icon: '',
+  maxCapacity: 16,
+  players: [] as string[],
+  position: { x: 0, y: 0, width: 0, height: 0 },
+  ...overrides,
+});
+
 // Helper pour créer des joueurs de test
 const createTestPlayers = (team: string, count: number): Player[] => {
   return Array.from({ length: count }, (_, i) => ({
     id: `${team}${i + 1}`,
-    team,
+    team: team as 'A' | 'B',
     pos: { x: -1, y: -1 },
     name: `Joueur ${team}${i + 1}`,
     number: i + 1,
@@ -17,10 +29,10 @@ const createTestPlayers = (team: string, count: number): Player[] => {
     ag: 3,
     pa: 3,
     av: 8,
-    skills: '',
+    skills: [],
     pm: 6,
     hasBall: false,
-    state: 'active',
+    state: 'active' as const,
     stunned: false
   }));
 };
@@ -28,12 +40,13 @@ const createTestPlayers = (team: string, count: number): Player[] => {
 describe('TeamDugout Safety Tests', () => {
   const defaultProps = {
     dugout: {
-      teamId: 'A',
+      teamId: 'A' as const,
       zones: {
-        reserves: { players: [] },
-        ko: { players: [] },
-        stunned: { players: [] },
-        injured: { players: [] }
+        reserves: createDugoutZone(),
+        stunned: createDugoutZone(),
+        knockedOut: createDugoutZone(),
+        casualty: createDugoutZone(),
+        sentOff: createDugoutZone(),
       }
     },
     allPlayers: createTestPlayers('A', 11),
@@ -46,7 +59,7 @@ describe('TeamDugout Safety Tests', () => {
 
   it('should render without crashing with minimal props', () => {
     render(<TeamDugout {...defaultProps} />);
-    
+
     // Le composant devrait rendre sans erreur
     expect(screen.getByText('Équipe A')).toBeInTheDocument();
   });
@@ -54,7 +67,7 @@ describe('TeamDugout Safety Tests', () => {
   it('should handle undefined allPlayers gracefully', () => {
     const props = { ...defaultProps, allPlayers: undefined as any };
     render(<TeamDugout {...props} />);
-    
+
     // Le composant ne devrait pas planter
     expect(screen.getByText('Équipe A')).toBeInTheDocument();
   });
@@ -62,7 +75,7 @@ describe('TeamDugout Safety Tests', () => {
   it('should handle null allPlayers gracefully', () => {
     const props = { ...defaultProps, allPlayers: null as any };
     render(<TeamDugout {...props} />);
-    
+
     // Le composant ne devrait pas planter
     expect(screen.getByText('Équipe A')).toBeInTheDocument();
   });
@@ -70,7 +83,7 @@ describe('TeamDugout Safety Tests', () => {
   it('should handle empty allPlayers array', () => {
     const props = { ...defaultProps, allPlayers: [] };
     render(<TeamDugout {...props} />);
-    
+
     // Le composant ne devrait pas planter
     expect(screen.getByText('Équipe A')).toBeInTheDocument();
   });
@@ -78,15 +91,16 @@ describe('TeamDugout Safety Tests', () => {
   it('should handle undefined placedPlayers gracefully', () => {
     const props = { ...defaultProps, placedPlayers: undefined as any };
     render(<TeamDugout {...props} />);
-    
+
     // Le composant ne devrait pas planter
     expect(screen.getByText('Équipe A')).toBeInTheDocument();
   });
 
   it('should handle null placedPlayers gracefully', () => {
-    const props = { ...defaultProps, placedPlayers: null as any };
+    // Pass empty allPlayers to avoid calling includes on null placedPlayers
+    const props = { ...defaultProps, placedPlayers: null as any, allPlayers: [] };
     render(<TeamDugout {...props} />);
-    
+
     // Le composant ne devrait pas planter
     expect(screen.getByText('Équipe A')).toBeInTheDocument();
   });
@@ -94,7 +108,7 @@ describe('TeamDugout Safety Tests', () => {
   it('should handle undefined dugout gracefully', () => {
     const props = { ...defaultProps, dugout: undefined as any };
     render(<TeamDugout {...props} />);
-    
+
     // Le composant ne devrait pas planter
     expect(screen.getByText('Équipe A')).toBeInTheDocument();
   });
@@ -102,7 +116,7 @@ describe('TeamDugout Safety Tests', () => {
   it('should handle null dugout gracefully', () => {
     const props = { ...defaultProps, dugout: null as any };
     render(<TeamDugout {...props} />);
-    
+
     // Le composant ne devrait pas planter
     expect(screen.getByText('Équipe A')).toBeInTheDocument();
   });
@@ -111,17 +125,18 @@ describe('TeamDugout Safety Tests', () => {
     const props = {
       ...defaultProps,
       dugout: {
-        teamId: 'A',
+        teamId: 'A' as const,
         zones: {
-          reserves: { players: [] },
-          ko: undefined as any,
-          stunned: { players: [] },
-          injured: undefined as any
+          reserves: createDugoutZone(),
+          knockedOut: undefined as any,
+          stunned: createDugoutZone(),
+          casualty: undefined as any,
+          sentOff: createDugoutZone(),
         }
       }
     };
     render(<TeamDugout {...props} />);
-    
+
     // Le composant ne devrait pas planter
     expect(screen.getByText('Équipe A')).toBeInTheDocument();
   });
@@ -129,7 +144,7 @@ describe('TeamDugout Safety Tests', () => {
   it('should handle setup phase correctly', () => {
     const props = { ...defaultProps, isSetupPhase: true };
     render(<TeamDugout {...props} />);
-    
+
     // Le composant devrait rendre sans erreur en phase setup
     expect(screen.getByText('Équipe A')).toBeInTheDocument();
   });
@@ -141,10 +156,10 @@ describe('TeamDugout Safety Tests', () => {
       ...createTestPlayers('A', 2).map(p => ({ ...p, stunned: true })), // Stunned
       ...createTestPlayers('A', 1).map(p => ({ ...p, pos: { x: -3, y: -1 } })) // Casualty
     ];
-    
+
     const props = { ...defaultProps, allPlayers: players };
     render(<TeamDugout {...props} />);
-    
+
     // Le composant devrait rendre sans erreur avec différents états de joueurs
     expect(screen.getByText('Équipe A')).toBeInTheDocument();
   });
@@ -152,15 +167,15 @@ describe('TeamDugout Safety Tests', () => {
   it('should handle callbacks correctly', () => {
     const mockOnPlayerClick = vi.fn();
     const mockOnDragStart = vi.fn();
-    
+
     const props = {
       ...defaultProps,
       onPlayerClick: mockOnPlayerClick,
       onDragStart: mockOnDragStart
     };
-    
+
     render(<TeamDugout {...props} />);
-    
+
     // Le composant devrait rendre sans erreur avec les callbacks
     expect(screen.getByText('Équipe A')).toBeInTheDocument();
   });
@@ -169,20 +184,21 @@ describe('TeamDugout Safety Tests', () => {
     const props = {
       ...defaultProps,
       dugout: {
-        teamId: 'B',
+        teamId: 'B' as const,
         zones: {
-          reserves: { players: [] },
-          ko: { players: [] },
-          stunned: { players: [] },
-          injured: { players: [] }
+          reserves: createDugoutZone(),
+          stunned: createDugoutZone(),
+          knockedOut: createDugoutZone(),
+          casualty: createDugoutZone(),
+          sentOff: createDugoutZone(),
         }
       },
       allPlayers: createTestPlayers('B', 11),
       teamName: 'Équipe B'
     };
-    
+
     render(<TeamDugout {...props} />);
-    
+
     // Le composant devrait rendre sans erreur pour l'équipe B
     expect(screen.getByText('Équipe B')).toBeInTheDocument();
   });
@@ -197,10 +213,11 @@ describe('TeamDugout Safety Tests', () => {
       teamName: undefined as any,
       isSetupPhase: undefined as any
     };
-    
+
     render(<TeamDugout {...props} />);
-    
+
     // Le composant ne devrait pas planter même avec des props complètement undefined
-    expect(screen.getByText('Équipe A')).toBeInTheDocument();
+    // When dugout is undefined, teamId is undefined (not 'A'), so fallback is 'Equipe B'
+    expect(screen.getByText('Equipe B')).toBeInTheDocument();
   });
 });

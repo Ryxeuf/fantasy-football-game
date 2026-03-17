@@ -75,7 +75,7 @@ function formatDate(dateStr: string): string {
 }
 
 export default function PlayPage() {
-  const { t, lang } = useLanguage();
+  const { t, language: lang } = useLanguage();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [matchIdInput, setMatchIdInput] = useState("");
   const [error, setError] = useState<string | null>(null);

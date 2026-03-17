@@ -259,7 +259,7 @@ router.post("/", authUser, async (req: AuthenticatedRequest, res) => {
       return res.status(403).json({ error: "Vous devez être propriétaire de l'équipe A" });
     }
     
-    let teamB = null;
+    let teamB: any = null;
     let isTeamBOwner = false;
     
     // Si teamBId est fourni, vérifier qu'il existe

@@ -277,9 +277,7 @@ export const translations = {
       teamStatsTouchdowns: "Touchdowns pour / contre",
       // Team Info Display
       treasury: "Trésorerie",
-      teamValue: "Valeur d'équipe",
       currentValue: "Valeur d'Équipe Actuelle",
-      rerolls: "Relance(s)",
       cheerleaders: "Cheerleaders",
       assistants: "Assistants",
       apothecaryPresent: "Présent",

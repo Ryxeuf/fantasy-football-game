@@ -865,7 +865,7 @@ export default function CupDetailPage() {
             Fermer les inscriptions
           </button>
         )}
-        {!cup.hasTeamParticipating && cup.status === "ouverte" && eligibleTeams.length > 0 && (
+        {!cup.hasTeamParticipating && cup.status === "ouverte" && teams.filter(t => t.ruleset === cup.ruleset).length > 0 && (
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">
               Choisir une équipe à inscrire
@@ -877,7 +877,7 @@ export default function CupDetailPage() {
                 className="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all"
               >
                 <option value="">-- Sélectionner une équipe --</option>
-                {eligibleTeams.map((team) => (
+                {teams.filter(t => t.ruleset === cup.ruleset).map((team) => (
                   <option key={team.id} value={team.id}>
                     {team.name} ({team.roster})
                   </option>
@@ -893,7 +893,7 @@ export default function CupDetailPage() {
             </div>
           </div>
         )}
-        {!cup.hasTeamParticipating && cup.status === "ouverte" && eligibleTeams.length === 0 && (
+        {!cup.hasTeamParticipating && cup.status === "ouverte" && teams.filter(t => t.ruleset === cup.ruleset).length === 0 && (
           <div className="text-sm text-gray-600 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
             Aucune équipe disponible avec le ruleset {rulesetLabels[cup.ruleset] || cup.ruleset}. Créez-en une ou modifiez une équipe existante.
           </div>

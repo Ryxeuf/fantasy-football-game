@@ -1,5 +1,4 @@
 import { describe, it, expect } from "vitest";
-import fetch from "node-fetch";
 
 const API_PORT = process.env.API_PORT || "18001";
 const API_BASE = `http://localhost:${API_PORT}`;

@@ -18,7 +18,7 @@ export async function updateTeamValues(prisma: PrismaClient, teamId: string) {
   // Préparer les données pour le calcul
   const teamValueData: TeamValueData = {
     players: team.players.map(player => ({
-      cost: getPlayerCost(player.position, team.roster, (team.ruleset as Ruleset) ?? DEFAULT_RULESET),
+      cost: getPlayerCost(player.position, team.roster, ((team as any).ruleset as Ruleset) ?? DEFAULT_RULESET),
       available: true // Pour l'instant, tous les joueurs sont disponibles
     })),
     rerolls: team.rerolls,
@@ -27,7 +27,7 @@ export async function updateTeamValues(prisma: PrismaClient, teamId: string) {
     apothecary: team.apothecary,
     dedicatedFans: team.dedicatedFans, // Ajout des fans dévoués
     roster: team.roster, // Ajout du roster pour le calcul des relances
-    ruleset: (team.ruleset as Ruleset) ?? DEFAULT_RULESET,
+    ruleset: ((team as any).ruleset as Ruleset) ?? DEFAULT_RULESET,
   };
 
   // Calculer les valeurs

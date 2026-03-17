@@ -1,5 +1,7 @@
 {
   "extends": "../../packages/config/tsconfig.base.json",
-  "compilerOptions": {},
+  "compilerOptions": {
+    "noImplicitAny": false
+  },
   "include": ["src"]
 }

@@ -223,7 +223,7 @@ router.get("/mine", authUser, async (req: AuthenticatedRequest, res) => {
 
 router.get("/rosters/:id", authUser, async (req: AuthenticatedRequest, res) => {
   const id = req.params.id as AllowedRoster;
-  if (!ALLOWED_TEAMS.includes(id))
+  if (!(ALLOWED_TEAMS as readonly string[]).includes(id))
     return res.status(404).json({ error: "Roster inconnu" });
   const ruleset = resolveRuleset(req.query.ruleset as string | undefined);
   
@@ -1379,7 +1379,7 @@ router.get("/:id/available-star-players", authUser, async (req: AuthenticatedReq
       // Vérifier les paires obligatoires
       const pairSlug = requiresPair(sp.slug);
       let needsPair = false;
-      let pairStatus = null;
+      let pairStatus: any = null;
       
       if (pairSlug) {
         needsPair = true;

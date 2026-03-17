@@ -1,5 +1,3 @@
-import fetch from "node-fetch";
-
 // Ce test suppose que l'API tourne localement et que le match existe.
 // On vérifie les statuts d'erreur et la route qui dépend du X-Match-Token.
 

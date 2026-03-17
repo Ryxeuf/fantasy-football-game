@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import fetch from "node-fetch";
 import jwt from "jsonwebtoken";
 
 const API_PORT = process.env.API_PORT || "18001";

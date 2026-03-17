@@ -120,7 +120,7 @@ export default function ShareLocalMatchPage() {
       if (me?.user) {
         setUserTeamOwnership({
           isTeamAOwner: localMatch.teamA.owner.id === me.user.id,
-          isTeamBOwner: localMatch.teamB.owner.id === me.user.id,
+          isTeamBOwner: localMatch.teamB?.owner.id === me.user.id,
         });
       }
     } catch {

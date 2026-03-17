@@ -249,7 +249,7 @@ export default function AdminStarPlayersPage() {
 
       // Roster filter (check if hirable by roster)
       if (rosterFilter) {
-        const hirableByRoster = sp.hirableBy.some(h => h.roster?.id === rosterFilter);
+        const hirableByRoster = sp.hirableBy.some(h => h.roster?.slug === rosterFilter);
         if (!hirableByRoster) {
           return false;
         }
@@ -500,7 +500,7 @@ export default function AdminStarPlayersPage() {
                             <span key={idx}>
                               {h.roster ? (
                                 <Link
-                                  href={`/admin/data/rosters/${h.roster.id}`}
+                                  href={`/admin/data/rosters/${h.roster.slug}`}
                                   className="text-blue-600 hover:text-blue-800 hover:underline"
                                 >
                                   {h.roster.name}

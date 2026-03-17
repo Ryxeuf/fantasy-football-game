@@ -88,7 +88,7 @@ export default function NewTeamBuilder() {
         // Vérifier que le rosterId actuel est dans la liste, sinon utiliser le premier
         if (rostersList.length > 0) {
           setRosterId((currentRosterId) => {
-            const currentRoster = rostersList.find(r => r.slug === currentRosterId);
+            const currentRoster = rostersList.find((r: { slug: string; name: string }) => r.slug === currentRosterId);
             return currentRoster ? currentRosterId : rostersList[0].slug;
           });
         }

@@ -1147,7 +1147,7 @@ async function main() {
 
         if (existingActions.length === 0) {
           // Générer au moins 40 actions pour un match réaliste
-          const actions = [];
+          const actions: any[] = [];
 
           // MI-TEMPS 1 - Tour 1 (Équipe A - Skavens)
           actions.push({
