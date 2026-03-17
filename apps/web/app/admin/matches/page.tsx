@@ -27,6 +27,7 @@ type StatusCounts = {
   "prematch-setup": number;
   active: number;
   ended: number;
+  cancelled: number;
 };
 
 async function fetchJSON(path: string) {
@@ -291,6 +292,12 @@ export default function AdminMatchesPage() {
           </div>
           <div className="text-sm text-gray-600">Terminées</div>
         </div>
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+          <div className="text-2xl font-bold text-red-600">
+            {statusCounts?.cancelled ?? 0}
+          </div>
+          <div className="text-sm text-gray-600">Annulées</div>
+        </div>
       </div>
 
       {/* Filters */}
@@ -332,6 +339,7 @@ export default function AdminMatchesPage() {
               <option value="prematch-setup">Setup</option>
               <option value="active">En cours</option>
               <option value="ended">Terminées</option>
+              <option value="cancelled">Annulées</option>
             </select>
           </div>
           <div className="flex items-end">

@@ -319,9 +319,23 @@ router.get("/matches", async (req, res) => {
       where.status = status as string;
     }
     if (search) {
+      const searchStr = search as string;
       where.OR = [
-        { id: { contains: search as string } },
-        { seed: { contains: search as string } },
+        { id: { contains: searchStr } },
+        { seed: { contains: searchStr } },
+        { status: { contains: searchStr } },
+        { creator: { coachName: { contains: searchStr, mode: "insensitive" } } },
+        { creator: { email: { contains: searchStr, mode: "insensitive" } } },
+        {
+          teamSelections: {
+            some: {
+              OR: [
+                { user: { coachName: { contains: searchStr, mode: "insensitive" } } },
+                { teamRef: { name: { contains: searchStr, mode: "insensitive" } } },
+              ],
+            },
+          },
+        },
       ];
     }
 
@@ -356,13 +370,14 @@ router.get("/matches", async (req, res) => {
     });
 
     // Count by status
-    const [pendingCount, prematchCount, prematchSetupCount, activeCount, endedCount] =
+    const [pendingCount, prematchCount, prematchSetupCount, activeCount, endedCount, cancelledCount] =
       await Promise.all([
         prisma.match.count({ where: { status: "pending" } }),
         prisma.match.count({ where: { status: "prematch" } }),
         prisma.match.count({ where: { status: "prematch-setup" } }),
         prisma.match.count({ where: { status: "active" } }),
         prisma.match.count({ where: { status: "ended" } }),
+        prisma.match.count({ where: { status: "cancelled" } }),
       ]);
 
     res.json({
@@ -379,6 +394,7 @@ router.get("/matches", async (req, res) => {
         "prematch-setup": prematchSetupCount,
         active: activeCount,
         ended: endedCount,
+        cancelled: cancelledCount,
       },
     });
   } catch (e: any) {
