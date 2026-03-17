@@ -1,7 +1,7 @@
 # BlooBowl - Makefile
 # Commandes utiles pour le développement du jeu Blood Bowl
 
-.PHONY: help install dev dev-web dev-mobile dev-server dev-engine build clean lint format typecheck test docker docker-up docker-down docker-logs setup db-seed db-reset-pg db-migrate db-migrate-deploy db-migrate-status db-migrate-data
+.PHONY: help install dev dev-web dev-mobile dev-server dev-engine build clean lint format typecheck test docker docker-up docker-down docker-logs setup db-seed db-reset-pg db-migrate db-migrate-deploy db-migrate-status db-migrate-data deploy deploy-no-cache maintenance-on maintenance-off maintenance-status
 
 # Variables
 PNPM := pnpm
@@ -246,6 +246,22 @@ help-docker: ## Aide pour Docker
 	@echo "Ports Docker:"
 	@echo "  Web:   http://localhost:8200"
 	@echo "  API:   http://localhost:8000"
+
+# Déploiement et maintenance
+deploy: ## Déploiement complet avec page de maintenance
+	@bash scripts/deploy.sh
+
+deploy-no-cache: ## Déploiement complet sans cache Docker
+	@bash scripts/deploy.sh --no-cache
+
+maintenance-on: ## Active la page de maintenance
+	@bash scripts/maintenance.sh on
+
+maintenance-off: ## Désactive la page de maintenance
+	@bash scripts/maintenance.sh off
+
+maintenance-status: ## Vérifie l'état de la maintenance
+	@bash scripts/maintenance.sh status
 
 # Commande par défaut
 .DEFAULT_GOAL := help
