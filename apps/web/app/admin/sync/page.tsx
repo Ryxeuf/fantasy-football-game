@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { API_BASE } from "../../auth-client";
 
@@ -9,6 +9,14 @@ import { API_BASE } from "../../auth-client";
  * Elle synchronise le cookie puis redirige vers la page admin demandée
  */
 export default function AdminSyncPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><p>Chargement...</p></div>}>
+      <AdminSyncContent />
+    </Suspense>
+  );
+}
+
+function AdminSyncContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const redirectTo = searchParams.get("redirect") || "/admin";

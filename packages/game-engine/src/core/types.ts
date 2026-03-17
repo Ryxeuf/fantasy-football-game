@@ -161,6 +161,7 @@ export interface DiceResult {
   targetNumber: number;
   success: boolean;
   modifiers: number;
+  playerName?: string;
 }
 
 export type ActionType =
