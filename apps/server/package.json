@@ -16,7 +16,8 @@
     "prisma:push": "prisma db push",
     "prisma:migrate": "prisma migrate dev --name init",
     "db:seed": "tsx src/seed.ts",
-    "list:users": "tsx src/list-users.ts"
+    "list:users": "tsx src/list-users.ts",
+    "postinstall": "prisma generate --schema ../../prisma/schema.prisma"
   },
   "dependencies": {
     "@prisma/client": "^6.16.2",
