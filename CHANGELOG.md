@@ -1,3 +1,11 @@
+## [1.36.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.36.0...v1.36.1) (2026-03-18)
+
+
+### 🐛 Bug Fixes
+
+* add postinstall script to generate Prisma client for typecheck ([7f168e2](https://github.com/Ryxeuf/fantasy-football-game/commit/7f168e220c8fc06d35f2778a5e2eb5b22a4f2eb9))
+* handle missing prisma schema in postinstall and add checks permission to auto-merge ([4a7c849](https://github.com/Ryxeuf/fantasy-football-game/commit/4a7c8494b008c25dfeb213d2b03724d2f7373a17))
+
 ## [1.36.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.35.0...v1.36.0) (2026-03-17)
 
 
