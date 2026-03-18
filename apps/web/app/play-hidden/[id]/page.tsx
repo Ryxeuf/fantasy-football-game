@@ -14,7 +14,6 @@ import {
   hasPlayerActed,
   type Position,
   type Move,
-  enterSetupPhase,
   placePlayerInSetup,
   type ExtendedGameState,
   type Player,
@@ -564,71 +563,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
       );
   }, [state, isActiveMatch]);
 
-  // Modifier handleStartSetup pour entrer en setup
-  const handleStartSetup = useMemo(() => {
-    if (state?.half !== 0) return undefined;
-    return () => {
-      setState((s) => {
-        if (!s || s.half !== 0) return s;
-        // Déterminer receivingTeam (placeholder 'A' pour local)
-        const receivingTeam = "A" as const;
-        const setupState = enterSetupPhase(
-          s as ExtendedGameState,
-          receivingTeam,
-        );
-        return setupState;
-      });
-    };
-  }, [state]);
 
-  // Afficher compteur en setup
-  {
-    state && (state as ExtendedGameState).preMatch?.phase === "setup" && (
-      <div className="flex justify-center mt-2">
-        <span className="text-sm text-gray-600">
-          Joueurs placés:{" "}
-          {(() => {
-            const currentCoach = (state as ExtendedGameState).preMatch?.currentCoach;
-            return state.players?.filter(p => p.team === currentCoach && p.pos.x >= 0).length || 0;
-          })()} / 11
-        </span>
-      </div>
-    );
-  }
-
-  // Si setup fini, bouton passer (vérifier que les deux équipes ont placé leurs joueurs)
-  {
-    state &&
-      (state as ExtendedGameState).preMatch?.phase === "setup" &&
-      (() => {
-        // Vérifier que les deux équipes ont placé leurs 11 joueurs
-        const teamAPlayersOnField = state.players.filter(p => p.team === 'A' && p.pos.x >= 0).length;
-        const teamBPlayersOnField = state.players.filter(p => p.team === 'B' && p.pos.x >= 0).length;
-        return teamAPlayersOnField === 11 && teamBPlayersOnField === 11;
-      })() && (
-        <div className="flex justify-center mt-4">
-          <button
-            onClick={() => {
-              // TODO: Appel API pour switch coach ou kickoff
-              setState((s) => {
-                if (!s) return s;
-                // Placeholder: passe à kickoff
-                const kickoffState = {
-                  ...s,
-                  preMatch: { ...s.preMatch, phase: "kickoff" as const },
-                };
-                kickoffState.half = 1;
-                kickoffState.turn = 1;
-                return kickoffState as ExtendedGameState;
-              });
-            }}
-            className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded"
-          >
-            Lancer le kick-off
-          </button>
-        </div>
-      );
-  }
 
   const localSide = useMemo(() => {
     if (!state || !teamNameA || !teamNameB || !state.teamNames) {
@@ -743,43 +678,40 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
                         {setupError}
                       </div>
                     )}
-                    {/* Bouton de validation du placement */}
+                    {/* Bouton de validation ou message d'attente */}
                     {(() => {
                       const currentCoach = state.preMatch?.currentCoach;
                       const playersOnField = state.players?.filter(p => p.team === currentCoach && p.pos.x >= 0).length || 0;
                       const mySide = getMySide(state as ExtendedGameState);
-                      
-                      // Le bouton n'apparaît que si :
-                      // 1. Il y a 11 joueurs placés pour l'équipe courante
-                      // 2. C'est le tour du joueur connecté
-                      return playersOnField === 11 && mySide === currentCoach;
-                    })() && (
-                      <div className="mt-3">
-                        <button
-                          onClick={handleValidatePlacement}
-                          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
-                        >
-                          Valider le placement
-                        </button>
-                      </div>
-                    )}
+
+                      if (mySide && mySide !== currentCoach) {
+                        return (
+                          <div className="mt-3 px-3 py-2 bg-yellow-50 text-yellow-700 rounded border border-yellow-300 text-sm">
+                            En attente du placement adverse...
+                          </div>
+                        );
+                      }
+
+                      if (playersOnField === 11 && mySide === currentCoach) {
+                        return (
+                          <div className="mt-3">
+                            <button
+                              onClick={handleValidatePlacement}
+                              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                            >
+                              Valider le placement
+                            </button>
+                          </div>
+                        );
+                      }
+
+                      return null;
+                    })()}
                   </div>
                 )}
               </div>
             )}
-            {/* Bouton débuter si idle */}
-            {state?.half === 0 &&
-              state.preMatch?.phase === "idle" &&
-              handleStartSetup && (
-                <div className="flex justify-center">
-                  <button
-                    onClick={handleStartSetup}
-                    className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-                  >
-                    Débuter la configuration des joueurs
-                  </button>
-                </div>
-              )}
+            {/* Phase idle: le serveur gère la transition vers setup automatiquement */}
             {/* Compteur si setup */}
             {state && state.preMatch?.phase === "setup" && (
               <div className="text-sm text-gray-600">
@@ -789,40 +721,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
                 })()} / 11
               </div>
             )}
-            {/* Bouton kick-off si les deux équipes ont placé leurs 11 joueurs */}
-            {state &&
-              state.preMatch?.phase === "setup" &&
-              (() => {
-                // Vérifier que les deux équipes ont placé leurs 11 joueurs
-                const teamAPlayersOnField = state.players.filter(p => p.team === 'A' && p.pos.x >= 0).length;
-                const teamBPlayersOnField = state.players.filter(p => p.team === 'B' && p.pos.x >= 0).length;
-                return teamAPlayersOnField === 11 && teamBPlayersOnField === 11;
-              })() && (
-                <div className="flex justify-center">
-                  <button
-                    onClick={() => {
-                      // TODO: Appel API pour switch coach ou kickoff
-                      setState((s) => {
-                        if (!s) return s;
-                        // Placeholder: passe à kickoff
-                        const kickoffState = {
-                          ...s,
-                          preMatch: {
-                            ...s.preMatch,
-                            phase: "kickoff" as const,
-                          },
-                        };
-                        kickoffState.half = 1;
-                        kickoffState.turn = 1;
-                        return kickoffState as ExtendedGameState;
-                      });
-                    }}
-                    className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded"
-                  >
-                    Lancer le kick-off
-                  </button>
-                </div>
-              )}
+            {/* Le kick-off est géré automatiquement par le backend après validation des deux placements */}
           </div>
 
           <div

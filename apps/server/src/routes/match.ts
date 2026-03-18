@@ -550,9 +550,19 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
 
     let gameState: any;
 
-    // Chercher le turn de start pour prematch ou initial
+    // Pour prematch-setup, chercher d'abord le dernier turn validate-setup (contient l'état le plus récent)
+    // puis fallback sur le turn start
     const startTurn = match.turns.find((t: any) => t.payload?.type === "start");
-    if (startTurn) {
+    if (match.status === "prematch-setup") {
+      const lastValidateSetupTurn = [...match.turns]
+        .reverse()
+        .find((t: any) => t.payload?.type === "validate-setup" && t.payload?.gameState);
+      const sourceTurn = lastValidateSetupTurn || startTurn;
+      if (sourceTurn) {
+        const gs = sourceTurn.payload.gameState;
+        gameState = typeof gs === "string" ? JSON.parse(gs) : gs;
+      }
+    } else if (startTurn) {
       const gs = startTurn.payload.gameState;
       gameState = typeof gs === "string" ? JSON.parse(gs) : gs;
     } else if (match.status === "prematch") {
