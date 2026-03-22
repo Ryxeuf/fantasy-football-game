@@ -26,8 +26,6 @@
 
 | # | Tâche | Gain | Diff | Issue | Détail |
 |---|-------|------|------|-------|--------|
-| 1.6 | Ajouter rate limiting sur les routes auth | 🟢 | 🟢 | — | express-rate-limit sur /login, /register (ex: 5 req/min) |
-| 1.7 | Ajouter rate limiting sur les routes API | 🟡 | 🟢 | — | Limite globale (ex: 100 req/min par IP) |
 | 1.8 | Ajouter validation d'entrée sur les routes critiques | 🟢 | 🟡 | — | Zod/Joi schemas sur match moves, team CRUD |
 
 ---

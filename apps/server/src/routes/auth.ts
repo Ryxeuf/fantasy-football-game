@@ -4,12 +4,13 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
 import { normalizeRoles } from "../utils/roles";
+import { authLimiter } from "../middleware/rateLimiter";
 
 const router = Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
 
-router.post("/register", async (req, res) => {
+router.post("/register", authLimiter, async (req, res) => {
   try {
     const { email, password, name, coachName, firstName, lastName, dateOfBirth } = req.body ?? {};
     if (typeof email !== "string" || typeof password !== "string") {
@@ -68,7 +69,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-router.post("/login", async (req, res) => {
+router.post("/login", authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body ?? {};
     if (typeof email !== "string" || typeof password !== "string") {

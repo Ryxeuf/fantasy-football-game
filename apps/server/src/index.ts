@@ -16,6 +16,7 @@ import localMatchRoutes from "./routes/local-match";
 import dotenv from "dotenv";
 import { execSync } from "node:child_process";
 import { prisma } from "./prisma";
+import { apiLimiter } from "./middleware/rateLimiter";
 
 dotenv.config({ path: "../../prisma/.env" });
 // Si tests SQLite: pousser le schéma SQLite en mémoire partagée au démarrage
@@ -43,6 +44,7 @@ const API_PORT = parseInt(process.env.API_PORT || "8201", 10);
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
+app.use(apiLimiter);
 app.get("/health", (_req, res) => res.json({ ok: true }));
 app.use("/auth", authRoutes);
 app.use("/match", matchRoutes);

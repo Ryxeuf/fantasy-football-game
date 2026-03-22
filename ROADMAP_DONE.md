@@ -120,3 +120,12 @@
 | 8 | EAS Build mobile | Pipeline build Expo |
 | 9 | Auto-merge | Merge automatique releases |
 | 10 | PR template + labeler | Standardisation contributions |
+
+---
+
+## Sécurité API (livré)
+
+| # | Fonctionnalité | Détail |
+|---|---------------|--------|
+| 1 | Rate limiting auth | express-rate-limit sur /login, /register (5 req/min par IP) |
+| 2 | Rate limiting API global | Limite globale 100 req/min par IP sur toutes les routes |
