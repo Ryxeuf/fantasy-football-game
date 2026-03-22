@@ -26,9 +26,7 @@
 
 | # | Tâche | Gain | Diff | Issue | Détail |
 |---|-------|------|------|-------|--------|
-| 1.6 | Ajouter rate limiting sur les routes auth | 🟢 | 🟢 | — | express-rate-limit sur /login, /register (ex: 5 req/min) |
-| 1.7 | Ajouter rate limiting sur les routes API | 🟡 | 🟢 | — | Limite globale (ex: 100 req/min par IP) |
-| 1.8 | Ajouter validation d'entrée sur les routes critiques | 🟢 | 🟡 | — | Zod/Joi schemas sur match moves, team CRUD |
+| 1.6 | Ajouter validation d'entrée sur les routes critiques | 🟢 | 🟡 | — | Zod/Joi schemas sur match moves, team CRUD |
 
 ---
 
@@ -176,12 +174,12 @@
 
 | Priorité | Nb tâches | Effort estimé | Impact |
 |----------|-----------|--------------|--------|
-| **P1 — Quick Wins** | 8 | ~3-5 jours | Sécurité + UX immédiate |
+| **P1 — Quick Wins** | 6 | ~2-4 jours | Sécurité + UX immédiate |
 | **P2 — Clés** | 13 | ~10-15 jours | Animations + multijoueur temps réel |
 | **P3 — Notifications** | 11 | ~8-12 jours | Engagement + rétention |
 | **P4 — Mobile** | 11 | ~15-20 jours | Couverture mobile |
 | **P5 — Polish** | 34 | ~40-60 jours | Communauté + fidélisation |
-| **Total** | **77** | ~80-110 jours | — |
+| **Total** | **75** | ~78-108 jours | — |
 
 ---
 
