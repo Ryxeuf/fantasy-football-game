@@ -44,6 +44,8 @@
 | 10 | 12 fichiers de routes | Couverture complète des endpoints |
 | 11 | Seed management | Données de base, seeding déterministe |
 | 12 | Changement de mot de passe | Validation, gestion d'erreurs ([v1.24]) |
+| 13 | Rate limiting auth | express-rate-limit sur /login, /register (5 req/min par IP) |
+| 14 | Rate limiting API global | Limite globale 100 req/min par IP, headers standard RateLimit |
 
 ---
 

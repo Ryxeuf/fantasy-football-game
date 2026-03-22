@@ -16,6 +16,7 @@ import localMatchRoutes from "./routes/local-match";
 import dotenv from "dotenv";
 import { execSync } from "node:child_process";
 import { prisma } from "./prisma";
+import { authRateLimiter, apiRateLimiter } from "./middleware/rateLimiter";
 
 dotenv.config({ path: "../../prisma/.env" });
 // Si tests SQLite: pousser le schéma SQLite en mémoire partagée au démarrage
@@ -43,8 +44,14 @@ const API_PORT = parseInt(process.env.API_PORT || "8201", 10);
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
+
+// Rate limiting global sur toutes les routes API (100 req/min par IP)
+app.use(apiRateLimiter);
+
 app.get("/health", (_req, res) => res.json({ ok: true }));
-app.use("/auth", authRoutes);
+
+// Rate limiting strict sur les routes auth (5 req/min par IP)
+app.use("/auth", authRateLimiter, authRoutes);
 app.use("/match", matchRoutes);
 app.use("/admin", adminRoutes);
 app.use("/admin/data", adminDataRoutes);
