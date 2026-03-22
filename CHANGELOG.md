@@ -1,3 +1,20 @@
+## [1.37.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.36.1...v1.37.0) (2026-03-22)
+
+
+### ✨ Features
+
+* **server:** add rate limiting on auth and API routes ([6ef43b6](https://github.com/Ryxeuf/fantasy-football-game/commit/6ef43b6080b25ab0343b4b952d08170b82320ddd))
+
+
+### 📝 Documentation
+
+* add comprehensive agent guides for all development roles ([#53](https://github.com/Ryxeuf/fantasy-football-game/issues/53)) ([937cfee](https://github.com/Ryxeuf/fantasy-football-game/commit/937cfee9778d1ccabbf712f9a3a4e3e3860d2553))
+
+
+### ♻️ Code Refactoring
+
+* reorganize roadmap into DONE archive and prioritized TODO backlog ([#54](https://github.com/Ryxeuf/fantasy-football-game/issues/54)) ([c9cb83f](https://github.com/Ryxeuf/fantasy-football-game/commit/c9cb83f7b55b26e4dce5fb6491a35004f28f3a69))
+
 ## [1.36.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.36.0...v1.36.1) (2026-03-18)
 
 
