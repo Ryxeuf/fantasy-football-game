@@ -1,282 +1,200 @@
-# 📋 ROADMAP - BlooBowl Fantasy Football Game
+# TODO — BlooBowl (Nuffle Arena)
 
-> Roadmap complète du projet [fantasy-football-game](https://github.com/Ryxeuf/fantasy-football-game), organisée en 7 phases progressives.
-> Dernière mise à jour : 2026-03-14
-
----
-
-## 📊 Audit global — État d'avancement
-
-### Résumé par domaine
-
-| Domaine | Avancement | Détail |
-|---------|-----------|--------|
-| **Moteur de jeu (Engine)** | 🟢 ~95% | Mouvement, blocage, passes, fautes, blessures, blitz, turnover, pré-match, dugout, GFI, 35+ compétences, effets météo, kickoff events, heatmap zones, probabilités, arbitre — tous fonctionnels |
-| **Serveur (API/DB)** | 🟢 ~95% | Auth JWT, CRUD complet, turns, matchs, cups, star players, admin, local matches — tout implémenté |
-| **Web (Next.js)** | 🟡 ~75% | Board Pixi.js, popups, HUD, Star Players, Skills, Teams, Admin, i18n, Local Matches — OK. Manque : zoom/pan, animations, heatmap, replayer |
-| **Mobile (Expo)** | 🔴 ~10% | MVP minimal : 1 écran avec board + end turn. Pas de login, lobby, zoom, notifications |
-| **Notifications** | 🔴 ~15% | Toast/dice notifications in-game seulement. Pas de push, permissions, préférences |
-| **Données statiques** | 🟢 ~95% | Rosters S2/S3, positions, skills FR/EN, star players avec images — complet |
+> Backlog priorisé par valeur (Gain) et effort (Difficulté).
+> Dernière mise à jour : 2026-03-22
+>
+> **Légende :**
+> - **Gain** : 🟢 Fort | 🟡 Moyen | 🔴 Faible — Impact utilisateur / valeur business
+> - **Difficulté** : 🟢 Facile (< 1j) | 🟡 Moyen (1-3j) | 🔴 Difficile (> 3j)
+> - **Score** = Gain élevé + Difficulté faible → à faire en premier
 
 ---
 
-## Phase 1 — Fondations & Moteur de jeu ✅ COMPLÈTE (100%)
+## 🏆 Priorité 1 — Quick Wins (Gain fort, Difficulté faible)
 
-> _Objectif : moteur de jeu déterministe fonctionnel avec toutes les mécaniques de base._
+### WEB — Améliorations visuelles critiques
 
-### ✅ Réalisé
+| # | Tâche | Gain | Diff | Issue | Détail |
+|---|-------|------|------|-------|--------|
+| 1.1 | Ajouter zoom molette sur le board Pixi.js | 🟢 | 🟢 | [#41] | `viewport.scaled` sur événement wheel, clamp min/max |
+| 1.2 | Ajouter pan drag sur le board Pixi.js | 🟢 | 🟢 | [#41] | Événements pointerdown/move/up, translation viewport |
+| 1.3 | Ajouter bouton reset zoom/position | 🟢 | 🟢 | [#41] | Bouton UI → viewport.fit() ou scale=1 + position origin |
+| 1.4 | Overlay heatmap zones de tacle (affichage) | 🟢 | 🟢 | [#27] | Layer semi-transparent, couleur par intensité, toggle on/off |
+| 1.5 | Indicateur "adversaire en train de jouer" | 🟢 | 🟢 | — | Texte/animation dans le HUD quand ce n'est pas le tour du joueur |
 
-- [x] **Plateau 26×15** avec RNG déterministe (Mulberry32)
-- [x] **Système de mouvement** — déplacement orthogonal/diagonal, PM tracking, adjacence
-- [x] **Blocage complet** — dés de bloc, push, follow-up, assists offensifs/défensifs
-- [x] **Système de balle** — pickup, passe, catch, bounce, scatter, touchdowns
-- [x] **Passes** — 4 portées (quick/short/long/bomb), précision, interceptions
-- [x] **Fautes** — assists de faute, jet d'armure, expulsion sur doubles
-- [x] **Blessures** — jets d'armure (2D6), blessures, table de casualty (D16), KO, stun, mort
-- [x] **[#31](https://github.com/Ryxeuf/fantasy-football-game/issues/31)** Jets d'esquive avec modificateurs ✅
-- [x] **Détection de turnover** — tous les cas (blocage raté, passe ratée, catch raté, fumble)
-- [x] **Blitz** — mouvement + bloc, limite 1/tour, coût PM
-- [x] **Going For It (GFI)** — 2+ sur D6 quand PM épuisés, Sure Feet reroll, turnover sur échec ✅
-- [x] **Séquence pré-match** — fan factor, météo, journeymen, inducements, prières à Nuffle, coin toss
-- [x] **Gestion du dugout** — réserves, KO, stunned, casualty, sent off, récupération KO
-- [x] **Team Value Calculator** — VE, VEA, trésorerie, coût relances
-- [x] **Rosters Season 2 & Season 3** — toutes les équipes avec positions
-- [x] **Star Players** — données complètes (stats, coûts, skills, images, mega stars)
-- [x] **200+ tests** passants
+### SERVEUR — Sécurité de base
+
+| # | Tâche | Gain | Diff | Issue | Détail |
+|---|-------|------|------|-------|--------|
+| 1.6 | Ajouter rate limiting sur les routes auth | 🟢 | 🟢 | — | express-rate-limit sur /login, /register (ex: 5 req/min) |
+| 1.7 | Ajouter rate limiting sur les routes API | 🟡 | 🟢 | — | Limite globale (ex: 100 req/min par IP) |
+| 1.8 | Ajouter validation d'entrée sur les routes critiques | 🟢 | 🟡 | — | Zod/Joi schemas sur match moves, team CRUD |
 
 ---
 
-## Phase 2 — Serveur, Auth & Persistance ✅ COMPLÈTE (95%)
+## 🥇 Priorité 2 — Fonctionnalités clés (Gain fort, Difficulté moyenne)
 
-> _Objectif : backend complet avec auth, persistance, matchmaking et admin._
+### WEB — Animations & polish
 
-### ✅ Réalisé
+| # | Tâche | Gain | Diff | Issue | Détail |
+|---|-------|------|------|-------|--------|
+| 2.1 | Animation tween déplacement joueur | 🟢 | 🟡 | [#36] | Interpolation position 150-250ms avec easing |
+| 2.2 | Animation tween de la balle (passe/scatter) | 🟢 | 🟡 | [#36] | Arc de trajectoire balle avec durée proportionnelle à la distance |
+| 2.3 | File d'attente d'animations (queue) | 🟡 | 🟡 | [#36] | Système séquentiel Promise-based, skip avec touche (S) |
+| 2.4 | Animation de touchdown | 🟡 | 🟢 | [#36] | Effet visuel flash/particles sur TD, renforcer l'animation existante |
+| 2.5 | Animation de blocage (impact) | 🟡 | 🟡 | [#36] | Shake/flash sur la cible du bloc, visuel selon résultat |
 
-- [x] **[#18](https://github.com/Ryxeuf/fantasy-football-game/issues/18)** Modèles Prisma complets — User, Match, Turn, Team, TeamPlayer, TeamStarPlayer, TeamSelection, LocalMatch, LocalMatchAction, Cup, CupParticipant, Skill, Roster, Position, StarPlayer ✅
-- [x] **[#19](https://github.com/Ryxeuf/fantasy-football-game/issues/19)** Sauvegarde des turns — chaque action crée un Turn avec gameState JSON, endpoint list ✅
-- [x] **Auth JWT** — register (avec validation admin), login, refresh, middleware authUser
-- [x] **[#15](https://github.com/Ryxeuf/fantasy-football-game/issues/15)** Liens d'invitation — shareToken sur LocalMatch, join via token ✅
-- [x] **[#16](https://github.com/Ryxeuf/fantasy-football-game/issues/16)** Lobby de partie — acceptation par turns, coin toss, setup phase, ready status ✅
-- [x] **Gestion des équipes** — CRUD complet, joueurs, star players, calcul valeurs
-- [x] **Local Matches** — création, partage, validation, moves, action logging détaillé
-- [x] **Cups/Tournois** — création, inscription, standings, scoring configurable
-- [x] **Admin API** — gestion users, skills, rosters, positions, star players
-- [x] **12 fichiers de routes** couvrant tous les endpoints
+### MULTIJOUEUR — Temps réel
 
-### ⚠️ Manques identifiés (reportés en Phase 5)
+| # | Tâche | Gain | Diff | Issue | Détail |
+|---|-------|------|------|-------|--------|
+| 2.6 | Intégrer WebSocket côté serveur (socket.io) | 🟢 | 🟡 | — | Setup socket.io sur le serveur Express existant |
+| 2.7 | Émettre les moves via WebSocket | 🟢 | 🟡 | — | Broadcast du gameState après chaque move aux joueurs du match |
+| 2.8 | Recevoir les moves via WebSocket côté web | 🟢 | 🟡 | — | Client socket.io dans le composant de jeu, update gameState |
+| 2.9 | Fallback polling si WebSocket échoue | 🟡 | 🟢 | — | Détection déconnexion WS → bascule sur polling existant |
+| 2.10 | Gestion reconnexion WebSocket | 🟡 | 🟡 | — | Reconnexion auto avec exponential backoff, resync état |
 
-- [ ] **WebSocket/SSE temps réel** — actuellement polling uniquement
-- [ ] **Rate limiting & throttling** — pas de protection contre l'abus
-- [ ] **Logs structurés & monitoring** — pas de logging centralisé
+### WEB — Assets & thèmes
 
----
-
-## Phase 3 — Règles Blood Bowl avancées ✅ COMPLÈTE (100%)
-
-> _Objectif : compléter les règles manquantes pour un jeu fidèle au Blood Bowl._
-
-### ✅ Réalisé
-
-- [x] Zones de tacle fonctionnelles — malus calculés pour dodge, pickup, passe, catch, interception
-- [x] 7 compétences de base avec effets mécaniques (Block, Dodge, Tackle, Sure Hands, Sure Feet, Guard, Mighty Blow)
-- [x] **[#33](https://github.com/Ryxeuf/fantasy-football-game/issues/33)** Zones de tacle — heatmap engine 26×15 avec intensité par équipe, zones contestées ✅
-- [x] **Going For It (GFI)** — déjà implémenté dans `actions.ts` (2+ sur D6, Sure Feet reroll, turnover) ✅
-- [x] **Effets météo en jeu** — `weather-effects.ts` raccorde les 12 types météo aux mécaniques (Blizzard -1 passe, Chaleur → épuisement, Pluie -1 catch, etc.) ✅
-- [x] **Kickoff events** — table complète 2D6 → 11 événements (Get the Ref, Riot, Perfect Defence, High Kick, Cheering Fans, Brilliant Coaching, Changing Weather, Quick Snap, Blitz, Officious Ref, Pitch Invasion) ✅
-- [x] **Système de compétences modulaire** — architecture plugin `SkillEffect` avec `canApply()`, `getModifiers()`, `modifyBlockResult()`, `canReroll()`, `specialEffect()` ✅
-- [x] **35+ compétences avancées** — Block, Dodge, Tackle, Sure Hands, Sure Feet, Guard, Mighty Blow, Dauntless, Frenzy, Jump Up, Stand Firm, Side Step, Dirty Player, Pass, Catch, Thick Skull, Stunty, Wrestle, Fend, Strip Ball, Pro, Break Tackle, Horns, Juggernaut, Sprint, Leader, Grab, Diving Tackle, Diving Catch, Accurate, Strong Arm, Prehensile Tail, Two Heads, Very Long Legs, Big Hand, Extra Arms, Claws, Iron Hard Skin, Pile Driver, Brawler ✅
-- [x] **Simulateur de probabilités** — `probability-calculator.ts` calcul temps réel pour moves, blocks, passes, fouls avec risk level et breakdown ✅
-- [x] **Mode "règles allégées"** — `rules-config.ts` avec `FULL_RULES` et `SIMPLIFIED_RULES` (sans compétences, météo, GFI, etc.) ✅
-- [x] **Validation par arbitre** — `referee.ts` avec `validateMove()` et `validateGameState()` (anti-triche, détection incohérences) ✅
-
-### 💡 Améliorations futures (reportées en Phase 7)
-
-- [ ] **Moteur d'événements chainés** — système événementiel pour gérer les cascades (bloc → push → crowd surf → injury → apothecary → casualty) avec rollback possible
+| # | Tâche | Gain | Diff | Issue | Détail |
+|---|-------|------|------|-------|--------|
+| 2.11 | Créer un asset loader/cache Pixi.js | 🟡 | 🟡 | [#38] | Chargement sprite sheets avant rendu, cache mémoire |
+| 2.12 | Sprite sheet joueurs par équipe | 🟡 | 🟡 | [#38] | Pions visuels différenciés par roster (couleurs/formes) |
+| 2.13 | Tileset terrain de base (herbe/lignes) | 🟡 | 🟡 | [#26] | Calques Pixi séparés : herbe, en-buts, lignes de terrain |
 
 ---
 
-## Phase 4 — Expérience Web immersive 🔶 EN COURS (60%)
+## 🥈 Priorité 3 — Notifications & engagement (Gain moyen, Difficulté moyenne)
 
-> _Objectif : transformer le board statique en une expérience de jeu riche et fluide._
+### NOTIFICATIONS
 
-### ✅ Réalisé
+| # | Tâche | Gain | Diff | Issue | Détail |
+|---|-------|------|------|-------|--------|
+| 3.1 | UI demande permission notifications browser | 🟡 | 🟢 | [#23] | Modal avec explication + bouton Notification.requestPermission() |
+| 3.2 | Page /settings avec préférences notifications | 🟡 | 🟡 | [#23] | Toggles par type : tour, match terminé, invitation |
+| 3.3 | Badge cloche dans le header | 🟡 | 🟢 | [#24] | Icône cloche avec compteur non-lu, dropdown liste |
+| 3.4 | Service Worker pour push notifications | 🟢 | 🟡 | — | Enregistrement SW, subscription endpoint, stockage côté serveur |
+| 3.5 | Endpoint serveur envoi push | 🟢 | 🟡 | — | Route POST /notifications/push avec web-push library |
+| 3.6 | Push "C'est votre tour" | 🟢 | 🟢 | — | Trigger après chaque end turn de l'adversaire |
+| 3.7 | Push "Invitation reçue" | 🟡 | 🟢 | — | Trigger à la création d'un match avec shareToken |
+| 3.8 | Push "Match terminé" | 🟡 | 🟢 | — | Trigger au touchdown final ou fin de temps |
 
-- [x] **Board Pixi.js** — terrain complet avec endzones, lignes, grille, joueurs colorés, balle dorée
-- [x] **[#34](https://github.com/Ryxeuf/fantasy-football-game/issues/34)** Surbrillance des coups possibles ✅ — overlay vert pour les moves légaux
-- [x] **[#28](https://github.com/Ryxeuf/fantasy-football-game/issues/28)** HUD overlay ✅ — scoreboard avec half/turn/team, PM, relances, turnover indicator, touchdown animation
-- [x] **Système de popups complet** — ActionPicker, BlockChoice, DiceResult, PushChoice, FollowUpChoice
-- [x] **GameLog** — log scrollable avec entrées colorées par type
-- [x] **Dugout complet** — zones réserves, KO, stunned, casualty avec compteurs
-- [x] **Star Players catalog** — grille filtrable avec recherche, filtre roster/coût/skill
-- [x] **Skills reference** — catégories, bilingue FR/EN, recherche, filtres Season 2/3
-- [x] **Teams management** — listing, filtres tier/ruleset, création/édition
-- [x] **Admin panel** — dashboard complet avec stats, CRUD data, gestion users/cups
-- [x] **Local Matches UI** — listing, filtres, détails, création
-- [x] **i18n FR/EN** — LanguageContext, translations complètes, switcher
+### WEB — Expérience utilisateur
 
-### 🔲 À implémenter
-
-- [ ] **[#41](https://github.com/Ryxeuf/fantasy-football-game/issues/41)** Zoom/Pan (wheel + drag) — viewport Pixi.js avec limites et reset
-- [ ] **[#36](https://github.com/Ryxeuf/fantasy-football-game/issues/36)** Animations tween déplacement — interpolation 150-250ms, easing, queue, skip (S)
-- [ ] **[#38](https://github.com/Ryxeuf/fantasy-football-game/issues/38)** Système d'assets (loader/cache) — sprite sheets, pions par équipe
-- [ ] **[#26](https://github.com/Ryxeuf/fantasy-football-game/issues/26)** Thème visuel terrain (tileset) — calques Pixi herbe/en-buts, lignes séparées
-- [ ] **[#27](https://github.com/Ryxeuf/fantasy-football-game/issues/27)** Heatmap zones de tacle — overlay semi-transparent avec intensité
-
-#### 💡 Améliorations proposées (innovantes)
-
-- [ ] **Système de caméra cinématique** — zoom automatique sur l'action en cours (bloc, passe longue, touchdown) avec transitions fluides
-- [ ] **Mode spectateur** — vue en lecture seule pour regarder un match en cours avec commentaires auto-générés
-- [ ] **Thèmes de terrain dynamiques** — terrain qui change visuellement selon la météo (neige, pluie, nuit) avec particles Pixi.js
-- [ ] **Indicateurs tactiques** — affichage des lignes de passe potentielles, trajectoires de blitz, et zones de danger au survol
-- [ ] **Replay 3D-like** — perspective isométrique optionnelle avec effet de profondeur pour les moments clés
-- [ ] **Sound design** — effets sonores contextualités (impact bloc, sifflet turnover, foule) via Web Audio API
-- [ ] **Export GIF/vidéo** — capture animée d'une action ou d'un tour complet pour partage social
+| # | Tâche | Gain | Diff | Issue | Détail |
+|---|-------|------|------|-------|--------|
+| 3.9 | Replayer basique (lecture seule) | 🟡 | 🟡 | [#21] | Slider de tours, recalcul gameState via seed, boutons prev/next |
+| 3.10 | Onglet historique du match | 🟡 | 🟡 | [#20] | Liste des turns avec résumé, bouton "voir cet état" |
+| 3.11 | Indicateurs tactiques au survol | 🟡 | 🟡 | — | Lignes de passe potentielles, trajectoires blitz au hover joueur |
 
 ---
 
-## Phase 5 — Multijoueur temps réel & Notifications 🔴 À FAIRE (15%)
+## 🥉 Priorité 4 — Mobile (Gain moyen, Difficulté élevée)
 
-> _Objectif : expérience multijoueur fluide avec notifications push._
+### MOBILE — Fonctionnalités essentielles
 
-### ✅ Réalisé
-
-- [x] Toast notifications in-game (dés, actions)
-- [x] Match lobby avec acceptation et setup
-- [x] Invitation par token
-
-### 🔲 À implémenter
-
-- [ ] **WebSocket/Server-Sent Events** — synchronisation temps réel des moves entre joueurs
-- [ ] **Indicateur "adversaire en train de jouer"** — animation de réflexion, timer visuel
-- [ ] **[#23](https://github.com/Ryxeuf/fantasy-football-game/issues/23)** UI permission & préférences notifications — modal d'activation, page /settings
-- [ ] **[#24](https://github.com/Ryxeuf/fantasy-football-game/issues/24)** Badge cloche + toast activation — icône header actif/inactif
-- [ ] **Push notifications (Service Worker)** — "C'est votre tour !", "Match terminé", "Invitation reçue"
-- [ ] **Chat in-game** — messagerie simple entre joueurs pendant un match
-
-#### 💡 Améliorations proposées (innovantes)
-
-- [ ] **Système de timer adaptatif** — timer par tour qui s'ajuste selon la complexité de la situation (plus de temps si beaucoup d'options)
-- [ ] **Notifications intelligentes** — regroupement des notifications, résumé digest ("3 matchs vous attendent"), heure de notification préférée
-- [ ] **Présence & statut** — indicateur en ligne/hors ligne, "dernière connexion il y a 5 min"
-- [ ] **Emotes rapides** — système d'emotes pendant le match (GG, Nice Block, Ouch!, 🎲) sans quitter le board
-- [ ] **Reconnexion gracieuse** — reprise automatique après déconnexion avec synchronisation d'état
+| # | Tâche | Gain | Diff | Issue | Détail |
+|---|-------|------|------|-------|--------|
+| 4.1 | Écran login mobile | 🟡 | 🟡 | [#17] | Formulaire email/password, stockage token SecureStore |
+| 4.2 | Écran register mobile | 🟡 | 🟢 | [#17] | Formulaire inscription, validation, redirect login |
+| 4.3 | Écran lobby / liste matchs mobile | 🟡 | 🟡 | [#17] | FlatList des matchs en attente, bouton créer/rejoindre |
+| 4.4 | Zoom pinch sur le board mobile | 🟡 | 🟡 | [#42] | PinchGestureHandler, scale avec limites |
+| 4.5 | Pan drag sur le board mobile | 🟡 | 🟡 | [#42] | PanGestureHandler, translation avec limites |
+| 4.6 | Surbrillance cases jouables (tap) | 🟡 | 🟡 | [#35] | Tap joueur → affiche cases, double-tap annule |
+| 4.7 | Renderer Canvas RN complet | 🟡 | 🔴 | [#29] | Plateau rect/cercles, gestes tap/long press, toutes mécaniques |
+| 4.8 | Animations tween mobile | 🟡 | 🟡 | [#37] | API partagée web/mobile pour déplacement/balle |
+| 4.9 | Pack d'assets mobile optimisé | 🟡 | 🟡 | [#40] | Sprite sheets 1x/2x, fallback vectoriel |
+| 4.10 | Notifications push Expo | 🟡 | 🟡 | [#25] | expo-notifications, permissions, tokens |
+| 4.11 | Historique matchs minimal | 🔴 | 🟢 | [#22] | Liste turns + bouton voir état |
 
 ---
 
-## Phase 6 — Application Mobile 🔴 À FAIRE (10%)
+## 📦 Priorité 5 — Polish & Communauté (Gain variable, Difficulté élevée)
 
-> _Objectif : application mobile native complète miroir du web._
+### STATISTIQUES & CLASSEMENT
 
-### ✅ Réalisé
+| # | Tâche | Gain | Diff | Issue | Détail |
+|---|-------|------|------|-------|--------|
+| 5.1 | Modèle Prisma pour ELO / classement | 🟡 | 🟢 | — | Champ elo sur User, historique classement |
+| 5.2 | Calcul ELO après chaque match | 🟡 | 🟡 | — | Fonction calcul ELO K-factor, update en fin de match |
+| 5.3 | Page leaderboard | 🟡 | 🟡 | — | Tableau classement, filtres saison/global |
+| 5.4 | Dashboard stats par coach | 🟡 | 🟡 | — | Win rate, TD/match, équipes préférées, graphiques |
+| 5.5 | Stats carrière par joueur | 🔴 | 🟡 | — | TD, casualties, passes, MVP, SPP, progression |
+| 5.6 | Heatmap terrain post-match | 🔴 | 🟡 | — | Visualisation zones jouées, couloirs de passe |
 
-- [x] Setup Expo + React Native basique
-- [x] Board PixiBoard.native.tsx (rendu minimal)
-- [x] 1 écran MVP avec mouvement + fin de tour
+### ENGAGEMENT
 
-### 🔲 À implémenter
+| # | Tâche | Gain | Diff | Issue | Détail |
+|---|-------|------|------|-------|--------|
+| 5.7 | Système achievements (modèle + logique) | 🟡 | 🟡 | — | Table Achievement, triggers en fin de match |
+| 5.8 | 20 premiers achievements | 🟡 | 🟡 | — | 1er TD, 10 casualties, victoire parfaite, etc. |
+| 5.9 | UI achievements sur profil | 🟡 | 🟢 | — | Grille badges, progression, date obtention |
+| 5.10 | Profil public de coach | 🟡 | 🟡 | — | Page /coach/:id, palmarès, équipes, stats |
+| 5.11 | Système de saisons compétitives | 🔴 | 🔴 | — | Saisons 4 semaines, reset, récompenses |
+| 5.12 | Mode draft | 🔴 | 🔴 | — | Sélection alternée joueurs avant match exhibition |
 
-- [ ] **[#17](https://github.com/Ryxeuf/fantasy-football-game/issues/17)** Flow Login → New/Join → Lobby — écrans Expo Stack complets
-- [ ] **[#42](https://github.com/Ryxeuf/fantasy-football-game/issues/42)** Zoom/Pan (pinch + drag) — gestes natifs avec limites
-- [ ] **[#35](https://github.com/Ryxeuf/fantasy-football-game/issues/35)** Surbrillance des coups possibles — tap → cases jouables, double-tap annule
-- [ ] **[#29](https://github.com/Ryxeuf/fantasy-football-game/issues/29)** Renderer Canvas RN (MVP) — plateau complet rect/cercles, gestes tap/long press
-- [ ] **[#37](https://github.com/Ryxeuf/fantasy-football-game/issues/37)** Animations tween RN — API partagée avec le web
-- [ ] **[#40](https://github.com/Ryxeuf/fantasy-football-game/issues/40)** Pack d'assets léger — sprite sheet 1x/2x, fallback vectoriel
-- [ ] **[#25](https://github.com/Ryxeuf/fantasy-football-game/issues/25)** Notifications Expo — permissions, toggles, push
-- [ ] **[#22](https://github.com/Ryxeuf/fantasy-football-game/issues/22)** Historique minimal — liste turns + bouton voir l'état
+### EXPÉRIENCE ENRICHIE
 
-#### 💡 Améliorations proposées (innovantes)
+| # | Tâche | Gain | Diff | Issue | Détail |
+|---|-------|------|------|-------|--------|
+| 5.13 | Variantes terrain (skins) | 🔴 | 🟡 | [#39] | Sélecteur herbe/ruine/neige + preview |
+| 5.14 | Thèmes météo dynamiques | 🔴 | 🟡 | — | Terrain change selon météo (neige, pluie) + particles |
+| 5.15 | Caméra cinématique | 🔴 | 🟡 | — | Zoom auto sur action (bloc, passe longue, TD) |
+| 5.16 | Mode spectateur | 🟡 | 🟡 | — | Vue lecture seule match en cours |
+| 5.17 | Chat in-game | 🟡 | 🟡 | — | Messagerie simple entre joueurs pendant match |
+| 5.18 | Emotes rapides | 🔴 | 🟢 | — | GG, Nice Block, Ouch! sans quitter le board |
+| 5.19 | Sound design (effets sonores) | 🟡 | 🟡 | — | Web Audio API : impact bloc, sifflet, foule |
+| 5.20 | Export GIF/vidéo action | 🔴 | 🔴 | — | Capture animée d'une action pour partage |
 
-- [ ] **Gestes avancés** — swipe pour end turn, long press pour action picker, shake pour relance
-- [ ] **Mode hors-ligne** — jouer un match local contre l'IA sans connexion, sync au retour en ligne
-- [ ] **Widget iOS/Android** — widget affichant "À votre tour dans X matchs" sur l'écran d'accueil
-- [ ] **Haptic feedback** — vibrations contextuelles (bloc réussi = vibration forte, esquive = vibration légère)
-- [ ] **Mode portrait optimisé** — board pivotable avec UI adaptative pour jouer d'une main
+### IA & TUTORIEL
 
----
+| # | Tâche | Gain | Diff | Issue | Détail |
+|---|-------|------|------|-------|--------|
+| 5.21 | IA adversaire — évaluation positionnelle | 🟡 | 🔴 | — | Scoring cases, formation, densité |
+| 5.22 | IA adversaire — scoring de coups | 🟡 | 🔴 | — | Évaluation bloc/mouvement/passe par heuristiques |
+| 5.23 | IA adversaire — niveau Débutant | 🟡 | 🟡 | — | Coups aléatoires pondérés, pas d'optimisation |
+| 5.24 | IA adversaire — niveau Intermédiaire | 🔴 | 🟡 | — | Scoring basique, quelques erreurs volontaires |
+| 5.25 | IA adversaire — niveau Légende | 🔴 | 🔴 | — | Scoring optimal, anticipation, gestion risque |
+| 5.26 | Tutoriel interactif — mouvement | 🟡 | 🟡 | — | Scénario guidé pas-à-pas, highlight cases |
+| 5.27 | Tutoriel interactif — blocage | 🟡 | 🟡 | — | Scénario guidé bloc + résultat |
+| 5.28 | Tutoriel interactif — passe | 🔴 | 🟡 | — | Scénario guidé passe + catch |
+| 5.29 | Tutoriel interactif — blitz | 🔴 | 🟡 | — | Scénario guidé blitz complet |
 
-## Phase 7 — Polish, Compétitivité & Communauté 🔴 À FAIRE (5%)
+### TECHNIQUE & INFRA
 
-> _Objectif : fonctionnalités avancées pour fidéliser et créer une communauté._
-
-### 🔲 À implémenter
-
-- [ ] **[#21](https://github.com/Ryxeuf/fantasy-football-game/issues/21)** Replayer avec curseur de tour — recalcul seed + events, UI stepper + slider
-- [ ] **[#20](https://github.com/Ryxeuf/fantasy-football-game/issues/20)** Historique du match (onglet) — liste turns, "Rejouer depuis ici"
-- [ ] **[#39](https://github.com/Ryxeuf/fantasy-football-game/issues/39)** Variantes de terrain (skins) — sélecteur herbe/ruine/neige + preview Lobby
-
-#### 💡 Améliorations proposées (innovantes)
-
-**Statistiques & Analytics**
-- [ ] **Dashboard statistiques par coach** — win rate, touchdowns/match, équipes préférées, graphiques d'évolution sur le temps
-- [ ] **Statistiques par joueur (carrière)** — touchdowns, casualties, passes, MVP awards, blessures subies, progression SPP
-- [ ] **Classement ELO** — système de classement avec leagues (Bronze, Argent, Or, Légende), matchmaking basé sur ELO
-- [ ] **Heatmap de terrain post-match** — visualisation des zones les plus jouées, couloirs de passe, zones de combat
-
-**Engagement communautaire**
-- [ ] **Système de saisons** — saisons compétitives de 4 semaines avec récompenses cosmétiques, reset de classement
-- [ ] **Achievements/Trophées** — 50+ achievements déblocables (1er touchdown, 10 casualties, gagner sans turnover, etc.)
-- [ ] **Profil public de coach** — page de profil avec palmarès, équipes, statistiques, badges, historique de matchs
-- [ ] **Leaderboards thématiques** — meilleur bloqueur, meilleur passeur, coach le plus chanceux (ratio dés)
-
-**Expérience enrichie**
-- [ ] **Mode draft** — sélection alternée de joueurs avant un match exhibition
-- [ ] **Tournois automatiques** — brackets automatiques, Swiss system, round-robin avec timers
-- [ ] **Système de progression cosmétique** — couleurs d'équipe, blasons, animations de touchdown personnalisées
-- [ ] **IA adversaire** — bot avec 3 niveaux de difficulté (Débutant, Intermédiaire, Légende) pour le jeu solo
-- [ ] **Tutoriel interactif** — scénarios guidés pas-à-pas pour apprendre les règles (mouvement → bloc → passe → blitz)
-- [ ] **API publique** — API REST documentée pour intégrations tierces (bots Discord, apps communautaires, outils d'analyse)
+| # | Tâche | Gain | Diff | Issue | Détail |
+|---|-------|------|------|-------|--------|
+| 5.30 | Logs structurés (winston/pino) | 🟡 | 🟡 | — | Logger centralisé, niveaux, format JSON |
+| 5.31 | Monitoring health dashboard | 🟡 | 🟡 | — | Endpoint /health détaillé, métriques basiques |
+| 5.32 | Moteur d'événements chaînés | 🟡 | 🔴 | — | Système événementiel cascades (bloc→push→injury→apothecary) avec rollback |
+| 5.33 | Tournois automatiques (brackets) | 🟡 | 🔴 | — | Swiss system, round-robin, timers |
+| 5.34 | API publique documentée | 🔴 | 🟡 | — | REST docs OpenAPI, endpoints tiers |
 
 ---
 
-## 📊 Statistiques globales
+## 📊 Résumé par priorité
 
-### Répartition par phase
-
-| Phase | Statut | Complété | Items total |
-|-------|--------|----------|-------------|
-| **Phase 1** — Moteur de jeu | ✅ Complète | 100% | 18 items |
-| **Phase 2** — Serveur & Auth | ✅ Complète | 95% | 12 items |
-| **Phase 3** — Règles avancées | ✅ Complète | 100% | 12 items |
-| **Phase 4** — Expérience Web | 🔶 En cours | 60% | 19 items |
-| **Phase 5** — Multijoueur & Notif | 🔴 À faire | 15% | 14 items |
-| **Phase 6** — Mobile | 🔴 À faire | 10% | 14 items |
-| **Phase 7** — Polish & Communauté | 🔴 À faire | 5% | 18 items |
-
-### Répartition par zone
-
-| Zone | Issues originales | Nouvelles propositions | Total |
-|------|------------------|----------------------|-------|
-| **Engine** | 4 | 5 | 9 |
-| **Server** | 4 | 3 | 7 |
-| **Web** | 12 | 7 | 19 |
-| **Mobile** | 8 | 5 | 13 |
-| **Notifications** | 3 | 5 | 8 |
-| **Communauté/Polish** | 3 | 14 | 17 |
-| **Total** | **34** | **39** | **73** |
-
-### Fonctionnalités non-listées dans l'ancienne roadmap mais déjà implémentées
-
-Ces fonctionnalités majeures étaient **absentes du TODO** mais sont **pleinement fonctionnelles** :
-
-| Fonctionnalité | Statut | Détail |
-|---------------|--------|--------|
-| Star Players complet | ✅ 100% | Catalog, CRUD admin, images, hiring rules, stats |
-| Skills bilingue FR/EN | ✅ 100% | Categories, search, Season 2/3, descriptions |
-| Teams management | ✅ 100% | Listing, filtres, création, édition, players |
-| Admin panel complet | ✅ 100% | Dashboard stats, CRUD complet, user management |
-| i18n FR/EN | ✅ 100% | Context, translations, switcher, persistance |
-| Local Matches | ✅ 100% | Création, partage, moves, action logging |
-| Cups/Tournois | ✅ 100% | Scoring configurable, standings, brackets |
-| SEO (partiel) | ⚠️ 50% | Structured data JSON-LD, métadonnées |
-| Popup system | ✅ 100% | 5 popups interactifs pour le gameplay |
-| Dice notifications | ✅ 100% | Toast system avec icons de dés |
-| GameLog complet | ✅ 100% | Log scrollable coloré par type |
-| Dugout UI | ✅ 100% | Zones visuelles avec compteurs |
-| Pré-match sequence | ✅ 100% | Fan Factor, Météo, Journeymen, Inducements |
-| Blitz system | ✅ 100% | Mouvement + bloc, limite par tour |
-| Passing complet | ✅ 100% | 4 portées, interceptions, handoff |
+| Priorité | Nb tâches | Effort estimé | Impact |
+|----------|-----------|--------------|--------|
+| **P1 — Quick Wins** | 8 | ~3-5 jours | Sécurité + UX immédiate |
+| **P2 — Clés** | 13 | ~10-15 jours | Animations + multijoueur temps réel |
+| **P3 — Notifications** | 11 | ~8-12 jours | Engagement + rétention |
+| **P4 — Mobile** | 11 | ~15-20 jours | Couverture mobile |
+| **P5 — Polish** | 34 | ~40-60 jours | Communauté + fidélisation |
+| **Total** | **77** | ~80-110 jours | — |
 
 ---
 
-_Source : [GitHub Issues](https://github.com/Ryxeuf/fantasy-football-game/issues)_
-_Audit réalisé le 2026-03-14 par analyse exhaustive du code source_
+## 🎯 Chemin critique recommandé
+
+```
+P1.1-1.3 (Zoom/Pan)  ──→  P2.1-2.5 (Animations)  ──→  P2.11-2.13 (Assets)
+         │
+P1.6-1.8 (Sécurité)  ──→  P2.6-2.10 (WebSocket)  ──→  P3.4-3.8 (Push notif)
+         │
+P1.4-1.5 (Heatmap)   ──→  P3.9-3.11 (Replayer)   ──→  P5.x (Communauté)
+```
+
+> **Recommandation** : commencer par P1 (quick wins) pour un impact immédiat,
+> puis P2.6-2.10 (WebSocket) car le multijoueur temps réel est le plus gros
+> manque fonctionnel du projet actuellement.
