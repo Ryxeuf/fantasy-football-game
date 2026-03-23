@@ -15,6 +15,11 @@ function getInitials(player: Player): string {
   return player.name.slice(0, 2).toUpperCase();
 }
 
+/* ── Viewport constants ─────────────────────────────────────────────── */
+const MIN_SCALE = 0.5;
+const MAX_SCALE = 3;
+const ZOOM_SPEED = 0.1; // scale delta per wheel tick
+
 type Props = {
   state: GameState;
   onCellClick?: (pos: Position) => void;
@@ -44,6 +49,14 @@ export default function PixiBoard({
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [responsiveCellSize, setResponsiveCellSize] = React.useState(cellSize);
 
+  /* ── Viewport state (zoom + pan) ──────────────────────────────────── */
+  const [scale, setScale] = React.useState(1);
+  const [offset, setOffset] = React.useState({ x: 0, y: 0 });
+  const isPanningRef = React.useRef(false);
+  const panStartRef = React.useRef({ x: 0, y: 0 });
+  const offsetStartRef = React.useRef({ x: 0, y: 0 });
+  const spaceHeldRef = React.useRef(false);
+
   // Orientation verticale : largeur devient hauteur et vice versa
   const safeWidth = typeof state.width === "number" && !isNaN(state.width) ? state.width : 26;
   const safeHeight = typeof state.height === "number" && !isNaN(state.height) ? state.height : 15;
@@ -71,16 +84,116 @@ export default function PixiBoard({
   const width = safeHeight * cs;
   const height = safeWidth * cs;
 
+  /* ── Zoom: mouse wheel ────────────────────────────────────────────── */
+  React.useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    function handleWheel(e: WheelEvent) {
+      e.preventDefault();
+      const rect = el!.getBoundingClientRect();
+      // Cursor position relative to the stage (pixel coords)
+      const cursorX = e.clientX - rect.left;
+      const cursorY = e.clientY - rect.top;
+
+      setScale((prev: number) => {
+        const direction = e.deltaY < 0 ? 1 : -1;
+        const next = Math.min(MAX_SCALE, Math.max(MIN_SCALE, prev + direction * ZOOM_SPEED));
+        // Adjust offset so the point under the cursor stays fixed
+        const ratio = next / prev;
+        setOffset((o: { x: number; y: number }) => ({
+          x: cursorX - ratio * (cursorX - o.x),
+          y: cursorY - ratio * (cursorY - o.y),
+        }));
+        return next;
+      });
+    }
+
+    el.addEventListener("wheel", handleWheel, { passive: false });
+    return () => el.removeEventListener("wheel", handleWheel);
+  }, []);
+
+  /* ── Pan: Space+drag or middle-click drag ─────────────────────────── */
+  React.useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.code === "Space" && !e.repeat) {
+        spaceHeldRef.current = true;
+      }
+    }
+    function onKeyUp(e: KeyboardEvent) {
+      if (e.code === "Space") {
+        spaceHeldRef.current = false;
+        // End any pan in progress
+        isPanningRef.current = false;
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+    };
+  }, []);
+
+  const handlePointerDown = React.useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      // Middle-click (button 1) or Space+left-click to start panning
+      const isMiddle = e.button === 1;
+      const isSpaceLeft = spaceHeldRef.current && e.button === 0;
+      if (isMiddle || isSpaceLeft) {
+        e.preventDefault();
+        isPanningRef.current = true;
+        panStartRef.current = { x: e.clientX, y: e.clientY };
+        offsetStartRef.current = { ...offset };
+        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+      }
+    },
+    [offset],
+  );
+
+  const handlePointerMove = React.useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isPanningRef.current) return;
+    const dx = e.clientX - panStartRef.current.x;
+    const dy = e.clientY - panStartRef.current.y;
+    setOffset({
+      x: offsetStartRef.current.x + dx,
+      y: offsetStartRef.current.y + dy,
+    });
+  }, []);
+
+  const handlePointerUp = React.useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (isPanningRef.current) {
+      isPanningRef.current = false;
+      (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+    }
+  }, []);
+
+  /* ── Reset viewport ───────────────────────────────────────────────── */
+  const handleResetViewport = React.useCallback(() => {
+    setScale(1);
+    setOffset({ x: 0, y: 0 });
+  }, []);
+
+  const isDefaultViewport = scale === 1 && offset.x === 0 && offset.y === 0;
+
+  /* ── Stage click → grid coordinate conversion (accounts for zoom/pan) */
   const handleStageClick = (event: any) => {
+    // Ignore clicks while panning
+    if (isPanningRef.current || spaceHeldRef.current) return;
+
     const nativeEvent = event.nativeEvent;
     if (!nativeEvent) return;
 
     const rect = event.currentTarget.getBoundingClientRect();
-    const x = (nativeEvent.clientX ?? nativeEvent.touches?.[0]?.clientX) - rect.left;
-    const y = (nativeEvent.clientY ?? nativeEvent.touches?.[0]?.clientY) - rect.top;
+    const pixelX = (nativeEvent.clientX ?? nativeEvent.touches?.[0]?.clientX) - rect.left;
+    const pixelY = (nativeEvent.clientY ?? nativeEvent.touches?.[0]?.clientY) - rect.top;
 
-    const gridX = Math.floor(x / cs);
-    const gridY = Math.floor(y / cs);
+    // Convert from screen-space to board-space (account for zoom + pan offset)
+    const boardX = (pixelX - offset.x) / scale;
+    const boardY = (pixelY - offset.y) / scale;
+
+    const gridX = Math.floor(boardX / cs);
+    const gridY = Math.floor(boardY / cs);
 
     if (gridX >= 0 && gridX < safeHeight && gridY >= 0 && gridY < safeWidth) {
       const position: Position = { x: gridY, y: gridX };
@@ -99,12 +212,18 @@ export default function PixiBoard({
 
   return (
     <div
-      ref={(el) => {
+      ref={(el: HTMLDivElement | null) => {
         // Merge both refs
         (containerRef as any).current = el;
         if (ref && typeof ref === "object") (ref as any).current = el;
       }}
-      className="w-full max-w-[480px] mx-auto"
+      className="w-full max-w-[480px] mx-auto relative"
+      style={{ cursor: spaceHeldRef.current || isPanningRef.current ? "grab" : undefined }}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+      onContextMenu={(e: React.MouseEvent) => e.preventDefault()}
     >
       <Stage
         width={width}
@@ -112,7 +231,7 @@ export default function PixiBoard({
         options={{ backgroundColor: 0x6b8e23 }}
         onPointerDown={handleStageClick}
       >
-        <Container>
+        <Container scale={scale} x={offset.x} y={offset.y}>
           {/* Fond vert kaki */}
           <Graphics
             draw={(g: PixiGraphics) => {
@@ -367,6 +486,68 @@ export default function PixiBoard({
           )}
         </Container>
       </Stage>
+
+      {/* ── Viewport controls (HTML overlay) ────────────────────────── */}
+      <div className="absolute bottom-2 right-2 flex flex-col gap-1 z-10">
+        {/* Zoom level indicator */}
+        {!isDefaultViewport && (
+          <span className="text-[10px] text-white bg-black/50 rounded px-1.5 py-0.5 text-center select-none">
+            {Math.round(scale * 100)}%
+          </span>
+        )}
+        {/* Reset button — only visible when viewport is not at default */}
+        {!isDefaultViewport && (
+          <button
+            onClick={handleResetViewport}
+            className="bg-gray-900/80 hover:bg-gray-900 text-white text-xs font-medium rounded px-2 py-1.5 shadow-lg backdrop-blur-sm transition-colors select-none"
+            title="Réinitialiser le zoom (1:1)"
+          >
+            ↺ 1:1
+          </button>
+        )}
+        {/* Zoom in / out buttons */}
+        <div className="flex gap-0.5">
+          <button
+            onClick={() => {
+              setScale((s: number) => {
+                const next = Math.min(MAX_SCALE, s + ZOOM_SPEED);
+                // Zoom toward center
+                const cx = width / 2;
+                const cy = height / 2;
+                const ratio = next / s;
+                setOffset((o: { x: number; y: number }) => ({
+                  x: cx - ratio * (cx - o.x),
+                  y: cy - ratio * (cy - o.y),
+                }));
+                return next;
+              });
+            }}
+            className="bg-gray-900/80 hover:bg-gray-900 text-white text-sm font-bold rounded-l px-2 py-1 shadow-lg backdrop-blur-sm transition-colors select-none"
+            title="Zoom avant"
+          >
+            +
+          </button>
+          <button
+            onClick={() => {
+              setScale((s: number) => {
+                const next = Math.max(MIN_SCALE, s - ZOOM_SPEED);
+                const cx = width / 2;
+                const cy = height / 2;
+                const ratio = next / s;
+                setOffset((o: { x: number; y: number }) => ({
+                  x: cx - ratio * (cx - o.x),
+                  y: cy - ratio * (cy - o.y),
+                }));
+                return next;
+              });
+            }}
+            className="bg-gray-900/80 hover:bg-gray-900 text-white text-sm font-bold rounded-r px-2 py-1 shadow-lg backdrop-blur-sm transition-colors select-none"
+            title="Zoom arrière"
+          >
+            −
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
