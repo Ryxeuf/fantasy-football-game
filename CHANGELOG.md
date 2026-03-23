@@ -1,3 +1,10 @@
+## [1.38.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.37.0...v1.38.0) (2026-03-23)
+
+
+### ✨ Features
+
+* **ui:** add board zoom/pan/reset and opponent turn indicator ([94b683f](https://github.com/Ryxeuf/fantasy-football-game/commit/94b683f5474093452159ff07bfc1f140a2169fff)), closes [#41](https://github.com/Ryxeuf/fantasy-football-game/issues/41)
+
 ## [1.37.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.36.1...v1.37.0) (2026-03-22)
 
 
