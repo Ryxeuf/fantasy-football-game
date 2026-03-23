@@ -84,6 +84,10 @@
 | 14 | Pré-match UI | Fan Factor, Météo, Journeymen, Inducements |
 | 15 | PDF export | Récapitulatif match local avec export jsPDF |
 | 16 | SEO partiel | Structured data JSON-LD, métadonnées |
+| 17 | Zoom molette board Pixi.js | Wheel zoom vers curseur, clamp 0.5x–3x, boutons +/− ([#41]) |
+| 18 | Pan drag board Pixi.js | Middle-click ou Space+drag, pointer capture ([#41]) |
+| 19 | Bouton reset zoom/position | Overlay HTML Tailwind, reset scale=1 + origin ([#41]) |
+| 20 | Indicateur adversaire en train de jouer | Bandeau vert/jaune dans le HUD selon isMyTurn, animation pulse |
 
 ---
 

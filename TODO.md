@@ -16,11 +16,7 @@
 
 | # | Tâche | Gain | Diff | Issue | Détail |
 |---|-------|------|------|-------|--------|
-| 1.1 | Ajouter zoom molette sur le board Pixi.js | 🟢 | 🟢 | [#41] | `viewport.scaled` sur événement wheel, clamp min/max |
-| 1.2 | Ajouter pan drag sur le board Pixi.js | 🟢 | 🟢 | [#41] | Événements pointerdown/move/up, translation viewport |
-| 1.3 | Ajouter bouton reset zoom/position | 🟢 | 🟢 | [#41] | Bouton UI → viewport.fit() ou scale=1 + position origin |
 | 1.4 | Overlay heatmap zones de tacle (affichage) | 🟢 | 🟢 | [#27] | Layer semi-transparent, couleur par intensité, toggle on/off |
-| 1.5 | Indicateur "adversaire en train de jouer" | 🟢 | 🟢 | — | Texte/animation dans le HUD quand ce n'est pas le tour du joueur |
 
 ### SERVEUR — Sécurité de base
 
@@ -174,7 +170,7 @@
 
 | Priorité | Nb tâches | Effort estimé | Impact |
 |----------|-----------|--------------|--------|
-| **P1 — Quick Wins** | 6 | ~2-4 jours | Sécurité + UX immédiate |
+| **P1 — Quick Wins** | 2 | ~1-2 jours | Sécurité + UX immédiate |
 | **P2 — Clés** | 13 | ~10-15 jours | Animations + multijoueur temps réel |
 | **P3 — Notifications** | 11 | ~8-12 jours | Engagement + rétention |
 | **P4 — Mobile** | 11 | ~15-20 jours | Couverture mobile |

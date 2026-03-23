@@ -80,8 +80,32 @@ export default function GameScoreboard({
     return () => clearTimeout(t);
   }, [lastScore?.id]);
 
+  // Determine if it's the opponent's turn (when localSide is known)
+  const isMyTurn = localSide ? state.currentPlayer === localSide : null;
+  const isOpponentTurn = isMyTurn === false && state.half > 0 && state.gamePhase !== "ended";
+
   return (
     <div className="fixed top-0 left-0 right-0 z-50 w-full bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white shadow-2xl">
+      {/* Bandeau indicateur de tour (visible quand localSide est connu) */}
+      {localSide && state.half > 0 && state.gamePhase !== "ended" && (
+        <div
+          className={`w-full text-center py-1.5 text-sm font-bold transition-colors duration-300 ${
+            isMyTurn
+              ? "bg-green-500 text-white"
+              : "bg-yellow-400 text-gray-900"
+          }`}
+        >
+          {isMyTurn ? (
+            <span>C&apos;est votre tour !</span>
+          ) : (
+            <span className="inline-flex items-center gap-2">
+              <span className="inline-block w-2 h-2 bg-gray-900 rounded-full animate-pulse" />
+              Adversaire en train de jouer...
+            </span>
+          )}
+        </div>
+      )}
+
       {/* Bannière Touchdown */}
       {showScoreAnim && (
         <div className="w-full bg-yellow-400 text-yellow-900 font-black text-center uppercase tracking-widest py-2 animate-bounce">
