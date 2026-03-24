@@ -6,6 +6,12 @@ import { acceptAndMaybeStartMatch } from "../services/match-start";
 import { enterSetupPhase, applyMove, makeRNG } from "@bb/game-engine";
 import type { Move } from "@bb/game-engine";
 import { getUserTeamSide } from "../services/turn-ownership";
+import { validate } from "../middleware/validate";
+import {
+  joinMatchSchema,
+  acceptMatchSchema,
+  moveSchema,
+} from "../schemas/match.schemas";
 
 const router = Router();
 const MATCH_SECRET = process.env.MATCH_SECRET || "dev-match-secret";
@@ -36,10 +42,9 @@ router.post("/create", authUser, async (req: AuthenticatedRequest, res) => {
 });
 
 // Rejoindre une partie existante, retourne un token de match
-router.post("/join", authUser, async (req: AuthenticatedRequest, res) => {
+router.post("/join", authUser, validate(joinMatchSchema), async (req: AuthenticatedRequest, res) => {
   try {
-    const { matchId } = req.body ?? {};
-    if (!matchId) return res.status(400).json({ error: "matchId requis" });
+    const { matchId } = req.body;
     const match = await prisma.match.update({
       where: { id: matchId },
       data: { players: { connect: { id: req.user!.id } } },
@@ -58,10 +63,9 @@ router.post("/join", authUser, async (req: AuthenticatedRequest, res) => {
 });
 
 // Accepter le match: chaque coach doit accepter. Au second accept, on lance la séquence de pré-match
-router.post("/accept", authUser, async (req: AuthenticatedRequest, res) => {
+router.post("/accept", authUser, validate(acceptMatchSchema), async (req: AuthenticatedRequest, res) => {
   try {
-    const { matchId } = (req.body ?? {}) as { matchId?: string };
-    if (!matchId) return res.status(400).json({ error: "matchId requis" });
+    const { matchId } = req.body as { matchId: string };
     const result = await acceptAndMaybeStartMatch(prisma as any, {
       matchId,
       userId: req.user!.id,
@@ -79,14 +83,11 @@ router.post("/accept", authUser, async (req: AuthenticatedRequest, res) => {
 router.post(
   "/:id/move",
   authUser,
+  validate(moveSchema),
   async (req: AuthenticatedRequest, res) => {
     try {
       const matchId = req.params.id;
-      const { move } = req.body as { move?: Move };
-
-      if (!move || !move.type) {
-        return res.status(400).json({ error: "move requis avec un type valide" });
-      }
+      const { move } = req.body as { move: Move };
 
       // Charger le match
       const match = await prisma.match.findUnique({

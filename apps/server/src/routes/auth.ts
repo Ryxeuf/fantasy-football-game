@@ -4,20 +4,21 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
 import { normalizeRoles } from "../utils/roles";
+import { validate } from "../middleware/validate";
+import {
+  registerSchema,
+  loginSchema,
+  updateProfileSchema,
+  changePasswordSchema,
+} from "../schemas/auth.schemas";
 
 const router = Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
 
-router.post("/register", async (req, res) => {
+router.post("/register", validate(registerSchema), async (req, res) => {
   try {
-    const { email, password, name, coachName, firstName, lastName, dateOfBirth } = req.body ?? {};
-    if (typeof email !== "string" || typeof password !== "string") {
-      return res.status(400).json({ error: "Email et mot de passe requis" });
-    }
-    if (typeof coachName !== "string" || coachName.trim() === "") {
-      return res.status(400).json({ error: "Nom de coach requis" });
-    }
+    const { email, password, name, coachName, firstName, lastName, dateOfBirth } = req.body;
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
@@ -68,12 +69,9 @@ router.post("/register", async (req, res) => {
   }
 });
 
-router.post("/login", async (req, res) => {
+router.post("/login", validate(loginSchema), async (req, res) => {
   try {
-    const { email, password } = req.body ?? {};
-    if (typeof email !== "string" || typeof password !== "string") {
-      return res.status(400).json({ error: "Email et mot de passe requis" });
-    }
+    const { email, password } = req.body;
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
@@ -202,14 +200,10 @@ router.get("/me", authUser, async (req: AuthenticatedRequest, res) => {
 });
 
 // Mettre à jour le profil utilisateur
-router.put("/me", authUser, async (req: AuthenticatedRequest, res) => {
+router.put("/me", authUser, validate(updateProfileSchema), async (req: AuthenticatedRequest, res) => {
   try {
-    const { email, coachName, firstName, lastName, dateOfBirth } = req.body ?? {};
-    
-    // Validation des champs obligatoires
-    if (email !== undefined && typeof email !== "string") {
-      return res.status(400).json({ error: "Email invalide" });
-    }
+    const { email, coachName, firstName, lastName, dateOfBirth } = req.body;
+
     if (email !== undefined) {
       const existing = await prisma.user.findUnique({ where: { email } });
       if (existing && existing.id !== req.user!.id) {
@@ -217,10 +211,6 @@ router.put("/me", authUser, async (req: AuthenticatedRequest, res) => {
       }
     }
     
-    if (coachName !== undefined && (typeof coachName !== "string" || coachName.trim() === "")) {
-      return res.status(400).json({ error: "Nom de coach requis" });
-    }
-
     // Construction des données à mettre à jour
     const updateData: any = {};
     if (email !== undefined) updateData.email = email;
@@ -265,22 +255,9 @@ router.put("/me", authUser, async (req: AuthenticatedRequest, res) => {
 });
 
 // Changer le mot de passe
-router.put("/me/password", authUser, async (req: AuthenticatedRequest, res) => {
+router.put("/me/password", authUser, validate(changePasswordSchema), async (req: AuthenticatedRequest, res) => {
   try {
-    const { currentPassword, newPassword } = req.body ?? {};
-    
-    // Validation des champs obligatoires
-    if (typeof currentPassword !== "string" || currentPassword.trim() === "") {
-      return res.status(400).json({ error: "Mot de passe actuel requis" });
-    }
-    if (typeof newPassword !== "string" || newPassword.trim() === "") {
-      return res.status(400).json({ error: "Nouveau mot de passe requis" });
-    }
-    
-    // Validation de la longueur du nouveau mot de passe
-    if (newPassword.length < 8) {
-      return res.status(400).json({ error: "Le nouveau mot de passe doit contenir au moins 8 caractères" });
-    }
+    const { currentPassword, newPassword } = req.body;
     
     // Récupérer l'utilisateur avec son mot de passe hashé
     const user = await prisma.user.findUnique({

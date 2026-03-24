@@ -3,8 +3,8 @@
  * Layout responsive : sur mobile le terrain est plein écran avec dugouts en accordéon
  */
 
-import React, { useState } from "react";
-import { GameState, Player } from "@bb/game-engine";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
+import { GameState, Player, calculateTackleZoneHeatmap } from "@bb/game-engine";
 import PixiBoard from "../board/PixiBoard";
 import TeamDugoutComponent from "./TeamDugout";
 import PlayerDetails from "./PlayerDetails";
@@ -46,6 +46,26 @@ export default function GameBoardWithDugouts({
   const [showDugoutA, setShowDugoutA] = useState(false);
   const [showDugoutB, setShowDugoutB] = useState(false);
   const [inspectedPlayer, setInspectedPlayer] = useState<Player | null>(null);
+  const [showTackleZones, setShowTackleZones] = useState(false);
+
+  const tackleZoneHeatmap = useMemo(
+    () => (showTackleZones && state ? calculateTackleZoneHeatmap(state) : undefined),
+    [showTackleZones, state],
+  );
+
+  // 'T' keyboard shortcut to toggle tackle zones
+  const toggleTackleZones = useCallback(() => setShowTackleZones((v) => !v), []);
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      // Ignore if user is typing in an input/textarea
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.key === "t" || e.key === "T") {
+        toggleTackleZones();
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [toggleTackleZones]);
 
   if (!state) {
     return (
@@ -119,6 +139,21 @@ export default function GameBoardWithDugouts({
         <div className="lg:hidden px-3 pb-2">{dugoutB}</div>
       )}
 
+      {/* Tackle zone toggle button */}
+      <div className="flex justify-center px-3 pb-1">
+        <button
+          onClick={toggleTackleZones}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+            showTackleZones
+              ? "bg-purple-600 text-white"
+              : "bg-purple-100 text-purple-800 border border-purple-300"
+          }`}
+          title="Toggle tackle zones (T)"
+        >
+          {showTackleZones ? "Hide" : "Show"} Tackle Zones (T)
+        </button>
+      </div>
+
       {/* Main layout: desktop side-by-side, mobile board-only */}
       <div className="flex flex-col lg:flex-row items-start gap-4 p-2 lg:p-4">
         {/* Dugout A - desktop only */}
@@ -140,6 +175,8 @@ export default function GameBoardWithDugouts({
             selectedPlayerId={selectedPlayerId}
             selectedForRepositioning={selectedForRepositioning}
             onCellSizeChange={onCellSizeChange}
+            tackleZoneHeatmap={tackleZoneHeatmap}
+            showTackleZones={showTackleZones}
           />
         </div>
 
