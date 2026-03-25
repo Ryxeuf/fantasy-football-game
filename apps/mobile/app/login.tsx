@@ -4,6 +4,7 @@ import {
   Text,
   TextInput,
   Pressable,
+  ScrollView,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
@@ -48,7 +49,10 @@ export default function LoginScreen() {
       style={styles.flex}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <View style={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={styles.card}>
           <Text style={styles.title}>Connexion</Text>
 
@@ -108,15 +112,15 @@ export default function LoginScreen() {
             </Text>
           </Pressable>
         </View>
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  container: {
-    flex: 1,
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: "center",
     padding: 24,
   },
@@ -155,7 +159,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   submitButton: {
-    backgroundColor: "#16A34A",
+    backgroundColor: "#2563EB",
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: "center",
