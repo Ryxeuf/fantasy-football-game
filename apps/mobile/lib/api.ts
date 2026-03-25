@@ -1,4 +1,5 @@
 // API client for mobile app.
+// Uses the same backend as the web app.
 // API_BASE can be overridden via EXPO_PUBLIC_API_BASE env var.
 
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE || "http://localhost:8201";

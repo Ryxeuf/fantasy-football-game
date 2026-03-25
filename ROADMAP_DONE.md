@@ -112,6 +112,15 @@
 
 ---
 
+## Quick Wins P1 (livré)
+
+| # | Fonctionnalité | Détail |
+|---|---------------|--------|
+| 1.4 | Overlay heatmap zones de tacle | Layer semi-transparent Pixi.js, couleur par intensité (rouge=team A, bleu=team B, violet=contesté), toggle bouton + raccourci clavier (T) |
+| 1.6 | Validation d'entrée Zod sur routes critiques | Middleware validate() + schemas Zod sur auth (register, login, profile, password), match (join, accept, move, choose-team), team (create, build, update, info) |
+
+---
+
 ## Infrastructure & DevOps (livré)
 
 | # | Fonctionnalité | Détail |
