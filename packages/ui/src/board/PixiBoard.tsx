@@ -2,7 +2,7 @@
 import * as React from "react";
 import { Stage, Container, Graphics, Text } from "@pixi/react";
 import type { Graphics as PixiGraphics } from "@pixi/graphics";
-import type { GameState, Position, Player } from "@bb/game-engine";
+import type { GameState, Position, Player, TackleZoneHeatmap } from "@bb/game-engine";
 
 /** Extract up to 2 initials from a player's name (e.g. "Grim Ironjaw" -> "GI") */
 function getInitials(player: Player): string {
@@ -32,6 +32,10 @@ type Props = {
   ref?: React.RefObject<HTMLDivElement>;
   /** Called when the responsive cell size changes (for drop coordinate math) */
   onCellSizeChange?: (cellSize: number) => void;
+  /** Tackle zone heatmap data */
+  tackleZoneHeatmap?: TackleZoneHeatmap;
+  /** Whether to show the tackle zone overlay */
+  showTackleZones?: boolean;
 };
 
 export default function PixiBoard({
@@ -45,6 +49,8 @@ export default function PixiBoard({
   selectedForRepositioning,
   ref,
   onCellSizeChange,
+  tackleZoneHeatmap,
+  showTackleZones = false,
 }: Props) {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [responsiveCellSize, setResponsiveCellSize] = React.useState(cellSize);
@@ -325,6 +331,43 @@ export default function PixiBoard({
               }
             }}
           />
+
+          {/* Tackle zone heatmap overlay */}
+          {showTackleZones && tackleZoneHeatmap && (
+            <Graphics
+              draw={(g: PixiGraphics) => {
+                g.clear();
+                const hm = tackleZoneHeatmap;
+                for (let x = 0; x < hm.width; x++) {
+                  for (let y = 0; y < hm.height; y++) {
+                    const cell = hm.cells[x][y];
+                    if (cell.teamA === 0 && cell.teamB === 0) continue;
+
+                    let color: number;
+                    let intensity: number;
+                    if (cell.contested) {
+                      // Purple for contested zones
+                      color = 0x9933ff;
+                      intensity = Math.max(cell.teamA, cell.teamB);
+                    } else if (cell.teamA > 0) {
+                      // Red for team A
+                      color = 0xff3333;
+                      intensity = cell.teamA;
+                    } else {
+                      // Blue for team B
+                      color = 0x3366ff;
+                      intensity = cell.teamB;
+                    }
+
+                    const alpha = Math.min(0.7, intensity * 0.15);
+                    g.beginFill(color, alpha);
+                    g.drawRect(y * cs, x * cs, cs, cs);
+                    g.endFill();
+                  }
+                }
+              }}
+            />
+          )}
 
           {/* Mouvements legaux */}
           <Graphics

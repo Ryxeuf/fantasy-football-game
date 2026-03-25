@@ -12,17 +12,7 @@
 
 ## 🏆 Priorité 1 — Quick Wins (Gain fort, Difficulté faible)
 
-### WEB — Améliorations visuelles critiques
-
-| # | Tâche | Gain | Diff | Issue | Détail |
-|---|-------|------|------|-------|--------|
-| 1.4 | Overlay heatmap zones de tacle (affichage) | 🟢 | 🟢 | [#27] | Layer semi-transparent, couleur par intensité, toggle on/off |
-
-### SERVEUR — Sécurité de base
-
-| # | Tâche | Gain | Diff | Issue | Détail |
-|---|-------|------|------|-------|--------|
-| 1.6 | Ajouter validation d'entrée sur les routes critiques | 🟢 | 🟡 | — | Zod/Joi schemas sur match moves, team CRUD |
+> ✅ Toutes les tâches P1 sont terminées ! Voir ROADMAP_DONE.md
 
 ---
 
@@ -170,7 +160,7 @@
 
 | Priorité | Nb tâches | Effort estimé | Impact |
 |----------|-----------|--------------|--------|
-| **P1 — Quick Wins** | 2 | ~1-2 jours | Sécurité + UX immédiate |
+| **P1 — Quick Wins** | ~~2~~ ✅ | ~~1-2 jours~~ | ✅ Terminé |
 | **P2 — Clés** | 13 | ~10-15 jours | Animations + multijoueur temps réel |
 | **P3 — Notifications** | 11 | ~8-12 jours | Engagement + rétention |
 | **P4 — Mobile** | 11 | ~15-20 jours | Couverture mobile |

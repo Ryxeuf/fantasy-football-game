@@ -21,6 +21,14 @@ import {
 } from "../utils/star-player-validation";
 import { getRosterFromDb } from "../utils/roster-helpers";
 import { resolveRuleset, isValidRuleset } from "../utils/ruleset-helpers";
+import { validate } from "../middleware/validate";
+import {
+  createFromRosterSchema,
+  buildTeamSchema,
+  updateTeamSchema,
+  updateTeamInfoSchema,
+} from "../schemas/team.schemas";
+import { chooseTeamSchema } from "../schemas/match.schemas";
 
 const router = Router();
 const ALLOWED_TEAMS = [
@@ -235,10 +243,8 @@ router.get("/rosters/:id", authUser, async (req: AuthenticatedRequest, res) => {
   res.json({ roster, ruleset });
 });
 
-router.post("/choose", authUser, async (req: AuthenticatedRequest, res) => {
-  const { matchId, teamId } = req.body ?? {};
-  if (!matchId) return res.status(400).json({ error: "matchId requis" });
-  if (!teamId) return res.status(400).json({ error: "teamId requis" });
+router.post("/choose", authUser, validate(chooseTeamSchema), async (req: AuthenticatedRequest, res) => {
+  const { matchId, teamId } = req.body;
 
   try {
     // Valider match et statut
@@ -421,6 +427,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
 router.post(
   "/create-from-roster",
   authUser,
+  validate(createFromRosterSchema),
   async (req: AuthenticatedRequest, res) => {
     const {
       name,
@@ -428,25 +435,19 @@ router.post(
       teamValue,
       starPlayers: starPlayerSlugs,
       ruleset: bodyRuleset,
-    } =
-      req.body ??
-      ({} as {
-        name?: string;
-        roster?: AllowedRoster;
-        teamValue?: number;
-        starPlayers?: string[];
-        ruleset?: string;
-      });
-    if (!name || !roster)
-      return res.status(400).json({ error: "name et roster requis" });
-    if (!ALLOWED_TEAMS.includes(roster))
+    } = req.body as {
+      name: string;
+      roster: string;
+      teamValue?: number;
+      starPlayers?: string[];
+      ruleset?: string;
+    };
+    if (!ALLOWED_TEAMS.includes(roster as any))
       return res.status(400).json({ error: "Roster non autorisé" });
 
     const ruleset = resolveRuleset(bodyRuleset);
-    
+
     const finalTeamValue = teamValue || 1000;
-    if (finalTeamValue < 100 || finalTeamValue > 2000)
-      return res.status(400).json({ error: "La valeur d'équipe doit être entre 100 et 2000k po" });
 
     // Valider les Star Players si fournis
     const starPlayersToHire = starPlayerSlugs || [];
@@ -603,26 +604,21 @@ router.post(
   },
 );
 
-router.post("/build", authUser, async (req: AuthenticatedRequest, res) => {
+router.post("/build", authUser, validate(buildTeamSchema), async (req: AuthenticatedRequest, res) => {
   const { name, roster, teamValue, choices, starPlayers: starPlayerSlugs, ruleset: bodyRuleset } =
-    req.body ??
-    ({} as {
-      name?: string;
-      roster?: AllowedRoster;
+    req.body as {
+      name: string;
+      roster: string;
       teamValue?: number;
-      choices?: Array<{ key: string; count: number }>;
+      choices: Array<{ key: string; count: number }>;
       starPlayers?: string[];
       ruleset?: string;
-    });
-  if (!name || !roster || !Array.isArray(choices))
-    return res.status(400).json({ error: "name, roster, choices requis" });
-  if (!ALLOWED_TEAMS.includes(roster))
+    };
+  if (!ALLOWED_TEAMS.includes(roster as any))
     return res.status(400).json({ error: "Roster non autorisé" });
   const ruleset = resolveRuleset(bodyRuleset);
-  
+
   const finalTeamValue = teamValue || 1000;
-  if (finalTeamValue < 100 || finalTeamValue > 2000)
-    return res.status(400).json({ error: "La valeur d'équipe doit être entre 100 et 2000k po" });
     
   const def = await getRosterFromDb(roster as AllowedRoster, "fr", ruleset);
   if (!def) {
@@ -783,21 +779,21 @@ router.post("/build", authUser, async (req: AuthenticatedRequest, res) => {
 });
 
 // Endpoint pour mettre à jour les informations d'équipe (fans, coachs, relances, etc.)
-router.put("/:id/info", authUser, async (req: AuthenticatedRequest, res) => {
+router.put("/:id/info", authUser, validate(updateTeamInfoSchema), async (req: AuthenticatedRequest, res) => {
   const teamId = req.params.id;
-  const { 
-    rerolls, 
-    cheerleaders, 
-    assistants, 
-    apothecary, 
-    dedicatedFans 
-  } = req.body ?? ({} as {
+  const {
+    rerolls,
+    cheerleaders,
+    assistants,
+    apothecary,
+    dedicatedFans
+  } = req.body as {
     rerolls?: number;
     cheerleaders?: number;
     assistants?: number;
     apothecary?: boolean;
     dedicatedFans?: number;
-  });
+  };
 
   try {
     // Vérifier que l'équipe appartient à l'utilisateur
@@ -821,23 +817,6 @@ router.put("/:id/info", authUser, async (req: AuthenticatedRequest, res) => {
       return res.status(400).json({ 
         error: "Impossible de modifier cette équipe car elle est engagée dans un match en cours" 
       });
-    }
-
-    // Validation des données selon les règles Blood Bowl
-    if (rerolls !== undefined && (rerolls < 0 || rerolls > 8 || !Number.isInteger(rerolls))) {
-      return res.status(400).json({ error: "Le nombre de relances doit être entre 0 et 8" });
-    }
-
-    if (cheerleaders !== undefined && (cheerleaders < 0 || cheerleaders > 12 || !Number.isInteger(cheerleaders))) {
-      return res.status(400).json({ error: "Le nombre de cheerleaders doit être entre 0 et 12" });
-    }
-
-    if (assistants !== undefined && (assistants < 0 || assistants > 6 || !Number.isInteger(assistants))) {
-      return res.status(400).json({ error: "Le nombre d'assistants doit être entre 0 et 6" });
-    }
-
-    if (dedicatedFans !== undefined && (dedicatedFans < 1 || dedicatedFans > 6 || !Number.isInteger(dedicatedFans))) {
-      return res.status(400).json({ error: "Le nombre de fans dévoués doit être entre 1 et 6" });
     }
 
     // Mise à jour de l'équipe
@@ -902,16 +881,12 @@ router.post("/:id/recalculate", authUser, async (req: AuthenticatedRequest, res)
   }
 });
 
-router.put("/:id", authUser, async (req: AuthenticatedRequest, res) => {
+router.put("/:id", authUser, validate(updateTeamSchema), async (req: AuthenticatedRequest, res) => {
   const teamId = req.params.id;
-  const { players, name } = req.body ?? ({} as { 
-    players?: Array<{ id: string; name: string; number: number }>;
+  const { players, name } = req.body as {
+    players: Array<{ id: string; name: string; number: number }>;
     name?: string;
-  });
-
-  if (!players || !Array.isArray(players)) {
-    return res.status(400).json({ error: "players requis (array)" });
-  }
+  };
 
   try {
     // Vérifier que l'équipe appartient à l'utilisateur
