@@ -18,3 +18,18 @@ export async function apiPost(path: string, body: unknown) {
   }
   return json;
 }
+
+export async function apiGet(path: string, token?: string) {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  const res = await fetch(`${API_BASE}${path}`, { headers });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(json?.error || `Erreur ${res.status}`);
+  }
+  return json;
+}
