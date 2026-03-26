@@ -416,6 +416,11 @@ router.get("/my-matches", authUser, async (req: AuthenticatedRequest, res) => {
       const opponentSelection = selections.find((s: any) => s.userId !== userId);
       const isMyTurn = m.currentTurnUserId === userId;
 
+      // Align score with user's side: first selection = teamA, second = teamB
+      const isTeamA = mySelection === selections[0];
+      const myScore = isTeamA ? score.teamA : score.teamB;
+      const opponentScore = isTeamA ? score.teamB : score.teamA;
+
       return {
         id: m.id,
         status: m.status,
@@ -423,6 +428,8 @@ router.get("/my-matches", authUser, async (req: AuthenticatedRequest, res) => {
         lastMoveAt: m.lastMoveAt,
         isMyTurn,
         score,
+        myScore,
+        opponentScore,
         half,
         turn,
         myTeam: mySelection

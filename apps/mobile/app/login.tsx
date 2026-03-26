@@ -30,7 +30,7 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       await login(email.trim(), password);
-      router.replace("/");
+      router.replace("/lobby");
     } catch (err: any) {
       setError(err.message || "Erreur lors de la connexion");
     } finally {

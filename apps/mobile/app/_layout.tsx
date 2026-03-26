@@ -6,6 +6,7 @@ export default function Layout() {
     <AuthProvider>
       <Stack>
         <Stack.Screen name="index" options={{ title: "Nuffle Arena" }} />
+        <Stack.Screen name="lobby" options={{ title: "Mes matchs" }} />
         <Stack.Screen name="login" options={{ title: "Connexion" }} />
         <Stack.Screen name="register" options={{ title: "Inscription" }} />
       </Stack>
