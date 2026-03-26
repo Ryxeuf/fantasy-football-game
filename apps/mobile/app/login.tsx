@@ -11,31 +11,25 @@ import {
   StyleSheet,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { apiPost } from "../lib/api";
-import { saveToken, saveUser } from "../lib/auth";
+import { useAuth } from "../lib/auth-context";
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { login } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const canSubmit =
-    email.trim() !== "" && password.trim() !== "" && !loading;
+  const canSubmit = email.trim() !== "" && password.trim() !== "" && !loading;
 
   async function onSubmit() {
     if (!canSubmit) return;
     setError(null);
     setLoading(true);
     try {
-      const result = await apiPost("/auth/login", {
-        email: email.trim(),
-        password,
-      });
-      await saveToken(result.token);
-      await saveUser(result.user);
+      await login(email.trim(), password);
       router.replace("/");
     } catch (err: any) {
       setError(err.message || "Erreur lors de la connexion");
@@ -76,7 +70,7 @@ export default function LoginScreen() {
           </Text>
           <TextInput
             style={styles.input}
-            placeholder="Mot de passe"
+            placeholder="Votre mot de passe"
             placeholderTextColor="#9CA3AF"
             value={password}
             onChangeText={setPassword}
@@ -89,10 +83,7 @@ export default function LoginScreen() {
           {error && <Text style={styles.error}>{error}</Text>}
 
           <Pressable
-            style={[
-              styles.submitButton,
-              !canSubmit && styles.submitButtonDisabled,
-            ]}
+            style={[styles.submitButton, !canSubmit && styles.submitButtonDisabled]}
             onPress={onSubmit}
             disabled={!canSubmit}
           >
@@ -103,10 +94,7 @@ export default function LoginScreen() {
             )}
           </Pressable>
 
-          <Pressable
-            style={styles.linkButton}
-            onPress={() => router.push("/register")}
-          >
+          <Pressable style={styles.linkButton} onPress={() => router.push("/register")}>
             <Text style={styles.linkText}>
               Pas de compte ? S'inscrire
             </Text>
