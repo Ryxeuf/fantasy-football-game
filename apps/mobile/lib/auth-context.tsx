@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import type { ReactNode } from "react";
-import { apiPost, apiGet, setToken, getToken, removeToken } from "./api";
+import { apiPost, apiGet, ApiError, setToken, getToken, removeToken } from "./api";
 
 interface User {
   id: string;
@@ -42,8 +42,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const data = await apiGet("/auth/me");
           setUser(data.user);
         }
-      } catch {
-        await removeToken();
+      } catch (err) {
+        if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+          await removeToken();
+        }
       } finally {
         setLoading(false);
       }
