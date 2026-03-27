@@ -1111,7 +1111,8 @@ router.get("/:id/turns", authUser, async (req: AuthenticatedRequest, res) => {
     // Retourner un résumé léger de chaque turn (sans le gameState complet)
     const turnSummaries = turns.map((t: any) => {
       const payload = t.payload || {};
-      const gs = payload.gameState;
+      const rawGs = payload.gameState;
+      const gs = typeof rawGs === "string" ? JSON.parse(rawGs) : rawGs;
       return {
         id: t.id,
         number: t.number,
