@@ -252,7 +252,6 @@ export default function LobbyScreen() {
   }
 
   function navigateToMatch(match: MatchSummary) {
-    if (match.status === "ended") return;
     router.push(`/match/${match.id}`);
   }
 

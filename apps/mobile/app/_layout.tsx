@@ -9,6 +9,7 @@ export default function Layout() {
         <Stack.Screen name="lobby" options={{ title: "Mes matchs" }} />
         <Stack.Screen name="login" options={{ title: "Connexion" }} />
         <Stack.Screen name="register" options={{ title: "Inscription" }} />
+        <Stack.Screen name="match/[id]" options={{ title: "Historique du match", headerShown: false }} />
       </Stack>
     </AuthProvider>
   );
