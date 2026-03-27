@@ -1075,3 +1075,59 @@ router.post(
     }
   }
 );
+
+// Historique des turns d'un match
+router.get("/:id/turns", authUser, async (req: AuthenticatedRequest, res) => {
+  try {
+    const matchId = req.params.id;
+    const userId = req.user!.id;
+
+    const match = await prisma.match.findUnique({
+      where: { id: matchId },
+      select: { id: true, status: true, players: { select: { id: true } } },
+    });
+
+    if (!match) {
+      return res.status(404).json({ error: "Partie introuvable" });
+    }
+
+    // Vérifier que l'utilisateur est un joueur du match
+    const isPlayer = match.players.some((p: { id: string }) => p.id === userId);
+    if (!isPlayer) {
+      return res.status(403).json({ error: "Vous n'etes pas un joueur de cette partie" });
+    }
+
+    const turns = await prisma.turn.findMany({
+      where: { matchId },
+      orderBy: { number: "asc" },
+      select: {
+        id: true,
+        number: true,
+        createdAt: true,
+        payload: true,
+      },
+    });
+
+    // Retourner un résumé léger de chaque turn (sans le gameState complet)
+    const turnSummaries = turns.map((t: any) => {
+      const payload = t.payload || {};
+      const gs = payload.gameState;
+      return {
+        id: t.id,
+        number: t.number,
+        createdAt: t.createdAt,
+        type: payload.type || "unknown",
+        userId: payload.userId || null,
+        half: gs?.half || null,
+        turn: gs?.turn || null,
+        score: gs?.score || null,
+        moveType: payload.move?.type || null,
+      };
+    });
+
+    return res.json({ matchId, turns: turnSummaries });
+  } catch (e: any) {
+    console.error("Erreur lors de la récupération des turns:", e);
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
+});
