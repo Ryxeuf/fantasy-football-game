@@ -22,6 +22,7 @@ type Props = {
   onCellClick?: (pos: Position) => void;
   cellSize?: number;
   legalMoves?: Position[];
+  blockTargets?: Position[];
   selectedPlayerId?: string | null;
 };
 
@@ -30,6 +31,7 @@ export default function PixiBoardNative({
   onCellClick,
   cellSize = 28,
   legalMoves = [],
+  blockTargets = [],
   selectedPlayerId,
 }: Props) {
   const boardWidth = state.width * cellSize;
@@ -168,6 +170,17 @@ export default function PixiBoardNative({
                 width={cellSize}
                 height={cellSize}
                 fill="rgba(34,197,94,0.35)"
+              />
+            ))}
+            {/* block targets */}
+            {blockTargets.map((m) => (
+              <Rect
+                key={`bt-${m.x}-${m.y}`}
+                x={m.x * cellSize}
+                y={m.y * cellSize}
+                width={cellSize}
+                height={cellSize}
+                fill="rgba(239,68,68,0.35)"
               />
             ))}
             {/* ball */}

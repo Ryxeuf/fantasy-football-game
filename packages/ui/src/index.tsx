@@ -42,6 +42,7 @@ export function Board({
 
 // Board components
 export { default as PixiBoard } from "./board/PixiBoard";
+export { default as PixiBoardNative } from "./board/PixiBoard.native";
 
 // Dugout components
 export { default as DugoutZone } from "./components/DugoutZone";
