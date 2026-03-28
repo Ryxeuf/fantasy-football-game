@@ -82,8 +82,8 @@
 | 4.1 | ~~Écran login mobile~~ ✅ | 🟡 | 🟡 | [#17] | Formulaire email/password, stockage token SecureStore |
 | 4.2 | ~~Écran register mobile~~ ✅ | 🟡 | 🟢 | [#17] | Formulaire inscription, validation, redirect login |
 | 4.3 | ~~Écran lobby / liste matchs mobile~~ ✅ | 🟡 | 🟡 | [#17] | FlatList des matchs en attente, bouton créer/rejoindre |
-| 4.4 | Zoom pinch sur le board mobile | 🟡 | 🟡 | [#42] | PinchGestureHandler, scale avec limites |
-| 4.5 | Pan drag sur le board mobile | 🟡 | 🟡 | [#42] | PanGestureHandler, translation avec limites |
+| 4.4 | ~~Zoom pinch sur le board mobile~~ ✅ | 🟡 | 🟡 | [#42] | PinchGestureHandler, scale avec limites |
+| 4.5 | ~~Pan drag sur le board mobile~~ ✅ | 🟡 | 🟡 | [#42] | PanGestureHandler, translation avec limites |
 | 4.6 | Surbrillance cases jouables (tap) | 🟡 | 🟡 | [#35] | Tap joueur → affiche cases, double-tap annule |
 | 4.7 | Renderer Canvas RN complet | 🟡 | 🔴 | [#29] | Plateau rect/cercles, gestes tap/long press, toutes mécaniques |
 | 4.8 | Animations tween mobile | 🟡 | 🟡 | [#37] | API partagée web/mobile pour déplacement/balle |
