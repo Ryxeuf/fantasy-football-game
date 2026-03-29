@@ -86,7 +86,7 @@
 | 4.5 | ~~Pan drag sur le board mobile~~ ✅ | 🟡 | 🟡 | [#42] | PanGestureHandler, translation avec limites |
 | 4.6 | ~~Surbrillance cases jouables (tap)~~ ✅ | 🟡 | 🟡 | [#35] | Tap joueur → affiche cases, double-tap annule |
 | 4.7 | Renderer Canvas RN complet | 🟡 | 🔴 | [#29] | Plateau rect/cercles, gestes tap/long press, toutes mécaniques |
-| 4.8 | Animations tween mobile | 🟡 | 🟡 | [#37] | API partagée web/mobile pour déplacement/balle |
+| 4.8 | ~~Animations tween mobile~~ ✅ | 🟡 | 🟡 | [#37] | API partagée web/mobile pour déplacement/balle |
 | 4.9 | Pack d'assets mobile optimisé | 🟡 | 🟡 | [#40] | Sprite sheets 1x/2x, fallback vectoriel |
 | 4.10 | Notifications push Expo | 🟡 | 🟡 | [#25] | expo-notifications, permissions, tokens |
 | 4.11 | ~~Historique matchs minimal~~ ✅ | 🔴 | 🟢 | [#22] | Liste turns + bouton voir état |
