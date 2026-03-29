@@ -17,6 +17,7 @@ dist
 build
 out
 .expo
+packages/game-engine/src/**/*.js
 
 # Cache
 .turbo
