@@ -7,6 +7,7 @@
     "dev": "expo start -c"
   },
   "dependencies": {
+    "@bb/game-engine": "workspace:*",
     "expo": "^51.0.28",
     "expo-router": "^3.4.8",
     "expo-secure-store": "~13.0.2",

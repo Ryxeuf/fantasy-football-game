@@ -9,6 +9,7 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
+  runOnJS,
 } from "react-native-reanimated";
 import type { GameState, Position } from "@bb/game-engine";
 
@@ -20,16 +21,20 @@ const SPRING_CONFIG = { damping: 20, stiffness: 200 };
 type Props = {
   state: GameState;
   onCellClick?: (pos: Position) => void;
+  onDeselect?: () => void;
   cellSize?: number;
   legalMoves?: Position[];
+  blockTargets?: Position[];
   selectedPlayerId?: string | null;
 };
 
 export default function PixiBoardNative({
   state,
   onCellClick,
+  onDeselect,
   cellSize = 28,
   legalMoves = [],
+  blockTargets = [],
   selectedPlayerId,
 }: Props) {
   const boardWidth = state.width * cellSize;
@@ -87,25 +92,32 @@ export default function PixiBoardNative({
     });
 
   /* ── Tap gesture (cell selection) ───────────────────────────────── */
+  const handleCellClick = onCellClick;
   const tapGesture = Gesture.Tap().onEnd((event) => {
-    if (!onCellClick) return;
+    if (!handleCellClick) return;
     // Convert screen coordinates to board coordinates accounting for transform
     const tapX = (event.x - translateX.value) / scale.value;
     const tapY = (event.y - translateY.value) / scale.value;
     const gridX = Math.floor(tapX / cellSize);
     const gridY = Math.floor(tapY / cellSize);
     if (gridX >= 0 && gridY >= 0 && gridX < state.width && gridY < state.height) {
-      onCellClick({ x: gridX, y: gridY });
+      runOnJS(handleCellClick)({ x: gridX, y: gridY });
     }
   });
 
-  /* ── Double-tap to reset viewport ───────────────────────────────── */
+  /* ── Double-tap to deselect player or reset viewport ─────────── */
   const doubleTapGesture = Gesture.Tap()
     .numberOfTaps(2)
     .onEnd(() => {
-      scale.value = withSpring(1, SPRING_CONFIG);
-      translateX.value = withSpring(0, SPRING_CONFIG);
-      translateY.value = withSpring(0, SPRING_CONFIG);
+      if (selectedPlayerId && onDeselect) {
+        // Deselect the current player
+        runOnJS(onDeselect)();
+      } else {
+        // Reset viewport
+        scale.value = withSpring(1, SPRING_CONFIG);
+        translateX.value = withSpring(0, SPRING_CONFIG);
+        translateY.value = withSpring(0, SPRING_CONFIG);
+      }
     });
 
   /* ── Compose gestures ───────────────────────────────────────────── */
@@ -168,6 +180,21 @@ export default function PixiBoardNative({
                 width={cellSize}
                 height={cellSize}
                 fill="rgba(34,197,94,0.35)"
+                stroke="rgba(34,197,94,0.7)"
+                strokeWidth={1}
+              />
+            ))}
+            {/* block targets */}
+            {blockTargets.map((t) => (
+              <Rect
+                key={`bt-${t.x}-${t.y}`}
+                x={t.x * cellSize}
+                y={t.y * cellSize}
+                width={cellSize}
+                height={cellSize}
+                fill="rgba(239,68,68,0.35)"
+                stroke="rgba(239,68,68,0.7)"
+                strokeWidth={1}
               />
             ))}
             {/* ball */}
@@ -183,14 +210,19 @@ export default function PixiBoardNative({
             {state.players.map((p) => (
               <G key={p.id}>
                 {p.id === selectedPlayerId && (
-                  <Rect
-                    x={p.pos.x * cellSize + cellSize * 0.1}
-                    y={p.pos.y * cellSize + cellSize * 0.1}
-                    width={cellSize * 0.8}
-                    height={cellSize * 0.8}
-                    stroke="#facc15"
-                    strokeWidth={2}
-                  />
+                  <>
+                    {/* Outer glow */}
+                    <Rect
+                      x={p.pos.x * cellSize}
+                      y={p.pos.y * cellSize}
+                      width={cellSize}
+                      height={cellSize}
+                      fill="rgba(250,204,21,0.2)"
+                      stroke="#facc15"
+                      strokeWidth={3}
+                      rx={2}
+                    />
+                  </>
                 )}
                 <Rect
                   x={p.pos.x * cellSize + cellSize * 0.1}
