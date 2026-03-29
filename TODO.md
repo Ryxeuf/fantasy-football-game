@@ -1,184 +1,230 @@
-# TODO — BlooBowl (Nuffle Arena)
+# TODO — Nuffle Arena (Blood Bowl 3 Online)
 
-> Backlog priorisé par valeur (Gain) et effort (Difficulté).
-> Dernière mise à jour : 2026-03-22
+> Backlog priorise par valeur (Gain) et effort (Difficulte).
+> Derniere mise a jour : 2026-03-29
 >
-> **Légende :**
-> - **Gain** : 🟢 Fort | 🟡 Moyen | 🔴 Faible — Impact utilisateur / valeur business
-> - **Difficulté** : 🟢 Facile (< 1j) | 🟡 Moyen (1-3j) | 🔴 Difficile (> 3j)
-> - **Score** = Gain élevé + Difficulté faible → à faire en premier
+> **Objectif** : jouer en ligne a Blood Bowl avec les regles BB3 (Season 2/3).
+>
+> **Legende :**
+> - **Gain** : Fort | Moyen | Faible — Impact utilisateur / valeur business
+> - **Difficulte** : Facile (< 1j) | Moyen (1-3j) | Difficile (> 3j)
+> - **Statut** : `[ ]` a faire | `[x]` termine | `[~]` en cours
 
 ---
 
-## 🏆 Priorité 1 — Quick Wins (Gain fort, Difficulté faible)
+## Etat des lieux (audit 2026-03-29)
 
-> ✅ Toutes les tâches P1 sont terminées ! Voir ROADMAP_DONE.md
+### Ce qui est fait
+- Moteur de jeu complet : plateau 26x15, mouvement, blocage, passes, fautes, blessures, blitz, GFI
+- 35+ skills implementes (Block, Dodge, Tackle, Sure Hands, Frenzy, Guard, Mighty Blow, etc.)
+- 120+ skills definis dans le registre (noms, descriptions, categories)
+- 32 rosters BB3 avec toutes les positions
+- 100+ Star Players avec stats et couts
+- Zones de tacle, effets meteo (12 types), kickoff events (11 evenements)
+- Sequence pre-match (fan factor, meteo, journeymen, coin toss)
+- Auth JWT complete + rate limiting
+- Base de donnees Prisma (User, Match, Turn, Team, Cup, etc.)
+- Board Pixi.js avec zoom/pan, HUD, popups, dugout, game log
+- Lobby de match avec invitations par token
+- Admin panel complet
+- i18n FR/EN
+- Docker + CI/CD + Traefik SSL
+- 200+ tests unitaires
 
----
-
-## 🥇 Priorité 2 — Fonctionnalités clés (Gain fort, Difficulté moyenne)
-
-### WEB — Animations & polish
-
-| # | Tâche | Gain | Diff | Issue | Détail |
-|---|-------|------|------|-------|--------|
-| 2.1 | Animation tween déplacement joueur | 🟢 | 🟡 | [#36] | Interpolation position 150-250ms avec easing |
-| 2.2 | Animation tween de la balle (passe/scatter) | 🟢 | 🟡 | [#36] | Arc de trajectoire balle avec durée proportionnelle à la distance |
-| 2.3 | File d'attente d'animations (queue) | 🟡 | 🟡 | [#36] | Système séquentiel Promise-based, skip avec touche (S) |
-| 2.4 | Animation de touchdown | 🟡 | 🟢 | [#36] | Effet visuel flash/particles sur TD, renforcer l'animation existante |
-| 2.5 | Animation de blocage (impact) | 🟡 | 🟡 | [#36] | Shake/flash sur la cible du bloc, visuel selon résultat |
-
-### MULTIJOUEUR — Temps réel
-
-| # | Tâche | Gain | Diff | Issue | Détail |
-|---|-------|------|------|-------|--------|
-| 2.6 | Intégrer WebSocket côté serveur (socket.io) | 🟢 | 🟡 | — | Setup socket.io sur le serveur Express existant |
-| 2.7 | Émettre les moves via WebSocket | 🟢 | 🟡 | — | Broadcast du gameState après chaque move aux joueurs du match |
-| 2.8 | Recevoir les moves via WebSocket côté web | 🟢 | 🟡 | — | Client socket.io dans le composant de jeu, update gameState |
-| 2.9 | Fallback polling si WebSocket échoue | 🟡 | 🟢 | — | Détection déconnexion WS → bascule sur polling existant |
-| 2.10 | Gestion reconnexion WebSocket | 🟡 | 🟡 | — | Reconnexion auto avec exponential backoff, resync état |
-
-### WEB — Assets & thèmes
-
-| # | Tâche | Gain | Diff | Issue | Détail |
-|---|-------|------|------|-------|--------|
-| 2.11 | Créer un asset loader/cache Pixi.js | 🟡 | 🟡 | [#38] | Chargement sprite sheets avant rendu, cache mémoire |
-| 2.12 | Sprite sheet joueurs par équipe | 🟡 | 🟡 | [#38] | Pions visuels différenciés par roster (couleurs/formes) |
-| 2.13 | Tileset terrain de base (herbe/lignes) | 🟡 | 🟡 | [#26] | Calques Pixi séparés : herbe, en-buts, lignes de terrain |
+### Ce qui manque pour jouer en ligne avec les regles BB3
+1. **Multijoueur temps reel** : pas de WebSocket, uniquement polling/tokens
+2. **Regles BB3 manquantes** : crowd push, apothecaire, inducements fonctionnels, prayers to Nuffle, regeneration, throw team-mate, secret weapons
+3. **Matchmaking** : pas de file d'attente, pas de recherche de match
+4. **Progression** : pas de SPP fonctionnel, pas de level-up, pas de campagne
+5. **Animations** : pas de tweens (mouvement, passe, bloc), experience statique
+6. **Game flow** : pas de timer de tour, pas de procedure mi-temps complete
 
 ---
 
-## 🥈 Priorité 3 — Notifications & engagement (Gain moyen, Difficulté moyenne)
+## Phase A — Multijoueur temps reel (CRITIQUE)
 
-### NOTIFICATIONS
+> Sans ca, impossible de jouer en ligne. C'est le prerequis #1.
 
-| # | Tâche | Gain | Diff | Issue | Détail |
-|---|-------|------|------|-------|--------|
-| 3.1 | UI demande permission notifications browser | 🟡 | 🟢 | [#23] | Modal avec explication + bouton Notification.requestPermission() |
-| 3.2 | Page /settings avec préférences notifications | 🟡 | 🟡 | [#23] | Toggles par type : tour, match terminé, invitation |
-| 3.3 | Badge cloche dans le header | 🟡 | 🟢 | [#24] | Icône cloche avec compteur non-lu, dropdown liste |
-| 3.4 | Service Worker pour push notifications | 🟢 | 🟡 | — | Enregistrement SW, subscription endpoint, stockage côté serveur |
-| 3.5 | Endpoint serveur envoi push | 🟢 | 🟡 | — | Route POST /notifications/push avec web-push library |
-| 3.6 | Push "C'est votre tour" | 🟢 | 🟢 | — | Trigger après chaque end turn de l'adversaire |
-| 3.7 | Push "Invitation reçue" | 🟡 | 🟢 | — | Trigger à la création d'un match avec shareToken |
-| 3.8 | Push "Match terminé" | 🟡 | 🟢 | — | Trigger au touchdown final ou fin de temps |
-
-### WEB — Expérience utilisateur
-
-| # | Tâche | Gain | Diff | Issue | Détail |
-|---|-------|------|------|-------|--------|
-| 3.9 | Replayer basique (lecture seule) | 🟡 | 🟡 | [#21] | Slider de tours, recalcul gameState via seed, boutons prev/next |
-| 3.10 | Onglet historique du match | 🟡 | 🟡 | [#20] | Liste des turns avec résumé, bouton "voir cet état" |
-| 3.11 | Indicateurs tactiques au survol | 🟡 | 🟡 | — | Lignes de passe potentielles, trajectoires blitz au hover joueur |
+| # | Tache | Gain | Diff | Statut | Detail |
+|---|-------|------|------|--------|--------|
+| A.1 | Installer socket.io sur le serveur Express | Fort | Facile | [ ] | `pnpm add socket.io`, attach au serveur HTTP existant, namespace `/game` |
+| A.2 | Creer les rooms par matchId | Fort | Facile | [ ] | `socket.join(matchId)`, gestion connect/disconnect |
+| A.3 | Authentifier les connexions WebSocket | Fort | Moyen | [ ] | Middleware socket.io qui verifie le JWT, associe `socket.userId` |
+| A.4 | Emettre le gameState apres chaque action | Fort | Moyen | [ ] | Apres `executeMove()`, broadcast `game:state-update` a la room |
+| A.5 | Client socket.io dans le composant de jeu | Fort | Moyen | [ ] | Hook `useGameSocket(matchId)` qui connecte et ecoute `game:state-update` |
+| A.6 | Synchroniser les actions via WebSocket | Fort | Moyen | [ ] | Client envoie `game:action` au serveur, serveur valide et broadcast |
+| A.7 | Gerer la reconnexion WebSocket | Moyen | Moyen | [ ] | Exponential backoff, resync du gameState complet au reconnect |
+| A.8 | Fallback polling si WebSocket echoue | Moyen | Facile | [ ] | Detection deconnexion WS, bascule sur GET /match/:id/state toutes les 3s |
+| A.9 | Indicateur de connexion (online/offline) | Moyen | Facile | [ ] | Badge vert/rouge dans le HUD pour chaque joueur |
+| A.10 | Notification "C'est votre tour" via WS | Fort | Facile | [ ] | Event `game:your-turn` avec toast + son optionnel |
 
 ---
 
-## 🥉 Priorité 4 — Mobile (Gain moyen, Difficulté élevée)
+## Phase B — Regles BB3 manquantes (gameplay complet)
 
-### MOBILE — Fonctionnalités essentielles
+> Regles essentielles pour un match BB3 fidele.
 
-| # | Tâche | Gain | Diff | Issue | Détail |
-|---|-------|------|------|-------|--------|
-| 4.1 | ~~Écran login mobile~~ ✅ | 🟡 | 🟡 | [#17] | Formulaire email/password, stockage token SecureStore |
-| 4.2 | ~~Écran register mobile~~ ✅ | 🟡 | 🟢 | [#17] | Formulaire inscription, validation, redirect login |
-| 4.3 | ~~Écran lobby / liste matchs mobile~~ ✅ | 🟡 | 🟡 | [#17] | FlatList des matchs en attente, bouton créer/rejoindre |
-| 4.4 | ~~Zoom pinch sur le board mobile~~ ✅ | 🟡 | 🟡 | [#42] | PinchGestureHandler, scale avec limites |
-| 4.5 | ~~Pan drag sur le board mobile~~ ✅ | 🟡 | 🟡 | [#42] | PanGestureHandler, translation avec limites |
-| 4.6 | ~~Surbrillance cases jouables (tap)~~ ✅ | 🟡 | 🟡 | [#35] | Tap joueur → affiche cases, double-tap annule |
-| 4.7 | Renderer Canvas RN complet | 🟡 | 🔴 | [#29] | Plateau rect/cercles, gestes tap/long press, toutes mécaniques |
-| 4.8 | Animations tween mobile | 🟡 | 🟡 | [#37] | API partagée web/mobile pour déplacement/balle |
-| 4.9 | Pack d'assets mobile optimisé | 🟡 | 🟡 | [#40] | Sprite sheets 1x/2x, fallback vectoriel |
-| 4.10 | Notifications push Expo | 🟡 | 🟡 | [#25] | expo-notifications, permissions, tokens |
-| 4.11 | ~~Historique matchs minimal~~ ✅ | 🔴 | 🟢 | [#22] | Liste turns + bouton voir état |
+### B1 — Regles critiques (impact chaque match)
 
----
+| # | Tache | Gain | Diff | Statut | Detail |
+|---|-------|------|------|--------|--------|
+| B1.1 | Crowd push (surf) | Fort | Moyen | [ ] | Quand un joueur est pousse hors du terrain : jet d'armure+blessure par la foule |
+| B1.2 | Apothecaire — modele et logique | Fort | Moyen | [ ] | 1 utilisation/match, choix entre 2 resultats de blessure, popup choix |
+| B1.3 | Apothecaire — UI popup de choix | Fort | Facile | [ ] | Modal "Utiliser l'apothecaire ? Resultat actuel vs re-roll" |
+| B1.4 | Regeneration (skill) | Moyen | Facile | [ ] | Apres casualty, jet 4+ pour revenir en reserve au lieu du banc |
+| B1.5 | Loner (3+/4+/5+) reroll limitation | Moyen | Facile | [ ] | Avant chaque team reroll, jet Loner requis (echoue = reroll perdu) |
+| B1.6 | Both Down — choix Block vs Wrestle | Fort | Facile | [ ] | Si les 2 joueurs ont Block/Wrestle, popup pour choisir l'effet |
+| B1.7 | Procedure mi-temps complete | Fort | Moyen | [ ] | Recovery KO (4+ par joueur), reset positions, re-kickoff |
+| B1.8 | Procedure fin de match | Fort | Moyen | [ ] | MVP aleatoire (+4 SPP), winnings (fan factor), blessures permanentes appliquees |
+| B1.9 | Timer de tour (optionnel) | Moyen | Moyen | [ ] | Countdown configurable (2/3/4 min), fin de tour auto a expiration |
 
-## 📦 Priorité 5 — Polish & Communauté (Gain variable, Difficulté élevée)
+### B2 — Regles importantes (affectent certains matchs)
 
-### STATISTIQUES & CLASSEMENT
+| # | Tache | Gain | Diff | Statut | Detail |
+|---|-------|------|------|--------|--------|
+| B2.1 | Inducements — liste et effets | Fort | Difficile | [ ] | Bloodweiser Kegs (KO recovery +1), Bribery (evite expulsion), Wandering Apothecary, Wizard (lightning/fireball) |
+| B2.2 | Inducements — UI selection pre-match | Fort | Moyen | [ ] | Page de depense petty cash avec catalogue inducements |
+| B2.3 | Prayers to Nuffle — 16 effets | Moyen | Moyen | [ ] | Table d6+d8, effets reels (reroll gratuit, +1 MA temporaire, etc.) |
+| B2.4 | Throw Team-Mate — mecanique complete | Moyen | Difficile | [ ] | Jet de passe special, landing 2+ avec scatter, crash si rate |
+| B2.5 | Secret Weapons — expulsion fin de drive | Moyen | Facile | [ ] | Chainsaw, Bomb, Ball & Chain : expulses en fin de drive sauf Bribe |
+| B2.6 | Sweltering Heat — retrait aleatoire | Moyen | Facile | [ ] | D6 par joueur au setup, 1 = mis en reserve pour le drive |
+| B2.7 | Animosity — jet avant passe/handoff | Moyen | Facile | [ ] | Si le receveur est d'une race differente, 2+ sinon refus |
+| B2.8 | Decay (skill) | Faible | Facile | [ ] | Blessures 1 niveau plus grave sur la table casualty |
+| B2.9 | Hypnotic Gaze | Faible | Moyen | [ ] | Action speciale : cible adjacente rate 2+ AG → perd tackle zone |
+| B2.10 | Projectile Vomit | Faible | Moyen | [ ] | Action speciale : bloc range 1 avec jet special |
 
-| # | Tâche | Gain | Diff | Issue | Détail |
-|---|-------|------|------|-------|--------|
-| 5.1 | Modèle Prisma pour ELO / classement | 🟡 | 🟢 | — | Champ elo sur User, historique classement |
-| 5.2 | Calcul ELO après chaque match | 🟡 | 🟡 | — | Fonction calcul ELO K-factor, update en fin de match |
-| 5.3 | Page leaderboard | 🟡 | 🟡 | — | Tableau classement, filtres saison/global |
-| 5.4 | Dashboard stats par coach | 🟡 | 🟡 | — | Win rate, TD/match, équipes préférées, graphiques |
-| 5.5 | Stats carrière par joueur | 🔴 | 🟡 | — | TD, casualties, passes, MVP, SPP, progression |
-| 5.6 | Heatmap terrain post-match | 🔴 | 🟡 | — | Visualisation zones jouées, couloirs de passe |
+### B3 — Star Players special rules
 
-### ENGAGEMENT
-
-| # | Tâche | Gain | Diff | Issue | Détail |
-|---|-------|------|------|-------|--------|
-| 5.7 | Système achievements (modèle + logique) | 🟡 | 🟡 | — | Table Achievement, triggers en fin de match |
-| 5.8 | 20 premiers achievements | 🟡 | 🟡 | — | 1er TD, 10 casualties, victoire parfaite, etc. |
-| 5.9 | UI achievements sur profil | 🟡 | 🟢 | — | Grille badges, progression, date obtention |
-| 5.10 | Profil public de coach | 🟡 | 🟡 | — | Page /coach/:id, palmarès, équipes, stats |
-| 5.11 | Système de saisons compétitives | 🔴 | 🔴 | — | Saisons 4 semaines, reset, récompenses |
-| 5.12 | Mode draft | 🔴 | 🔴 | — | Sélection alternée joueurs avant match exhibition |
-
-### EXPÉRIENCE ENRICHIE
-
-| # | Tâche | Gain | Diff | Issue | Détail |
-|---|-------|------|------|-------|--------|
-| 5.13 | Variantes terrain (skins) | 🔴 | 🟡 | [#39] | Sélecteur herbe/ruine/neige + preview |
-| 5.14 | Thèmes météo dynamiques | 🔴 | 🟡 | — | Terrain change selon météo (neige, pluie) + particles |
-| 5.15 | Caméra cinématique | 🔴 | 🟡 | — | Zoom auto sur action (bloc, passe longue, TD) |
-| 5.16 | Mode spectateur | 🟡 | 🟡 | — | Vue lecture seule match en cours |
-| 5.17 | Chat in-game | 🟡 | 🟡 | — | Messagerie simple entre joueurs pendant match |
-| 5.18 | Emotes rapides | 🔴 | 🟢 | — | GG, Nice Block, Ouch! sans quitter le board |
-| 5.19 | Sound design (effets sonores) | 🟡 | 🟡 | — | Web Audio API : impact bloc, sifflet, foule |
-| 5.20 | Export GIF/vidéo action | 🔴 | 🔴 | — | Capture animée d'une action pour partage |
-
-### IA & TUTORIEL
-
-| # | Tâche | Gain | Diff | Issue | Détail |
-|---|-------|------|------|-------|--------|
-| 5.21 | IA adversaire — évaluation positionnelle | 🟡 | 🔴 | — | Scoring cases, formation, densité |
-| 5.22 | IA adversaire — scoring de coups | 🟡 | 🔴 | — | Évaluation bloc/mouvement/passe par heuristiques |
-| 5.23 | IA adversaire — niveau Débutant | 🟡 | 🟡 | — | Coups aléatoires pondérés, pas d'optimisation |
-| 5.24 | IA adversaire — niveau Intermédiaire | 🔴 | 🟡 | — | Scoring basique, quelques erreurs volontaires |
-| 5.25 | IA adversaire — niveau Légende | 🔴 | 🔴 | — | Scoring optimal, anticipation, gestion risque |
-| 5.26 | Tutoriel interactif — mouvement | 🟡 | 🟡 | — | Scénario guidé pas-à-pas, highlight cases |
-| 5.27 | Tutoriel interactif — blocage | 🟡 | 🟡 | — | Scénario guidé bloc + résultat |
-| 5.28 | Tutoriel interactif — passe | 🔴 | 🟡 | — | Scénario guidé passe + catch |
-| 5.29 | Tutoriel interactif — blitz | 🔴 | 🟡 | — | Scénario guidé blitz complet |
-
-### TECHNIQUE & INFRA
-
-| # | Tâche | Gain | Diff | Issue | Détail |
-|---|-------|------|------|-------|--------|
-| 5.30 | Logs structurés (winston/pino) | 🟡 | 🟡 | — | Logger centralisé, niveaux, format JSON |
-| 5.31 | Monitoring health dashboard | 🟡 | 🟡 | — | Endpoint /health détaillé, métriques basiques |
-| 5.32 | Moteur d'événements chaînés | 🟡 | 🔴 | — | Système événementiel cascades (bloc→push→injury→apothecary) avec rollback |
-| 5.33 | Tournois automatiques (brackets) | 🟡 | 🔴 | — | Swiss system, round-robin, timers |
-| 5.34 | API publique documentée | 🔴 | 🟡 | — | REST docs OpenAPI, endpoints tiers |
+| # | Tache | Gain | Diff | Statut | Detail |
+|---|-------|------|------|--------|--------|
+| B3.1 | Implementer les regles speciales Mega Stars | Moyen | Difficile | [ ] | Chaque star player a des regles uniques (ex: Morg'th, Griff Oberwald) |
+| B3.2 | UI affichage regles speciales dans le match | Moyen | Facile | [ ] | Tooltip/popup avec description de la regle speciale au survol |
 
 ---
 
-## 📊 Résumé par priorité
+## Phase C — Matchmaking & flow de jeu en ligne
 
-| Priorité | Nb tâches | Effort estimé | Impact |
-|----------|-----------|--------------|--------|
-| **P1 — Quick Wins** | ~~2~~ ✅ | ~~1-2 jours~~ | ✅ Terminé |
-| **P2 — Clés** | 13 | ~10-15 jours | Animations + multijoueur temps réel |
-| **P3 — Notifications** | 11 | ~8-12 jours | Engagement + rétention |
-| **P4 — Mobile** | 11 | ~15-20 jours | Couverture mobile |
-| **P5 — Polish** | 34 | ~40-60 jours | Communauté + fidélisation |
-| **Total** | **75** | ~78-108 jours | — |
+> Pour trouver un adversaire et jouer un vrai match.
+
+| # | Tache | Gain | Diff | Statut | Detail |
+|---|-------|------|------|--------|--------|
+| C.1 | Page "Jouer en ligne" avec bouton recherche | Fort | Moyen | [ ] | Route /play, selection equipe, bouton "Chercher un match" |
+| C.2 | File d'attente matchmaking (queue) | Fort | Moyen | [ ] | Table MatchQueue en DB, matching par TV similaire (+/- 150k) |
+| C.3 | Matching automatique + creation match | Fort | Moyen | [ ] | Cron ou check a chaque join : si 2 joueurs compatibles, creer match |
+| C.4 | Notification match trouve | Fort | Facile | [ ] | Event WS `matchmaking:found`, redirect vers le match |
+| C.5 | Phase de setup en ligne (placement joueurs) | Fort | Moyen | [ ] | Chaque coach place ses joueurs sur sa moitie, bouton "Pret" |
+| C.6 | Sequence pre-match automatisee en ligne | Fort | Moyen | [ ] | Fan factor, meteo, inducements, prayers enchaines avec UI |
+| C.7 | Fin de match en ligne (resultats, stats) | Fort | Moyen | [ ] | Ecran recap : score, MVP, casualties, SPP gagnes |
+| C.8 | Abandon / deconnexion = defaite | Moyen | Facile | [ ] | Si un joueur quitte > 2 min, victoire par forfait |
 
 ---
 
-## 🎯 Chemin critique recommandé
+## Phase D — Progression des joueurs (campagne)
+
+> Pour que les equipes evoluent entre les matchs.
+
+| # | Tache | Gain | Diff | Statut | Detail |
+|---|-------|------|------|--------|--------|
+| D.1 | SPP tracking en match | Fort | Facile | [ ] | Compteur SPP par joueur : TD(3), Casualty(2), Completion(1), Interception(2), MVP(4) |
+| D.2 | Ecran post-match : attribution SPP | Fort | Moyen | [ ] | Liste joueurs avec SPP gagnes, MVP aleatoire highlight |
+| D.3 | Level-up : choix de competence | Fort | Moyen | [ ] | Quand SPP >= seuil, popup choix primary/secondary/random skill |
+| D.4 | Table d'avancement BB3 | Fort | Facile | [ ] | Seuils SPP par level (3, 4, 6, 8, 10...), cout TV par type |
+| D.5 | Blessures permanentes persistees | Moyen | Moyen | [ ] | Niggling Injury, -1 MA/ST/AG/PA appliques au roster |
+| D.6 | Mort de joueur persistee | Moyen | Facile | [ ] | Joueur marque comme mort, retire du roster |
+| D.7 | Achat de remplacants entre matchs | Moyen | Moyen | [ ] | Winnings + tresorerie, achat joueurs/rerolls/apothecaire |
+| D.8 | Journeymen automatiques si < 11 joueurs | Moyen | Facile | [ ] | Deja en place dans le moteur, connecter a la persistence |
+
+---
+
+## Phase E — Animations & experience de jeu
+
+> Pour que ce soit agreable a jouer (pas bloquant mais important).
+
+| # | Tache | Gain | Diff | Statut | Detail |
+|---|-------|------|------|--------|--------|
+| E.1 | Tween deplacement joueur | Fort | Moyen | [ ] | Interpolation position 150-250ms avec easing, Pixi.js ticker |
+| E.2 | Tween balle (passe/scatter) | Fort | Moyen | [ ] | Arc de trajectoire, duree proportionnelle a la distance |
+| E.3 | File d'attente d'animations | Moyen | Moyen | [ ] | Systeme sequentiel Promise-based, skip avec touche Espace |
+| E.4 | Animation de blocage (impact) | Moyen | Moyen | [ ] | Shake/flash sur la cible, visuel selon resultat (push/stun/KO) |
+| E.5 | Animation de touchdown | Moyen | Facile | [ ] | Flash + particules sur la endzone, renforcer animation existante |
+| E.6 | Animation de blessure | Moyen | Facile | [ ] | Icone KO/casualty/mort qui apparait au-dessus du joueur |
+| E.7 | Animation de des | Moyen | Moyen | [ ] | Des 3D ou 2D animes avant affichage resultat |
+
+---
+
+## Phase F — ELO & classement
+
+> Pour le competitif en ligne.
+
+| # | Tache | Gain | Diff | Statut | Detail |
+|---|-------|------|------|--------|--------|
+| F.1 | Champ ELO sur le modele User (Prisma) | Moyen | Facile | [ ] | `elo Int @default(1000)`, migration |
+| F.2 | Calcul ELO apres chaque match | Moyen | Moyen | [ ] | K-factor 32, bonus/malus selon ecart TV, update en fin de match |
+| F.3 | Page leaderboard | Moyen | Moyen | [ ] | Tableau top 100, recherche, filtres saison/global |
+| F.4 | ELO affiche dans le profil et le lobby | Moyen | Facile | [ ] | Badge ELO a cote du pseudo dans le matchmaking et profil |
+
+---
+
+## Phase G — Notifications push
+
+> Pour savoir quand c'est son tour sans garder l'onglet ouvert.
+
+| # | Tache | Gain | Diff | Statut | Detail |
+|---|-------|------|------|--------|--------|
+| G.1 | Service Worker pour push notifications | Fort | Moyen | [ ] | Enregistrement SW, subscription endpoint, stockage cote serveur |
+| G.2 | Endpoint serveur envoi push (web-push) | Fort | Moyen | [ ] | Route POST /notifications/push, library web-push |
+| G.3 | Push "C'est votre tour" | Fort | Facile | [ ] | Trigger apres chaque end turn adversaire |
+| G.4 | Push "Match trouve" | Fort | Facile | [ ] | Trigger quand matchmaking trouve un adversaire |
+| G.5 | UI demande permission + preferences | Moyen | Facile | [ ] | Modal permission + page /settings avec toggles |
+
+---
+
+## Phase H — Polish & qualite de vie
+
+> Ameliorations non-bloquantes mais qui comptent.
+
+| # | Tache | Gain | Diff | Statut | Detail |
+|---|-------|------|------|--------|--------|
+| H.1 | Chat in-game (messages predefinies) | Moyen | Moyen | [ ] | Messages rapides : "GG", "Nice!", "Ouch!", via WebSocket |
+| H.2 | Mode spectateur | Moyen | Moyen | [ ] | Vue lecture seule d'un match en cours, liste spectateurs |
+| H.3 | Replayer basique | Moyen | Moyen | [ ] | Slider de tours, recalcul gameState, boutons prev/next |
+| H.4 | Indicateurs tactiques au survol | Moyen | Moyen | [ ] | Lignes de passe, trajectoires blitz au hover |
+| H.5 | Sons (effets sonores) | Moyen | Moyen | [ ] | Web Audio API : impact bloc, sifflet, foule, touchdown |
+| H.6 | Sprite sheets joueurs par equipe | Moyen | Moyen | [ ] | Pions visuels differencies par roster |
+| H.7 | Variantes terrain (skins) | Faible | Moyen | [ ] | Selecteur herbe/ruine/neige |
+
+---
+
+## Resume par phase
+
+| Phase | Nb taches | Effort estime | Criticite pour jouer en ligne |
+|-------|-----------|--------------|-------------------------------|
+| **A — Multijoueur temps reel** | 10 | ~5-7 jours | BLOQUANT |
+| **B — Regles BB3 manquantes** | 21 | ~12-18 jours | ESSENTIEL (B1 critique, B2/B3 secondaire) |
+| **C — Matchmaking & flow** | 8 | ~6-8 jours | BLOQUANT |
+| **D — Progression joueurs** | 8 | ~5-7 jours | IMPORTANT (campagne) |
+| **E — Animations** | 7 | ~5-7 jours | IMPORTANT (UX) |
+| **F — ELO & classement** | 4 | ~2-3 jours | SOUHAITABLE |
+| **G — Notifications push** | 5 | ~3-4 jours | SOUHAITABLE |
+| **H — Polish** | 7 | ~5-7 jours | BONUS |
+| **Total** | **70** | **~43-61 jours** | — |
+
+---
+
+## Chemin critique pour jouer en ligne
 
 ```
-P1.1-1.3 (Zoom/Pan)  ──→  P2.1-2.5 (Animations)  ──→  P2.11-2.13 (Assets)
-         │
-P1.6-1.8 (Sécurité)  ──→  P2.6-2.10 (WebSocket)  ──→  P3.4-3.8 (Push notif)
-         │
-P1.4-1.5 (Heatmap)   ──→  P3.9-3.11 (Replayer)   ──→  P5.x (Communauté)
+Phase A (WebSocket)  ──→  Phase C (Matchmaking)  ──→  JOUABLE EN LIGNE
+       │                         │
+       └── Phase B1 (Regles critiques : crowd push, apothecaire, mi-temps)
+                                 │
+                    Phase E (Animations) ──→  EXPERIENCE AGREABLE
+                                 │
+                    Phase D (Progression) ──→  MODE CAMPAGNE
+                                 │
+              Phase F (ELO) + Phase G (Push) ──→  COMPETITIF
 ```
 
-> **Recommandation** : commencer par P1 (quick wins) pour un impact immédiat,
-> puis P2.6-2.10 (WebSocket) car le multijoueur temps réel est le plus gros
-> manque fonctionnel du projet actuellement.
+> **Recommandation** : faire A → B1 → C dans cet ordre. Ca donne un jeu
+> en ligne fonctionnel avec les regles BB3 essentielles. Ensuite E et D
+> en parallele pour l'experience et la profondeur.
