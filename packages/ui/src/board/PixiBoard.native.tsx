@@ -8,15 +8,167 @@ import {
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
+  useAnimatedProps,
   withSpring,
+  withTiming,
+  Easing,
   runOnJS,
 } from "react-native-reanimated";
-import type { GameState, Position } from "@bb/game-engine";
+import type { GameState, Position, Player } from "@bb/game-engine";
+
+/* ── Animated SVG components ───────────────────────────────────────── */
+const AnimatedRect = Animated.createAnimatedComponent(Rect);
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+const AnimatedSvgText = Animated.createAnimatedComponent(SvgText);
+
+const TWEEN_CONFIG = { duration: 200, easing: Easing.out(Easing.cubic) };
 
 /* ── Viewport constants ─────────────────────────────────────────────── */
 const MIN_SCALE = 0.5;
 const MAX_SCALE = 3;
 const SPRING_CONFIG = { damping: 20, stiffness: 200 };
+
+/* ── AnimatedPlayer: tweens position on move ───────────────────────── */
+function AnimatedPlayer({
+  player,
+  cellSize,
+  isSelected,
+}: {
+  player: Player;
+  cellSize: number;
+  isSelected: boolean;
+}) {
+  const targetX = player.pos.x * cellSize;
+  const targetY = player.pos.y * cellSize;
+
+  // Initialize at target position (no tween on first render)
+  const posX = useSharedValue(targetX);
+  const posY = useSharedValue(targetY);
+  const isFirstRender = React.useRef(true);
+
+  React.useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      posX.value = targetX;
+      posY.value = targetY;
+      return;
+    }
+    posX.value = withTiming(targetX, TWEEN_CONFIG);
+    posY.value = withTiming(targetY, TWEEN_CONFIG);
+  }, [targetX, targetY]);
+
+  // Selection glow
+  const glowProps = useAnimatedProps(() => ({
+    x: posX.value,
+    y: posY.value,
+  }));
+
+  // Main player rect
+  const rectProps = useAnimatedProps(() => ({
+    x: posX.value + cellSize * 0.1,
+    y: posY.value + cellSize * 0.1,
+  }));
+
+  // Team letter text
+  const textProps = useAnimatedProps(() => ({
+    x: posX.value + cellSize * 0.3,
+    y: posY.value + cellSize * 0.6,
+  }));
+
+  // PM badge circle
+  const pmCircleProps = useAnimatedProps(() => ({
+    cx: posX.value + cellSize * 0.8,
+    cy: posY.value + cellSize * 0.2,
+  }));
+
+  // PM badge text
+  const pmTextProps = useAnimatedProps(() => ({
+    x: posX.value + cellSize * 0.8,
+    y: posY.value + cellSize * 0.2 + cellSize * 0.08,
+  }));
+
+  return (
+    <G>
+      {isSelected && (
+        <AnimatedRect
+          animatedProps={glowProps}
+          width={cellSize}
+          height={cellSize}
+          fill="rgba(250,204,21,0.2)"
+          stroke="#facc15"
+          strokeWidth={3}
+          rx={2}
+        />
+      )}
+      <AnimatedRect
+        animatedProps={rectProps}
+        width={cellSize * 0.8}
+        height={cellSize * 0.8}
+        fill={player.team === "A" ? "#3B82F6" : "#EF4444"}
+      />
+      <AnimatedSvgText
+        animatedProps={textProps}
+        fontSize={12}
+        fill="#fff"
+      >
+        {player.team}
+      </AnimatedSvgText>
+      <AnimatedCircle
+        animatedProps={pmCircleProps}
+        r={cellSize * 0.2}
+        fill="#000"
+      />
+      <AnimatedSvgText
+        animatedProps={pmTextProps}
+        fontSize={cellSize * 0.25}
+        fill="#fff"
+        textAnchor="middle"
+      >
+        {String(player.pm)}
+      </AnimatedSvgText>
+    </G>
+  );
+}
+
+/* ── AnimatedBall: tweens position on scatter/pass ─────────────────── */
+function AnimatedBall({
+  position,
+  cellSize,
+}: {
+  position: Position;
+  cellSize: number;
+}) {
+  const targetCx = position.x * cellSize + cellSize / 2;
+  const targetCy = position.y * cellSize + cellSize / 2;
+
+  const cx = useSharedValue(targetCx);
+  const cy = useSharedValue(targetCy);
+  const isFirstRender = React.useRef(true);
+
+  React.useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      cx.value = targetCx;
+      cy.value = targetCy;
+      return;
+    }
+    cx.value = withTiming(targetCx, TWEEN_CONFIG);
+    cy.value = withTiming(targetCy, TWEEN_CONFIG);
+  }, [targetCx, targetCy]);
+
+  const ballProps = useAnimatedProps(() => ({
+    cx: cx.value,
+    cy: cy.value,
+  }));
+
+  return (
+    <AnimatedCircle
+      animatedProps={ballProps}
+      r={cellSize * 0.25}
+      fill="#222"
+    />
+  );
+}
 
 type Props = {
   state: GameState;
@@ -197,65 +349,21 @@ export default function PixiBoardNative({
                 strokeWidth={1}
               />
             ))}
-            {/* ball */}
+            {/* ball (animated) */}
             {state.ball && (
-              <Circle
-                cx={state.ball.x * cellSize + cellSize / 2}
-                cy={state.ball.y * cellSize + cellSize / 2}
-                r={cellSize * 0.25}
-                fill="#222"
+              <AnimatedBall
+                position={state.ball}
+                cellSize={cellSize}
               />
             )}
-            {/* players */}
+            {/* players (animated) */}
             {state.players.map((p) => (
-              <G key={p.id}>
-                {p.id === selectedPlayerId && (
-                  <>
-                    {/* Outer glow */}
-                    <Rect
-                      x={p.pos.x * cellSize}
-                      y={p.pos.y * cellSize}
-                      width={cellSize}
-                      height={cellSize}
-                      fill="rgba(250,204,21,0.2)"
-                      stroke="#facc15"
-                      strokeWidth={3}
-                      rx={2}
-                    />
-                  </>
-                )}
-                <Rect
-                  x={p.pos.x * cellSize + cellSize * 0.1}
-                  y={p.pos.y * cellSize + cellSize * 0.1}
-                  width={cellSize * 0.8}
-                  height={cellSize * 0.8}
-                  fill={p.team === "A" ? "#3B82F6" : "#EF4444"}
-                />
-                <SvgText
-                  x={p.pos.x * cellSize + cellSize * 0.3}
-                  y={p.pos.y * cellSize + cellSize * 0.6}
-                  fontSize={12}
-                  fill="#fff"
-                >
-                  {p.team}
-                </SvgText>
-                {/* Badge PM */}
-                <Circle
-                  cx={p.pos.x * cellSize + cellSize * 0.8}
-                  cy={p.pos.y * cellSize + cellSize * 0.2}
-                  r={cellSize * 0.2}
-                  fill="#000"
-                />
-                <SvgText
-                  x={p.pos.x * cellSize + cellSize * 0.8}
-                  y={p.pos.y * cellSize + cellSize * 0.2 + cellSize * 0.08}
-                  fontSize={cellSize * 0.25}
-                  fill="#fff"
-                  textAnchor="middle"
-                >
-                  {p.pm}
-                </SvgText>
-              </G>
+              <AnimatedPlayer
+                key={p.id}
+                player={p}
+                cellSize={cellSize}
+                isSelected={p.id === selectedPlayerId}
+              />
             ))}
           </Svg>
         </Animated.View>
