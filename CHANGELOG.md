@@ -1,3 +1,24 @@
+## [1.39.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.38.0...v1.39.0) (2026-03-29)
+
+
+### ✨ Features
+
+* **mobile:** add login screen (task 4.1) ([#60](https://github.com/Ryxeuf/fantasy-football-game/issues/60)) ([417adcc](https://github.com/Ryxeuf/fantasy-football-game/commit/417adccb8f96885e39ac43ab1fc8f8e06791d71e))
+* **mobile:** add minimal match history screen (task 4.11) ([#63](https://github.com/Ryxeuf/fantasy-football-game/issues/63)) ([868a728](https://github.com/Ryxeuf/fantasy-football-game/commit/868a7284797eea82056b0ddb95d0383cf4848cc7))
+* **mobile:** add register screen (task 4.2) ([#59](https://github.com/Ryxeuf/fantasy-football-game/issues/59)) ([e229e4d](https://github.com/Ryxeuf/fantasy-football-game/commit/e229e4d6d9a27a51efd5f78ee300bccd0a8d17df))
+* **mobile:** highlight playable cells on tap (task 4.6) ([#67](https://github.com/Ryxeuf/fantasy-football-game/issues/67)) ([111d1a1](https://github.com/Ryxeuf/fantasy-football-game/commit/111d1a1ce1704008d843a9895b2872210879ce25))
+* **mobile:** implement login screen with SecureStore auth (task 4.1) ([#61](https://github.com/Ryxeuf/fantasy-football-game/issues/61)) ([1c904e1](https://github.com/Ryxeuf/fantasy-football-game/commit/1c904e12b28ee32cad605de6f613b8c76fc669ae))
+* **mobile:** lobby screen with create/join match (task 4.3) ([#62](https://github.com/Ryxeuf/fantasy-football-game/issues/62)) ([032e040](https://github.com/Ryxeuf/fantasy-football-game/commit/032e0409df8120abf163c0c64c8992c65a5ad96d))
+* **mobile:** pinch-to-zoom & pan-to-drag on board (4.4 & 4.5) ([#65](https://github.com/Ryxeuf/fantasy-football-game/issues/65)) ([309fdbd](https://github.com/Ryxeuf/fantasy-football-game/commit/309fdbd75d230ea43055ed5ce36c269fc778742c))
+* **mobile:** tween animations for player & ball movement (4.8) ([#69](https://github.com/Ryxeuf/fantasy-football-game/issues/69)) ([c41316c](https://github.com/Ryxeuf/fantasy-football-game/commit/c41316c85073c8b4f385a458aa90f2d72fbd8e6c))
+* tackle zone heatmap overlay + Zod input validation (P1 complete) ([#58](https://github.com/Ryxeuf/fantasy-football-game/issues/58)) ([7f0f61a](https://github.com/Ryxeuf/fantasy-football-game/commit/7f0f61ac44d9a9ee0bf7236f9e5dcbfa4e6cbcd6))
+
+
+### 🐛 Bug Fixes
+
+* **mobile:** route pending matches to history, not gameplay ([#68](https://github.com/Ryxeuf/fantasy-football-game/issues/68)) ([12ea3d7](https://github.com/Ryxeuf/fantasy-football-game/commit/12ea3d76408cacbe9b9e42d84e2d61d26900e3e8))
+* normalize serialized gameState in turn summaries ([#64](https://github.com/Ryxeuf/fantasy-football-game/issues/64)) ([4185a07](https://github.com/Ryxeuf/fantasy-football-game/commit/4185a07b0f40efe0617ff9596671373eca070d56))
+
 ## [1.38.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.37.0...v1.38.0) (2026-03-23)
 
 
