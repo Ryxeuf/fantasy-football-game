@@ -252,7 +252,12 @@ export default function LobbyScreen() {
   }
 
   function navigateToMatch(match: MatchSummary) {
-    router.push(`/match/${match.id}`);
+    // Active/prematch matches → gameplay screen, ended → history
+    if (match.status === "ended") {
+      router.push(`/match/${match.id}`);
+    } else {
+      router.push(`/play/${match.id}`);
+    }
   }
 
   return (
