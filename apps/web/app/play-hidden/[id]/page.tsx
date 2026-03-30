@@ -22,6 +22,7 @@ import {
 import { API_BASE } from "../../auth-client";
 import { useGameMoves } from "./hooks/useGameMoves";
 import { useGameState } from "./hooks/useGameState";
+import PostMatchSPP from "../../components/PostMatchSPP";
 
 // Normalise un état reçu du serveur
 function normalizeState(state: any): ExtendedGameState {
@@ -806,6 +807,29 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
             </div>
             {/* PlayerDetails is now integrated in GameBoardWithDugouts */}
           </div>
+
+          {/* Post-match SPP display when game has ended */}
+          {state.gamePhase === "ended" &&
+            state.matchStats &&
+            Object.keys(state.matchStats).length > 0 &&
+            state.matchResult &&
+            state.players && (
+            <div className="mt-6">
+              <PostMatchSPP
+                matchStats={state.matchStats}
+                matchResult={state.matchResult}
+                players={state.players.map((p) => ({
+                  id: p.id,
+                  team: p.team,
+                  name: p.name,
+                  number: p.number ?? 0,
+                  position: p.position ?? "",
+                }))}
+                teamAName={teamNameA || state.teamNames?.teamA || "Équipe A"}
+                teamBName={teamNameB || state.teamNames?.teamB || "Équipe B"}
+              />
+            </div>
+          )}
         </div>
       </div>
       {showDicePopup && state.lastDiceResult && (

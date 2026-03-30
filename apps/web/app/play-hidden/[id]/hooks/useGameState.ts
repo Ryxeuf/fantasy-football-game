@@ -111,7 +111,7 @@ export function useGameState(matchId: string): GameStateInfo {
         if (!res.ok) { window.location.href = "/lobby"; return; }
         const status = data?.status;
         if (status) setMatchStatus(status);
-        if (status !== "active" && status !== "prematch" && status !== "prematch-setup") {
+        if (status !== "active" && status !== "prematch" && status !== "prematch-setup" && status !== "ended") {
           window.location.href = `/waiting/${matchId}`;
         }
       } catch { window.location.href = "/lobby"; }
