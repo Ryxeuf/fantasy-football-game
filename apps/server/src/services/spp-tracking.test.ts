@@ -204,6 +204,7 @@ describe("persistMatchSPP", () => {
     expect(updateCall.where.id).toBe("db-a1");
     expect(updateCall.data).toEqual({
       matchesPlayed: { increment: 1 },
+      missNextMatch: false, // Clear suspension flag after playing
       spp: { increment: 13 }, // 2*3 + 1*2 + 1*1 + 0 + 4 = 13
       totalTouchdowns: { increment: 2 },
       totalCasualties: { increment: 1 },

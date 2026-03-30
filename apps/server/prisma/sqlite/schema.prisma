@@ -113,6 +113,28 @@ model TeamPlayer {
   pa        Int
   av        Int
   skills    String
+
+  // SPP tracking (Star Player Points)
+  spp               Int @default(0)
+  totalTouchdowns   Int @default(0)
+  totalCasualties   Int @default(0)
+  totalCompletions  Int @default(0)
+  totalInterceptions Int @default(0)
+  totalMvpAwards    Int @default(0)
+  matchesPlayed     Int @default(0)
+
+  // Permanent injuries (BB2020/BB3 lasting injuries)
+  nigglingInjuries Int @default(0)
+  maReduction      Int @default(0)
+  stReduction      Int @default(0)
+  agReduction      Int @default(0)
+  paReduction      Int @default(0)
+  avReduction      Int @default(0)
+  missNextMatch    Boolean @default(false)
+
+  // Player death tracking
+  dead    Boolean   @default(false)
+  diedAt  DateTime?
 }
 
 // Modèle pour les coupes (tournois)
