@@ -11,6 +11,8 @@ export interface Position {
 
 export type PlayerState = 'active' | 'stunned' | 'knocked_out' | 'casualty' | 'sent_off';
 
+export type CasualtyOutcome = 'badly_hurt' | 'seriously_hurt' | 'serious_injury' | 'lasting_injury' | 'dead';
+
 export interface Player {
   id: string;
   team: TeamId;
@@ -145,6 +147,8 @@ export interface GameState {
     interceptions: number;
     mvp: boolean;
   }>;
+  // Résultats des blessures graves par joueur (rempli pendant le match)
+  casualtyResults: Record<string, CasualtyOutcome>; // playerId -> outcome
   // Résultats finaux (rempli en fin de match)
   matchResult?: {
     winner?: TeamId;

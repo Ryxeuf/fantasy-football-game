@@ -17,6 +17,7 @@ import {
 import { randomBytes } from "crypto";
 import { hasRole } from "../utils/roles";
 import { persistMatchSPP } from "../services/spp-tracking";
+import { persistPlayerDeaths } from "../services/player-death";
 
 const router = Router();
 
@@ -711,9 +712,10 @@ router.post("/:id/complete", authUser, async (req: AuthenticatedRequest, res) =>
 
     // Persist SPP to TeamPlayer records if game state is available
     let sppUpdatedCount = 0;
+    let deathsPersistedCount = 0;
     if (localMatch.gameState && localMatch.teamAId && localMatch.teamBId) {
+      const gameState = localMatch.gameState as any;
       try {
-        const gameState = localMatch.gameState as any;
         if (gameState.matchStats && gameState.players) {
           sppUpdatedCount = await persistMatchSPP(
             prisma as any,
@@ -726,9 +728,24 @@ router.post("/:id/complete", authUser, async (req: AuthenticatedRequest, res) =>
         console.error("Erreur lors de la persistence des SPP:", sppError);
         // Non-blocking: match completion succeeds even if SPP persistence fails
       }
+
+      // Persist player deaths from casualty results
+      try {
+        if (gameState.casualtyResults && gameState.players) {
+          deathsPersistedCount = await persistPlayerDeaths(
+            prisma as any,
+            gameState,
+            localMatch.teamAId,
+            localMatch.teamBId,
+          );
+        }
+      } catch (deathError) {
+        console.error("Erreur lors de la persistence des morts:", deathError);
+        // Non-blocking: match completion succeeds even if death persistence fails
+      }
     }
 
-    res.json({ localMatch: updatedMatch, sppUpdatedCount });
+    res.json({ localMatch: updatedMatch, sppUpdatedCount, deathsPersistedCount });
   } catch (e: any) {
     console.error("Erreur lors de la finalisation de la partie offline:", e);
     return res.status(500).json({ error: "Erreur serveur" });
