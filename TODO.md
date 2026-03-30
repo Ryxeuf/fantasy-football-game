@@ -125,7 +125,7 @@
 
 | # | Tache | Gain | Diff | Statut | Detail |
 |---|-------|------|------|--------|--------|
-| D.1 | SPP tracking en match | Fort | Facile | [ ] | Compteur SPP par joueur : TD(3), Casualty(2), Completion(1), Interception(2), MVP(4) |
+| D.1 | SPP tracking en match | Fort | Facile | [x] | Compteur SPP par joueur : TD(3), Casualty(2), Completion(1), Interception(1), MVP(4) |
 | D.2 | Ecran post-match : attribution SPP | Fort | Moyen | [ ] | Liste joueurs avec SPP gagnes, MVP aleatoire highlight |
 | D.3 | Level-up : choix de competence | Fort | Moyen | [ ] | Quand SPP >= seuil, popup choix primary/secondary/random skill |
 | D.4 | Table d'avancement BB3 | Fort | Facile | [ ] | Seuils SPP par level (3, 4, 6, 8, 10...), cout TV par type |
