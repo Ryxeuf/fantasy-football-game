@@ -47,7 +47,7 @@
 
 | # | Tache | Gain | Diff | Statut | Detail |
 |---|-------|------|------|--------|--------|
-| A.1 | Installer socket.io sur le serveur Express | Fort | Facile | [ ] | `pnpm add socket.io`, attach au serveur HTTP existant, namespace `/game` |
+| A.1 | Installer socket.io sur le serveur Express | Fort | Facile | [x] | `pnpm add socket.io`, attach au serveur HTTP existant, namespace `/game` |
 | A.2 | Creer les rooms par matchId | Fort | Facile | [ ] | `socket.join(matchId)`, gestion connect/disconnect |
 | A.3 | Authentifier les connexions WebSocket | Fort | Moyen | [ ] | Middleware socket.io qui verifie le JWT, associe `socket.userId` |
 | A.4 | Emettre le gameState apres chaque action | Fort | Moyen | [ ] | Apres `executeMove()`, broadcast `game:state-update` a la room |
