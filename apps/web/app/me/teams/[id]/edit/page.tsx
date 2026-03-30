@@ -1279,15 +1279,24 @@ export default function TeamEditPage() {
                       Annuler
                     </button>
                     <button
-                      disabled={!selectedSkillSlug || !selectedCategory || player.spp < psp}
+                      disabled={isRandom
+                        ? (!selectedCategory || (player.spp ?? 0) < psp)
+                        : (!selectedSkillSlug || !selectedCategory || (player.spp ?? 0) < psp)
+                      }
                       onClick={async () => {
                         try {
-                          const currentSkills = (player.skills || '').split(',').filter(Boolean);
-                          if (currentSkills.includes(selectedSkillSlug)) return;
-                          const result = await putJSON(`/team/${id}/players/${player.id}/skills`, {
-                            skillSlug: selectedSkillSlug,
+                          const body: Record<string, string> = {
                             advancementType: actualAdvType,
-                          });
+                          };
+                          if (isRandom) {
+                            // Server picks the random skill
+                            body.skillCategory = selectedCategory;
+                          } else {
+                            const currentSkills = (player.skills || '').split(',').filter(Boolean);
+                            if (currentSkills.includes(selectedSkillSlug)) return;
+                            body.skillSlug = selectedSkillSlug;
+                          }
+                          const result = await putJSON(`/team/${id}/players/${player.id}/skills`, body);
                           // Update local state with server response
                           if (result.player) {
                             setPlayers(prev => prev.map(p => p.id === player.id ? {
@@ -1296,6 +1305,13 @@ export default function TeamEditPage() {
                               advancements: result.player.advancements,
                               spp: result.player.spp,
                             } : p));
+                          }
+                          // Show random result to user
+                          if (isRandom && result.advancement?.skillSlug) {
+                            const rolledSkill = SKILLS_DEFINITIONS.find(s => s.slug === result.advancement.skillSlug);
+                            if (rolledSkill) {
+                              alert(`Compétence aléatoire obtenue : ${rolledSkill.nameFr}`);
+                            }
                           }
                           setAddingSkillFor(null);
                           setSelectedSkillSlug("");
@@ -1306,9 +1322,9 @@ export default function TeamEditPage() {
                       }}
                       className="px-8 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed transition-all font-semibold shadow-lg shadow-green-500/30 disabled:shadow-none"
                     >
-                      {player.spp < psp
-                        ? `SPP insuffisants (${player.spp}/${psp})`
-                        : isRandom ? 'Ajouter la compétence (aléatoire)' : 'Ajouter la compétence'}
+                      {(player.spp ?? 0) < psp
+                        ? `SPP insuffisants (${player.spp ?? 0}/${psp})`
+                        : isRandom ? 'Lancer les dés (serveur)' : 'Ajouter la compétence'}
                     </button>
                   </div>
                 </>

@@ -132,6 +132,9 @@ model TeamPlayer {
   avReduction      Int @default(0)
   missNextMatch    Boolean @default(false)
 
+  // Advancement tracking (level-up history)
+  advancements String @default("[]") // JSON array of PlayerAdvancement objects
+
   // Player death tracking
   dead    Boolean   @default(false)
   diedAt  DateTime?
