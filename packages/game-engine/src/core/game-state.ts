@@ -179,6 +179,7 @@ export function setupPreMatchWithTeams(
       teamB: teamBName,
     },
     matchStats: {},
+    casualtyResults: {},
     // Log du match
     gameLog: [
       createLogEntry(
@@ -316,6 +317,7 @@ export function setupPreMatch(): GameState {
       teamB: 'Elfes Sombres',
     },
     matchStats: {},
+    casualtyResults: {},
     // Log du match
     gameLog: [createLogEntry('info', 'Phase pré-match - Les joueurs sont en réserves')],
   };
@@ -426,6 +428,7 @@ export function setup(): GameState {
       teamB: 'Elfes Sombres',
     },
     matchStats: {},
+    casualtyResults: {},
     // Log du match
     gameLog: [createLogEntry('info', 'Match commencé - Orcs de Fer vs Elfes Sombres')],
   };
@@ -1248,6 +1251,7 @@ export function startMatchFromKickoff(state: ExtendedGameState): GameState {
     teamFoulCount: {} as Record<string, number>,
     lastDiceResult: undefined,
     matchStats: {},
+    casualtyResults: {},
     gameLog: [...state.gameLog, matchStartLog],
   };
 }

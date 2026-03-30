@@ -3,7 +3,7 @@
  * Gère les jets d'armure, de blessure et les zones de dugout
  */
 
-import { GameState, Player, RNG } from '../core/types';
+import { GameState, Player, RNG, CasualtyOutcome } from '../core/types';
 import { performArmorRoll } from '../utils/dice';
 import { createLogEntry } from '../utils/logging';
 import { movePlayerToDugoutZone } from './dugout';
@@ -105,8 +105,9 @@ function handleCasualty(state: GameState, player: Player, rng: RNG, causedById?:
   newState.gameLog = [...newState.gameLog, casualtyLog];
 
   // Déterminer le type de blessure
+  let outcome: CasualtyOutcome;
   if (casualtyRoll <= 6) {
-    // Badly Hurt - manque le reste du match
+    outcome = 'badly_hurt';
     const badlyHurtLog = createLogEntry(
       'action',
       `${player.name} est gravement blessé - manque le reste du match`,
@@ -115,7 +116,7 @@ function handleCasualty(state: GameState, player: Player, rng: RNG, causedById?:
     );
     newState.gameLog = [...newState.gameLog, badlyHurtLog];
   } else if (casualtyRoll <= 9) {
-    // Seriously Hurt - MNG (Miss Next Game)
+    outcome = 'seriously_hurt';
     const seriouslyHurtLog = createLogEntry(
       'action',
       `${player.name} est sérieusement blessé - manquera le prochain match`,
@@ -124,7 +125,7 @@ function handleCasualty(state: GameState, player: Player, rng: RNG, causedById?:
     );
     newState.gameLog = [...newState.gameLog, seriouslyHurtLog];
   } else if (casualtyRoll <= 12) {
-    // Serious Injury - NI + MNG
+    outcome = 'serious_injury';
     const seriousInjuryLog = createLogEntry(
       'action',
       `${player.name} a une blessure sérieuse - blessure gênante + manquera le prochain match`,
@@ -133,7 +134,7 @@ function handleCasualty(state: GameState, player: Player, rng: RNG, causedById?:
     );
     newState.gameLog = [...newState.gameLog, seriousInjuryLog];
   } else if (casualtyRoll <= 14) {
-    // Lasting Injury - réduction de caractéristique + MNG
+    outcome = 'lasting_injury';
     const lastingInjuryLog = createLogEntry(
       'action',
       `${player.name} a une blessure permanente - réduction de caractéristique + manquera le prochain match`,
@@ -142,10 +143,13 @@ function handleCasualty(state: GameState, player: Player, rng: RNG, causedById?:
     );
     newState.gameLog = [...newState.gameLog, lastingInjuryLog];
   } else {
-    // DEAD - mort
+    outcome = 'dead';
     const deadLog = createLogEntry('action', `${player.name} est MORT !`, player.id, player.team);
     newState.gameLog = [...newState.gameLog, deadLog];
   }
+
+  // Enregistrer le résultat de la blessure dans l'état du jeu
+  newState.casualtyResults = { ...newState.casualtyResults, [player.id]: outcome };
 
   return newState;
 }
