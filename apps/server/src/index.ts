@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
+import { createServer } from "node:http";
 import authRoutes from "./routes/auth";
 import matchRoutes from "./routes/match";
 import adminRoutes from "./routes/admin";
@@ -17,6 +18,7 @@ import dotenv from "dotenv";
 import { execSync } from "node:child_process";
 import { prisma } from "./prisma";
 import { authRateLimiter, apiRateLimiter } from "./middleware/rateLimiter";
+import { setupSocket } from "./socket";
 
 dotenv.config({ path: "../../prisma/.env" });
 // Si tests SQLite: pousser le schéma SQLite en mémoire partagée au démarrage
@@ -87,6 +89,9 @@ if (process.env.TEST_SQLITE === "1") {
   });
 }
 
-app.listen(API_PORT, () => {
+const httpServer = createServer(app);
+setupSocket(httpServer);
+
+httpServer.listen(API_PORT, () => {
   console.log(`Express API server listening on http://localhost:${API_PORT}`);
 });
