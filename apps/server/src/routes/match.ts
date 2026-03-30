@@ -217,7 +217,6 @@ router.post(
           } catch (injuryError) {
             console.error("Erreur lors de la persistence des blessures permanentes:", injuryError);
           }
-          }
         }
       }
 
