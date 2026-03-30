@@ -1,3 +1,17 @@
+## [1.42.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.41.0...v1.42.0) (2026-03-30)
+
+
+### ✨ Features
+
+* **A.2:** create game rooms by matchId via socket.io ([#87](https://github.com/Ryxeuf/fantasy-football-game/issues/87)) ([137f326](https://github.com/Ryxeuf/fantasy-football-game/commit/137f3263202e34a5f9a6b583c76aaa38f7a8db3a))
+* **QW.1:** wire D.5/D.6/D.8 into online match routes ([#85](https://github.com/Ryxeuf/fantasy-football-game/issues/85)) ([407aefe](https://github.com/Ryxeuf/fantasy-football-game/commit/407aefe760d38ef462efde63915c67210e05f134))
+* **QW.2:** wire PostMatchSPP into online match flow ([0b2962d](https://github.com/Ryxeuf/fantasy-football-game/commit/0b2962dd829b68af16b9c78a4f10432d1cacc208))
+
+
+### 📝 Documentation
+
+* audit roadmap, update statuses, reprioritize and add quick wins ([f45a50d](https://github.com/Ryxeuf/fantasy-football-game/commit/f45a50d7a6d2ba0d5f09854b78caec90d2acc4d0))
+
 ## [1.41.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.40.0...v1.41.0) (2026-03-30)
 
 
