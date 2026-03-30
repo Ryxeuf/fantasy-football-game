@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { DEFAULT_RULESET, type Ruleset } from '@bb/game-engine';
+import { DEFAULT_RULESET, type Ruleset, calculateAdvancementsSurcharge, type AdvancementType } from '@bb/game-engine';
 import { calculateTeamValue, calculateCurrentValue, getPlayerCost, type TeamValueData } from '../../../../packages/game-engine/src/utils/team-value-calculator';
 
 /**
@@ -18,10 +18,20 @@ export async function updateTeamValues(prisma: PrismaClient, teamId: string) {
   // Préparer les données pour le calcul (exclure les joueurs morts de la VE)
   const alivePlayers = team.players.filter(player => !player.dead);
   const teamValueData: TeamValueData = {
-    players: alivePlayers.map(player => ({
-      cost: getPlayerCost(player.position, team.roster, (team.ruleset as Ruleset) ?? DEFAULT_RULESET),
-      available: true // Pour l'instant, tous les joueurs vivants sont disponibles
-    })),
+    players: alivePlayers.map(player => {
+      const baseCost = getPlayerCost(player.position, team.roster, (team.ruleset as Ruleset) ?? DEFAULT_RULESET);
+      // Include advancement surcharges in player value
+      let advSurcharge = 0;
+      try {
+        const advancements = JSON.parse((player as any).advancements || '[]');
+        const advTypes = advancements.map((a: any) => a.type as AdvancementType);
+        advSurcharge = calculateAdvancementsSurcharge(advTypes);
+      } catch { /* ignore parse errors */ }
+      return {
+        cost: baseCost + advSurcharge,
+        available: true, // Pour l'instant, tous les joueurs vivants sont disponibles
+      };
+    }),
     rerolls: team.rerolls,
     cheerleaders: team.cheerleaders,
     assistants: team.assistants,

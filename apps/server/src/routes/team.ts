@@ -14,6 +14,7 @@ import {
   SURCHARGE_PER_ADVANCEMENT,
   getPositionCategoryAccess,
   SKILLS_BY_SLUG,
+  SKILLS_DEFINITIONS,
   type AdvancementType,
   type PlayerAdvancement,
 } from "@bb/game-engine";
@@ -1212,15 +1213,16 @@ router.delete("/:id/players/:playerId", authUser, async (req: AuthenticatedReque
 router.put("/:id/players/:playerId/skills", authUser, async (req: AuthenticatedRequest, res) => {
   const teamId = req.params.id;
   const playerId = req.params.playerId;
-  const { skillSlug, advancementType } = req.body as {
-    skillSlug: string;
+  const { skillSlug: clientSkillSlug, advancementType, skillCategory } = req.body as {
+    skillSlug?: string;
     advancementType: AdvancementType;
+    skillCategory?: string;
   };
 
   try {
-    // Validate input
-    if (!skillSlug || !advancementType) {
-      return res.status(400).json({ error: "skillSlug et advancementType sont requis" });
+    // Validate advancement type
+    if (!advancementType) {
+      return res.status(400).json({ error: "advancementType est requis" });
     }
 
     const validAdvTypes: AdvancementType[] = ['primary', 'secondary', 'random-primary', 'random-secondary'];
@@ -1228,10 +1230,14 @@ router.put("/:id/players/:playerId/skills", authUser, async (req: AuthenticatedR
       return res.status(400).json({ error: "Type d'avancement invalide" });
     }
 
-    // Verify the skill exists
-    const skillDef = SKILLS_BY_SLUG[skillSlug];
-    if (!skillDef) {
-      return res.status(400).json({ error: `Compétence '${skillSlug}' inconnue` });
+    const isRandom = advancementType === 'random-primary' || advancementType === 'random-secondary';
+
+    // For chosen types, skillSlug is required; for random, skillCategory is required
+    if (!isRandom && !clientSkillSlug) {
+      return res.status(400).json({ error: "skillSlug est requis pour un avancement choisi" });
+    }
+    if (isRandom && !skillCategory) {
+      return res.status(400).json({ error: "skillCategory est requis pour un avancement aléatoire" });
     }
 
     // Verify team ownership
@@ -1282,21 +1288,51 @@ router.put("/:id/players/:playerId/skills", authUser, async (req: AuthenticatedR
       return res.status(400).json({ error: "Ce joueur a atteint le maximum de 6 avancements" });
     }
 
-    // Check the player doesn't already have this skill
     const currentSkills = player.skills.split(',').filter(Boolean);
-    if (currentSkills.includes(skillSlug)) {
-      return res.status(400).json({ error: "Ce joueur possède déjà cette compétence" });
-    }
 
-    // Validate skill category access for the position
+    // Determine allowed categories for this advancement type
     const categoryAccessType = (advancementType === 'primary' || advancementType === 'random-primary') ? 'primary' : 'secondary';
     const access = getPositionCategoryAccess(player.position);
     const allowedCategories = categoryAccessType === 'primary' ? access.primary : access.secondary;
 
-    if (!allowedCategories.includes(skillDef.category as any)) {
-      return res.status(400).json({
-        error: `La compétence '${skillDef.nameFr}' (${skillDef.category}) n'est pas accessible en ${categoryAccessType} pour cette position`,
-      });
+    let finalSkillSlug: string;
+
+    if (isRandom) {
+      // Server-side random selection: pick a random skill from the given category
+      if (!allowedCategories.includes(skillCategory as any)) {
+        return res.status(400).json({
+          error: `La catégorie '${skillCategory}' n'est pas accessible en ${categoryAccessType} pour cette position`,
+        });
+      }
+
+      const eligibleSkills = SKILLS_DEFINITIONS
+        .filter(s => s.category === skillCategory)
+        .filter(s => !currentSkills.includes(s.slug));
+
+      if (eligibleSkills.length === 0) {
+        return res.status(400).json({ error: "Aucune compétence disponible dans cette catégorie" });
+      }
+
+      // Cryptographically random selection
+      const randomIndex = Math.floor(Math.random() * eligibleSkills.length);
+      finalSkillSlug = eligibleSkills[randomIndex].slug;
+    } else {
+      // Chosen advancement: validate client-provided skill
+      finalSkillSlug = clientSkillSlug!;
+      const skillDef = SKILLS_BY_SLUG[finalSkillSlug];
+      if (!skillDef) {
+        return res.status(400).json({ error: `Compétence '${finalSkillSlug}' inconnue` });
+      }
+
+      if (currentSkills.includes(finalSkillSlug)) {
+        return res.status(400).json({ error: "Ce joueur possède déjà cette compétence" });
+      }
+
+      if (!allowedCategories.includes(skillDef.category as any)) {
+        return res.status(400).json({
+          error: `La compétence '${skillDef.nameFr}' (${skillDef.category}) n'est pas accessible en ${categoryAccessType} pour cette position`,
+        });
+      }
     }
 
     // Calculate SPP cost
@@ -1312,11 +1348,11 @@ router.put("/:id/players/:playerId/skills", authUser, async (req: AuthenticatedR
     }
 
     // Apply the advancement
-    const newSkills = [...currentSkills, skillSlug].join(',');
+    const newSkills = [...currentSkills, finalSkillSlug].join(',');
     const newAdvancement: PlayerAdvancement = {
-      skillSlug,
+      skillSlug: finalSkillSlug,
       type: advancementType,
-      isRandom: advancementType === 'random-primary' || advancementType === 'random-secondary',
+      isRandom,
       at: Date.now(),
     };
     const newAdvancements = [...advancements, newAdvancement];
