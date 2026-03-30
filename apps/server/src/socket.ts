@@ -1,5 +1,6 @@
 import { Server as HttpServer } from "node:http";
 import { Server, Namespace } from "socket.io";
+import { registerGameRoomHandlers } from "./game-rooms";
 
 let io: Server | null = null;
 let gameNamespace: Namespace | null = null;
@@ -39,6 +40,9 @@ export function setupSocket(
       );
     });
   });
+
+  // Register game room handlers (join/leave match rooms)
+  registerGameRoomHandlers(gameNamespace);
 
   return io;
 }
