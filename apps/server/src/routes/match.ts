@@ -7,6 +7,8 @@ import { enterSetupPhase, applyMove, makeRNG } from "@bb/game-engine";
 import type { Move } from "@bb/game-engine";
 import { getUserTeamSide } from "../services/turn-ownership";
 import { persistMatchSPP } from "../services/spp-tracking";
+import { persistPlayerDeaths } from "../services/player-death";
+import { persistPermanentInjuries } from "../services/permanent-injuries";
 import { validate } from "../middleware/validate";
 import {
   joinMatchSchema,
@@ -189,6 +191,24 @@ router.post(
           const teamBId = teamSelections[1]?.teamId;
           if (teamAId && teamBId) {
             await persistMatchSPP(prisma as any, newState, teamAId, teamBId);
+
+            // Persist player deaths from casualty results
+            try {
+              if (newState.casualtyResults && newState.players) {
+                await persistPlayerDeaths(prisma as any, newState, teamAId, teamBId);
+              }
+            } catch (deathError) {
+              console.error("Erreur lors de la persistence des morts:", deathError);
+            }
+
+            // Persist permanent injuries (niggling, stat reductions, miss next match)
+            try {
+              if (newState.lastingInjuryDetails && newState.players) {
+                await persistPermanentInjuries(prisma as any, newState, teamAId, teamBId);
+              }
+            } catch (injuryError) {
+              console.error("Erreur lors de la persistence des blessures permanentes:", injuryError);
+            }
           }
         } catch (sppError) {
           console.error("Erreur lors de la persistence des SPP:", sppError);

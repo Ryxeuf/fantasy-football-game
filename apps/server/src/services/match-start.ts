@@ -3,6 +3,7 @@ import {
   setupPreMatchWithTeams,
   TeamPlayerData,
 } from "@bb/game-engine";
+import { getLinemanStats } from "./journeymen";
 
 type PrismaLike = {
   match: {
@@ -20,6 +21,7 @@ type PrismaLike = {
   };
   team: { findUnique: (args: any) => Promise<any> };
   teamPlayer: { findMany: (args: any) => Promise<any[]> };
+  roster: { findFirst: (args: any) => Promise<any> };
 };
 
 export async function acceptAndMaybeStartMatch(
@@ -157,6 +159,62 @@ export async function acceptAndMaybeStartMatch(
       av: p.av,
       skills: p.skills || "",
     }));
+
+  // Ajouter des journeymen si une équipe a < 11 joueurs vivants
+  if (teamAData.length < 11 || teamBData.length < 11) {
+    try {
+      const [linemanStatsA, linemanStatsB] = await Promise.all([
+        teamAData.length < 11
+          ? getLinemanStats(prisma as any, teamA.roster)
+          : Promise.resolve(undefined),
+        teamBData.length < 11
+          ? getLinemanStats(prisma as any, teamB.roster)
+          : Promise.resolve(undefined),
+      ]);
+
+      // Fill team A with journeymen
+      if (linemanStatsA && teamAData.length < 11) {
+        const needed = 11 - teamAData.length;
+        for (let i = 0; i < needed; i++) {
+          const number = teamAData.length + i + 1;
+          teamAData.push({
+            id: `journeyman-A-${number}`,
+            name: `Journeyman A${i + 1}`,
+            position: linemanStatsA.position,
+            number,
+            ma: linemanStatsA.ma,
+            st: linemanStatsA.st,
+            ag: linemanStatsA.ag,
+            pa: linemanStatsA.pa,
+            av: linemanStatsA.av,
+            skills: "loner_4",
+          });
+        }
+      }
+
+      // Fill team B with journeymen
+      if (linemanStatsB && teamBData.length < 11) {
+        const needed = 11 - teamBData.length;
+        for (let i = 0; i < needed; i++) {
+          const number = teamBData.length + i + 1;
+          teamBData.push({
+            id: `journeyman-B-${number}`,
+            name: `Journeyman B${i + 1}`,
+            position: linemanStatsB.position,
+            number,
+            ma: linemanStatsB.ma,
+            st: linemanStatsB.st,
+            ag: linemanStatsB.ag,
+            pa: linemanStatsB.pa,
+            av: linemanStatsB.av,
+            skills: "loner_4",
+          });
+        }
+      }
+    } catch (journeymenError) {
+      console.error("Erreur lors de l'ajout des journeymen:", journeymenError);
+    }
+  }
 
   // Initialiser l'état du jeu en phase pré-match avec les vraies équipes
   const gameState = setupPreMatchWithTeams(

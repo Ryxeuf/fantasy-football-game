@@ -18,7 +18,7 @@
 
 | # | Tache | Gain | Diff | Statut | Detail |
 |---|-------|------|------|--------|--------|
-| QW.1 | Cabler D.5/D.6/D.8 dans routes/match.ts (online) | Fort | Facile | [ ] | `persistPermanentInjuries`, `persistPlayerDeaths`, `addJourneymen` existent mais ne sont appeles que depuis local-match.ts — les connecter a la route match online |
+| QW.1 | Cabler D.5/D.6/D.8 dans routes/match.ts (online) | Fort | Facile | [x] | `persistPermanentInjuries`, `persistPlayerDeaths`, `addJourneymen` existent mais ne sont appeles que depuis local-match.ts — les connecter a la route match online |
 | QW.2 | Cabler PostMatchSPP dans le flow match online | Fort | Facile | [ ] | Le composant `PostMatchSPP.tsx` existe pour local matches — l'integrer dans le flow de fin de match online |
 
 ---
@@ -148,10 +148,10 @@
 | D.2 | Ecran post-match : attribution SPP | Fort | Moyen | [x] | Liste joueurs avec SPP gagnes, MVP aleatoire highlight (local matches) |
 | D.3 | Level-up : choix de competence | Fort | Moyen | [x] | Quand SPP >= seuil, popup choix primary/secondary/random skill |
 | D.4 | Table d'avancement BB3 | Fort | Facile | [x] | Seuils SPP par level (3, 4, 6, 8, 10...), cout TV par type |
-| D.5 | Blessures permanentes persistees | Moyen | Moyen | [~] | `persistPermanentInjuries` fonctionne pour local. **Non cable dans routes/match.ts online** (voir QW.1). |
-| D.6 | Mort de joueur persistee | Moyen | Facile | [~] | `persistPlayerDeaths` fonctionne pour local. **Non cable dans routes/match.ts online** (voir QW.1). |
+| D.5 | Blessures permanentes persistees | Moyen | Moyen | [x] | `persistPermanentInjuries` fonctionne pour local et online. |
+| D.6 | Mort de joueur persistee | Moyen | Facile | [x] | `persistPlayerDeaths` fonctionne pour local et online. |
 | D.7 | Achat de remplacants entre matchs | Moyen | Moyen | [x] | Winnings + tresorerie, achat joueurs/rerolls/apothecaire (implemente dans #82). |
-| D.8 | Journeymen automatiques si < 11 joueurs | Moyen | Facile | [~] | `addJourneymen()` fonctionne pour local. **Non cable dans routes/match.ts online** (voir QW.1). |
+| D.8 | Journeymen automatiques si < 11 joueurs | Moyen | Facile | [x] | `addJourneymen()` fonctionne pour local et online (via match-start.ts). |
 
 ---
 
