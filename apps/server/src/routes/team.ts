@@ -10,6 +10,12 @@ import {
   getStarPlayerBySlug,
   DEFAULT_RULESET,
   type Ruleset,
+  getNextAdvancementPspCost,
+  SURCHARGE_PER_ADVANCEMENT,
+  getPositionCategoryAccess,
+  SKILLS_BY_SLUG,
+  type AdvancementType,
+  type PlayerAdvancement,
 } from "@bb/game-engine";
 import {
   validateStarPlayerHire,
@@ -1198,6 +1204,148 @@ router.delete("/:id/players/:playerId", authUser, async (req: AuthenticatedReque
     res.json({ team: updatedTeam });
   } catch (e: any) {
     console.error("Erreur lors de la suppression du joueur:", e);
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// Endpoint pour ajouter une compétence à un joueur (level-up avec validation SPP)
+router.put("/:id/players/:playerId/skills", authUser, async (req: AuthenticatedRequest, res) => {
+  const teamId = req.params.id;
+  const playerId = req.params.playerId;
+  const { skillSlug, advancementType } = req.body as {
+    skillSlug: string;
+    advancementType: AdvancementType;
+  };
+
+  try {
+    // Validate input
+    if (!skillSlug || !advancementType) {
+      return res.status(400).json({ error: "skillSlug et advancementType sont requis" });
+    }
+
+    const validAdvTypes: AdvancementType[] = ['primary', 'secondary', 'random-primary', 'random-secondary'];
+    if (!validAdvTypes.includes(advancementType)) {
+      return res.status(400).json({ error: "Type d'avancement invalide" });
+    }
+
+    // Verify the skill exists
+    const skillDef = SKILLS_BY_SLUG[skillSlug];
+    if (!skillDef) {
+      return res.status(400).json({ error: `Compétence '${skillSlug}' inconnue` });
+    }
+
+    // Verify team ownership
+    const team = await prisma.team.findFirst({
+      where: { id: teamId, ownerId: req.user!.id },
+      include: { players: true },
+    });
+
+    if (!team) {
+      return res.status(404).json({ error: "Équipe introuvable" });
+    }
+
+    // Verify team not in active match
+    const activeSelection = await prisma.teamSelection.findFirst({
+      where: {
+        teamId,
+        match: { status: { in: ["pending", "active"] } },
+      },
+    });
+
+    if (activeSelection) {
+      return res.status(400).json({
+        error: "Impossible de modifier cette équipe car elle est engagée dans un match en cours",
+      });
+    }
+
+    // Find the player
+    const player = team.players.find((p: any) => p.id === playerId);
+    if (!player) {
+      return res.status(404).json({ error: "Joueur introuvable" });
+    }
+
+    // Check player is not dead
+    if ((player as any).dead) {
+      return res.status(400).json({ error: "Ce joueur est mort et ne peut pas recevoir d'avancement" });
+    }
+
+    // Parse existing advancements
+    let advancements: PlayerAdvancement[] = [];
+    try {
+      advancements = JSON.parse((player as any).advancements || '[]');
+    } catch {
+      advancements = [];
+    }
+
+    // Check max 6 advancements
+    if (advancements.length >= 6) {
+      return res.status(400).json({ error: "Ce joueur a atteint le maximum de 6 avancements" });
+    }
+
+    // Check the player doesn't already have this skill
+    const currentSkills = player.skills.split(',').filter(Boolean);
+    if (currentSkills.includes(skillSlug)) {
+      return res.status(400).json({ error: "Ce joueur possède déjà cette compétence" });
+    }
+
+    // Validate skill category access for the position
+    const categoryAccessType = (advancementType === 'primary' || advancementType === 'random-primary') ? 'primary' : 'secondary';
+    const access = getPositionCategoryAccess(player.position);
+    const allowedCategories = categoryAccessType === 'primary' ? access.primary : access.secondary;
+
+    if (!allowedCategories.includes(skillDef.category as any)) {
+      return res.status(400).json({
+        error: `La compétence '${skillDef.nameFr}' (${skillDef.category}) n'est pas accessible en ${categoryAccessType} pour cette position`,
+      });
+    }
+
+    // Calculate SPP cost
+    const sppCost = getNextAdvancementPspCost(advancements.length, advancementType);
+    const playerSpp = (player as any).spp || 0;
+
+    if (playerSpp < sppCost) {
+      return res.status(400).json({
+        error: `SPP insuffisants : ${playerSpp} disponibles, ${sppCost} requis pour un avancement ${advancementType}`,
+        required: sppCost,
+        available: playerSpp,
+      });
+    }
+
+    // Apply the advancement
+    const newSkills = [...currentSkills, skillSlug].join(',');
+    const newAdvancement: PlayerAdvancement = {
+      skillSlug,
+      type: advancementType,
+      isRandom: advancementType === 'random-primary' || advancementType === 'random-secondary',
+      at: Date.now(),
+    };
+    const newAdvancements = [...advancements, newAdvancement];
+
+    // Update player: add skill, record advancement, deduct SPP
+    await prisma.teamPlayer.update({
+      where: { id: playerId },
+      data: {
+        skills: newSkills,
+        advancements: JSON.stringify(newAdvancements),
+        spp: { decrement: sppCost },
+      },
+    });
+
+    // Recalculate team values
+    await updateTeamValues(prisma, teamId);
+
+    // Return updated player
+    const updatedPlayer = await prisma.teamPlayer.findUnique({
+      where: { id: playerId },
+    });
+
+    res.json({
+      player: updatedPlayer,
+      sppSpent: sppCost,
+      advancement: newAdvancement,
+    });
+  } catch (e: any) {
+    console.error("Erreur lors de l'ajout de compétence:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });

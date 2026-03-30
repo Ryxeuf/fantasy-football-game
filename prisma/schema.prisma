@@ -138,6 +138,9 @@ model TeamPlayer {
   avReduction      Int @default(0) // Total AV reduction from lasting injuries
   missNextMatch    Boolean @default(false) // Must sit out next match (seriously_hurt+)
 
+  // Advancement tracking (level-up history)
+  advancements String @default("[]") // JSON array of PlayerAdvancement objects
+
   // Player death tracking
   dead    Boolean   @default(false) // Player is dead (killed during a match)
   diedAt  DateTime? // When the player died
