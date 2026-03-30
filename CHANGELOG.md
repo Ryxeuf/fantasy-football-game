@@ -1,3 +1,22 @@
+## [1.40.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.39.0...v1.40.0) (2026-03-30)
+
+
+### ✨ Features
+
+* **D.1:** SPP tracking en match ([#71](https://github.com/Ryxeuf/fantasy-football-game/issues/71)) ([688034b](https://github.com/Ryxeuf/fantasy-football-game/commit/688034b52678de46d095edde89351f9b8a494214))
+* **D.2:** add post-match SPP attribution screen ([#77](https://github.com/Ryxeuf/fantasy-football-game/issues/77)) ([348c205](https://github.com/Ryxeuf/fantasy-football-game/commit/348c20554f63f2fe81c7c0f54f6b34d214267400))
+* **D.3:** implement level-up skill choice with SPP validation ([#78](https://github.com/Ryxeuf/fantasy-football-game/issues/78)) ([4cd7319](https://github.com/Ryxeuf/fantasy-football-game/commit/4cd73194c9ee5d89a983d4b9ec27b469c1919043))
+* **D.5:** persist permanent injuries after match completion ([#75](https://github.com/Ryxeuf/fantasy-football-game/issues/75)) ([fdb7c36](https://github.com/Ryxeuf/fantasy-football-game/commit/fdb7c3685a74e328fb8d9089d58fd11e521edf6d))
+* **D.6:** persist player deaths after match completion ([#73](https://github.com/Ryxeuf/fantasy-football-game/issues/73)) ([2550494](https://github.com/Ryxeuf/fantasy-football-game/commit/25504949433777d335e9d46d0e2301534e9d0a3f))
+* **D.8:** connect journeymen auto-add to persistence layer ([#74](https://github.com/Ryxeuf/fantasy-football-game/issues/74)) ([2fef364](https://github.com/Ryxeuf/fantasy-football-game/commit/2fef364e2e2a5df9af7c2e76dcc4fe839ca794dc))
+
+
+### 🐛 Bug Fixes
+
+* apply auth rate limiter only to login/register, not all /auth routes ([11dfd79](https://github.com/Ryxeuf/fantasy-football-game/commit/11dfd79163964ba30b04b4141d83a4ceca1f1a2a))
+* **D.3:** address Codex review — SQLite schema, server-side random, team values ([#80](https://github.com/Ryxeuf/fantasy-football-game/issues/80)) ([b391d93](https://github.com/Ryxeuf/fantasy-football-game/commit/b391d93fcc55dc5c94ca23869233115624ca8f3b))
+* **D.5:** sync SQLite schema + reset missNextMatch ([#76](https://github.com/Ryxeuf/fantasy-football-game/issues/76)) ([223ea05](https://github.com/Ryxeuf/fantasy-football-game/commit/223ea05b66ce9d4858baad31560451aefb60bcea)), closes [#75](https://github.com/Ryxeuf/fantasy-football-game/issues/75)
+
 ## [1.39.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.38.0...v1.39.0) (2026-03-29)
 
 
