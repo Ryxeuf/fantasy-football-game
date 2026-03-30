@@ -13,6 +13,29 @@ export type PlayerState = 'active' | 'stunned' | 'knocked_out' | 'casualty' | 's
 
 export type CasualtyOutcome = 'badly_hurt' | 'seriously_hurt' | 'serious_injury' | 'lasting_injury' | 'dead';
 
+/**
+ * Specific lasting injury type for BB2020/BB3 casualty table.
+ * - 'niggling': Niggling Injury (accumulates, -1 on future casualty rolls)
+ * - stat reductions: permanent -1 to the specified characteristic
+ */
+export type LastingInjuryType =
+  | 'niggling'
+  | '-1ma'
+  | '-1av'
+  | '-1pa'
+  | '-1ag'
+  | '-1st';
+
+/**
+ * Details of a lasting/serious injury for a player.
+ * Stored in GameState to be persisted post-match.
+ */
+export interface LastingInjuryDetail {
+  outcome: CasualtyOutcome; // 'serious_injury' | 'lasting_injury'
+  injuryType: LastingInjuryType;
+  missNextMatch: boolean;
+}
+
 export interface Player {
   id: string;
   team: TeamId;
@@ -149,6 +172,8 @@ export interface GameState {
   }>;
   // Résultats des blessures graves par joueur (rempli pendant le match)
   casualtyResults: Record<string, CasualtyOutcome>; // playerId -> outcome
+  // Détails des blessures permanentes (serious_injury / lasting_injury)
+  lastingInjuryDetails: Record<string, LastingInjuryDetail>; // playerId -> injury detail
   // Résultats finaux (rempli en fin de match)
   matchResult?: {
     winner?: TeamId;

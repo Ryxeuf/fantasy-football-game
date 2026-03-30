@@ -18,6 +18,7 @@ import { randomBytes } from "crypto";
 import { hasRole } from "../utils/roles";
 import { persistMatchSPP } from "../services/spp-tracking";
 import { persistPlayerDeaths } from "../services/player-death";
+import { persistPermanentInjuries } from "../services/permanent-injuries";
 import { getLinemanStats } from "../services/journeymen";
 
 const router = Router();
@@ -723,6 +724,7 @@ router.post("/:id/complete", authUser, async (req: AuthenticatedRequest, res) =>
     // Persist SPP to TeamPlayer records if game state is available
     let sppUpdatedCount = 0;
     let deathsPersistedCount = 0;
+    let injuriesPersistedCount = 0;
     if (localMatch.gameState && localMatch.teamAId && localMatch.teamBId) {
       const gameState = localMatch.gameState as any;
       try {
@@ -753,9 +755,24 @@ router.post("/:id/complete", authUser, async (req: AuthenticatedRequest, res) =>
         console.error("Erreur lors de la persistence des morts:", deathError);
         // Non-blocking: match completion succeeds even if death persistence fails
       }
+
+      // Persist permanent injuries (niggling, stat reductions, miss next match)
+      try {
+        if (gameState.lastingInjuryDetails && gameState.players) {
+          injuriesPersistedCount = await persistPermanentInjuries(
+            prisma as any,
+            gameState,
+            localMatch.teamAId,
+            localMatch.teamBId,
+          );
+        }
+      } catch (injuryError) {
+        console.error("Erreur lors de la persistence des blessures permanentes:", injuryError);
+        // Non-blocking: match completion succeeds even if injury persistence fails
+      }
     }
 
-    res.json({ localMatch: updatedMatch, sppUpdatedCount, deathsPersistedCount });
+    res.json({ localMatch: updatedMatch, sppUpdatedCount, deathsPersistedCount, injuriesPersistedCount });
   } catch (e: any) {
     console.error("Erreur lors de la finalisation de la partie offline:", e);
     return res.status(500).json({ error: "Erreur serveur" });

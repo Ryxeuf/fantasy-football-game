@@ -3,7 +3,7 @@
  * Gère les jets d'armure, de blessure et les zones de dugout
  */
 
-import { GameState, Player, RNG, CasualtyOutcome } from '../core/types';
+import { GameState, Player, RNG, CasualtyOutcome, LastingInjuryType, LastingInjuryDetail } from '../core/types';
 import { performArmorRoll } from '../utils/dice';
 import { createLogEntry } from '../utils/logging';
 import { movePlayerToDugoutZone } from './dugout';
@@ -78,6 +78,32 @@ function handleKnockedOut(state: GameState, player: Player): GameState {
 }
 
 /**
+ * BB2020/BB3 lasting injury table (D6 roll for characteristic reduction).
+ * 1: -1 MA, 2: -1 AV, 3: -1 PA (or -1 AG if no PA), 4-5: -1 AG, 6: -1 ST
+ */
+export function rollLastingInjuryType(rng: RNG, playerPa: number): LastingInjuryType {
+  const roll = Math.floor(rng() * 6) + 1;
+  switch (roll) {
+    case 1: return '-1ma';
+    case 2: return '-1av';
+    case 3: return playerPa === 0 ? '-1ag' : '-1pa';
+    case 4:
+    case 5: return '-1ag';
+    case 6: return '-1st';
+    default: return '-1ag'; // safety fallback
+  }
+}
+
+const LASTING_INJURY_LABELS: Record<LastingInjuryType, string> = {
+  'niggling': 'Blessure gênante (Niggling Injury)',
+  '-1ma': '-1 Mouvement (MA)',
+  '-1av': '-1 Armure (AV)',
+  '-1pa': '-1 Passe (PA)',
+  '-1ag': '-1 Agilité (AG)',
+  '-1st': '-1 Force (ST)',
+};
+
+/**
  * Gère un joueur blessé (10+)
  */
 function handleCasualty(state: GameState, player: Player, rng: RNG, causedById?: string): GameState {
@@ -104,6 +130,11 @@ function handleCasualty(state: GameState, player: Player, rng: RNG, causedById?:
   );
   newState.gameLog = [...newState.gameLog, casualtyLog];
 
+  // Initialize lastingInjuryDetails if not present
+  if (!newState.lastingInjuryDetails) {
+    newState.lastingInjuryDetails = {};
+  }
+
   // Déterminer le type de blessure
   let outcome: CasualtyOutcome;
   if (casualtyRoll <= 6) {
@@ -124,22 +155,43 @@ function handleCasualty(state: GameState, player: Player, rng: RNG, causedById?:
       player.team
     );
     newState.gameLog = [...newState.gameLog, seriouslyHurtLog];
+    // Seriously hurt: miss next match, no permanent stat change
+    newState.lastingInjuryDetails[player.id] = {
+      outcome: 'seriously_hurt',
+      injuryType: 'niggling', // placeholder, only missNextMatch matters here
+      missNextMatch: true,
+    };
   } else if (casualtyRoll <= 12) {
     outcome = 'serious_injury';
+    // Serious injury: Niggling Injury + miss next match
+    newState.lastingInjuryDetails[player.id] = {
+      outcome: 'serious_injury',
+      injuryType: 'niggling',
+      missNextMatch: true,
+    };
     const seriousInjuryLog = createLogEntry(
       'action',
-      `${player.name} a une blessure sérieuse - blessure gênante + manquera le prochain match`,
+      `${player.name} a une blessure sérieuse - ${LASTING_INJURY_LABELS['niggling']} + manquera le prochain match`,
       player.id,
-      player.team
+      player.team,
+      { injuryType: 'niggling' }
     );
     newState.gameLog = [...newState.gameLog, seriousInjuryLog];
   } else if (casualtyRoll <= 14) {
     outcome = 'lasting_injury';
+    // Lasting injury: roll D6 for specific stat reduction
+    const injuryType = rollLastingInjuryType(rng, player.pa);
+    newState.lastingInjuryDetails[player.id] = {
+      outcome: 'lasting_injury',
+      injuryType,
+      missNextMatch: true,
+    };
     const lastingInjuryLog = createLogEntry(
       'action',
-      `${player.name} a une blessure permanente - réduction de caractéristique + manquera le prochain match`,
+      `${player.name} a une blessure permanente - ${LASTING_INJURY_LABELS[injuryType]} + manquera le prochain match`,
       player.id,
-      player.team
+      player.team,
+      { injuryType }
     );
     newState.gameLog = [...newState.gameLog, lastingInjuryLog];
   } else {

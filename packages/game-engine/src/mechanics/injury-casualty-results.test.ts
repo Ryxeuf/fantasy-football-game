@@ -37,6 +37,7 @@ function createTestState(): GameState {
     teamNames: { teamA: 'Team A', teamB: 'Team B' },
     matchStats: {},
     casualtyResults: {},
+    lastingInjuryDetails: {},
     gameLog: [],
   };
 }
