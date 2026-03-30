@@ -119,6 +119,15 @@ model TeamPlayer {
   pa       Int
   av       Int
   skills   String
+
+  // SPP tracking (Star Player Points)
+  spp               Int @default(0) // Total SPP accumulated
+  totalTouchdowns   Int @default(0) // Career touchdowns
+  totalCasualties   Int @default(0) // Career casualties inflicted
+  totalCompletions  Int @default(0) // Career pass completions
+  totalInterceptions Int @default(0) // Career interceptions
+  totalMvpAwards    Int @default(0) // Career MVP awards
+  matchesPlayed     Int @default(0) // Total matches played
 }
 
 model TeamStarPlayer {
