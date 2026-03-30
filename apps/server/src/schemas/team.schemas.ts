@@ -40,3 +40,18 @@ export const updateTeamInfoSchema = z.object({
   apothecary: z.boolean().optional(),
   dedicatedFans: z.number().int().min(1, "Le nombre de fans dévoués doit être entre 1 et 6").max(6, "Le nombre de fans dévoués doit être entre 1 et 6").optional(),
 });
+
+export const purchaseSchema = z.object({
+  type: z.enum([
+    "player",
+    "reroll",
+    "cheerleader",
+    "assistant",
+    "apothecary",
+    "dedicated_fan",
+  ]),
+  // Required when type is "player"
+  position: z.string().optional(),
+  name: z.string().max(100).optional(),
+  number: z.number().int().min(1).max(99).optional(),
+});

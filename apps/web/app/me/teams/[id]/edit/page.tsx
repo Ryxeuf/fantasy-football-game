@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { API_BASE } from "../../../../auth-client";
 import SkillTooltip from "../../components/SkillTooltip";
 import TeamInfoEditor from "../../components/TeamInfoEditor";
+import TreasuryPurchasePanel from "../../components/TreasuryPurchasePanel";
 import { 
   getPlayerCost, 
   getDisplayName,
@@ -1363,6 +1364,36 @@ export default function TeamEditPage() {
             }));
           }}
           disabled={!canEdit}
+        />
+      )}
+
+      {/* Achats avec la trésorerie (entre matchs) */}
+      {team && team.treasury > 0 && (
+        <TreasuryPurchasePanel
+          team={{
+            id: team.id,
+            roster: team.roster,
+            treasury: team.treasury,
+            rerolls: team.rerolls || 0,
+            cheerleaders: team.cheerleaders || 0,
+            assistants: team.assistants || 0,
+            apothecary: team.apothecary || false,
+            dedicatedFans: team.dedicatedFans || 1,
+            players: (team.players || []).map((p: any) => ({
+              id: p.id,
+              number: p.number,
+              dead: p.dead || false,
+              name: p.name,
+            })),
+          }}
+          availablePositions={availablePositions}
+          onPurchaseComplete={async () => {
+            const d = await fetchJSON(`/team/${id}`);
+            setData(d);
+            setPlayers(d.team?.players || []);
+            const positionsData = await fetchJSON(`/team/${id}/available-positions`);
+            setAvailablePositions(positionsData.availablePositions || []);
+          }}
         />
       )}
 
