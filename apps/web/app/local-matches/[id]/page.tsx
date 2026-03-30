@@ -4,6 +4,7 @@ import { useRouter, useParams } from "next/navigation";
 import { API_BASE } from "../../auth-client";
 import LocalMatchActions from "./LocalMatchActions";
 import LocalMatchSummary from "./LocalMatchSummary";
+import PostMatchSPP from "./PostMatchSPP";
 
 // Types de météo (copie locale pour éviter les problèmes d'import)
 const WEATHER_TYPES = [
@@ -104,6 +105,24 @@ type LocalMatch = {
       teamA: string;
       teamB: string;
     };
+    matchStats?: Record<string, {
+      touchdowns: number;
+      casualties: number;
+      completions: number;
+      interceptions: number;
+      mvp: boolean;
+    }>;
+    matchResult?: {
+      winner?: "A" | "B";
+      spp: Record<string, number>;
+    };
+    players?: Array<{
+      id: string;
+      team: "A" | "B";
+      name: string;
+      number: number;
+      position: string;
+    }>;
   };
 };
 
@@ -845,6 +864,21 @@ export default function LocalMatchPage() {
                 </p>
               </div>
             )}
+          </div>
+        )}
+
+        {localMatch.status === "completed" && localMatch.teamB &&
+          localMatch.gameState?.matchStats &&
+          localMatch.gameState?.matchResult &&
+          localMatch.gameState?.players && (
+          <div className="mb-4 sm:mb-6">
+            <PostMatchSPP
+              matchStats={localMatch.gameState.matchStats}
+              matchResult={localMatch.gameState.matchResult}
+              players={localMatch.gameState.players}
+              teamAName={localMatch.teamA.name}
+              teamBName={localMatch.teamB.name}
+            />
           </div>
         )}
 
