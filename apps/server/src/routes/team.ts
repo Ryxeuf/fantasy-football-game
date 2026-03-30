@@ -17,6 +17,7 @@ import {
   SKILLS_DEFINITIONS,
   type AdvancementType,
   type PlayerAdvancement,
+  getRerollCost,
 } from "@bb/game-engine";
 import {
   validateStarPlayerHire,
@@ -34,6 +35,7 @@ import {
   buildTeamSchema,
   updateTeamSchema,
   updateTeamInfoSchema,
+  purchaseSchema,
 } from "../schemas/team.schemas";
 import { chooseTeamSchema } from "../schemas/match.schemas";
 
@@ -1827,6 +1829,258 @@ router.delete("/:id/star-players/:starPlayerId", authUser, async (req: Authentic
     });
   } catch (e: any) {
     console.error("Erreur lors du retrait du Star Player:", e);
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// Endpoint pour acheter avec la trésorerie (entre les matchs)
+router.post("/:id/purchase", authUser, validate(purchaseSchema), async (req: AuthenticatedRequest, res) => {
+  const teamId = req.params.id;
+  const { type, position, name, number } = req.body as {
+    type: "player" | "reroll" | "cheerleader" | "assistant" | "apothecary" | "dedicated_fan";
+    position?: string;
+    name?: string;
+    number?: number;
+  };
+
+  try {
+    const team = await prisma.team.findFirst({
+      where: { id: teamId, ownerId: req.user!.id },
+      include: { players: true },
+    });
+
+    if (!team) {
+      return res.status(404).json({ error: "Équipe introuvable" });
+    }
+
+    // Vérifier que l'équipe n'est pas en match actif
+    const activeSelection = await prisma.teamSelection.findFirst({
+      where: {
+        teamId,
+        match: { status: { in: ["pending", "active"] } },
+      },
+    });
+
+    if (activeSelection) {
+      return res.status(400).json({
+        error: "Impossible d'acheter pendant un match en cours",
+      });
+    }
+
+    let cost = 0;
+    let description = "";
+
+    switch (type) {
+      case "player": {
+        if (!position || !name || !number) {
+          return res.status(400).json({
+            error: "position, name et number requis pour acheter un joueur",
+          });
+        }
+
+        if (team.players.filter(p => !p.dead).length >= 16) {
+          return res.status(400).json({
+            error: "Une équipe ne peut pas avoir plus de 16 joueurs vivants",
+          });
+        }
+
+        const existingNumber = team.players.find(p => p.number === number && !p.dead);
+        if (existingNumber) {
+          return res.status(400).json({
+            error: `Le numéro ${number} est déjà utilisé par ${existingNumber.name}`,
+          });
+        }
+
+        const rosterData = await getRosterFromDb(
+          team.roster as AllowedRoster,
+          "fr",
+          (team.ruleset as Ruleset) ?? DEFAULT_RULESET,
+        );
+        if (!rosterData) {
+          return res.status(400).json({ error: "Roster non reconnu" });
+        }
+
+        const positionData = rosterData.positions.find((p: any) => p.slug === position);
+        if (!positionData) {
+          return res.status(400).json({
+            error: `Position '${position}' non trouvée dans le roster ${team.roster}`,
+          });
+        }
+
+        const currentPositionCount = team.players.filter(
+          p => p.position === position && !p.dead,
+        ).length;
+        if (currentPositionCount >= positionData.max) {
+          return res.status(400).json({
+            error: `Limite maximale atteinte pour la position ${positionData.displayName} (${positionData.max})`,
+          });
+        }
+
+        cost = positionData.cost * 1000; // kpo -> po
+
+        if (team.treasury < cost) {
+          return res.status(400).json({
+            error: `Trésorerie insuffisante. Coût: ${Math.round(cost / 1000)}k po, Trésorerie: ${Math.round(team.treasury / 1000)}k po`,
+          });
+        }
+
+        // Créer le joueur et déduire la trésorerie
+        await prisma.$transaction([
+          prisma.teamPlayer.create({
+            data: {
+              teamId,
+              name: name.trim(),
+              position,
+              number,
+              ma: positionData.ma,
+              st: positionData.st,
+              ag: positionData.ag,
+              pa: positionData.pa,
+              av: positionData.av,
+              skills: positionData.skills,
+            },
+          }),
+          prisma.team.update({
+            where: { id: teamId },
+            data: { treasury: team.treasury - cost },
+          }),
+        ]);
+
+        description = `Joueur ${name.trim()} (${positionData.displayName}) recruté`;
+        break;
+      }
+
+      case "reroll": {
+        if (team.rerolls >= 8) {
+          return res.status(400).json({ error: "Maximum 8 relances par équipe" });
+        }
+        // BB3 rule: rerolls cost double after team creation
+        cost = getRerollCost(team.roster) * 2;
+
+        if (team.treasury < cost) {
+          return res.status(400).json({
+            error: `Trésorerie insuffisante. Coût: ${Math.round(cost / 1000)}k po, Trésorerie: ${Math.round(team.treasury / 1000)}k po`,
+          });
+        }
+
+        await prisma.team.update({
+          where: { id: teamId },
+          data: {
+            rerolls: team.rerolls + 1,
+            treasury: team.treasury - cost,
+          },
+        });
+        description = `Relance achetée (coût doublé: ${Math.round(cost / 1000)}k po)`;
+        break;
+      }
+
+      case "cheerleader": {
+        if (team.cheerleaders >= 12) {
+          return res.status(400).json({ error: "Maximum 12 cheerleaders" });
+        }
+        cost = 10000;
+
+        if (team.treasury < cost) {
+          return res.status(400).json({
+            error: `Trésorerie insuffisante. Coût: 10k po, Trésorerie: ${Math.round(team.treasury / 1000)}k po`,
+          });
+        }
+
+        await prisma.team.update({
+          where: { id: teamId },
+          data: {
+            cheerleaders: team.cheerleaders + 1,
+            treasury: team.treasury - cost,
+          },
+        });
+        description = "Cheerleader recrutée";
+        break;
+      }
+
+      case "assistant": {
+        if (team.assistants >= 6) {
+          return res.status(400).json({ error: "Maximum 6 assistants" });
+        }
+        cost = 10000;
+
+        if (team.treasury < cost) {
+          return res.status(400).json({
+            error: `Trésorerie insuffisante. Coût: 10k po, Trésorerie: ${Math.round(team.treasury / 1000)}k po`,
+          });
+        }
+
+        await prisma.team.update({
+          where: { id: teamId },
+          data: {
+            assistants: team.assistants + 1,
+            treasury: team.treasury - cost,
+          },
+        });
+        description = "Assistant recruté";
+        break;
+      }
+
+      case "apothecary": {
+        if (team.apothecary) {
+          return res.status(400).json({ error: "L'équipe a déjà un apothicaire" });
+        }
+        cost = 50000;
+
+        if (team.treasury < cost) {
+          return res.status(400).json({
+            error: `Trésorerie insuffisante. Coût: 50k po, Trésorerie: ${Math.round(team.treasury / 1000)}k po`,
+          });
+        }
+
+        await prisma.team.update({
+          where: { id: teamId },
+          data: {
+            apothecary: true,
+            treasury: team.treasury - cost,
+          },
+        });
+        description = "Apothicaire recruté";
+        break;
+      }
+
+      case "dedicated_fan": {
+        if (team.dedicatedFans >= 6) {
+          return res.status(400).json({ error: "Maximum 6 fans dévoués" });
+        }
+        cost = 10000;
+
+        if (team.treasury < cost) {
+          return res.status(400).json({
+            error: `Trésorerie insuffisante. Coût: 10k po, Trésorerie: ${Math.round(team.treasury / 1000)}k po`,
+          });
+        }
+
+        await prisma.team.update({
+          where: { id: teamId },
+          data: {
+            dedicatedFans: team.dedicatedFans + 1,
+            treasury: team.treasury - cost,
+          },
+        });
+        description = "Fan dévoué recruté";
+        break;
+      }
+    }
+
+    // Recalculer les valeurs d'équipe
+    await updateTeamValues(prisma, teamId);
+
+    const updatedTeam = await prisma.team.findUnique({
+      where: { id: teamId },
+      include: { players: true },
+    });
+
+    res.json({
+      team: updatedTeam,
+      purchase: { type, cost, description },
+    });
+  } catch (e: any) {
+    console.error("Erreur lors de l'achat:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
