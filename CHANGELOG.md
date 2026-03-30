@@ -1,3 +1,11 @@
+## [1.41.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.40.0...v1.41.0) (2026-03-30)
+
+
+### ✨ Features
+
+* **A.1:** install socket.io and attach to Express HTTP server ([4088878](https://github.com/Ryxeuf/fantasy-football-game/commit/408887809726b3169e557a7bf86fce0bdd521b1d))
+* **D.7:** add treasury-based purchases between matches ([#82](https://github.com/Ryxeuf/fantasy-football-game/issues/82)) ([2aebcbc](https://github.com/Ryxeuf/fantasy-football-game/commit/2aebcbcc8eb1e5339fa11fc38dcc3d86342a343b))
+
 ## [1.40.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.39.0...v1.40.0) (2026-03-30)
 
 
