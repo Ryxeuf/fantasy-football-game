@@ -6,6 +6,7 @@ import { acceptAndMaybeStartMatch } from "../services/match-start";
 import { enterSetupPhase, applyMove, makeRNG } from "@bb/game-engine";
 import type { Move } from "@bb/game-engine";
 import { getUserTeamSide } from "../services/turn-ownership";
+import { persistMatchSPP } from "../services/spp-tracking";
 import { validate } from "../middleware/validate";
 import {
   joinMatchSchema,
@@ -175,6 +176,24 @@ router.post(
           lastMoveAt: new Date(),
         },
       });
+
+      // Persist SPP when the match ends
+      if (matchEnded && newState.matchStats && newState.players) {
+        try {
+          const teamSelections = await prisma.teamSelection.findMany({
+            where: { matchId },
+            orderBy: { createdAt: "asc" },
+            select: { teamId: true },
+          });
+          const teamAId = teamSelections[0]?.teamId;
+          const teamBId = teamSelections[1]?.teamId;
+          if (teamAId && teamBId) {
+            await persistMatchSPP(prisma as any, newState, teamAId, teamBId);
+          }
+        } catch (sppError) {
+          console.error("Erreur lors de la persistence des SPP:", sppError);
+        }
+      }
 
       // Determiner si c'est toujours le tour de ce joueur
       const isMyTurn = newState.currentPlayer === userTeamSide;
