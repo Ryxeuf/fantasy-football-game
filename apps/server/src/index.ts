@@ -50,8 +50,10 @@ app.use(apiRateLimiter);
 
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
-// Rate limiting strict sur les routes auth (5 req/min par IP)
-app.use("/auth", authRateLimiter, authRoutes);
+// Rate limiting strict uniquement sur login/register (anti brute-force)
+app.use("/auth/login", authRateLimiter);
+app.use("/auth/register", authRateLimiter);
+app.use("/auth", authRoutes);
 app.use("/match", matchRoutes);
 app.use("/admin", adminRoutes);
 app.use("/admin/data", adminDataRoutes);

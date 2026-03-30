@@ -1,12 +1,12 @@
 import rateLimit from "express-rate-limit";
 
 /**
- * Rate limiter strict pour les routes d'authentification.
- * 5 requêtes par minute par IP sur /login, /register.
+ * Rate limiter strict pour les routes sensibles d'authentification.
+ * 10 requêtes par fenêtre de 15 minutes par IP sur /login, /register.
  */
 export const authRateLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 5,
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
