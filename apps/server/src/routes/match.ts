@@ -626,30 +626,34 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
         return res.status(400).json({ error: "Équipes non trouvées" });
       }
 
-      const teamAData = teamA.players.map((p: any) => ({
-        id: p.id,
-        name: p.name,
-        position: p.position,
-        number: p.number,
-        ma: p.ma,
-        st: p.st,
-        ag: p.ag,
-        pa: p.pa,
-        av: p.av,
-        skills: p.skills || "",
-      }));
-      const teamBData = teamB.players.map((p: any) => ({
-        id: p.id,
-        name: p.name,
-        position: p.position,
-        number: p.number,
-        ma: p.ma,
-        st: p.st,
-        ag: p.ag,
-        pa: p.pa,
-        av: p.av,
-        skills: p.skills || "",
-      }));
+      const teamAData = teamA.players
+        .filter((p: any) => !p.dead)
+        .map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          position: p.position,
+          number: p.number,
+          ma: p.ma,
+          st: p.st,
+          ag: p.ag,
+          pa: p.pa,
+          av: p.av,
+          skills: p.skills || "",
+        }));
+      const teamBData = teamB.players
+        .filter((p: any) => !p.dead)
+        .map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          position: p.position,
+          number: p.number,
+          ma: p.ma,
+          st: p.st,
+          ag: p.ag,
+          pa: p.pa,
+          av: p.av,
+          skills: p.skills || "",
+        }));
 
       console.log(
         "Players loaded for prematch:",

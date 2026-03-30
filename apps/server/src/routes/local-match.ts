@@ -18,6 +18,7 @@ import { randomBytes } from "crypto";
 import { hasRole } from "../utils/roles";
 import { persistMatchSPP } from "../services/spp-tracking";
 import { persistPlayerDeaths } from "../services/player-death";
+import { getLinemanStats } from "../services/journeymen";
 
 const router = Router();
 
@@ -443,32 +444,36 @@ router.post("/:id/start", authUser, async (req: AuthenticatedRequest, res) => {
       return res.status(400).json({ error: "La partie a déjà été démarrée ou terminée" });
     }
     
-    // Préparer les données des équipes
-    const teamAData = localMatch.teamA.players.map((p: any) => ({
-      id: p.id,
-      name: p.name,
-      position: p.position,
-      number: p.number,
-      ma: p.ma,
-      st: p.st,
-      ag: p.ag,
-      pa: p.pa,
-      av: p.av,
-      skills: p.skills || "",
-    }));
-    
-    const teamBData = localMatch.teamB.players.map((p: any) => ({
-      id: p.id,
-      name: p.name,
-      position: p.position,
-      number: p.number,
-      ma: p.ma,
-      st: p.st,
-      ag: p.ag,
-      pa: p.pa,
-      av: p.av,
-      skills: p.skills || "",
-    }));
+    // Préparer les données des équipes (exclure les joueurs morts)
+    const teamAData = localMatch.teamA.players
+      .filter((p: any) => !p.dead)
+      .map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        position: p.position,
+        number: p.number,
+        ma: p.ma,
+        st: p.st,
+        ag: p.ag,
+        pa: p.pa,
+        av: p.av,
+        skills: p.skills || "",
+      }));
+
+    const teamBData = localMatch.teamB.players
+      .filter((p: any) => !p.dead)
+      .map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        position: p.position,
+        number: p.number,
+        ma: p.ma,
+        st: p.st,
+        ag: p.ag,
+        pa: p.pa,
+        av: p.av,
+        skills: p.skills || "",
+      }));
     
     // Récupérer les fans dévoués des équipes
     const dedicatedFansA = localMatch.teamA.dedicatedFans || 1;
@@ -511,8 +516,13 @@ router.post("/:id/start", authUser, async (req: AuthenticatedRequest, res) => {
     
     // Continuer automatiquement la séquence pré-match jusqu'à la phase setup
     // Journeymen : ajouter les joueurs de passage si nécessaire (11 joueurs par équipe)
+    // Utiliser les stats du Lineman du roster de chaque équipe
     if (gameState.preMatch.phase === 'journeymen') {
-      gameState = addJourneymen(gameState, 11, 11);
+      const [linemanStatsA, linemanStatsB] = await Promise.all([
+        getLinemanStats(prisma as any, localMatch.teamA.roster),
+        getLinemanStats(prisma as any, localMatch.teamB.roster),
+      ]);
+      gameState = addJourneymen(gameState, 11, 11, linemanStatsA, linemanStatsB);
     }
     
     // Inducements : traiter automatiquement (pas d'incitations pour l'instant)
