@@ -19,7 +19,7 @@
 | # | Tache | Gain | Diff | Statut | Detail |
 |---|-------|------|------|--------|--------|
 | QW.1 | Cabler D.5/D.6/D.8 dans routes/match.ts (online) | Fort | Facile | [x] | `persistPermanentInjuries`, `persistPlayerDeaths`, `addJourneymen` existent mais ne sont appeles que depuis local-match.ts — les connecter a la route match online |
-| QW.2 | Cabler PostMatchSPP dans le flow match online | Fort | Facile | [ ] | Le composant `PostMatchSPP.tsx` existe pour local matches — l'integrer dans le flow de fin de match online |
+| QW.2 | Cabler PostMatchSPP dans le flow match online | Fort | Facile | [x] | Le composant `PostMatchSPP.tsx` existe pour local matches — integre dans le flow de fin de match online |
 
 ---
 
