@@ -55,6 +55,8 @@ interface Player {
   pa: number;
   av: number;
   skills: string;
+  spp: number;
+  advancements: string; // JSON string of PlayerAdvancement[]
 }
 
 interface AvailablePosition {
@@ -576,6 +578,7 @@ export default function TeamEditPage() {
                 <th className="text-center px-4 py-3 font-semibold text-gray-900 text-xs sm:text-sm">AG</th>
                 <th className="text-center px-4 py-3 font-semibold text-gray-900 text-xs sm:text-sm">PA</th>
                 <th className="text-center px-4 py-3 font-semibold text-gray-900 text-xs sm:text-sm">AV</th>
+                <th className="text-center px-4 py-3 font-semibold text-yellow-700 text-xs sm:text-sm">SPP</th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-900 text-xs sm:text-sm">Compétences</th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-900 text-xs sm:text-sm">Actions</th>
               </tr>
@@ -639,9 +642,16 @@ export default function TeamEditPage() {
                     <td className="px-4 py-3 text-center font-mono text-sm">{player.ag}</td>
                     <td className="px-4 py-3 text-center font-mono text-sm">{player.pa || '—'}</td>
                     <td className="px-4 py-3 text-center font-mono text-sm">{player.av}</td>
+                    <td className="px-4 py-3 text-center">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full font-mono text-xs font-semibold ${
+                        (player.spp ?? 0) > 0 ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-500'
+                      }`}>
+                        {player.spp ?? 0}
+                      </span>
+                    </td>
                     <td className="px-4 py-3">
-                      <SkillTooltip 
-                        skillsString={player.skills} 
+                      <SkillTooltip
+                        skillsString={player.skills}
                         teamName={team?.roster}
                         position={player.position}
                       />
@@ -739,7 +749,7 @@ export default function TeamEditPage() {
 
                 {/* Statistiques */}
                 <div className="mb-4">
-                  <div className="grid grid-cols-5 gap-2">
+                  <div className="grid grid-cols-6 gap-2">
                     <div className="bg-blue-50 rounded-lg p-2 text-center">
                       <div className="text-xs text-blue-600 font-medium mb-0.5">MA</div>
                       <div className="text-base font-bold text-blue-900 font-mono">{player.ma}</div>
@@ -759,6 +769,10 @@ export default function TeamEditPage() {
                     <div className="bg-orange-50 rounded-lg p-2 text-center">
                       <div className="text-xs text-orange-600 font-medium mb-0.5">AV</div>
                       <div className="text-base font-bold text-orange-900 font-mono">{player.av}</div>
+                    </div>
+                    <div className="bg-yellow-50 rounded-lg p-2 text-center">
+                      <div className="text-xs text-yellow-600 font-medium mb-0.5">SPP</div>
+                      <div className="text-base font-bold text-yellow-900 font-mono">{player.spp ?? 0}</div>
                     </div>
                   </div>
                 </div>
@@ -1022,6 +1036,10 @@ export default function TeamEditPage() {
                             <span className="w-2 h-2 bg-yellow-400 rounded-full"></span>
                             {advCount > 0 ? `Expérimenté (${advCount})` : 'Recrue'}
                           </span>
+                          <span className="text-blue-200">•</span>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-yellow-400/20 text-yellow-200 font-semibold text-xs">
+                            {player.spp ?? 0} SPP
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -1134,9 +1152,16 @@ export default function TeamEditPage() {
                       </div>
                     </div>
 
-                    {/* Informations de coût */}
+                    {/* Informations de coût et SPP */}
                     <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
                       <div className="flex items-center justify-between">
+                        <div>
+                          <span className="text-sm text-gray-600">SPP disponibles: </span>
+                          <span className={`text-xl font-bold ${(player.spp ?? 0) >= psp ? 'text-green-700' : 'text-red-600'}`}>
+                            {player.spp ?? 0}
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-500">•</div>
                         <div>
                           <span className="text-sm text-gray-600">Coût PSP: </span>
                           <span className="text-xl font-bold text-blue-700">{psp}</span>
@@ -1147,6 +1172,11 @@ export default function TeamEditPage() {
                           <span className="text-xl font-bold text-indigo-700">+{surchargeK}k</span>
                         </div>
                       </div>
+                      {(player.spp ?? 0) < psp && (
+                        <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                          SPP insuffisants pour cet avancement ({player.spp ?? 0}/{psp}). Jouez des matchs pour accumuler plus de SPP.
+                        </div>
+                      )}
                     </div>
 
                     {/* Grille de compétences ou bouton aléatoire */}
@@ -1249,22 +1279,24 @@ export default function TeamEditPage() {
                       Annuler
                     </button>
                     <button
-                      disabled={!selectedSkillSlug || !selectedCategory}
+                      disabled={!selectedSkillSlug || !selectedCategory || player.spp < psp}
                       onClick={async () => {
                         try {
                           const currentSkills = (player.skills || '').split(',').filter(Boolean);
                           if (currentSkills.includes(selectedSkillSlug)) return;
-                          const newSkills = [...currentSkills, selectedSkillSlug].join(',');
-                          let currentAdv: any[] = [];
-                          try { currentAdv = JSON.parse(player.advancements || '[]'); } catch {}
-                          const newAdv = [...currentAdv, { 
-                            skillSlug: selectedSkillSlug, 
-                            type: actualAdvType, 
-                            isRandom: isRandom,
-                            at: Date.now() 
-                          }];
-                          await putJSON(`/team/${id}/players/${player.id}/skills`, { skills: newSkills, advancements: newAdv });
-                          setPlayers(prev => prev.map(p => p.id === player.id ? { ...p, skills: newSkills, advancements: JSON.stringify(newAdv) } as any : p));
+                          const result = await putJSON(`/team/${id}/players/${player.id}/skills`, {
+                            skillSlug: selectedSkillSlug,
+                            advancementType: actualAdvType,
+                          });
+                          // Update local state with server response
+                          if (result.player) {
+                            setPlayers(prev => prev.map(p => p.id === player.id ? {
+                              ...p,
+                              skills: result.player.skills,
+                              advancements: result.player.advancements,
+                              spp: result.player.spp,
+                            } : p));
+                          }
                           setAddingSkillFor(null);
                           setSelectedSkillSlug("");
                           setIsRandom(false);
@@ -1274,7 +1306,9 @@ export default function TeamEditPage() {
                       }}
                       className="px-8 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed transition-all font-semibold shadow-lg shadow-green-500/30 disabled:shadow-none"
                     >
-                      {isRandom ? 'Ajouter la compétence (aléatoire)' : 'Ajouter la compétence'}
+                      {player.spp < psp
+                        ? `SPP insuffisants (${player.spp}/${psp})`
+                        : isRandom ? 'Ajouter la compétence (aléatoire)' : 'Ajouter la compétence'}
                     </button>
                   </div>
                 </>
