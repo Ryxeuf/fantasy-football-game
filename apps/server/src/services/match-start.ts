@@ -127,32 +127,36 @@ export async function acceptAndMaybeStartMatch(
     return { ok: false, error: "Équipes introuvables", status: 404 } as const;
   }
 
-  // Convertir les données des joueurs
-  const teamAData: TeamPlayerData[] = teamA.players.map((p: any) => ({
-    id: p.id,
-    name: p.name,
-    position: p.position,
-    number: p.number,
-    ma: p.ma,
-    st: p.st,
-    ag: p.ag,
-    pa: p.pa,
-    av: p.av,
-    skills: p.skills || "",
-  }));
+  // Convertir les données des joueurs (exclure les joueurs morts)
+  const teamAData: TeamPlayerData[] = teamA.players
+    .filter((p: any) => !p.dead)
+    .map((p: any) => ({
+      id: p.id,
+      name: p.name,
+      position: p.position,
+      number: p.number,
+      ma: p.ma,
+      st: p.st,
+      ag: p.ag,
+      pa: p.pa,
+      av: p.av,
+      skills: p.skills || "",
+    }));
 
-  const teamBData: TeamPlayerData[] = teamB.players.map((p: any) => ({
-    id: p.id,
-    name: p.name,
-    position: p.position,
-    number: p.number,
-    ma: p.ma,
-    st: p.st,
-    ag: p.ag,
-    pa: p.pa,
-    av: p.av,
-    skills: p.skills || "",
-  }));
+  const teamBData: TeamPlayerData[] = teamB.players
+    .filter((p: any) => !p.dead)
+    .map((p: any) => ({
+      id: p.id,
+      name: p.name,
+      position: p.position,
+      number: p.number,
+      ma: p.ma,
+      st: p.st,
+      ag: p.ag,
+      pa: p.pa,
+      av: p.av,
+      skills: p.skills || "",
+    }));
 
   // Initialiser l'état du jeu en phase pré-match avec les vraies équipes
   const gameState = setupPreMatchWithTeams(

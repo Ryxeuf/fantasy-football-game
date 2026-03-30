@@ -132,7 +132,7 @@
 | D.5 | Blessures permanentes persistees | Moyen | Moyen | [ ] | Niggling Injury, -1 MA/ST/AG/PA appliques au roster |
 | D.6 | Mort de joueur persistee | Moyen | Facile | [x] | Joueur marque comme mort, retire du roster |
 | D.7 | Achat de remplacants entre matchs | Moyen | Moyen | [ ] | Winnings + tresorerie, achat joueurs/rerolls/apothecaire |
-| D.8 | Journeymen automatiques si < 11 joueurs | Moyen | Facile | [ ] | Deja en place dans le moteur, connecter a la persistence |
+| D.8 | Journeymen automatiques si < 11 joueurs | Moyen | Facile | [x] | Deja en place dans le moteur, connecter a la persistence |
 
 ---
 

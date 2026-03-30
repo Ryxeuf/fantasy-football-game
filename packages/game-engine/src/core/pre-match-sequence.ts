@@ -133,18 +133,47 @@ export function determineWeather(
 }
 
 /**
+ * Stats d'un joueur de passage (Lineman du roster)
+ */
+export interface JourneymanStats {
+  position: string;
+  ma: number;
+  st: number;
+  ag: number;
+  pa: number;
+  av: number;
+}
+
+/** Stats Lineman par défaut (Human Lineman) */
+const DEFAULT_JOURNEYMAN_STATS: JourneymanStats = {
+  position: 'Lineman',
+  ma: 6,
+  st: 3,
+  ag: 3,
+  pa: 4,
+  av: 8,
+};
+
+/**
  * Ajoute des joueurs de passage si nécessaire
  * @param state - État en phase journeymen
  * @param teamARequired - Nombre de joueurs requis pour l'équipe A
  * @param teamBRequired - Nombre de joueurs requis pour l'équipe B
+ * @param teamALinemanStats - Stats du Lineman du roster de l'équipe A (optionnel)
+ * @param teamBLinemanStats - Stats du Lineman du roster de l'équipe B (optionnel)
  * @returns État avec joueurs de passage ajoutés
  */
 export function addJourneymen(
   state: ExtendedGameState,
   teamARequired: number,
-  teamBRequired: number
+  teamBRequired: number,
+  teamALinemanStats?: JourneymanStats,
+  teamBLinemanStats?: JourneymanStats
 ): ExtendedGameState {
   if (state.preMatch.phase !== 'journeymen') return state;
+
+  const statsA = teamALinemanStats ?? DEFAULT_JOURNEYMAN_STATS;
+  const statsB = teamBLinemanStats ?? DEFAULT_JOURNEYMAN_STATS;
 
   const teamAPlayers = state.players.filter(p => p.team === 'A');
   const teamBPlayers = state.players.filter(p => p.team === 'B');
@@ -164,14 +193,14 @@ export function addJourneymen(
       team: 'A',
       name: `Joueur de passage A${i + 1}`,
       number: teamAPlayers.length + i + 1,
-      position: 'Lineman',
-      ma: 6,
-      st: 3,
-      ag: 3,
-      pa: 4,
-      av: 8,
+      position: statsA.position,
+      ma: statsA.ma,
+      st: statsA.st,
+      ag: statsA.ag,
+      pa: statsA.pa,
+      av: statsA.av,
       skills: ['Loner (4+)'],
-      pm: 6,
+      pm: statsA.ma,
       hasBall: false,
       state: 'active',
       stunned: false,
@@ -188,14 +217,14 @@ export function addJourneymen(
       team: 'B',
       name: `Joueur de passage B${i + 1}`,
       number: teamBPlayers.length + i + 1,
-      position: 'Lineman',
-      ma: 6,
-      st: 3,
-      ag: 3,
-      pa: 4,
-      av: 8,
+      position: statsB.position,
+      ma: statsB.ma,
+      st: statsB.st,
+      ag: statsB.ag,
+      pa: statsB.pa,
+      av: statsB.av,
       skills: ['Loner (4+)'],
-      pm: 6,
+      pm: statsB.ma,
       hasBall: false,
       state: 'active',
       stunned: false,

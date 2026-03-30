@@ -75,6 +75,7 @@ export {
   processPrayersToNuffle,
   determineKickingTeam,
 } from './core/pre-match-sequence';
+export type { JourneymanStats } from './core/pre-match-sequence';
 
 // Export des types de météo
 export {
