@@ -129,6 +129,15 @@ model TeamPlayer {
   totalMvpAwards    Int @default(0) // Career MVP awards
   matchesPlayed     Int @default(0) // Total matches played
 
+  // Permanent injuries (BB2020/BB3 lasting injuries)
+  nigglingInjuries Int @default(0) // Count of niggling injuries accumulated
+  maReduction      Int @default(0) // Total MA reduction from lasting injuries
+  stReduction      Int @default(0) // Total ST reduction from lasting injuries
+  agReduction      Int @default(0) // Total AG reduction from lasting injuries
+  paReduction      Int @default(0) // Total PA reduction from lasting injuries
+  avReduction      Int @default(0) // Total AV reduction from lasting injuries
+  missNextMatch    Boolean @default(false) // Must sit out next match (seriously_hurt+)
+
   // Player death tracking
   dead    Boolean   @default(false) // Player is dead (killed during a match)
   diedAt  DateTime? // When the player died

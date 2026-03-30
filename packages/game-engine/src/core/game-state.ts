@@ -180,6 +180,7 @@ export function setupPreMatchWithTeams(
     },
     matchStats: {},
     casualtyResults: {},
+    lastingInjuryDetails: {},
     // Log du match
     gameLog: [
       createLogEntry(
@@ -318,6 +319,7 @@ export function setupPreMatch(): GameState {
     },
     matchStats: {},
     casualtyResults: {},
+    lastingInjuryDetails: {},
     // Log du match
     gameLog: [createLogEntry('info', 'Phase pré-match - Les joueurs sont en réserves')],
   };
@@ -429,6 +431,7 @@ export function setup(): GameState {
     },
     matchStats: {},
     casualtyResults: {},
+    lastingInjuryDetails: {},
     // Log du match
     gameLog: [createLogEntry('info', 'Match commencé - Orcs de Fer vs Elfes Sombres')],
   };
@@ -1252,6 +1255,7 @@ export function startMatchFromKickoff(state: ExtendedGameState): GameState {
     lastDiceResult: undefined,
     matchStats: {},
     casualtyResults: {},
+    lastingInjuryDetails: {},
     gameLog: [...state.gameLog, matchStartLog],
   };
 }

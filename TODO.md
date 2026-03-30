@@ -129,7 +129,7 @@
 | D.2 | Ecran post-match : attribution SPP | Fort | Moyen | [ ] | Liste joueurs avec SPP gagnes, MVP aleatoire highlight |
 | D.3 | Level-up : choix de competence | Fort | Moyen | [ ] | Quand SPP >= seuil, popup choix primary/secondary/random skill |
 | D.4 | Table d'avancement BB3 | Fort | Facile | [x] | Seuils SPP par level (3, 4, 6, 8, 10...), cout TV par type |
-| D.5 | Blessures permanentes persistees | Moyen | Moyen | [ ] | Niggling Injury, -1 MA/ST/AG/PA appliques au roster |
+| D.5 | Blessures permanentes persistees | Moyen | Moyen | [x] | Niggling Injury, -1 MA/ST/AG/PA appliques au roster |
 | D.6 | Mort de joueur persistee | Moyen | Facile | [x] | Joueur marque comme mort, retire du roster |
 | D.7 | Achat de remplacants entre matchs | Moyen | Moyen | [ ] | Winnings + tresorerie, achat joueurs/rerolls/apothecaire |
 | D.8 | Journeymen automatiques si < 11 joueurs | Moyen | Facile | [x] | Deja en place dans le moteur, connecter a la persistence |
