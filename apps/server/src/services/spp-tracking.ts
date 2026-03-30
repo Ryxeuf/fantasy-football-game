@@ -106,6 +106,8 @@ export async function persistMatchSPP(
         where: { id: dbPlayerId },
         data: {
           matchesPlayed: { increment: 1 },
+          // Clear missNextMatch flag — player has served their suspension by participating
+          missNextMatch: false,
           ...(stats
             ? {
                 spp: { increment: earnedSPP },
