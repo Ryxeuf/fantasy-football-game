@@ -87,6 +87,7 @@ function makePrismaMock(opts: {
       findUnique: async (_: any) => ({
         id: _.where.id,
         name: `Team ${_.where.id}`,
+        roster: "humans",
         players: [
           {
             id: "p1",
@@ -117,6 +118,22 @@ function makePrismaMock(opts: {
     },
     teamPlayer: {
       findMany: async (_: any) => [],
+    },
+    roster: {
+      findFirst: async (_: any) => ({
+        slug: "humans",
+        positions: [
+          {
+            displayName: "Lineman",
+            max: 16,
+            ma: 6,
+            st: 3,
+            ag: 3,
+            pa: 4,
+            av: 9,
+          },
+        ],
+      }),
     },
   };
 }
