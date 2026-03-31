@@ -1,6 +1,7 @@
 import { Server as HttpServer } from "node:http";
 import { Server, Namespace } from "socket.io";
 import { registerGameRoomHandlers } from "./game-rooms";
+import { authSocket } from "./middleware/authSocket";
 
 let io: Server | null = null;
 let gameNamespace: Namespace | null = null;
@@ -30,6 +31,9 @@ export function setupSocket(
   });
 
   gameNamespace = io.of("/game");
+
+  // Authenticate all socket connections via JWT
+  gameNamespace.use(authSocket);
 
   gameNamespace.on("connection", (socket) => {
     console.log(`[socket.io] /game client connected: ${socket.id}`);

@@ -64,7 +64,7 @@
 |---|-------|------|------|--------|--------|
 | A.1 | Installer socket.io sur le serveur Express | Fort | Facile | [x] | `pnpm add socket.io`, attach au serveur HTTP existant, namespace `/game` (implemente dans #83) |
 | A.2 | Creer les rooms par matchId | Fort | Facile | [x] | `socket.join(matchId)`, gestion connect/disconnect |
-| A.3 | Authentifier les connexions WebSocket | Fort | Moyen | [ ] | Middleware socket.io qui verifie le JWT, associe `socket.userId` |
+| A.3 | Authentifier les connexions WebSocket | Fort | Moyen | [x] | Middleware socket.io qui verifie le JWT, associe `socket.userId` |
 | A.4 | Emettre le gameState apres chaque action | Fort | Moyen | [ ] | Apres `executeMove()`, broadcast `game:state-update` a la room |
 | A.5 | Client socket.io dans le composant de jeu | Fort | Moyen | [ ] | Hook `useGameSocket(matchId)` qui connecte et ecoute `game:state-update` |
 | A.6 | Synchroniser les actions via WebSocket | Fort | Moyen | [ ] | Client envoie `game:action` au serveur, serveur valide et broadcast |

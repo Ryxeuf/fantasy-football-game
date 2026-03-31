@@ -2,6 +2,7 @@ import { describe, it, expect, afterEach, beforeEach } from "vitest";
 import { createServer, Server as HttpServer } from "node:http";
 import { AddressInfo } from "node:net";
 import { io as clientIO, Socket as ClientSocket } from "socket.io-client";
+import jwt from "jsonwebtoken";
 import { setupSocket, getIO, getGameNamespace } from "./socket";
 import {
   registerGameRoomHandlers,
@@ -9,6 +10,12 @@ import {
   getActiveRooms,
   resetRooms,
 } from "./game-rooms";
+
+const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
+
+function createToken(sub = "test-user"): string {
+  return jwt.sign({ sub, roles: ["user"] }, JWT_SECRET, { expiresIn: "1h" });
+}
 
 let httpServer: HttpServer;
 let clientA: ClientSocket;
@@ -19,13 +26,16 @@ function getServerUrl(server: HttpServer): string {
   return `http://localhost:${addr.port}`;
 }
 
-function connectClient(url: string): Promise<ClientSocket> {
+function connectClient(url: string, sub?: string): Promise<ClientSocket> {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(
       () => reject(new Error("Connection timeout")),
       5000,
     );
-    const client = clientIO(`${url}/game`, { transports: ["websocket"] });
+    const client = clientIO(`${url}/game`, {
+      transports: ["websocket"],
+      auth: { token: createToken(sub) },
+    });
     client.on("connect", () => {
       clearTimeout(timeout);
       resolve(client);

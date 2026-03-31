@@ -2,7 +2,14 @@ import { describe, it, expect, afterEach } from "vitest";
 import { createServer, Server as HttpServer } from "node:http";
 import { AddressInfo } from "node:net";
 import { io as clientIO, Socket as ClientSocket } from "socket.io-client";
+import jwt from "jsonwebtoken";
 import { setupSocket, getIO, getGameNamespace } from "./socket";
+
+const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
+
+function createToken(sub = "test-user"): string {
+  return jwt.sign({ sub, roles: ["user"] }, JWT_SECRET, { expiresIn: "1h" });
+}
 
 let httpServer: HttpServer;
 let clientSocket: ClientSocket;
@@ -62,6 +69,7 @@ describe("setupSocket", () => {
 
       clientSocket = clientIO(`${url}/game`, {
         transports: ["websocket"],
+        auth: { token: createToken() },
       });
 
       clientSocket.on("connect", () => {
@@ -101,6 +109,7 @@ describe("setupSocket", () => {
 
       clientSocket = clientIO(`${url}/game`, {
         transports: ["websocket"],
+        auth: { token: createToken() },
       });
 
       clientSocket.on("connect", () => {
