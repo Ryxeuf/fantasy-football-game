@@ -1,9 +1,45 @@
 import "./globals.css";
 import type { ReactNode } from "react";
 import type { Metadata } from "next";
+import { Cinzel_Decorative, Cinzel, Montserrat, Inter, Bebas_Neue } from "next/font/google";
 import Footer from "./components/Footer";
 import Header from "./components/Header";
 import { ClientLayout } from "./components/ClientLayout";
+
+const cinzelDecorative = Cinzel_Decorative({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: "--font-cinzel-decorative",
+  display: "swap",
+});
+
+const cinzel = Cinzel({
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
+  variable: "--font-cinzel",
+  display: "swap",
+});
+
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
+  variable: "--font-montserrat",
+  display: "swap",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const bebasNeue = Bebas_Neue({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-bebas-neue",
+  display: "swap",
+});
 
 // URL de base pour les métadonnées
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://nufflearena.fr";
@@ -35,8 +71,8 @@ export const metadata: Metadata = {
     telephone: false,
   },
   icons: {
-    icon: "/images/favicon.png",
-    apple: "/images/favicon.png",
+    icon: "/images/favicon-optimized.png",
+    apple: "/images/favicon-optimized.png",
   },
   manifest: "/manifest.json",
   openGraph: {
@@ -83,15 +119,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="fr" className="scroll-smooth">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Montserrat:wght@400;600;700&family=Inter:wght@400;500;600&family=Bebas+Neue&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html lang="fr" className={`scroll-smooth ${cinzelDecorative.variable} ${cinzel.variable} ${montserrat.variable} ${inter.variable} ${bebasNeue.variable}`}>
       <body className="min-h-screen bg-nuffle-ivory text-nuffle-anthracite flex flex-col font-body antialiased">
         <ClientLayout>
           <div className="flex-1 w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">

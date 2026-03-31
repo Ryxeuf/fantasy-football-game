@@ -18,8 +18,13 @@ export async function GET(
     });
 
     const data = await response.json();
-    
-    return NextResponse.json(data, { status: response.status });
+
+    return NextResponse.json(data, {
+      status: response.status,
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+      },
+    });
   } catch (error: any) {
     console.error(`Erreur proxy /api/rosters/${params.slug}:`, error);
     return NextResponse.json(
