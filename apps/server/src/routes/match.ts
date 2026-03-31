@@ -3,12 +3,13 @@ import { prisma } from "../prisma";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
 import jwt from "jsonwebtoken";
 import { acceptAndMaybeStartMatch } from "../services/match-start";
-import { enterSetupPhase, applyMove, makeRNG } from "@bb/game-engine";
+import { enterSetupPhase, applyMove, makeRNG, addJourneymen } from "@bb/game-engine";
 import type { Move } from "@bb/game-engine";
 import { getUserTeamSide } from "../services/turn-ownership";
 import { persistMatchSPP } from "../services/spp-tracking";
 import { persistPlayerDeaths } from "../services/player-death";
 import { persistPermanentInjuries } from "../services/permanent-injuries";
+import { getLinemanStats } from "../services/journeymen";
 import { validate } from "../middleware/validate";
 import {
   joinMatchSchema,
@@ -179,39 +180,43 @@ router.post(
         },
       });
 
-      // Persist SPP when the match ends
-      if (matchEnded && newState.matchStats && newState.players) {
-        try {
-          const teamSelections = await prisma.teamSelection.findMany({
-            where: { matchId },
-            orderBy: { createdAt: "asc" },
-            select: { teamId: true },
-          });
-          const teamAId = teamSelections[0]?.teamId;
-          const teamBId = teamSelections[1]?.teamId;
-          if (teamAId && teamBId) {
-            await persistMatchSPP(prisma as any, newState, teamAId, teamBId);
+      // Persist post-match data when the match ends (SPP, deaths, injuries)
+      if (matchEnded && newState.players) {
+        const teamSelections = await prisma.teamSelection.findMany({
+          where: { matchId },
+          orderBy: { createdAt: "asc" },
+          select: { teamId: true },
+        });
+        const teamAId = teamSelections[0]?.teamId;
+        const teamBId = teamSelections[1]?.teamId;
 
-            // Persist player deaths from casualty results
-            try {
-              if (newState.casualtyResults && newState.players) {
-                await persistPlayerDeaths(prisma as any, newState, teamAId, teamBId);
-              }
-            } catch (deathError) {
-              console.error("Erreur lors de la persistence des morts:", deathError);
+        if (teamAId && teamBId) {
+          // D.4 — Persist SPP
+          try {
+            if (newState.matchStats) {
+              await persistMatchSPP(prisma as any, newState, teamAId, teamBId);
             }
-
-            // Persist permanent injuries (niggling, stat reductions, miss next match)
-            try {
-              if (newState.lastingInjuryDetails && newState.players) {
-                await persistPermanentInjuries(prisma as any, newState, teamAId, teamBId);
-              }
-            } catch (injuryError) {
-              console.error("Erreur lors de la persistence des blessures permanentes:", injuryError);
-            }
+          } catch (sppError) {
+            console.error("Erreur lors de la persistence des SPP:", sppError);
           }
-        } catch (sppError) {
-          console.error("Erreur lors de la persistence des SPP:", sppError);
+
+          // D.6 — Persist player deaths
+          try {
+            if (newState.casualtyResults) {
+              await persistPlayerDeaths(prisma as any, newState, teamAId, teamBId);
+            }
+          } catch (deathError) {
+            console.error("Erreur lors de la persistence des morts:", deathError);
+          }
+
+          // D.5 — Persist permanent injuries
+          try {
+            if (newState.lastingInjuryDetails) {
+              await persistPermanentInjuries(prisma as any, newState, teamAId, teamBId);
+            }
+          } catch (injuryError) {
+            console.error("Erreur lors de la persistence des blessures permanentes:", injuryError);
+          }
         }
       }
 
@@ -734,7 +739,7 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
         const selections = await prisma.teamSelection.findMany({
           where: { matchId },
           orderBy: { createdAt: "asc" },
-          select: { userId: true },
+          include: { teamRef: { select: { roster: true } } },
         });
         const s1 = selections[0];
         const s2 = selections[1];
@@ -743,6 +748,28 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
           receivingTeam =
             lastCoinToss.payload.receivingUserId === s1.userId ? "A" : "B";
         }
+
+        // D.8 — Add journeymen if teams have < 11 alive players
+        const rosterA = (s1 as any)?.teamRef?.roster;
+        const rosterB = (s2 as any)?.teamRef?.roster;
+        if (rosterA && rosterB) {
+          const [linemanStatsA, linemanStatsB] = await Promise.all([
+            getLinemanStats(prisma as any, rosterA),
+            getLinemanStats(prisma as any, rosterB),
+          ]);
+          // Temporarily set phase to 'journeymen' for addJourneymen to work
+          gameState = {
+            ...gameState,
+            preMatch: { ...gameState.preMatch, phase: 'journeymen' },
+          };
+          gameState = addJourneymen(gameState, 11, 11, linemanStatsA, linemanStatsB);
+          // Reset phase to 'idle' so enterSetupPhase can proceed
+          gameState = {
+            ...gameState,
+            preMatch: { ...gameState.preMatch, phase: 'idle' },
+          };
+        }
+
         gameState = enterSetupPhase(gameState, receivingTeam);
       }
 
