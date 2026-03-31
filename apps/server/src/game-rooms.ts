@@ -11,6 +11,11 @@ const matchRooms = new Map<string, Set<string>>();
  */
 const socketToMatch = new Map<string, string>();
 
+/**
+ * Tracks socket ID → userId for identifying authenticated users.
+ */
+const socketToUser = new Map<string, string>();
+
 export interface JoinMatchPayload {
   matchId: string;
 }
@@ -26,6 +31,12 @@ export interface RoomInfo {
  */
 export function registerGameRoomHandlers(gameNamespace: Namespace): void {
   gameNamespace.on("connection", (socket: Socket) => {
+    // Store userId from authenticated socket
+    const userId: string | undefined = socket.data.user?.id;
+    if (userId) {
+      socketToUser.set(socket.id, userId);
+    }
+
     socket.on("game:join-match", (payload: JoinMatchPayload, ack?: (response: { ok: boolean; error?: string }) => void) => {
       const { matchId } = payload ?? {};
 
@@ -59,6 +70,7 @@ export function registerGameRoomHandlers(gameNamespace: Namespace): void {
       // Notify other sockets in the room that a player connected
       socket.to(matchId).emit("game:player-connected", {
         matchId,
+        userId,
         connectedSockets: connectedCount,
       });
     });
@@ -80,6 +92,7 @@ export function registerGameRoomHandlers(gameNamespace: Namespace): void {
       if (matchId) {
         leaveRoom(socket, matchId);
       }
+      socketToUser.delete(socket.id);
     });
   });
 }
@@ -102,8 +115,10 @@ function leaveRoom(socket: Socket, matchId: string): void {
     );
 
     // Notify remaining sockets
+    const disconnectedUserId = socketToUser.get(socket.id);
     socket.to(matchId).emit("game:player-disconnected", {
       matchId,
+      userId: disconnectedUserId,
       connectedSockets: remaining,
     });
   }
@@ -119,8 +134,14 @@ export function getActiveRooms(): string[] {
   return Array.from(matchRooms.keys());
 }
 
+/** Get the userId associated with a socket ID. */
+export function getUserIdBySocket(socketId: string): string | undefined {
+  return socketToUser.get(socketId);
+}
+
 /** Reset all room tracking (for testing). */
 export function resetRooms(): void {
   matchRooms.clear();
   socketToMatch.clear();
+  socketToUser.clear();
 }
