@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import Logo from "./components/Logo";
 import { useLanguage } from "./contexts/LanguageContext";
 import HomeStructuredData from "./components/HomeStructuredData";
@@ -59,23 +60,30 @@ export default function LandingPage() {
           </div>
           <div className="relative w-full md:w-auto">
             <div className="rounded-xl border-2 border-nuffle-gold/30 bg-nuffle-bronze/20 backdrop-blur-sm p-4 sm:p-6 shadow-2xl">
-              <img
-                src="/images/bb_dice_sides.png"
+              <Image
+                src="/images/bb_dice_sides.webp"
                 alt="Dés de blocage"
+                width={540}
+                height={360}
                 className="w-full max-w-[540px] mx-auto rounded-md"
+                priority
               />
             </div>
             <div className="hidden md:block absolute -bottom-6 -left-6 rotate-[-8deg] rounded-lg border-2 border-nuffle-gold/30 bg-nuffle-bronze/30 p-3 shadow-xl backdrop-blur-sm">
-              <img
+              <Image
                 src="/images/blocking_dice/pow.png"
                 alt="POW"
+                width={80}
+                height={80}
                 className="w-20"
               />
             </div>
             <div className="hidden md:block absolute -top-6 -right-8 rotate-[12deg] rounded-lg border-2 border-nuffle-gold/30 bg-nuffle-bronze/30 p-3 shadow-xl backdrop-blur-sm">
-              <img
+              <Image
                 src="/images/blocking_dice/push_back.png"
                 alt="PUSH"
+                width={80}
+                height={80}
                 className="w-20"
               />
             </div>
@@ -89,9 +97,11 @@ export default function LandingPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
           <div className="rounded-xl bg-white shadow-lg border-2 border-nuffle-bronze/30 overflow-hidden hover:border-nuffle-gold/50 transition-all">
             <div className="h-40 flex items-center justify-center overflow-hidden" style={{ backgroundColor: '#e8d6ae' }}>
-              <img
-                src="/images/rosters.png"
+              <Image
+                src="/images/rosters.webp"
                 alt="Rosters"
+                width={400}
+                height={160}
                 className="h-full w-full object-contain"
               />
             </div>
@@ -104,9 +114,11 @@ export default function LandingPage() {
           </div>
           <div className="rounded-xl bg-white shadow-lg border-2 border-nuffle-bronze/30 overflow-hidden hover:border-nuffle-gold/50 transition-all">
             <div className="h-40 flex items-center justify-center overflow-hidden" style={{ backgroundColor: '#e8d6ae' }}>
-              <img
-                src="/images/star-players.png"
+              <Image
+                src="/images/star-players.webp"
                 alt="Star Players"
+                width={400}
+                height={160}
                 className="h-full w-full object-contain"
               />
             </div>
@@ -119,9 +131,11 @@ export default function LandingPage() {
           </div>
           <div className="rounded-xl bg-white shadow-lg border-2 border-nuffle-bronze/30 overflow-hidden hover:border-nuffle-gold/50 transition-all">
             <div className="h-40 flex items-center justify-center overflow-hidden" style={{ backgroundColor: '#e8d6ae' }}>
-              <img
-                src="/images/export-pdf.png"
+              <Image
+                src="/images/export-pdf.webp"
                 alt="Export PDF"
+                width={400}
+                height={160}
                 className="h-full w-full object-contain"
               />
             </div>

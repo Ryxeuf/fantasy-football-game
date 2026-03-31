@@ -8,9 +8,18 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API
 type Season = "season_2" | "season_3";
 type Tier = "all" | "I" | "II" | "III" | "IV";
 
+interface RosterSummary {
+  slug: string;
+  name: string;
+  budget: number;
+  tier: string;
+  naf: boolean;
+  positionCount: number;
+}
+
 export default function TeamsListPage() {
   const { language, t } = useLanguage();
-  const [teams, setTeams] = useState<Array<{ slug: string; name: string; budget: number; tier: string; naf: boolean; positions: any[] }>>([]);
+  const [teams, setTeams] = useState<RosterSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedSeason, setSelectedSeason] = useState<Season>("season_3");
@@ -26,18 +35,15 @@ export default function TeamsListPage() {
           throw new Error("Erreur lors du chargement des rosters");
         }
         const data = await response.json();
-        // Récupérer les détails de chaque roster pour avoir les positions
-        const rostersWithDetails = await Promise.all(
-          data.rosters.map(async (roster: { slug: string }) => {
-            const detailResponse = await fetch(`${API_BASE}/api/rosters/${roster.slug}?lang=${lang}&ruleset=${selectedSeason}`);
-            if (detailResponse.ok) {
-              const detailData = await detailResponse.json();
-              return { ...detailData.roster, slug: roster.slug };
-            }
-            return { ...roster, positions: [] };
-          })
-        );
-        setTeams(rostersWithDetails);
+        const rosters: RosterSummary[] = data.rosters.map((roster: any) => ({
+          slug: roster.slug,
+          name: roster.name,
+          budget: roster.budget,
+          tier: roster.tier,
+          naf: roster.naf,
+          positionCount: roster._count?.positions ?? 0,
+        }));
+        setTeams(rosters);
       } catch (err: any) {
         setError(err.message || "Erreur lors du chargement");
       } finally {
@@ -195,7 +201,7 @@ export default function TeamsListPage() {
             </div>
             <div className="text-sm text-gray-600">
               <div>{t.teams.budgetLabel.replace(/\{budget\}/g, team.budget.toString())}</div>
-              <div>{t.teams.positionsAvailable.replace(/\{count\}/g, team.positions.length.toString())}</div>
+              <div>{t.teams.positionsAvailable.replace(/\{count\}/g, team.positionCount.toString())}</div>
             </div>
           </Link>
         ))}

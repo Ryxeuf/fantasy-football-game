@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 interface LogoProps {
   variant?: "default" | "compact" | "icon";
@@ -10,14 +11,17 @@ interface LogoProps {
 export default function Logo({ variant = "default", className = "", showText = true, textColor }: LogoProps) {
   const baseClasses = "flex items-center gap-3";
   const textColorClass = textColor || "text-nuffle-anthracite";
-  
+
   if (variant === "icon") {
     return (
       <Link href="/" className={`${baseClasses} ${className}`}>
-        <img
-          src="/images/logo.png"
+        <Image
+          src="/images/logo.webp"
           alt="Nuffle Arena"
-          className="w-12 h-12 object-contain"
+          width={48}
+          height={48}
+          className="object-contain"
+          priority
         />
       </Link>
     );
@@ -26,10 +30,13 @@ export default function Logo({ variant = "default", className = "", showText = t
   if (variant === "compact") {
     return (
       <Link href="/" className={`${baseClasses} ${className}`}>
-        <img
-          src="/images/logo.png"
+        <Image
+          src="/images/logo.webp"
           alt="Nuffle Arena"
-          className="w-10 h-10 object-contain"
+          width={40}
+          height={40}
+          className="object-contain"
+          priority
         />
         {showText && (
           <span className={`font-logo ${textColorClass} text-xl tracking-wider`}>
@@ -42,10 +49,13 @@ export default function Logo({ variant = "default", className = "", showText = t
 
   return (
     <Link href="/" className={`${baseClasses} ${className}`}>
-      <img
-        src="/images/logo.png"
+      <Image
+        src="/images/logo.webp"
         alt="Nuffle Arena"
-        className="w-16 h-16 object-contain"
+        width={64}
+        height={64}
+        className="object-contain"
+        priority
       />
       {showText && (
         <div className="flex flex-col">

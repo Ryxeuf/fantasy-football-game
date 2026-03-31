@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 const images = [
-  "/images/stadium_illustration.svg",
-  "/images/bb_dice_sides.png",
-  "/images/blocking_dice/pow.png",
+  { src: "/images/stadium_illustration.svg", width: 600, height: 256 },
+  { src: "/images/bb_dice_sides.webp", width: 600, height: 256 },
+  { src: "/images/blocking_dice/pow.png", width: 600, height: 256 },
 ];
 
 export default function ImageCarousel() {
@@ -15,9 +16,11 @@ export default function ImageCarousel() {
   }, []);
   return (
     <div className="relative w-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow">
-      <img
-        src={images[idx]}
+      <Image
+        src={images[idx].src}
         alt="carousel"
+        width={images[idx].width}
+        height={images[idx].height}
         className="w-full h-64 object-contain bg-gray-50"
       />
       <div className="absolute bottom-2 right-3 flex gap-1">

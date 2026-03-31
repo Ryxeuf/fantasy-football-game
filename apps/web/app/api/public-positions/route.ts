@@ -15,8 +15,13 @@ export async function GET(request: NextRequest) {
     });
 
     const data = await response.json();
-    
-    return NextResponse.json(data, { status: response.status });
+
+    return NextResponse.json(data, {
+      status: response.status,
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+      },
+    });
   } catch (error: any) {
     console.error('Erreur proxy /api/public-positions:', error);
     return NextResponse.json(
