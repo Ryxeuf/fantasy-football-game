@@ -1,3 +1,10 @@
+## [1.44.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.44.0...v1.44.1) (2026-03-31)
+
+
+### ⚡ Performance Improvements
+
+* improve website performance across images, fonts, API calls, and caching ([29cb7f7](https://github.com/Ryxeuf/fantasy-football-game/commit/29cb7f7343b9454bed68e419ce079514389f4329))
+
 ## [1.44.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.43.0...v1.44.0) (2026-03-31)
 
 
