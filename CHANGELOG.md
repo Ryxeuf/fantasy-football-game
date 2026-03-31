@@ -1,3 +1,10 @@
+## [1.44.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.43.0...v1.44.0) (2026-03-31)
+
+
+### ✨ Features
+
+* **A.3:** authenticate WebSocket connections via JWT ([0357a0e](https://github.com/Ryxeuf/fantasy-football-game/commit/0357a0e063e66c8b9de68ee0c92ed261f3fc14e1))
+
 ## [1.43.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.42.0...v1.43.0) (2026-03-31)
 
 
