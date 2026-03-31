@@ -64,7 +64,7 @@
 |---|-------|------|------|--------|--------|
 | A.1 | Installer socket.io sur le serveur Express | Fort | Facile | [x] | `pnpm add socket.io`, attach au serveur HTTP existant, namespace `/game` (implemente dans #83) |
 | A.2 | Creer les rooms par matchId | Fort | Facile | [x] | `socket.join(matchId)`, gestion connect/disconnect |
-| A.3 | Authentifier les connexions WebSocket | Fort | Moyen | [ ] | Middleware socket.io qui verifie le JWT, associe `socket.userId` |
+| A.3 | Authentifier les connexions WebSocket | Fort | Moyen | [x] | Middleware socket.io qui verifie le JWT, associe `socket.userId` |
 | A.4 | Emettre le gameState apres chaque action | Fort | Moyen | [ ] | Apres `executeMove()`, broadcast `game:state-update` a la room |
 | A.5 | Client socket.io dans le composant de jeu | Fort | Moyen | [ ] | Hook `useGameSocket(matchId)` qui connecte et ecoute `game:state-update` |
 | A.6 | Synchroniser les actions via WebSocket | Fort | Moyen | [ ] | Client envoie `game:action` au serveur, serveur valide et broadcast |
@@ -222,7 +222,7 @@
 | Phase | Nb taches | Fait | Partiel | A faire | Effort restant estime | Criticite |
 |-------|-----------|------|---------|---------|----------------------|-----------|
 | **QW — Quick Wins** | 2 | 0 | 0 | 2 | ~0.5 jour | IMMEDIAT |
-| **A — Multijoueur temps reel** | 10 | 1 | 0 | 9 | ~4-6 jours | BLOQUANT |
+| **A — Multijoueur temps reel** | 10 | 3 | 0 | 7 | ~4-6 jours | BLOQUANT |
 | **B1 — Regles BB3 critiques** | 9 | 0 | 3 | 6 | ~8-12 jours | ESSENTIEL |
 | **B2 — Regles BB3 importantes** | 10 | 0 | 3 | 7 | ~7-10 jours | SECONDAIRE |
 | **B3 — Star Players specials** | 2 | 0 | 0 | 2 | ~4-6 jours | BONUS |
