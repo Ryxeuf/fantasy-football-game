@@ -6,6 +6,7 @@ import { acceptAndMaybeStartMatch } from "../services/match-start";
 import { enterSetupPhase, applyMove, makeRNG } from "@bb/game-engine";
 import type { Move } from "@bb/game-engine";
 import { getUserTeamSide } from "../services/turn-ownership";
+import { emitGameStateUpdate, emitMatchStatusChange, emitTurnChange } from "../socket";
 import { validate } from "../middleware/validate";
 import {
   joinMatchSchema,
@@ -72,6 +73,12 @@ router.post("/accept", authUser, validate(acceptMatchSchema), async (req: Authen
     });
     if (!result.ok && "status" in result && typeof result.status === "number")
       return res.status(result.status).json({ error: result.error });
+
+    // Broadcast match status change via WebSocket
+    if (result.ok && "status" in result) {
+      emitMatchStatusChange(matchId, String(result.status));
+    }
+
     return res.json(result);
   } catch (e: any) {
     console.error(e);
@@ -178,6 +185,13 @@ router.post(
 
       // Determiner si c'est toujours le tour de ce joueur
       const isMyTurn = newState.currentPlayer === userTeamSide;
+
+      // Broadcast via WebSocket to all clients in the match room
+      emitGameStateUpdate(matchId, newState, moveCount + 1);
+      emitTurnChange(matchId, newState.currentPlayer, matchEnded ? null : (nextUserId || null));
+      if (matchEnded) {
+        emitMatchStatusChange(matchId, "ended");
+      }
 
       return res.json({
         success: true,
@@ -842,7 +856,10 @@ router.post(
       }
 
       console.log("Retour au client - gameState.preMatch:", gameState.preMatch);
-      
+
+      // Broadcast setup update via WebSocket
+      emitGameStateUpdate(matchId, gameState, match.turns.length + 1);
+
       return res.json({
         success: true,
         gameState,
@@ -912,6 +929,9 @@ router.post(
         },
       });
 
+      // Broadcast via WebSocket
+      emitGameStateUpdate(matchId, newState, match.turns.length + 1);
+
       return res.json({
         success: true,
         gameState: newState,
@@ -972,6 +992,9 @@ router.post(
           },
         },
       });
+
+      // Broadcast via WebSocket
+      emitGameStateUpdate(matchId, newState, match.turns.length + 1);
 
       return res.json({
         success: true,
@@ -1056,6 +1079,11 @@ router.post(
           },
         },
       });
+
+      // Broadcast via WebSocket: match is now active
+      emitGameStateUpdate(matchId, matchState, match.turns.length + 1);
+      emitMatchStatusChange(matchId, "active");
+      emitTurnChange(matchId, matchState.currentPlayer, firstPlayerUserId || null);
 
       return res.json({
         success: true,

@@ -1,4 +1,5 @@
 import express from "express";
+import { createServer } from "node:http";
 import cors from "cors";
 import bodyParser from "body-parser";
 import authRoutes from "./routes/auth";
@@ -17,6 +18,7 @@ import dotenv from "dotenv";
 import { execSync } from "node:child_process";
 import { prisma } from "./prisma";
 import { authRateLimiter, apiRateLimiter } from "./middleware/rateLimiter";
+import { initSocketIO } from "./socket";
 
 dotenv.config({ path: "../../prisma/.env" });
 // Si tests SQLite: pousser le schéma SQLite en mémoire partagée au démarrage
@@ -85,6 +87,10 @@ if (process.env.TEST_SQLITE === "1") {
   });
 }
 
-app.listen(API_PORT, () => {
+const httpServer = createServer(app);
+initSocketIO(httpServer);
+
+httpServer.listen(API_PORT, () => {
   console.log(`Express API server listening on http://localhost:${API_PORT}`);
+  console.log(`WebSocket server attached on same port`);
 });
