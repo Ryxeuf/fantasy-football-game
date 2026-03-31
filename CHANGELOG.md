@@ -1,3 +1,15 @@
+## [1.43.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.42.0...v1.43.0) (2026-03-31)
+
+
+### ✨ Features
+
+* **QW.1:** wire D.5/D.6/D.8 into online match routes ([3150c71](https://github.com/Ryxeuf/fantasy-football-game/commit/3150c71f548e679c961ed5dab7845ce52ab7ef44))
+
+
+### 🐛 Bug Fixes
+
+* resolve merge conflicts with main for PR [#86](https://github.com/Ryxeuf/fantasy-football-game/issues/86) ([82dc9dc](https://github.com/Ryxeuf/fantasy-football-game/commit/82dc9dce986580d176e0407bec1a9c561df2a39a)), closes [#88](https://github.com/Ryxeuf/fantasy-football-game/issues/88)
+
 ## [1.42.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.41.0...v1.42.0) (2026-03-30)
 
 
