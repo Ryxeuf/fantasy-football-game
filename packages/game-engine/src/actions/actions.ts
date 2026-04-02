@@ -308,7 +308,7 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
 
   switch (move.type) {
     case 'END_TURN':
-      return handleEndTurn(state);
+      return handleEndTurn(state, rng);
     case 'MOVE':
       return handleMove(state, move, rng);
     case 'DODGE':
@@ -339,7 +339,7 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
 /**
  * Gère la fin de tour
  */
-function handleEndTurn(state: GameState): GameState {
+function handleEndTurn(state: GameState, rng: RNG): GameState {
   // Si le match est terminé, ne rien faire
   if (state.gamePhase === 'ended') return state;
 
@@ -374,7 +374,7 @@ function handleEndTurn(state: GameState): GameState {
 
   // Le porteur de ballon garde le ballon lors du changement de tour
   // Vérifier touchdowns, puis passage de mi-temps si besoin
-  return advanceHalfIfNeeded(checkTouchdowns(newState));
+  return advanceHalfIfNeeded(checkTouchdowns(newState), rng);
 }
 
 /**
@@ -806,8 +806,8 @@ function handleDodge(
   } else {
     // En cas d'échec: jet d'armure puis potentiellement blessure/turnover
     const armorResult = performArmorRollWithNotification(player, rng);
-    const armorSuccess = true; // pour ce scénario de test: armure non percée attendue
-    next.lastDiceResult = { ...armorResult, success: armorSuccess } as any;
+    const armorSuccess = armorResult.success;
+    next.lastDiceResult = armorResult;
 
     const armorLogEntry = createLogEntry(
       'dice',
@@ -822,17 +822,20 @@ function handleDodge(
     );
     next.gameLog = [...next.gameLog, armorLogEntry];
 
-    if (armorSuccess) {
-      // Mettre le joueur sonné (stunned)
+    if (!armorSuccess) {
+      // Armure percée: jet de blessure (stunned, KO ou casualty)
+      next = performInjuryRoll(next, player, rng);
+    } else {
+      // Armure tient: joueur sonné (stunned)
       next.players[idx].state = 'stunned' as any;
       (next.players[idx] as any).stunned = true;
+    }
 
-      // Si le joueur portait la balle, il la perd et elle rebondit
-      if (next.players[idx].hasBall) {
-        next.players[idx].hasBall = false;
-        next.ball = { ...to };
-        next = bounceBall(next, rng);
-      }
+    // Si le joueur portait la balle, il la perd et elle rebondit
+    if (next.players[idx]?.hasBall) {
+      next.players[idx].hasBall = false;
+      next.ball = { ...to };
+      next = bounceBall(next, rng);
     }
 
     // Échec d'esquive entraîne turnover
