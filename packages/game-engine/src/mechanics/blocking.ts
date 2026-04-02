@@ -425,7 +425,7 @@ export function handlePushWithChoice(
     }
 
     // Blessure automatique par la foule (pas de jet d'armure, minimum KO)
-    let resultState = handleInjuryByCrowd(newState, target, rng);
+    const resultState = handleInjuryByCrowd(newState, target, rng);
 
     // L'attaquant peut suivre (follow-up) sur la case liberee
     resultState.players = resultState.players.map(p =>
