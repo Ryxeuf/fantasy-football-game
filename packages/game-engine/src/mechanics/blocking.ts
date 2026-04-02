@@ -424,8 +424,7 @@ export function handlePushWithChoice(
       // Note: bounceBall sera appelé par la fonction appelante
     }
 
-    // Blessure automatique par la foule (pas de jet d'armure)
-    // handleInjuryByCrowd → performInjuryRoll gere le placement dugout (KO/casualty)
+    // Blessure automatique par la foule (pas de jet d'armure, minimum KO)
     let resultState = handleInjuryByCrowd(newState, target, rng);
 
     // L'attaquant peut suivre (follow-up) sur la case liberee
@@ -724,8 +723,7 @@ function handlePushBack(state: GameState, attacker: Player, target: Player, rng:
       // Note: bounceBall sera appelé par la fonction appelante
     }
 
-    // Blessure automatique par la foule (pas de jet d'armure)
-    // handleInjuryByCrowd → performInjuryRoll gere le placement dugout (KO/casualty)
+    // Blessure automatique par la foule (pas de jet d'armure, minimum KO)
     state = handleInjuryByCrowd(state, target, rng);
 
     // L'attaquant peut suivre (follow-up) sur la case liberee

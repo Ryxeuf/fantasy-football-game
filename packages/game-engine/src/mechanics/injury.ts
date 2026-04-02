@@ -224,9 +224,39 @@ export function handleSentOff(state: GameState, player: Player): GameState {
 }
 
 /**
- * Gère une blessure par la foule
+ * Gère une blessure par la foule (surf).
+ * Pas de jet d'armure. Le résultat minimum est KO (Stunned est promu en KO).
  */
 export function handleInjuryByCrowd(state: GameState, player: Player, rng: RNG): GameState {
-  // Pas de jet d'armure pour les blessures de foule
-  return performInjuryRoll(state, player, rng);
+  const newState = structuredClone(state) as GameState;
+
+  // Jet de 2D6 pour la blessure (pas de bonus)
+  const injuryRoll = Math.floor(rng() * 6) + 1 + Math.floor(rng() * 6) + 1;
+
+  const injuryLog = createLogEntry(
+    'dice',
+    `Jet de blessure (foule): ${injuryRoll}`,
+    player.id,
+    player.team,
+    { injuryRoll }
+  );
+  newState.gameLog = [...newState.gameLog, injuryLog];
+
+  // En Blood Bowl, une blessure par la foule est au minimum un KO.
+  // Stunned (2-7) est promu en KO.
+  if (injuryRoll <= 9) {
+    // 2-9: KO (inclut le résultat Stunned promu)
+    const koState = movePlayerToDugoutZone(newState, player.id, 'knockedOut', player.team);
+    const koLog = createLogEntry(
+      'action',
+      `${player.name} est KO par la foule et retiré du terrain`,
+      player.id,
+      player.team
+    );
+    koState.gameLog = [...koState.gameLog, koLog];
+    return koState;
+  } else {
+    // 10+: Casualty
+    return handleCasualty(newState, player, rng);
+  }
 }
