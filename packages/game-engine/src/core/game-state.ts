@@ -3,7 +3,7 @@
  * Gère les tours, les mi-temps, les actions des joueurs et les compteurs
  */
 
-import { GameState, TeamId, ActionType, Player, Position } from './types';
+import { GameState, TeamId, ActionType, Player, Position, RNG } from './types';
 import { createLogEntry } from '../utils/logging';
 import { checkTouchdowns } from '../mechanics/ball';
 import { initializeDugouts } from '../mechanics/dugout';
@@ -539,7 +539,7 @@ export function startMatchFromPreMatch(state: GameState): GameState {
  * @param state - État du jeu
  * @returns Nouvel état du jeu après vérification de la mi-temps
  */
-export function advanceHalfIfNeeded(state: GameState): GameState {
+export function advanceHalfIfNeeded(state: GameState, rng: RNG): GameState {
   // Si on a dépassé le 8e round, on passe à la mi‑temps suivante ou on termine le match
   if (state.turn > 8) {
     if (state.half === 1) {
@@ -552,7 +552,7 @@ export function advanceHalfIfNeeded(state: GameState): GameState {
 
       // Récupération des joueurs KO (4+ sur D6)
       let newState = { ...state, gameLog: [...state.gameLog, halftimeLog] };
-      newState = recoverKOPlayers(newState);
+      newState = recoverKOPlayers(newState, rng);
 
       // L'équipe qui a frappé en 1ère mi-temps reçoit en 2e, et vice versa
       const newKickingTeam: TeamId = state.kickingTeam === 'A' ? 'B' : 'A';
@@ -584,7 +584,7 @@ export function advanceHalfIfNeeded(state: GameState): GameState {
       );
 
       // Calculer les résultats finaux (SPP + MVP)
-      const matchResult = calculateMatchResult(state);
+      const matchResult = calculateMatchResult(state, rng);
 
       return {
         ...state,
@@ -601,7 +601,7 @@ export function advanceHalfIfNeeded(state: GameState): GameState {
 /**
  * Calcule les résultats finaux du match : vainqueur, SPP et MVP
  */
-function calculateMatchResult(state: GameState): { winner?: TeamId; spp: Record<string, number> } {
+function calculateMatchResult(state: GameState, rng: RNG): { winner?: TeamId; spp: Record<string, number> } {
   // Déterminer le vainqueur
   let winner: TeamId | undefined;
   if (state.score.teamA > state.score.teamB) winner = 'A';
@@ -624,8 +624,8 @@ function calculateMatchResult(state: GameState): { winner?: TeamId; spp: Record<
   for (const teamId of ['A', 'B'] as TeamId[]) {
     const teamPlayers = activePlayers.filter(p => p.team === teamId);
     if (teamPlayers.length > 0) {
-      // Simple sélection du premier joueur (sera déterministe avec seed en prod)
-      const mvpPlayer = teamPlayers[Math.floor(Math.random() * teamPlayers.length)];
+      // Sélection aléatoire déterministe via le RNG seedé
+      const mvpPlayer = teamPlayers[Math.floor(rng() * teamPlayers.length)];
       if (!spp[mvpPlayer.id]) spp[mvpPlayer.id] = 0;
       spp[mvpPlayer.id] += 4;
       if (!stats[mvpPlayer.id]) {
@@ -641,7 +641,7 @@ function calculateMatchResult(state: GameState): { winner?: TeamId; spp: Record<
 /**
  * Récupération des joueurs KO (4+ sur D6)
  */
-function recoverKOPlayers(state: GameState): GameState {
+function recoverKOPlayers(state: GameState, rng: RNG): GameState {
   const newState = { ...state };
 
   for (const teamId of ['A', 'B'] as TeamId[]) {
@@ -654,8 +654,8 @@ function recoverKOPlayers(state: GameState): GameState {
       const stillKOIds: string[] = [];
 
       for (const playerId of koZone.players) {
-        // Simple 4+ check (using random, will be deterministic with RNG later)
-        const roll = Math.floor(Math.random() * 6) + 1;
+        // Simple 4+ check using seeded RNG
+        const roll = Math.floor(rng() * 6) + 1;
         if (roll >= 4) {
           recoveredIds.push(playerId);
         } else {

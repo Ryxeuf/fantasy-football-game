@@ -18,8 +18,7 @@ import { performArmorRoll, roll2D6 } from '../utils/dice';
 import { performArmorRollWithNotification } from '../utils/dice-notifications';
 import { createLogEntry } from '../utils/logging';
 import { canTeamBlitz } from '../core/game-state';
-import { movePlayerToDugoutZone } from './dugout';
-import { performInjuryRoll, handleSentOff } from './injury';
+import { performInjuryRoll, handleSentOff, handleInjuryByCrowd } from './injury';
 
 /**
  * Effectue le jet d'armure + blessure avec Mighty Blow.
@@ -387,18 +386,55 @@ export function handlePushWithChoice(
   state: GameState,
   attacker: Player,
   target: Player,
-  blockResult: string
+  blockResult: string,
+  rng: RNG
 ): GameState {
-  const availableDirections = getPushDirections(attacker.pos, target.pos).filter(dir => {
+  const pushDirections = getPushDirections(attacker.pos, target.pos);
+  const availableDirections: Position[] = [];
+  let hasOutOfBounds = false;
+
+  for (const dir of pushDirections) {
     const newPos = {
       x: target.pos.x + dir.x,
       y: target.pos.y + dir.y,
     };
-    return inBounds(state, newPos) && !isPositionOccupied(state, newPos);
-  });
+    if (!inBounds(state, newPos)) {
+      hasOutOfBounds = true;
+    } else if (!isPositionOccupied(state, newPos)) {
+      availableDirections.push(dir);
+    }
+  }
 
-  if (availableDirections.length === 0) {
-    // Aucune direction disponible - pas de poussée possible
+  if (availableDirections.length === 0 && hasOutOfBounds) {
+    // Surf! Le joueur est poussé dans la foule
+    const surfLog = createLogEntry(
+      'action',
+      `${target.name} est poussé dans la foule par ${attacker.name} !`,
+      attacker.id,
+      attacker.team
+    );
+    const newState = { ...state, gameLog: [...state.gameLog, surfLog] };
+
+    // Gérer le ballon si le joueur surfé le portait
+    if (target.hasBall) {
+      newState.players = newState.players.map(p =>
+        p.id === target.id ? { ...p, hasBall: false } : p
+      );
+      newState.ball = { ...target.pos };
+      // Note: bounceBall sera appelé par la fonction appelante
+    }
+
+    // Blessure automatique par la foule (pas de jet d'armure, minimum KO)
+    const resultState = handleInjuryByCrowd(newState, target, rng);
+
+    // L'attaquant peut suivre (follow-up) sur la case liberee
+    resultState.players = resultState.players.map(p =>
+      p.id === attacker.id ? { ...p, pos: target.pos } : p
+    );
+
+    return resultState;
+  } else if (availableDirections.length === 0) {
+    // Aucune direction disponible (toutes occupées, aucune hors limites) - pas de poussée possible
     const noPushLog = createLogEntry(
       'action',
       `${target.name} ne peut pas être repoussé (aucune case libre)`,
@@ -503,7 +539,7 @@ export function resolveBlockResult(
     case 'BOTH_DOWN':
       return handleBothDown(newState, attacker, target, rng);
     case 'PUSH_BACK':
-      return handlePushBack(newState, attacker, target);
+      return handlePushBack(newState, attacker, target, rng);
     case 'STUMBLE':
       return handleStumble(newState, attacker, target, rng);
     case 'POW':
@@ -649,10 +685,11 @@ function handleBothDown(state: GameState, attacker: Player, target: Player, rng:
 /**
  * Gère le résultat PUSH_BACK
  */
-function handlePushBack(state: GameState, attacker: Player, target: Player): GameState {
+function handlePushBack(state: GameState, attacker: Player, target: Player, rng: RNG): GameState {
   // La cible est repoussée d'une case - vérifier les directions disponibles
   const pushDirections = getPushDirections(attacker.pos, target.pos);
   const availableDirections: Position[] = [];
+  let hasOutOfBounds = false;
 
   for (const pushDirection of pushDirections) {
     const newTargetPos = {
@@ -660,14 +697,41 @@ function handlePushBack(state: GameState, attacker: Player, target: Player): Gam
       y: target.pos.y + pushDirection.y,
     };
 
-    // Vérifier si la case de destination est libre
-    if (inBounds(state, newTargetPos) && !isPositionOccupied(state, newTargetPos)) {
+    if (!inBounds(state, newTargetPos)) {
+      hasOutOfBounds = true;
+    } else if (!isPositionOccupied(state, newTargetPos)) {
       availableDirections.push(pushDirection);
     }
   }
 
-  if (availableDirections.length === 0) {
-    // Aucune direction disponible - ne pas pousser
+  if (availableDirections.length === 0 && hasOutOfBounds) {
+    // Surf! Le joueur est poussé dans la foule
+    const surfLog = createLogEntry(
+      'action',
+      `${target.name} est poussé dans la foule par ${attacker.name} !`,
+      attacker.id,
+      attacker.team
+    );
+    state.gameLog = [...state.gameLog, surfLog];
+
+    // Gérer le ballon si le joueur surfé le portait
+    if (target.hasBall) {
+      state.players = state.players.map(p =>
+        p.id === target.id ? { ...p, hasBall: false } : p
+      );
+      state.ball = { ...target.pos };
+      // Note: bounceBall sera appelé par la fonction appelante
+    }
+
+    // Blessure automatique par la foule (pas de jet d'armure, minimum KO)
+    state = handleInjuryByCrowd(state, target, rng);
+
+    // L'attaquant peut suivre (follow-up) sur la case liberee
+    state.players = state.players.map(p =>
+      p.id === attacker.id ? { ...p, pos: target.pos } : p
+    );
+  } else if (availableDirections.length === 0) {
+    // Aucune direction disponible (toutes occupées, aucune hors limites) - ne pas pousser
     const noPushLog = createLogEntry(
       'action',
       `${target.name} ne peut pas être repoussé (toutes les directions bloquées)`,
@@ -726,7 +790,7 @@ function handlePushBack(state: GameState, attacker: Player, target: Player): Gam
 function handleStumble(state: GameState, attacker: Player, target: Player, rng: RNG): GameState {
   // Si la cible a Dodge (et l'attaquant n'a pas Tackle), c'est un Push Back
   if (dodgeNegatesStumble(target, attacker)) {
-    return handlePushBack(state, attacker, target);
+    return handlePushBack(state, attacker, target, rng);
   } else {
     // Pas de Dodge - traiter comme POW (le défenseur tombe, PAS un turnover)
     state.players = state.players.map(p => (p.id === target.id ? { ...p, stunned: true } : p));
@@ -744,7 +808,7 @@ function handleStumble(state: GameState, attacker: Player, target: Player, rng: 
     state = armorAndInjuryWithMightyBlow(state, target, attacker, rng);
 
     // Gérer la poussée avec choix de direction
-    const pushResult = handlePushWithChoice(state, attacker, target, 'STUMBLE');
+    const pushResult = handlePushWithChoice(state, attacker, target, 'STUMBLE', rng);
 
     // Si la cible avait le ballon, le perdre
     if (target.hasBall) {
@@ -779,7 +843,7 @@ function handlePow(state: GameState, attacker: Player, target: Player, rng: RNG)
   state = armorAndInjuryWithMightyBlow(state, target, attacker, rng);
 
   // Gérer la poussée avec choix de direction
-  const pushResult = handlePushWithChoice(state, attacker, target, 'POW');
+  const pushResult = handlePushWithChoice(state, attacker, target, 'POW', rng);
 
   // Si la cible avait le ballon, le perdre
   if (target.hasBall) {

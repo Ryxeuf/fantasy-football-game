@@ -1,4 +1,5 @@
 import { Namespace, Socket } from "socket.io";
+import { prisma } from "./prisma";
 
 /**
  * Tracks which users are connected to which match rooms.
@@ -37,11 +38,30 @@ export function registerGameRoomHandlers(gameNamespace: Namespace): void {
       socketToUser.set(socket.id, userId);
     }
 
-    socket.on("game:join-match", (payload: JoinMatchPayload, ack?: (response: { ok: boolean; error?: string }) => void) => {
+    socket.on("game:join-match", async (payload: JoinMatchPayload, ack?: (response: { ok: boolean; error?: string }) => void) => {
       const { matchId } = payload ?? {};
 
       if (!matchId || typeof matchId !== "string") {
         ack?.({ ok: false, error: "matchId is required" });
+        return;
+      }
+
+      if (!userId) {
+        ack?.({ ok: false, error: "Authentication required" });
+        return;
+      }
+
+      // Verify the user is a participant of this match
+      const match = await prisma.match.findFirst({
+        where: {
+          id: matchId,
+          players: { some: { id: userId } },
+        },
+        select: { id: true },
+      });
+
+      if (!match) {
+        ack?.({ ok: false, error: "You are not a participant of this match" });
         return;
       }
 
