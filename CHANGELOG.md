@@ -1,3 +1,17 @@
+## [1.44.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.44.1...v1.44.2) (2026-04-02)
+
+
+### 🐛 Bug Fixes
+
+* crowd injury now promotes stunned to KO (BB3 rules) ([1bed237](https://github.com/Ryxeuf/fantasy-football-game/commit/1bed2377cf6b21a2ee046efae1a31fdc7d92c0cf))
+* sprint 0 — critical bugfixes and security hardening ([1cbffa1](https://github.com/Ryxeuf/fantasy-football-game/commit/1cbffa1e98577b8f8f78ca83997b52e0fb1d9ad0))
+* use const for resultState in blocking.ts (lint error) ([7661079](https://github.com/Ryxeuf/fantasy-football-game/commit/7661079e939afb91b8f061a6d7d51fe623a1be99))
+
+
+### 📝 Documentation
+
+* update roadmap with full audit findings (2026-04-02) ([46aca38](https://github.com/Ryxeuf/fantasy-football-game/commit/46aca384ad002d1537f9421543324291613ce740))
+
 ## [1.44.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.44.0...v1.44.1) (2026-03-31)
 
 
