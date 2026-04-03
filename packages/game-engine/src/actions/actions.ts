@@ -346,7 +346,7 @@ function handleEndTurn(state: GameState, rng: RNG): GameState {
 
   // Si on est en phase post-TD, faire le reset et kickoff
   if (state.gamePhase === 'post-td') {
-    return handlePostTouchdown(state);
+    return handlePostTouchdown(state, rng);
   }
 
   // Changement de tour - le porteur de ballon garde le ballon
