@@ -1,3 +1,10 @@
+## [1.47.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.46.0...v1.47.0) (2026-04-03)
+
+
+### ✨ Features
+
+* add useGameSocket hook for real-time WebSocket updates (A.5) ([112270d](https://github.com/Ryxeuf/fantasy-football-game/commit/112270d0490b3ab3c8fea2e2273b5d73120486ed))
+
 ## [1.46.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.45.0...v1.46.0) (2026-04-03)
 
 
