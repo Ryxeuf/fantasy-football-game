@@ -298,8 +298,9 @@ registerSkill({
 registerSkill({
   slug: 'wrestle',
   triggers: ['on-block-result'],
-  description: 'Sur BOTH_DOWN, les deux joueurs sont mis au sol (pas de turnover). Alternative à Block.',
+  description: 'Sur BOTH_DOWN, les deux joueurs sont mis au sol sans jet d\'armure et sans turnover. Prévaut sur Block.',
   canApply: (ctx) => hasSkill(ctx.player, 'wrestle') && ctx.blockResult === 'BOTH_DOWN',
+  modifyBlockResult: () => 'BOTH_DOWN',
 });
 
 // FEND
