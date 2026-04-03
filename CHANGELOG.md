@@ -1,3 +1,16 @@
+## [1.47.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.47.0...v1.47.1) (2026-04-03)
+
+
+### 🐛 Bug Fixes
+
+* resolve markdown nesting issue in improved prompt ([dbd9af5](https://github.com/Ryxeuf/fantasy-football-game/commit/dbd9af576cad5b0d210549a4d1bbfd56244cba23))
+
+
+### 📝 Documentation
+
+* restore systematic PR creation step in improved prompt ([0ab7787](https://github.com/Ryxeuf/fantasy-football-game/commit/0ab7787b091989e700609aba26599e686e3519e1))
+* review agents and prompt, add 2 missing specialized agents ([d5e3bbc](https://github.com/Ryxeuf/fantasy-football-game/commit/d5e3bbc5ae30fd9c153926868bda3057ca5f90b0))
+
 ## [1.47.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.46.0...v1.47.0) (2026-04-03)
 
 
