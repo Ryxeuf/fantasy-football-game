@@ -4,6 +4,9 @@ import {
   DiceResultPopup,
   GameScoreboard,
   ActionPickerPopup,
+  BlockChoicePopup,
+  PushChoicePopup,
+  FollowUpChoicePopup,
   GameBoardWithDugouts,
 } from "@bb/ui";
 import {
@@ -23,6 +26,15 @@ import { API_BASE } from "../../auth-client";
 import { useGameMoves } from "./hooks/useGameMoves";
 import { useGameSocket } from "./hooks/useGameSocket";
 import { useGameState } from "./hooks/useGameState";
+import {
+  shouldShowBlockPopup,
+  shouldShowPushPopup,
+  shouldShowFollowUpPopup,
+  buildBlockChooseMove,
+  buildPushChooseMove,
+  buildFollowUpChooseMove,
+  computeBlockTargets,
+} from "./hooks/useBlockPopups";
 import PostMatchSPP from "../../components/PostMatchSPP";
 
 // Normalise un état reçu du serveur
@@ -189,6 +201,11 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
       .filter((m) => isMove(m, state.selectedPlayerId!))
       .map((m) => m.to);
   }, [legal, state?.selectedPlayerId]);
+
+  const blockTargets = useMemo(() => {
+    if (!state || !state.selectedPlayerId) return [];
+    return computeBlockTargets(state.selectedPlayerId, legal, state.players);
+  }, [state?.selectedPlayerId, legal, state?.players]);
 
   // Ajouter handlers après onCellClick
   const handleDragStart = (e: React.DragEvent, playerId: string) => {
@@ -506,6 +523,42 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
       state.selectedPlayerId &&
       (!extState.preMatch || (extState.preMatch.phase as string) !== "setup")
     ) {
+      // Handle BLOCK action: clicking an opponent to initiate a block
+      const target = state.players.find(
+        (p) =>
+          p.team !== state.currentPlayer &&
+          p.pos.x === pos.x &&
+          p.pos.y === pos.y,
+      );
+      if (target && (currentAction === "BLOCK" || currentAction === "BLITZ")) {
+        const blockMove = legal.find(
+          (m) =>
+            m.type === "BLOCK" &&
+            (m as any).playerId === state.selectedPlayerId &&
+            (m as any).targetId === target.id,
+        );
+        if (blockMove) {
+          if (isActiveMatch) {
+            submitMove(blockMove).then((result) => {
+              if (result?.success && result.gameState) {
+                const ns = normalizeState(result.gameState);
+                setState(ns);
+                setIsMyTurn(result.isMyTurn);
+                if (ns.lastDiceResult) setShowDicePopup(true);
+              }
+            });
+          } else {
+            setState((s) => {
+              if (!s) return null;
+              const s2 = applyMove(s, blockMove, createRNG());
+              if (s2.lastDiceResult) setShowDicePopup(true);
+              return s2 as ExtendedGameState;
+            });
+          }
+          return;
+        }
+      }
+
       const candidate = legal.find(
         (m) =>
           m.type === "MOVE" &&
@@ -752,7 +805,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
                     ? (state as ExtendedGameState).preMatch.legalSetupPositions
                     : movesForSelected
                 }
-                blockTargets={[]}
+                blockTargets={blockTargets}
                 selectedPlayerId={state.selectedPlayerId || undefined}
                 selectedForRepositioning={selectedFromReserve}
                 placedPlayers={
@@ -868,6 +921,90 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
             onClose={() => setCurrentAction("MOVE")}
           />
         )}
+      {/* Block/Push/FollowUp decision popups */}
+      {state && shouldShowBlockPopup(state) && state.pendingBlock && (
+        <BlockChoicePopup
+          attackerName={
+            state.players.find((p) => p.id === state.pendingBlock!.attackerId)?.name || "Attaquant"
+          }
+          defenderName={
+            state.players.find((p) => p.id === state.pendingBlock!.targetId)?.name || "Défenseur"
+          }
+          chooser={state.pendingBlock.chooser}
+          options={state.pendingBlock.options}
+          onChoose={(result) => {
+            const move = buildBlockChooseMove(state.pendingBlock!, result);
+            if (isActiveMatch) {
+              submitMove(move).then((res) => {
+                if (res?.success && res.gameState) {
+                  setState(normalizeState(res.gameState));
+                  setIsMyTurn(res.isMyTurn);
+                  if (res.gameState.lastDiceResult) setShowDicePopup(true);
+                }
+              });
+            } else {
+              setState((s) => {
+                if (!s) return null;
+                const s2 = applyMove(s, move, createRNG());
+                if (s2.lastDiceResult) setShowDicePopup(true);
+                return s2 as ExtendedGameState;
+              });
+            }
+          }}
+          onClose={() => {}}
+        />
+      )}
+      {state && shouldShowPushPopup(state) && state.pendingPushChoice && (
+        <PushChoicePopup
+          attackerName={
+            state.players.find((p) => p.id === state.pendingPushChoice!.attackerId)?.name || "Attaquant"
+          }
+          targetName={
+            state.players.find((p) => p.id === state.pendingPushChoice!.targetId)?.name || "Défenseur"
+          }
+          availableDirections={state.pendingPushChoice.availableDirections}
+          onChoose={(direction) => {
+            const move = buildPushChooseMove(state.pendingPushChoice!, direction);
+            if (isActiveMatch) {
+              submitMove(move).then((res) => {
+                if (res?.success && res.gameState) {
+                  setState(normalizeState(res.gameState));
+                  setIsMyTurn(res.isMyTurn);
+                }
+              });
+            } else {
+              setState((s) => s ? applyMove(s, move, createRNG()) as ExtendedGameState : null);
+            }
+          }}
+          onClose={() => {}}
+        />
+      )}
+      {state && shouldShowFollowUpPopup(state) && state.pendingFollowUpChoice && (
+        <FollowUpChoicePopup
+          attackerName={
+            state.players.find((p) => p.id === state.pendingFollowUpChoice!.attackerId)?.name || "Attaquant"
+          }
+          targetName={
+            state.players.find((p) => p.id === state.pendingFollowUpChoice!.targetId)?.name || "Défenseur"
+          }
+          targetNewPosition={state.pendingFollowUpChoice.targetNewPosition}
+          targetOldPosition={state.pendingFollowUpChoice.targetOldPosition}
+          onChoose={(followUp) => {
+            const move = buildFollowUpChooseMove(state.pendingFollowUpChoice!, followUp);
+            if (isActiveMatch) {
+              submitMove(move).then((res) => {
+                if (res?.success && res.gameState) {
+                  setState(normalizeState(res.gameState));
+                  setIsMyTurn(res.isMyTurn);
+                }
+              });
+            } else {
+              setState((s) => s ? applyMove(s, move, createRNG()) as ExtendedGameState : null);
+            }
+          }}
+          onClose={() => {}}
+        />
+      )}
     </div>
   );
 }
