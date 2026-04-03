@@ -3,6 +3,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import type { ExtendedGameState } from "@bb/game-engine";
 import { setupPreMatchWithTeams } from "@bb/game-engine";
 import { API_BASE } from "../../../auth-client";
+import { useGameSocket } from "./useGameSocket";
+import type { StateUpdatedPayload, MatchEndedPayload, PlayerConnectionPayload } from "./useGameSocket";
 
 function normalizeState(state: any): ExtendedGameState {
   if (!state) return state;
@@ -205,13 +207,30 @@ export function useGameState(matchId: string): GameStateInfo {
     })();
   }, [matchId, teamNameA, teamNameB]);
 
-  // Polling — désactivé quand c'est notre tour de placer en setup
+  // WebSocket — real-time game state updates via socket.io
+  const { connected: wsConnected } = useGameSocket(matchId, {
+    onStateUpdate: useCallback((data: StateUpdatedPayload) => {
+      if (data.gameState) {
+        setState(normalizeState(data.gameState));
+        setStateSource("server");
+      }
+    }, []),
+    onMatchEnded: useCallback((data: MatchEndedPayload) => {
+      if (data.gameState) {
+        setState(normalizeState(data.gameState));
+        setStateSource("server");
+        setMatchStatus("ended");
+      }
+    }, []),
+  });
+
+  // Fallback polling — slow interval (30s) when WebSocket is connected, faster (5s) when not.
+  // Disabled during our setup placement turn to avoid conflicts.
   const isMySetupTurn = state?.preMatch?.phase === "setup" && state?.preMatch?.currentCoach === myTeamSide;
   useEffect(() => {
-    // Pas de polling pendant notre phase de placement
     if (isMySetupTurn) return;
 
-    const pollInterval = isActiveMatch && !isMyTurn ? 3000 : 10000;
+    const pollInterval = wsConnected ? 30000 : (isActiveMatch && !isMyTurn ? 3000 : 10000);
     const interval = setInterval(async () => {
       try {
         const token = localStorage.getItem("auth_token");
@@ -232,7 +251,7 @@ export function useGameState(matchId: string): GameStateInfo {
       } catch {}
     }, pollInterval);
     return () => clearInterval(interval);
-  }, [matchId, isActiveMatch, isMyTurn, isMySetupTurn]);
+  }, [matchId, isActiveMatch, isMyTurn, isMySetupTurn, wsConnected]);
 
   // Load summary
   useEffect(() => {

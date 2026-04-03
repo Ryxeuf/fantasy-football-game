@@ -12,3 +12,4 @@
 
 - [x] **B0.1** (partiel) : Brancher `skill-registry.ts` dans le moteur — skill-bridge créé, modifiers intégrés dans dodge/pickup/GFI (15+ skills activés : Two Heads, Break Tackle, Stunty, Very Long Legs, Prehensile Tail, Diving Tackle, Big Hand, Extra Arms, Pro, Pass, Catch, etc.)
 - [x] **A.4** : Émettre gameState via WebSocket après chaque action — `broadcastGameState()` et `broadcastMatchEnd()` câblés dans POST /match/:id/move, émettent `game:state-updated` et `game:match-ended` sur le namespace /game
+- [x] **A.5** : Hook client `useGameSocket(matchId)` — connexion socket.io au namespace /game avec auth JWT, join/leave match room, listeners typés pour state-updated/player-connected/player-disconnected/match-ended, intégré dans useGameState (remplace le polling 3-10s par WebSocket temps réel + fallback polling 30s)
