@@ -1,3 +1,14 @@
+## [1.48.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.47.2...v1.48.0) (2026-04-03)
+
+
+### ✨ Features
+
+* add post-touchdown re-kickoff with KO recovery (B1.9) ([#101](https://github.com/Ryxeuf/fantasy-football-game/issues/101)) ([7d43fb4](https://github.com/Ryxeuf/fantasy-football-game/commit/7d43fb493f5290a649f372df2e6d84b78242f662))
+* implement Apothecary rule (B1.2-3) ([f3c2e52](https://github.com/Ryxeuf/fantasy-football-game/commit/f3c2e5267710001d9d153ea83b94a7309b584add))
+* synchronize game actions via WebSocket (A.6) ([#98](https://github.com/Ryxeuf/fantasy-football-game/issues/98)) ([06d28b2](https://github.com/Ryxeuf/fantasy-football-game/commit/06d28b25febe497906c66a4399b61a5038b2e3b2))
+* wire Block/Push/FollowUp popups in online match (UI-1) ([#99](https://github.com/Ryxeuf/fantasy-football-game/issues/99)) ([d9af895](https://github.com/Ryxeuf/fantasy-football-game/commit/d9af895efca7e5cc3765dc8a035327a5ca420445))
+* wire interactive Reroll popup (UI-2) ([#100](https://github.com/Ryxeuf/fantasy-football-game/issues/100)) ([61f2cdb](https://github.com/Ryxeuf/fantasy-football-game/commit/61f2cdba2ac67c3e3ca7a33c190caf0e7c0649f7))
+
 ## [1.47.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.47.1...v1.47.2) (2026-04-03)
 
 
