@@ -60,6 +60,7 @@ import {
 import { executePass, executeHandoff, getPassRange } from '../mechanics/passing';
 import { canFoul, executeFoul } from '../mechanics/foul';
 import { isAdjacent } from '../mechanics/movement';
+import { applyApothecaryChoice } from '../mechanics/apothecary';
 
 /**
  * Obtient tous les mouvements légaux pour l'état actuel
@@ -78,6 +79,14 @@ export function getLegalMoves(state: GameState): Move[] {
   // Vérifier que state.players existe
   if (!state.players || !Array.isArray(state.players)) {
     return moves;
+  }
+
+  // Si un pendingApothecary est en attente, seul le choix d'apothecaire est possible
+  if (state.pendingApothecary) {
+    return [
+      { type: 'APOTHECARY_CHOOSE', useApothecary: true } as Move,
+      { type: 'APOTHECARY_CHOOSE', useApothecary: false } as Move,
+    ];
   }
 
   // Si un pendingReroll est en attente, seules les relances sont possibles
@@ -296,6 +305,11 @@ function applyPickupFailure(state: GameState, playerIndex: number, rng: RNG): Ga
  * @returns Nouvel état du jeu
  */
 export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
+  // Si un pendingApothecary est en attente, seul APOTHECARY_CHOOSE est accepté
+  if (state.pendingApothecary && move.type !== 'APOTHECARY_CHOOSE') {
+    return state;
+  }
+
   // Si un pendingReroll est en attente, seuls REROLL_CHOOSE et END_TURN sont acceptés
   if (state.pendingReroll && move.type !== 'REROLL_CHOOSE' && move.type !== 'END_TURN') {
     return state;
@@ -303,7 +317,7 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
 
   // Si c'est un turnover, on ne peut que finir le tour
   // Exception : PUSH_CHOOSE, FOLLOW_UP_CHOOSE et REROLL_CHOOSE font partie de la résolution
-  if (state.isTurnover && move.type !== 'END_TURN' && move.type !== 'PUSH_CHOOSE' && move.type !== 'FOLLOW_UP_CHOOSE' && move.type !== 'REROLL_CHOOSE') {
+  if (state.isTurnover && move.type !== 'END_TURN' && move.type !== 'PUSH_CHOOSE' && move.type !== 'FOLLOW_UP_CHOOSE' && move.type !== 'REROLL_CHOOSE' && move.type !== 'APOTHECARY_CHOOSE') {
     return state;
   }
 
@@ -326,6 +340,8 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       return handleBlitz(state, move, rng);
     case 'REROLL_CHOOSE':
       return handleRerollChoose(state, move, rng);
+    case 'APOTHECARY_CHOOSE':
+      return applyApothecaryChoice(state, move.useApothecary, rng);
     case 'PASS':
       return handlePass(state, move, rng);
     case 'HANDOFF':

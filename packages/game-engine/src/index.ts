@@ -93,6 +93,9 @@ export { movePlayerToDugoutZone } from './mechanics/dugout';
 // Export des fonctions de blessure
 export { performInjuryRoll, rollLastingInjuryType } from './mechanics/injury';
 
+// Export des fonctions d'apothecaire
+export { applyApothecaryChoice, isApothecaryAvailable } from './mechanics/apothecary';
+
 // Export des fonctions de passe et remise
 export { executePass, executeHandoff, getPassRange, getDistance, findInterceptors } from './mechanics/passing';
 

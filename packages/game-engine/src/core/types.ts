@@ -87,6 +87,16 @@ export interface TeamDugout {
   };
 }
 
+export interface PendingApothecary {
+  playerId: string;
+  team: TeamId;
+  injuryType: 'ko' | 'casualty';
+  originalCasualtyOutcome?: CasualtyOutcome;
+  originalCasualtyRoll?: number;
+  originalLastingInjury?: LastingInjuryDetail;
+  causedById?: string;
+}
+
 export interface GameState {
   width: number;
   height: number;
@@ -97,6 +107,9 @@ export interface GameState {
   selectedPlayerId: string | null;
   lastDiceResult?: DiceResult;
   isTurnover: boolean;
+  // Apothecaire
+  apothecaryAvailable: { teamA: boolean; teamB: boolean };
+  pendingApothecary?: PendingApothecary;
   // Zones de dugout pour chaque équipe
   dugouts: {
     teamA: TeamDugout;
@@ -212,6 +225,7 @@ export type Move =
   | { type: 'PUSH_CHOOSE'; playerId: string; targetId: string; direction: Position }
   | { type: 'FOLLOW_UP_CHOOSE'; playerId: string; targetId: string; followUp: boolean }
   | { type: 'REROLL_CHOOSE'; useReroll: boolean }
+  | { type: 'APOTHECARY_CHOOSE'; useApothecary: boolean }
   | { type: 'PASS'; playerId: string; targetId: string }
   | { type: 'HANDOFF'; playerId: string; targetId: string }
   | { type: 'FOUL'; playerId: string; targetId: string };
