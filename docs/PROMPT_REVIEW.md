@@ -87,8 +87,8 @@ Implemente UNE tache non cochee (`- [ ]`) du **premier sprint non termine** dans
 | Game engine (regles, mecaniques) | `/bloodbowl-rules-agent` |
 | Pipeline etat/actions, GameState | `/game-state-integration-agent` |
 | WebSocket / multijoueur | `/websocket-multiplayer-agent` |
-| Systeme de skills | `/skill-system-agent` (si cree) |
-| Sequences de match (TD, mi-temps) | `/turn-sequence-agent` (si cree) |
+| Systeme de skills | `/skill-system-agent` |
+| Sequences de match (TD, mi-temps) | `/turn-sequence-agent` |
 | Schema Prisma, migrations | `/prisma-database-agent` |
 | Securite, anti-triche | `/api-security-agent` |
 
@@ -101,14 +101,11 @@ Implemente UNE tache non cochee (`- [ ]`) du **premier sprint non termine** dans
 - Immutabilite : retourne un nouveau GameState, ne mute jamais l'existant
 
 ## Validation (obligatoire avant commit)
-```bash
-pnpm test          # Tests unitaires + integration
-pnpm lint          # ESLint
-pnpm typecheck     # Verification TypeScript
-pnpm build         # Build de production
-```
-
-Si une commande echoue, corrige avant de continuer.
+Execute ces 4 commandes et corrige toute erreur avant de continuer :
+1. `pnpm test` — Tests unitaires + integration
+2. `pnpm lint` — ESLint
+3. `pnpm typecheck` — Verification TypeScript
+4. `pnpm build` — Build de production
 
 ## Finalisation
 1. Coche la tache dans TODO.md
