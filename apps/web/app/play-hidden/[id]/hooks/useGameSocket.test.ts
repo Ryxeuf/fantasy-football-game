@@ -137,3 +137,57 @@ describe("useGameSocket — createGameSocket", () => {
 
 // Import the helpers function (will be defined in the hook module)
 import { createGameSocketHelpers } from "./useGameSocket";
+
+describe("useGameSocket — submitMove via WebSocket", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSocket.on.mockReset();
+    mockSocket.off.mockReset();
+    mockSocket.emit.mockReset();
+  });
+
+  it("emits game:submit-move with matchId and move, resolves with ack", async () => {
+    const ackPayload = {
+      success: true,
+      gameState: { currentPlayer: "B" },
+      isMyTurn: false,
+      moveCount: 1,
+    };
+
+    mockSocket.emit.mockImplementation(
+      (event: string, payload: unknown, ack: (res: unknown) => void) => {
+        ack(ackPayload);
+      },
+    );
+
+    const { submitMove } = createGameSocketHelpers(mockSocket as any);
+    const result = await submitMove("match-ws-1", { type: "END_TURN" } as any);
+
+    expect(mockSocket.emit).toHaveBeenCalledWith(
+      "game:submit-move",
+      { matchId: "match-ws-1", move: { type: "END_TURN" } },
+      expect.any(Function),
+    );
+    expect(result).toEqual(ackPayload);
+  });
+
+  it("resolves with error payload when move is rejected", async () => {
+    const errorPayload = {
+      success: false,
+      error: "Not your turn",
+      code: "NOT_YOUR_TURN",
+    };
+
+    mockSocket.emit.mockImplementation(
+      (event: string, payload: unknown, ack: (res: unknown) => void) => {
+        ack(errorPayload);
+      },
+    );
+
+    const { submitMove } = createGameSocketHelpers(mockSocket as any);
+    const result = await submitMove("match-ws-2", { type: "MOVE", playerId: "p1", to: { x: 3, y: 4 } } as any);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("Not your turn");
+  });
+});

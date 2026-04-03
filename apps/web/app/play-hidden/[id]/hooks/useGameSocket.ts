@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useCallback, useState } from "react";
 import { io, type Socket } from "socket.io-client";
-import type { ExtendedGameState } from "@bb/game-engine";
+import type { ExtendedGameState, Move } from "@bb/game-engine";
 import { API_BASE } from "../../../auth-client";
 
 // --- Server event payload types ---
@@ -25,6 +25,15 @@ export interface MatchEndedPayload {
   matchId: string;
   gameState: ExtendedGameState;
   timestamp: string;
+}
+
+export interface MoveAckPayload {
+  success: boolean;
+  gameState?: ExtendedGameState;
+  isMyTurn?: boolean;
+  moveCount?: number;
+  error?: string;
+  code?: string;
 }
 
 export type GameSocketEvents = {
@@ -85,6 +94,18 @@ export function createGameSocketHelpers(socket: Socket) {
       socket.on("game:match-ended", handler);
     },
 
+    submitMove(matchId: string, move: Move): Promise<MoveAckPayload> {
+      return new Promise((resolve) => {
+        socket.emit(
+          "game:submit-move",
+          { matchId, move },
+          (response: MoveAckPayload) => {
+            resolve(response);
+          },
+        );
+      });
+    },
+
     cleanup(): void {
       socket.off("game:state-updated");
       socket.off("game:player-connected");
@@ -114,6 +135,8 @@ export interface UseGameSocketResult {
   joined: boolean;
   /** Any connection or join error message. */
   error: string | null;
+  /** Submit a move via WebSocket. Returns null if not connected. */
+  submitMove: (move: Move) => Promise<MoveAckPayload | null>;
 }
 
 /**
@@ -137,6 +160,17 @@ export function useGameSocket(
   optionsRef.current = options;
 
   const socketRef = useRef<Socket | null>(null);
+  const helpersRef = useRef<ReturnType<typeof createGameSocketHelpers> | null>(null);
+
+  const submitMove = useCallback(
+    async (move: Move): Promise<MoveAckPayload | null> => {
+      if (!helpersRef.current || !socketRef.current?.connected) {
+        return null;
+      }
+      return helpersRef.current.submitMove(matchId, move);
+    },
+    [matchId],
+  );
 
   useEffect(() => {
     const authToken = localStorage.getItem("auth_token");
@@ -148,6 +182,7 @@ export function useGameSocket(
     const socket = createGameSocket(API_BASE, authToken);
     socketRef.current = socket;
     const helpers = createGameSocketHelpers(socket);
+    helpersRef.current = helpers;
 
     // Connection lifecycle
     socket.on("connect", () => {
@@ -202,9 +237,10 @@ export function useGameSocket(
       socket.off("disconnect");
       socket.off("connect_error");
       socket.disconnect();
+      helpersRef.current = null;
       socketRef.current = null;
     };
   }, [matchId]);
 
-  return { connected, joined, error };
+  return { connected, joined, error, submitMove };
 }

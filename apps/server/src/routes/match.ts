@@ -3,15 +3,12 @@ import { prisma } from "../prisma";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
 import jwt from "jsonwebtoken";
 import { acceptAndMaybeStartMatch } from "../services/match-start";
-import { enterSetupPhase, applyMove, makeRNG, addJourneymen } from "@bb/game-engine";
+import { enterSetupPhase, addJourneymen } from "@bb/game-engine";
 import type { Move } from "@bb/game-engine";
 import { getUserTeamSide } from "../services/turn-ownership";
-import { persistMatchSPP } from "../services/spp-tracking";
-import { persistPlayerDeaths } from "../services/player-death";
-import { persistPermanentInjuries } from "../services/permanent-injuries";
 import { getLinemanStats } from "../services/journeymen";
 import { validate } from "../middleware/validate";
-import { broadcastGameState, broadcastMatchEnd } from "../services/game-broadcast";
+import { processMove } from "../services/move-processor";
 import {
   joinMatchSchema,
   acceptMatchSchema,
@@ -94,149 +91,21 @@ router.post(
       const matchId = req.params.id;
       const { move } = req.body as { move: Move };
 
-      // Charger le match
-      const match = await prisma.match.findUnique({
-        where: { id: matchId },
-        include: { turns: { orderBy: { number: "asc" } } },
-      });
+      const result = await processMove(matchId, req.user!.id, move);
 
-      if (!match) {
-        return res.status(404).json({ error: "Partie introuvable" });
+      if (!result.success) {
+        const statusMap: Record<string, number> = {
+          NOT_FOUND: 404,
+          INVALID_STATUS: 400,
+          NOT_PLAYER: 403,
+          NO_STATE: 500,
+          NOT_YOUR_TURN: 403,
+          ENGINE_ERROR: 400,
+        };
+        return res.status(statusMap[result.code] ?? 500).json({ error: result.error });
       }
 
-      if (match.status !== "active") {
-        return res.status(400).json({ error: `Statut invalide: ${match.status}. Le match doit etre actif.` });
-      }
-
-      // Determiner le cote du joueur (A ou B)
-      const userTeamSide = await getUserTeamSide(prisma as any, matchId, req.user!.id);
-      if (!userTeamSide) {
-        return res.status(403).json({ error: "Vous n'etes pas un joueur de cette partie" });
-      }
-
-      // Recuperer le dernier gameState
-      const lastTurnWithState = [...match.turns]
-        .reverse()
-        .find((t: any) => t.payload?.gameState);
-      if (!lastTurnWithState) {
-        return res.status(500).json({ error: "Etat de jeu introuvable" });
-      }
-
-      let gameState = (lastTurnWithState as any).payload.gameState;
-      if (typeof gameState === "string") {
-        gameState = JSON.parse(gameState);
-      }
-
-      // Verifier que c'est le tour de ce joueur
-      if (gameState.currentPlayer !== userTeamSide) {
-        return res.status(403).json({
-          error: `Ce n'est pas votre tour. C'est au tour de l'equipe ${gameState.currentPlayer}.`,
-        });
-      }
-
-      // Compter les moves pour le seed RNG deterministe
-      const moveCount = match.turns.filter(
-        (t: any) => t.payload?.type === "gameplay-move",
-      ).length;
-      const rng = makeRNG(`${match.seed}-move-${moveCount}`);
-
-      // Appliquer le coup
-      const newState = applyMove(gameState, move, rng);
-
-      // Persister le nouvel etat
-      const turnNumber = match.turns.length + 1;
-      await prisma.turn.create({
-        data: {
-          matchId,
-          number: turnNumber,
-          payload: {
-            type: "gameplay-move",
-            userId: req.user!.id,
-            move,
-            gameState: newState,
-            timestamp: new Date().toISOString(),
-          },
-        },
-      });
-
-      // Déterminer le prochain joueur à partir du state
-      const nextTeamSide = newState.currentPlayer;
-      const selections = await prisma.teamSelection.findMany({
-        where: { matchId },
-        orderBy: { createdAt: "asc" },
-        select: { userId: true },
-      });
-      const nextUserId = nextTeamSide === "A"
-        ? selections[0]?.userId
-        : selections[1]?.userId;
-
-      // Verifier si le match est termine (half 2, turn > 8)
-      const matchEnded = newState.half === 2 && newState.turn > 8 && newState.isTurnover;
-      await prisma.match.update({
-        where: { id: matchId },
-        data: {
-          ...(matchEnded ? { status: "ended" } : {}),
-          currentTurnUserId: matchEnded ? null : (nextUserId || null),
-          lastMoveAt: new Date(),
-        },
-      });
-
-      // Persist post-match data when the match ends (SPP, deaths, injuries)
-      if (matchEnded && newState.players) {
-        const teamSelections = await prisma.teamSelection.findMany({
-          where: { matchId },
-          orderBy: { createdAt: "asc" },
-          select: { teamId: true },
-        });
-        const teamAId = teamSelections[0]?.teamId;
-        const teamBId = teamSelections[1]?.teamId;
-
-        if (teamAId && teamBId) {
-          // D.4 — Persist SPP
-          try {
-            if (newState.matchStats) {
-              await persistMatchSPP(prisma as any, newState, teamAId, teamBId);
-            }
-          } catch (sppError) {
-            console.error("Erreur lors de la persistence des SPP:", sppError);
-          }
-
-          // D.6 — Persist player deaths
-          try {
-            if (newState.casualtyResults) {
-              await persistPlayerDeaths(prisma as any, newState, teamAId, teamBId);
-            }
-          } catch (deathError) {
-            console.error("Erreur lors de la persistence des morts:", deathError);
-          }
-
-          // D.5 — Persist permanent injuries
-          try {
-            if (newState.lastingInjuryDetails) {
-              await persistPermanentInjuries(prisma as any, newState, teamAId, teamBId);
-            }
-          } catch (injuryError) {
-            console.error("Erreur lors de la persistence des blessures permanentes:", injuryError);
-          }
-        }
-      }
-
-      // Broadcast updated state to all players in the match room via WebSocket
-      broadcastGameState(matchId, newState, move, req.user!.id);
-
-      if (matchEnded) {
-        broadcastMatchEnd(matchId, newState);
-      }
-
-      // Determiner si c'est toujours le tour de ce joueur
-      const isMyTurn = newState.currentPlayer === userTeamSide;
-
-      return res.json({
-        success: true,
-        gameState: newState,
-        isMyTurn,
-        moveCount: moveCount + 1,
-      });
+      return res.json(result);
     } catch (e: any) {
       console.error("Erreur lors de l'application du coup:", e);
       return res.status(500).json({ error: e?.message || "Erreur serveur" });

@@ -65,7 +65,7 @@
 | B0.1 | Brancher `skill-registry.ts` dans le moteur | Architecture | [~] |
 | A.4 | Emettre gameState via WebSocket apres chaque action | Multiplayer | [x] |
 | A.5 | Hook client `useGameSocket(matchId)` | Multiplayer | [x] |
-| A.6 | Synchroniser actions via WebSocket | Multiplayer | [ ] |
+| A.6 | Synchroniser actions via WebSocket | Multiplayer | [x] |
 | UI-1 | Cabler Block/Push/FollowUp popups en match online | UI | [ ] |
 | UI-2 | Cabler bouton Reroll interactif | UI | [ ] |
 | B1.9 | Post-touchdown : re-setup + re-kickoff | Game flow | [ ] |
