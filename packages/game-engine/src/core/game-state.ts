@@ -7,6 +7,7 @@ import { GameState, TeamId, ActionType, Player, Position, RNG } from './types';
 import { createLogEntry } from '../utils/logging';
 import { checkTouchdowns } from '../mechanics/ball';
 import { initializeDugouts } from '../mechanics/dugout';
+import { rollKickoffEvent, applyKickoffEvent } from '../mechanics/kickoff-events';
 
 // Étendre GameState pour pré-match
 export interface PreMatchState {
@@ -711,7 +712,7 @@ function resetPlayerPositions(state: GameState): GameState {
 /**
  * Gère le reset après un touchdown : repositionne les joueurs et prépare le kickoff
  */
-export function handlePostTouchdown(state: GameState): GameState {
+export function handlePostTouchdown(state: GameState, rng: RNG): GameState {
   // L'équipe qui a marqué frappe (kick)
   const lastScoreLog = state.gameLog.findLast(log => log.type === 'score');
   const scoringTeam = lastScoreLog?.team;
@@ -721,7 +722,10 @@ export function handlePostTouchdown(state: GameState): GameState {
   const receivingTeam: TeamId = newKickingTeam === 'A' ? 'B' : 'A';
 
   // Reset players
-  const newState = resetPlayerPositions(state);
+  let newState = resetPlayerPositions(state);
+
+  // Récupération des joueurs KO (4+ sur D6) avant le nouveau drive
+  newState = recoverKOPlayers(newState, rng);
 
   const resetLog = createLogEntry(
     'info',
@@ -730,7 +734,7 @@ export function handlePostTouchdown(state: GameState): GameState {
     undefined
   );
 
-  return {
+  let resultState: GameState = {
     ...newState,
     gamePhase: 'playing' as const,
     kickingTeam: newKickingTeam,
@@ -745,6 +749,12 @@ export function handlePostTouchdown(state: GameState): GameState {
     lastDiceResult: undefined,
     gameLog: [...newState.gameLog, resetLog],
   };
+
+  // Rouler et appliquer l'événement de kickoff
+  const { event } = rollKickoffEvent(rng);
+  resultState = applyKickoffEvent(resultState, event, rng, newKickingTeam);
+
+  return resultState;
 }
 
 /**

@@ -68,7 +68,7 @@
 | A.6 | Synchroniser actions via WebSocket | Multiplayer | [x] |
 | UI-1 | Cabler Block/Push/FollowUp popups en match online | UI | [x] |
 | UI-2 | Cabler bouton Reroll interactif | UI | [x] |
-| B1.9 | Post-touchdown : re-setup + re-kickoff | Game flow | [ ] |
+| B1.9 | Post-touchdown : re-setup + re-kickoff | Game flow | [x] |
 
 ### Sprint 2 — Regles BB3 essentielles (~5 jours)
 
