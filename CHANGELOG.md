@@ -1,3 +1,10 @@
+## [1.45.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.44.2...v1.45.0) (2026-04-03)
+
+
+### ✨ Features
+
+* wire skill-registry into game engine via skill-bridge (B0.1) ([1cc7d70](https://github.com/Ryxeuf/fantasy-football-game/commit/1cc7d7000e2dd38ad284e4bd773289f082aa611b))
+
 ## [1.44.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.44.1...v1.44.2) (2026-04-02)
 
 
