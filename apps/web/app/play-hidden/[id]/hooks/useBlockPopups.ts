@@ -64,6 +64,10 @@ export function buildRerollChooseMove(useReroll: boolean): Move {
   return { type: "REROLL_CHOOSE", useReroll } as Move;
 }
 
+export function buildApothecaryChooseMove(useApothecary: boolean): Move {
+  return { type: "APOTHECARY_CHOOSE", useApothecary } as Move;
+}
+
 // --- Block target computation ---
 
 export function computeBlockTargets(

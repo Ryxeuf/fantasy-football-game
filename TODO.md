@@ -74,7 +74,7 @@
 
 | # | Tache | Type | Statut |
 |---|-------|------|--------|
-| B1.2-3 | Apothecaire (logique + UI) | Regle | [ ] |
+| B1.2-3 | Apothecaire (logique + UI) | Regle | [x] |
 | B1.6 | Wrestle skill effect | Regle | [ ] |
 | B1.5 | Loner reroll limitation | Regle | [ ] |
 | B1.7 | Mi-temps complete (reset + re-kickoff) | Game flow | [ ] |

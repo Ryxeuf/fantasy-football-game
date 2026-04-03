@@ -92,7 +92,8 @@ export function setupPreMatchWithTeams(
   teamAData: TeamPlayerData[],
   teamBData: TeamPlayerData[],
   teamAName: string,
-  teamBName: string
+  teamBName: string,
+  options?: { teamAApothecary?: boolean; teamBApothecary?: boolean }
 ): ExtendedGameState {
   const dugouts = initializeDugouts();
 
@@ -168,6 +169,10 @@ export function setupPreMatchWithTeams(
     teamFoulCount: {} as Record<string, number>,
     teamRerolls: { teamA: 3, teamB: 3 },
     rerollUsedThisTurn: false,
+    apothecaryAvailable: {
+      teamA: options?.teamAApothecary ?? false,
+      teamB: options?.teamBApothecary ?? false,
+    },
     // Informations de match
     gamePhase: 'playing' as const,
     half: 0, // Pas de mi-temps en phase pré-match
@@ -307,6 +312,7 @@ export function setupPreMatch(): GameState {
     teamFoulCount: {} as Record<string, number>,
     teamRerolls: { teamA: 3, teamB: 3 },
     rerollUsedThisTurn: false,
+    apothecaryAvailable: { teamA: false, teamB: false },
     // Informations de match
     gamePhase: 'playing' as const,
     half: 0, // Pas de mi-temps en phase pré-match
@@ -419,6 +425,7 @@ export function setup(): GameState {
     // Relances d'équipe (3 par défaut pour les matchs de démonstration)
     teamRerolls: { teamA: 3, teamB: 3 },
     rerollUsedThisTurn: false,
+    apothecaryAvailable: { teamA: false, teamB: false },
     // Informations de match
     gamePhase: 'playing' as const,
     half: 1,

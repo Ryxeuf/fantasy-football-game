@@ -3,10 +3,11 @@
  * Gère les jets d'armure, de blessure et les zones de dugout
  */
 
-import { GameState, Player, RNG, CasualtyOutcome, LastingInjuryType, LastingInjuryDetail } from '../core/types';
+import { GameState, Player, RNG, CasualtyOutcome, LastingInjuryType, LastingInjuryDetail, PendingApothecary } from '../core/types';
 import { performArmorRoll } from '../utils/dice';
 import { createLogEntry } from '../utils/logging';
 import { movePlayerToDugoutZone } from './dugout';
+import { isApothecaryAvailable } from './apothecary';
 
 /**
  * Effectue un jet de blessure contre un joueur
@@ -73,6 +74,15 @@ function handleKnockedOut(state: GameState, player: Player): GameState {
     player.team
   );
   newState.gameLog = [...newState.gameLog, koLog];
+
+  // Verifier si l'apothecaire est disponible
+  if (isApothecaryAvailable(newState, player.id)) {
+    newState.pendingApothecary = {
+      playerId: player.id,
+      team: player.team,
+      injuryType: 'ko',
+    };
+  }
 
   return newState;
 }
@@ -202,6 +212,23 @@ function handleCasualty(state: GameState, player: Player, rng: RNG, causedById?:
 
   // Enregistrer le résultat de la blessure dans l'état du jeu
   newState.casualtyResults = { ...newState.casualtyResults, [player.id]: outcome };
+
+  // Verifier si l'apothecaire est disponible
+  if (isApothecaryAvailable(newState, player.id)) {
+    const pendingApothecary: PendingApothecary = {
+      playerId: player.id,
+      team: player.team,
+      injuryType: 'casualty',
+      originalCasualtyOutcome: outcome,
+      originalCasualtyRoll: casualtyRoll,
+      causedById,
+    };
+    // Store lasting injury if applicable
+    if (newState.lastingInjuryDetails[player.id]) {
+      pendingApothecary.originalLastingInjury = { ...newState.lastingInjuryDetails[player.id] };
+    }
+    newState.pendingApothecary = pendingApothecary;
+  }
 
   return newState;
 }

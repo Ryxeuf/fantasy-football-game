@@ -8,6 +8,7 @@ import {
   PushChoicePopup,
   FollowUpChoicePopup,
   RerollChoicePopup,
+  ApothecaryChoicePopup,
   GameBoardWithDugouts,
 } from "@bb/ui";
 import {
@@ -36,6 +37,7 @@ import {
   buildPushChooseMove,
   buildFollowUpChooseMove,
   buildRerollChooseMove,
+  buildApothecaryChooseMove,
   computeBlockTargets,
 } from "./hooks/useBlockPopups";
 import PostMatchSPP from "../../components/PostMatchSPP";
@@ -679,6 +681,11 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
               Relance disponible !
             </span>
           )}
+          {state && state.pendingApothecary && isMyTurn && (
+            <span className="bg-green-500 text-white px-2 py-0.5 rounded text-xs animate-pulse">
+              Apothicaire disponible !
+            </span>
+          )}
           {state && state.gamePhase === "ended" && (
             <span className="bg-gray-700 text-white px-2 py-0.5 rounded text-xs">
               Match terminé — {state.score.teamA} - {state.score.teamB}
@@ -1036,6 +1043,32 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
                 const s2 = applyMove(s, move, createRNG());
                 if (s2.lastDiceResult) setShowDicePopup(true);
                 return s2 as ExtendedGameState;
+              });
+            }
+          }}
+        />
+      )}
+      {/* Apothecary decision popup */}
+      {state && state.pendingApothecary && isMyTurn && (
+        <ApothecaryChoicePopup
+          playerName={
+            state.players.find((p) => p.id === state.pendingApothecary!.playerId)?.name || "Joueur"
+          }
+          injuryType={state.pendingApothecary.injuryType}
+          casualtyOutcome={state.pendingApothecary.originalCasualtyOutcome}
+          onChoose={(useApothecary) => {
+            const move = buildApothecaryChooseMove(useApothecary);
+            if (isActiveMatch) {
+              submitMove(move).then((res) => {
+                if (res?.success && res.gameState) {
+                  setState(normalizeState(res.gameState));
+                  setIsMyTurn(res.isMyTurn);
+                }
+              });
+            } else {
+              setState((s) => {
+                if (!s) return null;
+                return applyMove(s, move, createRNG()) as ExtendedGameState;
               });
             }
           }}
