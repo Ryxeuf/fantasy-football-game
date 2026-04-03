@@ -56,6 +56,7 @@ import {
   incrementTeamBlitzCount,
   advanceHalfIfNeeded,
   handlePostTouchdown,
+  handleHalftime,
 } from '../core/game-state';
 import { executePass, executeHandoff, getPassRange } from '../mechanics/passing';
 import { canFoul, executeFoul } from '../mechanics/foul';
@@ -325,6 +326,11 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
     return state;
   }
 
+  // En phase halftime ou post-td, seul END_TURN est accepté
+  if ((state.gamePhase === 'halftime' || state.gamePhase === 'post-td') && move.type !== 'END_TURN') {
+    return state;
+  }
+
   // Si c'est un turnover, on ne peut que finir le tour
   // Exception : PUSH_CHOOSE, FOLLOW_UP_CHOOSE et REROLL_CHOOSE font partie de la résolution
   if (state.isTurnover && move.type !== 'END_TURN' && move.type !== 'PUSH_CHOOSE' && move.type !== 'FOLLOW_UP_CHOOSE' && move.type !== 'REROLL_CHOOSE' && move.type !== 'APOTHECARY_CHOOSE') {
@@ -373,6 +379,11 @@ function handleEndTurn(state: GameState, rng: RNG): GameState {
   // Si on est en phase post-TD, faire le reset et kickoff
   if (state.gamePhase === 'post-td') {
     return handlePostTouchdown(state, rng);
+  }
+
+  // Si on est en phase halftime, compléter la transition vers la 2e mi-temps
+  if (state.gamePhase === 'halftime') {
+    return handleHalftime(state, rng);
   }
 
   // Changement de tour - le porteur de ballon garde le ballon

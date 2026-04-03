@@ -562,26 +562,13 @@ export function advanceHalfIfNeeded(state: GameState, rng: RNG): GameState {
       let newState = { ...state, gameLog: [...state.gameLog, halftimeLog] };
       newState = recoverKOPlayers(newState, rng);
 
-      // L'équipe qui a frappé en 1ère mi-temps reçoit en 2e, et vice versa
-      const newKickingTeam: TeamId = state.kickingTeam === 'A' ? 'B' : 'A';
-      const receivingTeam: TeamId = newKickingTeam === 'A' ? 'B' : 'A';
-
-      // Reset positions for second half
+      // Reset player stats for second half
       newState = resetPlayerPositions(newState);
 
+      // Pause en phase halftime — la transition complète se fait via END_TURN
       return {
         ...newState,
-        gamePhase: 'playing' as const,
-        half: 2,
-        turn: 1,
-        currentPlayer: receivingTeam,
-        kickingTeam: newKickingTeam,
-        isTurnover: false,
-        ball: { x: 13, y: 7 }, // Centre du terrain
-        playerActions: {} as Record<string, ActionType>,
-        teamBlitzCount: {} as Record<string, number>,
-        teamFoulCount: {} as Record<string, number>,
-        rerollUsedThisTurn: false,
+        gamePhase: 'halftime' as const,
       };
     } else {
       const endLog = createLogEntry(
@@ -758,6 +745,46 @@ export function handlePostTouchdown(state: GameState, rng: RNG): GameState {
   };
 
   // Rouler et appliquer l'événement de kickoff
+  const { event } = rollKickoffEvent(rng);
+  resultState = applyKickoffEvent(resultState, event, rng, newKickingTeam);
+
+  return resultState;
+}
+
+/**
+ * Gère la transition complète de la mi-temps : swap kicking team, kickoff event, passage en half 2
+ */
+export function handleHalftime(state: GameState, rng: RNG): GameState {
+  // L'équipe qui a frappé en 1ère mi-temps reçoit en 2e, et vice versa
+  const newKickingTeam: TeamId = state.kickingTeam === 'A' ? 'B' : 'A';
+  const receivingTeam: TeamId = newKickingTeam === 'A' ? 'B' : 'A';
+
+  const halftimeKickLog = createLogEntry(
+    'info',
+    `2e mi-temps : ${state.teamNames[newKickingTeam === 'A' ? 'teamA' : 'teamB']} frappe au pied. ${state.teamNames[receivingTeam === 'A' ? 'teamA' : 'teamB']} reçoit.`,
+    undefined,
+    undefined
+  );
+
+  let resultState: GameState = {
+    ...state,
+    gamePhase: 'playing' as const,
+    half: 2,
+    turn: 1,
+    currentPlayer: receivingTeam,
+    kickingTeam: newKickingTeam,
+    isTurnover: false,
+    ball: { x: 13, y: 7 }, // Centre du terrain pour le kickoff
+    selectedPlayerId: null,
+    playerActions: {} as Record<string, ActionType>,
+    teamBlitzCount: {} as Record<string, number>,
+    teamFoulCount: {} as Record<string, number>,
+    rerollUsedThisTurn: false,
+    lastDiceResult: undefined,
+    gameLog: [...state.gameLog, halftimeKickLog],
+  };
+
+  // Rouler et appliquer l'événement de kickoff pour la 2e mi-temps
   const { event } = rollKickoffEvent(rng);
   resultState = applyKickoffEvent(resultState, event, rng, newKickingTeam);
 
