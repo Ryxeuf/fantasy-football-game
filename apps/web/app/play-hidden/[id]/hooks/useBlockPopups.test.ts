@@ -3,9 +3,11 @@ import {
   shouldShowBlockPopup,
   shouldShowPushPopup,
   shouldShowFollowUpPopup,
+  shouldShowRerollPopup,
   buildBlockChooseMove,
   buildPushChooseMove,
   buildFollowUpChooseMove,
+  buildRerollChooseMove,
   computeBlockTargets,
 } from "./useBlockPopups";
 import type { GameState, Position, Move, BlockResult } from "@bb/game-engine";
@@ -176,6 +178,47 @@ describe("buildFollowUpChooseMove", () => {
       playerId: "a1",
       targetId: "b1",
       followUp: false,
+    });
+  });
+});
+
+describe("shouldShowRerollPopup", () => {
+  it("returns true when pendingReroll exists", () => {
+    const state = makeState({
+      pendingReroll: {
+        rollType: "dodge",
+        playerId: "a1",
+        team: "A" as any,
+        targetNumber: 3,
+        modifiers: 0,
+        playerIndex: 0,
+        from: { x: 10, y: 7 },
+        to: { x: 10, y: 8 },
+      },
+    });
+    expect(shouldShowRerollPopup(state)).toBe(true);
+  });
+
+  it("returns false when no pendingReroll", () => {
+    const state = makeState();
+    expect(shouldShowRerollPopup(state)).toBe(false);
+  });
+});
+
+describe("buildRerollChooseMove", () => {
+  it("builds a REROLL_CHOOSE move with useReroll=true", () => {
+    const move = buildRerollChooseMove(true);
+    expect(move).toEqual({
+      type: "REROLL_CHOOSE",
+      useReroll: true,
+    });
+  });
+
+  it("builds a REROLL_CHOOSE move with useReroll=false", () => {
+    const move = buildRerollChooseMove(false);
+    expect(move).toEqual({
+      type: "REROLL_CHOOSE",
+      useReroll: false,
     });
   });
 });

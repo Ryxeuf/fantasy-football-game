@@ -18,6 +18,10 @@ export function shouldShowFollowUpPopup(state: GameState): boolean {
   return !!state.pendingFollowUpChoice;
 }
 
+export function shouldShowRerollPopup(state: GameState): boolean {
+  return !!state.pendingReroll;
+}
+
 // --- Move builders ---
 
 export function buildBlockChooseMove(
@@ -53,6 +57,13 @@ export function buildFollowUpChooseMove(
     playerId: pending.attackerId,
     targetId: pending.targetId,
     followUp,
+  } as Move;
+}
+
+export function buildRerollChooseMove(useReroll: boolean): Move {
+  return {
+    type: "REROLL_CHOOSE",
+    useReroll,
   } as Move;
 }
 

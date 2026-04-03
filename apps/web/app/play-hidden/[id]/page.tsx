@@ -7,6 +7,7 @@ import {
   BlockChoicePopup,
   PushChoicePopup,
   FollowUpChoicePopup,
+  RerollChoicePopup,
   GameBoardWithDugouts,
 } from "@bb/ui";
 import {
@@ -30,9 +31,11 @@ import {
   shouldShowBlockPopup,
   shouldShowPushPopup,
   shouldShowFollowUpPopup,
+  shouldShowRerollPopup,
   buildBlockChooseMove,
   buildPushChooseMove,
   buildFollowUpChooseMove,
+  buildRerollChooseMove,
   computeBlockTargets,
 } from "./hooks/useBlockPopups";
 import PostMatchSPP from "../../components/PostMatchSPP";
@@ -1000,6 +1003,40 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
               });
             } else {
               setState((s) => s ? applyMove(s, move, createRNG()) as ExtendedGameState : null);
+            }
+          }}
+          onClose={() => {}}
+        />
+      )}
+      {/* Reroll decision popup */}
+      {state && shouldShowRerollPopup(state) && state.pendingReroll && (
+        <RerollChoicePopup
+          playerName={
+            state.players.find((p) => p.id === state.pendingReroll!.playerId)?.name || "Joueur"
+          }
+          rollType={state.pendingReroll.rollType}
+          teamRerollsLeft={
+            state.pendingReroll.team === "A"
+              ? (state.teamRerolls?.teamA ?? 0)
+              : (state.teamRerolls?.teamB ?? 0)
+          }
+          onChoose={(useReroll) => {
+            const move = buildRerollChooseMove(useReroll);
+            if (isActiveMatch) {
+              submitMove(move).then((res) => {
+                if (res?.success && res.gameState) {
+                  setState(normalizeState(res.gameState));
+                  setIsMyTurn(res.isMyTurn);
+                  if (res.gameState.lastDiceResult) setShowDicePopup(true);
+                }
+              });
+            } else {
+              setState((s) => {
+                if (!s) return null;
+                const s2 = applyMove(s, move, createRNG());
+                if (s2.lastDiceResult) setShowDicePopup(true);
+                return s2 as ExtendedGameState;
+              });
             }
           }}
           onClose={() => {}}
