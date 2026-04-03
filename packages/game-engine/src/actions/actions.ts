@@ -5,6 +5,7 @@
 
 import { GameState, Move, Player, Position, TeamId, RNG, BlockResult, ActionType } from '../core/types';
 import { canRerollGFI, canRerollPickup, canRerollDodge } from '../skills/skill-effects';
+import { getDodgeSkillModifiers, getPickupSkillModifiers, canSkillReroll } from '../skills/skill-bridge';
 import {
   inBounds,
   samePos,
@@ -426,8 +427,10 @@ function handleDodgeRoll(
   rng: RNG,
   idx: number
 ): GameState {
-  // Calculer les modificateurs de désquive (malus pour adversaires à l'arrivée)
-  const dodgeModifiers = calculateDodgeModifiers(state, from, to, player.team);
+  // Calculer les modificateurs de désquive (malus pour adversaires à l'arrivée + skills)
+  const baseDodgeModifiers = calculateDodgeModifiers(state, from, to, player.team);
+  const skillDodgeModifiers = getDodgeSkillModifiers(state, player, from);
+  const dodgeModifiers = baseDodgeModifiers + skillDodgeModifiers;
 
   // Effectuer le jet d'esquive avec les modificateurs
   const dodgeResult = performDodgeRollWithNotification(player, rng, dodgeModifiers);
@@ -467,9 +470,9 @@ function handleDodgeRoll(
   // Vérifier si le tour du joueur doit se terminer
   next = checkPlayerTurnEnd(next, player.id);
 
-  // Dodge skill auto-reroll si échec
+  // Dodge skill auto-reroll si échec (via skill registry)
   let finalDodgeSuccess = dodgeResult.success;
-  if (!finalDodgeSuccess && canRerollDodge(player)) {
+  if (!finalDodgeSuccess && canSkillReroll(player, 'on-dodge', state)) {
     const rerollLog = createLogEntry('dice', `Dodge : relance de l'esquive (${dodgeResult.diceRoll} raté)`, player.id, player.team);
     next.gameLog = [...next.gameLog, rerollLog];
     const rerollResult = performDodgeRollWithNotification(player, rng, dodgeModifiers);
@@ -490,8 +493,8 @@ function handleDodgeRoll(
       let gfiRoll = Math.floor(rng() * 6) + 1;
       let gfiSuccess = gfiRoll >= 2;
 
-      // Sure Feet auto-reroll
-      if (!gfiSuccess && canRerollGFI(player)) {
+      // Sure Feet auto-reroll (via skill registry)
+      if (!gfiSuccess && canSkillReroll(player, 'on-gfi', state)) {
         const sfLog = createLogEntry('dice', `Sure Feet : relance du GFI (${gfiRoll} raté)`, player.id, player.team);
         next.gameLog = [...next.gameLog, sfLog];
         gfiRoll = Math.floor(rng() * 6) + 1;
@@ -560,8 +563,8 @@ function handleNormalMove(
     let gfiRoll = Math.floor(rng() * 6) + 1;
     let gfiSuccess = gfiRoll >= 2;
 
-    // Sure Feet : relance automatique du GFI raté (1x par activation)
-    if (!gfiSuccess && canRerollGFI(player)) {
+    // Sure Feet : relance automatique du GFI raté (via skill registry)
+    if (!gfiSuccess && canSkillReroll(player, 'on-gfi', state)) {
       const rerollLog = createLogEntry(
         'dice',
         `Sure Feet : relance du GFI (${gfiRoll} raté)`,
@@ -663,14 +666,16 @@ function handleNormalMove(
  * Gère le ramassage de balle
  */
 function handleBallPickup(state: GameState, player: Player, rng: RNG, idx: number): GameState {
-  // Calculer les modificateurs de pickup (malus pour adversaires marquant la balle)
-  const pickupModifiers = calculatePickupModifiers(state, state.ball!, player.team);
+  // Calculer les modificateurs de pickup (malus pour adversaires + bonus skills)
+  const basePickupModifiers = calculatePickupModifiers(state, state.ball!, player.team);
+  const skillPickupModifiers = getPickupSkillModifiers(state, player);
+  const pickupModifiers = basePickupModifiers + skillPickupModifiers;
 
   // Effectuer le jet de pickup
   let pickupResult = performPickupRollWithNotification(player, rng, pickupModifiers);
 
-  // Sure Hands : relance automatique du pickup raté
-  if (!pickupResult.success && canRerollPickup(player)) {
+  // Sure Hands : relance automatique du pickup raté (via skill registry)
+  if (!pickupResult.success && canSkillReroll(player, 'on-pickup', state)) {
     const rerollLog = createLogEntry(
       'dice',
       `Sure Hands : relance du ramassage (${pickupResult.diceRoll} raté)`,
@@ -759,8 +764,10 @@ function handleDodge(
   const from = player.pos;
   const to = move.to;
 
-  // Calculer les modificateurs de désquive (malus pour adversaires à l'arrivée)
-  const dodgeModifiers = calculateDodgeModifiers(state, from, to, player.team);
+  // Calculer les modificateurs de désquive (malus pour adversaires à l'arrivée + skills)
+  const baseDodgeModifiers = calculateDodgeModifiers(state, from, to, player.team);
+  const skillDodgeModifiers = getDodgeSkillModifiers(state, player, from);
+  const dodgeModifiers = baseDodgeModifiers + skillDodgeModifiers;
 
   const dodgeResult = performDodgeRollWithNotification(player, rng, dodgeModifiers);
 
@@ -1256,8 +1263,10 @@ function handleBlitz(
   const needsDodge = requiresDodgeRoll(newState, from, to, attacker.team);
 
   if (needsDodge) {
-    // Calculer les modificateurs de désquive
-    const dodgeModifiers = calculateDodgeModifiers(newState, from, to, attacker.team);
+    // Calculer les modificateurs de désquive (adversaires à l'arrivée + skills)
+    const baseDodgeModifiers = calculateDodgeModifiers(newState, from, to, attacker.team);
+    const skillDodgeModifiers = getDodgeSkillModifiers(newState, attacker, from);
+    const dodgeModifiers = baseDodgeModifiers + skillDodgeModifiers;
 
     // Effectuer le jet d'esquive
     const dodgeResult = performDodgeRollWithNotification(attacker, rng, dodgeModifiers);
