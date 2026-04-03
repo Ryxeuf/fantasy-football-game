@@ -66,6 +66,15 @@ export function hasGuard(player: Player): boolean {
   return hasSkill(player, 'guard');
 }
 
+// ─── WRESTLE ─────────────────────────────────────────────
+/**
+ * Sur BOTH_DOWN, si l'un des deux joueurs a Wrestle, les deux sont mis au sol.
+ * Pas de jet d'armure, pas de turnover. Wrestle prévaut sur Block.
+ */
+export function wrestleOnBothDown(player: Player): boolean {
+  return hasSkill(player, 'wrestle');
+}
+
 // ─── MIGHTY BLOW ──────────────────────────────────────────────
 /**
  * Mighty Blow (+1) ajoute +1 au jet d'armure OU au jet de blessure

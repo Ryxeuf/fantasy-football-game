@@ -13,7 +13,7 @@ import {
   Player,
 } from '../core/types';
 import { isAdjacent, inBounds, isPositionOccupied } from './movement';
-import { hasGuard, blockNegatesBothDown, dodgeNegatesStumble, getMightyBlowBonus } from '../skills/skill-effects';
+import { hasGuard, blockNegatesBothDown, dodgeNegatesStumble, getMightyBlowBonus, wrestleOnBothDown } from '../skills/skill-effects';
 import { performArmorRoll, roll2D6 } from '../utils/dice';
 import { performArmorRollWithNotification } from '../utils/dice-notifications';
 import { createLogEntry } from '../utils/logging';
@@ -601,9 +601,51 @@ function handlePlayerDown(state: GameState, attacker: Player, target: Player, rn
 
 /**
  * Gère le résultat BOTH_DOWN
- * Skill Block : un joueur avec Block peut choisir de ne pas tomber sur BOTH_DOWN
+ * Wrestle : si l'un des joueurs a Wrestle, les deux sont mis au sol (pas de jet d'armure, pas de turnover)
+ * Block : un joueur avec Block peut choisir de ne pas tomber sur BOTH_DOWN
+ * Wrestle prévaut sur Block (BB2020)
  */
 function handleBothDown(state: GameState, attacker: Player, target: Player, rng: RNG): GameState {
+  const attackerHasWrestle = wrestleOnBothDown(attacker);
+  const targetHasWrestle = wrestleOnBothDown(target);
+  const wrestleActive = attackerHasWrestle || targetHasWrestle;
+
+  // Wrestle: les deux tombent, pas de jet d'armure, pas de turnover
+  if (wrestleActive) {
+    state.players = state.players.map(p => {
+      if (p.id === attacker.id) return { ...p, stunned: true };
+      if (p.id === target.id) return { ...p, stunned: true };
+      return p;
+    });
+
+    const wrestleUser = attackerHasWrestle ? attacker.name : target.name;
+    const wrestleLog = createLogEntry(
+      'action',
+      `Les Deux Plaqués — ${wrestleUser} utilise Wrestle : ${attacker.name} et ${target.name} sont mis au sol (pas de jet d'armure)`,
+      attacker.id,
+      attacker.team
+    );
+    state.gameLog = [...state.gameLog, wrestleLog];
+
+    // Pas de turnover avec Wrestle
+    // Pas de jets d'armure
+
+    // Si l'attaquant avait le ballon, il le perd
+    if (attacker.hasBall) {
+      state.players = state.players.map(p => (p.id === attacker.id ? { ...p, hasBall: false } : p));
+      state.ball = { ...attacker.pos };
+    }
+
+    // Si le défenseur avait le ballon, il le perd
+    if (target.hasBall) {
+      state.players = state.players.map(p => (p.id === target.id ? { ...p, hasBall: false } : p));
+      state.ball = { ...target.pos };
+    }
+
+    return state;
+  }
+
+  // Comportement standard Block
   const attackerHasBlock = blockNegatesBothDown(attacker);
   const targetHasBlock = blockNegatesBothDown(target);
 
