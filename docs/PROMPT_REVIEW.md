@@ -114,6 +114,9 @@ Si une commande echoue, corrige avant de continuer.
 1. Coche la tache dans TODO.md
 2. Commit avec message conventionnel (`feat:`, `fix:`, `refactor:`, etc.)
 3. Push : `git push -u origin <branch>`
+4. Cree une Pull Request via les outils GitHub avec :
+   - Un titre court et descriptif (< 70 caracteres)
+   - Un body structure : resume des changements, tache roadmap concernee, plan de test
 ```
 
 ### Changements cles
@@ -125,6 +128,6 @@ Si une commande echoue, corrige avant de continuer.
 | 5 etapes conditionnelles avant coder | 3 etapes dont une table de dispatch | Rapide a lire et executer |
 | `/bloodbowl-rules-agent` presente comme agent | Presente comme commande a invoquer | Reflete la realite (.claude/commands/) |
 | Bloc bash mal ferme | Bloc bash ferme correctement | Bug fix markdown |
-| Creation PR obligatoire | Retire (le user decidera) | Pas systematique pour chaque tache |
+| Creation PR avec format impose | Conservee, simplifiee | Titre < 70 chars + body structure |
 | Pas de mention RNG/immutabilite | Ajout dans Implementation | Contraintes critiques du projet |
 | `docs/ROADMAP_DONE.md` a maintenir | Retire | Fichier inexistant, overhead inutile |
