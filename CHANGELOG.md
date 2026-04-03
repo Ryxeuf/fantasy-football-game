@@ -1,3 +1,10 @@
+## [1.47.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.47.1...v1.47.2) (2026-04-03)
+
+
+### 🐛 Bug Fixes
+
+* use workflow_run trigger to avoid auto-merge racing CI ([d65edb2](https://github.com/Ryxeuf/fantasy-football-game/commit/d65edb212a83b099080657f6c9f786a7ffc95e39))
+
 ## [1.47.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.47.0...v1.47.1) (2026-04-03)
 
 
