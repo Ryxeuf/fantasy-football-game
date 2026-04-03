@@ -62,7 +62,7 @@
 
 | # | Tache | Type | Statut |
 |---|-------|------|--------|
-| B0.1 | Brancher `skill-registry.ts` dans le moteur | Architecture | [ ] |
+| B0.1 | Brancher `skill-registry.ts` dans le moteur | Architecture | [~] |
 | A.4 | Emettre gameState via WebSocket apres chaque action | Multiplayer | [ ] |
 | A.5 | Hook client `useGameSocket(matchId)` | Multiplayer | [ ] |
 | A.6 | Synchroniser actions via WebSocket | Multiplayer | [ ] |

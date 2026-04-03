@@ -167,6 +167,13 @@ export {
   type SkillModifier,
 } from './skills/skill-registry';
 
+// Export du bridge skill-registry → moteur
+export {
+  getDodgeSkillModifiers,
+  getPickupSkillModifiers,
+  canSkillReroll,
+} from './skills/skill-bridge';
+
 // Export des rosters et positions
 export * from './rosters';
 
