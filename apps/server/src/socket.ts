@@ -1,6 +1,7 @@
 import { Server as HttpServer } from "node:http";
 import { Server, Namespace } from "socket.io";
 import { registerGameRoomHandlers } from "./game-rooms";
+import { registerGameActionHandlers } from "./game-actions";
 import { authSocket } from "./middleware/authSocket";
 
 let io: Server | null = null;
@@ -48,6 +49,9 @@ export function setupSocket(
 
   // Register game room handlers (join/leave match rooms)
   registerGameRoomHandlers(gameNamespace);
+
+  // Register game action handlers (move submission via WebSocket)
+  registerGameActionHandlers(gameNamespace);
 
   return io;
 }

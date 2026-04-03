@@ -2,6 +2,7 @@
 import { useState, useCallback } from "react";
 import type { Move, ExtendedGameState } from "@bb/game-engine";
 import { API_BASE } from "../../../auth-client";
+import type { MoveAckPayload } from "./useGameSocket";
 
 interface MoveResult {
   success: boolean;
@@ -10,11 +11,16 @@ interface MoveResult {
   moveCount: number;
 }
 
+interface UseGameMovesOptions {
+  /** WebSocket submitMove function from useGameSocket. When provided and connected, moves are sent via WebSocket. */
+  wsSubmitMove?: (move: Move) => Promise<MoveAckPayload | null>;
+}
+
 /**
  * Hook pour soumettre les coups au serveur pendant la phase active du match.
- * Retourne submitMove(move) qui envoie le coup au serveur et retourne le nouvel état.
+ * Prefere WebSocket quand disponible, avec fallback REST automatique.
  */
-export function useGameMoves(matchId: string) {
+export function useGameMoves(matchId: string, options: UseGameMovesOptions = {}) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,6 +28,26 @@ export function useGameMoves(matchId: string) {
     async (move: Move): Promise<MoveResult | null> => {
       setSubmitting(true);
       setError(null);
+
+      // Try WebSocket first if available
+      if (options.wsSubmitMove) {
+        try {
+          const wsResult = await options.wsSubmitMove(move);
+          if (wsResult) {
+            setSubmitting(false);
+            if (!wsResult.success) {
+              setError(wsResult.error || "Erreur WebSocket");
+              return null;
+            }
+            return wsResult as MoveResult;
+          }
+          // wsResult is null → socket not connected, fall through to REST
+        } catch {
+          // WebSocket failed, fall through to REST
+        }
+      }
+
+      // REST fallback
       try {
         const token = localStorage.getItem("auth_token");
         if (!token) {
@@ -53,7 +79,7 @@ export function useGameMoves(matchId: string) {
         setSubmitting(false);
       }
     },
-    [matchId],
+    [matchId, options.wsSubmitMove],
   );
 
   return { submitMove, submitting, error, clearError: () => setError(null) };

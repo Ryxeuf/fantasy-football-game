@@ -21,6 +21,7 @@ import {
 } from "@bb/game-engine";
 import { API_BASE } from "../../auth-client";
 import { useGameMoves } from "./hooks/useGameMoves";
+import { useGameSocket } from "./hooks/useGameSocket";
 import { useGameState } from "./hooks/useGameState";
 import PostMatchSPP from "../../components/PostMatchSPP";
 
@@ -52,7 +53,17 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
     "MOVE" | "BLOCK" | "BLITZ" | "PASS" | "HANDOFF" | "FOUL" | null
   >(null);
   const createRNG = () => makeRNG(`ui-seed-${Date.now()}-${Math.random()}`);
-  const { submitMove, submitting: moveSubmitting } = useGameMoves(matchId);
+
+  // WebSocket connection for real-time move submission
+  const { submitMove: wsSubmitMove } = useGameSocket(matchId, {
+    onStateUpdate: (data) => {
+      setState(normalizeState(data.gameState));
+    },
+  });
+
+  const { submitMove, submitting: moveSubmitting } = useGameMoves(matchId, {
+    wsSubmitMove,
+  });
 
   // Helper : est-ce que le match est en phase active (coups envoyés au serveur) ?
   const isActiveMatch = matchStatus === "active";
