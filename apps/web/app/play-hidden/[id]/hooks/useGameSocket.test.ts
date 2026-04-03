@@ -1,0 +1,139 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+
+// --- Mock socket.io-client ---
+const mockSocket = {
+  on: vi.fn(),
+  off: vi.fn(),
+  emit: vi.fn(),
+  connect: vi.fn(),
+  disconnect: vi.fn(),
+  connected: false,
+  id: "test-socket-id",
+};
+
+vi.mock("socket.io-client", () => ({
+  io: vi.fn(() => mockSocket),
+}));
+
+// Must import after mock setup
+import { io } from "socket.io-client";
+import {
+  createGameSocket,
+  type GameSocketEvents,
+} from "./useGameSocket";
+
+describe("useGameSocket — createGameSocket", () => {
+  const matchId = "match-123";
+  const authToken = "test-jwt-token";
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSocket.connected = false;
+    // Reset on/off/emit tracking
+    mockSocket.on.mockReset();
+    mockSocket.off.mockReset();
+    mockSocket.emit.mockReset();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  describe("connection", () => {
+    it("creates a socket.io connection to the /game namespace", () => {
+      const socket = createGameSocket("http://localhost:8201", authToken);
+      expect(io).toHaveBeenCalledWith("http://localhost:8201/game", {
+        auth: { token: `Bearer ${authToken}` },
+        transports: ["websocket", "polling"],
+        autoConnect: false,
+      });
+      expect(socket).toBe(mockSocket);
+    });
+
+    it("does not auto-connect (explicit connect required)", () => {
+      createGameSocket("http://localhost:8201", authToken);
+      expect(mockSocket.connect).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("joinMatch", () => {
+    it("emits game:join-match with matchId and handles ack", () => {
+      mockSocket.emit.mockImplementation(
+        (event: string, payload: unknown, ack: (res: { ok: boolean }) => void) => {
+          ack({ ok: true });
+        },
+      );
+
+      const { joinMatch } = createGameSocketHelpers(mockSocket as any);
+      const result = joinMatch(matchId);
+
+      expect(mockSocket.emit).toHaveBeenCalledWith(
+        "game:join-match",
+        { matchId },
+        expect.any(Function),
+      );
+    });
+  });
+
+  describe("leaveMatch", () => {
+    it("emits game:leave-match with matchId", () => {
+      const { leaveMatch } = createGameSocketHelpers(mockSocket as any);
+      leaveMatch(matchId);
+
+      expect(mockSocket.emit).toHaveBeenCalledWith(
+        "game:leave-match",
+        { matchId },
+        expect.any(Function),
+      );
+    });
+  });
+
+  describe("event registration", () => {
+    it("registers listener for game:state-updated", () => {
+      const handler = vi.fn();
+      const { onStateUpdated } = createGameSocketHelpers(mockSocket as any);
+      onStateUpdated(handler);
+
+      expect(mockSocket.on).toHaveBeenCalledWith("game:state-updated", handler);
+    });
+
+    it("registers listener for game:player-connected", () => {
+      const handler = vi.fn();
+      const { onPlayerConnected } = createGameSocketHelpers(mockSocket as any);
+      onPlayerConnected(handler);
+
+      expect(mockSocket.on).toHaveBeenCalledWith("game:player-connected", handler);
+    });
+
+    it("registers listener for game:player-disconnected", () => {
+      const handler = vi.fn();
+      const { onPlayerDisconnected } = createGameSocketHelpers(mockSocket as any);
+      onPlayerDisconnected(handler);
+
+      expect(mockSocket.on).toHaveBeenCalledWith("game:player-disconnected", handler);
+    });
+
+    it("registers listener for game:match-ended", () => {
+      const handler = vi.fn();
+      const { onMatchEnded } = createGameSocketHelpers(mockSocket as any);
+      onMatchEnded(handler);
+
+      expect(mockSocket.on).toHaveBeenCalledWith("game:match-ended", handler);
+    });
+  });
+
+  describe("cleanup", () => {
+    it("removes all game event listeners on cleanup", () => {
+      const { cleanup } = createGameSocketHelpers(mockSocket as any);
+      cleanup();
+
+      expect(mockSocket.off).toHaveBeenCalledWith("game:state-updated");
+      expect(mockSocket.off).toHaveBeenCalledWith("game:player-connected");
+      expect(mockSocket.off).toHaveBeenCalledWith("game:player-disconnected");
+      expect(mockSocket.off).toHaveBeenCalledWith("game:match-ended");
+    });
+  });
+});
+
+// Import the helpers function (will be defined in the hook module)
+import { createGameSocketHelpers } from "./useGameSocket";
