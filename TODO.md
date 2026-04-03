@@ -52,18 +52,18 @@
 
 | # | Tache | Type | Statut |
 |---|-------|------|--------|
-| BUG-1 | Fix `armorSuccess = true` hardcode dans actions.ts | Bug | [~] |
-| BUG-2 | Remplacer `Math.random()` par RNG seede dans game-state.ts | Bug | [ ] |
-| BUG-3 | Cabler `handleInjuryByCrowd()` dans blocking.ts | Bug | [ ] |
-| SEC-1 | Ajouter auth middleware sur `/admin/data/*` | Securite | [ ] |
-| SEC-2 | Valider participant match dans socket room join | Securite | [ ] |
+| BUG-1 | Fix `armorSuccess = true` hardcode dans actions.ts | Bug | [x] |
+| BUG-2 | Remplacer `Math.random()` par RNG seede dans game-state.ts | Bug | [x] |
+| BUG-3 | Cabler `handleInjuryByCrowd()` dans blocking.ts | Bug | [x] |
+| SEC-1 | Ajouter auth middleware sur `/admin/data/*` | Securite | [x] |
+| SEC-2 | Valider participant match dans socket room join | Securite | [x] |
 
 ### Sprint 1 — Match online jouable (~5 jours)
 
 | # | Tache | Type | Statut |
 |---|-------|------|--------|
 | B0.1 | Brancher `skill-registry.ts` dans le moteur | Architecture | [~] |
-| A.4 | Emettre gameState via WebSocket apres chaque action | Multiplayer | [ ] |
+| A.4 | Emettre gameState via WebSocket apres chaque action | Multiplayer | [x] |
 | A.5 | Hook client `useGameSocket(matchId)` | Multiplayer | [ ] |
 | A.6 | Synchroniser actions via WebSocket | Multiplayer | [ ] |
 | UI-1 | Cabler Block/Push/FollowUp popups en match online | UI | [ ] |
@@ -105,8 +105,8 @@
 
 | Phase | Taches | Fait | Partiel | A faire | Criticite |
 |-------|--------|------|---------|---------|-----------|
-| **S0 — Bugfixes** | 5 | 0 | 0 | 5 | IMMEDIAT |
-| **A — Multijoueur temps reel** | 10 | 3 | 0 | 7 | BLOQUANT |
+| **S0 — Bugfixes** | 5 | 5 | 0 | 0 | TERMINE |
+| **A — Multijoueur temps reel** | 10 | 4 | 0 | 6 | BLOQUANT |
 | **B0 — Architecture skills** | 2 | 0 | 0 | 2 | BLOQUANT |
 | **B1 — Regles BB3 critiques** | 10 | 1 | 2 | 7 | ESSENTIEL |
 | **B2 — Regles BB3 importantes** | 10 | 0 | 3 | 7 | SECONDAIRE |
