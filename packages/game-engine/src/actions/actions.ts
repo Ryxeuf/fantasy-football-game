@@ -4,7 +4,7 @@
  */
 
 import { GameState, Move, Player, Position, TeamId, RNG, BlockResult, ActionType } from '../core/types';
-import { canRerollGFI, canRerollPickup, canRerollDodge } from '../skills/skill-effects';
+import { canRerollGFI, canRerollPickup, canRerollDodge, hasSkill } from '../skills/skill-effects';
 import { getDodgeSkillModifiers, getPickupSkillModifiers, canSkillReroll } from '../skills/skill-bridge';
 import {
   inBounds,
@@ -237,6 +237,16 @@ function canUseTeamReroll(state: GameState, team: TeamId): boolean {
   if (state.rerollUsedThisTurn) return false;
   const rerolls = team === 'A' ? state.teamRerolls?.teamA : state.teamRerolls?.teamB;
   return (rerolls ?? 0) > 0;
+}
+
+/**
+ * Retourne le seuil Loner du joueur (3, 4 ou 5) ou null s'il n'a pas Loner.
+ */
+function getLonerThreshold(player: Player): number | null {
+  if (hasSkill(player, 'loner-3')) return 3;
+  if (hasSkill(player, 'loner-4')) return 4;
+  if (hasSkill(player, 'loner-5')) return 5;
+  return null;
 }
 
 /**
@@ -1154,6 +1164,35 @@ function handleRerollChoose(
     } else {
       // dodge ou gfi : chute + turnover
       return applyRollFailure(newState, playerIndex, rng);
+    }
+  }
+
+  // Vérification Loner : le joueur doit réussir un jet D6 >= seuil
+  const lonerPlayer = newState.players[playerIndex];
+  const lonerThreshold = getLonerThreshold(lonerPlayer);
+  if (lonerThreshold !== null) {
+    const lonerRoll = Math.floor(rng() * 6) + 1;
+    const lonerSuccess = lonerRoll >= lonerThreshold;
+    const lonerLog = createLogEntry(
+      'dice',
+      `Solitaire (${lonerThreshold}+) : ${lonerRoll}/${lonerThreshold} ${lonerSuccess ? '✓' : '✗'}`,
+      playerId,
+      team,
+      { diceRoll: lonerRoll, targetNumber: lonerThreshold, success: lonerSuccess }
+    );
+    newState.gameLog = [...newState.gameLog, lonerLog];
+
+    if (!lonerSuccess) {
+      // Loner check failed: team reroll is consumed (wasted), original failure applies
+      newState = consumeTeamReroll(newState, team);
+      const wastedLog = createLogEntry('action', `Relance d'équipe gaspillée (Solitaire raté)`, playerId, team);
+      newState.gameLog = [...newState.gameLog, wastedLog];
+
+      if (rollType === 'pickup') {
+        return applyPickupFailure(newState, playerIndex, rng);
+      } else {
+        return applyRollFailure(newState, playerIndex, rng);
+      }
     }
   }
 

@@ -537,3 +537,29 @@ registerSkill({
   canApply: (ctx) => hasSkill(ctx.player, 'brawler') && ctx.blockResult === 'BOTH_DOWN',
   canReroll: () => true,
 });
+
+// ─── LONER (3 variants) ─────────────────────────────────────────────────────
+// Loner doesn't use the standard canReroll flow — it's checked in handleRerollChoose
+// when a player with Loner attempts to use a team reroll. Registered here for
+// lookup and metadata purposes.
+
+registerSkill({
+  slug: 'loner-3',
+  triggers: ['passive'],
+  description: 'Ce joueur doit obtenir 3+ sur un D6 pour utiliser une relance d\'équipe.',
+  canApply: (ctx) => hasSkill(ctx.player, 'loner-3'),
+});
+
+registerSkill({
+  slug: 'loner-4',
+  triggers: ['passive'],
+  description: 'Ce joueur doit obtenir 4+ sur un D6 pour utiliser une relance d\'équipe.',
+  canApply: (ctx) => hasSkill(ctx.player, 'loner-4'),
+});
+
+registerSkill({
+  slug: 'loner-5',
+  triggers: ['passive'],
+  description: 'Ce joueur doit obtenir 5+ sur un D6 pour utiliser une relance d\'équipe.',
+  canApply: (ctx) => hasSkill(ctx.player, 'loner-5'),
+});
