@@ -11,6 +11,7 @@ import { persistPlayerDeaths } from "../services/player-death";
 import { persistPermanentInjuries } from "../services/permanent-injuries";
 import { getLinemanStats } from "../services/journeymen";
 import { validate } from "../middleware/validate";
+import { broadcastGameState, broadcastMatchEnd } from "../services/game-broadcast";
 import {
   joinMatchSchema,
   acceptMatchSchema,
@@ -218,6 +219,13 @@ router.post(
             console.error("Erreur lors de la persistence des blessures permanentes:", injuryError);
           }
         }
+      }
+
+      // Broadcast updated state to all players in the match room via WebSocket
+      broadcastGameState(matchId, newState, move, req.user!.id);
+
+      if (matchEnded) {
+        broadcastMatchEnd(matchId, newState);
       }
 
       // Determiner si c'est toujours le tour de ce joueur
