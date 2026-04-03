@@ -1,3 +1,10 @@
+## [1.46.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.45.0...v1.46.0) (2026-04-03)
+
+
+### ✨ Features
+
+* broadcast gameState via WebSocket after each action (A.4) ([fc1db14](https://github.com/Ryxeuf/fantasy-football-game/commit/fc1db14c3b11ec021f72f6fa032ff559f9964c6a))
+
 ## [1.45.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.44.2...v1.45.0) (2026-04-03)
 
 
