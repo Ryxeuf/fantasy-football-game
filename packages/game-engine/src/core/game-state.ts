@@ -569,7 +569,14 @@ export function advanceHalfIfNeeded(state: GameState, rng: RNG): GameState {
       // Reset positions for second half
       newState = resetPlayerPositions(newState);
 
-      return {
+      const halftimeResetLog = createLogEntry(
+        'info',
+        `2e mi-temps : ${state.teamNames[newKickingTeam === 'A' ? 'teamA' : 'teamB']} frappe au pied. ${state.teamNames[receivingTeam === 'A' ? 'teamA' : 'teamB']} reçoit.`,
+        undefined,
+        undefined
+      );
+
+      let resultState: GameState = {
         ...newState,
         gamePhase: 'playing' as const,
         half: 2,
@@ -582,7 +589,14 @@ export function advanceHalfIfNeeded(state: GameState, rng: RNG): GameState {
         teamBlitzCount: {} as Record<string, number>,
         teamFoulCount: {} as Record<string, number>,
         rerollUsedThisTurn: false,
+        gameLog: [...newState.gameLog, halftimeResetLog],
       };
+
+      // Rouler et appliquer l'événement de kickoff pour la 2e mi-temps
+      const { event } = rollKickoffEvent(rng);
+      resultState = applyKickoffEvent(resultState, event, rng, newKickingTeam);
+
+      return resultState;
     } else {
       const endLog = createLogEntry(
         'info',
