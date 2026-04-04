@@ -174,6 +174,9 @@ export {
 export {
   getDodgeSkillModifiers,
   getPickupSkillModifiers,
+  getArmorSkillContext,
+  getInjurySkillModifiers,
+  getFoulArmorSkillModifiers,
   canSkillReroll,
 } from './skills/skill-bridge';
 

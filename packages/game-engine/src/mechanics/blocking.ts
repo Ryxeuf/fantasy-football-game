@@ -19,6 +19,7 @@ import { performArmorRollWithNotification } from '../utils/dice-notifications';
 import { createLogEntry } from '../utils/logging';
 import { canTeamBlitz } from '../core/game-state';
 import { performInjuryRoll, handleSentOff, handleInjuryByCrowd } from './injury';
+import { getArmorSkillContext, getInjurySkillModifiers } from '../skills/skill-bridge';
 
 /**
  * Effectue le jet d'armure + blessure avec Mighty Blow.
@@ -33,7 +34,10 @@ function armorAndInjuryWithMightyBlow(
 ): GameState {
   const mbBonus = getMightyBlowBonus(attacker);
   const diceRoll = roll2D6(rng);
-  const armorTarget = victim.av;
+
+  // Claws: armor breaks on 8+ regardless of AV (unless defender has Iron Hard Skin)
+  const { clawsActive } = getArmorSkillContext(state, attacker, victim);
+  const armorTarget = clawsActive ? Math.min(victim.av, 8) : victim.av;
 
   const armorBrokenNaturally = diceRoll >= armorTarget;
   const armorBrokenWithMB = (diceRoll + mbBonus) >= armorTarget;
@@ -56,7 +60,7 @@ function armorAndInjuryWithMightyBlow(
   const effectiveRoll = mbUsedOnArmor ? diceRoll + mbBonus : diceRoll;
   const armorLog = createLogEntry(
     'dice',
-    `Jet d'armure: ${effectiveRoll}/${armorTarget} ${armorBroken ? '✗ (percée)' : '✓ (tient)'}${mbBonus > 0 && mbUsedOnArmor ? ' [Mighty Blow +1]' : ''}`,
+    `Jet d'armure: ${effectiveRoll}/${armorTarget} ${armorBroken ? '✗ (percée)' : '✓ (tient)'}${mbBonus > 0 && mbUsedOnArmor ? ' [Mighty Blow +1]' : ''}${clawsActive ? ' [Claws]' : ''}`,
     victim.id,
     victim.team,
     {
@@ -80,7 +84,9 @@ function armorAndInjuryWithMightyBlow(
 
   if (armorBroken) {
     const injuryBonus = mbUsedOnArmor ? 0 : mbBonus;
-    state = performInjuryRoll(state, victim, rng, injuryBonus, attacker.id);
+    // Thick Skull: -1 to injury roll (KO on 9+ instead of 8+)
+    const injuryDefenderMod = getInjurySkillModifiers(state, victim);
+    state = performInjuryRoll(state, victim, rng, injuryBonus + injuryDefenderMod, attacker.id);
   }
 
   return state;
