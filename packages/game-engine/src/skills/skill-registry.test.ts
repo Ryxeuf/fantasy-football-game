@@ -47,7 +47,7 @@ describe('Skill Registry', () => {
 
     it('finds advanced skills', () => {
       const advancedSlugs = [
-        'dauntless', 'frenzy', 'jump-up', 'stand-firm', 'side-step',
+        'dauntless', 'frenzy', 'jump-up', 'stand-firm', 'sidestep',
         'dirty-player-1', 'pass', 'catch', 'thick-skull', 'stunty',
         'wrestle', 'fend', 'strip-ball', 'pro', 'break-tackle',
         'horns', 'juggernaut', 'sprint', 'leader',
@@ -59,6 +59,19 @@ describe('Skill Registry', () => {
         const effect = getSkillEffect(slug);
         expect(effect, `Missing skill: ${slug}`).toBeDefined();
       }
+    });
+
+    it('finds sidestep with canonical slug (no hyphen)', () => {
+      const effect = getSkillEffect('sidestep');
+      expect(effect).toBeDefined();
+      expect(effect!.slug).toBe('sidestep');
+    });
+
+    it('sidestep canApply works with roster slug format', () => {
+      const player = makePlayer({ skills: ['sidestep'] });
+      const effect = getSkillEffect('sidestep');
+      expect(effect).toBeDefined();
+      expect(effect!.canApply({ player, state: setup() })).toBe(true);
     });
   });
 
