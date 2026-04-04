@@ -538,6 +538,14 @@ registerSkill({
   canReroll: () => true,
 });
 
+// REGENERATION
+registerSkill({
+  slug: 'regeneration',
+  triggers: ['on-injury'],
+  description: 'Quand retiré du jeu (KO/Casualty), lance un D6. Sur 4+, le joueur rejoint les réserves. Se fait AVANT l\'apothicaire.',
+  canApply: (ctx) => hasSkill(ctx.player, 'regeneration'),
+});
+
 // ─── LONER (3 variants) ─────────────────────────────────────────────────────
 // Loner doesn't use the standard canReroll flow — it's checked in handleRerollChoose
 // when a player with Loner attempts to use a team reroll. Registered here for

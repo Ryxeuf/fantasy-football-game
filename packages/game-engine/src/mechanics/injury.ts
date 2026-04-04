@@ -8,6 +8,7 @@ import { performArmorRoll } from '../utils/dice';
 import { createLogEntry } from '../utils/logging';
 import { movePlayerToDugoutZone } from './dugout';
 import { isApothecaryAvailable } from './apothecary';
+import { hasRegeneration, tryRegeneration } from './regeneration';
 
 /**
  * Effectue un jet de blessure contre un joueur
@@ -38,7 +39,7 @@ export function performInjuryRoll(state: GameState, player: Player, rng: RNG, bo
     return handleStunned(newState, player);
   } else if (injuryRoll <= 9) {
     // 8-9: KO - va en zone KO
-    return handleKnockedOut(newState, player);
+    return handleKnockedOut(newState, player, rng);
   } else {
     // 10+: Casualty - va en zone blessés
     return handleCasualty(newState, player, rng, causedById);
@@ -63,7 +64,7 @@ function handleStunned(state: GameState, player: Player): GameState {
 /**
  * Gère un joueur KO (8-9)
  */
-function handleKnockedOut(state: GameState, player: Player): GameState {
+function handleKnockedOut(state: GameState, player: Player, rng: RNG): GameState {
   // Le joueur va en zone KO
   const newState = movePlayerToDugoutZone(state, player.id, 'knockedOut', player.team);
 
@@ -74,6 +75,12 @@ function handleKnockedOut(state: GameState, player: Player): GameState {
     player.team
   );
   newState.gameLog = [...newState.gameLog, koLog];
+
+  // Regeneration check (AVANT l'apothecaire)
+  if (hasRegeneration(newState, player.id)) {
+    const regenResult = tryRegeneration(newState, player.id, rng, 'ko');
+    if (regenResult) return regenResult;
+  }
 
   // Verifier si l'apothecaire est disponible
   if (isApothecaryAvailable(newState, player.id)) {
@@ -212,6 +219,12 @@ function handleCasualty(state: GameState, player: Player, rng: RNG, causedById?:
 
   // Enregistrer le résultat de la blessure dans l'état du jeu
   newState.casualtyResults = { ...newState.casualtyResults, [player.id]: outcome };
+
+  // Regeneration check (AVANT l'apothecaire)
+  if (hasRegeneration(newState, player.id)) {
+    const regenResult = tryRegeneration(newState, player.id, rng, 'casualty');
+    if (regenResult) return regenResult;
+  }
 
   // Verifier si l'apothecaire est disponible
   if (isApothecaryAvailable(newState, player.id)) {
