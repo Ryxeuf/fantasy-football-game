@@ -236,10 +236,10 @@ registerSkill({
 
 // SIDE STEP
 registerSkill({
-  slug: 'side-step',
+  slug: 'sidestep',
   triggers: ['on-block-defender'],
   description: 'Le joueur choisit la direction de poussée (au lieu de l\'attaquant).',
-  canApply: (ctx) => hasSkill(ctx.player, 'sidestep') || hasSkill(ctx.player, 'side-step') || hasSkill(ctx.player, 'side_step'),
+  canApply: (ctx) => hasSkill(ctx.player, 'sidestep'),
 });
 
 // DIRTY PLAYER (+1)

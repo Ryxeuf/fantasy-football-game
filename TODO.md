@@ -79,7 +79,7 @@
 | B1.5 | Loner reroll limitation | Regle | [x] |
 | B1.7 | Mi-temps complete (reset + re-kickoff) | Game flow | [x] |
 | B1.4 | Regeneration | Regle | [x] |
-| B0.2 | Fix slug mismatch sidestep/side-step | Bug | [ ] |
+| B0.2 | Fix slug mismatch sidestep/side-step | Bug | [x] |
 
 ### Sprint 3 — Matchmaking & Animations (~6 jours)
 
