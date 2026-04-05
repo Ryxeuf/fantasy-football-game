@@ -8,6 +8,7 @@ import { rollD6 } from '../utils/dice';
 import { isAdjacent, getAdjacentOpponents } from './movement';
 import { createLogEntry } from '../utils/logging';
 import { performInjuryRoll, handleSentOff } from './injury';
+import { getFoulArmorSkillModifiers } from '../skills/skill-bridge';
 
 /**
  * Vérifie si un joueur peut faire une faute sur une cible
@@ -81,15 +82,16 @@ export function executeFoul(
   );
   newState.gameLog = [...newState.gameLog, foulLog];
 
-  // Jet d'armure avec bonus d'assists
+  // Jet d'armure avec bonus d'assists + Dirty Player
   const die1 = rollD6(rng);
   const die2 = rollD6(rng);
-  const armorRoll = die1 + die2 + assists;
+  const dirtyPlayerBonus = getFoulArmorSkillModifiers(newState, attacker);
+  const armorRoll = die1 + die2 + assists + dirtyPlayerBonus;
   const armorBroken = armorRoll >= target.av;
 
   const armorLog = createLogEntry(
     'dice',
-    `Jet d'armure (foul): ${die1}+${die2}${assists !== 0 ? (assists > 0 ? '+' + assists : assists.toString()) : ''} = ${armorRoll}/${target.av} ${armorBroken ? '✗ (percée)' : '✓ (tient)'}`,
+    `Jet d'armure (foul): ${die1}+${die2}${assists !== 0 ? (assists > 0 ? '+' + assists : assists.toString()) : ''}${dirtyPlayerBonus > 0 ? ` [Dirty Player +${dirtyPlayerBonus}]` : ''} = ${armorRoll}/${target.av} ${armorBroken ? '✗ (percée)' : '✓ (tient)'}`,
     target.id,
     target.team,
     { die1, die2, assists, total: armorRoll, target: target.av }

@@ -50,6 +50,58 @@ export function getPickupSkillModifiers(
  * Vérifie si une compétence du joueur permet de relancer un jet pour le trigger donné.
  * Remplace les fonctions canRerollDodge, canRerollPickup, canRerollGFI hardcodées.
  */
+/**
+ * Détermine si Claws est actif pour un jet d'armure.
+ * Claws fait que l'armure casse toujours sur 8+, quel que soit l'AV.
+ * Iron Hard Skin annule Claws.
+ */
+export function getArmorSkillContext(
+  state: GameState,
+  attacker: Player,
+  defender: Player
+): { clawsActive: boolean } {
+  const attackerHasClaws = getSkillEffect('claws');
+  const defenderHasIronHardSkin = getSkillEffect('iron-hard-skin');
+
+  const clawsApplies = attackerHasClaws?.canApply({
+    player: attacker,
+    state,
+  }) ?? false;
+
+  const ironHardSkinApplies = defenderHasIronHardSkin?.canApply({
+    player: defender,
+    state,
+  }) ?? false;
+
+  return {
+    clawsActive: clawsApplies && !ironHardSkinApplies,
+  };
+}
+
+/**
+ * Collecte les modificateurs de blessure pour un joueur (défenseur).
+ * Inclut Thick Skull (-1 au jet de blessure).
+ */
+export function getInjurySkillModifiers(
+  state: GameState,
+  player: Player
+): number {
+  const mods = collectModifiers(player, 'on-injury', { state });
+  return mods.injuryModifier ?? 0;
+}
+
+/**
+ * Collecte les modificateurs d'armure pour une faute.
+ * Inclut Dirty Player +1.
+ */
+export function getFoulArmorSkillModifiers(
+  state: GameState,
+  player: Player
+): number {
+  const mods = collectModifiers(player, 'on-foul', { state });
+  return mods.armorModifier ?? 0;
+}
+
 export function canSkillReroll(
   player: Player,
   trigger: SkillTrigger,
