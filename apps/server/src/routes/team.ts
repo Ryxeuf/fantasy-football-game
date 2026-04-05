@@ -233,7 +233,7 @@ router.get("/mine", authUser, async (req: AuthenticatedRequest, res) => {
       ownerId: req.user!.id,
       ...(filterRuleset && { ruleset: filterRuleset }),
     },
-    select: { id: true, name: true, roster: true, ruleset: true, createdAt: true },
+    select: { id: true, name: true, roster: true, ruleset: true, createdAt: true, currentValue: true },
   });
   res.json({ teams });
 });

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { API_BASE } from "../auth-client";
 import { useLanguage } from "../contexts/LanguageContext";
 
@@ -16,6 +16,22 @@ interface MatchSummary {
   opponent: { coachName: string; teamName: string; rosterName?: string } | null;
 }
 
+interface TeamOption {
+  id: string;
+  name: string;
+  roster: string;
+  currentValue: number;
+}
+
+interface QueueStatus {
+  inQueue: boolean;
+  status?: string;
+  teamId?: string;
+  teamValue?: number;
+  matchId?: string | null;
+  joinedAt?: string;
+}
+
 async function apiPost(path: string, body?: unknown) {
   const token = localStorage.getItem("auth_token");
   const res = await fetch(`${API_BASE}${path}`, {
@@ -25,6 +41,17 @@ async function apiPost(path: string, body?: unknown) {
       Authorization: token ? `Bearer ${token}` : "",
     },
     body: JSON.stringify(body ?? {}),
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(json?.error || `Erreur ${res.status}`);
+  return json;
+}
+
+async function apiDelete(path: string) {
+  const token = localStorage.getItem("auth_token");
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "DELETE",
+    headers: { Authorization: token ? `Bearer ${token}` : "" },
   });
   const json = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(json?.error || `Erreur ${res.status}`);
@@ -74,6 +101,10 @@ function formatDate(dateStr: string): string {
   return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
+function formatTV(tv: number): string {
+  return `${Math.round(tv / 1000)}k`;
+}
+
 export default function PlayPage() {
   const { t, language: lang } = useLanguage();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -84,6 +115,50 @@ export default function PlayPage() {
   const [matches, setMatches] = useState<MatchSummary[]>([]);
   const [loadingMatches, setLoadingMatches] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
+
+  // Matchmaking state
+  const [teams, setTeams] = useState<TeamOption[]>([]);
+  const [selectedTeamId, setSelectedTeamId] = useState("");
+  const [queueStatus, setQueueStatus] = useState<QueueStatus>({ inQueue: false });
+  const [searching, setSearching] = useState(false);
+  const [searchElapsed, setSearchElapsed] = useState(0);
+
+  const loadMatches = useCallback(async () => {
+    try {
+      setLoadingMatches(true);
+      const data = await apiGet("/match/my-matches");
+      setMatches(data.matches || []);
+    } catch {
+      // silently fail
+    } finally {
+      setLoadingMatches(false);
+    }
+  }, []);
+
+  const loadTeams = useCallback(async () => {
+    try {
+      const data = await apiGet("/team/mine");
+      setTeams(data.teams || []);
+    } catch {
+      // silently fail
+    }
+  }, []);
+
+  const loadQueueStatus = useCallback(async () => {
+    try {
+      const data = await apiGet("/matchmaking/status");
+      setQueueStatus(data);
+      if (data.inQueue && data.status === "searching") {
+        setSearching(true);
+      }
+      if (data.inQueue && data.status === "matched" && data.matchId) {
+        // Match found! Redirect to accept
+        window.location.href = `/play-hidden/${data.matchId}`;
+      }
+    } catch {
+      // silently fail
+    }
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem("auth_token");
@@ -101,21 +176,45 @@ export default function PlayPage() {
         }
         setIsAuthenticated(true);
         loadMatches();
+        loadTeams();
+        loadQueueStatus();
       })
       .catch(() => setIsAuthenticated(false));
-  }, []);
+  }, [loadMatches, loadTeams, loadQueueStatus]);
 
-  async function loadMatches() {
-    try {
-      setLoadingMatches(true);
-      const data = await apiGet("/match/my-matches");
-      setMatches(data.matches || []);
-    } catch {
-      // silently fail
-    } finally {
-      setLoadingMatches(false);
+  // Poll queue status while searching
+  useEffect(() => {
+    if (!searching) return;
+    const interval = setInterval(async () => {
+      try {
+        const data = await apiGet("/matchmaking/status");
+        setQueueStatus(data);
+        if (data.inQueue && data.status === "matched" && data.matchId) {
+          setSearching(false);
+          window.location.href = `/play-hidden/${data.matchId}`;
+        }
+        if (!data.inQueue || data.status !== "searching") {
+          setSearching(false);
+        }
+      } catch {
+        // continue polling
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [searching]);
+
+  // Timer for search elapsed time
+  useEffect(() => {
+    if (!searching) {
+      setSearchElapsed(0);
+      return;
     }
-  }
+    const interval = setInterval(() => {
+      setSearchElapsed((prev) => prev + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [searching]);
 
   async function createMatch() {
     setError(null);
@@ -124,8 +223,8 @@ export default function PlayPage() {
       const { match, matchToken } = await apiPost("/match/create");
       localStorage.setItem("match_token", matchToken);
       window.location.href = `/team/select?matchId=${match.id}`;
-    } catch (e: any) {
-      setError(e.message || "Erreur");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Erreur");
     } finally {
       setCreating(false);
     }
@@ -139,10 +238,39 @@ export default function PlayPage() {
       const { match, matchToken } = await apiPost("/match/join", { matchId: matchIdInput.trim() });
       localStorage.setItem("match_token", matchToken);
       window.location.href = `/team/select?matchId=${match.id}`;
-    } catch (e: any) {
-      setError(e.message || "Erreur");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Erreur");
     } finally {
       setJoining(false);
+    }
+  }
+
+  async function startMatchmaking() {
+    if (!selectedTeamId) return;
+    setError(null);
+    setSearching(true);
+    try {
+      const result = await apiPost("/matchmaking/join", { teamId: selectedTeamId });
+      if (result.matched) {
+        localStorage.setItem("match_token", result.matchToken);
+        window.location.href = `/play-hidden/${result.matchId}`;
+        return;
+      }
+      setQueueStatus({ inQueue: true, status: "searching", teamId: selectedTeamId, teamValue: result.teamValue });
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Erreur");
+      setSearching(false);
+    }
+  }
+
+  async function cancelMatchmaking() {
+    setError(null);
+    try {
+      await apiDelete("/matchmaking/leave");
+      setSearching(false);
+      setQueueStatus({ inQueue: false });
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Erreur");
     }
   }
 
@@ -158,6 +286,12 @@ export default function PlayPage() {
 
   const activeMatches = matches.filter((m) => m.status !== "ended");
   const myTurnCount = matches.filter((m) => m.isMyTurn && m.status === "active").length;
+
+  function formatElapsed(seconds: number): string {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  }
 
   // Not authenticated
   if (isAuthenticated === false) {
@@ -224,6 +358,105 @@ export default function PlayPage() {
           <p className="text-sm text-red-700 font-body">{error}</p>
         </div>
       )}
+
+      {/* Matchmaking Card */}
+      <div className="max-w-3xl mx-auto">
+        <div className="rounded-xl bg-white shadow-lg border-2 border-nuffle-gold/40 overflow-hidden">
+          <div className="h-3 bg-gradient-to-r from-green-500 via-nuffle-gold to-green-500" />
+          <div className="p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
+                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-xl font-heading font-bold text-nuffle-anthracite">
+                  {lang === "en" ? "Find a Match" : "Chercher un match"}
+                </h2>
+                <p className="text-sm text-nuffle-anthracite/70 font-body">
+                  {lang === "en"
+                    ? "Select your team and find an opponent automatically (TV +/- 150k)"
+                    : "Selectionnez votre equipe et trouvez un adversaire automatiquement (VE +/- 150k)"}
+                </p>
+              </div>
+            </div>
+
+            {searching ? (
+              /* Queue active — show search status */
+              <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+                    <span className="font-subtitle font-semibold text-green-700">
+                      {lang === "en" ? "Searching for opponent..." : "Recherche d'un adversaire..."}
+                    </span>
+                  </div>
+                  <span className="text-sm font-mono text-green-600">
+                    {formatElapsed(searchElapsed)}
+                  </span>
+                </div>
+                {queueStatus.teamValue && (
+                  <p className="text-xs text-green-600/80 font-body">
+                    {lang === "en"
+                      ? `Team Value: ${formatTV(queueStatus.teamValue)} (matching ${formatTV(queueStatus.teamValue - 150000)} - ${formatTV(queueStatus.teamValue + 150000)})`
+                      : `Valeur d'equipe: ${formatTV(queueStatus.teamValue)} (matching ${formatTV(queueStatus.teamValue - 150000)} - ${formatTV(queueStatus.teamValue + 150000)})`}
+                  </p>
+                )}
+                <button
+                  onClick={cancelMatchmaking}
+                  className="w-full px-4 py-2 rounded-lg border-2 border-red-300 text-red-600 hover:bg-red-50 font-subtitle font-semibold text-sm transition-all"
+                >
+                  {lang === "en" ? "Cancel search" : "Annuler la recherche"}
+                </button>
+              </div>
+            ) : (
+              /* Team selection + search button */
+              <div className="space-y-3">
+                {teams.length === 0 ? (
+                  <div className="text-center py-4">
+                    <p className="text-sm text-nuffle-anthracite/60 font-body">
+                      {lang === "en"
+                        ? "You need a team to play. Create one first!"
+                        : "Vous avez besoin d'une equipe pour jouer. Creez-en une d'abord !"}
+                    </p>
+                    <a
+                      href="/team"
+                      className="inline-block mt-2 text-sm text-nuffle-bronze hover:text-nuffle-gold font-subtitle font-semibold hover:underline"
+                    >
+                      {lang === "en" ? "Create a team" : "Creer une equipe"} &rarr;
+                    </a>
+                  </div>
+                ) : (
+                  <>
+                    <select
+                      value={selectedTeamId}
+                      onChange={(e) => setSelectedTeamId(e.target.value)}
+                      className="w-full px-4 py-3 rounded-lg border-2 border-nuffle-bronze/30 focus:border-nuffle-gold focus:outline-none font-body text-sm bg-white"
+                    >
+                      <option value="">
+                        {lang === "en" ? "-- Select a team --" : "-- Selectionnez une equipe --"}
+                      </option>
+                      {teams.map((team) => (
+                        <option key={team.id} value={team.id}>
+                          {team.name} ({team.roster}) — {formatTV(team.currentValue)} TV
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={startMatchmaking}
+                      disabled={!selectedTeamId}
+                      className="w-full px-6 py-3 rounded-lg bg-green-600 hover:bg-green-700 text-white font-subtitle font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                    >
+                      {lang === "en" ? "Find a match" : "Chercher un match"}
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* Create / Join Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
