@@ -4,7 +4,7 @@
  */
 
 import { GameState, Move, Player, Position, TeamId, RNG, BlockResult, ActionType } from '../core/types';
-import { canRerollGFI, canRerollPickup, canRerollDodge, hasSkill } from '../skills/skill-effects';
+import { hasSkill } from '../skills/skill-effects';
 import { getDodgeSkillModifiers, getPickupSkillModifiers, canSkillReroll } from '../skills/skill-bridge';
 import {
   inBounds,

@@ -3,6 +3,11 @@ import {
   getDodgeSkillModifiers,
   getPickupSkillModifiers,
   canSkillReroll,
+  checkGuard,
+  checkBlockNegatesBothDown,
+  checkDodgeNegatesStumble,
+  checkWrestleOnBothDown,
+  getMightyBlowBonusFromRegistry,
 } from './skill-bridge';
 import type { Player, GameState } from '../core/types';
 import { setup } from '../core/game-state';
@@ -211,5 +216,82 @@ describe('Règle: Skill Bridge - Reroll Checks', () => {
     const player = makePlayer({ skills: ['sure-hands'] });
     const state = makeState([player]);
     expect(canSkillReroll(player, 'on-dodge', state)).toBe(false);
+  });
+});
+
+describe('Règle: Skill Bridge - Block Result Skills', () => {
+  it('checkGuard returns true for player with Guard', () => {
+    const player = makePlayer({ skills: ['guard'] });
+    const state = makeState([player]);
+    expect(checkGuard(player, state)).toBe(true);
+  });
+
+  it('checkGuard returns false for player without Guard', () => {
+    const player = makePlayer({ skills: [] });
+    const state = makeState([player]);
+    expect(checkGuard(player, state)).toBe(false);
+  });
+
+  it('checkBlockNegatesBothDown returns true for player with Block', () => {
+    const player = makePlayer({ skills: ['block'] });
+    const state = makeState([player]);
+    expect(checkBlockNegatesBothDown(player, state)).toBe(true);
+  });
+
+  it('checkBlockNegatesBothDown returns false without Block', () => {
+    const player = makePlayer({ skills: [] });
+    const state = makeState([player]);
+    expect(checkBlockNegatesBothDown(player, state)).toBe(false);
+  });
+
+  it('checkDodgeNegatesStumble returns true with Dodge and no Tackle', () => {
+    const defender = makePlayer({ skills: ['dodge'] });
+    const attacker = makeOpponent({ skills: [] });
+    const state = makeState([defender, attacker]);
+    expect(checkDodgeNegatesStumble(defender, attacker, state)).toBe(true);
+  });
+
+  it('checkDodgeNegatesStumble returns false when attacker has Tackle', () => {
+    const defender = makePlayer({ skills: ['dodge'] });
+    const attacker = makeOpponent({ skills: ['tackle'] });
+    const state = makeState([defender, attacker]);
+    expect(checkDodgeNegatesStumble(defender, attacker, state)).toBe(false);
+  });
+
+  it('checkDodgeNegatesStumble returns false without Dodge', () => {
+    const defender = makePlayer({ skills: [] });
+    const attacker = makeOpponent({ skills: [] });
+    const state = makeState([defender, attacker]);
+    expect(checkDodgeNegatesStumble(defender, attacker, state)).toBe(false);
+  });
+
+  it('checkWrestleOnBothDown returns true with Wrestle', () => {
+    const player = makePlayer({ skills: ['wrestle'] });
+    const state = makeState([player]);
+    expect(checkWrestleOnBothDown(player, state)).toBe(true);
+  });
+
+  it('checkWrestleOnBothDown returns false without Wrestle', () => {
+    const player = makePlayer({ skills: [] });
+    const state = makeState([player]);
+    expect(checkWrestleOnBothDown(player, state)).toBe(false);
+  });
+
+  it('getMightyBlowBonusFromRegistry returns 1 with Mighty Blow', () => {
+    const player = makePlayer({ skills: ['mighty-blow'] });
+    const state = makeState([player]);
+    expect(getMightyBlowBonusFromRegistry(player, state)).toBe(1);
+  });
+
+  it('getMightyBlowBonusFromRegistry returns 0 without Mighty Blow', () => {
+    const player = makePlayer({ skills: [] });
+    const state = makeState([player]);
+    expect(getMightyBlowBonusFromRegistry(player, state)).toBe(0);
+  });
+
+  it('getMightyBlowBonusFromRegistry works with underscore slug', () => {
+    const player = makePlayer({ skills: ['mighty_blow'] });
+    const state = makeState([player]);
+    expect(getMightyBlowBonusFromRegistry(player, state)).toBe(1);
   });
 });

@@ -102,6 +102,64 @@ export function getFoulArmorSkillModifiers(
   return mods.armorModifier ?? 0;
 }
 
+/**
+ * Vérifie si un joueur possède Guard via le skill-registry.
+ * Remplace l'appel direct à hasGuard() de skill-effects.
+ */
+export function checkGuard(player: Player, state: GameState): boolean {
+  const effect = getSkillEffect('guard');
+  return effect?.canApply({ player, state }) ?? false;
+}
+
+/**
+ * Vérifie si Block annule BOTH_DOWN via le skill-registry.
+ * Remplace blockNegatesBothDown() de skill-effects.
+ */
+export function checkBlockNegatesBothDown(player: Player, state: GameState): boolean {
+  const effect = getSkillEffect('block');
+  return effect?.canApply({ player, state, blockResult: 'BOTH_DOWN' }) ?? false;
+}
+
+/**
+ * Vérifie si Dodge transforme STUMBLE en PUSH_BACK via le skill-registry.
+ * Dodge est annulé si l'attaquant a Tackle.
+ * Remplace dodgeNegatesStumble() de skill-effects.
+ */
+export function checkDodgeNegatesStumble(
+  defender: Player,
+  attacker: Player,
+  state: GameState
+): boolean {
+  const effect = getSkillEffect('dodge');
+  if (!effect) return false;
+  if (!effect.canApply({ player: defender, state })) return false;
+  const result = effect.modifyBlockResult?.({
+    player: defender,
+    state,
+    blockResult: 'STUMBLE',
+    opponent: attacker,
+  });
+  return result === 'PUSH_BACK';
+}
+
+/**
+ * Vérifie si Wrestle s'active sur BOTH_DOWN via le skill-registry.
+ * Remplace wrestleOnBothDown() de skill-effects.
+ */
+export function checkWrestleOnBothDown(player: Player, state: GameState): boolean {
+  const effect = getSkillEffect('wrestle');
+  return effect?.canApply({ player, state, blockResult: 'BOTH_DOWN' }) ?? false;
+}
+
+/**
+ * Retourne le bonus Mighty Blow (+1) via le skill-registry.
+ * Remplace getMightyBlowBonus() de skill-effects.
+ */
+export function getMightyBlowBonusFromRegistry(player: Player, state: GameState): number {
+  const mods = collectModifiers(player, 'on-armor', { state });
+  return mods.armorModifier ?? 0;
+}
+
 export function canSkillReroll(
   player: Player,
   trigger: SkillTrigger,
