@@ -162,6 +162,7 @@ exports.Prisma.TeamScalarFieldEnum = {
   ownerId: 'ownerId',
   name: 'name',
   roster: 'roster',
+  ruleset: 'ruleset',
   createdAt: 'createdAt',
   treasury: 'treasury',
   rerolls: 'rerolls',
@@ -185,13 +186,31 @@ exports.Prisma.TeamPlayerScalarFieldEnum = {
   ag: 'ag',
   pa: 'pa',
   av: 'av',
-  skills: 'skills'
+  skills: 'skills',
+  spp: 'spp',
+  totalTouchdowns: 'totalTouchdowns',
+  totalCasualties: 'totalCasualties',
+  totalCompletions: 'totalCompletions',
+  totalInterceptions: 'totalInterceptions',
+  totalMvpAwards: 'totalMvpAwards',
+  matchesPlayed: 'matchesPlayed',
+  nigglingInjuries: 'nigglingInjuries',
+  maReduction: 'maReduction',
+  stReduction: 'stReduction',
+  agReduction: 'agReduction',
+  paReduction: 'paReduction',
+  avReduction: 'avReduction',
+  missNextMatch: 'missNextMatch',
+  advancements: 'advancements',
+  dead: 'dead',
+  diedAt: 'diedAt'
 };
 
 exports.Prisma.CupScalarFieldEnum = {
   id: 'id',
   name: 'name',
   creatorId: 'creatorId',
+  ruleset: 'ruleset',
   validated: 'validated',
   isPublic: 'isPublic',
   status: 'status',
@@ -204,6 +223,16 @@ exports.Prisma.CupParticipantScalarFieldEnum = {
   cupId: 'cupId',
   teamId: 'teamId',
   createdAt: 'createdAt'
+};
+
+exports.Prisma.MatchQueueScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  teamId: 'teamId',
+  teamValue: 'teamValue',
+  status: 'status',
+  matchId: 'matchId',
+  joinedAt: 'joinedAt'
 };
 
 exports.Prisma.LocalMatchScalarFieldEnum = {
@@ -276,7 +305,10 @@ exports.Prisma.QueryMode = {
   default: 'default',
   insensitive: 'insensitive'
 };
-
+exports.Ruleset = exports.$Enums.Ruleset = {
+  season_2: 'season_2',
+  season_3: 'season_3'
+};
 
 exports.Prisma.ModelName = {
   User: 'User',
@@ -287,6 +319,7 @@ exports.Prisma.ModelName = {
   TeamPlayer: 'TeamPlayer',
   Cup: 'Cup',
   CupParticipant: 'CupParticipant',
+  MatchQueue: 'MatchQueue',
   LocalMatch: 'LocalMatch',
   LocalMatchAction: 'LocalMatchAction'
 };

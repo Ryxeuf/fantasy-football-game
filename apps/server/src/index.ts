@@ -14,6 +14,7 @@ import publicRostersRoutes from "./routes/public-rosters";
 import publicPositionsRoutes from "./routes/public-positions";
 import cupRoutes from "./routes/cup";
 import localMatchRoutes from "./routes/local-match";
+import matchmakingRoutes from "./routes/matchmaking";
 import dotenv from "dotenv";
 import { execSync } from "node:child_process";
 import { prisma } from "./prisma";
@@ -67,12 +68,14 @@ app.use("/api", publicRostersRoutes);
 app.use("/api", publicPositionsRoutes);
 app.use("/cup", cupRoutes);
 app.use("/local-match", localMatchRoutes);
+app.use("/matchmaking", matchmakingRoutes);
 
 // Endpoint public de reset pour tests (uniquement en TEST_SQLITE=1)
 if (process.env.TEST_SQLITE === "1") {
   app.post("/__test/reset", async (_req, res) => {
     try {
       await prisma.turn.deleteMany({});
+      try { await (prisma as any).matchQueue.deleteMany({}); } catch {}
       await prisma.teamSelection.deleteMany({});
       try {
         await (prisma as any).$executeRawUnsafe('DELETE FROM "_MatchToUser"');
