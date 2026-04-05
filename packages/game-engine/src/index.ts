@@ -178,6 +178,11 @@ export {
   getInjurySkillModifiers,
   getFoulArmorSkillModifiers,
   canSkillReroll,
+  checkGuard,
+  checkBlockNegatesBothDown,
+  checkDodgeNegatesStumble,
+  checkWrestleOnBothDown,
+  getMightyBlowBonusFromRegistry,
 } from './skills/skill-bridge';
 
 // Export des rosters et positions

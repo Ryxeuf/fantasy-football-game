@@ -13,13 +13,12 @@ import {
   Player,
 } from '../core/types';
 import { isAdjacent, inBounds, isPositionOccupied } from './movement';
-import { hasGuard, blockNegatesBothDown, dodgeNegatesStumble, getMightyBlowBonus, wrestleOnBothDown } from '../skills/skill-effects';
+import { checkGuard, checkBlockNegatesBothDown, checkDodgeNegatesStumble, getMightyBlowBonusFromRegistry, checkWrestleOnBothDown, getArmorSkillContext, getInjurySkillModifiers } from '../skills/skill-bridge';
 import { performArmorRoll, roll2D6 } from '../utils/dice';
 import { performArmorRollWithNotification } from '../utils/dice-notifications';
 import { createLogEntry } from '../utils/logging';
 import { canTeamBlitz } from '../core/game-state';
 import { performInjuryRoll, handleSentOff, handleInjuryByCrowd } from './injury';
-import { getArmorSkillContext, getInjurySkillModifiers } from '../skills/skill-bridge';
 
 /**
  * Effectue le jet d'armure + blessure avec Mighty Blow.
@@ -32,7 +31,7 @@ function armorAndInjuryWithMightyBlow(
   attacker: Player,
   rng: RNG
 ): GameState {
-  const mbBonus = getMightyBlowBonus(attacker);
+  const mbBonus = getMightyBlowBonusFromRegistry(attacker, state);
   const diceRoll = roll2D6(rng);
 
   // Claws: armor breaks on 8+ regardless of AV (unless defender has Iron Hard Skin)
@@ -192,7 +191,7 @@ export function calculateOffensiveAssists(
     // Le coéquipier doit marquer la cible
     if (isAdjacent(teammate.pos, target.pos)) {
       // Guard : un joueur avec Guard peut assister même s'il est marqué par d'autres adversaires
-      if (hasGuard(teammate)) {
+      if (checkGuard(teammate, state)) {
         assists++;
       } else {
         // Vérifier que le coéquipier n'est pas marqué par un autre adversaire que la cible
@@ -232,7 +231,7 @@ export function calculateDefensiveAssists(
     // Le coéquipier doit marquer l'attaquant
     if (isAdjacent(teammate.pos, attacker.pos)) {
       // Guard : un joueur avec Guard peut assister même s'il est marqué par d'autres adversaires
-      if (hasGuard(teammate)) {
+      if (checkGuard(teammate, state)) {
         assists++;
       } else {
         // Vérifier que le coéquipier n'est pas marqué par un autre adversaire que l'attaquant
@@ -612,8 +611,8 @@ function handlePlayerDown(state: GameState, attacker: Player, target: Player, rn
  * Wrestle prévaut sur Block (BB2020)
  */
 function handleBothDown(state: GameState, attacker: Player, target: Player, rng: RNG): GameState {
-  const attackerHasWrestle = wrestleOnBothDown(attacker);
-  const targetHasWrestle = wrestleOnBothDown(target);
+  const attackerHasWrestle = checkWrestleOnBothDown(attacker, state);
+  const targetHasWrestle = checkWrestleOnBothDown(target, state);
   const wrestleActive = attackerHasWrestle || targetHasWrestle;
 
   // Wrestle: les deux tombent, pas de jet d'armure, pas de turnover
@@ -652,8 +651,8 @@ function handleBothDown(state: GameState, attacker: Player, target: Player, rng:
   }
 
   // Comportement standard Block
-  const attackerHasBlock = blockNegatesBothDown(attacker);
-  const targetHasBlock = blockNegatesBothDown(target);
+  const attackerHasBlock = checkBlockNegatesBothDown(attacker, state);
+  const targetHasBlock = checkBlockNegatesBothDown(target, state);
 
   // Déterminer qui tombe
   const attackerFalls = !attackerHasBlock;
@@ -837,7 +836,7 @@ function handlePushBack(state: GameState, attacker: Player, target: Player, rng:
  */
 function handleStumble(state: GameState, attacker: Player, target: Player, rng: RNG): GameState {
   // Si la cible a Dodge (et l'attaquant n'a pas Tackle), c'est un Push Back
-  if (dodgeNegatesStumble(target, attacker)) {
+  if (checkDodgeNegatesStumble(target, attacker, state)) {
     return handlePushBack(state, attacker, target, rng);
   } else {
     // Pas de Dodge - traiter comme POW (le défenseur tombe, PAS un turnover)

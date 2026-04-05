@@ -80,7 +80,8 @@ export function registerSkill(effect: SkillEffect): void {
 }
 
 export function getSkillEffect(slug: string): SkillEffect | undefined {
-  return skillRegistry.get(slug.toLowerCase());
+  const normalized = slug.toLowerCase().replace(/[_ ]/g, '-');
+  return skillRegistry.get(normalized);
 }
 
 export function getAllRegisteredSkills(): SkillEffect[] {
