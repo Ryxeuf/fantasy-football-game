@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState, useRef } from "react";
+import { useMemo, useState, useRef, useCallback } from "react";
 import {
   DiceResultPopup,
   GameScoreboard,
@@ -43,11 +43,50 @@ import {
 } from "./hooks/useBlockPopups";
 import PostMatchSPP from "../../components/PostMatchSPP";
 import { useTurnNotification } from "./hooks/useTurnNotification";
+import { useSoundEffects } from "./hooks/useSoundEffects";
+import { getSoundManager } from "./hooks/sound-manager";
 
 /** Renders nothing — just fires turn notification side-effects inside ToastProvider. */
 function TurnNotificationListener({ isMyTurn, isActiveMatch }: { isMyTurn: boolean; isActiveMatch: boolean }) {
   useTurnNotification({ isMyTurn, isActiveMatch });
   return null;
+}
+
+/** Renders nothing — just fires sound effect side-effects based on gameLog changes. */
+function SoundEffectsListener({ state }: { state: ExtendedGameState | null }) {
+  useSoundEffects({ state });
+  return null;
+}
+
+/** Floating mute/unmute toggle button for sound effects. */
+function SoundToggleButton() {
+  const [muted, setMuted] = useState(() => getSoundManager().isMuted());
+  const handleToggle = useCallback(() => {
+    const newMuted = getSoundManager().toggleMuted();
+    setMuted(newMuted);
+  }, []);
+  return (
+    <button
+      onClick={handleToggle}
+      className="fixed bottom-4 right-4 z-50 bg-gray-800 hover:bg-gray-700 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg transition-colors"
+      title={muted ? "Activer le son" : "Couper le son"}
+      aria-label={muted ? "Activer le son" : "Couper le son"}
+    >
+      {muted ? (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+          <path d="M11 5L6 9H2v6h4l5 4V5z" />
+          <line x1="23" y1="9" x2="17" y2="15" />
+          <line x1="17" y1="9" x2="23" y2="15" />
+        </svg>
+      ) : (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+          <path d="M11 5L6 9H2v6h4l5 4V5z" />
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+        </svg>
+      )}
+    </button>
+  );
 }
 
 // Normalise un état reçu du serveur
@@ -661,6 +700,8 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
   return (
     <ToastProvider>
     <TurnNotificationListener isMyTurn={isMyTurn} isActiveMatch={isActiveMatch} />
+    <SoundEffectsListener state={state} />
+    <SoundToggleButton />
     <div className="min-h-screen bg-gray-100">
       <GameScoreboard
         state={state}
