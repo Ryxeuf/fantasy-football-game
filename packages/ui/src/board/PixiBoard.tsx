@@ -3,6 +3,7 @@ import * as React from "react";
 import { Stage, Container, Graphics, Text } from "@pixi/react";
 import type { Graphics as PixiGraphics } from "@pixi/graphics";
 import type { GameState, Position, Player, TackleZoneHeatmap } from "@bb/game-engine";
+import { useAnimatedPositions } from "./useAnimatedPositions";
 
 /** Extract up to 2 initials from a player's name (e.g. "Grim Ironjaw" -> "GI") */
 function getInitials(player: Player): string {
@@ -89,6 +90,9 @@ export default function PixiBoard({
   const cs = responsiveCellSize;
   const width = safeHeight * cs;
   const height = safeWidth * cs;
+
+  /* ── Animation tweens ────────────────────────────────────────────── */
+  const anim = useAnimatedPositions(state.players ?? [], state.ball);
 
   /* ── Zoom: mouse wheel ────────────────────────────────────────────── */
   React.useEffect(() => {
@@ -401,14 +405,18 @@ export default function PixiBoard({
             const isSelectedForRepositioning = player.id === selectedForRepositioning;
             const isCurrentTeam = player.team === state.currentPlayer;
             const initials = getInitials(player);
+            // Use animated position if available, else actual position
+            const animPos = anim.players[player.id];
+            const posX = animPos ? animPos.x : player.pos.x;
+            const posY = animPos ? animPos.y : player.pos.y;
 
             return (
               <React.Fragment key={player.id}>
                 <Graphics
                   draw={(g: PixiGraphics) => {
                     g.clear();
-                    const x = player.pos.y * cs + cs / 2;
-                    const y = player.pos.x * cs + cs / 2;
+                    const x = posY * cs + cs / 2;
+                    const y = posX * cs + cs / 2;
                     const radius = cs / 2 - 2;
 
                     const playerColor = player.stunned
@@ -452,8 +460,8 @@ export default function PixiBoard({
 
                 {/* Initiales du joueur */}
                 <Text
-                  x={player.pos.y * cs + cs / 2}
-                  y={player.pos.x * cs + cs / 2}
+                  x={posY * cs + cs / 2}
+                  y={posX * cs + cs / 2}
                   text={initials}
                   anchor={{ x: 0.5, y: 0.5 }}
                   style={
@@ -475,8 +483,8 @@ export default function PixiBoard({
                   draw={(g: PixiGraphics) => {
                     g.clear();
                     const r = cs * 0.2;
-                    const bx = player.pos.y * cs + cs - r;
-                    const by = player.pos.x * cs + r;
+                    const bx = posY * cs + cs - r;
+                    const by = posX * cs + r;
                     g.beginFill(
                       player.stunned ? 0xeeeeee : 0x111111,
                       0.85,
@@ -486,8 +494,8 @@ export default function PixiBoard({
                   }}
                 />
                 <Text
-                  x={player.pos.y * cs + cs - cs * 0.2}
-                  y={player.pos.x * cs + cs * 0.2}
+                  x={posY * cs + cs - cs * 0.2}
+                  y={posX * cs + cs * 0.2}
                   text={String(player.pm)}
                   anchor={{ x: 0.5, y: 0.5 }}
                   style={
@@ -508,8 +516,9 @@ export default function PixiBoard({
             <Graphics
               draw={(g: PixiGraphics) => {
                 g.clear();
-                const x = state.ball!.y * cs + cs / 2;
-                const y = state.ball!.x * cs + cs / 2;
+                const ballPos = anim.ball ?? state.ball!;
+                const x = ballPos.y * cs + cs / 2;
+                const y = ballPos.x * cs + cs / 2;
                 const radius = cs / 3;
 
                 g.beginFill(0x8b4513);
