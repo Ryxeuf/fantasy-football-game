@@ -1206,12 +1206,23 @@ export function validatePlayerPlacement(state: ExtendedGameState): ExtendedGameS
   
   if (currentCoach === state.preMatch.receivingTeam) {
       // L'équipe receveuse a terminé, passer à l'équipe frappeuse
+      // Recalculer les positions légales pour l'autre moitié du terrain
+      const kickingTeamIsA = nextCoach === 'A';
+      const xStart = kickingTeamIsA ? 1 : 13;
+      const xEnd = kickingTeamIsA ? 12 : 24;
+      const kickingSetupPositions: Position[] = [];
+      for (let x = xStart; x <= xEnd; x++) {
+        for (let y = 0; y < state.height; y++) {
+          kickingSetupPositions.push({ x, y });
+        }
+      }
     return {
       ...state,
       preMatch: {
         ...state.preMatch,
         currentCoach: nextCoach,
         placedPlayers: [], // Reset pour l'autre équipe
+        legalSetupPositions: kickingSetupPositions,
       },
       gameLog: [...state.gameLog, logEntry],
     };
