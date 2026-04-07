@@ -10,6 +10,7 @@ import {
   RerollChoicePopup,
   ApothecaryChoicePopup,
   GameBoardWithDugouts,
+  ToastProvider,
 } from "@bb/ui";
 import {
   getLegalMoves,
@@ -41,6 +42,13 @@ import {
   computeBlockTargets,
 } from "./hooks/useBlockPopups";
 import PostMatchSPP from "../../components/PostMatchSPP";
+import { useTurnNotification } from "./hooks/useTurnNotification";
+
+/** Renders nothing — just fires turn notification side-effects inside ToastProvider. */
+function TurnNotificationListener({ isMyTurn, isActiveMatch }: { isMyTurn: boolean; isActiveMatch: boolean }) {
+  useTurnNotification({ isMyTurn, isActiveMatch });
+  return null;
+}
 
 // Normalise un état reçu du serveur
 function normalizeState(state: any): ExtendedGameState {
@@ -651,6 +659,8 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
   }
 
   return (
+    <ToastProvider>
+    <TurnNotificationListener isMyTurn={isMyTurn} isActiveMatch={isActiveMatch} />
     <div className="min-h-screen bg-gray-100">
       <GameScoreboard
         state={state}
@@ -1075,5 +1085,6 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
         />
       )}
     </div>
+    </ToastProvider>
   );
 }

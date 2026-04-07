@@ -7,6 +7,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@bb/game-engine": path.resolve(__dirname, "../../packages/game-engine/src"),
+      "@bb/ui": path.resolve(__dirname, "../../packages/ui/src"),
     },
   },
   test: {
