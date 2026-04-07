@@ -9,6 +9,7 @@ import {
   FollowUpChoicePopup,
   RerollChoicePopup,
   ApothecaryChoicePopup,
+  InducementSelectionPopup,
   GameBoardWithDugouts,
   ToastProvider,
 } from "@bb/ui";
@@ -18,12 +19,14 @@ import {
   makeRNG,
   clearDiceResult,
   hasPlayerActed,
+  INDUCEMENT_CATALOGUE,
   type Position,
   type Move,
   placePlayerInSetup,
   type ExtendedGameState,
   type Player,
   type TeamId,
+  type InducementSelection,
 } from "@bb/game-engine";
 import { API_BASE } from "../../auth-client";
 import { useGameMoves } from "./hooks/useGameMoves";
@@ -108,9 +111,13 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
   // État du jeu centralisé via hook
   const {
     state, stateSource, matchStatus, myTeamSide, isMyTurn,
-    teamNameA, teamNameB, userName,
+    teamNameA, teamNameB, userName, inducementPhase,
     setState, setMatchStatus, setMyTeamSide, setIsMyTurn,
   } = useGameState(matchId);
+
+  // Inducement submission state
+  const [inducementsSubmitted, setInducementsSubmitted] = useState(false);
+  const [inducementsSubmitting, setInducementsSubmitting] = useState(false);
 
   const [showDicePopup, setShowDicePopup] = useState(false);
   const [currentAction, setCurrentAction] = useState<
@@ -128,6 +135,38 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
   const { submitMove, submitting: moveSubmitting } = useGameMoves(matchId, {
     wsSubmitMove,
   });
+
+  // Submit inducement selection to server
+  const handleSubmitInducements = useCallback(async (selection: InducementSelection) => {
+    setInducementsSubmitting(true);
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) return;
+      const res = await fetch(`${API_BASE}/match/${matchId}/submit-inducements`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ selection }),
+      });
+      const data = await res.json().catch(() => ({}) as Record<string, unknown>);
+      if (res.ok) {
+        setInducementsSubmitted(true);
+        if (data.gameState) {
+          setState(normalizeState(data.gameState));
+        }
+      }
+    } catch {
+      // Network error — polling will recover
+    } finally {
+      setInducementsSubmitting(false);
+    }
+  }, [matchId, setState]);
+
+  const handleSkipInducements = useCallback(() => {
+    handleSubmitInducements({ items: [] });
+  }, [handleSubmitInducements]);
 
   // Helper : est-ce que le match est en phase active (coups envoyés au serveur) ?
   const isActiveMatch = matchStatus === "active";
@@ -1098,6 +1137,41 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
             }
           }}
         />
+      )}
+      {/* Inducement selection popup */}
+      {state && state.preMatch?.phase === "inducements" &&
+        inducementPhase && !inducementPhase.alreadySubmitted && !inducementsSubmitted && (
+        <InducementSelectionPopup
+          catalogue={INDUCEMENT_CATALOGUE.filter((def) => {
+            if (!def.canPurchase) return true;
+            return def.canPurchase({
+              teamId: myTeamSide || "A",
+              regionalRules: [],
+              hasApothecary: inducementPhase.hasApothecary,
+              rosterSlug: inducementPhase.rosterSlug,
+            });
+          })}
+          budget={inducementPhase.budget}
+          teamName={
+            myTeamSide === "A"
+              ? (state.teamNames.teamA || "Mon équipe")
+              : (state.teamNames.teamB || "Mon équipe")
+          }
+          onConfirm={handleSubmitInducements}
+          onSkip={handleSkipInducements}
+        />
+      )}
+      {/* Waiting for opponent inducements */}
+      {state && state.preMatch?.phase === "inducements" &&
+        (inducementsSubmitted || inducementPhase?.alreadySubmitted) && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl text-center">
+            <h3 className="text-xl font-bold mb-2">Inducements soumis</h3>
+            <p className="text-sm text-gray-600">
+              En attente de la sélection de votre adversaire...
+            </p>
+          </div>
+        </div>
       )}
       {/* Apothecary decision popup */}
       {state && state.pendingApothecary && isMyTurn && (

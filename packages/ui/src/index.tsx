@@ -62,6 +62,7 @@ export { default as PushChoicePopup } from "./popups/PushChoicePopup";
 export { default as FollowUpChoicePopup } from "./popups/FollowUpChoicePopup";
 export { default as RerollChoicePopup } from "./popups/RerollChoicePopup";
 export { default as ApothecaryChoicePopup } from "./popups/ApothecaryChoicePopup";
+export { default as InducementSelectionPopup } from "./popups/InducementSelectionPopup";
 
 // Test components
 export { default as DiceTestComponent } from "./components/DiceTestComponent";

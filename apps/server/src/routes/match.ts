@@ -3,8 +3,8 @@ import { prisma } from "../prisma";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
 import jwt from "jsonwebtoken";
 import { acceptAndMaybeStartMatch } from "../services/match-start";
-import { enterSetupPhase, addJourneymen } from "@bb/game-engine";
-import type { Move } from "@bb/game-engine";
+import { enterSetupPhase, addJourneymen, processInducementsWithSelection, calculatePettyCash, INDUCEMENT_CATALOGUE, makeRNG } from "@bb/game-engine";
+import type { Move, InducementSelection, InducementContext, PettyCashInput } from "@bb/game-engine";
 import { getUserTeamSide } from "../services/turn-ownership";
 import { getLinemanStats } from "../services/journeymen";
 import { validate } from "../middleware/validate";
@@ -606,17 +606,26 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
 
     // Dans /state, après chargement gameState pour prematch-setup
     if (match.status === "prematch-setup") {
-      // Entrer en setup si idle
+      const userTeamSide = await getUserTeamSide(prisma as any, matchId, req.user!.id);
+
+      // Check if inducements have been processed — use that state if available
+      const inducementsTurn = [...match.turns]
+        .reverse()
+        .find((t: any) => t.payload?.type === "inducements-processed" && t.payload?.gameState);
+      if (inducementsTurn) {
+        const gs = (inducementsTurn as any).payload.gameState;
+        gameState = typeof gs === "string" ? JSON.parse(gs) : gs;
+      }
+
+      // Advance through pre-match phases if still in idle
       const lastCoinToss = match.turns.find(
         (t: any) => t.payload?.type === "coin-toss",
       );
       if (lastCoinToss && gameState.preMatch.phase === "idle") {
-        // IMPORTANT: déterminer l'équipe receveuse selon le mapping A/B défini par l'ordre des sélections,
-        // pas selon l'utilisateur qui appelle la route (sinon chaque client verrait une équipe différente).
         const selections = await prisma.teamSelection.findMany({
           where: { matchId },
           orderBy: { createdAt: "asc" },
-          include: { teamRef: { select: { roster: true } } },
+          include: { teamRef: { select: { roster: true, teamValue: true, treasury: true, apothecary: true } } },
         });
         const s1 = selections[0];
         const s2 = selections[1];
@@ -626,7 +635,7 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
             lastCoinToss.payload.receivingUserId === s1.userId ? "A" : "B";
         }
 
-        // D.8 — Add journeymen if teams have < 11 alive players
+        // Add journeymen if teams have < 11 alive players
         const rosterA = (s1 as any)?.teamRef?.roster;
         const rosterB = (s2 as any)?.teamRef?.roster;
         if (rosterA && rosterB) {
@@ -634,23 +643,133 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
             getLinemanStats(prisma as any, rosterA),
             getLinemanStats(prisma as any, rosterB),
           ]);
-          // Temporarily set phase to 'journeymen' for addJourneymen to work
           gameState = {
             ...gameState,
             preMatch: { ...gameState.preMatch, phase: 'journeymen' },
           };
           gameState = addJourneymen(gameState, 11, 11, linemanStatsA, linemanStatsB);
-          // Reset phase to 'idle' so enterSetupPhase can proceed
-          gameState = {
-            ...gameState,
-            preMatch: { ...gameState.preMatch, phase: 'idle' },
-          };
         }
 
-        gameState = enterSetupPhase(gameState, receivingTeam);
+        // Phase is now 'inducements' after addJourneymen — stop here to let UI handle selection
+        // Include petty cash info for the client
+        const teamAData = (s1 as any)?.teamRef;
+        const teamBData = (s2 as any)?.teamRef;
+        const pettyCash = calculatePettyCash({
+          ctvTeamA: teamAData?.teamValue || 0,
+          ctvTeamB: teamBData?.teamValue || 0,
+          treasuryTeamA: teamAData?.treasury || 0,
+          treasuryTeamB: teamBData?.treasury || 0,
+        });
+
+        // Check if user already submitted inducements
+        const mySubmission = match.turns.find(
+          (t: any) =>
+            t.payload?.type === "submit-inducements" &&
+            t.payload?.teamSide === userTeamSide
+        );
+
+        // Store receiving team for later use when advancing past inducements
+        gameState = {
+          ...gameState,
+          preMatch: {
+            ...gameState.preMatch,
+            receivingTeam: receivingTeam,
+            kickingTeam: receivingTeam === "A" ? "B" : "A",
+          },
+        };
+
+        return res.json({
+          gameState,
+          matchStatus: match.status,
+          myTeamSide: userTeamSide,
+          isMyTurn: true, // Both coaches can submit inducements
+          inducementPhase: {
+            budget: userTeamSide === "A" ? pettyCash.teamA.maxBudget : pettyCash.teamB.maxBudget,
+            pettyCash: userTeamSide === "A" ? pettyCash.teamA.pettyCash : pettyCash.teamB.pettyCash,
+            hasApothecary: userTeamSide === "A"
+              ? (teamAData?.apothecary || false)
+              : (teamBData?.apothecary || false),
+            rosterSlug: userTeamSide === "A"
+              ? (teamAData?.roster || "")
+              : (teamBData?.roster || ""),
+            alreadySubmitted: !!mySubmission,
+          },
+        });
       }
 
-      const userTeamSide = await getUserTeamSide(prisma as any, matchId, req.user!.id);
+      // If past inducements phase (prayers or later), advance to setup
+      if (
+        gameState.preMatch.phase === "prayers" ||
+        gameState.preMatch.phase === "kicking-team" ||
+        gameState.preMatch.phase === "inducements"
+      ) {
+        // If still in inducements, it means we need to wait for submissions
+        if (gameState.preMatch.phase === "inducements") {
+          // Return current state — UI will show selection popup
+          const selections = await prisma.teamSelection.findMany({
+            where: { matchId },
+            orderBy: { createdAt: "asc" },
+            include: { teamRef: { select: { teamValue: true, treasury: true, apothecary: true, roster: true } } },
+          });
+          const teamAData = (selections[0] as any)?.teamRef;
+          const teamBData = (selections[1] as any)?.teamRef;
+          const pettyCash = calculatePettyCash({
+            ctvTeamA: teamAData?.teamValue || 0,
+            ctvTeamB: teamBData?.teamValue || 0,
+            treasuryTeamA: teamAData?.treasury || 0,
+            treasuryTeamB: teamBData?.treasury || 0,
+          });
+
+          const mySubmission = match.turns.find(
+            (t: any) =>
+              t.payload?.type === "submit-inducements" &&
+              t.payload?.teamSide === userTeamSide
+          );
+
+          return res.json({
+            gameState,
+            matchStatus: match.status,
+            myTeamSide: userTeamSide,
+            isMyTurn: true,
+            inducementPhase: {
+              budget: userTeamSide === "A" ? pettyCash.teamA.maxBudget : pettyCash.teamB.maxBudget,
+              pettyCash: userTeamSide === "A" ? pettyCash.teamA.pettyCash : pettyCash.teamB.pettyCash,
+              hasApothecary: userTeamSide === "A"
+                ? (teamAData?.apothecary || false)
+                : (teamBData?.apothecary || false),
+              rosterSlug: userTeamSide === "A"
+                ? (teamAData?.roster || "")
+                : (teamBData?.roster || ""),
+              alreadySubmitted: !!mySubmission,
+            },
+          });
+        }
+
+        // Advance through remaining phases
+        const { processPrayersToNuffle, determineKickingTeam } = await import("@bb/game-engine");
+        const rng = makeRNG(`${match.seed}-prematch`);
+
+        if (gameState.preMatch.phase === "prayers") {
+          const selections = await prisma.teamSelection.findMany({
+            where: { matchId },
+            orderBy: { createdAt: "asc" },
+            include: { teamRef: { select: { teamValue: true } } },
+          });
+          const ctvA = (selections[0] as any)?.teamRef?.teamValue || 0;
+          const ctvB = (selections[1] as any)?.teamRef?.teamValue || 0;
+          gameState = processPrayersToNuffle(gameState, rng, ctvA - ctvB);
+        }
+
+        if (gameState.preMatch.phase === "kicking-team") {
+          gameState = determineKickingTeam(gameState, rng);
+        }
+
+        if (gameState.preMatch.phase === "setup") {
+          gameState = enterSetupPhase(gameState, gameState.preMatch.receivingTeam);
+        }
+      }
+
+      // For setup phase and beyond
       return res.json({
         gameState,
         matchStatus: match.status,
@@ -1079,3 +1198,188 @@ router.get("/:id/turns", authUser, async (req: AuthenticatedRequest, res) => {
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
+
+// Submit inducement selection for a team during pre-match
+router.post(
+  "/:id/submit-inducements",
+  authUser,
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      const matchId = req.params.id;
+      const { selection } = req.body as { selection?: InducementSelection };
+
+      if (!selection || !Array.isArray(selection.items)) {
+        return res.status(400).json({ error: "selection.items est requis" });
+      }
+
+      const match = await prisma.match.findUnique({
+        where: { id: matchId },
+        include: { turns: { orderBy: { number: "asc" } } },
+      });
+
+      if (!match) {
+        return res.status(404).json({ error: "Partie introuvable" });
+      }
+
+      if (match.status !== "prematch-setup") {
+        return res.status(400).json({ error: "La partie n'est pas en phase pré-match" });
+      }
+
+      // Identify team side
+      const userTeamSide = await getUserTeamSide(prisma as any, matchId, req.user!.id);
+      if (!userTeamSide) {
+        return res.status(403).json({ error: "Vous n'êtes pas un joueur de cette partie" });
+      }
+
+      // Get game state
+      const lastTurnWithState = [...match.turns]
+        .reverse()
+        .find((t: any) => t.payload?.gameState);
+      if (!lastTurnWithState) {
+        return res.status(400).json({ error: "État de jeu introuvable" });
+      }
+
+      let gameState = (lastTurnWithState as any).payload.gameState;
+      if (typeof gameState === "string") {
+        gameState = JSON.parse(gameState);
+      }
+
+      if (gameState.preMatch?.phase !== "inducements") {
+        return res.status(400).json({ error: "Pas en phase d'inducements" });
+      }
+
+      // Check if this team already submitted
+      const existingSubmission = match.turns.find(
+        (t: any) =>
+          t.payload?.type === "submit-inducements" &&
+          t.payload?.teamSide === userTeamSide
+      );
+      if (existingSubmission) {
+        return res.status(400).json({ error: "Inducements déjà soumis pour cette équipe" });
+      }
+
+      // Save the submission as a turn
+      await prisma.turn.create({
+        data: {
+          matchId,
+          number: match.turns.length + 1,
+          payload: {
+            type: "submit-inducements",
+            userId: req.user!.id,
+            teamSide: userTeamSide,
+            selection,
+            timestamp: new Date().toISOString(),
+          },
+        },
+      });
+
+      // Check if both teams have submitted
+      const otherSide = userTeamSide === "A" ? "B" : "A";
+      const otherSubmission = match.turns.find(
+        (t: any) =>
+          t.payload?.type === "submit-inducements" &&
+          t.payload?.teamSide === otherSide
+      );
+
+      if (!otherSubmission) {
+        return res.json({
+          success: true,
+          status: "waiting_other_coach",
+          message: "En attente de la sélection de l'adversaire",
+        });
+      }
+
+      // Both teams submitted — process inducements
+      const otherSelection: InducementSelection = (otherSubmission as any).payload.selection;
+      const selectionA = userTeamSide === "A" ? selection : otherSelection;
+      const selectionB = userTeamSide === "B" ? selection : otherSelection;
+
+      // Get team data for CTV, treasury, roster, apothecary
+      const selections = await prisma.teamSelection.findMany({
+        where: { matchId },
+        orderBy: { createdAt: "asc" },
+        include: {
+          teamRef: {
+            select: {
+              teamValue: true,
+              treasury: true,
+              roster: true,
+              apothecary: true,
+            },
+          },
+        },
+      });
+
+      const teamAData = selections[0]?.teamRef;
+      const teamBData = selections[1]?.teamRef;
+
+      if (!teamAData || !teamBData) {
+        return res.status(400).json({ error: "Données d'équipe introuvables" });
+      }
+
+      const pettyCashInput: PettyCashInput = {
+        ctvTeamA: teamAData.teamValue || 0,
+        ctvTeamB: teamBData.teamValue || 0,
+        treasuryTeamA: teamAData.treasury || 0,
+        treasuryTeamB: teamBData.treasury || 0,
+      };
+
+      const ctxA: InducementContext = {
+        teamId: "A",
+        regionalRules: [],
+        hasApothecary: teamAData.apothecary || false,
+        rosterSlug: teamAData.roster || "",
+      };
+
+      const ctxB: InducementContext = {
+        teamId: "B",
+        regionalRules: [],
+        hasApothecary: teamBData.apothecary || false,
+        rosterSlug: teamBData.roster || "",
+      };
+
+      const result = processInducementsWithSelection(
+        gameState,
+        pettyCashInput,
+        selectionA,
+        selectionB,
+        ctxA,
+        ctxB
+      );
+
+      if (!result.validationA.valid || !result.validationB.valid) {
+        return res.status(400).json({
+          error: "Validation échouée",
+          errorsA: result.validationA.errors,
+          errorsB: result.validationB.errors,
+        });
+      }
+
+      // Save the processed state
+      await prisma.turn.create({
+        data: {
+          matchId,
+          number: match.turns.length + 2,
+          payload: {
+            type: "inducements-processed",
+            gameState: result.state,
+            timestamp: new Date().toISOString(),
+          },
+        },
+      });
+
+      // Broadcast updated state
+      const { broadcastGameState } = await import("../services/game-broadcast");
+      broadcastGameState(matchId, result.state, { type: "inducements" }, req.user!.id);
+
+      return res.json({
+        success: true,
+        status: "inducements_processed",
+        gameState: result.state,
+      });
+    } catch (e: any) {
+      console.error("Erreur submit-inducements:", e);
+      return res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+);

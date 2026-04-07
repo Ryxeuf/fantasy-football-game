@@ -8,6 +8,8 @@ import {
   determineWeather,
   addJourneymen,
   processInducements,
+  processInducementsWithSelection,
+  calculatePettyCash,
   processPrayersToNuffle,
   determineKickingTeam,
   enterSetupPhase,
@@ -526,9 +528,36 @@ router.post("/:id/start", authUser, async (req: AuthenticatedRequest, res) => {
       gameState = addJourneymen(gameState, 11, 11, linemanStatsA, linemanStatsB);
     }
     
-    // Inducements : traiter automatiquement (pas d'incitations pour l'instant)
+    // Inducements : passer automatiquement avec sélection vide (local match)
     if (gameState.preMatch.phase === 'inducements') {
-      gameState = processInducements(gameState, 0, 0, 0, 0);
+      const pettyCashInput = {
+        ctvTeamA: localMatch.teamA?.teamValue || 0,
+        ctvTeamB: localMatch.teamB?.teamValue || 0,
+        treasuryTeamA: localMatch.teamA?.treasury || 0,
+        treasuryTeamB: localMatch.teamB?.treasury || 0,
+      };
+      const emptySelection = { items: [] };
+      const ctxA = {
+        teamId: 'A' as const,
+        regionalRules: [] as string[],
+        hasApothecary: localMatch.teamA?.apothecary || false,
+        rosterSlug: localMatch.teamA?.roster || '',
+      };
+      const ctxB = {
+        teamId: 'B' as const,
+        regionalRules: [] as string[],
+        hasApothecary: localMatch.teamB?.apothecary || false,
+        rosterSlug: localMatch.teamB?.roster || '',
+      };
+      const result = processInducementsWithSelection(
+        gameState,
+        pettyCashInput,
+        emptySelection,
+        emptySelection,
+        ctxA,
+        ctxB,
+      );
+      gameState = result.state;
     }
     
     // Prayers : traiter automatiquement (pas de prières pour l'instant)

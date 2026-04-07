@@ -18,6 +18,14 @@ function normalizeState(state: any): ExtendedGameState {
   return state as ExtendedGameState;
 }
 
+export interface InducementPhaseInfo {
+  budget: number;
+  pettyCash: number;
+  hasApothecary: boolean;
+  rosterSlug: string;
+  alreadySubmitted: boolean;
+}
+
 export interface GameStateInfo {
   state: ExtendedGameState | null;
   stateSource: "server" | "fallback" | null;
@@ -27,6 +35,7 @@ export interface GameStateInfo {
   teamNameA: string | undefined;
   teamNameB: string | undefined;
   userName: string | undefined;
+  inducementPhase: InducementPhaseInfo | null;
   setState: (s: ExtendedGameState | ((prev: ExtendedGameState | null) => ExtendedGameState | null)) => void;
   setMatchStatus: (s: string | null) => void;
   setMyTeamSide: (s: "A" | "B" | null) => void;
@@ -45,6 +54,7 @@ export function useGameState(matchId: string): GameStateInfo {
   const [teamNameA, setTeamNameA] = useState<string | undefined>(undefined);
   const [teamNameB, setTeamNameB] = useState<string | undefined>(undefined);
   const [userName, setUserName] = useState<string | undefined>(undefined);
+  const [inducementPhase, setInducementPhase] = useState<InducementPhaseInfo | null>(null);
 
   const isActiveMatch = matchStatus === "active";
 
@@ -142,6 +152,7 @@ export function useGameState(matchId: string): GameStateInfo {
           if (data.matchStatus) setMatchStatus(data.matchStatus);
           if (data.myTeamSide) setMyTeamSide(data.myTeamSide);
           if (typeof data.isMyTurn === "boolean") setIsMyTurn(data.isMyTurn);
+          setInducementPhase(data.inducementPhase || null);
           initialLoadDone.current = true;
           return;
         }
@@ -217,6 +228,7 @@ export function useGameState(matchId: string): GameStateInfo {
             if (data.matchStatus) setMatchStatus(data.matchStatus);
             if (data.myTeamSide) setMyTeamSide(data.myTeamSide);
             if (typeof data.isMyTurn === "boolean") setIsMyTurn(data.isMyTurn);
+            setInducementPhase(data.inducementPhase || null);
           }
         }
       } catch {}
@@ -271,7 +283,7 @@ export function useGameState(matchId: string): GameStateInfo {
 
   return {
     state, stateSource, matchStatus, myTeamSide, isMyTurn,
-    teamNameA, teamNameB, userName,
+    teamNameA, teamNameB, userName, inducementPhase,
     setState, setMatchStatus, setMyTeamSide, setIsMyTurn,
   };
 }
