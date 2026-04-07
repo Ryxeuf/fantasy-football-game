@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState, useRef, useCallback } from "react";
+import { useMemo, useState, useRef, useCallback, useEffect } from "react";
 import {
   DiceResultPopup,
   GameScoreboard,
@@ -42,6 +42,8 @@ import {
   computeBlockTargets,
 } from "./hooks/useBlockPopups";
 import PostMatchSPP from "../../components/PostMatchSPP";
+import InducementSelector from "../../components/InducementSelector";
+import { INDUCEMENT_CATALOGUE, type InducementSelection, type InducementDefinition } from "@bb/game-engine";
 import { useTurnNotification } from "./hooks/useTurnNotification";
 import { useSoundEffects } from "./hooks/useSoundEffects";
 import { getSoundManager } from "./hooks/sound-manager";
@@ -56,6 +58,166 @@ function TurnNotificationListener({ isMyTurn, isActiveMatch }: { isMyTurn: boole
 function SoundEffectsListener({ state }: { state: ExtendedGameState | null }) {
   useSoundEffects({ state });
   return null;
+}
+
+/** Inducements phase UI for pre-match. */
+function InducementsPhaseUI({
+  matchId,
+  state,
+  stateSource,
+  setState,
+}: {
+  matchId: string;
+  state: ExtendedGameState;
+  stateSource: string | null;
+  setState: (s: ExtendedGameState | ((prev: ExtendedGameState | null) => ExtendedGameState | null)) => void;
+}) {
+  const [submitting, setSubmitting] = useState(false);
+  const [inducementError, setInducementError] = useState<string | null>(null);
+  const [inducementsInfo, setInducementsInfo] = useState<any>(null);
+  const infoLoadedRef = useRef(false);
+
+  // Load inducements info from server
+  useEffect(() => {
+    if (infoLoadedRef.current) return;
+    infoLoadedRef.current = true;
+    const token = localStorage.getItem("auth_token");
+    if (!token) return;
+    fetch(`${API_BASE}/local-match/${matchId}/inducements-info`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.ok ? r.json() : null)
+      .catch(() => null)
+      .then((data) => {
+        if (data) setInducementsInfo(data);
+      });
+  }, [matchId]);
+
+  // Filter catalogue: only show items the team can purchase (exclude star_player for now)
+  const catalogue = (inducementsInfo?.catalogue ?? INDUCEMENT_CATALOGUE.filter(
+    (ind) => ind.slug !== "star_player",
+  )) as InducementDefinition[];
+
+  const budgetA = inducementsInfo?.teamA?.budget ?? 0;
+  const budgetB = inducementsInfo?.teamB?.budget ?? 0;
+  const pettyCashA = inducementsInfo?.pettyCash?.teamA?.pettyCash ?? 0;
+  const pettyCashB = inducementsInfo?.pettyCash?.teamB?.pettyCash ?? 0;
+
+  const handleSubmit = async (
+    selectionA: InducementSelection,
+    selectionB: InducementSelection,
+  ) => {
+    setSubmitting(true);
+    setInducementError(null);
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) return;
+      const res = await fetch(`${API_BASE}/local-match/${matchId}/inducements`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ selectionA, selectionB }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setInducementError(data.error || "Erreur");
+        return;
+      }
+      if (data.gameState) {
+        setState(normalizeState(data.gameState));
+      }
+    } catch {
+      setInducementError("Erreur réseau");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // For local match (hotseat): show both teams side by side
+  const [selectionA, setSelectionA] = useState<InducementSelection>({ items: [] });
+  const [selectionB, setSelectionB] = useState<InducementSelection>({ items: [] });
+  const [teamAReady, setTeamAReady] = useState(false);
+  const [teamBReady, setTeamBReady] = useState(false);
+
+  const handleTeamAConfirm = (sel: InducementSelection) => {
+    setSelectionA(sel);
+    setTeamAReady(true);
+  };
+  const handleTeamBConfirm = (sel: InducementSelection) => {
+    setSelectionB(sel);
+    setTeamBReady(true);
+  };
+
+  // Auto-submit when both teams are ready
+  useEffect(() => {
+    if (teamAReady && teamBReady && !submitting) {
+      handleSubmit(selectionA, selectionB);
+    }
+  }, [teamAReady, teamBReady]);
+
+  return (
+    <div className="w-full max-w-4xl mx-auto">
+      <div className="text-center mb-4">
+        <h2 className="text-xl font-bold text-gray-800">Phase d'Inducements</h2>
+        <p className="text-sm text-gray-500 mt-1">
+          Chaque équipe peut dépenser son budget pour des avantages de match.
+        </p>
+      </div>
+
+      {inducementError && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm text-center">
+          {inducementError}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          {teamAReady ? (
+            <div className="rounded border bg-emerald-50 border-emerald-300 p-4 text-center">
+              <div className="font-semibold text-emerald-700">{state.teamNames.teamA}</div>
+              <div className="text-sm text-emerald-600 mt-1">Sélection confirmée</div>
+            </div>
+          ) : (
+            <InducementSelector
+              catalogue={catalogue}
+              budget={budgetA}
+              pettyCash={pettyCashA}
+              teamName={state.teamNames.teamA}
+              disabled={submitting}
+              onConfirm={handleTeamAConfirm}
+              onSkip={() => handleTeamAConfirm({ items: [] })}
+            />
+          )}
+        </div>
+        <div>
+          {teamBReady ? (
+            <div className="rounded border bg-emerald-50 border-emerald-300 p-4 text-center">
+              <div className="font-semibold text-emerald-700">{state.teamNames.teamB}</div>
+              <div className="text-sm text-emerald-600 mt-1">Sélection confirmée</div>
+            </div>
+          ) : (
+            <InducementSelector
+              catalogue={catalogue}
+              budget={budgetB}
+              pettyCash={pettyCashB}
+              teamName={state.teamNames.teamB}
+              disabled={submitting}
+              onConfirm={handleTeamBConfirm}
+              onSkip={() => handleTeamBConfirm({ items: [] })}
+            />
+          )}
+        </div>
+      </div>
+
+      {submitting && (
+        <div className="mt-4 text-center text-gray-500 text-sm">
+          Traitement des inducements...
+        </div>
+      )}
+    </div>
+  );
 }
 
 /** Floating mute/unmute toggle button for sound effects. */
@@ -752,8 +914,17 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
           <div className="flex flex-col items-center space-y-4 mb-6">
             {" "}
             {/* Wrapper centralisé pour pré-match */}
+            {/* Phase inducements */}
+            {state && state.half === 0 && state.preMatch?.phase === "inducements" && (
+              <InducementsPhaseUI
+                matchId={matchId}
+                state={state as ExtendedGameState}
+                stateSource={stateSource}
+                setState={setState}
+              />
+            )}
             {/* Statut pré-match (si half=0) */}
-            {state && state.half === 0 && stateSource === "server" && (
+            {state && state.half === 0 && stateSource === "server" && state.preMatch?.phase !== "inducements" && (
               <div className="text-center text-sm text-gray-600 bg-gray-100 p-2 rounded w-full max-w-md">
                 {state.preMatch?.phase === "kickoff" ? (
                   <div>

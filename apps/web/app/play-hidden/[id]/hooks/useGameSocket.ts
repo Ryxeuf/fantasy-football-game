@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useCallback, useState } from "react";
 import { io, type Socket } from "socket.io-client";
-import type { ExtendedGameState, Move } from "@bb/game-engine";
+import type { ExtendedGameState, Move, InducementSelection } from "@bb/game-engine";
 import { API_BASE } from "../../../auth-client";
 
 // --- Server event payload types ---
@@ -100,6 +100,21 @@ export function createGameSocketHelpers(socket: Socket) {
           "game:submit-move",
           { matchId, move },
           (response: MoveAckPayload) => {
+            resolve(response);
+          },
+        );
+      });
+    },
+
+    submitInducements(
+      matchId: string,
+      selection: InducementSelection,
+    ): Promise<{ success: boolean; status?: string; error?: string }> {
+      return new Promise((resolve) => {
+        socket.emit(
+          "game:submit-inducements",
+          { matchId, selection },
+          (response: { success: boolean; status?: string; error?: string }) => {
             resolve(response);
           },
         );

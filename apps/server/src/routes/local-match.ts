@@ -1,18 +1,23 @@
 import { Router } from "express";
 import { prisma } from "../prisma";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
-import { 
-  setupPreMatchWithTeams, 
-  startPreMatchSequence, 
-  calculateFanFactor, 
+import {
+  setupPreMatchWithTeams,
+  startPreMatchSequence,
+  calculateFanFactor,
   determineWeather,
   addJourneymen,
-  processInducements,
+  processInducementsWithSelection,
+  calculatePettyCash,
   processPrayersToNuffle,
   determineKickingTeam,
   enterSetupPhase,
   makeRNG,
-  type WeatherType
+  INDUCEMENT_CATALOGUE,
+  type WeatherType,
+  type InducementSelection,
+  type InducementContext,
+  type ExtendedGameState,
 } from "@bb/game-engine";
 import { randomBytes } from "crypto";
 import { hasRole } from "../utils/roles";
@@ -526,38 +531,16 @@ router.post("/:id/start", authUser, async (req: AuthenticatedRequest, res) => {
       gameState = addJourneymen(gameState, 11, 11, linemanStatsA, linemanStatsB);
     }
     
-    // Inducements : traiter automatiquement (pas d'incitations pour l'instant)
-    if (gameState.preMatch.phase === 'inducements') {
-      gameState = processInducements(gameState, 0, 0, 0, 0);
-    }
-    
-    // Prayers : traiter automatiquement (pas de prières pour l'instant)
-    if (gameState.preMatch.phase === 'prayers') {
-      gameState = processPrayersToNuffle(gameState, rng, 0);
-    }
-    
-    // Kicking team : déterminer automatiquement
-    if (gameState.preMatch.phase === 'kicking-team') {
-      gameState = determineKickingTeam(gameState, rng);
-    }
-    
-    // Si on arrive en phase setup, entrer dans la phase setup
-    if (gameState.preMatch.phase === 'setup') {
-      gameState = enterSetupPhase(gameState, gameState.preMatch.receivingTeam);
-    }
-    
-    // Ne pas mettre le statut à "in_progress" tant que la phase pré-match n'est pas terminée
-    // La phase pré-match se termine quand on arrive à la phase 'setup'
-    // Pour l'instant, on reste en "pending" pour permettre l'affichage de la phase pré-match
-    const isPreMatchComplete = gameState.preMatch.phase === 'setup' || gameState.preMatch.phase === 'kickoff' || gameState.preMatch.phase === 'kickoff-sequence';
-    const matchStatus = isPreMatchComplete ? "in_progress" : "pending";
+    // Inducements : arrêter ici pour laisser les joueurs choisir via l'UI
+    // La suite (prayers, kicking-team, setup) sera traitée dans POST /:id/inducements
+
+    const matchStatus = "pending";
     
     // Mettre à jour la partie
     const updatedMatch = await prisma.localMatch.update({
       where: { id: req.params.id },
       data: {
         status: matchStatus,
-        ...(isPreMatchComplete && { startedAt: new Date() }),
         gameState: gameState as any,
       },
       include: {
@@ -584,6 +567,194 @@ router.post("/:id/start", authUser, async (req: AuthenticatedRequest, res) => {
     });
   } catch (e: any) {
     console.error("Erreur lors du démarrage de la partie offline:", e);
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// POST /local-match/:id/inducements - Soumettre les sélections d'inducements
+router.post("/:id/inducements", authUser, async (req: AuthenticatedRequest, res) => {
+  try {
+    const localMatch = await prisma.localMatch.findUnique({
+      where: { id: req.params.id },
+      include: {
+        teamA: { include: { players: true } },
+        teamB: { include: { players: true } },
+      },
+    });
+
+    if (!localMatch) {
+      return res.status(404).json({ error: "Partie introuvable" });
+    }
+
+    let gameState = localMatch.gameState as unknown as ExtendedGameState;
+    if (!gameState || gameState.preMatch?.phase !== "inducements") {
+      return res.status(400).json({ error: "La partie n'est pas en phase d'inducements" });
+    }
+
+    const { selectionA, selectionB } = req.body as {
+      selectionA?: InducementSelection;
+      selectionB?: InducementSelection;
+    };
+
+    // Default to empty selections
+    const finalSelectionA: InducementSelection = selectionA ?? { items: [] };
+    const finalSelectionB: InducementSelection = selectionB ?? { items: [] };
+
+    // Build inducement contexts
+    const rosterA = localMatch.teamA.roster;
+    const rosterB = localMatch.teamB.roster;
+
+    const ctxA: InducementContext = {
+      teamId: "A",
+      regionalRules: [],
+      hasApothecary: gameState.apothecaryAvailable?.teamA ?? false,
+      rosterSlug: rosterA,
+    };
+    const ctxB: InducementContext = {
+      teamId: "B",
+      regionalRules: [],
+      hasApothecary: gameState.apothecaryAvailable?.teamB ?? false,
+      rosterSlug: rosterB,
+    };
+
+    // Calculate CTV for petty cash
+    const ctvA = localMatch.teamA.players
+      .filter((p: any) => !p.dead)
+      .reduce((sum: number, p: any) => sum + (p.value || 0), 0);
+    const ctvB = localMatch.teamB.players
+      .filter((p: any) => !p.dead)
+      .reduce((sum: number, p: any) => sum + (p.value || 0), 0);
+
+    const pettyCashInput = {
+      ctvTeamA: ctvA,
+      ctvTeamB: ctvB,
+      treasuryTeamA: (localMatch.teamA as any).treasury || 0,
+      treasuryTeamB: (localMatch.teamB as any).treasury || 0,
+    };
+
+    // Process inducements
+    const result = processInducementsWithSelection(
+      gameState,
+      pettyCashInput,
+      finalSelectionA,
+      finalSelectionB,
+      ctxA,
+      ctxB,
+    );
+
+    if (!result.validationA.valid || !result.validationB.valid) {
+      const errors = [...result.validationA.errors, ...result.validationB.errors];
+      return res.status(400).json({ error: errors.join("; "), errors });
+    }
+
+    gameState = result.state;
+
+    // Continue the pre-match sequence: prayers -> kicking-team -> setup
+    const rng = makeRNG(`local-match-${req.params.id}-inducements-${Date.now()}`);
+
+    if (gameState.preMatch.phase === "prayers") {
+      const ctvDiff = ctvA - ctvB;
+      gameState = processPrayersToNuffle(gameState, rng, ctvDiff);
+    }
+
+    if (gameState.preMatch.phase === "kicking-team") {
+      gameState = determineKickingTeam(gameState, rng);
+    }
+
+    if (gameState.preMatch.phase === "setup") {
+      gameState = enterSetupPhase(gameState, gameState.preMatch.receivingTeam);
+    }
+
+    const isPreMatchComplete =
+      gameState.preMatch.phase === "setup" ||
+      gameState.preMatch.phase === "kickoff" ||
+      gameState.preMatch.phase === "kickoff-sequence";
+    const matchStatus = isPreMatchComplete ? "in_progress" : "pending";
+
+    const updatedMatch = await prisma.localMatch.update({
+      where: { id: req.params.id },
+      data: {
+        status: matchStatus,
+        ...(isPreMatchComplete && { startedAt: new Date() }),
+        gameState: gameState as any,
+      },
+    });
+
+    res.json({
+      localMatch: updatedMatch,
+      gameState,
+      pettyCash: calculatePettyCash(pettyCashInput),
+    });
+  } catch (e: any) {
+    console.error("Erreur lors du traitement des inducements:", e);
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// GET /local-match/:id/inducements-info - Obtenir les infos pour la phase d'inducements
+router.get("/:id/inducements-info", authUser, async (req: AuthenticatedRequest, res) => {
+  try {
+    const localMatch = await prisma.localMatch.findUnique({
+      where: { id: req.params.id },
+      include: {
+        teamA: { include: { players: true } },
+        teamB: { include: { players: true } },
+      },
+    });
+
+    if (!localMatch) {
+      return res.status(404).json({ error: "Partie introuvable" });
+    }
+
+    const gameState = localMatch.gameState as unknown as ExtendedGameState;
+    if (!gameState || gameState.preMatch?.phase !== "inducements") {
+      return res.status(400).json({ error: "La partie n'est pas en phase d'inducements" });
+    }
+
+    // Calculate CTV and petty cash
+    const ctvA = localMatch.teamA.players
+      .filter((p: any) => !p.dead)
+      .reduce((sum: number, p: any) => sum + (p.value || 0), 0);
+    const ctvB = localMatch.teamB.players
+      .filter((p: any) => !p.dead)
+      .reduce((sum: number, p: any) => sum + (p.value || 0), 0);
+
+    const pettyCashInput = {
+      ctvTeamA: ctvA,
+      ctvTeamB: ctvB,
+      treasuryTeamA: (localMatch.teamA as any).treasury || 0,
+      treasuryTeamB: (localMatch.teamB as any).treasury || 0,
+    };
+
+    const pettyCash = calculatePettyCash(pettyCashInput);
+
+    // Filter catalogue based on team context
+    const catalogue = INDUCEMENT_CATALOGUE.filter((ind) => {
+      // Star players are handled separately in the UI
+      if (ind.slug === "star_player") return false;
+      return true;
+    });
+
+    res.json({
+      catalogue,
+      pettyCash,
+      teamA: {
+        name: localMatch.teamA.name,
+        roster: localMatch.teamA.roster,
+        ctv: ctvA,
+        budget: pettyCash.teamA.maxBudget,
+        hasApothecary: gameState.apothecaryAvailable?.teamA ?? false,
+      },
+      teamB: {
+        name: localMatch.teamB.name,
+        roster: localMatch.teamB.roster,
+        ctv: ctvB,
+        budget: pettyCash.teamB.maxBudget,
+        hasApothecary: gameState.apothecaryAvailable?.teamB ?? false,
+      },
+    });
+  } catch (e: any) {
+    console.error("Erreur lors de la récupération des infos d'inducements:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });

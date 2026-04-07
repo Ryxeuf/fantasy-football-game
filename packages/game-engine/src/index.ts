@@ -98,6 +98,15 @@ export type {
   PettyCashResult,
 } from './core/inducements';
 
+// Export du handler d'inducements
+export {
+  handleInducementSubmission,
+} from './core/inducement-handler';
+export type {
+  InducementSubmissionParams,
+  InducementSubmissionResult,
+} from './core/inducement-handler';
+
 // Export des types de météo
 export {
   WEATHER_TYPES,
