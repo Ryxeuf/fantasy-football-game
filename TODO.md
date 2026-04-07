@@ -94,7 +94,8 @@
 
 | # | Tache | Type | Statut |
 |---|-------|------|--------|
-| B2.1-2 | Inducements fonctionnels | Regle | [ ] |
+| B2.1 | Inducements — catalogue, validation, effets (game engine) | Regle | [x] |
+| B2.2 | Inducements — UI selection pre-match | UI | [ ] |
 | B2.3 | Prayers to Nuffle (16 vrais effets) | Regle | [ ] |
 | F.1-2 | Systeme ELO | Classement | [ ] |
 | B3.1 | Regles speciales star players (top 10) | Contenu | [ ] |

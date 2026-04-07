@@ -77,6 +77,27 @@ export {
 } from './core/pre-match-sequence';
 export type { JourneymanStats } from './core/pre-match-sequence';
 
+// Export du système d'inducements
+export {
+  INDUCEMENT_CATALOGUE,
+  getInducementDefinition,
+  calculatePettyCash,
+  getInducementCost,
+  validateInducementSelection,
+  applyInducementEffects,
+  processInducementsWithSelection,
+} from './core/inducements';
+export type {
+  InducementSlug,
+  InducementDefinition,
+  InducementContext,
+  PurchasedInducement,
+  InducementSelection,
+  InducementValidationResult,
+  PettyCashInput,
+  PettyCashResult,
+} from './core/inducements';
+
 // Export des types de météo
 export {
   WEATHER_TYPES,

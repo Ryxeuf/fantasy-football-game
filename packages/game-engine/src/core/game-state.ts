@@ -8,6 +8,7 @@ import { createLogEntry } from '../utils/logging';
 import { checkTouchdowns } from '../mechanics/ball';
 import { initializeDugouts } from '../mechanics/dugout';
 import { rollKickoffEvent, applyKickoffEvent } from '../mechanics/kickoff-events';
+import type { PurchasedInducement } from './inducements';
 
 // Étendre GameState pour pré-match
 export interface PreMatchState {
@@ -40,8 +41,8 @@ export interface PreMatchState {
   
   // Phase incitations
   inducements?: {
-    teamA: { pettyCash: number; treasurySpent: number; items: any[] };
-    teamB: { pettyCash: number; treasurySpent: number; items: any[] };
+    teamA: { pettyCash: number; treasurySpent: number; items: PurchasedInducement[] };
+    teamB: { pettyCash: number; treasurySpent: number; items: PurchasedInducement[] };
   };
   
   // Phase prières à Nuffle
