@@ -1,6 +1,7 @@
 import { ExtendedGameState, PreMatchState } from './game-state';
 import { createLogEntry } from '../utils/logging';
 import { WeatherType, getWeatherCondition } from './weather-types';
+import { PRAYERS_TABLE, applyPrayerEffect, type PrayerEffect } from '../mechanics/prayers-to-nuffle';
 
 /**
  * Démarre la séquence de pré-match complète
@@ -306,25 +307,61 @@ export function processPrayersToNuffle(
 
   const underdogTeam = ctvDifference > 0 ? 'B' : 'A';
   const rollsCount = Math.floor(Math.abs(ctvDifference) / 50000);
-  
-  const rolls: { dice: number; result: string; description: string }[] = [];
-  
-  for (let i = 0; i < rollsCount; i++) {
-    const dice = Math.floor(rng() * 16) + 1;
-    const result = `Prayer ${dice}`;
-    const description = `Effet de prière ${dice} pour l'équipe ${underdogTeam}`;
-    rolls.push({ dice, result, description });
+
+  if (rollsCount === 0) {
+    const logEntry = createLogEntry(
+      'action',
+      `Prières à Nuffle — Différence CTV insuffisante (${ctvDifference}), pas de prières.`
+    );
+    return {
+      ...state,
+      preMatch: { ...state.preMatch, phase: 'kicking-team', prayers: { underdogTeam, ctvDifference, rolls: [] } },
+      gameLog: [...state.gameLog, logEntry],
+    };
   }
 
-  const logEntry = createLogEntry(
+  const rolls: { dice: number; result: string; description: string }[] = [];
+  const collectedEffects: PrayerEffect[] = [];
+  let currentState: ExtendedGameState = state;
+
+  for (let i = 0; i < rollsCount; i++) {
+    const dice = Math.floor(rng() * 16) + 1;
+    const prayer = PRAYERS_TABLE[dice];
+    const effectResult = applyPrayerEffect(currentState, dice, underdogTeam, rng);
+
+    // Apply state changes from the prayer effect
+    currentState = { ...currentState, ...effectResult.state, preMatch: currentState.preMatch };
+
+    rolls.push({
+      dice,
+      result: prayer?.name ?? `Prayer ${dice}`,
+      description: effectResult.description,
+    });
+
+    if (effectResult.prayerEffect) {
+      collectedEffects.push(effectResult.prayerEffect);
+    }
+
+    const prayerLog = createLogEntry(
+      'action',
+      `Prière à Nuffle #${i + 1} (D16=${dice}) : ${effectResult.description}`,
+      undefined,
+      underdogTeam,
+      { prayerNumber: dice, prayerId: prayer?.id }
+    );
+    currentState = { ...currentState, gameLog: [...currentState.gameLog, prayerLog] };
+  }
+
+  const summaryLog = createLogEntry(
     'action',
-    `Prières à Nuffle - Équipe désavantagée: ${underdogTeam}, Différence CTV: ${ctvDifference}, Rolls: ${rollsCount}`
+    `Prières à Nuffle — Équipe désavantagée: ${underdogTeam}, Différence CTV: ${ctvDifference}, Prières: ${rollsCount}`
   );
 
   return {
-    ...state,
+    ...currentState,
+    prayerEffects: [...(currentState.prayerEffects ?? []), ...collectedEffects],
     preMatch: {
-      ...state.preMatch,
+      ...currentState.preMatch,
       phase: 'kicking-team',
       prayers: {
         underdogTeam,
@@ -332,7 +369,7 @@ export function processPrayersToNuffle(
         rolls,
       },
     },
-    gameLog: [...state.gameLog, logEntry],
+    gameLog: [...currentState.gameLog, summaryLog],
   };
 }
 

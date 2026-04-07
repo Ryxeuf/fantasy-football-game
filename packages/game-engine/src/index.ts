@@ -120,6 +120,10 @@ export {
 // Export des fonctions de dugout
 export { movePlayerToDugoutZone } from './mechanics/dugout';
 
+// Export des prières à Nuffle
+export { PRAYERS_TABLE, applyPrayerEffect } from './mechanics/prayers-to-nuffle';
+export type { PrayerDefinition, PrayerEffect, PrayerEffectResult } from './mechanics/prayers-to-nuffle';
+
 // Export des fonctions de blessure
 export { performInjuryRoll, rollLastingInjuryType } from './mechanics/injury';
 
