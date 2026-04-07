@@ -192,6 +192,14 @@ export interface GameState {
     winner?: TeamId;
     spp: Record<string, number>; // playerId -> SPP earned
   };
+  // Effets de prières à Nuffle actifs pour ce match
+  prayerEffects?: Array<{
+    type: 'bribe' | 'foul-penalty' | 'skill-granted' | 'stat-mod';
+    team: TeamId;
+    prayerId: string;
+    playerId?: string;
+    details?: Record<string, unknown>;
+  }>;
   // Log du match
   gameLog: GameLogEntry[];
 }
