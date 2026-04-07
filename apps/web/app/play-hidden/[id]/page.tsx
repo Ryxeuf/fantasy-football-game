@@ -10,6 +10,7 @@ import {
   RerollChoicePopup,
   ApothecaryChoicePopup,
   GameBoardWithDugouts,
+  GameLog,
   ToastProvider,
 } from "@bb/ui";
 import {
@@ -1135,6 +1136,13 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
             </div>
             {/* PlayerDetails is now integrated in GameBoardWithDugouts */}
           </div>
+
+          {/* Match log below the game board */}
+          {state.gameLog && state.gameLog.length > 0 && (
+            <div className="mt-2 w-full max-w-5xl mx-auto">
+              <GameLog logEntries={state.gameLog} />
+            </div>
+          )}
 
           {/* Post-match SPP display when game has ended */}
           {state.gamePhase === "ended" &&
