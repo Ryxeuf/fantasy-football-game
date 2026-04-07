@@ -15,6 +15,7 @@ import publicPositionsRoutes from "./routes/public-positions";
 import cupRoutes from "./routes/cup";
 import localMatchRoutes from "./routes/local-match";
 import matchmakingRoutes from "./routes/matchmaking";
+import leaderboardRoutes from "./routes/leaderboard";
 import dotenv from "dotenv";
 import { execSync } from "node:child_process";
 import { prisma } from "./prisma";
@@ -69,6 +70,7 @@ app.use("/api", publicPositionsRoutes);
 app.use("/cup", cupRoutes);
 app.use("/local-match", localMatchRoutes);
 app.use("/matchmaking", matchmakingRoutes);
+app.use("/leaderboard", leaderboardRoutes);
 
 // Endpoint public de reset pour tests (uniquement en TEST_SQLITE=1)
 if (process.env.TEST_SQLITE === "1") {

@@ -6,6 +6,7 @@ import { persistMatchSPP } from "./spp-tracking";
 import { persistPlayerDeaths } from "./player-death";
 import { persistPermanentInjuries } from "./permanent-injuries";
 import { broadcastGameState, broadcastMatchEnd } from "./game-broadcast";
+import { updateEloAfterMatch } from "./elo-update";
 
 export interface MoveResult {
   success: true;
@@ -137,7 +138,7 @@ export async function processMove(
     const teamSelections = await prisma.teamSelection.findMany({
       where: { matchId },
       orderBy: { createdAt: "asc" },
-      select: { teamId: true },
+      select: { teamId: true, userId: true },
     });
     const teamAId = teamSelections[0]?.teamId;
     const teamBId = teamSelections[1]?.teamId;
@@ -165,6 +166,23 @@ export async function processMove(
         }
       } catch {
         // Injury persistence error — non-blocking
+      }
+
+      // Update ELO ratings based on match result
+      const userAId = teamSelections[0]?.userId;
+      const userBId = teamSelections[1]?.userId;
+      if (userAId && userBId && newState.score) {
+        try {
+          await updateEloAfterMatch(
+            prisma as any,
+            userAId,
+            userBId,
+            newState.score.teamA,
+            newState.score.teamB,
+          );
+        } catch {
+          // ELO update error — non-blocking
+        }
       }
     }
   }
