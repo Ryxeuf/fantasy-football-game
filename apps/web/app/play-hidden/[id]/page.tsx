@@ -282,7 +282,12 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
   const createRNG = () => makeRNG(`ui-seed-${Date.now()}-${Math.random()}`);
 
   // WebSocket connection for real-time move submission
-  const { submitMove: wsSubmitMove } = useGameSocket(matchId, {
+  const {
+    submitMove: wsSubmitMove,
+    connected: wsConnected,
+    reconnecting: wsReconnecting,
+    reconnectAttempt: wsReconnectAttempt,
+  } = useGameSocket(matchId, {
     onStateUpdate: (data) => {
       setState(normalizeState(data.gameState));
     },
@@ -867,6 +872,9 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
         rightTeamName={state.teamNames?.teamB}
         localSide={localSide}
         userName={userName}
+        wsConnected={wsConnected}
+        wsReconnecting={wsReconnecting}
+        wsReconnectAttempt={wsReconnectAttempt}
         {...(state?.half > 0 && (!isActiveMatch || isMyTurn) ? { onEndTurn: handleEndTurn } : {})}
       />
       {/* Bandeau de statut de tour (match actif) */}

@@ -10,6 +10,9 @@ interface GameScoreboardProps {
   rightCoachName?: string;
   localSide?: "A" | "B" | null;
   userName?: string;
+  wsConnected?: boolean;
+  wsReconnecting?: boolean;
+  wsReconnectAttempt?: number;
 }
 
 export default function GameScoreboard({
@@ -21,6 +24,9 @@ export default function GameScoreboard({
   rightCoachName,
   localSide,
   userName,
+  wsConnected,
+  wsReconnecting,
+  wsReconnectAttempt,
 }: GameScoreboardProps) {
   // Si state n'est pas disponible, afficher un message de chargement
   if (!state) {
@@ -224,6 +230,29 @@ export default function GameScoreboard({
                 {state.ball ? "Ballon en jeu" : "Ballon hors jeu"}
               </span>
             </div>
+
+            {/* Indicateur de connexion WebSocket */}
+            {wsConnected !== undefined && (
+              <div className="flex items-center space-x-2">
+                <div
+                  data-testid="ws-status-dot"
+                  className={`w-2 h-2 rounded-full ${
+                    wsConnected
+                      ? "bg-green-400"
+                      : wsReconnecting
+                        ? "bg-amber-400 animate-pulse"
+                        : "bg-red-500"
+                  }`}
+                ></div>
+                <span className="text-gray-300">
+                  {wsConnected
+                    ? "Connecté"
+                    : wsReconnecting
+                      ? `Reconnexion... (${wsReconnectAttempt ?? 0})`
+                      : "Hors ligne"}
+                </span>
+              </div>
+            )}
 
             {/* Joueur sélectionné */}
             {state.selectedPlayerId && (

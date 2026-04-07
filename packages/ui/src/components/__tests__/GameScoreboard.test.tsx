@@ -236,8 +236,58 @@ describe('GameScoreboard', () => {
     const state = createMinimalGameState({ half: 1 });
     const mockOnEndTurn = vi.fn();
     render(<GameScoreboard state={state} onEndTurn={mockOnEndTurn} />);
-    
+
     // Le composant devrait rendre sans erreur
     expect(screen.getByText('Blood Bowl Fantasy Football')).toBeInTheDocument();
+  });
+
+  describe('Connection status indicator', () => {
+    it('should show "Connecté" with green dot when wsConnected is true', () => {
+      const state = createMinimalGameState();
+      render(<GameScoreboard state={state} wsConnected={true} />);
+
+      expect(screen.getByText('Connecté')).toBeInTheDocument();
+      const indicator = screen.getByTestId('ws-status-dot');
+      expect(indicator.className).toContain('bg-green-400');
+    });
+
+    it('should show reconnecting state with attempt number', () => {
+      const state = createMinimalGameState();
+      render(
+        <GameScoreboard
+          state={state}
+          wsConnected={false}
+          wsReconnecting={true}
+          wsReconnectAttempt={3}
+        />
+      );
+
+      expect(screen.getByText('Reconnexion... (3)')).toBeInTheDocument();
+      const indicator = screen.getByTestId('ws-status-dot');
+      expect(indicator.className).toContain('bg-amber-400');
+      expect(indicator.className).toContain('animate-pulse');
+    });
+
+    it('should show "Hors ligne" with red dot when disconnected', () => {
+      const state = createMinimalGameState();
+      render(
+        <GameScoreboard
+          state={state}
+          wsConnected={false}
+          wsReconnecting={false}
+        />
+      );
+
+      expect(screen.getByText('Hors ligne')).toBeInTheDocument();
+      const indicator = screen.getByTestId('ws-status-dot');
+      expect(indicator.className).toContain('bg-red-500');
+    });
+
+    it('should not render connection indicator when wsConnected is undefined', () => {
+      const state = createMinimalGameState();
+      render(<GameScoreboard state={state} />);
+
+      expect(screen.queryByTestId('ws-status-dot')).not.toBeInTheDocument();
+    });
   });
 });

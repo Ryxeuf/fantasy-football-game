@@ -106,7 +106,7 @@
 |---|-------|------|--------|
 | A.7 | Reconnexion WebSocket avec exponential backoff | Multiplayer | [x] |
 | A.8 | Fallback polling si WebSocket echoue | Multiplayer | [x] |
-| A.9 | Indicateur de connexion online/offline dans le HUD | UI | [ ] |
+| A.9 | Indicateur de connexion online/offline dans le HUD | UI | [x] |
 | C.4 | Notification match trouve via WebSocket | Matchmaking | [ ] |
 | C.5 | Phase de setup en ligne (placement + bouton Pret) | Game flow | [ ] |
 | C.6 | Sequence pre-match automatisee online | Game flow | [ ] |
