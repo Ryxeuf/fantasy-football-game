@@ -9,6 +9,10 @@ const mockSocket = {
   disconnect: vi.fn(),
   connected: false,
   id: "test-socket-id",
+  io: {
+    on: vi.fn(),
+    off: vi.fn(),
+  },
 };
 
 vi.mock("socket.io-client", () => ({
@@ -33,6 +37,8 @@ describe("useGameSocket — createGameSocket", () => {
     mockSocket.on.mockReset();
     mockSocket.off.mockReset();
     mockSocket.emit.mockReset();
+    mockSocket.io.on.mockReset();
+    mockSocket.io.off.mockReset();
   });
 
   afterEach(() => {
@@ -189,5 +195,116 @@ describe("useGameSocket — submitMove via WebSocket", () => {
 
     expect(result.success).toBe(false);
     expect(result.error).toBe("Not your turn");
+  });
+});
+
+describe("useGameSocket — reconnection configuration", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSocket.on.mockReset();
+    mockSocket.off.mockReset();
+    mockSocket.emit.mockReset();
+    mockSocket.io.on.mockReset();
+    mockSocket.io.off.mockReset();
+  });
+
+  it("configures socket.io with exponential backoff reconnection", () => {
+    createGameSocket("http://localhost:8201", "token-123");
+
+    expect(io).toHaveBeenCalledWith(
+      "http://localhost:8201/game",
+      expect.objectContaining({
+        reconnection: true,
+        reconnectionDelay: 500,
+        reconnectionDelayMax: 10000,
+        reconnectionAttempts: 15,
+        randomizationFactor: 0.3,
+      }),
+    );
+  });
+
+  it("still includes auth and transport config alongside reconnection", () => {
+    createGameSocket("http://localhost:8201", "my-jwt");
+
+    expect(io).toHaveBeenCalledWith(
+      "http://localhost:8201/game",
+      expect.objectContaining({
+        auth: { token: "Bearer my-jwt" },
+        transports: ["websocket", "polling"],
+        autoConnect: false,
+        reconnection: true,
+      }),
+    );
+  });
+});
+
+describe("useGameSocket — reconnection helpers", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSocket.on.mockReset();
+    mockSocket.off.mockReset();
+    mockSocket.emit.mockReset();
+    mockSocket.io.on.mockReset();
+    mockSocket.io.off.mockReset();
+  });
+
+  it("requestResync emits game:request-resync with matchId", () => {
+    const resyncPayload = {
+      success: true,
+      gameState: { currentPlayer: "A" },
+    };
+
+    mockSocket.emit.mockImplementation(
+      (event: string, payload: unknown, ack: (res: unknown) => void) => {
+        ack(resyncPayload);
+      },
+    );
+
+    const { requestResync } = createGameSocketHelpers(mockSocket as any);
+    requestResync("match-resync-1");
+
+    expect(mockSocket.emit).toHaveBeenCalledWith(
+      "game:request-resync",
+      { matchId: "match-resync-1" },
+      expect.any(Function),
+    );
+  });
+
+  it("requestResync resolves with gameState payload", async () => {
+    const resyncPayload = {
+      success: true,
+      gameState: { currentPlayer: "B", turn: 3 },
+    };
+
+    mockSocket.emit.mockImplementation(
+      (event: string, payload: unknown, ack: (res: unknown) => void) => {
+        ack(resyncPayload);
+      },
+    );
+
+    const { requestResync } = createGameSocketHelpers(mockSocket as any);
+    const result = await requestResync("match-resync-2");
+
+    expect(result.success).toBe(true);
+    expect(result.gameState).toEqual({ currentPlayer: "B", turn: 3 });
+  });
+
+  it("requestResync resolves with error when resync fails", async () => {
+    const errorPayload = {
+      success: false,
+      error: "Match not found",
+    };
+
+    mockSocket.emit.mockImplementation(
+      (event: string, payload: unknown, ack: (res: unknown) => void) => {
+        ack(errorPayload);
+      },
+    );
+
+    const { requestResync } = createGameSocketHelpers(mockSocket as any);
+    const result = await requestResync("match-bad");
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("Match not found");
   });
 });
