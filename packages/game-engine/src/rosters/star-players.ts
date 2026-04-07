@@ -35,7 +35,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 2,
     pa: null,
     av: 6,
-    skills: "claws,dauntless,dodge,frenzy,jump-up,loner-4,no-hands,sidestep,stunty",
+    skills: "claws,dauntless,dodge,frenzy,jump-up,loner-4,no-hands,sidestep,stunty,blind-rage",
     hirableBy: ["all"],
     imageUrl: "/data/Star-Players_files/Fungus-the-Loon.webp",
     specialRule: "Blind Rage: Peut relancer le D6 pour Intrépide."
@@ -50,7 +50,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 5,
     pa: 6,
     av: 10,
-    skills: "block,grab,loner-4,stand-firm",
+    skills: "block,grab,loner-4,stand-firm,coup-sauvage",
     hirableBy: ["lustrian_superleague"],
     imageUrl: "/data/Star-Players_files/Anqi-Panqi-star-player-.webp",
     specialRule: "Coup Sauvage: Une fois par partie, lorsqu'Anqi effectue une action de Blocage contre un joueur adverse, il peut choisir de relancer n'importe quel nombre de dés de Blocage."
@@ -163,9 +163,10 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 5,
     pa: 4,
     av: 11,
-    skills: "block,loner-4,mighty-blow-1,stand-firm,strong-arm,thick-skull,throw-team-mate,timmm-ber",
+    skills: "block,loner-4,mighty-blow-1,stand-firm,strong-arm,thick-skull,throw-team-mate,timmm-ber,reliable",
     hirableBy: ["old_world_classic"],
-    imageUrl: "/data/Star-Players_files/deeproot-strongbranch.webp"
+    imageUrl: "/data/Star-Players_files/deeproot-strongbranch.webp",
+    specialRule: "Reliable: Un Lancer de Coéquipier raté ne cause pas de turnover."
   },
 
   eldril_sidewinder: {
@@ -331,9 +332,10 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 2,
     pa: 3,
     av: 9,
-    skills: "loner-4,block,sure-feet,dodge,fend,sprint",
+    skills: "loner-4,block,sure-feet,dodge,fend,sprint,consummate-professional",
     hirableBy: ["old_world_classic"],
     imageUrl: undefined,
+    specialRule: "Consummate Professional: Une fois par match, Griff peut relancer n'importe quel dé.",
     isMegaStar: true
   },
 
@@ -346,9 +348,10 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 3,
     pa: null,
     av: 9,
-    skills: "loner-4,block,dauntless,frenzy,multiple-block,thick-skull",
+    skills: "loner-4,block,dauntless,frenzy,multiple-block,thick-skull,slayer",
     hirableBy: ["old_world_classic"],
-    imageUrl: "/data/Star-Players_files/grim-ironjaw-card.webp"
+    imageUrl: "/data/Star-Players_files/grim-ironjaw-card.webp",
+    specialRule: "Slayer: Peut relancer les jets d'Intrépide (Dauntless) ratés."
   },
 
   grombrindal: {
@@ -544,9 +547,10 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 3,
     pa: 5,
     av: 10,
-    skills: "block,mighty-blow-1,dirty-player-1,loner-4,sneaky-git",
+    skills: "block,mighty-blow-1,dirty-player-1,loner-4,sneaky-git,lord-of-chaos",
     hirableBy: ["all"],
-    imageUrl: "/data/Star-Players_files/Lord-borak.webp"
+    imageUrl: "/data/Star-Players_files/Lord-borak.webp",
+    specialRule: "Lord of Chaos: L'équipe gagne +1 relance d'équipe pour la première mi-temps."
   },
 
   lucien_swift: {
@@ -628,9 +632,10 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 4,
     pa: 6,
     av: 10,
-    skills: "loner-4,block,mighty-blow-1",
+    skills: "loner-4,block,mighty-blow-1,casse-os",
     hirableBy: ["lustrian_superleague", "old_world_classic"],
-    imageUrl: undefined
+    imageUrl: undefined,
+    specialRule: "Casse-Os: Une fois par match, +1 en Force lors d'un blocage."
   },
 
   prince_moranion: {
@@ -656,7 +661,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 3,
     pa: 4,
     av: 11,
-    skills: "loner-4,block,mighty-blow-2,thick-skull,throw-team-mate",
+    skills: "loner-4,block,mighty-blow-2,thick-skull,throw-team-mate,la-baliste",
     hirableBy: ["all"],
     imageUrl: "/data/Star-Players_files/Morg-'n-Thorg.webp",
     specialRule: "La Baliste: Une fois par match, si Morg rate le test de Passe quand il effectue une Passe ou un Lancer de Coéquipier, vous pouvez relancer le D6.",
@@ -756,9 +761,10 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 1,
     pa: 4,
     av: 8,
-    skills: "loner-4,dodge,frenzy,jump-up,juggernaut,leap",
+    skills: "loner-4,dodge,frenzy,jump-up,juggernaut,leap,pirouette",
     hirableBy: ["elven_kingdoms_league"],
-    imageUrl: undefined
+    imageUrl: undefined,
+    specialRule: "Pirouette: Une fois par tour, +1 au jet d'esquive."
   },
 
   rumbelow_sheepskin: {
@@ -882,9 +888,10 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     ag: 3,
     pa: 5,
     av: 10,
-    skills: "loner-4,block,jump-up,mighty-blow-1,thick-skull",
+    skills: "loner-4,block,jump-up,mighty-blow-1,thick-skull,crushing-blow",
     hirableBy: ["underworld_challenge", "badlands_brawl"],
-    imageUrl: undefined
+    imageUrl: undefined,
+    specialRule: "Crushing Blow: Une fois par match, +1 au jet d'armure après un blocage réussi."
   },
 
   wilhelm_chaney: {

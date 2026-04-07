@@ -226,6 +226,12 @@ export * from './rosters';
 export * from './skills';
 export * from './skills/skill-effects';
 
+// Enregistrement des règles spéciales des Star Players
+export {
+  isStarPlayerRuleUsed,
+  markStarPlayerRuleUsed,
+} from './skills/star-player-rules';
+
 // Export des utilitaires d'avancements
 export { 
   getNextAdvancementPspCost, 

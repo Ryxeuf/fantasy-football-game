@@ -957,6 +957,77 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
     category: "Agility",
     season3Only: true
   },
+  // ─── RÈGLES SPÉCIALES STAR PLAYERS ────────────────────────────────
+  {
+    slug: "blind-rage",
+    nameFr: "Rage Aveugle",
+    nameEn: "Blind Rage",
+    description: "Peut relancer le D6 pour Intrépide (Dauntless).",
+    category: "Trait"
+  },
+  {
+    slug: "slayer",
+    nameFr: "Tueur",
+    nameEn: "Slayer",
+    description: "Peut relancer les jets d'Intrépide (Dauntless) ratés.",
+    category: "Trait"
+  },
+  {
+    slug: "coup-sauvage",
+    nameFr: "Coup Sauvage",
+    nameEn: "Savage Blow",
+    description: "Une fois par partie, peut relancer n'importe quel nombre de dés de Blocage.",
+    category: "Trait"
+  },
+  {
+    slug: "la-baliste",
+    nameFr: "La Baliste",
+    nameEn: "The Ballista",
+    description: "Une fois par match, peut relancer un jet de Passe raté (Passe ou Lancer de Coéquipier).",
+    category: "Trait"
+  },
+  {
+    slug: "consummate-professional",
+    nameFr: "Professionnel Accompli",
+    nameEn: "Consummate Professional",
+    description: "Une fois par match, peut relancer n'importe quel dé.",
+    category: "Trait"
+  },
+  {
+    slug: "crushing-blow",
+    nameFr: "Coup Dévastateur",
+    nameEn: "Crushing Blow",
+    description: "Une fois par match, +1 au jet d'armure après un blocage réussi.",
+    category: "Trait"
+  },
+  {
+    slug: "lord-of-chaos",
+    nameFr: "Seigneur du Chaos",
+    nameEn: "Lord of Chaos",
+    description: "L'équipe gagne +1 relance d'équipe pour la première mi-temps.",
+    category: "Trait"
+  },
+  {
+    slug: "pirouette",
+    nameFr: "Pirouette",
+    nameEn: "Pirouette",
+    description: "Une fois par tour, +1 au jet d'esquive.",
+    category: "Trait"
+  },
+  {
+    slug: "casse-os",
+    nameFr: "Casse-Os",
+    nameEn: "Bone Breaker",
+    description: "Une fois par match, +1 en Force lors d'un blocage.",
+    category: "Trait"
+  },
+  {
+    slug: "reliable",
+    nameFr: "Fiable",
+    nameEn: "Reliable",
+    description: "Un Lancer de Coéquipier raté ne cause pas de turnover.",
+    category: "Trait"
+  },
 ];
 
 // Index par slug pour accès rapide
