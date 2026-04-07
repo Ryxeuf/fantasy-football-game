@@ -36,6 +36,13 @@ export interface MoveAckPayload {
   code?: string;
 }
 
+export interface ResyncPayload {
+  success: boolean;
+  gameState?: ExtendedGameState;
+  matchId?: string;
+  error?: string;
+}
+
 export type GameSocketEvents = {
   "game:state-updated": StateUpdatedPayload;
   "game:player-connected": PlayerConnectionPayload;
@@ -54,6 +61,11 @@ export function createGameSocket(serverUrl: string, authToken: string): Socket {
     auth: { token: `Bearer ${authToken}` },
     transports: ["websocket", "polling"],
     autoConnect: false,
+    reconnection: true,
+    reconnectionDelay: 500,
+    reconnectionDelayMax: 10000,
+    reconnectionAttempts: 15,
+    randomizationFactor: 0.3,
   });
 }
 
@@ -121,6 +133,18 @@ export function createGameSocketHelpers(socket: Socket) {
       });
     },
 
+    requestResync(matchId: string): Promise<ResyncPayload> {
+      return new Promise((resolve) => {
+        socket.emit(
+          "game:request-resync",
+          { matchId },
+          (response: ResyncPayload) => {
+            resolve(response);
+          },
+        );
+      });
+    },
+
     cleanup(): void {
       socket.off("game:state-updated");
       socket.off("game:player-connected");
@@ -141,6 +165,8 @@ export interface UseGameSocketOptions {
   onPlayerDisconnected?: (data: PlayerConnectionPayload) => void;
   /** Callback when the match ends. */
   onMatchEnded?: (data: MatchEndedPayload) => void;
+  /** Callback when a resync provides a fresh game state after reconnection. */
+  onResyncState?: (data: ResyncPayload) => void;
 }
 
 export interface UseGameSocketResult {
@@ -150,6 +176,10 @@ export interface UseGameSocketResult {
   joined: boolean;
   /** Any connection or join error message. */
   error: string | null;
+  /** Whether the socket is currently attempting to reconnect. */
+  reconnecting: boolean;
+  /** Current reconnection attempt number (0 when connected). */
+  reconnectAttempt: number;
   /** Submit a move via WebSocket. Returns null if not connected. */
   submitMove: (move: Move) => Promise<MoveAckPayload | null>;
 }
@@ -169,6 +199,8 @@ export function useGameSocket(
   const [connected, setConnected] = useState(false);
   const [joined, setJoined] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [reconnecting, setReconnecting] = useState(false);
+  const [reconnectAttempt, setReconnectAttempt] = useState(0);
 
   // Store callbacks in refs to avoid re-subscribing on every render
   const optionsRef = useRef(options);
@@ -199,19 +231,32 @@ export function useGameSocket(
     const helpers = createGameSocketHelpers(socket);
     helpersRef.current = helpers;
 
-    // Connection lifecycle
-    socket.on("connect", () => {
-      setConnected(true);
-      setError(null);
-
-      // Join the match room once connected
+    /** Join the match room and optionally request a state resync. */
+    const joinAndResync = (isReconnect: boolean) => {
       helpers.joinMatch(matchId).then((res) => {
         if (res.ok) {
           setJoined(true);
+          // After a reconnect, request the latest gameState to catch up
+          if (isReconnect) {
+            helpers.requestResync(matchId).then((resyncRes) => {
+              optionsRef.current.onResyncState?.(resyncRes);
+            });
+          }
         } else {
           setError(res.error ?? "Failed to join match room");
         }
       });
+    };
+
+    // Connection lifecycle
+    socket.on("connect", () => {
+      setConnected(true);
+      setReconnecting(false);
+      setReconnectAttempt(0);
+      setError(null);
+
+      // Join the match room on first connect
+      joinAndResync(false);
     });
 
     socket.on("disconnect", () => {
@@ -222,6 +267,25 @@ export function useGameSocket(
     socket.on("connect_error", (err: Error) => {
       setError(err.message);
       setConnected(false);
+    });
+
+    // Reconnection events (on the Manager instance — socket.io)
+    socket.io.on("reconnect_attempt", (attempt: number) => {
+      setReconnecting(true);
+      setReconnectAttempt(attempt);
+    });
+
+    socket.io.on("reconnect", () => {
+      setReconnecting(false);
+      setReconnectAttempt(0);
+      setError(null);
+      // Re-join the room and resync state after successful reconnect
+      joinAndResync(true);
+    });
+
+    socket.io.on("reconnect_failed", () => {
+      setReconnecting(false);
+      setError("Reconnection failed after maximum attempts");
     });
 
     // Game event listeners — delegate to callbacks via ref
@@ -251,11 +315,14 @@ export function useGameSocket(
       socket.off("connect");
       socket.off("disconnect");
       socket.off("connect_error");
+      socket.io.off("reconnect_attempt");
+      socket.io.off("reconnect");
+      socket.io.off("reconnect_failed");
       socket.disconnect();
       helpersRef.current = null;
       socketRef.current = null;
     };
   }, [matchId]);
 
-  return { connected, joined, error, submitMove };
+  return { connected, joined, error, reconnecting, reconnectAttempt, submitMove };
 }

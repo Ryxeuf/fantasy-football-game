@@ -100,6 +100,21 @@
 | F.1-2 | Systeme ELO | Classement | [x] |
 | B3.1 | Regles speciales star players (top 10) | Contenu | [x] |
 
+### Sprint 5 — Robustesse multijoueur & flow complet (~6 jours)
+
+| # | Tache | Type | Statut |
+|---|-------|------|--------|
+| A.7 | Reconnexion WebSocket avec exponential backoff | Multiplayer | [x] |
+| A.8 | Fallback polling si WebSocket echoue | Multiplayer | [ ] |
+| A.9 | Indicateur de connexion online/offline dans le HUD | UI | [ ] |
+| C.4 | Notification match trouve via WebSocket | Matchmaking | [ ] |
+| C.5 | Phase de setup en ligne (placement + bouton Pret) | Game flow | [ ] |
+| C.6 | Sequence pre-match automatisee online | Game flow | [ ] |
+| C.7 | Fin de match en ligne (ecran resultats) | Game flow | [ ] |
+| C.8 | Abandon / deconnexion = defaite (forfait > 2 min) | Multiplayer | [ ] |
+| B1.8 | Fin de match complete (winnings, fan factor, ecran) | Game flow | [ ] |
+| B1.10 | Timer de tour configurable avec fin de tour auto | Game flow | [ ] |
+
 ---
 
 ## Resume par phase
@@ -107,17 +122,17 @@
 | Phase | Taches | Fait | Partiel | A faire | Criticite |
 |-------|--------|------|---------|---------|-----------|
 | **S0 — Bugfixes** | 5 | 5 | 0 | 0 | TERMINE |
-| **A — Multijoueur temps reel** | 10 | 4 | 0 | 6 | BLOQUANT |
-| **B0 — Architecture skills** | 2 | 0 | 0 | 2 | BLOQUANT |
-| **B1 — Regles BB3 critiques** | 10 | 1 | 2 | 7 | ESSENTIEL |
-| **B2 — Regles BB3 importantes** | 10 | 0 | 3 | 7 | SECONDAIRE |
-| **B3 — Star Players specials** | 2 | 0 | 0 | 2 | BONUS |
-| **C — Matchmaking & flow** | 8 | 0 | 2 | 6 | BLOQUANT |
+| **A — Multijoueur temps reel** | 10 | 7 | 0 | 3 | EN COURS (Sprint 5) |
+| **B0 — Architecture skills** | 2 | 2 | 0 | 0 | TERMINE |
+| **B1 — Regles BB3 critiques** | 10 | 7 | 1 | 2 | EN COURS (Sprint 5) |
+| **B2 — Regles BB3 importantes** | 10 | 3 | 1 | 6 | SECONDAIRE |
+| **B3 — Star Players specials** | 2 | 1 | 0 | 1 | BONUS |
+| **C — Matchmaking & flow** | 8 | 3 | 1 | 4 | EN COURS (Sprint 5) |
 | **D — Progression joueurs** | 8 | 8 | 0 | 0 | TERMINE |
-| **E — Animations web** | 7 | 0 | 0 | 7 | IMPORTANT (UX) |
-| **F — ELO & classement** | 4 | 0 | 0 | 4 | SOUHAITABLE |
+| **E — Animations web** | 7 | 3 | 0 | 4 | IMPORTANT (UX) |
+| **F — ELO & classement** | 4 | 2 | 0 | 2 | SOUHAITABLE |
 | **G — Notifications push** | 5 | 0 | 0 | 5 | SOUHAITABLE |
-| **H — Polish** | 7 | 0 | 0 | 7 | BONUS |
+| **H — Polish** | 7 | 1 | 0 | 6 | BONUS |
 | **I — Contenu & donnees** | 10 | 0 | 0 | 10 | BONUS |
 
 ---
@@ -125,20 +140,24 @@
 ## Chemin critique pour jouer en ligne
 
 ```
-Sprint 0 (Bugfixes) ──→ Sprint 1 (WS + UI + skills) ──→ MATCH ONLINE JOUABLE
+Sprint 0 (Bugfixes) ✅ ──→ Sprint 1 (WS + UI + skills) ✅ ──→ MATCH ONLINE JOUABLE ✅
        │                         │
-       │                Sprint 2 (Regles BB3 critiques)
+       │                Sprint 2 (Regles BB3 critiques) ✅
        │                         │
-       │                Sprint 3 (Matchmaking + Animations) ──→ EXPERIENCE COMPLETE
+       │                Sprint 3 (Matchmaking + Animations) ✅ ──→ EXPERIENCE COMPLETE ✅
        │                         │
-       │                Sprint 4 (Contenu + ELO) ──→ COMPETITIF
+       │                Sprint 4 (Contenu + ELO) ✅ ──→ COMPETITIF ✅
+       │                         │
+       │                Sprint 5 (Robustesse + Flow) ──→ PRODUCTION READY
        │
        └── Phases B2/B3 + G + H + I ──→ GAMEPLAY RICHE + POLISH
 ```
 
-> **Recommandation (2026-04-02)** :
-> 1. **Immediat** : Sprint 0 — fixer les bugs critiques et failles securite
-> 2. **Sprint 1** : Brancher skills + WebSocket + UI manquante = match jouable
-> 3. **Sprint 2** : Regles BB3 essentielles (apothecaire, wrestle, mi-temps)
-> 4. **Sprint 3** : Matchmaking + animations = experience complete
-> 5. **Plus tard** : ELO, notifications, star players specials, polish
+> **Recommandation (2026-04-07)** :
+> 1. ~~Sprint 0~~ ✅ — bugs critiques et failles securite
+> 2. ~~Sprint 1~~ ✅ — skills + WebSocket + UI = match jouable
+> 3. ~~Sprint 2~~ ✅ — regles BB3 essentielles
+> 4. ~~Sprint 3~~ ✅ — matchmaking + animations
+> 5. ~~Sprint 4~~ ✅ — contenu + ELO
+> 6. **En cours** : Sprint 5 — robustesse WS, flow complet, timer = production ready
+> 7. **Plus tard** : B2 (TTM, Secret Weapons), G (push notifications), H (polish), I (contenu)
