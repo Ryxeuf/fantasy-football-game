@@ -202,6 +202,8 @@ export interface GameState {
   }>;
   // Log du match
   gameLog: GameLogEntry[];
+  // Suivi des règles spéciales de Star Players utilisées (clé: "playerId:ruleSlug")
+  usedStarPlayerRules: Record<string, boolean>;
 }
 
 export interface DiceResult {
