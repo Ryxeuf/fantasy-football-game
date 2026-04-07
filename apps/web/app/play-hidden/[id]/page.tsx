@@ -658,13 +658,8 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
       const responseData = await response.json();
       const normalizedState = normalizeState(responseData.gameState);
       setState(normalizedState);
-
-      // Afficher un message de succès
-      if (responseData.message) {
-        console.log("Validation réussie:", responseData.message);
-        console.log("Nouvelle phase:", normalizedState.preMatch?.phase);
-        console.log("Coach actuel:", normalizedState.preMatch?.currentCoach);
-      }
+      if (typeof responseData.isMyTurn === "boolean") setIsMyTurn(responseData.isMyTurn);
+      if (responseData.myTeamSide) setMyTeamSide(responseData.myTeamSide);
     } catch (error) {
       console.error("Erreur lors de la validation du placement:", error);
       showSetupError("Erreur lors de la sauvegarde du placement");
@@ -873,7 +868,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
         userName={userName}
         {...(state?.half > 0 && (!isActiveMatch || isMyTurn) ? { onEndTurn: handleEndTurn } : {})}
       />
-      {/* Bandeau de statut de tour (match actif uniquement) */}
+      {/* Bandeau de statut de tour (match actif) */}
       {isActiveMatch && (
         <div
           className={`fixed top-0 left-0 right-0 z-50 text-center py-2 text-sm font-bold flex items-center justify-center gap-4 ${
@@ -906,6 +901,22 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
           )}
         </div>
       )}
+      {/* Bandeau de statut pré-match (setup) */}
+      {!isActiveMatch && matchStatus === "prematch-setup" && state?.preMatch?.phase === "setup" && (
+        <div
+          className={`fixed top-0 left-0 right-0 z-50 text-center py-2 text-sm font-bold flex items-center justify-center gap-4 ${
+            isMyTurn
+              ? "bg-green-500 text-white"
+              : "bg-yellow-400 text-gray-900"
+          }`}
+        >
+          <span>
+            {isMyTurn
+              ? "Placez vos 11 joueurs sur le terrain"
+              : `En attente du placement de ${state.preMatch.currentCoach === "A" ? state.teamNames.teamA : state.teamNames.teamB}...`}
+          </span>
+        </div>
+      )}
       {/* Wrapper pour éléments pré-match, à l'intérieur du container principal */}
       <div className="pt-32">
         {" "}
@@ -925,50 +936,67 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
             )}
             {/* Statut pré-match (si half=0) */}
             {state && state.half === 0 && stateSource === "server" && state.preMatch?.phase !== "inducements" && (
-              <div className="text-center text-sm text-gray-600 bg-gray-100 p-2 rounded w-full max-w-md">
-                {state.preMatch?.phase === "kickoff" ? (
+              <div className="text-center text-sm text-gray-600 bg-white border border-gray-200 shadow-sm p-4 rounded-lg w-full max-w-md">
+                {/* Résumé du coin toss */}
+                {state.preMatch?.kickingTeam && state.preMatch?.receivingTeam && (
+                  <div className="mb-3 pb-3 border-b border-gray-200">
+                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Coin Toss</div>
+                    <div className="flex justify-center gap-4 text-xs">
+                      <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded">
+                        Frappe : {state.preMatch.kickingTeam === "A" ? state.teamNames.teamA : state.teamNames.teamB}
+                      </span>
+                      <span className="px-2 py-1 bg-green-50 text-green-700 rounded">
+                        Recoit : {state.preMatch.receivingTeam === "A" ? state.teamNames.teamA : state.teamNames.teamB}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {state.preMatch?.phase === "kickoff" || state.preMatch?.phase === "kickoff-sequence" ? (
                   <div>
-                    <div className="text-lg font-bold text-green-600 mb-2">🎉 Le match commence !</div>
-                    <div>Phase kickoff terminée</div>
-                    <div>
-                      Équipe qui frappe :{" "}
-                      {state.preMatch?.kickingTeam === "A"
-                        ? state.teamNames.teamA
-                        : state.teamNames.teamB}
-                    </div>
-                    <div>
-                      Équipe qui reçoit :{" "}
-                      {state.preMatch?.receivingTeam === "A"
-                        ? state.teamNames.teamA
-                        : state.teamNames.teamB}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-2">
+                    <div className="text-lg font-bold text-green-600 mb-1">Le match commence !</div>
+                    <div className="text-xs text-gray-500">
                       Le match va commencer automatiquement...
                     </div>
                   </div>
-                ) : (
+                ) : state.preMatch?.phase === "setup" ? (
                   <div>
-                    <div>Phase pré-match</div>
-                    <div>
-                      Receveuse :{" "}
-                      {state.preMatch?.receivingTeam === "A"
-                        ? state.teamNames.teamA
-                        : state.teamNames.teamB}{" "}
-                      ({state.preMatch?.receivingTeam})
+                    {/* Étapes de setup */}
+                    <div className="mb-2">
+                      <div className="flex items-center justify-center gap-2 text-xs text-gray-400 mb-2">
+                        <span className={`px-2 py-0.5 rounded ${
+                          state.preMatch.currentCoach === state.preMatch.receivingTeam
+                            ? "bg-green-100 text-green-700 font-semibold"
+                            : "bg-gray-100 text-gray-500 line-through"
+                        }`}>
+                          1. {state.preMatch.receivingTeam === "A" ? state.teamNames.teamA : state.teamNames.teamB} place
+                        </span>
+                        <span className="text-gray-300">&rarr;</span>
+                        <span className={`px-2 py-0.5 rounded ${
+                          state.preMatch.currentCoach === state.preMatch.kickingTeam
+                            ? "bg-green-100 text-green-700 font-semibold"
+                            : "bg-gray-100 text-gray-400"
+                        }`}>
+                          2. {state.preMatch.kickingTeam === "A" ? state.teamNames.teamA : state.teamNames.teamB} place
+                        </span>
+                        <span className="text-gray-300">&rarr;</span>
+                        <span className="px-2 py-0.5 rounded bg-gray-100 text-gray-400">
+                          3. Kickoff
+                        </span>
+                      </div>
                     </div>
-                    <div className="font-semibold">
+
+                    <div className="font-semibold text-gray-800">
                       Au tour de{" "}
-                      <span className={`px-2 py-1 rounded text-white ${
-                        state.preMatch?.currentCoach === "A" ? "bg-gray-600" : "bg-gray-700"
-                      }`}>
-                        {state.preMatch?.currentCoach === "A"
+                      <span className="px-2 py-1 rounded bg-green-600 text-white">
+                        {state.preMatch.currentCoach === "A"
                           ? state.teamNames.teamA
                           : state.teamNames.teamB}
                       </span>{" "}
                       de placer ses joueurs
                     </div>
                     <div className="text-xs text-gray-500 mt-1">
-                      Joueurs placés: {state.players?.filter(p => p.team === state.preMatch?.currentCoach && p.pos.x >= 0).length || 0}/11
+                      Joueurs placés : {state.players?.filter(p => p.team === state.preMatch?.currentCoach && p.pos.x >= 0).length || 0}/11
                     </div>
                     {setupError && (
                       <div className="mt-2 px-3 py-2 bg-red-100 text-red-700 rounded border border-red-300">
@@ -979,7 +1007,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
                     {(() => {
                       const currentCoach = state.preMatch?.currentCoach;
                       const playersOnField = state.players?.filter(p => p.team === currentCoach && p.pos.x >= 0).length || 0;
-                      const mySide = getMySide(state as ExtendedGameState);
+                      const mySide = myTeamSide || getMySide(state as ExtendedGameState);
 
                       if (mySide && mySide !== currentCoach) {
                         return (
@@ -994,7 +1022,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
                           <div className="mt-3">
                             <button
                               onClick={handleValidatePlacement}
-                              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors font-semibold"
                             >
                               Valider le placement
                             </button>
@@ -1004,6 +1032,10 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
 
                       return null;
                     })()}
+                  </div>
+                ) : (
+                  <div>
+                    <div className="text-gray-500">Phase pré-match en cours...</div>
                   </div>
                 )}
               </div>

@@ -481,7 +481,7 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
 
     // Pour prematch-setup, chercher d'abord le dernier turn validate-setup (contient l'état le plus récent)
     // puis fallback sur le turn start
-    const startTurn = match.turns.find((t: any) => t.payload?.type === "start");
+    const startTurn = match.turns.find((t: any) => t.payload?.type === "start" || t.payload?.type === "coin-toss");
     if (match.status === "prematch-setup") {
       const lastValidateSetupTurn = [...match.turns]
         .reverse()
@@ -725,9 +725,13 @@ router.post(
         },
       });
 
-      // Mettre à jour l'état du jeu avec les nouvelles positions
-      const lastTurn = match.turns[match.turns.length - 1];
-      let gameState = lastTurn?.payload?.gameState;
+      // Charger l'état du jeu le plus récent (validate-setup > coin-toss)
+      const lastValidateSetup = [...match.turns]
+        .reverse()
+        .find((t: any) => t.payload?.type === "validate-setup" && t.payload?.gameState);
+      const coinTossTurn = match.turns.find((t: any) => t.payload?.type === "coin-toss");
+      const sourceTurn = lastValidateSetup || coinTossTurn;
+      let gameState = sourceTurn?.payload?.gameState;
       if (typeof gameState === "string") {
         gameState = JSON.parse(gameState);
       }
@@ -744,33 +748,42 @@ router.post(
         });
       }
 
-      // Vérifier si le coach actuel a placé tous ses joueurs (11)
+      // S'assurer que l'état est en phase setup (transition idle→setup si nécessaire)
+      if (gameState.preMatch?.phase === 'idle') {
+        // Déterminer l'équipe receveuse depuis le coin-toss
+        const coinToss = match.turns.find((t: any) => t.payload?.type === "coin-toss");
+        const selections = await prisma.teamSelection.findMany({
+          where: { matchId },
+          orderBy: { createdAt: "asc" },
+        });
+        let receivingTeam: "A" | "B" = "A";
+        if (coinToss && selections.length >= 2) {
+          receivingTeam = coinToss.payload.receivingUserId === selections[0].userId ? "A" : "B";
+        }
+        gameState = enterSetupPhase(gameState, receivingTeam);
+      }
+
+      // Vérifier que l'utilisateur est bien le coach actuel
+      const userTeamSide = await getUserTeamSide(prisma as any, matchId, req.user!.id);
       const currentCoach = gameState.preMatch?.currentCoach;
+      if (userTeamSide !== currentCoach) {
+        return res.status(403).json({ error: "Ce n'est pas votre tour de placer" });
+      }
+
       const playersOnField = gameState.players?.filter(
         (p: any) => p.team === currentCoach && p.pos.x >= 0
       ).length || 0;
 
       // Si 11 joueurs sont placés, utiliser la fonction de validation explicite
       if (playersOnField === 11) {
-        const { validatePlayerPlacement, startKickoffSequence, enterSetupPhase } = await import("@bb/game-engine");
-        
-        console.log("Avant validation - gameState.preMatch:", gameState.preMatch);
-        
-        // S'assurer que l'état est en phase setup avant validation
-        if (gameState.preMatch.phase === 'idle') {
-          gameState = enterSetupPhase(gameState, gameState.preMatch.receivingTeam);
-          console.log("Après enterSetupPhase - gameState.preMatch:", gameState.preMatch);
-        }
-        
+        const { validatePlayerPlacement, startKickoffSequence } = await import("@bb/game-engine");
+
         // Valider le placement et passer à la phase suivante
         gameState = validatePlayerPlacement(gameState);
-        
-        console.log("Après validation - gameState.preMatch:", gameState.preMatch);
-        
+
         // Si on arrive en phase kickoff, commencer la séquence
         if (gameState.preMatch.phase === 'kickoff') {
           gameState = startKickoffSequence(gameState);
-          console.log("Après kickoff sequence - gameState.preMatch:", gameState.preMatch);
         }
       }
 
@@ -785,22 +798,28 @@ router.post(
         },
       });
 
+      // Notifier l'adversaire via WebSocket
+      try {
+        const { broadcastGameState } = await import("../services/game-broadcast");
+        broadcastGameState(matchId, gameState, { type: "validate-setup" }, req.user!.id);
+      } catch {}
+
       // Déterminer le message approprié
       let message = "Placement validé et sauvegardé";
       if (playersOnField === 11) {
-        if (gameState.preMatch?.phase === 'kickoff') {
+        if (gameState.preMatch?.phase === 'kickoff' || gameState.preMatch?.phase === 'kickoff-sequence') {
           message = "Placement validé - Le match commence !";
         } else {
           message = "Placement validé - Passage au coach suivant";
         }
       }
 
-      console.log("Retour au client - gameState.preMatch:", gameState.preMatch);
-      
       return res.json({
         success: true,
         gameState,
         message,
+        isMyTurn: gameState.preMatch?.currentCoach === userTeamSide,
+        myTeamSide: userTeamSide,
       });
     } catch (e: any) {
       console.error("Erreur lors de la validation du setup:", e);
