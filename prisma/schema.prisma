@@ -36,6 +36,7 @@ model User {
   teamSelections      TeamSelection[]
   createdCups         Cup[]           @relation("CupCreator")
   createdLocalMatches LocalMatch[]    @relation("LocalMatchCreator")
+  eloRating           Int             @default(1000) // ELO rating for ranked matchmaking
   matchQueue          MatchQueue?
 }
 
