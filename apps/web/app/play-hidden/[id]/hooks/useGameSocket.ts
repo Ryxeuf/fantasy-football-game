@@ -4,6 +4,7 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import { io, type Socket } from "socket.io-client";
 import type { ExtendedGameState, Move, InducementSelection } from "@bb/game-engine";
 import { API_BASE } from "../../../auth-client";
+import { submitMoveWithFallback } from "./submitMoveWithFallback";
 
 // --- Server event payload types ---
 
@@ -180,7 +181,7 @@ export interface UseGameSocketResult {
   reconnecting: boolean;
   /** Current reconnection attempt number (0 when connected). */
   reconnectAttempt: number;
-  /** Submit a move via WebSocket. Returns null if not connected. */
+  /** Submit a move via WebSocket, with automatic HTTP fallback if WS is unavailable. */
   submitMove: (move: Move) => Promise<MoveAckPayload | null>;
 }
 
@@ -211,10 +212,18 @@ export function useGameSocket(
 
   const submitMove = useCallback(
     async (move: Move): Promise<MoveAckPayload | null> => {
-      if (!helpersRef.current || !socketRef.current?.connected) {
-        return null;
-      }
-      return helpersRef.current.submitMove(matchId, move);
+      const wsConnected = !!socketRef.current?.connected && !!helpersRef.current;
+      const wsSubmit = helpersRef.current
+        ? helpersRef.current.submitMove.bind(helpersRef.current)
+        : async () => null;
+
+      return submitMoveWithFallback({
+        matchId,
+        move,
+        apiBase: API_BASE,
+        wsConnected,
+        wsSubmit,
+      });
     },
     [matchId],
   );
