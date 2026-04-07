@@ -87,7 +87,7 @@
 |---|-------|------|--------|
 | C.1-3 | Queue matchmaking + matching auto | Matchmaking | [x] |
 | E.1-3 | Tweens mouvement/balle + queue animations | UX | [x] |
-| A.10 | Notification "C'est votre tour" | Multiplayer | [ ] |
+| A.10 | Notification "C'est votre tour" | Multiplayer | [x] |
 | H.5 | Effets sonores basiques | UX | [ ] |
 
 ### Sprint 4 — Contenu & Competitif

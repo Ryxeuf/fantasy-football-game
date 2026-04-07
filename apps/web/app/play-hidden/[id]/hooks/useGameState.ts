@@ -47,35 +47,6 @@ export function useGameState(matchId: string): GameStateInfo {
   const [userName, setUserName] = useState<string | undefined>(undefined);
 
   const isActiveMatch = matchStatus === "active";
-  const prevIsMyTurn = useRef(false);
-
-  // Notification quand le tour change
-  useEffect(() => {
-    if (isMyTurn && !prevIsMyTurn.current && isActiveMatch) {
-      // Mettre à jour le titre
-      document.title = "Votre tour ! — Nuffle Arena";
-
-      // Notification navigateur
-      if ("Notification" in window && Notification.permission === "granted") {
-        new Notification("Nuffle Arena", {
-          body: "C'est votre tour de jouer !",
-          icon: "/favicon.ico",
-        });
-      }
-    } else if (!isMyTurn && isActiveMatch) {
-      document.title = "En attente... — Nuffle Arena";
-    } else if (!isActiveMatch) {
-      document.title = "Nuffle Arena";
-    }
-    prevIsMyTurn.current = isMyTurn;
-  }, [isMyTurn, isActiveMatch]);
-
-  // Demander la permission de notification au montage
-  useEffect(() => {
-    if ("Notification" in window && Notification.permission === "default") {
-      Notification.requestPermission();
-    }
-  }, []);
 
   // Auth check + join
   useEffect(() => {
