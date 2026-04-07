@@ -334,6 +334,22 @@ export const translations = {
       playOnlineButton: "Accéder au lobby",
       myOnlineMatches: "Mes matchs en ligne",
     },
+    // Inducements (pre-match)
+    inducements: {
+      title: "Inducements",
+      pettyCash: "Petty Cash",
+      budget: "Budget total",
+      remaining: "Restant",
+      totalCost: "Coût total",
+      confirm: "Confirmer la sélection",
+      skip: "Passer (aucun inducement)",
+      noBudget: "Aucun budget disponible",
+      maxReached: "Quantité max atteinte",
+      selectInducements: "Choisissez vos inducements",
+      waitingOpponent: "En attente de l'adversaire...",
+      phaseTitle: "Phase d'Inducements",
+      phaseDescription: "Sélectionnez vos inducements pour ce match. L'équipe désavantagée reçoit du Petty Cash.",
+    },
   },
   en: {
     // Navigation
@@ -669,6 +685,22 @@ export const translations = {
       playOnlineDesc: "Challenge other coaches online! Create a match or join an existing game.",
       playOnlineButton: "Go to lobby",
       myOnlineMatches: "My online matches",
+    },
+    // Inducements (pre-match)
+    inducements: {
+      title: "Inducements",
+      pettyCash: "Petty Cash",
+      budget: "Total Budget",
+      remaining: "Remaining",
+      totalCost: "Total cost",
+      confirm: "Confirm Selection",
+      skip: "Skip (no inducements)",
+      noBudget: "No budget available",
+      maxReached: "Max quantity reached",
+      selectInducements: "Select your inducements",
+      waitingOpponent: "Waiting for opponent...",
+      phaseTitle: "Inducements Phase",
+      phaseDescription: "Select inducements for this match. The underdog team receives Petty Cash.",
     },
   },
 } as const;
