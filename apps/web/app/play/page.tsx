@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { API_BASE } from "../auth-client";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useMatchmakingSocket } from "./hooks/useMatchmakingSocket";
 
 interface MatchSummary {
   id: string;
@@ -122,6 +123,16 @@ export default function PlayPage() {
   const [queueStatus, setQueueStatus] = useState<QueueStatus>({ inQueue: false });
   const [searching, setSearching] = useState(false);
   const [searchElapsed, setSearchElapsed] = useState(0);
+
+  // WebSocket notification for matchmaking — instant notification when match found
+  // Polling (below) serves as fallback per A.8
+  useMatchmakingSocket({
+    searching,
+    onMatchFound: useCallback((matchId: string) => {
+      setSearching(false);
+      window.location.href = `/play-hidden/${matchId}`;
+    }, []),
+  });
 
   const loadMatches = useCallback(async () => {
     try {
