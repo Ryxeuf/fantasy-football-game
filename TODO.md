@@ -111,7 +111,7 @@
 | C.5 | Phase de setup en ligne (placement + bouton Pret) | Game flow | [x] |
 | C.6 | Sequence pre-match automatisee online | Game flow | [x] |
 | C.7 | Fin de match en ligne (ecran resultats) | Game flow | [x] |
-| C.8 | Abandon / deconnexion = defaite (forfait > 2 min) | Multiplayer | [ ] |
+| C.8 | Abandon / deconnexion = defaite (forfait > 2 min) | Multiplayer | [x] |
 | B1.8 | Fin de match complete (winnings, fan factor, ecran) | Game flow | [ ] |
 | B1.10 | Timer de tour configurable avec fin de tour auto | Game flow | [ ] |
 

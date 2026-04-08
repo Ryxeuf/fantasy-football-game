@@ -28,6 +28,13 @@ export interface MatchEndedPayload {
   timestamp: string;
 }
 
+export interface MatchForfeitedPayload {
+  matchId: string;
+  forfeitingUserId: string;
+  gameState: ExtendedGameState;
+  timestamp: string;
+}
+
 export interface MoveAckPayload {
   success: boolean;
   gameState?: ExtendedGameState;
@@ -49,6 +56,7 @@ export type GameSocketEvents = {
   "game:player-connected": PlayerConnectionPayload;
   "game:player-disconnected": PlayerConnectionPayload;
   "game:match-ended": MatchEndedPayload;
+  "game:match-forfeited": MatchForfeitedPayload;
 };
 
 // --- Pure factory (testable without React) ---
@@ -107,6 +115,10 @@ export function createGameSocketHelpers(socket: Socket) {
       socket.on("game:match-ended", handler);
     },
 
+    onMatchForfeited(handler: (data: MatchForfeitedPayload) => void): void {
+      socket.on("game:match-forfeited", handler);
+    },
+
     submitMove(matchId: string, move: Move): Promise<MoveAckPayload> {
       return new Promise((resolve) => {
         socket.emit(
@@ -151,6 +163,7 @@ export function createGameSocketHelpers(socket: Socket) {
       socket.off("game:player-connected");
       socket.off("game:player-disconnected");
       socket.off("game:match-ended");
+      socket.off("game:match-forfeited");
     },
   };
 }
@@ -166,6 +179,8 @@ export interface UseGameSocketOptions {
   onPlayerDisconnected?: (data: PlayerConnectionPayload) => void;
   /** Callback when the match ends. */
   onMatchEnded?: (data: MatchEndedPayload) => void;
+  /** Callback when the match is forfeited due to opponent disconnection. */
+  onMatchForfeited?: (data: MatchForfeitedPayload) => void;
   /** Callback when a resync provides a fresh game state after reconnection. */
   onResyncState?: (data: ResyncPayload) => void;
 }
@@ -312,6 +327,10 @@ export function useGameSocket(
 
     helpers.onMatchEnded((data) => {
       optionsRef.current.onMatchEnded?.(data);
+    });
+
+    helpers.onMatchForfeited((data) => {
+      optionsRef.current.onMatchForfeited?.(data);
     });
 
     // Connect

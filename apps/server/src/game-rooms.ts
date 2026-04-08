@@ -1,5 +1,6 @@
 import { Namespace, Socket } from "socket.io";
 import { prisma } from "./prisma";
+import { startForfeitTimer, cancelForfeitTimer } from "./services/forfeit-tracker";
 
 /**
  * Tracks which users are connected to which match rooms.
@@ -71,6 +72,9 @@ export function registerGameRoomHandlers(gameNamespace: Namespace): void {
         leaveRoom(socket, previousMatch);
       }
 
+      // Cancel any pending forfeit timer for this user (reconnection)
+      cancelForfeitTimer(matchId, userId);
+
       // Join the new room
       socket.join(matchId);
       socketToMatch.set(socket.id, matchId);
@@ -141,6 +145,11 @@ function leaveRoom(socket: Socket, matchId: string): void {
       userId: disconnectedUserId,
       connectedSockets: remaining,
     });
+
+    // Start forfeit countdown if a player disconnected from the room
+    if (disconnectedUserId) {
+      startForfeitTimer(matchId, disconnectedUserId);
+    }
   }
 }
 

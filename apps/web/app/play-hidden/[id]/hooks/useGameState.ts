@@ -5,7 +5,7 @@ import { setupPreMatchWithTeams } from "@bb/game-engine";
 import { API_BASE } from "../../../auth-client";
 import { useGameSocket } from "./useGameSocket";
 import { deriveIsMyTurn } from "./deriveSetupTurn";
-import type { StateUpdatedPayload, MatchEndedPayload, PlayerConnectionPayload } from "./useGameSocket";
+import type { StateUpdatedPayload, MatchEndedPayload, PlayerConnectionPayload, MatchForfeitedPayload } from "./useGameSocket";
 
 function normalizeState(state: any): ExtendedGameState {
   if (!state) return state;
@@ -28,6 +28,10 @@ export interface GameStateInfo {
   teamNameA: string | undefined;
   teamNameB: string | undefined;
   userName: string | undefined;
+  /** True when the opponent has disconnected from the match. */
+  opponentDisconnected: boolean;
+  /** Timestamp (ms) when the opponent disconnected, or null. */
+  opponentDisconnectedAt: number | null;
   setState: (s: ExtendedGameState | ((prev: ExtendedGameState | null) => ExtendedGameState | null)) => void;
   setMatchStatus: (s: string | null) => void;
   setMyTeamSide: (s: "A" | "B" | null) => void;
@@ -46,6 +50,8 @@ export function useGameState(matchId: string): GameStateInfo {
   const [teamNameA, setTeamNameA] = useState<string | undefined>(undefined);
   const [teamNameB, setTeamNameB] = useState<string | undefined>(undefined);
   const [userName, setUserName] = useState<string | undefined>(undefined);
+  const [opponentDisconnected, setOpponentDisconnected] = useState(false);
+  const [opponentDisconnectedAt, setOpponentDisconnectedAt] = useState<number | null>(null);
 
   const isActiveMatch = matchStatus === "active";
 
@@ -206,6 +212,23 @@ export function useGameState(matchId: string): GameStateInfo {
         setMatchStatus("ended");
       }
     }, []),
+    onMatchForfeited: useCallback((data: MatchForfeitedPayload) => {
+      if (data.gameState) {
+        setState(normalizeState(data.gameState));
+        setStateSource("server");
+      }
+      setMatchStatus("ended");
+      setOpponentDisconnected(false);
+      setOpponentDisconnectedAt(null);
+    }, []),
+    onPlayerDisconnected: useCallback((_data: PlayerConnectionPayload) => {
+      setOpponentDisconnected(true);
+      setOpponentDisconnectedAt(Date.now());
+    }, []),
+    onPlayerConnected: useCallback((_data: PlayerConnectionPayload) => {
+      setOpponentDisconnected(false);
+      setOpponentDisconnectedAt(null);
+    }, []),
   });
 
   // Fallback polling — slow interval (30s) when WebSocket is connected, faster (5s) when not.
@@ -285,6 +308,7 @@ export function useGameState(matchId: string): GameStateInfo {
   return {
     state, stateSource, matchStatus, myTeamSide, isMyTurn,
     teamNameA, teamNameB, userName,
+    opponentDisconnected, opponentDisconnectedAt,
     setState, setMatchStatus, setMyTeamSide, setIsMyTurn,
   };
 }
