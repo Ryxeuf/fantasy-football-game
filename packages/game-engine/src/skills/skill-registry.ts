@@ -547,6 +547,15 @@ registerSkill({
   canApply: (ctx) => hasSkill(ctx.player, 'regeneration'),
 });
 
+// DECAY
+registerSkill({
+  slug: 'decay',
+  triggers: ['on-injury'],
+  description: '+1 au jet de blessure contre ce joueur (blessures plus graves).',
+  canApply: (ctx) => hasSkill(ctx.player, 'decay'),
+  getModifiers: () => ({ injuryModifier: 1 }),
+});
+
 // ─── LONER (3 variants) ─────────────────────────────────────────────────────
 // Loner doesn't use the standard canReroll flow — it's checked in handleRerollChoose
 // when a player with Loner attempts to use a team reroll. Registered here for
