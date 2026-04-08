@@ -35,6 +35,7 @@ import {
   awardTouchdown,
   bounceBall,
 } from '../mechanics/ball';
+import { hasAnimosityAgainst, checkAnimosity } from '../mechanics/animosity';
 import {
   canBlock,
   canBlitz,
@@ -1505,7 +1506,20 @@ function handlePass(state: GameState, move: { type: 'PASS'; playerId: string; ta
   if (passer.team !== state.currentPlayer) return state;
   if (hasPlayerActed(state, passer.id)) return state;
 
-  let newState = executePass(state, passer, target, rng);
+  // Animosity check: roll D6 before pass if passer dislikes target
+  let currentState = state;
+  if (hasAnimosityAgainst(passer, target)) {
+    const animResult = checkAnimosity(currentState, passer, target, rng);
+    currentState = animResult.newState;
+    if (!animResult.passed) {
+      // Player refuses — activation ends, no turnover
+      currentState = setPlayerAction(currentState, passer.id, 'PASS');
+      currentState = checkPlayerTurnEnd(currentState, passer.id);
+      return currentState;
+    }
+  }
+
+  let newState = executePass(currentState, passer, target, rng);
   newState = setPlayerAction(newState, passer.id, 'PASS');
   newState = checkPlayerTurnEnd(newState, passer.id);
   return newState;
@@ -1524,7 +1538,20 @@ function handleHandoff(state: GameState, move: { type: 'HANDOFF'; playerId: stri
   if (hasPlayerActed(state, passer.id)) return state;
   if (!isAdjacent(passer.pos, target.pos)) return state;
 
-  let newState = executeHandoff(state, passer, target, rng);
+  // Animosity check: roll D6 before handoff if passer dislikes target
+  let currentState = state;
+  if (hasAnimosityAgainst(passer, target)) {
+    const animResult = checkAnimosity(currentState, passer, target, rng);
+    currentState = animResult.newState;
+    if (!animResult.passed) {
+      // Player refuses — activation ends, no turnover
+      currentState = setPlayerAction(currentState, passer.id, 'HANDOFF');
+      currentState = checkPlayerTurnEnd(currentState, passer.id);
+      return currentState;
+    }
+  }
+
+  let newState = executeHandoff(currentState, passer, target, rng);
   newState = setPlayerAction(newState, passer.id, 'HANDOFF');
   newState = checkPlayerTurnEnd(newState, passer.id);
   return newState;

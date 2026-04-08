@@ -139,6 +139,9 @@ export { canFoul, executeFoul, calculateFoulAssists } from './mechanics/foul';
 // Export du système d'armes secrètes
 export { expelSecretWeapons, getSecretWeaponPlayers } from './mechanics/secret-weapons';
 
+// Export du système d'animosité
+export { extractLineage, hasAnimosityAgainst, checkAnimosity } from './mechanics/animosity';
+
 // Export des effets météo
 export {
   getWeatherModifiers,

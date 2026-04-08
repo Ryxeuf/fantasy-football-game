@@ -737,6 +737,14 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
     category: "Trait"
   },
   {
+    slug: "animosity-all",
+    nameFr: "Animosité (Tous)*",
+    nameEn: "Animosity (All)",
+    description: "Ce joueur est jaloux de et n'aime pas tous les autres joueurs de son équipe. Lorsque ce joueur souhaite effectuer une action de Remise à un coéquipier, ou tente d'effectuer une action de Passe et que la case cible est occupée par un coéquipier, ce joueur peut refuser de le faire. Lancez un D6. Sur un résultat de 1, ce joueur refuse d'effectuer l'action et son activation se termine.",
+    category: "Trait",
+    isModified: true
+  },
+  {
     slug: "animosity-underworld",
     nameFr: "Animosité (Underworld)*",
     nameEn: "Animosity (Underworld)",
