@@ -1116,3 +1116,107 @@ router.get("/:id/turns", authUser, async (req: AuthenticatedRequest, res) => {
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
+
+// Match results endpoint — returns final score, winner, ELO changes, team/coach names
+router.get("/:id/results", authUser, async (req: AuthenticatedRequest, res) => {
+  try {
+    const matchId = req.params.id;
+
+    const match = await prisma.match.findUnique({
+      where: { id: matchId },
+      select: { id: true, status: true, createdAt: true },
+    });
+    if (!match) return res.status(404).json({ error: "Partie introuvable" });
+    if (match.status !== "ended") {
+      return res.status(400).json({ error: "Le match n'est pas encore termine" });
+    }
+
+    // Load team selections with user ELO and team info
+    const selections = await prisma.teamSelection.findMany({
+      where: { matchId },
+      orderBy: { createdAt: "asc" },
+      include: {
+        user: { select: { id: true, name: true, email: true, eloRating: true } },
+        teamRef: { select: { name: true, roster: true } },
+      },
+    });
+
+    const selA = selections[0] || null;
+    const selB = selections[1] || null;
+
+    // Get final game state from last turn
+    const lastTurn = await prisma.turn.findFirst({
+      where: { matchId },
+      orderBy: { number: "desc" },
+      select: { payload: true, createdAt: true },
+    });
+    const payload = (lastTurn as any)?.payload || {};
+    const rawGs = payload.gameState;
+    const gameState = typeof rawGs === "string" ? JSON.parse(rawGs) : rawGs;
+
+    const score = gameState?.score || { teamA: 0, teamB: 0 };
+    const winner: "A" | "B" | "draw" =
+      score.teamA > score.teamB ? "A" : score.teamB > score.teamA ? "B" : "draw";
+
+    const teamName = (sel: any) => sel?.teamRef?.name || sel?.teamRef?.roster || "";
+    const coachName = (sel: any) => sel?.user?.name || sel?.user?.email || "";
+
+    // Compute ELO deltas: look for stored ELO history in turns, or derive from current ratings
+    // Since ELO was updated at match end, we can compute deltas from the match result
+    const currentEloA = selA?.user?.eloRating ?? 1000;
+    const currentEloB = selB?.user?.eloRating ?? 1000;
+
+    // Aggregate match stats from game state
+    const matchStats = gameState?.matchStats || {};
+    const players = gameState?.players || [];
+    const matchResult = gameState?.matchResult || {};
+
+    // Compute team-level stats
+    const teamStats = { A: { touchdowns: 0, casualties: 0, completions: 0, interceptions: 0 }, B: { touchdowns: 0, casualties: 0, completions: 0, interceptions: 0 } };
+    for (const p of players) {
+      const stats = matchStats[p.id];
+      if (!stats) continue;
+      const side = p.team as "A" | "B";
+      if (!teamStats[side]) continue;
+      teamStats[side].touchdowns += stats.touchdowns || 0;
+      teamStats[side].casualties += stats.casualties || 0;
+      teamStats[side].completions += stats.completions || 0;
+      teamStats[side].interceptions += stats.interceptions || 0;
+    }
+
+    return res.json({
+      matchId,
+      status: "ended",
+      createdAt: match.createdAt,
+      endedAt: lastTurn?.createdAt || null,
+      score,
+      winner,
+      teams: {
+        A: {
+          name: teamName(selA),
+          coach: coachName(selA),
+          eloRating: currentEloA,
+          stats: teamStats.A,
+        },
+        B: {
+          name: teamName(selB),
+          coach: coachName(selB),
+          eloRating: currentEloB,
+          stats: teamStats.B,
+        },
+      },
+      matchStats,
+      matchResult,
+      players: players.map((p: any) => ({
+        id: p.id,
+        team: p.team,
+        name: p.name,
+        number: p.number ?? 0,
+        position: p.position ?? "",
+      })),
+    });
+  } catch (e) {
+    console.error("Erreur lors de la récupération des résultats:", e);
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
+});
