@@ -219,7 +219,7 @@ export interface GameState {
 }
 
 export interface DiceResult {
-  type: 'dodge' | 'pickup' | 'pass' | 'catch' | 'armor' | 'block';
+  type: 'dodge' | 'pickup' | 'pass' | 'catch' | 'armor' | 'block' | 'landing';
   playerId: string;
   diceRoll: number;
   targetNumber: number;
@@ -250,6 +250,7 @@ export type Move =
   | { type: 'APOTHECARY_CHOOSE'; useApothecary: boolean }
   | { type: 'PASS'; playerId: string; targetId: string }
   | { type: 'HANDOFF'; playerId: string; targetId: string }
+  | { type: 'THROW_TEAM_MATE'; playerId: string; thrownPlayerId: string; targetPos: Position }
   | { type: 'FOUL'; playerId: string; targetId: string };
 
 export type BlockResult = 'PLAYER_DOWN' | 'BOTH_DOWN' | 'PUSH_BACK' | 'STUMBLE' | 'POW';

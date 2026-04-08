@@ -62,6 +62,7 @@ import { executePass, executeHandoff, getPassRange } from '../mechanics/passing'
 import { canFoul, executeFoul } from '../mechanics/foul';
 import { isAdjacent } from '../mechanics/movement';
 import { applyApothecaryChoice } from '../mechanics/apothecary';
+import { canThrowTeamMate, getThrowRange, executeThrowTeamMate } from '../mechanics/throw-team-mate';
 
 /**
  * Obtient tous les mouvements légaux pour l'état actuel
@@ -192,6 +193,32 @@ export function getLegalMoves(state: GameState): Move[] {
       );
       for (const target of groundedOpponents) {
         moves.push({ type: 'FOUL', playerId: p.id, targetId: target.id });
+      }
+    }
+
+    // Actions de Lancer de Coéquipier (THROW_TEAM_MATE)
+    if (!hasPlayerActed(state, p.id) && hasSkill(p, 'throw-team-mate')) {
+      // Chercher les coéquipiers adjacents avec Right Stuff
+      const throwableTeammates = state.players.filter(
+        t => t.team === team && t.id !== p.id && canThrowTeamMate(state, p, t)
+      );
+      for (const thrown of throwableTeammates) {
+        // Générer les positions cibles dans la portée Long Pass max (distance ≤ 10)
+        for (let dx = -10; dx <= 10; dx++) {
+          for (let dy = -10; dy <= 10; dy++) {
+            const targetPos = { x: p.pos.x + dx, y: p.pos.y + dy };
+            if (!inBounds(state, targetPos)) continue;
+            if (dx === 0 && dy === 0) continue;
+            const range = getThrowRange(p.pos, targetPos);
+            if (!range) continue;
+            moves.push({
+              type: 'THROW_TEAM_MATE',
+              playerId: p.id,
+              thrownPlayerId: thrown.id,
+              targetPos,
+            });
+          }
+        }
       }
     }
   }
@@ -357,6 +384,8 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       return handlePass(state, move, rng);
     case 'HANDOFF':
       return handleHandoff(state, move, rng);
+    case 'THROW_TEAM_MATE':
+      return handleThrowTeamMate(state, move, rng);
     case 'FOUL':
       return handleFoul(state, move, rng);
     default:
@@ -1554,6 +1583,32 @@ function handleHandoff(state: GameState, move: { type: 'HANDOFF'; playerId: stri
   let newState = executeHandoff(currentState, passer, target, rng);
   newState = setPlayerAction(newState, passer.id, 'HANDOFF');
   newState = checkPlayerTurnEnd(newState, passer.id);
+  return newState;
+}
+
+/**
+ * Gère une action de Lancer de Coéquipier (Throw Team-Mate)
+ */
+function handleThrowTeamMate(
+  state: GameState,
+  move: { type: 'THROW_TEAM_MATE'; playerId: string; thrownPlayerId: string; targetPos: Position },
+  rng: RNG,
+): GameState {
+  const thrower = state.players.find(p => p.id === move.playerId);
+  const thrown = state.players.find(p => p.id === move.thrownPlayerId);
+
+  if (!thrower || !thrown) return state;
+  if (thrower.team !== state.currentPlayer) return state;
+  if (hasPlayerActed(state, thrower.id)) return state;
+  if (!canThrowTeamMate(state, thrower, thrown)) return state;
+
+  // Vérifier que la cible est dans la portée
+  const range = getThrowRange(thrower.pos, move.targetPos);
+  if (!range) return state;
+
+  let newState = executeThrowTeamMate(state, thrower, thrown, move.targetPos, rng);
+  newState = setPlayerAction(newState, thrower.id, 'THROW_TEAM_MATE');
+  newState = checkPlayerTurnEnd(newState, thrower.id);
   return newState;
 }
 
