@@ -43,6 +43,7 @@ import {
   computeBlockTargets,
 } from "./hooks/useBlockPopups";
 import PostMatchSPP from "../../components/PostMatchSPP";
+import PreMatchSummary from "../../components/PreMatchSummary";
 import InducementSelector from "../../components/InducementSelector";
 import { INDUCEMENT_CATALOGUE, type InducementSelection, type InducementDefinition } from "@bb/game-engine";
 import { useTurnNotification } from "./hooks/useTurnNotification";
@@ -945,6 +946,22 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
           <div className="flex flex-col items-center space-y-4 mb-6">
             {" "}
             {/* Wrapper centralisé pour pré-match */}
+            {/* Pre-match loading (idle phase, server is running automation) */}
+            {state && state.half === 0 && state.preMatch?.phase === "idle" && (
+              <div className="w-full max-w-md mx-auto text-center p-6 bg-white border border-gray-200 shadow-sm rounded-lg">
+                <div className="text-lg font-bold text-gray-700 mb-2">Preparation du match...</div>
+                <p className="text-sm text-gray-500">
+                  La sequence pre-match est en cours (fans, meteo, journeymen).
+                </p>
+                <div className="mt-3 flex justify-center">
+                  <div className="animate-spin h-6 w-6 border-2 border-gray-300 border-t-blue-500 rounded-full" />
+                </div>
+              </div>
+            )}
+            {/* Pre-match summary (fan factor, weather, journeymen) */}
+            {state && state.half === 0 && state.preMatch?.fanFactor && (
+              <PreMatchSummary state={state as ExtendedGameState} />
+            )}
             {/* Phase inducements */}
             {state && state.half === 0 && state.preMatch?.phase === "inducements" && (
               <InducementsPhaseUI
