@@ -4,6 +4,7 @@ import {
   TeamPlayerData,
 } from "@bb/game-engine";
 import { getLinemanStats } from "./journeymen";
+import { runAutomatedPreMatchSequence } from "./pre-match-automation";
 
 type PrismaLike = {
   match: {
@@ -243,7 +244,14 @@ export async function acceptAndMaybeStartMatch(
   await prisma.match.update({
     where: { id: matchId },
     data: { status: "prematch-setup" },
-  }); // Changé en prematch-setup
+  });
+
+  // Run automated pre-match sequence (fans, weather, journeymen → inducements)
+  // This is fire-and-forget: the accept response returns immediately,
+  // and the client receives the updated state via WebSocket broadcast.
+  runAutomatedPreMatchSequence(prisma as any, matchId, gameState, match.seed)
+    .catch((err) => console.error("Pre-match automation error:", err));
+
   return {
     ok: true,
     status: "prematch-setup",
