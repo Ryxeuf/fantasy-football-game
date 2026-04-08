@@ -115,6 +115,17 @@
 | B1.8 | Fin de match complete (winnings, fan factor, ecran) | Game flow | [x] |
 | B1.10 | Timer de tour configurable avec fin de tour auto | Game flow | [x] |
 
+### Sprint 6 — Regles BB3 complementaires (~5 jours)
+
+| # | Tache | Type | Statut |
+|---|-------|------|--------|
+| B2.5 | Secret Weapons — expulsion fin de drive + Bribe | Regle | [x] |
+| B2.7 | Animosity — jet avant passe/handoff | Regle | [ ] |
+| B2.8 | Decay — blessures 1 niveau plus grave | Regle | [ ] |
+| B2.4 | Throw Team-Mate — mecanique complete | Regle | [ ] |
+| B2.9 | Hypnotic Gaze — action speciale | Regle | [ ] |
+| B2.10 | Projectile Vomit — bloc range 1 | Regle | [ ] |
+
 ---
 
 ## Resume par phase
@@ -125,7 +136,7 @@
 | **A — Multijoueur temps reel** | 10 | 7 | 0 | 3 | EN COURS (Sprint 5) |
 | **B0 — Architecture skills** | 2 | 2 | 0 | 0 | TERMINE |
 | **B1 — Regles BB3 critiques** | 10 | 7 | 1 | 2 | EN COURS (Sprint 5) |
-| **B2 — Regles BB3 importantes** | 10 | 3 | 1 | 6 | SECONDAIRE |
+| **B2 — Regles BB3 importantes** | 10 | 4 | 1 | 5 | EN COURS (Sprint 6) |
 | **B3 — Star Players specials** | 2 | 1 | 0 | 1 | BONUS |
 | **C — Matchmaking & flow** | 8 | 3 | 1 | 4 | EN COURS (Sprint 5) |
 | **D — Progression joueurs** | 8 | 8 | 0 | 0 | TERMINE |
@@ -148,7 +159,9 @@ Sprint 0 (Bugfixes) ✅ ──→ Sprint 1 (WS + UI + skills) ✅ ──→ MATC
        │                         │
        │                Sprint 4 (Contenu + ELO) ✅ ──→ COMPETITIF ✅
        │                         │
-       │                Sprint 5 (Robustesse + Flow) ──→ PRODUCTION READY
+       │                Sprint 5 (Robustesse + Flow) ✅ ──→ PRODUCTION READY ✅
+       │                         │
+       │                Sprint 6 (Regles BB3 complementaires) ──→ GAMEPLAY COMPLET
        │
        └── Phases B2/B3 + G + H + I ──→ GAMEPLAY RICHE + POLISH
 ```
@@ -159,5 +172,6 @@ Sprint 0 (Bugfixes) ✅ ──→ Sprint 1 (WS + UI + skills) ✅ ──→ MATC
 > 3. ~~Sprint 2~~ ✅ — regles BB3 essentielles
 > 4. ~~Sprint 3~~ ✅ — matchmaking + animations
 > 5. ~~Sprint 4~~ ✅ — contenu + ELO
-> 6. **En cours** : Sprint 5 — robustesse WS, flow complet, timer = production ready
-> 7. **Plus tard** : B2 (TTM, Secret Weapons), G (push notifications), H (polish), I (contenu)
+> 6. ~~Sprint 5~~ ✅ — robustesse WS, flow complet, timer = production ready
+> 7. **En cours** : Sprint 6 — regles BB3 complementaires (Secret Weapons, Animosity, TTM)
+> 8. **Plus tard** : G (push notifications), H (polish), I (contenu)
