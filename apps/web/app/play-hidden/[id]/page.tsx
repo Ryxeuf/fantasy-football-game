@@ -43,6 +43,7 @@ import {
   computeBlockTargets,
 } from "./hooks/useBlockPopups";
 import PostMatchSPP from "../../components/PostMatchSPP";
+import MatchEndScreen from "../../components/MatchEndScreen";
 import PreMatchSummary from "../../components/PreMatchSummary";
 import InducementSelector from "../../components/InducementSelector";
 import { INDUCEMENT_CATALOGUE, type InducementSelection, type InducementDefinition } from "@bb/game-engine";
@@ -874,6 +875,14 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
     <TurnNotificationListener isMyTurn={isMyTurn} isActiveMatch={isActiveMatch} />
     <SoundEffectsListener state={state} />
     <SoundToggleButton />
+    {/* End-of-match results overlay for online matches */}
+    {matchStatus === "ended" && state.gamePhase === "ended" && (
+      <MatchEndScreen
+        matchId={matchId}
+        myTeamSide={myTeamSide}
+        onClose={() => { window.location.href = "/lobby"; }}
+      />
+    )}
     <div className="min-h-screen bg-gray-100">
       <GameScoreboard
         state={state}
