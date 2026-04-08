@@ -9,6 +9,7 @@ import { checkTouchdowns } from '../mechanics/ball';
 import { initializeDugouts } from '../mechanics/dugout';
 import { rollKickoffEvent, applyKickoffEvent } from '../mechanics/kickoff-events';
 import { calculateMatchWinnings } from '../utils/team-value-calculator';
+import { FULL_RULES } from './rules-config';
 import type { PurchasedInducement } from './inducements';
 
 // Étendre GameState pour pré-match
@@ -190,6 +191,7 @@ export function setupPreMatchWithTeams(
     casualtyResults: {},
     lastingInjuryDetails: {},
     usedStarPlayerRules: {},
+    turnTimerSeconds: FULL_RULES.turnTimerSeconds,
     // Log du match
     gameLog: [
       createLogEntry(
@@ -331,6 +333,7 @@ export function setupPreMatch(): GameState {
     casualtyResults: {},
     lastingInjuryDetails: {},
     usedStarPlayerRules: {},
+    turnTimerSeconds: FULL_RULES.turnTimerSeconds,
     // Log du match
     gameLog: [createLogEntry('info', 'Phase pré-match - Les joueurs sont en réserves')],
   };
@@ -445,6 +448,7 @@ export function setup(): GameState {
     casualtyResults: {},
     lastingInjuryDetails: {},
     usedStarPlayerRules: {},
+    turnTimerSeconds: FULL_RULES.turnTimerSeconds,
     // Log du match
     gameLog: [createLogEntry('info', 'Match commencé - Orcs de Fer vs Elfes Sombres')],
   };

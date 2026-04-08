@@ -7,6 +7,8 @@ import { persistPlayerDeaths } from "./player-death";
 import { persistPermanentInjuries } from "./permanent-injuries";
 import { broadcastGameState, broadcastMatchEnd } from "./game-broadcast";
 import { updateEloAfterMatch } from "./elo-update";
+import { handleTurnTimerAfterMove } from "./turn-timer-orchestrator";
+import { FULL_RULES } from "@bb/game-engine";
 
 export interface MoveResult {
   success: true;
@@ -79,6 +81,9 @@ export async function processMove(
       code: "NOT_YOUR_TURN",
     };
   }
+
+  // Track previous player for turn timer logic
+  const prevPlayer = gameState.currentPlayer;
 
   // Deterministic RNG seeded by move count
   const moveCount = match.turns.filter(
@@ -232,6 +237,17 @@ export async function processMove(
   if (matchEnded) {
     broadcastMatchEnd(matchId, newState);
   }
+
+  // Manage turn timer: start/reset on turn change, cancel on match end
+  const turnTimerSecs = newState.turnTimerSeconds ?? FULL_RULES.turnTimerSeconds;
+  handleTurnTimerAfterMove(
+    matchId,
+    prevPlayer,
+    newState.currentPlayer,
+    turnTimerSecs,
+    matchEnded ? "ended" : newState.gamePhase,
+    nextUserId ?? undefined,
+  );
 
   const isMyTurn = newState.currentPlayer === userTeamSide;
 

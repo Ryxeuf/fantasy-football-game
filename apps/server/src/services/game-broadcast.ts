@@ -44,6 +44,28 @@ export function broadcastMatchEnd(
 }
 
 /**
+ * Broadcast turn timer info to all players in a match room.
+ * Sent whenever a new turn starts so clients can display the countdown.
+ */
+export function broadcastTurnTimerStarted(
+  matchId: string,
+  deadline: number,
+  turnTimerSeconds: number,
+): void {
+  try {
+    const gameNs = getGameNamespace();
+    gameNs.to(matchId).emit("game:turn-timer-started", {
+      matchId,
+      deadline,
+      turnTimerSeconds,
+      timestamp: new Date().toISOString(),
+    });
+  } catch {
+    // Socket.io may not be initialized in tests or during startup
+  }
+}
+
+/**
  * Broadcast match forfeit event to all players in a match room.
  * Sent when a player disconnects for longer than the forfeit timeout.
  */

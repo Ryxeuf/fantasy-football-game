@@ -276,6 +276,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
     state, stateSource, matchStatus, myTeamSide, isMyTurn,
     teamNameA, teamNameB, userName,
     opponentDisconnected, opponentDisconnectedAt,
+    turnTimerDeadline, turnTimerSeconds,
     setState, setMatchStatus, setMyTeamSide, setIsMyTurn,
   } = useGameState(matchId);
 
@@ -895,6 +896,8 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
         wsConnected={wsConnected}
         wsReconnecting={wsReconnecting}
         wsReconnectAttempt={wsReconnectAttempt}
+        turnTimerDeadline={turnTimerDeadline ?? undefined}
+        turnTimerSeconds={turnTimerSeconds}
         {...(state?.half > 0 && (!isActiveMatch || isMyTurn) ? { onEndTurn: handleEndTurn } : {})}
       />
       {isActiveMatch && (
