@@ -11,6 +11,7 @@ import { rollKickoffEvent, applyKickoffEvent } from '../mechanics/kickoff-events
 import { calculateMatchWinnings } from '../utils/team-value-calculator';
 import { FULL_RULES } from './rules-config';
 import type { PurchasedInducement } from './inducements';
+import { expelSecretWeapons } from '../mechanics/secret-weapons';
 
 // Étendre GameState pour pré-match
 export interface PreMatchState {
@@ -191,6 +192,7 @@ export function setupPreMatchWithTeams(
     casualtyResults: {},
     lastingInjuryDetails: {},
     usedStarPlayerRules: {},
+    bribesRemaining: { teamA: 0, teamB: 0 },
     turnTimerSeconds: FULL_RULES.turnTimerSeconds,
     // Log du match
     gameLog: [
@@ -333,6 +335,7 @@ export function setupPreMatch(): GameState {
     casualtyResults: {},
     lastingInjuryDetails: {},
     usedStarPlayerRules: {},
+    bribesRemaining: { teamA: 0, teamB: 0 },
     turnTimerSeconds: FULL_RULES.turnTimerSeconds,
     // Log du match
     gameLog: [createLogEntry('info', 'Phase pré-match - Les joueurs sont en réserves')],
@@ -448,6 +451,7 @@ export function setup(): GameState {
     casualtyResults: {},
     lastingInjuryDetails: {},
     usedStarPlayerRules: {},
+    bribesRemaining: { teamA: 0, teamB: 0 },
     turnTimerSeconds: FULL_RULES.turnTimerSeconds,
     // Log du match
     gameLog: [createLogEntry('info', 'Match commencé - Orcs de Fer vs Elfes Sombres')],
@@ -567,8 +571,13 @@ export function advanceHalfIfNeeded(state: GameState, rng: RNG): GameState {
         undefined
       );
 
+      // Expulser les joueurs Arme Secrète (fin de drive = mi-temps)
+      let newState = expelSecretWeapons(
+        { ...state, gameLog: [...state.gameLog, halftimeLog] },
+        rng
+      );
+
       // Récupération des joueurs KO (4+ sur D6)
-      let newState = { ...state, gameLog: [...state.gameLog, halftimeLog] };
       newState = recoverKOPlayers(newState, rng);
 
       // L'équipe qui a frappé en 1ère mi-temps reçoit en 2e, et vice versa
@@ -614,15 +623,20 @@ export function advanceHalfIfNeeded(state: GameState, rng: RNG): GameState {
         undefined
       );
 
+      // Expulser les joueurs Arme Secrète (fin de drive = fin de match)
+      const stateAfterExpulsion = expelSecretWeapons(
+        { ...state, gameLog: [...state.gameLog, endLog] },
+        rng
+      );
+
       // Calculer les résultats finaux (SPP + MVP)
-      const matchResult = calculateMatchResult(state, rng);
+      const matchResult = calculateMatchResult(stateAfterExpulsion, rng);
 
       return {
-        ...state,
+        ...stateAfterExpulsion,
         gamePhase: 'ended' as const,
         isTurnover: true,
         matchResult,
-        gameLog: [...state.gameLog, endLog],
       };
     }
   }
@@ -786,8 +800,11 @@ export function handlePostTouchdown(state: GameState, rng: RNG): GameState {
   const newKickingTeam: TeamId = scoringTeam === 'A' ? 'A' : 'B';
   const receivingTeam: TeamId = newKickingTeam === 'A' ? 'B' : 'A';
 
+  // Expulser les joueurs Arme Secrète avant le reset (fin de drive)
+  let newState = expelSecretWeapons(state, rng);
+
   // Reset players
-  let newState = resetPlayerPositions(state);
+  newState = resetPlayerPositions(newState);
 
   // Récupération des joueurs KO (4+ sur D6) avant le nouveau drive
   newState = recoverKOPlayers(newState, rng);
@@ -1352,10 +1369,39 @@ export function startMatchFromKickoff(state: ExtendedGameState): GameState {
     casualtyResults: {},
     lastingInjuryDetails: {},
     usedStarPlayerRules: state.usedStarPlayerRules ?? {},
+    bribesRemaining: initializeBribesFromInducements(preMatch, state.prayerEffects),
     fanAttendance,
     dedicatedFans,
     gameLog: [...state.gameLog, matchStartLog],
   };
+}
+
+/**
+ * Calcule le nombre de bribes disponibles pour chaque équipe
+ * à partir des inducements achetés et des prières à Nuffle.
+ */
+function initializeBribesFromInducements(preMatch: PreMatchState, prayerEffects?: GameState['prayerEffects']): { teamA: number; teamB: number } {
+  const bribes = { teamA: 0, teamB: 0 };
+  // Inducements achetés
+  if (preMatch.inducements) {
+    for (const teamKey of ['teamA', 'teamB'] as const) {
+      const items = preMatch.inducements[teamKey].items;
+      const bribeItem = items.find(i => i.slug === 'bribe');
+      if (bribeItem) {
+        bribes[teamKey] = bribeItem.quantity;
+      }
+    }
+  }
+  // Prières à Nuffle (Prayer 2 & 13 → +1 bribe chacune)
+  if (prayerEffects) {
+    for (const effect of prayerEffects) {
+      if (effect.type === 'bribe') {
+        const key = effect.team === 'A' ? 'teamA' : 'teamB';
+        bribes[key] += 1;
+      }
+    }
+  }
+  return bribes;
 }
 
 /**

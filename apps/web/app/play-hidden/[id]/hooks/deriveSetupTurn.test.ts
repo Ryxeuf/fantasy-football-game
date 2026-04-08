@@ -20,6 +20,7 @@ function baseState() {
     casualtyResults: {} as Record<string, any>,
     lastingInjuryDetails: {} as Record<string, any>,
     usedStarPlayerRules: {} as Record<string, any>,
+    bribesRemaining: { teamA: 0, teamB: 0 },
     apothecaryAvailable: { teamA: false, teamB: false },
     teamRerolls: { teamA: 3, teamB: 3 },
     rerollUsedThisTurn: false,

@@ -136,6 +136,9 @@ export { executePass, executeHandoff, getPassRange, getDistance, findInterceptor
 // Export des fonctions de faute
 export { canFoul, executeFoul, calculateFoulAssists } from './mechanics/foul';
 
+// Export du système d'armes secrètes
+export { expelSecretWeapons, getSecretWeaponPlayers } from './mechanics/secret-weapons';
+
 // Export des effets météo
 export {
   getWeatherModifiers,

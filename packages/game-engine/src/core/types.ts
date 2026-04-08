@@ -214,6 +214,8 @@ export interface GameState {
   gameLog: GameLogEntry[];
   // Suivi des règles spéciales de Star Players utilisées (clé: "playerId:ruleSlug")
   usedStarPlayerRules: Record<string, boolean>;
+  // Nombre de bribes restantes par équipe (achetées via inducements ou prières)
+  bribesRemaining: { teamA: number; teamB: number };
 }
 
 export interface DiceResult {
