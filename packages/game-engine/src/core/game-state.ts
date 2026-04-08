@@ -8,6 +8,7 @@ import { createLogEntry } from '../utils/logging';
 import { checkTouchdowns } from '../mechanics/ball';
 import { initializeDugouts } from '../mechanics/dugout';
 import { rollKickoffEvent, applyKickoffEvent } from '../mechanics/kickoff-events';
+import { calculateMatchWinnings } from '../utils/team-value-calculator';
 import type { PurchasedInducement } from './inducements';
 
 // Étendre GameState pour pré-match
@@ -625,9 +626,14 @@ export function advanceHalfIfNeeded(state: GameState, rng: RNG): GameState {
 }
 
 /**
- * Calcule les résultats finaux du match : vainqueur, SPP et MVP
+ * Calcule les résultats finaux du match : vainqueur, SPP, MVP, gains et dedicated fans
  */
-function calculateMatchResult(state: GameState, rng: RNG): { winner?: TeamId; spp: Record<string, number> } {
+function calculateMatchResult(state: GameState, rng: RNG): {
+  winner?: TeamId;
+  spp: Record<string, number>;
+  winnings?: { teamA: number; teamB: number };
+  dedicatedFansChange?: { teamA: number; teamB: number };
+} {
   // Déterminer le vainqueur
   let winner: TeamId | undefined;
   if (state.score.teamA > state.score.teamB) winner = 'A';
@@ -661,7 +667,37 @@ function calculateMatchResult(state: GameState, rng: RNG): { winner?: TeamId; sp
     }
   }
 
-  return { winner, spp };
+  // Calculer les gains (winnings) selon les règles Blood Bowl
+  // Gains = (Fan Attendance / 2 + Touchdowns marqués) × 10,000 po
+  const fanAttendance = state.fanAttendance ?? 0;
+  const winnings = {
+    teamA: calculateMatchWinnings(fanAttendance, state.score.teamA),
+    teamB: calculateMatchWinnings(fanAttendance, state.score.teamB),
+  };
+
+  // Mise à jour des dedicated fans selon les règles BB
+  // Gagnant : D6 >= dedicatedFans → +1
+  // Perdant : D6 < dedicatedFans → -1 (minimum 1)
+  // Match nul : pas de changement
+  const dedicatedFansChange = { teamA: 0, teamB: 0 };
+  if (winner && state.dedicatedFans) {
+    const winnerKey = winner === 'A' ? 'teamA' : 'teamB';
+    const loserKey = winner === 'A' ? 'teamB' : 'teamA';
+
+    // Gagnant : D6, si >= dedicatedFans → +1
+    const winnerRoll = Math.floor(rng() * 6) + 1;
+    if (winnerRoll >= state.dedicatedFans[winnerKey]) {
+      dedicatedFansChange[winnerKey] = 1;
+    }
+
+    // Perdant : D6, si < dedicatedFans → -1 (mais pas en dessous de 1)
+    const loserRoll = Math.floor(rng() * 6) + 1;
+    if (loserRoll < state.dedicatedFans[loserKey] && state.dedicatedFans[loserKey] > 1) {
+      dedicatedFansChange[loserKey] = -1;
+    }
+  }
+
+  return { winner, spp, winnings, dedicatedFansChange };
 }
 
 /**
@@ -1285,6 +1321,15 @@ export function startMatchFromKickoff(state: ExtendedGameState): GameState {
   // Retirer la propriété preMatch pour passer en mode match normal
   const { preMatch, ...matchState } = state;
 
+  // Préserver fan attendance et dedicated fans pour le calcul post-match
+  const fanFactor = preMatch.fanFactor;
+  const fanAttendance = fanFactor
+    ? fanFactor.teamA.total + fanFactor.teamB.total
+    : undefined;
+  const dedicatedFans = fanFactor
+    ? { teamA: fanFactor.teamA.dedicatedFans, teamB: fanFactor.teamB.dedicatedFans }
+    : undefined;
+
   return {
     ...matchState,
     gamePhase: 'playing' as const,
@@ -1303,6 +1348,8 @@ export function startMatchFromKickoff(state: ExtendedGameState): GameState {
     casualtyResults: {},
     lastingInjuryDetails: {},
     usedStarPlayerRules: state.usedStarPlayerRules ?? {},
+    fanAttendance,
+    dedicatedFans,
     gameLog: [...state.gameLog, matchStartLog],
   };
 }

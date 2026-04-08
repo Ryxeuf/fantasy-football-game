@@ -184,6 +184,45 @@ export async function processMove(
           // ELO update error — non-blocking
         }
       }
+
+      // Persist winnings (treasury) and dedicated fans changes
+      if (newState.matchResult) {
+        const { winnings, dedicatedFansChange } = newState.matchResult;
+
+        try {
+          if (winnings) {
+            await prisma.team.update({
+              where: { id: teamAId },
+              data: { treasury: { increment: winnings.teamA } },
+            });
+            await prisma.team.update({
+              where: { id: teamBId },
+              data: { treasury: { increment: winnings.teamB } },
+            });
+          }
+        } catch {
+          // Treasury update error — non-blocking
+        }
+
+        try {
+          if (dedicatedFansChange) {
+            if (dedicatedFansChange.teamA !== 0) {
+              await prisma.team.update({
+                where: { id: teamAId },
+                data: { dedicatedFans: { increment: dedicatedFansChange.teamA } },
+              });
+            }
+            if (dedicatedFansChange.teamB !== 0) {
+              await prisma.team.update({
+                where: { id: teamBId },
+                data: { dedicatedFans: { increment: dedicatedFansChange.teamB } },
+              });
+            }
+          }
+        } catch {
+          // Dedicated fans update error — non-blocking
+        }
+      }
     }
   }
 

@@ -1184,6 +1184,11 @@ router.get("/:id/results", authUser, async (req: AuthenticatedRequest, res) => {
       teamStats[side].interceptions += stats.interceptions || 0;
     }
 
+    // Extract winnings and dedicated fans change from matchResult
+    const winnings = matchResult?.winnings || null;
+    const dedicatedFansChange = matchResult?.dedicatedFansChange || null;
+    const fanAttendance = gameState?.fanAttendance || null;
+
     return res.json({
       matchId,
       status: "ended",
@@ -1207,6 +1212,9 @@ router.get("/:id/results", authUser, async (req: AuthenticatedRequest, res) => {
       },
       matchStats,
       matchResult,
+      winnings,
+      dedicatedFansChange,
+      fanAttendance,
       players: players.map((p: any) => ({
         id: p.id,
         team: p.team,
