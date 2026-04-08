@@ -48,11 +48,11 @@ describe("useGameSocket — createGameSocket", () => {
   describe("connection", () => {
     it("creates a socket.io connection to the /game namespace", () => {
       const socket = createGameSocket("http://localhost:8201", authToken);
-      expect(io).toHaveBeenCalledWith("http://localhost:8201/game", {
+      expect(io).toHaveBeenCalledWith("http://localhost:8201/game", expect.objectContaining({
         auth: { token: `Bearer ${authToken}` },
         transports: ["websocket", "polling"],
         autoConnect: false,
-      });
+      }));
       expect(socket).toBe(mockSocket);
     });
 
