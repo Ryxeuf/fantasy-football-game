@@ -47,6 +47,7 @@ import MatchEndScreen from "../../components/MatchEndScreen";
 import PreMatchSummary from "../../components/PreMatchSummary";
 import InducementSelector from "../../components/InducementSelector";
 import { INDUCEMENT_CATALOGUE, type InducementSelection, type InducementDefinition } from "@bb/game-engine";
+import { ForfeitWarning } from "../../components/ForfeitWarning";
 import { useTurnNotification } from "./hooks/useTurnNotification";
 import { useSoundEffects } from "./hooks/useSoundEffects";
 import { getSoundManager } from "./hooks/sound-manager";
@@ -274,6 +275,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
   const {
     state, stateSource, matchStatus, myTeamSide, isMyTurn,
     teamNameA, teamNameB, userName,
+    opponentDisconnected, opponentDisconnectedAt,
     setState, setMatchStatus, setMyTeamSide, setIsMyTurn,
   } = useGameState(matchId);
 
@@ -895,6 +897,12 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
         wsReconnectAttempt={wsReconnectAttempt}
         {...(state?.half > 0 && (!isActiveMatch || isMyTurn) ? { onEndTurn: handleEndTurn } : {})}
       />
+      {isActiveMatch && (
+        <ForfeitWarning
+          opponentDisconnected={opponentDisconnected}
+          disconnectedAt={opponentDisconnectedAt}
+        />
+      )}
       {/* Bandeau de statut de tour (match actif) */}
       {isActiveMatch && (
         <div

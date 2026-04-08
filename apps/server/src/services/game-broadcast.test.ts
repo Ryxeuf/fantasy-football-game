@@ -5,7 +5,7 @@ vi.mock("../socket", () => ({
   getGameNamespace: vi.fn(),
 }));
 
-import { broadcastGameState, broadcastMatchEnd } from "./game-broadcast";
+import { broadcastGameState, broadcastMatchEnd, broadcastMatchForfeited } from "./game-broadcast";
 import { getGameNamespace } from "../socket";
 
 describe("game-broadcast", () => {
@@ -77,6 +77,34 @@ describe("game-broadcast", () => {
       });
 
       expect(() => broadcastMatchEnd(matchId, gameState)).not.toThrow();
+    });
+  });
+
+  describe("broadcastMatchForfeited", () => {
+    const matchId = "match-789";
+    const forfeitingUserId = "user-forfeit";
+    const gameState = { gamePhase: "ended", matchResult: { winner: "B", forfeit: true } };
+
+    it("emits game:match-forfeited to the match room", () => {
+      broadcastMatchForfeited(matchId, forfeitingUserId, gameState);
+
+      expect(mockTo).toHaveBeenCalledWith(matchId);
+      expect(mockEmit).toHaveBeenCalledWith("game:match-forfeited", {
+        matchId,
+        forfeitingUserId,
+        gameState,
+        timestamp: expect.any(String),
+      });
+    });
+
+    it("does not throw if socket.io is not initialized", () => {
+      vi.mocked(getGameNamespace).mockImplementation(() => {
+        throw new Error("socket.io not initialized");
+      });
+
+      expect(() =>
+        broadcastMatchForfeited(matchId, forfeitingUserId, gameState),
+      ).not.toThrow();
     });
   });
 });

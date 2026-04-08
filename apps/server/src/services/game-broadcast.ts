@@ -42,3 +42,25 @@ export function broadcastMatchEnd(
     // Socket.io may not be initialized in tests or during startup
   }
 }
+
+/**
+ * Broadcast match forfeit event to all players in a match room.
+ * Sent when a player disconnects for longer than the forfeit timeout.
+ */
+export function broadcastMatchForfeited(
+  matchId: string,
+  forfeitingUserId: string,
+  gameState: unknown,
+): void {
+  try {
+    const gameNs = getGameNamespace();
+    gameNs.to(matchId).emit("game:match-forfeited", {
+      matchId,
+      forfeitingUserId,
+      gameState,
+      timestamp: new Date().toISOString(),
+    });
+  } catch {
+    // Socket.io may not be initialized in tests or during startup
+  }
+}
