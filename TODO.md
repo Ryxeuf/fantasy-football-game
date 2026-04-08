@@ -108,7 +108,7 @@
 | A.8 | Fallback polling si WebSocket echoue | Multiplayer | [x] |
 | A.9 | Indicateur de connexion online/offline dans le HUD | UI | [x] |
 | C.4 | Notification match trouve via WebSocket | Matchmaking | [x] |
-| C.5 | Phase de setup en ligne (placement + bouton Pret) | Game flow | [ ] |
+| C.5 | Phase de setup en ligne (placement + bouton Pret) | Game flow | [x] |
 | C.6 | Sequence pre-match automatisee online | Game flow | [ ] |
 | C.7 | Fin de match en ligne (ecran resultats) | Game flow | [ ] |
 | C.8 | Abandon / deconnexion = defaite (forfait > 2 min) | Multiplayer | [ ] |
