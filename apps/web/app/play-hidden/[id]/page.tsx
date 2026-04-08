@@ -282,16 +282,13 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
   const createRNG = () => makeRNG(`ui-seed-${Date.now()}-${Math.random()}`);
 
   // WebSocket connection for real-time move submission
+  // Note: state updates are already handled by useGameState's internal useGameSocket
   const {
     submitMove: wsSubmitMove,
     connected: wsConnected,
     reconnecting: wsReconnecting,
     reconnectAttempt: wsReconnectAttempt,
-  } = useGameSocket(matchId, {
-    onStateUpdate: (data) => {
-      setState(normalizeState(data.gameState));
-    },
-  });
+  } = useGameSocket(matchId);
 
   const { submitMove, submitting: moveSubmitting } = useGameMoves(matchId, {
     wsSubmitMove,
@@ -310,6 +307,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
   const boardRef = useRef<HTMLDivElement | null>(null);
   const [currentCellSize, setCurrentCellSize] = useState(28);
   const [setupError, setSetupError] = useState<string | null>(null);
+  const [setupSubmitting, setSetupSubmitting] = useState(false);
 
   function showSetupError(msg: string) {
     setSetupError(msg);
@@ -431,6 +429,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
   const handleDragStart = (e: React.DragEvent, playerId: string) => {
     const ext = state as ExtendedGameState | null;
     if (!ext || ext.preMatch?.phase !== "setup") return;
+    if (setupSubmitting) return; // Bloquer pendant la soumission
     // Autoriser uniquement le coach courant et ses joueurs
     const isMyTeam = (() => {
       // On déduit mon côté via teamNameA/B comparés à state.teamNames
@@ -628,9 +627,10 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
 
   // Fonction pour valider le placement et sauvegarder en base
   const handleValidatePlacement = async () => {
-    if (!state) return;
+    if (!state || setupSubmitting) return;
     const extState = state as ExtendedGameState;
 
+    setSetupSubmitting(true);
     try {
       const token = localStorage.getItem("auth_token");
       if (!token) {
@@ -669,6 +669,8 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
     } catch (error) {
       console.error("Erreur lors de la validation du placement:", error);
       showSetupError("Erreur lors de la sauvegarde du placement");
+    } finally {
+      setSetupSubmitting(false);
     }
   };
 
@@ -679,6 +681,12 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
     // Bloquer si match actif et pas mon tour (ou soumission en cours)
     if (isActiveMatch && (!isMyTurn || moveSubmitting)) return;
     const extState = state as ExtendedGameState;
+    // Bloquer les interactions setup quand ce n'est pas mon tour ou soumission en cours
+    if (extState.preMatch?.phase === "setup") {
+      const mySide = myTeamSide || getMySide(extState);
+      if (mySide && mySide !== extState.preMatch.currentCoach) return;
+      if (setupSubmitting) return;
+    }
     if (extState.preMatch?.phase === "setup") {
       // Mode setup : placer selectedFromReserve sur pos si légal
       if (selectedFromReserve) {
@@ -913,17 +921,20 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
       {/* Bandeau de statut pré-match (setup) */}
       {!isActiveMatch && matchStatus === "prematch-setup" && state?.preMatch?.phase === "setup" && (
         <div
-          className={`fixed top-0 left-0 right-0 z-50 text-center py-2 text-sm font-bold flex items-center justify-center gap-4 ${
+          className={`fixed top-0 left-0 right-0 z-50 text-center py-3 text-sm font-bold flex items-center justify-center gap-4 transition-colors duration-300 ${
             isMyTurn
-              ? "bg-green-500 text-white"
+              ? "bg-green-600 text-white"
               : "bg-yellow-400 text-gray-900"
           }`}
         >
           <span>
             {isMyTurn
-              ? "Placez vos 11 joueurs sur le terrain"
+              ? "Placez vos 11 joueurs puis cliquez Prêt !"
               : `En attente du placement de ${state.preMatch.currentCoach === "A" ? state.teamNames.teamA : state.teamNames.teamB}...`}
           </span>
+          {!isMyTurn && (
+            <span className="inline-block w-4 h-4 border-2 border-gray-700 border-t-transparent rounded-full animate-spin" />
+          )}
         </div>
       )}
       {/* Wrapper pour éléments pré-match, à l'intérieur du container principal */}
@@ -1031,9 +1042,14 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
                           <div className="mt-3">
                             <button
                               onClick={handleValidatePlacement}
-                              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors font-semibold"
+                              disabled={setupSubmitting}
+                              className={`px-6 py-3 text-white rounded-lg font-bold text-lg transition-all shadow-md ${
+                                setupSubmitting
+                                  ? "bg-gray-400 cursor-not-allowed"
+                                  : "bg-green-600 hover:bg-green-700 hover:shadow-lg active:scale-95"
+                              }`}
                             >
-                              Valider le placement
+                              {setupSubmitting ? "Validation..." : "Prêt !"}
                             </button>
                           </div>
                         );

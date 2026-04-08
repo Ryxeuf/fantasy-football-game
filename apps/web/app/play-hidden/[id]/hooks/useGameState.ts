@@ -4,6 +4,7 @@ import type { ExtendedGameState } from "@bb/game-engine";
 import { setupPreMatchWithTeams } from "@bb/game-engine";
 import { API_BASE } from "../../../auth-client";
 import { useGameSocket } from "./useGameSocket";
+import { deriveIsMyTurn } from "./deriveSetupTurn";
 import type { StateUpdatedPayload, MatchEndedPayload, PlayerConnectionPayload } from "./useGameSocket";
 
 function normalizeState(state: any): ExtendedGameState {
@@ -47,6 +48,10 @@ export function useGameState(matchId: string): GameStateInfo {
   const [userName, setUserName] = useState<string | undefined>(undefined);
 
   const isActiveMatch = matchStatus === "active";
+
+  // Ref for myTeamSide — used inside useCallback to avoid stale closures
+  const myTeamSideRef = useRef(myTeamSide);
+  myTeamSideRef.current = myTeamSide;
 
   // Auth check + join
   useEffect(() => {
@@ -182,8 +187,16 @@ export function useGameState(matchId: string): GameStateInfo {
   const { connected: wsConnected } = useGameSocket(matchId, {
     onStateUpdate: useCallback((data: StateUpdatedPayload) => {
       if (data.gameState) {
-        setState(normalizeState(data.gameState));
+        const gs = normalizeState(data.gameState);
+        setState(gs);
         setStateSource("server");
+        // Derive isMyTurn from game state so opponent instantly knows when it's their turn
+        const derived = deriveIsMyTurn(gs, myTeamSideRef.current);
+        setIsMyTurn(derived);
+        // Detect phase transitions (e.g. prematch-setup → active)
+        if (gs.gamePhase === "playing" && gs.half >= 1) {
+          setMatchStatus("active");
+        }
       }
     }, []),
     onMatchEnded: useCallback((data: MatchEndedPayload) => {

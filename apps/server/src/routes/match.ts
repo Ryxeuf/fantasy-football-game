@@ -885,6 +885,12 @@ router.post(
         },
       });
 
+      // Notifier l'adversaire via WebSocket
+      try {
+        const { broadcastGameState } = await import("../services/game-broadcast");
+        broadcastGameState(matchId, newState, { type: "place-kickoff-ball" }, req.user!.id);
+      } catch {}
+
       return res.json({
         success: true,
         gameState: newState,
@@ -945,6 +951,12 @@ router.post(
           },
         },
       });
+
+      // Notifier l'adversaire via WebSocket
+      try {
+        const { broadcastGameState } = await import("../services/game-broadcast");
+        broadcastGameState(matchId, newState, { type: "calculate-kick-deviation" }, req.user!.id);
+      } catch {}
 
       return res.json({
         success: true,
@@ -1029,6 +1041,12 @@ router.post(
           },
         },
       });
+
+      // Notifier les deux joueurs via WebSocket que le match commence
+      try {
+        const { broadcastGameState } = await import("../services/game-broadcast");
+        broadcastGameState(matchId, matchState, { type: "resolve-kickoff-event" }, req.user!.id);
+      } catch {}
 
       return res.json({
         success: true,
