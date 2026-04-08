@@ -25,6 +25,9 @@ export interface RulesConfig {
   maxGFI: number;                 // Nombre max de GFI (2 en full, 0 en simplified)
   turnsPerHalf: number;           // Nombre de tours par mi-temps (8 en full)
   rerollsPerTeam: number;         // Nombre de relances par défaut
+
+  // Timer de tour (en secondes, 0 = désactivé)
+  turnTimerSeconds: number;
 }
 
 /**
@@ -46,6 +49,7 @@ export const FULL_RULES: RulesConfig = {
   maxGFI: 2,
   turnsPerHalf: 8,
   rerollsPerTeam: 3,
+  turnTimerSeconds: 120,
 };
 
 /**
@@ -75,6 +79,7 @@ export const SIMPLIFIED_RULES: RulesConfig = {
   maxGFI: 0,
   turnsPerHalf: 6,
   rerollsPerTeam: 4,
+  turnTimerSeconds: 90,
 };
 
 /**

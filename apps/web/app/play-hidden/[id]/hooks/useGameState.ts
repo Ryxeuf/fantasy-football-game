@@ -5,7 +5,7 @@ import { setupPreMatchWithTeams } from "@bb/game-engine";
 import { API_BASE } from "../../../auth-client";
 import { useGameSocket } from "./useGameSocket";
 import { deriveIsMyTurn } from "./deriveSetupTurn";
-import type { StateUpdatedPayload, MatchEndedPayload, PlayerConnectionPayload, MatchForfeitedPayload } from "./useGameSocket";
+import type { StateUpdatedPayload, MatchEndedPayload, PlayerConnectionPayload, MatchForfeitedPayload, TurnTimerStartedPayload } from "./useGameSocket";
 
 function normalizeState(state: any): ExtendedGameState {
   if (!state) return state;
@@ -32,6 +32,10 @@ export interface GameStateInfo {
   opponentDisconnected: boolean;
   /** Timestamp (ms) when the opponent disconnected, or null. */
   opponentDisconnectedAt: number | null;
+  /** Turn timer deadline (ms epoch) from server, or null if no timer active. */
+  turnTimerDeadline: number | null;
+  /** Turn timer total duration in seconds (from server). */
+  turnTimerSeconds: number;
   setState: (s: ExtendedGameState | ((prev: ExtendedGameState | null) => ExtendedGameState | null)) => void;
   setMatchStatus: (s: string | null) => void;
   setMyTeamSide: (s: "A" | "B" | null) => void;
@@ -52,6 +56,8 @@ export function useGameState(matchId: string): GameStateInfo {
   const [userName, setUserName] = useState<string | undefined>(undefined);
   const [opponentDisconnected, setOpponentDisconnected] = useState(false);
   const [opponentDisconnectedAt, setOpponentDisconnectedAt] = useState<number | null>(null);
+  const [turnTimerDeadline, setTurnTimerDeadline] = useState<number | null>(null);
+  const [turnTimerSeconds, setTurnTimerSeconds] = useState(0);
 
   const isActiveMatch = matchStatus === "active";
 
@@ -229,6 +235,10 @@ export function useGameState(matchId: string): GameStateInfo {
       setOpponentDisconnected(false);
       setOpponentDisconnectedAt(null);
     }, []),
+    onTurnTimerStarted: useCallback((data: TurnTimerStartedPayload) => {
+      setTurnTimerDeadline(data.deadline);
+      setTurnTimerSeconds(data.turnTimerSeconds);
+    }, []),
   });
 
   // Fallback polling — slow interval (30s) when WebSocket is connected, faster (5s) when not.
@@ -309,6 +319,7 @@ export function useGameState(matchId: string): GameStateInfo {
     state, stateSource, matchStatus, myTeamSide, isMyTurn,
     teamNameA, teamNameB, userName,
     opponentDisconnected, opponentDisconnectedAt,
+    turnTimerDeadline, turnTimerSeconds,
     setState, setMatchStatus, setMyTeamSide, setIsMyTurn,
   };
 }

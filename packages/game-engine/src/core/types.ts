@@ -206,6 +206,10 @@ export interface GameState {
     playerId?: string;
     details?: Record<string, unknown>;
   }>;
+  // Timer de tour (en secondes, 0 = désactivé)
+  turnTimerSeconds: number;
+  // Deadline ISO du timer actuel (mis à jour côté serveur, utilisé côté client pour l'affichage)
+  turnDeadline?: string;
   // Log du match
   gameLog: GameLogEntry[];
   // Suivi des règles spéciales de Star Players utilisées (clé: "playerId:ruleSlug")

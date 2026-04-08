@@ -35,6 +35,13 @@ export interface MatchForfeitedPayload {
   timestamp: string;
 }
 
+export interface TurnTimerStartedPayload {
+  matchId: string;
+  deadline: number;
+  turnTimerSeconds: number;
+  timestamp: string;
+}
+
 export interface MoveAckPayload {
   success: boolean;
   gameState?: ExtendedGameState;
@@ -57,6 +64,7 @@ export type GameSocketEvents = {
   "game:player-disconnected": PlayerConnectionPayload;
   "game:match-ended": MatchEndedPayload;
   "game:match-forfeited": MatchForfeitedPayload;
+  "game:turn-timer-started": TurnTimerStartedPayload;
 };
 
 // --- Pure factory (testable without React) ---
@@ -119,6 +127,10 @@ export function createGameSocketHelpers(socket: Socket) {
       socket.on("game:match-forfeited", handler);
     },
 
+    onTurnTimerStarted(handler: (data: TurnTimerStartedPayload) => void): void {
+      socket.on("game:turn-timer-started", handler);
+    },
+
     submitMove(matchId: string, move: Move): Promise<MoveAckPayload> {
       return new Promise((resolve) => {
         socket.emit(
@@ -164,6 +176,7 @@ export function createGameSocketHelpers(socket: Socket) {
       socket.off("game:player-disconnected");
       socket.off("game:match-ended");
       socket.off("game:match-forfeited");
+      socket.off("game:turn-timer-started");
     },
   };
 }
@@ -183,6 +196,8 @@ export interface UseGameSocketOptions {
   onMatchForfeited?: (data: MatchForfeitedPayload) => void;
   /** Callback when a resync provides a fresh game state after reconnection. */
   onResyncState?: (data: ResyncPayload) => void;
+  /** Callback when the server sends turn timer info. */
+  onTurnTimerStarted?: (data: TurnTimerStartedPayload) => void;
 }
 
 export interface UseGameSocketResult {
@@ -331,6 +346,10 @@ export function useGameSocket(
 
     helpers.onMatchForfeited((data) => {
       optionsRef.current.onMatchForfeited?.(data);
+    });
+
+    helpers.onTurnTimerStarted((data) => {
+      optionsRef.current.onTurnTimerStarted?.(data);
     });
 
     // Connect

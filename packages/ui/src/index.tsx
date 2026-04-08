@@ -53,6 +53,7 @@ export { default as PlayerDetails } from "./components/PlayerDetails";
 export { default as GameScoreboard } from "./components/GameScoreboard";
 export { default as GameLog } from "./components/GameLog";
 export { default as BlockDiceIcon } from "./components/BlockDiceIcon";
+export { default as TurnTimer } from "./components/TurnTimer";
 
 // Popup components
 export { default as DiceResultPopup } from "./popups/DiceResultPopup";

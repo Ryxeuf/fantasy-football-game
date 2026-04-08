@@ -1,5 +1,6 @@
 import React, { useMemo, useEffect, useState } from "react";
 import type { GameState, GameLogEntry } from "@bb/game-engine";
+import TurnTimer from "./TurnTimer";
 
 interface GameScoreboardProps {
   state: GameState | null | undefined;
@@ -13,6 +14,8 @@ interface GameScoreboardProps {
   wsConnected?: boolean;
   wsReconnecting?: boolean;
   wsReconnectAttempt?: number;
+  turnTimerDeadline?: number;
+  turnTimerSeconds?: number;
 }
 
 export default function GameScoreboard({
@@ -27,6 +30,8 @@ export default function GameScoreboard({
   wsConnected,
   wsReconnecting,
   wsReconnectAttempt,
+  turnTimerDeadline,
+  turnTimerSeconds,
 }: GameScoreboardProps) {
   // Si state n'est pas disponible, afficher un message de chargement
   if (!state) {
@@ -150,6 +155,14 @@ export default function GameScoreboard({
               {getCurrentTeamName()}
             </div>
           </div>
+
+          {/* Turn Timer */}
+          {turnTimerDeadline && turnTimerSeconds && turnTimerSeconds > 0 && (
+            <TurnTimer
+              deadline={turnTimerDeadline}
+              turnTimerSeconds={turnTimerSeconds}
+            />
+          )}
         </div>
 
         {/* Score au centre */}
