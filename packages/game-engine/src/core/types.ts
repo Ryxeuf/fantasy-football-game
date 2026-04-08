@@ -187,10 +187,16 @@ export interface GameState {
   casualtyResults: Record<string, CasualtyOutcome>; // playerId -> outcome
   // Détails des blessures permanentes (serious_injury / lasting_injury)
   lastingInjuryDetails: Record<string, LastingInjuryDetail>; // playerId -> injury detail
+  // Fan attendance (somme des fan factors des deux équipes, calculé en pré-match)
+  fanAttendance?: number;
+  // Dedicated fans par équipe (préservés depuis pré-match pour calcul post-match)
+  dedicatedFans?: { teamA: number; teamB: number };
   // Résultats finaux (rempli en fin de match)
   matchResult?: {
     winner?: TeamId;
     spp: Record<string, number>; // playerId -> SPP earned
+    winnings?: { teamA: number; teamB: number }; // Gains en pièces d'or
+    dedicatedFansChange?: { teamA: number; teamB: number }; // Changement de dedicated fans (+1/0/-1)
   };
   // Effets de prières à Nuffle actifs pour ce match
   prayerEffects?: Array<{

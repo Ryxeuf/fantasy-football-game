@@ -28,6 +28,9 @@ interface MatchResults {
   teams: { A: TeamResult; B: TeamResult };
   matchStats: Record<string, any>;
   matchResult: { winner?: string; spp: Record<string, number> };
+  winnings: { teamA: number; teamB: number } | null;
+  dedicatedFansChange: { teamA: number; teamB: number } | null;
+  fanAttendance: number | null;
   players: Array<{
     id: string;
     team: "A" | "B";
@@ -51,6 +54,12 @@ function StatRow({ label, valueA, valueB }: { label: string; valueA: number; val
       <span className="w-16 text-left font-semibold text-gray-800">{valueB}</span>
     </div>
   );
+}
+
+function FanChangeLabel({ change }: { change: number }) {
+  if (change > 0) return <span className="text-green-600">+{change}</span>;
+  if (change < 0) return <span className="text-red-600">{change}</span>;
+  return <span className="text-gray-400">—</span>;
 }
 
 export default function MatchEndScreen({ matchId, myTeamSide, onClose }: MatchEndScreenProps) {
@@ -202,6 +211,44 @@ export default function MatchEndScreen({ matchId, myTeamSide, onClose }: MatchEn
             <StatRow label="Interceptions" valueA={teams.A.stats.interceptions} valueB={teams.B.stats.interceptions} />
           </div>
         </div>
+
+        {/* Winnings & Fan Factor section */}
+        {(results.winnings || results.dedicatedFansChange) && (
+          <div className="px-6 pb-4">
+            <div className="bg-amber-50 rounded-xl p-4">
+              <h3 className="text-center text-sm font-semibold text-amber-700 uppercase tracking-wide mb-3">
+                Gains &amp; Fans
+              </h3>
+              {results.winnings && (
+                <div className="flex items-center justify-between py-2 border-b border-amber-200">
+                  <span className="w-24 text-right font-semibold text-gray-800">
+                    {results.winnings.teamA.toLocaleString()} po
+                  </span>
+                  <span className="flex-1 text-center text-sm text-gray-500">Gains</span>
+                  <span className="w-24 text-left font-semibold text-gray-800">
+                    {results.winnings.teamB.toLocaleString()} po
+                  </span>
+                </div>
+              )}
+              {results.dedicatedFansChange && (
+                <div className="flex items-center justify-between py-2">
+                  <span className="w-24 text-right font-semibold">
+                    <FanChangeLabel change={results.dedicatedFansChange.teamA} />
+                  </span>
+                  <span className="flex-1 text-center text-sm text-gray-500">Fans Dévoués</span>
+                  <span className="w-24 text-left font-semibold">
+                    <FanChangeLabel change={results.dedicatedFansChange.teamB} />
+                  </span>
+                </div>
+              )}
+              {results.fanAttendance != null && (
+                <p className="text-center text-xs text-gray-400 mt-2">
+                  Affluence : {results.fanAttendance} fans
+                </p>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* SPP section — reuse existing component */}
         {results.matchStats && Object.keys(results.matchStats).length > 0 && results.players.length > 0 && (
