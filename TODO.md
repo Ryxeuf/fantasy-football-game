@@ -120,7 +120,7 @@
 | # | Tache | Type | Statut |
 |---|-------|------|--------|
 | B2.5 | Secret Weapons — expulsion fin de drive + Bribe | Regle | [x] |
-| B2.7 | Animosity — jet avant passe/handoff | Regle | [ ] |
+| B2.7 | Animosity — jet avant passe/handoff | Regle | [x] |
 | B2.8 | Decay — blessures 1 niveau plus grave | Regle | [ ] |
 | B2.4 | Throw Team-Mate — mecanique complete | Regle | [ ] |
 | B2.9 | Hypnotic Gaze — action speciale | Regle | [ ] |

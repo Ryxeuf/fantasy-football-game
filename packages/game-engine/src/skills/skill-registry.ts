@@ -572,3 +572,42 @@ registerSkill({
   description: 'Ce joueur doit obtenir 5+ sur un D6 pour utiliser une relance d\'équipe.',
   canApply: (ctx) => hasSkill(ctx.player, 'loner-5'),
 });
+
+// ─── ANIMOSITY (5 variants) ─────────────────────────────────────────────────
+// Animosity is checked in handlePass/handleHandoff before the action executes.
+// Registered here for lookup and metadata purposes.
+
+registerSkill({
+  slug: 'animosity',
+  triggers: ['on-pass'],
+  description: 'Jet d\'Animosité (D6) avant passe/remise à un coéquipier de lignée différente. Sur 1, refuse et activation terminée.',
+  canApply: (ctx) => hasSkill(ctx.player, 'animosity'),
+});
+
+registerSkill({
+  slug: 'animosity-all',
+  triggers: ['on-pass'],
+  description: 'Jet d\'Animosité (D6) avant passe/remise à tout coéquipier. Sur 1, refuse et activation terminée.',
+  canApply: (ctx) => hasSkill(ctx.player, 'animosity-all'),
+});
+
+registerSkill({
+  slug: 'animosity-underworld',
+  triggers: ['on-pass'],
+  description: 'Jet d\'Animosité (D6) avant passe/remise à un coéquipier de lignée différente (Underworld). Sur 1, refuse et activation terminée.',
+  canApply: (ctx) => hasSkill(ctx.player, 'animosity-underworld'),
+});
+
+registerSkill({
+  slug: 'animosity-all-dwarf-halfling',
+  triggers: ['on-pass'],
+  description: 'Jet d\'Animosité (D6) avant passe/remise à un coéquipier Nain ou Halfling. Sur 1, refuse et activation terminée.',
+  canApply: (ctx) => hasSkill(ctx.player, 'animosity-all-dwarf-halfling'),
+});
+
+registerSkill({
+  slug: 'animosity-all-dwarf-human',
+  triggers: ['on-pass'],
+  description: 'Jet d\'Animosité (D6) avant passe/remise à un coéquipier Nain ou Humain. Sur 1, refuse et activation terminée.',
+  canApply: (ctx) => hasSkill(ctx.player, 'animosity-all-dwarf-human'),
+});
