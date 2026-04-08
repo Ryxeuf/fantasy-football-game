@@ -102,6 +102,29 @@ describe('Règle: Thick Skull (injury modifier)', () => {
   });
 });
 
+describe('Règle: Decay (injury modifier)', () => {
+  it('returns 0 for player with no skills', () => {
+    const player = makePlayer();
+    const state = makeState([player]);
+    const mod = getInjurySkillModifiers(state, player);
+    expect(mod).toBe(0);
+  });
+
+  it('returns +1 for player with Decay', () => {
+    const player = makePlayer({ skills: ['decay'] });
+    const state = makeState([player]);
+    const mod = getInjurySkillModifiers(state, player);
+    expect(mod).toBe(1);
+  });
+
+  it('stacks with Thick Skull (Decay +1, Thick Skull -1 = 0)', () => {
+    const player = makePlayer({ skills: ['decay', 'thick-skull'] });
+    const state = makeState([player]);
+    const mod = getInjurySkillModifiers(state, player);
+    expect(mod).toBe(0);
+  });
+});
+
 describe('Règle: Dirty Player (foul armor modifier)', () => {
   it('returns 0 for player with no skills', () => {
     const player = makePlayer();
