@@ -7,8 +7,7 @@ import {
   leaveQueue,
   getQueueStatus,
 } from "../services/matchmaking";
-import { getGameNamespace } from "../socket";
-import { sendMatchFoundPush } from "../services/push-notifications";
+import { notifyMatchFound } from "../services/match-found-notify";
 
 const router = Router();
 
@@ -29,10 +28,9 @@ router.post(
         teamId,
       });
 
-      // If a match was found, notify the opponent via WebSocket + push
+      // If a match was found, notify the opponent (WebSocket if online, push if offline)
       if (result.matched) {
         notifyMatchFound(result.opponentUserId, result.matchId);
-        sendMatchFoundPush(result.opponentUserId, result.matchId);
       }
 
       return res.json(result);
@@ -83,22 +81,5 @@ router.get("/status", authUser, async (req: AuthenticatedRequest, res) => {
     return res.status(500).json({ error: message });
   }
 });
-
-/**
- * Notify a user via WebSocket that a match has been found.
- */
-function notifyMatchFound(userId: string, matchId: string): void {
-  try {
-    const gameNs = getGameNamespace();
-    // Broadcast to all sockets of this user in the /game namespace
-    for (const [, socket] of gameNs.sockets) {
-      if (socket.data.user?.id === userId) {
-        socket.emit("matchmaking:found", { matchId });
-      }
-    }
-  } catch {
-    // socket.io may not be initialized (e.g., in tests)
-  }
-}
 
 export default router;

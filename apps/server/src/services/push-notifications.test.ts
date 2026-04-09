@@ -205,7 +205,7 @@ describe("push-notifications", () => {
   });
 
   describe("sendMatchFoundPush", () => {
-    it("sends a 'match found' notification", async () => {
+    it("sends a 'match found' notification with correct payload", async () => {
       const webpush = (await import("web-push")).default;
       addSubscription(userId, subscription);
 
@@ -213,12 +213,24 @@ describe("push-notifications", () => {
 
       await new Promise((r) => setTimeout(r, 10));
 
-      expect(webpush.sendNotification).toHaveBeenCalled();
+      expect(webpush.sendNotification).toHaveBeenCalledWith(
+        subscription,
+        expect.any(String),
+      );
       const payload = JSON.parse(
         vi.mocked(webpush.sendNotification).mock.calls[0][1] as string,
       );
-      expect(payload.url).toBe("/play-hidden/match-def");
-      expect(payload.tag).toBe("match-found-match-def");
+      expect(payload).toEqual({
+        title: "Nuffle Arena",
+        body: "Un adversaire a ete trouve !",
+        icon: "/images/favicon-optimized.png",
+        url: "/play-hidden/match-def",
+        tag: "match-found-match-def",
+      });
+    });
+
+    it("does not throw if user has no subscriptions", () => {
+      expect(() => sendMatchFoundPush("no-user", "match-xyz")).not.toThrow();
     });
   });
 });
