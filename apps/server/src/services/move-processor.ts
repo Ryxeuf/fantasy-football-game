@@ -8,6 +8,7 @@ import { persistPermanentInjuries } from "./permanent-injuries";
 import { broadcastGameState, broadcastMatchEnd } from "./game-broadcast";
 import { updateEloAfterMatch } from "./elo-update";
 import { sendTurnPush } from "./push-notifications";
+import { isUserConnectedToMatch } from "./connected-users";
 import { handleTurnTimerAfterMove } from "./turn-timer-orchestrator";
 import { FULL_RULES } from "@bb/game-engine";
 
@@ -235,9 +236,12 @@ export async function processMove(
   // Broadcast to all connected players
   broadcastGameState(matchId, newState, move, userId);
 
-  // Send push notification when it becomes another player's turn
+  // Send push notification when it becomes another player's turn,
+  // but only if they are NOT already connected via WebSocket (G.3)
   if (!matchEnded && nextUserId && nextUserId !== userId) {
-    sendTurnPush(nextUserId, matchId);
+    if (!isUserConnectedToMatch(matchId, nextUserId)) {
+      sendTurnPush(nextUserId, matchId);
+    }
   }
 
   if (matchEnded) {

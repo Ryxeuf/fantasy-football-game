@@ -1,6 +1,7 @@
 import { Namespace, Socket } from "socket.io";
 import { prisma } from "./prisma";
 import { startForfeitTimer, cancelForfeitTimer } from "./services/forfeit-tracker";
+import { trackUserJoin, trackUserLeave, resetConnectedUsers } from "./services/connected-users";
 
 /**
  * Tracks which users are connected to which match rooms.
@@ -84,6 +85,9 @@ export function registerGameRoomHandlers(gameNamespace: Namespace): void {
       }
       matchRooms.get(matchId)!.add(socket.id);
 
+      // Track in connected-users for push notification decisions
+      trackUserJoin(matchId, socket.id, userId);
+
       const connectedCount = matchRooms.get(matchId)!.size;
       console.log(
         `[game-rooms] Socket ${socket.id} joined room ${matchId} (${connectedCount} connected)`,
@@ -124,6 +128,9 @@ export function registerGameRoomHandlers(gameNamespace: Namespace): void {
 function leaveRoom(socket: Socket, matchId: string): void {
   socket.leave(matchId);
   socketToMatch.delete(socket.id);
+
+  // Track in connected-users for push notification decisions
+  trackUserLeave(matchId, socket.id);
 
   const roomSockets = matchRooms.get(matchId);
   if (roomSockets) {
@@ -173,4 +180,5 @@ export function resetRooms(): void {
   matchRooms.clear();
   socketToMatch.clear();
   socketToUser.clear();
+  resetConnectedUsers();
 }
