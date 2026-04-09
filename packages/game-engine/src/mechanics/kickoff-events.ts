@@ -158,19 +158,20 @@ export function applyKickoffEvent(
     case 'cheering-fans': {
       const d3A = Math.floor(rng() * 3) + 1;
       const d3B = Math.floor(rng() * 3) + 1;
-      // Simplified: use fan factor as dedicated fans (default 0)
-      const scoreA = d3A;
-      const scoreB = d3B;
+      const dfA = newState.dedicatedFans?.teamA ?? 0;
+      const dfB = newState.dedicatedFans?.teamB ?? 0;
+      const scoreA = d3A + dfA;
+      const scoreB = d3B + dfB;
       if (scoreA > scoreB) {
         newState.teamRerolls = { ...newState.teamRerolls, teamA: (newState.teamRerolls?.teamA ?? 0) + 1 };
-        const log = createLogEntry('action', `Fans en folie : ${newState.teamNames.teamA} gagne 1 relance (${scoreA} vs ${scoreB})`);
+        const log = createLogEntry('action', `Fans en folie : ${newState.teamNames.teamA} gagne 1 relance (D3:${d3A} + ${dfA} fans = ${scoreA} vs D3:${d3B} + ${dfB} fans = ${scoreB})`);
         newState.gameLog = [...newState.gameLog, log];
       } else if (scoreB > scoreA) {
         newState.teamRerolls = { ...newState.teamRerolls, teamB: (newState.teamRerolls?.teamB ?? 0) + 1 };
-        const log = createLogEntry('action', `Fans en folie : ${newState.teamNames.teamB} gagne 1 relance (${scoreB} vs ${scoreA})`);
+        const log = createLogEntry('action', `Fans en folie : ${newState.teamNames.teamB} gagne 1 relance (D3:${d3B} + ${dfB} fans = ${scoreB} vs D3:${d3A} + ${dfA} fans = ${scoreA})`);
         newState.gameLog = [...newState.gameLog, log];
       } else {
-        const log = createLogEntry('action', `Fans en folie : égalité (${scoreA} vs ${scoreB}), pas de relance`);
+        const log = createLogEntry('action', `Fans en folie : égalité (D3:${d3A} + ${dfA} fans = ${scoreA} vs D3:${d3B} + ${dfB} fans = ${scoreB}), pas de relance`);
         newState.gameLog = [...newState.gameLog, log];
       }
       break;
