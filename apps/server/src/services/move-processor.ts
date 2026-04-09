@@ -7,6 +7,7 @@ import { persistPlayerDeaths } from "./player-death";
 import { persistPermanentInjuries } from "./permanent-injuries";
 import { broadcastGameState, broadcastMatchEnd } from "./game-broadcast";
 import { updateEloAfterMatch } from "./elo-update";
+import { sendTurnPush } from "./push-notifications";
 import { handleTurnTimerAfterMove } from "./turn-timer-orchestrator";
 import { FULL_RULES } from "@bb/game-engine";
 
@@ -233,6 +234,11 @@ export async function processMove(
 
   // Broadcast to all connected players
   broadcastGameState(matchId, newState, move, userId);
+
+  // Send push notification when it becomes another player's turn
+  if (!matchEnded && nextUserId && nextUserId !== userId) {
+    sendTurnPush(nextUserId, matchId);
+  }
 
   if (matchEnded) {
     broadcastMatchEnd(matchId, newState);
