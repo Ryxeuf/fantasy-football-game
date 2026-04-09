@@ -67,10 +67,12 @@ export function getAdjacentOpponents(state: GameState, position: Position, team:
     { x: -1, y: -1 },
   ];
 
+  const hypnotized = state.hypnotizedPlayers ?? [];
+
   for (const dir of dirs) {
     const checkPos = { x: position.x + dir.x, y: position.y + dir.y };
     const opponent = state.players.find(
-      p => p.team !== team && p.pos.x === checkPos.x && p.pos.y === checkPos.y && !p.stunned
+      p => p.team !== team && p.pos.x === checkPos.x && p.pos.y === checkPos.y && !p.stunned && !hypnotized.includes(p.id)
     );
     if (opponent) {
       opponents.push(opponent);
