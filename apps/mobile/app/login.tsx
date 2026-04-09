@@ -94,11 +94,9 @@ export default function LoginScreen() {
             )}
           </Pressable>
 
-          <Pressable style={styles.linkButton} onPress={() => router.push("/register")}>
-            <Text style={styles.linkText}>
-              Pas de compte ? S'inscrire
-            </Text>
-          </Pressable>
+          <Text style={styles.preAlphaText}>
+            Nuffle Arena est en pré-alpha. L'inscription sera bientôt disponible.
+          </Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -161,13 +159,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-  linkButton: {
+  preAlphaText: {
     marginTop: 16,
-    alignItems: "center",
-  },
-  linkText: {
-    color: "#2563EB",
-    fontSize: 14,
-    textDecorationLine: "underline",
+    fontSize: 13,
+    color: "#6B7280",
+    textAlign: "center",
+    lineHeight: 18,
   },
 });

@@ -6,7 +6,6 @@ import { authUser, AuthenticatedRequest } from "../middleware/authUser";
 import { normalizeRoles } from "../utils/roles";
 import { validate } from "../middleware/validate";
 import {
-  registerSchema,
   loginSchema,
   updateProfileSchema,
   changePasswordSchema,
@@ -16,57 +15,11 @@ const router = Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
 
-router.post("/register", validate(registerSchema), async (req, res) => {
-  try {
-    const { email, password, name, coachName, firstName, lastName, dateOfBirth } = req.body;
-
-    const existing = await prisma.user.findUnique({ where: { email } });
-    if (existing) {
-      return res.status(409).json({ error: "Email déjà utilisé" });
-    }
-
-    const passwordHash = await bcrypt.hash(password, 10);
-    const user = await prisma.user.create({
-      data: { 
-        email, 
-        passwordHash, 
-        name,
-        coachName,
-        firstName: typeof firstName === "string" ? firstName : null,
-        lastName: typeof lastName === "string" ? lastName : null,
-        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
-        valid: false,
-      },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        coachName: true,
-        firstName: true,
-        lastName: true,
-        dateOfBirth: true,
-        role: true,
-        roles: true,
-        valid: true,
-        createdAt: true,
-      },
-    });
-
-    const roles = normalizeRoles(user.roles ?? user.role);
-    const publicUser = {
-      ...user,
-      roles,
-    };
-
-    // Ne pas donner de token si le compte n'est pas validé
-    return res.status(201).json({ 
-      user: publicUser, 
-      message: "Votre compte a été créé avec succès. Un administrateur doit valider votre compte avant que vous puissiez vous connecter." 
-    });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: "Erreur serveur" });
-  }
+// Registration disabled during pre-alpha
+router.post("/register", (_req, res) => {
+  return res.status(403).json({
+    error: "L'inscription est actuellement désactivée. Nuffle Arena est en pré-alpha et sera bientôt disponible à l'inscription.",
+  });
 });
 
 router.post("/login", validate(loginSchema), async (req, res) => {

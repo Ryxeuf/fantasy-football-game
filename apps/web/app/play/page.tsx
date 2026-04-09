@@ -327,12 +327,6 @@ export default function PlayPage() {
             >
               {t.auth.login}
             </a>
-            <a
-              href="/register"
-              className="px-6 py-3 rounded-lg border-2 border-nuffle-bronze/50 text-nuffle-anthracite hover:bg-nuffle-bronze/10 font-subtitle font-semibold transition-all text-center"
-            >
-              {t.auth.register}
-            </a>
           </div>
         </div>
       </div>

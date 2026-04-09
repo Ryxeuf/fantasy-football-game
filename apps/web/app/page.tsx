@@ -50,12 +50,6 @@ export default function LandingPage() {
               >
                 {t.home.login}
               </a>
-              <a
-                href="/register"
-                className="px-6 py-3 rounded-lg border-2 border-nuffle-bronze/50 text-nuffle-ivory/90 hover:text-nuffle-ivory hover:bg-nuffle-bronze/20 font-subtitle font-semibold transition-all text-center"
-              >
-                {t.home.register}
-              </a>
             </div>
           </div>
           <div className="relative w-full md:w-auto">
