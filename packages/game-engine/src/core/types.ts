@@ -221,7 +221,7 @@ export interface GameState {
 }
 
 export interface DiceResult {
-  type: 'dodge' | 'pickup' | 'pass' | 'catch' | 'armor' | 'block' | 'landing' | 'gaze';
+  type: 'dodge' | 'pickup' | 'pass' | 'catch' | 'armor' | 'block' | 'landing' | 'gaze' | 'vomit';
   playerId: string;
   diceRoll: number;
   targetNumber: number;
@@ -238,7 +238,8 @@ export type ActionType =
   | 'HANDOFF'
   | 'THROW_TEAM_MATE'
   | 'FOUL'
-  | 'HYPNOTIC_GAZE';
+  | 'HYPNOTIC_GAZE'
+  | 'PROJECTILE_VOMIT';
 
 export type Move =
   | { type: 'MOVE'; playerId: string; to: Position }
@@ -255,7 +256,8 @@ export type Move =
   | { type: 'HANDOFF'; playerId: string; targetId: string }
   | { type: 'THROW_TEAM_MATE'; playerId: string; thrownPlayerId: string; targetPos: Position }
   | { type: 'FOUL'; playerId: string; targetId: string }
-  | { type: 'HYPNOTIC_GAZE'; playerId: string; targetId: string };
+  | { type: 'HYPNOTIC_GAZE'; playerId: string; targetId: string }
+  | { type: 'PROJECTILE_VOMIT'; playerId: string; targetId: string };
 
 export type BlockResult = 'PLAYER_DOWN' | 'BOTH_DOWN' | 'PUSH_BACK' | 'STUMBLE' | 'POW';
 

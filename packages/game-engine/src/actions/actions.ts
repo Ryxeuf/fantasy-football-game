@@ -64,6 +64,7 @@ import { isAdjacent } from '../mechanics/movement';
 import { applyApothecaryChoice } from '../mechanics/apothecary';
 import { canThrowTeamMate, getThrowRange, executeThrowTeamMate } from '../mechanics/throw-team-mate';
 import { canHypnoticGaze, executeHypnoticGaze } from '../mechanics/hypnotic-gaze';
+import { canProjectileVomit, executeProjectileVomit } from '../mechanics/projectile-vomit';
 
 /**
  * Obtient tous les mouvements légaux pour l'état actuel
@@ -230,6 +231,16 @@ export function getLegalMoves(state: GameState): Move[] {
       );
       for (const target of adjacentOpponents) {
         moves.push({ type: 'HYPNOTIC_GAZE', playerId: p.id, targetId: target.id });
+      }
+    }
+
+    // Actions de Vomissement Projectile (PROJECTILE_VOMIT)
+    if (!hasPlayerActed(state, p.id) && hasSkill(p, 'projectile-vomit')) {
+      const adjacentOpponents = state.players.filter(
+        opp => opp.team !== team && canProjectileVomit(state, p, opp)
+      );
+      for (const target of adjacentOpponents) {
+        moves.push({ type: 'PROJECTILE_VOMIT', playerId: p.id, targetId: target.id });
       }
     }
   }
@@ -401,6 +412,8 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       return handleFoul(state, move, rng);
     case 'HYPNOTIC_GAZE':
       return handleHypnoticGaze(state, move, rng);
+    case 'PROJECTILE_VOMIT':
+      return handleProjectileVomit(state, move, rng);
     default:
       return checkTouchdowns(state);
   }
@@ -1676,5 +1689,27 @@ function handleHypnoticGaze(
   let newState = executeHypnoticGaze(state, gazer, target, rng);
   newState = setPlayerAction(newState, gazer.id, 'HYPNOTIC_GAZE');
   newState = checkPlayerTurnEnd(newState, gazer.id);
+  return newState;
+}
+
+/**
+ * Gère une action de Vomissement Projectile (Projectile Vomit)
+ */
+function handleProjectileVomit(
+  state: GameState,
+  move: { type: 'PROJECTILE_VOMIT'; playerId: string; targetId: string },
+  rng: RNG,
+): GameState {
+  const vomiter = state.players.find(p => p.id === move.playerId);
+  const target = state.players.find(p => p.id === move.targetId);
+
+  if (!vomiter || !target) return state;
+  if (vomiter.team !== state.currentPlayer) return state;
+  if (hasPlayerActed(state, vomiter.id)) return state;
+  if (!canProjectileVomit(state, vomiter, target)) return state;
+
+  let newState = executeProjectileVomit(state, vomiter, target, rng);
+  newState = setPlayerAction(newState, vomiter.id, 'PROJECTILE_VOMIT');
+  newState = checkPlayerTurnEnd(newState, vomiter.id);
   return newState;
 }

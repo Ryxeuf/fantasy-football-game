@@ -139,6 +139,9 @@ export { canThrowTeamMate, getThrowRange, executeThrowTeamMate } from './mechani
 // Export du Regard Hypnotique (Hypnotic Gaze)
 export { canHypnoticGaze, calculateGazeModifiers, executeHypnoticGaze } from './mechanics/hypnotic-gaze';
 
+// Export du Vomissement Projectile (Projectile Vomit)
+export { canProjectileVomit, executeProjectileVomit } from './mechanics/projectile-vomit';
+
 // Export des fonctions de faute
 export { canFoul, executeFoul, calculateFoulAssists } from './mechanics/foul';
 

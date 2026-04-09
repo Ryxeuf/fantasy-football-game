@@ -124,7 +124,7 @@
 | B2.8 | Decay — blessures 1 niveau plus grave | Regle | [x] |
 | B2.4 | Throw Team-Mate — mecanique complete | Regle | [x] |
 | B2.9 | Hypnotic Gaze — action speciale | Regle | [x] |
-| B2.10 | Projectile Vomit — bloc range 1 | Regle | [ ] |
+| B2.10 | Projectile Vomit — bloc range 1 | Regle | [x] |
 
 ---
 
