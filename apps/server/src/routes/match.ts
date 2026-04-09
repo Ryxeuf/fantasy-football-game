@@ -1005,8 +1005,8 @@ router.post(
       const kickoffRng = makeRNG(`${match.seed}-kickoff-event`);
       let newState = resolveKickoffEvent(gameState, kickoffRng);
 
-      // Démarrer le match après résolution de l'événement
-      const matchState = startMatchFromKickoff(newState);
+      // Démarrer le match après résolution de l'événement (avec RNG pour effets météo)
+      const matchState = startMatchFromKickoff(newState, kickoffRng);
 
       // Déterminer qui joue en premier (l'équipe receveuse = currentPlayer)
       const selections = await prisma.teamSelection.findMany({

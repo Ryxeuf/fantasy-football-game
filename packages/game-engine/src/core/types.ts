@@ -218,6 +218,8 @@ export interface GameState {
   bribesRemaining: { teamA: number; teamB: number };
   // Joueurs hypnotisés (perdent leur zone de tacle jusqu'à leur prochaine activation)
   hypnotizedPlayers?: string[];
+  // Condition météo active pour ce match (persistée depuis le pré-match)
+  weatherCondition?: { condition: string; description: string };
 }
 
 export interface DiceResult {
