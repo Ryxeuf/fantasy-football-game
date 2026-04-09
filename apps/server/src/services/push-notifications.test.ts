@@ -12,6 +12,12 @@ vi.mock("web-push", () => ({
   },
 }));
 
+// Mock notification preferences — default: all allowed
+vi.mock("./notification-preferences", () => ({
+  shouldSendNotification: vi.fn().mockResolvedValue(true),
+  NotificationType: { Turn: "turn", MatchFound: "matchFound" },
+}));
+
 import {
   addSubscription,
   removeSubscription,
@@ -231,6 +237,50 @@ describe("push-notifications", () => {
 
     it("does not throw if user has no subscriptions", () => {
       expect(() => sendMatchFoundPush("no-user", "match-xyz")).not.toThrow();
+    });
+  });
+
+  describe("preference gating", () => {
+    it("skips sendTurnPush when user preferences disallow turn notifications", async () => {
+      const webpush = (await import("web-push")).default;
+      const { shouldSendNotification } = await import("./notification-preferences");
+      vi.mocked(shouldSendNotification).mockResolvedValueOnce(false);
+      addSubscription(userId, subscription);
+
+      sendTurnPush(userId, "match-gated");
+
+      await new Promise((r) => setTimeout(r, 20));
+
+      expect(shouldSendNotification).toHaveBeenCalled();
+      expect(webpush.sendNotification).not.toHaveBeenCalled();
+    });
+
+    it("skips sendMatchFoundPush when user preferences disallow match-found notifications", async () => {
+      const webpush = (await import("web-push")).default;
+      const { shouldSendNotification } = await import("./notification-preferences");
+      vi.mocked(shouldSendNotification).mockResolvedValueOnce(false);
+      addSubscription(userId, subscription);
+
+      sendMatchFoundPush(userId, "match-gated");
+
+      await new Promise((r) => setTimeout(r, 20));
+
+      expect(shouldSendNotification).toHaveBeenCalled();
+      expect(webpush.sendNotification).not.toHaveBeenCalled();
+    });
+
+    it("sends push when preferences allow", async () => {
+      const webpush = (await import("web-push")).default;
+      const { shouldSendNotification } = await import("./notification-preferences");
+      vi.mocked(shouldSendNotification).mockResolvedValueOnce(true);
+      addSubscription(userId, subscription);
+
+      sendTurnPush(userId, "match-allowed");
+
+      await new Promise((r) => setTimeout(r, 20));
+
+      expect(shouldSendNotification).toHaveBeenCalled();
+      expect(webpush.sendNotification).toHaveBeenCalled();
     });
   });
 });

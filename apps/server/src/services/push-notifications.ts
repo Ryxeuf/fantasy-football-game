@@ -1,4 +1,8 @@
 import webpush from "web-push";
+import {
+  shouldSendNotification,
+  NotificationType,
+} from "./notification-preferences";
 
 // ---------------------------------------------------------------------------
 // VAPID Configuration
@@ -147,32 +151,44 @@ export function getVapidPublicKey(): string {
 
 /**
  * Send a "your turn" push notification to a user.
+ * Checks user preferences before sending.
  * Non-blocking — errors are silently ignored.
  */
 export function sendTurnPush(userId: string, matchId: string): void {
-  sendPushToUser(userId, {
-    title: "Nuffle Arena",
-    body: "C'est votre tour de jouer !",
-    icon: "/images/favicon-optimized.png",
-    url: `/play-hidden/${matchId}`,
-    tag: `turn-${matchId}`,
-  }).catch(() => {
-    // Push failure is non-blocking
-  });
+  shouldSendNotification(userId, NotificationType.Turn)
+    .then((allowed) => {
+      if (!allowed) return;
+      return sendPushToUser(userId, {
+        title: "Nuffle Arena",
+        body: "C'est votre tour de jouer !",
+        icon: "/images/favicon-optimized.png",
+        url: `/play-hidden/${matchId}`,
+        tag: `turn-${matchId}`,
+      });
+    })
+    .catch(() => {
+      // Push failure is non-blocking
+    });
 }
 
 /**
  * Send a "match found" push notification to a user.
+ * Checks user preferences before sending.
  * Non-blocking — errors are silently ignored.
  */
 export function sendMatchFoundPush(userId: string, matchId: string): void {
-  sendPushToUser(userId, {
-    title: "Nuffle Arena",
-    body: "Un adversaire a ete trouve !",
-    icon: "/images/favicon-optimized.png",
-    url: `/play-hidden/${matchId}`,
-    tag: `match-found-${matchId}`,
-  }).catch(() => {
-    // Push failure is non-blocking
-  });
+  shouldSendNotification(userId, NotificationType.MatchFound)
+    .then((allowed) => {
+      if (!allowed) return;
+      return sendPushToUser(userId, {
+        title: "Nuffle Arena",
+        body: "Un adversaire a ete trouve !",
+        icon: "/images/favicon-optimized.png",
+        url: `/play-hidden/${matchId}`,
+        tag: `match-found-${matchId}`,
+      });
+    })
+    .catch(() => {
+      // Push failure is non-blocking
+    });
 }

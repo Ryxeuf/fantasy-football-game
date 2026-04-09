@@ -38,6 +38,7 @@ model User {
   createdLocalMatches LocalMatch[]    @relation("LocalMatchCreator")
   eloRating           Int             @default(1000) // ELO rating for ranked matchmaking
   matchQueue          MatchQueue?
+  notificationPreference NotificationPreference?
 }
 
 model Match {
@@ -460,4 +461,14 @@ model LocalMatchAction {
   @@index([matchId])
   @@index([half, turn])
   @@index([createdAt])
+}
+
+// Preferences de notification push par utilisateur
+model NotificationPreference {
+  id                     String  @id @default(cuid())
+  user                   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId                 String  @unique
+  pushEnabled            Boolean @default(true) // Master toggle notifications push
+  turnNotification       Boolean @default(true) // "C'est votre tour de jouer !"
+  matchFoundNotification Boolean @default(true) // "Un adversaire a ete trouve !"
 }

@@ -4,12 +4,17 @@ import { validate } from "../middleware/validate";
 import {
   pushSubscribeSchema,
   pushUnsubscribeSchema,
+  pushPreferencesSchema,
 } from "../schemas/push.schemas";
 import {
   addSubscription,
   removeSubscription,
   getVapidPublicKey,
 } from "../services/push-notifications";
+import {
+  getNotificationPreferences,
+  updateNotificationPreferences,
+} from "../services/notification-preferences";
 
 const router = Router();
 
@@ -57,6 +62,42 @@ router.post(
       return res.status(404).json({ error: "Abonnement non trouve" });
     }
     return res.json({ ok: true });
+  },
+);
+
+/**
+ * GET /push/preferences
+ * Returns notification preferences for the authenticated user.
+ */
+router.get(
+  "/preferences",
+  authUser,
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      const prefs = await getNotificationPreferences(req.user!.id);
+      return res.json(prefs);
+    } catch {
+      return res.status(500).json({ error: "Erreur serveur" });
+    }
+  },
+);
+
+/**
+ * PUT /push/preferences
+ * Update notification preferences for the authenticated user.
+ * Body: { pushEnabled?: boolean, turnNotification?: boolean, matchFoundNotification?: boolean }
+ */
+router.put(
+  "/preferences",
+  authUser,
+  validate(pushPreferencesSchema),
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      const prefs = await updateNotificationPreferences(req.user!.id, req.body);
+      return res.json(prefs);
+    } catch {
+      return res.status(500).json({ error: "Erreur serveur" });
+    }
   },
 );
 

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { API_BASE } from "../../auth-client";
+import NotificationPreferences from "../../components/NotificationPreferences";
 
 type UserProfile = {
   id: string;
@@ -553,6 +554,9 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
+
+      {/* Preferences de notifications */}
+      <NotificationPreferences />
 
       {/* Actions rapides */}
       <div className="bg-white border border-gray-200 rounded-lg p-6">

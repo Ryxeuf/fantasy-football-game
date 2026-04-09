@@ -11,3 +11,9 @@ export const pushSubscribeSchema = z.object({
 export const pushUnsubscribeSchema = z.object({
   endpoint: z.string().url("endpoint doit etre une URL valide"),
 });
+
+export const pushPreferencesSchema = z.object({
+  pushEnabled: z.boolean().optional(),
+  turnNotification: z.boolean().optional(),
+  matchFoundNotification: z.boolean().optional(),
+});
