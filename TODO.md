@@ -136,6 +136,17 @@
 | G.4 | Push "Match trouve" | Notifications | [x] |
 | G.5 | UI permission + preferences | Notifications | [x] |
 
+### Sprint 8 — Polish & Contenu
+
+| # | Tache | Type | Statut |
+|---|-------|------|--------|
+| H.1 | Chat in-game (WebSocket) | Polish | [x] |
+| H.2 | Mode spectateur | Polish | [ ] |
+| I.4 | Fix bug encodage Morg 'n' Thorg image | Contenu | [ ] |
+| I.5 | Fix placeholders images (6 star players) | Contenu | [ ] |
+| I.10 | Fix cheering fans dedicated fans a 0 | Contenu | [ ] |
+| I.8 | Fix 2 conditions meteo manquantes | Contenu | [ ] |
+
 ---
 
 ## Resume par phase
@@ -153,7 +164,7 @@
 | **E — Animations web** | 7 | 3 | 0 | 4 | IMPORTANT (UX) |
 | **F — ELO & classement** | 4 | 2 | 0 | 2 | SOUHAITABLE |
 | **G — Notifications push** | 5 | 2 | 0 | 3 | EN COURS (Sprint 7) |
-| **H — Polish** | 7 | 1 | 0 | 6 | BONUS |
+| **H — Polish** | 7 | 2 | 0 | 5 | EN COURS (Sprint 8) |
 | **I — Contenu & donnees** | 10 | 0 | 0 | 10 | BONUS |
 
 ---
@@ -186,5 +197,6 @@ Sprint 0 (Bugfixes) ✅ ──→ Sprint 1 (WS + UI + skills) ✅ ──→ MATC
 > 5. ~~Sprint 4~~ ✅ — contenu + ELO
 > 6. ~~Sprint 5~~ ✅ — robustesse WS, flow complet, timer = production ready
 > 7. ~~Sprint 6~~ ✅ — regles BB3 complementaires (Secret Weapons, Animosity, TTM)
-> 8. **En cours** : Sprint 7 — notifications push (Service Worker, web-push, integration)
-> 9. **Plus tard** : H (polish), I (contenu)
+> 8. ~~Sprint 7~~ ✅ — notifications push (Service Worker, web-push, integration)
+> 9. **En cours** : Sprint 8 — polish & contenu (chat in-game, bugfixes donnees)
+> 10. **Plus tard** : H suite (spectateur, replayer), I suite (contenu)
