@@ -4,6 +4,7 @@ import { registerGameRoomHandlers } from "./game-rooms";
 import { registerGameActionHandlers } from "./game-actions";
 import { registerResyncHandler } from "./game-resync";
 import { registerGameChatHandlers } from "./game-chat";
+import { registerSpectatorHandlers } from "./game-spectator";
 import { authSocket } from "./middleware/authSocket";
 
 let io: Server | null = null;
@@ -60,6 +61,9 @@ export function setupSocket(
 
   // Register chat handlers (in-match text chat)
   registerGameChatHandlers(gameNamespace);
+
+  // Register spectator handlers (read-only match viewing)
+  registerSpectatorHandlers(gameNamespace);
 
   return io;
 }

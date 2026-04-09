@@ -1,5 +1,6 @@
 import type { Namespace, Socket } from "socket.io";
 import { prisma } from "./prisma";
+import { isSpectator } from "./game-spectator";
 
 export interface ResyncRequestPayload {
   matchId: string;
@@ -19,18 +20,24 @@ export interface ResyncResponse {
 export async function handleResyncRequest(
   matchId: string,
   userId: string,
+  socketId?: string,
 ): Promise<ResyncResponse> {
-  // Verify the user is a participant of this match
-  const match = await prisma.match.findFirst({
-    where: {
-      id: matchId,
-      players: { some: { id: userId } },
-    },
-    select: { id: true },
-  });
+  // Spectators can also resync — skip participant check for them
+  const spectator = socketId ? isSpectator(socketId) : false;
 
-  if (!match) {
-    return { success: false, error: "You are not a participant of this match" };
+  if (!spectator) {
+    // Verify the user is a participant of this match
+    const match = await prisma.match.findFirst({
+      where: {
+        id: matchId,
+        players: { some: { id: userId } },
+      },
+      select: { id: true },
+    });
+
+    if (!match) {
+      return { success: false, error: "You are not a participant of this match" };
+    }
   }
 
   // Fetch the latest turn with a game state
@@ -84,7 +91,7 @@ export function registerResyncHandler(gameNamespace: Namespace): void {
         }
 
         try {
-          const result = await handleResyncRequest(matchId, userId);
+          const result = await handleResyncRequest(matchId, userId, socket.id);
           ack?.(result);
         } catch (e: unknown) {
           const message = e instanceof Error ? e.message : "Server error";
