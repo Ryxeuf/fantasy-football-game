@@ -283,6 +283,38 @@ describe('Star Players', () => {
       // Vérifier que l'apostrophe ASCII est utilisée
       expect(morg?.imageUrl).toContain("'");
     });
+
+    it('aucun star player ne devrait utiliser Fungus-the-Loon.webp comme placeholder sauf Fungus lui-même', () => {
+      Object.entries(STAR_PLAYERS).forEach(([slug, starPlayer]) => {
+        if (slug !== 'fungus_the_loon' && starPlayer.imageUrl) {
+          expect(starPlayer.imageUrl).not.toContain('Fungus-the-Loon');
+        }
+      });
+    });
+
+    it('les star players avec images disponibles devraient avoir la bonne imageUrl', () => {
+      const expectedImages: Record<string, string> = {
+        'akhorne_the_squirrel': '/data/Star-Players_files/akhorne-the-squirrel-1024x922.webp',
+        'the_black_gobbo': '/data/Star-Players_files/The-Black-Gobbo.webp',
+        'grombrindal': '/data/Star-Players_files/Grombrindal-the-White-Dwarf.webp',
+      };
+
+      Object.entries(expectedImages).forEach(([slug, expectedUrl]) => {
+        const starPlayer = getStarPlayerBySlug(slug);
+        expect(starPlayer).toBeDefined();
+        expect(starPlayer?.imageUrl).toBe(expectedUrl);
+      });
+    });
+
+    it('les star players sans image disponible ne devraient pas avoir de imageUrl', () => {
+      const noImageSlugs = ['hthark_the_unstoppable', 'zolcath_the_zoat'];
+
+      noImageSlugs.forEach((slug) => {
+        const starPlayer = getStarPlayerBySlug(slug);
+        expect(starPlayer).toBeDefined();
+        expect(starPlayer?.imageUrl).toBeUndefined();
+      });
+    });
   });
 
   describe('Validation des coûts connus', () => {

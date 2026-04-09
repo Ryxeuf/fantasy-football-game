@@ -37,7 +37,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 6,
     skills: "claws,dauntless,dodge,frenzy,jump-up,loner-4,no-hands,sidestep,stunty,blind-rage",
     hirableBy: ["all"],
-    imageUrl: "/data/Star-Players_files/Fungus-the-Loon.webp",
+    imageUrl: "/data/Star-Players_files/akhorne-the-squirrel-1024x922.webp",
     specialRule: "Blind Rage: Peut relancer le D6 pour Intrépide."
   },
 
@@ -95,7 +95,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "secret-weapon,disturbing-presence,dodge,loner-4,sidestep,sneaky-git,stab,stunty",
     hirableBy: ["underworld_challenge", "badlands_brawl"],
-    imageUrl: "/data/Star-Players_files/Fungus-the-Loon.webp"
+    imageUrl: "/data/Star-Players_files/The-Black-Gobbo.webp"
   },
 
   boa_konssstriktr: {
@@ -365,7 +365,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 10,
     skills: "block,dauntless,loner-4,mighty-blow-1,stand-firm,thick-skull",
     hirableBy: ["lustrian_superleague", "old_world_classic"],
-    imageUrl: "/data/Star-Players_files/Fungus-the-Loon.webp"
+    imageUrl: "/data/Star-Players_files/Grombrindal-the-White-Dwarf.webp"
   },
 
   guffle_pussmaw: {
@@ -421,7 +421,6 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 10,
     skills: "block,thick-skull,defensive,sure-feet,break-tackle,juggernaut,sprint,loner-4",
     hirableBy: ["badlands_brawl"],
-    imageUrl: "/data/Star-Players_files/Fungus-the-Loon.webp",
     isMegaStar: true
   },
 
@@ -946,8 +945,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     pa: 5,
     av: 10,
     skills: "disturbing-presence,juggernaut,loner-4,mighty-blow-1,prehensile-tail,regeneration,sure-feet",
-    hirableBy: ["lustrian_superleague", "elven_kingdoms_league"],
-    imageUrl: "/data/Star-Players_files/Fungus-the-Loon.webp"
+    hirableBy: ["lustrian_superleague", "elven_kingdoms_league"]
   },
 
   zzharg_madeye: {
