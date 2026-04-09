@@ -213,6 +213,8 @@ export interface UseGameSocketResult {
   reconnectAttempt: number;
   /** Submit a move via WebSocket, with automatic HTTP fallback if WS is unavailable. */
   submitMove: (move: Move) => Promise<MoveAckPayload | null>;
+  /** Raw socket instance for additional event listeners (e.g., chat). */
+  socket: Socket | null;
 }
 
 /**
@@ -371,5 +373,5 @@ export function useGameSocket(
     };
   }, [matchId]);
 
-  return { connected, joined, error, reconnecting, reconnectAttempt, submitMove };
+  return { connected, joined, error, reconnecting, reconnectAttempt, submitMove, socket: socketRef.current };
 }

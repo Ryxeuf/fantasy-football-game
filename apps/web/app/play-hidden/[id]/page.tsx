@@ -48,8 +48,10 @@ import PreMatchSummary from "../../components/PreMatchSummary";
 import InducementSelector from "../../components/InducementSelector";
 import { INDUCEMENT_CATALOGUE, type InducementSelection, type InducementDefinition } from "@bb/game-engine";
 import { ForfeitWarning } from "../../components/ForfeitWarning";
+import GameChat from "../../components/GameChat";
 import { useTurnNotification } from "./hooks/useTurnNotification";
 import { useSoundEffects } from "./hooks/useSoundEffects";
+import { useGameChat } from "./hooks/useGameChat";
 import { getSoundManager } from "./hooks/sound-manager";
 
 /** Renders nothing — just fires turn notification side-effects inside ToastProvider. */
@@ -293,11 +295,30 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
     connected: wsConnected,
     reconnecting: wsReconnecting,
     reconnectAttempt: wsReconnectAttempt,
+    socket: gameSocket,
   } = useGameSocket(matchId);
 
   const { submitMove, submitting: moveSubmitting } = useGameMoves(matchId, {
     wsSubmitMove,
   });
+
+  // In-game chat
+  const { messages: chatMessages, sendMessage: sendChatMessage } = useGameChat({
+    socket: gameSocket,
+    matchId,
+  });
+
+  // Extract current user ID from JWT for chat display
+  const currentUserId = useMemo(() => {
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) return undefined;
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      return payload.sub as string | undefined;
+    } catch {
+      return undefined;
+    }
+  }, []);
 
   // Helper : est-ce que le match est en phase active (coups envoyés au serveur) ?
   const isActiveMatch = matchStatus === "active";
@@ -1369,6 +1390,14 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
               });
             }
           }}
+        />
+      )}
+      {/* In-game chat */}
+      {isActiveMatch && (
+        <GameChat
+          messages={chatMessages}
+          sendMessage={sendChatMessage}
+          currentUserId={currentUserId}
         />
       )}
       {/* Apothecary decision popup */}
