@@ -8,6 +8,7 @@ import {
   getQueueStatus,
 } from "../services/matchmaking";
 import { getGameNamespace } from "../socket";
+import { sendMatchFoundPush } from "../services/push-notifications";
 
 const router = Router();
 
@@ -28,9 +29,10 @@ router.post(
         teamId,
       });
 
-      // If a match was found, notify the opponent via WebSocket
+      // If a match was found, notify the opponent via WebSocket + push
       if (result.matched) {
         notifyMatchFound(result.opponentUserId, result.matchId);
+        sendMatchFoundPush(result.opponentUserId, result.matchId);
       }
 
       return res.json(result);

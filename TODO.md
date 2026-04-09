@@ -126,6 +126,16 @@
 | B2.9 | Hypnotic Gaze — action speciale | Regle | [x] |
 | B2.10 | Projectile Vomit — bloc range 1 | Regle | [x] |
 
+### Sprint 7 — Notifications push (~5 jours)
+
+| # | Tache | Type | Statut |
+|---|-------|------|--------|
+| G.1 | Service Worker push notifications | Notifications | [x] |
+| G.2 | Endpoint serveur web-push | Notifications | [x] |
+| G.3 | Push "C'est votre tour" | Notifications | [ ] |
+| G.4 | Push "Match trouve" | Notifications | [ ] |
+| G.5 | UI permission + preferences | Notifications | [ ] |
+
 ---
 
 ## Resume par phase
@@ -142,7 +152,7 @@
 | **D — Progression joueurs** | 8 | 8 | 0 | 0 | TERMINE |
 | **E — Animations web** | 7 | 3 | 0 | 4 | IMPORTANT (UX) |
 | **F — ELO & classement** | 4 | 2 | 0 | 2 | SOUHAITABLE |
-| **G — Notifications push** | 5 | 0 | 0 | 5 | SOUHAITABLE |
+| **G — Notifications push** | 5 | 2 | 0 | 3 | EN COURS (Sprint 7) |
 | **H — Polish** | 7 | 1 | 0 | 6 | BONUS |
 | **I — Contenu & donnees** | 10 | 0 | 0 | 10 | BONUS |
 
@@ -161,7 +171,9 @@ Sprint 0 (Bugfixes) ✅ ──→ Sprint 1 (WS + UI + skills) ✅ ──→ MATC
        │                         │
        │                Sprint 5 (Robustesse + Flow) ✅ ──→ PRODUCTION READY ✅
        │                         │
-       │                Sprint 6 (Regles BB3 complementaires) ──→ GAMEPLAY COMPLET
+       │                Sprint 6 (Regles BB3 complementaires) ✅ ──→ GAMEPLAY COMPLET ✅
+       │                         │
+       │                Sprint 7 (Notifications push) ──→ ENGAGEMENT
        │
        └── Phases B2/B3 + G + H + I ──→ GAMEPLAY RICHE + POLISH
 ```
@@ -173,5 +185,6 @@ Sprint 0 (Bugfixes) ✅ ──→ Sprint 1 (WS + UI + skills) ✅ ──→ MATC
 > 4. ~~Sprint 3~~ ✅ — matchmaking + animations
 > 5. ~~Sprint 4~~ ✅ — contenu + ELO
 > 6. ~~Sprint 5~~ ✅ — robustesse WS, flow complet, timer = production ready
-> 7. **En cours** : Sprint 6 — regles BB3 complementaires (Secret Weapons, Animosity, TTM)
-> 8. **Plus tard** : G (push notifications), H (polish), I (contenu)
+> 7. ~~Sprint 6~~ ✅ — regles BB3 complementaires (Secret Weapons, Animosity, TTM)
+> 8. **En cours** : Sprint 7 — notifications push (Service Worker, web-push, integration)
+> 9. **Plus tard** : H (polish), I (contenu)
