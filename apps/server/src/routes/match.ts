@@ -14,6 +14,7 @@ import {
   acceptMatchSchema,
   moveSchema,
 } from "../schemas/match.schemas";
+import { getSpectatorCount } from "../game-spectator";
 
 const router = Router();
 const MATCH_SECRET = process.env.MATCH_SECRET || "dev-match-secret";
@@ -1225,6 +1226,148 @@ router.get("/:id/results", authUser, async (req: AuthenticatedRequest, res) => {
     });
   } catch (e) {
     console.error("Erreur lors de la récupération des résultats:", e);
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// ─── Spectator Mode ──────────────────────────────────────────────
+
+// List active matches available for spectating
+router.get("/live", authUser, async (_req: AuthenticatedRequest, res) => {
+  try {
+    const matches = await prisma.match.findMany({
+      where: {
+        status: { in: ["active", "prematch-setup"] },
+      },
+      orderBy: { lastMoveAt: "desc" },
+      take: 20,
+      include: {
+        teamSelections: {
+          orderBy: { createdAt: "asc" },
+          include: {
+            user: { select: { id: true, coachName: true } },
+            teamRef: { select: { name: true, roster: true } },
+          },
+        },
+        turns: {
+          orderBy: { number: "desc" },
+          take: 1,
+          select: { payload: true },
+        },
+      },
+    });
+
+    const result = matches.map((m: any) => {
+      const lastTurn = m.turns[0];
+      const gameState = (lastTurn?.payload as any)?.gameState;
+      const score = gameState?.score || { teamA: 0, teamB: 0 };
+      const half = gameState?.half || 0;
+      const turn = gameState?.turn || 0;
+
+      const selections = m.teamSelections.sort(
+        (a: any, b: any) => a.createdAt.getTime() - b.createdAt.getTime(),
+      );
+      const teamA = selections[0];
+      const teamB = selections[1];
+
+      return {
+        id: m.id,
+        status: m.status,
+        createdAt: m.createdAt,
+        lastMoveAt: m.lastMoveAt,
+        score,
+        half,
+        turn,
+        spectatorCount: getSpectatorCount(m.id),
+        teamA: teamA
+          ? {
+              coachName: teamA.user?.coachName || "",
+              teamName: teamA.teamRef?.name || "",
+              rosterName: teamA.teamRef?.roster || "",
+            }
+          : null,
+        teamB: teamB
+          ? {
+              coachName: teamB.user?.coachName || "",
+              teamName: teamB.teamRef?.name || "",
+              rosterName: teamB.teamRef?.roster || "",
+            }
+          : null,
+      };
+    });
+
+    return res.json({ matches: result });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// Get match state for spectators (no participant check)
+router.get("/:id/spectate", authUser, async (req: AuthenticatedRequest, res) => {
+  try {
+    const matchId = req.params.id;
+    const match = await prisma.match.findUnique({
+      where: { id: matchId },
+      include: { turns: { orderBy: { number: "asc" } } },
+    });
+
+    if (!match) {
+      return res.status(404).json({ error: "Partie introuvable" });
+    }
+
+    if (match.status !== "active" && match.status !== "prematch-setup") {
+      return res.status(400).json({
+        error: "Ce match n'est pas en cours",
+      });
+    }
+
+    // Get latest game state from turns
+    const latestStateTurn = [...match.turns]
+      .reverse()
+      .find((t: any) => t.payload?.gameState);
+
+    if (!latestStateTurn) {
+      return res.status(400).json({ error: "Etat de jeu introuvable" });
+    }
+
+    let gameState = (latestStateTurn as any).payload.gameState;
+    if (typeof gameState === "string") {
+      gameState = JSON.parse(gameState);
+    }
+
+    // Get team details
+    const selections = await prisma.teamSelection.findMany({
+      where: { matchId },
+      orderBy: { createdAt: "asc" },
+      include: {
+        user: { select: { id: true, coachName: true } },
+        teamRef: { select: { name: true, roster: true } },
+      },
+    });
+
+    const teamA = selections[0];
+    const teamB = selections[1];
+
+    return res.json({
+      gameState,
+      matchStatus: match.status,
+      spectatorCount: getSpectatorCount(matchId),
+      teamA: teamA
+        ? {
+            coachName: teamA.user?.coachName || "",
+            teamName: teamA.teamRef?.name || "",
+          }
+        : null,
+      teamB: teamB
+        ? {
+            coachName: teamB.user?.coachName || "",
+            teamName: teamB.teamRef?.name || "",
+          }
+        : null,
+    });
+  } catch (e) {
+    console.error(e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
