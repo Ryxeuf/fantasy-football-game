@@ -4,6 +4,7 @@ import { Stage, Container, Graphics, Text } from "@pixi/react";
 import type { Graphics as PixiGraphics } from "@pixi/graphics";
 import type { GameState, Position, Player, TackleZoneHeatmap } from "@bb/game-engine";
 import { useAnimatedPositions } from "./useAnimatedPositions";
+import { useBlockEffects } from "./useBlockEffects";
 
 /** Extract up to 2 initials from a player's name (e.g. "Grim Ironjaw" -> "GI") */
 function getInitials(player: Player): string {
@@ -93,6 +94,7 @@ export default function PixiBoard({
 
   /* ── Animation tweens ────────────────────────────────────────────── */
   const anim = useAnimatedPositions(state.players ?? [], state.ball);
+  const blockFx = useBlockEffects(state.players ?? []);
 
   /* ── Zoom: mouse wheel ────────────────────────────────────────────── */
   React.useEffect(() => {
@@ -410,13 +412,18 @@ export default function PixiBoard({
             const posX = animPos ? animPos.x : player.pos.x;
             const posY = animPos ? animPos.y : player.pos.y;
 
+            // Block effect overlay (shake + flash)
+            const fx = blockFx.overlays[player.id];
+            const shakeX = fx ? fx.shakeX : 0;
+            const shakeY = fx ? fx.shakeY : 0;
+
             return (
               <React.Fragment key={player.id}>
                 <Graphics
                   draw={(g: PixiGraphics) => {
                     g.clear();
-                    const x = posY * cs + cs / 2;
-                    const y = posX * cs + cs / 2;
+                    const x = posY * cs + cs / 2 + shakeX;
+                    const y = posX * cs + cs / 2 + shakeY;
                     const radius = cs / 2 - 2;
 
                     const playerColor = player.stunned
@@ -455,13 +462,22 @@ export default function PixiBoard({
                       g.drawCircle(x, y, 3);
                       g.endFill();
                     }
+
+                    // Block impact flash ring
+                    if (fx && fx.flashAlpha > 0) {
+                      g.lineStyle(3, fx.flashColor, fx.flashAlpha);
+                      g.drawCircle(x, y, radius + 4);
+                      g.beginFill(fx.flashColor, fx.flashAlpha * 0.3);
+                      g.drawCircle(x, y, radius);
+                      g.endFill();
+                    }
                   }}
                 />
 
                 {/* Initiales du joueur */}
                 <Text
-                  x={posY * cs + cs / 2}
-                  y={posX * cs + cs / 2}
+                  x={posY * cs + cs / 2 + shakeX}
+                  y={posX * cs + cs / 2 + shakeY}
                   text={initials}
                   anchor={{ x: 0.5, y: 0.5 }}
                   style={
@@ -483,8 +499,8 @@ export default function PixiBoard({
                   draw={(g: PixiGraphics) => {
                     g.clear();
                     const r = cs * 0.2;
-                    const bx = posY * cs + cs - r;
-                    const by = posX * cs + r;
+                    const bx = posY * cs + cs - r + shakeX;
+                    const by = posX * cs + r + shakeY;
                     g.beginFill(
                       player.stunned ? 0xeeeeee : 0x111111,
                       0.85,
@@ -494,8 +510,8 @@ export default function PixiBoard({
                   }}
                 />
                 <Text
-                  x={posY * cs + cs - cs * 0.2}
-                  y={posX * cs + cs * 0.2}
+                  x={posY * cs + cs - cs * 0.2 + shakeX}
+                  y={posX * cs + cs * 0.2 + shakeY}
                   text={String(player.pm)}
                   anchor={{ x: 0.5, y: 0.5 }}
                   style={
