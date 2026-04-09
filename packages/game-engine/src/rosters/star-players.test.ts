@@ -263,6 +263,28 @@ describe('Star Players', () => {
     });
   });
 
+  describe('Validation des imageUrl', () => {
+    it('les imageUrl ne devraient contenir que des caractères ASCII', () => {
+      Object.entries(STAR_PLAYERS).forEach(([slug, starPlayer]) => {
+        if (starPlayer.imageUrl) {
+          // eslint-disable-next-line no-control-regex
+          const isAscii = /^[\x00-\x7F]*$/.test(starPlayer.imageUrl);
+          expect(isAscii).toBe(true);
+        }
+      });
+    });
+
+    it('Morg n Thorg imageUrl ne devrait pas contenir de guillemets Unicode', () => {
+      const morg = getStarPlayerBySlug('morg_n_thorg');
+      expect(morg).toBeDefined();
+      expect(morg?.imageUrl).toBeDefined();
+      // Vérifier absence de LEFT/RIGHT SINGLE QUOTATION MARK (U+2018/U+2019)
+      expect(morg?.imageUrl).not.toMatch(/[\u2018\u2019]/);
+      // Vérifier que l'apostrophe ASCII est utilisée
+      expect(morg?.imageUrl).toContain("'");
+    });
+  });
+
   describe('Validation des coûts connus', () => {
     const knownCosts: Record<string, number> = {
       'glart_smashrip': 195000,

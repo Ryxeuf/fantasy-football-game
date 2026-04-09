@@ -142,7 +142,7 @@
 |---|-------|------|--------|
 | H.1 | Chat in-game (WebSocket) | Polish | [x] |
 | H.2 | Mode spectateur | Polish | [x] |
-| I.4 | Fix bug encodage Morg 'n' Thorg image | Contenu | [ ] |
+| I.4 | Fix bug encodage Morg 'n' Thorg image | Contenu | [x] |
 | I.5 | Fix placeholders images (6 star players) | Contenu | [ ] |
 | I.10 | Fix cheering fans dedicated fans a 0 | Contenu | [ ] |
 | I.8 | Fix 2 conditions meteo manquantes | Contenu | [ ] |
