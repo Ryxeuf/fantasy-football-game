@@ -12,6 +12,8 @@ import { calculateMatchWinnings } from '../utils/team-value-calculator';
 import { FULL_RULES } from './rules-config';
 import type { PurchasedInducement } from './inducements';
 import { expelSecretWeapons } from '../mechanics/secret-weapons';
+import { getWeatherModifiers, applyWeatherDriveEffects } from '../mechanics/weather-effects';
+import { getWeatherCondition, type WeatherType } from './weather-types';
 
 // Étendre GameState pour pré-match
 export interface PreMatchState {
@@ -614,6 +616,19 @@ export function advanceHalfIfNeeded(state: GameState, rng: RNG): GameState {
       const { event } = rollKickoffEvent(rng);
       resultState = applyKickoffEvent(resultState, event, rng, newKickingTeam);
 
+      // Appliquer les effets météo de début de drive (D3 joueurs en réserves si applicable)
+      if (resultState.weatherCondition) {
+        const weatherMods = getWeatherModifiers(resultState.weatherCondition);
+        if (weatherMods.playersToReserves > 0) {
+          const weatherLog = createLogEntry(
+            'info',
+            `Météo: ${resultState.weatherCondition.condition} — ${resultState.weatherCondition.description}`
+          );
+          resultState = applyWeatherDriveEffects(resultState, weatherMods, rng);
+          resultState = { ...resultState, gameLog: [...resultState.gameLog, weatherLog] };
+        }
+      }
+
       return resultState;
     } else {
       const endLog = createLogEntry(
@@ -835,6 +850,19 @@ export function handlePostTouchdown(state: GameState, rng: RNG): GameState {
   // Rouler et appliquer l'événement de kickoff
   const { event } = rollKickoffEvent(rng);
   resultState = applyKickoffEvent(resultState, event, rng, newKickingTeam);
+
+  // Appliquer les effets météo de début de drive (D3 joueurs en réserves si applicable)
+  if (resultState.weatherCondition) {
+    const weatherMods = getWeatherModifiers(resultState.weatherCondition);
+    if (weatherMods.playersToReserves > 0) {
+      const weatherLog = createLogEntry(
+        'info',
+        `Météo: ${resultState.weatherCondition.condition} — ${resultState.weatherCondition.description}`
+      );
+      resultState = applyWeatherDriveEffects(resultState, weatherMods, rng);
+      resultState = { ...resultState, gameLog: [...resultState.gameLog, weatherLog] };
+    }
+  }
 
   return resultState;
 }
@@ -1330,7 +1358,7 @@ export function startKickoffSequence(state: ExtendedGameState): ExtendedGameStat
  * @param state - État de kickoff avec toutes les étapes résolues
  * @returns État de match démarré
  */
-export function startMatchFromKickoff(state: ExtendedGameState): GameState {
+export function startMatchFromKickoff(state: ExtendedGameState, rng?: RNG): GameState {
   if (state.half !== 0 || state.preMatch.phase !== 'kickoff-sequence') return state;
 
   // Créer un log de début de match
@@ -1351,7 +1379,12 @@ export function startMatchFromKickoff(state: ExtendedGameState): GameState {
     ? { teamA: fanFactor.teamA.dedicatedFans, teamB: fanFactor.teamB.dedicatedFans }
     : undefined;
 
-  return {
+  // Préserver la condition météo depuis le pré-match
+  const weatherCondition = preMatch.weather
+    ? { condition: preMatch.weather.condition, description: preMatch.weather.description }
+    : undefined;
+
+  let resultState: GameState = {
     ...matchState,
     gamePhase: 'playing' as const,
     kickingTeam: state.preMatch.kickingTeam,
@@ -1372,8 +1405,24 @@ export function startMatchFromKickoff(state: ExtendedGameState): GameState {
     bribesRemaining: initializeBribesFromInducements(preMatch, state.prayerEffects),
     fanAttendance,
     dedicatedFans,
+    weatherCondition,
     gameLog: [...state.gameLog, matchStartLog],
   };
+
+  // Appliquer les effets météo de début de drive (D3 joueurs en réserves si applicable)
+  if (rng && weatherCondition) {
+    const weatherMods = getWeatherModifiers(weatherCondition);
+    if (weatherMods.playersToReserves > 0) {
+      const weatherLog = createLogEntry(
+        'info',
+        `Météo: ${weatherCondition.condition} — ${weatherCondition.description}`
+      );
+      resultState = applyWeatherDriveEffects(resultState, weatherMods, rng);
+      resultState = { ...resultState, gameLog: [...resultState.gameLog, weatherLog] };
+    }
+  }
+
+  return resultState;
 }
 
 /**

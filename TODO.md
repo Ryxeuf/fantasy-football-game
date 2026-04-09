@@ -145,7 +145,7 @@
 | I.4 | Fix bug encodage Morg 'n' Thorg image | Contenu | [x] |
 | I.5 | Fix placeholders images (6 star players) | Contenu | [x] |
 | I.10 | Fix cheering fans dedicated fans a 0 | Contenu | [x] |
-| I.8 | Fix 2 conditions meteo manquantes | Contenu | [ ] |
+| I.8 | Fix 2 conditions meteo manquantes | Contenu | [x] |
 
 ---
 
