@@ -63,6 +63,7 @@ import { canFoul, executeFoul } from '../mechanics/foul';
 import { isAdjacent } from '../mechanics/movement';
 import { applyApothecaryChoice } from '../mechanics/apothecary';
 import { canThrowTeamMate, getThrowRange, executeThrowTeamMate } from '../mechanics/throw-team-mate';
+import { canHypnoticGaze, executeHypnoticGaze } from '../mechanics/hypnotic-gaze';
 
 /**
  * Obtient tous les mouvements légaux pour l'état actuel
@@ -219,6 +220,16 @@ export function getLegalMoves(state: GameState): Move[] {
             });
           }
         }
+      }
+    }
+
+    // Actions de Regard Hypnotique (HYPNOTIC_GAZE)
+    if (!hasPlayerActed(state, p.id) && hasSkill(p, 'hypnotic-gaze')) {
+      const adjacentOpponents = state.players.filter(
+        opp => opp.team !== team && canHypnoticGaze(state, p, opp)
+      );
+      for (const target of adjacentOpponents) {
+        moves.push({ type: 'HYPNOTIC_GAZE', playerId: p.id, targetId: target.id });
       }
     }
   }
@@ -388,6 +399,8 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       return handleThrowTeamMate(state, move, rng);
     case 'FOUL':
       return handleFoul(state, move, rng);
+    case 'HYPNOTIC_GAZE':
+      return handleHypnoticGaze(state, move, rng);
     default:
       return checkTouchdowns(state);
   }
@@ -418,6 +431,7 @@ function handleEndTurn(state: GameState, rng: RNG): GameState {
     teamBlitzCount: {} as Record<string, number>, // Réinitialiser les compteurs de blitz
     teamFoulCount: {} as Record<string, number>, // Réinitialiser les compteurs de foul
     rerollUsedThisTurn: false, // Réinitialiser le flag de relance
+    hypnotizedPlayers: [], // Réinitialiser les joueurs hypnotisés
   };
 
   // Log du changement de tour
@@ -1640,5 +1654,27 @@ function handleFoul(state: GameState, move: { type: 'FOUL'; playerId: string; ta
 
   newState = setPlayerAction(newState, attacker.id, 'FOUL');
   newState = checkPlayerTurnEnd(newState, attacker.id);
+  return newState;
+}
+
+/**
+ * Gère une action de Regard Hypnotique (Hypnotic Gaze)
+ */
+function handleHypnoticGaze(
+  state: GameState,
+  move: { type: 'HYPNOTIC_GAZE'; playerId: string; targetId: string },
+  rng: RNG,
+): GameState {
+  const gazer = state.players.find(p => p.id === move.playerId);
+  const target = state.players.find(p => p.id === move.targetId);
+
+  if (!gazer || !target) return state;
+  if (gazer.team !== state.currentPlayer) return state;
+  if (hasPlayerActed(state, gazer.id)) return state;
+  if (!canHypnoticGaze(state, gazer, target)) return state;
+
+  let newState = executeHypnoticGaze(state, gazer, target, rng);
+  newState = setPlayerAction(newState, gazer.id, 'HYPNOTIC_GAZE');
+  newState = checkPlayerTurnEnd(newState, gazer.id);
   return newState;
 }

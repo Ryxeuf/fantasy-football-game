@@ -47,9 +47,13 @@ export function calculateTackleZoneHeatmap(state: GameState): TackleZoneHeatmap 
     }
   }
 
-  // Pour chaque joueur actif (non stunned), marquer les 8 cases adjacentes
+  // Pour chaque joueur actif (non stunned, non hypnotisé), marquer les 8 cases adjacentes
+  const hypnotized = state.hypnotizedPlayers ?? [];
   for (const player of state.players) {
     if (player.stunned || player.state === 'knocked_out' || player.state === 'casualty' || player.state === 'sent_off') {
+      continue;
+    }
+    if (hypnotized.includes(player.id)) {
       continue;
     }
 

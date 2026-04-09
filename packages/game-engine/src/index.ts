@@ -136,6 +136,9 @@ export { executePass, executeHandoff, getPassRange, getDistance, findInterceptor
 // Export du Lancer de Coéquipier (Throw Team-Mate)
 export { canThrowTeamMate, getThrowRange, executeThrowTeamMate } from './mechanics/throw-team-mate';
 
+// Export du Regard Hypnotique (Hypnotic Gaze)
+export { canHypnoticGaze, calculateGazeModifiers, executeHypnoticGaze } from './mechanics/hypnotic-gaze';
+
 // Export des fonctions de faute
 export { canFoul, executeFoul, calculateFoulAssists } from './mechanics/foul';
 

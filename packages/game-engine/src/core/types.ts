@@ -216,10 +216,12 @@ export interface GameState {
   usedStarPlayerRules: Record<string, boolean>;
   // Nombre de bribes restantes par équipe (achetées via inducements ou prières)
   bribesRemaining: { teamA: number; teamB: number };
+  // Joueurs hypnotisés (perdent leur zone de tacle jusqu'à leur prochaine activation)
+  hypnotizedPlayers?: string[];
 }
 
 export interface DiceResult {
-  type: 'dodge' | 'pickup' | 'pass' | 'catch' | 'armor' | 'block' | 'landing';
+  type: 'dodge' | 'pickup' | 'pass' | 'catch' | 'armor' | 'block' | 'landing' | 'gaze';
   playerId: string;
   diceRoll: number;
   targetNumber: number;
@@ -235,7 +237,8 @@ export type ActionType =
   | 'PASS'
   | 'HANDOFF'
   | 'THROW_TEAM_MATE'
-  | 'FOUL';
+  | 'FOUL'
+  | 'HYPNOTIC_GAZE';
 
 export type Move =
   | { type: 'MOVE'; playerId: string; to: Position }
@@ -251,7 +254,8 @@ export type Move =
   | { type: 'PASS'; playerId: string; targetId: string }
   | { type: 'HANDOFF'; playerId: string; targetId: string }
   | { type: 'THROW_TEAM_MATE'; playerId: string; thrownPlayerId: string; targetPos: Position }
-  | { type: 'FOUL'; playerId: string; targetId: string };
+  | { type: 'FOUL'; playerId: string; targetId: string }
+  | { type: 'HYPNOTIC_GAZE'; playerId: string; targetId: string };
 
 export type BlockResult = 'PLAYER_DOWN' | 'BOTH_DOWN' | 'PUSH_BACK' | 'STUMBLE' | 'POW';
 
