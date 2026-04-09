@@ -133,7 +133,7 @@
 | G.1 | Service Worker push notifications | Notifications | [x] |
 | G.2 | Endpoint serveur web-push | Notifications | [x] |
 | G.3 | Push "C'est votre tour" | Notifications | [x] |
-| G.4 | Push "Match trouve" | Notifications | [ ] |
+| G.4 | Push "Match trouve" | Notifications | [x] |
 | G.5 | UI permission + preferences | Notifications | [ ] |
 
 ---
