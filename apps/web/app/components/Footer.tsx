@@ -68,6 +68,16 @@ export default function Footer() {
                   {t.footer.termsOfService}
                 </a>
               </li>
+              <li>
+                <a href="/legal/politique-de-confidentialite" className="hover:text-nuffle-gold hover:underline transition-colors">
+                  {t.footer.privacyPolicy}
+                </a>
+              </li>
+              <li>
+                <a href="/legal/politique-de-cookies" className="hover:text-nuffle-gold hover:underline transition-colors">
+                  {t.footer.cookiePolicy}
+                </a>
+              </li>
             </ul>
           </div>
         </div>
