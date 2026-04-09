@@ -5,6 +5,7 @@ import type { Graphics as PixiGraphics } from "@pixi/graphics";
 import type { GameState, Position, Player, TackleZoneHeatmap } from "@bb/game-engine";
 import { useAnimatedPositions } from "./useAnimatedPositions";
 import { useBlockEffects } from "./useBlockEffects";
+import { useTouchdownEffects } from "./useTouchdownEffects";
 
 /** Extract up to 2 initials from a player's name (e.g. "Grim Ironjaw" -> "GI") */
 function getInitials(player: Player): string {
@@ -95,6 +96,7 @@ export default function PixiBoard({
   /* ── Animation tweens ────────────────────────────────────────────── */
   const anim = useAnimatedPositions(state.players ?? [], state.ball);
   const blockFx = useBlockEffects(state.players ?? []);
+  const tdFx = useTouchdownEffects(state.gameLog ?? [], safeWidth, safeHeight);
 
   /* ── Zoom: mouse wheel ────────────────────────────────────────────── */
   React.useEffect(() => {
@@ -551,6 +553,51 @@ export default function PixiBoard({
                 g.lineTo(x, y + radius);
               }}
             />
+          )}
+
+          {/* Touchdown flash + particles */}
+          {tdFx.overlay && (
+            <>
+              {/* Endzone flash overlay */}
+              <Graphics
+                draw={(g: PixiGraphics) => {
+                  g.clear();
+                  const alpha = tdFx.overlay!.flashAlpha;
+                  if (alpha <= 0) return;
+                  const flashColor = tdFx.overlay!.scoringTeam === "A" ? 0xffd700 : 0xffd700;
+                  // Flash the scoring endzone
+                  if (tdFx.overlay!.scoringTeam === "A") {
+                    // Team A endzone is at the bottom (y = height - cs)
+                    g.beginFill(flashColor, alpha);
+                    g.drawRect(0, height - cs, width, cs);
+                    g.endFill();
+                  } else {
+                    // Team B endzone is at the top (y = 0)
+                    g.beginFill(flashColor, alpha);
+                    g.drawRect(0, 0, width, cs);
+                    g.endFill();
+                  }
+                  // Also flash the full board very subtly
+                  g.beginFill(flashColor, alpha * 0.15);
+                  g.drawRect(0, 0, width, height);
+                  g.endFill();
+                }}
+              />
+              {/* Particles */}
+              <Graphics
+                draw={(g: PixiGraphics) => {
+                  g.clear();
+                  for (const p of tdFx.overlay!.particles) {
+                    if (p.alpha <= 0) continue;
+                    const px = p.y * cs + cs / 2;
+                    const py = p.x * cs + cs / 2;
+                    g.beginFill(p.color, p.alpha);
+                    g.drawCircle(px, py, p.size);
+                    g.endFill();
+                  }
+                }}
+              />
+            </>
           )}
         </Container>
       </Stage>
