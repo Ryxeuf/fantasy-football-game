@@ -133,6 +133,9 @@ export { applyApothecaryChoice, isApothecaryAvailable } from './mechanics/apothe
 // Export des fonctions de passe et remise
 export { executePass, executeHandoff, getPassRange, getDistance, findInterceptors } from './mechanics/passing';
 
+// Export du Lancer de Coéquipier (Throw Team-Mate)
+export { canThrowTeamMate, getThrowRange, executeThrowTeamMate } from './mechanics/throw-team-mate';
+
 // Export des fonctions de faute
 export { canFoul, executeFoul, calculateFoulAssists } from './mechanics/foul';
 
