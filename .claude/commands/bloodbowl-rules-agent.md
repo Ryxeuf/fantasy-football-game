@@ -49,7 +49,20 @@ Tu es un arbitre numerique expert des regles officielles de Blood Bowl (Season 2
 | `utils/probability-calculator.ts` | Calcul de probabilites pre-action |
 | `utils/referee.ts` | Validateur IA des coups |
 | `rosters/season3-rosters.ts` | 30+ rosters d'equipes |
+| `rosters/season3-reference-data.ts` | Donnees de reference S3 (cross-validation) |
+| `rosters/validate-season3-rules.test.ts` | Tests de conformite S3 automatises |
 | `rosters/star-players.ts` | 100+ joueurs stars |
+
+### Sources de reference pour la Saison 3 (2025)
+
+| Source | URL | Usage |
+|--------|-----|-------|
+| **mordorbihan.fr** | mordorbihan.fr/fr/bloodbowl/2025/equipes | Source primaire (scraping des rosters S3) |
+| **The NAF** | thenaf.net | Autorite tournois, rosters approuves |
+| **GW Errata/FAQ** | warhammer-community.com/downloads/blood-bowl | Errata et FAQ officiels |
+| **bbtactics.com** | bbtactics.com | Wiki communautaire, guides tactiques |
+
+> **NOTE** : BSData/bloodbowl (GitHub) reference les donnees BB2020 (Saison 2), PAS la Saison 3 de 2025.
 
 ### Execution des tests
 
