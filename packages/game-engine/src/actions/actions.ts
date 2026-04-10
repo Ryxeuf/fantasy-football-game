@@ -65,6 +65,12 @@ import { applyApothecaryChoice } from '../mechanics/apothecary';
 import { canThrowTeamMate, getThrowRange, executeThrowTeamMate } from '../mechanics/throw-team-mate';
 import { canHypnoticGaze, executeHypnoticGaze } from '../mechanics/hypnotic-gaze';
 import { canProjectileVomit, executeProjectileVomit } from '../mechanics/projectile-vomit';
+import {
+  resolveKickoffPerfectDefence,
+  resolveKickoffHighKick,
+  resolveKickoffQuickSnap,
+  resolveKickoffBlitz,
+} from '../mechanics/kickoff-resolution';
 
 /**
  * Obtient tous les mouvements légaux pour l'état actuel
@@ -83,6 +89,20 @@ export function getLegalMoves(state: GameState): Move[] {
   // Vérifier que state.players existe
   if (!state.players || !Array.isArray(state.players)) {
     return moves;
+  }
+
+  // Si un pendingKickoffEvent est en attente, seules les actions kickoff sont possibles
+  if (state.pendingKickoffEvent) {
+    switch (state.pendingKickoffEvent.type) {
+      case 'perfect-defence':
+        return [{ type: 'KICKOFF_PERFECT_DEFENCE', positions: [] } as Move];
+      case 'high-kick':
+        return [{ type: 'KICKOFF_HIGH_KICK', playerId: null } as Move];
+      case 'quick-snap':
+        return [{ type: 'KICKOFF_QUICK_SNAP', moves: [] } as Move];
+      case 'blitz':
+        return [{ type: 'KICKOFF_BLITZ_RESOLVE' } as Move];
+    }
   }
 
   // Si un pendingApothecary est en attente, seul le choix d'apothecaire est possible
@@ -164,7 +184,8 @@ export function getLegalMoves(state: GameState): Move[] {
     }
 
     // Actions de passe (PASS) - le joueur doit avoir le ballon et pas encore agi
-    if (p.hasBall && !hasPlayerActed(state, p.id)) {
+    // Passes interdites pendant le tour de blitz kickoff
+    if (p.hasBall && !hasPlayerActed(state, p.id) && !state.kickoffBlitzTurn) {
       const teammates = state.players.filter(
         t => t.team === team && t.id !== p.id && !t.stunned && t.state === 'active'
       );
@@ -177,7 +198,8 @@ export function getLegalMoves(state: GameState): Move[] {
     }
 
     // Actions de remise (HANDOFF) - le joueur doit avoir le ballon, cible adjacente
-    if (p.hasBall && !hasPlayerActed(state, p.id)) {
+    // Remises interdites pendant le tour de blitz kickoff
+    if (p.hasBall && !hasPlayerActed(state, p.id) && !state.kickoffBlitzTurn) {
       const teammates = state.players.filter(
         t => t.team === team && t.id !== p.id && !t.stunned && t.state === 'active'
       );
@@ -365,6 +387,12 @@ function applyPickupFailure(state: GameState, playerIndex: number, rng: RNG): Ga
  * @returns Nouvel état du jeu
  */
 export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
+  // Si un pendingKickoffEvent est en attente, seules les actions kickoff sont acceptées
+  if (state.pendingKickoffEvent) {
+    const kickoffMoves = ['KICKOFF_PERFECT_DEFENCE', 'KICKOFF_HIGH_KICK', 'KICKOFF_QUICK_SNAP', 'KICKOFF_BLITZ_RESOLVE'];
+    if (!kickoffMoves.includes(move.type)) return state;
+  }
+
   // Si un pendingApothecary est en attente, seul APOTHECARY_CHOOSE est accepté
   if (state.pendingApothecary && move.type !== 'APOTHECARY_CHOOSE') {
     return state;
@@ -372,6 +400,11 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
 
   // Si un pendingReroll est en attente, seuls REROLL_CHOOSE et END_TURN sont acceptés
   if (state.pendingReroll && move.type !== 'REROLL_CHOOSE' && move.type !== 'END_TURN') {
+    return state;
+  }
+
+  // Pendant le tour de blitz kickoff, les passes et remises sont interdites
+  if (state.kickoffBlitzTurn && (move.type === 'PASS' || move.type === 'HANDOFF')) {
     return state;
   }
 
@@ -414,6 +447,14 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       return handleHypnoticGaze(state, move, rng);
     case 'PROJECTILE_VOMIT':
       return handleProjectileVomit(state, move, rng);
+    case 'KICKOFF_PERFECT_DEFENCE':
+      return resolveKickoffPerfectDefence(state, move.positions);
+    case 'KICKOFF_HIGH_KICK':
+      return resolveKickoffHighKick(state, move.playerId);
+    case 'KICKOFF_QUICK_SNAP':
+      return resolveKickoffQuickSnap(state, move.moves);
+    case 'KICKOFF_BLITZ_RESOLVE':
+      return resolveKickoffBlitz(state);
     default:
       return checkTouchdowns(state);
   }
@@ -429,6 +470,25 @@ function handleEndTurn(state: GameState, rng: RNG): GameState {
   // Si on est en phase post-TD, faire le reset et kickoff
   if (state.gamePhase === 'post-td') {
     return handlePostTouchdown(state, rng);
+  }
+
+  // Si c'est un tour de blitz kickoff, le tour du kicking team est terminé
+  // Retourner le contrôle à l'équipe qui reçoit
+  if (state.kickoffBlitzTurn) {
+    const receivingTeam = state.kickingTeam === 'A' ? 'B' : 'A';
+    return {
+      ...state,
+      kickoffBlitzTurn: undefined,
+      currentPlayer: receivingTeam,
+      selectedPlayerId: null,
+      players: state.players.map(p => ({ ...p, pm: p.ma, gfiUsed: 0 })),
+      isTurnover: false,
+      playerActions: {},
+      teamBlitzCount: {},
+      teamFoulCount: {},
+      rerollUsedThisTurn: false,
+      hypnotizedPlayers: [],
+    };
   }
 
   // Changement de tour - le porteur de ballon garde le ballon

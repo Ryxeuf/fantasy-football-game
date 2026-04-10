@@ -142,14 +142,18 @@ export function applyKickoffEvent(
     }
 
     case 'perfect-defence': {
-      // L'équipe qui botte peut réorganiser (marqué comme flag, géré côté UI)
+      newState.pendingKickoffEvent = { type: 'perfect-defence', team: kickingTeam };
       const log = createLogEntry('action', `Défense parfaite — L'équipe qui botte peut réorganiser ses joueurs`);
       newState.gameLog = [...newState.gameLog, log];
       break;
     }
 
     case 'high-kick': {
-      // Un joueur de l'équipe qui reçoit peut être déplacé sous le ballon (géré côté UI)
+      newState.pendingKickoffEvent = {
+        type: 'high-kick',
+        team: receivingTeam,
+        ballPosition: newState.ball,
+      };
       const log = createLogEntry('action', `Coup en hauteur — L'équipe qui reçoit peut placer un joueur sous le ballon`);
       newState.gameLog = [...newState.gameLog, log];
       break;
@@ -202,14 +206,14 @@ export function applyKickoffEvent(
     }
 
     case 'quick-snap': {
-      // L'équipe qui reçoit peut déplacer chaque joueur d'1 case (géré côté UI)
+      newState.pendingKickoffEvent = { type: 'quick-snap', team: receivingTeam };
       const log = createLogEntry('action', `Snap rapide ! ${receivingTeam === 'A' ? newState.teamNames.teamA : newState.teamNames.teamB} peut déplacer ses joueurs d'1 case`);
       newState.gameLog = [...newState.gameLog, log];
       break;
     }
 
     case 'blitz': {
-      // L'équipe qui botte joue un tour immédiat (géré côté UI/game flow)
+      newState.pendingKickoffEvent = { type: 'blitz', team: kickingTeam };
       const log = createLogEntry('action', `Blitz ! ${kickingTeam === 'A' ? newState.teamNames.teamA : newState.teamNames.teamB} joue un tour immédiat`);
       newState.gameLog = [...newState.gameLog, log];
       break;
