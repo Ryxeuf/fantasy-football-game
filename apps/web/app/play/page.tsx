@@ -13,8 +13,8 @@ interface MatchSummary {
   score: { teamA: number; teamB: number };
   half: number;
   turn: number;
-  myTeam: { coachName: string; teamName: string; rosterName?: string } | null;
-  opponent: { coachName: string; teamName: string; rosterName?: string } | null;
+  myTeam: { coachName: string; teamName: string; rosterName?: string; eloRating?: number } | null;
+  opponent: { coachName: string; teamName: string; rosterName?: string; eloRating?: number } | null;
 }
 
 interface TeamOption {
@@ -573,6 +573,9 @@ export default function PlayPage() {
                       )}
                       <span className="text-nuffle-anthracite/50">vs</span>
                       <span className="truncate">{m.opponent?.teamName || (t.play?.waitingOpponent || "En attente...")}</span>
+                      {m.opponent?.eloRating != null && (
+                        <span className="text-xs text-nuffle-bronze/70 font-normal">{m.opponent.eloRating}</span>
+                      )}
                     </div>
                     <div className="text-xs text-nuffle-anthracite/50 mt-1 font-body flex items-center gap-2">
                       <span>{formatDate(m.createdAt)}</span>

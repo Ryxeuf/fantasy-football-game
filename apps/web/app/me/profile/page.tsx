@@ -14,6 +14,7 @@ type UserProfile = {
   role?: string;
   roles?: string[];
   patreon?: boolean;
+  eloRating: number;
   createdAt: string;
   updatedAt: string;
   _count: {
@@ -380,6 +381,10 @@ export default function ProfilePage() {
       <div className="bg-white border border-gray-200 rounded-lg p-6">
         <h3 className="text-xl font-bold mb-4">Statistiques</h3>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="bg-nuffle-gold/10 border border-nuffle-gold/30 p-4 rounded-lg">
+            <div className="text-3xl font-bold text-nuffle-bronze">{profile.eloRating ?? 1000}</div>
+            <div className="text-sm text-gray-600 mt-1">ELO</div>
+          </div>
           <div className="bg-blue-50 p-4 rounded-lg">
             <div className="text-3xl font-bold text-blue-700">{profile._count?.teams ?? 0}</div>
             <div className="text-sm text-gray-600 mt-1">Équipes créées</div>

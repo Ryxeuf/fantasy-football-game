@@ -157,7 +157,7 @@
 | E.7 | Animation de des (des 2D animes) | UX | [x] |
 | I.9 | Implementer 4 kickoff events delegues UI | Contenu | [x] |
 | F.3 | Page leaderboard | Classement | [x] |
-| F.4 | ELO dans profil et lobby | Classement | [ ] |
+| F.4 | ELO dans profil et lobby | Classement | [x] |
 
 ---
 
