@@ -159,6 +159,18 @@
 | F.3 | Page leaderboard | Classement | [x] |
 | F.4 | ELO dans profil et lobby | Classement | [x] |
 
+### Sprint 10 — Contenu & polish restants
+
+| # | Tache | Type | Statut |
+|---|-------|------|--------|
+| I.1 | Ajouter roster Slann en Season 3 | Contenu | [x] |
+| I.2 | Descriptions S3 rosters (descriptionFr/En) | Contenu | [ ] |
+| I.3 | Fixer images star players manquantes (~28) | Contenu | [ ] |
+| B3.2 | UI affichage regles speciales star players | UI | [ ] |
+| H.3 | Replayer basique | Polish | [ ] |
+| H.4 | Indicateurs tactiques (zones de tacle, portee) | Polish | [ ] |
+| H.6 | Sprite sheets par equipe | Polish | [ ] |
+
 ---
 
 ## Resume par phase
@@ -177,7 +189,7 @@
 | **F — ELO & classement** | 4 | 2 | 0 | 2 | SOUHAITABLE |
 | **G — Notifications push** | 5 | 2 | 0 | 3 | EN COURS (Sprint 7) |
 | **H — Polish** | 7 | 2 | 0 | 5 | EN COURS (Sprint 8) |
-| **I — Contenu & donnees** | 10 | 0 | 0 | 10 | BONUS |
+| **I — Contenu & donnees** | 10 | 6 | 0 | 4 | EN COURS (Sprint 10) |
 
 ---
 
@@ -210,5 +222,6 @@ Sprint 0 (Bugfixes) ✅ ──→ Sprint 1 (WS + UI + skills) ✅ ──→ MATC
 > 6. ~~Sprint 5~~ ✅ — robustesse WS, flow complet, timer = production ready
 > 7. ~~Sprint 6~~ ✅ — regles BB3 complementaires (Secret Weapons, Animosity, TTM)
 > 8. ~~Sprint 7~~ ✅ — notifications push (Service Worker, web-push, integration)
-> 9. **En cours** : Sprint 8 — polish & contenu (chat in-game, bugfixes donnees)
-> 10. **Plus tard** : H suite (spectateur, replayer), I suite (contenu)
+> 9. ~~Sprint 8~~ ✅ — polish & contenu (chat in-game, bugfixes donnees)
+> 10. ~~Sprint 9~~ ✅ — animations avancees, kickoff events, leaderboard
+> 11. **En cours** : Sprint 10 — contenu & polish restants (Slann S3, images, replayer)
