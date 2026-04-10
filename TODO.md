@@ -168,7 +168,7 @@
 | I.3 | Fixer images star players manquantes (~28) | Contenu | [x] |
 | B3.2 | UI affichage regles speciales star players | UI | [x] |
 | H.3 | Replayer basique | Polish | [x] |
-| H.4 | Indicateurs tactiques (zones de tacle, portee) | Polish | [ ] |
+| H.4 | Indicateurs tactiques (zones de tacle, portee) | Polish | [x] |
 | H.6 | Sprite sheets par equipe | Polish | [ ] |
 
 ---

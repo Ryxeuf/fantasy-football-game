@@ -184,6 +184,14 @@ export {
   type TackleZoneHeatmap,
 } from './mechanics/tackle-zones';
 
+// Export des indicateurs tactiques (portée mouvement + bandes de passe)
+export {
+  getReachableCells,
+  getPassRangeBands,
+  type ReachableCell,
+  type PassRangeBand,
+} from './mechanics/tactical-indicators';
+
 // Export du simulateur de probabilités
 export {
   calculateMoveProbability,

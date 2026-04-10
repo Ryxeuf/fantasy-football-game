@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useMemo, useEffect, useCallback } from "react";
-import { GameState, Player, calculateTackleZoneHeatmap } from "@bb/game-engine";
+import { GameState, Player, calculateTackleZoneHeatmap, getReachableCells, getPassRangeBands } from "@bb/game-engine";
 import PixiBoard from "../board/PixiBoard";
 import TeamDugoutComponent from "./TeamDugout";
 import PlayerDetails from "./PlayerDetails";
@@ -47,25 +47,45 @@ export default function GameBoardWithDugouts({
   const [showDugoutB, setShowDugoutB] = useState(false);
   const [inspectedPlayer, setInspectedPlayer] = useState<Player | null>(null);
   const [showTackleZones, setShowTackleZones] = useState(false);
+  const [showReachability, setShowReachability] = useState(false);
+  const [showPassRange, setShowPassRange] = useState(false);
 
   const tackleZoneHeatmap = useMemo(
     () => (showTackleZones && state ? calculateTackleZoneHeatmap(state) : undefined),
     [showTackleZones, state],
   );
 
-  // 'T' keyboard shortcut to toggle tackle zones
+  const reachableCells = useMemo(
+    () => (showReachability && state && selectedPlayerId ? getReachableCells(state, selectedPlayerId) : []),
+    [showReachability, state, selectedPlayerId],
+  );
+
+  const passRangeBands = useMemo(() => {
+    if (!showPassRange || !state || !selectedPlayerId) return [];
+    const player = state.players?.find(p => p.id === selectedPlayerId);
+    if (!player?.hasBall) return [];
+    return getPassRangeBands(player.pos, state.width, state.height);
+  }, [showPassRange, state, selectedPlayerId]);
+
+  // Keyboard shortcuts for tactical overlays
   const toggleTackleZones = useCallback(() => setShowTackleZones((v) => !v), []);
+  const toggleReachability = useCallback(() => setShowReachability((v) => !v), []);
+  const togglePassRange = useCallback(() => setShowPassRange((v) => !v), []);
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       // Ignore if user is typing in an input/textarea
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (e.key === "t" || e.key === "T") {
         toggleTackleZones();
+      } else if (e.key === "r" || e.key === "R") {
+        toggleReachability();
+      } else if (e.key === "p" || e.key === "P") {
+        togglePassRange();
       }
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [toggleTackleZones]);
+  }, [toggleTackleZones, toggleReachability, togglePassRange]);
 
   if (!state) {
     return (
@@ -139,8 +159,8 @@ export default function GameBoardWithDugouts({
         <div className="lg:hidden px-3 pb-2">{dugoutB}</div>
       )}
 
-      {/* Tackle zone toggle button */}
-      <div className="flex justify-center px-3 pb-1">
+      {/* Tactical indicator toggle buttons */}
+      <div className="flex justify-center gap-1.5 px-3 pb-1 flex-wrap">
         <button
           onClick={toggleTackleZones}
           className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
@@ -151,6 +171,28 @@ export default function GameBoardWithDugouts({
           title="Toggle tackle zones (T)"
         >
           {showTackleZones ? "Hide" : "Show"} Tackle Zones (T)
+        </button>
+        <button
+          onClick={toggleReachability}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+            showReachability
+              ? "bg-cyan-600 text-white"
+              : "bg-cyan-100 text-cyan-800 border border-cyan-300"
+          }`}
+          title="Toggle movement range (R)"
+        >
+          {showReachability ? "Hide" : "Show"} Range (R)
+        </button>
+        <button
+          onClick={togglePassRange}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+            showPassRange
+              ? "bg-amber-600 text-white"
+              : "bg-amber-100 text-amber-800 border border-amber-300"
+          }`}
+          title="Toggle pass range bands (P)"
+        >
+          {showPassRange ? "Hide" : "Show"} Pass Range (P)
         </button>
       </div>
 
@@ -177,6 +219,10 @@ export default function GameBoardWithDugouts({
             onCellSizeChange={onCellSizeChange}
             tackleZoneHeatmap={tackleZoneHeatmap}
             showTackleZones={showTackleZones}
+            reachableCells={reachableCells}
+            showReachability={showReachability}
+            passRangeBands={passRangeBands}
+            showPassRange={showPassRange}
           />
         </div>
 
