@@ -253,6 +253,9 @@ export * from './skills/skill-effects';
 export {
   isStarPlayerRuleUsed,
   markStarPlayerRuleUsed,
+  STAR_PLAYER_RULE_SLUGS,
+  isStarPlayerRule,
+  getPlayerStarRules,
 } from './skills/star-player-rules';
 
 // Export des utilitaires d'avancements

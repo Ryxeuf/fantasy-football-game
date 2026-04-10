@@ -1,10 +1,12 @@
 import React from "react";
 import type { Player } from "@bb/game-engine";
+import { getPlayerStarRules } from "@bb/game-engine";
 
 interface PlayerDetailsProps {
   player: Player | null;
   onClose: () => void;
   variant?: "floating" | "sidebar";
+  usedStarPlayerRules?: Record<string, boolean>;
 }
 
 /** Extract initials from player name */
@@ -18,11 +20,16 @@ export default function PlayerDetails({
   player,
   onClose,
   variant = "floating",
+  usedStarPlayerRules,
 }: PlayerDetailsProps) {
   if (!player) return null;
 
   const teamBg = player.team === "A" ? "bg-red-500" : "bg-blue-500";
   const teamBgLight = player.team === "A" ? "bg-red-50 text-red-700" : "bg-blue-50 text-blue-700";
+
+  const starRules = getPlayerStarRules(player, usedStarPlayerRules);
+  const starRuleSlugs = new Set(starRules.map(r => r.slug));
+  const regularSkills = player.skills.filter(s => !starRuleSlugs.has(s));
 
   return (
     <div
@@ -96,13 +103,13 @@ export default function PlayerDetails({
       </div>
 
       {/* Skills */}
-      {player.skills.length > 0 && (
+      {regularSkills.length > 0 && (
         <div className="mb-3">
           <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
             Competences
           </div>
           <div className="flex flex-wrap gap-1.5">
-            {player.skills.map((skill, i) => (
+            {regularSkills.map((skill, i) => (
               <span
                 key={i}
                 className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded-full border border-gray-200"
@@ -111,6 +118,48 @@ export default function PlayerDetails({
               </span>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Star Player Special Rules */}
+      {starRules.length > 0 && (
+        <div className="mt-3">
+          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+            Règle spéciale
+          </div>
+          {starRules.map((rule) => (
+            <div
+              key={rule.slug}
+              className={`rounded-lg p-3 border ${
+                rule.isUsed
+                  ? "bg-gray-50 border-gray-300"
+                  : "bg-yellow-50 border-yellow-300"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className={`text-sm font-bold ${
+                  rule.isUsed ? "text-gray-500" : "text-yellow-800"
+                }`}>
+                  {rule.nameFr}
+                </span>
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                  rule.isUsed
+                    ? "bg-gray-200 text-gray-600"
+                    : "bg-green-100 text-green-700"
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${
+                    rule.isUsed ? "bg-gray-400" : "bg-green-500"
+                  }`} />
+                  {rule.isUsed ? "Utilisée" : "Disponible"}
+                </span>
+              </div>
+              <p className={`text-xs leading-relaxed ${
+                rule.isUsed ? "text-gray-400" : "text-yellow-700"
+              }`}>
+                {rule.description}
+              </p>
+            </div>
+          ))}
         </div>
       )}
     </div>

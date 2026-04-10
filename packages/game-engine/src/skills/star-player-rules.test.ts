@@ -445,4 +445,124 @@ describe('Star Player Special Rules', () => {
       expect(isStarPlayerRuleUsed(state, 'player-1', 'coup-sauvage')).toBe(false);
     });
   });
+
+  describe('STAR_PLAYER_RULE_SLUGS', () => {
+    it('should contain all 10 star player rule slugs', async () => {
+      const { STAR_PLAYER_RULE_SLUGS } = await import('./star-player-rules');
+      expect(STAR_PLAYER_RULE_SLUGS.size).toBe(10);
+      expect(STAR_PLAYER_RULE_SLUGS.has('blind-rage')).toBe(true);
+      expect(STAR_PLAYER_RULE_SLUGS.has('slayer')).toBe(true);
+      expect(STAR_PLAYER_RULE_SLUGS.has('coup-sauvage')).toBe(true);
+      expect(STAR_PLAYER_RULE_SLUGS.has('la-baliste')).toBe(true);
+      expect(STAR_PLAYER_RULE_SLUGS.has('consummate-professional')).toBe(true);
+      expect(STAR_PLAYER_RULE_SLUGS.has('crushing-blow')).toBe(true);
+      expect(STAR_PLAYER_RULE_SLUGS.has('lord-of-chaos')).toBe(true);
+      expect(STAR_PLAYER_RULE_SLUGS.has('pirouette')).toBe(true);
+      expect(STAR_PLAYER_RULE_SLUGS.has('casse-os')).toBe(true);
+      expect(STAR_PLAYER_RULE_SLUGS.has('reliable')).toBe(true);
+    });
+
+    it('should not contain regular skill slugs', async () => {
+      const { STAR_PLAYER_RULE_SLUGS } = await import('./star-player-rules');
+      expect(STAR_PLAYER_RULE_SLUGS.has('block')).toBe(false);
+      expect(STAR_PLAYER_RULE_SLUGS.has('dodge')).toBe(false);
+      expect(STAR_PLAYER_RULE_SLUGS.has('mighty-blow')).toBe(false);
+    });
+  });
+
+  describe('isStarPlayerRule', () => {
+    it('should return true for star player rule slugs', async () => {
+      const { isStarPlayerRule } = await import('./star-player-rules');
+      expect(isStarPlayerRule('coup-sauvage')).toBe(true);
+      expect(isStarPlayerRule('blind-rage')).toBe(true);
+      expect(isStarPlayerRule('reliable')).toBe(true);
+    });
+
+    it('should return false for regular skill slugs', async () => {
+      const { isStarPlayerRule } = await import('./star-player-rules');
+      expect(isStarPlayerRule('block')).toBe(false);
+      expect(isStarPlayerRule('dodge')).toBe(false);
+      expect(isStarPlayerRule('loner-4')).toBe(false);
+    });
+  });
+
+  describe('getPlayerStarRules', () => {
+    it('should return empty array for player without star rules', async () => {
+      const { getPlayerStarRules } = await import('./star-player-rules');
+      const player = makePlayer({ skills: ['block', 'dodge', 'tackle'] });
+
+      const rules = getPlayerStarRules(player);
+      expect(rules).toEqual([]);
+    });
+
+    it('should return star rule info for player with star rules', async () => {
+      const { getPlayerStarRules } = await import('./star-player-rules');
+      const player = makePlayer({
+        id: 'akhorne-1',
+        skills: ['dodge', 'frenzy', 'blind-rage'],
+      });
+
+      const rules = getPlayerStarRules(player);
+      expect(rules).toHaveLength(1);
+      expect(rules[0].slug).toBe('blind-rage');
+      expect(rules[0].nameFr).toBe('Rage Aveugle');
+      expect(rules[0].nameEn).toBe('Blind Rage');
+      expect(rules[0].description).toBeTruthy();
+      expect(rules[0].isUsed).toBe(false);
+    });
+
+    it('should show rule as used when tracked in usedStarPlayerRules', async () => {
+      const { getPlayerStarRules } = await import('./star-player-rules');
+      const player = makePlayer({
+        id: 'anqi-1',
+        skills: ['block', 'grab', 'coup-sauvage'],
+      });
+      const usedRules = { 'anqi-1:coup-sauvage': true };
+
+      const rules = getPlayerStarRules(player, usedRules);
+      expect(rules).toHaveLength(1);
+      expect(rules[0].slug).toBe('coup-sauvage');
+      expect(rules[0].isUsed).toBe(true);
+    });
+
+    it('should show rule as available when not in usedStarPlayerRules', async () => {
+      const { getPlayerStarRules } = await import('./star-player-rules');
+      const player = makePlayer({
+        id: 'anqi-1',
+        skills: ['block', 'grab', 'coup-sauvage'],
+      });
+      const usedRules = { 'other-player:coup-sauvage': true };
+
+      const rules = getPlayerStarRules(player, usedRules);
+      expect(rules).toHaveLength(1);
+      expect(rules[0].isUsed).toBe(false);
+    });
+
+    it('should handle undefined usedStarPlayerRules', async () => {
+      const { getPlayerStarRules } = await import('./star-player-rules');
+      const player = makePlayer({
+        id: 'zug-1',
+        skills: ['block', 'mighty-blow', 'casse-os'],
+      });
+
+      const rules = getPlayerStarRules(player, undefined);
+      expect(rules).toHaveLength(1);
+      expect(rules[0].slug).toBe('casse-os');
+      expect(rules[0].isUsed).toBe(false);
+    });
+
+    it('should return multiple star rules if player has several', async () => {
+      const { getPlayerStarRules } = await import('./star-player-rules');
+      // Hypothetical player with multiple star player rules
+      const player = makePlayer({
+        id: 'multi-1',
+        skills: ['blind-rage', 'coup-sauvage'],
+      });
+
+      const rules = getPlayerStarRules(player);
+      expect(rules).toHaveLength(2);
+      expect(rules.map(r => r.slug)).toContain('blind-rage');
+      expect(rules.map(r => r.slug)).toContain('coup-sauvage');
+    });
+  });
 });
