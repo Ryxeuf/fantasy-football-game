@@ -2,7 +2,7 @@
 import * as React from "react";
 import { Stage, Container, Graphics, Text } from "@pixi/react";
 import type { Graphics as PixiGraphics } from "@pixi/graphics";
-import type { GameState, Position, Player, TackleZoneHeatmap } from "@bb/game-engine";
+import type { GameState, Position, Player, TackleZoneHeatmap, ReachableCell, PassRangeBand } from "@bb/game-engine";
 import { useAnimatedPositions } from "./useAnimatedPositions";
 import { useBlockEffects } from "./useBlockEffects";
 import { useTouchdownEffects } from "./useTouchdownEffects";
@@ -41,6 +41,14 @@ type Props = {
   tackleZoneHeatmap?: TackleZoneHeatmap;
   /** Whether to show the tackle zone overlay */
   showTackleZones?: boolean;
+  /** Reachable cells for the selected player (movement range) */
+  reachableCells?: ReachableCell[];
+  /** Whether to show the movement range overlay */
+  showReachability?: boolean;
+  /** Pass range bands for the ball carrier */
+  passRangeBands?: PassRangeBand[];
+  /** Whether to show the pass range overlay */
+  showPassRange?: boolean;
 };
 
 export default function PixiBoard({
@@ -56,6 +64,10 @@ export default function PixiBoard({
   onCellSizeChange,
   tackleZoneHeatmap,
   showTackleZones = false,
+  reachableCells = [],
+  showReachability = false,
+  passRangeBands = [],
+  showPassRange = false,
 }: Props) {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [responsiveCellSize, setResponsiveCellSize] = React.useState(cellSize);
@@ -375,6 +387,58 @@ export default function PixiBoard({
                     g.beginFill(color, alpha);
                     g.drawRect(y * cs, x * cs, cs, cs);
                     g.endFill();
+                  }
+                }
+              }}
+            />
+          )}
+
+          {/* Movement range overlay (reachability) */}
+          {showReachability && reachableCells.length > 0 && (
+            <Graphics
+              draw={(g: PixiGraphics) => {
+                g.clear();
+                // Find max cost to normalize alpha
+                let maxCost = 1;
+                for (const cell of reachableCells) {
+                  if (cell.cost > maxCost) maxCost = cell.cost;
+                }
+                for (const cell of reachableCells) {
+                  // Cyan for normal, yellow for GFI cells
+                  const color = cell.needsGfi ? 0xffaa00 : 0x00ccff;
+                  // Alpha fades with distance (closer = brighter)
+                  const alpha = 0.15 + 0.25 * (1 - cell.cost / (maxCost + 1));
+                  g.beginFill(color, alpha);
+                  g.drawRect(cell.pos.y * cs, cell.pos.x * cs, cs, cs);
+                  g.endFill();
+                }
+              }}
+            />
+          )}
+
+          {/* Pass range bands overlay */}
+          {showPassRange && passRangeBands.length > 0 && (
+            <Graphics
+              draw={(g: PixiGraphics) => {
+                g.clear();
+                const bandColors: Record<string, { color: number; alpha: number }> = {
+                  quick: { color: 0x00cc44, alpha: 0.18 },
+                  short: { color: 0xffcc00, alpha: 0.14 },
+                  long: { color: 0xff6600, alpha: 0.12 },
+                  bomb: { color: 0xff2222, alpha: 0.10 },
+                };
+                for (const band of passRangeBands) {
+                  const style = bandColors[band.range];
+                  if (!style) continue;
+                  g.beginFill(style.color, style.alpha);
+                  for (const pos of band.positions) {
+                    g.drawRect(pos.y * cs, pos.x * cs, cs, cs);
+                  }
+                  g.endFill();
+                  // Draw subtle border lines between bands
+                  g.lineStyle(1, style.color, style.alpha * 1.5);
+                  for (const pos of band.positions) {
+                    g.drawRect(pos.y * cs, pos.x * cs, cs, cs);
                   }
                 }
               }}
