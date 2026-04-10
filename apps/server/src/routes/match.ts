@@ -1375,3 +1375,75 @@ router.get("/:id/spectate", authUser, async (req: AuthenticatedRequest, res) => 
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
+
+// Replay data: returns all turns with game states for replaying a finished match
+router.get("/:id/replay", authUser, async (req: AuthenticatedRequest, res) => {
+  try {
+    const matchId = req.params.id;
+
+    const match = await prisma.match.findUnique({
+      where: { id: matchId },
+      include: {
+        turns: {
+          orderBy: { number: "asc" },
+          select: { number: true, payload: true, createdAt: true },
+        },
+        teamSelections: {
+          orderBy: { createdAt: "asc" },
+          include: {
+            user: { select: { id: true, coachName: true } },
+            teamRef: { select: { id: true, name: true, roster: true } },
+          },
+        },
+      },
+    });
+
+    if (!match) {
+      return res.status(404).json({ error: "Partie introuvable" });
+    }
+
+    if (match.status !== "ended") {
+      return res.status(400).json({ error: "Le replay n'est disponible que pour les matchs termines" });
+    }
+
+    // Extract turn payloads that contain game state
+    const replayTurns = match.turns
+      .filter((t: any) => t.payload?.gameState != null)
+      .map((t: any) => ({
+        type: t.payload.type,
+        gameState: t.payload.gameState,
+        move: t.payload.move,
+        timestamp: t.payload.timestamp || t.createdAt?.toISOString(),
+      }));
+
+    // Team metadata for display
+    const [selA, selB] = match.teamSelections;
+    const teamMeta = {
+      teamA: selA
+        ? {
+            coachName: selA.user?.coachName || "",
+            teamName: selA.teamRef?.name || "",
+            roster: selA.teamRef?.roster || "",
+          }
+        : null,
+      teamB: selB
+        ? {
+            coachName: selB.user?.coachName || "",
+            teamName: selB.teamRef?.name || "",
+            roster: selB.teamRef?.roster || "",
+          }
+        : null,
+    };
+
+    return res.json({
+      matchId,
+      status: match.status,
+      turns: replayTurns,
+      teams: teamMeta,
+      createdAt: match.createdAt,
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
+});
