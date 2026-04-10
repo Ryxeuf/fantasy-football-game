@@ -154,7 +154,7 @@
 | E.4 | Animation de blocage (shake/flash sur impact) | UX | [x] |
 | E.5 | Animation de touchdown (flash + particules endzone) | UX | [x] |
 | E.6 | Animation de blessure (icone KO/casualty/mort) | UX | [x] |
-| E.7 | Animation de des (des 2D animes) | UX | [ ] |
+| E.7 | Animation de des (des 2D animes) | UX | [x] |
 | I.9 | Implementer 4 kickoff events delegues UI | Contenu | [ ] |
 | F.3 | Page leaderboard | Classement | [ ] |
 | F.4 | ELO dans profil et lobby | Classement | [ ] |
