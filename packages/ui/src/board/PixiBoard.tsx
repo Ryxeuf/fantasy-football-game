@@ -6,6 +6,7 @@ import type { GameState, Position, Player, TackleZoneHeatmap } from "@bb/game-en
 import { useAnimatedPositions } from "./useAnimatedPositions";
 import { useBlockEffects } from "./useBlockEffects";
 import { useTouchdownEffects } from "./useTouchdownEffects";
+import { useInjuryEffects } from "./useInjuryEffects";
 
 /** Extract up to 2 initials from a player's name (e.g. "Grim Ironjaw" -> "GI") */
 function getInitials(player: Player): string {
@@ -97,6 +98,7 @@ export default function PixiBoard({
   const anim = useAnimatedPositions(state.players ?? [], state.ball);
   const blockFx = useBlockEffects(state.players ?? []);
   const tdFx = useTouchdownEffects(state.gameLog ?? [], safeWidth, safeHeight);
+  const injuryFx = useInjuryEffects(state.players ?? [], state.casualtyResults ?? {});
 
   /* ── Zoom: mouse wheel ────────────────────────────────────────────── */
   React.useEffect(() => {
@@ -599,6 +601,46 @@ export default function PixiBoard({
               />
             </>
           )}
+
+          {/* Injury icons (KO / casualty / dead) */}
+          {injuryFx.icons.map((icon) => (
+            <React.Fragment key={`injury-${icon.playerId}`}>
+              {/* Icon background circle */}
+              <Graphics
+                draw={(g: PixiGraphics) => {
+                  g.clear();
+                  if (icon.alpha <= 0) return;
+                  const x = icon.posY * cs + cs / 2;
+                  const y = icon.posX * cs + cs / 2 + icon.offsetY * cs;
+                  const radius = cs * 0.35;
+                  g.beginFill(0x000000, icon.alpha * 0.6);
+                  g.drawCircle(x, y, radius);
+                  g.endFill();
+                  g.lineStyle(2, icon.color, icon.alpha);
+                  g.drawCircle(x, y, radius);
+                }}
+              />
+              {/* Icon label text */}
+              <Text
+                x={icon.posY * cs + cs / 2}
+                y={icon.posX * cs + cs / 2 + icon.offsetY * cs}
+                text={icon.label}
+                anchor={{ x: 0.5, y: 0.5 }}
+                alpha={icon.alpha}
+                style={
+                  {
+                    align: "center",
+                    fill: icon.color,
+                    fontFamily: "Arial",
+                    fontSize: icon.iconType === "ko" ? Math.max(10, cs * 0.35) : Math.max(12, cs * 0.45),
+                    fontWeight: "bold",
+                    stroke: 0x000000,
+                    strokeThickness: Math.max(2, cs * 0.08),
+                  } as any
+                }
+              />
+            </React.Fragment>
+          ))}
         </Container>
       </Stage>
 
