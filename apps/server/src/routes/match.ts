@@ -207,7 +207,7 @@ router.get("/:id/details", authUser, async (req: AuthenticatedRequest, res) => {
         where: { matchId },
         orderBy: { createdAt: "asc" },
         include: {
-          user: { select: { id: true, name: true, email: true } },
+          user: { select: { id: true, name: true, email: true, eloRating: true } },
           teamRef: { select: { name: true, roster: true } },
         },
       }),
@@ -238,10 +238,11 @@ router.get("/:id/details", authUser, async (req: AuthenticatedRequest, res) => {
     const teamName = (sel: any) =>
       sel?.teamRef?.name || sel?.teamRef?.roster || sel?.team || "";
     const coachName = (sel: any) => sel?.user?.name || sel?.user?.email || "";
+    const eloRating = (sel: any) => sel?.user?.eloRating ?? 1000;
     return res.json({
       matchId,
-      local: { teamName: teamName(local), coachName: coachName(local) },
-      visitor: { teamName: teamName(visitor), coachName: coachName(visitor) },
+      local: { teamName: teamName(local), coachName: coachName(local), eloRating: eloRating(local) },
+      visitor: { teamName: teamName(visitor), coachName: coachName(visitor), eloRating: eloRating(visitor) },
     });
   } catch (e) {
     console.error(e);
@@ -310,7 +311,7 @@ router.get("/my-matches", authUser, async (req: AuthenticatedRequest, res) => {
       include: {
         teamSelections: {
           include: {
-            user: { select: { id: true, coachName: true } },
+            user: { select: { id: true, coachName: true, eloRating: true } },
             teamRef: { select: { id: true, name: true, roster: true } },
           },
         },
@@ -359,6 +360,7 @@ router.get("/my-matches", authUser, async (req: AuthenticatedRequest, res) => {
               coachName: mySelection.user.coachName,
               teamName: mySelection.teamRef?.name || mySelection.team,
               rosterName: mySelection.teamRef?.roster,
+              eloRating: mySelection.user.eloRating,
             }
           : null,
         opponent: opponentSelection
@@ -366,6 +368,7 @@ router.get("/my-matches", authUser, async (req: AuthenticatedRequest, res) => {
               coachName: opponentSelection.user.coachName,
               teamName: opponentSelection.teamRef?.name || opponentSelection.team,
               rosterName: opponentSelection.teamRef?.roster,
+              eloRating: opponentSelection.user.eloRating,
             }
           : null,
       };
@@ -398,7 +401,7 @@ router.get("/:id/summary", authUser, async (req: AuthenticatedRequest, res) => {
       prisma.teamSelection.findMany({
         where: { matchId },
         include: {
-          user: { select: { id: true, name: true, email: true } },
+          user: { select: { id: true, name: true, email: true, eloRating: true } },
           teamRef: { select: { id: true, name: true, roster: true } },
         },
         orderBy: { createdAt: "asc" },
@@ -430,6 +433,7 @@ router.get("/:id/summary", authUser, async (req: AuthenticatedRequest, res) => {
     const pickName = (sel: any) =>
       sel?.teamRef?.name || sel?.teamRef?.roster || sel?.team || "";
     const pickCoach = (sel: any) => sel?.user?.name || sel?.user?.email || "";
+    const pickElo = (sel: any) => sel?.user?.eloRating ?? 1000;
     const acceptedUserIds = Array.from(
       new Set(
         (acceptTurns || [])
@@ -451,8 +455,8 @@ router.get("/:id/summary", authUser, async (req: AuthenticatedRequest, res) => {
       status: match.status,
       createdAt: match.createdAt,
       teams: {
-        local: { name: pickName(local), coach: pickCoach(local) },
-        visitor: { name: pickName(visitor), coach: pickCoach(visitor) },
+        local: { name: pickName(local), coach: pickCoach(local), eloRating: pickElo(local) },
+        visitor: { name: pickName(visitor), coach: pickCoach(visitor), eloRating: pickElo(visitor) },
       },
       score: { teamA: 0, teamB: 0 }, // TODO: remplacer par score réel quand disponible
       half,

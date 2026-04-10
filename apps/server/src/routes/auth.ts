@@ -124,6 +124,7 @@ router.get("/me", authUser, async (req: AuthenticatedRequest, res) => {
         role: true,
         patreon: true,
         valid: true,
+        eloRating: true,
         createdAt: true,
         updatedAt: true,
         _count: {
