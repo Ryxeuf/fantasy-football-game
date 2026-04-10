@@ -7,6 +7,7 @@ import { useAnimatedPositions } from "./useAnimatedPositions";
 import { useBlockEffects } from "./useBlockEffects";
 import { useTouchdownEffects } from "./useTouchdownEffects";
 import { useInjuryEffects } from "./useInjuryEffects";
+import { useDiceEffects } from "./useDiceEffects";
 
 /** Extract up to 2 initials from a player's name (e.g. "Grim Ironjaw" -> "GI") */
 function getInitials(player: Player): string {
@@ -99,6 +100,7 @@ export default function PixiBoard({
   const blockFx = useBlockEffects(state.players ?? []);
   const tdFx = useTouchdownEffects(state.gameLog ?? [], safeWidth, safeHeight);
   const injuryFx = useInjuryEffects(state.players ?? [], state.casualtyResults ?? {});
+  const diceFx = useDiceEffects(state.gameLog ?? []);
 
   /* ── Zoom: mouse wheel ────────────────────────────────────────────── */
   React.useEffect(() => {
@@ -641,6 +643,89 @@ export default function PixiBoard({
               />
             </React.Fragment>
           ))}
+
+          {/* Animated dice overlay */}
+          {diceFx.dice.map((die, idx) => {
+            if (die.alpha <= 0) return null;
+            const dieSize = Math.max(28, cs * 1.4);
+            const dieX = width / 2 - dieSize / 2 + idx * (dieSize + 8);
+            const dieY = cs * 1.5;
+            const cornerRadius = dieSize * 0.15;
+            const pipRadius = dieSize * 0.08;
+            const borderColor = die.success === true ? 0x00cc44 : die.success === false ? 0xff3333 : 0xffffff;
+
+            return (
+              <React.Fragment key={`dice-${idx}`}>
+                {/* Die body: rounded rectangle with shadow */}
+                <Graphics
+                  draw={(g: PixiGraphics) => {
+                    g.clear();
+                    // Shadow
+                    g.beginFill(0x000000, die.alpha * 0.3);
+                    g.drawRoundedRect(dieX + 2, dieY + 2, dieSize, dieSize, cornerRadius);
+                    g.endFill();
+                    // Die body
+                    g.beginFill(0xffffff, die.alpha);
+                    g.drawRoundedRect(dieX, dieY, dieSize, dieSize, cornerRadius);
+                    g.endFill();
+                    // Border (success = green, fail = red, neutral = white)
+                    g.lineStyle(2, borderColor, die.alpha);
+                    g.drawRoundedRect(dieX, dieY, dieSize, dieSize, cornerRadius);
+
+                    // Draw pips based on display value
+                    g.beginFill(0x111111, die.alpha);
+                    const cx = dieX + dieSize / 2;
+                    const cy = dieY + dieSize / 2;
+                    const off = dieSize * 0.25; // offset from center for pip placement
+                    const v = die.displayValue;
+
+                    // Center pip (1, 3, 5)
+                    if (v === 1 || v === 3 || v === 5) {
+                      g.drawCircle(cx, cy, pipRadius);
+                    }
+                    // Top-left + bottom-right (2, 3, 4, 5, 6)
+                    if (v >= 2) {
+                      g.drawCircle(cx - off, cy - off, pipRadius);
+                      g.drawCircle(cx + off, cy + off, pipRadius);
+                    }
+                    // Top-right + bottom-left (4, 5, 6)
+                    if (v >= 4) {
+                      g.drawCircle(cx + off, cy - off, pipRadius);
+                      g.drawCircle(cx - off, cy + off, pipRadius);
+                    }
+                    // Middle-left + middle-right (6)
+                    if (v === 6) {
+                      g.drawCircle(cx - off, cy, pipRadius);
+                      g.drawCircle(cx + off, cy, pipRadius);
+                    }
+
+                    g.endFill();
+                  }}
+                />
+                {/* Roll description text below die */}
+                {!die.isTumbling && (
+                  <Text
+                    x={dieX + dieSize / 2}
+                    y={dieY + dieSize + 6}
+                    text={die.message.length > 30 ? die.message.slice(0, 30) + "..." : die.message}
+                    anchor={{ x: 0.5, y: 0 }}
+                    alpha={die.alpha}
+                    style={
+                      {
+                        align: "center",
+                        fill: borderColor,
+                        fontFamily: "Arial",
+                        fontSize: Math.max(8, cs * 0.28),
+                        fontWeight: "bold",
+                        stroke: 0x000000,
+                        strokeThickness: Math.max(2, cs * 0.08),
+                      } as any
+                    }
+                  />
+                )}
+              </React.Fragment>
+            );
+          })}
         </Container>
       </Stage>
 
