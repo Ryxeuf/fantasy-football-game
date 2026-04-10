@@ -70,11 +70,8 @@ export default function LoginPage() {
           {t.login.submit}
         </button>
       </form>
-      <p className="text-xs sm:text-sm mt-4 text-center">
-        {t.login.noAccount}{" "}
-        <a className="underline text-blue-600 hover:text-blue-700" href="/register">
-          {t.login.register}
-        </a>
+      <p className="text-xs sm:text-sm mt-4 text-center text-gray-500">
+        {t.register.preAlphaMessage}
       </p>
       </div>
     </div>

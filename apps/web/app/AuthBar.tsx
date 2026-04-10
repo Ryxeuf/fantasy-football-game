@@ -274,9 +274,6 @@ export default function AuthBar({ isMobileMenu = false }: AuthBarProps) {
           <a className="underline text-xs sm:text-sm whitespace-nowrap" href="/login">
             {t.auth.login}
           </a>
-          <a className="underline text-xs sm:text-sm whitespace-nowrap" href="/register">
-            {t.auth.register}
-          </a>
         </div>
       )}
     </div>

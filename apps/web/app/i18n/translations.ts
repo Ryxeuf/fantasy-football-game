@@ -134,6 +134,8 @@ export const translations = {
       login: "Connectez-vous",
       required: "requis",
       error: "Erreur",
+      preAlphaTitle: "Inscription indisponible",
+      preAlphaMessage: "Nuffle Arena est actuellement en pré-alpha. L'inscription sera bientôt disponible. Restez connectés !",
     },
     // Teams pages
     teams: {
@@ -488,6 +490,8 @@ export const translations = {
       login: "Log in",
       required: "required",
       error: "Error",
+      preAlphaTitle: "Registration unavailable",
+      preAlphaMessage: "Nuffle Arena is currently in pre-alpha. Registration will be available soon. Stay tuned!",
     },
     // Teams pages
     teams: {
