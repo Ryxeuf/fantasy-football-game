@@ -202,6 +202,7 @@ export default function GameBoardWithDugouts({
                 player={inspectedPlayer}
                 onClose={() => setInspectedPlayer(null)}
                 variant="sidebar"
+                usedStarPlayerRules={state.usedStarPlayerRules}
               />
             </div>
           </div>
@@ -211,6 +212,7 @@ export default function GameBoardWithDugouts({
               player={inspectedPlayer}
               onClose={() => setInspectedPlayer(null)}
               variant="floating"
+              usedStarPlayerRules={state.usedStarPlayerRules}
             />
           </div>
         </>

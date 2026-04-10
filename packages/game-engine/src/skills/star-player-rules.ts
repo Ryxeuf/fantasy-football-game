@@ -8,9 +8,70 @@
  * (clé = "playerId:ruleSlug", valeur = true).
  */
 
-import type { GameState } from '../core/types';
+import type { GameState, Player } from '../core/types';
 import { registerSkill } from './skill-registry';
 import { hasSkill } from './skill-effects';
+import { getSkillBySlug, type SkillDefinition } from './index';
+
+// ─── Slugs des règles spéciales de Star Players ──────────────────────────
+
+/** Set of all star player rule slugs for quick lookup */
+export const STAR_PLAYER_RULE_SLUGS: ReadonlySet<string> = new Set([
+  'blind-rage',
+  'slayer',
+  'coup-sauvage',
+  'la-baliste',
+  'consummate-professional',
+  'crushing-blow',
+  'lord-of-chaos',
+  'pirouette',
+  'casse-os',
+  'reliable',
+]);
+
+/** Check if a skill slug is a star player special rule */
+export function isStarPlayerRule(slug: string): boolean {
+  return STAR_PLAYER_RULE_SLUGS.has(slug);
+}
+
+/** Get the star player rules a player has, with display info and usage status */
+export function getPlayerStarRules(
+  player: Player,
+  usedStarPlayerRules?: Record<string, boolean>,
+): Array<{
+  slug: string;
+  nameFr: string;
+  nameEn: string;
+  description: string;
+  isUsed: boolean;
+}> {
+  const rules: Array<{
+    slug: string;
+    nameFr: string;
+    nameEn: string;
+    description: string;
+    isUsed: boolean;
+  }> = [];
+
+  for (const skill of player.skills) {
+    if (!isStarPlayerRule(skill)) continue;
+    const def = getSkillBySlug(skill);
+    if (!def) continue;
+
+    const key = `${player.id}:${skill}`;
+    const isUsed = usedStarPlayerRules?.[key] === true;
+
+    rules.push({
+      slug: skill,
+      nameFr: def.nameFr,
+      nameEn: def.nameEn,
+      description: def.description,
+      isUsed,
+    });
+  }
+
+  return rules;
+}
 
 // ─── Helpers pour le suivi des règles "once per game" ───────────────────
 
