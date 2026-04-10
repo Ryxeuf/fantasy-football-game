@@ -14,6 +14,8 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
     budget: 1000,
     tier: "I",
     naf: false,
+    descriptionFr: "L'Alliance du Vieux Monde est une équipe mixte composée de Humains, Nains et Halflings. Leurs équipes combinent les forces de différentes races pour créer une équipe équilibrée.",
+    descriptionEn: "The Old World Alliance is a mixed team composed of Humans, Dwarves and Halflings. Their teams combine the strengths of different races to create a balanced team.",
     positions: [
       {
         slug: "old_world_alliance_trois_quart_humain",
@@ -166,6 +168,8 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
     budget: 1000,
     tier: "I",
     naf: false,
+    descriptionFr: "Les Amazones sont des guerrières féroces de Lustrie, connues pour leur agilité et leur compétence au combat. Leurs équipes Blood Bowl sont rapides et agressives.",
+    descriptionEn: "Amazons are fierce warriors from Lustria, known for their agility and combat prowess. Their Blood Bowl teams are fast and aggressive.",
     positions: [
       {
         slug: "amazon_guerriere_aigle",
@@ -227,6 +231,8 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
     budget: 1000,
     tier: "I",
     naf: false,
+    descriptionFr: "Les Bas-Fonds sont une équipe mixte composée de Skavens et de Gobelins mutants. Leurs équipes combinent agilité et utilisation d'armes secrètes.",
+    descriptionEn: "Underworld Denizens are a mixed team composed of Skaven and mutant Goblins. Their teams combine agility with the use of secret weapons.",
     positions: [
       {
         slug: "underworld_gobelin_des_bas_fond",
@@ -340,6 +346,8 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
     budget: 1000,
     tier: "I",
     naf: false,
+    descriptionFr: "Les Elfes Noirs sont une race cruelle et agressive qui combine agilité et violence. Leurs équipes Blood Bowl sont rapides et dangereuses, spécialisées dans le blocage et la blessure.",
+    descriptionEn: "Dark Elves are a cruel and aggressive race that combines agility with violence. Their Blood Bowl teams are fast and dangerous, specializing in blocking and injuring.",
     positions: [
       {
         slug: "dark_elf_trois_quart_elfe_noir",
@@ -414,6 +422,8 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
     budget: 1000,
     tier: "I",
     naf: false,
+    descriptionFr: "Les Elfes Sylvains sont des maîtres de l'agilité et de la vitesse. Leurs équipes Blood Bowl excellent dans le jeu de passe et la mobilité, mais sont fragiles.",
+    descriptionEn: "Wood Elves are masters of agility and speed. Their Blood Bowl teams excel at passing and mobility, but are fragile.",
     positions: [
       {
         slug: "wood_elf_trois_quart_elfe_sylvain",
@@ -488,6 +498,8 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
     budget: 1000,
     tier: "III",
     naf: false,
+    descriptionFr: "Les Élus du Chaos sont des guerriers dévoués aux dieux du Chaos, développant des mutations au fil du temps. Leurs équipes deviennent plus puissantes avec l'expérience.",
+    descriptionEn: "Chaos Chosen are warriors dedicated to the Chaos gods, developing mutations over time. Their teams become more powerful with experience.",
     positions: [
       {
         slug: "chaos_chosen_trois_quart_homme_bete",
@@ -562,6 +574,8 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
     budget: 1000,
     tier: "IV",
     naf: false,
+    descriptionFr: "Les Gnomes sont de petits joueurs agiles mais très fragiles, souvent accompagnés de créatures sauvages. Leurs équipes Blood Bowl sont imprévisibles et excentriques.",
+    descriptionEn: "Gnomes are small, agile but very fragile players, often accompanied by wild creatures. Their Blood Bowl teams are unpredictable and eccentric.",
     positions: [
       {
         slug: "gnome_trois_quart_gnome",
@@ -636,6 +650,8 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
     budget: 1000,
     tier: "IV",
     naf: false,
+    descriptionFr: "Les Gobelins sont de petits joueurs agiles mais fragiles, connus pour leur utilisation d'armes secrètes et de tactiques déloyales. Leurs équipes Blood Bowl sont imprévisibles et dangereuses.",
+    descriptionEn: "Goblins are small, agile but fragile players, known for their use of secret weapons and underhanded tactics. Their Blood Bowl teams are unpredictable and dangerous.",
     positions: [
       {
         slug: "goblin_gobelin",
@@ -749,6 +765,8 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
     budget: 1000,
     tier: "IV",
     naf: false,
+    descriptionFr: "Les Halflings sont de petits joueurs agiles mais très fragiles. Leurs équipes Blood Bowl sont rapides mais vulnérables, souvent accompagnées d'un Treeman pour la protection.",
+    descriptionEn: "Halflings are small, agile but very fragile players. Their Blood Bowl teams are fast but vulnerable, often accompanied by a Treeman for protection.",
     positions: [
       {
         slug: "halfling_aspirant_halfling",
@@ -810,6 +828,8 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
     budget: 1000,
     tier: "I",
     naf: false,
+    descriptionFr: "Quand Blood Bowl atteignit Ulthuan pour la première fois, il y eut beaucoup de nez retroussés et de 'tut' méprisants, car cela semblait n'être rien de plus que deux équipes de voyous incivilisés qui se frappaient sans raison. Il devint rapidement évident que ce n'était pas la seule façon de jouer, cependant, et dans les années qui suivirent, les équipes de Hauts Elfes révolutionnèrent le jeu de passe du sport. Ils ont de nombreux avantages quand il s'agit de gagner (par opposition à massacrer l'adversaire, ce qui n'est pas toujours la même chose !), et leurs excellents joueurs sont l'épitomé du côté le plus gracieux du jeu. Le seul vrai problème avec les équipes de Hauts Elfes est qu'elles peuvent être très pointilleuses sur qui, quand ou où elles jouent, alors nous devons être reconnaissants qu'elles daignent jouer contre des races inférieures !",
+    descriptionEn: "When Blood Bowl first reached Ulthuan, there was much turning up of noses and loud disdainful tutting, for it appeared as nothing more than two teams of uncivilised yobs pummelling each other senseless. It quickly became apparent that this was not the sole way of playing, however, and in the years that followed High Elf teams revolutionised the sport's passing game. They have many advantages when it comes to winning (as opposed to slaughtering the opposition, which isn't always the same thing!), and their fine players are the epitome of the more graceful side of the game. The only real problem with High Elf teams is that they can be very picky about who, when or where they play, so we must be thankful they deign to play lesser races at all!",
     positions: [
       {
         slug: "high_elf_trois_quart_haut_elfe",
@@ -871,6 +891,8 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
     budget: 1000,
     tier: "I",
     naf: false,
+    descriptionFr: "Les Hommes-Lézards sont une race ancienne de Lustrie, combinant la force brute des Saurus avec l'agilité des Skinks. Leurs équipes sont équilibrées entre puissance et vitesse.",
+    descriptionEn: "Lizardmen are an ancient race from Lustria, combining the brute strength of Saurus with the agility of Skinks. Their teams are balanced between power and speed.",
     positions: [
       {
         slug: "lizardmen_trois_quart_skink",
@@ -932,6 +954,8 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
     budget: 1000,
     tier: "II",
     naf: false,
+    descriptionFr: "Les Horreurs Nécromantiques sont des créatures ressuscitées par la magie nécromantique, combinant morts-vivants et créatures monstrueuses. Leurs équipes sont résistantes et dangereuses.",
+    descriptionEn: "Necromantic Horrors are creatures resurrected by necromantic magic, combining undead and monstrous creatures. Their teams are resilient and dangerous.",
     positions: [
       {
         slug: "necromantic_horror_trois_quart_zombie",
@@ -1006,6 +1030,8 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
     budget: 1000,
     tier: "II",
     naf: false,
+    descriptionFr: "Les Humains sont une race polyvalente et adaptable, capable de jouer tous les styles de jeu. Leurs équipes Blood Bowl sont équilibrées et peuvent s'adapter à différentes stratégies.",
+    descriptionEn: "Humans are a versatile and adaptable race, capable of playing all styles of play. Their Blood Bowl teams are balanced and can adapt to different strategies.",
     positions: [
       {
         slug: "human_trois_quart",
@@ -1093,6 +1119,8 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
     budget: 1000,
     tier: "III",
     naf: false,
+    descriptionFr: "Les équipes de Khorne sont dédiées au dieu du sang et du combat. Leurs joueurs sont des berserkers violents qui recherchent la destruction de leurs adversaires.",
+    descriptionEn: "Khorne teams are dedicated to the god of blood and combat. Their players are violent berserkers who seek the destruction of their opponents.",
     positions: [
       {
         slug: "khorne_marauder_sanglant",
@@ -1154,6 +1182,8 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
     budget: 1000,
     tier: "II",
     naf: false,
+    descriptionFr: "Les Morts-Vivants sont une équipe composée de squelettes, zombies et autres créatures ressuscitées. Leurs équipes sont résistantes et bénéficient de la régénération, mais manquent d'agilité.",
+    descriptionEn: "The Undead are a team composed of skeletons, zombies and other resurrected creatures. Their teams are resilient and benefit from regeneration, but lack agility.",
     positions: [
       {
         slug: "undead_trois_quart_squelette",
@@ -1228,6 +1258,8 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
     budget: 1000,
     tier: "I",
     naf: false,
+    descriptionFr: "Les Nains du Chaos sont des nains corrompus par le Chaos, combinant la résistance des nains avec la brutalité du Chaos. Leurs équipes sont résistantes et agressives.",
+    descriptionEn: "Chaos Dwarves are dwarves corrupted by Chaos, combining dwarven resilience with Chaos brutality. Their teams are resilient and aggressive.",
     positions: [
       {
         slug: "chaos_dwarf_trois_quart_hobgobelin",
@@ -1315,6 +1347,8 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
     budget: 1000,
     tier: "I",
     naf: false,
+    descriptionFr: "Les Nains sont une race robuste et résistante, connue pour leur force et leur endurance. Leurs équipes Blood Bowl sont lentes mais très résistantes, spécialisées dans le blocage défensif.",
+    descriptionEn: "Dwarves are a sturdy and resilient race, known for their strength and endurance. Their Blood Bowl teams are slow but very tough, specializing in defensive blocking.",
     positions: [
       {
         slug: "dwarf_trois_quart_nain",
@@ -1389,6 +1423,8 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
     budget: 1000,
     tier: "II",
     naf: false,
+    descriptionFr: "La Noblesse Impériale représente l'élite de l'Empire, combinant compétences nobles et serviteurs dévoués. Leurs équipes sont équilibrées et polyvalentes.",
+    descriptionEn: "Imperial Nobility represents the elite of the Empire, combining noble skills and devoted servants. Their teams are balanced and versatile.",
     positions: [
       {
         slug: "imperial_nobility_valet_imperiale",
@@ -1463,6 +1499,8 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
     budget: 1000,
     tier: "I",
     naf: false,
+    descriptionFr: "Les Nordiques sont des guerriers vikings féroces des terres du nord, connus pour leur bravoure et leur résistance au froid. Leurs équipes Blood Bowl sont agressives et résistantes.",
+    descriptionEn: "Norse are fierce Viking warriors from the northern lands, known for their bravery and cold resistance. Their Blood Bowl teams are aggressive and resilient.",
     positions: [
       {
         slug: "norse_trois_quart",
@@ -1550,6 +1588,8 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
     budget: 1000,
     tier: "III",
     naf: false,
+    descriptionFr: "Les équipes de Nurgle sont dédiées au dieu de la peste et de la décomposition. Leurs joueurs sont résistants et peuvent transmettre des maladies à leurs adversaires.",
+    descriptionEn: "Nurgle teams are dedicated to the god of plague and decay. Their players are resilient and can spread diseases to their opponents.",
     positions: [
       {
         slug: "nurgle_trois_quart_putrescent",
@@ -1611,6 +1651,8 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
     budget: 1000,
     tier: "IV",
     naf: false,
+    descriptionFr: "Les Ogres sont des géants puissants mais peu intelligents, accompagnés de leurs serviteurs Gnoblars. Leurs équipes sont très fortes mais manquent de finesse.",
+    descriptionEn: "Ogres are powerful but unintelligent giants, accompanied by their Gnoblar servants. Their teams are very strong but lack finesse.",
     positions: [
       {
         slug: "ogre_trois_quart_gnoblar",
@@ -1659,6 +1701,8 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
     budget: 1000,
     tier: "III",
     naf: false,
+    descriptionFr: "Les Orques Noirs sont des guerriers disciplinés et bien équipés, plus organisés que les Orques standards. Leurs équipes Blood Bowl sont puissantes et mieux structurées.",
+    descriptionEn: "Black Orcs are disciplined and well-equipped warriors, more organized than standard Orcs. Their Blood Bowl teams are powerful and better structured.",
     positions: [
       {
         slug: "black_orc_malabar_gobelin",
@@ -1707,6 +1751,8 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
     budget: 1000,
     tier: "II",
     naf: false,
+    descriptionFr: "Les Orques sont une race brutale et agressive, connue pour leur force et leur violence. Leurs équipes Blood Bowl sont puissantes et spécialisées dans le blocage offensif.",
+    descriptionEn: "Orcs are a brutal and aggressive race, known for their strength and violence. Their Blood Bowl teams are powerful and specialize in offensive blocking.",
     positions: [
       {
         slug: "orc_trois_quart_orque",
@@ -1794,6 +1840,8 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
     budget: 1000,
     tier: "III",
     naf: false,
+    descriptionFr: "Les Renégats du Chaos sont des équipes composées de joueurs de différentes races unis par leur rejet de l'ordre. Leurs équipes sont variées et imprévisibles.",
+    descriptionEn: "Chaos Renegades are teams composed of players from different races united by their rejection of order. Their teams are varied and unpredictable.",
     positions: [
       {
         slug: "chaos_renegade_trois_quart_humain_renegat",
@@ -1933,6 +1981,8 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
     budget: 1000,
     tier: "II",
     naf: false,
+    descriptionFr: "Les Rois des Tombes sont des équipes de morts-vivants égyptiens ressuscités, combinant squelettes et créatures momifiées. Leurs équipes sont résistantes et mystérieuses.",
+    descriptionEn: "Tomb Kings are teams of resurrected Egyptian undead, combining skeletons and mummified creatures. Their teams are resilient and mysterious.",
     positions: [
       {
         slug: "tomb_kings_trois_quart_squelette",
@@ -1994,6 +2044,8 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
     budget: 1000,
     tier: "II",
     naf: false,
+    descriptionFr: "Les Skavens sont une race de rats humanoïdes qui se reproduisent rapidement et sont connus pour leur agilité et leur vitesse. Leurs équipes Blood Bowl sont réputées pour leur jeu rapide et leur capacité à marquer rapidement.",
+    descriptionEn: "Skaven are a race of humanoid rats that breed quickly and are known for their agility and speed. Their Blood Bowl teams are renowned for their fast play and ability to score quickly.",
     positions: [
       {
         slug: "skaven_rat_des_clans_skaven",
@@ -2068,6 +2120,8 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
     budget: 1000,
     tier: "II",
     naf: false,
+    descriptionFr: "Les Slann sont une race ancienne de grenouilles humanoïdes de Lustrie, connus pour leur agilité et leur capacité de saut exceptionnelle. Leurs équipes Blood Bowl sont rapides et acrobatiques.",
+    descriptionEn: "Slann are an ancient race of humanoid frogs from Lustria, known for their agility and exceptional jumping ability. Their Blood Bowl teams are fast and acrobatic.",
     positions: [
       {
         slug: "slann_trois_quart",
@@ -2129,6 +2183,8 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
     budget: 1000,
     tier: "IV",
     naf: false,
+    descriptionFr: "Les Snotlings sont les plus petits et les plus faibles des gobelinoïdes, mais ils compensent par leur nombre et leur utilisation d'armes secrètes. Leurs équipes sont chaotiques et imprévisibles.",
+    descriptionEn: "Snotlings are the smallest and weakest of goblinoids, but they compensate with their numbers and use of secret weapons. Their teams are chaotic and unpredictable.",
     positions: [
       {
         slug: "snotling_trois_quart_snotling",
@@ -2216,6 +2272,8 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
     budget: 1000,
     tier: "II",
     naf: false,
+    descriptionFr: "L'Union Elfique est une équipe composée d'elfes de différentes nations unies. Leurs équipes combinent agilité et compétences de passe pour un jeu rapide et élégant.",
+    descriptionEn: "The Elven Union is a team composed of elves from different united nations. Their teams combine agility and passing skills for fast and elegant play.",
     positions: [
       {
         slug: "elven_union_trois_quart_elfe",
@@ -2277,6 +2335,8 @@ export const SEASON_THREE_ROSTERS: Record<string, TeamRoster> = {
     budget: 1000,
     tier: "II",
     naf: false,
+    descriptionFr: "Les équipes de Vampires sont composées de maîtres vampires et de leurs serviteurs Thralls. Les vampires sont puissants mais doivent contrôler leur soif de sang.",
+    descriptionEn: "Vampire teams are composed of master vampires and their Thrall servants. Vampires are powerful but must control their bloodlust.",
     positions: [
       {
         slug: "vampire_trois_quart_sbire",
