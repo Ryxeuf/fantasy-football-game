@@ -167,7 +167,7 @@
 | I.2 | Descriptions S3 rosters (descriptionFr/En) | Contenu | [x] |
 | I.3 | Fixer images star players manquantes (~28) | Contenu | [x] |
 | B3.2 | UI affichage regles speciales star players | UI | [x] |
-| H.3 | Replayer basique | Polish | [ ] |
+| H.3 | Replayer basique | Polish | [x] |
 | H.4 | Indicateurs tactiques (zones de tacle, portee) | Polish | [ ] |
 | H.6 | Sprite sheets par equipe | Polish | [ ] |
 

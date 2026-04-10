@@ -272,3 +272,10 @@ export {
 
 // Accès de catégories par position
 export { getPositionCategoryAccess, type CategoryAccess, type SkillCategory } from './utils/skill-access';
+
+// Export du module de replay
+export {
+  buildReplayFrames,
+  type ReplayFrame,
+  type ReplayTurnPayload,
+} from './core/replay';
