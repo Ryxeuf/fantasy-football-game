@@ -1,3 +1,41 @@
+## [1.49.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.48.0...v1.49.0) (2026-04-10)
+
+
+### ✨ Features
+
+* add basic sound effects for match events (H.5) ([#114](https://github.com/Ryxeuf/fantasy-football-game/issues/114)) ([40786cd](https://github.com/Ryxeuf/fantasy-football-game/commit/40786cd462ea166a125978f3169598033d16b3bf))
+* add end-of-match results screen (C.7) ([#128](https://github.com/Ryxeuf/fantasy-football-game/issues/128)) ([778e899](https://github.com/Ryxeuf/fantasy-football-game/commit/778e899e69c0b93f01d93d2a5f07457a0e6f0629))
+* add inducements UI selection pre-match (B2.2) ([#116](https://github.com/Ryxeuf/fantasy-football-game/issues/116)) ([dfef59e](https://github.com/Ryxeuf/fantasy-football-game/commit/dfef59e3e999fc3da4e19c317ddb52120984b0d1))
+* add movement and ball tweens with animation queue (E.1-3) ([#112](https://github.com/Ryxeuf/fantasy-football-game/issues/112)) ([e16ec4e](https://github.com/Ryxeuf/fantasy-football-game/commit/e16ec4eac49abcf869fa849e3c03de0a13bd5978))
+* add push notification infrastructure (G.1 + G.2) ([#138](https://github.com/Ryxeuf/fantasy-football-game/issues/138)) ([80c2f39](https://github.com/Ryxeuf/fantasy-football-game/commit/80c2f3929b95cc4cf8606776b301b14230a64aa9))
+* add spectator mode for live match viewing (H.2) ([#143](https://github.com/Ryxeuf/fantasy-football-game/issues/143)) ([17d9461](https://github.com/Ryxeuf/fantasy-football-game/commit/17d94610c62a2ea0a824e59383ccba60f97a390d))
+* add turn notification system (A.10) ([#113](https://github.com/Ryxeuf/fantasy-football-game/issues/113)) ([9c8056f](https://github.com/Ryxeuf/fantasy-football-game/commit/9c8056f06085ed8bb32e7473b89f5a77f4394fc5))
+* add WebSocket connection status indicator in HUD (A.9) ([#124](https://github.com/Ryxeuf/fantasy-football-game/issues/124)) ([371acc9](https://github.com/Ryxeuf/fantasy-football-game/commit/371acc9585083414c0c30e4ad2a5514c48c5113f))
+* auto-forfeit on disconnect > 2 minutes (C.8) ([#129](https://github.com/Ryxeuf/fantasy-football-game/issues/129)) ([5677a7e](https://github.com/Ryxeuf/fantasy-football-game/commit/5677a7e7d62417803700714e37f877420eefd5c1))
+* automate online pre-match sequence (C.6) ([#127](https://github.com/Ryxeuf/fantasy-football-game/issues/127)) ([be7331e](https://github.com/Ryxeuf/fantasy-football-game/commit/be7331ea3deb0227d92c75470060f81e76d73624))
+* implement Animosity mechanic with 5 variants ([#133](https://github.com/Ryxeuf/fantasy-football-game/issues/133)) ([63c5517](https://github.com/Ryxeuf/fantasy-football-game/commit/63c5517ae36bebf8802ac51a652e0c554c3035ba))
+* implement BB3 Season 2 inducement system (B2.1) ([#115](https://github.com/Ryxeuf/fantasy-football-game/issues/115)) ([ec1122b](https://github.com/Ryxeuf/fantasy-football-game/commit/ec1122b31eb9eece3b3d2067cab753669142aae6))
+* implement Hypnotic Gaze special action (B2.9) ([#136](https://github.com/Ryxeuf/fantasy-football-game/issues/136)) ([c95fd19](https://github.com/Ryxeuf/fantasy-football-game/commit/c95fd19af50cb49bcf53585764678708ee5502b8))
+* implement Loner reroll limitation (B1.5) ([#104](https://github.com/Ryxeuf/fantasy-football-game/issues/104)) ([fd2eb91](https://github.com/Ryxeuf/fantasy-football-game/commit/fd2eb91fcb5432e41d14e45e97d05ba3c2f0768c))
+* implement Prayers to Nuffle with 16 real effects (B2.3) ([#117](https://github.com/Ryxeuf/fantasy-football-game/issues/117)) ([a9d71de](https://github.com/Ryxeuf/fantasy-football-game/commit/a9d71ded07c536b85a4e2a58047c301cbeca9c76))
+* implement Projectile Vomit special action mechanic ([#137](https://github.com/Ryxeuf/fantasy-football-game/issues/137)) ([18fc809](https://github.com/Ryxeuf/fantasy-football-game/commit/18fc809316d454d0b5a4311a6d2178b9409b21ca))
+* implement Regeneration skill mechanic ([#107](https://github.com/Ryxeuf/fantasy-football-game/issues/107)) ([2e65169](https://github.com/Ryxeuf/fantasy-football-game/commit/2e65169551da0efc22d807da8cfa7a54dffe814b))
+* implement special rules for top 10 star players (B3.1) ([#119](https://github.com/Ryxeuf/fantasy-football-game/issues/119)) ([dfeb008](https://github.com/Ryxeuf/fantasy-football-game/commit/dfeb008b424f0b033fdc68611950d13e4a33b583))
+* implement Throw Team-Mate mechanic (B2.4) ([#135](https://github.com/Ryxeuf/fantasy-football-game/issues/135)) ([b3b726e](https://github.com/Ryxeuf/fantasy-football-game/commit/b3b726edb4f9ddbe1d631d0e61ed552a2f01d4f9))
+* implement Wrestle skill effect (B1.6) ([#103](https://github.com/Ryxeuf/fantasy-football-game/issues/103)) ([66d7e55](https://github.com/Ryxeuf/fantasy-football-game/commit/66d7e55c5da498d537e505aae76c01d6acc7f7c6))
+* push notification UI permission & preferences (G.5) ([#141](https://github.com/Ryxeuf/fantasy-football-game/issues/141)) ([2fba43f](https://github.com/Ryxeuf/fantasy-football-game/commit/2fba43f8b652c9ea221bdd98c3f19b9eaab0ba08))
+* Secret Weapons expulsion at end of drive (B2.5) ([#132](https://github.com/Ryxeuf/fantasy-football-game/issues/132)) ([173a70f](https://github.com/Ryxeuf/fantasy-football-game/commit/173a70f80b2de2aef9fd9eabf9a8ca83587d3517))
+* smart "C'est votre tour" push notification (G.3) ([#139](https://github.com/Ryxeuf/fantasy-football-game/issues/139)) ([e199a70](https://github.com/Ryxeuf/fantasy-football-game/commit/e199a707e9bd4d56dc53c0515b7fac61b141da57))
+* smart "Match trouvé" push notification (G.4) ([#140](https://github.com/Ryxeuf/fantasy-football-game/issues/140)) ([87f9b40](https://github.com/Ryxeuf/fantasy-football-game/commit/87f9b40a7c2d5144b66cacb49896699afcf51041))
+* WebSocket notification for matchmaking (C.4) ([#125](https://github.com/Ryxeuf/fantasy-football-game/issues/125)) ([1beddfb](https://github.com/Ryxeuf/fantasy-football-game/commit/1beddfb8418bc59d615f61ed844ecdce171a3422))
+
+
+### 🐛 Bug Fixes
+
+* add project-level MCP config and resilient next-feature prompt ([3e8e54b](https://github.com/Ryxeuf/fantasy-football-game/commit/3e8e54bd8d2b90e848c519f67fbb8927f346fcd5))
+* resolve pre-match session bugs preventing player placement ([#120](https://github.com/Ryxeuf/fantasy-football-game/issues/120)) ([fd7ee22](https://github.com/Ryxeuf/fantasy-football-game/commit/fd7ee22685e97ef5309b4c3cd65e1130208243a1))
+* wire missing weather conditions into game flow (I.8) ([#147](https://github.com/Ryxeuf/fantasy-football-game/issues/147)) ([78ad1c4](https://github.com/Ryxeuf/fantasy-football-game/commit/78ad1c47977dbb909754156c2d424da95e3dd9e3))
+
 ## [1.48.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.47.2...v1.48.0) (2026-04-03)
 
 
