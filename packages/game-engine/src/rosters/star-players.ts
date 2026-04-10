@@ -81,7 +81,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 10,
     skills: "dirty-player-1,disturbing-presence,foul-appearance,loner-4",
     hirableBy: ["all"],
-    imageUrl: undefined
+    imageUrl: "/data/Star-Players_files/bilerot_vomitflesh.svg"
   },
 
   the_black_gobbo: {
@@ -109,7 +109,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "dodge,sidestep,prehensile-tail,loner-4,hypnotic-gaze",
     hirableBy: ["lustrian_superleague"],
-    imageUrl: undefined
+    imageUrl: "/data/Star-Players_files/boa_konssstriktr.svg"
   },
 
   bomber_dribblesnot: {
@@ -250,7 +250,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 8,
     skills: "accurate,dodge,loner-4,pass,sidestep,sure-hands",
     hirableBy: ["elven_kingdoms_league"],
-    imageUrl: undefined
+    imageUrl: "/data/Star-Players_files/gloriel_summerbloom.svg"
   },
 
   glotl_stop: {
@@ -264,7 +264,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 10,
     skills: "mighty-blow-1,thick-skull,frenzy,animal-savagery,prehensile-tail,loner-4,stand-firm",
     hirableBy: ["lustrian_superleague"],
-    imageUrl: undefined
+    imageUrl: "/data/Star-Players_files/glotl_stop.svg"
   },
 
   grashnak_blackhoof: {
@@ -292,6 +292,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 10,
     skills: "bone-head,kick-team-mate,loner-4,mighty-blow-1,thick-skull,throw-team-mate",
     hirableBy: ["all"],
+    imageUrl: "/data/Star-Players_files/GrakCrumbleberry.webp",
     specialRule: "Grak & Crumbleberry : Grak ne se présente jamais sans Crumbleberry et excelle lorsqu'il le propulse sur le terrain."
   },
 
@@ -306,6 +307,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 7,
     skills: "dodge,loner-4,right-stuff,stunty,sure-hands,sure-feet,titchy",
     hirableBy: ["all"],
+    imageUrl: "/data/Star-Players_files/GrakCrumbleberry.webp",
     specialRule: "Grak & Crumbleberry : Crumbleberry est sanglé au dos de Grak et profite d'un lancer spécial lorsqu'il joue avec lui."
   },
 
@@ -334,7 +336,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "loner-4,block,sure-feet,dodge,fend,sprint,consummate-professional",
     hirableBy: ["old_world_classic"],
-    imageUrl: undefined,
+    imageUrl: "/data/Star-Players_files/griff_oberwald.svg",
     specialRule: "Consummate Professional: Une fois par match, Griff peut relancer n'importe quel dé.",
     isMegaStar: true
   },
@@ -407,7 +409,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "chainsaw,loner-4,secret-weapon,pro,stand-firm",
     hirableBy: ["all"],
-    imageUrl: undefined
+    imageUrl: "/data/Star-Players_files/helmut_wulf.svg"
   },
 
   hthark_the_unstoppable: {
@@ -421,6 +423,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 10,
     skills: "block,thick-skull,defensive,sure-feet,break-tackle,juggernaut,sprint,loner-4",
     hirableBy: ["badlands_brawl"],
+    imageUrl: "/data/Star-Players_files/hthark_the_unstoppable.svg",
     isMegaStar: true
   },
 
@@ -435,7 +438,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "block,juggernaut,disturbing-presence,sure-hands,regeneration,loner-4,tackle",
     hirableBy: ["sylvanian_spotlight"],
-    imageUrl: undefined,
+    imageUrl: "/data/Star-Players_files/ivan_the_animal_deathshroud.svg",
     isMegaStar: true
   },
 
@@ -450,7 +453,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "block,guard,loner-4,tackle",
     hirableBy: ["old_world_classic"],
-    imageUrl: undefined
+    imageUrl: "/data/Star-Players_files/ivar_eriksson.svg"
   },
 
   jeremiah_kool: {
@@ -464,7 +467,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "block,dump-off,dodge,sidestep,nerves-of-steel,pass,diving-catch,loner-4,on-the-ball",
     hirableBy: ["elven_kingdoms_league"],
-    imageUrl: undefined
+    imageUrl: "/data/Star-Players_files/jeremiah_kool.svg"
   },
 
   jordell_freshbreeze: {
@@ -478,7 +481,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 8,
     skills: "block,dodge,sidestep,diving-catch,leap,loner-4",
     hirableBy: ["elven_kingdoms_league"],
-    imageUrl: undefined
+    imageUrl: "/data/Star-Players_files/jordell_freshbreeze.svg"
   },
 
   karina_von_riesz: {
@@ -492,7 +495,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "bloodlust,dodge,hypnotic-gaze,jump-up,loner-4,regeneration",
     hirableBy: ["sylvanian_spotlight"],
-    imageUrl: undefined
+    imageUrl: "/data/Star-Players_files/karina_von_riesz.svg"
   },
 
   karla_von_kill: {
@@ -506,7 +509,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "block,dauntless,dodge,jump-up,loner-4",
     hirableBy: ["lustrian_superleague", "old_world_classic"],
-    imageUrl: undefined
+    imageUrl: "/data/Star-Players_files/karla_von_kill.svg"
   },
 
   kiroth_krakeneye: {
@@ -563,6 +566,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "block,dauntless,loner-4,sidestep,tackle",
     hirableBy: ["elven_kingdoms_league"],
+    imageUrl: "/data/Star-Players_files/lucien_swift.svg",
     specialRule: "Les Swift Twins : Lucien forme un duo inséparable avec Valen et bénéficie d'un bonus lorsqu'ils jouent ensemble."
   },
 
@@ -577,6 +581,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 8,
     skills: "catch,dodge,loner-4,nerves-of-steel,sidestep,sure-feet",
     hirableBy: ["elven_kingdoms_league"],
+    imageUrl: "/data/Star-Players_files/valen_swift.svg",
     specialRule: "Les Swift Twins : Valen joue en tandem avec Lucien et profite d'actions combinées lorsqu'il est aligné avec lui."
   },
 
@@ -591,7 +596,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 10,
     skills: "block,hypnotic-gaze,loner-4,regeneration,sidestep",
     hirableBy: ["sylvanian_spotlight"],
-    imageUrl: undefined
+    imageUrl: "/data/Star-Players_files/luthor_von_drakenborg.svg"
   },
 
   maple_highgrove: {
@@ -605,7 +610,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 11,
     skills: "brawler,mighty-blow-1,thick-skull,grab,loner-4,stand-firm,tentacles",
     hirableBy: ["elven_kingdoms_league", "old_world_classic"],
-    imageUrl: undefined
+    imageUrl: "/data/Star-Players_files/maple_highgrove.svg"
   },
 
   max_spleenripper: {
@@ -619,7 +624,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "chainsaw,loner-4,secret-weapon",
     hirableBy: ["all"],
-    imageUrl: undefined
+    imageUrl: "/data/Star-Players_files/max_spleenripper.svg"
   },
 
   mighty_zug: {
@@ -633,7 +638,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 10,
     skills: "loner-4,block,mighty-blow-1,casse-os",
     hirableBy: ["lustrian_superleague", "old_world_classic"],
-    imageUrl: undefined,
+    imageUrl: "/data/Star-Players_files/mighty_zug.svg",
     specialRule: "Casse-Os: Une fois par match, +1 en Force lors d'un blocage."
   },
 
@@ -648,7 +653,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "block,dauntless,wrestle,loner-4,tackle",
     hirableBy: ["elven_kingdoms_league"],
-    imageUrl: undefined
+    imageUrl: "/data/Star-Players_files/prince_moranion.svg"
   },
 
   morg_n_thorg: {
@@ -720,7 +725,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 10,
     skills: "throw-team-mate,grab,regeneration,loner-4",
     hirableBy: ["underworld_challenge", "badlands_brawl"],
-    imageUrl: undefined
+    imageUrl: "/data/Star-Players_files/ripper_bolgrot.svg"
   },
 
   rodney_roachbait: {
@@ -734,7 +739,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 7,
     skills: "catch,diving-catch,jump-up,loner-4,on-the-ball,sidestep,stunty,wrestle",
     hirableBy: ["all"],
-    imageUrl: undefined
+    imageUrl: "/data/Star-Players_files/rodney_roachbait.svg"
   },
 
   rowana_forestfoot: {
@@ -748,7 +753,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 8,
     skills: "horns,dump-off,dodge,guard,jump-up,leap,loner-4",
     hirableBy: ["all"],
-    imageUrl: undefined
+    imageUrl: "/data/Star-Players_files/rowana_forestfoot.svg"
   },
 
   roxanna_darknail: {
@@ -762,7 +767,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 8,
     skills: "loner-4,dodge,frenzy,jump-up,juggernaut,leap,pirouette",
     hirableBy: ["elven_kingdoms_league"],
-    imageUrl: undefined,
+    imageUrl: "/data/Star-Players_files/roxanna_darknail.svg",
     specialRule: "Pirouette: Une fois par tour, +1 au jet d'esquive."
   },
 
@@ -777,7 +782,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 8,
     skills: "block,horns,juggernaut,loner-4,no-hands,tackle,thick-skull",
     hirableBy: ["old_world_classic"],
-    imageUrl: undefined
+    imageUrl: "/data/Star-Players_files/rumbelow_sheepskin.svg"
   },
 
   scrappa_sorehead: {
@@ -791,7 +796,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 8,
     skills: "pogo-stick,dodge,sure-feet,dirty-player-1,stunty,right-stuff,loner-4,sprint",
     hirableBy: ["underworld_challenge", "badlands_brawl"],
-    imageUrl: undefined
+    imageUrl: "/data/Star-Players_files/scrappa_sorehead.svg"
   },
 
   scyla_anfingrimm: {
@@ -833,7 +838,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "mighty-blow-1,claws,juggernaut,disturbing-presence,loner-4",
     hirableBy: ["old_world_classic"],
-    imageUrl: undefined
+    imageUrl: "/data/Star-Players_files/skorg_snowpelt.svg"
   },
 
   skrull_halfheight: {
@@ -847,7 +852,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "accurate,loner-4,nerves-of-steel,pass,regeneration,sure-hands,thick-skull",
     hirableBy: ["sylvanian_spotlight"],
-    imageUrl: undefined
+    imageUrl: "/data/Star-Players_files/skrull_halfheight.svg"
   },
 
   swiftvine_glimmershard: {
@@ -861,7 +866,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 7,
     skills: "sidestep,stunty,fend,stab,disturbing-presence,loner-4",
     hirableBy: ["elven_kingdoms_league"],
-    imageUrl: undefined
+    imageUrl: "/data/Star-Players_files/swiftvine_glimmershard.svg"
   },
 
   thorsson_stoutmead: {
@@ -875,7 +880,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 8,
     skills: "block,thick-skull,drunkard,loner-4",
     hirableBy: ["old_world_classic"],
-    imageUrl: undefined
+    imageUrl: "/data/Star-Players_files/thorsson_stoutmead.svg"
   },
 
   varag_ghoul_chewer: {
@@ -889,7 +894,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 10,
     skills: "loner-4,block,jump-up,mighty-blow-1,thick-skull,crushing-blow",
     hirableBy: ["underworld_challenge", "badlands_brawl"],
-    imageUrl: undefined,
+    imageUrl: "/data/Star-Players_files/varag_ghoul_chewer.svg",
     specialRule: "Crushing Blow: Une fois par match, +1 au jet d'armure après un blocage réussi."
   },
 
@@ -945,7 +950,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     pa: 5,
     av: 10,
     skills: "disturbing-presence,juggernaut,loner-4,mighty-blow-1,prehensile-tail,regeneration,sure-feet",
-    hirableBy: ["lustrian_superleague", "elven_kingdoms_league"]
+    hirableBy: ["lustrian_superleague", "elven_kingdoms_league"],
+    imageUrl: "/data/Star-Players_files/zolcath_the_zoat.svg"
   },
 
   zzharg_madeye: {
