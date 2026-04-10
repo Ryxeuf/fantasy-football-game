@@ -6,6 +6,7 @@ export const translations = {
       skills: "Compétences",
       starPlayers: "Star Players",
       play: "Jouer",
+      leaderboard: "Classement",
     },
     // Auth
     auth: {
@@ -338,6 +339,21 @@ export const translations = {
       playOnlineButton: "Accéder au lobby",
       myOnlineMatches: "Mes matchs en ligne",
     },
+    // Leaderboard
+    leaderboard: {
+      title: "Classement ELO",
+      description: "Les meilleurs coachs de Nuffle Arena classés par notation ELO",
+      rank: "Rang",
+      coach: "Coach",
+      elo: "ELO",
+      noPlayers: "Aucun joueur classé pour le moment.",
+      previous: "Précédent",
+      next: "Suivant",
+      page: "Page {current} sur {total}",
+      totalPlayers: "Joueurs classés",
+      topRating: "Meilleur ELO",
+      averageRating: "ELO moyen",
+    },
     // Inducements (pre-match)
     inducements: {
       title: "Inducements",
@@ -362,6 +378,7 @@ export const translations = {
       skills: "Skills",
       starPlayers: "Star Players",
       play: "Play",
+      leaderboard: "Leaderboard",
     },
     // Auth
     auth: {
@@ -693,6 +710,21 @@ export const translations = {
       playOnlineDesc: "Challenge other coaches online! Create a match or join an existing game.",
       playOnlineButton: "Go to lobby",
       myOnlineMatches: "My online matches",
+    },
+    // Leaderboard
+    leaderboard: {
+      title: "ELO Leaderboard",
+      description: "Top Nuffle Arena coaches ranked by ELO rating",
+      rank: "Rank",
+      coach: "Coach",
+      elo: "ELO",
+      noPlayers: "No ranked players yet.",
+      previous: "Previous",
+      next: "Next",
+      page: "Page {current} of {total}",
+      totalPlayers: "Ranked players",
+      topRating: "Top ELO",
+      averageRating: "Average ELO",
     },
     // Inducements (pre-match)
     inducements: {
