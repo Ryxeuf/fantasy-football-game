@@ -306,13 +306,23 @@ describe('Star Players', () => {
       });
     });
 
-    it('les star players sans image disponible ne devraient pas avoir de imageUrl', () => {
-      const noImageSlugs = ['hthark_the_unstoppable', 'zolcath_the_zoat'];
+    it('tous les star players devraient avoir une imageUrl définie', () => {
+      Object.entries(STAR_PLAYERS).forEach(([slug, starPlayer]) => {
+        expect(starPlayer.imageUrl).toBeDefined();
+        expect(typeof starPlayer.imageUrl).toBe('string');
+        expect(starPlayer.imageUrl!.length).toBeGreaterThan(0);
+      });
+    });
 
-      noImageSlugs.forEach((slug) => {
-        const starPlayer = getStarPlayerBySlug(slug);
-        expect(starPlayer).toBeDefined();
-        expect(starPlayer?.imageUrl).toBeUndefined();
+    it('toutes les imageUrl devraient commencer par /data/Star-Players_files/', () => {
+      Object.entries(STAR_PLAYERS).forEach(([slug, starPlayer]) => {
+        expect(starPlayer.imageUrl).toMatch(/^\/data\/Star-Players_files\//);
+      });
+    });
+
+    it('toutes les imageUrl devraient avoir une extension valide (.webp ou .svg)', () => {
+      Object.entries(STAR_PLAYERS).forEach(([slug, starPlayer]) => {
+        expect(starPlayer.imageUrl).toMatch(/\.(webp|svg)$/);
       });
     });
   });

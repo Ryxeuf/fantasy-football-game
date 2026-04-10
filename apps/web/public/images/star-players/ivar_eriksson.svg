@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300">
+  <defs>
+    <linearGradient id="bg-ivar_eriksson" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1A237E;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#283593;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="shine-ivar_eriksson" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:white;stop-opacity:0.15" />
+      <stop offset="50%" style="stop-color:white;stop-opacity:0" />
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="300" height="300" rx="12" fill="url(#bg-ivar_eriksson)" />
+  <!-- Shine overlay -->
+  <rect width="300" height="150" rx="12" fill="url(#shine-ivar_eriksson)" />
+  <!-- Border -->
+  <rect x="4" y="4" width="292" height="292" rx="10" fill="none" stroke="#5C6BC0" stroke-width="3" opacity="0.5" />
+  <rect x="10" y="10" width="280" height="280" rx="8" fill="none" stroke="#5C6BC0" stroke-width="1" opacity="0.3" />
+  <!-- Star icon at top -->
+  <text x="150" y="70" text-anchor="middle" font-size="36" fill="#5C6BC0" opacity="0.8">&#9733;</text>
+  <!-- Initials -->
+  <text x="150" y="185" text-anchor="middle" font-family="Georgia, serif" font-size="96" font-weight="bold" fill="white" letter-spacing="4">IE</text>
+  <!-- Name at bottom -->
+  <text x="150" y="260" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="white" opacity="0.8">Ivar Eriksson</text>
+  <!-- Decorative line -->
+  <line x1="60" y1="230" x2="240" y2="230" stroke="#5C6BC0" stroke-width="1" opacity="0.4" />
+</svg>

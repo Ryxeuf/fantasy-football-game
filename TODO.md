@@ -165,7 +165,7 @@
 |---|-------|------|--------|
 | I.1 | Ajouter roster Slann en Season 3 | Contenu | [x] |
 | I.2 | Descriptions S3 rosters (descriptionFr/En) | Contenu | [x] |
-| I.3 | Fixer images star players manquantes (~28) | Contenu | [ ] |
+| I.3 | Fixer images star players manquantes (~28) | Contenu | [x] |
 | B3.2 | UI affichage regles speciales star players | UI | [ ] |
 | H.3 | Replayer basique | Polish | [ ] |
 | H.4 | Indicateurs tactiques (zones de tacle, portee) | Polish | [ ] |
