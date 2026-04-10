@@ -1,7 +1,44 @@
 import { describe, it, expect } from 'vitest';
 import { SEASON_THREE_ROSTERS } from './season3-rosters';
+import { TEAM_ROSTERS_BY_RULESET } from './positions';
 
 describe('Season 3 Rosters', () => {
+  describe('Roster descriptions (I.2)', () => {
+    const rosterKeys = Object.keys(SEASON_THREE_ROSTERS);
+
+    it('should have descriptionFr for all 30 rosters', () => {
+      for (const key of rosterKeys) {
+        const roster = SEASON_THREE_ROSTERS[key];
+        expect(roster.descriptionFr, `${key} missing descriptionFr`).toBeDefined();
+        expect(roster.descriptionFr!.length, `${key} descriptionFr is empty`).toBeGreaterThan(0);
+      }
+    });
+
+    it('should have descriptionEn for all 30 rosters', () => {
+      for (const key of rosterKeys) {
+        const roster = SEASON_THREE_ROSTERS[key];
+        expect(roster.descriptionEn, `${key} missing descriptionEn`).toBeDefined();
+        expect(roster.descriptionEn!.length, `${key} descriptionEn is empty`).toBeGreaterThan(0);
+      }
+    });
+
+    it('should have matching descriptions with Season 2 rosters', () => {
+      const s2Rosters = TEAM_ROSTERS_BY_RULESET.season_2;
+      for (const key of rosterKeys) {
+        if (s2Rosters[key]) {
+          expect(
+            SEASON_THREE_ROSTERS[key].descriptionFr,
+            `${key} descriptionFr should match S2`
+          ).toBe(s2Rosters[key].descriptionFr);
+          expect(
+            SEASON_THREE_ROSTERS[key].descriptionEn,
+            `${key} descriptionEn should match S2`
+          ).toBe(s2Rosters[key].descriptionEn);
+        }
+      }
+    });
+  });
+
   describe('Roster completeness', () => {
     it('should contain 30 rosters (same as Season 2)', () => {
       const rosterCount = Object.keys(SEASON_THREE_ROSTERS).length;
