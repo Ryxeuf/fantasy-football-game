@@ -87,6 +87,12 @@ export interface TeamDugout {
   };
 }
 
+export interface PendingKickoffEvent {
+  type: 'perfect-defence' | 'high-kick' | 'quick-snap' | 'blitz';
+  team: TeamId;
+  ballPosition?: Position; // for high-kick: where the ball will land
+}
+
 export interface PendingApothecary {
   playerId: string;
   team: TeamId;
@@ -110,6 +116,10 @@ export interface GameState {
   // Apothecaire
   apothecaryAvailable: { teamA: boolean; teamB: boolean };
   pendingApothecary?: PendingApothecary;
+  // Événement de kickoff en attente de résolution UI
+  pendingKickoffEvent?: PendingKickoffEvent;
+  // Tour de blitz kickoff en cours (équipe qui botte joue un tour immédiat)
+  kickoffBlitzTurn?: boolean;
   // Zones de dugout pour chaque équipe
   dugouts: {
     teamA: TeamDugout;
@@ -259,7 +269,11 @@ export type Move =
   | { type: 'THROW_TEAM_MATE'; playerId: string; thrownPlayerId: string; targetPos: Position }
   | { type: 'FOUL'; playerId: string; targetId: string }
   | { type: 'HYPNOTIC_GAZE'; playerId: string; targetId: string }
-  | { type: 'PROJECTILE_VOMIT'; playerId: string; targetId: string };
+  | { type: 'PROJECTILE_VOMIT'; playerId: string; targetId: string }
+  | { type: 'KICKOFF_PERFECT_DEFENCE'; positions: Array<{ playerId: string; position: Position }> }
+  | { type: 'KICKOFF_HIGH_KICK'; playerId: string | null }
+  | { type: 'KICKOFF_QUICK_SNAP'; moves: Array<{ playerId: string; to: Position }> }
+  | { type: 'KICKOFF_BLITZ_RESOLVE' };
 
 export type BlockResult = 'PLAYER_DOWN' | 'BOTH_DOWN' | 'PUSH_BACK' | 'STUMBLE' | 'POW';
 

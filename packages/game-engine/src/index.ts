@@ -167,6 +167,14 @@ export {
   type KickoffEvent,
 } from './mechanics/kickoff-events';
 
+// Export de la résolution des événements de kickoff UI
+export {
+  resolveKickoffPerfectDefence,
+  resolveKickoffHighKick,
+  resolveKickoffQuickSnap,
+  resolveKickoffBlitz,
+} from './mechanics/kickoff-resolution';
+
 // Export du calcul de zones de tacle (heatmap)
 export {
   calculateTackleZoneHeatmap,
