@@ -129,7 +129,8 @@ exports.Prisma.UserScalarFieldEnum = {
   role: 'role',
   roles: 'roles',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  eloRating: 'eloRating'
 };
 
 exports.Prisma.MatchScalarFieldEnum = {

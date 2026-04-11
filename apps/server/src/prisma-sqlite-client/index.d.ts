@@ -2064,8 +2064,18 @@ export namespace Prisma {
 
   export type AggregateUser = {
     _count: UserCountAggregateOutputType | null
+    _avg: UserAvgAggregateOutputType | null
+    _sum: UserSumAggregateOutputType | null
     _min: UserMinAggregateOutputType | null
     _max: UserMaxAggregateOutputType | null
+  }
+
+  export type UserAvgAggregateOutputType = {
+    eloRating: number | null
+  }
+
+  export type UserSumAggregateOutputType = {
+    eloRating: number | null
   }
 
   export type UserMinAggregateOutputType = {
@@ -2081,6 +2091,7 @@ export namespace Prisma {
     roles: string | null
     createdAt: Date | null
     updatedAt: Date | null
+    eloRating: number | null
   }
 
   export type UserMaxAggregateOutputType = {
@@ -2096,6 +2107,7 @@ export namespace Prisma {
     roles: string | null
     createdAt: Date | null
     updatedAt: Date | null
+    eloRating: number | null
   }
 
   export type UserCountAggregateOutputType = {
@@ -2111,9 +2123,18 @@ export namespace Prisma {
     roles: number
     createdAt: number
     updatedAt: number
+    eloRating: number
     _all: number
   }
 
+
+  export type UserAvgAggregateInputType = {
+    eloRating?: true
+  }
+
+  export type UserSumAggregateInputType = {
+    eloRating?: true
+  }
 
   export type UserMinAggregateInputType = {
     id?: true
@@ -2128,6 +2149,7 @@ export namespace Prisma {
     roles?: true
     createdAt?: true
     updatedAt?: true
+    eloRating?: true
   }
 
   export type UserMaxAggregateInputType = {
@@ -2143,6 +2165,7 @@ export namespace Prisma {
     roles?: true
     createdAt?: true
     updatedAt?: true
+    eloRating?: true
   }
 
   export type UserCountAggregateInputType = {
@@ -2158,6 +2181,7 @@ export namespace Prisma {
     roles?: true
     createdAt?: true
     updatedAt?: true
+    eloRating?: true
     _all?: true
   }
 
@@ -2199,6 +2223,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: UserAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: UserSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: UserMinAggregateInputType
@@ -2229,6 +2265,8 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: UserCountAggregateInputType | true
+    _avg?: UserAvgAggregateInputType
+    _sum?: UserSumAggregateInputType
     _min?: UserMinAggregateInputType
     _max?: UserMaxAggregateInputType
   }
@@ -2246,7 +2284,10 @@ export namespace Prisma {
     roles: string
     createdAt: Date
     updatedAt: Date
+    eloRating: number
     _count: UserCountAggregateOutputType | null
+    _avg: UserAvgAggregateOutputType | null
+    _sum: UserSumAggregateOutputType | null
     _min: UserMinAggregateOutputType | null
     _max: UserMaxAggregateOutputType | null
   }
@@ -2278,6 +2319,7 @@ export namespace Prisma {
     roles?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    eloRating?: boolean
     matches?: boolean | User$matchesArgs<ExtArgs>
     createdMatches?: boolean | User$createdMatchesArgs<ExtArgs>
     teams?: boolean | User$teamsArgs<ExtArgs>
@@ -2301,6 +2343,7 @@ export namespace Prisma {
     roles?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    eloRating?: boolean
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -2316,6 +2359,7 @@ export namespace Prisma {
     roles?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    eloRating?: boolean
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectScalar = {
@@ -2331,9 +2375,10 @@ export namespace Prisma {
     roles?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    eloRating?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "passwordHash" | "name" | "coachName" | "firstName" | "lastName" | "dateOfBirth" | "role" | "roles" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "passwordHash" | "name" | "coachName" | "firstName" | "lastName" | "dateOfBirth" | "role" | "roles" | "createdAt" | "updatedAt" | "eloRating", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     matches?: boolean | User$matchesArgs<ExtArgs>
     createdMatches?: boolean | User$createdMatchesArgs<ExtArgs>
@@ -2377,6 +2422,7 @@ export namespace Prisma {
       roles: string
       createdAt: Date
       updatedAt: Date
+      eloRating: number
     }, ExtArgs["result"]["user"]>
     composites: {}
   }
@@ -2819,6 +2865,7 @@ export namespace Prisma {
     readonly roles: FieldRef<"User", 'String'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
+    readonly eloRating: FieldRef<"User", 'Int'>
   }
     
 
@@ -15585,7 +15632,8 @@ export namespace Prisma {
     role: 'role',
     roles: 'roles',
     createdAt: 'createdAt',
-    updatedAt: 'updatedAt'
+    updatedAt: 'updatedAt',
+    eloRating: 'eloRating'
   };
 
   export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -15893,6 +15941,7 @@ export namespace Prisma {
     roles?: StringFilter<"User"> | string
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
+    eloRating?: IntFilter<"User"> | number
     matches?: MatchListRelationFilter
     createdMatches?: MatchListRelationFilter
     teams?: TeamListRelationFilter
@@ -15915,6 +15964,7 @@ export namespace Prisma {
     roles?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    eloRating?: SortOrder
     matches?: MatchOrderByRelationAggregateInput
     createdMatches?: MatchOrderByRelationAggregateInput
     teams?: TeamOrderByRelationAggregateInput
@@ -15940,6 +15990,7 @@ export namespace Prisma {
     roles?: StringFilter<"User"> | string
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
+    eloRating?: IntFilter<"User"> | number
     matches?: MatchListRelationFilter
     createdMatches?: MatchListRelationFilter
     teams?: TeamListRelationFilter
@@ -15962,9 +16013,12 @@ export namespace Prisma {
     roles?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    eloRating?: SortOrder
     _count?: UserCountOrderByAggregateInput
+    _avg?: UserAvgOrderByAggregateInput
     _max?: UserMaxOrderByAggregateInput
     _min?: UserMinOrderByAggregateInput
+    _sum?: UserSumOrderByAggregateInput
   }
 
   export type UserScalarWhereWithAggregatesInput = {
@@ -15983,6 +16037,7 @@ export namespace Prisma {
     roles?: StringWithAggregatesFilter<"User"> | string
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
+    eloRating?: IntWithAggregatesFilter<"User"> | number
   }
 
   export type MatchWhereInput = {
@@ -16940,6 +16995,7 @@ export namespace Prisma {
     roles?: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    eloRating?: number
     matches?: MatchCreateNestedManyWithoutPlayersInput
     createdMatches?: MatchCreateNestedManyWithoutCreatorInput
     teams?: TeamCreateNestedManyWithoutOwnerInput
@@ -16962,6 +17018,7 @@ export namespace Prisma {
     roles?: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    eloRating?: number
     matches?: MatchUncheckedCreateNestedManyWithoutPlayersInput
     createdMatches?: MatchUncheckedCreateNestedManyWithoutCreatorInput
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
@@ -16984,6 +17041,7 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
     matches?: MatchUpdateManyWithoutPlayersNestedInput
     createdMatches?: MatchUpdateManyWithoutCreatorNestedInput
     teams?: TeamUpdateManyWithoutOwnerNestedInput
@@ -17006,6 +17064,7 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
     matches?: MatchUncheckedUpdateManyWithoutPlayersNestedInput
     createdMatches?: MatchUncheckedUpdateManyWithoutCreatorNestedInput
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
@@ -17028,6 +17087,7 @@ export namespace Prisma {
     roles?: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    eloRating?: number
   }
 
   export type UserUpdateManyMutationInput = {
@@ -17043,6 +17103,7 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
   }
 
   export type UserUncheckedUpdateManyInput = {
@@ -17058,6 +17119,7 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
   }
 
   export type MatchCreateInput = {
@@ -18149,6 +18211,17 @@ export namespace Prisma {
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
   }
 
+  export type IntFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntFilter<$PrismaModel> | number
+  }
+
   export type MatchListRelationFilter = {
     every?: MatchWhereInput
     some?: MatchWhereInput
@@ -18222,6 +18295,11 @@ export namespace Prisma {
     roles?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    eloRating?: SortOrder
+  }
+
+  export type UserAvgOrderByAggregateInput = {
+    eloRating?: SortOrder
   }
 
   export type UserMaxOrderByAggregateInput = {
@@ -18237,6 +18315,7 @@ export namespace Prisma {
     roles?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    eloRating?: SortOrder
   }
 
   export type UserMinOrderByAggregateInput = {
@@ -18252,6 +18331,11 @@ export namespace Prisma {
     roles?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    eloRating?: SortOrder
+  }
+
+  export type UserSumOrderByAggregateInput = {
+    eloRating?: SortOrder
   }
 
   export type StringWithAggregatesFilter<$PrismaModel = never> = {
@@ -18316,6 +18400,22 @@ export namespace Prisma {
     _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
+  export type IntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
+  }
+
   export type UserNullableScalarRelationFilter = {
     is?: UserWhereInput | null
     isNot?: UserWhereInput | null
@@ -18363,17 +18463,6 @@ export namespace Prisma {
     status?: SortOrder
     seed?: SortOrder
     creatorId?: SortOrder
-  }
-
-  export type IntFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[]
-    notIn?: number[]
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntFilter<$PrismaModel> | number
   }
   export type JsonFilter<$PrismaModel = never> =
     | PatchUndefined<
@@ -18427,22 +18516,6 @@ export namespace Prisma {
 
   export type TurnSumOrderByAggregateInput = {
     number?: SortOrder
-  }
-
-  export type IntWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[]
-    notIn?: number[]
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
-    _count?: NestedIntFilter<$PrismaModel>
-    _avg?: NestedFloatFilter<$PrismaModel>
-    _sum?: NestedIntFilter<$PrismaModel>
-    _min?: NestedIntFilter<$PrismaModel>
-    _max?: NestedIntFilter<$PrismaModel>
   }
   export type JsonWithAggregatesFilter<$PrismaModel = never> =
     | PatchUndefined<
@@ -19235,6 +19308,14 @@ export namespace Prisma {
     set?: Date | string
   }
 
+  export type IntFieldUpdateOperationsInput = {
+    set?: number
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
   export type MatchUpdateManyWithoutPlayersNestedInput = {
     create?: XOR<MatchCreateWithoutPlayersInput, MatchUncheckedCreateWithoutPlayersInput> | MatchCreateWithoutPlayersInput[] | MatchUncheckedCreateWithoutPlayersInput[]
     connectOrCreate?: MatchCreateOrConnectWithoutPlayersInput | MatchCreateOrConnectWithoutPlayersInput[]
@@ -19563,14 +19644,6 @@ export namespace Prisma {
     create?: XOR<MatchCreateWithoutTurnsInput, MatchUncheckedCreateWithoutTurnsInput>
     connectOrCreate?: MatchCreateOrConnectWithoutTurnsInput
     connect?: MatchWhereUniqueInput
-  }
-
-  export type IntFieldUpdateOperationsInput = {
-    set?: number
-    increment?: number
-    decrement?: number
-    multiply?: number
-    divide?: number
   }
 
   export type MatchUpdateOneRequiredWithoutTurnsNestedInput = {
@@ -20241,6 +20314,17 @@ export namespace Prisma {
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
   }
 
+  export type NestedIntFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntFilter<$PrismaModel> | number
+  }
+
   export type NestedStringWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -20256,17 +20340,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedStringFilter<$PrismaModel>
     _max?: NestedStringFilter<$PrismaModel>
-  }
-
-  export type NestedIntFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[]
-    notIn?: number[]
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntFilter<$PrismaModel> | number
   }
 
   export type NestedStringNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -20906,6 +20979,7 @@ export namespace Prisma {
     roles?: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    eloRating?: number
     matches?: MatchCreateNestedManyWithoutPlayersInput
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
@@ -20927,6 +21001,7 @@ export namespace Prisma {
     roles?: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    eloRating?: number
     matches?: MatchUncheckedCreateNestedManyWithoutPlayersInput
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
@@ -20953,6 +21028,7 @@ export namespace Prisma {
     roles?: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    eloRating?: number
     createdMatches?: MatchCreateNestedManyWithoutCreatorInput
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
@@ -20974,6 +21050,7 @@ export namespace Prisma {
     roles?: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    eloRating?: number
     createdMatches?: MatchUncheckedCreateNestedManyWithoutCreatorInput
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
@@ -21059,6 +21136,7 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
     matches?: MatchUpdateManyWithoutPlayersNestedInput
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
@@ -21080,6 +21158,7 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
     matches?: MatchUncheckedUpdateManyWithoutPlayersNestedInput
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
@@ -21120,6 +21199,7 @@ export namespace Prisma {
     roles?: StringFilter<"User"> | string
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
+    eloRating?: IntFilter<"User"> | number
   }
 
   export type TurnUpsertWithWhereUniqueWithoutMatchInput = {
@@ -21259,6 +21339,7 @@ export namespace Prisma {
     roles?: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    eloRating?: number
     matches?: MatchCreateNestedManyWithoutPlayersInput
     createdMatches?: MatchCreateNestedManyWithoutCreatorInput
     teams?: TeamCreateNestedManyWithoutOwnerInput
@@ -21280,6 +21361,7 @@ export namespace Prisma {
     roles?: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    eloRating?: number
     matches?: MatchUncheckedCreateNestedManyWithoutPlayersInput
     createdMatches?: MatchUncheckedCreateNestedManyWithoutCreatorInput
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
@@ -21399,6 +21481,7 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
     matches?: MatchUpdateManyWithoutPlayersNestedInput
     createdMatches?: MatchUpdateManyWithoutCreatorNestedInput
     teams?: TeamUpdateManyWithoutOwnerNestedInput
@@ -21420,6 +21503,7 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
     matches?: MatchUncheckedUpdateManyWithoutPlayersNestedInput
     createdMatches?: MatchUncheckedUpdateManyWithoutCreatorNestedInput
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
@@ -21498,6 +21582,7 @@ export namespace Prisma {
     roles?: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    eloRating?: number
     matches?: MatchCreateNestedManyWithoutPlayersInput
     createdMatches?: MatchCreateNestedManyWithoutCreatorInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
@@ -21519,6 +21604,7 @@ export namespace Prisma {
     roles?: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    eloRating?: number
     matches?: MatchUncheckedCreateNestedManyWithoutPlayersInput
     createdMatches?: MatchUncheckedCreateNestedManyWithoutCreatorInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
@@ -21796,6 +21882,7 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
     matches?: MatchUpdateManyWithoutPlayersNestedInput
     createdMatches?: MatchUpdateManyWithoutCreatorNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
@@ -21817,6 +21904,7 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
     matches?: MatchUncheckedUpdateManyWithoutPlayersNestedInput
     createdMatches?: MatchUncheckedUpdateManyWithoutCreatorNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
@@ -22099,6 +22187,7 @@ export namespace Prisma {
     roles?: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    eloRating?: number
     matches?: MatchCreateNestedManyWithoutPlayersInput
     createdMatches?: MatchCreateNestedManyWithoutCreatorInput
     teams?: TeamCreateNestedManyWithoutOwnerInput
@@ -22120,6 +22209,7 @@ export namespace Prisma {
     roles?: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    eloRating?: number
     matches?: MatchUncheckedCreateNestedManyWithoutPlayersInput
     createdMatches?: MatchUncheckedCreateNestedManyWithoutCreatorInput
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
@@ -22227,6 +22317,7 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
     matches?: MatchUpdateManyWithoutPlayersNestedInput
     createdMatches?: MatchUpdateManyWithoutCreatorNestedInput
     teams?: TeamUpdateManyWithoutOwnerNestedInput
@@ -22248,6 +22339,7 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
     matches?: MatchUncheckedUpdateManyWithoutPlayersNestedInput
     createdMatches?: MatchUncheckedUpdateManyWithoutCreatorNestedInput
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
@@ -22477,6 +22569,7 @@ export namespace Prisma {
     roles?: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    eloRating?: number
     matches?: MatchCreateNestedManyWithoutPlayersInput
     createdMatches?: MatchCreateNestedManyWithoutCreatorInput
     teams?: TeamCreateNestedManyWithoutOwnerInput
@@ -22498,6 +22591,7 @@ export namespace Prisma {
     roles?: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    eloRating?: number
     matches?: MatchUncheckedCreateNestedManyWithoutPlayersInput
     createdMatches?: MatchUncheckedCreateNestedManyWithoutCreatorInput
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
@@ -22586,6 +22680,7 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
     matches?: MatchUpdateManyWithoutPlayersNestedInput
     createdMatches?: MatchUpdateManyWithoutCreatorNestedInput
     teams?: TeamUpdateManyWithoutOwnerNestedInput
@@ -22607,6 +22702,7 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
     matches?: MatchUncheckedUpdateManyWithoutPlayersNestedInput
     createdMatches?: MatchUncheckedUpdateManyWithoutCreatorNestedInput
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
@@ -22685,6 +22781,7 @@ export namespace Prisma {
     roles?: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    eloRating?: number
     matches?: MatchCreateNestedManyWithoutPlayersInput
     createdMatches?: MatchCreateNestedManyWithoutCreatorInput
     teams?: TeamCreateNestedManyWithoutOwnerInput
@@ -22706,6 +22803,7 @@ export namespace Prisma {
     roles?: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    eloRating?: number
     matches?: MatchUncheckedCreateNestedManyWithoutPlayersInput
     createdMatches?: MatchUncheckedCreateNestedManyWithoutCreatorInput
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
@@ -22925,6 +23023,7 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
     matches?: MatchUpdateManyWithoutPlayersNestedInput
     createdMatches?: MatchUpdateManyWithoutCreatorNestedInput
     teams?: TeamUpdateManyWithoutOwnerNestedInput
@@ -22946,6 +23045,7 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
     matches?: MatchUncheckedUpdateManyWithoutPlayersNestedInput
     createdMatches?: MatchUncheckedUpdateManyWithoutCreatorNestedInput
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
@@ -23569,6 +23669,7 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
     createdMatches?: MatchUpdateManyWithoutCreatorNestedInput
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
@@ -23590,6 +23691,7 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
     createdMatches?: MatchUncheckedUpdateManyWithoutCreatorNestedInput
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
@@ -23611,6 +23713,7 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
   }
 
   export type TurnUpdateWithoutMatchInput = {

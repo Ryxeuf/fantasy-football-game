@@ -1,0 +1,17 @@
+{
+  "name": "@bb/tests-e2e-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "TEST_SQLITE=1 TEST_DATABASE_URL='file:memdb-e2e?mode=memory&cache=shared' API_PORT=18002 vitest run --config vitest.config.ts",
+    "test:watch": "TEST_SQLITE=1 TEST_DATABASE_URL='file:memdb-e2e?mode=memory&cache=shared' API_PORT=18002 vitest --config vitest.config.ts",
+    "test:ci": "TEST_SQLITE=1 TEST_DATABASE_URL='file:memdb-e2e?mode=memory&cache=shared' API_PORT=18002 vitest run --config vitest.config.ts --reporter=default --reporter=junit --outputFile=./reports/junit.xml"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "node-fetch": "^3.3.2",
+    "socket.io-client": "^4.8.3",
+    "vitest": "^2.1.9"
+  }
+}

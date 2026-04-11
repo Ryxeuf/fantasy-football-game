@@ -77,21 +77,139 @@ app.use("/push", pushRoutes);
 // Endpoint public de reset pour tests (uniquement en TEST_SQLITE=1)
 if (process.env.TEST_SQLITE === "1") {
   app.post("/__test/reset", async (_req, res) => {
-    try {
-      await prisma.turn.deleteMany({});
-      try { await (prisma as any).matchQueue.deleteMany({}); } catch {}
-      await prisma.teamSelection.deleteMany({});
+    // Ordre de suppression des entités pour respecter les FK:
+    //   turn → teamSelection → _MatchToUser → match → teamPlayer → team → user
+    // Chaque étape est isolée dans un try/catch pour que les entités
+    // facultatives (modèles présents uniquement dans le schéma Postgres)
+    // n'empêchent pas le reset.
+    const safe = async (label: string, fn: () => Promise<unknown>) => {
       try {
-        await (prisma as any).$executeRawUnsafe('DELETE FROM "_MatchToUser"');
-      } catch {}
-      await prisma.match.deleteMany({});
-      await prisma.teamPlayer.deleteMany({});
-      await prisma.team.deleteMany({});
-      await prisma.user.deleteMany({});
+        await fn();
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        console.warn(`[__test/reset] ${label}: ${msg.slice(0, 160)}`);
+      }
+    };
+    try {
+      await safe("turn", () => prisma.turn.deleteMany({}));
+      await safe("matchQueue", () =>
+        (prisma as any).matchQueue?.deleteMany?.({}) ?? Promise.resolve(),
+      );
+      await safe("teamSelection", () => prisma.teamSelection.deleteMany({}));
+      await safe("_MatchToUser", () =>
+        (prisma as any).$executeRawUnsafe('DELETE FROM "_MatchToUser"'),
+      );
+      await safe("match", () => prisma.match.deleteMany({}));
+      await safe("teamPlayer", () => prisma.teamPlayer.deleteMany({}));
+      await safe("team", () => prisma.team.deleteMany({}));
+      await safe("user", () => prisma.user.deleteMany({}));
       return res.json({ ok: true });
     } catch (e: any) {
       console.error(e);
       return res.status(500).json({ error: e?.message || "reset failed" });
+    }
+  });
+
+  // Seed d'utilisateurs de test (register est désactivé en pré-alpha,
+  // donc on expose un endpoint dédié aux tests E2E).
+  app.post("/__test/seed-user", async (req, res) => {
+    try {
+      const { email, password, name } = req.body as {
+        email?: string;
+        password?: string;
+        name?: string;
+      };
+      if (!email || !password) {
+        return res
+          .status(400)
+          .json({ error: "email et password requis" });
+      }
+
+      const bcrypt = await import("bcryptjs");
+      const passwordHash = await bcrypt.default.hash(password, 4);
+
+      const displayName = name || email.split("@")[0];
+      // Seul le schéma Postgres expose `valid`; on évite de le passer afin que
+      // le même payload fonctionne sur les deux schémas.
+      const user = await prisma.user.upsert({
+        where: { email },
+        update: { passwordHash },
+        create: {
+          email,
+          passwordHash,
+          name: displayName,
+          coachName: displayName,
+          role: "user",
+          roles: JSON.stringify(["user"]),
+        },
+      });
+
+      return res.json({ id: user.id, email: user.email, name: user.name });
+    } catch (e: any) {
+      console.error(e);
+      return res
+        .status(500)
+        .json({ error: e?.message || "seed-user failed" });
+    }
+  });
+
+  // Seed d'équipe minimale (11 linemen) pour les tests E2E.
+  // Contourne /team/create-from-roster qui fait des includes incompatibles
+  // avec le schéma SQLite de test (starPlayers, etc.).
+  app.post("/__test/seed-team", async (req, res) => {
+    try {
+      const { ownerId, name, roster } = req.body as {
+        ownerId?: string;
+        name?: string;
+        roster?: "skaven" | "lizardmen";
+      };
+      if (!ownerId || !name || !roster) {
+        return res
+          .status(400)
+          .json({ error: "ownerId, name et roster requis" });
+      }
+      if (roster !== "skaven" && roster !== "lizardmen") {
+        return res
+          .status(400)
+          .json({ error: "roster doit être skaven ou lizardmen" });
+      }
+
+      const team = await prisma.team.create({
+        data: {
+          ownerId,
+          name,
+          roster,
+          teamValue: 1000,
+          initialBudget: 1000,
+          treasury: 0,
+          rerolls: 0,
+          cheerleaders: 0,
+          assistants: 0,
+          apothecary: false,
+        },
+      });
+
+      // 11 linemen génériques, stats de base
+      const players = Array.from({ length: 11 }, (_, i) => ({
+        teamId: team.id,
+        name: `${name} ${i + 1}`,
+        position: "Lineman",
+        number: i + 1,
+        ma: 6,
+        st: 3,
+        ag: 3,
+        pa: 4,
+        av: 9,
+        skills: "",
+      }));
+      await prisma.teamPlayer.createMany({ data: players });
+
+      return res.json({ id: team.id, name: team.name, roster: team.roster });
+    } catch (e: any) {
+      console.error(e);
+      return res
+        .status(500)
+        .json({ error: e?.message || "seed-team failed" });
     }
   });
 }
