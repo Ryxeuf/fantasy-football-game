@@ -1,3 +1,18 @@
+## [1.50.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.49.0...v1.50.0) (2026-04-11)
+
+
+### ✨ Features
+
+* Add ELO leaderboard page with pagination ([#156](https://github.com/Ryxeuf/fantasy-football-game/issues/156)) ([da84992](https://github.com/Ryxeuf/fantasy-football-game/commit/da8499256299cda5690c49b2d13afd3965e624dc))
+* add match replay functionality with playback controls ([#163](https://github.com/Ryxeuf/fantasy-football-game/issues/163)) ([0dba726](https://github.com/Ryxeuf/fantasy-football-game/commit/0dba726dae7dbf96c1787011ce3a000ad138b665))
+* add tactical indicators — movement range and pass range overlays (H.4) ([#164](https://github.com/Ryxeuf/fantasy-football-game/issues/164)) ([258a9bd](https://github.com/Ryxeuf/fantasy-football-game/commit/258a9bd37663d769c8cb09689494bf83f676e72b))
+* implement 4 UI-delegated kickoff events ([#155](https://github.com/Ryxeuf/fantasy-football-game/issues/155)) ([5769844](https://github.com/Ryxeuf/fantasy-football-game/commit/5769844e5193b6c103540e5008fe6e11e27de85a))
+
+
+### ♻️ Code Refactoring
+
+* rename -hidden routes to their proper names ([a30acb6](https://github.com/Ryxeuf/fantasy-football-game/commit/a30acb67704699876b59905f7ce70e1e15b0aca7))
+
 ## [1.49.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.48.0...v1.49.0) (2026-04-10)
 
 
