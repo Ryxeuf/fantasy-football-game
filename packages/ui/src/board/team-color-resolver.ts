@@ -6,7 +6,13 @@
  * Graphics fill. A later sub-task will add sprite sheet loading and swap
  * the circle Graphics for Pixi Sprites tinted with the same color.
  */
-import { getTeamColors, type TeamColors } from "@bb/game-engine";
+import {
+  getTeamColors,
+  getTeamSpriteManifest,
+  hasTeamSprite,
+  type TeamColors,
+  type TeamSpriteManifest,
+} from "@bb/game-engine";
 import type { GameState, Player } from "@bb/game-engine";
 
 /** Legacy red/blue palette preserved for backwards compatibility. */
@@ -113,4 +119,47 @@ export function resolveTeamOutlineColor(
   if (rosterSlug) return getTeamColors(rosterSlug).secondary;
 
   return player.team === "A" ? LEGACY_TEAM_A_OUTLINE : LEGACY_TEAM_B_OUTLINE;
+}
+
+/**
+ * H.6 sub-task 4/5 — resolve the sprite manifest for a player's team, if any.
+ *
+ * Returns `null` when no sprite is registered for the team's roster slug
+ * (the common case today — sub-task 5/5 will populate the registry). The
+ * renderer uses this to decide between the circle Graphics fallback path
+ * and the future Pixi.Sprite + tint path.
+ *
+ * Resolution order:
+ *   1. stunned players always return `null` (keep the greyed-out circle
+ *      fallback regardless of whether a sprite is shipped)
+ *   2. `teamRosters[team]` → `getTeamSpriteManifest(slug)`
+ *   3. `null` when no roster slug is available (legacy red/blue fallback)
+ */
+export function resolveTeamSpriteManifest(
+  player: Pick<Player, "team" | "stunned">,
+  teamRosters?: TeamRostersMap,
+): TeamSpriteManifest | null {
+  if (player.stunned) return null;
+
+  const rosterSlug =
+    player.team === "A" ? teamRosters?.teamA : teamRosters?.teamB;
+  return getTeamSpriteManifest(rosterSlug);
+}
+
+/**
+ * H.6 sub-task 4/5 — does the player's team have a sprite manifest ready to
+ * render? Convenience boolean wrapper around {@link resolveTeamSpriteManifest}.
+ *
+ * This is the single source of truth for the renderer's "sprite vs circle"
+ * decision: as long as it returns `false`, the PixiBoard must keep drawing
+ * circles with the per-roster fill + outline colors.
+ */
+export function shouldUseTeamSprite(
+  player: Pick<Player, "team" | "stunned">,
+  teamRosters?: TeamRostersMap,
+): boolean {
+  if (player.stunned) return false;
+  const rosterSlug =
+    player.team === "A" ? teamRosters?.teamA : teamRosters?.teamB;
+  return hasTeamSprite(rosterSlug);
 }

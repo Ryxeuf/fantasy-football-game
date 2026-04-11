@@ -39,6 +39,16 @@ export {
   type TeamColors,
 } from './team-colors';
 
+// Export du registry de sprite manifests (H.6 — sub-task 4/5)
+export {
+  TEAM_SPRITE_MANIFESTS,
+  getTeamSpriteManifest,
+  hasTeamSprite,
+  isTeamSpriteManifest,
+  type SpriteFrame,
+  type TeamSpriteManifest,
+} from './team-sprites';
+
 // Export des utilitaires Star Players
 export * from './star-players-utils';
 export {
