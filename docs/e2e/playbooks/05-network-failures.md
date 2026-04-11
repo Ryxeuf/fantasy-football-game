@@ -18,7 +18,7 @@ joueur perd la connexion, ferme sa page, ou tente de reconnecter.
 
 5. [ ] Alice ferme complètement son onglet.
 6. [ ] Bob voit une bannière "Adversaire déconnecté".
-7. [ ] Alice rouvre `/play-hidden/<id>` dans les 10 secondes → la
+7. [ ] Alice rouvre `/play/<id>` dans les 10 secondes → la
       bannière disparaît côté Bob.
 8. [ ] Le match reprend normalement.
 

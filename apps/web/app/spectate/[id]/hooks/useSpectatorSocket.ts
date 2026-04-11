@@ -12,7 +12,7 @@ import {
   type MatchForfeitedPayload,
   type TurnTimerStartedPayload,
   type ResyncPayload,
-} from "../../../play-hidden/[id]/hooks/useGameSocket";
+} from "../../../play/[id]/hooks/useGameSocket";
 
 export interface SpectatorCountPayload {
   matchId: string;

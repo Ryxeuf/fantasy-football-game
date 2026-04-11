@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import type { ChatMessage, ChatAck } from "../play-hidden/[id]/hooks/useGameChat";
+import type { ChatMessage, ChatAck } from "../play/[id]/hooks/useGameChat";
 
 export interface GameChatProps {
   messages: ChatMessage[];

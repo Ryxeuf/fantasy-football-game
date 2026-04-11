@@ -33,8 +33,8 @@ test.describe("E2E UI — chat in-game", () => {
     await aliceWaiting.accept();
     await bobWaiting.accept();
 
-    await alice.page.waitForURL(/\/play-hidden\//, { timeout: 20_000 });
-    await bob.page.waitForURL(/\/play-hidden\//, { timeout: 20_000 });
+    await alice.page.waitForURL(/\/play\/[^/]+/, { timeout: 20_000 });
+    await bob.page.waitForURL(/\/play\/[^/]+/, { timeout: 20_000 });
 
     const aliceView = new GameViewPage(alice.page);
     const bobView = new GameViewPage(bob.page);

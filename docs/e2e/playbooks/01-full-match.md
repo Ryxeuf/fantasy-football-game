@@ -19,12 +19,12 @@ serveur et front lancés en mode dev ou staging.
 ## Création + acceptation
 
 4. [ ] Alice clique **"Créer une partie"** → redirection vers
-      `/waiting-hidden/<id>`.
+      `/waiting/<id>`.
 5. [ ] Copier l'`<id>` et le coller dans le champ "ID de la partie" de Bob.
 6. [ ] Bob clique **"Rejoindre"** → Bob est aussi sur
-      `/waiting-hidden/<id>`.
+      `/waiting/<id>`.
 7. [ ] Les deux coachs cliquent **"Accepter"** → redirection vers
-      `/play-hidden/<id>`.
+      `/play/<id>`.
 
 ## Pré-match
 

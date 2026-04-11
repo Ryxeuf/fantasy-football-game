@@ -119,9 +119,9 @@ export default function MyMatchesPage() {
           <a
             key={m.id}
             href={m.status === "active" || m.status === "prematch" || m.status === "prematch-setup"
-              ? `/play-hidden/${m.id}`
+              ? `/play/${m.id}`
               : m.status === "pending"
-                ? `/waiting-hidden/${m.id}`
+                ? `/waiting/${m.id}`
                 : "#"}
             className={`block p-4 rounded-lg border transition-colors ${
               m.isMyTurn && m.status === "active"

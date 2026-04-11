@@ -5,7 +5,7 @@ import type { Page, Locator } from "@playwright/test";
  *
  * Expose les 3 actions principales que les specs utilisent :
  *   - createMatch(): crée un match et renvoie son id (extrait de l'URL après
- *     redirection vers /waiting-hidden/<id>)
+ *     redirection vers /waiting/<id>)
  *   - joinMatch(matchId)
  *   - startMatchmaking(teamId)
  */
@@ -40,7 +40,7 @@ export class LobbyPage {
    */
   async createMatch(): Promise<string> {
     await this.createMatchButton.click();
-    await this.page.waitForURL(/\/waiting[-/][^/]*\/[^/]+$/, {
+    await this.page.waitForURL(/\/waiting\/[^/]+$/, {
       timeout: 15_000,
     });
     return extractMatchIdFromUrl(this.page.url());
@@ -49,7 +49,7 @@ export class LobbyPage {
   async joinMatch(matchId: string): Promise<void> {
     await this.matchIdInput.fill(matchId);
     await this.joinMatchButton.click();
-    await this.page.waitForURL(/\/waiting[-/][^/]*\/[^/]+$/, {
+    await this.page.waitForURL(/\/waiting\/[^/]+$/, {
       timeout: 15_000,
     });
   }

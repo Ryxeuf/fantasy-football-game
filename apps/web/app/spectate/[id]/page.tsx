@@ -15,7 +15,7 @@ import type {
   MatchForfeitedPayload,
   TurnTimerStartedPayload,
   ResyncPayload,
-} from "../../play-hidden/[id]/hooks/useGameSocket";
+} from "../../play/[id]/hooks/useGameSocket";
 
 function normalizeState(state: any): ExtendedGameState {
   if (!state) return state;

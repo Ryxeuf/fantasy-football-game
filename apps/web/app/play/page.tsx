@@ -130,7 +130,7 @@ export default function PlayPage() {
     searching,
     onMatchFound: useCallback((matchId: string) => {
       setSearching(false);
-      window.location.href = `/play-hidden/${matchId}`;
+      window.location.href = `/play/${matchId}`;
     }, []),
   });
 
@@ -164,7 +164,7 @@ export default function PlayPage() {
       }
       if (data.inQueue && data.status === "matched" && data.matchId) {
         // Match found! Redirect to accept
-        window.location.href = `/play-hidden/${data.matchId}`;
+        window.location.href = `/play/${data.matchId}`;
       }
     } catch {
       // silently fail
@@ -202,7 +202,7 @@ export default function PlayPage() {
         setQueueStatus(data);
         if (data.inQueue && data.status === "matched" && data.matchId) {
           setSearching(false);
-          window.location.href = `/play-hidden/${data.matchId}`;
+          window.location.href = `/play/${data.matchId}`;
         }
         if (!data.inQueue || data.status !== "searching") {
           setSearching(false);
@@ -264,7 +264,7 @@ export default function PlayPage() {
       const result = await apiPost("/matchmaking/join", { teamId: selectedTeamId });
       if (result.matched) {
         localStorage.setItem("match_token", result.matchToken);
-        window.location.href = `/play-hidden/${result.matchId}`;
+        window.location.href = `/play/${result.matchId}`;
         return;
       }
       setQueueStatus({ inQueue: true, status: "searching", teamId: selectedTeamId, teamValue: result.teamValue });
@@ -605,9 +605,9 @@ export default function PlayPage() {
                   <a
                     href={
                       m.status === "active" || m.status === "prematch" || m.status === "prematch-setup"
-                        ? `/play-hidden/${m.id}`
+                        ? `/play/${m.id}`
                         : m.status === "pending"
-                          ? `/waiting-hidden/${m.id}`
+                          ? `/waiting/${m.id}`
                           : "#"
                     }
                     className="px-4 py-2 rounded-lg bg-nuffle-gold hover:bg-nuffle-gold/90 text-nuffle-anthracite font-subtitle font-semibold text-sm shadow hover:shadow-md transition-all whitespace-nowrap"

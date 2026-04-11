@@ -2,7 +2,7 @@ import type { Page, Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 
 /**
- * Page Object pour `/waiting-hidden/<matchId>` (salle d'attente avant le match).
+ * Page Object pour `/waiting/<matchId>` (salle d'attente avant le match).
  *
  * Les indicateurs d'acceptation exposent `data-accepted="true|false"` pour
  * des assertions lisibles sans parsing de texte.
