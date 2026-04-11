@@ -3,6 +3,7 @@ import * as React from "react";
 import { Stage, Container, Graphics, Text } from "@pixi/react";
 import type { Graphics as PixiGraphics } from "@pixi/graphics";
 import type { GameState, Position, Player, TackleZoneHeatmap, ReachableCell, PassRangeBand } from "@bb/game-engine";
+import { resolveTeamFillColor, type TeamRostersMap, type TeamColorOverridesMap } from "./team-color-resolver";
 import { useAnimatedPositions } from "./useAnimatedPositions";
 import { useBlockEffects } from "./useBlockEffects";
 import { useTouchdownEffects } from "./useTouchdownEffects";
@@ -49,6 +50,14 @@ type Props = {
   passRangeBands?: PassRangeBand[];
   /** Whether to show the pass range overlay */
   showPassRange?: boolean;
+  /**
+   * H.6 — optional per-team roster slugs used to look up team-specific
+   * colors (and, in a later sub-task, sprite sheets). When omitted, players
+   * fall back to the legacy red/blue team A/B palette.
+   */
+  teamRosters?: TeamRostersMap;
+  /** H.6 — optional explicit color override per team (bypasses rosterSlug lookup). */
+  teamColorOverrides?: TeamColorOverridesMap;
 };
 
 export default function PixiBoard({
@@ -68,6 +77,8 @@ export default function PixiBoard({
   showReachability = false,
   passRangeBands = [],
   showPassRange = false,
+  teamRosters,
+  teamColorOverrides,
 }: Props) {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [responsiveCellSize, setResponsiveCellSize] = React.useState(cellSize);
@@ -496,11 +507,11 @@ export default function PixiBoard({
                     const y = posX * cs + cs / 2 + shakeY;
                     const radius = cs / 2 - 2;
 
-                    const playerColor = player.stunned
-                      ? 0x808080
-                      : player.team === "A"
-                        ? 0xcc2222
-                        : 0x2255cc;
+                    const playerColor = resolveTeamFillColor(
+                      player,
+                      teamRosters,
+                      teamColorOverrides,
+                    );
                     g.beginFill(playerColor);
                     g.drawCircle(x, y, radius);
                     g.endFill();

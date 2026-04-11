@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useMemo, useEffect, useCallback } from "react";
-import { GameState, Player, calculateTackleZoneHeatmap, getReachableCells, getPassRangeBands } from "@bb/game-engine";
+import { GameState, Player, calculateTackleZoneHeatmap, getReachableCells, getPassRangeBands, type TeamColors } from "@bb/game-engine";
 import PixiBoard from "../board/PixiBoard";
 import TeamDugoutComponent from "./TeamDugout";
 import PlayerDetails from "./PlayerDetails";
@@ -25,6 +25,16 @@ interface GameBoardWithDugoutsProps {
   onDrop?: (e: React.DragEvent) => void;
   /** Called when the responsive cell size changes (for drop coordinate math) */
   onCellSizeChange?: (cellSize: number) => void;
+  /** H.6 — roster slugs for team A / team B, used for per-team visual colors. */
+  teamRosters?: {
+    teamA?: string;
+    teamB?: string;
+  };
+  /** H.6 — optional explicit color overrides per team. */
+  teamColorOverrides?: {
+    teamA?: TeamColors;
+    teamB?: TeamColors;
+  };
 }
 
 export default function GameBoardWithDugouts({
@@ -42,6 +52,8 @@ export default function GameBoardWithDugouts({
   onDragOver,
   onDrop,
   onCellSizeChange,
+  teamRosters,
+  teamColorOverrides,
 }: GameBoardWithDugoutsProps) {
   const [showDugoutA, setShowDugoutA] = useState(false);
   const [showDugoutB, setShowDugoutB] = useState(false);
@@ -224,6 +236,8 @@ export default function GameBoardWithDugouts({
             showReachability={showReachability}
             passRangeBands={passRangeBands}
             showPassRange={showPassRange}
+            teamRosters={teamRosters}
+            teamColorOverrides={teamColorOverrides}
           />
         </div>
 
