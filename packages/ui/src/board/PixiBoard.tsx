@@ -3,7 +3,12 @@ import * as React from "react";
 import { Stage, Container, Graphics, Text } from "@pixi/react";
 import type { Graphics as PixiGraphics } from "@pixi/graphics";
 import type { GameState, Position, Player, TackleZoneHeatmap, ReachableCell, PassRangeBand } from "@bb/game-engine";
-import { resolveTeamFillColor, type TeamRostersMap, type TeamColorOverridesMap } from "./team-color-resolver";
+import {
+  resolveTeamFillColor,
+  resolveTeamOutlineColor,
+  type TeamRostersMap,
+  type TeamColorOverridesMap,
+} from "./team-color-resolver";
 import { useAnimatedPositions } from "./useAnimatedPositions";
 import { useBlockEffects } from "./useBlockEffects";
 import { useTouchdownEffects } from "./useTouchdownEffects";
@@ -512,6 +517,11 @@ export default function PixiBoard({
                       teamRosters,
                       teamColorOverrides,
                     );
+                    const outlineColor = resolveTeamOutlineColor(
+                      player,
+                      teamRosters,
+                      teamColorOverrides,
+                    );
                     g.beginFill(playerColor);
                     g.drawCircle(x, y, radius);
                     g.endFill();
@@ -527,7 +537,9 @@ export default function PixiBoard({
                       g.lineStyle(2, 0xff8800, 0.4);
                       g.drawCircle(x, y, radius + 6);
                     } else {
-                      g.lineStyle(2, 0xffffff, 0.9);
+                      // H.6 sub-task 3/5: outline uses the per-roster secondary
+                      // color so teams are distinguished beyond the jersey fill.
+                      g.lineStyle(2, outlineColor, 0.9);
                       g.drawCircle(x, y, radius);
                     }
 

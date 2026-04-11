@@ -169,7 +169,7 @@
 | B3.2 | UI affichage regles speciales star players | UI | [x] |
 | H.3 | Replayer basique | Polish | [x] |
 | H.4 | Indicateurs tactiques (zones de tacle, portee) | Polish | [x] |
-| H.6 | Sprite sheets par equipe (2/5 — state propagation + renderer fallback) | Polish | [ ] |
+| H.6 | Sprite sheets par equipe (3/5 — state propagation + renderer fallback + secondary outline) | Polish | [ ] |
 
 ---
 

@@ -4,8 +4,12 @@ import { ROSTER_COLORS } from "@bb/game-engine";
 import {
   LEGACY_TEAM_A_COLOR,
   LEGACY_TEAM_B_COLOR,
+  LEGACY_TEAM_A_OUTLINE,
+  LEGACY_TEAM_B_OUTLINE,
   STUNNED_COLOR,
+  STUNNED_OUTLINE_COLOR,
   resolveTeamFillColor,
+  resolveTeamOutlineColor,
   resolveTeamRostersFromState,
 } from "./team-color-resolver";
 
@@ -184,5 +188,151 @@ describe("Regle: resolveTeamRostersFromState (H.6 foundation)", () => {
     );
     expect(colorA).toBe(ROSTER_COLORS.orc.primary);
     expect(colorB).toBe(ROSTER_COLORS.dwarf.primary);
+  });
+});
+
+describe("Regle: resolveTeamOutlineColor (H.6 sprite sheets - sub-task 3)", () => {
+  function makePlayer(
+    team: "A" | "B",
+    stunned = false,
+  ): Pick<Player, "team" | "stunned"> {
+    return { team, stunned };
+  }
+
+  describe("legacy fallback (no teamRosters, no overrides)", () => {
+    it("team A → legacy A outline", () => {
+      expect(resolveTeamOutlineColor(makePlayer("A"))).toBe(
+        LEGACY_TEAM_A_OUTLINE,
+      );
+    });
+
+    it("team B → legacy B outline", () => {
+      expect(resolveTeamOutlineColor(makePlayer("B"))).toBe(
+        LEGACY_TEAM_B_OUTLINE,
+      );
+    });
+
+    it("stunned players → stunned outline regardless of team", () => {
+      expect(resolveTeamOutlineColor(makePlayer("A", true))).toBe(
+        STUNNED_OUTLINE_COLOR,
+      );
+      expect(resolveTeamOutlineColor(makePlayer("B", true))).toBe(
+        STUNNED_OUTLINE_COLOR,
+      );
+    });
+  });
+
+  describe("roster-based lookup (uses secondary color)", () => {
+    it("uses ROSTER_COLORS.secondary for a known team A roster", () => {
+      const color = resolveTeamOutlineColor(makePlayer("A"), {
+        teamA: "skaven",
+      });
+      expect(color).toBe(ROSTER_COLORS.skaven.secondary);
+    });
+
+    it("uses ROSTER_COLORS.secondary for a known team B roster", () => {
+      const color = resolveTeamOutlineColor(makePlayer("B"), {
+        teamA: "skaven",
+        teamB: "dwarf",
+      });
+      expect(color).toBe(ROSTER_COLORS.dwarf.secondary);
+    });
+
+    it("primary and outline must differ for a known roster", () => {
+      const fill = resolveTeamFillColor(makePlayer("A"), { teamA: "orc" });
+      const outline = resolveTeamOutlineColor(makePlayer("A"), {
+        teamA: "orc",
+      });
+      expect(fill).not.toBe(outline);
+    });
+
+    it("stunned players stay on stunned outline even when roster is provided", () => {
+      const color = resolveTeamOutlineColor(makePlayer("A", true), {
+        teamA: "skaven",
+      });
+      expect(color).toBe(STUNNED_OUTLINE_COLOR);
+    });
+  });
+
+  describe("explicit color overrides", () => {
+    it("override takes precedence over roster lookup", () => {
+      const override = { primary: 0x123456, secondary: 0x654321 };
+      const color = resolveTeamOutlineColor(
+        makePlayer("A"),
+        { teamA: "skaven" },
+        { teamA: override },
+      );
+      expect(color).toBe(0x654321);
+    });
+
+    it("override on team A does not affect team B", () => {
+      const overrideA = { primary: 0x123456, secondary: 0x654321 };
+      const color = resolveTeamOutlineColor(
+        makePlayer("B"),
+        undefined,
+        { teamA: overrideA },
+      );
+      expect(color).toBe(LEGACY_TEAM_B_OUTLINE);
+    });
+
+    it("stunned players ignore overrides", () => {
+      const override = { primary: 0x123456, secondary: 0x654321 };
+      const color = resolveTeamOutlineColor(
+        makePlayer("A", true),
+        undefined,
+        { teamA: override },
+      );
+      expect(color).toBe(STUNNED_OUTLINE_COLOR);
+    });
+  });
+
+  describe("backwards compatibility", () => {
+    it("undefined teamRosters returns the legacy outlines", () => {
+      expect(resolveTeamOutlineColor(makePlayer("A"), undefined)).toBe(
+        LEGACY_TEAM_A_OUTLINE,
+      );
+      expect(resolveTeamOutlineColor(makePlayer("B"), undefined)).toBe(
+        LEGACY_TEAM_B_OUTLINE,
+      );
+    });
+
+    it("empty teamRosters object returns the legacy outlines", () => {
+      expect(resolveTeamOutlineColor(makePlayer("A"), {})).toBe(
+        LEGACY_TEAM_A_OUTLINE,
+      );
+      expect(resolveTeamOutlineColor(makePlayer("B"), {})).toBe(
+        LEGACY_TEAM_B_OUTLINE,
+      );
+    });
+
+    it("unknown roster still yields a numeric color (default palette)", () => {
+      const color = resolveTeamOutlineColor(makePlayer("A"), {
+        teamA: "not_a_real_roster",
+      });
+      expect(typeof color).toBe("number");
+      expect(color).toBeGreaterThanOrEqual(0);
+      expect(color).toBeLessThanOrEqual(0xffffff);
+    });
+  });
+
+  describe("integration with fill color", () => {
+    it("fill + outline are both exposed by the same resolver family", () => {
+      const rosters = { teamA: "wood_elf", teamB: "dark_elf" };
+      const playerA = makePlayer("A");
+      const playerB = makePlayer("B");
+
+      expect(resolveTeamFillColor(playerA, rosters)).toBe(
+        ROSTER_COLORS.wood_elf.primary,
+      );
+      expect(resolveTeamOutlineColor(playerA, rosters)).toBe(
+        ROSTER_COLORS.wood_elf.secondary,
+      );
+      expect(resolveTeamFillColor(playerB, rosters)).toBe(
+        ROSTER_COLORS.dark_elf.primary,
+      );
+      expect(resolveTeamOutlineColor(playerB, rosters)).toBe(
+        ROSTER_COLORS.dark_elf.secondary,
+      );
+    });
   });
 });
