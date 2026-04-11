@@ -128,6 +128,8 @@ exports.Prisma.UserScalarFieldEnum = {
   dateOfBirth: 'dateOfBirth',
   role: 'role',
   roles: 'roles',
+  patreon: 'patreon',
+  valid: 'valid',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   eloRating: 'eloRating'

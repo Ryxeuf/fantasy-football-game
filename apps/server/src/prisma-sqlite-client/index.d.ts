@@ -2402,6 +2402,8 @@ export namespace Prisma {
     dateOfBirth: Date | null
     role: string | null
     roles: string | null
+    patreon: boolean | null
+    valid: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
     eloRating: number | null
@@ -2418,6 +2420,8 @@ export namespace Prisma {
     dateOfBirth: Date | null
     role: string | null
     roles: string | null
+    patreon: boolean | null
+    valid: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
     eloRating: number | null
@@ -2434,6 +2438,8 @@ export namespace Prisma {
     dateOfBirth: number
     role: number
     roles: number
+    patreon: number
+    valid: number
     createdAt: number
     updatedAt: number
     eloRating: number
@@ -2460,6 +2466,8 @@ export namespace Prisma {
     dateOfBirth?: true
     role?: true
     roles?: true
+    patreon?: true
+    valid?: true
     createdAt?: true
     updatedAt?: true
     eloRating?: true
@@ -2476,6 +2484,8 @@ export namespace Prisma {
     dateOfBirth?: true
     role?: true
     roles?: true
+    patreon?: true
+    valid?: true
     createdAt?: true
     updatedAt?: true
     eloRating?: true
@@ -2492,6 +2502,8 @@ export namespace Prisma {
     dateOfBirth?: true
     role?: true
     roles?: true
+    patreon?: true
+    valid?: true
     createdAt?: true
     updatedAt?: true
     eloRating?: true
@@ -2595,6 +2607,8 @@ export namespace Prisma {
     dateOfBirth: Date | null
     role: string
     roles: string
+    patreon: boolean
+    valid: boolean
     createdAt: Date
     updatedAt: Date
     eloRating: number
@@ -2630,6 +2644,8 @@ export namespace Prisma {
     dateOfBirth?: boolean
     role?: boolean
     roles?: boolean
+    patreon?: boolean
+    valid?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     eloRating?: boolean
@@ -2654,6 +2670,8 @@ export namespace Prisma {
     dateOfBirth?: boolean
     role?: boolean
     roles?: boolean
+    patreon?: boolean
+    valid?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     eloRating?: boolean
@@ -2670,6 +2688,8 @@ export namespace Prisma {
     dateOfBirth?: boolean
     role?: boolean
     roles?: boolean
+    patreon?: boolean
+    valid?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     eloRating?: boolean
@@ -2686,12 +2706,14 @@ export namespace Prisma {
     dateOfBirth?: boolean
     role?: boolean
     roles?: boolean
+    patreon?: boolean
+    valid?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     eloRating?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "passwordHash" | "name" | "coachName" | "firstName" | "lastName" | "dateOfBirth" | "role" | "roles" | "createdAt" | "updatedAt" | "eloRating", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "passwordHash" | "name" | "coachName" | "firstName" | "lastName" | "dateOfBirth" | "role" | "roles" | "patreon" | "valid" | "createdAt" | "updatedAt" | "eloRating", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     matches?: boolean | User$matchesArgs<ExtArgs>
     createdMatches?: boolean | User$createdMatchesArgs<ExtArgs>
@@ -2733,6 +2755,16 @@ export namespace Prisma {
        * Liste complète des rôles (stockée en JSON, ex: '["user","admin"]')
        */
       roles: string
+      /**
+       * Présent dans le schéma Postgres pour les fonctionnalités premium.
+       * Stub côté SQLite pour que /auth/me puisse sélectionner ce champ
+       * sans diverger entre les deux schémas.
+       */
+      patreon: boolean
+      /**
+       * Pré-alpha gate côté Postgres ; en SQLite tous les comptes sont valides.
+       */
+      valid: boolean
       createdAt: Date
       updatedAt: Date
       eloRating: number
@@ -3176,6 +3208,8 @@ export namespace Prisma {
     readonly dateOfBirth: FieldRef<"User", 'DateTime'>
     readonly role: FieldRef<"User", 'String'>
     readonly roles: FieldRef<"User", 'String'>
+    readonly patreon: FieldRef<"User", 'Boolean'>
+    readonly valid: FieldRef<"User", 'Boolean'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
     readonly eloRating: FieldRef<"User", 'Int'>
@@ -19529,6 +19563,8 @@ export namespace Prisma {
     dateOfBirth: 'dateOfBirth',
     role: 'role',
     roles: 'roles',
+    patreon: 'patreon',
+    valid: 'valid',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
     eloRating: 'eloRating'
@@ -19831,6 +19867,13 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'Boolean'
+   */
+  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+  /**
    * Reference to a field of type 'Int'
    */
   export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
@@ -19859,13 +19902,6 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'Boolean'
-   */
-  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
-    
-
-
-  /**
    * Reference to a field of type 'Float'
    */
   export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
@@ -19889,6 +19925,8 @@ export namespace Prisma {
     dateOfBirth?: DateTimeNullableFilter<"User"> | Date | string | null
     role?: StringFilter<"User"> | string
     roles?: StringFilter<"User"> | string
+    patreon?: BoolFilter<"User"> | boolean
+    valid?: BoolFilter<"User"> | boolean
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     eloRating?: IntFilter<"User"> | number
@@ -19912,6 +19950,8 @@ export namespace Prisma {
     dateOfBirth?: SortOrderInput | SortOrder
     role?: SortOrder
     roles?: SortOrder
+    patreon?: SortOrder
+    valid?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     eloRating?: SortOrder
@@ -19938,6 +19978,8 @@ export namespace Prisma {
     dateOfBirth?: DateTimeNullableFilter<"User"> | Date | string | null
     role?: StringFilter<"User"> | string
     roles?: StringFilter<"User"> | string
+    patreon?: BoolFilter<"User"> | boolean
+    valid?: BoolFilter<"User"> | boolean
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     eloRating?: IntFilter<"User"> | number
@@ -19961,6 +20003,8 @@ export namespace Prisma {
     dateOfBirth?: SortOrderInput | SortOrder
     role?: SortOrder
     roles?: SortOrder
+    patreon?: SortOrder
+    valid?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     eloRating?: SortOrder
@@ -19985,6 +20029,8 @@ export namespace Prisma {
     dateOfBirth?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
     role?: StringWithAggregatesFilter<"User"> | string
     roles?: StringWithAggregatesFilter<"User"> | string
+    patreon?: BoolWithAggregatesFilter<"User"> | boolean
+    valid?: BoolWithAggregatesFilter<"User"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     eloRating?: IntWithAggregatesFilter<"User"> | number
@@ -21215,6 +21261,8 @@ export namespace Prisma {
     dateOfBirth?: Date | string | null
     role?: string
     roles?: string
+    patreon?: boolean
+    valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -21238,6 +21286,8 @@ export namespace Prisma {
     dateOfBirth?: Date | string | null
     role?: string
     roles?: string
+    patreon?: boolean
+    valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -21261,6 +21311,8 @@ export namespace Prisma {
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -21284,6 +21336,8 @@ export namespace Prisma {
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -21307,6 +21361,8 @@ export namespace Prisma {
     dateOfBirth?: Date | string | null
     role?: string
     roles?: string
+    patreon?: boolean
+    valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -21323,6 +21379,8 @@ export namespace Prisma {
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -21339,6 +21397,8 @@ export namespace Prisma {
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -22729,6 +22789,11 @@ export namespace Prisma {
     not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
   }
 
+  export type BoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
   export type DateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[]
@@ -22822,6 +22887,8 @@ export namespace Prisma {
     dateOfBirth?: SortOrder
     role?: SortOrder
     roles?: SortOrder
+    patreon?: SortOrder
+    valid?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     eloRating?: SortOrder
@@ -22842,6 +22909,8 @@ export namespace Prisma {
     dateOfBirth?: SortOrder
     role?: SortOrder
     roles?: SortOrder
+    patreon?: SortOrder
+    valid?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     eloRating?: SortOrder
@@ -22858,6 +22927,8 @@ export namespace Prisma {
     dateOfBirth?: SortOrder
     role?: SortOrder
     roles?: SortOrder
+    patreon?: SortOrder
+    valid?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     eloRating?: SortOrder
@@ -22913,6 +22984,14 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedDateTimeNullableFilter<$PrismaModel>
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  }
+
+  export type BoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
   }
 
   export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
@@ -23122,11 +23201,6 @@ export namespace Prisma {
     not?: NestedEnumRulesetFilter<$PrismaModel> | $Enums.Ruleset
   }
 
-  export type BoolFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolFilter<$PrismaModel> | boolean
-  }
-
   export type TeamPlayerListRelationFilter = {
     every?: TeamPlayerWhereInput
     some?: TeamPlayerWhereInput
@@ -23251,14 +23325,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumRulesetFilter<$PrismaModel>
     _max?: NestedEnumRulesetFilter<$PrismaModel>
-  }
-
-  export type BoolWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedBoolFilter<$PrismaModel>
-    _max?: NestedBoolFilter<$PrismaModel>
   }
 
   export type TeamScalarRelationFilter = {
@@ -24040,6 +24106,10 @@ export namespace Prisma {
     set?: Date | string | null
   }
 
+  export type BoolFieldUpdateOperationsInput = {
+    set?: boolean
+  }
+
   export type DateTimeFieldUpdateOperationsInput = {
     set?: Date | string
   }
@@ -24540,10 +24610,6 @@ export namespace Prisma {
 
   export type EnumRulesetFieldUpdateOperationsInput = {
     set?: $Enums.Ruleset
-  }
-
-  export type BoolFieldUpdateOperationsInput = {
-    set?: boolean
   }
 
   export type UserUpdateOneRequiredWithoutTeamsNestedInput = {
@@ -25151,6 +25217,11 @@ export namespace Prisma {
     not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
   }
 
+  export type NestedBoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
   export type NestedDateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[]
@@ -25232,6 +25303,14 @@ export namespace Prisma {
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
   }
 
+  export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
+  }
+
   export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[]
@@ -25298,11 +25377,6 @@ export namespace Prisma {
     not?: NestedEnumRulesetFilter<$PrismaModel> | $Enums.Ruleset
   }
 
-  export type NestedBoolFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolFilter<$PrismaModel> | boolean
-  }
-
   export type NestedEnumRulesetWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.Ruleset | EnumRulesetFieldRefInput<$PrismaModel>
     in?: $Enums.Ruleset[]
@@ -25311,14 +25385,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumRulesetFilter<$PrismaModel>
     _max?: NestedEnumRulesetFilter<$PrismaModel>
-  }
-
-  export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedBoolFilter<$PrismaModel>
-    _max?: NestedBoolFilter<$PrismaModel>
   }
   export type NestedJsonNullableFilter<$PrismaModel = never> =
     | PatchUndefined<
@@ -25827,6 +25893,8 @@ export namespace Prisma {
     dateOfBirth?: Date | string | null
     role?: string
     roles?: string
+    patreon?: boolean
+    valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -25849,6 +25917,8 @@ export namespace Prisma {
     dateOfBirth?: Date | string | null
     role?: string
     roles?: string
+    patreon?: boolean
+    valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -25876,6 +25946,8 @@ export namespace Prisma {
     dateOfBirth?: Date | string | null
     role?: string
     roles?: string
+    patreon?: boolean
+    valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -25898,6 +25970,8 @@ export namespace Prisma {
     dateOfBirth?: Date | string | null
     role?: string
     roles?: string
+    patreon?: boolean
+    valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -25984,6 +26058,8 @@ export namespace Prisma {
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -26006,6 +26082,8 @@ export namespace Prisma {
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -26047,6 +26125,8 @@ export namespace Prisma {
     dateOfBirth?: DateTimeNullableFilter<"User"> | Date | string | null
     role?: StringFilter<"User"> | string
     roles?: StringFilter<"User"> | string
+    patreon?: BoolFilter<"User"> | boolean
+    valid?: BoolFilter<"User"> | boolean
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     eloRating?: IntFilter<"User"> | number
@@ -26187,6 +26267,8 @@ export namespace Prisma {
     dateOfBirth?: Date | string | null
     role?: string
     roles?: string
+    patreon?: boolean
+    valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -26209,6 +26291,8 @@ export namespace Prisma {
     dateOfBirth?: Date | string | null
     role?: string
     roles?: string
+    patreon?: boolean
+    valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -26331,6 +26415,8 @@ export namespace Prisma {
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -26353,6 +26439,8 @@ export namespace Prisma {
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -26434,6 +26522,8 @@ export namespace Prisma {
     dateOfBirth?: Date | string | null
     role?: string
     roles?: string
+    patreon?: boolean
+    valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -26456,6 +26546,8 @@ export namespace Prisma {
     dateOfBirth?: Date | string | null
     role?: string
     roles?: string
+    patreon?: boolean
+    valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -26757,6 +26849,8 @@ export namespace Prisma {
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -26779,6 +26873,8 @@ export namespace Prisma {
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -27369,6 +27465,8 @@ export namespace Prisma {
     dateOfBirth?: Date | string | null
     role?: string
     roles?: string
+    patreon?: boolean
+    valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -27391,6 +27489,8 @@ export namespace Prisma {
     dateOfBirth?: Date | string | null
     role?: string
     roles?: string
+    patreon?: boolean
+    valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -27499,6 +27599,8 @@ export namespace Prisma {
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -27521,6 +27623,8 @@ export namespace Prisma {
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -27755,6 +27859,8 @@ export namespace Prisma {
     dateOfBirth?: Date | string | null
     role?: string
     roles?: string
+    patreon?: boolean
+    valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -27777,6 +27883,8 @@ export namespace Prisma {
     dateOfBirth?: Date | string | null
     role?: string
     roles?: string
+    patreon?: boolean
+    valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -27868,6 +27976,8 @@ export namespace Prisma {
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -27890,6 +28000,8 @@ export namespace Prisma {
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -27971,6 +28083,8 @@ export namespace Prisma {
     dateOfBirth?: Date | string | null
     role?: string
     roles?: string
+    patreon?: boolean
+    valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -27993,6 +28107,8 @@ export namespace Prisma {
     dateOfBirth?: Date | string | null
     role?: string
     roles?: string
+    patreon?: boolean
+    valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -28217,6 +28333,8 @@ export namespace Prisma {
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -28239,6 +28357,8 @@ export namespace Prisma {
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -28869,6 +28989,8 @@ export namespace Prisma {
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -28891,6 +29013,8 @@ export namespace Prisma {
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -28913,6 +29037,8 @@ export namespace Prisma {
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number

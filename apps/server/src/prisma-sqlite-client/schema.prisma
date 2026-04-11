@@ -26,6 +26,12 @@ model User {
   role                String          @default("user")
   /// Liste complète des rôles (stockée en JSON, ex: '["user","admin"]')
   roles               String          @default("[]")
+  /// Présent dans le schéma Postgres pour les fonctionnalités premium.
+  /// Stub côté SQLite pour que /auth/me puisse sélectionner ce champ
+  /// sans diverger entre les deux schémas.
+  patreon             Boolean         @default(false)
+  /// Pré-alpha gate côté Postgres ; en SQLite tous les comptes sont valides.
+  valid               Boolean         @default(true)
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
   matches             Match[]
