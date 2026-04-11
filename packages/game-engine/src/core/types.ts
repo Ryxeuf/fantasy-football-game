@@ -172,6 +172,15 @@ export interface GameState {
     teamA: string;
     teamB: string;
   };
+  /**
+   * H.6 — canonical roster slugs for each side (e.g. 'skaven', 'lizardmen').
+   * Used by the Pixi renderer to apply per-roster primary/secondary colors.
+   * Optional so legacy game states (and fixtures) remain backward compatible.
+   */
+  teamRosters?: {
+    teamA?: string;
+    teamB?: string;
+  };
   // Système de relances (rerolls)
   teamRerolls: { teamA: number; teamB: number };
   rerollUsedThisTurn: boolean;

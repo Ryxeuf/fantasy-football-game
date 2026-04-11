@@ -217,12 +217,17 @@ export async function acceptAndMaybeStartMatch(
     }
   }
 
-  // Initialiser l'état du jeu en phase pré-match avec les vraies équipes
+  // Initialiser l'état du jeu en phase pré-match avec les vraies équipes.
+  // H.6 — propagate roster slugs so the client renderer can pick per-roster colors.
   const gameState = setupPreMatchWithTeams(
     teamAData,
     teamBData,
     teamA.name,
     teamB.name,
+    {
+      teamARoster: teamA.roster,
+      teamBRoster: teamB.roster,
+    },
   );
 
   // Créer turn pour coin toss et setup initial

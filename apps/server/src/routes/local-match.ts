@@ -485,12 +485,17 @@ router.post("/:id/start", authUser, async (req: AuthenticatedRequest, res) => {
     const dedicatedFansA = localMatch.teamA.dedicatedFans || 1;
     const dedicatedFansB = localMatch.teamB.dedicatedFans || 1;
     
-    // Initialiser l'état du jeu en phase pré-match
+    // Initialiser l'état du jeu en phase pré-match.
+    // H.6 — propagate roster slugs so the client renderer can pick per-roster colors.
     let gameState = setupPreMatchWithTeams(
       teamAData,
       teamBData,
       localMatch.teamA.name,
       localMatch.teamB.name,
+      {
+        teamARoster: localMatch.teamA.roster,
+        teamBRoster: localMatch.teamB.roster,
+      },
     );
     
     // Démarrer la séquence de pré-match : fans -> weather

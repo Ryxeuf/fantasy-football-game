@@ -572,11 +572,16 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
       const teamBName = s2.teamRef?.name || s2.team || "Team B";
 
       const { setupPreMatchWithTeams } = await import("@bb/game-engine");
+      // H.6 — propagate roster slugs so the client renderer can pick per-roster colors.
       gameState = setupPreMatchWithTeams(
         teamAData,
         teamBData,
         teamAName,
         teamBName,
+        {
+          teamARoster: teamA.roster,
+          teamBRoster: teamB.roster,
+        },
       );
     } else {
       // Pour active, dernier turn
