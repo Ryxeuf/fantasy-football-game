@@ -1,0 +1,6 @@
+node_modules
+playwright-report
+reports
+test-results
+blob-report
+.playwright-cache

@@ -36,7 +36,10 @@ router.post("/login", validate(loginSchema), async (req, res) => {
       `[LOGIN] Tentative de connexion pour ${email}: valid=${user.valid}, role=${user.role}`,
     );
     
-    if (!user.valid) {
+    // Le champ `valid` n'existe que dans le schéma Postgres (pré-alpha gate).
+    // Sur les autres schémas (ex: SQLite de test), il est undefined et le
+    // compte doit être traité comme valide.
+    if (user.valid === false) {
       console.log(`[LOGIN] Compte non validé pour ${email}`);
       return res.status(403).json({ error: "Votre compte n'est pas encore validé. Veuillez contacter un administrateur." });
     }

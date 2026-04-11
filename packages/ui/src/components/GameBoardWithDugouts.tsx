@@ -203,6 +203,7 @@ export default function GameBoardWithDugouts({
 
         {/* Board - single instance, always rendered */}
         <div
+          data-testid="game-board"
           className="w-full lg:w-auto lg:flex-shrink-0"
           ref={boardContainerRef}
           onDragOver={onDragOver}

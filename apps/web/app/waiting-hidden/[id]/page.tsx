@@ -122,7 +122,7 @@ export default function WaitingPage({ params }: { params: { id: string } }) {
   }
 
   return (
-    <div className="max-w-lg mx-auto p-6 space-y-4">
+    <div className="max-w-lg mx-auto p-6 space-y-4" data-testid="waiting-room">
       <h1 className="text-2xl font-bold">En attente des acceptations</h1>
       {error && <p className="text-red-600 text-sm">{error}</p>}
       <div className="rounded border bg-white p-4 space-y-2">
@@ -136,6 +136,8 @@ export default function WaitingPage({ params }: { params: { id: string } }) {
             </div>
           </div>
           <div
+            data-testid="acceptance-local"
+            data-accepted={localAccepted ? "true" : "false"}
             className={`px-2 py-1 text-sm rounded ${localAccepted ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}`}
           >
             {localAccepted ? "Accepté" : "En attente"}
@@ -150,6 +152,8 @@ export default function WaitingPage({ params }: { params: { id: string } }) {
               </div>
             </div>
             <div
+              data-testid="acceptance-visitor"
+              data-accepted={visitorAccepted ? "true" : "false"}
               className={`px-2 py-1 text-sm rounded ${visitorAccepted ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}`}
             >
               {visitorAccepted ? "Accepté" : "En attente"}
@@ -172,6 +176,7 @@ export default function WaitingPage({ params }: { params: { id: string } }) {
         </a>
         {!acceptedOnce && summary?.status === "pending" && (
           <button
+            data-testid="waiting-accept-button"
             onClick={acceptMatch}
             disabled={accepting}
             className="bg-green-500 text-white px-4 py-2 rounded"

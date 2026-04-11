@@ -1,32 +1,158 @@
-name: E2E Web
+name: E2E multiplayer tests
+
 on:
-  # Workflow temporairement désactivé
-  # pull_request:
-  #   branches: [ main, develop ]
-  # Désactiver temporairement en utilisant un événement qui ne se produira jamais
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "apps/server/**"
+      - "apps/web/**"
+      - "packages/**"
+      - "tests/e2e-api/**"
+      - "tests/e2e-ui/**"
+      - ".github/workflows/e2e.yml"
+  push:
+    branches: [main]
   workflow_dispatch:
+
 permissions:
   contents: read
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  e2e:
+  # -------------------------------------------------------------------------
+  # Niveau 1: API + Socket.IO, headless, SQLite in-memory.
+  # Bloquant sur chaque PR, très rapide (~1 min).
+  # -------------------------------------------------------------------------
+  e2e-api:
+    name: E2E API (vitest)
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 20, cache: "pnpm" }
+
       - uses: pnpm/action-setup@v4
-        with: { version: 9 }
-      - name: Install
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Install Playwright
-        run: pnpm exec playwright install --with-deps || true
-        working-directory: apps/web
+
+      - name: Generate SQLite Prisma client
+        working-directory: apps/server
+        run: pnpm exec prisma generate --schema prisma/sqlite/schema.prisma
+
+      - name: Run e2e-api suite
+        working-directory: tests/e2e-api
+        env:
+          TEST_SQLITE: "1"
+          TEST_DATABASE_URL: "file:memdb-e2e-ci?mode=memory&cache=shared"
+          API_PORT: "18002"
+          JWT_SECRET: ci-jwt-secret
+          MATCH_SECRET: ci-match-secret
+        run: pnpm run test
+
+      - name: Upload JUnit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-api-junit
+          path: tests/e2e-api/reports/
+          if-no-files-found: ignore
+
+  # -------------------------------------------------------------------------
+  # Niveau 2: Playwright UI. Plus lent (~5-10 min), déclenché sur push main
+  # ou PR portant le label `run-e2e-ui`.
+  # -------------------------------------------------------------------------
+  e2e-ui:
+    name: E2E UI (playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: >
+      github.event_name == 'push' ||
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.pull_request.labels.*.name, 'run-e2e-ui')
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate SQLite Prisma client
+        working-directory: apps/server
+        run: pnpm exec prisma generate --schema prisma/sqlite/schema.prisma
+
+      - name: Install Playwright browsers
+        working-directory: tests/e2e-ui
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Start API server (background)
+        working-directory: apps/server
+        env:
+          TEST_SQLITE: "1"
+          TEST_DATABASE_URL: "file:memdb-e2e-ui-ci?mode=memory&cache=shared"
+          API_PORT: "18002"
+          JWT_SECRET: ci-jwt-secret
+          MATCH_SECRET: ci-match-secret
+        run: |
+          nohup pnpm run dev:nowatch > /tmp/api-server.log 2>&1 &
+          echo "API_PID=$!" >> $GITHUB_ENV
+
+      - name: Wait for API server
+        run: npx wait-on -t 60000 http://localhost:18002/health
+
       - name: Build web
-        run: pnpm --filter @bb/web build
-      - name: Start web (bg)
-        run: pnpm --filter @bb/web start &
-      - name: Wait on web
-        run: npx wait-on http://localhost:3000
+        working-directory: apps/web
+        env:
+          NEXT_PUBLIC_API_BASE: http://localhost:18002
+        run: pnpm run build
+
+      - name: Start web (background)
+        working-directory: apps/web
+        env:
+          NEXT_PUBLIC_API_BASE: http://localhost:18002
+          PORT: "3100"
+        run: |
+          nohup pnpm run start > /tmp/web-server.log 2>&1 &
+          echo "WEB_PID=$!" >> $GITHUB_ENV
+
+      - name: Wait for web
+        run: npx wait-on -t 120000 http://localhost:3100
+
       - name: Run Playwright tests
-        run: pnpm --filter @bb/web test:e2e || echo "Add Playwright tests to apps/web"
+        working-directory: tests/e2e-ui
+        env:
+          WEB_BASE_URL: http://localhost:3100
+          API_BASE_URL: http://localhost:18002
+          CI: "true"
+        run: pnpm run test
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: tests/e2e-ui/playwright-report/
+          if-no-files-found: ignore
+
+      - name: Upload server logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-logs
+          path: |
+            /tmp/api-server.log
+            /tmp/web-server.log
+          if-no-files-found: ignore

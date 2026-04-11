@@ -85,6 +85,28 @@ test: ## Lance tous les tests
 	@echo "🧪 Lancement des tests..."
 	$(PNPM) run test
 
+test-e2e-api: ## Lance la suite E2E API multijoueur (Vitest + Socket.IO)
+	@echo "🎯 E2E API multijoueur (SQLite in-memory)..."
+	$(PNPM) --filter @bb/tests-e2e-api run test
+
+test-e2e-ui: ## Lance la suite E2E UI multijoueur (Playwright, serveurs déjà lancés)
+	@echo "🎮 E2E UI multijoueur (Playwright)..."
+	$(PNPM) --filter @bb/tests-e2e-ui run test
+
+test-e2e-ui-headed: ## Lance la suite E2E UI en mode navigateur visible
+	$(PNPM) --filter @bb/tests-e2e-ui run test:headed
+
+test-e2e-ui-debug: ## Lance la suite E2E UI en mode inspecteur pas-à-pas
+	$(PNPM) --filter @bb/tests-e2e-ui run test:debug
+
+test-e2e-install: ## Installe les navigateurs Playwright (à exécuter une fois)
+	$(PNPM) --filter @bb/tests-e2e-ui run install:browsers
+
+test-e2e-report: ## Ouvre le dernier rapport Playwright
+	$(PNPM) --filter @bb/tests-e2e-ui run report
+
+test-e2e: test-e2e-api ## Alias: lance la suite E2E la plus rapide (API)
+
 # Nettoyage
 clean: ## Nettoie tous les fichiers de build et cache
 	@echo "🧹 Nettoyage des fichiers de build et cache..."

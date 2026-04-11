@@ -129,7 +129,8 @@ exports.Prisma.UserScalarFieldEnum = {
   role: 'role',
   roles: 'roles',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  eloRating: 'eloRating'
 };
 
 exports.Prisma.MatchScalarFieldEnum = {
@@ -204,6 +205,49 @@ exports.Prisma.TeamPlayerScalarFieldEnum = {
   advancements: 'advancements',
   dead: 'dead',
   diedAt: 'diedAt'
+};
+
+exports.Prisma.TeamStarPlayerScalarFieldEnum = {
+  id: 'id',
+  teamId: 'teamId',
+  starPlayerSlug: 'starPlayerSlug',
+  cost: 'cost',
+  hiredAt: 'hiredAt'
+};
+
+exports.Prisma.RosterScalarFieldEnum = {
+  id: 'id',
+  slug: 'slug',
+  ruleset: 'ruleset',
+  name: 'name',
+  nameEn: 'nameEn',
+  descriptionFr: 'descriptionFr',
+  descriptionEn: 'descriptionEn',
+  budget: 'budget',
+  tier: 'tier',
+  regionalRules: 'regionalRules',
+  specialRules: 'specialRules',
+  naf: 'naf',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.PositionScalarFieldEnum = {
+  id: 'id',
+  rosterId: 'rosterId',
+  slug: 'slug',
+  displayName: 'displayName',
+  cost: 'cost',
+  min: 'min',
+  max: 'max',
+  ma: 'ma',
+  st: 'st',
+  ag: 'ag',
+  pa: 'pa',
+  av: 'av',
+  keywords: 'keywords',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.CupScalarFieldEnum = {
@@ -317,6 +361,9 @@ exports.Prisma.ModelName = {
   TeamSelection: 'TeamSelection',
   Team: 'Team',
   TeamPlayer: 'TeamPlayer',
+  TeamStarPlayer: 'TeamStarPlayer',
+  Roster: 'Roster',
+  Position: 'Position',
   Cup: 'Cup',
   CupParticipant: 'CupParticipant',
   MatchQueue: 'MatchQueue',

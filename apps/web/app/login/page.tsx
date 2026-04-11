@@ -40,13 +40,17 @@ export default function LoginPage() {
       <div className="max-w-sm w-full">
       <h1 className="text-xl sm:text-2xl font-bold mb-4">{t.login.title}</h1>
       {infoMessage && (
-        <div className="mb-4 p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-800 text-xs sm:text-sm">
+        <div
+          data-testid="login-info-message"
+          className="mb-4 p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-800 text-xs sm:text-sm"
+        >
           {infoMessage}
         </div>
       )}
       <form onSubmit={onSubmit} className="space-y-3 sm:space-y-4">
         <div>
           <input
+            data-testid="login-email"
             className="w-full border border-gray-300 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder={t.login.email}
             type="email"
@@ -57,6 +61,7 @@ export default function LoginPage() {
         </div>
         <div>
           <input
+            data-testid="login-password"
             className="w-full border border-gray-300 p-2.5 sm:p-3 rounded-lg text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder={t.login.password}
             type="password"
@@ -65,8 +70,15 @@ export default function LoginPage() {
             autoComplete="current-password"
           />
         </div>
-        {error && <p className="text-red-600 text-xs sm:text-sm">{error}</p>}
-        <button className="w-full bg-blue-600 text-white py-2.5 sm:py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm sm:text-base">
+        {error && (
+          <p data-testid="login-error" className="text-red-600 text-xs sm:text-sm">
+            {error}
+          </p>
+        )}
+        <button
+          data-testid="login-submit"
+          className="w-full bg-blue-600 text-white py-2.5 sm:py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm sm:text-base"
+        >
           {t.login.submit}
         </button>
       </form>
