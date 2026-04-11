@@ -31,6 +31,14 @@ export {
   type RegionalRule
 } from './star-players';
 
+// Export des couleurs d'equipes (H.6 — sprite sheets par equipe, etape 1)
+export {
+  DEFAULT_TEAM_COLORS,
+  ROSTER_COLORS,
+  getTeamColors,
+  type TeamColors,
+} from './team-colors';
+
 // Export des utilitaires Star Players
 export * from './star-players-utils';
 export {

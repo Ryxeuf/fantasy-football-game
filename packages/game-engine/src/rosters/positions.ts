@@ -27,6 +27,10 @@ export interface TeamRoster {
   regionalRules?: string[];
   specialRules?: string;
   positions: PositionDefinition[];
+  /** H.6 — optional per-roster primary color (24-bit hex) for board rendering. */
+  primaryColor?: number;
+  /** H.6 — optional per-roster secondary / accent color (24-bit hex). */
+  secondaryColor?: number;
 }
 
 export type Ruleset = "season_2" | "season_3";
