@@ -37,9 +37,9 @@ test.describe("E2E UI — parcours multijoueur happy path", () => {
     await aliceWaiting.accept();
     await bobWaiting.accept();
 
-    // Après double acceptation, le client redirige vers /play-hidden/<id>
-    await alice.page.waitForURL(/\/play-hidden\//, { timeout: 20_000 });
-    await bob.page.waitForURL(/\/play-hidden\//, { timeout: 20_000 });
+    // Après double acceptation, le client redirige vers /play/<id>
+    await alice.page.waitForURL(/\/play\/[^/]+/, { timeout: 20_000 });
+    await bob.page.waitForURL(/\/play\/[^/]+/, { timeout: 20_000 });
 
     const aliceView = new GameViewPage(alice.page);
     const bobView = new GameViewPage(bob.page);

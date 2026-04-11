@@ -201,7 +201,7 @@ describe("push-notifications", () => {
       const payload = JSON.parse(
         vi.mocked(webpush.sendNotification).mock.calls[0][1] as string,
       );
-      expect(payload.url).toBe("/play-hidden/match-abc");
+      expect(payload.url).toBe("/play/match-abc");
       expect(payload.tag).toBe("turn-match-abc");
     });
 
@@ -230,7 +230,7 @@ describe("push-notifications", () => {
         title: "Nuffle Arena",
         body: "Un adversaire a ete trouve !",
         icon: "/images/favicon-optimized.png",
-        url: "/play-hidden/match-def",
+        url: "/play/match-def",
         tag: "match-found-match-def",
       });
     });

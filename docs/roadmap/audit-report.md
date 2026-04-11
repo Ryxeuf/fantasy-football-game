@@ -75,7 +75,7 @@ Slug inconsistency : les rosters utilisent `sidestep` (sans tiret) mais le regis
 | Probleme | Detail |
 |----------|--------|
 | **Zero WebSocket cote client** | `useGameState` poll GET `/match/:id/state` a 3s/10s. Pas de socket.io-client. |
-| **Block/Push/FollowUp popups non cables** | Importes dans l'ancien stub `/play-hidden/page.tsx` mais PAS dans `/play-hidden/[id]/page.tsx` |
+| **Block/Push/FollowUp popups non cables** | Importes dans l'ancien stub (supprime) mais PAS dans `/play/[id]/page.tsx` |
 | **Pas de bouton Reroll** | Badge `pendingReroll` visible mais pas interactif |
 | **Pas d'animations** | Positions snapent instantanement, aucun tween Pixi.js |
 | **GameLog non affiche** | Composant existe dans `@bb/ui` mais non rendu dans la page match |

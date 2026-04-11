@@ -162,7 +162,7 @@ export function sendTurnPush(userId: string, matchId: string): void {
         title: "Nuffle Arena",
         body: "C'est votre tour de jouer !",
         icon: "/images/favicon-optimized.png",
-        url: `/play-hidden/${matchId}`,
+        url: `/play/${matchId}`,
         tag: `turn-${matchId}`,
       });
     })
@@ -184,7 +184,7 @@ export function sendMatchFoundPush(userId: string, matchId: string): void {
         title: "Nuffle Arena",
         body: "Un adversaire a ete trouve !",
         icon: "/images/favicon-optimized.png",
-        url: `/play-hidden/${matchId}`,
+        url: `/play/${matchId}`,
         tag: `match-found-${matchId}`,
       });
     })

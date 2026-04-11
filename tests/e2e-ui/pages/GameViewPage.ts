@@ -2,7 +2,7 @@ import type { Page, Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 
 /**
- * Page Object pour `/play-hidden/<matchId>` (écran principal du match).
+ * Page Object pour `/play/<matchId>` (écran principal du match).
  *
  * Le wrapper `[data-testid=game-view]` expose les meta du match sous forme
  * de data-attributes (matchStatus, gamePhase, preMatchPhase, myTeamSide,

@@ -33,8 +33,8 @@ test.describe("E2E UI — reconnexion en plein match", () => {
     await aliceWaiting.accept();
     await bobWaiting.accept();
 
-    await alice.page.waitForURL(/\/play-hidden\//, { timeout: 20_000 });
-    await bob.page.waitForURL(/\/play-hidden\//, { timeout: 20_000 });
+    await alice.page.waitForURL(/\/play\/[^/]+/, { timeout: 20_000 });
+    await bob.page.waitForURL(/\/play\/[^/]+/, { timeout: 20_000 });
 
     const bobView = new GameViewPage(bob.page);
     await bobView.waitUntilLoaded();
