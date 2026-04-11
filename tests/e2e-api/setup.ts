@@ -73,6 +73,13 @@ export async function setup(): Promise<void> {
   await fetch(`http://localhost:${API_PORT}/__test/reset`, {
     method: "POST",
   }).catch(() => null);
+
+  // Seed des rosters (Skaven / Lizardmen) + leur Lineman. Nécessaire pour
+  // que la séquence pré-match automatisée (addJourneymen → getLinemanStats)
+  // fonctionne sans fallback silencieux.
+  await fetch(`http://localhost:${API_PORT}/__test/seed-rosters`, {
+    method: "POST",
+  }).catch(() => null);
 }
 
 export async function teardown(): Promise<void> {

@@ -10,6 +10,10 @@ const API_BASE =
 
 export async function resetDb(): Promise<void> {
   await fetch(`${API_BASE}/__test/reset`, { method: "POST" });
+  // Re-seed les rosters (Skaven / Lizardmen + position Lineman) après
+  // chaque reset: certaines routes du serveur (/match/:id/state en
+  // phase prematch-setup → addJourneymen) interrogent le modèle Roster.
+  await fetch(`${API_BASE}/__test/seed-rosters`, { method: "POST" });
 }
 
 export async function seedUser(

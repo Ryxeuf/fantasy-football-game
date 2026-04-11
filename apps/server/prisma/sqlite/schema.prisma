@@ -83,6 +83,7 @@ model Team {
   ruleset   Ruleset  @default(season_2)
   createdAt DateTime @default(now())
   players   TeamPlayer[]
+  starPlayers TeamStarPlayer[]
   selections TeamSelection[]
   cupParticipants CupParticipant[]
   localMatchesAsTeamA LocalMatch[] @relation("LocalMatchTeamA")
@@ -141,6 +142,68 @@ model TeamPlayer {
   // Player death tracking
   dead    Boolean   @default(false)
   diedAt  DateTime?
+}
+
+// Star Player recruté pour une équipe (mirror minimal du schéma Postgres
+// pour satisfaire les routes team qui font des includes sur cette relation).
+model TeamStarPlayer {
+  id             String   @id @default(cuid())
+  team           Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId         String
+  starPlayerSlug String
+  cost           Int
+  hiredAt        DateTime @default(now())
+
+  @@unique([teamId, starPlayerSlug])
+  @@index([teamId])
+}
+
+// Modèle pour les rosters d'équipes (mirror simplifié du schéma Postgres —
+// on ne garde que les champs utilisés par les routes et par la sélection
+// des linemen pour les journeymen).
+model Roster {
+  id            String   @id @default(cuid())
+  slug          String
+  ruleset       Ruleset  @default(season_2)
+  name          String
+  nameEn        String
+  descriptionFr String?
+  descriptionEn String?
+  budget        Int
+  tier          String
+  regionalRules String?
+  specialRules  String?
+  naf           Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  positions Position[]
+
+  @@unique([slug, ruleset])
+}
+
+// Positions rattachées à un roster (Lineman, Thrower, etc.).
+// Utilisé par `getLinemanStats` pour peupler les journeymen.
+model Position {
+  id          String   @id @default(cuid())
+  roster      Roster   @relation(fields: [rosterId], references: [id], onDelete: Cascade)
+  rosterId    String
+  slug        String
+  displayName String
+  cost        Int
+  min         Int
+  max         Int
+  ma          Int
+  st          Int
+  ag          Int
+  pa          Int
+  av          Int
+  keywords    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([rosterId, slug])
+  @@index([rosterId])
 }
 
 // Modèle pour les coupes (tournois)

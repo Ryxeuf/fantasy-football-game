@@ -44,6 +44,21 @@ export type Team = $Result.DefaultSelection<Prisma.$TeamPayload>
  */
 export type TeamPlayer = $Result.DefaultSelection<Prisma.$TeamPlayerPayload>
 /**
+ * Model TeamStarPlayer
+ * 
+ */
+export type TeamStarPlayer = $Result.DefaultSelection<Prisma.$TeamStarPlayerPayload>
+/**
+ * Model Roster
+ * 
+ */
+export type Roster = $Result.DefaultSelection<Prisma.$RosterPayload>
+/**
+ * Model Position
+ * 
+ */
+export type Position = $Result.DefaultSelection<Prisma.$PositionPayload>
+/**
  * Model Cup
  * 
  */
@@ -263,6 +278,36 @@ export class PrismaClient<
     * ```
     */
   get teamPlayer(): Prisma.TeamPlayerDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.teamStarPlayer`: Exposes CRUD operations for the **TeamStarPlayer** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more TeamStarPlayers
+    * const teamStarPlayers = await prisma.teamStarPlayer.findMany()
+    * ```
+    */
+  get teamStarPlayer(): Prisma.TeamStarPlayerDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.roster`: Exposes CRUD operations for the **Roster** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Rosters
+    * const rosters = await prisma.roster.findMany()
+    * ```
+    */
+  get roster(): Prisma.RosterDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.position`: Exposes CRUD operations for the **Position** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Positions
+    * const positions = await prisma.position.findMany()
+    * ```
+    */
+  get position(): Prisma.PositionDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.cup`: Exposes CRUD operations for the **Cup** model.
@@ -759,6 +804,9 @@ export namespace Prisma {
     TeamSelection: 'TeamSelection',
     Team: 'Team',
     TeamPlayer: 'TeamPlayer',
+    TeamStarPlayer: 'TeamStarPlayer',
+    Roster: 'Roster',
+    Position: 'Position',
     Cup: 'Cup',
     CupParticipant: 'CupParticipant',
     MatchQueue: 'MatchQueue',
@@ -782,7 +830,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "cup" | "cupParticipant" | "matchQueue" | "localMatch" | "localMatchAction"
+      modelProps: "user" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamStarPlayer" | "roster" | "position" | "cup" | "cupParticipant" | "matchQueue" | "localMatch" | "localMatchAction"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1227,6 +1275,228 @@ export namespace Prisma {
           count: {
             args: Prisma.TeamPlayerCountArgs<ExtArgs>
             result: $Utils.Optional<TeamPlayerCountAggregateOutputType> | number
+          }
+        }
+      }
+      TeamStarPlayer: {
+        payload: Prisma.$TeamStarPlayerPayload<ExtArgs>
+        fields: Prisma.TeamStarPlayerFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.TeamStarPlayerFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamStarPlayerPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.TeamStarPlayerFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamStarPlayerPayload>
+          }
+          findFirst: {
+            args: Prisma.TeamStarPlayerFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamStarPlayerPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.TeamStarPlayerFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamStarPlayerPayload>
+          }
+          findMany: {
+            args: Prisma.TeamStarPlayerFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamStarPlayerPayload>[]
+          }
+          create: {
+            args: Prisma.TeamStarPlayerCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamStarPlayerPayload>
+          }
+          createMany: {
+            args: Prisma.TeamStarPlayerCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.TeamStarPlayerCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamStarPlayerPayload>[]
+          }
+          delete: {
+            args: Prisma.TeamStarPlayerDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamStarPlayerPayload>
+          }
+          update: {
+            args: Prisma.TeamStarPlayerUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamStarPlayerPayload>
+          }
+          deleteMany: {
+            args: Prisma.TeamStarPlayerDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.TeamStarPlayerUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.TeamStarPlayerUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamStarPlayerPayload>[]
+          }
+          upsert: {
+            args: Prisma.TeamStarPlayerUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamStarPlayerPayload>
+          }
+          aggregate: {
+            args: Prisma.TeamStarPlayerAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateTeamStarPlayer>
+          }
+          groupBy: {
+            args: Prisma.TeamStarPlayerGroupByArgs<ExtArgs>
+            result: $Utils.Optional<TeamStarPlayerGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.TeamStarPlayerCountArgs<ExtArgs>
+            result: $Utils.Optional<TeamStarPlayerCountAggregateOutputType> | number
+          }
+        }
+      }
+      Roster: {
+        payload: Prisma.$RosterPayload<ExtArgs>
+        fields: Prisma.RosterFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.RosterFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RosterPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.RosterFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RosterPayload>
+          }
+          findFirst: {
+            args: Prisma.RosterFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RosterPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.RosterFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RosterPayload>
+          }
+          findMany: {
+            args: Prisma.RosterFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RosterPayload>[]
+          }
+          create: {
+            args: Prisma.RosterCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RosterPayload>
+          }
+          createMany: {
+            args: Prisma.RosterCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.RosterCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RosterPayload>[]
+          }
+          delete: {
+            args: Prisma.RosterDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RosterPayload>
+          }
+          update: {
+            args: Prisma.RosterUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RosterPayload>
+          }
+          deleteMany: {
+            args: Prisma.RosterDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.RosterUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.RosterUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RosterPayload>[]
+          }
+          upsert: {
+            args: Prisma.RosterUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RosterPayload>
+          }
+          aggregate: {
+            args: Prisma.RosterAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateRoster>
+          }
+          groupBy: {
+            args: Prisma.RosterGroupByArgs<ExtArgs>
+            result: $Utils.Optional<RosterGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.RosterCountArgs<ExtArgs>
+            result: $Utils.Optional<RosterCountAggregateOutputType> | number
+          }
+        }
+      }
+      Position: {
+        payload: Prisma.$PositionPayload<ExtArgs>
+        fields: Prisma.PositionFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.PositionFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PositionPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.PositionFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PositionPayload>
+          }
+          findFirst: {
+            args: Prisma.PositionFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PositionPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.PositionFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PositionPayload>
+          }
+          findMany: {
+            args: Prisma.PositionFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PositionPayload>[]
+          }
+          create: {
+            args: Prisma.PositionCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PositionPayload>
+          }
+          createMany: {
+            args: Prisma.PositionCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.PositionCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PositionPayload>[]
+          }
+          delete: {
+            args: Prisma.PositionDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PositionPayload>
+          }
+          update: {
+            args: Prisma.PositionUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PositionPayload>
+          }
+          deleteMany: {
+            args: Prisma.PositionDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.PositionUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.PositionUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PositionPayload>[]
+          }
+          upsert: {
+            args: Prisma.PositionUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PositionPayload>
+          }
+          aggregate: {
+            args: Prisma.PositionAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregatePosition>
+          }
+          groupBy: {
+            args: Prisma.PositionGroupByArgs<ExtArgs>
+            result: $Utils.Optional<PositionGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.PositionCountArgs<ExtArgs>
+            result: $Utils.Optional<PositionCountAggregateOutputType> | number
           }
         }
       }
@@ -1702,6 +1972,9 @@ export namespace Prisma {
     teamSelection?: TeamSelectionOmit
     team?: TeamOmit
     teamPlayer?: TeamPlayerOmit
+    teamStarPlayer?: TeamStarPlayerOmit
+    roster?: RosterOmit
+    position?: PositionOmit
     cup?: CupOmit
     cupParticipant?: CupParticipantOmit
     matchQueue?: MatchQueueOmit
@@ -1913,6 +2186,7 @@ export namespace Prisma {
 
   export type TeamCountOutputType = {
     players: number
+    starPlayers: number
     selections: number
     cupParticipants: number
     localMatchesAsTeamA: number
@@ -1922,6 +2196,7 @@ export namespace Prisma {
 
   export type TeamCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     players?: boolean | TeamCountOutputTypeCountPlayersArgs
+    starPlayers?: boolean | TeamCountOutputTypeCountStarPlayersArgs
     selections?: boolean | TeamCountOutputTypeCountSelectionsArgs
     cupParticipants?: boolean | TeamCountOutputTypeCountCupParticipantsArgs
     localMatchesAsTeamA?: boolean | TeamCountOutputTypeCountLocalMatchesAsTeamAArgs
@@ -1945,6 +2220,13 @@ export namespace Prisma {
    */
   export type TeamCountOutputTypeCountPlayersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: TeamPlayerWhereInput
+  }
+
+  /**
+   * TeamCountOutputType without action
+   */
+  export type TeamCountOutputTypeCountStarPlayersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TeamStarPlayerWhereInput
   }
 
   /**
@@ -1980,6 +2262,37 @@ export namespace Prisma {
    */
   export type TeamCountOutputTypeCountMatchQueueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: MatchQueueWhereInput
+  }
+
+
+  /**
+   * Count Type RosterCountOutputType
+   */
+
+  export type RosterCountOutputType = {
+    positions: number
+  }
+
+  export type RosterCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    positions?: boolean | RosterCountOutputTypeCountPositionsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * RosterCountOutputType without action
+   */
+  export type RosterCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RosterCountOutputType
+     */
+    select?: RosterCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * RosterCountOutputType without action
+   */
+  export type RosterCountOutputTypeCountPositionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PositionWhereInput
   }
 
 
@@ -7092,6 +7405,7 @@ export namespace Prisma {
     initialBudget?: boolean
     owner?: boolean | UserDefaultArgs<ExtArgs>
     players?: boolean | Team$playersArgs<ExtArgs>
+    starPlayers?: boolean | Team$starPlayersArgs<ExtArgs>
     selections?: boolean | Team$selectionsArgs<ExtArgs>
     cupParticipants?: boolean | Team$cupParticipantsArgs<ExtArgs>
     localMatchesAsTeamA?: boolean | Team$localMatchesAsTeamAArgs<ExtArgs>
@@ -7160,6 +7474,7 @@ export namespace Prisma {
   export type TeamInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     owner?: boolean | UserDefaultArgs<ExtArgs>
     players?: boolean | Team$playersArgs<ExtArgs>
+    starPlayers?: boolean | Team$starPlayersArgs<ExtArgs>
     selections?: boolean | Team$selectionsArgs<ExtArgs>
     cupParticipants?: boolean | Team$cupParticipantsArgs<ExtArgs>
     localMatchesAsTeamA?: boolean | Team$localMatchesAsTeamAArgs<ExtArgs>
@@ -7179,6 +7494,7 @@ export namespace Prisma {
     objects: {
       owner: Prisma.$UserPayload<ExtArgs>
       players: Prisma.$TeamPlayerPayload<ExtArgs>[]
+      starPlayers: Prisma.$TeamStarPlayerPayload<ExtArgs>[]
       selections: Prisma.$TeamSelectionPayload<ExtArgs>[]
       cupParticipants: Prisma.$CupParticipantPayload<ExtArgs>[]
       localMatchesAsTeamA: Prisma.$LocalMatchPayload<ExtArgs>[]
@@ -7597,6 +7913,7 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     owner<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     players<T extends Team$playersArgs<ExtArgs> = {}>(args?: Subset<T, Team$playersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeamPlayerPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    starPlayers<T extends Team$starPlayersArgs<ExtArgs> = {}>(args?: Subset<T, Team$starPlayersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeamStarPlayerPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     selections<T extends Team$selectionsArgs<ExtArgs> = {}>(args?: Subset<T, Team$selectionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeamSelectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     cupParticipants<T extends Team$cupParticipantsArgs<ExtArgs> = {}>(args?: Subset<T, Team$cupParticipantsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CupParticipantPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     localMatchesAsTeamA<T extends Team$localMatchesAsTeamAArgs<ExtArgs> = {}>(args?: Subset<T, Team$localMatchesAsTeamAArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LocalMatchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -8061,6 +8378,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: TeamPlayerScalarFieldEnum | TeamPlayerScalarFieldEnum[]
+  }
+
+  /**
+   * Team.starPlayers
+   */
+  export type Team$starPlayersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamStarPlayer
+     */
+    select?: TeamStarPlayerSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamStarPlayer
+     */
+    omit?: TeamStarPlayerOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamStarPlayerInclude<ExtArgs> | null
+    where?: TeamStarPlayerWhereInput
+    orderBy?: TeamStarPlayerOrderByWithRelationInput | TeamStarPlayerOrderByWithRelationInput[]
+    cursor?: TeamStarPlayerWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: TeamStarPlayerScalarFieldEnum | TeamStarPlayerScalarFieldEnum[]
   }
 
   /**
@@ -9660,6 +10001,3563 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: TeamPlayerInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model TeamStarPlayer
+   */
+
+  export type AggregateTeamStarPlayer = {
+    _count: TeamStarPlayerCountAggregateOutputType | null
+    _avg: TeamStarPlayerAvgAggregateOutputType | null
+    _sum: TeamStarPlayerSumAggregateOutputType | null
+    _min: TeamStarPlayerMinAggregateOutputType | null
+    _max: TeamStarPlayerMaxAggregateOutputType | null
+  }
+
+  export type TeamStarPlayerAvgAggregateOutputType = {
+    cost: number | null
+  }
+
+  export type TeamStarPlayerSumAggregateOutputType = {
+    cost: number | null
+  }
+
+  export type TeamStarPlayerMinAggregateOutputType = {
+    id: string | null
+    teamId: string | null
+    starPlayerSlug: string | null
+    cost: number | null
+    hiredAt: Date | null
+  }
+
+  export type TeamStarPlayerMaxAggregateOutputType = {
+    id: string | null
+    teamId: string | null
+    starPlayerSlug: string | null
+    cost: number | null
+    hiredAt: Date | null
+  }
+
+  export type TeamStarPlayerCountAggregateOutputType = {
+    id: number
+    teamId: number
+    starPlayerSlug: number
+    cost: number
+    hiredAt: number
+    _all: number
+  }
+
+
+  export type TeamStarPlayerAvgAggregateInputType = {
+    cost?: true
+  }
+
+  export type TeamStarPlayerSumAggregateInputType = {
+    cost?: true
+  }
+
+  export type TeamStarPlayerMinAggregateInputType = {
+    id?: true
+    teamId?: true
+    starPlayerSlug?: true
+    cost?: true
+    hiredAt?: true
+  }
+
+  export type TeamStarPlayerMaxAggregateInputType = {
+    id?: true
+    teamId?: true
+    starPlayerSlug?: true
+    cost?: true
+    hiredAt?: true
+  }
+
+  export type TeamStarPlayerCountAggregateInputType = {
+    id?: true
+    teamId?: true
+    starPlayerSlug?: true
+    cost?: true
+    hiredAt?: true
+    _all?: true
+  }
+
+  export type TeamStarPlayerAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which TeamStarPlayer to aggregate.
+     */
+    where?: TeamStarPlayerWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TeamStarPlayers to fetch.
+     */
+    orderBy?: TeamStarPlayerOrderByWithRelationInput | TeamStarPlayerOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: TeamStarPlayerWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TeamStarPlayers from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TeamStarPlayers.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned TeamStarPlayers
+    **/
+    _count?: true | TeamStarPlayerCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: TeamStarPlayerAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: TeamStarPlayerSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: TeamStarPlayerMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: TeamStarPlayerMaxAggregateInputType
+  }
+
+  export type GetTeamStarPlayerAggregateType<T extends TeamStarPlayerAggregateArgs> = {
+        [P in keyof T & keyof AggregateTeamStarPlayer]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateTeamStarPlayer[P]>
+      : GetScalarType<T[P], AggregateTeamStarPlayer[P]>
+  }
+
+
+
+
+  export type TeamStarPlayerGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TeamStarPlayerWhereInput
+    orderBy?: TeamStarPlayerOrderByWithAggregationInput | TeamStarPlayerOrderByWithAggregationInput[]
+    by: TeamStarPlayerScalarFieldEnum[] | TeamStarPlayerScalarFieldEnum
+    having?: TeamStarPlayerScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: TeamStarPlayerCountAggregateInputType | true
+    _avg?: TeamStarPlayerAvgAggregateInputType
+    _sum?: TeamStarPlayerSumAggregateInputType
+    _min?: TeamStarPlayerMinAggregateInputType
+    _max?: TeamStarPlayerMaxAggregateInputType
+  }
+
+  export type TeamStarPlayerGroupByOutputType = {
+    id: string
+    teamId: string
+    starPlayerSlug: string
+    cost: number
+    hiredAt: Date
+    _count: TeamStarPlayerCountAggregateOutputType | null
+    _avg: TeamStarPlayerAvgAggregateOutputType | null
+    _sum: TeamStarPlayerSumAggregateOutputType | null
+    _min: TeamStarPlayerMinAggregateOutputType | null
+    _max: TeamStarPlayerMaxAggregateOutputType | null
+  }
+
+  type GetTeamStarPlayerGroupByPayload<T extends TeamStarPlayerGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<TeamStarPlayerGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof TeamStarPlayerGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], TeamStarPlayerGroupByOutputType[P]>
+            : GetScalarType<T[P], TeamStarPlayerGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type TeamStarPlayerSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    teamId?: boolean
+    starPlayerSlug?: boolean
+    cost?: boolean
+    hiredAt?: boolean
+    team?: boolean | TeamDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["teamStarPlayer"]>
+
+  export type TeamStarPlayerSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    teamId?: boolean
+    starPlayerSlug?: boolean
+    cost?: boolean
+    hiredAt?: boolean
+    team?: boolean | TeamDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["teamStarPlayer"]>
+
+  export type TeamStarPlayerSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    teamId?: boolean
+    starPlayerSlug?: boolean
+    cost?: boolean
+    hiredAt?: boolean
+    team?: boolean | TeamDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["teamStarPlayer"]>
+
+  export type TeamStarPlayerSelectScalar = {
+    id?: boolean
+    teamId?: boolean
+    starPlayerSlug?: boolean
+    cost?: boolean
+    hiredAt?: boolean
+  }
+
+  export type TeamStarPlayerOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "teamId" | "starPlayerSlug" | "cost" | "hiredAt", ExtArgs["result"]["teamStarPlayer"]>
+  export type TeamStarPlayerInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    team?: boolean | TeamDefaultArgs<ExtArgs>
+  }
+  export type TeamStarPlayerIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    team?: boolean | TeamDefaultArgs<ExtArgs>
+  }
+  export type TeamStarPlayerIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    team?: boolean | TeamDefaultArgs<ExtArgs>
+  }
+
+  export type $TeamStarPlayerPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "TeamStarPlayer"
+    objects: {
+      team: Prisma.$TeamPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      teamId: string
+      starPlayerSlug: string
+      cost: number
+      hiredAt: Date
+    }, ExtArgs["result"]["teamStarPlayer"]>
+    composites: {}
+  }
+
+  type TeamStarPlayerGetPayload<S extends boolean | null | undefined | TeamStarPlayerDefaultArgs> = $Result.GetResult<Prisma.$TeamStarPlayerPayload, S>
+
+  type TeamStarPlayerCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<TeamStarPlayerFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: TeamStarPlayerCountAggregateInputType | true
+    }
+
+  export interface TeamStarPlayerDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['TeamStarPlayer'], meta: { name: 'TeamStarPlayer' } }
+    /**
+     * Find zero or one TeamStarPlayer that matches the filter.
+     * @param {TeamStarPlayerFindUniqueArgs} args - Arguments to find a TeamStarPlayer
+     * @example
+     * // Get one TeamStarPlayer
+     * const teamStarPlayer = await prisma.teamStarPlayer.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends TeamStarPlayerFindUniqueArgs>(args: SelectSubset<T, TeamStarPlayerFindUniqueArgs<ExtArgs>>): Prisma__TeamStarPlayerClient<$Result.GetResult<Prisma.$TeamStarPlayerPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one TeamStarPlayer that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {TeamStarPlayerFindUniqueOrThrowArgs} args - Arguments to find a TeamStarPlayer
+     * @example
+     * // Get one TeamStarPlayer
+     * const teamStarPlayer = await prisma.teamStarPlayer.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends TeamStarPlayerFindUniqueOrThrowArgs>(args: SelectSubset<T, TeamStarPlayerFindUniqueOrThrowArgs<ExtArgs>>): Prisma__TeamStarPlayerClient<$Result.GetResult<Prisma.$TeamStarPlayerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first TeamStarPlayer that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamStarPlayerFindFirstArgs} args - Arguments to find a TeamStarPlayer
+     * @example
+     * // Get one TeamStarPlayer
+     * const teamStarPlayer = await prisma.teamStarPlayer.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends TeamStarPlayerFindFirstArgs>(args?: SelectSubset<T, TeamStarPlayerFindFirstArgs<ExtArgs>>): Prisma__TeamStarPlayerClient<$Result.GetResult<Prisma.$TeamStarPlayerPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first TeamStarPlayer that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamStarPlayerFindFirstOrThrowArgs} args - Arguments to find a TeamStarPlayer
+     * @example
+     * // Get one TeamStarPlayer
+     * const teamStarPlayer = await prisma.teamStarPlayer.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends TeamStarPlayerFindFirstOrThrowArgs>(args?: SelectSubset<T, TeamStarPlayerFindFirstOrThrowArgs<ExtArgs>>): Prisma__TeamStarPlayerClient<$Result.GetResult<Prisma.$TeamStarPlayerPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more TeamStarPlayers that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamStarPlayerFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all TeamStarPlayers
+     * const teamStarPlayers = await prisma.teamStarPlayer.findMany()
+     * 
+     * // Get first 10 TeamStarPlayers
+     * const teamStarPlayers = await prisma.teamStarPlayer.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const teamStarPlayerWithIdOnly = await prisma.teamStarPlayer.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends TeamStarPlayerFindManyArgs>(args?: SelectSubset<T, TeamStarPlayerFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeamStarPlayerPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a TeamStarPlayer.
+     * @param {TeamStarPlayerCreateArgs} args - Arguments to create a TeamStarPlayer.
+     * @example
+     * // Create one TeamStarPlayer
+     * const TeamStarPlayer = await prisma.teamStarPlayer.create({
+     *   data: {
+     *     // ... data to create a TeamStarPlayer
+     *   }
+     * })
+     * 
+     */
+    create<T extends TeamStarPlayerCreateArgs>(args: SelectSubset<T, TeamStarPlayerCreateArgs<ExtArgs>>): Prisma__TeamStarPlayerClient<$Result.GetResult<Prisma.$TeamStarPlayerPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many TeamStarPlayers.
+     * @param {TeamStarPlayerCreateManyArgs} args - Arguments to create many TeamStarPlayers.
+     * @example
+     * // Create many TeamStarPlayers
+     * const teamStarPlayer = await prisma.teamStarPlayer.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends TeamStarPlayerCreateManyArgs>(args?: SelectSubset<T, TeamStarPlayerCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many TeamStarPlayers and returns the data saved in the database.
+     * @param {TeamStarPlayerCreateManyAndReturnArgs} args - Arguments to create many TeamStarPlayers.
+     * @example
+     * // Create many TeamStarPlayers
+     * const teamStarPlayer = await prisma.teamStarPlayer.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many TeamStarPlayers and only return the `id`
+     * const teamStarPlayerWithIdOnly = await prisma.teamStarPlayer.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends TeamStarPlayerCreateManyAndReturnArgs>(args?: SelectSubset<T, TeamStarPlayerCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeamStarPlayerPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a TeamStarPlayer.
+     * @param {TeamStarPlayerDeleteArgs} args - Arguments to delete one TeamStarPlayer.
+     * @example
+     * // Delete one TeamStarPlayer
+     * const TeamStarPlayer = await prisma.teamStarPlayer.delete({
+     *   where: {
+     *     // ... filter to delete one TeamStarPlayer
+     *   }
+     * })
+     * 
+     */
+    delete<T extends TeamStarPlayerDeleteArgs>(args: SelectSubset<T, TeamStarPlayerDeleteArgs<ExtArgs>>): Prisma__TeamStarPlayerClient<$Result.GetResult<Prisma.$TeamStarPlayerPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one TeamStarPlayer.
+     * @param {TeamStarPlayerUpdateArgs} args - Arguments to update one TeamStarPlayer.
+     * @example
+     * // Update one TeamStarPlayer
+     * const teamStarPlayer = await prisma.teamStarPlayer.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends TeamStarPlayerUpdateArgs>(args: SelectSubset<T, TeamStarPlayerUpdateArgs<ExtArgs>>): Prisma__TeamStarPlayerClient<$Result.GetResult<Prisma.$TeamStarPlayerPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more TeamStarPlayers.
+     * @param {TeamStarPlayerDeleteManyArgs} args - Arguments to filter TeamStarPlayers to delete.
+     * @example
+     * // Delete a few TeamStarPlayers
+     * const { count } = await prisma.teamStarPlayer.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends TeamStarPlayerDeleteManyArgs>(args?: SelectSubset<T, TeamStarPlayerDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more TeamStarPlayers.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamStarPlayerUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many TeamStarPlayers
+     * const teamStarPlayer = await prisma.teamStarPlayer.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends TeamStarPlayerUpdateManyArgs>(args: SelectSubset<T, TeamStarPlayerUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more TeamStarPlayers and returns the data updated in the database.
+     * @param {TeamStarPlayerUpdateManyAndReturnArgs} args - Arguments to update many TeamStarPlayers.
+     * @example
+     * // Update many TeamStarPlayers
+     * const teamStarPlayer = await prisma.teamStarPlayer.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more TeamStarPlayers and only return the `id`
+     * const teamStarPlayerWithIdOnly = await prisma.teamStarPlayer.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends TeamStarPlayerUpdateManyAndReturnArgs>(args: SelectSubset<T, TeamStarPlayerUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeamStarPlayerPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one TeamStarPlayer.
+     * @param {TeamStarPlayerUpsertArgs} args - Arguments to update or create a TeamStarPlayer.
+     * @example
+     * // Update or create a TeamStarPlayer
+     * const teamStarPlayer = await prisma.teamStarPlayer.upsert({
+     *   create: {
+     *     // ... data to create a TeamStarPlayer
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the TeamStarPlayer we want to update
+     *   }
+     * })
+     */
+    upsert<T extends TeamStarPlayerUpsertArgs>(args: SelectSubset<T, TeamStarPlayerUpsertArgs<ExtArgs>>): Prisma__TeamStarPlayerClient<$Result.GetResult<Prisma.$TeamStarPlayerPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of TeamStarPlayers.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamStarPlayerCountArgs} args - Arguments to filter TeamStarPlayers to count.
+     * @example
+     * // Count the number of TeamStarPlayers
+     * const count = await prisma.teamStarPlayer.count({
+     *   where: {
+     *     // ... the filter for the TeamStarPlayers we want to count
+     *   }
+     * })
+    **/
+    count<T extends TeamStarPlayerCountArgs>(
+      args?: Subset<T, TeamStarPlayerCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], TeamStarPlayerCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a TeamStarPlayer.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamStarPlayerAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends TeamStarPlayerAggregateArgs>(args: Subset<T, TeamStarPlayerAggregateArgs>): Prisma.PrismaPromise<GetTeamStarPlayerAggregateType<T>>
+
+    /**
+     * Group by TeamStarPlayer.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamStarPlayerGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends TeamStarPlayerGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: TeamStarPlayerGroupByArgs['orderBy'] }
+        : { orderBy?: TeamStarPlayerGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, TeamStarPlayerGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetTeamStarPlayerGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the TeamStarPlayer model
+   */
+  readonly fields: TeamStarPlayerFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for TeamStarPlayer.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__TeamStarPlayerClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    team<T extends TeamDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TeamDefaultArgs<ExtArgs>>): Prisma__TeamClient<$Result.GetResult<Prisma.$TeamPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the TeamStarPlayer model
+   */
+  interface TeamStarPlayerFieldRefs {
+    readonly id: FieldRef<"TeamStarPlayer", 'String'>
+    readonly teamId: FieldRef<"TeamStarPlayer", 'String'>
+    readonly starPlayerSlug: FieldRef<"TeamStarPlayer", 'String'>
+    readonly cost: FieldRef<"TeamStarPlayer", 'Int'>
+    readonly hiredAt: FieldRef<"TeamStarPlayer", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * TeamStarPlayer findUnique
+   */
+  export type TeamStarPlayerFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamStarPlayer
+     */
+    select?: TeamStarPlayerSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamStarPlayer
+     */
+    omit?: TeamStarPlayerOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamStarPlayerInclude<ExtArgs> | null
+    /**
+     * Filter, which TeamStarPlayer to fetch.
+     */
+    where: TeamStarPlayerWhereUniqueInput
+  }
+
+  /**
+   * TeamStarPlayer findUniqueOrThrow
+   */
+  export type TeamStarPlayerFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamStarPlayer
+     */
+    select?: TeamStarPlayerSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamStarPlayer
+     */
+    omit?: TeamStarPlayerOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamStarPlayerInclude<ExtArgs> | null
+    /**
+     * Filter, which TeamStarPlayer to fetch.
+     */
+    where: TeamStarPlayerWhereUniqueInput
+  }
+
+  /**
+   * TeamStarPlayer findFirst
+   */
+  export type TeamStarPlayerFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamStarPlayer
+     */
+    select?: TeamStarPlayerSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamStarPlayer
+     */
+    omit?: TeamStarPlayerOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamStarPlayerInclude<ExtArgs> | null
+    /**
+     * Filter, which TeamStarPlayer to fetch.
+     */
+    where?: TeamStarPlayerWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TeamStarPlayers to fetch.
+     */
+    orderBy?: TeamStarPlayerOrderByWithRelationInput | TeamStarPlayerOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for TeamStarPlayers.
+     */
+    cursor?: TeamStarPlayerWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TeamStarPlayers from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TeamStarPlayers.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of TeamStarPlayers.
+     */
+    distinct?: TeamStarPlayerScalarFieldEnum | TeamStarPlayerScalarFieldEnum[]
+  }
+
+  /**
+   * TeamStarPlayer findFirstOrThrow
+   */
+  export type TeamStarPlayerFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamStarPlayer
+     */
+    select?: TeamStarPlayerSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamStarPlayer
+     */
+    omit?: TeamStarPlayerOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamStarPlayerInclude<ExtArgs> | null
+    /**
+     * Filter, which TeamStarPlayer to fetch.
+     */
+    where?: TeamStarPlayerWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TeamStarPlayers to fetch.
+     */
+    orderBy?: TeamStarPlayerOrderByWithRelationInput | TeamStarPlayerOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for TeamStarPlayers.
+     */
+    cursor?: TeamStarPlayerWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TeamStarPlayers from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TeamStarPlayers.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of TeamStarPlayers.
+     */
+    distinct?: TeamStarPlayerScalarFieldEnum | TeamStarPlayerScalarFieldEnum[]
+  }
+
+  /**
+   * TeamStarPlayer findMany
+   */
+  export type TeamStarPlayerFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamStarPlayer
+     */
+    select?: TeamStarPlayerSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamStarPlayer
+     */
+    omit?: TeamStarPlayerOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamStarPlayerInclude<ExtArgs> | null
+    /**
+     * Filter, which TeamStarPlayers to fetch.
+     */
+    where?: TeamStarPlayerWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TeamStarPlayers to fetch.
+     */
+    orderBy?: TeamStarPlayerOrderByWithRelationInput | TeamStarPlayerOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing TeamStarPlayers.
+     */
+    cursor?: TeamStarPlayerWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TeamStarPlayers from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TeamStarPlayers.
+     */
+    skip?: number
+    distinct?: TeamStarPlayerScalarFieldEnum | TeamStarPlayerScalarFieldEnum[]
+  }
+
+  /**
+   * TeamStarPlayer create
+   */
+  export type TeamStarPlayerCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamStarPlayer
+     */
+    select?: TeamStarPlayerSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamStarPlayer
+     */
+    omit?: TeamStarPlayerOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamStarPlayerInclude<ExtArgs> | null
+    /**
+     * The data needed to create a TeamStarPlayer.
+     */
+    data: XOR<TeamStarPlayerCreateInput, TeamStarPlayerUncheckedCreateInput>
+  }
+
+  /**
+   * TeamStarPlayer createMany
+   */
+  export type TeamStarPlayerCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many TeamStarPlayers.
+     */
+    data: TeamStarPlayerCreateManyInput | TeamStarPlayerCreateManyInput[]
+  }
+
+  /**
+   * TeamStarPlayer createManyAndReturn
+   */
+  export type TeamStarPlayerCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamStarPlayer
+     */
+    select?: TeamStarPlayerSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamStarPlayer
+     */
+    omit?: TeamStarPlayerOmit<ExtArgs> | null
+    /**
+     * The data used to create many TeamStarPlayers.
+     */
+    data: TeamStarPlayerCreateManyInput | TeamStarPlayerCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamStarPlayerIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * TeamStarPlayer update
+   */
+  export type TeamStarPlayerUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamStarPlayer
+     */
+    select?: TeamStarPlayerSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamStarPlayer
+     */
+    omit?: TeamStarPlayerOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamStarPlayerInclude<ExtArgs> | null
+    /**
+     * The data needed to update a TeamStarPlayer.
+     */
+    data: XOR<TeamStarPlayerUpdateInput, TeamStarPlayerUncheckedUpdateInput>
+    /**
+     * Choose, which TeamStarPlayer to update.
+     */
+    where: TeamStarPlayerWhereUniqueInput
+  }
+
+  /**
+   * TeamStarPlayer updateMany
+   */
+  export type TeamStarPlayerUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update TeamStarPlayers.
+     */
+    data: XOR<TeamStarPlayerUpdateManyMutationInput, TeamStarPlayerUncheckedUpdateManyInput>
+    /**
+     * Filter which TeamStarPlayers to update
+     */
+    where?: TeamStarPlayerWhereInput
+    /**
+     * Limit how many TeamStarPlayers to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * TeamStarPlayer updateManyAndReturn
+   */
+  export type TeamStarPlayerUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamStarPlayer
+     */
+    select?: TeamStarPlayerSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamStarPlayer
+     */
+    omit?: TeamStarPlayerOmit<ExtArgs> | null
+    /**
+     * The data used to update TeamStarPlayers.
+     */
+    data: XOR<TeamStarPlayerUpdateManyMutationInput, TeamStarPlayerUncheckedUpdateManyInput>
+    /**
+     * Filter which TeamStarPlayers to update
+     */
+    where?: TeamStarPlayerWhereInput
+    /**
+     * Limit how many TeamStarPlayers to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamStarPlayerIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * TeamStarPlayer upsert
+   */
+  export type TeamStarPlayerUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamStarPlayer
+     */
+    select?: TeamStarPlayerSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamStarPlayer
+     */
+    omit?: TeamStarPlayerOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamStarPlayerInclude<ExtArgs> | null
+    /**
+     * The filter to search for the TeamStarPlayer to update in case it exists.
+     */
+    where: TeamStarPlayerWhereUniqueInput
+    /**
+     * In case the TeamStarPlayer found by the `where` argument doesn't exist, create a new TeamStarPlayer with this data.
+     */
+    create: XOR<TeamStarPlayerCreateInput, TeamStarPlayerUncheckedCreateInput>
+    /**
+     * In case the TeamStarPlayer was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<TeamStarPlayerUpdateInput, TeamStarPlayerUncheckedUpdateInput>
+  }
+
+  /**
+   * TeamStarPlayer delete
+   */
+  export type TeamStarPlayerDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamStarPlayer
+     */
+    select?: TeamStarPlayerSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamStarPlayer
+     */
+    omit?: TeamStarPlayerOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamStarPlayerInclude<ExtArgs> | null
+    /**
+     * Filter which TeamStarPlayer to delete.
+     */
+    where: TeamStarPlayerWhereUniqueInput
+  }
+
+  /**
+   * TeamStarPlayer deleteMany
+   */
+  export type TeamStarPlayerDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which TeamStarPlayers to delete
+     */
+    where?: TeamStarPlayerWhereInput
+    /**
+     * Limit how many TeamStarPlayers to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * TeamStarPlayer without action
+   */
+  export type TeamStarPlayerDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamStarPlayer
+     */
+    select?: TeamStarPlayerSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamStarPlayer
+     */
+    omit?: TeamStarPlayerOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamStarPlayerInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model Roster
+   */
+
+  export type AggregateRoster = {
+    _count: RosterCountAggregateOutputType | null
+    _avg: RosterAvgAggregateOutputType | null
+    _sum: RosterSumAggregateOutputType | null
+    _min: RosterMinAggregateOutputType | null
+    _max: RosterMaxAggregateOutputType | null
+  }
+
+  export type RosterAvgAggregateOutputType = {
+    budget: number | null
+  }
+
+  export type RosterSumAggregateOutputType = {
+    budget: number | null
+  }
+
+  export type RosterMinAggregateOutputType = {
+    id: string | null
+    slug: string | null
+    ruleset: $Enums.Ruleset | null
+    name: string | null
+    nameEn: string | null
+    descriptionFr: string | null
+    descriptionEn: string | null
+    budget: number | null
+    tier: string | null
+    regionalRules: string | null
+    specialRules: string | null
+    naf: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type RosterMaxAggregateOutputType = {
+    id: string | null
+    slug: string | null
+    ruleset: $Enums.Ruleset | null
+    name: string | null
+    nameEn: string | null
+    descriptionFr: string | null
+    descriptionEn: string | null
+    budget: number | null
+    tier: string | null
+    regionalRules: string | null
+    specialRules: string | null
+    naf: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type RosterCountAggregateOutputType = {
+    id: number
+    slug: number
+    ruleset: number
+    name: number
+    nameEn: number
+    descriptionFr: number
+    descriptionEn: number
+    budget: number
+    tier: number
+    regionalRules: number
+    specialRules: number
+    naf: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type RosterAvgAggregateInputType = {
+    budget?: true
+  }
+
+  export type RosterSumAggregateInputType = {
+    budget?: true
+  }
+
+  export type RosterMinAggregateInputType = {
+    id?: true
+    slug?: true
+    ruleset?: true
+    name?: true
+    nameEn?: true
+    descriptionFr?: true
+    descriptionEn?: true
+    budget?: true
+    tier?: true
+    regionalRules?: true
+    specialRules?: true
+    naf?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type RosterMaxAggregateInputType = {
+    id?: true
+    slug?: true
+    ruleset?: true
+    name?: true
+    nameEn?: true
+    descriptionFr?: true
+    descriptionEn?: true
+    budget?: true
+    tier?: true
+    regionalRules?: true
+    specialRules?: true
+    naf?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type RosterCountAggregateInputType = {
+    id?: true
+    slug?: true
+    ruleset?: true
+    name?: true
+    nameEn?: true
+    descriptionFr?: true
+    descriptionEn?: true
+    budget?: true
+    tier?: true
+    regionalRules?: true
+    specialRules?: true
+    naf?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type RosterAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Roster to aggregate.
+     */
+    where?: RosterWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Rosters to fetch.
+     */
+    orderBy?: RosterOrderByWithRelationInput | RosterOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: RosterWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Rosters from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Rosters.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Rosters
+    **/
+    _count?: true | RosterCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: RosterAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: RosterSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: RosterMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: RosterMaxAggregateInputType
+  }
+
+  export type GetRosterAggregateType<T extends RosterAggregateArgs> = {
+        [P in keyof T & keyof AggregateRoster]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateRoster[P]>
+      : GetScalarType<T[P], AggregateRoster[P]>
+  }
+
+
+
+
+  export type RosterGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: RosterWhereInput
+    orderBy?: RosterOrderByWithAggregationInput | RosterOrderByWithAggregationInput[]
+    by: RosterScalarFieldEnum[] | RosterScalarFieldEnum
+    having?: RosterScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: RosterCountAggregateInputType | true
+    _avg?: RosterAvgAggregateInputType
+    _sum?: RosterSumAggregateInputType
+    _min?: RosterMinAggregateInputType
+    _max?: RosterMaxAggregateInputType
+  }
+
+  export type RosterGroupByOutputType = {
+    id: string
+    slug: string
+    ruleset: $Enums.Ruleset
+    name: string
+    nameEn: string
+    descriptionFr: string | null
+    descriptionEn: string | null
+    budget: number
+    tier: string
+    regionalRules: string | null
+    specialRules: string | null
+    naf: boolean
+    createdAt: Date
+    updatedAt: Date
+    _count: RosterCountAggregateOutputType | null
+    _avg: RosterAvgAggregateOutputType | null
+    _sum: RosterSumAggregateOutputType | null
+    _min: RosterMinAggregateOutputType | null
+    _max: RosterMaxAggregateOutputType | null
+  }
+
+  type GetRosterGroupByPayload<T extends RosterGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<RosterGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof RosterGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], RosterGroupByOutputType[P]>
+            : GetScalarType<T[P], RosterGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type RosterSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    slug?: boolean
+    ruleset?: boolean
+    name?: boolean
+    nameEn?: boolean
+    descriptionFr?: boolean
+    descriptionEn?: boolean
+    budget?: boolean
+    tier?: boolean
+    regionalRules?: boolean
+    specialRules?: boolean
+    naf?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    positions?: boolean | Roster$positionsArgs<ExtArgs>
+    _count?: boolean | RosterCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["roster"]>
+
+  export type RosterSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    slug?: boolean
+    ruleset?: boolean
+    name?: boolean
+    nameEn?: boolean
+    descriptionFr?: boolean
+    descriptionEn?: boolean
+    budget?: boolean
+    tier?: boolean
+    regionalRules?: boolean
+    specialRules?: boolean
+    naf?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["roster"]>
+
+  export type RosterSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    slug?: boolean
+    ruleset?: boolean
+    name?: boolean
+    nameEn?: boolean
+    descriptionFr?: boolean
+    descriptionEn?: boolean
+    budget?: boolean
+    tier?: boolean
+    regionalRules?: boolean
+    specialRules?: boolean
+    naf?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["roster"]>
+
+  export type RosterSelectScalar = {
+    id?: boolean
+    slug?: boolean
+    ruleset?: boolean
+    name?: boolean
+    nameEn?: boolean
+    descriptionFr?: boolean
+    descriptionEn?: boolean
+    budget?: boolean
+    tier?: boolean
+    regionalRules?: boolean
+    specialRules?: boolean
+    naf?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type RosterOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "slug" | "ruleset" | "name" | "nameEn" | "descriptionFr" | "descriptionEn" | "budget" | "tier" | "regionalRules" | "specialRules" | "naf" | "createdAt" | "updatedAt", ExtArgs["result"]["roster"]>
+  export type RosterInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    positions?: boolean | Roster$positionsArgs<ExtArgs>
+    _count?: boolean | RosterCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type RosterIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type RosterIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+
+  export type $RosterPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Roster"
+    objects: {
+      positions: Prisma.$PositionPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      slug: string
+      ruleset: $Enums.Ruleset
+      name: string
+      nameEn: string
+      descriptionFr: string | null
+      descriptionEn: string | null
+      budget: number
+      tier: string
+      regionalRules: string | null
+      specialRules: string | null
+      naf: boolean
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["roster"]>
+    composites: {}
+  }
+
+  type RosterGetPayload<S extends boolean | null | undefined | RosterDefaultArgs> = $Result.GetResult<Prisma.$RosterPayload, S>
+
+  type RosterCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<RosterFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: RosterCountAggregateInputType | true
+    }
+
+  export interface RosterDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Roster'], meta: { name: 'Roster' } }
+    /**
+     * Find zero or one Roster that matches the filter.
+     * @param {RosterFindUniqueArgs} args - Arguments to find a Roster
+     * @example
+     * // Get one Roster
+     * const roster = await prisma.roster.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends RosterFindUniqueArgs>(args: SelectSubset<T, RosterFindUniqueArgs<ExtArgs>>): Prisma__RosterClient<$Result.GetResult<Prisma.$RosterPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Roster that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {RosterFindUniqueOrThrowArgs} args - Arguments to find a Roster
+     * @example
+     * // Get one Roster
+     * const roster = await prisma.roster.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends RosterFindUniqueOrThrowArgs>(args: SelectSubset<T, RosterFindUniqueOrThrowArgs<ExtArgs>>): Prisma__RosterClient<$Result.GetResult<Prisma.$RosterPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Roster that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RosterFindFirstArgs} args - Arguments to find a Roster
+     * @example
+     * // Get one Roster
+     * const roster = await prisma.roster.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends RosterFindFirstArgs>(args?: SelectSubset<T, RosterFindFirstArgs<ExtArgs>>): Prisma__RosterClient<$Result.GetResult<Prisma.$RosterPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Roster that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RosterFindFirstOrThrowArgs} args - Arguments to find a Roster
+     * @example
+     * // Get one Roster
+     * const roster = await prisma.roster.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends RosterFindFirstOrThrowArgs>(args?: SelectSubset<T, RosterFindFirstOrThrowArgs<ExtArgs>>): Prisma__RosterClient<$Result.GetResult<Prisma.$RosterPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Rosters that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RosterFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Rosters
+     * const rosters = await prisma.roster.findMany()
+     * 
+     * // Get first 10 Rosters
+     * const rosters = await prisma.roster.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const rosterWithIdOnly = await prisma.roster.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends RosterFindManyArgs>(args?: SelectSubset<T, RosterFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RosterPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Roster.
+     * @param {RosterCreateArgs} args - Arguments to create a Roster.
+     * @example
+     * // Create one Roster
+     * const Roster = await prisma.roster.create({
+     *   data: {
+     *     // ... data to create a Roster
+     *   }
+     * })
+     * 
+     */
+    create<T extends RosterCreateArgs>(args: SelectSubset<T, RosterCreateArgs<ExtArgs>>): Prisma__RosterClient<$Result.GetResult<Prisma.$RosterPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Rosters.
+     * @param {RosterCreateManyArgs} args - Arguments to create many Rosters.
+     * @example
+     * // Create many Rosters
+     * const roster = await prisma.roster.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends RosterCreateManyArgs>(args?: SelectSubset<T, RosterCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Rosters and returns the data saved in the database.
+     * @param {RosterCreateManyAndReturnArgs} args - Arguments to create many Rosters.
+     * @example
+     * // Create many Rosters
+     * const roster = await prisma.roster.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Rosters and only return the `id`
+     * const rosterWithIdOnly = await prisma.roster.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends RosterCreateManyAndReturnArgs>(args?: SelectSubset<T, RosterCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RosterPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a Roster.
+     * @param {RosterDeleteArgs} args - Arguments to delete one Roster.
+     * @example
+     * // Delete one Roster
+     * const Roster = await prisma.roster.delete({
+     *   where: {
+     *     // ... filter to delete one Roster
+     *   }
+     * })
+     * 
+     */
+    delete<T extends RosterDeleteArgs>(args: SelectSubset<T, RosterDeleteArgs<ExtArgs>>): Prisma__RosterClient<$Result.GetResult<Prisma.$RosterPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Roster.
+     * @param {RosterUpdateArgs} args - Arguments to update one Roster.
+     * @example
+     * // Update one Roster
+     * const roster = await prisma.roster.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends RosterUpdateArgs>(args: SelectSubset<T, RosterUpdateArgs<ExtArgs>>): Prisma__RosterClient<$Result.GetResult<Prisma.$RosterPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Rosters.
+     * @param {RosterDeleteManyArgs} args - Arguments to filter Rosters to delete.
+     * @example
+     * // Delete a few Rosters
+     * const { count } = await prisma.roster.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends RosterDeleteManyArgs>(args?: SelectSubset<T, RosterDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Rosters.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RosterUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Rosters
+     * const roster = await prisma.roster.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends RosterUpdateManyArgs>(args: SelectSubset<T, RosterUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Rosters and returns the data updated in the database.
+     * @param {RosterUpdateManyAndReturnArgs} args - Arguments to update many Rosters.
+     * @example
+     * // Update many Rosters
+     * const roster = await prisma.roster.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Rosters and only return the `id`
+     * const rosterWithIdOnly = await prisma.roster.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends RosterUpdateManyAndReturnArgs>(args: SelectSubset<T, RosterUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RosterPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one Roster.
+     * @param {RosterUpsertArgs} args - Arguments to update or create a Roster.
+     * @example
+     * // Update or create a Roster
+     * const roster = await prisma.roster.upsert({
+     *   create: {
+     *     // ... data to create a Roster
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Roster we want to update
+     *   }
+     * })
+     */
+    upsert<T extends RosterUpsertArgs>(args: SelectSubset<T, RosterUpsertArgs<ExtArgs>>): Prisma__RosterClient<$Result.GetResult<Prisma.$RosterPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Rosters.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RosterCountArgs} args - Arguments to filter Rosters to count.
+     * @example
+     * // Count the number of Rosters
+     * const count = await prisma.roster.count({
+     *   where: {
+     *     // ... the filter for the Rosters we want to count
+     *   }
+     * })
+    **/
+    count<T extends RosterCountArgs>(
+      args?: Subset<T, RosterCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], RosterCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Roster.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RosterAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends RosterAggregateArgs>(args: Subset<T, RosterAggregateArgs>): Prisma.PrismaPromise<GetRosterAggregateType<T>>
+
+    /**
+     * Group by Roster.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RosterGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends RosterGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: RosterGroupByArgs['orderBy'] }
+        : { orderBy?: RosterGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, RosterGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetRosterGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Roster model
+   */
+  readonly fields: RosterFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Roster.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__RosterClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    positions<T extends Roster$positionsArgs<ExtArgs> = {}>(args?: Subset<T, Roster$positionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PositionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Roster model
+   */
+  interface RosterFieldRefs {
+    readonly id: FieldRef<"Roster", 'String'>
+    readonly slug: FieldRef<"Roster", 'String'>
+    readonly ruleset: FieldRef<"Roster", 'Ruleset'>
+    readonly name: FieldRef<"Roster", 'String'>
+    readonly nameEn: FieldRef<"Roster", 'String'>
+    readonly descriptionFr: FieldRef<"Roster", 'String'>
+    readonly descriptionEn: FieldRef<"Roster", 'String'>
+    readonly budget: FieldRef<"Roster", 'Int'>
+    readonly tier: FieldRef<"Roster", 'String'>
+    readonly regionalRules: FieldRef<"Roster", 'String'>
+    readonly specialRules: FieldRef<"Roster", 'String'>
+    readonly naf: FieldRef<"Roster", 'Boolean'>
+    readonly createdAt: FieldRef<"Roster", 'DateTime'>
+    readonly updatedAt: FieldRef<"Roster", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Roster findUnique
+   */
+  export type RosterFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Roster
+     */
+    select?: RosterSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Roster
+     */
+    omit?: RosterOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RosterInclude<ExtArgs> | null
+    /**
+     * Filter, which Roster to fetch.
+     */
+    where: RosterWhereUniqueInput
+  }
+
+  /**
+   * Roster findUniqueOrThrow
+   */
+  export type RosterFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Roster
+     */
+    select?: RosterSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Roster
+     */
+    omit?: RosterOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RosterInclude<ExtArgs> | null
+    /**
+     * Filter, which Roster to fetch.
+     */
+    where: RosterWhereUniqueInput
+  }
+
+  /**
+   * Roster findFirst
+   */
+  export type RosterFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Roster
+     */
+    select?: RosterSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Roster
+     */
+    omit?: RosterOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RosterInclude<ExtArgs> | null
+    /**
+     * Filter, which Roster to fetch.
+     */
+    where?: RosterWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Rosters to fetch.
+     */
+    orderBy?: RosterOrderByWithRelationInput | RosterOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Rosters.
+     */
+    cursor?: RosterWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Rosters from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Rosters.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Rosters.
+     */
+    distinct?: RosterScalarFieldEnum | RosterScalarFieldEnum[]
+  }
+
+  /**
+   * Roster findFirstOrThrow
+   */
+  export type RosterFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Roster
+     */
+    select?: RosterSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Roster
+     */
+    omit?: RosterOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RosterInclude<ExtArgs> | null
+    /**
+     * Filter, which Roster to fetch.
+     */
+    where?: RosterWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Rosters to fetch.
+     */
+    orderBy?: RosterOrderByWithRelationInput | RosterOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Rosters.
+     */
+    cursor?: RosterWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Rosters from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Rosters.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Rosters.
+     */
+    distinct?: RosterScalarFieldEnum | RosterScalarFieldEnum[]
+  }
+
+  /**
+   * Roster findMany
+   */
+  export type RosterFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Roster
+     */
+    select?: RosterSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Roster
+     */
+    omit?: RosterOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RosterInclude<ExtArgs> | null
+    /**
+     * Filter, which Rosters to fetch.
+     */
+    where?: RosterWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Rosters to fetch.
+     */
+    orderBy?: RosterOrderByWithRelationInput | RosterOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Rosters.
+     */
+    cursor?: RosterWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Rosters from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Rosters.
+     */
+    skip?: number
+    distinct?: RosterScalarFieldEnum | RosterScalarFieldEnum[]
+  }
+
+  /**
+   * Roster create
+   */
+  export type RosterCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Roster
+     */
+    select?: RosterSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Roster
+     */
+    omit?: RosterOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RosterInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Roster.
+     */
+    data: XOR<RosterCreateInput, RosterUncheckedCreateInput>
+  }
+
+  /**
+   * Roster createMany
+   */
+  export type RosterCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Rosters.
+     */
+    data: RosterCreateManyInput | RosterCreateManyInput[]
+  }
+
+  /**
+   * Roster createManyAndReturn
+   */
+  export type RosterCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Roster
+     */
+    select?: RosterSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Roster
+     */
+    omit?: RosterOmit<ExtArgs> | null
+    /**
+     * The data used to create many Rosters.
+     */
+    data: RosterCreateManyInput | RosterCreateManyInput[]
+  }
+
+  /**
+   * Roster update
+   */
+  export type RosterUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Roster
+     */
+    select?: RosterSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Roster
+     */
+    omit?: RosterOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RosterInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Roster.
+     */
+    data: XOR<RosterUpdateInput, RosterUncheckedUpdateInput>
+    /**
+     * Choose, which Roster to update.
+     */
+    where: RosterWhereUniqueInput
+  }
+
+  /**
+   * Roster updateMany
+   */
+  export type RosterUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Rosters.
+     */
+    data: XOR<RosterUpdateManyMutationInput, RosterUncheckedUpdateManyInput>
+    /**
+     * Filter which Rosters to update
+     */
+    where?: RosterWhereInput
+    /**
+     * Limit how many Rosters to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Roster updateManyAndReturn
+   */
+  export type RosterUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Roster
+     */
+    select?: RosterSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Roster
+     */
+    omit?: RosterOmit<ExtArgs> | null
+    /**
+     * The data used to update Rosters.
+     */
+    data: XOR<RosterUpdateManyMutationInput, RosterUncheckedUpdateManyInput>
+    /**
+     * Filter which Rosters to update
+     */
+    where?: RosterWhereInput
+    /**
+     * Limit how many Rosters to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Roster upsert
+   */
+  export type RosterUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Roster
+     */
+    select?: RosterSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Roster
+     */
+    omit?: RosterOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RosterInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Roster to update in case it exists.
+     */
+    where: RosterWhereUniqueInput
+    /**
+     * In case the Roster found by the `where` argument doesn't exist, create a new Roster with this data.
+     */
+    create: XOR<RosterCreateInput, RosterUncheckedCreateInput>
+    /**
+     * In case the Roster was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<RosterUpdateInput, RosterUncheckedUpdateInput>
+  }
+
+  /**
+   * Roster delete
+   */
+  export type RosterDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Roster
+     */
+    select?: RosterSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Roster
+     */
+    omit?: RosterOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RosterInclude<ExtArgs> | null
+    /**
+     * Filter which Roster to delete.
+     */
+    where: RosterWhereUniqueInput
+  }
+
+  /**
+   * Roster deleteMany
+   */
+  export type RosterDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Rosters to delete
+     */
+    where?: RosterWhereInput
+    /**
+     * Limit how many Rosters to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Roster.positions
+   */
+  export type Roster$positionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Position
+     */
+    select?: PositionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Position
+     */
+    omit?: PositionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PositionInclude<ExtArgs> | null
+    where?: PositionWhereInput
+    orderBy?: PositionOrderByWithRelationInput | PositionOrderByWithRelationInput[]
+    cursor?: PositionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: PositionScalarFieldEnum | PositionScalarFieldEnum[]
+  }
+
+  /**
+   * Roster without action
+   */
+  export type RosterDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Roster
+     */
+    select?: RosterSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Roster
+     */
+    omit?: RosterOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RosterInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model Position
+   */
+
+  export type AggregatePosition = {
+    _count: PositionCountAggregateOutputType | null
+    _avg: PositionAvgAggregateOutputType | null
+    _sum: PositionSumAggregateOutputType | null
+    _min: PositionMinAggregateOutputType | null
+    _max: PositionMaxAggregateOutputType | null
+  }
+
+  export type PositionAvgAggregateOutputType = {
+    cost: number | null
+    min: number | null
+    max: number | null
+    ma: number | null
+    st: number | null
+    ag: number | null
+    pa: number | null
+    av: number | null
+  }
+
+  export type PositionSumAggregateOutputType = {
+    cost: number | null
+    min: number | null
+    max: number | null
+    ma: number | null
+    st: number | null
+    ag: number | null
+    pa: number | null
+    av: number | null
+  }
+
+  export type PositionMinAggregateOutputType = {
+    id: string | null
+    rosterId: string | null
+    slug: string | null
+    displayName: string | null
+    cost: number | null
+    min: number | null
+    max: number | null
+    ma: number | null
+    st: number | null
+    ag: number | null
+    pa: number | null
+    av: number | null
+    keywords: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type PositionMaxAggregateOutputType = {
+    id: string | null
+    rosterId: string | null
+    slug: string | null
+    displayName: string | null
+    cost: number | null
+    min: number | null
+    max: number | null
+    ma: number | null
+    st: number | null
+    ag: number | null
+    pa: number | null
+    av: number | null
+    keywords: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type PositionCountAggregateOutputType = {
+    id: number
+    rosterId: number
+    slug: number
+    displayName: number
+    cost: number
+    min: number
+    max: number
+    ma: number
+    st: number
+    ag: number
+    pa: number
+    av: number
+    keywords: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type PositionAvgAggregateInputType = {
+    cost?: true
+    min?: true
+    max?: true
+    ma?: true
+    st?: true
+    ag?: true
+    pa?: true
+    av?: true
+  }
+
+  export type PositionSumAggregateInputType = {
+    cost?: true
+    min?: true
+    max?: true
+    ma?: true
+    st?: true
+    ag?: true
+    pa?: true
+    av?: true
+  }
+
+  export type PositionMinAggregateInputType = {
+    id?: true
+    rosterId?: true
+    slug?: true
+    displayName?: true
+    cost?: true
+    min?: true
+    max?: true
+    ma?: true
+    st?: true
+    ag?: true
+    pa?: true
+    av?: true
+    keywords?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type PositionMaxAggregateInputType = {
+    id?: true
+    rosterId?: true
+    slug?: true
+    displayName?: true
+    cost?: true
+    min?: true
+    max?: true
+    ma?: true
+    st?: true
+    ag?: true
+    pa?: true
+    av?: true
+    keywords?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type PositionCountAggregateInputType = {
+    id?: true
+    rosterId?: true
+    slug?: true
+    displayName?: true
+    cost?: true
+    min?: true
+    max?: true
+    ma?: true
+    st?: true
+    ag?: true
+    pa?: true
+    av?: true
+    keywords?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type PositionAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Position to aggregate.
+     */
+    where?: PositionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Positions to fetch.
+     */
+    orderBy?: PositionOrderByWithRelationInput | PositionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: PositionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Positions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Positions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Positions
+    **/
+    _count?: true | PositionCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: PositionAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: PositionSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: PositionMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: PositionMaxAggregateInputType
+  }
+
+  export type GetPositionAggregateType<T extends PositionAggregateArgs> = {
+        [P in keyof T & keyof AggregatePosition]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregatePosition[P]>
+      : GetScalarType<T[P], AggregatePosition[P]>
+  }
+
+
+
+
+  export type PositionGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PositionWhereInput
+    orderBy?: PositionOrderByWithAggregationInput | PositionOrderByWithAggregationInput[]
+    by: PositionScalarFieldEnum[] | PositionScalarFieldEnum
+    having?: PositionScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: PositionCountAggregateInputType | true
+    _avg?: PositionAvgAggregateInputType
+    _sum?: PositionSumAggregateInputType
+    _min?: PositionMinAggregateInputType
+    _max?: PositionMaxAggregateInputType
+  }
+
+  export type PositionGroupByOutputType = {
+    id: string
+    rosterId: string
+    slug: string
+    displayName: string
+    cost: number
+    min: number
+    max: number
+    ma: number
+    st: number
+    ag: number
+    pa: number
+    av: number
+    keywords: string | null
+    createdAt: Date
+    updatedAt: Date
+    _count: PositionCountAggregateOutputType | null
+    _avg: PositionAvgAggregateOutputType | null
+    _sum: PositionSumAggregateOutputType | null
+    _min: PositionMinAggregateOutputType | null
+    _max: PositionMaxAggregateOutputType | null
+  }
+
+  type GetPositionGroupByPayload<T extends PositionGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<PositionGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof PositionGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], PositionGroupByOutputType[P]>
+            : GetScalarType<T[P], PositionGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type PositionSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    rosterId?: boolean
+    slug?: boolean
+    displayName?: boolean
+    cost?: boolean
+    min?: boolean
+    max?: boolean
+    ma?: boolean
+    st?: boolean
+    ag?: boolean
+    pa?: boolean
+    av?: boolean
+    keywords?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    roster?: boolean | RosterDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["position"]>
+
+  export type PositionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    rosterId?: boolean
+    slug?: boolean
+    displayName?: boolean
+    cost?: boolean
+    min?: boolean
+    max?: boolean
+    ma?: boolean
+    st?: boolean
+    ag?: boolean
+    pa?: boolean
+    av?: boolean
+    keywords?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    roster?: boolean | RosterDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["position"]>
+
+  export type PositionSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    rosterId?: boolean
+    slug?: boolean
+    displayName?: boolean
+    cost?: boolean
+    min?: boolean
+    max?: boolean
+    ma?: boolean
+    st?: boolean
+    ag?: boolean
+    pa?: boolean
+    av?: boolean
+    keywords?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    roster?: boolean | RosterDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["position"]>
+
+  export type PositionSelectScalar = {
+    id?: boolean
+    rosterId?: boolean
+    slug?: boolean
+    displayName?: boolean
+    cost?: boolean
+    min?: boolean
+    max?: boolean
+    ma?: boolean
+    st?: boolean
+    ag?: boolean
+    pa?: boolean
+    av?: boolean
+    keywords?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type PositionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "rosterId" | "slug" | "displayName" | "cost" | "min" | "max" | "ma" | "st" | "ag" | "pa" | "av" | "keywords" | "createdAt" | "updatedAt", ExtArgs["result"]["position"]>
+  export type PositionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    roster?: boolean | RosterDefaultArgs<ExtArgs>
+  }
+  export type PositionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    roster?: boolean | RosterDefaultArgs<ExtArgs>
+  }
+  export type PositionIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    roster?: boolean | RosterDefaultArgs<ExtArgs>
+  }
+
+  export type $PositionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Position"
+    objects: {
+      roster: Prisma.$RosterPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      rosterId: string
+      slug: string
+      displayName: string
+      cost: number
+      min: number
+      max: number
+      ma: number
+      st: number
+      ag: number
+      pa: number
+      av: number
+      keywords: string | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["position"]>
+    composites: {}
+  }
+
+  type PositionGetPayload<S extends boolean | null | undefined | PositionDefaultArgs> = $Result.GetResult<Prisma.$PositionPayload, S>
+
+  type PositionCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<PositionFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: PositionCountAggregateInputType | true
+    }
+
+  export interface PositionDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Position'], meta: { name: 'Position' } }
+    /**
+     * Find zero or one Position that matches the filter.
+     * @param {PositionFindUniqueArgs} args - Arguments to find a Position
+     * @example
+     * // Get one Position
+     * const position = await prisma.position.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends PositionFindUniqueArgs>(args: SelectSubset<T, PositionFindUniqueArgs<ExtArgs>>): Prisma__PositionClient<$Result.GetResult<Prisma.$PositionPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Position that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {PositionFindUniqueOrThrowArgs} args - Arguments to find a Position
+     * @example
+     * // Get one Position
+     * const position = await prisma.position.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends PositionFindUniqueOrThrowArgs>(args: SelectSubset<T, PositionFindUniqueOrThrowArgs<ExtArgs>>): Prisma__PositionClient<$Result.GetResult<Prisma.$PositionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Position that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PositionFindFirstArgs} args - Arguments to find a Position
+     * @example
+     * // Get one Position
+     * const position = await prisma.position.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends PositionFindFirstArgs>(args?: SelectSubset<T, PositionFindFirstArgs<ExtArgs>>): Prisma__PositionClient<$Result.GetResult<Prisma.$PositionPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Position that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PositionFindFirstOrThrowArgs} args - Arguments to find a Position
+     * @example
+     * // Get one Position
+     * const position = await prisma.position.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends PositionFindFirstOrThrowArgs>(args?: SelectSubset<T, PositionFindFirstOrThrowArgs<ExtArgs>>): Prisma__PositionClient<$Result.GetResult<Prisma.$PositionPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Positions that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PositionFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Positions
+     * const positions = await prisma.position.findMany()
+     * 
+     * // Get first 10 Positions
+     * const positions = await prisma.position.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const positionWithIdOnly = await prisma.position.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends PositionFindManyArgs>(args?: SelectSubset<T, PositionFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PositionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Position.
+     * @param {PositionCreateArgs} args - Arguments to create a Position.
+     * @example
+     * // Create one Position
+     * const Position = await prisma.position.create({
+     *   data: {
+     *     // ... data to create a Position
+     *   }
+     * })
+     * 
+     */
+    create<T extends PositionCreateArgs>(args: SelectSubset<T, PositionCreateArgs<ExtArgs>>): Prisma__PositionClient<$Result.GetResult<Prisma.$PositionPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Positions.
+     * @param {PositionCreateManyArgs} args - Arguments to create many Positions.
+     * @example
+     * // Create many Positions
+     * const position = await prisma.position.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends PositionCreateManyArgs>(args?: SelectSubset<T, PositionCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Positions and returns the data saved in the database.
+     * @param {PositionCreateManyAndReturnArgs} args - Arguments to create many Positions.
+     * @example
+     * // Create many Positions
+     * const position = await prisma.position.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Positions and only return the `id`
+     * const positionWithIdOnly = await prisma.position.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends PositionCreateManyAndReturnArgs>(args?: SelectSubset<T, PositionCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PositionPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a Position.
+     * @param {PositionDeleteArgs} args - Arguments to delete one Position.
+     * @example
+     * // Delete one Position
+     * const Position = await prisma.position.delete({
+     *   where: {
+     *     // ... filter to delete one Position
+     *   }
+     * })
+     * 
+     */
+    delete<T extends PositionDeleteArgs>(args: SelectSubset<T, PositionDeleteArgs<ExtArgs>>): Prisma__PositionClient<$Result.GetResult<Prisma.$PositionPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Position.
+     * @param {PositionUpdateArgs} args - Arguments to update one Position.
+     * @example
+     * // Update one Position
+     * const position = await prisma.position.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends PositionUpdateArgs>(args: SelectSubset<T, PositionUpdateArgs<ExtArgs>>): Prisma__PositionClient<$Result.GetResult<Prisma.$PositionPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Positions.
+     * @param {PositionDeleteManyArgs} args - Arguments to filter Positions to delete.
+     * @example
+     * // Delete a few Positions
+     * const { count } = await prisma.position.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends PositionDeleteManyArgs>(args?: SelectSubset<T, PositionDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Positions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PositionUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Positions
+     * const position = await prisma.position.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends PositionUpdateManyArgs>(args: SelectSubset<T, PositionUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Positions and returns the data updated in the database.
+     * @param {PositionUpdateManyAndReturnArgs} args - Arguments to update many Positions.
+     * @example
+     * // Update many Positions
+     * const position = await prisma.position.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Positions and only return the `id`
+     * const positionWithIdOnly = await prisma.position.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends PositionUpdateManyAndReturnArgs>(args: SelectSubset<T, PositionUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PositionPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one Position.
+     * @param {PositionUpsertArgs} args - Arguments to update or create a Position.
+     * @example
+     * // Update or create a Position
+     * const position = await prisma.position.upsert({
+     *   create: {
+     *     // ... data to create a Position
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Position we want to update
+     *   }
+     * })
+     */
+    upsert<T extends PositionUpsertArgs>(args: SelectSubset<T, PositionUpsertArgs<ExtArgs>>): Prisma__PositionClient<$Result.GetResult<Prisma.$PositionPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Positions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PositionCountArgs} args - Arguments to filter Positions to count.
+     * @example
+     * // Count the number of Positions
+     * const count = await prisma.position.count({
+     *   where: {
+     *     // ... the filter for the Positions we want to count
+     *   }
+     * })
+    **/
+    count<T extends PositionCountArgs>(
+      args?: Subset<T, PositionCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], PositionCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Position.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PositionAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends PositionAggregateArgs>(args: Subset<T, PositionAggregateArgs>): Prisma.PrismaPromise<GetPositionAggregateType<T>>
+
+    /**
+     * Group by Position.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PositionGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends PositionGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: PositionGroupByArgs['orderBy'] }
+        : { orderBy?: PositionGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, PositionGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetPositionGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Position model
+   */
+  readonly fields: PositionFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Position.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__PositionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    roster<T extends RosterDefaultArgs<ExtArgs> = {}>(args?: Subset<T, RosterDefaultArgs<ExtArgs>>): Prisma__RosterClient<$Result.GetResult<Prisma.$RosterPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Position model
+   */
+  interface PositionFieldRefs {
+    readonly id: FieldRef<"Position", 'String'>
+    readonly rosterId: FieldRef<"Position", 'String'>
+    readonly slug: FieldRef<"Position", 'String'>
+    readonly displayName: FieldRef<"Position", 'String'>
+    readonly cost: FieldRef<"Position", 'Int'>
+    readonly min: FieldRef<"Position", 'Int'>
+    readonly max: FieldRef<"Position", 'Int'>
+    readonly ma: FieldRef<"Position", 'Int'>
+    readonly st: FieldRef<"Position", 'Int'>
+    readonly ag: FieldRef<"Position", 'Int'>
+    readonly pa: FieldRef<"Position", 'Int'>
+    readonly av: FieldRef<"Position", 'Int'>
+    readonly keywords: FieldRef<"Position", 'String'>
+    readonly createdAt: FieldRef<"Position", 'DateTime'>
+    readonly updatedAt: FieldRef<"Position", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Position findUnique
+   */
+  export type PositionFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Position
+     */
+    select?: PositionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Position
+     */
+    omit?: PositionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PositionInclude<ExtArgs> | null
+    /**
+     * Filter, which Position to fetch.
+     */
+    where: PositionWhereUniqueInput
+  }
+
+  /**
+   * Position findUniqueOrThrow
+   */
+  export type PositionFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Position
+     */
+    select?: PositionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Position
+     */
+    omit?: PositionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PositionInclude<ExtArgs> | null
+    /**
+     * Filter, which Position to fetch.
+     */
+    where: PositionWhereUniqueInput
+  }
+
+  /**
+   * Position findFirst
+   */
+  export type PositionFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Position
+     */
+    select?: PositionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Position
+     */
+    omit?: PositionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PositionInclude<ExtArgs> | null
+    /**
+     * Filter, which Position to fetch.
+     */
+    where?: PositionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Positions to fetch.
+     */
+    orderBy?: PositionOrderByWithRelationInput | PositionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Positions.
+     */
+    cursor?: PositionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Positions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Positions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Positions.
+     */
+    distinct?: PositionScalarFieldEnum | PositionScalarFieldEnum[]
+  }
+
+  /**
+   * Position findFirstOrThrow
+   */
+  export type PositionFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Position
+     */
+    select?: PositionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Position
+     */
+    omit?: PositionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PositionInclude<ExtArgs> | null
+    /**
+     * Filter, which Position to fetch.
+     */
+    where?: PositionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Positions to fetch.
+     */
+    orderBy?: PositionOrderByWithRelationInput | PositionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Positions.
+     */
+    cursor?: PositionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Positions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Positions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Positions.
+     */
+    distinct?: PositionScalarFieldEnum | PositionScalarFieldEnum[]
+  }
+
+  /**
+   * Position findMany
+   */
+  export type PositionFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Position
+     */
+    select?: PositionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Position
+     */
+    omit?: PositionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PositionInclude<ExtArgs> | null
+    /**
+     * Filter, which Positions to fetch.
+     */
+    where?: PositionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Positions to fetch.
+     */
+    orderBy?: PositionOrderByWithRelationInput | PositionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Positions.
+     */
+    cursor?: PositionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Positions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Positions.
+     */
+    skip?: number
+    distinct?: PositionScalarFieldEnum | PositionScalarFieldEnum[]
+  }
+
+  /**
+   * Position create
+   */
+  export type PositionCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Position
+     */
+    select?: PositionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Position
+     */
+    omit?: PositionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PositionInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Position.
+     */
+    data: XOR<PositionCreateInput, PositionUncheckedCreateInput>
+  }
+
+  /**
+   * Position createMany
+   */
+  export type PositionCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Positions.
+     */
+    data: PositionCreateManyInput | PositionCreateManyInput[]
+  }
+
+  /**
+   * Position createManyAndReturn
+   */
+  export type PositionCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Position
+     */
+    select?: PositionSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Position
+     */
+    omit?: PositionOmit<ExtArgs> | null
+    /**
+     * The data used to create many Positions.
+     */
+    data: PositionCreateManyInput | PositionCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PositionIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Position update
+   */
+  export type PositionUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Position
+     */
+    select?: PositionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Position
+     */
+    omit?: PositionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PositionInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Position.
+     */
+    data: XOR<PositionUpdateInput, PositionUncheckedUpdateInput>
+    /**
+     * Choose, which Position to update.
+     */
+    where: PositionWhereUniqueInput
+  }
+
+  /**
+   * Position updateMany
+   */
+  export type PositionUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Positions.
+     */
+    data: XOR<PositionUpdateManyMutationInput, PositionUncheckedUpdateManyInput>
+    /**
+     * Filter which Positions to update
+     */
+    where?: PositionWhereInput
+    /**
+     * Limit how many Positions to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Position updateManyAndReturn
+   */
+  export type PositionUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Position
+     */
+    select?: PositionSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Position
+     */
+    omit?: PositionOmit<ExtArgs> | null
+    /**
+     * The data used to update Positions.
+     */
+    data: XOR<PositionUpdateManyMutationInput, PositionUncheckedUpdateManyInput>
+    /**
+     * Filter which Positions to update
+     */
+    where?: PositionWhereInput
+    /**
+     * Limit how many Positions to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PositionIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Position upsert
+   */
+  export type PositionUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Position
+     */
+    select?: PositionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Position
+     */
+    omit?: PositionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PositionInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Position to update in case it exists.
+     */
+    where: PositionWhereUniqueInput
+    /**
+     * In case the Position found by the `where` argument doesn't exist, create a new Position with this data.
+     */
+    create: XOR<PositionCreateInput, PositionUncheckedCreateInput>
+    /**
+     * In case the Position was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<PositionUpdateInput, PositionUncheckedUpdateInput>
+  }
+
+  /**
+   * Position delete
+   */
+  export type PositionDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Position
+     */
+    select?: PositionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Position
+     */
+    omit?: PositionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PositionInclude<ExtArgs> | null
+    /**
+     * Filter which Position to delete.
+     */
+    where: PositionWhereUniqueInput
+  }
+
+  /**
+   * Position deleteMany
+   */
+  export type PositionDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Positions to delete
+     */
+    where?: PositionWhereInput
+    /**
+     * Limit how many Positions to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Position without action
+   */
+  export type PositionDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Position
+     */
+    select?: PositionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Position
+     */
+    omit?: PositionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PositionInclude<ExtArgs> | null
   }
 
 
@@ -15728,6 +19626,58 @@ export namespace Prisma {
   export type TeamPlayerScalarFieldEnum = (typeof TeamPlayerScalarFieldEnum)[keyof typeof TeamPlayerScalarFieldEnum]
 
 
+  export const TeamStarPlayerScalarFieldEnum: {
+    id: 'id',
+    teamId: 'teamId',
+    starPlayerSlug: 'starPlayerSlug',
+    cost: 'cost',
+    hiredAt: 'hiredAt'
+  };
+
+  export type TeamStarPlayerScalarFieldEnum = (typeof TeamStarPlayerScalarFieldEnum)[keyof typeof TeamStarPlayerScalarFieldEnum]
+
+
+  export const RosterScalarFieldEnum: {
+    id: 'id',
+    slug: 'slug',
+    ruleset: 'ruleset',
+    name: 'name',
+    nameEn: 'nameEn',
+    descriptionFr: 'descriptionFr',
+    descriptionEn: 'descriptionEn',
+    budget: 'budget',
+    tier: 'tier',
+    regionalRules: 'regionalRules',
+    specialRules: 'specialRules',
+    naf: 'naf',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type RosterScalarFieldEnum = (typeof RosterScalarFieldEnum)[keyof typeof RosterScalarFieldEnum]
+
+
+  export const PositionScalarFieldEnum: {
+    id: 'id',
+    rosterId: 'rosterId',
+    slug: 'slug',
+    displayName: 'displayName',
+    cost: 'cost',
+    min: 'min',
+    max: 'max',
+    ma: 'ma',
+    st: 'st',
+    ag: 'ag',
+    pa: 'pa',
+    av: 'av',
+    keywords: 'keywords',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type PositionScalarFieldEnum = (typeof PositionScalarFieldEnum)[keyof typeof PositionScalarFieldEnum]
+
+
   export const CupScalarFieldEnum: {
     id: 'id',
     name: 'name',
@@ -16250,6 +20200,7 @@ export namespace Prisma {
     initialBudget?: IntFilter<"Team"> | number
     owner?: XOR<UserScalarRelationFilter, UserWhereInput>
     players?: TeamPlayerListRelationFilter
+    starPlayers?: TeamStarPlayerListRelationFilter
     selections?: TeamSelectionListRelationFilter
     cupParticipants?: CupParticipantListRelationFilter
     localMatchesAsTeamA?: LocalMatchListRelationFilter
@@ -16275,6 +20226,7 @@ export namespace Prisma {
     initialBudget?: SortOrder
     owner?: UserOrderByWithRelationInput
     players?: TeamPlayerOrderByRelationAggregateInput
+    starPlayers?: TeamStarPlayerOrderByRelationAggregateInput
     selections?: TeamSelectionOrderByRelationAggregateInput
     cupParticipants?: CupParticipantOrderByRelationAggregateInput
     localMatchesAsTeamA?: LocalMatchOrderByRelationAggregateInput
@@ -16303,6 +20255,7 @@ export namespace Prisma {
     initialBudget?: IntFilter<"Team"> | number
     owner?: XOR<UserScalarRelationFilter, UserWhereInput>
     players?: TeamPlayerListRelationFilter
+    starPlayers?: TeamStarPlayerListRelationFilter
     selections?: TeamSelectionListRelationFilter
     cupParticipants?: CupParticipantListRelationFilter
     localMatchesAsTeamA?: LocalMatchListRelationFilter
@@ -16524,6 +20477,275 @@ export namespace Prisma {
     advancements?: StringWithAggregatesFilter<"TeamPlayer"> | string
     dead?: BoolWithAggregatesFilter<"TeamPlayer"> | boolean
     diedAt?: DateTimeNullableWithAggregatesFilter<"TeamPlayer"> | Date | string | null
+  }
+
+  export type TeamStarPlayerWhereInput = {
+    AND?: TeamStarPlayerWhereInput | TeamStarPlayerWhereInput[]
+    OR?: TeamStarPlayerWhereInput[]
+    NOT?: TeamStarPlayerWhereInput | TeamStarPlayerWhereInput[]
+    id?: StringFilter<"TeamStarPlayer"> | string
+    teamId?: StringFilter<"TeamStarPlayer"> | string
+    starPlayerSlug?: StringFilter<"TeamStarPlayer"> | string
+    cost?: IntFilter<"TeamStarPlayer"> | number
+    hiredAt?: DateTimeFilter<"TeamStarPlayer"> | Date | string
+    team?: XOR<TeamScalarRelationFilter, TeamWhereInput>
+  }
+
+  export type TeamStarPlayerOrderByWithRelationInput = {
+    id?: SortOrder
+    teamId?: SortOrder
+    starPlayerSlug?: SortOrder
+    cost?: SortOrder
+    hiredAt?: SortOrder
+    team?: TeamOrderByWithRelationInput
+  }
+
+  export type TeamStarPlayerWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    teamId_starPlayerSlug?: TeamStarPlayerTeamIdStarPlayerSlugCompoundUniqueInput
+    AND?: TeamStarPlayerWhereInput | TeamStarPlayerWhereInput[]
+    OR?: TeamStarPlayerWhereInput[]
+    NOT?: TeamStarPlayerWhereInput | TeamStarPlayerWhereInput[]
+    teamId?: StringFilter<"TeamStarPlayer"> | string
+    starPlayerSlug?: StringFilter<"TeamStarPlayer"> | string
+    cost?: IntFilter<"TeamStarPlayer"> | number
+    hiredAt?: DateTimeFilter<"TeamStarPlayer"> | Date | string
+    team?: XOR<TeamScalarRelationFilter, TeamWhereInput>
+  }, "id" | "teamId_starPlayerSlug">
+
+  export type TeamStarPlayerOrderByWithAggregationInput = {
+    id?: SortOrder
+    teamId?: SortOrder
+    starPlayerSlug?: SortOrder
+    cost?: SortOrder
+    hiredAt?: SortOrder
+    _count?: TeamStarPlayerCountOrderByAggregateInput
+    _avg?: TeamStarPlayerAvgOrderByAggregateInput
+    _max?: TeamStarPlayerMaxOrderByAggregateInput
+    _min?: TeamStarPlayerMinOrderByAggregateInput
+    _sum?: TeamStarPlayerSumOrderByAggregateInput
+  }
+
+  export type TeamStarPlayerScalarWhereWithAggregatesInput = {
+    AND?: TeamStarPlayerScalarWhereWithAggregatesInput | TeamStarPlayerScalarWhereWithAggregatesInput[]
+    OR?: TeamStarPlayerScalarWhereWithAggregatesInput[]
+    NOT?: TeamStarPlayerScalarWhereWithAggregatesInput | TeamStarPlayerScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"TeamStarPlayer"> | string
+    teamId?: StringWithAggregatesFilter<"TeamStarPlayer"> | string
+    starPlayerSlug?: StringWithAggregatesFilter<"TeamStarPlayer"> | string
+    cost?: IntWithAggregatesFilter<"TeamStarPlayer"> | number
+    hiredAt?: DateTimeWithAggregatesFilter<"TeamStarPlayer"> | Date | string
+  }
+
+  export type RosterWhereInput = {
+    AND?: RosterWhereInput | RosterWhereInput[]
+    OR?: RosterWhereInput[]
+    NOT?: RosterWhereInput | RosterWhereInput[]
+    id?: StringFilter<"Roster"> | string
+    slug?: StringFilter<"Roster"> | string
+    ruleset?: EnumRulesetFilter<"Roster"> | $Enums.Ruleset
+    name?: StringFilter<"Roster"> | string
+    nameEn?: StringFilter<"Roster"> | string
+    descriptionFr?: StringNullableFilter<"Roster"> | string | null
+    descriptionEn?: StringNullableFilter<"Roster"> | string | null
+    budget?: IntFilter<"Roster"> | number
+    tier?: StringFilter<"Roster"> | string
+    regionalRules?: StringNullableFilter<"Roster"> | string | null
+    specialRules?: StringNullableFilter<"Roster"> | string | null
+    naf?: BoolFilter<"Roster"> | boolean
+    createdAt?: DateTimeFilter<"Roster"> | Date | string
+    updatedAt?: DateTimeFilter<"Roster"> | Date | string
+    positions?: PositionListRelationFilter
+  }
+
+  export type RosterOrderByWithRelationInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    ruleset?: SortOrder
+    name?: SortOrder
+    nameEn?: SortOrder
+    descriptionFr?: SortOrderInput | SortOrder
+    descriptionEn?: SortOrderInput | SortOrder
+    budget?: SortOrder
+    tier?: SortOrder
+    regionalRules?: SortOrderInput | SortOrder
+    specialRules?: SortOrderInput | SortOrder
+    naf?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    positions?: PositionOrderByRelationAggregateInput
+  }
+
+  export type RosterWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    slug_ruleset?: RosterSlugRulesetCompoundUniqueInput
+    AND?: RosterWhereInput | RosterWhereInput[]
+    OR?: RosterWhereInput[]
+    NOT?: RosterWhereInput | RosterWhereInput[]
+    slug?: StringFilter<"Roster"> | string
+    ruleset?: EnumRulesetFilter<"Roster"> | $Enums.Ruleset
+    name?: StringFilter<"Roster"> | string
+    nameEn?: StringFilter<"Roster"> | string
+    descriptionFr?: StringNullableFilter<"Roster"> | string | null
+    descriptionEn?: StringNullableFilter<"Roster"> | string | null
+    budget?: IntFilter<"Roster"> | number
+    tier?: StringFilter<"Roster"> | string
+    regionalRules?: StringNullableFilter<"Roster"> | string | null
+    specialRules?: StringNullableFilter<"Roster"> | string | null
+    naf?: BoolFilter<"Roster"> | boolean
+    createdAt?: DateTimeFilter<"Roster"> | Date | string
+    updatedAt?: DateTimeFilter<"Roster"> | Date | string
+    positions?: PositionListRelationFilter
+  }, "id" | "slug_ruleset">
+
+  export type RosterOrderByWithAggregationInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    ruleset?: SortOrder
+    name?: SortOrder
+    nameEn?: SortOrder
+    descriptionFr?: SortOrderInput | SortOrder
+    descriptionEn?: SortOrderInput | SortOrder
+    budget?: SortOrder
+    tier?: SortOrder
+    regionalRules?: SortOrderInput | SortOrder
+    specialRules?: SortOrderInput | SortOrder
+    naf?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: RosterCountOrderByAggregateInput
+    _avg?: RosterAvgOrderByAggregateInput
+    _max?: RosterMaxOrderByAggregateInput
+    _min?: RosterMinOrderByAggregateInput
+    _sum?: RosterSumOrderByAggregateInput
+  }
+
+  export type RosterScalarWhereWithAggregatesInput = {
+    AND?: RosterScalarWhereWithAggregatesInput | RosterScalarWhereWithAggregatesInput[]
+    OR?: RosterScalarWhereWithAggregatesInput[]
+    NOT?: RosterScalarWhereWithAggregatesInput | RosterScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Roster"> | string
+    slug?: StringWithAggregatesFilter<"Roster"> | string
+    ruleset?: EnumRulesetWithAggregatesFilter<"Roster"> | $Enums.Ruleset
+    name?: StringWithAggregatesFilter<"Roster"> | string
+    nameEn?: StringWithAggregatesFilter<"Roster"> | string
+    descriptionFr?: StringNullableWithAggregatesFilter<"Roster"> | string | null
+    descriptionEn?: StringNullableWithAggregatesFilter<"Roster"> | string | null
+    budget?: IntWithAggregatesFilter<"Roster"> | number
+    tier?: StringWithAggregatesFilter<"Roster"> | string
+    regionalRules?: StringNullableWithAggregatesFilter<"Roster"> | string | null
+    specialRules?: StringNullableWithAggregatesFilter<"Roster"> | string | null
+    naf?: BoolWithAggregatesFilter<"Roster"> | boolean
+    createdAt?: DateTimeWithAggregatesFilter<"Roster"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"Roster"> | Date | string
+  }
+
+  export type PositionWhereInput = {
+    AND?: PositionWhereInput | PositionWhereInput[]
+    OR?: PositionWhereInput[]
+    NOT?: PositionWhereInput | PositionWhereInput[]
+    id?: StringFilter<"Position"> | string
+    rosterId?: StringFilter<"Position"> | string
+    slug?: StringFilter<"Position"> | string
+    displayName?: StringFilter<"Position"> | string
+    cost?: IntFilter<"Position"> | number
+    min?: IntFilter<"Position"> | number
+    max?: IntFilter<"Position"> | number
+    ma?: IntFilter<"Position"> | number
+    st?: IntFilter<"Position"> | number
+    ag?: IntFilter<"Position"> | number
+    pa?: IntFilter<"Position"> | number
+    av?: IntFilter<"Position"> | number
+    keywords?: StringNullableFilter<"Position"> | string | null
+    createdAt?: DateTimeFilter<"Position"> | Date | string
+    updatedAt?: DateTimeFilter<"Position"> | Date | string
+    roster?: XOR<RosterScalarRelationFilter, RosterWhereInput>
+  }
+
+  export type PositionOrderByWithRelationInput = {
+    id?: SortOrder
+    rosterId?: SortOrder
+    slug?: SortOrder
+    displayName?: SortOrder
+    cost?: SortOrder
+    min?: SortOrder
+    max?: SortOrder
+    ma?: SortOrder
+    st?: SortOrder
+    ag?: SortOrder
+    pa?: SortOrder
+    av?: SortOrder
+    keywords?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    roster?: RosterOrderByWithRelationInput
+  }
+
+  export type PositionWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    rosterId_slug?: PositionRosterIdSlugCompoundUniqueInput
+    AND?: PositionWhereInput | PositionWhereInput[]
+    OR?: PositionWhereInput[]
+    NOT?: PositionWhereInput | PositionWhereInput[]
+    rosterId?: StringFilter<"Position"> | string
+    slug?: StringFilter<"Position"> | string
+    displayName?: StringFilter<"Position"> | string
+    cost?: IntFilter<"Position"> | number
+    min?: IntFilter<"Position"> | number
+    max?: IntFilter<"Position"> | number
+    ma?: IntFilter<"Position"> | number
+    st?: IntFilter<"Position"> | number
+    ag?: IntFilter<"Position"> | number
+    pa?: IntFilter<"Position"> | number
+    av?: IntFilter<"Position"> | number
+    keywords?: StringNullableFilter<"Position"> | string | null
+    createdAt?: DateTimeFilter<"Position"> | Date | string
+    updatedAt?: DateTimeFilter<"Position"> | Date | string
+    roster?: XOR<RosterScalarRelationFilter, RosterWhereInput>
+  }, "id" | "rosterId_slug">
+
+  export type PositionOrderByWithAggregationInput = {
+    id?: SortOrder
+    rosterId?: SortOrder
+    slug?: SortOrder
+    displayName?: SortOrder
+    cost?: SortOrder
+    min?: SortOrder
+    max?: SortOrder
+    ma?: SortOrder
+    st?: SortOrder
+    ag?: SortOrder
+    pa?: SortOrder
+    av?: SortOrder
+    keywords?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: PositionCountOrderByAggregateInput
+    _avg?: PositionAvgOrderByAggregateInput
+    _max?: PositionMaxOrderByAggregateInput
+    _min?: PositionMinOrderByAggregateInput
+    _sum?: PositionSumOrderByAggregateInput
+  }
+
+  export type PositionScalarWhereWithAggregatesInput = {
+    AND?: PositionScalarWhereWithAggregatesInput | PositionScalarWhereWithAggregatesInput[]
+    OR?: PositionScalarWhereWithAggregatesInput[]
+    NOT?: PositionScalarWhereWithAggregatesInput | PositionScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Position"> | string
+    rosterId?: StringWithAggregatesFilter<"Position"> | string
+    slug?: StringWithAggregatesFilter<"Position"> | string
+    displayName?: StringWithAggregatesFilter<"Position"> | string
+    cost?: IntWithAggregatesFilter<"Position"> | number
+    min?: IntWithAggregatesFilter<"Position"> | number
+    max?: IntWithAggregatesFilter<"Position"> | number
+    ma?: IntWithAggregatesFilter<"Position"> | number
+    st?: IntWithAggregatesFilter<"Position"> | number
+    ag?: IntWithAggregatesFilter<"Position"> | number
+    pa?: IntWithAggregatesFilter<"Position"> | number
+    av?: IntWithAggregatesFilter<"Position"> | number
+    keywords?: StringNullableWithAggregatesFilter<"Position"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"Position"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"Position"> | Date | string
   }
 
   export type CupWhereInput = {
@@ -17321,6 +21543,7 @@ export namespace Prisma {
     initialBudget?: number
     owner: UserCreateNestedOneWithoutTeamsInput
     players?: TeamPlayerCreateNestedManyWithoutTeamInput
+    starPlayers?: TeamStarPlayerCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantCreateNestedManyWithoutTeamInput
     localMatchesAsTeamA?: LocalMatchCreateNestedManyWithoutTeamAInput
@@ -17345,6 +21568,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     players?: TeamPlayerUncheckedCreateNestedManyWithoutTeamInput
+    starPlayers?: TeamStarPlayerUncheckedCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionUncheckedCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantUncheckedCreateNestedManyWithoutTeamInput
     localMatchesAsTeamA?: LocalMatchUncheckedCreateNestedManyWithoutTeamAInput
@@ -17369,6 +21593,7 @@ export namespace Prisma {
     initialBudget?: IntFieldUpdateOperationsInput | number
     owner?: UserUpdateOneRequiredWithoutTeamsNestedInput
     players?: TeamPlayerUpdateManyWithoutTeamNestedInput
+    starPlayers?: TeamStarPlayerUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUpdateManyWithoutTeamNestedInput
     localMatchesAsTeamA?: LocalMatchUpdateManyWithoutTeamANestedInput
@@ -17393,6 +21618,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     players?: TeamPlayerUncheckedUpdateManyWithoutTeamNestedInput
+    starPlayers?: TeamStarPlayerUncheckedUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUncheckedUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUncheckedUpdateManyWithoutTeamNestedInput
     localMatchesAsTeamA?: LocalMatchUncheckedUpdateManyWithoutTeamANestedInput
@@ -17667,6 +21893,309 @@ export namespace Prisma {
     advancements?: StringFieldUpdateOperationsInput | string
     dead?: BoolFieldUpdateOperationsInput | boolean
     diedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type TeamStarPlayerCreateInput = {
+    id?: string
+    starPlayerSlug: string
+    cost: number
+    hiredAt?: Date | string
+    team: TeamCreateNestedOneWithoutStarPlayersInput
+  }
+
+  export type TeamStarPlayerUncheckedCreateInput = {
+    id?: string
+    teamId: string
+    starPlayerSlug: string
+    cost: number
+    hiredAt?: Date | string
+  }
+
+  export type TeamStarPlayerUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    starPlayerSlug?: StringFieldUpdateOperationsInput | string
+    cost?: IntFieldUpdateOperationsInput | number
+    hiredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    team?: TeamUpdateOneRequiredWithoutStarPlayersNestedInput
+  }
+
+  export type TeamStarPlayerUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    teamId?: StringFieldUpdateOperationsInput | string
+    starPlayerSlug?: StringFieldUpdateOperationsInput | string
+    cost?: IntFieldUpdateOperationsInput | number
+    hiredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TeamStarPlayerCreateManyInput = {
+    id?: string
+    teamId: string
+    starPlayerSlug: string
+    cost: number
+    hiredAt?: Date | string
+  }
+
+  export type TeamStarPlayerUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    starPlayerSlug?: StringFieldUpdateOperationsInput | string
+    cost?: IntFieldUpdateOperationsInput | number
+    hiredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TeamStarPlayerUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    teamId?: StringFieldUpdateOperationsInput | string
+    starPlayerSlug?: StringFieldUpdateOperationsInput | string
+    cost?: IntFieldUpdateOperationsInput | number
+    hiredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RosterCreateInput = {
+    id?: string
+    slug: string
+    ruleset?: $Enums.Ruleset
+    name: string
+    nameEn: string
+    descriptionFr?: string | null
+    descriptionEn?: string | null
+    budget: number
+    tier: string
+    regionalRules?: string | null
+    specialRules?: string | null
+    naf?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    positions?: PositionCreateNestedManyWithoutRosterInput
+  }
+
+  export type RosterUncheckedCreateInput = {
+    id?: string
+    slug: string
+    ruleset?: $Enums.Ruleset
+    name: string
+    nameEn: string
+    descriptionFr?: string | null
+    descriptionEn?: string | null
+    budget: number
+    tier: string
+    regionalRules?: string | null
+    specialRules?: string | null
+    naf?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    positions?: PositionUncheckedCreateNestedManyWithoutRosterInput
+  }
+
+  export type RosterUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    name?: StringFieldUpdateOperationsInput | string
+    nameEn?: StringFieldUpdateOperationsInput | string
+    descriptionFr?: NullableStringFieldUpdateOperationsInput | string | null
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    budget?: IntFieldUpdateOperationsInput | number
+    tier?: StringFieldUpdateOperationsInput | string
+    regionalRules?: NullableStringFieldUpdateOperationsInput | string | null
+    specialRules?: NullableStringFieldUpdateOperationsInput | string | null
+    naf?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    positions?: PositionUpdateManyWithoutRosterNestedInput
+  }
+
+  export type RosterUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    name?: StringFieldUpdateOperationsInput | string
+    nameEn?: StringFieldUpdateOperationsInput | string
+    descriptionFr?: NullableStringFieldUpdateOperationsInput | string | null
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    budget?: IntFieldUpdateOperationsInput | number
+    tier?: StringFieldUpdateOperationsInput | string
+    regionalRules?: NullableStringFieldUpdateOperationsInput | string | null
+    specialRules?: NullableStringFieldUpdateOperationsInput | string | null
+    naf?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    positions?: PositionUncheckedUpdateManyWithoutRosterNestedInput
+  }
+
+  export type RosterCreateManyInput = {
+    id?: string
+    slug: string
+    ruleset?: $Enums.Ruleset
+    name: string
+    nameEn: string
+    descriptionFr?: string | null
+    descriptionEn?: string | null
+    budget: number
+    tier: string
+    regionalRules?: string | null
+    specialRules?: string | null
+    naf?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type RosterUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    name?: StringFieldUpdateOperationsInput | string
+    nameEn?: StringFieldUpdateOperationsInput | string
+    descriptionFr?: NullableStringFieldUpdateOperationsInput | string | null
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    budget?: IntFieldUpdateOperationsInput | number
+    tier?: StringFieldUpdateOperationsInput | string
+    regionalRules?: NullableStringFieldUpdateOperationsInput | string | null
+    specialRules?: NullableStringFieldUpdateOperationsInput | string | null
+    naf?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RosterUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    name?: StringFieldUpdateOperationsInput | string
+    nameEn?: StringFieldUpdateOperationsInput | string
+    descriptionFr?: NullableStringFieldUpdateOperationsInput | string | null
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    budget?: IntFieldUpdateOperationsInput | number
+    tier?: StringFieldUpdateOperationsInput | string
+    regionalRules?: NullableStringFieldUpdateOperationsInput | string | null
+    specialRules?: NullableStringFieldUpdateOperationsInput | string | null
+    naf?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PositionCreateInput = {
+    id?: string
+    slug: string
+    displayName: string
+    cost: number
+    min: number
+    max: number
+    ma: number
+    st: number
+    ag: number
+    pa: number
+    av: number
+    keywords?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    roster: RosterCreateNestedOneWithoutPositionsInput
+  }
+
+  export type PositionUncheckedCreateInput = {
+    id?: string
+    rosterId: string
+    slug: string
+    displayName: string
+    cost: number
+    min: number
+    max: number
+    ma: number
+    st: number
+    ag: number
+    pa: number
+    av: number
+    keywords?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type PositionUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    cost?: IntFieldUpdateOperationsInput | number
+    min?: IntFieldUpdateOperationsInput | number
+    max?: IntFieldUpdateOperationsInput | number
+    ma?: IntFieldUpdateOperationsInput | number
+    st?: IntFieldUpdateOperationsInput | number
+    ag?: IntFieldUpdateOperationsInput | number
+    pa?: IntFieldUpdateOperationsInput | number
+    av?: IntFieldUpdateOperationsInput | number
+    keywords?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    roster?: RosterUpdateOneRequiredWithoutPositionsNestedInput
+  }
+
+  export type PositionUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    rosterId?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    cost?: IntFieldUpdateOperationsInput | number
+    min?: IntFieldUpdateOperationsInput | number
+    max?: IntFieldUpdateOperationsInput | number
+    ma?: IntFieldUpdateOperationsInput | number
+    st?: IntFieldUpdateOperationsInput | number
+    ag?: IntFieldUpdateOperationsInput | number
+    pa?: IntFieldUpdateOperationsInput | number
+    av?: IntFieldUpdateOperationsInput | number
+    keywords?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PositionCreateManyInput = {
+    id?: string
+    rosterId: string
+    slug: string
+    displayName: string
+    cost: number
+    min: number
+    max: number
+    ma: number
+    st: number
+    ag: number
+    pa: number
+    av: number
+    keywords?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type PositionUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    cost?: IntFieldUpdateOperationsInput | number
+    min?: IntFieldUpdateOperationsInput | number
+    max?: IntFieldUpdateOperationsInput | number
+    ma?: IntFieldUpdateOperationsInput | number
+    st?: IntFieldUpdateOperationsInput | number
+    ag?: IntFieldUpdateOperationsInput | number
+    pa?: IntFieldUpdateOperationsInput | number
+    av?: IntFieldUpdateOperationsInput | number
+    keywords?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PositionUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    rosterId?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    cost?: IntFieldUpdateOperationsInput | number
+    min?: IntFieldUpdateOperationsInput | number
+    max?: IntFieldUpdateOperationsInput | number
+    ma?: IntFieldUpdateOperationsInput | number
+    st?: IntFieldUpdateOperationsInput | number
+    ag?: IntFieldUpdateOperationsInput | number
+    pa?: IntFieldUpdateOperationsInput | number
+    av?: IntFieldUpdateOperationsInput | number
+    keywords?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type CupCreateInput = {
@@ -18604,6 +23133,12 @@ export namespace Prisma {
     none?: TeamPlayerWhereInput
   }
 
+  export type TeamStarPlayerListRelationFilter = {
+    every?: TeamStarPlayerWhereInput
+    some?: TeamStarPlayerWhereInput
+    none?: TeamStarPlayerWhereInput
+  }
+
   export type CupParticipantListRelationFilter = {
     every?: CupParticipantWhereInput
     some?: CupParticipantWhereInput
@@ -18617,6 +23152,10 @@ export namespace Prisma {
   }
 
   export type TeamPlayerOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type TeamStarPlayerOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -18862,6 +23401,203 @@ export namespace Prisma {
     agReduction?: SortOrder
     paReduction?: SortOrder
     avReduction?: SortOrder
+  }
+
+  export type TeamStarPlayerTeamIdStarPlayerSlugCompoundUniqueInput = {
+    teamId: string
+    starPlayerSlug: string
+  }
+
+  export type TeamStarPlayerCountOrderByAggregateInput = {
+    id?: SortOrder
+    teamId?: SortOrder
+    starPlayerSlug?: SortOrder
+    cost?: SortOrder
+    hiredAt?: SortOrder
+  }
+
+  export type TeamStarPlayerAvgOrderByAggregateInput = {
+    cost?: SortOrder
+  }
+
+  export type TeamStarPlayerMaxOrderByAggregateInput = {
+    id?: SortOrder
+    teamId?: SortOrder
+    starPlayerSlug?: SortOrder
+    cost?: SortOrder
+    hiredAt?: SortOrder
+  }
+
+  export type TeamStarPlayerMinOrderByAggregateInput = {
+    id?: SortOrder
+    teamId?: SortOrder
+    starPlayerSlug?: SortOrder
+    cost?: SortOrder
+    hiredAt?: SortOrder
+  }
+
+  export type TeamStarPlayerSumOrderByAggregateInput = {
+    cost?: SortOrder
+  }
+
+  export type PositionListRelationFilter = {
+    every?: PositionWhereInput
+    some?: PositionWhereInput
+    none?: PositionWhereInput
+  }
+
+  export type PositionOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type RosterSlugRulesetCompoundUniqueInput = {
+    slug: string
+    ruleset: $Enums.Ruleset
+  }
+
+  export type RosterCountOrderByAggregateInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    ruleset?: SortOrder
+    name?: SortOrder
+    nameEn?: SortOrder
+    descriptionFr?: SortOrder
+    descriptionEn?: SortOrder
+    budget?: SortOrder
+    tier?: SortOrder
+    regionalRules?: SortOrder
+    specialRules?: SortOrder
+    naf?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type RosterAvgOrderByAggregateInput = {
+    budget?: SortOrder
+  }
+
+  export type RosterMaxOrderByAggregateInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    ruleset?: SortOrder
+    name?: SortOrder
+    nameEn?: SortOrder
+    descriptionFr?: SortOrder
+    descriptionEn?: SortOrder
+    budget?: SortOrder
+    tier?: SortOrder
+    regionalRules?: SortOrder
+    specialRules?: SortOrder
+    naf?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type RosterMinOrderByAggregateInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    ruleset?: SortOrder
+    name?: SortOrder
+    nameEn?: SortOrder
+    descriptionFr?: SortOrder
+    descriptionEn?: SortOrder
+    budget?: SortOrder
+    tier?: SortOrder
+    regionalRules?: SortOrder
+    specialRules?: SortOrder
+    naf?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type RosterSumOrderByAggregateInput = {
+    budget?: SortOrder
+  }
+
+  export type RosterScalarRelationFilter = {
+    is?: RosterWhereInput
+    isNot?: RosterWhereInput
+  }
+
+  export type PositionRosterIdSlugCompoundUniqueInput = {
+    rosterId: string
+    slug: string
+  }
+
+  export type PositionCountOrderByAggregateInput = {
+    id?: SortOrder
+    rosterId?: SortOrder
+    slug?: SortOrder
+    displayName?: SortOrder
+    cost?: SortOrder
+    min?: SortOrder
+    max?: SortOrder
+    ma?: SortOrder
+    st?: SortOrder
+    ag?: SortOrder
+    pa?: SortOrder
+    av?: SortOrder
+    keywords?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type PositionAvgOrderByAggregateInput = {
+    cost?: SortOrder
+    min?: SortOrder
+    max?: SortOrder
+    ma?: SortOrder
+    st?: SortOrder
+    ag?: SortOrder
+    pa?: SortOrder
+    av?: SortOrder
+  }
+
+  export type PositionMaxOrderByAggregateInput = {
+    id?: SortOrder
+    rosterId?: SortOrder
+    slug?: SortOrder
+    displayName?: SortOrder
+    cost?: SortOrder
+    min?: SortOrder
+    max?: SortOrder
+    ma?: SortOrder
+    st?: SortOrder
+    ag?: SortOrder
+    pa?: SortOrder
+    av?: SortOrder
+    keywords?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type PositionMinOrderByAggregateInput = {
+    id?: SortOrder
+    rosterId?: SortOrder
+    slug?: SortOrder
+    displayName?: SortOrder
+    cost?: SortOrder
+    min?: SortOrder
+    max?: SortOrder
+    ma?: SortOrder
+    st?: SortOrder
+    ag?: SortOrder
+    pa?: SortOrder
+    av?: SortOrder
+    keywords?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type PositionSumOrderByAggregateInput = {
+    cost?: SortOrder
+    min?: SortOrder
+    max?: SortOrder
+    ma?: SortOrder
+    st?: SortOrder
+    ag?: SortOrder
+    pa?: SortOrder
+    av?: SortOrder
   }
 
   export type CupCountOrderByAggregateInput = {
@@ -19711,6 +24447,13 @@ export namespace Prisma {
     connect?: TeamPlayerWhereUniqueInput | TeamPlayerWhereUniqueInput[]
   }
 
+  export type TeamStarPlayerCreateNestedManyWithoutTeamInput = {
+    create?: XOR<TeamStarPlayerCreateWithoutTeamInput, TeamStarPlayerUncheckedCreateWithoutTeamInput> | TeamStarPlayerCreateWithoutTeamInput[] | TeamStarPlayerUncheckedCreateWithoutTeamInput[]
+    connectOrCreate?: TeamStarPlayerCreateOrConnectWithoutTeamInput | TeamStarPlayerCreateOrConnectWithoutTeamInput[]
+    createMany?: TeamStarPlayerCreateManyTeamInputEnvelope
+    connect?: TeamStarPlayerWhereUniqueInput | TeamStarPlayerWhereUniqueInput[]
+  }
+
   export type TeamSelectionCreateNestedManyWithoutTeamRefInput = {
     create?: XOR<TeamSelectionCreateWithoutTeamRefInput, TeamSelectionUncheckedCreateWithoutTeamRefInput> | TeamSelectionCreateWithoutTeamRefInput[] | TeamSelectionUncheckedCreateWithoutTeamRefInput[]
     connectOrCreate?: TeamSelectionCreateOrConnectWithoutTeamRefInput | TeamSelectionCreateOrConnectWithoutTeamRefInput[]
@@ -19751,6 +24494,13 @@ export namespace Prisma {
     connectOrCreate?: TeamPlayerCreateOrConnectWithoutTeamInput | TeamPlayerCreateOrConnectWithoutTeamInput[]
     createMany?: TeamPlayerCreateManyTeamInputEnvelope
     connect?: TeamPlayerWhereUniqueInput | TeamPlayerWhereUniqueInput[]
+  }
+
+  export type TeamStarPlayerUncheckedCreateNestedManyWithoutTeamInput = {
+    create?: XOR<TeamStarPlayerCreateWithoutTeamInput, TeamStarPlayerUncheckedCreateWithoutTeamInput> | TeamStarPlayerCreateWithoutTeamInput[] | TeamStarPlayerUncheckedCreateWithoutTeamInput[]
+    connectOrCreate?: TeamStarPlayerCreateOrConnectWithoutTeamInput | TeamStarPlayerCreateOrConnectWithoutTeamInput[]
+    createMany?: TeamStarPlayerCreateManyTeamInputEnvelope
+    connect?: TeamStarPlayerWhereUniqueInput | TeamStarPlayerWhereUniqueInput[]
   }
 
   export type TeamSelectionUncheckedCreateNestedManyWithoutTeamRefInput = {
@@ -19816,6 +24566,20 @@ export namespace Prisma {
     update?: TeamPlayerUpdateWithWhereUniqueWithoutTeamInput | TeamPlayerUpdateWithWhereUniqueWithoutTeamInput[]
     updateMany?: TeamPlayerUpdateManyWithWhereWithoutTeamInput | TeamPlayerUpdateManyWithWhereWithoutTeamInput[]
     deleteMany?: TeamPlayerScalarWhereInput | TeamPlayerScalarWhereInput[]
+  }
+
+  export type TeamStarPlayerUpdateManyWithoutTeamNestedInput = {
+    create?: XOR<TeamStarPlayerCreateWithoutTeamInput, TeamStarPlayerUncheckedCreateWithoutTeamInput> | TeamStarPlayerCreateWithoutTeamInput[] | TeamStarPlayerUncheckedCreateWithoutTeamInput[]
+    connectOrCreate?: TeamStarPlayerCreateOrConnectWithoutTeamInput | TeamStarPlayerCreateOrConnectWithoutTeamInput[]
+    upsert?: TeamStarPlayerUpsertWithWhereUniqueWithoutTeamInput | TeamStarPlayerUpsertWithWhereUniqueWithoutTeamInput[]
+    createMany?: TeamStarPlayerCreateManyTeamInputEnvelope
+    set?: TeamStarPlayerWhereUniqueInput | TeamStarPlayerWhereUniqueInput[]
+    disconnect?: TeamStarPlayerWhereUniqueInput | TeamStarPlayerWhereUniqueInput[]
+    delete?: TeamStarPlayerWhereUniqueInput | TeamStarPlayerWhereUniqueInput[]
+    connect?: TeamStarPlayerWhereUniqueInput | TeamStarPlayerWhereUniqueInput[]
+    update?: TeamStarPlayerUpdateWithWhereUniqueWithoutTeamInput | TeamStarPlayerUpdateWithWhereUniqueWithoutTeamInput[]
+    updateMany?: TeamStarPlayerUpdateManyWithWhereWithoutTeamInput | TeamStarPlayerUpdateManyWithWhereWithoutTeamInput[]
+    deleteMany?: TeamStarPlayerScalarWhereInput | TeamStarPlayerScalarWhereInput[]
   }
 
   export type TeamSelectionUpdateManyWithoutTeamRefNestedInput = {
@@ -19902,6 +24666,20 @@ export namespace Prisma {
     deleteMany?: TeamPlayerScalarWhereInput | TeamPlayerScalarWhereInput[]
   }
 
+  export type TeamStarPlayerUncheckedUpdateManyWithoutTeamNestedInput = {
+    create?: XOR<TeamStarPlayerCreateWithoutTeamInput, TeamStarPlayerUncheckedCreateWithoutTeamInput> | TeamStarPlayerCreateWithoutTeamInput[] | TeamStarPlayerUncheckedCreateWithoutTeamInput[]
+    connectOrCreate?: TeamStarPlayerCreateOrConnectWithoutTeamInput | TeamStarPlayerCreateOrConnectWithoutTeamInput[]
+    upsert?: TeamStarPlayerUpsertWithWhereUniqueWithoutTeamInput | TeamStarPlayerUpsertWithWhereUniqueWithoutTeamInput[]
+    createMany?: TeamStarPlayerCreateManyTeamInputEnvelope
+    set?: TeamStarPlayerWhereUniqueInput | TeamStarPlayerWhereUniqueInput[]
+    disconnect?: TeamStarPlayerWhereUniqueInput | TeamStarPlayerWhereUniqueInput[]
+    delete?: TeamStarPlayerWhereUniqueInput | TeamStarPlayerWhereUniqueInput[]
+    connect?: TeamStarPlayerWhereUniqueInput | TeamStarPlayerWhereUniqueInput[]
+    update?: TeamStarPlayerUpdateWithWhereUniqueWithoutTeamInput | TeamStarPlayerUpdateWithWhereUniqueWithoutTeamInput[]
+    updateMany?: TeamStarPlayerUpdateManyWithWhereWithoutTeamInput | TeamStarPlayerUpdateManyWithWhereWithoutTeamInput[]
+    deleteMany?: TeamStarPlayerScalarWhereInput | TeamStarPlayerScalarWhereInput[]
+  }
+
   export type TeamSelectionUncheckedUpdateManyWithoutTeamRefNestedInput = {
     create?: XOR<TeamSelectionCreateWithoutTeamRefInput, TeamSelectionUncheckedCreateWithoutTeamRefInput> | TeamSelectionCreateWithoutTeamRefInput[] | TeamSelectionUncheckedCreateWithoutTeamRefInput[]
     connectOrCreate?: TeamSelectionCreateOrConnectWithoutTeamRefInput | TeamSelectionCreateOrConnectWithoutTeamRefInput[]
@@ -19984,6 +24762,76 @@ export namespace Prisma {
     upsert?: TeamUpsertWithoutPlayersInput
     connect?: TeamWhereUniqueInput
     update?: XOR<XOR<TeamUpdateToOneWithWhereWithoutPlayersInput, TeamUpdateWithoutPlayersInput>, TeamUncheckedUpdateWithoutPlayersInput>
+  }
+
+  export type TeamCreateNestedOneWithoutStarPlayersInput = {
+    create?: XOR<TeamCreateWithoutStarPlayersInput, TeamUncheckedCreateWithoutStarPlayersInput>
+    connectOrCreate?: TeamCreateOrConnectWithoutStarPlayersInput
+    connect?: TeamWhereUniqueInput
+  }
+
+  export type TeamUpdateOneRequiredWithoutStarPlayersNestedInput = {
+    create?: XOR<TeamCreateWithoutStarPlayersInput, TeamUncheckedCreateWithoutStarPlayersInput>
+    connectOrCreate?: TeamCreateOrConnectWithoutStarPlayersInput
+    upsert?: TeamUpsertWithoutStarPlayersInput
+    connect?: TeamWhereUniqueInput
+    update?: XOR<XOR<TeamUpdateToOneWithWhereWithoutStarPlayersInput, TeamUpdateWithoutStarPlayersInput>, TeamUncheckedUpdateWithoutStarPlayersInput>
+  }
+
+  export type PositionCreateNestedManyWithoutRosterInput = {
+    create?: XOR<PositionCreateWithoutRosterInput, PositionUncheckedCreateWithoutRosterInput> | PositionCreateWithoutRosterInput[] | PositionUncheckedCreateWithoutRosterInput[]
+    connectOrCreate?: PositionCreateOrConnectWithoutRosterInput | PositionCreateOrConnectWithoutRosterInput[]
+    createMany?: PositionCreateManyRosterInputEnvelope
+    connect?: PositionWhereUniqueInput | PositionWhereUniqueInput[]
+  }
+
+  export type PositionUncheckedCreateNestedManyWithoutRosterInput = {
+    create?: XOR<PositionCreateWithoutRosterInput, PositionUncheckedCreateWithoutRosterInput> | PositionCreateWithoutRosterInput[] | PositionUncheckedCreateWithoutRosterInput[]
+    connectOrCreate?: PositionCreateOrConnectWithoutRosterInput | PositionCreateOrConnectWithoutRosterInput[]
+    createMany?: PositionCreateManyRosterInputEnvelope
+    connect?: PositionWhereUniqueInput | PositionWhereUniqueInput[]
+  }
+
+  export type PositionUpdateManyWithoutRosterNestedInput = {
+    create?: XOR<PositionCreateWithoutRosterInput, PositionUncheckedCreateWithoutRosterInput> | PositionCreateWithoutRosterInput[] | PositionUncheckedCreateWithoutRosterInput[]
+    connectOrCreate?: PositionCreateOrConnectWithoutRosterInput | PositionCreateOrConnectWithoutRosterInput[]
+    upsert?: PositionUpsertWithWhereUniqueWithoutRosterInput | PositionUpsertWithWhereUniqueWithoutRosterInput[]
+    createMany?: PositionCreateManyRosterInputEnvelope
+    set?: PositionWhereUniqueInput | PositionWhereUniqueInput[]
+    disconnect?: PositionWhereUniqueInput | PositionWhereUniqueInput[]
+    delete?: PositionWhereUniqueInput | PositionWhereUniqueInput[]
+    connect?: PositionWhereUniqueInput | PositionWhereUniqueInput[]
+    update?: PositionUpdateWithWhereUniqueWithoutRosterInput | PositionUpdateWithWhereUniqueWithoutRosterInput[]
+    updateMany?: PositionUpdateManyWithWhereWithoutRosterInput | PositionUpdateManyWithWhereWithoutRosterInput[]
+    deleteMany?: PositionScalarWhereInput | PositionScalarWhereInput[]
+  }
+
+  export type PositionUncheckedUpdateManyWithoutRosterNestedInput = {
+    create?: XOR<PositionCreateWithoutRosterInput, PositionUncheckedCreateWithoutRosterInput> | PositionCreateWithoutRosterInput[] | PositionUncheckedCreateWithoutRosterInput[]
+    connectOrCreate?: PositionCreateOrConnectWithoutRosterInput | PositionCreateOrConnectWithoutRosterInput[]
+    upsert?: PositionUpsertWithWhereUniqueWithoutRosterInput | PositionUpsertWithWhereUniqueWithoutRosterInput[]
+    createMany?: PositionCreateManyRosterInputEnvelope
+    set?: PositionWhereUniqueInput | PositionWhereUniqueInput[]
+    disconnect?: PositionWhereUniqueInput | PositionWhereUniqueInput[]
+    delete?: PositionWhereUniqueInput | PositionWhereUniqueInput[]
+    connect?: PositionWhereUniqueInput | PositionWhereUniqueInput[]
+    update?: PositionUpdateWithWhereUniqueWithoutRosterInput | PositionUpdateWithWhereUniqueWithoutRosterInput[]
+    updateMany?: PositionUpdateManyWithWhereWithoutRosterInput | PositionUpdateManyWithWhereWithoutRosterInput[]
+    deleteMany?: PositionScalarWhereInput | PositionScalarWhereInput[]
+  }
+
+  export type RosterCreateNestedOneWithoutPositionsInput = {
+    create?: XOR<RosterCreateWithoutPositionsInput, RosterUncheckedCreateWithoutPositionsInput>
+    connectOrCreate?: RosterCreateOrConnectWithoutPositionsInput
+    connect?: RosterWhereUniqueInput
+  }
+
+  export type RosterUpdateOneRequiredWithoutPositionsNestedInput = {
+    create?: XOR<RosterCreateWithoutPositionsInput, RosterUncheckedCreateWithoutPositionsInput>
+    connectOrCreate?: RosterCreateOrConnectWithoutPositionsInput
+    upsert?: RosterUpsertWithoutPositionsInput
+    connect?: RosterWhereUniqueInput
+    update?: XOR<XOR<RosterUpdateToOneWithWhereWithoutPositionsInput, RosterUpdateWithoutPositionsInput>, RosterUncheckedUpdateWithoutPositionsInput>
   }
 
   export type UserCreateNestedOneWithoutCreatedCupsInput = {
@@ -20588,6 +25436,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     players?: TeamPlayerCreateNestedManyWithoutTeamInput
+    starPlayers?: TeamStarPlayerCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantCreateNestedManyWithoutTeamInput
     localMatchesAsTeamA?: LocalMatchCreateNestedManyWithoutTeamAInput
@@ -20611,6 +25460,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     players?: TeamPlayerUncheckedCreateNestedManyWithoutTeamInput
+    starPlayers?: TeamStarPlayerUncheckedCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionUncheckedCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantUncheckedCreateNestedManyWithoutTeamInput
     localMatchesAsTeamA?: LocalMatchUncheckedCreateNestedManyWithoutTeamAInput
@@ -21392,6 +26242,7 @@ export namespace Prisma {
     initialBudget?: number
     owner: UserCreateNestedOneWithoutTeamsInput
     players?: TeamPlayerCreateNestedManyWithoutTeamInput
+    starPlayers?: TeamStarPlayerCreateNestedManyWithoutTeamInput
     cupParticipants?: CupParticipantCreateNestedManyWithoutTeamInput
     localMatchesAsTeamA?: LocalMatchCreateNestedManyWithoutTeamAInput
     localMatchesAsTeamB?: LocalMatchCreateNestedManyWithoutTeamBInput
@@ -21415,6 +26266,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     players?: TeamPlayerUncheckedCreateNestedManyWithoutTeamInput
+    starPlayers?: TeamStarPlayerUncheckedCreateNestedManyWithoutTeamInput
     cupParticipants?: CupParticipantUncheckedCreateNestedManyWithoutTeamInput
     localMatchesAsTeamA?: LocalMatchUncheckedCreateNestedManyWithoutTeamAInput
     localMatchesAsTeamB?: LocalMatchUncheckedCreateNestedManyWithoutTeamBInput
@@ -21540,6 +26392,7 @@ export namespace Prisma {
     initialBudget?: IntFieldUpdateOperationsInput | number
     owner?: UserUpdateOneRequiredWithoutTeamsNestedInput
     players?: TeamPlayerUpdateManyWithoutTeamNestedInput
+    starPlayers?: TeamStarPlayerUpdateManyWithoutTeamNestedInput
     cupParticipants?: CupParticipantUpdateManyWithoutTeamNestedInput
     localMatchesAsTeamA?: LocalMatchUpdateManyWithoutTeamANestedInput
     localMatchesAsTeamB?: LocalMatchUpdateManyWithoutTeamBNestedInput
@@ -21563,6 +26416,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     players?: TeamPlayerUncheckedUpdateManyWithoutTeamNestedInput
+    starPlayers?: TeamStarPlayerUncheckedUpdateManyWithoutTeamNestedInput
     cupParticipants?: CupParticipantUncheckedUpdateManyWithoutTeamNestedInput
     localMatchesAsTeamA?: LocalMatchUncheckedUpdateManyWithoutTeamANestedInput
     localMatchesAsTeamB?: LocalMatchUncheckedUpdateManyWithoutTeamBNestedInput
@@ -21685,6 +26539,29 @@ export namespace Prisma {
 
   export type TeamPlayerCreateManyTeamInputEnvelope = {
     data: TeamPlayerCreateManyTeamInput | TeamPlayerCreateManyTeamInput[]
+  }
+
+  export type TeamStarPlayerCreateWithoutTeamInput = {
+    id?: string
+    starPlayerSlug: string
+    cost: number
+    hiredAt?: Date | string
+  }
+
+  export type TeamStarPlayerUncheckedCreateWithoutTeamInput = {
+    id?: string
+    starPlayerSlug: string
+    cost: number
+    hiredAt?: Date | string
+  }
+
+  export type TeamStarPlayerCreateOrConnectWithoutTeamInput = {
+    where: TeamStarPlayerWhereUniqueInput
+    create: XOR<TeamStarPlayerCreateWithoutTeamInput, TeamStarPlayerUncheckedCreateWithoutTeamInput>
+  }
+
+  export type TeamStarPlayerCreateManyTeamInputEnvelope = {
+    data: TeamStarPlayerCreateManyTeamInput | TeamStarPlayerCreateManyTeamInput[]
   }
 
   export type TeamSelectionCreateWithoutTeamRefInput = {
@@ -21963,6 +26840,33 @@ export namespace Prisma {
     diedAt?: DateTimeNullableFilter<"TeamPlayer"> | Date | string | null
   }
 
+  export type TeamStarPlayerUpsertWithWhereUniqueWithoutTeamInput = {
+    where: TeamStarPlayerWhereUniqueInput
+    update: XOR<TeamStarPlayerUpdateWithoutTeamInput, TeamStarPlayerUncheckedUpdateWithoutTeamInput>
+    create: XOR<TeamStarPlayerCreateWithoutTeamInput, TeamStarPlayerUncheckedCreateWithoutTeamInput>
+  }
+
+  export type TeamStarPlayerUpdateWithWhereUniqueWithoutTeamInput = {
+    where: TeamStarPlayerWhereUniqueInput
+    data: XOR<TeamStarPlayerUpdateWithoutTeamInput, TeamStarPlayerUncheckedUpdateWithoutTeamInput>
+  }
+
+  export type TeamStarPlayerUpdateManyWithWhereWithoutTeamInput = {
+    where: TeamStarPlayerScalarWhereInput
+    data: XOR<TeamStarPlayerUpdateManyMutationInput, TeamStarPlayerUncheckedUpdateManyWithoutTeamInput>
+  }
+
+  export type TeamStarPlayerScalarWhereInput = {
+    AND?: TeamStarPlayerScalarWhereInput | TeamStarPlayerScalarWhereInput[]
+    OR?: TeamStarPlayerScalarWhereInput[]
+    NOT?: TeamStarPlayerScalarWhereInput | TeamStarPlayerScalarWhereInput[]
+    id?: StringFilter<"TeamStarPlayer"> | string
+    teamId?: StringFilter<"TeamStarPlayer"> | string
+    starPlayerSlug?: StringFilter<"TeamStarPlayer"> | string
+    cost?: IntFilter<"TeamStarPlayer"> | number
+    hiredAt?: DateTimeFilter<"TeamStarPlayer"> | Date | string
+  }
+
   export type TeamSelectionUpsertWithWhereUniqueWithoutTeamRefInput = {
     where: TeamSelectionWhereUniqueInput
     update: XOR<TeamSelectionUpdateWithoutTeamRefInput, TeamSelectionUncheckedUpdateWithoutTeamRefInput>
@@ -22082,6 +26986,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     owner: UserCreateNestedOneWithoutTeamsInput
+    starPlayers?: TeamStarPlayerCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantCreateNestedManyWithoutTeamInput
     localMatchesAsTeamA?: LocalMatchCreateNestedManyWithoutTeamAInput
@@ -22105,6 +27010,7 @@ export namespace Prisma {
     teamValue?: number
     currentValue?: number
     initialBudget?: number
+    starPlayers?: TeamStarPlayerUncheckedCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionUncheckedCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantUncheckedCreateNestedManyWithoutTeamInput
     localMatchesAsTeamA?: LocalMatchUncheckedCreateNestedManyWithoutTeamAInput
@@ -22144,6 +27050,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     owner?: UserUpdateOneRequiredWithoutTeamsNestedInput
+    starPlayers?: TeamStarPlayerUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUpdateManyWithoutTeamNestedInput
     localMatchesAsTeamA?: LocalMatchUpdateManyWithoutTeamANestedInput
@@ -22167,11 +27074,288 @@ export namespace Prisma {
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
+    starPlayers?: TeamStarPlayerUncheckedUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUncheckedUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUncheckedUpdateManyWithoutTeamNestedInput
     localMatchesAsTeamA?: LocalMatchUncheckedUpdateManyWithoutTeamANestedInput
     localMatchesAsTeamB?: LocalMatchUncheckedUpdateManyWithoutTeamBNestedInput
     matchQueue?: MatchQueueUncheckedUpdateManyWithoutTeamNestedInput
+  }
+
+  export type TeamCreateWithoutStarPlayersInput = {
+    id?: string
+    name: string
+    roster: string
+    ruleset?: $Enums.Ruleset
+    createdAt?: Date | string
+    treasury?: number
+    rerolls?: number
+    cheerleaders?: number
+    assistants?: number
+    apothecary?: boolean
+    dedicatedFans?: number
+    teamValue?: number
+    currentValue?: number
+    initialBudget?: number
+    owner: UserCreateNestedOneWithoutTeamsInput
+    players?: TeamPlayerCreateNestedManyWithoutTeamInput
+    selections?: TeamSelectionCreateNestedManyWithoutTeamRefInput
+    cupParticipants?: CupParticipantCreateNestedManyWithoutTeamInput
+    localMatchesAsTeamA?: LocalMatchCreateNestedManyWithoutTeamAInput
+    localMatchesAsTeamB?: LocalMatchCreateNestedManyWithoutTeamBInput
+    matchQueue?: MatchQueueCreateNestedManyWithoutTeamInput
+  }
+
+  export type TeamUncheckedCreateWithoutStarPlayersInput = {
+    id?: string
+    ownerId: string
+    name: string
+    roster: string
+    ruleset?: $Enums.Ruleset
+    createdAt?: Date | string
+    treasury?: number
+    rerolls?: number
+    cheerleaders?: number
+    assistants?: number
+    apothecary?: boolean
+    dedicatedFans?: number
+    teamValue?: number
+    currentValue?: number
+    initialBudget?: number
+    players?: TeamPlayerUncheckedCreateNestedManyWithoutTeamInput
+    selections?: TeamSelectionUncheckedCreateNestedManyWithoutTeamRefInput
+    cupParticipants?: CupParticipantUncheckedCreateNestedManyWithoutTeamInput
+    localMatchesAsTeamA?: LocalMatchUncheckedCreateNestedManyWithoutTeamAInput
+    localMatchesAsTeamB?: LocalMatchUncheckedCreateNestedManyWithoutTeamBInput
+    matchQueue?: MatchQueueUncheckedCreateNestedManyWithoutTeamInput
+  }
+
+  export type TeamCreateOrConnectWithoutStarPlayersInput = {
+    where: TeamWhereUniqueInput
+    create: XOR<TeamCreateWithoutStarPlayersInput, TeamUncheckedCreateWithoutStarPlayersInput>
+  }
+
+  export type TeamUpsertWithoutStarPlayersInput = {
+    update: XOR<TeamUpdateWithoutStarPlayersInput, TeamUncheckedUpdateWithoutStarPlayersInput>
+    create: XOR<TeamCreateWithoutStarPlayersInput, TeamUncheckedCreateWithoutStarPlayersInput>
+    where?: TeamWhereInput
+  }
+
+  export type TeamUpdateToOneWithWhereWithoutStarPlayersInput = {
+    where?: TeamWhereInput
+    data: XOR<TeamUpdateWithoutStarPlayersInput, TeamUncheckedUpdateWithoutStarPlayersInput>
+  }
+
+  export type TeamUpdateWithoutStarPlayersInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    roster?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    treasury?: IntFieldUpdateOperationsInput | number
+    rerolls?: IntFieldUpdateOperationsInput | number
+    cheerleaders?: IntFieldUpdateOperationsInput | number
+    assistants?: IntFieldUpdateOperationsInput | number
+    apothecary?: BoolFieldUpdateOperationsInput | boolean
+    dedicatedFans?: IntFieldUpdateOperationsInput | number
+    teamValue?: IntFieldUpdateOperationsInput | number
+    currentValue?: IntFieldUpdateOperationsInput | number
+    initialBudget?: IntFieldUpdateOperationsInput | number
+    owner?: UserUpdateOneRequiredWithoutTeamsNestedInput
+    players?: TeamPlayerUpdateManyWithoutTeamNestedInput
+    selections?: TeamSelectionUpdateManyWithoutTeamRefNestedInput
+    cupParticipants?: CupParticipantUpdateManyWithoutTeamNestedInput
+    localMatchesAsTeamA?: LocalMatchUpdateManyWithoutTeamANestedInput
+    localMatchesAsTeamB?: LocalMatchUpdateManyWithoutTeamBNestedInput
+    matchQueue?: MatchQueueUpdateManyWithoutTeamNestedInput
+  }
+
+  export type TeamUncheckedUpdateWithoutStarPlayersInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ownerId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    roster?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    treasury?: IntFieldUpdateOperationsInput | number
+    rerolls?: IntFieldUpdateOperationsInput | number
+    cheerleaders?: IntFieldUpdateOperationsInput | number
+    assistants?: IntFieldUpdateOperationsInput | number
+    apothecary?: BoolFieldUpdateOperationsInput | boolean
+    dedicatedFans?: IntFieldUpdateOperationsInput | number
+    teamValue?: IntFieldUpdateOperationsInput | number
+    currentValue?: IntFieldUpdateOperationsInput | number
+    initialBudget?: IntFieldUpdateOperationsInput | number
+    players?: TeamPlayerUncheckedUpdateManyWithoutTeamNestedInput
+    selections?: TeamSelectionUncheckedUpdateManyWithoutTeamRefNestedInput
+    cupParticipants?: CupParticipantUncheckedUpdateManyWithoutTeamNestedInput
+    localMatchesAsTeamA?: LocalMatchUncheckedUpdateManyWithoutTeamANestedInput
+    localMatchesAsTeamB?: LocalMatchUncheckedUpdateManyWithoutTeamBNestedInput
+    matchQueue?: MatchQueueUncheckedUpdateManyWithoutTeamNestedInput
+  }
+
+  export type PositionCreateWithoutRosterInput = {
+    id?: string
+    slug: string
+    displayName: string
+    cost: number
+    min: number
+    max: number
+    ma: number
+    st: number
+    ag: number
+    pa: number
+    av: number
+    keywords?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type PositionUncheckedCreateWithoutRosterInput = {
+    id?: string
+    slug: string
+    displayName: string
+    cost: number
+    min: number
+    max: number
+    ma: number
+    st: number
+    ag: number
+    pa: number
+    av: number
+    keywords?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type PositionCreateOrConnectWithoutRosterInput = {
+    where: PositionWhereUniqueInput
+    create: XOR<PositionCreateWithoutRosterInput, PositionUncheckedCreateWithoutRosterInput>
+  }
+
+  export type PositionCreateManyRosterInputEnvelope = {
+    data: PositionCreateManyRosterInput | PositionCreateManyRosterInput[]
+  }
+
+  export type PositionUpsertWithWhereUniqueWithoutRosterInput = {
+    where: PositionWhereUniqueInput
+    update: XOR<PositionUpdateWithoutRosterInput, PositionUncheckedUpdateWithoutRosterInput>
+    create: XOR<PositionCreateWithoutRosterInput, PositionUncheckedCreateWithoutRosterInput>
+  }
+
+  export type PositionUpdateWithWhereUniqueWithoutRosterInput = {
+    where: PositionWhereUniqueInput
+    data: XOR<PositionUpdateWithoutRosterInput, PositionUncheckedUpdateWithoutRosterInput>
+  }
+
+  export type PositionUpdateManyWithWhereWithoutRosterInput = {
+    where: PositionScalarWhereInput
+    data: XOR<PositionUpdateManyMutationInput, PositionUncheckedUpdateManyWithoutRosterInput>
+  }
+
+  export type PositionScalarWhereInput = {
+    AND?: PositionScalarWhereInput | PositionScalarWhereInput[]
+    OR?: PositionScalarWhereInput[]
+    NOT?: PositionScalarWhereInput | PositionScalarWhereInput[]
+    id?: StringFilter<"Position"> | string
+    rosterId?: StringFilter<"Position"> | string
+    slug?: StringFilter<"Position"> | string
+    displayName?: StringFilter<"Position"> | string
+    cost?: IntFilter<"Position"> | number
+    min?: IntFilter<"Position"> | number
+    max?: IntFilter<"Position"> | number
+    ma?: IntFilter<"Position"> | number
+    st?: IntFilter<"Position"> | number
+    ag?: IntFilter<"Position"> | number
+    pa?: IntFilter<"Position"> | number
+    av?: IntFilter<"Position"> | number
+    keywords?: StringNullableFilter<"Position"> | string | null
+    createdAt?: DateTimeFilter<"Position"> | Date | string
+    updatedAt?: DateTimeFilter<"Position"> | Date | string
+  }
+
+  export type RosterCreateWithoutPositionsInput = {
+    id?: string
+    slug: string
+    ruleset?: $Enums.Ruleset
+    name: string
+    nameEn: string
+    descriptionFr?: string | null
+    descriptionEn?: string | null
+    budget: number
+    tier: string
+    regionalRules?: string | null
+    specialRules?: string | null
+    naf?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type RosterUncheckedCreateWithoutPositionsInput = {
+    id?: string
+    slug: string
+    ruleset?: $Enums.Ruleset
+    name: string
+    nameEn: string
+    descriptionFr?: string | null
+    descriptionEn?: string | null
+    budget: number
+    tier: string
+    regionalRules?: string | null
+    specialRules?: string | null
+    naf?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type RosterCreateOrConnectWithoutPositionsInput = {
+    where: RosterWhereUniqueInput
+    create: XOR<RosterCreateWithoutPositionsInput, RosterUncheckedCreateWithoutPositionsInput>
+  }
+
+  export type RosterUpsertWithoutPositionsInput = {
+    update: XOR<RosterUpdateWithoutPositionsInput, RosterUncheckedUpdateWithoutPositionsInput>
+    create: XOR<RosterCreateWithoutPositionsInput, RosterUncheckedCreateWithoutPositionsInput>
+    where?: RosterWhereInput
+  }
+
+  export type RosterUpdateToOneWithWhereWithoutPositionsInput = {
+    where?: RosterWhereInput
+    data: XOR<RosterUpdateWithoutPositionsInput, RosterUncheckedUpdateWithoutPositionsInput>
+  }
+
+  export type RosterUpdateWithoutPositionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    name?: StringFieldUpdateOperationsInput | string
+    nameEn?: StringFieldUpdateOperationsInput | string
+    descriptionFr?: NullableStringFieldUpdateOperationsInput | string | null
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    budget?: IntFieldUpdateOperationsInput | number
+    tier?: StringFieldUpdateOperationsInput | string
+    regionalRules?: NullableStringFieldUpdateOperationsInput | string | null
+    specialRules?: NullableStringFieldUpdateOperationsInput | string | null
+    naf?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RosterUncheckedUpdateWithoutPositionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    name?: StringFieldUpdateOperationsInput | string
+    nameEn?: StringFieldUpdateOperationsInput | string
+    descriptionFr?: NullableStringFieldUpdateOperationsInput | string | null
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    budget?: IntFieldUpdateOperationsInput | number
+    tier?: StringFieldUpdateOperationsInput | string
+    regionalRules?: NullableStringFieldUpdateOperationsInput | string | null
+    specialRules?: NullableStringFieldUpdateOperationsInput | string | null
+    naf?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type UserCreateWithoutCreatedCupsInput = {
@@ -22428,6 +27612,7 @@ export namespace Prisma {
     initialBudget?: number
     owner: UserCreateNestedOneWithoutTeamsInput
     players?: TeamPlayerCreateNestedManyWithoutTeamInput
+    starPlayers?: TeamStarPlayerCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionCreateNestedManyWithoutTeamRefInput
     localMatchesAsTeamA?: LocalMatchCreateNestedManyWithoutTeamAInput
     localMatchesAsTeamB?: LocalMatchCreateNestedManyWithoutTeamBInput
@@ -22451,6 +27636,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     players?: TeamPlayerUncheckedCreateNestedManyWithoutTeamInput
+    starPlayers?: TeamStarPlayerUncheckedCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionUncheckedCreateNestedManyWithoutTeamRefInput
     localMatchesAsTeamA?: LocalMatchUncheckedCreateNestedManyWithoutTeamAInput
     localMatchesAsTeamB?: LocalMatchUncheckedCreateNestedManyWithoutTeamBInput
@@ -22527,6 +27713,7 @@ export namespace Prisma {
     initialBudget?: IntFieldUpdateOperationsInput | number
     owner?: UserUpdateOneRequiredWithoutTeamsNestedInput
     players?: TeamPlayerUpdateManyWithoutTeamNestedInput
+    starPlayers?: TeamStarPlayerUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUpdateManyWithoutTeamRefNestedInput
     localMatchesAsTeamA?: LocalMatchUpdateManyWithoutTeamANestedInput
     localMatchesAsTeamB?: LocalMatchUpdateManyWithoutTeamBNestedInput
@@ -22550,6 +27737,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     players?: TeamPlayerUncheckedUpdateManyWithoutTeamNestedInput
+    starPlayers?: TeamStarPlayerUncheckedUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUncheckedUpdateManyWithoutTeamRefNestedInput
     localMatchesAsTeamA?: LocalMatchUncheckedUpdateManyWithoutTeamANestedInput
     localMatchesAsTeamB?: LocalMatchUncheckedUpdateManyWithoutTeamBNestedInput
@@ -22622,6 +27810,7 @@ export namespace Prisma {
     initialBudget?: number
     owner: UserCreateNestedOneWithoutTeamsInput
     players?: TeamPlayerCreateNestedManyWithoutTeamInput
+    starPlayers?: TeamStarPlayerCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantCreateNestedManyWithoutTeamInput
     localMatchesAsTeamA?: LocalMatchCreateNestedManyWithoutTeamAInput
@@ -22645,6 +27834,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     players?: TeamPlayerUncheckedCreateNestedManyWithoutTeamInput
+    starPlayers?: TeamStarPlayerUncheckedCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionUncheckedCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantUncheckedCreateNestedManyWithoutTeamInput
     localMatchesAsTeamA?: LocalMatchUncheckedCreateNestedManyWithoutTeamAInput
@@ -22739,6 +27929,7 @@ export namespace Prisma {
     initialBudget?: IntFieldUpdateOperationsInput | number
     owner?: UserUpdateOneRequiredWithoutTeamsNestedInput
     players?: TeamPlayerUpdateManyWithoutTeamNestedInput
+    starPlayers?: TeamStarPlayerUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUpdateManyWithoutTeamNestedInput
     localMatchesAsTeamA?: LocalMatchUpdateManyWithoutTeamANestedInput
@@ -22762,6 +27953,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     players?: TeamPlayerUncheckedUpdateManyWithoutTeamNestedInput
+    starPlayers?: TeamStarPlayerUncheckedUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUncheckedUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUncheckedUpdateManyWithoutTeamNestedInput
     localMatchesAsTeamA?: LocalMatchUncheckedUpdateManyWithoutTeamANestedInput
@@ -22834,6 +28026,7 @@ export namespace Prisma {
     initialBudget?: number
     owner: UserCreateNestedOneWithoutTeamsInput
     players?: TeamPlayerCreateNestedManyWithoutTeamInput
+    starPlayers?: TeamStarPlayerCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantCreateNestedManyWithoutTeamInput
     localMatchesAsTeamB?: LocalMatchCreateNestedManyWithoutTeamBInput
@@ -22857,6 +28050,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     players?: TeamPlayerUncheckedCreateNestedManyWithoutTeamInput
+    starPlayers?: TeamStarPlayerUncheckedCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionUncheckedCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantUncheckedCreateNestedManyWithoutTeamInput
     localMatchesAsTeamB?: LocalMatchUncheckedCreateNestedManyWithoutTeamBInput
@@ -22885,6 +28079,7 @@ export namespace Prisma {
     initialBudget?: number
     owner: UserCreateNestedOneWithoutTeamsInput
     players?: TeamPlayerCreateNestedManyWithoutTeamInput
+    starPlayers?: TeamStarPlayerCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantCreateNestedManyWithoutTeamInput
     localMatchesAsTeamA?: LocalMatchCreateNestedManyWithoutTeamAInput
@@ -22908,6 +28103,7 @@ export namespace Prisma {
     currentValue?: number
     initialBudget?: number
     players?: TeamPlayerUncheckedCreateNestedManyWithoutTeamInput
+    starPlayers?: TeamStarPlayerUncheckedCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionUncheckedCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantUncheckedCreateNestedManyWithoutTeamInput
     localMatchesAsTeamA?: LocalMatchUncheckedCreateNestedManyWithoutTeamAInput
@@ -23082,6 +28278,7 @@ export namespace Prisma {
     initialBudget?: IntFieldUpdateOperationsInput | number
     owner?: UserUpdateOneRequiredWithoutTeamsNestedInput
     players?: TeamPlayerUpdateManyWithoutTeamNestedInput
+    starPlayers?: TeamStarPlayerUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUpdateManyWithoutTeamNestedInput
     localMatchesAsTeamB?: LocalMatchUpdateManyWithoutTeamBNestedInput
@@ -23105,6 +28302,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     players?: TeamPlayerUncheckedUpdateManyWithoutTeamNestedInput
+    starPlayers?: TeamStarPlayerUncheckedUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUncheckedUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUncheckedUpdateManyWithoutTeamNestedInput
     localMatchesAsTeamB?: LocalMatchUncheckedUpdateManyWithoutTeamBNestedInput
@@ -23139,6 +28337,7 @@ export namespace Prisma {
     initialBudget?: IntFieldUpdateOperationsInput | number
     owner?: UserUpdateOneRequiredWithoutTeamsNestedInput
     players?: TeamPlayerUpdateManyWithoutTeamNestedInput
+    starPlayers?: TeamStarPlayerUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUpdateManyWithoutTeamNestedInput
     localMatchesAsTeamA?: LocalMatchUpdateManyWithoutTeamANestedInput
@@ -23162,6 +28361,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     players?: TeamPlayerUncheckedUpdateManyWithoutTeamNestedInput
+    starPlayers?: TeamStarPlayerUncheckedUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUncheckedUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUncheckedUpdateManyWithoutTeamNestedInput
     localMatchesAsTeamA?: LocalMatchUncheckedUpdateManyWithoutTeamANestedInput
@@ -23474,6 +28674,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     players?: TeamPlayerUpdateManyWithoutTeamNestedInput
+    starPlayers?: TeamStarPlayerUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUpdateManyWithoutTeamNestedInput
     localMatchesAsTeamA?: LocalMatchUpdateManyWithoutTeamANestedInput
@@ -23497,6 +28698,7 @@ export namespace Prisma {
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
     players?: TeamPlayerUncheckedUpdateManyWithoutTeamNestedInput
+    starPlayers?: TeamStarPlayerUncheckedUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUncheckedUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUncheckedUpdateManyWithoutTeamNestedInput
     localMatchesAsTeamA?: LocalMatchUncheckedUpdateManyWithoutTeamANestedInput
@@ -23791,6 +28993,13 @@ export namespace Prisma {
     diedAt?: Date | string | null
   }
 
+  export type TeamStarPlayerCreateManyTeamInput = {
+    id?: string
+    starPlayerSlug: string
+    cost: number
+    hiredAt?: Date | string
+  }
+
   export type TeamSelectionCreateManyTeamRefInput = {
     id?: string
     matchId: string
@@ -23940,6 +29149,27 @@ export namespace Prisma {
     advancements?: StringFieldUpdateOperationsInput | string
     dead?: BoolFieldUpdateOperationsInput | boolean
     diedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type TeamStarPlayerUpdateWithoutTeamInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    starPlayerSlug?: StringFieldUpdateOperationsInput | string
+    cost?: IntFieldUpdateOperationsInput | number
+    hiredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TeamStarPlayerUncheckedUpdateWithoutTeamInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    starPlayerSlug?: StringFieldUpdateOperationsInput | string
+    cost?: IntFieldUpdateOperationsInput | number
+    hiredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TeamStarPlayerUncheckedUpdateManyWithoutTeamInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    starPlayerSlug?: StringFieldUpdateOperationsInput | string
+    cost?: IntFieldUpdateOperationsInput | number
+    hiredAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type TeamSelectionUpdateWithoutTeamRefInput = {
@@ -24127,6 +29357,74 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     matchId?: NullableStringFieldUpdateOperationsInput | string | null
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PositionCreateManyRosterInput = {
+    id?: string
+    slug: string
+    displayName: string
+    cost: number
+    min: number
+    max: number
+    ma: number
+    st: number
+    ag: number
+    pa: number
+    av: number
+    keywords?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type PositionUpdateWithoutRosterInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    cost?: IntFieldUpdateOperationsInput | number
+    min?: IntFieldUpdateOperationsInput | number
+    max?: IntFieldUpdateOperationsInput | number
+    ma?: IntFieldUpdateOperationsInput | number
+    st?: IntFieldUpdateOperationsInput | number
+    ag?: IntFieldUpdateOperationsInput | number
+    pa?: IntFieldUpdateOperationsInput | number
+    av?: IntFieldUpdateOperationsInput | number
+    keywords?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PositionUncheckedUpdateWithoutRosterInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    cost?: IntFieldUpdateOperationsInput | number
+    min?: IntFieldUpdateOperationsInput | number
+    max?: IntFieldUpdateOperationsInput | number
+    ma?: IntFieldUpdateOperationsInput | number
+    st?: IntFieldUpdateOperationsInput | number
+    ag?: IntFieldUpdateOperationsInput | number
+    pa?: IntFieldUpdateOperationsInput | number
+    av?: IntFieldUpdateOperationsInput | number
+    keywords?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PositionUncheckedUpdateManyWithoutRosterInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    cost?: IntFieldUpdateOperationsInput | number
+    min?: IntFieldUpdateOperationsInput | number
+    max?: IntFieldUpdateOperationsInput | number
+    ma?: IntFieldUpdateOperationsInput | number
+    st?: IntFieldUpdateOperationsInput | number
+    ag?: IntFieldUpdateOperationsInput | number
+    pa?: IntFieldUpdateOperationsInput | number
+    av?: IntFieldUpdateOperationsInput | number
+    keywords?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type CupParticipantCreateManyCupInput = {

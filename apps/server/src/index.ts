@@ -212,6 +212,75 @@ if (process.env.TEST_SQLITE === "1") {
         .json({ error: e?.message || "seed-team failed" });
     }
   });
+
+  // Seed des rosters + linemen de test. Nécessaire pour que
+  // `getLinemanStats` (utilisé par `addJourneymen` pendant la phase
+  // pré-match) trouve une position lineman à appliquer aux journeymen.
+  // En prod ce seed est fait par `apps/server/src/seed.ts` mais il
+  // suppose le schéma Postgres complet — on expose ici une version
+  // minimale et idempotente pour les tests.
+  app.post("/__test/seed-rosters", async (_req, res) => {
+    try {
+      const rosters: Array<{
+        slug: string;
+        name: string;
+        nameEn: string;
+        tier: string;
+      }> = [
+        { slug: "skaven", name: "Skavens", nameEn: "Skaven", tier: "II" },
+        {
+          slug: "lizardmen",
+          name: "Hommes-lézards",
+          nameEn: "Lizardmen",
+          tier: "I",
+        },
+      ];
+
+      for (const r of rosters) {
+        const roster = await prisma.roster.upsert({
+          where: { slug_ruleset: { slug: r.slug, ruleset: "season_2" } },
+          update: {},
+          create: {
+            slug: r.slug,
+            ruleset: "season_2",
+            name: r.name,
+            nameEn: r.nameEn,
+            budget: 1_000_000,
+            tier: r.tier,
+          },
+        });
+
+        await prisma.position.upsert({
+          where: {
+            rosterId_slug: {
+              rosterId: roster.id,
+              slug: `${r.slug}_lineman`,
+            },
+          },
+          update: {},
+          create: {
+            rosterId: roster.id,
+            slug: `${r.slug}_lineman`,
+            displayName: "Lineman",
+            cost: 50_000,
+            min: 0,
+            max: 16, // getLinemanStats prend la position avec le plus grand max
+            ma: 6,
+            st: 3,
+            ag: 3,
+            pa: 4,
+            av: 8,
+          },
+        });
+      }
+
+      return res.json({ ok: true, rosters: rosters.map((r) => r.slug) });
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error("[__test/seed-rosters]", msg);
+      return res.status(500).json({ error: msg || "seed-rosters failed" });
+    }
+  });
 }
 
 const httpServer = createServer(app);

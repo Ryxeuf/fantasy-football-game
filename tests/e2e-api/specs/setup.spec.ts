@@ -21,35 +21,44 @@ describe("E2E API — phase de setup", () => {
     await resetDb();
   });
 
+  interface SetupStateResponse {
+    gameState: {
+      players: Array<{
+        id: string;
+        team: "A" | "B";
+        pos: { x: number; y: number };
+      }>;
+      preMatch?: {
+        phase?: string;
+        currentCoach?: "A" | "B";
+        receivingTeam?: "A" | "B";
+        kickingTeam?: "A" | "B";
+      };
+    };
+    myTeamSide: "A" | "B";
+    isMyTurn?: boolean;
+  }
+
   /**
-   * Helper: récupère le gameState courant et retourne les 11 premiers
-   * joueurs de l'équipe receveuse (celle qui doit placer en premier).
+   * Helper: polle /match/:id/state jusqu'à ce que la phase atteigne
+   * `setup` ou `kickoff`, puis retourne l'état complet.
    */
   async function waitForSetupReady(
     coachToken: string,
     matchId: string,
-  ): Promise<{
-    gameState: {
-      players: Array<{ id: string; team: "A" | "B"; pos: { x: number; y: number } }>;
-      preMatch?: { phase?: string; currentCoach?: "A" | "B" };
-    };
-    myTeamSide: "A" | "B";
-  } | null> {
+  ): Promise<SetupStateResponse | null> {
     const deadline = Date.now() + 12_000;
     while (Date.now() < deadline) {
       try {
-        const res = await get<{
-          gameState: {
-            players: Array<{ id: string; team: "A" | "B"; pos: { x: number; y: number } }>;
-            preMatch?: { phase?: string };
-          };
-          myTeamSide: "A" | "B";
-        }>(`/match/${matchId}/state`, coachToken);
+        const res = await get<SetupStateResponse>(
+          `/match/${matchId}/state`,
+          coachToken,
+        );
         if (
           res.gameState?.preMatch?.phase === "setup" ||
           res.gameState?.preMatch?.phase === "kickoff"
         ) {
-          return res as any;
+          return res;
         }
       } catch {
         // le endpoint /state peut être 500 transitoirement
@@ -87,20 +96,24 @@ describe("E2E API — phase de setup", () => {
     async () => {
       const { coachA, coachB, match } = await bootMatch();
 
-      // Attente que le serveur atteigne la phase setup.
-      // Peut être indisponible à cause de divergences du schéma SQLite
-      // (ex: modèle `roster` absent) — dans ce cas on skip.
+      // Attente que le serveur atteigne la phase setup via coach A.
+      // On ne requête pas B séparément: un seul appel /state peut avoir des
+      // effets de bord (transition idle → setup) — en appeler deux en
+      // concurrence crée une race visible côté test (B reçoit parfois null).
       const setupStateA = await waitForSetupReady(coachA.token, match.id);
-      if (!setupStateA) {
-        console.warn(
-          "[setup.spec] phase setup non atteinte dans les temps — skip",
-        );
-        return;
-      }
+      expect(setupStateA).not.toBeNull();
 
-      const myTeam = setupStateA.myTeamSide;
-      const losX = myTeam === "A" ? 12 : 13;
-      const safeX = myTeam === "A" ? 6 : 18;
+      const currentCoach = setupStateA!.gameState.preMatch?.currentCoach;
+      expect(currentCoach === "A" || currentCoach === "B").toBe(true);
+
+      // Sélection du coach qui a la main: celui dont myTeamSide matche
+      // le currentCoach côté moteur. Comme myTeamSide de A est connu,
+      // on en déduit celui de B par opposition.
+      const aSide = setupStateA!.myTeamSide;
+      const placingCoach = aSide === currentCoach ? coachA : coachB;
+      const placingTeam = currentCoach!; // "A" ou "B"
+      const losX = placingTeam === "A" ? 12 : 13;
+      const safeX = placingTeam === "A" ? 6 : 18;
 
       // 3 LoS, 2 wide zones haut, 2 wide zones bas, 4 milieu.
       const positions = [
@@ -117,8 +130,8 @@ describe("E2E API — phase de setup", () => {
         { x: safeX, y: 8 },
       ];
 
-      const teamPlayers = setupStateA.gameState.players
-        .filter((p) => p.team === myTeam)
+      const teamPlayers = setupStateA!.gameState.players
+        .filter((p) => p.team === placingTeam)
         .slice(0, 11);
       expect(teamPlayers).toHaveLength(11);
 
@@ -131,29 +144,13 @@ describe("E2E API — phase de setup", () => {
         })),
       };
 
-      const token = myTeam === setupStateA.myTeamSide
-        ? (myTeam === "A" ? coachA.token : coachB.token)
-        : coachA.token;
-
       const res = await rawPost(
         `/match/${match.id}/validate-setup`,
-        token,
+        placingCoach.token,
         payload,
       );
 
-      // Le placement doit être accepté (200). Si un endpoint interne échoue
-      // à cause d'une divergence SQLite/Postgres, on tolère 500 et on émet
-      // un warning pour ne pas bloquer la CI sur un bug non-spec.
-      if (res.status >= 500) {
-        const body = await res.json().catch(() => ({}));
-        console.warn(
-          `[setup.spec] validate-setup a retourné ${res.status}: ${
-            (body as any)?.error ?? ""
-          }`,
-        );
-        return;
-      }
-      expect([200, 201]).toContain(res.status);
+      expect(res.status).toBe(200);
     },
     30_000,
   );
