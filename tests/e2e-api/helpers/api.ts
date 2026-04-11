@@ -90,6 +90,66 @@ export async function rawPost(
   });
 }
 
+export async function rawGet(
+  path: string,
+  token: string | null,
+): Promise<Response> {
+  return fetch(`${API_BASE}${path}`, {
+    headers: { ...authHeader(token) },
+  });
+}
+
+export async function put<TResponse = unknown>(
+  path: string,
+  token: string | null,
+  body: unknown,
+): Promise<TResponse> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeader(token),
+    },
+    body: JSON.stringify(body ?? {}),
+  });
+  const json = await parseJson(res);
+  if (!res.ok) {
+    throw new ApiError(
+      res.status,
+      `PUT ${path} -> ${res.status}: ${
+        (json as { error?: string } | null)?.error ?? res.statusText
+      }`,
+      json,
+    );
+  }
+  return json as TResponse;
+}
+
+export async function rawPut(
+  path: string,
+  token: string | null,
+  body: unknown,
+): Promise<Response> {
+  return fetch(`${API_BASE}${path}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeader(token),
+    },
+    body: JSON.stringify(body ?? {}),
+  });
+}
+
+export async function rawDelete(
+  path: string,
+  token: string | null,
+): Promise<Response> {
+  return fetch(`${API_BASE}${path}`, {
+    method: "DELETE",
+    headers: { ...authHeader(token) },
+  });
+}
+
 /** Reset total de la DB in-memory (tests seulement). */
 export async function resetDb(): Promise<void> {
   await fetch(`${API_BASE}/__test/reset`, { method: "POST" });
