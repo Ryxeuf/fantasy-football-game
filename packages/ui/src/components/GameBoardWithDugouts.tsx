@@ -6,6 +6,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { GameState, Player, calculateTackleZoneHeatmap, getReachableCells, getPassRangeBands, type TeamColors } from "@bb/game-engine";
 import PixiBoard from "../board/PixiBoard";
+import { resolveTeamRostersFromState } from "../board/team-color-resolver";
 import TeamDugoutComponent from "./TeamDugout";
 import PlayerDetails from "./PlayerDetails";
 
@@ -61,6 +62,14 @@ export default function GameBoardWithDugouts({
   const [showTackleZones, setShowTackleZones] = useState(false);
   const [showReachability, setShowReachability] = useState(false);
   const [showPassRange, setShowPassRange] = useState(false);
+
+  // H.6 — merge per-side rosters from state + prop override.
+  // Prop override wins per side; falls back to state.teamRosters; undefined triggers
+  // the legacy red/blue fallback inside PixiBoard.
+  const effectiveTeamRosters = useMemo(
+    () => resolveTeamRostersFromState(state, teamRosters),
+    [state, teamRosters],
+  );
 
   const tackleZoneHeatmap = useMemo(
     () => (showTackleZones && state ? calculateTackleZoneHeatmap(state) : undefined),
@@ -236,7 +245,7 @@ export default function GameBoardWithDugouts({
             showReachability={showReachability}
             passRangeBands={passRangeBands}
             showPassRange={showPassRange}
-            teamRosters={teamRosters}
+            teamRosters={effectiveTeamRosters}
             teamColorOverrides={teamColorOverrides}
           />
         </div>

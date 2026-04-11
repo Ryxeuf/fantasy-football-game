@@ -99,7 +99,14 @@ export function setupPreMatchWithTeams(
   teamBData: TeamPlayerData[],
   teamAName: string,
   teamBName: string,
-  options?: { teamAApothecary?: boolean; teamBApothecary?: boolean }
+  options?: {
+    teamAApothecary?: boolean;
+    teamBApothecary?: boolean;
+    /** H.6 — canonical roster slug for team A (e.g. 'skaven'). */
+    teamARoster?: string;
+    /** H.6 — canonical roster slug for team B (e.g. 'lizardmen'). */
+    teamBRoster?: string;
+  }
 ): ExtendedGameState {
   const dugouts = initializeDugouts();
 
@@ -190,6 +197,10 @@ export function setupPreMatchWithTeams(
       teamA: teamAName,
       teamB: teamBName,
     },
+    teamRosters:
+      options?.teamARoster || options?.teamBRoster
+        ? { teamA: options?.teamARoster, teamB: options?.teamBRoster }
+        : undefined,
     matchStats: {},
     casualtyResults: {},
     lastingInjuryDetails: {},

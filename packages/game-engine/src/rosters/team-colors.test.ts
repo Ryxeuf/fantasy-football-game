@@ -6,6 +6,7 @@ import {
   type TeamColors,
 } from './team-colors';
 import { TEAM_ROSTERS_BY_RULESET } from './positions';
+import { setupPreMatchWithTeams, type TeamPlayerData } from '../core/game-state';
 
 describe('Regle: team-colors (H.6 sprite sheets - sub-task 1)', () => {
   describe('DEFAULT_TEAM_COLORS', () => {
@@ -82,6 +83,59 @@ describe('Regle: team-colors (H.6 sprite sheets - sub-task 1)', () => {
     it('falls back to ROSTER_COLORS when override has only partial fields', () => {
       // Passing undefined override is equivalent to not passing one
       expect(getTeamColors('skaven', undefined)).toEqual(ROSTER_COLORS.skaven);
+    });
+  });
+
+  describe('setupPreMatchWithTeams populates state.teamRosters', () => {
+    const makePlayer = (team: 'A' | 'B', num: number): TeamPlayerData => ({
+      id: `${team}${num}`,
+      name: `${team}${num}`,
+      position: 'Lineman',
+      number: num,
+      ma: 6,
+      st: 3,
+      ag: 3,
+      pa: 4,
+      av: 9,
+      skills: '',
+    });
+
+    it('exposes the roster slugs on the resulting game state when provided', () => {
+      const state = setupPreMatchWithTeams(
+        [makePlayer('A', 1)],
+        [makePlayer('B', 1)],
+        'Skavens FC',
+        'Lizardmen FC',
+        { teamARoster: 'skaven', teamBRoster: 'lizardmen' },
+      );
+      expect(state.teamRosters?.teamA).toBe('skaven');
+      expect(state.teamRosters?.teamB).toBe('lizardmen');
+    });
+
+    it('leaves teamRosters undefined when no roster slugs provided', () => {
+      const state = setupPreMatchWithTeams(
+        [makePlayer('A', 1)],
+        [makePlayer('B', 1)],
+        'Team A',
+        'Team B',
+      );
+      // Either undefined object, or both sides undefined — both are valid "no data"
+      expect(state.teamRosters?.teamA).toBeUndefined();
+      expect(state.teamRosters?.teamB).toBeUndefined();
+    });
+
+    it('allows resolving canonical colors via getTeamColors from the state slug', () => {
+      const state = setupPreMatchWithTeams(
+        [makePlayer('A', 1)],
+        [makePlayer('B', 1)],
+        'Orcs',
+        'Dwarfs',
+        { teamARoster: 'orc', teamBRoster: 'dwarf' },
+      );
+      const colorsA = getTeamColors(state.teamRosters?.teamA);
+      const colorsB = getTeamColors(state.teamRosters?.teamB);
+      expect(colorsA).toEqual(ROSTER_COLORS.orc);
+      expect(colorsB).toEqual(ROSTER_COLORS.dwarf);
     });
   });
 
