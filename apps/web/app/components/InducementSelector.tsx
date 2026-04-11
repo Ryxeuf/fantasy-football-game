@@ -83,7 +83,10 @@ export default function InducementSelector({
 
   if (budget <= 0) {
     return (
-      <div className="rounded border bg-white p-4">
+      <div
+        data-testid="inducement-selector"
+        className="rounded border bg-white p-4"
+      >
         <h3 className="font-semibold mb-2">
           {t.inducements?.title || "Inducements"} — {teamName}
         </h3>
@@ -91,6 +94,7 @@ export default function InducementSelector({
           {t.inducements?.noBudget || "No budget available"}
         </p>
         <button
+          data-testid="inducement-skip"
           onClick={onSkip}
           disabled={disabled}
           className="mt-3 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors disabled:opacity-50"
@@ -102,7 +106,10 @@ export default function InducementSelector({
   }
 
   return (
-    <div className="rounded border bg-white p-4 max-w-lg w-full">
+    <div
+      data-testid="inducement-selector"
+      className="rounded border bg-white p-4 max-w-lg w-full"
+    >
       <h3 className="font-semibold mb-3 text-lg">
         {t.inducements?.selectInducements || "Select your inducements"} — {teamName}
       </h3>
@@ -192,6 +199,7 @@ export default function InducementSelector({
       {/* Actions */}
       <div className="mt-4 flex gap-3">
         <button
+          data-testid="inducement-confirm"
           onClick={handleConfirm}
           disabled={disabled || totalCost > budget}
           className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
@@ -199,6 +207,7 @@ export default function InducementSelector({
           {t.inducements?.confirm || "Confirm Selection"}
         </button>
         <button
+          data-testid="inducement-skip"
           onClick={onSkip}
           disabled={disabled}
           className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors disabled:opacity-50"

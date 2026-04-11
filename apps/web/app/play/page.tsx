@@ -356,7 +356,10 @@ export default function PlayPage() {
 
       {/* Error */}
       {error && (
-        <div className="max-w-2xl mx-auto rounded-lg border-2 border-red-300 bg-red-50 p-4 flex items-start gap-3">
+        <div
+          data-testid="play-error"
+          className="max-w-2xl mx-auto rounded-lg border-2 border-red-300 bg-red-50 p-4 flex items-start gap-3"
+        >
           <svg className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
           </svg>
@@ -409,6 +412,7 @@ export default function PlayPage() {
                   </p>
                 )}
                 <button
+                  data-testid="matchmaking-cancel"
                   onClick={cancelMatchmaking}
                   className="w-full px-4 py-2 rounded-lg border-2 border-red-300 text-red-600 hover:bg-red-50 font-subtitle font-semibold text-sm transition-all"
                 >
@@ -435,6 +439,7 @@ export default function PlayPage() {
                 ) : (
                   <>
                     <select
+                      data-testid="team-select"
                       value={selectedTeamId}
                       onChange={(e) => setSelectedTeamId(e.target.value)}
                       className="w-full px-4 py-3 rounded-lg border-2 border-nuffle-bronze/30 focus:border-nuffle-gold focus:outline-none font-body text-sm bg-white"
@@ -449,6 +454,7 @@ export default function PlayPage() {
                       ))}
                     </select>
                     <button
+                      data-testid="matchmaking-start"
                       onClick={startMatchmaking}
                       disabled={!selectedTeamId}
                       className="w-full px-6 py-3 rounded-lg bg-green-600 hover:bg-green-700 text-white font-subtitle font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
@@ -481,6 +487,7 @@ export default function PlayPage() {
               {t.play?.createDesc || "Lancez un nouveau match et partagez l'identifiant avec votre adversaire pour qu'il vous rejoigne."}
             </p>
             <button
+              data-testid="create-match-button"
               onClick={createMatch}
               disabled={creating}
               className="w-full px-6 py-3 rounded-lg bg-nuffle-gold hover:bg-nuffle-gold/90 text-nuffle-anthracite font-subtitle font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
@@ -509,6 +516,7 @@ export default function PlayPage() {
             </p>
             <div className="flex gap-2">
               <input
+                data-testid="match-id-input"
                 type="text"
                 className="flex-1 px-4 py-3 rounded-lg border-2 border-nuffle-bronze/30 focus:border-nuffle-gold focus:outline-none font-body text-sm placeholder:text-nuffle-anthracite/40"
                 placeholder={t.play?.matchIdPlaceholder || "ID de la partie"}
@@ -517,6 +525,7 @@ export default function PlayPage() {
                 onKeyDown={(e) => e.key === "Enter" && joinMatch()}
               />
               <button
+                data-testid="join-match-button"
                 onClick={joinMatch}
                 disabled={joining || !matchIdInput.trim()}
                 className="px-5 py-3 rounded-lg bg-nuffle-anthracite hover:bg-nuffle-anthracite/90 text-nuffle-ivory font-subtitle font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none whitespace-nowrap"

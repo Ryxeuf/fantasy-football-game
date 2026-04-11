@@ -907,7 +907,15 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
         onClose={() => { window.location.href = "/lobby"; }}
       />
     )}
-    <div className="min-h-screen bg-gray-100">
+    <div
+      className="min-h-screen bg-gray-100"
+      data-testid="game-view"
+      data-match-status={matchStatus}
+      data-game-phase={state?.gamePhase}
+      data-prematch-phase={state?.preMatch?.phase}
+      data-my-team-side={localSide}
+      data-is-my-turn={isMyTurn ? "true" : "false"}
+    >
       <GameScoreboard
         state={state}
         leftTeamName={state.teamNames?.teamA}

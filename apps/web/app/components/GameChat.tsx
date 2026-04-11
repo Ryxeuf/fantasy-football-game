@@ -78,6 +78,7 @@ export default function GameChat({
   if (!open) {
     return (
       <button
+        data-testid="chat-toggle"
         onClick={() => setOpen(true)}
         className="fixed bottom-4 left-4 z-50 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg transition-colors"
         title="Ouvrir le chat"
@@ -107,11 +108,15 @@ export default function GameChat({
 
   // Expanded: chat panel
   return (
-    <div className="fixed bottom-4 left-4 z-50 w-80 max-h-96 bg-white border border-gray-300 rounded-lg shadow-xl flex flex-col">
+    <div
+      data-testid="chat-panel"
+      className="fixed bottom-4 left-4 z-50 w-80 max-h-96 bg-white border border-gray-300 rounded-lg shadow-xl flex flex-col"
+    >
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 bg-indigo-600 text-white rounded-t-lg">
         <span className="text-sm font-semibold">Chat</span>
         <button
+          data-testid="chat-close"
           onClick={() => setOpen(false)}
           className="text-white hover:text-gray-200 transition-colors"
           title="Fermer le chat"
@@ -174,6 +179,7 @@ export default function GameChat({
       {/* Input */}
       <div className="flex items-center gap-2 px-3 py-2 border-t border-gray-200">
         <input
+          data-testid="chat-input"
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -184,6 +190,7 @@ export default function GameChat({
           disabled={sending}
         />
         <button
+          data-testid="chat-send"
           onClick={handleSend}
           disabled={sending || !input.trim()}
           className="text-sm px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"

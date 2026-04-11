@@ -22,7 +22,10 @@ export default function PreMatchSummary({ state }: PreMatchSummaryProps) {
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto mb-4">
+    <div
+      data-testid="prematch-summary"
+      className="w-full max-w-2xl mx-auto mb-4"
+    >
       <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-4 space-y-3">
         <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide text-center">
           Sequence pre-match
