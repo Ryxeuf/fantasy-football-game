@@ -72,6 +72,7 @@ import {
   resolveKickoffQuickSnap,
   resolveKickoffBlitz,
 } from '../mechanics/kickoff-resolution';
+import { checkBoneHead } from '../mechanics/negative-traits';
 
 /**
  * Obtient tous les mouvements légaux pour l'état actuel
@@ -420,49 +421,67 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
     return state;
   }
 
+  // ─── Negative trait activation checks (Bone Head, etc.) ───────────────
+  // These run once at the start of a player's activation (first action only).
+  // If the check fails, the player's activation ends without executing the action.
+  let activeState = state;
+  const ACTIVATION_MOVE_TYPES: string[] = [
+    'MOVE', 'DODGE', 'BLOCK', 'BLITZ', 'PASS', 'HANDOFF',
+    'THROW_TEAM_MATE', 'FOUL', 'HYPNOTIC_GAZE', 'PROJECTILE_VOMIT',
+  ];
+  if (ACTIVATION_MOVE_TYPES.includes(move.type) && 'playerId' in move) {
+    const playerId = (move as { playerId: string }).playerId;
+    const player = state.players.find(p => p.id === playerId);
+    if (player && !hasPlayerActed(state, player.id)) {
+      const activationCheck = checkBoneHead(state, player, rng);
+      if (!activationCheck.passed) return activationCheck.newState;
+      activeState = activationCheck.newState;
+    }
+  }
+
   switch (move.type) {
     case 'END_TURN':
-      return handleEndTurn(state, rng);
+      return handleEndTurn(activeState, rng);
     case 'MOVE':
-      return handleMove(state, move, rng);
+      return handleMove(activeState, move, rng);
     case 'DODGE':
-      return handleDodge(state, move, rng);
+      return handleDodge(activeState, move, rng);
     case 'BLOCK':
-      return handleBlock(state, move, rng);
+      return handleBlock(activeState, move, rng);
     case 'BLOCK_CHOOSE':
-      return handleBlockChoose(state, move, rng);
+      return handleBlockChoose(activeState, move, rng);
     case 'PUSH_CHOOSE':
-      return handlePushChoose(state, move);
+      return handlePushChoose(activeState, move);
     case 'FOLLOW_UP_CHOOSE':
-      return handleFollowUpChoose(state, move);
+      return handleFollowUpChoose(activeState, move);
     case 'BLITZ':
-      return handleBlitz(state, move, rng);
+      return handleBlitz(activeState, move, rng);
     case 'REROLL_CHOOSE':
-      return handleRerollChoose(state, move, rng);
+      return handleRerollChoose(activeState, move, rng);
     case 'APOTHECARY_CHOOSE':
-      return applyApothecaryChoice(state, move.useApothecary, rng);
+      return applyApothecaryChoice(activeState, move.useApothecary, rng);
     case 'PASS':
-      return handlePass(state, move, rng);
+      return handlePass(activeState, move, rng);
     case 'HANDOFF':
-      return handleHandoff(state, move, rng);
+      return handleHandoff(activeState, move, rng);
     case 'THROW_TEAM_MATE':
-      return handleThrowTeamMate(state, move, rng);
+      return handleThrowTeamMate(activeState, move, rng);
     case 'FOUL':
-      return handleFoul(state, move, rng);
+      return handleFoul(activeState, move, rng);
     case 'HYPNOTIC_GAZE':
-      return handleHypnoticGaze(state, move, rng);
+      return handleHypnoticGaze(activeState, move, rng);
     case 'PROJECTILE_VOMIT':
-      return handleProjectileVomit(state, move, rng);
+      return handleProjectileVomit(activeState, move, rng);
     case 'KICKOFF_PERFECT_DEFENCE':
-      return resolveKickoffPerfectDefence(state, move.positions);
+      return resolveKickoffPerfectDefence(activeState, move.positions);
     case 'KICKOFF_HIGH_KICK':
-      return resolveKickoffHighKick(state, move.playerId);
+      return resolveKickoffHighKick(activeState, move.playerId);
     case 'KICKOFF_QUICK_SNAP':
-      return resolveKickoffQuickSnap(state, move.moves);
+      return resolveKickoffQuickSnap(activeState, move.moves);
     case 'KICKOFF_BLITZ_RESOLVE':
-      return resolveKickoffBlitz(state);
+      return resolveKickoffBlitz(activeState);
     default:
-      return checkTouchdowns(state);
+      return checkTouchdowns(activeState);
   }
 }
 
