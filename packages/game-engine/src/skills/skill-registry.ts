@@ -25,6 +25,7 @@ export type SkillTrigger =
   | 'on-turnover'            // Lors d'un turnover
   | 'on-setup'               // Lors du placement
   | 'on-kickoff'             // Lors du kickoff
+  | 'on-activation'          // Au début de l'activation du joueur (ex: Bone Head)
   | 'passive';               // Effet passif permanent
 
 export interface SkillContext {
@@ -580,6 +581,17 @@ registerSkill({
   triggers: ['passive'],
   description: 'Ce joueur doit obtenir 5+ sur un D6 pour utiliser une relance d\'équipe.',
   canApply: (ctx) => hasSkill(ctx.player, 'loner-5'),
+});
+
+// ─── BONE HEAD ──────────────────────────────────────────────────────────────
+// Bone Head check is performed in applyMove before dispatching to action handlers.
+// Registered here for lookup and metadata purposes.
+
+registerSkill({
+  slug: 'bone-head',
+  triggers: ['on-activation'],
+  description: 'Au début de l\'activation, jet D6. Sur 1, le joueur ne peut pas agir (activation terminée).',
+  canApply: (ctx) => hasSkill(ctx.player, 'bone-head'),
 });
 
 // ─── ANIMOSITY (5 variants) ─────────────────────────────────────────────────
