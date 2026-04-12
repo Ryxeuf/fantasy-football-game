@@ -623,6 +623,17 @@ registerSkill({
   canApply: (ctx) => hasSkill(ctx.player, 'wild-animal'),
 });
 
+// ─── ANIMAL SAVAGERY ────────────────────────────────────────────────────────
+// Animal Savagery check is performed in applyMove before dispatching to action handlers.
+// Registered here for lookup and metadata purposes.
+
+registerSkill({
+  slug: 'animal-savagery',
+  triggers: ['on-activation'],
+  description: 'Au début de l\'activation, jet D6. Sur 1, attaque un coéquipier adjacent aléatoire (bloc forcé). Sans coéquipier adjacent, activation terminée.',
+  canApply: (ctx) => hasSkill(ctx.player, 'animal-savagery'),
+});
+
 // ─── ANIMOSITY (5 variants) ─────────────────────────────────────────────────
 // Animosity is checked in handlePass/handleHandoff before the action executes.
 // Registered here for lookup and metadata purposes.

@@ -72,7 +72,7 @@ import {
   resolveKickoffQuickSnap,
   resolveKickoffBlitz,
 } from '../mechanics/kickoff-resolution';
-import { checkBoneHead, checkReallyStupid, checkWildAnimal } from '../mechanics/negative-traits';
+import { checkBoneHead, checkReallyStupid, checkWildAnimal, checkAnimalSavagery } from '../mechanics/negative-traits';
 
 /**
  * Obtient tous les mouvements légaux pour l'état actuel
@@ -444,6 +444,10 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       const wildAnimalCheck = checkWildAnimal(activeState, player, rng, move.type);
       if (!wildAnimalCheck.passed) return wildAnimalCheck.newState;
       activeState = wildAnimalCheck.newState;
+
+      const animalSavageryCheck = checkAnimalSavagery(activeState, player, rng);
+      if (!animalSavageryCheck.passed) return animalSavageryCheck.newState;
+      activeState = animalSavageryCheck.newState;
     }
   }
 

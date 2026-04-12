@@ -1,13 +1,18 @@
 /**
- * Negative trait activation checks (Bone Head, Really Stupid, Wild Animal, etc.)
+ * Negative trait activation checks (Bone Head, Really Stupid, Wild Animal, Animal Savagery, etc.)
  * These are checked at the start of a player's activation before their first action.
  */
 
-import type { GameState, Player, RNG } from '../core/types';
+import type { GameState, Player, RNG, Position, BlockResult } from '../core/types';
 import { hasSkill } from '../skills/skill-effects';
 import { hasPlayerActed, setPlayerAction } from '../core/game-state';
 import { createLogEntry } from '../utils/logging';
-import { getAdjacentPlayers } from './movement';
+import { getAdjacentPlayers, inBounds, isPositionOccupied } from './movement';
+import { blockResultFromRoll } from '../utils/dice';
+import { performArmorRoll } from '../utils/dice';
+import { performInjuryRoll } from './injury';
+import { getPushDirections } from './blocking';
+import { checkBlockNegatesBothDown, checkDodgeNegatesStumble } from '../skills/skill-bridge';
 
 export interface ActivationCheckResult {
   passed: boolean;
@@ -249,4 +254,274 @@ export function checkWildAnimal(
   }
 
   return { passed: success, newState };
+}
+
+/**
+ * Auto-push a target player away from the attacker.
+ * Picks the first available direction. No pending state.
+ */
+function autoPushPlayer(
+  state: GameState,
+  attacker: Player,
+  target: Player,
+): { newState: GameState; pushed: boolean } {
+  const pushDirections = getPushDirections(attacker.pos, target.pos);
+  for (const dir of pushDirections) {
+    const newPos: Position = {
+      x: target.pos.x + dir.x,
+      y: target.pos.y + dir.y,
+    };
+    if (inBounds(state, newPos) && !isPositionOccupied(state, newPos)) {
+      const pushLog = createLogEntry(
+        'action',
+        `${target.name} repoussé vers (${newPos.x}, ${newPos.y})`,
+        attacker.id,
+        attacker.team
+      );
+      return {
+        newState: {
+          ...state,
+          players: state.players.map(p =>
+            p.id === target.id ? { ...p, pos: newPos } : p
+          ),
+          gameLog: [...state.gameLog, pushLog],
+        },
+        pushed: true,
+      };
+    }
+  }
+  return { newState: state, pushed: false };
+}
+
+/**
+ * Knock down a player in place: set stunned, perform armor + injury rolls.
+ */
+function knockDownPlayer(
+  state: GameState,
+  player: Player,
+  rng: RNG
+): GameState {
+  let newState: GameState = {
+    ...state,
+    players: state.players.map(p =>
+      p.id === player.id ? { ...p, stunned: true } : p
+    ),
+  };
+
+  const armorResult = performArmorRoll(player, rng);
+  const armorLog = createLogEntry(
+    'dice',
+    `Jet d'armure: ${armorResult.diceRoll}/${armorResult.targetNumber} ${armorResult.success ? '✓' : '✗'}`,
+    player.id,
+    player.team,
+    { diceRoll: armorResult.diceRoll, targetNumber: armorResult.targetNumber, success: armorResult.success }
+  );
+  newState = { ...newState, gameLog: [...newState.gameLog, armorLog] };
+
+  if (!armorResult.success) {
+    newState = performInjuryRoll(newState, player, rng);
+  }
+
+  return newState;
+}
+
+/**
+ * Resolve a forced Animal Savagery block inline (no pending states).
+ * Returns the updated state and whether the attacker is still standing.
+ */
+function resolveAnimalSavageryBlock(
+  state: GameState,
+  attacker: Player,
+  target: Player,
+  blockResult: BlockResult,
+  rng: RNG
+): { newState: GameState; attackerStanding: boolean } {
+  let newState = state;
+
+  switch (blockResult) {
+    case 'PLAYER_DOWN': {
+      const downLog = createLogEntry(
+        'action',
+        `${attacker.name} tombe en attaquant sauvagement !`,
+        attacker.id,
+        attacker.team
+      );
+      newState = { ...newState, gameLog: [...newState.gameLog, downLog] };
+      newState = knockDownPlayer(newState, attacker, rng);
+      return { newState, attackerStanding: false };
+    }
+
+    case 'BOTH_DOWN': {
+      const attackerHasBlock = checkBlockNegatesBothDown(attacker, state);
+      const targetHasBlock = checkBlockNegatesBothDown(target, state);
+      const attackerFalls = !attackerHasBlock;
+      const targetFalls = !targetHasBlock;
+
+      if (!attackerFalls && !targetFalls) {
+        const log = createLogEntry(
+          'action',
+          `Les Deux Plaqués — ${attacker.name} et ${target.name} restent debout (Block)`,
+          attacker.id,
+          attacker.team
+        );
+        return { newState: { ...newState, gameLog: [...newState.gameLog, log] }, attackerStanding: true };
+      }
+
+      const log = createLogEntry(
+        'action',
+        `Les Deux Plaqués — ${attackerFalls ? attacker.name + ' tombe' : attacker.name + ' (Block)'}, ${targetFalls ? target.name + ' tombe' : target.name + ' (Block)'}`,
+        attacker.id,
+        attacker.team
+      );
+      newState = { ...newState, gameLog: [...newState.gameLog, log] };
+
+      if (targetFalls) {
+        const { newState: pushed } = autoPushPlayer(newState, attacker, target);
+        newState = pushed;
+        newState = knockDownPlayer(newState, target, rng);
+      }
+      if (attackerFalls) {
+        newState = knockDownPlayer(newState, attacker, rng);
+      }
+
+      return { newState, attackerStanding: !attackerFalls };
+    }
+
+    case 'PUSH_BACK': {
+      const { newState: pushed } = autoPushPlayer(newState, attacker, target);
+      newState = pushed;
+      return { newState, attackerStanding: true };
+    }
+
+    case 'STUMBLE': {
+      const dodgeNegates = checkDodgeNegatesStumble(target, attacker, state);
+      const { newState: pushed } = autoPushPlayer(newState, attacker, target);
+      newState = pushed;
+      if (!dodgeNegates) {
+        newState = knockDownPlayer(newState, target, rng);
+      }
+      return { newState, attackerStanding: true };
+    }
+
+    case 'POW': {
+      const { newState: pushed } = autoPushPlayer(newState, attacker, target);
+      newState = pushed;
+      newState = knockDownPlayer(newState, target, rng);
+      return { newState, attackerStanding: true };
+    }
+
+    default:
+      return { newState, attackerStanding: true };
+  }
+}
+
+/**
+ * Check Animal Savagery activation roll.
+ * BB3 Rule: At the start of this player's activation, roll a D6.
+ * - On a 2+: player may perform their declared action as normal.
+ * - On a 1: player lashes out at a random adjacent standing teammate.
+ *   -> If adjacent standing teammate exists: perform forced 1-die block, then
+ *      if attacker is still standing, continue declared action.
+ *   -> If no adjacent standing teammate: activation ends immediately (NOT a turnover).
+ *
+ * @returns { passed: true, newState } if player can continue their action
+ * @returns { passed: false, newState } if activation is lost
+ */
+export function checkAnimalSavagery(
+  state: GameState,
+  player: Player,
+  rng: RNG
+): ActivationCheckResult {
+  if (!hasSkill(player, 'animal-savagery')) {
+    return { passed: true, newState: state };
+  }
+
+  if (hasPlayerActed(state, player.id)) {
+    return { passed: true, newState: state };
+  }
+
+  const roll = Math.floor(rng() * 6) + 1;
+  const success = roll >= 2;
+
+  const rollLog = createLogEntry(
+    'dice',
+    `Sauvagerie Animale: ${roll}/2 ${success ? '✓' : '✗'}`,
+    player.id,
+    player.team,
+    { diceRoll: roll, targetNumber: 2, success, skill: 'animal-savagery' }
+  );
+
+  let newState: GameState = {
+    ...state,
+    gameLog: [...state.gameLog, rollLog],
+  };
+
+  if (success) {
+    return { passed: true, newState };
+  }
+
+  // Failed (roll 1): lash out at random adjacent standing teammate
+  const adjacents = getAdjacentPlayers(newState, player.pos);
+  const standingTeammates = adjacents.filter(
+    p => p.team === player.team && p.id !== player.id && p.state === 'active'
+  );
+
+  if (standingTeammates.length === 0) {
+    const failLog = createLogEntry(
+      'info',
+      `${player.name} est pris de sauvagerie mais n'a aucun coéquipier adjacent !`,
+      player.id,
+      player.team
+    );
+    newState = {
+      ...newState,
+      gameLog: [...newState.gameLog, failLog],
+    };
+
+    newState = setPlayerAction(newState, player.id, 'MOVE');
+    newState = {
+      ...newState,
+      players: newState.players.map(p =>
+        p.id === player.id ? { ...p, pm: 0, gfiUsed: 2 } : p
+      ),
+    };
+
+    return { passed: false, newState };
+  }
+
+  // Pick random adjacent teammate
+  const targetIndex = Math.floor(rng() * standingTeammates.length);
+  const target = standingTeammates[targetIndex];
+
+  // Perform forced 1-die block against teammate
+  const blockRoll = Math.floor(rng() * 6) + 1;
+  const blockResult = blockResultFromRoll(blockRoll);
+
+  const lashLog = createLogEntry(
+    'action',
+    `${player.name} attaque sauvagement ${target.name} ! (${blockResult})`,
+    player.id,
+    player.team,
+    { skill: 'animal-savagery', targetId: target.id, blockResult, diceRoll: blockRoll }
+  );
+  newState = { ...newState, gameLog: [...newState.gameLog, lashLog] };
+
+  // Resolve forced block inline
+  const resolution = resolveAnimalSavageryBlock(newState, player, target, blockResult, rng);
+  newState = resolution.newState;
+
+  if (!resolution.attackerStanding) {
+    newState = setPlayerAction(newState, player.id, 'MOVE');
+    newState = {
+      ...newState,
+      isTurnover: true,
+      players: newState.players.map(p =>
+        p.id === player.id ? { ...p, pm: 0, gfiUsed: 2 } : p
+      ),
+    };
+    return { passed: false, newState };
+  }
+
+  // Attacker still standing: can continue their declared action
+  return { passed: true, newState };
 }
