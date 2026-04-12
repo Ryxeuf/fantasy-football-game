@@ -1,7 +1,8 @@
 # Phases de Developpement
 
-> Derniere mise a jour : 2026-04-02
+> Derniere mise a jour : 2026-04-12
 > Voir [audit-report.md](./audit-report.md) pour le detail des constats.
+> Voir [evolution-analysis-2026-04-12.md](./evolution-analysis-2026-04-12.md) pour l'analyse d'evolution et les phases J-O.
 
 ---
 
@@ -180,3 +181,123 @@
 | I.8 | Fixer 2 conditions meteo manquantes | Faible | Facile | [ ] | Affaissement du plafond, Ames errantes en colere |
 | I.9 | Implementer 4 kickoff events delegues UI | Moyen | Moyen | [ ] | perfect-defence, high-kick, quick-snap, blitz |
 | I.10 | Fixer cheering fans dedicated fans a 0 | Faible | Facile | [ ] | Hardcode dans kickoff-events.ts |
+
+---
+
+## Phase J — Traits negatifs & equilibre equipes (CRITIQUE)
+
+> Analyse d'evolution 2026-04-12. Sans ces traits, les equipes Big Guys/Vampires/Nurgle sont surpuissantes.
+> Fichiers principaux : `skill-registry.ts`, `actions.ts`, `types.ts`
+
+| # | Tache | Gain | Diff | Statut | Detail |
+|---|-------|------|------|--------|--------|
+| J.1 | Implementer `bone-head` | Fort | Facile | [ ] | Roll D6 a l'activation; sur 1, perte d'action. Ogres, Snotlings |
+| J.2 | Implementer `really-stupid` (1/2) | Fort | Facile | [ ] | Roll D6; sur 1, perte action (sauf coequipier adjacent non-RS) |
+| J.3 | Implementer `wild-animal` | Fort | Facile | [ ] | Roll D6; sur 1-2, ne peut que block/blitz |
+| J.4 | Implementer `animal-savagery` | Fort | Moyen | [ ] | Roll D6; sur 1, block un coequipier adjacent aleatoire |
+| J.5 | Implementer `take-root` | Fort | Facile | [ ] | Roll D6; sur 1, enracine (ne peut bouger tout le tour) |
+| J.6 | Implementer `no-hands` | Fort | Facile | [ ] | Ne peut ramasser/attraper/porter le ballon |
+| J.7 | Implementer `right-stuff` | Fort | Facile | [ ] | Peut etre lance; blessure reduite a l'atterrissage |
+| J.8 | Implementer `bloodlust` (3 variantes) | Fort | Moyen | [ ] | Doit mordre un thrall apres activation; echec = turnover |
+| J.9 | Implementer `always-hungry` | Fort | Facile | [ ] | Roll D6; sur 1, mange le coequipier lance |
+| J.10 | Implementer `foul-appearance` | Fort | Facile | [ ] | Adversaire roll D6 avant block; sur 1, block echoue |
+| J.11 | Implementer `instable` | Moyen | Facile | [ ] | Retire du jeu sur double armor break |
+
+---
+
+## Phase K — Skills a fort impact
+
+> Skills couramment rencontres qui enrichissent significativement le gameplay.
+> Fichiers principaux : `skill-registry.ts`, `actions.ts`, `movement.ts`, `blocking.ts`
+
+| # | Tache | Gain | Diff | Statut | Detail |
+|---|-------|------|------|--------|--------|
+| K.1 | Implementer `leap` + `pogo-stick` | Fort | Moyen | [ ] | Sauter par-dessus les tackle zones. Wood Elves, High Elves, Slann |
+| K.2 | Implementer `stab` | Fort | Moyen | [ ] | Action alternative au block standard. Assassins |
+| K.3 | Implementer `chainsaw` | Fort | Moyen | [ ] | Action alternative au block, -armorRoll. Secret Weapon |
+| K.4 | Implementer `dump-off` | Fort | Moyen | [ ] | Quick Pass defensif quand cible par block en portant le ballon |
+| K.5 | Implementer `on-the-ball` | Moyen | Facile | [ ] | Deplacement libre quand adversaire fait une passe |
+| K.6 | Implementer `kick` | Moyen | Facile | [ ] | Choix de placement du kickoff (pas de scatter aleatoire) |
+| K.7 | Implementer `sneaky-git` | Moyen | Facile | [ ] | Fouls : pas d'expulsion sur doubles |
+| K.8 | Implementer `defensive` | Moyen | Facile | [ ] | Deplacement 1 case lors du setup adverse |
+| K.9 | Implementer `disturbing-presence` | Moyen | Facile | [ ] | -1 aux jets passe/interception/catch adverses adjacents |
+| K.10 | Implementer `multiple-block` | Moyen | Moyen | [ ] | Block deux adversaires adjacents simultanement |
+| K.11 | Implementer `hail-mary-pass` + `safe-pass` | Moyen | Moyen | [ ] | Passe longue portee / protection fumble |
+| K.12 | Implementer `ball-and-chain` | Fort | Moyen | [ ] | Mouvement aleatoire obligatoire, block auto |
+| K.13 | Implementer `bombardier` | Fort | Moyen | [ ] | Lancer de bombe (scatter, KO zone) |
+
+---
+
+## Phase L — Systeme de ligues (CRITIQUE)
+
+> Killer feature competitive. Le coeur du Blood Bowl en ligne.
+> Fichiers principaux : `prisma/schema.prisma`, `routes/league.ts` (nouveau), `apps/web/app/leagues/` (nouveau)
+
+| # | Tache | Gain | Diff | Statut | Detail |
+|---|-------|------|------|--------|--------|
+| L.1 | Modeles Prisma League/Season/Participant/Round | Fort | Moyen | [ ] | Schema DB pour ligues persistantes |
+| L.2 | Migration Prisma + seed data | Fort | Facile | [ ] | Tables et donnees initiales |
+| L.3 | Routes API CRUD ligue | Fort | Difficile | [ ] | create, join, schedule, standings, matchs |
+| L.4 | Generateur de calendrier round-robin | Fort | Moyen | [ ] | Algorithme de paires, gestion byes |
+| L.5 | Page liste des ligues | Fort | Moyen | [ ] | Browse, search, join |
+| L.6 | Page detail ligue | Fort | Difficile | [ ] | Calendrier, classement, matchs, stats |
+| L.7 | Integration match -> ligue | Fort | Moyen | [ ] | Resultats auto apres match online |
+| L.8 | ELO saisonnier avec reset | Moyen | Moyen | [ ] | Saisons, placements, tiers |
+
+---
+
+## Phase M — Parite mobile
+
+> L'app mobile a 7 ecrans vs 40+ sur web. Objectif : jeu en ligne complet sur mobile.
+> Fichiers principaux : `apps/mobile/app/` (nouveaux ecrans), `packages/ui/src/board/PixiBoard.native.tsx`
+
+| # | Tache | Gain | Diff | Statut | Detail |
+|---|-------|------|------|--------|--------|
+| M.1 | Ecrans gestion d'equipe | Fort | Difficile | [ ] | Creer, editer, voir, star players |
+| M.2 | Ecran queue matchmaking | Fort | Moyen | [ ] | Bouton recherche, attente, notification |
+| M.3 | Integration WebSocket complete | Fort | Moyen | [ ] | Socket.io client, reconnexion, statut |
+| M.4 | Popups block/push/followup/reroll | Fort | Moyen | [ ] | Composants natifs touch-friendly |
+| M.5 | Chat in-game mobile | Moyen | Facile | [ ] | Bulle de chat overlay |
+| M.6 | Ecran leaderboard | Moyen | Facile | [ ] | ELO rankings pagines |
+| M.7 | Ecran replay de match | Moyen | Moyen | [ ] | Controles lecture, timeline |
+| M.8 | Ecrans cups/ligues | Moyen | Moyen | [ ] | Browse, detail, classement |
+| M.9 | Push notifications natives | Moyen | Moyen | [ ] | Expo Notifications, preferences |
+| M.10 | Details joueur et progression | Moyen | Moyen | [ ] | Stats, SPP, blessures, level-up |
+| M.11 | Catalogue Star Players | Faible | Facile | [ ] | Liste avec images et stats |
+| M.12 | Profil et settings | Faible | Facile | [ ] | Coach name, ELO, preferences |
+
+---
+
+## Phase N — Croissance & engagement
+
+> Features pour attirer et retenir les joueurs.
+> Fichiers principaux : `rules-config.ts`, `packages/game-engine/src/ai/` (nouveau), `prisma/schema.prisma`
+
+| # | Tache | Gain | Diff | Statut | Detail |
+|---|-------|------|------|--------|--------|
+| N.1 | Tutoriel interactif | Fort | Difficile | [ ] | Match guide etape par etape contre scripts |
+| N.2 | Mode simplifie debutants | Fort | Moyen | [ ] | Leverager `SIMPLIFIED_RULES` existant |
+| N.3 | IA adversaire (heuristique) | Fort | Tres Diff | [ ] | Evaluation positionnelle, scoring coups |
+| N.4 | Mode pratique contre IA | Fort | Moyen | [ ] | Match solo pour s'entrainer |
+| N.5 | Systeme d'amis | Moyen | Difficile | [ ] | Ajout, invitation directe, statut en ligne |
+| N.6 | Historique matchs + stats carriere | Moyen | Moyen | [ ] | W/L/D, head-to-head, stats aggregees |
+| N.7 | Systeme d'achievements | Moyen | Difficile | [ ] | Milestones, deblocables, progression |
+
+---
+
+## Phase O — Contenu & polish final
+
+> Completion de couverture, optimisations, qualite.
+
+| # | Tache | Gain | Diff | Statut | Detail |
+|---|-------|------|------|--------|--------|
+| O.1 | ~39 skills niche restants (batch 3) | Moyen | Difficile | [ ] | cannoneer, cloud-burster, etc. |
+| O.2 | Star player special rules (~30 restantes) | Moyen | Moyen | [ ] | Effets mecaniques dans star-player-rules.ts |
+| O.3 | Verification differences regles S3 | Moyen | Moyen | [ ] | Skills isModified, season3Only |
+| O.4 | Expansion E2E tests (80% coverage) | Moyen | Difficile | [ ] | Vitest coverage, Playwright specs |
+| O.5 | Optimisation GameState (separer gameLog) | Moyen | Moyen | [ ] | Log croit sans limite, diffs par tour |
+| O.6 | Standardiser error handling | Moyen | Moyen | [ ] | ApiResponse<T> uniforme |
+| O.7 | Optimiser queries DB | Moyen | Moyen | [ ] | Pagination, select, indexes |
+| O.8 | Cosmetiques | Faible | Moyen | [ ] | Logos equipe, generateur noms par race |
+| O.9 | Features communautaires | Faible | Difficile | [ ] | Match of the week, Discord, profils coach |
+| O.10 | Dashboard analytics | Faible | Moyen | [ ] | Stats perso et globales |
