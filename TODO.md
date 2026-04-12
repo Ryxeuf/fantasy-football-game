@@ -178,7 +178,7 @@
 | I.7 | Differencier star players S3 vs S2 (overrides, Slann regional rules) | Contenu | [x] |
 | B2.6 | Verifier connexion Sweltering Heat dans le flow (deja cable) | Regle | [x] |
 | I.6 | Rediger regles speciales star players manquantes (~60) | Contenu | [x] |
-| H.7 | Variantes de terrain (skins herbe/ruine/neige) | Polish | [ ] |
+| H.7 | Variantes de terrain (skins herbe/ruine/neige) | Polish | [x] |
 
 ---
 

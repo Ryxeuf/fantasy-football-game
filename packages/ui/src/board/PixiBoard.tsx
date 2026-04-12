@@ -18,6 +18,7 @@ import { useDiceEffects } from "./useDiceEffects";
 import { useSpriteTextures } from "./useSpriteTextures";
 import { resolvePlayerSpriteFrame } from "./sprite-frame-resolver";
 import { resolveTeamSpriteManifest } from "./team-color-resolver";
+import { getTerrainSkin, type TerrainSkinId } from "./terrain-skins";
 
 /** Extract up to 2 initials from a player's name (e.g. "Grim Ironjaw" -> "GI") */
 function getInitials(player: Player): string {
@@ -67,6 +68,8 @@ type Props = {
   teamRosters?: TeamRostersMap;
   /** H.6 — optional explicit color override per team (bypasses rosterSlug lookup). */
   teamColorOverrides?: TeamColorOverridesMap;
+  /** H.7 — terrain skin variant (grass/ruins/snow). Defaults to grass. */
+  terrainSkin?: TerrainSkinId;
 };
 
 export default function PixiBoard({
@@ -88,9 +91,13 @@ export default function PixiBoard({
   showPassRange = false,
   teamRosters,
   teamColorOverrides,
+  terrainSkin: terrainSkinId,
 }: Props) {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [responsiveCellSize, setResponsiveCellSize] = React.useState(cellSize);
+
+  /* ── H.7 — Terrain skin ──────────────────────────────────────────── */
+  const skin = getTerrainSkin(terrainSkinId);
 
   /* ── Viewport state (zoom + pan) ──────────────────────────────────── */
   const [scale, setScale] = React.useState(1);
@@ -281,15 +288,15 @@ export default function PixiBoard({
       <Stage
         width={width}
         height={height}
-        options={{ backgroundColor: 0x6b8e23 }}
+        options={{ backgroundColor: skin.fieldColor }}
         onPointerDown={handleStageClick}
       >
         <Container scale={scale} x={offset.x} y={offset.y}>
-          {/* Fond vert kaki */}
+          {/* Fond terrain (H.7 — skin-driven) */}
           <Graphics
             draw={(g: PixiGraphics) => {
               g.clear();
-              g.beginFill(0x6b8e23);
+              g.beginFill(skin.fieldColor);
               g.drawRect(0, 0, width, height);
               g.endFill();
             }}
@@ -303,8 +310,8 @@ export default function PixiBoard({
               const squareSize = cs / 2;
               for (let x = 0; x < width; x += squareSize) {
                 for (let y = 0; y < tdHeight; y += squareSize) {
-                  const isRed = (x / squareSize + y / squareSize) % 2 === 0;
-                  g.beginFill(isRed ? 0xff0000 : 0xf5f5f5);
+                  const isPrimary = (x / squareSize + y / squareSize) % 2 === 0;
+                  g.beginFill(isPrimary ? skin.endzoneTeamAColor : skin.endzoneSecondaryColor);
                   g.drawRect(x, y, squareSize, squareSize);
                   g.endFill();
                 }
@@ -323,8 +330,8 @@ export default function PixiBoard({
               const startY = height - tdHeight;
               for (let x = 0; x < width; x += squareSize) {
                 for (let y = 0; y < tdHeight; y += squareSize) {
-                  const isBlue = (x / squareSize + y / squareSize) % 2 === 0;
-                  g.beginFill(isBlue ? 0x0000ff : 0xf5f5f5);
+                  const isPrimary = (x / squareSize + y / squareSize) % 2 === 0;
+                  g.beginFill(isPrimary ? skin.endzoneTeamBColor : skin.endzoneSecondaryColor);
                   g.drawRect(x, startY + y, squareSize, squareSize);
                   g.endFill();
                 }
@@ -338,7 +345,7 @@ export default function PixiBoard({
           <Graphics
             draw={(g: PixiGraphics) => {
               g.clear();
-              g.lineStyle(3, 0xffffff, 1);
+              g.lineStyle(3, skin.lineColor, 1);
               g.drawRect(0, 0, cs * 4, height);
             }}
           />
@@ -347,7 +354,7 @@ export default function PixiBoard({
           <Graphics
             draw={(g: PixiGraphics) => {
               g.clear();
-              g.lineStyle(3, 0xffffff, 1);
+              g.lineStyle(3, skin.lineColor, 1);
               g.drawRect(width - cs * 4, 0, cs * 4, height);
             }}
           />
@@ -356,7 +363,7 @@ export default function PixiBoard({
           <Graphics
             draw={(g: PixiGraphics) => {
               g.clear();
-              g.lineStyle(4, 0xffff00, 1);
+              g.lineStyle(4, skin.centerLineColor, 1);
               const centerY = 13 * cs;
               g.moveTo(0, centerY);
               g.lineTo(width, centerY);
@@ -367,7 +374,7 @@ export default function PixiBoard({
           <Graphics
             draw={(g: PixiGraphics) => {
               g.clear();
-              g.lineStyle(1, 0xcccccc, 0.3);
+              g.lineStyle(1, skin.gridColor, skin.gridAlpha);
               for (let x = 0; x <= safeHeight; x++) {
                 g.moveTo(x * cs, 0);
                 g.lineTo(x * cs, height);
