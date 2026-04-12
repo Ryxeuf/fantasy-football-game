@@ -35,23 +35,34 @@ export class LobbyPage {
   }
 
   /**
-   * Clique sur "Créer une partie" et attend la redirection vers la waiting
-   * room. Retourne le matchId extrait de l'URL.
+   * Clique sur "Créer une partie", sélectionne la première équipe
+   * disponible sur /team/select, puis attend la redirection vers la
+   * waiting room. Retourne le matchId extrait de l'URL.
    */
   async createMatch(): Promise<string> {
     await this.createMatchButton.click();
-    await this.page.waitForURL(/\/waiting\/[^/]+$/, {
-      timeout: 15_000,
-    });
+    await this.selectTeamAndProceed();
     return extractMatchIdFromUrl(this.page.url());
   }
 
   async joinMatch(matchId: string): Promise<void> {
     await this.matchIdInput.fill(matchId);
     await this.joinMatchButton.click();
-    await this.page.waitForURL(/\/waiting\/[^/]+$/, {
-      timeout: 15_000,
-    });
+    await this.selectTeamAndProceed();
+  }
+
+  /**
+   * Étape intermédiaire commune : sur /team/select, choisit la première
+   * équipe puis attend la redirection vers /waiting/<id>.
+   */
+  private async selectTeamAndProceed(): Promise<void> {
+    await this.page.waitForURL(/\/team\/select/, { timeout: 15_000 });
+    const teamOption = this.page
+      .locator('[data-testid="team-option"]')
+      .first();
+    await teamOption.waitFor({ state: "visible", timeout: 10_000 });
+    await teamOption.click();
+    await this.page.waitForURL(/\/waiting\/[^/]+$/, { timeout: 15_000 });
   }
 }
 

@@ -64,6 +64,7 @@ export default function TeamSelectPage() {
         {teams.map((t) => (
           <button
             key={t.id}
+            data-testid="team-option"
             onClick={() => choose(t.id)}
             className="rounded-xl border p-6 bg-white hover:shadow text-left"
           >

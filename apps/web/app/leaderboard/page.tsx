@@ -92,7 +92,7 @@ export default function LeaderboardPage() {
   }
 
   return (
-    <div className="w-full p-4 sm:p-6 space-y-4 sm:space-y-6">
+    <div data-testid="leaderboard-page" className="w-full p-4 sm:p-6 space-y-4 sm:space-y-6">
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold mb-2">
           {t.leaderboard.title}
@@ -104,7 +104,7 @@ export default function LeaderboardPage() {
 
       {/* Statistics cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-        <div className="bg-nuffle-gold/10 border border-nuffle-gold/30 rounded-lg p-4">
+        <div data-testid="leaderboard-total-players" className="bg-nuffle-gold/10 border border-nuffle-gold/30 rounded-lg p-4">
           <div className="text-sm text-nuffle-bronze font-medium">
             {t.leaderboard.totalPlayers}
           </div>
@@ -112,7 +112,7 @@ export default function LeaderboardPage() {
             {meta.total}
           </div>
         </div>
-        <div className="bg-nuffle-gold/10 border border-nuffle-gold/30 rounded-lg p-4">
+        <div data-testid="leaderboard-top-rating" className="bg-nuffle-gold/10 border border-nuffle-gold/30 rounded-lg p-4">
           <div className="text-sm text-nuffle-bronze font-medium">
             {t.leaderboard.topRating}
           </div>
@@ -120,7 +120,7 @@ export default function LeaderboardPage() {
             {topRating}
           </div>
         </div>
-        <div className="bg-nuffle-gold/10 border border-nuffle-gold/30 rounded-lg p-4">
+        <div data-testid="leaderboard-avg-rating" className="bg-nuffle-gold/10 border border-nuffle-gold/30 rounded-lg p-4">
           <div className="text-sm text-nuffle-bronze font-medium">
             {t.leaderboard.averageRating}
           </div>
@@ -132,12 +132,12 @@ export default function LeaderboardPage() {
 
       {/* Leaderboard table */}
       {entries.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
+        <div data-testid="leaderboard-empty" className="text-center py-8 text-gray-500">
           {t.leaderboard.noPlayers}
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
+          <table data-testid="leaderboard-table" className="w-full border-collapse">
             <thead>
               <tr className="bg-nuffle-anthracite text-nuffle-ivory">
                 <th className="px-4 py-3 text-left text-sm font-semibold w-20">
