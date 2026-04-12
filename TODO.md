@@ -193,7 +193,7 @@
 | J.1 | Implementer `bone-head` (activation roll) | Regle | [x] |
 | J.2 | Implementer `really-stupid` (1/2) | Regle | [x] |
 | J.3 | Implementer `wild-animal` | Regle | [x] |
-| J.4 | Implementer `animal-savagery` | Regle | [ ] |
+| J.4 | Implementer `animal-savagery` | Regle | [x] |
 | J.5 | Implementer `take-root` | Regle | [ ] |
 | J.6 | Implementer `no-hands` | Regle | [ ] |
 | J.7 | Implementer `right-stuff` | Regle | [ ] |
