@@ -7,6 +7,7 @@ import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { GameState, Player, calculateTackleZoneHeatmap, getReachableCells, getPassRangeBands, type TeamColors } from "@bb/game-engine";
 import PixiBoard from "../board/PixiBoard";
 import { resolveTeamRostersFromState } from "../board/team-color-resolver";
+import { TERRAIN_SKINS, type TerrainSkinId } from "../board/terrain-skins";
 import TeamDugoutComponent from "./TeamDugout";
 import PlayerDetails from "./PlayerDetails";
 
@@ -62,6 +63,7 @@ export default function GameBoardWithDugouts({
   const [showTackleZones, setShowTackleZones] = useState(false);
   const [showReachability, setShowReachability] = useState(false);
   const [showPassRange, setShowPassRange] = useState(false);
+  const [terrainSkin, setTerrainSkin] = useState<TerrainSkinId>("grass");
 
   // H.6 — merge per-side rosters from state + prop override.
   // Prop override wins per side; falls back to state.teamRosters; undefined triggers
@@ -215,6 +217,18 @@ export default function GameBoardWithDugouts({
         >
           {showPassRange ? "Hide" : "Show"} Pass Range (P)
         </button>
+        <select
+          value={terrainSkin}
+          onChange={(e) => setTerrainSkin(e.target.value as TerrainSkinId)}
+          className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-green-100 text-green-800 border border-green-300 cursor-pointer"
+          title="Terrain skin"
+        >
+          {Object.values(TERRAIN_SKINS).map((skin) => (
+            <option key={skin.id} value={skin.id}>
+              {skin.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Main layout: desktop side-by-side, mobile board-only */}
@@ -247,6 +261,7 @@ export default function GameBoardWithDugouts({
             showPassRange={showPassRange}
             teamRosters={effectiveTeamRosters}
             teamColorOverrides={teamColorOverrides}
+            terrainSkin={terrainSkin}
           />
         </div>
 

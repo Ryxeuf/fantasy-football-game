@@ -42,6 +42,8 @@ export function Board({
 
 // Board components
 export { default as PixiBoard } from "./board/PixiBoard";
+export { TERRAIN_SKINS, getTerrainSkin, resolveTerrainSkinFromWeather } from "./board/terrain-skins";
+export type { TerrainSkin, TerrainSkinId } from "./board/terrain-skins";
 
 // Dugout components
 export { default as DugoutZone } from "./components/DugoutZone";
