@@ -152,7 +152,7 @@ export { expelSecretWeapons, getSecretWeaponPlayers } from './mechanics/secret-w
 export { extractLineage, hasAnimosityAgainst, checkAnimosity } from './mechanics/animosity';
 
 // Export des traits négatifs (Bone Head, etc.)
-export { checkBoneHead } from './mechanics/negative-traits';
+export { checkBoneHead, checkReallyStupid } from './mechanics/negative-traits';
 export type { ActivationCheckResult } from './mechanics/negative-traits';
 
 // Export des effets météo

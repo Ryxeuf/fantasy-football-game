@@ -191,7 +191,7 @@
 | SEC-3 | Centraliser JWT_SECRET/MATCH_SECRET dans `config.ts`, crash si absent en prod | Securite | [x] |
 | SEC-4 | Restreindre CORS aux origines specifiques | Securite | [x] |
 | J.1 | Implementer `bone-head` (activation roll) | Regle | [x] |
-| J.2 | Implementer `really-stupid` (1/2) | Regle | [ ] |
+| J.2 | Implementer `really-stupid` (1/2) | Regle | [x] |
 | J.3 | Implementer `wild-animal` | Regle | [ ] |
 | J.4 | Implementer `animal-savagery` | Regle | [ ] |
 | J.5 | Implementer `take-root` | Regle | [ ] |

@@ -594,6 +594,24 @@ registerSkill({
   canApply: (ctx) => hasSkill(ctx.player, 'bone-head'),
 });
 
+// ─── REALLY STUPID ─────────────────────────────────────────────────────────
+// Really Stupid check is performed in applyMove before dispatching to action handlers.
+// Registered here for lookup and metadata purposes.
+
+registerSkill({
+  slug: 'really-stupid',
+  triggers: ['on-activation'],
+  description: 'Au début de l\'activation, jet D6. Sur 1-3 (ou 1 si coéquipier adjacent non-RS), le joueur ne peut pas agir.',
+  canApply: (ctx) => hasSkill(ctx.player, 'really-stupid'),
+});
+
+registerSkill({
+  slug: 'really-stupid-2',
+  triggers: ['on-activation'],
+  description: 'Au début de l\'activation, jet D6 (+2 si coéquipier adjacent non-RS). Sur 1-3, le joueur ne peut pas agir.',
+  canApply: (ctx) => hasSkill(ctx.player, 'really-stupid-2'),
+});
+
 // ─── ANIMOSITY (5 variants) ─────────────────────────────────────────────────
 // Animosity is checked in handlePass/handleHandoff before the action executes.
 // Registered here for lookup and metadata purposes.
