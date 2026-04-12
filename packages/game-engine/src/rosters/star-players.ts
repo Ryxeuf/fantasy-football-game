@@ -982,10 +982,49 @@ const cloneStarPlayersMap = (source: Record<string, StarPlayerDefinition>): Reco
     Object.entries(source).map(([slug, player]) => [slug, cloneStarPlayer(player)]),
   );
 
+// ---------------------------------------------------------------------------
+// Season 3 Star Player overrides (BB 2020 Season 2 rulebook changes)
+// ---------------------------------------------------------------------------
+
+/**
+ * S3-specific overrides: only the fields that differ from S2.
+ * To add a future S3 change, add an entry here with only the changed fields.
+ */
+const SEASON_THREE_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefinition>> = {
+  // Hakflem Skuttlespike: expanded availability in S3 (BB 2020 S2 rules)
+  // Now also available to Sylvanian Spotlight teams (Undead, Necromantic Horror, Vampire)
+  hakflem_skuttlespike: {
+    hirableBy: ["underworld_challenge", "sylvanian_spotlight"],
+  },
+};
+
+/**
+ * Build the Season 3 star player map from S2 base + S3-specific overrides.
+ * This approach avoids duplicating all data while allowing precise S3 changes.
+ */
+function buildSeasonThreeStarPlayers(): Record<string, StarPlayerDefinition> {
+  const base = cloneStarPlayersMap(SEASON_TWO_STAR_PLAYERS);
+
+  for (const [slug, overrides] of Object.entries(SEASON_THREE_STAR_PLAYER_OVERRIDES)) {
+    if (base[slug]) {
+      base[slug] = {
+        ...base[slug],
+        ...overrides,
+        // Deep-copy hirableBy if overridden to prevent shared references
+        hirableBy: overrides.hirableBy
+          ? [...overrides.hirableBy]
+          : [...base[slug].hirableBy],
+      };
+    }
+  }
+
+  return base;
+}
+
 // Export du mapping des Star Players par ruleset
 export const STAR_PLAYERS_BY_RULESET: Record<Ruleset, Record<string, StarPlayerDefinition>> = {
   season_2: SEASON_TWO_STAR_PLAYERS,
-  season_3: cloneStarPlayersMap(SEASON_TWO_STAR_PLAYERS),
+  season_3: buildSeasonThreeStarPlayers(),
 };
 
 // Export de STAR_PLAYERS pour la compatibilité avec le code existant (utilise le ruleset par défaut)
@@ -1067,6 +1106,7 @@ export const TEAM_REGIONAL_RULES: Record<string, string[]> = {
   khorne: ["favoured_of"],
   chaos_dwarf: ["badlands_brawl", "worlds_edge_superleague", "favoured_of"],
   gnome: ["halfling_thimble_cup"],
+  slann: ["lustrian_superleague"],
 };
 
 const cloneRegionalRules = (

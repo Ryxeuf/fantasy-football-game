@@ -4,6 +4,8 @@ import {
   getStarPlayerBySlug,
   getAvailableStarPlayers,
   TEAM_REGIONAL_RULES,
+  STAR_PLAYERS_BY_RULESET,
+  TEAM_REGIONAL_RULES_BY_RULESET,
   type StarPlayerDefinition,
 } from './star-players';
 
@@ -360,6 +362,131 @@ describe('Star Players', () => {
         const starPlayer = getStarPlayerBySlug(slug);
         expect(starPlayer).toBeDefined();
         expect(starPlayer?.cost).toBe(expectedCost);
+      });
+    });
+  });
+
+  describe('Season 3 star player differentiation (I.7)', () => {
+    describe('S3 star players are separate from S2', () => {
+      it('devrait avoir des maps distinctes pour S2 et S3', () => {
+        const s2Map = STAR_PLAYERS_BY_RULESET.season_2;
+        const s3Map = STAR_PLAYERS_BY_RULESET.season_3;
+
+        expect(s2Map).toBeDefined();
+        expect(s3Map).toBeDefined();
+        expect(s2Map).not.toBe(s3Map);
+      });
+
+      it('les mutations S3 ne devraient pas affecter S2', () => {
+        const s2Hakflem = STAR_PLAYERS_BY_RULESET.season_2['hakflem_skuttlespike'];
+        const s3Hakflem = STAR_PLAYERS_BY_RULESET.season_3['hakflem_skuttlespike'];
+
+        expect(s2Hakflem).toBeDefined();
+        expect(s3Hakflem).toBeDefined();
+        expect(s2Hakflem).not.toBe(s3Hakflem);
+
+        // Verify they're separate objects
+        expect(s2Hakflem.hirableBy).not.toBe(s3Hakflem.hirableBy);
+      });
+
+      it('S3 devrait avoir tous les star players de base de S2', () => {
+        const s2Slugs = Object.keys(STAR_PLAYERS_BY_RULESET.season_2);
+        const s3Slugs = Object.keys(STAR_PLAYERS_BY_RULESET.season_3);
+
+        // All S2 star players should exist in S3
+        for (const slug of s2Slugs) {
+          expect(s3Slugs).toContain(slug);
+        }
+      });
+    });
+
+    describe('S3-specific star player changes', () => {
+      it('Hakflem Skuttlespike devrait être disponible pour sylvanian_spotlight en S3', () => {
+        const s3Hakflem = getStarPlayerBySlug('hakflem_skuttlespike', 'season_3');
+        expect(s3Hakflem).toBeDefined();
+        expect(s3Hakflem?.hirableBy).toContain('underworld_challenge');
+        expect(s3Hakflem?.hirableBy).toContain('sylvanian_spotlight');
+      });
+
+      it('Hakflem Skuttlespike S2 ne devrait PAS avoir sylvanian_spotlight', () => {
+        const s2Hakflem = getStarPlayerBySlug('hakflem_skuttlespike', 'season_2');
+        expect(s2Hakflem).toBeDefined();
+        expect(s2Hakflem?.hirableBy).toContain('underworld_challenge');
+        expect(s2Hakflem?.hirableBy).not.toContain('sylvanian_spotlight');
+      });
+
+      it('S3 devrait avoir au moins une différence avec S2', () => {
+        const s2Map = STAR_PLAYERS_BY_RULESET.season_2;
+        const s3Map = STAR_PLAYERS_BY_RULESET.season_3;
+
+        let hasDifference = false;
+        for (const slug of Object.keys(s2Map)) {
+          const s2Player = s2Map[slug];
+          const s3Player = s3Map[slug];
+          if (!s3Player) continue;
+
+          if (
+            s2Player.cost !== s3Player.cost ||
+            s2Player.skills !== s3Player.skills ||
+            JSON.stringify(s2Player.hirableBy) !== JSON.stringify(s3Player.hirableBy)
+          ) {
+            hasDifference = true;
+            break;
+          }
+        }
+
+        expect(hasDifference).toBe(true);
+      });
+    });
+
+    describe('S3 regional rules', () => {
+      it('slann devrait avoir lustrian_superleague dans les règles régionales S3', () => {
+        const s3Rules = TEAM_REGIONAL_RULES_BY_RULESET.season_3;
+        expect(s3Rules['slann']).toBeDefined();
+        expect(s3Rules['slann']).toContain('lustrian_superleague');
+      });
+
+      it('slann devrait pouvoir recruter des star players lustrian_superleague en S3', () => {
+        const availablePlayers = getAvailableStarPlayers('slann', [], 'season_3');
+
+        // Should include "all" players plus lustrian_superleague players
+        const lustrians = availablePlayers.filter(
+          sp => sp.hirableBy.includes('lustrian_superleague')
+        );
+        expect(lustrians.length).toBeGreaterThan(0);
+
+        // Check specific lustrian star players
+        const anqi = availablePlayers.find(sp => sp.slug === 'anqi_panqi');
+        expect(anqi).toBeDefined();
+
+        const boa = availablePlayers.find(sp => sp.slug === 'boa_konssstriktr');
+        expect(boa).toBeDefined();
+      });
+
+      it('les équipes undead S3 devraient avoir accès à Hakflem via sylvanian_spotlight', () => {
+        const availablePlayers = getAvailableStarPlayers('undead', [], 'season_3');
+        const hakflem = availablePlayers.find(sp => sp.slug === 'hakflem_skuttlespike');
+        expect(hakflem).toBeDefined();
+      });
+
+      it('les équipes undead S2 ne devraient PAS avoir accès à Hakflem', () => {
+        const availablePlayers = getAvailableStarPlayers('undead', [], 'season_2');
+        const hakflem = availablePlayers.find(sp => sp.slug === 'hakflem_skuttlespike');
+        expect(hakflem).toBeUndefined();
+      });
+    });
+
+    describe('getStarPlayerBySlug avec ruleset', () => {
+      it('devrait retourner le star player S3 quand ruleset=season_3', () => {
+        const s3Glart = getStarPlayerBySlug('glart_smashrip', 'season_3');
+        expect(s3Glart).toBeDefined();
+        expect(s3Glart?.displayName).toBe('Glart Smashrip');
+      });
+
+      it('devrait retourner le star player S2 quand ruleset=season_2', () => {
+        const s2Glart = getStarPlayerBySlug('glart_smashrip', 'season_2');
+        expect(s2Glart).toBeDefined();
+        expect(s2Glart?.displayName).toBe('Glart Smashrip');
       });
     });
   });
