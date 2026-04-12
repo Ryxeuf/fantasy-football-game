@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import type { GameState, Player } from "@bb/game-engine";
-import { ROSTER_COLORS } from "@bb/game-engine";
+import type { GameState, Player, TeamSpriteManifest } from "@bb/game-engine";
+import { ROSTER_COLORS, TEAM_SPRITE_MANIFESTS } from "@bb/game-engine";
 import {
   LEGACY_TEAM_A_COLOR,
   LEGACY_TEAM_B_COLOR,
@@ -11,6 +11,8 @@ import {
   resolveTeamFillColor,
   resolveTeamOutlineColor,
   resolveTeamRostersFromState,
+  resolveTeamSpriteManifest,
+  shouldUseTeamSprite,
 } from "./team-color-resolver";
 
 /** Minimal Player-shaped fixture. The resolver only reads team + stunned. */
@@ -334,5 +336,168 @@ describe("Regle: resolveTeamOutlineColor (H.6 sprite sheets - sub-task 3)", () =
         ROSTER_COLORS.dark_elf.secondary,
       );
     });
+  });
+});
+
+describe("Regle: resolveTeamSpriteManifest (H.6 sprite sheets - sub-task 4)", () => {
+  function makePlayer(
+    team: "A" | "B",
+    stunned = false,
+  ): Pick<Player, "team" | "stunned"> {
+    return { team, stunned };
+  }
+
+  /** Registers a fake sprite for the duration of a single test. */
+  function withFakeSprite<T>(slug: string, fn: (m: TeamSpriteManifest) => T): T {
+    const fakeManifest: TeamSpriteManifest = {
+      atlasUrl: `/images/team-sprites/${slug}.png`,
+      frames: { idle: { x: 0, y: 0, w: 32, h: 32 } },
+    };
+    (TEAM_SPRITE_MANIFESTS as Record<string, TeamSpriteManifest>)[slug] =
+      fakeManifest;
+    try {
+      return fn(fakeManifest);
+    } finally {
+      delete (TEAM_SPRITE_MANIFESTS as Record<string, TeamSpriteManifest>)[
+        slug
+      ];
+    }
+  }
+
+  describe("renderer fallback invariant", () => {
+    it("returns null when no roster slug is provided (legacy fallback)", () => {
+      expect(resolveTeamSpriteManifest(makePlayer("A"))).toBeNull();
+      expect(resolveTeamSpriteManifest(makePlayer("B"))).toBeNull();
+    });
+
+    it("returns null when the roster slug has no registered sprite", () => {
+      expect(
+        resolveTeamSpriteManifest(makePlayer("A"), { teamA: "skaven" }),
+      ).toBeNull();
+    });
+
+    it("returns null for unknown roster slugs", () => {
+      expect(
+        resolveTeamSpriteManifest(makePlayer("B"), {
+          teamB: "not_a_real_roster",
+        }),
+      ).toBeNull();
+    });
+
+    it("stunned players never return a sprite (greyed-out circle fallback)", () => {
+      const testSlug = "__test_sprite_stunned__";
+      withFakeSprite(testSlug, () => {
+        expect(
+          resolveTeamSpriteManifest(makePlayer("A", true), { teamA: testSlug }),
+        ).toBeNull();
+      });
+    });
+  });
+
+  describe("sprite resolution", () => {
+    it("returns the registered manifest for team A when available", () => {
+      const testSlug = "__test_sprite_a__";
+      withFakeSprite(testSlug, (expectedManifest) => {
+        const resolved = resolveTeamSpriteManifest(makePlayer("A"), {
+          teamA: testSlug,
+        });
+        expect(resolved).toEqual(expectedManifest);
+      });
+    });
+
+    it("returns the registered manifest for team B when available", () => {
+      const testSlug = "__test_sprite_b__";
+      withFakeSprite(testSlug, (expectedManifest) => {
+        const resolved = resolveTeamSpriteManifest(makePlayer("B"), {
+          teamA: "skaven",
+          teamB: testSlug,
+        });
+        expect(resolved).toEqual(expectedManifest);
+      });
+    });
+
+    it("resolves independently for each team", () => {
+      const slugA = "__test_sprite_split_a__";
+      withFakeSprite(slugA, () => {
+        // Team A has a sprite, team B does not
+        expect(
+          resolveTeamSpriteManifest(makePlayer("A"), {
+            teamA: slugA,
+            teamB: "dwarf",
+          }),
+        ).not.toBeNull();
+        expect(
+          resolveTeamSpriteManifest(makePlayer("B"), {
+            teamA: slugA,
+            teamB: "dwarf",
+          }),
+        ).toBeNull();
+      });
+    });
+  });
+});
+
+describe("Regle: shouldUseTeamSprite (H.6 sprite sheets - sub-task 4)", () => {
+  function makePlayer(
+    team: "A" | "B",
+    stunned = false,
+  ): Pick<Player, "team" | "stunned"> {
+    return { team, stunned };
+  }
+
+  it("returns false when no roster slug is provided", () => {
+    expect(shouldUseTeamSprite(makePlayer("A"))).toBe(false);
+  });
+
+  it("returns false when the roster slug has no registered sprite", () => {
+    expect(shouldUseTeamSprite(makePlayer("A"), { teamA: "skaven" })).toBe(
+      false,
+    );
+  });
+
+  it("returns true when a sprite is registered for the player's team", () => {
+    const testSlug = "__test_should_use__";
+    (TEAM_SPRITE_MANIFESTS as Record<string, TeamSpriteManifest>)[testSlug] = {
+      atlasUrl: "/a.png",
+      frames: { idle: { x: 0, y: 0, w: 1, h: 1 } },
+    };
+    try {
+      expect(shouldUseTeamSprite(makePlayer("A"), { teamA: testSlug })).toBe(
+        true,
+      );
+    } finally {
+      delete (TEAM_SPRITE_MANIFESTS as Record<string, TeamSpriteManifest>)[
+        testSlug
+      ];
+    }
+  });
+
+  it("stunned players never use a sprite", () => {
+    const testSlug = "__test_should_stunned__";
+    (TEAM_SPRITE_MANIFESTS as Record<string, TeamSpriteManifest>)[testSlug] = {
+      atlasUrl: "/a.png",
+      frames: { idle: { x: 0, y: 0, w: 1, h: 1 } },
+    };
+    try {
+      expect(
+        shouldUseTeamSprite(makePlayer("A", true), { teamA: testSlug }),
+      ).toBe(false);
+    } finally {
+      delete (TEAM_SPRITE_MANIFESTS as Record<string, TeamSpriteManifest>)[
+        testSlug
+      ];
+    }
+  });
+
+  it("as a global invariant, returns false for every real roster today", () => {
+    // Until sub-task 5/5 ships atlases, the renderer must always fall back to
+    // the circle path for every real roster. This is the contract that lets
+    // sub-task 4/5 merge safely without visual regressions.
+    for (const slug of Object.keys(ROSTER_COLORS)) {
+      expect(
+        shouldUseTeamSprite(makePlayer("A"), { teamA: slug }),
+        `unexpected sprite path for "${slug}"`,
+      ).toBe(false);
+    }
   });
 });
