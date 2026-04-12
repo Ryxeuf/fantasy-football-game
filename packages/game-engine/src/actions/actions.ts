@@ -72,7 +72,7 @@ import {
   resolveKickoffQuickSnap,
   resolveKickoffBlitz,
 } from '../mechanics/kickoff-resolution';
-import { checkBoneHead } from '../mechanics/negative-traits';
+import { checkBoneHead, checkReallyStupid } from '../mechanics/negative-traits';
 
 /**
  * Obtient tous les mouvements légaux pour l'état actuel
@@ -433,9 +433,13 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
     const playerId = (move as { playerId: string }).playerId;
     const player = state.players.find(p => p.id === playerId);
     if (player && !hasPlayerActed(state, player.id)) {
-      const activationCheck = checkBoneHead(state, player, rng);
-      if (!activationCheck.passed) return activationCheck.newState;
-      activeState = activationCheck.newState;
+      const boneHeadCheck = checkBoneHead(state, player, rng);
+      if (!boneHeadCheck.passed) return boneHeadCheck.newState;
+      activeState = boneHeadCheck.newState;
+
+      const reallyStupidCheck = checkReallyStupid(activeState, player, rng);
+      if (!reallyStupidCheck.passed) return reallyStupidCheck.newState;
+      activeState = reallyStupidCheck.newState;
     }
   }
 
