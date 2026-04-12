@@ -587,9 +587,8 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
     slug: "wild-animal",
     nameFr: "Fureur Débridée*",
     nameEn: "Wild Animal",
-    description: "Au début de l'activation de ce joueur, jetez un D6. Sur un résultat de 1, ce joueur ne peut effectuer aucune action et son activation se termine immédiatement.",
-    category: "Trait",
-    isModified: true
+    description: "Au début de l'activation, jetez un D6 (+2 si Block/Blitz). Sur un total de 1-3, l'activation se termine immédiatement. Pas de turnover.",
+    category: "Trait"
   },
   {
     slug: "always-hungry",

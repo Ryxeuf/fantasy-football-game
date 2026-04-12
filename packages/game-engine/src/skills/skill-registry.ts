@@ -612,6 +612,17 @@ registerSkill({
   canApply: (ctx) => hasSkill(ctx.player, 'really-stupid-2'),
 });
 
+// ─── WILD ANIMAL ──────────────────────────────────────────────────────────────
+// Wild Animal check is performed in applyMove before dispatching to action handlers.
+// Registered here for lookup and metadata purposes.
+
+registerSkill({
+  slug: 'wild-animal',
+  triggers: ['on-activation'],
+  description: 'Au début de l\'activation, jet D6 (+2 si Block/Blitz). Sur 1-3 total, le joueur ne peut pas agir.',
+  canApply: (ctx) => hasSkill(ctx.player, 'wild-animal'),
+});
+
 // ─── ANIMOSITY (5 variants) ─────────────────────────────────────────────────
 // Animosity is checked in handlePass/handleHandoff before the action executes.
 // Registered here for lookup and metadata purposes.
