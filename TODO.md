@@ -188,7 +188,7 @@
 
 | # | Tache | Type | Statut |
 |---|-------|------|--------|
-| SEC-3 | Centraliser JWT_SECRET/MATCH_SECRET dans `config.ts`, crash si absent en prod | Securite | [ ] |
+| SEC-3 | Centraliser JWT_SECRET/MATCH_SECRET dans `config.ts`, crash si absent en prod | Securite | [x] |
 | SEC-4 | Restreindre CORS aux origines specifiques | Securite | [ ] |
 | J.1 | Implementer `bone-head` (activation roll) | Regle | [ ] |
 | J.2 | Implementer `really-stupid` (1/2) | Regle | [ ] |

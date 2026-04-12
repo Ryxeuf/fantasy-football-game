@@ -1,7 +1,6 @@
 import { prisma } from "../prisma";
 import jwt from "jsonwebtoken";
-
-const MATCH_SECRET = process.env.MATCH_SECRET || "dev-match-secret";
+import { MATCH_SECRET } from "../config";
 const TV_RANGE = 150_000; // Match teams within +/- 150k TV
 
 export interface JoinQueueParams {

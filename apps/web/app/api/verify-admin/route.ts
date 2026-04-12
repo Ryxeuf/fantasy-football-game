@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || "dev-secret-change-me"
-);
+function getJwtSecret(): Uint8Array {
+  const raw = process.env.JWT_SECRET;
+  if (!raw && process.env.NODE_ENV === "production") {
+    throw new Error(
+      'FATAL: Missing required environment variable "JWT_SECRET". ' +
+        "The server cannot start in production without it.",
+    );
+  }
+  return new TextEncoder().encode(raw || "dev-secret-change-me");
+}
+
+const JWT_SECRET = getJwtSecret();
 
 /**
  * Route API pour vérifier si un token correspond à un admin

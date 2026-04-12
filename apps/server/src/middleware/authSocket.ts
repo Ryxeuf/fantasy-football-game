@@ -1,8 +1,7 @@
 import type { Socket } from "socket.io";
 import jwt from "jsonwebtoken";
 import { normalizeRoles } from "../utils/roles";
-
-const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
+import { JWT_SECRET } from "../config";
 
 export interface SocketUser {
   id: string;

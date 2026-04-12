@@ -10,10 +10,9 @@ import {
   updateProfileSchema,
   changePasswordSchema,
 } from "../schemas/auth.schemas";
+import { JWT_SECRET } from "../config";
 
 const router = Router();
-
-const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
 
 // Registration disabled during pre-alpha
 router.post("/register", (_req, res) => {
