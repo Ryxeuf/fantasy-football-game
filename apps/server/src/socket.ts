@@ -6,6 +6,7 @@ import { registerResyncHandler } from "./game-resync";
 import { registerGameChatHandlers } from "./game-chat";
 import { registerSpectatorHandlers } from "./game-spectator";
 import { authSocket } from "./middleware/authSocket";
+import { CORS_ORIGINS } from "./config";
 
 let io: Server | null = null;
 let gameNamespace: Namespace | null = null;
@@ -27,7 +28,7 @@ export function setupSocket(
 ): Server {
   io = new Server(httpServer, {
     cors: options.cors ?? {
-      origin: "*",
+      origin: CORS_ORIGINS,
       methods: ["GET", "POST"],
     },
     // Only enable websocket (upgrade from polling) for lower latency

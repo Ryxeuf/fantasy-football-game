@@ -22,6 +22,7 @@ import { execSync } from "node:child_process";
 import { prisma } from "./prisma";
 import { authRateLimiter, apiRateLimiter } from "./middleware/rateLimiter";
 import { setupSocket } from "./socket";
+import { CORS_ORIGINS } from "./config";
 
 dotenv.config({ path: "../../prisma/.env" });
 // Si tests SQLite: pousser le schéma SQLite en mémoire partagée au démarrage
@@ -47,7 +48,7 @@ const API_PORT = parseInt(process.env.API_PORT || "8201", 10);
 
 // Serveur Express API
 const app = express();
-app.use(cors());
+app.use(cors({ origin: CORS_ORIGINS }));
 app.use(bodyParser.json());
 
 // Rate limiting global sur toutes les routes API (100 req/min par IP)
