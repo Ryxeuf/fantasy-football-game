@@ -1,11 +1,12 @@
 "use client";
 import * as React from "react";
-import { Stage, Container, Graphics, Text } from "@pixi/react";
+import { Stage, Container, Graphics, Text, Sprite } from "@pixi/react";
 import type { Graphics as PixiGraphics } from "@pixi/graphics";
 import type { GameState, Position, Player, TackleZoneHeatmap, ReachableCell, PassRangeBand } from "@bb/game-engine";
 import {
   resolveTeamFillColor,
   resolveTeamOutlineColor,
+  shouldUseTeamSprite,
   type TeamRostersMap,
   type TeamColorOverridesMap,
 } from "./team-color-resolver";
@@ -14,6 +15,9 @@ import { useBlockEffects } from "./useBlockEffects";
 import { useTouchdownEffects } from "./useTouchdownEffects";
 import { useInjuryEffects } from "./useInjuryEffects";
 import { useDiceEffects } from "./useDiceEffects";
+import { useSpriteTextures } from "./useSpriteTextures";
+import { resolvePlayerSpriteFrame } from "./sprite-frame-resolver";
+import { resolveTeamSpriteManifest } from "./team-color-resolver";
 
 /** Extract up to 2 initials from a player's name (e.g. "Grim Ironjaw" -> "GI") */
 function getInitials(player: Player): string {
@@ -129,6 +133,9 @@ export default function PixiBoard({
   const tdFx = useTouchdownEffects(state.gameLog ?? [], safeWidth, safeHeight);
   const injuryFx = useInjuryEffects(state.players ?? [], state.casualtyResults ?? {});
   const diceFx = useDiceEffects(state.gameLog ?? []);
+
+  /* ── H.6 sub-task 5/5: sprite textures ───────────────────────────── */
+  const spriteTextures = useSpriteTextures(teamRosters);
 
   /* ── Zoom: mouse wheel ────────────────────────────────────────────── */
   React.useEffect(() => {
@@ -503,8 +510,45 @@ export default function PixiBoard({
             const shakeX = fx ? fx.shakeX : 0;
             const shakeY = fx ? fx.shakeY : 0;
 
+            // H.6 sub-task 5/5: sprite vs circle rendering decision
+            const manifest = resolveTeamSpriteManifest(player, teamRosters);
+            const rosterSlug =
+              player.team === "A" ? teamRosters?.teamA : teamRosters?.teamB;
+            const frameTextures =
+              rosterSlug && manifest ? spriteTextures[rosterSlug] : undefined;
+            const useSpritePath = !!(manifest && frameTextures);
+            const spriteFrame = manifest
+              ? resolvePlayerSpriteFrame(player, manifest)
+              : "idle";
+            const spriteTexture =
+              useSpritePath ? frameTextures[spriteFrame] ?? frameTextures.idle : undefined;
+
+            const playerColor = resolveTeamFillColor(
+              player,
+              teamRosters,
+              teamColorOverrides,
+            );
+            const outlineColor = resolveTeamOutlineColor(
+              player,
+              teamRosters,
+              teamColorOverrides,
+            );
+
             return (
               <React.Fragment key={player.id}>
+                {/* H.6 sub-task 5/5: sprite body (rendered when atlas is loaded) */}
+                {useSpritePath && spriteTexture && (
+                  <Sprite
+                    texture={spriteTexture}
+                    x={posY * cs + 1 + shakeX}
+                    y={posX * cs + 1 + shakeY}
+                    width={cs - 2}
+                    height={cs - 2}
+                    tint={manifest.tint ?? playerColor}
+                  />
+                )}
+
+                {/* Player body (circle fallback) + selection/state overlays */}
                 <Graphics
                   draw={(g: PixiGraphics) => {
                     g.clear();
@@ -512,19 +556,12 @@ export default function PixiBoard({
                     const y = posX * cs + cs / 2 + shakeY;
                     const radius = cs / 2 - 2;
 
-                    const playerColor = resolveTeamFillColor(
-                      player,
-                      teamRosters,
-                      teamColorOverrides,
-                    );
-                    const outlineColor = resolveTeamOutlineColor(
-                      player,
-                      teamRosters,
-                      teamColorOverrides,
-                    );
-                    g.beginFill(playerColor);
-                    g.drawCircle(x, y, radius);
-                    g.endFill();
+                    // Circle fill: only when not using a sprite
+                    if (!useSpritePath || !spriteTexture) {
+                      g.beginFill(playerColor);
+                      g.drawCircle(x, y, radius);
+                      g.endFill();
+                    }
 
                     if (isSelected) {
                       g.lineStyle(3, 0xffff00, 1);
