@@ -171,6 +171,15 @@
 | H.4 | Indicateurs tactiques (zones de tacle, portee) | Polish | [x] |
 | H.6 | Sprite sheets par equipe (5/5 — sprite manifest registry + UI resolver + PixiBoard integration, atlases directory ready) | Polish | [x] |
 
+### Sprint 11 — Donnees S3 & taches restantes
+
+| # | Tache | Type | Statut |
+|---|-------|------|--------|
+| I.7 | Differencier star players S3 vs S2 (overrides, Slann regional rules) | Contenu | [x] |
+| B2.6 | Verifier connexion Sweltering Heat dans le flow (deja cable) | Regle | [x] |
+| I.6 | Rediger regles speciales star players manquantes (~60) | Contenu | [ ] |
+| H.7 | Variantes de terrain (skins herbe/ruine/neige) | Polish | [ ] |
+
 ---
 
 ## Resume par phase
@@ -224,4 +233,5 @@ Sprint 0 (Bugfixes) ✅ ──→ Sprint 1 (WS + UI + skills) ✅ ──→ MATC
 > 8. ~~Sprint 7~~ ✅ — notifications push (Service Worker, web-push, integration)
 > 9. ~~Sprint 8~~ ✅ — polish & contenu (chat in-game, bugfixes donnees)
 > 10. ~~Sprint 9~~ ✅ — animations avancees, kickoff events, leaderboard
-> 11. **En cours** : Sprint 10 — contenu & polish restants (Slann S3, images, replayer)
+> 11. ~~Sprint 10~~ ✅ — contenu & polish restants (Slann S3, images, replayer)
+> 12. **En cours** : Sprint 11 — donnees S3, taches restantes
