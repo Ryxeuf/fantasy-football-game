@@ -1,14 +1,15 @@
 # TODO — Nuffle Arena (Blood Bowl 3 Online)
 
 > Backlog priorise par valeur (Gain) et effort (Difficulte).
-> Derniere mise a jour : 2026-04-02
+> Derniere mise a jour : 2026-04-12
 >
 > **Objectif** : jouer en ligne a Blood Bowl avec les regles BB3 (Season 2/3).
 >
 > **Documentation detaillee** : [`docs/roadmap/`](./docs/roadmap/)
 > - [Audit complet (2026-04-02)](./docs/roadmap/audit-report.md) — constats game engine, frontend, backend, contenu
-> - [Phases detaillees (A-I)](./docs/roadmap/phases.md) — toutes les taches par phase
+> - [Phases detaillees (A-O)](./docs/roadmap/phases.md) — toutes les taches par phase
 > - [Sprint 0 — Bugfixes](./docs/roadmap/sprint-0.md) — bugs critiques et securite
+> - [Analyse d'evolution (2026-04-12)](./docs/roadmap/evolution-analysis-2026-04-12.md) — evaluation complete, plan sprints 12-20
 
 ---
 
@@ -180,6 +181,123 @@
 | I.6 | Rediger regles speciales star players manquantes (~60) | Contenu | [x] |
 | H.7 | Variantes de terrain (skins herbe/ruine/neige) | Polish | [x] |
 
+### Sprint 12 — Fondations & Securite (~5 jours)
+
+> Securiser la plateforme et combler les manques critiques d'equilibre.
+> [Detail](./docs/roadmap/evolution-analysis-2026-04-12.md)
+
+| # | Tache | Type | Statut |
+|---|-------|------|--------|
+| SEC-3 | Centraliser JWT_SECRET/MATCH_SECRET dans `config.ts`, crash si absent en prod | Securite | [ ] |
+| SEC-4 | Restreindre CORS aux origines specifiques | Securite | [ ] |
+| J.1 | Implementer `bone-head` (activation roll) | Regle | [ ] |
+| J.2 | Implementer `really-stupid` (1/2) | Regle | [ ] |
+| J.3 | Implementer `wild-animal` | Regle | [ ] |
+| J.4 | Implementer `animal-savagery` | Regle | [ ] |
+| J.5 | Implementer `take-root` | Regle | [ ] |
+| J.6 | Implementer `no-hands` | Regle | [ ] |
+| J.7 | Implementer `right-stuff` | Regle | [ ] |
+| TEST-1 | Activer vitest coverage reporting | Qualite | [ ] |
+| SEC-5 | Validation Zod sur toutes les routes non validees | Securite | [ ] |
+
+### Sprint 13 — Equilibre des Equipes (~6 jours)
+
+> Rendre toutes les equipes jouables avec les bonnes mecaniques.
+
+| # | Tache | Type | Statut |
+|---|-------|------|--------|
+| J.8 | Implementer `bloodlust` (3 variantes) | Regle | [ ] |
+| J.9 | Implementer `always-hungry` | Regle | [ ] |
+| J.10 | Implementer `foul-appearance` | Regle | [ ] |
+| J.11 | Implementer `instable` | Regle | [ ] |
+| K.1 | Implementer `leap` + `pogo-stick` | Regle | [ ] |
+| K.2 | Implementer `stab` | Regle | [ ] |
+| K.3 | Implementer `chainsaw` | Regle | [ ] |
+| K.4 | Implementer `dump-off` | Regle | [ ] |
+| K.5 | Implementer `on-the-ball` | Regle | [ ] |
+| TEST-2 | Tests unitaires pour tous les nouveaux skills | Tests | [ ] |
+
+### Sprint 14 — Infrastructure Competitive (~8 jours)
+
+> Lancer le systeme de ligues — coeur du Blood Bowl competitif.
+
+| # | Tache | Type | Statut |
+|---|-------|------|--------|
+| L.1 | Modeles Prisma League/LeagueSeason/LeagueParticipant/LeagueRound | DB | [ ] |
+| L.2 | Migration Prisma + seed data | DB | [ ] |
+| L.3 | Routes API CRUD ligue (create, join, schedule, standings) | API | [ ] |
+| L.4 | Generateur de calendrier round-robin | Backend | [ ] |
+| L.5 | Page liste des ligues | Frontend | [ ] |
+| L.6 | Page detail ligue (calendrier, classement, matchs) | Frontend | [ ] |
+| L.7 | Integration match online -> ligue (resultats auto) | Backend | [ ] |
+| L.8 | ELO saisonnier avec reset et placements | Backend | [ ] |
+
+### Sprint 15 — Skills a Fort Impact (~5 jours)
+
+> Completer les skills les plus frequemment rencontres.
+
+| # | Tache | Type | Statut |
+|---|-------|------|--------|
+| K.6 | Implementer `kick` | Regle | [ ] |
+| K.7 | Implementer `sneaky-git` | Regle | [ ] |
+| K.8 | Implementer `defensive` | Regle | [ ] |
+| K.9 | Implementer `disturbing-presence` | Regle | [ ] |
+| K.10 | Implementer `multiple-block` | Regle | [ ] |
+| K.11 | Implementer `hail-mary-pass` + `safe-pass` | Regle | [ ] |
+| K.12 | Implementer `ball-and-chain` | Regle | [ ] |
+| K.13 | Implementer `bombardier` | Regle | [ ] |
+| B3.3 | 20 prochaines star player special rules | Contenu | [ ] |
+
+### Sprint 16-17 — Parite Mobile (~10 jours)
+
+> Amener l'app mobile a un etat utilisable pour le jeu en ligne.
+
+| # | Tache | Type | Statut |
+|---|-------|------|--------|
+| M.1 | Ecrans gestion d'equipe (creer, editer, voir) | Mobile | [ ] |
+| M.2 | Ecran queue matchmaking | Mobile | [ ] |
+| M.3 | Integration WebSocket complete | Mobile | [ ] |
+| M.4 | Popups block/push/followup/reroll natifs | Mobile | [ ] |
+| M.5 | Chat in-game mobile | Mobile | [ ] |
+| M.6 | Ecran leaderboard | Mobile | [ ] |
+| M.7 | Ecran replay de match | Mobile | [ ] |
+| M.8 | Ecrans cups/ligues | Mobile | [ ] |
+| M.9 | Push notifications natives (Expo Notifications) | Mobile | [ ] |
+| M.10 | Details joueur et progression | Mobile | [ ] |
+| M.11 | Catalogue Star Players mobile | Mobile | [ ] |
+| M.12 | Profil et settings mobile | Mobile | [ ] |
+
+### Sprint 18-19 — Croissance & Engagement (~10 jours)
+
+> Attirer et retenir les joueurs.
+
+| # | Tache | Type | Statut |
+|---|-------|------|--------|
+| N.1 | Tutoriel interactif (match guide contre scripts) | Engagement | [ ] |
+| N.2 | Mode simplifie pour debutants (leverager `SIMPLIFIED_RULES`) | Engagement | [ ] |
+| N.3 | IA adversaire — evaluation heuristique basique | Engagement | [ ] |
+| N.4 | Mode pratique contre IA | Engagement | [ ] |
+| N.5 | Systeme d'amis (ajout, invitation, statut en ligne) | Social | [ ] |
+| N.6 | Historique de matchs avec stats de carriere | Social | [ ] |
+| N.7 | Systeme d'achievements | Social | [ ] |
+
+### Sprint 20+ — Contenu & Polish
+
+> Completer la couverture skills, ameliorer la qualite.
+
+| # | Tache | Type | Statut |
+|---|-------|------|--------|
+| O.1 | ~39 skills niche restants (batch 3) | Contenu | [ ] |
+| O.2 | Star player special rules restantes (~30) | Contenu | [ ] |
+| O.3 | Verification differences regles S3 | Contenu | [ ] |
+| O.4 | Expansion E2E tests (couverture cible 80%) | Qualite | [ ] |
+| O.5 | Optimisation taille GameState (separer gameLog) | Perf | [ ] |
+| O.6 | Standardiser error handling (`ApiResponse<T>`) | Qualite | [ ] |
+| O.7 | Optimiser queries DB (pagination, select) | Perf | [ ] |
+| O.8 | Cosmetiques (logos equipe, generateur noms) | Engagement | [ ] |
+| O.9 | Features communautaires (match of the week, Discord) | Engagement | [ ] |
+| O.10 | Dashboard analytics personnel et global | Engagement | [ ] |
+
 ---
 
 ## Resume par phase
@@ -187,42 +305,48 @@
 | Phase | Taches | Fait | Partiel | A faire | Criticite |
 |-------|--------|------|---------|---------|-----------|
 | **S0 — Bugfixes** | 5 | 5 | 0 | 0 | TERMINE |
-| **A — Multijoueur temps reel** | 10 | 7 | 0 | 3 | EN COURS (Sprint 5) |
+| **A — Multijoueur temps reel** | 10 | 10 | 0 | 0 | TERMINE |
 | **B0 — Architecture skills** | 2 | 2 | 0 | 0 | TERMINE |
-| **B1 — Regles BB3 critiques** | 10 | 7 | 1 | 2 | EN COURS (Sprint 5) |
-| **B2 — Regles BB3 importantes** | 10 | 4 | 1 | 5 | EN COURS (Sprint 6) |
-| **B3 — Star Players specials** | 2 | 1 | 0 | 1 | BONUS |
-| **C — Matchmaking & flow** | 8 | 3 | 1 | 4 | EN COURS (Sprint 5) |
+| **B1 — Regles BB3 critiques** | 10 | 10 | 0 | 0 | TERMINE |
+| **B2 — Regles BB3 importantes** | 10 | 10 | 0 | 0 | TERMINE |
+| **B3 — Star Players specials** | 2 | 2 | 0 | 0 | TERMINE |
+| **C — Matchmaking & flow** | 8 | 8 | 0 | 0 | TERMINE |
 | **D — Progression joueurs** | 8 | 8 | 0 | 0 | TERMINE |
-| **E — Animations web** | 7 | 3 | 0 | 4 | IMPORTANT (UX) |
-| **F — ELO & classement** | 4 | 2 | 0 | 2 | SOUHAITABLE |
-| **G — Notifications push** | 5 | 2 | 0 | 3 | EN COURS (Sprint 7) |
-| **H — Polish** | 7 | 2 | 0 | 5 | EN COURS (Sprint 8) |
-| **I — Contenu & donnees** | 10 | 6 | 0 | 4 | EN COURS (Sprint 10) |
+| **E — Animations web** | 7 | 7 | 0 | 0 | TERMINE |
+| **F — ELO & classement** | 4 | 4 | 0 | 0 | TERMINE |
+| **G — Notifications push** | 5 | 5 | 0 | 0 | TERMINE |
+| **H — Polish** | 7 | 7 | 0 | 0 | TERMINE |
+| **I — Contenu & donnees** | 10 | 10 | 0 | 0 | TERMINE |
+| **J — Traits negatifs** | 11 | 0 | 0 | 11 | CRITIQUE (Sprint 12-13) |
+| **K — Skills fort impact** | 13 | 0 | 0 | 13 | IMPORTANT (Sprint 13-15) |
+| **L — Ligues** | 8 | 0 | 0 | 8 | CRITIQUE (Sprint 14) |
+| **M — Parite mobile** | 12 | 0 | 0 | 12 | IMPORTANT (Sprint 16-17) |
+| **N — Croissance** | 7 | 0 | 0 | 7 | IMPORTANT (Sprint 18-19) |
+| **O — Contenu & polish** | 10 | 0 | 0 | 10 | SOUHAITABLE (Sprint 20+) |
 
 ---
 
-## Chemin critique pour jouer en ligne
+## Chemin critique
 
 ```
-Sprint 0 (Bugfixes) ✅ ──→ Sprint 1 (WS + UI + skills) ✅ ──→ MATCH ONLINE JOUABLE ✅
-       │                         │
-       │                Sprint 2 (Regles BB3 critiques) ✅
-       │                         │
-       │                Sprint 3 (Matchmaking + Animations) ✅ ──→ EXPERIENCE COMPLETE ✅
-       │                         │
-       │                Sprint 4 (Contenu + ELO) ✅ ──→ COMPETITIF ✅
-       │                         │
-       │                Sprint 5 (Robustesse + Flow) ✅ ──→ PRODUCTION READY ✅
-       │                         │
-       │                Sprint 6 (Regles BB3 complementaires) ✅ ──→ GAMEPLAY COMPLET ✅
-       │                         │
-       │                Sprint 7 (Notifications push) ──→ ENGAGEMENT
-       │
-       └── Phases B2/B3 + G + H + I ──→ GAMEPLAY RICHE + POLISH
+Phase 1 : Sprints 0-11 ✅ ──→ MATCH ONLINE JOUABLE + GAMEPLAY RICHE + POLISH
+
+Phase 2 : Sprints 12-20 (en cours)
+
+Sprint 12 (Securite + Traits negatifs)
+    │
+    ├── Sprint 13 (Equilibre equipes) ── Sprint 15 (Skills fort impact)
+    │                                         │
+    │                                    Sprint 20+ (Skills niche)
+    │
+    ├── Sprint 14 (Ligues) ── Sprint 18 (Amis, Stats)
+    │
+    ├── Sprint 16-17 (Mobile) ── [App stores]
+    │
+    └── Sprint 18-19 (Tutoriel + IA) ── Sprint 20+ (Communaute)
 ```
 
-> **Recommandation (2026-04-07)** :
+> **Historique (Sprints 0-11)** :
 > 1. ~~Sprint 0~~ ✅ — bugs critiques et failles securite
 > 2. ~~Sprint 1~~ ✅ — skills + WebSocket + UI = match jouable
 > 3. ~~Sprint 2~~ ✅ — regles BB3 essentielles
@@ -234,4 +358,13 @@ Sprint 0 (Bugfixes) ✅ ──→ Sprint 1 (WS + UI + skills) ✅ ──→ MATC
 > 9. ~~Sprint 8~~ ✅ — polish & contenu (chat in-game, bugfixes donnees)
 > 10. ~~Sprint 9~~ ✅ — animations avancees, kickoff events, leaderboard
 > 11. ~~Sprint 10~~ ✅ — contenu & polish restants (Slann S3, images, replayer)
-> 12. **En cours** : Sprint 11 — donnees S3, taches restantes
+> 12. ~~Sprint 11~~ ✅ — donnees S3, taches restantes
+>
+> **Plan d'evolution (2026-04-12)** :
+> 13. Sprint 12 — securite + traits negatifs (equilibre critique)
+> 14. Sprint 13 — equilibre equipes (bloodlust, leap, stab, dump-off)
+> 15. Sprint 14 — systeme de ligues (killer feature competitive)
+> 16. Sprint 15 — skills a fort impact (kick, ball-and-chain, bombardier)
+> 17. Sprint 16-17 — parite mobile (7 → 20+ ecrans)
+> 18. Sprint 18-19 — croissance (tutoriel, IA, amis, achievements)
+> 19. Sprint 20+ — contenu & polish (skills niche, E2E, optimisations)
