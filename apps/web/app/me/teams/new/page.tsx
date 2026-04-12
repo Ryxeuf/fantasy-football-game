@@ -195,9 +195,10 @@ export default function NewTeamBuilder() {
   return (
     <div className="w-full p-6 space-y-6">
       <h1 className="text-2xl font-bold">{t.teams.createTeamTitle}</h1>
-      {error && <p className="text-red-600 text-sm">{error}</p>}
+      {error && <p data-testid="team-builder-error" className="text-red-600 text-sm">{error}</p>}
       <div className="grid gap-3">
         <input
+          data-testid="team-name-input"
           className="border p-2 rounded"
           placeholder={t.teams.teamNamePlaceholder}
           value={name}
@@ -209,6 +210,7 @@ export default function NewTeamBuilder() {
               {t.teams.rulesetLabel}
             </label>
             <select
+              data-testid="ruleset-select"
               className="border p-2 w-full rounded"
               value={ruleset}
               onChange={(e) => setRuleset(e.target.value as Ruleset)}
@@ -225,6 +227,7 @@ export default function NewTeamBuilder() {
               {t.teams.roster}
             </label>
             <select
+              data-testid="roster-select"
               className="border p-2 w-full rounded"
               value={rosterId}
               onChange={(e) => setRosterId(e.target.value)}
@@ -287,6 +290,7 @@ export default function NewTeamBuilder() {
                 <td className="p-2">{counts[p.slug] || 0}</td>
                 <td className="p-2">
                   <button
+                    data-testid={`position-remove-${p.slug}`}
                     className="px-2 py-1 border mr-2 rounded hover:bg-gray-100 transition-colors"
                     onClick={() => change(p.slug, -1)}
                     disabled={(counts[p.slug] || 0) <= (p.min || 0)}
@@ -294,6 +298,7 @@ export default function NewTeamBuilder() {
                     -
                   </button>
                   <button
+                    data-testid={`position-add-${p.slug}`}
                     className={`px-2 py-1 border rounded ${
                       (counts[p.slug] || 0) >= (p.max || 16) || 
                       total + p.cost > teamValue 
@@ -364,6 +369,7 @@ export default function NewTeamBuilder() {
             )}
           </div>
           <button
+            data-testid="create-team-submit"
             className="px-6 py-3 bg-emerald-600 text-white rounded font-medium disabled:bg-gray-400 disabled:cursor-not-allowed hover:bg-emerald-700 transition-colors"
             onClick={submit}
             disabled={totalPlayersWithStars < 11 || totalPlayersWithStars > 16}
