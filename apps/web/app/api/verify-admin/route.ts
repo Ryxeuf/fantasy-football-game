@@ -1,9 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || "dev-secret-change-me"
-);
+// Lazy initialization: Next.js sets NODE_ENV=production during `next build`,
+// so we cannot validate env vars at module load time — the build would crash
+// when collecting page data. Instead, we resolve the secret on first request.
+let _cachedSecret: Uint8Array | null = null;
+
+function getJwtSecret(): Uint8Array {
+  if (_cachedSecret) return _cachedSecret;
+
+  const raw = process.env.JWT_SECRET;
+  if (!raw && process.env.NODE_ENV === "production") {
+    throw new Error(
+      'FATAL: Missing required environment variable "JWT_SECRET". ' +
+        "The server cannot start in production without it.",
+    );
+  }
+  _cachedSecret = new TextEncoder().encode(raw || "dev-secret-change-me");
+  return _cachedSecret;
+}
 
 /**
  * Route API pour vérifier si un token correspond à un admin
@@ -19,7 +34,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const { payload } = await jwtVerify(token, JWT_SECRET);
+    const { payload } = await jwtVerify(token, getJwtSecret());
     const roles = Array.isArray(payload.roles)
       ? (payload.roles as string[])
       : payload.role
