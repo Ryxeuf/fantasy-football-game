@@ -67,7 +67,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "hail-mary-pass,loner-4,pass,secret-weapon,cannoneer,sure-hands,thick-skull",
     hirableBy: ["old_world_classic"],
-    imageUrl: "/data/Star-Players_files/barik-farblast.webp"
+    imageUrl: "/data/Star-Players_files/barik-farblast.webp",
+    specialRule: "Cannoneer : Lorsque Barik effectue une Passe, réduisez tout modificateur négatif de 1 (minimum 0)."
   },
 
   bilerot_vomitflesh: {
@@ -81,7 +82,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 10,
     skills: "dirty-player-1,disturbing-presence,foul-appearance,loner-4",
     hirableBy: ["all"],
-    imageUrl: "/data/Star-Players_files/bilerot_vomitflesh.svg"
+    imageUrl: "/data/Star-Players_files/bilerot_vomitflesh.svg",
+    specialRule: "Vomi Projectile : Une fois par match, Bilerot peut effectuer une attaque de Vomi Projectile contre un joueur adverse adjacent, provoquant un jet d'Armure."
   },
 
   the_black_gobbo: {
@@ -95,7 +97,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "secret-weapon,disturbing-presence,dodge,loner-4,sidestep,sneaky-git,stab,stunty",
     hirableBy: ["underworld_challenge", "badlands_brawl"],
-    imageUrl: "/data/Star-Players_files/The-Black-Gobbo.webp"
+    imageUrl: "/data/Star-Players_files/The-Black-Gobbo.webp",
+    specialRule: "Le Plus Sournois : Une fois par match, si le Black Gobbo est expulsé pour Arme Secrète, lancez un D6 ; sur 4+, il n'est pas expulsé."
   },
 
   boa_konssstriktr: {
@@ -109,7 +112,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "dodge,sidestep,prehensile-tail,loner-4,hypnotic-gaze",
     hirableBy: ["lustrian_superleague"],
-    imageUrl: "/data/Star-Players_files/boa_konssstriktr.svg"
+    imageUrl: "/data/Star-Players_files/boa_konssstriktr.svg",
+    specialRule: "Regard Hypnotique : Boa peut utiliser son Regard Hypnotique pour neutraliser un joueur adverse adjacent, l'empêchant d'utiliser sa zone de tacle."
   },
 
   bomber_dribblesnot: {
@@ -123,7 +127,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 8,
     skills: "accurate,secret-weapon,dodge,loner-4,stunty,right-stuff",
     hirableBy: ["underworld_challenge", "badlands_brawl"],
-    imageUrl: "/data/Star-Players_files/Bomber-Dribblesnot.webp"
+    imageUrl: "/data/Star-Players_files/Bomber-Dribblesnot.webp",
+    specialRule: "Kaboom! : Bomber peut lancer des bombes au lieu du ballon. La bombe explose à l'impact, mettant au sol les joueurs dans la case cible."
   },
 
   bryce_the_slice_cambuel: {
@@ -137,7 +142,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "chainsaw,loner-4,regeneration,secret-weapon,stand-firm,thick-skull",
     hirableBy: ["sylvanian_spotlight"],
-    imageUrl: "/data/Star-Players_files/Bryce-The-Slice-Cambuel-2023.webp"
+    imageUrl: "/data/Star-Players_files/Bryce-The-Slice-Cambuel-2023.webp",
+    specialRule: "Flammes Fantomatiques : Une fois par match, tous les joueurs adverses adjacents à Bryce perdent leur zone de tacle jusqu'à la fin du tour."
   },
 
   cindy_piewhistle: {
@@ -151,7 +157,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 7,
     skills: "secret-weapon,dodge,stunty,accurate,loner-4",
     hirableBy: ["old_world_classic"],
-    imageUrl: "/data/Star-Players_files/Cindy_Piewhistle.webp"
+    imageUrl: "/data/Star-Players_files/Cindy_Piewhistle.webp",
+    specialRule: "Lanceuse de Tartes : Cindy peut lancer des tartes au lieu du ballon, étourdissant les joueurs touchés."
   },
 
   deeproot_strongbranch: {
@@ -180,7 +187,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 8,
     skills: "loner-4,dodge,nerves-of-steel,catch,hypnotic-gaze,on-the-ball",
     hirableBy: ["elven_kingdoms_league"],
-    imageUrl: "/data/Star-Players_files/Eldril-Sidewinder.webp"
+    imageUrl: "/data/Star-Players_files/Eldril-Sidewinder.webp",
+    specialRule: "Danse Envoûtante : Une fois par match, après avoir été mis au sol, Eldril peut se relever gratuitement sur un jet de 2+."
   },
 
   estelle_la_veneaux: {
@@ -194,7 +202,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 8,
     skills: "dodge,guard,sidestep,disturbing-presence,loner-4",
     hirableBy: ["lustrian_superleague"],
-    imageUrl: "/data/Star-Players_files/star-player-whitergrasp-doubledrool.webp"
+    imageUrl: "/data/Star-Players_files/star-player-whitergrasp-doubledrool.webp",
+    specialRule: "Griffes Venimeuses : Une fois par match, après un Blocage réussi, Estelle peut infliger un jet d'Armure automatique au joueur ciblé."
   },
 
   frank_n_stein: {
@@ -208,7 +217,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 10,
     skills: "break-tackle,loner-4,mighty-blow-1,regeneration,stand-firm,thick-skull",
     hirableBy: ["old_world_classic", "sylvanian_spotlight"],
-    imageUrl: "/data/Star-Players_files/frank-n-stein.webp"
+    imageUrl: "/data/Star-Players_files/frank-n-stein.webp",
+    specialRule: "Fracas Brutal : Une fois par match, Frank peut ajouter +1 au jet d'Armure après un Blocage réussi."
   },
 
   fungus_the_loon: {
@@ -222,7 +232,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 8,
     skills: "secret-weapon,ball-and-chain,mighty-blow-1,stunty,loner-4,no-hands",
     hirableBy: ["underworld_challenge", "badlands_brawl"],
-    imageUrl: "/data/Star-Players_files/Fungus-the-Loon.webp"
+    imageUrl: "/data/Star-Players_files/Fungus-the-Loon.webp",
+    specialRule: "Le Fou Furieux : Fungus se déplace aléatoirement avec son Boulet et Chaîne, écrasant tout joueur sur son passage."
   },
 
   glart_smashrip: {
@@ -236,7 +247,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "block,claws,juggernaut,grab,loner-4,stand-firm",
     hirableBy: ["underworld_challenge"],
-    imageUrl: "/data/Star-Players_files/Glart-Smashrip.webp"
+    imageUrl: "/data/Star-Players_files/Glart-Smashrip.webp",
+    specialRule: "Charge Frénétique : Une fois par match, lors d'un Blitz, Glart peut se déplacer de 3 cases supplémentaires."
   },
 
   gloriel_summerbloom: {
@@ -250,7 +262,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 8,
     skills: "accurate,dodge,loner-4,pass,sidestep,sure-hands",
     hirableBy: ["elven_kingdoms_league"],
-    imageUrl: "/data/Star-Players_files/gloriel_summerbloom.svg"
+    imageUrl: "/data/Star-Players_files/gloriel_summerbloom.svg",
+    specialRule: "Tir à Bout Portant : Une fois par match, après une Passe complétée par Gloriel, le receveur peut se déplacer de 3 cases supplémentaires."
   },
 
   glotl_stop: {
@@ -264,7 +277,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 10,
     skills: "mighty-blow-1,thick-skull,frenzy,animal-savagery,prehensile-tail,loner-4,stand-firm",
     hirableBy: ["lustrian_superleague"],
-    imageUrl: "/data/Star-Players_files/glotl_stop.svg"
+    imageUrl: "/data/Star-Players_files/glotl_stop.svg",
+    specialRule: "Sauvagerie Primale : Une fois par match, lors d'un Blocage, Glotl peut ajouter +2 à sa Force."
   },
 
   grashnak_blackhoof: {
@@ -278,7 +292,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "frenzy,horns,loner-4,mighty-blow-1,thick-skull,wild-animal",
     hirableBy: ["all"],
-    imageUrl: "/data/Star-Players_files/Grashnak-Blackhoof.webp"
+    imageUrl: "/data/Star-Players_files/Grashnak-Blackhoof.webp",
+    specialRule: "Encorné par le Taureau : Une fois par match, lors d'un Blitz, Grashnak peut ajouter +2 au jet d'Armure."
   },
 
   grak: {
@@ -322,7 +337,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "disturbing-presence,dodge,foul-appearance,jump-up,loner-4,no-hands,regeneration,shadowing,sidestep",
     hirableBy: ["sylvanian_spotlight"],
-    imageUrl: "/data/Star-Players_files/Skitter-Stab-Stab-blood-bowl-star-player.webp"
+    imageUrl: "/data/Star-Players_files/Skitter-Stab-Stab-blood-bowl-star-player.webp",
+    specialRule: "Incorporelle : Une fois par match, Gretchen peut traverser les cases occupées par d'autres joueurs durant son déplacement."
   },
 
   griff_oberwald: {
@@ -367,7 +383,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 10,
     skills: "block,dauntless,loner-4,mighty-blow-1,stand-firm,thick-skull",
     hirableBy: ["lustrian_superleague", "old_world_classic"],
-    imageUrl: "/data/Star-Players_files/Grombrindal-the-White-Dwarf.webp"
+    imageUrl: "/data/Star-Players_files/Grombrindal-the-White-Dwarf.webp",
+    specialRule: "Sagesse du Nain Blanc : Une fois par match, l'équipe de Grombrindal peut utiliser une relance d'équipe gratuite, même si elle n'en a plus."
   },
 
   guffle_pussmaw: {
@@ -381,7 +398,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 10,
     skills: "plague-ridden,monstrous-mouth,bloodlust,foul-appearance,loner-4",
     hirableBy: ["all"],
-    imageUrl: "/data/Star-Players_files/Guffle-Pussmaw-Star-Player.webp"
+    imageUrl: "/data/Star-Players_files/Guffle-Pussmaw-Star-Player.webp",
+    specialRule: "Bouche Monstrueuse : Guffle peut attraper le ballon avec sa bouche immonde, lui conférant +1 au jet de Réception."
   },
 
   hakflem_skuttlespike: {
@@ -395,7 +413,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 8,
     skills: "loner-4,extra-arms,two-heads,dodge,prehensile-tail",
     hirableBy: ["underworld_challenge"],
-    imageUrl: "/data/Star-Players_files/Hakflem-Skuttlespike.webp"
+    imageUrl: "/data/Star-Players_files/Hakflem-Skuttlespike.webp",
+    specialRule: "Traître : Une fois par match, Hakflem peut effectuer une action de Coup de Poignard gratuite contre un joueur adjacent sans provoquer de turnover."
   },
 
   helmut_wulf: {
@@ -409,7 +428,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "chainsaw,loner-4,secret-weapon,pro,stand-firm",
     hirableBy: ["all"],
-    imageUrl: "/data/Star-Players_files/helmut_wulf.svg"
+    imageUrl: "/data/Star-Players_files/helmut_wulf.svg",
+    specialRule: "Vieux Pro : Une fois par match, si Helmut est expulsé pour Arme Secrète, lancez un D6 ; sur 2+, il peut rester un drive de plus."
   },
 
   hthark_the_unstoppable: {
@@ -424,6 +444,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     skills: "block,thick-skull,defensive,sure-feet,break-tackle,juggernaut,sprint,loner-4",
     hirableBy: ["badlands_brawl"],
     imageUrl: "/data/Star-Players_files/hthark_the_unstoppable.svg",
+    specialRule: "Imparable : H'thark ne peut être mis au sol que par un résultat Double Crâne sur les dés de Blocage.",
     isMegaStar: true
   },
 
@@ -439,6 +460,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     skills: "block,juggernaut,disturbing-presence,sure-hands,regeneration,loner-4,tackle",
     hirableBy: ["sylvanian_spotlight"],
     imageUrl: "/data/Star-Players_files/ivan_the_animal_deathshroud.svg",
+    specialRule: "Mort et Fier de l'Être : Les adversaires doivent soustraire 1 aux jets de Blessure contre Ivan.",
     isMegaStar: true
   },
 
@@ -453,7 +475,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "block,guard,loner-4,tackle",
     hirableBy: ["old_world_classic"],
-    imageUrl: "/data/Star-Players_files/ivar_eriksson.svg"
+    imageUrl: "/data/Star-Players_files/ivar_eriksson.svg",
+    specialRule: "Mur de Boucliers : Tant qu'Ivar est debout, les coéquipiers adjacents bénéficient de +1 à leur Valeur d'Armure."
   },
 
   jeremiah_kool: {
@@ -467,7 +490,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "block,dump-off,dodge,sidestep,nerves-of-steel,pass,diving-catch,loner-4,on-the-ball",
     hirableBy: ["elven_kingdoms_league"],
-    imageUrl: "/data/Star-Players_files/jeremiah_kool.svg"
+    imageUrl: "/data/Star-Players_files/jeremiah_kool.svg",
+    specialRule: "Le Kata de Kool : Une fois par match, après avoir réceptionné le ballon, Jeremiah peut effectuer un déplacement gratuit de 3 cases."
   },
 
   jordell_freshbreeze: {
@@ -481,7 +505,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 8,
     skills: "block,dodge,sidestep,diving-catch,leap,loner-4",
     hirableBy: ["elven_kingdoms_league"],
-    imageUrl: "/data/Star-Players_files/jordell_freshbreeze.svg"
+    imageUrl: "/data/Star-Players_files/jordell_freshbreeze.svg",
+    specialRule: "Réception du Siècle : Une fois par match, Jordell peut ajouter +1 à un jet de Réception ou d'Interception."
   },
 
   karina_von_riesz: {
@@ -495,7 +520,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "bloodlust,dodge,hypnotic-gaze,jump-up,loner-4,regeneration",
     hirableBy: ["sylvanian_spotlight"],
-    imageUrl: "/data/Star-Players_files/karina_von_riesz.svg"
+    imageUrl: "/data/Star-Players_files/karina_von_riesz.svg",
+    specialRule: "Charme Vampirique : Une fois par match, Karina peut forcer un joueur adverse adjacent à se déplacer d'une case dans une direction de son choix."
   },
 
   karla_von_kill: {
@@ -509,7 +535,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "block,dauntless,dodge,jump-up,loner-4",
     hirableBy: ["lustrian_superleague", "old_world_classic"],
-    imageUrl: "/data/Star-Players_files/karla_von_kill.svg"
+    imageUrl: "/data/Star-Players_files/karla_von_kill.svg",
+    specialRule: "Indomptable : Une fois par match, Karla peut ajouter +1 à sa Force pour une action de Blocage ou de Blitz."
   },
 
   kiroth_krakeneye: {
@@ -523,7 +550,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "disturbing-presence,foul-appearance,loner-4,on-the-ball,tackle,tentacles",
     hirableBy: ["elven_kingdoms_league"],
-    imageUrl: "/data/Star-Players_files/Kiroth-Krakeneye.webp"
+    imageUrl: "/data/Star-Players_files/Kiroth-Krakeneye.webp",
+    specialRule: "Emprise Eldritch : Les joueurs adverses subissent un modificateur de -1 lorsqu'ils tentent d'Esquiver hors de la zone de tacle de Kiroth."
   },
 
   kreek_rustgouger: {
@@ -537,7 +565,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 10,
     skills: "ball-and-chain,loner-4,mighty-blow-1,no-hands,prehensile-tail,secret-weapon",
     hirableBy: ["underworld_challenge"],
-    imageUrl: "/data/Star-Players_files/Kreek-Rustgouger.webp"
+    imageUrl: "/data/Star-Players_files/Kreek-Rustgouger.webp",
+    specialRule: "Boulet Rouillé : Kreek se déplace aléatoirement avec son Boulet et Chaîne, broyant tout joueur sur son passage."
   },
 
   lord_borak: {
@@ -596,7 +625,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 10,
     skills: "block,hypnotic-gaze,loner-4,regeneration,sidestep",
     hirableBy: ["sylvanian_spotlight"],
-    imageUrl: "/data/Star-Players_files/luthor_von_drakenborg.svg"
+    imageUrl: "/data/Star-Players_files/luthor_von_drakenborg.svg",
+    specialRule: "Seigneur Vampire : Une fois par match, Luthor peut relancer un jet de Soif de Sang (Bloodlust) raté."
   },
 
   maple_highgrove: {
@@ -610,7 +640,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 11,
     skills: "brawler,mighty-blow-1,thick-skull,grab,loner-4,stand-firm,tentacles",
     hirableBy: ["elven_kingdoms_league", "old_world_classic"],
-    imageUrl: "/data/Star-Players_files/maple_highgrove.svg"
+    imageUrl: "/data/Star-Players_files/maple_highgrove.svg",
+    specialRule: "Le Grand Ent : Une fois par match, Maple peut ajouter +1 à sa Force pour une action de Blocage."
   },
 
   max_spleenripper: {
@@ -624,7 +655,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "chainsaw,loner-4,secret-weapon",
     hirableBy: ["all"],
-    imageUrl: "/data/Star-Players_files/max_spleenripper.svg"
+    imageUrl: "/data/Star-Players_files/max_spleenripper.svg",
+    specialRule: "Carnage Maximum : Une fois par match, lors d'une attaque à la Tronçonneuse réussie, Max peut ajouter +1 au jet d'Armure."
   },
 
   mighty_zug: {
@@ -653,7 +685,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "block,dauntless,wrestle,loner-4,tackle",
     hirableBy: ["elven_kingdoms_league"],
-    imageUrl: "/data/Star-Players_files/prince_moranion.svg"
+    imageUrl: "/data/Star-Players_files/prince_moranion.svg",
+    specialRule: "Bravoure Elfique : Une fois par match, Prince Moranion peut se relever gratuitement et effectuer un Blocage sans utiliser d'action de Blitz."
   },
 
   morg_n_thorg: {
@@ -683,7 +716,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 8,
     skills: "secret-weapon,block,dodge,stunty,loner-4,chainsaw",
     hirableBy: ["underworld_challenge", "badlands_brawl"],
-    imageUrl: "/data/Star-Players_files/Nobbla-Blackwart-3rd-Edition.webp"
+    imageUrl: "/data/Star-Players_files/Nobbla-Blackwart-3rd-Edition.webp",
+    specialRule: "Frappez-les à Terre : Une fois par match, lors d'une Faute, Nobbla peut ajouter +1 au jet d'Armure."
   },
 
   puggy_baconbreath: {
@@ -697,7 +731,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 7,
     skills: "dodge,titchy,nerves-of-steel,right-stuff,loner-4",
     hirableBy: ["old_world_classic"],
-    imageUrl: "/data/Star-Players_files/Puggy_Baconbreath.webp"
+    imageUrl: "/data/Star-Players_files/Puggy_Baconbreath.webp",
+    specialRule: "Demi-Portion : Une fois par match, Puggy peut ignorer les zones de tacle adverses lors de son déplacement pour un tour."
   },
 
   rashnak_backstabber: {
@@ -711,7 +746,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 8,
     skills: "sidestep,sneaky-git,shadowing,stab,loner-4",
     hirableBy: ["badlands_brawl"],
-    imageUrl: "/data/Star-Players_files/Grashnak-Blackhoof.webp"
+    imageUrl: "/data/Star-Players_files/Grashnak-Blackhoof.webp",
+    specialRule: "Coup dans le Dos : Une fois par match, lorsqu'un joueur adverse se déplace adjacent à Rashnak, il peut effectuer un Coup de Poignard gratuit."
   },
 
   ripper_bolgrot: {
@@ -725,7 +761,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 10,
     skills: "throw-team-mate,grab,regeneration,loner-4",
     hirableBy: ["underworld_challenge", "badlands_brawl"],
-    imageUrl: "/data/Star-Players_files/ripper_bolgrot.svg"
+    imageUrl: "/data/Star-Players_files/ripper_bolgrot.svg",
+    specialRule: "Lancer de Caillou : Une fois par match, Ripper peut lancer un rocher sur un joueur adverse à portée, provoquant un jet d'Armure."
   },
 
   rodney_roachbait: {
@@ -739,7 +776,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 7,
     skills: "catch,diving-catch,jump-up,loner-4,on-the-ball,sidestep,stunty,wrestle",
     hirableBy: ["all"],
-    imageUrl: "/data/Star-Players_files/rodney_roachbait.svg"
+    imageUrl: "/data/Star-Players_files/rodney_roachbait.svg",
+    specialRule: "Attrape-Cafards : Une fois par match, Rodney peut ajouter +1 à un jet de Réception."
   },
 
   rowana_forestfoot: {
@@ -753,7 +791,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 8,
     skills: "horns,dump-off,dodge,guard,jump-up,leap,loner-4",
     hirableBy: ["all"],
-    imageUrl: "/data/Star-Players_files/rowana_forestfoot.svg"
+    imageUrl: "/data/Star-Players_files/rowana_forestfoot.svg",
+    specialRule: "Bond Féerique : Une fois par match, Rowana peut traverser les zones de tacle adverses sans effectuer de jet d'Esquive."
   },
 
   roxanna_darknail: {
@@ -782,7 +821,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 8,
     skills: "block,horns,juggernaut,loner-4,no-hands,tackle,thick-skull",
     hirableBy: ["old_world_classic"],
-    imageUrl: "/data/Star-Players_files/rumbelow_sheepskin.svg"
+    imageUrl: "/data/Star-Players_files/rumbelow_sheepskin.svg",
+    specialRule: "Bélier : Une fois par match, après un déplacement de Blitz de 3+ cases, Rumbelow peut ajouter +1 à sa Force pour le Blocage."
   },
 
   scrappa_sorehead: {
@@ -796,7 +836,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 8,
     skills: "pogo-stick,dodge,sure-feet,dirty-player-1,stunty,right-stuff,loner-4,sprint",
     hirableBy: ["underworld_challenge", "badlands_brawl"],
-    imageUrl: "/data/Star-Players_files/scrappa_sorehead.svg"
+    imageUrl: "/data/Star-Players_files/scrappa_sorehead.svg",
+    specialRule: "Chipe! : Une fois par match, lorsque Scrappa se déplace adjacent à un porteur de ballon adverse, il peut tenter de lui voler le ballon (jet d'Agilité)."
   },
 
   scyla_anfingrimm: {
@@ -810,7 +851,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 10,
     skills: "claws,frenzy,loner-4,mighty-blow-1,prehensile-tail,thick-skull,wild-animal",
     hirableBy: ["all"],
-    imageUrl: "/data/Star-Players_files/Scyla-Anfingrimm.webp"
+    imageUrl: "/data/Star-Players_files/Scyla-Anfingrimm.webp",
+    specialRule: "Collier de Bronze de Khorne : Scyla est immunisé contre les effets de Regard Hypnotique et autres capacités magiques."
   },
 
   skitter_stab_stab: {
@@ -824,7 +866,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 8,
     skills: "dodge,stab,shadowing,prehensile-tail,loner-4",
     hirableBy: ["underworld_challenge"],
-    imageUrl: "/data/Star-Players_files/Skitter-Stab-Stab-blood-bowl-star-player.webp"
+    imageUrl: "/data/Star-Players_files/Skitter-Stab-Stab-blood-bowl-star-player.webp",
+    specialRule: "Assassin : Lors d'un Blitz, Skitter peut effectuer une action de Coup de Poignard au lieu d'un Blocage."
   },
 
   skorg_snowpelt: {
@@ -838,7 +881,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "mighty-blow-1,claws,juggernaut,disturbing-presence,loner-4",
     hirableBy: ["old_world_classic"],
-    imageUrl: "/data/Star-Players_files/skorg_snowpelt.svg"
+    imageUrl: "/data/Star-Players_files/skorg_snowpelt.svg",
+    specialRule: "Rage du Yéti : Une fois par match, Skorg peut ajouter +2 à sa Force pour une action de Blocage."
   },
 
   skrull_halfheight: {
@@ -852,7 +896,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "accurate,loner-4,nerves-of-steel,pass,regeneration,sure-hands,thick-skull",
     hirableBy: ["sylvanian_spotlight"],
-    imageUrl: "/data/Star-Players_files/skrull_halfheight.svg"
+    imageUrl: "/data/Star-Players_files/skrull_halfheight.svg",
+    specialRule: "Jeu de Passe Solide : Une fois par match, Skrull peut ajouter +1 à sa Précision de Passe pour une action de Passe."
   },
 
   swiftvine_glimmershard: {
@@ -866,7 +911,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 7,
     skills: "sidestep,stunty,fend,stab,disturbing-presence,loner-4",
     hirableBy: ["elven_kingdoms_league"],
-    imageUrl: "/data/Star-Players_files/swiftvine_glimmershard.svg"
+    imageUrl: "/data/Star-Players_files/swiftvine_glimmershard.svg",
+    specialRule: "Piqûre Rapide : Une fois par match, Swiftvine peut ajouter +1 à son Agilité pour un jet d'Esquive."
   },
 
   thorsson_stoutmead: {
@@ -880,7 +926,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 8,
     skills: "block,thick-skull,drunkard,loner-4",
     hirableBy: ["old_world_classic"],
-    imageUrl: "/data/Star-Players_files/thorsson_stoutmead.svg"
+    imageUrl: "/data/Star-Players_files/thorsson_stoutmead.svg",
+    specialRule: "Coup de Tonneau : Une fois par match, Thorsson peut ajouter +1 à sa Force pour un Blocage, mais doit ensuite tester pour Tête d'Os (Bone Head)."
   },
 
   varag_ghoul_chewer: {
@@ -909,7 +956,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "catch,claws,frenzy,loner-4,regeneration,wrestle",
     hirableBy: ["sylvanian_spotlight"],
-    imageUrl: "/data/Star-Players_files/Wilhelm-Chaney.webp"
+    imageUrl: "/data/Star-Players_files/Wilhelm-Chaney.webp",
+    specialRule: "Frénésie Lycanthropique : Une fois par match, Wilhelm peut ajouter +1 à sa Force et +1 à son Mouvement pour un tour entier."
   },
 
   willow_rosebark: {
@@ -923,7 +971,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "dauntless,loner-4,sidestep,thick-skull",
     hirableBy: ["elven_kingdoms_league"],
-    imageUrl: "/data/Star-Players_files/Willow-Rosebark.webp"
+    imageUrl: "/data/Star-Players_files/Willow-Rosebark.webp",
+    specialRule: "Écorce Protectrice : Une fois par match, Willow peut ajouter +1 à sa Valeur d'Armure pour un coup reçu."
   },
 
   withergrasp_doubledrool: {
@@ -937,7 +986,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 9,
     skills: "loner-4,prehensile-tail,tackle,tentacles,two-heads,wrestle,hypnotic-gaze",
     hirableBy: ["all"],
-    imageUrl: "/data/Star-Players_files/star-player-whitergrasp-doubledrool.webp"
+    imageUrl: "/data/Star-Players_files/star-player-whitergrasp-doubledrool.webp",
+    specialRule: "Bave Paralysante : Les joueurs adverses subissent un modificateur de -1 lorsqu'ils tentent de quitter la zone de tacle de Withergrasp."
   },
 
   zolcath_the_zoat: {
@@ -951,7 +1001,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 10,
     skills: "disturbing-presence,juggernaut,loner-4,mighty-blow-1,prehensile-tail,regeneration,sure-feet",
     hirableBy: ["lustrian_superleague", "elven_kingdoms_league"],
-    imageUrl: "/data/Star-Players_files/zolcath_the_zoat.svg"
+    imageUrl: "/data/Star-Players_files/zolcath_the_zoat.svg",
+    specialRule: "Dévoreur de Sorts : Une fois par match, Zolcath peut annuler un effet spécial ou une carte de Prière à Nuffle ciblant un joueur de son équipe."
   },
 
   zzharg_madeye: {
@@ -965,7 +1016,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     av: 10,
     skills: "nerves-of-steel,hail-mary-pass,loner-4,secret-weapon,cannoneer,sure-hands,thick-skull",
     hirableBy: ["badlands_brawl"],
-    imageUrl: "/data/Star-Players_files/Zzharg-Madeye-star-player-blood-bowl.webp"
+    imageUrl: "/data/Star-Players_files/Zzharg-Madeye-star-player-blood-bowl.webp",
+    specialRule: "Cannoneer : Lorsque Zzharg effectue une Passe, réduisez tout modificateur négatif de 1 (minimum 0)."
   },
 
 };

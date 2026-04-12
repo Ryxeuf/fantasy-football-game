@@ -263,6 +263,42 @@ describe('Star Players', () => {
         expect(starPlayer.specialRule).toBeTruthy();
       });
     });
+
+    it('aucun star player ne devrait avoir la règle spéciale fallback (I.6)', () => {
+      const fallbackPattern = /^Consultez le Livre de Règles Blood Bowl/;
+      const playersWithFallback: string[] = [];
+
+      Object.values(STAR_PLAYERS).forEach(starPlayer => {
+        if (starPlayer.specialRule && fallbackPattern.test(starPlayer.specialRule)) {
+          playersWithFallback.push(starPlayer.slug);
+        }
+      });
+
+      expect(playersWithFallback).toEqual([]);
+    });
+
+    it('chaque règle spéciale devrait être unique ou partagée par un duo', () => {
+      const ruleCounts = new Map<string, string[]>();
+
+      Object.values(STAR_PLAYERS).forEach(starPlayer => {
+        if (!starPlayer.specialRule) return;
+        const existing = ruleCounts.get(starPlayer.specialRule) ?? [];
+        existing.push(starPlayer.slug);
+        ruleCounts.set(starPlayer.specialRule, existing);
+      });
+
+      // Les duos (Grak/Crumbleberry, Swift Twins) peuvent partager une mention
+      // mais sinon chaque règle devrait être unique
+      for (const [rule, slugs] of ruleCounts.entries()) {
+        if (slugs.length > 1) {
+          // Only known duos should share rules
+          const isDuo = slugs.every(s =>
+            ['grak', 'crumbleberry', 'lucien_swift', 'valen_swift'].includes(s)
+          );
+          expect(isDuo).toBe(true);
+        }
+      }
+    });
   });
 
   describe('Validation des imageUrl', () => {
