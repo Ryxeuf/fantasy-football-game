@@ -19,6 +19,7 @@ import {
   performArmorRoll,
   rollBlockDice,
   rollBlockDiceManyWithRolls,
+  blockResultFromRoll,
 } from '../utils/dice';
 import {
   performDodgeRollWithNotification,
@@ -353,6 +354,11 @@ function applyRollFailure(state: GameState, playerIndex: number, rng: RNG): Game
     { diceRoll: armorResult.diceRoll, targetNumber: armorResult.targetNumber, success: armorResult.success }
   );
   state.gameLog = [...state.gameLog, armorLog];
+
+  // Si l'armure est percée (success = false), faire un jet de blessure
+  if (!armorResult.success) {
+    state = performInjuryRoll(state, state.players[playerIndex], rng);
+  }
 
   // Perte de balle si le joueur la portait
   if (player.hasBall) {
@@ -1025,13 +1031,14 @@ function handleBlock(
 
   // Si un seul dé, résoudre immédiatement
   if (diceCount === 1) {
-    const blockResult = rollBlockDiceWithNotification(rng, attacker.name);
-    const diceRoll = Math.floor(rng() * 6) + 1; // Simuler le jet de dé pour le log (1-6)
+    // Single RNG call: derive both diceRoll and blockResult from same value
+    const diceRoll = Math.floor(rng() * 6) + 1;
+    const blockResult = blockResultFromRoll(diceRoll);
     const blockDiceResult = {
       type: 'block' as const,
       playerId: attacker.id,
       targetId: target.id,
-      diceRoll: diceRoll,
+      diceRoll,
       result: blockResult,
       offensiveAssists,
       defensiveAssists,

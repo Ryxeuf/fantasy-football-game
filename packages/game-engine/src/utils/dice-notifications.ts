@@ -149,9 +149,14 @@ export function performArmorRollWithNotification(
   rng: RNG,
   modifiers: number = 0
 ): DiceResult {
-  const diceRoll = Math.floor(rng() * 6) + 1;
-  const targetNumber = Math.max(2, Math.min(6, player.av - modifiers));
-  const success = diceRoll >= targetNumber;
+  // Armor rolls use 2D6, not 1D6
+  const die1 = Math.floor(rng() * 6) + 1;
+  const die2 = Math.floor(rng() * 6) + 1;
+  const diceRoll = die1 + die2;
+  // Target = AV + modifiers, capped at 12 (matching performArmorRoll in dice.ts)
+  const targetNumber = Math.min(12, player.av + modifiers);
+  // Armor holds (success) when roll is below target; broken when roll >= target
+  const success = diceRoll < targetNumber;
 
   const diceResult: DiceResult = {
     type: 'armor',
