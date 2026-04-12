@@ -28,7 +28,7 @@ import {
 } from "@bb/game-engine";
 import { API_BASE } from "../../auth-client";
 import { useGameMoves } from "./hooks/useGameMoves";
-import { useGameSocket } from "./hooks/useGameSocket";
+// useGameSocket is now called only inside useGameState to avoid duplicate connections
 import { useGameState } from "./hooks/useGameState";
 import {
   shouldShowBlockPopup,
@@ -161,7 +161,7 @@ function InducementsPhaseUI({
     if (teamAReady && teamBReady && !submitting) {
       handleSubmit(selectionA, selectionB);
     }
-  }, [teamAReady, teamBReady]);
+  }, [teamAReady, teamBReady, submitting, selectionA, selectionB, handleSubmit]);
 
   return (
     <div className="w-full max-w-4xl mx-auto">
@@ -257,17 +257,19 @@ function SoundToggleButton() {
   );
 }
 
-// Normalise un état reçu du serveur
+// Normalise un état reçu du serveur (immutable — returns new object)
 function normalizeState(state: any): ExtendedGameState {
   if (!state) return state;
-  if (!state.playerActions) state.playerActions = {};
-  if (!state.teamBlitzCount) state.teamBlitzCount = {};
-  if (!state.teamFoulCount) state.teamFoulCount = {};
-  if (!state.matchStats) state.matchStats = {};
-  if (typeof state.width !== "number") state.width = 26;
-  if (typeof state.height !== "number") state.height = 15;
-  if (state.preMatch?.phase === "setup") state.selectedPlayerId = null;
-  return state as ExtendedGameState;
+  return {
+    ...state,
+    playerActions: state.playerActions ?? {},
+    teamBlitzCount: state.teamBlitzCount ?? {},
+    teamFoulCount: state.teamFoulCount ?? {},
+    matchStats: state.matchStats ?? {},
+    width: typeof state.width === "number" ? state.width : 26,
+    height: typeof state.height === "number" ? state.height : 15,
+    selectedPlayerId: state.preMatch?.phase === "setup" ? null : state.selectedPlayerId,
+  } as ExtendedGameState;
 }
 
 export default function PlayByIdPage({ params }: { params: { id: string } }) {
@@ -279,6 +281,8 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
     teamNameA, teamNameB, userName,
     opponentDisconnected, opponentDisconnectedAt,
     turnTimerDeadline, turnTimerSeconds,
+    wsConnected, wsReconnecting, wsReconnectAttempt,
+    wsSubmitMove, gameSocket,
     setState, setMatchStatus, setMyTeamSide, setIsMyTurn,
   } = useGameState(matchId);
 
@@ -288,16 +292,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
   >(null);
   const createRNG = () => makeRNG(`ui-seed-${Date.now()}-${Math.random()}`);
 
-  // WebSocket connection for real-time move submission
-  // Note: state updates are already handled by useGameState's internal useGameSocket
-  const {
-    submitMove: wsSubmitMove,
-    connected: wsConnected,
-    reconnecting: wsReconnecting,
-    reconnectAttempt: wsReconnectAttempt,
-    socket: gameSocket,
-  } = useGameSocket(matchId);
-
+  // Move submission uses the single WebSocket from useGameState (no duplicate connection)
   const { submitMove, submitting: moveSubmitting } = useGameMoves(matchId, {
     wsSubmitMove,
   });
@@ -513,11 +508,11 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
 
     if (
       gridX >= 0 &&
-      gridX < state.height &&
+      gridX < state.width &&
       gridY >= 0 &&
-      gridY < state.width
+      gridY < state.height
     ) {
-      const pos: Position = { x: gridY, y: gridX };
+      const pos: Position = { x: gridX, y: gridY };
 
       const err = validatePlacement(extState, draggedPlayerId, pos);
       if (err) {
@@ -839,9 +834,9 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
           // Pré-match / fallback local
           setState((s) => {
             if (!s) return null;
-            const s2 = applyMove(s, candidate, createRNG());
+            let s2 = applyMove(s, candidate, createRNG());
             const p = s2.players.find((pl) => pl.id === candidate.playerId);
-            if (!p || p.pm <= 0) s2.selectedPlayerId = null;
+            if (!p || p.pm <= 0) s2 = { ...s2, selectedPlayerId: null };
             if (s2.lastDiceResult) setShowDicePopup(true);
             setSelectedFromReserve(null);
             return s2 as ExtendedGameState;
@@ -875,7 +870,8 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
             ) as ExtendedGameState)
           : null,
       );
-  }, [state, isActiveMatch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state, isActiveMatch, submitMove, setState, setIsMyTurn]);
 
 
 

@@ -33,6 +33,23 @@ export default function GameScoreboard({
   turnTimerDeadline,
   turnTimerSeconds,
 }: GameScoreboardProps) {
+  // All hooks MUST be called before any early return (Rules of Hooks)
+  const lastScore = useMemo(() => {
+    if (!state || !state.gameLog || !Array.isArray(state.gameLog)) {
+      return undefined;
+    }
+    const entries = [...state.gameLog].reverse();
+    return entries.find((e) => e.type === "score");
+  }, [state?.gameLog]);
+
+  const [showScoreAnim, setShowScoreAnim] = useState(false);
+  useEffect(() => {
+    if (!lastScore) return;
+    setShowScoreAnim(true);
+    const t = setTimeout(() => setShowScoreAnim(false), 2500);
+    return () => clearTimeout(t);
+  }, [lastScore?.id]);
+
   // Si state n'est pas disponible, afficher un message de chargement
   if (!state) {
     return (
@@ -45,10 +62,6 @@ export default function GameScoreboard({
       </div>
     );
   }
-
-  const getTeamColor = (team: "A" | "B") => {
-    return team === "A" ? "bg-red-600" : "bg-blue-600";
-  };
 
   const getTeamTextColor = (team: "A" | "B") => {
     return team === "A" ? "text-red-600" : "text-blue-600";
@@ -72,24 +85,6 @@ export default function GameScoreboard({
   const getCurrentTeamColor = () => {
     return state.currentPlayer === "A" ? "red" : "blue";
   };
-
-  // Déterminer la dernière entrée de score
-  const lastScore = useMemo(() => {
-    if (!state || !state.gameLog || !Array.isArray(state.gameLog)) {
-      return undefined;
-    }
-    const entries = [...state.gameLog].reverse();
-    return entries.find((e) => e.type === "score");
-  }, [state?.gameLog ?? null]);
-
-  // Afficher l'animation pendant 2.5s après un score
-  const [showScoreAnim, setShowScoreAnim] = useState(false);
-  useEffect(() => {
-    if (!lastScore) return;
-    setShowScoreAnim(true);
-    const t = setTimeout(() => setShowScoreAnim(false), 2500);
-    return () => clearTimeout(t);
-  }, [lastScore?.id]);
 
   // Determine if it's the opponent's turn (when localSide is known)
   const isMyTurn = localSide ? state.currentPlayer === localSide : null;
@@ -223,7 +218,9 @@ export default function GameScoreboard({
               className={`px-6 py-2 rounded-lg font-bold text-white transition-all duration-200 ${
                 state.isTurnover
                   ? "bg-red-600 hover:bg-red-700"
-                  : `bg-${getCurrentTeamColor()}-600 hover:bg-${getCurrentTeamColor()}-700`
+                  : getCurrentTeamColor() === "red"
+                    ? "bg-red-600 hover:bg-red-700"
+                    : "bg-blue-600 hover:bg-blue-700"
               } shadow-lg hover:shadow-xl transform hover:scale-105`}
             >
               {state.isTurnover ? "Tour terminé" : "Fin du tour"}

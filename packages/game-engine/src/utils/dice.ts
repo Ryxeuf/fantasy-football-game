@@ -128,29 +128,35 @@ export function performPickupRoll(player: Player, rng: RNG, modifiers: number = 
 }
 
 /**
- * Lance un dé de blocage
- * @param rng - Générateur de nombres aléatoires
- * @returns Un résultat de blocage
+ * Converts a raw 1-6 die value to a BlockResult.
  */
-export function rollBlockDice(rng: RNG): BlockResult {
-  const roll = Math.floor(rng() * 6) + 1; // 1-6 pour les 6 faces du dé de blocage
-
+export function blockResultFromRoll(roll: number): BlockResult {
   switch (roll) {
     case 1:
       return 'PLAYER_DOWN';
     case 2:
       return 'BOTH_DOWN';
     case 3:
-      return 'PUSH_BACK'; // Première face Push Back
+      return 'PUSH_BACK';
     case 4:
       return 'STUMBLE';
     case 5:
       return 'POW';
     case 6:
-      return 'PUSH_BACK'; // Deuxième face Push Back (dupliquée)
+      return 'PUSH_BACK';
     default:
-      return 'PUSH_BACK'; // Ne devrait jamais arriver
+      return 'PUSH_BACK';
   }
+}
+
+/**
+ * Lance un dé de blocage
+ * @param rng - Générateur de nombres aléatoires
+ * @returns Un résultat de blocage
+ */
+export function rollBlockDice(rng: RNG): BlockResult {
+  const roll = Math.floor(rng() * 6) + 1;
+  return blockResultFromRoll(roll);
 }
 
 /**
@@ -179,8 +185,8 @@ export function rollBlockDiceManyWithRolls(
 ): Array<{ diceRoll: number; result: BlockResult }> {
   const results: Array<{ diceRoll: number; result: BlockResult }> = [];
   for (let i = 0; i < count; i++) {
-    const diceRoll = Math.floor(rng() * 6) + 1; // 1-6 pour les 6 faces du dé de blocage
-    const result = rollBlockDice(rng);
+    const diceRoll = Math.floor(rng() * 6) + 1;
+    const result = blockResultFromRoll(diceRoll);
     results.push({ diceRoll, result });
   }
   return results;
@@ -205,10 +211,9 @@ export function performBlockRoll(
   const attackerStrength = attacker.st + offensiveAssists;
   const targetStrength = target.st + defensiveAssists;
 
-  // Pour simplifier, on lance un seul dé et on prend le résultat
-  // Dans un vrai jeu, on lancerait plusieurs dés et le chooser sélectionnerait
-  const diceRoll = Math.floor(rng() * 6) + 1; // 1-6 pour les 6 faces du dé de blocage
-  const result = rollBlockDice(rng);
+  // Single die roll — derive both display value and result from same RNG call
+  const diceRoll = Math.floor(rng() * 6) + 1;
+  const result = blockResultFromRoll(diceRoll);
 
   return {
     type: 'block',

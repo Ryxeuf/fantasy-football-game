@@ -9,14 +9,16 @@ import type { StateUpdatedPayload, MatchEndedPayload, PlayerConnectionPayload, M
 
 function normalizeState(state: any): ExtendedGameState {
   if (!state) return state;
-  if (!state.playerActions) state.playerActions = {};
-  if (!state.teamBlitzCount) state.teamBlitzCount = {};
-  if (!state.teamFoulCount) state.teamFoulCount = {};
-  if (!state.matchStats) state.matchStats = {};
-  if (typeof state.width !== "number") state.width = 26;
-  if (typeof state.height !== "number") state.height = 15;
-  if (state.preMatch?.phase === "setup") state.selectedPlayerId = null;
-  return state as ExtendedGameState;
+  return {
+    ...state,
+    playerActions: state.playerActions ?? {},
+    teamBlitzCount: state.teamBlitzCount ?? {},
+    teamFoulCount: state.teamFoulCount ?? {},
+    matchStats: state.matchStats ?? {},
+    width: typeof state.width === "number" ? state.width : 26,
+    height: typeof state.height === "number" ? state.height : 15,
+    selectedPlayerId: state.preMatch?.phase === "setup" ? null : state.selectedPlayerId,
+  } as ExtendedGameState;
 }
 
 export interface GameStateInfo {
@@ -36,6 +38,14 @@ export interface GameStateInfo {
   turnTimerDeadline: number | null;
   /** Turn timer total duration in seconds (from server). */
   turnTimerSeconds: number;
+  /** WebSocket connection status */
+  wsConnected: boolean;
+  wsReconnecting: boolean;
+  wsReconnectAttempt: number;
+  /** WebSocket submitMove function */
+  wsSubmitMove: ReturnType<typeof useGameSocket>["submitMove"];
+  /** Raw socket reference for chat */
+  gameSocket: ReturnType<typeof useGameSocket>["socket"];
   setState: (s: ExtendedGameState | ((prev: ExtendedGameState | null) => ExtendedGameState | null)) => void;
   setMatchStatus: (s: string | null) => void;
   setMyTeamSide: (s: "A" | "B" | null) => void;
@@ -195,8 +205,14 @@ export function useGameState(matchId: string): GameStateInfo {
     })();
   }, [matchId, teamNameA, teamNameB]);
 
-  // WebSocket — real-time game state updates via socket.io
-  const { connected: wsConnected } = useGameSocket(matchId, {
+  // WebSocket — single connection for real-time game state updates + move submission + chat
+  const {
+    connected: wsConnected,
+    reconnecting: wsReconnecting,
+    reconnectAttempt: wsReconnectAttempt,
+    submitMove: wsSubmitMove,
+    socket: gameSocket,
+  } = useGameSocket(matchId, {
     onStateUpdate: useCallback((data: StateUpdatedPayload) => {
       if (data.gameState) {
         const gs = normalizeState(data.gameState);
@@ -320,6 +336,8 @@ export function useGameState(matchId: string): GameStateInfo {
     teamNameA, teamNameB, userName,
     opponentDisconnected, opponentDisconnectedAt,
     turnTimerDeadline, turnTimerSeconds,
+    wsConnected, wsReconnecting, wsReconnectAttempt,
+    wsSubmitMove, gameSocket,
     setState, setMatchStatus, setMyTeamSide, setIsMyTurn,
   };
 }

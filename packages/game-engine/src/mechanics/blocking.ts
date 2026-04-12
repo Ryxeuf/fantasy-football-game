@@ -632,13 +632,14 @@ function handleBothDown(state: GameState, attacker: Player, target: Player, rng:
     );
     state.gameLog = [...state.gameLog, wrestleLog];
 
-    // Pas de turnover avec Wrestle
-    // Pas de jets d'armure
+    // Pas de jets d'armure avec Wrestle
+    // Mais si l'attaquant perd le ballon en tombant, c'est un turnover (BB2020)
 
-    // Si l'attaquant avait le ballon, il le perd
+    // Si l'attaquant avait le ballon, il le perd → turnover
     if (attacker.hasBall) {
       state.players = state.players.map(p => (p.id === attacker.id ? { ...p, hasBall: false } : p));
       state.ball = { ...attacker.pos };
+      state.isTurnover = true;
     }
 
     // Si le défenseur avait le ballon, il le perd
@@ -796,8 +797,13 @@ function handlePushBack(state: GameState, attacker: Player, target: Player, rng:
 
     state.players = state.players.map(p => (p.id === target.id ? { ...p, pos: newTargetPos } : p));
 
-    // L'attaquant peut suivre (follow-up)
-    state.players = state.players.map(p => (p.id === attacker.id ? { ...p, pos: target.pos } : p));
+    // Follow-up is optional on PUSH_BACK — let the attacker choose
+    state.pendingFollowUpChoice = {
+      attackerId: attacker.id,
+      targetId: target.id,
+      targetNewPosition: newTargetPos,
+      targetOldPosition: target.pos,
+    };
 
     const pushLog = createLogEntry(
       'action',
