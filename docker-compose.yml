@@ -28,10 +28,6 @@ services:
       - SERVER_API_BASE=http://server:8201
     volumes:
       - .:/app
-      - /app/node_modules
-      - /app/apps/web/node_modules
-      - /app/packages/ui/node_modules
-      - /app/packages/game-engine/node_modules
     working_dir: /app
     command: >
       sh -c "
@@ -74,7 +70,6 @@ services:
       - DATABASE_URL=postgresql://bb_user:bb_pass@db:5432/bb_db?schema=public
     volumes:
       - .:/app
-      - /app/node_modules
     working_dir: /app/apps/server
     networks:
       - traefik-network
@@ -96,7 +91,6 @@ services:
 
 
 volumes:
-  node_modules:
   db_data:
 networks:
   traefik-network:
