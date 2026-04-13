@@ -156,6 +156,8 @@ export interface GameState {
   };
   // Suivi des actions par joueur par tour
   playerActions: Record<string, ActionType>; // playerId -> action effectuée ce tour
+  // Joueur actuellement en train de blitzer (peut se déplacer puis bloquer)
+  blitzingPlayerId?: string;
   // Compteur de blitz par équipe par tour
   teamBlitzCount: Record<string, number>; // teamId -> nombre de blitz effectués ce tour
   // Compteur de foul par équipe par tour

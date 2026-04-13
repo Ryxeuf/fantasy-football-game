@@ -58,6 +58,7 @@ import {
   incrementTeamBlitzCount,
   advanceHalfIfNeeded,
   handlePostTouchdown,
+  canTeamBlitz,
 } from '../core/game-state';
 import { executePass, executeHandoff, getPassRange } from '../mechanics/passing';
 import { canFoul, executeFoul } from '../mechanics/foul';
@@ -168,19 +169,33 @@ export function getLegalMoves(state: GameState): Move[] {
       }
     }
 
-    // Actions de blitz (mouvement + blocage)
-    // Pour chaque direction de mouvement possible
-    for (const d of dirs) {
-      const to = { x: p.pos.x + d.x, y: p.pos.y + d.y };
-      if (!inBounds(state, to)) continue;
-      if (occ.has(`${to.x},${to.y}`)) continue; // pas de chevauchement
+    // Blitz au contact : un joueur qui a commencé à se déplacer peut bloquer
+    // un adversaire adjacent si l'équipe peut encore blitzer
+    const playerAction = state.playerActions?.[p.id];
+    if (playerAction === 'MOVE' && canTeamBlitz(state, p.team) && p.pm > 0) {
+      for (const opponent of adjacentOpponents) {
+        // Éviter les doublons si canBlock a déjà ajouté ce BLOCK
+        const alreadyHasBlock = moves.some(
+          m => m.type === 'BLOCK' && (m as any).playerId === p.id && (m as any).targetId === opponent.id
+        );
+        if (!alreadyHasBlock && !opponent.stunned && opponent.team !== p.team) {
+          moves.push({ type: 'BLOCK', playerId: p.id, targetId: opponent.id });
+        }
+      }
+    }
 
-      // Vérifier si on peut faire un blitz vers cette position
-      // Chercher tous les adversaires qui seraient adjacents après le mouvement
-      const allOpponents = state.players.filter(opp => opp.team !== p.team && !opp.stunned);
-      for (const opponent of allOpponents) {
-        if (canBlitz(state, p.id, to, opponent.id)) {
-          moves.push({ type: 'BLITZ', playerId: p.id, to, targetId: opponent.id });
+    // Actions de blitz (mouvement + blocage atomique, pour les joueurs pas encore déplacés)
+    if (!playerAction) {
+      for (const d of dirs) {
+        const to = { x: p.pos.x + d.x, y: p.pos.y + d.y };
+        if (!inBounds(state, to)) continue;
+        if (occ.has(`${to.x},${to.y}`)) continue;
+
+        const allOpponents = state.players.filter(opp => opp.team !== p.team && !opp.stunned);
+        for (const opponent of allOpponents) {
+          if (canBlitz(state, p.id, to, opponent.id)) {
+            moves.push({ type: 'BLITZ', playerId: p.id, to, targetId: opponent.id });
+          }
         }
       }
     }
@@ -1071,8 +1086,18 @@ function handleBlock(
 
   if (!attacker || !target) return state;
 
-  // Vérifier que le blocage est légal
-  if (!canBlock(state, move.playerId, move.targetId)) return state;
+  // Détecter un blitz pendant un mouvement : le joueur a déjà bougé et blitz un adversaire adjacent
+  const playerAction = state.playerActions?.[move.playerId];
+  const isBlitzDuringMove = playerAction === 'MOVE' && canTeamBlitz(state, attacker.team);
+
+  if (isBlitzDuringMove) {
+    // Vérifier manuellement les conditions du blitz-block (sans canBlock qui exige pm > 0)
+    if (attacker.stunned || target.stunned || attacker.team === target.team) return state;
+    if (!isAdjacent(attacker.pos, target.pos)) return state;
+  } else {
+    // Vérifier que le blocage est légal
+    if (!canBlock(state, move.playerId, move.targetId)) return state;
+  }
 
   // Calculer les assists
   const offensiveAssists = calculateOffensiveAssists(state, attacker, target);
@@ -1084,8 +1109,17 @@ function handleBlock(
   const diceCount = calculateBlockDiceCount(attackerStrength, targetStrength);
   const chooser = getBlockDiceChooser(attackerStrength, targetStrength);
 
-  // Enregistrer l'action de blocage
-  const newState = setPlayerAction(state, attacker.id, 'BLOCK');
+  // Enregistrer l'action — blitz consomme le compteur de blitz de l'équipe
+  let newState: GameState;
+  if (isBlitzDuringMove) {
+    newState = setPlayerAction(state, attacker.id, 'BLITZ');
+    newState.teamBlitzCount = {
+      ...newState.teamBlitzCount,
+      [attacker.team]: (newState.teamBlitzCount[attacker.team] || 0) + 1,
+    };
+  } else {
+    newState = setPlayerAction(state, attacker.id, 'BLOCK');
+  }
 
   // Si un seul dé, résoudre immédiatement
   if (diceCount === 1) {
