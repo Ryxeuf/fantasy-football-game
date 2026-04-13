@@ -163,8 +163,17 @@ export default function PlayPage() {
         setSearching(true);
       }
       if (data.inQueue && data.status === "matched" && data.matchId) {
-        // Match found! Redirect to accept
-        window.location.href = `/play/${data.matchId}`;
+        // Verify match still exists before redirecting
+        try {
+          await apiGet(`/match/${data.matchId}/summary`);
+          window.location.href = `/play/${data.matchId}`;
+        } catch {
+          // Match no longer exists — clean up stale queue entry
+          await apiDelete("/matchmaking/leave").catch(() => {});
+          localStorage.removeItem("match_token");
+          setQueueStatus({ inQueue: false });
+          setSearching(false);
+        }
       }
     } catch {
       // silently fail
@@ -201,8 +210,18 @@ export default function PlayPage() {
         const data = await apiGet("/matchmaking/status");
         setQueueStatus(data);
         if (data.inQueue && data.status === "matched" && data.matchId) {
-          setSearching(false);
-          window.location.href = `/play/${data.matchId}`;
+          // Verify match still exists before redirecting
+          try {
+            await apiGet(`/match/${data.matchId}/summary`);
+            setSearching(false);
+            window.location.href = `/play/${data.matchId}`;
+          } catch {
+            await apiDelete("/matchmaking/leave").catch(() => {});
+            localStorage.removeItem("match_token");
+            setSearching(false);
+            setQueueStatus({ inQueue: false });
+          }
+          return;
         }
         if (!data.inQueue || data.status !== "searching") {
           setSearching(false);

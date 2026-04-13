@@ -92,9 +92,25 @@ export function useGameState(matchId: string): GameStateInfo {
         if (res.ok && data?.matchToken) {
           localStorage.setItem("match_token", data.matchToken as string);
         } else {
-          window.location.href = "/lobby";
+          // Match introuvable — nettoyer session + queue matchmaking
+          localStorage.removeItem("match_token");
+          await fetch(`${API_BASE}/matchmaking/leave`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${authToken}` },
+          }).catch(() => {});
+          window.location.href = "/play";
         }
-      } catch { window.location.href = "/lobby"; }
+      } catch {
+        localStorage.removeItem("match_token");
+        const authToken = localStorage.getItem("auth_token");
+        if (authToken) {
+          await fetch(`${API_BASE}/matchmaking/leave`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${authToken}` },
+          }).catch(() => {});
+        }
+        window.location.href = "/play";
+      }
     })();
   }, []);
 
@@ -108,13 +124,32 @@ export function useGameState(matchId: string): GameStateInfo {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json().catch(() => ({}) as any);
-        if (!res.ok) { window.location.href = "/lobby"; return; }
+        if (!res.ok) {
+          // Match introuvable — nettoyer session + queue matchmaking
+          localStorage.removeItem("match_token");
+          await fetch(`${API_BASE}/matchmaking/leave`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` },
+          }).catch(() => {});
+          window.location.href = "/play";
+          return;
+        }
         const status = data?.status;
         if (status) setMatchStatus(status);
         if (status !== "active" && status !== "prematch" && status !== "prematch-setup" && status !== "ended") {
           window.location.href = `/waiting/${matchId}`;
         }
-      } catch { window.location.href = "/lobby"; }
+      } catch {
+        localStorage.removeItem("match_token");
+        const authToken = localStorage.getItem("auth_token");
+        if (authToken) {
+          await fetch(`${API_BASE}/matchmaking/leave`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${authToken}` },
+          }).catch(() => {});
+        }
+        window.location.href = "/play";
+      }
     })();
   }, [matchId]);
 
