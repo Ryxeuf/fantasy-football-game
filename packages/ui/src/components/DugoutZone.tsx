@@ -3,10 +3,15 @@
  */
 
 import React from "react";
-import { DugoutZone, Player } from "@bb/game-engine";
+import { Player } from "@bb/game-engine";
+
+interface ZoneDescriptor {
+  type: string;
+  name: string;
+}
 
 interface DugoutZoneProps {
-  zone: any;
+  zone: ZoneDescriptor;
   players: Player[];
   teamColor: string;
   onPlayerClick?: (playerId: string) => void;
@@ -42,9 +47,9 @@ export default function DugoutZoneComponent({
         {zoneName}
       </h4>
       <div className="flex flex-wrap gap-1.5">
-        {players.map((player) => (
+        {players.map((player, index) => (
           <div
-            key={player.id}
+            key={`${player.id}-${zoneType}-${index}`}
             className={`player-token w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold cursor-pointer border-2 transition-transform active:scale-95 ${
               player.stunned
                 ? "bg-gray-400 text-white border-gray-500"

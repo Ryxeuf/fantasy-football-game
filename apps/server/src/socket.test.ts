@@ -2,7 +2,9 @@ import { describe, it, expect, afterEach } from "vitest";
 import { createServer, Server as HttpServer } from "node:http";
 import { AddressInfo } from "node:net";
 import { io as clientIO, Socket as ClientSocket } from "socket.io-client";
+import jwt from "jsonwebtoken";
 import { setupSocket, getIO, getGameNamespace } from "./socket";
+import { JWT_SECRET } from "./config";
 
 let httpServer: HttpServer;
 let clientSocket: ClientSocket;
@@ -10,6 +12,11 @@ let clientSocket: ClientSocket;
 function getServerUrl(server: HttpServer): string {
   const addr = server.address() as AddressInfo;
   return `http://localhost:${addr.port}`;
+}
+
+/** Generate a valid JWT for socket authentication in tests. */
+function createTestToken(userId = "test-user-1"): string {
+  return jwt.sign({ sub: userId, roles: ["user"] }, JWT_SECRET);
 }
 
 afterEach(async () => {
@@ -62,6 +69,7 @@ describe("setupSocket", () => {
 
       clientSocket = clientIO(`${url}/game`, {
         transports: ["websocket"],
+        auth: { token: `Bearer ${createTestToken()}` },
       });
 
       clientSocket.on("connect", () => {
@@ -101,6 +109,7 @@ describe("setupSocket", () => {
 
       clientSocket = clientIO(`${url}/game`, {
         transports: ["websocket"],
+        auth: { token: `Bearer ${createTestToken()}` },
       });
 
       clientSocket.on("connect", () => {

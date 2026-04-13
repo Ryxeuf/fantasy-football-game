@@ -48,6 +48,9 @@ export function performInjuryRoll(state: GameState, player: Player, rng: RNG, bo
 
 /**
  * Gère un joueur sonné (2-7)
+ * NOTE: `state` is intentionally mutated here. All callers (performInjuryRoll,
+ * handleInjuryByCrowd) pass an already-cloned state (via structuredClone), so
+ * direct mutation is safe and avoids an unnecessary extra clone.
  */
 function handleStunned(state: GameState, player: Player): GameState {
   // Le joueur reste sur le terrain mais devient sonné
