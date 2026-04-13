@@ -1,3 +1,16 @@
+## [1.54.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.53.0...v1.54.0) (2026-04-13)
+
+
+### ✨ Features
+
+* enhance inducements phase UI for online matches ([a8d098a](https://github.com/Ryxeuf/fantasy-football-game/commit/a8d098aafc5d60e26588a035881264746a8c244b))
+
+
+### 🐛 Bug Fixes
+
+* enhance match existence verification and cleanup process ([149b6c2](https://github.com/Ryxeuf/fantasy-football-game/commit/149b6c201f3881645941972b42948ab1b5ab03ff))
+* update team selection data structure in matchmaking service ([f955d98](https://github.com/Ryxeuf/fantasy-football-game/commit/f955d98ed13e45d1f47dd8d914979390e750c3e5))
+
 ## [1.53.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.52.0...v1.53.0) (2026-04-13)
 
 
