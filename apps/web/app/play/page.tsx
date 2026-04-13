@@ -117,6 +117,10 @@ export default function PlayPage() {
   const [loadingMatches, setLoadingMatches] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
 
+  // Match creation options
+  const [selectedTerrain, setSelectedTerrain] = useState("grass");
+  const [turnTimerEnabled, setTurnTimerEnabled] = useState(true);
+
   // Matchmaking state
   const [teams, setTeams] = useState<TeamOption[]>([]);
   const [selectedTeamId, setSelectedTeamId] = useState("");
@@ -250,7 +254,10 @@ export default function PlayPage() {
     setError(null);
     setCreating(true);
     try {
-      const { match, matchToken } = await apiPost("/match/create");
+      const { match, matchToken } = await apiPost("/match/create", {
+        terrainSkin: selectedTerrain,
+        turnTimerEnabled,
+      });
       localStorage.setItem("match_token", matchToken);
       window.location.href = `/team/select?matchId=${match.id}`;
     } catch (e: unknown) {
@@ -505,6 +512,33 @@ export default function PlayPage() {
             <p className="text-sm text-nuffle-anthracite/70 font-body">
               {t.play?.createDesc || "Lancez un nouveau match et partagez l'identifiant avec votre adversaire pour qu'il vous rejoigne."}
             </p>
+            {/* Options de match */}
+            <div className="space-y-3 pt-2 border-t border-nuffle-bronze/20">
+              <div>
+                <label className="text-xs font-subtitle font-semibold text-nuffle-anthracite/60 block mb-1">Terrain</label>
+                <select
+                  value={selectedTerrain}
+                  onChange={(e) => setSelectedTerrain(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-nuffle-bronze/30 focus:border-nuffle-gold focus:outline-none font-body text-sm bg-white"
+                >
+                  <option value="grass">Herbe classique</option>
+                  <option value="ruins">Ruines antiques</option>
+                  <option value="snow">Toundra enneigee</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="turnTimer"
+                  checked={turnTimerEnabled}
+                  onChange={(e) => setTurnTimerEnabled(e.target.checked)}
+                  className="rounded border-nuffle-bronze/30 text-nuffle-gold focus:ring-nuffle-gold"
+                />
+                <label htmlFor="turnTimer" className="text-xs font-subtitle text-nuffle-anthracite/70">
+                  Timer de tour (quitter = forfait si active)
+                </label>
+              </div>
+            </div>
             <button
               data-testid="create-match-button"
               onClick={createMatch}

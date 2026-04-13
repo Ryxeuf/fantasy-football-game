@@ -162,6 +162,9 @@ export interface GameState {
   teamBlitzCount: Record<string, number>; // teamId -> nombre de blitz effectués ce tour
   // Compteur de foul par équipe par tour
   teamFoulCount: Record<string, number>;
+  // Options de match
+  terrainSkin?: string; // 'grass' | 'ruins' | 'snow'
+  turnTimerEnabled?: boolean;
   // Informations de match
   gamePhase: 'playing' | 'post-td' | 'halftime' | 'ended';
   kickingTeam?: TeamId; // Équipe qui frappe (kick)

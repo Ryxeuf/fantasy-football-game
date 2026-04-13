@@ -23,8 +23,8 @@ const ALLOWED_TEAMS = ["skaven", "lizardmen"] as const;
 // Créer une partie, le créateur reçoit un token de match
 router.post("/create", authUser, async (req: AuthenticatedRequest, res) => {
   try {
+    const { terrainSkin, turnTimerEnabled } = req.body || {};
     const seed = `match-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    // Ne pas écrire creatorId pour compatibilité (certains environnements n'ont pas encore la colonne)
     const match = await prisma.match.create({
       data: {
         status: "pending",
@@ -32,6 +32,21 @@ router.post("/create", authUser, async (req: AuthenticatedRequest, res) => {
         players: { connect: { id: req.user!.id } },
       },
     });
+
+    // Stocker les options de match dans un turn initial de type "options"
+    if (terrainSkin || typeof turnTimerEnabled === 'boolean') {
+      await prisma.turn.create({
+        data: {
+          matchId: match.id,
+          number: 0,
+          payload: {
+            type: "match-options",
+            terrainSkin: terrainSkin || "grass",
+            turnTimerEnabled: turnTimerEnabled !== false,
+          },
+        },
+      });
+    }
     const token = jwt.sign(
       { matchId: match.id, userId: req.user!.id },
       MATCH_SECRET,

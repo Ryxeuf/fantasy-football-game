@@ -1218,6 +1218,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
                 isSetupPhase={
                   (state as ExtendedGameState).preMatch?.phase === "setup"
                 }
+                initialTerrainSkin={(state as any).terrainSkin || undefined}
               />
             </div>
             {/* PlayerDetails is now integrated in GameBoardWithDugouts */}

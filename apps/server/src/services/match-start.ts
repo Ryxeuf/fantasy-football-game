@@ -219,7 +219,7 @@ export async function acceptAndMaybeStartMatch(
 
   // Initialiser l'état du jeu en phase pré-match avec les vraies équipes.
   // H.6 — propagate roster slugs so the client renderer can pick per-roster colors.
-  const gameState = setupPreMatchWithTeams(
+  let gameState = setupPreMatchWithTeams(
     teamAData,
     teamBData,
     teamA.name,
@@ -229,6 +229,19 @@ export async function acceptAndMaybeStartMatch(
       teamBRoster: teamB.roster,
     },
   );
+
+  // Injecter les options de match (terrain skin, timer) depuis le turn "match-options"
+  const optionsTurn = await prisma.turn.findFirst({
+    where: { matchId, payload: { path: ['type'], equals: 'match-options' } },
+  });
+  if (optionsTurn) {
+    const opts = optionsTurn.payload as any;
+    gameState = {
+      ...gameState,
+      terrainSkin: opts.terrainSkin || 'grass',
+      turnTimerEnabled: opts.turnTimerEnabled !== false,
+    };
+  }
 
   // Créer turn pour coin toss et setup initial
   const nextNumber = (await prisma.turn.count({ where: { matchId } })) + 1;

@@ -37,6 +37,8 @@ interface GameBoardWithDugoutsProps {
     teamA?: TeamColors;
     teamB?: TeamColors;
   };
+  /** H.7 — initial terrain skin (from match options). */
+  initialTerrainSkin?: TerrainSkinId;
 }
 
 export default function GameBoardWithDugouts({
@@ -56,6 +58,7 @@ export default function GameBoardWithDugouts({
   onCellSizeChange,
   teamRosters,
   teamColorOverrides,
+  initialTerrainSkin,
 }: GameBoardWithDugoutsProps) {
   const [showDugoutA, setShowDugoutA] = useState(false);
   const [showDugoutB, setShowDugoutB] = useState(false);
@@ -63,7 +66,7 @@ export default function GameBoardWithDugouts({
   const [showTackleZones, setShowTackleZones] = useState(false);
   const [showReachability, setShowReachability] = useState(false);
   const [showPassRange, setShowPassRange] = useState(false);
-  const [terrainSkin, setTerrainSkin] = useState<TerrainSkinId>("grass");
+  const [terrainSkin, setTerrainSkin] = useState<TerrainSkinId>(initialTerrainSkin || "grass");
 
   // H.6 — merge per-side rosters from state + prop override.
   // Prop override wins per side; falls back to state.teamRosters; undefined triggers
