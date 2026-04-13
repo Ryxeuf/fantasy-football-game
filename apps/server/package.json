@@ -17,6 +17,7 @@
     "prisma:migrate": "prisma migrate dev --name init",
     "db:seed": "tsx src/seed.ts",
     "list:users": "tsx src/list-users.ts",
+    "test": "vitest run",
     "postinstall": "test -f ../../prisma/schema.prisma && prisma generate --schema ../../prisma/schema.prisma || true"
   },
   "dependencies": {
@@ -41,6 +42,7 @@
     "prisma": "^6.16.2",
     "socket.io-client": "^4.8.3",
     "tsx": "^4.16.2",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.0"
   }
 }
