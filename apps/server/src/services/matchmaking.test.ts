@@ -167,8 +167,8 @@ describe("Matchmaking Service", () => {
       // Verify team selections were created
       expect(mockPrisma.teamSelection.createMany).toHaveBeenCalledWith({
         data: [
-          { matchId: "match-new", userId, teamId },
-          { matchId: "match-new", userId: "user-2", teamId: "team-2" },
+          { matchId: "match-new", userId, teamId, team: "team-1" },
+          { matchId: "match-new", userId: "user-2", teamId: "team-2", team: "team-2" },
         ],
       });
 

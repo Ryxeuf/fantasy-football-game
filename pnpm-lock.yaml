@@ -152,6 +152,9 @@ importers:
       typescript:
         specifier: ^5.5.4
         version: 5.9.2
+      vitest:
+        specifier: ^2.0.0
+        version: 2.1.9(@types/node@22.18.0)(jsdom@23.2.0)(terser@5.43.1)
 
   apps/web:
     dependencies:
