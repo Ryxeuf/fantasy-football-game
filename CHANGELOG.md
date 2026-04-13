@@ -1,3 +1,10 @@
+## [1.52.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.51.0...v1.52.0) (2026-04-13)
+
+
+### ✨ Features
+
+* add CORS_ORIGINS environment variable to docker-compose.yml ([bc8fdfb](https://github.com/Ryxeuf/fantasy-football-game/commit/bc8fdfb2fa6f0d99b1959a5c269f4cb7f8e57216))
+
 ## [1.51.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.50.0...v1.51.0) (2026-04-13)
 
 
