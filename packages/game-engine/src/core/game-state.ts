@@ -800,7 +800,8 @@ export function handlePostTouchdown(state: GameState, rng: RNG): GameState {
   );
 
   // Entrer en phase de setup pour le nouveau drive (les joueurs doivent être replacés)
-  const resultState: GameState = {
+  const extState = newState as ExtendedGameState;
+  const resultState = {
     ...newState,
     gamePhase: 'playing' as const,
     kickingTeam: newKickingTeam,
@@ -815,14 +816,14 @@ export function handlePostTouchdown(state: GameState, rng: RNG): GameState {
     lastDiceResult: undefined,
     gameLog: [...newState.gameLog, resetLog],
     preMatch: {
-      ...(newState.preMatch ?? {} as PreMatchState),
+      ...extState.preMatch,
       phase: 'setup' as const,
       currentCoach: receivingTeam,
       kickingTeam: newKickingTeam,
       receivingTeam: receivingTeam,
       placedPlayers: [],
       legalSetupPositions: [],
-    } satisfies PreMatchState,
+    },
   };
 
   return resultState;

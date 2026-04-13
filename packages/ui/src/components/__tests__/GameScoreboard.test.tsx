@@ -241,6 +241,54 @@ describe('GameScoreboard', () => {
     expect(screen.getByText('Blood Bowl Fantasy Football')).toBeInTheDocument();
   });
 
+  describe('Team rerolls display', () => {
+    it('should display reroll counts for both teams when match is in progress', () => {
+      const state = createMinimalGameState({
+        half: 1,
+        teamRerolls: { teamA: 3, teamB: 2 }
+      });
+      render(<GameScoreboard state={state} />);
+
+      expect(screen.getByText('3')).toBeInTheDocument();
+      expect(screen.getByText('2')).toBeInTheDocument();
+    });
+
+    it('should not display reroll counts before match starts (half 0)', () => {
+      const state = createMinimalGameState({
+        half: 0,
+        teamRerolls: { teamA: 3, teamB: 3 }
+      });
+      render(<GameScoreboard state={state} />);
+
+      // Reroll counts should not be visible when half is 0
+      const svgs = document.querySelectorAll('svg');
+      // No reroll icons should be rendered
+      expect(svgs.length).toBe(0);
+    });
+
+    it('should display 0 rerolls when team has used all rerolls', () => {
+      const state = createMinimalGameState({
+        half: 1,
+        teamRerolls: { teamA: 0, teamB: 0 }
+      });
+      render(<GameScoreboard state={state} />);
+
+      // Score 0s + reroll 0s - at least 4 zeros total
+      expect(screen.getAllByText('0').length).toBeGreaterThanOrEqual(4);
+    });
+
+    it('should handle undefined teamRerolls gracefully', () => {
+      const state = createMinimalGameState({
+        half: 1,
+        teamRerolls: undefined as any
+      });
+      render(<GameScoreboard state={state} />);
+
+      // Should not crash
+      expect(screen.getByText('Blood Bowl Fantasy Football')).toBeInTheDocument();
+    });
+  });
+
   describe('Connection status indicator', () => {
     it('should show "Connecté" with green dot when wsConnected is true', () => {
       const state = createMinimalGameState();

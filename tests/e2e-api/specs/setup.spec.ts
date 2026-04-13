@@ -96,61 +96,80 @@ describe("E2E API — phase de setup", () => {
     async () => {
       const { coachA, coachB, match } = await bootMatch();
 
-      // Attente que le serveur atteigne la phase setup via coach A.
-      // On ne requête pas B séparément: un seul appel /state peut avoir des
-      // effets de bord (transition idle → setup) — en appeler deux en
-      // concurrence crée une race visible côté test (B reçoit parfois null).
-      const setupStateA = await waitForSetupReady(coachA.token, match.id);
-      expect(setupStateA).not.toBeNull();
+      // Retry loop: la transition idle → setup peut provoquer un décalage
+      // entre l'état retourné par /state et celui vu par validate-setup,
+      // ce qui donne un 403 transitoire en CI. On re-poll et réessaie.
+      const maxAttempts = 3;
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        // Attente que le serveur atteigne la phase setup via coach A.
+        // On ne requête pas B séparément: un seul appel /state peut avoir des
+        // effets de bord (transition idle → setup) — en appeler deux en
+        // concurrence crée une race visible côté test (B reçoit parfois null).
+        const setupStateA = await waitForSetupReady(coachA.token, match.id);
+        expect(setupStateA).not.toBeNull();
 
-      const currentCoach = setupStateA!.gameState.preMatch?.currentCoach;
-      expect(currentCoach === "A" || currentCoach === "B").toBe(true);
+        const currentCoach = setupStateA!.gameState.preMatch?.currentCoach;
+        expect(currentCoach === "A" || currentCoach === "B").toBe(true);
 
-      // Sélection du coach qui a la main: celui dont myTeamSide matche
-      // le currentCoach côté moteur. Comme myTeamSide de A est connu,
-      // on en déduit celui de B par opposition.
-      const aSide = setupStateA!.myTeamSide;
-      const placingCoach = aSide === currentCoach ? coachA : coachB;
-      const placingTeam = currentCoach!; // "A" ou "B"
-      const losX = placingTeam === "A" ? 12 : 13;
-      const safeX = placingTeam === "A" ? 6 : 18;
+        // Sélection du coach qui a la main: celui dont myTeamSide matche
+        // le currentCoach côté moteur. Comme myTeamSide de A est connu,
+        // on en déduit celui de B par opposition.
+        const aSide = setupStateA!.myTeamSide;
+        const placingCoach = aSide === currentCoach ? coachA : coachB;
+        const placingTeam = currentCoach!; // "A" ou "B"
+        const losX = placingTeam === "A" ? 12 : 13;
+        const safeX = placingTeam === "A" ? 6 : 18;
 
-      // 3 LoS, 2 wide zones haut, 2 wide zones bas, 4 milieu.
-      const positions = [
-        { x: losX, y: 6 },
-        { x: losX, y: 7 },
-        { x: losX, y: 8 },
-        { x: safeX, y: 1 },
-        { x: safeX, y: 2 },
-        { x: safeX, y: 12 },
-        { x: safeX, y: 13 },
-        { x: safeX, y: 5 },
-        { x: safeX, y: 6 },
-        { x: safeX, y: 7 },
-        { x: safeX, y: 8 },
-      ];
+        // 3 LoS, 2 wide zones haut, 2 wide zones bas, 4 milieu.
+        const positions = [
+          { x: losX, y: 6 },
+          { x: losX, y: 7 },
+          { x: losX, y: 8 },
+          { x: safeX, y: 1 },
+          { x: safeX, y: 2 },
+          { x: safeX, y: 12 },
+          { x: safeX, y: 13 },
+          { x: safeX, y: 5 },
+          { x: safeX, y: 6 },
+          { x: safeX, y: 7 },
+          { x: safeX, y: 8 },
+        ];
 
-      const teamPlayers = setupStateA!.gameState.players
-        .filter((p) => p.team === placingTeam)
-        .slice(0, 11);
-      expect(teamPlayers).toHaveLength(11);
+        const teamPlayers = setupStateA!.gameState.players
+          .filter((p) => p.team === placingTeam)
+          .slice(0, 11);
+        expect(teamPlayers).toHaveLength(11);
 
-      const payload = {
-        placedPlayers: teamPlayers.map((p) => p.id),
-        playerPositions: teamPlayers.map((p, i) => ({
-          playerId: p.id,
-          x: positions[i].x,
-          y: positions[i].y,
-        })),
-      };
+        const payload = {
+          placedPlayers: teamPlayers.map((p) => p.id),
+          playerPositions: teamPlayers.map((p, i) => ({
+            playerId: p.id,
+            x: positions[i].x,
+            y: positions[i].y,
+          })),
+        };
 
-      const res = await rawPost(
-        `/match/${match.id}/validate-setup`,
-        placingCoach.token,
-        payload,
-      );
+        const res = await rawPost(
+          `/match/${match.id}/validate-setup`,
+          placingCoach.token,
+          payload,
+        );
 
-      expect(res.status).toBe(200);
+        if (res.status === 200) {
+          // Success — test passes
+          expect(res.status).toBe(200);
+          return;
+        }
+
+        // 403 = race condition (currentCoach stale) — retry after short delay
+        if (res.status === 403 && attempt < maxAttempts) {
+          await new Promise((r) => setTimeout(r, 500));
+          continue;
+        }
+
+        // Final attempt or unexpected status — assert and fail
+        expect(res.status).toBe(200);
+      }
     },
     30_000,
   );

@@ -167,10 +167,18 @@ export default function PlayPage() {
         setSearching(true);
       }
       if (data.inQueue && data.status === "matched" && data.matchId) {
-        // Verify match still exists before redirecting
+        // Verify match still exists and is not ended before redirecting
         try {
-          await apiGet(`/match/${data.matchId}/summary`);
-          window.location.href = `/play/${data.matchId}`;
+          const summary = await apiGet(`/match/${data.matchId}/summary`);
+          if (summary?.status === "ended") {
+            // Match is finished — clean up stale queue entry, don't redirect
+            await apiDelete("/matchmaking/leave").catch(() => {});
+            localStorage.removeItem("match_token");
+            setQueueStatus({ inQueue: false });
+            setSearching(false);
+          } else {
+            window.location.href = `/play/${data.matchId}`;
+          }
         } catch {
           // Match no longer exists — clean up stale queue entry
           await apiDelete("/matchmaking/leave").catch(() => {});
@@ -214,11 +222,19 @@ export default function PlayPage() {
         const data = await apiGet("/matchmaking/status");
         setQueueStatus(data);
         if (data.inQueue && data.status === "matched" && data.matchId) {
-          // Verify match still exists before redirecting
+          // Verify match still exists and is not ended before redirecting
           try {
-            await apiGet(`/match/${data.matchId}/summary`);
-            setSearching(false);
-            window.location.href = `/play/${data.matchId}`;
+            const summary = await apiGet(`/match/${data.matchId}/summary`);
+            if (summary?.status === "ended") {
+              // Match is finished — clean up stale queue entry, don't redirect
+              await apiDelete("/matchmaking/leave").catch(() => {});
+              localStorage.removeItem("match_token");
+              setSearching(false);
+              setQueueStatus({ inQueue: false });
+            } else {
+              setSearching(false);
+              window.location.href = `/play/${data.matchId}`;
+            }
           } catch {
             await apiDelete("/matchmaking/leave").catch(() => {});
             localStorage.removeItem("match_token");
