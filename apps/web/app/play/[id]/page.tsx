@@ -66,109 +66,70 @@ function SoundEffectsListener({ state }: { state: ExtendedGameState | null }) {
   return null;
 }
 
-/** Inducements phase UI for pre-match. */
+/** Inducements phase UI for online pre-match.
+ *  Each player only sees and submits inducements for their own team.
+ *  Submission goes via WebSocket (game:submit-inducements). */
 function InducementsPhaseUI({
   matchId,
   state,
   stateSource,
   setState,
+  myTeamSide,
+  gameSocket,
 }: {
   matchId: string;
   state: ExtendedGameState;
   stateSource: string | null;
   setState: (s: ExtendedGameState | ((prev: ExtendedGameState | null) => ExtendedGameState | null)) => void;
+  myTeamSide: "A" | "B" | null;
+  gameSocket: ReturnType<typeof import("./hooks/useGameSocket").useGameSocket>["socket"];
 }) {
   const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [inducementError, setInducementError] = useState<string | null>(null);
-  const [inducementsInfo, setInducementsInfo] = useState<any>(null);
-  const infoLoadedRef = useRef(false);
 
-  // Load inducements info from server
-  useEffect(() => {
-    if (infoLoadedRef.current) return;
-    infoLoadedRef.current = true;
-    const token = localStorage.getItem("auth_token");
-    if (!token) return;
-    fetch(`${API_BASE}/local-match/${matchId}/inducements-info`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => r.ok ? r.json() : null)
-      .catch(() => null)
-      .then((data) => {
-        if (data) setInducementsInfo(data);
-      });
-  }, [matchId]);
-
-  // Filter catalogue: only show items the team can purchase (exclude star_player for now)
-  const catalogue = (inducementsInfo?.catalogue ?? INDUCEMENT_CATALOGUE.filter(
+  const catalogue = INDUCEMENT_CATALOGUE.filter(
     (ind) => ind.slug !== "star_player",
-  )) as InducementDefinition[];
+  ) as InducementDefinition[];
 
-  const budgetA = inducementsInfo?.teamA?.budget ?? 0;
-  const budgetB = inducementsInfo?.teamB?.budget ?? 0;
-  const pettyCashA = inducementsInfo?.pettyCash?.teamA?.pettyCash ?? 0;
-  const pettyCashB = inducementsInfo?.pettyCash?.teamB?.pettyCash ?? 0;
+  const myTeamName = myTeamSide === "A" ? state.teamNames.teamA : state.teamNames.teamB;
+  // Budget info from preMatch state (petty cash computed server-side during pre-match sequence)
+  const myBudget = myTeamSide === "A"
+    ? (state.preMatch?.pettyCash?.teamA ?? 0)
+    : (state.preMatch?.pettyCash?.teamB ?? 0);
 
-  const handleSubmit = async (
-    selectionA: InducementSelection,
-    selectionB: InducementSelection,
-  ) => {
+  const handleConfirm = useCallback((selection: InducementSelection) => {
+    if (!gameSocket || submitting || submitted) return;
     setSubmitting(true);
     setInducementError(null);
-    try {
-      const token = localStorage.getItem("auth_token");
-      if (!token) return;
-      const res = await fetch(`${API_BASE}/local-match/${matchId}/inducements`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ selectionA, selectionB }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setInducementError(data.error || "Erreur");
-        return;
-      }
-      if (data.gameState) {
-        setState(normalizeState(data.gameState));
-      }
-    } catch {
-      setInducementError("Erreur réseau");
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
-  // For local match (hotseat): show both teams side by side
-  const [selectionA, setSelectionA] = useState<InducementSelection>({ items: [] });
-  const [selectionB, setSelectionB] = useState<InducementSelection>({ items: [] });
-  const [teamAReady, setTeamAReady] = useState(false);
-  const [teamBReady, setTeamBReady] = useState(false);
+    gameSocket.emit(
+      "game:submit-inducements",
+      { matchId, selection },
+      (response: any) => {
+        setSubmitting(false);
+        if (!response?.success) {
+          setInducementError(response?.error || "Erreur");
+          return;
+        }
+        setSubmitted(true);
+        if (response.gameState) {
+          setState(normalizeState(response.gameState));
+        }
+      },
+    );
+  }, [gameSocket, matchId, submitting, submitted, setState]);
 
-  const handleTeamAConfirm = (sel: InducementSelection) => {
-    setSelectionA(sel);
-    setTeamAReady(true);
-  };
-  const handleTeamBConfirm = (sel: InducementSelection) => {
-    setSelectionB(sel);
-    setTeamBReady(true);
-  };
-
-  // Auto-submit when both teams are ready
-  useEffect(() => {
-    if (teamAReady && teamBReady && !submitting) {
-      handleSubmit(selectionA, selectionB);
-    }
-  }, [teamAReady, teamBReady, submitting, selectionA, selectionB, handleSubmit]);
+  const handleSkip = useCallback(() => {
+    handleConfirm({ items: [] });
+  }, [handleConfirm]);
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
+    <div className="w-full max-w-lg mx-auto">
       <div className="text-center mb-4">
-        <h2 className="text-xl font-bold text-gray-800">Phase d'Inducements</h2>
+        <h2 className="text-xl font-bold text-gray-800">Phase d&apos;Inducements</h2>
         <p className="text-sm text-gray-500 mt-1">
-          Chaque équipe peut dépenser son budget pour des avantages de match.
+          Depensez votre budget pour des avantages de match.
         </p>
       </div>
 
@@ -178,48 +139,27 @@ function InducementsPhaseUI({
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          {teamAReady ? (
-            <div className="rounded border bg-emerald-50 border-emerald-300 p-4 text-center">
-              <div className="font-semibold text-emerald-700">{state.teamNames.teamA}</div>
-              <div className="text-sm text-emerald-600 mt-1">Sélection confirmée</div>
-            </div>
-          ) : (
-            <InducementSelector
-              catalogue={catalogue}
-              budget={budgetA}
-              pettyCash={pettyCashA}
-              teamName={state.teamNames.teamA}
-              disabled={submitting}
-              onConfirm={handleTeamAConfirm}
-              onSkip={() => handleTeamAConfirm({ items: [] })}
-            />
-          )}
+      {submitted ? (
+        <div className="rounded border bg-emerald-50 border-emerald-300 p-6 text-center">
+          <div className="font-semibold text-emerald-700">{myTeamName}</div>
+          <div className="text-sm text-emerald-600 mt-1">Selection confirmee</div>
+          <div className="text-xs text-gray-500 mt-3">En attente de l&apos;adversaire...</div>
         </div>
-        <div>
-          {teamBReady ? (
-            <div className="rounded border bg-emerald-50 border-emerald-300 p-4 text-center">
-              <div className="font-semibold text-emerald-700">{state.teamNames.teamB}</div>
-              <div className="text-sm text-emerald-600 mt-1">Sélection confirmée</div>
-            </div>
-          ) : (
-            <InducementSelector
-              catalogue={catalogue}
-              budget={budgetB}
-              pettyCash={pettyCashB}
-              teamName={state.teamNames.teamB}
-              disabled={submitting}
-              onConfirm={handleTeamBConfirm}
-              onSkip={() => handleTeamBConfirm({ items: [] })}
-            />
-          )}
-        </div>
-      </div>
+      ) : (
+        <InducementSelector
+          catalogue={catalogue}
+          budget={myBudget}
+          pettyCash={myBudget}
+          teamName={myTeamName}
+          disabled={submitting}
+          onConfirm={handleConfirm}
+          onSkip={handleSkip}
+        />
+      )}
 
       {submitting && (
         <div className="mt-4 text-center text-gray-500 text-sm">
-          Traitement des inducements...
+          Envoi de la selection...
         </div>
       )}
     </div>
@@ -1014,6 +954,8 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
                 state={state as ExtendedGameState}
                 stateSource={stateSource}
                 setState={setState}
+                myTeamSide={myTeamSide}
+                gameSocket={gameSocket}
               />
             )}
             {/* Statut pré-match (si half=0) */}
