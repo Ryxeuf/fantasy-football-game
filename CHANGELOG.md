@@ -1,3 +1,15 @@
+## [1.56.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.56.0...v1.56.1) (2026-04-13)
+
+
+### 🐛 Bug Fixes
+
+* correct pre-existing test failures and SQLite binary target ([44544a1](https://github.com/Ryxeuf/fantasy-football-game/commit/44544a128d409f68506e77b623a8207f17385cb9))
+
+
+### ♻️ Code Refactoring
+
+* update SQLite client configuration and paths ([af1a299](https://github.com/Ryxeuf/fantasy-football-game/commit/af1a2996a851091a66bf034c51eed8fb650d351e))
+
 ## [1.56.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.55.2...v1.56.0) (2026-04-13)
 
 
