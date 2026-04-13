@@ -9,6 +9,8 @@ export default defineConfig({
     setupFiles: ["./vitest-setup.ts"],
     exclude: [
       "**/node_modules/**",
+      "e2e-api/**",
+      "e2e-ui/**",
       "integration/admin-middleware.test.ts",
       "integration/auth.test.ts",
       "integration/local-stats-features.test.ts",
@@ -16,6 +18,16 @@ export default defineConfig({
       "integration/match-start.test.ts",
       "ui/PlayByIdHeader.test.tsx",
     ],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json", "html"],
+      include: [
+        "../packages/game-engine/src/**/*.ts",
+        "../packages/ui/src/**/*.ts",
+        "../packages/ui/src/**/*.tsx",
+      ],
+      exclude: ["node_modules/", "**/*.d.ts", "**/*.config.*", "**/*.test.ts", "**/*.test.tsx"],
+    },
   },
   resolve: {
     alias: {
