@@ -351,10 +351,10 @@ export function getPushDirections(attackerPos: Position, targetPos: Position): P
   const normalizedX = dx === 0 ? 0 : Math.sign(dx);
   const normalizedY = dy === 0 ? 0 : Math.sign(dy);
 
-  // Les directions de poussée sont dans la direction opposée à l'attaquant
-  // (la cible est poussée dans la direction opposée à l'attaquant)
-  const pushX = normalizedX === 0 ? 0 : -normalizedX;
-  const pushY = normalizedY === 0 ? 0 : -normalizedY;
+  // Les directions de poussée sont dans la même direction que attaquant→cible
+  // (la cible est poussée loin de l'attaquant)
+  const pushX = normalizedX;
+  const pushY = normalizedY;
 
   const directions: Position[] = [];
 
