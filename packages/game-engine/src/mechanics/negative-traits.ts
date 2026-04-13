@@ -525,3 +525,72 @@ export function checkAnimalSavagery(
   // Attacker still standing: can continue their declared action
   return { passed: true, newState };
 }
+
+/**
+ * Check Take Root activation roll.
+ * BB3 Rule: At the start of this player's activation, roll a D6.
+ * On a 1, the player becomes "rooted" — they can't perform any action
+ * and their activation ends immediately.
+ * On 2+, the player acts normally.
+ * This is NOT a turnover.
+ *
+ * @returns { passed: true, newState } if player doesn't have take-root or passes the roll
+ * @returns { passed: false, newState } with modified state if roll fails
+ */
+export function checkTakeRoot(
+  state: GameState,
+  player: Player,
+  rng: RNG
+): ActivationCheckResult {
+  // No take-root: always pass (no state change)
+  if (!hasSkill(player, 'take-root')) {
+    return { passed: true, newState: state };
+  }
+
+  // Already acted this turn: skip check (not first action)
+  if (hasPlayerActed(state, player.id)) {
+    return { passed: true, newState: state };
+  }
+
+  // Roll D6: succeed on 2+
+  const roll = Math.floor(rng() * 6) + 1;
+  const success = roll >= 2;
+
+  const rollLog = createLogEntry(
+    'dice',
+    `Prendre Racine: ${roll}/2 ${success ? '✓' : '✗'}`,
+    player.id,
+    player.team,
+    { diceRoll: roll, targetNumber: 2, success, skill: 'take-root' }
+  );
+
+  let newState: GameState = {
+    ...state,
+    gameLog: [...state.gameLog, rollLog],
+  };
+
+  if (!success) {
+    // Failed: player is rooted, activation ends immediately, NOT a turnover
+    const failLog = createLogEntry(
+      'info',
+      `${player.name} est enraciné et ne peut pas agir !`,
+      player.id,
+      player.team
+    );
+    newState = {
+      ...newState,
+      gameLog: [...newState.gameLog, failLog],
+    };
+
+    // Mark player as having acted and remove all movement points
+    newState = setPlayerAction(newState, player.id, 'MOVE');
+    newState = {
+      ...newState,
+      players: newState.players.map(p =>
+        p.id === player.id ? { ...p, pm: 0, gfiUsed: 2 } : p
+      ),
+    };
+  }
+
+  return { passed: success, newState };
+}

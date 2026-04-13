@@ -634,6 +634,17 @@ registerSkill({
   canApply: (ctx) => hasSkill(ctx.player, 'animal-savagery'),
 });
 
+// ─── TAKE ROOT ──────────────────────────────────────────────────────────────
+// Take Root check is performed in applyMove before dispatching to action handlers.
+// Registered here for lookup and metadata purposes.
+
+registerSkill({
+  slug: 'take-root',
+  triggers: ['on-activation'],
+  description: 'Au début de l\'activation, jet D6. Sur 1, le joueur est enraciné et ne peut pas agir (activation terminée).',
+  canApply: (ctx) => hasSkill(ctx.player, 'take-root'),
+});
+
 // ─── ANIMOSITY (5 variants) ─────────────────────────────────────────────────
 // Animosity is checked in handlePass/handleHandoff before the action executes.
 // Registered here for lookup and metadata purposes.
