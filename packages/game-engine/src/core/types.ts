@@ -267,6 +267,7 @@ export type ActionType =
 export type Move =
   | { type: 'MOVE'; playerId: string; to: Position }
   | { type: 'END_TURN' }
+  | { type: 'END_PLAYER_TURN'; playerId: string }
   | { type: 'DODGE'; playerId: string; from: Position; to: Position }
   | { type: 'BLOCK'; playerId: string; targetId: string }
   | { type: 'BLOCK_CHOOSE'; playerId: string; targetId: string; result: BlockResult }

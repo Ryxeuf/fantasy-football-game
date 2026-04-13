@@ -1279,6 +1279,32 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
             onClose={() => setCurrentAction("MOVE")}
           />
         )}
+      {/* Bouton fin d'activation du joueur */}
+      {state && state.selectedPlayerId && isMyTurn &&
+        state.playerActions?.[state.selectedPlayerId] &&
+        (state as ExtendedGameState).preMatch?.phase !== "setup" &&
+        !state.pendingBlock && !state.pendingPushChoice && !state.pendingFollowUpChoice && (
+          <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40">
+            <button
+              onClick={() => {
+                const move = { type: 'END_PLAYER_TURN' as const, playerId: state.selectedPlayerId! };
+                if (isActiveMatch) {
+                  submitMove(move).then((res) => {
+                    if (res?.success && res.gameState) {
+                      setState(normalizeState(res.gameState));
+                      setIsMyTurn(res.isMyTurn);
+                    }
+                  });
+                } else {
+                  setState((s) => s ? applyMove(s, move, createRNG()) as ExtendedGameState : null);
+                }
+              }}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow-lg transition-all text-sm"
+            >
+              Terminer l&apos;activation
+            </button>
+          </div>
+        )}
       {/* Block/Push/FollowUp decision popups */}
       {state && shouldShowBlockPopup(state) && state.pendingBlock && (
         <BlockChoicePopup

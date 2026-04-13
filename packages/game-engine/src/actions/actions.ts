@@ -282,6 +282,12 @@ export function getLegalMoves(state: GameState): Move[] {
         moves.push({ type: 'PROJECTILE_VOMIT', playerId: p.id, targetId: target.id });
       }
     }
+
+    // END_PLAYER_TURN : permet d'arrêter l'activation d'un joueur en cours
+    const pAction = state.playerActions?.[p.id];
+    if (pAction === 'MOVE' || pAction === 'BLITZ') {
+      moves.push({ type: 'END_PLAYER_TURN', playerId: p.id });
+    }
   }
   return moves;
 }
@@ -473,6 +479,8 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
   switch (move.type) {
     case 'END_TURN':
       return handleEndTurn(activeState, rng);
+    case 'END_PLAYER_TURN':
+      return handleEndPlayerTurn(activeState, move);
     case 'MOVE':
       return handleMove(activeState, move, rng);
     case 'DODGE':
@@ -514,6 +522,34 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
     default:
       return checkTouchdowns(activeState);
   }
+}
+
+/**
+ * Termine l'activation d'un joueur (met fin à son mouvement/action en cours)
+ */
+function handleEndPlayerTurn(
+  state: GameState,
+  move: { type: 'END_PLAYER_TURN'; playerId: string },
+): GameState {
+  const player = state.players.find(p => p.id === move.playerId);
+  if (!player) return state;
+  if (player.team !== state.currentPlayer) return state;
+
+  // Mettre les PM du joueur à 0 pour empêcher d'autres actions
+  const newState = {
+    ...state,
+    players: state.players.map(p =>
+      p.id === move.playerId ? { ...p, pm: 0, gfiUsed: 2 } : p,
+    ),
+    selectedPlayerId: null,
+  };
+
+  // Marquer le joueur comme ayant agi s'il ne l'a pas encore été
+  if (!hasPlayerActed(newState, move.playerId)) {
+    return setPlayerAction(newState, move.playerId, 'MOVE');
+  }
+
+  return newState;
 }
 
 /**
