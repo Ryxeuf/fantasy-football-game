@@ -1,3 +1,39 @@
+## [1.51.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.50.0...v1.51.0) (2026-04-13)
+
+
+### ✨ Features
+
+* add team sprite manifest registry (H.6 sub-task 4/5) ([#171](https://github.com/Ryxeuf/fantasy-football-game/issues/171)) ([ad85cba](https://github.com/Ryxeuf/fantasy-football-game/commit/ad85cba46b363e5f052ef1ff533c90e55bf49a95))
+* complete sprite sheet rendering pipeline (H.6 5/5) ([#172](https://github.com/Ryxeuf/fantasy-football-game/issues/172)) ([3676039](https://github.com/Ryxeuf/fantasy-football-game/commit/36760398bdba148ff1ddc5e6cc92c0a2d382d129))
+* **e2e:** add 3 new E2E UI test scenarios + fix team-select flow ([#176](https://github.com/Ryxeuf/fantasy-football-game/issues/176)) ([1d2faaa](https://github.com/Ryxeuf/fantasy-football-game/commit/1d2faaaa569a9caa88c4530b93ef456c41888846))
+* **H.6:** propagate per-roster colors through GameState ([#169](https://github.com/Ryxeuf/fantasy-football-game/issues/169)) ([0176af8](https://github.com/Ryxeuf/fantasy-football-game/commit/0176af8575d40ec4f249900764c690814cb154f1)), closes [#168](https://github.com/Ryxeuf/fantasy-football-game/issues/168)
+* **H.7:** terrain skin variants (grass/ruins/snow) ([#175](https://github.com/Ryxeuf/fantasy-football-game/issues/175)) ([da194d2](https://github.com/Ryxeuf/fantasy-football-game/commit/da194d2cf444a3cc33095bade1c6622fbc0b0050))
+* **I.6:** add special rules for all 52 remaining star players ([#174](https://github.com/Ryxeuf/fantasy-football-game/issues/174)) ([9421a9c](https://github.com/Ryxeuf/fantasy-football-game/commit/9421a9c971da4a203e8ddc234a1951fc879f3315))
+* **I.7:** differentiate S3 star players from S2 ([#173](https://github.com/Ryxeuf/fantasy-football-game/issues/173)) ([824e766](https://github.com/Ryxeuf/fantasy-football-game/commit/824e76672cc3564a2fe758a1b2e87ee37335847f))
+* **J.1:** implement bone-head activation roll ([#181](https://github.com/Ryxeuf/fantasy-football-game/issues/181)) ([cdf957d](https://github.com/Ryxeuf/fantasy-football-game/commit/cdf957d20ce501810898259911796fa6aec6c595))
+* **J.2:** implement really-stupid activation roll ([#182](https://github.com/Ryxeuf/fantasy-football-game/issues/182)) ([d28fef1](https://github.com/Ryxeuf/fantasy-football-game/commit/d28fef17c573516f17aa5ce105c1722d5c0d12df))
+* **J.3:** implement wild-animal activation roll ([#183](https://github.com/Ryxeuf/fantasy-football-game/issues/183)) ([df17225](https://github.com/Ryxeuf/fantasy-football-game/commit/df172256f15431900ee9d18354e2a417ba79b9ef))
+* **J.4:** implement animal-savagery activation roll ([#184](https://github.com/Ryxeuf/fantasy-football-game/issues/184)) ([17d4400](https://github.com/Ryxeuf/fantasy-football-game/commit/17d4400de8e0a482d96db05ecbcc68973dca7a13))
+* **J.5:** implement take-root activation roll ([#185](https://github.com/Ryxeuf/fantasy-football-game/issues/185)) ([903ffb4](https://github.com/Ryxeuf/fantasy-football-game/commit/903ffb46f5bdd90d354ba177c18ae9f9acc27cfe))
+* per-roster team colors on the board (H.6 foundation) ([#168](https://github.com/Ryxeuf/fantasy-football-game/issues/168)) ([48eb677](https://github.com/Ryxeuf/fantasy-football-game/commit/48eb677f71f740b5d70a4aeb15ea39b8dcfa7b45))
+* **SEC-3:** centralize JWT_SECRET/MATCH_SECRET in config.ts ([#179](https://github.com/Ryxeuf/fantasy-football-game/issues/179)) ([04fdaf1](https://github.com/Ryxeuf/fantasy-football-game/commit/04fdaf107226338beddddaa8a48e87641d28f7c0))
+* **SEC-4:** restrict CORS to specific origins ([#180](https://github.com/Ryxeuf/fantasy-football-game/issues/180)) ([a4925a6](https://github.com/Ryxeuf/fantasy-football-game/commit/a4925a6cb20b767dea99a247b71d275f15bf3a4f))
+
+
+### 🐛 Bug Fixes
+
+* resolve 12 CRITICAL and HIGH bugs found by multi-agent code analysis ([#177](https://github.com/Ryxeuf/fantasy-football-game/issues/177)) ([cfc6a12](https://github.com/Ryxeuf/fantasy-football-game/commit/cfc6a12248bfe82fa072e89c8a842e6fd237faab))
+
+
+### 📝 Documentation
+
+* add evolution analysis and sprint 12-20 roadmap ([#178](https://github.com/Ryxeuf/fantasy-football-game/issues/178)) ([e8f65fe](https://github.com/Ryxeuf/fantasy-football-game/commit/e8f65fe8ba5cb9150f8ca1593894d9dbdafe0be2))
+
+
+### ♻️ Code Refactoring
+
+* remove node_modules volumes from docker-compose.yml ([de44c28](https://github.com/Ryxeuf/fantasy-football-game/commit/de44c28ae1f7a95a8061ed35b76cbd28b147533a))
+
 ## [1.50.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.49.0...v1.50.0) (2026-04-11)
 
 
