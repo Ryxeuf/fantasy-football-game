@@ -1,3 +1,10 @@
+## [1.55.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.55.1...v1.55.2) (2026-04-13)
+
+
+### 🐛 Bug Fixes
+
+* improve player action handling in game state ([4bd4dd2](https://github.com/Ryxeuf/fantasy-football-game/commit/4bd4dd2bd2ae3475db1fab52f2a4af73e7afa9da))
+
 ## [1.55.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.55.0...v1.55.1) (2026-04-13)
 
 
