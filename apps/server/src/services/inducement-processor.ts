@@ -184,10 +184,12 @@ export async function processInducementSubmission(
   });
 
   // Update match status
-  const isReady =
-    gameState.preMatch.phase === "setup" ||
-    gameState.preMatch.phase === "kickoff";
-  if (isReady) {
+  if (gameState.preMatch.phase === "setup") {
+    await prisma.match.update({
+      where: { id: matchId },
+      data: { status: "prematch-setup" },
+    });
+  } else if (gameState.preMatch.phase === "kickoff") {
     await prisma.match.update({
       where: { id: matchId },
       data: { status: "active" },

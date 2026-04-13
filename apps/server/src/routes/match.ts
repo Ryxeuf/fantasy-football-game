@@ -702,7 +702,7 @@ router.post(
         return res.status(404).json({ error: "Partie introuvable" });
       }
 
-      if (match.status !== "prematch-setup") {
+      if (match.status !== "prematch-setup" && match.status !== "active") {
         return res
           .status(400)
           .json({ error: "La partie n'est pas en phase de setup" });
