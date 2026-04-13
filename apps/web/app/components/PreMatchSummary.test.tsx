@@ -31,7 +31,7 @@ function makeState(preMatchOverrides: Record<string, any> = {}): ExtendedGameSta
       receivingTeam: "B",
       ...preMatchOverrides,
     },
-  } as ExtendedGameState;
+  } as unknown as ExtendedGameState;
 }
 
 describe("PreMatchSummary", () => {

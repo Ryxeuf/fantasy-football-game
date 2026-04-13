@@ -1878,13 +1878,13 @@ router.post("/:id/purchase", authUser, validate(purchaseSchema), async (req: Aut
           });
         }
 
-        if (team.players.filter(p => !p.dead).length >= 16) {
+        if (team.players.filter((p: typeof team.players[number]) => !p.dead).length >= 16) {
           return res.status(400).json({
             error: "Une équipe ne peut pas avoir plus de 16 joueurs vivants",
           });
         }
 
-        const existingNumber = team.players.find(p => p.number === number && !p.dead);
+        const existingNumber = team.players.find((p: typeof team.players[number]) => p.number === number && !p.dead);
         if (existingNumber) {
           return res.status(400).json({
             error: `Le numéro ${number} est déjà utilisé par ${existingNumber.name}`,
@@ -1908,7 +1908,7 @@ router.post("/:id/purchase", authUser, validate(purchaseSchema), async (req: Aut
         }
 
         const currentPositionCount = team.players.filter(
-          p => p.position === position && !p.dead,
+          (p: typeof team.players[number]) => p.position === position && !p.dead,
         ).length;
         if (currentPositionCount >= positionData.max) {
           return res.status(400).json({

@@ -695,3 +695,15 @@ registerSkill({
   description: 'Ce joueur ne peut ni ramasser, ni attraper, ni transporter le ballon. Les actions Passe et Remise lui sont interdites.',
   canApply: (ctx) => hasSkill(ctx.player, 'no-hands'),
 });
+
+// ─── RIGHT STUFF ───────────────────────────────────────────────────────────
+// Right Stuff enables a player (ST ≤ 3) to be thrown by a teammate with
+// Throw Team-Mate. The ST ≤ 3 check is enforced in canThrowTeamMate().
+// Registered here for lookup and metadata purposes.
+
+registerSkill({
+  slug: 'right-stuff',
+  triggers: ['passive'],
+  description: 'Si ce joueur a une Force de 3 ou moins, il peut être lancé par un coéquipier ayant la compétence Lancer d\'Équipier.',
+  canApply: (ctx) => hasSkill(ctx.player, 'right-stuff'),
+});

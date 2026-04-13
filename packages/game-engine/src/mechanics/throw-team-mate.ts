@@ -46,8 +46,9 @@ export function canThrowTeamMate(
 ): boolean {
   // Le lanceur doit avoir le trait TTM
   if (!hasSkill(thrower, 'throw-team-mate')) return false;
-  // Le lancé doit avoir le trait Right Stuff
+  // Le lancé doit avoir le trait Right Stuff ET une Force ≤ 3 (BB2020)
   if (!hasSkill(thrown, 'right-stuff')) return false;
+  if (thrown.st > 3) return false;
   // Même équipe
   if (thrower.team !== thrown.team) return false;
   // Adjacents
