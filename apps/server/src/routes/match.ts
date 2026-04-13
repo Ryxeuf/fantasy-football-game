@@ -487,7 +487,8 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
     // Pour prematch-setup, chercher le dernier turn avec gameState
     // (validate-setup, pre-match-sequence, inducements, ou coin-toss)
     const startTurn = match.turns.find((t: any) => t.payload?.type === "start" || t.payload?.type === "coin-toss");
-    if (match.status === "prematch-setup") {
+    if (match.status === "prematch-setup" || match.status === "active") {
+      // Toujours charger le dernier gameState disponible
       const latestStateTurn = [...match.turns]
         .reverse()
         .find((t: any) => t.payload?.gameState);
