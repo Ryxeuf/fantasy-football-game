@@ -231,9 +231,11 @@ export async function acceptAndMaybeStartMatch(
   );
 
   // Injecter les options de match (terrain skin, timer) depuis le turn "match-options"
-  const optionsTurn = await prisma.turn.findFirst({
-    where: { matchId, payload: { path: ['type'], equals: 'match-options' } },
+  const allTurns = await prisma.turn.findMany({
+    where: { matchId },
+    orderBy: { number: 'asc' },
   });
+  const optionsTurn = allTurns.find((t: any) => (t.payload as any)?.type === 'match-options');
   if (optionsTurn) {
     const opts = optionsTurn.payload as any;
     gameState = {
