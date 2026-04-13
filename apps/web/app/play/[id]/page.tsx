@@ -1186,25 +1186,28 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
                   }
                   // Logique normale (seulement si pas en phase setup)
                   const player = state.players.find((p) => p.id === playerId);
+                  if (!player) return;
+
+                  // Clic sur un adversaire avec une action Block/Blitz active → traiter comme un clic de cellule
                   if (
-                    player &&
+                    player.team !== state.currentPlayer &&
+                    state.selectedPlayerId &&
+                    (currentAction === "BLOCK" || currentAction === "BLITZ" || currentAction === "FOUL")
+                  ) {
+                    onCellClick(player.pos);
+                    return;
+                  }
+
+                  if (
                     player.team === state.currentPlayer &&
                     (!extState.preMatch ||
                       (extState.preMatch.phase as string) !== "setup")
                   ) {
-                    console.log("Setting selectedPlayerId:", playerId);
                     setState((s) =>
                       s ? { ...s, selectedPlayerId: player.id } : null,
                     );
                     setCurrentAction(null);
                     setSelectedFromReserve(null);
-                  } else {
-                    console.log("Not setting selectedPlayerId:", {
-                      player: !!player,
-                      teamMatch: player?.team === state.currentPlayer,
-                      preMatch: !!extState.preMatch,
-                      phase: extState.preMatch?.phase,
-                    });
                   }
                 }}
                 onDragStart={handleDragStart}
