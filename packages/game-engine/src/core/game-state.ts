@@ -815,14 +815,14 @@ export function handlePostTouchdown(state: GameState, rng: RNG): GameState {
     lastDiceResult: undefined,
     gameLog: [...newState.gameLog, resetLog],
     preMatch: {
-      ...newState.preMatch,
-      phase: 'setup' as any,
+      ...(newState.preMatch ?? {} as PreMatchState),
+      phase: 'setup' as const,
       currentCoach: receivingTeam,
       kickingTeam: newKickingTeam,
       receivingTeam: receivingTeam,
       placedPlayers: [],
       legalSetupPositions: [],
-    },
+    } satisfies PreMatchState,
   };
 
   return resultState;
