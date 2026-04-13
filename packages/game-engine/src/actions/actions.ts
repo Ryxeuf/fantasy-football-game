@@ -1248,7 +1248,7 @@ function handleBlockChoose(
     targetStrength: state.pendingBlock.targetStrength,
   };
 
-  let newState = resolveBlockResult({ ...state, pendingBlock: undefined }, blockResult, rng);
+  let newState = resolveBlockResult({ ...state, pendingBlock: undefined, lastDiceResult: undefined }, blockResult, rng);
 
   // Déterminer si c'était un blitz ou un blocage normal
   // Si le joueur a déjà l'action BLITZ enregistrée, c'est un blitz
@@ -1281,15 +1281,6 @@ function handleBlockChoose(
     newState = checkPlayerTurnEnd(newState, attacker.id);
   }
 
-  // lastDiceResult est déjà renseigné par resolveBlockResult pour l'armure; on peut aussi logguer le block
-  newState.lastDiceResult = {
-    type: 'block',
-    playerId: attacker.id,
-    diceRoll: 0,
-    targetNumber: 0,
-    success: true,
-    modifiers: 0,
-  };
   return newState;
 }
 
