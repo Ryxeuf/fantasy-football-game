@@ -823,7 +823,7 @@ function resetPlayerPositions(state: GameState): GameState {
 /**
  * Gère le reset après un touchdown : repositionne les joueurs et prépare le kickoff
  */
-export function handlePostTouchdown(state: GameState, rng: RNG): GameState {
+export function handlePostTouchdown(state: GameState, rng: RNG): ExtendedGameState {
   // L'équipe qui a marqué frappe (kick)
   const lastScoreLog = state.gameLog.findLast(log => log.type === 'score');
   const scoringTeam = lastScoreLog?.team;
@@ -849,7 +849,7 @@ export function handlePostTouchdown(state: GameState, rng: RNG): GameState {
   );
 
   // Entrer en phase de setup pour le nouveau drive (les joueurs doivent être replacés)
-  const resultState: GameState = {
+  const resultState: ExtendedGameState = {
     ...newState,
     gamePhase: 'playing' as const,
     kickingTeam: newKickingTeam,
@@ -864,7 +864,7 @@ export function handlePostTouchdown(state: GameState, rng: RNG): GameState {
     lastDiceResult: undefined,
     gameLog: [...newState.gameLog, resetLog],
     preMatch: {
-      ...newState.preMatch,
+      ...(newState as ExtendedGameState).preMatch,
       phase: 'setup' as any,
       currentCoach: receivingTeam,
       kickingTeam: newKickingTeam,
