@@ -196,7 +196,7 @@
 | J.4 | Implementer `animal-savagery` | Regle | [x] |
 | J.5 | Implementer `take-root` | Regle | [x] |
 | J.6 | Implementer `no-hands` | Regle | [x] |
-| J.7 | Implementer `right-stuff` | Regle | [ ] |
+| J.7 | Implementer `right-stuff` | Regle | [x] |
 | TEST-1 | Activer vitest coverage reporting | Qualite | [ ] |
 | SEC-5 | Validation Zod sur toutes les routes non validees | Securite | [ ] |
 
