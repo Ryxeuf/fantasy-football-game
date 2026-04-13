@@ -683,3 +683,15 @@ registerSkill({
   description: 'Jet d\'Animosité (D6) avant passe/remise à un coéquipier Nain ou Humain. Sur 1, refuse et activation terminée.',
   canApply: (ctx) => hasSkill(ctx.player, 'animosity-all-dwarf-human'),
 });
+
+// ─── NO HANDS ──────────────────────────────────────────────────────────────
+// No Hands prevents the player from picking up, catching, or carrying the ball.
+// Checked in handleBallPickup, executePass, executeHandoff, and bounceBall.
+// Registered here for lookup and metadata purposes.
+
+registerSkill({
+  slug: 'no-hands',
+  triggers: ['passive'],
+  description: 'Ce joueur ne peut ni ramasser, ni attraper, ni transporter le ballon. Les actions Passe et Remise lui sont interdites.',
+  canApply: (ctx) => hasSkill(ctx.player, 'no-hands'),
+});

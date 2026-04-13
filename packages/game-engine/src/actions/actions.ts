@@ -850,6 +850,29 @@ function handleNormalMove(
  * Gère le ramassage de balle
  */
 function handleBallPickup(state: GameState, player: Player, rng: RNG, idx: number): GameState {
+  // No Hands: player cannot pick up the ball at all (no roll)
+  if (hasSkill(player, 'no-hands')) {
+    const noHandsLog = createLogEntry(
+      'info',
+      `Sans Ballon: ${player.name} ne peut pas ramasser le ballon !`,
+      player.id,
+      player.team,
+      { skill: 'no-hands' }
+    );
+    const turnoverLog = createLogEntry(
+      'turnover',
+      `Échec du ramassage (Sans Ballon) - Turnover`,
+      player.id,
+      player.team
+    );
+    const newState: GameState = {
+      ...state,
+      isTurnover: true,
+      gameLog: [...state.gameLog, noHandsLog, turnoverLog],
+    };
+    return bounceBall(newState, rng);
+  }
+
   // Calculer les modificateurs de pickup (malus pour adversaires + bonus skills)
   const basePickupModifiers = calculatePickupModifiers(state, state.ball!, player.team);
   const skillPickupModifiers = getPickupSkillModifiers(state, player);

@@ -8,6 +8,7 @@ import { rollD6 } from '../utils/dice';
 import { samePos, isAdjacent, getAdjacentOpponents } from './movement';
 import { createLogEntry } from '../utils/logging';
 import { bounceBall, checkTouchdowns, isInOpponentEndzone, awardTouchdown } from './ball';
+import { hasSkill } from '../skills/skill-effects';
 
 /**
  * Distances de passe selon BB2020
@@ -268,6 +269,27 @@ export function executePass(
     return bounceBall(newState, rng);
   }
 
+  // No Hands: receiver cannot catch the ball (no roll)
+  if (hasSkill(target, 'no-hands')) {
+    const noHandsLog = createLogEntry(
+      'info',
+      `Sans Ballon: ${target.name} ne peut pas réceptionner le ballon !`,
+      target.id,
+      target.team,
+      { skill: 'no-hands' }
+    );
+    const failLog = createLogEntry(
+      'turnover',
+      `Réception impossible (Sans Ballon) - Turnover !`,
+      target.id,
+      target.team
+    );
+    newState.gameLog = [...newState.gameLog, noHandsLog, failLog];
+    newState.isTurnover = true;
+    newState.ball = { ...target.pos };
+    return bounceBall(newState, rng);
+  }
+
   // Passe réussie : le receveur doit réceptionner
   const catchModifiers = calculateCatchModifiers(newState, target);
   const catchResult = performCatchRoll(target, rng, catchModifiers);
@@ -348,6 +370,27 @@ export function executeHandoff(
     passer.team
   );
   newState.gameLog = [...newState.gameLog, handoffLog];
+
+  // No Hands: receiver cannot catch the ball (no roll)
+  if (hasSkill(target, 'no-hands')) {
+    const noHandsLog = createLogEntry(
+      'info',
+      `Sans Ballon: ${target.name} ne peut pas réceptionner le ballon !`,
+      target.id,
+      target.team,
+      { skill: 'no-hands' }
+    );
+    const failLog = createLogEntry(
+      'turnover',
+      `Remise impossible (Sans Ballon) - Turnover !`,
+      target.id,
+      target.team
+    );
+    newState.gameLog = [...newState.gameLog, noHandsLog, failLog];
+    newState.isTurnover = true;
+    newState.ball = { ...target.pos };
+    return bounceBall(newState, rng);
+  }
 
   // Jet de réception pour le receveur
   const catchModifiers = calculateCatchModifiers(newState, target);

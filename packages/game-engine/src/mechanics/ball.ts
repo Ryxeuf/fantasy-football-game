@@ -7,6 +7,7 @@ import { GameState, Player, Position, TeamId, RNG } from '../core/types';
 import { samePos, calculatePickupModifiers } from './movement';
 import { performPickupRoll } from '../utils/dice';
 import { createLogEntry, addLogEntry } from '../utils/logging';
+import { hasSkill } from '../skills/skill-effects';
 
 /**
  * Vérifie si un joueur est dans l'en-but adverse
@@ -152,6 +153,20 @@ export function bounceBall(state: GameState, rng: RNG): GameState {
   );
 
   if (playerAtNewPos) {
+    // No Hands: ball bounces off this player (no catch roll)
+    if (hasSkill(playerAtNewPos, 'no-hands')) {
+      const noHandsLog = createLogEntry(
+        'info',
+        `Sans Ballon: ${playerAtNewPos.name} ne peut pas réceptionner le ballon !`,
+        playerAtNewPos.id,
+        playerAtNewPos.team,
+        { skill: 'no-hands' }
+      );
+      newState.gameLog = [...newState.gameLog, noHandsLog];
+      newState.ball = newBallPos;
+      return bounceBall(newState, rng);
+    }
+
     // Le joueur doit tenter de réceptionner la balle
     const catchModifiers = calculatePickupModifiers(newState, newBallPos, playerAtNewPos.team);
     const catchResult = performPickupRoll(playerAtNewPos, rng, catchModifiers);
