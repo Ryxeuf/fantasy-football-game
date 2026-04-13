@@ -3,28 +3,43 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nuffle Arena - Maintenance</title>
+  <title>Nuffle Arena - Maintenance en cours</title>
+  <meta name="description" content="Nuffle Arena est en maintenance. Nous revenons tres bientot.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏈</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Montserrat:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --nuffle-gold: #CBA135;
+      --nuffle-red: #7A1F1F;
+      --nuffle-ivory: #E9E2D0;
+      --nuffle-anthracite: #1E1E1E;
+      --nuffle-bronze: #6B4E2E;
+    }
 
     body {
       min-height: 100vh;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      background: #0a0e17;
-      color: #e2e8f0;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--nuffle-anthracite);
+      color: var(--nuffle-ivory);
       overflow: hidden;
+      position: relative;
     }
 
-    .bg-pattern {
+    .bg-gradient {
       position: fixed;
       inset: 0;
       background:
-        radial-gradient(ellipse at 20% 50%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 50%, rgba(168, 85, 247, 0.08) 0%, transparent 50%),
-        radial-gradient(ellipse at 50% 0%, rgba(59, 130, 246, 0.06) 0%, transparent 50%);
+        radial-gradient(ellipse at 20% 30%, rgba(203, 161, 53, 0.12) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 70%, rgba(107, 78, 46, 0.12) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 100%, rgba(203, 161, 53, 0.06) 0%, transparent 40%);
       z-index: 0;
     }
 
@@ -33,96 +48,186 @@
       z-index: 1;
       text-align: center;
       padding: 2rem;
-      max-width: 600px;
+      max-width: 640px;
+      width: 100%;
     }
 
-    .icon {
-      font-size: 4rem;
-      margin-bottom: 1.5rem;
-      animation: bounce 2s ease-in-out infinite;
+    .logo-section {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 2.5rem;
     }
 
-    @keyframes bounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-10px); }
+    .logo-icon {
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, var(--nuffle-gold), var(--nuffle-bronze));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      box-shadow: 0 4px 20px rgba(203, 161, 53, 0.3);
     }
 
-    h1 {
-      font-size: 2rem;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-      background: linear-gradient(135deg, #818cf8, #a78bfa, #c084fc);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .subtitle {
-      font-size: 1.1rem;
-      color: #94a3b8;
-      margin-bottom: 2rem;
+    .logo-text {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 1.6rem;
+      letter-spacing: 0.15em;
+      color: var(--nuffle-ivory);
     }
 
     .card {
-      background: rgba(30, 41, 59, 0.6);
-      border: 1px solid rgba(99, 102, 241, 0.2);
+      background: linear-gradient(135deg,
+        rgba(107, 78, 46, 0.15),
+        rgba(30, 30, 30, 0.8),
+        rgba(107, 78, 46, 0.1));
+      border: 2px solid rgba(203, 161, 53, 0.25);
       border-radius: 1rem;
-      padding: 2rem;
-      backdrop-filter: blur(10px);
+      padding: 2.5rem 2rem;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
     }
 
-    .card p {
+    .dice-icon {
+      font-size: 3.5rem;
+      margin-bottom: 1.5rem;
+      display: inline-block;
+      animation: roll 3s ease-in-out infinite;
+    }
+
+    @keyframes roll {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      25% { transform: rotate(-8deg) scale(1.05); }
+      50% { transform: rotate(8deg) scale(1); }
+      75% { transform: rotate(-4deg) scale(1.02); }
+    }
+
+    h1 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.7rem;
+      font-weight: 700;
+      color: var(--nuffle-gold);
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      font-family: 'Montserrat', sans-serif;
       font-size: 1rem;
-      line-height: 1.7;
-      color: #cbd5e1;
+      font-weight: 600;
+      color: var(--nuffle-bronze);
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .message {
+      font-size: 1rem;
+      line-height: 1.8;
+      color: rgba(233, 226, 208, 0.85);
+    }
+
+    .divider {
+      width: 60px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--nuffle-gold), transparent);
+      margin: 1.5rem auto;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-top: 1.5rem;
+      padding: 0.6rem 1.2rem;
+      background: rgba(203, 161, 53, 0.1);
+      border: 1px solid rgba(203, 161, 53, 0.2);
+      border-radius: 2rem;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--nuffle-gold);
     }
 
     .spinner {
       display: inline-block;
-      width: 20px;
-      height: 20px;
-      border: 2px solid rgba(129, 140, 248, 0.3);
-      border-top-color: #818cf8;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(203, 161, 53, 0.25);
+      border-top-color: var(--nuffle-gold);
       border-radius: 50%;
       animation: spin 1s linear infinite;
-      margin-right: 0.5rem;
-      vertical-align: middle;
     }
 
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
 
-    .status {
-      margin-top: 1.5rem;
-      font-size: 0.9rem;
-      color: #818cf8;
+    .footer {
+      position: relative;
+      z-index: 1;
+      margin-top: 2.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(107, 78, 46, 0.3);
+      font-size: 0.75rem;
+      color: rgba(233, 226, 208, 0.4);
+      text-align: center;
+      max-width: 640px;
+      width: 100%;
+      padding-left: 2rem;
+      padding-right: 2rem;
     }
 
-    .footer {
-      margin-top: 2rem;
-      font-size: 0.8rem;
-      color: #475569;
+    .footer a {
+      color: rgba(203, 161, 53, 0.6);
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      color: var(--nuffle-gold);
+    }
+
+    @media (max-width: 480px) {
+      .container { padding: 1.5rem 1rem; }
+      .card { padding: 2rem 1.5rem; }
+      .logo-text { font-size: 1.3rem; }
+      h1 { font-size: 1.4rem; }
+      .dice-icon { font-size: 2.8rem; }
     }
   </style>
 </head>
 <body>
-  <div class="bg-pattern"></div>
+  <div class="bg-gradient"></div>
+
   <div class="container">
-    <div class="icon">🏈</div>
-    <h1>Nuffle Arena</h1>
-    <p class="subtitle">Maintenance en cours</p>
+    <div class="logo-section">
+      <div class="logo-icon">🏈</div>
+      <span class="logo-text">NUFFLE ARENA</span>
+    </div>
+
     <div class="card">
-      <p>
-        L'arene est temporairement fermee pour maintenance.<br>
-        Nous mettons a jour le terrain pour vous offrir la meilleure experience de jeu.
+      <div class="dice-icon">🎲</div>
+      <h1>L'arene est en maintenance</h1>
+      <p class="subtitle">Nous preparons le terrain</p>
+
+      <div class="divider"></div>
+
+      <p class="message">
+        Nos apothicaires travaillent dur pour remettre l'arene en etat.<br>
+        Le match reprendra tres bientot !
       </p>
-      <p class="status">
+
+      <div class="status">
         <span class="spinner"></span>
         Mise a jour en cours...
-      </p>
+      </div>
     </div>
-    <p class="footer">Nous serons de retour tres bientot. Merci de votre patience !</p>
+  </div>
+
+  <div class="footer">
+    <p>&copy; 2026 <a href="https://nufflearena.fr">Nuffle Arena</a> &mdash; Gestionnaire d'equipes Blood Bowl</p>
   </div>
 </body>
 </html>
