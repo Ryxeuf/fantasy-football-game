@@ -1,3 +1,10 @@
+## [1.53.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.52.0...v1.53.0) (2026-04-13)
+
+
+### ✨ Features
+
+* add rate limiting whitelist and trust proxy configuration ([09473e5](https://github.com/Ryxeuf/fantasy-football-game/commit/09473e507d9ebd9687c4a3a8a010e2ac5b8f74fd))
+
 ## [1.52.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.51.0...v1.52.0) (2026-04-13)
 
 
