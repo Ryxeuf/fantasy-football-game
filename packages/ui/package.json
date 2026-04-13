@@ -6,29 +6,31 @@
   "main": "src/index.tsx",
   "types": "src/index.tsx",
   "dependencies": {
+    "@pixi/core": "^7.4.3",
+    "@pixi/graphics": "^7.4.3",
+    "@pixi/react": "^7.1.2",
+    "@pixi/sprite": "^7.4.3",
+    "@pixi/text": "^7.4.3",
     "react": "^18.3.1",
     "react-native-gesture-handler": "~2.16.2",
     "react-native-reanimated": "~3.10.1",
-    "react-native-svg": "^15.2.0",
-    "@pixi/react": "^7.1.2",
-    "@pixi/core": "^7.4.3",
-    "@pixi/graphics": "^7.4.3",
-    "@pixi/text": "^7.4.3",
-    "@pixi/sprite": "^7.4.3"
+    "react-native-svg": "^15.2.0"
   },
   "devDependencies": {
-    "typescript": "^5.5.4",
-    "@types/react": "^18.3.5",
-    "vitest": "^2.1.9",
-    "@testing-library/react": "^14.2.1",
     "@testing-library/jest-dom": "^6.4.2",
-    "@vitejs/plugin-react": "^4.3.3"
+    "@testing-library/react": "^14.2.1",
+    "@types/react": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.3",
+    "@vitest/coverage-v8": "^2.0.0",
+    "typescript": "^5.5.4",
+    "vitest": "^2.1.9"
   },
   "scripts": {
     "build": "echo no-op",
     "dev": "echo ui-dev",
     "lint": "eslint . || true",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest --run"
+    "test": "vitest --run",
+    "test:coverage": "vitest --run --coverage"
   }
 }

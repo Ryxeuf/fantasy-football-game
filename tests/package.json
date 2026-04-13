@@ -9,7 +9,7 @@
     "test:ui": "vitest --config vitest.config.ts tests/ui",
     "test:game-engine": "vitest --config vitest.config.ts tests/game-engine",
     "test:watch": "vitest --watch",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.0.0",
@@ -17,6 +17,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/react": "^18.3.24",
     "@types/react-dom": "^18.3.7",
+    "@vitest/coverage-v8": "^2.0.0",
     "jsdom": "^23.0.0",
     "jsonwebtoken": "^9.0.2",
     "node-fetch": "^3.3.2",

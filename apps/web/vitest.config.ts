@@ -14,5 +14,11 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     include: ["app/**/*.test.ts", "app/**/*.test.tsx"],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json", "html"],
+      include: ["app/**/*.ts", "app/**/*.tsx"],
+      exclude: ["node_modules/", "**/*.d.ts", "**/*.config.*", "**/*.test.ts", "**/*.test.tsx"],
+    },
   },
 });
