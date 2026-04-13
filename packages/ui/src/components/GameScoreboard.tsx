@@ -178,6 +178,17 @@ export default function GameScoreboard({
             >
               {state.score?.teamA || 0}
             </div>
+            {state.half > 0 && state.teamRerolls && (
+              <div className="text-xs text-gray-300 mt-1">
+                <span className="inline-flex items-center gap-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 2v6h-6" /><path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+                    <path d="M3 22v-6h6" /><path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+                  </svg>
+                  {state.teamRerolls.teamA ?? 0}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Séparateur */}
@@ -199,6 +210,17 @@ export default function GameScoreboard({
             >
               {state.score?.teamB || 0}
             </div>
+            {state.half > 0 && state.teamRerolls && (
+              <div className="text-xs text-gray-300 mt-1">
+                <span className="inline-flex items-center gap-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 2v6h-6" /><path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+                    <path d="M3 22v-6h6" /><path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+                  </svg>
+                  {state.teamRerolls.teamB ?? 0}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
