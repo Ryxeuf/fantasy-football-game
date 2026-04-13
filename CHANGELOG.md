@@ -1,3 +1,21 @@
+## [1.55.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.54.0...v1.55.0) (2026-04-13)
+
+
+### ✨ Features
+
+* **J.6:** implement no-hands trait ([#186](https://github.com/Ryxeuf/fantasy-football-game/issues/186)) ([4fdc778](https://github.com/Ryxeuf/fantasy-football-game/commit/4fdc778a3e8ba1b9d6bebd06e278d1620ea78f4f))
+
+
+### 🐛 Bug Fixes
+
+* update match state retrieval logic to include active status ([44bdd46](https://github.com/Ryxeuf/fantasy-football-game/commit/44bdd46829a3562f74710a21bd5bbd1716acfb7a))
+* update match status logic to include active phase ([e500a24](https://github.com/Ryxeuf/fantasy-football-game/commit/e500a2407fc53a1724b3197669c0b34be9e8457c))
+
+
+### ♻️ Code Refactoring
+
+* streamline game state retrieval and update team value calculation ([271df74](https://github.com/Ryxeuf/fantasy-football-game/commit/271df74ed414205144c31126db3d5b7d1971fa03))
+
 ## [1.54.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.53.0...v1.54.0) (2026-04-13)
 
 
