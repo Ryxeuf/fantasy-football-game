@@ -1,3 +1,10 @@
+## [1.55.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.55.0...v1.55.1) (2026-04-13)
+
+
+### 🐛 Bug Fixes
+
+* enhance match state management during kickoff phase ([32c101e](https://github.com/Ryxeuf/fantasy-football-game/commit/32c101e80a30aac06485191033fdca21f3520077))
+
 ## [1.55.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.54.0...v1.55.0) (2026-04-13)
 
 
