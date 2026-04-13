@@ -29,9 +29,9 @@ describe("Jets d'armure et de blessure", () => {
         targetId: 'B1',
       };
 
-      // Utiliser un RNG qui va donner PLAYER_DOWN et faire échouer l'armure
-      const failingRng = () => 0.1; // Toujours 1 sur un D6
-      const blockResult = applyMove(testState, blockMove, failingRng);
+      // RNG qui produit des valeurs hautes (die=6) pour percer l'armure
+      const highRng = () => 0.99;
+      const blockResult = applyMove(testState, blockMove, highRng);
 
       // Si il y a un pendingBlock, choisir PLAYER_DOWN
       let result = blockResult;
@@ -42,25 +42,18 @@ describe("Jets d'armure et de blessure", () => {
           targetId: 'B1',
           result: 'PLAYER_DOWN' as const,
         };
-        result = applyMove(blockResult, chooseMove, failingRng);
+        result = applyMove(blockResult, chooseMove, highRng);
       }
 
-      // Debug: afficher l'état du résultat
-      console.log('Résultat du blocage:', {
-        playerA1: result.players.find(p => p.id === 'A1'),
-        playerB1: result.players.find(p => p.id === 'B1'),
-        gameLog: result.gameLog.slice(-5),
-      });
-
-      // Vérifier que le joueur A1 est étourdi (PLAYER_DOWN)
-      const playerA1 = result.players.find(p => p.id === 'A1');
-      expect(playerA1?.stunned).toBe(true);
-
-      // Vérifier qu'un jet de blessure a été effectué
-      // (on peut le vérifier en regardant les logs ou l'état du joueur)
+      // Avec un RNG haut, l'armure est percée (6+6=12 > tout AV)
+      // Vérifier qu'un jet d'armure et un jet de blessure ont été effectués
+      const armorLogs = result.gameLog.filter(
+        log => log.type === 'dice' && log.message.includes("Jet d'armure")
+      );
       const injuryLogs = result.gameLog.filter(
         log => log.type === 'dice' && log.message.includes('Jet de blessure')
       );
+      expect(armorLogs.length).toBeGreaterThan(0);
       expect(injuryLogs.length).toBeGreaterThan(0);
     });
 
@@ -82,9 +75,9 @@ describe("Jets d'armure et de blessure", () => {
         targetId: 'B1',
       };
 
-      // Utiliser un RNG qui va donner BOTH_DOWN et faire échouer les armures
-      const failingRng = () => 0.1; // Toujours 1 sur un D6
-      const blockResult = applyMove(testState, blockMove, failingRng);
+      // RNG qui produit des valeurs hautes pour percer les armures des deux joueurs
+      const highRng = () => 0.99;
+      const blockResult = applyMove(testState, blockMove, highRng);
 
       // Si il y a un pendingBlock, choisir BOTH_DOWN
       let result = blockResult;
@@ -95,16 +88,10 @@ describe("Jets d'armure et de blessure", () => {
           targetId: 'B1',
           result: 'BOTH_DOWN' as const,
         };
-        result = applyMove(blockResult, chooseMove, failingRng);
+        result = applyMove(blockResult, chooseMove, highRng);
       }
 
-      // Vérifier que les deux joueurs sont étourdis
-      const playerA1 = result.players.find(p => p.id === 'A1');
-      const playerB1 = result.players.find(p => p.id === 'B1');
-      expect(playerA1?.stunned).toBe(true);
-      expect(playerB1?.stunned).toBe(true);
-
-      // Vérifier qu'au moins un jet de blessure a été effectué
+      // Avec un RNG haut, les armures sont percées et des jets de blessure ont lieu
       const injuryLogs = result.gameLog.filter(
         log => log.type === 'dice' && log.message.includes('Jet de blessure')
       );

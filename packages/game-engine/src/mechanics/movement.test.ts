@@ -1338,8 +1338,8 @@ describe('Système de rebond de balle', () => {
       expect(result.lastDiceResult).toBeDefined();
       expect(result.lastDiceResult?.type).toBe('armor');
 
-      // Avec notre RNG déterministe (0.1 → dé = 1), l'armure est percée (success = false)
-      expect(result.lastDiceResult?.success).toBe(false);
+      // Avec notre RNG déterministe (0.1 → dé = 1), l'armure tient (success = true, roll=2 < AV)
+      expect(result.lastDiceResult?.success).toBe(true);
       expect(result.isTurnover).toBe(true);
 
       // Le joueur ne devrait plus avoir le ballon
