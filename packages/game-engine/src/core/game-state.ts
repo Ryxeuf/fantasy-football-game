@@ -803,12 +803,18 @@ function recoverKOPlayers(state: GameState, rng: RNG): GameState {
  */
 function resetPlayerPositions(state: GameState): GameState {
   const newPlayers = state.players.map(p => {
-    // Seuls les joueurs actifs (state === 'active' ou pas de state) sont repositionnés
+    // Joueurs KO, blessés, morts ne sont pas repositionnés
     if (p.state && p.state !== 'active') return p;
-    if (p.stunned) return { ...p, stunned: false, pm: p.ma, gfiUsed: 0 };
 
-    // Position par défaut basée sur l'équipe
-    return { ...p, stunned: false, pm: p.ma, gfiUsed: 0, hasBall: false };
+    // Remettre tous les joueurs actifs en réserve (hors terrain) pour le re-setup
+    return {
+      ...p,
+      stunned: false,
+      pm: p.ma,
+      gfiUsed: 0,
+      hasBall: false,
+      pos: { x: -1, y: -1 }, // Hors terrain = en réserve
+    };
   });
 
   return { ...state, players: newPlayers };
@@ -842,13 +848,14 @@ export function handlePostTouchdown(state: GameState, rng: RNG): GameState {
     undefined
   );
 
-  let resultState: GameState = {
+  // Entrer en phase de setup pour le nouveau drive (les joueurs doivent être replacés)
+  const resultState: GameState = {
     ...newState,
     gamePhase: 'playing' as const,
     kickingTeam: newKickingTeam,
     currentPlayer: receivingTeam,
     isTurnover: false,
-    ball: { x: 13, y: 7 }, // Centre du terrain pour le kickoff
+    ball: undefined, // Pas de ballon tant que le kickoff n'est pas lancé
     selectedPlayerId: null,
     playerActions: {} as Record<string, ActionType>,
     teamBlitzCount: {} as Record<string, number>,
@@ -856,24 +863,16 @@ export function handlePostTouchdown(state: GameState, rng: RNG): GameState {
     rerollUsedThisTurn: false,
     lastDiceResult: undefined,
     gameLog: [...newState.gameLog, resetLog],
+    preMatch: {
+      ...newState.preMatch,
+      phase: 'setup' as any,
+      currentCoach: receivingTeam,
+      kickingTeam: newKickingTeam,
+      receivingTeam: receivingTeam,
+      placedPlayers: [],
+      legalSetupPositions: [],
+    },
   };
-
-  // Rouler et appliquer l'événement de kickoff
-  const { event } = rollKickoffEvent(rng);
-  resultState = applyKickoffEvent(resultState, event, rng, newKickingTeam);
-
-  // Appliquer les effets météo de début de drive (D3 joueurs en réserves si applicable)
-  if (resultState.weatherCondition) {
-    const weatherMods = getWeatherModifiers(resultState.weatherCondition);
-    if (weatherMods.playersToReserves > 0) {
-      const weatherLog = createLogEntry(
-        'info',
-        `Météo: ${resultState.weatherCondition.condition} — ${resultState.weatherCondition.description}`
-      );
-      resultState = applyWeatherDriveEffects(resultState, weatherMods, rng);
-      resultState = { ...resultState, gameLog: [...resultState.gameLog, weatherLog] };
-    }
-  }
 
   return resultState;
 }

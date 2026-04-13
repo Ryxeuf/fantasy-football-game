@@ -55,12 +55,12 @@ describe('Règle: Post-touchdown re-kickoff', () => {
       expect(result.currentPlayer).toBe('B'); // receiving team plays first
     });
 
-    it('devrait placer la balle au centre du terrain', () => {
+    it('devrait ne pas avoir de balle (en attente du kickoff après re-setup)', () => {
       const state = createPostTdState();
       const rng = makeRNG('post-td-ball');
       const result = handlePostTouchdown(state, rng);
 
-      expect(result.ball).toEqual({ x: 13, y: 7 });
+      expect(result.ball).toBeUndefined();
     });
 
     it('devrait réinitialiser les actions des joueurs', () => {
@@ -101,16 +101,15 @@ describe('Règle: Post-touchdown re-kickoff', () => {
       }
     });
 
-    it('devrait rouler et appliquer un événement de kickoff', () => {
+    it('devrait entrer en phase de setup pour le re-placement', () => {
       const state = createPostTdState();
       const rng = makeRNG('post-td-kickoff-event');
       const result = handlePostTouchdown(state, rng);
 
-      // Verify a kickoff event log was added
-      const kickoffEventLogs = result.gameLog.filter(
-        log => log.details && (log.details as Record<string, unknown>).kickoffEvent
-      );
-      expect(kickoffEventLogs.length).toBeGreaterThanOrEqual(1);
+      // Après un TD, les joueurs doivent être replacés (phase setup)
+      expect(result.preMatch?.phase).toBe('setup');
+      expect(result.preMatch?.receivingTeam).toBe('B');
+      expect(result.preMatch?.kickingTeam).toBe('A');
     });
 
     it('devrait ajouter un log de re-kickoff', () => {
@@ -151,7 +150,8 @@ describe('Règle: Post-touchdown re-kickoff', () => {
       const result = applyMove(state, { type: 'END_TURN' }, rng);
 
       expect(result.gamePhase).toBe('playing');
-      expect(result.ball).toEqual({ x: 13, y: 7 });
+      expect(result.preMatch?.phase).toBe('setup');
+      expect(result.ball).toBeUndefined();
     });
   });
 
