@@ -175,8 +175,8 @@ async function createMatchFromQueue(
   // Create team selections for both players
   await prisma.teamSelection.createMany({
     data: [
-      { matchId: match.id, userId: joiningUserId, teamId: joiningTeamId },
-      { matchId: match.id, userId: opponent.userId, teamId: opponent.teamId },
+      { matchId: match.id, userId: joiningUserId, teamId: joiningTeamId, team: joiningTeamId },
+      { matchId: match.id, userId: opponent.userId, teamId: opponent.teamId, team: opponent.teamId },
     ],
   });
 
