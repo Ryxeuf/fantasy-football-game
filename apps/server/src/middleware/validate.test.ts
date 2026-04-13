@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { z } from "zod";
-import { validate } from "./validate";
+import { validate, validateQuery } from "./validate";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -206,6 +206,92 @@ describe("validate middleware", () => {
       validate(schemaWithOptional)(req, res, next);
 
       expect(next).toHaveBeenCalledOnce();
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// validateQuery middleware
+// ---------------------------------------------------------------------------
+
+function createMockReqWithQuery(query: unknown) {
+  return { query } as any;
+}
+
+describe("validateQuery middleware", () => {
+  const querySchema = z.object({
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(100).default(50),
+    search: z.string().max(200).default(""),
+  });
+
+  describe("when query params match the schema", () => {
+    it("calls next()", () => {
+      const req = createMockReqWithQuery({ page: "2", limit: "25", search: "test" });
+      const res = createMockRes();
+      const next = vi.fn();
+
+      validateQuery(querySchema)(req, res, next);
+
+      expect(next).toHaveBeenCalledOnce();
+      expect(res.status).not.toHaveBeenCalled();
+    });
+
+    it("replaces req.query with parsed and coerced data", () => {
+      const req = createMockReqWithQuery({ page: "3", limit: "10" });
+      const res = createMockRes();
+      const next = vi.fn();
+
+      validateQuery(querySchema)(req, res, next);
+
+      expect(req.query).toEqual({ page: 3, limit: 10, search: "" });
+    });
+
+    it("applies defaults for missing optional fields", () => {
+      const req = createMockReqWithQuery({});
+      const res = createMockRes();
+      const next = vi.fn();
+
+      validateQuery(querySchema)(req, res, next);
+
+      expect(next).toHaveBeenCalledOnce();
+      expect(req.query).toEqual({ page: 1, limit: 50, search: "" });
+    });
+  });
+
+  describe("when query params fail validation", () => {
+    it("returns 400 for invalid values", () => {
+      const req = createMockReqWithQuery({ page: "0" }); // min is 1
+      const res = createMockRes();
+      const next = vi.fn();
+
+      validateQuery(querySchema)(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it("returns 400 when limit exceeds max", () => {
+      const req = createMockReqWithQuery({ limit: "999" });
+      const res = createMockRes();
+      const next = vi.fn();
+
+      validateQuery(querySchema)(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it("returns an error message in the response", () => {
+      const req = createMockReqWithQuery({ page: "abc" }); // NaN after coerce
+      const res = createMockRes();
+      const next = vi.fn();
+
+      validateQuery(querySchema)(req, res, next);
+
+      const jsonArg = res.json.mock.calls[0][0];
+      expect(jsonArg).toHaveProperty("error");
+      expect(typeof jsonArg.error).toBe("string");
     });
   });
 });

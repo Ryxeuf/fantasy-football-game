@@ -3,13 +3,23 @@ import { prisma } from "../prisma";
 import { authUser } from "../middleware/authUser";
 import { adminOnly } from "../middleware/adminOnly";
 import { normalizeRoles } from "../utils/roles";
+import { validate, validateQuery } from "../middleware/validate";
+import {
+  adminUsersQuerySchema,
+  adminMatchesQuerySchema,
+  adminTeamsQuerySchema,
+  updateUserRoleSchema,
+  updateUserPatreonSchema,
+  updateUserValidSchema,
+  updateMatchStatusSchema,
+} from "../schemas/admin.schemas";
 
 const router = Router();
 
 router.use(authUser, adminOnly);
 
 // Route améliorée pour lister les utilisateurs avec statistiques
-router.get("/users", async (req, res) => {
+router.get("/users", validateQuery(adminUsersQuerySchema), async (req, res) => {
   try {
     const {
       search = "",
@@ -168,10 +178,10 @@ router.get("/users/:id", async (req, res) => {
 });
 
 // Route pour modifier le rôle d'un utilisateur
-router.patch("/users/:id/role", async (req, res) => {
+router.patch("/users/:id/role", validate(updateUserRoleSchema), async (req, res) => {
   try {
     const { id } = req.params;
-    const { role, roles } = req.body ?? {};
+    const { role, roles } = req.body;
 
     const rolesArray: string[] = Array.isArray(roles)
       ? roles
@@ -225,14 +235,10 @@ router.patch("/users/:id/role", async (req, res) => {
 });
 
 // Route pour modifier le statut Patreon d'un utilisateur
-router.patch("/users/:id/patreon", async (req, res) => {
+router.patch("/users/:id/patreon", validate(updateUserPatreonSchema), async (req, res) => {
   try {
     const { id } = req.params;
     const { patreon } = req.body;
-
-    if (typeof patreon !== "boolean") {
-      return res.status(400).json({ error: "Valeur Patreon invalide" });
-    }
 
     const user = await prisma.user.update({
       where: { id },
@@ -251,14 +257,10 @@ router.patch("/users/:id/patreon", async (req, res) => {
 });
 
 // Route pour modifier le statut de validation d'un utilisateur
-router.patch("/users/:id/valid", async (req, res) => {
+router.patch("/users/:id/valid", validate(updateUserValidSchema), async (req, res) => {
   try {
     const { id } = req.params;
     const { valid } = req.body;
-
-    if (typeof valid !== "boolean") {
-      return res.status(400).json({ error: "Valeur valid invalide" });
-    }
 
     const user = await prisma.user.update({
       where: { id },
@@ -300,7 +302,7 @@ router.delete("/users/:id", async (req, res) => {
   }
 });
 
-router.get("/matches", async (req, res) => {
+router.get("/matches", validateQuery(adminMatchesQuerySchema), async (req, res) => {
   try {
     const {
       limit,
@@ -451,15 +453,10 @@ router.get("/matches/:id", async (req, res) => {
 });
 
 // Modifier le statut d'un match
-router.patch("/matches/:id/status", async (req, res) => {
+router.patch("/matches/:id/status", validate(updateMatchStatusSchema), async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body ?? {};
-
-    const allowedStatuses = ["pending", "prematch", "prematch-setup", "active", "ended", "cancelled"];
-    if (!status || !allowedStatuses.includes(status)) {
-      return res.status(400).json({ error: "Statut invalide" });
-    }
+    const { status } = req.body;
 
     const match = await prisma.match.update({
       where: { id },
@@ -641,7 +638,7 @@ router.get("/stats", async (_req, res) => {
 // =============================================================================
 
 // Route pour lister toutes les équipes avec filtres et pagination
-router.get("/teams", async (req, res) => {
+router.get("/teams", validateQuery(adminTeamsQuerySchema), async (req, res) => {
   try {
     const {
       search = "",

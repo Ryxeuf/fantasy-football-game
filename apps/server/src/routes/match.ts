@@ -13,6 +13,9 @@ import {
   joinMatchSchema,
   acceptMatchSchema,
   moveSchema,
+  createMatchSchema,
+  validateSetupSchema,
+  placeKickoffBallSchema,
 } from "../schemas/match.schemas";
 import { getSpectatorCount } from "../game-spectator";
 import { MATCH_SECRET } from "../config";
@@ -21,7 +24,7 @@ const router = Router();
 const ALLOWED_TEAMS = ["skaven", "lizardmen"] as const;
 
 // Créer une partie, le créateur reçoit un token de match
-router.post("/create", authUser, async (req: AuthenticatedRequest, res) => {
+router.post("/create", authUser, validate(createMatchSchema), async (req: AuthenticatedRequest, res) => {
   try {
     const { terrainSkin, turnTimerEnabled } = req.body || {};
     const seed = `match-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -701,16 +704,11 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
 router.post(
   "/:id/validate-setup",
   authUser,
+  validate(validateSetupSchema),
   async (req: AuthenticatedRequest, res) => {
     try {
       const matchId = req.params.id;
       const { placedPlayers, playerPositions } = req.body;
-
-      if (!placedPlayers || !playerPositions) {
-        return res
-          .status(400)
-          .json({ error: "placedPlayers et playerPositions requis" });
-      }
 
       // Vérifier que le match existe et est en phase setup
       const match = await prisma.match.findUnique({
@@ -869,14 +867,11 @@ router.post(
 router.post(
   "/:id/place-kickoff-ball",
   authUser,
+  validate(placeKickoffBallSchema),
   async (req: AuthenticatedRequest, res) => {
     try {
       const matchId = req.params.id;
       const { position } = req.body;
-
-      if (!position || typeof position.x !== "number" || typeof position.y !== "number") {
-        return res.status(400).json({ error: "Position requise" });
-      }
 
       // Vérifier que le match existe et est en phase kickoff-sequence
       const match = await prisma.match.findUnique({

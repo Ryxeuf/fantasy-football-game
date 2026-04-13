@@ -8,6 +8,13 @@ import {
 } from "../cupScoring";
 import { hasRole } from "../utils/roles";
 import { resolveRuleset } from "../utils/ruleset-helpers";
+import { validate } from "../middleware/validate";
+import {
+  createCupSchema,
+  registerCupSchema,
+  unregisterCupSchema,
+  updateCupStatusSchema,
+} from "../schemas/cup.schemas";
 
 const router = Router();
 
@@ -411,9 +418,9 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
 });
 
 // POST /cup - Créer une nouvelle coupe
-router.post("/", authUser, async (req: AuthenticatedRequest, res) => {
-  const body = (req.body ?? {}) as {
-    name?: string;
+router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedRequest, res) => {
+  const body = req.body as {
+    name: string;
     isPublic?: boolean;
     ruleset?: string;
     scoringConfig?: Partial<{
@@ -426,7 +433,6 @@ router.post("/", authUser, async (req: AuthenticatedRequest, res) => {
       foulCasualtyPoints: number;
       passPoints: number;
     }>;
-    // Compatibilité : on accepte aussi les champs à plat
     winPoints?: number;
     drawPoints?: number;
     lossPoints?: number;
@@ -439,16 +445,6 @@ router.post("/", authUser, async (req: AuthenticatedRequest, res) => {
 
   const { name, isPublic } = body;
   const ruleset = resolveRuleset(body.ruleset);
-
-  if (!name || typeof name !== "string" || name.trim() === "") {
-    return res.status(400).json({ error: "Le nom de la coupe est requis" });
-  }
-
-  if (name.trim().length > 100) {
-    return res
-      .status(400)
-      .json({ error: "Le nom de la coupe ne peut pas dépasser 100 caractères" });
-  }
 
   // Par défaut, la coupe est publique
   const cupIsPublic = isPublic !== undefined ? Boolean(isPublic) : true;
@@ -569,13 +565,10 @@ router.post("/", authUser, async (req: AuthenticatedRequest, res) => {
 router.post(
   "/:id/register",
   authUser,
+  validate(registerCupSchema),
   async (req: AuthenticatedRequest, res) => {
     const cupId = req.params.id;
-    const { teamId } = req.body ?? ({} as { teamId?: string });
-
-    if (!teamId || typeof teamId !== "string") {
-      return res.status(400).json({ error: "teamId requis" });
-    }
+    const { teamId } = req.body;
 
     try {
       // Vérifier que la coupe existe
@@ -701,15 +694,12 @@ router.post(
 router.post(
   "/:id/unregister",
   authUser,
+  validate(unregisterCupSchema),
   async (req: AuthenticatedRequest, res) => {
     const cupId = req.params.id;
-    const { teamId, force } = req.body ?? ({} as { teamId?: string; force?: boolean });
+    const { teamId, force } = req.body;
     const isAdmin = hasRole(req.user!.roles, "admin");
     const forceRemove = force === true && isAdmin;
-
-    if (!teamId || typeof teamId !== "string") {
-      return res.status(400).json({ error: "teamId requis" });
-    }
 
     try {
       // Vérifier que la coupe existe
@@ -914,16 +904,10 @@ router.post(
 router.post(
   "/:id/status",
   authUser,
+  validate(updateCupStatusSchema),
   async (req: AuthenticatedRequest, res) => {
     const cupId = req.params.id;
-    const { status } = req.body ?? ({} as { status?: string });
-
-    const validStatuses = ["ouverte", "en_cours", "terminee", "archivee"];
-    if (!status || !validStatuses.includes(status)) {
-      return res.status(400).json({ 
-        error: `Statut invalide. Statuts valides: ${validStatuses.join(", ")}` 
-      });
-    }
+    const { status } = req.body;
 
     try {
       // Vérifier que la coupe existe et que l'utilisateur est le créateur

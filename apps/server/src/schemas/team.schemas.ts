@@ -55,3 +55,21 @@ export const purchaseSchema = z.object({
   name: z.string().max(100).optional(),
   number: z.number().int().min(1).max(99).optional(),
 });
+
+export const addPlayerSchema = z.object({
+  position: z.string().min(1, "position requis"),
+  name: z.string().min(1, "name requis").max(100),
+  number: z.number().int().min(1, "Le numero doit etre entre 1 et 99").max(99, "Le numero doit etre entre 1 et 99"),
+});
+
+const validAdvancementTypes = ["primary", "secondary", "random-primary", "random-secondary"] as const;
+
+export const updatePlayerSkillsSchema = z.object({
+  skillSlug: z.string().optional(),
+  advancementType: z.enum(validAdvancementTypes, { message: "advancementType est requis" }),
+  skillCategory: z.string().optional(),
+});
+
+export const addStarPlayerToTeamSchema = z.object({
+  starPlayerSlug: z.string().min(1, "starPlayerSlug requis"),
+});

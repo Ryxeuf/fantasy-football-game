@@ -25,6 +25,17 @@ import { persistMatchSPP } from "../services/spp-tracking";
 import { persistPlayerDeaths } from "../services/player-death";
 import { persistPermanentInjuries } from "../services/permanent-injuries";
 import { getLinemanStats } from "../services/journeymen";
+import { validate, validateQuery } from "../middleware/validate";
+import {
+  localMatchListQuerySchema,
+  createLocalMatchSchema,
+  updateLocalMatchStateSchema,
+  completeLocalMatchSchema,
+  updateLocalMatchStatusSchema,
+  createLocalMatchActionSchema,
+  validateShareTokenSchema,
+  localMatchInducementsSchema,
+} from "../schemas/local-match.schemas";
 
 const router = Router();
 
@@ -32,7 +43,7 @@ const router = Router();
 // - Par défaut : uniquement ses propres matchs (créateur ou propriétaire d'une des équipes)
 // - scope=mine_and_public : ses matchs + les matchs publics
 // - Si l'utilisateur est créateur d'une coupe et cupId fourni : il voit tous les matchs de cette coupe
-router.get("/", authUser, async (req: AuthenticatedRequest, res) => {
+router.get("/", authUser, validateQuery(localMatchListQuerySchema), async (req: AuthenticatedRequest, res) => {
   try {
     const { status, cupId, all, scope } = req.query;
     const isAdmin = hasRole(req.user!.roles, "admin");
@@ -233,13 +244,9 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
 });
 
 // POST /local-match - Créer une nouvelle partie offline
-router.post("/", authUser, async (req: AuthenticatedRequest, res) => {
+router.post("/", authUser, validate(createLocalMatchSchema), async (req: AuthenticatedRequest, res) => {
   try {
     const { name, teamAId, teamBId, cupId, isPublic } = req.body;
-    
-    if (!teamAId) {
-      return res.status(400).json({ error: "teamAId est requis" });
-    }
     
     // Si une coupe est fournie, teamBId est requis
     if (cupId && !teamBId) {
@@ -577,7 +584,7 @@ router.post("/:id/start", authUser, async (req: AuthenticatedRequest, res) => {
 });
 
 // POST /local-match/:id/inducements - Soumettre les sélections d'inducements
-router.post("/:id/inducements", authUser, async (req: AuthenticatedRequest, res) => {
+router.post("/:id/inducements", authUser, validate(localMatchInducementsSchema), async (req: AuthenticatedRequest, res) => {
   try {
     const localMatch = await prisma.localMatch.findUnique({
       where: { id: req.params.id },
@@ -765,13 +772,9 @@ router.get("/:id/inducements-info", authUser, async (req: AuthenticatedRequest, 
 });
 
 // PUT /local-match/:id/state - Sauvegarder l'état du jeu
-router.put("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
+router.put("/:id/state", authUser, validate(updateLocalMatchStateSchema), async (req: AuthenticatedRequest, res) => {
   try {
     const { gameState, scoreTeamA, scoreTeamB } = req.body;
-    
-    if (!gameState) {
-      return res.status(400).json({ error: "gameState est requis" });
-    }
     
     const localMatch = await prisma.localMatch.findUnique({
       where: { id: req.params.id },
@@ -827,13 +830,9 @@ router.put("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
 });
 
 // POST /local-match/:id/complete - Terminer une partie offline
-router.post("/:id/complete", authUser, async (req: AuthenticatedRequest, res) => {
+router.post("/:id/complete", authUser, validate(completeLocalMatchSchema), async (req: AuthenticatedRequest, res) => {
   try {
     const { scoreTeamA, scoreTeamB } = req.body;
-    
-    if (scoreTeamA === undefined || scoreTeamB === undefined) {
-      return res.status(400).json({ error: "scoreTeamA et scoreTeamB sont requis" });
-    }
     
     const localMatch = await prisma.localMatch.findUnique({
       where: { id: req.params.id },
@@ -956,18 +955,9 @@ router.post("/:id/complete", authUser, async (req: AuthenticatedRequest, res) =>
 });
 
 // PATCH /local-match/:id/status - Changer le statut d'un match (admin uniquement)
-router.patch("/:id/status", authUser, async (req: AuthenticatedRequest, res) => {
+router.patch("/:id/status", authUser, validate(updateLocalMatchStatusSchema), async (req: AuthenticatedRequest, res) => {
   try {
     const { status } = req.body;
-    
-    if (!status) {
-      return res.status(400).json({ error: "Le statut est requis" });
-    }
-    
-    const validStatuses = ["pending", "waiting_for_player", "in_progress", "completed", "cancelled"];
-    if (!validStatuses.includes(status)) {
-      return res.status(400).json({ error: `Statut invalide. Doit être l'un de: ${validStatuses.join(", ")}` });
-    }
     
     const isAdmin = hasRole(req.user!.roles, "admin");
     if (!isAdmin) {
@@ -1135,44 +1125,12 @@ router.get("/:id/actions", authUser, async (req: AuthenticatedRequest, res) => {
 });
 
 // POST /local-match/:id/actions - Créer une nouvelle action
-router.post("/:id/actions", authUser, async (req: AuthenticatedRequest, res) => {
+router.post("/:id/actions", authUser, validate(createLocalMatchActionSchema), async (req: AuthenticatedRequest, res) => {
   try {
     const { half, turn, actionType, playerId, playerName, playerTeam, opponentId, opponentName, diceResult, fumble, armorBroken, opponentState, passType, playerState } = req.body;
-    
-    // Validation
-    if (!half || !turn || !actionType || !playerId || !playerName || !playerTeam) {
-      return res.status(400).json({ error: "Paramètres manquants" });
-    }
-    
-    if (half < 1 || half > 2) {
-      return res.status(400).json({ error: "La mi-temps doit être 1 ou 2" });
-    }
-    
-    if (turn < 1 || turn > 8) {
-      return res.status(400).json({ error: "Le tour doit être entre 1 et 8" });
-    }
-    
-    const validActionTypes = ["passe", "reception", "td", "blocage", "blitz", "transmission", "aggression", "sprint", "esquive", "apothicaire", "interception"];
-    if (!validActionTypes.includes(actionType)) {
-      return res.status(400).json({ error: `Type d'action invalide. Doit être l'un de: ${validActionTypes.join(", ")}` });
-    }
-    
-    if (!["A", "B"].includes(playerTeam)) {
-      return res.status(400).json({ error: "L'équipe du joueur doit être A ou B" });
-    }
-    
-    // Validation du résultat du dé si fourni (2D6 = 2 à 12, mais on accepte n'importe quel nombre)
-    if (diceResult !== undefined && diceResult !== null) {
-      if (typeof diceResult !== "number" || diceResult < 1) {
-        return res.status(400).json({ error: "Le résultat du dé doit être un nombre positif" });
-      }
-    }
-    
-    // Validation des champs spécifiques pour blitz et blocage
+
+    // Cross-field validation for blitz/blocage
     if (["blitz", "blocage"].includes(actionType)) {
-      if (armorBroken !== undefined && typeof armorBroken !== "boolean") {
-        return res.status(400).json({ error: "armorBroken doit être un booléen" });
-      }
       if (armorBroken === true && opponentState) {
         const validStates = ["sonne", "ko", "elimine"];
         if (!validStates.includes(opponentState)) {
@@ -1180,17 +1138,8 @@ router.post("/:id/actions", authUser, async (req: AuthenticatedRequest, res) => 
         }
       }
     }
-    
-    // Validation du type de passe
-    if (actionType === "passe" && passType) {
-      const validPassTypes = ["rapide", "courte", "longue", "longue_bombe"];
-      if (!validPassTypes.includes(passType)) {
-        return res.status(400).json({ error: `passType invalide. Doit être l'un de: ${validPassTypes.join(", ")}` });
-      }
-    }
-    
-    // Validation de l'état du joueur en cas d'échec
-    // Sauf pour passe, transmission, réception, apothicaire, interception
+
+    // Cross-field validation for fumble + playerState
     const actionsWithoutPlayerState = ["passe", "transmission", "reception", "apothicaire", "interception"];
     if (fumble === true && !actionsWithoutPlayerState.includes(actionType) && playerState) {
       const validPlayerStates = ["sonne", "ko", "elimine"];
@@ -1368,7 +1317,7 @@ router.get("/share/:token", async (req, res) => {
 });
 
 // POST /local-match/share/:token/validate - Valider la participation d'un joueur via le lien de partage
-router.post("/share/:token/validate", authUser, async (req: AuthenticatedRequest, res) => {
+router.post("/share/:token/validate", authUser, validate(validateShareTokenSchema), async (req: AuthenticatedRequest, res) => {
   try {
     const { token } = req.params;
     const { teamBId } = req.body; // Optionnel : équipe du second joueur si teamBId était null
