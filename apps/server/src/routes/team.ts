@@ -36,6 +36,9 @@ import {
   updateTeamSchema,
   updateTeamInfoSchema,
   purchaseSchema,
+  addPlayerSchema,
+  updatePlayerSkillsSchema,
+  addStarPlayerToTeamSchema,
 } from "../schemas/team.schemas";
 import { chooseTeamSchema } from "../schemas/match.schemas";
 
@@ -1005,17 +1008,9 @@ router.put("/:id", authUser, validate(updateTeamSchema), async (req: Authenticat
 });
 
 // Endpoint pour ajouter un joueur à une équipe
-router.post("/:id/players", authUser, async (req: AuthenticatedRequest, res) => {
+router.post("/:id/players", authUser, validate(addPlayerSchema), async (req: AuthenticatedRequest, res) => {
   const teamId = req.params.id;
-  const { position, name, number } = req.body ?? ({} as { 
-    position?: string; 
-    name?: string; 
-    number?: number; 
-  });
-
-  if (!position || !name || !number) {
-    return res.status(400).json({ error: "position, name et number requis" });
-  }
+  const { position, name, number } = req.body;
 
   try {
     // Vérifier que l'équipe appartient à l'utilisateur
@@ -1212,7 +1207,7 @@ router.delete("/:id/players/:playerId", authUser, async (req: AuthenticatedReque
 });
 
 // Endpoint pour ajouter une compétence à un joueur (level-up avec validation SPP)
-router.put("/:id/players/:playerId/skills", authUser, async (req: AuthenticatedRequest, res) => {
+router.put("/:id/players/:playerId/skills", authUser, validate(updatePlayerSkillsSchema), async (req: AuthenticatedRequest, res) => {
   const teamId = req.params.id;
   const playerId = req.params.playerId;
   const { skillSlug: clientSkillSlug, advancementType, skillCategory } = req.body as {
@@ -1222,16 +1217,6 @@ router.put("/:id/players/:playerId/skills", authUser, async (req: AuthenticatedR
   };
 
   try {
-    // Validate advancement type
-    if (!advancementType) {
-      return res.status(400).json({ error: "advancementType est requis" });
-    }
-
-    const validAdvTypes: AdvancementType[] = ['primary', 'secondary', 'random-primary', 'random-secondary'];
-    if (!validAdvTypes.includes(advancementType)) {
-      return res.status(400).json({ error: "Type d'avancement invalide" });
-    }
-
     const isRandom = advancementType === 'random-primary' || advancementType === 'random-secondary';
 
     // For chosen types, skillSlug is required; for random, skillCategory is required
@@ -1587,13 +1572,9 @@ router.get("/:id/available-star-players", authUser, async (req: AuthenticatedReq
 });
 
 // Endpoint pour recruter un Star Player
-router.post("/:id/star-players", authUser, async (req: AuthenticatedRequest, res) => {
+router.post("/:id/star-players", authUser, validate(addStarPlayerToTeamSchema), async (req: AuthenticatedRequest, res) => {
   const teamId = req.params.id;
-  const { starPlayerSlug } = req.body ?? ({} as { starPlayerSlug?: string });
-
-  if (!starPlayerSlug) {
-    return res.status(400).json({ error: "starPlayerSlug requis" });
-  }
+  const { starPlayerSlug } = req.body;
 
   try {
     // Vérifier que l'équipe appartient à l'utilisateur

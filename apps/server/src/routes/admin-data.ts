@@ -11,6 +11,23 @@ import { prisma } from "../prisma";
 import { adminOnly } from "../middleware/adminOnly";
 import { authUser } from "../middleware/authUser";
 import { resolveRuleset } from "../utils/ruleset-helpers";
+import { validate, validateQuery } from "../middleware/validate";
+import {
+  adminSkillsQuerySchema,
+  adminRostersQuerySchema,
+  adminPositionsQuerySchema,
+  adminStarPlayersQuerySchema,
+  createSkillSchema,
+  updateSkillSchema,
+  duplicateToRulesetSchema,
+  createRosterSchema,
+  updateRosterSchema,
+  createPositionSchema,
+  updatePositionSchema,
+  duplicatePositionSchema,
+  createStarPlayerDataSchema,
+  updateStarPlayerDataSchema,
+} from "../schemas/admin-data.schemas";
 
 const router = Router();
 
@@ -20,7 +37,7 @@ router.use(authUser, adminOnly);
 // SKILLS (Compétences)
 // =============================================================================
 
-router.get("/skills", async (req, res) => {
+router.get("/skills", validateQuery(adminSkillsQuerySchema), async (req, res) => {
   try {
     const { category, search, ruleset } = req.query;
     const where: any = {};
@@ -75,13 +92,9 @@ router.get("/skills/:id", async (req, res) => {
   }
 });
 
-router.post("/skills", async (req, res) => {
+router.post("/skills", validate(createSkillSchema), async (req, res) => {
   try {
     const { slug, nameFr, nameEn, description, descriptionEn, category, ruleset: rawRuleset } = req.body;
-    
-    if (!slug || !nameFr || !nameEn || !description || !category) {
-      return res.status(400).json({ error: "Tous les champs sont requis" });
-    }
 
     const ruleset = resolveRuleset(rawRuleset);
 
@@ -98,7 +111,7 @@ router.post("/skills", async (req, res) => {
   }
 });
 
-router.put("/skills/:id", async (req, res) => {
+router.put("/skills/:id", validate(updateSkillSchema), async (req, res) => {
   try {
     const { nameFr, nameEn, description, descriptionEn, category, ruleset: rawRuleset, isElite, isPassive, isModified } = req.body;
     
@@ -142,7 +155,7 @@ router.put("/skills/:id", async (req, res) => {
   }
 });
 
-router.post("/skills/:id/duplicate", async (req, res) => {
+router.post("/skills/:id/duplicate", validate(duplicateToRulesetSchema), async (req, res) => {
   try {
     const sourceSkill = await prisma.skill.findUnique({
       where: { id: req.params.id },
@@ -214,7 +227,7 @@ router.delete("/skills/:id", async (req, res) => {
 // ROSTERS (Équipes)
 // =============================================================================
 
-router.get("/rosters", async (req, res) => {
+router.get("/rosters", validateQuery(adminRostersQuerySchema), async (req, res) => {
   try {
     const { ruleset } = req.query;
     const where: any = {};
@@ -306,7 +319,7 @@ router.get("/rosters/:id", async (req, res) => {
   }
 });
 
-router.post("/rosters", async (req, res) => {
+router.post("/rosters", validate(createRosterSchema), async (req, res) => {
   try {
     const {
       slug,
@@ -321,10 +334,6 @@ router.post("/rosters", async (req, res) => {
       naf,
       ruleset: rawRuleset,
     } = req.body;
-    
-    if (!slug || !name || !nameEn || budget === undefined || !tier) {
-      return res.status(400).json({ error: "Tous les champs sont requis (slug, name, nameEn, budget, tier)" });
-    }
 
     const ruleset = resolveRuleset(rawRuleset);
     const regionalRulesJson = regionalRules ? JSON.stringify(regionalRules) : null;
@@ -354,7 +363,7 @@ router.post("/rosters", async (req, res) => {
   }
 });
 
-router.put("/rosters/:id", async (req, res) => {
+router.put("/rosters/:id", validate(updateRosterSchema), async (req, res) => {
   try {
     const {
       name,
@@ -368,10 +377,6 @@ router.put("/rosters/:id", async (req, res) => {
       naf,
       ruleset: rawRuleset,
     } = req.body;
-    
-    if (!name || !nameEn) {
-      return res.status(400).json({ error: "Les champs name et nameEn sont requis" });
-    }
     
     const regionalRulesJson = regionalRules ? JSON.stringify(regionalRules) : null;
     const data: any = {
@@ -407,7 +412,7 @@ router.put("/rosters/:id", async (req, res) => {
   }
 });
 
-router.post("/rosters/:id/duplicate", async (req, res) => {
+router.post("/rosters/:id/duplicate", validate(duplicateToRulesetSchema), async (req, res) => {
   try {
     const sourceRoster = await prisma.roster.findUnique({
       where: { id: req.params.id },
@@ -519,7 +524,7 @@ router.delete("/rosters/:id", async (req, res) => {
 // POSITIONS
 // =============================================================================
 
-router.get("/positions", async (req, res) => {
+router.get("/positions", validateQuery(adminPositionsQuerySchema), async (req, res) => {
   try {
     const { rosterId, ruleset } = req.query;
     const where: any = {};
@@ -588,15 +593,9 @@ router.get("/positions/:id", async (req, res) => {
   }
 });
 
-router.post("/positions", async (req, res) => {
+router.post("/positions", validate(createPositionSchema), async (req, res) => {
   try {
     const { rosterId, slug, displayName, cost, min, max, ma, st, ag, pa, av, keywords, skillSlugs } = req.body;
-    
-    if (!rosterId || !slug || !displayName || cost === undefined || min === undefined || 
-        max === undefined || ma === undefined || st === undefined || ag === undefined || 
-        pa === undefined || av === undefined) {
-      return res.status(400).json({ error: "Tous les champs sont requis" });
-    }
 
     const position = await prisma.position.create({
       data: {
@@ -636,7 +635,7 @@ router.post("/positions", async (req, res) => {
   }
 });
 
-router.put("/positions/:id", async (req, res) => {
+router.put("/positions/:id", validate(updatePositionSchema), async (req, res) => {
   try {
     const { displayName, cost, min, max, ma, st, ag, pa, av, keywords, skillSlugs } = req.body;
     
@@ -683,7 +682,7 @@ router.put("/positions/:id", async (req, res) => {
   }
 });
 
-router.post("/positions/:id/duplicate", async (req, res) => {
+router.post("/positions/:id/duplicate", validate(duplicatePositionSchema), async (req, res) => {
   try {
     const sourcePosition = await prisma.position.findUnique({
       where: { id: req.params.id },
@@ -700,10 +699,6 @@ router.post("/positions/:id/duplicate", async (req, res) => {
     }
 
     const { targetRosterId } = req.body;
-
-    if (!targetRosterId) {
-      return res.status(400).json({ error: "Le roster cible est requis" });
-    }
 
     // Vérifier que le roster cible existe
     const targetRoster = await prisma.roster.findUnique({
@@ -781,7 +776,7 @@ router.delete("/positions/:id", async (req, res) => {
 // STAR PLAYERS
 // =============================================================================
 
-router.get("/star-players", async (req, res) => {
+router.get("/star-players", validateQuery(adminStarPlayersQuerySchema), async (req, res) => {
   try {
     const { search } = req.query;
     const where: any = {};
@@ -835,14 +830,9 @@ router.get("/star-players/:id", async (req, res) => {
   }
 });
 
-router.post("/star-players", async (req, res) => {
+router.post("/star-players", validate(createStarPlayerDataSchema), async (req, res) => {
   try {
     const { slug, displayName, cost, ma, st, ag, pa, av, specialRule, imageUrl, skillSlugs, hirableBy } = req.body;
-    
-    if (!slug || !displayName || cost === undefined || ma === undefined || 
-        st === undefined || ag === undefined || av === undefined) {
-      return res.status(400).json({ error: "Tous les champs requis sont manquants" });
-    }
 
     const starPlayer = await prisma.starPlayer.create({
       data: {
@@ -891,7 +881,7 @@ router.post("/star-players", async (req, res) => {
   }
 });
 
-router.put("/star-players/:id", async (req, res) => {
+router.put("/star-players/:id", validate(updateStarPlayerDataSchema), async (req, res) => {
   try {
     const { displayName, cost, ma, st, ag, pa, av, specialRule, imageUrl, skillSlugs, hirableBy } = req.body;
     
