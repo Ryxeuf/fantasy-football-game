@@ -69,6 +69,7 @@ services:
       - API_PORT=8201
       - DATABASE_URL=postgresql://bb_user:bb_pass@db:5432/bb_db?schema=public
       - CORS_ORIGINS=https://nufflearena.fr,http://localhost:3100
+      - RATE_LIMIT_WHITELIST=82.67.200.127
     volumes:
       - .:/app
     working_dir: /app/apps/server

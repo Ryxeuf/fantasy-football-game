@@ -48,6 +48,8 @@ const API_PORT = parseInt(process.env.API_PORT || "8201", 10);
 
 // Serveur Express API
 const app = express();
+// Trust le premier proxy (Traefik) pour obtenir la vraie IP client via X-Forwarded-For
+app.set("trust proxy", 1);
 app.use(cors({ origin: CORS_ORIGINS }));
 app.use(bodyParser.json());
 
