@@ -32,7 +32,7 @@ router.get("/", async (req, res) => {
       prisma.user.count(),
     ]);
 
-    const leaderboard = users.map((user, index) => ({
+    const leaderboard = users.map((user: typeof users[number], index: number) => ({
       rank: offset + index + 1,
       userId: user.id,
       coachName: user.coachName,

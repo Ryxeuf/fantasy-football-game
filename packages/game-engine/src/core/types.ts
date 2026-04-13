@@ -2,6 +2,8 @@
  * Types et interfaces pour le moteur de jeu Blood Bowl
  */
 
+import type { PreMatchState } from './game-state';
+
 export type TeamId = 'A' | 'B';
 
 export interface Position {
@@ -244,6 +246,8 @@ export interface GameState {
   hypnotizedPlayers?: string[];
   // Condition météo active pour ce match (persistée depuis le pré-match)
   weatherCondition?: { condition: string; description: string };
+  // État pré-match (setup, kickoff, inducements, etc.)
+  preMatch?: PreMatchState;
 }
 
 export interface DiceResult {

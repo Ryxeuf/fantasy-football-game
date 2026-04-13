@@ -95,8 +95,8 @@ function InducementsPhaseUI({
   const myTeamName = myTeamSide === "A" ? state.teamNames.teamA : state.teamNames.teamB;
   // Budget info from preMatch state (petty cash computed server-side during pre-match sequence)
   const myBudget = myTeamSide === "A"
-    ? (state.preMatch?.pettyCash?.teamA ?? 0)
-    : (state.preMatch?.pettyCash?.teamB ?? 0);
+    ? (state.preMatch?.inducements?.teamA?.pettyCash ?? 0)
+    : (state.preMatch?.inducements?.teamB?.pettyCash ?? 0);
 
   const handleConfirm = useCallback((selection: InducementSelection) => {
     if (!gameSocket || submitting || submitted) return;

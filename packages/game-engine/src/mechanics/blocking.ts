@@ -47,7 +47,7 @@ export function applyChainPush(
       undefined,
       pushed.team === 'A' ? 'B' : 'A'
     );
-    let newState = { ...state, gameLog: [...state.gameLog, surfLog] };
+    const newState = { ...state, gameLog: [...state.gameLog, surfLog] };
     if (pushed.hasBall) {
       newState.players = newState.players.map(p =>
         p.id === pushedPlayerId ? { ...p, hasBall: false } : p
@@ -520,7 +520,7 @@ export function handlePushWithChoice(
       y: target.pos.y + pushDirection.y,
     };
 
-    let newState = applyChainPush(state, target.id, pushDirection, rng);
+    const newState = applyChainPush(state, target.id, pushDirection, rng);
 
     // Demander confirmation pour le follow-up
     newState.pendingFollowUpChoice = {
