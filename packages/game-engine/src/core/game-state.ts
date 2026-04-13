@@ -3,67 +3,18 @@
  * Gère les tours, les mi-temps, les actions des joueurs et les compteurs
  */
 
-import { GameState, TeamId, ActionType, Player, Position, RNG } from './types';
+import { GameState, PreMatchState, TeamId, ActionType, Player, Position, RNG } from './types';
 import { createLogEntry } from '../utils/logging';
 import { checkTouchdowns } from '../mechanics/ball';
 import { initializeDugouts } from '../mechanics/dugout';
 import { rollKickoffEvent, applyKickoffEvent } from '../mechanics/kickoff-events';
 import { calculateMatchWinnings } from '../utils/team-value-calculator';
 import { FULL_RULES } from './rules-config';
-import type { PurchasedInducement } from './inducements';
 import { expelSecretWeapons } from '../mechanics/secret-weapons';
 import { getWeatherModifiers, applyWeatherDriveEffects } from '../mechanics/weather-effects';
 import { getWeatherCondition, type WeatherType } from './weather-types';
 
-// Étendre GameState pour pré-match
-export interface PreMatchState {
-  phase: 'idle' | 'fans' | 'weather' | 'journeymen' | 'inducements' | 'prayers' | 'kicking-team' | 'setup' | 'kickoff' | 'kickoff-sequence';
-  currentCoach: TeamId;
-  legalSetupPositions: Position[];
-  placedPlayers: string[]; // IDs des joueurs placés
-  kickingTeam: TeamId;
-  receivingTeam: TeamId;
-  
-  // Phase des fans dévoués
-  fanFactor?: {
-    teamA: { d3: number; dedicatedFans: number; total: number };
-    teamB: { d3: number; dedicatedFans: number; total: number };
-  };
-  
-  // Phase météo
-  weatherType?: string; // Type de météo choisi (classique, printaniere, etc.)
-  weather?: {
-    total: number;
-    condition: string;
-    description: string;
-  };
-  
-  // Phase joueurs de passage
-  journeymen?: {
-    teamA: { count: number; players: string[] };
-    teamB: { count: number; players: string[] };
-  };
-  
-  // Phase incitations
-  inducements?: {
-    teamA: { pettyCash: number; treasurySpent: number; items: PurchasedInducement[] };
-    teamB: { pettyCash: number; treasurySpent: number; items: PurchasedInducement[] };
-  };
-  
-  // Phase prières à Nuffle
-  prayers?: {
-    underdogTeam: TeamId;
-    ctvDifference: number;
-    rolls: { dice: number; result: string; description: string }[];
-  };
-  
-  // Nouvelles propriétés pour la séquence de kickoff
-  kickoffStep?: 'place-ball' | 'kick-deviation' | 'kickoff-event';
-  ballPosition?: Position | null; // Position initiale du ballon
-  kickDeviation?: { d8: number; d6: number; direction: string } | null;
-  kickoffEvent?: { dice: number; event: string; description: string } | null;
-  finalBallPosition?: Position; // Position finale du ballon après déviation
-}
+export type { PreMatchState };
 
 export interface ExtendedGameState extends GameState {
   preMatch: PreMatchState;

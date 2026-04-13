@@ -2,8 +2,6 @@
  * Types et interfaces pour le moteur de jeu Blood Bowl
  */
 
-import type { PreMatchState } from './game-state';
-
 export type TeamId = 'A' | 'B';
 
 export interface Position {
@@ -248,6 +246,44 @@ export interface GameState {
   weatherCondition?: { condition: string; description: string };
   // État pré-match (setup, kickoff, inducements, etc.)
   preMatch?: PreMatchState;
+}
+
+/** État de la séquence pré-match (fans, météo, journeymen, inducements, kickoff) */
+export interface PreMatchState {
+  phase: 'idle' | 'fans' | 'weather' | 'journeymen' | 'inducements' | 'prayers' | 'kicking-team' | 'setup' | 'kickoff' | 'kickoff-sequence';
+  currentCoach: TeamId;
+  legalSetupPositions: Position[];
+  placedPlayers: string[];
+  kickingTeam: TeamId;
+  receivingTeam: TeamId;
+  fanFactor?: {
+    teamA: { d3: number; dedicatedFans: number; total: number };
+    teamB: { d3: number; dedicatedFans: number; total: number };
+  };
+  weatherType?: string;
+  weather?: {
+    total: number;
+    condition: string;
+    description: string;
+  };
+  journeymen?: {
+    teamA: { count: number; players: string[] };
+    teamB: { count: number; players: string[] };
+  };
+  inducements?: {
+    teamA: { pettyCash: number; treasurySpent: number; items: Array<{ slug: string; displayName: string; cost: number; quantity: number; starPlayerSlug?: string }> };
+    teamB: { pettyCash: number; treasurySpent: number; items: Array<{ slug: string; displayName: string; cost: number; quantity: number; starPlayerSlug?: string }> };
+  };
+  prayers?: {
+    underdogTeam: TeamId;
+    ctvDifference: number;
+    rolls: { dice: number; result: string; description: string }[];
+  };
+  kickoffStep?: 'place-ball' | 'kick-deviation' | 'kickoff-event';
+  ballPosition?: Position | null;
+  kickDeviation?: { d8: number; d6: number; direction: string } | null;
+  kickoffEvent?: { dice: number; event: string; description: string } | null;
+  finalBallPosition?: Position;
 }
 
 export interface DiceResult {
