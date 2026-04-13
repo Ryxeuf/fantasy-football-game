@@ -103,19 +103,15 @@ export async function processInducementSubmission(
     where: { matchId },
     orderBy: { createdAt: "asc" },
     include: {
-      teamRef: { select: { roster: true, treasury: true, players: { select: { value: true, dead: true } } } },
+      teamRef: { select: { roster: true, treasury: true, currentValue: true } },
     },
   });
 
   const teamA = teamSelections[0]?.teamRef;
   const teamB = teamSelections[1]?.teamRef;
 
-  const ctvA = teamA?.players
-    ?.filter((p: any) => !p.dead)
-    .reduce((sum: number, p: any) => sum + (p.value || 0), 0) ?? 0;
-  const ctvB = teamB?.players
-    ?.filter((p: any) => !p.dead)
-    .reduce((sum: number, p: any) => sum + (p.value || 0), 0) ?? 0;
+  const ctvA = (teamA as any)?.currentValue ?? 0;
+  const ctvB = (teamB as any)?.currentValue ?? 0;
 
   const pettyCashInput = {
     ctvTeamA: ctvA,

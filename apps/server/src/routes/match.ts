@@ -735,13 +735,11 @@ router.post(
         },
       });
 
-      // Charger l'état du jeu le plus récent (validate-setup > coin-toss)
-      const lastValidateSetup = [...match.turns]
+      // Charger l'état du jeu le plus récent (validate-setup > inducements > coin-toss)
+      const lastStateTurn = [...match.turns]
         .reverse()
-        .find((t: any) => t.payload?.type === "validate-setup" && t.payload?.gameState);
-      const coinTossTurn = match.turns.find((t: any) => t.payload?.type === "coin-toss");
-      const sourceTurn = lastValidateSetup || coinTossTurn;
-      let gameState = sourceTurn?.payload?.gameState;
+        .find((t: any) => t.payload?.gameState);
+      let gameState = lastStateTurn?.payload?.gameState;
       if (typeof gameState === "string") {
         gameState = JSON.parse(gameState);
       }
