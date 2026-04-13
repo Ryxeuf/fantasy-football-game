@@ -438,21 +438,23 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
       }
     }
 
-    // Utiliser rect du board (Pixi container)
-    const rect = boardRef.current.getBoundingClientRect();
+    // Utiliser rect du canvas Pixi (pas le wrapper div qui peut être plus large)
+    const canvas = boardRef.current.querySelector('canvas');
+    const rect = (canvas || boardRef.current).getBoundingClientRect();
     const nativeEvent = e.nativeEvent;
-    const x = nativeEvent.clientX - rect.left;
-    const y = nativeEvent.clientY - rect.top;
-    const gridX = Math.floor(x / currentCellSize);
-    const gridY = Math.floor(y / currentCellSize);
+    const pixelX = nativeEvent.clientX - rect.left;
+    const pixelY = nativeEvent.clientY - rect.top;
+    // pixelX → colonne (y), pixelY → ligne (x) — même logique que PixiBoard.handleStageClick
+    const gridCol = Math.floor(pixelX / currentCellSize);
+    const gridRow = Math.floor(pixelY / currentCellSize);
 
     if (
-      gridX >= 0 &&
-      gridX < state.width &&
-      gridY >= 0 &&
-      gridY < state.height
+      gridCol >= 0 &&
+      gridCol < state.height &&
+      gridRow >= 0 &&
+      gridRow < state.width
     ) {
-      const pos: Position = { x: gridX, y: gridY };
+      const pos: Position = { x: gridRow, y: gridCol };
 
       const err = validatePlacement(extState, draggedPlayerId, pos);
       if (err) {

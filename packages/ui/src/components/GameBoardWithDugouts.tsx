@@ -123,7 +123,10 @@ export default function GameBoardWithDugouts({
 
   const handlePlayerClick = (playerId: string) => {
     const player = state.players?.find((p) => p.id === playerId) || null;
-    setInspectedPlayer(player);
+    // En phase setup, ne pas afficher le panneau d'inspection (il bloque les clics sur mobile)
+    if (!isSetupPhase) {
+      setInspectedPlayer(player);
+    }
     onPlayerClick?.(playerId);
   };
 
