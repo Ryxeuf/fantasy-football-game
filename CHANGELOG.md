@@ -1,3 +1,20 @@
+## [1.56.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.55.2...v1.56.0) (2026-04-13)
+
+
+### ✨ Features
+
+* add END_PLAYER_TURN to stop player activation mid-move ([5d9e519](https://github.com/Ryxeuf/fantasy-football-game/commit/5d9e519ef55092976b85b02ad137935ecdfab77f))
+* add terrain skin and turn timer options to match creation ([680278a](https://github.com/Ryxeuf/fantasy-football-game/commit/680278a2def0ca65ba9d99551e337b146ad7fdb5))
+* allow block during blitz movement (blitz at contact) ([889e15f](https://github.com/Ryxeuf/fantasy-football-game/commit/889e15f9b776e4961286e63913f71040f5175135))
+* display remaining movement points during player activation ([6f2e753](https://github.com/Ryxeuf/fantasy-football-game/commit/6f2e753c8c8dddc891fef11189a086f29b703f71))
+* implement chain push mechanics ([d280ae9](https://github.com/Ryxeuf/fantasy-football-game/commit/d280ae9c50cae59ac37c6522b005493219c66e3c))
+* post-TD phase with KO recovery and re-setup ([929859b](https://github.com/Ryxeuf/fantasy-football-game/commit/929859b203e578887fd6a5ae5450c3cef3398fc6))
+
+
+### 🐛 Bug Fixes
+
+* correct push direction calculation in blocking mechanics ([1ed103d](https://github.com/Ryxeuf/fantasy-football-game/commit/1ed103ded7b4e029b8276b631d0bf412565655a9))
+
 ## [1.55.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.55.1...v1.55.2) (2026-04-13)
 
 
