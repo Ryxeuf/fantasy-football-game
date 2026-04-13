@@ -1,36 +1,74 @@
-import { describe, it, expect, afterEach, beforeEach } from "vitest";
+import { describe, it, expect, afterEach, beforeEach, vi } from "vitest";
 import { createServer, Server as HttpServer } from "node:http";
 import { AddressInfo } from "node:net";
 import { io as clientIO, Socket as ClientSocket } from "socket.io-client";
+import jwt from "jsonwebtoken";
+import { JWT_SECRET } from "./config";
+
+// Mock Prisma before imports (required by game-rooms which is registered by setupSocket)
+vi.mock("./prisma", () => ({
+  prisma: {
+    match: {
+      findFirst: vi.fn(),
+    },
+  },
+}));
+
+// Mock forfeit-tracker to avoid side effects
+vi.mock("./services/forfeit-tracker", () => ({
+  startForfeitTimer: vi.fn(),
+  cancelForfeitTimer: vi.fn(),
+}));
+
+// Mock connected-users
+vi.mock("./services/connected-users", () => ({
+  trackUserJoin: vi.fn(),
+  trackUserLeave: vi.fn(),
+  resetConnectedUsers: vi.fn(),
+}));
+
+// Mock move-processor and inducement-processor to isolate from DB
+vi.mock("./services/move-processor", () => ({
+  processMove: vi.fn().mockRejectedValue(new Error("Not a participant")),
+}));
+vi.mock("./services/inducement-processor", () => ({
+  processInducementSubmission: vi.fn().mockRejectedValue(new Error("Not a participant")),
+}));
+
+import { prisma } from "./prisma";
 import { setupSocket, getIO, getGameNamespace } from "./socket";
-import {
-  registerGameRoomHandlers,
-  getRoomSize,
-  resetRooms,
-} from "./game-rooms";
-import {
-  registerSpectatorHandlers,
-  getSpectatorCount,
-  resetSpectators,
-} from "./game-spectator";
+import { getRoomSize, resetRooms } from "./game-rooms";
+import { getSpectatorCount, resetSpectators } from "./game-spectator";
 
 let httpServer: HttpServer;
 let clientA: ClientSocket;
 let clientB: ClientSocket;
 let clientSpec: ClientSocket;
 
+const TEST_USER_A = "user-a";
+const TEST_USER_B = "user-b";
+const TEST_SPECTATOR = "spectator-1";
+
 function getServerUrl(server: HttpServer): string {
   const addr = server.address() as AddressInfo;
   return `http://localhost:${addr.port}`;
 }
 
-function connectClient(url: string): Promise<ClientSocket> {
+/** Generate a valid JWT for socket authentication in tests. */
+function createTestToken(userId: string): string {
+  return jwt.sign({ sub: userId, roles: ["user"] }, JWT_SECRET);
+}
+
+function connectClient(url: string, userId: string): Promise<ClientSocket> {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(
       () => reject(new Error("Connection timeout")),
       5000,
     );
-    const client = clientIO(`${url}/game`, { transports: ["websocket"] });
+    const client = clientIO(`${url}/game`, {
+      transports: ["websocket"],
+      auth: { token: `Bearer ${createTestToken(userId)}` },
+    });
     client.on("connect", () => {
       clearTimeout(timeout);
       resolve(client);
@@ -60,8 +98,11 @@ function emitWithAck(
 }
 
 beforeEach(() => {
+  vi.clearAllMocks();
   resetRooms();
   resetSpectators();
+  // Allow all match participation checks by default
+  vi.mocked(prisma.match.findFirst).mockResolvedValue({ id: "any" } as never);
 });
 
 afterEach(async () => {
@@ -78,17 +119,15 @@ afterEach(async () => {
 describe("game-spectator", () => {
   function setupServer(): string {
     httpServer = createServer();
+    // setupSocket already registers all handlers (game-rooms, spectator, etc.)
     setupSocket(httpServer);
-    const ns = getGameNamespace();
-    registerGameRoomHandlers(ns);
-    registerSpectatorHandlers(ns);
     httpServer.listen(0);
     return getServerUrl(httpServer);
   }
 
   it("spectator joins a match room and receives ack", async () => {
     const url = setupServer();
-    clientSpec = await connectClient(url);
+    clientSpec = await connectClient(url, TEST_SPECTATOR);
 
     const ack = await emitWithAck(clientSpec, "game:spectate-match", {
       matchId: "match-123",
@@ -100,7 +139,7 @@ describe("game-spectator", () => {
 
   it("rejects spectate without matchId", async () => {
     const url = setupServer();
-    clientSpec = await connectClient(url);
+    clientSpec = await connectClient(url, TEST_SPECTATOR);
 
     const ack = await emitWithAck(clientSpec, "game:spectate-match", {});
 
@@ -110,8 +149,8 @@ describe("game-spectator", () => {
 
   it("spectator receives game state updates broadcast to the room", async () => {
     const url = setupServer();
-    clientA = await connectClient(url);
-    clientSpec = await connectClient(url);
+    clientA = await connectClient(url, TEST_USER_A);
+    clientSpec = await connectClient(url, TEST_SPECTATOR);
 
     // Player joins the room
     await emitWithAck(clientA, "game:join-match", { matchId: "match-456" });
@@ -151,7 +190,7 @@ describe("game-spectator", () => {
 
   it("spectator cannot submit moves", async () => {
     const url = setupServer();
-    clientSpec = await connectClient(url);
+    clientSpec = await connectClient(url, TEST_SPECTATOR);
 
     await emitWithAck(clientSpec, "game:spectate-match", {
       matchId: "match-789",
@@ -163,15 +202,15 @@ describe("game-spectator", () => {
       move: { type: "END_TURN" },
     });
 
-    // Move submission requires auth, spectator socket may not have user data
-    // so it should be rejected
-    expect(ack.ok).toBe(false);
+    // Move submission handler uses { success } not { ok }; cast to access it
+    const result = ack as unknown as { success: boolean };
+    expect(result.success).toBe(false);
   });
 
   it("multiple spectators can join the same match", async () => {
     const url = setupServer();
-    clientA = await connectClient(url);
-    clientB = await connectClient(url);
+    clientA = await connectClient(url, TEST_USER_A);
+    clientB = await connectClient(url, TEST_USER_B);
 
     await emitWithAck(clientA, "game:spectate-match", {
       matchId: "match-multi",
@@ -185,7 +224,7 @@ describe("game-spectator", () => {
 
   it("spectator leaving decrements count", async () => {
     const url = setupServer();
-    clientSpec = await connectClient(url);
+    clientSpec = await connectClient(url, TEST_SPECTATOR);
 
     await emitWithAck(clientSpec, "game:spectate-match", {
       matchId: "match-leave",
@@ -200,7 +239,7 @@ describe("game-spectator", () => {
 
   it("spectator disconnect cleans up tracking", async () => {
     const url = setupServer();
-    clientSpec = await connectClient(url);
+    clientSpec = await connectClient(url, TEST_SPECTATOR);
 
     await emitWithAck(clientSpec, "game:spectate-match", {
       matchId: "match-dc",
@@ -215,8 +254,8 @@ describe("game-spectator", () => {
 
   it("spectator does not trigger forfeit timer on disconnect", async () => {
     const url = setupServer();
-    clientA = await connectClient(url);
-    clientSpec = await connectClient(url);
+    clientA = await connectClient(url, TEST_USER_A);
+    clientSpec = await connectClient(url, TEST_SPECTATOR);
 
     // Player joins
     await emitWithAck(clientA, "game:join-match", {
@@ -246,8 +285,8 @@ describe("game-spectator", () => {
 
   it("notifies spectators with spectator count updates", async () => {
     const url = setupServer();
-    clientA = await connectClient(url);
-    clientSpec = await connectClient(url);
+    clientA = await connectClient(url, TEST_USER_A);
+    clientSpec = await connectClient(url, TEST_SPECTATOR);
 
     // Player joins the room
     await emitWithAck(clientA, "game:join-match", {
@@ -261,6 +300,7 @@ describe("game-spectator", () => {
 
     // Both player and spectator should have received count
     // (The spectator join notifies the room)
+    // Wait for the count=2 event specifically (count=1 arrives when first spectator joins)
     const countPromise = new Promise<{ matchId: string; spectatorCount: number }>(
       (resolve, reject) => {
         const timeout = setTimeout(
@@ -268,14 +308,16 @@ describe("game-spectator", () => {
           5000,
         );
         clientA.on("game:spectator-count", (data) => {
-          clearTimeout(timeout);
-          resolve(data);
+          if (data.spectatorCount >= 2) {
+            clearTimeout(timeout);
+            resolve(data);
+          }
         });
       },
     );
 
     // Second spectator joins
-    clientB = await connectClient(url);
+    clientB = await connectClient(url, TEST_USER_B);
     await emitWithAck(clientB, "game:spectate-match", {
       matchId: "match-count",
     });

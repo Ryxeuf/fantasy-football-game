@@ -177,7 +177,7 @@ export function getLegalMoves(state: GameState): Move[] {
       for (const opponent of adjacentOpponents) {
         // Éviter les doublons si canBlock a déjà ajouté ce BLOCK
         const alreadyHasBlock = moves.some(
-          m => m.type === 'BLOCK' && (m as any).playerId === p.id && (m as any).targetId === opponent.id
+          m => m.type === 'BLOCK' && m.playerId === p.id && m.targetId === opponent.id
         );
         if (!alreadyHasBlock && !opponent.stunned && opponent.team !== p.team) {
           moves.push({ type: 'BLOCK', playerId: p.id, targetId: opponent.id });
@@ -1093,8 +1093,8 @@ function handleDodge(
       next = performInjuryRoll(next, player, rng);
     } else {
       // Armure tient: joueur sonné (stunned)
-      next.players[idx].state = 'stunned' as any;
-      (next.players[idx] as any).stunned = true;
+      next.players[idx].state = 'stunned';
+      next.players[idx].stunned = true;
     }
 
     // Si le joueur portait la balle, il la perd et elle rebondit
