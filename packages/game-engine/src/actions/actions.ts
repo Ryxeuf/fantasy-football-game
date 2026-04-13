@@ -45,6 +45,7 @@ import {
   calculateBlockDiceCount,
   getBlockDiceChooser,
   resolveBlockResult,
+  applyChainPush,
 } from '../mechanics/blocking';
 import {
   hasPlayerActed,
@@ -1316,16 +1317,17 @@ function handlePushChoose(
   );
   if (!isValidDirection) return state;
 
-  // Appliquer la poussée dans la direction choisie
+  // Appliquer la poussée dans la direction choisie (avec chain push si occupée)
   const newTargetPos = {
     x: target.pos.x + move.direction.x,
     y: target.pos.y + move.direction.y,
   };
 
-  const newState = { ...state, pendingPushChoice: undefined };
-  newState.players = newState.players.map(p =>
-    p.id === target.id ? { ...p, pos: newTargetPos } : p
-  );
+  let newState = { ...state, pendingPushChoice: undefined } as GameState;
+
+  // Chain push : si la destination est occupée, pousser le joueur qui y est d'abord
+  const rng = () => Math.random(); // RNG pour les surfs en chaîne
+  newState = applyChainPush(newState, target.id, move.direction, rng);
 
   // Demander confirmation pour le follow-up
   newState.pendingFollowUpChoice = {

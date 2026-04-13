@@ -21,6 +21,70 @@ import { canTeamBlitz } from '../core/game-state';
 import { performInjuryRoll, handleSentOff, handleInjuryByCrowd } from './injury';
 
 /**
+ * Applique un chain push : si la case de destination est occupée, le joueur qui s'y trouve
+ * est poussé dans la même direction (récursif). Si hors-limites, le joueur est surfé.
+ * @returns Le nouvel état après tous les déplacements en chaîne
+ */
+export function applyChainPush(
+  state: GameState,
+  pushedPlayerId: string,
+  direction: Position,
+  rng: RNG,
+): GameState {
+  const pushed = state.players.find(p => p.id === pushedPlayerId);
+  if (!pushed) return state;
+
+  const newPos = {
+    x: pushed.pos.x + direction.x,
+    y: pushed.pos.y + direction.y,
+  };
+
+  // Hors-limites → surf
+  if (!inBounds(state, newPos)) {
+    const surfLog = createLogEntry(
+      'action',
+      `${pushed.name} est poussé dans la foule (chain push) !`,
+      undefined,
+      pushed.team === 'A' ? 'B' : 'A'
+    );
+    let newState = { ...state, gameLog: [...state.gameLog, surfLog] };
+    if (pushed.hasBall) {
+      newState.players = newState.players.map(p =>
+        p.id === pushedPlayerId ? { ...p, hasBall: false } : p
+      );
+      newState.ball = { ...pushed.pos };
+    }
+    return handleInjuryByCrowd(newState, pushed, rng);
+  }
+
+  // Case occupée → chain push récursif
+  const occupant = state.players.find(
+    p => p.pos.x === newPos.x && p.pos.y === newPos.y && p.id !== pushedPlayerId
+  );
+  let newState = state;
+  if (occupant) {
+    const chainLog = createLogEntry(
+      'action',
+      `${occupant.name} est repoussé en chaîne !`,
+      undefined,
+      pushed.team === 'A' ? 'B' : 'A'
+    );
+    newState = { ...newState, gameLog: [...newState.gameLog, chainLog] };
+    newState = applyChainPush(newState, occupant.id, direction, rng);
+  }
+
+  // Déplacer le joueur poussé
+  newState = {
+    ...newState,
+    players: newState.players.map(p =>
+      p.id === pushedPlayerId ? { ...p, pos: newPos } : p
+    ),
+  };
+
+  return newState;
+}
+
+/**
  * Effectue le jet d'armure + blessure avec Mighty Blow.
  * Mighty Blow (+1) s'applique soit au jet d'armure, soit au jet de blessure.
  * Stratégie optimale : si l'armure casse naturellement, le bonus est gardé pour la blessure.
@@ -405,7 +469,8 @@ export function handlePushWithChoice(
     };
     if (!inBounds(state, newPos)) {
       hasOutOfBounds = true;
-    } else if (!isPositionOccupied(state, newPos)) {
+    } else {
+      // Case libre ou occupée (chain push) — les deux sont des directions valides
       availableDirections.push(dir);
     }
   }
@@ -448,17 +513,14 @@ export function handlePushWithChoice(
     );
     return { ...state, gameLog: [...state.gameLog, noPushLog] };
   } else if (availableDirections.length === 1) {
-    // Une seule direction disponible - pousser automatiquement
+    // Une seule direction disponible - pousser automatiquement (avec chain push)
     const pushDirection = availableDirections[0];
     const newTargetPos = {
       x: target.pos.x + pushDirection.x,
       y: target.pos.y + pushDirection.y,
     };
 
-    const newState = { ...state };
-    newState.players = newState.players.map(p =>
-      p.id === target.id ? { ...p, pos: newTargetPos } : p
-    );
+    let newState = applyChainPush(state, target.id, pushDirection, rng);
 
     // Demander confirmation pour le follow-up
     newState.pendingFollowUpChoice = {
@@ -747,7 +809,8 @@ function handlePushBack(state: GameState, attacker: Player, target: Player, rng:
 
     if (!inBounds(state, newTargetPos)) {
       hasOutOfBounds = true;
-    } else if (!isPositionOccupied(state, newTargetPos)) {
+    } else {
+      // Case libre ou occupée (chain push) — les deux sont des directions valides
       availableDirections.push(pushDirection);
     }
   }
@@ -788,14 +851,14 @@ function handlePushBack(state: GameState, attacker: Player, target: Player, rng:
     );
     state.gameLog = [...state.gameLog, noPushLog];
   } else if (availableDirections.length === 1) {
-    // Une seule direction disponible - pousser automatiquement
+    // Une seule direction disponible - pousser automatiquement (avec chain push)
     const pushDirection = availableDirections[0];
     const newTargetPos = {
       x: target.pos.x + pushDirection.x,
       y: target.pos.y + pushDirection.y,
     };
 
-    state.players = state.players.map(p => (p.id === target.id ? { ...p, pos: newTargetPos } : p));
+    state = applyChainPush(state, target.id, pushDirection, rng);
 
     // Follow-up is optional on PUSH_BACK — let the attacker choose
     state.pendingFollowUpChoice = {
