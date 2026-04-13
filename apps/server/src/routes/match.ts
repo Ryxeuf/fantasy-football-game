@@ -596,7 +596,12 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
     // Pour les matchs actifs, enrichir la réponse avec des métadonnées
     if (match.status === "active" && gameState) {
       const userTeamSide = await getUserTeamSide(prisma as any, matchId, req.user!.id);
-      const isMyTurn = userTeamSide ? gameState.currentPlayer === userTeamSide : false;
+      const phase = gameState.preMatch?.phase;
+      const isMyTurn = userTeamSide
+        ? (phase === "setup" || phase === "kickoff-sequence")
+          ? gameState.preMatch?.currentCoach === userTeamSide
+          : gameState.currentPlayer === userTeamSide
+        : false;
       const moveCount = match.turns.filter(
         (t: any) => t.payload?.type === "gameplay-move",
       ).length;
@@ -813,6 +818,14 @@ router.post(
         broadcastGameState(matchId, gameState, { type: "validate-setup" }, req.user!.id);
       } catch {}
 
+      // Mettre à jour le statut du match si kickoff atteint
+      if (gameState.preMatch?.phase === 'kickoff' || gameState.preMatch?.phase === 'kickoff-sequence') {
+        await prisma.match.update({
+          where: { id: matchId },
+          data: { status: "active" },
+        });
+      }
+
       // Déterminer le message approprié
       let message = "Placement validé et sauvegardé";
       if (playersOnField === 11) {
@@ -860,13 +873,13 @@ router.post(
         return res.status(404).json({ error: "Partie introuvable" });
       }
 
-      if (match.status !== "prematch-setup") {
+      if (match.status !== "prematch-setup" && match.status !== "active") {
         return res.status(400).json({ error: "La partie n'est pas en phase de kickoff" });
       }
 
-      // Récupérer l'état du jeu
-      const lastTurn = match.turns[match.turns.length - 1];
-      let gameState = lastTurn?.payload?.gameState;
+      // Récupérer le dernier état du jeu
+      const lastStateTurn = [...match.turns].reverse().find((t: any) => t.payload?.gameState);
+      let gameState = lastStateTurn?.payload?.gameState;
       if (typeof gameState === "string") {
         gameState = JSON.parse(gameState);
       }
@@ -877,7 +890,12 @@ router.post(
 
       // Placer le ballon
       const { placeKickoffBall } = await import("@bb/game-engine");
-      const newState = placeKickoffBall(gameState, position);
+      let newState = placeKickoffBall(gameState, position);
+
+      // Exposer la position du ballon pour le rendu frontend
+      if (newState.preMatch?.ballPosition) {
+        newState = { ...newState, ball: newState.preMatch.ballPosition };
+      }
 
       // Sauvegarder le nouvel état
       const newTurn = await prisma.turn.create({
@@ -930,9 +948,9 @@ router.post(
         return res.status(404).json({ error: "Partie introuvable" });
       }
 
-      // Récupérer l'état du jeu
-      const lastTurn = match.turns[match.turns.length - 1];
-      let gameState = lastTurn?.payload?.gameState;
+      // Récupérer le dernier état du jeu
+      const lastStateTurn2 = [...match.turns].reverse().find((t: any) => t.payload?.gameState);
+      let gameState = lastStateTurn2?.payload?.gameState;
       if (typeof gameState === "string") {
         gameState = JSON.parse(gameState);
       }
@@ -942,7 +960,7 @@ router.post(
       }
 
       // Calculer la déviation avec un RNG déterministe
-      const { calculateKickDeviation } = await import("@bb/game-engine");
+      const { calculateKickDeviation, makeRNG } = await import("@bb/game-engine");
       const deviationRng = makeRNG(`${match.seed}-kick-deviation`);
       const newState = calculateKickDeviation(gameState, deviationRng);
 
@@ -997,9 +1015,9 @@ router.post(
         return res.status(404).json({ error: "Partie introuvable" });
       }
 
-      // Récupérer l'état du jeu
-      const lastTurn = match.turns[match.turns.length - 1];
-      let gameState = lastTurn?.payload?.gameState;
+      // Récupérer le dernier état du jeu
+      const lastStateTurn3 = [...match.turns].reverse().find((t: any) => t.payload?.gameState);
+      let gameState = lastStateTurn3?.payload?.gameState;
       if (typeof gameState === "string") {
         gameState = JSON.parse(gameState);
       }
@@ -1009,8 +1027,8 @@ router.post(
       }
 
       // Résoudre l'événement avec un RNG déterministe
-      const { resolveKickoffEvent, startMatchFromKickoff } = await import("@bb/game-engine");
-      const kickoffRng = makeRNG(`${match.seed}-kickoff-event`);
+      const { resolveKickoffEvent, startMatchFromKickoff, makeRNG: makeRNG2 } = await import("@bb/game-engine");
+      const kickoffRng = makeRNG2(`${match.seed}-kickoff-event`);
       let newState = resolveKickoffEvent(gameState, kickoffRng);
 
       // Démarrer le match après résolution de l'événement (avec RNG pour effets météo)
