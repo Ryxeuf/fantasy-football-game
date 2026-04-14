@@ -13,9 +13,21 @@ import { performArmorRoll } from '../utils/dice';
 import { performInjuryRoll } from './injury';
 import { getPushDirections } from './blocking';
 import { checkBlockNegatesBothDown, checkDodgeNegatesStumble } from '../skills/skill-bridge';
+import { movePlayerToDugoutZone } from './dugout';
+import { bounceBall } from './ball';
 
 export interface ActivationCheckResult {
   passed: boolean;
+  newState: GameState;
+}
+
+export interface AlwaysHungryResult {
+  /** true = le lancer de coéquipier peut se dérouler normalement */
+  passed: boolean;
+  /** true = le coéquipier a été mangé (retiré du jeu comme casualty) */
+  eaten: boolean;
+  /** true = le coéquipier s'est échappé mais est tombé à terre */
+  escaped: boolean;
   newState: GameState;
 }
 
@@ -692,4 +704,179 @@ export function checkTakeRoot(
   }
 
   return { passed: success, newState };
+}
+
+/**
+ * Check Always Hungry activation roll (BB3).
+ *
+ * Règle BB3 : lorsque le joueur tente une action Lancer de Coéquipier
+ * (Throw Team-Mate), après son déplacement mais avant le lancer, il doit
+ * effectuer un jet d'activation.
+ *
+ * - D6 = 2+ : le lancer se poursuit normalement.
+ * - D6 = 1  : le joueur tente de manger son coéquipier. Relancez un D6 :
+ *     - 1   : le coéquipier est avalé (mis en casualty, retiré du jeu).
+ *             Turnover.
+ *     - 2-6 : le coéquipier s'échappe mais tombe à terre (jet de blessure).
+ *             Turnover.
+ *
+ * Dans tous les cas d'échec, le ballon porté par le coéquipier est lâché
+ * à la position actuelle puis rebondit.
+ *
+ * @param state  État courant du jeu
+ * @param thrower Joueur qui voulait effectuer le TTM
+ * @param thrown Coéquipier qui devait être lancé
+ * @param rng    Générateur déterministe
+ * @returns      Résultat du test avec nouvel état
+ */
+export function checkAlwaysHungry(
+  state: GameState,
+  thrower: Player,
+  thrown: Player,
+  rng: RNG
+): AlwaysHungryResult {
+  // No always-hungry: always pass (no state change)
+  if (!hasSkill(thrower, 'always-hungry')) {
+    return { passed: true, eaten: false, escaped: false, newState: state };
+  }
+
+  // Roll D6: succeed on 2+
+  const hungerRoll = Math.floor(rng() * 6) + 1;
+  const success = hungerRoll >= 2;
+
+  const rollLog = createLogEntry(
+    'dice',
+    `Toujours Affamé: ${hungerRoll}/2 ${success ? '✓' : '✗'}`,
+    thrower.id,
+    thrower.team,
+    { diceRoll: hungerRoll, targetNumber: 2, success, skill: 'always-hungry' }
+  );
+
+  let newState: GameState = {
+    ...state,
+    gameLog: [...state.gameLog, rollLog],
+  };
+
+  if (success) {
+    return { passed: true, eaten: false, escaped: false, newState };
+  }
+
+  // Failed hunger check: attempt to eat teammate (second D6)
+  const attemptLog = createLogEntry(
+    'action',
+    `${thrower.name} tente de manger ${thrown.name} au lieu de le lancer !`,
+    thrower.id,
+    thrower.team,
+    { skill: 'always-hungry', targetId: thrown.id }
+  );
+  newState = {
+    ...newState,
+    gameLog: [...newState.gameLog, attemptLog],
+  };
+
+  const eatRoll = Math.floor(rng() * 6) + 1;
+  const eaten = eatRoll === 1;
+
+  const eatLog = createLogEntry(
+    'dice',
+    `Jet d'appétit: ${eatRoll} — ${eaten ? 'coéquipier avalé' : "coéquipier s'échappe"}`,
+    thrower.id,
+    thrower.team,
+    { diceRoll: eatRoll, skill: 'always-hungry', eaten }
+  );
+  newState = {
+    ...newState,
+    gameLog: [...newState.gameLog, eatLog],
+  };
+
+  // In both outcomes: the teammate drops the ball if carried
+  const thrownCarried = newState.players.find(p => p.id === thrown.id)?.hasBall;
+  if (thrownCarried) {
+    const dropPos: Position = { ...thrown.pos };
+    newState = {
+      ...newState,
+      players: newState.players.map(p =>
+        p.id === thrown.id ? { ...p, hasBall: false } : p
+      ),
+      ball: dropPos,
+    };
+    newState = bounceBall(newState, rng);
+  }
+
+  // The thrower loses their TTM action (turnover)
+  newState = setPlayerAction(newState, thrower.id, 'THROW_TEAM_MATE');
+  newState = {
+    ...newState,
+    isTurnover: true,
+    players: newState.players.map(p =>
+      p.id === thrower.id ? { ...p, pm: 0, gfiUsed: 2 } : p
+    ),
+  };
+
+  if (eaten) {
+    // Teammate is removed from play as a casualty (no armor/injury roll)
+    newState = movePlayerToDugoutZone(newState, thrown.id, 'casualty', thrown.team);
+    newState = {
+      ...newState,
+      players: newState.players.map(p =>
+        p.id === thrown.id
+          ? { ...p, state: 'casualty', stunned: false, pos: { x: -1, y: -1 } }
+          : p
+      ),
+    };
+
+    const eatenLog = createLogEntry(
+      'action',
+      `${thrown.name} a été avalé — retiré du jeu (Turnover)`,
+      thrown.id,
+      thrown.team,
+      { skill: 'always-hungry' }
+    );
+    newState = {
+      ...newState,
+      gameLog: [...newState.gameLog, eatenLog],
+    };
+
+    return { passed: false, eaten: true, escaped: false, newState };
+  }
+
+  // Teammate escapes but is placed prone; perform armor + injury roll
+  const escapeLog = createLogEntry(
+    'action',
+    `${thrown.name} s'échappe mais tombe à terre !`,
+    thrown.id,
+    thrown.team,
+    { skill: 'always-hungry' }
+  );
+  newState = {
+    ...newState,
+    gameLog: [...newState.gameLog, escapeLog],
+    players: newState.players.map(p =>
+      p.id === thrown.id ? { ...p, stunned: true } : p
+    ),
+  };
+
+  // Armor roll: if it breaks, perform injury roll
+  const updatedThrown = newState.players.find(p => p.id === thrown.id);
+  if (updatedThrown) {
+    const armorResult = performArmorRoll(updatedThrown, rng);
+    const armorLog = createLogEntry(
+      'dice',
+      `Jet d'armure: ${armorResult.diceRoll}/${armorResult.targetNumber} ${armorResult.success ? '✓' : '✗'}`,
+      updatedThrown.id,
+      updatedThrown.team,
+      {
+        diceRoll: armorResult.diceRoll,
+        targetNumber: armorResult.targetNumber,
+        success: armorResult.success,
+      }
+    );
+    newState = { ...newState, gameLog: [...newState.gameLog, armorLog] };
+
+    if (!armorResult.success) {
+      newState = performInjuryRoll(newState, updatedThrown, rng);
+    }
+  }
+
+  return { passed: false, eaten: false, escaped: true, newState };
 }

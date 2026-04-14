@@ -22,6 +22,7 @@ import { getRandomDirection, bounceBall, checkTouchdowns, isInOpponentEndzone, a
 import { performInjuryRoll } from './injury';
 import { getDistance, getPassRangeModifier } from './passing';
 import { getAdjacentOpponents } from './movement';
+import { checkAlwaysHungry } from './negative-traits';
 
 export type ThrowRange = 'quick' | 'short' | 'long';
 
@@ -183,6 +184,17 @@ export function executeThrowTeamMate(
     thrower.team,
   );
   newState.gameLog = [...newState.gameLog, actionLog];
+
+  // --- Always Hungry: test d'appétit avant le lancer ---
+  // Si le lanceur a le trait, il peut avaler son coéquipier au lieu de le lancer.
+  const currentThrower = newState.players.find(p => p.id === thrower.id)!;
+  const currentThrown = newState.players.find(p => p.id === thrown.id)!;
+  const hungryResult = checkAlwaysHungry(newState, currentThrower, currentThrown, rng);
+  newState = hungryResult.newState;
+  if (!hungryResult.passed) {
+    // Le TTM est annulé (coéquipier mangé ou s'est échappé) — turnover géré par checkAlwaysHungry
+    return checkTouchdowns(newState);
+  }
 
   // --- Jet de passe ---
   const throwModifiers = calculateThrowModifiers(newState, thrower, thrown, targetPos);

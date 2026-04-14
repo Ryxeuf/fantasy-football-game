@@ -8,6 +8,7 @@ import {
   checkAnimalSavagery,
   checkTakeRoot,
   checkBloodlust,
+  checkAlwaysHungry,
 } from './negative-traits';
 
 /** Fixed RNG that always returns the same value */
@@ -450,6 +451,172 @@ describe('Regle: Bloodlust (Soif de Sang)', () => {
       const player = getPlayer(state, 'A1');
       const result = checkBloodlust(state, player, fixedRNG(0.0), 'MOVE');
       expect(result.passed).toBe(true);
+    });
+  });
+});
+
+describe('Regle: Always Hungry (Toujours Affame)', () => {
+  /**
+   * Setup: A1 is the thrower (with always-hungry + throw-team-mate),
+   * A2 is the teammate being thrown (adjacent, active).
+   */
+  function setupAlwaysHungryState(): GameState {
+    let state = setup();
+    state = withSkill(state, 'A1', 'always-hungry');
+    state = withSkill(state, 'A1', 'throw-team-mate');
+    state = withSkill(state, 'A2', 'right-stuff');
+    return state;
+  }
+
+  describe('pas de trait', () => {
+    it('should pass if thrower does not have always-hungry', () => {
+      const state = setup();
+      const thrower = getPlayer(state, 'A1');
+      const thrown = getPlayer(state, 'A2');
+      const result = checkAlwaysHungry(state, thrower, thrown, fixedRNG(0.0));
+      expect(result.passed).toBe(true);
+      expect(result.eaten).toBe(false);
+      expect(result.escaped).toBe(false);
+      expect(result.newState).toBe(state);
+    });
+  });
+
+  describe('activation roll', () => {
+    it('should pass on roll 2 (2+)', () => {
+      const state = setupAlwaysHungryState();
+      const thrower = getPlayer(state, 'A1');
+      const thrown = getPlayer(state, 'A2');
+      const result = checkAlwaysHungry(state, thrower, thrown, fixedRNG(0.2));
+      expect(result.passed).toBe(true);
+      expect(result.eaten).toBe(false);
+      expect(result.escaped).toBe(false);
+    });
+
+    it('should pass on roll 6', () => {
+      const state = setupAlwaysHungryState();
+      const thrower = getPlayer(state, 'A1');
+      const thrown = getPlayer(state, 'A2');
+      const result = checkAlwaysHungry(state, thrower, thrown, fixedRNG(0.99));
+      expect(result.passed).toBe(true);
+    });
+
+    it('should fail on natural 1 (hungry activated)', () => {
+      const state = setupAlwaysHungryState();
+      const thrower = getPlayer(state, 'A1');
+      const thrown = getPlayer(state, 'A2');
+      // First roll = 1 (hungry), second roll = 6 (escape)
+      const rng = (() => {
+        const values = [0.0, 0.99];
+        let i = 0;
+        return () => values[i++ % values.length];
+      })();
+      const result = checkAlwaysHungry(state, thrower, thrown, rng);
+      expect(result.passed).toBe(false);
+    });
+
+    it('should add log entries on roll', () => {
+      const state = setupAlwaysHungryState();
+      const thrower = getPlayer(state, 'A1');
+      const thrown = getPlayer(state, 'A2');
+      const logCountBefore = state.gameLog.length;
+      const result = checkAlwaysHungry(state, thrower, thrown, fixedRNG(0.99));
+      expect(result.newState.gameLog.length).toBeGreaterThan(logCountBefore);
+    });
+  });
+
+  describe('hungry activated — teammate eaten (second roll = 1)', () => {
+    it('should mark teammate as casualty when second roll is 1', () => {
+      const state = setupAlwaysHungryState();
+      const thrower = getPlayer(state, 'A1');
+      const thrown = getPlayer(state, 'A2');
+      // First roll = 1 (hungry), second roll = 1 (eaten)
+      const rng = fixedRNG(0.0);
+      const result = checkAlwaysHungry(state, thrower, thrown, rng);
+      expect(result.passed).toBe(false);
+      expect(result.eaten).toBe(true);
+      expect(result.escaped).toBe(false);
+      const updatedThrown = getPlayer(result.newState, 'A2');
+      expect(updatedThrown.state).toBe('casualty');
+    });
+
+    it('should set turnover when teammate is eaten', () => {
+      const state = setupAlwaysHungryState();
+      const thrower = getPlayer(state, 'A1');
+      const thrown = getPlayer(state, 'A2');
+      const result = checkAlwaysHungry(state, thrower, thrown, fixedRNG(0.0));
+      expect(result.newState.isTurnover).toBe(true);
+    });
+
+    it('should drop and bounce ball if eaten teammate had it', () => {
+      let state = setupAlwaysHungryState();
+      state = {
+        ...state,
+        players: state.players.map(p =>
+          p.id === 'A2' ? { ...p, hasBall: true } : p
+        ),
+        ball: undefined,
+      };
+      const thrower = getPlayer(state, 'A1');
+      const thrown = getPlayer(state, 'A2');
+      const result = checkAlwaysHungry(state, thrower, thrown, fixedRNG(0.0));
+      const updatedThrown = getPlayer(result.newState, 'A2');
+      expect(updatedThrown.hasBall).toBeFalsy();
+      expect(result.newState.ball).toBeDefined();
+    });
+  });
+
+  describe('hungry activated — teammate escapes (second roll 2+)', () => {
+    it('should knock teammate prone when second roll is 2+', () => {
+      const state = setupAlwaysHungryState();
+      const thrower = getPlayer(state, 'A1');
+      const thrown = getPlayer(state, 'A2');
+      // First roll = 1 (hungry), second roll = 6 (escape), then armor rolls (no break)
+      const rng = (() => {
+        const values = [0.0, 0.99, 0.0, 0.0, 0.0, 0.0];
+        let i = 0;
+        return () => values[i++ % values.length];
+      })();
+      const result = checkAlwaysHungry(state, thrower, thrown, rng);
+      expect(result.passed).toBe(false);
+      expect(result.escaped).toBe(true);
+      expect(result.eaten).toBe(false);
+      const updatedThrown = getPlayer(result.newState, 'A2');
+      expect(updatedThrown.stunned).toBe(true);
+    });
+
+    it('should set turnover when teammate escapes', () => {
+      const state = setupAlwaysHungryState();
+      const thrower = getPlayer(state, 'A1');
+      const thrown = getPlayer(state, 'A2');
+      const rng = (() => {
+        const values = [0.0, 0.99, 0.0, 0.0, 0.0, 0.0];
+        let i = 0;
+        return () => values[i++ % values.length];
+      })();
+      const result = checkAlwaysHungry(state, thrower, thrown, rng);
+      expect(result.newState.isTurnover).toBe(true);
+    });
+
+    it('should drop and bounce ball if escaped teammate had it', () => {
+      let state = setupAlwaysHungryState();
+      state = {
+        ...state,
+        players: state.players.map(p =>
+          p.id === 'A2' ? { ...p, hasBall: true } : p
+        ),
+        ball: undefined,
+      };
+      const thrower = getPlayer(state, 'A1');
+      const thrown = getPlayer(state, 'A2');
+      const rng = (() => {
+        const values = [0.0, 0.99, 0.0, 0.0, 0.0, 0.0];
+        let i = 0;
+        return () => values[i++ % values.length];
+      })();
+      const result = checkAlwaysHungry(state, thrower, thrown, rng);
+      const updatedThrown = getPlayer(result.newState, 'A2');
+      expect(updatedThrown.hasBall).toBeFalsy();
+      expect(result.newState.ball).toBeDefined();
     });
   });
 });
