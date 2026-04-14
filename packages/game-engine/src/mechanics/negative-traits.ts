@@ -968,6 +968,7 @@ export function logInstablePrevention(
     FOUL: 'de faute',
     HYPNOTIC_GAZE: 'de regard hypnotique',
     PROJECTILE_VOMIT: 'de vomissement projectile',
+    STAB: 'de poignard',
   };
   const label = actionLabels[actionType] ?? '';
   const message = label
