@@ -136,6 +136,18 @@ export interface GameState {
     totalStrength: number;
     targetStrength: number;
   };
+  // Choix de Dump-off en attente : la cible d'un blocage a le skill `dump-off`
+  // et le ballon. Elle peut choisir un receveur (Quick Pass) ou passer son
+  // tour de Dump-off. Après résolution, le blocage initial reprend via la
+  // `pendingBlockMove` conservée ci-dessous.
+  pendingDumpOff?: {
+    attackerId: string;         // joueur effectuant le blocage (adversaire)
+    targetId: string;           // cible du blocage — passeur potentiel du Dump-off
+    receiverOptions: string[];  // IDs des receveurs éligibles (Quick range)
+    pendingBlockMove:
+      | { type: 'BLOCK'; playerId: string; targetId: string }
+      | { type: 'BLITZ'; playerId: string; to: Position; targetId: string };
+  };
   // Choix de direction de poussée en attente
   pendingPushChoice?: {
     attackerId: string;
@@ -330,6 +342,7 @@ export type Move =
   | { type: 'PROJECTILE_VOMIT'; playerId: string; targetId: string }
   | { type: 'STAB'; playerId: string; targetId: string }
   | { type: 'CHAINSAW'; playerId: string; targetId: string }
+  | { type: 'DUMP_OFF_CHOOSE'; passerId: string; receiverId: string | null }
   | { type: 'KICKOFF_PERFECT_DEFENCE'; positions: Array<{ playerId: string; position: Position }> }
   | { type: 'KICKOFF_HIGH_KICK'; playerId: string | null }
   | { type: 'KICKOFF_QUICK_SNAP'; moves: Array<{ playerId: string; to: Position }> }

@@ -70,6 +70,7 @@ import { canHypnoticGaze, executeHypnoticGaze } from '../mechanics/hypnotic-gaze
 import { canProjectileVomit, executeProjectileVomit } from '../mechanics/projectile-vomit';
 import { canStab, executeStab } from '../mechanics/stab';
 import { canChainsaw, executeChainsaw } from '../mechanics/chainsaw';
+import { canDumpOff, getDumpOffReceivers, executeDumpOff } from '../mechanics/dump-off';
 import {
   resolveKickoffPerfectDefence,
   resolveKickoffHighKick,
@@ -564,6 +565,8 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       return handleStab(activeState, move, rng);
     case 'CHAINSAW':
       return handleChainsaw(activeState, move, rng);
+    case 'DUMP_OFF_CHOOSE':
+      return handleDumpOffChoose(activeState, move, rng);
     case 'KICKOFF_PERFECT_DEFENCE':
       return resolveKickoffPerfectDefence(activeState, move.positions);
     case 'KICKOFF_HIGH_KICK':
@@ -1251,7 +1254,8 @@ function handleDodge(
 function handleBlock(
   state: GameState,
   move: { type: 'BLOCK'; playerId: string; targetId: string },
-  rng: RNG
+  rng: RNG,
+  options: { skipDumpOff?: boolean } = {}
 ): GameState {
   const attacker = state.players.find(p => p.id === move.playerId);
   const target = state.players.find(p => p.id === move.targetId);
@@ -1269,6 +1273,38 @@ function handleBlock(
   } else {
     // Vérifier que le blocage est légal
     if (!canBlock(state, move.playerId, move.targetId)) return state;
+  }
+
+  // ─── Dump-off check ────────────────────────────────────────────────────
+  // Si la cible possède le skill `dump-off` et a le ballon, elle peut
+  // effectuer une Passe Rapide immédiate avant que les dés de bloc soient
+  // lancés. On interrompt le blocage en posant `pendingDumpOff`. Le blocage
+  // reprend ensuite via `handleDumpOffChoose` (avec `skipDumpOff: true`).
+  if (!options.skipDumpOff && canDumpOff(state, target)) {
+    const receivers = getDumpOffReceivers(state, target);
+    if (receivers.length > 0) {
+      const dumpLog = createLogEntry(
+        'info',
+        `${target.name} peut tenter un Délestage (Dump-off) !`,
+        target.id,
+        target.team,
+        { skill: 'dump-off' },
+      );
+      return {
+        ...state,
+        gameLog: [...state.gameLog, dumpLog],
+        pendingDumpOff: {
+          attackerId: attacker.id,
+          targetId: target.id,
+          receiverOptions: receivers.map(r => r.id),
+          pendingBlockMove: {
+            type: 'BLOCK',
+            playerId: move.playerId,
+            targetId: move.targetId,
+          },
+        },
+      };
+    }
   }
 
   // ─── Foul Appearance check ─────────────────────────────────────────────
@@ -1358,6 +1394,53 @@ function handleBlock(
       },
     };
   }
+}
+
+/**
+ * Gère le choix de Dump-off : la cible d'un blocage (porteuse du ballon, skill
+ * `dump-off`) choisit un receveur pour une Passe Rapide, ou passe son tour de
+ * Dump-off (receiverId = null). Après résolution, le blocage initial reprend.
+ */
+function handleDumpOffChoose(
+  state: GameState,
+  move: { type: 'DUMP_OFF_CHOOSE'; passerId: string; receiverId: string | null },
+  rng: RNG
+): GameState {
+  if (!state.pendingDumpOff) return state;
+  if (state.pendingDumpOff.targetId !== move.passerId) return state;
+
+  const pendingMove = state.pendingDumpOff.pendingBlockMove;
+  const receiverOptions = state.pendingDumpOff.receiverOptions;
+
+  // Nettoyer le pendingDumpOff dans tous les cas
+  const cleared: GameState = { ...state, pendingDumpOff: undefined };
+
+  let afterDumpOff: GameState = cleared;
+
+  if (move.receiverId !== null) {
+    // Vérifier que le receveur choisi est bien éligible (évite triche client)
+    if (!receiverOptions.includes(move.receiverId)) {
+      return cleared;
+    }
+    afterDumpOff = executeDumpOff(cleared, move.passerId, move.receiverId, rng);
+  } else {
+    const skipLog = createLogEntry(
+      'info',
+      `Délestage refusé par le coach défenseur`,
+      move.passerId,
+      undefined,
+      { skill: 'dump-off' },
+    );
+    afterDumpOff = { ...cleared, gameLog: [...cleared.gameLog, skipLog] };
+  }
+
+  // Reprendre le blocage initial en ignorant le nouveau check dump-off
+  if (pendingMove.type === 'BLOCK') {
+    return handleBlock(afterDumpOff, pendingMove, rng, { skipDumpOff: true });
+  }
+  // BLITZ : pour l'instant, non intégré (un follow-up portera l'intégration
+  // complète dans `handleBlitz`). Fallback : on renvoie l'état post-dump-off.
+  return afterDumpOff;
 }
 
 /**

@@ -149,6 +149,9 @@ export { canStab, executeStab } from './mechanics/stab';
 // Export de la Tronçonneuse (Chainsaw)
 export { canChainsaw, executeChainsaw } from './mechanics/chainsaw';
 
+// Export du Délestage (Dump-off)
+export { canDumpOff, getDumpOffReceivers, executeDumpOff } from './mechanics/dump-off';
+
 // Export des fonctions de faute
 export { canFoul, executeFoul, calculateFoulAssists } from './mechanics/foul';
 
