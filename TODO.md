@@ -206,7 +206,7 @@
 
 | # | Tache | Type | Statut |
 |---|-------|------|--------|
-| J.8 | Implementer `bloodlust` (3 variantes) | Regle | [ ] |
+| J.8 | Implementer `bloodlust` (3 variantes) | Regle | [x] |
 | J.9 | Implementer `always-hungry` | Regle | [ ] |
 | J.10 | Implementer `foul-appearance` | Regle | [ ] |
 | J.11 | Implementer `instable` | Regle | [ ] |
