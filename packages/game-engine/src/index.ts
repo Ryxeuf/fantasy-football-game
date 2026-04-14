@@ -143,6 +143,9 @@ export { canHypnoticGaze, calculateGazeModifiers, executeHypnoticGaze } from './
 // Export du Vomissement Projectile (Projectile Vomit)
 export { canProjectileVomit, executeProjectileVomit } from './mechanics/projectile-vomit';
 
+// Export du Poignard (Stab)
+export { canStab, executeStab } from './mechanics/stab';
+
 // Export des fonctions de faute
 export { canFoul, executeFoul, calculateFoulAssists } from './mechanics/foul';
 

@@ -68,6 +68,7 @@ import { applyApothecaryChoice } from '../mechanics/apothecary';
 import { canThrowTeamMate, getThrowRange, executeThrowTeamMate } from '../mechanics/throw-team-mate';
 import { canHypnoticGaze, executeHypnoticGaze } from '../mechanics/hypnotic-gaze';
 import { canProjectileVomit, executeProjectileVomit } from '../mechanics/projectile-vomit';
+import { canStab, executeStab } from '../mechanics/stab';
 import {
   resolveKickoffPerfectDefence,
   resolveKickoffHighKick,
@@ -303,6 +304,16 @@ export function getLegalMoves(state: GameState): Move[] {
       }
     }
 
+    // Actions de Poignard (STAB)
+    if (!hasPlayerActed(state, p.id) && hasSkill(p, 'stab')) {
+      const adjacentOpponents = state.players.filter(
+        opp => opp.team !== team && canStab(state, p, opp)
+      );
+      for (const target of adjacentOpponents) {
+        moves.push({ type: 'STAB', playerId: p.id, targetId: target.id });
+      }
+    }
+
     // END_PLAYER_TURN : permet d'arrêter l'activation d'un joueur en cours
     const pAction = state.playerActions?.[p.id];
     if (pAction === 'MOVE' || pAction === 'BLITZ') {
@@ -468,7 +479,7 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
   let activeState = state;
   const ACTIVATION_MOVE_TYPES: string[] = [
     'MOVE', 'LEAP', 'DODGE', 'BLOCK', 'BLITZ', 'PASS', 'HANDOFF',
-    'THROW_TEAM_MATE', 'FOUL', 'HYPNOTIC_GAZE', 'PROJECTILE_VOMIT',
+    'THROW_TEAM_MATE', 'FOUL', 'HYPNOTIC_GAZE', 'PROJECTILE_VOMIT', 'STAB',
   ];
   if (ACTIVATION_MOVE_TYPES.includes(move.type) && 'playerId' in move) {
     const playerId = (move as { playerId: string }).playerId;
@@ -537,6 +548,8 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       return handleHypnoticGaze(activeState, move, rng);
     case 'PROJECTILE_VOMIT':
       return handleProjectileVomit(activeState, move, rng);
+    case 'STAB':
+      return handleStab(activeState, move, rng);
     case 'KICKOFF_PERFECT_DEFENCE':
       return resolveKickoffPerfectDefence(activeState, move.positions);
     case 'KICKOFF_HIGH_KICK':
@@ -2050,5 +2063,27 @@ function handleProjectileVomit(
   let newState = executeProjectileVomit(state, vomiter, target, rng);
   newState = setPlayerAction(newState, vomiter.id, 'PROJECTILE_VOMIT');
   newState = checkPlayerTurnEnd(newState, vomiter.id);
+  return newState;
+}
+
+/**
+ * Gère une action de Poignard (Stab)
+ */
+function handleStab(
+  state: GameState,
+  move: { type: 'STAB'; playerId: string; targetId: string },
+  rng: RNG,
+): GameState {
+  const stabber = state.players.find(p => p.id === move.playerId);
+  const target = state.players.find(p => p.id === move.targetId);
+
+  if (!stabber || !target) return state;
+  if (stabber.team !== state.currentPlayer) return state;
+  if (hasPlayerActed(state, stabber.id)) return state;
+  if (!canStab(state, stabber, target)) return state;
+
+  let newState = executeStab(state, stabber, target, rng);
+  newState = setPlayerAction(newState, stabber.id, 'STAB');
+  newState = checkPlayerTurnEnd(newState, stabber.id);
   return newState;
 }
