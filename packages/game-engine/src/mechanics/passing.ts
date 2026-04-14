@@ -35,6 +35,19 @@ export function getPassRange(from: Position, to: Position): PassRange | null {
 }
 
 /**
+ * Détermine si un joueur peut tenter une passe sur une distance donnée.
+ * Les joueurs Stunty ne peuvent pas tenter de passes Long ni Long Bomb :
+ * l'action est restreinte aux portées Quick et Short.
+ */
+export function canAttemptPassForRange(passer: Player, range: PassRange | null): boolean {
+  if (!range) return false;
+  if (hasSkill(passer, 'stunty') && (range === 'long' || range === 'bomb')) {
+    return false;
+  }
+  return true;
+}
+
+/**
  * Modificateur de distance pour le jet de passe
  */
 export function getPassRangeModifier(range: PassRange): number {
