@@ -146,6 +146,9 @@ export { canProjectileVomit, executeProjectileVomit } from './mechanics/projecti
 // Export du Poignard (Stab)
 export { canStab, executeStab } from './mechanics/stab';
 
+// Export de la Tronçonneuse (Chainsaw)
+export { canChainsaw, executeChainsaw } from './mechanics/chainsaw';
+
 // Export des fonctions de faute
 export { canFoul, executeFoul, calculateFoulAssists } from './mechanics/foul';
 
