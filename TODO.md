@@ -207,7 +207,7 @@
 | # | Tache | Type | Statut |
 |---|-------|------|--------|
 | J.8 | Implementer `bloodlust` (3 variantes) | Regle | [x] |
-| J.9 | Implementer `always-hungry` | Regle | [ ] |
+| J.9 | Implementer `always-hungry` | Regle | [x] |
 | J.10 | Implementer `foul-appearance` | Regle | [ ] |
 | J.11 | Implementer `instable` | Regle | [ ] |
 | K.1 | Implementer `leap` + `pogo-stick` | Regle | [ ] |
