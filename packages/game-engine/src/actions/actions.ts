@@ -74,7 +74,7 @@ import {
   resolveKickoffQuickSnap,
   resolveKickoffBlitz,
 } from '../mechanics/kickoff-resolution';
-import { checkBoneHead, checkReallyStupid, checkWildAnimal, checkAnimalSavagery, checkTakeRoot, checkBloodlust, checkAlwaysHungry } from '../mechanics/negative-traits';
+import { checkBoneHead, checkReallyStupid, checkWildAnimal, checkAnimalSavagery, checkTakeRoot, checkBloodlust, checkAlwaysHungry, checkFoulAppearance } from '../mechanics/negative-traits';
 
 /**
  * Obtient tous les mouvements légaux pour l'état actuel
@@ -1140,9 +1140,18 @@ function handleBlock(
     if (!canBlock(state, move.playerId, move.targetId)) return state;
   }
 
+  // ─── Foul Appearance check ─────────────────────────────────────────────
+  // Rolled by the attacker before any block dice. On 1, the declared action
+  // is wasted (no turnover) and the attacker's activation ends.
+  const foulAppearanceCheck = checkFoulAppearance(state, attacker, target, rng, isBlitzDuringMove);
+  if (!foulAppearanceCheck.shouldContinueBlock) {
+    return foulAppearanceCheck.newState;
+  }
+  const stateAfterFA = foulAppearanceCheck.newState;
+
   // Calculer les assists
-  const offensiveAssists = calculateOffensiveAssists(state, attacker, target);
-  const defensiveAssists = calculateDefensiveAssists(state, attacker, target);
+  const offensiveAssists = calculateOffensiveAssists(stateAfterFA, attacker, target);
+  const defensiveAssists = calculateDefensiveAssists(stateAfterFA, attacker, target);
 
   // Nombre de dés et qui choisit
   const attackerStrength = attacker.st + offensiveAssists;
@@ -1153,13 +1162,13 @@ function handleBlock(
   // Enregistrer l'action — blitz consomme le compteur de blitz de l'équipe
   let newState: GameState;
   if (isBlitzDuringMove) {
-    newState = setPlayerAction(state, attacker.id, 'BLITZ');
+    newState = setPlayerAction(stateAfterFA, attacker.id, 'BLITZ');
     newState.teamBlitzCount = {
       ...newState.teamBlitzCount,
       [attacker.team]: (newState.teamBlitzCount[attacker.team] || 0) + 1,
     };
   } else {
-    newState = setPlayerAction(state, attacker.id, 'BLOCK');
+    newState = setPlayerAction(stateAfterFA, attacker.id, 'BLOCK');
   }
 
   // Si un seul dé, résoudre immédiatement
@@ -1556,8 +1565,16 @@ function handleBlitz(
   // Vérifier que le blitz est légal
   if (!canBlitz(state, move.playerId, move.to, move.targetId)) return state;
 
+  // ─── Foul Appearance check ─────────────────────────────────────────────
+  // Rolled by the attacker before the blitz begins. On 1, the declared
+  // action is wasted (no turnover) and the attacker's activation ends.
+  const foulAppearanceCheck = checkFoulAppearance(state, attacker, target, rng, true);
+  if (!foulAppearanceCheck.shouldContinueBlock) {
+    return foulAppearanceCheck.newState;
+  }
+
   // Gérer le changement de joueur
-  let newState = handlePlayerSwitch(state, move.playerId);
+  let newState = handlePlayerSwitch(foulAppearanceCheck.newState, move.playerId);
 
   // 1. Effectuer le mouvement
   const from = attacker.pos;

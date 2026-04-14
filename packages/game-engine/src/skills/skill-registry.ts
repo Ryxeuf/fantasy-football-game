@@ -707,3 +707,16 @@ registerSkill({
   description: 'Si ce joueur a une Force de 3 ou moins, il peut être lancé par un coéquipier ayant la compétence Lancer d\'Équipier.',
   canApply: (ctx) => hasSkill(ctx.player, 'right-stuff'),
 });
+
+// ─── FOUL APPEARANCE ───────────────────────────────────────────────────────
+// Foul Appearance check is performed in handleBlock / handleBlitz before any
+// block dice are rolled. The attacker's coach rolls a D6; on 1, the declared
+// block action is wasted (no turnover). Registered here for lookup and
+// metadata purposes.
+
+registerSkill({
+  slug: 'foul-appearance',
+  triggers: ['on-block-defender'],
+  description: 'Quand un joueur adverse déclare un Blocage ciblant ce joueur, l\'attaquant lance un D6 avant le blocage. Sur 1, le blocage est annulé et l\'action est gaspillée.',
+  canApply: (ctx) => hasSkill(ctx.player, 'foul-appearance'),
+});
