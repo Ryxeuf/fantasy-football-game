@@ -3,7 +3,7 @@
  * These are checked at the start of a player's activation before their first action.
  */
 
-import type { GameState, Player, RNG, Position, BlockResult, CasualtyOutcome } from '../core/types';
+import type { GameState, Player, RNG, Position, BlockResult, CasualtyOutcome, ActionType } from '../core/types';
 import { hasSkill } from '../skills/skill-effects';
 import { hasPlayerActed, setPlayerAction } from '../core/game-state';
 import { createLogEntry } from '../utils/logging';
@@ -907,4 +907,81 @@ export function checkFoulAppearance(
   };
 
   return { shouldContinueBlock: false, newState };
+}
+
+/**
+ * List of action types forbidden by the Instable (Unstable) trait.
+ *
+ * BB3 Season 3 rule (Instable / Unstable):
+ *   A player with this trait is too clumsy / unstable to safely handle
+ *   ball-transfer actions. They cannot declare a Pass, Hand-Off, or
+ *   Throw Team-Mate action. Other actions (Move, Block, Blitz, Foul, etc.)
+ *   are still available.
+ *
+ * This is a PROHIBITION, not a failed roll — no dice are rolled. The action
+ * is simply rejected. This is NOT a turnover since the activation has not
+ * started yet (the action is never applied).
+ */
+const INSTABLE_FORBIDDEN_ACTIONS: ReadonlySet<ActionType> = new Set<ActionType>([
+  'PASS',
+  'HANDOFF',
+  'THROW_TEAM_MATE',
+]);
+
+/**
+ * Check whether a player with the Instable (Unstable) trait is allowed to
+ * declare the given action.
+ *
+ * @param player Player attempting to act.
+ * @param actionType Action the player is trying to declare.
+ * @returns `true` when the action is allowed, `false` when Instable forbids it.
+ */
+export function canInstablePerformAction(
+  player: Player,
+  actionType: ActionType
+): boolean {
+  if (!hasSkill(player, 'instable')) {
+    return true;
+  }
+  return !INSTABLE_FORBIDDEN_ACTIONS.has(actionType);
+}
+
+/**
+ * Append a log entry explaining that an Instable player cannot perform the
+ * requested action. Returns a new state (immutable) with the log appended.
+ *
+ * The caller is responsible for not applying the forbidden action — this
+ * helper only records the reason in the game log.
+ */
+export function logInstablePrevention(
+  state: GameState,
+  player: Player,
+  actionType: ActionType
+): GameState {
+  const actionLabels: Record<ActionType, string> = {
+    MOVE: 'de mouvement',
+    BLOCK: 'de blocage',
+    BLITZ: 'de blitz',
+    PASS: 'de passe',
+    HANDOFF: 'de remise',
+    THROW_TEAM_MATE: 'de lancer de coequipier',
+    FOUL: 'de faute',
+    HYPNOTIC_GAZE: 'de regard hypnotique',
+    PROJECTILE_VOMIT: 'de vomissement projectile',
+  };
+  const label = actionLabels[actionType] ?? '';
+  const message = label
+    ? `Instable: ${player.name} ne peut pas declarer d'action ${label} !`
+    : `Instable: ${player.name} ne peut pas declarer cette action !`;
+  const entry = createLogEntry(
+    'info',
+    message,
+    player.id,
+    player.team,
+    { skill: 'instable', actionType }
+  );
+  return {
+    ...state,
+    gameLog: [...state.gameLog, entry],
+  };
 }
