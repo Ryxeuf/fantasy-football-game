@@ -810,3 +810,101 @@ export function checkAlwaysHungry(
 
   return { shouldContinueThrow: false, newState };
 }
+
+/**
+ * Resultat du test Foul Appearance (Repulsion).
+ * - `shouldContinueBlock`: `true` si le blocage peut se dérouler normalement,
+ *   `false` si l'attaquant est repoussé par l'apparence du défenseur.
+ * - `newState`: état mis à jour (logs, consommation d'activation si échec).
+ */
+export interface FoulAppearanceResult {
+  shouldContinueBlock: boolean;
+  newState: GameState;
+}
+
+/**
+ * Check Foul Appearance (Répulsion) roll.
+ * BB3 Rule (Mutation): when an opposing player declares a Block action targeting
+ * a player with Foul Appearance, the attacker's coach must first roll a D6.
+ * - On 2+: the block proceeds as normal.
+ * - On a 1: the attacker cannot perform the declared block. The action is
+ *   wasted: the attacker's activation ends (pm = 0) without a turnover.
+ *
+ * The check is done by the attacker, but the trait belongs to the target.
+ *
+ * @param state Current game state.
+ * @param attacker Player declaring the Block/Blitz action.
+ * @param target Player being targeted (must have foul-appearance for a roll).
+ * @param rng Seeded RNG.
+ * @param isBlitz When true, the wasted action is recorded as a Blitz (and the
+ *   team's blitz counter is incremented).
+ */
+export function checkFoulAppearance(
+  state: GameState,
+  attacker: Player,
+  target: Player,
+  rng: RNG,
+  isBlitz: boolean = false
+): FoulAppearanceResult {
+  // No foul-appearance on the target: block proceeds (no state change)
+  if (!hasSkill(target, 'foul-appearance')) {
+    return { shouldContinueBlock: true, newState: state };
+  }
+
+  // Roll D6: succeed on 2+
+  const roll = Math.floor(rng() * 6) + 1;
+  const success = roll >= 2;
+
+  const rollLog = createLogEntry(
+    'dice',
+    `Répulsion: ${roll}/2 ${success ? '✓' : '✗'}`,
+    attacker.id,
+    attacker.team,
+    { diceRoll: roll, targetNumber: 2, success, skill: 'foul-appearance', targetId: target.id }
+  );
+
+  let newState: GameState = {
+    ...state,
+    gameLog: [...state.gameLog, rollLog],
+  };
+
+  if (success) {
+    return { shouldContinueBlock: true, newState };
+  }
+
+  // Failed: the declared block/blitz is wasted. NOT a turnover.
+  const failLog = createLogEntry(
+    'info',
+    `${attacker.name} est répugné par ${target.name} et ne peut pas effectuer son blocage !`,
+    attacker.id,
+    attacker.team
+  );
+  newState = {
+    ...newState,
+    gameLog: [...newState.gameLog, failLog],
+  };
+
+  // Register the wasted action on the attacker
+  const actionType = isBlitz ? 'BLITZ' : 'BLOCK';
+  newState = setPlayerAction(newState, attacker.id, actionType);
+
+  if (isBlitz) {
+    newState = {
+      ...newState,
+      teamBlitzCount: {
+        ...newState.teamBlitzCount,
+        [attacker.team]: (newState.teamBlitzCount[attacker.team] || 0) + 1,
+      },
+    };
+  }
+
+  // End the attacker's activation (no more movement, no GFI)
+  newState = {
+    ...newState,
+    players: newState.players.map(p =>
+      p.id === attacker.id ? { ...p, pm: 0, gfiUsed: 2 } : p
+    ),
+  };
+
+  return { shouldContinueBlock: false, newState };
+}
