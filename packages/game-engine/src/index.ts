@@ -26,6 +26,7 @@ export * from './utils/dice';
 export * from './utils/dice-notifications';
 export * from './utils/team-value-calculator';
 export * from './mechanics/movement';
+export * from './mechanics/leap';
 export * from './actions/actions';
 // Export des fonctions de blocage (sans conflit)
 export {
@@ -142,6 +143,12 @@ export { canHypnoticGaze, calculateGazeModifiers, executeHypnoticGaze } from './
 // Export du Vomissement Projectile (Projectile Vomit)
 export { canProjectileVomit, executeProjectileVomit } from './mechanics/projectile-vomit';
 
+// Export du Poignard (Stab)
+export { canStab, executeStab } from './mechanics/stab';
+
+// Export de la Tronçonneuse (Chainsaw)
+export { canChainsaw, executeChainsaw } from './mechanics/chainsaw';
+
 // Export des fonctions de faute
 export { canFoul, executeFoul, calculateFoulAssists } from './mechanics/foul';
 
@@ -152,8 +159,8 @@ export { expelSecretWeapons, getSecretWeaponPlayers } from './mechanics/secret-w
 export { extractLineage, hasAnimosityAgainst, checkAnimosity } from './mechanics/animosity';
 
 // Export des traits négatifs (Bone Head, Really Stupid, Wild Animal, etc.)
-export { checkBoneHead, checkReallyStupid, checkWildAnimal, checkAnimalSavagery } from './mechanics/negative-traits';
-export type { ActivationCheckResult } from './mechanics/negative-traits';
+export { checkBoneHead, checkReallyStupid, checkWildAnimal, checkAnimalSavagery, checkTakeRoot, checkBloodlust, checkAlwaysHungry, canInstablePerformAction, logInstablePrevention } from './mechanics/negative-traits';
+export type { ActivationCheckResult, AlwaysHungryResult } from './mechanics/negative-traits';
 
 // Export des effets météo
 export {

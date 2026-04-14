@@ -243,7 +243,7 @@
 | P2.1 | Implementer `kick` (tres pris en progression, universel) | Regle | [ ] |
 | P2.2 | Implementer `defensive` (progression universelle) | Regle | [ ] |
 | P2.3 | Implementer `disturbing-presence` (progression universelle) | Regle | [ ] |
-| P2.4 | Implementer `leap` (Saurus progression frequente) | Regle | [ ] |
+| P2.4 | Implementer `leap` (Saurus progression frequente) | Regle | [x] |
 | P2.5 | Implementer `dump-off` (Imperial / Skaven Thrower progression) | Regle | [ ] |
 | P2.6 | Implementer `sneaky-git` (Dwarf Troll Slayer progression) | Regle | [ ] |
 | P2.7 | Lister les star players hirables par les 5 equipes (flag `hirableBy`) | Contenu | [ ] |
@@ -315,13 +315,13 @@
 
 | # | Tache | Type | Statut |
 |---|-------|------|--------|
-| J.8 | Implementer `bloodlust` (3 variantes) — Vampires | Regle | [ ] |
-| J.9 | Implementer `always-hungry` — Ogres / Snotlings | Regle | [ ] |
-| J.10 | Implementer `foul-appearance` — Nurgle / Chaos | Regle | [ ] |
-| J.11 | Implementer `instable` — divers | Regle | [ ] |
-| K.1b | Implementer `pogo-stick` — Goblin | Regle | [ ] |
-| K.2 | Implementer `stab` — Vampire / Underworld | Regle | [ ] |
-| K.3 | Implementer `chainsaw` — Secret weapons | Regle | [ ] |
+| J.8 | Implementer `bloodlust` (3 variantes) — Vampires | Regle | [x] |
+| J.9 | Implementer `always-hungry` — Ogres / Snotlings | Regle | [x] |
+| J.10 | Implementer `foul-appearance` — Nurgle / Chaos | Regle | [x] |
+| J.11 | Implementer `instable` — divers | Regle | [x] |
+| K.1b | Implementer `pogo-stick` — Goblin | Regle | [x] |
+| K.2 | Implementer `stab` — Vampire / Underworld | Regle | [x] |
+| K.3 | Implementer `chainsaw` — Secret weapons | Regle | [x] |
 | K.10 | Implementer `multiple-block` — Ogres | Regle | [ ] |
 | K.11 | Implementer `hail-mary-pass` + `safe-pass` | Regle | [ ] |
 | K.12 | Implementer `ball-and-chain` — Goblin Fanatic | Regle | [ ] |
@@ -364,12 +364,12 @@
 | **H — Polish** | 7 | 7 | 0 | 0 | TERMINE |
 | **I — Contenu & donnees** | 10 | 10 | 0 | 0 | TERMINE |
 | **P1 — Skills intrinseques 5 equipes** | 13 | 0 | 0 | 13 | CRITIQUE (Sprint 13) |
-| **P2 — Progression & Stars 5 equipes** | 10 | 0 | 0 | 10 | CRITIQUE (Sprint 14) |
+| **P2 — Progression & Stars 5 equipes** | 10 | 1 | 0 | 9 | CRITIQUE (Sprint 14) |
 | **N — Croissance & engagement** | 8 | 0 | 0 | 8 | HAUTE (Sprint 15-16) |
 | **L — Ligues** | 9 | 0 | 0 | 9 | HAUTE (Sprint 17) |
 | **M — Parite mobile** | 12 | 0 | 0 | 12 | MOYENNE (Sprint 18-19) |
-| **J — Traits negatifs restants** | 4 | 0 | 0 | 4 | BASSE (Sprint 20-21) |
-| **K — Skills fort impact (non-5 equipes)** | 8 | 0 | 0 | 8 | BASSE (Sprint 20-21) |
+| **J — Traits negatifs restants** | 4 | 4 | 0 | 0 | TERMINE (livre avant ordonnancement) |
+| **K — Skills fort impact (non-5 equipes)** | 8 | 3 | 0 | 5 | BASSE (Sprint 20-21) |
 | **O — Contenu & polish** | 10 | 0 | 0 | 10 | SOUHAITABLE (Sprint 22+) |
 
 ---

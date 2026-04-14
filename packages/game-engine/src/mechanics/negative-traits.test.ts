@@ -7,6 +7,9 @@ import {
   checkWildAnimal,
   checkAnimalSavagery,
   checkTakeRoot,
+  checkBloodlust,
+  canInstablePerformAction,
+  logInstablePrevention,
 } from './negative-traits';
 
 /** Fixed RNG that always returns the same value */
@@ -288,6 +291,171 @@ describe('checkTakeRoot', () => {
   });
 });
 
+describe('Regle: Bloodlust (Soif de Sang)', () => {
+  describe('checkBloodlust — pas de trait', () => {
+    it('should always pass if player has no bloodlust skill', () => {
+      const state = setup();
+      const player = getPlayer(state, 'A1');
+      const result = checkBloodlust(state, player, fixedRNG(0.0), 'MOVE');
+      expect(result.passed).toBe(true);
+      expect(result.newState).toBe(state);
+    });
+  });
+
+  describe('checkBloodlust — bloodlust (cible 4+)', () => {
+    it('should fail on roll=3 for MOVE action (3 < 4)', () => {
+      let state = setup();
+      state = withSkill(state, 'A1', 'bloodlust');
+      const player = getPlayer(state, 'A1');
+      // RNG 0.4 → Math.floor(0.4*6)+1 = 3
+      const result = checkBloodlust(state, player, fixedRNG(0.4), 'MOVE');
+      expect(result.passed).toBe(false);
+    });
+
+    it('should pass on roll=4 for MOVE action (4 >= 4)', () => {
+      let state = setup();
+      state = withSkill(state, 'A1', 'bloodlust');
+      const player = getPlayer(state, 'A1');
+      // RNG 0.5 → Math.floor(0.5*6)+1 = 4
+      const result = checkBloodlust(state, player, fixedRNG(0.5), 'MOVE');
+      expect(result.passed).toBe(true);
+    });
+
+    it('should pass on roll=3 for BLOCK action (3+1=4 >= 4)', () => {
+      let state = setup();
+      state = withSkill(state, 'A1', 'bloodlust');
+      const player = getPlayer(state, 'A1');
+      const result = checkBloodlust(state, player, fixedRNG(0.4), 'BLOCK');
+      expect(result.passed).toBe(true);
+    });
+
+    it('should pass on roll=3 for BLITZ action (3+1=4 >= 4)', () => {
+      let state = setup();
+      state = withSkill(state, 'A1', 'bloodlust');
+      const player = getPlayer(state, 'A1');
+      const result = checkBloodlust(state, player, fixedRNG(0.4), 'BLITZ');
+      expect(result.passed).toBe(true);
+    });
+
+    it('should fail on natural 1 even with BLOCK modifier', () => {
+      let state = setup();
+      state = withSkill(state, 'A1', 'bloodlust');
+      const player = getPlayer(state, 'A1');
+      // Natural 1 always fails regardless of modifier
+      const result = checkBloodlust(state, player, fixedRNG(0.0), 'BLOCK');
+      expect(result.passed).toBe(false);
+    });
+
+    it('should set pm=0 and gfiUsed=2 on failure', () => {
+      let state = setup();
+      state = withSkill(state, 'A1', 'bloodlust');
+      const player = getPlayer(state, 'A1');
+      const result = checkBloodlust(state, player, fixedRNG(0.0), 'MOVE');
+      const updatedPlayer = getPlayer(result.newState, 'A1');
+      expect(updatedPlayer.pm).toBe(0);
+      expect(updatedPlayer.gfiUsed).toBe(2);
+    });
+
+    it('should NOT set turnover on failure', () => {
+      let state = setup();
+      state = withSkill(state, 'A1', 'bloodlust');
+      const player = getPlayer(state, 'A1');
+      const result = checkBloodlust(state, player, fixedRNG(0.0), 'MOVE');
+      expect(result.newState.isTurnover).toBeFalsy();
+    });
+
+    it('should add log entries on roll', () => {
+      let state = setup();
+      state = withSkill(state, 'A1', 'bloodlust');
+      const player = getPlayer(state, 'A1');
+      const logCountBefore = state.gameLog.length;
+      const result = checkBloodlust(state, player, fixedRNG(0.0), 'MOVE');
+      expect(result.newState.gameLog.length).toBeGreaterThan(logCountBefore);
+    });
+  });
+
+  describe('checkBloodlust — bloodlust-2 (cible 2+)', () => {
+    it('should pass on roll=2 for MOVE action (2 >= 2)', () => {
+      let state = setup();
+      state = withSkill(state, 'A1', 'bloodlust-2');
+      const player = getPlayer(state, 'A1');
+      // RNG 0.2 → roll=2
+      const result = checkBloodlust(state, player, fixedRNG(0.2), 'MOVE');
+      expect(result.passed).toBe(true);
+    });
+
+    it('should fail on natural 1 (MOVE)', () => {
+      let state = setup();
+      state = withSkill(state, 'A1', 'bloodlust-2');
+      const player = getPlayer(state, 'A1');
+      const result = checkBloodlust(state, player, fixedRNG(0.0), 'MOVE');
+      expect(result.passed).toBe(false);
+    });
+
+    it('should fail on natural 1 even with BLOCK modifier', () => {
+      let state = setup();
+      state = withSkill(state, 'A1', 'bloodlust-2');
+      const player = getPlayer(state, 'A1');
+      const result = checkBloodlust(state, player, fixedRNG(0.0), 'BLOCK');
+      expect(result.passed).toBe(false);
+    });
+  });
+
+  describe('checkBloodlust — bloodlust-3 (cible 3+)', () => {
+    it('should fail on roll=2 for MOVE action (2 < 3)', () => {
+      let state = setup();
+      state = withSkill(state, 'A1', 'bloodlust-3');
+      const player = getPlayer(state, 'A1');
+      // RNG 0.2 → roll=2
+      const result = checkBloodlust(state, player, fixedRNG(0.2), 'MOVE');
+      expect(result.passed).toBe(false);
+    });
+
+    it('should pass on roll=3 for MOVE action (3 >= 3)', () => {
+      let state = setup();
+      state = withSkill(state, 'A1', 'bloodlust-3');
+      const player = getPlayer(state, 'A1');
+      // RNG 0.4 → roll=3
+      const result = checkBloodlust(state, player, fixedRNG(0.4), 'MOVE');
+      expect(result.passed).toBe(true);
+    });
+
+    it('should pass on roll=2 for BLOCK action (2+1=3 >= 3)', () => {
+      let state = setup();
+      state = withSkill(state, 'A1', 'bloodlust-3');
+      const player = getPlayer(state, 'A1');
+      const result = checkBloodlust(state, player, fixedRNG(0.2), 'BLOCK');
+      expect(result.passed).toBe(true);
+    });
+
+    it('should fail on natural 1 even with BLITZ modifier', () => {
+      let state = setup();
+      state = withSkill(state, 'A1', 'bloodlust-3');
+      const player = getPlayer(state, 'A1');
+      const result = checkBloodlust(state, player, fixedRNG(0.0), 'BLITZ');
+      expect(result.passed).toBe(false);
+    });
+  });
+
+  describe('checkBloodlust — re-activation', () => {
+    it('should skip check if player already acted this turn', () => {
+      let state = setup();
+      state = withSkill(state, 'A1', 'bloodlust');
+      // Simulate already acted
+      state = {
+        ...state,
+        playerActions: {
+          ...state.playerActions,
+          A1: 'MOVE',
+        },
+      };
+      const player = getPlayer(state, 'A1');
+      const result = checkBloodlust(state, player, fixedRNG(0.0), 'MOVE');
+      expect(result.passed).toBe(true);
+    });
+  });
+});
+
 describe('checkAnimalSavagery', () => {
   it('should always pass if player does not have animal-savagery', () => {
     const state = setup();
@@ -344,5 +512,87 @@ describe('checkAnimalSavagery', () => {
     const logCountBefore = state.gameLog.length;
     const result = checkAnimalSavagery(state, player, fixedRNG(0.99));
     expect(result.newState.gameLog.length).toBeGreaterThan(logCountBefore);
+  });
+});
+
+describe('canInstablePerformAction', () => {
+  it('should allow any action for a player without the instable trait', () => {
+    const state = setup();
+    const player = getPlayer(state, 'A1');
+    expect(canInstablePerformAction(player, 'PASS')).toBe(true);
+    expect(canInstablePerformAction(player, 'HANDOFF')).toBe(true);
+    expect(canInstablePerformAction(player, 'THROW_TEAM_MATE')).toBe(true);
+    expect(canInstablePerformAction(player, 'MOVE')).toBe(true);
+    expect(canInstablePerformAction(player, 'BLOCK')).toBe(true);
+  });
+
+  it('should forbid PASS action for a player with instable', () => {
+    let state = setup();
+    state = withSkill(state, 'A1', 'instable');
+    const player = getPlayer(state, 'A1');
+    expect(canInstablePerformAction(player, 'PASS')).toBe(false);
+  });
+
+  it('should forbid HANDOFF action for a player with instable', () => {
+    let state = setup();
+    state = withSkill(state, 'A1', 'instable');
+    const player = getPlayer(state, 'A1');
+    expect(canInstablePerformAction(player, 'HANDOFF')).toBe(false);
+  });
+
+  it('should forbid THROW_TEAM_MATE action for a player with instable', () => {
+    let state = setup();
+    state = withSkill(state, 'A1', 'instable');
+    const player = getPlayer(state, 'A1');
+    expect(canInstablePerformAction(player, 'THROW_TEAM_MATE')).toBe(false);
+  });
+
+  it('should still allow MOVE/BLOCK/BLITZ/FOUL for a player with instable', () => {
+    let state = setup();
+    state = withSkill(state, 'A1', 'instable');
+    const player = getPlayer(state, 'A1');
+    expect(canInstablePerformAction(player, 'MOVE')).toBe(true);
+    expect(canInstablePerformAction(player, 'BLOCK')).toBe(true);
+    expect(canInstablePerformAction(player, 'BLITZ')).toBe(true);
+    expect(canInstablePerformAction(player, 'FOUL')).toBe(true);
+  });
+});
+
+describe('logInstablePrevention', () => {
+  it('should append a log entry describing the prevented action', () => {
+    let state = setup();
+    state = withSkill(state, 'A1', 'instable');
+    const player = getPlayer(state, 'A1');
+    const logCountBefore = state.gameLog.length;
+
+    const newState = logInstablePrevention(state, player, 'PASS');
+
+    expect(newState.gameLog.length).toBe(logCountBefore + 1);
+    const lastEntry = newState.gameLog[newState.gameLog.length - 1];
+    expect(lastEntry.message).toContain('Instable');
+    expect(lastEntry.playerId).toBe(player.id);
+    expect(lastEntry.team).toBe(player.team);
+  });
+
+  it('should not mutate the original state', () => {
+    let state = setup();
+    state = withSkill(state, 'A1', 'instable');
+    const player = getPlayer(state, 'A1');
+    const originalLogLength = state.gameLog.length;
+
+    logInstablePrevention(state, player, 'HANDOFF');
+
+    expect(state.gameLog.length).toBe(originalLogLength);
+  });
+
+  it('should include the skill metadata in the log entry', () => {
+    let state = setup();
+    state = withSkill(state, 'A1', 'instable');
+    const player = getPlayer(state, 'A1');
+
+    const newState = logInstablePrevention(state, player, 'THROW_TEAM_MATE');
+    const lastEntry = newState.gameLog[newState.gameLog.length - 1];
+    // Metadata is stored under details
+    expect(lastEntry.details?.skill).toBe('instable');
   });
 });

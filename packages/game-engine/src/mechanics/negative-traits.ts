@@ -3,7 +3,7 @@
  * These are checked at the start of a player's activation before their first action.
  */
 
-import type { GameState, Player, RNG, Position, BlockResult } from '../core/types';
+import type { GameState, Player, RNG, Position, BlockResult, CasualtyOutcome, ActionType } from '../core/types';
 import { hasSkill } from '../skills/skill-effects';
 import { hasPlayerActed, setPlayerAction } from '../core/game-state';
 import { createLogEntry } from '../utils/logging';
@@ -11,6 +11,7 @@ import { getAdjacentPlayers, inBounds, isPositionOccupied } from './movement';
 import { blockResultFromRoll } from '../utils/dice';
 import { performArmorRoll } from '../utils/dice';
 import { performInjuryRoll } from './injury';
+import { movePlayerToDugoutZone } from './dugout';
 import { getPushDirections } from './blocking';
 import { checkBlockNegatesBothDown, checkDodgeNegatesStumble } from '../skills/skill-bridge';
 
@@ -527,6 +528,105 @@ export function checkAnimalSavagery(
 }
 
 /**
+ * Détermine la cible Bloodlust en fonction de la variante du trait.
+ * - `bloodlust`   → cible 4+ (variante par défaut BB3)
+ * - `bloodlust-2` → cible 2+
+ * - `bloodlust-3` → cible 3+
+ * @returns la cible à atteindre, ou null si le joueur n'a pas le trait
+ */
+function getBloodlustTarget(player: Player): number | null {
+  if (hasSkill(player, 'bloodlust-2')) return 2;
+  if (hasSkill(player, 'bloodlust-3')) return 3;
+  if (hasSkill(player, 'bloodlust')) return 4;
+  return null;
+}
+
+/**
+ * Check Bloodlust activation roll.
+ * BB3 Rule: At the start of this player's activation, after declaring their action,
+ * roll a D6 and add +1 if the declared action is a Block or Blitz.
+ * - If the result is >= target number (from the variant): act normally.
+ * - If the result is < target number OR natural 1: activation fails. The Vampire
+ *   could bite an adjacent Thrall teammate — in this simplified implementation,
+ *   the activation ends (NOT a turnover), mirroring other negative-trait patterns.
+ *
+ * Three variants are supported:
+ * - `bloodlust`   → cible 4+ (défaut)
+ * - `bloodlust-2` → cible 2+
+ * - `bloodlust-3` → cible 3+
+ *
+ * @param moveType Action déclarée (BLOCK/BLITZ bénéficient d'un +1)
+ * @returns { passed, newState } — newState inchangé si aucun trait présent
+ */
+export function checkBloodlust(
+  state: GameState,
+  player: Player,
+  rng: RNG,
+  moveType: string
+): ActivationCheckResult {
+  const targetNumber = getBloodlustTarget(player);
+
+  // No bloodlust variant: always pass (no state change)
+  if (targetNumber === null) {
+    return { passed: true, newState: state };
+  }
+
+  // Already acted this turn: skip check (not first action)
+  if (hasPlayerActed(state, player.id)) {
+    return { passed: true, newState: state };
+  }
+
+  // Roll D6
+  const roll = Math.floor(rng() * 6) + 1;
+  const isBlockOrBlitz = moveType === 'BLOCK' || moveType === 'BLITZ';
+  const modifier = isBlockOrBlitz ? 1 : 0;
+  const total = roll + modifier;
+  // Natural 1 always fails, regardless of modifier
+  const success = roll !== 1 && total >= targetNumber;
+
+  const modifierText = modifier > 0 ? ` (+${modifier})` : '';
+  const rollLog = createLogEntry(
+    'dice',
+    `Soif de Sang: ${roll}${modifierText}/${targetNumber} ${success ? '✓' : '✗'}`,
+    player.id,
+    player.team,
+    { diceRoll: roll, targetNumber, success, skill: 'bloodlust', modifier }
+  );
+
+  let newState: GameState = {
+    ...state,
+    gameLog: [...state.gameLog, rollLog],
+  };
+
+  if (!success) {
+    // Failed: activation ends immediately, NOT a turnover.
+    // Full rule allows biting an adjacent Thrall teammate — simplified here
+    // by just ending the activation (same pattern as bone-head/take-root).
+    const failLog = createLogEntry(
+      'info',
+      `${player.name} cède à sa soif de sang et ne peut pas agir !`,
+      player.id,
+      player.team
+    );
+    newState = {
+      ...newState,
+      gameLog: [...newState.gameLog, failLog],
+    };
+
+    // Mark player as having acted and remove all movement points
+    newState = setPlayerAction(newState, player.id, 'MOVE');
+    newState = {
+      ...newState,
+      players: newState.players.map(p =>
+        p.id === player.id ? { ...p, pm: 0, gfiUsed: 2 } : p
+      ),
+    };
+  }
+
+  return { passed: success, newState };
+}
+
+/**
  * Check Take Root activation roll.
  * BB3 Rule: At the start of this player's activation, roll a D6.
  * On a 1, the player becomes "rooted" — they can't perform any action
@@ -593,4 +693,297 @@ export function checkTakeRoot(
   }
 
   return { passed: success, newState };
+}
+
+/**
+ * Resultat du test Always Hungry pour un lancer de coequipier.
+ * - `shouldContinueThrow`: `true` si le lancer doit continuer normalement,
+ *   `false` si le coequipier s'est echappe ou s'est fait devorer.
+ * - `newState`: etat mis a jour (logs, turnover, casualty eventuelle).
+ */
+export interface AlwaysHungryResult {
+  shouldContinueThrow: boolean;
+  newState: GameState;
+}
+
+/**
+ * Check Always Hungry (Toujours Affame) roll.
+ * BB2020/BB3 rule (Deathzone Big Guys):
+ *   When a player with Always Hungry attempts to throw a team-mate, they must
+ *   roll a D6 BEFORE the Pass roll.
+ *     - 2+ : the throw continues as normal.
+ *     - 1  : the player tries to eat the team-mate. Roll another D6:
+ *         - 2+ : the team-mate escapes, placed Prone (stunned) in their current
+ *           square. No pass is made. TURNOVER.
+ *         - 1  : the team-mate is EATEN. Removed from play as a casualty
+ *           (Dead). TURNOVER.
+ *
+ * This function does NOT remove the thrower's activation nor mark the action
+ * as taken — the caller (handleThrowTeamMate) remains responsible for the
+ * surrounding action bookkeeping.
+ */
+export function checkAlwaysHungry(
+  state: GameState,
+  thrower: Player,
+  thrown: Player,
+  rng: RNG
+): AlwaysHungryResult {
+  // No always-hungry: always continue (no state change)
+  if (!hasSkill(thrower, 'always-hungry')) {
+    return { shouldContinueThrow: true, newState: state };
+  }
+
+  // First roll: are we hungry?
+  const firstRoll = Math.floor(rng() * 6) + 1;
+  const hungrySuccess = firstRoll >= 2;
+
+  const firstLog = createLogEntry(
+    'dice',
+    `Toujours Affame: ${firstRoll}/2 ${hungrySuccess ? '✓' : '✗'}`,
+    thrower.id,
+    thrower.team,
+    { diceRoll: firstRoll, targetNumber: 2, success: hungrySuccess, skill: 'always-hungry' }
+  );
+
+  let newState: GameState = {
+    ...state,
+    gameLog: [...state.gameLog, firstLog],
+  };
+
+  if (hungrySuccess) {
+    // Pas faim — le lancer continue normalement
+    return { shouldContinueThrow: true, newState };
+  }
+
+  // 1 on first roll: try to eat the team-mate. Roll again.
+  const eatRoll = Math.floor(rng() * 6) + 1;
+  const teammateEscapes = eatRoll >= 2;
+
+  const eatLog = createLogEntry(
+    'dice',
+    `Tentative de devorer ${thrown.name}: ${eatRoll}/2 ${teammateEscapes ? '✓ (echappe)' : '✗ (devore)'}`,
+    thrower.id,
+    thrower.team,
+    { diceRoll: eatRoll, targetNumber: 2, success: teammateEscapes, skill: 'always-hungry' }
+  );
+  newState = { ...newState, gameLog: [...newState.gameLog, eatLog] };
+
+  if (teammateEscapes) {
+    // Le coequipier s'echappe : place prone (stunned) dans sa case, turnover
+    const escapeLog = createLogEntry(
+      'action',
+      `${thrown.name} s'echappe au dernier moment et tombe au sol !`,
+      thrown.id,
+      thrown.team
+    );
+    newState = {
+      ...newState,
+      gameLog: [...newState.gameLog, escapeLog],
+      isTurnover: true,
+      players: newState.players.map(p =>
+        p.id === thrown.id ? { ...p, stunned: true } : p
+      ),
+    };
+    return { shouldContinueThrow: false, newState };
+  }
+
+  // Double 1: le coequipier est devore (casualty Dead), turnover.
+  const eatenLog = createLogEntry(
+    'action',
+    `${thrower.name} devore ${thrown.name} ! MORT !`,
+    thrower.id,
+    thrower.team,
+    { targetId: thrown.id }
+  );
+  newState = { ...newState, gameLog: [...newState.gameLog, eatenLog] };
+
+  // Deplace le coequipier dans la zone casualty du dugout
+  newState = movePlayerToDugoutZone(newState, thrown.id, 'casualty', thrown.team);
+
+  // Marque l'issue de la blessure comme Dead
+  const outcome: CasualtyOutcome = 'dead';
+  newState = {
+    ...newState,
+    casualtyResults: { ...(newState.casualtyResults ?? {}), [thrown.id]: outcome },
+    isTurnover: true,
+  };
+
+  return { shouldContinueThrow: false, newState };
+}
+
+/**
+ * Resultat du test Foul Appearance (Repulsion).
+ * - `shouldContinueBlock`: `true` si le blocage peut se dérouler normalement,
+ *   `false` si l'attaquant est repoussé par l'apparence du défenseur.
+ * - `newState`: état mis à jour (logs, consommation d'activation si échec).
+ */
+export interface FoulAppearanceResult {
+  shouldContinueBlock: boolean;
+  newState: GameState;
+}
+
+/**
+ * Check Foul Appearance (Répulsion) roll.
+ * BB3 Rule (Mutation): when an opposing player declares a Block action targeting
+ * a player with Foul Appearance, the attacker's coach must first roll a D6.
+ * - On 2+: the block proceeds as normal.
+ * - On a 1: the attacker cannot perform the declared block. The action is
+ *   wasted: the attacker's activation ends (pm = 0) without a turnover.
+ *
+ * The check is done by the attacker, but the trait belongs to the target.
+ *
+ * @param state Current game state.
+ * @param attacker Player declaring the Block/Blitz action.
+ * @param target Player being targeted (must have foul-appearance for a roll).
+ * @param rng Seeded RNG.
+ * @param isBlitz When true, the wasted action is recorded as a Blitz (and the
+ *   team's blitz counter is incremented).
+ */
+export function checkFoulAppearance(
+  state: GameState,
+  attacker: Player,
+  target: Player,
+  rng: RNG,
+  isBlitz: boolean = false
+): FoulAppearanceResult {
+  // No foul-appearance on the target: block proceeds (no state change)
+  if (!hasSkill(target, 'foul-appearance')) {
+    return { shouldContinueBlock: true, newState: state };
+  }
+
+  // Roll D6: succeed on 2+
+  const roll = Math.floor(rng() * 6) + 1;
+  const success = roll >= 2;
+
+  const rollLog = createLogEntry(
+    'dice',
+    `Répulsion: ${roll}/2 ${success ? '✓' : '✗'}`,
+    attacker.id,
+    attacker.team,
+    { diceRoll: roll, targetNumber: 2, success, skill: 'foul-appearance', targetId: target.id }
+  );
+
+  let newState: GameState = {
+    ...state,
+    gameLog: [...state.gameLog, rollLog],
+  };
+
+  if (success) {
+    return { shouldContinueBlock: true, newState };
+  }
+
+  // Failed: the declared block/blitz is wasted. NOT a turnover.
+  const failLog = createLogEntry(
+    'info',
+    `${attacker.name} est répugné par ${target.name} et ne peut pas effectuer son blocage !`,
+    attacker.id,
+    attacker.team
+  );
+  newState = {
+    ...newState,
+    gameLog: [...newState.gameLog, failLog],
+  };
+
+  // Register the wasted action on the attacker
+  const actionType = isBlitz ? 'BLITZ' : 'BLOCK';
+  newState = setPlayerAction(newState, attacker.id, actionType);
+
+  if (isBlitz) {
+    newState = {
+      ...newState,
+      teamBlitzCount: {
+        ...newState.teamBlitzCount,
+        [attacker.team]: (newState.teamBlitzCount[attacker.team] || 0) + 1,
+      },
+    };
+  }
+
+  // End the attacker's activation (no more movement, no GFI)
+  newState = {
+    ...newState,
+    players: newState.players.map(p =>
+      p.id === attacker.id ? { ...p, pm: 0, gfiUsed: 2 } : p
+    ),
+  };
+
+  return { shouldContinueBlock: false, newState };
+}
+
+/**
+ * List of action types forbidden by the Instable (Unstable) trait.
+ *
+ * BB3 Season 3 rule (Instable / Unstable):
+ *   A player with this trait is too clumsy / unstable to safely handle
+ *   ball-transfer actions. They cannot declare a Pass, Hand-Off, or
+ *   Throw Team-Mate action. Other actions (Move, Block, Blitz, Foul, etc.)
+ *   are still available.
+ *
+ * This is a PROHIBITION, not a failed roll — no dice are rolled. The action
+ * is simply rejected. This is NOT a turnover since the activation has not
+ * started yet (the action is never applied).
+ */
+const INSTABLE_FORBIDDEN_ACTIONS: ReadonlySet<ActionType> = new Set<ActionType>([
+  'PASS',
+  'HANDOFF',
+  'THROW_TEAM_MATE',
+]);
+
+/**
+ * Check whether a player with the Instable (Unstable) trait is allowed to
+ * declare the given action.
+ *
+ * @param player Player attempting to act.
+ * @param actionType Action the player is trying to declare.
+ * @returns `true` when the action is allowed, `false` when Instable forbids it.
+ */
+export function canInstablePerformAction(
+  player: Player,
+  actionType: ActionType
+): boolean {
+  if (!hasSkill(player, 'instable')) {
+    return true;
+  }
+  return !INSTABLE_FORBIDDEN_ACTIONS.has(actionType);
+}
+
+/**
+ * Append a log entry explaining that an Instable player cannot perform the
+ * requested action. Returns a new state (immutable) with the log appended.
+ *
+ * The caller is responsible for not applying the forbidden action — this
+ * helper only records the reason in the game log.
+ */
+export function logInstablePrevention(
+  state: GameState,
+  player: Player,
+  actionType: ActionType
+): GameState {
+  const actionLabels: Record<ActionType, string> = {
+    MOVE: 'de mouvement',
+    BLOCK: 'de blocage',
+    BLITZ: 'de blitz',
+    PASS: 'de passe',
+    HANDOFF: 'de remise',
+    THROW_TEAM_MATE: 'de lancer de coequipier',
+    FOUL: 'de faute',
+    HYPNOTIC_GAZE: 'de regard hypnotique',
+    PROJECTILE_VOMIT: 'de vomissement projectile',
+    STAB: 'de poignard',
+    CHAINSAW: 'de tronconneuse',
+  };
+  const label = actionLabels[actionType] ?? '';
+  const message = label
+    ? `Instable: ${player.name} ne peut pas declarer d'action ${label} !`
+    : `Instable: ${player.name} ne peut pas declarer cette action !`;
+  const entry = createLogEntry(
+    'info',
+    message,
+    player.id,
+    player.team,
+    { skill: 'instable', actionType }
+  );
+  return {
+    ...state,
+    gameLog: [...state.gameLog, entry],
+  };
 }
