@@ -74,7 +74,7 @@ import {
   resolveKickoffQuickSnap,
   resolveKickoffBlitz,
 } from '../mechanics/kickoff-resolution';
-import { checkBoneHead, checkReallyStupid, checkWildAnimal, checkAnimalSavagery, checkTakeRoot } from '../mechanics/negative-traits';
+import { checkBoneHead, checkReallyStupid, checkWildAnimal, checkAnimalSavagery, checkTakeRoot, checkBloodlust } from '../mechanics/negative-traits';
 
 /**
  * Obtient tous les mouvements légaux pour l'état actuel
@@ -474,6 +474,10 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       const takeRootCheck = checkTakeRoot(activeState, player, rng);
       if (!takeRootCheck.passed) return takeRootCheck.newState;
       activeState = takeRootCheck.newState;
+
+      const bloodlustCheck = checkBloodlust(activeState, player, rng, move.type);
+      if (!bloodlustCheck.passed) return bloodlustCheck.newState;
+      activeState = bloodlustCheck.newState;
     }
   }
 

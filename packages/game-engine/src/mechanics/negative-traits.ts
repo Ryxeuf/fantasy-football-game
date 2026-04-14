@@ -527,6 +527,105 @@ export function checkAnimalSavagery(
 }
 
 /**
+ * Détermine la cible Bloodlust en fonction de la variante du trait.
+ * - `bloodlust`   → cible 4+ (variante par défaut BB3)
+ * - `bloodlust-2` → cible 2+
+ * - `bloodlust-3` → cible 3+
+ * @returns la cible à atteindre, ou null si le joueur n'a pas le trait
+ */
+function getBloodlustTarget(player: Player): number | null {
+  if (hasSkill(player, 'bloodlust-2')) return 2;
+  if (hasSkill(player, 'bloodlust-3')) return 3;
+  if (hasSkill(player, 'bloodlust')) return 4;
+  return null;
+}
+
+/**
+ * Check Bloodlust activation roll.
+ * BB3 Rule: At the start of this player's activation, after declaring their action,
+ * roll a D6 and add +1 if the declared action is a Block or Blitz.
+ * - If the result is >= target number (from the variant): act normally.
+ * - If the result is < target number OR natural 1: activation fails. The Vampire
+ *   could bite an adjacent Thrall teammate — in this simplified implementation,
+ *   the activation ends (NOT a turnover), mirroring other negative-trait patterns.
+ *
+ * Three variants are supported:
+ * - `bloodlust`   → cible 4+ (défaut)
+ * - `bloodlust-2` → cible 2+
+ * - `bloodlust-3` → cible 3+
+ *
+ * @param moveType Action déclarée (BLOCK/BLITZ bénéficient d'un +1)
+ * @returns { passed, newState } — newState inchangé si aucun trait présent
+ */
+export function checkBloodlust(
+  state: GameState,
+  player: Player,
+  rng: RNG,
+  moveType: string
+): ActivationCheckResult {
+  const targetNumber = getBloodlustTarget(player);
+
+  // No bloodlust variant: always pass (no state change)
+  if (targetNumber === null) {
+    return { passed: true, newState: state };
+  }
+
+  // Already acted this turn: skip check (not first action)
+  if (hasPlayerActed(state, player.id)) {
+    return { passed: true, newState: state };
+  }
+
+  // Roll D6
+  const roll = Math.floor(rng() * 6) + 1;
+  const isBlockOrBlitz = moveType === 'BLOCK' || moveType === 'BLITZ';
+  const modifier = isBlockOrBlitz ? 1 : 0;
+  const total = roll + modifier;
+  // Natural 1 always fails, regardless of modifier
+  const success = roll !== 1 && total >= targetNumber;
+
+  const modifierText = modifier > 0 ? ` (+${modifier})` : '';
+  const rollLog = createLogEntry(
+    'dice',
+    `Soif de Sang: ${roll}${modifierText}/${targetNumber} ${success ? '✓' : '✗'}`,
+    player.id,
+    player.team,
+    { diceRoll: roll, targetNumber, success, skill: 'bloodlust', modifier }
+  );
+
+  let newState: GameState = {
+    ...state,
+    gameLog: [...state.gameLog, rollLog],
+  };
+
+  if (!success) {
+    // Failed: activation ends immediately, NOT a turnover.
+    // Full rule allows biting an adjacent Thrall teammate — simplified here
+    // by just ending the activation (same pattern as bone-head/take-root).
+    const failLog = createLogEntry(
+      'info',
+      `${player.name} cède à sa soif de sang et ne peut pas agir !`,
+      player.id,
+      player.team
+    );
+    newState = {
+      ...newState,
+      gameLog: [...newState.gameLog, failLog],
+    };
+
+    // Mark player as having acted and remove all movement points
+    newState = setPlayerAction(newState, player.id, 'MOVE');
+    newState = {
+      ...newState,
+      players: newState.players.map(p =>
+        p.id === player.id ? { ...p, pm: 0, gfiUsed: 2 } : p
+      ),
+    };
+  }
+
+  return { passed: success, newState };
+}
+
+/**
  * Check Take Root activation roll.
  * BB3 Rule: At the start of this player's activation, roll a D6.
  * On a 1, the player becomes "rooted" — they can't perform any action
