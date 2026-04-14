@@ -209,7 +209,7 @@
 | J.8 | Implementer `bloodlust` (3 variantes) | Regle | [x] |
 | J.9 | Implementer `always-hungry` | Regle | [x] |
 | J.10 | Implementer `foul-appearance` | Regle | [x] |
-| J.11 | Implementer `instable` | Regle | [ ] |
+| J.11 | Implementer `instable` | Regle | [x] |
 | K.1 | Implementer `leap` + `pogo-stick` | Regle | [ ] |
 | K.2 | Implementer `stab` | Regle | [ ] |
 | K.3 | Implementer `chainsaw` | Regle | [ ] |
