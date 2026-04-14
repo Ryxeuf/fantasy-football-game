@@ -75,6 +75,12 @@ import {
   resolveKickoffBlitz,
 } from '../mechanics/kickoff-resolution';
 import { checkBoneHead, checkReallyStupid, checkWildAnimal, checkAnimalSavagery, checkTakeRoot, checkBloodlust, checkAlwaysHungry, checkFoulAppearance, canInstablePerformAction, logInstablePrevention } from '../mechanics/negative-traits';
+import {
+  canLeap as playerCanLeap,
+  getLeapModifier,
+  performLeapRoll,
+  getLegalLeapDestinations,
+} from '../mechanics/leap';
 
 /**
  * Obtient tous les mouvements légaux pour l'état actuel
@@ -160,6 +166,16 @@ export function getLegalMoves(state: GameState): Move[] {
       if (!inBounds(state, to)) continue;
       if (occ.has(`${to.x},${to.y}`)) continue; // pas de chevauchement
       moves.push({ type: 'MOVE', playerId: p.id, to });
+    }
+
+    // Actions de Saut (LEAP / Pogo Stick) — 2 cases de mouvement, test d'AG,
+    // ignore les zones de tacle au depart.
+    // MVP: on exige p.pm >= 2 (pas de leap-via-GFI pour l'instant).
+    if (playerCanLeap(p) && p.pm >= 2) {
+      const leapDests = getLegalLeapDestinations(state, p.pos);
+      for (const to of leapDests) {
+        moves.push({ type: 'LEAP', playerId: p.id, to });
+      }
     }
 
     // Actions de blocage
@@ -451,7 +467,7 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
   // If the check fails, the player's activation ends without executing the action.
   let activeState = state;
   const ACTIVATION_MOVE_TYPES: string[] = [
-    'MOVE', 'DODGE', 'BLOCK', 'BLITZ', 'PASS', 'HANDOFF',
+    'MOVE', 'LEAP', 'DODGE', 'BLOCK', 'BLITZ', 'PASS', 'HANDOFF',
     'THROW_TEAM_MATE', 'FOUL', 'HYPNOTIC_GAZE', 'PROJECTILE_VOMIT',
   ];
   if (ACTIVATION_MOVE_TYPES.includes(move.type) && 'playerId' in move) {
@@ -491,6 +507,8 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       return handleEndPlayerTurn(activeState, move);
     case 'MOVE':
       return handleMove(activeState, move, rng);
+    case 'LEAP':
+      return handleLeap(activeState, move, rng);
     case 'DODGE':
       return handleDodge(activeState, move, rng);
     case 'BLOCK':
@@ -624,6 +642,89 @@ function handleEndTurn(state: GameState, rng: RNG): GameState {
 /**
  * Gère un mouvement simple
  */
+/**
+ * Gère une action LEAP (Saut) — compétence Leap ou trait Pogo Stick.
+ *
+ * Le joueur saute 2 cases (distance Chebyshev) depuis sa position actuelle.
+ * Un seul test d'Agilité est effectué, qui remplace le jet d'esquive quand le
+ * joueur quitte des zones de tacle. Coûte 2 points de mouvement.
+ * Échec = le joueur tombe à la case d'arrivée (armure + blessure + turnover
+ * s'il portait le ballon).
+ */
+function handleLeap(
+  state: GameState,
+  move: { type: 'LEAP'; playerId: string; to: Position },
+  rng: RNG
+): GameState {
+  const idx = state.players.findIndex(p => p.id === move.playerId);
+  if (idx === -1) return state;
+
+  // Gestion du changement de joueur actif
+  const newState = handlePlayerSwitch(state, move.playerId);
+
+  // Vérifier que ce LEAP est bien légal (skill, distance, case libre, PM suffisants)
+  const legal = getLegalMoves(newState).some(
+    m => m.type === 'LEAP' && m.playerId === move.playerId && samePos(m.to, move.to)
+  );
+  if (!legal) return newState;
+
+  if (newState.isTurnover) return newState;
+
+  const player = newState.players[idx];
+  const modifiers = getLeapModifier(player);
+
+  // Jet d'Agilité pour le saut
+  const leapResult = performLeapRoll(player, rng, modifiers);
+
+  let next = structuredClone(newState) as GameState;
+  next.lastDiceResult = leapResult;
+
+  const leapLogEntry = createLogEntry(
+    'dice',
+    `Saut (Leap): ${leapResult.diceRoll}/${leapResult.targetNumber} ${leapResult.success ? '✓' : '✗'}`,
+    player.id,
+    player.team,
+    {
+      diceRoll: leapResult.diceRoll,
+      targetNumber: leapResult.targetNumber,
+      success: leapResult.success,
+      modifiers,
+      skill: hasSkill(player, 'pogo-stick') ? 'pogo-stick' : 'leap',
+    }
+  );
+  next.gameLog = [...next.gameLog, leapLogEntry];
+
+  // Déplacer le joueur vers la case d'arrivée et consommer 2 PM
+  next.players[idx].pos = { ...move.to };
+  next.players[idx].pm = Math.max(0, next.players[idx].pm - 2);
+
+  // Enregistrer l'action de mouvement si c'est le premier mouvement
+  if (!hasPlayerActed(next, player.id)) {
+    next = setPlayerAction(next, player.id, 'MOVE');
+  }
+
+  next = checkPlayerTurnEnd(next, player.id);
+
+  if (!leapResult.success) {
+    // Échec : le joueur tombe à la case d'arrivée (armure + blessure + turnover)
+    return applyRollFailure(next, idx, rng);
+  }
+
+  // Succès : pas de jet d'esquive nécessaire même si on quittait des zones de tacle.
+  // Touchdown si on porte la balle et qu'on atteint l'en-but adverse.
+  const mover = next.players[idx];
+  if (mover.hasBall && isInOpponentEndzone(next, mover)) {
+    return awardTouchdown(next, mover.team, mover);
+  }
+
+  // Ramassage de balle si on atterrit sur le ballon.
+  if (next.ball && samePos(next.ball, move.to)) {
+    return handleBallPickup(next, player, rng, idx);
+  }
+
+  return next;
+}
+
 function handleMove(
   state: GameState,
   move: { type: 'MOVE'; playerId: string; to: Position },

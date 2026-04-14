@@ -26,6 +26,7 @@ export * from './utils/dice';
 export * from './utils/dice-notifications';
 export * from './utils/team-value-calculator';
 export * from './mechanics/movement';
+export * from './mechanics/leap';
 export * from './actions/actions';
 // Export des fonctions de blocage (sans conflit)
 export {

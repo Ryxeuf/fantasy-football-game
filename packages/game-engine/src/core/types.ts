@@ -309,6 +309,7 @@ export type ActionType =
 
 export type Move =
   | { type: 'MOVE'; playerId: string; to: Position }
+  | { type: 'LEAP'; playerId: string; to: Position }
   | { type: 'END_TURN' }
   | { type: 'END_PLAYER_TURN'; playerId: string }
   | { type: 'DODGE'; playerId: string; from: Position; to: Position }
