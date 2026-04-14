@@ -14,6 +14,7 @@ import {
 } from '../core/types';
 import { isAdjacent, inBounds, isPositionOccupied } from './movement';
 import { checkGuard, checkBlockNegatesBothDown, checkDodgeNegatesStumble, getMightyBlowBonusFromRegistry, checkWrestleOnBothDown, getArmorSkillContext, getInjurySkillModifiers } from '../skills/skill-bridge';
+import { hasSkill } from '../skills/skill-effects';
 import { performArmorRoll, roll2D6 } from '../utils/dice';
 import { performArmorRollWithNotification } from '../utils/dice-notifications';
 import { createLogEntry } from '../utils/logging';
@@ -99,8 +100,12 @@ function armorAndInjuryWithMightyBlow(
   const diceRoll = roll2D6(rng);
 
   // Claws: armor breaks on 8+ regardless of AV (unless defender has Iron Hard Skin)
+  // Stunty: la valeur d'armure du joueur cible est reduite de 1 (plus fragile).
+  // Le malus s'applique toujours, cumulatif avec Claws et Mighty Blow.
   const { clawsActive } = getArmorSkillContext(state, attacker, victim);
-  const armorTarget = clawsActive ? Math.min(victim.av, 8) : victim.av;
+  const stuntyAdjust = hasSkill(victim, 'stunty') ? -1 : 0;
+  const baseTarget = clawsActive ? Math.min(victim.av, 8) : victim.av;
+  const armorTarget = baseTarget + stuntyAdjust;
 
   const armorBrokenNaturally = diceRoll >= armorTarget;
   const armorBrokenWithMB = (diceRoll + mbBonus) >= armorTarget;

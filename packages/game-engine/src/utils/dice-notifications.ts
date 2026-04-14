@@ -4,6 +4,7 @@
  */
 
 import { RNG, Player, DiceResult, BlockResult } from '../core/types';
+import { calculateArmorTarget } from './dice';
 
 // Type pour les callbacks de notification
 export type DiceNotificationCallback = (playerName: string, diceResult: DiceResult) => void;
@@ -154,7 +155,8 @@ export function performArmorRollWithNotification(
   const die2 = Math.floor(rng() * 6) + 1;
   const diceRoll = die1 + die2;
   // Target = AV + modifiers, capped at 12 (matching performArmorRoll in dice.ts)
-  const targetNumber = Math.min(12, player.av + modifiers);
+  // calculateArmorTarget applique également le malus Stunty (-1 AV).
+  const targetNumber = calculateArmorTarget(player, modifiers);
   // Armor holds (success) when roll is below target; broken when roll >= target
   const success = diceRoll < targetNumber;
 

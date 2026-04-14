@@ -4,6 +4,7 @@
  */
 
 import { RNG, Player, DiceResult, BlockResult, BlockDiceResult } from '../core/types';
+import { hasSkill } from '../skills/skill-effects';
 
 /**
  * Lance un dé à 6 faces
@@ -67,7 +68,10 @@ export function calculateArmorTarget(player: Player, modifiers: number = 0): num
   // L'armure est percée si le résultat est >= à la valeur d'armure du joueur
   // Les modificateurs positifs rendent l'armure plus difficile à percer (augmentent la valeur cible)
   // La valeur de base est l'armure du joueur (av), et on ajoute les modificateurs positifs
-  return Math.min(12, player.av + modifiers);
+  // Stunty : la valeur d'armure est réduite de 1 (plus fragile), ce qui rend la
+  // cassure plus facile. S'applique toujours, cumulatif avec tout autre modificateur.
+  const stuntyAdjust = hasSkill(player, 'stunty') ? -1 : 0;
+  return Math.min(12, player.av + modifiers + stuntyAdjust);
 }
 
 /**

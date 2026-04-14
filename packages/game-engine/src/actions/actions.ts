@@ -61,7 +61,7 @@ import {
   handlePostTouchdown,
   canTeamBlitz,
 } from '../core/game-state';
-import { executePass, executeHandoff, getPassRange } from '../mechanics/passing';
+import { executePass, executeHandoff, getPassRange, canAttemptPassForRange } from '../mechanics/passing';
 import { canFoul, executeFoul } from '../mechanics/foul';
 import { isAdjacent } from '../mechanics/movement';
 import { applyApothecaryChoice } from '../mechanics/apothecary';
@@ -228,7 +228,7 @@ export function getLegalMoves(state: GameState): Move[] {
       );
       for (const target of teammates) {
         const range = getPassRange(p.pos, target.pos);
-        if (range) {
+        if (range && canAttemptPassForRange(p, range)) {
           moves.push({ type: 'PASS', playerId: p.id, targetId: target.id });
         }
       }
@@ -1906,6 +1906,13 @@ function handlePass(state: GameState, move: { type: 'PASS'; playerId: string; ta
   // No dice are rolled, no turnover. The action is simply rejected with a log.
   if (!canInstablePerformAction(passer, 'PASS')) {
     return logInstablePrevention(state, passer, 'PASS');
+  }
+
+  // Stunty: passes Long/Long Bomb interdites. L'action est rejetee sans dé
+  // ni turnover (retourne l'etat inchange, le coach doit choisir un autre recepteur).
+  const passRange = getPassRange(passer.pos, target.pos);
+  if (!canAttemptPassForRange(passer, passRange)) {
+    return state;
   }
 
   // Animosity check: roll D6 before pass if passer dislikes target

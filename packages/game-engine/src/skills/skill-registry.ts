@@ -281,10 +281,16 @@ registerSkill({
 });
 
 // STUNTY
+// Règle BB3 :
+//  - +1 au jet d'esquive (collecté via skill-registry ici).
+//  - Malus d'armure -1 quand la cible est Stunty (appliqué directement dans
+//    `calculateArmorTarget` / `performArmorRollWithNotification` / `blocking.ts`).
+//  - Passes Long et Long Bomb interdites (appliqué via `canAttemptPassForRange`
+//    dans `passing.ts`, consommé par `getLegalMoves` et `handlePass`).
 registerSkill({
   slug: 'stunty',
-  triggers: ['on-armor', 'on-dodge', 'on-pass'],
-  description: '+1 au jet d\'esquive, -1 à l\'armure, passes interdites au-delà de courte.',
+  triggers: ['on-dodge'],
+  description: '+1 au jet d\'esquive, armure réduite de 1 (plus fragile), passes limitées à Quick/Short.',
   canApply: (ctx) => hasSkill(ctx.player, 'stunty'),
   getModifiers: (ctx) => {
     const mods: SkillModifier = {};

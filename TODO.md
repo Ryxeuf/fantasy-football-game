@@ -220,7 +220,7 @@
 
 | # | Tache | Type | Statut |
 |---|-------|------|--------|
-| P1.1 | Implementer `stunty` (Skinks, Lineman Gnome, joueurs petits) | Regle | [ ] |
+| P1.1 | Implementer `stunty` (Skinks, Lineman Gnome, joueurs petits) | Regle | [x] |
 | P1.2 | Implementer `dauntless` (Dwarf Troll Slayer) | Regle | [ ] |
 | P1.3 | Implementer `break-tackle` (Dwarf Deathroller) | Regle | [ ] |
 | P1.4 | Implementer `juggernaut` (Dwarf Deathroller) | Regle | [ ] |
