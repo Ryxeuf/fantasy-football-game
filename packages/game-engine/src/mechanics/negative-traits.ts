@@ -3,7 +3,7 @@
  * These are checked at the start of a player's activation before their first action.
  */
 
-import type { GameState, Player, RNG, Position, BlockResult } from '../core/types';
+import type { GameState, Player, RNG, Position, BlockResult, CasualtyOutcome } from '../core/types';
 import { hasSkill } from '../skills/skill-effects';
 import { hasPlayerActed, setPlayerAction } from '../core/game-state';
 import { createLogEntry } from '../utils/logging';
@@ -11,6 +11,7 @@ import { getAdjacentPlayers, inBounds, isPositionOccupied } from './movement';
 import { blockResultFromRoll } from '../utils/dice';
 import { performArmorRoll } from '../utils/dice';
 import { performInjuryRoll } from './injury';
+import { movePlayerToDugoutZone } from './dugout';
 import { getPushDirections } from './blocking';
 import { checkBlockNegatesBothDown, checkDodgeNegatesStumble } from '../skills/skill-bridge';
 
@@ -692,4 +693,120 @@ export function checkTakeRoot(
   }
 
   return { passed: success, newState };
+}
+
+/**
+ * Resultat du test Always Hungry pour un lancer de coequipier.
+ * - `shouldContinueThrow`: `true` si le lancer doit continuer normalement,
+ *   `false` si le coequipier s'est echappe ou s'est fait devorer.
+ * - `newState`: etat mis a jour (logs, turnover, casualty eventuelle).
+ */
+export interface AlwaysHungryResult {
+  shouldContinueThrow: boolean;
+  newState: GameState;
+}
+
+/**
+ * Check Always Hungry (Toujours Affame) roll.
+ * BB2020/BB3 rule (Deathzone Big Guys):
+ *   When a player with Always Hungry attempts to throw a team-mate, they must
+ *   roll a D6 BEFORE the Pass roll.
+ *     - 2+ : the throw continues as normal.
+ *     - 1  : the player tries to eat the team-mate. Roll another D6:
+ *         - 2+ : the team-mate escapes, placed Prone (stunned) in their current
+ *           square. No pass is made. TURNOVER.
+ *         - 1  : the team-mate is EATEN. Removed from play as a casualty
+ *           (Dead). TURNOVER.
+ *
+ * This function does NOT remove the thrower's activation nor mark the action
+ * as taken — the caller (handleThrowTeamMate) remains responsible for the
+ * surrounding action bookkeeping.
+ */
+export function checkAlwaysHungry(
+  state: GameState,
+  thrower: Player,
+  thrown: Player,
+  rng: RNG
+): AlwaysHungryResult {
+  // No always-hungry: always continue (no state change)
+  if (!hasSkill(thrower, 'always-hungry')) {
+    return { shouldContinueThrow: true, newState: state };
+  }
+
+  // First roll: are we hungry?
+  const firstRoll = Math.floor(rng() * 6) + 1;
+  const hungrySuccess = firstRoll >= 2;
+
+  const firstLog = createLogEntry(
+    'dice',
+    `Toujours Affame: ${firstRoll}/2 ${hungrySuccess ? '✓' : '✗'}`,
+    thrower.id,
+    thrower.team,
+    { diceRoll: firstRoll, targetNumber: 2, success: hungrySuccess, skill: 'always-hungry' }
+  );
+
+  let newState: GameState = {
+    ...state,
+    gameLog: [...state.gameLog, firstLog],
+  };
+
+  if (hungrySuccess) {
+    // Pas faim — le lancer continue normalement
+    return { shouldContinueThrow: true, newState };
+  }
+
+  // 1 on first roll: try to eat the team-mate. Roll again.
+  const eatRoll = Math.floor(rng() * 6) + 1;
+  const teammateEscapes = eatRoll >= 2;
+
+  const eatLog = createLogEntry(
+    'dice',
+    `Tentative de devorer ${thrown.name}: ${eatRoll}/2 ${teammateEscapes ? '✓ (echappe)' : '✗ (devore)'}`,
+    thrower.id,
+    thrower.team,
+    { diceRoll: eatRoll, targetNumber: 2, success: teammateEscapes, skill: 'always-hungry' }
+  );
+  newState = { ...newState, gameLog: [...newState.gameLog, eatLog] };
+
+  if (teammateEscapes) {
+    // Le coequipier s'echappe : place prone (stunned) dans sa case, turnover
+    const escapeLog = createLogEntry(
+      'action',
+      `${thrown.name} s'echappe au dernier moment et tombe au sol !`,
+      thrown.id,
+      thrown.team
+    );
+    newState = {
+      ...newState,
+      gameLog: [...newState.gameLog, escapeLog],
+      isTurnover: true,
+      players: newState.players.map(p =>
+        p.id === thrown.id ? { ...p, stunned: true } : p
+      ),
+    };
+    return { shouldContinueThrow: false, newState };
+  }
+
+  // Double 1: le coequipier est devore (casualty Dead), turnover.
+  const eatenLog = createLogEntry(
+    'action',
+    `${thrower.name} devore ${thrown.name} ! MORT !`,
+    thrower.id,
+    thrower.team,
+    { targetId: thrown.id }
+  );
+  newState = { ...newState, gameLog: [...newState.gameLog, eatenLog] };
+
+  // Deplace le coequipier dans la zone casualty du dugout
+  newState = movePlayerToDugoutZone(newState, thrown.id, 'casualty', thrown.team);
+
+  // Marque l'issue de la blessure comme Dead
+  const outcome: CasualtyOutcome = 'dead';
+  newState = {
+    ...newState,
+    casualtyResults: { ...(newState.casualtyResults ?? {}), [thrown.id]: outcome },
+    isTurnover: true,
+  };
+
+  return { shouldContinueThrow: false, newState };
 }

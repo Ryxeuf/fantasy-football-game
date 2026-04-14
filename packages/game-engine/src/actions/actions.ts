@@ -74,7 +74,7 @@ import {
   resolveKickoffQuickSnap,
   resolveKickoffBlitz,
 } from '../mechanics/kickoff-resolution';
-import { checkBoneHead, checkReallyStupid, checkWildAnimal, checkAnimalSavagery, checkTakeRoot, checkBloodlust } from '../mechanics/negative-traits';
+import { checkBoneHead, checkReallyStupid, checkWildAnimal, checkAnimalSavagery, checkTakeRoot, checkBloodlust, checkAlwaysHungry } from '../mechanics/negative-traits';
 
 /**
  * Obtient tous les mouvements légaux pour l'état actuel
@@ -1825,7 +1825,17 @@ function handleThrowTeamMate(
   const range = getThrowRange(thrower.pos, move.targetPos);
   if (!range) return state;
 
-  let newState = executeThrowTeamMate(state, thrower, thrown, move.targetPos, rng);
+  // Always Hungry check (BB3): test AVANT le jet de passe. Un double-1 devore
+  // le coequipier, un 1+2+ place le coequipier prone + turnover, 2+ continue.
+  const hungryResult = checkAlwaysHungry(state, thrower, thrown, rng);
+  if (!hungryResult.shouldContinueThrow) {
+    let newState = hungryResult.newState;
+    newState = setPlayerAction(newState, thrower.id, 'THROW_TEAM_MATE');
+    newState = checkPlayerTurnEnd(newState, thrower.id);
+    return newState;
+  }
+
+  let newState = executeThrowTeamMate(hungryResult.newState, thrower, thrown, move.targetPos, rng);
   newState = setPlayerAction(newState, thrower.id, 'THROW_TEAM_MATE');
   newState = checkPlayerTurnEnd(newState, thrower.id);
   return newState;
