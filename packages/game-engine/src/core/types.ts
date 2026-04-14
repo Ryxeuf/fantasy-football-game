@@ -306,7 +306,8 @@ export type ActionType =
   | 'FOUL'
   | 'HYPNOTIC_GAZE'
   | 'PROJECTILE_VOMIT'
-  | 'STAB';
+  | 'STAB'
+  | 'CHAINSAW';
 
 export type Move =
   | { type: 'MOVE'; playerId: string; to: Position }
@@ -328,6 +329,7 @@ export type Move =
   | { type: 'HYPNOTIC_GAZE'; playerId: string; targetId: string }
   | { type: 'PROJECTILE_VOMIT'; playerId: string; targetId: string }
   | { type: 'STAB'; playerId: string; targetId: string }
+  | { type: 'CHAINSAW'; playerId: string; targetId: string }
   | { type: 'KICKOFF_PERFECT_DEFENCE'; positions: Array<{ playerId: string; position: Position }> }
   | { type: 'KICKOFF_HIGH_KICK'; playerId: string | null }
   | { type: 'KICKOFF_QUICK_SNAP'; moves: Array<{ playerId: string; to: Position }> }

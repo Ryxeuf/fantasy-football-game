@@ -212,7 +212,7 @@
 | J.11 | Implementer `instable` | Regle | [x] |
 | K.1 | Implementer `leap` + `pogo-stick` | Regle | [x] |
 | K.2 | Implementer `stab` | Regle | [x] |
-| K.3 | Implementer `chainsaw` | Regle | [ ] |
+| K.3 | Implementer `chainsaw` | Regle | [x] |
 | K.4 | Implementer `dump-off` | Regle | [ ] |
 | K.5 | Implementer `on-the-ball` | Regle | [ ] |
 | TEST-2 | Tests unitaires pour tous les nouveaux skills | Tests | [ ] |

@@ -69,6 +69,7 @@ import { canThrowTeamMate, getThrowRange, executeThrowTeamMate } from '../mechan
 import { canHypnoticGaze, executeHypnoticGaze } from '../mechanics/hypnotic-gaze';
 import { canProjectileVomit, executeProjectileVomit } from '../mechanics/projectile-vomit';
 import { canStab, executeStab } from '../mechanics/stab';
+import { canChainsaw, executeChainsaw } from '../mechanics/chainsaw';
 import {
   resolveKickoffPerfectDefence,
   resolveKickoffHighKick,
@@ -314,6 +315,16 @@ export function getLegalMoves(state: GameState): Move[] {
       }
     }
 
+    // Actions de Tronçonneuse (CHAINSAW)
+    if (!hasPlayerActed(state, p.id) && hasSkill(p, 'chainsaw')) {
+      const adjacentOpponents = state.players.filter(
+        opp => opp.team !== team && canChainsaw(state, p, opp)
+      );
+      for (const target of adjacentOpponents) {
+        moves.push({ type: 'CHAINSAW', playerId: p.id, targetId: target.id });
+      }
+    }
+
     // END_PLAYER_TURN : permet d'arrêter l'activation d'un joueur en cours
     const pAction = state.playerActions?.[p.id];
     if (pAction === 'MOVE' || pAction === 'BLITZ') {
@@ -480,6 +491,7 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
   const ACTIVATION_MOVE_TYPES: string[] = [
     'MOVE', 'LEAP', 'DODGE', 'BLOCK', 'BLITZ', 'PASS', 'HANDOFF',
     'THROW_TEAM_MATE', 'FOUL', 'HYPNOTIC_GAZE', 'PROJECTILE_VOMIT', 'STAB',
+    'CHAINSAW',
   ];
   if (ACTIVATION_MOVE_TYPES.includes(move.type) && 'playerId' in move) {
     const playerId = (move as { playerId: string }).playerId;
@@ -550,6 +562,8 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       return handleProjectileVomit(activeState, move, rng);
     case 'STAB':
       return handleStab(activeState, move, rng);
+    case 'CHAINSAW':
+      return handleChainsaw(activeState, move, rng);
     case 'KICKOFF_PERFECT_DEFENCE':
       return resolveKickoffPerfectDefence(activeState, move.positions);
     case 'KICKOFF_HIGH_KICK':
@@ -2085,5 +2099,27 @@ function handleStab(
   let newState = executeStab(state, stabber, target, rng);
   newState = setPlayerAction(newState, stabber.id, 'STAB');
   newState = checkPlayerTurnEnd(newState, stabber.id);
+  return newState;
+}
+
+/**
+ * Gère une action de Tronçonneuse (Chainsaw)
+ */
+function handleChainsaw(
+  state: GameState,
+  move: { type: 'CHAINSAW'; playerId: string; targetId: string },
+  rng: RNG,
+): GameState {
+  const attacker = state.players.find(p => p.id === move.playerId);
+  const target = state.players.find(p => p.id === move.targetId);
+
+  if (!attacker || !target) return state;
+  if (attacker.team !== state.currentPlayer) return state;
+  if (hasPlayerActed(state, attacker.id)) return state;
+  if (!canChainsaw(state, attacker, target)) return state;
+
+  let newState = executeChainsaw(state, attacker, target, rng);
+  newState = setPlayerAction(newState, attacker.id, 'CHAINSAW');
+  newState = checkPlayerTurnEnd(newState, attacker.id);
   return newState;
 }

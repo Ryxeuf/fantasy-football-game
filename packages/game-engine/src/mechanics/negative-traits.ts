@@ -969,6 +969,7 @@ export function logInstablePrevention(
     HYPNOTIC_GAZE: 'de regard hypnotique',
     PROJECTILE_VOMIT: 'de vomissement projectile',
     STAB: 'de poignard',
+    CHAINSAW: 'de tronconneuse',
   };
   const label = actionLabels[actionType] ?? '';
   const message = label
