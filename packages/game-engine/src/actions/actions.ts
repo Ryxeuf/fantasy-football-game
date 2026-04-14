@@ -74,7 +74,7 @@ import {
   resolveKickoffQuickSnap,
   resolveKickoffBlitz,
 } from '../mechanics/kickoff-resolution';
-import { checkBoneHead, checkReallyStupid, checkWildAnimal, checkAnimalSavagery, checkTakeRoot, checkBloodlust, checkAlwaysHungry, checkFoulAppearance } from '../mechanics/negative-traits';
+import { checkBoneHead, checkReallyStupid, checkWildAnimal, checkAnimalSavagery, checkTakeRoot, checkBloodlust, checkAlwaysHungry, checkFoulAppearance, canInstablePerformAction, logInstablePrevention } from '../mechanics/negative-traits';
 
 /**
  * Obtient tous les mouvements légaux pour l'état actuel
@@ -203,7 +203,8 @@ export function getLegalMoves(state: GameState): Move[] {
 
     // Actions de passe (PASS) - le joueur doit avoir le ballon et pas encore agi
     // Passes interdites pendant le tour de blitz kickoff
-    if (p.hasBall && !hasPlayerActed(state, p.id) && !state.kickoffBlitzTurn) {
+    // Instable: prohibition — le joueur ne peut pas declarer d'action de passe
+    if (p.hasBall && !hasPlayerActed(state, p.id) && !state.kickoffBlitzTurn && canInstablePerformAction(p, 'PASS')) {
       const teammates = state.players.filter(
         t => t.team === team && t.id !== p.id && !t.stunned && t.state === 'active'
       );
@@ -217,7 +218,8 @@ export function getLegalMoves(state: GameState): Move[] {
 
     // Actions de remise (HANDOFF) - le joueur doit avoir le ballon, cible adjacente
     // Remises interdites pendant le tour de blitz kickoff
-    if (p.hasBall && !hasPlayerActed(state, p.id) && !state.kickoffBlitzTurn) {
+    // Instable: prohibition — le joueur ne peut pas declarer d'action de remise
+    if (p.hasBall && !hasPlayerActed(state, p.id) && !state.kickoffBlitzTurn && canInstablePerformAction(p, 'HANDOFF')) {
       const teammates = state.players.filter(
         t => t.team === team && t.id !== p.id && !t.stunned && t.state === 'active'
       );
@@ -239,7 +241,8 @@ export function getLegalMoves(state: GameState): Move[] {
     }
 
     // Actions de Lancer de Coéquipier (THROW_TEAM_MATE)
-    if (!hasPlayerActed(state, p.id) && hasSkill(p, 'throw-team-mate')) {
+    // Instable: prohibition — le joueur ne peut pas declarer d'action de lancer de coequipier
+    if (!hasPlayerActed(state, p.id) && hasSkill(p, 'throw-team-mate') && canInstablePerformAction(p, 'THROW_TEAM_MATE')) {
       // Chercher les coéquipiers adjacents avec Right Stuff
       const throwableTeammates = state.players.filter(
         t => t.team === team && t.id !== p.id && canThrowTeamMate(state, p, t)
@@ -1771,6 +1774,12 @@ function handlePass(state: GameState, move: { type: 'PASS'; playerId: string; ta
   if (passer.team !== state.currentPlayer) return state;
   if (hasPlayerActed(state, passer.id)) return state;
 
+  // Instable (Unstable): prohibition — Pass action cannot be declared.
+  // No dice are rolled, no turnover. The action is simply rejected with a log.
+  if (!canInstablePerformAction(passer, 'PASS')) {
+    return logInstablePrevention(state, passer, 'PASS');
+  }
+
   // Animosity check: roll D6 before pass if passer dislikes target
   let currentState = state;
   if (hasAnimosityAgainst(passer, target)) {
@@ -1802,6 +1811,11 @@ function handleHandoff(state: GameState, move: { type: 'HANDOFF'; playerId: stri
   if (passer.team !== state.currentPlayer) return state;
   if (hasPlayerActed(state, passer.id)) return state;
   if (!isAdjacent(passer.pos, target.pos)) return state;
+
+  // Instable (Unstable): prohibition — Hand-Off action cannot be declared.
+  if (!canInstablePerformAction(passer, 'HANDOFF')) {
+    return logInstablePrevention(state, passer, 'HANDOFF');
+  }
 
   // Animosity check: roll D6 before handoff if passer dislikes target
   let currentState = state;
@@ -1837,6 +1851,11 @@ function handleThrowTeamMate(
   if (thrower.team !== state.currentPlayer) return state;
   if (hasPlayerActed(state, thrower.id)) return state;
   if (!canThrowTeamMate(state, thrower, thrown)) return state;
+
+  // Instable (Unstable): prohibition — Throw Team-Mate action cannot be declared.
+  if (!canInstablePerformAction(thrower, 'THROW_TEAM_MATE')) {
+    return logInstablePrevention(state, thrower, 'THROW_TEAM_MATE');
+  }
 
   // Vérifier que la cible est dans la portée
   const range = getThrowRange(thrower.pos, move.targetPos);
