@@ -1,3 +1,27 @@
+## [1.58.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.57.0...v1.58.0) (2026-04-15)
+
+
+### ✨ Features
+
+* **game-engine:** generalize iron-hard-skin (P1.7) ([#217](https://github.com/Ryxeuf/fantasy-football-game/issues/217)) ([4b02f9c](https://github.com/Ryxeuf/fantasy-football-game/commit/4b02f9c4331c79916148ffb9ec14c4e5113d355b))
+* **game-engine:** implement always-hungry trait (J.9) ([#200](https://github.com/Ryxeuf/fantasy-football-game/issues/200)) ([0ee0c98](https://github.com/Ryxeuf/fantasy-football-game/commit/0ee0c98b3414fee0b6ea706bbb1b1d7a91824c98))
+* **game-engine:** implement armored-skull trait (P1.6) ([#216](https://github.com/Ryxeuf/fantasy-football-game/issues/216)) ([153ca81](https://github.com/Ryxeuf/fantasy-football-game/commit/153ca8102489f0784fb04aa82bad7260c697f21a))
+* **game-engine:** implement break-tackle skill (P1.3) ([#208](https://github.com/Ryxeuf/fantasy-football-game/issues/208)) ([e70a362](https://github.com/Ryxeuf/fantasy-football-game/commit/e70a3627b60df1c74ba185c1c304153e77bc570f))
+* **game-engine:** implement chainsaw trait (K.3) ([#204](https://github.com/Ryxeuf/fantasy-football-game/issues/204)) ([ea79736](https://github.com/Ryxeuf/fantasy-football-game/commit/ea79736b161fc6ccced25b75d43cc07a3359e6ba))
+* **game-engine:** implement dauntless skill (P1.2) ([#207](https://github.com/Ryxeuf/fantasy-football-game/issues/207)) ([30e43a5](https://github.com/Ryxeuf/fantasy-football-game/commit/30e43a535d06d0e425204ccca7ae0de7d773b544))
+* **game-engine:** implement dump-off skill (K.4) ([#205](https://github.com/Ryxeuf/fantasy-football-game/issues/205)) ([7485c9d](https://github.com/Ryxeuf/fantasy-football-game/commit/7485c9df9352e5434f9f98a7776833ccdc157cfb))
+* **game-engine:** implement juggernaut skill (P1.4) ([#209](https://github.com/Ryxeuf/fantasy-football-game/issues/209)) ([4ac0810](https://github.com/Ryxeuf/fantasy-football-game/commit/4ac08105fd59e587c88ccf6ec0ac10289eeb1e4a))
+* **game-engine:** implement on-the-ball skill (K.5) ([#219](https://github.com/Ryxeuf/fantasy-football-game/issues/219)) ([a6a65a5](https://github.com/Ryxeuf/fantasy-football-game/commit/a6a65a55c0339396c640faca1fca4ba582c000eb))
+* **game-engine:** implement stab skill (K.2) ([#203](https://github.com/Ryxeuf/fantasy-football-game/issues/203)) ([0b30893](https://github.com/Ryxeuf/fantasy-football-game/commit/0b30893f6c4f5a580609f0470d8d7e72544d7a81))
+* **game-engine:** implement stand-firm skill (P1.5) ([#210](https://github.com/Ryxeuf/fantasy-football-game/issues/210)) ([4513fd4](https://github.com/Ryxeuf/fantasy-football-game/commit/4513fd4c67d3ddb81517fe0b10283bfcbe4cb8b8))
+* **game-engine:** implement stunty trait (P1.1) ([#206](https://github.com/Ryxeuf/fantasy-football-game/issues/206)) ([d31a892](https://github.com/Ryxeuf/fantasy-football-game/commit/d31a892dcb1d7b47aa3c3a342af35f8ddffaf44d))
+* **game-engine:** skip juggernaut conversion when attacker has Block ([#213](https://github.com/Ryxeuf/fantasy-football-game/issues/213)) ([19d7f69](https://github.com/Ryxeuf/fantasy-football-game/commit/19d7f69607fbbc6480f9899a2779fa0738b91599)), closes [#209](https://github.com/Ryxeuf/fantasy-football-game/issues/209)
+
+
+### 🐛 Bug Fixes
+
+* **docker:** update NODE_ENV to development and improve healthcheck commands ([42c6fd0](https://github.com/Ryxeuf/fantasy-football-game/commit/42c6fd0e3bfd068ef611ac4e501c43d278e4928f))
+
 ## [1.57.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.56.1...v1.57.0) (2026-04-14)
 
 
