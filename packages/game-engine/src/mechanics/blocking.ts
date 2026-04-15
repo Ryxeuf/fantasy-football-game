@@ -124,19 +124,22 @@ function armorAndInjuryWithMightyBlow(
   attacker: Player,
   rng: RNG
 ): GameState {
-  const mbBonus = getMightyBlowBonusFromRegistry(attacker, state);
+  const mbBonusRaw = getMightyBlowBonusFromRegistry(attacker, state);
   const diceRoll = roll2D6(rng);
 
   // Claws: armor breaks on 8+ regardless of AV (unless defender has Iron Hard Skin)
+  // Iron Hard Skin: bloque les modificateurs positifs de l'attaquant sur le jet
+  // d'armure (Mighty Blow notamment). La blessure n'est pas concernée.
   // Stunty: la valeur d'armure du joueur cible est reduite de 1 (plus fragile).
   // Le malus s'applique toujours, cumulatif avec Claws et Mighty Blow.
-  const { clawsActive } = getArmorSkillContext(state, attacker, victim);
+  const { clawsActive, ironHardSkinActive } = getArmorSkillContext(state, attacker, victim);
+  const mbBonusOnArmor = ironHardSkinActive ? 0 : mbBonusRaw;
   const stuntyAdjust = hasSkill(victim, 'stunty') ? -1 : 0;
   const baseTarget = clawsActive ? Math.min(victim.av, 8) : victim.av;
   const armorTarget = baseTarget + stuntyAdjust;
 
   const armorBrokenNaturally = diceRoll >= armorTarget;
-  const armorBrokenWithMB = (diceRoll + mbBonus) >= armorTarget;
+  const armorBrokenWithMB = (diceRoll + mbBonusOnArmor) >= armorTarget;
 
   let armorBroken: boolean;
   let mbUsedOnArmor: boolean;
@@ -153,18 +156,19 @@ function armorAndInjuryWithMightyBlow(
   }
 
   // Log du jet d'armure
-  const effectiveRoll = mbUsedOnArmor ? diceRoll + mbBonus : diceRoll;
+  const effectiveRoll = mbUsedOnArmor ? diceRoll + mbBonusOnArmor : diceRoll;
   const armorLog = createLogEntry(
     'dice',
-    `Jet d'armure: ${effectiveRoll}/${armorTarget} ${armorBroken ? '✗ (percée)' : '✓ (tient)'}${mbBonus > 0 && mbUsedOnArmor ? ' [Mighty Blow +1]' : ''}${clawsActive ? ' [Claws]' : ''}`,
+    `Jet d'armure: ${effectiveRoll}/${armorTarget} ${armorBroken ? '✗ (percée)' : '✓ (tient)'}${mbBonusOnArmor > 0 && mbUsedOnArmor ? ' [Mighty Blow +1]' : ''}${clawsActive ? ' [Claws]' : ''}${ironHardSkinActive ? ' [Iron Hard Skin]' : ''}`,
     victim.id,
     victim.team,
     {
       diceRoll: effectiveRoll,
       targetNumber: armorTarget,
       success: !armorBroken,
-      mightyBlow: mbBonus > 0,
+      mightyBlow: mbBonusRaw > 0,
       mightyBlowAppliedTo: mbUsedOnArmor ? 'armor' : 'injury',
+      ironHardSkin: ironHardSkinActive,
     }
   );
   state.gameLog = [...state.gameLog, armorLog];
@@ -175,11 +179,13 @@ function armorAndInjuryWithMightyBlow(
     diceRoll: effectiveRoll,
     targetNumber: armorTarget,
     success: !armorBroken,
-    modifiers: mbUsedOnArmor ? mbBonus : 0,
+    modifiers: mbUsedOnArmor ? mbBonusOnArmor : 0,
   };
 
   if (armorBroken) {
-    const injuryBonus = mbUsedOnArmor ? 0 : mbBonus;
+    // Le bonus Mighty Blow est reporté sur la blessure si non utilisé sur
+    // l'armure. Iron Hard Skin NE bloque PAS Mighty Blow sur la blessure.
+    const injuryBonus = mbUsedOnArmor ? 0 : mbBonusRaw;
     // Thick Skull: -1 to injury roll (KO on 9+ instead of 8+)
     const injuryDefenderMod = getInjurySkillModifiers(state, victim);
     state = performInjuryRoll(state, victim, rng, injuryBonus + injuryDefenderMod, attacker.id);

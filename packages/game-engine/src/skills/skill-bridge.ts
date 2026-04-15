@@ -51,15 +51,21 @@ export function getPickupSkillModifiers(
  * Remplace les fonctions canRerollDodge, canRerollPickup, canRerollGFI hardcodées.
  */
 /**
- * Détermine si Claws est actif pour un jet d'armure.
- * Claws fait que l'armure casse toujours sur 8+, quel que soit l'AV.
- * Iron Hard Skin annule Claws.
+ * Détermine le contexte skills pour un jet d'armure donné.
+ *
+ * - `clawsActive` : Claws fait que l'armure casse toujours sur 8+ (Iron Hard
+ *   Skin l'annule).
+ * - `ironHardSkinActive` : le défenseur possède Iron Hard Skin. Quand ce
+ *   drapeau est levé, aucun modificateur positif au jet d'armure provenant
+ *   des Skills, Traits, Special Rules ou Prayers to Nuffle de l'attaquant
+ *   ne doit être appliqué (Claws, Mighty Blow sur l'armure, Dirty Player,
+ *   bonus Chainsaw, etc.). Le jet de BLESSURE n'est pas concerné.
  */
 export function getArmorSkillContext(
   state: GameState,
   attacker: Player,
   defender: Player
-): { clawsActive: boolean } {
+): { clawsActive: boolean; ironHardSkinActive: boolean } {
   const attackerHasClaws = getSkillEffect('claws');
   const defenderHasIronHardSkin = getSkillEffect('iron-hard-skin');
 
@@ -75,6 +81,7 @@ export function getArmorSkillContext(
 
   return {
     clawsActive: clawsApplies && !ironHardSkinApplies,
+    ironHardSkinActive: ironHardSkinApplies,
   };
 }
 

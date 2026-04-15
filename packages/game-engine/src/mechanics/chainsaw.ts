@@ -26,6 +26,7 @@ import { rollD6, calculateArmorTarget } from '../utils/dice';
 import { performInjuryRoll } from './injury';
 import { createLogEntry } from '../utils/logging';
 import { isAdjacent } from './movement';
+import { getArmorSkillContext } from '../skills/skill-bridge';
 
 const CHAINSAW_ARMOR_BONUS = 3;
 
@@ -133,15 +134,21 @@ export function executeChainsaw(
     newState.isTurnover = true;
   } else {
     // Jet d'armure sur la cible avec +3 (pas de Mighty Blow).
-    const armorResult = buildArmorResult(target, die1, die2, CHAINSAW_ARMOR_BONUS);
+    // Iron Hard Skin annule le bonus Chainsaw (modificateur de trait de
+    // l'attaquant sur le jet d'armure).
+    const { ironHardSkinActive } = getArmorSkillContext(newState, attacker, target);
+    const chainsawBonus = ironHardSkinActive ? 0 : CHAINSAW_ARMOR_BONUS;
+    const armorResult = buildArmorResult(target, die1, die2, chainsawBonus);
     newState.lastDiceResult = armorResult;
 
+    const bonusSign = chainsawBonus > 0 ? `+${chainsawBonus}` : '';
+    const ihsTag = ironHardSkinActive ? ' [Iron Hard Skin]' : '';
     const armorLog = createLogEntry(
       'dice',
-      `Jet d'armure de ${target.name}: ${die1 + die2}+${CHAINSAW_ARMOR_BONUS} vs ${target.av} ${armorResult.success ? '(tient)' : '(percée)'}`,
+      `Jet d'armure de ${target.name}: ${die1 + die2}${bonusSign} vs ${target.av}${ihsTag} ${armorResult.success ? '(tient)' : '(percée)'}`,
       target.id,
       target.team,
-      { diceRoll: armorResult.diceRoll, targetNumber: armorResult.targetNumber, chainsawBonus: CHAINSAW_ARMOR_BONUS },
+      { diceRoll: armorResult.diceRoll, targetNumber: armorResult.targetNumber, chainsawBonus, ironHardSkin: ironHardSkinActive },
     );
     newState.gameLog = [...newState.gameLog, armorLog];
 

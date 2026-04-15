@@ -18,7 +18,7 @@ import { performArmorRoll } from '../utils/dice';
 import { performInjuryRoll } from './injury';
 import { createLogEntry } from '../utils/logging';
 import { isAdjacent } from './movement';
-import { getMightyBlowBonusFromRegistry } from '../skills/skill-bridge';
+import { getMightyBlowBonusFromRegistry, getArmorSkillContext } from '../skills/skill-bridge';
 import { bounceBall } from './ball';
 
 /**
@@ -113,17 +113,26 @@ export function executeProjectileVomit(
       newState = bounceBall(newState, rng);
     }
 
-    // Jet d'armure avec bonus Mighty Blow éventuel
-    const mightyBlowBonus = getMightyBlowBonusFromRegistry(vomiter, newState);
+    // Jet d'armure avec bonus Mighty Blow éventuel.
+    // Iron Hard Skin annule les modificateurs positifs de l'attaquant
+    // sur le jet d'armure (ex. Mighty Blow).
+    const mightyBlowBonusRaw = getMightyBlowBonusFromRegistry(vomiter, newState);
+    const { ironHardSkinActive } = getArmorSkillContext(
+      newState,
+      vomiter,
+      newState.players[targetIdx],
+    );
+    const mightyBlowBonus = ironHardSkinActive ? 0 : mightyBlowBonusRaw;
     const armorResult = performArmorRoll(newState.players[targetIdx], rng, -mightyBlowBonus);
     newState.lastDiceResult = armorResult;
 
+    const ihsTag = ironHardSkinActive ? ' [Iron Hard Skin]' : '';
     const armorLog = createLogEntry(
       'dice',
-      `Jet d'armure de ${target.name}: ${armorResult.diceRoll}/${armorResult.targetNumber} ${armorResult.success ? '(tient)' : '(percée)'}`,
+      `Jet d'armure de ${target.name}: ${armorResult.diceRoll}/${armorResult.targetNumber}${ihsTag} ${armorResult.success ? '(tient)' : '(percée)'}`,
       target.id,
       target.team,
-      { diceRoll: armorResult.diceRoll, targetNumber: armorResult.targetNumber, mightyBlowBonus },
+      { diceRoll: armorResult.diceRoll, targetNumber: armorResult.targetNumber, mightyBlowBonus, ironHardSkin: ironHardSkinActive },
     );
     newState.gameLog = [...newState.gameLog, armorLog];
 

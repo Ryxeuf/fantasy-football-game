@@ -77,6 +77,22 @@ describe('Règle: Claws + Iron Hard Skin (armor skills)', () => {
     const ctx = getArmorSkillContext(state, attacker, defender);
     expect(ctx.clawsActive).toBe(false);
   });
+
+  it('exposes ironHardSkinActive=false when defender lacks Iron Hard Skin', () => {
+    const attacker = makePlayer({ id: 'att', skills: ['claws'] });
+    const defender = makePlayer({ id: 'def', team: 'B', av: 10, skills: [] });
+    const state = makeState([attacker, defender]);
+    const ctx = getArmorSkillContext(state, attacker, defender);
+    expect(ctx.ironHardSkinActive).toBe(false);
+  });
+
+  it('exposes ironHardSkinActive=true when defender has Iron Hard Skin', () => {
+    const attacker = makePlayer({ id: 'att', skills: [] });
+    const defender = makePlayer({ id: 'def', team: 'B', av: 10, skills: ['iron-hard-skin'] });
+    const state = makeState([attacker, defender]);
+    const ctx = getArmorSkillContext(state, attacker, defender);
+    expect(ctx.ironHardSkinActive).toBe(true);
+  });
 });
 
 describe('Règle: Thick Skull (injury modifier)', () => {
