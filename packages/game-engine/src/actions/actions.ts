@@ -639,6 +639,7 @@ function handleEndTurn(state: GameState, rng: RNG): GameState {
       rerollUsedThisTurn: false,
       hypnotizedPlayers: [],
       usedBreakTackleThisTurn: [],
+      usedOnTheBallThisTurn: [],
     };
   }
 
@@ -657,6 +658,7 @@ function handleEndTurn(state: GameState, rng: RNG): GameState {
     rerollUsedThisTurn: false, // Réinitialiser le flag de relance
     hypnotizedPlayers: [], // Réinitialiser les joueurs hypnotisés
     usedBreakTackleThisTurn: [], // Réinitialiser Break Tackle (une fois par tour)
+    usedOnTheBallThisTurn: [], // Réinitialiser On the Ball (une fois par tour d'equipe)
   };
 
   // Log du changement de tour

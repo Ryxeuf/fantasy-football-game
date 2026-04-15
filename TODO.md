@@ -228,7 +228,7 @@
 | K.2 | Implementer `stab` | Regle | [ ] |
 | K.3 | Implementer `chainsaw` | Regle | [ ] |
 | K.4 | Implementer `dump-off` | Regle | [ ] |
-| K.5 | Implementer `on-the-ball` | Regle | [ ] |
+| K.5 | Implementer `on-the-ball` | Regle | [x] |
 | P1.1 | Implementer `stunty` (Skinks, Lineman Gnome, joueurs petits) | Regle | [x] |
 | P1.2 | Implementer `dauntless` (Dwarf Troll Slayer) | Regle | [x] |
 | P1.3 | Implementer `break-tackle` (Dwarf Deathroller) | Regle | [x] |

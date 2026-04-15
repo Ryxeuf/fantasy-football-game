@@ -153,6 +153,17 @@ export { canChainsaw, executeChainsaw } from './mechanics/chainsaw';
 // Export du Délestage (Dump-off)
 export { canDumpOff, getDumpOffReceivers, executeDumpOff } from './mechanics/dump-off';
 
+// Export de Sur le Ballon (On the Ball)
+export {
+  canTriggerOnTheBall,
+  getOnTheBallReactivePlayers,
+  getOnTheBallReachableSquares,
+  executeOnTheBallMove,
+  hasUsedOnTheBallThisTurn,
+  markOnTheBallUsed,
+  resetOnTheBallUsage,
+} from './mechanics/on-the-ball';
+
 // Export des fonctions de faute
 export { canFoul, executeFoul, calculateFoulAssists } from './mechanics/foul';
 
