@@ -20,6 +20,7 @@ import { performArmorRollWithNotification } from '../utils/dice-notifications';
 import { createLogEntry } from '../utils/logging';
 import { canTeamBlitz } from '../core/game-state';
 import { performInjuryRoll, handleSentOff, handleInjuryByCrowd } from './injury';
+import { isJuggernautActiveForBlock } from './juggernaut';
 
 /**
  * Applique un chain push : si la case de destination est occupée, le joueur qui s'y trouve
@@ -678,6 +679,25 @@ function handlePlayerDown(state: GameState, attacker: Player, target: Player, rn
  * Wrestle prévaut sur Block (BB2020)
  */
 function handleBothDown(state: GameState, attacker: Player, target: Player, rng: RNG): GameState {
+  // Juggernaut : pendant un Blitz, l'attaquant peut convertir BOTH_DOWN en
+  // PUSH_BACK. On applique systematiquement la conversion puisque c'est
+  // toujours avantageux pour l'attaquant. La regle annule aussi Wrestle,
+  // Fend et Stand Firm du defenseur cible (traites ici / dans handlePushBack).
+  if (isJuggernautActiveForBlock(state, attacker)) {
+    const juggernautLog = createLogEntry(
+      'action',
+      `${attacker.name} utilise Juggernaut : BOTH_DOWN devient PUSH_BACK`,
+      attacker.id,
+      attacker.team,
+      { skill: 'juggernaut', convertedFrom: 'BOTH_DOWN', convertedTo: 'PUSH_BACK' },
+    );
+    const stateWithLog: GameState = {
+      ...state,
+      gameLog: [...state.gameLog, juggernautLog],
+    };
+    return handlePushBack(stateWithLog, attacker, target, rng);
+  }
+
   const attackerHasWrestle = checkWrestleOnBothDown(attacker, state);
   const targetHasWrestle = checkWrestleOnBothDown(target, state);
   const wrestleActive = attackerHasWrestle || targetHasWrestle;

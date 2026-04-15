@@ -168,6 +168,9 @@ export type { ActivationCheckResult, AlwaysHungryResult } from './mechanics/nega
 // Export du skill Dauntless (applique au blocage)
 export { checkDauntless } from './mechanics/dauntless';
 export type { DauntlessCheckResult } from './mechanics/dauntless';
+
+// Export du skill Juggernaut (applique au blocage pendant un blitz)
+export { hasJuggernaut, isJuggernautActiveForBlock } from './mechanics/juggernaut';
 export {
   hasBreakTackle,
   getBreakTackleDodgeBonus,

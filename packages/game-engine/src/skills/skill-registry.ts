@@ -361,17 +361,15 @@ registerSkill({
 });
 
 // JUGGERNAUT
+// Effet cable dans `mechanics/juggernaut.ts` + `mechanics/blocking.ts`
+// (conversion BOTH_DOWN -> PUSH_BACK et annulation de Wrestle/Fend/Stand Firm
+// du defenseur cible). L'entree du registre reste utile pour la description
+// et l'auto-discovery (getSkillsForTrigger, UI).
 registerSkill({
   slug: 'juggernaut',
   triggers: ['on-block-attacker'],
-  description: 'Lors d\'un Blitz, BOTH_DOWN et PUSH_BACK sont traités comme POW. Annule Fend et Stand Firm.',
+  description: 'Lors d\'un Blitz, peut traiter BOTH_DOWN comme PUSH_BACK. Le defenseur cible ne peut pas utiliser Fend, Stand Firm ni Wrestle.',
   canApply: (ctx) => hasSkill(ctx.player, 'juggernaut'),
-  modifyBlockResult: (ctx) => {
-    if (ctx.blockResult === 'BOTH_DOWN' || ctx.blockResult === 'PUSH_BACK') {
-      return 'POW';
-    }
-    return null;
-  },
 });
 
 // NERVES OF STEEL
