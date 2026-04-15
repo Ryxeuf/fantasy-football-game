@@ -194,22 +194,14 @@ registerSkill({
 // ─── COMPÉTENCES AVANCÉES ────────────────────────────────────────────────
 
 // DAUNTLESS
+// Dauntless is resolved in `mechanics/dauntless.ts` and invoked from
+// `handleBlock` before block dice are rolled. The registry entry is kept here
+// for lookup and metadata purposes only.
 registerSkill({
   slug: 'dauntless',
   triggers: ['on-block-attacker'],
-  description: 'Si ST inférieure à l\'adversaire, lance un D6 + ST. Si >= ST adverse, la force est considérée comme égale.',
-  canApply: (ctx) => {
-    if (!hasSkill(ctx.player, 'dauntless')) return false;
-    return !!ctx.opponent && ctx.player.st < ctx.opponent.st;
-  },
-  getModifiers: (ctx) => {
-    if (!ctx.rng || !ctx.opponent) return {};
-    const roll = Math.floor(ctx.rng() * 6) + 1;
-    if (ctx.player.st + roll >= ctx.opponent.st) {
-      return { strengthModifier: ctx.opponent.st - ctx.player.st };
-    }
-    return {};
-  },
+  description: 'Si la force totale est inférieure à celle de la cible, lance un D6 + ST de base. Si le total est >= force totale adverse, la force est considérée comme égale pour ce blocage.',
+  canApply: (ctx) => hasSkill(ctx.player, 'dauntless'),
 });
 
 // FRENZY

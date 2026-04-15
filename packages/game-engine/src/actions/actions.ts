@@ -71,6 +71,7 @@ import { canProjectileVomit, executeProjectileVomit } from '../mechanics/project
 import { canStab, executeStab } from '../mechanics/stab';
 import { canChainsaw, executeChainsaw } from '../mechanics/chainsaw';
 import { canDumpOff, getDumpOffReceivers, executeDumpOff } from '../mechanics/dump-off';
+import { checkDauntless } from '../mechanics/dauntless';
 import {
   resolveKickoffPerfectDefence,
   resolveKickoffHighKick,
@@ -1320,22 +1321,37 @@ function handleBlock(
   const offensiveAssists = calculateOffensiveAssists(stateAfterFA, attacker, target);
   const defensiveAssists = calculateDefensiveAssists(stateAfterFA, attacker, target);
 
-  // Nombre de dés et qui choisit
-  const attackerStrength = attacker.st + offensiveAssists;
+  // Forces de base avant Dauntless
+  const baseAttackerStrength = attacker.st + offensiveAssists;
   const targetStrength = target.st + defensiveAssists;
+
+  // ─── Dauntless check ───────────────────────────────────────────────────
+  // Si l'attaquant a Dauntless et est en desavantage, il tente d'egaliser la force.
+  const dauntlessResult = checkDauntless(
+    stateAfterFA,
+    attacker,
+    target,
+    baseAttackerStrength,
+    targetStrength,
+    rng
+  );
+  const stateAfterDauntless = dauntlessResult.newState;
+  const attackerStrength = dauntlessResult.newAttackerStrength;
+
+  // Nombre de dés et qui choisit
   const diceCount = calculateBlockDiceCount(attackerStrength, targetStrength);
   const chooser = getBlockDiceChooser(attackerStrength, targetStrength);
 
   // Enregistrer l'action — blitz consomme le compteur de blitz de l'équipe
   let newState: GameState;
   if (isBlitzDuringMove) {
-    newState = setPlayerAction(stateAfterFA, attacker.id, 'BLITZ');
+    newState = setPlayerAction(stateAfterDauntless, attacker.id, 'BLITZ');
     newState.teamBlitzCount = {
       ...newState.teamBlitzCount,
       [attacker.team]: (newState.teamBlitzCount[attacker.team] || 0) + 1,
     };
   } else {
-    newState = setPlayerAction(stateAfterFA, attacker.id, 'BLOCK');
+    newState = setPlayerAction(stateAfterDauntless, attacker.id, 'BLOCK');
   }
 
   // Si un seul dé, résoudre immédiatement
