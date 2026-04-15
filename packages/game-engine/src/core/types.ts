@@ -254,6 +254,8 @@ export interface GameState {
   bribesRemaining: { teamA: number; teamB: number };
   // Joueurs hypnotisés (perdent leur zone de tacle jusqu'à leur prochaine activation)
   hypnotizedPlayers?: string[];
+  // IDs des joueurs qui ont déjà utilisé Break Tackle ce tour (une fois par tour par joueur).
+  usedBreakTackleThisTurn?: string[];
   // Condition météo active pour ce match (persistée depuis le pré-match)
   weatherCondition?: { condition: string; description: string };
   // État pré-match (setup, kickoff, inducements, etc.)
