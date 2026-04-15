@@ -5,7 +5,10 @@ import {
   makeRNG,
   type GameState,
 } from '../index';
-import { isJuggernautActiveForBlock } from './juggernaut';
+import {
+  isJuggernautActiveForBlock,
+  shouldConvertBothDownToPushBack,
+} from './juggernaut';
 
 /**
  * Juggernaut (BB3 Season 2/3 rules):
@@ -243,6 +246,60 @@ describe('Regle: Juggernaut', () => {
       // Personne ne tombe, c'est juste une poussee.
       expect(attacker.stunned).toBeFalsy();
       expect(defender.stunned).toBeFalsy();
+    });
+  });
+
+  describe('Auto-choix quand l\'attaquant a aussi Block', () => {
+    it('shouldConvertBothDownToPushBack retourne false si l\'attaquant a Block', () => {
+      const testState = placePlayersForBlock(state, ['juggernaut', 'block'], [], {
+        isBlitz: true,
+      });
+      const attacker = testState.players.find(p => p.id === 'A2')!;
+      // isJuggernautActiveForBlock reste vrai (pour Fend/Stand Firm/Wrestle
+      // annules), mais la conversion BOTH_DOWN → PUSH_BACK est skippee.
+      expect(isJuggernautActiveForBlock(testState, attacker)).toBe(true);
+      expect(shouldConvertBothDownToPushBack(testState, attacker)).toBe(false);
+    });
+
+    it('shouldConvertBothDownToPushBack retourne true sans Block', () => {
+      const testState = placePlayersForBlock(state, ['juggernaut'], [], {
+        isBlitz: true,
+      });
+      const attacker = testState.players.find(p => p.id === 'A2')!;
+      expect(shouldConvertBothDownToPushBack(testState, attacker)).toBe(true);
+    });
+
+    it('BOTH_DOWN avec Block+Juggernaut : Block gagne (defenseur au sol, attaquant debout)', () => {
+      // Avec Block, le comportement standard du BOTH_DOWN est strictement
+      // meilleur (defenseur prone, attaquant debout, pas de turnover) que la
+      // conversion Juggernaut (personne ne tombe, defenseur juste pousse).
+      // On doit donc garder le BOTH_DOWN et laisser Block le resoudre.
+      const testState = placePlayersForBlock(state, ['juggernaut', 'block'], [], {
+        isBlitz: true,
+      });
+      const blockResult = makeBlockResult('A2', 'B2', 'BOTH_DOWN');
+
+      const result = resolveBlockResult(testState, blockResult, rng);
+
+      const attacker = result.players.find(p => p.id === 'A2')!;
+      const defender = result.players.find(p => p.id === 'B2')!;
+      expect(attacker.stunned).toBeFalsy();
+      expect(defender.stunned).toBe(true);
+      expect(result.isTurnover).toBe(false);
+    });
+
+    it('BOTH_DOWN avec Block+Juggernaut : pas de log Juggernaut (conversion skippee)', () => {
+      const testState = placePlayersForBlock(state, ['juggernaut', 'block'], [], {
+        isBlitz: true,
+      });
+      const blockResult = makeBlockResult('A2', 'B2', 'BOTH_DOWN');
+
+      const result = resolveBlockResult(testState, blockResult, rng);
+
+      const juggernautLog = result.gameLog.find(
+        log => log.message.toLowerCase().includes('juggernaut'),
+      );
+      expect(juggernautLog).toBeUndefined();
     });
   });
 });

@@ -171,7 +171,11 @@ export { checkDauntless } from './mechanics/dauntless';
 export type { DauntlessCheckResult } from './mechanics/dauntless';
 
 // Export du skill Juggernaut (applique au blocage pendant un blitz)
-export { hasJuggernaut, isJuggernautActiveForBlock } from './mechanics/juggernaut';
+export {
+  hasJuggernaut,
+  isJuggernautActiveForBlock,
+  shouldConvertBothDownToPushBack,
+} from './mechanics/juggernaut';
 
 // Export du skill Stand Firm (applique au blocage pour refuser d'etre pousse)
 export {

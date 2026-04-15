@@ -13,9 +13,9 @@
  * bestiary).
  *
  * This file only exposes predicates; the actual block-resolution wiring lives
- * in `blocking.ts` (inside `handleBothDown`). We always convert BOTH_DOWN to
- * PUSH_BACK when Juggernaut is active — the attacker always benefits from
- * the conversion, so the "may choose" clause is resolved automatically.
+ * in `blocking.ts` (inside `handleBothDown`). The conversion is "may choose",
+ * so the engine auto-resolves it to whichever option yields the best outcome
+ * for the attacker — see `shouldConvertBothDownToPushBack`.
  */
 
 import type { GameState, Player } from '../core/types';
@@ -39,4 +39,29 @@ export function isJuggernautActiveForBlock(
 ): boolean {
   if (!hasJuggernaut(attacker)) return false;
   return state.playerActions?.[attacker.id] === 'BLITZ';
+}
+
+/**
+ * Decides whether a BOTH_DOWN block result should be converted to PUSH_BACK
+ * under Juggernaut. The rule says "may choose", so we pick the option that is
+ * strictly best for the attacker:
+ *
+ *  - Without Block: convert to PUSH_BACK (nobody falls, no turnover).
+ *  - With Block: keep BOTH_DOWN so the standard Block handling applies
+ *    (attacker stays up, defender falls prone — strictly better outcome).
+ *
+ * The anti-Fend/Stand Firm/Wrestle clauses still apply even when the
+ * conversion is skipped — callers that care about those should use
+ * `isJuggernautActiveForBlock` instead.
+ */
+export function shouldConvertBothDownToPushBack(
+  state: GameState,
+  attacker: Player,
+): boolean {
+  if (!isJuggernautActiveForBlock(state, attacker)) return false;
+  // If the attacker has Block, the standard BOTH_DOWN handling already puts
+  // the defender on the ground while keeping the attacker up — strictly
+  // better than a Push Back. Skip the conversion in that case.
+  if (hasSkill(attacker, 'block')) return false;
+  return true;
 }

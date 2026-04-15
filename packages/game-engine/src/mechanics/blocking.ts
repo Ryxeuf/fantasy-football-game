@@ -20,7 +20,7 @@ import { performArmorRollWithNotification } from '../utils/dice-notifications';
 import { createLogEntry } from '../utils/logging';
 import { canTeamBlitz } from '../core/game-state';
 import { performInjuryRoll, handleSentOff, handleInjuryByCrowd } from './injury';
-import { isJuggernautActiveForBlock } from './juggernaut';
+import { shouldConvertBothDownToPushBack } from './juggernaut';
 import {
   isStandFirmActiveForBlock,
   isStandFirmActiveForChainPush,
@@ -721,10 +721,11 @@ function handlePlayerDown(state: GameState, attacker: Player, target: Player, rn
  */
 function handleBothDown(state: GameState, attacker: Player, target: Player, rng: RNG): GameState {
   // Juggernaut : pendant un Blitz, l'attaquant peut convertir BOTH_DOWN en
-  // PUSH_BACK. On applique systematiquement la conversion puisque c'est
-  // toujours avantageux pour l'attaquant. La regle annule aussi Wrestle,
-  // Fend et Stand Firm du defenseur cible (traites ici / dans handlePushBack).
-  if (isJuggernautActiveForBlock(state, attacker)) {
+  // PUSH_BACK. `shouldConvertBothDownToPushBack` auto-resout le choix "may" :
+  // on garde BOTH_DOWN quand l'attaquant a Block (Block donne un meilleur
+  // resultat : defenseur au sol, attaquant debout). La regle annule aussi
+  // Wrestle/Fend/Stand Firm du defenseur cible (traites ici / dans handlePushBack).
+  if (shouldConvertBothDownToPushBack(state, attacker)) {
     const juggernautLog = createLogEntry(
       'action',
       `${attacker.name} utilise Juggernaut : BOTH_DOWN devient PUSH_BACK`,
