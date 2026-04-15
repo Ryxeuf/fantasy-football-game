@@ -3,9 +3,17 @@
  * Résultat sur 2D6 déterminant un événement spécial au début de chaque drive
  */
 
-import { GameState, RNG, TeamId } from '../core/types';
+import { GameState, Position, RNG, TeamId } from '../core/types';
 import { roll2D6, rollD6 } from '../utils/dice';
 import { createLogEntry } from '../utils/logging';
+
+/**
+ * Événement de kickoff en attente d'une action de l'UI
+ */
+export interface PendingKickoffEvent {
+  eventId: 'perfect-defence' | 'high-kick' | 'quick-snap' | 'blitz';
+  team: TeamId; // équipe qui doit agir
+}
 
 export interface KickoffEvent {
   id: string;
@@ -142,14 +150,14 @@ export function applyKickoffEvent(
     }
 
     case 'perfect-defence': {
-      // L'équipe qui botte peut réorganiser (marqué comme flag, géré côté UI)
+      newState.pendingKickoffEvent = { eventId: 'perfect-defence', team: kickingTeam };
       const log = createLogEntry('action', `Défense parfaite — L'équipe qui botte peut réorganiser ses joueurs`);
       newState.gameLog = [...newState.gameLog, log];
       break;
     }
 
     case 'high-kick': {
-      // Un joueur de l'équipe qui reçoit peut être déplacé sous le ballon (géré côté UI)
+      newState.pendingKickoffEvent = { eventId: 'high-kick', team: receivingTeam };
       const log = createLogEntry('action', `Coup en hauteur — L'équipe qui reçoit peut placer un joueur sous le ballon`);
       newState.gameLog = [...newState.gameLog, log];
       break;
@@ -202,14 +210,14 @@ export function applyKickoffEvent(
     }
 
     case 'quick-snap': {
-      // L'équipe qui reçoit peut déplacer chaque joueur d'1 case (géré côté UI)
+      newState.pendingKickoffEvent = { eventId: 'quick-snap', team: receivingTeam };
       const log = createLogEntry('action', `Snap rapide ! ${receivingTeam === 'A' ? newState.teamNames.teamA : newState.teamNames.teamB} peut déplacer ses joueurs d'1 case`);
       newState.gameLog = [...newState.gameLog, log];
       break;
     }
 
     case 'blitz': {
-      // L'équipe qui botte joue un tour immédiat (géré côté UI/game flow)
+      newState.pendingKickoffEvent = { eventId: 'blitz', team: kickingTeam };
       const log = createLogEntry('action', `Blitz ! ${kickingTeam === 'A' ? newState.teamNames.teamA : newState.teamNames.teamB} joue un tour immédiat`);
       newState.gameLog = [...newState.gameLog, log];
       break;
@@ -248,4 +256,256 @@ export function applyKickoffEvent(
   }
 
   return newState;
+}
+
+// ---------------------------------------------------------------------------
+// Résolveurs pour les événements de kickoff délégués à l'UI
+// ---------------------------------------------------------------------------
+
+export interface KickoffResolveResult {
+  success: boolean;
+  state: GameState;
+}
+
+interface Reposition {
+  playerId: string;
+  to: Position;
+}
+
+const PITCH_MID_X = 13; // x < 13 : moitié A (kicking ou receiving) ; x >= 13 : moitié B
+
+function isInsidePitch(state: GameState, pos: Position): boolean {
+  return pos.x >= 0 && pos.x < state.width && pos.y >= 0 && pos.y < state.height;
+}
+
+function isInTeamHalf(team: TeamId, pos: Position): boolean {
+  return team === 'A' ? pos.x < PITCH_MID_X : pos.x >= PITCH_MID_X;
+}
+
+function clearPendingKickoff(state: GameState): GameState {
+  const next: GameState = { ...state };
+  delete next.pendingKickoffEvent;
+  return next;
+}
+
+/**
+ * Défense parfaite : l'équipe qui botte peut réorganiser ses joueurs.
+ * Chaque reposition déplace un joueur vers une nouvelle case dans la moitié de l'équipe.
+ */
+export function resolvePerfectDefence(
+  state: GameState,
+  repositions: readonly Reposition[]
+): KickoffResolveResult {
+  if (state.pendingKickoffEvent?.eventId !== 'perfect-defence') {
+    return { success: false, state };
+  }
+
+  const team = state.pendingKickoffEvent.team;
+
+  // Construire la map des repositions (playerId -> Position)
+  const moveMap = new Map<string, Position>();
+  for (const r of repositions) {
+    const player = state.players.find(p => p.id === r.playerId);
+    if (!player) return { success: false, state };
+    if (player.team !== team) return { success: false, state };
+    if (!isInsidePitch(state, r.to)) return { success: false, state };
+    if (!isInTeamHalf(team, r.to)) return { success: false, state };
+    if (moveMap.has(r.playerId)) return { success: false, state };
+    moveMap.set(r.playerId, r.to);
+  }
+
+  // Vérifier l'absence de collision : positions finales doivent être uniques,
+  // et ne doivent pas chevaucher un joueur immobile (non repositionné).
+  const finalPositions = new Map<string, string>(); // "x,y" -> playerId
+  for (const player of state.players) {
+    if (player.pos.x < 0) continue; // joueur hors terrain
+    const pos = moveMap.get(player.id) ?? player.pos;
+    const key = `${pos.x},${pos.y}`;
+    if (finalPositions.has(key)) {
+      return { success: false, state };
+    }
+    finalPositions.set(key, player.id);
+  }
+
+  const newPlayers = state.players.map(p => {
+    const newPos = moveMap.get(p.id);
+    return newPos ? { ...p, pos: newPos } : p;
+  });
+
+  const log = createLogEntry(
+    'action',
+    `Défense parfaite résolue : ${repositions.length} joueur(s) repositionné(s)`
+  );
+
+  return {
+    success: true,
+    state: clearPendingKickoff({
+      ...state,
+      players: newPlayers,
+      gameLog: [...state.gameLog, log],
+    }),
+  };
+}
+
+/**
+ * Coup de pied en hauteur : un joueur de l'équipe qui reçoit est déplacé sous
+ * le ballon, si la case cible est libre.
+ */
+export function resolveHighKick(
+  state: GameState,
+  playerId: string,
+  ballPos: Position
+): KickoffResolveResult {
+  if (state.pendingKickoffEvent?.eventId !== 'high-kick') {
+    return { success: false, state };
+  }
+
+  const team = state.pendingKickoffEvent.team;
+  const player = state.players.find(p => p.id === playerId);
+  if (!player || player.team !== team) return { success: false, state };
+  if (player.state !== 'active' || player.stunned) return { success: false, state };
+  if (!isInsidePitch(state, ballPos)) return { success: false, state };
+
+  const occupant = state.players.find(
+    p => p.id !== playerId && p.pos.x === ballPos.x && p.pos.y === ballPos.y
+  );
+  if (occupant) return { success: false, state };
+
+  const newPlayers = state.players.map(p =>
+    p.id === playerId ? { ...p, pos: ballPos } : p
+  );
+
+  const log = createLogEntry(
+    'action',
+    `Coup en hauteur résolu : ${player.name ?? playerId} placé sous le ballon`
+  );
+
+  return {
+    success: true,
+    state: clearPendingKickoff({
+      ...state,
+      players: newPlayers,
+      gameLog: [...state.gameLog, log],
+    }),
+  };
+}
+
+/**
+ * Snap rapide : chaque joueur de l'équipe qui reçoit peut se déplacer d'une case.
+ * Les joueurs non listés dans `moves` ne bougent pas.
+ */
+export function resolveQuickSnap(
+  state: GameState,
+  moves: readonly Reposition[]
+): KickoffResolveResult {
+  if (state.pendingKickoffEvent?.eventId !== 'quick-snap') {
+    return { success: false, state };
+  }
+
+  const team = state.pendingKickoffEvent.team;
+  const moveMap = new Map<string, Position>();
+
+  for (const m of moves) {
+    const player = state.players.find(p => p.id === m.playerId);
+    if (!player) return { success: false, state };
+    if (player.team !== team) return { success: false, state };
+    if (player.state !== 'active' || player.stunned) return { success: false, state };
+    if (!isInsidePitch(state, m.to)) return { success: false, state };
+
+    const dx = Math.abs(m.to.x - player.pos.x);
+    const dy = Math.abs(m.to.y - player.pos.y);
+    if (dx > 1 || dy > 1 || (dx === 0 && dy === 0)) {
+      return { success: false, state };
+    }
+    if (moveMap.has(m.playerId)) return { success: false, state };
+    moveMap.set(m.playerId, m.to);
+  }
+
+  // Collision check : aucune case cible ne peut être partagée, ni occupée par
+  // un joueur non repositionné.
+  const finalPositions = new Map<string, string>();
+  for (const player of state.players) {
+    if (player.pos.x < 0) continue;
+    const pos = moveMap.get(player.id) ?? player.pos;
+    const key = `${pos.x},${pos.y}`;
+    if (finalPositions.has(key)) {
+      return { success: false, state };
+    }
+    finalPositions.set(key, player.id);
+  }
+
+  const newPlayers = state.players.map(p => {
+    const newPos = moveMap.get(p.id);
+    return newPos ? { ...p, pos: newPos } : p;
+  });
+
+  const log = createLogEntry(
+    'action',
+    `Snap rapide résolu : ${moves.length} joueur(s) déplacé(s) d'une case`
+  );
+
+  return {
+    success: true,
+    state: clearPendingKickoff({
+      ...state,
+      players: newPlayers,
+      gameLog: [...state.gameLog, log],
+    }),
+  };
+}
+
+/**
+ * Blitz : l'équipe qui botte prend le contrôle et joue un tour spécial
+ * (passes/handoffs interdits). Le flag `blitzKickoffActive` est utilisé par le
+ * game flow pour restreindre les actions.
+ */
+export function resolveBlitzKickoff(state: GameState): KickoffResolveResult {
+  if (state.pendingKickoffEvent?.eventId !== 'blitz') {
+    return { success: false, state };
+  }
+
+  const team = state.pendingKickoffEvent.team;
+  const log = createLogEntry(
+    'action',
+    `Blitz résolu : ${team === 'A' ? state.teamNames.teamA : state.teamNames.teamB} prend le contrôle`
+  );
+
+  return {
+    success: true,
+    state: clearPendingKickoff({
+      ...state,
+      currentPlayer: team,
+      playerActions: {},
+      teamBlitzCount: {},
+      teamFoulCount: {},
+      isTurnover: false,
+      rerollUsedThisTurn: false,
+      blitzKickoffActive: true,
+      gameLog: [...state.gameLog, log],
+    }),
+  };
+}
+
+/**
+ * Termine un tour de kickoff Blitz et rend la main à l'équipe qui reçoit.
+ * @param state - État en cours de blitz
+ * @param kickingTeam - Équipe qui bottait (pour restituer la main à l'autre)
+ */
+export function endBlitzKickoff(state: GameState, kickingTeam: TeamId): GameState {
+  const receivingTeam: TeamId = kickingTeam === 'A' ? 'B' : 'A';
+  const log = createLogEntry(
+    'action',
+    `Fin du Blitz de kickoff : ${state.teamNames[receivingTeam === 'A' ? 'teamA' : 'teamB']} reprend la main`
+  );
+  return {
+    ...state,
+    currentPlayer: receivingTeam,
+    blitzKickoffActive: false,
+    playerActions: {},
+    teamBlitzCount: {},
+    teamFoulCount: {},
+    isTurnover: false,
+    rerollUsedThisTurn: false,
+    gameLog: [...state.gameLog, log],
+  };
 }

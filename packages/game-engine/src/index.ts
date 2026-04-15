@@ -164,7 +164,14 @@ export {
   KICKOFF_EVENTS,
   rollKickoffEvent,
   applyKickoffEvent,
+  resolvePerfectDefence,
+  resolveHighKick,
+  resolveQuickSnap,
+  resolveBlitzKickoff,
+  endBlitzKickoff,
   type KickoffEvent,
+  type PendingKickoffEvent,
+  type KickoffResolveResult,
 } from './mechanics/kickoff-events';
 
 // Export du calcul de zones de tacle (heatmap)

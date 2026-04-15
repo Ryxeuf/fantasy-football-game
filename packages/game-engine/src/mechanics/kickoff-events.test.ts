@@ -1,5 +1,14 @@
 import { describe, it, expect } from 'vitest';
-import { KICKOFF_EVENTS, rollKickoffEvent, applyKickoffEvent } from './kickoff-events';
+import {
+  KICKOFF_EVENTS,
+  rollKickoffEvent,
+  applyKickoffEvent,
+  resolvePerfectDefence,
+  resolveHighKick,
+  resolveQuickSnap,
+  resolveBlitzKickoff,
+  endBlitzKickoff,
+} from './kickoff-events';
 import { setup } from '../core/game-state';
 import { makeRNG } from '../utils/rng';
 
@@ -137,6 +146,242 @@ describe('Kickoff Events', () => {
         // Log should mention the dedicated fans contribution
         expect(actionLog!.message).toMatch(/D3.*\+.*fans/i);
       });
+    });
+  });
+
+  describe('Regle: Perfect Defence — kicking team may reposition', () => {
+    const perfectDefenceEvent = KICKOFF_EVENTS[4];
+
+    it('sets pendingKickoffEvent for the kicking team', () => {
+      const state = setup();
+      const rng = makeRNG('pd-pending');
+      const result = applyKickoffEvent(state, perfectDefenceEvent, rng, 'A');
+      expect(result.pendingKickoffEvent).toEqual({
+        eventId: 'perfect-defence',
+        team: 'A',
+      });
+    });
+
+    it('resolvePerfectDefence repositions kicking team players and clears the flag', () => {
+      const state = applyKickoffEvent(setup(), perfectDefenceEvent, makeRNG('pd'), 'A');
+      const result = resolvePerfectDefence(state, [
+        { playerId: 'A1', to: { x: 12, y: 7 } },
+        { playerId: 'A2', to: { x: 12, y: 6 } },
+      ]);
+      expect(result.success).toBe(true);
+      const a1 = result.state.players.find(p => p.id === 'A1');
+      const a2 = result.state.players.find(p => p.id === 'A2');
+      expect(a1?.pos).toEqual({ x: 12, y: 7 });
+      expect(a2?.pos).toEqual({ x: 12, y: 6 });
+      expect(result.state.pendingKickoffEvent).toBeUndefined();
+    });
+
+    it('fails if a reposition collides with another player', () => {
+      const state = applyKickoffEvent(setup(), perfectDefenceEvent, makeRNG('pd'), 'A');
+      // Try to move A1 onto A2's square
+      const result = resolvePerfectDefence(state, [
+        { playerId: 'A1', to: { x: 10, y: 7 } },
+      ]);
+      expect(result.success).toBe(false);
+    });
+
+    it('fails if reposition targets opposing half', () => {
+      const state = applyKickoffEvent(setup(), perfectDefenceEvent, makeRNG('pd'), 'A');
+      // Team A is kicking team (left half, x<=12). x=15 is opponent half
+      const result = resolvePerfectDefence(state, [
+        { playerId: 'A1', to: { x: 15, y: 7 } },
+      ]);
+      expect(result.success).toBe(false);
+    });
+
+    it('fails if player does not belong to kicking team', () => {
+      const state = applyKickoffEvent(setup(), perfectDefenceEvent, makeRNG('pd'), 'A');
+      const result = resolvePerfectDefence(state, [
+        { playerId: 'B1', to: { x: 12, y: 6 } },
+      ]);
+      expect(result.success).toBe(false);
+    });
+
+    it('fails if no perfect-defence is pending', () => {
+      const state = setup();
+      const result = resolvePerfectDefence(state, []);
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe('Regle: High Kick — receiving team may place a player under the ball', () => {
+    const highKickEvent = KICKOFF_EVENTS[5];
+
+    it('sets pendingKickoffEvent for the receiving team', () => {
+      const state = setup();
+      const rng = makeRNG('hk-pending');
+      const result = applyKickoffEvent(state, highKickEvent, rng, 'A');
+      expect(result.pendingKickoffEvent).toEqual({
+        eventId: 'high-kick',
+        team: 'B',
+      });
+    });
+
+    it('resolveHighKick moves a receiving team player to the ball position', () => {
+      const state = applyKickoffEvent(setup(), highKickEvent, makeRNG('hk'), 'A');
+      // Ball position for receiving team B: somewhere on their half (x >= 13)
+      const ballPos = { x: 18, y: 2 };
+      const result = resolveHighKick(state, 'B1', ballPos);
+      expect(result.success).toBe(true);
+      const b1 = result.state.players.find(p => p.id === 'B1');
+      expect(b1?.pos).toEqual(ballPos);
+      expect(result.state.pendingKickoffEvent).toBeUndefined();
+    });
+
+    it('fails if the player does not belong to the receiving team', () => {
+      const state = applyKickoffEvent(setup(), highKickEvent, makeRNG('hk'), 'A');
+      const result = resolveHighKick(state, 'A1', { x: 18, y: 2 });
+      expect(result.success).toBe(false);
+    });
+
+    it('fails if the target square is already occupied', () => {
+      const state = applyKickoffEvent(setup(), highKickEvent, makeRNG('hk'), 'A');
+      // B1 is at x=15,y=7 and B2 is at x=16,y=7
+      const result = resolveHighKick(state, 'B1', { x: 16, y: 7 });
+      expect(result.success).toBe(false);
+    });
+
+    it('fails if no high-kick is pending', () => {
+      const state = setup();
+      const result = resolveHighKick(state, 'B1', { x: 18, y: 2 });
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe('Regle: Quick Snap — receiving team may move each player 1 square', () => {
+    const quickSnapEvent = KICKOFF_EVENTS[9];
+
+    it('sets pendingKickoffEvent for the receiving team', () => {
+      const state = setup();
+      const rng = makeRNG('qs-pending');
+      const result = applyKickoffEvent(state, quickSnapEvent, rng, 'A');
+      expect(result.pendingKickoffEvent).toEqual({
+        eventId: 'quick-snap',
+        team: 'B',
+      });
+    });
+
+    it('resolveQuickSnap moves receiving team players by 1 square', () => {
+      const state = applyKickoffEvent(setup(), quickSnapEvent, makeRNG('qs'), 'A');
+      // B1 at (15,7) → (14,7), B2 at (16,7) → (17,8)
+      const result = resolveQuickSnap(state, [
+        { playerId: 'B1', to: { x: 14, y: 7 } },
+        { playerId: 'B2', to: { x: 17, y: 8 } },
+      ]);
+      expect(result.success).toBe(true);
+      const b1 = result.state.players.find(p => p.id === 'B1');
+      const b2 = result.state.players.find(p => p.id === 'B2');
+      expect(b1?.pos).toEqual({ x: 14, y: 7 });
+      expect(b2?.pos).toEqual({ x: 17, y: 8 });
+      expect(result.state.pendingKickoffEvent).toBeUndefined();
+    });
+
+    it('fails if a move exceeds 1 square', () => {
+      const state = applyKickoffEvent(setup(), quickSnapEvent, makeRNG('qs'), 'A');
+      const result = resolveQuickSnap(state, [
+        { playerId: 'B1', to: { x: 15, y: 9 } }, // distance = 2
+      ]);
+      expect(result.success).toBe(false);
+    });
+
+    it('fails if a move targets a kicking team player', () => {
+      const state = applyKickoffEvent(setup(), quickSnapEvent, makeRNG('qs'), 'A');
+      const result = resolveQuickSnap(state, [
+        { playerId: 'A1', to: { x: 11, y: 6 } },
+      ]);
+      expect(result.success).toBe(false);
+    });
+
+    it('fails if a move leaves the pitch', () => {
+      const state = applyKickoffEvent(setup(), quickSnapEvent, makeRNG('qs'), 'A');
+      // Put B1 on edge then try to move off
+      const edgeState = {
+        ...state,
+        players: state.players.map(p => p.id === 'B1' ? { ...p, pos: { x: 15, y: 0 } } : p),
+      };
+      const result = resolveQuickSnap(edgeState, [
+        { playerId: 'B1', to: { x: 15, y: -1 } },
+      ]);
+      expect(result.success).toBe(false);
+    });
+
+    it('fails if two moves collide on the same square', () => {
+      const state = applyKickoffEvent(setup(), quickSnapEvent, makeRNG('qs'), 'A');
+      const result = resolveQuickSnap(state, [
+        { playerId: 'B1', to: { x: 15, y: 8 } },
+        { playerId: 'B2', to: { x: 15, y: 8 } },
+      ]);
+      expect(result.success).toBe(false);
+    });
+
+    it('allows skipping players by omitting them from moves', () => {
+      const state = applyKickoffEvent(setup(), quickSnapEvent, makeRNG('qs'), 'A');
+      const result = resolveQuickSnap(state, [
+        { playerId: 'B1', to: { x: 14, y: 7 } },
+      ]);
+      expect(result.success).toBe(true);
+      const b2 = result.state.players.find(p => p.id === 'B2');
+      expect(b2?.pos).toEqual({ x: 16, y: 7 }); // unchanged
+    });
+  });
+
+  describe('Regle: Blitz — kicking team plays an immediate turn', () => {
+    const blitzEvent = KICKOFF_EVENTS[10];
+
+    it('sets pendingKickoffEvent for the kicking team', () => {
+      const state = setup();
+      const rng = makeRNG('blitz-pending');
+      const result = applyKickoffEvent(state, blitzEvent, rng, 'A');
+      expect(result.pendingKickoffEvent).toEqual({
+        eventId: 'blitz',
+        team: 'A',
+      });
+    });
+
+    it('resolveBlitzKickoff switches currentPlayer to kicking team and activates flag', () => {
+      const base = applyKickoffEvent(setup(), blitzEvent, makeRNG('blitz'), 'A');
+      const stateWithReceivingTurn = { ...base, currentPlayer: 'B' as const };
+      const result = resolveBlitzKickoff(stateWithReceivingTurn);
+      expect(result.success).toBe(true);
+      expect(result.state.currentPlayer).toBe('A');
+      expect(result.state.blitzKickoffActive).toBe(true);
+      expect(result.state.pendingKickoffEvent).toBeUndefined();
+    });
+
+    it('resolveBlitzKickoff resets playerActions and turnover flag', () => {
+      const base = applyKickoffEvent(setup(), blitzEvent, makeRNG('blitz'), 'A');
+      const dirty = {
+        ...base,
+        currentPlayer: 'B' as const,
+        isTurnover: true,
+        playerActions: { A1: 'MOVE' } as Record<string, 'MOVE'>,
+        rerollUsedThisTurn: true,
+      };
+      const result = resolveBlitzKickoff(dirty);
+      expect(result.success).toBe(true);
+      expect(result.state.isTurnover).toBe(false);
+      expect(result.state.playerActions).toEqual({});
+      expect(result.state.rerollUsedThisTurn).toBe(false);
+    });
+
+    it('endBlitzKickoff returns control to the receiving team', () => {
+      const base = applyKickoffEvent(setup(), blitzEvent, makeRNG('blitz'), 'A');
+      const blitzing = resolveBlitzKickoff({ ...base, currentPlayer: 'B' as const }).state;
+      const ended = endBlitzKickoff(blitzing, 'A');
+      expect(ended.currentPlayer).toBe('B');
+      expect(ended.blitzKickoffActive).toBe(false);
+      expect(ended.playerActions).toEqual({});
+    });
+
+    it('fails if no blitz is pending', () => {
+      const state = setup();
+      const result = resolveBlitzKickoff(state);
+      expect(result.success).toBe(false);
     });
   });
 });

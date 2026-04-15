@@ -178,5 +178,5 @@
 | I.6 | Rediger les 60 specialRule star players manquantes | Moyen | Difficile | [ ] | 60/67 ont un fallback generique |
 | I.7 | Star players specifiques Season 3 | Moyen | Moyen | [ ] | S3 = clone S2 actuellement |
 | I.8 | Fixer 2 conditions meteo manquantes | Faible | Facile | [ ] | Affaissement du plafond, Ames errantes en colere |
-| I.9 | Implementer 4 kickoff events delegues UI | Moyen | Moyen | [ ] | perfect-defence, high-kick, quick-snap, blitz |
+| I.9 | Implementer 4 kickoff events delegues UI | Moyen | Moyen | [x] | perfect-defence, high-kick, quick-snap, blitz |
 | I.10 | Fixer cheering fans dedicated fans a 0 | Faible | Facile | [ ] | Hardcode dans kickoff-events.ts |

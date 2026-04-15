@@ -220,6 +220,13 @@ export interface GameState {
   hypnotizedPlayers?: string[];
   // Condition météo active pour ce match (persistée depuis le pré-match)
   weatherCondition?: { condition: string; description: string };
+  // Événement de kickoff délégué à l'UI en attente de résolution
+  pendingKickoffEvent?: {
+    eventId: 'perfect-defence' | 'high-kick' | 'quick-snap' | 'blitz';
+    team: TeamId;
+  };
+  // Indique qu'un tour spécial "Blitz" de kickoff est actif (pas de passe/handoff)
+  blitzKickoffActive?: boolean;
 }
 
 export interface DiceResult {
