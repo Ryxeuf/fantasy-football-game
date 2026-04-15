@@ -25,6 +25,7 @@ import {
   isStandFirmActiveForBlock,
   isStandFirmActiveForChainPush,
 } from './stand-firm';
+import { isFendActiveForFollowUp } from './fend';
 
 /**
  * Applique un chain push : si la case de destination est occupée, le joueur qui s'y trouve
@@ -547,13 +548,27 @@ export function handlePushWithChoice(
       // Note: bounceBall sera appelé par la fonction appelante
     }
 
-    // Blessure automatique par la foule (pas de jet d'armure, minimum KO)
-    const resultState = handleInjuryByCrowd(newState, target, rng);
+    // Fend : verifier avant la blessure par la foule (qui stun la cible)
+    const fendActiveSurf = isFendActiveForFollowUp(state, attacker, target);
 
-    // L'attaquant peut suivre (follow-up) sur la case liberee
-    resultState.players = resultState.players.map(p =>
-      p.id === attacker.id ? { ...p, pos: target.pos } : p
-    );
+    // Blessure automatique par la foule (pas de jet d'armure, minimum KO)
+    let resultState = handleInjuryByCrowd(newState, target, rng);
+
+    if (fendActiveSurf) {
+      const fendLog = createLogEntry(
+        'action',
+        `${target.name} utilise Fend : ${attacker.name} ne peut pas suivre`,
+        target.id,
+        target.team,
+        { skill: 'fend' },
+      );
+      resultState = { ...resultState, gameLog: [...resultState.gameLog, fendLog] };
+    } else {
+      // L'attaquant peut suivre (follow-up) sur la case liberee
+      resultState.players = resultState.players.map(p =>
+        p.id === attacker.id ? { ...p, pos: target.pos } : p
+      );
+    }
 
     return resultState;
   } else if (availableDirections.length === 0) {
@@ -573,15 +588,32 @@ export function handlePushWithChoice(
       y: target.pos.y + pushDirection.y,
     };
 
+    // Fend : verifier avant la poussee (la cible doit etre debout). En
+    // pratique, quand handlePushWithChoice est appele depuis POW/STUMBLE
+    // knockdown, la cible est deja stunned et Fend n'est pas actif ; mais on
+    // verifie quand meme pour le cas Dodge → PUSH_BACK si on passait par ici.
+    const fendActive = isFendActiveForFollowUp(state, attacker, target);
+
     const newState = applyChainPush(state, target.id, pushDirection, rng);
 
-    // Demander confirmation pour le follow-up
-    newState.pendingFollowUpChoice = {
-      attackerId: attacker.id,
-      targetId: target.id,
-      targetNewPosition: newTargetPos,
-      targetOldPosition: target.pos,
-    };
+    if (fendActive) {
+      const fendLog = createLogEntry(
+        'action',
+        `${target.name} utilise Fend : ${attacker.name} ne peut pas suivre`,
+        target.id,
+        target.team,
+        { skill: 'fend' },
+      );
+      newState.gameLog = [...newState.gameLog, fendLog];
+    } else {
+      // Demander confirmation pour le follow-up
+      newState.pendingFollowUpChoice = {
+        attackerId: attacker.id,
+        targetId: target.id,
+        targetNewPosition: newTargetPos,
+        targetOldPosition: target.pos,
+      };
+    }
 
     const pushLog = createLogEntry(
       'action',
@@ -920,13 +952,28 @@ function handlePushBack(state: GameState, attacker: Player, target: Player, rng:
       // Note: bounceBall sera appelé par la fonction appelante
     }
 
+    // Fend : l'attaquant ne peut pas suivre (meme vers la case liberee par la
+    // foule). Verifier AVANT d'appliquer la blessure (qui stun la cible).
+    const fendActiveSurf = isFendActiveForFollowUp(state, attacker, target);
+
     // Blessure automatique par la foule (pas de jet d'armure, minimum KO)
     state = handleInjuryByCrowd(state, target, rng);
 
-    // L'attaquant peut suivre (follow-up) sur la case liberee
-    state.players = state.players.map(p =>
-      p.id === attacker.id ? { ...p, pos: target.pos } : p
-    );
+    if (fendActiveSurf) {
+      const fendLog = createLogEntry(
+        'action',
+        `${target.name} utilise Fend : ${attacker.name} ne peut pas suivre`,
+        target.id,
+        target.team,
+        { skill: 'fend' },
+      );
+      state.gameLog = [...state.gameLog, fendLog];
+    } else {
+      // L'attaquant peut suivre (follow-up) sur la case liberee
+      state.players = state.players.map(p =>
+        p.id === attacker.id ? { ...p, pos: target.pos } : p
+      );
+    }
   } else if (availableDirections.length === 0) {
     // Aucune direction disponible (toutes occupées, aucune hors limites) - ne pas pousser
     const noPushLog = createLogEntry(
@@ -944,15 +991,29 @@ function handlePushBack(state: GameState, attacker: Player, target: Player, rng:
       y: target.pos.y + pushDirection.y,
     };
 
+    // Fend : verifier avant la poussee (la cible doit etre debout)
+    const fendActive = isFendActiveForFollowUp(state, attacker, target);
+
     state = applyChainPush(state, target.id, pushDirection, rng);
 
-    // Follow-up is optional on PUSH_BACK — let the attacker choose
-    state.pendingFollowUpChoice = {
-      attackerId: attacker.id,
-      targetId: target.id,
-      targetNewPosition: newTargetPos,
-      targetOldPosition: target.pos,
-    };
+    if (fendActive) {
+      const fendLog = createLogEntry(
+        'action',
+        `${target.name} utilise Fend : ${attacker.name} ne peut pas suivre`,
+        target.id,
+        target.team,
+        { skill: 'fend' },
+      );
+      state.gameLog = [...state.gameLog, fendLog];
+    } else {
+      // Follow-up is optional on PUSH_BACK — let the attacker choose
+      state.pendingFollowUpChoice = {
+        attackerId: attacker.id,
+        targetId: target.id,
+        targetNewPosition: newTargetPos,
+        targetOldPosition: target.pos,
+      };
+    }
 
     const pushLog = createLogEntry(
       'action',

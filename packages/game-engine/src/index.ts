@@ -194,6 +194,12 @@ export {
   isStandFirmActiveForBlock,
   isStandFirmActiveForChainPush,
 } from './mechanics/stand-firm';
+
+// Export du skill Fend (empeche le follow-up de l'attaquant apres une poussee)
+export {
+  hasFend,
+  isFendActiveForFollowUp,
+} from './mechanics/fend';
 export {
   hasBreakTackle,
   getBreakTackleDodgeBonus,
