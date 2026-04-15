@@ -30,7 +30,7 @@ services:
     restart: unless-stopped
     container_name: nufflearena_web
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
       - PORT=3100
       - NEXT_PUBLIC_API_BASE=https://api.nufflearena.fr
       - SERVER_API_BASE=http://server:8201
@@ -52,7 +52,7 @@ services:
       db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3100"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3100/"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -68,6 +68,9 @@ services:
       - NODE_ENV=production
       - API_PORT=8201
       - DATABASE_URL=postgresql://${POSTGRES_USER:-bb_user}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-bb_db}?schema=public
+      - JWT_SECRET=${JWT_SECRET}
+      - MATCH_SECRET=${MATCH_SECRET}
+      - CORS_ORIGINS=${CORS_ORIGINS}
     networks:
       - traefik-network
     labels:
@@ -86,11 +89,11 @@ services:
     command: >
       sh -c "
         npx prisma generate --schema /app/prisma/schema.prisma &&
-        npx prisma migrate deploy --schema /app/prisma/schema.prisma &&
-        pnpm run dev:nowatch
+        npx prisma db push --schema /app/prisma/schema.prisma --skip-generate &&
+        pnpm --filter @bb/server run dev:nowatch
       "
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8201/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8201/health"]
       interval: 30s
       timeout: 10s
       retries: 3
