@@ -136,6 +136,18 @@ export interface GameState {
     totalStrength: number;
     targetStrength: number;
   };
+  // Choix de Dump-off en attente : la cible d'un blocage a le skill `dump-off`
+  // et le ballon. Elle peut choisir un receveur (Quick Pass) ou passer son
+  // tour de Dump-off. Après résolution, le blocage initial reprend via la
+  // `pendingBlockMove` conservée ci-dessous.
+  pendingDumpOff?: {
+    attackerId: string;         // joueur effectuant le blocage (adversaire)
+    targetId: string;           // cible du blocage — passeur potentiel du Dump-off
+    receiverOptions: string[];  // IDs des receveurs éligibles (Quick range)
+    pendingBlockMove:
+      | { type: 'BLOCK'; playerId: string; targetId: string }
+      | { type: 'BLITZ'; playerId: string; to: Position; targetId: string };
+  };
   // Choix de direction de poussée en attente
   pendingPushChoice?: {
     attackerId: string;
@@ -242,6 +254,8 @@ export interface GameState {
   bribesRemaining: { teamA: number; teamB: number };
   // Joueurs hypnotisés (perdent leur zone de tacle jusqu'à leur prochaine activation)
   hypnotizedPlayers?: string[];
+  // IDs des joueurs qui ont déjà utilisé Break Tackle ce tour (une fois par tour par joueur).
+  usedBreakTackleThisTurn?: string[];
   // Condition météo active pour ce match (persistée depuis le pré-match)
   weatherCondition?: { condition: string; description: string };
   // État pré-match (setup, kickoff, inducements, etc.)
@@ -305,10 +319,13 @@ export type ActionType =
   | 'THROW_TEAM_MATE'
   | 'FOUL'
   | 'HYPNOTIC_GAZE'
-  | 'PROJECTILE_VOMIT';
+  | 'PROJECTILE_VOMIT'
+  | 'STAB'
+  | 'CHAINSAW';
 
 export type Move =
   | { type: 'MOVE'; playerId: string; to: Position }
+  | { type: 'LEAP'; playerId: string; to: Position }
   | { type: 'END_TURN' }
   | { type: 'END_PLAYER_TURN'; playerId: string }
   | { type: 'DODGE'; playerId: string; from: Position; to: Position }
@@ -325,6 +342,9 @@ export type Move =
   | { type: 'FOUL'; playerId: string; targetId: string }
   | { type: 'HYPNOTIC_GAZE'; playerId: string; targetId: string }
   | { type: 'PROJECTILE_VOMIT'; playerId: string; targetId: string }
+  | { type: 'STAB'; playerId: string; targetId: string }
+  | { type: 'CHAINSAW'; playerId: string; targetId: string }
+  | { type: 'DUMP_OFF_CHOOSE'; passerId: string; receiverId: string | null }
   | { type: 'KICKOFF_PERFECT_DEFENCE'; positions: Array<{ playerId: string; position: Position }> }
   | { type: 'KICKOFF_HIGH_KICK'; playerId: string | null }
   | { type: 'KICKOFF_QUICK_SNAP'; moves: Array<{ playerId: string; to: Position }> }

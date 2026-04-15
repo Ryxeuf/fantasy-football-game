@@ -9,6 +9,8 @@ import {
   checkTakeRoot,
   checkBloodlust,
   checkAlwaysHungry,
+  canInstablePerformAction,
+  logInstablePrevention,
 } from './negative-traits';
 
 /** Fixed RNG that always returns the same value */
@@ -677,5 +679,87 @@ describe('checkAnimalSavagery', () => {
     const logCountBefore = state.gameLog.length;
     const result = checkAnimalSavagery(state, player, fixedRNG(0.99));
     expect(result.newState.gameLog.length).toBeGreaterThan(logCountBefore);
+  });
+});
+
+describe('canInstablePerformAction', () => {
+  it('should allow any action for a player without the instable trait', () => {
+    const state = setup();
+    const player = getPlayer(state, 'A1');
+    expect(canInstablePerformAction(player, 'PASS')).toBe(true);
+    expect(canInstablePerformAction(player, 'HANDOFF')).toBe(true);
+    expect(canInstablePerformAction(player, 'THROW_TEAM_MATE')).toBe(true);
+    expect(canInstablePerformAction(player, 'MOVE')).toBe(true);
+    expect(canInstablePerformAction(player, 'BLOCK')).toBe(true);
+  });
+
+  it('should forbid PASS action for a player with instable', () => {
+    let state = setup();
+    state = withSkill(state, 'A1', 'instable');
+    const player = getPlayer(state, 'A1');
+    expect(canInstablePerformAction(player, 'PASS')).toBe(false);
+  });
+
+  it('should forbid HANDOFF action for a player with instable', () => {
+    let state = setup();
+    state = withSkill(state, 'A1', 'instable');
+    const player = getPlayer(state, 'A1');
+    expect(canInstablePerformAction(player, 'HANDOFF')).toBe(false);
+  });
+
+  it('should forbid THROW_TEAM_MATE action for a player with instable', () => {
+    let state = setup();
+    state = withSkill(state, 'A1', 'instable');
+    const player = getPlayer(state, 'A1');
+    expect(canInstablePerformAction(player, 'THROW_TEAM_MATE')).toBe(false);
+  });
+
+  it('should still allow MOVE/BLOCK/BLITZ/FOUL for a player with instable', () => {
+    let state = setup();
+    state = withSkill(state, 'A1', 'instable');
+    const player = getPlayer(state, 'A1');
+    expect(canInstablePerformAction(player, 'MOVE')).toBe(true);
+    expect(canInstablePerformAction(player, 'BLOCK')).toBe(true);
+    expect(canInstablePerformAction(player, 'BLITZ')).toBe(true);
+    expect(canInstablePerformAction(player, 'FOUL')).toBe(true);
+  });
+});
+
+describe('logInstablePrevention', () => {
+  it('should append a log entry describing the prevented action', () => {
+    let state = setup();
+    state = withSkill(state, 'A1', 'instable');
+    const player = getPlayer(state, 'A1');
+    const logCountBefore = state.gameLog.length;
+
+    const newState = logInstablePrevention(state, player, 'PASS');
+
+    expect(newState.gameLog.length).toBe(logCountBefore + 1);
+    const lastEntry = newState.gameLog[newState.gameLog.length - 1];
+    expect(lastEntry.message).toContain('Instable');
+    expect(lastEntry.playerId).toBe(player.id);
+    expect(lastEntry.team).toBe(player.team);
+  });
+
+  it('should not mutate the original state', () => {
+    let state = setup();
+    state = withSkill(state, 'A1', 'instable');
+    const player = getPlayer(state, 'A1');
+    const originalLogLength = state.gameLog.length;
+
+    logInstablePrevention(state, player, 'HANDOFF');
+
+    expect(state.gameLog.length).toBe(originalLogLength);
+  });
+
+  it('should include the skill metadata in the log entry', () => {
+    let state = setup();
+    state = withSkill(state, 'A1', 'instable');
+    const player = getPlayer(state, 'A1');
+
+    const newState = logInstablePrevention(state, player, 'THROW_TEAM_MATE');
+    const lastEntry = newState.gameLog[newState.gameLog.length - 1];
+    // Metadata is stored under details
+    expect(lastEntry.details?.skill).toBe('instable');
   });
 });

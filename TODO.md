@@ -1,9 +1,22 @@
 # TODO — Nuffle Arena (Blood Bowl 3 Online)
 
 > Backlog priorise par valeur (Gain) et effort (Difficulte).
-> Derniere mise a jour : 2026-04-12
+> Derniere mise a jour : 2026-04-14 (repriorisation 5 equipes)
 >
-> **Objectif** : jouer en ligne a Blood Bowl avec les regles BB3 (Season 2/3).
+> **Objectif** : livrer un jeu 100% fonctionnel avec un scope reduit a 5 equipes prioritaires,
+> puis rayonner sur le reste du contenu.
+>
+> **Equipes prioritaires** (MVP complet) :
+> 1. Skaven
+> 2. Gnomes
+> 3. Hommes-Lezards
+> 4. Nains
+> 5. Noblesse Imperiale
+>
+> **Ordre strategique post-Sprint 12** :
+> 1. Completer les skills intrinseques et star players des 5 equipes → jeu joueable complet
+> 2. Engagement & retention (tutoriel, IA, amis, achievements) — deplace en priorite haute
+> 3. Ligues + mobile + contenu restant ensuite
 >
 > **Documentation detaillee** : [`docs/roadmap/`](./docs/roadmap/)
 > - [Audit complet (2026-04-02)](./docs/roadmap/audit-report.md) — constats game engine, frontend, backend, contenu
@@ -200,9 +213,10 @@
 | TEST-1 | Activer vitest coverage reporting | Qualite | [x] |
 | SEC-5 | Validation Zod sur toutes les routes non validees | Securite | [x] |
 
-### Sprint 13 — Equilibre des Equipes (~6 jours)
+### Sprint 13 — Skills intrinseques des 5 equipes prioritaires (~6 jours)
 
-> Rendre toutes les equipes jouables avec les bonnes mecaniques.
+> Finaliser tous les skills presents de base sur les rosters Skaven, Gnomes, Hommes-Lezards, Nains, Noblesse Imperiale.
+> Objectif : chaque joueur des 5 rosters joue avec ses regles BB3 correctement appliquees.
 
 | # | Tache | Type | Statut |
 |---|-------|------|--------|
@@ -215,11 +229,63 @@
 | K.3 | Implementer `chainsaw` | Regle | [ ] |
 | K.4 | Implementer `dump-off` | Regle | [ ] |
 | K.5 | Implementer `on-the-ball` | Regle | [ ] |
-| TEST-2 | Tests unitaires pour tous les nouveaux skills | Tests | [ ] |
+| P1.1 | Implementer `stunty` (Skinks, Lineman Gnome, joueurs petits) | Regle | [x] |
+| P1.2 | Implementer `dauntless` (Dwarf Troll Slayer) | Regle | [x] |
+| P1.3 | Implementer `break-tackle` (Dwarf Deathroller) | Regle | [x] |
+| P1.4 | Implementer `juggernaut` (Dwarf Deathroller) | Regle | [x] |
+| P1.5 | Implementer `stand-firm` (Deathroller, Bodyguard, Treeman Gnome) | Regle | [x] |
+| P1.6 | Implementer `armored-skull` (Dwarf Deathroller) | Regle | [ ] |
+| P1.7 | Implementer `iron-hard-skin` (Gnomes : piston, beastmaster, treeman) | Regle | [ ] |
+| P1.8 | Implementer `shadowing` (Lizardmen Chameleon Skink) | Regle | [ ] |
+| P1.9 | Implementer `fend` (Imperial Retainer Lineman) — verifier | Regle | [ ] |
+| P1.10 | Implementer `running-pass` (Imperial Thrower) | Regle | [ ] |
+| P1.11 | Audit : verifier que `prehensile-tail`, `frenzy`, `throw-team-mate`, `thick-skull`, `on-the-ball`, `loner` s'appliquent correctement aux joueurs des 5 equipes | Regle | [ ] |
+| TEST-2 | Tests unitaires + integration pour chacun des skills ci-dessus | Tests | [ ] |
+| TEST-3 | Test E2E : un match complet Nains vs Skaven sans divergence de regles | Tests | [ ] |
 
-### Sprint 14 — Infrastructure Competitive (~8 jours)
+### Sprint 14 — Skills de progression & Star Players des 5 equipes (~6 jours)
 
-> Lancer le systeme de ligues — coeur du Blood Bowl competitif.
+> Completer les skills selectionnables lors du level-up + toutes les star players hirables par les 5 equipes prioritaires.
+
+| # | Tache | Type | Statut |
+|---|-------|------|--------|
+| P2.1 | Implementer `kick` (tres pris en progression, universel) | Regle | [ ] |
+| P2.2 | Implementer `defensive` (progression universelle) | Regle | [ ] |
+| P2.3 | Implementer `disturbing-presence` (progression universelle) | Regle | [ ] |
+| P2.4 | Implementer `leap` (Saurus progression frequente) | Regle | [x] |
+| P2.5 | Implementer `dump-off` (Imperial / Skaven Thrower progression) | Regle | [x] |
+| P2.6 | Implementer `sneaky-git` (Dwarf Troll Slayer progression) | Regle | [ ] |
+| P2.7 | Lister les star players hirables par les 5 equipes (flag `hirableBy`) | Contenu | [ ] |
+| P2.8 | Ecrire les special rules manquantes de ces star players (~15-25) | Contenu | [ ] |
+| P2.9 | Images + descriptions FR/EN de ces star players | Contenu | [ ] |
+| P2.10 | Tests unitaires sur les special rules star players des 5 equipes | Tests | [ ] |
+
+### Sprint 15 — Tutoriel & IA adversaire (~6 jours, ex-Sprint 18 remonte)
+
+> Rendre le jeu accessible aux debutants avant toute autre croissance.
+
+| # | Tache | Type | Statut |
+|---|-------|------|--------|
+| N.1 | Tutoriel interactif (match guide, scripts pas a pas) | Engagement | [ ] |
+| N.2 | Mode simplifie pour debutants (leverager `SIMPLIFIED_RULES`) | Engagement | [ ] |
+| N.3 | IA adversaire — evaluation heuristique basique (eval position + coup) | Engagement | [ ] |
+| N.4 | Mode pratique contre IA (3 niveaux de difficulte) | Engagement | [ ] |
+| N.4b | IA contrainte aux 5 equipes prioritaires dans un premier temps | Engagement | [ ] |
+
+### Sprint 16 — Social & retention (~5 jours, ex-Sprint 19 remonte)
+
+> Fideliser les joueurs autour des 5 equipes jouables.
+
+| # | Tache | Type | Statut |
+|---|-------|------|--------|
+| N.5 | Systeme d'amis (ajout, invitation, statut en ligne) | Social | [ ] |
+| N.6 | Historique de matchs avec stats de carriere (par equipe, par joueur) | Social | [ ] |
+| N.7 | Systeme d'achievements (succes) | Social | [ ] |
+| N.8 | Badges "Maitre" par equipe prioritaire (gagner X matchs avec chaque) | Social | [ ] |
+
+### Sprint 17 — Infrastructure Competitive : ligues (~8 jours, ex-Sprint 14)
+
+> Systeme de ligues — activite long-terme autour des 5 equipes.
 
 | # | Tache | Type | Statut |
 |---|-------|------|--------|
@@ -231,26 +297,11 @@
 | L.6 | Page detail ligue (calendrier, classement, matchs) | Frontend | [ ] |
 | L.7 | Integration match online -> ligue (resultats auto) | Backend | [ ] |
 | L.8 | ELO saisonnier avec reset et placements | Backend | [ ] |
+| L.9 | Ligue demarrage : "Open 5 Teams" limite aux 5 equipes prioritaires | Backend | [ ] |
 
-### Sprint 15 — Skills a Fort Impact (~5 jours)
+### Sprint 18-19 — Parite Mobile (~10 jours, ex-Sprint 16-17)
 
-> Completer les skills les plus frequemment rencontres.
-
-| # | Tache | Type | Statut |
-|---|-------|------|--------|
-| K.6 | Implementer `kick` | Regle | [ ] |
-| K.7 | Implementer `sneaky-git` | Regle | [ ] |
-| K.8 | Implementer `defensive` | Regle | [ ] |
-| K.9 | Implementer `disturbing-presence` | Regle | [ ] |
-| K.10 | Implementer `multiple-block` | Regle | [ ] |
-| K.11 | Implementer `hail-mary-pass` + `safe-pass` | Regle | [ ] |
-| K.12 | Implementer `ball-and-chain` | Regle | [ ] |
-| K.13 | Implementer `bombardier` | Regle | [ ] |
-| B3.3 | 20 prochaines star player special rules | Contenu | [ ] |
-
-### Sprint 16-17 — Parite Mobile (~10 jours)
-
-> Amener l'app mobile a un etat utilisable pour le jeu en ligne.
+> Amener l'app mobile a un etat utilisable.
 
 | # | Tache | Type | Statut |
 |---|-------|------|--------|
@@ -267,28 +318,32 @@
 | M.11 | Catalogue Star Players mobile | Mobile | [ ] |
 | M.12 | Profil et settings mobile | Mobile | [ ] |
 
-### Sprint 18-19 — Croissance & Engagement (~10 jours)
+### Sprint 20-21 — Extension contenu : skills & equipes restantes
 
-> Attirer et retenir les joueurs.
-
-| # | Tache | Type | Statut |
-|---|-------|------|--------|
-| N.1 | Tutoriel interactif (match guide contre scripts) | Engagement | [ ] |
-| N.2 | Mode simplifie pour debutants (leverager `SIMPLIFIED_RULES`) | Engagement | [ ] |
-| N.3 | IA adversaire — evaluation heuristique basique | Engagement | [ ] |
-| N.4 | Mode pratique contre IA | Engagement | [ ] |
-| N.5 | Systeme d'amis (ajout, invitation, statut en ligne) | Social | [ ] |
-| N.6 | Historique de matchs avec stats de carriere | Social | [ ] |
-| N.7 | Systeme d'achievements | Social | [ ] |
-
-### Sprint 20+ — Contenu & Polish
-
-> Completer la couverture skills, ameliorer la qualite.
+> Une fois les 5 equipes prioritaires totalement finies, ouvrir progressivement le reste.
 
 | # | Tache | Type | Statut |
 |---|-------|------|--------|
+| J.8 | Implementer `bloodlust` (3 variantes) — Vampires | Regle | [x] |
+| J.9 | Implementer `always-hungry` — Ogres / Snotlings | Regle | [x] |
+| J.10 | Implementer `foul-appearance` — Nurgle / Chaos | Regle | [x] |
+| J.11 | Implementer `instable` — divers | Regle | [x] |
+| K.1b | Implementer `pogo-stick` — Goblin | Regle | [x] |
+| K.2 | Implementer `stab` — Vampire / Underworld | Regle | [x] |
+| K.3 | Implementer `chainsaw` — Secret weapons | Regle | [x] |
+| K.10 | Implementer `multiple-block` — Ogres | Regle | [ ] |
+| K.11 | Implementer `hail-mary-pass` + `safe-pass` | Regle | [ ] |
+| K.12 | Implementer `ball-and-chain` — Goblin Fanatic | Regle | [ ] |
+| K.13 | Implementer `bombardier` — Goblin Bomma | Regle | [ ] |
+| O.2 | Star player special rules restantes (~30, hors 5 equipes) | Contenu | [ ] |
 | O.1 | ~39 skills niche restants (batch 3) | Contenu | [ ] |
-| O.2 | Star player special rules restantes (~30) | Contenu | [ ] |
+
+### Sprint 22+ — Polish final & communaute
+
+> Qualite, performance, rayonnement.
+
+| # | Tache | Type | Statut |
+|---|-------|------|--------|
 | O.3 | Verification differences regles S3 | Contenu | [ ] |
 | O.4 | Expansion E2E tests (couverture cible 80%) | Qualite | [ ] |
 | O.5 | Optimisation taille GameState (separer gameLog) | Perf | [ ] |
@@ -317,36 +372,44 @@
 | **G — Notifications push** | 5 | 5 | 0 | 0 | TERMINE |
 | **H — Polish** | 7 | 7 | 0 | 0 | TERMINE |
 | **I — Contenu & donnees** | 10 | 10 | 0 | 0 | TERMINE |
-| **J — Traits negatifs** | 11 | 0 | 0 | 11 | CRITIQUE (Sprint 12-13) |
-| **K — Skills fort impact** | 13 | 0 | 0 | 13 | IMPORTANT (Sprint 13-15) |
-| **L — Ligues** | 8 | 0 | 0 | 8 | CRITIQUE (Sprint 14) |
-| **M — Parite mobile** | 12 | 0 | 0 | 12 | IMPORTANT (Sprint 16-17) |
-| **N — Croissance** | 7 | 0 | 0 | 7 | IMPORTANT (Sprint 18-19) |
-| **O — Contenu & polish** | 10 | 0 | 0 | 10 | SOUHAITABLE (Sprint 20+) |
+| **P1 — Skills intrinseques 5 equipes** | 13 | 0 | 0 | 13 | CRITIQUE (Sprint 13) |
+| **P2 — Progression & Stars 5 equipes** | 10 | 1 | 0 | 9 | CRITIQUE (Sprint 14) |
+| **N — Croissance & engagement** | 8 | 0 | 0 | 8 | HAUTE (Sprint 15-16) |
+| **L — Ligues** | 9 | 0 | 0 | 9 | HAUTE (Sprint 17) |
+| **M — Parite mobile** | 12 | 0 | 0 | 12 | MOYENNE (Sprint 18-19) |
+| **J — Traits negatifs restants** | 4 | 4 | 0 | 0 | TERMINE (livre avant ordonnancement) |
+| **K — Skills fort impact (non-5 equipes)** | 8 | 3 | 0 | 5 | BASSE (Sprint 20-21) |
+| **O — Contenu & polish** | 10 | 0 | 0 | 10 | SOUHAITABLE (Sprint 22+) |
 
 ---
 
 ## Chemin critique
 
 ```
-Phase 1 : Sprints 0-11 ✅ ──→ MATCH ONLINE JOUABLE + GAMEPLAY RICHE + POLISH
+Phase 1 : Sprints 0-12 ✅ ──→ MATCH ONLINE JOUABLE + GAMEPLAY RICHE + SECURITE
 
-Phase 2 : Sprints 12-20 (en cours)
+Phase 2 : MVP "5 equipes totalement fonctionnelles" (repriorisation 2026-04-14)
 
-Sprint 12 (Securite + Traits negatifs)
+Sprint 13 (Skills intrinseques 5 equipes)
     │
-    ├── Sprint 13 (Equilibre equipes) ── Sprint 15 (Skills fort impact)
-    │                                         │
-    │                                    Sprint 20+ (Skills niche)
-    │
-    ├── Sprint 14 (Ligues) ── Sprint 18 (Amis, Stats)
-    │
-    ├── Sprint 16-17 (Mobile) ── [App stores]
-    │
-    └── Sprint 18-19 (Tutoriel + IA) ── Sprint 20+ (Communaute)
+    └── Sprint 14 (Progression + Star Players 5 equipes)
+           │
+           └── ✅ Les 5 equipes (Skaven/Gnomes/Lezards/Nains/Noblesse) sont jouables a 100%
+                  │
+                  ├── Sprint 15 (Tutoriel + IA)           ── onboarding debutants
+                  │     │
+                  │     └── Sprint 16 (Amis, achievements) ── retention
+                  │
+                  └── Sprint 17 (Ligues) ── activite competitive long-terme
+
+Phase 3 : Extension
+
+Sprint 18-19 (Mobile) ── [App stores]
+Sprint 20-21 (Skills + equipes restantes) ── ouvrir les 56 autres rosters
+Sprint 22+ (Polish, perf, communaute)
 ```
 
-> **Historique (Sprints 0-11)** :
+> **Historique (Sprints 0-12)** :
 > 1. ~~Sprint 0~~ ✅ — bugs critiques et failles securite
 > 2. ~~Sprint 1~~ ✅ — skills + WebSocket + UI = match jouable
 > 3. ~~Sprint 2~~ ✅ — regles BB3 essentielles
@@ -359,12 +422,14 @@ Sprint 12 (Securite + Traits negatifs)
 > 10. ~~Sprint 9~~ ✅ — animations avancees, kickoff events, leaderboard
 > 11. ~~Sprint 10~~ ✅ — contenu & polish restants (Slann S3, images, replayer)
 > 12. ~~Sprint 11~~ ✅ — donnees S3, taches restantes
+> 13. ~~Sprint 12~~ ✅ — securite + traits negatifs (equilibre critique)
 >
-> **Plan d'evolution (2026-04-12)** :
-> 13. Sprint 12 — securite + traits negatifs (equilibre critique)
-> 14. Sprint 13 — equilibre equipes (bloodlust, leap, stab, dump-off)
-> 15. Sprint 14 — systeme de ligues (killer feature competitive)
-> 16. Sprint 15 — skills a fort impact (kick, ball-and-chain, bombardier)
-> 17. Sprint 16-17 — parite mobile (7 → 20+ ecrans)
-> 18. Sprint 18-19 — croissance (tutoriel, IA, amis, achievements)
-> 19. Sprint 20+ — contenu & polish (skills niche, E2E, optimisations)
+> **Plan d'evolution repriorise (2026-04-14)** :
+> 14. Sprint 13 — skills intrinseques des 5 equipes (stunty, dauntless, break-tackle, juggernaut, stand-firm, armored-skull, iron-hard-skin, shadowing, fend, running-pass)
+> 15. Sprint 14 — skills de progression + star players hirables par les 5 equipes (kick, defensive, disturbing-presence, leap, dump-off, sneaky-git + ~20 stars)
+> 16. Sprint 15 — tutoriel interactif + IA adversaire (onboarding) [REMONTE]
+> 17. Sprint 16 — amis, achievements, historique carriere (retention) [REMONTE]
+> 18. Sprint 17 — systeme de ligues (competitif) [DECALE]
+> 19. Sprint 18-19 — parite mobile [DECALE]
+> 20. Sprint 20-21 — skills et equipes restantes (bloodlust, stab, chainsaw, ball-and-chain, bombardier, etc.)
+> 21. Sprint 22+ — polish final (E2E, perf, analytics, communaute)

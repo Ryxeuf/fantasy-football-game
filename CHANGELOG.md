@@ -1,3 +1,22 @@
+## [1.57.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.56.1...v1.57.0) (2026-04-14)
+
+
+### ✨ Features
+
+* activate vitest coverage reporting (TEST-1) ([#191](https://github.com/Ryxeuf/fantasy-football-game/issues/191)) ([900d35b](https://github.com/Ryxeuf/fantasy-football-game/commit/900d35b50f19b7994cd03ff03eb6eb385c6afaad))
+* **game-engine:** implement Foul Appearance (J.10) ([#198](https://github.com/Ryxeuf/fantasy-football-game/issues/198)) ([ac8c27c](https://github.com/Ryxeuf/fantasy-football-game/commit/ac8c27c27a03d55fcaca2d6ca967a31d15f6ddb0))
+* **game-engine:** implement instable (Unstable) trait (J.11) ([#201](https://github.com/Ryxeuf/fantasy-football-game/issues/201)) ([deb4a4a](https://github.com/Ryxeuf/fantasy-football-game/commit/deb4a4a3537242cf723b641394595e467026fa3b))
+* **game-engine:** implement Leap + Pogo Stick (K.1) ([#202](https://github.com/Ryxeuf/fantasy-football-game/issues/202)) ([86e58e0](https://github.com/Ryxeuf/fantasy-football-game/commit/86e58e01fe79eb93c85fbfe1e94d395feb0d52f7))
+* implement always-hungry trait (J.9) ([#197](https://github.com/Ryxeuf/fantasy-football-game/issues/197)) ([07b1165](https://github.com/Ryxeuf/fantasy-football-game/commit/07b11658c05ff23110eea2b431ac385f255538a3))
+* implement bloodlust trait with 3 variants (J.8) ([#196](https://github.com/Ryxeuf/fantasy-football-game/issues/196)) ([8cd8644](https://github.com/Ryxeuf/fantasy-football-game/commit/8cd86446a0ff34edb0f2bf705db6c0477532af79))
+* implement right-stuff skill (J.7) ([#187](https://github.com/Ryxeuf/fantasy-football-game/issues/187)) ([a082d9e](https://github.com/Ryxeuf/fantasy-football-game/commit/a082d9ecdf61506270ffaf5b04ccbd4af286cd09))
+* **sec:** add Zod validation to all routes (SEC-5) ([#195](https://github.com/Ryxeuf/fantasy-football-game/issues/195)) ([efc8ff3](https://github.com/Ryxeuf/fantasy-football-game/commit/efc8ff3d65bc5b6fd98cd21aa5d682061b6e959e))
+
+
+### 🐛 Bug Fixes
+
+* remove dummy DiceResult overwrite after block resolution ([#190](https://github.com/Ryxeuf/fantasy-football-game/issues/190)) ([4cdc6e7](https://github.com/Ryxeuf/fantasy-football-game/commit/4cdc6e7c737fe6df7e92d529e5615228b524363c))
+
 ## [1.56.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.56.0...v1.56.1) (2026-04-13)
 
 

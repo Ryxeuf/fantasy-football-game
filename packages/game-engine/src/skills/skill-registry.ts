@@ -194,22 +194,14 @@ registerSkill({
 // ─── COMPÉTENCES AVANCÉES ────────────────────────────────────────────────
 
 // DAUNTLESS
+// Dauntless is resolved in `mechanics/dauntless.ts` and invoked from
+// `handleBlock` before block dice are rolled. The registry entry is kept here
+// for lookup and metadata purposes only.
 registerSkill({
   slug: 'dauntless',
   triggers: ['on-block-attacker'],
-  description: 'Si ST inférieure à l\'adversaire, lance un D6 + ST. Si >= ST adverse, la force est considérée comme égale.',
-  canApply: (ctx) => {
-    if (!hasSkill(ctx.player, 'dauntless')) return false;
-    return !!ctx.opponent && ctx.player.st < ctx.opponent.st;
-  },
-  getModifiers: (ctx) => {
-    if (!ctx.rng || !ctx.opponent) return {};
-    const roll = Math.floor(ctx.rng() * 6) + 1;
-    if (ctx.player.st + roll >= ctx.opponent.st) {
-      return { strengthModifier: ctx.opponent.st - ctx.player.st };
-    }
-    return {};
-  },
+  description: 'Si la force totale est inférieure à celle de la cible, lance un D6 + ST de base. Si le total est >= force totale adverse, la force est considérée comme égale pour ce blocage.',
+  canApply: (ctx) => hasSkill(ctx.player, 'dauntless'),
 });
 
 // FRENZY
@@ -281,10 +273,16 @@ registerSkill({
 });
 
 // STUNTY
+// Règle BB3 :
+//  - +1 au jet d'esquive (collecté via skill-registry ici).
+//  - Malus d'armure -1 quand la cible est Stunty (appliqué directement dans
+//    `calculateArmorTarget` / `performArmorRollWithNotification` / `blocking.ts`).
+//  - Passes Long et Long Bomb interdites (appliqué via `canAttemptPassForRange`
+//    dans `passing.ts`, consommé par `getLegalMoves` et `handlePass`).
 registerSkill({
   slug: 'stunty',
-  triggers: ['on-armor', 'on-dodge', 'on-pass'],
-  description: '+1 au jet d\'esquive, -1 à l\'armure, passes interdites au-delà de courte.',
+  triggers: ['on-dodge'],
+  description: '+1 au jet d\'esquive, armure réduite de 1 (plus fragile), passes limitées à Quick/Short.',
   canApply: (ctx) => hasSkill(ctx.player, 'stunty'),
   getModifiers: (ctx) => {
     const mods: SkillModifier = {};
@@ -334,10 +332,18 @@ registerSkill({
 registerSkill({
   slug: 'break-tackle',
   triggers: ['on-dodge'],
-  description: 'Peut utiliser la Force (ST) au lieu de l\'Agilité (AG) pour un jet d\'esquive.',
-  canApply: (ctx) => hasSkill(ctx.player, 'break-tackle') || hasSkill(ctx.player, 'break_tackle'),
+  description: 'Une fois par tour, peut utiliser la Force (ST) au lieu de l\'Agilité (AG) pour un jet d\'esquive.',
+  canApply: (ctx) => {
+    if (!(hasSkill(ctx.player, 'break-tackle') || hasSkill(ctx.player, 'break_tackle'))) {
+      return false;
+    }
+    // Une fois par tour : si déjà utilisé ce tour, le skill ne s'applique plus.
+    const used = ctx.state?.usedBreakTackleThisTurn ?? [];
+    if (used.includes(ctx.player.id)) return false;
+    // Uniquement bénéfique quand ST > AG (remplacer AG par ST plus petit serait défavorable).
+    return ctx.player.st > ctx.player.ag;
+  },
   getModifiers: (ctx) => {
-    // Si ST > AG, c'est avantageux
     if (ctx.player.st > ctx.player.ag) {
       return { dodgeModifier: ctx.player.st - ctx.player.ag };
     }
@@ -355,17 +361,15 @@ registerSkill({
 });
 
 // JUGGERNAUT
+// Effet cable dans `mechanics/juggernaut.ts` + `mechanics/blocking.ts`
+// (conversion BOTH_DOWN -> PUSH_BACK et annulation de Wrestle/Fend/Stand Firm
+// du defenseur cible). L'entree du registre reste utile pour la description
+// et l'auto-discovery (getSkillsForTrigger, UI).
 registerSkill({
   slug: 'juggernaut',
   triggers: ['on-block-attacker'],
-  description: 'Lors d\'un Blitz, BOTH_DOWN et PUSH_BACK sont traités comme POW. Annule Fend et Stand Firm.',
+  description: 'Lors d\'un Blitz, peut traiter BOTH_DOWN comme PUSH_BACK. Le defenseur cible ne peut pas utiliser Fend, Stand Firm ni Wrestle.',
   canApply: (ctx) => hasSkill(ctx.player, 'juggernaut'),
-  modifyBlockResult: (ctx) => {
-    if (ctx.blockResult === 'BOTH_DOWN' || ctx.blockResult === 'PUSH_BACK') {
-      return 'POW';
-    }
-    return null;
-  },
 });
 
 // NERVES OF STEEL
@@ -706,4 +710,17 @@ registerSkill({
   triggers: ['passive'],
   description: 'Si ce joueur a une Force de 3 ou moins, il peut être lancé par un coéquipier ayant la compétence Lancer d\'Équipier.',
   canApply: (ctx) => hasSkill(ctx.player, 'right-stuff'),
+});
+
+// ─── FOUL APPEARANCE ───────────────────────────────────────────────────────
+// Foul Appearance check is performed in handleBlock / handleBlitz before any
+// block dice are rolled. The attacker's coach rolls a D6; on 1, the declared
+// block action is wasted (no turnover). Registered here for lookup and
+// metadata purposes.
+
+registerSkill({
+  slug: 'foul-appearance',
+  triggers: ['on-block-defender'],
+  description: 'Quand un joueur adverse déclare un Blocage ciblant ce joueur, l\'attaquant lance un D6 avant le blocage. Sur 1, le blocage est annulé et l\'action est gaspillée.',
+  canApply: (ctx) => hasSkill(ctx.player, 'foul-appearance'),
 });

@@ -61,20 +61,31 @@ import {
   handlePostTouchdown,
   canTeamBlitz,
 } from '../core/game-state';
-import { executePass, executeHandoff, getPassRange } from '../mechanics/passing';
+import { executePass, executeHandoff, getPassRange, canAttemptPassForRange } from '../mechanics/passing';
 import { canFoul, executeFoul } from '../mechanics/foul';
 import { isAdjacent } from '../mechanics/movement';
 import { applyApothecaryChoice } from '../mechanics/apothecary';
 import { canThrowTeamMate, getThrowRange, executeThrowTeamMate } from '../mechanics/throw-team-mate';
 import { canHypnoticGaze, executeHypnoticGaze } from '../mechanics/hypnotic-gaze';
 import { canProjectileVomit, executeProjectileVomit } from '../mechanics/projectile-vomit';
+import { canStab, executeStab } from '../mechanics/stab';
+import { canChainsaw, executeChainsaw } from '../mechanics/chainsaw';
+import { canDumpOff, getDumpOffReceivers, executeDumpOff } from '../mechanics/dump-off';
+import { checkDauntless } from '../mechanics/dauntless';
+import { canApplyBreakTackle, markBreakTackleUsed } from '../mechanics/break-tackle';
 import {
   resolveKickoffPerfectDefence,
   resolveKickoffHighKick,
   resolveKickoffQuickSnap,
   resolveKickoffBlitz,
 } from '../mechanics/kickoff-resolution';
-import { checkBoneHead, checkReallyStupid, checkWildAnimal, checkAnimalSavagery, checkTakeRoot, checkBloodlust } from '../mechanics/negative-traits';
+import { checkBoneHead, checkReallyStupid, checkWildAnimal, checkAnimalSavagery, checkTakeRoot, checkBloodlust, checkFoulAppearance, canInstablePerformAction, logInstablePrevention } from '../mechanics/negative-traits';
+import {
+  canLeap as playerCanLeap,
+  getLeapModifier,
+  performLeapRoll,
+  getLegalLeapDestinations,
+} from '../mechanics/leap';
 
 /**
  * Obtient tous les mouvements légaux pour l'état actuel
@@ -162,6 +173,16 @@ export function getLegalMoves(state: GameState): Move[] {
       moves.push({ type: 'MOVE', playerId: p.id, to });
     }
 
+    // Actions de Saut (LEAP / Pogo Stick) — 2 cases de mouvement, test d'AG,
+    // ignore les zones de tacle au depart.
+    // MVP: on exige p.pm >= 2 (pas de leap-via-GFI pour l'instant).
+    if (playerCanLeap(p) && p.pm >= 2) {
+      const leapDests = getLegalLeapDestinations(state, p.pos);
+      for (const to of leapDests) {
+        moves.push({ type: 'LEAP', playerId: p.id, to });
+      }
+    }
+
     // Actions de blocage
     const adjacentOpponents = getAdjacentOpponents(state, p.pos, p.team);
     for (const opponent of adjacentOpponents) {
@@ -203,13 +224,14 @@ export function getLegalMoves(state: GameState): Move[] {
 
     // Actions de passe (PASS) - le joueur doit avoir le ballon et pas encore agi
     // Passes interdites pendant le tour de blitz kickoff
-    if (p.hasBall && !hasPlayerActed(state, p.id) && !state.kickoffBlitzTurn) {
+    // Instable: prohibition — le joueur ne peut pas declarer d'action de passe
+    if (p.hasBall && !hasPlayerActed(state, p.id) && !state.kickoffBlitzTurn && canInstablePerformAction(p, 'PASS')) {
       const teammates = state.players.filter(
         t => t.team === team && t.id !== p.id && !t.stunned && t.state === 'active'
       );
       for (const target of teammates) {
         const range = getPassRange(p.pos, target.pos);
-        if (range) {
+        if (range && canAttemptPassForRange(p, range)) {
           moves.push({ type: 'PASS', playerId: p.id, targetId: target.id });
         }
       }
@@ -217,7 +239,8 @@ export function getLegalMoves(state: GameState): Move[] {
 
     // Actions de remise (HANDOFF) - le joueur doit avoir le ballon, cible adjacente
     // Remises interdites pendant le tour de blitz kickoff
-    if (p.hasBall && !hasPlayerActed(state, p.id) && !state.kickoffBlitzTurn) {
+    // Instable: prohibition — le joueur ne peut pas declarer d'action de remise
+    if (p.hasBall && !hasPlayerActed(state, p.id) && !state.kickoffBlitzTurn && canInstablePerformAction(p, 'HANDOFF')) {
       const teammates = state.players.filter(
         t => t.team === team && t.id !== p.id && !t.stunned && t.state === 'active'
       );
@@ -239,7 +262,8 @@ export function getLegalMoves(state: GameState): Move[] {
     }
 
     // Actions de Lancer de Coéquipier (THROW_TEAM_MATE)
-    if (!hasPlayerActed(state, p.id) && hasSkill(p, 'throw-team-mate')) {
+    // Instable: prohibition — le joueur ne peut pas declarer d'action de lancer de coequipier
+    if (!hasPlayerActed(state, p.id) && hasSkill(p, 'throw-team-mate') && canInstablePerformAction(p, 'THROW_TEAM_MATE')) {
       // Chercher les coéquipiers adjacents avec Right Stuff
       const throwableTeammates = state.players.filter(
         t => t.team === team && t.id !== p.id && canThrowTeamMate(state, p, t)
@@ -281,6 +305,26 @@ export function getLegalMoves(state: GameState): Move[] {
       );
       for (const target of adjacentOpponents) {
         moves.push({ type: 'PROJECTILE_VOMIT', playerId: p.id, targetId: target.id });
+      }
+    }
+
+    // Actions de Poignard (STAB)
+    if (!hasPlayerActed(state, p.id) && hasSkill(p, 'stab')) {
+      const adjacentOpponents = state.players.filter(
+        opp => opp.team !== team && canStab(state, p, opp)
+      );
+      for (const target of adjacentOpponents) {
+        moves.push({ type: 'STAB', playerId: p.id, targetId: target.id });
+      }
+    }
+
+    // Actions de Tronçonneuse (CHAINSAW)
+    if (!hasPlayerActed(state, p.id) && hasSkill(p, 'chainsaw')) {
+      const adjacentOpponents = state.players.filter(
+        opp => opp.team !== team && canChainsaw(state, p, opp)
+      );
+      for (const target of adjacentOpponents) {
+        moves.push({ type: 'CHAINSAW', playerId: p.id, targetId: target.id });
       }
     }
 
@@ -448,8 +492,9 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
   // If the check fails, the player's activation ends without executing the action.
   let activeState = state;
   const ACTIVATION_MOVE_TYPES: string[] = [
-    'MOVE', 'DODGE', 'BLOCK', 'BLITZ', 'PASS', 'HANDOFF',
-    'THROW_TEAM_MATE', 'FOUL', 'HYPNOTIC_GAZE', 'PROJECTILE_VOMIT',
+    'MOVE', 'LEAP', 'DODGE', 'BLOCK', 'BLITZ', 'PASS', 'HANDOFF',
+    'THROW_TEAM_MATE', 'FOUL', 'HYPNOTIC_GAZE', 'PROJECTILE_VOMIT', 'STAB',
+    'CHAINSAW',
   ];
   if (ACTIVATION_MOVE_TYPES.includes(move.type) && 'playerId' in move) {
     const playerId = (move as { playerId: string }).playerId;
@@ -488,6 +533,8 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       return handleEndPlayerTurn(activeState, move);
     case 'MOVE':
       return handleMove(activeState, move, rng);
+    case 'LEAP':
+      return handleLeap(activeState, move, rng);
     case 'DODGE':
       return handleDodge(activeState, move, rng);
     case 'BLOCK':
@@ -516,6 +563,12 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       return handleHypnoticGaze(activeState, move, rng);
     case 'PROJECTILE_VOMIT':
       return handleProjectileVomit(activeState, move, rng);
+    case 'STAB':
+      return handleStab(activeState, move, rng);
+    case 'CHAINSAW':
+      return handleChainsaw(activeState, move, rng);
+    case 'DUMP_OFF_CHOOSE':
+      return handleDumpOffChoose(activeState, move, rng);
     case 'KICKOFF_PERFECT_DEFENCE':
       return resolveKickoffPerfectDefence(activeState, move.positions);
     case 'KICKOFF_HIGH_KICK':
@@ -585,6 +638,7 @@ function handleEndTurn(state: GameState, rng: RNG): GameState {
       teamFoulCount: {},
       rerollUsedThisTurn: false,
       hypnotizedPlayers: [],
+      usedBreakTackleThisTurn: [],
     };
   }
 
@@ -602,6 +656,7 @@ function handleEndTurn(state: GameState, rng: RNG): GameState {
     teamFoulCount: {} as Record<string, number>, // Réinitialiser les compteurs de foul
     rerollUsedThisTurn: false, // Réinitialiser le flag de relance
     hypnotizedPlayers: [], // Réinitialiser les joueurs hypnotisés
+    usedBreakTackleThisTurn: [], // Réinitialiser Break Tackle (une fois par tour)
   };
 
   // Log du changement de tour
@@ -621,6 +676,89 @@ function handleEndTurn(state: GameState, rng: RNG): GameState {
 /**
  * Gère un mouvement simple
  */
+/**
+ * Gère une action LEAP (Saut) — compétence Leap ou trait Pogo Stick.
+ *
+ * Le joueur saute 2 cases (distance Chebyshev) depuis sa position actuelle.
+ * Un seul test d'Agilité est effectué, qui remplace le jet d'esquive quand le
+ * joueur quitte des zones de tacle. Coûte 2 points de mouvement.
+ * Échec = le joueur tombe à la case d'arrivée (armure + blessure + turnover
+ * s'il portait le ballon).
+ */
+function handleLeap(
+  state: GameState,
+  move: { type: 'LEAP'; playerId: string; to: Position },
+  rng: RNG
+): GameState {
+  const idx = state.players.findIndex(p => p.id === move.playerId);
+  if (idx === -1) return state;
+
+  // Gestion du changement de joueur actif
+  const newState = handlePlayerSwitch(state, move.playerId);
+
+  // Vérifier que ce LEAP est bien légal (skill, distance, case libre, PM suffisants)
+  const legal = getLegalMoves(newState).some(
+    m => m.type === 'LEAP' && m.playerId === move.playerId && samePos(m.to, move.to)
+  );
+  if (!legal) return newState;
+
+  if (newState.isTurnover) return newState;
+
+  const player = newState.players[idx];
+  const modifiers = getLeapModifier(player);
+
+  // Jet d'Agilité pour le saut
+  const leapResult = performLeapRoll(player, rng, modifiers);
+
+  let next = structuredClone(newState) as GameState;
+  next.lastDiceResult = leapResult;
+
+  const leapLogEntry = createLogEntry(
+    'dice',
+    `Saut (Leap): ${leapResult.diceRoll}/${leapResult.targetNumber} ${leapResult.success ? '✓' : '✗'}`,
+    player.id,
+    player.team,
+    {
+      diceRoll: leapResult.diceRoll,
+      targetNumber: leapResult.targetNumber,
+      success: leapResult.success,
+      modifiers,
+      skill: hasSkill(player, 'pogo-stick') ? 'pogo-stick' : 'leap',
+    }
+  );
+  next.gameLog = [...next.gameLog, leapLogEntry];
+
+  // Déplacer le joueur vers la case d'arrivée et consommer 2 PM
+  next.players[idx].pos = { ...move.to };
+  next.players[idx].pm = Math.max(0, next.players[idx].pm - 2);
+
+  // Enregistrer l'action de mouvement si c'est le premier mouvement
+  if (!hasPlayerActed(next, player.id)) {
+    next = setPlayerAction(next, player.id, 'MOVE');
+  }
+
+  next = checkPlayerTurnEnd(next, player.id);
+
+  if (!leapResult.success) {
+    // Échec : le joueur tombe à la case d'arrivée (armure + blessure + turnover)
+    return applyRollFailure(next, idx, rng);
+  }
+
+  // Succès : pas de jet d'esquive nécessaire même si on quittait des zones de tacle.
+  // Touchdown si on porte la balle et qu'on atteint l'en-but adverse.
+  const mover = next.players[idx];
+  if (mover.hasBall && isInOpponentEndzone(next, mover)) {
+    return awardTouchdown(next, mover.team, mover);
+  }
+
+  // Ramassage de balle si on atterrit sur le ballon.
+  if (next.ball && samePos(next.ball, move.to)) {
+    return handleBallPickup(next, player, rng, idx);
+  }
+
+  return next;
+}
+
 function handleMove(
   state: GameState,
   move: { type: 'MOVE'; playerId: string; to: Position },
@@ -668,6 +806,7 @@ function handleDodgeRoll(
   idx: number
 ): GameState {
   // Calculer les modificateurs de désquive (malus pour adversaires à l'arrivée + skills)
+  const breakTackleApplied = canApplyBreakTackle(state, player);
   const baseDodgeModifiers = calculateDodgeModifiers(state, from, to, player.team);
   const skillDodgeModifiers = getDodgeSkillModifiers(state, player, from);
   const dodgeModifiers = baseDodgeModifiers + skillDodgeModifiers;
@@ -677,6 +816,9 @@ function handleDodgeRoll(
 
   let next = structuredClone(state) as GameState;
   next.lastDiceResult = dodgeResult;
+  if (breakTackleApplied) {
+    next = markBreakTackleUsed(next, player.id);
+  }
 
   // Log du jet d'esquive
   const logEntry = createLogEntry(
@@ -1028,6 +1170,7 @@ function handleDodge(
   const to = move.to;
 
   // Calculer les modificateurs de désquive (malus pour adversaires à l'arrivée + skills)
+  const breakTackleApplied = canApplyBreakTackle(state, player);
   const baseDodgeModifiers = calculateDodgeModifiers(state, from, to, player.team);
   const skillDodgeModifiers = getDodgeSkillModifiers(state, player, from);
   const dodgeModifiers = baseDodgeModifiers + skillDodgeModifiers;
@@ -1036,6 +1179,9 @@ function handleDodge(
 
   let next = structuredClone(state) as GameState;
   next.lastDiceResult = dodgeResult;
+  if (breakTackleApplied) {
+    next = markBreakTackleUsed(next, player.id);
+  }
 
   // Log du jet d'esquive
   const dodgeLogEntry = createLogEntry(
@@ -1120,7 +1266,8 @@ function handleDodge(
 function handleBlock(
   state: GameState,
   move: { type: 'BLOCK'; playerId: string; targetId: string },
-  rng: RNG
+  rng: RNG,
+  options: { skipDumpOff?: boolean } = {}
 ): GameState {
   const attacker = state.players.find(p => p.id === move.playerId);
   const target = state.players.find(p => p.id === move.targetId);
@@ -1140,26 +1287,82 @@ function handleBlock(
     if (!canBlock(state, move.playerId, move.targetId)) return state;
   }
 
+  // ─── Dump-off check ────────────────────────────────────────────────────
+  // Si la cible possède le skill `dump-off` et a le ballon, elle peut
+  // effectuer une Passe Rapide immédiate avant que les dés de bloc soient
+  // lancés. On interrompt le blocage en posant `pendingDumpOff`. Le blocage
+  // reprend ensuite via `handleDumpOffChoose` (avec `skipDumpOff: true`).
+  if (!options.skipDumpOff && canDumpOff(state, target)) {
+    const receivers = getDumpOffReceivers(state, target);
+    if (receivers.length > 0) {
+      const dumpLog = createLogEntry(
+        'info',
+        `${target.name} peut tenter un Délestage (Dump-off) !`,
+        target.id,
+        target.team,
+        { skill: 'dump-off' },
+      );
+      return {
+        ...state,
+        gameLog: [...state.gameLog, dumpLog],
+        pendingDumpOff: {
+          attackerId: attacker.id,
+          targetId: target.id,
+          receiverOptions: receivers.map(r => r.id),
+          pendingBlockMove: {
+            type: 'BLOCK',
+            playerId: move.playerId,
+            targetId: move.targetId,
+          },
+        },
+      };
+    }
+  }
+
+  // ─── Foul Appearance check ─────────────────────────────────────────────
+  // Rolled by the attacker before any block dice. On 1, the declared action
+  // is wasted (no turnover) and the attacker's activation ends.
+  const foulAppearanceCheck = checkFoulAppearance(state, attacker, target, rng, isBlitzDuringMove);
+  if (!foulAppearanceCheck.shouldContinueBlock) {
+    return foulAppearanceCheck.newState;
+  }
+  const stateAfterFA = foulAppearanceCheck.newState;
+
   // Calculer les assists
-  const offensiveAssists = calculateOffensiveAssists(state, attacker, target);
-  const defensiveAssists = calculateDefensiveAssists(state, attacker, target);
+  const offensiveAssists = calculateOffensiveAssists(stateAfterFA, attacker, target);
+  const defensiveAssists = calculateDefensiveAssists(stateAfterFA, attacker, target);
+
+  // Forces de base avant Dauntless
+  const baseAttackerStrength = attacker.st + offensiveAssists;
+  const targetStrength = target.st + defensiveAssists;
+
+  // ─── Dauntless check ───────────────────────────────────────────────────
+  // Si l'attaquant a Dauntless et est en desavantage, il tente d'egaliser la force.
+  const dauntlessResult = checkDauntless(
+    stateAfterFA,
+    attacker,
+    target,
+    baseAttackerStrength,
+    targetStrength,
+    rng
+  );
+  const stateAfterDauntless = dauntlessResult.newState;
+  const attackerStrength = dauntlessResult.newAttackerStrength;
 
   // Nombre de dés et qui choisit
-  const attackerStrength = attacker.st + offensiveAssists;
-  const targetStrength = target.st + defensiveAssists;
   const diceCount = calculateBlockDiceCount(attackerStrength, targetStrength);
   const chooser = getBlockDiceChooser(attackerStrength, targetStrength);
 
   // Enregistrer l'action — blitz consomme le compteur de blitz de l'équipe
   let newState: GameState;
   if (isBlitzDuringMove) {
-    newState = setPlayerAction(state, attacker.id, 'BLITZ');
+    newState = setPlayerAction(stateAfterDauntless, attacker.id, 'BLITZ');
     newState.teamBlitzCount = {
       ...newState.teamBlitzCount,
       [attacker.team]: (newState.teamBlitzCount[attacker.team] || 0) + 1,
     };
   } else {
-    newState = setPlayerAction(state, attacker.id, 'BLOCK');
+    newState = setPlayerAction(stateAfterDauntless, attacker.id, 'BLOCK');
   }
 
   // Si un seul dé, résoudre immédiatement
@@ -1218,6 +1421,53 @@ function handleBlock(
       },
     };
   }
+}
+
+/**
+ * Gère le choix de Dump-off : la cible d'un blocage (porteuse du ballon, skill
+ * `dump-off`) choisit un receveur pour une Passe Rapide, ou passe son tour de
+ * Dump-off (receiverId = null). Après résolution, le blocage initial reprend.
+ */
+function handleDumpOffChoose(
+  state: GameState,
+  move: { type: 'DUMP_OFF_CHOOSE'; passerId: string; receiverId: string | null },
+  rng: RNG
+): GameState {
+  if (!state.pendingDumpOff) return state;
+  if (state.pendingDumpOff.targetId !== move.passerId) return state;
+
+  const pendingMove = state.pendingDumpOff.pendingBlockMove;
+  const receiverOptions = state.pendingDumpOff.receiverOptions;
+
+  // Nettoyer le pendingDumpOff dans tous les cas
+  const cleared: GameState = { ...state, pendingDumpOff: undefined };
+
+  let afterDumpOff: GameState = cleared;
+
+  if (move.receiverId !== null) {
+    // Vérifier que le receveur choisi est bien éligible (évite triche client)
+    if (!receiverOptions.includes(move.receiverId)) {
+      return cleared;
+    }
+    afterDumpOff = executeDumpOff(cleared, move.passerId, move.receiverId, rng);
+  } else {
+    const skipLog = createLogEntry(
+      'info',
+      `Délestage refusé par le coach défenseur`,
+      move.passerId,
+      undefined,
+      { skill: 'dump-off' },
+    );
+    afterDumpOff = { ...cleared, gameLog: [...cleared.gameLog, skipLog] };
+  }
+
+  // Reprendre le blocage initial en ignorant le nouveau check dump-off
+  if (pendingMove.type === 'BLOCK') {
+    return handleBlock(afterDumpOff, pendingMove, rng, { skipDumpOff: true });
+  }
+  // BLITZ : pour l'instant, non intégré (un follow-up portera l'intégration
+  // complète dans `handleBlitz`). Fallback : on renvoie l'état post-dump-off.
+  return afterDumpOff;
 }
 
 /**
@@ -1556,8 +1806,16 @@ function handleBlitz(
   // Vérifier que le blitz est légal
   if (!canBlitz(state, move.playerId, move.to, move.targetId)) return state;
 
+  // ─── Foul Appearance check ─────────────────────────────────────────────
+  // Rolled by the attacker before the blitz begins. On 1, the declared
+  // action is wasted (no turnover) and the attacker's activation ends.
+  const foulAppearanceCheck = checkFoulAppearance(state, attacker, target, rng, true);
+  if (!foulAppearanceCheck.shouldContinueBlock) {
+    return foulAppearanceCheck.newState;
+  }
+
   // Gérer le changement de joueur
-  let newState = handlePlayerSwitch(state, move.playerId);
+  let newState = handlePlayerSwitch(foulAppearanceCheck.newState, move.playerId);
 
   // 1. Effectuer le mouvement
   const from = attacker.pos;
@@ -1568,6 +1826,7 @@ function handleBlitz(
 
   if (needsDodge) {
     // Calculer les modificateurs de désquive (adversaires à l'arrivée + skills)
+    const breakTackleApplied = canApplyBreakTackle(newState, attacker);
     const baseDodgeModifiers = calculateDodgeModifiers(newState, from, to, attacker.team);
     const skillDodgeModifiers = getDodgeSkillModifiers(newState, attacker, from);
     const dodgeModifiers = baseDodgeModifiers + skillDodgeModifiers;
@@ -1576,6 +1835,9 @@ function handleBlitz(
     const dodgeResult = performDodgeRollWithNotification(attacker, rng, dodgeModifiers);
 
     newState.lastDiceResult = dodgeResult;
+    if (breakTackleApplied) {
+      newState = markBreakTackleUsed(newState, attacker.id);
+    }
 
     // Log du jet d'esquive
     const dodgeLogEntry = createLogEntry(
@@ -1754,6 +2016,19 @@ function handlePass(state: GameState, move: { type: 'PASS'; playerId: string; ta
   if (passer.team !== state.currentPlayer) return state;
   if (hasPlayerActed(state, passer.id)) return state;
 
+  // Instable (Unstable): prohibition — Pass action cannot be declared.
+  // No dice are rolled, no turnover. The action is simply rejected with a log.
+  if (!canInstablePerformAction(passer, 'PASS')) {
+    return logInstablePrevention(state, passer, 'PASS');
+  }
+
+  // Stunty: passes Long/Long Bomb interdites. L'action est rejetee sans dé
+  // ni turnover (retourne l'etat inchange, le coach doit choisir un autre recepteur).
+  const passRange = getPassRange(passer.pos, target.pos);
+  if (!canAttemptPassForRange(passer, passRange)) {
+    return state;
+  }
+
   // Animosity check: roll D6 before pass if passer dislikes target
   let currentState = state;
   if (hasAnimosityAgainst(passer, target)) {
@@ -1785,6 +2060,11 @@ function handleHandoff(state: GameState, move: { type: 'HANDOFF'; playerId: stri
   if (passer.team !== state.currentPlayer) return state;
   if (hasPlayerActed(state, passer.id)) return state;
   if (!isAdjacent(passer.pos, target.pos)) return state;
+
+  // Instable (Unstable): prohibition — Hand-Off action cannot be declared.
+  if (!canInstablePerformAction(passer, 'HANDOFF')) {
+    return logInstablePrevention(state, passer, 'HANDOFF');
+  }
 
   // Animosity check: roll D6 before handoff if passer dislikes target
   let currentState = state;
@@ -1821,10 +2101,17 @@ function handleThrowTeamMate(
   if (hasPlayerActed(state, thrower.id)) return state;
   if (!canThrowTeamMate(state, thrower, thrown)) return state;
 
+  // Instable (Unstable): prohibition — Throw Team-Mate action cannot be declared.
+  if (!canInstablePerformAction(thrower, 'THROW_TEAM_MATE')) {
+    return logInstablePrevention(state, thrower, 'THROW_TEAM_MATE');
+  }
+
   // Vérifier que la cible est dans la portée
   const range = getThrowRange(thrower.pos, move.targetPos);
   if (!range) return state;
 
+  // Note: le test Always Hungry (BB3) est realise dans executeThrowTeamMate,
+  // apres le deplacement mais avant le lancer.
   let newState = executeThrowTeamMate(state, thrower, thrown, move.targetPos, rng);
   newState = setPlayerAction(newState, thrower.id, 'THROW_TEAM_MATE');
   newState = checkPlayerTurnEnd(newState, thrower.id);
@@ -1903,5 +2190,49 @@ function handleProjectileVomit(
   let newState = executeProjectileVomit(state, vomiter, target, rng);
   newState = setPlayerAction(newState, vomiter.id, 'PROJECTILE_VOMIT');
   newState = checkPlayerTurnEnd(newState, vomiter.id);
+  return newState;
+}
+
+/**
+ * Gère une action de Poignard (Stab)
+ */
+function handleStab(
+  state: GameState,
+  move: { type: 'STAB'; playerId: string; targetId: string },
+  rng: RNG,
+): GameState {
+  const stabber = state.players.find(p => p.id === move.playerId);
+  const target = state.players.find(p => p.id === move.targetId);
+
+  if (!stabber || !target) return state;
+  if (stabber.team !== state.currentPlayer) return state;
+  if (hasPlayerActed(state, stabber.id)) return state;
+  if (!canStab(state, stabber, target)) return state;
+
+  let newState = executeStab(state, stabber, target, rng);
+  newState = setPlayerAction(newState, stabber.id, 'STAB');
+  newState = checkPlayerTurnEnd(newState, stabber.id);
+  return newState;
+}
+
+/**
+ * Gère une action de Tronçonneuse (Chainsaw)
+ */
+function handleChainsaw(
+  state: GameState,
+  move: { type: 'CHAINSAW'; playerId: string; targetId: string },
+  rng: RNG,
+): GameState {
+  const attacker = state.players.find(p => p.id === move.playerId);
+  const target = state.players.find(p => p.id === move.targetId);
+
+  if (!attacker || !target) return state;
+  if (attacker.team !== state.currentPlayer) return state;
+  if (hasPlayerActed(state, attacker.id)) return state;
+  if (!canChainsaw(state, attacker, target)) return state;
+
+  let newState = executeChainsaw(state, attacker, target, rng);
+  newState = setPlayerAction(newState, attacker.id, 'CHAINSAW');
+  newState = checkPlayerTurnEnd(newState, attacker.id);
   return newState;
 }
