@@ -332,10 +332,18 @@ registerSkill({
 registerSkill({
   slug: 'break-tackle',
   triggers: ['on-dodge'],
-  description: 'Peut utiliser la Force (ST) au lieu de l\'Agilité (AG) pour un jet d\'esquive.',
-  canApply: (ctx) => hasSkill(ctx.player, 'break-tackle') || hasSkill(ctx.player, 'break_tackle'),
+  description: 'Une fois par tour, peut utiliser la Force (ST) au lieu de l\'Agilité (AG) pour un jet d\'esquive.',
+  canApply: (ctx) => {
+    if (!(hasSkill(ctx.player, 'break-tackle') || hasSkill(ctx.player, 'break_tackle'))) {
+      return false;
+    }
+    // Une fois par tour : si déjà utilisé ce tour, le skill ne s'applique plus.
+    const used = ctx.state?.usedBreakTackleThisTurn ?? [];
+    if (used.includes(ctx.player.id)) return false;
+    // Uniquement bénéfique quand ST > AG (remplacer AG par ST plus petit serait défavorable).
+    return ctx.player.st > ctx.player.ag;
+  },
   getModifiers: (ctx) => {
-    // Si ST > AG, c'est avantageux
     if (ctx.player.st > ctx.player.ag) {
       return { dodgeModifier: ctx.player.st - ctx.player.ag };
     }

@@ -72,6 +72,7 @@ import { canStab, executeStab } from '../mechanics/stab';
 import { canChainsaw, executeChainsaw } from '../mechanics/chainsaw';
 import { canDumpOff, getDumpOffReceivers, executeDumpOff } from '../mechanics/dump-off';
 import { checkDauntless } from '../mechanics/dauntless';
+import { canApplyBreakTackle, markBreakTackleUsed } from '../mechanics/break-tackle';
 import {
   resolveKickoffPerfectDefence,
   resolveKickoffHighKick,
@@ -637,6 +638,7 @@ function handleEndTurn(state: GameState, rng: RNG): GameState {
       teamFoulCount: {},
       rerollUsedThisTurn: false,
       hypnotizedPlayers: [],
+      usedBreakTackleThisTurn: [],
     };
   }
 
@@ -654,6 +656,7 @@ function handleEndTurn(state: GameState, rng: RNG): GameState {
     teamFoulCount: {} as Record<string, number>, // Réinitialiser les compteurs de foul
     rerollUsedThisTurn: false, // Réinitialiser le flag de relance
     hypnotizedPlayers: [], // Réinitialiser les joueurs hypnotisés
+    usedBreakTackleThisTurn: [], // Réinitialiser Break Tackle (une fois par tour)
   };
 
   // Log du changement de tour
@@ -803,6 +806,7 @@ function handleDodgeRoll(
   idx: number
 ): GameState {
   // Calculer les modificateurs de désquive (malus pour adversaires à l'arrivée + skills)
+  const breakTackleApplied = canApplyBreakTackle(state, player);
   const baseDodgeModifiers = calculateDodgeModifiers(state, from, to, player.team);
   const skillDodgeModifiers = getDodgeSkillModifiers(state, player, from);
   const dodgeModifiers = baseDodgeModifiers + skillDodgeModifiers;
@@ -812,6 +816,9 @@ function handleDodgeRoll(
 
   let next = structuredClone(state) as GameState;
   next.lastDiceResult = dodgeResult;
+  if (breakTackleApplied) {
+    next = markBreakTackleUsed(next, player.id);
+  }
 
   // Log du jet d'esquive
   const logEntry = createLogEntry(
@@ -1163,6 +1170,7 @@ function handleDodge(
   const to = move.to;
 
   // Calculer les modificateurs de désquive (malus pour adversaires à l'arrivée + skills)
+  const breakTackleApplied = canApplyBreakTackle(state, player);
   const baseDodgeModifiers = calculateDodgeModifiers(state, from, to, player.team);
   const skillDodgeModifiers = getDodgeSkillModifiers(state, player, from);
   const dodgeModifiers = baseDodgeModifiers + skillDodgeModifiers;
@@ -1171,6 +1179,9 @@ function handleDodge(
 
   let next = structuredClone(state) as GameState;
   next.lastDiceResult = dodgeResult;
+  if (breakTackleApplied) {
+    next = markBreakTackleUsed(next, player.id);
+  }
 
   // Log du jet d'esquive
   const dodgeLogEntry = createLogEntry(
@@ -1815,6 +1826,7 @@ function handleBlitz(
 
   if (needsDodge) {
     // Calculer les modificateurs de désquive (adversaires à l'arrivée + skills)
+    const breakTackleApplied = canApplyBreakTackle(newState, attacker);
     const baseDodgeModifiers = calculateDodgeModifiers(newState, from, to, attacker.team);
     const skillDodgeModifiers = getDodgeSkillModifiers(newState, attacker, from);
     const dodgeModifiers = baseDodgeModifiers + skillDodgeModifiers;
@@ -1823,6 +1835,9 @@ function handleBlitz(
     const dodgeResult = performDodgeRollWithNotification(attacker, rng, dodgeModifiers);
 
     newState.lastDiceResult = dodgeResult;
+    if (breakTackleApplied) {
+      newState = markBreakTackleUsed(newState, attacker.id);
+    }
 
     // Log du jet d'esquive
     const dodgeLogEntry = createLogEntry(
