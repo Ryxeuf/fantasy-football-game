@@ -165,6 +165,10 @@ export { extractLineage, hasAnimosityAgainst, checkAnimosity } from './mechanics
 export { checkBoneHead, checkReallyStupid, checkWildAnimal, checkAnimalSavagery, checkTakeRoot, checkBloodlust, checkAlwaysHungry, canInstablePerformAction, logInstablePrevention } from './mechanics/negative-traits';
 export type { ActivationCheckResult, AlwaysHungryResult } from './mechanics/negative-traits';
 
+// Export du skill Dauntless (applique au blocage)
+export { checkDauntless } from './mechanics/dauntless';
+export type { DauntlessCheckResult } from './mechanics/dauntless';
+
 // Export des effets météo
 export {
   getWeatherModifiers,
