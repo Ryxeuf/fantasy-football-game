@@ -224,7 +224,7 @@
 | P1.2 | Implementer `dauntless` (Dwarf Troll Slayer) | Regle | [x] |
 | P1.3 | Implementer `break-tackle` (Dwarf Deathroller) | Regle | [x] |
 | P1.4 | Implementer `juggernaut` (Dwarf Deathroller) | Regle | [x] |
-| P1.5 | Implementer `stand-firm` (Deathroller, Bodyguard, Treeman Gnome) | Regle | [ ] |
+| P1.5 | Implementer `stand-firm` (Deathroller, Bodyguard, Treeman Gnome) | Regle | [x] |
 | P1.6 | Implementer `armored-skull` (Dwarf Deathroller) | Regle | [ ] |
 | P1.7 | Implementer `iron-hard-skin` (Gnomes : piston, beastmaster, treeman) | Regle | [ ] |
 | P1.8 | Implementer `shadowing` (Lizardmen Chameleon Skink) | Regle | [ ] |

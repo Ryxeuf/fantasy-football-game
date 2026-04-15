@@ -21,6 +21,7 @@ import { createLogEntry } from '../utils/logging';
 import { canTeamBlitz } from '../core/game-state';
 import { performInjuryRoll, handleSentOff, handleInjuryByCrowd } from './injury';
 import { isJuggernautActiveForBlock } from './juggernaut';
+import { isStandFirmActiveAgainstBlock, isStandFirmActiveAgainstChainPush } from './stand-firm';
 
 /**
  * Applique un chain push : si la case de destination est occupée, le joueur qui s'y trouve
@@ -35,6 +36,20 @@ export function applyChainPush(
 ): GameState {
   const pushed = state.players.find(p => p.id === pushedPlayerId);
   if (!pushed) return state;
+
+  // Stand Firm : une victime de chain push peut refuser la poussee.
+  // Juggernaut ne neutralise PAS Stand Firm sur une victime de chain push
+  // (seulement sur la cible directe du Blitz).
+  if (isStandFirmActiveAgainstChainPush(pushed)) {
+    const standFirmLog = createLogEntry(
+      'action',
+      `${pushed.name} utilise Stand Firm : resiste au chain push`,
+      pushed.id,
+      pushed.team,
+      { skill: 'stand-firm', blockResult: 'CHAIN_PUSH' }
+    );
+    return { ...state, gameLog: [...state.gameLog, standFirmLog] };
+  }
 
   const newPos = {
     x: pushed.pos.x + direction.x,
@@ -464,6 +479,20 @@ export function handlePushWithChoice(
   blockResult: string,
   rng: RNG
 ): GameState {
+  // Stand Firm : la cible peut refuser la poussee.
+  // Elle tombe dans sa propre case (le knockdown a deja ete applique par l'appelant).
+  // Aucun follow-up n'est possible (la case de la cible reste occupee).
+  if (isStandFirmActiveAgainstBlock(state, target, attacker)) {
+    const standFirmLog = createLogEntry(
+      'action',
+      `${target.name} utilise Stand Firm : tombe sur sa propre case (pas de poussee)`,
+      target.id,
+      target.team,
+      { skill: 'stand-firm', blockResult }
+    );
+    return { ...state, gameLog: [...state.gameLog, standFirmLog] };
+  }
+
   const pushDirections = getPushDirections(attacker.pos, target.pos);
   const availableDirections: Position[] = [];
   let hasOutOfBounds = false;
@@ -821,6 +850,19 @@ function handleBothDown(state: GameState, attacker: Player, target: Player, rng:
  * Gère le résultat PUSH_BACK
  */
 function handlePushBack(state: GameState, attacker: Player, target: Player, rng: RNG): GameState {
+  // Stand Firm : la cible peut choisir de ne pas etre repoussee.
+  // On applique systematiquement la resistance (toujours avantageux).
+  if (isStandFirmActiveAgainstBlock(state, target, attacker)) {
+    const standFirmLog = createLogEntry(
+      'action',
+      `${target.name} utilise Stand Firm : n'est pas repousse(e)`,
+      target.id,
+      target.team,
+      { skill: 'stand-firm', blockResult: 'PUSH_BACK' }
+    );
+    return { ...state, gameLog: [...state.gameLog, standFirmLog] };
+  }
+
   // La cible est repoussée d'une case - vérifier les directions disponibles
   const pushDirections = getPushDirections(attacker.pos, target.pos);
   const availableDirections: Position[] = [];
