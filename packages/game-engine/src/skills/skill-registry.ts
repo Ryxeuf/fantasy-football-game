@@ -361,17 +361,15 @@ registerSkill({
 });
 
 // JUGGERNAUT
+// Effect applied in `mechanics/juggernaut.ts` and invoked from `handleBothDown`
+// in `mechanics/blocking.ts`. The registry entry is kept for lookup and
+// metadata purposes only.
 registerSkill({
   slug: 'juggernaut',
   triggers: ['on-block-attacker'],
-  description: 'Lors d\'un Blitz, BOTH_DOWN et PUSH_BACK sont traités comme POW. Annule Fend et Stand Firm.',
+  description:
+    'Lors d\'un Blitz, un résultat "Les Deux Plaqués" peut être appliqué comme "Repoussé". Annule Fend et Stand Firm pour ce blocage.',
   canApply: (ctx) => hasSkill(ctx.player, 'juggernaut'),
-  modifyBlockResult: (ctx) => {
-    if (ctx.blockResult === 'BOTH_DOWN' || ctx.blockResult === 'PUSH_BACK') {
-      return 'POW';
-    }
-    return null;
-  },
 });
 
 // NERVES OF STEEL

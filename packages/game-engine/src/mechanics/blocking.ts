@@ -20,6 +20,7 @@ import { performArmorRollWithNotification } from '../utils/dice-notifications';
 import { createLogEntry } from '../utils/logging';
 import { canTeamBlitz } from '../core/game-state';
 import { performInjuryRoll, handleSentOff, handleInjuryByCrowd } from './injury';
+import { shouldConvertBothDownToPushBack } from './juggernaut';
 
 /**
  * Applique un chain push : si la case de destination est occupée, le joueur qui s'y trouve
@@ -678,6 +679,26 @@ function handlePlayerDown(state: GameState, attacker: Player, target: Player, rn
  * Wrestle prévaut sur Block (BB2020)
  */
 function handleBothDown(state: GameState, attacker: Player, target: Player, rng: RNG): GameState {
+  // Juggernaut (BB2020): during a Blitz action, a player with Juggernaut may
+  // apply a Both Down result as if it were a Push Back result. When that
+  // happens, Wrestle and Block never enter the resolution because the roll is
+  // no longer treated as Both Down.
+  if (shouldConvertBothDownToPushBack(state, attacker)) {
+    const juggernautLog = createLogEntry(
+      'action',
+      `${attacker.name} utilise Juggernaut : Les Deux Plaqués est traité comme une Poussée`,
+      attacker.id,
+      attacker.team,
+      { skill: 'juggernaut' },
+    );
+    return handlePushBack(
+      { ...state, gameLog: [...state.gameLog, juggernautLog] },
+      attacker,
+      target,
+      rng,
+    );
+  }
+
   const attackerHasWrestle = checkWrestleOnBothDown(attacker, state);
   const targetHasWrestle = checkWrestleOnBothDown(target, state);
   const wrestleActive = attackerHasWrestle || targetHasWrestle;
