@@ -451,10 +451,14 @@ registerSkill({
 });
 
 // SHADOWING
+// La résolution du suivi (2D6 + MA diff >= 7) est effectuée par
+// `resolveShadowingAfterDodge` dans `mechanics/shadowing.ts`, appelé depuis
+// les trois chemins de Dodge dans `actions.ts`. L'entrée ici sert uniquement
+// à déclarer l'effet pour le registre (affichage UI, documentation).
 registerSkill({
   slug: 'shadowing',
   triggers: ['on-dodge'],
-  description: 'Quand un adversaire adjacent tente de s\'esquiver, le joueur peut tenter de le suivre (MA vs MA).',
+  description: 'Quand un adversaire quitte sa zone de tacle en esquivant, le joueur peut tenter de le suivre (2D6 + MA vs MA, succès ≥ 7).',
   canApply: (ctx) => hasSkill(ctx.player, 'shadowing'),
 });
 
