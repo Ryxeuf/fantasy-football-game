@@ -73,6 +73,7 @@ import { canChainsaw, executeChainsaw } from '../mechanics/chainsaw';
 import { canDumpOff, getDumpOffReceivers, executeDumpOff } from '../mechanics/dump-off';
 import { checkDauntless } from '../mechanics/dauntless';
 import { canApplyBreakTackle, markBreakTackleUsed } from '../mechanics/break-tackle';
+import { resolveShadowingAfterDodge } from '../mechanics/shadowing';
 import {
   resolveKickoffPerfectDefence,
   resolveKickoffHighKick,
@@ -854,6 +855,11 @@ function handleDodgeRoll(
   // Vérifier si le tour du joueur doit se terminer
   next = checkPlayerTurnEnd(next, player.id);
 
+  // Shadowing : les adversaires avec Shadowing adjacents à la case quittée
+  // tentent de suivre le dodger. Résolu une seule fois par esquive, après
+  // que le joueur ait bougé et indépendamment du résultat final (BB3).
+  next = resolveShadowingAfterDodge(next, player, from, rng);
+
   // Dodge skill auto-reroll si échec (via skill registry)
   let finalDodgeSuccess = dodgeResult.success;
   if (!finalDodgeSuccess && canSkillReroll(player, 'on-dodge', state)) {
@@ -1203,6 +1209,9 @@ function handleDodge(
   // Le joueur se déplace toujours, que le jet d'esquive réussisse ou échoue
   next.players[idx].pos = { ...move.to };
   next.players[idx].pm = Math.max(0, next.players[idx].pm - 1);
+
+  // Shadowing : résolu après le mouvement, indépendamment du résultat (BB3).
+  next = resolveShadowingAfterDodge(next, player, from, rng);
 
   if (dodgeResult.success) {
     // Avancement d'état standard après mouvement réussi
@@ -1863,6 +1872,9 @@ function handleBlitz(
     // Calculer le coût en PM : distance seulement (le blocage coûtera 1 PM supplémentaire)
     const distance = Math.abs(from.x - to.x) + Math.abs(from.y - to.y);
     newState.players[attackerIdx].pm = Math.max(0, newState.players[attackerIdx].pm - distance);
+
+    // Shadowing : tentative de suivi après le mouvement (BB3).
+    newState = resolveShadowingAfterDodge(newState, attacker, from, rng);
 
     if (dodgeResult.success) {
       // Si le joueur porte la balle et atteint l'en-but adverse -> touchdown

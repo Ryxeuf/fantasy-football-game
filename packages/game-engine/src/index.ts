@@ -202,6 +202,21 @@ export {
   markBreakTackleUsed,
 } from './mechanics/break-tackle';
 
+// Export du skill Shadowing (Lizardmen Chameleon Skink, etc.)
+export {
+  hasShadowing,
+  findShadowingCandidates,
+  isShadowingPossible,
+  rollShadowing,
+  tryApplyShadowing,
+  resolveShadowingAfterDodge,
+  SHADOWING_TARGET,
+} from './mechanics/shadowing';
+export type {
+  ShadowingResult,
+  ShadowingAttempt,
+} from './mechanics/shadowing';
+
 // Export des effets météo
 export {
   getWeatherModifiers,

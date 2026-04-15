@@ -236,7 +236,7 @@
 | P1.5 | Implementer `stand-firm` (Deathroller, Bodyguard, Treeman Gnome) | Regle | [x] |
 | P1.6 | Implementer `armored-skull` (Dwarf Deathroller) | Regle | [x] |
 | P1.7 | Implementer `iron-hard-skin` (Gnomes : piston, beastmaster, treeman) | Regle | [x] |
-| P1.8 | Implementer `shadowing` (Lizardmen Chameleon Skink) | Regle | [ ] |
+| P1.8 | Implementer `shadowing` (Lizardmen Chameleon Skink) | Regle | [x] |
 | P1.9 | Implementer `fend` (Imperial Retainer Lineman) — verifier | Regle | [ ] |
 | P1.10 | Implementer `running-pass` (Imperial Thrower) | Regle | [ ] |
 | P1.11 | Audit : verifier que `prehensile-tail`, `frenzy`, `throw-team-mate`, `thick-skull`, `on-the-ball`, `loner` s'appliquent correctement aux joueurs des 5 equipes | Regle | [ ] |
