@@ -523,7 +523,7 @@ registerSkill({
 registerSkill({
   slug: 'iron-hard-skin',
   triggers: ['on-armor'],
-  description: 'Annule la compétence Claws de l\'adversaire.',
+  description: 'Annule tous les modificateurs positifs que l\'adversaire appliquerait au jet d\'armure contre ce joueur (Claws, Mighty Blow sur armure, Dirty Player, Chainsaw, etc.). N\'affecte pas le jet de blessure.',
   canApply: (ctx) => hasSkill(ctx.player, 'iron-hard-skin') || hasSkill(ctx.player, 'iron_hard_skin'),
 });
 
