@@ -5,7 +5,11 @@
 
 import { Router } from "express";
 import { prisma } from "../prisma";
-import { resolveRuleset, DEFAULT_RULESET } from "../utils/ruleset-helpers";
+import {
+  resolveRuleset,
+  DEFAULT_RULESET,
+  RULESETS,
+} from "../utils/ruleset-helpers";
 
 const router = Router();
 
@@ -47,11 +51,26 @@ router.get("/rosters", async (req, res) => {
       ruleset: roster.ruleset,
       _count: roster._count,
     }));
-    
-    res.json({ rosters: transformedRosters, ruleset });
-  } catch (error: any) {
+
+    // Empty results are a strong smell that the DB has not been seeded
+    // for this ruleset (e.g. prod Postgres missing `season_3` rosters).
+    // Emitting a warning here makes that regression discoverable in logs.
+    if (transformedRosters.length === 0) {
+      console.warn(
+        `[public-rosters] No rosters found for ruleset=${ruleset}. ` +
+          "The database may need a seed for this ruleset.",
+      );
+    }
+
+    res.json({
+      rosters: transformedRosters,
+      ruleset,
+      availableRulesets: RULESETS,
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Erreur serveur";
     console.error("Erreur lors de la récupération des rosters:", error);
-    res.status(500).json({ error: error.message || "Erreur serveur" });
+    res.status(500).json({ error: message });
   }
 });
 
@@ -108,9 +127,10 @@ router.get("/rosters/:slug", async (req, res) => {
     }
 
     res.json({ roster: transformRoster(roster, isEnglish), ruleset });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Erreur serveur";
     console.error("Erreur lors de la récupération du roster:", error);
-    res.status(500).json({ error: error.message || "Erreur serveur" });
+    res.status(500).json({ error: message });
   }
 });
 

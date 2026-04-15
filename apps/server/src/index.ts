@@ -239,45 +239,54 @@ if (process.env.TEST_SQLITE === "1") {
         },
       ];
 
-      for (const r of rosters) {
-        const roster = await prisma.roster.upsert({
-          where: { slug_ruleset: { slug: r.slug, ruleset: "season_2" } },
-          update: {},
-          create: {
-            slug: r.slug,
-            ruleset: "season_2",
-            name: r.name,
-            nameEn: r.nameEn,
-            budget: 1_000_000,
-            tier: r.tier,
-          },
-        });
+      // Seed for both rulesets so tests covering either season_2 or
+      // season_3 endpoints have data.
+      const rulesets = ["season_2", "season_3"] as const;
+      for (const ruleset of rulesets) {
+        for (const r of rosters) {
+          const roster = await prisma.roster.upsert({
+            where: { slug_ruleset: { slug: r.slug, ruleset } },
+            update: {},
+            create: {
+              slug: r.slug,
+              ruleset,
+              name: r.name,
+              nameEn: r.nameEn,
+              budget: 1_000_000,
+              tier: r.tier,
+            },
+          });
 
-        await prisma.position.upsert({
-          where: {
-            rosterId_slug: {
+          await prisma.position.upsert({
+            where: {
+              rosterId_slug: {
+                rosterId: roster.id,
+                slug: `${r.slug}_lineman`,
+              },
+            },
+            update: {},
+            create: {
               rosterId: roster.id,
               slug: `${r.slug}_lineman`,
+              displayName: "Lineman",
+              cost: 50_000,
+              min: 0,
+              max: 16, // getLinemanStats prend la position avec le plus grand max
+              ma: 6,
+              st: 3,
+              ag: 3,
+              pa: 4,
+              av: 8,
             },
-          },
-          update: {},
-          create: {
-            rosterId: roster.id,
-            slug: `${r.slug}_lineman`,
-            displayName: "Lineman",
-            cost: 50_000,
-            min: 0,
-            max: 16, // getLinemanStats prend la position avec le plus grand max
-            ma: 6,
-            st: 3,
-            ag: 3,
-            pa: 4,
-            av: 8,
-          },
-        });
+          });
+        }
       }
 
-      return res.json({ ok: true, rosters: rosters.map((r) => r.slug) });
+      return res.json({
+        ok: true,
+        rulesets,
+        rosters: rosters.map((r) => r.slug),
+      });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       console.error("[__test/seed-rosters]", msg);
