@@ -256,6 +256,9 @@ export interface GameState {
   hypnotizedPlayers?: string[];
   // IDs des joueurs qui ont déjà utilisé Break Tackle ce tour (une fois par tour par joueur).
   usedBreakTackleThisTurn?: string[];
+  // Equipes ayant utilise On the Ball pendant le tour adverse en cours
+  // (reset au changement de tour). Une seule activation par tour d'equipe.
+  usedOnTheBallThisTurn?: TeamId[];
   // Condition météo active pour ce match (persistée depuis le pré-match)
   weatherCondition?: { condition: string; description: string };
   // État pré-match (setup, kickoff, inducements, etc.)
