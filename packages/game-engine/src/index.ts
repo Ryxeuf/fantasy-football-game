@@ -40,6 +40,7 @@ export {
   getPushDirections,
   handlePushWithChoice,
   resolveBlockResult,
+  applyChainPush,
 } from './mechanics/blocking';
 
 // Export des fonctions de gestion d'état (sans conflit)
@@ -171,6 +172,13 @@ export type { DauntlessCheckResult } from './mechanics/dauntless';
 
 // Export du skill Juggernaut (applique au blocage pendant un blitz)
 export { hasJuggernaut, isJuggernautActiveForBlock } from './mechanics/juggernaut';
+
+// Export du skill Stand Firm (applique au blocage pour refuser d'etre pousse)
+export {
+  hasStandFirm,
+  isStandFirmActiveForBlock,
+  isStandFirmActiveForChainPush,
+} from './mechanics/stand-firm';
 export {
   hasBreakTackle,
   getBreakTackleDodgeBonus,

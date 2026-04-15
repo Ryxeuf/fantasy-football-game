@@ -21,6 +21,10 @@ import { createLogEntry } from '../utils/logging';
 import { canTeamBlitz } from '../core/game-state';
 import { performInjuryRoll, handleSentOff, handleInjuryByCrowd } from './injury';
 import { isJuggernautActiveForBlock } from './juggernaut';
+import {
+  isStandFirmActiveForBlock,
+  isStandFirmActiveForChainPush,
+} from './stand-firm';
 
 /**
  * Applique un chain push : si la case de destination est occupée, le joueur qui s'y trouve
@@ -35,6 +39,19 @@ export function applyChainPush(
 ): GameState {
   const pushed = state.players.find(p => p.id === pushedPlayerId);
   if (!pushed) return state;
+
+  // Stand Firm : un joueur debout avec Stand Firm peut refuser d'etre pousse
+  // en chaine. Le chain stoppe ici, personne ne bouge.
+  if (isStandFirmActiveForChainPush(pushed)) {
+    const standFirmLog = createLogEntry(
+      'action',
+      `${pushed.name} utilise Stand Firm : refuse d'etre pousse en chaine`,
+      undefined,
+      pushed.team,
+      { skill: 'stand-firm' },
+    );
+    return { ...state, gameLog: [...state.gameLog, standFirmLog] };
+  }
 
   const newPos = {
     x: pushed.pos.x + direction.x,
@@ -73,6 +90,16 @@ export function applyChainPush(
     );
     newState = { ...newState, gameLog: [...newState.gameLog, chainLog] };
     newState = applyChainPush(newState, occupant.id, direction, rng);
+
+    // Si la case de destination est toujours occupee (p.ex. Stand Firm du
+    // chain target qui refuse de bouger), on ne peut pas pousser le joueur
+    // initial : personne ne bouge.
+    const stillOccupied = newState.players.some(
+      p => p.pos.x === newPos.x && p.pos.y === newPos.y && p.id !== pushedPlayerId
+    );
+    if (stillOccupied) {
+      return newState;
+    }
   }
 
   // Déplacer le joueur poussé
@@ -464,6 +491,20 @@ export function handlePushWithChoice(
   blockResult: string,
   rng: RNG
 ): GameState {
+  // Stand Firm : la cible peut refuser la poussee. Note : pour POW, la cible
+  // est deja marquee stunned=true AVANT cet appel, donc elle tombera bien sur
+  // sa case actuelle sans etre deplacee.
+  if (isStandFirmActiveForBlock(state, attacker, target)) {
+    const standFirmLog = createLogEntry(
+      'action',
+      `${target.name} utilise Stand Firm : refuse d'etre pousse`,
+      target.id,
+      target.team,
+      { skill: 'stand-firm', blockResult },
+    );
+    return { ...state, gameLog: [...state.gameLog, standFirmLog] };
+  }
+
   const pushDirections = getPushDirections(attacker.pos, target.pos);
   const availableDirections: Position[] = [];
   let hasOutOfBounds = false;
@@ -821,6 +862,19 @@ function handleBothDown(state: GameState, attacker: Player, target: Player, rng:
  * Gère le résultat PUSH_BACK
  */
 function handlePushBack(state: GameState, attacker: Player, target: Player, rng: RNG): GameState {
+  // Stand Firm : la cible peut refuser d'etre poussee. Elle reste sur sa case,
+  // l'attaquant ne fait pas de follow-up.
+  if (isStandFirmActiveForBlock(state, attacker, target)) {
+    const standFirmLog = createLogEntry(
+      'action',
+      `${target.name} utilise Stand Firm : refuse d'etre pousse`,
+      target.id,
+      target.team,
+      { skill: 'stand-firm' },
+    );
+    return { ...state, gameLog: [...state.gameLog, standFirmLog] };
+  }
+
   // La cible est repoussée d'une case - vérifier les directions disponibles
   const pushDirections = getPushDirections(attacker.pos, target.pos);
   const availableDirections: Position[] = [];
