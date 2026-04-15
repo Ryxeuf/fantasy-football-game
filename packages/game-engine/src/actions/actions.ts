@@ -73,6 +73,7 @@ import { canChainsaw, executeChainsaw } from '../mechanics/chainsaw';
 import { canDumpOff, getDumpOffReceivers, executeDumpOff } from '../mechanics/dump-off';
 import { checkDauntless } from '../mechanics/dauntless';
 import { canApplyBreakTackle, markBreakTackleUsed } from '../mechanics/break-tackle';
+import { isFendActiveForFollowUp } from '../mechanics/fend';
 import { resolveShadowingAfterDodge } from '../mechanics/shadowing';
 import {
   resolveKickoffPerfectDefence,
@@ -1581,17 +1582,33 @@ function handlePushChoose(
 
   let newState = { ...state, pendingPushChoice: undefined } as GameState;
 
+  // Fend : verifier avant la poussee (la cible doit etre debout). Sur POW/
+  // STUMBLE sans Dodge, la cible est deja stunned avant d'arriver ici, donc
+  // isFendActiveForFollowUp renverra false naturellement.
+  const fendActive = isFendActiveForFollowUp(newState, attacker, target);
+
   // Chain push : si la destination est occupée, pousser le joueur qui y est d'abord
   const rng = () => Math.random(); // RNG pour les surfs en chaîne
   newState = applyChainPush(newState, target.id, move.direction, rng);
 
-  // Demander confirmation pour le follow-up
-  newState.pendingFollowUpChoice = {
-    attackerId: attacker.id,
-    targetId: target.id,
-    targetNewPosition: newTargetPos,
-    targetOldPosition: target.pos,
-  };
+  if (fendActive) {
+    const fendLog = createLogEntry(
+      'action',
+      `${target.name} utilise Fend : ${attacker.name} ne peut pas suivre`,
+      target.id,
+      target.team,
+      { skill: 'fend' },
+    );
+    newState.gameLog = [...newState.gameLog, fendLog];
+  } else {
+    // Demander confirmation pour le follow-up
+    newState.pendingFollowUpChoice = {
+      attackerId: attacker.id,
+      targetId: target.id,
+      targetNewPosition: newTargetPos,
+      targetOldPosition: target.pos,
+    };
+  }
 
   // Log de la poussée
   const pushLog = createLogEntry(
