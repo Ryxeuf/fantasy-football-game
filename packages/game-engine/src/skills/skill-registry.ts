@@ -329,18 +329,18 @@ registerSkill({
 });
 
 // BREAK TACKLE
+// Le skill est actif mais sa logique est gérée post-roll dans
+// `mechanics/break-tackle.ts` (checkBreakTackle), qui s'exécute après un
+// Dodge raté et ajoute +1 (ST ≤ 4) ou +2 (ST ≥ 5) une fois par activation.
+// On n'applique aucun modificateur pré-jet ici pour éviter de rendre les
+// dodges permanents, ce qui ne correspondrait pas à la règle BB3.
 registerSkill({
   slug: 'break-tackle',
   triggers: ['on-dodge'],
-  description: 'Peut utiliser la Force (ST) au lieu de l\'Agilité (AG) pour un jet d\'esquive.',
-  canApply: (ctx) => hasSkill(ctx.player, 'break-tackle') || hasSkill(ctx.player, 'break_tackle'),
-  getModifiers: (ctx) => {
-    // Si ST > AG, c'est avantageux
-    if (ctx.player.st > ctx.player.ag) {
-      return { dodgeModifier: ctx.player.st - ctx.player.ag };
-    }
-    return {};
-  },
+  description:
+    "Une fois par activation, après un test d'Agilité pour Esquiver, modifie le jet de +1 (ST ≤ 4) ou +2 (ST ≥ 5).",
+  canApply: (ctx) =>
+    hasSkill(ctx.player, 'break-tackle') || hasSkill(ctx.player, 'break_tackle'),
 });
 
 // HORNS

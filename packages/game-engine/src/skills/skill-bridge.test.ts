@@ -81,15 +81,11 @@ describe('Règle: Skill Bridge - Dodge Modifiers', () => {
     expect(mod).toBe(2);
   });
 
-  it('gives Break Tackle bonus when ST > AG', () => {
-    const player = makePlayer({ skills: ['break-tackle'], st: 4, ag: 3 });
-    const state = makeState([player]);
-    const mod = getDodgeSkillModifiers(state, player, player.pos);
-    expect(mod).toBe(1); // ST(4) - AG(3) = +1
-  });
-
-  it('gives no Break Tackle bonus when ST <= AG', () => {
-    const player = makePlayer({ skills: ['break-tackle'], st: 3, ag: 3 });
+  // BB3: Break Tackle is a post-roll effect (+1 / +2 once per activation) and
+  // must NOT add a pre-roll modifier here. It is resolved in
+  // mechanics/break-tackle.ts after the Dodge roll is made.
+  it('does not contribute to pre-roll Dodge modifiers (BB3 post-roll effect)', () => {
+    const player = makePlayer({ skills: ['break-tackle'], st: 5, ag: 3 });
     const state = makeState([player]);
     const mod = getDodgeSkillModifiers(state, player, player.pos);
     expect(mod).toBe(0);

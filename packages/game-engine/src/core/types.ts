@@ -52,6 +52,7 @@ export interface Player {
   skills: string[];
   pm: number; // points de mouvement restants
   gfiUsed?: number; // nombre de GFI (Going For It) utilisés ce tour (max 2)
+  breakTackleUsed?: boolean; // Break Tackle utilisé pendant cette activation (BB3 — reset chaque tour d'équipe)
   hasBall?: boolean; // indique si le joueur a la balle
   state?: PlayerState; // état du joueur pour les zones de dugout
 }

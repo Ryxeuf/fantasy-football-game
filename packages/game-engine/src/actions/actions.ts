@@ -72,6 +72,7 @@ import { canStab, executeStab } from '../mechanics/stab';
 import { canChainsaw, executeChainsaw } from '../mechanics/chainsaw';
 import { canDumpOff, getDumpOffReceivers, executeDumpOff } from '../mechanics/dump-off';
 import { checkDauntless } from '../mechanics/dauntless';
+import { checkBreakTackle } from '../mechanics/break-tackle';
 import {
   resolveKickoffPerfectDefence,
   resolveKickoffHighKick,
@@ -630,7 +631,7 @@ function handleEndTurn(state: GameState, rng: RNG): GameState {
       kickoffBlitzTurn: undefined,
       currentPlayer: receivingTeam,
       selectedPlayerId: null,
-      players: state.players.map(p => ({ ...p, pm: p.ma, gfiUsed: 0 })),
+      players: state.players.map(p => ({ ...p, pm: p.ma, gfiUsed: 0, breakTackleUsed: false })),
       isTurnover: false,
       playerActions: {},
       teamBlitzCount: {},
@@ -845,8 +846,22 @@ function handleDodgeRoll(
   // Vérifier si le tour du joueur doit se terminer
   next = checkPlayerTurnEnd(next, player.id);
 
-  // Dodge skill auto-reroll si échec (via skill registry)
+  // Break Tackle (BB3): une fois par activation, après un Dodge raté, ajoute
+  // +1 (ST <= 4) ou +2 (ST >= 5) au jet. Appliqué avant toute relance.
   let finalDodgeSuccess = dodgeResult.success;
+  if (!finalDodgeSuccess) {
+    const breakTackleCheck = checkBreakTackle(
+      next,
+      next.players[idx],
+      dodgeResult.diceRoll,
+      dodgeResult.targetNumber,
+      dodgeResult.success
+    );
+    if (breakTackleCheck.triggered) {
+      next = breakTackleCheck.newState;
+      finalDodgeSuccess = true;
+    }
+  }
   if (!finalDodgeSuccess && canSkillReroll(player, 'on-dodge', state)) {
     const rerollLog = createLogEntry('dice', `Dodge : relance de l'esquive (${dodgeResult.diceRoll} raté)`, player.id, player.team);
     next.gameLog = [...next.gameLog, rerollLog];
@@ -1191,7 +1206,23 @@ function handleDodge(
   next.players[idx].pos = { ...move.to };
   next.players[idx].pm = Math.max(0, next.players[idx].pm - 1);
 
-  if (dodgeResult.success) {
+  // Break Tackle (BB3): +1/+2 une fois par activation sur un Dodge raté.
+  let dodgeSucceeded = dodgeResult.success;
+  if (!dodgeSucceeded) {
+    const breakTackleCheck = checkBreakTackle(
+      next,
+      next.players[idx],
+      dodgeResult.diceRoll,
+      dodgeResult.targetNumber,
+      dodgeResult.success
+    );
+    if (breakTackleCheck.triggered) {
+      next = breakTackleCheck.newState;
+      dodgeSucceeded = true;
+    }
+  }
+
+  if (dodgeSucceeded) {
     // Avancement d'état standard après mouvement réussi
     if (!hasPlayerActed(next, player.id)) {
       next = setPlayerAction(next, player.id, 'MOVE');
@@ -1847,7 +1878,24 @@ function handleBlitz(
     const distance = Math.abs(from.x - to.x) + Math.abs(from.y - to.y);
     newState.players[attackerIdx].pm = Math.max(0, newState.players[attackerIdx].pm - distance);
 
-    if (dodgeResult.success) {
+    // Break Tackle (BB3): +1/+2 une fois par activation sur un Dodge raté
+    // pendant un Blitz.
+    let blitzDodgeSuccess = dodgeResult.success;
+    if (!blitzDodgeSuccess) {
+      const breakTackleCheck = checkBreakTackle(
+        newState,
+        newState.players[attackerIdx],
+        dodgeResult.diceRoll,
+        dodgeResult.targetNumber,
+        dodgeResult.success
+      );
+      if (breakTackleCheck.triggered) {
+        newState = breakTackleCheck.newState;
+        blitzDodgeSuccess = true;
+      }
+    }
+
+    if (blitzDodgeSuccess) {
       // Si le joueur porte la balle et atteint l'en-but adverse -> touchdown
       const mover = newState.players[attackerIdx];
       if (mover.hasBall && isInOpponentEndzone(newState, mover)) {

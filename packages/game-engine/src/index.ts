@@ -168,6 +168,12 @@ export type { ActivationCheckResult, AlwaysHungryResult } from './mechanics/nega
 // Export du skill Dauntless (applique au blocage)
 export { checkDauntless } from './mechanics/dauntless';
 export type { DauntlessCheckResult } from './mechanics/dauntless';
+export {
+  checkBreakTackle,
+  hasBreakTackle,
+  getBreakTackleModifier,
+} from './mechanics/break-tackle';
+export type { BreakTackleResult } from './mechanics/break-tackle';
 
 // Export des effets météo
 export {
