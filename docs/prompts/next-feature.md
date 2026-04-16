@@ -1,26 +1,73 @@
-# Prompt : Next Feature (version resiliente)
+# Prompt : Next Feature (v2 — execution progressive)
+
+> Version optimisee avec garde-fous fichiers (300-500 lignes max),
+> execution progressive (anti-timeout), et detection de travail existant.
+>
+> Fichier de commande : `.claude/commands/next-feature.md`
 
 ## Identite
+
 Developpeur autonome sur Nuffle Arena, jeu Blood Bowl 3 en TypeScript.
 Monorepo pnpm + Turborepo : `apps/web` (Next.js 14), `apps/server` (Express + socket.io),
 `packages/game-engine` (logique deterministe), `packages/ui` (Pixi.js).
 
-## Objectif
-Implemente UNE tache non cochee (`- [ ]`) du **premier sprint non termine** dans TODO.md.
+## Principes d'execution
 
-## Selection de la tache
-1. Lis TODO.md, identifie le premier sprint ayant des `- [ ]`
-2. Dans ce sprint, prends la tache suivante dans l'ordre du tableau
-3. Si la tache a des dependances non resolues (`[ ]` anterieures), passe a la suivante
-4. Si la tache estimee > 1h de code, decoupe en sous-taches et n'implemente que la premiere
+### 1. Progressivite (anti-timeout)
+- **Une phase a la fois** : terminer et valider chaque phase avant la suivante
+- **Increments de 30-50 lignes** entre chaque execution de tests
+- **Commits intermediaires** si une phase depasse ~100 lignes de changement
+- **Diagnostic immediat** si un build/test depasse 2 min (pas de relance aveugle)
 
-## Avant de coder
-1. Explore le code existant lie a la tache (fichiers, types, tests)
-2. Planifie l'approche technique (max 5 lignes)
-3. Invoque le bon agent specialise selon le domaine :
+### 2. Garde-fous fichiers
+- **300 lignes** : seuil de refactorisation pour les nouveaux fichiers
+- **500 lignes** : seuil maximum, demander confirmation utilisateur au-dela
+- **Extraire proactivement** en sous-modules plutot que laisser grossir
 
-| Domaine touche | Commande a invoquer |
-|----------------|---------------------|
+### 3. Pas de travail en double
+- Toujours verifier les PR ouvertes avant de coder
+- Si une PR existe pour la meme tache : corriger/debloquer au lieu de reimplementer
+
+---
+
+## Workflow detaille
+
+### Phase 0 — Verification des outils (< 30 sec)
+
+Verifier avant tout :
+
+1. **Outils MCP GitHub** : tenter `list_issues` ou `list_pull_requests`
+2. **CLI gh** (fallback) : `gh --version`
+3. **pnpm** : `pnpm --version`
+
+Si aucun outil GitHub disponible : prevenir l'utilisateur, proposer de continuer sans PR.
+
+### Phase 1 — Selection de la tache (lecture seule)
+
+1. Lire `TODO.md`, identifier le premier sprint avec des `- [ ]`
+2. Prendre la premiere tache non cochee dans l'ordre
+3. Sauter les taches avec dependances non resolues
+4. Decouper en sous-taches si estimee > 1h de code
+5. Afficher clairement la tache selectionnee
+
+### Phase 2 — Detection de travail existant (< 2 min)
+
+1. Lister les PR ouvertes sur le repository
+2. Si une PR traite la meme tache :
+   - Se brancher sur la branche de la PR
+   - Analyser les blocages (CI, conflits, review)
+   - Corriger et s'assurer que la PR est mergeable
+   - S'arreter la
+3. Sinon, passer a la Phase 3
+
+### Phase 3 — Exploration et planification (< 3 min)
+
+1. Explorer le code lie a la tache (types, implementations, tests existants)
+2. Planifier en max 5 lignes
+3. Invoquer l'agent specialise si necessaire :
+
+| Domaine | Agent |
+|---------|-------|
 | Game engine (regles, mecaniques) | `/bloodbowl-rules-agent` |
 | Pipeline etat/actions, GameState | `/game-state-integration-agent` |
 | WebSocket / multijoueur | `/websocket-multiplayer-agent` |
@@ -28,61 +75,82 @@ Implemente UNE tache non cochee (`- [ ]`) du **premier sprint non termine** dans
 | Sequences de match (TD, mi-temps) | `/turn-sequence-agent` |
 | Schema Prisma, migrations | `/prisma-database-agent` |
 | Securite, anti-triche | `/api-security-agent` |
+| Frontend Next.js | `/nextjs-frontend-agent` |
+| Rendu Pixi.js | `/pixi-renderer-agent` |
+| Tests et qualite | `/testing-quality-agent` |
+| IA adversaire | `/ai-opponent-agent` |
+| DevOps / infra | `/devops-infrastructure-agent` |
 
-## Implementation
-- TDD : ecris les tests AVANT le code (RED -> GREEN -> REFACTOR)
-- Tests unitaires : `packages/game-engine/src/**/*.test.ts` (adjacent au source)
-- Tests integration : `tests/integration/`
-- Framework : Vitest, convention : `describe('Regle: [nom]')`
-- RNG : utilise UNIQUEMENT `utils/rng.ts`, jamais `Math.random()`
-- Immutabilite : retourne un nouveau GameState, ne mute jamais l'existant
+### Phase 4 — Implementation TDD (progressive)
 
-## Validation (obligatoire avant commit)
-Execute ces 4 commandes et corrige toute erreur avant de continuer :
-1. `pnpm test` -- Tests unitaires + integration
-2. `pnpm lint` -- ESLint
-3. `pnpm typecheck` -- Verification TypeScript
-4. `pnpm build` -- Build de production
+**Etape 4a : Tests d'abord (RED)**
+- Ecrire les tests AVANT le code
+- Emplacement : adjacent au source (`*.test.ts`)
+- Integration : `tests/integration/`
+- Convention : `describe('Regle: [nom]')`
+- Lancer `pnpm test` — les tests doivent echouer
 
-## Finalisation
+**Etape 4b : Implementation minimale (GREEN)**
+- Code minimal pour passer les tests
+- ~30-50 lignes max entre chaque `pnpm test`
+- Corriger immediatement si un test echoue
 
-### 1. Coche la tache dans TODO.md
+**Etape 4c : Refactorisation (REFACTOR)**
+- Ameliorer sans casser les tests
+- Verifier taille des fichiers (< 300 nouveaux, < 500 existants)
+- Extraire en sous-modules si necessaire
 
-### 2. Commit et push
-- Commit avec message conventionnel (`feat:`, `fix:`, `refactor:`, etc.)
-- Push : `git push -u origin <branch>`
+**Contraintes techniques :**
+- RNG : `utils/rng.ts` uniquement, jamais `Math.random()`
+- Immutabilite : nouveau GameState, jamais de mutation
+- Fichier > 500 lignes = validation utilisateur obligatoire
 
-### 3. Creation de Pull Request (avec fallback)
+### Phase 5 — Validation (sequentielle)
 
-**Verification prealable des outils GitHub :**
-Avant de creer la PR, verifie la disponibilite des outils dans cet ordre :
+Executer une par une, corriger avant de passer a la suivante :
 
-1. **Outils MCP GitHub (`mcp__github__*`)** : utilise `mcp__github__create_pull_request`
-   si les outils `mcp__github__` sont disponibles dans la session.
+1. `pnpm test` — Tests
+2. `pnpm lint` — ESLint
+3. `pnpm typecheck` — TypeScript
+4. `pnpm build` — Build production
 
-2. **Fallback CLI `gh`** : si les outils MCP ne sont pas disponibles, utilise :
-   ```bash
-   gh pr create --title "<titre>" --body "<body>" --base main
-   ```
+Si echec : diagnostiquer, corriger, relancer uniquement la commande en echec.
 
-3. **Dernier recours** : si ni MCP ni `gh` ne fonctionnent, affiche a l'utilisateur
-   la commande exacte a executer manuellement :
-   ```
-   [MANUAL PR REQUIRED]
-   Branche : <branch>
-   Titre : <titre court < 70 chars>
-   Base : main
-   Body :
-   ## Resume
-   - <changements>
+### Phase 6 — Finalisation
 
-   ## Tache roadmap
-   - <reference TODO.md>
+**6a. TODO.md** : cocher la tache `- [x]`
 
-   ## Plan de test
-   - [ ] <tests>
-   ```
+**6b. Commit et push** :
+- Message conventionnel (`feat:`, `fix:`, `refactor:`, `test:`)
+- `git push -u origin <branch>`
 
-**Format PR (quel que soit l'outil) :**
-- Titre court et descriptif (< 70 caracteres)
-- Body structure : resume des changements, tache roadmap concernee, plan de test
+**6c. Pull Request** :
+
+Outils (par ordre de priorite) :
+1. MCP GitHub : `mcp__github__create_pull_request`
+2. CLI `gh` : `gh pr create --title "<titre>" --body "<body>" --base main`
+3. Dernier recours : afficher commande manuelle
+
+Format PR :
+```
+Titre : < 70 caracteres
+Body :
+## Resume
+- <changements>
+
+## Tache roadmap
+- Sprint X, tache Y
+
+## Plan de test
+- [ ] <tests>
+```
+
+---
+
+## Historique des versions
+
+| Version | Date | Changements |
+|---------|------|-------------|
+| v1.0 | 2026-04-02 | Version initiale |
+| v1.1 | 2026-04-12 | Ajout fallback PR (MCP → gh → manuel) |
+| v2.0 | 2026-04-16 | Execution progressive, garde-fous fichiers 300-500 lignes, detection PR existantes, table agents etendue |
