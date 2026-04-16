@@ -26,6 +26,7 @@ import {
   isStandFirmActiveForChainPush,
 } from './stand-firm';
 import { isFendActiveForFollowUp } from './fend';
+import { hasFrenzy } from './frenzy';
 
 /**
  * Applique un chain push : si la case de destination est occupée, le joueur qui s'y trouve
@@ -993,6 +994,7 @@ function handlePushBack(state: GameState, attacker: Player, target: Player, rng:
 
     // Fend : verifier avant la poussee (la cible doit etre debout)
     const fendActive = isFendActiveForFollowUp(state, attacker, target);
+    const frenzyActive = hasFrenzy(attacker);
 
     state = applyChainPush(state, target.id, pushDirection, rng);
 
@@ -1005,6 +1007,23 @@ function handlePushBack(state: GameState, attacker: Player, target: Player, rng:
         { skill: 'fend' },
       );
       state.gameLog = [...state.gameLog, fendLog];
+    } else if (frenzyActive) {
+      // Frenzy : follow-up obligatoire + second bloc
+      state.players = state.players.map(p =>
+        p.id === attacker.id ? { ...p, pos: target.pos } : p
+      );
+      const frenzyFollowLog = createLogEntry(
+        'action',
+        `${attacker.name} suit ${target.name} (Frenzy — obligatoire)`,
+        attacker.id,
+        attacker.team,
+        { skill: 'frenzy' },
+      );
+      state.gameLog = [...state.gameLog, frenzyFollowLog];
+      state.pendingFrenzyBlock = {
+        attackerId: attacker.id,
+        targetId: target.id,
+      };
     } else {
       // Follow-up is optional on PUSH_BACK — let the attacker choose
       state.pendingFollowUpChoice = {
@@ -1034,6 +1053,14 @@ function handlePushBack(state: GameState, attacker: Player, target: Player, rng:
       totalStrength: 3,
       targetStrength: 2,
     };
+    // Frenzy : marquer le second bloc en attente pour après le choix de
+    // direction + follow-up automatique
+    if (hasFrenzy(attacker)) {
+      state.pendingFrenzyBlock = {
+        attackerId: attacker.id,
+        targetId: target.id,
+      };
+    }
 
     const choiceLog = createLogEntry(
       'action',
