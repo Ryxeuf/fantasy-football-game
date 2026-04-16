@@ -763,6 +763,7 @@ function resetPlayerPositions(state: GameState): GameState {
       stunned: false,
       pm: p.ma,
       gfiUsed: 0,
+      breakTackleUsed: false,
       hasBall: false,
       pos: { x: -1, y: -1 }, // Hors terrain = en réserve
     };

@@ -183,6 +183,12 @@ export type { ActivationCheckResult, AlwaysHungryResult } from './mechanics/nega
 // Export du skill Dauntless (applique au blocage)
 export { checkDauntless } from './mechanics/dauntless';
 export type { DauntlessCheckResult } from './mechanics/dauntless';
+export {
+  checkBreakTackle,
+  hasBreakTackle,
+  getBreakTackleModifier,
+} from './mechanics/break-tackle';
+export type { BreakTackleResult } from './mechanics/break-tackle';
 
 // Export du skill Juggernaut (applique au blocage pendant un blitz)
 export {
@@ -203,13 +209,6 @@ export {
   hasFend,
   isFendActiveForFollowUp,
 } from './mechanics/fend';
-export {
-  hasBreakTackle,
-  getBreakTackleDodgeBonus,
-  canApplyBreakTackle,
-  hasUsedBreakTackleThisTurn,
-  markBreakTackleUsed,
-} from './mechanics/break-tackle';
 
 // Export du skill Running Pass (Imperial Thrower, etc.)
 export {

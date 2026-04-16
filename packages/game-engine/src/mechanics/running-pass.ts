@@ -23,7 +23,7 @@
  * Quand Running Pass s'active, on enregistre l'utilisation dans
  * `state.usedRunningPassThisTurn`. Le tableau est reinitialise au changement
  * de tour (`handleEndTurn` dans `actions.ts`), exactement comme pour
- * `usedBreakTackleThisTurn`. La fonction `canPlayerContinueMoving` du moteur
+ * d'autres flags par-tour. La fonction `canPlayerContinueMoving` du moteur
  * traite ce flag pour autoriser la suite du mouvement meme si l'action
  * principale du joueur reste enregistree comme `PASS` ou `HANDOFF`.
  *

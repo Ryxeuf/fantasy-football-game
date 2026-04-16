@@ -77,7 +77,7 @@ import { canStab, executeStab } from '../mechanics/stab';
 import { canChainsaw, executeChainsaw } from '../mechanics/chainsaw';
 import { canDumpOff, getDumpOffReceivers, executeDumpOff } from '../mechanics/dump-off';
 import { checkDauntless } from '../mechanics/dauntless';
-import { canApplyBreakTackle, markBreakTackleUsed } from '../mechanics/break-tackle';
+import { checkBreakTackle } from '../mechanics/break-tackle';
 import { isFendActiveForFollowUp } from '../mechanics/fend';
 import { resolveShadowingAfterDodge } from '../mechanics/shadowing';
 import { hasFrenzy } from '../mechanics/frenzy';
@@ -693,14 +693,13 @@ function handleEndTurn(state: GameState, rng: RNG): GameState {
       kickoffBlitzTurn: undefined,
       currentPlayer: receivingTeam,
       selectedPlayerId: null,
-      players: state.players.map(p => ({ ...p, pm: p.ma, gfiUsed: 0 })),
+      players: state.players.map(p => ({ ...p, pm: p.ma, gfiUsed: 0, breakTackleUsed: false })),
       isTurnover: false,
       playerActions: {},
       teamBlitzCount: {},
       teamFoulCount: {},
       rerollUsedThisTurn: false,
       hypnotizedPlayers: [],
-      usedBreakTackleThisTurn: [],
       usedRunningPassThisTurn: [],
       usedOnTheBallThisTurn: [],
     };
@@ -720,7 +719,6 @@ function handleEndTurn(state: GameState, rng: RNG): GameState {
     teamFoulCount: {} as Record<string, number>, // Réinitialiser les compteurs de foul
     rerollUsedThisTurn: false, // Réinitialiser le flag de relance
     hypnotizedPlayers: [], // Réinitialiser les joueurs hypnotisés
-    usedBreakTackleThisTurn: [], // Réinitialiser Break Tackle (une fois par tour)
     usedRunningPassThisTurn: [], // Réinitialiser Running Pass (une fois par tour)
     usedOnTheBallThisTurn: [], // Réinitialiser On the Ball (une fois par tour d'equipe)
   };
@@ -872,7 +870,6 @@ function handleDodgeRoll(
   idx: number
 ): GameState {
   // Calculer les modificateurs de désquive (malus pour adversaires à l'arrivée + skills)
-  const breakTackleApplied = canApplyBreakTackle(state, player);
   const baseDodgeModifiers = calculateDodgeModifiers(state, from, to, player.team);
   const skillDodgeModifiers = getDodgeSkillModifiers(state, player, from);
   const dodgeModifiers = baseDodgeModifiers + skillDodgeModifiers;
@@ -882,9 +879,6 @@ function handleDodgeRoll(
 
   let next = structuredClone(state) as GameState;
   next.lastDiceResult = dodgeResult;
-  if (breakTackleApplied) {
-    next = markBreakTackleUsed(next, player.id);
-  }
 
   // Log du jet d'esquive
   const logEntry = createLogEntry(
@@ -923,8 +917,22 @@ function handleDodgeRoll(
   // que le joueur ait bougé et indépendamment du résultat final (BB3).
   next = resolveShadowingAfterDodge(next, player, from, rng);
 
-  // Dodge skill auto-reroll si échec (via skill registry)
+  // Break Tackle (BB3): une fois par activation, après un Dodge raté, ajoute
+  // +1 (ST <= 4) ou +2 (ST >= 5) au jet. Appliqué avant toute relance.
   let finalDodgeSuccess = dodgeResult.success;
+  if (!finalDodgeSuccess) {
+    const breakTackleCheck = checkBreakTackle(
+      next,
+      next.players[idx],
+      dodgeResult.diceRoll,
+      dodgeResult.targetNumber,
+      dodgeResult.success
+    );
+    if (breakTackleCheck.triggered) {
+      next = breakTackleCheck.newState;
+      finalDodgeSuccess = true;
+    }
+  }
   if (!finalDodgeSuccess && canSkillReroll(player, 'on-dodge', state)) {
     const rerollLog = createLogEntry('dice', `Dodge : relance de l'esquive (${dodgeResult.diceRoll} raté)`, player.id, player.team);
     next.gameLog = [...next.gameLog, rerollLog];
@@ -1241,7 +1249,6 @@ function handleDodge(
   const to = move.to;
 
   // Calculer les modificateurs de désquive (malus pour adversaires à l'arrivée + skills)
-  const breakTackleApplied = canApplyBreakTackle(state, player);
   const baseDodgeModifiers = calculateDodgeModifiers(state, from, to, player.team);
   const skillDodgeModifiers = getDodgeSkillModifiers(state, player, from);
   const dodgeModifiers = baseDodgeModifiers + skillDodgeModifiers;
@@ -1250,9 +1257,6 @@ function handleDodge(
 
   let next = structuredClone(state) as GameState;
   next.lastDiceResult = dodgeResult;
-  if (breakTackleApplied) {
-    next = markBreakTackleUsed(next, player.id);
-  }
 
   // Log du jet d'esquive
   const dodgeLogEntry = createLogEntry(
@@ -1276,7 +1280,23 @@ function handleDodge(
   // Shadowing : résolu après le mouvement, indépendamment du résultat (BB3).
   next = resolveShadowingAfterDodge(next, player, from, rng);
 
-  if (dodgeResult.success) {
+  // Break Tackle (BB3): +1/+2 une fois par activation sur un Dodge raté.
+  let dodgeSucceeded = dodgeResult.success;
+  if (!dodgeSucceeded) {
+    const breakTackleCheck = checkBreakTackle(
+      next,
+      next.players[idx],
+      dodgeResult.diceRoll,
+      dodgeResult.targetNumber,
+      dodgeResult.success
+    );
+    if (breakTackleCheck.triggered) {
+      next = breakTackleCheck.newState;
+      dodgeSucceeded = true;
+    }
+  }
+
+  if (dodgeSucceeded) {
     // Avancement d'état standard après mouvement réussi
     if (!hasPlayerActed(next, player.id)) {
       next = setPlayerAction(next, player.id, 'MOVE');
@@ -1933,7 +1953,6 @@ function handleBlitz(
 
   if (needsDodge) {
     // Calculer les modificateurs de désquive (adversaires à l'arrivée + skills)
-    const breakTackleApplied = canApplyBreakTackle(newState, attacker);
     const baseDodgeModifiers = calculateDodgeModifiers(newState, from, to, attacker.team);
     const skillDodgeModifiers = getDodgeSkillModifiers(newState, attacker, from);
     const dodgeModifiers = baseDodgeModifiers + skillDodgeModifiers;
@@ -1942,9 +1961,6 @@ function handleBlitz(
     const dodgeResult = performDodgeRollWithNotification(attacker, rng, dodgeModifiers);
 
     newState.lastDiceResult = dodgeResult;
-    if (breakTackleApplied) {
-      newState = markBreakTackleUsed(newState, attacker.id);
-    }
 
     // Log du jet d'esquive
     const dodgeLogEntry = createLogEntry(
@@ -1972,7 +1988,24 @@ function handleBlitz(
     // Shadowing : tentative de suivi après le mouvement (BB3).
     newState = resolveShadowingAfterDodge(newState, attacker, from, rng);
 
-    if (dodgeResult.success) {
+    // Break Tackle (BB3): +1/+2 une fois par activation sur un Dodge raté
+    // pendant un Blitz.
+    let blitzDodgeSuccess = dodgeResult.success;
+    if (!blitzDodgeSuccess) {
+      const breakTackleCheck = checkBreakTackle(
+        newState,
+        newState.players[attackerIdx],
+        dodgeResult.diceRoll,
+        dodgeResult.targetNumber,
+        dodgeResult.success
+      );
+      if (breakTackleCheck.triggered) {
+        newState = breakTackleCheck.newState;
+        blitzDodgeSuccess = true;
+      }
+    }
+
+    if (blitzDodgeSuccess) {
       // Si le joueur porte la balle et atteint l'en-but adverse -> touchdown
       const mover = newState.players[attackerIdx];
       if (mover.hasBall && isInOpponentEndzone(newState, mover)) {

@@ -52,6 +52,7 @@ export interface Player {
   skills: string[];
   pm: number; // points de mouvement restants
   gfiUsed?: number; // nombre de GFI (Going For It) utilisés ce tour (max 2)
+  breakTackleUsed?: boolean; // Break Tackle utilisé pendant cette activation (BB3 — reset chaque tour d'équipe)
   hasBall?: boolean; // indique si le joueur a la balle
   state?: PlayerState; // état du joueur pour les zones de dugout
 }
@@ -254,8 +255,6 @@ export interface GameState {
   bribesRemaining: { teamA: number; teamB: number };
   // Joueurs hypnotisés (perdent leur zone de tacle jusqu'à leur prochaine activation)
   hypnotizedPlayers?: string[];
-  // IDs des joueurs qui ont déjà utilisé Break Tackle ce tour (une fois par tour par joueur).
-  usedBreakTackleThisTurn?: string[];
   // IDs des joueurs qui ont déjà utilisé Running Pass ce tour (une fois par tour par joueur).
   // La presence d'un id ici autorise aussi la poursuite du mouvement apres
   // une Action de Passe (cf. canPlayerContinueMoving dans game-state.ts).

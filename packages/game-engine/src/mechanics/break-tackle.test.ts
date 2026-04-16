@@ -1,24 +1,32 @@
 import { describe, it, expect } from 'vitest';
-import {
-  hasBreakTackle,
-  getBreakTackleDodgeBonus,
-  canApplyBreakTackle,
-  hasUsedBreakTackleThisTurn,
-  markBreakTackleUsed,
-} from './break-tackle';
-import { getDodgeSkillModifiers } from '../skills/skill-bridge';
-import type { Player, GameState } from '../core/types';
 import { setup } from '../core/game-state';
+import { checkBreakTackle } from './break-tackle';
+import type { GameState, Player } from '../core/types';
+
+/**
+ * Break Tackle (BB3 Season 2/3 rules):
+ * - Once per activation, after the player has performed a Dodge action (D6 agility test),
+ *   they may modify the dice roll by:
+ *     - +1 if their Strength characteristic is 4 or less,
+ *     - +2 if their Strength characteristic is 5 or more.
+ * - The skill is only useful to turn a failed dodge into a success.
+ * - A player can only use Break Tackle once during their activation, regardless of how
+ *   many Dodge actions they make.
+ */
 
 function makePlayer(overrides: Partial<Player> = {}): Player {
   return {
     id: 'p1',
     team: 'A',
     pos: { x: 5, y: 5 },
-    name: 'Test Player',
+    name: 'Dodger',
     number: 1,
     position: 'Lineman',
-    ma: 6, st: 3, ag: 3, pa: 4, av: 9,
+    ma: 6,
+    st: 3,
+    ag: 3,
+    pa: 4,
+    av: 8,
     skills: [],
     pm: 6,
     state: 'active',
@@ -28,138 +36,191 @@ function makePlayer(overrides: Partial<Player> = {}): Player {
 
 function makeState(players: Player[]): GameState {
   const state = setup();
-  state.players = players;
-  return state;
+  return { ...state, players };
 }
 
-describe('Règle: Break Tackle - detection', () => {
-  it('hasBreakTackle retourne true pour un joueur avec le skill', () => {
-    const player = makePlayer({ skills: ['break-tackle'] });
-    expect(hasBreakTackle(player)).toBe(true);
-  });
-
-  it('hasBreakTackle retourne true pour la variante underscore', () => {
-    const player = makePlayer({ skills: ['break_tackle'] });
-    expect(hasBreakTackle(player)).toBe(true);
-  });
-
-  it('hasBreakTackle retourne false sans le skill', () => {
+describe('Regle: Break Tackle — activation', () => {
+  it('ne declenche pas si le joueur n\'a pas le skill', () => {
     const player = makePlayer({ skills: [] });
-    expect(hasBreakTackle(player)).toBe(false);
+    const state = makeState([player]);
+
+    // Dodge raté : 2 sur D6, target 3+ (AG 3 donne 4+, mais modifiers +1 => target 3+)
+    const result = checkBreakTackle(state, player, 2, 3, false);
+
+    expect(result.triggered).toBe(false);
+    expect(result.newState).toBe(state);
+  });
+
+  it('ne declenche pas si le dodge est deja reussi', () => {
+    const player = makePlayer({ skills: ['break-tackle'], st: 4 });
+    const state = makeState([player]);
+
+    const result = checkBreakTackle(state, player, 4, 3, true);
+
+    expect(result.triggered).toBe(false);
+  });
+
+  it('ne declenche pas si le bonus ne suffit pas a transformer l\'echec en reussite', () => {
+    const player = makePlayer({ skills: ['break-tackle'], st: 4 });
+    const state = makeState([player]);
+
+    // Dodge 1 raté, target 4+ : +1 donnerait 2 qui reste < 4, donc inutile
+    const result = checkBreakTackle(state, player, 1, 4, false);
+
+    expect(result.triggered).toBe(false);
+  });
+
+  it('ne declenche pas si le joueur a deja utilise Break Tackle pendant son activation', () => {
+    const player = makePlayer({
+      skills: ['break-tackle'],
+      st: 4,
+      breakTackleUsed: true,
+    });
+    const state = makeState([player]);
+
+    // Sans le flag, le +1 transformerait un 2 en 3 (succès sur 3+)
+    const result = checkBreakTackle(state, player, 2, 3, false);
+
+    expect(result.triggered).toBe(false);
   });
 });
 
-describe('Règle: Break Tackle - bonus au jet d\'esquive', () => {
-  it('retourne ST - AG quand ST > AG (Dwarf Deathroller : ST 7, AG 5)', () => {
-    const deathroller = makePlayer({ skills: ['break-tackle'], st: 7, ag: 5 });
-    expect(getBreakTackleDodgeBonus(deathroller)).toBe(2);
+describe('Regle: Break Tackle — modificateur selon la Force', () => {
+  it('applique +1 quand ST = 3', () => {
+    const player = makePlayer({ skills: ['break-tackle'], st: 3 });
+    const state = makeState([player]);
+
+    // Dodge 2, target 3+ : +1 donne 3 => succès
+    const result = checkBreakTackle(state, player, 2, 3, false);
+
+    expect(result.triggered).toBe(true);
+    expect(result.modifier).toBe(1);
+    expect(result.newSuccess).toBe(true);
   });
 
-  it('retourne +1 quand ST = AG + 1 (Orc Blitzer : ST 4, AG 3)', () => {
-    const blitzer = makePlayer({ skills: ['break-tackle'], st: 4, ag: 3 });
-    expect(getBreakTackleDodgeBonus(blitzer)).toBe(1);
+  it('applique +1 quand ST = 4', () => {
+    const player = makePlayer({ skills: ['break-tackle'], st: 4 });
+    const state = makeState([player]);
+
+    const result = checkBreakTackle(state, player, 3, 4, false);
+
+    expect(result.triggered).toBe(true);
+    expect(result.modifier).toBe(1);
+    expect(result.newSuccess).toBe(true);
   });
 
-  it('retourne 0 quand ST = AG', () => {
-    const player = makePlayer({ skills: ['break-tackle'], st: 3, ag: 3 });
-    expect(getBreakTackleDodgeBonus(player)).toBe(0);
+  it('applique +2 quand ST = 5', () => {
+    const player = makePlayer({ skills: ['break-tackle'], st: 5 });
+    const state = makeState([player]);
+
+    // Dodge 2, target 4+ : +2 donne 4 => succès
+    const result = checkBreakTackle(state, player, 2, 4, false);
+
+    expect(result.triggered).toBe(true);
+    expect(result.modifier).toBe(2);
+    expect(result.newSuccess).toBe(true);
   });
 
-  it('retourne 0 quand ST < AG (ne pénalise jamais)', () => {
-    const player = makePlayer({ skills: ['break-tackle'], st: 2, ag: 3 });
-    expect(getBreakTackleDodgeBonus(player)).toBe(0);
-  });
+  it('applique +2 quand ST = 7 (Deathroller)', () => {
+    const player = makePlayer({ skills: ['break-tackle'], st: 7 });
+    const state = makeState([player]);
 
-  it('retourne 0 quand le joueur n\'a pas le skill', () => {
-    const player = makePlayer({ skills: [], st: 7, ag: 5 });
-    expect(getBreakTackleDodgeBonus(player)).toBe(0);
+    const result = checkBreakTackle(state, player, 3, 5, false);
+
+    expect(result.triggered).toBe(true);
+    expect(result.modifier).toBe(2);
+    expect(result.newSuccess).toBe(true);
   });
 });
 
-describe('Règle: Break Tackle - tracking once-per-turn', () => {
-  it('canApplyBreakTackle retourne true quand skill present, ST > AG, pas encore utilise', () => {
-    const player = makePlayer({ skills: ['break-tackle'], st: 7, ag: 5 });
+describe('Regle: Break Tackle — effets sur l\'etat du jeu', () => {
+  it('marque le joueur comme ayant utilise Break Tackle (breakTackleUsed=true)', () => {
+    const player = makePlayer({ skills: ['break-tackle'], st: 5 });
     const state = makeState([player]);
-    expect(canApplyBreakTackle(state, player)).toBe(true);
+
+    const result = checkBreakTackle(state, player, 2, 4, false);
+
+    expect(result.triggered).toBe(true);
+    const updatedPlayer = result.newState.players.find((p) => p.id === player.id);
+    expect(updatedPlayer?.breakTackleUsed).toBe(true);
   });
 
-  it('canApplyBreakTackle retourne false quand ST <= AG', () => {
-    const player = makePlayer({ skills: ['break-tackle'], st: 3, ag: 3 });
+  it('ajoute une entree au gameLog quand il se declenche', () => {
+    const player = makePlayer({ skills: ['break-tackle'], st: 5 });
     const state = makeState([player]);
-    expect(canApplyBreakTackle(state, player)).toBe(false);
+
+    const logsBefore = state.gameLog.length;
+    const result = checkBreakTackle(state, player, 2, 4, false);
+
+    expect(result.newState.gameLog.length).toBeGreaterThan(logsBefore);
+    const lastLog = result.newState.gameLog[result.newState.gameLog.length - 1];
+    expect(lastLog.type).toBe('dice');
+    expect(lastLog.message).toMatch(/Break Tackle|Esquive en Force/i);
   });
 
-  it('canApplyBreakTackle retourne false sans le skill', () => {
-    const player = makePlayer({ skills: [], st: 7, ag: 5 });
+  it('ne modifie pas le gameLog quand le skill ne s\'active pas', () => {
+    const player = makePlayer({ skills: [] });
     const state = makeState([player]);
-    expect(canApplyBreakTackle(state, player)).toBe(false);
+
+    const result = checkBreakTackle(state, player, 2, 4, false);
+
+    expect(result.newState.gameLog.length).toBe(state.gameLog.length);
   });
 
-  it('canApplyBreakTackle retourne false apres une utilisation ce tour', () => {
-    const player = makePlayer({ skills: ['break-tackle'], st: 7, ag: 5 });
-    const state = makeState([player]);
-    const usedState = markBreakTackleUsed(state, player.id);
-    expect(canApplyBreakTackle(usedState, player)).toBe(false);
+  it('n\'affecte pas les autres joueurs de l\'etat', () => {
+    const player1 = makePlayer({ id: 'p1', skills: ['break-tackle'], st: 5 });
+    const player2 = makePlayer({ id: 'p2', team: 'B', pos: { x: 10, y: 10 } });
+    const state = makeState([player1, player2]);
+
+    const result = checkBreakTackle(state, player1, 2, 4, false);
+
+    const updated2 = result.newState.players.find((p) => p.id === 'p2');
+    expect(updated2).toEqual(player2);
+    expect(updated2?.breakTackleUsed).toBeUndefined();
   });
 
-  it('hasUsedBreakTackleThisTurn retourne false par defaut', () => {
-    const player = makePlayer({ skills: ['break-tackle'], st: 7, ag: 5 });
+  it('slug alternatif break_tackle est reconnu', () => {
+    const player = makePlayer({ skills: ['break_tackle'], st: 5 });
     const state = makeState([player]);
-    expect(hasUsedBreakTackleThisTurn(state, player.id)).toBe(false);
-  });
 
-  it('hasUsedBreakTackleThisTurn retourne true apres markBreakTackleUsed', () => {
-    const player = makePlayer({ skills: ['break-tackle'], st: 7, ag: 5 });
-    const state = makeState([player]);
-    const usedState = markBreakTackleUsed(state, player.id);
-    expect(hasUsedBreakTackleThisTurn(usedState, player.id)).toBe(true);
-  });
+    const result = checkBreakTackle(state, player, 2, 4, false);
 
-  it('markBreakTackleUsed ne mute pas l\'etat source (immuabilite)', () => {
-    const player = makePlayer({ skills: ['break-tackle'], st: 7, ag: 5 });
-    const state = makeState([player]);
-    markBreakTackleUsed(state, player.id);
-    expect(state.usedBreakTackleThisTurn).toBeUndefined();
-  });
-
-  it('markBreakTackleUsed est idempotent pour un meme joueur', () => {
-    const player = makePlayer({ skills: ['break-tackle'], st: 7, ag: 5 });
-    const state = makeState([player]);
-    const once = markBreakTackleUsed(state, player.id);
-    const twice = markBreakTackleUsed(once, player.id);
-    expect(twice.usedBreakTackleThisTurn).toEqual([player.id]);
-  });
-
-  it('markBreakTackleUsed accumule plusieurs joueurs differents', () => {
-    const p1 = makePlayer({ id: 'p1', skills: ['break-tackle'], st: 7, ag: 5 });
-    const p2 = makePlayer({ id: 'p2', skills: ['break-tackle'], st: 5, ag: 4 });
-    const state = makeState([p1, p2]);
-    const afterP1 = markBreakTackleUsed(state, p1.id);
-    const afterP2 = markBreakTackleUsed(afterP1, p2.id);
-    expect(afterP2.usedBreakTackleThisTurn).toEqual([p1.id, p2.id]);
+    expect(result.triggered).toBe(true);
+    expect(result.modifier).toBe(2);
   });
 });
 
-describe('Règle: Break Tackle - integration dans getDodgeSkillModifiers', () => {
-  it('applique le bonus Break Tackle quand ST > AG et non utilise', () => {
-    const player = makePlayer({ skills: ['break-tackle'], st: 4, ag: 3 });
+describe('Regle: Break Tackle — cas limites', () => {
+  it('ne declenche pas si le bonus rend le dodge succes sur un 1 naturel (ne peut pas modifier un 1 BB3 si c\'est la regle)', () => {
+    // BB3: un 1 naturel reste un echec meme apres modificateurs. Validation stricte.
+    const player = makePlayer({ skills: ['break-tackle'], st: 5 });
     const state = makeState([player]);
-    const mod = getDodgeSkillModifiers(state, player, player.pos);
-    expect(mod).toBe(1);
+
+    // Dodge 1 (naturel 1 = echec automatique), target 2+ : +2 donnerait 3 mais 1 naturel = echec
+    const result = checkBreakTackle(state, player, 1, 2, false);
+
+    expect(result.triggered).toBe(false);
   });
 
-  it('retourne 0 apres utilisation (once per turn)', () => {
-    const player = makePlayer({ skills: ['break-tackle'], st: 4, ag: 3 });
+  it('applique le +1 meme avec ST = 1 (Stunty)', () => {
+    const player = makePlayer({ skills: ['break-tackle'], st: 1 });
     const state = makeState([player]);
-    const usedState = markBreakTackleUsed(state, player.id);
-    const mod = getDodgeSkillModifiers(usedState, player, player.pos);
-    expect(mod).toBe(0);
+
+    const result = checkBreakTackle(state, player, 2, 3, false);
+
+    expect(result.triggered).toBe(true);
+    expect(result.modifier).toBe(1);
   });
 
-  it('applique le bonus sur une Deathroller (ST 7, AG 5 => +2)', () => {
-    const deathroller = makePlayer({ skills: ['break-tackle'], st: 7, ag: 5 });
-    const state = makeState([deathroller]);
-    const mod = getDodgeSkillModifiers(state, deathroller, deathroller.pos);
-    expect(mod).toBe(2);
+  it('applique exactement le bonus necessaire sans sur-modifier', () => {
+    // Le jet est juste ameliore du +1/+2, pas plus
+    const player = makePlayer({ skills: ['break-tackle'], st: 5 });
+    const state = makeState([player]);
+
+    const result = checkBreakTackle(state, player, 3, 4, false);
+
+    expect(result.triggered).toBe(true);
+    expect(result.modifier).toBe(2); // ST 5 => +2
+    expect(result.newSuccess).toBe(true);
   });
 });
