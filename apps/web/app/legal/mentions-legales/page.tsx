@@ -83,7 +83,40 @@ export default function MentionsLegalesPage() {
 
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">
-            3. Propriété intellectuelle
+            3. Financement et dons
+          </h2>
+          <p className="mb-4">
+            Nuffle Arena est un projet gratuit financé par des dons
+            volontaires. Les dons sont collectés via la plateforme tierce{" "}
+            <a
+              href="https://ko-fi.com/nufflearena"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-emerald-600 hover:text-emerald-700 hover:underline"
+            >
+              Ko-fi
+            </a>{" "}
+            (Ko-fi Labs Limited, Royaume-Uni).
+          </p>
+          <p className="mb-4">
+            Les dons sont des libéralités et ne donnent droit à aucune
+            contrepartie ni avantage en jeu. Ils ne sont pas déductibles
+            fiscalement. Aucune donnée de paiement n&apos;est collectée ou
+            stockée par Nuffle Arena. Pour plus de détails, consultez
+            l&apos;article 3 de nos{" "}
+            <Link
+              href="/legal/conditions-utilisation"
+              className="text-emerald-600 hover:text-emerald-700 hover:underline"
+            >
+              conditions d&apos;utilisation
+            </Link>
+            .
+          </p>
+        </section>
+
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4">
+            4. Propriété intellectuelle
           </h2>
           <p className="mb-4">
             <strong>Blood Bowl</strong> est une marque déposée de Games Workshop
@@ -107,7 +140,7 @@ export default function MentionsLegalesPage() {
 
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">
-            4. Propriété du site
+            5. Propriété du site
           </h2>
           <p className="mb-4">
             L&apos;ensemble de ce site relève de la législation française et
@@ -126,7 +159,7 @@ export default function MentionsLegalesPage() {
 
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">
-            5. Protection des données personnelles
+            6. Protection des données personnelles
           </h2>
           <p className="mb-4">
             Conformément au Règlement Général sur la Protection des Données (RGPD
@@ -150,7 +183,7 @@ export default function MentionsLegalesPage() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">6. Cookies</h2>
+          <h2 className="text-2xl font-semibold mb-4">7. Cookies</h2>
           <p className="mb-4">
             Le site Nuffle Arena utilise des cookies strictement nécessaires au
             fonctionnement du service et des technologies de stockage local. Aucun
@@ -171,7 +204,7 @@ export default function MentionsLegalesPage() {
 
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">
-            7. Limitation de responsabilité
+            8. Limitation de responsabilité
           </h2>
           <p className="mb-4">
             L&apos;éditeur s&apos;efforce d&apos;assurer au mieux de ses
@@ -189,7 +222,7 @@ export default function MentionsLegalesPage() {
 
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">
-            8. Loi applicable
+            9. Loi applicable
           </h2>
           <p className="mb-4">
             Les présentes mentions légales sont régies par la loi française. En
@@ -200,7 +233,7 @@ export default function MentionsLegalesPage() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">9. Contact</h2>
+          <h2 className="text-2xl font-semibold mb-4">10. Contact</h2>
           <p className="mb-4">
             Pour toute question concernant les présentes mentions légales, vous
             pouvez nous contacter à l&apos;adresse suivante :
@@ -214,7 +247,7 @@ export default function MentionsLegalesPage() {
 
         <section className="mb-8">
           <p className="text-sm text-gray-500 italic">
-            Dernière mise à jour : 9 avril 2026
+            Dernière mise à jour : 16 avril 2026
           </p>
         </section>
       </div>
