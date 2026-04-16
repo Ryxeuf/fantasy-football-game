@@ -201,6 +201,18 @@ export {
   hasUsedBreakTackleThisTurn,
   markBreakTackleUsed,
 } from './mechanics/break-tackle';
+export {
+  hasShadowing,
+  hasUsedShadowingThisTurn,
+  markShadowingUsed,
+  getShadowingCandidates,
+  findShadowerForSquare,
+  rollShadowingCheck,
+  computeShadowingSuccess,
+  applyShadowingOnDodge,
+  SHADOWING_TARGET,
+} from './mechanics/shadowing';
+export type { ShadowingRollResult, ApplyShadowingResult, ApplyShadowingOptions } from './mechanics/shadowing';
 
 // Export des effets météo
 export {

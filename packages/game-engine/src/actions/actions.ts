@@ -73,6 +73,7 @@ import { canChainsaw, executeChainsaw } from '../mechanics/chainsaw';
 import { canDumpOff, getDumpOffReceivers, executeDumpOff } from '../mechanics/dump-off';
 import { checkDauntless } from '../mechanics/dauntless';
 import { canApplyBreakTackle, markBreakTackleUsed } from '../mechanics/break-tackle';
+import { applyShadowingOnDodge } from '../mechanics/shadowing';
 import {
   resolveKickoffPerfectDefence,
   resolveKickoffHighKick,
@@ -639,6 +640,7 @@ function handleEndTurn(state: GameState, rng: RNG): GameState {
       rerollUsedThisTurn: false,
       hypnotizedPlayers: [],
       usedBreakTackleThisTurn: [],
+      usedShadowingThisTurn: [],
       usedOnTheBallThisTurn: [],
     };
   }
@@ -658,6 +660,7 @@ function handleEndTurn(state: GameState, rng: RNG): GameState {
     rerollUsedThisTurn: false, // Réinitialiser le flag de relance
     hypnotizedPlayers: [], // Réinitialiser les joueurs hypnotisés
     usedBreakTackleThisTurn: [], // Réinitialiser Break Tackle (une fois par tour)
+    usedShadowingThisTurn: [], // Réinitialiser Shadowing (une fois par tour par shadower)
     usedOnTheBallThisTurn: [], // Réinitialiser On the Ball (une fois par tour d'equipe)
   };
 
@@ -872,6 +875,11 @@ function handleDodgeRoll(
   }
 
   if (finalDodgeSuccess) {
+    // Shadowing : un adversaire adjacent avec le skill peut tenter de suivre
+    // sur la case venant d'etre liberee (2D6 + MA shadower - MA mover >= 7).
+    const shadowResult = applyShadowingOnDodge(next, next.players[idx], from, to, rng);
+    next = shadowResult.state as GameState;
+
     // Si c'est aussi un GFI, jet supplémentaire de GFI (2+ sur D6)
     if (isDodgeGFI) {
       let gfiRoll = Math.floor(rng() * 6) + 1;
@@ -1205,6 +1213,11 @@ function handleDodge(
   next.players[idx].pm = Math.max(0, next.players[idx].pm - 1);
 
   if (dodgeResult.success) {
+    // Shadowing : un adversaire adjacent avec le skill peut tenter de suivre
+    // sur la case venant d'etre liberee (2D6 + MA shadower - MA mover >= 7).
+    const shadowResult = applyShadowingOnDodge(next, next.players[idx], from, to, rng);
+    next = shadowResult.state as GameState;
+
     // Avancement d'état standard après mouvement réussi
     if (!hasPlayerActed(next, player.id)) {
       next = setPlayerAction(next, player.id, 'MOVE');

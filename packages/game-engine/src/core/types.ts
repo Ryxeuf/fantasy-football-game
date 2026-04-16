@@ -256,6 +256,8 @@ export interface GameState {
   hypnotizedPlayers?: string[];
   // IDs des joueurs qui ont déjà utilisé Break Tackle ce tour (une fois par tour par joueur).
   usedBreakTackleThisTurn?: string[];
+  // IDs des joueurs qui ont déjà tenté Shadowing ce tour (une fois par tour par joueur).
+  usedShadowingThisTurn?: string[];
   // Equipes ayant utilise On the Ball pendant le tour adverse en cours
   // (reset au changement de tour). Une seule activation par tour d'equipe.
   usedOnTheBallThisTurn?: TeamId[];
