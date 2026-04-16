@@ -320,3 +320,121 @@ describe('Règle: Shadowing - type ShadowingResult', () => {
     expect(Object.keys(result).sort()).toEqual(['dice', 'success', 'target', 'total']);
   });
 });
+
+describe('Règle: Shadowing - une seule tentative par poursuivant par tour (BB3)', () => {
+  it('findShadowingCandidates exclut les joueurs ayant déjà tenté ce tour', () => {
+    const dodger = makePlayer({ id: 'd1', team: 'A', pos: { x: 5, y: 5 } });
+    const shadower = makePlayer({
+      id: 's1',
+      team: 'B',
+      pos: { x: 6, y: 5 },
+      skills: ['shadowing'],
+    });
+    const state = makeState([dodger, shadower]);
+    state.usedShadowingThisTurn = ['s1'];
+    const candidates = findShadowingCandidates(state, dodger, { x: 5, y: 5 });
+    expect(candidates).toEqual([]);
+  });
+
+  it('findShadowingCandidates inclut les joueurs qui n\'ont pas encore tenté', () => {
+    const dodger = makePlayer({ id: 'd1', team: 'A', pos: { x: 5, y: 5 } });
+    const s1 = makePlayer({
+      id: 's1',
+      team: 'B',
+      pos: { x: 6, y: 5 },
+      skills: ['shadowing'],
+    });
+    const s2 = makePlayer({
+      id: 's2',
+      team: 'B',
+      pos: { x: 4, y: 5 },
+      skills: ['shadowing'],
+    });
+    const state = makeState([dodger, s1, s2]);
+    state.usedShadowingThisTurn = ['s1'];
+    const candidates = findShadowingCandidates(state, dodger, { x: 5, y: 5 });
+    expect(candidates.map((p) => p.id)).toEqual(['s2']);
+  });
+
+  it('resolveShadowingAfterDodge enregistre le shadower dans usedShadowingThisTurn (succès)', () => {
+    const dodger = makePlayer({ id: 'd1', team: 'A', pos: { x: 7, y: 5 }, ma: 6 });
+    const shadower = makePlayer({
+      id: 's1',
+      team: 'B',
+      pos: { x: 6, y: 5 },
+      ma: 6,
+      skills: ['shadowing'],
+    });
+    const state = makeState([dodger, shadower]);
+    // 2D6 = 4 + 3 = 7 → success
+    const rng = makeSeededRng([4, 3]);
+    const next = resolveShadowingAfterDodge(state, dodger, { x: 5, y: 5 }, rng);
+    expect(next.usedShadowingThisTurn).toContain('s1');
+  });
+
+  it('resolveShadowingAfterDodge enregistre le shadower dans usedShadowingThisTurn (échec)', () => {
+    const dodger = makePlayer({ id: 'd1', team: 'A', pos: { x: 7, y: 5 }, ma: 9 });
+    const shadower = makePlayer({
+      id: 's1',
+      team: 'B',
+      pos: { x: 6, y: 5 },
+      ma: 4,
+      skills: ['shadowing'],
+    });
+    const state = makeState([dodger, shadower]);
+    // 2D6 = 1 + 2 = 3, MA diff = -5 → total = -2 → fail
+    const rng = makeSeededRng([1, 2]);
+    const next = resolveShadowingAfterDodge(state, dodger, { x: 5, y: 5 }, rng);
+    expect(next.usedShadowingThisTurn).toContain('s1');
+  });
+
+  it('un shadower ayant déjà tenté ne peut plus suivre un second dodger', () => {
+    const dodger1 = makePlayer({ id: 'd1', team: 'A', pos: { x: 7, y: 5 }, ma: 6 });
+    const dodger2 = makePlayer({ id: 'd2', team: 'A', pos: { x: 7, y: 6 }, ma: 6 });
+    const shadower = makePlayer({
+      id: 's1',
+      team: 'B',
+      pos: { x: 6, y: 5 },
+      ma: 6,
+      skills: ['shadowing'],
+    });
+    const state = makeState([dodger1, dodger2, shadower]);
+    // First dodge: s1 rolls 4+3 = 7 → success, moves to (5,5)
+    const rng = makeSeededRng([4, 3]);
+    const after1st = resolveShadowingAfterDodge(state, dodger1, { x: 5, y: 5 }, rng);
+    expect(after1st.usedShadowingThisTurn).toContain('s1');
+
+    // Second dodge by dodger2: s1 should NOT be a candidate even if adjacent
+    // Move shadower to be adjacent to dodger2's vacated square for the test
+    const stateForSecond: GameState = {
+      ...after1st,
+      players: after1st.players.map((p) =>
+        p.id === 's1' ? { ...p, pos: { x: 6, y: 6 } } : p,
+      ),
+    };
+    const rng2 = makeSeededRng([6, 6]); // Would succeed, but should not even roll
+    const after2nd = resolveShadowingAfterDodge(stateForSecond, dodger2, { x: 5, y: 6 }, rng2);
+    const updatedShadower = after2nd.players.find((p) => p.id === 's1')!;
+    // Shadower should NOT have moved — already used Shadowing this turn
+    expect(updatedShadower.pos).toEqual({ x: 6, y: 6 });
+  });
+
+  it('fonctionne normalement quand usedShadowingThisTurn est undefined (état legacy)', () => {
+    const dodger = makePlayer({ id: 'd1', team: 'A', pos: { x: 7, y: 5 }, ma: 6 });
+    const shadower = makePlayer({
+      id: 's1',
+      team: 'B',
+      pos: { x: 6, y: 5 },
+      ma: 6,
+      skills: ['shadowing'],
+    });
+    const state = makeState([dodger, shadower]);
+    // Ensure field is not set (legacy state)
+    delete (state as Record<string, unknown>).usedShadowingThisTurn;
+    const rng = makeSeededRng([4, 3]);
+    const next = resolveShadowingAfterDodge(state, dodger, { x: 5, y: 5 }, rng);
+    const updatedShadower = next.players.find((p) => p.id === 's1')!;
+    expect(updatedShadower.pos).toEqual({ x: 5, y: 5 });
+    expect(next.usedShadowingThisTurn).toContain('s1');
+  });
+});

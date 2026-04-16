@@ -702,6 +702,7 @@ function handleEndTurn(state: GameState, rng: RNG): GameState {
       hypnotizedPlayers: [],
       usedRunningPassThisTurn: [],
       usedOnTheBallThisTurn: [],
+      usedShadowingThisTurn: [],
     };
   }
 
@@ -721,6 +722,7 @@ function handleEndTurn(state: GameState, rng: RNG): GameState {
     hypnotizedPlayers: [], // Réinitialiser les joueurs hypnotisés
     usedRunningPassThisTurn: [], // Réinitialiser Running Pass (une fois par tour)
     usedOnTheBallThisTurn: [], // Réinitialiser On the Ball (une fois par tour d'equipe)
+    usedShadowingThisTurn: [], // Réinitialiser Shadowing (une fois par poursuivant par tour d'equipe)
   };
 
   // Log du changement de tour

@@ -262,6 +262,9 @@ export interface GameState {
   // Equipes ayant utilise On the Ball pendant le tour adverse en cours
   // (reset au changement de tour). Une seule activation par tour d'equipe.
   usedOnTheBallThisTurn?: TeamId[];
+  // IDs des joueurs ayant deja tente Shadowing ce tour d'equipe adverse
+  // (une seule tentative par poursuivant par tour, BB3). Reset au changement de tour.
+  usedShadowingThisTurn?: string[];
   // Second bloc Frenzy en attente : après un PUSH_BACK, l'attaquant avec
   // Frenzy doit effectuer un second bloc une fois le follow-up résolu.
   pendingFrenzyBlock?: {

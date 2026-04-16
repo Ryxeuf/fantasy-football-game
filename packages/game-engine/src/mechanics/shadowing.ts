@@ -54,7 +54,8 @@ export function hasShadowing(player: Player): boolean {
  * Finds all active opposing players who:
  * - have the Shadowing skill,
  * - are adjacent to the square the dodger left,
- * - are in a state allowed to shadow (standing, not stunned/KO/casualty/sent-off).
+ * - are in a state allowed to shadow (standing, not stunned/KO/casualty/sent-off),
+ * - have not already attempted Shadowing this team turn (BB3: one attempt per pursuer per turn).
  */
 export function findShadowingCandidates(
   state: GameState,
@@ -62,11 +63,13 @@ export function findShadowingCandidates(
   vacatedSquare: Position,
 ): Player[] {
   const adjacentOpponents = getAdjacentOpponents(state, vacatedSquare, dodger.team);
+  const alreadyUsed = state.usedShadowingThisTurn ?? [];
   return adjacentOpponents.filter((opponent) => {
     if (!hasShadowing(opponent)) return false;
     if (opponent.stunned) return false;
     const playerState = opponent.state;
     if (playerState && playerState !== 'active') return false;
+    if (alreadyUsed.includes(opponent.id)) return false;
     return true;
   });
 }
@@ -181,6 +184,9 @@ export function isShadowingPossible(
  * roll moves the shadower into the vacated square and stops the loop (only
  * one body can occupy the square).
  *
+ * Each attempt (success or failure) marks the shadower as having used their
+ * one Shadowing attempt for this team turn (BB3 rule).
+ *
  * Returns the updated state; no mutation of the input.
  */
 export function resolveShadowingAfterDodge(
@@ -199,12 +205,23 @@ export function resolveShadowingAfterDodge(
     const freshDodger = working.players.find((p) => p.id === dodger.id) ?? dodger;
     const attempt = tryApplyShadowing(working, freshDodger, freshShadower, vacatedSquare, rng);
     working = attempt.state;
+    // Mark the shadower as having used their one attempt this turn (BB3).
+    working = markShadowingUsed(working, freshShadower.id);
     if (attempt.applied) {
       // Only one shadower can follow into the vacated square.
       break;
     }
   }
   return working;
+}
+
+/**
+ * Records that a player has used their Shadowing attempt for this team turn.
+ */
+function markShadowingUsed(state: GameState, playerId: string): GameState {
+  const current = state.usedShadowingThisTurn ?? [];
+  if (current.includes(playerId)) return state;
+  return { ...state, usedShadowingThisTurn: [...current, playerId] };
 }
 
 // Re-export isAdjacent for downstream helpers/tests that want it alongside.
