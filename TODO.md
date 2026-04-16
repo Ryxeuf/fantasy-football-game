@@ -238,7 +238,7 @@
 | P1.7 | Implementer `iron-hard-skin` (Gnomes : piston, beastmaster, treeman) | Regle | [x] |
 | P1.8 | Implementer `shadowing` (Lizardmen Chameleon Skink) | Regle | [x] |
 | P1.9 | Implementer `fend` (Imperial Retainer Lineman) — verifier | Regle | [x] |
-| P1.10 | Implementer `running-pass` (Imperial Thrower) | Regle | [ ] |
+| P1.10 | Implementer `running-pass` (Imperial Thrower) | Regle | [x] |
 | P1.11 | Audit : verifier que `prehensile-tail`, `frenzy`, `throw-team-mate`, `thick-skull`, `on-the-ball`, `loner` s'appliquent correctement aux joueurs des 5 equipes | Regle | [ ] |
 | TEST-2 | Tests unitaires + integration pour chacun des skills ci-dessus | Tests | [ ] |
 | TEST-3 | Test E2E : un match complet Nains vs Skaven sans divergence de regles | Tests | [ ] |
