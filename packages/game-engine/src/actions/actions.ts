@@ -80,6 +80,12 @@ import { checkDauntless } from '../mechanics/dauntless';
 import { canApplyBreakTackle, markBreakTackleUsed } from '../mechanics/break-tackle';
 import { isFendActiveForFollowUp } from '../mechanics/fend';
 import { resolveShadowingAfterDodge } from '../mechanics/shadowing';
+import { hasFrenzy } from '../mechanics/frenzy';
+import {
+  getOnTheBallReactivePlayers,
+  executeOnTheBallMove,
+  markOnTheBallUsed,
+} from '../mechanics/on-the-ball';
 import {
   resolveKickoffPerfectDefence,
   resolveKickoffHighKick,
@@ -387,6 +393,46 @@ function canUseTeamReroll(state: GameState, team: TeamId): boolean {
 }
 
 /**
+ * Résout le second bloc Frenzy si `pendingFrenzyBlock` est défini et qu'il
+ * n'y a plus de choix en attente (push / follow-up). Appel conditionnel
+ * depuis `applyMove` après chaque handler susceptible de terminer un push.
+ */
+function resolveFrenzyBlock(state: GameState, rng: RNG): GameState {
+  if (!state.pendingFrenzyBlock) return state;
+  // Ne pas résoudre tant qu'un choix de push ou follow-up est en attente
+  if (state.pendingPushChoice || state.pendingFollowUpChoice) return state;
+
+  const { attackerId, targetId } = state.pendingFrenzyBlock;
+  const attacker = state.players.find(p => p.id === attackerId);
+  const target = state.players.find(p => p.id === targetId);
+
+  // Consommer le pending
+  const next: GameState = { ...state, pendingFrenzyBlock: undefined };
+
+  // Conditions pour le second bloc : attaquant et cible debout et adjacents
+  if (!attacker || !target) return next;
+  if (attacker.stunned || target.stunned) return next;
+  if (!isAdjacent(attacker.pos, target.pos)) return next;
+
+  const frenzyLog = createLogEntry(
+    'action',
+    `${attacker.name} effectue un second blocage (Frenzy) contre ${target.name} !`,
+    attacker.id,
+    attacker.team,
+    { skill: 'frenzy' },
+  );
+  next.gameLog = [...next.gameLog, frenzyLog];
+
+  // Exécuter le second bloc via handleBlock — en passant par la mécanique
+  // standard (assists, dés, résolution).
+  return handleBlock(
+    next,
+    { type: 'BLOCK', playerId: attackerId, targetId },
+    rng,
+  );
+}
+
+/**
  * Retourne le seuil Loner du joueur (3, 4 ou 5) ou null s'il n'a pas Loner.
  */
 function getLonerThreshold(player: Player): number | null {
@@ -483,6 +529,11 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
     return state;
   }
 
+  // Si un pendingOnTheBall est en attente, seuls ON_THE_BALL_MOVE/DECLINE et END_TURN sont acceptés
+  if (state.pendingOnTheBall && move.type !== 'ON_THE_BALL_MOVE' && move.type !== 'ON_THE_BALL_DECLINE' && move.type !== 'END_TURN') {
+    return state;
+  }
+
   // Pendant le tour de blitz kickoff, les passes et remises sont interdites
   if (state.kickoffBlitzTurn && (move.type === 'PASS' || move.type === 'HANDOFF')) {
     return state;
@@ -490,7 +541,7 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
 
   // Si c'est un turnover, on ne peut que finir le tour
   // Exception : PUSH_CHOOSE, FOLLOW_UP_CHOOSE et REROLL_CHOOSE font partie de la résolution
-  if (state.isTurnover && move.type !== 'END_TURN' && move.type !== 'PUSH_CHOOSE' && move.type !== 'FOLLOW_UP_CHOOSE' && move.type !== 'REROLL_CHOOSE' && move.type !== 'APOTHECARY_CHOOSE') {
+  if (state.isTurnover && move.type !== 'END_TURN' && move.type !== 'PUSH_CHOOSE' && move.type !== 'FOLLOW_UP_CHOOSE' && move.type !== 'REROLL_CHOOSE' && move.type !== 'APOTHECARY_CHOOSE' && move.type !== 'ON_THE_BALL_MOVE' && move.type !== 'ON_THE_BALL_DECLINE') {
     return state;
   }
 
@@ -545,13 +596,13 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
     case 'DODGE':
       return handleDodge(activeState, move, rng);
     case 'BLOCK':
-      return handleBlock(activeState, move, rng);
+      return resolveFrenzyBlock(handleBlock(activeState, move, rng), rng);
     case 'BLOCK_CHOOSE':
-      return handleBlockChoose(activeState, move, rng);
+      return resolveFrenzyBlock(handleBlockChoose(activeState, move, rng), rng);
     case 'PUSH_CHOOSE':
-      return handlePushChoose(activeState, move);
+      return resolveFrenzyBlock(handlePushChoose(activeState, move), rng);
     case 'FOLLOW_UP_CHOOSE':
-      return handleFollowUpChoose(activeState, move);
+      return resolveFrenzyBlock(handleFollowUpChoose(activeState, move), rng);
     case 'BLITZ':
       return handleBlitz(activeState, move, rng);
     case 'REROLL_CHOOSE':
@@ -584,6 +635,10 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       return resolveKickoffQuickSnap(activeState, move.moves);
     case 'KICKOFF_BLITZ_RESOLVE':
       return resolveKickoffBlitz(activeState);
+    case 'ON_THE_BALL_MOVE':
+      return handleOnTheBallMove(activeState, move, rng);
+    case 'ON_THE_BALL_DECLINE':
+      return handleOnTheBallDecline(activeState, rng);
     default:
       return checkTouchdowns(activeState);
   }
@@ -1598,6 +1653,8 @@ function handlePushChoose(
   const rng = () => Math.random(); // RNG pour les surfs en chaîne
   newState = applyChainPush(newState, target.id, move.direction, rng);
 
+  const frenzyActive = hasFrenzy(attacker) && !!newState.pendingFrenzyBlock;
+
   if (fendActive) {
     const fendLog = createLogEntry(
       'action',
@@ -1607,6 +1664,21 @@ function handlePushChoose(
       { skill: 'fend' },
     );
     newState.gameLog = [...newState.gameLog, fendLog];
+    // Fend annule le suivi → pas de second bloc frenzy
+    newState.pendingFrenzyBlock = undefined;
+  } else if (frenzyActive) {
+    // Frenzy : follow-up obligatoire
+    newState.players = newState.players.map(p =>
+      p.id === attacker.id ? { ...p, pos: target.pos } : p
+    );
+    const frenzyFollowLog = createLogEntry(
+      'action',
+      `${attacker.name} suit ${target.name} (Frenzy — obligatoire)`,
+      attacker.id,
+      attacker.team,
+      { skill: 'frenzy' },
+    );
+    newState.gameLog = [...newState.gameLog, frenzyFollowLog];
   } else {
     // Demander confirmation pour le follow-up
     newState.pendingFollowUpChoice = {
@@ -2067,6 +2139,27 @@ function handlePass(state: GameState, move: { type: 'PASS'; playerId: string; ta
     return state;
   }
 
+  // ─── On the Ball : réaction adverse avant la passe ──────────────────
+  const reactivePlayers = getOnTheBallReactivePlayers(state, passer.team);
+  if (reactivePlayers.length > 0) {
+    const otbLog = createLogEntry(
+      'info',
+      `Un joueur adverse peut activer Sur le Ballon avant la passe !`,
+      undefined,
+      reactivePlayers[0].team,
+      { skill: 'on-the-ball' },
+    );
+    return {
+      ...state,
+      gameLog: [...state.gameLog, otbLog],
+      pendingOnTheBall: {
+        passerTeam: passer.team,
+        pendingPassMove: { type: 'PASS', playerId: move.playerId, targetId: move.targetId },
+        reactivePlayers: reactivePlayers.map(p => p.id),
+      },
+    };
+  }
+
   // Animosity check: roll D6 before pass if passer dislikes target
   let currentState = state;
   if (hasAnimosityAgainst(passer, target)) {
@@ -2102,6 +2195,55 @@ function handlePass(state: GameState, move: { type: 'PASS'; playerId: string; ta
 
   newState = checkPlayerTurnEnd(newState, passer.id);
   return newState;
+}
+
+/**
+ * Gère le mouvement réactif On the Ball — le coach défenseur déplace un
+ * joueur possédant le skill avant la passe.
+ */
+function handleOnTheBallMove(
+  state: GameState,
+  move: { type: 'ON_THE_BALL_MOVE'; playerId: string; to: Position },
+  rng: RNG,
+): GameState {
+  if (!state.pendingOnTheBall) return state;
+  // Vérifier que le joueur choisi fait partie des réactifs éligibles
+  if (!state.pendingOnTheBall.reactivePlayers.includes(move.playerId)) return state;
+
+  const passMove = state.pendingOnTheBall.pendingPassMove;
+  let next: GameState = { ...state, pendingOnTheBall: undefined };
+
+  // Exécuter le mouvement On the Ball
+  next = executeOnTheBallMove(next, move.playerId, move.to, rng);
+
+  // Reprendre la passe initiale
+  return handlePass(next, passMove, rng);
+}
+
+/**
+ * Le coach défenseur décline On the Ball — la passe reprend normalement.
+ */
+function handleOnTheBallDecline(state: GameState, rng: RNG): GameState {
+  if (!state.pendingOnTheBall) return state;
+
+  const passMove = state.pendingOnTheBall.pendingPassMove;
+  const opposingTeam: TeamId = state.pendingOnTheBall.passerTeam === 'A' ? 'B' : 'A';
+  let next: GameState = { ...state, pendingOnTheBall: undefined };
+
+  // Marquer l'utilisation pour que handlePass ne re-déclenche pas
+  next = markOnTheBallUsed(next, opposingTeam);
+
+  const declineLog = createLogEntry(
+    'info',
+    `Sur le Ballon décliné par le coach défenseur`,
+    undefined,
+    opposingTeam,
+    { skill: 'on-the-ball' },
+  );
+  next.gameLog = [...next.gameLog, declineLog];
+
+  // Reprendre la passe initiale
+  return handlePass(next, passMove, rng);
 }
 
 /**

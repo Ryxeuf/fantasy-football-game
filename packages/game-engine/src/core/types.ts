@@ -263,6 +263,18 @@ export interface GameState {
   // Equipes ayant utilise On the Ball pendant le tour adverse en cours
   // (reset au changement de tour). Une seule activation par tour d'equipe.
   usedOnTheBallThisTurn?: TeamId[];
+  // Second bloc Frenzy en attente : après un PUSH_BACK, l'attaquant avec
+  // Frenzy doit effectuer un second bloc une fois le follow-up résolu.
+  pendingFrenzyBlock?: {
+    attackerId: string;
+    targetId: string;
+  };
+  // On the Ball en attente : un joueur adverse peut réagir avant la passe.
+  pendingOnTheBall?: {
+    passerTeam: TeamId;
+    pendingPassMove: { type: 'PASS'; playerId: string; targetId: string };
+    reactivePlayers: string[];
+  };
   // Condition météo active pour ce match (persistée depuis le pré-match)
   weatherCondition?: { condition: string; description: string };
   // État pré-match (setup, kickoff, inducements, etc.)
@@ -355,7 +367,9 @@ export type Move =
   | { type: 'KICKOFF_PERFECT_DEFENCE'; positions: Array<{ playerId: string; position: Position }> }
   | { type: 'KICKOFF_HIGH_KICK'; playerId: string | null }
   | { type: 'KICKOFF_QUICK_SNAP'; moves: Array<{ playerId: string; to: Position }> }
-  | { type: 'KICKOFF_BLITZ_RESOLVE' };
+  | { type: 'KICKOFF_BLITZ_RESOLVE' }
+  | { type: 'ON_THE_BALL_MOVE'; playerId: string; to: Position }
+  | { type: 'ON_THE_BALL_DECLINE' };
 
 export type BlockResult = 'PLAYER_DOWN' | 'BOTH_DOWN' | 'PUSH_BACK' | 'STUMBLE' | 'POW';
 
