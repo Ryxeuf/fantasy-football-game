@@ -240,7 +240,11 @@
 | P1.9 | Implementer `fend` (Imperial Retainer Lineman) — verifier | Regle | [x] |
 | P1.10 | Implementer `running-pass` (Imperial Thrower) | Regle | [x] |
 | P1.11 | Audit : verifier que `prehensile-tail`, `frenzy`, `throw-team-mate`, `thick-skull`, `on-the-ball`, `loner` s'appliquent correctement aux joueurs des 5 equipes | Regle | [x] |
-| TEST-2 | Tests unitaires + integration pour chacun des skills ci-dessus | Tests | [ ] |
+| TEST-2a | Tests integration : `stunty` + `armored-skull` (batch 1) | Tests | [x] |
+| TEST-2b | Tests integration : `dauntless` + `juggernaut` (batch 2) | Tests | [ ] |
+| TEST-2c | Tests integration : `stand-firm` + `fend` (batch 3) | Tests | [ ] |
+| TEST-2d | Tests integration : `break-tackle` + `iron-hard-skin` (batch 4) | Tests | [ ] |
+| TEST-2e | Tests integration : `shadowing` + `running-pass` (batch 5) | Tests | [ ] |
 | TEST-3 | Test E2E : un match complet Nains vs Skaven sans divergence de regles | Tests | [ ] |
 
 ### Sprint 14 — Skills de progression & Star Players des 5 equipes (~6 jours)
