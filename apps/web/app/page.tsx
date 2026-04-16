@@ -173,6 +173,38 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Support CTA */}
+      <section className="w-full px-4 sm:px-6 pb-8 md:pb-12">
+        <div className="rounded-2xl bg-white border-2 border-nuffle-bronze/30 p-6 sm:p-8 md:p-10 shadow-lg hover:border-nuffle-gold/50 transition-all">
+          <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
+            <div className="flex-shrink-0">
+              <svg className="w-12 h-12 sm:w-16 sm:h-16 text-red-500" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+              </svg>
+            </div>
+            <div className="flex-1 text-center md:text-left">
+              <h3 className="text-xl sm:text-2xl font-heading font-bold text-nuffle-anthracite">
+                {t.support?.homeCta || "Vous aimez Nuffle Arena ?"}
+              </h3>
+              <p className="text-nuffle-anthracite/80 mt-2 font-body text-sm sm:text-base">
+                {t.support?.homeCtaDescription || "Ce projet est 100 % gratuit et maintenu par des passionnés. Un petit coup de pouce nous aide à garder les serveurs en ligne !"}
+              </p>
+            </div>
+            <div className="flex-shrink-0">
+              <a
+                href="/support"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-nuffle-gold hover:bg-nuffle-gold/90 text-nuffle-anthracite font-subtitle font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105 whitespace-nowrap"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8zM6 1v3M10 1v3M14 1v3" />
+                </svg>
+                {t.support?.homeCtaButton || "Nous soutenir"}
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Callout */}
       <section className="w-full px-4 sm:px-6 pb-12 md:pb-16">
         <div className="rounded-2xl bg-gradient-to-r from-nuffle-gold via-nuffle-bronze to-nuffle-gold text-nuffle-anthracite p-6 sm:p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6 shadow-xl border-2 border-nuffle-bronze/50">

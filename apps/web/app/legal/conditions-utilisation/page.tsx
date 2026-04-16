@@ -90,11 +90,95 @@ export default function ConditionsUtilisationPage() {
 
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">
-            3. Conditions d&apos;accès et inscription
+            3. Dons et soutien financier
+          </h2>
+          <h3 className="text-xl font-semibold mb-3 mt-4">
+            3.1. Nature des dons
+          </h3>
+          <p className="mb-4">
+            Nuffle Arena propose à ses utilisateurs la possibilité de
+            soutenir financièrement le projet via la plateforme tierce{" "}
+            <strong>Ko-fi</strong> (ko-fi.com). Ces dons sont{" "}
+            <strong>entièrement volontaires</strong> et ne conditionnent en
+            aucun cas l&apos;accès aux fonctionnalités du service.
+          </p>
+          <p className="mb-4">
+            Les dons constituent des libéralités au sens de l&apos;article 893
+            du Code civil. Ils ne donnent droit à aucune contrepartie, aucun
+            avantage en jeu, aucun service supplémentaire et ne sont pas
+            déductibles fiscalement.
+          </p>
+
+          <h3 className="text-xl font-semibold mb-3 mt-4">
+            3.2. Plateforme de paiement
+          </h3>
+          <p className="mb-4">
+            Les dons sont traités exclusivement par la plateforme Ko-fi
+            (exploitée par Ko-fi Labs Limited). En effectuant un don, vous
+            acceptez les{" "}
+            <a
+              href="https://more.ko-fi.com/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-emerald-600 hover:text-emerald-700 hover:underline"
+            >
+              conditions d&apos;utilisation de Ko-fi
+            </a>{" "}
+            et sa{" "}
+            <a
+              href="https://more.ko-fi.com/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-emerald-600 hover:text-emerald-700 hover:underline"
+            >
+              politique de confidentialité
+            </a>
+            .
+          </p>
+          <p className="mb-4">
+            Nuffle Arena ne collecte, ne stocke et ne traite aucune donnée
+            de paiement (numéro de carte bancaire, identifiants PayPal,
+            etc.). L&apos;ensemble du traitement financier est géré par Ko-fi
+            et ses prestataires de paiement (Stripe, PayPal).
+          </p>
+
+          <h3 className="text-xl font-semibold mb-3 mt-4">
+            3.3. Utilisation des fonds
+          </h3>
+          <p className="mb-4">
+            Les fonds collectés via les dons sont utilisés exclusivement
+            pour couvrir les frais liés au fonctionnement de Nuffle Arena :
+            hébergement, nom de domaine, outils de développement et
+            maintenance. L&apos;éditeur s&apos;engage à une transparence sur
+            l&apos;utilisation des fonds, consultable sur la{" "}
+            <Link
+              href="/support"
+              className="text-emerald-600 hover:text-emerald-700 hover:underline"
+            >
+              page de soutien
+            </Link>
+            .
+          </p>
+
+          <h3 className="text-xl font-semibold mb-3 mt-4">
+            3.4. Remboursement
+          </h3>
+          <p className="mb-4">
+            Les dons étant des libéralités volontaires, ils ne sont pas
+            remboursables sauf en cas d&apos;erreur technique avérée
+            (doublon de paiement, montant erroné). Dans ce cas, contactez
+            l&apos;éditeur à contact@nufflearena.fr ou directement le
+            support Ko-fi.
+          </p>
+        </section>
+
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4">
+            4. Conditions d&apos;accès et inscription
           </h2>
 
           <h3 className="text-xl font-semibold mb-3 mt-4">
-            3.1. Âge minimum
+            4.1. Âge minimum
           </h3>
           <p className="mb-4">
             Conformément à l&apos;article 8 du Règlement Général sur la Protection
@@ -110,7 +194,7 @@ export default function ConditionsUtilisationPage() {
           </p>
 
           <h3 className="text-xl font-semibold mb-3 mt-4">
-            3.2. Création de compte
+            4.2. Création de compte
           </h3>
           <p className="mb-4">
             L&apos;utilisation de certaines fonctionnalités de Nuffle Arena
@@ -126,7 +210,7 @@ export default function ConditionsUtilisationPage() {
           </p>
 
           <h3 className="text-xl font-semibold mb-3 mt-4">
-            3.3. Utilisation autorisée
+            4.3. Utilisation autorisée
           </h3>
           <p className="mb-4">
             Vous vous engagez à utiliser Nuffle Arena uniquement pour :
@@ -143,7 +227,7 @@ export default function ConditionsUtilisationPage() {
           </ul>
 
           <h3 className="text-xl font-semibold mb-3 mt-4">
-            3.4. Utilisations interdites
+            4.4. Utilisations interdites
           </h3>
           <p className="mb-4">Il est strictement interdit de :</p>
           <ul className="list-disc list-inside mb-4 space-y-2 ml-4">
@@ -178,7 +262,7 @@ export default function ConditionsUtilisationPage() {
 
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">
-            4. Propriété intellectuelle
+            5. Propriété intellectuelle
           </h2>
           <p className="mb-4">
             <strong>Blood Bowl</strong> et tous les éléments associés (règles,
@@ -202,7 +286,7 @@ export default function ConditionsUtilisationPage() {
 
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">
-            5. Disponibilité du service
+            6. Disponibilité du service
           </h2>
           <p className="mb-4">
             L&apos;éditeur s&apos;efforce d&apos;assurer la continuité et la
@@ -220,7 +304,7 @@ export default function ConditionsUtilisationPage() {
 
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">
-            6. Limitation de responsabilité
+            7. Limitation de responsabilité
           </h2>
           <p className="mb-4">
             Le service Nuffle Arena est fourni « tel quel », sans garantie
@@ -244,7 +328,7 @@ export default function ConditionsUtilisationPage() {
 
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">
-            7. Données utilisateur et vie privée
+            8. Données utilisateur et vie privée
           </h2>
           <p className="mb-4">
             Vous êtes seul responsable des équipes et données que vous créez via
@@ -274,7 +358,7 @@ export default function ConditionsUtilisationPage() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">8. Résiliation</h2>
+          <h2 className="text-2xl font-semibold mb-4">9. Résiliation</h2>
           <p className="mb-4">
             Vous pouvez résilier votre compte à tout moment en supprimant votre
             compte via les paramètres de votre profil.
@@ -299,7 +383,7 @@ export default function ConditionsUtilisationPage() {
 
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">
-            9. Liens hypertextes
+            10. Liens hypertextes
           </h2>
           <p className="mb-4">
             Le site Nuffle Arena peut contenir des liens hypertextes vers des
@@ -316,7 +400,7 @@ export default function ConditionsUtilisationPage() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">10. Force majeure</h2>
+          <h2 className="text-2xl font-semibold mb-4">11. Force majeure</h2>
           <p className="mb-4">
             L&apos;éditeur ne pourra être tenu responsable de tout manquement ou
             retard dans l&apos;exécution de ses obligations au titre des présentes
@@ -330,7 +414,7 @@ export default function ConditionsUtilisationPage() {
 
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">
-            11. Modifications des conditions
+            12. Modifications des conditions
           </h2>
           <p className="mb-4">
             L&apos;éditeur se réserve le droit de modifier les présentes
@@ -346,7 +430,7 @@ export default function ConditionsUtilisationPage() {
 
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">
-            12. Loi applicable et juridiction
+            13. Loi applicable et juridiction
           </h2>
           <p className="mb-4">
             Les présentes conditions d&apos;utilisation sont régies par la loi
@@ -364,7 +448,7 @@ export default function ConditionsUtilisationPage() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">13. Contact</h2>
+          <h2 className="text-2xl font-semibold mb-4">14. Contact</h2>
           <p className="mb-4">
             Pour toute question concernant les présentes conditions
             d&apos;utilisation, vous pouvez nous contacter :
@@ -378,7 +462,7 @@ export default function ConditionsUtilisationPage() {
 
         <section className="mb-8">
           <p className="text-sm text-gray-500 italic">
-            Dernière mise à jour : 9 avril 2026
+            Dernière mise à jour : 16 avril 2026
           </p>
         </section>
       </div>
