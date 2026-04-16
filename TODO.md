@@ -220,17 +220,26 @@
 
 | # | Tache | Type | Statut |
 |---|-------|------|--------|
+| J.8 | Implementer `bloodlust` (3 variantes) | Regle | [x] |
+| J.9 | Implementer `always-hungry` | Regle | [x] |
+| J.10 | Implementer `foul-appearance` | Regle | [x] |
+| J.11 | Implementer `instable` | Regle | [x] |
+| K.1 | Implementer `leap` + `pogo-stick` | Regle | [x] |
+| K.2 | Implementer `stab` | Regle | [x] |
+| K.3 | Implementer `chainsaw` | Regle | [x] |
+| K.4 | Implementer `dump-off` | Regle | [x] |
+| K.5 | Implementer `on-the-ball` | Regle | [x] |
 | P1.1 | Implementer `stunty` (Skinks, Lineman Gnome, joueurs petits) | Regle | [x] |
 | P1.2 | Implementer `dauntless` (Dwarf Troll Slayer) | Regle | [x] |
 | P1.3 | Implementer `break-tackle` (Dwarf Deathroller) | Regle | [x] |
-| P1.4 | Implementer `juggernaut` (Dwarf Deathroller) | Regle | [ ] |
-| P1.5 | Implementer `stand-firm` (Deathroller, Bodyguard, Treeman Gnome) | Regle | [ ] |
-| P1.6 | Implementer `armored-skull` (Dwarf Deathroller) | Regle | [ ] |
-| P1.7 | Implementer `iron-hard-skin` (Gnomes : piston, beastmaster, treeman) | Regle | [ ] |
-| P1.8 | Implementer `shadowing` (Lizardmen Chameleon Skink) | Regle | [ ] |
-| P1.9 | Implementer `fend` (Imperial Retainer Lineman) — verifier | Regle | [ ] |
-| P1.10 | Implementer `running-pass` (Imperial Thrower) | Regle | [ ] |
-| P1.11 | Audit : verifier que `prehensile-tail`, `frenzy`, `throw-team-mate`, `thick-skull`, `on-the-ball`, `loner` s'appliquent correctement aux joueurs des 5 equipes | Regle | [ ] |
+| P1.4 | Implementer `juggernaut` (Dwarf Deathroller) | Regle | [x] |
+| P1.5 | Implementer `stand-firm` (Deathroller, Bodyguard, Treeman Gnome) | Regle | [x] |
+| P1.6 | Implementer `armored-skull` (Dwarf Deathroller) | Regle | [x] |
+| P1.7 | Implementer `iron-hard-skin` (Gnomes : piston, beastmaster, treeman) | Regle | [x] |
+| P1.8 | Implementer `shadowing` (Lizardmen Chameleon Skink) | Regle | [x] |
+| P1.9 | Implementer `fend` (Imperial Retainer Lineman) — verifier | Regle | [x] |
+| P1.10 | Implementer `running-pass` (Imperial Thrower) | Regle | [x] |
+| P1.11 | Audit : verifier que `prehensile-tail`, `frenzy`, `throw-team-mate`, `thick-skull`, `on-the-ball`, `loner` s'appliquent correctement aux joueurs des 5 equipes | Regle | [x] |
 | TEST-2 | Tests unitaires + integration pour chacun des skills ci-dessus | Tests | [ ] |
 | TEST-3 | Test E2E : un match complet Nains vs Skaven sans divergence de regles | Tests | [ ] |
 

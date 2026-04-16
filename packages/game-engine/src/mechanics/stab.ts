@@ -21,7 +21,7 @@ import { performArmorRoll } from '../utils/dice';
 import { performInjuryRoll } from './injury';
 import { createLogEntry } from '../utils/logging';
 import { isAdjacent } from './movement';
-import { getMightyBlowBonusFromRegistry } from '../skills/skill-bridge';
+import { getMightyBlowBonusFromRegistry, getArmorSkillContext } from '../skills/skill-bridge';
 
 /**
  * Indique si un joueur peut utiliser Stab sur une cible donnée.
@@ -59,17 +59,22 @@ export function executeStab(
   );
   newState.gameLog = [...newState.gameLog, actionLog];
 
-  // Jet d'armure direct, avec bonus Mighty Blow éventuel
-  const mightyBlowBonus = getMightyBlowBonusFromRegistry(stabber, newState);
+  // Jet d'armure direct, avec bonus Mighty Blow éventuel.
+  // Iron Hard Skin annule les modificateurs positifs de l'attaquant
+  // sur le jet d'armure (ex. Mighty Blow).
+  const mightyBlowBonusRaw = getMightyBlowBonusFromRegistry(stabber, newState);
+  const { ironHardSkinActive } = getArmorSkillContext(newState, stabber, target);
+  const mightyBlowBonus = ironHardSkinActive ? 0 : mightyBlowBonusRaw;
   const armorResult = performArmorRoll(target, rng, -mightyBlowBonus);
   newState.lastDiceResult = armorResult;
 
+  const ihsTag = ironHardSkinActive ? ' [Iron Hard Skin]' : '';
   const armorLog = createLogEntry(
     'dice',
-    `Jet d'armure de ${target.name}: ${armorResult.diceRoll}/${armorResult.targetNumber} ${armorResult.success ? '(tient)' : '(percée)'}`,
+    `Jet d'armure de ${target.name}: ${armorResult.diceRoll}/${armorResult.targetNumber}${ihsTag} ${armorResult.success ? '(tient)' : '(percée)'}`,
     target.id,
     target.team,
-    { diceRoll: armorResult.diceRoll, targetNumber: armorResult.targetNumber, mightyBlowBonus },
+    { diceRoll: armorResult.diceRoll, targetNumber: armorResult.targetNumber, mightyBlowBonus, ironHardSkin: ironHardSkinActive },
   );
   newState.gameLog = [...newState.gameLog, armorLog];
 

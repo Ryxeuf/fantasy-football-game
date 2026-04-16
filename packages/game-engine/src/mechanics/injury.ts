@@ -9,6 +9,16 @@ import { createLogEntry } from '../utils/logging';
 import { movePlayerToDugoutZone } from './dugout';
 import { isApothecaryAvailable } from './apothecary';
 import { hasRegeneration, tryRegeneration } from './regeneration';
+import { hasSkill } from '../skills/skill-effects';
+
+/**
+ * Armored Skull (BB3 Season 2/3): apply a -1 modifier to any Injury roll
+ * made against a player with this skill. Used by Dwarf Deathroller and
+ * similarly armored star players.
+ */
+function armoredSkullModifier(player: Player): number {
+  return hasSkill(player, 'armored-skull') ? -1 : 0;
+}
 
 /**
  * Effectue un jet de blessure contre un joueur
@@ -20,8 +30,9 @@ import { hasRegeneration, tryRegeneration } from './regeneration';
 export function performInjuryRoll(state: GameState, player: Player, rng: RNG, bonus: number = 0, causedById?: string): GameState {
   const newState = structuredClone(state) as GameState;
 
-  // Jet de 2D6 pour la blessure (+ bonus de Mighty Blow éventuel)
-  const injuryRoll = Math.floor(rng() * 6) + 1 + Math.floor(rng() * 6) + 1 + bonus;
+  // Jet de 2D6 pour la blessure (+ bonus de Mighty Blow éventuel, - Armored Skull si applicable)
+  const armoredSkullMod = armoredSkullModifier(player);
+  const injuryRoll = Math.floor(rng() * 6) + 1 + Math.floor(rng() * 6) + 1 + bonus + armoredSkullMod;
 
   // Log du jet de blessure
   const injuryLog = createLogEntry(
@@ -273,8 +284,9 @@ export function handleSentOff(state: GameState, player: Player): GameState {
 export function handleInjuryByCrowd(state: GameState, player: Player, rng: RNG): GameState {
   const newState = structuredClone(state) as GameState;
 
-  // Jet de 2D6 pour la blessure (pas de bonus)
-  const injuryRoll = Math.floor(rng() * 6) + 1 + Math.floor(rng() * 6) + 1;
+  // Jet de 2D6 pour la blessure (pas de bonus, - Armored Skull si applicable)
+  const armoredSkullMod = armoredSkullModifier(player);
+  const injuryRoll = Math.floor(rng() * 6) + 1 + Math.floor(rng() * 6) + 1 + armoredSkullMod;
 
   const injuryLog = createLogEntry(
     'dice',

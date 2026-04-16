@@ -40,6 +40,7 @@ export {
   getPushDirections,
   handlePushWithChoice,
   resolveBlockResult,
+  applyChainPush,
 } from './mechanics/blocking';
 
 // Export des fonctions de gestion d'état (sans conflit)
@@ -137,6 +138,9 @@ export { executePass, executeHandoff, getPassRange, getDistance, findInterceptor
 // Export du Lancer de Coéquipier (Throw Team-Mate)
 export { canThrowTeamMate, getThrowRange, executeThrowTeamMate } from './mechanics/throw-team-mate';
 
+// Export de Frenzy (Frénésie)
+export { hasFrenzy } from './mechanics/frenzy';
+
 // Export du Regard Hypnotique (Hypnotic Gaze)
 export { canHypnoticGaze, calculateGazeModifiers, executeHypnoticGaze } from './mechanics/hypnotic-gaze';
 
@@ -151,6 +155,17 @@ export { canChainsaw, executeChainsaw } from './mechanics/chainsaw';
 
 // Export du Délestage (Dump-off)
 export { canDumpOff, getDumpOffReceivers, executeDumpOff } from './mechanics/dump-off';
+
+// Export de Sur le Ballon (On the Ball)
+export {
+  canTriggerOnTheBall,
+  getOnTheBallReactivePlayers,
+  getOnTheBallReachableSquares,
+  executeOnTheBallMove,
+  hasUsedOnTheBallThisTurn,
+  markOnTheBallUsed,
+  resetOnTheBallUsage,
+} from './mechanics/on-the-ball';
 
 // Export des fonctions de faute
 export { canFoul, executeFoul, calculateFoulAssists } from './mechanics/foul';
@@ -174,6 +189,51 @@ export {
   getBreakTackleModifier,
 } from './mechanics/break-tackle';
 export type { BreakTackleResult } from './mechanics/break-tackle';
+
+// Export du skill Juggernaut (applique au blocage pendant un blitz)
+export {
+  hasJuggernaut,
+  isJuggernautActiveForBlock,
+  shouldConvertBothDownToPushBack,
+} from './mechanics/juggernaut';
+
+// Export du skill Stand Firm (applique au blocage pour refuser d'etre pousse)
+export {
+  hasStandFirm,
+  isStandFirmActiveForBlock,
+  isStandFirmActiveForChainPush,
+} from './mechanics/stand-firm';
+
+// Export du skill Fend (empeche le follow-up de l'attaquant apres une poussee)
+export {
+  hasFend,
+  isFendActiveForFollowUp,
+} from './mechanics/fend';
+
+// Export du skill Running Pass (Imperial Thrower, etc.)
+export {
+  hasRunningPass,
+  hasRunningPassHandoffVariant,
+  canApplyRunningPass,
+  canApplyRunningPassToHandoff,
+  hasUsedRunningPassThisTurn,
+  markRunningPassUsed,
+} from './mechanics/running-pass';
+
+// Export du skill Shadowing (Lizardmen Chameleon Skink, etc.)
+export {
+  hasShadowing,
+  findShadowingCandidates,
+  isShadowingPossible,
+  rollShadowing,
+  tryApplyShadowing,
+  resolveShadowingAfterDodge,
+  SHADOWING_TARGET,
+} from './mechanics/shadowing';
+export type {
+  ShadowingResult,
+  ShadowingAttempt,
+} from './mechanics/shadowing';
 
 // Export des effets météo
 export {

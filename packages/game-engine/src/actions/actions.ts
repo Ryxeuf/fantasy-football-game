@@ -62,6 +62,11 @@ import {
   canTeamBlitz,
 } from '../core/game-state';
 import { executePass, executeHandoff, getPassRange, canAttemptPassForRange } from '../mechanics/passing';
+import {
+  canApplyRunningPass,
+  canApplyRunningPassToHandoff,
+  markRunningPassUsed,
+} from '../mechanics/running-pass';
 import { canFoul, executeFoul } from '../mechanics/foul';
 import { isAdjacent } from '../mechanics/movement';
 import { applyApothecaryChoice } from '../mechanics/apothecary';
@@ -73,13 +78,21 @@ import { canChainsaw, executeChainsaw } from '../mechanics/chainsaw';
 import { canDumpOff, getDumpOffReceivers, executeDumpOff } from '../mechanics/dump-off';
 import { checkDauntless } from '../mechanics/dauntless';
 import { checkBreakTackle } from '../mechanics/break-tackle';
+import { isFendActiveForFollowUp } from '../mechanics/fend';
+import { resolveShadowingAfterDodge } from '../mechanics/shadowing';
+import { hasFrenzy } from '../mechanics/frenzy';
+import {
+  getOnTheBallReactivePlayers,
+  executeOnTheBallMove,
+  markOnTheBallUsed,
+} from '../mechanics/on-the-ball';
 import {
   resolveKickoffPerfectDefence,
   resolveKickoffHighKick,
   resolveKickoffQuickSnap,
   resolveKickoffBlitz,
 } from '../mechanics/kickoff-resolution';
-import { checkBoneHead, checkReallyStupid, checkWildAnimal, checkAnimalSavagery, checkTakeRoot, checkBloodlust, checkAlwaysHungry, checkFoulAppearance, canInstablePerformAction, logInstablePrevention } from '../mechanics/negative-traits';
+import { checkBoneHead, checkReallyStupid, checkWildAnimal, checkAnimalSavagery, checkTakeRoot, checkBloodlust, checkFoulAppearance, canInstablePerformAction, logInstablePrevention } from '../mechanics/negative-traits';
 import {
   canLeap as playerCanLeap,
   getLeapModifier,
@@ -380,6 +393,46 @@ function canUseTeamReroll(state: GameState, team: TeamId): boolean {
 }
 
 /**
+ * Résout le second bloc Frenzy si `pendingFrenzyBlock` est défini et qu'il
+ * n'y a plus de choix en attente (push / follow-up). Appel conditionnel
+ * depuis `applyMove` après chaque handler susceptible de terminer un push.
+ */
+function resolveFrenzyBlock(state: GameState, rng: RNG): GameState {
+  if (!state.pendingFrenzyBlock) return state;
+  // Ne pas résoudre tant qu'un choix de push ou follow-up est en attente
+  if (state.pendingPushChoice || state.pendingFollowUpChoice) return state;
+
+  const { attackerId, targetId } = state.pendingFrenzyBlock;
+  const attacker = state.players.find(p => p.id === attackerId);
+  const target = state.players.find(p => p.id === targetId);
+
+  // Consommer le pending
+  const next: GameState = { ...state, pendingFrenzyBlock: undefined };
+
+  // Conditions pour le second bloc : attaquant et cible debout et adjacents
+  if (!attacker || !target) return next;
+  if (attacker.stunned || target.stunned) return next;
+  if (!isAdjacent(attacker.pos, target.pos)) return next;
+
+  const frenzyLog = createLogEntry(
+    'action',
+    `${attacker.name} effectue un second blocage (Frenzy) contre ${target.name} !`,
+    attacker.id,
+    attacker.team,
+    { skill: 'frenzy' },
+  );
+  next.gameLog = [...next.gameLog, frenzyLog];
+
+  // Exécuter le second bloc via handleBlock — en passant par la mécanique
+  // standard (assists, dés, résolution).
+  return handleBlock(
+    next,
+    { type: 'BLOCK', playerId: attackerId, targetId },
+    rng,
+  );
+}
+
+/**
  * Retourne le seuil Loner du joueur (3, 4 ou 5) ou null s'il n'a pas Loner.
  */
 function getLonerThreshold(player: Player): number | null {
@@ -476,6 +529,11 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
     return state;
   }
 
+  // Si un pendingOnTheBall est en attente, seuls ON_THE_BALL_MOVE/DECLINE et END_TURN sont acceptés
+  if (state.pendingOnTheBall && move.type !== 'ON_THE_BALL_MOVE' && move.type !== 'ON_THE_BALL_DECLINE' && move.type !== 'END_TURN') {
+    return state;
+  }
+
   // Pendant le tour de blitz kickoff, les passes et remises sont interdites
   if (state.kickoffBlitzTurn && (move.type === 'PASS' || move.type === 'HANDOFF')) {
     return state;
@@ -483,7 +541,7 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
 
   // Si c'est un turnover, on ne peut que finir le tour
   // Exception : PUSH_CHOOSE, FOLLOW_UP_CHOOSE et REROLL_CHOOSE font partie de la résolution
-  if (state.isTurnover && move.type !== 'END_TURN' && move.type !== 'PUSH_CHOOSE' && move.type !== 'FOLLOW_UP_CHOOSE' && move.type !== 'REROLL_CHOOSE' && move.type !== 'APOTHECARY_CHOOSE') {
+  if (state.isTurnover && move.type !== 'END_TURN' && move.type !== 'PUSH_CHOOSE' && move.type !== 'FOLLOW_UP_CHOOSE' && move.type !== 'REROLL_CHOOSE' && move.type !== 'APOTHECARY_CHOOSE' && move.type !== 'ON_THE_BALL_MOVE' && move.type !== 'ON_THE_BALL_DECLINE') {
     return state;
   }
 
@@ -538,13 +596,13 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
     case 'DODGE':
       return handleDodge(activeState, move, rng);
     case 'BLOCK':
-      return handleBlock(activeState, move, rng);
+      return resolveFrenzyBlock(handleBlock(activeState, move, rng), rng);
     case 'BLOCK_CHOOSE':
-      return handleBlockChoose(activeState, move, rng);
+      return resolveFrenzyBlock(handleBlockChoose(activeState, move, rng), rng);
     case 'PUSH_CHOOSE':
-      return handlePushChoose(activeState, move);
+      return resolveFrenzyBlock(handlePushChoose(activeState, move), rng);
     case 'FOLLOW_UP_CHOOSE':
-      return handleFollowUpChoose(activeState, move);
+      return resolveFrenzyBlock(handleFollowUpChoose(activeState, move), rng);
     case 'BLITZ':
       return handleBlitz(activeState, move, rng);
     case 'REROLL_CHOOSE':
@@ -577,6 +635,10 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       return resolveKickoffQuickSnap(activeState, move.moves);
     case 'KICKOFF_BLITZ_RESOLVE':
       return resolveKickoffBlitz(activeState);
+    case 'ON_THE_BALL_MOVE':
+      return handleOnTheBallMove(activeState, move, rng);
+    case 'ON_THE_BALL_DECLINE':
+      return handleOnTheBallDecline(activeState, rng);
     default:
       return checkTouchdowns(activeState);
   }
@@ -638,6 +700,8 @@ function handleEndTurn(state: GameState, rng: RNG): GameState {
       teamFoulCount: {},
       rerollUsedThisTurn: false,
       hypnotizedPlayers: [],
+      usedRunningPassThisTurn: [],
+      usedOnTheBallThisTurn: [],
     };
   }
 
@@ -655,6 +719,8 @@ function handleEndTurn(state: GameState, rng: RNG): GameState {
     teamFoulCount: {} as Record<string, number>, // Réinitialiser les compteurs de foul
     rerollUsedThisTurn: false, // Réinitialiser le flag de relance
     hypnotizedPlayers: [], // Réinitialiser les joueurs hypnotisés
+    usedRunningPassThisTurn: [], // Réinitialiser Running Pass (une fois par tour)
+    usedOnTheBallThisTurn: [], // Réinitialiser On the Ball (une fois par tour d'equipe)
   };
 
   // Log du changement de tour
@@ -845,6 +911,11 @@ function handleDodgeRoll(
 
   // Vérifier si le tour du joueur doit se terminer
   next = checkPlayerTurnEnd(next, player.id);
+
+  // Shadowing : les adversaires avec Shadowing adjacents à la case quittée
+  // tentent de suivre le dodger. Résolu une seule fois par esquive, après
+  // que le joueur ait bougé et indépendamment du résultat final (BB3).
+  next = resolveShadowingAfterDodge(next, player, from, rng);
 
   // Break Tackle (BB3): une fois par activation, après un Dodge raté, ajoute
   // +1 (ST <= 4) ou +2 (ST >= 5) au jet. Appliqué avant toute relance.
@@ -1205,6 +1276,9 @@ function handleDodge(
   // Le joueur se déplace toujours, que le jet d'esquive réussisse ou échoue
   next.players[idx].pos = { ...move.to };
   next.players[idx].pm = Math.max(0, next.players[idx].pm - 1);
+
+  // Shadowing : résolu après le mouvement, indépendamment du résultat (BB3).
+  next = resolveShadowingAfterDodge(next, player, from, rng);
 
   // Break Tackle (BB3): +1/+2 une fois par activation sur un Dodge raté.
   let dodgeSucceeded = dodgeResult.success;
@@ -1590,17 +1664,50 @@ function handlePushChoose(
 
   let newState = { ...state, pendingPushChoice: undefined } as GameState;
 
+  // Fend : verifier avant la poussee (la cible doit etre debout). Sur POW/
+  // STUMBLE sans Dodge, la cible est deja stunned avant d'arriver ici, donc
+  // isFendActiveForFollowUp renverra false naturellement.
+  const fendActive = isFendActiveForFollowUp(newState, attacker, target);
+
   // Chain push : si la destination est occupée, pousser le joueur qui y est d'abord
   const rng = () => Math.random(); // RNG pour les surfs en chaîne
   newState = applyChainPush(newState, target.id, move.direction, rng);
 
-  // Demander confirmation pour le follow-up
-  newState.pendingFollowUpChoice = {
-    attackerId: attacker.id,
-    targetId: target.id,
-    targetNewPosition: newTargetPos,
-    targetOldPosition: target.pos,
-  };
+  const frenzyActive = hasFrenzy(attacker) && !!newState.pendingFrenzyBlock;
+
+  if (fendActive) {
+    const fendLog = createLogEntry(
+      'action',
+      `${target.name} utilise Fend : ${attacker.name} ne peut pas suivre`,
+      target.id,
+      target.team,
+      { skill: 'fend' },
+    );
+    newState.gameLog = [...newState.gameLog, fendLog];
+    // Fend annule le suivi → pas de second bloc frenzy
+    newState.pendingFrenzyBlock = undefined;
+  } else if (frenzyActive) {
+    // Frenzy : follow-up obligatoire
+    newState.players = newState.players.map(p =>
+      p.id === attacker.id ? { ...p, pos: target.pos } : p
+    );
+    const frenzyFollowLog = createLogEntry(
+      'action',
+      `${attacker.name} suit ${target.name} (Frenzy — obligatoire)`,
+      attacker.id,
+      attacker.team,
+      { skill: 'frenzy' },
+    );
+    newState.gameLog = [...newState.gameLog, frenzyFollowLog];
+  } else {
+    // Demander confirmation pour le follow-up
+    newState.pendingFollowUpChoice = {
+      attackerId: attacker.id,
+      targetId: target.id,
+      targetNewPosition: newTargetPos,
+      targetOldPosition: target.pos,
+    };
+  }
 
   // Log de la poussée
   const pushLog = createLogEntry(
@@ -1878,6 +1985,9 @@ function handleBlitz(
     const distance = Math.abs(from.x - to.x) + Math.abs(from.y - to.y);
     newState.players[attackerIdx].pm = Math.max(0, newState.players[attackerIdx].pm - distance);
 
+    // Shadowing : tentative de suivi après le mouvement (BB3).
+    newState = resolveShadowingAfterDodge(newState, attacker, from, rng);
+
     // Break Tackle (BB3): +1/+2 une fois par activation sur un Dodge raté
     // pendant un Blitz.
     let blitzDodgeSuccess = dodgeResult.success;
@@ -2062,6 +2172,27 @@ function handlePass(state: GameState, move: { type: 'PASS'; playerId: string; ta
     return state;
   }
 
+  // ─── On the Ball : réaction adverse avant la passe ──────────────────
+  const reactivePlayers = getOnTheBallReactivePlayers(state, passer.team);
+  if (reactivePlayers.length > 0) {
+    const otbLog = createLogEntry(
+      'info',
+      `Un joueur adverse peut activer Sur le Ballon avant la passe !`,
+      undefined,
+      reactivePlayers[0].team,
+      { skill: 'on-the-ball' },
+    );
+    return {
+      ...state,
+      gameLog: [...state.gameLog, otbLog],
+      pendingOnTheBall: {
+        passerTeam: passer.team,
+        pendingPassMove: { type: 'PASS', playerId: move.playerId, targetId: move.targetId },
+        reactivePlayers: reactivePlayers.map(p => p.id),
+      },
+    };
+  }
+
   // Animosity check: roll D6 before pass if passer dislikes target
   let currentState = state;
   if (hasAnimosityAgainst(passer, target)) {
@@ -2077,8 +2208,75 @@ function handlePass(state: GameState, move: { type: 'PASS'; playerId: string; ta
 
   let newState = executePass(currentState, passer, target, rng);
   newState = setPlayerAction(newState, passer.id, 'PASS');
+
+  // Running Pass : si le passeur a le skill, qu'il s'agit d'une Quick Pass
+  // sans turnover et qu'il lui reste de la MA, il peut continuer son mouvement
+  // apres la passe (une fois par tour). On ne le marque pas avant le passe pour
+  // permettre la lecture du flag dans canApplyRunningPass / canPlayerContinueMoving.
+  const passerAfter = newState.players.find(p => p.id === passer.id);
+  if (passerAfter && canApplyRunningPass(newState, passerAfter, passRange, newState.isTurnover)) {
+    newState = markRunningPassUsed(newState, passer.id);
+    const rpLog = createLogEntry(
+      'info',
+      `Passe dans la Course : ${passer.name} peut continuer son mouvement`,
+      passer.id,
+      passer.team,
+      { skill: 'running-pass' },
+    );
+    newState = { ...newState, gameLog: [...newState.gameLog, rpLog] };
+  }
+
   newState = checkPlayerTurnEnd(newState, passer.id);
   return newState;
+}
+
+/**
+ * Gère le mouvement réactif On the Ball — le coach défenseur déplace un
+ * joueur possédant le skill avant la passe.
+ */
+function handleOnTheBallMove(
+  state: GameState,
+  move: { type: 'ON_THE_BALL_MOVE'; playerId: string; to: Position },
+  rng: RNG,
+): GameState {
+  if (!state.pendingOnTheBall) return state;
+  // Vérifier que le joueur choisi fait partie des réactifs éligibles
+  if (!state.pendingOnTheBall.reactivePlayers.includes(move.playerId)) return state;
+
+  const passMove = state.pendingOnTheBall.pendingPassMove;
+  let next: GameState = { ...state, pendingOnTheBall: undefined };
+
+  // Exécuter le mouvement On the Ball
+  next = executeOnTheBallMove(next, move.playerId, move.to, rng);
+
+  // Reprendre la passe initiale
+  return handlePass(next, passMove, rng);
+}
+
+/**
+ * Le coach défenseur décline On the Ball — la passe reprend normalement.
+ */
+function handleOnTheBallDecline(state: GameState, rng: RNG): GameState {
+  if (!state.pendingOnTheBall) return state;
+
+  const passMove = state.pendingOnTheBall.pendingPassMove;
+  const opposingTeam: TeamId = state.pendingOnTheBall.passerTeam === 'A' ? 'B' : 'A';
+  let next: GameState = { ...state, pendingOnTheBall: undefined };
+
+  // Marquer l'utilisation pour que handlePass ne re-déclenche pas
+  next = markOnTheBallUsed(next, opposingTeam);
+
+  const declineLog = createLogEntry(
+    'info',
+    `Sur le Ballon décliné par le coach défenseur`,
+    undefined,
+    opposingTeam,
+    { skill: 'on-the-ball' },
+  );
+  next.gameLog = [...next.gameLog, declineLog];
+
+  // Reprendre la passe initiale
+  return handlePass(next, passMove, rng);
 }
 
 /**
@@ -2114,6 +2312,22 @@ function handleHandoff(state: GameState, move: { type: 'HANDOFF'; playerId: stri
 
   let newState = executeHandoff(currentState, passer, target, rng);
   newState = setPlayerAction(newState, passer.id, 'HANDOFF');
+
+  // Running Pass (variante S3) : un Hand-Off s'integre dans la regle ; meme
+  // resolution que pour une Quick Pass.
+  const passerAfter = newState.players.find(p => p.id === passer.id);
+  if (passerAfter && canApplyRunningPassToHandoff(newState, passerAfter, newState.isTurnover)) {
+    newState = markRunningPassUsed(newState, passer.id);
+    const rpLog = createLogEntry(
+      'info',
+      `Transmission dans la course : ${passer.name} peut continuer son mouvement`,
+      passer.id,
+      passer.team,
+      { skill: 'running-pass-2025' },
+    );
+    newState = { ...newState, gameLog: [...newState.gameLog, rpLog] };
+  }
+
   newState = checkPlayerTurnEnd(newState, passer.id);
   return newState;
 }
@@ -2143,17 +2357,9 @@ function handleThrowTeamMate(
   const range = getThrowRange(thrower.pos, move.targetPos);
   if (!range) return state;
 
-  // Always Hungry check (BB3): test AVANT le jet de passe. Un double-1 devore
-  // le coequipier, un 1+2+ place le coequipier prone + turnover, 2+ continue.
-  const hungryResult = checkAlwaysHungry(state, thrower, thrown, rng);
-  if (!hungryResult.shouldContinueThrow) {
-    let newState = hungryResult.newState;
-    newState = setPlayerAction(newState, thrower.id, 'THROW_TEAM_MATE');
-    newState = checkPlayerTurnEnd(newState, thrower.id);
-    return newState;
-  }
-
-  let newState = executeThrowTeamMate(hungryResult.newState, thrower, thrown, move.targetPos, rng);
+  // Note: le test Always Hungry (BB3) est realise dans executeThrowTeamMate,
+  // apres le deplacement mais avant le lancer.
+  let newState = executeThrowTeamMate(state, thrower, thrown, move.targetPos, rng);
   newState = setPlayerAction(newState, thrower.id, 'THROW_TEAM_MATE');
   newState = checkPlayerTurnEnd(newState, thrower.id);
   return newState;

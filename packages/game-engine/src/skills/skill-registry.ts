@@ -353,17 +353,15 @@ registerSkill({
 });
 
 // JUGGERNAUT
+// Effet cable dans `mechanics/juggernaut.ts` + `mechanics/blocking.ts`
+// (conversion BOTH_DOWN -> PUSH_BACK et annulation de Wrestle/Fend/Stand Firm
+// du defenseur cible). L'entree du registre reste utile pour la description
+// et l'auto-discovery (getSkillsForTrigger, UI).
 registerSkill({
   slug: 'juggernaut',
   triggers: ['on-block-attacker'],
-  description: 'Lors d\'un Blitz, BOTH_DOWN et PUSH_BACK sont traités comme POW. Annule Fend et Stand Firm.',
+  description: 'Lors d\'un Blitz, peut traiter BOTH_DOWN comme PUSH_BACK. Le defenseur cible ne peut pas utiliser Fend, Stand Firm ni Wrestle.',
   canApply: (ctx) => hasSkill(ctx.player, 'juggernaut'),
-  modifyBlockResult: (ctx) => {
-    if (ctx.blockResult === 'BOTH_DOWN' || ctx.blockResult === 'PUSH_BACK') {
-      return 'POW';
-    }
-    return null;
-  },
 });
 
 // NERVES OF STEEL
@@ -445,10 +443,14 @@ registerSkill({
 });
 
 // SHADOWING
+// La résolution du suivi (2D6 + MA diff >= 7) est effectuée par
+// `resolveShadowingAfterDodge` dans `mechanics/shadowing.ts`, appelé depuis
+// les trois chemins de Dodge dans `actions.ts`. L'entrée ici sert uniquement
+// à déclarer l'effet pour le registre (affichage UI, documentation).
 registerSkill({
   slug: 'shadowing',
   triggers: ['on-dodge'],
-  description: 'Quand un adversaire adjacent tente de s\'esquiver, le joueur peut tenter de le suivre (MA vs MA).',
+  description: 'Quand un adversaire quitte sa zone de tacle en esquivant, le joueur peut tenter de le suivre (2D6 + MA vs MA, succès ≥ 7).',
   canApply: (ctx) => hasSkill(ctx.player, 'shadowing'),
 });
 
@@ -517,7 +519,7 @@ registerSkill({
 registerSkill({
   slug: 'iron-hard-skin',
   triggers: ['on-armor'],
-  description: 'Annule la compétence Claws de l\'adversaire.',
+  description: 'Annule tous les modificateurs positifs que l\'adversaire appliquerait au jet d\'armure contre ce joueur (Claws, Mighty Blow sur armure, Dirty Player, Chainsaw, etc.). N\'affecte pas le jet de blessure.',
   canApply: (ctx) => hasSkill(ctx.player, 'iron-hard-skin') || hasSkill(ctx.player, 'iron_hard_skin'),
 });
 

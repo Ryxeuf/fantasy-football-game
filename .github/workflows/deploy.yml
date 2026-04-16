@@ -68,6 +68,37 @@ jobs:
             docker compose -f docker-compose.prod.yml build --no-cache
             docker compose -f docker-compose.prod.yml up -d
 
+            # Appliquer le schéma Prisma puis seeder les données de référence
+            # (rosters, star players, compétences...) pour chaque ruleset.
+            # Sans cette étape, les nouveautés du schéma (ex. ajout du ruleset
+            # `season_3`) ne sont jamais propagées en prod et la liste
+            # /teams apparaît vide pour les nouvelles saisons.
+            echo "⏳ Attente de Postgres (max 60s)..."
+            DB_TIMEOUT=60
+            DB_ELAPSED=0
+            until docker compose -f docker-compose.prod.yml exec -T db \
+                pg_isready -U "${POSTGRES_USER:-bb_user}" \
+                -d "${POSTGRES_DB:-bb_db}" >/dev/null 2>&1; do
+              if [ $DB_ELAPSED -ge $DB_TIMEOUT ]; then
+                echo "❌ Postgres toujours indisponible après ${DB_TIMEOUT}s"
+                exit 1
+              fi
+              sleep 3
+              DB_ELAPSED=$((DB_ELAPSED + 3))
+            done
+            echo "✅ Postgres prêt"
+
+            echo "🗄️  Application du schéma Prisma (db push)..."
+            docker compose -f docker-compose.prod.yml exec -T server \
+              pnpm -w exec prisma db push \
+              --schema prisma/schema.prisma \
+              --accept-data-loss \
+              --skip-generate
+
+            echo "🌱 Seed des données de référence (rosters, skills, ...)..."
+            docker compose -f docker-compose.prod.yml exec -T server \
+              sh -c "cd apps/server && pnpm run db:seed"
+
             # Attendre que les health checks passent (max 90s)
             echo "⏳ Attente que les services soient healthy..."
             TIMEOUT=90

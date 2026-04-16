@@ -14,9 +14,20 @@ import { performInjuryRoll } from './injury';
 import { movePlayerToDugoutZone } from './dugout';
 import { getPushDirections } from './blocking';
 import { checkBlockNegatesBothDown, checkDodgeNegatesStumble } from '../skills/skill-bridge';
+import { bounceBall } from './ball';
 
 export interface ActivationCheckResult {
   passed: boolean;
+  newState: GameState;
+}
+
+export interface AlwaysHungryResult {
+  /** true = le lancer de coéquipier peut se dérouler normalement */
+  passed: boolean;
+  /** true = le coéquipier a été mangé (retiré du jeu comme casualty) */
+  eaten: boolean;
+  /** true = le coéquipier s'est échappé mais est tombé à terre */
+  escaped: boolean;
   newState: GameState;
 }
 
@@ -696,31 +707,27 @@ export function checkTakeRoot(
 }
 
 /**
- * Resultat du test Always Hungry pour un lancer de coequipier.
- * - `shouldContinueThrow`: `true` si le lancer doit continuer normalement,
- *   `false` si le coequipier s'est echappe ou s'est fait devorer.
- * - `newState`: etat mis a jour (logs, turnover, casualty eventuelle).
- */
-export interface AlwaysHungryResult {
-  shouldContinueThrow: boolean;
-  newState: GameState;
-}
-
-/**
- * Check Always Hungry (Toujours Affame) roll.
- * BB2020/BB3 rule (Deathzone Big Guys):
- *   When a player with Always Hungry attempts to throw a team-mate, they must
- *   roll a D6 BEFORE the Pass roll.
- *     - 2+ : the throw continues as normal.
- *     - 1  : the player tries to eat the team-mate. Roll another D6:
- *         - 2+ : the team-mate escapes, placed Prone (stunned) in their current
- *           square. No pass is made. TURNOVER.
- *         - 1  : the team-mate is EATEN. Removed from play as a casualty
- *           (Dead). TURNOVER.
+ * Check Always Hungry activation roll (BB3).
  *
- * This function does NOT remove the thrower's activation nor mark the action
- * as taken — the caller (handleThrowTeamMate) remains responsible for the
- * surrounding action bookkeeping.
+ * Regle BB3 : lorsque le joueur tente une action Lancer de Coequipier
+ * (Throw Team-Mate), apres son deplacement mais avant le lancer, il doit
+ * effectuer un jet d'activation.
+ *
+ * - D6 = 2+ : le lancer se poursuit normalement.
+ * - D6 = 1  : le joueur tente de manger son coequipier. Relancez un D6 :
+ *     - 1   : le coequipier est avale (mis en casualty, retire du jeu).
+ *             Turnover.
+ *     - 2-6 : le coequipier s'echappe mais tombe a terre (jet d'armure +
+ *             blessure). Turnover.
+ *
+ * Dans tous les cas d'echec, le ballon porte par le coequipier est lache
+ * a la position actuelle puis rebondit, et le lanceur perd son action TTM.
+ *
+ * @param state  Etat courant du jeu
+ * @param thrower Joueur qui voulait effectuer le TTM
+ * @param thrown Coequipier qui devait etre lance
+ * @param rng    Generateur deterministe
+ * @returns      Resultat du test avec nouvel etat
  */
 export function checkAlwaysHungry(
   state: GameState,
@@ -728,94 +735,158 @@ export function checkAlwaysHungry(
   thrown: Player,
   rng: RNG
 ): AlwaysHungryResult {
-  // No always-hungry: always continue (no state change)
+  // No always-hungry: always pass (no state change)
   if (!hasSkill(thrower, 'always-hungry')) {
-    return { shouldContinueThrow: true, newState: state };
+    return { passed: true, eaten: false, escaped: false, newState: state };
   }
 
-  // First roll: are we hungry?
-  const firstRoll = Math.floor(rng() * 6) + 1;
-  const hungrySuccess = firstRoll >= 2;
+  // Roll D6: succeed on 2+
+  const hungerRoll = Math.floor(rng() * 6) + 1;
+  const success = hungerRoll >= 2;
 
-  const firstLog = createLogEntry(
+  const rollLog = createLogEntry(
     'dice',
-    `Toujours Affame: ${firstRoll}/2 ${hungrySuccess ? '✓' : '✗'}`,
+    `Toujours Affame: ${hungerRoll}/2 ${success ? '✓' : '✗'}`,
     thrower.id,
     thrower.team,
-    { diceRoll: firstRoll, targetNumber: 2, success: hungrySuccess, skill: 'always-hungry' }
+    { diceRoll: hungerRoll, targetNumber: 2, success, skill: 'always-hungry' }
   );
 
   let newState: GameState = {
     ...state,
-    gameLog: [...state.gameLog, firstLog],
+    gameLog: [...state.gameLog, rollLog],
   };
 
-  if (hungrySuccess) {
-    // Pas faim — le lancer continue normalement
-    return { shouldContinueThrow: true, newState };
+  if (success) {
+    return { passed: true, eaten: false, escaped: false, newState };
   }
 
-  // 1 on first roll: try to eat the team-mate. Roll again.
+  // Failed hunger check: attempt to eat teammate (second D6)
+  const attemptLog = createLogEntry(
+    'action',
+    `${thrower.name} tente de manger ${thrown.name} au lieu de le lancer !`,
+    thrower.id,
+    thrower.team,
+    { skill: 'always-hungry', targetId: thrown.id }
+  );
+  newState = {
+    ...newState,
+    gameLog: [...newState.gameLog, attemptLog],
+  };
+
   const eatRoll = Math.floor(rng() * 6) + 1;
-  const teammateEscapes = eatRoll >= 2;
+  const eaten = eatRoll === 1;
 
   const eatLog = createLogEntry(
     'dice',
-    `Tentative de devorer ${thrown.name}: ${eatRoll}/2 ${teammateEscapes ? '✓ (echappe)' : '✗ (devore)'}`,
+    `Jet d'appetit: ${eatRoll} — ${eaten ? 'coequipier avale' : "coequipier s'echappe"}`,
     thrower.id,
     thrower.team,
-    { diceRoll: eatRoll, targetNumber: 2, success: teammateEscapes, skill: 'always-hungry' }
+    { diceRoll: eatRoll, skill: 'always-hungry', eaten }
   );
-  newState = { ...newState, gameLog: [...newState.gameLog, eatLog] };
+  newState = {
+    ...newState,
+    gameLog: [...newState.gameLog, eatLog],
+  };
 
-  if (teammateEscapes) {
-    // Le coequipier s'echappe : place prone (stunned) dans sa case, turnover
-    const escapeLog = createLogEntry(
+  // In both outcomes: the teammate drops the ball if carried
+  const thrownCarried = newState.players.find(p => p.id === thrown.id)?.hasBall;
+  if (thrownCarried) {
+    const dropPos: Position = { ...thrown.pos };
+    newState = {
+      ...newState,
+      players: newState.players.map(p =>
+        p.id === thrown.id ? { ...p, hasBall: false } : p
+      ),
+      ball: dropPos,
+    };
+    newState = bounceBall(newState, rng);
+  }
+
+  // The thrower loses their TTM action (turnover)
+  newState = setPlayerAction(newState, thrower.id, 'THROW_TEAM_MATE');
+  newState = {
+    ...newState,
+    isTurnover: true,
+    players: newState.players.map(p =>
+      p.id === thrower.id ? { ...p, pm: 0, gfiUsed: 2 } : p
+    ),
+  };
+
+  if (eaten) {
+    // Teammate is removed from play as a casualty (no armor/injury roll)
+    newState = movePlayerToDugoutZone(newState, thrown.id, 'casualty', thrown.team);
+    newState = {
+      ...newState,
+      players: newState.players.map(p =>
+        p.id === thrown.id
+          ? { ...p, state: 'casualty', stunned: false, pos: { x: -1, y: -1 } }
+          : p
+      ),
+      casualtyResults: { ...(newState.casualtyResults ?? {}), [thrown.id]: 'dead' },
+    };
+
+    const eatenLog = createLogEntry(
       'action',
-      `${thrown.name} s'echappe au dernier moment et tombe au sol !`,
+      `${thrown.name} a ete avale — retire du jeu (Turnover)`,
       thrown.id,
-      thrown.team
+      thrown.team,
+      { skill: 'always-hungry' }
     );
     newState = {
       ...newState,
-      gameLog: [...newState.gameLog, escapeLog],
-      isTurnover: true,
-      players: newState.players.map(p =>
-        p.id === thrown.id ? { ...p, stunned: true } : p
-      ),
+      gameLog: [...newState.gameLog, eatenLog],
     };
-    return { shouldContinueThrow: false, newState };
+
+    return { passed: false, eaten: true, escaped: false, newState };
   }
 
-  // Double 1: le coequipier est devore (casualty Dead), turnover.
-  const eatenLog = createLogEntry(
+  // Teammate escapes but is placed prone; perform armor + injury roll
+  const escapeLog = createLogEntry(
     'action',
-    `${thrower.name} devore ${thrown.name} ! MORT !`,
-    thrower.id,
-    thrower.team,
-    { targetId: thrown.id }
+    `${thrown.name} s'echappe mais tombe a terre !`,
+    thrown.id,
+    thrown.team,
+    { skill: 'always-hungry' }
   );
-  newState = { ...newState, gameLog: [...newState.gameLog, eatenLog] };
-
-  // Deplace le coequipier dans la zone casualty du dugout
-  newState = movePlayerToDugoutZone(newState, thrown.id, 'casualty', thrown.team);
-
-  // Marque l'issue de la blessure comme Dead
-  const outcome: CasualtyOutcome = 'dead';
   newState = {
     ...newState,
-    casualtyResults: { ...(newState.casualtyResults ?? {}), [thrown.id]: outcome },
-    isTurnover: true,
+    gameLog: [...newState.gameLog, escapeLog],
+    players: newState.players.map(p =>
+      p.id === thrown.id ? { ...p, stunned: true } : p
+    ),
   };
 
-  return { shouldContinueThrow: false, newState };
+  // Armor roll: if it breaks, perform injury roll
+  const updatedThrown = newState.players.find(p => p.id === thrown.id);
+  if (updatedThrown) {
+    const armorResult = performArmorRoll(updatedThrown, rng);
+    const armorLog = createLogEntry(
+      'dice',
+      `Jet d'armure: ${armorResult.diceRoll}/${armorResult.targetNumber} ${armorResult.success ? '✓' : '✗'}`,
+      updatedThrown.id,
+      updatedThrown.team,
+      {
+        diceRoll: armorResult.diceRoll,
+        targetNumber: armorResult.targetNumber,
+        success: armorResult.success,
+      }
+    );
+    newState = { ...newState, gameLog: [...newState.gameLog, armorLog] };
+
+    if (!armorResult.success) {
+      newState = performInjuryRoll(newState, updatedThrown, rng);
+    }
+  }
+
+  return { passed: false, eaten: false, escaped: true, newState };
 }
 
 /**
  * Resultat du test Foul Appearance (Repulsion).
- * - `shouldContinueBlock`: `true` si le blocage peut se dérouler normalement,
- *   `false` si l'attaquant est repoussé par l'apparence du défenseur.
- * - `newState`: état mis à jour (logs, consommation d'activation si échec).
+ * - `shouldContinueBlock`: `true` si le blocage peut se derouler normalement,
+ *   `false` si l'attaquant est repousse par l'apparence du defenseur.
+ * - `newState`: etat mis a jour (logs, consommation d'activation si echec).
  */
 export interface FoulAppearanceResult {
   shouldContinueBlock: boolean;
@@ -823,7 +894,7 @@ export interface FoulAppearanceResult {
 }
 
 /**
- * Check Foul Appearance (Répulsion) roll.
+ * Check Foul Appearance (Repulsion) roll.
  * BB3 Rule (Mutation): when an opposing player declares a Block action targeting
  * a player with Foul Appearance, the attacker's coach must first roll a D6.
  * - On 2+: the block proceeds as normal.

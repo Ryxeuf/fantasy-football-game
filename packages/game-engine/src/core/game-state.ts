@@ -887,14 +887,19 @@ export function canPlayerContinueMoving(state: GameState, playerId: string): boo
   if (!player) return false;
 
   // Un joueur peut continuer à bouger s'il n'est pas étourdi, a des PM (ou du GFI disponible),
-  // c'est le tour de son équipe, et soit il n'a pas encore agi, soit il a déjà commencé à bouger ou fait un blitz
+  // c'est le tour de son équipe, et soit il n'a pas encore agi, soit il a déjà commencé à bouger ou fait un blitz.
+  // Cas particulier : Running Pass autorise le passeur a continuer sa MA apres une Quick Pass
+  // (ou un Hand-Off pour la variante S3) sans changer son action principale.
   const playerAction = getPlayerAction(state, playerId);
   const hasMovement = player.pm > 0 || (player.gfiUsed ?? 0) < 2;
+  const runningPassActive =
+    (state.usedRunningPassThisTurn ?? []).includes(playerId) &&
+    (playerAction === 'PASS' || playerAction === 'HANDOFF');
   return (
     !player.stunned &&
     hasMovement &&
     player.team === state.currentPlayer &&
-    (!hasPlayerActed(state, playerId) || playerAction === 'MOVE' || playerAction === 'BLITZ')
+    (!hasPlayerActed(state, playerId) || playerAction === 'MOVE' || playerAction === 'BLITZ' || runningPassActive)
   );
 }
 
@@ -1033,10 +1038,15 @@ export function checkPlayerTurnEnd(state: GameState, playerId: string): GameStat
   if (!player) return state;
 
   // Si le joueur n'a plus de PM et a commencé à bouger, finir son tour
+  // Inclut Running Pass : action PASS/HANDOFF + flag usedRunningPassThisTurn => poursuite autorisee
+  const action = getPlayerAction(state, playerId);
+  const runningPassActive =
+    (state.usedRunningPassThisTurn ?? []).includes(playerId) &&
+    (action === 'PASS' || action === 'HANDOFF');
   if (
     player.pm <= 0 &&
     hasPlayerActed(state, playerId) &&
-    (getPlayerAction(state, playerId) === 'MOVE' || getPlayerAction(state, playerId) === 'BLITZ')
+    (action === 'MOVE' || action === 'BLITZ' || runningPassActive)
   ) {
     return endPlayerTurn(state, playerId);
   }

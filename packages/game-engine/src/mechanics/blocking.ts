@@ -20,6 +20,13 @@ import { performArmorRollWithNotification } from '../utils/dice-notifications';
 import { createLogEntry } from '../utils/logging';
 import { canTeamBlitz } from '../core/game-state';
 import { performInjuryRoll, handleSentOff, handleInjuryByCrowd } from './injury';
+import { shouldConvertBothDownToPushBack } from './juggernaut';
+import {
+  isStandFirmActiveForBlock,
+  isStandFirmActiveForChainPush,
+} from './stand-firm';
+import { isFendActiveForFollowUp } from './fend';
+import { hasFrenzy } from './frenzy';
 
 /**
  * Applique un chain push : si la case de destination est occupée, le joueur qui s'y trouve
@@ -34,6 +41,19 @@ export function applyChainPush(
 ): GameState {
   const pushed = state.players.find(p => p.id === pushedPlayerId);
   if (!pushed) return state;
+
+  // Stand Firm : un joueur debout avec Stand Firm peut refuser d'etre pousse
+  // en chaine. Le chain stoppe ici, personne ne bouge.
+  if (isStandFirmActiveForChainPush(pushed)) {
+    const standFirmLog = createLogEntry(
+      'action',
+      `${pushed.name} utilise Stand Firm : refuse d'etre pousse en chaine`,
+      undefined,
+      pushed.team,
+      { skill: 'stand-firm' },
+    );
+    return { ...state, gameLog: [...state.gameLog, standFirmLog] };
+  }
 
   const newPos = {
     x: pushed.pos.x + direction.x,
@@ -72,6 +92,16 @@ export function applyChainPush(
     );
     newState = { ...newState, gameLog: [...newState.gameLog, chainLog] };
     newState = applyChainPush(newState, occupant.id, direction, rng);
+
+    // Si la case de destination est toujours occupee (p.ex. Stand Firm du
+    // chain target qui refuse de bouger), on ne peut pas pousser le joueur
+    // initial : personne ne bouge.
+    const stillOccupied = newState.players.some(
+      p => p.pos.x === newPos.x && p.pos.y === newPos.y && p.id !== pushedPlayerId
+    );
+    if (stillOccupied) {
+      return newState;
+    }
   }
 
   // Déplacer le joueur poussé
@@ -96,19 +126,22 @@ function armorAndInjuryWithMightyBlow(
   attacker: Player,
   rng: RNG
 ): GameState {
-  const mbBonus = getMightyBlowBonusFromRegistry(attacker, state);
+  const mbBonusRaw = getMightyBlowBonusFromRegistry(attacker, state);
   const diceRoll = roll2D6(rng);
 
   // Claws: armor breaks on 8+ regardless of AV (unless defender has Iron Hard Skin)
+  // Iron Hard Skin: bloque les modificateurs positifs de l'attaquant sur le jet
+  // d'armure (Mighty Blow notamment). La blessure n'est pas concernée.
   // Stunty: la valeur d'armure du joueur cible est reduite de 1 (plus fragile).
   // Le malus s'applique toujours, cumulatif avec Claws et Mighty Blow.
-  const { clawsActive } = getArmorSkillContext(state, attacker, victim);
+  const { clawsActive, ironHardSkinActive } = getArmorSkillContext(state, attacker, victim);
+  const mbBonusOnArmor = ironHardSkinActive ? 0 : mbBonusRaw;
   const stuntyAdjust = hasSkill(victim, 'stunty') ? -1 : 0;
   const baseTarget = clawsActive ? Math.min(victim.av, 8) : victim.av;
   const armorTarget = baseTarget + stuntyAdjust;
 
   const armorBrokenNaturally = diceRoll >= armorTarget;
-  const armorBrokenWithMB = (diceRoll + mbBonus) >= armorTarget;
+  const armorBrokenWithMB = (diceRoll + mbBonusOnArmor) >= armorTarget;
 
   let armorBroken: boolean;
   let mbUsedOnArmor: boolean;
@@ -125,18 +158,19 @@ function armorAndInjuryWithMightyBlow(
   }
 
   // Log du jet d'armure
-  const effectiveRoll = mbUsedOnArmor ? diceRoll + mbBonus : diceRoll;
+  const effectiveRoll = mbUsedOnArmor ? diceRoll + mbBonusOnArmor : diceRoll;
   const armorLog = createLogEntry(
     'dice',
-    `Jet d'armure: ${effectiveRoll}/${armorTarget} ${armorBroken ? '✗ (percée)' : '✓ (tient)'}${mbBonus > 0 && mbUsedOnArmor ? ' [Mighty Blow +1]' : ''}${clawsActive ? ' [Claws]' : ''}`,
+    `Jet d'armure: ${effectiveRoll}/${armorTarget} ${armorBroken ? '✗ (percée)' : '✓ (tient)'}${mbBonusOnArmor > 0 && mbUsedOnArmor ? ' [Mighty Blow +1]' : ''}${clawsActive ? ' [Claws]' : ''}${ironHardSkinActive ? ' [Iron Hard Skin]' : ''}`,
     victim.id,
     victim.team,
     {
       diceRoll: effectiveRoll,
       targetNumber: armorTarget,
       success: !armorBroken,
-      mightyBlow: mbBonus > 0,
+      mightyBlow: mbBonusRaw > 0,
       mightyBlowAppliedTo: mbUsedOnArmor ? 'armor' : 'injury',
+      ironHardSkin: ironHardSkinActive,
     }
   );
   state.gameLog = [...state.gameLog, armorLog];
@@ -147,11 +181,13 @@ function armorAndInjuryWithMightyBlow(
     diceRoll: effectiveRoll,
     targetNumber: armorTarget,
     success: !armorBroken,
-    modifiers: mbUsedOnArmor ? mbBonus : 0,
+    modifiers: mbUsedOnArmor ? mbBonusOnArmor : 0,
   };
 
   if (armorBroken) {
-    const injuryBonus = mbUsedOnArmor ? 0 : mbBonus;
+    // Le bonus Mighty Blow est reporté sur la blessure si non utilisé sur
+    // l'armure. Iron Hard Skin NE bloque PAS Mighty Blow sur la blessure.
+    const injuryBonus = mbUsedOnArmor ? 0 : mbBonusRaw;
     // Thick Skull: -1 to injury roll (KO on 9+ instead of 8+)
     const injuryDefenderMod = getInjurySkillModifiers(state, victim);
     state = performInjuryRoll(state, victim, rng, injuryBonus + injuryDefenderMod, attacker.id);
@@ -463,6 +499,20 @@ export function handlePushWithChoice(
   blockResult: string,
   rng: RNG
 ): GameState {
+  // Stand Firm : la cible peut refuser la poussee. Note : pour POW, la cible
+  // est deja marquee stunned=true AVANT cet appel, donc elle tombera bien sur
+  // sa case actuelle sans etre deplacee.
+  if (isStandFirmActiveForBlock(state, attacker, target)) {
+    const standFirmLog = createLogEntry(
+      'action',
+      `${target.name} utilise Stand Firm : refuse d'etre pousse`,
+      target.id,
+      target.team,
+      { skill: 'stand-firm', blockResult },
+    );
+    return { ...state, gameLog: [...state.gameLog, standFirmLog] };
+  }
+
   const pushDirections = getPushDirections(attacker.pos, target.pos);
   const availableDirections: Position[] = [];
   let hasOutOfBounds = false;
@@ -499,13 +549,27 @@ export function handlePushWithChoice(
       // Note: bounceBall sera appelé par la fonction appelante
     }
 
-    // Blessure automatique par la foule (pas de jet d'armure, minimum KO)
-    const resultState = handleInjuryByCrowd(newState, target, rng);
+    // Fend : verifier avant la blessure par la foule (qui stun la cible)
+    const fendActiveSurf = isFendActiveForFollowUp(state, attacker, target);
 
-    // L'attaquant peut suivre (follow-up) sur la case liberee
-    resultState.players = resultState.players.map(p =>
-      p.id === attacker.id ? { ...p, pos: target.pos } : p
-    );
+    // Blessure automatique par la foule (pas de jet d'armure, minimum KO)
+    let resultState = handleInjuryByCrowd(newState, target, rng);
+
+    if (fendActiveSurf) {
+      const fendLog = createLogEntry(
+        'action',
+        `${target.name} utilise Fend : ${attacker.name} ne peut pas suivre`,
+        target.id,
+        target.team,
+        { skill: 'fend' },
+      );
+      resultState = { ...resultState, gameLog: [...resultState.gameLog, fendLog] };
+    } else {
+      // L'attaquant peut suivre (follow-up) sur la case liberee
+      resultState.players = resultState.players.map(p =>
+        p.id === attacker.id ? { ...p, pos: target.pos } : p
+      );
+    }
 
     return resultState;
   } else if (availableDirections.length === 0) {
@@ -525,15 +589,32 @@ export function handlePushWithChoice(
       y: target.pos.y + pushDirection.y,
     };
 
+    // Fend : verifier avant la poussee (la cible doit etre debout). En
+    // pratique, quand handlePushWithChoice est appele depuis POW/STUMBLE
+    // knockdown, la cible est deja stunned et Fend n'est pas actif ; mais on
+    // verifie quand meme pour le cas Dodge → PUSH_BACK si on passait par ici.
+    const fendActive = isFendActiveForFollowUp(state, attacker, target);
+
     const newState = applyChainPush(state, target.id, pushDirection, rng);
 
-    // Demander confirmation pour le follow-up
-    newState.pendingFollowUpChoice = {
-      attackerId: attacker.id,
-      targetId: target.id,
-      targetNewPosition: newTargetPos,
-      targetOldPosition: target.pos,
-    };
+    if (fendActive) {
+      const fendLog = createLogEntry(
+        'action',
+        `${target.name} utilise Fend : ${attacker.name} ne peut pas suivre`,
+        target.id,
+        target.team,
+        { skill: 'fend' },
+      );
+      newState.gameLog = [...newState.gameLog, fendLog];
+    } else {
+      // Demander confirmation pour le follow-up
+      newState.pendingFollowUpChoice = {
+        attackerId: attacker.id,
+        targetId: target.id,
+        targetNewPosition: newTargetPos,
+        targetOldPosition: target.pos,
+      };
+    }
 
     const pushLog = createLogEntry(
       'action',
@@ -678,6 +759,26 @@ function handlePlayerDown(state: GameState, attacker: Player, target: Player, rn
  * Wrestle prévaut sur Block (BB2020)
  */
 function handleBothDown(state: GameState, attacker: Player, target: Player, rng: RNG): GameState {
+  // Juggernaut : pendant un Blitz, l'attaquant peut convertir BOTH_DOWN en
+  // PUSH_BACK. `shouldConvertBothDownToPushBack` auto-resout le choix "may" :
+  // on garde BOTH_DOWN quand l'attaquant a Block (Block donne un meilleur
+  // resultat : defenseur au sol, attaquant debout). La regle annule aussi
+  // Wrestle/Fend/Stand Firm du defenseur cible (traites ici / dans handlePushBack).
+  if (shouldConvertBothDownToPushBack(state, attacker)) {
+    const juggernautLog = createLogEntry(
+      'action',
+      `${attacker.name} utilise Juggernaut : BOTH_DOWN devient PUSH_BACK`,
+      attacker.id,
+      attacker.team,
+      { skill: 'juggernaut', convertedFrom: 'BOTH_DOWN', convertedTo: 'PUSH_BACK' },
+    );
+    const stateWithLog: GameState = {
+      ...state,
+      gameLog: [...state.gameLog, juggernautLog],
+    };
+    return handlePushBack(stateWithLog, attacker, target, rng);
+  }
+
   const attackerHasWrestle = checkWrestleOnBothDown(attacker, state);
   const targetHasWrestle = checkWrestleOnBothDown(target, state);
   const wrestleActive = attackerHasWrestle || targetHasWrestle;
@@ -801,6 +902,19 @@ function handleBothDown(state: GameState, attacker: Player, target: Player, rng:
  * Gère le résultat PUSH_BACK
  */
 function handlePushBack(state: GameState, attacker: Player, target: Player, rng: RNG): GameState {
+  // Stand Firm : la cible peut refuser d'etre poussee. Elle reste sur sa case,
+  // l'attaquant ne fait pas de follow-up.
+  if (isStandFirmActiveForBlock(state, attacker, target)) {
+    const standFirmLog = createLogEntry(
+      'action',
+      `${target.name} utilise Stand Firm : refuse d'etre pousse`,
+      target.id,
+      target.team,
+      { skill: 'stand-firm' },
+    );
+    return { ...state, gameLog: [...state.gameLog, standFirmLog] };
+  }
+
   // La cible est repoussée d'une case - vérifier les directions disponibles
   const pushDirections = getPushDirections(attacker.pos, target.pos);
   const availableDirections: Position[] = [];
@@ -839,13 +953,28 @@ function handlePushBack(state: GameState, attacker: Player, target: Player, rng:
       // Note: bounceBall sera appelé par la fonction appelante
     }
 
+    // Fend : l'attaquant ne peut pas suivre (meme vers la case liberee par la
+    // foule). Verifier AVANT d'appliquer la blessure (qui stun la cible).
+    const fendActiveSurf = isFendActiveForFollowUp(state, attacker, target);
+
     // Blessure automatique par la foule (pas de jet d'armure, minimum KO)
     state = handleInjuryByCrowd(state, target, rng);
 
-    // L'attaquant peut suivre (follow-up) sur la case liberee
-    state.players = state.players.map(p =>
-      p.id === attacker.id ? { ...p, pos: target.pos } : p
-    );
+    if (fendActiveSurf) {
+      const fendLog = createLogEntry(
+        'action',
+        `${target.name} utilise Fend : ${attacker.name} ne peut pas suivre`,
+        target.id,
+        target.team,
+        { skill: 'fend' },
+      );
+      state.gameLog = [...state.gameLog, fendLog];
+    } else {
+      // L'attaquant peut suivre (follow-up) sur la case liberee
+      state.players = state.players.map(p =>
+        p.id === attacker.id ? { ...p, pos: target.pos } : p
+      );
+    }
   } else if (availableDirections.length === 0) {
     // Aucune direction disponible (toutes occupées, aucune hors limites) - ne pas pousser
     const noPushLog = createLogEntry(
@@ -863,15 +992,47 @@ function handlePushBack(state: GameState, attacker: Player, target: Player, rng:
       y: target.pos.y + pushDirection.y,
     };
 
+    // Fend : verifier avant la poussee (la cible doit etre debout)
+    const fendActive = isFendActiveForFollowUp(state, attacker, target);
+    const frenzyActive = hasFrenzy(attacker);
+
     state = applyChainPush(state, target.id, pushDirection, rng);
 
-    // Follow-up is optional on PUSH_BACK — let the attacker choose
-    state.pendingFollowUpChoice = {
-      attackerId: attacker.id,
-      targetId: target.id,
-      targetNewPosition: newTargetPos,
-      targetOldPosition: target.pos,
-    };
+    if (fendActive) {
+      const fendLog = createLogEntry(
+        'action',
+        `${target.name} utilise Fend : ${attacker.name} ne peut pas suivre`,
+        target.id,
+        target.team,
+        { skill: 'fend' },
+      );
+      state.gameLog = [...state.gameLog, fendLog];
+    } else if (frenzyActive) {
+      // Frenzy : follow-up obligatoire + second bloc
+      state.players = state.players.map(p =>
+        p.id === attacker.id ? { ...p, pos: target.pos } : p
+      );
+      const frenzyFollowLog = createLogEntry(
+        'action',
+        `${attacker.name} suit ${target.name} (Frenzy — obligatoire)`,
+        attacker.id,
+        attacker.team,
+        { skill: 'frenzy' },
+      );
+      state.gameLog = [...state.gameLog, frenzyFollowLog];
+      state.pendingFrenzyBlock = {
+        attackerId: attacker.id,
+        targetId: target.id,
+      };
+    } else {
+      // Follow-up is optional on PUSH_BACK — let the attacker choose
+      state.pendingFollowUpChoice = {
+        attackerId: attacker.id,
+        targetId: target.id,
+        targetNewPosition: newTargetPos,
+        targetOldPosition: target.pos,
+      };
+    }
 
     const pushLog = createLogEntry(
       'action',
@@ -892,6 +1053,14 @@ function handlePushBack(state: GameState, attacker: Player, target: Player, rng:
       totalStrength: 3,
       targetStrength: 2,
     };
+    // Frenzy : marquer le second bloc en attente pour après le choix de
+    // direction + follow-up automatique
+    if (hasFrenzy(attacker)) {
+      state.pendingFrenzyBlock = {
+        attackerId: attacker.id,
+        targetId: target.id,
+      };
+    }
 
     const choiceLog = createLogEntry(
       'action',
