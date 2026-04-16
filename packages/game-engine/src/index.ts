@@ -208,6 +208,16 @@ export {
   markBreakTackleUsed,
 } from './mechanics/break-tackle';
 
+// Export du skill Running Pass (Imperial Thrower, etc.)
+export {
+  hasRunningPass,
+  hasRunningPassHandoffVariant,
+  canApplyRunningPass,
+  canApplyRunningPassToHandoff,
+  hasUsedRunningPassThisTurn,
+  markRunningPassUsed,
+} from './mechanics/running-pass';
+
 // Export du skill Shadowing (Lizardmen Chameleon Skink, etc.)
 export {
   hasShadowing,

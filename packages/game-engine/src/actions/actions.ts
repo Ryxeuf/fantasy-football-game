@@ -62,6 +62,11 @@ import {
   canTeamBlitz,
 } from '../core/game-state';
 import { executePass, executeHandoff, getPassRange, canAttemptPassForRange } from '../mechanics/passing';
+import {
+  canApplyRunningPass,
+  canApplyRunningPassToHandoff,
+  markRunningPassUsed,
+} from '../mechanics/running-pass';
 import { canFoul, executeFoul } from '../mechanics/foul';
 import { isAdjacent } from '../mechanics/movement';
 import { applyApothecaryChoice } from '../mechanics/apothecary';
@@ -641,6 +646,7 @@ function handleEndTurn(state: GameState, rng: RNG): GameState {
       rerollUsedThisTurn: false,
       hypnotizedPlayers: [],
       usedBreakTackleThisTurn: [],
+      usedRunningPassThisTurn: [],
       usedOnTheBallThisTurn: [],
     };
   }
@@ -660,6 +666,7 @@ function handleEndTurn(state: GameState, rng: RNG): GameState {
     rerollUsedThisTurn: false, // Réinitialiser le flag de relance
     hypnotizedPlayers: [], // Réinitialiser les joueurs hypnotisés
     usedBreakTackleThisTurn: [], // Réinitialiser Break Tackle (une fois par tour)
+    usedRunningPassThisTurn: [], // Réinitialiser Running Pass (une fois par tour)
     usedOnTheBallThisTurn: [], // Réinitialiser On the Ball (une fois par tour d'equipe)
   };
 
@@ -2075,6 +2082,24 @@ function handlePass(state: GameState, move: { type: 'PASS'; playerId: string; ta
 
   let newState = executePass(currentState, passer, target, rng);
   newState = setPlayerAction(newState, passer.id, 'PASS');
+
+  // Running Pass : si le passeur a le skill, qu'il s'agit d'une Quick Pass
+  // sans turnover et qu'il lui reste de la MA, il peut continuer son mouvement
+  // apres la passe (une fois par tour). On ne le marque pas avant le passe pour
+  // permettre la lecture du flag dans canApplyRunningPass / canPlayerContinueMoving.
+  const passerAfter = newState.players.find(p => p.id === passer.id);
+  if (passerAfter && canApplyRunningPass(newState, passerAfter, passRange, newState.isTurnover)) {
+    newState = markRunningPassUsed(newState, passer.id);
+    const rpLog = createLogEntry(
+      'info',
+      `Passe dans la Course : ${passer.name} peut continuer son mouvement`,
+      passer.id,
+      passer.team,
+      { skill: 'running-pass' },
+    );
+    newState = { ...newState, gameLog: [...newState.gameLog, rpLog] };
+  }
+
   newState = checkPlayerTurnEnd(newState, passer.id);
   return newState;
 }
@@ -2112,6 +2137,22 @@ function handleHandoff(state: GameState, move: { type: 'HANDOFF'; playerId: stri
 
   let newState = executeHandoff(currentState, passer, target, rng);
   newState = setPlayerAction(newState, passer.id, 'HANDOFF');
+
+  // Running Pass (variante S3) : un Hand-Off s'integre dans la regle ; meme
+  // resolution que pour une Quick Pass.
+  const passerAfter = newState.players.find(p => p.id === passer.id);
+  if (passerAfter && canApplyRunningPassToHandoff(newState, passerAfter, newState.isTurnover)) {
+    newState = markRunningPassUsed(newState, passer.id);
+    const rpLog = createLogEntry(
+      'info',
+      `Transmission dans la course : ${passer.name} peut continuer son mouvement`,
+      passer.id,
+      passer.team,
+      { skill: 'running-pass-2025' },
+    );
+    newState = { ...newState, gameLog: [...newState.gameLog, rpLog] };
+  }
+
   newState = checkPlayerTurnEnd(newState, passer.id);
   return newState;
 }
