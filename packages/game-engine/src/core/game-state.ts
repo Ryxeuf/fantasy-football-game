@@ -8,6 +8,7 @@ import { createLogEntry } from '../utils/logging';
 import { checkTouchdowns } from '../mechanics/ball';
 import { initializeDugouts } from '../mechanics/dugout';
 import { rollKickoffEvent, applyKickoffEvent } from '../mechanics/kickoff-events';
+import { applyKickSkillToDeviation } from '../mechanics/kick-skill';
 import { calculateMatchWinnings } from '../utils/team-value-calculator';
 import { FULL_RULES } from './rules-config';
 import { expelSecretWeapons } from '../mechanics/secret-weapons';
@@ -1477,8 +1478,16 @@ export function calculateKickDeviation(state: ExtendedGameState, rng: () => numb
   }
 
   const d8 = Math.floor(rng() * 8) + 1;
-  const d6 = Math.floor(rng() * 6) + 1;
-  
+  const rawD6 = Math.floor(rng() * 6) + 1;
+
+  // Skill Kick : si l'equipe qui botte a un joueur Kick eligible sur le terrain,
+  // le D6 de deviation est divise par deux (arrondi a l'entier inferieur).
+  const kickingTeam = state.preMatch.kickingTeam;
+  const kickResult = kickingTeam
+    ? applyKickSkillToDeviation(state, kickingTeam, rawD6)
+    : { d6: rawD6, applied: false };
+  const d6 = kickResult.d6;
+
   // Déterminer la direction basée sur le D8
   const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
   const direction = directions[d8 - 1];
@@ -1506,9 +1515,12 @@ export function calculateKickDeviation(state: ExtendedGameState, rng: () => numb
 
   const finalPosition = { x: newX, y: newY };
 
+  const kickSuffix = kickResult.applied
+    ? ` (skill Kick : D6 ${rawD6} -> ${d6})`
+    : '';
   const logEntry = createLogEntry(
     'action',
-    `Déviation du kickoff: D8=${d8} (${direction}), D6=${d6} → Ballon en (${finalPosition.x}, ${finalPosition.y})`,
+    `Déviation du kickoff: D8=${d8} (${direction}), D6=${d6} → Ballon en (${finalPosition.x}, ${finalPosition.y})${kickSuffix}`,
     undefined,
     state.preMatch.kickingTeam
   );

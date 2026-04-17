@@ -708,6 +708,19 @@ registerSkill({
   canApply: (ctx) => hasSkill(ctx.player, 'right-stuff'),
 });
 
+// ─── KICK ──────────────────────────────────────────────────────────────────
+// Le skill Kick est resolu dans `core/game-state.ts` (`calculateKickDeviation`)
+// via `applyKickSkillToDeviation` (mechanics/kick-skill.ts). Quand l'equipe qui
+// botte a un joueur Kick eligible (sur le terrain, hors LoS et wide zones), le
+// D6 de deviation du ballon est divise par 2 (arrondi a l'entier inferieur).
+// L'entree du registre sert pour la decouverte UI et la documentation.
+registerSkill({
+  slug: 'kick',
+  triggers: ['on-kickoff'],
+  description: "Lors d'un coup d'envoi, si ce joueur est sur le terrain (hors LoS et Wide Zones), le D6 de deviation du ballon peut etre divise par deux (arrondi a l'entier inferieur).",
+  canApply: (ctx) => hasSkill(ctx.player, 'kick'),
+});
+
 // ─── FOUL APPEARANCE ───────────────────────────────────────────────────────
 // Foul Appearance check is performed in handleBlock / handleBlitz before any
 // block dice are rolled. The attacker's coach rolls a D6; on 1, the declared
