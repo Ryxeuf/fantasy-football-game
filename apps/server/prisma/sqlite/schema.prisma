@@ -43,6 +43,29 @@ model User {
   createdLocalMatches LocalMatch[] @relation("LocalMatchCreator")
   eloRating Int @default(1000)
   matchQueue MatchQueue?
+  featureFlagOverrides FeatureFlagUser[]
+}
+
+model FeatureFlag {
+  id            String            @id @default(cuid())
+  key           String            @unique
+  description   String?
+  enabled       Boolean           @default(false)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  userOverrides FeatureFlagUser[]
+}
+
+model FeatureFlagUser {
+  id        String      @id @default(cuid())
+  flag      FeatureFlag @relation(fields: [flagId], references: [id], onDelete: Cascade)
+  flagId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  createdAt DateTime    @default(now())
+
+  @@unique([flagId, userId])
+  @@index([userId])
 }
 
 model Match {
