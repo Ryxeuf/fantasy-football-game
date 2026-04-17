@@ -182,6 +182,18 @@ registerSkill({
   canApply: (ctx) => hasSkill(ctx.player, 'guard'),
 });
 
+// DEFENSIVE
+// Effet cable dans `mechanics/defensive.ts` + `mechanics/blocking.ts`
+// (annulation du Guard des adversaires marques par le joueur Defensive
+// pendant le tour adverse, pour le calcul des assists offensifs).
+// L'entree ici sert pour la decouverte UI et la documentation.
+registerSkill({
+  slug: 'defensive',
+  triggers: ['on-block-defender'],
+  description: "Pendant le tour adverse uniquement, tous les joueurs adverses marques par ce joueur ne peuvent pas utiliser le skill Guard.",
+  canApply: (ctx) => hasSkill(ctx.player, 'defensive'),
+});
+
 // MIGHTY BLOW (+1)
 registerSkill({
   slug: 'mighty-blow',

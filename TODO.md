@@ -254,7 +254,7 @@
 | # | Tache | Type | Statut |
 |---|-------|------|--------|
 | P2.1 | Implementer `kick` (tres pris en progression, universel) | Regle | [x] |
-| P2.2 | Implementer `defensive` (progression universelle) | Regle | [ ] |
+| P2.2 | Implementer `defensive` (progression universelle) | Regle | [x] |
 | P2.3 | Implementer `disturbing-presence` (progression universelle) | Regle | [ ] |
 | P2.4 | Implementer `leap` (Saurus progression frequente) | Regle | [x] |
 | P2.5 | Implementer `dump-off` (Imperial / Skaven Thrower progression) | Regle | [x] |
