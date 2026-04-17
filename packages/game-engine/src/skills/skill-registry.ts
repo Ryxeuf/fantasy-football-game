@@ -745,3 +745,16 @@ registerSkill({
   description: 'Quand un joueur adverse déclare un Blocage ciblant ce joueur, l\'attaquant lance un D6 avant le blocage. Sur 1, le blocage est annulé et l\'action est gaspillée.',
   canApply: (ctx) => hasSkill(ctx.player, 'foul-appearance'),
 });
+
+// ─── DISTURBING PRESENCE ───────────────────────────────────────────────────
+// Disturbing Presence est resolue dans `mechanics/disturbing-presence.ts`
+// (`getDisturbingPresenceModifier`) et appliquee dans `passing.ts` (pass,
+// catch, interception) et `throw-team-mate.ts`. Un adversaire avec ce skill
+// situe a <= 3 cases applique -1 au test correspondant. L'entree du registre
+// sert a l'affichage UI et a la documentation du skill.
+registerSkill({
+  slug: 'disturbing-presence',
+  triggers: ['on-pass', 'on-catch'],
+  description: "Quand un adversaire effectue une Passe, un Lancer d'Equipier, une Interception ou une Reception, il subit -1 par joueur avec ce skill a 3 cases ou moins.",
+  canApply: (ctx) => hasSkill(ctx.player, 'disturbing-presence') || hasSkill(ctx.player, 'disturbing_presence'),
+});
