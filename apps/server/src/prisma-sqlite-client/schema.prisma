@@ -15,34 +15,57 @@ enum Ruleset {
 }
 
 model User {
-  id                  String          @id @default(cuid())
-  email               String          @unique
-  passwordHash        String
-  name                String? // Conservé pour rétrocompatibilité
-  coachName           String // Nom de coach (obligatoire)
-  firstName           String? // Prénom (optionnel)
-  lastName            String? // Nom (optionnel)
-  dateOfBirth         DateTime? // Date de naissance (optionnel)
+  id                   String            @id @default(cuid())
+  email                String            @unique
+  passwordHash         String
+  name                 String? // Conservé pour rétrocompatibilité
+  coachName            String // Nom de coach (obligatoire)
+  firstName            String? // Prénom (optionnel)
+  lastName             String? // Nom (optionnel)
+  dateOfBirth          DateTime? // Date de naissance (optionnel)
   /// Rôle principal (conservé pour compatibilité, ex: "user" | "admin")
-  role                String          @default("user")
+  role                 String            @default("user")
   /// Liste complète des rôles (stockée en JSON, ex: '["user","admin"]')
-  roles               String          @default("[]")
+  roles                String            @default("[]")
   /// Présent dans le schéma Postgres pour les fonctionnalités premium.
   /// Stub côté SQLite pour que /auth/me puisse sélectionner ce champ
   /// sans diverger entre les deux schémas.
-  patreon             Boolean         @default(false)
+  patreon              Boolean           @default(false)
   /// Pré-alpha gate côté Postgres ; en SQLite tous les comptes sont valides.
-  valid               Boolean         @default(true)
-  createdAt           DateTime        @default(now())
-  updatedAt           DateTime        @updatedAt
-  matches             Match[]
-  createdMatches      Match[]         @relation("MatchCreator")
-  teams               Team[]
-  teamSelections      TeamSelection[]
-  createdCups         Cup[]           @relation("CupCreator")
-  createdLocalMatches LocalMatch[]    @relation("LocalMatchCreator")
-  eloRating           Int             @default(1000)
-  matchQueue          MatchQueue?
+  valid                Boolean           @default(true)
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  matches              Match[]
+  createdMatches       Match[]           @relation("MatchCreator")
+  teams                Team[]
+  teamSelections       TeamSelection[]
+  createdCups          Cup[]             @relation("CupCreator")
+  createdLocalMatches  LocalMatch[]      @relation("LocalMatchCreator")
+  eloRating            Int               @default(1000)
+  matchQueue           MatchQueue?
+  featureFlagOverrides FeatureFlagUser[]
+}
+
+model FeatureFlag {
+  id            String            @id @default(cuid())
+  key           String            @unique
+  description   String?
+  enabled       Boolean           @default(false)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  userOverrides FeatureFlagUser[]
+}
+
+model FeatureFlagUser {
+  id        String      @id @default(cuid())
+  flag      FeatureFlag @relation(fields: [flagId], references: [id], onDelete: Cascade)
+  flagId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  createdAt DateTime    @default(now())
+
+  @@unique([flagId, userId])
+  @@index([userId])
 }
 
 model Match {

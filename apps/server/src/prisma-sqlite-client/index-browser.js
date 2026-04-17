@@ -135,6 +135,22 @@ exports.Prisma.UserScalarFieldEnum = {
   eloRating: 'eloRating'
 };
 
+exports.Prisma.FeatureFlagScalarFieldEnum = {
+  id: 'id',
+  key: 'key',
+  description: 'description',
+  enabled: 'enabled',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.FeatureFlagUserScalarFieldEnum = {
+  id: 'id',
+  flagId: 'flagId',
+  userId: 'userId',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.MatchScalarFieldEnum = {
   id: 'id',
   createdAt: 'createdAt',
@@ -358,6 +374,8 @@ exports.Ruleset = exports.$Enums.Ruleset = {
 
 exports.Prisma.ModelName = {
   User: 'User',
+  FeatureFlag: 'FeatureFlag',
+  FeatureFlagUser: 'FeatureFlagUser',
   Match: 'Match',
   Turn: 'Turn',
   TeamSelection: 'TeamSelection',

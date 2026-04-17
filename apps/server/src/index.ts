@@ -17,6 +17,10 @@ import localMatchRoutes from "./routes/local-match";
 import matchmakingRoutes from "./routes/matchmaking";
 import leaderboardRoutes from "./routes/leaderboard";
 import pushRoutes from "./routes/push";
+import {
+  userFeatureFlagsRouter,
+  adminFeatureFlagsRouter,
+} from "./routes/feature-flags";
 import dotenv from "dotenv";
 import { execSync } from "node:child_process";
 import { prisma } from "./prisma";
@@ -76,6 +80,8 @@ app.use("/local-match", localMatchRoutes);
 app.use("/matchmaking", matchmakingRoutes);
 app.use("/leaderboard", leaderboardRoutes);
 app.use("/push", pushRoutes);
+app.use("/api/feature-flags", userFeatureFlagsRouter);
+app.use("/admin/feature-flags", adminFeatureFlagsRouter);
 
 // Endpoint public de reset pour tests (uniquement en TEST_SQLITE=1)
 if (process.env.TEST_SQLITE === "1") {

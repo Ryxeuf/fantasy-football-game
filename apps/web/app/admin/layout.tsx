@@ -69,6 +69,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               {navItem("/admin/matches", "Parties", "🎮")}
               {navItem("/admin/local-matches", "Matchs Locaux", "🎯")}
               {navItem("/admin/cups", "Coupes", "🏆")}
+              {navItem("/admin/feature-flags", "Feature Flags", "🚩")}
               {navItem("/admin/routes", "Routes", "📋")}
             </div>
 
