@@ -245,7 +245,7 @@
 | TEST-2c | Tests integration : `stand-firm` + `fend` (batch 3) | Tests | [x] |
 | TEST-2d | Tests integration : `break-tackle` + `iron-hard-skin` (batch 4) | Tests | [x] |
 | TEST-2e | Tests integration : `shadowing` + `running-pass` (batch 5) | Tests | [x] |
-| TEST-3 | Test E2E : un match complet Nains vs Skaven sans divergence de regles | Tests | [ ] |
+| TEST-3 | Test E2E : un match complet Nains vs Skaven sans divergence de regles | Tests | [x] |
 
 ### Sprint 14 — Skills de progression & Star Players des 5 equipes (~6 jours)
 
