@@ -9,6 +9,7 @@ import { samePos, isAdjacent, getAdjacentOpponents } from './movement';
 import { createLogEntry } from '../utils/logging';
 import { bounceBall, checkTouchdowns, isInOpponentEndzone, awardTouchdown } from './ball';
 import { hasSkill } from '../skills/skill-effects';
+import { getDisturbingPresenceModifier } from './disturbing-presence';
 
 /**
  * Distances de passe selon BB2020
@@ -79,6 +80,9 @@ export function calculatePassModifiers(
   const opponentsNearPasser = getAdjacentOpponents(state, passer.pos, passer.team);
   modifiers -= opponentsNearPasser.length;
 
+  // Disturbing Presence : -1 par adversaire avec le skill a <= 3 cases
+  modifiers += getDisturbingPresenceModifier(state, passer.pos, passer.team);
+
   return modifiers;
 }
 
@@ -113,6 +117,9 @@ export function calculateCatchModifiers(
   // Malus pour chaque adversaire en zone de tacle du receveur
   const opponentsNearCatcher = getAdjacentOpponents(state, catcher.pos, catcher.team);
   modifiers -= opponentsNearCatcher.length;
+
+  // Disturbing Presence : -1 par adversaire avec le skill a <= 3 cases
+  modifiers += getDisturbingPresenceModifier(state, catcher.pos, catcher.team);
 
   return modifiers;
 }
@@ -180,11 +187,23 @@ export function findInterceptors(
 }
 
 /**
- * Effectue un jet d'interception (AG du joueur, -2 de base)
+ * Effectue un jet d'interception (AG du joueur, -2 de base).
+ * Applique egalement le malus Disturbing Presence (-1 par adversaire avec
+ * le skill a <= 3 cases de l'intercepteur).
  */
-export function performInterceptionRoll(interceptor: Player, rng: RNG): DiceResult {
+export function performInterceptionRoll(
+  interceptor: Player,
+  rng: RNG,
+  state?: GameState,
+): DiceResult {
   const diceRoll = rollD6(rng);
-  const targetNumber = Math.max(2, Math.min(6, interceptor.ag + 2)); // Plus difficile : AG + 2
+  const dpModifier = state
+    ? getDisturbingPresenceModifier(state, interceptor.pos, interceptor.team)
+    : 0;
+  // Total modifier = -2 (interception de base) + DP (negatif ou nul)
+  const totalModifier = -2 + dpModifier;
+  // targetNumber base = interceptor.ag - totalModifier (un modificateur negatif augmente le target)
+  const targetNumber = Math.max(2, Math.min(6, interceptor.ag - totalModifier));
   const success = diceRoll >= targetNumber;
 
   return {
@@ -193,7 +212,7 @@ export function performInterceptionRoll(interceptor: Player, rng: RNG): DiceResu
     diceRoll,
     targetNumber,
     success,
-    modifiers: -2,
+    modifiers: totalModifier,
   };
 }
 
@@ -217,7 +236,7 @@ export function executePass(
   // Vérifier les interceptions
   const interceptors = findInterceptors(newState, passer.pos, target.pos, passer.team);
   for (const interceptor of interceptors) {
-    const interceptResult = performInterceptionRoll(interceptor, rng);
+    const interceptResult = performInterceptionRoll(interceptor, rng, newState);
 
     const interceptLog = createLogEntry(
       'dice',

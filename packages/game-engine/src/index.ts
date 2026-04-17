@@ -210,6 +210,13 @@ export {
   isFendActiveForFollowUp,
 } from './mechanics/fend';
 
+// Export du skill Disturbing Presence (-1 aux passes/catches/intercept des adversaires a <= 3 cases)
+export {
+  hasDisturbingPresence,
+  getDisturbingPresenceModifier,
+  DISTURBING_PRESENCE_RANGE,
+} from './mechanics/disturbing-presence';
+
 // Export du skill Running Pass (Imperial Thrower, etc.)
 export {
   hasRunningPass,

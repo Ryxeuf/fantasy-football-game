@@ -23,6 +23,7 @@ import { performInjuryRoll } from './injury';
 import { getDistance, getPassRangeModifier } from './passing';
 import { getAdjacentOpponents } from './movement';
 import { checkAlwaysHungry } from './negative-traits';
+import { getDisturbingPresenceModifier } from './disturbing-presence';
 
 export type ThrowRange = 'quick' | 'short' | 'long';
 
@@ -85,6 +86,9 @@ function calculateThrowModifiers(
   if (hasSkill(thrown, 'stunty')) {
     modifiers += 1;
   }
+
+  // Disturbing Presence : -1 par adversaire avec le skill a <= 3 cases du lanceur
+  modifiers += getDisturbingPresenceModifier(state, thrower.pos, thrower.team);
 
   return modifiers;
 }
