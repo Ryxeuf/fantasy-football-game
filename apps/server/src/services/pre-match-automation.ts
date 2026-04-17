@@ -9,12 +9,17 @@ import type { ExtendedGameState } from "@bb/game-engine";
 import { broadcastGameState } from "./game-broadcast";
 
 type PrismaLike = {
+  $transaction: <T>(fn: (tx: any) => Promise<T>) => Promise<T>;
   turn: {
     count: (args: any) => Promise<number>;
     create: (args: any) => Promise<any>;
+    findMany: (args: any) => Promise<any[]>;
   };
   teamSelection: {
     findMany: (args: any) => Promise<any[]>;
+  };
+  match: {
+    update: (args: any) => Promise<any>;
   };
 };
 
@@ -67,22 +72,46 @@ export async function runAutomatedPreMatchSequence(
   // so this will add 0 extra players and just transition the phase.
   state = addJourneymen(state, MIN_PLAYERS_PER_TEAM, MIN_PLAYERS_PER_TEAM);
 
-  // Persist the state as a turn entry
-  const turnCount = await prisma.turn.count({ where: { matchId } });
-  await prisma.turn.create({
-    data: {
-      matchId,
-      number: turnCount + 1,
-      payload: {
-        type: "pre-match-sequence",
-        gameState: state,
-        timestamp: new Date().toISOString(),
+  // Persist the state as a turn entry. Wrap in a transaction so we can
+  // serialize against `ensureSetupPhasePersisted` and skip the write if the
+  // bypass already produced a `setup-init` turn (otherwise we would clobber
+  // it with a stale `inducements` state).
+  const persisted = await prisma.$transaction(async (tx: any) => {
+    if (typeof tx.match?.update === "function") {
+      // Re-write status to itself to acquire a row-level lock on the match.
+      await tx.match.update({
+        where: { id: matchId },
+        data: { status: "prematch-setup" },
+      });
+    }
+
+    const turns = await tx.turn.findMany({
+      where: { matchId },
+      orderBy: { number: "asc" },
+    });
+    const hasSetupInit = turns.some(
+      (t: any) => t.payload?.type === "setup-init",
+    );
+    if (hasSetupInit) return false;
+
+    await tx.turn.create({
+      data: {
+        matchId,
+        number: turns.length + 1,
+        payload: {
+          type: "pre-match-sequence",
+          gameState: state,
+          timestamp: new Date().toISOString(),
+        },
       },
-    },
+    });
+    return true;
   });
 
   // Broadcast the updated state to all connected clients
-  broadcastGameState(matchId, state, { type: "pre-match-sequence" }, "server");
+  if (persisted) {
+    broadcastGameState(matchId, state, { type: "pre-match-sequence" }, "server");
+  }
 
   return state;
 }
