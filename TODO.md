@@ -243,7 +243,7 @@
 | TEST-2a | Tests integration : `stunty` + `armored-skull` (batch 1) | Tests | [x] |
 | TEST-2b | Tests integration : `dauntless` + `juggernaut` (batch 2) | Tests | [x] |
 | TEST-2c | Tests integration : `stand-firm` + `fend` (batch 3) | Tests | [x] |
-| TEST-2d | Tests integration : `break-tackle` + `iron-hard-skin` (batch 4) | Tests | [ ] |
+| TEST-2d | Tests integration : `break-tackle` + `iron-hard-skin` (batch 4) | Tests | [x] |
 | TEST-2e | Tests integration : `shadowing` + `running-pass` (batch 5) | Tests | [ ] |
 | TEST-3 | Test E2E : un match complet Nains vs Skaven sans divergence de regles | Tests | [ ] |
 
