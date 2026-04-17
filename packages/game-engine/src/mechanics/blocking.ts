@@ -27,6 +27,7 @@ import {
 } from './stand-firm';
 import { isFendActiveForFollowUp } from './fend';
 import { hasFrenzy } from './frenzy';
+import { isGuardCancelledByDefensive } from './defensive';
 
 /**
  * Applique un chain push : si la case de destination est occupée, le joueur qui s'y trouve
@@ -295,8 +296,12 @@ export function calculateOffensiveAssists(
   for (const teammate of teammates) {
     // Le coéquipier doit marquer la cible
     if (isAdjacent(teammate.pos, target.pos)) {
-      // Guard : un joueur avec Guard peut assister même s'il est marqué par d'autres adversaires
-      if (checkGuard(teammate, state)) {
+      // Guard : un joueur avec Guard peut assister même s'il est marqué par d'autres adversaires.
+      // Defensive (BB3) : pendant le tour adverse, le Guard est annulé si un adversaire
+      // Defensive adjacent marque le joueur Guard.
+      const guardActive =
+        checkGuard(teammate, state) && !isGuardCancelledByDefensive(state, teammate);
+      if (guardActive) {
         assists++;
       } else {
         // Vérifier que le coéquipier n'est pas marqué par un autre adversaire que la cible
