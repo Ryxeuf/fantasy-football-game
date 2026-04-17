@@ -3,10 +3,9 @@ import { prisma } from "../prisma";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
 import jwt from "jsonwebtoken";
 import { acceptAndMaybeStartMatch } from "../services/match-start";
-import { enterSetupPhase, addJourneymen } from "@bb/game-engine";
 import type { Move } from "@bb/game-engine";
 import { getUserTeamSide } from "../services/turn-ownership";
-import { getLinemanStats } from "../services/journeymen";
+import { ensureSetupPhasePersisted } from "../services/prematch-setup";
 import { validate } from "../middleware/validate";
 import { processMove } from "../services/move-processor";
 import {
@@ -491,6 +490,15 @@ router.get("/:id/summary", authUser, async (req: AuthenticatedRequest, res) => {
 router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
   try {
     const matchId = req.params.id;
+
+    // Persist the idle → setup transition atomically before reading the
+    // match. This makes the rest of this handler a pure read: any concurrent
+    // call sees the same persisted state instead of running the transition
+    // again in-memory. The returned `gameState` is the canonical post-bypass
+    // state (preferring `setup-init`/`validate-setup` over a stale
+    // `pre-match-sequence` written by the parallel automation).
+    const ensured = await ensureSetupPhasePersisted(matchId, prisma as any);
+
     const match = await prisma.match.findUnique({
       where: { id: matchId },
       include: { turns: { orderBy: { number: "asc" } } },
@@ -506,13 +514,28 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
     // (validate-setup, pre-match-sequence, inducements, ou coin-toss)
     const startTurn = match.turns.find((t: any) => t.payload?.type === "start" || t.payload?.type === "coin-toss");
     if (match.status === "prematch-setup" || match.status === "active") {
-      // Toujours charger le dernier gameState disponible
+      // Prefer the latest validate-setup turn (carries player placements),
+      // then the canonical state from `ensureSetupPhasePersisted`, then any
+      // gameState turn as a last resort.
+      const latestValidateSetup = [...match.turns]
+        .reverse()
+        .find(
+          (t: any) =>
+            t.payload?.type === "validate-setup" && t.payload?.gameState,
+        );
       const latestStateTurn = [...match.turns]
         .reverse()
         .find((t: any) => t.payload?.gameState);
-      const sourceTurn = latestStateTurn || startTurn;
-      if (sourceTurn) {
-        const gs = sourceTurn.payload.gameState;
+      if (latestValidateSetup) {
+        const gs = latestValidateSetup.payload.gameState;
+        gameState = typeof gs === "string" ? JSON.parse(gs) : gs;
+      } else if (ensured) {
+        gameState = ensured.gameState;
+      } else if (latestStateTurn) {
+        const gs = latestStateTurn.payload.gameState;
+        gameState = typeof gs === "string" ? JSON.parse(gs) : gs;
+      } else if (startTurn) {
+        const gs = startTurn.payload.gameState;
         gameState = typeof gs === "string" ? JSON.parse(gs) : gs;
       }
     } else if (startTurn) {
@@ -638,52 +661,9 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
       });
     }
 
-    // Dans /state, après chargement gameState pour prematch-setup
+    // Pure read for prematch-setup: the idle → setup transition was already
+    // persisted by ensureSetupPhasePersisted at the top of this handler.
     if (match.status === "prematch-setup") {
-      // Entrer en setup si idle
-      const lastCoinToss = match.turns.find(
-        (t: any) => t.payload?.type === "coin-toss",
-      );
-      if (lastCoinToss && gameState.preMatch.phase === "idle") {
-        // IMPORTANT: déterminer l'équipe receveuse selon le mapping A/B défini par l'ordre des sélections,
-        // pas selon l'utilisateur qui appelle la route (sinon chaque client verrait une équipe différente).
-        const selections = await prisma.teamSelection.findMany({
-          where: { matchId },
-          orderBy: { createdAt: "asc" },
-          include: { teamRef: { select: { roster: true } } },
-        });
-        const s1 = selections[0];
-        const s2 = selections[1];
-        let receivingTeam: "A" | "B" = "A";
-        if (s1 && s2) {
-          receivingTeam =
-            lastCoinToss.payload.receivingUserId === s1.userId ? "A" : "B";
-        }
-
-        // D.8 — Add journeymen if teams have < 11 alive players
-        const rosterA = (s1 as any)?.teamRef?.roster;
-        const rosterB = (s2 as any)?.teamRef?.roster;
-        if (rosterA && rosterB) {
-          const [linemanStatsA, linemanStatsB] = await Promise.all([
-            getLinemanStats(prisma as any, rosterA),
-            getLinemanStats(prisma as any, rosterB),
-          ]);
-          // Temporarily set phase to 'journeymen' for addJourneymen to work
-          gameState = {
-            ...gameState,
-            preMatch: { ...gameState.preMatch, phase: 'journeymen' },
-          };
-          gameState = addJourneymen(gameState, 11, 11, linemanStatsA, linemanStatsB);
-          // Reset phase to 'idle' so enterSetupPhase can proceed
-          gameState = {
-            ...gameState,
-            preMatch: { ...gameState.preMatch, phase: 'idle' },
-          };
-        }
-
-        gameState = enterSetupPhase(gameState, receivingTeam);
-      }
-
       const userTeamSide = await getUserTeamSide(prisma as any, matchId, req.user!.id);
       return res.json({
         gameState,
@@ -739,11 +719,23 @@ router.post(
           .json({ error: "Vous n'êtes pas un joueur de cette partie" });
       }
 
+      // Idempotently persist the idle → setup transition before doing anything
+      // else. The returned `gameState` is the canonical post-bypass state
+      // (preferring `setup-init`/`validate-setup` over a stale
+      // `pre-match-sequence` written by the parallel automation).
+      const ensured = await ensureSetupPhasePersisted(matchId, prisma as any);
+
+      // Re-read turns after the potential setup-init insert.
+      const refreshedTurns = await prisma.turn.findMany({
+        where: { matchId },
+        orderBy: { number: "asc" },
+      });
+
       // Créer un nouveau turn pour sauvegarder le placement
       const newTurn = await prisma.turn.create({
         data: {
           matchId,
-          number: match.turns.length + 1,
+          number: refreshedTurns.length + 1,
           payload: {
             type: "validate-setup",
             userId: req.user!.id,
@@ -754,11 +746,19 @@ router.post(
         },
       });
 
-      // Charger l'état du jeu le plus récent (validate-setup > inducements > coin-toss)
-      const lastStateTurn = [...match.turns]
+      // Build the working gameState. Prefer the most recent `validate-setup`
+      // (carries player placements), then fall back to the canonical state
+      // returned by `ensureSetupPhasePersisted` (skips a stale
+      // `pre-match-sequence` written by the parallel automation).
+      const lastValidateSetupTurn = [...refreshedTurns]
         .reverse()
-        .find((t: any) => t.payload?.gameState);
-      let gameState = lastStateTurn?.payload?.gameState;
+        .find(
+          (t: any) =>
+            t.payload?.type === "validate-setup" && t.payload?.gameState,
+        );
+      let gameState: any = lastValidateSetupTurn
+        ? lastValidateSetupTurn.payload.gameState
+        : ensured?.gameState;
       if (typeof gameState === "string") {
         gameState = JSON.parse(gameState);
       }
@@ -773,21 +773,6 @@ router.post(
             player.pos = { x: newPosition.x, y: newPosition.y };
           }
         });
-      }
-
-      // S'assurer que l'état est en phase setup (transition idle→setup si nécessaire)
-      if (gameState.preMatch?.phase === 'idle') {
-        // Déterminer l'équipe receveuse depuis le coin-toss
-        const coinToss = match.turns.find((t: any) => t.payload?.type === "coin-toss");
-        const selections = await prisma.teamSelection.findMany({
-          where: { matchId },
-          orderBy: { createdAt: "asc" },
-        });
-        let receivingTeam: "A" | "B" = "A";
-        if (coinToss && selections.length >= 2) {
-          receivingTeam = coinToss.payload.receivingUserId === selections[0].userId ? "A" : "B";
-        }
-        gameState = enterSetupPhase(gameState, receivingTeam);
       }
 
       // Vérifier que l'utilisateur est bien le coach actuel

@@ -65,13 +65,20 @@ function makePrismaMock(opts: {
   teamBDedicatedFans?: number;
 } = {}) {
   const turns: any[] = opts.turns || [];
-  return {
+  const prisma: any = {
+    $transaction: vi
+      .fn()
+      .mockImplementation(async (fn: (tx: any) => Promise<any>) => fn(prisma)),
+    match: {
+      update: vi.fn().mockResolvedValue({}),
+    },
     turn: {
       count: vi.fn().mockResolvedValue(turns.length),
       create: vi.fn().mockImplementation(async (args: any) => {
         turns.push(args.data);
         return args.data;
       }),
+      findMany: vi.fn().mockImplementation(async () => [...turns]),
     },
     teamSelection: {
       findMany: vi.fn().mockResolvedValue([
@@ -88,6 +95,7 @@ function makePrismaMock(opts: {
       ]),
     },
   };
+  return prisma;
 }
 
 describe("runAutomatedPreMatchSequence", () => {
