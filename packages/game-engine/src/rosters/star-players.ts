@@ -38,7 +38,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     skills: "claws,dauntless,dodge,frenzy,jump-up,loner-4,no-hands,sidestep,stunty,blind-rage",
     hirableBy: ["all"],
     imageUrl: "/data/Star-Players_files/akhorne-the-squirrel-1024x922.webp",
-    specialRule: "Blind Rage: Peut relancer le D6 pour Intrépide."
+    specialRule: "Rage Aveugle : Akhorne peut relancer le D6 de son jet d'Intrépide (Dauntless) une fois par tentative. Une fois par match, il peut également relancer un dé de Blocage perdu lorsqu'il attaque un joueur de Force supérieure."
   },
 
   anqi_panqi: {
@@ -173,7 +173,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     skills: "block,loner-4,mighty-blow-1,stand-firm,strong-arm,thick-skull,throw-team-mate,timmm-ber,reliable",
     hirableBy: ["old_world_classic"],
     imageUrl: "/data/Star-Players_files/deeproot-strongbranch.webp",
-    specialRule: "Reliable: Un Lancer de Coéquipier raté ne cause pas de turnover."
+    specialRule: "Fiable : Un Lancer de Coéquipier raté par Deeproot Strongbranch ne déclenche pas de turnover et la case d'atterrissage dévie d'une seule case au lieu de trois. Cet effet s'applique aussi aux passes ratées qu'il effectue."
   },
 
   eldril_sidewinder: {
@@ -369,7 +369,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     skills: "loner-4,block,dauntless,frenzy,multiple-block,thick-skull,slayer",
     hirableBy: ["old_world_classic"],
     imageUrl: "/data/Star-Players_files/grim-ironjaw-card.webp",
-    specialRule: "Slayer: Peut relancer les jets d'Intrépide (Dauntless) ratés."
+    specialRule: "Tueur Grudgebearer : Grim Ironjaw peut relancer ses jets d'Intrépide ratés. Une fois par match, lorsqu'il cible un joueur de Force 4 ou plus lors d'un Blocage ou d'un Blitz, il peut ajouter +1 au jet de Blessure si la cible est mise à terre."
   },
 
   grombrindal: {
@@ -581,7 +581,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     skills: "block,mighty-blow-1,dirty-player-1,loner-4,sneaky-git,lord-of-chaos",
     hirableBy: ["all"],
     imageUrl: "/data/Star-Players_files/Lord-borak.webp",
-    specialRule: "Lord of Chaos: L'équipe gagne +1 relance d'équipe pour la première mi-temps."
+    specialRule: "Seigneur du Chaos : Tant que Lord Borak est sur le terrain, son équipe reçoit +1 relance d'équipe en début de chaque mi-temps. Si Lord Borak est retiré du jeu (KO, blessure ou mort), la relance bonus en cours est immédiatement perdue."
   },
 
   lucien_swift: {
@@ -671,7 +671,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     skills: "loner-4,block,mighty-blow-1,casse-os",
     hirableBy: ["lustrian_superleague", "old_world_classic"],
     imageUrl: "/data/Star-Players_files/mighty_zug.svg",
-    specialRule: "Casse-Os: Une fois par match, +1 en Force lors d'un blocage."
+    specialRule: "Casse-Os : Une fois par match, avant d'effectuer une action de Blocage ou de Blitz, Mighty Zug peut déclarer Casse-Os. Il gagne +1 en Force pour cette seule action, en cumul avec ses autres modificateurs et son skill Mighty Blow."
   },
 
   prince_moranion: {
@@ -942,7 +942,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     skills: "loner-4,block,jump-up,mighty-blow-1,thick-skull,crushing-blow",
     hirableBy: ["underworld_challenge", "badlands_brawl"],
     imageUrl: "/data/Star-Players_files/varag_ghoul_chewer.svg",
-    specialRule: "Crushing Blow: Une fois par match, +1 au jet d'armure après un blocage réussi."
+    specialRule: "Mâcheur de Goules : Une fois par match, après un Blocage réussi où la cible de Varag Ghoul-Chewer finit à terre, il peut ajouter +1 au jet d'Armure. Si l'Armure est percée, il peut aussi ajouter +1 au jet de Blessure."
   },
 
   wilhelm_chaney: {
