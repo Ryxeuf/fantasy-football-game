@@ -257,6 +257,18 @@ registerSkill({
   getModifiers: () => ({ armorModifier: 1 }),
 });
 
+// SNEAKY GIT
+// Effet resolu dans `mechanics/foul.ts` (annulation de l'expulsion sur doublet
+// naturel) et dans `core/game-state.ts#canPlayerContinueMoving` (l'activation
+// se poursuit apres la faute). L'entree du registre sert a la decouverte UI
+// et a la documentation.
+registerSkill({
+  slug: 'sneaky-git',
+  triggers: ['on-foul'],
+  description: "Lors d'une faute, pas d'expulsion sur un doublet naturel au jet d'armure. L'activation du joueur peut se poursuivre apres la faute.",
+  canApply: (ctx) => hasSkill(ctx.player, 'sneaky-git') || hasSkill(ctx.player, 'sneaky_git'),
+});
+
 // PASS
 registerSkill({
   slug: 'pass',

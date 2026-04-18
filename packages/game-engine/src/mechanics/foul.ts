@@ -8,7 +8,7 @@ import { rollD6 } from '../utils/dice';
 import { isAdjacent, getAdjacentOpponents } from './movement';
 import { createLogEntry } from '../utils/logging';
 import { performInjuryRoll, handleSentOff } from './injury';
-import { getFoulArmorSkillModifiers, getArmorSkillContext } from '../skills/skill-bridge';
+import { getFoulArmorSkillModifiers, getArmorSkillContext, isSneakyGitActive } from '../skills/skill-bridge';
 
 /**
  * Vérifie si un joueur peut faire une faute sur une cible
@@ -114,8 +114,9 @@ export function executeFoul(
     newState = performInjuryRoll(newState, targetPlayer, rng, 0, attacker.id);
   }
 
-  // Expulsion si doublet
-  if (isDoubles) {
+  // Expulsion si doublet, sauf si l'attaquant possede Sneaky Git
+  const sneakyGit = isSneakyGitActive(newState, attacker);
+  if (isDoubles && !sneakyGit) {
     const attackerPlayer = newState.players.find(p => p.id === attacker.id);
     if (attackerPlayer) {
       const expulsionLog = createLogEntry(
@@ -127,6 +128,14 @@ export function executeFoul(
       newState.gameLog = [...newState.gameLog, expulsionLog];
       newState = handleSentOff(newState, attackerPlayer);
     }
+  } else if (isDoubles && sneakyGit) {
+    const sneakyLog = createLogEntry(
+      'action',
+      `Doublet (${die1}-${die2}) ! ${attacker.name} evite l'expulsion grâce à Sneaky Git.`,
+      attacker.id,
+      attacker.team
+    );
+    newState.gameLog = [...newState.gameLog, sneakyLog];
   }
 
   return newState;

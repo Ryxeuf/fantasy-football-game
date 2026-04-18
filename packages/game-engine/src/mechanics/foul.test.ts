@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { setup, applyMove } from '../index';
+import { setup, applyMove, canPlayerContinueMoving } from '../index';
 import { GameState, RNG, Move } from '../core/types';
 import { canFoul, calculateFoulAssists } from './foul';
 
@@ -134,5 +134,72 @@ describe('Foul Action', () => {
 
     const fouler = result.players.find(p => p.id === 'A1')!;
     expect(fouler.state).not.toBe('sent_off');
+  });
+});
+
+describe('Regle: Sneaky Git', () => {
+  it('ne declenche pas d\'expulsion sur un doublet naturel au jet d\'armure', () => {
+    const state = createFoulTestState();
+    state.players[0].skills = ['sneaky-git'];
+    // RNG: die1=6, die2=6 => doublet, armor = 12+1 = 13 (broken)
+    const rng = makeTestRNG([0.83, 0.83, 0.5, 0.5, 0.5]);
+
+    const move: Move = { type: 'FOUL', playerId: 'A1', targetId: 'B1' };
+    const result = applyMove(state, move, rng);
+
+    const fouler = result.players.find(p => p.id === 'A1')!;
+    // Doublet 6-6 : normalement expulse, mais sneaky-git annule l'expulsion
+    expect(fouler.state).not.toBe('sent_off');
+  });
+
+  it('reste expulse sans sneaky-git sur un doublet naturel', () => {
+    const state = createFoulTestState();
+    // pas de skill sneaky-git
+    const rng = makeTestRNG([0.83, 0.83, 0.5, 0.5, 0.5]);
+
+    const move: Move = { type: 'FOUL', playerId: 'A1', targetId: 'B1' };
+    const result = applyMove(state, move, rng);
+
+    const fouler = result.players.find(p => p.id === 'A1')!;
+    expect(fouler.state).toBe('sent_off');
+  });
+
+  it('applique le jet de blessure normalement malgre sneaky-git', () => {
+    const state = createFoulTestState();
+    state.players[0].skills = ['sneaky-git'];
+    // die1=6 die2=6 armor brisee, puis injury die1=6, die2=6 => 12 casualty
+    const rng = makeTestRNG([0.83, 0.83, 0.83, 0.83, 0.5]);
+
+    const move: Move = { type: 'FOUL', playerId: 'A1', targetId: 'B1' };
+    const result = applyMove(state, move, rng);
+
+    const victim = result.players.find(p => p.id === 'B1')!;
+    // La cible a subi le jet de blessure (pas active apres armor brisee + injury 12)
+    expect(victim.state).not.toBe('active');
+    const fouler = result.players.find(p => p.id === 'A1')!;
+    expect(fouler.state).not.toBe('sent_off');
+  });
+
+  it('autorise la poursuite de l\'activation apres une faute', () => {
+    const state = createFoulTestState();
+    state.players[0].skills = ['sneaky-git'];
+    // PM = 6, die1=1 die2=3 (pas de doublet, pas d'expulsion meme sans sneaky-git)
+    const rng = makeTestRNG([0.16, 0.4, 0.5, 0.5, 0.5]);
+
+    const move: Move = { type: 'FOUL', playerId: 'A1', targetId: 'B1' };
+    const result = applyMove(state, move, rng);
+
+    // Avec sneaky-git, le joueur peut continuer a bouger apres la faute
+    expect(canPlayerContinueMoving(result, 'A1')).toBe(true);
+  });
+
+  it('stoppe l\'activation apres une faute sans sneaky-git', () => {
+    const state = createFoulTestState();
+    const rng = makeTestRNG([0.16, 0.4, 0.5, 0.5, 0.5]);
+
+    const move: Move = { type: 'FOUL', playerId: 'A1', targetId: 'B1' };
+    const result = applyMove(state, move, rng);
+
+    expect(canPlayerContinueMoving(result, 'A1')).toBe(false);
   });
 });
