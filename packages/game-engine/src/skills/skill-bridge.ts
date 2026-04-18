@@ -110,6 +110,15 @@ export function getFoulArmorSkillModifiers(
 }
 
 /**
+ * Indique si un joueur peut ignorer l'expulsion automatique sur un doublet
+ * naturel au jet d'armure d'une faute. Correspond au skill `sneaky-git`.
+ */
+export function isSneakyGitActive(state: GameState, player: Player): boolean {
+  const effect = getSkillEffect('sneaky-git');
+  return effect?.canApply({ player, state }) ?? false;
+}
+
+/**
  * Vérifie si un joueur possède Guard via le skill-registry.
  * Remplace l'appel direct à hasGuard() de skill-effects.
  */
