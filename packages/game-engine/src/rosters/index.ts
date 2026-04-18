@@ -49,6 +49,13 @@ export {
   type TeamSpriteManifest,
 } from './team-sprites';
 
+// Export des equipes prioritaires (P2.7)
+export {
+  PRIORITY_TEAM_ROSTERS,
+  getStarPlayersHirableByPriorityTeams,
+  type PriorityTeamRoster,
+} from './priority-teams';
+
 // Export des utilitaires Star Players
 export * from './star-players-utils';
 export {
