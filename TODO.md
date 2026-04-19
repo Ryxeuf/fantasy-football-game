@@ -272,7 +272,7 @@
 |---|-------|------|--------|
 | N.1 | Tutoriel interactif (match guide, scripts pas a pas) | Engagement | [x] |
 | N.2 | Mode simplifie pour debutants (leverager `SIMPLIFIED_RULES`) | Engagement | [x] |
-| N.3 | IA adversaire — evaluation heuristique basique (eval position + coup) | Engagement | [ ] |
+| N.3 | IA adversaire — evaluation heuristique basique (eval position + coup) | Engagement | [x] |
 | N.4 | Mode pratique contre IA (3 niveaux de difficulte) | Engagement | [ ] |
 | N.4b | IA contrainte aux 5 equipes prioritaires dans un premier temps | Engagement | [ ] |
 
