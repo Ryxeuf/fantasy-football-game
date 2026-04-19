@@ -24,6 +24,8 @@ export const chooseTeamSchema = z.object({
 export const createMatchSchema = z.object({
   terrainSkin: z.string().max(50).optional(),
   turnTimerEnabled: z.boolean().optional(),
+  // N.2 — Mode simplifie pour debutants : leverager SIMPLIFIED_RULES.
+  rulesMode: z.enum(['full', 'simplified']).optional(),
 });
 
 const positionSchema = z.object({

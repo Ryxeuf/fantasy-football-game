@@ -2,6 +2,7 @@ import {
   makeRNG,
   setupPreMatchWithTeams,
   TeamPlayerData,
+  type RulesMode,
 } from "@bb/game-engine";
 import { getLinemanStats } from "./journeymen";
 import { runAutomatedPreMatchSequence } from "./pre-match-automation";
@@ -217,8 +218,18 @@ export async function acceptAndMaybeStartMatch(
     }
   }
 
+  // Lire le turn "match-options" en AMONT pour propager `rulesMode` a setupPreMatchWithTeams.
+  const allTurns = await prisma.turn.findMany({
+    where: { matchId },
+    orderBy: { number: 'asc' },
+  });
+  const optionsTurn = allTurns.find((t: any) => (t.payload as any)?.type === 'match-options');
+  const opts = optionsTurn ? (optionsTurn.payload as any) : null;
+  const rulesMode: RulesMode = opts?.rulesMode === 'simplified' ? 'simplified' : 'full';
+
   // Initialiser l'état du jeu en phase pré-match avec les vraies équipes.
   // H.6 — propagate roster slugs so the client renderer can pick per-roster colors.
+  // N.2 — propagate `rulesMode` so SIMPLIFIED_RULES is applied (rerolls, timer, turnsPerHalf).
   let gameState = setupPreMatchWithTeams(
     teamAData,
     teamBData,
@@ -227,17 +238,12 @@ export async function acceptAndMaybeStartMatch(
     {
       teamARoster: teamA.roster,
       teamBRoster: teamB.roster,
+      rulesMode,
     },
   );
 
-  // Injecter les options de match (terrain skin, timer) depuis le turn "match-options"
-  const allTurns = await prisma.turn.findMany({
-    where: { matchId },
-    orderBy: { number: 'asc' },
-  });
-  const optionsTurn = allTurns.find((t: any) => (t.payload as any)?.type === 'match-options');
-  if (optionsTurn) {
-    const opts = optionsTurn.payload as any;
+  // Injecter les options de match restantes (terrain skin, timer enable flag)
+  if (opts) {
     gameState = {
       ...gameState,
       terrainSkin: opts.terrainSkin || 'grass',

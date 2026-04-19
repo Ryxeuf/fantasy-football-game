@@ -1,5 +1,5 @@
 import { prisma } from "../prisma";
-import { applyMove, makeRNG } from "@bb/game-engine";
+import { applyMove, makeRNG, isMatchEnded } from "@bb/game-engine";
 import type { Move, ExtendedGameState } from "@bb/game-engine";
 import { getUserTeamSide } from "./turn-ownership";
 import { persistMatchSPP } from "./spp-tracking";
@@ -129,8 +129,8 @@ export async function processMove(
     ? selections[0]?.userId
     : selections[1]?.userId;
 
-  // Check if match ended (half 2, turn > 8)
-  const matchEnded = newState.half === 2 && newState.turn > 8 && newState.isTurnover;
+  // N.2 — Check if match ended (honors rulesConfig.turnsPerHalf: 8 in full, 6 in simplified)
+  const matchEnded = isMatchEnded(newState);
   await prisma.match.update({
     where: { id: matchId },
     data: {

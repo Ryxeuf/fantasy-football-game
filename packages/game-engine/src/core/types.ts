@@ -245,6 +245,13 @@ export interface GameState {
   }>;
   // Timer de tour (en secondes, 0 = désactivé)
   turnTimerSeconds: number;
+  /**
+   * N.2 — Mode simplifie pour debutants.
+   * Configuration de regles appliquee au match (toggle features, duree des
+   * mi-temps, rerolls, timer). Optionnel pour conserver la compat descendante :
+   * en l'absence, les helpers retombent sur FULL_RULES (8 tours, 3 rerolls).
+   */
+  rulesConfig?: import('./rules-config').RulesConfig;
   // Deadline ISO du timer actuel (mis à jour côté serveur, utilisé côté client pour l'affichage)
   turnDeadline?: string;
   // Log du match

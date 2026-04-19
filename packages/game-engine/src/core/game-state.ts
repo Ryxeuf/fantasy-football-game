@@ -10,7 +10,7 @@ import { initializeDugouts } from '../mechanics/dugout';
 import { rollKickoffEvent, applyKickoffEvent } from '../mechanics/kickoff-events';
 import { applyKickSkillToDeviation } from '../mechanics/kick-skill';
 import { calculateMatchWinnings } from '../utils/team-value-calculator';
-import { FULL_RULES } from './rules-config';
+import { FULL_RULES, getRulesConfig, type RulesConfig, type RulesMode } from './rules-config';
 import { expelSecretWeapons } from '../mechanics/secret-weapons';
 import { getWeatherModifiers, applyWeatherDriveEffects } from '../mechanics/weather-effects';
 import { getWeatherCondition, type WeatherType } from './weather-types';
@@ -59,8 +59,15 @@ export function setupPreMatchWithTeams(
     teamARoster?: string;
     /** H.6 — canonical roster slug for team B (e.g. 'lizardmen'). */
     teamBRoster?: string;
+    /**
+     * N.2 — Mode de regles (`full` par defaut, ou `simplified` pour debutants).
+     * Applique les valeurs de la config choisie aux champs impactes :
+     * `turnTimerSeconds`, `teamRerolls`, et attache `rulesConfig` a l'etat.
+     */
+    rulesMode?: RulesMode;
   }
 ): ExtendedGameState {
+  const rulesConfig: RulesConfig = getRulesConfig(options?.rulesMode ?? 'full');
   const dugouts = initializeDugouts();
 
   // Créer les joueurs de l'équipe A
@@ -133,7 +140,10 @@ export function setupPreMatchWithTeams(
     playerActions: {} as Record<string, ActionType>,
     teamBlitzCount: {} as Record<string, number>,
     teamFoulCount: {} as Record<string, number>,
-    teamRerolls: { teamA: 3, teamB: 3 },
+    teamRerolls: {
+      teamA: rulesConfig.rerollsPerTeam,
+      teamB: rulesConfig.rerollsPerTeam,
+    },
     rerollUsedThisTurn: false,
     apothecaryAvailable: {
       teamA: options?.teamAApothecary ?? false,
@@ -159,13 +169,22 @@ export function setupPreMatchWithTeams(
     lastingInjuryDetails: {},
     usedStarPlayerRules: {},
     bribesRemaining: { teamA: 0, teamB: 0 },
-    turnTimerSeconds: FULL_RULES.turnTimerSeconds,
+    turnTimerSeconds: rulesConfig.turnTimerSeconds,
+    rulesConfig,
     // Log du match
     gameLog: [
       createLogEntry(
         'info',
         `Phase pré-match - ${teamAName} vs ${teamBName} - Les joueurs sont en réserves`
       ),
+      ...(rulesConfig.mode === 'simplified'
+        ? [
+            createLogEntry(
+              'info',
+              `Mode simplifié (débutants) activé : ${rulesConfig.turnsPerHalf} tours par mi-temps, ${rulesConfig.rerollsPerTeam} relances, timer ${rulesConfig.turnTimerSeconds}s. Compétences, météo et événements de kickoff désactivés.`
+            ),
+          ]
+        : []),
     ],
   };
 
@@ -522,17 +541,46 @@ export function startMatchFromPreMatch(state: GameState): GameState {
 }
 
 /**
- * Gère la fin de tour et de mi-temps (8 tours par équipe / 8 "rounds")
+ * N.2 — Helpers Rules Config.
+ * `getRulesConfigForState` retourne la config attachee a l'etat (ou FULL_RULES par defaut).
+ * `getTurnsPerHalf` centralise la lecture de `turnsPerHalf` (8 en full, 6 en simplified).
+ * `isSimplifiedMode` permet aux consommateurs (UI, moteur) de brancher des comportements optionnels.
+ */
+export function getRulesConfigForState(state: Pick<GameState, 'rulesConfig'>): RulesConfig {
+  return state.rulesConfig ?? FULL_RULES;
+}
+
+export function getTurnsPerHalf(state: Pick<GameState, 'rulesConfig'>): number {
+  return getRulesConfigForState(state).turnsPerHalf;
+}
+
+export function isSimplifiedMode(state: Pick<GameState, 'rulesConfig'>): boolean {
+  return getRulesConfigForState(state).mode === 'simplified';
+}
+
+/**
+ * N.2 — Detection centralisee de fin de match, remplace `newState.half === 2 && newState.turn > 8 && newState.isTurnover`
+ * dans move-processor. Honore `rulesConfig.turnsPerHalf` (6 en mode simplifie).
+ */
+export function isMatchEnded(state: Pick<GameState, 'rulesConfig' | 'half' | 'turn' | 'isTurnover'>): boolean {
+  const turnsPerHalf = getTurnsPerHalf(state);
+  return state.half === 2 && state.turn > turnsPerHalf && state.isTurnover === true;
+}
+
+/**
+ * Gère la fin de tour et de mi-temps.
+ * Nombre de tours par mi-temps respecte `rulesConfig.turnsPerHalf` (8 en full, 6 en simplified).
  * @param state - État du jeu
  * @returns Nouvel état du jeu après vérification de la mi-temps
  */
 export function advanceHalfIfNeeded(state: GameState, rng: RNG): GameState {
-  // Si on a dépassé le 8e round, on passe à la mi‑temps suivante ou on termine le match
-  if (state.turn > 8) {
+  const turnsPerHalf = getTurnsPerHalf(state);
+  // Si on a dépassé le Xe round (selon rulesConfig.turnsPerHalf), on passe à la mi‑temps suivante ou on termine le match
+  if (state.turn > turnsPerHalf) {
     if (state.half === 1) {
       const halftimeLog = createLogEntry(
         'info',
-        `Mi-temps atteinte (8 tours par équipe). Début de la 2e mi-temps`,
+        `Mi-temps atteinte (${turnsPerHalf} tours par équipe). Début de la 2e mi-temps`,
         undefined,
         undefined
       );
