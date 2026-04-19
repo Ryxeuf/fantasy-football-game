@@ -35,6 +35,11 @@ export default function Footer() {
                   {t.play?.playOnline || "Jouer en ligne"}
                 </a>
               </li>
+              <li>
+                <a href="/tutoriel" className="hover:text-nuffle-gold hover:underline transition-colors">
+                  {t.footer.tutorial}
+                </a>
+              </li>
             </ul>
           </div>
           <div>

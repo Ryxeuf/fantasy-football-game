@@ -270,7 +270,7 @@
 
 | # | Tache | Type | Statut |
 |---|-------|------|--------|
-| N.1 | Tutoriel interactif (match guide, scripts pas a pas) | Engagement | [ ] |
+| N.1 | Tutoriel interactif (match guide, scripts pas a pas) | Engagement | [x] |
 | N.2 | Mode simplifie pour debutants (leverager `SIMPLIFIED_RULES`) | Engagement | [ ] |
 | N.3 | IA adversaire — evaluation heuristique basique (eval position + coup) | Engagement | [ ] |
 | N.4 | Mode pratique contre IA (3 niveaux de difficulte) | Engagement | [ ] |
