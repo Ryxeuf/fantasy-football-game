@@ -378,3 +378,23 @@ export {
   type ReplayFrame,
   type ReplayTurnPayload,
 } from './core/replay';
+
+// Export du module tutoriel (N.1)
+export {
+  listTutorialScripts,
+  findTutorialScript,
+  createTutorialProgress,
+  advanceTutorialProgress,
+  goBackTutorialProgress,
+  restartTutorialProgress,
+  isTutorialComplete,
+  getCurrentStep,
+  getProgressRatio,
+  MON_PREMIER_MATCH,
+  type TutorialScript,
+  type TutorialStep,
+  type TutorialStepActionKind,
+  type TutorialStepHighlight,
+  type TutorialProgress,
+  type TutorialDifficulty,
+} from './tutorial';

@@ -83,6 +83,7 @@ export const translations = {
       items: "élément",
       itemsPlural: "éléments",
       compulsory: "Obligatoire",
+      tutorial: "Tutoriel interactif",
     },
     // Star Players page
     starPlayers: {
@@ -496,6 +497,7 @@ export const translations = {
       items: "item",
       itemsPlural: "items",
       compulsory: "Compulsory",
+      tutorial: "Interactive tutorial",
     },
     // Star Players page
     starPlayers: {
