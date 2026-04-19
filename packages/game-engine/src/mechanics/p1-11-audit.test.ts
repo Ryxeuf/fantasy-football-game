@@ -13,7 +13,12 @@ import {
   type GameState,
   type Player,
 } from '../index';
-import { TEAM_ROSTERS } from '../rosters/positions';
+import { TEAM_ROSTERS_BY_RULESET } from '../rosters/positions';
+
+// P1.11 fige le contenu MVP audité sur le ruleset Saison 2 (slugs d'origine).
+// Ce bloc utilise explicitement `season_2` pour rester stable face au défaut
+// global (désormais `season_3`), qui renomme ces positions.
+const TEAM_ROSTERS = TEAM_ROSTERS_BY_RULESET.season_2;
 import { hasSkill } from '../skills/skill-effects';
 import { getDodgeSkillModifiers, getInjurySkillModifiers } from '../skills/skill-bridge';
 import { canTriggerOnTheBall, getOnTheBallReactivePlayers } from './on-the-ball';

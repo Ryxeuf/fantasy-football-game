@@ -109,7 +109,7 @@ model Team {
   ownerId             String
   name                String
   roster              String // 'skaven' | 'lizardmen'
-  ruleset             Ruleset          @default(season_2)
+  ruleset             Ruleset          @default(season_3)
   createdAt           DateTime         @default(now())
   players             TeamPlayer[]
   starPlayers         TeamStarPlayer[]

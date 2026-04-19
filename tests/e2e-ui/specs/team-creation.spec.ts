@@ -104,6 +104,63 @@ test.describe("E2E UI — team creation", () => {
     expect(new URL(page.url()).pathname).toMatch(/^\/me\/teams\/[^/]+$/);
   });
 
+  test("la saison 3 est sélectionnée par défaut", async ({ page }) => {
+    const login = new LoginPage(page);
+    await login.goto();
+    await login.login("coach@playwright.test", "password-c");
+    await page.waitForURL(/\/(play|team|me)/, { timeout: 15_000 });
+
+    const builder = new TeamBuilderPage(page);
+    await builder.goto();
+
+    await expect(builder.rulesetSelect).toBeVisible({ timeout: 10_000 });
+    await expect(builder.rulesetSelect).toHaveValue("season_3");
+  });
+
+  test("création avec staff : relances, cheerleaders et apothicaire", async ({
+    page,
+  }) => {
+    const login = new LoginPage(page);
+    await login.goto();
+    await login.login("coach@playwright.test", "password-c");
+    await page.waitForURL(/\/(play|team|me)/, { timeout: 15_000 });
+
+    const builder = new TeamBuilderPage(page);
+    await builder.goto();
+    await expect(builder.rosterSelect).toBeVisible({ timeout: 10_000 });
+
+    await builder.fillName("Staffed Rats");
+
+    // Configure du staff avant d'ajouter les joueurs pour valider l'impact budget.
+    await builder.setStaff({
+      rerolls: 2,
+      cheerleaders: 1,
+      assistants: 1,
+      dedicatedFans: 2,
+      apothecary: true,
+    });
+
+    // Staff skaven : 2*50 + 1*10 + 1*10 + 50 + (2-1)*10 = 180k
+    await expect(builder.staffCost).toHaveText(/180.*po/);
+
+    await page
+      .locator('[data-testid^="position-add-"]')
+      .first()
+      .waitFor({ state: "visible", timeout: 10_000 });
+
+    await fillRosterUntilValid(page, builder);
+
+    await expect(builder.submitButton).toBeEnabled({ timeout: 5_000 });
+
+    await builder.submit();
+    await page.waitForURL(/\/me\/teams\/[^/]+$/, { timeout: 15_000 });
+
+    // Vérifier que la page détail affiche bien les infos staff configurées.
+    await expect(page.getByText(/Relance|Reroll/i).first()).toBeVisible({
+      timeout: 10_000,
+    });
+  });
+
   test("l'équipe créée apparaît dans la liste /me/teams", async ({ page }) => {
     const login = new LoginPage(page);
     await login.goto();

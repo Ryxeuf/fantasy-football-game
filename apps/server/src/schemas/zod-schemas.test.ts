@@ -48,6 +48,7 @@ import {
   addPlayerSchema,
   updatePlayerSkillsSchema,
   addStarPlayerToTeamSchema,
+  buildTeamSchema,
 } from "./team.schemas";
 
 // ---------------------------------------------------------------------------
@@ -485,6 +486,87 @@ describe("Team schemas", () => {
 
     it("rejects empty slug", () => {
       expect(() => addStarPlayerToTeamSchema.parse({ starPlayerSlug: "" })).toThrow();
+    });
+  });
+
+  describe("buildTeamSchema", () => {
+    const baseBody = {
+      name: "Les Fous",
+      roster: "human",
+      choices: [{ key: "lineman", count: 11 }],
+    };
+
+    it("accepts minimal body without staff fields (all optional)", () => {
+      const result = buildTeamSchema.parse(baseBody);
+      expect(result.name).toBe("Les Fous");
+      expect(result.rerolls).toBeUndefined();
+      expect(result.cheerleaders).toBeUndefined();
+      expect(result.assistants).toBeUndefined();
+      expect(result.apothecary).toBeUndefined();
+      expect(result.dedicatedFans).toBeUndefined();
+    });
+
+    it("accepts valid staff values within bounds", () => {
+      const result = buildTeamSchema.parse({
+        ...baseBody,
+        rerolls: 3,
+        cheerleaders: 2,
+        assistants: 1,
+        apothecary: true,
+        dedicatedFans: 4,
+      });
+      expect(result.rerolls).toBe(3);
+      expect(result.cheerleaders).toBe(2);
+      expect(result.assistants).toBe(1);
+      expect(result.apothecary).toBe(true);
+      expect(result.dedicatedFans).toBe(4);
+    });
+
+    it("accepts zero for staff counters that allow 0", () => {
+      const result = buildTeamSchema.parse({
+        ...baseBody,
+        rerolls: 0,
+        cheerleaders: 0,
+        assistants: 0,
+      });
+      expect(result.rerolls).toBe(0);
+    });
+
+    it("rejects rerolls > 8", () => {
+      expect(() => buildTeamSchema.parse({ ...baseBody, rerolls: 9 })).toThrow();
+    });
+
+    it("rejects negative rerolls", () => {
+      expect(() => buildTeamSchema.parse({ ...baseBody, rerolls: -1 })).toThrow();
+    });
+
+    it("rejects non-integer rerolls", () => {
+      expect(() => buildTeamSchema.parse({ ...baseBody, rerolls: 1.5 })).toThrow();
+    });
+
+    it("rejects cheerleaders > 12", () => {
+      expect(() => buildTeamSchema.parse({ ...baseBody, cheerleaders: 13 })).toThrow();
+    });
+
+    it("rejects assistants > 6", () => {
+      expect(() => buildTeamSchema.parse({ ...baseBody, assistants: 7 })).toThrow();
+    });
+
+    it("rejects dedicatedFans < 1", () => {
+      expect(() => buildTeamSchema.parse({ ...baseBody, dedicatedFans: 0 })).toThrow();
+    });
+
+    it("rejects dedicatedFans > 6", () => {
+      expect(() => buildTeamSchema.parse({ ...baseBody, dedicatedFans: 7 })).toThrow();
+    });
+
+    it("rejects non-boolean apothecary", () => {
+      expect(() => buildTeamSchema.parse({ ...baseBody, apothecary: "yes" })).toThrow();
+    });
+
+    it("still requires name, roster, and choices", () => {
+      expect(() => buildTeamSchema.parse({ name: "X", roster: "human" })).toThrow();
+      expect(() => buildTeamSchema.parse({ name: "", roster: "human", choices: [] })).toThrow();
     });
   });
 });

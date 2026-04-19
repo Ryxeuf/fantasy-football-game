@@ -18,7 +18,7 @@ router.get("/skills", async (req, res) => {
       where.category = category;
     }
 
-    // Filtre obligatoire par ruleset (par défaut season_2)
+    // Filtre obligatoire par ruleset (par défaut season_3)
     where.ruleset = resolveRuleset(ruleset as string | undefined);
     
     if (search) {

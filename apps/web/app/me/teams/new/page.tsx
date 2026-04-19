@@ -4,7 +4,7 @@ import { API_BASE } from "../../../auth-client";
 import StarPlayerSelector from "../../../components/StarPlayerSelector";
 import SkillTooltip from "../components/SkillTooltip";
 import { useLanguage } from "../../../contexts/LanguageContext";
-import { DEFAULT_RULESET, RULESETS, type Ruleset } from "@bb/game-engine";
+import { DEFAULT_RULESET, RULESETS, type Ruleset, getRerollCost } from "@bb/game-engine";
 
 type Position = {
   slug: string;
@@ -69,6 +69,12 @@ export default function NewTeamBuilder() {
   const [error, setError] = useState<string | null>(null);
   const [rosters, setRosters] = useState<Roster[]>([]);
   const [loadingRosters, setLoadingRosters] = useState(true);
+
+  const [rerolls, setRerolls] = useState(0);
+  const [cheerleaders, setCheerleaders] = useState(0);
+  const [assistants, setAssistants] = useState(0);
+  const [apothecary, setApothecary] = useState(false);
+  const [dedicatedFans, setDedicatedFans] = useState(1);
 
   // Charger la liste des rosters depuis l'API selon la langue
   useEffect(() => {
@@ -144,6 +150,18 @@ export default function NewTeamBuilder() {
     [totalPlayers, selectedStarPlayers],
   );
 
+  const rerollUnitCost = useMemo(() => getRerollCost(rosterId) / 1000, [rosterId]);
+  const staffCost = useMemo(
+    () =>
+      rerolls * rerollUnitCost +
+      cheerleaders * 10 +
+      assistants * 10 +
+      (apothecary ? 50 : 0) +
+      Math.max(0, dedicatedFans - 1) * 10,
+    [rerolls, rerollUnitCost, cheerleaders, assistants, apothecary, dedicatedFans],
+  );
+  const remainingBudget = teamValue - total - staffCost;
+
   const rulesetLabels: Record<Ruleset, string> = {
     season_2: t.teams.rulesetSeason2 ?? "Saison 2",
     season_3: t.teams.rulesetSeason3 ?? "Saison 3",
@@ -181,7 +199,12 @@ export default function NewTeamBuilder() {
             key: slug,
             count,
           })),
-          starPlayers: selectedStarPlayers, // ✨ Ajout des Star Players
+          starPlayers: selectedStarPlayers,
+          rerolls,
+          cheerleaders,
+          assistants,
+          apothecary,
+          dedicatedFans,
         }),
       });
       const json = await res.json();
@@ -323,14 +346,95 @@ export default function NewTeamBuilder() {
         selectedStarPlayers={selectedStarPlayers}
         onSelectionChange={setSelectedStarPlayers}
         currentPlayerCount={totalPlayers}
-        availableBudget={(teamValue - total) * 1000}
+        availableBudget={Math.max(0, (teamValue - total - staffCost) * 1000)}
       />
 
+      <div className="rounded border bg-white p-4 space-y-4">
+        <h2 className="text-lg font-semibold">{t.teams.teamInfo ?? "Staff"}</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {t.teams.rerolls} ({rerollUnitCost}{t.teams.kpo})
+            </label>
+            <input
+              data-testid="staff-rerolls"
+              type="number"
+              min={0}
+              max={8}
+              value={rerolls}
+              onChange={(e) => setRerolls(Math.max(0, Math.min(8, parseInt(e.target.value) || 0)))}
+              className="border p-2 w-full rounded"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {t.teams.cheerleaders} (10{t.teams.kpo})
+            </label>
+            <input
+              data-testid="staff-cheerleaders"
+              type="number"
+              min={0}
+              max={12}
+              value={cheerleaders}
+              onChange={(e) => setCheerleaders(Math.max(0, Math.min(12, parseInt(e.target.value) || 0)))}
+              className="border p-2 w-full rounded"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {t.teams.assistants} (10{t.teams.kpo})
+            </label>
+            <input
+              data-testid="staff-assistants"
+              type="number"
+              min={0}
+              max={6}
+              value={assistants}
+              onChange={(e) => setAssistants(Math.max(0, Math.min(6, parseInt(e.target.value) || 0)))}
+              className="border p-2 w-full rounded"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {t.teams.dedicatedFans} (10{t.teams.kpo})
+            </label>
+            <input
+              data-testid="staff-dedicated-fans"
+              type="number"
+              min={1}
+              max={6}
+              value={dedicatedFans}
+              onChange={(e) => setDedicatedFans(Math.max(1, Math.min(6, parseInt(e.target.value) || 1)))}
+              className="border p-2 w-full rounded"
+            />
+          </div>
+          <div className="flex items-center gap-3">
+            <input
+              data-testid="staff-apothecary"
+              type="checkbox"
+              checked={apothecary}
+              onChange={(e) => setApothecary(e.target.checked)}
+              className="h-4 w-4"
+            />
+            <label className="text-sm text-gray-700">
+              {t.teams.apothecary} (50{t.teams.kpo})
+            </label>
+          </div>
+        </div>
+        <div className="text-sm text-gray-600" data-testid="staff-cost">
+          {t.teams.staffCost ?? "Coût staff"} : {staffCost}{t.teams.kpo}
+        </div>
+      </div>
+
       <div className="rounded border bg-gray-50 p-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3 text-sm">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-3 text-sm">
           <div>
             <div className="text-gray-600">{t.teams.playersCost}</div>
             <div className="font-semibold text-lg">{total}{t.teams.kpo}</div>
+          </div>
+          <div>
+            <div className="text-gray-600">{t.teams.staffCost ?? "Coût staff"}</div>
+            <div className="font-semibold text-lg" data-testid="staff-cost-summary">{staffCost}{t.teams.kpo}</div>
           </div>
           <div>
             <div className="text-gray-600">{t.teams.totalBudget}</div>
@@ -338,8 +442,11 @@ export default function NewTeamBuilder() {
           </div>
           <div>
             <div className="text-gray-600">{t.teams.remainingBudget}</div>
-            <div className={`font-semibold text-lg ${teamValue - total < 0 ? 'text-red-600' : 'text-green-600'}`}>
-              {teamValue - total}{t.teams.kpo}
+            <div
+              data-testid="remaining-budget"
+              className={`font-semibold text-lg ${remainingBudget < 0 ? 'text-red-600' : 'text-green-600'}`}
+            >
+              {remainingBudget}{t.teams.kpo}
             </div>
           </div>
           <div>
@@ -372,7 +479,7 @@ export default function NewTeamBuilder() {
             data-testid="create-team-submit"
             className="px-6 py-3 bg-emerald-600 text-white rounded font-medium disabled:bg-gray-400 disabled:cursor-not-allowed hover:bg-emerald-700 transition-colors"
             onClick={submit}
-            disabled={totalPlayersWithStars < 11 || totalPlayersWithStars > 16}
+            disabled={totalPlayersWithStars < 11 || totalPlayersWithStars > 16 || remainingBudget < 0}
           >
             {t.teams.createTeamButton}
           </button>
