@@ -130,6 +130,8 @@ test.describe("E2E UI — team creation", () => {
     await expect(builder.rosterSelect).toBeVisible({ timeout: 10_000 });
 
     await builder.fillName("Staffed Rats");
+    // Skaven explicitement pour figer le coût de reroll (50k) attendu.
+    await builder.selectRoster("skaven");
 
     // Configure du staff avant d'ajouter les joueurs pour valider l'impact budget.
     await builder.setStaff({

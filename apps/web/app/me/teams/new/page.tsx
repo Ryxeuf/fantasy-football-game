@@ -323,13 +323,13 @@ export default function NewTeamBuilder() {
                   <button
                     data-testid={`position-add-${p.slug}`}
                     className={`px-2 py-1 border rounded ${
-                      (counts[p.slug] || 0) >= (p.max || 16) || 
-                      total + p.cost > teamValue 
-                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
+                      (counts[p.slug] || 0) >= (p.max || 16) ||
+                      total + staffCost + p.cost > teamValue
+                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                         : 'hover:bg-gray-100 transition-colors'
                     }`}
                     onClick={() => change(p.slug, 1)}
-                    disabled={(counts[p.slug] || 0) >= (p.max || 16) || total + p.cost > teamValue}
+                    disabled={(counts[p.slug] || 0) >= (p.max || 16) || total + staffCost + p.cost > teamValue}
                   >
                     +
                   </button>

@@ -668,10 +668,26 @@ router.post("/build", authUser, validate(buildTeamSchema), async (req: Authentic
   if (totalPlayers < 11 || totalPlayers > 16)
     return res.status(400).json({ error: "Il faut entre 11 et 16 joueurs" });
 
+  // Staff facultatif: valeurs par défaut si non fournies. Calculé avant
+  // la validation Star Players pour que leur budget disponible soit juste.
+  const rerolls = bodyRerolls ?? 0;
+  const cheerleaders = bodyCheerleaders ?? 0;
+  const assistants = bodyAssistants ?? 0;
+  const apothecary = bodyApothecary ?? false;
+  const dedicatedFans = bodyDedicatedFans ?? 1;
+
+  const rerollUnitCost = getRerollCost(roster) / 1000; // kpo
+  const staffCost =
+    rerolls * rerollUnitCost +
+    cheerleaders * 10 +
+    assistants * 10 +
+    (apothecary ? 50 : 0) +
+    Math.max(0, dedicatedFans - 1) * 10;
+
   // Valider les Star Players si fournis
   const starPlayersToHire = starPlayerSlugs || [];
   let starPlayersCost = 0;
-  
+
   if (starPlayersToHire.length > 0) {
     // Valider les paires obligatoires
     const pairValidation = validateStarPlayerPairs(starPlayersToHire);
@@ -681,45 +697,28 @@ router.post("/build", authUser, validate(buildTeamSchema), async (req: Authentic
 
     // Valider que Star Players + joueurs ne dépassent pas 16
     if (totalPlayers + starPlayersToHire.length > 16) {
-      return res.status(400).json({ 
-        error: `Trop de joueurs ! ${totalPlayers} joueurs + ${starPlayersToHire.length} Star Players = ${totalPlayers + starPlayersToHire.length} (maximum: 16)` 
+      return res.status(400).json({
+        error: `Trop de joueurs ! ${totalPlayers} joueurs + ${starPlayersToHire.length} Star Players = ${totalPlayers + starPlayersToHire.length} (maximum: 16)`
       });
     }
 
     // Calculer le coût des Star Players
-    starPlayersCost = calculateStarPlayersCost(starPlayersToHire, ruleset) / 1000; // Convertir en K po
-    
-    // Valider la disponibilité pour ce roster
+    starPlayersCost = calculateStarPlayersCost(starPlayersToHire, ruleset) / 1000;
+
+    // Budget disponible = budget total - joueurs - staff déjà engagé
     const budgetInPo = finalTeamValue * 1000;
     const validation = validateStarPlayersForTeam(
       starPlayersToHire,
       roster,
       totalPlayers,
-      budgetInPo - (totalCost * 1000),
+      budgetInPo - (totalCost * 1000) - (staffCost * 1000),
       ruleset,
     );
-    
+
     if (!validation.valid) {
       return res.status(400).json({ error: validation.error });
     }
   }
-
-  // Staff facultatif: appliquer les valeurs par défaut si non fournies
-  const rerolls = bodyRerolls ?? 0;
-  const cheerleaders = bodyCheerleaders ?? 0;
-  const assistants = bodyAssistants ?? 0;
-  const apothecary = bodyApothecary ?? false;
-  const dedicatedFans = bodyDedicatedFans ?? 1;
-
-  // Coût du staff (kpo). Coûts officiels Blood Bowl — cohérent avec
-  // team-value-calculator.ts et TeamInfoEditor.tsx.
-  const rerollUnitCost = getRerollCost(roster) / 1000; // kpo
-  const staffCost =
-    rerolls * rerollUnitCost +
-    cheerleaders * 10 +
-    assistants * 10 +
-    (apothecary ? 50 : 0) +
-    Math.max(0, dedicatedFans - 1) * 10;
 
   // Vérifier le budget total (joueurs + Star Players + staff)
   const totalBudgetUsed = totalCost + starPlayersCost + staffCost;
