@@ -120,6 +120,8 @@ export default function PlayPage() {
   // Match creation options
   const [selectedTerrain, setSelectedTerrain] = useState("grass");
   const [turnTimerEnabled, setTurnTimerEnabled] = useState(true);
+  // N.2 — Mode simplifie pour debutants (leverager SIMPLIFIED_RULES)
+  const [simplifiedMode, setSimplifiedMode] = useState(false);
 
   // Matchmaking state
   const [teams, setTeams] = useState<TeamOption[]>([]);
@@ -273,6 +275,7 @@ export default function PlayPage() {
       const { match, matchToken } = await apiPost("/match/create", {
         terrainSkin: selectedTerrain,
         turnTimerEnabled,
+        rulesMode: simplifiedMode ? "simplified" : "full",
       });
       localStorage.setItem("match_token", matchToken);
       window.location.href = `/team/select?matchId=${match.id}`;
@@ -552,6 +555,19 @@ export default function PlayPage() {
                 />
                 <label htmlFor="turnTimer" className="text-xs font-subtitle text-nuffle-anthracite/70">
                   Timer de tour (quitter = forfait si active)
+                </label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="simplifiedMode"
+                  data-testid="simplified-mode-toggle"
+                  checked={simplifiedMode}
+                  onChange={(e) => setSimplifiedMode(e.target.checked)}
+                  className="rounded border-nuffle-bronze/30 text-nuffle-gold focus:ring-nuffle-gold"
+                />
+                <label htmlFor="simplifiedMode" className="text-xs font-subtitle text-nuffle-anthracite/70">
+                  Mode simplifié (débutants) — 6 tours/mi-temps, 4 relances, sans compétences
                 </label>
               </div>
             </div>

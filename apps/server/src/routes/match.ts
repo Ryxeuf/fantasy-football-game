@@ -25,7 +25,7 @@ const ALLOWED_TEAMS = ["skaven", "lizardmen"] as const;
 // Créer une partie, le créateur reçoit un token de match
 router.post("/create", authUser, validate(createMatchSchema), async (req: AuthenticatedRequest, res) => {
   try {
-    const { terrainSkin, turnTimerEnabled } = req.body || {};
+    const { terrainSkin, turnTimerEnabled, rulesMode } = req.body || {};
     const seed = `match-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const match = await prisma.match.create({
       data: {
@@ -36,7 +36,9 @@ router.post("/create", authUser, validate(createMatchSchema), async (req: Authen
     });
 
     // Stocker les options de match dans un turn initial de type "options"
-    if (terrainSkin || typeof turnTimerEnabled === 'boolean') {
+    const hasOptions =
+      terrainSkin || typeof turnTimerEnabled === 'boolean' || rulesMode;
+    if (hasOptions) {
       await prisma.turn.create({
         data: {
           matchId: match.id,
@@ -45,6 +47,8 @@ router.post("/create", authUser, validate(createMatchSchema), async (req: Authen
             type: "match-options",
             terrainSkin: terrainSkin || "grass",
             turnTimerEnabled: turnTimerEnabled !== false,
+            // N.2 — Mode simplifie pour debutants (leverager SIMPLIFIED_RULES).
+            rulesMode: rulesMode === 'simplified' ? 'simplified' : 'full',
           },
         },
       });

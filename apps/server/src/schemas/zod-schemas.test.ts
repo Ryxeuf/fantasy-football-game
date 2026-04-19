@@ -385,6 +385,20 @@ describe("Match schemas", () => {
       expect(result.terrainSkin).toBe("snow");
       expect(result.turnTimerEnabled).toBe(true);
     });
+
+    it("accepts rulesMode='simplified' (N.2)", () => {
+      const result = createMatchSchema.parse({ rulesMode: "simplified" });
+      expect(result.rulesMode).toBe("simplified");
+    });
+
+    it("accepts rulesMode='full'", () => {
+      const result = createMatchSchema.parse({ rulesMode: "full" });
+      expect(result.rulesMode).toBe("full");
+    });
+
+    it("rejects unknown rulesMode values", () => {
+      expect(() => createMatchSchema.parse({ rulesMode: "extreme" })).toThrow();
+    });
   });
 
   describe("validateSetupSchema", () => {
