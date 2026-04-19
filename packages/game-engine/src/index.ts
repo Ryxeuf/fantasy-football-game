@@ -383,6 +383,15 @@ export {
   type ReplayTurnPayload,
 } from './core/replay';
 
+// Export du module IA adversaire (N.3)
+export {
+  evaluatePosition,
+  scoreMove,
+  pickBestMove,
+  EVAL_WEIGHTS,
+} from './ai';
+export type { EvaluationBreakdown, PositionEvaluation } from './ai';
+
 // Export du module tutoriel (N.1)
 export {
   listTutorialScripts,
