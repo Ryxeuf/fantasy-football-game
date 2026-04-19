@@ -6,6 +6,7 @@ import CopyrightFooter from '../../components/CopyrightFooter';
 import SkillTooltip from '../../components/SkillTooltip';
 import type { StarPlayerDefinition } from '@bb/game-engine';
 import { getStarPlayerSkillSlugs } from '@bb/game-engine';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8201';
 
@@ -16,7 +17,8 @@ export default function StarPlayerDetailPage() {
   const params = useParams();
   const router = useRouter();
   const slug = params.slug as string;
-  
+  const { language } = useLanguage();
+
   const [starPlayer, setStarPlayer] = useState<StarPlayerDefinition | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -234,17 +236,25 @@ export default function StarPlayerDetailPage() {
             </div>
 
             {/* Règle spéciale */}
-            {starPlayer.specialRule && (
-              <div>
-                <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-900 flex items-center gap-2">
-                  <span className="text-2xl">⭐</span>
-                  Règle Spéciale
-                </h2>
-                <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4 sm:p-6">
-                  <p className="text-gray-800 leading-relaxed text-sm sm:text-base">{starPlayer.specialRule}</p>
+            {(() => {
+              const preferredRule =
+                language === 'en'
+                  ? starPlayer.specialRuleEn ?? starPlayer.specialRule
+                  : starPlayer.specialRule ?? starPlayer.specialRuleEn;
+              if (!preferredRule) return null;
+              const heading = language === 'en' ? 'Special Rule' : 'Règle Spéciale';
+              return (
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-900 flex items-center gap-2">
+                    <span className="text-2xl">⭐</span>
+                    {heading}
+                  </h2>
+                  <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4 sm:p-6">
+                    <p className="text-gray-800 leading-relaxed text-sm sm:text-base">{preferredRule}</p>
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Équipes éligibles */}
             <div>
