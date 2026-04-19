@@ -43,7 +43,7 @@ export default function StarPlayerSelector({
   currentPlayerCount,
   availableBudget,
   disabled = false,
-  ruleset = "season_2",
+  ruleset = "season_3",
 }: StarPlayerSelectorProps) {
   const { t } = useLanguage();
   const [availableStarPlayers, setAvailableStarPlayers] = useState<StarPlayer[]>([]);

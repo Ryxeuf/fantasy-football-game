@@ -77,7 +77,7 @@ async function main() {
 
   if (teamsWithoutRuleset.length > 0) {
     console.log(
-      `⚠️  ${teamsWithoutRuleset.length} équipes SANS ruleset (devrait être season_2 par défaut)`
+      `⚠️  ${teamsWithoutRuleset.length} équipes SANS ruleset (devrait être season_3 par défaut)`
     );
     teamsWithoutRuleset.slice(0, 5).forEach((t: any) => {
       console.log(`   - ${t.name} (ID: ${t.id})`);

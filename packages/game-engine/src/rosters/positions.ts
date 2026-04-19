@@ -35,7 +35,7 @@ export interface TeamRoster {
 
 export type Ruleset = "season_2" | "season_3";
 export const RULESETS: Ruleset[] = ["season_2", "season_3"];
-export const DEFAULT_RULESET: Ruleset = "season_2";
+export const DEFAULT_RULESET: Ruleset = "season_3";
 
 type TeamRosterMap = Record<string, TeamRoster>;
 

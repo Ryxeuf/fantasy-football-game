@@ -617,15 +617,31 @@ router.post(
 );
 
 router.post("/build", authUser, validate(buildTeamSchema), async (req: AuthenticatedRequest, res) => {
-  const { name, roster, teamValue, choices, starPlayers: starPlayerSlugs, ruleset: bodyRuleset } =
-    req.body as {
-      name: string;
-      roster: string;
-      teamValue?: number;
-      choices: Array<{ key: string; count: number }>;
-      starPlayers?: string[];
-      ruleset?: string;
-    };
+  const {
+    name,
+    roster,
+    teamValue,
+    choices,
+    starPlayers: starPlayerSlugs,
+    ruleset: bodyRuleset,
+    rerolls: bodyRerolls,
+    cheerleaders: bodyCheerleaders,
+    assistants: bodyAssistants,
+    apothecary: bodyApothecary,
+    dedicatedFans: bodyDedicatedFans,
+  } = req.body as {
+    name: string;
+    roster: string;
+    teamValue?: number;
+    choices: Array<{ key: string; count: number }>;
+    starPlayers?: string[];
+    ruleset?: string;
+    rerolls?: number;
+    cheerleaders?: number;
+    assistants?: number;
+    apothecary?: boolean;
+    dedicatedFans?: number;
+  };
   if (!ALLOWED_TEAMS.includes(roster as any))
     return res.status(400).json({ error: "Roster non autorisé" });
   const ruleset = resolveRuleset(bodyRuleset);
@@ -652,10 +668,26 @@ router.post("/build", authUser, validate(buildTeamSchema), async (req: Authentic
   if (totalPlayers < 11 || totalPlayers > 16)
     return res.status(400).json({ error: "Il faut entre 11 et 16 joueurs" });
 
+  // Staff facultatif: valeurs par défaut si non fournies. Calculé avant
+  // la validation Star Players pour que leur budget disponible soit juste.
+  const rerolls = bodyRerolls ?? 0;
+  const cheerleaders = bodyCheerleaders ?? 0;
+  const assistants = bodyAssistants ?? 0;
+  const apothecary = bodyApothecary ?? false;
+  const dedicatedFans = bodyDedicatedFans ?? 1;
+
+  const rerollUnitCost = getRerollCost(roster) / 1000; // kpo
+  const staffCost =
+    rerolls * rerollUnitCost +
+    cheerleaders * 10 +
+    assistants * 10 +
+    (apothecary ? 50 : 0) +
+    Math.max(0, dedicatedFans - 1) * 10;
+
   // Valider les Star Players si fournis
   const starPlayersToHire = starPlayerSlugs || [];
   let starPlayersCost = 0;
-  
+
   if (starPlayersToHire.length > 0) {
     // Valider les paires obligatoires
     const pairValidation = validateStarPlayerPairs(starPlayersToHire);
@@ -665,52 +697,52 @@ router.post("/build", authUser, validate(buildTeamSchema), async (req: Authentic
 
     // Valider que Star Players + joueurs ne dépassent pas 16
     if (totalPlayers + starPlayersToHire.length > 16) {
-      return res.status(400).json({ 
-        error: `Trop de joueurs ! ${totalPlayers} joueurs + ${starPlayersToHire.length} Star Players = ${totalPlayers + starPlayersToHire.length} (maximum: 16)` 
+      return res.status(400).json({
+        error: `Trop de joueurs ! ${totalPlayers} joueurs + ${starPlayersToHire.length} Star Players = ${totalPlayers + starPlayersToHire.length} (maximum: 16)`
       });
     }
 
     // Calculer le coût des Star Players
-    starPlayersCost = calculateStarPlayersCost(starPlayersToHire, ruleset) / 1000; // Convertir en K po
-    
-    // Valider la disponibilité pour ce roster
+    starPlayersCost = calculateStarPlayersCost(starPlayersToHire, ruleset) / 1000;
+
+    // Budget disponible = budget total - joueurs - staff déjà engagé
     const budgetInPo = finalTeamValue * 1000;
     const validation = validateStarPlayersForTeam(
       starPlayersToHire,
       roster,
       totalPlayers,
-      budgetInPo - (totalCost * 1000),
+      budgetInPo - (totalCost * 1000) - (staffCost * 1000),
       ruleset,
     );
-    
+
     if (!validation.valid) {
       return res.status(400).json({ error: validation.error });
     }
   }
 
-  // Vérifier le budget total (joueurs + Star Players)
-  const totalBudgetUsed = totalCost + starPlayersCost;
+  // Vérifier le budget total (joueurs + Star Players + staff)
+  const totalBudgetUsed = totalCost + starPlayersCost + staffCost;
   if (totalBudgetUsed > finalTeamValue)
     return res
       .status(400)
-      .json({ 
-        error: `Budget dépassé: ${totalBudgetUsed}k (${totalCost}k joueurs + ${starPlayersCost}k Star Players) / ${finalTeamValue}k` 
+      .json({
+        error: `Budget dépassé: ${totalBudgetUsed}k (${totalCost}k joueurs + ${starPlayersCost}k Star Players + ${staffCost}k staff) / ${finalTeamValue}k`
       });
 
   const team = await prisma.team.create({
-    data: { 
-      ownerId: req.user!.id, 
-      name, 
+    data: {
+      ownerId: req.user!.id,
+      name,
       roster,
       ruleset,
       teamValue: finalTeamValue,
       initialBudget: finalTeamValue,
       treasury: 0,
-      rerolls: 0,
-      cheerleaders: 0,
-      assistants: 0,
-      apothecary: false,
-      dedicatedFans: 1,
+      rerolls,
+      cheerleaders,
+      assistants,
+      apothecary,
+      dedicatedFans,
       currentValue: 0,
     },
   });
@@ -779,13 +811,14 @@ router.post("/build", authUser, validate(buildTeamSchema), async (req: Authentic
 
   res
     .status(201)
-    .json({ 
-      team: enrichedTeam, 
-      cost: totalBudgetUsed, 
+    .json({
+      team: enrichedTeam,
+      cost: totalBudgetUsed,
       budget: finalTeamValue,
       breakdown: {
         players: totalCost,
-        starPlayers: starPlayersCost
+        starPlayers: starPlayersCost,
+        staff: staffCost,
       }
     });
 });

@@ -20,6 +20,11 @@ export const buildTeamSchema = z.object({
   ),
   starPlayers: z.array(z.string()).optional(),
   ruleset: z.string().optional(),
+  rerolls: z.number().int().min(0, "Le nombre de relances doit être entre 0 et 8").max(8, "Le nombre de relances doit être entre 0 et 8").optional(),
+  cheerleaders: z.number().int().min(0, "Le nombre de cheerleaders doit être entre 0 et 12").max(12, "Le nombre de cheerleaders doit être entre 0 et 12").optional(),
+  assistants: z.number().int().min(0, "Le nombre d'assistants doit être entre 0 et 6").max(6, "Le nombre d'assistants doit être entre 0 et 6").optional(),
+  apothecary: z.boolean().optional(),
+  dedicatedFans: z.number().int().min(1, "Le nombre de fans dévoués doit être entre 1 et 6").max(6, "Le nombre de fans dévoués doit être entre 1 et 6").optional(),
 });
 
 const playerUpdateItem = z.object({
