@@ -220,7 +220,29 @@ describe("LeaderboardPage", () => {
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining("/leaderboard?limit=20&offset=0"),
+        expect.any(Object),
       );
     });
+  });
+
+  it("sends Authorization header when an auth token is present (feature flag override)", async () => {
+    localStorageMock.getItem.mockImplementation((key: string) =>
+      key === "auth_token" ? "test-token-123" : null,
+    );
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockLeaderboardData),
+    });
+
+    renderWithProvider();
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalled();
+    });
+
+    const [, options] = mockFetch.mock.calls[0];
+    expect(options).toBeDefined();
+    const headers = (options?.headers ?? {}) as Record<string, string>;
+    expect(headers.Authorization).toBe("Bearer test-token-123");
   });
 });
