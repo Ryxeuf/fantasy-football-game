@@ -39,8 +39,15 @@ export default function LeaderboardPage() {
       try {
         setLoading(true);
         setError(null);
+        const token =
+          typeof window !== "undefined"
+            ? localStorage.getItem("auth_token")
+            : null;
+        const headers: Record<string, string> = {};
+        if (token) headers.Authorization = `Bearer ${token}`;
         const response = await fetch(
           `${API_BASE}/leaderboard?limit=${PAGE_SIZE}&offset=${offset}`,
+          { headers },
         );
         if (!response.ok) {
           throw new Error("Erreur lors du chargement du classement");
