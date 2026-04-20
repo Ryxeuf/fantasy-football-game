@@ -17,7 +17,7 @@ import {
   SEASON_3_RENAMED_SKILLS 
 } from "./static-skills-data-s3";
 import { UNKNOWN_USER_ID } from "./utils/user-constants";
-import { ONLINE_PLAY_FLAG } from "./services/featureFlags";
+import { ONLINE_PLAY_FLAG, AI_TRAINING_FLAG } from "./services/featureFlags";
 import { seedDefaultLeagues, DEFAULT_LEAGUE_NAME } from "./seeders/leagues";
 
 async function main() {
@@ -977,6 +977,41 @@ async function main() {
     });
     console.log(
       `   ✅ Override '${ONLINE_PLAY_FLAG}' ajouté pour user@example.com`,
+    );
+  }
+
+  // "ai_training" : gate la fonctionnalité "Entrainement contre l'IA"
+  // (création d'un match pratique solo + calcul du coup IA).
+  // Par défaut désactivé globalement ; FEATURE_FLAGS_FORCE_ENABLED=true (CI)
+  // et le rôle admin court-circuitent ce flag. Un override est ajouté pour
+  // user@example.com afin de faciliter les tests manuels.
+  const aiTrainingFlag = await prisma.featureFlag.upsert({
+    where: { key: AI_TRAINING_FLAG },
+    update: {
+      description:
+        "Active l'entrainement contre l'IA (match pratique solo + coups IA).",
+    },
+    create: {
+      key: AI_TRAINING_FLAG,
+      description:
+        "Active l'entrainement contre l'IA (match pratique solo + coups IA).",
+      enabled: false,
+    },
+  });
+  console.log(
+    `   ✅ Flag '${AI_TRAINING_FLAG}' ${aiTrainingFlag.enabled ? "actif" : "inactif (override admin/user)"}`,
+  );
+
+  if (testUser) {
+    await prisma.featureFlagUser.upsert({
+      where: {
+        flagId_userId: { flagId: aiTrainingFlag.id, userId: testUser.id },
+      },
+      create: { flagId: aiTrainingFlag.id, userId: testUser.id },
+      update: {},
+    });
+    console.log(
+      `   ✅ Override '${AI_TRAINING_FLAG}' ajouté pour user@example.com`,
     );
   }
 

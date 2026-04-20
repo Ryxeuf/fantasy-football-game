@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import PlayPage from "./page";
 import { LanguageProvider } from "../contexts/LanguageContext";
+import { FeatureFlagProvider } from "../contexts/FeatureFlagContext";
 
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
@@ -21,10 +22,19 @@ vi.mock("./hooks/useMatchmakingSocket", () => ({
   useMatchmakingSocket: vi.fn(),
 }));
 
+vi.mock("../lib/featureFlags", () => ({
+  fetchMyFlags: vi.fn(),
+}));
+
+import { fetchMyFlags } from "../lib/featureFlags";
+const mockedFetchMyFlags = fetchMyFlags as unknown as ReturnType<typeof vi.fn>;
+
 function renderWithProvider() {
   return render(
     <LanguageProvider>
-      <PlayPage />
+      <FeatureFlagProvider>
+        <PlayPage />
+      </FeatureFlagProvider>
     </LanguageProvider>,
   );
 }
@@ -68,6 +78,7 @@ describe("PlayPage — ELO display in lobby", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorageMock.getItem.mockReturnValue("fake-token");
+    mockedFetchMyFlags.mockResolvedValue([]);
   });
 
   it("displays opponent ELO rating in match cards", async () => {
@@ -99,5 +110,50 @@ describe("PlayPage — ELO display in lobby", () => {
 
     // Opponent ELO should be displayed
     expect(screen.getByText("1180")).toBeTruthy();
+  });
+});
+
+describe("PlayPage — ai_training feature flag", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorageMock.getItem.mockReturnValue("fake-token");
+    mockFetch.mockImplementation((url: string) => {
+      if (url.includes("/auth/me")) return Promise.resolve(mockAuthResponse);
+      if (url.includes("/my-matches"))
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ matches: [] }),
+        });
+      if (url.includes("/team/mine"))
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(mockTeamsData),
+        });
+      if (url.includes("/matchmaking/status"))
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(mockQueueData),
+        });
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+    });
+  });
+
+  it("hides the 'Entrainement contre l'IA' card when the flag is inactive", async () => {
+    mockedFetchMyFlags.mockResolvedValue([]);
+    renderWithProvider();
+    // Wait for the create-match card (always rendered) to appear, then
+    // assert the practice card is absent.
+    await waitFor(() =>
+      expect(screen.getByTestId("create-match-button")).toBeTruthy(),
+    );
+    expect(screen.queryByTestId("practice-ai-card")).toBeNull();
+  });
+
+  it("shows the 'Entrainement contre l'IA' card when the flag is active", async () => {
+    mockedFetchMyFlags.mockResolvedValue(["ai_training"]);
+    renderWithProvider();
+    await waitFor(() =>
+      expect(screen.getByTestId("practice-ai-card")).toBeTruthy(),
+    );
   });
 });

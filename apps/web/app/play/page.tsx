@@ -3,6 +3,8 @@ import { useEffect, useState, useCallback } from "react";
 import { API_BASE } from "../auth-client";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useMatchmakingSocket } from "./hooks/useMatchmakingSocket";
+import { useFeatureFlag } from "../hooks/useFeatureFlag";
+import { AI_TRAINING_FLAG } from "../lib/featureFlagKeys";
 
 interface MatchSummary {
   id: string;
@@ -108,6 +110,7 @@ function formatTV(tv: number): string {
 
 export default function PlayPage() {
   const { t, language: lang } = useLanguage();
+  const aiTrainingEnabled = useFeatureFlag(AI_TRAINING_FLAG);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [matchIdInput, setMatchIdInput] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -540,7 +543,8 @@ export default function PlayPage() {
         </div>
       </div>
 
-      {/* Practice vs AI Card (N.4) */}
+      {/* Practice vs AI Card (N.4) — gated behind the `ai_training` feature flag */}
+      {aiTrainingEnabled && (
       <div className="max-w-3xl mx-auto">
         <div
           data-testid="practice-ai-card"
@@ -650,6 +654,7 @@ export default function PlayPage() {
           </div>
         </div>
       </div>
+      )}
 
       {/* Create / Join Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
