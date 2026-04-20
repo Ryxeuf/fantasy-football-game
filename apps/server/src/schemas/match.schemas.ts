@@ -47,3 +47,16 @@ export const validateSetupSchema = z.object({
 export const placeKickoffBallSchema = z.object({
   position: positionSchema,
 });
+
+// Practice vs AI — online match variant.
+const aiDifficultyValues = ["easy", "medium", "hard"] as const;
+
+export const createPracticeOnlineMatchSchema = z.object({
+  userTeamId: z.string().min(1, "userTeamId est requis"),
+  difficulty: z.enum(aiDifficultyValues, {
+    message: "difficulty doit etre easy, medium ou hard",
+  }),
+  aiRosterSlug: z.string().optional(),
+  userSide: z.enum(["A", "B"]).optional(),
+  seed: z.string().max(200).optional(),
+});

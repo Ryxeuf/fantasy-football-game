@@ -15,7 +15,10 @@ import {
   createMatchSchema,
   validateSetupSchema,
   placeKickoffBallSchema,
+  createPracticeOnlineMatchSchema,
 } from "../schemas/match.schemas";
+import { createOnlinePracticeMatch } from "../services/practice-match";
+import type { AIDifficulty } from "@bb/game-engine";
 import { getSpectatorCount } from "../game-spectator";
 import { MATCH_SECRET } from "../config";
 
@@ -102,6 +105,70 @@ router.post("/accept", authUser, validate(acceptMatchSchema), async (req: Authen
     return res.status(500).json({ error: e?.message || "Erreur serveur" });
   }
 });
+
+// Create an online match vs AI (practice mode).
+// Reuses the ensureAISystemUser / spawnAITeam helpers from the LocalMatch
+// practice service, but creates a regular Match so the standard /play/:id
+// flow kicks in (same pre-match, same WebSocket broadcasts).
+router.post(
+  "/practice",
+  authUser,
+  validate(createPracticeOnlineMatchSchema),
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      const { userTeamId, difficulty, aiRosterSlug, userSide, seed } =
+        req.body as {
+          userTeamId: string;
+          difficulty: AIDifficulty;
+          aiRosterSlug?: string;
+          userSide?: "A" | "B";
+          seed?: string;
+        };
+
+      const result = await createOnlinePracticeMatch(prisma as any, {
+        creatorId: req.user!.id,
+        userTeamId,
+        difficulty,
+        aiRosterSlug,
+        userSide,
+        seed,
+      });
+
+      const matchToken = jwt.sign(
+        { matchId: result.matchId, userId: req.user!.id },
+        MATCH_SECRET,
+        { expiresIn: "2h" },
+      );
+
+      return res.status(201).json({
+        match: { id: result.matchId },
+        matchToken,
+        ai: {
+          roster: result.aiRoster,
+          teamId: result.aiTeamId,
+          teamSide: result.aiTeamSide,
+          userId: result.aiUserId,
+          difficulty,
+        },
+      });
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Erreur serveur";
+      const status = message.includes("introuvable")
+        ? 404
+        : message.includes("proprietaire")
+          ? 403
+          : message.includes("non autorise")
+            ? 400
+            : message.includes("est requis")
+              ? 400
+              : 500;
+      if (status >= 500) {
+        console.error("Erreur creation match pratique online:", e);
+      }
+      return res.status(status).json({ error: message });
+    }
+  },
+);
 
 // Soumettre un coup pendant la phase active du match
 router.post(
