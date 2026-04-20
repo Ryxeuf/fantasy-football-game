@@ -192,6 +192,12 @@ export default function TeamDetailPage() {
           >
             {recalculating ? t.teams.recalculating : t.teams.recalculateVE}
           </button>
+          <a
+            href={`/me/teams/${id}/career`}
+            className="px-3 sm:px-4 py-2 text-sm sm:text-base bg-amber-600 text-white rounded hover:bg-amber-700 transition-colors text-center"
+          >
+            Stats de carriere
+          </a>
           <div className="relative">
             <button
               onClick={() => setExportMenuOpen(!exportMenuOpen)}
