@@ -329,15 +329,20 @@ export default function PlayPage() {
     setError(null);
     setStartingPractice(true);
     try {
-      const result = await apiPost("/local-match/practice", {
+      const result = await apiPost("/match/practice", {
         userTeamId: practiceTeamId,
         difficulty: practiceDifficulty,
       });
-      const matchId = result?.localMatch?.id;
-      if (!matchId) {
+      const matchId = result?.match?.id;
+      const matchToken = result?.matchToken;
+      if (!matchId || !matchToken) {
         throw new Error("Reponse serveur inattendue");
       }
-      window.location.href = `/local-matches/${matchId}`;
+      localStorage.setItem("match_token", matchToken);
+      // Team is already selected on the server (both sides), AI has already
+      // auto-accepted. User just needs to accept via /waiting/:id to trigger
+      // the pre-match sequence; then they land on /play/:id.
+      window.location.href = `/waiting/${matchId}`;
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Erreur");
     } finally {
@@ -560,8 +565,8 @@ export default function PlayPage() {
                 </h2>
                 <p className="text-sm text-nuffle-anthracite/70 font-body">
                   {lang === "en"
-                    ? "Play a solo match against a bot. Pick your team and a difficulty level."
-                    : "Jouez un match solo contre un bot. Choisissez votre equipe et un niveau de difficulte."}
+                    ? "Play an online match against a bot. Pick your team and a difficulty level."
+                    : "Jouez un match en ligne contre un bot. Choisissez votre equipe et un niveau de difficulte."}
                 </p>
               </div>
             </div>
