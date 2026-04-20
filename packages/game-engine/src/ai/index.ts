@@ -22,3 +22,15 @@ export {
   scoreMoveForDifficulty,
 } from './difficulty';
 export type { AIDifficulty, AIDifficultyProfile, PickAIMoveOptions } from './difficulty';
+
+// N.4b — Whitelist rosters IA adversaire (5 equipes prioritaires)
+export {
+  AI_OPPONENT_ALLOWED_ROSTERS,
+  isAIOpponentRosterAllowed,
+  listAIOpponentAllowedRosters,
+  pickAIOpponentRoster,
+} from './opponent-teams';
+export type {
+  AIOpponentRoster,
+  PickAIOpponentRosterOptions,
+} from './opponent-teams';
