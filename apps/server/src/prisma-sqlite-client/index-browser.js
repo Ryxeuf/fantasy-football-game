@@ -135,6 +135,15 @@ exports.Prisma.UserScalarFieldEnum = {
   eloRating: 'eloRating'
 };
 
+exports.Prisma.FriendshipScalarFieldEnum = {
+  id: 'id',
+  requesterId: 'requesterId',
+  receiverId: 'receiverId',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.FeatureFlagScalarFieldEnum = {
   id: 'id',
   key: 'key',
@@ -374,6 +383,7 @@ exports.Ruleset = exports.$Enums.Ruleset = {
 
 exports.Prisma.ModelName = {
   User: 'User',
+  Friendship: 'Friendship',
   FeatureFlag: 'FeatureFlag',
   FeatureFlagUser: 'FeatureFlagUser',
   Match: 'Match',

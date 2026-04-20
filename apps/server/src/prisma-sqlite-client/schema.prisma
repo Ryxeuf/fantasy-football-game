@@ -44,6 +44,25 @@ model User {
   eloRating            Int               @default(1000)
   matchQueue           MatchQueue?
   featureFlagOverrides FeatureFlagUser[]
+  friendshipsSent      Friendship[]      @relation("FriendshipRequester")
+  friendshipsReceived  Friendship[]      @relation("FriendshipReceiver")
+}
+
+// Relation d'amitie entre deux utilisateurs (mirror SQLite du schema Postgres)
+model Friendship {
+  id          String   @id @default(cuid())
+  requester   User     @relation("FriendshipRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  requesterId String
+  receiver    User     @relation("FriendshipReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  receiverId  String
+  status      String   @default("pending") // "pending" | "accepted" | "declined" | "blocked"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([requesterId, receiverId])
+  @@index([requesterId])
+  @@index([receiverId])
+  @@index([status])
 }
 
 model FeatureFlag {
@@ -110,7 +129,7 @@ model Team {
   ownerId             String
   name                String
   roster              String
-  ruleset             Ruleset          @default(season_2)
+  ruleset             Ruleset          @default(season_3)
   createdAt           DateTime         @default(now())
   players             TeamPlayer[]
   starPlayers         TeamStarPlayer[]
