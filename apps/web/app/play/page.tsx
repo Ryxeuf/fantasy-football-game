@@ -337,7 +337,7 @@ export default function PlayPage() {
       if (!matchId) {
         throw new Error("Reponse serveur inattendue");
       }
-      window.location.href = `/local-match/${matchId}`;
+      window.location.href = `/local-matches/${matchId}`;
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Erreur");
     } finally {
