@@ -12,8 +12,16 @@
 | **Sprint 3** | Frontend stabilization | 15 issues | Pending |
 | **Sprint 4** | Server & Security hardening | 14 issues | Pending |
 | **Sprint 5** | Test infrastructure & tech debt | 7 issues | Pending |
+| **Sprint 6** | Badges foundation (P1) | 7 tickets | Pending |
+| **Sprint 7** | Badges match & cup triggers (P2) | 7 tickets | Pending |
 
-**Total: 61 issues identified, 12 fixed.**
+**Total: 75 issues identified, 12 fixed.**
+
+## Feature — Badges, Titres & Récompenses
+
+Sprints 6 & 7 forment la **première PR** de la feature badges/titres/récompenses.
+Voir [FEATURE-BADGES-TITLES-REWARDS.md](./FEATURE-BADGES-TITLES-REWARDS.md) pour le plan global
+et les sprints P3 à P7 à venir (Ko-fi, tutoriel détaillé, frontend, mobile, polish).
 
 ## Sprint 1 — DONE
 
@@ -84,9 +92,35 @@ See [SPRINT-5-test-infrastructure.md](./SPRINT-5-test-infrastructure.md)
 - Regression tests for Sprint 1 fixes
 - Clean up empty scripts and dev notes
 
+## Sprint 6 — Badges Foundation (P1)
+
+See [SPRINT-6-badges-foundation.md](./SPRINT-6-badges-foundation.md)
+
+**Key items:**
+- Migration Prisma (Badge, UserBadge, Title, UserTitle, Donation, UserStats, TutorialProgress)
+- Seed catalogue badges + titres (validé utilisateur)
+- AchievementService (dispatch + grant + notify + idempotence)
+- 5 règles onboarding (first_team, profile_complete, tutorial_started/complete, roster_collector)
+- Endpoints `/api/me/badges`, `/api/me/titles`, `PUT /api/me/title`, `POST /api/me/tutorial-progress`
+- Hooks dans `routes/team.ts` et `routes/user.ts`
+
+## Sprint 7 — Badges Match & Cup Triggers (P2)
+
+See [SPRINT-7-badges-match-cup-triggers.md](./SPRINT-7-badges-match-cup-triggers.md)
+
+**Key items:**
+- Enum Trigger étendu (MATCH_ENDED, MATCH_FORFEITED, CUP_CREATED, CUP_COMPLETED)
+- Hooks dans `game-broadcast.ts`, `forfeit-tracker.ts`, `routes/cup.ts`
+- stats-updater étendu (match + cup)
+- matches.rules.ts (11 règles) + cups.rules.ts (7 règles) + game-facts.rules.ts (8 règles)
+- Titre dynamique `champion_cup` avec label figé à l'attribution
+- Titres `coach_elite`, `legende_vivante`, `taulier_du_terrain`, `veteran`
+- Endpoint `/api/me/badges` enrichi avec progression
+
 ## Priority Order
 
 1. **Sprint 2** — Game engine correctness is the foundation. Fixing state mutation and rule bugs prevents cascading issues.
 2. **Sprint 3** — Frontend stability directly affects user experience. Memory leaks and race conditions cause visible bugs.
 3. **Sprint 4** — Security hardening before production deployment. Required for any public-facing release.
 4. **Sprint 5** — Test infrastructure enables safe future development. Lower urgency but high long-term value.
+5. **Sprints 6 + 7** — New feature (badges/titres). Peut être implémentée en parallèle des sprints de stabilisation. Une seule PR combinant P1+P2.
