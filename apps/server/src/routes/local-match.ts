@@ -14,11 +14,16 @@ import {
   enterSetupPhase,
   makeRNG,
   INDUCEMENT_CATALOGUE,
+  listAIOpponentAllowedRosters,
+  type AIDifficulty,
+  type TeamId,
   type WeatherType,
   type InducementSelection,
   type InducementContext,
   type ExtendedGameState,
 } from "@bb/game-engine";
+import { createPracticeMatch } from "../services/ai-practice";
+import { computeAIMove } from "../services/ai-turn";
 import { randomBytes } from "crypto";
 import { hasRole } from "../utils/roles";
 import { persistMatchSPP } from "../services/spp-tracking";
@@ -35,6 +40,8 @@ import {
   createLocalMatchActionSchema,
   validateShareTokenSchema,
   localMatchInducementsSchema,
+  createPracticeMatchSchema,
+  aiNextMoveSchema,
 } from "../schemas/local-match.schemas";
 
 const router = Router();
@@ -1502,6 +1509,118 @@ router.post("/share/:token/validate", authUser, validate(validateShareTokenSchem
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// N.4 — Mode pratique contre IA (PR initial d'integration).
+// ─────────────────────────────────────────────────────────────────────────────
+
+// GET /local-match/ai/opponents — liste la whitelist des rosters IA (N.4b).
+router.get("/ai/opponents", authUser, async (_req: AuthenticatedRequest, res) => {
+  res.json({ rosters: listAIOpponentAllowedRosters() });
+});
+
+// POST /local-match/practice — cree un match pratique contre IA.
+router.post(
+  "/practice",
+  authUser,
+  validate(createPracticeMatchSchema),
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      const { userTeamId, difficulty, aiRosterSlug, userSide, seed } = req.body as {
+        userTeamId: string;
+        difficulty: AIDifficulty;
+        aiRosterSlug?: string;
+        userSide?: "A" | "B";
+        seed?: string;
+      };
+
+      const result = await createPracticeMatch(prisma as any, {
+        creatorId: req.user!.id,
+        userTeamId,
+        difficulty,
+        aiRosterSlug,
+        userSide,
+        seed,
+      });
+
+      const localMatch = await prisma.localMatch.findUnique({
+        where: { id: result.localMatchId },
+        include: {
+          teamA: { select: { id: true, name: true, roster: true } },
+          teamB: { select: { id: true, name: true, roster: true } },
+        },
+      });
+
+      return res.status(201).json({
+        localMatch,
+        ai: {
+          roster: result.aiRoster,
+          teamId: result.aiTeamId,
+          teamSide: result.aiTeamSide,
+          difficulty,
+        },
+      });
+    } catch (e: any) {
+      const message = e instanceof Error ? e.message : "Erreur serveur";
+      const status = message.includes("introuvable") ? 404
+        : message.includes("proprietaire") ? 403
+        : message.includes("non autorise") ? 400
+        : message.includes("est requis") ? 400
+        : 500;
+      if (status >= 500) console.error("Erreur lors de la creation du match pratique:", e);
+      return res.status(status).json({ error: message });
+    }
+  },
+);
+
+// POST /local-match/:id/ai-next-move — calcule le prochain coup IA.
+// Ne mute pas l'etat cote serveur : le client applique le coup puis persiste via PUT /state.
+router.post(
+  "/:id/ai-next-move",
+  authUser,
+  validate(aiNextMoveSchema),
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      const localMatch = await prisma.localMatch.findUnique({
+        where: { id: req.params.id },
+      });
+      if (!localMatch) {
+        return res.status(404).json({ error: "Partie offline introuvable" });
+      }
+      if (!localMatch.aiOpponent) {
+        return res.status(400).json({ error: "Ce match n'est pas un match pratique contre IA" });
+      }
+      if (localMatch.creatorId !== req.user!.id) {
+        return res.status(403).json({ error: "Acces non autorise" });
+      }
+      if (!localMatch.aiTeamSide || !localMatch.aiDifficulty) {
+        return res.status(400).json({ error: "Configuration IA incomplete" });
+      }
+
+      const state = req.body?.gameState ?? localMatch.gameState;
+      if (!state) {
+        return res.status(400).json({ error: "gameState introuvable pour ce match" });
+      }
+
+      const result = computeAIMove({
+        state,
+        aiTeam: localMatch.aiTeamSide as TeamId,
+        difficulty: localMatch.aiDifficulty as AIDifficulty,
+        seed: req.body?.seed ?? `ai-${localMatch.id}`,
+      });
+
+      return res.json({
+        isAITurn: result.isAITurn,
+        move: result.move,
+        aiTeam: localMatch.aiTeamSide,
+        difficulty: localMatch.aiDifficulty,
+      });
+    } catch (e: any) {
+      console.error("Erreur lors du calcul du coup IA:", e);
+      return res.status(500).json({ error: "Erreur serveur" });
+    }
+  },
+);
 
 export default router;
 

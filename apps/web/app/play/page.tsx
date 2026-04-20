@@ -130,6 +130,11 @@ export default function PlayPage() {
   const [searching, setSearching] = useState(false);
   const [searchElapsed, setSearchElapsed] = useState(0);
 
+  // N.4 — Mode pratique contre IA
+  const [practiceTeamId, setPracticeTeamId] = useState("");
+  const [practiceDifficulty, setPracticeDifficulty] = useState<"easy" | "medium" | "hard">("medium");
+  const [startingPractice, setStartingPractice] = useState(false);
+
   // WebSocket notification for matchmaking — instant notification when match found
   // Polling (below) serves as fallback per A.8
   useMatchmakingSocket({
@@ -316,6 +321,27 @@ export default function PlayPage() {
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Erreur");
       setSearching(false);
+    }
+  }
+
+  async function startPracticeMatch() {
+    if (!practiceTeamId) return;
+    setError(null);
+    setStartingPractice(true);
+    try {
+      const result = await apiPost("/local-match/practice", {
+        userTeamId: practiceTeamId,
+        difficulty: practiceDifficulty,
+      });
+      const matchId = result?.localMatch?.id;
+      if (!matchId) {
+        throw new Error("Reponse serveur inattendue");
+      }
+      window.location.href = `/local-match/${matchId}`;
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Erreur");
+    } finally {
+      setStartingPractice(false);
     }
   }
 
@@ -508,6 +534,117 @@ export default function PlayPage() {
                     </button>
                   </>
                 )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Practice vs AI Card (N.4) */}
+      <div className="max-w-3xl mx-auto">
+        <div
+          data-testid="practice-ai-card"
+          className="rounded-xl bg-white shadow-lg border-2 border-purple-300/60 overflow-hidden"
+        >
+          <div className="h-3 bg-gradient-to-r from-purple-500 via-nuffle-gold to-purple-500" />
+          <div className="p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-xl font-heading font-bold text-nuffle-anthracite">
+                  {lang === "en" ? "Practice vs AI" : "Entrainement contre l'IA"}
+                </h2>
+                <p className="text-sm text-nuffle-anthracite/70 font-body">
+                  {lang === "en"
+                    ? "Play a solo match against a bot. Pick your team and a difficulty level."
+                    : "Jouez un match solo contre un bot. Choisissez votre equipe et un niveau de difficulte."}
+                </p>
+              </div>
+            </div>
+
+            {teams.length === 0 ? (
+              <div className="text-center py-4">
+                <p className="text-sm text-nuffle-anthracite/60 font-body">
+                  {lang === "en"
+                    ? "You need a team to play. Create one first!"
+                    : "Vous avez besoin d'une equipe pour jouer. Creez-en une d'abord !"}
+                </p>
+                <a
+                  href="/team"
+                  className="inline-block mt-2 text-sm text-nuffle-bronze hover:text-nuffle-gold font-subtitle font-semibold hover:underline"
+                >
+                  {lang === "en" ? "Create a team" : "Creer une equipe"} &rarr;
+                </a>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-subtitle font-semibold text-nuffle-anthracite/60 block mb-1">
+                    {lang === "en" ? "Your team" : "Votre equipe"}
+                  </label>
+                  <select
+                    data-testid="practice-team-select"
+                    value={practiceTeamId}
+                    onChange={(e) => setPracticeTeamId(e.target.value)}
+                    className="w-full px-4 py-3 rounded-lg border-2 border-nuffle-bronze/30 focus:border-nuffle-gold focus:outline-none font-body text-sm bg-white"
+                  >
+                    <option value="">
+                      {lang === "en" ? "-- Select a team --" : "-- Selectionnez une equipe --"}
+                    </option>
+                    {teams.map((team) => (
+                      <option key={team.id} value={team.id}>
+                        {team.name} ({team.roster}) &mdash; {formatTV(team.currentValue)} TV
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-subtitle font-semibold text-nuffle-anthracite/60 block mb-1">
+                    {lang === "en" ? "Difficulty" : "Difficulte"}
+                  </label>
+                  <div className="grid grid-cols-3 gap-2" role="radiogroup">
+                    {(["easy", "medium", "hard"] as const).map((level) => (
+                      <button
+                        key={level}
+                        type="button"
+                        role="radio"
+                        aria-checked={practiceDifficulty === level}
+                        data-testid={`practice-difficulty-${level}`}
+                        onClick={() => setPracticeDifficulty(level)}
+                        className={`px-3 py-2 rounded-lg border-2 text-sm font-subtitle font-semibold transition-all ${
+                          practiceDifficulty === level
+                            ? "border-purple-500 bg-purple-50 text-purple-700"
+                            : "border-nuffle-bronze/20 text-nuffle-anthracite/70 hover:border-purple-300"
+                        }`}
+                      >
+                        {level === "easy" && (lang === "en" ? "Easy" : "Facile")}
+                        {level === "medium" && (lang === "en" ? "Medium" : "Moyen")}
+                        {level === "hard" && (lang === "en" ? "Hard" : "Difficile")}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <button
+                  data-testid="practice-start-button"
+                  onClick={startPracticeMatch}
+                  disabled={!practiceTeamId || startingPractice}
+                  className="w-full px-6 py-3 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-subtitle font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                >
+                  {startingPractice
+                    ? (lang === "en" ? "Starting..." : "Demarrage...")
+                    : (lang === "en" ? "Play vs AI" : "Jouer contre l'IA")}
+                </button>
+                <p className="text-[11px] text-nuffle-anthracite/50 font-body">
+                  {lang === "en"
+                    ? "The AI opponent is picked from 5 priority rosters (Skaven, Lizardmen, Dwarf, Gnome, Imperial Nobility)."
+                    : "L'adversaire IA est choisi parmi 5 equipes prioritaires (Skavens, Hommes-lezards, Nains, Gnomes, Noblesse imperiale)."}
+                </p>
               </div>
             )}
           </div>
