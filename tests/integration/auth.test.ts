@@ -15,11 +15,16 @@ describe("Auth API", () => {
     const reg = await fetch(`${API_BASE}/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, name: "Tester" }),
+      body: JSON.stringify({
+        email,
+        password,
+        coachName: "Tester",
+      }),
     });
     expect(reg.status).toBe(201);
     const regBody: any = await reg.json();
     expect(regBody?.user?.email).toBe(email);
+    // En SQLite (tests), `valid` default = true => token renvoyé
     expect(typeof regBody?.token).toBe("string");
 
     // Login

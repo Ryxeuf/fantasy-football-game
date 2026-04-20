@@ -131,8 +131,8 @@ if (process.env.TEST_SQLITE === "1") {
     }
   });
 
-  // Seed d'utilisateurs de test (register est désactivé en pré-alpha,
-  // donc on expose un endpoint dédié aux tests E2E).
+  // Seed d'utilisateurs de test : endpoint dédié aux tests E2E qui crée
+  // un compte déjà validé (bypass de la modération admin).
   app.post("/__test/seed-user", async (req, res) => {
     try {
       const { email, password, name } = req.body as {

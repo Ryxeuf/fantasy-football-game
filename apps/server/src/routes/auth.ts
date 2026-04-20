@@ -7,6 +7,7 @@ import { normalizeRoles } from "../utils/roles";
 import { validate } from "../middleware/validate";
 import {
   loginSchema,
+  registerSchema,
   updateProfileSchema,
   changePasswordSchema,
 } from "../schemas/auth.schemas";
@@ -14,11 +15,77 @@ import { JWT_SECRET } from "../config";
 
 const router = Router();
 
-// Registration disabled during pre-alpha
-router.post("/register", (_req, res) => {
-  return res.status(403).json({
-    error: "L'inscription est actuellement désactivée. Nuffle Arena est en pré-alpha et sera bientôt disponible à l'inscription.",
-  });
+router.post("/register", validate(registerSchema), async (req, res) => {
+  try {
+    const {
+      email,
+      password,
+      coachName,
+      name,
+      firstName,
+      lastName,
+      dateOfBirth,
+    } = req.body;
+
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing) {
+      return res.status(409).json({ error: "Email déjà utilisé" });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const created = await prisma.user.create({
+      data: {
+        email,
+        passwordHash,
+        coachName,
+        name: name ?? coachName,
+        firstName: firstName && firstName !== "" ? firstName : null,
+        lastName: lastName && lastName !== "" ? lastName : null,
+        dateOfBirth:
+          dateOfBirth && dateOfBirth !== "" ? new Date(dateOfBirth) : null,
+      },
+    });
+
+    const roles = normalizeRoles((created as any).roles ?? created.role);
+    const primaryRole = roles[0];
+    const publicUser = {
+      id: created.id,
+      email: created.email,
+      name: created.name,
+      coachName: created.coachName,
+      firstName: created.firstName,
+      lastName: created.lastName,
+      dateOfBirth: created.dateOfBirth,
+      role: primaryRole,
+      roles,
+      valid: created.valid,
+      createdAt: created.createdAt,
+    };
+
+    // Si l'inscription nécessite la modération admin (valid=false en prod),
+    // on ne retourne pas de token : le compte devra être validé avant login.
+    if (created.valid === false) {
+      return res.status(201).json({
+        user: publicUser,
+        message:
+          "Votre compte a bien été créé. Il doit être validé par un administrateur avant que vous puissiez vous connecter.",
+      });
+    }
+
+    const token = jwt.sign(
+      { sub: created.id, role: primaryRole, roles },
+      JWT_SECRET,
+      { expiresIn: "7d" },
+    );
+    return res.status(201).json({ user: publicUser, token });
+  } catch (err: any) {
+    if (err?.code === "P2002") {
+      return res.status(409).json({ error: "Email déjà utilisé" });
+    }
+    console.error(err);
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
 });
 
 router.post("/login", validate(loginSchema), async (req, res) => {
