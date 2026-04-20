@@ -25,6 +25,7 @@ interface StatsSummary {
   casualties: number;
   friendsCount: number;
   rostersPlayed: string[];
+  winsByRoster?: Record<string, number>;
 }
 
 interface AchievementsResponse {

@@ -37,6 +37,7 @@ const baseStats = (
   casualties: 0,
   friendsCount: 0,
   rostersPlayed: new Set<string>(),
+  winsByRoster: new Map<string, number>(),
   ...overrides,
 });
 
@@ -118,6 +119,79 @@ describe("Rule: evaluateAchievements", () => {
   });
 });
 
+describe("Rule: Master roster badges (N.8)", () => {
+  const PRIORITY = [
+    "skaven",
+    "lizardmen",
+    "dwarf",
+    "gnome",
+    "imperial_nobility",
+  ];
+
+  it("exposes a 'master-<roster>' achievement for each priority team", () => {
+    for (const roster of PRIORITY) {
+      const ach = ACHIEVEMENTS_CATALOG.find((a) => a.slug === `master-${roster}`);
+      expect(ach, `missing master-${roster}`).toBeDefined();
+      expect(ach!.category).toBe("rosters");
+    }
+  });
+
+  it("each master badge requires exactly 5 wins with the roster", () => {
+    for (const roster of PRIORITY) {
+      const ach = ACHIEVEMENTS_CATALOG.find((a) => a.slug === `master-${roster}`)!;
+      expect(
+        ach.predicate(
+          baseStats({ winsByRoster: new Map([[roster, 4]]) }),
+        ),
+      ).toBe(false);
+      expect(
+        ach.predicate(
+          baseStats({ winsByRoster: new Map([[roster, 5]]) }),
+        ),
+      ).toBe(true);
+    }
+  });
+
+  it("master badge is scoped to its own roster (no cross-counting)", () => {
+    const masterSkaven = ACHIEVEMENTS_CATALOG.find(
+      (a) => a.slug === "master-skaven",
+    )!;
+    expect(
+      masterSkaven.predicate(
+        baseStats({ winsByRoster: new Map([["dwarf", 100]]) }),
+      ),
+    ).toBe(false);
+    expect(
+      masterSkaven.predicate(
+        baseStats({
+          winsByRoster: new Map([
+            ["skaven", 5],
+            ["dwarf", 0],
+          ]),
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  it("renames the legacy 'roster-<roster>' badges to 'Pioneer' semantics", () => {
+    const pioneer = ACHIEVEMENTS_CATALOG.find((a) => a.slug === "roster-skaven")!;
+    expect(pioneer.nameFr.toLowerCase()).toContain("pionnier");
+    expect(pioneer.nameEn.toLowerCase()).toContain("pioneer");
+    expect(pioneer.predicate(baseStats({ rostersPlayed: new Set(["skaven"]) }))).toBe(
+      true,
+    );
+  });
+
+  it("evaluateAchievements unlocks master badge when wins threshold reached", () => {
+    const result = evaluateAchievements(
+      baseStats({ winsByRoster: new Map([["skaven", 5]]) }),
+      new Set<string>(),
+    );
+    expect(result).toContain("master-skaven");
+    expect(result).not.toContain("master-dwarf");
+  });
+});
+
 describe("unlockAchievements", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -167,6 +241,56 @@ describe("getUserAchievements (lazy evaluation)", () => {
     const matches10 = result.achievements.find((a) => a.slug === "matches-10");
     expect(matches10?.unlocked).toBe(false);
     expect(matches10?.unlockedAt).toBeNull();
+  });
+
+  it("computes winsByRoster per roster for master badges (N.8)", async () => {
+    mockPrisma.userAchievement.findMany.mockResolvedValue([]);
+    const buildSelection = (
+      selId: string,
+      roster: string,
+      myScore: number,
+      oppScore: number,
+    ) => ({
+      id: selId,
+      userId: "user-1",
+      teamRef: { roster },
+      match: {
+        id: `m-${selId}`,
+        status: "ended",
+        turns: [
+          {
+            payload: {
+              gameState: {
+                score: { teamA: myScore, teamB: oppScore },
+                players: [],
+                matchStats: {},
+              },
+            },
+          },
+        ],
+        teamSelections: [
+          { id: selId, userId: "user-1" },
+          { id: `opp-${selId}`, userId: "user-x" },
+        ],
+      },
+    });
+    // 3 wins with skaven, 1 loss with skaven, 2 wins with dwarf
+    mockPrisma.teamSelection.findMany.mockResolvedValue([
+      buildSelection("s1", "skaven", 2, 0),
+      buildSelection("s2", "skaven", 3, 1),
+      buildSelection("s3", "skaven", 4, 1),
+      buildSelection("s4", "skaven", 0, 2),
+      buildSelection("s5", "dwarf", 1, 0),
+      buildSelection("s6", "dwarf", 2, 1),
+    ]);
+    mockPrisma.friendship.count.mockResolvedValue(0);
+    mockPrisma.userAchievement.createMany.mockResolvedValue({ count: 0 });
+
+    const result = await getUserAchievements("user-1");
+
+    const winsByRoster = result.stats.winsByRoster ?? {};
+    expect(winsByRoster.skaven).toBe(3);
+    expect(winsByRoster.dwarf).toBe(2);
   });
 
   it("unlocks new achievements on first read when stats suffice", async () => {

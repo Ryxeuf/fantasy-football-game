@@ -33,6 +33,7 @@ export interface UserAchievementStats {
   casualties: number;
   friendsCount: number;
   rostersPlayed: Set<string>;
+  winsByRoster: Map<string, number>;
 }
 
 export interface AchievementDefinition {
@@ -59,8 +60,9 @@ export interface AchievementView {
 }
 
 export interface UserAchievementsResult {
-  stats: Omit<UserAchievementStats, "rostersPlayed"> & {
+  stats: Omit<UserAchievementStats, "rostersPlayed" | "winsByRoster"> & {
     rostersPlayed: string[];
+    winsByRoster: Record<string, number>;
   };
   achievements: AchievementView[];
 }
@@ -94,13 +96,23 @@ const MILESTONE_CASUALTIES: Array<[string, number, string, string, string]> = [
   ["cas-100", 100, "Boucher", "Butcher", "Infliger 100 sorties"],
 ];
 
+/**
+ * Priority rosters (Sprint 13/14 MVP scope): each gets two achievements —
+ *  - `roster-<slug>` (Pionnier/Pioneer) : play one match with the team
+ *  - `master-<slug>` (Maître/Master) : win N.8-threshold matches with the team
+ *
+ * Tuple : [roster slug, FR team name, EN team name]
+ */
 const PRIORITY_ROSTERS: Array<[string, string, string]> = [
-  ["skaven", "Maître des Skavens", "Skaven master"],
-  ["lizardmen", "Maître des Hommes-Lézards", "Lizardmen master"],
-  ["dwarf", "Maître des Nains", "Dwarf master"],
-  ["gnome", "Maître des Gnomes", "Gnome master"],
-  ["imperial_nobility", "Maître de la Noblesse Impériale", "Imperial Nobility master"],
+  ["skaven", "Skavens", "Skaven"],
+  ["lizardmen", "Hommes-Lézards", "Lizardmen"],
+  ["dwarf", "Nains", "Dwarf"],
+  ["gnome", "Gnomes", "Gnome"],
+  ["imperial_nobility", "Noblesse Impériale", "Imperial Nobility"],
 ];
+
+/** Minimum wins with a priority roster required to earn its Master badge. */
+export const MASTER_ROSTER_WINS_THRESHOLD = 5;
 
 function buildCatalog(): AchievementDefinition[] {
   const catalog: AchievementDefinition[] = [];
@@ -181,13 +193,24 @@ function buildCatalog(): AchievementDefinition[] {
   for (const [roster, nameFr, nameEn] of PRIORITY_ROSTERS) {
     catalog.push({
       slug: `roster-${roster}`,
-      nameFr,
-      nameEn,
+      nameFr: `Pionnier des ${nameFr}`,
+      nameEn: `${nameEn} pioneer`,
       descriptionFr: `Jouer un match avec l'équipe ${nameFr}`,
       descriptionEn: `Play a match with the ${nameEn} team`,
       category: "rosters",
       icon: "⚔️",
       predicate: (s) => s.rostersPlayed.has(roster),
+    });
+    catalog.push({
+      slug: `master-${roster}`,
+      nameFr: `Maître des ${nameFr}`,
+      nameEn: `${nameEn} master`,
+      descriptionFr: `Gagner ${MASTER_ROSTER_WINS_THRESHOLD} matchs avec l'équipe ${nameFr}`,
+      descriptionEn: `Win ${MASTER_ROSTER_WINS_THRESHOLD} matches with the ${nameEn} team`,
+      category: "rosters",
+      icon: "👑",
+      predicate: (s) =>
+        (s.winsByRoster.get(roster) ?? 0) >= MASTER_ROSTER_WINS_THRESHOLD,
     });
   }
 
@@ -297,6 +320,7 @@ export async function computeUserStats(
   let touchdowns = 0;
   let casualties = 0;
   const rostersPlayed = new Set<string>();
+  const winsByRoster = new Map<string, number>();
 
   for (const sel of selections) {
     if (!sel.match || sel.match.status !== "ended") continue;
@@ -317,8 +341,12 @@ export async function computeUserStats(
       teamSide === "A" ? gs.score?.teamB ?? 0 : gs.score?.teamA ?? 0;
 
     touchdowns += myScore;
-    if (myScore > oppScore) wins += 1;
-    else if (myScore < oppScore) losses += 1;
+    if (myScore > oppScore) {
+      wins += 1;
+      if (roster) {
+        winsByRoster.set(roster, (winsByRoster.get(roster) ?? 0) + 1);
+      }
+    } else if (myScore < oppScore) losses += 1;
     else draws += 1;
 
     const players = gs.players ?? [];
@@ -347,6 +375,7 @@ export async function computeUserStats(
     casualties,
     friendsCount,
     rostersPlayed,
+    winsByRoster,
   };
 }
 
@@ -404,6 +433,7 @@ export async function getUserAchievements(
       casualties: stats.casualties,
       friendsCount: stats.friendsCount,
       rostersPlayed: Array.from(stats.rostersPlayed),
+      winsByRoster: Object.fromEntries(stats.winsByRoster),
     },
     achievements,
   };
