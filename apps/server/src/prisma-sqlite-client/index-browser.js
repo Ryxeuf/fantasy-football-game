@@ -330,7 +330,10 @@ exports.Prisma.LocalMatchScalarFieldEnum = {
   teamBOwnerValidated: 'teamBOwnerValidated',
   gameState: 'gameState',
   scoreTeamA: 'scoreTeamA',
-  scoreTeamB: 'scoreTeamB'
+  scoreTeamB: 'scoreTeamB',
+  aiOpponent: 'aiOpponent',
+  aiDifficulty: 'aiDifficulty',
+  aiTeamSide: 'aiTeamSide'
 };
 
 exports.Prisma.LocalMatchActionScalarFieldEnum = {
@@ -350,6 +353,65 @@ exports.Prisma.LocalMatchActionScalarFieldEnum = {
   armorBroken: 'armorBroken',
   opponentState: 'opponentState',
   passType: 'passType',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.LeagueScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  creatorId: 'creatorId',
+  ruleset: 'ruleset',
+  status: 'status',
+  isPublic: 'isPublic',
+  maxParticipants: 'maxParticipants',
+  allowedRosters: 'allowedRosters',
+  winPoints: 'winPoints',
+  drawPoints: 'drawPoints',
+  lossPoints: 'lossPoints',
+  forfeitPoints: 'forfeitPoints',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.LeagueSeasonScalarFieldEnum = {
+  id: 'id',
+  leagueId: 'leagueId',
+  seasonNumber: 'seasonNumber',
+  name: 'name',
+  status: 'status',
+  startDate: 'startDate',
+  endDate: 'endDate',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.LeagueParticipantScalarFieldEnum = {
+  id: 'id',
+  seasonId: 'seasonId',
+  teamId: 'teamId',
+  seasonElo: 'seasonElo',
+  wins: 'wins',
+  draws: 'draws',
+  losses: 'losses',
+  points: 'points',
+  touchdownsFor: 'touchdownsFor',
+  touchdownsAgainst: 'touchdownsAgainst',
+  casualtiesFor: 'casualtiesFor',
+  casualtiesAgainst: 'casualtiesAgainst',
+  status: 'status',
+  joinedAt: 'joinedAt'
+};
+
+exports.Prisma.LeagueRoundScalarFieldEnum = {
+  id: 'id',
+  seasonId: 'seasonId',
+  roundNumber: 'roundNumber',
+  name: 'name',
+  status: 'status',
+  startDate: 'startDate',
+  endDate: 'endDate',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -406,7 +468,11 @@ exports.Prisma.ModelName = {
   CupParticipant: 'CupParticipant',
   MatchQueue: 'MatchQueue',
   LocalMatch: 'LocalMatch',
-  LocalMatchAction: 'LocalMatchAction'
+  LocalMatchAction: 'LocalMatchAction',
+  League: 'League',
+  LeagueSeason: 'LeagueSeason',
+  LeagueParticipant: 'LeagueParticipant',
+  LeagueRound: 'LeagueRound'
 };
 
 /**

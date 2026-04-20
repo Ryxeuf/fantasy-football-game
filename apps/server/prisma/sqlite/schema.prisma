@@ -40,6 +40,7 @@ model User {
   teams     Team[]
   teamSelections TeamSelection[]
   createdCups Cup[] @relation("CupCreator")
+  createdLeagues League[] @relation("LeagueCreator")
   createdLocalMatches LocalMatch[] @relation("LocalMatchCreator")
   eloRating Int @default(1000)
   matchQueue MatchQueue?
@@ -151,6 +152,7 @@ model Team {
   localMatchesAsTeamA LocalMatch[] @relation("LocalMatchTeamA")
   localMatchesAsTeamB LocalMatch[] @relation("LocalMatchTeamB")
   matchQueue MatchQueue[]
+  leagueParticipations LeagueParticipant[]
 
   // Informations d'équipe Blood Bowl
   treasury      Int @default(0)        // Trésorerie en pièces d'or (calculée automatiquement)
@@ -419,6 +421,93 @@ model LocalMatchAction {
   @@index([matchId])
   @@index([half, turn])
   @@index([createdAt])
+}
+
+// L.1 — Modeles de ligue (Sprint 17). Mirror SQLite du schema Postgres.
+model League {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  creator         User     @relation("LeagueCreator", fields: [creatorId], references: [id])
+  creatorId       String
+  ruleset         Ruleset  @default(season_3)
+  status          String   @default("draft") // "draft" | "open" | "in_progress" | "completed" | "archived"
+  isPublic        Boolean  @default(true)
+  maxParticipants Int      @default(16)
+  allowedRosters  String?  // JSON array des rosters autorises (null = tous)
+  winPoints       Int      @default(3)
+  drawPoints      Int      @default(1)
+  lossPoints      Int      @default(0)
+  forfeitPoints   Int      @default(-1)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  seasons LeagueSeason[]
+
+  @@index([creatorId])
+  @@index([status])
+  @@index([isPublic])
+}
+
+model LeagueSeason {
+  id           String   @id @default(cuid())
+  league       League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId     String
+  seasonNumber Int
+  name         String
+  status       String   @default("draft") // "draft" | "scheduled" | "in_progress" | "completed"
+  startDate    DateTime?
+  endDate      DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  participants LeagueParticipant[]
+  rounds       LeagueRound[]
+
+  @@unique([leagueId, seasonNumber])
+  @@index([leagueId])
+  @@index([status])
+}
+
+model LeagueParticipant {
+  id                String       @id @default(cuid())
+  season            LeagueSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  seasonId          String
+  team              Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId            String
+  seasonElo         Int          @default(1000)
+  wins              Int          @default(0)
+  draws             Int          @default(0)
+  losses            Int          @default(0)
+  points            Int          @default(0)
+  touchdownsFor     Int          @default(0)
+  touchdownsAgainst Int          @default(0)
+  casualtiesFor     Int          @default(0)
+  casualtiesAgainst Int          @default(0)
+  status            String       @default("active") // "active" | "withdrawn"
+  joinedAt          DateTime     @default(now())
+
+  @@unique([seasonId, teamId])
+  @@index([seasonId])
+  @@index([teamId])
+  @@index([seasonElo])
+}
+
+model LeagueRound {
+  id          String       @id @default(cuid())
+  season      LeagueSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  seasonId    String
+  roundNumber Int
+  name        String?
+  status      String       @default("pending") // "pending" | "in_progress" | "completed"
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@unique([seasonId, roundNumber])
+  @@index([seasonId])
+  @@index([status])
 }
 
 

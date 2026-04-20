@@ -35,6 +35,7 @@ model User {
   teams               Team[]
   teamSelections      TeamSelection[]
   createdCups         Cup[]           @relation("CupCreator")
+  createdLeagues      League[]        @relation("LeagueCreator")
   createdLocalMatches LocalMatch[]    @relation("LocalMatchCreator")
   eloRating           Int             @default(1000) // ELO rating for ranked matchmaking
   matchQueue          MatchQueue?
@@ -121,6 +122,7 @@ model Team {
   localMatchesAsTeamA LocalMatch[]     @relation("LocalMatchTeamA")
   localMatchesAsTeamB LocalMatch[]     @relation("LocalMatchTeamB")
   matchQueue          MatchQueue[]
+  leagueParticipations LeagueParticipant[]
 
   // Informations d'équipe Blood Bowl
   treasury      Int     @default(0) // Trésorerie en pièces d'or (calculée automatiquement)
@@ -542,4 +544,108 @@ model NotificationPreference {
   pushEnabled            Boolean @default(true) // Master toggle notifications push
   turnNotification       Boolean @default(true) // "C'est votre tour de jouer !"
   matchFoundNotification Boolean @default(true) // "Un adversaire a ete trouve !"
+}
+
+// L.1 — Modele ligue (Sprint 17 : infrastructure competitive).
+// Une League est le conteneur persistant. Chaque edition concrete
+// est une LeagueSeason (round-robin, playoffs...).
+model League {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  creator         User     @relation("LeagueCreator", fields: [creatorId], references: [id])
+  creatorId       String
+  ruleset         Ruleset  @default(season_3)
+  // "draft" | "open" | "in_progress" | "completed" | "archived"
+  status          String   @default("draft")
+  isPublic        Boolean  @default(true)
+  maxParticipants Int      @default(16)
+  // JSON array de slugs de rosters autorises. null = tous rosters autorises.
+  // Ex: ["skaven","gnomes","lizardmen","dwarf","imperial_nobility"]
+  // pour la ligue L.9 "Open 5 Teams".
+  allowedRosters  String?
+  winPoints       Int      @default(3)
+  drawPoints      Int      @default(1)
+  lossPoints      Int      @default(0)
+  forfeitPoints   Int      @default(-1)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  seasons LeagueSeason[]
+
+  @@index([creatorId])
+  @@index([status])
+  @@index([isPublic])
+}
+
+// L.1 — Saison de ligue. Une saison encapsule les participants,
+// le calendrier et le classement pour une edition donnee.
+model LeagueSeason {
+  id           String   @id @default(cuid())
+  league       League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId     String
+  seasonNumber Int
+  name         String
+  // "draft" | "scheduled" | "in_progress" | "completed"
+  status       String   @default("draft")
+  startDate    DateTime?
+  endDate      DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  participants LeagueParticipant[]
+  rounds       LeagueRound[]
+
+  @@unique([leagueId, seasonNumber])
+  @@index([leagueId])
+  @@index([status])
+}
+
+// L.1 — Inscription d'une equipe sur une saison.
+// Les compteurs (wins/draws/losses/points/td/cas) sont materialises
+// pour servir le classement rapidement (L.3 standings, L.7 agregation
+// des resultats). `seasonElo` supporte L.8 (ELO saisonnier).
+model LeagueParticipant {
+  id                String       @id @default(cuid())
+  season            LeagueSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  seasonId          String
+  team              Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId            String
+  seasonElo         Int          @default(1000)
+  wins              Int          @default(0)
+  draws             Int          @default(0)
+  losses            Int          @default(0)
+  points            Int          @default(0)
+  touchdownsFor     Int          @default(0)
+  touchdownsAgainst Int          @default(0)
+  casualtiesFor     Int          @default(0)
+  casualtiesAgainst Int          @default(0)
+  // "active" | "withdrawn"
+  status            String       @default("active")
+  joinedAt          DateTime     @default(now())
+
+  @@unique([seasonId, teamId])
+  @@index([seasonId])
+  @@index([teamId])
+  @@index([seasonElo])
+}
+
+// L.1 — Journee (round) d'une saison. Utilise par le generateur
+// de calendrier round-robin (L.4) et le rattachement des matchs (L.7).
+model LeagueRound {
+  id          String   @id @default(cuid())
+  season      LeagueSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  seasonId    String
+  roundNumber Int
+  name        String?
+  // "pending" | "in_progress" | "completed"
+  status      String   @default("pending")
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([seasonId, roundNumber])
+  @@index([seasonId])
+  @@index([status])
 }
