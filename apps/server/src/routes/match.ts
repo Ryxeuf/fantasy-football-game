@@ -18,6 +18,7 @@ import {
   createPracticeOnlineMatchSchema,
 } from "../schemas/match.schemas";
 import { createOnlinePracticeMatch } from "../services/practice-match";
+import { scheduleAILoop } from "../services/ai-loop";
 import type { AIDifficulty } from "@bb/game-engine";
 import { getSpectatorCount } from "../game-spectator";
 import { MATCH_SECRET } from "../config";
@@ -893,6 +894,18 @@ router.post(
           where: { id: matchId },
           data: { status: "active" },
         });
+        // If the active player is the AI, kick off the loop.
+        const postMatch = await prisma.match.findUnique({
+          where: { id: matchId },
+          select: { aiOpponent: true, aiTeamSide: true },
+        });
+        if (
+          postMatch?.aiOpponent &&
+          postMatch.aiTeamSide &&
+          gameState.currentPlayer === postMatch.aiTeamSide
+        ) {
+          scheduleAILoop(matchId);
+        }
       }
 
       // Déterminer le message approprié
@@ -1119,6 +1132,20 @@ router.post(
           lastMoveAt: new Date(),
         },
       });
+
+      // Practice vs AI — if the first player is the AI, start the loop.
+      const postKickoffMatch = await prisma.match.findUnique({
+        where: { id: matchId },
+        select: { aiOpponent: true, aiTeamSide: true, aiUserId: true },
+      });
+      if (
+        postKickoffMatch?.aiOpponent &&
+        postKickoffMatch.aiTeamSide &&
+        postKickoffMatch.aiUserId &&
+        firstPlayerUserId === postKickoffMatch.aiUserId
+      ) {
+        scheduleAILoop(matchId);
+      }
 
       // Sauvegarder le nouvel état
       const newTurn = await prisma.turn.create({
