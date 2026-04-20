@@ -17,6 +17,12 @@ import { hasRole } from "../utils/roles";
  */
 export const ONLINE_PLAY_FLAG = "online_play" as const;
 
+/**
+ * Clé du flag qui gate la fonctionnalité "Entrainement contre l'IA"
+ * (POST /local-match/practice et POST /local-match/:id/ai-next-move).
+ */
+export const AI_TRAINING_FLAG = "ai_training" as const;
+
 export interface FeatureFlagDTO {
   id: string;
   key: string;

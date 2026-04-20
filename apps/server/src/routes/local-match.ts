@@ -27,6 +27,8 @@ import { persistPlayerDeaths } from "../services/player-death";
 import { persistPermanentInjuries } from "../services/permanent-injuries";
 import { getLinemanStats } from "../services/journeymen";
 import { validate, validateQuery } from "../middleware/validate";
+import { requireFeatureFlag } from "../middleware/requireFeatureFlag";
+import { AI_TRAINING_FLAG } from "../services/featureFlags";
 import {
   localMatchListQuerySchema,
   createLocalMatchSchema,
@@ -1565,9 +1567,15 @@ router.post("/share/:token/validate", authUser, validate(validateShareTokenSchem
 // roster whitelist.
 // ─────────────────────────────────────────────────────────────────────────────
 
-router.get("/ai/opponents", authUser, async (_req: AuthenticatedRequest, res) => {
-  res.json({ rosters: listAIOpponentAllowedRosters() });
-});
+router.get(
+  "/ai/opponents",
+  requireFeatureFlag(AI_TRAINING_FLAG),
+  authUser,
+  async (_req: AuthenticatedRequest, res) => {
+    res.json({ rosters: listAIOpponentAllowedRosters() });
+  },
+);
+
 
 export default router;
 
