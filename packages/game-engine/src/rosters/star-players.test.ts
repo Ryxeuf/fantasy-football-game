@@ -6,7 +6,11 @@ import {
   TEAM_REGIONAL_RULES,
   STAR_PLAYERS_BY_RULESET,
   TEAM_REGIONAL_RULES_BY_RULESET,
+  PRIORITY_TEAM_SLUGS,
+  getPriorityTeamStarPlayers,
+  isStarPlayerHirableBy,
   type StarPlayerDefinition,
+  type PriorityTeamSlug,
 } from './star-players';
 
 describe('Star Players', () => {
@@ -523,6 +527,158 @@ describe('Star Players', () => {
         const s2Glart = getStarPlayerBySlug('glart_smashrip', 'season_2');
         expect(s2Glart).toBeDefined();
         expect(s2Glart?.displayName).toBe('Glart Smashrip');
+      });
+    });
+  });
+
+  describe('Priority teams (P2.7)', () => {
+    const PRIORITY_TEAMS: readonly PriorityTeamSlug[] = [
+      'skaven',
+      'lizardmen',
+      'dwarf',
+      'imperial_nobility',
+      'gnome',
+    ];
+
+    describe('PRIORITY_TEAM_SLUGS', () => {
+      it('devrait contenir exactement les 5 équipes prioritaires du MVP', () => {
+        expect([...PRIORITY_TEAM_SLUGS].sort()).toEqual(
+          [...PRIORITY_TEAMS].sort(),
+        );
+      });
+
+      it('chaque équipe prioritaire devrait avoir des règles régionales définies', () => {
+        PRIORITY_TEAM_SLUGS.forEach((teamSlug) => {
+          expect(TEAM_REGIONAL_RULES[teamSlug]).toBeDefined();
+          expect(TEAM_REGIONAL_RULES[teamSlug].length).toBeGreaterThan(0);
+        });
+      });
+    });
+
+    describe('isStarPlayerHirableBy', () => {
+      it('devrait retourner true pour un star player "all" peu importe l\'équipe', () => {
+        const morg = getStarPlayerBySlug('morg_n_thorg');
+        expect(morg).toBeDefined();
+        PRIORITY_TEAM_SLUGS.forEach((teamSlug) => {
+          expect(isStarPlayerHirableBy(morg as StarPlayerDefinition, teamSlug)).toBe(true);
+        });
+      });
+
+      it('devrait retourner true pour Hakflem côté Skaven (underworld_challenge)', () => {
+        const hakflem = getStarPlayerBySlug('hakflem_skuttlespike');
+        expect(hakflem).toBeDefined();
+        expect(isStarPlayerHirableBy(hakflem as StarPlayerDefinition, 'skaven')).toBe(true);
+      });
+
+      it('devrait retourner false pour Hakflem côté Elfes Sylvains (S2)', () => {
+        const hakflem = getStarPlayerBySlug('hakflem_skuttlespike', 'season_2');
+        expect(hakflem).toBeDefined();
+        expect(
+          isStarPlayerHirableBy(hakflem as StarPlayerDefinition, 'wood_elf', 'season_2'),
+        ).toBe(false);
+      });
+
+      it('devrait respecter les différences de ruleset (Hakflem S3 hirable par Undead)', () => {
+        const hakflemS3 = getStarPlayerBySlug('hakflem_skuttlespike', 'season_3');
+        expect(hakflemS3).toBeDefined();
+        expect(
+          isStarPlayerHirableBy(hakflemS3 as StarPlayerDefinition, 'undead', 'season_3'),
+        ).toBe(true);
+      });
+
+      it('devrait retourner false pour une équipe inconnue', () => {
+        const hakflem = getStarPlayerBySlug('hakflem_skuttlespike');
+        expect(hakflem).toBeDefined();
+        expect(
+          isStarPlayerHirableBy(hakflem as StarPlayerDefinition, 'unknown_team'),
+        ).toBe(false);
+      });
+    });
+
+    describe('getPriorityTeamStarPlayers', () => {
+      it('devrait retourner un mapping pour les 5 équipes prioritaires', () => {
+        const mapping = getPriorityTeamStarPlayers();
+        expect(Object.keys(mapping).sort()).toEqual([...PRIORITY_TEAMS].sort());
+      });
+
+      it('chaque équipe prioritaire devrait avoir au moins un star player recrutable', () => {
+        const mapping = getPriorityTeamStarPlayers();
+        PRIORITY_TEAM_SLUGS.forEach((teamSlug) => {
+          expect(mapping[teamSlug].length).toBeGreaterThan(0);
+        });
+      });
+
+      it('chaque star player listé devrait être effectivement recrutable par son équipe', () => {
+        const mapping = getPriorityTeamStarPlayers();
+        PRIORITY_TEAM_SLUGS.forEach((teamSlug) => {
+          mapping[teamSlug].forEach((starPlayer) => {
+            expect(isStarPlayerHirableBy(starPlayer, teamSlug)).toBe(true);
+          });
+        });
+      });
+
+      it('chaque équipe prioritaire devrait inclure au moins un star player "all"', () => {
+        const mapping = getPriorityTeamStarPlayers();
+        PRIORITY_TEAM_SLUGS.forEach((teamSlug) => {
+          const hasAllStar = mapping[teamSlug].some((sp) =>
+            sp.hirableBy.includes('all'),
+          );
+          expect(hasAllStar).toBe(true);
+        });
+      });
+
+      it('Skaven devrait pouvoir recruter Hakflem Skuttlespike', () => {
+        const mapping = getPriorityTeamStarPlayers();
+        const slugs = mapping.skaven.map((sp) => sp.slug);
+        expect(slugs).toContain('hakflem_skuttlespike');
+      });
+
+      it('Lizardmen devrait pouvoir recruter Zolcath the Zoat (lustrian)', () => {
+        const mapping = getPriorityTeamStarPlayers();
+        const slugs = mapping.lizardmen.map((sp) => sp.slug);
+        expect(slugs).toContain('zolcath_the_zoat');
+      });
+
+      it('Dwarf devrait pouvoir recruter Grim Ironjaw (worlds_edge_superleague)', () => {
+        const mapping = getPriorityTeamStarPlayers();
+        const slugs = mapping.dwarf.map((sp) => sp.slug);
+        expect(slugs).toContain('grim_ironjaw');
+      });
+
+      it('Imperial Nobility devrait pouvoir recruter un star player old_world_classic', () => {
+        const mapping = getPriorityTeamStarPlayers();
+        const hasOwc = mapping.imperial_nobility.some((sp) =>
+          sp.hirableBy.includes('old_world_classic'),
+        );
+        expect(hasOwc).toBe(true);
+      });
+
+      it('Gnome devrait récupérer les star players halfling_thimble_cup si présents dans la base', () => {
+        const mapping = getPriorityTeamStarPlayers();
+        const thimbleCupStars = Object.values(STAR_PLAYERS).filter((sp) =>
+          sp.hirableBy.includes('halfling_thimble_cup'),
+        );
+        const gnomeSlugs = new Set(mapping.gnome.map((sp) => sp.slug));
+        thimbleCupStars.forEach((sp) => {
+          expect(gnomeSlugs.has(sp.slug)).toBe(true);
+        });
+      });
+
+      it('devrait être cohérent avec getAvailableStarPlayers pour chaque équipe', () => {
+        const mapping = getPriorityTeamStarPlayers();
+        PRIORITY_TEAM_SLUGS.forEach((teamSlug) => {
+          const expected = getAvailableStarPlayers(teamSlug)
+            .map((sp) => sp.slug)
+            .sort();
+          const actual = mapping[teamSlug].map((sp) => sp.slug).sort();
+          expect(actual).toEqual(expected);
+        });
+      });
+
+      it('devrait supporter le ruleset season_3 (Hakflem accessible aux Undead mais pas Skaven déjà inclus)', () => {
+        const mappingS3 = getPriorityTeamStarPlayers('season_3');
+        const skavenSlugs = mappingS3.skaven.map((sp) => sp.slug);
+        expect(skavenSlugs).toContain('hakflem_skuttlespike');
       });
     });
   });

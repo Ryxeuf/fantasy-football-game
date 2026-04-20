@@ -259,7 +259,7 @@
 | P2.4 | Implementer `leap` (Saurus progression frequente) | Regle | [x] |
 | P2.5 | Implementer `dump-off` (Imperial / Skaven Thrower progression) | Regle | [x] |
 | P2.6 | Implementer `sneaky-git` (Dwarf Troll Slayer progression) | Regle | [x] |
-| P2.7 | Lister les star players hirables par les 5 equipes (flag `hirableBy`) | Contenu | [ ] |
+| P2.7 | Lister les star players hirables par les 5 equipes (flag `hirableBy`) | Contenu | [x] |
 | P2.8 | Ecrire les special rules manquantes de ces star players (~15-25) | Contenu | [ ] |
 | P2.9 | Images + descriptions FR/EN de ces star players | Contenu | [ ] |
 | P2.10 | Tests unitaires sur les special rules star players des 5 equipes | Tests | [ ] |

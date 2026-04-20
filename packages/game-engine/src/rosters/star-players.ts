@@ -1189,7 +1189,7 @@ export function getRegionalRulesForTeam(
 /**
  * Types utilitaires pour les règles régionales
  */
-export type RegionalRule = 
+export type RegionalRule =
   | "badlands_brawl"
   | "elven_kingdoms_league"
   | "halfling_thimble_cup"
@@ -1199,3 +1199,55 @@ export type RegionalRule =
   | "underworld_challenge"
   | "worlds_edge_superleague"
   | "favoured_of";
+
+/**
+ * Les 5 équipes prioritaires du MVP (cf. TODO.md — scope réduit).
+ * Toute liste / mapping dérivé doit rester cohérent avec `TEAM_REGIONAL_RULES`.
+ */
+export const PRIORITY_TEAM_SLUGS = [
+  "skaven",
+  "lizardmen",
+  "dwarf",
+  "imperial_nobility",
+  "gnome",
+] as const;
+
+export type PriorityTeamSlug = (typeof PRIORITY_TEAM_SLUGS)[number];
+
+/**
+ * Vérifie si un Star Player est recrutable par une équipe donnée.
+ * Couvre le cas "all" (ouvert à toutes les équipes) et l'intersection
+ * entre `hirableBy` et les règles régionales de l'équipe.
+ */
+export function isStarPlayerHirableBy(
+  starPlayer: StarPlayerDefinition,
+  teamSlug: string,
+  ruleset: Ruleset = DEFAULT_RULESET,
+): boolean {
+  if (starPlayer.hirableBy.includes("all")) {
+    return true;
+  }
+  const teamRules = getRegionalRulesForTeam(teamSlug, ruleset);
+  if (teamRules.length === 0) {
+    return false;
+  }
+  return starPlayer.hirableBy.some((rule) => teamRules.includes(rule));
+}
+
+/**
+ * Retourne le mapping complet des Star Players recrutables par chacune
+ * des 5 équipes prioritaires (Skaven, Hommes-Lézards, Nains, Noblesse
+ * Impériale, Gnomes). Sert de base aux tâches P2.8 à P2.10.
+ */
+export function getPriorityTeamStarPlayers(
+  ruleset: Ruleset = DEFAULT_RULESET,
+): Record<PriorityTeamSlug, StarPlayerDefinition[]> {
+  const entries = PRIORITY_TEAM_SLUGS.map((teamSlug) => [
+    teamSlug,
+    getAvailableStarPlayers(teamSlug, [], ruleset),
+  ] as const);
+  return Object.fromEntries(entries) as Record<
+    PriorityTeamSlug,
+    StarPlayerDefinition[]
+  >;
+}
