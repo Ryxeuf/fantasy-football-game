@@ -80,7 +80,7 @@ export async function ensureAISystemUser(prisma: PrismaLike): Promise<{ id: stri
       name: AI_SYSTEM_COACH_NAME,
       coachName: AI_SYSTEM_COACH_NAME,
       role: "ai",
-      roles: JSON.stringify(["ai"]),
+      roles: ["ai"],
     },
   });
   return { id: user.id };

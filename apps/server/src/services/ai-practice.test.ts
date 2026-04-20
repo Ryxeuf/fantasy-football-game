@@ -90,6 +90,16 @@ describe("ensureAISystemUser", () => {
     expect(result.id).toBe("ai-new");
     expect(prisma.user.upsert).toHaveBeenCalledOnce();
   });
+
+  it("passe le champ roles sous forme de tableau (String[] Prisma)", async () => {
+    const prisma = makePrismaMock();
+    prisma.user.findUnique.mockResolvedValue(null);
+    prisma.user.upsert.mockResolvedValue({ id: "ai-new" });
+    await ensureAISystemUser(prisma as any);
+    const upsertArgs = prisma.user.upsert.mock.calls[0][0];
+    expect(Array.isArray(upsertArgs.create.roles)).toBe(true);
+    expect(upsertArgs.create.roles).toEqual(["ai"]);
+  });
 });
 
 describe("spawnAITeam", () => {
