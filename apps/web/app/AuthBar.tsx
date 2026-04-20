@@ -2,6 +2,8 @@
 import { useEffect, useState, useRef } from "react";
 import { API_BASE } from "./auth-client";
 import { useLanguage } from "./contexts/LanguageContext";
+import { useFeatureFlag } from "./hooks/useFeatureFlag";
+import { ONLINE_PLAY_FLAG } from "./lib/featureFlagKeys";
 
 type UserData = {
   email: string;
@@ -16,6 +18,7 @@ interface AuthBarProps {
 
 export default function AuthBar({ isMobileMenu = false }: AuthBarProps) {
   const { t } = useLanguage();
+  const onlinePlayEnabled = useFeatureFlag(ONLINE_PLAY_FLAG);
   const [hasToken, setHasToken] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -147,18 +150,22 @@ export default function AuthBar({ isMobileMenu = false }: AuthBarProps) {
           >
             🎮 Parties Offline
           </a>
-          <a
-            href="/play"
-            className="block px-4 py-2.5 text-sm text-nuffle-gold font-semibold hover:bg-yellow-50 rounded-lg transition-colors"
-          >
-            ⚔️ {t.play?.playOnline || "Jouer en ligne"}
-          </a>
-          <a
-            href="/me/matches"
-            className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            📊 {t.play?.myOnlineMatches || "Mes matchs en ligne"}
-          </a>
+          {onlinePlayEnabled && (
+            <>
+              <a
+                href="/play"
+                className="block px-4 py-2.5 text-sm text-nuffle-gold font-semibold hover:bg-yellow-50 rounded-lg transition-colors"
+              >
+                ⚔️ {t.play?.playOnline || "Jouer en ligne"}
+              </a>
+              <a
+                href="/me/matches"
+                className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                📊 {t.play?.myOnlineMatches || "Mes matchs en ligne"}
+              </a>
+            </>
+          )}
           <a
             href="/me/achievements"
             className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
@@ -242,20 +249,24 @@ export default function AuthBar({ isMobileMenu = false }: AuthBarProps) {
                 >
                   🎮 Parties Offline
                 </a>
-                <a
-                  href="/play"
-                  className="block px-4 py-2.5 text-sm hover:bg-gray-100 transition-colors text-nuffle-gold font-semibold"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  ⚔️ {t.play?.playOnline || "Jouer en ligne"}
-                </a>
-                <a
-                  href="/me/matches"
-                  className="block px-4 py-2.5 text-sm hover:bg-gray-100 transition-colors"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  📊 {t.play?.myOnlineMatches || "Mes matchs en ligne"}
-                </a>
+                {onlinePlayEnabled && (
+                  <>
+                    <a
+                      href="/play"
+                      className="block px-4 py-2.5 text-sm hover:bg-gray-100 transition-colors text-nuffle-gold font-semibold"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      ⚔️ {t.play?.playOnline || "Jouer en ligne"}
+                    </a>
+                    <a
+                      href="/me/matches"
+                      className="block px-4 py-2.5 text-sm hover:bg-gray-100 transition-colors"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      📊 {t.play?.myOnlineMatches || "Mes matchs en ligne"}
+                    </a>
+                  </>
+                )}
                 <a
                   href="/me/achievements"
                   className="block px-4 py-2.5 text-sm hover:bg-gray-100 transition-colors"

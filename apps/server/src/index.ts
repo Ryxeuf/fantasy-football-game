@@ -24,6 +24,8 @@ import {
   userFeatureFlagsRouter,
   adminFeatureFlagsRouter,
 } from "./routes/feature-flags";
+import { requireFeatureFlag } from "./middleware/requireFeatureFlag";
+import { ONLINE_PLAY_FLAG } from "./services/featureFlags";
 import dotenv from "dotenv";
 import { execSync } from "node:child_process";
 import { prisma } from "./prisma";
@@ -69,7 +71,7 @@ app.get("/health", (_req, res) => res.json({ ok: true }));
 app.use("/auth/login", authRateLimiter);
 app.use("/auth/register", authRateLimiter);
 app.use("/auth", authRoutes);
-app.use("/match", matchRoutes);
+app.use("/match", requireFeatureFlag(ONLINE_PLAY_FLAG), matchRoutes);
 app.use("/admin", adminRoutes);
 app.use("/admin/data", adminDataRoutes);
 app.use("/user", userRoutes);
@@ -80,8 +82,12 @@ app.use("/api", publicRostersRoutes);
 app.use("/api", publicPositionsRoutes);
 app.use("/cup", cupRoutes);
 app.use("/local-match", localMatchRoutes);
-app.use("/matchmaking", matchmakingRoutes);
-app.use("/leaderboard", leaderboardRoutes);
+app.use("/matchmaking", requireFeatureFlag(ONLINE_PLAY_FLAG), matchmakingRoutes);
+app.use(
+  "/leaderboard",
+  requireFeatureFlag(ONLINE_PLAY_FLAG),
+  leaderboardRoutes,
+);
 app.use("/push", pushRoutes);
 app.use("/friends", friendsRoutes);
 app.use("/career-stats", careerStatsRoutes);

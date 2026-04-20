@@ -4,9 +4,12 @@ import Logo from "./Logo";
 import AuthBar from "../AuthBar";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useFeatureFlag } from "../hooks/useFeatureFlag";
+import { ONLINE_PLAY_FLAG } from "../lib/featureFlagKeys";
 
 export default function Header() {
   const { t } = useLanguage();
+  const onlinePlayEnabled = useFeatureFlag(ONLINE_PLAY_FLAG);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -65,18 +68,22 @@ export default function Header() {
           >
             ⭐ {t.nav.starPlayers}
           </a>
-          <a
-            href="/leaderboard"
-            className="text-sm font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold hover:underline transition-colors whitespace-nowrap"
-          >
-            🏆 {t.nav.leaderboard}
-          </a>
-          <a
-            href="/play"
-            className="text-sm font-subtitle font-semibold text-nuffle-gold hover:text-nuffle-bronze hover:underline transition-colors whitespace-nowrap"
-          >
-            🎮 {t.nav.play}
-          </a>
+          {onlinePlayEnabled && (
+            <a
+              href="/leaderboard"
+              className="text-sm font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold hover:underline transition-colors whitespace-nowrap"
+            >
+              🏆 {t.nav.leaderboard}
+            </a>
+          )}
+          {onlinePlayEnabled && (
+            <a
+              href="/play"
+              className="text-sm font-subtitle font-semibold text-nuffle-gold hover:text-nuffle-bronze hover:underline transition-colors whitespace-nowrap"
+            >
+              🎮 {t.nav.play}
+            </a>
+          )}
           <a
             href="/support"
             className="text-sm font-subtitle font-semibold text-red-500 hover:text-nuffle-gold hover:underline transition-colors whitespace-nowrap inline-flex items-center gap-1"
@@ -168,20 +175,24 @@ export default function Header() {
               >
                 ⭐ {t.nav.starPlayers}
               </a>
-              <a
-                href="/leaderboard"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors py-2 active:text-nuffle-gold"
-              >
-                🏆 {t.nav.leaderboard}
-              </a>
-              <a
-                href="/play"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block text-base font-subtitle font-semibold text-nuffle-gold hover:text-nuffle-bronze transition-colors py-2 active:text-nuffle-bronze"
-              >
-                🎮 {t.nav.play}
-              </a>
+              {onlinePlayEnabled && (
+                <a
+                  href="/leaderboard"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors py-2 active:text-nuffle-gold"
+                >
+                  🏆 {t.nav.leaderboard}
+                </a>
+              )}
+              {onlinePlayEnabled && (
+                <a
+                  href="/play"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block text-base font-subtitle font-semibold text-nuffle-gold hover:text-nuffle-bronze transition-colors py-2 active:text-nuffle-bronze"
+                >
+                  🎮 {t.nav.play}
+                </a>
+              )}
               <a
                 href="/support"
                 onClick={() => setMobileMenuOpen(false)}

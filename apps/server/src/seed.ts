@@ -17,6 +17,7 @@ import {
   SEASON_3_RENAMED_SKILLS 
 } from "./static-skills-data-s3";
 import { UNKNOWN_USER_ID } from "./utils/user-constants";
+import { ONLINE_PLAY_FLAG } from "./services/featureFlags";
 
 async function main() {
   console.log("🌱 Début du seed...\n");
@@ -935,6 +936,47 @@ async function main() {
         },
       });
     }
+  }
+
+  // =============================================================================
+  // 6b. SEED DES FEATURE FLAGS
+  // =============================================================================
+  console.log("🚩 Seed des feature flags...");
+  // "online_play" : gate toute la partie "Jouer en ligne" du site.
+  // Par défaut désactivé globalement ; les admins ont un bypass automatique
+  // (cf. services/featureFlags.ts) et l'utilisateur "user@example.com" reçoit
+  // un override explicite ci-dessous pour les tests personnels.
+  const onlinePlayFlag = await prisma.featureFlag.upsert({
+    where: { key: ONLINE_PLAY_FLAG },
+    update: {
+      description:
+        "Active la partie 'Jouer en ligne' du site (matchmaking, match en ligne, lobby, spectate).",
+    },
+    create: {
+      key: ONLINE_PLAY_FLAG,
+      description:
+        "Active la partie 'Jouer en ligne' du site (matchmaking, match en ligne, lobby, spectate).",
+      enabled: false,
+    },
+  });
+  console.log(
+    `   ✅ Flag '${ONLINE_PLAY_FLAG}' ${onlinePlayFlag.enabled ? "actif" : "inactif (override admin/user)"}`,
+  );
+
+  const testUser = await prisma.user.findUnique({
+    where: { email: "user@example.com" },
+  });
+  if (testUser) {
+    await prisma.featureFlagUser.upsert({
+      where: {
+        flagId_userId: { flagId: onlinePlayFlag.id, userId: testUser.id },
+      },
+      create: { flagId: onlinePlayFlag.id, userId: testUser.id },
+      update: {},
+    });
+    console.log(
+      `   ✅ Override '${ONLINE_PLAY_FLAG}' ajouté pour user@example.com`,
+    );
   }
 
   // =============================================================================

@@ -8,6 +8,10 @@ permissions:
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
+env:
+  # Force tous les feature flags à ON pour la CI (build, lint, tests).
+  # Cf. apps/server/src/services/featureFlags.ts
+  FEATURE_FLAGS_FORCE_ENABLED: "true"
 jobs:
   ci:
     runs-on: ubuntu-latest

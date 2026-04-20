@@ -37,7 +37,9 @@ userFeatureFlagsRouter.get("/me", async (req: AuthenticatedRequest, res) => {
     return res.status(401).json({ success: false, error: "Non authentifié" });
   }
   try {
-    const keys = await listEnabledKeysForUser(req.user.id);
+    const keys = await listEnabledKeysForUser(req.user.id, {
+      roles: req.user.roles,
+    });
     return res.json({ success: true, data: keys });
   } catch (error: unknown) {
     console.error("[featureFlags] /me error:", error);
