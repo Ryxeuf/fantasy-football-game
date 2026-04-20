@@ -284,7 +284,7 @@
 |---|-------|------|--------|
 | N.5 | Systeme d'amis (ajout, invitation, statut en ligne) | Social | [x] |
 | N.6 | Historique de matchs avec stats de carriere (par equipe, par joueur) | Social | [x] |
-| N.7 | Systeme d'achievements (succes) | Social | [ ] |
+| N.7 | Systeme d'achievements (succes) | Social | [x] |
 | N.8 | Badges "Maitre" par equipe prioritaire (gagner X matchs avec chaque) | Social | [ ] |
 
 ### Sprint 17 — Infrastructure Competitive : ligues (~8 jours, ex-Sprint 14)

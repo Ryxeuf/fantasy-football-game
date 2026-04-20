@@ -42,6 +42,7 @@ model User {
   featureFlagOverrides FeatureFlagUser[]
   friendshipsSent     Friendship[]    @relation("FriendshipRequester")
   friendshipsReceived Friendship[]    @relation("FriendshipReceiver")
+  achievements        UserAchievement[]
 }
 
 model FeatureFlag {
@@ -518,6 +519,19 @@ model Friendship {
   @@index([requesterId])
   @@index([receiverId])
   @@index([status])
+}
+
+// N.7 — Systeme d'achievements (succes). Un unlock par (userId, slug).
+// Le catalogue complet est en code (apps/server/src/services/achievements.ts).
+model UserAchievement {
+  id         String   @id @default(cuid())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+  slug       String
+  unlockedAt DateTime @default(now())
+
+  @@unique([userId, slug])
+  @@index([userId])
 }
 
 // Preferences de notification push par utilisateur
