@@ -550,16 +550,71 @@ router.post("/:id/start", authUser, async (req: AuthenticatedRequest, res) => {
       gameState = addJourneymen(gameState, 11, 11, linemanStatsA, linemanStatsB);
     }
     
-    // Inducements : arrêter ici pour laisser les joueurs choisir via l'UI
-    // La suite (prayers, kicking-team, setup) sera traitée dans POST /:id/inducements
+    // Inducements : pour les matchs IA, l'adversaire n'a pas d'UI pour choisir,
+    // on enchaine automatiquement inducements (selections vides) -> prayers -> kicking-team -> setup.
+    // Pour les matchs humain vs humain, on s'arrete ici pour que les joueurs choisissent via l'UI.
+    if (localMatch.aiOpponent && gameState.preMatch.phase === 'inducements') {
+      const ctvA = localMatch.teamA.players
+        .filter((p: any) => !p.dead)
+        .reduce((sum: number, p: any) => sum + (p.value || 0), 0);
+      const ctvB = localMatch.teamB.players
+        .filter((p: any) => !p.dead)
+        .reduce((sum: number, p: any) => sum + (p.value || 0), 0);
 
-    const matchStatus = "pending";
+      const pettyCashInput = {
+        ctvTeamA: ctvA,
+        ctvTeamB: ctvB,
+        treasuryTeamA: (localMatch.teamA as any).treasury || 0,
+        treasuryTeamB: (localMatch.teamB as any).treasury || 0,
+      };
+
+      const ctxA: InducementContext = {
+        teamId: "A",
+        regionalRules: [],
+        hasApothecary: gameState.apothecaryAvailable?.teamA ?? false,
+        rosterSlug: localMatch.teamA.roster,
+      };
+      const ctxB: InducementContext = {
+        teamId: "B",
+        regionalRules: [],
+        hasApothecary: gameState.apothecaryAvailable?.teamB ?? false,
+        rosterSlug: localMatch.teamB.roster,
+      };
+
+      const emptySelection: InducementSelection = { items: [] };
+      const inducementsResult = processInducementsWithSelection(
+        gameState,
+        pettyCashInput,
+        emptySelection,
+        emptySelection,
+        ctxA,
+        ctxB,
+      );
+      gameState = inducementsResult.state;
+
+      if (gameState.preMatch.phase === 'prayers') {
+        gameState = processPrayersToNuffle(gameState, rng, ctvA - ctvB);
+      }
+      if (gameState.preMatch.phase === 'kicking-team') {
+        gameState = determineKickingTeam(gameState, rng);
+      }
+      if (gameState.preMatch.phase === 'setup') {
+        gameState = enterSetupPhase(gameState, gameState.preMatch.receivingTeam);
+      }
+    }
+
+    const isPreMatchComplete =
+      gameState.preMatch.phase === 'setup' ||
+      gameState.preMatch.phase === 'kickoff' ||
+      gameState.preMatch.phase === 'kickoff-sequence';
+    const matchStatus = isPreMatchComplete ? "in_progress" : "pending";
     
     // Mettre à jour la partie
     const updatedMatch = await prisma.localMatch.update({
       where: { id: req.params.id },
       data: {
         status: matchStatus,
+        ...(isPreMatchComplete && { startedAt: new Date() }),
         gameState: gameState as any,
       },
       include: {
@@ -579,8 +634,8 @@ router.post("/:id/start", authUser, async (req: AuthenticatedRequest, res) => {
         },
       },
     });
-    
-    res.json({ 
+
+    res.json({
       localMatch: updatedMatch,
       gameState,
     });
