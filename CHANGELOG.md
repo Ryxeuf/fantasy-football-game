@@ -1,3 +1,35 @@
+## [1.59.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.58.0...v1.59.0) (2026-04-20)
+
+
+### ✨ Features
+
+* add Ko-fi donation integration with support page and legal updates ([#233](https://github.com/Ryxeuf/fantasy-football-game/issues/233)) ([df44df2](https://github.com/Ryxeuf/fantasy-football-game/commit/df44df2f992ff6f2ff600935643297f57f04898e))
+* **ai:** restrict AI opponent to 5 priority teams (N.4b) ([#255](https://github.com/Ryxeuf/fantasy-football-game/issues/255)) ([b90aae1](https://github.com/Ryxeuf/fantasy-football-game/commit/b90aae11facfc4e2349fc3b18d3820b241e19f2a))
+* **ai:** three-level AI difficulty for practice mode (N.4) ([#254](https://github.com/Ryxeuf/fantasy-football-game/issues/254)) ([cd8953a](https://github.com/Ryxeuf/fantasy-football-game/commit/cd8953ae6394ea1fa7feda228cafc7ee352423a1))
+* **career-stats:** N.6 historique de matchs et stats de carriere par equipe ([3ff6ba4](https://github.com/Ryxeuf/fantasy-football-game/commit/3ff6ba4babbbc64e97dc394742683f1a57261d4b))
+* **content:** descriptions EN pour les star players MVP (P2.9) ([#248](https://github.com/Ryxeuf/fantasy-football-game/issues/248)) ([a1fbc30](https://github.com/Ryxeuf/fantasy-football-game/commit/a1fbc30c8f500af91386d5d5229c10d98806206b))
+* **content:** enrichir special rules star players 5 equipes prioritaires (P2.8) ([#247](https://github.com/Ryxeuf/fantasy-football-game/issues/247)) ([1dbbe32](https://github.com/Ryxeuf/fantasy-football-game/commit/1dbbe32a58556a27f9c3696354469ac65ed916dc))
+* **game-engine:** audit & fix frenzy + on-the-ball (P1.11) ([#229](https://github.com/Ryxeuf/fantasy-football-game/issues/229)) ([d7d1fbc](https://github.com/Ryxeuf/fantasy-football-game/commit/d7d1fbcc695baad5a30e2400fa02decf63938556))
+* **game-engine:** implement break-tackle skill (P1.3) ([#215](https://github.com/Ryxeuf/fantasy-football-game/issues/215)) ([dbc2ddf](https://github.com/Ryxeuf/fantasy-football-game/commit/dbc2ddf60de1e3c243d23080ffd214337f346eaa))
+* **game-engine:** implement fend skill (P1.9) ([#227](https://github.com/Ryxeuf/fantasy-football-game/issues/227)) ([906feba](https://github.com/Ryxeuf/fantasy-football-game/commit/906febaa66e625dda67fb212cabc7f68a2241f54))
+* **game-engine:** implement running-pass skill (P1.10) ([#228](https://github.com/Ryxeuf/fantasy-football-game/issues/228)) ([3e2a7af](https://github.com/Ryxeuf/fantasy-football-game/commit/3e2a7afb7c4bbdbf9b5897515b1bd030415f1d33))
+* **game-engine:** implement shadowing skill (P1.8) ([#226](https://github.com/Ryxeuf/fantasy-football-game/issues/226)) ([251b1b0](https://github.com/Ryxeuf/fantasy-football-game/commit/251b1b09070baeba33fa75de8dac7d96a1563cbd))
+* IA — evaluation heuristique position + coup (N.3) ([#253](https://github.com/Ryxeuf/fantasy-football-game/issues/253)) ([c6acdbf](https://github.com/Ryxeuf/fantasy-football-game/commit/c6acdbf79bd9a9e29f81f3bea7bfc75bee85faa6))
+* implement Defensive skill (Sprint 14 P2.2) ([#243](https://github.com/Ryxeuf/fantasy-football-game/issues/243)) ([81fbb3d](https://github.com/Ryxeuf/fantasy-football-game/commit/81fbb3dd882faf372056fd65f1ab6ca1c9916800))
+* implement disturbing-presence skill (Sprint 14 P2.3) ([#244](https://github.com/Ryxeuf/fantasy-football-game/issues/244)) ([30b197a](https://github.com/Ryxeuf/fantasy-football-game/commit/30b197a68b99f8bd2ce7bf73119ed01689143a53))
+* implement Kick skill (Sprint 14 P2.1) ([#242](https://github.com/Ryxeuf/fantasy-football-game/issues/242)) ([20fe072](https://github.com/Ryxeuf/fantasy-football-game/commit/20fe072c7e5b6e183771e64fbf8733206c300340))
+* implement sneaky-git skill (Sprint 14 P2.6) ([#245](https://github.com/Ryxeuf/fantasy-football-game/issues/245)) ([e2f748f](https://github.com/Ryxeuf/fantasy-football-game/commit/e2f748f650143c21b593f78db5af8064bc8ca04c))
+* mode simplifie pour debutants (Sprint 15 · N.2) ([#251](https://github.com/Ryxeuf/fantasy-football-game/issues/251)) ([2138468](https://github.com/Ryxeuf/fantasy-football-game/commit/213846895c9c6b12c6cb985e812a4f5d3ffa0f52))
+* **P2.7:** lister les star players hirables par les 5 equipes prioritaires ([#246](https://github.com/Ryxeuf/fantasy-football-game/issues/246)) ([49a949c](https://github.com/Ryxeuf/fantasy-football-game/commit/49a949cce5faffe02b76fdf5579ce7e12d3bde37))
+* **social:** systeme d'amis — fondation backend (N.5) ([#258](https://github.com/Ryxeuf/fantasy-football-game/issues/258)) ([79a9d01](https://github.com/Ryxeuf/fantasy-football-game/commit/79a9d0186dd210a92b10d9e622ef6568664e85d3))
+* **teams:** season 3 par defaut et staff a la creation ([#252](https://github.com/Ryxeuf/fantasy-football-game/issues/252)) ([7c94e61](https://github.com/Ryxeuf/fantasy-football-game/commit/7c94e61c578a5ccc0a8aabb508e9b4ddb9460847))
+* tutoriel interactif (Sprint 15 · N.1) ([#250](https://github.com/Ryxeuf/fantasy-football-game/issues/250)) ([52efbd5](https://github.com/Ryxeuf/fantasy-football-game/commit/52efbd5ec003dee30cf4eae95885751a1d9db26f))
+
+
+### 📝 Documentation
+
+* add Sprint 6 & 7 specs for badges/titles/rewards system ([#260](https://github.com/Ryxeuf/fantasy-football-game/issues/260)) ([7a634e2](https://github.com/Ryxeuf/fantasy-football-game/commit/7a634e2165030927ccd4897e41d89916281c2490))
+
 ## [1.58.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.57.0...v1.58.0) (2026-04-15)
 
 
