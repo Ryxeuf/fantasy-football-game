@@ -30,6 +30,7 @@ import {
   removeUserOverride,
   invalidateFeatureFlagsCache,
   ONLINE_PLAY_FLAG,
+  AI_TRAINING_FLAG,
 } from "./featureFlags";
 
 const mockPrisma = prisma as any;
@@ -320,6 +321,12 @@ describe("featureFlags service", () => {
   describe("ONLINE_PLAY_FLAG constant", () => {
     it('exports the canonical "online_play" key', () => {
       expect(ONLINE_PLAY_FLAG).toBe("online_play");
+    });
+  });
+
+  describe("AI_TRAINING_FLAG constant", () => {
+    it('exports the canonical "ai_training" key', () => {
+      expect(AI_TRAINING_FLAG).toBe("ai_training");
     });
   });
 });

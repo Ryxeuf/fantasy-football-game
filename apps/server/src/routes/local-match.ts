@@ -31,6 +31,8 @@ import { persistPlayerDeaths } from "../services/player-death";
 import { persistPermanentInjuries } from "../services/permanent-injuries";
 import { getLinemanStats } from "../services/journeymen";
 import { validate, validateQuery } from "../middleware/validate";
+import { requireFeatureFlag } from "../middleware/requireFeatureFlag";
+import { AI_TRAINING_FLAG } from "../services/featureFlags";
 import {
   localMatchListQuerySchema,
   createLocalMatchSchema,
@@ -1570,13 +1572,19 @@ router.post("/share/:token/validate", authUser, validate(validateShareTokenSchem
 // ─────────────────────────────────────────────────────────────────────────────
 
 // GET /local-match/ai/opponents — liste la whitelist des rosters IA (N.4b).
-router.get("/ai/opponents", authUser, async (_req: AuthenticatedRequest, res) => {
-  res.json({ rosters: listAIOpponentAllowedRosters() });
-});
+router.get(
+  "/ai/opponents",
+  requireFeatureFlag(AI_TRAINING_FLAG),
+  authUser,
+  async (_req: AuthenticatedRequest, res) => {
+    res.json({ rosters: listAIOpponentAllowedRosters() });
+  },
+);
 
 // POST /local-match/practice — cree un match pratique contre IA.
 router.post(
   "/practice",
+  requireFeatureFlag(AI_TRAINING_FLAG),
   authUser,
   validate(createPracticeMatchSchema),
   async (req: AuthenticatedRequest, res) => {
@@ -1632,6 +1640,7 @@ router.post(
 // Ne mute pas l'etat cote serveur : le client applique le coup puis persiste via PUT /state.
 router.post(
   "/:id/ai-next-move",
+  requireFeatureFlag(AI_TRAINING_FLAG),
   authUser,
   validate(aiNextMoveSchema),
   async (req: AuthenticatedRequest, res) => {
