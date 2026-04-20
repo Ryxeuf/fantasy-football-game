@@ -274,7 +274,7 @@
 | N.2 | Mode simplifie pour debutants (leverager `SIMPLIFIED_RULES`) | Engagement | [x] |
 | N.3 | IA adversaire — evaluation heuristique basique (eval position + coup) | Engagement | [x] |
 | N.4 | Mode pratique contre IA (3 niveaux de difficulte) | Engagement | [x] |
-| N.4b | IA contrainte aux 5 equipes prioritaires dans un premier temps | Engagement | [ ] |
+| N.4b | IA contrainte aux 5 equipes prioritaires dans un premier temps | Engagement | [x] |
 
 ### Sprint 16 — Social & retention (~5 jours, ex-Sprint 19 remonte)
 

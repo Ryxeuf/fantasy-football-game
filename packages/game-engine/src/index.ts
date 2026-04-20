@@ -396,6 +396,10 @@ export {
   listAIDifficulties,
   pickAIMove,
   scoreMoveForDifficulty,
+  AI_OPPONENT_ALLOWED_ROSTERS,
+  isAIOpponentRosterAllowed,
+  listAIOpponentAllowedRosters,
+  pickAIOpponentRoster,
 } from './ai';
 export type {
   EvaluationBreakdown,
@@ -403,6 +407,8 @@ export type {
   AIDifficulty,
   AIDifficultyProfile,
   PickAIMoveOptions,
+  AIOpponentRoster,
+  PickAIOpponentRosterOptions,
 } from './ai';
 
 // Export du module tutoriel (N.1)
