@@ -1,3 +1,10 @@
+## [1.60.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.59.0...v1.60.0) (2026-04-20)
+
+
+### ✨ Features
+
+* **social:** N.7 systeme d'achievements (succes) ([564b173](https://github.com/Ryxeuf/fantasy-football-game/commit/564b1738d1e19cd60678ac347ac50d1ec0ffcda4))
+
 ## [1.59.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.58.0...v1.59.0) (2026-04-20)
 
 
