@@ -18,6 +18,7 @@ import {
 } from "./static-skills-data-s3";
 import { UNKNOWN_USER_ID } from "./utils/user-constants";
 import { ONLINE_PLAY_FLAG } from "./services/featureFlags";
+import { seedDefaultLeagues, DEFAULT_LEAGUE_NAME } from "./seeders/leagues";
 
 async function main() {
   console.log("🌱 Début du seed...\n");
@@ -1930,6 +1931,22 @@ async function main() {
     console.log("   ⚠️  Impossible de créer la coupe : utilisateurs non trouvés");
   }
   console.log("✅ Fixtures de coupe et match local terminées\n");
+
+  // =============================================================================
+  // 8. SEED DES LIGUES PAR DEFAUT (L.2 — Sprint 17)
+  // =============================================================================
+  console.log("🏟️  Seed des ligues par défaut...");
+  const leagueCreator = await prisma.user.findUnique({
+    where: { email: "admin@example.com" },
+    select: { id: true },
+  });
+  if (leagueCreator) {
+    await seedDefaultLeagues({ creatorId: leagueCreator.id });
+    console.log(`   ✅ Ligue '${DEFAULT_LEAGUE_NAME}' prête (saison 1, rounds initiaux, 5 équipes prioritaires)`);
+  } else {
+    console.log("   ⚠️  Admin introuvable, seeder des ligues ignoré");
+  }
+  console.log("✅ Ligues par défaut terminées\n");
 }
 
 main()
@@ -1942,6 +1959,7 @@ main()
     console.log("   - Tous les Star Players ont été importés");
     console.log("   - Les comptes par défaut sont prêts");
     console.log("   - La coupe 'Test 1' et un match local ont été créés");
+    console.log(`   - La ligue '${DEFAULT_LEAGUE_NAME}' est prête`);
   })
   .catch(async (e) => {
     console.error("❌ Erreur lors du seed:", e);
