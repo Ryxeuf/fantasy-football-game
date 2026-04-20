@@ -1,3 +1,15 @@
+## [1.61.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.60.0...v1.61.0) (2026-04-20)
+
+
+### ✨ Features
+
+* add L.3 league CRUD API routes (create/join/schedule/standings) ([#271](https://github.com/Ryxeuf/fantasy-football-game/issues/271)) ([f203eb8](https://github.com/Ryxeuf/fantasy-football-game/commit/f203eb84c9d0f438e86e5d0eada3399a4d6f7911))
+* add online_play feature flag with server middleware and client gate ([#265](https://github.com/Ryxeuf/fantasy-football-game/issues/265)) ([bd912d9](https://github.com/Ryxeuf/fantasy-football-game/commit/bd912d977f6ed7baf748aa0408a390eb49a5f8f1))
+* **league:** L.1 Prisma models for League/Season/Participant/Round ([#266](https://github.com/Ryxeuf/fantasy-football-game/issues/266)) ([92d75f7](https://github.com/Ryxeuf/fantasy-football-game/commit/92d75f74853bb7a79ec764c10c8fe7b7a6b86c27))
+* **league:** L.2 seed default 'Open 5 Teams' league ([#267](https://github.com/Ryxeuf/fantasy-football-game/issues/267)) ([05932fc](https://github.com/Ryxeuf/fantasy-football-game/commit/05932fc19e7e0118ae3cd6bb4065d378f5910ad2))
+* **local-match:** automate inducements processing for AI matches ([65bd2cc](https://github.com/Ryxeuf/fantasy-football-game/commit/65bd2cc20968d38ba3092e8f64f4509aa35fc49e))
+* **social:** N.8 badges Maitre par equipe prioritaire ([#264](https://github.com/Ryxeuf/fantasy-football-game/issues/264)) ([16669b5](https://github.com/Ryxeuf/fantasy-football-game/commit/16669b51fc3d96e4bc1699be36aea97e904e0400))
+
 ## [1.60.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.59.0...v1.60.0) (2026-04-20)
 
 
