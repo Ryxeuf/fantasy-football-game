@@ -5,8 +5,7 @@ import { API_BASE } from "../../auth-client";
 import LocalMatchActions from "./LocalMatchActions";
 import LocalMatchSummary from "./LocalMatchSummary";
 import PostMatchSPP from "./PostMatchSPP";
-import { PracticeAIPanel } from "./PracticeAIPanel";
-import type { GameState, TeamId } from "@bb/game-engine";
+import type { TeamId } from "@bb/game-engine";
 
 // Types de météo (copie locale pour éviter les problèmes d'import)
 const WEATHER_TYPES = [
@@ -841,20 +840,6 @@ export default function LocalMatchPage() {
 
         {localMatch.status === "in_progress" && (
           <div className="space-y-4">
-            {localMatch.aiOpponent && localMatch.aiTeamSide && (
-              <PracticeAIPanel
-                matchId={matchId}
-                gameState={(localMatch.gameState ?? null) as unknown as GameState | null}
-                aiTeam={localMatch.aiTeamSide}
-                difficulty={localMatch.aiDifficulty ?? null}
-                onStateChange={(nextState) => {
-                  setLocalMatch((prev) => prev ? ({
-                    ...prev,
-                    gameState: nextState as any,
-                  }) : prev);
-                }}
-              />
-            )}
             {!localMatch.aiOpponent && (
               <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 p-4 rounded">
                 <p className="font-semibold mb-2">Mode Offline</p>

@@ -11,6 +11,7 @@ import { sendTurnPush } from "./push-notifications";
 import { isUserConnectedToMatch } from "./connected-users";
 import { handleTurnTimerAfterMove } from "./turn-timer-orchestrator";
 import { FULL_RULES } from "@bb/game-engine";
+import { scheduleAILoop } from "./ai-loop";
 
 export interface MoveResult {
   success: true;
@@ -258,6 +259,18 @@ export async function processMove(
     matchEnded ? "ended" : newState.gamePhase,
     nextUserId ?? undefined,
   );
+
+  // Practice vs AI — if the next turn belongs to the AI, schedule the loop
+  // (fire-and-forget). The loop persists AI moves as turns and broadcasts
+  // them via WebSocket; HTTP response returns immediately.
+  if (
+    !matchEnded &&
+    match.aiOpponent &&
+    match.aiTeamSide &&
+    newState.currentPlayer === match.aiTeamSide
+  ) {
+    scheduleAILoop(matchId);
+  }
 
   const isMyTurn = newState.currentPlayer === userTeamSide;
 

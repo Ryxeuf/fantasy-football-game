@@ -80,6 +80,14 @@ model Match {
   players           User[]
   turns             Turn[]
   teamSelections    TeamSelection[]
+
+  // Practice vs AI — online match with an AI opponent.
+  aiOpponent   Boolean @default(false)
+  aiDifficulty String? // 'easy' | 'medium' | 'hard'
+  aiTeamSide   String? // 'A' | 'B' — side controlled by the AI
+  aiUserId     String? // User id of the system AI account
+
+  @@index([aiOpponent])
 }
 
 model Turn {
