@@ -23,15 +23,43 @@ describe("E2E API — auth", () => {
     await resetDb();
   });
 
-  it("POST /auth/register est désactivé en pré-alpha (403)", async () => {
+  it("POST /auth/register crée un compte et retourne un token (SQLite: valid=true)", async () => {
     const res = await rawPost("/auth/register", null, {
       email: "newbie@e2e.test",
       password: "password-x",
       coachName: "Newbie",
     });
-    expect(res.status).toBe(403);
-    const body = (await res.json()) as { error?: string };
-    expect(typeof body.error).toBe("string");
+    expect(res.status).toBe(201);
+    const body = (await res.json()) as {
+      user?: { email?: string; coachName?: string };
+      token?: string;
+    };
+    expect(body.user?.email).toBe("newbie@e2e.test");
+    expect(body.user?.coachName).toBe("Newbie");
+    expect(typeof body.token).toBe("string");
+  });
+
+  it("POST /auth/register refuse un email déjà utilisé (409)", async () => {
+    await rawPost("/auth/register", null, {
+      email: "dup@e2e.test",
+      password: "password-x",
+      coachName: "Dup",
+    });
+    const res = await rawPost("/auth/register", null, {
+      email: "dup@e2e.test",
+      password: "password-x",
+      coachName: "DupAgain",
+    });
+    expect(res.status).toBe(409);
+  });
+
+  it("POST /auth/register refuse un payload invalide (400)", async () => {
+    const res = await rawPost("/auth/register", null, {
+      email: "not-an-email",
+      password: "short",
+      coachName: "",
+    });
+    expect(res.status).toBe(400);
   });
 
   it("POST /auth/login refuse un payload invalide (400)", async () => {
