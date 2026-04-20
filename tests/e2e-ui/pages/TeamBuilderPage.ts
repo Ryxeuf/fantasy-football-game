@@ -13,10 +13,6 @@ export class TeamBuilderPage {
   readonly rulesetSelect: Locator;
   readonly submitButton: Locator;
   readonly errorMessage: Locator;
-  readonly rerollsInput: Locator;
-  readonly cheerleadersInput: Locator;
-  readonly assistantsInput: Locator;
-  readonly dedicatedFansInput: Locator;
   readonly apothecaryCheckbox: Locator;
   readonly staffCost: Locator;
   readonly remainingBudget: Locator;
@@ -28,10 +24,6 @@ export class TeamBuilderPage {
     this.rulesetSelect = page.getByTestId("ruleset-select");
     this.submitButton = page.getByTestId("create-team-submit");
     this.errorMessage = page.getByTestId("team-builder-error");
-    this.rerollsInput = page.getByTestId("staff-rerolls");
-    this.cheerleadersInput = page.getByTestId("staff-cheerleaders");
-    this.assistantsInput = page.getByTestId("staff-assistants");
-    this.dedicatedFansInput = page.getByTestId("staff-dedicated-fans");
     this.apothecaryCheckbox = page.getByTestId("staff-apothecary");
     this.staffCost = page.getByTestId("staff-cost-summary");
     this.remainingBudget = page.getByTestId("remaining-budget");
@@ -64,6 +56,24 @@ export class TeamBuilderPage {
     await this.submitButton.click();
   }
 
+  /**
+   * Clique N fois sur le bouton "+" d'un stepper staff pour atteindre la
+   * valeur cible. Les steppers remplacent les anciens inputs numériques.
+   */
+  private async setStepperValue(
+    testIdBase: string,
+    target: number,
+    minValue = 0,
+  ): Promise<void> {
+    const currentOffset = Math.max(0, target - minValue);
+    const button = this.page.getByTestId(`${testIdBase}-inc`);
+    await button.waitFor({ state: "visible" });
+    for (let i = 0; i < currentOffset; i++) {
+      if (await button.isDisabled()) break;
+      await button.click();
+    }
+  }
+
   async setStaff(staff: {
     rerolls?: number;
     cheerleaders?: number;
@@ -72,22 +82,26 @@ export class TeamBuilderPage {
     apothecary?: boolean;
   }): Promise<void> {
     if (staff.rerolls !== undefined) {
-      await this.rerollsInput.fill(String(staff.rerolls));
+      await this.setStepperValue("staff-rerolls", staff.rerolls, 0);
     }
     if (staff.cheerleaders !== undefined) {
-      await this.cheerleadersInput.fill(String(staff.cheerleaders));
+      await this.setStepperValue("staff-cheerleaders", staff.cheerleaders, 0);
     }
     if (staff.assistants !== undefined) {
-      await this.assistantsInput.fill(String(staff.assistants));
+      await this.setStepperValue("staff-assistants", staff.assistants, 0);
     }
     if (staff.dedicatedFans !== undefined) {
-      await this.dedicatedFansInput.fill(String(staff.dedicatedFans));
+      // min=1 pour les fans dévoués
+      await this.setStepperValue(
+        "staff-dedicated-fans",
+        staff.dedicatedFans,
+        1,
+      );
     }
     if (staff.apothecary !== undefined) {
-      const isChecked = await this.apothecaryCheckbox.isChecked();
-      if (isChecked !== staff.apothecary) {
-        await this.apothecaryCheckbox.click();
-      }
+      // L'input apothécaire est visuellement caché derrière un toggle,
+      // donc on utilise setChecked qui cible directement l'input.
+      await this.apothecaryCheckbox.setChecked(staff.apothecary);
     }
   }
 }

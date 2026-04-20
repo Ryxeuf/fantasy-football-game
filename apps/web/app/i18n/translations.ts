@@ -226,6 +226,14 @@ export const translations = {
       validTeam: "Équipe valide ({players} joueurs + {stars} Star Players)",
       createTeamButton: "Créer l'équipe",
       kpo: "K po",
+      // Mobile / sticky summary
+      playersShort: "Joueurs",
+      budgetShort: "Budget",
+      summaryTitle: "Résumé de l'équipe",
+      availablePositions: "Positions disponibles",
+      addPlayer: "Ajouter",
+      removePlayer: "Retirer",
+      apothecaryHelp: "Un seul apothicaire par équipe",
       // Star Player Selector
       starPlayersAvailable: "Star Players Disponibles",
       selected: "sélectionné(s)",
@@ -641,6 +649,14 @@ export const translations = {
       validTeam: "Valid team ({players} players + {stars} Star Players)",
       createTeamButton: "Create team",
       kpo: "K po",
+      // Mobile / sticky summary
+      playersShort: "Players",
+      budgetShort: "Budget",
+      summaryTitle: "Team summary",
+      availablePositions: "Available positions",
+      addPlayer: "Add",
+      removePlayer: "Remove",
+      apothecaryHelp: "One apothecary per team",
       // Star Player Selector
       starPlayersAvailable: "Available Star Players",
       selected: "selected",
