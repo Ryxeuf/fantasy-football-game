@@ -262,3 +262,158 @@ export function parseAllowedRosters(raw: string | null): string[] | null {
     return null;
   }
 }
+
+export interface StandingRow {
+  participantId: string;
+  teamId: string;
+  teamName: string;
+  roster: string;
+  ownerId: string;
+  coachName: string | null;
+  played: number;
+  wins: number;
+  draws: number;
+  losses: number;
+  points: number;
+  touchdownsFor: number;
+  touchdownsAgainst: number;
+  touchdownDifference: number;
+  casualtiesFor: number;
+  casualtiesAgainst: number;
+  seasonElo: number;
+  status: LeagueParticipantStatus;
+}
+
+/**
+ * Classement d'une saison (L.3 standings). Trie selon :
+ *   points DESC → diff TD DESC → TD pour DESC → ELO DESC → nom ASC.
+ * Cette methode lit les compteurs materialises sur `LeagueParticipant`
+ * (mis a jour par L.7 : integration match -> ligue).
+ */
+export async function computeSeasonStandings(
+  seasonId: string,
+): Promise<StandingRow[]> {
+  const season = await prisma.leagueSeason.findUnique({
+    where: { id: seasonId },
+    select: { id: true },
+  });
+  if (!season) {
+    throw new Error(`Saison introuvable: ${seasonId}`);
+  }
+
+  const participants = await prisma.leagueParticipant.findMany({
+    where: { seasonId },
+    include: {
+      team: {
+        select: {
+          id: true,
+          name: true,
+          roster: true,
+          owner: { select: { id: true, coachName: true } },
+        },
+      },
+    },
+  });
+
+  type ParticipantRow = (typeof participants)[number];
+  const rows: StandingRow[] = participants.map((p: ParticipantRow) => ({
+    participantId: p.id,
+    teamId: p.teamId,
+    teamName: p.team.name,
+    roster: p.team.roster,
+    ownerId: p.team.owner.id,
+    coachName: p.team.owner.coachName ?? null,
+    played: p.wins + p.draws + p.losses,
+    wins: p.wins,
+    draws: p.draws,
+    losses: p.losses,
+    points: p.points,
+    touchdownsFor: p.touchdownsFor,
+    touchdownsAgainst: p.touchdownsAgainst,
+    touchdownDifference: p.touchdownsFor - p.touchdownsAgainst,
+    casualtiesFor: p.casualtiesFor,
+    casualtiesAgainst: p.casualtiesAgainst,
+    seasonElo: p.seasonElo,
+    status: p.status as LeagueParticipantStatus,
+  }));
+
+  rows.sort((a, b) => {
+    if (b.points !== a.points) return b.points - a.points;
+    if (b.touchdownDifference !== a.touchdownDifference) {
+      return b.touchdownDifference - a.touchdownDifference;
+    }
+    if (b.touchdownsFor !== a.touchdownsFor) {
+      return b.touchdownsFor - a.touchdownsFor;
+    }
+    if (b.seasonElo !== a.seasonElo) return b.seasonElo - a.seasonElo;
+    return a.teamName.localeCompare(b.teamName);
+  });
+
+  return rows;
+}
+
+export async function getLeagueById(leagueId: string) {
+  return prisma.league.findUnique({
+    where: { id: leagueId },
+    include: {
+      creator: { select: { id: true, coachName: true, email: true } },
+      seasons: { orderBy: { seasonNumber: "asc" } },
+    },
+  });
+}
+
+export async function getSeasonById(seasonId: string) {
+  return prisma.leagueSeason.findUnique({
+    where: { id: seasonId },
+    include: {
+      league: true,
+      rounds: { orderBy: { roundNumber: "asc" } },
+      participants: {
+        include: {
+          team: {
+            select: {
+              id: true,
+              name: true,
+              roster: true,
+              owner: { select: { id: true, coachName: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
+/**
+ * Withdraw une equipe d'une saison : refuse si la saison est terminee
+ * ou si l'equipe n'est pas inscrite.
+ */
+export async function withdrawParticipant(input: {
+  seasonId: string;
+  teamId: string;
+}) {
+  const season = await prisma.leagueSeason.findUnique({
+    where: { id: input.seasonId },
+    select: { id: true, status: true },
+  });
+  if (!season) {
+    throw new Error(`Saison introuvable: ${input.seasonId}`);
+  }
+  if (season.status === "completed") {
+    throw new Error("Saison terminee : impossible de retirer une equipe");
+  }
+
+  const existing = await prisma.leagueParticipant.findUnique({
+    where: {
+      seasonId_teamId: { seasonId: input.seasonId, teamId: input.teamId },
+    },
+  });
+  if (!existing) {
+    throw new Error("Cette equipe n'est pas inscrite sur la saison");
+  }
+
+  return prisma.leagueParticipant.update({
+    where: { id: existing.id },
+    data: { status: "withdrawn" },
+  });
+}

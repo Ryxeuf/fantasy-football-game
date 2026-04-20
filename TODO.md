@@ -295,7 +295,7 @@
 |---|-------|------|--------|
 | L.1 | Modeles Prisma League/LeagueSeason/LeagueParticipant/LeagueRound | DB | [x] |
 | L.2 | Migration Prisma + seed data | DB | [x] |
-| L.3 | Routes API CRUD ligue (create, join, schedule, standings) | API | [ ] |
+| L.3 | Routes API CRUD ligue (create, join, schedule, standings) | API | [x] |
 | L.4 | Generateur de calendrier round-robin | Backend | [ ] |
 | L.5 | Page liste des ligues | Frontend | [ ] |
 | L.6 | Page detail ligue (calendrier, classement, matchs) | Frontend | [ ] |
