@@ -159,6 +159,12 @@ export default function AuthBar({ isMobileMenu = false }: AuthBarProps) {
           >
             📊 {t.play?.myOnlineMatches || "Mes matchs en ligne"}
           </a>
+          <a
+            href="/me/achievements"
+            className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            🏅 {t.auth.achievements || "Mes succès"}
+          </a>
           {isAdmin && (
             <a
               href="/admin"
@@ -249,6 +255,13 @@ export default function AuthBar({ isMobileMenu = false }: AuthBarProps) {
                   onClick={() => setMenuOpen(false)}
                 >
                   📊 {t.play?.myOnlineMatches || "Mes matchs en ligne"}
+                </a>
+                <a
+                  href="/me/achievements"
+                  className="block px-4 py-2.5 text-sm hover:bg-gray-100 transition-colors"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  🏅 {t.auth.achievements || "Mes succès"}
                 </a>
                 {isAdmin && (
                   <a

@@ -46,6 +46,19 @@ model User {
   featureFlagOverrides FeatureFlagUser[]
   friendshipsSent      Friendship[]      @relation("FriendshipRequester")
   friendshipsReceived  Friendship[]      @relation("FriendshipReceiver")
+  achievements         UserAchievement[]
+}
+
+// N.7 — Systeme d'achievements (mirror SQLite du schema Postgres).
+model UserAchievement {
+  id         String   @id @default(cuid())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+  slug       String
+  unlockedAt DateTime @default(now())
+
+  @@unique([userId, slug])
+  @@index([userId])
 }
 
 // Relation d'amitie entre deux utilisateurs (mirror SQLite du schema Postgres)

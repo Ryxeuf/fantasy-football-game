@@ -19,6 +19,7 @@ import leaderboardRoutes from "./routes/leaderboard";
 import pushRoutes from "./routes/push";
 import friendsRoutes from "./routes/friends";
 import careerStatsRoutes from "./routes/career-stats";
+import achievementsRoutes from "./routes/achievements";
 import {
   userFeatureFlagsRouter,
   adminFeatureFlagsRouter,
@@ -84,6 +85,7 @@ app.use("/leaderboard", leaderboardRoutes);
 app.use("/push", pushRoutes);
 app.use("/friends", friendsRoutes);
 app.use("/career-stats", careerStatsRoutes);
+app.use("/achievements", achievementsRoutes);
 app.use("/api/feature-flags", userFeatureFlagsRouter);
 app.use("/admin/feature-flags", adminFeatureFlagsRouter);
 
