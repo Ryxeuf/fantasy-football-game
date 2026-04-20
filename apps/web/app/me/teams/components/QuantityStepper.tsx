@@ -14,6 +14,8 @@ interface QuantityStepperProps {
   valueTestId?: string;
   size?: "sm" | "md" | "lg";
   ariaLabel?: string;
+  decrementAriaLabel?: string;
+  incrementAriaLabel?: string;
 }
 
 const SIZE_CLASSES = {
@@ -45,6 +47,8 @@ export default function QuantityStepper({
   valueTestId,
   size = "md",
   ariaLabel,
+  decrementAriaLabel,
+  incrementAriaLabel,
 }: QuantityStepperProps) {
   const classes = SIZE_CLASSES[size];
   const canDecrement = !disabled && value - step >= min;
@@ -73,7 +77,7 @@ export default function QuantityStepper({
         onClick={decrement}
         disabled={!canDecrement}
         data-testid={decrementTestId}
-        aria-label={label ? `Diminuer ${label}` : "Diminuer"}
+        aria-label={decrementAriaLabel ?? label ?? "decrement"}
         className={`${classes.button} flex items-center justify-center font-semibold text-gray-700 border-r border-gray-300 transition-colors active:bg-gray-200 hover:bg-gray-100 disabled:bg-gray-50 disabled:text-gray-300 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-inset`}
       >
         −
@@ -90,7 +94,7 @@ export default function QuantityStepper({
         onClick={increment}
         disabled={!canIncrement}
         data-testid={incrementTestId}
-        aria-label={label ? `Augmenter ${label}` : "Augmenter"}
+        aria-label={incrementAriaLabel ?? label ?? "increment"}
         className={`${classes.button} flex items-center justify-center font-semibold text-gray-700 border-l border-gray-300 transition-colors active:bg-gray-200 hover:bg-gray-100 disabled:bg-gray-50 disabled:text-gray-300 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-inset`}
       >
         +

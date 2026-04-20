@@ -216,6 +216,11 @@ export default function NewTeamBuilder() {
     totalPlayersWithStars <= 16 &&
     remainingBudget >= 0;
 
+  const incLabel = (label: string) =>
+    t.teams.increaseLabel.replace("{label}", label);
+  const decLabel = (label: string) =>
+    t.teams.decreaseLabel.replace("{label}", label);
+
   return (
     <div className="w-full pb-32 md:pb-8">
       {/* Sticky summary bar — visible across scroll on all breakpoints */}
@@ -395,6 +400,8 @@ export default function NewTeamBuilder() {
                   step={50}
                   onChange={setTeamValue}
                   label={t.teams.teamValue}
+                  decrementAriaLabel={decLabel(t.teams.teamValue)}
+                  incrementAriaLabel={incLabel(t.teams.teamValue)}
                   size="md"
                 />
                 <span className="text-base font-semibold text-gray-900 tabular-nums">
@@ -614,8 +621,11 @@ export default function NewTeamBuilder() {
                 max={8}
                 onChange={setRerolls}
                 label={t.teams.rerolls}
+                decrementAriaLabel={decLabel(t.teams.rerolls)}
+                incrementAriaLabel={incLabel(t.teams.rerolls)}
                 decrementTestId="staff-rerolls-dec"
                 incrementTestId="staff-rerolls-inc"
+                valueTestId="staff-rerolls-value"
               />
             </StaffRow>
 
@@ -630,8 +640,11 @@ export default function NewTeamBuilder() {
                 max={12}
                 onChange={setCheerleaders}
                 label={t.teams.cheerleaders}
+                decrementAriaLabel={decLabel(t.teams.cheerleaders)}
+                incrementAriaLabel={incLabel(t.teams.cheerleaders)}
                 decrementTestId="staff-cheerleaders-dec"
                 incrementTestId="staff-cheerleaders-inc"
+                valueTestId="staff-cheerleaders-value"
               />
             </StaffRow>
 
@@ -646,8 +659,11 @@ export default function NewTeamBuilder() {
                 max={6}
                 onChange={setAssistants}
                 label={t.teams.assistants}
+                decrementAriaLabel={decLabel(t.teams.assistants)}
+                incrementAriaLabel={incLabel(t.teams.assistants)}
                 decrementTestId="staff-assistants-dec"
                 incrementTestId="staff-assistants-inc"
+                valueTestId="staff-assistants-value"
               />
             </StaffRow>
 
@@ -662,12 +678,18 @@ export default function NewTeamBuilder() {
                 max={6}
                 onChange={setDedicatedFans}
                 label={t.teams.dedicatedFans}
+                decrementAriaLabel={decLabel(t.teams.dedicatedFans)}
+                incrementAriaLabel={incLabel(t.teams.dedicatedFans)}
                 decrementTestId="staff-dedicated-fans-dec"
                 incrementTestId="staff-dedicated-fans-inc"
+                valueTestId="staff-dedicated-fans-value"
               />
             </StaffRow>
 
-            <label className="sm:col-span-2 flex items-center justify-between gap-3 p-3 rounded-lg border border-gray-200 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors">
+            <label
+              htmlFor="staff-apothecary-input"
+              className="sm:col-span-2 flex items-center justify-between gap-3 p-3 rounded-lg border border-gray-200 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
+            >
               <div className="min-w-0">
                 <div className="font-medium text-gray-900">
                   {t.teams.apothecary}
@@ -676,11 +698,22 @@ export default function NewTeamBuilder() {
                   50{t.teams.kpo} · {t.teams.apothecaryHelp}
                 </div>
               </div>
+              <input
+                id="staff-apothecary-input"
+                data-testid="staff-apothecary"
+                type="checkbox"
+                role="switch"
+                aria-checked={apothecary}
+                aria-label={t.teams.apothecary}
+                className="sr-only peer"
+                checked={apothecary}
+                onChange={(e) => setApothecary(e.target.checked)}
+              />
               <span
-                className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors ${
+                aria-hidden="true"
+                className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-500 peer-focus-visible:ring-offset-2 ${
                   apothecary ? "bg-emerald-600" : "bg-gray-300"
                 }`}
-                aria-hidden="true"
               >
                 <span
                   className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
@@ -688,13 +721,6 @@ export default function NewTeamBuilder() {
                   }`}
                 />
               </span>
-              <input
-                data-testid="staff-apothecary"
-                type="checkbox"
-                className="sr-only"
-                checked={apothecary}
-                onChange={(e) => setApothecary(e.target.checked)}
-              />
             </label>
           </div>
         </div>

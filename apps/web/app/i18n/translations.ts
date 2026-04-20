@@ -233,6 +233,8 @@ export const translations = {
       availablePositions: "Positions disponibles",
       addPlayer: "Ajouter",
       removePlayer: "Retirer",
+      increaseLabel: "Augmenter {label}",
+      decreaseLabel: "Diminuer {label}",
       apothecaryHelp: "Un seul apothicaire par équipe",
       // Star Player Selector
       starPlayersAvailable: "Star Players Disponibles",
@@ -656,6 +658,8 @@ export const translations = {
       availablePositions: "Available positions",
       addPlayer: "Add",
       removePlayer: "Remove",
+      increaseLabel: "Increase {label}",
+      decreaseLabel: "Decrease {label}",
       apothecaryHelp: "One apothecary per team",
       // Star Player Selector
       starPlayersAvailable: "Available Star Players",

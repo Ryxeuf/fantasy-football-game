@@ -57,19 +57,34 @@ export class TeamBuilderPage {
   }
 
   /**
-   * Clique N fois sur le bouton "+" d'un stepper staff pour atteindre la
-   * valeur cible. Les steppers remplacent les anciens inputs numériques.
+   * Ajuste un stepper staff jusqu'à la valeur cible en lisant la valeur
+   * actuellement affichée dans le DOM et en cliquant sur inc/dec le bon
+   * nombre de fois. Fonctionne quelle que soit la valeur initiale du
+   * champ (ex. `dedicatedFans` initialisé à 1).
    */
   private async setStepperValue(
     testIdBase: string,
     target: number,
-    minValue = 0,
   ): Promise<void> {
-    const currentOffset = Math.max(0, target - minValue);
-    const button = this.page.getByTestId(`${testIdBase}-inc`);
-    await button.waitFor({ state: "visible" });
-    for (let i = 0; i < currentOffset; i++) {
-      if (await button.isDisabled()) break;
+    const incButton = this.page.getByTestId(`${testIdBase}-inc`);
+    const decButton = this.page.getByTestId(`${testIdBase}-dec`);
+    await incButton.waitFor({ state: "visible" });
+
+    const valueLocator = this.page.getByTestId(`${testIdBase}-value`);
+    const readCurrent = async (): Promise<number> => {
+      const text = (await valueLocator.innerText()).trim();
+      const parsed = parseInt(text, 10);
+      return Number.isNaN(parsed) ? 0 : parsed;
+    };
+
+    // Safeguard: at most (target + 20) iterations to avoid infinite loops
+    // if a button unexpectedly stays disabled.
+    const maxIterations = Math.abs(target) + 20;
+    for (let i = 0; i < maxIterations; i++) {
+      const current = await readCurrent();
+      if (current === target) return;
+      const button = current < target ? incButton : decButton;
+      if (await button.isDisabled()) return;
       await button.click();
     }
   }
@@ -82,21 +97,16 @@ export class TeamBuilderPage {
     apothecary?: boolean;
   }): Promise<void> {
     if (staff.rerolls !== undefined) {
-      await this.setStepperValue("staff-rerolls", staff.rerolls, 0);
+      await this.setStepperValue("staff-rerolls", staff.rerolls);
     }
     if (staff.cheerleaders !== undefined) {
-      await this.setStepperValue("staff-cheerleaders", staff.cheerleaders, 0);
+      await this.setStepperValue("staff-cheerleaders", staff.cheerleaders);
     }
     if (staff.assistants !== undefined) {
-      await this.setStepperValue("staff-assistants", staff.assistants, 0);
+      await this.setStepperValue("staff-assistants", staff.assistants);
     }
     if (staff.dedicatedFans !== undefined) {
-      // min=1 pour les fans dévoués
-      await this.setStepperValue(
-        "staff-dedicated-fans",
-        staff.dedicatedFans,
-        1,
-      );
+      await this.setStepperValue("staff-dedicated-fans", staff.dedicatedFans);
     }
     if (staff.apothecary !== undefined) {
       // L'input apothécaire est visuellement caché derrière un toggle,
