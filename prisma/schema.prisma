@@ -40,6 +40,8 @@ model User {
   matchQueue          MatchQueue?
   notificationPreference NotificationPreference?
   featureFlagOverrides FeatureFlagUser[]
+  friendshipsSent     Friendship[]    @relation("FriendshipRequester")
+  friendshipsReceived Friendship[]    @relation("FriendshipReceiver")
 }
 
 model FeatureFlag {
@@ -484,6 +486,29 @@ model LocalMatchAction {
   @@index([matchId])
   @@index([half, turn])
   @@index([createdAt])
+}
+
+// Relation d'amitie entre deux utilisateurs
+// status: "pending" (invitation envoyee, en attente de reponse)
+//         "accepted" (amis)
+//         "declined" (invitation refusee, conservee pour eviter le spam)
+//         "blocked" (l'un a bloque l'autre)
+// L'unicite (requesterId, receiverId) empeche les doublons dans un sens donne.
+// Pour verifier si deux utilisateurs sont amis il faut chercher dans les deux sens.
+model Friendship {
+  id          String   @id @default(cuid())
+  requester   User     @relation("FriendshipRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  requesterId String
+  receiver    User     @relation("FriendshipReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  receiverId  String
+  status      String   @default("pending")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([requesterId, receiverId])
+  @@index([requesterId])
+  @@index([receiverId])
+  @@index([status])
 }
 
 // Preferences de notification push par utilisateur

@@ -19,6 +19,11 @@ export type PrismaPromise<T> = $Public.PrismaPromise<T>
  */
 export type User = $Result.DefaultSelection<Prisma.$UserPayload>
 /**
+ * Model Friendship
+ * 
+ */
+export type Friendship = $Result.DefaultSelection<Prisma.$FriendshipPayload>
+/**
  * Model FeatureFlag
  * 
  */
@@ -238,6 +243,16 @@ export class PrismaClient<
     * ```
     */
   get user(): Prisma.UserDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.friendship`: Exposes CRUD operations for the **Friendship** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Friendships
+    * const friendships = await prisma.friendship.findMany()
+    * ```
+    */
+  get friendship(): Prisma.FriendshipDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.featureFlag`: Exposes CRUD operations for the **FeatureFlag** model.
@@ -829,6 +844,7 @@ export namespace Prisma {
 
   export const ModelName: {
     User: 'User',
+    Friendship: 'Friendship',
     FeatureFlag: 'FeatureFlag',
     FeatureFlagUser: 'FeatureFlagUser',
     Match: 'Match',
@@ -862,7 +878,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamStarPlayer" | "roster" | "position" | "cup" | "cupParticipant" | "matchQueue" | "localMatch" | "localMatchAction"
+      modelProps: "user" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamStarPlayer" | "roster" | "position" | "cup" | "cupParticipant" | "matchQueue" | "localMatch" | "localMatchAction"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -937,6 +953,80 @@ export namespace Prisma {
           count: {
             args: Prisma.UserCountArgs<ExtArgs>
             result: $Utils.Optional<UserCountAggregateOutputType> | number
+          }
+        }
+      }
+      Friendship: {
+        payload: Prisma.$FriendshipPayload<ExtArgs>
+        fields: Prisma.FriendshipFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.FriendshipFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FriendshipPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.FriendshipFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FriendshipPayload>
+          }
+          findFirst: {
+            args: Prisma.FriendshipFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FriendshipPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.FriendshipFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FriendshipPayload>
+          }
+          findMany: {
+            args: Prisma.FriendshipFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FriendshipPayload>[]
+          }
+          create: {
+            args: Prisma.FriendshipCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FriendshipPayload>
+          }
+          createMany: {
+            args: Prisma.FriendshipCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.FriendshipCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FriendshipPayload>[]
+          }
+          delete: {
+            args: Prisma.FriendshipDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FriendshipPayload>
+          }
+          update: {
+            args: Prisma.FriendshipUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FriendshipPayload>
+          }
+          deleteMany: {
+            args: Prisma.FriendshipDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.FriendshipUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.FriendshipUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FriendshipPayload>[]
+          }
+          upsert: {
+            args: Prisma.FriendshipUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FriendshipPayload>
+          }
+          aggregate: {
+            args: Prisma.FriendshipAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateFriendship>
+          }
+          groupBy: {
+            args: Prisma.FriendshipGroupByArgs<ExtArgs>
+            result: $Utils.Optional<FriendshipGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.FriendshipCountArgs<ExtArgs>
+            result: $Utils.Optional<FriendshipCountAggregateOutputType> | number
           }
         }
       }
@@ -2147,6 +2237,7 @@ export namespace Prisma {
   }
   export type GlobalOmitConfig = {
     user?: UserOmit
+    friendship?: FriendshipOmit
     featureFlag?: FeatureFlagOmit
     featureFlagUser?: FeatureFlagUserOmit
     match?: MatchOmit
@@ -2249,6 +2340,8 @@ export namespace Prisma {
     createdCups: number
     createdLocalMatches: number
     featureFlagOverrides: number
+    friendshipsSent: number
+    friendshipsReceived: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -2259,6 +2352,8 @@ export namespace Prisma {
     createdCups?: boolean | UserCountOutputTypeCountCreatedCupsArgs
     createdLocalMatches?: boolean | UserCountOutputTypeCountCreatedLocalMatchesArgs
     featureFlagOverrides?: boolean | UserCountOutputTypeCountFeatureFlagOverridesArgs
+    friendshipsSent?: boolean | UserCountOutputTypeCountFriendshipsSentArgs
+    friendshipsReceived?: boolean | UserCountOutputTypeCountFriendshipsReceivedArgs
   }
 
   // Custom InputTypes
@@ -2319,6 +2414,20 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountFeatureFlagOverridesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: FeatureFlagUserWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountFriendshipsSentArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: FriendshipWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountFriendshipsReceivedArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: FriendshipWhereInput
   }
 
 
@@ -2879,6 +2988,8 @@ export namespace Prisma {
     createdLocalMatches?: boolean | User$createdLocalMatchesArgs<ExtArgs>
     matchQueue?: boolean | User$matchQueueArgs<ExtArgs>
     featureFlagOverrides?: boolean | User$featureFlagOverridesArgs<ExtArgs>
+    friendshipsSent?: boolean | User$friendshipsSentArgs<ExtArgs>
+    friendshipsReceived?: boolean | User$friendshipsReceivedArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -2946,6 +3057,8 @@ export namespace Prisma {
     createdLocalMatches?: boolean | User$createdLocalMatchesArgs<ExtArgs>
     matchQueue?: boolean | User$matchQueueArgs<ExtArgs>
     featureFlagOverrides?: boolean | User$featureFlagOverridesArgs<ExtArgs>
+    friendshipsSent?: boolean | User$friendshipsSentArgs<ExtArgs>
+    friendshipsReceived?: boolean | User$friendshipsReceivedArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -2962,6 +3075,8 @@ export namespace Prisma {
       createdLocalMatches: Prisma.$LocalMatchPayload<ExtArgs>[]
       matchQueue: Prisma.$MatchQueuePayload<ExtArgs> | null
       featureFlagOverrides: Prisma.$FeatureFlagUserPayload<ExtArgs>[]
+      friendshipsSent: Prisma.$FriendshipPayload<ExtArgs>[]
+      friendshipsReceived: Prisma.$FriendshipPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -3395,6 +3510,8 @@ export namespace Prisma {
     createdLocalMatches<T extends User$createdLocalMatchesArgs<ExtArgs> = {}>(args?: Subset<T, User$createdLocalMatchesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LocalMatchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     matchQueue<T extends User$matchQueueArgs<ExtArgs> = {}>(args?: Subset<T, User$matchQueueArgs<ExtArgs>>): Prisma__MatchQueueClient<$Result.GetResult<Prisma.$MatchQueuePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     featureFlagOverrides<T extends User$featureFlagOverridesArgs<ExtArgs> = {}>(args?: Subset<T, User$featureFlagOverridesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FeatureFlagUserPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    friendshipsSent<T extends User$friendshipsSentArgs<ExtArgs> = {}>(args?: Subset<T, User$friendshipsSentArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FriendshipPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    friendshipsReceived<T extends User$friendshipsReceivedArgs<ExtArgs> = {}>(args?: Subset<T, User$friendshipsReceivedArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FriendshipPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -4012,6 +4129,54 @@ export namespace Prisma {
   }
 
   /**
+   * User.friendshipsSent
+   */
+  export type User$friendshipsSentArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Friendship
+     */
+    select?: FriendshipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Friendship
+     */
+    omit?: FriendshipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FriendshipInclude<ExtArgs> | null
+    where?: FriendshipWhereInput
+    orderBy?: FriendshipOrderByWithRelationInput | FriendshipOrderByWithRelationInput[]
+    cursor?: FriendshipWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: FriendshipScalarFieldEnum | FriendshipScalarFieldEnum[]
+  }
+
+  /**
+   * User.friendshipsReceived
+   */
+  export type User$friendshipsReceivedArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Friendship
+     */
+    select?: FriendshipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Friendship
+     */
+    omit?: FriendshipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FriendshipInclude<ExtArgs> | null
+    where?: FriendshipWhereInput
+    orderBy?: FriendshipOrderByWithRelationInput | FriendshipOrderByWithRelationInput[]
+    cursor?: FriendshipWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: FriendshipScalarFieldEnum | FriendshipScalarFieldEnum[]
+  }
+
+  /**
    * User without action
    */
   export type UserDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -4027,6 +4192,1083 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: UserInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model Friendship
+   */
+
+  export type AggregateFriendship = {
+    _count: FriendshipCountAggregateOutputType | null
+    _min: FriendshipMinAggregateOutputType | null
+    _max: FriendshipMaxAggregateOutputType | null
+  }
+
+  export type FriendshipMinAggregateOutputType = {
+    id: string | null
+    requesterId: string | null
+    receiverId: string | null
+    status: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type FriendshipMaxAggregateOutputType = {
+    id: string | null
+    requesterId: string | null
+    receiverId: string | null
+    status: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type FriendshipCountAggregateOutputType = {
+    id: number
+    requesterId: number
+    receiverId: number
+    status: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type FriendshipMinAggregateInputType = {
+    id?: true
+    requesterId?: true
+    receiverId?: true
+    status?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type FriendshipMaxAggregateInputType = {
+    id?: true
+    requesterId?: true
+    receiverId?: true
+    status?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type FriendshipCountAggregateInputType = {
+    id?: true
+    requesterId?: true
+    receiverId?: true
+    status?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type FriendshipAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Friendship to aggregate.
+     */
+    where?: FriendshipWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Friendships to fetch.
+     */
+    orderBy?: FriendshipOrderByWithRelationInput | FriendshipOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: FriendshipWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Friendships from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Friendships.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Friendships
+    **/
+    _count?: true | FriendshipCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: FriendshipMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: FriendshipMaxAggregateInputType
+  }
+
+  export type GetFriendshipAggregateType<T extends FriendshipAggregateArgs> = {
+        [P in keyof T & keyof AggregateFriendship]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateFriendship[P]>
+      : GetScalarType<T[P], AggregateFriendship[P]>
+  }
+
+
+
+
+  export type FriendshipGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: FriendshipWhereInput
+    orderBy?: FriendshipOrderByWithAggregationInput | FriendshipOrderByWithAggregationInput[]
+    by: FriendshipScalarFieldEnum[] | FriendshipScalarFieldEnum
+    having?: FriendshipScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: FriendshipCountAggregateInputType | true
+    _min?: FriendshipMinAggregateInputType
+    _max?: FriendshipMaxAggregateInputType
+  }
+
+  export type FriendshipGroupByOutputType = {
+    id: string
+    requesterId: string
+    receiverId: string
+    status: string
+    createdAt: Date
+    updatedAt: Date
+    _count: FriendshipCountAggregateOutputType | null
+    _min: FriendshipMinAggregateOutputType | null
+    _max: FriendshipMaxAggregateOutputType | null
+  }
+
+  type GetFriendshipGroupByPayload<T extends FriendshipGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<FriendshipGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof FriendshipGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], FriendshipGroupByOutputType[P]>
+            : GetScalarType<T[P], FriendshipGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type FriendshipSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    requesterId?: boolean
+    receiverId?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    requester?: boolean | UserDefaultArgs<ExtArgs>
+    receiver?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["friendship"]>
+
+  export type FriendshipSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    requesterId?: boolean
+    receiverId?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    requester?: boolean | UserDefaultArgs<ExtArgs>
+    receiver?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["friendship"]>
+
+  export type FriendshipSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    requesterId?: boolean
+    receiverId?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    requester?: boolean | UserDefaultArgs<ExtArgs>
+    receiver?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["friendship"]>
+
+  export type FriendshipSelectScalar = {
+    id?: boolean
+    requesterId?: boolean
+    receiverId?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type FriendshipOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "requesterId" | "receiverId" | "status" | "createdAt" | "updatedAt", ExtArgs["result"]["friendship"]>
+  export type FriendshipInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    requester?: boolean | UserDefaultArgs<ExtArgs>
+    receiver?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type FriendshipIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    requester?: boolean | UserDefaultArgs<ExtArgs>
+    receiver?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type FriendshipIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    requester?: boolean | UserDefaultArgs<ExtArgs>
+    receiver?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $FriendshipPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Friendship"
+    objects: {
+      requester: Prisma.$UserPayload<ExtArgs>
+      receiver: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      requesterId: string
+      receiverId: string
+      status: string
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["friendship"]>
+    composites: {}
+  }
+
+  type FriendshipGetPayload<S extends boolean | null | undefined | FriendshipDefaultArgs> = $Result.GetResult<Prisma.$FriendshipPayload, S>
+
+  type FriendshipCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<FriendshipFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: FriendshipCountAggregateInputType | true
+    }
+
+  export interface FriendshipDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Friendship'], meta: { name: 'Friendship' } }
+    /**
+     * Find zero or one Friendship that matches the filter.
+     * @param {FriendshipFindUniqueArgs} args - Arguments to find a Friendship
+     * @example
+     * // Get one Friendship
+     * const friendship = await prisma.friendship.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends FriendshipFindUniqueArgs>(args: SelectSubset<T, FriendshipFindUniqueArgs<ExtArgs>>): Prisma__FriendshipClient<$Result.GetResult<Prisma.$FriendshipPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Friendship that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {FriendshipFindUniqueOrThrowArgs} args - Arguments to find a Friendship
+     * @example
+     * // Get one Friendship
+     * const friendship = await prisma.friendship.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends FriendshipFindUniqueOrThrowArgs>(args: SelectSubset<T, FriendshipFindUniqueOrThrowArgs<ExtArgs>>): Prisma__FriendshipClient<$Result.GetResult<Prisma.$FriendshipPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Friendship that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FriendshipFindFirstArgs} args - Arguments to find a Friendship
+     * @example
+     * // Get one Friendship
+     * const friendship = await prisma.friendship.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends FriendshipFindFirstArgs>(args?: SelectSubset<T, FriendshipFindFirstArgs<ExtArgs>>): Prisma__FriendshipClient<$Result.GetResult<Prisma.$FriendshipPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Friendship that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FriendshipFindFirstOrThrowArgs} args - Arguments to find a Friendship
+     * @example
+     * // Get one Friendship
+     * const friendship = await prisma.friendship.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends FriendshipFindFirstOrThrowArgs>(args?: SelectSubset<T, FriendshipFindFirstOrThrowArgs<ExtArgs>>): Prisma__FriendshipClient<$Result.GetResult<Prisma.$FriendshipPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Friendships that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FriendshipFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Friendships
+     * const friendships = await prisma.friendship.findMany()
+     * 
+     * // Get first 10 Friendships
+     * const friendships = await prisma.friendship.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const friendshipWithIdOnly = await prisma.friendship.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends FriendshipFindManyArgs>(args?: SelectSubset<T, FriendshipFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FriendshipPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Friendship.
+     * @param {FriendshipCreateArgs} args - Arguments to create a Friendship.
+     * @example
+     * // Create one Friendship
+     * const Friendship = await prisma.friendship.create({
+     *   data: {
+     *     // ... data to create a Friendship
+     *   }
+     * })
+     * 
+     */
+    create<T extends FriendshipCreateArgs>(args: SelectSubset<T, FriendshipCreateArgs<ExtArgs>>): Prisma__FriendshipClient<$Result.GetResult<Prisma.$FriendshipPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Friendships.
+     * @param {FriendshipCreateManyArgs} args - Arguments to create many Friendships.
+     * @example
+     * // Create many Friendships
+     * const friendship = await prisma.friendship.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends FriendshipCreateManyArgs>(args?: SelectSubset<T, FriendshipCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Friendships and returns the data saved in the database.
+     * @param {FriendshipCreateManyAndReturnArgs} args - Arguments to create many Friendships.
+     * @example
+     * // Create many Friendships
+     * const friendship = await prisma.friendship.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Friendships and only return the `id`
+     * const friendshipWithIdOnly = await prisma.friendship.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends FriendshipCreateManyAndReturnArgs>(args?: SelectSubset<T, FriendshipCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FriendshipPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a Friendship.
+     * @param {FriendshipDeleteArgs} args - Arguments to delete one Friendship.
+     * @example
+     * // Delete one Friendship
+     * const Friendship = await prisma.friendship.delete({
+     *   where: {
+     *     // ... filter to delete one Friendship
+     *   }
+     * })
+     * 
+     */
+    delete<T extends FriendshipDeleteArgs>(args: SelectSubset<T, FriendshipDeleteArgs<ExtArgs>>): Prisma__FriendshipClient<$Result.GetResult<Prisma.$FriendshipPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Friendship.
+     * @param {FriendshipUpdateArgs} args - Arguments to update one Friendship.
+     * @example
+     * // Update one Friendship
+     * const friendship = await prisma.friendship.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends FriendshipUpdateArgs>(args: SelectSubset<T, FriendshipUpdateArgs<ExtArgs>>): Prisma__FriendshipClient<$Result.GetResult<Prisma.$FriendshipPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Friendships.
+     * @param {FriendshipDeleteManyArgs} args - Arguments to filter Friendships to delete.
+     * @example
+     * // Delete a few Friendships
+     * const { count } = await prisma.friendship.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends FriendshipDeleteManyArgs>(args?: SelectSubset<T, FriendshipDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Friendships.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FriendshipUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Friendships
+     * const friendship = await prisma.friendship.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends FriendshipUpdateManyArgs>(args: SelectSubset<T, FriendshipUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Friendships and returns the data updated in the database.
+     * @param {FriendshipUpdateManyAndReturnArgs} args - Arguments to update many Friendships.
+     * @example
+     * // Update many Friendships
+     * const friendship = await prisma.friendship.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Friendships and only return the `id`
+     * const friendshipWithIdOnly = await prisma.friendship.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends FriendshipUpdateManyAndReturnArgs>(args: SelectSubset<T, FriendshipUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FriendshipPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one Friendship.
+     * @param {FriendshipUpsertArgs} args - Arguments to update or create a Friendship.
+     * @example
+     * // Update or create a Friendship
+     * const friendship = await prisma.friendship.upsert({
+     *   create: {
+     *     // ... data to create a Friendship
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Friendship we want to update
+     *   }
+     * })
+     */
+    upsert<T extends FriendshipUpsertArgs>(args: SelectSubset<T, FriendshipUpsertArgs<ExtArgs>>): Prisma__FriendshipClient<$Result.GetResult<Prisma.$FriendshipPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Friendships.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FriendshipCountArgs} args - Arguments to filter Friendships to count.
+     * @example
+     * // Count the number of Friendships
+     * const count = await prisma.friendship.count({
+     *   where: {
+     *     // ... the filter for the Friendships we want to count
+     *   }
+     * })
+    **/
+    count<T extends FriendshipCountArgs>(
+      args?: Subset<T, FriendshipCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], FriendshipCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Friendship.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FriendshipAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends FriendshipAggregateArgs>(args: Subset<T, FriendshipAggregateArgs>): Prisma.PrismaPromise<GetFriendshipAggregateType<T>>
+
+    /**
+     * Group by Friendship.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FriendshipGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends FriendshipGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: FriendshipGroupByArgs['orderBy'] }
+        : { orderBy?: FriendshipGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, FriendshipGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetFriendshipGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Friendship model
+   */
+  readonly fields: FriendshipFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Friendship.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__FriendshipClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    requester<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    receiver<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Friendship model
+   */
+  interface FriendshipFieldRefs {
+    readonly id: FieldRef<"Friendship", 'String'>
+    readonly requesterId: FieldRef<"Friendship", 'String'>
+    readonly receiverId: FieldRef<"Friendship", 'String'>
+    readonly status: FieldRef<"Friendship", 'String'>
+    readonly createdAt: FieldRef<"Friendship", 'DateTime'>
+    readonly updatedAt: FieldRef<"Friendship", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Friendship findUnique
+   */
+  export type FriendshipFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Friendship
+     */
+    select?: FriendshipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Friendship
+     */
+    omit?: FriendshipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FriendshipInclude<ExtArgs> | null
+    /**
+     * Filter, which Friendship to fetch.
+     */
+    where: FriendshipWhereUniqueInput
+  }
+
+  /**
+   * Friendship findUniqueOrThrow
+   */
+  export type FriendshipFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Friendship
+     */
+    select?: FriendshipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Friendship
+     */
+    omit?: FriendshipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FriendshipInclude<ExtArgs> | null
+    /**
+     * Filter, which Friendship to fetch.
+     */
+    where: FriendshipWhereUniqueInput
+  }
+
+  /**
+   * Friendship findFirst
+   */
+  export type FriendshipFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Friendship
+     */
+    select?: FriendshipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Friendship
+     */
+    omit?: FriendshipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FriendshipInclude<ExtArgs> | null
+    /**
+     * Filter, which Friendship to fetch.
+     */
+    where?: FriendshipWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Friendships to fetch.
+     */
+    orderBy?: FriendshipOrderByWithRelationInput | FriendshipOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Friendships.
+     */
+    cursor?: FriendshipWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Friendships from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Friendships.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Friendships.
+     */
+    distinct?: FriendshipScalarFieldEnum | FriendshipScalarFieldEnum[]
+  }
+
+  /**
+   * Friendship findFirstOrThrow
+   */
+  export type FriendshipFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Friendship
+     */
+    select?: FriendshipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Friendship
+     */
+    omit?: FriendshipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FriendshipInclude<ExtArgs> | null
+    /**
+     * Filter, which Friendship to fetch.
+     */
+    where?: FriendshipWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Friendships to fetch.
+     */
+    orderBy?: FriendshipOrderByWithRelationInput | FriendshipOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Friendships.
+     */
+    cursor?: FriendshipWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Friendships from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Friendships.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Friendships.
+     */
+    distinct?: FriendshipScalarFieldEnum | FriendshipScalarFieldEnum[]
+  }
+
+  /**
+   * Friendship findMany
+   */
+  export type FriendshipFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Friendship
+     */
+    select?: FriendshipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Friendship
+     */
+    omit?: FriendshipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FriendshipInclude<ExtArgs> | null
+    /**
+     * Filter, which Friendships to fetch.
+     */
+    where?: FriendshipWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Friendships to fetch.
+     */
+    orderBy?: FriendshipOrderByWithRelationInput | FriendshipOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Friendships.
+     */
+    cursor?: FriendshipWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Friendships from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Friendships.
+     */
+    skip?: number
+    distinct?: FriendshipScalarFieldEnum | FriendshipScalarFieldEnum[]
+  }
+
+  /**
+   * Friendship create
+   */
+  export type FriendshipCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Friendship
+     */
+    select?: FriendshipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Friendship
+     */
+    omit?: FriendshipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FriendshipInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Friendship.
+     */
+    data: XOR<FriendshipCreateInput, FriendshipUncheckedCreateInput>
+  }
+
+  /**
+   * Friendship createMany
+   */
+  export type FriendshipCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Friendships.
+     */
+    data: FriendshipCreateManyInput | FriendshipCreateManyInput[]
+  }
+
+  /**
+   * Friendship createManyAndReturn
+   */
+  export type FriendshipCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Friendship
+     */
+    select?: FriendshipSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Friendship
+     */
+    omit?: FriendshipOmit<ExtArgs> | null
+    /**
+     * The data used to create many Friendships.
+     */
+    data: FriendshipCreateManyInput | FriendshipCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FriendshipIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Friendship update
+   */
+  export type FriendshipUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Friendship
+     */
+    select?: FriendshipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Friendship
+     */
+    omit?: FriendshipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FriendshipInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Friendship.
+     */
+    data: XOR<FriendshipUpdateInput, FriendshipUncheckedUpdateInput>
+    /**
+     * Choose, which Friendship to update.
+     */
+    where: FriendshipWhereUniqueInput
+  }
+
+  /**
+   * Friendship updateMany
+   */
+  export type FriendshipUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Friendships.
+     */
+    data: XOR<FriendshipUpdateManyMutationInput, FriendshipUncheckedUpdateManyInput>
+    /**
+     * Filter which Friendships to update
+     */
+    where?: FriendshipWhereInput
+    /**
+     * Limit how many Friendships to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Friendship updateManyAndReturn
+   */
+  export type FriendshipUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Friendship
+     */
+    select?: FriendshipSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Friendship
+     */
+    omit?: FriendshipOmit<ExtArgs> | null
+    /**
+     * The data used to update Friendships.
+     */
+    data: XOR<FriendshipUpdateManyMutationInput, FriendshipUncheckedUpdateManyInput>
+    /**
+     * Filter which Friendships to update
+     */
+    where?: FriendshipWhereInput
+    /**
+     * Limit how many Friendships to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FriendshipIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Friendship upsert
+   */
+  export type FriendshipUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Friendship
+     */
+    select?: FriendshipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Friendship
+     */
+    omit?: FriendshipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FriendshipInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Friendship to update in case it exists.
+     */
+    where: FriendshipWhereUniqueInput
+    /**
+     * In case the Friendship found by the `where` argument doesn't exist, create a new Friendship with this data.
+     */
+    create: XOR<FriendshipCreateInput, FriendshipUncheckedCreateInput>
+    /**
+     * In case the Friendship was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<FriendshipUpdateInput, FriendshipUncheckedUpdateInput>
+  }
+
+  /**
+   * Friendship delete
+   */
+  export type FriendshipDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Friendship
+     */
+    select?: FriendshipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Friendship
+     */
+    omit?: FriendshipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FriendshipInclude<ExtArgs> | null
+    /**
+     * Filter which Friendship to delete.
+     */
+    where: FriendshipWhereUniqueInput
+  }
+
+  /**
+   * Friendship deleteMany
+   */
+  export type FriendshipDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Friendships to delete
+     */
+    where?: FriendshipWhereInput
+    /**
+     * Limit how many Friendships to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Friendship without action
+   */
+  export type FriendshipDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Friendship
+     */
+    select?: FriendshipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Friendship
+     */
+    omit?: FriendshipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FriendshipInclude<ExtArgs> | null
   }
 
 
@@ -21955,6 +23197,18 @@ export namespace Prisma {
   export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
 
 
+  export const FriendshipScalarFieldEnum: {
+    id: 'id',
+    requesterId: 'requesterId',
+    receiverId: 'receiverId',
+    status: 'status',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type FriendshipScalarFieldEnum = (typeof FriendshipScalarFieldEnum)[keyof typeof FriendshipScalarFieldEnum]
+
+
   export const FeatureFlagScalarFieldEnum: {
     id: 'id',
     key: 'key',
@@ -22342,6 +23596,8 @@ export namespace Prisma {
     createdLocalMatches?: LocalMatchListRelationFilter
     matchQueue?: XOR<MatchQueueNullableScalarRelationFilter, MatchQueueWhereInput> | null
     featureFlagOverrides?: FeatureFlagUserListRelationFilter
+    friendshipsSent?: FriendshipListRelationFilter
+    friendshipsReceived?: FriendshipListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -22368,6 +23624,8 @@ export namespace Prisma {
     createdLocalMatches?: LocalMatchOrderByRelationAggregateInput
     matchQueue?: MatchQueueOrderByWithRelationInput
     featureFlagOverrides?: FeatureFlagUserOrderByRelationAggregateInput
+    friendshipsSent?: FriendshipOrderByRelationAggregateInput
+    friendshipsReceived?: FriendshipOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -22397,6 +23655,8 @@ export namespace Prisma {
     createdLocalMatches?: LocalMatchListRelationFilter
     matchQueue?: XOR<MatchQueueNullableScalarRelationFilter, MatchQueueWhereInput> | null
     featureFlagOverrides?: FeatureFlagUserListRelationFilter
+    friendshipsSent?: FriendshipListRelationFilter
+    friendshipsReceived?: FriendshipListRelationFilter
   }, "id" | "email">
 
   export type UserOrderByWithAggregationInput = {
@@ -22441,6 +23701,70 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     eloRating?: IntWithAggregatesFilter<"User"> | number
+  }
+
+  export type FriendshipWhereInput = {
+    AND?: FriendshipWhereInput | FriendshipWhereInput[]
+    OR?: FriendshipWhereInput[]
+    NOT?: FriendshipWhereInput | FriendshipWhereInput[]
+    id?: StringFilter<"Friendship"> | string
+    requesterId?: StringFilter<"Friendship"> | string
+    receiverId?: StringFilter<"Friendship"> | string
+    status?: StringFilter<"Friendship"> | string
+    createdAt?: DateTimeFilter<"Friendship"> | Date | string
+    updatedAt?: DateTimeFilter<"Friendship"> | Date | string
+    requester?: XOR<UserScalarRelationFilter, UserWhereInput>
+    receiver?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }
+
+  export type FriendshipOrderByWithRelationInput = {
+    id?: SortOrder
+    requesterId?: SortOrder
+    receiverId?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    requester?: UserOrderByWithRelationInput
+    receiver?: UserOrderByWithRelationInput
+  }
+
+  export type FriendshipWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    requesterId_receiverId?: FriendshipRequesterIdReceiverIdCompoundUniqueInput
+    AND?: FriendshipWhereInput | FriendshipWhereInput[]
+    OR?: FriendshipWhereInput[]
+    NOT?: FriendshipWhereInput | FriendshipWhereInput[]
+    requesterId?: StringFilter<"Friendship"> | string
+    receiverId?: StringFilter<"Friendship"> | string
+    status?: StringFilter<"Friendship"> | string
+    createdAt?: DateTimeFilter<"Friendship"> | Date | string
+    updatedAt?: DateTimeFilter<"Friendship"> | Date | string
+    requester?: XOR<UserScalarRelationFilter, UserWhereInput>
+    receiver?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id" | "requesterId_receiverId">
+
+  export type FriendshipOrderByWithAggregationInput = {
+    id?: SortOrder
+    requesterId?: SortOrder
+    receiverId?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: FriendshipCountOrderByAggregateInput
+    _max?: FriendshipMaxOrderByAggregateInput
+    _min?: FriendshipMinOrderByAggregateInput
+  }
+
+  export type FriendshipScalarWhereWithAggregatesInput = {
+    AND?: FriendshipScalarWhereWithAggregatesInput | FriendshipScalarWhereWithAggregatesInput[]
+    OR?: FriendshipScalarWhereWithAggregatesInput[]
+    NOT?: FriendshipScalarWhereWithAggregatesInput | FriendshipScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Friendship"> | string
+    requesterId?: StringWithAggregatesFilter<"Friendship"> | string
+    receiverId?: StringWithAggregatesFilter<"Friendship"> | string
+    status?: StringWithAggregatesFilter<"Friendship"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"Friendship"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"Friendship"> | Date | string
   }
 
   export type FeatureFlagWhereInput = {
@@ -23795,6 +25119,8 @@ export namespace Prisma {
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
     featureFlagOverrides?: FeatureFlagUserCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -23821,6 +25147,8 @@ export namespace Prisma {
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
     featureFlagOverrides?: FeatureFlagUserUncheckedCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipUncheckedCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
   }
 
   export type UserUpdateInput = {
@@ -23847,6 +25175,8 @@ export namespace Prisma {
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
     featureFlagOverrides?: FeatureFlagUserUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -23873,6 +25203,8 @@ export namespace Prisma {
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
     featureFlagOverrides?: FeatureFlagUserUncheckedUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUncheckedUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -23927,6 +25259,67 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type FriendshipCreateInput = {
+    id?: string
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    requester: UserCreateNestedOneWithoutFriendshipsSentInput
+    receiver: UserCreateNestedOneWithoutFriendshipsReceivedInput
+  }
+
+  export type FriendshipUncheckedCreateInput = {
+    id?: string
+    requesterId: string
+    receiverId: string
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type FriendshipUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    requester?: UserUpdateOneRequiredWithoutFriendshipsSentNestedInput
+    receiver?: UserUpdateOneRequiredWithoutFriendshipsReceivedNestedInput
+  }
+
+  export type FriendshipUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    requesterId?: StringFieldUpdateOperationsInput | string
+    receiverId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type FriendshipCreateManyInput = {
+    id?: string
+    requesterId: string
+    receiverId: string
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type FriendshipUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type FriendshipUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    requesterId?: StringFieldUpdateOperationsInput | string
+    receiverId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type FeatureFlagCreateInput = {
@@ -25496,6 +26889,12 @@ export namespace Prisma {
     none?: FeatureFlagUserWhereInput
   }
 
+  export type FriendshipListRelationFilter = {
+    every?: FriendshipWhereInput
+    some?: FriendshipWhereInput
+    none?: FriendshipWhereInput
+  }
+
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
@@ -25522,6 +26921,10 @@ export namespace Prisma {
   }
 
   export type FeatureFlagUserOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type FriendshipOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -25673,6 +27076,43 @@ export namespace Prisma {
     _max?: NestedIntFilter<$PrismaModel>
   }
 
+  export type UserScalarRelationFilter = {
+    is?: UserWhereInput
+    isNot?: UserWhereInput
+  }
+
+  export type FriendshipRequesterIdReceiverIdCompoundUniqueInput = {
+    requesterId: string
+    receiverId: string
+  }
+
+  export type FriendshipCountOrderByAggregateInput = {
+    id?: SortOrder
+    requesterId?: SortOrder
+    receiverId?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type FriendshipMaxOrderByAggregateInput = {
+    id?: SortOrder
+    requesterId?: SortOrder
+    receiverId?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type FriendshipMinOrderByAggregateInput = {
+    id?: SortOrder
+    requesterId?: SortOrder
+    receiverId?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
   export type FeatureFlagCountOrderByAggregateInput = {
     id?: SortOrder
     key?: SortOrder
@@ -25703,11 +27143,6 @@ export namespace Prisma {
   export type FeatureFlagScalarRelationFilter = {
     is?: FeatureFlagWhereInput
     isNot?: FeatureFlagWhereInput
-  }
-
-  export type UserScalarRelationFilter = {
-    is?: UserWhereInput
-    isNot?: UserWhereInput
   }
 
   export type FeatureFlagUserFlagIdUserIdCompoundUniqueInput = {
@@ -26761,6 +28196,20 @@ export namespace Prisma {
     connect?: FeatureFlagUserWhereUniqueInput | FeatureFlagUserWhereUniqueInput[]
   }
 
+  export type FriendshipCreateNestedManyWithoutRequesterInput = {
+    create?: XOR<FriendshipCreateWithoutRequesterInput, FriendshipUncheckedCreateWithoutRequesterInput> | FriendshipCreateWithoutRequesterInput[] | FriendshipUncheckedCreateWithoutRequesterInput[]
+    connectOrCreate?: FriendshipCreateOrConnectWithoutRequesterInput | FriendshipCreateOrConnectWithoutRequesterInput[]
+    createMany?: FriendshipCreateManyRequesterInputEnvelope
+    connect?: FriendshipWhereUniqueInput | FriendshipWhereUniqueInput[]
+  }
+
+  export type FriendshipCreateNestedManyWithoutReceiverInput = {
+    create?: XOR<FriendshipCreateWithoutReceiverInput, FriendshipUncheckedCreateWithoutReceiverInput> | FriendshipCreateWithoutReceiverInput[] | FriendshipUncheckedCreateWithoutReceiverInput[]
+    connectOrCreate?: FriendshipCreateOrConnectWithoutReceiverInput | FriendshipCreateOrConnectWithoutReceiverInput[]
+    createMany?: FriendshipCreateManyReceiverInputEnvelope
+    connect?: FriendshipWhereUniqueInput | FriendshipWhereUniqueInput[]
+  }
+
   export type MatchUncheckedCreateNestedManyWithoutPlayersInput = {
     create?: XOR<MatchCreateWithoutPlayersInput, MatchUncheckedCreateWithoutPlayersInput> | MatchCreateWithoutPlayersInput[] | MatchUncheckedCreateWithoutPlayersInput[]
     connectOrCreate?: MatchCreateOrConnectWithoutPlayersInput | MatchCreateOrConnectWithoutPlayersInput[]
@@ -26813,6 +28262,20 @@ export namespace Prisma {
     connectOrCreate?: FeatureFlagUserCreateOrConnectWithoutUserInput | FeatureFlagUserCreateOrConnectWithoutUserInput[]
     createMany?: FeatureFlagUserCreateManyUserInputEnvelope
     connect?: FeatureFlagUserWhereUniqueInput | FeatureFlagUserWhereUniqueInput[]
+  }
+
+  export type FriendshipUncheckedCreateNestedManyWithoutRequesterInput = {
+    create?: XOR<FriendshipCreateWithoutRequesterInput, FriendshipUncheckedCreateWithoutRequesterInput> | FriendshipCreateWithoutRequesterInput[] | FriendshipUncheckedCreateWithoutRequesterInput[]
+    connectOrCreate?: FriendshipCreateOrConnectWithoutRequesterInput | FriendshipCreateOrConnectWithoutRequesterInput[]
+    createMany?: FriendshipCreateManyRequesterInputEnvelope
+    connect?: FriendshipWhereUniqueInput | FriendshipWhereUniqueInput[]
+  }
+
+  export type FriendshipUncheckedCreateNestedManyWithoutReceiverInput = {
+    create?: XOR<FriendshipCreateWithoutReceiverInput, FriendshipUncheckedCreateWithoutReceiverInput> | FriendshipCreateWithoutReceiverInput[] | FriendshipUncheckedCreateWithoutReceiverInput[]
+    connectOrCreate?: FriendshipCreateOrConnectWithoutReceiverInput | FriendshipCreateOrConnectWithoutReceiverInput[]
+    createMany?: FriendshipCreateManyReceiverInputEnvelope
+    connect?: FriendshipWhereUniqueInput | FriendshipWhereUniqueInput[]
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -26950,6 +28413,34 @@ export namespace Prisma {
     deleteMany?: FeatureFlagUserScalarWhereInput | FeatureFlagUserScalarWhereInput[]
   }
 
+  export type FriendshipUpdateManyWithoutRequesterNestedInput = {
+    create?: XOR<FriendshipCreateWithoutRequesterInput, FriendshipUncheckedCreateWithoutRequesterInput> | FriendshipCreateWithoutRequesterInput[] | FriendshipUncheckedCreateWithoutRequesterInput[]
+    connectOrCreate?: FriendshipCreateOrConnectWithoutRequesterInput | FriendshipCreateOrConnectWithoutRequesterInput[]
+    upsert?: FriendshipUpsertWithWhereUniqueWithoutRequesterInput | FriendshipUpsertWithWhereUniqueWithoutRequesterInput[]
+    createMany?: FriendshipCreateManyRequesterInputEnvelope
+    set?: FriendshipWhereUniqueInput | FriendshipWhereUniqueInput[]
+    disconnect?: FriendshipWhereUniqueInput | FriendshipWhereUniqueInput[]
+    delete?: FriendshipWhereUniqueInput | FriendshipWhereUniqueInput[]
+    connect?: FriendshipWhereUniqueInput | FriendshipWhereUniqueInput[]
+    update?: FriendshipUpdateWithWhereUniqueWithoutRequesterInput | FriendshipUpdateWithWhereUniqueWithoutRequesterInput[]
+    updateMany?: FriendshipUpdateManyWithWhereWithoutRequesterInput | FriendshipUpdateManyWithWhereWithoutRequesterInput[]
+    deleteMany?: FriendshipScalarWhereInput | FriendshipScalarWhereInput[]
+  }
+
+  export type FriendshipUpdateManyWithoutReceiverNestedInput = {
+    create?: XOR<FriendshipCreateWithoutReceiverInput, FriendshipUncheckedCreateWithoutReceiverInput> | FriendshipCreateWithoutReceiverInput[] | FriendshipUncheckedCreateWithoutReceiverInput[]
+    connectOrCreate?: FriendshipCreateOrConnectWithoutReceiverInput | FriendshipCreateOrConnectWithoutReceiverInput[]
+    upsert?: FriendshipUpsertWithWhereUniqueWithoutReceiverInput | FriendshipUpsertWithWhereUniqueWithoutReceiverInput[]
+    createMany?: FriendshipCreateManyReceiverInputEnvelope
+    set?: FriendshipWhereUniqueInput | FriendshipWhereUniqueInput[]
+    disconnect?: FriendshipWhereUniqueInput | FriendshipWhereUniqueInput[]
+    delete?: FriendshipWhereUniqueInput | FriendshipWhereUniqueInput[]
+    connect?: FriendshipWhereUniqueInput | FriendshipWhereUniqueInput[]
+    update?: FriendshipUpdateWithWhereUniqueWithoutReceiverInput | FriendshipUpdateWithWhereUniqueWithoutReceiverInput[]
+    updateMany?: FriendshipUpdateManyWithWhereWithoutReceiverInput | FriendshipUpdateManyWithWhereWithoutReceiverInput[]
+    deleteMany?: FriendshipScalarWhereInput | FriendshipScalarWhereInput[]
+  }
+
   export type MatchUncheckedUpdateManyWithoutPlayersNestedInput = {
     create?: XOR<MatchCreateWithoutPlayersInput, MatchUncheckedCreateWithoutPlayersInput> | MatchCreateWithoutPlayersInput[] | MatchUncheckedCreateWithoutPlayersInput[]
     connectOrCreate?: MatchCreateOrConnectWithoutPlayersInput | MatchCreateOrConnectWithoutPlayersInput[]
@@ -27055,6 +28546,62 @@ export namespace Prisma {
     update?: FeatureFlagUserUpdateWithWhereUniqueWithoutUserInput | FeatureFlagUserUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: FeatureFlagUserUpdateManyWithWhereWithoutUserInput | FeatureFlagUserUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: FeatureFlagUserScalarWhereInput | FeatureFlagUserScalarWhereInput[]
+  }
+
+  export type FriendshipUncheckedUpdateManyWithoutRequesterNestedInput = {
+    create?: XOR<FriendshipCreateWithoutRequesterInput, FriendshipUncheckedCreateWithoutRequesterInput> | FriendshipCreateWithoutRequesterInput[] | FriendshipUncheckedCreateWithoutRequesterInput[]
+    connectOrCreate?: FriendshipCreateOrConnectWithoutRequesterInput | FriendshipCreateOrConnectWithoutRequesterInput[]
+    upsert?: FriendshipUpsertWithWhereUniqueWithoutRequesterInput | FriendshipUpsertWithWhereUniqueWithoutRequesterInput[]
+    createMany?: FriendshipCreateManyRequesterInputEnvelope
+    set?: FriendshipWhereUniqueInput | FriendshipWhereUniqueInput[]
+    disconnect?: FriendshipWhereUniqueInput | FriendshipWhereUniqueInput[]
+    delete?: FriendshipWhereUniqueInput | FriendshipWhereUniqueInput[]
+    connect?: FriendshipWhereUniqueInput | FriendshipWhereUniqueInput[]
+    update?: FriendshipUpdateWithWhereUniqueWithoutRequesterInput | FriendshipUpdateWithWhereUniqueWithoutRequesterInput[]
+    updateMany?: FriendshipUpdateManyWithWhereWithoutRequesterInput | FriendshipUpdateManyWithWhereWithoutRequesterInput[]
+    deleteMany?: FriendshipScalarWhereInput | FriendshipScalarWhereInput[]
+  }
+
+  export type FriendshipUncheckedUpdateManyWithoutReceiverNestedInput = {
+    create?: XOR<FriendshipCreateWithoutReceiverInput, FriendshipUncheckedCreateWithoutReceiverInput> | FriendshipCreateWithoutReceiverInput[] | FriendshipUncheckedCreateWithoutReceiverInput[]
+    connectOrCreate?: FriendshipCreateOrConnectWithoutReceiverInput | FriendshipCreateOrConnectWithoutReceiverInput[]
+    upsert?: FriendshipUpsertWithWhereUniqueWithoutReceiverInput | FriendshipUpsertWithWhereUniqueWithoutReceiverInput[]
+    createMany?: FriendshipCreateManyReceiverInputEnvelope
+    set?: FriendshipWhereUniqueInput | FriendshipWhereUniqueInput[]
+    disconnect?: FriendshipWhereUniqueInput | FriendshipWhereUniqueInput[]
+    delete?: FriendshipWhereUniqueInput | FriendshipWhereUniqueInput[]
+    connect?: FriendshipWhereUniqueInput | FriendshipWhereUniqueInput[]
+    update?: FriendshipUpdateWithWhereUniqueWithoutReceiverInput | FriendshipUpdateWithWhereUniqueWithoutReceiverInput[]
+    updateMany?: FriendshipUpdateManyWithWhereWithoutReceiverInput | FriendshipUpdateManyWithWhereWithoutReceiverInput[]
+    deleteMany?: FriendshipScalarWhereInput | FriendshipScalarWhereInput[]
+  }
+
+  export type UserCreateNestedOneWithoutFriendshipsSentInput = {
+    create?: XOR<UserCreateWithoutFriendshipsSentInput, UserUncheckedCreateWithoutFriendshipsSentInput>
+    connectOrCreate?: UserCreateOrConnectWithoutFriendshipsSentInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserCreateNestedOneWithoutFriendshipsReceivedInput = {
+    create?: XOR<UserCreateWithoutFriendshipsReceivedInput, UserUncheckedCreateWithoutFriendshipsReceivedInput>
+    connectOrCreate?: UserCreateOrConnectWithoutFriendshipsReceivedInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserUpdateOneRequiredWithoutFriendshipsSentNestedInput = {
+    create?: XOR<UserCreateWithoutFriendshipsSentInput, UserUncheckedCreateWithoutFriendshipsSentInput>
+    connectOrCreate?: UserCreateOrConnectWithoutFriendshipsSentInput
+    upsert?: UserUpsertWithoutFriendshipsSentInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutFriendshipsSentInput, UserUpdateWithoutFriendshipsSentInput>, UserUncheckedUpdateWithoutFriendshipsSentInput>
+  }
+
+  export type UserUpdateOneRequiredWithoutFriendshipsReceivedNestedInput = {
+    create?: XOR<UserCreateWithoutFriendshipsReceivedInput, UserUncheckedCreateWithoutFriendshipsReceivedInput>
+    connectOrCreate?: UserCreateOrConnectWithoutFriendshipsReceivedInput
+    upsert?: UserUpsertWithoutFriendshipsReceivedInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutFriendshipsReceivedInput, UserUpdateWithoutFriendshipsReceivedInput>, UserUncheckedUpdateWithoutFriendshipsReceivedInput>
   }
 
   export type FeatureFlagUserCreateNestedManyWithoutFlagInput = {
@@ -28515,6 +30062,56 @@ export namespace Prisma {
     data: FeatureFlagUserCreateManyUserInput | FeatureFlagUserCreateManyUserInput[]
   }
 
+  export type FriendshipCreateWithoutRequesterInput = {
+    id?: string
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    receiver: UserCreateNestedOneWithoutFriendshipsReceivedInput
+  }
+
+  export type FriendshipUncheckedCreateWithoutRequesterInput = {
+    id?: string
+    receiverId: string
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type FriendshipCreateOrConnectWithoutRequesterInput = {
+    where: FriendshipWhereUniqueInput
+    create: XOR<FriendshipCreateWithoutRequesterInput, FriendshipUncheckedCreateWithoutRequesterInput>
+  }
+
+  export type FriendshipCreateManyRequesterInputEnvelope = {
+    data: FriendshipCreateManyRequesterInput | FriendshipCreateManyRequesterInput[]
+  }
+
+  export type FriendshipCreateWithoutReceiverInput = {
+    id?: string
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    requester: UserCreateNestedOneWithoutFriendshipsSentInput
+  }
+
+  export type FriendshipUncheckedCreateWithoutReceiverInput = {
+    id?: string
+    requesterId: string
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type FriendshipCreateOrConnectWithoutReceiverInput = {
+    where: FriendshipWhereUniqueInput
+    create: XOR<FriendshipCreateWithoutReceiverInput, FriendshipUncheckedCreateWithoutReceiverInput>
+  }
+
+  export type FriendshipCreateManyReceiverInputEnvelope = {
+    data: FriendshipCreateManyReceiverInput | FriendshipCreateManyReceiverInput[]
+  }
+
   export type MatchUpsertWithWhereUniqueWithoutPlayersInput = {
     where: MatchWhereUniqueInput
     update: XOR<MatchUpdateWithoutPlayersInput, MatchUncheckedUpdateWithoutPlayersInput>
@@ -28748,6 +30345,298 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"FeatureFlagUser"> | Date | string
   }
 
+  export type FriendshipUpsertWithWhereUniqueWithoutRequesterInput = {
+    where: FriendshipWhereUniqueInput
+    update: XOR<FriendshipUpdateWithoutRequesterInput, FriendshipUncheckedUpdateWithoutRequesterInput>
+    create: XOR<FriendshipCreateWithoutRequesterInput, FriendshipUncheckedCreateWithoutRequesterInput>
+  }
+
+  export type FriendshipUpdateWithWhereUniqueWithoutRequesterInput = {
+    where: FriendshipWhereUniqueInput
+    data: XOR<FriendshipUpdateWithoutRequesterInput, FriendshipUncheckedUpdateWithoutRequesterInput>
+  }
+
+  export type FriendshipUpdateManyWithWhereWithoutRequesterInput = {
+    where: FriendshipScalarWhereInput
+    data: XOR<FriendshipUpdateManyMutationInput, FriendshipUncheckedUpdateManyWithoutRequesterInput>
+  }
+
+  export type FriendshipScalarWhereInput = {
+    AND?: FriendshipScalarWhereInput | FriendshipScalarWhereInput[]
+    OR?: FriendshipScalarWhereInput[]
+    NOT?: FriendshipScalarWhereInput | FriendshipScalarWhereInput[]
+    id?: StringFilter<"Friendship"> | string
+    requesterId?: StringFilter<"Friendship"> | string
+    receiverId?: StringFilter<"Friendship"> | string
+    status?: StringFilter<"Friendship"> | string
+    createdAt?: DateTimeFilter<"Friendship"> | Date | string
+    updatedAt?: DateTimeFilter<"Friendship"> | Date | string
+  }
+
+  export type FriendshipUpsertWithWhereUniqueWithoutReceiverInput = {
+    where: FriendshipWhereUniqueInput
+    update: XOR<FriendshipUpdateWithoutReceiverInput, FriendshipUncheckedUpdateWithoutReceiverInput>
+    create: XOR<FriendshipCreateWithoutReceiverInput, FriendshipUncheckedCreateWithoutReceiverInput>
+  }
+
+  export type FriendshipUpdateWithWhereUniqueWithoutReceiverInput = {
+    where: FriendshipWhereUniqueInput
+    data: XOR<FriendshipUpdateWithoutReceiverInput, FriendshipUncheckedUpdateWithoutReceiverInput>
+  }
+
+  export type FriendshipUpdateManyWithWhereWithoutReceiverInput = {
+    where: FriendshipScalarWhereInput
+    data: XOR<FriendshipUpdateManyMutationInput, FriendshipUncheckedUpdateManyWithoutReceiverInput>
+  }
+
+  export type UserCreateWithoutFriendshipsSentInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name?: string | null
+    coachName: string
+    firstName?: string | null
+    lastName?: string | null
+    dateOfBirth?: Date | string | null
+    role?: string
+    roles?: string
+    patreon?: boolean
+    valid?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    eloRating?: number
+    matches?: MatchCreateNestedManyWithoutPlayersInput
+    createdMatches?: MatchCreateNestedManyWithoutCreatorInput
+    teams?: TeamCreateNestedManyWithoutOwnerInput
+    teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
+    createdCups?: CupCreateNestedManyWithoutCreatorInput
+    createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
+    matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
+    featureFlagOverrides?: FeatureFlagUserCreateNestedManyWithoutUserInput
+    friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
+  }
+
+  export type UserUncheckedCreateWithoutFriendshipsSentInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name?: string | null
+    coachName: string
+    firstName?: string | null
+    lastName?: string | null
+    dateOfBirth?: Date | string | null
+    role?: string
+    roles?: string
+    patreon?: boolean
+    valid?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    eloRating?: number
+    matches?: MatchUncheckedCreateNestedManyWithoutPlayersInput
+    createdMatches?: MatchUncheckedCreateNestedManyWithoutCreatorInput
+    teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
+    teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
+    createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
+    matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
+    featureFlagOverrides?: FeatureFlagUserUncheckedCreateNestedManyWithoutUserInput
+    friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
+  }
+
+  export type UserCreateOrConnectWithoutFriendshipsSentInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutFriendshipsSentInput, UserUncheckedCreateWithoutFriendshipsSentInput>
+  }
+
+  export type UserCreateWithoutFriendshipsReceivedInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name?: string | null
+    coachName: string
+    firstName?: string | null
+    lastName?: string | null
+    dateOfBirth?: Date | string | null
+    role?: string
+    roles?: string
+    patreon?: boolean
+    valid?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    eloRating?: number
+    matches?: MatchCreateNestedManyWithoutPlayersInput
+    createdMatches?: MatchCreateNestedManyWithoutCreatorInput
+    teams?: TeamCreateNestedManyWithoutOwnerInput
+    teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
+    createdCups?: CupCreateNestedManyWithoutCreatorInput
+    createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
+    matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
+    featureFlagOverrides?: FeatureFlagUserCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipCreateNestedManyWithoutRequesterInput
+  }
+
+  export type UserUncheckedCreateWithoutFriendshipsReceivedInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name?: string | null
+    coachName: string
+    firstName?: string | null
+    lastName?: string | null
+    dateOfBirth?: Date | string | null
+    role?: string
+    roles?: string
+    patreon?: boolean
+    valid?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    eloRating?: number
+    matches?: MatchUncheckedCreateNestedManyWithoutPlayersInput
+    createdMatches?: MatchUncheckedCreateNestedManyWithoutCreatorInput
+    teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
+    teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
+    createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
+    matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
+    featureFlagOverrides?: FeatureFlagUserUncheckedCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipUncheckedCreateNestedManyWithoutRequesterInput
+  }
+
+  export type UserCreateOrConnectWithoutFriendshipsReceivedInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutFriendshipsReceivedInput, UserUncheckedCreateWithoutFriendshipsReceivedInput>
+  }
+
+  export type UserUpsertWithoutFriendshipsSentInput = {
+    update: XOR<UserUpdateWithoutFriendshipsSentInput, UserUncheckedUpdateWithoutFriendshipsSentInput>
+    create: XOR<UserCreateWithoutFriendshipsSentInput, UserUncheckedCreateWithoutFriendshipsSentInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutFriendshipsSentInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutFriendshipsSentInput, UserUncheckedUpdateWithoutFriendshipsSentInput>
+  }
+
+  export type UserUpdateWithoutFriendshipsSentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    coachName?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    valid?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
+    matches?: MatchUpdateManyWithoutPlayersNestedInput
+    createdMatches?: MatchUpdateManyWithoutCreatorNestedInput
+    teams?: TeamUpdateManyWithoutOwnerNestedInput
+    teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
+    createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
+    matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
+    featureFlagOverrides?: FeatureFlagUserUpdateManyWithoutUserNestedInput
+    friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutFriendshipsSentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    coachName?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    valid?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
+    matches?: MatchUncheckedUpdateManyWithoutPlayersNestedInput
+    createdMatches?: MatchUncheckedUpdateManyWithoutCreatorNestedInput
+    teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
+    teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
+    createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
+    matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
+    featureFlagOverrides?: FeatureFlagUserUncheckedUpdateManyWithoutUserNestedInput
+    friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
+  }
+
+  export type UserUpsertWithoutFriendshipsReceivedInput = {
+    update: XOR<UserUpdateWithoutFriendshipsReceivedInput, UserUncheckedUpdateWithoutFriendshipsReceivedInput>
+    create: XOR<UserCreateWithoutFriendshipsReceivedInput, UserUncheckedCreateWithoutFriendshipsReceivedInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutFriendshipsReceivedInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutFriendshipsReceivedInput, UserUncheckedUpdateWithoutFriendshipsReceivedInput>
+  }
+
+  export type UserUpdateWithoutFriendshipsReceivedInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    coachName?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    valid?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
+    matches?: MatchUpdateManyWithoutPlayersNestedInput
+    createdMatches?: MatchUpdateManyWithoutCreatorNestedInput
+    teams?: TeamUpdateManyWithoutOwnerNestedInput
+    teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
+    createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
+    matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
+    featureFlagOverrides?: FeatureFlagUserUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUpdateManyWithoutRequesterNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutFriendshipsReceivedInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    coachName?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    valid?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
+    matches?: MatchUncheckedUpdateManyWithoutPlayersNestedInput
+    createdMatches?: MatchUncheckedUpdateManyWithoutCreatorNestedInput
+    teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
+    teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
+    createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
+    matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
+    featureFlagOverrides?: FeatureFlagUserUncheckedUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUncheckedUpdateManyWithoutRequesterNestedInput
+  }
+
   export type FeatureFlagUserCreateWithoutFlagInput = {
     id?: string
     createdAt?: Date | string
@@ -28831,6 +30720,8 @@ export namespace Prisma {
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
+    friendshipsSent?: FriendshipCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
   }
 
   export type UserUncheckedCreateWithoutFeatureFlagOverridesInput = {
@@ -28856,6 +30747,8 @@ export namespace Prisma {
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
+    friendshipsSent?: FriendshipUncheckedCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
   }
 
   export type UserCreateOrConnectWithoutFeatureFlagOverridesInput = {
@@ -28926,6 +30819,8 @@ export namespace Prisma {
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
+    friendshipsSent?: FriendshipUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
   }
 
   export type UserUncheckedUpdateWithoutFeatureFlagOverridesInput = {
@@ -28951,6 +30846,8 @@ export namespace Prisma {
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
+    friendshipsSent?: FriendshipUncheckedUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
   }
 
   export type UserCreateWithoutCreatedMatchesInput = {
@@ -28976,6 +30873,8 @@ export namespace Prisma {
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
     featureFlagOverrides?: FeatureFlagUserCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
   }
 
   export type UserUncheckedCreateWithoutCreatedMatchesInput = {
@@ -29001,6 +30900,8 @@ export namespace Prisma {
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
     featureFlagOverrides?: FeatureFlagUserUncheckedCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipUncheckedCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
   }
 
   export type UserCreateOrConnectWithoutCreatedMatchesInput = {
@@ -29031,6 +30932,8 @@ export namespace Prisma {
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
     featureFlagOverrides?: FeatureFlagUserCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
   }
 
   export type UserUncheckedCreateWithoutMatchesInput = {
@@ -29056,6 +30959,8 @@ export namespace Prisma {
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
     featureFlagOverrides?: FeatureFlagUserUncheckedCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipUncheckedCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
   }
 
   export type UserCreateOrConnectWithoutMatchesInput = {
@@ -29145,6 +31050,8 @@ export namespace Prisma {
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
     featureFlagOverrides?: FeatureFlagUserUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
   }
 
   export type UserUncheckedUpdateWithoutCreatedMatchesInput = {
@@ -29170,6 +31077,8 @@ export namespace Prisma {
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
     featureFlagOverrides?: FeatureFlagUserUncheckedUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUncheckedUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
   }
 
   export type UserUpsertWithWhereUniqueWithoutMatchesInput = {
@@ -29356,6 +31265,8 @@ export namespace Prisma {
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
     featureFlagOverrides?: FeatureFlagUserCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
   }
 
   export type UserUncheckedCreateWithoutTeamSelectionsInput = {
@@ -29381,6 +31292,8 @@ export namespace Prisma {
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
     featureFlagOverrides?: FeatureFlagUserUncheckedCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipUncheckedCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
   }
 
   export type UserCreateOrConnectWithoutTeamSelectionsInput = {
@@ -29506,6 +31419,8 @@ export namespace Prisma {
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
     featureFlagOverrides?: FeatureFlagUserUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
   }
 
   export type UserUncheckedUpdateWithoutTeamSelectionsInput = {
@@ -29531,6 +31446,8 @@ export namespace Prisma {
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
     featureFlagOverrides?: FeatureFlagUserUncheckedUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUncheckedUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
   }
 
   export type TeamUpsertWithoutSelectionsInput = {
@@ -29615,6 +31532,8 @@ export namespace Prisma {
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
     featureFlagOverrides?: FeatureFlagUserCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
   }
 
   export type UserUncheckedCreateWithoutTeamsInput = {
@@ -29640,6 +31559,8 @@ export namespace Prisma {
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
     featureFlagOverrides?: FeatureFlagUserUncheckedCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipUncheckedCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
   }
 
   export type UserCreateOrConnectWithoutTeamsInput = {
@@ -29944,6 +31865,8 @@ export namespace Prisma {
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
     featureFlagOverrides?: FeatureFlagUserUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
   }
 
   export type UserUncheckedUpdateWithoutTeamsInput = {
@@ -29969,6 +31892,8 @@ export namespace Prisma {
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
     featureFlagOverrides?: FeatureFlagUserUncheckedUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUncheckedUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
   }
 
   export type TeamPlayerUpsertWithWhereUniqueWithoutTeamInput = {
@@ -30562,6 +32487,8 @@ export namespace Prisma {
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
     featureFlagOverrides?: FeatureFlagUserCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
   }
 
   export type UserUncheckedCreateWithoutCreatedCupsInput = {
@@ -30587,6 +32514,8 @@ export namespace Prisma {
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
     featureFlagOverrides?: FeatureFlagUserUncheckedCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipUncheckedCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
   }
 
   export type UserCreateOrConnectWithoutCreatedCupsInput = {
@@ -30698,6 +32627,8 @@ export namespace Prisma {
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
     featureFlagOverrides?: FeatureFlagUserUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
   }
 
   export type UserUncheckedUpdateWithoutCreatedCupsInput = {
@@ -30723,6 +32654,8 @@ export namespace Prisma {
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
     featureFlagOverrides?: FeatureFlagUserUncheckedUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUncheckedUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
   }
 
   export type CupParticipantUpsertWithWhereUniqueWithoutCupInput = {
@@ -30960,6 +32893,8 @@ export namespace Prisma {
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     featureFlagOverrides?: FeatureFlagUserCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
   }
 
   export type UserUncheckedCreateWithoutMatchQueueInput = {
@@ -30985,6 +32920,8 @@ export namespace Prisma {
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     featureFlagOverrides?: FeatureFlagUserUncheckedCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipUncheckedCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
   }
 
   export type UserCreateOrConnectWithoutMatchQueueInput = {
@@ -31079,6 +33016,8 @@ export namespace Prisma {
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     featureFlagOverrides?: FeatureFlagUserUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
   }
 
   export type UserUncheckedUpdateWithoutMatchQueueInput = {
@@ -31104,6 +33043,8 @@ export namespace Prisma {
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     featureFlagOverrides?: FeatureFlagUserUncheckedUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUncheckedUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
   }
 
   export type TeamUpsertWithoutMatchQueueInput = {
@@ -31188,6 +33129,8 @@ export namespace Prisma {
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
     featureFlagOverrides?: FeatureFlagUserCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
   }
 
   export type UserUncheckedCreateWithoutCreatedLocalMatchesInput = {
@@ -31213,6 +33156,8 @@ export namespace Prisma {
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
     featureFlagOverrides?: FeatureFlagUserUncheckedCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipUncheckedCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
   }
 
   export type UserCreateOrConnectWithoutCreatedLocalMatchesInput = {
@@ -31440,6 +33385,8 @@ export namespace Prisma {
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
     featureFlagOverrides?: FeatureFlagUserUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
   }
 
   export type UserUncheckedUpdateWithoutCreatedLocalMatchesInput = {
@@ -31465,6 +33412,8 @@ export namespace Prisma {
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
     featureFlagOverrides?: FeatureFlagUserUncheckedUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUncheckedUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
   }
 
   export type TeamUpsertWithoutLocalMatchesAsTeamAInput = {
@@ -31826,6 +33775,22 @@ export namespace Prisma {
     createdAt?: Date | string
   }
 
+  export type FriendshipCreateManyRequesterInput = {
+    id?: string
+    receiverId: string
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type FriendshipCreateManyReceiverInput = {
+    id?: string
+    requesterId: string
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type MatchUpdateWithoutPlayersInput = {
     id?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -32084,6 +34049,54 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type FriendshipUpdateWithoutRequesterInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    receiver?: UserUpdateOneRequiredWithoutFriendshipsReceivedNestedInput
+  }
+
+  export type FriendshipUncheckedUpdateWithoutRequesterInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    receiverId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type FriendshipUncheckedUpdateManyWithoutRequesterInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    receiverId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type FriendshipUpdateWithoutReceiverInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    requester?: UserUpdateOneRequiredWithoutFriendshipsSentNestedInput
+  }
+
+  export type FriendshipUncheckedUpdateWithoutReceiverInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    requesterId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type FriendshipUncheckedUpdateManyWithoutReceiverInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    requesterId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type FeatureFlagUserCreateManyFlagInput = {
     id?: string
     userId: string
@@ -32146,6 +34159,8 @@ export namespace Prisma {
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
     featureFlagOverrides?: FeatureFlagUserUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
   }
 
   export type UserUncheckedUpdateWithoutMatchesInput = {
@@ -32171,6 +34186,8 @@ export namespace Prisma {
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
     featureFlagOverrides?: FeatureFlagUserUncheckedUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUncheckedUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
   }
 
   export type UserUncheckedUpdateManyWithoutMatchesInput = {
