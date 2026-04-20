@@ -383,14 +383,27 @@ export {
   type ReplayTurnPayload,
 } from './core/replay';
 
-// Export du module IA adversaire (N.3)
+// Export du module IA adversaire (N.3) + profils de difficulte (N.4)
 export {
   evaluatePosition,
   scoreMove,
   pickBestMove,
   EVAL_WEIGHTS,
+  AI_DIFFICULTY_LEVELS,
+  AI_DIFFICULTY_PROFILES,
+  DEFAULT_AI_DIFFICULTY,
+  getAIDifficultyProfile,
+  listAIDifficulties,
+  pickAIMove,
+  scoreMoveForDifficulty,
 } from './ai';
-export type { EvaluationBreakdown, PositionEvaluation } from './ai';
+export type {
+  EvaluationBreakdown,
+  PositionEvaluation,
+  AIDifficulty,
+  AIDifficultyProfile,
+  PickAIMoveOptions,
+} from './ai';
 
 // Export du module tutoriel (N.1)
 export {
