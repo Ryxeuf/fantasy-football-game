@@ -603,6 +603,12 @@ describe("Auth schemas", () => {
       expect(result.dateOfBirth).toBe("1990-01-01");
     });
 
+    it("rejects a malformed dateOfBirth", () => {
+      expect(() =>
+        registerSchema.parse({ ...validBody, dateOfBirth: "not-a-date" }),
+      ).toThrow();
+    });
+
     it("rejects an invalid email", () => {
       expect(() =>
         registerSchema.parse({ ...validBody, email: "not-an-email" }),

@@ -140,6 +140,7 @@ export const translations = {
       pendingValidationTitle: "Compte en attente de validation",
       pendingValidationMessage:
         "Votre compte a bien été créé. Un administrateur doit le valider avant que vous puissiez vous connecter.",
+      backToHome: "Retour à l'accueil",
     },
     // Teams pages
     teams: {
@@ -567,6 +568,7 @@ export const translations = {
       pendingValidationTitle: "Account pending validation",
       pendingValidationMessage:
         "Your account has been created. An administrator must validate it before you can log in.",
+      backToHome: "Back to home",
     },
     // Teams pages
     teams: {
