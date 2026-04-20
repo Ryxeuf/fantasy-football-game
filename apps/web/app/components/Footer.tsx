@@ -3,9 +3,12 @@
 import VersionInfo from "./VersionInfo";
 import Logo from "./Logo";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useFeatureFlag } from "../hooks/useFeatureFlag";
+import { ONLINE_PLAY_FLAG } from "../lib/featureFlagKeys";
 
 export default function Footer() {
   const { t } = useLanguage();
+  const onlinePlayEnabled = useFeatureFlag(ONLINE_PLAY_FLAG);
   return (
     <footer className="border-t-2 border-nuffle-bronze/30 bg-white mt-auto w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
       <div className="w-full px-4 sm:px-6 py-6 sm:py-8">
@@ -30,11 +33,13 @@ export default function Footer() {
                   {t.footer.starPlayers}
                 </a>
               </li>
-              <li>
-                <a href="/play" className="hover:text-nuffle-gold hover:underline transition-colors">
-                  {t.play?.playOnline || "Jouer en ligne"}
-                </a>
-              </li>
+              {onlinePlayEnabled && (
+                <li>
+                  <a href="/play" className="hover:text-nuffle-gold hover:underline transition-colors">
+                    {t.play?.playOnline || "Jouer en ligne"}
+                  </a>
+                </li>
+              )}
               <li>
                 <a href="/tutoriel" className="hover:text-nuffle-gold hover:underline transition-colors">
                   {t.footer.tutorial}

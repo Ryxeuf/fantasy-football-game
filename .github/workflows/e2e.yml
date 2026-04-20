@@ -21,6 +21,11 @@ concurrency:
   group: e2e-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  # Force tous les feature flags à ON pour la CI (E2E API + UI).
+  # Cf. apps/server/src/services/featureFlags.ts
+  FEATURE_FLAGS_FORCE_ENABLED: "true"
+
 jobs:
   # -------------------------------------------------------------------------
   # Niveau 1: API + Socket.IO, headless, SQLite in-memory.

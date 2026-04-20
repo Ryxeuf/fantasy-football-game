@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
 vi.mock("../prisma", () => ({
   prisma: {
@@ -29,6 +29,7 @@ import {
   addUserOverride,
   removeUserOverride,
   invalidateFeatureFlagsCache,
+  ONLINE_PLAY_FLAG,
 } from "./featureFlags";
 
 const mockPrisma = prisma as any;
@@ -53,9 +54,22 @@ function flag(
 }
 
 describe("featureFlags service", () => {
+  // La CI peut exporter FEATURE_FLAGS_FORCE_ENABLED=true ; on la neutralise
+  // dans les tests unitaires pour pouvoir observer le comportement par défaut.
+  const savedForceEnv = process.env.FEATURE_FLAGS_FORCE_ENABLED;
+
   beforeEach(() => {
     vi.clearAllMocks();
     invalidateFeatureFlagsCache();
+    delete process.env.FEATURE_FLAGS_FORCE_ENABLED;
+  });
+
+  afterEach(() => {
+    if (savedForceEnv === undefined) {
+      delete process.env.FEATURE_FLAGS_FORCE_ENABLED;
+    } else {
+      process.env.FEATURE_FLAGS_FORCE_ENABLED = savedForceEnv;
+    }
   });
 
   describe("isEnabled", () => {
@@ -108,6 +122,48 @@ describe("featureFlags service", () => {
       await isEnabled("beta");
       expect(mockPrisma.featureFlag.findMany).toHaveBeenCalledTimes(1);
     });
+
+    it("returns true when FEATURE_FLAGS_FORCE_ENABLED=true (CI/tests)", async () => {
+      process.env.FEATURE_FLAGS_FORCE_ENABLED = "true";
+      // Pas de mock : le bypass doit court-circuiter l'accès DB.
+      expect(await isEnabled("never_created_anywhere")).toBe(true);
+      expect(mockPrisma.featureFlag.findMany).not.toHaveBeenCalled();
+    });
+
+    it('accepts "1" as a truthy value for FEATURE_FLAGS_FORCE_ENABLED', async () => {
+      process.env.FEATURE_FLAGS_FORCE_ENABLED = "1";
+      expect(await isEnabled("anything")).toBe(true);
+    });
+
+    it("does not bypass when FEATURE_FLAGS_FORCE_ENABLED=false", async () => {
+      process.env.FEATURE_FLAGS_FORCE_ENABLED = "false";
+      mockPrisma.featureFlag.findMany.mockResolvedValue([]);
+      expect(await isEnabled("missing")).toBe(false);
+    });
+
+    it("returns true for admin role regardless of flag state", async () => {
+      mockPrisma.featureFlag.findMany.mockResolvedValue([
+        flag("f1", "beta", false),
+      ]);
+      expect(
+        await isEnabled("beta", "user-1", { roles: ["user", "admin"] }),
+      ).toBe(true);
+      expect(await isEnabled("beta", undefined, { roles: ["admin"] })).toBe(
+        true,
+      );
+      // Le bypass admin ne doit pas déclencher la lookup d'override.
+      expect(mockPrisma.featureFlagUser.findUnique).not.toHaveBeenCalled();
+    });
+
+    it("does not grant bypass to non-admin roles", async () => {
+      mockPrisma.featureFlag.findMany.mockResolvedValue([
+        flag("f1", "beta", false),
+      ]);
+      mockPrisma.featureFlagUser.findUnique.mockResolvedValue(null);
+      expect(
+        await isEnabled("beta", "user-1", { roles: ["user", "moderator"] }),
+      ).toBe(false);
+    });
   });
 
   describe("listEnabledKeysForUser", () => {
@@ -142,6 +198,30 @@ describe("featureFlags service", () => {
         },
       ]);
       expect(await listEnabledKeysForUser("user-1")).toEqual(["beta"]);
+    });
+
+    it("returns all flag keys for admin regardless of state", async () => {
+      mockPrisma.featureFlag.findMany.mockResolvedValue([
+        flag("f1", "alpha", false),
+        flag("f2", "beta", false),
+        flag("f3", "gamma", true),
+      ]);
+      const keys = await listEnabledKeysForUser("admin-id", {
+        roles: ["admin"],
+      });
+      expect(keys).toEqual(["alpha", "beta", "gamma"]);
+      // Ne doit pas aller chercher les overrides si admin.
+      expect(mockPrisma.featureFlagUser.findMany).not.toHaveBeenCalled();
+    });
+
+    it("returns all flag keys when FEATURE_FLAGS_FORCE_ENABLED=true", async () => {
+      process.env.FEATURE_FLAGS_FORCE_ENABLED = "true";
+      mockPrisma.featureFlag.findMany.mockResolvedValue([
+        flag("f1", "alpha", false),
+        flag("f2", "beta", false),
+      ]);
+      const keys = await listEnabledKeysForUser("anybody");
+      expect(keys).toEqual(["alpha", "beta"]);
     });
   });
 
@@ -234,6 +314,12 @@ describe("featureFlags service", () => {
         new Error("not found"),
       );
       await expect(removeUserOverride("f1", "user-1")).resolves.toBeUndefined();
+    });
+  });
+
+  describe("ONLINE_PLAY_FLAG constant", () => {
+    it('exports the canonical "online_play" key', () => {
+      expect(ONLINE_PLAY_FLAG).toBe("online_play");
     });
   });
 });

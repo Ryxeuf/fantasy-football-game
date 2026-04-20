@@ -3,9 +3,12 @@ import Image from "next/image";
 import Logo from "./components/Logo";
 import { useLanguage } from "./contexts/LanguageContext";
 import HomeStructuredData from "./components/HomeStructuredData";
+import { useFeatureFlag } from "./hooks/useFeatureFlag";
+import { ONLINE_PLAY_FLAG } from "./lib/featureFlagKeys";
 
 export default function LandingPage() {
   const { t } = useLanguage();
+  const onlinePlayEnabled = useFeatureFlag(ONLINE_PLAY_FLAG);
   return (
     <>
       <HomeStructuredData />
@@ -144,6 +147,7 @@ export default function LandingPage() {
       </section>
 
       {/* Play Online */}
+      {onlinePlayEnabled && (
       <section className="w-full px-4 sm:px-6 pb-8 md:pb-12">
         <div className="rounded-2xl bg-gradient-to-br from-nuffle-anthracite via-nuffle-bronze/90 to-nuffle-anthracite text-nuffle-ivory p-6 sm:p-8 md:p-12 shadow-xl border-2 border-nuffle-bronze/50">
           <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
@@ -172,6 +176,7 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+      )}
 
       {/* Support CTA */}
       <section className="w-full px-4 sm:px-6 pb-8 md:pb-12">
