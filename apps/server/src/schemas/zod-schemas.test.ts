@@ -9,6 +9,9 @@ import {
   updateMatchStatusSchema,
 } from "./admin.schemas";
 
+// Auth schemas
+import { registerSchema } from "./auth.schemas";
+
 // Admin data schemas
 import {
   createSkillSchema,
@@ -567,6 +570,61 @@ describe("Team schemas", () => {
     it("still requires name, roster, and choices", () => {
       expect(() => buildTeamSchema.parse({ name: "X", roster: "human" })).toThrow();
       expect(() => buildTeamSchema.parse({ name: "", roster: "human", choices: [] })).toThrow();
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Auth schemas
+// ---------------------------------------------------------------------------
+
+describe("Auth schemas", () => {
+  describe("registerSchema", () => {
+    const validBody = {
+      email: "coach@example.com",
+      password: "secret12",
+      coachName: "Coach Z",
+    };
+
+    it("accepts a minimal valid body", () => {
+      const result = registerSchema.parse(validBody);
+      expect(result.email).toBe("coach@example.com");
+      expect(result.coachName).toBe("Coach Z");
+    });
+
+    it("accepts optional profile fields", () => {
+      const result = registerSchema.parse({
+        ...validBody,
+        firstName: "Jane",
+        lastName: "Doe",
+        dateOfBirth: "1990-01-01",
+      });
+      expect(result.firstName).toBe("Jane");
+      expect(result.dateOfBirth).toBe("1990-01-01");
+    });
+
+    it("rejects an invalid email", () => {
+      expect(() =>
+        registerSchema.parse({ ...validBody, email: "not-an-email" }),
+      ).toThrow();
+    });
+
+    it("rejects a password shorter than 8 characters", () => {
+      expect(() =>
+        registerSchema.parse({ ...validBody, password: "short" }),
+      ).toThrow();
+    });
+
+    it("rejects an empty coachName", () => {
+      expect(() =>
+        registerSchema.parse({ ...validBody, coachName: "" }),
+      ).toThrow();
+    });
+
+    it("rejects a coachName longer than 50 characters", () => {
+      expect(() =>
+        registerSchema.parse({ ...validBody, coachName: "x".repeat(51) }),
+      ).toThrow();
     });
   });
 });

@@ -137,8 +137,9 @@ export const translations = {
       login: "Connectez-vous",
       required: "requis",
       error: "Erreur",
-      preAlphaTitle: "Inscription indisponible",
-      preAlphaMessage: "Nuffle Arena est actuellement en pré-alpha. L'inscription sera bientôt disponible. Restez connectés !",
+      pendingValidationTitle: "Compte en attente de validation",
+      pendingValidationMessage:
+        "Votre compte a bien été créé. Un administrateur doit le valider avant que vous puissiez vous connecter.",
     },
     // Teams pages
     teams: {
@@ -563,8 +564,9 @@ export const translations = {
       login: "Log in",
       required: "required",
       error: "Error",
-      preAlphaTitle: "Registration unavailable",
-      preAlphaMessage: "Nuffle Arena is currently in pre-alpha. Registration will be available soon. Stay tuned!",
+      pendingValidationTitle: "Account pending validation",
+      pendingValidationMessage:
+        "Your account has been created. An administrator must validate it before you can log in.",
     },
     // Teams pages
     teams: {
