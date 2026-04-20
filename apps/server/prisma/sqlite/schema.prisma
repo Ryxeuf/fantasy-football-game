@@ -345,7 +345,12 @@ model LocalMatch {
   // Résultat du match (optionnel, rempli à la fin)
   scoreTeamA Int?    // Score de l'équipe A
   scoreTeamB Int?    // Score de l'équipe B
-  
+
+  // N.4 — Mode pratique contre IA.
+  aiOpponent   Boolean @default(false)
+  aiDifficulty String?
+  aiTeamSide   String?
+
   // Actions manuelles enregistrées pour le match
   actions LocalMatchAction[]
 
@@ -356,6 +361,7 @@ model LocalMatch {
   @@index([status])
   @@index([createdAt])
   @@index([shareToken])
+  @@index([aiOpponent])
 }
 
 // Modèle pour les actions manuelles d'un match local

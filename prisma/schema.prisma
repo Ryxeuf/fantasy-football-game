@@ -431,6 +431,14 @@ model LocalMatch {
   scoreTeamA Int? // Score de l'équipe A
   scoreTeamB Int? // Score de l'équipe B
 
+  // N.4 — Mode pratique contre IA.
+  // `aiOpponent` flag indique que ce match est joue contre un adversaire IA.
+  // `aiDifficulty` contient le profil de difficulte ('easy'|'medium'|'hard').
+  // `aiTeamSide` indique quel cote est controle par l'IA ('A'|'B').
+  aiOpponent   Boolean @default(false)
+  aiDifficulty String?
+  aiTeamSide   String?
+
   // Actions manuelles enregistrées pour le match
   actions LocalMatchAction[]
 
@@ -442,6 +450,7 @@ model LocalMatch {
   @@index([status])
   @@index([createdAt])
   @@index([shareToken])
+  @@index([aiOpponent])
 }
 
 // Modèle pour les actions manuelles d'un match local

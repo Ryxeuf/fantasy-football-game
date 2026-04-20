@@ -96,3 +96,23 @@ export const localMatchInducementsSchema = z.object({
     .optional()
     .nullable(),
 });
+
+// N.4 — Mode pratique contre IA.
+const aiDifficultyValues = ["easy", "medium", "hard"] as const;
+
+export const createPracticeMatchSchema = z.object({
+  userTeamId: z.string().min(1, "userTeamId est requis"),
+  difficulty: z.enum(aiDifficultyValues, {
+    message: "difficulty doit etre easy, medium ou hard",
+  }),
+  aiRosterSlug: z.string().optional(),
+  userSide: z.enum(["A", "B"]).optional(),
+  seed: z.string().max(200).optional(),
+});
+
+export const aiNextMoveSchema = z.object({
+  // gameState optionnel : par defaut on lit celui stocke en base.
+  gameState: z.any().optional(),
+  // Seed optionnelle pour la reproductibilite (tests).
+  seed: z.string().max(200).optional(),
+});
