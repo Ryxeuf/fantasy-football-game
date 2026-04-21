@@ -9,6 +9,7 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { apiGet, apiPost, ApiError } from "../../lib/api";
 import { useAuth } from "../../lib/auth-context";
+import { useGameSocket } from "../../lib/use-game-socket";
 import {
   getLegalMoves,
   type GameState,
@@ -31,7 +32,7 @@ function normalizeState(state: any): GameState {
 export default function PlayScreen() {
   const { id: matchId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
 
   const [state, setState] = useState<GameState | null>(null);
   const [loading, setLoading] = useState(true);
@@ -62,12 +63,53 @@ export default function PlayScreen() {
     fetchState().finally(() => setLoading(false));
   }, [fetchState]);
 
-  // Poll for state updates when it's not our turn
+  // Resolve whose turn it is from a gameState + current user id
+  const resolveIsMyTurn = useCallback(
+    (gs: GameState | null): boolean => {
+      if (!gs || !user) return false;
+      const myPlayers = gs.players.filter((p) => p.userId === user.id);
+      if (myPlayers.length === 0) return false;
+      const myTeam = myPlayers[0].team;
+      return gs.currentPlayer === myTeam;
+    },
+    [user],
+  );
+
+  // Real-time updates via WebSocket
+  const {
+    connected: wsConnected,
+    submitMove: wsSubmitMove,
+  } = useGameSocket(matchId ?? "", {
+    onStateUpdate: ({ gameState }) => {
+      if (!gameState) return;
+      setState(normalizeState(gameState));
+      setIsMyTurn(resolveIsMyTurn(gameState as GameState));
+      setError(null);
+    },
+    onResyncState: ({ success, gameState }) => {
+      if (success && gameState) {
+        setState(normalizeState(gameState));
+        setIsMyTurn(resolveIsMyTurn(gameState as GameState));
+      }
+    },
+    onMatchEnded: ({ gameState }) => {
+      if (gameState) {
+        setState(normalizeState(gameState));
+      }
+    },
+    onMatchForfeited: ({ gameState }) => {
+      if (gameState) {
+        setState(normalizeState(gameState));
+      }
+    },
+  });
+
+  // HTTP polling fallback — only when WebSocket is not connected
   useEffect(() => {
-    if (!state || loading) return;
+    if (!state || loading || wsConnected) return;
     const interval = setInterval(fetchState, isMyTurn ? 10000 : 3000);
     return () => clearInterval(interval);
-  }, [fetchState, isMyTurn, state, loading]);
+  }, [fetchState, isMyTurn, state, loading, wsConnected]);
 
   // Compute legal moves
   const legal = useMemo(() => {
@@ -106,11 +148,22 @@ export default function PlayScreen() {
       .filter((pos): pos is Position => !!pos);
   }, [legal, state?.selectedPlayerId, state?.players]);
 
-  // Submit a move to the server
+  // Submit a move — prefer WebSocket, fall back to HTTP when unavailable
   const submitMove = useCallback(
     async (move: Move) => {
       setSubmitting(true);
       try {
+        const wsAck = wsConnected ? await wsSubmitMove(move) : null;
+        if (wsAck?.success && wsAck.gameState) {
+          setState(normalizeState(wsAck.gameState));
+          if (typeof wsAck.isMyTurn === "boolean") setIsMyTurn(wsAck.isMyTurn);
+          return;
+        }
+        if (wsAck && !wsAck.success && wsAck.error) {
+          setError(wsAck.error);
+          return;
+        }
+
         const data = await apiPost(`/match/${matchId}/move`, { move });
         if (data?.gameState) {
           setState(normalizeState(data.gameState));
@@ -127,7 +180,7 @@ export default function PlayScreen() {
         setSubmitting(false);
       }
     },
-    [matchId, router, logout],
+    [matchId, router, logout, wsConnected, wsSubmitMove],
   );
 
   // Handle cell tap
@@ -258,6 +311,7 @@ export default function PlayScreen() {
       >
         <Text style={styles.turnBannerText}>
           {isMyTurn ? "Votre tour" : "Tour de l'adversaire"}
+          {wsConnected ? "" : " (hors ligne)"}
         </Text>
         {submitting && (
           <ActivityIndicator
