@@ -369,6 +369,25 @@ export const translations = {
       topRating: "Meilleur ELO",
       averageRating: "ELO moyen",
     },
+    // Leagues (Sprint 17 — L.5)
+    leagues: {
+      title: "Ligues",
+      description: "Retrouvez toutes les ligues de Nuffle Arena, inscrivez-vous et suivez les classements saisonniers.",
+      empty: "Aucune ligue pour le moment.",
+      errorLoad: "Erreur lors du chargement des ligues",
+      filterStatus: "Statut",
+      maxParticipants: "Places",
+      visibilityPublic: "Publique",
+      visibilityPrivate: "Privée",
+      allowedRosters: "Rosters autorisés",
+      rulesetSeason2: "Saison 2",
+      rulesetSeason3: "Saison 3",
+      statusDraft: "Brouillon",
+      statusOpen: "Ouverte",
+      statusInProgress: "En cours",
+      statusCompleted: "Terminée",
+      statusArchived: "Archivée",
+    },
     // Inducements (pre-match)
     inducements: {
       title: "Inducements",
@@ -796,6 +815,25 @@ export const translations = {
       totalPlayers: "Ranked players",
       topRating: "Top ELO",
       averageRating: "Average ELO",
+    },
+    // Leagues (Sprint 17 — L.5)
+    leagues: {
+      title: "Leagues",
+      description: "Browse every Nuffle Arena league, join competitions and follow seasonal standings.",
+      empty: "No leagues yet.",
+      errorLoad: "Failed to load leagues",
+      filterStatus: "Status",
+      maxParticipants: "Slots",
+      visibilityPublic: "Public",
+      visibilityPrivate: "Private",
+      allowedRosters: "Allowed rosters",
+      rulesetSeason2: "Season 2",
+      rulesetSeason3: "Season 3",
+      statusDraft: "Draft",
+      statusOpen: "Open",
+      statusInProgress: "In progress",
+      statusCompleted: "Completed",
+      statusArchived: "Archived",
     },
     // Inducements (pre-match)
     inducements: {
