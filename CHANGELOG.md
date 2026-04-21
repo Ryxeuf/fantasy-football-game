@@ -1,3 +1,20 @@
+## [1.63.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.62.0...v1.63.0) (2026-04-21)
+
+
+### ✨ Features
+
+* **admin:** page d'avancement lisant roadmap et sprints ([#281](https://github.com/Ryxeuf/fantasy-football-game/issues/281)) ([5eb366d](https://github.com/Ryxeuf/fantasy-football-game/commit/5eb366daecb2d5eda011d4f6fe7d175197edc72f))
+* ajoute les informations d'hébergement OVH aux mentions légales ([39c5aba](https://github.com/Ryxeuf/fantasy-football-game/commit/39c5aba5cff1ceddb73fe334aec603826fa8c94a))
+* **league:** L.7 integration match online -> ligue (resultats auto) ([#277](https://github.com/Ryxeuf/fantasy-football-game/issues/277)) ([dbb6d41](https://github.com/Ryxeuf/fantasy-football-game/commit/dbb6d417529a4113d044c34ea0c5646938fb1e3d))
+* **league:** L.8 ELO saisonnier avec reset et placements ([#278](https://github.com/Ryxeuf/fantasy-football-game/issues/278)) ([1d84d04](https://github.com/Ryxeuf/fantasy-football-game/commit/1d84d048cd04d44a381b7deb609627116836cea8))
+* **league:** L.9 enforce allowedRosters restriction in service layer ([#279](https://github.com/Ryxeuf/fantasy-football-game/issues/279)) ([6f82852](https://github.com/Ryxeuf/fantasy-football-game/commit/6f8285223266a4ef199df97c1cde8dba90bc3208))
+* **mobile:** M.1 écrans gestion d'équipe (liste, création, détail, édition) ([#283](https://github.com/Ryxeuf/fantasy-football-game/issues/283)) ([dc98395](https://github.com/Ryxeuf/fantasy-football-game/commit/dc9839506dc07ac7a444d5a5c9fb016052bea167))
+
+
+### 🐛 Bug Fixes
+
+* **admin:** inject JWT_SECRET into web container for /api/admin/progress ([#282](https://github.com/Ryxeuf/fantasy-football-game/issues/282)) ([d4928b2](https://github.com/Ryxeuf/fantasy-football-game/commit/d4928b2bca35c07c57be7238a3b7deadc46fd074))
+
 ## [1.62.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.61.0...v1.62.0) (2026-04-21)
 
 
