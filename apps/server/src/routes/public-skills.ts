@@ -48,6 +48,7 @@ router.get("/skills", async (req, res) => {
     res.json({ skills });
   } catch (error: any) {
     console.error("Erreur lors de la récupération des compétences publiques:", error);
+    res.setHeader("Cache-Control", "no-store");
     res.status(500).json({ error: error.message || "Erreur serveur" });
   }
 });

@@ -70,6 +70,7 @@ router.get("/rosters", async (req, res) => {
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Erreur serveur";
     console.error("Erreur lors de la récupération des rosters:", error);
+    res.setHeader("Cache-Control", "no-store");
     res.status(500).json({ error: message });
   }
 });
@@ -116,6 +117,7 @@ router.get("/rosters/:slug", async (req, res) => {
           },
         });
         if (!fallbackRoster) {
+          res.setHeader("Cache-Control", "no-store");
           return res.status(404).json({ error: "Roster non trouvé" });
         }
         return res.json({
@@ -123,6 +125,7 @@ router.get("/rosters/:slug", async (req, res) => {
           ruleset: DEFAULT_RULESET,
         });
       }
+      res.setHeader("Cache-Control", "no-store");
       return res.status(404).json({ error: "Roster non trouvé" });
     }
 
@@ -130,6 +133,7 @@ router.get("/rosters/:slug", async (req, res) => {
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Erreur serveur";
     console.error("Erreur lors de la récupération du roster:", error);
+    res.setHeader("Cache-Control", "no-store");
     res.status(500).json({ error: message });
   }
 });

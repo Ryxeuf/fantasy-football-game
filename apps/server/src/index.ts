@@ -32,6 +32,7 @@ import dotenv from "dotenv";
 import { execSync } from "node:child_process";
 import { prisma } from "./prisma";
 import { authRateLimiter, apiRateLimiter } from "./middleware/rateLimiter";
+import { publicCache } from "./middleware/publicCache";
 import { setupSocket } from "./socket";
 import { CORS_ORIGINS } from "./config";
 
@@ -82,9 +83,10 @@ app.use("/admin/data", adminDataRoutes);
 app.use("/user", userRoutes);
 app.use("/team", teamRoutes);
 app.use("/star-players", starPlayersRoutes);
-app.use("/api", publicSkillsRoutes);
-app.use("/api", publicRostersRoutes);
-app.use("/api", publicPositionsRoutes);
+// Public reference data: cache for 1h with 24h stale-while-revalidate.
+app.use("/api", publicCache(), publicSkillsRoutes);
+app.use("/api", publicCache(), publicRostersRoutes);
+app.use("/api", publicCache(), publicPositionsRoutes);
 app.use("/cup", cupRoutes);
 app.use("/local-match", localMatchRoutes);
 app.use("/matchmaking", requireFeatureFlag(ONLINE_PLAY_FLAG), matchmakingRoutes);
