@@ -162,7 +162,9 @@ describe('Regle: Rules Config — turns per half honors simplified mode', () => 
     const result = advanceHalfIfNeeded(state, makeRNG('simp-t7'));
     expect(result.half).toBe(2);
     expect(result.turn).toBe(1);
-    expect(result.gamePhase).toBe('playing');
+    // B1.7 — la 2e mi-temps passe d'abord par la phase d'acknowledgement
+    // 'halftime' (UI) puis par preMatch.phase='setup' avant reprise via kickoff.
+    expect(result.gamePhase).toBe('halftime');
   });
 
   it('ends the match at turn 7 of half 2 in simplified rules', () => {
