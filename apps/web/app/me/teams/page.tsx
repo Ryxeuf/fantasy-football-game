@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { API_BASE } from "../../auth-client";
 import { useLanguage } from "../../contexts/LanguageContext";
 
@@ -23,56 +24,88 @@ async function fetchJSON(path: string) {
   return res.json();
 }
 
+function TeamsSkeleton() {
+  return (
+    <div className="grid gap-3" aria-hidden="true">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="rounded border p-4 bg-white animate-pulse">
+          <div className="h-5 w-2/5 bg-gray-200 rounded" />
+          <div className="h-3 w-1/4 bg-gray-200 rounded mt-3" />
+          <div className="h-5 w-20 bg-gray-200 rounded-full mt-3" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function MyTeamsPage() {
   const { t, language } = useLanguage();
+  const router = useRouter();
   const [teams, setTeams] = useState<Team[]>([]);
   const [rosterNames, setRosterNames] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
       setError(null);
+      setLoading(true);
       try {
-        const me = await fetchJSON("/auth/me");
+        const lang = language === "en" ? "en" : "fr";
+        const API_BASE_PUBLIC =
+          process.env.NEXT_PUBLIC_API_BASE ||
+          process.env.NEXT_PUBLIC_API_URL ||
+          "http://localhost:8201";
+
+        // Fire all three requests in parallel. The rosters endpoint is
+        // public, so no auth guard is needed before kicking it off.
+        const [me, mine, rostersResponse] = await Promise.all([
+          fetchJSON("/auth/me"),
+          fetchJSON("/team/mine").catch((err) => {
+            // Surface auth errors through the me check below, swallow here.
+            return { teams: [] as Team[], _err: err };
+          }),
+          fetch(`${API_BASE_PUBLIC}/api/rosters?lang=${lang}`).catch(
+            () => null,
+          ),
+        ]);
+
         if (!me?.user) {
-          window.location.href = "/login";
+          router.push("/login");
           return;
         }
-        const { teams } = await fetchJSON("/team/mine");
-        setTeams(teams);
-        
-        // Charger les noms des rosters depuis l'API selon la langue
-        const lang = language === "en" ? "en" : "fr";
-        try {
-          const API_BASE = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8201';
-          const rostersResponse = await fetch(`${API_BASE}/api/rosters?lang=${lang}`);
-          if (rostersResponse.ok) {
-            const rostersData = await rostersResponse.json();
-            const namesMap: Record<string, string> = {};
-            rostersData.rosters.forEach((r: { slug: string; name: string }) => {
+
+        setTeams(mine?.teams ?? []);
+
+        if (rostersResponse && rostersResponse.ok) {
+          const rostersData = await rostersResponse.json();
+          const namesMap: Record<string, string> = {};
+          rostersData.rosters.forEach(
+            (r: { slug: string; name: string }) => {
               namesMap[r.slug] = r.name;
-            });
-            setRosterNames(namesMap);
-          }
-        } catch (err) {
-          console.error("Erreur lors du chargement des noms de rosters:", err);
+            },
+          );
+          setRosterNames(namesMap);
         }
       } catch (e: any) {
-        setError(e.message || t.teams.error);
+        setError(e?.message || t.teams.error);
+      } finally {
+        setLoading(false);
       }
     })();
-  }, [t, language]);
+  }, [t, language, router]);
 
   return (
     <div className="w-full p-4 sm:p-6 space-y-4 sm:space-y-6">
       <h1 className="text-xl sm:text-2xl font-bold">{t.teams.title}</h1>
       {error && <p className="text-red-600 text-sm">{error}</p>}
-      {teams.length > 0 && (
+      {loading && <TeamsSkeleton />}
+      {!loading && teams.length > 0 && (
         <p className="text-xs text-gray-500">{t.teams.rulesetInfoList}</p>
       )}
-      
+
       {/* Liste des équipes existantes */}
-      {teams.length > 0 && (
+      {!loading && teams.length > 0 && (
         <div className="grid gap-3">
           {teams.map((team) => (
             <a

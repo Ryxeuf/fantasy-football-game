@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import compression from "compression";
 import bodyParser from "body-parser";
 import { createServer } from "node:http";
 import authRoutes from "./routes/auth";
@@ -31,6 +32,8 @@ import dotenv from "dotenv";
 import { execSync } from "node:child_process";
 import { prisma } from "./prisma";
 import { authRateLimiter, apiRateLimiter } from "./middleware/rateLimiter";
+import { publicCache } from "./middleware/publicCache";
+import { requestTiming } from "./middleware/requestTiming";
 import { setupSocket } from "./socket";
 import { CORS_ORIGINS } from "./config";
 
@@ -61,6 +64,12 @@ const app = express();
 // Trust le premier proxy (Traefik) pour obtenir la vraie IP client via X-Forwarded-For
 app.set("trust proxy", 1);
 app.use(cors({ origin: CORS_ORIGINS }));
+// gzip/deflate/br responses over ~1KB. Team payloads with 11-16 players
+// plus star players commonly exceed 50KB uncompressed.
+app.use(compression());
+// Warn on any request that took >=500ms. Set REQUEST_LOG=1 to see every
+// request (useful locally; stays off in prod to avoid log spam).
+app.use(requestTiming(500));
 app.use(bodyParser.json());
 
 // Rate limiting global sur toutes les routes API (100 req/min par IP)
@@ -78,9 +87,10 @@ app.use("/admin/data", adminDataRoutes);
 app.use("/user", userRoutes);
 app.use("/team", teamRoutes);
 app.use("/star-players", starPlayersRoutes);
-app.use("/api", publicSkillsRoutes);
-app.use("/api", publicRostersRoutes);
-app.use("/api", publicPositionsRoutes);
+// Public reference data: cache for 1h with 24h stale-while-revalidate.
+app.use("/api", publicCache(), publicSkillsRoutes);
+app.use("/api", publicCache(), publicRostersRoutes);
+app.use("/api", publicCache(), publicPositionsRoutes);
 app.use("/cup", cupRoutes);
 app.use("/local-match", localMatchRoutes);
 app.use("/matchmaking", requireFeatureFlag(ONLINE_PLAY_FLAG), matchmakingRoutes);

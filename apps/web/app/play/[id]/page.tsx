@@ -1,5 +1,6 @@
 "use client";
 import { useMemo, useState, useRef, useCallback, useEffect } from "react";
+import dynamic from "next/dynamic";
 import {
   DiceResultPopup,
   GameScoreboard,
@@ -9,10 +10,25 @@ import {
   FollowUpChoicePopup,
   RerollChoicePopup,
   ApothecaryChoicePopup,
-  GameBoardWithDugouts,
   GameLog,
   ToastProvider,
 } from "@bb/ui";
+
+// GameBoardWithDugouts pulls in the entire Pixi.js + @pixi/react bundle.
+// It uses Canvas APIs that don't exist on the server, so disable SSR and
+// let Next.js emit it as a separate chunk that only ships when the user
+// actually opens an online match.
+const GameBoardWithDugouts = dynamic(
+  () => import("@bb/ui").then((m) => m.GameBoardWithDugouts),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full aspect-[2/1] bg-gray-900 text-gray-400 flex items-center justify-center rounded-lg">
+        Chargement du plateau…
+      </div>
+    ),
+  },
+);
 import {
   getLegalMoves,
   applyMove,

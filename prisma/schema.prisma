@@ -159,6 +159,8 @@ model Team {
   teamValue     Int @default(0) // VE - Valeur d'Équipe (calculée)
   currentValue  Int @default(0) // VEA - Valeur d'Équipe Actuelle (calculée)
   initialBudget Int @default(0) // Budget initial saisi par l'utilisateur lors de la création
+
+  @@index([ownerId])
 }
 
 model TeamPlayer {
@@ -199,6 +201,8 @@ model TeamPlayer {
   // Player death tracking
   dead    Boolean   @default(false) // Player is dead (killed during a match)
   diedAt  DateTime? // When the player died
+
+  @@index([teamId])
 }
 
 model TeamStarPlayer {

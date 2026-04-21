@@ -72,6 +72,7 @@ router.get("/positions", async (req, res) => {
     res.json({ positions: transformedPositions, ruleset });
   } catch (error: any) {
     console.error("Erreur lors de la récupération des positions:", error);
+    res.setHeader("Cache-Control", "no-store");
     res.status(500).json({ error: error.message || "Erreur serveur" });
   }
 });
@@ -128,10 +129,12 @@ router.get("/positions/:slug", async (req, res) => {
           },
         });
         if (!fallback) {
+          res.setHeader("Cache-Control", "no-store");
           return res.status(404).json({ error: "Position non trouvée" });
         }
         return res.json({ position: transformPosition(fallback, isEnglish), ruleset: DEFAULT_RULESET });
       }
+      res.setHeader("Cache-Control", "no-store");
       return res.status(404).json({ error: "Position non trouvée" });
     }
 
@@ -157,6 +160,7 @@ router.get("/positions/:slug", async (req, res) => {
     res.json({ position: transformedPosition, ruleset });
   } catch (error: any) {
     console.error("Erreur lors de la récupération de la position:", error);
+    res.setHeader("Cache-Control", "no-store");
     res.status(500).json({ error: error.message || "Erreur serveur" });
   }
 });
