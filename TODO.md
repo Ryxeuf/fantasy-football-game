@@ -297,7 +297,7 @@
 | L.2 | Migration Prisma + seed data | DB | [x] |
 | L.3 | Routes API CRUD ligue (create, join, schedule, standings) | API | [x] |
 | L.4 | Generateur de calendrier round-robin | Backend | [x] |
-| L.5 | Page liste des ligues | Frontend | [ ] |
+| L.5 | Page liste des ligues | Frontend | [x] |
 | L.6 | Page detail ligue (calendrier, classement, matchs) | Frontend | [ ] |
 | L.7 | Integration match online -> ligue (resultats auto) | Backend | [ ] |
 | L.8 | ELO saisonnier avec reset et placements | Backend | [ ] |
