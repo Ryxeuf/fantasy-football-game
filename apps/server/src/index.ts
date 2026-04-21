@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import compression from "compression";
 import bodyParser from "body-parser";
 import { createServer } from "node:http";
 import authRoutes from "./routes/auth";
@@ -61,6 +62,9 @@ const app = express();
 // Trust le premier proxy (Traefik) pour obtenir la vraie IP client via X-Forwarded-For
 app.set("trust proxy", 1);
 app.use(cors({ origin: CORS_ORIGINS }));
+// gzip/deflate/br responses over ~1KB. Team payloads with 11-16 players
+// plus star players commonly exceed 50KB uncompressed.
+app.use(compression());
 app.use(bodyParser.json());
 
 // Rate limiting global sur toutes les routes API (100 req/min par IP)
