@@ -16,7 +16,9 @@ const router = Router();
  */
 router.get("/", async (req, res) => {
   try {
+    const ruleset = resolveRuleset(req.query.ruleset as string | undefined);
     const starPlayers = await prisma.starPlayer.findMany({
+      where: { ruleset },
       include: {
         skills: {
           include: { skill: true },

@@ -25,14 +25,15 @@ export default function StarPlayersPage() {
   const [minCost, setMinCost] = useState<number>(0);
   const [maxCost, setMaxCost] = useState<number>(400000);
   const [selectedSkill, setSelectedSkill] = useState<string>('');
-  
+  const [selectedRuleset, setSelectedRuleset] = useState<'season_2' | 'season_3'>('season_3');
+
   // Navigation
   const router = useRouter();
 
-  // Charger tous les star players au montage du composant
+  // Charger tous les star players au montage du composant et quand le ruleset change
   useEffect(() => {
     loadStarPlayers();
-  }, []);
+  }, [selectedRuleset]);
 
   // Appliquer les filtres
   useEffect(() => {
@@ -42,12 +43,18 @@ export default function StarPlayersPage() {
   const loadStarPlayers = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/star-players`);
+      const response = await fetch(`${API_URL}/star-players?ruleset=${selectedRuleset}`);
       const data = await response.json();
-      
+
       if (data.success) {
-        setStarPlayers(data.data);
-        setFilteredPlayers(data.data);
+        // Garde-fou : dédupliquer par slug si le serveur renvoie plusieurs rulesets.
+        const uniqueBySlug = Array.from(
+          new Map<string, StarPlayerDefinition>(
+            data.data.map((p: StarPlayerDefinition) => [p.slug, p])
+          ).values()
+        );
+        setStarPlayers(uniqueBySlug);
+        setFilteredPlayers(uniqueBySlug);
       } else {
         setError(t.starPlayers.error);
       }
@@ -139,6 +146,19 @@ export default function StarPlayersPage() {
           <h2 className="text-lg sm:text-xl font-bold mb-4">{t.starPlayers.filters}</h2>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Ruleset */}
+            <div>
+              <label className="block text-sm font-medium mb-2">{t.starPlayers.ruleset}</label>
+              <select
+                value={selectedRuleset}
+                onChange={(e) => setSelectedRuleset(e.target.value as 'season_2' | 'season_3')}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="season_3">{t.starPlayers.rulesetSeason3}</option>
+                <option value="season_2">{t.starPlayers.rulesetSeason2}</option>
+              </select>
+            </div>
+
             {/* Recherche */}
             <div>
               <label className="block text-sm font-medium mb-2">{t.starPlayers.search}</label>
