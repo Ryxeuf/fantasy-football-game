@@ -12,6 +12,14 @@ const TEST_DATABASE_URL =
   process.env.TEST_DATABASE_URL ||
   "file:memdb-e2e?mode=memory&cache=shared";
 
+// Active par défaut tous les feature flags pour la suite e2e-api.
+// Cf. apps/server/src/services/featureFlags.ts (FEATURE_FLAGS_FORCE_ENABLED).
+// Sans ceci, /match/* et /matchmaking/* (gates par requireFeatureFlag) renvoient
+// 403 et la suite échoue. Le flag explicite (CI ou local) reste prioritaire.
+if (process.env.FEATURE_FLAGS_FORCE_ENABLED === undefined) {
+  process.env.FEATURE_FLAGS_FORCE_ENABLED = "true";
+}
+
 async function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }

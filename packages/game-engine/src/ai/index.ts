@@ -34,3 +34,6 @@ export type {
   AIOpponentRoster,
   PickAIOpponentRosterOptions,
 } from './opponent-teams';
+
+// Auto-placement des joueurs IA pendant la phase setup (fix AI stuck in placement)
+export { autoSetupAITeam, buildAISetupPositions } from './setup-placement';

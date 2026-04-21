@@ -9072,6 +9072,12 @@ export namespace Prisma {
     status: string | null
     seed: string | null
     creatorId: string | null
+    currentTurnUserId: string | null
+    lastMoveAt: Date | null
+    aiOpponent: boolean | null
+    aiDifficulty: string | null
+    aiTeamSide: string | null
+    aiUserId: string | null
   }
 
   export type MatchMaxAggregateOutputType = {
@@ -9080,6 +9086,12 @@ export namespace Prisma {
     status: string | null
     seed: string | null
     creatorId: string | null
+    currentTurnUserId: string | null
+    lastMoveAt: Date | null
+    aiOpponent: boolean | null
+    aiDifficulty: string | null
+    aiTeamSide: string | null
+    aiUserId: string | null
   }
 
   export type MatchCountAggregateOutputType = {
@@ -9088,6 +9100,12 @@ export namespace Prisma {
     status: number
     seed: number
     creatorId: number
+    currentTurnUserId: number
+    lastMoveAt: number
+    aiOpponent: number
+    aiDifficulty: number
+    aiTeamSide: number
+    aiUserId: number
     _all: number
   }
 
@@ -9098,6 +9116,12 @@ export namespace Prisma {
     status?: true
     seed?: true
     creatorId?: true
+    currentTurnUserId?: true
+    lastMoveAt?: true
+    aiOpponent?: true
+    aiDifficulty?: true
+    aiTeamSide?: true
+    aiUserId?: true
   }
 
   export type MatchMaxAggregateInputType = {
@@ -9106,6 +9130,12 @@ export namespace Prisma {
     status?: true
     seed?: true
     creatorId?: true
+    currentTurnUserId?: true
+    lastMoveAt?: true
+    aiOpponent?: true
+    aiDifficulty?: true
+    aiTeamSide?: true
+    aiUserId?: true
   }
 
   export type MatchCountAggregateInputType = {
@@ -9114,6 +9144,12 @@ export namespace Prisma {
     status?: true
     seed?: true
     creatorId?: true
+    currentTurnUserId?: true
+    lastMoveAt?: true
+    aiOpponent?: true
+    aiDifficulty?: true
+    aiTeamSide?: true
+    aiUserId?: true
     _all?: true
   }
 
@@ -9195,6 +9231,12 @@ export namespace Prisma {
     status: string
     seed: string
     creatorId: string | null
+    currentTurnUserId: string | null
+    lastMoveAt: Date | null
+    aiOpponent: boolean
+    aiDifficulty: string | null
+    aiTeamSide: string | null
+    aiUserId: string | null
     _count: MatchCountAggregateOutputType | null
     _min: MatchMinAggregateOutputType | null
     _max: MatchMaxAggregateOutputType | null
@@ -9220,6 +9262,12 @@ export namespace Prisma {
     status?: boolean
     seed?: boolean
     creatorId?: boolean
+    currentTurnUserId?: boolean
+    lastMoveAt?: boolean
+    aiOpponent?: boolean
+    aiDifficulty?: boolean
+    aiTeamSide?: boolean
+    aiUserId?: boolean
     creator?: boolean | Match$creatorArgs<ExtArgs>
     players?: boolean | Match$playersArgs<ExtArgs>
     turns?: boolean | Match$turnsArgs<ExtArgs>
@@ -9233,6 +9281,12 @@ export namespace Prisma {
     status?: boolean
     seed?: boolean
     creatorId?: boolean
+    currentTurnUserId?: boolean
+    lastMoveAt?: boolean
+    aiOpponent?: boolean
+    aiDifficulty?: boolean
+    aiTeamSide?: boolean
+    aiUserId?: boolean
     creator?: boolean | Match$creatorArgs<ExtArgs>
   }, ExtArgs["result"]["match"]>
 
@@ -9242,6 +9296,12 @@ export namespace Prisma {
     status?: boolean
     seed?: boolean
     creatorId?: boolean
+    currentTurnUserId?: boolean
+    lastMoveAt?: boolean
+    aiOpponent?: boolean
+    aiDifficulty?: boolean
+    aiTeamSide?: boolean
+    aiUserId?: boolean
     creator?: boolean | Match$creatorArgs<ExtArgs>
   }, ExtArgs["result"]["match"]>
 
@@ -9251,9 +9311,15 @@ export namespace Prisma {
     status?: boolean
     seed?: boolean
     creatorId?: boolean
+    currentTurnUserId?: boolean
+    lastMoveAt?: boolean
+    aiOpponent?: boolean
+    aiDifficulty?: boolean
+    aiTeamSide?: boolean
+    aiUserId?: boolean
   }
 
-  export type MatchOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "createdAt" | "status" | "seed" | "creatorId", ExtArgs["result"]["match"]>
+  export type MatchOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "createdAt" | "status" | "seed" | "creatorId" | "currentTurnUserId" | "lastMoveAt" | "aiOpponent" | "aiDifficulty" | "aiTeamSide" | "aiUserId", ExtArgs["result"]["match"]>
   export type MatchInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     creator?: boolean | Match$creatorArgs<ExtArgs>
     players?: boolean | Match$playersArgs<ExtArgs>
@@ -9282,6 +9348,12 @@ export namespace Prisma {
       status: string
       seed: string
       creatorId: string | null
+      currentTurnUserId: string | null
+      lastMoveAt: Date | null
+      aiOpponent: boolean
+      aiDifficulty: string | null
+      aiTeamSide: string | null
+      aiUserId: string | null
     }, ExtArgs["result"]["match"]>
     composites: {}
   }
@@ -9714,6 +9786,12 @@ export namespace Prisma {
     readonly status: FieldRef<"Match", 'String'>
     readonly seed: FieldRef<"Match", 'String'>
     readonly creatorId: FieldRef<"Match", 'String'>
+    readonly currentTurnUserId: FieldRef<"Match", 'String'>
+    readonly lastMoveAt: FieldRef<"Match", 'DateTime'>
+    readonly aiOpponent: FieldRef<"Match", 'Boolean'>
+    readonly aiDifficulty: FieldRef<"Match", 'String'>
+    readonly aiTeamSide: FieldRef<"Match", 'String'>
+    readonly aiUserId: FieldRef<"Match", 'String'>
   }
     
 
@@ -29820,7 +29898,13 @@ export namespace Prisma {
     createdAt: 'createdAt',
     status: 'status',
     seed: 'seed',
-    creatorId: 'creatorId'
+    creatorId: 'creatorId',
+    currentTurnUserId: 'currentTurnUserId',
+    lastMoveAt: 'lastMoveAt',
+    aiOpponent: 'aiOpponent',
+    aiDifficulty: 'aiDifficulty',
+    aiTeamSide: 'aiTeamSide',
+    aiUserId: 'aiUserId'
   };
 
   export type MatchScalarFieldEnum = (typeof MatchScalarFieldEnum)[keyof typeof MatchScalarFieldEnum]
@@ -30605,6 +30689,12 @@ export namespace Prisma {
     status?: StringFilter<"Match"> | string
     seed?: StringFilter<"Match"> | string
     creatorId?: StringNullableFilter<"Match"> | string | null
+    currentTurnUserId?: StringNullableFilter<"Match"> | string | null
+    lastMoveAt?: DateTimeNullableFilter<"Match"> | Date | string | null
+    aiOpponent?: BoolFilter<"Match"> | boolean
+    aiDifficulty?: StringNullableFilter<"Match"> | string | null
+    aiTeamSide?: StringNullableFilter<"Match"> | string | null
+    aiUserId?: StringNullableFilter<"Match"> | string | null
     creator?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
     players?: UserListRelationFilter
     turns?: TurnListRelationFilter
@@ -30617,6 +30707,12 @@ export namespace Prisma {
     status?: SortOrder
     seed?: SortOrder
     creatorId?: SortOrderInput | SortOrder
+    currentTurnUserId?: SortOrderInput | SortOrder
+    lastMoveAt?: SortOrderInput | SortOrder
+    aiOpponent?: SortOrder
+    aiDifficulty?: SortOrderInput | SortOrder
+    aiTeamSide?: SortOrderInput | SortOrder
+    aiUserId?: SortOrderInput | SortOrder
     creator?: UserOrderByWithRelationInput
     players?: UserOrderByRelationAggregateInput
     turns?: TurnOrderByRelationAggregateInput
@@ -30632,6 +30728,12 @@ export namespace Prisma {
     status?: StringFilter<"Match"> | string
     seed?: StringFilter<"Match"> | string
     creatorId?: StringNullableFilter<"Match"> | string | null
+    currentTurnUserId?: StringNullableFilter<"Match"> | string | null
+    lastMoveAt?: DateTimeNullableFilter<"Match"> | Date | string | null
+    aiOpponent?: BoolFilter<"Match"> | boolean
+    aiDifficulty?: StringNullableFilter<"Match"> | string | null
+    aiTeamSide?: StringNullableFilter<"Match"> | string | null
+    aiUserId?: StringNullableFilter<"Match"> | string | null
     creator?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
     players?: UserListRelationFilter
     turns?: TurnListRelationFilter
@@ -30644,6 +30746,12 @@ export namespace Prisma {
     status?: SortOrder
     seed?: SortOrder
     creatorId?: SortOrderInput | SortOrder
+    currentTurnUserId?: SortOrderInput | SortOrder
+    lastMoveAt?: SortOrderInput | SortOrder
+    aiOpponent?: SortOrder
+    aiDifficulty?: SortOrderInput | SortOrder
+    aiTeamSide?: SortOrderInput | SortOrder
+    aiUserId?: SortOrderInput | SortOrder
     _count?: MatchCountOrderByAggregateInput
     _max?: MatchMaxOrderByAggregateInput
     _min?: MatchMinOrderByAggregateInput
@@ -30658,6 +30766,12 @@ export namespace Prisma {
     status?: StringWithAggregatesFilter<"Match"> | string
     seed?: StringWithAggregatesFilter<"Match"> | string
     creatorId?: StringNullableWithAggregatesFilter<"Match"> | string | null
+    currentTurnUserId?: StringNullableWithAggregatesFilter<"Match"> | string | null
+    lastMoveAt?: DateTimeNullableWithAggregatesFilter<"Match"> | Date | string | null
+    aiOpponent?: BoolWithAggregatesFilter<"Match"> | boolean
+    aiDifficulty?: StringNullableWithAggregatesFilter<"Match"> | string | null
+    aiTeamSide?: StringNullableWithAggregatesFilter<"Match"> | string | null
+    aiUserId?: StringNullableWithAggregatesFilter<"Match"> | string | null
   }
 
   export type TurnWhereInput = {
@@ -32608,6 +32722,12 @@ export namespace Prisma {
     createdAt?: Date | string
     status: string
     seed: string
+    currentTurnUserId?: string | null
+    lastMoveAt?: Date | string | null
+    aiOpponent?: boolean
+    aiDifficulty?: string | null
+    aiTeamSide?: string | null
+    aiUserId?: string | null
     creator?: UserCreateNestedOneWithoutCreatedMatchesInput
     players?: UserCreateNestedManyWithoutMatchesInput
     turns?: TurnCreateNestedManyWithoutMatchInput
@@ -32620,6 +32740,12 @@ export namespace Prisma {
     status: string
     seed: string
     creatorId?: string | null
+    currentTurnUserId?: string | null
+    lastMoveAt?: Date | string | null
+    aiOpponent?: boolean
+    aiDifficulty?: string | null
+    aiTeamSide?: string | null
+    aiUserId?: string | null
     players?: UserUncheckedCreateNestedManyWithoutMatchesInput
     turns?: TurnUncheckedCreateNestedManyWithoutMatchInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutMatchInput
@@ -32630,6 +32756,12 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: StringFieldUpdateOperationsInput | string
     seed?: StringFieldUpdateOperationsInput | string
+    currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    aiOpponent?: BoolFieldUpdateOperationsInput | boolean
+    aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
+    aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
+    aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
     creator?: UserUpdateOneWithoutCreatedMatchesNestedInput
     players?: UserUpdateManyWithoutMatchesNestedInput
     turns?: TurnUpdateManyWithoutMatchNestedInput
@@ -32642,6 +32774,12 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     seed?: StringFieldUpdateOperationsInput | string
     creatorId?: NullableStringFieldUpdateOperationsInput | string | null
+    currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    aiOpponent?: BoolFieldUpdateOperationsInput | boolean
+    aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
+    aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
+    aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
     players?: UserUncheckedUpdateManyWithoutMatchesNestedInput
     turns?: TurnUncheckedUpdateManyWithoutMatchNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutMatchNestedInput
@@ -32653,6 +32791,12 @@ export namespace Prisma {
     status: string
     seed: string
     creatorId?: string | null
+    currentTurnUserId?: string | null
+    lastMoveAt?: Date | string | null
+    aiOpponent?: boolean
+    aiDifficulty?: string | null
+    aiTeamSide?: string | null
+    aiUserId?: string | null
   }
 
   export type MatchUpdateManyMutationInput = {
@@ -32660,6 +32804,12 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: StringFieldUpdateOperationsInput | string
     seed?: StringFieldUpdateOperationsInput | string
+    currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    aiOpponent?: BoolFieldUpdateOperationsInput | boolean
+    aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
+    aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
+    aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type MatchUncheckedUpdateManyInput = {
@@ -32668,6 +32818,12 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     seed?: StringFieldUpdateOperationsInput | string
     creatorId?: NullableStringFieldUpdateOperationsInput | string | null
+    currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    aiOpponent?: BoolFieldUpdateOperationsInput | boolean
+    aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
+    aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
+    aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type TurnCreateInput = {
@@ -34860,6 +35016,12 @@ export namespace Prisma {
     status?: SortOrder
     seed?: SortOrder
     creatorId?: SortOrder
+    currentTurnUserId?: SortOrder
+    lastMoveAt?: SortOrder
+    aiOpponent?: SortOrder
+    aiDifficulty?: SortOrder
+    aiTeamSide?: SortOrder
+    aiUserId?: SortOrder
   }
 
   export type MatchMaxOrderByAggregateInput = {
@@ -34868,6 +35030,12 @@ export namespace Prisma {
     status?: SortOrder
     seed?: SortOrder
     creatorId?: SortOrder
+    currentTurnUserId?: SortOrder
+    lastMoveAt?: SortOrder
+    aiOpponent?: SortOrder
+    aiDifficulty?: SortOrder
+    aiTeamSide?: SortOrder
+    aiUserId?: SortOrder
   }
 
   export type MatchMinOrderByAggregateInput = {
@@ -34876,6 +35044,12 @@ export namespace Prisma {
     status?: SortOrder
     seed?: SortOrder
     creatorId?: SortOrder
+    currentTurnUserId?: SortOrder
+    lastMoveAt?: SortOrder
+    aiOpponent?: SortOrder
+    aiDifficulty?: SortOrder
+    aiTeamSide?: SortOrder
+    aiUserId?: SortOrder
   }
   export type JsonFilter<$PrismaModel = never> =
     | PatchUndefined<
@@ -38094,6 +38268,12 @@ export namespace Prisma {
     createdAt?: Date | string
     status: string
     seed: string
+    currentTurnUserId?: string | null
+    lastMoveAt?: Date | string | null
+    aiOpponent?: boolean
+    aiDifficulty?: string | null
+    aiTeamSide?: string | null
+    aiUserId?: string | null
     creator?: UserCreateNestedOneWithoutCreatedMatchesInput
     turns?: TurnCreateNestedManyWithoutMatchInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutMatchInput
@@ -38105,6 +38285,12 @@ export namespace Prisma {
     status: string
     seed: string
     creatorId?: string | null
+    currentTurnUserId?: string | null
+    lastMoveAt?: Date | string | null
+    aiOpponent?: boolean
+    aiDifficulty?: string | null
+    aiTeamSide?: string | null
+    aiUserId?: string | null
     turns?: TurnUncheckedCreateNestedManyWithoutMatchInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutMatchInput
   }
@@ -38119,6 +38305,12 @@ export namespace Prisma {
     createdAt?: Date | string
     status: string
     seed: string
+    currentTurnUserId?: string | null
+    lastMoveAt?: Date | string | null
+    aiOpponent?: boolean
+    aiDifficulty?: string | null
+    aiTeamSide?: string | null
+    aiUserId?: string | null
     players?: UserCreateNestedManyWithoutMatchesInput
     turns?: TurnCreateNestedManyWithoutMatchInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutMatchInput
@@ -38129,6 +38321,12 @@ export namespace Prisma {
     createdAt?: Date | string
     status: string
     seed: string
+    currentTurnUserId?: string | null
+    lastMoveAt?: Date | string | null
+    aiOpponent?: boolean
+    aiDifficulty?: string | null
+    aiTeamSide?: string | null
+    aiUserId?: string | null
     players?: UserUncheckedCreateNestedManyWithoutMatchesInput
     turns?: TurnUncheckedCreateNestedManyWithoutMatchInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutMatchInput
@@ -38502,6 +38700,12 @@ export namespace Prisma {
     status?: StringFilter<"Match"> | string
     seed?: StringFilter<"Match"> | string
     creatorId?: StringNullableFilter<"Match"> | string | null
+    currentTurnUserId?: StringNullableFilter<"Match"> | string | null
+    lastMoveAt?: DateTimeNullableFilter<"Match"> | Date | string | null
+    aiOpponent?: BoolFilter<"Match"> | boolean
+    aiDifficulty?: StringNullableFilter<"Match"> | string | null
+    aiTeamSide?: StringNullableFilter<"Match"> | string | null
+    aiUserId?: StringNullableFilter<"Match"> | string | null
   }
 
   export type MatchUpsertWithWhereUniqueWithoutCreatorInput = {
@@ -39765,6 +39969,12 @@ export namespace Prisma {
     createdAt?: Date | string
     status: string
     seed: string
+    currentTurnUserId?: string | null
+    lastMoveAt?: Date | string | null
+    aiOpponent?: boolean
+    aiDifficulty?: string | null
+    aiTeamSide?: string | null
+    aiUserId?: string | null
     creator?: UserCreateNestedOneWithoutCreatedMatchesInput
     players?: UserCreateNestedManyWithoutMatchesInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutMatchInput
@@ -39776,6 +39986,12 @@ export namespace Prisma {
     status: string
     seed: string
     creatorId?: string | null
+    currentTurnUserId?: string | null
+    lastMoveAt?: Date | string | null
+    aiOpponent?: boolean
+    aiDifficulty?: string | null
+    aiTeamSide?: string | null
+    aiUserId?: string | null
     players?: UserUncheckedCreateNestedManyWithoutMatchesInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutMatchInput
   }
@@ -39801,6 +40017,12 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: StringFieldUpdateOperationsInput | string
     seed?: StringFieldUpdateOperationsInput | string
+    currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    aiOpponent?: BoolFieldUpdateOperationsInput | boolean
+    aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
+    aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
+    aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
     creator?: UserUpdateOneWithoutCreatedMatchesNestedInput
     players?: UserUpdateManyWithoutMatchesNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutMatchNestedInput
@@ -39812,6 +40034,12 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     seed?: StringFieldUpdateOperationsInput | string
     creatorId?: NullableStringFieldUpdateOperationsInput | string | null
+    currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    aiOpponent?: BoolFieldUpdateOperationsInput | boolean
+    aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
+    aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
+    aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
     players?: UserUncheckedUpdateManyWithoutMatchesNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutMatchNestedInput
   }
@@ -39821,6 +40049,12 @@ export namespace Prisma {
     createdAt?: Date | string
     status: string
     seed: string
+    currentTurnUserId?: string | null
+    lastMoveAt?: Date | string | null
+    aiOpponent?: boolean
+    aiDifficulty?: string | null
+    aiTeamSide?: string | null
+    aiUserId?: string | null
     creator?: UserCreateNestedOneWithoutCreatedMatchesInput
     players?: UserCreateNestedManyWithoutMatchesInput
     turns?: TurnCreateNestedManyWithoutMatchInput
@@ -39832,6 +40066,12 @@ export namespace Prisma {
     status: string
     seed: string
     creatorId?: string | null
+    currentTurnUserId?: string | null
+    lastMoveAt?: Date | string | null
+    aiOpponent?: boolean
+    aiDifficulty?: string | null
+    aiTeamSide?: string | null
+    aiUserId?: string | null
     players?: UserUncheckedCreateNestedManyWithoutMatchesInput
     turns?: TurnUncheckedCreateNestedManyWithoutMatchInput
   }
@@ -39975,6 +40215,12 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: StringFieldUpdateOperationsInput | string
     seed?: StringFieldUpdateOperationsInput | string
+    currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    aiOpponent?: BoolFieldUpdateOperationsInput | boolean
+    aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
+    aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
+    aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
     creator?: UserUpdateOneWithoutCreatedMatchesNestedInput
     players?: UserUpdateManyWithoutMatchesNestedInput
     turns?: TurnUpdateManyWithoutMatchNestedInput
@@ -39986,6 +40232,12 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     seed?: StringFieldUpdateOperationsInput | string
     creatorId?: NullableStringFieldUpdateOperationsInput | string | null
+    currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    aiOpponent?: BoolFieldUpdateOperationsInput | boolean
+    aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
+    aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
+    aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
     players?: UserUncheckedUpdateManyWithoutMatchesNestedInput
     turns?: TurnUncheckedUpdateManyWithoutMatchNestedInput
   }
@@ -43143,6 +43395,12 @@ export namespace Prisma {
     createdAt?: Date | string
     status: string
     seed: string
+    currentTurnUserId?: string | null
+    lastMoveAt?: Date | string | null
+    aiOpponent?: boolean
+    aiDifficulty?: string | null
+    aiTeamSide?: string | null
+    aiUserId?: string | null
   }
 
   export type TeamCreateManyOwnerInput = {
@@ -43253,6 +43511,12 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: StringFieldUpdateOperationsInput | string
     seed?: StringFieldUpdateOperationsInput | string
+    currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    aiOpponent?: BoolFieldUpdateOperationsInput | boolean
+    aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
+    aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
+    aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
     creator?: UserUpdateOneWithoutCreatedMatchesNestedInput
     turns?: TurnUpdateManyWithoutMatchNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutMatchNestedInput
@@ -43264,6 +43528,12 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     seed?: StringFieldUpdateOperationsInput | string
     creatorId?: NullableStringFieldUpdateOperationsInput | string | null
+    currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    aiOpponent?: BoolFieldUpdateOperationsInput | boolean
+    aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
+    aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
+    aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
     turns?: TurnUncheckedUpdateManyWithoutMatchNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutMatchNestedInput
   }
@@ -43274,6 +43544,12 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     seed?: StringFieldUpdateOperationsInput | string
     creatorId?: NullableStringFieldUpdateOperationsInput | string | null
+    currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    aiOpponent?: BoolFieldUpdateOperationsInput | boolean
+    aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
+    aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
+    aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type MatchUpdateWithoutCreatorInput = {
@@ -43281,6 +43557,12 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: StringFieldUpdateOperationsInput | string
     seed?: StringFieldUpdateOperationsInput | string
+    currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    aiOpponent?: BoolFieldUpdateOperationsInput | boolean
+    aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
+    aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
+    aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
     players?: UserUpdateManyWithoutMatchesNestedInput
     turns?: TurnUpdateManyWithoutMatchNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutMatchNestedInput
@@ -43291,6 +43573,12 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: StringFieldUpdateOperationsInput | string
     seed?: StringFieldUpdateOperationsInput | string
+    currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    aiOpponent?: BoolFieldUpdateOperationsInput | boolean
+    aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
+    aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
+    aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
     players?: UserUncheckedUpdateManyWithoutMatchesNestedInput
     turns?: TurnUncheckedUpdateManyWithoutMatchNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutMatchNestedInput
@@ -43301,6 +43589,12 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: StringFieldUpdateOperationsInput | string
     seed?: StringFieldUpdateOperationsInput | string
+    currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    aiOpponent?: BoolFieldUpdateOperationsInput | boolean
+    aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
+    aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
+    aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type TeamUpdateWithoutOwnerInput = {

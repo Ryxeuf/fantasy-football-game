@@ -172,7 +172,13 @@ exports.Prisma.MatchScalarFieldEnum = {
   createdAt: 'createdAt',
   status: 'status',
   seed: 'seed',
-  creatorId: 'creatorId'
+  creatorId: 'creatorId',
+  currentTurnUserId: 'currentTurnUserId',
+  lastMoveAt: 'lastMoveAt',
+  aiOpponent: 'aiOpponent',
+  aiDifficulty: 'aiDifficulty',
+  aiTeamSide: 'aiTeamSide',
+  aiUserId: 'aiUserId'
 };
 
 exports.Prisma.TurnScalarFieldEnum = {

@@ -400,6 +400,8 @@ export {
   isAIOpponentRosterAllowed,
   listAIOpponentAllowedRosters,
   pickAIOpponentRoster,
+  autoSetupAITeam,
+  buildAISetupPositions,
 } from './ai';
 export type {
   EvaluationBreakdown,
