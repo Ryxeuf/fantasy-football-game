@@ -17,6 +17,7 @@ import {
   type Move,
 } from "@bb/game-engine";
 import PixiBoardNative from "../../../../packages/ui/src/board/PixiBoard.native";
+import MatchPopups from "../../components/popups/MatchPopups";
 
 function normalizeState(state: any): GameState {
   if (!state) return state;
@@ -376,6 +377,12 @@ export default function PlayScreen() {
           Tap un joueur pour voir ses cases jouables. Double-tap pour annuler.
         </Text>
       </View>
+
+      <MatchPopups
+        state={state}
+        isMyTurn={isMyTurn}
+        submitMove={submitMove}
+      />
     </View>
   );
 }
