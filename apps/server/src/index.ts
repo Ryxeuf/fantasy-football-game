@@ -33,6 +33,7 @@ import { execSync } from "node:child_process";
 import { prisma } from "./prisma";
 import { authRateLimiter, apiRateLimiter } from "./middleware/rateLimiter";
 import { publicCache } from "./middleware/publicCache";
+import { requestTiming } from "./middleware/requestTiming";
 import { setupSocket } from "./socket";
 import { CORS_ORIGINS } from "./config";
 
@@ -66,6 +67,9 @@ app.use(cors({ origin: CORS_ORIGINS }));
 // gzip/deflate/br responses over ~1KB. Team payloads with 11-16 players
 // plus star players commonly exceed 50KB uncompressed.
 app.use(compression());
+// Warn on any request that took >=500ms. Set REQUEST_LOG=1 to see every
+// request (useful locally; stays off in prod to avoid log spam).
+app.use(requestTiming(500));
 app.use(bodyParser.json());
 
 // Rate limiting global sur toutes les routes API (100 req/min par IP)
