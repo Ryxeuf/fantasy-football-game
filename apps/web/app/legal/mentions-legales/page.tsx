@@ -63,20 +63,32 @@ export default function MentionsLegalesPage() {
             Conformément à l&apos;article 6-I-2 de la LCEN, les coordonnées de
             l&apos;hébergeur du site sont les suivantes :
           </p>
-          {/* TODO: Remplacer par les informations réelles de l'hébergeur */}
-          <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+          <div className="bg-gray-50 p-4 rounded-lg">
             <p className="mb-2">
-              <strong>Hébergeur :</strong> [Nom de l&apos;hébergeur]
+              <strong>Hébergeur :</strong> OVH SAS
             </p>
             <p className="mb-2">
-              <strong>Adresse :</strong> [Adresse du siège social]
+              <strong>Adresse :</strong> 2 rue Kellermann, 59100 Roubaix, France
             </p>
             <p className="mb-2">
-              <strong>Téléphone :</strong> [Numéro de téléphone]
+              <strong>Téléphone :</strong> +33 9 72 10 10 07
             </p>
-            <p className="text-sm text-yellow-700 mt-2 italic">
-              Information à compléter par l&apos;éditeur conformément à l&apos;article
-              6-I-2 de la LCEN.
+            <p className="mb-2">
+              <strong>Site web :</strong>{" "}
+              <a
+                href="https://www.ovhcloud.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-emerald-600 hover:text-emerald-700 hover:underline"
+              >
+                www.ovhcloud.com
+              </a>
+            </p>
+            <p className="mb-2">
+              <strong>RCS :</strong> Lille Métropole 424 761 419
+            </p>
+            <p className="mb-2">
+              <strong>Capital social :</strong> 10 174 560 €
             </p>
           </div>
         </section>
@@ -247,7 +259,7 @@ export default function MentionsLegalesPage() {
 
         <section className="mb-8">
           <p className="text-sm text-gray-500 italic">
-            Dernière mise à jour : 16 avril 2026
+            Dernière mise à jour : 21 avril 2026
           </p>
         </section>
       </div>
