@@ -18,8 +18,17 @@ router.get("/", async (req, res) => {
     );
     const offset = Math.max(0, parseInt(req.query.offset as string, 10) || 0);
 
+    // Exclut les coachs dont le profil n'a pas encore été validé (modération
+    // admin / pré-alpha gate) et les comptes systèmes IA (`role = "ai"`) qui
+    // ne doivent pas apparaître dans le classement humain.
+    const where = {
+      valid: true,
+      role: { not: "ai" },
+    } as const;
+
     const [users, total] = await Promise.all([
       prisma.user.findMany({
+        where,
         select: {
           id: true,
           coachName: true,
@@ -29,7 +38,7 @@ router.get("/", async (req, res) => {
         take: limit,
         skip: offset,
       }),
-      prisma.user.count(),
+      prisma.user.count({ where }),
     ]);
 
     const leaderboard = users.map((user: typeof users[number], index: number) => ({

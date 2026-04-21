@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { get, resetDb } from "../helpers/api";
+import { get, post, resetDb } from "../helpers/api";
 import { seedAndLogin } from "../helpers/factories";
 
 interface LeaderboardEntry {
@@ -89,5 +89,37 @@ describe("E2E API — /leaderboard", () => {
     if (res.data.length > 0) {
       expect(res.data[0].rank).toBe(2);
     }
+  });
+
+  it("exclut les profils non validés et les comptes IA du classement", async () => {
+    // Seed direct (sans login car `valid=false` bloque l'authentification).
+    await Promise.all([
+      post("/__test/seed-user", null, {
+        email: "valid@e2e.test",
+        password: "password",
+        name: "ValidCoach",
+      }),
+      post("/__test/seed-user", null, {
+        email: "pending@e2e.test",
+        password: "password",
+        name: "PendingCoach",
+        valid: false,
+      }),
+      post("/__test/seed-user", null, {
+        email: "ai@e2e.test",
+        password: "password",
+        name: "AiCoach",
+        role: "ai",
+      }),
+    ]);
+
+    const res = await get<LeaderboardResponse>("/leaderboard", null);
+    const names = res.data.map((e) => e.coachName);
+    expect(names).toContain("ValidCoach");
+    expect(names).not.toContain("PendingCoach");
+    expect(names).not.toContain("AiCoach");
+    // `meta.total` reflète aussi les filtres pour garder la pagination
+    // cohérente côté client.
+    expect(res.meta.total).toBe(names.length);
   });
 });

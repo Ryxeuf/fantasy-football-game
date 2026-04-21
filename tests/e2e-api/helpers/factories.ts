@@ -45,11 +45,12 @@ export async function seedAndLogin(
   email: string,
   password: string,
   name?: string,
+  options: { role?: string; valid?: boolean } = {},
 ): Promise<{ token: string; userId: string }> {
   const seeded = await post<{ id: string; email: string }>(
     "/__test/seed-user",
     null,
-    { email, password, name },
+    { email, password, name, ...options },
   );
   const login = await post<{ token: string; user: { id: string } }>(
     "/auth/login",
