@@ -52,6 +52,10 @@ export const createRoundSchema = z.object({
   endDate: z.coerce.date().optional().nullable(),
 });
 
+export const attachMatchSchema = z.object({
+  matchId: z.string().min(1, "matchId requis"),
+});
+
 export const listLeaguesQuerySchema = z.object({
   creatorId: z.string().optional(),
   status: z
@@ -68,3 +72,4 @@ export type CreateSeasonBody = z.infer<typeof createSeasonSchema>;
 export type JoinSeasonBody = z.infer<typeof joinSeasonSchema>;
 export type CreateRoundBody = z.infer<typeof createRoundSchema>;
 export type ListLeaguesQuery = z.infer<typeof listLeaguesQuerySchema>;
+export type AttachMatchBody = z.infer<typeof attachMatchSchema>;

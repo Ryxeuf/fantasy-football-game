@@ -30,11 +30,13 @@ import {
   joinSeasonSchema,
   createRoundSchema,
   listLeaguesQuerySchema,
+  attachMatchSchema,
   type CreateLeagueBody,
   type CreateSeasonBody,
   type JoinSeasonBody,
   type CreateRoundBody,
   type ListLeaguesQuery,
+  type AttachMatchBody,
 } from "../schemas/league.schemas";
 
 function requireUserId(req: AuthenticatedRequest, res: Response): string | null {
@@ -295,6 +297,69 @@ export async function handleCreateRound(
   }
 }
 
+/**
+ * L.7 — Rattache un match existant a un round de ligue.
+ * Reserve au createur de la ligue. Refuse si le match est deja termine
+ * ou deja rattache a une autre saison/round.
+ */
+export async function handleAttachMatch(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const { seasonId, roundId } = req.params;
+  const body = req.body as AttachMatchBody;
+
+  const season = await getSeasonById(seasonId);
+  if (!season) {
+    res.status(404).json({ error: "Saison introuvable" });
+    return;
+  }
+  if ((season as { league: { creatorId: string } }).league.creatorId !== userId) {
+    res
+      .status(403)
+      .json({ error: "Seul le createur de la ligue peut rattacher un match" });
+    return;
+  }
+
+  const round = await prisma.leagueRound.findUnique({ where: { id: roundId } });
+  if (!round || (round as { seasonId: string }).seasonId !== seasonId) {
+    res.status(404).json({ error: "Journee introuvable dans cette saison" });
+    return;
+  }
+
+  const match = await prisma.match.findUnique({
+    where: { id: body.matchId },
+    select: {
+      id: true,
+      status: true,
+      leagueSeasonId: true,
+      leagueScoredAt: true,
+    },
+  });
+  if (!match) {
+    res.status(404).json({ error: "Partie introuvable" });
+    return;
+  }
+  if (match.status === "ended" || match.leagueScoredAt) {
+    res.status(400).json({
+      error: "Impossible de rattacher un match deja termine ou deja comptabilise",
+    });
+    return;
+  }
+  if (match.leagueSeasonId && match.leagueSeasonId !== seasonId) {
+    res.status(409).json({ error: "Match deja rattache a une autre saison" });
+    return;
+  }
+
+  await prisma.match.update({
+    where: { id: match.id },
+    data: { leagueSeasonId: seasonId, leagueRoundId: roundId },
+  });
+  res.status(200).json({ matchId: match.id, seasonId, roundId });
+}
+
 export async function handleGetStandings(
   req: AuthenticatedRequest,
   res: Response,
@@ -336,6 +401,12 @@ router.post(
   authUser,
   validate(createRoundSchema),
   handleCreateRound,
+);
+router.post(
+  "/seasons/:seasonId/rounds/:roundId/matches",
+  authUser,
+  validate(attachMatchSchema),
+  handleAttachMatch,
 );
 router.get("/seasons/:seasonId/standings", authUser, handleGetStandings);
 router.get("/seasons/:seasonId", authUser, handleGetSeason);

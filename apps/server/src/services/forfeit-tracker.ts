@@ -1,6 +1,7 @@
 import { prisma } from "../prisma";
 import { broadcastMatchForfeited } from "./game-broadcast";
 import { updateEloAfterMatch } from "./elo-update";
+import { recordLeagueMatchResult } from "./league-match-result";
 
 /** Forfeit timeout: 2 minutes of disconnection. */
 export const FORFEIT_TIMEOUT_MS = 2 * 60 * 1000;
@@ -149,6 +150,21 @@ async function executeForfeit(matchId: string, forfeitingUserId: string): Promis
     await updateEloAfterMatch(prisma as any, userAId, userBId, scoreA, scoreB);
   } catch {
     // ELO update error — non-blocking
+  }
+
+  // L.7 — report forfeit to league standings (non-blocking).
+  // Scores are synthetic (1-0 for the winner), no casualties inflicted.
+  try {
+    await recordLeagueMatchResult({
+      matchId,
+      scoreA,
+      scoreB,
+      casualtiesA: 0,
+      casualtiesB: 0,
+    });
+  } catch {
+    // League integration error — non-blocking, the ladder can be
+    // reconciled later via a maintenance task.
   }
 
   // Broadcast forfeit to all connected players
