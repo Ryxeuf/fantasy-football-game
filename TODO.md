@@ -300,7 +300,7 @@
 | L.5 | Page liste des ligues | Frontend | [x] |
 | L.6 | Page detail ligue (calendrier, classement, matchs) | Frontend | [x] |
 | L.7 | Integration match online -> ligue (resultats auto) | Backend | [x] |
-| L.8 | ELO saisonnier avec reset et placements | Backend | [ ] |
+| L.8 | ELO saisonnier avec reset et placements | Backend | [x] |
 | L.9 | Ligue demarrage : "Open 5 Teams" limite aux 5 equipes prioritaires | Backend | [ ] |
 
 ### Sprint 18-19 — Parite Mobile (~10 jours, ex-Sprint 16-17)

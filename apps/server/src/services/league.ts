@@ -16,6 +16,7 @@
  */
 
 import { prisma } from "../prisma";
+import { deriveSeasonEloFromGlobal } from "./season-elo";
 
 export type LeagueStatus =
   | "draft"
@@ -59,7 +60,16 @@ export interface CreateSeasonInput {
 export interface AddParticipantInput {
   seasonId: string;
   teamId: string;
+  /**
+   * L.8 — valeur initiale explicite. Prioritaire sur le soft-reset.
+   */
   initialElo?: number;
+  /**
+   * L.8 — si true, seed `seasonElo` en appliquant un soft-reset depuis
+   * `User.eloRating` du proprietaire de l'equipe (compression vers 1000).
+   * Ignore si `initialElo` est fourni.
+   */
+  carryOverFromGlobal?: boolean;
 }
 
 export interface CreateRoundInput {
@@ -171,7 +181,10 @@ export async function addParticipant(input: AddParticipantInput) {
     );
   }
 
-  const team = await prisma.team.findUnique({ where: { id: input.teamId } });
+  const team = await prisma.team.findUnique({
+    where: { id: input.teamId },
+    include: { owner: { select: { eloRating: true } } },
+  });
   if (!team) {
     throw new Error(`Equipe introuvable: ${input.teamId}`);
   }
@@ -195,11 +208,26 @@ export async function addParticipant(input: AddParticipantInput) {
     );
   }
 
+  // L.8 — determination du seasonElo de depart. Priorite :
+  //   1. initialElo (valeur explicite d'admin/test)
+  //   2. soft-reset depuis l'ELO global si demande
+  //   3. DEFAULT_INITIAL_ELO (1000) — reset dur, identique a aujourd'hui.
+  let seasonElo = DEFAULT_INITIAL_ELO;
+  if (typeof input.initialElo === "number") {
+    seasonElo = input.initialElo;
+  } else if (input.carryOverFromGlobal) {
+    const ownerElo = (team as { owner?: { eloRating?: number } | null }).owner
+      ?.eloRating;
+    if (typeof ownerElo === "number") {
+      seasonElo = deriveSeasonEloFromGlobal(ownerElo);
+    }
+  }
+
   return prisma.leagueParticipant.create({
     data: {
       seasonId: input.seasonId,
       teamId: input.teamId,
-      seasonElo: input.initialElo ?? DEFAULT_INITIAL_ELO,
+      seasonElo,
       status: "active",
     },
   });

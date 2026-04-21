@@ -305,6 +305,90 @@ describe("Rule: League service", () => {
       );
       expect(mockPrisma.leagueParticipant.create).not.toHaveBeenCalled();
     });
+
+    it("L.8 — soft-resets seasonElo from owner's global eloRating when carryOverFromGlobal=true", async () => {
+      mockPrisma.leagueSeason.findUnique.mockResolvedValue({
+        id: seasonId,
+        status: "draft",
+        league: { maxParticipants: 16 },
+      });
+      mockPrisma.team.findUnique.mockResolvedValue({
+        id: teamId,
+        owner: { eloRating: 1400 },
+      });
+      mockPrisma.leagueParticipant.findUnique.mockResolvedValue(null);
+      mockPrisma.leagueParticipant.count.mockResolvedValue(0);
+      mockPrisma.leagueParticipant.create.mockImplementation(
+        async (args: { data: { seasonElo: number } }) => ({
+          id: "participant-1",
+          ...args.data,
+        }),
+      );
+
+      await addParticipant({ seasonId, teamId, carryOverFromGlobal: true });
+
+      // 1000 + (1400-1000)*0.25 = 1100
+      expect(mockPrisma.leagueParticipant.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ seasonElo: 1100 }),
+      });
+    });
+
+    it("L.8 — defaults to 1000 when carryOverFromGlobal=true but owner has no eloRating", async () => {
+      mockPrisma.leagueSeason.findUnique.mockResolvedValue({
+        id: seasonId,
+        status: "draft",
+        league: { maxParticipants: 16 },
+      });
+      mockPrisma.team.findUnique.mockResolvedValue({
+        id: teamId,
+        owner: null,
+      });
+      mockPrisma.leagueParticipant.findUnique.mockResolvedValue(null);
+      mockPrisma.leagueParticipant.count.mockResolvedValue(0);
+      mockPrisma.leagueParticipant.create.mockImplementation(
+        async (args: { data: { seasonElo: number } }) => ({
+          id: "participant-1",
+          ...args.data,
+        }),
+      );
+
+      await addParticipant({ seasonId, teamId, carryOverFromGlobal: true });
+
+      expect(mockPrisma.leagueParticipant.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ seasonElo: 1000 }),
+      });
+    });
+
+    it("L.8 — explicit initialElo takes precedence over carryOverFromGlobal", async () => {
+      mockPrisma.leagueSeason.findUnique.mockResolvedValue({
+        id: seasonId,
+        status: "draft",
+        league: { maxParticipants: 16 },
+      });
+      mockPrisma.team.findUnique.mockResolvedValue({
+        id: teamId,
+        owner: { eloRating: 1400 },
+      });
+      mockPrisma.leagueParticipant.findUnique.mockResolvedValue(null);
+      mockPrisma.leagueParticipant.count.mockResolvedValue(0);
+      mockPrisma.leagueParticipant.create.mockImplementation(
+        async (args: { data: { seasonElo: number } }) => ({
+          id: "participant-1",
+          ...args.data,
+        }),
+      );
+
+      await addParticipant({
+        seasonId,
+        teamId,
+        initialElo: 1234,
+        carryOverFromGlobal: true,
+      });
+
+      expect(mockPrisma.leagueParticipant.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ seasonElo: 1234 }),
+      });
+    });
   });
 
   describe("createRound", () => {

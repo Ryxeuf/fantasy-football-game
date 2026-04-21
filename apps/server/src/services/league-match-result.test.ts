@@ -140,6 +140,10 @@ describe("Rule: recordLeagueMatchResult (L.7)", () => {
       async (args: { where: { seasonId_teamId: { teamId: string } } }) => ({
         id: `p-${args.where.seasonId_teamId.teamId}`,
         teamId: args.where.seasonId_teamId.teamId,
+        seasonElo: 1000,
+        wins: 0,
+        draws: 0,
+        losses: 0,
       }),
     );
     mockPrisma.leagueRound.findMany.mockResolvedValue([]); // no other rounds
@@ -196,6 +200,10 @@ describe("Rule: recordLeagueMatchResult (L.7)", () => {
       async (args: { where: { seasonId_teamId: { teamId: string } } }) => ({
         id: `p-${args.where.seasonId_teamId.teamId}`,
         teamId: args.where.seasonId_teamId.teamId,
+        seasonElo: 1000,
+        wins: 0,
+        draws: 0,
+        losses: 0,
       }),
     );
     mockPrisma.leagueRound.findMany.mockResolvedValue([]);
@@ -225,6 +233,10 @@ describe("Rule: recordLeagueMatchResult (L.7)", () => {
       async (args: { where: { seasonId_teamId: { teamId: string } } }) => ({
         id: `p-${args.where.seasonId_teamId.teamId}`,
         teamId: args.where.seasonId_teamId.teamId,
+        seasonElo: 1000,
+        wins: 0,
+        draws: 0,
+        losses: 0,
       }),
     );
     mockPrisma.match.count.mockResolvedValue(0); // no unfinished matches in round
@@ -259,6 +271,10 @@ describe("Rule: recordLeagueMatchResult (L.7)", () => {
     mockPrisma.leagueParticipant.findUnique.mockImplementation(
       async (args: { where: { seasonId_teamId: { teamId: string } } }) => ({
         id: `p-${args.where.seasonId_teamId.teamId}`,
+        seasonElo: 1000,
+        wins: 0,
+        draws: 0,
+        losses: 0,
       }),
     );
     mockPrisma.match.count.mockResolvedValue(2); // 2 matches still unfinished
@@ -283,6 +299,10 @@ describe("Rule: recordLeagueMatchResult (L.7)", () => {
     ]);
     mockPrisma.leagueParticipant.findUnique.mockResolvedValueOnce({
       id: "p-team-A",
+      seasonElo: 1000,
+      wins: 0,
+      draws: 0,
+      losses: 0,
     });
     mockPrisma.leagueParticipant.findUnique.mockResolvedValueOnce(null);
 
@@ -296,5 +316,147 @@ describe("Rule: recordLeagueMatchResult (L.7)", () => {
 
     expect(result).toEqual({ skipped: true, reason: "participant-missing" });
     expect(mockPrisma.leagueParticipant.update).not.toHaveBeenCalled();
+  });
+
+  describe("L.8 — ELO saisonnier", () => {
+    it("applies placement K-factor (48) on a participant's first match", async () => {
+      mockPrisma.match.findUnique.mockResolvedValue(baseMatch());
+      mockPrisma.teamSelection.findMany.mockResolvedValue([
+        { teamId: "team-A", userId: "user-A" },
+        { teamId: "team-B", userId: "user-B" },
+      ]);
+      mockPrisma.leagueParticipant.findUnique.mockImplementation(
+        async (args: { where: { seasonId_teamId: { teamId: string } } }) => ({
+          id: `p-${args.where.seasonId_teamId.teamId}`,
+          teamId: args.where.seasonId_teamId.teamId,
+          seasonElo: 1000,
+          wins: 0,
+          draws: 0,
+          losses: 0,
+        }),
+      );
+      mockPrisma.leagueRound.findMany.mockResolvedValue([]);
+
+      const result = await recordLeagueMatchResult({
+        matchId: "match-1",
+        scoreA: 2,
+        scoreB: 0,
+        casualtiesA: 0,
+        casualtiesB: 0,
+      });
+
+      if (!("recorded" in result)) throw new Error("expected recorded");
+      // Both in placement (K=48) at 1000 vs 1000 → expected 0.5; actualA=1
+      // delta = round(48 * 0.5) = 24
+      expect(result.seasonElo.deltaA).toBe(24);
+      expect(result.seasonElo.deltaB).toBe(-24);
+      expect(result.seasonElo.newRatingA).toBe(1024);
+      expect(result.seasonElo.newRatingB).toBe(976);
+      expect(result.seasonElo.placementA).toBe(true);
+      expect(result.seasonElo.placementB).toBe(true);
+    });
+
+    it("applies regular K-factor (32) once participant has 5+ games played", async () => {
+      mockPrisma.match.findUnique.mockResolvedValue(baseMatch());
+      mockPrisma.teamSelection.findMany.mockResolvedValue([
+        { teamId: "team-A", userId: "user-A" },
+        { teamId: "team-B", userId: "user-B" },
+      ]);
+      mockPrisma.leagueParticipant.findUnique.mockImplementation(
+        async (args: { where: { seasonId_teamId: { teamId: string } } }) => ({
+          id: `p-${args.where.seasonId_teamId.teamId}`,
+          teamId: args.where.seasonId_teamId.teamId,
+          seasonElo: 1000,
+          wins: 3,
+          draws: 1,
+          losses: 1,
+        }),
+      );
+      mockPrisma.leagueRound.findMany.mockResolvedValue([]);
+
+      const result = await recordLeagueMatchResult({
+        matchId: "match-1",
+        scoreA: 2,
+        scoreB: 0,
+        casualtiesA: 0,
+        casualtiesB: 0,
+      });
+
+      if (!("recorded" in result)) throw new Error("expected recorded");
+      expect(result.seasonElo.deltaA).toBe(16);
+      expect(result.seasonElo.deltaB).toBe(-16);
+      expect(result.seasonElo.placementA).toBe(false);
+      expect(result.seasonElo.placementB).toBe(false);
+    });
+
+    it("persists new seasonElo on both participants in the transaction", async () => {
+      mockPrisma.match.findUnique.mockResolvedValue(baseMatch());
+      mockPrisma.teamSelection.findMany.mockResolvedValue([
+        { teamId: "team-A", userId: "user-A" },
+        { teamId: "team-B", userId: "user-B" },
+      ]);
+      mockPrisma.leagueParticipant.findUnique.mockImplementation(
+        async (args: { where: { seasonId_teamId: { teamId: string } } }) => ({
+          id: `p-${args.where.seasonId_teamId.teamId}`,
+          teamId: args.where.seasonId_teamId.teamId,
+          seasonElo: 1100,
+          wins: 10,
+          draws: 0,
+          losses: 0,
+        }),
+      );
+      mockPrisma.leagueRound.findMany.mockResolvedValue([]);
+
+      await recordLeagueMatchResult({
+        matchId: "match-1",
+        scoreA: 3,
+        scoreB: 1,
+        casualtiesA: 0,
+        casualtiesB: 0,
+      });
+
+      const updates = mockPrisma.leagueParticipant.update.mock.calls.map(
+        (c: unknown[]) => c[0],
+      ) as Array<{
+        where: { id: string };
+        data: Record<string, unknown>;
+      }>;
+      const aUpdate = updates.find((u) => u.where.id === "p-team-A");
+      const bUpdate = updates.find((u) => u.where.id === "p-team-B");
+      // Regular K=32, both at 1100, A wins → deltaA=16
+      expect(aUpdate?.data.seasonElo).toBe(1116);
+      expect(bUpdate?.data.seasonElo).toBe(1084);
+    });
+
+    it("never writes a seasonElo below MIN_SEASON_ELO (100)", async () => {
+      mockPrisma.match.findUnique.mockResolvedValue(baseMatch());
+      mockPrisma.teamSelection.findMany.mockResolvedValue([
+        { teamId: "team-A", userId: "user-A" },
+        { teamId: "team-B", userId: "user-B" },
+      ]);
+      mockPrisma.leagueParticipant.findUnique.mockImplementation(
+        async (args: { where: { seasonId_teamId: { teamId: string } } }) => ({
+          id: `p-${args.where.seasonId_teamId.teamId}`,
+          teamId: args.where.seasonId_teamId.teamId,
+          // Team B is already at the floor and about to take a hit.
+          seasonElo: args.where.seasonId_teamId.teamId === "team-B" ? 100 : 2000,
+          wins: 10,
+          draws: 0,
+          losses: 0,
+        }),
+      );
+      mockPrisma.leagueRound.findMany.mockResolvedValue([]);
+
+      const result = await recordLeagueMatchResult({
+        matchId: "match-1",
+        scoreA: 5,
+        scoreB: 0,
+        casualtiesA: 0,
+        casualtiesB: 0,
+      });
+
+      if (!("recorded" in result)) throw new Error("expected recorded");
+      expect(result.seasonElo.newRatingB).toBeGreaterThanOrEqual(100);
+    });
   });
 });
