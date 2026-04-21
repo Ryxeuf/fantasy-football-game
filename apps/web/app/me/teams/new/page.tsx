@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { API_BASE } from "../../../auth-client";
 import StarPlayerSelector from "../../../components/StarPlayerSelector";
 import SkillTooltip from "../components/SkillTooltip";
@@ -28,6 +30,7 @@ type Roster = {
 
 export default function NewTeamBuilder() {
   const { t, language } = useLanguage();
+  const router = useRouter();
   const [ruleset, setRuleset] = useState<Ruleset>(() => {
     if (typeof window !== "undefined") {
       const urlParams = new URLSearchParams(window.location.search);
@@ -67,6 +70,7 @@ export default function NewTeamBuilder() {
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [selectedStarPlayers, setSelectedStarPlayers] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const [rosters, setRosters] = useState<Roster[]>([]);
   const [loadingRosters, setLoadingRosters] = useState(true);
 
@@ -177,8 +181,10 @@ export default function NewTeamBuilder() {
   }
 
   async function submit() {
+    if (saving) return;
+    setSaving(true);
+    setError(null);
     try {
-      setError(null);
       const token = localStorage.getItem("auth_token");
       const res = await fetch(`${API_BASE}/team/build`, {
         method: "POST",
@@ -205,9 +211,13 @@ export default function NewTeamBuilder() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error || `${t.teams.error} ${res.status}`);
-      window.location.href = `/me/teams/${json.team.id}`;
+      toast.success(t.teams.teamCreatedToast);
+      router.push(`/me/teams/${json.team.id}`);
     } catch (e: any) {
-      setError(e.message || t.teams.error);
+      const message = e?.message || t.teams.error;
+      setError(message);
+      toast.error(message);
+      setSaving(false);
     }
   }
 
@@ -263,11 +273,18 @@ export default function NewTeamBuilder() {
             </div>
             <button
               data-testid="create-team-submit"
-              className="shrink-0 min-h-[44px] px-4 md:px-6 py-2 bg-emerald-600 text-white rounded-lg font-semibold text-sm md:text-base disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-emerald-700 active:bg-emerald-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+              className="shrink-0 min-h-[44px] px-4 md:px-6 py-2 bg-emerald-600 text-white rounded-lg font-semibold text-sm md:text-base disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-emerald-700 active:bg-emerald-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 inline-flex items-center justify-center gap-2"
               onClick={submit}
-              disabled={!isTeamValid}
+              disabled={!isTeamValid || saving}
+              aria-busy={saving}
             >
-              {t.teams.createTeamButton}
+              {saving && (
+                <span
+                  aria-hidden="true"
+                  className="h-4 w-4 rounded-full border-2 border-white/40 border-t-white animate-spin"
+                />
+              )}
+              {saving ? t.teams.creatingTeamButton : t.teams.createTeamButton}
             </button>
           </div>
 

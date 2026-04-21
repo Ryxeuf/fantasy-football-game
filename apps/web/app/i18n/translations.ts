@@ -231,6 +231,10 @@ export const translations = {
       maxPlayersExceeded: "Maximum 16 joueurs autorisés (actuellement {count})",
       validTeam: "Équipe valide ({players} joueurs + {stars} Star Players)",
       createTeamButton: "Créer l'équipe",
+      creatingTeamButton: "Création en cours…",
+      teamCreatedToast: "Équipe créée avec succès",
+      savingTeamButton: "Enregistrement…",
+      teamSavedToast: "Équipe enregistrée",
       kpo: "K po",
       // Mobile / sticky summary
       playersShort: "Joueurs",
@@ -723,6 +727,10 @@ export const translations = {
       maxPlayersExceeded: "Maximum 16 players allowed (currently {count})",
       validTeam: "Valid team ({players} players + {stars} Star Players)",
       createTeamButton: "Create team",
+      creatingTeamButton: "Creating…",
+      teamCreatedToast: "Team created successfully",
+      savingTeamButton: "Saving…",
+      teamSavedToast: "Team saved",
       kpo: "K po",
       // Mobile / sticky summary
       playersShort: "Players",
