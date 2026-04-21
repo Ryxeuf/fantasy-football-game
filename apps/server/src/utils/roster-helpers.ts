@@ -5,6 +5,44 @@
 import { DEFAULT_RULESET, type Ruleset } from "@bb/game-engine";
 import { prisma } from "../prisma";
 
+// In-process cache. Roster data is effectively static between seeds, and
+// this helper is called many times per team creation/display cycle. A short
+// TTL means admin-driven roster edits propagate within minutes without
+// requiring explicit invalidation.
+const ROSTER_TTL_MS = 5 * 60 * 1000;
+
+interface CacheEntry<T> {
+  value: T;
+  expiresAt: number;
+}
+
+const singleRosterCache = new Map<string, CacheEntry<unknown>>();
+const allRostersCache = new Map<string, CacheEntry<unknown>>();
+
+function cacheGet<T>(store: Map<string, CacheEntry<unknown>>, key: string): T | undefined {
+  const entry = store.get(key);
+  if (!entry) return undefined;
+  if (entry.expiresAt < Date.now()) {
+    store.delete(key);
+    return undefined;
+  }
+  return entry.value as T;
+}
+
+function cacheSet<T>(
+  store: Map<string, CacheEntry<unknown>>,
+  key: string,
+  value: T,
+) {
+  store.set(key, { value, expiresAt: Date.now() + ROSTER_TTL_MS });
+}
+
+/** Invalidate every cached roster entry — call after admin-driven reseeds. */
+export function invalidateRosterCache(): void {
+  singleRosterCache.clear();
+  allRostersCache.clear();
+}
+
 /**
  * Récupère un roster complet depuis la base de données avec ses positions et leurs compétences
  * @param slug - Le slug du roster
@@ -16,6 +54,11 @@ export async function getRosterFromDb(
   lang: string = "fr",
   ruleset: Ruleset = DEFAULT_RULESET,
 ) {
+  const cacheKey = `${slug}::${lang}::${ruleset}`;
+  const cached = cacheGet<unknown>(singleRosterCache, cacheKey);
+  if (cached !== undefined) {
+    return cached;
+  }
   const roster = await prisma.roster.findFirst({
     where: { slug, ruleset },
     include: {
@@ -40,7 +83,7 @@ export async function getRosterFromDb(
   const isEnglish = lang === "en";
 
   // Transformer les données pour correspondre au format attendu (compatible avec TEAM_ROSTERS)
-  return {
+  const result = {
     name: isEnglish ? roster.nameEn : roster.name,
     budget: roster.budget,
     tier: roster.tier,
@@ -61,6 +104,9 @@ export async function getRosterFromDb(
         .join(","),
     })),
   };
+
+  cacheSet(singleRosterCache, cacheKey, result);
+  return result;
 }
 
 /**
@@ -72,6 +118,12 @@ export async function getAllRostersFromDb(
   lang: string = "fr",
   ruleset: Ruleset = DEFAULT_RULESET,
 ) {
+  const cacheKey = `${lang}::${ruleset}`;
+  const cached = cacheGet<Record<string, unknown>>(allRostersCache, cacheKey);
+  if (cached !== undefined) {
+    return cached;
+  }
+
   const rosters = await prisma.roster.findMany({
     where: { ruleset },
     include: {
@@ -114,6 +166,7 @@ export async function getAllRostersFromDb(
       })),
     };
   }
+  cacheSet(allRostersCache, cacheKey, result);
   return result;
 }
 
