@@ -47,6 +47,7 @@ import {
   handleCreateLeague,
   handleListLeagues,
   handleGetLeague,
+  handleGetSeason,
   handleCreateSeason,
   handleJoinSeason,
   handleCreateRound,
@@ -207,6 +208,82 @@ describe("Route: GET /leagues/:id", () => {
       league: expect.objectContaining({
         id: "league-1",
         allowedRosters: ["skaven", "dwarf"],
+      }),
+    });
+  });
+});
+
+describe("Route: GET /leagues/seasons/:seasonId (season detail)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("returns 404 when the season does not exist", async () => {
+    mockService.getSeasonById.mockResolvedValue(null);
+    const req = createReq({ params: { seasonId: "nope" } });
+    const res = createRes();
+    await handleGetSeason(req, res);
+    expect(res.statusCode).toBe(404);
+  });
+
+  it("returns rounds, participants and allowedRosters parsed", async () => {
+    mockService.getSeasonById.mockResolvedValue({
+      id: "season-1",
+      seasonNumber: 1,
+      name: "Saison 1",
+      status: "draft",
+      startDate: null,
+      endDate: null,
+      leagueId: "league-1",
+      league: {
+        id: "league-1",
+        name: "Open 5",
+        creatorId: "user-1",
+        allowedRosters: JSON.stringify(["skaven", "dwarf"]),
+      },
+      rounds: [
+        {
+          id: "round-1",
+          roundNumber: 1,
+          name: "J1",
+          status: "pending",
+          startDate: null,
+          endDate: null,
+        },
+      ],
+      participants: [
+        {
+          id: "participant-1",
+          seasonElo: 1000,
+          status: "active",
+          wins: 1,
+          draws: 0,
+          losses: 0,
+          points: 3,
+          touchdownsFor: 2,
+          touchdownsAgainst: 1,
+          casualtiesFor: 0,
+          casualtiesAgainst: 0,
+          teamId: "team-1",
+          team: {
+            id: "team-1",
+            name: "Team A",
+            roster: "skaven",
+            owner: { id: "user-1", coachName: "Coach Ryxeuf" },
+          },
+        },
+      ],
+    });
+    const req = createReq({ params: { seasonId: "season-1" } });
+    const res = createRes();
+    await handleGetSeason(req, res);
+    expect(res.statusCode).toBe(200);
+    expect(res.payload).toMatchObject({
+      season: expect.objectContaining({
+        id: "season-1",
+        rounds: expect.any(Array),
+        participants: expect.any(Array),
+        league: expect.objectContaining({
+          allowedRosters: ["skaven", "dwarf"],
+        }),
       }),
     });
   });
