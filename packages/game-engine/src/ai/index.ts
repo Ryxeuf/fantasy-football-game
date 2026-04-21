@@ -37,3 +37,7 @@ export type {
 
 // Auto-placement des joueurs IA pendant la phase setup (fix AI stuck in placement)
 export { autoSetupAITeam, buildAISetupPositions } from './setup-placement';
+
+// Auto-placement du ballon de kickoff quand l'IA est l'equipe qui frappe
+// (fix "match bloque en kickoff" quand l'IA kick)
+export { pickAIKickoffBallPosition } from './kickoff-placement';

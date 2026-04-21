@@ -20,6 +20,7 @@ import {
 } from "@bb/game-engine";
 import { prisma } from "../prisma";
 import { broadcastGameState } from "./game-broadcast";
+import { runAIKickoffIfNeeded } from "./ai-kickoff";
 
 type PrismaLike = {
   match: {
@@ -115,6 +116,19 @@ export async function runAISetupIfNeeded(
 
   if (!ran) {
     return { ran: false, reason: "not-ai-turn", gameState: state };
+  }
+
+  // Si la sequence de kickoff commence et que l'IA est l'equipe qui frappe,
+  // placer immediatement le ballon pour eviter un blocage cote client.
+  if (
+    state.preMatch?.phase === "kickoff-sequence" &&
+    state.preMatch?.kickoffStep === "place-ball" &&
+    state.preMatch?.kickingTeam === aiTeam
+  ) {
+    const kickoffReport = await runAIKickoffIfNeeded(matchId, db);
+    if (kickoffReport.ran && kickoffReport.gameState) {
+      state = kickoffReport.gameState;
+    }
   }
 
   return { ran: true, reason: "placed", gameState: state };

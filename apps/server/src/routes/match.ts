@@ -20,6 +20,7 @@ import {
 import { createOnlinePracticeMatch } from "../services/practice-match";
 import { scheduleAILoop } from "../services/ai-loop";
 import { runAISetupIfNeeded } from "../services/ai-setup";
+import { runAIKickoffIfNeeded } from "../services/ai-kickoff";
 import type { AIDifficulty } from "@bb/game-engine";
 import { getSpectatorCount } from "../game-spectator";
 import { MATCH_SECRET } from "../config";
@@ -931,6 +932,20 @@ router.post(
           gameState.currentPlayer === postMatch.aiTeamSide
         ) {
           scheduleAILoop(matchId);
+        }
+        // Si l'IA est l'equipe qui frappe, placer immediatement le ballon pour
+        // eviter que le match reste bloque sur l'etape `place-ball` du kickoff.
+        if (
+          postMatch?.aiOpponent &&
+          postMatch.aiTeamSide &&
+          gameState.preMatch?.phase === 'kickoff-sequence' &&
+          gameState.preMatch?.kickoffStep === 'place-ball' &&
+          gameState.preMatch?.kickingTeam === postMatch.aiTeamSide
+        ) {
+          const kickoffReport = await runAIKickoffIfNeeded(matchId, prisma as any);
+          if (kickoffReport.ran && kickoffReport.gameState) {
+            gameState = kickoffReport.gameState;
+          }
         }
       }
 
