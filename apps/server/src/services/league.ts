@@ -170,7 +170,9 @@ export async function createSeason(input: CreateSeasonInput) {
 export async function addParticipant(input: AddParticipantInput) {
   const season = await prisma.leagueSeason.findUnique({
     where: { id: input.seasonId },
-    include: { league: { select: { maxParticipants: true } } },
+    include: {
+      league: { select: { maxParticipants: true, allowedRosters: true } },
+    },
   });
   if (!season) {
     throw new Error(`Saison introuvable: ${input.seasonId}`);
@@ -187,6 +189,21 @@ export async function addParticipant(input: AddParticipantInput) {
   });
   if (!team) {
     throw new Error(`Equipe introuvable: ${input.teamId}`);
+  }
+
+  // L.9 — invariant metier de la ligue "Open 5 Teams" : une saison peut
+  // restreindre les rosters autorises. On enforce la restriction ici
+  // (source de verite) pour que les seeders, scripts admin et le handler
+  // HTTP beneficient tous de la meme garantie.
+  const allowed = parseAllowedRosters(
+    (season as { league: { allowedRosters: string | null } }).league
+      .allowedRosters ?? null,
+  );
+  const teamRoster = (team as { roster?: string }).roster;
+  if (allowed && teamRoster && !allowed.includes(teamRoster)) {
+    throw new Error(
+      `Roster ${teamRoster} non autorise sur cette saison (autorises: ${allowed.join(", ")})`,
+    );
   }
 
   const existing = await prisma.leagueParticipant.findUnique({

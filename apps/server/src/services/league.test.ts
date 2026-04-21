@@ -389,6 +389,118 @@ describe("Rule: League service", () => {
         data: expect.objectContaining({ seasonElo: 1234 }),
       });
     });
+
+    it("L.9 — rejects a team whose roster is not in the league allowedRosters", async () => {
+      // Ligue "Open 5 Teams" : restreinte aux 5 rosters prioritaires.
+      // Toute equipe d'un autre roster doit etre refusee cote service,
+      // meme si un caller bypasse les verifications HTTP.
+      mockPrisma.leagueSeason.findUnique.mockResolvedValue({
+        id: seasonId,
+        status: "draft",
+        league: {
+          maxParticipants: 16,
+          allowedRosters: JSON.stringify([
+            "skaven",
+            "gnome",
+            "lizardmen",
+            "dwarf",
+            "imperial_nobility",
+          ]),
+        },
+      });
+      mockPrisma.team.findUnique.mockResolvedValue({
+        id: teamId,
+        roster: "chaos_chosen",
+      });
+
+      await expect(addParticipant({ seasonId, teamId })).rejects.toThrow(
+        /roster|autorise/i,
+      );
+      expect(mockPrisma.leagueParticipant.findUnique).not.toHaveBeenCalled();
+      expect(mockPrisma.leagueParticipant.create).not.toHaveBeenCalled();
+    });
+
+    it("L.9 — accepts a team whose roster is part of the allowedRosters", async () => {
+      mockPrisma.leagueSeason.findUnique.mockResolvedValue({
+        id: seasonId,
+        status: "draft",
+        league: {
+          maxParticipants: 16,
+          allowedRosters: JSON.stringify([
+            "skaven",
+            "gnome",
+            "lizardmen",
+            "dwarf",
+            "imperial_nobility",
+          ]),
+        },
+      });
+      mockPrisma.team.findUnique.mockResolvedValue({
+        id: teamId,
+        roster: "skaven",
+      });
+      mockPrisma.leagueParticipant.findUnique.mockResolvedValue(null);
+      mockPrisma.leagueParticipant.count.mockResolvedValue(0);
+      mockPrisma.leagueParticipant.create.mockImplementation(
+        async (args: { data: { seasonId: string; teamId: string } }) => ({
+          id: "participant-skaven",
+          ...args.data,
+        }),
+      );
+
+      const result = await addParticipant({ seasonId, teamId });
+
+      expect(result).toMatchObject({ teamId });
+      expect(mockPrisma.leagueParticipant.create).toHaveBeenCalledTimes(1);
+    });
+
+    it("L.9 — accepts any roster when allowedRosters is null (open league)", async () => {
+      mockPrisma.leagueSeason.findUnique.mockResolvedValue({
+        id: seasonId,
+        status: "draft",
+        league: { maxParticipants: 16, allowedRosters: null },
+      });
+      mockPrisma.team.findUnique.mockResolvedValue({
+        id: teamId,
+        roster: "chaos_chosen",
+      });
+      mockPrisma.leagueParticipant.findUnique.mockResolvedValue(null);
+      mockPrisma.leagueParticipant.count.mockResolvedValue(0);
+      mockPrisma.leagueParticipant.create.mockImplementation(
+        async (args: { data: { seasonId: string; teamId: string } }) => ({
+          id: "participant-chaos",
+          ...args.data,
+        }),
+      );
+
+      await addParticipant({ seasonId, teamId });
+
+      expect(mockPrisma.leagueParticipant.create).toHaveBeenCalledTimes(1);
+    });
+
+    it("L.9 — falls back to open league when allowedRosters JSON is malformed", async () => {
+      mockPrisma.leagueSeason.findUnique.mockResolvedValue({
+        id: seasonId,
+        status: "draft",
+        league: { maxParticipants: 16, allowedRosters: "not-json" },
+      });
+      mockPrisma.team.findUnique.mockResolvedValue({
+        id: teamId,
+        roster: "chaos_chosen",
+      });
+      mockPrisma.leagueParticipant.findUnique.mockResolvedValue(null);
+      mockPrisma.leagueParticipant.count.mockResolvedValue(0);
+      mockPrisma.leagueParticipant.create.mockImplementation(
+        async (args: { data: { seasonId: string; teamId: string } }) => ({
+          id: "participant-fallback",
+          ...args.data,
+        }),
+      );
+
+      await addParticipant({ seasonId, teamId });
+
+      expect(mockPrisma.leagueParticipant.create).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe("createRound", () => {

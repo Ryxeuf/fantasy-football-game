@@ -364,7 +364,10 @@ describe("Route: POST /leagues/seasons/:seasonId/join", () => {
     expect(mockService.addParticipant).not.toHaveBeenCalled();
   });
 
-  it("rejects teams whose roster is not allowed", async () => {
+  it("rejects teams whose roster is not allowed (domain error from service)", async () => {
+    // L.9 — la verification allowedRosters est deleguee au service.
+    // Le handler se contente de convertir l'erreur metier en reponse 400
+    // via `domainError`.
     mockPrisma.team.findUnique.mockResolvedValue({
       id: "team-1",
       ownerId: "user-1",
@@ -374,6 +377,9 @@ describe("Route: POST /leagues/seasons/:seasonId/join", () => {
       id: "season-1",
       league: { allowedRosters: JSON.stringify(["skaven", "dwarf"]) },
     });
+    mockService.addParticipant.mockRejectedValue(
+      new Error("Roster chaos non autorise sur cette saison (autorises: skaven, dwarf)"),
+    );
     const req = createReq({
       params: { seasonId: "season-1" },
       body: { teamId: "team-1" },

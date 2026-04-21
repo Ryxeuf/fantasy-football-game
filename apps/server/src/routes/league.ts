@@ -214,17 +214,8 @@ export async function handleJoinSeason(
     return;
   }
 
-  const allowed = parseAllowedRosters(
-    (season as { league: { allowedRosters: string | null } }).league
-      .allowedRosters,
-  );
-  if (allowed && !allowed.includes((team as { roster: string }).roster)) {
-    res.status(400).json({
-      error: `Roster ${(team as { roster: string }).roster} non autorise (autorises: ${allowed.join(", ")})`,
-    });
-    return;
-  }
-
+  // L.9 — la restriction allowedRosters est enforcee dans `addParticipant`
+  // (source de verite metier). Le domainError ci-dessous convertit en 400.
   try {
     const participant = await addParticipant({ seasonId, teamId: body.teamId });
     res.status(201).json(participant);
