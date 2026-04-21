@@ -87,7 +87,22 @@ model Match {
   aiTeamSide   String? // 'A' | 'B' — side controlled by the AI
   aiUserId     String? // User id of the system AI account
 
+  // L.7 — Rattachement a une saison/journee de ligue. Optionnel : un match
+  // peut etre indepedant (amical, matchmaking classique) ou rattache a une
+  // ligue. Quand les deux sont renseignes, la fin du match met a jour les
+  // compteurs materialises du participant (wins/losses/points/td/cas).
+  leagueSeasonId   String?
+  leagueSeason     LeagueSeason? @relation("LeagueSeasonMatches", fields: [leagueSeasonId], references: [id], onDelete: SetNull)
+  leagueRoundId    String?
+  leagueRound      LeagueRound?  @relation("LeagueRoundMatches", fields: [leagueRoundId], references: [id], onDelete: SetNull)
+  // Marqueur d'idempotence pour recordLeagueMatchResult : une fois le score
+  // reporte au classement, on ne le comptabilise plus, meme si la route/hook
+  // est rejoue.
+  leagueScoredAt   DateTime?
+
   @@index([aiOpponent])
+  @@index([leagueSeasonId])
+  @@index([leagueRoundId])
 }
 
 model Turn {
@@ -603,6 +618,7 @@ model LeagueSeason {
 
   participants LeagueParticipant[]
   rounds       LeagueRound[]
+  matches      Match[]             @relation("LeagueSeasonMatches")
 
   @@unique([leagueId, seasonNumber])
   @@index([leagueId])
@@ -652,6 +668,8 @@ model LeagueRound {
   endDate     DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  matches     Match[]  @relation("LeagueRoundMatches")
 
   @@unique([seasonId, roundNumber])
   @@index([seasonId])

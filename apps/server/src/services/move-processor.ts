@@ -12,6 +12,7 @@ import { isUserConnectedToMatch } from "./connected-users";
 import { handleTurnTimerAfterMove } from "./turn-timer-orchestrator";
 import { FULL_RULES } from "@bb/game-engine";
 import { scheduleAILoop } from "./ai-loop";
+import { recordLeagueMatchResult } from "./league-match-result";
 
 export interface MoveResult {
   success: true;
@@ -24,6 +25,45 @@ export interface MoveError {
   success: false;
   error: string;
   code: "NOT_FOUND" | "INVALID_STATUS" | "NOT_PLAYER" | "NO_STATE" | "NOT_YOUR_TURN" | "ENGINE_ERROR";
+}
+
+interface AggregatedMatchStats {
+  scoreA: number;
+  scoreB: number;
+  casA: number;
+  casB: number;
+}
+
+/**
+ * Compute the team-level stats needed by league standings (L.7).
+ * Mirrors the aggregation performed by GET /match/:id/results so the
+ * ladder and the results screen stay in sync.
+ */
+function aggregateMatchStats(state: ExtendedGameState): AggregatedMatchStats {
+  const raw = state as unknown as {
+    score?: { teamA?: number; teamB?: number };
+    matchStats?: Record<string, { casualties?: number }>;
+    players?: Array<{ id: string; team?: string }>;
+  };
+  const score = raw.score ?? {};
+  const stats = raw.matchStats ?? {};
+  const players = raw.players ?? [];
+
+  let casA = 0;
+  let casB = 0;
+  for (const p of players) {
+    const entry = stats[p.id];
+    if (!entry) continue;
+    if (p.team === "A") casA += entry.casualties ?? 0;
+    else if (p.team === "B") casB += entry.casualties ?? 0;
+  }
+
+  return {
+    scoreA: score.teamA ?? 0,
+    scoreB: score.teamB ?? 0,
+    casA,
+    casB,
+  };
 }
 
 /**
@@ -230,6 +270,23 @@ export async function processMove(
         } catch {
           // Dedicated fans update error — non-blocking
         }
+      }
+
+      // L.7 — report the match result to league standings if the match
+      // is attached to a LeagueSeason. Non-blocking: if the ladder
+      // update fails, the match is still considered finished and the
+      // league service can reconcile later.
+      try {
+        const { scoreA, scoreB, casA, casB } = aggregateMatchStats(newState);
+        await recordLeagueMatchResult({
+          matchId,
+          scoreA,
+          scoreB,
+          casualtiesA: casA,
+          casualtiesB: casB,
+        });
+      } catch {
+        // League integration error — non-blocking
       }
     }
   }
