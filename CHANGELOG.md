@@ -1,3 +1,18 @@
+## [1.62.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.61.0...v1.62.0) (2026-04-21)
+
+
+### ✨ Features
+
+* **league:** L.4 round-robin schedule generator ([#273](https://github.com/Ryxeuf/fantasy-football-game/issues/273)) ([d3f41ce](https://github.com/Ryxeuf/fantasy-football-game/commit/d3f41ce2e3c915b723b26bcbbbfa6f86f42d7053))
+* **league:** L.5 page liste des ligues (frontend) ([#275](https://github.com/Ryxeuf/fantasy-football-game/issues/275)) ([711e359](https://github.com/Ryxeuf/fantasy-football-game/commit/711e359870671a07b23633e6ff1da2e88ec29ee4))
+* **league:** L.6 page detail ligue (calendrier, classement, participants) ([#276](https://github.com/Ryxeuf/fantasy-football-game/issues/276)) ([ddae701](https://github.com/Ryxeuf/fantasy-football-game/commit/ddae7016c83e65c964f719525c014d7b015bb743))
+* move Practice vs AI from LocalMatch to online Match flow ([#274](https://github.com/Ryxeuf/fantasy-football-game/issues/274)) ([b87e733](https://github.com/Ryxeuf/fantasy-football-game/commit/b87e733e4caca28ad69ab359521a4e9652279a68))
+
+
+### 🐛 Bug Fixes
+
+* **star-players:** filtre par ruleset et déduplication côté client ([b643ce4](https://github.com/Ryxeuf/fantasy-football-game/commit/b643ce437b37596e47fff03f3b769d2f8eab95d8))
+
 ## [1.61.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.60.0...v1.61.0) (2026-04-20)
 
 
