@@ -124,6 +124,34 @@ export async function handleGetLeague(
   });
 }
 
+export async function handleGetSeason(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const seasonId = req.params.seasonId;
+  const season = await getSeasonById(seasonId);
+  if (!season) {
+    res.status(404).json({ error: "Saison introuvable" });
+    return;
+  }
+  const raw = season as unknown as Record<string, unknown> & {
+    league?: { allowedRosters?: string | null } & Record<string, unknown>;
+  };
+  const league = raw.league;
+  const serializedLeague = league
+    ? {
+        ...league,
+        allowedRosters: parseAllowedRosters(league.allowedRosters ?? null),
+      }
+    : league;
+  res.status(200).json({
+    season: {
+      ...raw,
+      league: serializedLeague,
+    },
+  });
+}
+
 export async function handleCreateSeason(
   req: AuthenticatedRequest,
   res: Response,
@@ -310,5 +338,6 @@ router.post(
   handleCreateRound,
 );
 router.get("/seasons/:seasonId/standings", authUser, handleGetStandings);
+router.get("/seasons/:seasonId", authUser, handleGetSeason);
 
 export default router;
