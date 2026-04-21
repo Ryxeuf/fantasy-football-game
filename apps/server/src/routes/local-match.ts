@@ -13,12 +13,16 @@ import {
   determineKickingTeam,
   enterSetupPhase,
   makeRNG,
+  autoSetupAITeam,
+  validatePlayerPlacement,
+  startKickoffSequence,
   INDUCEMENT_CATALOGUE,
   listAIOpponentAllowedRosters,
   type WeatherType,
   type InducementSelection,
   type InducementContext,
   type ExtendedGameState,
+  type TeamId,
 } from "@bb/game-engine";
 import { randomBytes } from "crypto";
 import { hasRole } from "../utils/roles";
@@ -597,6 +601,22 @@ router.post("/:id/start", authUser, async (req: AuthenticatedRequest, res) => {
       if (gameState.preMatch.phase === 'setup') {
         gameState = enterSetupPhase(gameState, gameState.preMatch.receivingTeam);
       }
+
+      // Auto-place AI players when the AI is the current coach. Without this
+      // the match hangs because no client submits placements for the AI side.
+      const aiSide: TeamId = (localMatch as any).aiTeamSide === 'A' ? 'A' : 'B';
+      for (let iter = 0; iter < 2; iter += 1) {
+        if (gameState.preMatch.phase !== 'setup') break;
+        if (gameState.preMatch.currentCoach !== aiSide) break;
+        const before = gameState.players.filter(p => p.team === aiSide && p.pos.x >= 0).length;
+        gameState = autoSetupAITeam(gameState, aiSide);
+        const after = gameState.players.filter(p => p.team === aiSide && p.pos.x >= 0).length;
+        if (after < 11 || after === before) break;
+        gameState = validatePlayerPlacement(gameState);
+      }
+      if (gameState.preMatch.phase === 'kickoff') {
+        gameState = startKickoffSequence(gameState);
+      }
     }
 
     const isPreMatchComplete =
@@ -733,6 +753,24 @@ router.post("/:id/inducements", authUser, validate(localMatchInducementsSchema),
 
     if (gameState.preMatch.phase === "setup") {
       gameState = enterSetupPhase(gameState, gameState.preMatch.receivingTeam);
+    }
+
+    // Auto-place AI players if the match is against the AI and the AI is the
+    // current coach. Prevents the AI from blocking the setup phase forever.
+    if (localMatch.aiOpponent) {
+      const aiSide: TeamId = (localMatch as any).aiTeamSide === 'A' ? 'A' : 'B';
+      for (let iter = 0; iter < 2; iter += 1) {
+        if (gameState.preMatch.phase !== 'setup') break;
+        if (gameState.preMatch.currentCoach !== aiSide) break;
+        const before = gameState.players.filter(p => p.team === aiSide && p.pos.x >= 0).length;
+        gameState = autoSetupAITeam(gameState, aiSide);
+        const after = gameState.players.filter(p => p.team === aiSide && p.pos.x >= 0).length;
+        if (after < 11 || after === before) break;
+        gameState = validatePlayerPlacement(gameState);
+      }
+      if (gameState.preMatch.phase === 'kickoff') {
+        gameState = startKickoffSequence(gameState);
+      }
     }
 
     const isPreMatchComplete =

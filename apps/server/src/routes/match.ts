@@ -19,6 +19,7 @@ import {
 } from "../schemas/match.schemas";
 import { createOnlinePracticeMatch } from "../services/practice-match";
 import { scheduleAILoop } from "../services/ai-loop";
+import { runAISetupIfNeeded } from "../services/ai-setup";
 import type { AIDifficulty } from "@bb/game-engine";
 import { getSpectatorCount } from "../game-spectator";
 import { MATCH_SECRET } from "../config";
@@ -571,6 +572,13 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
     // `pre-match-sequence` written by the parallel automation).
     const ensured = await ensureSetupPhasePersisted(matchId, prisma as any);
 
+    // Once the setup phase is persisted, if the AI is the current coach,
+    // place its 11 players automatically so the match does not hang on a
+    // coach that has no client submitting on its behalf.
+    if (ensured?.gameState?.preMatch?.phase === "setup") {
+      await runAISetupIfNeeded(matchId, prisma as any);
+    }
+
     const match = await prisma.match.findUnique({
       where: { id: matchId },
       include: { turns: { orderBy: { number: "asc" } } },
@@ -887,6 +895,24 @@ router.post(
         const { broadcastGameState } = await import("../services/game-broadcast");
         broadcastGameState(matchId, gameState, { type: "validate-setup" }, req.user!.id);
       } catch {}
+
+      // Si apres validation l'IA doit placer ses joueurs, on le fait cote serveur.
+      // Sans ceci, le match reste bloque en phase setup pour les matchs pratique online.
+      const aiMatchForSetup = await prisma.match.findUnique({
+        where: { id: matchId },
+        select: { aiOpponent: true, aiTeamSide: true },
+      });
+      if (
+        aiMatchForSetup?.aiOpponent &&
+        aiMatchForSetup.aiTeamSide &&
+        gameState.preMatch?.phase === "setup" &&
+        gameState.preMatch?.currentCoach === aiMatchForSetup.aiTeamSide
+      ) {
+        const report = await runAISetupIfNeeded(matchId, prisma as any);
+        if (report.ran && report.gameState) {
+          gameState = report.gameState;
+        }
+      }
 
       // Mettre à jour le statut du match si kickoff atteint
       if (gameState.preMatch?.phase === 'kickoff' || gameState.preMatch?.phase === 'kickoff-sequence') {

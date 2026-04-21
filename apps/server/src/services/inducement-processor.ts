@@ -14,6 +14,7 @@ import type {
 } from "@bb/game-engine";
 import { getUserTeamSide } from "./turn-ownership";
 import { broadcastGameState } from "./game-broadcast";
+import { runAISetupIfNeeded } from "./ai-setup";
 
 /**
  * In-memory store for pending inducement selections per match.
@@ -201,6 +202,19 @@ export async function processInducementSubmission(
 
   // Clean up pending selections
   pendingSelections.delete(matchId);
+
+  // If the AI opponent is now the current coach in setup phase, auto-place
+  // its 11 players so the match does not hang on the AI side.
+  if (gameState.preMatch.phase === "setup") {
+    try {
+      const report = await runAISetupIfNeeded(matchId, prisma as any);
+      if (report.ran && report.gameState) {
+        gameState = report.gameState;
+      }
+    } catch (err) {
+      console.error(`[inducement-processor] AI auto-setup failed for ${matchId}:`, err);
+    }
+  }
 
   return {
     success: true,
