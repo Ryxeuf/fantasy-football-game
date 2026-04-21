@@ -1,13 +1,13 @@
 import { Metadata } from 'next';
+import { getServerApiBase } from '../../lib/serverApi';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8201';
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://nufflearena.fr';
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const { slug } = params;
-  
+
   try {
-    const response = await fetch(`${API_BASE}/api/rosters/${slug}?lang=fr`, {
+    const response = await fetch(`${getServerApiBase()}/api/rosters/${slug}?lang=fr`, {
       next: { revalidate: 3600 }, // Cache pendant 1 heure
     });
     
