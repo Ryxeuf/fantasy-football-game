@@ -85,7 +85,7 @@
 | C.3 | Matching automatique + creation match | Fort | Moyen | [ ] | Cron ou check a chaque join |
 | C.4 | Notification match trouve | Fort | Facile | [ ] | Event WS `matchmaking:found` |
 | C.5 | Phase de setup en ligne | Fort | Moyen | [ ] | Placement joueurs, bouton "Pret" |
-| C.6 | Sequence pre-match automatisee | Fort | Moyen | [~] | Moteur existe. Manque : inducements/prayers reels, UI online |
+| C.6 | Sequence pre-match automatisee | Fort | Moyen | [x] | Moteur + inducements (catalogue 9 types, validation CTV, effets) + 16 prayers reels + UI online (PreMatchSummary, InducementSelector) + WS `game:submit-inducements` + E2E |
 | C.7 | Fin de match en ligne (resultats) | Fort | Moyen | [ ] | Ecran recap adapte de `PostMatchSPP.tsx` |
 | C.8 | Abandon / deconnexion = defaite | Moyen | Facile | [ ] | Forfait si quitte > 2 min |
 
