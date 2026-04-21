@@ -309,7 +309,7 @@
 
 | # | Tache | Type | Statut |
 |---|-------|------|--------|
-| M.1 | Ecrans gestion d'equipe (creer, editer, voir) | Mobile | [ ] |
+| M.1 | Ecrans gestion d'equipe (creer, editer, voir) | Mobile | [x] |
 | M.2 | Ecran queue matchmaking | Mobile | [ ] |
 | M.3 | Integration WebSocket complete | Mobile | [ ] |
 | M.4 | Popups block/push/followup/reroll natifs | Mobile | [ ] |

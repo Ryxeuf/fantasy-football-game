@@ -12,6 +12,9 @@ export default function Layout() {
           <Stack.Screen name="login" options={{ title: "Connexion" }} />
           <Stack.Screen name="register" options={{ title: "Inscription" }} />
           <Stack.Screen name="match/[id]" options={{ title: "Historique du match", headerShown: false }} />
+          <Stack.Screen name="teams/index" options={{ title: "Mes equipes" }} />
+          <Stack.Screen name="teams/new" options={{ title: "Nouvelle equipe" }} />
+          <Stack.Screen name="teams/[id]" options={{ title: "Detail equipe" }} />
         </Stack>
       </AuthProvider>
     </GestureHandlerRootView>

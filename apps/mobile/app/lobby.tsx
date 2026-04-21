@@ -267,9 +267,17 @@ export default function LobbyScreen() {
         <Text style={styles.title}>
           {user?.coachName ? `Salut, ${user.coachName} !` : "Mes matchs"}
         </Text>
-        <Pressable onPress={handleLogout} style={styles.logoutButton}>
-          <Text style={styles.logoutText}>Deconnexion</Text>
-        </Pressable>
+        <View style={styles.headerActions}>
+          <Pressable
+            onPress={() => router.push("/teams")}
+            style={styles.teamsButton}
+          >
+            <Text style={styles.teamsButtonText}>Mes equipes</Text>
+          </Pressable>
+          <Pressable onPress={handleLogout} style={styles.logoutButton}>
+            <Text style={styles.logoutText}>Deconnexion</Text>
+          </Pressable>
+        </View>
       </View>
 
       {myTurnCount > 0 && (
@@ -426,6 +434,22 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     color: "#111827",
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  teamsButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    backgroundColor: "#EFF6FF",
+    borderRadius: 6,
+  },
+  teamsButtonText: {
+    color: "#1D4ED8",
+    fontSize: 13,
+    fontWeight: "600",
   },
   logoutButton: {
     paddingVertical: 6,
