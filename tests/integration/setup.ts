@@ -4,6 +4,13 @@ const API_PORT = process.env.API_PORT || "18001";
 const TEST_DATABASE_URL =
   process.env.TEST_DATABASE_URL || "file:memdb1?mode=memory&cache=shared";
 
+// Active par défaut tous les feature flags pour la suite intégration.
+// Cf. apps/server/src/services/featureFlags.ts. Sans ceci, les routes gatées
+// par requireFeatureFlag (online_play, ai_training, etc.) renvoient 403.
+if (process.env.FEATURE_FLAGS_FORCE_ENABLED === undefined) {
+  process.env.FEATURE_FLAGS_FORCE_ENABLED = "true";
+}
+
 let serverProc: any;
 
 async function wait(ms: number) {
