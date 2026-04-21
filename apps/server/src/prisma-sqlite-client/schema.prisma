@@ -102,15 +102,27 @@ model FeatureFlagUser {
 }
 
 model Match {
-  id             String          @id @default(cuid())
-  createdAt      DateTime        @default(now())
-  status         String
-  seed           String
-  creator        User?           @relation("MatchCreator", fields: [creatorId], references: [id])
-  creatorId      String?
-  players        User[]
-  turns          Turn[]
-  teamSelections TeamSelection[]
+  id                String          @id @default(cuid())
+  createdAt         DateTime        @default(now())
+  status            String
+  seed              String
+  creator           User?           @relation("MatchCreator", fields: [creatorId], references: [id])
+  creatorId         String?
+  currentTurnUserId String?
+  lastMoveAt        DateTime?
+  players           User[]
+  turns             Turn[]
+  teamSelections    TeamSelection[]
+
+  // Practice vs AI — online match with an AI opponent.
+  // Mirrors the same fields on the PostgreSQL schema so e2e-api tests that
+  // hit `/match/*` routes don't fail with PrismaClientValidationError.
+  aiOpponent   Boolean @default(false)
+  aiDifficulty String?
+  aiTeamSide   String?
+  aiUserId     String?
+
+  @@index([aiOpponent])
 }
 
 model Turn {
