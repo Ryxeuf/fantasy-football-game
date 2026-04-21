@@ -4,7 +4,8 @@
   "private": true,
   "main": "index.js",
   "scripts": {
-    "dev": "expo start -c"
+    "dev": "expo start -c",
+    "test": "vitest run"
   },
   "dependencies": {
     "@bb/game-engine": "workspace:*",
@@ -19,6 +20,7 @@
   },
   "devDependencies": {
     "typescript": "^5.5.4",
-    "@types/react": "^18.3.5"
+    "@types/react": "^18.3.5",
+    "vitest": "^2.1.9"
   }
 }

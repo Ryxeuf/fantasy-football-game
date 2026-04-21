@@ -65,6 +65,20 @@ export async function apiPost(path: string, body: unknown) {
   return json;
 }
 
+export async function apiPut(path: string, body: unknown) {
+  const auth = await authHeaders();
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...auth },
+    body: JSON.stringify(body),
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new ApiError(json?.error || `Erreur ${res.status}`, res.status);
+  }
+  return json;
+}
+
 export async function apiGet(path: string) {
   const auth = await authHeaders();
   const res = await fetch(`${API_BASE}${path}`, {
