@@ -402,6 +402,7 @@ export {
   pickAIOpponentRoster,
   autoSetupAITeam,
   buildAISetupPositions,
+  pickAIKickoffBallPosition,
 } from './ai';
 export type {
   EvaluationBreakdown,
