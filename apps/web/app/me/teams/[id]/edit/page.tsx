@@ -1,14 +1,16 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { API_BASE } from "../../../../auth-client";
 import SkillTooltip from "../../components/SkillTooltip";
 import TeamInfoEditor from "../../components/TeamInfoEditor";
 import TreasuryPurchasePanel from "../../components/TreasuryPurchasePanel";
-import { 
-  getPlayerCost, 
+import {
+  getPlayerCost,
   getDisplayName,
   SKILLS_DEFINITIONS,
-  getNextAdvancementPspCost, 
+  getNextAdvancementPspCost,
   SURCHARGE_PER_ADVANCEMENT,
   getPositionCategoryAccess,
   type AdvancementType
@@ -78,7 +80,8 @@ interface AvailablePosition {
 }
 
 export default function TeamEditPage() {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
+  const router = useRouter();
   const [data, setData] = useState<any>(null);
   const [rosterName, setRosterName] = useState<string>("");
   const [teamName, setTeamName] = useState<string>("");
@@ -152,18 +155,26 @@ export default function TeamEditPage() {
       setError(null);
       setLoading(true);
       try {
-        const me = await fetchJSON("/auth/me");
+        // Parallelize the three independent initial fetches instead of
+        // awaiting them sequentially (previously ~3 round-trips ≈ 600ms).
+        const [me, d, positionsData] = await Promise.all([
+          fetchJSON("/auth/me"),
+          fetchJSON(`/team/${id}`),
+          fetchJSON(`/team/${id}/available-positions`),
+        ]);
+
         if (!me?.user) {
-          window.location.href = "/login";
+          router.push("/login");
           return;
         }
-        const d = await fetchJSON(`/team/${id}`);
-        console.log("Données équipe chargées:", d);
+
         setData(d);
         setPlayers(d.team?.players || []);
         setTeamName(d.team?.name || "");
-        
-        // Charger le nom du roster depuis l'API selon la langue
+        setAvailablePositions(positionsData.availablePositions || []);
+
+        // Roster name fetch depends on d.team.roster, kept separate and
+        // non-blocking — the main UI can render without it.
         if (d?.team?.roster) {
           const lang = language === "en" ? "en" : "fr";
           try {
@@ -180,19 +191,13 @@ export default function TeamEditPage() {
             setRosterName(d.team.roster);
           }
         }
-        
-        // Charger les positions disponibles
-        const positionsData = await fetchJSON(`/team/${id}/available-positions`);
-        console.log("Positions disponibles:", positionsData);
-        setAvailablePositions(positionsData.availablePositions || []);
       } catch (e: any) {
-        console.error("Erreur lors du chargement:", e);
         setError(e.message || "Erreur");
       } finally {
         setLoading(false);
       }
     })();
-  }, [id, language]);
+  }, [id, language, router]);
 
   const team = data?.team;
   const match = data?.currentMatch;
@@ -201,9 +206,9 @@ export default function TeamEditPage() {
   // Rediriger si l'équipe ne peut pas être modifiée
   useEffect(() => {
     if (!loading && !canEdit) {
-      window.location.href = `/me/teams/${id}`;
+      router.push(`/me/teams/${id}`);
     }
-  }, [loading, canEdit, id]);
+  }, [loading, canEdit, id, router]);
 
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
@@ -257,12 +262,13 @@ export default function TeamEditPage() {
           number: p.number
         }))
       });
-      
-      // Rediriger vers la page de visualisation
-      window.location.href = `/me/teams/${id}`;
+
+      toast.success(t.teams.teamSavedToast);
+      router.push(`/me/teams/${id}`);
     } catch (e: any) {
-      setError(e.message || "Erreur lors de la sauvegarde");
-    } finally {
+      const message = e?.message || "Erreur lors de la sauvegarde";
+      setError(message);
+      toast.error(message);
       setSaving(false);
     }
   };
@@ -299,15 +305,19 @@ export default function TeamEditPage() {
         throw new Error(errorData.error || "Erreur lors de la suppression");
       }
 
-      // Recharger les données
-      const d = await fetchJSON(`/team/${id}`);
+      // Parallelize the two refetches; they are independent.
+      const [d, positionsData] = await Promise.all([
+        fetchJSON(`/team/${id}`),
+        fetchJSON(`/team/${id}/available-positions`),
+      ]);
       setData(d);
       setPlayers(d.team?.players || []);
-      
-      const positionsData = await fetchJSON(`/team/${id}/available-positions`);
       setAvailablePositions(positionsData.availablePositions || []);
+      toast.success("Joueur supprimé");
     } catch (e: any) {
-      setError(e.message || "Erreur lors de la suppression du joueur");
+      const message = e?.message || "Erreur lors de la suppression du joueur";
+      setError(message);
+      toast.error(message);
     }
   };
 
@@ -347,19 +357,22 @@ export default function TeamEditPage() {
         throw new Error(errorData.error || "Erreur lors de l'ajout du joueur");
       }
 
-      // Recharger les données
-      const d = await fetchJSON(`/team/${id}`);
+      const [d, positionsData] = await Promise.all([
+        fetchJSON(`/team/${id}`),
+        fetchJSON(`/team/${id}/available-positions`),
+      ]);
       setData(d);
       setPlayers(d.team?.players || []);
-      
-      const positionsData = await fetchJSON(`/team/${id}/available-positions`);
       setAvailablePositions(positionsData.availablePositions || []);
 
       // Réinitialiser le formulaire
       setNewPlayerForm({ position: '', name: '', number: 1 });
       setShowAddPlayerForm(false);
+      toast.success("Joueur ajouté");
     } catch (e: any) {
-      setError(e.message || "Erreur lors de l'ajout du joueur");
+      const message = e?.message || "Erreur lors de l'ajout du joueur";
+      setError(message);
+      toast.error(message);
     }
   };
 
@@ -453,9 +466,16 @@ export default function TeamEditPage() {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-4 sm:px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium text-sm sm:text-base"
+            aria-busy={saving}
+            className="px-4 sm:px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium text-sm sm:text-base inline-flex items-center justify-center gap-2"
           >
-            {saving ? "Enregistrement..." : "💾 Enregistrer"}
+            {saving && (
+              <span
+                aria-hidden="true"
+                className="h-4 w-4 rounded-full border-2 border-white/40 border-t-white animate-spin"
+              />
+            )}
+            {saving ? t.teams.savingTeamButton : "💾 Enregistrer"}
           </button>
           <a
             href={`/me/teams/${id}`}
