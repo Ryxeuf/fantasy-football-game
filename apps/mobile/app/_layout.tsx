@@ -9,6 +9,7 @@ export default function Layout() {
         <Stack>
           <Stack.Screen name="index" options={{ title: "Nuffle Arena" }} />
           <Stack.Screen name="lobby" options={{ title: "Mes matchs" }} />
+          <Stack.Screen name="matchmaking" options={{ title: "Chercher un match" }} />
           <Stack.Screen name="login" options={{ title: "Connexion" }} />
           <Stack.Screen name="register" options={{ title: "Inscription" }} />
           <Stack.Screen name="match/[id]" options={{ title: "Historique du match", headerShown: false }} />

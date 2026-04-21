@@ -90,3 +90,16 @@ export async function apiGet(path: string) {
   }
   return json;
 }
+
+export async function apiDelete(path: string) {
+  const auth = await authHeaders();
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "DELETE",
+    headers: { ...auth },
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new ApiError(json?.error || `Erreur ${res.status}`, res.status);
+  }
+  return json;
+}

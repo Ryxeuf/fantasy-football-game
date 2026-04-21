@@ -291,6 +291,14 @@ export default function LobbyScreen() {
 
       <View style={styles.actionRow}>
         <Pressable
+          style={styles.matchmakingButton}
+          onPress={() => router.push("/matchmaking")}
+        >
+          <Text style={styles.actionButtonText}>Chercher un match</Text>
+        </Pressable>
+      </View>
+      <View style={styles.actionRow}>
+        <Pressable
           style={[styles.createButton, createLoading && styles.buttonDisabled]}
           onPress={handleCreate}
           disabled={createLoading}
@@ -483,6 +491,13 @@ const styles = StyleSheet.create({
   createButton: {
     flex: 1,
     backgroundColor: "#2563EB",
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  matchmakingButton: {
+    flex: 1,
+    backgroundColor: "#16A34A",
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: "center",
