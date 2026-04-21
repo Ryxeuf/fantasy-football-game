@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { Prisma } from "@prisma/client";
 import { prisma } from "../prisma";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
 import { updateTeamValues } from "../utils/team-values";
@@ -1006,32 +1007,49 @@ router.put("/:id", authUser, validate(updateTeamSchema), async (req: Authenticat
       }
     }
 
-    // Mise à jour de l'équipe si le nom est fourni
+    // Batch every write into a single Prisma transaction so Postgres
+    // sees one pipelined round-trip instead of (N players + 1 team)
+    // separate queries.
+    const operations: Prisma.PrismaPromise<unknown>[] = [];
     if (name !== undefined) {
-      await prisma.team.update({
-        where: { id: teamId },
-        data: { name: name.trim() }
-      });
+      operations.push(
+        prisma.team.update({
+          where: { id: teamId },
+          data: { name: name.trim() },
+        }),
+      );
+    }
+    for (const player of players) {
+      operations.push(
+        prisma.teamPlayer.update({
+          where: { id: player.id },
+          data: {
+            name: player.name.trim(),
+            number: player.number,
+          },
+        }),
+      );
+    }
+    if (operations.length > 0) {
+      await prisma.$transaction(operations);
     }
 
-    // Mise à jour des joueurs
-    const updatePromises = players.map(player => 
-      prisma.teamPlayer.update({
-        where: { id: player.id },
-        data: { 
-          name: player.name.trim(),
-          number: player.number
-        }
-      })
+    // Build the response from the state we already have in memory to
+    // avoid a third round-trip — nothing else on the team mutates here.
+    const updates = new Map(
+      players.map((p) => [
+        p.id,
+        { name: p.name.trim(), number: p.number },
+      ]),
     );
-
-    await Promise.all(updatePromises);
-
-    // Retourner l'équipe mise à jour
-    const updatedTeam = await prisma.team.findUnique({
-      where: { id: teamId },
-      include: { players: true }
-    });
+    const updatedTeam = {
+      ...team,
+      name: name !== undefined ? name.trim() : team.name,
+      players: team.players.map((existing: any) => {
+        const update = updates.get(existing.id);
+        return update ? { ...existing, ...update } : existing;
+      }),
+    };
 
     res.json({ team: updatedTeam });
   } catch (e: any) {

@@ -16,21 +16,43 @@ interface CacheEntry<T> {
   expiresAt: number;
 }
 
-const singleRosterCache = new Map<string, CacheEntry<unknown>>();
-const allRostersCache = new Map<string, CacheEntry<unknown>>();
+export interface RosterPosition {
+  slug: string;
+  displayName: string;
+  cost: number;
+  min: number;
+  max: number;
+  ma: number;
+  st: number;
+  ag: number;
+  pa: number;
+  av: number;
+  skills: string;
+}
 
-function cacheGet<T>(store: Map<string, CacheEntry<unknown>>, key: string): T | undefined {
+export interface RosterPayload {
+  name: string;
+  budget: number;
+  tier: string;
+  naf: boolean;
+  positions: RosterPosition[];
+}
+
+const singleRosterCache = new Map<string, CacheEntry<RosterPayload>>();
+const allRostersCache = new Map<string, CacheEntry<Record<string, RosterPayload>>>();
+
+function cacheGet<T>(store: Map<string, CacheEntry<T>>, key: string): T | undefined {
   const entry = store.get(key);
   if (!entry) return undefined;
   if (entry.expiresAt < Date.now()) {
     store.delete(key);
     return undefined;
   }
-  return entry.value as T;
+  return entry.value;
 }
 
 function cacheSet<T>(
-  store: Map<string, CacheEntry<unknown>>,
+  store: Map<string, CacheEntry<T>>,
   key: string,
   value: T,
 ) {
@@ -53,9 +75,9 @@ export async function getRosterFromDb(
   slug: string,
   lang: string = "fr",
   ruleset: Ruleset = DEFAULT_RULESET,
-) {
+): Promise<RosterPayload | null> {
   const cacheKey = `${slug}::${lang}::${ruleset}`;
-  const cached = cacheGet<unknown>(singleRosterCache, cacheKey);
+  const cached = cacheGet(singleRosterCache, cacheKey);
   if (cached !== undefined) {
     return cached;
   }
@@ -117,9 +139,9 @@ export async function getRosterFromDb(
 export async function getAllRostersFromDb(
   lang: string = "fr",
   ruleset: Ruleset = DEFAULT_RULESET,
-) {
+): Promise<Record<string, RosterPayload>> {
   const cacheKey = `${lang}::${ruleset}`;
-  const cached = cacheGet<Record<string, unknown>>(allRostersCache, cacheKey);
+  const cached = cacheGet(allRostersCache, cacheKey);
   if (cached !== undefined) {
     return cached;
   }
@@ -142,7 +164,7 @@ export async function getAllRostersFromDb(
   const isEnglish = lang === "en";
 
   // Transformer les données pour correspondre au format attendu
-  const result: Record<string, any> = {};
+  const result: Record<string, RosterPayload> = {};
   for (const roster of rosters) {
     result[roster.slug] = {
       name: isEnglish ? roster.nameEn : roster.name,
