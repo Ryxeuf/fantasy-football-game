@@ -80,14 +80,14 @@
 
 | # | Tache | Gain | Diff | Statut | Detail |
 |---|-------|------|------|--------|--------|
-| C.1 | Page "Jouer en ligne" avec bouton recherche | Fort | Moyen | [~] | Route /play existe. Manque : selection equipe, "Chercher un match" |
-| C.2 | File d'attente matchmaking (queue) | Fort | Moyen | [ ] | Table MatchQueue en DB, matching TV +/- 150k |
-| C.3 | Matching automatique + creation match | Fort | Moyen | [ ] | Cron ou check a chaque join |
-| C.4 | Notification match trouve | Fort | Facile | [ ] | Event WS `matchmaking:found` |
-| C.5 | Phase de setup en ligne | Fort | Moyen | [ ] | Placement joueurs, bouton "Pret" |
-| C.6 | Sequence pre-match automatisee | Fort | Moyen | [~] | Moteur existe. Manque : inducements/prayers reels, UI online |
-| C.7 | Fin de match en ligne (resultats) | Fort | Moyen | [ ] | Ecran recap adapte de `PostMatchSPP.tsx` |
-| C.8 | Abandon / deconnexion = defaite | Moyen | Facile | [ ] | Forfait si quitte > 2 min |
+| C.1 | Page "Jouer en ligne" avec bouton recherche | Fort | Moyen | [x] | `apps/web/app/play/page.tsx` avec `team-select` + bouton "Chercher un match" → `POST /matchmaking/join` |
+| C.2 | File d'attente matchmaking (queue) | Fort | Moyen | [x] | Table Prisma `MatchQueue` + `apps/server/src/services/matchmaking.ts` (matching TV ±150k) |
+| C.3 | Matching automatique + creation match | Fort | Moyen | [x] | `apps/server/src/routes/matchmaking.ts` (join/leave/status) + tests unitaires 327 lignes |
+| C.4 | Notification match trouve | Fort | Facile | [x] | Hook `useMatchmakingSocket` écoute `matchmaking:found` + notif browser + son + redirect |
+| C.5 | Phase de setup en ligne | Fort | Moyen | [x] | `apps/server/src/services/prematch-setup.ts` (placement + bouton Pret) + `ai-setup.ts` pour AI |
+| C.6 | Sequence pre-match automatisee | Fort | Moyen | [x] | Moteur + inducements (catalogue 9 types, validation CTV, effets) + 16 prayers reels + UI online (PreMatchSummary, InducementSelector) + WS `game:submit-inducements` + E2E |
+| C.7 | Fin de match en ligne (resultats) | Fort | Moyen | [x] | `apps/web/app/components/PostMatchSPP.tsx` ecran recap |
+| C.8 | Abandon / deconnexion = defaite | Moyen | Facile | [x] | `apps/server/src/services/forfeit-tracker.ts` (forfait > 2 min) + tests |
 
 ---
 
