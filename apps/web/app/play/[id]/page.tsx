@@ -45,6 +45,7 @@ import {
 import PostMatchSPP from "../../components/PostMatchSPP";
 import MatchEndScreen from "../../components/MatchEndScreen";
 import PreMatchSummary from "../../components/PreMatchSummary";
+import HalftimeTransition from "../../components/HalftimeTransition";
 import InducementSelector from "../../components/InducementSelector";
 import { INDUCEMENT_CATALOGUE, type InducementSelection, type InducementDefinition } from "@bb/game-engine";
 import { ForfeitWarning } from "../../components/ForfeitWarning";
@@ -257,6 +258,11 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
 
   // Helper : est-ce que le match est en phase active (coups envoyés au serveur) ?
   const isActiveMatch = matchStatus === "active";
+
+  // B1.7 — suivi local de l'acknowledgement de la mi-temps. Le composant
+  // HalftimeTransition s'affiche tant que gamePhase === 'halftime' et que le
+  // joueur n'a pas cliqué sur le CTA pour la mi-temps courante.
+  const [halftimeDismissedHalf, setHalftimeDismissedHalf] = useState<number | null>(null);
 
   // Ajouter state pour selectedFromReserve (pour setup)
   const [selectedFromReserve, setSelectedFromReserve] = useState<string | null>(
@@ -852,6 +858,13 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
         matchId={matchId}
         myTeamSide={myTeamSide}
         onClose={() => { window.location.href = "/lobby"; }}
+      />
+    )}
+    {/* B1.7 — Halftime transition overlay (bloquant, CTA requis) */}
+    {state?.gamePhase === "halftime" && halftimeDismissedHalf !== state.half && (
+      <HalftimeTransition
+        state={state}
+        onAcknowledge={() => setHalftimeDismissedHalf(state.half)}
       />
     )}
     <div

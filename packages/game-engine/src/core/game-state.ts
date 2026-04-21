@@ -598,7 +598,7 @@ export function advanceHalfIfNeeded(state: GameState, rng: RNG): GameState {
       const newKickingTeam: TeamId = state.kickingTeam === 'A' ? 'B' : 'A';
       const receivingTeam: TeamId = newKickingTeam === 'A' ? 'B' : 'A';
 
-      // Reset positions for second half
+      // Reset positions pour la 2e mi-temps (tous les joueurs actifs vont en réserves)
       newState = resetPlayerPositions(newState);
 
       const halftimeResetLog = createLogEntry(
@@ -608,38 +608,50 @@ export function advanceHalfIfNeeded(state: GameState, rng: RNG): GameState {
         undefined
       );
 
-      let resultState: GameState = {
+      // Entrer en phase halftime + setup. Le re-kickoff sera déclenché après le
+      // placement des joueurs par les deux coachs (validatePlayerPlacement →
+      // startKickoffSequence → placeKickoffBall → calculateKickDeviation →
+      // resolveKickoffEvent → startMatchFromKickoff) — même contrat que
+      // handlePostTouchdown et que la séquence pré-match initiale.
+      const extState = newState as ExtendedGameState;
+      const resultState: GameState = {
         ...newState,
-        gamePhase: 'playing' as const,
+        gamePhase: 'halftime' as const,
         half: 2,
         turn: 1,
         currentPlayer: receivingTeam,
         kickingTeam: newKickingTeam,
         isTurnover: false,
-        ball: { x: 13, y: 7 }, // Centre du terrain
+        ball: undefined,
+        selectedPlayerId: null,
         playerActions: {} as Record<string, ActionType>,
         teamBlitzCount: {} as Record<string, number>,
         teamFoulCount: {} as Record<string, number>,
         rerollUsedThisTurn: false,
+        lastDiceResult: undefined,
         gameLog: [...newState.gameLog, halftimeResetLog],
+        preMatch: {
+          ...(extState.preMatch ?? {
+            currentCoach: receivingTeam,
+            legalSetupPositions: [],
+            placedPlayers: [],
+            kickingTeam: newKickingTeam,
+            receivingTeam,
+          }),
+          phase: 'setup' as const,
+          currentCoach: receivingTeam,
+          kickingTeam: newKickingTeam,
+          receivingTeam,
+          placedPlayers: [],
+          legalSetupPositions: [],
+          // Nettoyer tout résidu de kickoff précédent
+          kickoffStep: undefined,
+          ballPosition: null,
+          kickDeviation: null,
+          kickoffEvent: null,
+          finalBallPosition: undefined,
+        },
       };
-
-      // Rouler et appliquer l'événement de kickoff pour la 2e mi-temps
-      const { event } = rollKickoffEvent(rng);
-      resultState = applyKickoffEvent(resultState, event, rng, newKickingTeam);
-
-      // Appliquer les effets météo de début de drive (D3 joueurs en réserves si applicable)
-      if (resultState.weatherCondition) {
-        const weatherMods = getWeatherModifiers(resultState.weatherCondition);
-        if (weatherMods.playersToReserves > 0) {
-          const weatherLog = createLogEntry(
-            'info',
-            `Météo: ${resultState.weatherCondition.condition} — ${resultState.weatherCondition.description}`
-          );
-          resultState = applyWeatherDriveEffects(resultState, weatherMods, rng);
-          resultState = { ...resultState, gameLog: [...resultState.gameLog, weatherLog] };
-        }
-      }
 
       return resultState;
     } else {
@@ -1362,7 +1374,11 @@ export function validatePlayerPlacement(state: ExtendedGameState): ExtendedGameS
  * @returns État de kickoff avec les étapes à suivre
  */
 export function startKickoffSequence(state: ExtendedGameState): ExtendedGameState {
-  if (state.half !== 0 || state.preMatch.phase !== 'kickoff') return state;
+  // Supporte à la fois le kickoff initial (half === 0) et le re-kickoff de mi-temps
+  // (half >= 1). Le seul invariant est d'être en phase 'kickoff' : cette phase
+  // n'est atteinte que via `validatePlayerPlacement` une fois les 11 joueurs de
+  // chaque équipe placés (donc inatteignable à mi-tour sans passer par setup).
+  if (state.preMatch.phase !== 'kickoff') return state;
 
   // Créer un log de début de kickoff
   const kickoffLog = createLogEntry(
@@ -1385,42 +1401,65 @@ export function startKickoffSequence(state: ExtendedGameState): ExtendedGameStat
 }
 
 /**
- * Transforme l'état de kickoff en état de match démarré après résolution complète
+ * Transforme l'état de kickoff en état de match démarré / repris après résolution complète.
+ * - Appelé en début de match (state.half === 0) : initialise half=1, turn=1, compteurs
+ *   de match, bribes depuis inducements, fan attendance, etc.
+ * - Appelé au démarrage de la 2e mi-temps (state.half === 2) : conserve matchStats,
+ *   casualtyResults, bribesRemaining, fanAttendance, dedicatedFans et la météo déjà
+ *   enregistrée dans l'état.
  * @param state - État de kickoff avec toutes les étapes résolues
- * @returns État de match démarré
+ * @returns État de match démarré ou repris
  */
 export function startMatchFromKickoff(state: ExtendedGameState, rng?: RNG): GameState {
-  if (state.half !== 0 || state.preMatch.phase !== 'kickoff-sequence') return state;
+  if (state.preMatch.phase !== 'kickoff-sequence') return state;
 
-  // Créer un log de début de match
+  const isInitialStart = state.half === 0;
+
   const matchStartLog = createLogEntry(
     'info',
-    `Match commencé - ${state.teamNames.teamA} vs ${state.teamNames.teamB} - Le jeu commence !`
+    isInitialStart
+      ? `Match commencé - ${state.teamNames.teamA} vs ${state.teamNames.teamB} - Le jeu commence !`
+      : `Début de la 2e mi-temps - ${state.teamNames.teamA} vs ${state.teamNames.teamB}`
   );
 
   // Retirer la propriété preMatch pour passer en mode match normal
   const { preMatch, ...matchState } = state;
 
-  // Préserver fan attendance et dedicated fans pour le calcul post-match
+  // Préserver fan attendance et dedicated fans pour le calcul post-match.
+  // Au démarrage initial, on les (ré)initialise depuis fanFactor ; en reprise,
+  // on conserve les valeurs déjà présentes dans l'état.
   const fanFactor = preMatch.fanFactor;
-  const fanAttendance = fanFactor
-    ? fanFactor.teamA.total + fanFactor.teamB.total
-    : undefined;
-  const dedicatedFans = fanFactor
-    ? { teamA: fanFactor.teamA.dedicatedFans, teamB: fanFactor.teamB.dedicatedFans }
-    : undefined;
+  const fanAttendance = isInitialStart
+    ? (fanFactor ? fanFactor.teamA.total + fanFactor.teamB.total : undefined)
+    : state.fanAttendance;
+  const dedicatedFans = isInitialStart
+    ? (fanFactor
+        ? { teamA: fanFactor.teamA.dedicatedFans, teamB: fanFactor.teamB.dedicatedFans }
+        : undefined)
+    : state.dedicatedFans;
 
-  // Préserver la condition météo depuis le pré-match
-  const weatherCondition = preMatch.weather
-    ? { condition: preMatch.weather.condition, description: preMatch.weather.description }
-    : undefined;
+  // Météo : au démarrage initial, on prend celle du pré-match ; en reprise
+  // (mi-temps), on conserve la météo active (elle peut avoir changé via un
+  // Changing Weather kickoff event de la 1ère mi-temps).
+  const weatherCondition = isInitialStart
+    ? (preMatch.weather
+        ? { condition: preMatch.weather.condition, description: preMatch.weather.description }
+        : undefined)
+    : state.weatherCondition;
+
+  const nextHalf = isInitialStart ? 1 : state.half;
+  // Sur reprise de mi-temps, `advanceHalfIfNeeded` a déjà forcé turn=1 avant
+  // d'entrer dans le flux setup → kickoff-sequence : on conserve donc la valeur
+  // courante plutôt que de la sur-écrire (ce qui casserait un éventuel re-kickoff
+  // post-touchdown où turn != 1 doit être préservé).
+  const nextTurn = isInitialStart ? 1 : state.turn;
 
   let resultState: GameState = {
     ...matchState,
     gamePhase: 'playing' as const,
     kickingTeam: state.preMatch.kickingTeam,
-    half: 1,
-    turn: 1,
+    half: nextHalf,
+    turn: nextTurn,
     currentPlayer: state.preMatch.receivingTeam, // L'équipe qui reçoit commence
     ball: state.preMatch.finalBallPosition || { x: 13, y: 7 }, // Position finale du ballon
     selectedPlayerId: null,
@@ -1429,11 +1468,13 @@ export function startMatchFromKickoff(state: ExtendedGameState, rng?: RNG): Game
     teamBlitzCount: {} as Record<string, number>,
     teamFoulCount: {} as Record<string, number>,
     lastDiceResult: undefined,
-    matchStats: {},
-    casualtyResults: {},
-    lastingInjuryDetails: {},
+    matchStats: isInitialStart ? {} : state.matchStats,
+    casualtyResults: isInitialStart ? {} : state.casualtyResults,
+    lastingInjuryDetails: isInitialStart ? {} : state.lastingInjuryDetails,
     usedStarPlayerRules: state.usedStarPlayerRules ?? {},
-    bribesRemaining: initializeBribesFromInducements(preMatch, state.prayerEffects),
+    bribesRemaining: isInitialStart
+      ? initializeBribesFromInducements(preMatch, state.prayerEffects)
+      : state.bribesRemaining,
     fanAttendance,
     dedicatedFans,
     weatherCondition,
