@@ -20,6 +20,12 @@
  */
 
 import { prisma } from "../prisma";
+import {
+  calculateSeasonEloChange,
+  clampSeasonElo,
+  isInPlacement,
+  type SeasonMatchOutcome,
+} from "./season-elo";
 
 export interface RecordMatchResultInput {
   readonly matchId: string;
@@ -31,6 +37,17 @@ export interface RecordMatchResultInput {
 
 export type MatchWinner = "A" | "B" | "draw";
 
+export interface SeasonEloSnapshot {
+  readonly oldRatingA: number;
+  readonly oldRatingB: number;
+  readonly newRatingA: number;
+  readonly newRatingB: number;
+  readonly deltaA: number;
+  readonly deltaB: number;
+  readonly placementA: boolean;
+  readonly placementB: boolean;
+}
+
 export type RecordMatchResultOutcome =
   | {
       readonly recorded: true;
@@ -38,6 +55,7 @@ export type RecordMatchResultOutcome =
       readonly pointsDelta: { readonly teamA: number; readonly teamB: number };
       readonly roundCompleted: boolean;
       readonly seasonCompleted: boolean;
+      readonly seasonElo: SeasonEloSnapshot;
     }
   | {
       readonly skipped: true;
@@ -113,14 +131,22 @@ export async function recordLeagueMatchResult(
   }
 
   const seasonId = match.leagueSeasonId;
+  const participantSelect = {
+    id: true,
+    teamId: true,
+    seasonElo: true,
+    wins: true,
+    draws: true,
+    losses: true,
+  } as const;
   const [participantA, participantB] = await Promise.all([
     prisma.leagueParticipant.findUnique({
       where: { seasonId_teamId: { seasonId, teamId: teamAId } },
-      select: { id: true, teamId: true },
+      select: participantSelect,
     }),
     prisma.leagueParticipant.findUnique({
       where: { seasonId_teamId: { seasonId, teamId: teamBId } },
-      select: { id: true, teamId: true },
+      select: participantSelect,
     }),
   ]);
 
@@ -133,6 +159,25 @@ export async function recordLeagueMatchResult(
   const pointsA = pointsFor(winner, "A", bareme);
   const pointsB = pointsFor(winner, "B", bareme);
 
+  // L.8 — ELO saisonnier : calcul des deltas en utilisant le K-factor de
+  // placement (48) tant que le participant n'a pas joue 5 matchs, sinon 32.
+  // Le snapshot est calcule AVANT la mise a jour des compteurs, d'ou l'etat
+  // de placement base sur (wins+draws+losses) courant.
+  const placementA = isInPlacement(participantA);
+  const placementB = isInPlacement(participantB);
+  const seasonOutcome: SeasonMatchOutcome =
+    winner === "A" ? "win" : winner === "B" ? "loss" : "draw";
+  const { deltaA: seasonDeltaA, deltaB: seasonDeltaB } =
+    calculateSeasonEloChange({
+      ratingA: participantA.seasonElo,
+      ratingB: participantB.seasonElo,
+      outcome: seasonOutcome,
+      inPlacementA: placementA,
+      inPlacementB: placementB,
+    });
+  const newSeasonEloA = clampSeasonElo(participantA.seasonElo + seasonDeltaA);
+  const newSeasonEloB = clampSeasonElo(participantB.seasonElo + seasonDeltaB);
+
   const updateA = prisma.leagueParticipant.update({
     where: { id: participantA.id },
     data: {
@@ -144,6 +189,7 @@ export async function recordLeagueMatchResult(
       touchdownsAgainst: { increment: input.scoreB },
       casualtiesFor: { increment: input.casualtiesA },
       casualtiesAgainst: { increment: input.casualtiesB },
+      seasonElo: newSeasonEloA,
     },
   });
 
@@ -158,6 +204,7 @@ export async function recordLeagueMatchResult(
       touchdownsAgainst: { increment: input.scoreA },
       casualtiesFor: { increment: input.casualtiesB },
       casualtiesAgainst: { increment: input.casualtiesA },
+      seasonElo: newSeasonEloB,
     },
   });
 
@@ -205,5 +252,15 @@ export async function recordLeagueMatchResult(
     pointsDelta: { teamA: pointsA, teamB: pointsB },
     roundCompleted,
     seasonCompleted,
+    seasonElo: {
+      oldRatingA: participantA.seasonElo,
+      oldRatingB: participantB.seasonElo,
+      newRatingA: newSeasonEloA,
+      newRatingB: newSeasonEloB,
+      deltaA: newSeasonEloA - participantA.seasonElo,
+      deltaB: newSeasonEloB - participantB.seasonElo,
+      placementA,
+      placementB,
+    },
   };
 }
