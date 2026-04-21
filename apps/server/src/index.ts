@@ -137,10 +137,12 @@ if (process.env.TEST_SQLITE === "1") {
   // un compte déjà validé (bypass de la modération admin).
   app.post("/__test/seed-user", async (req, res) => {
     try {
-      const { email, password, name } = req.body as {
+      const { email, password, name, role, valid } = req.body as {
         email?: string;
         password?: string;
         name?: string;
+        role?: string;
+        valid?: boolean;
       };
       if (!email || !password) {
         return res
@@ -152,18 +154,25 @@ if (process.env.TEST_SQLITE === "1") {
       const passwordHash = await bcrypt.default.hash(password, 4);
 
       const displayName = name || email.split("@")[0];
-      // Seul le schéma Postgres expose `valid`; on évite de le passer afin que
-      // le même payload fonctionne sur les deux schémas.
+      const effectiveRole = role ?? "user";
+      // `valid` et `roles` sont normalises pour rester compatibles avec les
+      // deux schemas (Postgres: Boolean / String[], SQLite: Boolean / String
+      // JSON). Par defaut un user de test est valide pour que les suites
+      // existantes continuent de passer sans modification.
+      const update: Record<string, unknown> = { passwordHash };
+      if (typeof valid === "boolean") update.valid = valid;
+      if (typeof role === "string") update.role = role;
       const user = await prisma.user.upsert({
         where: { email },
-        update: { passwordHash },
+        update,
         create: {
           email,
           passwordHash,
           name: displayName,
           coachName: displayName,
-          role: "user",
-          roles: JSON.stringify(["user"]),
+          role: effectiveRole,
+          roles: JSON.stringify([effectiveRole]),
+          ...(typeof valid === "boolean" ? { valid } : {}),
         },
       });
 
