@@ -85,6 +85,8 @@ export const translations = {
       itemsPlural: "éléments",
       compulsory: "Obligatoire",
       tutorial: "Tutoriel interactif",
+      community: "Communauté",
+      joinDiscord: "Rejoindre le Discord",
     },
     // Star Players page
     starPlayers: {
@@ -581,6 +583,8 @@ export const translations = {
       itemsPlural: "items",
       compulsory: "Compulsory",
       tutorial: "Interactive tutorial",
+      community: "Community",
+      joinDiscord: "Join our Discord",
     },
     // Star Players page
     starPlayers: {
