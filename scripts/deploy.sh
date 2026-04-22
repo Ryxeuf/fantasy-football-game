@@ -26,8 +26,9 @@ DEPLOY_LOG="$PROJECT_DIR/deploy.log"
 HEALTH_TIMEOUT=120
 
 # Webhook Discord pour notifier les bascules en/hors maintenance.
-# Peut etre surcharge via la variable d'environnement DISCORD_WEBHOOK_URL.
-DISCORD_WEBHOOK_URL="${DISCORD_WEBHOOK_URL:-https://discord.com/api/webhooks/1496447262878859326/WfiQoymqHFU2KaFiQwRBsiutJmI5NOdF0FaF4oQWmv7BgynsWQpuyHHIqMlbM6kiEZhA}"
+# A definir via la variable d'environnement DISCORD_WEBHOOK_URL.
+# Si vide, les notifications Discord sont simplement ignorees.
+DISCORD_WEBHOOK_URL="${DISCORD_WEBHOOK_URL:-}"
 
 # Options
 NO_CACHE=""
@@ -104,6 +105,20 @@ echo ""
 
 log_deploy "deploy start - branch $BRANCH - commit ${PREVIOUS_COMMIT:0:7} - options: no-cache=${NO_CACHE:-false} skip-pull=$SKIP_PULL"
 
+# --- Calcul des commits a deployer (pour les notifications Discord) ---
+# Fetch non destructif pour connaitre ce qui sera deploye avant de basculer
+# en maintenance. Limite a 20 commits pour respecter la limite Discord (2000 chars).
+COMMITS_BULLETS=""
+if [ "$SKIP_PULL" = false ] && [ "$BRANCH" != "unknown" ]; then
+  if git fetch origin "$BRANCH" --quiet 2>/dev/null; then
+    COMMITS_BULLETS=$(git log --format="- %s" "HEAD..origin/$BRANCH" 2>/dev/null | head -n 20 || true)
+    TOTAL_COMMITS=$(git rev-list --count "HEAD..origin/$BRANCH" 2>/dev/null || echo 0)
+    if [ "$TOTAL_COMMITS" -gt 20 ] 2>/dev/null; then
+      COMMITS_BULLETS="${COMMITS_BULLETS}"$'\n'"- ... et $((TOTAL_COMMITS - 20)) autres commits"
+    fi
+  fi
+fi
+
 # --- Fonction de rollback ---
 rollback() {
   log_section "ROLLBACK"
@@ -143,7 +158,11 @@ trap rollback ERR
 log_section "1/5 - Activation de la maintenance"
 "$MAINTENANCE_SCRIPT" on
 
-discord_notify ":tools: **Nuffle Arena** - Passage en maintenance pour un deploiement (branche \`$BRANCH\`, commit \`${PREVIOUS_COMMIT:0:7}\`)."
+MAINT_MSG=":tools: **Nuffle Arena** - Passage en maintenance pour un deploiement (branche \`$BRANCH\`, commit \`${PREVIOUS_COMMIT:0:7}\`)."
+if [ -n "$COMMITS_BULLETS" ]; then
+  MAINT_MSG="${MAINT_MSG}"$'\n'"**Commits a deployer :**"$'\n'"${COMMITS_BULLETS}"
+fi
+discord_notify "$MAINT_MSG"
 
 # Petit delai pour que Traefik detecte le nouveau container
 sleep 2
@@ -240,7 +259,11 @@ log_section "Finalisation"
 FINAL_COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
 DURATION=$ELAPSED
 
-discord_notify ":white_check_mark: **Nuffle Arena** - Sortie de maintenance, deploiement reussi (branche \`$BRANCH\`, commit \`${FINAL_COMMIT:0:7}\`, health check ${DURATION}s)."
+SUCCESS_MSG=":white_check_mark: **Nuffle Arena** - Sortie de maintenance, deploiement reussi (branche \`$BRANCH\`, commit \`${FINAL_COMMIT:0:7}\`, health check ${DURATION}s)."
+if [ -n "$COMMITS_BULLETS" ]; then
+  SUCCESS_MSG="${SUCCESS_MSG}"$'\n'"**Commits deployes :**"$'\n'"${COMMITS_BULLETS}"
+fi
+discord_notify "$SUCCESS_MSG"
 
 echo ""
 echo -e "${BOLD}${GREEN}✅ Deploiement reussi !${NC}"
