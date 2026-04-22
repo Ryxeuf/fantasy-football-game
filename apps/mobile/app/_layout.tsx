@@ -33,6 +33,20 @@ export default function Layout() {
             name="teams/[id]"
             options={{ title: "Detail equipe" }}
           />
+          <Stack.Screen name="cups/index" options={{ title: "Coupes" }} />
+          <Stack.Screen
+            name="cups/archived"
+            options={{ title: "Coupes archivees" }}
+          />
+          <Stack.Screen
+            name="cups/[id]"
+            options={{ title: "Detail coupe" }}
+          />
+          <Stack.Screen name="leagues/index" options={{ title: "Ligues" }} />
+          <Stack.Screen
+            name="leagues/[id]"
+            options={{ title: "Detail ligue" }}
+          />
         </Stack>
       </AuthProvider>
     </GestureHandlerRootView>
