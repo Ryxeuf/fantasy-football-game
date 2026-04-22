@@ -27,11 +27,13 @@ import {
   getVapidPublicKey,
   sendTurnPush,
   sendMatchFoundPush,
+  clearExpoSubscriptions,
 } from "./push-notifications";
 
 describe("push-notifications", () => {
   beforeEach(() => {
     clearSubscriptions();
+    clearExpoSubscriptions();
     vi.clearAllMocks();
   });
 
@@ -232,6 +234,11 @@ describe("push-notifications", () => {
         icon: "/images/favicon-optimized.png",
         url: "/play/match-def",
         tag: "match-found-match-def",
+        data: {
+          kind: "matchFound",
+          matchId: "match-def",
+          url: "/play/match-def",
+        },
       });
     });
 

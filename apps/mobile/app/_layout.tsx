@@ -1,11 +1,32 @@
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
+import { useCallback } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { AuthProvider } from "../lib/auth-context";
+import { AuthProvider, useAuth } from "../lib/auth-context";
+import { useExpoPushRegistration } from "../lib/use-expo-push";
+
+function PushRegistration() {
+  const { user } = useAuth();
+  const router = useRouter();
+  const handleNavigate = useCallback(
+    (path: string) => {
+      // expo-router accepts relative/absolute paths; cast only because the
+      // generic signature expects a typed route union.
+      router.push(path as never);
+    },
+    [router],
+  );
+  useExpoPushRegistration({
+    enabled: user !== null,
+    onNavigate: handleNavigate,
+  });
+  return null;
+}
 
 export default function Layout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
+        <PushRegistration />
         <Stack>
           <Stack.Screen name="index" options={{ title: "Nuffle Arena" }} />
           <Stack.Screen name="lobby" options={{ title: "Mes matchs" }} />
