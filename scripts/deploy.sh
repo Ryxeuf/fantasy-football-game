@@ -25,6 +25,10 @@ MAINTENANCE_SCRIPT="$SCRIPT_DIR/maintenance.sh"
 DEPLOY_LOG="$PROJECT_DIR/deploy.log"
 HEALTH_TIMEOUT=120
 
+# Webhook Discord pour notifier les bascules en/hors maintenance.
+# Peut etre surcharge via la variable d'environnement DISCORD_WEBHOOK_URL.
+DISCORD_WEBHOOK_URL="${DISCORD_WEBHOOK_URL:-https://discord.com/api/webhooks/1496447262878859326/WfiQoymqHFU2KaFiQwRBsiutJmI5NOdF0FaF4oQWmv7BgynsWQpuyHHIqMlbM6kiEZhA}"
+
 # Options
 NO_CACHE=""
 SKIP_PULL=false
@@ -55,6 +59,35 @@ timestamp() { date '+%Y-%m-%d %H:%M:%S'; }
 # Enregistre dans le log de deploy
 log_deploy() {
   echo "[$(timestamp)] $1" >> "$DEPLOY_LOG"
+}
+
+# Envoie une notification Discord (non bloquant).
+# Usage: discord_notify "message"
+discord_notify() {
+  local message="$1"
+
+  if [ -z "${DISCORD_WEBHOOK_URL:-}" ]; then
+    return 0
+  fi
+
+  if ! command -v curl >/dev/null 2>&1; then
+    log_warn "curl introuvable : notification Discord ignoree."
+    return 0
+  fi
+
+  # Echappe les caracteres JSON sensibles (\ " et retours a la ligne)
+  local escaped="${message//\\/\\\\}"
+  escaped="${escaped//\"/\\\"}"
+  escaped="${escaped//$'\n'/\\n}"
+
+  local payload="{\"content\":\"${escaped}\"}"
+
+  if ! curl -sS -m 5 -X POST \
+      -H "Content-Type: application/json" \
+      -d "$payload" \
+      "$DISCORD_WEBHOOK_URL" >/dev/null 2>&1; then
+    log_warn "Echec de l'envoi de la notification Discord."
+  fi
 }
 
 # --- Pre-checks ---
@@ -95,6 +128,8 @@ rollback() {
   # Desactiver la maintenance apres rollback
   "$MAINTENANCE_SCRIPT" off 2>/dev/null || true
 
+  discord_notify ":warning: **Nuffle Arena** - Deploiement echoue, rollback effectue vers \`${PREVIOUS_COMMIT:0:7}\` sur \`$BRANCH\`. Site de nouveau accessible."
+
   log_error "Rollback termine. Verifiez les logs : docker compose -f docker-compose.prod.yml logs"
   log_deploy "rollback completed to ${PREVIOUS_COMMIT:0:7}"
   exit 1
@@ -107,6 +142,8 @@ trap rollback ERR
 # =============================================================================
 log_section "1/5 - Activation de la maintenance"
 "$MAINTENANCE_SCRIPT" on
+
+discord_notify ":tools: **Nuffle Arena** - Passage en maintenance pour un deploiement (branche \`$BRANCH\`, commit \`${PREVIOUS_COMMIT:0:7}\`)."
 
 # Petit delai pour que Traefik detecte le nouveau container
 sleep 2
@@ -202,6 +239,8 @@ log_section "Finalisation"
 
 FINAL_COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
 DURATION=$ELAPSED
+
+discord_notify ":white_check_mark: **Nuffle Arena** - Sortie de maintenance, deploiement reussi (branche \`$BRANCH\`, commit \`${FINAL_COMMIT:0:7}\`, health check ${DURATION}s)."
 
 echo ""
 echo -e "${BOLD}${GREEN}✅ Deploiement reussi !${NC}"
