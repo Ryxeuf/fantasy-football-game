@@ -239,9 +239,27 @@ export default function TeamDetailScreen() {
           {positions.length === 0 ? (
             <Text style={styles.empty}>Aucun joueur recrute</Text>
           ) : (
-            positions.map((p) => (
-              <InfoRow key={p.position} label={p.position} value={`x${p.count}`} />
-            ))
+            <>
+              {positions.map((p) => (
+                <InfoRow
+                  key={p.position}
+                  label={p.position}
+                  value={`x${p.count}`}
+                />
+              ))}
+              {(team.players ?? []).map((p) => (
+                <Pressable
+                  key={p.id}
+                  onPress={() => router.push(`/player/${team.id}/${p.id}`)}
+                  style={styles.row}
+                >
+                  <Text style={styles.rowLabel}>
+                    #{p.number} {p.name}
+                  </Text>
+                  <Text style={styles.rowValue}>{p.position} ›</Text>
+                </Pressable>
+              ))}
+            </>
           )}
         </Section>
 

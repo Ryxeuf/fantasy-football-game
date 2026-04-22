@@ -318,7 +318,7 @@
 | M.7 | Ecran replay de match | Mobile | [x] |
 | M.8 | Ecrans cups/ligues | Mobile | [x] |
 | M.9 | Push notifications natives (Expo Notifications) | Mobile | [x] |
-| M.10 | Details joueur et progression | Mobile | [ ] |
+| M.10 | Details joueur et progression | Mobile | [x] |
 | M.11 | Catalogue Star Players mobile | Mobile | [ ] |
 | M.12 | Profil et settings mobile | Mobile | [ ] |
 
