@@ -68,6 +68,14 @@ export default function Layout() {
             name="leagues/[id]"
             options={{ title: "Detail ligue" }}
           />
+          <Stack.Screen
+            name="star-players/index"
+            options={{ title: "Star Players" }}
+          />
+          <Stack.Screen
+            name="star-players/[slug]"
+            options={{ title: "Detail Star Player" }}
+          />
         </Stack>
       </AuthProvider>
     </GestureHandlerRootView>
