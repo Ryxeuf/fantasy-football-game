@@ -274,6 +274,12 @@ export default function LobbyScreen() {
           >
             <Text style={styles.teamsButtonText}>Mes equipes</Text>
           </Pressable>
+          <Pressable
+            onPress={() => router.push("/leaderboard")}
+            style={styles.leaderboardButton}
+          >
+            <Text style={styles.leaderboardButtonText}>Classement</Text>
+          </Pressable>
           <Pressable onPress={handleLogout} style={styles.logoutButton}>
             <Text style={styles.logoutText}>Deconnexion</Text>
           </Pressable>
@@ -456,6 +462,17 @@ const styles = StyleSheet.create({
   },
   teamsButtonText: {
     color: "#1D4ED8",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  leaderboardButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    backgroundColor: "#FEF3C7",
+    borderRadius: 6,
+  },
+  leaderboardButtonText: {
+    color: "#92400E",
     fontSize: 13,
     fontWeight: "600",
   },
