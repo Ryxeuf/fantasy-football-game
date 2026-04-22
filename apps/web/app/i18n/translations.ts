@@ -35,6 +35,7 @@ export const translations = {
     },
     // Home page
     home: {
+      betaBanner: "Version BÊTA ouverte à tous — vos comptes, équipes et matchs sont désormais conservés.",
       title: "L'arène où le hasard devient divin.",
       description: "Plateforme digitale pour créer et gérer vos équipes Blood Bowl. Construisez vos rosters, recrutez des Star Players légendaires, et exportez vos équipes en PDF.",
       subtitle: "Conformité aux règles officielles Blood Bowl 2025 : 28 rosters disponibles, gestion complète des budgets, trésorerie, et export PDF pour vos parties.",
@@ -533,6 +534,7 @@ export const translations = {
     },
     // Home page
     home: {
+      betaBanner: "BETA version open to everyone — your accounts, teams, and matches are now preserved.",
       title: "The arena where chance becomes divine.",
       description: "Digital platform to create and manage your Blood Bowl teams. Build your rosters, recruit legendary Star Players, and export your teams as PDF.",
       subtitle: "Compliance with official Blood Bowl 2025 rules: 28 available rosters, complete budget management, treasury, and PDF export for your games.",
