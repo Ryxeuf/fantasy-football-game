@@ -337,6 +337,13 @@ export default function LobbyScreen() {
         >
           <Text style={styles.actionButtonText}>Ligues</Text>
         </Pressable>
+        <Pressable
+          style={styles.starsButton}
+          onPress={() => router.push("/star-players")}
+          testID="lobby-stars-button"
+        >
+          <Text style={styles.actionButtonText}>Stars</Text>
+        </Pressable>
       </View>
       <View style={styles.actionRow}>
         <Pressable
@@ -575,6 +582,13 @@ const styles = StyleSheet.create({
   leaguesButton: {
     flex: 1,
     backgroundColor: "#0E7490",
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  starsButton: {
+    flex: 1,
+    backgroundColor: "#D97706",
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: "center",
