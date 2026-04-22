@@ -25,6 +25,21 @@ MAINTENANCE_SCRIPT="$SCRIPT_DIR/maintenance.sh"
 DEPLOY_LOG="$PROJECT_DIR/deploy.log"
 HEALTH_TIMEOUT=120
 
+# Charge les variables depuis .env.local si present (gitignore).
+# Permet d'y stocker par exemple DISCORD_WEBHOOK_URL=...
+if [ -f "$PROJECT_DIR/.env.local" ]; then
+  set -a
+  # shellcheck disable=SC1091
+  . "$PROJECT_DIR/.env.local"
+  set +a
+fi
+
+# Webhook Discord pour notifier les bascules en/hors maintenance.
+# A definir via la variable d'environnement DISCORD_WEBHOOK_URL
+# (soit dans l'environnement, soit dans .env.local a la racine du projet).
+# Si vide, les notifications Discord sont simplement ignorees.
+DISCORD_WEBHOOK_URL="${DISCORD_WEBHOOK_URL:-}"
+
 # Options
 NO_CACHE=""
 SKIP_PULL=false
@@ -57,6 +72,35 @@ log_deploy() {
   echo "[$(timestamp)] $1" >> "$DEPLOY_LOG"
 }
 
+# Envoie une notification Discord (non bloquant).
+# Usage: discord_notify "message"
+discord_notify() {
+  local message="$1"
+
+  if [ -z "${DISCORD_WEBHOOK_URL:-}" ]; then
+    return 0
+  fi
+
+  if ! command -v curl >/dev/null 2>&1; then
+    log_warn "curl introuvable : notification Discord ignoree."
+    return 0
+  fi
+
+  # Echappe les caracteres JSON sensibles (\ " et retours a la ligne)
+  local escaped="${message//\\/\\\\}"
+  escaped="${escaped//\"/\\\"}"
+  escaped="${escaped//$'\n'/\\n}"
+
+  local payload="{\"content\":\"${escaped}\"}"
+
+  if ! curl -sS -m 5 -X POST \
+      -H "Content-Type: application/json" \
+      -d "$payload" \
+      "$DISCORD_WEBHOOK_URL" >/dev/null 2>&1; then
+    log_warn "Echec de l'envoi de la notification Discord."
+  fi
+}
+
 # --- Pre-checks ---
 cd "$PROJECT_DIR"
 
@@ -70,6 +114,20 @@ echo -e "   Options: cache=${NO_CACHE:-oui} pull=${SKIP_PULL/true/non}"
 echo ""
 
 log_deploy "deploy start - branch $BRANCH - commit ${PREVIOUS_COMMIT:0:7} - options: no-cache=${NO_CACHE:-false} skip-pull=$SKIP_PULL"
+
+# --- Calcul des commits a deployer (pour les notifications Discord) ---
+# Fetch non destructif pour connaitre ce qui sera deploye avant de basculer
+# en maintenance. Limite a 20 commits pour respecter la limite Discord (2000 chars).
+COMMITS_BULLETS=""
+if [ "$SKIP_PULL" = false ] && [ "$BRANCH" != "unknown" ]; then
+  if git fetch origin "$BRANCH" --quiet 2>/dev/null; then
+    COMMITS_BULLETS=$(git log --format="- %s" "HEAD..origin/$BRANCH" 2>/dev/null | head -n 20 || true)
+    TOTAL_COMMITS=$(git rev-list --count "HEAD..origin/$BRANCH" 2>/dev/null || echo 0)
+    if [ "$TOTAL_COMMITS" -gt 20 ] 2>/dev/null; then
+      COMMITS_BULLETS="${COMMITS_BULLETS}"$'\n'"- ... et $((TOTAL_COMMITS - 20)) autres commits"
+    fi
+  fi
+fi
 
 # --- Fonction de rollback ---
 rollback() {
@@ -95,6 +153,8 @@ rollback() {
   # Desactiver la maintenance apres rollback
   "$MAINTENANCE_SCRIPT" off 2>/dev/null || true
 
+  discord_notify ":warning: **Nuffle Arena** - Deploiement echoue, rollback effectue vers \`${PREVIOUS_COMMIT:0:7}\` sur \`$BRANCH\`. Site de nouveau accessible."
+
   log_error "Rollback termine. Verifiez les logs : docker compose -f docker-compose.prod.yml logs"
   log_deploy "rollback completed to ${PREVIOUS_COMMIT:0:7}"
   exit 1
@@ -107,6 +167,12 @@ trap rollback ERR
 # =============================================================================
 log_section "1/5 - Activation de la maintenance"
 "$MAINTENANCE_SCRIPT" on
+
+MAINT_MSG=":tools: **Nuffle Arena** - Passage en maintenance pour un deploiement (branche \`$BRANCH\`, commit \`${PREVIOUS_COMMIT:0:7}\`)."
+if [ -n "$COMMITS_BULLETS" ]; then
+  MAINT_MSG="${MAINT_MSG}"$'\n'"**Commits a deployer :**"$'\n'"${COMMITS_BULLETS}"
+fi
+discord_notify "$MAINT_MSG"
 
 # Petit delai pour que Traefik detecte le nouveau container
 sleep 2
@@ -202,6 +268,12 @@ log_section "Finalisation"
 
 FINAL_COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
 DURATION=$ELAPSED
+
+SUCCESS_MSG=":white_check_mark: **Nuffle Arena** - Sortie de maintenance, deploiement reussi (branche \`$BRANCH\`, commit \`${FINAL_COMMIT:0:7}\`, health check ${DURATION}s)."
+if [ -n "$COMMITS_BULLETS" ]; then
+  SUCCESS_MSG="${SUCCESS_MSG}"$'\n'"**Commits deployes :**"$'\n'"${COMMITS_BULLETS}"
+fi
+discord_notify "$SUCCESS_MSG"
 
 echo ""
 echo -e "${BOLD}${GREEN}✅ Deploiement reussi !${NC}"
