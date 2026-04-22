@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { getServerApiBase } from '../../lib/serverApi';
+import { getServerApiBase, safeServerJson } from '../../lib/serverApi';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://nufflearena.fr';
 
@@ -7,20 +7,13 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const { slug } = params;
 
   try {
-    const response = await fetch(`${getServerApiBase()}/api/rosters/${slug}?lang=fr`, {
-      next: { revalidate: 3600 }, // Cache pendant 1 heure
-    });
-    
-    if (!response.ok) {
-      return {
-        title: 'Équipe introuvable',
-        description: 'L\'équipe demandée n\'a pas été trouvée.',
-      };
-    }
-    
-    const data = await response.json();
-    const team = data.roster;
-    
+    const data = await safeServerJson<{ roster?: any }>(
+      `${getServerApiBase()}/api/rosters/${slug}?lang=fr`,
+      { next: { revalidate: 3600 } },
+    );
+
+    const team = data?.roster;
+
     if (!team) {
       return {
         title: 'Équipe introuvable',

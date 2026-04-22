@@ -1,4 +1,4 @@
-import { getServerApiBase } from "../lib/serverApi";
+import { getServerApiBase, safeServerJson } from "../lib/serverApi";
 import TeamsListClient, {
   type RosterSummary,
   type Season,
@@ -10,15 +10,11 @@ export const revalidate = 3600;
 
 async function fetchRosters(season: Season): Promise<RosterSummary[]> {
   const base = getServerApiBase();
-  const res = await fetch(
+  const data = await safeServerJson<{ rosters?: any[] }>(
     `${base}/api/rosters?lang=fr&ruleset=${season}`,
     { next: { revalidate: 3600 } },
   );
-  if (!res.ok) {
-    return [];
-  }
-  const data = await res.json();
-  return (data.rosters ?? []).map((roster: any) => ({
+  return (data?.rosters ?? []).map((roster: any) => ({
     slug: roster.slug,
     name: roster.name,
     budget: roster.budget,
