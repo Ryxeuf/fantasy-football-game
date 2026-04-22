@@ -313,7 +313,7 @@
 | M.2 | Ecran queue matchmaking | Mobile | [x] |
 | M.3 | Integration WebSocket complete | Mobile | [x] |
 | M.4 | Popups block/push/followup/reroll natifs | Mobile | [x] |
-| M.5 | Chat in-game mobile | Mobile | [ ] |
+| M.5 | Chat in-game mobile | Mobile | [x] |
 | M.6 | Ecran leaderboard | Mobile | [ ] |
 | M.7 | Ecran replay de match | Mobile | [ ] |
 | M.8 | Ecrans cups/ligues | Mobile | [ ] |
