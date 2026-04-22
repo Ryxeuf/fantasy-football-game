@@ -78,7 +78,7 @@ export default function Footer() {
             <ul className="text-sm text-nuffle-anthracite/80 space-y-1 font-body">
               <li>
                 <a
-                  href="https://discord.gg/5epQQ9Kf"
+                  href="https://discord.gg/XEZJTgEHKn"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-nuffle-gold hover:underline transition-colors inline-flex items-center gap-1.5"

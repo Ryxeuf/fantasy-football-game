@@ -532,7 +532,7 @@ module.exports = {
 
 ### **Communauté :**
 
-- [Discord Turborepo](https://discord.gg/V6y4Xr6N)
+- [Discord Turborepo](https://discord.gg/XEZJTgEHKn)
 - [Expo Discord](https://discord.gg/expo)
 - [Next.js Discord](https://discord.gg/nextjs)
 
