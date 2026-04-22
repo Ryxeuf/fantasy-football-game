@@ -10,6 +10,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { apiGet, apiPost, ApiError } from "../../lib/api";
 import { useAuth } from "../../lib/auth-context";
 import { useGameSocket } from "../../lib/use-game-socket";
+import { useGameChat } from "../../lib/use-game-chat";
 import {
   getLegalMoves,
   type GameState,
@@ -18,6 +19,7 @@ import {
 } from "@bb/game-engine";
 import PixiBoardNative from "../../../../packages/ui/src/board/PixiBoard.native";
 import MatchPopups from "../../components/popups/MatchPopups";
+import GameChat from "../../components/GameChat";
 
 function normalizeState(state: any): GameState {
   if (!state) return state;
@@ -80,6 +82,7 @@ export default function PlayScreen() {
   const {
     connected: wsConnected,
     submitMove: wsSubmitMove,
+    socket: wsSocket,
   } = useGameSocket(matchId ?? "", {
     onStateUpdate: ({ gameState }) => {
       if (!gameState) return;
@@ -103,6 +106,12 @@ export default function PlayScreen() {
         setState(normalizeState(gameState));
       }
     },
+  });
+
+  // In-game chat wired on the same /game socket
+  const { messages: chatMessages, sendMessage: sendChatMessage } = useGameChat({
+    socket: wsSocket,
+    matchId: matchId ?? "",
   });
 
   // HTTP polling fallback — only when WebSocket is not connected
@@ -382,6 +391,12 @@ export default function PlayScreen() {
         state={state}
         isMyTurn={isMyTurn}
         submitMove={submitMove}
+      />
+
+      <GameChat
+        messages={chatMessages}
+        sendMessage={sendChatMessage}
+        currentUserId={user?.id}
       />
     </View>
   );
