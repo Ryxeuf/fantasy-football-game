@@ -1,3 +1,15 @@
+## [1.64.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.63.0...v1.64.0) (2026-04-22)
+
+
+### ✨ Features
+
+* **mobile:** M.2 écran queue matchmaking ([#290](https://github.com/Ryxeuf/fantasy-football-game/issues/290)) ([2300eeb](https://github.com/Ryxeuf/fantasy-football-game/commit/2300eebc29c97684b198f289ec9ecbf638ebd10a))
+* **mobile:** M.3 integration WebSocket complete ([#291](https://github.com/Ryxeuf/fantasy-football-game/issues/291)) ([8409972](https://github.com/Ryxeuf/fantasy-football-game/commit/8409972828169e0cf569c967525d1a1a4bca78ce))
+* **mobile:** M.4 popups natifs Block/Push/FollowUp/Reroll ([#292](https://github.com/Ryxeuf/fantasy-football-game/issues/292)) ([4d5a122](https://github.com/Ryxeuf/fantasy-football-game/commit/4d5a1228ddf7bad5b4fe283fa861d8d8be09393b))
+* **mobile:** M.5 chat in-game mobile ([#293](https://github.com/Ryxeuf/fantasy-football-game/issues/293)) ([7f09943](https://github.com/Ryxeuf/fantasy-football-game/commit/7f09943a777108aeb9eedab53a22bbf0e1213536))
+* **mobile:** M.6 ecran leaderboard ([#294](https://github.com/Ryxeuf/fantasy-football-game/issues/294)) ([d86729b](https://github.com/Ryxeuf/fantasy-football-game/commit/d86729b32b23699d706868a1d513be24e76098cb))
+* **mobile:** M.7 ecran replay de match ([#296](https://github.com/Ryxeuf/fantasy-football-game/issues/296)) ([fb29366](https://github.com/Ryxeuf/fantasy-football-game/commit/fb29366599bd471f62c80ec98dbdad1397dc1960))
+
 ## [1.63.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.62.0...v1.63.0) (2026-04-21)
 
 
