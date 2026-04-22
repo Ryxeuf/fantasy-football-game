@@ -315,7 +315,7 @@
 | M.4 | Popups block/push/followup/reroll natifs | Mobile | [x] |
 | M.5 | Chat in-game mobile | Mobile | [x] |
 | M.6 | Ecran leaderboard | Mobile | [x] |
-| M.7 | Ecran replay de match | Mobile | [ ] |
+| M.7 | Ecran replay de match | Mobile | [x] |
 | M.8 | Ecrans cups/ligues | Mobile | [ ] |
 | M.9 | Push notifications natives (Expo Notifications) | Mobile | [ ] |
 | M.10 | Details joueur et progression | Mobile | [ ] |

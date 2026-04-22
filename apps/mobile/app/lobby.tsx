@@ -84,11 +84,14 @@ function formatDate(dateStr: string): string {
 function MatchCard({
   match,
   onPress,
+  onReplay,
 }: {
   match: MatchSummary;
   onPress: () => void;
+  onReplay?: () => void;
 }) {
   const isMyTurn = match.isMyTurn && match.status === "active";
+  const isEnded = match.status === "ended";
 
   return (
     <Pressable
@@ -103,9 +106,7 @@ function MatchCard({
               { backgroundColor: getStatusColor(match.status) },
             ]}
           />
-          <Text style={styles.statusText}>
-            {getStatusLabel(match.status)}
-          </Text>
+          <Text style={styles.statusText}>{getStatusLabel(match.status)}</Text>
           {isMyTurn && (
             <View style={styles.myTurnBadge}>
               <Text style={styles.myTurnText}>Votre tour</Text>
@@ -143,6 +144,19 @@ function MatchCard({
           </Text>
         )}
       </View>
+
+      {isEnded && onReplay && (
+        <Pressable
+          onPress={(e) => {
+            e.stopPropagation();
+            onReplay();
+          }}
+          style={styles.replayButton}
+          accessibilityLabel="Voir le replay"
+        >
+          <Text style={styles.replayButtonText}>▶ Voir le replay</Text>
+        </Pressable>
+      )}
     </Pressable>
   );
 }
@@ -166,14 +180,15 @@ export default function LobbyScreen() {
       setMatches(data.matches || []);
       setError(null);
     } catch (err: unknown) {
-      if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+      if (
+        err instanceof ApiError &&
+        (err.status === 401 || err.status === 403)
+      ) {
         await logout();
         router.replace("/login");
         return;
       }
-      setError(
-        err instanceof Error ? err.message : "Erreur de chargement",
-      );
+      setError(err instanceof Error ? err.message : "Erreur de chargement");
     }
   }, [router, logout]);
 
@@ -261,6 +276,10 @@ export default function LobbyScreen() {
     }
   }
 
+  function navigateToReplay(match: MatchSummary) {
+    router.push(`/replay/${match.id}`);
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -289,8 +308,8 @@ export default function LobbyScreen() {
       {myTurnCount > 0 && (
         <View style={styles.turnBanner}>
           <Text style={styles.turnBannerText}>
-            {myTurnCount} match{myTurnCount > 1 ? "s" : ""} en attente de
-            votre tour
+            {myTurnCount} match{myTurnCount > 1 ? "s" : ""} en attente de votre
+            tour
           </Text>
         </View>
       )}
@@ -365,7 +384,11 @@ export default function LobbyScreen() {
           data={filtered}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <MatchCard match={item} onPress={() => navigateToMatch(item)} />
+            <MatchCard
+              match={item}
+              onPress={() => navigateToMatch(item)}
+              onReplay={() => navigateToReplay(item)}
+            />
           )}
           contentContainerStyle={styles.listContent}
           refreshControl={
@@ -633,6 +656,19 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 11,
     color: "#9CA3AF",
+  },
+  replayButton: {
+    marginTop: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: "#0F172A",
+    borderRadius: 6,
+    alignItems: "center",
+  },
+  replayButtonText: {
+    color: "#93C5FD",
+    fontSize: 13,
+    fontWeight: "600",
   },
   center: {
     flex: 1,
