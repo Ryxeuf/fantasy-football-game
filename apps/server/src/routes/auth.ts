@@ -44,6 +44,7 @@ router.post("/register", validate(registerSchema), async (req, res) => {
         lastName: lastName && lastName !== "" ? lastName : null,
         dateOfBirth:
           dateOfBirth && dateOfBirth !== "" ? new Date(dateOfBirth) : null,
+        valid: true,
       },
     });
 
@@ -62,16 +63,6 @@ router.post("/register", validate(registerSchema), async (req, res) => {
       valid: created.valid,
       createdAt: created.createdAt,
     };
-
-    // Si l'inscription nécessite la modération admin (valid=false en prod),
-    // on ne retourne pas de token : le compte devra être validé avant login.
-    if (created.valid === false) {
-      return res.status(201).json({
-        user: publicUser,
-        message:
-          "Votre compte a bien été créé. Il doit être validé par un administrateur avant que vous puissiez vous connecter.",
-      });
-    }
 
     const token = jwt.sign(
       { sub: created.id, role: primaryRole, roles },
