@@ -19,6 +19,11 @@ export type PrismaPromise<T> = $Public.PrismaPromise<T>
  */
 export type User = $Result.DefaultSelection<Prisma.$UserPayload>
 /**
+ * Model KofiTransaction
+ * 
+ */
+export type KofiTransaction = $Result.DefaultSelection<Prisma.$KofiTransactionPayload>
+/**
  * Model UserAchievement
  * 
  */
@@ -268,6 +273,16 @@ export class PrismaClient<
     * ```
     */
   get user(): Prisma.UserDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.kofiTransaction`: Exposes CRUD operations for the **KofiTransaction** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more KofiTransactions
+    * const kofiTransactions = await prisma.kofiTransaction.findMany()
+    * ```
+    */
+  get kofiTransaction(): Prisma.KofiTransactionDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.userAchievement`: Exposes CRUD operations for the **UserAchievement** model.
@@ -919,6 +934,7 @@ export namespace Prisma {
 
   export const ModelName: {
     User: 'User',
+    KofiTransaction: 'KofiTransaction',
     UserAchievement: 'UserAchievement',
     Friendship: 'Friendship',
     FeatureFlag: 'FeatureFlag',
@@ -958,7 +974,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamStarPlayer" | "roster" | "position" | "cup" | "cupParticipant" | "matchQueue" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leagueParticipant" | "leagueRound"
+      modelProps: "user" | "kofiTransaction" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamStarPlayer" | "roster" | "position" | "cup" | "cupParticipant" | "matchQueue" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leagueParticipant" | "leagueRound"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1033,6 +1049,80 @@ export namespace Prisma {
           count: {
             args: Prisma.UserCountArgs<ExtArgs>
             result: $Utils.Optional<UserCountAggregateOutputType> | number
+          }
+        }
+      }
+      KofiTransaction: {
+        payload: Prisma.$KofiTransactionPayload<ExtArgs>
+        fields: Prisma.KofiTransactionFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.KofiTransactionFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KofiTransactionPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.KofiTransactionFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KofiTransactionPayload>
+          }
+          findFirst: {
+            args: Prisma.KofiTransactionFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KofiTransactionPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.KofiTransactionFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KofiTransactionPayload>
+          }
+          findMany: {
+            args: Prisma.KofiTransactionFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KofiTransactionPayload>[]
+          }
+          create: {
+            args: Prisma.KofiTransactionCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KofiTransactionPayload>
+          }
+          createMany: {
+            args: Prisma.KofiTransactionCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.KofiTransactionCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KofiTransactionPayload>[]
+          }
+          delete: {
+            args: Prisma.KofiTransactionDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KofiTransactionPayload>
+          }
+          update: {
+            args: Prisma.KofiTransactionUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KofiTransactionPayload>
+          }
+          deleteMany: {
+            args: Prisma.KofiTransactionDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.KofiTransactionUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.KofiTransactionUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KofiTransactionPayload>[]
+          }
+          upsert: {
+            args: Prisma.KofiTransactionUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$KofiTransactionPayload>
+          }
+          aggregate: {
+            args: Prisma.KofiTransactionAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateKofiTransaction>
+          }
+          groupBy: {
+            args: Prisma.KofiTransactionGroupByArgs<ExtArgs>
+            result: $Utils.Optional<KofiTransactionGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.KofiTransactionCountArgs<ExtArgs>
+            result: $Utils.Optional<KofiTransactionCountAggregateOutputType> | number
           }
         }
       }
@@ -2687,6 +2777,7 @@ export namespace Prisma {
   }
   export type GlobalOmitConfig = {
     user?: UserOmit
+    kofiTransaction?: KofiTransactionOmit
     userAchievement?: UserAchievementOmit
     friendship?: FriendshipOmit
     featureFlag?: FeatureFlagOmit
@@ -2799,6 +2890,7 @@ export namespace Prisma {
     friendshipsSent: number
     friendshipsReceived: number
     achievements: number
+    kofiTransactions: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -2813,6 +2905,7 @@ export namespace Prisma {
     friendshipsSent?: boolean | UserCountOutputTypeCountFriendshipsSentArgs
     friendshipsReceived?: boolean | UserCountOutputTypeCountFriendshipsReceivedArgs
     achievements?: boolean | UserCountOutputTypeCountAchievementsArgs
+    kofiTransactions?: boolean | UserCountOutputTypeCountKofiTransactionsArgs
   }
 
   // Custom InputTypes
@@ -2901,6 +2994,13 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountAchievementsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: UserAchievementWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountKofiTransactionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: KofiTransactionWhereInput
   }
 
 
@@ -3268,10 +3368,12 @@ export namespace Prisma {
   }
 
   export type UserAvgAggregateOutputType = {
+    totalDonatedCents: number | null
     eloRating: number | null
   }
 
   export type UserSumAggregateOutputType = {
+    totalDonatedCents: number | null
     eloRating: number | null
   }
 
@@ -3287,6 +3389,10 @@ export namespace Prisma {
     role: string | null
     roles: string | null
     patreon: boolean | null
+    kofiLinkCode: string | null
+    supporterTier: string | null
+    supporterActiveUntil: Date | null
+    totalDonatedCents: number | null
     valid: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -3305,6 +3411,10 @@ export namespace Prisma {
     role: string | null
     roles: string | null
     patreon: boolean | null
+    kofiLinkCode: string | null
+    supporterTier: string | null
+    supporterActiveUntil: Date | null
+    totalDonatedCents: number | null
     valid: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -3323,6 +3433,10 @@ export namespace Prisma {
     role: number
     roles: number
     patreon: number
+    kofiLinkCode: number
+    supporterTier: number
+    supporterActiveUntil: number
+    totalDonatedCents: number
     valid: number
     createdAt: number
     updatedAt: number
@@ -3332,10 +3446,12 @@ export namespace Prisma {
 
 
   export type UserAvgAggregateInputType = {
+    totalDonatedCents?: true
     eloRating?: true
   }
 
   export type UserSumAggregateInputType = {
+    totalDonatedCents?: true
     eloRating?: true
   }
 
@@ -3351,6 +3467,10 @@ export namespace Prisma {
     role?: true
     roles?: true
     patreon?: true
+    kofiLinkCode?: true
+    supporterTier?: true
+    supporterActiveUntil?: true
+    totalDonatedCents?: true
     valid?: true
     createdAt?: true
     updatedAt?: true
@@ -3369,6 +3489,10 @@ export namespace Prisma {
     role?: true
     roles?: true
     patreon?: true
+    kofiLinkCode?: true
+    supporterTier?: true
+    supporterActiveUntil?: true
+    totalDonatedCents?: true
     valid?: true
     createdAt?: true
     updatedAt?: true
@@ -3387,6 +3511,10 @@ export namespace Prisma {
     role?: true
     roles?: true
     patreon?: true
+    kofiLinkCode?: true
+    supporterTier?: true
+    supporterActiveUntil?: true
+    totalDonatedCents?: true
     valid?: true
     createdAt?: true
     updatedAt?: true
@@ -3492,6 +3620,10 @@ export namespace Prisma {
     role: string
     roles: string
     patreon: boolean
+    kofiLinkCode: string | null
+    supporterTier: string | null
+    supporterActiveUntil: Date | null
+    totalDonatedCents: number
     valid: boolean
     createdAt: Date
     updatedAt: Date
@@ -3529,6 +3661,10 @@ export namespace Prisma {
     role?: boolean
     roles?: boolean
     patreon?: boolean
+    kofiLinkCode?: boolean
+    supporterTier?: boolean
+    supporterActiveUntil?: boolean
+    totalDonatedCents?: boolean
     valid?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -3545,6 +3681,7 @@ export namespace Prisma {
     friendshipsSent?: boolean | User$friendshipsSentArgs<ExtArgs>
     friendshipsReceived?: boolean | User$friendshipsReceivedArgs<ExtArgs>
     achievements?: boolean | User$achievementsArgs<ExtArgs>
+    kofiTransactions?: boolean | User$kofiTransactionsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -3560,6 +3697,10 @@ export namespace Prisma {
     role?: boolean
     roles?: boolean
     patreon?: boolean
+    kofiLinkCode?: boolean
+    supporterTier?: boolean
+    supporterActiveUntil?: boolean
+    totalDonatedCents?: boolean
     valid?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -3578,6 +3719,10 @@ export namespace Prisma {
     role?: boolean
     roles?: boolean
     patreon?: boolean
+    kofiLinkCode?: boolean
+    supporterTier?: boolean
+    supporterActiveUntil?: boolean
+    totalDonatedCents?: boolean
     valid?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -3596,13 +3741,17 @@ export namespace Prisma {
     role?: boolean
     roles?: boolean
     patreon?: boolean
+    kofiLinkCode?: boolean
+    supporterTier?: boolean
+    supporterActiveUntil?: boolean
+    totalDonatedCents?: boolean
     valid?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     eloRating?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "passwordHash" | "name" | "coachName" | "firstName" | "lastName" | "dateOfBirth" | "role" | "roles" | "patreon" | "valid" | "createdAt" | "updatedAt" | "eloRating", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "passwordHash" | "name" | "coachName" | "firstName" | "lastName" | "dateOfBirth" | "role" | "roles" | "patreon" | "kofiLinkCode" | "supporterTier" | "supporterActiveUntil" | "totalDonatedCents" | "valid" | "createdAt" | "updatedAt" | "eloRating", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     matches?: boolean | User$matchesArgs<ExtArgs>
     createdMatches?: boolean | User$createdMatchesArgs<ExtArgs>
@@ -3616,6 +3765,7 @@ export namespace Prisma {
     friendshipsSent?: boolean | User$friendshipsSentArgs<ExtArgs>
     friendshipsReceived?: boolean | User$friendshipsReceivedArgs<ExtArgs>
     achievements?: boolean | User$achievementsArgs<ExtArgs>
+    kofiTransactions?: boolean | User$kofiTransactionsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -3636,6 +3786,7 @@ export namespace Prisma {
       friendshipsSent: Prisma.$FriendshipPayload<ExtArgs>[]
       friendshipsReceived: Prisma.$FriendshipPayload<ExtArgs>[]
       achievements: Prisma.$UserAchievementPayload<ExtArgs>[]
+      kofiTransactions: Prisma.$KofiTransactionPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -3660,6 +3811,22 @@ export namespace Prisma {
        * sans diverger entre les deux schémas.
        */
       patreon: boolean
+      /**
+       * Code unique à coller dans le message Ko-fi pour lier le don au compte.
+       */
+      kofiLinkCode: string | null
+      /**
+       * Palier (tier_name Ko-fi) du dernier abonnement actif.
+       */
+      supporterTier: string | null
+      /**
+       * Fin de la période de supporter payée.
+       */
+      supporterActiveUntil: Date | null
+      /**
+       * Total des dons en centimes.
+       */
+      totalDonatedCents: number
       /**
        * Pré-alpha gate côté Postgres ; en SQLite tous les comptes sont valides.
        */
@@ -4073,6 +4240,7 @@ export namespace Prisma {
     friendshipsSent<T extends User$friendshipsSentArgs<ExtArgs> = {}>(args?: Subset<T, User$friendshipsSentArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FriendshipPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     friendshipsReceived<T extends User$friendshipsReceivedArgs<ExtArgs> = {}>(args?: Subset<T, User$friendshipsReceivedArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FriendshipPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     achievements<T extends User$achievementsArgs<ExtArgs> = {}>(args?: Subset<T, User$achievementsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserAchievementPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    kofiTransactions<T extends User$kofiTransactionsArgs<ExtArgs> = {}>(args?: Subset<T, User$kofiTransactionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$KofiTransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -4113,6 +4281,10 @@ export namespace Prisma {
     readonly role: FieldRef<"User", 'String'>
     readonly roles: FieldRef<"User", 'String'>
     readonly patreon: FieldRef<"User", 'Boolean'>
+    readonly kofiLinkCode: FieldRef<"User", 'String'>
+    readonly supporterTier: FieldRef<"User", 'String'>
+    readonly supporterActiveUntil: FieldRef<"User", 'DateTime'>
+    readonly totalDonatedCents: FieldRef<"User", 'Int'>
     readonly valid: FieldRef<"User", 'Boolean'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
@@ -4786,6 +4958,30 @@ export namespace Prisma {
   }
 
   /**
+   * User.kofiTransactions
+   */
+  export type User$kofiTransactionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KofiTransaction
+     */
+    select?: KofiTransactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KofiTransaction
+     */
+    omit?: KofiTransactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KofiTransactionInclude<ExtArgs> | null
+    where?: KofiTransactionWhereInput
+    orderBy?: KofiTransactionOrderByWithRelationInput | KofiTransactionOrderByWithRelationInput[]
+    cursor?: KofiTransactionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: KofiTransactionScalarFieldEnum | KofiTransactionScalarFieldEnum[]
+  }
+
+  /**
    * User without action
    */
   export type UserDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -4801,6 +4997,1261 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: UserInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model KofiTransaction
+   */
+
+  export type AggregateKofiTransaction = {
+    _count: KofiTransactionCountAggregateOutputType | null
+    _avg: KofiTransactionAvgAggregateOutputType | null
+    _sum: KofiTransactionSumAggregateOutputType | null
+    _min: KofiTransactionMinAggregateOutputType | null
+    _max: KofiTransactionMaxAggregateOutputType | null
+  }
+
+  export type KofiTransactionAvgAggregateOutputType = {
+    amountCents: number | null
+  }
+
+  export type KofiTransactionSumAggregateOutputType = {
+    amountCents: number | null
+  }
+
+  export type KofiTransactionMinAggregateOutputType = {
+    id: string | null
+    kofiTransactionId: string | null
+    messageId: string | null
+    type: string | null
+    isSubscriptionPayment: boolean | null
+    isFirstSubscriptionPayment: boolean | null
+    tierName: string | null
+    amountCents: number | null
+    currency: string | null
+    fromName: string | null
+    email: string | null
+    message: string | null
+    userId: string | null
+    matchedVia: string | null
+    rawPayload: string | null
+    receivedAt: Date | null
+  }
+
+  export type KofiTransactionMaxAggregateOutputType = {
+    id: string | null
+    kofiTransactionId: string | null
+    messageId: string | null
+    type: string | null
+    isSubscriptionPayment: boolean | null
+    isFirstSubscriptionPayment: boolean | null
+    tierName: string | null
+    amountCents: number | null
+    currency: string | null
+    fromName: string | null
+    email: string | null
+    message: string | null
+    userId: string | null
+    matchedVia: string | null
+    rawPayload: string | null
+    receivedAt: Date | null
+  }
+
+  export type KofiTransactionCountAggregateOutputType = {
+    id: number
+    kofiTransactionId: number
+    messageId: number
+    type: number
+    isSubscriptionPayment: number
+    isFirstSubscriptionPayment: number
+    tierName: number
+    amountCents: number
+    currency: number
+    fromName: number
+    email: number
+    message: number
+    userId: number
+    matchedVia: number
+    rawPayload: number
+    receivedAt: number
+    _all: number
+  }
+
+
+  export type KofiTransactionAvgAggregateInputType = {
+    amountCents?: true
+  }
+
+  export type KofiTransactionSumAggregateInputType = {
+    amountCents?: true
+  }
+
+  export type KofiTransactionMinAggregateInputType = {
+    id?: true
+    kofiTransactionId?: true
+    messageId?: true
+    type?: true
+    isSubscriptionPayment?: true
+    isFirstSubscriptionPayment?: true
+    tierName?: true
+    amountCents?: true
+    currency?: true
+    fromName?: true
+    email?: true
+    message?: true
+    userId?: true
+    matchedVia?: true
+    rawPayload?: true
+    receivedAt?: true
+  }
+
+  export type KofiTransactionMaxAggregateInputType = {
+    id?: true
+    kofiTransactionId?: true
+    messageId?: true
+    type?: true
+    isSubscriptionPayment?: true
+    isFirstSubscriptionPayment?: true
+    tierName?: true
+    amountCents?: true
+    currency?: true
+    fromName?: true
+    email?: true
+    message?: true
+    userId?: true
+    matchedVia?: true
+    rawPayload?: true
+    receivedAt?: true
+  }
+
+  export type KofiTransactionCountAggregateInputType = {
+    id?: true
+    kofiTransactionId?: true
+    messageId?: true
+    type?: true
+    isSubscriptionPayment?: true
+    isFirstSubscriptionPayment?: true
+    tierName?: true
+    amountCents?: true
+    currency?: true
+    fromName?: true
+    email?: true
+    message?: true
+    userId?: true
+    matchedVia?: true
+    rawPayload?: true
+    receivedAt?: true
+    _all?: true
+  }
+
+  export type KofiTransactionAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which KofiTransaction to aggregate.
+     */
+    where?: KofiTransactionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of KofiTransactions to fetch.
+     */
+    orderBy?: KofiTransactionOrderByWithRelationInput | KofiTransactionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: KofiTransactionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` KofiTransactions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` KofiTransactions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned KofiTransactions
+    **/
+    _count?: true | KofiTransactionCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: KofiTransactionAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: KofiTransactionSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: KofiTransactionMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: KofiTransactionMaxAggregateInputType
+  }
+
+  export type GetKofiTransactionAggregateType<T extends KofiTransactionAggregateArgs> = {
+        [P in keyof T & keyof AggregateKofiTransaction]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateKofiTransaction[P]>
+      : GetScalarType<T[P], AggregateKofiTransaction[P]>
+  }
+
+
+
+
+  export type KofiTransactionGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: KofiTransactionWhereInput
+    orderBy?: KofiTransactionOrderByWithAggregationInput | KofiTransactionOrderByWithAggregationInput[]
+    by: KofiTransactionScalarFieldEnum[] | KofiTransactionScalarFieldEnum
+    having?: KofiTransactionScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: KofiTransactionCountAggregateInputType | true
+    _avg?: KofiTransactionAvgAggregateInputType
+    _sum?: KofiTransactionSumAggregateInputType
+    _min?: KofiTransactionMinAggregateInputType
+    _max?: KofiTransactionMaxAggregateInputType
+  }
+
+  export type KofiTransactionGroupByOutputType = {
+    id: string
+    kofiTransactionId: string
+    messageId: string | null
+    type: string
+    isSubscriptionPayment: boolean
+    isFirstSubscriptionPayment: boolean
+    tierName: string | null
+    amountCents: number
+    currency: string
+    fromName: string | null
+    email: string | null
+    message: string | null
+    userId: string | null
+    matchedVia: string | null
+    rawPayload: string
+    receivedAt: Date
+    _count: KofiTransactionCountAggregateOutputType | null
+    _avg: KofiTransactionAvgAggregateOutputType | null
+    _sum: KofiTransactionSumAggregateOutputType | null
+    _min: KofiTransactionMinAggregateOutputType | null
+    _max: KofiTransactionMaxAggregateOutputType | null
+  }
+
+  type GetKofiTransactionGroupByPayload<T extends KofiTransactionGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<KofiTransactionGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof KofiTransactionGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], KofiTransactionGroupByOutputType[P]>
+            : GetScalarType<T[P], KofiTransactionGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type KofiTransactionSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    kofiTransactionId?: boolean
+    messageId?: boolean
+    type?: boolean
+    isSubscriptionPayment?: boolean
+    isFirstSubscriptionPayment?: boolean
+    tierName?: boolean
+    amountCents?: boolean
+    currency?: boolean
+    fromName?: boolean
+    email?: boolean
+    message?: boolean
+    userId?: boolean
+    matchedVia?: boolean
+    rawPayload?: boolean
+    receivedAt?: boolean
+    user?: boolean | KofiTransaction$userArgs<ExtArgs>
+  }, ExtArgs["result"]["kofiTransaction"]>
+
+  export type KofiTransactionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    kofiTransactionId?: boolean
+    messageId?: boolean
+    type?: boolean
+    isSubscriptionPayment?: boolean
+    isFirstSubscriptionPayment?: boolean
+    tierName?: boolean
+    amountCents?: boolean
+    currency?: boolean
+    fromName?: boolean
+    email?: boolean
+    message?: boolean
+    userId?: boolean
+    matchedVia?: boolean
+    rawPayload?: boolean
+    receivedAt?: boolean
+    user?: boolean | KofiTransaction$userArgs<ExtArgs>
+  }, ExtArgs["result"]["kofiTransaction"]>
+
+  export type KofiTransactionSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    kofiTransactionId?: boolean
+    messageId?: boolean
+    type?: boolean
+    isSubscriptionPayment?: boolean
+    isFirstSubscriptionPayment?: boolean
+    tierName?: boolean
+    amountCents?: boolean
+    currency?: boolean
+    fromName?: boolean
+    email?: boolean
+    message?: boolean
+    userId?: boolean
+    matchedVia?: boolean
+    rawPayload?: boolean
+    receivedAt?: boolean
+    user?: boolean | KofiTransaction$userArgs<ExtArgs>
+  }, ExtArgs["result"]["kofiTransaction"]>
+
+  export type KofiTransactionSelectScalar = {
+    id?: boolean
+    kofiTransactionId?: boolean
+    messageId?: boolean
+    type?: boolean
+    isSubscriptionPayment?: boolean
+    isFirstSubscriptionPayment?: boolean
+    tierName?: boolean
+    amountCents?: boolean
+    currency?: boolean
+    fromName?: boolean
+    email?: boolean
+    message?: boolean
+    userId?: boolean
+    matchedVia?: boolean
+    rawPayload?: boolean
+    receivedAt?: boolean
+  }
+
+  export type KofiTransactionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "kofiTransactionId" | "messageId" | "type" | "isSubscriptionPayment" | "isFirstSubscriptionPayment" | "tierName" | "amountCents" | "currency" | "fromName" | "email" | "message" | "userId" | "matchedVia" | "rawPayload" | "receivedAt", ExtArgs["result"]["kofiTransaction"]>
+  export type KofiTransactionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | KofiTransaction$userArgs<ExtArgs>
+  }
+  export type KofiTransactionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | KofiTransaction$userArgs<ExtArgs>
+  }
+  export type KofiTransactionIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | KofiTransaction$userArgs<ExtArgs>
+  }
+
+  export type $KofiTransactionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "KofiTransaction"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs> | null
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      kofiTransactionId: string
+      messageId: string | null
+      type: string
+      isSubscriptionPayment: boolean
+      isFirstSubscriptionPayment: boolean
+      tierName: string | null
+      amountCents: number
+      currency: string
+      fromName: string | null
+      email: string | null
+      message: string | null
+      userId: string | null
+      matchedVia: string | null
+      /**
+       * SQLite n'a pas le type Json de Prisma : payload brut stocké en string.
+       */
+      rawPayload: string
+      receivedAt: Date
+    }, ExtArgs["result"]["kofiTransaction"]>
+    composites: {}
+  }
+
+  type KofiTransactionGetPayload<S extends boolean | null | undefined | KofiTransactionDefaultArgs> = $Result.GetResult<Prisma.$KofiTransactionPayload, S>
+
+  type KofiTransactionCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<KofiTransactionFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: KofiTransactionCountAggregateInputType | true
+    }
+
+  export interface KofiTransactionDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['KofiTransaction'], meta: { name: 'KofiTransaction' } }
+    /**
+     * Find zero or one KofiTransaction that matches the filter.
+     * @param {KofiTransactionFindUniqueArgs} args - Arguments to find a KofiTransaction
+     * @example
+     * // Get one KofiTransaction
+     * const kofiTransaction = await prisma.kofiTransaction.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends KofiTransactionFindUniqueArgs>(args: SelectSubset<T, KofiTransactionFindUniqueArgs<ExtArgs>>): Prisma__KofiTransactionClient<$Result.GetResult<Prisma.$KofiTransactionPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one KofiTransaction that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {KofiTransactionFindUniqueOrThrowArgs} args - Arguments to find a KofiTransaction
+     * @example
+     * // Get one KofiTransaction
+     * const kofiTransaction = await prisma.kofiTransaction.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends KofiTransactionFindUniqueOrThrowArgs>(args: SelectSubset<T, KofiTransactionFindUniqueOrThrowArgs<ExtArgs>>): Prisma__KofiTransactionClient<$Result.GetResult<Prisma.$KofiTransactionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first KofiTransaction that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KofiTransactionFindFirstArgs} args - Arguments to find a KofiTransaction
+     * @example
+     * // Get one KofiTransaction
+     * const kofiTransaction = await prisma.kofiTransaction.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends KofiTransactionFindFirstArgs>(args?: SelectSubset<T, KofiTransactionFindFirstArgs<ExtArgs>>): Prisma__KofiTransactionClient<$Result.GetResult<Prisma.$KofiTransactionPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first KofiTransaction that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KofiTransactionFindFirstOrThrowArgs} args - Arguments to find a KofiTransaction
+     * @example
+     * // Get one KofiTransaction
+     * const kofiTransaction = await prisma.kofiTransaction.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends KofiTransactionFindFirstOrThrowArgs>(args?: SelectSubset<T, KofiTransactionFindFirstOrThrowArgs<ExtArgs>>): Prisma__KofiTransactionClient<$Result.GetResult<Prisma.$KofiTransactionPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more KofiTransactions that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KofiTransactionFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all KofiTransactions
+     * const kofiTransactions = await prisma.kofiTransaction.findMany()
+     * 
+     * // Get first 10 KofiTransactions
+     * const kofiTransactions = await prisma.kofiTransaction.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const kofiTransactionWithIdOnly = await prisma.kofiTransaction.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends KofiTransactionFindManyArgs>(args?: SelectSubset<T, KofiTransactionFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$KofiTransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a KofiTransaction.
+     * @param {KofiTransactionCreateArgs} args - Arguments to create a KofiTransaction.
+     * @example
+     * // Create one KofiTransaction
+     * const KofiTransaction = await prisma.kofiTransaction.create({
+     *   data: {
+     *     // ... data to create a KofiTransaction
+     *   }
+     * })
+     * 
+     */
+    create<T extends KofiTransactionCreateArgs>(args: SelectSubset<T, KofiTransactionCreateArgs<ExtArgs>>): Prisma__KofiTransactionClient<$Result.GetResult<Prisma.$KofiTransactionPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many KofiTransactions.
+     * @param {KofiTransactionCreateManyArgs} args - Arguments to create many KofiTransactions.
+     * @example
+     * // Create many KofiTransactions
+     * const kofiTransaction = await prisma.kofiTransaction.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends KofiTransactionCreateManyArgs>(args?: SelectSubset<T, KofiTransactionCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many KofiTransactions and returns the data saved in the database.
+     * @param {KofiTransactionCreateManyAndReturnArgs} args - Arguments to create many KofiTransactions.
+     * @example
+     * // Create many KofiTransactions
+     * const kofiTransaction = await prisma.kofiTransaction.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many KofiTransactions and only return the `id`
+     * const kofiTransactionWithIdOnly = await prisma.kofiTransaction.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends KofiTransactionCreateManyAndReturnArgs>(args?: SelectSubset<T, KofiTransactionCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$KofiTransactionPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a KofiTransaction.
+     * @param {KofiTransactionDeleteArgs} args - Arguments to delete one KofiTransaction.
+     * @example
+     * // Delete one KofiTransaction
+     * const KofiTransaction = await prisma.kofiTransaction.delete({
+     *   where: {
+     *     // ... filter to delete one KofiTransaction
+     *   }
+     * })
+     * 
+     */
+    delete<T extends KofiTransactionDeleteArgs>(args: SelectSubset<T, KofiTransactionDeleteArgs<ExtArgs>>): Prisma__KofiTransactionClient<$Result.GetResult<Prisma.$KofiTransactionPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one KofiTransaction.
+     * @param {KofiTransactionUpdateArgs} args - Arguments to update one KofiTransaction.
+     * @example
+     * // Update one KofiTransaction
+     * const kofiTransaction = await prisma.kofiTransaction.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends KofiTransactionUpdateArgs>(args: SelectSubset<T, KofiTransactionUpdateArgs<ExtArgs>>): Prisma__KofiTransactionClient<$Result.GetResult<Prisma.$KofiTransactionPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more KofiTransactions.
+     * @param {KofiTransactionDeleteManyArgs} args - Arguments to filter KofiTransactions to delete.
+     * @example
+     * // Delete a few KofiTransactions
+     * const { count } = await prisma.kofiTransaction.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends KofiTransactionDeleteManyArgs>(args?: SelectSubset<T, KofiTransactionDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more KofiTransactions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KofiTransactionUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many KofiTransactions
+     * const kofiTransaction = await prisma.kofiTransaction.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends KofiTransactionUpdateManyArgs>(args: SelectSubset<T, KofiTransactionUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more KofiTransactions and returns the data updated in the database.
+     * @param {KofiTransactionUpdateManyAndReturnArgs} args - Arguments to update many KofiTransactions.
+     * @example
+     * // Update many KofiTransactions
+     * const kofiTransaction = await prisma.kofiTransaction.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more KofiTransactions and only return the `id`
+     * const kofiTransactionWithIdOnly = await prisma.kofiTransaction.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends KofiTransactionUpdateManyAndReturnArgs>(args: SelectSubset<T, KofiTransactionUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$KofiTransactionPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one KofiTransaction.
+     * @param {KofiTransactionUpsertArgs} args - Arguments to update or create a KofiTransaction.
+     * @example
+     * // Update or create a KofiTransaction
+     * const kofiTransaction = await prisma.kofiTransaction.upsert({
+     *   create: {
+     *     // ... data to create a KofiTransaction
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the KofiTransaction we want to update
+     *   }
+     * })
+     */
+    upsert<T extends KofiTransactionUpsertArgs>(args: SelectSubset<T, KofiTransactionUpsertArgs<ExtArgs>>): Prisma__KofiTransactionClient<$Result.GetResult<Prisma.$KofiTransactionPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of KofiTransactions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KofiTransactionCountArgs} args - Arguments to filter KofiTransactions to count.
+     * @example
+     * // Count the number of KofiTransactions
+     * const count = await prisma.kofiTransaction.count({
+     *   where: {
+     *     // ... the filter for the KofiTransactions we want to count
+     *   }
+     * })
+    **/
+    count<T extends KofiTransactionCountArgs>(
+      args?: Subset<T, KofiTransactionCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], KofiTransactionCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a KofiTransaction.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KofiTransactionAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends KofiTransactionAggregateArgs>(args: Subset<T, KofiTransactionAggregateArgs>): Prisma.PrismaPromise<GetKofiTransactionAggregateType<T>>
+
+    /**
+     * Group by KofiTransaction.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {KofiTransactionGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends KofiTransactionGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: KofiTransactionGroupByArgs['orderBy'] }
+        : { orderBy?: KofiTransactionGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, KofiTransactionGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetKofiTransactionGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the KofiTransaction model
+   */
+  readonly fields: KofiTransactionFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for KofiTransaction.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__KofiTransactionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends KofiTransaction$userArgs<ExtArgs> = {}>(args?: Subset<T, KofiTransaction$userArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the KofiTransaction model
+   */
+  interface KofiTransactionFieldRefs {
+    readonly id: FieldRef<"KofiTransaction", 'String'>
+    readonly kofiTransactionId: FieldRef<"KofiTransaction", 'String'>
+    readonly messageId: FieldRef<"KofiTransaction", 'String'>
+    readonly type: FieldRef<"KofiTransaction", 'String'>
+    readonly isSubscriptionPayment: FieldRef<"KofiTransaction", 'Boolean'>
+    readonly isFirstSubscriptionPayment: FieldRef<"KofiTransaction", 'Boolean'>
+    readonly tierName: FieldRef<"KofiTransaction", 'String'>
+    readonly amountCents: FieldRef<"KofiTransaction", 'Int'>
+    readonly currency: FieldRef<"KofiTransaction", 'String'>
+    readonly fromName: FieldRef<"KofiTransaction", 'String'>
+    readonly email: FieldRef<"KofiTransaction", 'String'>
+    readonly message: FieldRef<"KofiTransaction", 'String'>
+    readonly userId: FieldRef<"KofiTransaction", 'String'>
+    readonly matchedVia: FieldRef<"KofiTransaction", 'String'>
+    readonly rawPayload: FieldRef<"KofiTransaction", 'String'>
+    readonly receivedAt: FieldRef<"KofiTransaction", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * KofiTransaction findUnique
+   */
+  export type KofiTransactionFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KofiTransaction
+     */
+    select?: KofiTransactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KofiTransaction
+     */
+    omit?: KofiTransactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KofiTransactionInclude<ExtArgs> | null
+    /**
+     * Filter, which KofiTransaction to fetch.
+     */
+    where: KofiTransactionWhereUniqueInput
+  }
+
+  /**
+   * KofiTransaction findUniqueOrThrow
+   */
+  export type KofiTransactionFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KofiTransaction
+     */
+    select?: KofiTransactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KofiTransaction
+     */
+    omit?: KofiTransactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KofiTransactionInclude<ExtArgs> | null
+    /**
+     * Filter, which KofiTransaction to fetch.
+     */
+    where: KofiTransactionWhereUniqueInput
+  }
+
+  /**
+   * KofiTransaction findFirst
+   */
+  export type KofiTransactionFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KofiTransaction
+     */
+    select?: KofiTransactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KofiTransaction
+     */
+    omit?: KofiTransactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KofiTransactionInclude<ExtArgs> | null
+    /**
+     * Filter, which KofiTransaction to fetch.
+     */
+    where?: KofiTransactionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of KofiTransactions to fetch.
+     */
+    orderBy?: KofiTransactionOrderByWithRelationInput | KofiTransactionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for KofiTransactions.
+     */
+    cursor?: KofiTransactionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` KofiTransactions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` KofiTransactions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of KofiTransactions.
+     */
+    distinct?: KofiTransactionScalarFieldEnum | KofiTransactionScalarFieldEnum[]
+  }
+
+  /**
+   * KofiTransaction findFirstOrThrow
+   */
+  export type KofiTransactionFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KofiTransaction
+     */
+    select?: KofiTransactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KofiTransaction
+     */
+    omit?: KofiTransactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KofiTransactionInclude<ExtArgs> | null
+    /**
+     * Filter, which KofiTransaction to fetch.
+     */
+    where?: KofiTransactionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of KofiTransactions to fetch.
+     */
+    orderBy?: KofiTransactionOrderByWithRelationInput | KofiTransactionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for KofiTransactions.
+     */
+    cursor?: KofiTransactionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` KofiTransactions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` KofiTransactions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of KofiTransactions.
+     */
+    distinct?: KofiTransactionScalarFieldEnum | KofiTransactionScalarFieldEnum[]
+  }
+
+  /**
+   * KofiTransaction findMany
+   */
+  export type KofiTransactionFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KofiTransaction
+     */
+    select?: KofiTransactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KofiTransaction
+     */
+    omit?: KofiTransactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KofiTransactionInclude<ExtArgs> | null
+    /**
+     * Filter, which KofiTransactions to fetch.
+     */
+    where?: KofiTransactionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of KofiTransactions to fetch.
+     */
+    orderBy?: KofiTransactionOrderByWithRelationInput | KofiTransactionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing KofiTransactions.
+     */
+    cursor?: KofiTransactionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` KofiTransactions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` KofiTransactions.
+     */
+    skip?: number
+    distinct?: KofiTransactionScalarFieldEnum | KofiTransactionScalarFieldEnum[]
+  }
+
+  /**
+   * KofiTransaction create
+   */
+  export type KofiTransactionCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KofiTransaction
+     */
+    select?: KofiTransactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KofiTransaction
+     */
+    omit?: KofiTransactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KofiTransactionInclude<ExtArgs> | null
+    /**
+     * The data needed to create a KofiTransaction.
+     */
+    data: XOR<KofiTransactionCreateInput, KofiTransactionUncheckedCreateInput>
+  }
+
+  /**
+   * KofiTransaction createMany
+   */
+  export type KofiTransactionCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many KofiTransactions.
+     */
+    data: KofiTransactionCreateManyInput | KofiTransactionCreateManyInput[]
+  }
+
+  /**
+   * KofiTransaction createManyAndReturn
+   */
+  export type KofiTransactionCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KofiTransaction
+     */
+    select?: KofiTransactionSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the KofiTransaction
+     */
+    omit?: KofiTransactionOmit<ExtArgs> | null
+    /**
+     * The data used to create many KofiTransactions.
+     */
+    data: KofiTransactionCreateManyInput | KofiTransactionCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KofiTransactionIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * KofiTransaction update
+   */
+  export type KofiTransactionUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KofiTransaction
+     */
+    select?: KofiTransactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KofiTransaction
+     */
+    omit?: KofiTransactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KofiTransactionInclude<ExtArgs> | null
+    /**
+     * The data needed to update a KofiTransaction.
+     */
+    data: XOR<KofiTransactionUpdateInput, KofiTransactionUncheckedUpdateInput>
+    /**
+     * Choose, which KofiTransaction to update.
+     */
+    where: KofiTransactionWhereUniqueInput
+  }
+
+  /**
+   * KofiTransaction updateMany
+   */
+  export type KofiTransactionUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update KofiTransactions.
+     */
+    data: XOR<KofiTransactionUpdateManyMutationInput, KofiTransactionUncheckedUpdateManyInput>
+    /**
+     * Filter which KofiTransactions to update
+     */
+    where?: KofiTransactionWhereInput
+    /**
+     * Limit how many KofiTransactions to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * KofiTransaction updateManyAndReturn
+   */
+  export type KofiTransactionUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KofiTransaction
+     */
+    select?: KofiTransactionSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the KofiTransaction
+     */
+    omit?: KofiTransactionOmit<ExtArgs> | null
+    /**
+     * The data used to update KofiTransactions.
+     */
+    data: XOR<KofiTransactionUpdateManyMutationInput, KofiTransactionUncheckedUpdateManyInput>
+    /**
+     * Filter which KofiTransactions to update
+     */
+    where?: KofiTransactionWhereInput
+    /**
+     * Limit how many KofiTransactions to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KofiTransactionIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * KofiTransaction upsert
+   */
+  export type KofiTransactionUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KofiTransaction
+     */
+    select?: KofiTransactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KofiTransaction
+     */
+    omit?: KofiTransactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KofiTransactionInclude<ExtArgs> | null
+    /**
+     * The filter to search for the KofiTransaction to update in case it exists.
+     */
+    where: KofiTransactionWhereUniqueInput
+    /**
+     * In case the KofiTransaction found by the `where` argument doesn't exist, create a new KofiTransaction with this data.
+     */
+    create: XOR<KofiTransactionCreateInput, KofiTransactionUncheckedCreateInput>
+    /**
+     * In case the KofiTransaction was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<KofiTransactionUpdateInput, KofiTransactionUncheckedUpdateInput>
+  }
+
+  /**
+   * KofiTransaction delete
+   */
+  export type KofiTransactionDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KofiTransaction
+     */
+    select?: KofiTransactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KofiTransaction
+     */
+    omit?: KofiTransactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KofiTransactionInclude<ExtArgs> | null
+    /**
+     * Filter which KofiTransaction to delete.
+     */
+    where: KofiTransactionWhereUniqueInput
+  }
+
+  /**
+   * KofiTransaction deleteMany
+   */
+  export type KofiTransactionDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which KofiTransactions to delete
+     */
+    where?: KofiTransactionWhereInput
+    /**
+     * Limit how many KofiTransactions to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * KofiTransaction.user
+   */
+  export type KofiTransaction$userArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    where?: UserWhereInput
+  }
+
+  /**
+   * KofiTransaction without action
+   */
+  export type KofiTransactionDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the KofiTransaction
+     */
+    select?: KofiTransactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the KofiTransaction
+     */
+    omit?: KofiTransactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: KofiTransactionInclude<ExtArgs> | null
   }
 
 
@@ -29840,6 +31291,10 @@ export namespace Prisma {
     role: 'role',
     roles: 'roles',
     patreon: 'patreon',
+    kofiLinkCode: 'kofiLinkCode',
+    supporterTier: 'supporterTier',
+    supporterActiveUntil: 'supporterActiveUntil',
+    totalDonatedCents: 'totalDonatedCents',
     valid: 'valid',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
@@ -29847,6 +31302,28 @@ export namespace Prisma {
   };
 
   export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+  export const KofiTransactionScalarFieldEnum: {
+    id: 'id',
+    kofiTransactionId: 'kofiTransactionId',
+    messageId: 'messageId',
+    type: 'type',
+    isSubscriptionPayment: 'isSubscriptionPayment',
+    isFirstSubscriptionPayment: 'isFirstSubscriptionPayment',
+    tierName: 'tierName',
+    amountCents: 'amountCents',
+    currency: 'currency',
+    fromName: 'fromName',
+    email: 'email',
+    message: 'message',
+    userId: 'userId',
+    matchedVia: 'matchedVia',
+    rawPayload: 'rawPayload',
+    receivedAt: 'receivedAt'
+  };
+
+  export type KofiTransactionScalarFieldEnum = (typeof KofiTransactionScalarFieldEnum)[keyof typeof KofiTransactionScalarFieldEnum]
 
 
   export const UserAchievementScalarFieldEnum: {
@@ -30326,6 +31803,10 @@ export namespace Prisma {
     role?: StringFilter<"User"> | string
     roles?: StringFilter<"User"> | string
     patreon?: BoolFilter<"User"> | boolean
+    kofiLinkCode?: StringNullableFilter<"User"> | string | null
+    supporterTier?: StringNullableFilter<"User"> | string | null
+    supporterActiveUntil?: DateTimeNullableFilter<"User"> | Date | string | null
+    totalDonatedCents?: IntFilter<"User"> | number
     valid?: BoolFilter<"User"> | boolean
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
@@ -30342,6 +31823,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipListRelationFilter
     friendshipsReceived?: FriendshipListRelationFilter
     achievements?: UserAchievementListRelationFilter
+    kofiTransactions?: KofiTransactionListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -30356,6 +31838,10 @@ export namespace Prisma {
     role?: SortOrder
     roles?: SortOrder
     patreon?: SortOrder
+    kofiLinkCode?: SortOrderInput | SortOrder
+    supporterTier?: SortOrderInput | SortOrder
+    supporterActiveUntil?: SortOrderInput | SortOrder
+    totalDonatedCents?: SortOrder
     valid?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -30372,11 +31858,13 @@ export namespace Prisma {
     friendshipsSent?: FriendshipOrderByRelationAggregateInput
     friendshipsReceived?: FriendshipOrderByRelationAggregateInput
     achievements?: UserAchievementOrderByRelationAggregateInput
+    kofiTransactions?: KofiTransactionOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
     id?: string
     email?: string
+    kofiLinkCode?: string
     AND?: UserWhereInput | UserWhereInput[]
     OR?: UserWhereInput[]
     NOT?: UserWhereInput | UserWhereInput[]
@@ -30389,6 +31877,9 @@ export namespace Prisma {
     role?: StringFilter<"User"> | string
     roles?: StringFilter<"User"> | string
     patreon?: BoolFilter<"User"> | boolean
+    supporterTier?: StringNullableFilter<"User"> | string | null
+    supporterActiveUntil?: DateTimeNullableFilter<"User"> | Date | string | null
+    totalDonatedCents?: IntFilter<"User"> | number
     valid?: BoolFilter<"User"> | boolean
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
@@ -30405,7 +31896,8 @@ export namespace Prisma {
     friendshipsSent?: FriendshipListRelationFilter
     friendshipsReceived?: FriendshipListRelationFilter
     achievements?: UserAchievementListRelationFilter
-  }, "id" | "email">
+    kofiTransactions?: KofiTransactionListRelationFilter
+  }, "id" | "email" | "kofiLinkCode">
 
   export type UserOrderByWithAggregationInput = {
     id?: SortOrder
@@ -30419,6 +31911,10 @@ export namespace Prisma {
     role?: SortOrder
     roles?: SortOrder
     patreon?: SortOrder
+    kofiLinkCode?: SortOrderInput | SortOrder
+    supporterTier?: SortOrderInput | SortOrder
+    supporterActiveUntil?: SortOrderInput | SortOrder
+    totalDonatedCents?: SortOrder
     valid?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -30445,10 +31941,126 @@ export namespace Prisma {
     role?: StringWithAggregatesFilter<"User"> | string
     roles?: StringWithAggregatesFilter<"User"> | string
     patreon?: BoolWithAggregatesFilter<"User"> | boolean
+    kofiLinkCode?: StringNullableWithAggregatesFilter<"User"> | string | null
+    supporterTier?: StringNullableWithAggregatesFilter<"User"> | string | null
+    supporterActiveUntil?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
+    totalDonatedCents?: IntWithAggregatesFilter<"User"> | number
     valid?: BoolWithAggregatesFilter<"User"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     eloRating?: IntWithAggregatesFilter<"User"> | number
+  }
+
+  export type KofiTransactionWhereInput = {
+    AND?: KofiTransactionWhereInput | KofiTransactionWhereInput[]
+    OR?: KofiTransactionWhereInput[]
+    NOT?: KofiTransactionWhereInput | KofiTransactionWhereInput[]
+    id?: StringFilter<"KofiTransaction"> | string
+    kofiTransactionId?: StringFilter<"KofiTransaction"> | string
+    messageId?: StringNullableFilter<"KofiTransaction"> | string | null
+    type?: StringFilter<"KofiTransaction"> | string
+    isSubscriptionPayment?: BoolFilter<"KofiTransaction"> | boolean
+    isFirstSubscriptionPayment?: BoolFilter<"KofiTransaction"> | boolean
+    tierName?: StringNullableFilter<"KofiTransaction"> | string | null
+    amountCents?: IntFilter<"KofiTransaction"> | number
+    currency?: StringFilter<"KofiTransaction"> | string
+    fromName?: StringNullableFilter<"KofiTransaction"> | string | null
+    email?: StringNullableFilter<"KofiTransaction"> | string | null
+    message?: StringNullableFilter<"KofiTransaction"> | string | null
+    userId?: StringNullableFilter<"KofiTransaction"> | string | null
+    matchedVia?: StringNullableFilter<"KofiTransaction"> | string | null
+    rawPayload?: StringFilter<"KofiTransaction"> | string
+    receivedAt?: DateTimeFilter<"KofiTransaction"> | Date | string
+    user?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+  }
+
+  export type KofiTransactionOrderByWithRelationInput = {
+    id?: SortOrder
+    kofiTransactionId?: SortOrder
+    messageId?: SortOrderInput | SortOrder
+    type?: SortOrder
+    isSubscriptionPayment?: SortOrder
+    isFirstSubscriptionPayment?: SortOrder
+    tierName?: SortOrderInput | SortOrder
+    amountCents?: SortOrder
+    currency?: SortOrder
+    fromName?: SortOrderInput | SortOrder
+    email?: SortOrderInput | SortOrder
+    message?: SortOrderInput | SortOrder
+    userId?: SortOrderInput | SortOrder
+    matchedVia?: SortOrderInput | SortOrder
+    rawPayload?: SortOrder
+    receivedAt?: SortOrder
+    user?: UserOrderByWithRelationInput
+  }
+
+  export type KofiTransactionWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    kofiTransactionId?: string
+    AND?: KofiTransactionWhereInput | KofiTransactionWhereInput[]
+    OR?: KofiTransactionWhereInput[]
+    NOT?: KofiTransactionWhereInput | KofiTransactionWhereInput[]
+    messageId?: StringNullableFilter<"KofiTransaction"> | string | null
+    type?: StringFilter<"KofiTransaction"> | string
+    isSubscriptionPayment?: BoolFilter<"KofiTransaction"> | boolean
+    isFirstSubscriptionPayment?: BoolFilter<"KofiTransaction"> | boolean
+    tierName?: StringNullableFilter<"KofiTransaction"> | string | null
+    amountCents?: IntFilter<"KofiTransaction"> | number
+    currency?: StringFilter<"KofiTransaction"> | string
+    fromName?: StringNullableFilter<"KofiTransaction"> | string | null
+    email?: StringNullableFilter<"KofiTransaction"> | string | null
+    message?: StringNullableFilter<"KofiTransaction"> | string | null
+    userId?: StringNullableFilter<"KofiTransaction"> | string | null
+    matchedVia?: StringNullableFilter<"KofiTransaction"> | string | null
+    rawPayload?: StringFilter<"KofiTransaction"> | string
+    receivedAt?: DateTimeFilter<"KofiTransaction"> | Date | string
+    user?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+  }, "id" | "kofiTransactionId">
+
+  export type KofiTransactionOrderByWithAggregationInput = {
+    id?: SortOrder
+    kofiTransactionId?: SortOrder
+    messageId?: SortOrderInput | SortOrder
+    type?: SortOrder
+    isSubscriptionPayment?: SortOrder
+    isFirstSubscriptionPayment?: SortOrder
+    tierName?: SortOrderInput | SortOrder
+    amountCents?: SortOrder
+    currency?: SortOrder
+    fromName?: SortOrderInput | SortOrder
+    email?: SortOrderInput | SortOrder
+    message?: SortOrderInput | SortOrder
+    userId?: SortOrderInput | SortOrder
+    matchedVia?: SortOrderInput | SortOrder
+    rawPayload?: SortOrder
+    receivedAt?: SortOrder
+    _count?: KofiTransactionCountOrderByAggregateInput
+    _avg?: KofiTransactionAvgOrderByAggregateInput
+    _max?: KofiTransactionMaxOrderByAggregateInput
+    _min?: KofiTransactionMinOrderByAggregateInput
+    _sum?: KofiTransactionSumOrderByAggregateInput
+  }
+
+  export type KofiTransactionScalarWhereWithAggregatesInput = {
+    AND?: KofiTransactionScalarWhereWithAggregatesInput | KofiTransactionScalarWhereWithAggregatesInput[]
+    OR?: KofiTransactionScalarWhereWithAggregatesInput[]
+    NOT?: KofiTransactionScalarWhereWithAggregatesInput | KofiTransactionScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"KofiTransaction"> | string
+    kofiTransactionId?: StringWithAggregatesFilter<"KofiTransaction"> | string
+    messageId?: StringNullableWithAggregatesFilter<"KofiTransaction"> | string | null
+    type?: StringWithAggregatesFilter<"KofiTransaction"> | string
+    isSubscriptionPayment?: BoolWithAggregatesFilter<"KofiTransaction"> | boolean
+    isFirstSubscriptionPayment?: BoolWithAggregatesFilter<"KofiTransaction"> | boolean
+    tierName?: StringNullableWithAggregatesFilter<"KofiTransaction"> | string | null
+    amountCents?: IntWithAggregatesFilter<"KofiTransaction"> | number
+    currency?: StringWithAggregatesFilter<"KofiTransaction"> | string
+    fromName?: StringNullableWithAggregatesFilter<"KofiTransaction"> | string | null
+    email?: StringNullableWithAggregatesFilter<"KofiTransaction"> | string | null
+    message?: StringNullableWithAggregatesFilter<"KofiTransaction"> | string | null
+    userId?: StringNullableWithAggregatesFilter<"KofiTransaction"> | string | null
+    matchedVia?: StringNullableWithAggregatesFilter<"KofiTransaction"> | string | null
+    rawPayload?: StringWithAggregatesFilter<"KofiTransaction"> | string
+    receivedAt?: DateTimeWithAggregatesFilter<"KofiTransaction"> | Date | string
   }
 
   export type UserAchievementWhereInput = {
@@ -32332,6 +33944,10 @@ export namespace Prisma {
     role?: string
     roles?: string
     patreon?: boolean
+    kofiLinkCode?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCents?: number
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -32348,6 +33964,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipCreateNestedManyWithoutRequesterInput
     friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -32362,6 +33979,10 @@ export namespace Prisma {
     role?: string
     roles?: string
     patreon?: boolean
+    kofiLinkCode?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCents?: number
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -32378,6 +33999,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipUncheckedCreateNestedManyWithoutRequesterInput
     friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserUpdateInput = {
@@ -32392,6 +34014,10 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCents?: IntFieldUpdateOperationsInput | number
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -32408,6 +34034,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipUpdateManyWithoutRequesterNestedInput
     friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -32422,6 +34049,10 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCents?: IntFieldUpdateOperationsInput | number
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -32438,6 +34069,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipUncheckedUpdateManyWithoutRequesterNestedInput
     friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -32452,6 +34084,10 @@ export namespace Prisma {
     role?: string
     roles?: string
     patreon?: boolean
+    kofiLinkCode?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCents?: number
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -32470,6 +34106,10 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCents?: IntFieldUpdateOperationsInput | number
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -32488,10 +34128,146 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCents?: IntFieldUpdateOperationsInput | number
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type KofiTransactionCreateInput = {
+    id?: string
+    kofiTransactionId: string
+    messageId?: string | null
+    type: string
+    isSubscriptionPayment?: boolean
+    isFirstSubscriptionPayment?: boolean
+    tierName?: string | null
+    amountCents: number
+    currency: string
+    fromName?: string | null
+    email?: string | null
+    message?: string | null
+    matchedVia?: string | null
+    rawPayload: string
+    receivedAt?: Date | string
+    user?: UserCreateNestedOneWithoutKofiTransactionsInput
+  }
+
+  export type KofiTransactionUncheckedCreateInput = {
+    id?: string
+    kofiTransactionId: string
+    messageId?: string | null
+    type: string
+    isSubscriptionPayment?: boolean
+    isFirstSubscriptionPayment?: boolean
+    tierName?: string | null
+    amountCents: number
+    currency: string
+    fromName?: string | null
+    email?: string | null
+    message?: string | null
+    userId?: string | null
+    matchedVia?: string | null
+    rawPayload: string
+    receivedAt?: Date | string
+  }
+
+  export type KofiTransactionUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    kofiTransactionId?: StringFieldUpdateOperationsInput | string
+    messageId?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: StringFieldUpdateOperationsInput | string
+    isSubscriptionPayment?: BoolFieldUpdateOperationsInput | boolean
+    isFirstSubscriptionPayment?: BoolFieldUpdateOperationsInput | boolean
+    tierName?: NullableStringFieldUpdateOperationsInput | string | null
+    amountCents?: IntFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    fromName?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    message?: NullableStringFieldUpdateOperationsInput | string | null
+    matchedVia?: NullableStringFieldUpdateOperationsInput | string | null
+    rawPayload?: StringFieldUpdateOperationsInput | string
+    receivedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneWithoutKofiTransactionsNestedInput
+  }
+
+  export type KofiTransactionUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    kofiTransactionId?: StringFieldUpdateOperationsInput | string
+    messageId?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: StringFieldUpdateOperationsInput | string
+    isSubscriptionPayment?: BoolFieldUpdateOperationsInput | boolean
+    isFirstSubscriptionPayment?: BoolFieldUpdateOperationsInput | boolean
+    tierName?: NullableStringFieldUpdateOperationsInput | string | null
+    amountCents?: IntFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    fromName?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    message?: NullableStringFieldUpdateOperationsInput | string | null
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
+    matchedVia?: NullableStringFieldUpdateOperationsInput | string | null
+    rawPayload?: StringFieldUpdateOperationsInput | string
+    receivedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KofiTransactionCreateManyInput = {
+    id?: string
+    kofiTransactionId: string
+    messageId?: string | null
+    type: string
+    isSubscriptionPayment?: boolean
+    isFirstSubscriptionPayment?: boolean
+    tierName?: string | null
+    amountCents: number
+    currency: string
+    fromName?: string | null
+    email?: string | null
+    message?: string | null
+    userId?: string | null
+    matchedVia?: string | null
+    rawPayload: string
+    receivedAt?: Date | string
+  }
+
+  export type KofiTransactionUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    kofiTransactionId?: StringFieldUpdateOperationsInput | string
+    messageId?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: StringFieldUpdateOperationsInput | string
+    isSubscriptionPayment?: BoolFieldUpdateOperationsInput | boolean
+    isFirstSubscriptionPayment?: BoolFieldUpdateOperationsInput | boolean
+    tierName?: NullableStringFieldUpdateOperationsInput | string | null
+    amountCents?: IntFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    fromName?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    message?: NullableStringFieldUpdateOperationsInput | string | null
+    matchedVia?: NullableStringFieldUpdateOperationsInput | string | null
+    rawPayload?: StringFieldUpdateOperationsInput | string
+    receivedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KofiTransactionUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    kofiTransactionId?: StringFieldUpdateOperationsInput | string
+    messageId?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: StringFieldUpdateOperationsInput | string
+    isSubscriptionPayment?: BoolFieldUpdateOperationsInput | boolean
+    isFirstSubscriptionPayment?: BoolFieldUpdateOperationsInput | boolean
+    tierName?: NullableStringFieldUpdateOperationsInput | string | null
+    amountCents?: IntFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    fromName?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    message?: NullableStringFieldUpdateOperationsInput | string | null
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
+    matchedVia?: NullableStringFieldUpdateOperationsInput | string | null
+    rawPayload?: StringFieldUpdateOperationsInput | string
+    receivedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type UserAchievementCreateInput = {
@@ -34594,17 +36370,6 @@ export namespace Prisma {
     not?: NestedBoolFilter<$PrismaModel> | boolean
   }
 
-  export type DateTimeFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[]
-    notIn?: Date[] | string[]
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeFilter<$PrismaModel> | Date | string
-  }
-
   export type IntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[]
@@ -34614,6 +36379,17 @@ export namespace Prisma {
     gt?: number | IntFieldRefInput<$PrismaModel>
     gte?: number | IntFieldRefInput<$PrismaModel>
     not?: NestedIntFilter<$PrismaModel> | number
+  }
+
+  export type DateTimeFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[]
+    notIn?: Date[] | string[]
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeFilter<$PrismaModel> | Date | string
   }
 
   export type MatchListRelationFilter = {
@@ -34675,6 +36451,12 @@ export namespace Prisma {
     none?: UserAchievementWhereInput
   }
 
+  export type KofiTransactionListRelationFilter = {
+    every?: KofiTransactionWhereInput
+    some?: KofiTransactionWhereInput
+    none?: KofiTransactionWhereInput
+  }
+
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
@@ -34716,6 +36498,10 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
+  export type KofiTransactionOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
   export type UserCountOrderByAggregateInput = {
     id?: SortOrder
     email?: SortOrder
@@ -34728,6 +36514,10 @@ export namespace Prisma {
     role?: SortOrder
     roles?: SortOrder
     patreon?: SortOrder
+    kofiLinkCode?: SortOrder
+    supporterTier?: SortOrder
+    supporterActiveUntil?: SortOrder
+    totalDonatedCents?: SortOrder
     valid?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -34735,6 +36525,7 @@ export namespace Prisma {
   }
 
   export type UserAvgOrderByAggregateInput = {
+    totalDonatedCents?: SortOrder
     eloRating?: SortOrder
   }
 
@@ -34750,6 +36541,10 @@ export namespace Prisma {
     role?: SortOrder
     roles?: SortOrder
     patreon?: SortOrder
+    kofiLinkCode?: SortOrder
+    supporterTier?: SortOrder
+    supporterActiveUntil?: SortOrder
+    totalDonatedCents?: SortOrder
     valid?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -34768,6 +36563,10 @@ export namespace Prisma {
     role?: SortOrder
     roles?: SortOrder
     patreon?: SortOrder
+    kofiLinkCode?: SortOrder
+    supporterTier?: SortOrder
+    supporterActiveUntil?: SortOrder
+    totalDonatedCents?: SortOrder
     valid?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -34775,6 +36574,7 @@ export namespace Prisma {
   }
 
   export type UserSumOrderByAggregateInput = {
+    totalDonatedCents?: SortOrder
     eloRating?: SortOrder
   }
 
@@ -34834,20 +36634,6 @@ export namespace Prisma {
     _max?: NestedBoolFilter<$PrismaModel>
   }
 
-  export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[]
-    notIn?: Date[] | string[]
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedDateTimeFilter<$PrismaModel>
-    _max?: NestedDateTimeFilter<$PrismaModel>
-  }
-
   export type IntWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[]
@@ -34862,6 +36648,90 @@ export namespace Prisma {
     _sum?: NestedIntFilter<$PrismaModel>
     _min?: NestedIntFilter<$PrismaModel>
     _max?: NestedIntFilter<$PrismaModel>
+  }
+
+  export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[]
+    notIn?: Date[] | string[]
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedDateTimeFilter<$PrismaModel>
+    _max?: NestedDateTimeFilter<$PrismaModel>
+  }
+
+  export type UserNullableScalarRelationFilter = {
+    is?: UserWhereInput | null
+    isNot?: UserWhereInput | null
+  }
+
+  export type KofiTransactionCountOrderByAggregateInput = {
+    id?: SortOrder
+    kofiTransactionId?: SortOrder
+    messageId?: SortOrder
+    type?: SortOrder
+    isSubscriptionPayment?: SortOrder
+    isFirstSubscriptionPayment?: SortOrder
+    tierName?: SortOrder
+    amountCents?: SortOrder
+    currency?: SortOrder
+    fromName?: SortOrder
+    email?: SortOrder
+    message?: SortOrder
+    userId?: SortOrder
+    matchedVia?: SortOrder
+    rawPayload?: SortOrder
+    receivedAt?: SortOrder
+  }
+
+  export type KofiTransactionAvgOrderByAggregateInput = {
+    amountCents?: SortOrder
+  }
+
+  export type KofiTransactionMaxOrderByAggregateInput = {
+    id?: SortOrder
+    kofiTransactionId?: SortOrder
+    messageId?: SortOrder
+    type?: SortOrder
+    isSubscriptionPayment?: SortOrder
+    isFirstSubscriptionPayment?: SortOrder
+    tierName?: SortOrder
+    amountCents?: SortOrder
+    currency?: SortOrder
+    fromName?: SortOrder
+    email?: SortOrder
+    message?: SortOrder
+    userId?: SortOrder
+    matchedVia?: SortOrder
+    rawPayload?: SortOrder
+    receivedAt?: SortOrder
+  }
+
+  export type KofiTransactionMinOrderByAggregateInput = {
+    id?: SortOrder
+    kofiTransactionId?: SortOrder
+    messageId?: SortOrder
+    type?: SortOrder
+    isSubscriptionPayment?: SortOrder
+    isFirstSubscriptionPayment?: SortOrder
+    tierName?: SortOrder
+    amountCents?: SortOrder
+    currency?: SortOrder
+    fromName?: SortOrder
+    email?: SortOrder
+    message?: SortOrder
+    userId?: SortOrder
+    matchedVia?: SortOrder
+    rawPayload?: SortOrder
+    receivedAt?: SortOrder
+  }
+
+  export type KofiTransactionSumOrderByAggregateInput = {
+    amountCents?: SortOrder
   }
 
   export type UserScalarRelationFilter = {
@@ -34983,11 +36853,6 @@ export namespace Prisma {
     flagId?: SortOrder
     userId?: SortOrder
     createdAt?: SortOrder
-  }
-
-  export type UserNullableScalarRelationFilter = {
-    is?: UserWhereInput | null
-    isNot?: UserWhereInput | null
   }
 
   export type UserListRelationFilter = {
@@ -36353,6 +38218,13 @@ export namespace Prisma {
     connect?: UserAchievementWhereUniqueInput | UserAchievementWhereUniqueInput[]
   }
 
+  export type KofiTransactionCreateNestedManyWithoutUserInput = {
+    create?: XOR<KofiTransactionCreateWithoutUserInput, KofiTransactionUncheckedCreateWithoutUserInput> | KofiTransactionCreateWithoutUserInput[] | KofiTransactionUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: KofiTransactionCreateOrConnectWithoutUserInput | KofiTransactionCreateOrConnectWithoutUserInput[]
+    createMany?: KofiTransactionCreateManyUserInputEnvelope
+    connect?: KofiTransactionWhereUniqueInput | KofiTransactionWhereUniqueInput[]
+  }
+
   export type MatchUncheckedCreateNestedManyWithoutPlayersInput = {
     create?: XOR<MatchCreateWithoutPlayersInput, MatchUncheckedCreateWithoutPlayersInput> | MatchCreateWithoutPlayersInput[] | MatchUncheckedCreateWithoutPlayersInput[]
     connectOrCreate?: MatchCreateOrConnectWithoutPlayersInput | MatchCreateOrConnectWithoutPlayersInput[]
@@ -36435,6 +38307,13 @@ export namespace Prisma {
     connect?: UserAchievementWhereUniqueInput | UserAchievementWhereUniqueInput[]
   }
 
+  export type KofiTransactionUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<KofiTransactionCreateWithoutUserInput, KofiTransactionUncheckedCreateWithoutUserInput> | KofiTransactionCreateWithoutUserInput[] | KofiTransactionUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: KofiTransactionCreateOrConnectWithoutUserInput | KofiTransactionCreateOrConnectWithoutUserInput[]
+    createMany?: KofiTransactionCreateManyUserInputEnvelope
+    connect?: KofiTransactionWhereUniqueInput | KofiTransactionWhereUniqueInput[]
+  }
+
   export type StringFieldUpdateOperationsInput = {
     set?: string
   }
@@ -36451,16 +38330,16 @@ export namespace Prisma {
     set?: boolean
   }
 
-  export type DateTimeFieldUpdateOperationsInput = {
-    set?: Date | string
-  }
-
   export type IntFieldUpdateOperationsInput = {
     set?: number
     increment?: number
     decrement?: number
     multiply?: number
     divide?: number
+  }
+
+  export type DateTimeFieldUpdateOperationsInput = {
+    set?: Date | string
   }
 
   export type MatchUpdateManyWithoutPlayersNestedInput = {
@@ -36626,6 +38505,20 @@ export namespace Prisma {
     deleteMany?: UserAchievementScalarWhereInput | UserAchievementScalarWhereInput[]
   }
 
+  export type KofiTransactionUpdateManyWithoutUserNestedInput = {
+    create?: XOR<KofiTransactionCreateWithoutUserInput, KofiTransactionUncheckedCreateWithoutUserInput> | KofiTransactionCreateWithoutUserInput[] | KofiTransactionUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: KofiTransactionCreateOrConnectWithoutUserInput | KofiTransactionCreateOrConnectWithoutUserInput[]
+    upsert?: KofiTransactionUpsertWithWhereUniqueWithoutUserInput | KofiTransactionUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: KofiTransactionCreateManyUserInputEnvelope
+    set?: KofiTransactionWhereUniqueInput | KofiTransactionWhereUniqueInput[]
+    disconnect?: KofiTransactionWhereUniqueInput | KofiTransactionWhereUniqueInput[]
+    delete?: KofiTransactionWhereUniqueInput | KofiTransactionWhereUniqueInput[]
+    connect?: KofiTransactionWhereUniqueInput | KofiTransactionWhereUniqueInput[]
+    update?: KofiTransactionUpdateWithWhereUniqueWithoutUserInput | KofiTransactionUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: KofiTransactionUpdateManyWithWhereWithoutUserInput | KofiTransactionUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: KofiTransactionScalarWhereInput | KofiTransactionScalarWhereInput[]
+  }
+
   export type MatchUncheckedUpdateManyWithoutPlayersNestedInput = {
     create?: XOR<MatchCreateWithoutPlayersInput, MatchUncheckedCreateWithoutPlayersInput> | MatchCreateWithoutPlayersInput[] | MatchUncheckedCreateWithoutPlayersInput[]
     connectOrCreate?: MatchCreateOrConnectWithoutPlayersInput | MatchCreateOrConnectWithoutPlayersInput[]
@@ -36787,6 +38680,36 @@ export namespace Prisma {
     update?: UserAchievementUpdateWithWhereUniqueWithoutUserInput | UserAchievementUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: UserAchievementUpdateManyWithWhereWithoutUserInput | UserAchievementUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: UserAchievementScalarWhereInput | UserAchievementScalarWhereInput[]
+  }
+
+  export type KofiTransactionUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<KofiTransactionCreateWithoutUserInput, KofiTransactionUncheckedCreateWithoutUserInput> | KofiTransactionCreateWithoutUserInput[] | KofiTransactionUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: KofiTransactionCreateOrConnectWithoutUserInput | KofiTransactionCreateOrConnectWithoutUserInput[]
+    upsert?: KofiTransactionUpsertWithWhereUniqueWithoutUserInput | KofiTransactionUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: KofiTransactionCreateManyUserInputEnvelope
+    set?: KofiTransactionWhereUniqueInput | KofiTransactionWhereUniqueInput[]
+    disconnect?: KofiTransactionWhereUniqueInput | KofiTransactionWhereUniqueInput[]
+    delete?: KofiTransactionWhereUniqueInput | KofiTransactionWhereUniqueInput[]
+    connect?: KofiTransactionWhereUniqueInput | KofiTransactionWhereUniqueInput[]
+    update?: KofiTransactionUpdateWithWhereUniqueWithoutUserInput | KofiTransactionUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: KofiTransactionUpdateManyWithWhereWithoutUserInput | KofiTransactionUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: KofiTransactionScalarWhereInput | KofiTransactionScalarWhereInput[]
+  }
+
+  export type UserCreateNestedOneWithoutKofiTransactionsInput = {
+    create?: XOR<UserCreateWithoutKofiTransactionsInput, UserUncheckedCreateWithoutKofiTransactionsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutKofiTransactionsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserUpdateOneWithoutKofiTransactionsNestedInput = {
+    create?: XOR<UserCreateWithoutKofiTransactionsInput, UserUncheckedCreateWithoutKofiTransactionsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutKofiTransactionsInput
+    upsert?: UserUpsertWithoutKofiTransactionsInput
+    disconnect?: UserWhereInput | boolean
+    delete?: UserWhereInput | boolean
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutKofiTransactionsInput, UserUpdateWithoutKofiTransactionsInput>, UserUncheckedUpdateWithoutKofiTransactionsInput>
   }
 
   export type UserCreateNestedOneWithoutAchievementsInput = {
@@ -38053,17 +39976,6 @@ export namespace Prisma {
     not?: NestedBoolFilter<$PrismaModel> | boolean
   }
 
-  export type NestedDateTimeFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[]
-    notIn?: Date[] | string[]
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeFilter<$PrismaModel> | Date | string
-  }
-
   export type NestedIntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[]
@@ -38073,6 +39985,17 @@ export namespace Prisma {
     gt?: number | IntFieldRefInput<$PrismaModel>
     gte?: number | IntFieldRefInput<$PrismaModel>
     not?: NestedIntFilter<$PrismaModel> | number
+  }
+
+  export type NestedDateTimeFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[]
+    notIn?: Date[] | string[]
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeFilter<$PrismaModel> | Date | string
   }
 
   export type NestedStringWithAggregatesFilter<$PrismaModel = never> = {
@@ -38142,20 +40065,6 @@ export namespace Prisma {
     _max?: NestedBoolFilter<$PrismaModel>
   }
 
-  export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[]
-    notIn?: Date[] | string[]
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedDateTimeFilter<$PrismaModel>
-    _max?: NestedDateTimeFilter<$PrismaModel>
-  }
-
   export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[]
@@ -38181,6 +40090,20 @@ export namespace Prisma {
     gt?: number | FloatFieldRefInput<$PrismaModel>
     gte?: number | FloatFieldRefInput<$PrismaModel>
     not?: NestedFloatFilter<$PrismaModel> | number
+  }
+
+  export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[]
+    notIn?: Date[] | string[]
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedDateTimeFilter<$PrismaModel>
+    _max?: NestedDateTimeFilter<$PrismaModel>
   }
   export type NestedJsonFilter<$PrismaModel = never> =
     | PatchUndefined<
@@ -38675,6 +40598,51 @@ export namespace Prisma {
     data: UserAchievementCreateManyUserInput | UserAchievementCreateManyUserInput[]
   }
 
+  export type KofiTransactionCreateWithoutUserInput = {
+    id?: string
+    kofiTransactionId: string
+    messageId?: string | null
+    type: string
+    isSubscriptionPayment?: boolean
+    isFirstSubscriptionPayment?: boolean
+    tierName?: string | null
+    amountCents: number
+    currency: string
+    fromName?: string | null
+    email?: string | null
+    message?: string | null
+    matchedVia?: string | null
+    rawPayload: string
+    receivedAt?: Date | string
+  }
+
+  export type KofiTransactionUncheckedCreateWithoutUserInput = {
+    id?: string
+    kofiTransactionId: string
+    messageId?: string | null
+    type: string
+    isSubscriptionPayment?: boolean
+    isFirstSubscriptionPayment?: boolean
+    tierName?: string | null
+    amountCents: number
+    currency: string
+    fromName?: string | null
+    email?: string | null
+    message?: string | null
+    matchedVia?: string | null
+    rawPayload: string
+    receivedAt?: Date | string
+  }
+
+  export type KofiTransactionCreateOrConnectWithoutUserInput = {
+    where: KofiTransactionWhereUniqueInput
+    create: XOR<KofiTransactionCreateWithoutUserInput, KofiTransactionUncheckedCreateWithoutUserInput>
+  }
+
+  export type KofiTransactionCreateManyUserInputEnvelope = {
+    data: KofiTransactionCreateManyUserInput | KofiTransactionCreateManyUserInput[]
+  }
+
   export type MatchUpsertWithWhereUniqueWithoutPlayersInput = {
     where: MatchWhereUniqueInput
     update: XOR<MatchUpdateWithoutPlayersInput, MatchUncheckedUpdateWithoutPlayersInput>
@@ -39024,7 +40992,45 @@ export namespace Prisma {
     unlockedAt?: DateTimeFilter<"UserAchievement"> | Date | string
   }
 
-  export type UserCreateWithoutAchievementsInput = {
+  export type KofiTransactionUpsertWithWhereUniqueWithoutUserInput = {
+    where: KofiTransactionWhereUniqueInput
+    update: XOR<KofiTransactionUpdateWithoutUserInput, KofiTransactionUncheckedUpdateWithoutUserInput>
+    create: XOR<KofiTransactionCreateWithoutUserInput, KofiTransactionUncheckedCreateWithoutUserInput>
+  }
+
+  export type KofiTransactionUpdateWithWhereUniqueWithoutUserInput = {
+    where: KofiTransactionWhereUniqueInput
+    data: XOR<KofiTransactionUpdateWithoutUserInput, KofiTransactionUncheckedUpdateWithoutUserInput>
+  }
+
+  export type KofiTransactionUpdateManyWithWhereWithoutUserInput = {
+    where: KofiTransactionScalarWhereInput
+    data: XOR<KofiTransactionUpdateManyMutationInput, KofiTransactionUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type KofiTransactionScalarWhereInput = {
+    AND?: KofiTransactionScalarWhereInput | KofiTransactionScalarWhereInput[]
+    OR?: KofiTransactionScalarWhereInput[]
+    NOT?: KofiTransactionScalarWhereInput | KofiTransactionScalarWhereInput[]
+    id?: StringFilter<"KofiTransaction"> | string
+    kofiTransactionId?: StringFilter<"KofiTransaction"> | string
+    messageId?: StringNullableFilter<"KofiTransaction"> | string | null
+    type?: StringFilter<"KofiTransaction"> | string
+    isSubscriptionPayment?: BoolFilter<"KofiTransaction"> | boolean
+    isFirstSubscriptionPayment?: BoolFilter<"KofiTransaction"> | boolean
+    tierName?: StringNullableFilter<"KofiTransaction"> | string | null
+    amountCents?: IntFilter<"KofiTransaction"> | number
+    currency?: StringFilter<"KofiTransaction"> | string
+    fromName?: StringNullableFilter<"KofiTransaction"> | string | null
+    email?: StringNullableFilter<"KofiTransaction"> | string | null
+    message?: StringNullableFilter<"KofiTransaction"> | string | null
+    userId?: StringNullableFilter<"KofiTransaction"> | string | null
+    matchedVia?: StringNullableFilter<"KofiTransaction"> | string | null
+    rawPayload?: StringFilter<"KofiTransaction"> | string
+    receivedAt?: DateTimeFilter<"KofiTransaction"> | Date | string
+  }
+
+  export type UserCreateWithoutKofiTransactionsInput = {
     id?: string
     email: string
     passwordHash: string
@@ -39036,6 +41042,10 @@ export namespace Prisma {
     role?: string
     roles?: string
     patreon?: boolean
+    kofiLinkCode?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCents?: number
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -39051,9 +41061,10 @@ export namespace Prisma {
     featureFlagOverrides?: FeatureFlagUserCreateNestedManyWithoutUserInput
     friendshipsSent?: FriendshipCreateNestedManyWithoutRequesterInput
     friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
+    achievements?: UserAchievementCreateNestedManyWithoutUserInput
   }
 
-  export type UserUncheckedCreateWithoutAchievementsInput = {
+  export type UserUncheckedCreateWithoutKofiTransactionsInput = {
     id?: string
     email: string
     passwordHash: string
@@ -39065,6 +41076,10 @@ export namespace Prisma {
     role?: string
     roles?: string
     patreon?: boolean
+    kofiLinkCode?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCents?: number
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -39080,6 +41095,159 @@ export namespace Prisma {
     featureFlagOverrides?: FeatureFlagUserUncheckedCreateNestedManyWithoutUserInput
     friendshipsSent?: FriendshipUncheckedCreateNestedManyWithoutRequesterInput
     friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
+    achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutKofiTransactionsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutKofiTransactionsInput, UserUncheckedCreateWithoutKofiTransactionsInput>
+  }
+
+  export type UserUpsertWithoutKofiTransactionsInput = {
+    update: XOR<UserUpdateWithoutKofiTransactionsInput, UserUncheckedUpdateWithoutKofiTransactionsInput>
+    create: XOR<UserCreateWithoutKofiTransactionsInput, UserUncheckedCreateWithoutKofiTransactionsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutKofiTransactionsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutKofiTransactionsInput, UserUncheckedUpdateWithoutKofiTransactionsInput>
+  }
+
+  export type UserUpdateWithoutKofiTransactionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    coachName?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCents?: IntFieldUpdateOperationsInput | number
+    valid?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
+    matches?: MatchUpdateManyWithoutPlayersNestedInput
+    createdMatches?: MatchUpdateManyWithoutCreatorNestedInput
+    teams?: TeamUpdateManyWithoutOwnerNestedInput
+    teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
+    createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
+    createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
+    matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
+    featureFlagOverrides?: FeatureFlagUserUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
+    achievements?: UserAchievementUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutKofiTransactionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    coachName?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCents?: IntFieldUpdateOperationsInput | number
+    valid?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
+    matches?: MatchUncheckedUpdateManyWithoutPlayersNestedInput
+    createdMatches?: MatchUncheckedUpdateManyWithoutCreatorNestedInput
+    teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
+    teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
+    createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
+    createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
+    matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
+    featureFlagOverrides?: FeatureFlagUserUncheckedUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUncheckedUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
+    achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserCreateWithoutAchievementsInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name?: string | null
+    coachName: string
+    firstName?: string | null
+    lastName?: string | null
+    dateOfBirth?: Date | string | null
+    role?: string
+    roles?: string
+    patreon?: boolean
+    kofiLinkCode?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCents?: number
+    valid?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    eloRating?: number
+    matches?: MatchCreateNestedManyWithoutPlayersInput
+    createdMatches?: MatchCreateNestedManyWithoutCreatorInput
+    teams?: TeamCreateNestedManyWithoutOwnerInput
+    teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
+    createdCups?: CupCreateNestedManyWithoutCreatorInput
+    createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
+    createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
+    matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
+    featureFlagOverrides?: FeatureFlagUserCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
+    kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutAchievementsInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name?: string | null
+    coachName: string
+    firstName?: string | null
+    lastName?: string | null
+    dateOfBirth?: Date | string | null
+    role?: string
+    roles?: string
+    patreon?: boolean
+    kofiLinkCode?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCents?: number
+    valid?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    eloRating?: number
+    matches?: MatchUncheckedCreateNestedManyWithoutPlayersInput
+    createdMatches?: MatchUncheckedCreateNestedManyWithoutCreatorInput
+    teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
+    teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
+    createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
+    createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
+    matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
+    featureFlagOverrides?: FeatureFlagUserUncheckedCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipUncheckedCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
+    kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutAchievementsInput = {
@@ -39110,6 +41278,10 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCents?: IntFieldUpdateOperationsInput | number
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -39125,6 +41297,7 @@ export namespace Prisma {
     featureFlagOverrides?: FeatureFlagUserUpdateManyWithoutUserNestedInput
     friendshipsSent?: FriendshipUpdateManyWithoutRequesterNestedInput
     friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
+    kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutAchievementsInput = {
@@ -39139,6 +41312,10 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCents?: IntFieldUpdateOperationsInput | number
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -39154,6 +41331,7 @@ export namespace Prisma {
     featureFlagOverrides?: FeatureFlagUserUncheckedUpdateManyWithoutUserNestedInput
     friendshipsSent?: FriendshipUncheckedUpdateManyWithoutRequesterNestedInput
     friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
+    kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutFriendshipsSentInput = {
@@ -39168,6 +41346,10 @@ export namespace Prisma {
     role?: string
     roles?: string
     patreon?: boolean
+    kofiLinkCode?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCents?: number
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -39183,6 +41365,7 @@ export namespace Prisma {
     featureFlagOverrides?: FeatureFlagUserCreateNestedManyWithoutUserInput
     friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutFriendshipsSentInput = {
@@ -39197,6 +41380,10 @@ export namespace Prisma {
     role?: string
     roles?: string
     patreon?: boolean
+    kofiLinkCode?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCents?: number
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -39212,6 +41399,7 @@ export namespace Prisma {
     featureFlagOverrides?: FeatureFlagUserUncheckedCreateNestedManyWithoutUserInput
     friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutFriendshipsSentInput = {
@@ -39231,6 +41419,10 @@ export namespace Prisma {
     role?: string
     roles?: string
     patreon?: boolean
+    kofiLinkCode?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCents?: number
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -39246,6 +41438,7 @@ export namespace Prisma {
     featureFlagOverrides?: FeatureFlagUserCreateNestedManyWithoutUserInput
     friendshipsSent?: FriendshipCreateNestedManyWithoutRequesterInput
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutFriendshipsReceivedInput = {
@@ -39260,6 +41453,10 @@ export namespace Prisma {
     role?: string
     roles?: string
     patreon?: boolean
+    kofiLinkCode?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCents?: number
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -39275,6 +41472,7 @@ export namespace Prisma {
     featureFlagOverrides?: FeatureFlagUserUncheckedCreateNestedManyWithoutUserInput
     friendshipsSent?: FriendshipUncheckedCreateNestedManyWithoutRequesterInput
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutFriendshipsReceivedInput = {
@@ -39305,6 +41503,10 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCents?: IntFieldUpdateOperationsInput | number
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -39320,6 +41522,7 @@ export namespace Prisma {
     featureFlagOverrides?: FeatureFlagUserUpdateManyWithoutUserNestedInput
     friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutFriendshipsSentInput = {
@@ -39334,6 +41537,10 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCents?: IntFieldUpdateOperationsInput | number
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -39349,6 +41556,7 @@ export namespace Prisma {
     featureFlagOverrides?: FeatureFlagUserUncheckedUpdateManyWithoutUserNestedInput
     friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutFriendshipsReceivedInput = {
@@ -39374,6 +41582,10 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCents?: IntFieldUpdateOperationsInput | number
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -39389,6 +41601,7 @@ export namespace Prisma {
     featureFlagOverrides?: FeatureFlagUserUpdateManyWithoutUserNestedInput
     friendshipsSent?: FriendshipUpdateManyWithoutRequesterNestedInput
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutFriendshipsReceivedInput = {
@@ -39403,6 +41616,10 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCents?: IntFieldUpdateOperationsInput | number
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -39418,6 +41635,7 @@ export namespace Prisma {
     featureFlagOverrides?: FeatureFlagUserUncheckedUpdateManyWithoutUserNestedInput
     friendshipsSent?: FriendshipUncheckedUpdateManyWithoutRequesterNestedInput
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type FeatureFlagUserCreateWithoutFlagInput = {
@@ -39492,6 +41710,10 @@ export namespace Prisma {
     role?: string
     roles?: string
     patreon?: boolean
+    kofiLinkCode?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCents?: number
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -39507,6 +41729,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipCreateNestedManyWithoutRequesterInput
     friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutFeatureFlagOverridesInput = {
@@ -39521,6 +41744,10 @@ export namespace Prisma {
     role?: string
     roles?: string
     patreon?: boolean
+    kofiLinkCode?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCents?: number
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -39536,6 +41763,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipUncheckedCreateNestedManyWithoutRequesterInput
     friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutFeatureFlagOverridesInput = {
@@ -39595,6 +41823,10 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCents?: IntFieldUpdateOperationsInput | number
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -39610,6 +41842,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipUpdateManyWithoutRequesterNestedInput
     friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutFeatureFlagOverridesInput = {
@@ -39624,6 +41857,10 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCents?: IntFieldUpdateOperationsInput | number
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -39639,6 +41876,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipUncheckedUpdateManyWithoutRequesterNestedInput
     friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutCreatedMatchesInput = {
@@ -39653,6 +41891,10 @@ export namespace Prisma {
     role?: string
     roles?: string
     patreon?: boolean
+    kofiLinkCode?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCents?: number
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -39668,6 +41910,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipCreateNestedManyWithoutRequesterInput
     friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutCreatedMatchesInput = {
@@ -39682,6 +41925,10 @@ export namespace Prisma {
     role?: string
     roles?: string
     patreon?: boolean
+    kofiLinkCode?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCents?: number
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -39697,6 +41944,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipUncheckedCreateNestedManyWithoutRequesterInput
     friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutCreatedMatchesInput = {
@@ -39716,6 +41964,10 @@ export namespace Prisma {
     role?: string
     roles?: string
     patreon?: boolean
+    kofiLinkCode?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCents?: number
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -39731,6 +41983,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipCreateNestedManyWithoutRequesterInput
     friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutMatchesInput = {
@@ -39745,6 +41998,10 @@ export namespace Prisma {
     role?: string
     roles?: string
     patreon?: boolean
+    kofiLinkCode?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCents?: number
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -39760,6 +42017,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipUncheckedCreateNestedManyWithoutRequesterInput
     friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutMatchesInput = {
@@ -39838,6 +42096,10 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCents?: IntFieldUpdateOperationsInput | number
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -39853,6 +42115,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipUpdateManyWithoutRequesterNestedInput
     friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutCreatedMatchesInput = {
@@ -39867,6 +42130,10 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCents?: IntFieldUpdateOperationsInput | number
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -39882,6 +42149,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipUncheckedUpdateManyWithoutRequesterNestedInput
     friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithWhereUniqueWithoutMatchesInput = {
@@ -39915,6 +42183,10 @@ export namespace Prisma {
     role?: StringFilter<"User"> | string
     roles?: StringFilter<"User"> | string
     patreon?: BoolFilter<"User"> | boolean
+    kofiLinkCode?: StringNullableFilter<"User"> | string | null
+    supporterTier?: StringNullableFilter<"User"> | string | null
+    supporterActiveUntil?: DateTimeNullableFilter<"User"> | Date | string | null
+    totalDonatedCents?: IntFilter<"User"> | number
     valid?: BoolFilter<"User"> | boolean
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
@@ -40093,6 +42365,10 @@ export namespace Prisma {
     role?: string
     roles?: string
     patreon?: boolean
+    kofiLinkCode?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCents?: number
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -40108,6 +42384,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipCreateNestedManyWithoutRequesterInput
     friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutTeamSelectionsInput = {
@@ -40122,6 +42399,10 @@ export namespace Prisma {
     role?: string
     roles?: string
     patreon?: boolean
+    kofiLinkCode?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCents?: number
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -40137,6 +42418,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipUncheckedCreateNestedManyWithoutRequesterInput
     friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutTeamSelectionsInput = {
@@ -40265,6 +42547,10 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCents?: IntFieldUpdateOperationsInput | number
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -40280,6 +42566,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipUpdateManyWithoutRequesterNestedInput
     friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutTeamSelectionsInput = {
@@ -40294,6 +42581,10 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCents?: IntFieldUpdateOperationsInput | number
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -40309,6 +42600,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipUncheckedUpdateManyWithoutRequesterNestedInput
     friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type TeamUpsertWithoutSelectionsInput = {
@@ -40384,6 +42676,10 @@ export namespace Prisma {
     role?: string
     roles?: string
     patreon?: boolean
+    kofiLinkCode?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCents?: number
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -40399,6 +42695,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipCreateNestedManyWithoutRequesterInput
     friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutTeamsInput = {
@@ -40413,6 +42710,10 @@ export namespace Prisma {
     role?: string
     roles?: string
     patreon?: boolean
+    kofiLinkCode?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCents?: number
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -40428,6 +42729,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipUncheckedCreateNestedManyWithoutRequesterInput
     friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutTeamsInput = {
@@ -40774,6 +43076,10 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCents?: IntFieldUpdateOperationsInput | number
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -40789,6 +43095,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipUpdateManyWithoutRequesterNestedInput
     friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutTeamsInput = {
@@ -40803,6 +43110,10 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCents?: IntFieldUpdateOperationsInput | number
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -40818,6 +43129,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipUncheckedUpdateManyWithoutRequesterNestedInput
     friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type TeamPlayerUpsertWithWhereUniqueWithoutTeamInput = {
@@ -41444,6 +43756,10 @@ export namespace Prisma {
     role?: string
     roles?: string
     patreon?: boolean
+    kofiLinkCode?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCents?: number
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -41459,6 +43775,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipCreateNestedManyWithoutRequesterInput
     friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutCreatedCupsInput = {
@@ -41473,6 +43790,10 @@ export namespace Prisma {
     role?: string
     roles?: string
     patreon?: boolean
+    kofiLinkCode?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCents?: number
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -41488,6 +43809,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipUncheckedCreateNestedManyWithoutRequesterInput
     friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutCreatedCupsInput = {
@@ -41594,6 +43916,10 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCents?: IntFieldUpdateOperationsInput | number
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -41609,6 +43935,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipUpdateManyWithoutRequesterNestedInput
     friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutCreatedCupsInput = {
@@ -41623,6 +43950,10 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCents?: IntFieldUpdateOperationsInput | number
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -41638,6 +43969,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipUncheckedUpdateManyWithoutRequesterNestedInput
     friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type CupParticipantUpsertWithWhereUniqueWithoutCupInput = {
@@ -41868,6 +44200,10 @@ export namespace Prisma {
     role?: string
     roles?: string
     patreon?: boolean
+    kofiLinkCode?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCents?: number
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -41883,6 +44219,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipCreateNestedManyWithoutRequesterInput
     friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutMatchQueueInput = {
@@ -41897,6 +44234,10 @@ export namespace Prisma {
     role?: string
     roles?: string
     patreon?: boolean
+    kofiLinkCode?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCents?: number
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -41912,6 +44253,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipUncheckedCreateNestedManyWithoutRequesterInput
     friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutMatchQueueInput = {
@@ -41997,6 +44339,10 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCents?: IntFieldUpdateOperationsInput | number
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -42012,6 +44358,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipUpdateManyWithoutRequesterNestedInput
     friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutMatchQueueInput = {
@@ -42026,6 +44373,10 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCents?: IntFieldUpdateOperationsInput | number
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -42041,6 +44392,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipUncheckedUpdateManyWithoutRequesterNestedInput
     friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type TeamUpsertWithoutMatchQueueInput = {
@@ -42116,6 +44468,10 @@ export namespace Prisma {
     role?: string
     roles?: string
     patreon?: boolean
+    kofiLinkCode?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCents?: number
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -42131,6 +44487,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipCreateNestedManyWithoutRequesterInput
     friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutCreatedLocalMatchesInput = {
@@ -42145,6 +44502,10 @@ export namespace Prisma {
     role?: string
     roles?: string
     patreon?: boolean
+    kofiLinkCode?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCents?: number
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -42160,6 +44521,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipUncheckedCreateNestedManyWithoutRequesterInput
     friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutCreatedLocalMatchesInput = {
@@ -42380,6 +44742,10 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCents?: IntFieldUpdateOperationsInput | number
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -42395,6 +44761,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipUpdateManyWithoutRequesterNestedInput
     friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutCreatedLocalMatchesInput = {
@@ -42409,6 +44776,10 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCents?: IntFieldUpdateOperationsInput | number
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -42424,6 +44795,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipUncheckedUpdateManyWithoutRequesterNestedInput
     friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type TeamUpsertWithoutLocalMatchesAsTeamAInput = {
@@ -42745,6 +45117,10 @@ export namespace Prisma {
     role?: string
     roles?: string
     patreon?: boolean
+    kofiLinkCode?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCents?: number
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -42760,6 +45136,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipCreateNestedManyWithoutRequesterInput
     friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutCreatedLeaguesInput = {
@@ -42774,6 +45151,10 @@ export namespace Prisma {
     role?: string
     roles?: string
     patreon?: boolean
+    kofiLinkCode?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCents?: number
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -42789,6 +45170,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipUncheckedCreateNestedManyWithoutRequesterInput
     friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutCreatedLeaguesInput = {
@@ -42854,6 +45236,10 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCents?: IntFieldUpdateOperationsInput | number
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -42869,6 +45255,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipUpdateManyWithoutRequesterNestedInput
     friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutCreatedLeaguesInput = {
@@ -42883,6 +45270,10 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCents?: IntFieldUpdateOperationsInput | number
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -42898,6 +45289,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipUncheckedUpdateManyWithoutRequesterNestedInput
     friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type LeagueSeasonUpsertWithWhereUniqueWithoutLeagueInput = {
@@ -43506,6 +45898,24 @@ export namespace Prisma {
     unlockedAt?: Date | string
   }
 
+  export type KofiTransactionCreateManyUserInput = {
+    id?: string
+    kofiTransactionId: string
+    messageId?: string | null
+    type: string
+    isSubscriptionPayment?: boolean
+    isFirstSubscriptionPayment?: boolean
+    tierName?: string | null
+    amountCents: number
+    currency: string
+    fromName?: string | null
+    email?: string | null
+    message?: string | null
+    matchedVia?: string | null
+    rawPayload: string
+    receivedAt?: Date | string
+  }
+
   export type MatchUpdateWithoutPlayersInput = {
     id?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -43930,6 +46340,60 @@ export namespace Prisma {
     unlockedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type KofiTransactionUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    kofiTransactionId?: StringFieldUpdateOperationsInput | string
+    messageId?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: StringFieldUpdateOperationsInput | string
+    isSubscriptionPayment?: BoolFieldUpdateOperationsInput | boolean
+    isFirstSubscriptionPayment?: BoolFieldUpdateOperationsInput | boolean
+    tierName?: NullableStringFieldUpdateOperationsInput | string | null
+    amountCents?: IntFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    fromName?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    message?: NullableStringFieldUpdateOperationsInput | string | null
+    matchedVia?: NullableStringFieldUpdateOperationsInput | string | null
+    rawPayload?: StringFieldUpdateOperationsInput | string
+    receivedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KofiTransactionUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    kofiTransactionId?: StringFieldUpdateOperationsInput | string
+    messageId?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: StringFieldUpdateOperationsInput | string
+    isSubscriptionPayment?: BoolFieldUpdateOperationsInput | boolean
+    isFirstSubscriptionPayment?: BoolFieldUpdateOperationsInput | boolean
+    tierName?: NullableStringFieldUpdateOperationsInput | string | null
+    amountCents?: IntFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    fromName?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    message?: NullableStringFieldUpdateOperationsInput | string | null
+    matchedVia?: NullableStringFieldUpdateOperationsInput | string | null
+    rawPayload?: StringFieldUpdateOperationsInput | string
+    receivedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type KofiTransactionUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    kofiTransactionId?: StringFieldUpdateOperationsInput | string
+    messageId?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: StringFieldUpdateOperationsInput | string
+    isSubscriptionPayment?: BoolFieldUpdateOperationsInput | boolean
+    isFirstSubscriptionPayment?: BoolFieldUpdateOperationsInput | boolean
+    tierName?: NullableStringFieldUpdateOperationsInput | string | null
+    amountCents?: IntFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    fromName?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    message?: NullableStringFieldUpdateOperationsInput | string | null
+    matchedVia?: NullableStringFieldUpdateOperationsInput | string | null
+    rawPayload?: StringFieldUpdateOperationsInput | string
+    receivedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type FeatureFlagUserCreateManyFlagInput = {
     id?: string
     userId: string
@@ -43981,6 +46445,10 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCents?: IntFieldUpdateOperationsInput | number
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -43996,6 +46464,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipUpdateManyWithoutRequesterNestedInput
     friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutMatchesInput = {
@@ -44010,6 +46479,10 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCents?: IntFieldUpdateOperationsInput | number
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -44025,6 +46498,7 @@ export namespace Prisma {
     friendshipsSent?: FriendshipUncheckedUpdateManyWithoutRequesterNestedInput
     friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateManyWithoutMatchesInput = {
@@ -44039,6 +46513,10 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCents?: IntFieldUpdateOperationsInput | number
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string

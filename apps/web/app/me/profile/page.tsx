@@ -14,6 +14,8 @@ type UserProfile = {
   role?: string;
   roles?: string[];
   patreon?: boolean;
+  isSupporter?: boolean;
+  supporterTier?: string | null;
   eloRating: number;
   createdAt: string;
   updatedAt: string;
@@ -265,9 +267,12 @@ export default function ProfilePage() {
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
                 <h2 className="text-2xl font-bold">{profile.coachName || profile.name || "Utilisateur"}</h2>
-                {profile.patreon && (
-                  <span className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-semibold">
-                    Patreon
+                {(profile.isSupporter ?? profile.patreon) && (
+                  <span
+                    className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-semibold"
+                    title={profile.supporterTier ?? undefined}
+                  >
+                    Supporter
                   </span>
                 )}
               </div>

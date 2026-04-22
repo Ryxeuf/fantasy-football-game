@@ -12,6 +12,11 @@ import {
   changePasswordSchema,
 } from "../schemas/auth.schemas";
 import { JWT_SECRET } from "../config";
+import {
+  claimOrphanKofiTransactions,
+  ensureKofiLinkCode,
+} from "../services/kofi-claim";
+import { isSupporter } from "../services/kofi";
 
 const router = Router();
 
@@ -46,6 +51,15 @@ router.post("/register", validate(registerSchema), async (req, res) => {
           dateOfBirth && dateOfBirth !== "" ? new Date(dateOfBirth) : null,
       },
     });
+
+    // Alloue le code Ko-fi et rattache d'éventuels dons orphelins.
+    // Ces opérations ne doivent pas bloquer l'inscription si elles échouent.
+    try {
+      await ensureKofiLinkCode(created.id);
+      await claimOrphanKofiTransactions(created.id, created.email);
+    } catch (kofiErr) {
+      console.error("[register] kofi post-create hooks failed:", kofiErr);
+    }
 
     const roles = normalizeRoles((created as any).roles ?? created.role);
     const primaryRole = roles[0];
@@ -115,8 +129,17 @@ router.post("/login", validate(loginSchema), async (req, res) => {
       console.log(`[LOGIN] Mot de passe incorrect pour ${email}`);
       return res.status(401).json({ error: "Identifiants invalides" });
     }
-    
+
     console.log(`[LOGIN] Connexion réussie pour ${email}`);
+
+    // Rattrape les dons orphelins reçus avant l'inscription et garantit que
+    // le compte a un kofiLinkCode. Jamais bloquant sur le login.
+    try {
+      await ensureKofiLinkCode(user.id);
+      await claimOrphanKofiTransactions(user.id, user.email);
+    } catch (kofiErr) {
+      console.error("[login] kofi post-login hooks failed:", kofiErr);
+    }
 
     const roles = normalizeRoles((user as any).roles ?? user.role);
     const primaryRole = roles[0];
@@ -192,6 +215,10 @@ router.get("/me", authUser, async (req: AuthenticatedRequest, res) => {
         dateOfBirth: true,
         role: true,
         patreon: true,
+        kofiLinkCode: true,
+        supporterTier: true,
+        supporterActiveUntil: true,
+        totalDonatedCents: true,
         valid: true,
         eloRating: true,
         createdAt: true,
@@ -213,6 +240,10 @@ router.get("/me", authUser, async (req: AuthenticatedRequest, res) => {
     const publicUser = {
       ...user,
       roles,
+      isSupporter: isSupporter({
+        patreon: user.patreon,
+        supporterActiveUntil: user.supporterActiveUntil,
+      }),
     };
 
     res.json({ user: publicUser });

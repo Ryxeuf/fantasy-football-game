@@ -129,10 +129,33 @@ exports.Prisma.UserScalarFieldEnum = {
   role: 'role',
   roles: 'roles',
   patreon: 'patreon',
+  kofiLinkCode: 'kofiLinkCode',
+  supporterTier: 'supporterTier',
+  supporterActiveUntil: 'supporterActiveUntil',
+  totalDonatedCents: 'totalDonatedCents',
   valid: 'valid',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   eloRating: 'eloRating'
+};
+
+exports.Prisma.KofiTransactionScalarFieldEnum = {
+  id: 'id',
+  kofiTransactionId: 'kofiTransactionId',
+  messageId: 'messageId',
+  type: 'type',
+  isSubscriptionPayment: 'isSubscriptionPayment',
+  isFirstSubscriptionPayment: 'isFirstSubscriptionPayment',
+  tierName: 'tierName',
+  amountCents: 'amountCents',
+  currency: 'currency',
+  fromName: 'fromName',
+  email: 'email',
+  message: 'message',
+  userId: 'userId',
+  matchedVia: 'matchedVia',
+  rawPayload: 'rawPayload',
+  receivedAt: 'receivedAt'
 };
 
 exports.Prisma.UserAchievementScalarFieldEnum = {
@@ -458,6 +481,7 @@ exports.Ruleset = exports.$Enums.Ruleset = {
 
 exports.Prisma.ModelName = {
   User: 'User',
+  KofiTransaction: 'KofiTransaction',
   UserAchievement: 'UserAchievement',
   Friendship: 'Friendship',
   FeatureFlag: 'FeatureFlag',

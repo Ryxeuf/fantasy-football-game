@@ -1,11 +1,113 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { API_BASE } from "../auth-client";
 import { useLanguage } from "../contexts/LanguageContext";
 
 const KOFI_USERNAME = "nufflearena";
 const KOFI_URL = `https://ko-fi.com/${KOFI_USERNAME}`;
+
+function useKofiLinkCode(): {
+  code: string | null;
+  loading: boolean;
+  isAuthenticated: boolean;
+} {
+  const [code, setCode] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+
+  useEffect(() => {
+    const token =
+      typeof window !== "undefined"
+        ? window.localStorage.getItem("auth_token")
+        : null;
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+    setIsAuthenticated(true);
+    fetch(`${API_BASE}/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        const linkCode: unknown = data?.user?.kofiLinkCode;
+        if (typeof linkCode === "string") setCode(linkCode);
+      })
+      .catch(() => {
+        /* ignore — pas bloquant pour la page /support */
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  return { code, loading, isAuthenticated };
+}
+
+function KofiLinkCodeCard({
+  code,
+  loading,
+  isAuthenticated,
+  labels,
+}: {
+  code: string | null;
+  loading: boolean;
+  isAuthenticated: boolean;
+  labels: {
+    title: string;
+    description: string;
+    copy: string;
+    copied: string;
+    anonHint: string;
+  };
+}) {
+  const [justCopied, setJustCopied] = useState(false);
+
+  if (loading) return null;
+
+  if (!isAuthenticated || !code) {
+    return (
+      <div className="mt-8 max-w-2xl mx-auto rounded-xl border-2 border-nuffle-bronze/30 bg-nuffle-ivory/40 p-5 text-center">
+        <p className="text-sm text-nuffle-anthracite/80 font-body">
+          {labels.anonHint}
+        </p>
+      </div>
+    );
+  }
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setJustCopied(true);
+      window.setTimeout(() => setJustCopied(false), 2000);
+    } catch {
+      /* clipboard permission refused — utilisateur peut copier à la main */
+    }
+  };
+
+  return (
+    <div className="mt-8 max-w-2xl mx-auto rounded-xl border-2 border-nuffle-gold/60 bg-white p-6 shadow-lg">
+      <h3 className="font-heading font-bold text-lg text-nuffle-anthracite mb-2">
+        {labels.title}
+      </h3>
+      <p className="text-sm text-nuffle-anthracite/80 font-body mb-4">
+        {labels.description}
+      </p>
+      <div className="flex items-center gap-3">
+        <code className="flex-1 px-4 py-3 rounded-lg bg-nuffle-anthracite/5 border border-nuffle-bronze/30 font-mono text-lg font-bold text-nuffle-anthracite tracking-widest text-center">
+          {code}
+        </code>
+        <button
+          type="button"
+          onClick={handleCopy}
+          className="px-4 py-3 rounded-lg bg-nuffle-gold hover:bg-nuffle-gold/90 text-nuffle-anthracite font-subtitle font-semibold transition-colors"
+        >
+          {justCopied ? labels.copied : labels.copy}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function HeartIcon({ className }: { className?: string }) {
   return (
@@ -87,6 +189,7 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
 export default function SupportPage() {
   const { t } = useLanguage();
   const s = t.support;
+  const { code, loading, isAuthenticated } = useKofiLinkCode();
 
   return (
     <div className="w-full min-h-screen">
@@ -125,7 +228,19 @@ export default function SupportPage() {
           <p className="text-nuffle-anthracite/80 font-body mb-8">
             {s.kofiDescription}
           </p>
-          <div className="rounded-xl border-2 border-nuffle-bronze/30 bg-white p-6 shadow-lg">
+          <KofiLinkCodeCard
+            code={code}
+            loading={loading}
+            isAuthenticated={isAuthenticated}
+            labels={{
+              title: s.linkCodeTitle,
+              description: s.linkCodeDescription,
+              copy: s.linkCodeCopy,
+              copied: s.linkCodeCopied,
+              anonHint: s.linkCodeAnonHint,
+            }}
+          />
+          <div className="rounded-xl border-2 border-nuffle-bronze/30 bg-white p-6 shadow-lg mt-8">
             <iframe
               id="kofiframe"
               src={`https://ko-fi.com/${KOFI_USERNAME}/?hidefeed=true&widget=true&embed=true&preview=true`}

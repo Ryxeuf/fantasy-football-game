@@ -31,6 +31,14 @@ model User {
   /// Stub côté SQLite pour que /auth/me puisse sélectionner ce champ
   /// sans diverger entre les deux schémas.
   patreon              Boolean           @default(false)
+  /// Code unique à coller dans le message Ko-fi pour lier le don au compte.
+  kofiLinkCode         String?           @unique
+  /// Palier (tier_name Ko-fi) du dernier abonnement actif.
+  supporterTier        String?
+  /// Fin de la période de supporter payée.
+  supporterActiveUntil DateTime?
+  /// Total des dons en centimes.
+  totalDonatedCents    Int               @default(0)
   /// Pré-alpha gate côté Postgres ; en SQLite tous les comptes sont valides.
   valid                Boolean           @default(true)
   createdAt            DateTime          @default(now())
@@ -48,6 +56,32 @@ model User {
   friendshipsSent      Friendship[]      @relation("FriendshipRequester")
   friendshipsReceived  Friendship[]      @relation("FriendshipReceiver")
   achievements         UserAchievement[]
+  kofiTransactions     KofiTransaction[]
+}
+
+model KofiTransaction {
+  id                         String   @id @default(cuid())
+  kofiTransactionId          String   @unique
+  messageId                  String?
+  type                       String
+  isSubscriptionPayment      Boolean  @default(false)
+  isFirstSubscriptionPayment Boolean  @default(false)
+  tierName                   String?
+  amountCents                Int
+  currency                   String
+  fromName                   String?
+  email                      String?
+  message                    String?
+  user                       User?    @relation(fields: [userId], references: [id])
+  userId                     String?
+  matchedVia                 String?
+  /// SQLite n'a pas le type Json de Prisma : payload brut stocké en string.
+  rawPayload                 String
+  receivedAt                 DateTime @default(now())
+
+  @@index([userId])
+  @@index([email])
+  @@index([receivedAt])
 }
 
 // N.7 — Systeme d'achievements (mirror SQLite du schema Postgres).

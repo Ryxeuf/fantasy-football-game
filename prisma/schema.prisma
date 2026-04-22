@@ -26,7 +26,18 @@ model User {
   role                String          @default("user")
   /// Liste complète des rôles (ex: ["user","admin"])
   roles               String[]        @default([])
+  /// Override manuel admin (cadeau, etc.). Conservé pour compatibilité.
+  /// Le statut de supporter réel se lit via supporterActiveUntil.
   patreon             Boolean         @default(false)
+  /// Code unique à coller dans le message Ko-fi pour lier le don au compte.
+  /// Format : "KFI-XXXXXX" (base32 Crockford).
+  kofiLinkCode        String?         @unique
+  /// Palier (tier_name Ko-fi) du dernier abonnement actif. null = pas d'abo.
+  supporterTier       String?
+  /// Fin de la période de supporter payée. null ou < now() = pas actif.
+  supporterActiveUntil DateTime?
+  /// Total des dons reçus de cet utilisateur, en centimes, dans la devise de référence.
+  totalDonatedCents   Int             @default(0)
   valid               Boolean         @default(false)
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
@@ -44,6 +55,43 @@ model User {
   friendshipsSent     Friendship[]    @relation("FriendshipRequester")
   friendshipsReceived Friendship[]    @relation("FriendshipReceiver")
   achievements        UserAchievement[]
+  kofiTransactions    KofiTransaction[]
+}
+
+/// Journal des événements webhook Ko-fi reçus.
+/// userId est nullable : les dons orphelins sont rattachés au login suivant
+/// si l'email ou le kofiLinkCode correspondent.
+model KofiTransaction {
+  id                      String   @id @default(cuid())
+  /// Ko-fi "kofi_transaction_id" — UUID unique, sert à la déduplication.
+  kofiTransactionId       String   @unique
+  /// Ko-fi "message_id" — id d'événement propre à la notif (distinct de la transaction).
+  messageId               String?
+  /// "Donation" | "Subscription" | "Commission" | "Shop Order"
+  type                    String
+  isSubscriptionPayment   Boolean  @default(false)
+  isFirstSubscriptionPayment Boolean @default(false)
+  /// tier_name pour les abonnements mensuels (Gold Member, etc.).
+  tierName                String?
+  /// Montant en centimes dans la devise d'origine (ex 500 pour 5.00 EUR).
+  amountCents             Int
+  currency                String
+  fromName                String?
+  /// Stocké en lowercase pour le matching.
+  email                   String?
+  message                 String?
+  /// Rattachement au compte utilisateur. null = orphelin en attente de claim.
+  user                    User?    @relation(fields: [userId], references: [id])
+  userId                  String?
+  /// "code" | "email" | "manual" | null
+  matchedVia              String?
+  /// Payload brut pour diagnostic/rejeu.
+  rawPayload              Json
+  receivedAt              DateTime @default(now())
+
+  @@index([userId])
+  @@index([email])
+  @@index([receivedAt])
 }
 
 model FeatureFlag {
