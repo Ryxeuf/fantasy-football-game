@@ -324,6 +324,22 @@ export default function LobbyScreen() {
       </View>
       <View style={styles.actionRow}>
         <Pressable
+          style={styles.cupsButton}
+          onPress={() => router.push("/cups")}
+          testID="lobby-cups-button"
+        >
+          <Text style={styles.actionButtonText}>Coupes</Text>
+        </Pressable>
+        <Pressable
+          style={styles.leaguesButton}
+          onPress={() => router.push("/leagues")}
+          testID="lobby-leagues-button"
+        >
+          <Text style={styles.actionButtonText}>Ligues</Text>
+        </Pressable>
+      </View>
+      <View style={styles.actionRow}>
+        <Pressable
           style={[styles.createButton, createLoading && styles.buttonDisabled]}
           onPress={handleCreate}
           disabled={createLoading}
@@ -545,6 +561,20 @@ const styles = StyleSheet.create({
   joinButton: {
     flex: 1,
     backgroundColor: "#7C3AED",
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  cupsButton: {
+    flex: 1,
+    backgroundColor: "#B45309",
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  leaguesButton: {
+    flex: 1,
+    backgroundColor: "#0E7490",
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: "center",
