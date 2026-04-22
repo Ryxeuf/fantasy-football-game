@@ -25,8 +25,18 @@ MAINTENANCE_SCRIPT="$SCRIPT_DIR/maintenance.sh"
 DEPLOY_LOG="$PROJECT_DIR/deploy.log"
 HEALTH_TIMEOUT=120
 
+# Charge les variables depuis .env.local si present (gitignore).
+# Permet d'y stocker par exemple DISCORD_WEBHOOK_URL=...
+if [ -f "$PROJECT_DIR/.env.local" ]; then
+  set -a
+  # shellcheck disable=SC1091
+  . "$PROJECT_DIR/.env.local"
+  set +a
+fi
+
 # Webhook Discord pour notifier les bascules en/hors maintenance.
-# A definir via la variable d'environnement DISCORD_WEBHOOK_URL.
+# A definir via la variable d'environnement DISCORD_WEBHOOK_URL
+# (soit dans l'environnement, soit dans .env.local a la racine du projet).
 # Si vide, les notifications Discord sont simplement ignorees.
 DISCORD_WEBHOOK_URL="${DISCORD_WEBHOOK_URL:-}"
 
