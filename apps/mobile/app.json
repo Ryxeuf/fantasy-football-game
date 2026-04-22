@@ -5,6 +5,18 @@
     "scheme": "nuffle-arena",
     "version": "0.1.0",
     "orientation": "portrait",
-    "sdkVersion": "51.0.0"
+    "sdkVersion": "51.0.0",
+    "notification": {
+      "iosDisplayInForeground": true,
+      "androidMode": "default"
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "color": "#ffffff"
+        }
+      ]
+    ]
   }
 }
