@@ -76,6 +76,10 @@ export default function Layout() {
             name="star-players/[slug]"
             options={{ title: "Detail Star Player" }}
           />
+          <Stack.Screen
+            name="settings"
+            options={{ title: "Profil et reglages" }}
+          />
         </Stack>
       </AuthProvider>
     </GestureHandlerRootView>
