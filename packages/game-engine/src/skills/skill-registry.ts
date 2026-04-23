@@ -487,6 +487,18 @@ registerSkill({
     hasSkill(ctx.player, 'monstrous-mouth') || hasSkill(ctx.player, 'monstrous_mouth'),
 });
 
+// ARM BAR (O.1 batch 3g) : +1 au jet d'armure (ou de blessure) du joueur
+// adverse qui Tombe en ratant un Esquive/Saut/Bond pour quitter une case ou
+// il etait Marque par ce joueur. La resolution effective se fait dans
+// `actions.ts` (voir `applyRollFailure` + helper `getArmBarBonus` dans
+// `mechanics/arm-bar.ts`). L'entree ici sert pour la decouverte UI.
+registerSkill({
+  slug: 'arm-bar',
+  triggers: ['on-armor', 'on-injury'],
+  description: "+1 au jet d'Armure (ou de Blessure) quand un adversaire Tombe en ratant un test d'agilite (Esquive/Saut/Bond) pour quitter une case ou il etait Marque par ce joueur.",
+  canApply: (ctx) => hasSkill(ctx.player, 'arm-bar') || hasSkill(ctx.player, 'arm_bar'),
+});
+
 // SHADOWING
 // La résolution du suivi (2D6 + MA diff >= 7) est effectuée par
 // `resolveShadowingAfterDodge` dans `mechanics/shadowing.ts`, appelé depuis
