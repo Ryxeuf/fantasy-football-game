@@ -23,6 +23,11 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 COMPOSE_PROD="$PROJECT_DIR/docker-compose.prod.yml"
 MAINTENANCE_SCRIPT="$SCRIPT_DIR/maintenance.sh"
 DEPLOY_LOG="$PROJECT_DIR/deploy.log"
+# Fichier d'etat qui memorise le dernier commit reellement deploye en prod.
+# Permet de lister correctement les commits mis en prod meme si HEAD local
+# a ete avance par un git pull manuel ou par une autre automatisation
+# entre deux deploys.
+LAST_DEPLOYED_FILE="$PROJECT_DIR/.last-deployed-commit"
 HEALTH_TIMEOUT=120
 
 # Charge les variables depuis .env.local si present (gitignore).
@@ -107,25 +112,47 @@ cd "$PROJECT_DIR"
 PREVIOUS_COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
 BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
 
+# Lit le dernier commit reellement deploye en prod (fallback : HEAD courant).
+# Indispensable pour calculer la liste des commits mis en prod lorsque HEAD
+# a deja ete avance avant l'execution du script (pull manuel, etc.).
+LAST_DEPLOYED_COMMIT=""
+if [ -f "$LAST_DEPLOYED_FILE" ]; then
+  LAST_DEPLOYED_COMMIT=$(tr -d ' \t\r\n' < "$LAST_DEPLOYED_FILE" || true)
+fi
+if [ -z "$LAST_DEPLOYED_COMMIT" ] || ! git cat-file -e "${LAST_DEPLOYED_COMMIT}^{commit}" 2>/dev/null; then
+  LAST_DEPLOYED_COMMIT="$PREVIOUS_COMMIT"
+fi
+
 echo -e "\n${BOLD}🏈 Deploiement Nuffle Arena${NC}"
 echo -e "   Branche: ${CYAN}$BRANCH${NC}"
 echo -e "   Commit actuel: ${CYAN}${PREVIOUS_COMMIT:0:7}${NC}"
+echo -e "   Dernier deploy: ${CYAN}${LAST_DEPLOYED_COMMIT:0:7}${NC}"
 echo -e "   Options: cache=${NO_CACHE:-oui} pull=${SKIP_PULL/true/non}"
 echo ""
 
-log_deploy "deploy start - branch $BRANCH - commit ${PREVIOUS_COMMIT:0:7} - options: no-cache=${NO_CACHE:-false} skip-pull=$SKIP_PULL"
+log_deploy "deploy start - branch $BRANCH - commit ${PREVIOUS_COMMIT:0:7} - last deployed ${LAST_DEPLOYED_COMMIT:0:7} - options: no-cache=${NO_CACHE:-false} skip-pull=$SKIP_PULL"
 
 # --- Calcul des commits a deployer (pour les notifications Discord) ---
-# Fetch non destructif pour connaitre ce qui sera deploye avant de basculer
-# en maintenance. Limite a 20 commits pour respecter la limite Discord (2000 chars).
+# Fetch non destructif pour connaitre la cible du deploiement avant de
+# basculer en maintenance. On compare ensuite LAST_DEPLOYED_COMMIT (ce qui
+# tourne reellement en prod) a la cible a deployer (origin/$BRANCH si pull,
+# sinon HEAD). Limite a 20 commits pour respecter la limite Discord
+# (2000 caracteres).
 COMMITS_BULLETS=""
+TARGET_REF=""
 if [ "$SKIP_PULL" = false ] && [ "$BRANCH" != "unknown" ]; then
   if git fetch origin "$BRANCH" --quiet 2>/dev/null; then
-    COMMITS_BULLETS=$(git log --format="- %s" "HEAD..origin/$BRANCH" 2>/dev/null | head -n 20 || true)
-    TOTAL_COMMITS=$(git rev-list --count "HEAD..origin/$BRANCH" 2>/dev/null || echo 0)
-    if [ "$TOTAL_COMMITS" -gt 20 ] 2>/dev/null; then
-      COMMITS_BULLETS="${COMMITS_BULLETS}"$'\n'"- ... et $((TOTAL_COMMITS - 20)) autres commits"
-    fi
+    TARGET_REF="origin/$BRANCH"
+  fi
+elif [ "$SKIP_PULL" = true ]; then
+  TARGET_REF="HEAD"
+fi
+
+if [ -n "$TARGET_REF" ] && [ "$LAST_DEPLOYED_COMMIT" != "unknown" ]; then
+  COMMITS_BULLETS=$(git log --format="- %s" "$LAST_DEPLOYED_COMMIT..$TARGET_REF" 2>/dev/null | head -n 20 || true)
+  TOTAL_COMMITS=$(git rev-list --count "$LAST_DEPLOYED_COMMIT..$TARGET_REF" 2>/dev/null || echo 0)
+  if [ "$TOTAL_COMMITS" -gt 20 ] 2>/dev/null; then
+    COMMITS_BULLETS="${COMMITS_BULLETS}"$'\n'"- ... et $((TOTAL_COMMITS - 20)) autres commits"
   fi
 fi
 
@@ -268,6 +295,12 @@ log_section "Finalisation"
 
 FINAL_COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
 DURATION=$ELAPSED
+
+# Memorise le commit effectivement deploye pour le prochain deploy (permet
+# de lister correctement les commits mis en prod meme apres un pull manuel).
+if [ "$FINAL_COMMIT" != "unknown" ]; then
+  echo "$FINAL_COMMIT" > "$LAST_DEPLOYED_FILE"
+fi
 
 SUCCESS_MSG=":white_check_mark: **Nuffle Arena** - Sortie de maintenance, deploiement reussi (branche \`$BRANCH\`, commit \`${FINAL_COMMIT:0:7}\`, health check ${DURATION}s)."
 if [ -n "$COMMITS_BULLETS" ]; then

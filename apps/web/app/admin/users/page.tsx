@@ -175,7 +175,7 @@ export default function AdminUsersPage() {
         await loadUserDetails(userId);
       }
     } catch (e: any) {
-      alert(e.message || "Erreur lors de la modification du statut Patreon");
+      alert(e.message || "Erreur lors de la modification du statut Supporter");
     } finally {
       setActionLoading(null);
     }
@@ -589,7 +589,7 @@ export default function AdminUsersPage() {
                     })()}
                   </div>
                   <div>
-                    <span className="text-gray-600">Patreon:</span>{" "}
+                    <span className="text-gray-600" title="Override manuel — le statut réel est calculé depuis les dons Ko-fi">Supporter (override):</span>{" "}
                     <label className="flex items-center gap-2">
                       <input
                         type="checkbox"

@@ -75,12 +75,15 @@ import { canHypnoticGaze, executeHypnoticGaze } from '../mechanics/hypnotic-gaze
 import { canProjectileVomit, executeProjectileVomit } from '../mechanics/projectile-vomit';
 import { canStab, executeStab } from '../mechanics/stab';
 import { canChainsaw, executeChainsaw } from '../mechanics/chainsaw';
+import { canBallAndChain, executeBallAndChain } from '../mechanics/ball-and-chain';
+import { canBombThrow, executeBombThrow } from '../mechanics/bombardier';
 import { canDumpOff, getDumpOffReceivers, executeDumpOff } from '../mechanics/dump-off';
 import { checkDauntless } from '../mechanics/dauntless';
 import { checkBreakTackle } from '../mechanics/break-tackle';
 import { isFendActiveForFollowUp } from '../mechanics/fend';
 import { resolveShadowingAfterDodge } from '../mechanics/shadowing';
 import { hasFrenzy } from '../mechanics/frenzy';
+import { getArmBarBonus } from '../mechanics/arm-bar';
 import {
   canPerformMultipleBlock,
   isMultipleBlockActiveFor,
@@ -592,22 +595,32 @@ function consumeTeamReroll(state: GameState, team: TeamId): GameState {
 }
 
 /**
- * Applique les conséquences d'un échec de jet (chute, turnover, armure, perte de balle)
+ * Applique les conséquences d'un échec de jet (chute, turnover, armure, perte de balle).
+ * @param armorBonus Bonus optionnel applique au jet d'armure (ex: +1 d'Arm Bar
+ *   quand un esquive a echoue dans la zone de tacle d'un adversaire avec ce skill).
  */
-function applyRollFailure(state: GameState, playerIndex: number, rng: RNG): GameState {
+function applyRollFailure(
+  state: GameState,
+  playerIndex: number,
+  rng: RNG,
+  armorBonus: number = 0,
+): GameState {
   const player = state.players[playerIndex];
   state.isTurnover = true;
   state.players[playerIndex] = { ...player, stunned: true };
 
-  // Jet d'armure
-  const armorResult = performArmorRollWithNotification(state.players[playerIndex], rng);
+  // Jet d'armure (avec bonus eventuel d'Arm Bar). `armorBonus` est exprime
+  // comme bonus a l'attaquant (i.e. +1 facilite la cassure d'armure). Il est
+  // negativise ici car `performArmorRollWithNotification` attend un modificateur
+  // a appliquer au TARGET (positif = armure plus difficile a percer).
+  const armorResult = performArmorRollWithNotification(state.players[playerIndex], rng, -armorBonus);
   state.lastDiceResult = armorResult;
   const armorLog = createLogEntry(
     'dice',
-    `Jet d'armure: ${armorResult.diceRoll}/${armorResult.targetNumber} ${armorResult.success ? '✓' : '✗'}`,
+    `Jet d'armure: ${armorResult.diceRoll}/${armorResult.targetNumber} ${armorResult.success ? '✓' : '✗'}${armorBonus > 0 ? ` [Arm Bar +${armorBonus}]` : ''}`,
     player.id,
     player.team,
-    { diceRoll: armorResult.diceRoll, targetNumber: armorResult.targetNumber, success: armorResult.success }
+    { diceRoll: armorResult.diceRoll, targetNumber: armorResult.targetNumber, success: armorResult.success, armBar: armorBonus > 0 }
   );
   state.gameLog = [...state.gameLog, armorLog];
 
@@ -688,7 +701,7 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
   const ACTIVATION_MOVE_TYPES: string[] = [
     'MOVE', 'LEAP', 'DODGE', 'BLOCK', 'MULTI_BLOCK', 'BLITZ', 'PASS', 'HANDOFF',
     'THROW_TEAM_MATE', 'FOUL', 'HYPNOTIC_GAZE', 'PROJECTILE_VOMIT', 'STAB',
-    'CHAINSAW',
+    'CHAINSAW', 'BALL_AND_CHAIN', 'BOMB_THROW',
   ];
   if (ACTIVATION_MOVE_TYPES.includes(move.type) && 'playerId' in move) {
     const playerId = (move as { playerId: string }).playerId;
@@ -763,6 +776,10 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       return handleStab(activeState, move, rng);
     case 'CHAINSAW':
       return handleChainsaw(activeState, move, rng);
+    case 'BALL_AND_CHAIN':
+      return handleBallAndChain(activeState, move, rng);
+    case 'BOMB_THROW':
+      return handleBombThrow(activeState, move, rng);
     case 'DUMP_OFF_CHOOSE':
       return handleDumpOffChoose(activeState, move, rng);
     case 'KICKOFF_PERFECT_DEFENCE':
@@ -1132,8 +1149,9 @@ function handleDodgeRoll(
       next.pendingReroll = { rollType: 'dodge', playerId: player.id, team: player.team, targetNumber: dodgeResult.targetNumber, modifiers: dodgeModifiers, playerIndex: idx, from, to };
       return next;
     }
-    // Pas de relance disponible : appliquer l'échec
-    return applyRollFailure(next, idx, rng);
+    // Pas de relance disponible : appliquer l'echec, avec bonus Arm Bar
+    // si un adversaire adjacent a la case d'origine possede ce skill.
+    return applyRollFailure(next, idx, rng, getArmBarBonus(next, player, from));
   }
 
   return next;
@@ -2000,7 +2018,10 @@ function handleRerollChoose(
       }
       return newState;
     } else {
-      return applyRollFailure(newState, playerIndex, rng);
+      // Echec apres team reroll : appliquer l'echec avec bonus Arm Bar.
+      const dodger = newState.players[playerIndex];
+      const armBarBonus = from ? getArmBarBonus(newState, dodger, from) : 0;
+      return applyRollFailure(newState, playerIndex, rng, armBarBonus);
     }
   } else if (rollType === 'gfi') {
     // Relancer le jet de GFI
@@ -2629,5 +2650,46 @@ function handleChainsaw(
   let newState = executeChainsaw(state, attacker, target, rng);
   newState = setPlayerAction(newState, attacker.id, 'CHAINSAW');
   newState = checkPlayerTurnEnd(newState, attacker.id);
+  return newState;
+}
+
+/**
+ * Gere une action Ball and Chain (Chaine et Boulet).
+ * Remplace le Move normal du Fanatic : deplacement aleatoire automatique.
+ */
+function handleBallAndChain(
+  state: GameState,
+  move: { type: 'BALL_AND_CHAIN'; playerId: string },
+  rng: RNG,
+): GameState {
+  const player = state.players.find(p => p.id === move.playerId);
+  if (!player) return state;
+  if (player.team !== state.currentPlayer) return state;
+  if (hasPlayerActed(state, player.id)) return state;
+  if (!canBallAndChain(state, move.playerId)) return state;
+
+  let newState = executeBallAndChain(state, move.playerId, rng);
+  newState = setPlayerAction(newState, move.playerId, 'MOVE');
+  newState = checkPlayerTurnEnd(newState, move.playerId);
+  return newState;
+}
+
+/**
+ * Gere une action Bomb Throw (Lancer de Bombe) pour un Bombardier.
+ */
+function handleBombThrow(
+  state: GameState,
+  move: { type: 'BOMB_THROW'; playerId: string; target: Position },
+  rng: RNG,
+): GameState {
+  const player = state.players.find(p => p.id === move.playerId);
+  if (!player) return state;
+  if (player.team !== state.currentPlayer) return state;
+  if (hasPlayerActed(state, player.id)) return state;
+  if (!canBombThrow(state, move.playerId, move.target)) return state;
+
+  let newState = executeBombThrow(state, move.playerId, move.target, rng);
+  newState = setPlayerAction(newState, move.playerId, 'BOMB_THROW');
+  newState = checkPlayerTurnEnd(newState, move.playerId);
   return newState;
 }

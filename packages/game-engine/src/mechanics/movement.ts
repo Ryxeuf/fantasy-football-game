@@ -147,13 +147,28 @@ export function calculateDodgeModifiers(
 export function calculatePickupModifiers(
   state: GameState,
   ballPosition: Position,
-  team: TeamId
+  team: TeamId,
+  picker?: Player
 ): number {
   let modifiers = 0;
 
-  // Malus pour chaque adversaire qui marque la case où se trouve la balle
+  // Malus pour chaque adversaire qui marque la case où se trouve la balle.
+  // Big Hand (O.1 batch 3) annule ce malus de zones de tacle.
   const opponentsAtBall = getAdjacentOpponents(state, ballPosition, team);
-  modifiers -= opponentsAtBall.length; // -1 par adversaire adjacent à la balle
+  const hasBigHand =
+    picker !== undefined &&
+    (picker.skills.includes('big-hand') || picker.skills.includes('big_hand'));
+  if (!hasBigHand) {
+    modifiers -= opponentsAtBall.length;
+  }
+
+  // Extra Arms (O.1 batch 3) : +1 au jet de ramassage.
+  if (
+    picker !== undefined &&
+    (picker.skills.includes('extra-arms') || picker.skills.includes('extra_arms'))
+  ) {
+    modifiers += 1;
+  }
 
   return modifiers;
 }

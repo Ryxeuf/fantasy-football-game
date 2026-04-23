@@ -33,6 +33,7 @@ services:
       - NODE_ENV=development
       - PORT=3100
       - NEXT_PUBLIC_API_BASE=https://api.nufflearena.fr
+      - NEXT_PUBLIC_UMAMI_ENABLED=true
       - SERVER_API_BASE=http://server:8201
       - JWT_SECRET=${JWT_SECRET}
     networks:
@@ -72,6 +73,7 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - MATCH_SECRET=${MATCH_SECRET}
       - CORS_ORIGINS=${CORS_ORIGINS}
+      - KOFI_VERIFICATION_TOKEN=${KOFI_VERIFICATION_TOKEN}
     networks:
       - traefik-network
     labels:
@@ -83,6 +85,12 @@ services:
       - "traefik.http.routers.nufflearena-api.service=nufflearena-api"
       - "traefik.http.routers.nufflearena-api.priority=1"
       - "traefik.http.services.nufflearena-api.loadbalancer.server.port=8201"
+      # Route les POST Ko-fi envoyes sur nufflearena.fr/webhooks/kofi vers le serveur Express
+      - "traefik.http.routers.nufflearena-kofi.rule=Host(`nufflearena.fr`) && PathPrefix(`/webhooks/kofi`)"
+      - "traefik.http.routers.nufflearena-kofi.entrypoints=websecure"
+      - "traefik.http.routers.nufflearena-kofi.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.nufflearena-kofi.service=nufflearena-api"
+      - "traefik.http.routers.nufflearena-kofi.priority=100"
       - "traefik.docker.network=traefik-network"
     depends_on:
       db:
@@ -90,7 +98,7 @@ services:
     command: >
       sh -c "
         npx prisma generate --schema /app/prisma/schema.prisma &&
-        npx prisma db push --schema /app/prisma/schema.prisma --skip-generate &&
+        npx prisma db push --schema /app/prisma/schema.prisma --skip-generate --accept-data-loss &&
         pnpm --filter @bb/server run dev:nowatch
       "
     healthcheck:

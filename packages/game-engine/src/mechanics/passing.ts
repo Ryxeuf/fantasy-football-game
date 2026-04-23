@@ -39,12 +39,12 @@ export function getPassRange(from: Position, to: Position): PassRange | null {
  * Détermine si un joueur peut tenter une passe sur une distance donnée.
  * Les joueurs Stunty ne peuvent pas tenter de passes Long ni Long Bomb :
  * l'action est restreinte aux portées Quick et Short.
- * Hail Mary Pass : ignore la règle de portée, autorise toute case du terrain
- * (y compris au-delà de 13 cases, où `range` vaut `null`).
+ * Les joueurs avec Hail Mary Pass peuvent viser n'importe quelle case du
+ * terrain (la règle de portée est ignorée, même au-delà de Long Bomb).
  */
 export function canAttemptPassForRange(passer: Player, range: PassRange | null): boolean {
-  if (range === null) {
-    return hasSkill(passer, 'hail-mary-pass');
+  if (!range) {
+    return hasSkill(passer, 'hail-mary-pass') || hasSkill(passer, 'hail_mary_pass');
   }
   if (hasSkill(passer, 'stunty') && (range === 'long' || range === 'bomb')) {
     return false;
@@ -80,9 +80,46 @@ export function calculatePassModifiers(
     modifiers += getPassRangeModifier(range);
   }
 
-  // Malus pour chaque adversaire en zone de tacle du passeur
+  // Accurate (O.1 batch 3b) : +1 sur Quick et Short.
+  if (
+    range &&
+    (range === 'quick' || range === 'short') &&
+    (passer.skills.includes('accurate') || passer.skills.includes('Accurate'))
+  ) {
+    modifiers += 1;
+  }
+
+  // Strong Arm (O.1 batch 3b) : +1 sur Short, Long et Bomb.
+  if (
+    range &&
+    (range === 'short' || range === 'long' || range === 'bomb') &&
+    (passer.skills.includes('strong-arm') ||
+      passer.skills.includes('strong_arm') ||
+      passer.skills.includes('Strong Arm'))
+  ) {
+    modifiers += 1;
+  }
+
+  // Cannoneer (O.1 batch 3f) : +1 sur Long et Bomb. Complement symetrique
+  // d'Accurate qui lui couvre Quick et Short.
+  if (
+    range &&
+    (range === 'long' || range === 'bomb') &&
+    (passer.skills.includes('cannoneer') ||
+      passer.skills.includes('Cannoneer'))
+  ) {
+    modifiers += 1;
+  }
+
+  // Malus pour chaque adversaire en zone de tacle du passeur.
+  // Nerves of Steel (O.1 batch 3) annule ce malus.
   const opponentsNearPasser = getAdjacentOpponents(state, passer.pos, passer.team);
-  modifiers -= opponentsNearPasser.length;
+  const hasNervesOfSteel =
+    passer.skills.includes('nerves-of-steel') ||
+    passer.skills.includes('nerves_of_steel');
+  if (!hasNervesOfSteel) {
+    modifiers -= opponentsNearPasser.length;
+  }
 
   // Disturbing Presence : -1 par adversaire avec le skill a <= 3 cases
   modifiers += getDisturbingPresenceModifier(state, passer.pos, passer.team);
@@ -118,9 +155,34 @@ export function calculateCatchModifiers(
 ): number {
   let modifiers = 0;
 
-  // Malus pour chaque adversaire en zone de tacle du receveur
+  // Malus pour chaque adversaire en zone de tacle du receveur.
+  // Nerves of Steel (O.1 batch 3) annule ce malus.
   const opponentsNearCatcher = getAdjacentOpponents(state, catcher.pos, catcher.team);
-  modifiers -= opponentsNearCatcher.length;
+  const hasNervesOfSteel =
+    catcher.skills.includes('nerves-of-steel') ||
+    catcher.skills.includes('nerves_of_steel');
+  if (!hasNervesOfSteel) {
+    modifiers -= opponentsNearCatcher.length;
+  }
+
+  // Extra Arms (O.1 batch 3) : +1 au jet de reception.
+  if (
+    catcher.skills.includes('extra-arms') ||
+    catcher.skills.includes('extra_arms')
+  ) {
+    modifiers += 1;
+  }
+
+  // Diving Catch (O.1 batch 3d) : +1 au jet de reception du ballon.
+  // Note : l'effet "peut receptionner sur une case adjacente" n'est pas
+  // encore implemente (deviation/scatter vers une case voisine suite a une
+  // passe ratee).
+  if (
+    catcher.skills.includes('diving-catch') ||
+    catcher.skills.includes('diving_catch')
+  ) {
+    modifiers += 1;
+  }
 
   // Disturbing Presence : -1 par adversaire avec le skill a <= 3 cases
   modifiers += getDisturbingPresenceModifier(state, catcher.pos, catcher.team);
@@ -131,6 +193,57 @@ export function calculateCatchModifiers(
 /**
  * Effectue un jet de réception
  */
+/**
+ * Effectue un jet de reception avec la possibilite d'utiliser le skill `catch`
+ * pour relancer une fois en cas d'echec (sans consommer la relance d'equipe).
+ * BB2020 : "If this player fails to catch a Pass, Pick Up, Intercept or Bounce,
+ * they may re-roll the dice." — implemente ici uniquement sur Catch.
+ */
+export function performCatchRollWithSkill(
+  catcher: Player,
+  rng: RNG,
+  modifiers: number,
+): { result: DiceResult; rerolled: boolean } {
+  const first = performCatchRoll(catcher, rng, modifiers);
+  if (first.success) {
+    return { result: first, rerolled: false };
+  }
+  // Catch (relance standard) OU Monstrous Mouth (O.1 batch 3f, mutation qui
+  // permet de relancer toute tentative ratee de reception). Les deux skills
+  // offrent la meme relance personnelle ; les posseder ensemble n'autorise
+  // pas une double relance.
+  const hasCatch = catcher.skills.some(s => s.toLowerCase() === 'catch');
+  const hasMonstrousMouth =
+    catcher.skills.includes('monstrous-mouth') ||
+    catcher.skills.includes('monstrous_mouth');
+  if (!hasCatch && !hasMonstrousMouth) {
+    return { result: first, rerolled: false };
+  }
+  const second = performCatchRoll(catcher, rng, modifiers);
+  return { result: second, rerolled: true };
+}
+
+/**
+ * Effectue un jet de passe avec la possibilite d'utiliser le skill `pass`
+ * pour relancer une fois en cas d'echec.
+ */
+export function performPassRollWithSkill(
+  passer: Player,
+  rng: RNG,
+  modifiers: number,
+): { result: DiceResult; rerolled: boolean } {
+  const first = performPassRoll(passer, rng, modifiers);
+  if (first.success) {
+    return { result: first, rerolled: false };
+  }
+  const hasPass = passer.skills.some(s => s.toLowerCase() === 'pass');
+  if (!hasPass) {
+    return { result: first, rerolled: false };
+  }
+  const second = performPassRoll(passer, rng, modifiers);
+  return { result: second, rerolled: true };
+}
+
 export function performCatchRoll(catcher: Player, rng: RNG, modifiers: number): DiceResult {
   const diceRoll = rollD6(rng);
   const targetNumber = Math.max(2, Math.min(6, catcher.ag - modifiers));
@@ -276,9 +389,20 @@ export function executePass(
     }
   }
 
-  // Jet de passe
+  // Jet de passe (avec relance `pass` skill si echec et skill present)
   const passModifiers = calculatePassModifiers(newState, passer, target.pos);
-  const passResult = performPassRoll(passer, rng, passModifiers);
+  const passRollOutcome = performPassRollWithSkill(passer, rng, passModifiers);
+  const passResult = passRollOutcome.result;
+  if (passRollOutcome.rerolled) {
+    const rerollLog = createLogEntry(
+      'info',
+      `${passer.name} utilise Pass pour relancer son jet de passe`,
+      passer.id,
+      passer.team,
+      { skill: 'pass' },
+    );
+    newState.gameLog = [...newState.gameLog, rerollLog];
+  }
 
   newState.lastDiceResult = passResult;
 
@@ -292,21 +416,22 @@ export function executePass(
   newState.gameLog = [...newState.gameLog, passLog];
 
   if (!passResult.success) {
-    // Safe Pass : le passeur conserve le ballon, pas de turnover ni de rebond.
-    // L'activation du joueur se termine (géré par l'appelant via checkPlayerTurnEnd).
-    if (hasSkill(passer, 'safe-pass')) {
+    // Safe Pass : sur echec, le passeur garde le ballon. Pas de turnover,
+    // pas de rebond, l'activation se termine (geree par handlePass via
+    // setPlayerAction + checkPlayerTurnEnd).
+    if (hasSkill(passer, 'safe-pass') || hasSkill(passer, 'safe_pass')) {
       newState.players = newState.players.map(p =>
         p.id === passer.id ? { ...p, hasBall: true } : p
       );
       newState.ball = undefined;
-      const safeLog = createLogEntry(
+      const safePassLog = createLogEntry(
         'info',
-        `Passe Assurée : ${passer.name} conserve le ballon, aucun turnover`,
+        `Passe Assuree : ${passer.name} garde possession du ballon.`,
         passer.id,
         passer.team,
         { skill: 'safe-pass' }
       );
-      newState.gameLog = [...newState.gameLog, safeLog];
+      newState.gameLog = [...newState.gameLog, safePassLog];
       return newState;
     }
 
@@ -323,13 +448,14 @@ export function executePass(
     return bounceBall(newState, rng);
   }
 
-  // Hail Mary Pass : même sur un jet de passe réussi, la passe n'est jamais
-  // précise. Le ballon rebondit depuis la case cible, sans tentative de
-  // réception directe et sans turnover (tant que le bounce ne déclenche rien).
-  if (hasSkill(passer, 'hail-mary-pass')) {
+  // Hail Mary Pass : la passe n'est jamais precise. Meme sur un jet reussi,
+  // le ballon ne va pas directement dans les mains du receveur. Il devie depuis
+  // la case cible, sans turnover (le receveur ou un autre joueur peut tenter
+  // de le rattraper via le rebond).
+  if (hasSkill(passer, 'hail-mary-pass') || hasSkill(passer, 'hail_mary_pass')) {
     const hmpLog = createLogEntry(
       'info',
-      `Passe Désespérée : lancer imprécis, le ballon rebondit depuis la cible`,
+      `Passe Desesperee : la passe n'est jamais precise, le ballon devie depuis la cible.`,
       passer.id,
       passer.team,
       { skill: 'hail-mary-pass' }
@@ -360,9 +486,20 @@ export function executePass(
     return bounceBall(newState, rng);
   }
 
-  // Passe réussie : le receveur doit réceptionner
+  // Passe réussie : le receveur doit réceptionner (avec relance `catch` skill)
   const catchModifiers = calculateCatchModifiers(newState, target);
-  const catchResult = performCatchRoll(target, rng, catchModifiers);
+  const catchOutcome = performCatchRollWithSkill(target, rng, catchModifiers);
+  const catchResult = catchOutcome.result;
+  if (catchOutcome.rerolled) {
+    const catchRerollLog = createLogEntry(
+      'info',
+      `${target.name} utilise Catch pour relancer sa reception`,
+      target.id,
+      target.team,
+      { skill: 'catch' },
+    );
+    newState.gameLog = [...newState.gameLog, catchRerollLog];
+  }
 
   const catchLog = createLogEntry(
     'dice',
@@ -462,9 +599,20 @@ export function executeHandoff(
     return bounceBall(newState, rng);
   }
 
-  // Jet de réception pour le receveur
+  // Jet de réception pour le receveur (avec relance `catch` skill)
   const catchModifiers = calculateCatchModifiers(newState, target);
-  const catchResult = performCatchRoll(target, rng, catchModifiers);
+  const catchOutcomeHO = performCatchRollWithSkill(target, rng, catchModifiers);
+  const catchResult = catchOutcomeHO.result;
+  if (catchOutcomeHO.rerolled) {
+    const catchRerollLog = createLogEntry(
+      'info',
+      `${target.name} utilise Catch pour relancer sa reception`,
+      target.id,
+      target.team,
+      { skill: 'catch' },
+    );
+    newState.gameLog = [...newState.gameLog, catchRerollLog];
+  }
 
   newState.lastDiceResult = catchResult;
 

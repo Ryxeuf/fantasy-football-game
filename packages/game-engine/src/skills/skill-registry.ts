@@ -203,6 +203,29 @@ registerSkill({
   getModifiers: () => ({ armorModifier: 1 }), // Appliqué au meilleur choix par le moteur
 });
 
+// MIGHTY BLOW (+1) — variante BB3 utilisee dans les rosters
+// (`mighty-blow-1`). Comportement identique a `mighty-blow` mais slug
+// distinct, donc enregistrement separe pour que les rosters existants
+// recoivent enfin le bonus +1 (O.1 batch 3h).
+registerSkill({
+  slug: 'mighty-blow-1',
+  triggers: ['on-armor', 'on-injury'],
+  description: '+1 au jet d\'armure OU au jet de blessure (automatique).',
+  canApply: (ctx) => hasSkill(ctx.player, 'mighty-blow-1') || hasSkill(ctx.player, 'mighty_blow_1'),
+  getModifiers: () => ({ armorModifier: 1 }),
+});
+
+// MIGHTY BLOW (+2) — variante BB3 utilisee par Morg n Thorg et autres
+// stars (`mighty-blow-2`). Bonus de +2 au jet d'armure ou de blessure.
+// (O.1 batch 3h)
+registerSkill({
+  slug: 'mighty-blow-2',
+  triggers: ['on-armor', 'on-injury'],
+  description: '+2 au jet d\'armure OU au jet de blessure (automatique).',
+  canApply: (ctx) => hasSkill(ctx.player, 'mighty-blow-2') || hasSkill(ctx.player, 'mighty_blow_2'),
+  getModifiers: () => ({ armorModifier: 2 }),
+});
+
 // ─── COMPÉTENCES AVANCÉES ────────────────────────────────────────────────
 
 // DAUNTLESS
@@ -257,6 +280,17 @@ registerSkill({
   getModifiers: () => ({ armorModifier: 1 }),
 });
 
+// DIRTY PLAYER (+2) — variante BB3 utilisee notamment par le Dwarf
+// Deathroller (`dirty-player-2`). Bonus de +2 au jet d'armure lors d'une
+// faute. (O.1 batch 3h)
+registerSkill({
+  slug: 'dirty-player-2',
+  triggers: ['on-foul'],
+  description: '+2 au jet d\'armure lors d\'une faute.',
+  canApply: (ctx) => hasSkill(ctx.player, 'dirty-player-2') || hasSkill(ctx.player, 'dirty_player_2'),
+  getModifiers: () => ({ armorModifier: 2 }),
+});
+
 // SNEAKY GIT
 // Effet resolu dans `mechanics/foul.ts` (annulation de l'expulsion sur doublet
 // naturel) et dans `core/game-state.ts#canPlayerContinueMoving` (l'activation
@@ -276,31 +310,6 @@ registerSkill({
   description: 'Permet de relancer un jet de passe raté.',
   canApply: (ctx) => hasSkill(ctx.player, 'pass'),
   canReroll: () => true,
-});
-
-// HAIL MARY PASS
-// Effet résolu dans `mechanics/passing.ts` :
-//  - `canAttemptPassForRange` autorise une portée > Long Bomb quand le passeur
-//    a ce skill (case cible n'importe où sur le terrain).
-//  - `executePass` force le ballon à rebondir depuis la cible même sur un jet
-//    de passe réussi (la passe n'est jamais précise).
-// L'entrée du registre sert à la découverte UI et à la documentation.
-registerSkill({
-  slug: 'hail-mary-pass',
-  triggers: ['on-pass'],
-  description: "Ignore la règle de portée (toute case du terrain). La passe n'est jamais précise : le ballon rebondit depuis la cible.",
-  canApply: (ctx) => hasSkill(ctx.player, 'hail-mary-pass'),
-});
-
-// SAFE PASS
-// Effet résolu dans `mechanics/passing.ts#executePass` : sur un jet de passe
-// raté, le passeur conserve le ballon, pas de turnover ni de rebond.
-// L'entrée du registre sert à la découverte UI et à la documentation.
-registerSkill({
-  slug: 'safe-pass',
-  triggers: ['on-pass'],
-  description: "Si le jet de passe échoue, le passeur conserve le ballon, aucun rebond ni turnover. L'activation se termine.",
-  canApply: (ctx) => hasSkill(ctx.player, 'safe-pass'),
 });
 
 // CATCH
@@ -489,6 +498,39 @@ registerSkill({
   description: '+1 au jet de passe pour les passes Short, Long et Bomb.',
   canApply: (ctx) => hasSkill(ctx.player, 'strong-arm') || hasSkill(ctx.player, 'strong_arm'),
   getModifiers: () => ({ passModifier: 1 }),
+});
+
+// CANNONEER (O.1 batch 3f) : +1 au jet de passe sur Long et Bomb.
+// Effectivement resolu par `calculatePassModifiers` dans `mechanics/passing.ts`.
+registerSkill({
+  slug: 'cannoneer',
+  triggers: ['on-pass'],
+  description: '+1 au jet de passe pour les passes Long et Long Bomb.',
+  canApply: (ctx) => hasSkill(ctx.player, 'cannoneer'),
+  getModifiers: () => ({ passModifier: 1 }),
+});
+
+// MONSTROUS MOUTH (O.1 batch 3f) : relance toute tentative ratee de reception
+// (effectuee dans `performCatchRollWithSkill`) et Strip Ball ne peut pas etre
+// utilise contre ce joueur (resolu dans `handlePushBack` de `mechanics/blocking.ts`).
+registerSkill({
+  slug: 'monstrous-mouth',
+  triggers: ['on-catch'],
+  description: 'Relance toute tentative ratee de reception. Strip Ball ne peut pas etre utilise contre ce joueur.',
+  canApply: (ctx) =>
+    hasSkill(ctx.player, 'monstrous-mouth') || hasSkill(ctx.player, 'monstrous_mouth'),
+});
+
+// ARM BAR (O.1 batch 3g) : +1 au jet d'armure (ou de blessure) du joueur
+// adverse qui Tombe en ratant un Esquive/Saut/Bond pour quitter une case ou
+// il etait Marque par ce joueur. La resolution effective se fait dans
+// `actions.ts` (voir `applyRollFailure` + helper `getArmBarBonus` dans
+// `mechanics/arm-bar.ts`). L'entree ici sert pour la decouverte UI.
+registerSkill({
+  slug: 'arm-bar',
+  triggers: ['on-armor', 'on-injury'],
+  description: "+1 au jet d'Armure (ou de Blessure) quand un adversaire Tombe en ratant un test d'agilite (Esquive/Saut/Bond) pour quitter une case ou il etait Marque par ce joueur.",
+  canApply: (ctx) => hasSkill(ctx.player, 'arm-bar') || hasSkill(ctx.player, 'arm_bar'),
 });
 
 // SHADOWING
@@ -683,6 +725,29 @@ registerSkill({
   canApply: (ctx) => hasSkill(ctx.player, 'animal-savagery'),
 });
 
+// ─── BOMBARDIER ─────────────────────────────────────────────────────────────
+// Action speciale "Lancer de Bombe" implementee dans `mechanics/bombardier.ts`,
+// branchee via l'action BOMB_THROW.
+
+registerSkill({
+  slug: 'bombardier',
+  triggers: ['on-activation'],
+  description: 'Action speciale (remplace un blocage) : lance une bombe sur une case en portee Quick/Short. Succes = explosion +1 armure ; fumble = explosion sur le lanceur ; echec = deviation D8.',
+  canApply: (ctx) => hasSkill(ctx.player, 'bombardier'),
+});
+
+// ─── BALL AND CHAIN ─────────────────────────────────────────────────────────
+// Ball and Chain remplace l'action de Mouvement du joueur par un deplacement
+// automatique dans une direction aleatoire (D8). Implementation dans
+// `mechanics/ball-and-chain.ts`, branche via l'action BALL_AND_CHAIN.
+
+registerSkill({
+  slug: 'ball-and-chain',
+  triggers: ['on-activation'],
+  description: 'Remplace l\'action de Mouvement par un deplacement automatique (jet D8) jusqu\'a MA cases. Sortie de terrain = crowd surf + turnover ; collision adverse = Block automatique.',
+  canApply: (ctx) => hasSkill(ctx.player, 'ball-and-chain'),
+});
+
 // ─── TAKE ROOT ──────────────────────────────────────────────────────────────
 // Take Root check is performed in applyMove before dispatching to action handlers.
 // Registered here for lookup and metadata purposes.
@@ -781,6 +846,32 @@ registerSkill({
   triggers: ['on-block-defender'],
   description: 'Quand un joueur adverse déclare un Blocage ciblant ce joueur, l\'attaquant lance un D6 avant le blocage. Sur 1, le blocage est annulé et l\'action est gaspillée.',
   canApply: (ctx) => hasSkill(ctx.player, 'foul-appearance'),
+});
+
+// ─── HAIL MARY PASS ────────────────────────────────────────────────────────
+// Hail Mary Pass est resolu dans `mechanics/passing.ts` :
+//  - `canAttemptPassForRange` permet de viser n'importe quelle case (ignore la
+//    regle de portee, y compris au-dela de Long Bomb).
+//  - `executePass` : sur un jet de passe reussi, la passe n'est jamais precise,
+//    le ballon devie depuis la case cible (pas de catch direct, pas de turnover).
+// L'entree du registre sert a la decouverte UI et a la documentation.
+registerSkill({
+  slug: 'hail-mary-pass',
+  triggers: ['on-pass'],
+  description: "La case cible de la passe peut etre n'importe ou sur le terrain (la regle de portee est ignoree). La passe n'est jamais precise : meme sur un jet reussi, le ballon devie depuis la cible.",
+  canApply: (ctx) => hasSkill(ctx.player, 'hail-mary-pass') || hasSkill(ctx.player, 'hail_mary_pass'),
+});
+
+// ─── SAFE PASS ─────────────────────────────────────────────────────────────
+// Safe Pass est resolu dans `mechanics/passing.ts#executePass` : sur un jet de
+// passe rate, le passeur garde le ballon, il n'y a pas de turnover ni de rebond,
+// et l'activation du passeur se termine (geree par handlePass). L'entree du
+// registre sert a la decouverte UI et a la documentation.
+registerSkill({
+  slug: 'safe-pass',
+  triggers: ['on-pass'],
+  description: "Si ce joueur rate une action de Passe, le ballon n'est pas lache, ne rebondit pas depuis la case qu'occupe ce joueur, et aucun Renversement n'est cause. Au lieu de cela, ce joueur garde possession du ballon et son activation se termine.",
+  canApply: (ctx) => hasSkill(ctx.player, 'safe-pass') || hasSkill(ctx.player, 'safe_pass'),
 });
 
 // ─── DISTURBING PRESENCE ───────────────────────────────────────────────────

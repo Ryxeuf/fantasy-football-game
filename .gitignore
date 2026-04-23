@@ -103,3 +103,6 @@ screenshots/
 .vscode/settings.json
 .idea/
 *.iml
+
+# Deploy state (ecrit par scripts/deploy.sh apres chaque deploy reussi)
+.last-deployed-commit
