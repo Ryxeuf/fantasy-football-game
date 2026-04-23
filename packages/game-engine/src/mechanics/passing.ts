@@ -80,9 +80,15 @@ export function calculatePassModifiers(
     modifiers += getPassRangeModifier(range);
   }
 
-  // Malus pour chaque adversaire en zone de tacle du passeur
+  // Malus pour chaque adversaire en zone de tacle du passeur.
+  // Nerves of Steel (O.1 batch 3) annule ce malus.
   const opponentsNearPasser = getAdjacentOpponents(state, passer.pos, passer.team);
-  modifiers -= opponentsNearPasser.length;
+  const hasNervesOfSteel =
+    passer.skills.includes('nerves-of-steel') ||
+    passer.skills.includes('nerves_of_steel');
+  if (!hasNervesOfSteel) {
+    modifiers -= opponentsNearPasser.length;
+  }
 
   // Disturbing Presence : -1 par adversaire avec le skill a <= 3 cases
   modifiers += getDisturbingPresenceModifier(state, passer.pos, passer.team);
@@ -118,9 +124,23 @@ export function calculateCatchModifiers(
 ): number {
   let modifiers = 0;
 
-  // Malus pour chaque adversaire en zone de tacle du receveur
+  // Malus pour chaque adversaire en zone de tacle du receveur.
+  // Nerves of Steel (O.1 batch 3) annule ce malus.
   const opponentsNearCatcher = getAdjacentOpponents(state, catcher.pos, catcher.team);
-  modifiers -= opponentsNearCatcher.length;
+  const hasNervesOfSteel =
+    catcher.skills.includes('nerves-of-steel') ||
+    catcher.skills.includes('nerves_of_steel');
+  if (!hasNervesOfSteel) {
+    modifiers -= opponentsNearCatcher.length;
+  }
+
+  // Extra Arms (O.1 batch 3) : +1 au jet de reception.
+  if (
+    catcher.skills.includes('extra-arms') ||
+    catcher.skills.includes('extra_arms')
+  ) {
+    modifiers += 1;
+  }
 
   // Disturbing Presence : -1 par adversaire avec le skill a <= 3 cases
   modifiers += getDisturbingPresenceModifier(state, catcher.pos, catcher.team);
