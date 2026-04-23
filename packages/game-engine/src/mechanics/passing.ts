@@ -80,6 +80,26 @@ export function calculatePassModifiers(
     modifiers += getPassRangeModifier(range);
   }
 
+  // Accurate (O.1 batch 3b) : +1 sur Quick et Short.
+  if (
+    range &&
+    (range === 'quick' || range === 'short') &&
+    (passer.skills.includes('accurate') || passer.skills.includes('Accurate'))
+  ) {
+    modifiers += 1;
+  }
+
+  // Strong Arm (O.1 batch 3b) : +1 sur Short, Long et Bomb.
+  if (
+    range &&
+    (range === 'short' || range === 'long' || range === 'bomb') &&
+    (passer.skills.includes('strong-arm') ||
+      passer.skills.includes('strong_arm') ||
+      passer.skills.includes('Strong Arm'))
+  ) {
+    modifiers += 1;
+  }
+
   // Malus pour chaque adversaire en zone de tacle du passeur.
   // Nerves of Steel (O.1 batch 3) annule ce malus.
   const opponentsNearPasser = getAdjacentOpponents(state, passer.pos, passer.team);
