@@ -299,6 +299,13 @@ export default function LobbyScreen() {
           >
             <Text style={styles.leaderboardButtonText}>Classement</Text>
           </Pressable>
+          <Pressable
+            onPress={() => router.push("/settings")}
+            style={styles.settingsButton}
+            testID="lobby-settings-button"
+          >
+            <Text style={styles.settingsButtonText}>Profil</Text>
+          </Pressable>
           <Pressable onPress={handleLogout} style={styles.logoutButton}>
             <Text style={styles.logoutText}>Deconnexion</Text>
           </Pressable>
@@ -519,6 +526,17 @@ const styles = StyleSheet.create({
   },
   leaderboardButtonText: {
     color: "#92400E",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  settingsButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    backgroundColor: "#F3F4F6",
+    borderRadius: 6,
+  },
+  settingsButtonText: {
+    color: "#111827",
     fontSize: 13,
     fontWeight: "600",
   },

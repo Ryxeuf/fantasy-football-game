@@ -320,7 +320,7 @@
 | M.9 | Push notifications natives (Expo Notifications) | Mobile | [x] |
 | M.10 | Details joueur et progression | Mobile | [x] |
 | M.11 | Catalogue Star Players mobile | Mobile | [x] |
-| M.12 | Profil et settings mobile | Mobile | [ ] |
+| M.12 | Profil et settings mobile | Mobile | [x] |
 
 ### Sprint 20-21 — Extension contenu : skills & equipes restantes
 
