@@ -151,7 +151,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     skills: "chainsaw,loner-4,regeneration,secret-weapon,stand-firm,thick-skull",
     hirableBy: ["sylvanian_spotlight"],
     imageUrl: "/data/Star-Players_files/Bryce-The-Slice-Cambuel-2023.webp",
-    specialRule: "Flammes Fantomatiques : Une fois par match, tous les joueurs adverses adjacents à Bryce perdent leur zone de tacle jusqu'à la fin du tour."
+    specialRule: "Flammes Fantomatiques : Une fois par match, tous les joueurs adverses adjacents à Bryce perdent leur zone de tacle jusqu'à la fin du tour.",
+    specialRuleEn: "Phantom Flames: Once per match, all opposing players adjacent to Bryce lose their tackle zones until the end of the turn."
   },
 
   cindy_piewhistle: {
@@ -198,7 +199,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     skills: "loner-4,dodge,nerves-of-steel,catch,hypnotic-gaze,on-the-ball",
     hirableBy: ["elven_kingdoms_league"],
     imageUrl: "/data/Star-Players_files/Eldril-Sidewinder.webp",
-    specialRule: "Danse Envoûtante : Une fois par match, après avoir été mis au sol, Eldril peut se relever gratuitement sur un jet de 2+."
+    specialRule: "Danse Envoûtante : Une fois par match, après avoir été mis au sol, Eldril peut se relever gratuitement sur un jet de 2+.",
+    specialRuleEn: "Enchanting Dance: Once per match, after being knocked down, Eldril may stand up for free on a roll of 2+."
   },
 
   estelle_la_veneaux: {
@@ -277,7 +279,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     skills: "accurate,dodge,loner-4,pass,sidestep,sure-hands",
     hirableBy: ["elven_kingdoms_league"],
     imageUrl: "/data/Star-Players_files/gloriel_summerbloom.svg",
-    specialRule: "Tir à Bout Portant : Une fois par match, après une Passe complétée par Gloriel, le receveur peut se déplacer de 3 cases supplémentaires."
+    specialRule: "Tir à Bout Portant : Une fois par match, après une Passe complétée par Gloriel, le receveur peut se déplacer de 3 cases supplémentaires.",
+    specialRuleEn: "Point Blank Shot: Once per match, after a Pass completed by Gloriel, the receiver may move 3 additional squares."
   },
 
   glotl_stop: {
@@ -356,7 +359,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     skills: "disturbing-presence,dodge,foul-appearance,jump-up,loner-4,no-hands,regeneration,shadowing,sidestep",
     hirableBy: ["sylvanian_spotlight"],
     imageUrl: "/data/Star-Players_files/Skitter-Stab-Stab-blood-bowl-star-player.webp",
-    specialRule: "Incorporelle : Une fois par match, Gretchen peut traverser les cases occupées par d'autres joueurs durant son déplacement."
+    specialRule: "Incorporelle : Une fois par match, Gretchen peut traverser les cases occupées par d'autres joueurs durant son déplacement.",
+    specialRuleEn: "Incorporeal: Once per match, Gretchen may move through squares occupied by other players during her movement."
   },
 
   griff_oberwald: {
@@ -469,6 +473,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     hirableBy: ["badlands_brawl"],
     imageUrl: "/data/Star-Players_files/hthark_the_unstoppable.svg",
     specialRule: "Imparable : H'thark ne peut être mis au sol que par un résultat Double Crâne sur les dés de Blocage.",
+    specialRuleEn: "Unstoppable: H'thark can only be knocked down on a Double Skull result on the Block dice.",
     isMegaStar: true
   },
 
@@ -485,6 +490,7 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     hirableBy: ["sylvanian_spotlight"],
     imageUrl: "/data/Star-Players_files/ivan_the_animal_deathshroud.svg",
     specialRule: "Mort et Fier de l'Être : Les adversaires doivent soustraire 1 aux jets de Blessure contre Ivan.",
+    specialRuleEn: "Dead and Proud of It: Opponents must subtract 1 from Injury rolls against Ivan.",
     isMegaStar: true
   },
 
@@ -516,7 +522,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     skills: "block,dump-off,dodge,sidestep,nerves-of-steel,pass,diving-catch,loner-4,on-the-ball",
     hirableBy: ["elven_kingdoms_league"],
     imageUrl: "/data/Star-Players_files/jeremiah_kool.svg",
-    specialRule: "Le Kata de Kool : Une fois par match, après avoir réceptionné le ballon, Jeremiah peut effectuer un déplacement gratuit de 3 cases."
+    specialRule: "Le Kata de Kool : Une fois par match, après avoir réceptionné le ballon, Jeremiah peut effectuer un déplacement gratuit de 3 cases.",
+    specialRuleEn: "The Kool Kata: Once per match, after catching the ball, Jeremiah may perform a free 3-square move."
   },
 
   jordell_freshbreeze: {
@@ -531,7 +538,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     skills: "block,dodge,sidestep,diving-catch,leap,loner-4",
     hirableBy: ["elven_kingdoms_league"],
     imageUrl: "/data/Star-Players_files/jordell_freshbreeze.svg",
-    specialRule: "Réception du Siècle : Une fois par match, Jordell peut ajouter +1 à un jet de Réception ou d'Interception."
+    specialRule: "Réception du Siècle : Une fois par match, Jordell peut ajouter +1 à un jet de Réception ou d'Interception.",
+    specialRuleEn: "Catch of the Century: Once per match, Jordell may add +1 to a Catch or Interception roll."
   },
 
   karina_von_riesz: {
@@ -546,7 +554,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     skills: "bloodlust,dodge,hypnotic-gaze,jump-up,loner-4,regeneration",
     hirableBy: ["sylvanian_spotlight"],
     imageUrl: "/data/Star-Players_files/karina_von_riesz.svg",
-    specialRule: "Charme Vampirique : Une fois par match, Karina peut forcer un joueur adverse adjacent à se déplacer d'une case dans une direction de son choix."
+    specialRule: "Charme Vampirique : Une fois par match, Karina peut forcer un joueur adverse adjacent à se déplacer d'une case dans une direction de son choix.",
+    specialRuleEn: "Vampiric Charm: Once per match, Karina may force an adjacent opposing player to move one square in a direction of her choice."
   },
 
   karla_von_kill: {
@@ -577,7 +586,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     skills: "disturbing-presence,foul-appearance,loner-4,on-the-ball,tackle,tentacles",
     hirableBy: ["elven_kingdoms_league"],
     imageUrl: "/data/Star-Players_files/Kiroth-Krakeneye.webp",
-    specialRule: "Emprise Eldritch : Les joueurs adverses subissent un modificateur de -1 lorsqu'ils tentent d'Esquiver hors de la zone de tacle de Kiroth."
+    specialRule: "Emprise Eldritch : Les joueurs adverses subissent un modificateur de -1 lorsqu'ils tentent d'Esquiver hors de la zone de tacle de Kiroth.",
+    specialRuleEn: "Eldritch Grasp: Opposing players suffer a -1 modifier when attempting to Dodge out of Kiroth's tackle zone."
   },
 
   kreek_rustgouger: {
@@ -624,7 +634,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     skills: "block,dauntless,loner-4,sidestep,tackle",
     hirableBy: ["elven_kingdoms_league"],
     imageUrl: "/data/Star-Players_files/lucien_swift.svg",
-    specialRule: "Les Swift Twins : Lucien forme un duo inséparable avec Valen et bénéficie d'un bonus lorsqu'ils jouent ensemble."
+    specialRule: "Les Swift Twins : Lucien forme un duo inséparable avec Valen et bénéficie d'un bonus lorsqu'ils jouent ensemble.",
+    specialRuleEn: "The Swift Twins: Lucien forms an inseparable duo with Valen and benefits from a bonus when they play together."
   },
 
   valen_swift: {
@@ -639,7 +650,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     skills: "catch,dodge,loner-4,nerves-of-steel,sidestep,sure-feet",
     hirableBy: ["elven_kingdoms_league"],
     imageUrl: "/data/Star-Players_files/valen_swift.svg",
-    specialRule: "Les Swift Twins : Valen joue en tandem avec Lucien et profite d'actions combinées lorsqu'il est aligné avec lui."
+    specialRule: "Les Swift Twins : Valen joue en tandem avec Lucien et profite d'actions combinées lorsqu'il est aligné avec lui.",
+    specialRuleEn: "The Swift Twins: Valen plays in tandem with Lucien and benefits from combined actions when aligned with him."
   },
 
   luthor_von_drakenborg: {
@@ -654,7 +666,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     skills: "block,hypnotic-gaze,loner-4,regeneration,sidestep",
     hirableBy: ["sylvanian_spotlight"],
     imageUrl: "/data/Star-Players_files/luthor_von_drakenborg.svg",
-    specialRule: "Seigneur Vampire : Une fois par match, Luthor peut relancer un jet de Soif de Sang (Bloodlust) raté."
+    specialRule: "Seigneur Vampire : Une fois par match, Luthor peut relancer un jet de Soif de Sang (Bloodlust) raté.",
+    specialRuleEn: "Vampire Lord: Once per match, Luthor may re-roll a failed Bloodlust roll."
   },
 
   maple_highgrove: {
@@ -717,7 +730,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     skills: "block,dauntless,wrestle,loner-4,tackle",
     hirableBy: ["elven_kingdoms_league"],
     imageUrl: "/data/Star-Players_files/prince_moranion.svg",
-    specialRule: "Bravoure Elfique : Une fois par match, Prince Moranion peut se relever gratuitement et effectuer un Blocage sans utiliser d'action de Blitz."
+    specialRule: "Bravoure Elfique : Une fois par match, Prince Moranion peut se relever gratuitement et effectuer un Blocage sans utiliser d'action de Blitz.",
+    specialRuleEn: "Elven Bravery: Once per match, Prince Moranion may stand up for free and perform a Block without using a Blitz action."
   },
 
   morg_n_thorg: {
@@ -781,7 +795,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     skills: "sidestep,sneaky-git,shadowing,stab,loner-4",
     hirableBy: ["badlands_brawl"],
     imageUrl: "/data/Star-Players_files/Grashnak-Blackhoof.webp",
-    specialRule: "Coup dans le Dos : Une fois par match, lorsqu'un joueur adverse se déplace adjacent à Rashnak, il peut effectuer un Coup de Poignard gratuit."
+    specialRule: "Coup dans le Dos : Une fois par match, lorsqu'un joueur adverse se déplace adjacent à Rashnak, il peut effectuer un Coup de Poignard gratuit.",
+    specialRuleEn: "Backstab: Once per match, when an opposing player moves adjacent to Rashnak, he may perform a free Stab action."
   },
 
   ripper_bolgrot: {
@@ -844,7 +859,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     skills: "loner-4,dodge,frenzy,jump-up,juggernaut,leap,pirouette",
     hirableBy: ["elven_kingdoms_league"],
     imageUrl: "/data/Star-Players_files/roxanna_darknail.svg",
-    specialRule: "Pirouette: Une fois par tour, +1 au jet d'esquive."
+    specialRule: "Pirouette: Une fois par tour, +1 au jet d'esquive.",
+    specialRuleEn: "Pirouette: Once per turn, +1 to the Dodge roll."
   },
 
   rumbelow_sheepskin: {
@@ -939,7 +955,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     skills: "accurate,loner-4,nerves-of-steel,pass,regeneration,sure-hands,thick-skull",
     hirableBy: ["sylvanian_spotlight"],
     imageUrl: "/data/Star-Players_files/skrull_halfheight.svg",
-    specialRule: "Jeu de Passe Solide : Une fois par match, Skrull peut ajouter +1 à sa Précision de Passe pour une action de Passe."
+    specialRule: "Jeu de Passe Solide : Une fois par match, Skrull peut ajouter +1 à sa Précision de Passe pour une action de Passe.",
+    specialRuleEn: "Solid Passing Game: Once per match, Skrull may add +1 to his Passing Ability for one Pass action."
   },
 
   swiftvine_glimmershard: {
@@ -954,7 +971,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     skills: "sidestep,stunty,fend,stab,disturbing-presence,loner-4",
     hirableBy: ["elven_kingdoms_league"],
     imageUrl: "/data/Star-Players_files/swiftvine_glimmershard.svg",
-    specialRule: "Piqûre Rapide : Une fois par match, Swiftvine peut ajouter +1 à son Agilité pour un jet d'Esquive."
+    specialRule: "Piqûre Rapide : Une fois par match, Swiftvine peut ajouter +1 à son Agilité pour un jet d'Esquive.",
+    specialRuleEn: "Quick Sting: Once per match, Swiftvine may add +1 to her Agility for a Dodge roll."
   },
 
   thorsson_stoutmead: {
@@ -1001,7 +1019,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     skills: "catch,claws,frenzy,loner-4,regeneration,wrestle",
     hirableBy: ["sylvanian_spotlight"],
     imageUrl: "/data/Star-Players_files/Wilhelm-Chaney.webp",
-    specialRule: "Frénésie Lycanthropique : Une fois par match, Wilhelm peut ajouter +1 à sa Force et +1 à son Mouvement pour un tour entier."
+    specialRule: "Frénésie Lycanthropique : Une fois par match, Wilhelm peut ajouter +1 à sa Force et +1 à son Mouvement pour un tour entier.",
+    specialRuleEn: "Lycanthropic Frenzy: Once per match, Wilhelm may add +1 to his Strength and +1 to his Movement for one full turn."
   },
 
   willow_rosebark: {
@@ -1016,7 +1035,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     skills: "dauntless,loner-4,sidestep,thick-skull",
     hirableBy: ["elven_kingdoms_league"],
     imageUrl: "/data/Star-Players_files/Willow-Rosebark.webp",
-    specialRule: "Écorce Protectrice : Une fois par match, Willow peut ajouter +1 à sa Valeur d'Armure pour un coup reçu."
+    specialRule: "Écorce Protectrice : Une fois par match, Willow peut ajouter +1 à sa Valeur d'Armure pour un coup reçu.",
+    specialRuleEn: "Protective Bark: Once per match, Willow may add +1 to her Armour Value for one hit taken."
   },
 
   withergrasp_doubledrool: {
@@ -1063,7 +1083,8 @@ const SEASON_TWO_STAR_PLAYERS: Record<string, StarPlayerDefinition> = {
     skills: "nerves-of-steel,hail-mary-pass,loner-4,secret-weapon,cannoneer,sure-hands,thick-skull",
     hirableBy: ["badlands_brawl"],
     imageUrl: "/data/Star-Players_files/Zzharg-Madeye-star-player-blood-bowl.webp",
-    specialRule: "Cannoneer : Lorsque Zzharg effectue une Passe, réduisez tout modificateur négatif de 1 (minimum 0)."
+    specialRule: "Cannoneer : Lorsque Zzharg effectue une Passe, réduisez tout modificateur négatif de 1 (minimum 0).",
+    specialRuleEn: "Cannoneer: When Zzharg performs a Pass, reduce any negative modifier by 1 (minimum 0)."
   },
 
 };
