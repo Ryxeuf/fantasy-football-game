@@ -39,9 +39,13 @@ export function getPassRange(from: Position, to: Position): PassRange | null {
  * Détermine si un joueur peut tenter une passe sur une distance donnée.
  * Les joueurs Stunty ne peuvent pas tenter de passes Long ni Long Bomb :
  * l'action est restreinte aux portées Quick et Short.
+ * Hail Mary Pass : ignore la règle de portée, autorise toute case du terrain
+ * (y compris au-delà de 13 cases, où `range` vaut `null`).
  */
 export function canAttemptPassForRange(passer: Player, range: PassRange | null): boolean {
-  if (!range) return false;
+  if (range === null) {
+    return hasSkill(passer, 'hail-mary-pass');
+  }
   if (hasSkill(passer, 'stunty') && (range === 'long' || range === 'bomb')) {
     return false;
   }
@@ -288,6 +292,24 @@ export function executePass(
   newState.gameLog = [...newState.gameLog, passLog];
 
   if (!passResult.success) {
+    // Safe Pass : le passeur conserve le ballon, pas de turnover ni de rebond.
+    // L'activation du joueur se termine (géré par l'appelant via checkPlayerTurnEnd).
+    if (hasSkill(passer, 'safe-pass')) {
+      newState.players = newState.players.map(p =>
+        p.id === passer.id ? { ...p, hasBall: true } : p
+      );
+      newState.ball = undefined;
+      const safeLog = createLogEntry(
+        'info',
+        `Passe Assurée : ${passer.name} conserve le ballon, aucun turnover`,
+        passer.id,
+        passer.team,
+        { skill: 'safe-pass' }
+      );
+      newState.gameLog = [...newState.gameLog, safeLog];
+      return newState;
+    }
+
     // Passe ratée : le ballon dévie depuis la cible
     const failLog = createLogEntry(
       'turnover',
@@ -297,6 +319,22 @@ export function executePass(
     );
     newState.gameLog = [...newState.gameLog, failLog];
     newState.isTurnover = true;
+    newState.ball = { ...target.pos };
+    return bounceBall(newState, rng);
+  }
+
+  // Hail Mary Pass : même sur un jet de passe réussi, la passe n'est jamais
+  // précise. Le ballon rebondit depuis la case cible, sans tentative de
+  // réception directe et sans turnover (tant que le bounce ne déclenche rien).
+  if (hasSkill(passer, 'hail-mary-pass')) {
+    const hmpLog = createLogEntry(
+      'info',
+      `Passe Désespérée : lancer imprécis, le ballon rebondit depuis la cible`,
+      passer.id,
+      passer.team,
+      { skill: 'hail-mary-pass' }
+    );
+    newState.gameLog = [...newState.gameLog, hmpLog];
     newState.ball = { ...target.pos };
     return bounceBall(newState, rng);
   }

@@ -278,6 +278,31 @@ registerSkill({
   canReroll: () => true,
 });
 
+// HAIL MARY PASS
+// Effet résolu dans `mechanics/passing.ts` :
+//  - `canAttemptPassForRange` autorise une portée > Long Bomb quand le passeur
+//    a ce skill (case cible n'importe où sur le terrain).
+//  - `executePass` force le ballon à rebondir depuis la cible même sur un jet
+//    de passe réussi (la passe n'est jamais précise).
+// L'entrée du registre sert à la découverte UI et à la documentation.
+registerSkill({
+  slug: 'hail-mary-pass',
+  triggers: ['on-pass'],
+  description: "Ignore la règle de portée (toute case du terrain). La passe n'est jamais précise : le ballon rebondit depuis la cible.",
+  canApply: (ctx) => hasSkill(ctx.player, 'hail-mary-pass'),
+});
+
+// SAFE PASS
+// Effet résolu dans `mechanics/passing.ts#executePass` : sur un jet de passe
+// raté, le passeur conserve le ballon, pas de turnover ni de rebond.
+// L'entrée du registre sert à la découverte UI et à la documentation.
+registerSkill({
+  slug: 'safe-pass',
+  triggers: ['on-pass'],
+  description: "Si le jet de passe échoue, le passeur conserve le ballon, aucun rebond ni turnover. L'activation se termine.",
+  canApply: (ctx) => hasSkill(ctx.player, 'safe-pass'),
+});
+
 // CATCH
 registerSkill({
   slug: 'catch',
