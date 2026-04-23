@@ -912,10 +912,14 @@ function handlePushBack(state: GameState, attacker: Player, target: Player, rng:
   // et la cible porte le ballon, la cible lache la balle lors du PUSH_BACK,
   // meme si elle n'est pas mise au sol. La balle rebondit depuis la case
   // d'origine de la cible.
+  // Monstrous Mouth (O.1 batch 3f) : la cible est immunisee contre Strip Ball.
   const attackerHasStripBall =
     attacker.skills.includes('strip-ball') ||
     attacker.skills.includes('strip_ball');
-  if (attackerHasStripBall && target.hasBall) {
+  const targetHasMonstrousMouth =
+    target.skills.includes('monstrous-mouth') ||
+    target.skills.includes('monstrous_mouth');
+  if (attackerHasStripBall && target.hasBall && !targetHasMonstrousMouth) {
     const stripLog = createLogEntry(
       'action',
       `${attacker.name} utilise Strip Ball : ${target.name} lache le ballon !`,

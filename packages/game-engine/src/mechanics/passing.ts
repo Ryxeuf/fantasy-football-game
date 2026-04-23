@@ -100,6 +100,17 @@ export function calculatePassModifiers(
     modifiers += 1;
   }
 
+  // Cannoneer (O.1 batch 3f) : +1 sur Long et Bomb. Complement symetrique
+  // d'Accurate qui lui couvre Quick et Short.
+  if (
+    range &&
+    (range === 'long' || range === 'bomb') &&
+    (passer.skills.includes('cannoneer') ||
+      passer.skills.includes('Cannoneer'))
+  ) {
+    modifiers += 1;
+  }
+
   // Malus pour chaque adversaire en zone de tacle du passeur.
   // Nerves of Steel (O.1 batch 3) annule ce malus.
   const opponentsNearPasser = getAdjacentOpponents(state, passer.pos, passer.team);
@@ -197,8 +208,15 @@ export function performCatchRollWithSkill(
   if (first.success) {
     return { result: first, rerolled: false };
   }
+  // Catch (relance standard) OU Monstrous Mouth (O.1 batch 3f, mutation qui
+  // permet de relancer toute tentative ratee de reception). Les deux skills
+  // offrent la meme relance personnelle ; les posseder ensemble n'autorise
+  // pas une double relance.
   const hasCatch = catcher.skills.some(s => s.toLowerCase() === 'catch');
-  if (!hasCatch) {
+  const hasMonstrousMouth =
+    catcher.skills.includes('monstrous-mouth') ||
+    catcher.skills.includes('monstrous_mouth');
+  if (!hasCatch && !hasMonstrousMouth) {
     return { result: first, rerolled: false };
   }
   const second = performCatchRoll(catcher, rng, modifiers);
