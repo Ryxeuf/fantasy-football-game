@@ -1,3 +1,10 @@
+## [1.67.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.67.0...v1.67.1) (2026-04-23)
+
+
+### ♻️ Code Refactoring
+
+* **layout:** replace Script component with script tag for Umami analytics integration ([700f1cc](https://github.com/Ryxeuf/fantasy-football-game/commit/700f1ccfdd13a24d514a4a86c3c0d4148a50b1ef))
+
 ## [1.67.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.66.0...v1.67.0) (2026-04-23)
 
 
