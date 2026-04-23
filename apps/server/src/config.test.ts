@@ -75,12 +75,28 @@ describe("config", () => {
     it("succeeds in production when all secrets are provided", async () => {
       process.env.JWT_SECRET = "prod-jwt-secret";
       process.env.MATCH_SECRET = "prod-match-secret";
+      process.env.KOFI_VERIFICATION_TOKEN = "prod-kofi-token";
       process.env.CORS_ORIGINS = "https://nuffle-arena.com";
       process.env.NODE_ENV = "production";
 
-      const { JWT_SECRET, MATCH_SECRET } = await import("./config");
+      const { JWT_SECRET, MATCH_SECRET, KOFI_VERIFICATION_TOKEN } = await import(
+        "./config"
+      );
       expect(JWT_SECRET).toBe("prod-jwt-secret");
       expect(MATCH_SECRET).toBe("prod-match-secret");
+      expect(KOFI_VERIFICATION_TOKEN).toBe("prod-kofi-token");
+    });
+
+    it("throws when KOFI_VERIFICATION_TOKEN is missing in production", async () => {
+      process.env.JWT_SECRET = "s";
+      process.env.MATCH_SECRET = "s";
+      process.env.CORS_ORIGINS = "https://nuffle-arena.com";
+      delete process.env.KOFI_VERIFICATION_TOKEN;
+      process.env.NODE_ENV = "production";
+
+      await expect(() => import("./config")).rejects.toThrow(
+        "KOFI_VERIFICATION_TOKEN",
+      );
     });
   });
 
@@ -141,6 +157,7 @@ describe("config", () => {
       process.env.CORS_ORIGINS = "https://nuffle-arena.com";
       process.env.JWT_SECRET = "s";
       process.env.MATCH_SECRET = "s";
+      process.env.KOFI_VERIFICATION_TOKEN = "s";
       process.env.NODE_ENV = "production";
 
       const { CORS_ORIGINS } = await import("./config");

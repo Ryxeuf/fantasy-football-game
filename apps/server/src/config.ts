@@ -55,3 +55,13 @@ function parseCorsOrigins(): string[] {
 }
 
 export const CORS_ORIGINS: string[] = parseCorsOrigins();
+
+/**
+ * Verification token that Ko-fi includes in every webhook payload.
+ * Set it in your Ko-fi webhook settings and export it as env here.
+ * In dev/test a fixed fallback is used so local tests run without env setup.
+ */
+export const KOFI_VERIFICATION_TOKEN: string = getRequiredSecret(
+  "KOFI_VERIFICATION_TOKEN",
+  "dev-kofi-verification-token",
+);
