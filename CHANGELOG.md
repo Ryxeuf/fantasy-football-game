@@ -1,3 +1,10 @@
+## [1.67.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.66.0...v1.67.0) (2026-04-23)
+
+
+### ✨ Features
+
+* **analytics:** enable Umami analytics in production environment ([ecd4b30](https://github.com/Ryxeuf/fantasy-football-game/commit/ecd4b308ccffe4bc957a377141aaa878e205685c))
+
 ## [1.66.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.65.0...v1.66.0) (2026-04-23)
 
 
