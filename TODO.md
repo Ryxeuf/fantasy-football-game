@@ -335,7 +335,7 @@
 | K.1b | Implementer `pogo-stick` — Goblin | Regle | [x] |
 | K.2 | Implementer `stab` — Vampire / Underworld | Regle | [x] |
 | K.3 | Implementer `chainsaw` — Secret weapons | Regle | [x] |
-| K.10 | Implementer `multiple-block` — Ogres | Regle | [ ] |
+| K.10 | Implementer `multiple-block` — Ogres | Regle | [x] |
 | K.11 | Implementer `hail-mary-pass` + `safe-pass` | Regle | [ ] |
 | K.12 | Implementer `ball-and-chain` — Goblin Fanatic | Regle | [ ] |
 | K.13 | Implementer `bombardier` — Goblin Bomma | Regle | [ ] |

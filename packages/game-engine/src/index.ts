@@ -145,6 +145,17 @@ export { canThrowTeamMate, getThrowRange, executeThrowTeamMate } from './mechani
 // Export de Frenzy (Frénésie)
 export { hasFrenzy } from './mechanics/frenzy';
 
+// Export de Multiple Block (Blocage Multiple — BB2020 / BB3)
+export {
+  hasMultipleBlock,
+  canPerformMultipleBlock,
+  findMultipleBlockTargets,
+  hasUsedMultipleBlockThisTurn,
+  markMultipleBlockUsed,
+  isMultipleBlockActiveFor,
+  MULTIPLE_BLOCK_ST_PENALTY,
+} from './mechanics/multiple-block';
+
 // Export du Regard Hypnotique (Hypnotic Gaze)
 export { canHypnoticGaze, calculateGazeModifiers, executeHypnoticGaze } from './mechanics/hypnotic-gaze';
 

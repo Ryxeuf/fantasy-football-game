@@ -82,6 +82,12 @@ import { isFendActiveForFollowUp } from '../mechanics/fend';
 import { resolveShadowingAfterDodge } from '../mechanics/shadowing';
 import { hasFrenzy } from '../mechanics/frenzy';
 import {
+  canPerformMultipleBlock,
+  isMultipleBlockActiveFor,
+  markMultipleBlockUsed,
+  MULTIPLE_BLOCK_ST_PENALTY,
+} from '../mechanics/multiple-block';
+import {
   getOnTheBallReactivePlayers,
   executeOnTheBallMove,
   markOnTheBallUsed,
@@ -433,6 +439,136 @@ function resolveFrenzyBlock(state: GameState, rng: RNG): GameState {
 }
 
 /**
+ * Declare un Multiple Block : l'attaquant cible deux adversaires adjacents.
+ * Applique le premier bloc ; le second est differe via `pendingMultipleBlock`
+ * et resolu par `resolveMultipleBlock` apres la fin du premier (push/follow-up
+ * eventuels termines).
+ */
+function handleMultiBlock(
+  state: GameState,
+  move: { type: 'MULTI_BLOCK'; playerId: string; firstTargetId: string; secondTargetId: string },
+  rng: RNG,
+): GameState {
+  if (!canPerformMultipleBlock(state, move.playerId, move.firstTargetId, move.secondTargetId)) {
+    return state;
+  }
+  const attacker = state.players.find(p => p.id === move.playerId);
+  if (!attacker) return state;
+
+  // Marquer l'usage AVANT le premier bloc (one-shot par tour d'equipe) et
+  // poser le flag actif qui provoque le -2 ST dans handleBlock.
+  const prepared: GameState = markMultipleBlockUsed(state, attacker.team);
+  const withPending: GameState = {
+    ...prepared,
+    pendingMultipleBlock: {
+      attackerId: attacker.id,
+      secondTargetId: move.secondTargetId,
+    },
+  };
+
+  const declareLog = createLogEntry(
+    'action',
+    `${attacker.name} declare un Blocage Multiple (Multiple Block) !`,
+    attacker.id,
+    attacker.team,
+    { skill: 'multiple-block' },
+  );
+  const logged: GameState = { ...withPending, gameLog: [...withPending.gameLog, declareLog] };
+
+  return handleBlock(
+    logged,
+    { type: 'BLOCK', playerId: move.playerId, targetId: move.firstTargetId },
+    rng,
+  );
+}
+
+/**
+ * Resout le second bloc d'une sequence Multiple Block une fois que le premier
+ * bloc est entierement resolu (plus de pending block/push/follow-up/reroll et
+ * pas de turnover). Si l'attaquant n'est plus adjacent a la seconde cible, le
+ * second bloc est annule (loggue).
+ */
+function resolveMultipleBlock(state: GameState, rng: RNG): GameState {
+  if (!state.pendingMultipleBlock) return state;
+  // Attendre la fin de toute resolution en cours (dice / push / follow-up / reroll / frenzy).
+  if (
+    state.pendingBlock ||
+    state.pendingPushChoice ||
+    state.pendingFollowUpChoice ||
+    state.pendingReroll ||
+    state.pendingFrenzyBlock
+  ) {
+    return state;
+  }
+
+  const { attackerId, secondTargetId } = state.pendingMultipleBlock;
+
+  // Si le second bloc a deja ete lance (secondTargetId absent), la sequence est
+  // terminee : on nettoie le flag.
+  if (!secondTargetId) {
+    return { ...state, pendingMultipleBlock: undefined };
+  }
+
+  const attacker = state.players.find(p => p.id === attackerId);
+  const target = state.players.find(p => p.id === secondTargetId);
+
+  // Un turnover interrompt la sequence — on nettoie sans lancer le second bloc.
+  if (state.isTurnover || !attacker || !target) {
+    return { ...state, pendingMultipleBlock: undefined };
+  }
+
+  // Adjacence obligatoire au moment du second bloc (follow-up peut l'avoir
+  // deplace). Attaquant et cible debout.
+  const secondBlockPossible =
+    !attacker.stunned &&
+    attacker.pm > 0 &&
+    !target.stunned &&
+    target.pm > 0 &&
+    isAdjacent(attacker.pos, target.pos);
+
+  if (!secondBlockPossible) {
+    const cancelledLog = createLogEntry(
+      'info',
+      `${attacker.name} ne peut pas effectuer le second Blocage Multiple (cible hors de portee).`,
+      attacker.id,
+      attacker.team,
+      { skill: 'multiple-block' },
+    );
+    return {
+      ...state,
+      pendingMultipleBlock: undefined,
+      gameLog: [...state.gameLog, cancelledLog],
+    };
+  }
+
+  // Consommer le secondTargetId (mais garder attackerId pour que le -2 ST
+  // s'applique aussi au second bloc).
+  const launching: GameState = {
+    ...state,
+    pendingMultipleBlock: { attackerId, secondTargetId: undefined },
+  };
+
+  const secondLog = createLogEntry(
+    'action',
+    `${attacker.name} effectue le second Blocage Multiple contre ${target.name} !`,
+    attacker.id,
+    attacker.team,
+    { skill: 'multiple-block' },
+  );
+  const withLog: GameState = { ...launching, gameLog: [...launching.gameLog, secondLog] };
+
+  const afterSecondBlock = handleBlock(
+    withLog,
+    { type: 'BLOCK', playerId: attackerId, targetId: secondTargetId },
+    rng,
+  );
+
+  // Appel recursif : si le second bloc s'est resolu immediatement sans pending,
+  // on nettoie le flag dans la meme dispatch.
+  return resolveMultipleBlock(afterSecondBlock, rng);
+}
+
+/**
  * Retourne le seuil Loner du joueur (3, 4 ou 5) ou null s'il n'a pas Loner.
  */
 function getLonerThreshold(player: Player): number | null {
@@ -550,7 +686,7 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
   // If the check fails, the player's activation ends without executing the action.
   let activeState = state;
   const ACTIVATION_MOVE_TYPES: string[] = [
-    'MOVE', 'LEAP', 'DODGE', 'BLOCK', 'BLITZ', 'PASS', 'HANDOFF',
+    'MOVE', 'LEAP', 'DODGE', 'BLOCK', 'MULTI_BLOCK', 'BLITZ', 'PASS', 'HANDOFF',
     'THROW_TEAM_MATE', 'FOUL', 'HYPNOTIC_GAZE', 'PROJECTILE_VOMIT', 'STAB',
     'CHAINSAW',
   ];
@@ -596,19 +732,21 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
     case 'DODGE':
       return handleDodge(activeState, move, rng);
     case 'BLOCK':
-      return resolveFrenzyBlock(handleBlock(activeState, move, rng), rng);
+      return resolveMultipleBlock(resolveFrenzyBlock(handleBlock(activeState, move, rng), rng), rng);
+    case 'MULTI_BLOCK':
+      return resolveMultipleBlock(resolveFrenzyBlock(handleMultiBlock(activeState, move, rng), rng), rng);
     case 'BLOCK_CHOOSE':
-      return resolveFrenzyBlock(handleBlockChoose(activeState, move, rng), rng);
+      return resolveMultipleBlock(resolveFrenzyBlock(handleBlockChoose(activeState, move, rng), rng), rng);
     case 'PUSH_CHOOSE':
-      return resolveFrenzyBlock(handlePushChoose(activeState, move), rng);
+      return resolveMultipleBlock(resolveFrenzyBlock(handlePushChoose(activeState, move), rng), rng);
     case 'FOLLOW_UP_CHOOSE':
-      return resolveFrenzyBlock(handleFollowUpChoose(activeState, move), rng);
+      return resolveMultipleBlock(resolveFrenzyBlock(handleFollowUpChoose(activeState, move), rng), rng);
     case 'BLITZ':
       return handleBlitz(activeState, move, rng);
     case 'REROLL_CHOOSE':
-      return handleRerollChoose(activeState, move, rng);
+      return resolveMultipleBlock(resolveFrenzyBlock(handleRerollChoose(activeState, move, rng), rng), rng);
     case 'APOTHECARY_CHOOSE':
-      return applyApothecaryChoice(activeState, move.useApothecary, rng);
+      return resolveMultipleBlock(resolveFrenzyBlock(applyApothecaryChoice(activeState, move.useApothecary, rng), rng), rng);
     case 'PASS':
       return handlePass(activeState, move, rng);
     case 'HANDOFF':
@@ -702,6 +840,7 @@ function handleEndTurn(state: GameState, rng: RNG): GameState {
       hypnotizedPlayers: [],
       usedRunningPassThisTurn: [],
       usedOnTheBallThisTurn: [],
+      usedMultipleBlockThisTurn: [],
     };
   }
 
@@ -721,6 +860,7 @@ function handleEndTurn(state: GameState, rng: RNG): GameState {
     hypnotizedPlayers: [], // Réinitialiser les joueurs hypnotisés
     usedRunningPassThisTurn: [], // Réinitialiser Running Pass (une fois par tour)
     usedOnTheBallThisTurn: [], // Réinitialiser On the Ball (une fois par tour d'equipe)
+    usedMultipleBlockThisTurn: [], // Réinitialiser Multiple Block (une fois par tour d'equipe)
   };
 
   // Log du changement de tour
@@ -1426,8 +1566,16 @@ function handleBlock(
   const offensiveAssists = calculateOffensiveAssists(stateAfterFA, attacker, target);
   const defensiveAssists = calculateDefensiveAssists(stateAfterFA, attacker, target);
 
-  // Forces de base avant Dauntless
-  const baseAttackerStrength = attacker.st + offensiveAssists;
+  // Multiple Block : -2 ST applique aux deux blocs de la sequence.
+  // Le flag `pendingMultipleBlock.attackerId` reste pose pour toute la
+  // sequence multi-bloc ; il est consomme apres la resolution complete du
+  // second bloc.
+  const multipleBlockPenalty = isMultipleBlockActiveFor(stateAfterFA, attacker.id)
+    ? MULTIPLE_BLOCK_ST_PENALTY
+    : 0;
+
+  // Forces de base avant Dauntless (incluant la penalite Multiple Block)
+  const baseAttackerStrength = attacker.st + offensiveAssists + multipleBlockPenalty;
   const targetStrength = target.st + defensiveAssists;
 
   // ─── Dauntless check ───────────────────────────────────────────────────

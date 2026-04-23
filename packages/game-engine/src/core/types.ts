@@ -269,6 +269,18 @@ export interface GameState {
   // Equipes ayant utilise On the Ball pendant le tour adverse en cours
   // (reset au changement de tour). Une seule activation par tour d'equipe.
   usedOnTheBallThisTurn?: TeamId[];
+  // Equipes ayant utilise Multiple Block ce tour (reset au changement de tour).
+  // Une seule activation par tour d'equipe (BB2020 / BB3 S2/S3).
+  usedMultipleBlockThisTurn?: TeamId[];
+  // Multiple Block en cours : tant que pendingMultipleBlock.attackerId est
+  // defini, les blocages effectues par cet attaquant subissent le modificateur
+  // -2 ST. Quand `secondTargetId` est defini, le second bloc n'a pas encore
+  // ete lance ; une fois lance, le champ est mis a `undefined` et le flag est
+  // consomme quand la sequence complete se termine sans pending.
+  pendingMultipleBlock?: {
+    attackerId: string;
+    secondTargetId?: string;
+  };
   // Second bloc Frenzy en attente : après un PUSH_BACK, l'attaquant avec
   // Frenzy doit effectuer un second bloc une fois le follow-up résolu.
   pendingFrenzyBlock?: {
@@ -355,6 +367,7 @@ export type Move =
   | { type: 'END_PLAYER_TURN'; playerId: string }
   | { type: 'DODGE'; playerId: string; from: Position; to: Position }
   | { type: 'BLOCK'; playerId: string; targetId: string }
+  | { type: 'MULTI_BLOCK'; playerId: string; firstTargetId: string; secondTargetId: string }
   | { type: 'BLOCK_CHOOSE'; playerId: string; targetId: string; result: BlockResult }
   | { type: 'BLITZ'; playerId: string; to: Position; targetId: string }
   | { type: 'PUSH_CHOOSE'; playerId: string; targetId: string; direction: Position }
