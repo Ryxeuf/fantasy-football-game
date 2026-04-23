@@ -1015,6 +1015,49 @@ registerSkill({
   getModifiers: () => ({ strengthModifier: -2 }),
 });
 
+// ─── ARMORED SKULL (O.1 batch 3l) ───────────────────────────────────────────
+// Le modificateur -1 au jet de blessure est applique directement dans
+// `mechanics/injury.ts` (`armoredSkullModifier`), appele par
+// `performInjuryRoll` et `performLastingInjuryRoll`. On n'expose PAS de
+// `getModifiers` ici pour eviter un double-comptage via le flux
+// `skill-bridge.getInjurySkillModifiers` utilise par `blocking.ts`.
+// L'entree du registre sert uniquement a la decouverte UI et a la
+// documentation du skill.
+registerSkill({
+  slug: 'armored-skull',
+  triggers: ['on-injury'],
+  description: "-1 a tout jet de Blessure effectue contre ce joueur. Reduit les chances de KO et de Blessure grave.",
+  canApply: (ctx) => hasSkill(ctx.player, 'armored-skull') || hasSkill(ctx.player, 'armored_skull'),
+});
+
+// ─── INSTABLE (O.1 batch 3l) ────────────────────────────────────────────────
+// Instable interdit les actions Passe, Remise (Hand-Off) et Lancer d'Equipier.
+// La prohibition est appliquee dans `mechanics/negative-traits.ts`
+// (`checkInstableProhibition`) depuis les handlers d'action et depuis
+// `getLegalMoves`. Aucune mecanique registry-driven n'est necessaire ici.
+registerSkill({
+  slug: 'instable',
+  triggers: ['passive'],
+  description: "Ce joueur ne peut pas declarer d'action de Passe, de Transmission (Hand-Off) ni de Lancer d'Equipier. L'action est refusee sans jet et sans turnover.",
+  canApply: (ctx) => hasSkill(ctx.player, 'instable'),
+});
+
+// ─── RUNNING PASS (O.1 batch 3l) ────────────────────────────────────────────
+// Running Pass permet au joueur de continuer son mouvement apres une Passe
+// Rapide reussie (et une Transmission pour la variante `running-pass-2025`).
+// La logique est entierement portee par `mechanics/running-pass.ts` et
+// consommee par `canPlayerContinueMoving` dans `core/game-state.ts`. L'entree
+// ici sert a la decouverte UI (catalogue des skills) et a la documentation.
+registerSkill({
+  slug: 'running-pass',
+  triggers: ['on-pass'],
+  description: "Le joueur peut continuer son mouvement apres une Passe Rapide reussie s'il lui reste du mouvement. Variante Season 3 (`running-pass-2025`) : s'applique egalement aux Transmissions (Hand-Off). Utilisable une fois par tour d'equipe.",
+  canApply: (ctx) =>
+    hasSkill(ctx.player, 'running-pass') ||
+    hasSkill(ctx.player, 'running_pass') ||
+    hasSkill(ctx.player, 'running-pass-2025'),
+});
+
 // ─── HYPNOTIC GAZE (O.1 batch 3k) ───────────────────────────────────────────
 // Hypnotic Gaze est une action speciale remplacant une action standard : le
 // joueur tente un jet d'Agilite (2+) pour priver un adversaire adjacent de sa
