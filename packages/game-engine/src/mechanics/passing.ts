@@ -162,6 +162,17 @@ export function calculateCatchModifiers(
     modifiers += 1;
   }
 
+  // Diving Catch (O.1 batch 3d) : +1 au jet de reception du ballon.
+  // Note : l'effet "peut receptionner sur une case adjacente" n'est pas
+  // encore implemente (deviation/scatter vers une case voisine suite a une
+  // passe ratee).
+  if (
+    catcher.skills.includes('diving-catch') ||
+    catcher.skills.includes('diving_catch')
+  ) {
+    modifiers += 1;
+  }
+
   // Disturbing Presence : -1 par adversaire avec le skill a <= 3 cases
   modifiers += getDisturbingPresenceModifier(state, catcher.pos, catcher.team);
 
