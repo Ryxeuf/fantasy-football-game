@@ -72,6 +72,7 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - MATCH_SECRET=${MATCH_SECRET}
       - CORS_ORIGINS=${CORS_ORIGINS}
+      - KOFI_VERIFICATION_TOKEN=${KOFI_VERIFICATION_TOKEN}
     networks:
       - traefik-network
     labels:
@@ -90,7 +91,7 @@ services:
     command: >
       sh -c "
         npx prisma generate --schema /app/prisma/schema.prisma &&
-        npx prisma db push --schema /app/prisma/schema.prisma --skip-generate &&
+        npx prisma db push --schema /app/prisma/schema.prisma --skip-generate --accept-data-loss &&
         pnpm --filter @bb/server run dev:nowatch
       "
     healthcheck:
