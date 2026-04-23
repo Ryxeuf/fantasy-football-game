@@ -1207,7 +1207,11 @@ export function enterSetupPhase(
   };
 
   const setupPositions: Position[] = buildHalf(receivingTeam === 'A');
+  const kickingTeam: TeamId = receivingTeam === 'A' ? 'B' : 'A';
 
+  // On réaligne receivingTeam/kickingTeam sur le paramètre explicite : certains
+  // chemins (bypass `ensureSetupPhasePersisted`) court-circuitent
+  // `determineKickingTeam` et laissent ces champs aux valeurs par défaut.
   return {
     ...state,
     preMatch: {
@@ -1216,6 +1220,8 @@ export function enterSetupPhase(
       currentCoach: receivingTeam,
       legalSetupPositions: setupPositions,
       placedPlayers: state.preMatch.phase === 'idle' ? [] : state.preMatch.placedPlayers, // Ne pas réinitialiser si on passe d'une équipe à l'autre
+      receivingTeam,
+      kickingTeam,
     },
   };
 }

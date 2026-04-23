@@ -250,6 +250,12 @@ describe("ensureSetupPhasePersisted", () => {
     const result = await ensureSetupPhasePersisted("m1", prisma as any);
     expect(result?.persisted).toBe(true);
     expect(result?.gameState.preMatch.currentCoach).toBe("B");
+    // Regression : le bypass doit aussi aligner receivingTeam/kickingTeam sur
+    // le coin-toss. Sans ça, validatePlayerPlacement interprète mal qui vient
+    // de placer et saute prématurément en 'kickoff' après le placement de la
+    // première équipe (typiquement l'IA quand elle reçoit).
+    expect(result?.gameState.preMatch.receivingTeam).toBe("B");
+    expect(result?.gameState.preMatch.kickingTeam).toBe("A");
   });
 
   it("returns existing state (no-op) if there is no coin-toss yet", async () => {

@@ -16,6 +16,7 @@ vi.mock("./game-broadcast", () => ({
 import {
   setupPreMatchWithTeams,
   enterSetupPhase,
+  validatePlayerPlacement,
   type ExtendedGameState,
   type TeamId,
 } from "@bb/game-engine";
@@ -50,7 +51,12 @@ function buildSetupState(
       receivingTeam,
     },
   };
-  let state = enterSetupPhase(withCoinToss, currentCoach);
+  // enterSetupPhase(state, receivingTeam) fait du parametre l'equipe receveuse
+  // et l'installe comme coach courant. Pour atteindre un etat ou le coach
+  // courant est l'equipe frappeuse (scenario "receveuse a fini de placer"), il
+  // faut preplacer 11 joueurs pour la receveuse puis appeler
+  // validatePlayerPlacement pour passer la main.
+  let state = enterSetupPhase(withCoinToss, receivingTeam);
   if (preplaceHumanTeam) {
     const losX = preplaceHumanTeam === "A" ? 12 : 13;
     const backX = preplaceHumanTeam === "A" ? 6 : 18;
@@ -69,6 +75,17 @@ function buildSetupState(
       }
     }
     state = { ...state, players };
+    // Si la receveuse vient d'etre preplacee, on transitionne vers la
+    // frappeuse pour respecter la semantique "11 joueurs places → au suivant".
+    if (preplaceHumanTeam === receivingTeam) {
+      state = validatePlayerPlacement(state);
+    }
+  }
+  if (state.preMatch.currentCoach !== currentCoach) {
+    throw new Error(
+      `buildSetupState: expected currentCoach=${currentCoach} but state has ${state.preMatch.currentCoach}. ` +
+        `Check receivingTeam/preplaceHumanTeam combination.`,
+    );
   }
   return state;
 }

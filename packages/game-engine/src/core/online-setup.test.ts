@@ -116,6 +116,49 @@ describe('Règle: Phase de setup en ligne', () => {
       expect(state.preMatch.legalSetupPositions.length).toBeGreaterThan(0);
     });
 
+    // Régression : quand le bypass pré-match (ensureSetupPhasePersisted) entre
+    // directement en phase setup avec l'IA comme receveuse (B), les champs
+    // preMatch.receivingTeam et preMatch.kickingTeam doivent refléter ce choix.
+    // Sans cela, validatePlayerPlacement après le placement de l'IA voit
+    // currentCoach='B' != receivingTeam='A' (placeholder par défaut) et saute
+    // directement en 'kickoff', empêchant le joueur humain (équipe A, frappeuse)
+    // de placer ses joueurs.
+    it('devrait aligner preMatch.receivingTeam/kickingTeam sur le paramètre receivingTeam', () => {
+      // Simule l'état "post-bypass" où les placeholders par défaut
+      // (receivingTeam='A', kickingTeam='B') n'ont pas été mis à jour par
+      // determineKickingTeam (court-circuité par le bypass).
+      const preMatch = createPreMatchState('A'); // defaults: receiving=A, kicking=B
+
+      // Le coin-toss a décidé que B reçoit — c'est donc B qui doit placer en
+      // premier.
+      const state = enterSetupPhase(preMatch, 'B');
+
+      expect(state.preMatch.phase).toBe('setup');
+      expect(state.preMatch.currentCoach).toBe('B');
+      expect(state.preMatch.receivingTeam).toBe('B');
+      expect(state.preMatch.kickingTeam).toBe('A');
+    });
+
+    // Régression end-to-end : reproduit le bug "IA place ses joueurs en premier,
+    // puis le match saute au kickoff sans laisser l'humain placer".
+    it('validatePlayerPlacement ne doit pas sauter à kickoff quand seule la receveuse (IA) a placé', () => {
+      // Simule le chemin du bypass : placeholders par défaut + IA=receveuse
+      const preMatch = createPreMatchState('A'); // defaults: receiving=A, kicking=B
+      const setupState = enterSetupPhase(preMatch, 'B'); // coin-toss: B reçoit
+
+      // L'IA (B) place ses 11 joueurs
+      const afterTeamB = placeAllPlayersForTeam(setupState, 'B');
+      expect(
+        afterTeamB.players.filter(p => p.team === 'B' && p.pos.x >= 0).length,
+      ).toBe(11);
+
+      const afterValidate = validatePlayerPlacement(afterTeamB);
+
+      // La phase doit rester 'setup' et passer la main à A (humain frappeur)
+      expect(afterValidate.preMatch.phase).toBe('setup');
+      expect(afterValidate.preMatch.currentCoach).toBe('A');
+    });
+
     it('devrait calculer les positions légales pour l\'équipe A (x=1..12)', () => {
       const preMatch = createPreMatchState('A');
       const state = enterSetupPhase(preMatch, 'A');
