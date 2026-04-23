@@ -922,3 +922,42 @@ registerSkill({
   description: "Action speciale remplacant un Blocage : jet D6 contre une cible adjacente. Sur 2+, la cible est mise a terre et subit un jet d'armure. Sur 1, l'activation se termine sans turnover.",
   canApply: (ctx) => hasSkill(ctx.player, 'projectile-vomit') || hasSkill(ctx.player, 'projectile_vomit'),
 });
+
+// ─── ON THE BALL (O.1 batch 3j) ─────────────────────────────────────────────
+// On the Ball est une reaction defensive declenchee lors d'une action de Passe
+// adverse : le joueur possedant ce skill peut se deplacer jusqu'a 3 cases avant
+// que le jet de Passe soit effectue, une fois par tour d'equipe. Resolution
+// dans `mechanics/on-the-ball.ts` (`executeOnTheBallMove`, `canUseOnTheBall`,
+// tracking via `state.usedOnTheBallThisTurn`). L'entree du registre sert a la
+// decouverte UI et a la documentation.
+registerSkill({
+  slug: 'on-the-ball',
+  triggers: ['on-pass'],
+  description: "Une fois par tour d'equipe, lorsque l'adversaire declare une action de Passe, ce joueur peut se deplacer jusqu'a 3 cases avant le jet de Passe, en terminant adjacent ou sur la case cible.",
+  canApply: (ctx) => hasSkill(ctx.player, 'on-the-ball') || hasSkill(ctx.player, 'on_the_ball'),
+});
+
+// ─── THROW TEAM-MATE (O.1 batch 3j) ─────────────────────────────────────────
+// Throw Team-Mate permet a un joueur (Big Guy, Ogre, Treeman, etc.) de lancer
+// un coequipier Right Stuff sur une case cible. Implementation dans
+// `mechanics/throw-team-mate.ts` (action THROW_TEAM_MATE dispatchee via
+// actions.ts). L'entree du registre sert a la decouverte UI.
+registerSkill({
+  slug: 'throw-team-mate',
+  triggers: ['on-pass'],
+  description: "Action speciale : lance un coequipier possedant Right Stuff vers une case cible. Utilise les regles de portee et de deviation des passes ; la cible effectue un jet d'armure a l'atterrissage.",
+  canApply: (ctx) => hasSkill(ctx.player, 'throw-team-mate') || hasSkill(ctx.player, 'throw_team_mate'),
+});
+
+// ─── DUMP-OFF (O.1 batch 3j) ────────────────────────────────────────────────
+// Dump-off est une reaction defensive : quand ce joueur porteur du ballon est
+// cible d'un Blocage/Blitz, il peut immediatement effectuer une Passe Rapide
+// avant la resolution du bloc, interrompant l'activation de l'attaquant.
+// Resolution dans `mechanics/dump-off.ts` (`canDumpOff`, `executeDumpOff`).
+// L'entree du registre sert a la decouverte UI.
+registerSkill({
+  slug: 'dump-off',
+  triggers: ['on-block-defender'],
+  description: "Quand ce joueur porteur du ballon est cible d'un Blocage/Blitz, il peut effectuer immediatement une Passe Rapide avant la resolution du bloc. Pas de turnover si la passe rate.",
+  canApply: (ctx) => hasSkill(ctx.player, 'dump-off') || hasSkill(ctx.player, 'dump_off'),
+});
