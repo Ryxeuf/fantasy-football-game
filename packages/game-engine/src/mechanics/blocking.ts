@@ -223,6 +223,9 @@ export function canBlock(state: GameState, playerId: string, targetId: string): 
   // Les joueurs doivent être d'équipes différentes
   if (player.team === target.team) return false;
 
+  // O.1 batch 3g : un joueur avec Titchy ne peut pas declarer d'action de Blocage.
+  if (player.skills.includes('titchy')) return false;
+
   return true;
 }
 

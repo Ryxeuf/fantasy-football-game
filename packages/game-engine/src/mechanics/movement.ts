@@ -72,7 +72,13 @@ export function getAdjacentOpponents(state: GameState, position: Position, team:
   for (const dir of dirs) {
     const checkPos = { x: position.x + dir.x, y: position.y + dir.y };
     const opponent = state.players.find(
-      p => p.team !== team && p.pos.x === checkPos.x && p.pos.y === checkPos.y && !p.stunned && !hypnotized.includes(p.id)
+      p => p.team !== team
+        && p.pos.x === checkPos.x
+        && p.pos.y === checkPos.y
+        && !p.stunned
+        && !hypnotized.includes(p.id)
+        // O.1 batch 3g : un joueur Titchy n'exerce pas de zone de tacle.
+        && !p.skills.includes('titchy')
     );
     if (opponent) {
       opponents.push(opponent);
