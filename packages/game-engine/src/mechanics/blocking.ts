@@ -21,6 +21,7 @@ import { createLogEntry } from '../utils/logging';
 import { canTeamBlitz } from '../core/game-state';
 import { performInjuryRoll, handleSentOff, handleInjuryByCrowd } from './injury';
 import { shouldConvertBothDownToPushBack } from './juggernaut';
+import { bounceBall } from './ball';
 import {
   isStandFirmActiveForBlock,
   isStandFirmActiveForChainPush,
@@ -907,6 +908,36 @@ function handleBothDown(state: GameState, attacker: Player, target: Player, rng:
  * Gère le résultat PUSH_BACK
  */
 function handlePushBack(state: GameState, attacker: Player, target: Player, rng: RNG): GameState {
+  // Strip Ball (BB2020, O.1 batch 3) : si l'attaquant possede `strip-ball`
+  // et la cible porte le ballon, la cible lache la balle lors du PUSH_BACK,
+  // meme si elle n'est pas mise au sol. La balle rebondit depuis la case
+  // d'origine de la cible.
+  const attackerHasStripBall =
+    attacker.skills.includes('strip-ball') ||
+    attacker.skills.includes('strip_ball');
+  if (attackerHasStripBall && target.hasBall) {
+    const stripLog = createLogEntry(
+      'action',
+      `${attacker.name} utilise Strip Ball : ${target.name} lache le ballon !`,
+      attacker.id,
+      attacker.team,
+      { skill: 'strip-ball' },
+    );
+    state = {
+      ...state,
+      players: state.players.map(p =>
+        p.id === target.id ? { ...p, hasBall: false } : p,
+      ),
+      ball: { ...target.pos },
+      gameLog: [...state.gameLog, stripLog],
+    };
+    // Mettre a jour la reference locale target pour que le reste de la
+    // resolution ne ressuscite pas hasBall.
+    target = { ...target, hasBall: false };
+    // Rebondir la balle depuis la case d'origine de la cible.
+    state = bounceBall(state, rng);
+  }
+
   // Stand Firm : la cible peut refuser d'etre poussee. Elle reste sur sa case,
   // l'attaquant ne fait pas de follow-up.
   if (isStandFirmActiveForBlock(state, attacker, target)) {
