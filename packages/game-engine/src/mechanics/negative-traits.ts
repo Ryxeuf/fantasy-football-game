@@ -1042,6 +1042,7 @@ export function logInstablePrevention(
     STAB: 'de poignard',
     CHAINSAW: 'de tronconneuse',
     BALL_AND_CHAIN: 'de chaine et boulet',
+    BOMB_THROW: 'de lancer de bombe',
   };
   const label = actionLabels[actionType] ?? '';
   const message = label

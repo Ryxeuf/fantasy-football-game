@@ -359,7 +359,8 @@ export type ActionType =
   | 'PROJECTILE_VOMIT'
   | 'STAB'
   | 'CHAINSAW'
-  | 'BALL_AND_CHAIN';
+  | 'BALL_AND_CHAIN'
+  | 'BOMB_THROW';
 
 export type Move =
   | { type: 'MOVE'; playerId: string; to: Position }
@@ -384,6 +385,7 @@ export type Move =
   | { type: 'STAB'; playerId: string; targetId: string }
   | { type: 'CHAINSAW'; playerId: string; targetId: string }
   | { type: 'BALL_AND_CHAIN'; playerId: string }
+  | { type: 'BOMB_THROW'; playerId: string; target: Position }
   | { type: 'DUMP_OFF_CHOOSE'; passerId: string; receiverId: string | null }
   | { type: 'KICKOFF_PERFECT_DEFENCE'; positions: Array<{ playerId: string; position: Position }> }
   | { type: 'KICKOFF_HIGH_KICK'; playerId: string | null }
