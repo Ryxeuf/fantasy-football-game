@@ -886,3 +886,39 @@ registerSkill({
   description: "Quand un adversaire effectue une Passe, un Lancer d'Equipier, une Interception ou une Reception, il subit -1 par joueur avec ce skill a 3 cases ou moins.",
   canApply: (ctx) => hasSkill(ctx.player, 'disturbing-presence') || hasSkill(ctx.player, 'disturbing_presence'),
 });
+
+// ─── LEAP (O.1 batch 3i) ────────────────────────────────────────────────────
+// Leap (Agility) permet de sauter par-dessus une case adjacente pour arriver
+// a une case a distance Chebyshev 2, avec un jet d'Agilite remplacant l'esquive
+// classique. Resolution dans `mechanics/leap.ts` (`executeLeap`, `canLeap`).
+// L'entree du registre sert a la decouverte UI et a la documentation.
+registerSkill({
+  slug: 'leap',
+  triggers: ['on-activation'],
+  description: "Pendant son mouvement, le joueur peut sauter par-dessus une case adjacente (2 cases de mouvement) avec un jet d'Agilite. Pas de jet d'Esquive requis pour quitter les zones de tacle.",
+  canApply: (ctx) => hasSkill(ctx.player, 'leap') || hasSkill(ctx.player, 'pogo-stick'),
+});
+
+// ─── STAB (O.1 batch 3i) ────────────────────────────────────────────────────
+// Stab remplace une action de Blocage : jet d'armure direct (sans dés de bloc
+// ni assistance) contre une cible adjacente debout. Mighty Blow s'applique a
+// l'armure. Resolution dans `mechanics/stab.ts` (`executeStab`, `canStab`).
+// L'entree du registre sert a la decouverte UI et a la documentation.
+registerSkill({
+  slug: 'stab',
+  triggers: ['on-activation'],
+  description: "Action speciale remplacant un Blocage : jet d'armure direct contre une cible adjacente. Pas de des de bloc, pas d'assistance, pas de turnover ; l'activation se termine apres le Stab.",
+  canApply: (ctx) => hasSkill(ctx.player, 'stab'),
+});
+
+// ─── PROJECTILE VOMIT (O.1 batch 3i) ────────────────────────────────────────
+// Projectile Vomit (trait de mutation) remplace une action de Blocage : jet
+// D6 (2+ = succes) contre une cible adjacente ; succes = cible mise a terre
+// suivie d'un jet d'armure (Mighty Blow s'applique). Echec termine l'activation
+// sans turnover. Resolution dans `mechanics/projectile-vomit.ts`.
+registerSkill({
+  slug: 'projectile-vomit',
+  triggers: ['on-activation'],
+  description: "Action speciale remplacant un Blocage : jet D6 contre une cible adjacente. Sur 2+, la cible est mise a terre et subit un jet d'armure. Sur 1, l'activation se termine sans turnover.",
+  canApply: (ctx) => hasSkill(ctx.player, 'projectile-vomit') || hasSkill(ctx.player, 'projectile_vomit'),
+});
