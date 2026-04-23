@@ -337,7 +337,7 @@
 | K.3 | Implementer `chainsaw` — Secret weapons | Regle | [x] |
 | K.10 | Implementer `multiple-block` — Ogres | Regle | [x] |
 | K.11 | Implementer `hail-mary-pass` + `safe-pass` | Regle | [x] |
-| K.12 | Implementer `ball-and-chain` — Goblin Fanatic | Regle | [ ] |
+| K.12 | Implementer `ball-and-chain` — Goblin Fanatic | Regle | [x] |
 | K.13 | Implementer `bombardier` — Goblin Bomma | Regle | [ ] |
 | O.2 | Star player special rules restantes (~30, hors 5 equipes) | Contenu | [ ] |
 | O.1 | ~39 skills niche restants (batch 3) | Contenu | [ ] |

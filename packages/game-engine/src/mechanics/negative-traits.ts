@@ -1041,6 +1041,7 @@ export function logInstablePrevention(
     PROJECTILE_VOMIT: 'de vomissement projectile',
     STAB: 'de poignard',
     CHAINSAW: 'de tronconneuse',
+    BALL_AND_CHAIN: 'de chaine et boulet',
   };
   const label = actionLabels[actionType] ?? '';
   const message = label
