@@ -39,9 +39,13 @@ export function getPassRange(from: Position, to: Position): PassRange | null {
  * Détermine si un joueur peut tenter une passe sur une distance donnée.
  * Les joueurs Stunty ne peuvent pas tenter de passes Long ni Long Bomb :
  * l'action est restreinte aux portées Quick et Short.
+ * Les joueurs avec Hail Mary Pass peuvent viser n'importe quelle case du
+ * terrain (la règle de portée est ignorée, même au-delà de Long Bomb).
  */
 export function canAttemptPassForRange(passer: Player, range: PassRange | null): boolean {
-  if (!range) return false;
+  if (!range) {
+    return hasSkill(passer, 'hail-mary-pass') || hasSkill(passer, 'hail_mary_pass');
+  }
   if (hasSkill(passer, 'stunty') && (range === 'long' || range === 'bomb')) {
     return false;
   }
@@ -288,6 +292,25 @@ export function executePass(
   newState.gameLog = [...newState.gameLog, passLog];
 
   if (!passResult.success) {
+    // Safe Pass : sur echec, le passeur garde le ballon. Pas de turnover,
+    // pas de rebond, l'activation se termine (geree par handlePass via
+    // setPlayerAction + checkPlayerTurnEnd).
+    if (hasSkill(passer, 'safe-pass') || hasSkill(passer, 'safe_pass')) {
+      newState.players = newState.players.map(p =>
+        p.id === passer.id ? { ...p, hasBall: true } : p
+      );
+      newState.ball = undefined;
+      const safePassLog = createLogEntry(
+        'info',
+        `Passe Assuree : ${passer.name} garde possession du ballon.`,
+        passer.id,
+        passer.team,
+        { skill: 'safe-pass' }
+      );
+      newState.gameLog = [...newState.gameLog, safePassLog];
+      return newState;
+    }
+
     // Passe ratée : le ballon dévie depuis la cible
     const failLog = createLogEntry(
       'turnover',
@@ -297,6 +320,23 @@ export function executePass(
     );
     newState.gameLog = [...newState.gameLog, failLog];
     newState.isTurnover = true;
+    newState.ball = { ...target.pos };
+    return bounceBall(newState, rng);
+  }
+
+  // Hail Mary Pass : la passe n'est jamais precise. Meme sur un jet reussi,
+  // le ballon ne va pas directement dans les mains du receveur. Il devie depuis
+  // la case cible, sans turnover (le receveur ou un autre joueur peut tenter
+  // de le rattraper via le rebond).
+  if (hasSkill(passer, 'hail-mary-pass') || hasSkill(passer, 'hail_mary_pass')) {
+    const hmpLog = createLogEntry(
+      'info',
+      `Passe Desesperee : la passe n'est jamais precise, le ballon devie depuis la cible.`,
+      passer.id,
+      passer.team,
+      { skill: 'hail-mary-pass' }
+    );
+    newState.gameLog = [...newState.gameLog, hmpLog];
     newState.ball = { ...target.pos };
     return bounceBall(newState, rng);
   }
