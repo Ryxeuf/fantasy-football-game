@@ -203,6 +203,29 @@ registerSkill({
   getModifiers: () => ({ armorModifier: 1 }), // Appliqué au meilleur choix par le moteur
 });
 
+// MIGHTY BLOW (+1) — variante BB3 utilisee dans les rosters
+// (`mighty-blow-1`). Comportement identique a `mighty-blow` mais slug
+// distinct, donc enregistrement separe pour que les rosters existants
+// recoivent enfin le bonus +1 (O.1 batch 3h).
+registerSkill({
+  slug: 'mighty-blow-1',
+  triggers: ['on-armor', 'on-injury'],
+  description: '+1 au jet d\'armure OU au jet de blessure (automatique).',
+  canApply: (ctx) => hasSkill(ctx.player, 'mighty-blow-1') || hasSkill(ctx.player, 'mighty_blow_1'),
+  getModifiers: () => ({ armorModifier: 1 }),
+});
+
+// MIGHTY BLOW (+2) — variante BB3 utilisee par Morg n Thorg et autres
+// stars (`mighty-blow-2`). Bonus de +2 au jet d'armure ou de blessure.
+// (O.1 batch 3h)
+registerSkill({
+  slug: 'mighty-blow-2',
+  triggers: ['on-armor', 'on-injury'],
+  description: '+2 au jet d\'armure OU au jet de blessure (automatique).',
+  canApply: (ctx) => hasSkill(ctx.player, 'mighty-blow-2') || hasSkill(ctx.player, 'mighty_blow_2'),
+  getModifiers: () => ({ armorModifier: 2 }),
+});
+
 // ─── COMPÉTENCES AVANCÉES ────────────────────────────────────────────────
 
 // DAUNTLESS
@@ -255,6 +278,17 @@ registerSkill({
   description: '+1 au jet d\'armure lors d\'une faute.',
   canApply: (ctx) => hasSkill(ctx.player, 'dirty-player-1') || hasSkill(ctx.player, 'dirty_player') || hasSkill(ctx.player, 'dirty player'),
   getModifiers: () => ({ armorModifier: 1 }),
+});
+
+// DIRTY PLAYER (+2) — variante BB3 utilisee notamment par le Dwarf
+// Deathroller (`dirty-player-2`). Bonus de +2 au jet d'armure lors d'une
+// faute. (O.1 batch 3h)
+registerSkill({
+  slug: 'dirty-player-2',
+  triggers: ['on-foul'],
+  description: '+2 au jet d\'armure lors d\'une faute.',
+  canApply: (ctx) => hasSkill(ctx.player, 'dirty-player-2') || hasSkill(ctx.player, 'dirty_player_2'),
+  getModifiers: () => ({ armorModifier: 2 }),
 });
 
 // SNEAKY GIT
