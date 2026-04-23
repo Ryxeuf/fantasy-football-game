@@ -658,6 +658,17 @@ registerSkill({
   canApply: (ctx) => hasSkill(ctx.player, 'animal-savagery'),
 });
 
+// ─── BOMBARDIER ─────────────────────────────────────────────────────────────
+// Action speciale "Lancer de Bombe" implementee dans `mechanics/bombardier.ts`,
+// branchee via l'action BOMB_THROW.
+
+registerSkill({
+  slug: 'bombardier',
+  triggers: ['on-activation'],
+  description: 'Action speciale (remplace un blocage) : lance une bombe sur une case en portee Quick/Short. Succes = explosion +1 armure ; fumble = explosion sur le lanceur ; echec = deviation D8.',
+  canApply: (ctx) => hasSkill(ctx.player, 'bombardier'),
+});
+
 // ─── BALL AND CHAIN ─────────────────────────────────────────────────────────
 // Ball and Chain remplace l'action de Mouvement du joueur par un deplacement
 // automatique dans une direction aleatoire (D8). Implementation dans

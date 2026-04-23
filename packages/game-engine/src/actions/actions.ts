@@ -76,6 +76,7 @@ import { canProjectileVomit, executeProjectileVomit } from '../mechanics/project
 import { canStab, executeStab } from '../mechanics/stab';
 import { canChainsaw, executeChainsaw } from '../mechanics/chainsaw';
 import { canBallAndChain, executeBallAndChain } from '../mechanics/ball-and-chain';
+import { canBombThrow, executeBombThrow } from '../mechanics/bombardier';
 import { canDumpOff, getDumpOffReceivers, executeDumpOff } from '../mechanics/dump-off';
 import { checkDauntless } from '../mechanics/dauntless';
 import { checkBreakTackle } from '../mechanics/break-tackle';
@@ -689,7 +690,7 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
   const ACTIVATION_MOVE_TYPES: string[] = [
     'MOVE', 'LEAP', 'DODGE', 'BLOCK', 'MULTI_BLOCK', 'BLITZ', 'PASS', 'HANDOFF',
     'THROW_TEAM_MATE', 'FOUL', 'HYPNOTIC_GAZE', 'PROJECTILE_VOMIT', 'STAB',
-    'CHAINSAW', 'BALL_AND_CHAIN',
+    'CHAINSAW', 'BALL_AND_CHAIN', 'BOMB_THROW',
   ];
   if (ACTIVATION_MOVE_TYPES.includes(move.type) && 'playerId' in move) {
     const playerId = (move as { playerId: string }).playerId;
@@ -766,6 +767,8 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       return handleChainsaw(activeState, move, rng);
     case 'BALL_AND_CHAIN':
       return handleBallAndChain(activeState, move, rng);
+    case 'BOMB_THROW':
+      return handleBombThrow(activeState, move, rng);
     case 'DUMP_OFF_CHOOSE':
       return handleDumpOffChoose(activeState, move, rng);
     case 'KICKOFF_PERFECT_DEFENCE':
@@ -2652,6 +2655,26 @@ function handleBallAndChain(
 
   let newState = executeBallAndChain(state, move.playerId, rng);
   newState = setPlayerAction(newState, move.playerId, 'MOVE');
+  newState = checkPlayerTurnEnd(newState, move.playerId);
+  return newState;
+}
+
+/**
+ * Gere une action Bomb Throw (Lancer de Bombe) pour un Bombardier.
+ */
+function handleBombThrow(
+  state: GameState,
+  move: { type: 'BOMB_THROW'; playerId: string; target: Position },
+  rng: RNG,
+): GameState {
+  const player = state.players.find(p => p.id === move.playerId);
+  if (!player) return state;
+  if (player.team !== state.currentPlayer) return state;
+  if (hasPlayerActed(state, player.id)) return state;
+  if (!canBombThrow(state, move.playerId, move.target)) return state;
+
+  let newState = executeBombThrow(state, move.playerId, move.target, rng);
+  newState = setPlayerAction(newState, move.playerId, 'BOMB_THROW');
   newState = checkPlayerTurnEnd(newState, move.playerId);
   return newState;
 }
