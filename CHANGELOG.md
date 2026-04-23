@@ -1,3 +1,17 @@
+## [1.65.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.64.0...v1.65.0) (2026-04-23)
+
+
+### ✨ Features
+
+* **game-engine:** K.10 implementer multiple-block (Ogres) ([#305](https://github.com/Ryxeuf/fantasy-football-game/issues/305)) ([be1479a](https://github.com/Ryxeuf/fantasy-football-game/commit/be1479a90f42a0e234212f30bbe5cedb745d8f93))
+* **game-engine:** K.11 implementer hail-mary-pass + safe-pass ([#307](https://github.com/Ryxeuf/fantasy-football-game/issues/307)) ([dd2aa93](https://github.com/Ryxeuf/fantasy-football-game/commit/dd2aa93486f53ee6073c55f4c7c052fe7c2f91e7))
+* **mobile:** M.10 ecran details joueur et progression ([#302](https://github.com/Ryxeuf/fantasy-football-game/issues/302)) ([169e658](https://github.com/Ryxeuf/fantasy-football-game/commit/169e65889e1b39e1337c324cbc4c609d7948f59f))
+* **mobile:** M.11 catalogue star players ([#303](https://github.com/Ryxeuf/fantasy-football-game/issues/303)) ([20c1131](https://github.com/Ryxeuf/fantasy-football-game/commit/20c1131260be151090cae63446d5ae28622f8e64))
+* **mobile:** M.12 ecran profil et settings ([#304](https://github.com/Ryxeuf/fantasy-football-game/issues/304)) ([8507e20](https://github.com/Ryxeuf/fantasy-football-game/commit/8507e204b506b2320535279fbd0c077897d71174))
+* **mobile:** M.8 ecrans cups et ligues ([#299](https://github.com/Ryxeuf/fantasy-football-game/issues/299)) ([2ec295b](https://github.com/Ryxeuf/fantasy-football-game/commit/2ec295b2a8b5b2edc5457916fb2e3c0e0144ba63))
+* **mobile:** M.9 push notifications natives via Expo ([#300](https://github.com/Ryxeuf/fantasy-football-game/issues/300)) ([b78c07b](https://github.com/Ryxeuf/fantasy-football-game/commit/b78c07b94979ae95e296b7a6f8af89fab53f6360))
+* passage du mode alpha au mode beta ouvert à tous ([#301](https://github.com/Ryxeuf/fantasy-football-game/issues/301)) ([9c04b87](https://github.com/Ryxeuf/fantasy-football-game/commit/9c04b87da51fbad54d1267b251207181d7cf335e))
+
 ## [1.64.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.63.0...v1.64.0) (2026-04-22)
 
 
