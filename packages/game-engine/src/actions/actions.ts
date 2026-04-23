@@ -253,7 +253,7 @@ export function getLegalMoves(state: GameState): Move[] {
       );
       for (const target of teammates) {
         const range = getPassRange(p.pos, target.pos);
-        if (range && canAttemptPassForRange(p, range)) {
+        if (canAttemptPassForRange(p, range)) {
           moves.push({ type: 'PASS', playerId: p.id, targetId: target.id });
         }
       }
