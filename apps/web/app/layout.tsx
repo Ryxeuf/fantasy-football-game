@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { ReactNode } from "react";
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Cinzel_Decorative, Cinzel, Montserrat, Inter, Bebas_Neue } from "next/font/google";
 import Footer from "./components/Footer";
 import Header from "./components/Header";
@@ -121,6 +122,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="fr" className={`scroll-smooth ${cinzelDecorative.variable} ${cinzel.variable} ${montserrat.variable} ${inter.variable} ${bebasNeue.variable}`}>
       <body className="min-h-screen bg-nuffle-ivory text-nuffle-anthracite flex flex-col font-body antialiased">
+        {process.env.NODE_ENV === "production" && (
+          <Script
+            src="https://umami.ryxeuf.fr/script.js"
+            data-website-id="cda1e0dd-b79b-402d-947d-7cb02ffe13e3"
+            strategy="afterInteractive"
+            defer
+          />
+        )}
         <ClientLayout>
           <div className="flex-1 w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
             <div className="w-full p-4 sm:p-6">

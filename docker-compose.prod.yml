@@ -84,6 +84,12 @@ services:
       - "traefik.http.routers.nufflearena-api.service=nufflearena-api"
       - "traefik.http.routers.nufflearena-api.priority=1"
       - "traefik.http.services.nufflearena-api.loadbalancer.server.port=8201"
+      # Route les POST Ko-fi envoyes sur nufflearena.fr/webhooks/kofi vers le serveur Express
+      - "traefik.http.routers.nufflearena-kofi.rule=Host(`nufflearena.fr`) && PathPrefix(`/webhooks/kofi`)"
+      - "traefik.http.routers.nufflearena-kofi.entrypoints=websecure"
+      - "traefik.http.routers.nufflearena-kofi.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.nufflearena-kofi.service=nufflearena-api"
+      - "traefik.http.routers.nufflearena-kofi.priority=100"
       - "traefik.docker.network=traefik-network"
     depends_on:
       db:
