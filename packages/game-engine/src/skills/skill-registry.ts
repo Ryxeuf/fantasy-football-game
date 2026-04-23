@@ -203,6 +203,29 @@ registerSkill({
   getModifiers: () => ({ armorModifier: 1 }), // Appliqué au meilleur choix par le moteur
 });
 
+// MIGHTY BLOW (+1) — variante BB3 utilisee dans les rosters
+// (`mighty-blow-1`). Comportement identique a `mighty-blow` mais slug
+// distinct, donc enregistrement separe pour que les rosters existants
+// recoivent enfin le bonus +1 (O.1 batch 3h).
+registerSkill({
+  slug: 'mighty-blow-1',
+  triggers: ['on-armor', 'on-injury'],
+  description: '+1 au jet d\'armure OU au jet de blessure (automatique).',
+  canApply: (ctx) => hasSkill(ctx.player, 'mighty-blow-1') || hasSkill(ctx.player, 'mighty_blow_1'),
+  getModifiers: () => ({ armorModifier: 1 }),
+});
+
+// MIGHTY BLOW (+2) — variante BB3 utilisee par Morg n Thorg et autres
+// stars (`mighty-blow-2`). Bonus de +2 au jet d'armure ou de blessure.
+// (O.1 batch 3h)
+registerSkill({
+  slug: 'mighty-blow-2',
+  triggers: ['on-armor', 'on-injury'],
+  description: '+2 au jet d\'armure OU au jet de blessure (automatique).',
+  canApply: (ctx) => hasSkill(ctx.player, 'mighty-blow-2') || hasSkill(ctx.player, 'mighty_blow_2'),
+  getModifiers: () => ({ armorModifier: 2 }),
+});
+
 // ─── COMPÉTENCES AVANCÉES ────────────────────────────────────────────────
 
 // DAUNTLESS
@@ -255,6 +278,17 @@ registerSkill({
   description: '+1 au jet d\'armure lors d\'une faute.',
   canApply: (ctx) => hasSkill(ctx.player, 'dirty-player-1') || hasSkill(ctx.player, 'dirty_player') || hasSkill(ctx.player, 'dirty player'),
   getModifiers: () => ({ armorModifier: 1 }),
+});
+
+// DIRTY PLAYER (+2) — variante BB3 utilisee notamment par le Dwarf
+// Deathroller (`dirty-player-2`). Bonus de +2 au jet d'armure lors d'une
+// faute. (O.1 batch 3h)
+registerSkill({
+  slug: 'dirty-player-2',
+  triggers: ['on-foul'],
+  description: '+2 au jet d\'armure lors d\'une faute.',
+  canApply: (ctx) => hasSkill(ctx.player, 'dirty-player-2') || hasSkill(ctx.player, 'dirty_player_2'),
+  getModifiers: () => ({ armorModifier: 2 }),
 });
 
 // SNEAKY GIT
@@ -509,6 +543,18 @@ registerSkill({
   triggers: ['passive'],
   description: "Ce joueur n'exerce pas de zone de tacle et ne peut pas declarer d'action de Blocage.",
   canApply: (ctx) => hasSkill(ctx.player, 'titchy'),
+});
+
+// ARM BAR (O.1 batch 3g) : +1 au jet d'armure (ou de blessure) du joueur
+// adverse qui Tombe en ratant un Esquive/Saut/Bond pour quitter une case ou
+// il etait Marque par ce joueur. La resolution effective se fait dans
+// `actions.ts` (voir `applyRollFailure` + helper `getArmBarBonus` dans
+// `mechanics/arm-bar.ts`). L'entree ici sert pour la decouverte UI.
+registerSkill({
+  slug: 'arm-bar',
+  triggers: ['on-armor', 'on-injury'],
+  description: "+1 au jet d'Armure (ou de Blessure) quand un adversaire Tombe en ratant un test d'agilite (Esquive/Saut/Bond) pour quitter une case ou il etait Marque par ce joueur.",
+  canApply: (ctx) => hasSkill(ctx.player, 'arm-bar') || hasSkill(ctx.player, 'arm_bar'),
 });
 
 // SHADOWING
@@ -863,4 +909,79 @@ registerSkill({
   triggers: ['on-pass', 'on-catch'],
   description: "Quand un adversaire effectue une Passe, un Lancer d'Equipier, une Interception ou une Reception, il subit -1 par joueur avec ce skill a 3 cases ou moins.",
   canApply: (ctx) => hasSkill(ctx.player, 'disturbing-presence') || hasSkill(ctx.player, 'disturbing_presence'),
+});
+
+// ─── LEAP (O.1 batch 3i) ────────────────────────────────────────────────────
+// Leap (Agility) permet de sauter par-dessus une case adjacente pour arriver
+// a une case a distance Chebyshev 2, avec un jet d'Agilite remplacant l'esquive
+// classique. Resolution dans `mechanics/leap.ts` (`executeLeap`, `canLeap`).
+// L'entree du registre sert a la decouverte UI et a la documentation.
+registerSkill({
+  slug: 'leap',
+  triggers: ['on-activation'],
+  description: "Pendant son mouvement, le joueur peut sauter par-dessus une case adjacente (2 cases de mouvement) avec un jet d'Agilite. Pas de jet d'Esquive requis pour quitter les zones de tacle.",
+  canApply: (ctx) => hasSkill(ctx.player, 'leap') || hasSkill(ctx.player, 'pogo-stick'),
+});
+
+// ─── STAB (O.1 batch 3i) ────────────────────────────────────────────────────
+// Stab remplace une action de Blocage : jet d'armure direct (sans dés de bloc
+// ni assistance) contre une cible adjacente debout. Mighty Blow s'applique a
+// l'armure. Resolution dans `mechanics/stab.ts` (`executeStab`, `canStab`).
+// L'entree du registre sert a la decouverte UI et a la documentation.
+registerSkill({
+  slug: 'stab',
+  triggers: ['on-activation'],
+  description: "Action speciale remplacant un Blocage : jet d'armure direct contre une cible adjacente. Pas de des de bloc, pas d'assistance, pas de turnover ; l'activation se termine apres le Stab.",
+  canApply: (ctx) => hasSkill(ctx.player, 'stab'),
+});
+
+// ─── PROJECTILE VOMIT (O.1 batch 3i) ────────────────────────────────────────
+// Projectile Vomit (trait de mutation) remplace une action de Blocage : jet
+// D6 (2+ = succes) contre une cible adjacente ; succes = cible mise a terre
+// suivie d'un jet d'armure (Mighty Blow s'applique). Echec termine l'activation
+// sans turnover. Resolution dans `mechanics/projectile-vomit.ts`.
+registerSkill({
+  slug: 'projectile-vomit',
+  triggers: ['on-activation'],
+  description: "Action speciale remplacant un Blocage : jet D6 contre une cible adjacente. Sur 2+, la cible est mise a terre et subit un jet d'armure. Sur 1, l'activation se termine sans turnover.",
+  canApply: (ctx) => hasSkill(ctx.player, 'projectile-vomit') || hasSkill(ctx.player, 'projectile_vomit'),
+});
+
+// ─── ON THE BALL (O.1 batch 3j) ─────────────────────────────────────────────
+// On the Ball est une reaction defensive declenchee lors d'une action de Passe
+// adverse : le joueur possedant ce skill peut se deplacer jusqu'a 3 cases avant
+// que le jet de Passe soit effectue, une fois par tour d'equipe. Resolution
+// dans `mechanics/on-the-ball.ts` (`executeOnTheBallMove`, `canUseOnTheBall`,
+// tracking via `state.usedOnTheBallThisTurn`). L'entree du registre sert a la
+// decouverte UI et a la documentation.
+registerSkill({
+  slug: 'on-the-ball',
+  triggers: ['on-pass'],
+  description: "Une fois par tour d'equipe, lorsque l'adversaire declare une action de Passe, ce joueur peut se deplacer jusqu'a 3 cases avant le jet de Passe, en terminant adjacent ou sur la case cible.",
+  canApply: (ctx) => hasSkill(ctx.player, 'on-the-ball') || hasSkill(ctx.player, 'on_the_ball'),
+});
+
+// ─── THROW TEAM-MATE (O.1 batch 3j) ─────────────────────────────────────────
+// Throw Team-Mate permet a un joueur (Big Guy, Ogre, Treeman, etc.) de lancer
+// un coequipier Right Stuff sur une case cible. Implementation dans
+// `mechanics/throw-team-mate.ts` (action THROW_TEAM_MATE dispatchee via
+// actions.ts). L'entree du registre sert a la decouverte UI.
+registerSkill({
+  slug: 'throw-team-mate',
+  triggers: ['on-pass'],
+  description: "Action speciale : lance un coequipier possedant Right Stuff vers une case cible. Utilise les regles de portee et de deviation des passes ; la cible effectue un jet d'armure a l'atterrissage.",
+  canApply: (ctx) => hasSkill(ctx.player, 'throw-team-mate') || hasSkill(ctx.player, 'throw_team_mate'),
+});
+
+// ─── DUMP-OFF (O.1 batch 3j) ────────────────────────────────────────────────
+// Dump-off est une reaction defensive : quand ce joueur porteur du ballon est
+// cible d'un Blocage/Blitz, il peut immediatement effectuer une Passe Rapide
+// avant la resolution du bloc, interrompant l'activation de l'attaquant.
+// Resolution dans `mechanics/dump-off.ts` (`canDumpOff`, `executeDumpOff`).
+// L'entree du registre sert a la decouverte UI.
+registerSkill({
+  slug: 'dump-off',
+  triggers: ['on-block-defender'],
+  description: "Quand ce joueur porteur du ballon est cible d'un Blocage/Blitz, il peut effectuer immediatement une Passe Rapide avant la resolution du bloc. Pas de turnover si la passe rate.",
+  canApply: (ctx) => hasSkill(ctx.player, 'dump-off') || hasSkill(ctx.player, 'dump_off'),
 });

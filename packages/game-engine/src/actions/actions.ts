@@ -83,6 +83,7 @@ import { checkBreakTackle } from '../mechanics/break-tackle';
 import { isFendActiveForFollowUp } from '../mechanics/fend';
 import { resolveShadowingAfterDodge } from '../mechanics/shadowing';
 import { hasFrenzy } from '../mechanics/frenzy';
+import { getArmBarBonus } from '../mechanics/arm-bar';
 import {
   canPerformMultipleBlock,
   isMultipleBlockActiveFor,
@@ -252,7 +253,7 @@ export function getLegalMoves(state: GameState): Move[] {
       );
       for (const target of teammates) {
         const range = getPassRange(p.pos, target.pos);
-        if (range && canAttemptPassForRange(p, range)) {
+        if (canAttemptPassForRange(p, range)) {
           moves.push({ type: 'PASS', playerId: p.id, targetId: target.id });
         }
       }
@@ -594,22 +595,32 @@ function consumeTeamReroll(state: GameState, team: TeamId): GameState {
 }
 
 /**
- * Applique les conséquences d'un échec de jet (chute, turnover, armure, perte de balle)
+ * Applique les conséquences d'un échec de jet (chute, turnover, armure, perte de balle).
+ * @param armorBonus Bonus optionnel applique au jet d'armure (ex: +1 d'Arm Bar
+ *   quand un esquive a echoue dans la zone de tacle d'un adversaire avec ce skill).
  */
-function applyRollFailure(state: GameState, playerIndex: number, rng: RNG): GameState {
+function applyRollFailure(
+  state: GameState,
+  playerIndex: number,
+  rng: RNG,
+  armorBonus: number = 0,
+): GameState {
   const player = state.players[playerIndex];
   state.isTurnover = true;
   state.players[playerIndex] = { ...player, stunned: true };
 
-  // Jet d'armure
-  const armorResult = performArmorRollWithNotification(state.players[playerIndex], rng);
+  // Jet d'armure (avec bonus eventuel d'Arm Bar). `armorBonus` est exprime
+  // comme bonus a l'attaquant (i.e. +1 facilite la cassure d'armure). Il est
+  // negativise ici car `performArmorRollWithNotification` attend un modificateur
+  // a appliquer au TARGET (positif = armure plus difficile a percer).
+  const armorResult = performArmorRollWithNotification(state.players[playerIndex], rng, -armorBonus);
   state.lastDiceResult = armorResult;
   const armorLog = createLogEntry(
     'dice',
-    `Jet d'armure: ${armorResult.diceRoll}/${armorResult.targetNumber} ${armorResult.success ? '✓' : '✗'}`,
+    `Jet d'armure: ${armorResult.diceRoll}/${armorResult.targetNumber} ${armorResult.success ? '✓' : '✗'}${armorBonus > 0 ? ` [Arm Bar +${armorBonus}]` : ''}`,
     player.id,
     player.team,
-    { diceRoll: armorResult.diceRoll, targetNumber: armorResult.targetNumber, success: armorResult.success }
+    { diceRoll: armorResult.diceRoll, targetNumber: armorResult.targetNumber, success: armorResult.success, armBar: armorBonus > 0 }
   );
   state.gameLog = [...state.gameLog, armorLog];
 
@@ -1138,8 +1149,9 @@ function handleDodgeRoll(
       next.pendingReroll = { rollType: 'dodge', playerId: player.id, team: player.team, targetNumber: dodgeResult.targetNumber, modifiers: dodgeModifiers, playerIndex: idx, from, to };
       return next;
     }
-    // Pas de relance disponible : appliquer l'échec
-    return applyRollFailure(next, idx, rng);
+    // Pas de relance disponible : appliquer l'echec, avec bonus Arm Bar
+    // si un adversaire adjacent a la case d'origine possede ce skill.
+    return applyRollFailure(next, idx, rng, getArmBarBonus(next, player, from));
   }
 
   return next;
@@ -2006,7 +2018,10 @@ function handleRerollChoose(
       }
       return newState;
     } else {
-      return applyRollFailure(newState, playerIndex, rng);
+      // Echec apres team reroll : appliquer l'echec avec bonus Arm Bar.
+      const dodger = newState.players[playerIndex];
+      const armBarBonus = from ? getArmBarBonus(newState, dodger, from) : 0;
+      return applyRollFailure(newState, playerIndex, rng, armBarBonus);
     }
   } else if (rollType === 'gfi') {
     // Relancer le jet de GFI

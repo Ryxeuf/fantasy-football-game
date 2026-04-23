@@ -120,6 +120,15 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="fr" className={`scroll-smooth ${cinzelDecorative.variable} ${cinzel.variable} ${montserrat.variable} ${inter.variable} ${bebasNeue.variable}`}>
+      <head>
+        {process.env.NEXT_PUBLIC_UMAMI_ENABLED === "true" && (
+          <script
+            defer
+            src="https://umami.ryxeuf.fr/script.js"
+            data-website-id="cda1e0dd-b79b-402d-947d-7cb02ffe13e3"
+          />
+        )}
+      </head>
       <body className="min-h-screen bg-nuffle-ivory text-nuffle-anthracite flex flex-col font-body antialiased">
         <ClientLayout>
           <div className="flex-1 w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">

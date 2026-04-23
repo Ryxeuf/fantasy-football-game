@@ -1,3 +1,35 @@
+## [1.67.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.67.0...v1.67.1) (2026-04-23)
+
+
+### ♻️ Code Refactoring
+
+* **layout:** replace Script component with script tag for Umami analytics integration ([700f1cc](https://github.com/Ryxeuf/fantasy-football-game/commit/700f1ccfdd13a24d514a4a86c3c0d4148a50b1ef))
+
+## [1.67.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.66.0...v1.67.0) (2026-04-23)
+
+
+### ✨ Features
+
+* **analytics:** enable Umami analytics in production environment ([ecd4b30](https://github.com/Ryxeuf/fantasy-football-game/commit/ecd4b308ccffe4bc957a377141aaa878e205685c))
+
+## [1.66.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.65.0...v1.66.0) (2026-04-23)
+
+
+### ✨ Features
+
+* **content:** O.2 ajouter specialRuleEn pour 21 star players ([#312](https://github.com/Ryxeuf/fantasy-football-game/issues/312)) ([a7d0d0c](https://github.com/Ryxeuf/fantasy-football-game/commit/a7d0d0c07f3d6189444196b26891aa52d1d050b4))
+* **docker:** add Traefik routing for Ko-fi webhooks and integrate Umami analytics script in production layout ([326aaef](https://github.com/Ryxeuf/fantasy-football-game/commit/326aaef2609154079008b08af02071a588fec74d))
+* **game-engine:** K.12 implementer ball-and-chain (Goblin Fanatic) ([#310](https://github.com/Ryxeuf/fantasy-football-game/issues/310)) ([a1bf3ce](https://github.com/Ryxeuf/fantasy-football-game/commit/a1bf3cef32a6710bd55b6dabc80d0d879b5622cd))
+* **game-engine:** K.13 implementer bombardier (Goblin Bomma) ([#311](https://github.com/Ryxeuf/fantasy-football-game/issues/311)) ([7f51ce0](https://github.com/Ryxeuf/fantasy-football-game/commit/7f51ce03c6afd521735166113b3b42a36043b761))
+* **game-engine:** O.1 batch 3a - nerves-of-steel, big-hand, extra-arms ([#313](https://github.com/Ryxeuf/fantasy-football-game/issues/313)) ([fe0f198](https://github.com/Ryxeuf/fantasy-football-game/commit/fe0f1980a20b5ad9c6494e559b15fb821b091f48))
+* **game-engine:** O.1 batch 3b - accurate + strong-arm pass modifiers ([#314](https://github.com/Ryxeuf/fantasy-football-game/issues/314)) ([180d298](https://github.com/Ryxeuf/fantasy-football-game/commit/180d298571c462b8cd6ab8d9c8510363caa21a37))
+* **game-engine:** O.1 batch 3c - strip-ball ([#315](https://github.com/Ryxeuf/fantasy-football-game/issues/315)) ([ed2afef](https://github.com/Ryxeuf/fantasy-football-game/commit/ed2afef99c86e741bd55d8facb1fd9f758b85da6))
+* **game-engine:** O.1 batch 3d - diving-catch catch modifier ([#316](https://github.com/Ryxeuf/fantasy-football-game/issues/316)) ([7d2d0fb](https://github.com/Ryxeuf/fantasy-football-game/commit/7d2d0fb301d4b10ad639249ba29f6ef4198a5c6c))
+* **game-engine:** O.1 batch 3e - catch + pass personal rerolls ([#317](https://github.com/Ryxeuf/fantasy-football-game/issues/317)) ([1f35b86](https://github.com/Ryxeuf/fantasy-football-game/commit/1f35b866c2068793d4a67f2d55a764dec003c4cf))
+* **game-engine:** O.1 batch 3f - cannoneer + monstrous-mouth ([#318](https://github.com/Ryxeuf/fantasy-football-game/issues/318)) ([569ae46](https://github.com/Ryxeuf/fantasy-football-game/commit/569ae46ceb0cabc1481d4af4159fb26e0e5db7ba))
+* **game-engine:** O.1 batch 3g - arm-bar (cle de bras) ([#319](https://github.com/Ryxeuf/fantasy-football-game/issues/319)) ([874d39b](https://github.com/Ryxeuf/fantasy-football-game/commit/874d39bbcf1d1126009eaaed27d3a509c0554965))
+* **game-engine:** O.1 batch 3h - mighty-blow-1/2 + dirty-player-2 ([#321](https://github.com/Ryxeuf/fantasy-football-game/issues/321)) ([0a0832d](https://github.com/Ryxeuf/fantasy-football-game/commit/0a0832d3a5f71a5e157d8e949cd06dac249111c2))
+
 ## [1.65.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.64.0...v1.65.0) (2026-04-23)
 
 
