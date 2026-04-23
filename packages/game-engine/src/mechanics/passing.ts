@@ -350,10 +350,19 @@ export function executePass(
   );
   newState.ball = undefined;
 
+  // Cloud Burster (O.1 batch 3g) : sur une passe Long ou Bomb, le passeur peut
+  // forcer le coach adverse a relancer une interception reussie (une fois par
+  // interceptor, sans cumul avec un autre reroll).
+  const passRange = getPassRange(passer.pos, target.pos);
+  const passerHasCloudBurster =
+    hasSkill(passer, 'cloud-burster') || hasSkill(passer, 'cloud_burster');
+  const cloudBursterApplies =
+    passerHasCloudBurster && (passRange === 'long' || passRange === 'bomb');
+
   // Vérifier les interceptions
   const interceptors = findInterceptors(newState, passer.pos, target.pos, passer.team);
   for (const interceptor of interceptors) {
-    const interceptResult = performInterceptionRoll(interceptor, rng, newState);
+    let interceptResult = performInterceptionRoll(interceptor, rng, newState);
 
     const interceptLog = createLogEntry(
       'dice',
@@ -363,6 +372,26 @@ export function executePass(
       { diceRoll: interceptResult.diceRoll, targetNumber: interceptResult.targetNumber }
     );
     newState.gameLog = [...newState.gameLog, interceptLog];
+
+    if (interceptResult.success && cloudBursterApplies) {
+      const cbLog = createLogEntry(
+        'info',
+        `Cloud Burster : ${passer.name} force la relance de l'interception de ${interceptor.name}.`,
+        passer.id,
+        passer.team,
+        { skill: 'cloud-burster' },
+      );
+      newState.gameLog = [...newState.gameLog, cbLog];
+      interceptResult = performInterceptionRoll(interceptor, rng, newState);
+      const rerollLog = createLogEntry(
+        'dice',
+        `Relance d'interception de ${interceptor.name}: ${interceptResult.diceRoll}/${interceptResult.targetNumber} ${interceptResult.success ? '✓' : '✗'}`,
+        interceptor.id,
+        interceptor.team,
+        { diceRoll: interceptResult.diceRoll, targetNumber: interceptResult.targetNumber },
+      );
+      newState.gameLog = [...newState.gameLog, rerollLog];
+    }
 
     if (interceptResult.success) {
       // Interception réussie !

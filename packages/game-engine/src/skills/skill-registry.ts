@@ -521,6 +521,30 @@ registerSkill({
     hasSkill(ctx.player, 'monstrous-mouth') || hasSkill(ctx.player, 'monstrous_mouth'),
 });
 
+// CLOUD BURSTER (O.1 batch 3g) : sur une passe Long ou Bomb, le passeur force
+// le coach adverse a relancer une interception reussie. Resolution dans
+// `mechanics/passing.ts#executePass`. L'entree du registre sert a la decouverte UI.
+registerSkill({
+  slug: 'cloud-burster',
+  triggers: ['on-pass'],
+  description: "Sur une passe Long ou Long Bomb, le passeur peut forcer l'adversaire a relancer une interception reussie.",
+  canApply: (ctx) =>
+    hasSkill(ctx.player, 'cloud-burster') || hasSkill(ctx.player, 'cloud_burster'),
+});
+
+// TITCHY (O.1 batch 3g, trait) : n'exerce pas de zone de tacle et ne peut pas
+// declarer d'action de Blocage. Les autres effets (ignorer les TZ adverses sur
+// ses propres tests d'agilite) relevent des jets ou ce joueur est acteur et
+// seront couverts par un batch ulterieur. Filtrage des TZ dans
+// `mechanics/movement.ts#getAdjacentOpponents`, restriction du Block dans
+// `mechanics/blocking.ts#canBlock`.
+registerSkill({
+  slug: 'titchy',
+  triggers: ['passive'],
+  description: "Ce joueur n'exerce pas de zone de tacle et ne peut pas declarer d'action de Blocage.",
+  canApply: (ctx) => hasSkill(ctx.player, 'titchy'),
+});
+
 // ARM BAR (O.1 batch 3g) : +1 au jet d'armure (ou de blessure) du joueur
 // adverse qui Tombe en ratant un Esquive/Saut/Bond pour quitter une case ou
 // il etait Marque par ce joueur. La resolution effective se fait dans
