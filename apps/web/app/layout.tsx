@@ -122,7 +122,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="fr" className={`scroll-smooth ${cinzelDecorative.variable} ${cinzel.variable} ${montserrat.variable} ${inter.variable} ${bebasNeue.variable}`}>
       <body className="min-h-screen bg-nuffle-ivory text-nuffle-anthracite flex flex-col font-body antialiased">
-        {process.env.NODE_ENV === "production" && (
+        {process.env.NEXT_PUBLIC_UMAMI_ENABLED === "true" && (
           <Script
             src="https://umami.ryxeuf.fr/script.js"
             data-website-id="cda1e0dd-b79b-402d-947d-7cb02ffe13e3"
