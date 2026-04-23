@@ -658,6 +658,18 @@ registerSkill({
   canApply: (ctx) => hasSkill(ctx.player, 'animal-savagery'),
 });
 
+// ─── BALL AND CHAIN ─────────────────────────────────────────────────────────
+// Ball and Chain remplace l'action de Mouvement du joueur par un deplacement
+// automatique dans une direction aleatoire (D8). Implementation dans
+// `mechanics/ball-and-chain.ts`, branche via l'action BALL_AND_CHAIN.
+
+registerSkill({
+  slug: 'ball-and-chain',
+  triggers: ['on-activation'],
+  description: 'Remplace l\'action de Mouvement par un deplacement automatique (jet D8) jusqu\'a MA cases. Sortie de terrain = crowd surf + turnover ; collision adverse = Block automatique.',
+  canApply: (ctx) => hasSkill(ctx.player, 'ball-and-chain'),
+});
+
 // ─── TAKE ROOT ──────────────────────────────────────────────────────────────
 // Take Root check is performed in applyMove before dispatching to action handlers.
 // Registered here for lookup and metadata purposes.

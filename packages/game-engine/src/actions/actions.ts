@@ -75,6 +75,7 @@ import { canHypnoticGaze, executeHypnoticGaze } from '../mechanics/hypnotic-gaze
 import { canProjectileVomit, executeProjectileVomit } from '../mechanics/projectile-vomit';
 import { canStab, executeStab } from '../mechanics/stab';
 import { canChainsaw, executeChainsaw } from '../mechanics/chainsaw';
+import { canBallAndChain, executeBallAndChain } from '../mechanics/ball-and-chain';
 import { canDumpOff, getDumpOffReceivers, executeDumpOff } from '../mechanics/dump-off';
 import { checkDauntless } from '../mechanics/dauntless';
 import { checkBreakTackle } from '../mechanics/break-tackle';
@@ -688,7 +689,7 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
   const ACTIVATION_MOVE_TYPES: string[] = [
     'MOVE', 'LEAP', 'DODGE', 'BLOCK', 'MULTI_BLOCK', 'BLITZ', 'PASS', 'HANDOFF',
     'THROW_TEAM_MATE', 'FOUL', 'HYPNOTIC_GAZE', 'PROJECTILE_VOMIT', 'STAB',
-    'CHAINSAW',
+    'CHAINSAW', 'BALL_AND_CHAIN',
   ];
   if (ACTIVATION_MOVE_TYPES.includes(move.type) && 'playerId' in move) {
     const playerId = (move as { playerId: string }).playerId;
@@ -763,6 +764,8 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       return handleStab(activeState, move, rng);
     case 'CHAINSAW':
       return handleChainsaw(activeState, move, rng);
+    case 'BALL_AND_CHAIN':
+      return handleBallAndChain(activeState, move, rng);
     case 'DUMP_OFF_CHOOSE':
       return handleDumpOffChoose(activeState, move, rng);
     case 'KICKOFF_PERFECT_DEFENCE':
@@ -2629,5 +2632,26 @@ function handleChainsaw(
   let newState = executeChainsaw(state, attacker, target, rng);
   newState = setPlayerAction(newState, attacker.id, 'CHAINSAW');
   newState = checkPlayerTurnEnd(newState, attacker.id);
+  return newState;
+}
+
+/**
+ * Gere une action Ball and Chain (Chaine et Boulet).
+ * Remplace le Move normal du Fanatic : deplacement aleatoire automatique.
+ */
+function handleBallAndChain(
+  state: GameState,
+  move: { type: 'BALL_AND_CHAIN'; playerId: string },
+  rng: RNG,
+): GameState {
+  const player = state.players.find(p => p.id === move.playerId);
+  if (!player) return state;
+  if (player.team !== state.currentPlayer) return state;
+  if (hasPlayerActed(state, player.id)) return state;
+  if (!canBallAndChain(state, move.playerId)) return state;
+
+  let newState = executeBallAndChain(state, move.playerId, rng);
+  newState = setPlayerAction(newState, move.playerId, 'MOVE');
+  newState = checkPlayerTurnEnd(newState, move.playerId);
   return newState;
 }
