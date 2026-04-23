@@ -758,6 +758,32 @@ registerSkill({
   canApply: (ctx) => hasSkill(ctx.player, 'foul-appearance'),
 });
 
+// ─── HAIL MARY PASS ────────────────────────────────────────────────────────
+// Hail Mary Pass est resolu dans `mechanics/passing.ts` :
+//  - `canAttemptPassForRange` permet de viser n'importe quelle case (ignore la
+//    regle de portee, y compris au-dela de Long Bomb).
+//  - `executePass` : sur un jet de passe reussi, la passe n'est jamais precise,
+//    le ballon devie depuis la case cible (pas de catch direct, pas de turnover).
+// L'entree du registre sert a la decouverte UI et a la documentation.
+registerSkill({
+  slug: 'hail-mary-pass',
+  triggers: ['on-pass'],
+  description: "La case cible de la passe peut etre n'importe ou sur le terrain (la regle de portee est ignoree). La passe n'est jamais precise : meme sur un jet reussi, le ballon devie depuis la cible.",
+  canApply: (ctx) => hasSkill(ctx.player, 'hail-mary-pass') || hasSkill(ctx.player, 'hail_mary_pass'),
+});
+
+// ─── SAFE PASS ─────────────────────────────────────────────────────────────
+// Safe Pass est resolu dans `mechanics/passing.ts#executePass` : sur un jet de
+// passe rate, le passeur garde le ballon, il n'y a pas de turnover ni de rebond,
+// et l'activation du passeur se termine (geree par handlePass). L'entree du
+// registre sert a la decouverte UI et a la documentation.
+registerSkill({
+  slug: 'safe-pass',
+  triggers: ['on-pass'],
+  description: "Si ce joueur rate une action de Passe, le ballon n'est pas lache, ne rebondit pas depuis la case qu'occupe ce joueur, et aucun Renversement n'est cause. Au lieu de cela, ce joueur garde possession du ballon et son activation se termine.",
+  canApply: (ctx) => hasSkill(ctx.player, 'safe-pass') || hasSkill(ctx.player, 'safe_pass'),
+});
+
 // ─── DISTURBING PRESENCE ───────────────────────────────────────────────────
 // Disturbing Presence est resolue dans `mechanics/disturbing-presence.ts`
 // (`getDisturbingPresenceModifier`) et appliquee dans `passing.ts` (pass,
