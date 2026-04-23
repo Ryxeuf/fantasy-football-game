@@ -182,6 +182,50 @@ export function calculateCatchModifiers(
 /**
  * Effectue un jet de réception
  */
+/**
+ * Effectue un jet de reception avec la possibilite d'utiliser le skill `catch`
+ * pour relancer une fois en cas d'echec (sans consommer la relance d'equipe).
+ * BB2020 : "If this player fails to catch a Pass, Pick Up, Intercept or Bounce,
+ * they may re-roll the dice." — implemente ici uniquement sur Catch.
+ */
+export function performCatchRollWithSkill(
+  catcher: Player,
+  rng: RNG,
+  modifiers: number,
+): { result: DiceResult; rerolled: boolean } {
+  const first = performCatchRoll(catcher, rng, modifiers);
+  if (first.success) {
+    return { result: first, rerolled: false };
+  }
+  const hasCatch = catcher.skills.some(s => s.toLowerCase() === 'catch');
+  if (!hasCatch) {
+    return { result: first, rerolled: false };
+  }
+  const second = performCatchRoll(catcher, rng, modifiers);
+  return { result: second, rerolled: true };
+}
+
+/**
+ * Effectue un jet de passe avec la possibilite d'utiliser le skill `pass`
+ * pour relancer une fois en cas d'echec.
+ */
+export function performPassRollWithSkill(
+  passer: Player,
+  rng: RNG,
+  modifiers: number,
+): { result: DiceResult; rerolled: boolean } {
+  const first = performPassRoll(passer, rng, modifiers);
+  if (first.success) {
+    return { result: first, rerolled: false };
+  }
+  const hasPass = passer.skills.some(s => s.toLowerCase() === 'pass');
+  if (!hasPass) {
+    return { result: first, rerolled: false };
+  }
+  const second = performPassRoll(passer, rng, modifiers);
+  return { result: second, rerolled: true };
+}
+
 export function performCatchRoll(catcher: Player, rng: RNG, modifiers: number): DiceResult {
   const diceRoll = rollD6(rng);
   const targetNumber = Math.max(2, Math.min(6, catcher.ag - modifiers));
@@ -327,9 +371,20 @@ export function executePass(
     }
   }
 
-  // Jet de passe
+  // Jet de passe (avec relance `pass` skill si echec et skill present)
   const passModifiers = calculatePassModifiers(newState, passer, target.pos);
-  const passResult = performPassRoll(passer, rng, passModifiers);
+  const passRollOutcome = performPassRollWithSkill(passer, rng, passModifiers);
+  const passResult = passRollOutcome.result;
+  if (passRollOutcome.rerolled) {
+    const rerollLog = createLogEntry(
+      'info',
+      `${passer.name} utilise Pass pour relancer son jet de passe`,
+      passer.id,
+      passer.team,
+      { skill: 'pass' },
+    );
+    newState.gameLog = [...newState.gameLog, rerollLog];
+  }
 
   newState.lastDiceResult = passResult;
 
@@ -413,9 +468,20 @@ export function executePass(
     return bounceBall(newState, rng);
   }
 
-  // Passe réussie : le receveur doit réceptionner
+  // Passe réussie : le receveur doit réceptionner (avec relance `catch` skill)
   const catchModifiers = calculateCatchModifiers(newState, target);
-  const catchResult = performCatchRoll(target, rng, catchModifiers);
+  const catchOutcome = performCatchRollWithSkill(target, rng, catchModifiers);
+  const catchResult = catchOutcome.result;
+  if (catchOutcome.rerolled) {
+    const catchRerollLog = createLogEntry(
+      'info',
+      `${target.name} utilise Catch pour relancer sa reception`,
+      target.id,
+      target.team,
+      { skill: 'catch' },
+    );
+    newState.gameLog = [...newState.gameLog, catchRerollLog];
+  }
 
   const catchLog = createLogEntry(
     'dice',
@@ -515,9 +581,20 @@ export function executeHandoff(
     return bounceBall(newState, rng);
   }
 
-  // Jet de réception pour le receveur
+  // Jet de réception pour le receveur (avec relance `catch` skill)
   const catchModifiers = calculateCatchModifiers(newState, target);
-  const catchResult = performCatchRoll(target, rng, catchModifiers);
+  const catchOutcomeHO = performCatchRollWithSkill(target, rng, catchModifiers);
+  const catchResult = catchOutcomeHO.result;
+  if (catchOutcomeHO.rerolled) {
+    const catchRerollLog = createLogEntry(
+      'info',
+      `${target.name} utilise Catch pour relancer sa reception`,
+      target.id,
+      target.team,
+      { skill: 'catch' },
+    );
+    newState.gameLog = [...newState.gameLog, catchRerollLog];
+  }
 
   newState.lastDiceResult = catchResult;
 
