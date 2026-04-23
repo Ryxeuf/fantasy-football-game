@@ -126,4 +126,31 @@ describe('Regle: Strip Ball', () => {
     // perte de balle automatique hors skills specifiques).
     expect(carrier.hasBall).toBe(true);
   });
+
+  it('Monstrous Mouth : la cible est immunisee contre Strip Ball (O.1 batch 3f)', () => {
+    let s = setupStripBallScenario();
+    // La cible porte-ballon a Monstrous Mouth -> Strip Ball inapplicable.
+    s = patchPlayer(s, 'B1', { skills: ['monstrous-mouth'] });
+
+    const blockResult: BlockDiceResult = {
+      type: 'block',
+      playerId: 'A2',
+      targetId: 'B1',
+      diceRoll: 3,
+      result: 'PUSH_BACK',
+      offensiveAssists: 0,
+      defensiveAssists: 0,
+      totalStrength: 3,
+      targetStrength: 2,
+    };
+    const rng = makeRNG('monstrous-mouth-vs-strip-ball');
+    const result = resolveBlockResult(s, blockResult, rng);
+
+    const carrier = result.players.find(p => p.id === 'B1')!;
+    // Le porteur garde le ballon malgre le PUSH_BACK + Strip Ball de l'attaquant.
+    expect(carrier.hasBall).toBe(true);
+    const logText = result.gameLog.map(e => e.message).join('\n');
+    // Aucun message Strip Ball ne doit apparaitre (skill non declenche).
+    expect(logText).not.toMatch(/Strip Ball/i);
+  });
 });

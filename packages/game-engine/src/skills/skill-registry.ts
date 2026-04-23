@@ -466,6 +466,27 @@ registerSkill({
   getModifiers: () => ({ passModifier: 1 }),
 });
 
+// CANNONEER (O.1 batch 3f) : +1 au jet de passe sur Long et Bomb.
+// Effectivement resolu par `calculatePassModifiers` dans `mechanics/passing.ts`.
+registerSkill({
+  slug: 'cannoneer',
+  triggers: ['on-pass'],
+  description: '+1 au jet de passe pour les passes Long et Long Bomb.',
+  canApply: (ctx) => hasSkill(ctx.player, 'cannoneer'),
+  getModifiers: () => ({ passModifier: 1 }),
+});
+
+// MONSTROUS MOUTH (O.1 batch 3f) : relance toute tentative ratee de reception
+// (effectuee dans `performCatchRollWithSkill`) et Strip Ball ne peut pas etre
+// utilise contre ce joueur (resolu dans `handlePushBack` de `mechanics/blocking.ts`).
+registerSkill({
+  slug: 'monstrous-mouth',
+  triggers: ['on-catch'],
+  description: 'Relance toute tentative ratee de reception. Strip Ball ne peut pas etre utilise contre ce joueur.',
+  canApply: (ctx) =>
+    hasSkill(ctx.player, 'monstrous-mouth') || hasSkill(ctx.player, 'monstrous_mouth'),
+});
+
 // SHADOWING
 // La résolution du suivi (2D6 + MA diff >= 7) est effectuée par
 // `resolveShadowingAfterDodge` dans `mechanics/shadowing.ts`, appelé depuis
