@@ -985,3 +985,46 @@ registerSkill({
   description: "Quand ce joueur porteur du ballon est cible d'un Blocage/Blitz, il peut effectuer immediatement une Passe Rapide avant la resolution du bloc. Pas de turnover si la passe rate.",
   canApply: (ctx) => hasSkill(ctx.player, 'dump-off') || hasSkill(ctx.player, 'dump_off'),
 });
+
+// ─── CHAINSAW (O.1 batch 3k) ────────────────────────────────────────────────
+// Chainsaw (Secret Weapon) remplace une action de Blocage : jet d'armure
+// direct contre une cible adjacente debout avec un modificateur +3. Mighty
+// Blow ne s'applique pas. Un double 1 naturel fait exploser la tronconneuse
+// sur son porteur. Resolution dans `mechanics/chainsaw.ts` (`executeChainsaw`,
+// `canUseChainsaw`). L'entree du registre sert a la decouverte UI.
+registerSkill({
+  slug: 'chainsaw',
+  triggers: ['on-activation'],
+  description: "Arme Secrete. Action speciale remplacant un Blocage : jet d'armure direct (+3) contre une cible adjacente debout. Mighty Blow ne s'applique pas. Double 1 naturel = la tronconneuse explose sur le porteur.",
+  canApply: (ctx) => hasSkill(ctx.player, 'chainsaw'),
+});
+
+// ─── MULTIPLE BLOCK (O.1 batch 3k) ──────────────────────────────────────────
+// Multiple Block permet, une fois par tour d'equipe, de declarer une action de
+// Blocage ciblant simultanement deux adversaires adjacents avec un malus de
+// -2 ST applique a chacun des deux blocs. Resolution dans
+// `mechanics/multiple-block.ts` (`canPerformMultipleBlock`,
+// `findMultipleBlockTargets`, etc.) avec tracking via
+// `state.usedMultipleBlockThisTurn` et `state.pendingMultipleBlock`.
+// L'entree du registre sert a la decouverte UI.
+registerSkill({
+  slug: 'multiple-block',
+  triggers: ['on-block-attacker'],
+  description: "Une fois par tour d'equipe, ce joueur peut effectuer une action de Blocage ciblant deux adversaires adjacents simultanement. Chaque bloc subit un malus de -2 a la Force de l'attaquant.",
+  canApply: (ctx) => hasSkill(ctx.player, 'multiple-block') || hasSkill(ctx.player, 'multiple_block'),
+  getModifiers: () => ({ strengthModifier: -2 }),
+});
+
+// ─── HYPNOTIC GAZE (O.1 batch 3k) ───────────────────────────────────────────
+// Hypnotic Gaze est une action speciale remplacant une action standard : le
+// joueur tente un jet d'Agilite (2+) pour priver un adversaire adjacent de sa
+// zone de tacle jusqu'a sa prochaine activation. -1 par TZ adverse hors cible.
+// Resolution dans `mechanics/hypnotic-gaze.ts` (`canHypnoticGaze`,
+// `performHypnoticGaze`, `calculateGazeModifiers`). L'entree du registre sert
+// a la decouverte UI.
+registerSkill({
+  slug: 'hypnotic-gaze',
+  triggers: ['on-activation'],
+  description: "Action speciale : jet d'Agilite (2+) contre un adversaire adjacent. Succes = la cible perd sa zone de tacle jusqu'a sa prochaine activation. Echec = fin d'activation (pas de turnover). -1 par zone de tacle adverse hors cible.",
+  canApply: (ctx) => hasSkill(ctx.player, 'hypnotic-gaze') || hasSkill(ctx.player, 'hypnotic_gaze'),
+});
