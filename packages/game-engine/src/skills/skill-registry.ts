@@ -1422,3 +1422,89 @@ registerSkill({
   description: "Avant de determiner les des de bloc, ce joueur peut etre retire du terrain et replace sur n'importe quelle case inoccupee adjacente au joueur effectuant le bloc.",
   canApply: (ctx) => hasSkill(ctx.player, 'trickster'),
 });
+
+// ─── BLIND RAGE (O.1 batch 3s) ──────────────────────────────────────────────
+// Blind Rage (Rage Aveugle) est une regle speciale Star Player : quand ce
+// joueur echoue a un jet d'Intrepide (Dauntless), il peut relancer le D6.
+// La relance conditionnelle est geree par le handler Dauntless dedie ;
+// l'entree du registre sert a la decouverte UI. On n'expose PAS de
+// getModifiers : il s'agit d'une relance opt-in, pas d'un modificateur
+// de jet.
+registerSkill({
+  slug: 'blind-rage',
+  triggers: ['on-block-attacker'],
+  description: "Peut relancer le D6 pour Intrepide (Dauntless) quand ce joueur rate le jet.",
+  canApply: (ctx) => hasSkill(ctx.player, 'blind-rage') || hasSkill(ctx.player, 'blind_rage'),
+});
+
+// ─── SLAYER (O.1 batch 3s) ──────────────────────────────────────────────────
+// Slayer (Tueur) est une regle speciale Star Player : chaque jet
+// d'Intrepide (Dauntless) rate peut etre relance. La relance est geree
+// par le handler Dauntless dedie ; l'entree du registre sert a la
+// decouverte UI. On n'expose PAS de getModifiers : il s'agit d'une
+// relance opt-in, pas d'un modificateur de jet.
+registerSkill({
+  slug: 'slayer',
+  triggers: ['on-block-attacker'],
+  description: "Peut relancer les jets d'Intrepide (Dauntless) rates.",
+  canApply: (ctx) => hasSkill(ctx.player, 'slayer'),
+});
+
+// ─── CONSUMMATE PROFESSIONAL (O.1 batch 3s) ─────────────────────────────────
+// Consummate Professional (Professionnel Accompli) est une regle speciale
+// Star Player : une fois par match, ce joueur peut relancer n'importe
+// quel de qu'il vient de lancer. La relance est consommee via le
+// reroll manager dedie ; l'entree du registre sert a la decouverte UI.
+// On n'expose PAS de getModifiers : il s'agit d'une relance ponctuelle
+// gerée par un pool par-match, pas d'un modificateur de jet.
+registerSkill({
+  slug: 'consummate-professional',
+  triggers: ['passive'],
+  description: "Une fois par match, ce joueur peut relancer n'importe quel de qu'il vient de lancer.",
+  canApply: (ctx) =>
+    hasSkill(ctx.player, 'consummate-professional') ||
+    hasSkill(ctx.player, 'consummate_professional'),
+});
+
+// ─── CRUSHING BLOW (O.1 batch 3s) ───────────────────────────────────────────
+// Crushing Blow (Coup Devastateur) est une regle speciale Star Player :
+// une fois par match, apres un blocage reussi, ce joueur peut ajouter
+// +1 au jet d'armure inflige a l'adversaire. Le bonus ponctuel est
+// gere par l'armor handler dedie via un flag per-match ; l'entree du
+// registre sert a la decouverte UI. On n'expose PAS de getModifiers :
+// il s'agit d'un bonus opt-in une fois par match, pas d'un modificateur
+// de jet permanent.
+registerSkill({
+  slug: 'crushing-blow',
+  triggers: ['on-armor'],
+  description: "Une fois par match, +1 au jet d'armure apres un blocage reussi.",
+  canApply: (ctx) => hasSkill(ctx.player, 'crushing-blow') || hasSkill(ctx.player, 'crushing_blow'),
+});
+
+// ─── PIROUETTE (O.1 batch 3s) ───────────────────────────────────────────────
+// Pirouette est une regle speciale Star Player : une fois par tour,
+// ce joueur peut ajouter +1 a un jet d'esquive. Le bonus ponctuel est
+// gere par le dodge handler dedie via un flag per-turn ; l'entree du
+// registre sert a la decouverte UI. On n'expose PAS de getModifiers :
+// il s'agit d'un bonus opt-in une fois par tour, pas d'un modificateur
+// de jet permanent.
+registerSkill({
+  slug: 'pirouette',
+  triggers: ['on-dodge'],
+  description: "Une fois par tour, +1 au jet d'esquive.",
+  canApply: (ctx) => hasSkill(ctx.player, 'pirouette'),
+});
+
+// ─── RELIABLE (O.1 batch 3s) ────────────────────────────────────────────────
+// Reliable (Fiable) est une regle speciale Star Player : un Lancer de
+// Coequipier rate effectue par ce joueur ne cause pas de Turnover.
+// L'annulation du Turnover est geree par le Throw Team-Mate handler
+// dedie ; l'entree du registre sert a la decouverte UI. On n'expose
+// PAS de getModifiers : il s'agit d'une contrainte sur la resolution
+// du turnover, pas d'un modificateur de jet.
+registerSkill({
+  slug: 'reliable',
+  triggers: ['on-pass'],
+  description: "Un Lancer de Coequipier rate effectue par ce joueur ne cause pas de turnover.",
+  canApply: (ctx) => hasSkill(ctx.player, 'reliable'),
+});
