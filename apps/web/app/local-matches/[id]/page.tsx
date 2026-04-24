@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { API_BASE } from "../../auth-client";
 import LocalMatchActions from "./LocalMatchActions";
+import LocalMatchInducements from "./LocalMatchInducements";
 import LocalMatchSummary from "./LocalMatchSummary";
 import PostMatchSPP from "./PostMatchSPP";
 import type { TeamId } from "@bb/game-engine";
@@ -704,8 +705,13 @@ export default function LocalMatchPage() {
                   </div>
                 )}
                 
-                {/* Afficher un bouton pour continuer si on est en phase setup */}
-                {localMatch.gameState.preMatch.phase === 'setup' ? (
+                {/* Phase d'inducements : saisie manuelle pour les matchs locaux */}
+                {localMatch.gameState.preMatch.phase === 'inducements' ? (
+                  <LocalMatchInducements
+                    matchId={matchId}
+                    onSuccess={loadLocalMatch}
+                  />
+                ) : localMatch.gameState.preMatch.phase === 'setup' ? (
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
                     <h3 className="text-xl font-semibold text-nuffle-anthracite mb-4">
                       Phase de placement des joueurs
@@ -730,7 +736,7 @@ export default function LocalMatchPage() {
                       Phase actuelle: <strong>{localMatch.gameState.preMatch.phase}</strong>
                     </p>
                     <p className="text-sm text-yellow-700 mt-2">
-                      La séquence d'avant-match est en cours. Les phases suivantes (joueurs de passage, incitations, prières, etc.) seront traitées automatiquement.
+                      La séquence d'avant-match est en cours.
                     </p>
                   </div>
                 )}
