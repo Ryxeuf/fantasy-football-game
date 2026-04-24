@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { isAdminToken } from "./lib/jwt-utils";
+import { decodeJWT, isAdminToken } from "./lib/jwt-utils";
 
 function verifyAdminAccess(request: NextRequest): boolean {
   // Récupère le token depuis les cookies ou les headers
@@ -15,6 +15,13 @@ function verifyAdminAccess(request: NextRequest): boolean {
   // Vérifie directement le token JWT (décodage sans vérification de signature pour Edge Runtime)
   // La vérification de signature complète est faite côté serveur dans les routes API
   return isAdminToken(token);
+}
+
+function hasValidAuthToken(request: NextRequest): boolean {
+  const token = request.cookies.get("auth_token")?.value;
+  if (!token) return false;
+  // decodeJWT retourne null si le token est expiré ou invalide
+  return decodeJWT(token) !== null;
 }
 
 export async function middleware(request: NextRequest) {
@@ -33,7 +40,7 @@ export async function middleware(request: NextRequest) {
     }
 
     const hasCookie = request.cookies.has("auth_token");
-    
+
     const isAdmin = verifyAdminAccess(request);
 
     if (!isAdmin) {
@@ -47,9 +54,29 @@ export async function middleware(request: NextRequest) {
         url.searchParams.set("redirect", pathname);
         return NextResponse.redirect(url);
       }
-      
+
       // Cookie présent mais pas admin ou token invalide -> 404
       return new NextResponse(null, { status: 404 });
+    }
+  }
+
+  // Protège toutes les routes commençant par /me : connexion ou création de compte requise
+  if (pathname.startsWith("/me")) {
+    if (!hasValidAuthToken(request)) {
+      const redirectTarget = pathname + (request.nextUrl.search || "");
+      const url = request.nextUrl.clone();
+
+      // Si aucun cookie n'est présent, tente d'abord une synchronisation depuis
+      // localStorage (utilisateurs déjà connectés sans cookie).
+      // Si un cookie est présent mais invalide/expiré, redirige directement vers le login.
+      if (!request.cookies.has("auth_token")) {
+        url.pathname = "/auth/sync";
+      } else {
+        url.pathname = "/login";
+      }
+      url.search = "";
+      url.searchParams.set("redirect", redirectTarget);
+      return NextResponse.redirect(url);
     }
   }
 
@@ -57,6 +84,6 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: "/admin/:path*",
+  matcher: ["/admin/:path*", "/me/:path*"],
 };
 

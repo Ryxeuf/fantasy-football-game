@@ -1,7 +1,17 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { apiPost } from "../auth-client";
 import { useLanguage } from "../contexts/LanguageContext";
+
+// Autorise uniquement les redirections internes (chemins relatifs commençant par "/"
+// et ne pouvant être interprétés comme des URLs externes).
+function sanitizeRedirect(raw: string | null, fallback: string = "/me"): string {
+  if (!raw) return fallback;
+  if (!raw.startsWith("/")) return fallback;
+  if (raw.startsWith("//")) return fallback;
+  if (raw.startsWith("/\\")) return fallback;
+  return raw;
+}
 
 export default function RegisterPage() {
   const { t } = useLanguage();
@@ -14,6 +24,19 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [redirectTo, setRedirectTo] = useState<string>("/me");
+  const [loginHref, setLoginHref] = useState<string>("/login");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const redirectParam = sanitizeRedirect(params.get("redirect"));
+    setRedirectTo(redirectParam);
+    setLoginHref(
+      redirectParam === "/me"
+        ? "/login"
+        : `/login?redirect=${encodeURIComponent(redirectParam)}`,
+    );
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -35,7 +58,7 @@ export default function RegisterPage() {
       if (response?.token) {
         localStorage.setItem("auth_token", response.token);
         document.cookie = `auth_token=${response.token}; path=/; max-age=86400; SameSite=Lax`;
-        window.location.href = "/me";
+        window.location.href = redirectTo;
         return;
       }
 
@@ -174,7 +197,7 @@ export default function RegisterPage() {
         </form>
         <p className="text-xs sm:text-sm mt-4 text-center text-gray-500">
           {t.register.hasAccount}{" "}
-          <a className="text-blue-600 hover:underline" href="/login">
+          <a className="text-blue-600 hover:underline" href={loginHref}>
             {t.register.login}
           </a>
         </p>

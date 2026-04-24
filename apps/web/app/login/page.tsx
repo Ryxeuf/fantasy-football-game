@@ -3,21 +3,45 @@ import { useState, useEffect } from "react";
 import { apiPost, API_BASE } from "../auth-client";
 import { useLanguage } from "../contexts/LanguageContext";
 
+// Autorise uniquement les redirections internes (chemins relatifs commençant par "/"
+// et ne pouvant être interprétés comme des URLs externes).
+function sanitizeRedirect(raw: string | null, fallback: string = "/me"): string {
+  if (!raw) return fallback;
+  if (!raw.startsWith("/")) return fallback;
+  if (raw.startsWith("//")) return fallback;
+  if (raw.startsWith("/\\")) return fallback;
+  return raw;
+}
+
 export default function LoginPage() {
   const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
+  const [redirectTo, setRedirectTo] = useState<string>("/me");
+  const [registerHref, setRegisterHref] = useState<string>("/register");
 
   useEffect(() => {
-    // Récupérer le message depuis l'URL si présent
     const params = new URLSearchParams(window.location.search);
     const message = params.get("message");
+    const redirectParam = sanitizeRedirect(params.get("redirect"));
+
+    setRedirectTo(redirectParam);
+    setRegisterHref(
+      redirectParam === "/me"
+        ? "/register"
+        : `/register?redirect=${encodeURIComponent(redirectParam)}`,
+    );
+
     if (message) {
       setInfoMessage(decodeURIComponent(message));
-      // Nettoyer l'URL
-      window.history.replaceState({}, document.title, window.location.pathname);
+      // Nettoie le paramètre "message" mais conserve "redirect" pour le submit.
+      params.delete("message");
+      const newSearch = params.toString();
+      const newUrl =
+        window.location.pathname + (newSearch ? `?${newSearch}` : "");
+      window.history.replaceState({}, document.title, newUrl);
     }
   }, []);
 
@@ -29,7 +53,7 @@ export default function LoginPage() {
       localStorage.setItem("auth_token", token);
       // Stocke aussi dans les cookies pour le middleware Next.js
       document.cookie = `auth_token=${token}; path=/; max-age=86400; SameSite=Lax`;
-      window.location.href = "/me";
+      window.location.href = redirectTo;
     } catch (err: any) {
       setError(err.message || t.login.error);
     }
@@ -84,7 +108,7 @@ export default function LoginPage() {
       </form>
       <p className="text-xs sm:text-sm mt-4 text-center text-gray-500">
         {t.login.noAccount}{" "}
-        <a className="text-blue-600 hover:underline" href="/register">
+        <a className="text-blue-600 hover:underline" href={registerHref}>
           {t.login.register}
         </a>
       </p>
