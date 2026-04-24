@@ -1168,3 +1168,43 @@ registerSkill({
   description: "Une fois par tour d'equipe, en plus d'un autre joueur effectuant une Passe ou un Lancer d'Equipier, un seul joueur avec ce trait peut effectuer l'action speciale 'Kick Team-Mate'.",
   canApply: (ctx) => hasSkill(ctx.player, 'kick-team-mate') || hasSkill(ctx.player, 'kick_team_mate'),
 });
+
+// ─── DRUNKARD (O.1 batch 3o) ────────────────────────────────────────────────
+// Drunkard (Poivrot) impose -1 au jet de Foncer (GFI) du joueur. Le
+// modificateur reel est applique par la logique de mouvement (GFI handler) ;
+// l'entree du registre sert a la decouverte UI et a la documentation. On
+// n'expose PAS de getModifiers ici pour eviter le double-comptage avec
+// l'implementation existante du GFI.
+registerSkill({
+  slug: 'drunkard',
+  triggers: ['on-gfi'],
+  description: "Ce joueur subit un modificateur de -1 au jet de de lorsqu'il tente de Foncer (GFI).",
+  canApply: (ctx) => hasSkill(ctx.player, 'drunkard'),
+});
+
+// ─── TIMMM-BER! (O.1 batch 3o) ──────────────────────────────────────────────
+// Timmm-ber! est un trait de relevement pour les joueurs a tres faible
+// mobilite (MA <= 2, typiquement les Treemen). Quand ce joueur tente de se
+// relever, il beneficie d'un modificateur +1 par coequipier Debout adjacent
+// et en position ouverte. Un 1 naturel reste un echec quel que soit le
+// nombre d'aidants. La mecanique de relevement dediee lit directement le
+// skill sur le joueur ; l'entree du registre sert a la decouverte UI.
+registerSkill({
+  slug: 'timmm-ber',
+  triggers: ['on-activation'],
+  description: "Si ce joueur a une Allocation de Mouvement de 2 ou moins, il applique +1 au jet pour se relever par coequipier Debout adjacent en position ouverte. Un 1 naturel reste un echec.",
+  canApply: (ctx) => hasSkill(ctx.player, 'timmm-ber') || hasSkill(ctx.player, 'timmm_ber'),
+});
+
+// ─── FUMBLEROOSKIE (O.1 batch 3o) ───────────────────────────────────────────
+// Fumblerooskie est une action volontaire : pendant un mouvement ou un Blitz
+// alors qu'il est en possession du ballon, ce joueur peut choisir de "lacher"
+// le ballon dans n'importe quelle case quittee pendant son mouvement. Le
+// ballon ne rebondit pas. La mecanique est geree par un handler d'action
+// dedie ; l'entree du registre sert a la decouverte UI et a la documentation.
+registerSkill({
+  slug: 'fumblerooskie',
+  triggers: ['on-movement'],
+  description: "Pendant un mouvement ou un Blitz en possession du ballon, ce joueur peut lacher le ballon dans n'importe quelle case qu'il quitte. Le ballon ne rebondit pas.",
+  canApply: (ctx) => hasSkill(ctx.player, 'fumblerooskie'),
+});
