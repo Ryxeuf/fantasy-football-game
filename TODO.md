@@ -348,7 +348,7 @@
 
 | # | Tache | Type | Statut |
 |---|-------|------|--------|
-| O.3 | Verification differences regles S3 | Contenu | [ ] |
+| O.3 | Verification differences regles S3 | Contenu | [x] |
 | O.4 | Expansion E2E tests (couverture cible 80%) | Qualite | [ ] |
 | O.5 | Optimisation taille GameState (separer gameLog) | Perf | [ ] |
 | O.6 | Standardiser error handling (`ApiResponse<T>`) | Qualite | [ ] |
