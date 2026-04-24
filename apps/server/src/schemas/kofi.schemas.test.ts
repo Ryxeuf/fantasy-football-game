@@ -72,6 +72,31 @@ describe("Rule: ko-fi webhook schema", () => {
       const result = kofiWebhookPayloadSchema.safeParse(rest);
       expect(result.success).toBe(true);
     });
+
+    it("preserves discord_userid and discord_username when provided", () => {
+      const result = kofiWebhookPayloadSchema.safeParse({
+        ...basePayload,
+        discord_userid: "012345678901234567",
+        discord_username: "Jo#4105",
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.discord_userid).toBe("012345678901234567");
+        expect(result.data.discord_username).toBe("Jo#4105");
+      }
+    });
+
+    it("accepts a null discord_userid (donor without linked Discord)", () => {
+      const result = kofiWebhookPayloadSchema.safeParse({
+        ...basePayload,
+        discord_userid: null,
+        discord_username: null,
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.discord_userid).toBeNull();
+      }
+    });
   });
 
   describe("amountToCents", () => {

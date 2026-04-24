@@ -47,12 +47,13 @@ export function normaliseEmail(
   return trimmed.length > 0 ? trimmed : null;
 }
 
-export type MatchedVia = "code" | "email" | "manual";
+export type MatchedVia = "code" | "email" | "discord" | "manual";
 
 export interface MatchCandidate {
   id: string;
   email: string;
   kofiLinkCode: string | null;
+  discordUserId: string | null;
 }
 
 export interface MatchResult {
@@ -62,10 +63,12 @@ export interface MatchResult {
 
 /**
  * Tente d'associer un payload Ko-fi à un utilisateur parmi les candidats.
- * Priorité au code (haute confiance) puis à l'email (confiance moyenne).
+ * Priorité : code (haute confiance) > email (confiance moyenne) > discord
+ * (confiance moyenne, suppose que User.discordUserId a été renseigné par
+ * le titulaire du compte).
  */
 export function matchKofiPayloadToUser(
-  payload: Pick<KofiWebhookPayload, "message" | "email">,
+  payload: Pick<KofiWebhookPayload, "message" | "email" | "discord_userid">,
   candidates: ReadonlyArray<MatchCandidate>,
 ): MatchResult | null {
   const code = extractKofiLinkCode(payload.message);
@@ -90,25 +93,36 @@ export function matchKofiPayloadToUser(
     }
   }
 
+  const discordId = payload.discord_userid?.trim();
+  if (discordId) {
+    const byDiscord = candidates.find((c) => c.discordUserId === discordId);
+    if (byDiscord) {
+      return { userId: byDiscord.id, matchedVia: "discord" };
+    }
+  }
+
   return null;
 }
 
 export interface SupporterSnapshot {
   supporterTier: string | null;
   supporterActiveUntil: Date | null;
-  totalDonatedCentsDelta: number;
+  /** Devise ISO (ex: "USD", "EUR") du don courant. */
+  currency: string;
+  /** Centimes à ajouter au compteur de la devise correspondante. */
+  amountCentsDelta: number;
 }
 
 /**
  * Calcule la mise à jour à appliquer sur l'utilisateur après un événement Ko-fi.
  * - Abonnement → étend `supporterActiveUntil` à `now + window` et fixe le tier.
- * - Don simple / shop order → incrémente uniquement le total donné.
+ * - Don simple / shop order → expose juste les centimes à ajouter à la devise.
  * - `amount` négatif est refusé par `amountToCents` en amont.
  */
 export function computeSupporterUpdate(
   payload: Pick<
     KofiWebhookPayload,
-    "amount" | "is_subscription_payment" | "tier_name"
+    "amount" | "currency" | "is_subscription_payment" | "tier_name"
   >,
   now: Date = new Date(),
 ): SupporterSnapshot {
@@ -121,14 +135,16 @@ export function computeSupporterUpdate(
     return {
       supporterTier: payload.tier_name ?? "Supporter",
       supporterActiveUntil: activeUntil,
-      totalDonatedCentsDelta: cents,
+      currency: payload.currency,
+      amountCentsDelta: cents,
     };
   }
 
   return {
     supporterTier: null,
     supporterActiveUntil: null,
-    totalDonatedCentsDelta: cents,
+    currency: payload.currency,
+    amountCentsDelta: cents,
   };
 }
 
@@ -157,25 +173,28 @@ export interface AggregatableKofiTransaction {
   isSubscriptionPayment: boolean;
   tierName: string | null;
   amountCents: number;
+  currency: string;
   receivedAt: Date;
 }
 
 export interface SupporterAggregate {
   supporterTier: string | null;
   supporterActiveUntil: Date | null;
-  totalDonatedCentsDelta: number;
+  /** Map devise → total centimes accumulés. Pas de conversion entre devises. */
+  totalDonatedCentsByCurrency: Record<string, number>;
 }
 
 export function aggregateSupporterState(
   transactions: ReadonlyArray<AggregatableKofiTransaction>,
   now: Date = new Date(),
 ): SupporterAggregate {
-  let totalCentsDelta = 0;
+  const totalsByCurrency: Record<string, number> = {};
   let bestActiveUntil: Date | null = null;
   let bestTier: string | null = null;
 
   for (const tx of transactions) {
-    totalCentsDelta += tx.amountCents;
+    totalsByCurrency[tx.currency] =
+      (totalsByCurrency[tx.currency] ?? 0) + tx.amountCents;
 
     if (!tx.isSubscriptionPayment) continue;
 
@@ -194,6 +213,6 @@ export function aggregateSupporterState(
   return {
     supporterTier: bestTier,
     supporterActiveUntil: bestActiveUntil,
-    totalDonatedCentsDelta: totalCentsDelta,
+    totalDonatedCentsByCurrency: totalsByCurrency,
   };
 }

@@ -33,12 +33,16 @@ model User {
   patreon   Boolean  @default(false)
   /// Code unique à coller dans le message Ko-fi pour lier le don au compte.
   kofiLinkCode         String?   @unique
+  /// Discord user ID renseigné par le titulaire du compte (3e stratégie de
+  /// matching Ko-fi).
+  discordUserId        String?   @unique
   /// Palier (tier_name Ko-fi) du dernier abonnement actif.
   supporterTier        String?
   /// Fin de la période de supporter payée.
   supporterActiveUntil DateTime?
-  /// Total des dons en centimes.
-  totalDonatedCents    Int       @default(0)
+  /// Map devise→centimes sérialisée en JSON (SQLite n'a pas de type Json).
+  /// Exemple : '{"USD":300,"EUR":1000}'.
+  totalDonatedCentsByCurrency String @default("{}")
   /// Pré-alpha gate côté Postgres ; en SQLite tous les comptes sont valides.
   valid     Boolean  @default(true)
   createdAt DateTime @default(now())
@@ -63,6 +67,8 @@ model KofiTransaction {
   id                         String   @id @default(cuid())
   kofiTransactionId          String   @unique
   messageId                  String?
+  /// Horodatage Ko-fi (ISO 8601). Distinct de receivedAt.
+  kofiTimestamp              DateTime?
   type                       String
   isSubscriptionPayment      Boolean  @default(false)
   isFirstSubscriptionPayment Boolean  @default(false)
@@ -71,6 +77,8 @@ model KofiTransaction {
   currency                   String
   fromName                   String?
   email                      String?
+  /// discord_userid du payload Ko-fi (snowflake), conservé brut pour audit.
+  discordUserId              String?
   message                    String?
   user                       User?    @relation(fields: [userId], references: [id])
   userId                     String?

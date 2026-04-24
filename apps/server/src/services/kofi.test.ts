@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  aggregateSupporterState,
   computeSupporterUpdate,
   extractKofiLinkCode,
   generateKofiLinkCode,
@@ -62,14 +63,33 @@ describe("Rule: kofi service", () => {
 
   describe("matchKofiPayloadToUser", () => {
     const candidates = [
-      { id: "u1", email: "alice@example.com", kofiLinkCode: "KFI-AB12CD" },
-      { id: "u2", email: "bob@example.com", kofiLinkCode: "KFI-EF34GH" },
-      { id: "u3", email: "carol@example.com", kofiLinkCode: null },
+      {
+        id: "u1",
+        email: "alice@example.com",
+        kofiLinkCode: "KFI-AB12CD",
+        discordUserId: null,
+      },
+      {
+        id: "u2",
+        email: "bob@example.com",
+        kofiLinkCode: "KFI-EF34GH",
+        discordUserId: "111222333444555666",
+      },
+      {
+        id: "u3",
+        email: "carol@example.com",
+        kofiLinkCode: null,
+        discordUserId: "999888777666555444",
+      },
     ];
 
-    it("matches by code with priority over email", () => {
+    it("matches by code with priority over email and discord", () => {
       const result = matchKofiPayloadToUser(
-        { message: "thanks KFI-AB12CD", email: "carol@example.com" },
+        {
+          message: "thanks KFI-AB12CD",
+          email: "carol@example.com",
+          discord_userid: "999888777666555444",
+        },
         candidates,
       );
       expect(result).toEqual({ userId: "u1", matchedVia: "code" });
@@ -77,15 +97,31 @@ describe("Rule: kofi service", () => {
 
     it("falls back to email when no code present", () => {
       const result = matchKofiPayloadToUser(
-        { message: "love the game", email: "Bob@Example.COM" },
+        {
+          message: "love the game",
+          email: "Bob@Example.COM",
+          discord_userid: null,
+        },
         candidates,
       );
       expect(result).toEqual({ userId: "u2", matchedVia: "email" });
     });
 
+    it("falls back to discord when neither code nor email match", () => {
+      const result = matchKofiPayloadToUser(
+        {
+          message: "love the game",
+          email: "stranger@example.com",
+          discord_userid: "111222333444555666",
+        },
+        candidates,
+      );
+      expect(result).toEqual({ userId: "u2", matchedVia: "discord" });
+    });
+
     it("returns null when nothing matches", () => {
       const result = matchKofiPayloadToUser(
-        { message: null, email: "stranger@example.com" },
+        { message: null, email: "stranger@example.com", discord_userid: null },
         candidates,
       );
       expect(result).toBeNull();
@@ -93,12 +129,28 @@ describe("Rule: kofi service", () => {
 
     it("returns null when code is present but does not match any user", () => {
       const result = matchKofiPayloadToUser(
-        { message: "KFI-ZZZZZZ", email: "alice@example.com" },
+        {
+          message: "KFI-ZZZZZZ",
+          email: "alice@example.com",
+          discord_userid: "111222333444555666",
+        },
         candidates,
       );
-      // Code match fails → should NOT silently fall back to email: code is a
-      // strong claim "this donation belongs to user X", a wrong code means the
-      // donor made a mistake, not that we should auto-attach via email.
+      // Code match fails → should NOT silently fall back to email/discord:
+      // code is a strong claim "this donation belongs to user X", a wrong
+      // code means the donor made a mistake, not that we should auto-attach.
+      expect(result).toBeNull();
+    });
+
+    it("ignores discord_userid when it matches no candidate", () => {
+      const result = matchKofiPayloadToUser(
+        {
+          message: null,
+          email: "stranger@example.com",
+          discord_userid: "000000000000000000",
+        },
+        candidates,
+      );
       expect(result).toBeNull();
     });
   });
@@ -110,6 +162,7 @@ describe("Rule: kofi service", () => {
       const update = computeSupporterUpdate(
         {
           amount: "10.00",
+          currency: "EUR",
           is_subscription_payment: true,
           tier_name: "Gold Member",
         },
@@ -117,7 +170,8 @@ describe("Rule: kofi service", () => {
       );
 
       expect(update.supporterTier).toBe("Gold Member");
-      expect(update.totalDonatedCentsDelta).toBe(1000);
+      expect(update.currency).toBe("EUR");
+      expect(update.amountCentsDelta).toBe(1000);
       expect(update.supporterActiveUntil).not.toBeNull();
       const deltaDays =
         (update.supporterActiveUntil!.getTime() - NOW.getTime()) /
@@ -127,7 +181,12 @@ describe("Rule: kofi service", () => {
 
     it("uses fallback tier 'Supporter' when tier_name is missing", () => {
       const update = computeSupporterUpdate(
-        { amount: "3.00", is_subscription_payment: true, tier_name: null },
+        {
+          amount: "3.00",
+          currency: "USD",
+          is_subscription_payment: true,
+          tier_name: null,
+        },
         NOW,
       );
       expect(update.supporterTier).toBe("Supporter");
@@ -135,12 +194,89 @@ describe("Rule: kofi service", () => {
 
     it("increments only the total donated on a one-shot donation", () => {
       const update = computeSupporterUpdate(
-        { amount: "5.00", is_subscription_payment: false, tier_name: null },
+        {
+          amount: "5.00",
+          currency: "USD",
+          is_subscription_payment: false,
+          tier_name: null,
+        },
         NOW,
       );
       expect(update.supporterTier).toBeNull();
       expect(update.supporterActiveUntil).toBeNull();
-      expect(update.totalDonatedCentsDelta).toBe(500);
+      expect(update.currency).toBe("USD");
+      expect(update.amountCentsDelta).toBe(500);
+    });
+  });
+
+  describe("aggregateSupporterState", () => {
+    const NOW = new Date("2026-04-22T12:00:00Z");
+
+    it("returns empty currency map for an empty list", () => {
+      const result = aggregateSupporterState([], NOW);
+      expect(result.totalDonatedCentsByCurrency).toEqual({});
+      expect(result.supporterTier).toBeNull();
+      expect(result.supporterActiveUntil).toBeNull();
+    });
+
+    it("aggregates totals per currency without mixing them", () => {
+      const result = aggregateSupporterState(
+        [
+          {
+            isSubscriptionPayment: false,
+            tierName: null,
+            amountCents: 300,
+            currency: "USD",
+            receivedAt: NOW,
+          },
+          {
+            isSubscriptionPayment: false,
+            tierName: null,
+            amountCents: 500,
+            currency: "EUR",
+            receivedAt: NOW,
+          },
+          {
+            isSubscriptionPayment: false,
+            tierName: null,
+            amountCents: 200,
+            currency: "USD",
+            receivedAt: NOW,
+          },
+        ],
+        NOW,
+      );
+      expect(result.totalDonatedCentsByCurrency).toEqual({
+        USD: 500,
+        EUR: 500,
+      });
+    });
+
+    it("retains the latest active subscription tier across currencies", () => {
+      const result = aggregateSupporterState(
+        [
+          {
+            isSubscriptionPayment: true,
+            tierName: "Gold Member",
+            amountCents: 1000,
+            currency: "USD",
+            receivedAt: new Date(NOW.getTime() - 10 * 24 * 60 * 60 * 1000),
+          },
+          {
+            isSubscriptionPayment: false,
+            tierName: null,
+            amountCents: 100,
+            currency: "EUR",
+            receivedAt: NOW,
+          },
+        ],
+        NOW,
+      );
+      expect(result.supporterTier).toBe("Gold Member");
+      expect(result.totalDonatedCentsByCurrency).toEqual({
+        USD: 1000,
+        EUR: 100,
+      });
     });
   });
 

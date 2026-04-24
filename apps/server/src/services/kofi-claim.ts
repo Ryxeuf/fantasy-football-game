@@ -75,6 +75,7 @@ export async function claimOrphanKofiTransactions(
         isSubscriptionPayment: true,
         tierName: true,
         amountCents: true,
+        currency: true,
         receivedAt: true,
       },
     });
@@ -86,7 +87,8 @@ export async function claimOrphanKofiTransactions(
       data: {
         supporterTier: aggregate.supporterTier,
         supporterActiveUntil: aggregate.supporterActiveUntil,
-        totalDonatedCents: aggregate.totalDonatedCentsDelta,
+        totalDonatedCentsByCurrency:
+          aggregate.totalDonatedCentsByCurrency as never,
       },
     });
   });

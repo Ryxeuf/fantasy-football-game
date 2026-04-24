@@ -35,6 +35,10 @@ export const kofiWebhookPayloadSchema = z.object({
   // tier_name non fourni par Ko-fi pour les dons simples.
   tier_name: z.string().optional().nullable(),
   shop_items: z.array(kofiShopItemSchema).optional().nullable(),
+  // Champs Discord (présents quand le donateur a lié Ko-fi à son compte Discord).
+  // Servent à matcher la donation à un User si le compte cible a renseigné son Discord ID.
+  discord_username: z.string().optional().nullable(),
+  discord_userid: z.string().optional().nullable(),
 });
 
 export type KofiWebhookPayload = z.infer<typeof kofiWebhookPayloadSchema>;

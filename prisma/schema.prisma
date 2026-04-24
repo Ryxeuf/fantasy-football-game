@@ -32,12 +32,18 @@ model User {
   /// Code unique à coller dans le message Ko-fi pour lier le don au compte.
   /// Format : "KFI-XXXXXX" (base32 Crockford).
   kofiLinkCode        String?         @unique
+  /// Discord user ID renseigné par le titulaire du compte (3e stratégie de
+  /// matching Ko-fi : si Ko-fi expose discord_userid et qu'il correspond, on
+  /// rattache le don automatiquement).
+  discordUserId       String?         @unique
   /// Palier (tier_name Ko-fi) du dernier abonnement actif. null = pas d'abo.
   supporterTier       String?
   /// Fin de la période de supporter payée. null ou < now() = pas actif.
   supporterActiveUntil DateTime?
-  /// Total des dons reçus de cet utilisateur, en centimes, dans la devise de référence.
-  totalDonatedCents   Int             @default(0)
+  /// Total des dons par devise, en centimes. Map ISO currency → centimes.
+  /// Pas de conversion : chaque devise reste indépendante (USD ≠ EUR).
+  /// Exemple : {"USD": 300, "EUR": 1000}.
+  totalDonatedCentsByCurrency Json    @default("{}")
   valid               Boolean         @default(false)
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
@@ -67,6 +73,10 @@ model KofiTransaction {
   kofiTransactionId       String   @unique
   /// Ko-fi "message_id" — id d'événement propre à la notif (distinct de la transaction).
   messageId               String?
+  /// Horodatage fourni par Ko-fi dans le payload (ISO 8601). Distinct de
+  /// receivedAt (= now()) pour pouvoir trier sur l'horloge Ko-fi en cas de
+  /// retry tardif. null si parse échoue ou si payload pré-migration.
+  kofiTimestamp           DateTime?
   /// "Donation" | "Subscription" | "Commission" | "Shop Order"
   type                    String
   isSubscriptionPayment   Boolean  @default(false)
@@ -79,6 +89,9 @@ model KofiTransaction {
   fromName                String?
   /// Stocké en lowercase pour le matching.
   email                   String?
+  /// discord_userid du payload Ko-fi (snowflake). Conservé brut pour audit
+  /// même quand le matching s'est fait par code ou email.
+  discordUserId           String?
   message                 String?
   /// Rattachement au compte utilisateur. null = orphelin en attente de claim.
   user                    User?    @relation(fields: [userId], references: [id])

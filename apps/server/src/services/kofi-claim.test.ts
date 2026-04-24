@@ -81,7 +81,7 @@ describe("Rule: kofi claim service", () => {
       expect(mockPrisma.user.update).not.toHaveBeenCalled();
     });
 
-    it("attaches orphans and recomputes the supporter aggregate", async () => {
+    it("attaches orphans and recomputes the supporter aggregate by currency", async () => {
       mockPrisma.kofiTransaction.findMany
         .mockResolvedValueOnce([{ id: "tx-1" }, { id: "tx-2" }])
         .mockResolvedValueOnce([
@@ -89,12 +89,14 @@ describe("Rule: kofi claim service", () => {
             isSubscriptionPayment: true,
             tierName: "Gold Member",
             amountCents: 1000,
+            currency: "USD",
             receivedAt: new Date(),
           },
           {
             isSubscriptionPayment: false,
             tierName: null,
             amountCents: 300,
+            currency: "EUR",
             receivedAt: new Date(),
           },
         ]);
@@ -116,12 +118,15 @@ describe("Rule: kofi claim service", () => {
         data: {
           supporterTier: string | null;
           supporterActiveUntil: Date | null;
-          totalDonatedCents: number;
+          totalDonatedCentsByCurrency: Record<string, number>;
         };
       };
       expect(updateArg.data.supporterTier).toBe("Gold Member");
       expect(updateArg.data.supporterActiveUntil).toBeInstanceOf(Date);
-      expect(updateArg.data.totalDonatedCents).toBe(1300);
+      expect(updateArg.data.totalDonatedCentsByCurrency).toEqual({
+        USD: 1000,
+        EUR: 300,
+      });
     });
 
     it("lowercases the email for orphan lookup", async () => {

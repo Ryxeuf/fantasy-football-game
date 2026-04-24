@@ -26,6 +26,39 @@ const webhookBodyParsers = [
   bodyParser.json({ limit: "100kb" }),
 ];
 
+/**
+ * Lit la map devise→centimes existante (Json côté Postgres, string côté SQLite),
+ * ajoute le delta sur la devise indiquée et retourne la nouvelle map dans le
+ * format attendu par la couche Prisma de la plateforme courante.
+ */
+export function mergeCurrencyTotals(
+  current: unknown,
+  currency: string,
+  amountCentsDelta: number,
+  isSqlite: boolean,
+): unknown {
+  let parsed: Record<string, number> = {};
+  if (typeof current === "string" && current.length > 0) {
+    try {
+      const candidate: unknown = JSON.parse(current);
+      if (candidate && typeof candidate === "object") {
+        parsed = candidate as Record<string, number>;
+      }
+    } catch {
+      parsed = {};
+    }
+  } else if (current && typeof current === "object") {
+    parsed = current as Record<string, number>;
+  }
+
+  const next: Record<string, number> = {
+    ...parsed,
+    [currency]: (parsed[currency] ?? 0) + amountCentsDelta,
+  };
+
+  return isSqlite ? JSON.stringify(next) : next;
+}
+
 function extractPayload(req: Request): KofiWebhookPayload | null {
   const body = (req.body ?? {}) as Record<string, unknown>;
   const rawData = body.data ?? body;
@@ -70,30 +103,45 @@ export async function handleKofiWebhook(
     }
 
     // Candidats pour le matching : on ne charge que les rares utilisateurs
-    // dont l'email ou le kofiLinkCode correspondent au payload.
+    // dont l'email, le kofiLinkCode ou le discordUserId correspondent au payload.
     const code = extractKofiLinkCode(payload.message);
     const email = normaliseEmail(payload.email);
+    const discordUserId = payload.discord_userid?.trim() || null;
     const orFilters: Array<Record<string, unknown>> = [];
     if (code) orFilters.push({ kofiLinkCode: code });
     if (email) orFilters.push({ email });
+    if (discordUserId) orFilters.push({ discordUserId });
 
     const candidates =
       orFilters.length > 0
         ? await prisma.user.findMany({
             where: { OR: orFilters },
-            select: { id: true, email: true, kofiLinkCode: true },
+            select: {
+              id: true,
+              email: true,
+              kofiLinkCode: true,
+              discordUserId: true,
+            },
           })
         : [];
 
     const match = matchKofiPayloadToUser(payload, candidates);
     const supporterDelta = computeSupporterUpdate(payload);
     const isSqlite = process.env.TEST_SQLITE === "1";
+    // Le payload "timestamp" est ISO 8601. On le préserve distinctement de
+    // receivedAt (= now) pour pouvoir trier par horloge Ko-fi en cas de
+    // livraison retardée. null si parse échoue (ne bloque pas l'écriture).
+    const kofiTimestamp = (() => {
+      const d = new Date(payload.timestamp);
+      return Number.isNaN(d.getTime()) ? null : d;
+    })();
 
     await prisma.$transaction(async (tx: typeof prisma) => {
       await tx.kofiTransaction.create({
         data: {
           kofiTransactionId: payload.kofi_transaction_id,
           messageId: payload.message_id,
+          kofiTimestamp,
           type: payload.type,
           isSubscriptionPayment: payload.is_subscription_payment,
           isFirstSubscriptionPayment: payload.is_first_subscription_payment,
@@ -103,6 +151,7 @@ export async function handleKofiWebhook(
           fromName: payload.from_name ?? null,
           email: email,
           message: payload.message ?? null,
+          discordUserId: payload.discord_userid?.trim() || null,
           userId: match?.userId ?? null,
           matchedVia: match?.matchedVia ?? null,
           rawPayload: (isSqlite
@@ -112,10 +161,21 @@ export async function handleKofiWebhook(
       });
 
       if (match) {
+        // Lecture-modification-écriture de la map devise→centimes. La
+        // sérialisation est garantie par la transaction Prisma (les retries
+        // Ko-fi sont déjà bloqués en amont par le check de déduplication).
+        const current = await tx.user.findUnique({
+          where: { id: match.userId },
+          select: { totalDonatedCentsByCurrency: true },
+        });
+        const nextMap = mergeCurrencyTotals(
+          current?.totalDonatedCentsByCurrency,
+          supporterDelta.currency,
+          supporterDelta.amountCentsDelta,
+          isSqlite,
+        );
         const nextUpdate: Record<string, unknown> = {
-          totalDonatedCents: {
-            increment: supporterDelta.totalDonatedCentsDelta,
-          },
+          totalDonatedCentsByCurrency: nextMap,
         };
         if (payload.is_subscription_payment) {
           nextUpdate.supporterTier = supporterDelta.supporterTier;

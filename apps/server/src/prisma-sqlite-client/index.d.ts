@@ -3368,12 +3368,10 @@ export namespace Prisma {
   }
 
   export type UserAvgAggregateOutputType = {
-    totalDonatedCents: number | null
     eloRating: number | null
   }
 
   export type UserSumAggregateOutputType = {
-    totalDonatedCents: number | null
     eloRating: number | null
   }
 
@@ -3390,9 +3388,10 @@ export namespace Prisma {
     roles: string | null
     patreon: boolean | null
     kofiLinkCode: string | null
+    discordUserId: string | null
     supporterTier: string | null
     supporterActiveUntil: Date | null
-    totalDonatedCents: number | null
+    totalDonatedCentsByCurrency: string | null
     valid: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -3412,9 +3411,10 @@ export namespace Prisma {
     roles: string | null
     patreon: boolean | null
     kofiLinkCode: string | null
+    discordUserId: string | null
     supporterTier: string | null
     supporterActiveUntil: Date | null
-    totalDonatedCents: number | null
+    totalDonatedCentsByCurrency: string | null
     valid: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -3434,9 +3434,10 @@ export namespace Prisma {
     roles: number
     patreon: number
     kofiLinkCode: number
+    discordUserId: number
     supporterTier: number
     supporterActiveUntil: number
-    totalDonatedCents: number
+    totalDonatedCentsByCurrency: number
     valid: number
     createdAt: number
     updatedAt: number
@@ -3446,12 +3447,10 @@ export namespace Prisma {
 
 
   export type UserAvgAggregateInputType = {
-    totalDonatedCents?: true
     eloRating?: true
   }
 
   export type UserSumAggregateInputType = {
-    totalDonatedCents?: true
     eloRating?: true
   }
 
@@ -3468,9 +3467,10 @@ export namespace Prisma {
     roles?: true
     patreon?: true
     kofiLinkCode?: true
+    discordUserId?: true
     supporterTier?: true
     supporterActiveUntil?: true
-    totalDonatedCents?: true
+    totalDonatedCentsByCurrency?: true
     valid?: true
     createdAt?: true
     updatedAt?: true
@@ -3490,9 +3490,10 @@ export namespace Prisma {
     roles?: true
     patreon?: true
     kofiLinkCode?: true
+    discordUserId?: true
     supporterTier?: true
     supporterActiveUntil?: true
-    totalDonatedCents?: true
+    totalDonatedCentsByCurrency?: true
     valid?: true
     createdAt?: true
     updatedAt?: true
@@ -3512,9 +3513,10 @@ export namespace Prisma {
     roles?: true
     patreon?: true
     kofiLinkCode?: true
+    discordUserId?: true
     supporterTier?: true
     supporterActiveUntil?: true
-    totalDonatedCents?: true
+    totalDonatedCentsByCurrency?: true
     valid?: true
     createdAt?: true
     updatedAt?: true
@@ -3621,9 +3623,10 @@ export namespace Prisma {
     roles: string
     patreon: boolean
     kofiLinkCode: string | null
+    discordUserId: string | null
     supporterTier: string | null
     supporterActiveUntil: Date | null
-    totalDonatedCents: number
+    totalDonatedCentsByCurrency: string
     valid: boolean
     createdAt: Date
     updatedAt: Date
@@ -3662,9 +3665,10 @@ export namespace Prisma {
     roles?: boolean
     patreon?: boolean
     kofiLinkCode?: boolean
+    discordUserId?: boolean
     supporterTier?: boolean
     supporterActiveUntil?: boolean
-    totalDonatedCents?: boolean
+    totalDonatedCentsByCurrency?: boolean
     valid?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -3698,9 +3702,10 @@ export namespace Prisma {
     roles?: boolean
     patreon?: boolean
     kofiLinkCode?: boolean
+    discordUserId?: boolean
     supporterTier?: boolean
     supporterActiveUntil?: boolean
-    totalDonatedCents?: boolean
+    totalDonatedCentsByCurrency?: boolean
     valid?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -3720,9 +3725,10 @@ export namespace Prisma {
     roles?: boolean
     patreon?: boolean
     kofiLinkCode?: boolean
+    discordUserId?: boolean
     supporterTier?: boolean
     supporterActiveUntil?: boolean
-    totalDonatedCents?: boolean
+    totalDonatedCentsByCurrency?: boolean
     valid?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -3742,16 +3748,17 @@ export namespace Prisma {
     roles?: boolean
     patreon?: boolean
     kofiLinkCode?: boolean
+    discordUserId?: boolean
     supporterTier?: boolean
     supporterActiveUntil?: boolean
-    totalDonatedCents?: boolean
+    totalDonatedCentsByCurrency?: boolean
     valid?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     eloRating?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "passwordHash" | "name" | "coachName" | "firstName" | "lastName" | "dateOfBirth" | "role" | "roles" | "patreon" | "kofiLinkCode" | "supporterTier" | "supporterActiveUntil" | "totalDonatedCents" | "valid" | "createdAt" | "updatedAt" | "eloRating", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "passwordHash" | "name" | "coachName" | "firstName" | "lastName" | "dateOfBirth" | "role" | "roles" | "patreon" | "kofiLinkCode" | "discordUserId" | "supporterTier" | "supporterActiveUntil" | "totalDonatedCentsByCurrency" | "valid" | "createdAt" | "updatedAt" | "eloRating", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     matches?: boolean | User$matchesArgs<ExtArgs>
     createdMatches?: boolean | User$createdMatchesArgs<ExtArgs>
@@ -3816,6 +3823,11 @@ export namespace Prisma {
        */
       kofiLinkCode: string | null
       /**
+       * Discord user ID renseigné par le titulaire du compte (3e stratégie de
+       * matching Ko-fi).
+       */
+      discordUserId: string | null
+      /**
        * Palier (tier_name Ko-fi) du dernier abonnement actif.
        */
       supporterTier: string | null
@@ -3824,9 +3836,10 @@ export namespace Prisma {
        */
       supporterActiveUntil: Date | null
       /**
-       * Total des dons en centimes.
+       * Map devise→centimes sérialisée en JSON (SQLite n'a pas de type Json).
+       * Exemple : '{"USD":300,"EUR":1000}'.
        */
-      totalDonatedCents: number
+      totalDonatedCentsByCurrency: string
       /**
        * Pré-alpha gate côté Postgres ; en SQLite tous les comptes sont valides.
        */
@@ -4282,9 +4295,10 @@ export namespace Prisma {
     readonly roles: FieldRef<"User", 'String'>
     readonly patreon: FieldRef<"User", 'Boolean'>
     readonly kofiLinkCode: FieldRef<"User", 'String'>
+    readonly discordUserId: FieldRef<"User", 'String'>
     readonly supporterTier: FieldRef<"User", 'String'>
     readonly supporterActiveUntil: FieldRef<"User", 'DateTime'>
-    readonly totalDonatedCents: FieldRef<"User", 'Int'>
+    readonly totalDonatedCentsByCurrency: FieldRef<"User", 'String'>
     readonly valid: FieldRef<"User", 'Boolean'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
@@ -5024,6 +5038,7 @@ export namespace Prisma {
     id: string | null
     kofiTransactionId: string | null
     messageId: string | null
+    kofiTimestamp: Date | null
     type: string | null
     isSubscriptionPayment: boolean | null
     isFirstSubscriptionPayment: boolean | null
@@ -5032,6 +5047,7 @@ export namespace Prisma {
     currency: string | null
     fromName: string | null
     email: string | null
+    discordUserId: string | null
     message: string | null
     userId: string | null
     matchedVia: string | null
@@ -5043,6 +5059,7 @@ export namespace Prisma {
     id: string | null
     kofiTransactionId: string | null
     messageId: string | null
+    kofiTimestamp: Date | null
     type: string | null
     isSubscriptionPayment: boolean | null
     isFirstSubscriptionPayment: boolean | null
@@ -5051,6 +5068,7 @@ export namespace Prisma {
     currency: string | null
     fromName: string | null
     email: string | null
+    discordUserId: string | null
     message: string | null
     userId: string | null
     matchedVia: string | null
@@ -5062,6 +5080,7 @@ export namespace Prisma {
     id: number
     kofiTransactionId: number
     messageId: number
+    kofiTimestamp: number
     type: number
     isSubscriptionPayment: number
     isFirstSubscriptionPayment: number
@@ -5070,6 +5089,7 @@ export namespace Prisma {
     currency: number
     fromName: number
     email: number
+    discordUserId: number
     message: number
     userId: number
     matchedVia: number
@@ -5091,6 +5111,7 @@ export namespace Prisma {
     id?: true
     kofiTransactionId?: true
     messageId?: true
+    kofiTimestamp?: true
     type?: true
     isSubscriptionPayment?: true
     isFirstSubscriptionPayment?: true
@@ -5099,6 +5120,7 @@ export namespace Prisma {
     currency?: true
     fromName?: true
     email?: true
+    discordUserId?: true
     message?: true
     userId?: true
     matchedVia?: true
@@ -5110,6 +5132,7 @@ export namespace Prisma {
     id?: true
     kofiTransactionId?: true
     messageId?: true
+    kofiTimestamp?: true
     type?: true
     isSubscriptionPayment?: true
     isFirstSubscriptionPayment?: true
@@ -5118,6 +5141,7 @@ export namespace Prisma {
     currency?: true
     fromName?: true
     email?: true
+    discordUserId?: true
     message?: true
     userId?: true
     matchedVia?: true
@@ -5129,6 +5153,7 @@ export namespace Prisma {
     id?: true
     kofiTransactionId?: true
     messageId?: true
+    kofiTimestamp?: true
     type?: true
     isSubscriptionPayment?: true
     isFirstSubscriptionPayment?: true
@@ -5137,6 +5162,7 @@ export namespace Prisma {
     currency?: true
     fromName?: true
     email?: true
+    discordUserId?: true
     message?: true
     userId?: true
     matchedVia?: true
@@ -5235,6 +5261,7 @@ export namespace Prisma {
     id: string
     kofiTransactionId: string
     messageId: string | null
+    kofiTimestamp: Date | null
     type: string
     isSubscriptionPayment: boolean
     isFirstSubscriptionPayment: boolean
@@ -5243,6 +5270,7 @@ export namespace Prisma {
     currency: string
     fromName: string | null
     email: string | null
+    discordUserId: string | null
     message: string | null
     userId: string | null
     matchedVia: string | null
@@ -5273,6 +5301,7 @@ export namespace Prisma {
     id?: boolean
     kofiTransactionId?: boolean
     messageId?: boolean
+    kofiTimestamp?: boolean
     type?: boolean
     isSubscriptionPayment?: boolean
     isFirstSubscriptionPayment?: boolean
@@ -5281,6 +5310,7 @@ export namespace Prisma {
     currency?: boolean
     fromName?: boolean
     email?: boolean
+    discordUserId?: boolean
     message?: boolean
     userId?: boolean
     matchedVia?: boolean
@@ -5293,6 +5323,7 @@ export namespace Prisma {
     id?: boolean
     kofiTransactionId?: boolean
     messageId?: boolean
+    kofiTimestamp?: boolean
     type?: boolean
     isSubscriptionPayment?: boolean
     isFirstSubscriptionPayment?: boolean
@@ -5301,6 +5332,7 @@ export namespace Prisma {
     currency?: boolean
     fromName?: boolean
     email?: boolean
+    discordUserId?: boolean
     message?: boolean
     userId?: boolean
     matchedVia?: boolean
@@ -5313,6 +5345,7 @@ export namespace Prisma {
     id?: boolean
     kofiTransactionId?: boolean
     messageId?: boolean
+    kofiTimestamp?: boolean
     type?: boolean
     isSubscriptionPayment?: boolean
     isFirstSubscriptionPayment?: boolean
@@ -5321,6 +5354,7 @@ export namespace Prisma {
     currency?: boolean
     fromName?: boolean
     email?: boolean
+    discordUserId?: boolean
     message?: boolean
     userId?: boolean
     matchedVia?: boolean
@@ -5333,6 +5367,7 @@ export namespace Prisma {
     id?: boolean
     kofiTransactionId?: boolean
     messageId?: boolean
+    kofiTimestamp?: boolean
     type?: boolean
     isSubscriptionPayment?: boolean
     isFirstSubscriptionPayment?: boolean
@@ -5341,6 +5376,7 @@ export namespace Prisma {
     currency?: boolean
     fromName?: boolean
     email?: boolean
+    discordUserId?: boolean
     message?: boolean
     userId?: boolean
     matchedVia?: boolean
@@ -5348,7 +5384,7 @@ export namespace Prisma {
     receivedAt?: boolean
   }
 
-  export type KofiTransactionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "kofiTransactionId" | "messageId" | "type" | "isSubscriptionPayment" | "isFirstSubscriptionPayment" | "tierName" | "amountCents" | "currency" | "fromName" | "email" | "message" | "userId" | "matchedVia" | "rawPayload" | "receivedAt", ExtArgs["result"]["kofiTransaction"]>
+  export type KofiTransactionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "kofiTransactionId" | "messageId" | "kofiTimestamp" | "type" | "isSubscriptionPayment" | "isFirstSubscriptionPayment" | "tierName" | "amountCents" | "currency" | "fromName" | "email" | "discordUserId" | "message" | "userId" | "matchedVia" | "rawPayload" | "receivedAt", ExtArgs["result"]["kofiTransaction"]>
   export type KofiTransactionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | KofiTransaction$userArgs<ExtArgs>
   }
@@ -5368,6 +5404,10 @@ export namespace Prisma {
       id: string
       kofiTransactionId: string
       messageId: string | null
+      /**
+       * Horodatage Ko-fi (ISO 8601). Distinct de receivedAt.
+       */
+      kofiTimestamp: Date | null
       type: string
       isSubscriptionPayment: boolean
       isFirstSubscriptionPayment: boolean
@@ -5376,6 +5416,10 @@ export namespace Prisma {
       currency: string
       fromName: string | null
       email: string | null
+      /**
+       * discord_userid du payload Ko-fi (snowflake), conservé brut pour audit.
+       */
+      discordUserId: string | null
       message: string | null
       userId: string | null
       matchedVia: string | null
@@ -5811,6 +5855,7 @@ export namespace Prisma {
     readonly id: FieldRef<"KofiTransaction", 'String'>
     readonly kofiTransactionId: FieldRef<"KofiTransaction", 'String'>
     readonly messageId: FieldRef<"KofiTransaction", 'String'>
+    readonly kofiTimestamp: FieldRef<"KofiTransaction", 'DateTime'>
     readonly type: FieldRef<"KofiTransaction", 'String'>
     readonly isSubscriptionPayment: FieldRef<"KofiTransaction", 'Boolean'>
     readonly isFirstSubscriptionPayment: FieldRef<"KofiTransaction", 'Boolean'>
@@ -5819,6 +5864,7 @@ export namespace Prisma {
     readonly currency: FieldRef<"KofiTransaction", 'String'>
     readonly fromName: FieldRef<"KofiTransaction", 'String'>
     readonly email: FieldRef<"KofiTransaction", 'String'>
+    readonly discordUserId: FieldRef<"KofiTransaction", 'String'>
     readonly message: FieldRef<"KofiTransaction", 'String'>
     readonly userId: FieldRef<"KofiTransaction", 'String'>
     readonly matchedVia: FieldRef<"KofiTransaction", 'String'>
@@ -31292,9 +31338,10 @@ export namespace Prisma {
     roles: 'roles',
     patreon: 'patreon',
     kofiLinkCode: 'kofiLinkCode',
+    discordUserId: 'discordUserId',
     supporterTier: 'supporterTier',
     supporterActiveUntil: 'supporterActiveUntil',
-    totalDonatedCents: 'totalDonatedCents',
+    totalDonatedCentsByCurrency: 'totalDonatedCentsByCurrency',
     valid: 'valid',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
@@ -31308,6 +31355,7 @@ export namespace Prisma {
     id: 'id',
     kofiTransactionId: 'kofiTransactionId',
     messageId: 'messageId',
+    kofiTimestamp: 'kofiTimestamp',
     type: 'type',
     isSubscriptionPayment: 'isSubscriptionPayment',
     isFirstSubscriptionPayment: 'isFirstSubscriptionPayment',
@@ -31316,6 +31364,7 @@ export namespace Prisma {
     currency: 'currency',
     fromName: 'fromName',
     email: 'email',
+    discordUserId: 'discordUserId',
     message: 'message',
     userId: 'userId',
     matchedVia: 'matchedVia',
@@ -31804,9 +31853,10 @@ export namespace Prisma {
     roles?: StringFilter<"User"> | string
     patreon?: BoolFilter<"User"> | boolean
     kofiLinkCode?: StringNullableFilter<"User"> | string | null
+    discordUserId?: StringNullableFilter<"User"> | string | null
     supporterTier?: StringNullableFilter<"User"> | string | null
     supporterActiveUntil?: DateTimeNullableFilter<"User"> | Date | string | null
-    totalDonatedCents?: IntFilter<"User"> | number
+    totalDonatedCentsByCurrency?: StringFilter<"User"> | string
     valid?: BoolFilter<"User"> | boolean
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
@@ -31839,9 +31889,10 @@ export namespace Prisma {
     roles?: SortOrder
     patreon?: SortOrder
     kofiLinkCode?: SortOrderInput | SortOrder
+    discordUserId?: SortOrderInput | SortOrder
     supporterTier?: SortOrderInput | SortOrder
     supporterActiveUntil?: SortOrderInput | SortOrder
-    totalDonatedCents?: SortOrder
+    totalDonatedCentsByCurrency?: SortOrder
     valid?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -31865,6 +31916,7 @@ export namespace Prisma {
     id?: string
     email?: string
     kofiLinkCode?: string
+    discordUserId?: string
     AND?: UserWhereInput | UserWhereInput[]
     OR?: UserWhereInput[]
     NOT?: UserWhereInput | UserWhereInput[]
@@ -31879,7 +31931,7 @@ export namespace Prisma {
     patreon?: BoolFilter<"User"> | boolean
     supporterTier?: StringNullableFilter<"User"> | string | null
     supporterActiveUntil?: DateTimeNullableFilter<"User"> | Date | string | null
-    totalDonatedCents?: IntFilter<"User"> | number
+    totalDonatedCentsByCurrency?: StringFilter<"User"> | string
     valid?: BoolFilter<"User"> | boolean
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
@@ -31897,7 +31949,7 @@ export namespace Prisma {
     friendshipsReceived?: FriendshipListRelationFilter
     achievements?: UserAchievementListRelationFilter
     kofiTransactions?: KofiTransactionListRelationFilter
-  }, "id" | "email" | "kofiLinkCode">
+  }, "id" | "email" | "kofiLinkCode" | "discordUserId">
 
   export type UserOrderByWithAggregationInput = {
     id?: SortOrder
@@ -31912,9 +31964,10 @@ export namespace Prisma {
     roles?: SortOrder
     patreon?: SortOrder
     kofiLinkCode?: SortOrderInput | SortOrder
+    discordUserId?: SortOrderInput | SortOrder
     supporterTier?: SortOrderInput | SortOrder
     supporterActiveUntil?: SortOrderInput | SortOrder
-    totalDonatedCents?: SortOrder
+    totalDonatedCentsByCurrency?: SortOrder
     valid?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -31942,9 +31995,10 @@ export namespace Prisma {
     roles?: StringWithAggregatesFilter<"User"> | string
     patreon?: BoolWithAggregatesFilter<"User"> | boolean
     kofiLinkCode?: StringNullableWithAggregatesFilter<"User"> | string | null
+    discordUserId?: StringNullableWithAggregatesFilter<"User"> | string | null
     supporterTier?: StringNullableWithAggregatesFilter<"User"> | string | null
     supporterActiveUntil?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
-    totalDonatedCents?: IntWithAggregatesFilter<"User"> | number
+    totalDonatedCentsByCurrency?: StringWithAggregatesFilter<"User"> | string
     valid?: BoolWithAggregatesFilter<"User"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
@@ -31958,6 +32012,7 @@ export namespace Prisma {
     id?: StringFilter<"KofiTransaction"> | string
     kofiTransactionId?: StringFilter<"KofiTransaction"> | string
     messageId?: StringNullableFilter<"KofiTransaction"> | string | null
+    kofiTimestamp?: DateTimeNullableFilter<"KofiTransaction"> | Date | string | null
     type?: StringFilter<"KofiTransaction"> | string
     isSubscriptionPayment?: BoolFilter<"KofiTransaction"> | boolean
     isFirstSubscriptionPayment?: BoolFilter<"KofiTransaction"> | boolean
@@ -31966,6 +32021,7 @@ export namespace Prisma {
     currency?: StringFilter<"KofiTransaction"> | string
     fromName?: StringNullableFilter<"KofiTransaction"> | string | null
     email?: StringNullableFilter<"KofiTransaction"> | string | null
+    discordUserId?: StringNullableFilter<"KofiTransaction"> | string | null
     message?: StringNullableFilter<"KofiTransaction"> | string | null
     userId?: StringNullableFilter<"KofiTransaction"> | string | null
     matchedVia?: StringNullableFilter<"KofiTransaction"> | string | null
@@ -31978,6 +32034,7 @@ export namespace Prisma {
     id?: SortOrder
     kofiTransactionId?: SortOrder
     messageId?: SortOrderInput | SortOrder
+    kofiTimestamp?: SortOrderInput | SortOrder
     type?: SortOrder
     isSubscriptionPayment?: SortOrder
     isFirstSubscriptionPayment?: SortOrder
@@ -31986,6 +32043,7 @@ export namespace Prisma {
     currency?: SortOrder
     fromName?: SortOrderInput | SortOrder
     email?: SortOrderInput | SortOrder
+    discordUserId?: SortOrderInput | SortOrder
     message?: SortOrderInput | SortOrder
     userId?: SortOrderInput | SortOrder
     matchedVia?: SortOrderInput | SortOrder
@@ -32001,6 +32059,7 @@ export namespace Prisma {
     OR?: KofiTransactionWhereInput[]
     NOT?: KofiTransactionWhereInput | KofiTransactionWhereInput[]
     messageId?: StringNullableFilter<"KofiTransaction"> | string | null
+    kofiTimestamp?: DateTimeNullableFilter<"KofiTransaction"> | Date | string | null
     type?: StringFilter<"KofiTransaction"> | string
     isSubscriptionPayment?: BoolFilter<"KofiTransaction"> | boolean
     isFirstSubscriptionPayment?: BoolFilter<"KofiTransaction"> | boolean
@@ -32009,6 +32068,7 @@ export namespace Prisma {
     currency?: StringFilter<"KofiTransaction"> | string
     fromName?: StringNullableFilter<"KofiTransaction"> | string | null
     email?: StringNullableFilter<"KofiTransaction"> | string | null
+    discordUserId?: StringNullableFilter<"KofiTransaction"> | string | null
     message?: StringNullableFilter<"KofiTransaction"> | string | null
     userId?: StringNullableFilter<"KofiTransaction"> | string | null
     matchedVia?: StringNullableFilter<"KofiTransaction"> | string | null
@@ -32021,6 +32081,7 @@ export namespace Prisma {
     id?: SortOrder
     kofiTransactionId?: SortOrder
     messageId?: SortOrderInput | SortOrder
+    kofiTimestamp?: SortOrderInput | SortOrder
     type?: SortOrder
     isSubscriptionPayment?: SortOrder
     isFirstSubscriptionPayment?: SortOrder
@@ -32029,6 +32090,7 @@ export namespace Prisma {
     currency?: SortOrder
     fromName?: SortOrderInput | SortOrder
     email?: SortOrderInput | SortOrder
+    discordUserId?: SortOrderInput | SortOrder
     message?: SortOrderInput | SortOrder
     userId?: SortOrderInput | SortOrder
     matchedVia?: SortOrderInput | SortOrder
@@ -32048,6 +32110,7 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"KofiTransaction"> | string
     kofiTransactionId?: StringWithAggregatesFilter<"KofiTransaction"> | string
     messageId?: StringNullableWithAggregatesFilter<"KofiTransaction"> | string | null
+    kofiTimestamp?: DateTimeNullableWithAggregatesFilter<"KofiTransaction"> | Date | string | null
     type?: StringWithAggregatesFilter<"KofiTransaction"> | string
     isSubscriptionPayment?: BoolWithAggregatesFilter<"KofiTransaction"> | boolean
     isFirstSubscriptionPayment?: BoolWithAggregatesFilter<"KofiTransaction"> | boolean
@@ -32056,6 +32119,7 @@ export namespace Prisma {
     currency?: StringWithAggregatesFilter<"KofiTransaction"> | string
     fromName?: StringNullableWithAggregatesFilter<"KofiTransaction"> | string | null
     email?: StringNullableWithAggregatesFilter<"KofiTransaction"> | string | null
+    discordUserId?: StringNullableWithAggregatesFilter<"KofiTransaction"> | string | null
     message?: StringNullableWithAggregatesFilter<"KofiTransaction"> | string | null
     userId?: StringNullableWithAggregatesFilter<"KofiTransaction"> | string | null
     matchedVia?: StringNullableWithAggregatesFilter<"KofiTransaction"> | string | null
@@ -33945,9 +34009,10 @@ export namespace Prisma {
     roles?: string
     patreon?: boolean
     kofiLinkCode?: string | null
+    discordUserId?: string | null
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
-    totalDonatedCents?: number
+    totalDonatedCentsByCurrency?: string
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -33980,9 +34045,10 @@ export namespace Prisma {
     roles?: string
     patreon?: boolean
     kofiLinkCode?: string | null
+    discordUserId?: string | null
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
-    totalDonatedCents?: number
+    totalDonatedCentsByCurrency?: string
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -34015,9 +34081,10 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
     kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    totalDonatedCents?: IntFieldUpdateOperationsInput | number
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -34050,9 +34117,10 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
     kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    totalDonatedCents?: IntFieldUpdateOperationsInput | number
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -34085,9 +34153,10 @@ export namespace Prisma {
     roles?: string
     patreon?: boolean
     kofiLinkCode?: string | null
+    discordUserId?: string | null
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
-    totalDonatedCents?: number
+    totalDonatedCentsByCurrency?: string
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -34107,9 +34176,10 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
     kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    totalDonatedCents?: IntFieldUpdateOperationsInput | number
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -34129,9 +34199,10 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
     kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    totalDonatedCents?: IntFieldUpdateOperationsInput | number
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -34142,6 +34213,7 @@ export namespace Prisma {
     id?: string
     kofiTransactionId: string
     messageId?: string | null
+    kofiTimestamp?: Date | string | null
     type: string
     isSubscriptionPayment?: boolean
     isFirstSubscriptionPayment?: boolean
@@ -34150,6 +34222,7 @@ export namespace Prisma {
     currency: string
     fromName?: string | null
     email?: string | null
+    discordUserId?: string | null
     message?: string | null
     matchedVia?: string | null
     rawPayload: string
@@ -34161,6 +34234,7 @@ export namespace Prisma {
     id?: string
     kofiTransactionId: string
     messageId?: string | null
+    kofiTimestamp?: Date | string | null
     type: string
     isSubscriptionPayment?: boolean
     isFirstSubscriptionPayment?: boolean
@@ -34169,6 +34243,7 @@ export namespace Prisma {
     currency: string
     fromName?: string | null
     email?: string | null
+    discordUserId?: string | null
     message?: string | null
     userId?: string | null
     matchedVia?: string | null
@@ -34180,6 +34255,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     kofiTransactionId?: StringFieldUpdateOperationsInput | string
     messageId?: NullableStringFieldUpdateOperationsInput | string | null
+    kofiTimestamp?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     type?: StringFieldUpdateOperationsInput | string
     isSubscriptionPayment?: BoolFieldUpdateOperationsInput | boolean
     isFirstSubscriptionPayment?: BoolFieldUpdateOperationsInput | boolean
@@ -34188,6 +34264,7 @@ export namespace Prisma {
     currency?: StringFieldUpdateOperationsInput | string
     fromName?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     message?: NullableStringFieldUpdateOperationsInput | string | null
     matchedVia?: NullableStringFieldUpdateOperationsInput | string | null
     rawPayload?: StringFieldUpdateOperationsInput | string
@@ -34199,6 +34276,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     kofiTransactionId?: StringFieldUpdateOperationsInput | string
     messageId?: NullableStringFieldUpdateOperationsInput | string | null
+    kofiTimestamp?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     type?: StringFieldUpdateOperationsInput | string
     isSubscriptionPayment?: BoolFieldUpdateOperationsInput | boolean
     isFirstSubscriptionPayment?: BoolFieldUpdateOperationsInput | boolean
@@ -34207,6 +34285,7 @@ export namespace Prisma {
     currency?: StringFieldUpdateOperationsInput | string
     fromName?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     message?: NullableStringFieldUpdateOperationsInput | string | null
     userId?: NullableStringFieldUpdateOperationsInput | string | null
     matchedVia?: NullableStringFieldUpdateOperationsInput | string | null
@@ -34218,6 +34297,7 @@ export namespace Prisma {
     id?: string
     kofiTransactionId: string
     messageId?: string | null
+    kofiTimestamp?: Date | string | null
     type: string
     isSubscriptionPayment?: boolean
     isFirstSubscriptionPayment?: boolean
@@ -34226,6 +34306,7 @@ export namespace Prisma {
     currency: string
     fromName?: string | null
     email?: string | null
+    discordUserId?: string | null
     message?: string | null
     userId?: string | null
     matchedVia?: string | null
@@ -34237,6 +34318,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     kofiTransactionId?: StringFieldUpdateOperationsInput | string
     messageId?: NullableStringFieldUpdateOperationsInput | string | null
+    kofiTimestamp?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     type?: StringFieldUpdateOperationsInput | string
     isSubscriptionPayment?: BoolFieldUpdateOperationsInput | boolean
     isFirstSubscriptionPayment?: BoolFieldUpdateOperationsInput | boolean
@@ -34245,6 +34327,7 @@ export namespace Prisma {
     currency?: StringFieldUpdateOperationsInput | string
     fromName?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     message?: NullableStringFieldUpdateOperationsInput | string | null
     matchedVia?: NullableStringFieldUpdateOperationsInput | string | null
     rawPayload?: StringFieldUpdateOperationsInput | string
@@ -34255,6 +34338,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     kofiTransactionId?: StringFieldUpdateOperationsInput | string
     messageId?: NullableStringFieldUpdateOperationsInput | string | null
+    kofiTimestamp?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     type?: StringFieldUpdateOperationsInput | string
     isSubscriptionPayment?: BoolFieldUpdateOperationsInput | boolean
     isFirstSubscriptionPayment?: BoolFieldUpdateOperationsInput | boolean
@@ -34263,6 +34347,7 @@ export namespace Prisma {
     currency?: StringFieldUpdateOperationsInput | string
     fromName?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     message?: NullableStringFieldUpdateOperationsInput | string | null
     userId?: NullableStringFieldUpdateOperationsInput | string | null
     matchedVia?: NullableStringFieldUpdateOperationsInput | string | null
@@ -36370,17 +36455,6 @@ export namespace Prisma {
     not?: NestedBoolFilter<$PrismaModel> | boolean
   }
 
-  export type IntFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[]
-    notIn?: number[]
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntFilter<$PrismaModel> | number
-  }
-
   export type DateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[]
@@ -36390,6 +36464,17 @@ export namespace Prisma {
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
+  }
+
+  export type IntFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntFilter<$PrismaModel> | number
   }
 
   export type MatchListRelationFilter = {
@@ -36515,9 +36600,10 @@ export namespace Prisma {
     roles?: SortOrder
     patreon?: SortOrder
     kofiLinkCode?: SortOrder
+    discordUserId?: SortOrder
     supporterTier?: SortOrder
     supporterActiveUntil?: SortOrder
-    totalDonatedCents?: SortOrder
+    totalDonatedCentsByCurrency?: SortOrder
     valid?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -36525,7 +36611,6 @@ export namespace Prisma {
   }
 
   export type UserAvgOrderByAggregateInput = {
-    totalDonatedCents?: SortOrder
     eloRating?: SortOrder
   }
 
@@ -36542,9 +36627,10 @@ export namespace Prisma {
     roles?: SortOrder
     patreon?: SortOrder
     kofiLinkCode?: SortOrder
+    discordUserId?: SortOrder
     supporterTier?: SortOrder
     supporterActiveUntil?: SortOrder
-    totalDonatedCents?: SortOrder
+    totalDonatedCentsByCurrency?: SortOrder
     valid?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -36564,9 +36650,10 @@ export namespace Prisma {
     roles?: SortOrder
     patreon?: SortOrder
     kofiLinkCode?: SortOrder
+    discordUserId?: SortOrder
     supporterTier?: SortOrder
     supporterActiveUntil?: SortOrder
-    totalDonatedCents?: SortOrder
+    totalDonatedCentsByCurrency?: SortOrder
     valid?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -36574,7 +36661,6 @@ export namespace Prisma {
   }
 
   export type UserSumOrderByAggregateInput = {
-    totalDonatedCents?: SortOrder
     eloRating?: SortOrder
   }
 
@@ -36634,6 +36720,20 @@ export namespace Prisma {
     _max?: NestedBoolFilter<$PrismaModel>
   }
 
+  export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[]
+    notIn?: Date[] | string[]
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedDateTimeFilter<$PrismaModel>
+    _max?: NestedDateTimeFilter<$PrismaModel>
+  }
+
   export type IntWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[]
@@ -36650,20 +36750,6 @@ export namespace Prisma {
     _max?: NestedIntFilter<$PrismaModel>
   }
 
-  export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[]
-    notIn?: Date[] | string[]
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedDateTimeFilter<$PrismaModel>
-    _max?: NestedDateTimeFilter<$PrismaModel>
-  }
-
   export type UserNullableScalarRelationFilter = {
     is?: UserWhereInput | null
     isNot?: UserWhereInput | null
@@ -36673,6 +36759,7 @@ export namespace Prisma {
     id?: SortOrder
     kofiTransactionId?: SortOrder
     messageId?: SortOrder
+    kofiTimestamp?: SortOrder
     type?: SortOrder
     isSubscriptionPayment?: SortOrder
     isFirstSubscriptionPayment?: SortOrder
@@ -36681,6 +36768,7 @@ export namespace Prisma {
     currency?: SortOrder
     fromName?: SortOrder
     email?: SortOrder
+    discordUserId?: SortOrder
     message?: SortOrder
     userId?: SortOrder
     matchedVia?: SortOrder
@@ -36696,6 +36784,7 @@ export namespace Prisma {
     id?: SortOrder
     kofiTransactionId?: SortOrder
     messageId?: SortOrder
+    kofiTimestamp?: SortOrder
     type?: SortOrder
     isSubscriptionPayment?: SortOrder
     isFirstSubscriptionPayment?: SortOrder
@@ -36704,6 +36793,7 @@ export namespace Prisma {
     currency?: SortOrder
     fromName?: SortOrder
     email?: SortOrder
+    discordUserId?: SortOrder
     message?: SortOrder
     userId?: SortOrder
     matchedVia?: SortOrder
@@ -36715,6 +36805,7 @@ export namespace Prisma {
     id?: SortOrder
     kofiTransactionId?: SortOrder
     messageId?: SortOrder
+    kofiTimestamp?: SortOrder
     type?: SortOrder
     isSubscriptionPayment?: SortOrder
     isFirstSubscriptionPayment?: SortOrder
@@ -36723,6 +36814,7 @@ export namespace Prisma {
     currency?: SortOrder
     fromName?: SortOrder
     email?: SortOrder
+    discordUserId?: SortOrder
     message?: SortOrder
     userId?: SortOrder
     matchedVia?: SortOrder
@@ -38330,16 +38422,16 @@ export namespace Prisma {
     set?: boolean
   }
 
+  export type DateTimeFieldUpdateOperationsInput = {
+    set?: Date | string
+  }
+
   export type IntFieldUpdateOperationsInput = {
     set?: number
     increment?: number
     decrement?: number
     multiply?: number
     divide?: number
-  }
-
-  export type DateTimeFieldUpdateOperationsInput = {
-    set?: Date | string
   }
 
   export type MatchUpdateManyWithoutPlayersNestedInput = {
@@ -39976,17 +40068,6 @@ export namespace Prisma {
     not?: NestedBoolFilter<$PrismaModel> | boolean
   }
 
-  export type NestedIntFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[]
-    notIn?: number[]
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntFilter<$PrismaModel> | number
-  }
-
   export type NestedDateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[]
@@ -39996,6 +40077,17 @@ export namespace Prisma {
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
+  }
+
+  export type NestedIntFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntFilter<$PrismaModel> | number
   }
 
   export type NestedStringWithAggregatesFilter<$PrismaModel = never> = {
@@ -40065,6 +40157,20 @@ export namespace Prisma {
     _max?: NestedBoolFilter<$PrismaModel>
   }
 
+  export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[]
+    notIn?: Date[] | string[]
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedDateTimeFilter<$PrismaModel>
+    _max?: NestedDateTimeFilter<$PrismaModel>
+  }
+
   export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[]
@@ -40090,20 +40196,6 @@ export namespace Prisma {
     gt?: number | FloatFieldRefInput<$PrismaModel>
     gte?: number | FloatFieldRefInput<$PrismaModel>
     not?: NestedFloatFilter<$PrismaModel> | number
-  }
-
-  export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[]
-    notIn?: Date[] | string[]
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedDateTimeFilter<$PrismaModel>
-    _max?: NestedDateTimeFilter<$PrismaModel>
   }
   export type NestedJsonFilter<$PrismaModel = never> =
     | PatchUndefined<
@@ -40602,6 +40694,7 @@ export namespace Prisma {
     id?: string
     kofiTransactionId: string
     messageId?: string | null
+    kofiTimestamp?: Date | string | null
     type: string
     isSubscriptionPayment?: boolean
     isFirstSubscriptionPayment?: boolean
@@ -40610,6 +40703,7 @@ export namespace Prisma {
     currency: string
     fromName?: string | null
     email?: string | null
+    discordUserId?: string | null
     message?: string | null
     matchedVia?: string | null
     rawPayload: string
@@ -40620,6 +40714,7 @@ export namespace Prisma {
     id?: string
     kofiTransactionId: string
     messageId?: string | null
+    kofiTimestamp?: Date | string | null
     type: string
     isSubscriptionPayment?: boolean
     isFirstSubscriptionPayment?: boolean
@@ -40628,6 +40723,7 @@ export namespace Prisma {
     currency: string
     fromName?: string | null
     email?: string | null
+    discordUserId?: string | null
     message?: string | null
     matchedVia?: string | null
     rawPayload: string
@@ -41015,6 +41111,7 @@ export namespace Prisma {
     id?: StringFilter<"KofiTransaction"> | string
     kofiTransactionId?: StringFilter<"KofiTransaction"> | string
     messageId?: StringNullableFilter<"KofiTransaction"> | string | null
+    kofiTimestamp?: DateTimeNullableFilter<"KofiTransaction"> | Date | string | null
     type?: StringFilter<"KofiTransaction"> | string
     isSubscriptionPayment?: BoolFilter<"KofiTransaction"> | boolean
     isFirstSubscriptionPayment?: BoolFilter<"KofiTransaction"> | boolean
@@ -41023,6 +41120,7 @@ export namespace Prisma {
     currency?: StringFilter<"KofiTransaction"> | string
     fromName?: StringNullableFilter<"KofiTransaction"> | string | null
     email?: StringNullableFilter<"KofiTransaction"> | string | null
+    discordUserId?: StringNullableFilter<"KofiTransaction"> | string | null
     message?: StringNullableFilter<"KofiTransaction"> | string | null
     userId?: StringNullableFilter<"KofiTransaction"> | string | null
     matchedVia?: StringNullableFilter<"KofiTransaction"> | string | null
@@ -41043,9 +41141,10 @@ export namespace Prisma {
     roles?: string
     patreon?: boolean
     kofiLinkCode?: string | null
+    discordUserId?: string | null
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
-    totalDonatedCents?: number
+    totalDonatedCentsByCurrency?: string
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -41077,9 +41176,10 @@ export namespace Prisma {
     roles?: string
     patreon?: boolean
     kofiLinkCode?: string | null
+    discordUserId?: string | null
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
-    totalDonatedCents?: number
+    totalDonatedCentsByCurrency?: string
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -41127,9 +41227,10 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
     kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    totalDonatedCents?: IntFieldUpdateOperationsInput | number
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -41161,9 +41262,10 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
     kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    totalDonatedCents?: IntFieldUpdateOperationsInput | number
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -41195,9 +41297,10 @@ export namespace Prisma {
     roles?: string
     patreon?: boolean
     kofiLinkCode?: string | null
+    discordUserId?: string | null
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
-    totalDonatedCents?: number
+    totalDonatedCentsByCurrency?: string
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -41229,9 +41332,10 @@ export namespace Prisma {
     roles?: string
     patreon?: boolean
     kofiLinkCode?: string | null
+    discordUserId?: string | null
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
-    totalDonatedCents?: number
+    totalDonatedCentsByCurrency?: string
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -41279,9 +41383,10 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
     kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    totalDonatedCents?: IntFieldUpdateOperationsInput | number
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -41313,9 +41418,10 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
     kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    totalDonatedCents?: IntFieldUpdateOperationsInput | number
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -41347,9 +41453,10 @@ export namespace Prisma {
     roles?: string
     patreon?: boolean
     kofiLinkCode?: string | null
+    discordUserId?: string | null
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
-    totalDonatedCents?: number
+    totalDonatedCentsByCurrency?: string
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -41381,9 +41488,10 @@ export namespace Prisma {
     roles?: string
     patreon?: boolean
     kofiLinkCode?: string | null
+    discordUserId?: string | null
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
-    totalDonatedCents?: number
+    totalDonatedCentsByCurrency?: string
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -41420,9 +41528,10 @@ export namespace Prisma {
     roles?: string
     patreon?: boolean
     kofiLinkCode?: string | null
+    discordUserId?: string | null
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
-    totalDonatedCents?: number
+    totalDonatedCentsByCurrency?: string
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -41454,9 +41563,10 @@ export namespace Prisma {
     roles?: string
     patreon?: boolean
     kofiLinkCode?: string | null
+    discordUserId?: string | null
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
-    totalDonatedCents?: number
+    totalDonatedCentsByCurrency?: string
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -41504,9 +41614,10 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
     kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    totalDonatedCents?: IntFieldUpdateOperationsInput | number
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -41538,9 +41649,10 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
     kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    totalDonatedCents?: IntFieldUpdateOperationsInput | number
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -41583,9 +41695,10 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
     kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    totalDonatedCents?: IntFieldUpdateOperationsInput | number
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -41617,9 +41730,10 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
     kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    totalDonatedCents?: IntFieldUpdateOperationsInput | number
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -41711,9 +41825,10 @@ export namespace Prisma {
     roles?: string
     patreon?: boolean
     kofiLinkCode?: string | null
+    discordUserId?: string | null
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
-    totalDonatedCents?: number
+    totalDonatedCentsByCurrency?: string
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -41745,9 +41860,10 @@ export namespace Prisma {
     roles?: string
     patreon?: boolean
     kofiLinkCode?: string | null
+    discordUserId?: string | null
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
-    totalDonatedCents?: number
+    totalDonatedCentsByCurrency?: string
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -41824,9 +41940,10 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
     kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    totalDonatedCents?: IntFieldUpdateOperationsInput | number
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -41858,9 +41975,10 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
     kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    totalDonatedCents?: IntFieldUpdateOperationsInput | number
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -41892,9 +42010,10 @@ export namespace Prisma {
     roles?: string
     patreon?: boolean
     kofiLinkCode?: string | null
+    discordUserId?: string | null
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
-    totalDonatedCents?: number
+    totalDonatedCentsByCurrency?: string
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -41926,9 +42045,10 @@ export namespace Prisma {
     roles?: string
     patreon?: boolean
     kofiLinkCode?: string | null
+    discordUserId?: string | null
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
-    totalDonatedCents?: number
+    totalDonatedCentsByCurrency?: string
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -41965,9 +42085,10 @@ export namespace Prisma {
     roles?: string
     patreon?: boolean
     kofiLinkCode?: string | null
+    discordUserId?: string | null
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
-    totalDonatedCents?: number
+    totalDonatedCentsByCurrency?: string
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -41999,9 +42120,10 @@ export namespace Prisma {
     roles?: string
     patreon?: boolean
     kofiLinkCode?: string | null
+    discordUserId?: string | null
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
-    totalDonatedCents?: number
+    totalDonatedCentsByCurrency?: string
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -42097,9 +42219,10 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
     kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    totalDonatedCents?: IntFieldUpdateOperationsInput | number
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -42131,9 +42254,10 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
     kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    totalDonatedCents?: IntFieldUpdateOperationsInput | number
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -42184,9 +42308,10 @@ export namespace Prisma {
     roles?: StringFilter<"User"> | string
     patreon?: BoolFilter<"User"> | boolean
     kofiLinkCode?: StringNullableFilter<"User"> | string | null
+    discordUserId?: StringNullableFilter<"User"> | string | null
     supporterTier?: StringNullableFilter<"User"> | string | null
     supporterActiveUntil?: DateTimeNullableFilter<"User"> | Date | string | null
-    totalDonatedCents?: IntFilter<"User"> | number
+    totalDonatedCentsByCurrency?: StringFilter<"User"> | string
     valid?: BoolFilter<"User"> | boolean
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
@@ -42366,9 +42491,10 @@ export namespace Prisma {
     roles?: string
     patreon?: boolean
     kofiLinkCode?: string | null
+    discordUserId?: string | null
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
-    totalDonatedCents?: number
+    totalDonatedCentsByCurrency?: string
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -42400,9 +42526,10 @@ export namespace Prisma {
     roles?: string
     patreon?: boolean
     kofiLinkCode?: string | null
+    discordUserId?: string | null
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
-    totalDonatedCents?: number
+    totalDonatedCentsByCurrency?: string
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -42548,9 +42675,10 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
     kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    totalDonatedCents?: IntFieldUpdateOperationsInput | number
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -42582,9 +42710,10 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
     kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    totalDonatedCents?: IntFieldUpdateOperationsInput | number
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -42677,9 +42806,10 @@ export namespace Prisma {
     roles?: string
     patreon?: boolean
     kofiLinkCode?: string | null
+    discordUserId?: string | null
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
-    totalDonatedCents?: number
+    totalDonatedCentsByCurrency?: string
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -42711,9 +42841,10 @@ export namespace Prisma {
     roles?: string
     patreon?: boolean
     kofiLinkCode?: string | null
+    discordUserId?: string | null
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
-    totalDonatedCents?: number
+    totalDonatedCentsByCurrency?: string
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -43077,9 +43208,10 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
     kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    totalDonatedCents?: IntFieldUpdateOperationsInput | number
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -43111,9 +43243,10 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
     kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    totalDonatedCents?: IntFieldUpdateOperationsInput | number
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -43757,9 +43890,10 @@ export namespace Prisma {
     roles?: string
     patreon?: boolean
     kofiLinkCode?: string | null
+    discordUserId?: string | null
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
-    totalDonatedCents?: number
+    totalDonatedCentsByCurrency?: string
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -43791,9 +43925,10 @@ export namespace Prisma {
     roles?: string
     patreon?: boolean
     kofiLinkCode?: string | null
+    discordUserId?: string | null
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
-    totalDonatedCents?: number
+    totalDonatedCentsByCurrency?: string
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -43917,9 +44052,10 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
     kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    totalDonatedCents?: IntFieldUpdateOperationsInput | number
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -43951,9 +44087,10 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
     kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    totalDonatedCents?: IntFieldUpdateOperationsInput | number
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -44201,9 +44338,10 @@ export namespace Prisma {
     roles?: string
     patreon?: boolean
     kofiLinkCode?: string | null
+    discordUserId?: string | null
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
-    totalDonatedCents?: number
+    totalDonatedCentsByCurrency?: string
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -44235,9 +44373,10 @@ export namespace Prisma {
     roles?: string
     patreon?: boolean
     kofiLinkCode?: string | null
+    discordUserId?: string | null
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
-    totalDonatedCents?: number
+    totalDonatedCentsByCurrency?: string
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -44340,9 +44479,10 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
     kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    totalDonatedCents?: IntFieldUpdateOperationsInput | number
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -44374,9 +44514,10 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
     kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    totalDonatedCents?: IntFieldUpdateOperationsInput | number
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -44469,9 +44610,10 @@ export namespace Prisma {
     roles?: string
     patreon?: boolean
     kofiLinkCode?: string | null
+    discordUserId?: string | null
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
-    totalDonatedCents?: number
+    totalDonatedCentsByCurrency?: string
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -44503,9 +44645,10 @@ export namespace Prisma {
     roles?: string
     patreon?: boolean
     kofiLinkCode?: string | null
+    discordUserId?: string | null
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
-    totalDonatedCents?: number
+    totalDonatedCentsByCurrency?: string
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -44743,9 +44886,10 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
     kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    totalDonatedCents?: IntFieldUpdateOperationsInput | number
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -44777,9 +44921,10 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
     kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    totalDonatedCents?: IntFieldUpdateOperationsInput | number
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -45118,9 +45263,10 @@ export namespace Prisma {
     roles?: string
     patreon?: boolean
     kofiLinkCode?: string | null
+    discordUserId?: string | null
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
-    totalDonatedCents?: number
+    totalDonatedCentsByCurrency?: string
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -45152,9 +45298,10 @@ export namespace Prisma {
     roles?: string
     patreon?: boolean
     kofiLinkCode?: string | null
+    discordUserId?: string | null
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
-    totalDonatedCents?: number
+    totalDonatedCentsByCurrency?: string
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -45237,9 +45384,10 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
     kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    totalDonatedCents?: IntFieldUpdateOperationsInput | number
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -45271,9 +45419,10 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
     kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    totalDonatedCents?: IntFieldUpdateOperationsInput | number
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -45902,6 +46051,7 @@ export namespace Prisma {
     id?: string
     kofiTransactionId: string
     messageId?: string | null
+    kofiTimestamp?: Date | string | null
     type: string
     isSubscriptionPayment?: boolean
     isFirstSubscriptionPayment?: boolean
@@ -45910,6 +46060,7 @@ export namespace Prisma {
     currency: string
     fromName?: string | null
     email?: string | null
+    discordUserId?: string | null
     message?: string | null
     matchedVia?: string | null
     rawPayload: string
@@ -46344,6 +46495,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     kofiTransactionId?: StringFieldUpdateOperationsInput | string
     messageId?: NullableStringFieldUpdateOperationsInput | string | null
+    kofiTimestamp?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     type?: StringFieldUpdateOperationsInput | string
     isSubscriptionPayment?: BoolFieldUpdateOperationsInput | boolean
     isFirstSubscriptionPayment?: BoolFieldUpdateOperationsInput | boolean
@@ -46352,6 +46504,7 @@ export namespace Prisma {
     currency?: StringFieldUpdateOperationsInput | string
     fromName?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     message?: NullableStringFieldUpdateOperationsInput | string | null
     matchedVia?: NullableStringFieldUpdateOperationsInput | string | null
     rawPayload?: StringFieldUpdateOperationsInput | string
@@ -46362,6 +46515,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     kofiTransactionId?: StringFieldUpdateOperationsInput | string
     messageId?: NullableStringFieldUpdateOperationsInput | string | null
+    kofiTimestamp?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     type?: StringFieldUpdateOperationsInput | string
     isSubscriptionPayment?: BoolFieldUpdateOperationsInput | boolean
     isFirstSubscriptionPayment?: BoolFieldUpdateOperationsInput | boolean
@@ -46370,6 +46524,7 @@ export namespace Prisma {
     currency?: StringFieldUpdateOperationsInput | string
     fromName?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     message?: NullableStringFieldUpdateOperationsInput | string | null
     matchedVia?: NullableStringFieldUpdateOperationsInput | string | null
     rawPayload?: StringFieldUpdateOperationsInput | string
@@ -46380,6 +46535,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     kofiTransactionId?: StringFieldUpdateOperationsInput | string
     messageId?: NullableStringFieldUpdateOperationsInput | string | null
+    kofiTimestamp?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     type?: StringFieldUpdateOperationsInput | string
     isSubscriptionPayment?: BoolFieldUpdateOperationsInput | boolean
     isFirstSubscriptionPayment?: BoolFieldUpdateOperationsInput | boolean
@@ -46388,6 +46544,7 @@ export namespace Prisma {
     currency?: StringFieldUpdateOperationsInput | string
     fromName?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     message?: NullableStringFieldUpdateOperationsInput | string | null
     matchedVia?: NullableStringFieldUpdateOperationsInput | string | null
     rawPayload?: StringFieldUpdateOperationsInput | string
@@ -46446,9 +46603,10 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
     kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    totalDonatedCents?: IntFieldUpdateOperationsInput | number
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -46480,9 +46638,10 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
     kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    totalDonatedCents?: IntFieldUpdateOperationsInput | number
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -46514,9 +46673,10 @@ export namespace Prisma {
     roles?: StringFieldUpdateOperationsInput | string
     patreon?: BoolFieldUpdateOperationsInput | boolean
     kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    totalDonatedCents?: IntFieldUpdateOperationsInput | number
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string

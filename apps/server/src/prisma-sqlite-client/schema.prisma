@@ -15,69 +15,77 @@ enum Ruleset {
 }
 
 model User {
-  id                   String            @id @default(cuid())
-  email                String            @unique
-  passwordHash         String
-  name                 String? // Conservé pour rétrocompatibilité
-  coachName            String // Nom de coach (obligatoire)
-  firstName            String? // Prénom (optionnel)
-  lastName             String? // Nom (optionnel)
-  dateOfBirth          DateTime? // Date de naissance (optionnel)
+  id                          String            @id @default(cuid())
+  email                       String            @unique
+  passwordHash                String
+  name                        String? // Conservé pour rétrocompatibilité
+  coachName                   String // Nom de coach (obligatoire)
+  firstName                   String? // Prénom (optionnel)
+  lastName                    String? // Nom (optionnel)
+  dateOfBirth                 DateTime? // Date de naissance (optionnel)
   /// Rôle principal (conservé pour compatibilité, ex: "user" | "admin")
-  role                 String            @default("user")
+  role                        String            @default("user")
   /// Liste complète des rôles (stockée en JSON, ex: '["user","admin"]')
-  roles                String            @default("[]")
+  roles                       String            @default("[]")
   /// Présent dans le schéma Postgres pour les fonctionnalités premium.
   /// Stub côté SQLite pour que /auth/me puisse sélectionner ce champ
   /// sans diverger entre les deux schémas.
-  patreon              Boolean           @default(false)
+  patreon                     Boolean           @default(false)
   /// Code unique à coller dans le message Ko-fi pour lier le don au compte.
-  kofiLinkCode         String?           @unique
+  kofiLinkCode                String?           @unique
+  /// Discord user ID renseigné par le titulaire du compte (3e stratégie de
+  /// matching Ko-fi).
+  discordUserId               String?           @unique
   /// Palier (tier_name Ko-fi) du dernier abonnement actif.
-  supporterTier        String?
+  supporterTier               String?
   /// Fin de la période de supporter payée.
-  supporterActiveUntil DateTime?
-  /// Total des dons en centimes.
-  totalDonatedCents    Int               @default(0)
+  supporterActiveUntil        DateTime?
+  /// Map devise→centimes sérialisée en JSON (SQLite n'a pas de type Json).
+  /// Exemple : '{"USD":300,"EUR":1000}'.
+  totalDonatedCentsByCurrency String            @default("{}")
   /// Pré-alpha gate côté Postgres ; en SQLite tous les comptes sont valides.
-  valid                Boolean           @default(true)
-  createdAt            DateTime          @default(now())
-  updatedAt            DateTime          @updatedAt
-  matches              Match[]
-  createdMatches       Match[]           @relation("MatchCreator")
-  teams                Team[]
-  teamSelections       TeamSelection[]
-  createdCups          Cup[]             @relation("CupCreator")
-  createdLeagues       League[]          @relation("LeagueCreator")
-  createdLocalMatches  LocalMatch[]      @relation("LocalMatchCreator")
-  eloRating            Int               @default(1000)
-  matchQueue           MatchQueue?
-  featureFlagOverrides FeatureFlagUser[]
-  friendshipsSent      Friendship[]      @relation("FriendshipRequester")
-  friendshipsReceived  Friendship[]      @relation("FriendshipReceiver")
-  achievements         UserAchievement[]
-  kofiTransactions     KofiTransaction[]
+  valid                       Boolean           @default(true)
+  createdAt                   DateTime          @default(now())
+  updatedAt                   DateTime          @updatedAt
+  matches                     Match[]
+  createdMatches              Match[]           @relation("MatchCreator")
+  teams                       Team[]
+  teamSelections              TeamSelection[]
+  createdCups                 Cup[]             @relation("CupCreator")
+  createdLeagues              League[]          @relation("LeagueCreator")
+  createdLocalMatches         LocalMatch[]      @relation("LocalMatchCreator")
+  eloRating                   Int               @default(1000)
+  matchQueue                  MatchQueue?
+  featureFlagOverrides        FeatureFlagUser[]
+  friendshipsSent             Friendship[]      @relation("FriendshipRequester")
+  friendshipsReceived         Friendship[]      @relation("FriendshipReceiver")
+  achievements                UserAchievement[]
+  kofiTransactions            KofiTransaction[]
 }
 
 model KofiTransaction {
-  id                         String   @id @default(cuid())
-  kofiTransactionId          String   @unique
+  id                         String    @id @default(cuid())
+  kofiTransactionId          String    @unique
   messageId                  String?
+  /// Horodatage Ko-fi (ISO 8601). Distinct de receivedAt.
+  kofiTimestamp              DateTime?
   type                       String
-  isSubscriptionPayment      Boolean  @default(false)
-  isFirstSubscriptionPayment Boolean  @default(false)
+  isSubscriptionPayment      Boolean   @default(false)
+  isFirstSubscriptionPayment Boolean   @default(false)
   tierName                   String?
   amountCents                Int
   currency                   String
   fromName                   String?
   email                      String?
+  /// discord_userid du payload Ko-fi (snowflake), conservé brut pour audit.
+  discordUserId              String?
   message                    String?
-  user                       User?    @relation(fields: [userId], references: [id])
+  user                       User?     @relation(fields: [userId], references: [id])
   userId                     String?
   matchedVia                 String?
   /// SQLite n'a pas le type Json de Prisma : payload brut stocké en string.
   rawPayload                 String
-  receivedAt                 DateTime @default(now())
+  receivedAt                 DateTime  @default(now())
 
   @@index([userId])
   @@index([email])
