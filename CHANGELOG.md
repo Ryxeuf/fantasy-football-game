@@ -1,3 +1,16 @@
+## [1.71.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.70.1...v1.71.0) (2026-04-24)
+
+
+### ✨ Features
+
+* **game-engine:** O.1 batch 3p - hit-and-run + my-ball + plague-ridden ([#331](https://github.com/Ryxeuf/fantasy-football-game/issues/331)) ([52d0737](https://github.com/Ryxeuf/fantasy-football-game/commit/52d0737f2b2a36d12cdda76b2ece6cb222be175c))
+* **game-engine:** O.1 batch 3q — contagieux + fork + hate + insignifiant + pick-me-up ([#332](https://github.com/Ryxeuf/fantasy-football-game/issues/332)) ([74ea04e](https://github.com/Ryxeuf/fantasy-football-game/commit/74ea04e5cd33213c9ac19934e5dc566ff4b2c22f))
+* **game-engine:** O.1 batch 3r — breathe-fire + clearance + pile-on + provocation + surefoot + trickster ([#334](https://github.com/Ryxeuf/fantasy-football-game/issues/334)) ([6b289c3](https://github.com/Ryxeuf/fantasy-football-game/commit/6b289c3bf5311f8811d0672fc8e12e620ce3bc08))
+* **game-engine:** O.1 batch 3s — star player traits registry (6 skills) ([#335](https://github.com/Ryxeuf/fantasy-football-game/issues/335)) ([878fef1](https://github.com/Ryxeuf/fantasy-football-game/commit/878fef1b79b64ee8940e3609c8709cd34a1a6958))
+* **game-engine:** O.1 batch 3t — star player + scelerate S3 traits registry (6 skills) ([#336](https://github.com/Ryxeuf/fantasy-football-game/issues/336)) ([90d02f5](https://github.com/Ryxeuf/fantasy-football-game/commit/90d02f5442f37b94c27245ec6e89573cafcd7aa3))
+* **game-engine:** O.1 batch 3u — final niche skills registry (closes O.1) ([#337](https://github.com/Ryxeuf/fantasy-football-game/issues/337)) ([b506829](https://github.com/Ryxeuf/fantasy-football-game/commit/b50682996e93cc6f55599cfab1c08373da850a39))
+* **prisma:** update User and KofiTransaction models for currency tracking and Discord integration ([dd9943c](https://github.com/Ryxeuf/fantasy-football-game/commit/dd9943c652b1fda4c6814d18b4a64a44c5c6887b))
+
 ## [1.70.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.70.0...v1.70.1) (2026-04-24)
 
 
