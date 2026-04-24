@@ -1126,3 +1126,45 @@ registerSkill({
   description: "A la fin de chaque drive, ce joueur est expulse par l'arbitre (Sent-off). Un pot-de-vin (Bribe) peut etre utilise pour tenter de l'eviter (jet D6 : 2+ = sauve).",
   canApply: (ctx) => hasSkill(ctx.player, 'secret-weapon') || hasSkill(ctx.player, 'secret_weapon'),
 });
+
+// ─── POGO STICK (O.1 batch 3n) ──────────────────────────────────────────────
+// Pogo Stick partage la mecanique de Leap (mechanics/leap.ts) : le joueur peut
+// sauter par-dessus une case adjacente occupee (y compris Debout) et recoit
+// +1 au jet d'Agilite du saut. `canLeap` et `calculateLeapAgilityModifier`
+// lisent directement le skill `pogo-stick` sur le joueur. Le dispatch dans
+// `actions/actions.ts` choisit `pogo-stick` comme label du skill declenche
+// quand il est present. On expose ici une entree dediee pour que l'UI puisse
+// differencier Pogo Stick de Leap et refleter le bonus specifique.
+registerSkill({
+  slug: 'pogo-stick',
+  triggers: ['on-movement'],
+  description: "Le joueur peut sauter par-dessus n'importe quelle case adjacente (libre ou occupee), avec un modificateur +1 sur le jet d'Agilite du saut.",
+  canApply: (ctx) => hasSkill(ctx.player, 'pogo-stick') || hasSkill(ctx.player, 'pogo_stick'),
+});
+
+// ─── SWARMING (O.1 batch 3n) ────────────────────────────────────────────────
+// Swarming est une regle de placement : un joueur portant ce trait peut etre
+// place sur le terrain au debut du match meme si cela depasse le nombre
+// maximum de joueurs autorises (Underworld / Goblin). La logique de placement
+// est geree au niveau des validations de setup ; cette entree de registre
+// sert a la decouverte UI (catalogue et fiche joueur) et ne doit PAS exposer
+// de modificateur d'action en jeu.
+registerSkill({
+  slug: 'swarming',
+  triggers: ['on-setup'],
+  description: "Ce joueur peut etre place sur le terrain au debut du match meme si cela depasse le nombre maximum de joueurs autorises.",
+  canApply: (ctx) => hasSkill(ctx.player, 'swarming'),
+});
+
+// ─── KICK TEAM-MATE (O.1 batch 3n) ──────────────────────────────────────────
+// Kick Team-Mate est une action speciale alternative a Throw Team-Mate : une
+// fois par tour d'equipe, en plus d'un autre joueur effectuant une Passe ou un
+// Lancer d'Equipier, un seul joueur avec ce trait peut effectuer une action
+// "Kick Team-Mate". Le dispatch se fait via les handlers d'action dedies.
+// L'entree du registre sert a la decouverte UI et a la documentation.
+registerSkill({
+  slug: 'kick-team-mate',
+  triggers: ['on-activation'],
+  description: "Une fois par tour d'equipe, en plus d'un autre joueur effectuant une Passe ou un Lancer d'Equipier, un seul joueur avec ce trait peut effectuer l'action speciale 'Kick Team-Mate'.",
+  canApply: (ctx) => hasSkill(ctx.player, 'kick-team-mate') || hasSkill(ctx.player, 'kick_team_mate'),
+});
