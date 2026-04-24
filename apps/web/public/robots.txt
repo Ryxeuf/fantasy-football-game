@@ -1,6 +1,11 @@
 # robots.txt pour Nuffle Arena
 # Plus d'infos : https://nufflearena.fr
+# Résumé LLM : https://nufflearena.fr/llms.txt
+# Résumé LLM étendu : https://nufflearena.fr/llms-full.txt
 
+# ---------------------------------------------------------------------------
+# Règles génériques (tous les crawlers web)
+# ---------------------------------------------------------------------------
 User-agent: *
 Allow: /
 
@@ -25,6 +30,165 @@ Allow: /tutoriel
 Allow: /tutoriel/
 Allow: /support
 Allow: /legal/
+Allow: /llms.txt
+Allow: /llms-full.txt
 
+# ---------------------------------------------------------------------------
+# Crawlers IA / moteurs génératifs : explicitement autorisés
+# Objectif : être indexé et cité par ChatGPT, Claude, Perplexity, Gemini,
+# Apple Intelligence, Common Crawl, etc.
+# ---------------------------------------------------------------------------
+
+# OpenAI (ChatGPT Search, SearchGPT, ChatGPT browsing)
+User-agent: GPTBot
+Allow: /
+Disallow: /me/
+Disallow: /api/
+Disallow: /admin/
+Disallow: /login
+Disallow: /register
+Disallow: /waiting/
+Disallow: /lobby/
+Disallow: /spectate/
+Disallow: /replay/
+
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /me/
+Disallow: /api/
+Disallow: /admin/
+Disallow: /login
+Disallow: /register
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /me/
+Disallow: /api/
+Disallow: /admin/
+
+# Anthropic (Claude, ClaudeBot)
+User-agent: ClaudeBot
+Allow: /
+Disallow: /me/
+Disallow: /api/
+Disallow: /admin/
+Disallow: /login
+Disallow: /register
+
+User-agent: anthropic-ai
+Allow: /
+Disallow: /me/
+Disallow: /api/
+Disallow: /admin/
+
+User-agent: Claude-Web
+Allow: /
+Disallow: /me/
+Disallow: /api/
+Disallow: /admin/
+
+# Perplexity
+User-agent: PerplexityBot
+Allow: /
+Disallow: /me/
+Disallow: /api/
+Disallow: /admin/
+Disallow: /login
+Disallow: /register
+
+User-agent: Perplexity-User
+Allow: /
+Disallow: /me/
+Disallow: /api/
+Disallow: /admin/
+
+# Google (Gemini, AI Overviews)
+User-agent: Google-Extended
+Allow: /
+Disallow: /me/
+Disallow: /api/
+Disallow: /admin/
+Disallow: /login
+Disallow: /register
+
+# Apple Intelligence
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /me/
+Disallow: /api/
+Disallow: /admin/
+Disallow: /login
+Disallow: /register
+
+# Common Crawl (corpus utilisé par de nombreux LLM open-source)
+User-agent: CCBot
+Allow: /
+Disallow: /me/
+Disallow: /api/
+Disallow: /admin/
+Disallow: /login
+Disallow: /register
+
+# Amazon (Rufus, Titan)
+User-agent: Amazonbot
+Allow: /
+Disallow: /me/
+Disallow: /api/
+Disallow: /admin/
+
+# DuckDuckGo AI (DuckAssist)
+User-agent: DuckAssistBot
+Allow: /
+Disallow: /me/
+Disallow: /api/
+Disallow: /admin/
+
+# Meta AI
+User-agent: Meta-ExternalAgent
+Allow: /
+Disallow: /me/
+Disallow: /api/
+Disallow: /admin/
+
+User-agent: Meta-ExternalFetcher
+Allow: /
+Disallow: /me/
+Disallow: /api/
+Disallow: /admin/
+
+# ByteDance (Doubao)
+User-agent: Bytespider
+Allow: /
+Disallow: /me/
+Disallow: /api/
+Disallow: /admin/
+
+# Mistral / You.com / autres
+User-agent: MistralAI-User
+Allow: /
+Disallow: /me/
+Disallow: /api/
+Disallow: /admin/
+
+User-agent: YouBot
+Allow: /
+Disallow: /me/
+Disallow: /api/
+Disallow: /admin/
+
+User-agent: cohere-ai
+Allow: /
+Disallow: /me/
+Disallow: /api/
+Disallow: /admin/
+
+User-agent: cohere-training-data-crawler
+Allow: /
+Disallow: /me/
+Disallow: /api/
+Disallow: /admin/
+
+# ---------------------------------------------------------------------------
 # Sitemap
+# ---------------------------------------------------------------------------
 Sitemap: https://nufflearena.fr/sitemap.xml

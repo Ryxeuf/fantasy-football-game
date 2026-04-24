@@ -4,15 +4,21 @@ import StructuredData from "./StructuredData";
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://nufflearena.fr";
 
 /**
- * Composant pour ajouter les données structurées JSON-LD à la page d'accueil.
+ * Données structurées JSON-LD de la page d'accueil.
  *
- * Combine plusieurs types schema.org dans un @graph unique :
- * - Organization (pour Google Knowledge Panel)
- * - WebSite (pour sitelinks search box)
- * - WebApplication (pour la nature logicielle du site)
- * - FAQPage (pour les rich results FAQ)
+ * Regroupe plusieurs types schema.org dans un `@graph` unique :
+ * - Organization (Google Knowledge Panel, reconnaissance d'entité)
+ * - WebSite (sitelinks search box)
+ * - WebApplication (nature logicielle, feature list, offre gratuite)
+ * - FAQPage (rich results FAQ pour Google et pour les LLM)
+ *
+ * Objectif secondaire : maximiser la citabilité par les modèles de
+ * langage (GEO / LLMO) — chaque bloc contient des faits clairs,
+ * datés et sourcés.
  */
 export default function HomeStructuredData() {
+  const lastUpdated = new Date().toISOString().split("T")[0];
+
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
@@ -20,11 +26,33 @@ export default function HomeStructuredData() {
         "@type": "Organization",
         "@id": `${BASE_URL}#organization`,
         name: "Nuffle Arena",
+        alternateName: ["Nuffle Arena - Blood Bowl", "NuffleArena"],
         url: BASE_URL,
-        logo: `${BASE_URL}/images/logo.png`,
+        logo: {
+          "@type": "ImageObject",
+          url: `${BASE_URL}/images/logo.png`,
+          width: 1200,
+          height: 630,
+        },
         description:
           "Plateforme digitale gratuite pour créer et gérer vos équipes Blood Bowl selon les règles officielles 2025 (Saison 3).",
-        sameAs: ["https://discord.gg/XEZJTgEHKn"],
+        foundingDate: "2025",
+        sameAs: [
+          "https://discord.gg/XEZJTgEHKn",
+          "https://github.com/Ryxeuf/fantasy-football-game",
+          "https://ko-fi.com/nufflearena",
+        ],
+        knowsAbout: [
+          "Blood Bowl",
+          "Blood Bowl 2025",
+          "Blood Bowl Saison 3",
+          "Fantasy Football",
+          "Games Workshop",
+          "Warhammer",
+          "Tabletop games",
+          "Team management",
+          "Roster building",
+        ],
       },
       {
         "@type": "WebSite",
@@ -35,6 +63,7 @@ export default function HomeStructuredData() {
           "Gestionnaire d'équipes Blood Bowl : rosters, Star Players, compétences, export PDF et suivi de match sur table.",
         inLanguage: ["fr-FR", "en"],
         publisher: { "@id": `${BASE_URL}#organization` },
+        dateModified: lastUpdated,
       },
       {
         "@type": "WebApplication",
@@ -50,6 +79,7 @@ export default function HomeStructuredData() {
         browserRequirements: "Requires JavaScript. Requires HTML5.",
         inLanguage: ["fr-FR", "en"],
         isAccessibleForFree: true,
+        dateModified: lastUpdated,
         offers: {
           "@type": "Offer",
           price: "0",
@@ -68,6 +98,14 @@ export default function HomeStructuredData() {
         ],
         screenshot: `${BASE_URL}/images/logo.png`,
         publisher: { "@id": `${BASE_URL}#organization` },
+        about: {
+          "@type": "Game",
+          name: "Blood Bowl",
+          description:
+            "Jeu de plateau de Fantasy Football édité par Games Workshop, mêlant stratégie de football américain et univers fantastique Warhammer.",
+          genre: ["Fantasy Football", "Tabletop", "Strategy"],
+          gamePlatform: "Tabletop",
+        },
       },
       {
         "@type": "FAQPage",
@@ -103,6 +141,22 @@ export default function HomeStructuredData() {
             acceptedAnswer: {
               "@type": "Answer",
               text: "Les 30 rosters officiels Saison 3 : Skaven, Elfes (Union, Sylvains, Noirs, Pro Elves, Hauts Elfes), Orques, Orques Noirs, Nains, Hommes-Lézards, Gnomes, Halflings, Noblesse Impériale, Chaos, Khemri, Nurgle, Morts-Vivants, Vampires, Amazones, Nordiques, Ogres, Gobelins, Snotlings, Alliance du Vieux Monde et plus.",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "Combien de Star Players sont disponibles ?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "Plus de 60 Star Players sont référencés avec leurs statistiques, compétences et règles spéciales, parmi lesquels Griff Oberwald, Morg 'n' Thorg, Hakflem Skuttlespike, Helmut Wulf, Grashnak Blackhoof. Chaque équipe peut recruter les Star Players autorisés par ses règles régionales.",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "Quelle version des règles est utilisée ?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "Nuffle Arena suit les règles officielles Blood Bowl 2025 (Saison 3) de Games Workshop, avec compatibilité historique Saison 2.",
             },
           },
         ],
