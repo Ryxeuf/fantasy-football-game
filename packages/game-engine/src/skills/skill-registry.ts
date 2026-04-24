@@ -1701,3 +1701,24 @@ registerSkill({
   description: "Lors d'un Lancer de Coequipier, si le joueur lance atterrit ou rebondit sur une case occupee et plaque l'adversaire, +1 au jet d'Armure ou de Blessure ; sur Elimination, gagne les PSP correspondants.",
   canApply: (ctx) => hasSkill(ctx.player, 'fatal-flight') || hasSkill(ctx.player, 'fatal_flight'),
 });
+
+// ─── RUNNING PASS 2025 (O.3 S3 audit) ───────────────────────────────────────
+// Running Pass 2025 (Transmission dans la course) est la variante Season 3
+// modifiee du skill `running-pass` : si ce joueur effectue une Action de
+// Passe qui est une Passe Rapide ou une Action de Transmission, son
+// activation ne prend pas fin et il peut continuer son Action de Mouvement
+// avec son mouvement restant. La difference avec la version S2 est la
+// portee etendue (Passe Rapide + Transmission, vs. Transmission seule en
+// S2). La prolongation d'activation post-passe est geree par le pass
+// handler dedie et conditionne la version appliquee selon le flag
+// `season3Only` du catalogue. L'entree du registre sert a la decouverte
+// UI et a la discrimination S2/S3. On n'expose PAS de getModifiers : il
+// s'agit d'une regle de flow d'activation, pas d'un modificateur de jet.
+registerSkill({
+  slug: 'running-pass-2025',
+  triggers: ['on-pass'],
+  description: "Season 3 : si ce joueur effectue une Action de Passe qui est une Passe Rapide ou une Action de Transmission, son activation ne prend pas fin et il peut continuer son Action de Mouvement.",
+  canApply: (ctx) =>
+    hasSkill(ctx.player, 'running-pass-2025') ||
+    hasSkill(ctx.player, 'running_pass_2025'),
+});
