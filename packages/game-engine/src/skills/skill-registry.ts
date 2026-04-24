@@ -1208,3 +1208,50 @@ registerSkill({
   description: "Pendant un mouvement ou un Blitz en possession du ballon, ce joueur peut lacher le ballon dans n'importe quelle case qu'il quitte. Le ballon ne rebondit pas.",
   canApply: (ctx) => hasSkill(ctx.player, 'fumblerooskie'),
 });
+
+// ─── HIT AND RUN (O.1 batch 3p) ─────────────────────────────────────────────
+// Hit and Run est un skill d'Agilite Season 3 : une fois par activation, apres
+// avoir effectue une action de Bloc (ou Blitz), le joueur peut effectuer un
+// mouvement supplementaire. La mecanique de prolongation de mouvement est
+// geree par les handlers d'action dedies ; l'entree du registre sert a la
+// decouverte UI et a la documentation. On n'expose PAS de getModifiers pour
+// eviter un double-comptage avec l'implementation du post-bloc.
+registerSkill({
+  slug: 'hit-and-run',
+  triggers: ['on-movement'],
+  description: "Ce joueur peut effectuer un mouvement apres avoir effectue une action de Blocage.",
+  canApply: (ctx) => hasSkill(ctx.player, 'hit-and-run') || hasSkill(ctx.player, 'hit_and_run'),
+});
+
+// ─── MY BALL (O.1 batch 3p) ─────────────────────────────────────────────────
+// My Ball est un trait Season 3 (Halfling Beer Boar entre autres). Un joueur
+// portant ce trait ne peut pas abandonner volontairement le ballon quand il
+// en est en possession : il ne peut donc pas effectuer d'action de Passe,
+// de Passe a la main, ni utiliser toute autre competence qui lui ferait
+// renoncer a la possession. La restriction est appliquee au niveau du
+// dispatch d'actions ; l'entree du registre sert a la decouverte UI. On
+// n'expose pas de getModifiers : il ne s'agit pas d'un modificateur de jet
+// mais d'une interdiction d'action.
+registerSkill({
+  slug: 'my-ball',
+  triggers: ['on-pass'],
+  description: "Ce joueur ne peut pas abandonner volontairement le ballon : il ne peut pas effectuer de Passe, de Passe a la main, ni utiliser toute competence qui lui ferait renoncer a la possession.",
+  canApply: (ctx) => hasSkill(ctx.player, 'my-ball') || hasSkill(ctx.player, 'my_ball'),
+});
+
+// ─── PLAGUE RIDDEN (O.1 batch 3p) ───────────────────────────────────────────
+// Plague Ridden est un trait Season 3 de l'equipe Nurgle : une fois par
+// match, si un joueur adverse avec ST <= 4 et sans trait Decay / Regeneration
+// / Microbe subit un resultat de Blessure MORT (15-16) suite a un Bloc ou
+// Agression d'un joueur avec ce trait, et qu'il ne peut etre sauve par un
+// apothicaire, le porteur peut choisir d'utiliser Plague Ridden : la victime
+// ne meurt pas, elle est infectee. La logique d'application est geree par le
+// handler de blessure ; l'entree du registre sert a la decouverte UI. On
+// n'expose PAS de getModifiers pour eviter un double-comptage sur l'injury
+// roll.
+registerSkill({
+  slug: 'plague-ridden',
+  triggers: ['on-injury'],
+  description: "Une fois par match, si un joueur adverse avec Force 4 ou moins (sans Decomposition, Regeneration ou Microbe) subit une Blessure MORT suite a un Bloc ou une Agression de ce joueur et ne peut etre sauve par un apothicaire, vous pouvez utiliser ce trait : la victime est infectee au lieu de mourir.",
+  canApply: (ctx) => hasSkill(ctx.player, 'plague-ridden') || hasSkill(ctx.player, 'plague_ridden'),
+});
