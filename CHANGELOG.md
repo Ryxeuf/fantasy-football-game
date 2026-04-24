@@ -1,3 +1,10 @@
+## [1.69.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.68.0...v1.69.0) (2026-04-24)
+
+
+### ✨ Features
+
+* **logging:** enable HTTP request logging for better observability ([08fd171](https://github.com/Ryxeuf/fantasy-football-game/commit/08fd17141c8da985a04ffd936f04cd9ad08bf830))
+
 ## [1.68.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.67.1...v1.68.0) (2026-04-24)
 
 
