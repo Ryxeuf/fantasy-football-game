@@ -1,29 +1,37 @@
 FROM node:18-alpine
 
-# Install pnpm
+# NEXT_PUBLIC_* vars must be present at build time — Next.js inlines them
+# into the client bundle during `next build`. Override via build args from
+# docker-compose; defaults match the current production host.
+ARG NEXT_PUBLIC_API_BASE=https://api.nufflearena.fr
+ARG NEXT_PUBLIC_UMAMI_ENABLED=true
+ENV NEXT_PUBLIC_API_BASE=$NEXT_PUBLIC_API_BASE
+ENV NEXT_PUBLIC_UMAMI_ENABLED=$NEXT_PUBLIC_UMAMI_ENABLED
+ENV NEXT_TELEMETRY_DISABLED=1
+
 RUN npm install -g pnpm
 
-# Set working directory
 WORKDIR /app
 
-# Copy package files
+# Install deps first for Docker-layer cache.
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/web/package.json ./apps/web/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/game-engine/package.json ./packages/game-engine/
+RUN pnpm install --frozen-lockfile
 
-# Install dependencies
-RUN pnpm install
-
-# Copy source code
+# Copy source and build an optimized production bundle so that ISR, static
+# pre-rendering, minification, and bundle splitting actually kick in.
 COPY . .
+RUN pnpm -w prisma generate
+RUN pnpm --filter @bb/web run build
 
-# Expose port
+ENV NODE_ENV=production
+ENV PORT=3100
 EXPOSE 3100
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3100/ || exit 1
 
-# Default command
-CMD ["pnpm", "run", "dev:web"]
+# `next start` reads PORT from env, so the compose setting propagates.
+CMD ["pnpm", "--filter", "@bb/web", "exec", "next", "start", "-p", "3100"]

@@ -27,10 +27,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.web
+      args:
+        NEXT_PUBLIC_API_BASE: https://api.nufflearena.fr
+        NEXT_PUBLIC_UMAMI_ENABLED: "true"
     restart: unless-stopped
     container_name: nufflearena_web
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - PORT=3100
       - NEXT_PUBLIC_API_BASE=https://api.nufflearena.fr
       - NEXT_PUBLIC_UMAMI_ENABLED=true
