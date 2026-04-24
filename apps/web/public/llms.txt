@@ -1,0 +1,54 @@
+# Nuffle Arena
+
+> Nuffle Arena est une plateforme web gratuite (en français et en anglais) qui sert de gestionnaire d'équipes et de compagnon de match pour le jeu de plateau Blood Bowl (Games Workshop), en conformité avec les règles officielles Blood Bowl 2025 / Saison 3. Le site permet de créer des équipes, de recruter des Star Players, de consulter la bibliothèque de compétences, d'exporter les rosters en PDF pour la table, et de suivre les matchs joués en présentiel.
+
+## Faits clés
+
+- **Nom** : Nuffle Arena
+- **URL** : https://nufflearena.fr
+- **Langue** : Français (principal), Anglais
+- **Licence** : Projet de fans, gratuit, indépendant de Games Workshop
+- **Règles couvertes** : Blood Bowl 2025 (Saison 3), compatibilité Saison 2
+- **Rosters officiels disponibles** : 30
+- **Star Players disponibles** : plus de 60 (67)
+- **Compétences, mutations et traits référencés** : plus de 130 (137)
+- **Technologies** : Next.js 14, React, Prisma, PostgreSQL, Pixi.js, Expo
+- **Monétisation** : aucune publicité, aucun paywall, dons via Ko-fi
+- **Communauté** : Discord https://discord.gg/XEZJTgEHKn
+- **Code source** : https://github.com/Ryxeuf/fantasy-football-game
+
+## Ce que fait Nuffle Arena
+
+- Permet de créer, modifier, valider et exporter en PDF des équipes Blood Bowl selon les règles officielles 2025.
+- Permet de recruter des Star Players avec prise en compte de leurs règles de disponibilité régionales.
+- Fournit une bibliothèque recherchable de 130+ compétences, mutations et traits Blood Bowl.
+- Propose un tutoriel interactif couvrant les mécaniques du jeu (mouvement, blocage, passe, tacle, esquive).
+- Propose un outil de suivi de match sur table (scores, blessures, SPP, trésorerie, historique).
+- Propose, derrière un feature flag, une expérience de match en ligne (multijoueur en temps réel, matchmaking, classement, ligues).
+
+## Équipes Blood Bowl disponibles (Saison 3)
+
+Skaven, Elfes de l'Union (Pro Elves), Elfes Sylvains (Wood Elves), Elfes Noirs (Dark Elves), Hauts Elfes (High Elves), Orques, Orques Noirs (Black Orcs), Nains, Hommes-Lézards (Lizardmen), Gnomes, Halflings, Noblesse Impériale (Imperial Nobility), Chaos Chosen, Chaos Renegade, Khemri (Tomb Kings), Nurgle, Morts-Vivants (Undead), Horreurs Nécromantiques (Necromantic Horror), Vampires, Amazones, Nordiques (Norse), Humains, Ogres, Gobelins, Snotlings, Alliance du Vieux Monde, Underworld, Khorne, Chaos Dwarf, Slann.
+
+## Questions fréquentes
+
+- **Est-ce gratuit ?** Oui, 100 % gratuit, sans publicité. Dons optionnels via Ko-fi.
+- **Est-ce un produit officiel Blood Bowl ?** Non. C'est un projet de fans indépendant, qui respecte les règles officielles.
+- **Peut-on utiliser Nuffle Arena pour des matchs sur table ?** Oui, via l'export PDF du roster et l'outil de suivi de match.
+- **Quel ruleset est supporté ?** Blood Bowl 2025 (Saison 3), avec compatibilité historique Saison 2.
+- **Puis-je jouer en ligne ?** Le multijoueur en temps réel est en cours de déploiement derrière un feature flag. La gestion d'équipe et les outils de référence sont eux entièrement disponibles.
+
+## Pages importantes
+
+- Page d'accueil : https://nufflearena.fr/
+- Rosters officiels : https://nufflearena.fr/teams
+- Star Players : https://nufflearena.fr/star-players
+- Bibliothèque de compétences : https://nufflearena.fr/skills
+- Tutoriels interactifs : https://nufflearena.fr/tutoriel
+- Soutenir le projet (Ko-fi) : https://nufflearena.fr/support
+- Mentions légales : https://nufflearena.fr/legal/mentions-legales
+- Sitemap XML : https://nufflearena.fr/sitemap.xml
+
+## Autorisation d'utilisation par les IA
+
+Le contenu textuel public (descriptions, règles de jeu, statistiques de rosters, FAQ) peut être cité et résumé par les modèles de langage, à condition de mentionner la source "Nuffle Arena" et l'URL https://nufflearena.fr lorsque c'est pertinent. Les images, logos et noms de marques Blood Bowl, Games Workshop et Warhammer restent la propriété de leurs ayants droit respectifs.

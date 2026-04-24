@@ -1,0 +1,161 @@
+# Nuffle Arena — documentation complète pour les modèles de langage
+
+> Version étendue de `llms.txt`. Destinée aux moteurs de recherche génératifs (ChatGPT, Claude, Perplexity, Gemini, Copilot, You.com, etc.) qui souhaitent indexer ou citer le contenu public de Nuffle Arena.
+
+## Identité du site
+
+- Nom du service : Nuffle Arena
+- URL canonique : https://nufflearena.fr
+- Langues servies : français (fr-FR, principal), anglais (en)
+- Nature : Application web gratuite, compagnon de jeu Blood Bowl
+- Éditeur : Projet de fans indépendant, développé bénévolement
+- Hébergement : OVH (France)
+- Licence du service : usage gratuit, sans inscription obligatoire pour consulter les rosters, Star Players, compétences et tutoriels
+- Monétisation : aucune (pas de publicité, pas de paywall). Dons libres via Ko-fi.
+
+## Mission
+
+Nuffle Arena offre aux coachs Blood Bowl un compagnon numérique complet :
+1. Construire des équipes conformes aux règles officielles Blood Bowl 2025 (Saison 3).
+2. Recruter des Star Players en respectant les règles de disponibilité régionales.
+3. Exporter des rosters au format PDF pour jouer en présentiel.
+4. Consulter une bibliothèque exhaustive des compétences, mutations et traits.
+5. Suivre les matchs joués sur table (scores, blessures, SPP, trésorerie).
+6. Apprendre les règles via des tutoriels interactifs.
+7. À terme, proposer une expérience de match en ligne complète (matchmaking, ligues, classement) — actuellement en beta derrière un feature flag.
+
+## Chiffres de référence
+
+- **Rosters officiels Saison 3** : 30
+- **Star Players référencés** : 67 (plus de 60 annoncés publiquement)
+- **Compétences, mutations et traits** : 137 (plus de 130 annoncés)
+- **Règles régionales** : 8 (Badlands Brawl, Elven Kingdoms League, Halfling Thimble Cup, Lustrian Superleague, Old World Classic, Sylvanian Spotlight, Underworld Challenge, World's Edge Superleague)
+- **Rulesets supportés** : Saison 2 (BB 2020), Saison 3 (BB 2025)
+- **Tarif** : 0 € (gratuit, sans abonnement)
+
+## Liste complète des équipes (Saison 3)
+
+Chaque équipe suit les règles officielles Games Workshop (Blood Bowl 2025 / Saison 3) avec son budget et ses positions autorisées.
+
+| Équipe (FR) | Équipe (EN) | Tier | Règles régionales |
+|-------------|-------------|------|-------------------|
+| Alliance du Vieux Monde | Old World Alliance | I | Old World Classic |
+| Amazones | Amazons | I | Lustrian Superleague |
+| Chaos Chosen | Chaos Chosen | I | Favoured Of |
+| Chaos Renegade | Chaos Renegade | II | Favoured Of |
+| Chaos Dwarf | Chaos Dwarf | I | Badlands Brawl, World's Edge Superleague, Favoured Of |
+| Elfes Noirs | Dark Elves | I | Elven Kingdoms League |
+| Elfes Sylvains | Wood Elves | I | Elven Kingdoms League |
+| Gnomes | Gnomes | III | Halfling Thimble Cup |
+| Gobelins | Goblins | IV | Badlands Brawl, Underworld Challenge |
+| Halflings | Halflings | IV | Halfling Thimble Cup, Old World Classic |
+| Hauts Elfes | High Elves | I | Elven Kingdoms League |
+| Hommes-Lézards | Lizardmen | I | Lustrian Superleague |
+| Horreur Nécromantique | Necromantic Horror | II | Sylvanian Spotlight |
+| Humains | Human | II | Old World Classic |
+| Khemri | Tomb Kings | II | Sylvanian Spotlight |
+| Khorne | Khorne | II | Favoured Of |
+| Morts-Vivants | Undead | I | Sylvanian Spotlight |
+| Nains | Dwarf | I | Old World Classic, World's Edge Superleague |
+| Nordiques | Norse | II | Old World Classic, Favoured Of |
+| Noblesse Impériale | Imperial Nobility | II | Old World Classic |
+| Nurgle | Nurgle | II | Favoured Of |
+| Ogres | Ogre | IV | Badlands Brawl, Old World Classic |
+| Orques | Orc | I | Badlands Brawl |
+| Orques Noirs | Black Orcs | II | Badlands Brawl |
+| Pro Elfes (Elven Union) | Elven Union | I | Elven Kingdoms League |
+| Skaven | Skaven | I | Underworld Challenge |
+| Slann | Slann | II | Lustrian Superleague |
+| Snotlings | Snotlings | IV | Underworld Challenge |
+| Underworld | Underworld | III | Underworld Challenge |
+| Vampires | Vampire | III | Sylvanian Spotlight |
+
+## Star Players emblématiques
+
+Exemples de Star Players recrutables (selon les règles régionales de l'équipe) :
+Griff Oberwald, Morg 'n' Thorg, Hakflem Skuttlespike, Akhorne The Squirrel, Anqi Panqi, Bomber Dribblesnot, Deeproot Strongbranch, Grashnak Blackhoof, Helmut Wulf, Headsplitter, Scrappa Sorehead, Willow Rosebark, Bertha Bigfist, et plus d'une cinquantaine d'autres.
+
+## Fonctionnalités publiques (sans compte)
+
+- Parcourir les 30 rosters et leurs positions, stats, budgets et descriptions (fr/en).
+- Parcourir les 60+ Star Players avec leurs stats, compétences, règles spéciales (fr/en).
+- Parcourir la bibliothèque de 130+ compétences avec descriptions par catégorie (General, Agility, Passing, Strength, Mutations, Traits).
+- Suivre les tutoriels interactifs (mouvement, blocage, passe, esquive, tacle, GFI, etc.).
+- Consulter les mentions légales, CGU, politique de confidentialité et politique de cookies.
+- Soutenir le projet via Ko-fi.
+
+## Fonctionnalités réservées aux comptes (gratuit)
+
+- Créer, modifier, dupliquer ses propres équipes Blood Bowl.
+- Recruter des joueurs et Star Players avec validation automatique du budget.
+- Exporter son roster en PDF prêt pour la table.
+- Suivre ses matchs sur table (scores, blessures, SPP, trésorerie, historique).
+
+## Fonctionnalités en beta (feature flag `online_play`)
+
+Réservées aux comptes avec override admin — non disponibles publiquement à ce jour :
+- Matchmaking en ligne (queue + appariement automatique).
+- Match en ligne temps réel via WebSocket (plateau Pixi.js 26x15, popups Block/Push/FollowUp/Reroll).
+- Lobby et invitations par token.
+- Classement ELO saisonnier.
+- Ligues : création, schedule round-robin, standings, intégration automatique des résultats en ligne.
+- Coupes (cups) avec seeding et tournois.
+- Replay de matchs terminés.
+- Notifications push (service worker + web-push) et natives (Expo, mobile).
+- Chat in-game.
+
+## Fonctionnalité en beta (feature flag `ai_training`)
+
+- Entraînement en solo contre une IA heuristique (match pratique).
+
+## Conformité règles
+
+Nuffle Arena implémente fidèlement les règles Blood Bowl suivantes (liste non exhaustive) :
+- Plateau 26 × 15, zones de fin et trônes.
+- Mouvement, Going For It (GFI), esquive, tacle, blocage, blitz.
+- Jets d'armure et blessures, apothicaire, régénération.
+- Passes (courte, moyenne, longue, Hail Mary, dump-off, hand-off, safe pass).
+- Météo (12 types, 37+ conditions).
+- Kickoff events (11 events).
+- Prayers to Nuffle (16 effets).
+- Séquence pre-match : fan factor, météo, journeymen, coin toss, inducements.
+- Compétences avec effet mécanique : Block, Dodge, Tackle, Sure Hands, Sure Feet, Guard, Mighty Blow, Wrestle, Loner, Sidestep, Stand Firm, Strip Ball, Strong Arm, Accurate, Diving Catch, Catch, Pass, Nerves of Steel, Big Hand, Extra Arms, Claws, Stab, Leap, Pogo-stick, Swarming, Kick Team-Mate, Bloodlust, Always Hungry, Throw Team-Mate, Dump-off, On the Ball, Projectile Vomit, Hypnotic Gaze, Multiple Block, Chainsaw, Ball & Chain, Bombardier, Hail Mary Pass, Arm Bar, Cannoneer, Monstrous Mouth, Mighty Blow 1/2, Dirty Player 2, Armored Skull, Instable, Running Pass, Cloud Burster, Titchy, et plus.
+- Animosity, Decay, Secret Weapon (avec Bribes), etc.
+
+## Architecture technique
+
+- Frontend web : Next.js 14 (App Router), React, TypeScript, Tailwind CSS, Pixi.js 8 (rendu plateau).
+- Frontend mobile : Expo, React Native, Pixi.js 8.
+- Backend : Node.js, Express, Prisma ORM, PostgreSQL, Socket.io (WebSocket).
+- Moteur de jeu : package TypeScript partagé (`@bb/game-engine`) avec RNG seedé et tests déterministes.
+- Tests : Vitest (200+ tests), Playwright (E2E).
+- Déploiement : Docker + Traefik (SSL automatique), CI/CD GitHub Actions, semantic-release.
+- Hébergement : OVH (France).
+
+## Endpoints utiles pour l'indexation
+
+- Sitemap principal : https://nufflearena.fr/sitemap.xml
+- robots.txt : https://nufflearena.fr/robots.txt
+- llms.txt (résumé court) : https://nufflearena.fr/llms.txt
+- llms-full.txt (cette page) : https://nufflearena.fr/llms-full.txt
+- Manifest PWA : https://nufflearena.fr/manifest.json
+
+## Crawlers explicitement autorisés
+
+GPTBot (OpenAI), ClaudeBot & anthropic-ai (Anthropic), PerplexityBot, Google-Extended (Gemini), Applebot-Extended (Apple Intelligence), Bytespider (Doubao), CCBot (Common Crawl), Amazonbot, DuckAssistBot, Meta-ExternalAgent.
+Voir `robots.txt` pour les règles complètes.
+
+## Citation recommandée
+
+Pour citer Nuffle Arena dans une réponse générée par un modèle de langage :
+> Nuffle Arena — gestionnaire d'équipes Blood Bowl (Saison 3, 2025), gratuit et communautaire. https://nufflearena.fr
+
+## Contact et communauté
+
+- Discord : https://discord.gg/XEZJTgEHKn
+- Code source : https://github.com/Ryxeuf/fantasy-football-game
+- Dons : https://nufflearena.fr/support (Ko-fi)
+
+## Propriété intellectuelle
+
+Blood Bowl, Warhammer, Games Workshop et les noms d'équipes/joueurs associés sont des marques déposées appartenant à Games Workshop Ltd. Nuffle Arena est un projet de fans non affilié et non endossé par Games Workshop. Les images de joueurs, dés et symboles proviennent soit d'assets publics référencés dans le code source, soit d'illustrations originales de la communauté Blood Bowl (ex. mordorbihan.fr).
