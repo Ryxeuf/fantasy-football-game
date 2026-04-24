@@ -21,12 +21,24 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Mot de passe requis"),
 });
 
+/**
+ * Snowflake Discord : 17 à 20 chiffres (cf. https://discord.com/developers/docs/reference#snowflakes).
+ * Chaîne vide acceptée et traitée comme un effacement (null) côté route.
+ */
+const discordUserIdSchema = z
+  .string()
+  .regex(/^\d{17,20}$/, "Discord ID invalide (17 à 20 chiffres)")
+  .or(z.literal(""))
+  .optional()
+  .nullable();
+
 export const updateProfileSchema = z.object({
   email: z.string().email("Email invalide").optional(),
   coachName: z.string().min(1, "Nom de coach requis").max(50).optional(),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   dateOfBirth: z.string().optional().nullable(),
+  discordUserId: discordUserIdSchema,
 });
 
 export const changePasswordSchema = z.object({

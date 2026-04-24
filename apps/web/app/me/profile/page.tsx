@@ -11,6 +11,7 @@ type UserProfile = {
   firstName?: string | null;
   lastName?: string | null;
   dateOfBirth?: string | null;
+  discordUserId?: string | null;
   role?: string;
   roles?: string[];
   patreon?: boolean;
@@ -27,6 +28,8 @@ type UserProfile = {
     createdLocalMatches?: number;
   };
 };
+
+const DISCORD_ID_REGEX = /^\d{17,20}$/;
 
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");
@@ -362,10 +365,58 @@ export default function ProfilePage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-nuffle-bronze"
               />
             </div>
+            <div>
+              <label
+                htmlFor="discordUserId"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Identifiant Discord
+              </label>
+              <input
+                id="discordUserId"
+                type="text"
+                inputMode="numeric"
+                pattern="\d{17,20}"
+                placeholder="Ex : 012345678901234567"
+                value={formData.discordUserId ?? ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, discordUserId: e.target.value || null })
+                }
+                aria-invalid={
+                  !!formData.discordUserId &&
+                  !DISCORD_ID_REGEX.test(formData.discordUserId)
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-nuffle-bronze font-mono"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Suite de 17 à 20 chiffres. Active le rattachement automatique
+                des dons Ko-fi quand le donateur a lié son compte Discord.{" "}
+                <a
+                  href="https://support.discord.com/hc/fr/articles/206346498-O%C3%B9-puis-je-trouver-mon-identifiant-d-utilisateur-de-serveur-de-message"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-nuffle-bronze underline"
+                >
+                  Comment trouver mon Discord ID ?
+                </a>
+              </p>
+              {!!formData.discordUserId &&
+                !DISCORD_ID_REGEX.test(formData.discordUserId) && (
+                  <p className="text-xs text-red-600 mt-1">
+                    Format invalide : 17 à 20 chiffres uniquement.
+                  </p>
+                )}
+            </div>
             <div className="flex gap-3 pt-4">
               <button
                 onClick={handleSave}
-                disabled={saving || !formData.email || !formData.coachName}
+                disabled={
+                  saving ||
+                  !formData.email ||
+                  !formData.coachName ||
+                  (!!formData.discordUserId &&
+                    !DISCORD_ID_REGEX.test(formData.discordUserId))
+                }
                 className="px-4 py-2 bg-nuffle-bronze text-white rounded hover:bg-nuffle-gold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving ? "Enregistrement..." : "Enregistrer"}
@@ -455,6 +506,14 @@ export default function ProfilePage() {
                     month: "long",
                     day: "numeric",
                   })}
+                </dd>
+              </div>
+            )}
+            {profile.discordUserId && (
+              <div>
+                <dt className="text-sm font-medium text-gray-600">Identifiant Discord</dt>
+                <dd className="mt-1 text-sm text-gray-900 font-mono">
+                  {profile.discordUserId}
                 </dd>
               </div>
             )}

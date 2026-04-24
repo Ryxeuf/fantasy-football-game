@@ -248,7 +248,7 @@ router.get("/me", authUser, async (req: AuthenticatedRequest, res) => {
 // Mettre à jour le profil utilisateur
 router.put("/me", authUser, validate(updateProfileSchema), async (req: AuthenticatedRequest, res) => {
   try {
-    const { email, coachName, firstName, lastName, dateOfBirth } = req.body;
+    const { email, coachName, firstName, lastName, dateOfBirth, discordUserId } = req.body;
 
     if (email !== undefined) {
       const existing = await prisma.user.findUnique({ where: { email } });
@@ -256,7 +256,7 @@ router.put("/me", authUser, validate(updateProfileSchema), async (req: Authentic
         return res.status(409).json({ error: "Email déjà utilisé" });
       }
     }
-    
+
     // Construction des données à mettre à jour
     const updateData: any = {};
     if (email !== undefined) updateData.email = email;
@@ -265,6 +265,10 @@ router.put("/me", authUser, validate(updateProfileSchema), async (req: Authentic
     if (lastName !== undefined) updateData.lastName = lastName === "" ? null : lastName;
     if (dateOfBirth !== undefined) {
       updateData.dateOfBirth = dateOfBirth === "" || dateOfBirth === null ? null : new Date(dateOfBirth);
+    }
+    if (discordUserId !== undefined) {
+      updateData.discordUserId =
+        discordUserId === "" || discordUserId === null ? null : discordUserId;
     }
 
     const updatedUser = await prisma.user.update({
@@ -278,6 +282,7 @@ router.put("/me", authUser, validate(updateProfileSchema), async (req: Authentic
         firstName: true,
         lastName: true,
         dateOfBirth: true,
+        discordUserId: true,
         role: true,
         createdAt: true,
         updatedAt: true,
@@ -293,6 +298,14 @@ router.put("/me", authUser, validate(updateProfileSchema), async (req: Authentic
     res.json({ user: publicUser });
   } catch (e: any) {
     if (e.code === "P2002") {
+      // Prisma unique constraint violation. target indique le champ en cause
+      // (ex: ['email'] ou ['discordUserId']). On renvoie un message ciblé.
+      const target: string[] | undefined = e?.meta?.target;
+      if (target?.includes("discordUserId")) {
+        return res
+          .status(409)
+          .json({ error: "Cet identifiant Discord est déjà associé à un autre compte" });
+      }
       return res.status(409).json({ error: "Email déjà utilisé" });
     }
     console.error(e);
