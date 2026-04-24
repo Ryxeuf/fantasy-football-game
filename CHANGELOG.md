@@ -1,3 +1,10 @@
+## [1.72.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.72.0...v1.72.1) (2026-04-24)
+
+
+### 🐛 Bug Fixes
+
+* **docker:** cap Node V8 heap to 2GB during web build to prevent OOM ([42f902e](https://github.com/Ryxeuf/fantasy-football-game/commit/42f902e3f44f69e8eaa8c384ebbdae2c887a21e4))
+
 ## [1.72.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.71.0...v1.72.0) (2026-04-24)
 
 
