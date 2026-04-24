@@ -1,3 +1,10 @@
+## [1.70.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.70.0...v1.70.1) (2026-04-24)
+
+
+### 🐛 Bug Fixes
+
+* **web:** update start script port from 3000 to 3100 in package.json ([df551bb](https://github.com/Ryxeuf/fantasy-football-game/commit/df551bbb5bd0c801637817c643afdaa4183ff646))
+
 ## [1.70.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.69.0...v1.70.0) (2026-04-24)
 
 
