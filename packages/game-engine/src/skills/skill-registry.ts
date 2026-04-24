@@ -1329,3 +1329,96 @@ registerSkill({
   description: "A la fin du tour d'equipe adverse, lancez un D6 pour chaque coequipier a Terre et non-Etourdi dans les trois cases d'un joueur Debout avec ce trait ; sur un succes, le coequipier est immediatement releve.",
   canApply: (ctx) => hasSkill(ctx.player, 'pick-me-up') || hasSkill(ctx.player, 'pick_me_up'),
 });
+
+// ─── BREATHE FIRE (O.1 batch 3r) ────────────────────────────────────────────
+// Breathe Fire (Souffle Ardent) est un trait Season 3 (Slann Kroxigor,
+// variantes Black Orc Trained Troll) : une fois par activation, au lieu
+// d'effectuer une action de Bloc, ce joueur peut effectuer une action
+// Speciale Souffle de Feu (template conique, jet d'armure sur tout joueur
+// touche). Le dispatch d'action et le template de zone sont geres par le
+// handler d'action speciale dedie ; l'entree du registre sert a la
+// decouverte UI. On n'expose PAS de getModifiers : il ne s'agit pas d'un
+// modificateur de jet mais d'une action alternative.
+registerSkill({
+  slug: 'breathe-fire',
+  triggers: ['on-activation'],
+  description: "Une fois par activation, au lieu d'effectuer une action de Bloc, ce joueur peut effectuer une action Speciale Souffle de Feu.",
+  canApply: (ctx) => hasSkill(ctx.player, 'breathe-fire') || hasSkill(ctx.player, 'breathe_fire'),
+});
+
+// ─── CLEARANCE (O.1 batch 3r) ───────────────────────────────────────────────
+// Clearance (Degagement) est une competence Scelerate Season 3 : une fois
+// par tour d'equipe, le joueur peut annoncer une action Speciale de
+// Degagement. Il peut effectuer un mouvement d'abord, puis choisir une
+// direction avec le gabarit de renvois (D6 direction + D6 cases) ; pas de
+// Turnover si le ballon est au sol. Le dispatch d'action est gere par le
+// handler d'action speciale dedie ; l'entree du registre sert a la
+// decouverte UI. On n'expose PAS de getModifiers : il s'agit d'une action
+// alternative, pas d'un modificateur de jet.
+registerSkill({
+  slug: 'clearance',
+  triggers: ['on-activation'],
+  description: "Une fois par tour, ce joueur peut annoncer une action Speciale de Degagement. Il peut bouger d'abord, puis utiliser le Gabarit de Renvois (D6 direction + D6 cases). Pas de Turnover si le ballon est au sol.",
+  canApply: (ctx) => hasSkill(ctx.player, 'clearance'),
+});
+
+// ─── PILE-ON (O.1 batch 3r) ─────────────────────────────────────────────────
+// Pile On (Pique) est un trait (BB2020 S3) : apres un bloc reussi qui met
+// l'adversaire a Terre, ce joueur peut choisir de Valdinguer sur lui au lieu
+// de rester debout, offrant un bonus au jet d'armure/blessure via le handler
+// dedie ; ce trait permet egalement de relancer un jet d'agilite
+// d'atterrissage rate. Les deux effets sont resolus respectivement dans
+// l'injury handler et dans le landing handler ; l'entree du registre sert a
+// la decouverte UI. On n'expose PAS de getModifiers pour eviter un
+// double-comptage sur l'injury/landing.
+registerSkill({
+  slug: 'pile-on',
+  triggers: ['on-injury'],
+  description: "Apres un bloc reussi, ce joueur peut choisir de Valdinguer sur l'adversaire a Terre pour des degats supplementaires. Permet egalement de relancer un jet d'agilite d'atterrissage rate.",
+  canApply: (ctx) => hasSkill(ctx.player, 'pile-on') || hasSkill(ctx.player, 'pile_on'),
+});
+
+// ─── PROVOCATION (O.1 batch 3r) ─────────────────────────────────────────────
+// Provocation est une competence Scelerate Season 3 : quand ce joueur est
+// Repousse suite a un blocage contre lui, il peut forcer le joueur adverse
+// a Poursuivre (sauf si l'adverse est Enracine). L'effet est applique par
+// le resolveur de push-back / follow-up ; l'entree du registre sert a la
+// decouverte UI. On n'expose PAS de getModifiers : il s'agit d'une
+// contrainte sur la decision de suivre, pas d'un modificateur de jet.
+registerSkill({
+  slug: 'provocation',
+  triggers: ['on-block-result'],
+  description: "Quand ce joueur est Repousse suite a un blocage contre lui, il peut forcer le joueur adverse a Poursuivre (sauf si enracine).",
+  canApply: (ctx) => hasSkill(ctx.player, 'provocation'),
+});
+
+// ─── SUREFOOT (O.1 batch 3r) ────────────────────────────────────────────────
+// Surefoot (Appuis Surs) est une competence General Season 3 : chaque fois
+// que ce joueur est cense etre Plaque ou Chuter (esquive, GFI, bloc, etc.),
+// jetez un D6 ; sur un 6, il n'est pas Plaque / ne Chute pas. Si cela se
+// produit pendant son activation, il peut continuer normalement sans
+// Turnover. Le jet d'evitement est gere par les handlers de mouvement /
+// bloc dedies ; l'entree du registre sert a la decouverte UI. On n'expose
+// PAS de getModifiers pour eviter un double-comptage sur le jet passif.
+registerSkill({
+  slug: 'surefoot',
+  triggers: ['on-movement'],
+  description: "Chaque fois que ce joueur est cense etre Plaque ou Chuter, jetez un D6. Sur un 6, il n'est pas Plaque / ne Chute pas. Pendant son activation, il peut continuer normalement sans Turnover.",
+  canApply: (ctx) => hasSkill(ctx.player, 'surefoot'),
+});
+
+// ─── TRICKSTER (O.1 batch 3r) ───────────────────────────────────────────────
+// Trickster (Farceur) est un trait Season 3 : avant de determiner combien
+// de des sont lances lors d'un bloc (ou d'une action speciale qui remplace
+// un bloc) cible sur ce joueur, il peut etre retire du terrain et replace
+// sur n'importe quelle case inoccupee adjacente au joueur effectuant le
+// bloc. Le re-placement pre-bloc est gere par le pre-processor d'action de
+// bloc ; l'entree du registre sert a la decouverte UI. On n'expose PAS de
+// getModifiers : il ne s'agit pas d'un modificateur de jet mais d'un
+// re-placement defensif.
+registerSkill({
+  slug: 'trickster',
+  triggers: ['on-block-defender'],
+  description: "Avant de determiner les des de bloc, ce joueur peut etre retire du terrain et replace sur n'importe quelle case inoccupee adjacente au joueur effectuant le bloc.",
+  canApply: (ctx) => hasSkill(ctx.player, 'trickster'),
+});
