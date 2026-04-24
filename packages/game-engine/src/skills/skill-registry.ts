@@ -1508,3 +1508,106 @@ registerSkill({
   description: "Un Lancer de Coequipier rate effectue par ce joueur ne cause pas de turnover.",
   canApply: (ctx) => hasSkill(ctx.player, 'reliable'),
 });
+
+// ─── STAKES (O.1 batch 3t) ──────────────────────────────────────────────────
+// Stakes (Pieux) est une regle speciale Star Player : lors d'une attaque de
+// Poignard (Stab) contre un joueur Khemri, Necromantique, Mort-Vivant ou
+// Vampire, ce joueur ajoute +1 au jet d'Armure. Le bonus conditionnel au
+// roster adverse est gere par l'armor handler dedie (verification du
+// type d'equipe via le roster metadata) ; l'entree du registre sert a
+// la decouverte UI. On n'expose PAS de getModifiers : le bonus est
+// conditionne par le type de roster adverse, pas applicable
+// inconditionnellement via collectModifiers.
+registerSkill({
+  slug: 'stakes',
+  triggers: ['on-armor'],
+  description: "+1 au jet d'Armure lors d'une attaque de Poignard contre un joueur Khemri, Necromantique, Mort-Vivant ou Vampire.",
+  canApply: (ctx) => hasSkill(ctx.player, 'stakes'),
+});
+
+// ─── SOLITARY AGGRESSOR (O.1 batch 3t) ──────────────────────────────────────
+// Solitary Aggressor (Agresseur Solitaire) est une competence Scelerate
+// Season 3 : quand ce joueur effectue une Action d'Agression sans Soutien
+// Offensif ni Defensif, il peut relancer un Jet d'Armure rate. La
+// relance conditionnelle (verification absence de soutiens) est geree
+// par le foul handler dedie ; l'entree du registre sert a la decouverte
+// UI. On n'expose PAS de getModifiers : il s'agit d'une relance opt-in,
+// pas d'un modificateur de jet.
+registerSkill({
+  slug: 'solitary-aggressor',
+  triggers: ['on-foul'],
+  description: "Quand ce joueur effectue une Agression sans Soutien Offensif ou Defensif, il peut relancer un Jet d'Armure rate.",
+  canApply: (ctx) =>
+    hasSkill(ctx.player, 'solitary-aggressor') ||
+    hasSkill(ctx.player, 'solitary_aggressor'),
+});
+
+// ─── LIGHTNING AGGRESSION (O.1 batch 3t) ────────────────────────────────────
+// Lightning Aggression (Agression Eclair) est une competence Scelerate
+// Season 3 : l'Activation de ce joueur ne prend pas fin apres qu'il a
+// effectue une Action d'Agression et il peut continuer son Action de
+// Mouvement avec son mouvement restant. La prolongation d'activation
+// post-Agression est geree par le foul handler dedie ; l'entree du
+// registre sert a la decouverte UI. On n'expose PAS de getModifiers :
+// il s'agit d'une regle de flow d'activation, pas d'un modificateur de
+// jet.
+registerSkill({
+  slug: 'lightning-aggression',
+  triggers: ['on-foul'],
+  description: "L'Activation de ce joueur ne prend pas fin apres une Action d'Agression ; il peut continuer son Action de Mouvement avec son mouvement restant.",
+  canApply: (ctx) =>
+    hasSkill(ctx.player, 'lightning-aggression') ||
+    hasSkill(ctx.player, 'lightning_aggression'),
+});
+
+// ─── BOOT TO THE HEAD (O.1 batch 3t) ────────────────────────────────────────
+// Boot to the Head (Coup de Crampons) est une competence Scelerate Season 3
+// : ce joueur peut fournir un Soutien Offensif quand un coequipier effectue
+// une Action d'Agression, quel que soit le nombre de joueurs adverses qui
+// le Marquent. L'override du comptage de soutien sur Agression est gere
+// par le foul-assist resolver dedie ; l'entree du registre sert a la
+// decouverte UI. On n'expose PAS de getModifiers : il s'agit d'une regle
+// d'eligibilite au soutien, pas d'un modificateur de jet applique via
+// collectModifiers.
+registerSkill({
+  slug: 'boot-to-the-head',
+  triggers: ['on-foul'],
+  description: "Ce joueur peut fournir un Soutien Offensif pour une Agression d'un coequipier, quel que soit le nombre de joueurs adverses qui le Marquent.",
+  canApply: (ctx) =>
+    hasSkill(ctx.player, 'boot-to-the-head') ||
+    hasSkill(ctx.player, 'boot_to_the_head'),
+});
+
+// ─── VIOLENT INNOVATOR (O.1 batch 3t) ───────────────────────────────────────
+// Violent Innovator (Innovateur Violent) est une competence Scelerate
+// Season 3 : si un adversaire subit une Elimination suite a une Action
+// Speciale effectuee par ce joueur, ce joueur gagne les PSP
+// correspondants. L'octroi de SPP post-Elimination sur Action Speciale
+// est gere par le SPP manager dedie ; l'entree du registre sert a la
+// decouverte UI. On n'expose PAS de getModifiers : il s'agit d'un
+// ajustement de comptage SPP, pas d'un modificateur de jet.
+registerSkill({
+  slug: 'violent-innovator',
+  triggers: ['on-injury'],
+  description: "Si un adversaire subit une Elimination suite a une Action Speciale effectuee par ce joueur, celui-ci gagne les PSP correspondants.",
+  canApply: (ctx) =>
+    hasSkill(ctx.player, 'violent-innovator') ||
+    hasSkill(ctx.player, 'violent_innovator'),
+});
+
+// ─── SABOTEUR (O.1 batch 3t) ────────────────────────────────────────────────
+// Saboteur est une competence Scelerate Season 3 reservee aux Armes
+// Secretes : quand ce joueur est Plaque suite a l'Action de Blocage d'un
+// adversaire, avant le jet d'Armure, il peut lancer un D6. Sur 1-3, rien
+// ne se passe et le jet d'Armure suit ; sur 4+, l'arme sabotee explose,
+// Plaque aussi l'adversaire (sans Turnover sauf si porteur de Ballon)
+// et ce joueur est automatiquement KO. La resolution du D6 d'explosion
+// est geree par le saboteur handler dedie ; l'entree du registre sert a
+// la decouverte UI. On n'expose PAS de getModifiers : il s'agit d'une
+// action alternative pre-armure, pas d'un modificateur de jet.
+registerSkill({
+  slug: 'saboteur',
+  triggers: ['on-armor'],
+  description: "Avant le jet d'Armure apres avoir ete Plaque, ce joueur peut jeter un D6 : sur 4+ son arme sabotee explose, Plaquant aussi l'adversaire et KO automatique pour lui. Necessite Arme Secrete.",
+  canApply: (ctx) => hasSkill(ctx.player, 'saboteur'),
+});
