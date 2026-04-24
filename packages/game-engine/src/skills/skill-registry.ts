@@ -1611,3 +1611,93 @@ registerSkill({
   description: "Avant le jet d'Armure apres avoir ete Plaque, ce joueur peut jeter un D6 : sur 4+ son arme sabotee explose, Plaquant aussi l'adversaire et KO automatique pour lui. Necessite Arme Secrete.",
   canApply: (ctx) => hasSkill(ctx.player, 'saboteur'),
 });
+
+// ─── BULLSEYE (O.1 batch 3u) ────────────────────────────────────────────────
+// Bullseye (Dans le Mille) est un trait Season 3 Force : lors d'une Action
+// de Lancer de Coequipier, si le resultat du lancer est un Lancer Superbe,
+// le joueur lance ne Valdingue pas et atterrit sur la case ciblee.
+// L'annulation du Valdingue post-TTM sur Lancer Superbe est geree par le
+// Throw Team-Mate handler dedie ; l'entree du registre sert a la
+// decouverte UI. On n'expose PAS de getModifiers : il s'agit d'une
+// regle speciale de resolution TTM, pas d'un modificateur de jet.
+registerSkill({
+  slug: 'bullseye',
+  triggers: ['on-pass'],
+  description: "Lors d'un Lancer de Coequipier avec Lancer Superbe, le joueur lance ne Valdingue pas et atterrit sur la case ciblee.",
+  canApply: (ctx) => hasSkill(ctx.player, 'bullseye'),
+});
+
+// ─── CASSE-OS (O.1 batch 3u) ────────────────────────────────────────────────
+// Casse-Os (Bone Breaker) est une regle speciale Star Player : une fois
+// par match, ce joueur ajoute +1 en Force lors d'une Action de Blocage.
+// Le bonus ponctuel de Force est gere par le blocking handler dedie via
+// un flag per-match ; l'entree du registre sert a la decouverte UI. On
+// n'expose PAS de getModifiers : il s'agit d'un bonus opt-in une fois
+// par match, pas d'un modificateur de jet permanent.
+registerSkill({
+  slug: 'casse-os',
+  triggers: ['on-block-attacker'],
+  description: "Une fois par match, +1 en Force lors d'une Action de Blocage.",
+  canApply: (ctx) => hasSkill(ctx.player, 'casse-os') || hasSkill(ctx.player, 'casse_os'),
+});
+
+// ─── COUP SAUVAGE (O.1 batch 3u) ────────────────────────────────────────────
+// Coup Sauvage (Savage Blow) est une regle speciale Star Player : une fois
+// par partie, ce joueur peut relancer n'importe quel nombre de des de
+// Blocage qu'il vient de lancer. La relance du pool de des est geree par
+// le blocking handler dedie via un flag per-match ; l'entree du registre
+// sert a la decouverte UI. On n'expose PAS de getModifiers : il s'agit
+// d'une relance opt-in une fois par partie, pas d'un modificateur de
+// jet.
+registerSkill({
+  slug: 'coup-sauvage',
+  triggers: ['on-block-attacker'],
+  description: "Une fois par partie, ce joueur peut relancer n'importe quel nombre de des de Blocage qu'il vient de lancer.",
+  canApply: (ctx) => hasSkill(ctx.player, 'coup-sauvage') || hasSkill(ctx.player, 'coup_sauvage'),
+});
+
+// ─── LA BALISTE (O.1 batch 3u) ──────────────────────────────────────────────
+// La Baliste (The Ballista) est une regle speciale Star Player : une fois
+// par match, ce joueur peut relancer un jet de Passe rate (Passe ou Lancer
+// de Coequipier). La relance ponctuelle est geree par le pass/TTM handler
+// dedie via un flag per-match ; l'entree du registre sert a la decouverte
+// UI. On n'expose PAS de getModifiers : il s'agit d'une relance opt-in
+// une fois par match, pas d'un modificateur de jet.
+registerSkill({
+  slug: 'la-baliste',
+  triggers: ['on-pass'],
+  description: "Une fois par match, ce joueur peut relancer un jet de Passe rate (Passe ou Lancer de Coequipier).",
+  canApply: (ctx) => hasSkill(ctx.player, 'la-baliste') || hasSkill(ctx.player, 'la_baliste'),
+});
+
+// ─── LORD OF CHAOS (O.1 batch 3u) ───────────────────────────────────────────
+// Lord of Chaos (Seigneur du Chaos) est une regle speciale Star Player
+// d'equipe : l'equipe de ce joueur gagne +1 Relance d'Equipe pour la
+// premiere mi-temps. Le bonus de setup kickoff est applique par le pre-
+// match sequence resolver dedie ; l'entree du registre sert a la
+// decouverte UI. On n'expose PAS de getModifiers : il s'agit d'un bonus
+// de setup de ressource equipe, pas d'un modificateur de jet.
+registerSkill({
+  slug: 'lord-of-chaos',
+  triggers: ['on-kickoff'],
+  description: "L'equipe de ce joueur gagne +1 Relance d'Equipe pour la premiere mi-temps.",
+  canApply: (ctx) => hasSkill(ctx.player, 'lord-of-chaos') || hasSkill(ctx.player, 'lord_of_chaos'),
+});
+
+// ─── FATAL FLIGHT (O.1 batch 3u) ────────────────────────────────────────────
+// Fatal Flight (Vol Fatal) est une competence Scelerate Season 3 : lors
+// d'un Lancer de Coequipier, si le joueur lance atterrit ou rebondit sur
+// une case occupee et plaque l'adversaire, il peut appliquer +1 au jet
+// d'Armure ou au jet de Blessure ; si l'adversaire subit une Elimination,
+// le joueur gagne les PSP correspondants. Le bonus armure/blessure
+// conditionnel post-TTM et l'octroi de SPP sont geres par le TTM
+// handler + SPP manager dedies ; l'entree du registre sert a la
+// decouverte UI. On n'expose PAS de getModifiers : le bonus est
+// conditionne par l'atterrissage sur case occupee suite a un TTM, pas
+// applicable inconditionnellement via collectModifiers.
+registerSkill({
+  slug: 'fatal-flight',
+  triggers: ['on-armor'],
+  description: "Lors d'un Lancer de Coequipier, si le joueur lance atterrit ou rebondit sur une case occupee et plaque l'adversaire, +1 au jet d'Armure ou de Blessure ; sur Elimination, gagne les PSP correspondants.",
+  canApply: (ctx) => hasSkill(ctx.player, 'fatal-flight') || hasSkill(ctx.player, 'fatal_flight'),
+});
