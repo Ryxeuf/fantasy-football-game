@@ -1,3 +1,22 @@
+## [1.68.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.67.1...v1.68.0) (2026-04-24)
+
+
+### ✨ Features
+
+* **game-engine:** K.11 hail-mary legal moves + tests complementaires ([#324](https://github.com/Ryxeuf/fantasy-football-game/issues/324)) ([be51d4a](https://github.com/Ryxeuf/fantasy-football-game/commit/be51d4ac6554754e69106622318c134a35142440))
+* **game-engine:** O.1 batch 3g - cloud-burster + titchy ([#320](https://github.com/Ryxeuf/fantasy-football-game/issues/320)) ([f623755](https://github.com/Ryxeuf/fantasy-football-game/commit/f623755c5da8dfa544c89bbe217a7cc7a4fd2fca))
+* **game-engine:** O.1 batch 3i - leap + stab + projectile-vomit registry entries ([#322](https://github.com/Ryxeuf/fantasy-football-game/issues/322)) ([a6a03f0](https://github.com/Ryxeuf/fantasy-football-game/commit/a6a03f086d1785610d8a60d969cbae8a094c39b5))
+* **game-engine:** O.1 batch 3j - on-the-ball + throw-team-mate + dump-off registry entries ([#323](https://github.com/Ryxeuf/fantasy-football-game/issues/323)) ([bc5e327](https://github.com/Ryxeuf/fantasy-football-game/commit/bc5e3273f0d82ccc3eb74c70df15aad939c065b1))
+* **game-engine:** O.1 batch 3k - chainsaw + multiple-block + hypnotic-gaze ([#325](https://github.com/Ryxeuf/fantasy-football-game/issues/325)) ([364ec17](https://github.com/Ryxeuf/fantasy-football-game/commit/364ec17692776eb3713adb13805c6d3c5abf236f))
+* **game-engine:** O.1 batch 3l - armored-skull + instable + running-pass ([#326](https://github.com/Ryxeuf/fantasy-football-game/issues/326)) ([c42bffb](https://github.com/Ryxeuf/fantasy-football-game/commit/c42bffb2ad9a84fa3e17361afcd3dbd0dd2beb66))
+* **game-engine:** O.1 batch 3m - bloodlust + always-hungry + secret-weapon registry ([#327](https://github.com/Ryxeuf/fantasy-football-game/issues/327)) ([3a55869](https://github.com/Ryxeuf/fantasy-football-game/commit/3a55869fa02796619e0a315591c09c7c6030dd64))
+* **game-engine:** O.1 batch 3n - pogo-stick + swarming + kick-team-mate ([#328](https://github.com/Ryxeuf/fantasy-football-game/issues/328)) ([32ab85b](https://github.com/Ryxeuf/fantasy-football-game/commit/32ab85b44bfe532258b600802d48086a6d12901d))
+
+
+### 🐛 Bug Fixes
+
+* **docker:** update SERVER_API_BASE to use nufflearena_server in production and development configurations ([720efd9](https://github.com/Ryxeuf/fantasy-football-game/commit/720efd9e8c6ad7e48ee85b61d642c18380061241))
+
 ## [1.67.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.67.0...v1.67.1) (2026-04-23)
 
 
