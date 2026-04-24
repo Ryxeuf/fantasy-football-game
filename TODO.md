@@ -1,7 +1,7 @@
 # TODO — Nuffle Arena (Blood Bowl 3 Online)
 
 > Backlog priorise par valeur (Gain) et effort (Difficulte).
-> Derniere mise a jour : 2026-04-14 (repriorisation 5 equipes)
+> Derniere mise a jour : 2026-04-24 (ajout Sprint 23 SEO/GEO, socle livre)
 >
 > **Objectif** : livrer un jeu 100% fonctionnel avec un scope reduit a 5 equipes prioritaires,
 > puis rayonner sur le reste du contenu.
@@ -357,6 +357,48 @@
 | O.9 | Features communautaires (match of the week, Discord) | Engagement | [ ] |
 | O.10 | Dashboard analytics personnel et global | Engagement | [ ] |
 
+### Sprint 23 — SEO, GEO & rayonnement (~5 jours)
+
+> Optimiser la visibilite du site pour les moteurs de recherche classiques
+> (Google, Bing) et pour les moteurs generatifs / LLM (ChatGPT, Claude,
+> Perplexity, Gemini, Apple Intelligence). Maximiser la citabilite par les
+> IA et accelerer l'acquisition organique en mode zero-budget.
+>
+> Livrables deja realises (refresh homepage + socle SEO/GEO) marques [x].
+> Les taches restantes ciblent les pages profondes (teams, star-players,
+> skills), les signaux de fraicheur (blog/RSS), la soumission aux outils
+> webmasters et le suivi de presence dans les IA.
+
+| # | Tache | Type | Statut |
+|---|-------|------|--------|
+| Q.1 | Refresh homepage (chiffres a jour, feature flags respectes, FAQ visible) | SEO | [x] |
+| Q.2 | Metadonnees Next.js enrichies (hreflang fr/en/x-default, canonical, geo FR, applicationName) | SEO | [x] |
+| Q.3 | JSON-LD homepage `@graph` : Organization + WebSite + WebApplication + FAQPage | SEO | [x] |
+| Q.4 | `robots.txt` + `app/robots.ts` consolides (pages publiques allow, zones privees disallow) | SEO | [x] |
+| Q.5 | Sitemap enrichi (skills, support, pages legales, tutoriels, teams/[slug], star-players/[slug]) | SEO | [x] |
+| Q.6 | `llms.txt` + `llms-full.txt` (standard llmstxt.org) avec faits citables | GEO | [x] |
+| Q.7 | Regles explicites pour 20 crawlers IA (GPTBot, ClaudeBot, PerplexityBot, Google-Extended, Applebot-Extended, CCBot...) | GEO | [x] |
+| Q.8 | `sameAs` + `knowsAbout` + `dateModified` dans JSON-LD (citabilite LLM) | GEO | [x] |
+| Q.9 | `manifest.json` enrichi (shortcuts PWA : equipes, rosters, stars) | SEO | [x] |
+| Q.10 | Metadata + JSON-LD `SportsTeam` dynamique sur `/teams/[slug]` (31 pages) | SEO | [ ] |
+| Q.11 | Metadata + JSON-LD `Person` / `SportsAthlete` dynamique sur `/star-players/[slug]` (~67 pages) | SEO | [ ] |
+| Q.12 | Metadata + JSON-LD `ItemList` / `DefinedTermSet` sur `/skills` (130+ entries citables) | SEO | [ ] |
+| Q.13 | `BreadcrumbList` JSON-LD sur toutes les pages profondes (teams, star-players, skills, tutoriel) | SEO | [ ] |
+| Q.14 | Open Graph images dynamiques par page via `ImageResponse` Next.js (og:image contextualise) | SEO | [ ] |
+| Q.15 | Page `/a-propos` (About) citable : histoire, chiffres, equipe, roadmap publique | GEO | [ ] |
+| Q.16 | Section blog / changelog public + flux RSS (`/feed.xml`) comme signal de fraicheur LLM | GEO | [ ] |
+| Q.17 | Codes de verification webmasters dans `layout.tsx` (Google Search Console, Bing, Yandex) | SEO | [ ] |
+| Q.18 | Soumission sitemap + monitoring indexation (Google Search Console, Bing Webmaster Tools) | SEO | [ ] |
+| Q.19 | Ajouter Umami events cles (clic equipe, recrut star player, export PDF, support CTA) | Analytics | [ ] |
+| Q.20 | Core Web Vitals monitoring (LCP, INP, CLS) + budget perf CI | Perf | [ ] |
+| Q.21 | Audit A11y WCAG AA (contraste, labels, navigation clavier, focus rings) | Qualite | [ ] |
+| Q.22 | `humans.txt` + `security.txt` (bonnes pratiques, contact securite) | SEO | [ ] |
+| Q.23 | Entry Wikidata (et/ou section Wikipedia ebauche) pour renforcer l'identite d'entite | GEO | [ ] |
+| Q.24 | Schema.org `Event` pour les tournois/ligues publics (quand online_play sera ouvert) | SEO | [ ] |
+| Q.25 | Protocole de test "presence IA" : prompts de reference dans ChatGPT / Claude / Perplexity, suivi mensuel | GEO | [ ] |
+| Q.26 | Strategie liens entrants : annonce r/bloodbowl, TalkFantasyFootball, blog Mordorbihan, Discord BB | GEO | [ ] |
+| Q.27 | Hreflang par page (alternates canoniques fr/en quand le split i18n sera fait) | SEO | [ ] |
+
 ---
 
 ## Resume par phase
@@ -384,6 +426,7 @@
 | **J — Traits negatifs restants** | 4 | 4 | 0 | 0 | TERMINE (livre avant ordonnancement) |
 | **K — Skills fort impact (non-5 equipes)** | 8 | 3 | 0 | 5 | BASSE (Sprint 20-21) |
 | **O — Contenu & polish** | 10 | 0 | 0 | 10 | SOUHAITABLE (Sprint 22+) |
+| **Q — SEO, GEO & rayonnement** | 27 | 9 | 0 | 18 | HAUTE (Sprint 23) |
 
 ---
 
@@ -411,6 +454,7 @@ Phase 3 : Extension
 Sprint 18-19 (Mobile) ── [App stores]
 Sprint 20-21 (Skills + equipes restantes) ── ouvrir les 56 autres rosters
 Sprint 22+ (Polish, perf, communaute)
+Sprint 23   (SEO + GEO : indexation Google/Bing + citation IA) ── acquisition organique
 ```
 
 > **Historique (Sprints 0-12)** :
@@ -437,3 +481,4 @@ Sprint 22+ (Polish, perf, communaute)
 > 19. Sprint 18-19 — parite mobile [DECALE]
 > 20. Sprint 20-21 — skills et equipes restantes (bloodlust, stab, chainsaw, ball-and-chain, bombardier, etc.)
 > 21. Sprint 22+ — polish final (E2E, perf, analytics, communaute)
+> 22. Sprint 23 — SEO, GEO & rayonnement (indexation Google/Bing + llms.txt + JSON-LD pages profondes + blog/RSS + presence IA) — socle livre, extensions a venir
