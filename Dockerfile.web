@@ -24,6 +24,11 @@ RUN pnpm install --frozen-lockfile
 # pre-rendering, minification, and bundle splitting actually kick in.
 COPY . .
 RUN pnpm -w prisma generate
+# Borne le heap V8 a 2 Go pour que les workers de build Next.js declenchent
+# un GC agressif plutot que d'etre tues par le OOM-killer systeme quand les
+# autres services de l'hote occupent deja ~10 Go de RAM resident. Sans ce
+# plafond, le build echoue sporadiquement avec exit code 137 / oom_kill.
+ENV NODE_OPTIONS="--max-old-space-size=2048"
 RUN pnpm --filter @bb/web run build
 
 ENV NODE_ENV=production
