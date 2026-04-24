@@ -1,4 +1,4 @@
-import { getServerApiBase, safeServerJson } from "../lib/serverApi";
+import { fetchServerJson, getServerApiBase } from "../lib/serverApi";
 import SkillsClient, { type Skill } from "./SkillsClient";
 
 // ISR — skill definitions change only with rules edition updates.
@@ -6,7 +6,7 @@ export const revalidate = 3600;
 
 async function fetchSkills(ruleset: string): Promise<Skill[]> {
   const base = getServerApiBase();
-  const data = await safeServerJson<{ skills?: Skill[] }>(
+  const data = await fetchServerJson<{ skills?: Skill[] }>(
     `${base}/api/skills?ruleset=${encodeURIComponent(ruleset)}`,
     { next: { revalidate: 3600 } },
   );

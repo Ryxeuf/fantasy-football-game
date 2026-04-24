@@ -6,8 +6,87 @@
 import { Router } from "express";
 import { prisma } from "../prisma";
 import { resolveRuleset, DEFAULT_RULESET } from "../utils/ruleset-helpers";
+import { memoizeAsync } from "../utils/memoize-async";
 
 const router = Router();
+
+const POSITIONS_CACHE_TTL_MS = 5 * 60 * 1000;
+const POSITIONS_LIST_NS = "public-positions-list";
+const POSITIONS_DETAIL_NS = "public-positions-detail";
+
+interface TransformedPosition {
+  slug: string;
+  displayName: string;
+  cost: number;
+  min: number;
+  max: number;
+  ma: number;
+  st: number;
+  ag: number;
+  pa: number;
+  av: number;
+  skills: string;
+  rosterSlug: string;
+  rosterName: string;
+}
+
+async function loadPositionList(
+  lang: string,
+  ruleset: string,
+  rosterSlug?: string,
+): Promise<{ positions: TransformedPosition[]; ruleset: string }> {
+  const isEnglish = lang === "en";
+  const where: any = { roster: { ruleset } };
+  if (rosterSlug) {
+    where.roster = { slug: rosterSlug, ruleset };
+  }
+  const positions = await prisma.position.findMany({
+    where,
+    include: {
+      roster: { select: { slug: true, name: true, nameEn: true } },
+      skills: { include: { skill: true } },
+    },
+    orderBy: [{ roster: { name: "asc" } }, { displayName: "asc" }],
+  });
+  const transformed = positions.map((position: any) =>
+    transformPosition(position, isEnglish),
+  );
+  return { positions: transformed, ruleset };
+}
+
+async function loadPositionDetail(
+  slug: string,
+  lang: string,
+  ruleset: string,
+): Promise<{ position: TransformedPosition; ruleset: string } | null> {
+  const isEnglish = lang === "en";
+  const position = await prisma.position.findFirst({
+    where: { slug, roster: { ruleset } },
+    include: {
+      roster: { select: { slug: true, name: true, nameEn: true } },
+      skills: { include: { skill: true } },
+    },
+  });
+  if (position) {
+    return { position: transformPosition(position, isEnglish), ruleset };
+  }
+  if (ruleset !== DEFAULT_RULESET) {
+    const fallback = await prisma.position.findFirst({
+      where: { slug, roster: { ruleset: DEFAULT_RULESET } },
+      include: {
+        roster: { select: { slug: true, name: true, nameEn: true } },
+        skills: { include: { skill: true } },
+      },
+    });
+    if (fallback) {
+      return {
+        position: transformPosition(fallback, isEnglish),
+        ruleset: DEFAULT_RULESET,
+      };
+    }
+  }
+  return null;
+}
 
 /**
  * GET /api/positions
@@ -16,60 +95,17 @@ const router = Router();
  */
 router.get("/positions", async (req, res) => {
   try {
-    const { rosterSlug } = req.query;
     const lang = (req.query.lang as string) || "fr";
-    const isEnglish = lang === "en";
     const ruleset = resolveRuleset(req.query.ruleset as string | undefined);
-    const where: any = {
-      roster: {
-        ruleset,
-      },
-    };
-    
-    if (rosterSlug) {
-      where.roster = {
-        slug: rosterSlug as string,
-        ruleset,
-      };
-    }
-
-    const positions = await prisma.position.findMany({
-      where,
-      include: {
-        roster: {
-          select: {
-            slug: true,
-            name: true,
-            nameEn: true,
-          },
-        },
-        skills: {
-          include: { skill: true },
-        },
-      },
-      orderBy: [{ roster: { name: "asc" } }, { displayName: "asc" }],
-    });
-
-    // Transformer les données pour correspondre au format attendu
-    const transformedPositions = positions.map((position: any) => ({
-      slug: position.slug,
-      displayName: position.displayName,
-      cost: position.cost,
-      min: position.min,
-      max: position.max,
-      ma: position.ma,
-      st: position.st,
-      ag: position.ag,
-      pa: position.pa,
-      av: position.av,
-      skills: position.skills
-        .map((ps: any) => ps.skill.slug)
-        .join(","),
-      rosterSlug: position.roster.slug,
-      rosterName: isEnglish ? position.roster.nameEn : position.roster.name,
-    }));
-
-    res.json({ positions: transformedPositions, ruleset });
+    const rosterSlug =
+      typeof req.query.rosterSlug === "string" ? req.query.rosterSlug : "";
+    const payload = await memoizeAsync(
+      POSITIONS_LIST_NS,
+      `${lang}::${ruleset}::${rosterSlug}`,
+      POSITIONS_CACHE_TTL_MS,
+      () => loadPositionList(lang, ruleset, rosterSlug || undefined),
+    );
+    res.json(payload);
   } catch (error: any) {
     console.error("Erreur lors de la récupération des positions:", error);
     res.setHeader("Cache-Control", "no-store");
@@ -86,78 +122,18 @@ router.get("/positions/:slug", async (req, res) => {
   try {
     const { slug } = req.params;
     const lang = (req.query.lang as string) || "fr";
-    const isEnglish = lang === "en";
     const ruleset = resolveRuleset(req.query.ruleset as string | undefined);
-    
-    const position = await prisma.position.findFirst({
-      where: {
-        slug,
-        roster: { ruleset },
-      },
-      include: {
-        roster: {
-          select: {
-            slug: true,
-            name: true,
-            nameEn: true,
-          },
-        },
-        skills: {
-          include: { skill: true },
-        },
-      },
-    });
-
-    if (!position) {
-      if (ruleset !== DEFAULT_RULESET) {
-        const fallback = await prisma.position.findFirst({
-          where: {
-            slug,
-            roster: { ruleset: DEFAULT_RULESET },
-          },
-          include: {
-            roster: {
-              select: {
-                slug: true,
-                name: true,
-                nameEn: true,
-              },
-            },
-            skills: {
-              include: { skill: true },
-            },
-          },
-        });
-        if (!fallback) {
-          res.setHeader("Cache-Control", "no-store");
-          return res.status(404).json({ error: "Position non trouvée" });
-        }
-        return res.json({ position: transformPosition(fallback, isEnglish), ruleset: DEFAULT_RULESET });
-      }
+    const payload = await memoizeAsync(
+      POSITIONS_DETAIL_NS,
+      `${slug}::${lang}::${ruleset}`,
+      POSITIONS_CACHE_TTL_MS,
+      () => loadPositionDetail(slug, lang, ruleset),
+    );
+    if (!payload) {
       res.setHeader("Cache-Control", "no-store");
       return res.status(404).json({ error: "Position non trouvée" });
     }
-
-    // Transformer les données
-    const transformedPosition = {
-      slug: position.slug,
-      displayName: position.displayName,
-      cost: position.cost,
-      min: position.min,
-      max: position.max,
-      ma: position.ma,
-      st: position.st,
-      ag: position.ag,
-      pa: position.pa,
-      av: position.av,
-      skills: position.skills
-        .map((ps: any) => ps.skill.slug)
-        .join(","),
-      rosterSlug: position.roster.slug,
-      rosterName: isEnglish ? position.roster.nameEn : position.roster.name,
-    };
-
-    res.json({ position: transformedPosition, ruleset });
+    res.json(payload);
   } catch (error: any) {
     console.error("Erreur lors de la récupération de la position:", error);
     res.setHeader("Cache-Control", "no-store");
@@ -165,7 +141,10 @@ router.get("/positions/:slug", async (req, res) => {
   }
 });
 
-function transformPosition(position: any, isEnglish: boolean) {
+function transformPosition(
+  position: any,
+  isEnglish: boolean,
+): TransformedPosition {
   return {
     slug: position.slug,
     displayName: position.displayName,
@@ -177,14 +156,10 @@ function transformPosition(position: any, isEnglish: boolean) {
     ag: position.ag,
     pa: position.pa,
     av: position.av,
-    skills: position.skills
-      .map((ps: any) => ps.skill.slug)
-      .join(","),
+    skills: position.skills.map((ps: any) => ps.skill.slug).join(","),
     rosterSlug: position.roster.slug,
     rosterName: isEnglish ? position.roster.nameEn : position.roster.name,
   };
 }
 
 export default router;
-
-

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { DEFAULT_RULESET, type Ruleset } from "@bb/game-engine";
-import { getServerApiBase, safeServerJson } from "../../lib/serverApi";
+import { fetchServerJson, getServerApiBase } from "../../lib/serverApi";
 import TeamDetailClient from "./TeamDetailClient";
 
 // ISR — roster definitions are reference data that rarely changes.
@@ -16,7 +16,7 @@ async function fetchRoster(
   ruleset: Ruleset,
 ): Promise<{ roster: any; ruleset: Ruleset } | null> {
   const base = getServerApiBase();
-  const data = await safeServerJson<{ roster?: any; ruleset?: Ruleset }>(
+  const data = await fetchServerJson<{ roster?: any; ruleset?: Ruleset }>(
     `${base}/api/rosters/${encodeURIComponent(slug)}?lang=fr&ruleset=${ruleset}`,
     { next: { revalidate: 3600 } },
   );

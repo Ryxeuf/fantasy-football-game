@@ -1,33 +1,37 @@
-import { NextRequest, NextResponse } from 'next/server';
-
-const SERVER_API_BASE = process.env.SERVER_API_BASE || 'http://nufflearena_server:8201';
+import { NextRequest, NextResponse } from "next/server";
+import {
+  ServerApiError,
+  fetchServerJson,
+  getServerApiBase,
+} from "../../lib/serverApi";
 
 export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const queryString = searchParams.toString();
+  const url = `${getServerApiBase()}/api/rosters${
+    queryString ? `?${queryString}` : ""
+  }`;
+
   try {
-    const { searchParams } = new URL(request.url);
-    const queryString = searchParams.toString();
-    const url = `${SERVER_API_BASE}/api/rosters${queryString ? `?${queryString}` : ''}`;
-    
-    const response = await fetch(url, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    const data = await response.json();
-
+    const data = await fetchServerJson<unknown>(url);
+    if (data === null) {
+      return NextResponse.json(
+        { error: "Not found" },
+        { status: 404, headers: { "Cache-Control": "no-store" } },
+      );
+    }
     return NextResponse.json(data, {
-      status: response.status,
       headers: {
-        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+        "Cache-Control":
+          "public, s-maxage=3600, stale-while-revalidate=86400",
       },
     });
-  } catch (error: any) {
-    console.error('Erreur proxy /api/rosters:', error);
+  } catch (err) {
+    console.error("[api/rosters proxy]", err);
+    const status = err instanceof ServerApiError && err.status ? err.status : 503;
     return NextResponse.json(
-      { error: error.message || 'Erreur serveur' },
-      { status: 500 }
+      { error: err instanceof Error ? err.message : "Upstream error" },
+      { status, headers: { "Cache-Control": "no-store" } },
     );
   }
 }
-

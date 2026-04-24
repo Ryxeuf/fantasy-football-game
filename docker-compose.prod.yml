@@ -74,6 +74,10 @@ services:
       - MATCH_SECRET=${MATCH_SECRET}
       - CORS_ORIGINS=${CORS_ORIGINS}
       - KOFI_VERIFICATION_TOKEN=${KOFI_VERIFICATION_TOKEN}
+      # Log every HTTP request to stdout so Loki can index them. Slow calls
+      # still emit at warn level; without this flag Loki has no stream to
+      # surface because the server is otherwise silent in steady state.
+      - REQUEST_LOG=1
     networks:
       - traefik-network
     labels:
