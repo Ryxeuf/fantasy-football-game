@@ -1,3 +1,11 @@
+## [1.72.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.71.0...v1.72.0) (2026-04-24)
+
+
+### ✨ Features
+
+* **auth:** add discordUserId to user profile updates and validation ([d425697](https://github.com/Ryxeuf/fantasy-football-game/commit/d425697822b80bf491811cac23ea26a6f32c0742))
+* **game-engine:** O.3 — audit S2 vs S3 rules + register running-pass-2025 ([#338](https://github.com/Ryxeuf/fantasy-football-game/issues/338)) ([664664a](https://github.com/Ryxeuf/fantasy-football-game/commit/664664ae11fa507aa05dedb48b7f2374de7df039))
+
 ## [1.71.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.70.1...v1.71.0) (2026-04-24)
 
 
