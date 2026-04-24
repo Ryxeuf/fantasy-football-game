@@ -1071,3 +1071,58 @@ registerSkill({
   description: "Action speciale : jet d'Agilite (2+) contre un adversaire adjacent. Succes = la cible perd sa zone de tacle jusqu'a sa prochaine activation. Echec = fin d'activation (pas de turnover). -1 par zone de tacle adverse hors cible.",
   canApply: (ctx) => hasSkill(ctx.player, 'hypnotic-gaze') || hasSkill(ctx.player, 'hypnotic_gaze'),
 });
+
+// ─── BLOODLUST (3 variantes) (O.1 batch 3m) ─────────────────────────────────
+// Bloodlust est verifie au debut de l'activation par `checkBloodlust` dans
+// `mechanics/negative-traits.ts`. Le jet D6 (+1 si Block/Blitz) doit atteindre
+// la cible de la variante (4+ par defaut, 2+ pour bloodlust-2, 3+ pour
+// bloodlust-3) ; sinon l'activation se termine sans turnover. Chaque variante
+// recoit son propre slug pour eviter le double-comptage et permettre a l'UI
+// d'afficher le bon seuil. L'entree du registre sert a la decouverte UI et a
+// la documentation.
+registerSkill({
+  slug: 'bloodlust',
+  triggers: ['on-activation'],
+  description: "Au debut de l'activation, jet D6 (+1 si Block/Blitz). Sur un resultat inferieur a 4 (ou 1 naturel), l'activation se termine sans turnover ; le Vampire pourrait mordre un Thrall adjacent.",
+  canApply: (ctx) => hasSkill(ctx.player, 'bloodlust'),
+});
+
+registerSkill({
+  slug: 'bloodlust-2',
+  triggers: ['on-activation'],
+  description: "Au debut de l'activation, jet D6 (+1 si Block/Blitz). Sur un resultat inferieur a 2 (ou 1 naturel), l'activation se termine sans turnover ; le Vampire pourrait mordre un Thrall adjacent.",
+  canApply: (ctx) => hasSkill(ctx.player, 'bloodlust-2'),
+});
+
+registerSkill({
+  slug: 'bloodlust-3',
+  triggers: ['on-activation'],
+  description: "Au debut de l'activation, jet D6 (+1 si Block/Blitz). Sur un resultat inferieur a 3 (ou 1 naturel), l'activation se termine sans turnover ; le Vampire pourrait mordre un Thrall adjacent.",
+  canApply: (ctx) => hasSkill(ctx.player, 'bloodlust-3'),
+});
+
+// ─── ALWAYS HUNGRY (O.1 batch 3m) ───────────────────────────────────────────
+// Always Hungry est verifie lors d'une action Throw Team-Mate dans
+// `mechanics/negative-traits.ts` (`checkAlwaysHungry`). Sur un jet D6 = 1 avant
+// le lancer, le porteur tente de manger son coequipier (jet d'echappee) au lieu
+// de le lancer. L'entree du registre sert a la decouverte UI et a la
+// documentation ; aucun modificateur n'est expose ici (le jet est dedie).
+registerSkill({
+  slug: 'always-hungry',
+  triggers: ['on-pass'],
+  description: "Quand ce joueur tente un Lancer d'Equipier, jet D6 (2+). Sur 1, il essaie de manger le coequipier au lieu de le lancer ; ce dernier peut tenter un jet d'echappee.",
+  canApply: (ctx) => hasSkill(ctx.player, 'always-hungry') || hasSkill(ctx.player, 'always_hungry'),
+});
+
+// ─── SECRET WEAPON (O.1 batch 3m) ───────────────────────────────────────────
+// Secret Weapon est resolu en fin de drive par `expelSecretWeapons` dans
+// `mechanics/secret-weapons.ts`. Tout joueur portant ce trait qui a participe
+// au drive est expulse par l'arbitre, sauf si un Bribe (pot-de-vin) reussit
+// (jet D6 : 2+ = sauve, 1 = expulse quand meme). L'entree du registre sert a
+// la decouverte UI et a la documentation.
+registerSkill({
+  slug: 'secret-weapon',
+  triggers: ['passive'],
+  description: "A la fin de chaque drive, ce joueur est expulse par l'arbitre (Sent-off). Un pot-de-vin (Bribe) peut etre utilise pour tenter de l'eviter (jet D6 : 2+ = sauve).",
+  canApply: (ctx) => hasSkill(ctx.player, 'secret-weapon') || hasSkill(ctx.player, 'secret_weapon'),
+});
