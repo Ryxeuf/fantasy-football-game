@@ -8,10 +8,20 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/me/', '/api/', '/login', '/register'],
+        disallow: [
+          '/me/',
+          '/api/',
+          '/admin/',
+          '/login',
+          '/register',
+          '/waiting/',
+          '/lobby/',
+          '/spectate/',
+          '/replay/',
+        ],
       },
     ],
     sitemap: `${BASE_URL}/sitemap.xml`,
+    host: BASE_URL,
   };
 }
-

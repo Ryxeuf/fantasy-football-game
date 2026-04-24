@@ -1,8 +1,9 @@
 {
-  "name": "Nuffle Arena - Gestionnaire d'équipes Blood Bowl",
+  "name": "Nuffle Arena — Gestionnaire d'équipes Blood Bowl",
   "short_name": "Nuffle Arena",
-  "description": "Formez vos équipes Blood Bowl. Défiez le destin. L'arène où le hasard devient divin.",
+  "description": "Gestionnaire Blood Bowl gratuit : 30 rosters, 60+ Star Players, 130+ compétences, export PDF et suivi de match sur table.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#2C2416",
   "theme_color": "#CB9E35",
@@ -21,8 +22,27 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["games", "entertainment"],
+  "categories": ["games", "entertainment", "sports"],
   "lang": "fr-FR",
-  "dir": "ltr"
+  "dir": "ltr",
+  "shortcuts": [
+    {
+      "name": "Mes équipes",
+      "short_name": "Équipes",
+      "url": "/me/teams",
+      "description": "Accédez à vos équipes Blood Bowl"
+    },
+    {
+      "name": "Rosters",
+      "short_name": "Rosters",
+      "url": "/teams",
+      "description": "Explorez les 30 rosters officiels"
+    },
+    {
+      "name": "Star Players",
+      "short_name": "Stars",
+      "url": "/star-players",
+      "description": "Découvrez les 60+ Star Players"
+    }
+  ]
 }
-
