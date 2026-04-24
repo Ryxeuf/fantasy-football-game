@@ -1255,3 +1255,77 @@ registerSkill({
   description: "Une fois par match, si un joueur adverse avec Force 4 ou moins (sans Decomposition, Regeneration ou Microbe) subit une Blessure MORT suite a un Bloc ou une Agression de ce joueur et ne peut etre sauve par un apothicaire, vous pouvez utiliser ce trait : la victime est infectee au lieu de mourir.",
   canApply: (ctx) => hasSkill(ctx.player, 'plague-ridden') || hasSkill(ctx.player, 'plague_ridden'),
 });
+
+// ─── CONTAGIEUX (O.1 batch 3q) ──────────────────────────────────────────────
+// Contagieux (Contagious) est un trait Season 3 de l'equipe Nurgle : il permet
+// au joueur porteur de transmettre une maladie ou une infection aux joueurs
+// adverses suite a une blessure infligee. La logique de transmission est
+// geree par le handler de blessure Nurgle ; l'entree du registre sert a la
+// decouverte UI et a la documentation. On n'expose PAS de getModifiers pour
+// eviter un double-comptage sur l'injury roll.
+registerSkill({
+  slug: 'contagieux',
+  triggers: ['on-injury'],
+  description: "Ce trait permet au joueur de transmettre une maladie ou une infection aux joueurs adverses suite a une blessure infligee.",
+  canApply: (ctx) => hasSkill(ctx.player, 'contagieux'),
+});
+
+// ─── FORK (O.1 batch 3q) ────────────────────────────────────────────────────
+// Fork (Fourchette) est une competence Scelerate Season 3 (Undead Zombie
+// Lineman entre autres) : quand un joueur adverse est Repousse par ce joueur,
+// l'adverse ne peut plus fournir de Soutien Offensif ni Defensif jusqu'a la
+// fin de sa prochaine activation. Le marquage de l'interdiction de soutien
+// est applique par le resolveur de bloc / push-back ; l'entree du registre
+// sert a la decouverte UI. On n'expose PAS de getModifiers : il ne s'agit pas
+// d'un modificateur de jet mais d'un debuff applique a la cible repoussee.
+registerSkill({
+  slug: 'fork',
+  triggers: ['on-block-result'],
+  description: "Quand un joueur adverse est Repousse par ce joueur, il ne peut plus fournir de Soutien Offensif ni Defensif jusqu'a la fin de sa prochaine activation.",
+  canApply: (ctx) => hasSkill(ctx.player, 'fork'),
+});
+
+// ─── HATE (O.1 batch 3q) ────────────────────────────────────────────────────
+// Hate (Haine (X)) est un trait Season 3 : chaque fois que ce joueur effectue
+// une Action de Blocage contre un joueur ayant le meme Mot-Cle que celui entre
+// parentheses (keyword cible), il peut relancer un resultat Attaquant Plaque.
+// Le parametre (X) est porte par la donnee roster ; l'entree du registre sert
+// a la decouverte UI et a la documentation. On n'expose PAS de getModifiers
+// pour eviter un double-comptage avec l'implementation de la relance ciblee.
+registerSkill({
+  slug: 'hate',
+  triggers: ['on-block-attacker'],
+  description: "Chaque fois que ce joueur effectue une Action de Blocage contre un joueur ayant le meme Mot-Cle que celui entre parentheses, il peut relancer un resultat Attaquant Plaque.",
+  canApply: (ctx) => hasSkill(ctx.player, 'hate'),
+});
+
+// ─── INSIGNIFIANT (O.1 batch 3q) ────────────────────────────────────────────
+// Insignifiant (Insignificant) est un trait Season 3 (Snotling Lineman entre
+// autres) : lors de la construction de la liste d'equipe, on ne peut pas
+// inclure plus de joueurs ayant ce trait que de joueurs ne l'ayant pas. La
+// validation est appliquee par le constructeur de roster ; l'entree du
+// registre sert a la decouverte UI. On n'expose PAS de getModifiers : il ne
+// s'agit pas d'un modificateur de jet mais d'une regle de composition
+// d'equipe.
+registerSkill({
+  slug: 'insignifiant',
+  triggers: ['on-setup'],
+  description: "Quand vous creez une Liste d'Equipe, vous ne pouvez pas inclure plus de joueurs ayant ce Trait que de joueurs n'ayant pas ce Trait.",
+  canApply: (ctx) => hasSkill(ctx.player, 'insignifiant'),
+});
+
+// ─── PICK-ME-UP (O.1 batch 3q) ──────────────────────────────────────────────
+// Pick-me-up (Petit remontant) est un trait Season 3 (Halfling Beer Boar,
+// Snotling Fun Hurler, Rotspawn) : a la fin du tour d'equipe adverse, lancez
+// un D6 pour chaque coequipier a Terre et non-Etourdi dans les trois cases
+// d'un joueur Debout avec ce trait ; sur un succes, le coequipier est
+// immediatement releve. Le flow de relevement differe est gere par le
+// handler de fin de tour adverse ; l'entree du registre sert a la decouverte
+// UI. On n'expose PAS de getModifiers pour eviter un double-comptage sur le
+// jet de relevement.
+registerSkill({
+  slug: 'pick-me-up',
+  triggers: ['on-activation'],
+  description: "A la fin du tour d'equipe adverse, lancez un D6 pour chaque coequipier a Terre et non-Etourdi dans les trois cases d'un joueur Debout avec ce trait ; sur un succes, le coequipier est immediatement releve.",
+  canApply: (ctx) => hasSkill(ctx.player, 'pick-me-up') || hasSkill(ctx.player, 'pick_me_up'),
+});
