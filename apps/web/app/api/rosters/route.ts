@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const SERVER_API_BASE = process.env.SERVER_API_BASE || 'http://server:8201';
+const SERVER_API_BASE = process.env.SERVER_API_BASE || 'http://nufflearena_server:8201';
 
 export async function GET(request: NextRequest) {
   try {

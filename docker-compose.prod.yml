@@ -34,7 +34,7 @@ services:
       - PORT=3100
       - NEXT_PUBLIC_API_BASE=https://api.nufflearena.fr
       - NEXT_PUBLIC_UMAMI_ENABLED=true
-      - SERVER_API_BASE=http://server:8201
+      - SERVER_API_BASE=http://nufflearena_server:8201
       - JWT_SECRET=${JWT_SECRET}
     networks:
       - traefik-network
