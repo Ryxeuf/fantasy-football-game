@@ -137,6 +137,36 @@ if (process.env.TEST_SQLITE === "1") {
         (prisma as any).$executeRawUnsafe('DELETE FROM "_MatchToUser"'),
       );
       await safe("match", () => prisma.match.deleteMany({}));
+      // League hierarchy: participants/rounds cascade from seasons; seasons
+      // and leagues must be removed before users (creatorId is RESTRICT).
+      await safe("leagueRound", () =>
+        (prisma as any).leagueRound?.deleteMany?.({}) ?? Promise.resolve(),
+      );
+      await safe("leagueParticipant", () =>
+        (prisma as any).leagueParticipant?.deleteMany?.({}) ??
+        Promise.resolve(),
+      );
+      await safe("leagueSeason", () =>
+        (prisma as any).leagueSeason?.deleteMany?.({}) ?? Promise.resolve(),
+      );
+      await safe("league", () =>
+        (prisma as any).league?.deleteMany?.({}) ?? Promise.resolve(),
+      );
+      // Cup hierarchy (creator is RESTRICT vs User).
+      await safe("cupParticipant", () =>
+        (prisma as any).cupParticipant?.deleteMany?.({}) ?? Promise.resolve(),
+      );
+      await safe("cup", () =>
+        (prisma as any).cup?.deleteMany?.({}) ?? Promise.resolve(),
+      );
+      // UserAchievement + Friendship cascade on User, but deleting explicitly
+      // avoids surprises if cascade rules change.
+      await safe("userAchievement", () =>
+        (prisma as any).userAchievement?.deleteMany?.({}) ?? Promise.resolve(),
+      );
+      await safe("friendship", () =>
+        (prisma as any).friendship?.deleteMany?.({}) ?? Promise.resolve(),
+      );
       await safe("teamPlayer", () => prisma.teamPlayer.deleteMany({}));
       await safe("team", () => prisma.team.deleteMany({}));
       await safe("user", () => prisma.user.deleteMany({}));
