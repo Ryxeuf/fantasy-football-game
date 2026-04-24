@@ -1,3 +1,10 @@
+## [1.70.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.69.0...v1.70.0) (2026-04-24)
+
+
+### ✨ Features
+
+* **game-engine:** O.1 batch 3o - drunkard + timmm-ber + fumblerooskie ([#329](https://github.com/Ryxeuf/fantasy-football-game/issues/329)) ([617b3f2](https://github.com/Ryxeuf/fantasy-football-game/commit/617b3f2a84d17b7e4c9b63b84ffb13cfc920785a))
+
 ## [1.69.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.68.0...v1.69.0) (2026-04-24)
 
 
