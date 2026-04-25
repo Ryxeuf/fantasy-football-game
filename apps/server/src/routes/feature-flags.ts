@@ -19,6 +19,7 @@ import {
   addUserOverride,
   removeUserOverride,
 } from "../services/featureFlags";
+import { sendSuccess, sendError } from "../utils/api-response";
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Erreur serveur";
@@ -34,18 +35,16 @@ userFeatureFlagsRouter.use(authUser);
 
 userFeatureFlagsRouter.get("/me", async (req: AuthenticatedRequest, res) => {
   if (!req.user?.id) {
-    return res.status(401).json({ success: false, error: "Non authentifié" });
+    return sendError(res, "Non authentifié", 401);
   }
   try {
     const keys = await listEnabledKeysForUser(req.user.id, {
       roles: req.user.roles,
     });
-    return res.json({ success: true, data: keys });
+    return sendSuccess(res, keys);
   } catch (error: unknown) {
     console.error("[featureFlags] /me error:", error);
-    return res
-      .status(500)
-      .json({ success: false, error: errorMessage(error) });
+    return sendError(res, errorMessage(error));
   }
 });
 
@@ -60,12 +59,10 @@ adminFeatureFlagsRouter.use(authUser, adminOnly);
 adminFeatureFlagsRouter.get("/", async (_req, res) => {
   try {
     const flags = await listAll();
-    return res.json({ success: true, data: flags });
+    return sendSuccess(res, flags);
   } catch (error: unknown) {
     console.error("[featureFlags] GET / error:", error);
-    return res
-      .status(500)
-      .json({ success: false, error: errorMessage(error) });
+    return sendError(res, errorMessage(error));
   }
 });
 
@@ -81,17 +78,13 @@ adminFeatureFlagsRouter.post(
       };
       const existing = await prisma.featureFlag.findUnique({ where: { key } });
       if (existing) {
-        return res
-          .status(409)
-          .json({ success: false, error: "Une flag avec cette clé existe déjà" });
+        return sendError(res, "Une flag avec cette clé existe déjà", 409);
       }
       const flag = await createFlag({ key, description, enabled });
-      return res.status(201).json({ success: true, data: flag });
+      return sendSuccess(res, flag, 201);
     } catch (error: unknown) {
       console.error("[featureFlags] POST / error:", error);
-      return res
-        .status(500)
-        .json({ success: false, error: errorMessage(error) });
+      return sendError(res, errorMessage(error));
     }
   },
 );
@@ -103,17 +96,13 @@ adminFeatureFlagsRouter.patch(
     try {
       const existing = await findById(req.params.id);
       if (!existing) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Feature flag introuvable" });
+        return sendError(res, "Feature flag introuvable", 404);
       }
       const flag = await updateFlag(req.params.id, req.body);
-      return res.json({ success: true, data: flag });
+      return sendSuccess(res, flag);
     } catch (error: unknown) {
       console.error("[featureFlags] PATCH /:id error:", error);
-      return res
-        .status(500)
-        .json({ success: false, error: errorMessage(error) });
+      return sendError(res, errorMessage(error));
     }
   },
 );
@@ -122,17 +111,13 @@ adminFeatureFlagsRouter.delete("/:id", async (req, res) => {
   try {
     const existing = await findById(req.params.id);
     if (!existing) {
-      return res
-        .status(404)
-        .json({ success: false, error: "Feature flag introuvable" });
+      return sendError(res, "Feature flag introuvable", 404);
     }
     await deleteFlag(req.params.id);
-    return res.json({ success: true, data: { id: req.params.id } });
+    return sendSuccess(res, { id: req.params.id });
   } catch (error: unknown) {
     console.error("[featureFlags] DELETE /:id error:", error);
-    return res
-      .status(500)
-      .json({ success: false, error: errorMessage(error) });
+    return sendError(res, errorMessage(error));
   }
 });
 
@@ -140,17 +125,13 @@ adminFeatureFlagsRouter.get("/:id/users", async (req, res) => {
   try {
     const existing = await findById(req.params.id);
     if (!existing) {
-      return res
-        .status(404)
-        .json({ success: false, error: "Feature flag introuvable" });
+      return sendError(res, "Feature flag introuvable", 404);
     }
     const users = await listUsersForFlag(req.params.id);
-    return res.json({ success: true, data: users });
+    return sendSuccess(res, users);
   } catch (error: unknown) {
     console.error("[featureFlags] GET /:id/users error:", error);
-    return res
-      .status(500)
-      .json({ success: false, error: errorMessage(error) });
+    return sendError(res, errorMessage(error));
   }
 });
 
@@ -161,24 +142,18 @@ adminFeatureFlagsRouter.post(
     try {
       const flag = await findById(req.params.id);
       if (!flag) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Feature flag introuvable" });
+        return sendError(res, "Feature flag introuvable", 404);
       }
       const { userId } = req.body as { userId: string };
       const user = await prisma.user.findUnique({ where: { id: userId } });
       if (!user) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Utilisateur introuvable" });
+        return sendError(res, "Utilisateur introuvable", 404);
       }
       await addUserOverride(req.params.id, userId);
-      return res.status(201).json({ success: true, data: { userId } });
+      return sendSuccess(res, { userId }, 201);
     } catch (error: unknown) {
       console.error("[featureFlags] POST /:id/users error:", error);
-      return res
-        .status(500)
-        .json({ success: false, error: errorMessage(error) });
+      return sendError(res, errorMessage(error));
     }
   },
 );
@@ -187,16 +162,12 @@ adminFeatureFlagsRouter.delete("/:id/users/:userId", async (req, res) => {
   try {
     const flag = await findById(req.params.id);
     if (!flag) {
-      return res
-        .status(404)
-        .json({ success: false, error: "Feature flag introuvable" });
+      return sendError(res, "Feature flag introuvable", 404);
     }
     await removeUserOverride(req.params.id, req.params.userId);
-    return res.json({ success: true, data: { userId: req.params.userId } });
+    return sendSuccess(res, { userId: req.params.userId });
   } catch (error: unknown) {
     console.error("[featureFlags] DELETE /:id/users/:userId error:", error);
-    return res
-      .status(500)
-      .json({ success: false, error: errorMessage(error) });
+    return sendError(res, errorMessage(error));
   }
 });
