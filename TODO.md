@@ -350,7 +350,7 @@
 |---|-------|------|--------|
 | O.3 | Verification differences regles S3 | Contenu | [x] |
 | O.4 | Expansion E2E tests (couverture cible 80%) | Qualite | [x] |
-| O.5 | Optimisation taille GameState (separer gameLog) | Perf | [ ] |
+| O.5 | Optimisation taille GameState (separer gameLog) | Perf | [x] |
 | O.6 | Standardiser error handling (`ApiResponse<T>`) | Qualite | [ ] |
 | O.7 | Optimiser queries DB (pagination, select) | Perf | [ ] |
 | O.8 | Cosmetiques (logos equipe, generateur noms) | Engagement | [ ] |
