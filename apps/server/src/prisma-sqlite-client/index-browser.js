@@ -379,6 +379,7 @@ exports.Prisma.LocalMatchScalarFieldEnum = {
   id: 'id',
   name: 'name',
   status: 'status',
+  isPublic: 'isPublic',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   startedAt: 'startedAt',
