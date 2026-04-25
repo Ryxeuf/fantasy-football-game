@@ -300,9 +300,9 @@ model Roster {
   @@unique([slug, ruleset])
 }
 
-// Compétences BB3 (Skill). Utilisé par la route publique `/api/skills`
-// (read-only, pas de relations PositionSkill/StarPlayerSkill ici car
-// ces relations ne sont pas exercées par les tests E2E qui en dépendent).
+// Compétences BB3 (Skill). Utilisé par la route publique `/api/skills` et
+// indirectement par `/api/positions` via la relation `PositionSkill` (read-only,
+// jointure laissée vide en E2E sauf si un test seed explicitement la table).
 model Skill {
   id            String   @id @default(cuid())
   slug          String
@@ -318,11 +318,14 @@ model Skill {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  positionSkills PositionSkill[]
+
   @@unique([slug, ruleset])
 }
 
 // Positions rattachées à un roster (Lineman, Thrower, etc.).
-// Utilisé par `getLinemanStats` pour peupler les journeymen.
+// Utilisé par `getLinemanStats` pour peupler les journeymen et par
+// `/api/positions` (qui inclut la relation `skills`).
 model Position {
   id          String   @id @default(cuid())
   roster      Roster   @relation(fields: [rosterId], references: [id], onDelete: Cascade)
@@ -341,8 +344,24 @@ model Position {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  skills PositionSkill[]
+
   @@unique([rosterId, slug])
   @@index([rosterId])
+}
+
+// Relation many-to-many entre Position et Skill (miroir minimal du schéma
+// Postgres). Nécessaire pour que la route `/api/positions` (qui fait
+// `include: { skills: { include: { skill: true } } }`) ne crashe pas en E2E.
+model PositionSkill {
+  id         String   @id @default(cuid())
+  position   Position @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  positionId String
+  skill      Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  skillId    String
+
+  @@unique([positionId, skillId])
+  @@index([positionId])
 }
 
 // Modèle pour les coupes (tournois)
