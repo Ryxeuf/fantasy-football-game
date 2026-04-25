@@ -300,6 +300,27 @@ model Roster {
   @@unique([slug, ruleset])
 }
 
+// Compétences BB3 (Skill). Utilisé par la route publique `/api/skills`
+// (read-only, pas de relations PositionSkill/StarPlayerSkill ici car
+// ces relations ne sont pas exercées par les tests E2E qui en dépendent).
+model Skill {
+  id            String   @id @default(cuid())
+  slug          String
+  ruleset       Ruleset  @default(season_2)
+  nameFr        String
+  nameEn        String
+  description   String
+  descriptionEn String?
+  category      String
+  isElite       Boolean  @default(false)
+  isPassive     Boolean  @default(false)
+  isModified    Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([slug, ruleset])
+}
+
 // Positions rattachées à un roster (Lineman, Thrower, etc.).
 // Utilisé par `getLinemanStats` pour peupler les journeymen.
 model Position {
