@@ -376,11 +376,23 @@ model Cup {
   status    String   @default("ouverte") // Statut: "ouverte", "en_cours", "terminee", "archivee"
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
+  // Configuration des points (cf. schema Postgres). Necessaire pour
+  // que `POST /cup` ne crashe pas en E2E (le route fait un create avec
+  // ces champs explicitement).
+  winPoints           Int @default(1000)
+  drawPoints          Int @default(400)
+  lossPoints          Int @default(0)
+  forfeitPoints       Int @default(-100)
+  touchdownPoints     Int @default(5)
+  blockCasualtyPoints Int @default(3)
+  foulCasualtyPoints  Int @default(2)
+  passPoints          Int @default(2)
+
   // Relations
   participants CupParticipant[]
   localMatches LocalMatch[]
-  
+
   @@index([creatorId])
   @@index([validated])
   @@index([isPublic])

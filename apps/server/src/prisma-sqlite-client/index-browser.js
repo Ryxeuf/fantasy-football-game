@@ -347,7 +347,15 @@ exports.Prisma.CupScalarFieldEnum = {
   isPublic: 'isPublic',
   status: 'status',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  winPoints: 'winPoints',
+  drawPoints: 'drawPoints',
+  lossPoints: 'lossPoints',
+  forfeitPoints: 'forfeitPoints',
+  touchdownPoints: 'touchdownPoints',
+  blockCasualtyPoints: 'blockCasualtyPoints',
+  foulCasualtyPoints: 'foulCasualtyPoints',
+  passPoints: 'passPoints'
 };
 
 exports.Prisma.CupParticipantScalarFieldEnum = {
