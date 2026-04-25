@@ -37,6 +37,7 @@ import { publicCache } from "./middleware/publicCache";
 import { requestTiming } from "./middleware/requestTiming";
 import { setupSocket } from "./socket";
 import { CORS_ORIGINS } from "./config";
+import { invalidateAllMemo } from "./utils/memoize-async";
 
 dotenv.config({ path: "../../prisma/.env" });
 // Si tests SQLite: pousser le schéma SQLite en mémoire partagée au démarrage
@@ -170,6 +171,9 @@ if (process.env.TEST_SQLITE === "1") {
       await safe("teamPlayer", () => prisma.teamPlayer.deleteMany({}));
       await safe("team", () => prisma.team.deleteMany({}));
       await safe("user", () => prisma.user.deleteMany({}));
+      // Reference data caches (memoizeAsync) survive the DB wipe and would
+      // otherwise serve stale `[]` lists to the next test. Drop everything.
+      invalidateAllMemo();
       return res.json({ ok: true });
     } catch (e: any) {
       console.error(e);
@@ -292,6 +296,54 @@ if (process.env.TEST_SQLITE === "1") {
   // Seed des rosters + linemen de test. Nécessaire pour que
   // `getLinemanStats` (utilisé par `addJourneymen` pendant la phase
   // pré-match) trouve une position lineman à appliquer aux journeymen.
+  // Seed minimal de skills pour les tests E2E qui exercent /api/skills.
+  // Couvre deux catégories (General, Agility) et les deux rulesets pour
+  // valider le filtrage. Idempotent via upsert sur le composite slug+ruleset.
+  app.post("/__test/seed-skills", async (_req, res) => {
+    try {
+      const skills: Array<{
+        slug: string;
+        nameFr: string;
+        nameEn: string;
+        category: string;
+      }> = [
+        { slug: "block", nameFr: "Blocage", nameEn: "Block", category: "General" },
+        { slug: "dodge", nameFr: "Esquive", nameEn: "Dodge", category: "Agility" },
+        { slug: "tackle", nameFr: "Plaquage", nameEn: "Tackle", category: "General" },
+      ];
+      const rulesets = ["season_2", "season_3"] as const;
+      for (const ruleset of rulesets) {
+        for (const s of skills) {
+          await prisma.skill.upsert({
+            where: { slug_ruleset: { slug: s.slug, ruleset } },
+            update: {},
+            create: {
+              slug: s.slug,
+              ruleset,
+              nameFr: s.nameFr,
+              nameEn: s.nameEn,
+              description: `Description ${s.nameFr}`,
+              descriptionEn: `Description ${s.nameEn}`,
+              category: s.category,
+            },
+          });
+        }
+      }
+      // Drop the public-skills cache so the freshly seeded rows are visible
+      // to the very next /api/skills call without waiting for TTL.
+      invalidateAllMemo();
+      return res.json({
+        ok: true,
+        rulesets,
+        skills: skills.map((s) => s.slug),
+      });
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error("[__test/seed-skills]", msg);
+      return res.status(500).json({ error: msg || "seed-skills failed" });
+    }
+  });
+
   // En prod ce seed est fait par `apps/server/src/seed.ts` mais il
   // suppose le schéma Postgres complet — on expose ici une version
   // minimale et idempotente pour les tests.
