@@ -298,6 +298,22 @@ exports.Prisma.RosterScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.SkillScalarFieldEnum = {
+  id: 'id',
+  slug: 'slug',
+  ruleset: 'ruleset',
+  nameFr: 'nameFr',
+  nameEn: 'nameEn',
+  description: 'description',
+  descriptionEn: 'descriptionEn',
+  category: 'category',
+  isElite: 'isElite',
+  isPassive: 'isPassive',
+  isModified: 'isModified',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.PositionScalarFieldEnum = {
   id: 'id',
   rosterId: 'rosterId',
@@ -496,6 +512,7 @@ exports.Prisma.ModelName = {
   TeamPlayer: 'TeamPlayer',
   TeamStarPlayer: 'TeamStarPlayer',
   Roster: 'Roster',
+  Skill: 'Skill',
   Position: 'Position',
   Cup: 'Cup',
   CupParticipant: 'CupParticipant',

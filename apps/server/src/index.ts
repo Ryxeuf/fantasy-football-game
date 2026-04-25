@@ -366,6 +366,99 @@ if (process.env.TEST_SQLITE === "1") {
       return res.status(500).json({ error: msg || "seed-rosters failed" });
     }
   });
+
+  // Seed minimal de compétences pour les tests E2E de /api/skills.
+  // Idempotent (upsert) sur (slug, ruleset). Couvre les principales catégories
+  // afin de pouvoir tester les filtres par catégorie sans dépendre du seed
+  // complet (130+ skills) du game-engine.
+  app.post("/__test/seed-skills", async (_req, res) => {
+    try {
+      const skills: Array<{
+        slug: string;
+        nameFr: string;
+        nameEn: string;
+        description: string;
+        descriptionEn: string;
+        category: string;
+      }> = [
+        {
+          slug: "block",
+          nameFr: "Blocage",
+          nameEn: "Block",
+          description: "Le joueur ignore les résultats Tomber Tous Les Deux.",
+          descriptionEn: "The player ignores Both Down results.",
+          category: "General",
+        },
+        {
+          slug: "dodge",
+          nameFr: "Esquive",
+          nameEn: "Dodge",
+          description: "Permet de relancer un jet d'esquive raté.",
+          descriptionEn: "Allows a re-roll on a failed dodge.",
+          category: "Agility",
+        },
+        {
+          slug: "mighty-blow",
+          nameFr: "Coup de Massue",
+          nameEn: "Mighty Blow",
+          description: "+1 au jet d'armure ou de blessure après un blocage.",
+          descriptionEn: "+1 to armour or injury roll after a block.",
+          category: "Strength",
+        },
+        {
+          slug: "pass",
+          nameFr: "Passe",
+          nameEn: "Pass",
+          description: "Permet de relancer un jet de passe raté.",
+          descriptionEn: "Allows a re-roll on a failed pass.",
+          category: "Passing",
+        },
+        {
+          slug: "sure-hands",
+          nameFr: "Mains Sûres",
+          nameEn: "Sure Hands",
+          description: "Permet de relancer un jet de ramassage raté.",
+          descriptionEn: "Allows a re-roll on a failed pickup.",
+          category: "Trait",
+        },
+      ];
+
+      const rulesets = ["season_2", "season_3"] as const;
+      for (const ruleset of rulesets) {
+        for (const s of skills) {
+          await prisma.skill.upsert({
+            where: { slug_ruleset: { slug: s.slug, ruleset } },
+            update: {
+              nameFr: s.nameFr,
+              nameEn: s.nameEn,
+              description: s.description,
+              descriptionEn: s.descriptionEn,
+              category: s.category,
+            },
+            create: {
+              slug: s.slug,
+              ruleset,
+              nameFr: s.nameFr,
+              nameEn: s.nameEn,
+              description: s.description,
+              descriptionEn: s.descriptionEn,
+              category: s.category,
+            },
+          });
+        }
+      }
+
+      return res.json({
+        ok: true,
+        rulesets,
+        skills: skills.map((s) => s.slug),
+      });
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error("[__test/seed-skills]", msg);
+      return res.status(500).json({ error: msg || "seed-skills failed" });
+    }
+  });
 }
 
 const httpServer = createServer(app);
