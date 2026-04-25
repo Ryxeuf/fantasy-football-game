@@ -89,6 +89,11 @@ export type Skill = $Result.DefaultSelection<Prisma.$SkillPayload>
  */
 export type Position = $Result.DefaultSelection<Prisma.$PositionPayload>
 /**
+ * Model PositionSkill
+ * 
+ */
+export type PositionSkill = $Result.DefaultSelection<Prisma.$PositionSkillPayload>
+/**
  * Model Cup
  * 
  */
@@ -418,6 +423,16 @@ export class PrismaClient<
     * ```
     */
   get position(): Prisma.PositionDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.positionSkill`: Exposes CRUD operations for the **PositionSkill** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more PositionSkills
+    * const positionSkills = await prisma.positionSkill.findMany()
+    * ```
+    */
+  get positionSkill(): Prisma.PositionSkillDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.cup`: Exposes CRUD operations for the **Cup** model.
@@ -963,6 +978,7 @@ export namespace Prisma {
     Roster: 'Roster',
     Skill: 'Skill',
     Position: 'Position',
+    PositionSkill: 'PositionSkill',
     Cup: 'Cup',
     CupParticipant: 'CupParticipant',
     MatchQueue: 'MatchQueue',
@@ -990,7 +1006,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "kofiTransaction" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamStarPlayer" | "roster" | "skill" | "position" | "cup" | "cupParticipant" | "matchQueue" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leagueParticipant" | "leagueRound"
+      modelProps: "user" | "kofiTransaction" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamStarPlayer" | "roster" | "skill" | "position" | "positionSkill" | "cup" | "cupParticipant" | "matchQueue" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leagueParticipant" | "leagueRound"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2104,6 +2120,80 @@ export namespace Prisma {
           }
         }
       }
+      PositionSkill: {
+        payload: Prisma.$PositionSkillPayload<ExtArgs>
+        fields: Prisma.PositionSkillFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.PositionSkillFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PositionSkillPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.PositionSkillFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PositionSkillPayload>
+          }
+          findFirst: {
+            args: Prisma.PositionSkillFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PositionSkillPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.PositionSkillFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PositionSkillPayload>
+          }
+          findMany: {
+            args: Prisma.PositionSkillFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PositionSkillPayload>[]
+          }
+          create: {
+            args: Prisma.PositionSkillCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PositionSkillPayload>
+          }
+          createMany: {
+            args: Prisma.PositionSkillCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.PositionSkillCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PositionSkillPayload>[]
+          }
+          delete: {
+            args: Prisma.PositionSkillDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PositionSkillPayload>
+          }
+          update: {
+            args: Prisma.PositionSkillUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PositionSkillPayload>
+          }
+          deleteMany: {
+            args: Prisma.PositionSkillDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.PositionSkillUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.PositionSkillUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PositionSkillPayload>[]
+          }
+          upsert: {
+            args: Prisma.PositionSkillUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PositionSkillPayload>
+          }
+          aggregate: {
+            args: Prisma.PositionSkillAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregatePositionSkill>
+          }
+          groupBy: {
+            args: Prisma.PositionSkillGroupByArgs<ExtArgs>
+            result: $Utils.Optional<PositionSkillGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.PositionSkillCountArgs<ExtArgs>
+            result: $Utils.Optional<PositionSkillCountAggregateOutputType> | number
+          }
+        }
+      }
       Cup: {
         payload: Prisma.$CupPayload<ExtArgs>
         fields: Prisma.CupFieldRefs
@@ -2881,6 +2971,7 @@ export namespace Prisma {
     roster?: RosterOmit
     skill?: SkillOmit
     position?: PositionOmit
+    positionSkill?: PositionSkillOmit
     cup?: CupOmit
     cupParticipant?: CupParticipantOmit
     matchQueue?: MatchQueueOmit
@@ -3297,6 +3388,68 @@ export namespace Prisma {
    */
   export type RosterCountOutputTypeCountPositionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: PositionWhereInput
+  }
+
+
+  /**
+   * Count Type SkillCountOutputType
+   */
+
+  export type SkillCountOutputType = {
+    positionSkills: number
+  }
+
+  export type SkillCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    positionSkills?: boolean | SkillCountOutputTypeCountPositionSkillsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * SkillCountOutputType without action
+   */
+  export type SkillCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SkillCountOutputType
+     */
+    select?: SkillCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * SkillCountOutputType without action
+   */
+  export type SkillCountOutputTypeCountPositionSkillsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PositionSkillWhereInput
+  }
+
+
+  /**
+   * Count Type PositionCountOutputType
+   */
+
+  export type PositionCountOutputType = {
+    skills: number
+  }
+
+  export type PositionCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    skills?: boolean | PositionCountOutputTypeCountSkillsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * PositionCountOutputType without action
+   */
+  export type PositionCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PositionCountOutputType
+     */
+    select?: PositionCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * PositionCountOutputType without action
+   */
+  export type PositionCountOutputTypeCountSkillsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PositionSkillWhereInput
   }
 
 
@@ -19545,6 +19698,8 @@ export namespace Prisma {
     isModified?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    positionSkills?: boolean | Skill$positionSkillsArgs<ExtArgs>
+    _count?: boolean | SkillCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["skill"]>
 
   export type SkillSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -19596,10 +19751,18 @@ export namespace Prisma {
   }
 
   export type SkillOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "slug" | "ruleset" | "nameFr" | "nameEn" | "description" | "descriptionEn" | "category" | "isElite" | "isPassive" | "isModified" | "createdAt" | "updatedAt", ExtArgs["result"]["skill"]>
+  export type SkillInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    positionSkills?: boolean | Skill$positionSkillsArgs<ExtArgs>
+    _count?: boolean | SkillCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type SkillIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type SkillIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
 
   export type $SkillPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Skill"
-    objects: {}
+    objects: {
+      positionSkills: Prisma.$PositionSkillPayload<ExtArgs>[]
+    }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       slug: string
@@ -20008,6 +20171,7 @@ export namespace Prisma {
    */
   export interface Prisma__SkillClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    positionSkills<T extends Skill$positionSkillsArgs<ExtArgs> = {}>(args?: Subset<T, Skill$positionSkillsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PositionSkillPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -20067,6 +20231,10 @@ export namespace Prisma {
      */
     omit?: SkillOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SkillInclude<ExtArgs> | null
+    /**
      * Filter, which Skill to fetch.
      */
     where: SkillWhereUniqueInput
@@ -20085,6 +20253,10 @@ export namespace Prisma {
      */
     omit?: SkillOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SkillInclude<ExtArgs> | null
+    /**
      * Filter, which Skill to fetch.
      */
     where: SkillWhereUniqueInput
@@ -20102,6 +20274,10 @@ export namespace Prisma {
      * Omit specific fields from the Skill
      */
     omit?: SkillOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SkillInclude<ExtArgs> | null
     /**
      * Filter, which Skill to fetch.
      */
@@ -20151,6 +20327,10 @@ export namespace Prisma {
      */
     omit?: SkillOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SkillInclude<ExtArgs> | null
+    /**
      * Filter, which Skill to fetch.
      */
     where?: SkillWhereInput
@@ -20199,6 +20379,10 @@ export namespace Prisma {
      */
     omit?: SkillOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SkillInclude<ExtArgs> | null
+    /**
      * Filter, which Skills to fetch.
      */
     where?: SkillWhereInput
@@ -20241,6 +20425,10 @@ export namespace Prisma {
      * Omit specific fields from the Skill
      */
     omit?: SkillOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SkillInclude<ExtArgs> | null
     /**
      * The data needed to create a Skill.
      */
@@ -20287,6 +20475,10 @@ export namespace Prisma {
      * Omit specific fields from the Skill
      */
     omit?: SkillOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SkillInclude<ExtArgs> | null
     /**
      * The data needed to update a Skill.
      */
@@ -20354,6 +20546,10 @@ export namespace Prisma {
      */
     omit?: SkillOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SkillInclude<ExtArgs> | null
+    /**
      * The filter to search for the Skill to update in case it exists.
      */
     where: SkillWhereUniqueInput
@@ -20380,6 +20576,10 @@ export namespace Prisma {
      */
     omit?: SkillOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SkillInclude<ExtArgs> | null
+    /**
      * Filter which Skill to delete.
      */
     where: SkillWhereUniqueInput
@@ -20400,6 +20600,30 @@ export namespace Prisma {
   }
 
   /**
+   * Skill.positionSkills
+   */
+  export type Skill$positionSkillsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PositionSkill
+     */
+    select?: PositionSkillSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PositionSkill
+     */
+    omit?: PositionSkillOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PositionSkillInclude<ExtArgs> | null
+    where?: PositionSkillWhereInput
+    orderBy?: PositionSkillOrderByWithRelationInput | PositionSkillOrderByWithRelationInput[]
+    cursor?: PositionSkillWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: PositionSkillScalarFieldEnum | PositionSkillScalarFieldEnum[]
+  }
+
+  /**
    * Skill without action
    */
   export type SkillDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -20411,6 +20635,10 @@ export namespace Prisma {
      * Omit specific fields from the Skill
      */
     omit?: SkillOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SkillInclude<ExtArgs> | null
   }
 
 
@@ -20721,6 +20949,8 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     roster?: boolean | RosterDefaultArgs<ExtArgs>
+    skills?: boolean | Position$skillsArgs<ExtArgs>
+    _count?: boolean | PositionCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["position"]>
 
   export type PositionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -20782,6 +21012,8 @@ export namespace Prisma {
   export type PositionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "rosterId" | "slug" | "displayName" | "cost" | "min" | "max" | "ma" | "st" | "ag" | "pa" | "av" | "keywords" | "createdAt" | "updatedAt", ExtArgs["result"]["position"]>
   export type PositionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     roster?: boolean | RosterDefaultArgs<ExtArgs>
+    skills?: boolean | Position$skillsArgs<ExtArgs>
+    _count?: boolean | PositionCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type PositionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     roster?: boolean | RosterDefaultArgs<ExtArgs>
@@ -20794,6 +21026,7 @@ export namespace Prisma {
     name: "Position"
     objects: {
       roster: Prisma.$RosterPayload<ExtArgs>
+      skills: Prisma.$PositionSkillPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -21206,6 +21439,7 @@ export namespace Prisma {
   export interface Prisma__PositionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     roster<T extends RosterDefaultArgs<ExtArgs> = {}>(args?: Subset<T, RosterDefaultArgs<ExtArgs>>): Prisma__RosterClient<$Result.GetResult<Prisma.$RosterPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    skills<T extends Position$skillsArgs<ExtArgs> = {}>(args?: Subset<T, Position$skillsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PositionSkillPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -21644,6 +21878,30 @@ export namespace Prisma {
   }
 
   /**
+   * Position.skills
+   */
+  export type Position$skillsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PositionSkill
+     */
+    select?: PositionSkillSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PositionSkill
+     */
+    omit?: PositionSkillOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PositionSkillInclude<ExtArgs> | null
+    where?: PositionSkillWhereInput
+    orderBy?: PositionSkillOrderByWithRelationInput | PositionSkillOrderByWithRelationInput[]
+    cursor?: PositionSkillWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: PositionSkillScalarFieldEnum | PositionSkillScalarFieldEnum[]
+  }
+
+  /**
    * Position without action
    */
   export type PositionDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -21659,6 +21917,1044 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: PositionInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model PositionSkill
+   */
+
+  export type AggregatePositionSkill = {
+    _count: PositionSkillCountAggregateOutputType | null
+    _min: PositionSkillMinAggregateOutputType | null
+    _max: PositionSkillMaxAggregateOutputType | null
+  }
+
+  export type PositionSkillMinAggregateOutputType = {
+    id: string | null
+    positionId: string | null
+    skillId: string | null
+  }
+
+  export type PositionSkillMaxAggregateOutputType = {
+    id: string | null
+    positionId: string | null
+    skillId: string | null
+  }
+
+  export type PositionSkillCountAggregateOutputType = {
+    id: number
+    positionId: number
+    skillId: number
+    _all: number
+  }
+
+
+  export type PositionSkillMinAggregateInputType = {
+    id?: true
+    positionId?: true
+    skillId?: true
+  }
+
+  export type PositionSkillMaxAggregateInputType = {
+    id?: true
+    positionId?: true
+    skillId?: true
+  }
+
+  export type PositionSkillCountAggregateInputType = {
+    id?: true
+    positionId?: true
+    skillId?: true
+    _all?: true
+  }
+
+  export type PositionSkillAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PositionSkill to aggregate.
+     */
+    where?: PositionSkillWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PositionSkills to fetch.
+     */
+    orderBy?: PositionSkillOrderByWithRelationInput | PositionSkillOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: PositionSkillWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PositionSkills from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PositionSkills.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned PositionSkills
+    **/
+    _count?: true | PositionSkillCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: PositionSkillMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: PositionSkillMaxAggregateInputType
+  }
+
+  export type GetPositionSkillAggregateType<T extends PositionSkillAggregateArgs> = {
+        [P in keyof T & keyof AggregatePositionSkill]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregatePositionSkill[P]>
+      : GetScalarType<T[P], AggregatePositionSkill[P]>
+  }
+
+
+
+
+  export type PositionSkillGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PositionSkillWhereInput
+    orderBy?: PositionSkillOrderByWithAggregationInput | PositionSkillOrderByWithAggregationInput[]
+    by: PositionSkillScalarFieldEnum[] | PositionSkillScalarFieldEnum
+    having?: PositionSkillScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: PositionSkillCountAggregateInputType | true
+    _min?: PositionSkillMinAggregateInputType
+    _max?: PositionSkillMaxAggregateInputType
+  }
+
+  export type PositionSkillGroupByOutputType = {
+    id: string
+    positionId: string
+    skillId: string
+    _count: PositionSkillCountAggregateOutputType | null
+    _min: PositionSkillMinAggregateOutputType | null
+    _max: PositionSkillMaxAggregateOutputType | null
+  }
+
+  type GetPositionSkillGroupByPayload<T extends PositionSkillGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<PositionSkillGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof PositionSkillGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], PositionSkillGroupByOutputType[P]>
+            : GetScalarType<T[P], PositionSkillGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type PositionSkillSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    positionId?: boolean
+    skillId?: boolean
+    position?: boolean | PositionDefaultArgs<ExtArgs>
+    skill?: boolean | SkillDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["positionSkill"]>
+
+  export type PositionSkillSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    positionId?: boolean
+    skillId?: boolean
+    position?: boolean | PositionDefaultArgs<ExtArgs>
+    skill?: boolean | SkillDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["positionSkill"]>
+
+  export type PositionSkillSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    positionId?: boolean
+    skillId?: boolean
+    position?: boolean | PositionDefaultArgs<ExtArgs>
+    skill?: boolean | SkillDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["positionSkill"]>
+
+  export type PositionSkillSelectScalar = {
+    id?: boolean
+    positionId?: boolean
+    skillId?: boolean
+  }
+
+  export type PositionSkillOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "positionId" | "skillId", ExtArgs["result"]["positionSkill"]>
+  export type PositionSkillInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    position?: boolean | PositionDefaultArgs<ExtArgs>
+    skill?: boolean | SkillDefaultArgs<ExtArgs>
+  }
+  export type PositionSkillIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    position?: boolean | PositionDefaultArgs<ExtArgs>
+    skill?: boolean | SkillDefaultArgs<ExtArgs>
+  }
+  export type PositionSkillIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    position?: boolean | PositionDefaultArgs<ExtArgs>
+    skill?: boolean | SkillDefaultArgs<ExtArgs>
+  }
+
+  export type $PositionSkillPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "PositionSkill"
+    objects: {
+      position: Prisma.$PositionPayload<ExtArgs>
+      skill: Prisma.$SkillPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      positionId: string
+      skillId: string
+    }, ExtArgs["result"]["positionSkill"]>
+    composites: {}
+  }
+
+  type PositionSkillGetPayload<S extends boolean | null | undefined | PositionSkillDefaultArgs> = $Result.GetResult<Prisma.$PositionSkillPayload, S>
+
+  type PositionSkillCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<PositionSkillFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: PositionSkillCountAggregateInputType | true
+    }
+
+  export interface PositionSkillDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['PositionSkill'], meta: { name: 'PositionSkill' } }
+    /**
+     * Find zero or one PositionSkill that matches the filter.
+     * @param {PositionSkillFindUniqueArgs} args - Arguments to find a PositionSkill
+     * @example
+     * // Get one PositionSkill
+     * const positionSkill = await prisma.positionSkill.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends PositionSkillFindUniqueArgs>(args: SelectSubset<T, PositionSkillFindUniqueArgs<ExtArgs>>): Prisma__PositionSkillClient<$Result.GetResult<Prisma.$PositionSkillPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one PositionSkill that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {PositionSkillFindUniqueOrThrowArgs} args - Arguments to find a PositionSkill
+     * @example
+     * // Get one PositionSkill
+     * const positionSkill = await prisma.positionSkill.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends PositionSkillFindUniqueOrThrowArgs>(args: SelectSubset<T, PositionSkillFindUniqueOrThrowArgs<ExtArgs>>): Prisma__PositionSkillClient<$Result.GetResult<Prisma.$PositionSkillPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first PositionSkill that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PositionSkillFindFirstArgs} args - Arguments to find a PositionSkill
+     * @example
+     * // Get one PositionSkill
+     * const positionSkill = await prisma.positionSkill.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends PositionSkillFindFirstArgs>(args?: SelectSubset<T, PositionSkillFindFirstArgs<ExtArgs>>): Prisma__PositionSkillClient<$Result.GetResult<Prisma.$PositionSkillPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first PositionSkill that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PositionSkillFindFirstOrThrowArgs} args - Arguments to find a PositionSkill
+     * @example
+     * // Get one PositionSkill
+     * const positionSkill = await prisma.positionSkill.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends PositionSkillFindFirstOrThrowArgs>(args?: SelectSubset<T, PositionSkillFindFirstOrThrowArgs<ExtArgs>>): Prisma__PositionSkillClient<$Result.GetResult<Prisma.$PositionSkillPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more PositionSkills that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PositionSkillFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all PositionSkills
+     * const positionSkills = await prisma.positionSkill.findMany()
+     * 
+     * // Get first 10 PositionSkills
+     * const positionSkills = await prisma.positionSkill.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const positionSkillWithIdOnly = await prisma.positionSkill.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends PositionSkillFindManyArgs>(args?: SelectSubset<T, PositionSkillFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PositionSkillPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a PositionSkill.
+     * @param {PositionSkillCreateArgs} args - Arguments to create a PositionSkill.
+     * @example
+     * // Create one PositionSkill
+     * const PositionSkill = await prisma.positionSkill.create({
+     *   data: {
+     *     // ... data to create a PositionSkill
+     *   }
+     * })
+     * 
+     */
+    create<T extends PositionSkillCreateArgs>(args: SelectSubset<T, PositionSkillCreateArgs<ExtArgs>>): Prisma__PositionSkillClient<$Result.GetResult<Prisma.$PositionSkillPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many PositionSkills.
+     * @param {PositionSkillCreateManyArgs} args - Arguments to create many PositionSkills.
+     * @example
+     * // Create many PositionSkills
+     * const positionSkill = await prisma.positionSkill.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends PositionSkillCreateManyArgs>(args?: SelectSubset<T, PositionSkillCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many PositionSkills and returns the data saved in the database.
+     * @param {PositionSkillCreateManyAndReturnArgs} args - Arguments to create many PositionSkills.
+     * @example
+     * // Create many PositionSkills
+     * const positionSkill = await prisma.positionSkill.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many PositionSkills and only return the `id`
+     * const positionSkillWithIdOnly = await prisma.positionSkill.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends PositionSkillCreateManyAndReturnArgs>(args?: SelectSubset<T, PositionSkillCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PositionSkillPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a PositionSkill.
+     * @param {PositionSkillDeleteArgs} args - Arguments to delete one PositionSkill.
+     * @example
+     * // Delete one PositionSkill
+     * const PositionSkill = await prisma.positionSkill.delete({
+     *   where: {
+     *     // ... filter to delete one PositionSkill
+     *   }
+     * })
+     * 
+     */
+    delete<T extends PositionSkillDeleteArgs>(args: SelectSubset<T, PositionSkillDeleteArgs<ExtArgs>>): Prisma__PositionSkillClient<$Result.GetResult<Prisma.$PositionSkillPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one PositionSkill.
+     * @param {PositionSkillUpdateArgs} args - Arguments to update one PositionSkill.
+     * @example
+     * // Update one PositionSkill
+     * const positionSkill = await prisma.positionSkill.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends PositionSkillUpdateArgs>(args: SelectSubset<T, PositionSkillUpdateArgs<ExtArgs>>): Prisma__PositionSkillClient<$Result.GetResult<Prisma.$PositionSkillPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more PositionSkills.
+     * @param {PositionSkillDeleteManyArgs} args - Arguments to filter PositionSkills to delete.
+     * @example
+     * // Delete a few PositionSkills
+     * const { count } = await prisma.positionSkill.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends PositionSkillDeleteManyArgs>(args?: SelectSubset<T, PositionSkillDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more PositionSkills.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PositionSkillUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many PositionSkills
+     * const positionSkill = await prisma.positionSkill.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends PositionSkillUpdateManyArgs>(args: SelectSubset<T, PositionSkillUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more PositionSkills and returns the data updated in the database.
+     * @param {PositionSkillUpdateManyAndReturnArgs} args - Arguments to update many PositionSkills.
+     * @example
+     * // Update many PositionSkills
+     * const positionSkill = await prisma.positionSkill.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more PositionSkills and only return the `id`
+     * const positionSkillWithIdOnly = await prisma.positionSkill.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends PositionSkillUpdateManyAndReturnArgs>(args: SelectSubset<T, PositionSkillUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PositionSkillPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one PositionSkill.
+     * @param {PositionSkillUpsertArgs} args - Arguments to update or create a PositionSkill.
+     * @example
+     * // Update or create a PositionSkill
+     * const positionSkill = await prisma.positionSkill.upsert({
+     *   create: {
+     *     // ... data to create a PositionSkill
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the PositionSkill we want to update
+     *   }
+     * })
+     */
+    upsert<T extends PositionSkillUpsertArgs>(args: SelectSubset<T, PositionSkillUpsertArgs<ExtArgs>>): Prisma__PositionSkillClient<$Result.GetResult<Prisma.$PositionSkillPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of PositionSkills.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PositionSkillCountArgs} args - Arguments to filter PositionSkills to count.
+     * @example
+     * // Count the number of PositionSkills
+     * const count = await prisma.positionSkill.count({
+     *   where: {
+     *     // ... the filter for the PositionSkills we want to count
+     *   }
+     * })
+    **/
+    count<T extends PositionSkillCountArgs>(
+      args?: Subset<T, PositionSkillCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], PositionSkillCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a PositionSkill.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PositionSkillAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends PositionSkillAggregateArgs>(args: Subset<T, PositionSkillAggregateArgs>): Prisma.PrismaPromise<GetPositionSkillAggregateType<T>>
+
+    /**
+     * Group by PositionSkill.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PositionSkillGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends PositionSkillGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: PositionSkillGroupByArgs['orderBy'] }
+        : { orderBy?: PositionSkillGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, PositionSkillGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetPositionSkillGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the PositionSkill model
+   */
+  readonly fields: PositionSkillFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for PositionSkill.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__PositionSkillClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    position<T extends PositionDefaultArgs<ExtArgs> = {}>(args?: Subset<T, PositionDefaultArgs<ExtArgs>>): Prisma__PositionClient<$Result.GetResult<Prisma.$PositionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    skill<T extends SkillDefaultArgs<ExtArgs> = {}>(args?: Subset<T, SkillDefaultArgs<ExtArgs>>): Prisma__SkillClient<$Result.GetResult<Prisma.$SkillPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the PositionSkill model
+   */
+  interface PositionSkillFieldRefs {
+    readonly id: FieldRef<"PositionSkill", 'String'>
+    readonly positionId: FieldRef<"PositionSkill", 'String'>
+    readonly skillId: FieldRef<"PositionSkill", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * PositionSkill findUnique
+   */
+  export type PositionSkillFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PositionSkill
+     */
+    select?: PositionSkillSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PositionSkill
+     */
+    omit?: PositionSkillOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PositionSkillInclude<ExtArgs> | null
+    /**
+     * Filter, which PositionSkill to fetch.
+     */
+    where: PositionSkillWhereUniqueInput
+  }
+
+  /**
+   * PositionSkill findUniqueOrThrow
+   */
+  export type PositionSkillFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PositionSkill
+     */
+    select?: PositionSkillSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PositionSkill
+     */
+    omit?: PositionSkillOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PositionSkillInclude<ExtArgs> | null
+    /**
+     * Filter, which PositionSkill to fetch.
+     */
+    where: PositionSkillWhereUniqueInput
+  }
+
+  /**
+   * PositionSkill findFirst
+   */
+  export type PositionSkillFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PositionSkill
+     */
+    select?: PositionSkillSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PositionSkill
+     */
+    omit?: PositionSkillOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PositionSkillInclude<ExtArgs> | null
+    /**
+     * Filter, which PositionSkill to fetch.
+     */
+    where?: PositionSkillWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PositionSkills to fetch.
+     */
+    orderBy?: PositionSkillOrderByWithRelationInput | PositionSkillOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PositionSkills.
+     */
+    cursor?: PositionSkillWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PositionSkills from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PositionSkills.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PositionSkills.
+     */
+    distinct?: PositionSkillScalarFieldEnum | PositionSkillScalarFieldEnum[]
+  }
+
+  /**
+   * PositionSkill findFirstOrThrow
+   */
+  export type PositionSkillFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PositionSkill
+     */
+    select?: PositionSkillSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PositionSkill
+     */
+    omit?: PositionSkillOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PositionSkillInclude<ExtArgs> | null
+    /**
+     * Filter, which PositionSkill to fetch.
+     */
+    where?: PositionSkillWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PositionSkills to fetch.
+     */
+    orderBy?: PositionSkillOrderByWithRelationInput | PositionSkillOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PositionSkills.
+     */
+    cursor?: PositionSkillWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PositionSkills from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PositionSkills.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PositionSkills.
+     */
+    distinct?: PositionSkillScalarFieldEnum | PositionSkillScalarFieldEnum[]
+  }
+
+  /**
+   * PositionSkill findMany
+   */
+  export type PositionSkillFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PositionSkill
+     */
+    select?: PositionSkillSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PositionSkill
+     */
+    omit?: PositionSkillOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PositionSkillInclude<ExtArgs> | null
+    /**
+     * Filter, which PositionSkills to fetch.
+     */
+    where?: PositionSkillWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PositionSkills to fetch.
+     */
+    orderBy?: PositionSkillOrderByWithRelationInput | PositionSkillOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing PositionSkills.
+     */
+    cursor?: PositionSkillWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PositionSkills from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PositionSkills.
+     */
+    skip?: number
+    distinct?: PositionSkillScalarFieldEnum | PositionSkillScalarFieldEnum[]
+  }
+
+  /**
+   * PositionSkill create
+   */
+  export type PositionSkillCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PositionSkill
+     */
+    select?: PositionSkillSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PositionSkill
+     */
+    omit?: PositionSkillOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PositionSkillInclude<ExtArgs> | null
+    /**
+     * The data needed to create a PositionSkill.
+     */
+    data: XOR<PositionSkillCreateInput, PositionSkillUncheckedCreateInput>
+  }
+
+  /**
+   * PositionSkill createMany
+   */
+  export type PositionSkillCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many PositionSkills.
+     */
+    data: PositionSkillCreateManyInput | PositionSkillCreateManyInput[]
+  }
+
+  /**
+   * PositionSkill createManyAndReturn
+   */
+  export type PositionSkillCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PositionSkill
+     */
+    select?: PositionSkillSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the PositionSkill
+     */
+    omit?: PositionSkillOmit<ExtArgs> | null
+    /**
+     * The data used to create many PositionSkills.
+     */
+    data: PositionSkillCreateManyInput | PositionSkillCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PositionSkillIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * PositionSkill update
+   */
+  export type PositionSkillUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PositionSkill
+     */
+    select?: PositionSkillSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PositionSkill
+     */
+    omit?: PositionSkillOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PositionSkillInclude<ExtArgs> | null
+    /**
+     * The data needed to update a PositionSkill.
+     */
+    data: XOR<PositionSkillUpdateInput, PositionSkillUncheckedUpdateInput>
+    /**
+     * Choose, which PositionSkill to update.
+     */
+    where: PositionSkillWhereUniqueInput
+  }
+
+  /**
+   * PositionSkill updateMany
+   */
+  export type PositionSkillUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update PositionSkills.
+     */
+    data: XOR<PositionSkillUpdateManyMutationInput, PositionSkillUncheckedUpdateManyInput>
+    /**
+     * Filter which PositionSkills to update
+     */
+    where?: PositionSkillWhereInput
+    /**
+     * Limit how many PositionSkills to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * PositionSkill updateManyAndReturn
+   */
+  export type PositionSkillUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PositionSkill
+     */
+    select?: PositionSkillSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the PositionSkill
+     */
+    omit?: PositionSkillOmit<ExtArgs> | null
+    /**
+     * The data used to update PositionSkills.
+     */
+    data: XOR<PositionSkillUpdateManyMutationInput, PositionSkillUncheckedUpdateManyInput>
+    /**
+     * Filter which PositionSkills to update
+     */
+    where?: PositionSkillWhereInput
+    /**
+     * Limit how many PositionSkills to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PositionSkillIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * PositionSkill upsert
+   */
+  export type PositionSkillUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PositionSkill
+     */
+    select?: PositionSkillSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PositionSkill
+     */
+    omit?: PositionSkillOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PositionSkillInclude<ExtArgs> | null
+    /**
+     * The filter to search for the PositionSkill to update in case it exists.
+     */
+    where: PositionSkillWhereUniqueInput
+    /**
+     * In case the PositionSkill found by the `where` argument doesn't exist, create a new PositionSkill with this data.
+     */
+    create: XOR<PositionSkillCreateInput, PositionSkillUncheckedCreateInput>
+    /**
+     * In case the PositionSkill was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<PositionSkillUpdateInput, PositionSkillUncheckedUpdateInput>
+  }
+
+  /**
+   * PositionSkill delete
+   */
+  export type PositionSkillDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PositionSkill
+     */
+    select?: PositionSkillSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PositionSkill
+     */
+    omit?: PositionSkillOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PositionSkillInclude<ExtArgs> | null
+    /**
+     * Filter which PositionSkill to delete.
+     */
+    where: PositionSkillWhereUniqueInput
+  }
+
+  /**
+   * PositionSkill deleteMany
+   */
+  export type PositionSkillDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PositionSkills to delete
+     */
+    where?: PositionSkillWhereInput
+    /**
+     * Limit how many PositionSkills to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * PositionSkill without action
+   */
+  export type PositionSkillDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PositionSkill
+     */
+    select?: PositionSkillSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PositionSkill
+     */
+    omit?: PositionSkillOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PositionSkillInclude<ExtArgs> | null
   }
 
 
@@ -32773,6 +34069,15 @@ export namespace Prisma {
   export type PositionScalarFieldEnum = (typeof PositionScalarFieldEnum)[keyof typeof PositionScalarFieldEnum]
 
 
+  export const PositionSkillScalarFieldEnum: {
+    id: 'id',
+    positionId: 'positionId',
+    skillId: 'skillId'
+  };
+
+  export type PositionSkillScalarFieldEnum = (typeof PositionSkillScalarFieldEnum)[keyof typeof PositionSkillScalarFieldEnum]
+
+
   export const CupScalarFieldEnum: {
     id: 'id',
     name: 'name',
@@ -34263,6 +35568,7 @@ export namespace Prisma {
     isModified?: BoolFilter<"Skill"> | boolean
     createdAt?: DateTimeFilter<"Skill"> | Date | string
     updatedAt?: DateTimeFilter<"Skill"> | Date | string
+    positionSkills?: PositionSkillListRelationFilter
   }
 
   export type SkillOrderByWithRelationInput = {
@@ -34279,6 +35585,7 @@ export namespace Prisma {
     isModified?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    positionSkills?: PositionSkillOrderByRelationAggregateInput
   }
 
   export type SkillWhereUniqueInput = Prisma.AtLeast<{
@@ -34299,6 +35606,7 @@ export namespace Prisma {
     isModified?: BoolFilter<"Skill"> | boolean
     createdAt?: DateTimeFilter<"Skill"> | Date | string
     updatedAt?: DateTimeFilter<"Skill"> | Date | string
+    positionSkills?: PositionSkillListRelationFilter
   }, "id" | "slug_ruleset">
 
   export type SkillOrderByWithAggregationInput = {
@@ -34359,6 +35667,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"Position"> | Date | string
     updatedAt?: DateTimeFilter<"Position"> | Date | string
     roster?: XOR<RosterScalarRelationFilter, RosterWhereInput>
+    skills?: PositionSkillListRelationFilter
   }
 
   export type PositionOrderByWithRelationInput = {
@@ -34378,6 +35687,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     roster?: RosterOrderByWithRelationInput
+    skills?: PositionSkillOrderByRelationAggregateInput
   }
 
   export type PositionWhereUniqueInput = Prisma.AtLeast<{
@@ -34401,6 +35711,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"Position"> | Date | string
     updatedAt?: DateTimeFilter<"Position"> | Date | string
     roster?: XOR<RosterScalarRelationFilter, RosterWhereInput>
+    skills?: PositionSkillListRelationFilter
   }, "id" | "rosterId_slug">
 
   export type PositionOrderByWithAggregationInput = {
@@ -34445,6 +35756,55 @@ export namespace Prisma {
     keywords?: StringNullableWithAggregatesFilter<"Position"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Position"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Position"> | Date | string
+  }
+
+  export type PositionSkillWhereInput = {
+    AND?: PositionSkillWhereInput | PositionSkillWhereInput[]
+    OR?: PositionSkillWhereInput[]
+    NOT?: PositionSkillWhereInput | PositionSkillWhereInput[]
+    id?: StringFilter<"PositionSkill"> | string
+    positionId?: StringFilter<"PositionSkill"> | string
+    skillId?: StringFilter<"PositionSkill"> | string
+    position?: XOR<PositionScalarRelationFilter, PositionWhereInput>
+    skill?: XOR<SkillScalarRelationFilter, SkillWhereInput>
+  }
+
+  export type PositionSkillOrderByWithRelationInput = {
+    id?: SortOrder
+    positionId?: SortOrder
+    skillId?: SortOrder
+    position?: PositionOrderByWithRelationInput
+    skill?: SkillOrderByWithRelationInput
+  }
+
+  export type PositionSkillWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    positionId_skillId?: PositionSkillPositionIdSkillIdCompoundUniqueInput
+    AND?: PositionSkillWhereInput | PositionSkillWhereInput[]
+    OR?: PositionSkillWhereInput[]
+    NOT?: PositionSkillWhereInput | PositionSkillWhereInput[]
+    positionId?: StringFilter<"PositionSkill"> | string
+    skillId?: StringFilter<"PositionSkill"> | string
+    position?: XOR<PositionScalarRelationFilter, PositionWhereInput>
+    skill?: XOR<SkillScalarRelationFilter, SkillWhereInput>
+  }, "id" | "positionId_skillId">
+
+  export type PositionSkillOrderByWithAggregationInput = {
+    id?: SortOrder
+    positionId?: SortOrder
+    skillId?: SortOrder
+    _count?: PositionSkillCountOrderByAggregateInput
+    _max?: PositionSkillMaxOrderByAggregateInput
+    _min?: PositionSkillMinOrderByAggregateInput
+  }
+
+  export type PositionSkillScalarWhereWithAggregatesInput = {
+    AND?: PositionSkillScalarWhereWithAggregatesInput | PositionSkillScalarWhereWithAggregatesInput[]
+    OR?: PositionSkillScalarWhereWithAggregatesInput[]
+    NOT?: PositionSkillScalarWhereWithAggregatesInput | PositionSkillScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"PositionSkill"> | string
+    positionId?: StringWithAggregatesFilter<"PositionSkill"> | string
+    skillId?: StringWithAggregatesFilter<"PositionSkill"> | string
   }
 
   export type CupWhereInput = {
@@ -36667,6 +38027,7 @@ export namespace Prisma {
     isModified?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
+    positionSkills?: PositionSkillCreateNestedManyWithoutSkillInput
   }
 
   export type SkillUncheckedCreateInput = {
@@ -36683,6 +38044,7 @@ export namespace Prisma {
     isModified?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
+    positionSkills?: PositionSkillUncheckedCreateNestedManyWithoutSkillInput
   }
 
   export type SkillUpdateInput = {
@@ -36699,6 +38061,7 @@ export namespace Prisma {
     isModified?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    positionSkills?: PositionSkillUpdateManyWithoutSkillNestedInput
   }
 
   export type SkillUncheckedUpdateInput = {
@@ -36715,6 +38078,7 @@ export namespace Prisma {
     isModified?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    positionSkills?: PositionSkillUncheckedUpdateManyWithoutSkillNestedInput
   }
 
   export type SkillCreateManyInput = {
@@ -36781,6 +38145,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     roster: RosterCreateNestedOneWithoutPositionsInput
+    skills?: PositionSkillCreateNestedManyWithoutPositionInput
   }
 
   export type PositionUncheckedCreateInput = {
@@ -36799,6 +38164,7 @@ export namespace Prisma {
     keywords?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    skills?: PositionSkillUncheckedCreateNestedManyWithoutPositionInput
   }
 
   export type PositionUpdateInput = {
@@ -36817,6 +38183,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     roster?: RosterUpdateOneRequiredWithoutPositionsNestedInput
+    skills?: PositionSkillUpdateManyWithoutPositionNestedInput
   }
 
   export type PositionUncheckedUpdateInput = {
@@ -36835,6 +38202,7 @@ export namespace Prisma {
     keywords?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    skills?: PositionSkillUncheckedUpdateManyWithoutPositionNestedInput
   }
 
   export type PositionCreateManyInput = {
@@ -36888,6 +38256,46 @@ export namespace Prisma {
     keywords?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PositionSkillCreateInput = {
+    id?: string
+    position: PositionCreateNestedOneWithoutSkillsInput
+    skill: SkillCreateNestedOneWithoutPositionSkillsInput
+  }
+
+  export type PositionSkillUncheckedCreateInput = {
+    id?: string
+    positionId: string
+    skillId: string
+  }
+
+  export type PositionSkillUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    position?: PositionUpdateOneRequiredWithoutSkillsNestedInput
+    skill?: SkillUpdateOneRequiredWithoutPositionSkillsNestedInput
+  }
+
+  export type PositionSkillUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    positionId?: StringFieldUpdateOperationsInput | string
+    skillId?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type PositionSkillCreateManyInput = {
+    id?: string
+    positionId: string
+    skillId: string
+  }
+
+  export type PositionSkillUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type PositionSkillUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    positionId?: StringFieldUpdateOperationsInput | string
+    skillId?: StringFieldUpdateOperationsInput | string
   }
 
   export type CupCreateInput = {
@@ -38933,6 +40341,16 @@ export namespace Prisma {
     budget?: SortOrder
   }
 
+  export type PositionSkillListRelationFilter = {
+    every?: PositionSkillWhereInput
+    some?: PositionSkillWhereInput
+    none?: PositionSkillWhereInput
+  }
+
+  export type PositionSkillOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
   export type SkillSlugRulesetCompoundUniqueInput = {
     slug: string
     ruleset: $Enums.Ruleset
@@ -39070,6 +40488,39 @@ export namespace Prisma {
     ag?: SortOrder
     pa?: SortOrder
     av?: SortOrder
+  }
+
+  export type PositionScalarRelationFilter = {
+    is?: PositionWhereInput
+    isNot?: PositionWhereInput
+  }
+
+  export type SkillScalarRelationFilter = {
+    is?: SkillWhereInput
+    isNot?: SkillWhereInput
+  }
+
+  export type PositionSkillPositionIdSkillIdCompoundUniqueInput = {
+    positionId: string
+    skillId: string
+  }
+
+  export type PositionSkillCountOrderByAggregateInput = {
+    id?: SortOrder
+    positionId?: SortOrder
+    skillId?: SortOrder
+  }
+
+  export type PositionSkillMaxOrderByAggregateInput = {
+    id?: SortOrder
+    positionId?: SortOrder
+    skillId?: SortOrder
+  }
+
+  export type PositionSkillMinOrderByAggregateInput = {
+    id?: SortOrder
+    positionId?: SortOrder
+    skillId?: SortOrder
   }
 
   export type CupCountOrderByAggregateInput = {
@@ -41001,10 +42452,66 @@ export namespace Prisma {
     deleteMany?: PositionScalarWhereInput | PositionScalarWhereInput[]
   }
 
+  export type PositionSkillCreateNestedManyWithoutSkillInput = {
+    create?: XOR<PositionSkillCreateWithoutSkillInput, PositionSkillUncheckedCreateWithoutSkillInput> | PositionSkillCreateWithoutSkillInput[] | PositionSkillUncheckedCreateWithoutSkillInput[]
+    connectOrCreate?: PositionSkillCreateOrConnectWithoutSkillInput | PositionSkillCreateOrConnectWithoutSkillInput[]
+    createMany?: PositionSkillCreateManySkillInputEnvelope
+    connect?: PositionSkillWhereUniqueInput | PositionSkillWhereUniqueInput[]
+  }
+
+  export type PositionSkillUncheckedCreateNestedManyWithoutSkillInput = {
+    create?: XOR<PositionSkillCreateWithoutSkillInput, PositionSkillUncheckedCreateWithoutSkillInput> | PositionSkillCreateWithoutSkillInput[] | PositionSkillUncheckedCreateWithoutSkillInput[]
+    connectOrCreate?: PositionSkillCreateOrConnectWithoutSkillInput | PositionSkillCreateOrConnectWithoutSkillInput[]
+    createMany?: PositionSkillCreateManySkillInputEnvelope
+    connect?: PositionSkillWhereUniqueInput | PositionSkillWhereUniqueInput[]
+  }
+
+  export type PositionSkillUpdateManyWithoutSkillNestedInput = {
+    create?: XOR<PositionSkillCreateWithoutSkillInput, PositionSkillUncheckedCreateWithoutSkillInput> | PositionSkillCreateWithoutSkillInput[] | PositionSkillUncheckedCreateWithoutSkillInput[]
+    connectOrCreate?: PositionSkillCreateOrConnectWithoutSkillInput | PositionSkillCreateOrConnectWithoutSkillInput[]
+    upsert?: PositionSkillUpsertWithWhereUniqueWithoutSkillInput | PositionSkillUpsertWithWhereUniqueWithoutSkillInput[]
+    createMany?: PositionSkillCreateManySkillInputEnvelope
+    set?: PositionSkillWhereUniqueInput | PositionSkillWhereUniqueInput[]
+    disconnect?: PositionSkillWhereUniqueInput | PositionSkillWhereUniqueInput[]
+    delete?: PositionSkillWhereUniqueInput | PositionSkillWhereUniqueInput[]
+    connect?: PositionSkillWhereUniqueInput | PositionSkillWhereUniqueInput[]
+    update?: PositionSkillUpdateWithWhereUniqueWithoutSkillInput | PositionSkillUpdateWithWhereUniqueWithoutSkillInput[]
+    updateMany?: PositionSkillUpdateManyWithWhereWithoutSkillInput | PositionSkillUpdateManyWithWhereWithoutSkillInput[]
+    deleteMany?: PositionSkillScalarWhereInput | PositionSkillScalarWhereInput[]
+  }
+
+  export type PositionSkillUncheckedUpdateManyWithoutSkillNestedInput = {
+    create?: XOR<PositionSkillCreateWithoutSkillInput, PositionSkillUncheckedCreateWithoutSkillInput> | PositionSkillCreateWithoutSkillInput[] | PositionSkillUncheckedCreateWithoutSkillInput[]
+    connectOrCreate?: PositionSkillCreateOrConnectWithoutSkillInput | PositionSkillCreateOrConnectWithoutSkillInput[]
+    upsert?: PositionSkillUpsertWithWhereUniqueWithoutSkillInput | PositionSkillUpsertWithWhereUniqueWithoutSkillInput[]
+    createMany?: PositionSkillCreateManySkillInputEnvelope
+    set?: PositionSkillWhereUniqueInput | PositionSkillWhereUniqueInput[]
+    disconnect?: PositionSkillWhereUniqueInput | PositionSkillWhereUniqueInput[]
+    delete?: PositionSkillWhereUniqueInput | PositionSkillWhereUniqueInput[]
+    connect?: PositionSkillWhereUniqueInput | PositionSkillWhereUniqueInput[]
+    update?: PositionSkillUpdateWithWhereUniqueWithoutSkillInput | PositionSkillUpdateWithWhereUniqueWithoutSkillInput[]
+    updateMany?: PositionSkillUpdateManyWithWhereWithoutSkillInput | PositionSkillUpdateManyWithWhereWithoutSkillInput[]
+    deleteMany?: PositionSkillScalarWhereInput | PositionSkillScalarWhereInput[]
+  }
+
   export type RosterCreateNestedOneWithoutPositionsInput = {
     create?: XOR<RosterCreateWithoutPositionsInput, RosterUncheckedCreateWithoutPositionsInput>
     connectOrCreate?: RosterCreateOrConnectWithoutPositionsInput
     connect?: RosterWhereUniqueInput
+  }
+
+  export type PositionSkillCreateNestedManyWithoutPositionInput = {
+    create?: XOR<PositionSkillCreateWithoutPositionInput, PositionSkillUncheckedCreateWithoutPositionInput> | PositionSkillCreateWithoutPositionInput[] | PositionSkillUncheckedCreateWithoutPositionInput[]
+    connectOrCreate?: PositionSkillCreateOrConnectWithoutPositionInput | PositionSkillCreateOrConnectWithoutPositionInput[]
+    createMany?: PositionSkillCreateManyPositionInputEnvelope
+    connect?: PositionSkillWhereUniqueInput | PositionSkillWhereUniqueInput[]
+  }
+
+  export type PositionSkillUncheckedCreateNestedManyWithoutPositionInput = {
+    create?: XOR<PositionSkillCreateWithoutPositionInput, PositionSkillUncheckedCreateWithoutPositionInput> | PositionSkillCreateWithoutPositionInput[] | PositionSkillUncheckedCreateWithoutPositionInput[]
+    connectOrCreate?: PositionSkillCreateOrConnectWithoutPositionInput | PositionSkillCreateOrConnectWithoutPositionInput[]
+    createMany?: PositionSkillCreateManyPositionInputEnvelope
+    connect?: PositionSkillWhereUniqueInput | PositionSkillWhereUniqueInput[]
   }
 
   export type RosterUpdateOneRequiredWithoutPositionsNestedInput = {
@@ -41013,6 +42520,62 @@ export namespace Prisma {
     upsert?: RosterUpsertWithoutPositionsInput
     connect?: RosterWhereUniqueInput
     update?: XOR<XOR<RosterUpdateToOneWithWhereWithoutPositionsInput, RosterUpdateWithoutPositionsInput>, RosterUncheckedUpdateWithoutPositionsInput>
+  }
+
+  export type PositionSkillUpdateManyWithoutPositionNestedInput = {
+    create?: XOR<PositionSkillCreateWithoutPositionInput, PositionSkillUncheckedCreateWithoutPositionInput> | PositionSkillCreateWithoutPositionInput[] | PositionSkillUncheckedCreateWithoutPositionInput[]
+    connectOrCreate?: PositionSkillCreateOrConnectWithoutPositionInput | PositionSkillCreateOrConnectWithoutPositionInput[]
+    upsert?: PositionSkillUpsertWithWhereUniqueWithoutPositionInput | PositionSkillUpsertWithWhereUniqueWithoutPositionInput[]
+    createMany?: PositionSkillCreateManyPositionInputEnvelope
+    set?: PositionSkillWhereUniqueInput | PositionSkillWhereUniqueInput[]
+    disconnect?: PositionSkillWhereUniqueInput | PositionSkillWhereUniqueInput[]
+    delete?: PositionSkillWhereUniqueInput | PositionSkillWhereUniqueInput[]
+    connect?: PositionSkillWhereUniqueInput | PositionSkillWhereUniqueInput[]
+    update?: PositionSkillUpdateWithWhereUniqueWithoutPositionInput | PositionSkillUpdateWithWhereUniqueWithoutPositionInput[]
+    updateMany?: PositionSkillUpdateManyWithWhereWithoutPositionInput | PositionSkillUpdateManyWithWhereWithoutPositionInput[]
+    deleteMany?: PositionSkillScalarWhereInput | PositionSkillScalarWhereInput[]
+  }
+
+  export type PositionSkillUncheckedUpdateManyWithoutPositionNestedInput = {
+    create?: XOR<PositionSkillCreateWithoutPositionInput, PositionSkillUncheckedCreateWithoutPositionInput> | PositionSkillCreateWithoutPositionInput[] | PositionSkillUncheckedCreateWithoutPositionInput[]
+    connectOrCreate?: PositionSkillCreateOrConnectWithoutPositionInput | PositionSkillCreateOrConnectWithoutPositionInput[]
+    upsert?: PositionSkillUpsertWithWhereUniqueWithoutPositionInput | PositionSkillUpsertWithWhereUniqueWithoutPositionInput[]
+    createMany?: PositionSkillCreateManyPositionInputEnvelope
+    set?: PositionSkillWhereUniqueInput | PositionSkillWhereUniqueInput[]
+    disconnect?: PositionSkillWhereUniqueInput | PositionSkillWhereUniqueInput[]
+    delete?: PositionSkillWhereUniqueInput | PositionSkillWhereUniqueInput[]
+    connect?: PositionSkillWhereUniqueInput | PositionSkillWhereUniqueInput[]
+    update?: PositionSkillUpdateWithWhereUniqueWithoutPositionInput | PositionSkillUpdateWithWhereUniqueWithoutPositionInput[]
+    updateMany?: PositionSkillUpdateManyWithWhereWithoutPositionInput | PositionSkillUpdateManyWithWhereWithoutPositionInput[]
+    deleteMany?: PositionSkillScalarWhereInput | PositionSkillScalarWhereInput[]
+  }
+
+  export type PositionCreateNestedOneWithoutSkillsInput = {
+    create?: XOR<PositionCreateWithoutSkillsInput, PositionUncheckedCreateWithoutSkillsInput>
+    connectOrCreate?: PositionCreateOrConnectWithoutSkillsInput
+    connect?: PositionWhereUniqueInput
+  }
+
+  export type SkillCreateNestedOneWithoutPositionSkillsInput = {
+    create?: XOR<SkillCreateWithoutPositionSkillsInput, SkillUncheckedCreateWithoutPositionSkillsInput>
+    connectOrCreate?: SkillCreateOrConnectWithoutPositionSkillsInput
+    connect?: SkillWhereUniqueInput
+  }
+
+  export type PositionUpdateOneRequiredWithoutSkillsNestedInput = {
+    create?: XOR<PositionCreateWithoutSkillsInput, PositionUncheckedCreateWithoutSkillsInput>
+    connectOrCreate?: PositionCreateOrConnectWithoutSkillsInput
+    upsert?: PositionUpsertWithoutSkillsInput
+    connect?: PositionWhereUniqueInput
+    update?: XOR<XOR<PositionUpdateToOneWithWhereWithoutSkillsInput, PositionUpdateWithoutSkillsInput>, PositionUncheckedUpdateWithoutSkillsInput>
+  }
+
+  export type SkillUpdateOneRequiredWithoutPositionSkillsNestedInput = {
+    create?: XOR<SkillCreateWithoutPositionSkillsInput, SkillUncheckedCreateWithoutPositionSkillsInput>
+    connectOrCreate?: SkillCreateOrConnectWithoutPositionSkillsInput
+    upsert?: SkillUpsertWithoutPositionSkillsInput
+    connect?: SkillWhereUniqueInput
+    update?: XOR<XOR<SkillUpdateToOneWithWhereWithoutPositionSkillsInput, SkillUpdateWithoutPositionSkillsInput>, SkillUncheckedUpdateWithoutPositionSkillsInput>
   }
 
   export type UserCreateNestedOneWithoutCreatedCupsInput = {
@@ -45193,6 +46756,7 @@ export namespace Prisma {
     keywords?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    skills?: PositionSkillCreateNestedManyWithoutPositionInput
   }
 
   export type PositionUncheckedCreateWithoutRosterInput = {
@@ -45210,6 +46774,7 @@ export namespace Prisma {
     keywords?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    skills?: PositionSkillUncheckedCreateNestedManyWithoutPositionInput
   }
 
   export type PositionCreateOrConnectWithoutRosterInput = {
@@ -45258,6 +46823,50 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Position"> | Date | string
   }
 
+  export type PositionSkillCreateWithoutSkillInput = {
+    id?: string
+    position: PositionCreateNestedOneWithoutSkillsInput
+  }
+
+  export type PositionSkillUncheckedCreateWithoutSkillInput = {
+    id?: string
+    positionId: string
+  }
+
+  export type PositionSkillCreateOrConnectWithoutSkillInput = {
+    where: PositionSkillWhereUniqueInput
+    create: XOR<PositionSkillCreateWithoutSkillInput, PositionSkillUncheckedCreateWithoutSkillInput>
+  }
+
+  export type PositionSkillCreateManySkillInputEnvelope = {
+    data: PositionSkillCreateManySkillInput | PositionSkillCreateManySkillInput[]
+  }
+
+  export type PositionSkillUpsertWithWhereUniqueWithoutSkillInput = {
+    where: PositionSkillWhereUniqueInput
+    update: XOR<PositionSkillUpdateWithoutSkillInput, PositionSkillUncheckedUpdateWithoutSkillInput>
+    create: XOR<PositionSkillCreateWithoutSkillInput, PositionSkillUncheckedCreateWithoutSkillInput>
+  }
+
+  export type PositionSkillUpdateWithWhereUniqueWithoutSkillInput = {
+    where: PositionSkillWhereUniqueInput
+    data: XOR<PositionSkillUpdateWithoutSkillInput, PositionSkillUncheckedUpdateWithoutSkillInput>
+  }
+
+  export type PositionSkillUpdateManyWithWhereWithoutSkillInput = {
+    where: PositionSkillScalarWhereInput
+    data: XOR<PositionSkillUpdateManyMutationInput, PositionSkillUncheckedUpdateManyWithoutSkillInput>
+  }
+
+  export type PositionSkillScalarWhereInput = {
+    AND?: PositionSkillScalarWhereInput | PositionSkillScalarWhereInput[]
+    OR?: PositionSkillScalarWhereInput[]
+    NOT?: PositionSkillScalarWhereInput | PositionSkillScalarWhereInput[]
+    id?: StringFilter<"PositionSkill"> | string
+    positionId?: StringFilter<"PositionSkill"> | string
+    skillId?: StringFilter<"PositionSkill"> | string
+  }
+
   export type RosterCreateWithoutPositionsInput = {
     id?: string
     slug: string
@@ -45295,6 +46904,25 @@ export namespace Prisma {
   export type RosterCreateOrConnectWithoutPositionsInput = {
     where: RosterWhereUniqueInput
     create: XOR<RosterCreateWithoutPositionsInput, RosterUncheckedCreateWithoutPositionsInput>
+  }
+
+  export type PositionSkillCreateWithoutPositionInput = {
+    id?: string
+    skill: SkillCreateNestedOneWithoutPositionSkillsInput
+  }
+
+  export type PositionSkillUncheckedCreateWithoutPositionInput = {
+    id?: string
+    skillId: string
+  }
+
+  export type PositionSkillCreateOrConnectWithoutPositionInput = {
+    where: PositionSkillWhereUniqueInput
+    create: XOR<PositionSkillCreateWithoutPositionInput, PositionSkillUncheckedCreateWithoutPositionInput>
+  }
+
+  export type PositionSkillCreateManyPositionInputEnvelope = {
+    data: PositionSkillCreateManyPositionInput | PositionSkillCreateManyPositionInput[]
   }
 
   export type RosterUpsertWithoutPositionsInput = {
@@ -45338,6 +46966,190 @@ export namespace Prisma {
     regionalRules?: NullableStringFieldUpdateOperationsInput | string | null
     specialRules?: NullableStringFieldUpdateOperationsInput | string | null
     naf?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PositionSkillUpsertWithWhereUniqueWithoutPositionInput = {
+    where: PositionSkillWhereUniqueInput
+    update: XOR<PositionSkillUpdateWithoutPositionInput, PositionSkillUncheckedUpdateWithoutPositionInput>
+    create: XOR<PositionSkillCreateWithoutPositionInput, PositionSkillUncheckedCreateWithoutPositionInput>
+  }
+
+  export type PositionSkillUpdateWithWhereUniqueWithoutPositionInput = {
+    where: PositionSkillWhereUniqueInput
+    data: XOR<PositionSkillUpdateWithoutPositionInput, PositionSkillUncheckedUpdateWithoutPositionInput>
+  }
+
+  export type PositionSkillUpdateManyWithWhereWithoutPositionInput = {
+    where: PositionSkillScalarWhereInput
+    data: XOR<PositionSkillUpdateManyMutationInput, PositionSkillUncheckedUpdateManyWithoutPositionInput>
+  }
+
+  export type PositionCreateWithoutSkillsInput = {
+    id?: string
+    slug: string
+    displayName: string
+    cost: number
+    min: number
+    max: number
+    ma: number
+    st: number
+    ag: number
+    pa: number
+    av: number
+    keywords?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    roster: RosterCreateNestedOneWithoutPositionsInput
+  }
+
+  export type PositionUncheckedCreateWithoutSkillsInput = {
+    id?: string
+    rosterId: string
+    slug: string
+    displayName: string
+    cost: number
+    min: number
+    max: number
+    ma: number
+    st: number
+    ag: number
+    pa: number
+    av: number
+    keywords?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type PositionCreateOrConnectWithoutSkillsInput = {
+    where: PositionWhereUniqueInput
+    create: XOR<PositionCreateWithoutSkillsInput, PositionUncheckedCreateWithoutSkillsInput>
+  }
+
+  export type SkillCreateWithoutPositionSkillsInput = {
+    id?: string
+    slug: string
+    ruleset?: $Enums.Ruleset
+    nameFr: string
+    nameEn: string
+    description: string
+    descriptionEn?: string | null
+    category: string
+    isElite?: boolean
+    isPassive?: boolean
+    isModified?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type SkillUncheckedCreateWithoutPositionSkillsInput = {
+    id?: string
+    slug: string
+    ruleset?: $Enums.Ruleset
+    nameFr: string
+    nameEn: string
+    description: string
+    descriptionEn?: string | null
+    category: string
+    isElite?: boolean
+    isPassive?: boolean
+    isModified?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type SkillCreateOrConnectWithoutPositionSkillsInput = {
+    where: SkillWhereUniqueInput
+    create: XOR<SkillCreateWithoutPositionSkillsInput, SkillUncheckedCreateWithoutPositionSkillsInput>
+  }
+
+  export type PositionUpsertWithoutSkillsInput = {
+    update: XOR<PositionUpdateWithoutSkillsInput, PositionUncheckedUpdateWithoutSkillsInput>
+    create: XOR<PositionCreateWithoutSkillsInput, PositionUncheckedCreateWithoutSkillsInput>
+    where?: PositionWhereInput
+  }
+
+  export type PositionUpdateToOneWithWhereWithoutSkillsInput = {
+    where?: PositionWhereInput
+    data: XOR<PositionUpdateWithoutSkillsInput, PositionUncheckedUpdateWithoutSkillsInput>
+  }
+
+  export type PositionUpdateWithoutSkillsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    cost?: IntFieldUpdateOperationsInput | number
+    min?: IntFieldUpdateOperationsInput | number
+    max?: IntFieldUpdateOperationsInput | number
+    ma?: IntFieldUpdateOperationsInput | number
+    st?: IntFieldUpdateOperationsInput | number
+    ag?: IntFieldUpdateOperationsInput | number
+    pa?: IntFieldUpdateOperationsInput | number
+    av?: IntFieldUpdateOperationsInput | number
+    keywords?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    roster?: RosterUpdateOneRequiredWithoutPositionsNestedInput
+  }
+
+  export type PositionUncheckedUpdateWithoutSkillsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    rosterId?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    cost?: IntFieldUpdateOperationsInput | number
+    min?: IntFieldUpdateOperationsInput | number
+    max?: IntFieldUpdateOperationsInput | number
+    ma?: IntFieldUpdateOperationsInput | number
+    st?: IntFieldUpdateOperationsInput | number
+    ag?: IntFieldUpdateOperationsInput | number
+    pa?: IntFieldUpdateOperationsInput | number
+    av?: IntFieldUpdateOperationsInput | number
+    keywords?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SkillUpsertWithoutPositionSkillsInput = {
+    update: XOR<SkillUpdateWithoutPositionSkillsInput, SkillUncheckedUpdateWithoutPositionSkillsInput>
+    create: XOR<SkillCreateWithoutPositionSkillsInput, SkillUncheckedCreateWithoutPositionSkillsInput>
+    where?: SkillWhereInput
+  }
+
+  export type SkillUpdateToOneWithWhereWithoutPositionSkillsInput = {
+    where?: SkillWhereInput
+    data: XOR<SkillUpdateWithoutPositionSkillsInput, SkillUncheckedUpdateWithoutPositionSkillsInput>
+  }
+
+  export type SkillUpdateWithoutPositionSkillsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    nameFr?: StringFieldUpdateOperationsInput | string
+    nameEn?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    category?: StringFieldUpdateOperationsInput | string
+    isElite?: BoolFieldUpdateOperationsInput | boolean
+    isPassive?: BoolFieldUpdateOperationsInput | boolean
+    isModified?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SkillUncheckedUpdateWithoutPositionSkillsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    nameFr?: StringFieldUpdateOperationsInput | string
+    nameEn?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    category?: StringFieldUpdateOperationsInput | string
+    isElite?: BoolFieldUpdateOperationsInput | boolean
+    isPassive?: BoolFieldUpdateOperationsInput | boolean
+    isModified?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -48709,6 +50521,7 @@ export namespace Prisma {
     keywords?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    skills?: PositionSkillUpdateManyWithoutPositionNestedInput
   }
 
   export type PositionUncheckedUpdateWithoutRosterInput = {
@@ -48726,6 +50539,7 @@ export namespace Prisma {
     keywords?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    skills?: PositionSkillUncheckedUpdateManyWithoutPositionNestedInput
   }
 
   export type PositionUncheckedUpdateManyWithoutRosterInput = {
@@ -48743,6 +50557,46 @@ export namespace Prisma {
     keywords?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PositionSkillCreateManySkillInput = {
+    id?: string
+    positionId: string
+  }
+
+  export type PositionSkillUpdateWithoutSkillInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    position?: PositionUpdateOneRequiredWithoutSkillsNestedInput
+  }
+
+  export type PositionSkillUncheckedUpdateWithoutSkillInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    positionId?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type PositionSkillUncheckedUpdateManyWithoutSkillInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    positionId?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type PositionSkillCreateManyPositionInput = {
+    id?: string
+    skillId: string
+  }
+
+  export type PositionSkillUpdateWithoutPositionInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    skill?: SkillUpdateOneRequiredWithoutPositionSkillsNestedInput
+  }
+
+  export type PositionSkillUncheckedUpdateWithoutPositionInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    skillId?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type PositionSkillUncheckedUpdateManyWithoutPositionInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    skillId?: StringFieldUpdateOperationsInput | string
   }
 
   export type CupParticipantCreateManyCupInput = {

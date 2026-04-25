@@ -332,6 +332,12 @@ exports.Prisma.PositionScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.PositionSkillScalarFieldEnum = {
+  id: 'id',
+  positionId: 'positionId',
+  skillId: 'skillId'
+};
+
 exports.Prisma.CupScalarFieldEnum = {
   id: 'id',
   name: 'name',
@@ -514,6 +520,7 @@ exports.Prisma.ModelName = {
   Roster: 'Roster',
   Skill: 'Skill',
   Position: 'Position',
+  PositionSkill: 'PositionSkill',
   Cup: 'Cup',
   CupParticipant: 'CupParticipant',
   MatchQueue: 'MatchQueue',
