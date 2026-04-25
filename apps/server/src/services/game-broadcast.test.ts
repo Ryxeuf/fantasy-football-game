@@ -5,7 +5,12 @@ vi.mock("../socket", () => ({
   getGameNamespace: vi.fn(),
 }));
 
-import { broadcastGameState, broadcastMatchEnd, broadcastMatchForfeited } from "./game-broadcast";
+import {
+  broadcastGameState,
+  broadcastMatchEnd,
+  broadcastMatchForfeited,
+  MAX_BROADCAST_LOG_ENTRIES,
+} from "./game-broadcast";
 import { getGameNamespace } from "../socket";
 
 describe("game-broadcast", () => {
@@ -54,6 +59,47 @@ describe("game-broadcast", () => {
         broadcastGameState(matchId, gameState, move, userId),
       ).not.toThrow();
     });
+
+    it("truncates gameLog to the last MAX_BROADCAST_LOG_ENTRIES entries", () => {
+      const oversizedLog = Array.from({ length: MAX_BROADCAST_LOG_ENTRIES + 50 }, (_, i) => ({
+        id: `log-${i}`,
+        timestamp: i,
+        type: "info" as const,
+        message: `entry-${i}`,
+      }));
+      const stateWithLog = { ...gameState, gameLog: oversizedLog };
+
+      broadcastGameState(matchId, stateWithLog, move, userId);
+
+      const payload = mockEmit.mock.calls[0][1];
+      expect(payload.gameState.gameLog).toHaveLength(MAX_BROADCAST_LOG_ENTRIES);
+      // Doit conserver les entrées les plus récentes (fin du tableau)
+      const lastIndex = MAX_BROADCAST_LOG_ENTRIES + 50 - 1;
+      expect(payload.gameState.gameLog[MAX_BROADCAST_LOG_ENTRIES - 1].message).toBe(
+        `entry-${lastIndex}`,
+      );
+    });
+
+    it("does not mutate the input game state when truncating", () => {
+      const oversizedLog = Array.from({ length: MAX_BROADCAST_LOG_ENTRIES + 10 }, (_, i) => ({
+        id: `log-${i}`,
+        timestamp: i,
+        type: "info" as const,
+        message: `entry-${i}`,
+      }));
+      const stateWithLog = { ...gameState, gameLog: oversizedLog };
+
+      broadcastGameState(matchId, stateWithLog, move, userId);
+
+      expect(stateWithLog.gameLog).toHaveLength(MAX_BROADCAST_LOG_ENTRIES + 10);
+    });
+
+    it("leaves gameState untouched when no gameLog is present", () => {
+      broadcastGameState(matchId, gameState, move, userId);
+
+      const payload = mockEmit.mock.calls[0][1];
+      expect(payload.gameState).toBe(gameState);
+    });
   });
 
   describe("broadcastMatchEnd", () => {
@@ -77,6 +123,21 @@ describe("game-broadcast", () => {
       });
 
       expect(() => broadcastMatchEnd(matchId, gameState)).not.toThrow();
+    });
+
+    it("truncates gameLog when present", () => {
+      const oversizedLog = Array.from({ length: MAX_BROADCAST_LOG_ENTRIES + 10 }, (_, i) => ({
+        id: `log-${i}`,
+        timestamp: i,
+        type: "info" as const,
+        message: `entry-${i}`,
+      }));
+      const stateWithLog = { ...gameState, gameLog: oversizedLog };
+
+      broadcastMatchEnd(matchId, stateWithLog);
+
+      const payload = mockEmit.mock.calls[0][1];
+      expect(payload.gameState.gameLog).toHaveLength(MAX_BROADCAST_LOG_ENTRIES);
     });
   });
 
@@ -105,6 +166,21 @@ describe("game-broadcast", () => {
       expect(() =>
         broadcastMatchForfeited(matchId, forfeitingUserId, gameState),
       ).not.toThrow();
+    });
+
+    it("truncates gameLog when present", () => {
+      const oversizedLog = Array.from({ length: MAX_BROADCAST_LOG_ENTRIES + 5 }, (_, i) => ({
+        id: `log-${i}`,
+        timestamp: i,
+        type: "info" as const,
+        message: `entry-${i}`,
+      }));
+      const stateWithLog = { ...gameState, gameLog: oversizedLog };
+
+      broadcastMatchForfeited(matchId, forfeitingUserId, stateWithLog);
+
+      const payload = mockEmit.mock.calls[0][1];
+      expect(payload.gameState.gameLog).toHaveLength(MAX_BROADCAST_LOG_ENTRIES);
     });
   });
 });
