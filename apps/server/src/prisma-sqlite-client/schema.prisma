@@ -434,6 +434,9 @@ model LocalMatch {
   id          String    @id @default(cuid())
   name        String? // Nom optionnel pour la partie
   status      String    @default("pending") // "pending", "waiting_for_player", "in_progress", "completed", "cancelled"
+  // Miroir du schéma Postgres : la route `POST /local-match` set
+  // `isPublic` explicitement, donc le champ doit exister en SQLite.
+  isPublic    Boolean   @default(true)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   startedAt   DateTime? // Date de début de la partie
