@@ -22964,8 +22964,32 @@ export namespace Prisma {
 
   export type AggregateCup = {
     _count: CupCountAggregateOutputType | null
+    _avg: CupAvgAggregateOutputType | null
+    _sum: CupSumAggregateOutputType | null
     _min: CupMinAggregateOutputType | null
     _max: CupMaxAggregateOutputType | null
+  }
+
+  export type CupAvgAggregateOutputType = {
+    winPoints: number | null
+    drawPoints: number | null
+    lossPoints: number | null
+    forfeitPoints: number | null
+    touchdownPoints: number | null
+    blockCasualtyPoints: number | null
+    foulCasualtyPoints: number | null
+    passPoints: number | null
+  }
+
+  export type CupSumAggregateOutputType = {
+    winPoints: number | null
+    drawPoints: number | null
+    lossPoints: number | null
+    forfeitPoints: number | null
+    touchdownPoints: number | null
+    blockCasualtyPoints: number | null
+    foulCasualtyPoints: number | null
+    passPoints: number | null
   }
 
   export type CupMinAggregateOutputType = {
@@ -22978,6 +23002,14 @@ export namespace Prisma {
     status: string | null
     createdAt: Date | null
     updatedAt: Date | null
+    winPoints: number | null
+    drawPoints: number | null
+    lossPoints: number | null
+    forfeitPoints: number | null
+    touchdownPoints: number | null
+    blockCasualtyPoints: number | null
+    foulCasualtyPoints: number | null
+    passPoints: number | null
   }
 
   export type CupMaxAggregateOutputType = {
@@ -22990,6 +23022,14 @@ export namespace Prisma {
     status: string | null
     createdAt: Date | null
     updatedAt: Date | null
+    winPoints: number | null
+    drawPoints: number | null
+    lossPoints: number | null
+    forfeitPoints: number | null
+    touchdownPoints: number | null
+    blockCasualtyPoints: number | null
+    foulCasualtyPoints: number | null
+    passPoints: number | null
   }
 
   export type CupCountAggregateOutputType = {
@@ -23002,9 +23042,39 @@ export namespace Prisma {
     status: number
     createdAt: number
     updatedAt: number
+    winPoints: number
+    drawPoints: number
+    lossPoints: number
+    forfeitPoints: number
+    touchdownPoints: number
+    blockCasualtyPoints: number
+    foulCasualtyPoints: number
+    passPoints: number
     _all: number
   }
 
+
+  export type CupAvgAggregateInputType = {
+    winPoints?: true
+    drawPoints?: true
+    lossPoints?: true
+    forfeitPoints?: true
+    touchdownPoints?: true
+    blockCasualtyPoints?: true
+    foulCasualtyPoints?: true
+    passPoints?: true
+  }
+
+  export type CupSumAggregateInputType = {
+    winPoints?: true
+    drawPoints?: true
+    lossPoints?: true
+    forfeitPoints?: true
+    touchdownPoints?: true
+    blockCasualtyPoints?: true
+    foulCasualtyPoints?: true
+    passPoints?: true
+  }
 
   export type CupMinAggregateInputType = {
     id?: true
@@ -23016,6 +23086,14 @@ export namespace Prisma {
     status?: true
     createdAt?: true
     updatedAt?: true
+    winPoints?: true
+    drawPoints?: true
+    lossPoints?: true
+    forfeitPoints?: true
+    touchdownPoints?: true
+    blockCasualtyPoints?: true
+    foulCasualtyPoints?: true
+    passPoints?: true
   }
 
   export type CupMaxAggregateInputType = {
@@ -23028,6 +23106,14 @@ export namespace Prisma {
     status?: true
     createdAt?: true
     updatedAt?: true
+    winPoints?: true
+    drawPoints?: true
+    lossPoints?: true
+    forfeitPoints?: true
+    touchdownPoints?: true
+    blockCasualtyPoints?: true
+    foulCasualtyPoints?: true
+    passPoints?: true
   }
 
   export type CupCountAggregateInputType = {
@@ -23040,6 +23126,14 @@ export namespace Prisma {
     status?: true
     createdAt?: true
     updatedAt?: true
+    winPoints?: true
+    drawPoints?: true
+    lossPoints?: true
+    forfeitPoints?: true
+    touchdownPoints?: true
+    blockCasualtyPoints?: true
+    foulCasualtyPoints?: true
+    passPoints?: true
     _all?: true
   }
 
@@ -23081,6 +23175,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: CupAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: CupSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: CupMinAggregateInputType
@@ -23111,6 +23217,8 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: CupCountAggregateInputType | true
+    _avg?: CupAvgAggregateInputType
+    _sum?: CupSumAggregateInputType
     _min?: CupMinAggregateInputType
     _max?: CupMaxAggregateInputType
   }
@@ -23125,7 +23233,17 @@ export namespace Prisma {
     status: string
     createdAt: Date
     updatedAt: Date
+    winPoints: number
+    drawPoints: number
+    lossPoints: number
+    forfeitPoints: number
+    touchdownPoints: number
+    blockCasualtyPoints: number
+    foulCasualtyPoints: number
+    passPoints: number
     _count: CupCountAggregateOutputType | null
+    _avg: CupAvgAggregateOutputType | null
+    _sum: CupSumAggregateOutputType | null
     _min: CupMinAggregateOutputType | null
     _max: CupMaxAggregateOutputType | null
   }
@@ -23154,6 +23272,14 @@ export namespace Prisma {
     status?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    winPoints?: boolean
+    drawPoints?: boolean
+    lossPoints?: boolean
+    forfeitPoints?: boolean
+    touchdownPoints?: boolean
+    blockCasualtyPoints?: boolean
+    foulCasualtyPoints?: boolean
+    passPoints?: boolean
     creator?: boolean | UserDefaultArgs<ExtArgs>
     participants?: boolean | Cup$participantsArgs<ExtArgs>
     localMatches?: boolean | Cup$localMatchesArgs<ExtArgs>
@@ -23170,6 +23296,14 @@ export namespace Prisma {
     status?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    winPoints?: boolean
+    drawPoints?: boolean
+    lossPoints?: boolean
+    forfeitPoints?: boolean
+    touchdownPoints?: boolean
+    blockCasualtyPoints?: boolean
+    foulCasualtyPoints?: boolean
+    passPoints?: boolean
     creator?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["cup"]>
 
@@ -23183,6 +23317,14 @@ export namespace Prisma {
     status?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    winPoints?: boolean
+    drawPoints?: boolean
+    lossPoints?: boolean
+    forfeitPoints?: boolean
+    touchdownPoints?: boolean
+    blockCasualtyPoints?: boolean
+    foulCasualtyPoints?: boolean
+    passPoints?: boolean
     creator?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["cup"]>
 
@@ -23196,9 +23338,17 @@ export namespace Prisma {
     status?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    winPoints?: boolean
+    drawPoints?: boolean
+    lossPoints?: boolean
+    forfeitPoints?: boolean
+    touchdownPoints?: boolean
+    blockCasualtyPoints?: boolean
+    foulCasualtyPoints?: boolean
+    passPoints?: boolean
   }
 
-  export type CupOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "creatorId" | "ruleset" | "validated" | "isPublic" | "status" | "createdAt" | "updatedAt", ExtArgs["result"]["cup"]>
+  export type CupOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "creatorId" | "ruleset" | "validated" | "isPublic" | "status" | "createdAt" | "updatedAt" | "winPoints" | "drawPoints" | "lossPoints" | "forfeitPoints" | "touchdownPoints" | "blockCasualtyPoints" | "foulCasualtyPoints" | "passPoints", ExtArgs["result"]["cup"]>
   export type CupInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     creator?: boolean | UserDefaultArgs<ExtArgs>
     participants?: boolean | Cup$participantsArgs<ExtArgs>
@@ -23229,6 +23379,14 @@ export namespace Prisma {
       status: string
       createdAt: Date
       updatedAt: Date
+      winPoints: number
+      drawPoints: number
+      lossPoints: number
+      forfeitPoints: number
+      touchdownPoints: number
+      blockCasualtyPoints: number
+      foulCasualtyPoints: number
+      passPoints: number
     }, ExtArgs["result"]["cup"]>
     composites: {}
   }
@@ -23664,6 +23822,14 @@ export namespace Prisma {
     readonly status: FieldRef<"Cup", 'String'>
     readonly createdAt: FieldRef<"Cup", 'DateTime'>
     readonly updatedAt: FieldRef<"Cup", 'DateTime'>
+    readonly winPoints: FieldRef<"Cup", 'Int'>
+    readonly drawPoints: FieldRef<"Cup", 'Int'>
+    readonly lossPoints: FieldRef<"Cup", 'Int'>
+    readonly forfeitPoints: FieldRef<"Cup", 'Int'>
+    readonly touchdownPoints: FieldRef<"Cup", 'Int'>
+    readonly blockCasualtyPoints: FieldRef<"Cup", 'Int'>
+    readonly foulCasualtyPoints: FieldRef<"Cup", 'Int'>
+    readonly passPoints: FieldRef<"Cup", 'Int'>
   }
     
 
@@ -34087,7 +34253,15 @@ export namespace Prisma {
     isPublic: 'isPublic',
     status: 'status',
     createdAt: 'createdAt',
-    updatedAt: 'updatedAt'
+    updatedAt: 'updatedAt',
+    winPoints: 'winPoints',
+    drawPoints: 'drawPoints',
+    lossPoints: 'lossPoints',
+    forfeitPoints: 'forfeitPoints',
+    touchdownPoints: 'touchdownPoints',
+    blockCasualtyPoints: 'blockCasualtyPoints',
+    foulCasualtyPoints: 'foulCasualtyPoints',
+    passPoints: 'passPoints'
   };
 
   export type CupScalarFieldEnum = (typeof CupScalarFieldEnum)[keyof typeof CupScalarFieldEnum]
@@ -35820,6 +35994,14 @@ export namespace Prisma {
     status?: StringFilter<"Cup"> | string
     createdAt?: DateTimeFilter<"Cup"> | Date | string
     updatedAt?: DateTimeFilter<"Cup"> | Date | string
+    winPoints?: IntFilter<"Cup"> | number
+    drawPoints?: IntFilter<"Cup"> | number
+    lossPoints?: IntFilter<"Cup"> | number
+    forfeitPoints?: IntFilter<"Cup"> | number
+    touchdownPoints?: IntFilter<"Cup"> | number
+    blockCasualtyPoints?: IntFilter<"Cup"> | number
+    foulCasualtyPoints?: IntFilter<"Cup"> | number
+    passPoints?: IntFilter<"Cup"> | number
     creator?: XOR<UserScalarRelationFilter, UserWhereInput>
     participants?: CupParticipantListRelationFilter
     localMatches?: LocalMatchListRelationFilter
@@ -35835,6 +36017,14 @@ export namespace Prisma {
     status?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    winPoints?: SortOrder
+    drawPoints?: SortOrder
+    lossPoints?: SortOrder
+    forfeitPoints?: SortOrder
+    touchdownPoints?: SortOrder
+    blockCasualtyPoints?: SortOrder
+    foulCasualtyPoints?: SortOrder
+    passPoints?: SortOrder
     creator?: UserOrderByWithRelationInput
     participants?: CupParticipantOrderByRelationAggregateInput
     localMatches?: LocalMatchOrderByRelationAggregateInput
@@ -35853,6 +36043,14 @@ export namespace Prisma {
     status?: StringFilter<"Cup"> | string
     createdAt?: DateTimeFilter<"Cup"> | Date | string
     updatedAt?: DateTimeFilter<"Cup"> | Date | string
+    winPoints?: IntFilter<"Cup"> | number
+    drawPoints?: IntFilter<"Cup"> | number
+    lossPoints?: IntFilter<"Cup"> | number
+    forfeitPoints?: IntFilter<"Cup"> | number
+    touchdownPoints?: IntFilter<"Cup"> | number
+    blockCasualtyPoints?: IntFilter<"Cup"> | number
+    foulCasualtyPoints?: IntFilter<"Cup"> | number
+    passPoints?: IntFilter<"Cup"> | number
     creator?: XOR<UserScalarRelationFilter, UserWhereInput>
     participants?: CupParticipantListRelationFilter
     localMatches?: LocalMatchListRelationFilter
@@ -35868,9 +36066,19 @@ export namespace Prisma {
     status?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    winPoints?: SortOrder
+    drawPoints?: SortOrder
+    lossPoints?: SortOrder
+    forfeitPoints?: SortOrder
+    touchdownPoints?: SortOrder
+    blockCasualtyPoints?: SortOrder
+    foulCasualtyPoints?: SortOrder
+    passPoints?: SortOrder
     _count?: CupCountOrderByAggregateInput
+    _avg?: CupAvgOrderByAggregateInput
     _max?: CupMaxOrderByAggregateInput
     _min?: CupMinOrderByAggregateInput
+    _sum?: CupSumOrderByAggregateInput
   }
 
   export type CupScalarWhereWithAggregatesInput = {
@@ -35886,6 +36094,14 @@ export namespace Prisma {
     status?: StringWithAggregatesFilter<"Cup"> | string
     createdAt?: DateTimeWithAggregatesFilter<"Cup"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Cup"> | Date | string
+    winPoints?: IntWithAggregatesFilter<"Cup"> | number
+    drawPoints?: IntWithAggregatesFilter<"Cup"> | number
+    lossPoints?: IntWithAggregatesFilter<"Cup"> | number
+    forfeitPoints?: IntWithAggregatesFilter<"Cup"> | number
+    touchdownPoints?: IntWithAggregatesFilter<"Cup"> | number
+    blockCasualtyPoints?: IntWithAggregatesFilter<"Cup"> | number
+    foulCasualtyPoints?: IntWithAggregatesFilter<"Cup"> | number
+    passPoints?: IntWithAggregatesFilter<"Cup"> | number
   }
 
   export type CupParticipantWhereInput = {
@@ -38307,6 +38523,14 @@ export namespace Prisma {
     status?: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    winPoints?: number
+    drawPoints?: number
+    lossPoints?: number
+    forfeitPoints?: number
+    touchdownPoints?: number
+    blockCasualtyPoints?: number
+    foulCasualtyPoints?: number
+    passPoints?: number
     creator: UserCreateNestedOneWithoutCreatedCupsInput
     participants?: CupParticipantCreateNestedManyWithoutCupInput
     localMatches?: LocalMatchCreateNestedManyWithoutCupInput
@@ -38322,6 +38546,14 @@ export namespace Prisma {
     status?: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    winPoints?: number
+    drawPoints?: number
+    lossPoints?: number
+    forfeitPoints?: number
+    touchdownPoints?: number
+    blockCasualtyPoints?: number
+    foulCasualtyPoints?: number
+    passPoints?: number
     participants?: CupParticipantUncheckedCreateNestedManyWithoutCupInput
     localMatches?: LocalMatchUncheckedCreateNestedManyWithoutCupInput
   }
@@ -38335,6 +38567,14 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    winPoints?: IntFieldUpdateOperationsInput | number
+    drawPoints?: IntFieldUpdateOperationsInput | number
+    lossPoints?: IntFieldUpdateOperationsInput | number
+    forfeitPoints?: IntFieldUpdateOperationsInput | number
+    touchdownPoints?: IntFieldUpdateOperationsInput | number
+    blockCasualtyPoints?: IntFieldUpdateOperationsInput | number
+    foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
+    passPoints?: IntFieldUpdateOperationsInput | number
     creator?: UserUpdateOneRequiredWithoutCreatedCupsNestedInput
     participants?: CupParticipantUpdateManyWithoutCupNestedInput
     localMatches?: LocalMatchUpdateManyWithoutCupNestedInput
@@ -38350,6 +38590,14 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    winPoints?: IntFieldUpdateOperationsInput | number
+    drawPoints?: IntFieldUpdateOperationsInput | number
+    lossPoints?: IntFieldUpdateOperationsInput | number
+    forfeitPoints?: IntFieldUpdateOperationsInput | number
+    touchdownPoints?: IntFieldUpdateOperationsInput | number
+    blockCasualtyPoints?: IntFieldUpdateOperationsInput | number
+    foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
+    passPoints?: IntFieldUpdateOperationsInput | number
     participants?: CupParticipantUncheckedUpdateManyWithoutCupNestedInput
     localMatches?: LocalMatchUncheckedUpdateManyWithoutCupNestedInput
   }
@@ -38364,6 +38612,14 @@ export namespace Prisma {
     status?: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    winPoints?: number
+    drawPoints?: number
+    lossPoints?: number
+    forfeitPoints?: number
+    touchdownPoints?: number
+    blockCasualtyPoints?: number
+    foulCasualtyPoints?: number
+    passPoints?: number
   }
 
   export type CupUpdateManyMutationInput = {
@@ -38375,6 +38631,14 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    winPoints?: IntFieldUpdateOperationsInput | number
+    drawPoints?: IntFieldUpdateOperationsInput | number
+    lossPoints?: IntFieldUpdateOperationsInput | number
+    forfeitPoints?: IntFieldUpdateOperationsInput | number
+    touchdownPoints?: IntFieldUpdateOperationsInput | number
+    blockCasualtyPoints?: IntFieldUpdateOperationsInput | number
+    foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
+    passPoints?: IntFieldUpdateOperationsInput | number
   }
 
   export type CupUncheckedUpdateManyInput = {
@@ -38387,6 +38651,14 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    winPoints?: IntFieldUpdateOperationsInput | number
+    drawPoints?: IntFieldUpdateOperationsInput | number
+    lossPoints?: IntFieldUpdateOperationsInput | number
+    forfeitPoints?: IntFieldUpdateOperationsInput | number
+    touchdownPoints?: IntFieldUpdateOperationsInput | number
+    blockCasualtyPoints?: IntFieldUpdateOperationsInput | number
+    foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
+    passPoints?: IntFieldUpdateOperationsInput | number
   }
 
   export type CupParticipantCreateInput = {
@@ -40533,6 +40805,25 @@ export namespace Prisma {
     status?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    winPoints?: SortOrder
+    drawPoints?: SortOrder
+    lossPoints?: SortOrder
+    forfeitPoints?: SortOrder
+    touchdownPoints?: SortOrder
+    blockCasualtyPoints?: SortOrder
+    foulCasualtyPoints?: SortOrder
+    passPoints?: SortOrder
+  }
+
+  export type CupAvgOrderByAggregateInput = {
+    winPoints?: SortOrder
+    drawPoints?: SortOrder
+    lossPoints?: SortOrder
+    forfeitPoints?: SortOrder
+    touchdownPoints?: SortOrder
+    blockCasualtyPoints?: SortOrder
+    foulCasualtyPoints?: SortOrder
+    passPoints?: SortOrder
   }
 
   export type CupMaxOrderByAggregateInput = {
@@ -40545,6 +40836,14 @@ export namespace Prisma {
     status?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    winPoints?: SortOrder
+    drawPoints?: SortOrder
+    lossPoints?: SortOrder
+    forfeitPoints?: SortOrder
+    touchdownPoints?: SortOrder
+    blockCasualtyPoints?: SortOrder
+    foulCasualtyPoints?: SortOrder
+    passPoints?: SortOrder
   }
 
   export type CupMinOrderByAggregateInput = {
@@ -40557,6 +40856,25 @@ export namespace Prisma {
     status?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    winPoints?: SortOrder
+    drawPoints?: SortOrder
+    lossPoints?: SortOrder
+    forfeitPoints?: SortOrder
+    touchdownPoints?: SortOrder
+    blockCasualtyPoints?: SortOrder
+    foulCasualtyPoints?: SortOrder
+    passPoints?: SortOrder
+  }
+
+  export type CupSumOrderByAggregateInput = {
+    winPoints?: SortOrder
+    drawPoints?: SortOrder
+    lossPoints?: SortOrder
+    forfeitPoints?: SortOrder
+    touchdownPoints?: SortOrder
+    blockCasualtyPoints?: SortOrder
+    foulCasualtyPoints?: SortOrder
+    passPoints?: SortOrder
   }
 
   export type CupScalarRelationFilter = {
@@ -43477,6 +43795,14 @@ export namespace Prisma {
     status?: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    winPoints?: number
+    drawPoints?: number
+    lossPoints?: number
+    forfeitPoints?: number
+    touchdownPoints?: number
+    blockCasualtyPoints?: number
+    foulCasualtyPoints?: number
+    passPoints?: number
     participants?: CupParticipantCreateNestedManyWithoutCupInput
     localMatches?: LocalMatchCreateNestedManyWithoutCupInput
   }
@@ -43490,6 +43816,14 @@ export namespace Prisma {
     status?: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    winPoints?: number
+    drawPoints?: number
+    lossPoints?: number
+    forfeitPoints?: number
+    touchdownPoints?: number
+    blockCasualtyPoints?: number
+    foulCasualtyPoints?: number
+    passPoints?: number
     participants?: CupParticipantUncheckedCreateNestedManyWithoutCupInput
     localMatches?: LocalMatchUncheckedCreateNestedManyWithoutCupInput
   }
@@ -43910,6 +44244,14 @@ export namespace Prisma {
     status?: StringFilter<"Cup"> | string
     createdAt?: DateTimeFilter<"Cup"> | Date | string
     updatedAt?: DateTimeFilter<"Cup"> | Date | string
+    winPoints?: IntFilter<"Cup"> | number
+    drawPoints?: IntFilter<"Cup"> | number
+    lossPoints?: IntFilter<"Cup"> | number
+    forfeitPoints?: IntFilter<"Cup"> | number
+    touchdownPoints?: IntFilter<"Cup"> | number
+    blockCasualtyPoints?: IntFilter<"Cup"> | number
+    foulCasualtyPoints?: IntFilter<"Cup"> | number
+    passPoints?: IntFilter<"Cup"> | number
   }
 
   export type LeagueUpsertWithWhereUniqueWithoutCreatorInput = {
@@ -47427,6 +47769,14 @@ export namespace Prisma {
     status?: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    winPoints?: number
+    drawPoints?: number
+    lossPoints?: number
+    forfeitPoints?: number
+    touchdownPoints?: number
+    blockCasualtyPoints?: number
+    foulCasualtyPoints?: number
+    passPoints?: number
     creator: UserCreateNestedOneWithoutCreatedCupsInput
     localMatches?: LocalMatchCreateNestedManyWithoutCupInput
   }
@@ -47441,6 +47791,14 @@ export namespace Prisma {
     status?: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    winPoints?: number
+    drawPoints?: number
+    lossPoints?: number
+    forfeitPoints?: number
+    touchdownPoints?: number
+    blockCasualtyPoints?: number
+    foulCasualtyPoints?: number
+    passPoints?: number
     localMatches?: LocalMatchUncheckedCreateNestedManyWithoutCupInput
   }
 
@@ -47524,6 +47882,14 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    winPoints?: IntFieldUpdateOperationsInput | number
+    drawPoints?: IntFieldUpdateOperationsInput | number
+    lossPoints?: IntFieldUpdateOperationsInput | number
+    forfeitPoints?: IntFieldUpdateOperationsInput | number
+    touchdownPoints?: IntFieldUpdateOperationsInput | number
+    blockCasualtyPoints?: IntFieldUpdateOperationsInput | number
+    foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
+    passPoints?: IntFieldUpdateOperationsInput | number
     creator?: UserUpdateOneRequiredWithoutCreatedCupsNestedInput
     localMatches?: LocalMatchUpdateManyWithoutCupNestedInput
   }
@@ -47538,6 +47904,14 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    winPoints?: IntFieldUpdateOperationsInput | number
+    drawPoints?: IntFieldUpdateOperationsInput | number
+    lossPoints?: IntFieldUpdateOperationsInput | number
+    forfeitPoints?: IntFieldUpdateOperationsInput | number
+    touchdownPoints?: IntFieldUpdateOperationsInput | number
+    blockCasualtyPoints?: IntFieldUpdateOperationsInput | number
+    foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
+    passPoints?: IntFieldUpdateOperationsInput | number
     localMatches?: LocalMatchUncheckedUpdateManyWithoutCupNestedInput
   }
 
@@ -48068,6 +48442,14 @@ export namespace Prisma {
     status?: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    winPoints?: number
+    drawPoints?: number
+    lossPoints?: number
+    forfeitPoints?: number
+    touchdownPoints?: number
+    blockCasualtyPoints?: number
+    foulCasualtyPoints?: number
+    passPoints?: number
     creator: UserCreateNestedOneWithoutCreatedCupsInput
     participants?: CupParticipantCreateNestedManyWithoutCupInput
   }
@@ -48082,6 +48464,14 @@ export namespace Prisma {
     status?: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    winPoints?: number
+    drawPoints?: number
+    lossPoints?: number
+    forfeitPoints?: number
+    touchdownPoints?: number
+    blockCasualtyPoints?: number
+    foulCasualtyPoints?: number
+    passPoints?: number
     participants?: CupParticipantUncheckedCreateNestedManyWithoutCupInput
   }
 
@@ -48362,6 +48752,14 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    winPoints?: IntFieldUpdateOperationsInput | number
+    drawPoints?: IntFieldUpdateOperationsInput | number
+    lossPoints?: IntFieldUpdateOperationsInput | number
+    forfeitPoints?: IntFieldUpdateOperationsInput | number
+    touchdownPoints?: IntFieldUpdateOperationsInput | number
+    blockCasualtyPoints?: IntFieldUpdateOperationsInput | number
+    foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
+    passPoints?: IntFieldUpdateOperationsInput | number
     creator?: UserUpdateOneRequiredWithoutCreatedCupsNestedInput
     participants?: CupParticipantUpdateManyWithoutCupNestedInput
   }
@@ -48376,6 +48774,14 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    winPoints?: IntFieldUpdateOperationsInput | number
+    drawPoints?: IntFieldUpdateOperationsInput | number
+    lossPoints?: IntFieldUpdateOperationsInput | number
+    forfeitPoints?: IntFieldUpdateOperationsInput | number
+    touchdownPoints?: IntFieldUpdateOperationsInput | number
+    blockCasualtyPoints?: IntFieldUpdateOperationsInput | number
+    foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
+    passPoints?: IntFieldUpdateOperationsInput | number
     participants?: CupParticipantUncheckedUpdateManyWithoutCupNestedInput
   }
 
@@ -49255,6 +49661,14 @@ export namespace Prisma {
     status?: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    winPoints?: number
+    drawPoints?: number
+    lossPoints?: number
+    forfeitPoints?: number
+    touchdownPoints?: number
+    blockCasualtyPoints?: number
+    foulCasualtyPoints?: number
+    passPoints?: number
   }
 
   export type LeagueCreateManyCreatorInput = {
@@ -49535,6 +49949,14 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    winPoints?: IntFieldUpdateOperationsInput | number
+    drawPoints?: IntFieldUpdateOperationsInput | number
+    lossPoints?: IntFieldUpdateOperationsInput | number
+    forfeitPoints?: IntFieldUpdateOperationsInput | number
+    touchdownPoints?: IntFieldUpdateOperationsInput | number
+    blockCasualtyPoints?: IntFieldUpdateOperationsInput | number
+    foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
+    passPoints?: IntFieldUpdateOperationsInput | number
     participants?: CupParticipantUpdateManyWithoutCupNestedInput
     localMatches?: LocalMatchUpdateManyWithoutCupNestedInput
   }
@@ -49548,6 +49970,14 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    winPoints?: IntFieldUpdateOperationsInput | number
+    drawPoints?: IntFieldUpdateOperationsInput | number
+    lossPoints?: IntFieldUpdateOperationsInput | number
+    forfeitPoints?: IntFieldUpdateOperationsInput | number
+    touchdownPoints?: IntFieldUpdateOperationsInput | number
+    blockCasualtyPoints?: IntFieldUpdateOperationsInput | number
+    foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
+    passPoints?: IntFieldUpdateOperationsInput | number
     participants?: CupParticipantUncheckedUpdateManyWithoutCupNestedInput
     localMatches?: LocalMatchUncheckedUpdateManyWithoutCupNestedInput
   }
@@ -49561,6 +49991,14 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    winPoints?: IntFieldUpdateOperationsInput | number
+    drawPoints?: IntFieldUpdateOperationsInput | number
+    lossPoints?: IntFieldUpdateOperationsInput | number
+    forfeitPoints?: IntFieldUpdateOperationsInput | number
+    touchdownPoints?: IntFieldUpdateOperationsInput | number
+    blockCasualtyPoints?: IntFieldUpdateOperationsInput | number
+    foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
+    passPoints?: IntFieldUpdateOperationsInput | number
   }
 
   export type LeagueUpdateWithoutCreatorInput = {
