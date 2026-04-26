@@ -81,6 +81,7 @@ export default function GameChat({
         data-testid="chat-toggle"
         onClick={() => setOpen(true)}
         className="fixed bottom-4 left-4 z-50 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg transition-colors"
+        aria-label="Ouvrir le chat"
         title="Ouvrir le chat"
       >
         <svg
@@ -119,6 +120,7 @@ export default function GameChat({
           data-testid="chat-close"
           onClick={() => setOpen(false)}
           className="text-white hover:text-gray-200 transition-colors"
+          aria-label="Fermer le chat"
           title="Fermer le chat"
         >
           <svg
@@ -186,6 +188,7 @@ export default function GameChat({
           onKeyDown={handleKeyDown}
           placeholder="Message..."
           maxLength={500}
+          aria-label="Message du chat"
           className="flex-1 text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-indigo-500"
           disabled={sending}
         />

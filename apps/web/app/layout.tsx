@@ -174,12 +174,16 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         )}
       </head>
       <body className="min-h-screen bg-nuffle-ivory text-nuffle-anthracite flex flex-col font-body antialiased">
+        {/* A11y: skip-link visible au focus clavier (Q.21). */}
+        <a href="#main-content" className="skip-link">
+          Aller au contenu principal
+        </a>
         <WebVitalsReporter />
         <ClientLayout>
           <div className="flex-1 w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
             <div className="w-full p-4 sm:p-6">
               <Header />
-              {children}
+              <main id="main-content">{children}</main>
             </div>
           </div>
           <Footer />

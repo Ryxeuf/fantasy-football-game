@@ -30,3 +30,37 @@
     --border: var(--color-bronze);
   }
 }
+
+/* ----------------------------------------------------------------- */
+/* A11y — focus rings WCAG AA (Q.21 — Sprint 23)                     */
+/* ----------------------------------------------------------------- */
+/* Toujours afficher un focus ring visible quand l element recoit le */
+/* focus clavier (Tab). On utilise focus-visible pour eviter les     */
+/* rings au clic souris. Couleur bronze + ring epais pour un         */
+/* contraste >= 3:1 sur ivory et anthracite.                          */
+
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Skip-link reveal au focus pour le clavier */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  background: var(--color-anthracite);
+  color: var(--color-ivory);
+  padding: 0.5rem 1rem;
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+.skip-link:focus {
+  left: 1rem;
+  top: 1rem;
+  outline: 2px solid var(--color-gold);
+  outline-offset: 2px;
+}
