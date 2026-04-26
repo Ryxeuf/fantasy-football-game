@@ -5,6 +5,7 @@ import { Cinzel_Decorative, Cinzel, Montserrat, Inter, Bebas_Neue } from "next/f
 import Footer from "./components/Footer";
 import Header from "./components/Header";
 import { ClientLayout } from "./components/ClientLayout";
+import WebVitalsReporter from "./components/WebVitalsReporter";
 import { buildWebmasterVerification } from "./lib/webmaster-verification";
 
 const cinzelDecorative = Cinzel_Decorative({
@@ -173,6 +174,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         )}
       </head>
       <body className="min-h-screen bg-nuffle-ivory text-nuffle-anthracite flex flex-col font-body antialiased">
+        <WebVitalsReporter />
         <ClientLayout>
           <div className="flex-1 w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
             <div className="w-full p-4 sm:p-6">
