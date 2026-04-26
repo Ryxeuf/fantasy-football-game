@@ -395,7 +395,7 @@
 | Q.21 | Audit A11y WCAG AA (contraste, labels, navigation clavier, focus rings) | Qualite | [x] |
 | Q.22 | `humans.txt` + `security.txt` (bonnes pratiques, contact securite) | SEO | [x] |
 | Q.23 | Entry Wikidata (et/ou section Wikipedia ebauche) pour renforcer l'identite d'entite | GEO | [ ] |
-| Q.24 | Schema.org `Event` pour les tournois/ligues publics (quand online_play sera ouvert) | SEO | [ ] |
+| Q.24 | Schema.org `Event` pour les tournois/ligues publics (quand online_play sera ouvert) | SEO | [x] |
 | Q.25 | Protocole de test "presence IA" : prompts de reference dans ChatGPT / Claude / Perplexity, suivi mensuel | GEO | [ ] |
 | Q.26 | Strategie liens entrants : annonce r/bloodbowl, TalkFantasyFootball, blog Mordorbihan, Discord BB | GEO | [ ] |
 | Q.27 | Hreflang par page (alternates canoniques fr/en quand le split i18n sera fait) | SEO | [ ] |
