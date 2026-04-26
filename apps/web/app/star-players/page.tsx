@@ -6,6 +6,7 @@ import StarPlayerCard from '../components/StarPlayerCard';
 import CopyrightFooter from '../components/CopyrightFooter';
 import type { StarPlayerDefinition } from '@bb/game-engine';
 import { useLanguage } from '../contexts/LanguageContext';
+import { UMAMI_EVENTS, trackUmamiEvent } from '../lib/umami-events';
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8201';
 
@@ -100,6 +101,10 @@ export default function StarPlayersPage() {
   };
 
   const handlePlayerClick = (player: StarPlayerDefinition) => {
+    trackUmamiEvent(UMAMI_EVENTS.STAR_PLAYER_HIRE, {
+      slug: player.slug,
+      cost: player.cost,
+    });
     router.push(`/star-players/${player.slug}`);
   };
 

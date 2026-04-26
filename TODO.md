@@ -390,7 +390,7 @@
 | Q.16 | Section blog / changelog public + flux RSS (`/feed.xml`) comme signal de fraicheur LLM | GEO | [x] |
 | Q.17 | Codes de verification webmasters dans `layout.tsx` (Google Search Console, Bing, Yandex) | SEO | [x] |
 | Q.18 | Soumission sitemap + monitoring indexation (Google Search Console, Bing Webmaster Tools) | SEO | [x] |
-| Q.19 | Ajouter Umami events cles (clic equipe, recrut star player, export PDF, support CTA) | Analytics | [ ] |
+| Q.19 | Ajouter Umami events cles (clic equipe, recrut star player, export PDF, support CTA) | Analytics | [x] |
 | Q.20 | Core Web Vitals monitoring (LCP, INP, CLS) + budget perf CI | Perf | [ ] |
 | Q.21 | Audit A11y WCAG AA (contraste, labels, navigation clavier, focus rings) | Qualite | [ ] |
 | Q.22 | `humans.txt` + `security.txt` (bonnes pratiques, contact securite) | SEO | [ ] |
