@@ -5,6 +5,11 @@ import Logo from "./Logo";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useFeatureFlag } from "../hooks/useFeatureFlag";
 import { ONLINE_PLAY_FLAG } from "../lib/featureFlagKeys";
+import { buildCommunityLinks } from "@bb/game-engine";
+
+const COMMUNITY_LINKS = buildCommunityLinks({
+  DISCORD_INVITE_URL: process.env.NEXT_PUBLIC_DISCORD_INVITE_URL,
+});
 
 export default function Footer() {
   const { t } = useLanguage();
@@ -78,7 +83,7 @@ export default function Footer() {
             <ul className="text-sm text-nuffle-anthracite/80 space-y-1 font-body">
               <li>
                 <a
-                  href="https://discord.gg/XEZJTgEHKn"
+                  href={COMMUNITY_LINKS.discordInviteUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-nuffle-gold hover:underline transition-colors inline-flex items-center gap-1.5"
