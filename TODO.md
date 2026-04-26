@@ -385,7 +385,7 @@
 | Q.11 | Metadata + JSON-LD `Person` / `SportsAthlete` dynamique sur `/star-players/[slug]` (~67 pages) | SEO | [x] |
 | Q.12 | Metadata + JSON-LD `ItemList` / `DefinedTermSet` sur `/skills` (130+ entries citables) | SEO | [x] |
 | Q.13 | `BreadcrumbList` JSON-LD sur toutes les pages profondes (teams, star-players, skills, tutoriel) | SEO | [x] |
-| Q.14 | Open Graph images dynamiques par page via `ImageResponse` Next.js (og:image contextualise) | SEO | [ ] |
+| Q.14 | Open Graph images dynamiques par page via `ImageResponse` Next.js (og:image contextualise) | SEO | [x] |
 | Q.15 | Page `/a-propos` (About) citable : histoire, chiffres, equipe, roadmap publique | GEO | [x] |
 | Q.16 | Section blog / changelog public + flux RSS (`/feed.xml`) comme signal de fraicheur LLM | GEO | [x] |
 | Q.17 | Codes de verification webmasters dans `layout.tsx` (Google Search Console, Bing, Yandex) | SEO | [x] |
