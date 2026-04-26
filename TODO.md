@@ -386,7 +386,7 @@
 | Q.12 | Metadata + JSON-LD `ItemList` / `DefinedTermSet` sur `/skills` (130+ entries citables) | SEO | [x] |
 | Q.13 | `BreadcrumbList` JSON-LD sur toutes les pages profondes (teams, star-players, skills, tutoriel) | SEO | [x] |
 | Q.14 | Open Graph images dynamiques par page via `ImageResponse` Next.js (og:image contextualise) | SEO | [ ] |
-| Q.15 | Page `/a-propos` (About) citable : histoire, chiffres, equipe, roadmap publique | GEO | [ ] |
+| Q.15 | Page `/a-propos` (About) citable : histoire, chiffres, equipe, roadmap publique | GEO | [x] |
 | Q.16 | Section blog / changelog public + flux RSS (`/feed.xml`) comme signal de fraicheur LLM | GEO | [ ] |
 | Q.17 | Codes de verification webmasters dans `layout.tsx` (Google Search Console, Bing, Yandex) | SEO | [ ] |
 | Q.18 | Soumission sitemap + monitoring indexation (Google Search Console, Bing Webmaster Tools) | SEO | [ ] |
