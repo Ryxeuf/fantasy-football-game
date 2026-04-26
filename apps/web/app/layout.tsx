@@ -5,6 +5,7 @@ import { Cinzel_Decorative, Cinzel, Montserrat, Inter, Bebas_Neue } from "next/f
 import Footer from "./components/Footer";
 import Header from "./components/Header";
 import { ClientLayout } from "./components/ClientLayout";
+import { buildWebmasterVerification } from "./lib/webmaster-verification";
 
 const cinzelDecorative = Cinzel_Decorative({
   subsets: ["latin"],
@@ -143,12 +144,20 @@ export const metadata: Metadata = {
     "geo.placename": "France",
     "ICBM": "46.603354, 1.888334",
   },
-  verification: {
-    // Ajoutez vos codes de vérification ici si nécessaire
-    // google: "votre-code-google",
-    // yandex: "votre-code-yandex",
-    // bing: "votre-code-bing",
-  },
+  // Codes de vérification webmasters (Q.17 — Sprint 23).
+  // Pilote depuis l'env public, valide via `buildWebmasterVerification`
+  // (rejet des placeholders, chaines vides, espaces internes, > 200 chars).
+  // Variables : NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+  //            NEXT_PUBLIC_YANDEX_VERIFICATION,
+  //            NEXT_PUBLIC_BING_SITE_VERIFICATION (devient meta msvalidate.01).
+  verification: buildWebmasterVerification({
+    NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION:
+      process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+    NEXT_PUBLIC_YANDEX_VERIFICATION:
+      process.env.NEXT_PUBLIC_YANDEX_VERIFICATION,
+    NEXT_PUBLIC_BING_SITE_VERIFICATION:
+      process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION,
+  }),
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
