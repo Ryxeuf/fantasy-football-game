@@ -2,6 +2,9 @@ import { notFound } from "next/navigation";
 import { DEFAULT_RULESET, type Ruleset } from "@bb/game-engine";
 import { fetchServerJson, getServerApiBase } from "../../lib/serverApi";
 import TeamDetailClient from "./TeamDetailClient";
+import TeamStructuredData from "./TeamStructuredData";
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://nufflearena.fr";
 
 // ISR — roster definitions are reference data that rarely changes.
 export const revalidate = 3600;
@@ -41,11 +44,20 @@ export default async function TeamDetailPage({
   }
 
   return (
-    <TeamDetailClient
-      slug={params.slug}
-      selectedRuleset={selectedRuleset}
-      actualRuleset={payload.ruleset}
-      initialTeam={payload.roster}
-    />
+    <>
+      <TeamStructuredData
+        slug={params.slug}
+        roster={payload.roster}
+        ruleset={payload.ruleset}
+        baseUrl={SITE_URL}
+        lang="fr"
+      />
+      <TeamDetailClient
+        slug={params.slug}
+        selectedRuleset={selectedRuleset}
+        actualRuleset={payload.ruleset}
+        initialTeam={payload.roster}
+      />
+    </>
   );
 }
