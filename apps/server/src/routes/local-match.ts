@@ -26,6 +26,7 @@ import {
 } from "@bb/game-engine";
 import { randomBytes } from "crypto";
 import { hasRole } from "../utils/roles";
+import { parsePagination, buildApiMeta } from "../utils/pagination";
 import { persistMatchSPP } from "../services/spp-tracking";
 import { persistPlayerDeaths } from "../services/player-death";
 import { persistPermanentInjuries } from "../services/permanent-injuries";
@@ -125,54 +126,62 @@ router.get("/", authUser, validateQuery(localMatchListQuerySchema), async (req: 
       }
     }
     
-    const localMatches = await prisma.localMatch.findMany({
-      where: whereClause,
-      include: {
-        creator: {
-          select: {
-            id: true,
-            coachName: true,
-            email: true,
+    const { limit, offset } = parsePagination(
+      req.query as Record<string, unknown>,
+    );
+    const [localMatches, total] = await Promise.all([
+      prisma.localMatch.findMany({
+        where: whereClause,
+        include: {
+          creator: {
+            select: {
+              id: true,
+              coachName: true,
+              email: true,
+            },
           },
-        },
-        teamA: {
-          select: {
-            id: true,
-            name: true,
-            roster: true,
-            owner: {
-              select: {
-                id: true,
-                coachName: true,
+          teamA: {
+            select: {
+              id: true,
+              name: true,
+              roster: true,
+              owner: {
+                select: {
+                  id: true,
+                  coachName: true,
+                },
               },
             },
           },
-        },
-        teamB: {
-          select: {
-            id: true,
-            name: true,
-            roster: true,
-            owner: {
-              select: {
-                id: true,
-                coachName: true,
+          teamB: {
+            select: {
+              id: true,
+              name: true,
+              roster: true,
+              owner: {
+                select: {
+                  id: true,
+                  coachName: true,
+                },
               },
             },
           },
-        },
-        cup: {
-          select: {
-            id: true,
-            name: true,
-            status: true,
+          cup: {
+            select: {
+              id: true,
+              name: true,
+              status: true,
+            },
           },
         },
-      },
-      orderBy: { createdAt: "desc" },
-    });
-    
-    res.json({ localMatches });
+        orderBy: { createdAt: "desc" },
+        take: limit,
+        skip: offset,
+      }),
+      prisma.localMatch.count({ where: whereClause }),
+    ]);
+
+    res.json({ localMatches, meta: buildApiMeta({ total, limit, offset }) });
   } catch (e: any) {
     console.error("Erreur lors de la récupération des parties offline:", e);
     return res.status(500).json({ error: "Erreur serveur" });
@@ -1204,16 +1213,28 @@ router.get("/:id/actions", authUser, async (req: AuthenticatedRequest, res) => {
       return res.status(403).json({ error: "Accès non autorisé" });
     }
     
-    const actions = await prisma.localMatchAction.findMany({
-      where: { matchId: req.params.id },
-      orderBy: [
-        { half: "asc" },
-        { turn: "asc" },
-        { createdAt: "asc" },
-      ],
-    });
-    
-    res.json({ actions });
+    // Pagination : un match peut accumuler des centaines d'actions, on borne
+    // les retours pour éviter une réponse trop lourde (max 1000, défaut 500).
+    const { limit, offset } = parsePagination(
+      req.query as Record<string, unknown>,
+      { defaultLimit: 500, maxLimit: 1000 },
+    );
+    const where = { matchId: req.params.id };
+    const [actions, total] = await Promise.all([
+      prisma.localMatchAction.findMany({
+        where,
+        orderBy: [
+          { half: "asc" },
+          { turn: "asc" },
+          { createdAt: "asc" },
+        ],
+        take: limit,
+        skip: offset,
+      }),
+      prisma.localMatchAction.count({ where }),
+    ]);
+
+    res.json({ actions, meta: buildApiMeta({ total, limit, offset }) });
   } catch (e: any) {
     console.error("Erreur lors de la récupération des actions:", e);
     return res.status(500).json({ error: "Erreur serveur" });
