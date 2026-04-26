@@ -352,7 +352,7 @@
 | O.4 | Expansion E2E tests (couverture cible 80%) | Qualite | [x] |
 | O.5 | Optimisation taille GameState (separer gameLog) | Perf | [x] |
 | O.6 | Standardiser error handling (`ApiResponse<T>`) | Qualite | [x] |
-| O.7 | Optimiser queries DB (pagination, select) | Perf | [ ] |
+| O.7 | Optimiser queries DB (pagination, select) | Perf | [x] |
 | O.8 | Cosmetiques (logos equipe, generateur noms) | Engagement | [ ] |
 | O.9 | Features communautaires (match of the week, Discord) | Engagement | [ ] |
 | O.10 | Dashboard analytics personnel et global | Engagement | [ ] |

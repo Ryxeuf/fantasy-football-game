@@ -30,6 +30,7 @@ import {
 } from "../utils/star-player-validation";
 import { getRosterFromDb } from "../utils/roster-helpers";
 import { resolveRuleset, isValidRuleset } from "../utils/ruleset-helpers";
+import { parsePagination, buildApiMeta } from "../utils/pagination";
 import { validate } from "../middleware/validate";
 import {
   createFromRosterSchema,
@@ -232,14 +233,24 @@ router.get("/mine", authUser, async (req: AuthenticatedRequest, res) => {
   const filterRuleset = isValidRuleset(requestedRuleset)
     ? (requestedRuleset as Ruleset)
     : undefined;
-  const teams = await prisma.team.findMany({
-    where: {
-      ownerId: req.user!.id,
-      ...(filterRuleset && { ruleset: filterRuleset }),
-    },
-    select: { id: true, name: true, roster: true, ruleset: true, createdAt: true, currentValue: true },
-  });
-  res.json({ teams });
+  const { limit, offset } = parsePagination(
+    req.query as Record<string, unknown>,
+  );
+  const where = {
+    ownerId: req.user!.id,
+    ...(filterRuleset && { ruleset: filterRuleset }),
+  };
+  const [teams, total] = await Promise.all([
+    prisma.team.findMany({
+      where,
+      select: { id: true, name: true, roster: true, ruleset: true, createdAt: true, currentValue: true },
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      skip: offset,
+    }),
+    prisma.team.count({ where }),
+  ]);
+  res.json({ teams, meta: buildApiMeta({ total, limit, offset }) });
 });
 
 router.get("/rosters/:id", authUser, async (req: AuthenticatedRequest, res) => {
@@ -345,7 +356,8 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
     include: { match: true },
   });
 
-  // Statistiques de matchs locaux pour cette équipe
+  // Statistiques de matchs locaux pour cette équipe — bornées pour éviter
+  // une croissance illimitée (cap à 500 derniers matchs, agrégats locaux).
   const localMatches = await prisma.localMatch.findMany({
     where: {
       OR: [{ teamAId: team.id }, { teamBId: team.id }],
@@ -358,6 +370,8 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
       scoreTeamA: true,
       scoreTeamB: true,
     },
+    orderBy: { createdAt: "desc" },
+    take: 500,
   });
 
   let pending = 0;
