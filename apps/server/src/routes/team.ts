@@ -31,6 +31,7 @@ import {
 import { getRosterFromDb } from "../utils/roster-helpers";
 import { resolveRuleset, isValidRuleset } from "../utils/ruleset-helpers";
 import { parsePagination, buildApiMeta } from "../utils/pagination";
+import { generateTeamName } from "../services/team-name-generator";
 import { validate } from "../middleware/validate";
 import {
   createFromRosterSchema,
@@ -206,6 +207,21 @@ function rosterTemplates(roster: AllowedRoster) {
     // Kroxigor optionnel (non inclus par défaut)
   ];
 }
+
+// O.8a — Générateur de noms d'équipe par roster.
+// Public (pas d'auth) : aide à la création d'équipe, sans contenu sensible.
+router.get("/name-generator", (req, res) => {
+  const roster =
+    typeof req.query.roster === "string" && req.query.roster.length > 0
+      ? req.query.roster
+      : "generic";
+  const seed =
+    typeof req.query.seed === "string" && req.query.seed.length > 0
+      ? req.query.seed
+      : undefined;
+  const name = generateTeamName(roster, seed ? { seed } : {});
+  res.json({ name, roster });
+});
 
 router.get("/available", authUser, async (req: AuthenticatedRequest, res) => {
   const requestedRuleset = req.query.ruleset as string | undefined;

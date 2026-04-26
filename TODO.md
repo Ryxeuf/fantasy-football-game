@@ -353,7 +353,8 @@
 | O.5 | Optimisation taille GameState (separer gameLog) | Perf | [x] |
 | O.6 | Standardiser error handling (`ApiResponse<T>`) | Qualite | [x] |
 | O.7 | Optimiser queries DB (pagination, select) | Perf | [x] |
-| O.8 | Cosmetiques (logos equipe, generateur noms) | Engagement | [ ] |
+| O.8a | Generateur de noms d'equipe par roster (service + endpoint) | Engagement | [x] |
+| O.8b | Cosmetiques visuels (logos equipe, assets graphiques) | Engagement | [ ] |
 | O.9 | Features communautaires (match of the week, Discord) | Engagement | [ ] |
 | O.10 | Dashboard analytics personnel et global | Engagement | [ ] |
 
