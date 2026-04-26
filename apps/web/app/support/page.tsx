@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { API_BASE } from "../auth-client";
 import { useLanguage } from "../contexts/LanguageContext";
+import { UMAMI_EVENTS, trackUmamiEvent } from "../lib/umami-events";
 
 const KOFI_USERNAME = "nufflearena";
 const KOFI_URL = `https://ko-fi.com/${KOFI_USERNAME}`;
@@ -208,6 +209,9 @@ export default function SupportPage() {
               href={KOFI_URL}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() =>
+                trackUmamiEvent(UMAMI_EVENTS.SUPPORT_CTA, { placement: "hero" })
+              }
               className="inline-flex items-center gap-2 px-8 py-4 bg-nuffle-gold hover:bg-nuffle-gold/90 text-nuffle-anthracite font-subtitle font-bold rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105 text-lg"
             >
               <CoffeeIcon className="w-6 h-6" />
@@ -389,6 +393,9 @@ export default function SupportPage() {
             href={KOFI_URL}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() =>
+              trackUmamiEvent(UMAMI_EVENTS.SUPPORT_CTA, { placement: "footer-cta" })
+            }
             className="inline-flex items-center gap-2 px-8 py-4 bg-nuffle-gold hover:bg-nuffle-gold/90 text-nuffle-anthracite font-subtitle font-bold rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105 text-lg"
           >
             <CoffeeIcon className="w-6 h-6" />

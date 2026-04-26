@@ -6,6 +6,7 @@ import TeamInfoDisplay from "../components/TeamInfoDisplay";
 import { getPlayerCost, getDisplayName, getRerollCost } from "@bb/game-engine";
 import { exportTeamToPDF, exportSkillsSheet, exportMatchSheet } from "../utils/exportPDF";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { UMAMI_EVENTS, trackUmamiEvent } from "../../../lib/umami-events";
 
 async function fetchJSON(path: string) {
   const token = localStorage.getItem("auth_token");
@@ -107,6 +108,7 @@ export default function TeamDetailPage() {
   const handleExportRoster = async () => {
     if (!team) return;
     try {
+      trackUmamiEvent(UMAMI_EVENTS.PDF_EXPORT, { kind: "roster" });
       await exportTeamToPDF(team, getPlayerCost, userName, language);
       setExportMenuOpen(false);
     } catch (error) {
@@ -118,6 +120,7 @@ export default function TeamDetailPage() {
   const handleExportSkills = async () => {
     if (!team) return;
     try {
+      trackUmamiEvent(UMAMI_EVENTS.PDF_EXPORT, { kind: "skills" });
       await exportSkillsSheet(team, language);
       setExportMenuOpen(false);
     } catch (error) {
@@ -129,6 +132,7 @@ export default function TeamDetailPage() {
   const handleExportMatch = async () => {
     if (!team) return;
     try {
+      trackUmamiEvent(UMAMI_EVENTS.PDF_EXPORT, { kind: "match" });
       await exportMatchSheet(team, undefined, language);
       setExportMenuOpen(false);
     } catch (error) {

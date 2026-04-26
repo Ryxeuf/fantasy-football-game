@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "../contexts/LanguageContext";
 import TeamLogo from "../components/TeamLogo";
+import { UMAMI_EVENTS, trackUmamiEvent } from "../lib/umami-events";
 
 export type Season = "season_2" | "season_3";
 type Tier = "all" | "I" | "II" | "III" | "IV";
@@ -195,6 +196,13 @@ export default function TeamsListClient({
           <Link
             key={team.slug}
             href={`/teams/${team.slug}?ruleset=${initialSeason}`}
+            onClick={() =>
+              trackUmamiEvent(UMAMI_EVENTS.TEAM_CLICK, {
+                slug: team.slug,
+                tier: team.tier,
+                ruleset: initialSeason,
+              })
+            }
             className="rounded-xl border-2 border-blue-200 bg-white p-6 hover:border-blue-400 hover:shadow-lg transition-all text-left"
           >
             <div className="flex items-start gap-3 mb-3">
