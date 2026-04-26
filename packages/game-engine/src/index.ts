@@ -362,6 +362,9 @@ export * from './rosters';
 // Export du module communautaire (O.9 : match of the week, Discord helpers)
 export * from './community';
 
+// Export du module analytics (O.10 : dashboard personnel + global)
+export * from './analytics';
+
 // Export des compétences (skills)
 export * from './skills';
 export * from './skills/skill-effects';
