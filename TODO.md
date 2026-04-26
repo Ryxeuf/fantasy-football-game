@@ -398,7 +398,7 @@
 | Q.24 | Schema.org `Event` pour les tournois/ligues publics (quand online_play sera ouvert) | SEO | [x] |
 | Q.25 | Protocole de test "presence IA" : prompts de reference dans ChatGPT / Claude / Perplexity, suivi mensuel | GEO | [x] |
 | Q.26 | Strategie liens entrants : annonce r/bloodbowl, TalkFantasyFootball, blog Mordorbihan, Discord BB | GEO | [x] |
-| Q.27 | Hreflang par page (alternates canoniques fr/en quand le split i18n sera fait) | SEO | [ ] |
+| Q.27 | Hreflang par page (alternates canoniques fr/en quand le split i18n sera fait) | SEO | [x] |
 
 ---
 

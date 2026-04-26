@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import BreadcrumbStructuredData from "../components/BreadcrumbStructuredData";
+import { buildHreflangAlternates } from "../lib/hreflang";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://nufflearena.fr";
 const URL = `${BASE_URL}/a-propos`;
+const ALTERNATES = buildHreflangAlternates({ baseUrl: BASE_URL, pathname: "/a-propos" });
 
 export const metadata: Metadata = {
   title: "A propos - Histoire, chiffres et roadmap | Nuffle Arena",
@@ -18,14 +20,7 @@ export const metadata: Metadata = {
     "Open source",
     "Communaute Blood Bowl",
   ],
-  alternates: {
-    canonical: URL,
-    languages: {
-      "fr-FR": URL,
-      en: URL,
-      "x-default": URL,
-    },
-  },
+  alternates: ALTERNATES,
   openGraph: {
     title: "A propos de Nuffle Arena",
     description:
