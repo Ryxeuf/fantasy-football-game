@@ -392,7 +392,7 @@
 | Q.18 | Soumission sitemap + monitoring indexation (Google Search Console, Bing Webmaster Tools) | SEO | [x] |
 | Q.19 | Ajouter Umami events cles (clic equipe, recrut star player, export PDF, support CTA) | Analytics | [x] |
 | Q.20 | Core Web Vitals monitoring (LCP, INP, CLS) + budget perf CI | Perf | [x] |
-| Q.21 | Audit A11y WCAG AA (contraste, labels, navigation clavier, focus rings) | Qualite | [ ] |
+| Q.21 | Audit A11y WCAG AA (contraste, labels, navigation clavier, focus rings) | Qualite | [x] |
 | Q.22 | `humans.txt` + `security.txt` (bonnes pratiques, contact securite) | SEO | [ ] |
 | Q.23 | Entry Wikidata (et/ou section Wikipedia ebauche) pour renforcer l'identite d'entite | GEO | [ ] |
 | Q.24 | Schema.org `Event` pour les tournois/ligues publics (quand online_play sera ouvert) | SEO | [ ] |
