@@ -383,7 +383,7 @@
 | Q.9 | `manifest.json` enrichi (shortcuts PWA : equipes, rosters, stars) | SEO | [x] |
 | Q.10 | Metadata + JSON-LD `SportsTeam` dynamique sur `/teams/[slug]` (31 pages) | SEO | [x] |
 | Q.11 | Metadata + JSON-LD `Person` / `SportsAthlete` dynamique sur `/star-players/[slug]` (~67 pages) | SEO | [x] |
-| Q.12 | Metadata + JSON-LD `ItemList` / `DefinedTermSet` sur `/skills` (130+ entries citables) | SEO | [ ] |
+| Q.12 | Metadata + JSON-LD `ItemList` / `DefinedTermSet` sur `/skills` (130+ entries citables) | SEO | [x] |
 | Q.13 | `BreadcrumbList` JSON-LD sur toutes les pages profondes (teams, star-players, skills, tutoriel) | SEO | [ ] |
 | Q.14 | Open Graph images dynamiques par page via `ImageResponse` Next.js (og:image contextualise) | SEO | [ ] |
 | Q.15 | Page `/a-propos` (About) citable : histoire, chiffres, equipe, roadmap publique | GEO | [ ] |
