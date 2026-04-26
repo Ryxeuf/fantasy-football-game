@@ -381,7 +381,7 @@
 | Q.7 | Regles explicites pour 20 crawlers IA (GPTBot, ClaudeBot, PerplexityBot, Google-Extended, Applebot-Extended, CCBot...) | GEO | [x] |
 | Q.8 | `sameAs` + `knowsAbout` + `dateModified` dans JSON-LD (citabilite LLM) | GEO | [x] |
 | Q.9 | `manifest.json` enrichi (shortcuts PWA : equipes, rosters, stars) | SEO | [x] |
-| Q.10 | Metadata + JSON-LD `SportsTeam` dynamique sur `/teams/[slug]` (31 pages) | SEO | [ ] |
+| Q.10 | Metadata + JSON-LD `SportsTeam` dynamique sur `/teams/[slug]` (31 pages) | SEO | [x] |
 | Q.11 | Metadata + JSON-LD `Person` / `SportsAthlete` dynamique sur `/star-players/[slug]` (~67 pages) | SEO | [ ] |
 | Q.12 | Metadata + JSON-LD `ItemList` / `DefinedTermSet` sur `/skills` (130+ entries citables) | SEO | [ ] |
 | Q.13 | `BreadcrumbList` JSON-LD sur toutes les pages profondes (teams, star-players, skills, tutoriel) | SEO | [ ] |

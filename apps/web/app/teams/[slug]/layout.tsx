@@ -35,6 +35,14 @@ export async function generateMetadata({ params }: { params: { slug: string } })
         'Fantasy Football',
         'Nuffle Arena',
       ],
+      alternates: {
+        canonical: `${BASE_URL}/teams/${slug}`,
+        languages: {
+          'fr-FR': `${BASE_URL}/teams/${slug}`,
+          'en': `${BASE_URL}/teams/${slug}`,
+          'x-default': `${BASE_URL}/teams/${slug}`,
+        },
+      },
       openGraph: {
         title,
         description,
