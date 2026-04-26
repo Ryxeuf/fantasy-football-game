@@ -39,6 +39,18 @@ export {
   type TeamColors,
 } from './team-colors';
 
+// Export des logos d'equipes (O.8b — cosmetiques visuels)
+export {
+  DEFAULT_TEAM_LOGO,
+  ROSTER_LOGOS,
+  TEAM_LOGO_SHAPES,
+  getTeamLogo,
+  renderTeamLogoSvg,
+  type TeamLogo,
+  type TeamLogoShape,
+  type RenderTeamLogoOptions,
+} from './team-logos';
+
 // Export du registry de sprite manifests (H.6 — sub-task 4/5)
 export {
   TEAM_SPRITE_MANIFESTS,

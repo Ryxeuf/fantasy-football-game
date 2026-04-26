@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "../contexts/LanguageContext";
+import TeamLogo from "../components/TeamLogo";
 
 export type Season = "season_2" | "season_3";
 type Tier = "all" | "I" | "II" | "III" | "IV";
@@ -196,8 +197,9 @@ export default function TeamsListClient({
             href={`/teams/${team.slug}?ruleset=${initialSeason}`}
             className="rounded-xl border-2 border-blue-200 bg-white p-6 hover:border-blue-400 hover:shadow-lg transition-all text-left"
           >
-            <div className="flex items-start justify-between mb-3">
-              <h2 className="text-lg font-semibold text-blue-900">
+            <div className="flex items-start gap-3 mb-3">
+              <TeamLogo slug={team.slug} size={48} title={team.name} />
+              <h2 className="text-lg font-semibold text-blue-900 flex-1">
                 {team.name}
               </h2>
             </div>
