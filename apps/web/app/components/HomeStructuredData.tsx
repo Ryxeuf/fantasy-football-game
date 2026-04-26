@@ -1,7 +1,14 @@
 "use client";
 import StructuredData from "./StructuredData";
+import { buildExternalSameAs } from "../lib/external-identity";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://nufflearena.fr";
+
+const EXTERNAL_SAME_AS = buildExternalSameAs({
+  NEXT_PUBLIC_WIKIDATA_QID: process.env.NEXT_PUBLIC_WIKIDATA_QID,
+  NEXT_PUBLIC_WIKIPEDIA_FR_URL: process.env.NEXT_PUBLIC_WIKIPEDIA_FR_URL,
+  NEXT_PUBLIC_WIKIPEDIA_EN_URL: process.env.NEXT_PUBLIC_WIKIPEDIA_EN_URL,
+});
 
 /**
  * Données structurées JSON-LD de la page d'accueil.
@@ -41,6 +48,7 @@ export default function HomeStructuredData() {
           "https://discord.gg/XEZJTgEHKn",
           "https://github.com/Ryxeuf/fantasy-football-game",
           "https://ko-fi.com/nufflearena",
+          ...EXTERNAL_SAME_AS,
         ],
         knowsAbout: [
           "Blood Bowl",
