@@ -15,7 +15,7 @@
 | S24.4 | WebSocket cleanup listeners + room leak | FIX | S | [x] | `apps/web/app/play/[id]/hooks/useGameSocket.ts:365-370`. Listeners non desabonnes apres disconnect : fuite memoire progressive sur sessions longues. |
 | S24.5 | Polling fallback 3s -> 10s + backoff exponentiel | FIX | M | [x] | `apps/web/app/play/[id]/hooks/useGameState.ts:301`. Quand WS degrade, X clients = X requetes/3s. Trop agressif a la scale beta. |
 | S24.6 | Verifier `app.use(authRateLimiter)` + couverture `/leagues` GET | FIX | S | [x] | Divergence detectee entre agents backend ("non applique") et securite ("present"). Confirmer end-to-end + ajouter tests. |
-| S24.7 | Retirer `console.log` debug en prod (web) | FIX | S | [ ] | `apps/web/app/play/[id]/page.tsx:615,729,743` + autres. 10+ logs de debug visibles dans les devtools. |
+| S24.7 | Retirer `console.log` debug en prod (web) | FIX | S | [x] | `apps/web/app/play/[id]/page.tsx:615,729,743` + autres. 10+ logs de debug visibles dans les devtools. |
 | S24.8 | Wrapper minimal pour `console.error` backend (preparation S25) | FIX | S | [ ] | 270 console.* eparpilles dans `apps/server/src/`. Wrapper temporaire `serverLog.error()` qui delegue a console mais permet swap vers pino en S25 sans toucher chaque call site. |
 | S24.9 | Docker compose dev hot-reload + 5 make targets quotidiens | CONFORT | S | [ ] | `docker-compose.yml` actuellement statique (`pnpm install && pnpm run dev`). Ajouter bind mount + nodemon/turbopack hot reload. Targets : `make logs`, `make reset-db`, `make seed`, `make tunnel`, `make snapshot-prod`. Cycle dev x5 plus rapide. |
 

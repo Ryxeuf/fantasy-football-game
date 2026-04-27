@@ -43,6 +43,7 @@ import {
   type TeamId,
 } from "@bb/game-engine";
 import { API_BASE } from "../../auth-client";
+import { webLog } from "../../lib/log";
 import { useGameMoves } from "./hooks/useGameMoves";
 // useGameSocket is now called only inside useGameState to avoid duplicate connections
 import { useGameState } from "./hooks/useGameState";
@@ -540,7 +541,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
       const normalizedState = normalizeState(responseData.gameState);
       setState(normalizedState);
 
-      console.log("Ballon placé:", responseData.message);
+      webLog.debug("Ballon placé:", responseData.message);
     } catch (error) {
       console.error("Erreur lors du placement du ballon:", error);
     }
@@ -576,7 +577,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
       const normalizedState = normalizeState(responseData.gameState);
       setState(normalizedState);
 
-      console.log("Déviation calculée:", responseData.message);
+      webLog.debug("Déviation calculée:", responseData.message);
     } catch (error) {
       console.error("Erreur lors du calcul de déviation:", error);
     }
@@ -612,7 +613,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
       const normalizedState = normalizeState(responseData.gameState);
       setState(normalizedState);
 
-      console.log("Événement résolu:", responseData.message);
+      webLog.debug("Événement résolu:", responseData.message);
     } catch (error) {
       console.error("Erreur lors de la résolution de l'événement:", error);
     }
@@ -726,7 +727,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
     const player = state.players.find(
       (p) => p.pos.x === pos.x && p.pos.y === pos.y,
     );
-    console.log("onCellClick - player found:", {
+    webLog.debug("onCellClick - player found:", {
       player: !!player,
       playerId: player?.id,
       team: player?.team,
@@ -740,7 +741,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
       // En mode THROW_TEAM_MATE, ne PAS re-selectionner un coequipier : il sera traite comme cible a lancer ci-dessous
       !(currentAction === "THROW_TEAM_MATE" && player.id !== state.selectedPlayerId)
     ) {
-      console.log("Setting selectedPlayerId from onCellClick:", player.id);
+      webLog.debug("Setting selectedPlayerId from onCellClick:", player.id);
       setState((s) => (s ? { ...s, selectedPlayerId: player.id } : null));
       setCurrentAction(null);
       setThrowTeamMateThrownId(null);
@@ -1258,7 +1259,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
                 onPlayerClick={(playerId) => {
                   if (!state) return;
                   const extState = state as ExtendedGameState;
-                  console.log("onPlayerClick called:", {
+                  webLog.debug("onPlayerClick called:", {
                     playerId,
                     phase: extState.preMatch?.phase,
                     currentCoach: extState.preMatch?.currentCoach,
@@ -1272,12 +1273,12 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
                     ) {
                       // Permettre de sélectionner les joueurs déjà placés ou ceux en réserves
                       if (!draggedPlayerId) {
-                        console.log("Setting selectedFromReserve:", playerId);
+                        webLog.debug("Setting selectedFromReserve:", playerId);
                         setSelectedFromReserve(playerId);
                       }
                       return;
                     }
-                    console.log("Ignoring player click in setup phase");
+                    webLog.debug("Ignoring player click in setup phase");
                     return; // Ignore autres en setup
                   }
                   // Logique normale (seulement si pas en phase setup)

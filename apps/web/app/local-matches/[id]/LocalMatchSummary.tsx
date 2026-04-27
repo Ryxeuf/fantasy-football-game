@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { API_BASE } from "../../auth-client";
+import { webLog } from "../../lib/log";
 
 type ActionType = "passe" | "reception" | "td" | "blocage" | "blitz" | "transmission" | "aggression" | "sprint" | "esquive" | "apothicaire" | "interception";
 
@@ -205,9 +206,8 @@ export default function LocalMatchSummary({ matchId, match }: LocalMatchSummaryP
     loadActions();
   }, [matchId]);
 
-  // Debug: vérifier les données de pré-match
   useEffect(() => {
-    console.log("LocalMatchSummary - match data:", {
+    webLog.debug("LocalMatchSummary - match data:", {
       hasGameState: !!match.gameState,
       hasPreMatch: !!match.gameState?.preMatch,
       hasFanFactor: !!match.gameState?.preMatch?.fanFactor,
