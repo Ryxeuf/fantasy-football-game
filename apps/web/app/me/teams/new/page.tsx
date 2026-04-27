@@ -602,15 +602,6 @@ export default function NewTeamBuilder() {
           </div>
         </div>
 
-        <StarPlayerSelector
-          roster={rosterId}
-          ruleset={ruleset}
-          selectedStarPlayers={selectedStarPlayers}
-          onSelectionChange={setSelectedStarPlayers}
-          currentPlayerCount={totalPlayers}
-          availableBudget={Math.max(0, (teamValue - total - staffCost) * 1000)}
-        />
-
         {/* Staff section */}
         <div className="rounded-xl border border-gray-200 bg-white p-4 md:p-5 space-y-4">
           <div className="flex items-baseline justify-between">
@@ -741,6 +732,15 @@ export default function NewTeamBuilder() {
             </label>
           </div>
         </div>
+
+        <StarPlayerSelector
+          roster={rosterId}
+          ruleset={ruleset}
+          selectedStarPlayers={selectedStarPlayers}
+          onSelectionChange={setSelectedStarPlayers}
+          currentPlayerCount={totalPlayers}
+          availableBudget={Math.max(0, (teamValue - total - staffCost) * 1000)}
+        />
       </div>
     </div>
   );
