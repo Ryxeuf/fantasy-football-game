@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { apiPost } from "../auth-client";
 import { useLanguage } from "../contexts/LanguageContext";
+import { syncAuthCookie } from "../lib/auth-cookie";
 
 // Autorise uniquement les redirections internes (chemins relatifs commençant par "/"
 // et ne pouvant être interprétés comme des URLs externes).
@@ -57,7 +58,8 @@ export default function RegisterPage() {
 
       if (response?.token) {
         localStorage.setItem("auth_token", response.token);
-        document.cookie = `auth_token=${response.token}; path=/; max-age=86400; SameSite=Lax`;
+        // Cookie httpOnly synchronise via la route serveur (S24.1).
+        await syncAuthCookie(response.token);
         window.location.href = redirectTo;
         return;
       }
