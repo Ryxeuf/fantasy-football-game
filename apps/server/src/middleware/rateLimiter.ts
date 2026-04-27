@@ -16,17 +16,24 @@ const WHITELISTED_IPS: Set<string> = new Set(
     .filter(Boolean),
 );
 
-function isWhitelisted(req: Request): boolean {
+export function isWhitelisted(req: Request): boolean {
   return WHITELISTED_IPS.has(req.ip || "");
 }
+
+// Quotas exportés pour permettre aux tests et au monitoring de valider
+// la configuration sans dépendre des internals d'express-rate-limit.
+export const AUTH_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
+export const AUTH_RATE_LIMIT_MAX_PROD = 10;
+export const API_RATE_LIMIT_WINDOW_MS = 60 * 1000;
+export const API_RATE_LIMIT_MAX_PROD = 100;
 
 /**
  * Rate limiter strict pour les routes sensibles d'authentification.
  * 10 requêtes par fenêtre de 15 minutes par IP sur /login, /register.
  */
 export const authRateLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: TEST_MODE ? 10_000 : 10,
+  windowMs: AUTH_RATE_LIMIT_WINDOW_MS,
+  max: TEST_MODE ? 10_000 : AUTH_RATE_LIMIT_MAX_PROD,
   standardHeaders: true,
   legacyHeaders: false,
   skip: isWhitelisted,
@@ -41,8 +48,8 @@ export const authRateLimiter = rateLimit({
  * 100 requêtes par minute par IP.
  */
 export const apiRateLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: TEST_MODE ? 100_000 : 100,
+  windowMs: API_RATE_LIMIT_WINDOW_MS,
+  max: TEST_MODE ? 100_000 : API_RATE_LIMIT_MAX_PROD,
   standardHeaders: true,
   legacyHeaders: false,
   skip: isWhitelisted,
