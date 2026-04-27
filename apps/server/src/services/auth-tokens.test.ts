@@ -82,6 +82,23 @@ describe("Rule: auth-tokens helpers (S24.3a)", () => {
       expect(decoded.exp).toBeGreaterThanOrEqual(expectedExp - 2);
       expect(decoded.exp).toBeLessThanOrEqual(expectedExp + 2);
     });
+
+    it("auto-generates a unique jti when none is provided", () => {
+      const t1 = signRefreshToken({ sub: "user-1" });
+      const t2 = signRefreshToken({ sub: "user-1" });
+      const d1 = jwt.verify(t1, JWT_SECRET) as Record<string, unknown>;
+      const d2 = jwt.verify(t2, JWT_SECRET) as Record<string, unknown>;
+      expect(typeof d1.jti).toBe("string");
+      expect(typeof d2.jti).toBe("string");
+      expect((d1.jti as string).length).toBeGreaterThan(0);
+      expect(d1.jti).not.toEqual(d2.jti);
+    });
+
+    it("uses the provided jti when supplied", () => {
+      const token = signRefreshToken({ sub: "user-1", jti: "fixed-jti-123" });
+      const decoded = jwt.verify(token, JWT_SECRET) as Record<string, unknown>;
+      expect(decoded.jti).toBe("fixed-jti-123");
+    });
   });
 
   describe("verifyRefreshToken", () => {
@@ -91,6 +108,21 @@ describe("Rule: auth-tokens helpers (S24.3a)", () => {
       expect(payload).toEqual(
         expect.objectContaining({ sub: "user-1", typ: "refresh" }),
       );
+    });
+
+    it("returns the jti claim for a valid refresh token", () => {
+      const token = signRefreshToken({ sub: "user-1", jti: "abc-123" });
+      const payload = verifyRefreshToken(token);
+      expect(payload.jti).toBe("abc-123");
+    });
+
+    it("rejects a refresh token without jti", () => {
+      const token = jwt.sign(
+        { sub: "user-1", typ: "refresh" },
+        JWT_SECRET,
+        { expiresIn: "7d" },
+      );
+      expect(() => verifyRefreshToken(token)).toThrow(/missing jti/i);
     });
 
     it("rejects an access token by typ check", () => {
