@@ -77,51 +77,21 @@ interface SourceConfig {
 const SOURCE_CONFIGS: SourceConfig[] = [
   {
     id: "todo",
-    title: "TODO — Sprints",
+    title: "TODO — Backlog",
     relPath: "TODO.md",
-    description: "Backlog priorisé par sprints et phases",
+    description: "Backlog actif post-v1.73 (Sprints 0-23 archives)",
   },
   {
     id: "phases",
-    title: "Roadmap — Phases détaillées",
+    title: "Roadmap v2 — Phases R+",
     relPath: "docs/roadmap/phases.md",
-    description: "Toutes les tâches par phase (A à O)",
+    description: "Nouvelle feuille de route, page blanche prete a remplir",
   },
   {
-    id: "sprint-0",
-    title: "Sprint 0 — Bugfixes & sécurité",
-    relPath: "docs/roadmap/sprint-0.md",
-    description: "Bugs critiques et failles de sécurité",
-  },
-  {
-    id: "sprint-2",
-    title: "Sprint 2 — Game engine",
-    relPath: "docs/sprints/SPRINT-2-game-engine-stabilization.md",
-  },
-  {
-    id: "sprint-3",
-    title: "Sprint 3 — Frontend",
-    relPath: "docs/sprints/SPRINT-3-frontend-stabilization.md",
-  },
-  {
-    id: "sprint-4",
-    title: "Sprint 4 — Server & sécurité",
-    relPath: "docs/sprints/SPRINT-4-server-security.md",
-  },
-  {
-    id: "sprint-5",
-    title: "Sprint 5 — Tests & dette",
-    relPath: "docs/sprints/SPRINT-5-test-infrastructure.md",
-  },
-  {
-    id: "sprint-6",
-    title: "Sprint 6 — Badges (foundation)",
-    relPath: "docs/sprints/SPRINT-6-badges-foundation.md",
-  },
-  {
-    id: "sprint-7",
-    title: "Sprint 7 — Badges (match & cup)",
-    relPath: "docs/sprints/SPRINT-7-badges-match-cup-triggers.md",
+    id: "follow-up-b01",
+    title: "Suivi qualite — Skill registry (B0.1)",
+    relPath: "docs/roadmap/follow-up-b01.md",
+    description: "Hardcodes residuels a refactorer (blocking, movement, foul)",
   },
 ];
 
