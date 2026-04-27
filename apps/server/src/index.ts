@@ -4,6 +4,7 @@ import compression from "compression";
 import bodyParser from "body-parser";
 import { createServer } from "node:http";
 import authRoutes from "./routes/auth";
+import authRefreshRoutes from "./routes/auth-refresh";
 import matchRoutes from "./routes/match";
 import adminRoutes from "./routes/admin";
 import adminDataRoutes from "./routes/admin-data";
@@ -85,9 +86,11 @@ app.use(apiRateLimiter);
 
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
-// Rate limiting strict uniquement sur login/register (anti brute-force)
+// Rate limiting strict uniquement sur login/register/refresh (anti brute-force)
 app.use("/auth/login", authRateLimiter);
 app.use("/auth/register", authRateLimiter);
+app.use("/auth/refresh", authRateLimiter);
+app.use("/auth", authRefreshRoutes);
 app.use("/auth", authRoutes);
 app.use("/match", requireFeatureFlag(ONLINE_PLAY_FLAG), matchRoutes);
 app.use("/admin", adminRoutes);
