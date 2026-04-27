@@ -61,6 +61,21 @@ model User {
   friendshipsReceived Friendship[] @relation("FriendshipReceiver")
   achievements        UserAchievement[]
   kofiTransactions    KofiTransaction[]
+  refreshTokens       RefreshToken[]
+}
+
+/// S24.3c — mirror SQLite du registre Postgres des refresh tokens.
+model RefreshToken {
+  id        String    @id @default(cuid())
+  jti       String    @unique
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model KofiTransaction {

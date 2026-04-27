@@ -140,6 +140,15 @@ exports.Prisma.UserScalarFieldEnum = {
   eloRating: 'eloRating'
 };
 
+exports.Prisma.RefreshTokenScalarFieldEnum = {
+  id: 'id',
+  jti: 'jti',
+  userId: 'userId',
+  expiresAt: 'expiresAt',
+  revokedAt: 'revokedAt',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.KofiTransactionScalarFieldEnum = {
   id: 'id',
   kofiTransactionId: 'kofiTransactionId',
@@ -515,6 +524,7 @@ exports.Ruleset = exports.$Enums.Ruleset = {
 
 exports.Prisma.ModelName = {
   User: 'User',
+  RefreshToken: 'RefreshToken',
   KofiTransaction: 'KofiTransaction',
   UserAchievement: 'UserAchievement',
   Friendship: 'Friendship',

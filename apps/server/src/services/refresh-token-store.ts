@@ -25,11 +25,11 @@ export interface RefreshTokenRecord {
 }
 
 export interface RefreshTokenStore {
-  register(record: { jti: string; sub: string; expiresAt: number }): void;
-  revoke(jti: string): void;
-  revokeAllForUser(sub: string): void;
-  isActive(jti: string): boolean;
-  isRevoked(jti: string): boolean;
+  register(record: { jti: string; sub: string; expiresAt: number }): Promise<void>;
+  revoke(jti: string): Promise<void>;
+  revokeAllForUser(sub: string): Promise<void>;
+  isActive(jti: string): Promise<boolean>;
+  isRevoked(jti: string): Promise<boolean>;
 }
 
 export class RefreshTokenReuseError extends Error {
@@ -42,11 +42,11 @@ export class RefreshTokenReuseError extends Error {
 export class InMemoryRefreshTokenStore implements RefreshTokenStore {
   private readonly records = new Map<string, RefreshTokenRecord>();
 
-  register(record: { jti: string; sub: string; expiresAt: number }): void {
+  async register(record: { jti: string; sub: string; expiresAt: number }): Promise<void> {
     this.records.set(record.jti, { ...record });
   }
 
-  revoke(jti: string): void {
+  async revoke(jti: string): Promise<void> {
     const existing = this.records.get(jti);
     if (!existing) return;
     this.records.set(jti, {
@@ -55,7 +55,7 @@ export class InMemoryRefreshTokenStore implements RefreshTokenStore {
     });
   }
 
-  revokeAllForUser(sub: string): void {
+  async revokeAllForUser(sub: string): Promise<void> {
     const now = Math.floor(Date.now() / 1000);
     for (const [jti, rec] of this.records.entries()) {
       if (rec.sub === sub && !rec.revokedAt) {
@@ -64,7 +64,7 @@ export class InMemoryRefreshTokenStore implements RefreshTokenStore {
     }
   }
 
-  isActive(jti: string): boolean {
+  async isActive(jti: string): Promise<boolean> {
     const rec = this.records.get(jti);
     if (!rec) return false;
     if (rec.revokedAt) return false;
@@ -72,7 +72,7 @@ export class InMemoryRefreshTokenStore implements RefreshTokenStore {
     return true;
   }
 
-  isRevoked(jti: string): boolean {
+  async isRevoked(jti: string): Promise<boolean> {
     const rec = this.records.get(jti);
     if (!rec) return false;
     return Boolean(rec.revokedAt);
@@ -85,28 +85,28 @@ export interface RotateRefreshTokenResult {
   sub: string;
 }
 
-export function rotateRefreshToken(
+export async function rotateRefreshToken(
   presentedToken: string,
   store: RefreshTokenStore,
-): RotateRefreshTokenResult {
+): Promise<RotateRefreshTokenResult> {
   const payload = verifyRefreshToken(presentedToken);
 
-  if (store.isRevoked(payload.jti)) {
-    store.revokeAllForUser(payload.sub);
+  if (await store.isRevoked(payload.jti)) {
+    await store.revokeAllForUser(payload.sub);
     throw new RefreshTokenReuseError(
       "Refresh token reuse detected: all sessions revoked",
     );
   }
 
-  if (!store.isActive(payload.jti)) {
+  if (!(await store.isActive(payload.jti))) {
     throw new Error("Refresh token: jti not registered or expired");
   }
 
-  store.revoke(payload.jti);
+  await store.revoke(payload.jti);
 
   const newToken = signRefreshToken({ sub: payload.sub });
   const newPayload = verifyRefreshToken(newToken);
-  store.register({
+  await store.register({
     jti: newPayload.jti,
     sub: newPayload.sub,
     expiresAt: Math.floor(Date.now() / 1000) + REFRESH_TOKEN_TTL_SECONDS,
