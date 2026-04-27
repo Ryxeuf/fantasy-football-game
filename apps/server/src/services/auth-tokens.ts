@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import jwt, { type SignOptions } from "jsonwebtoken";
 import { JWT_SECRET } from "../config";
 
@@ -18,6 +19,7 @@ interface AccessTokenClaims {
 
 interface RefreshTokenClaims {
   sub: string;
+  jti?: string;
 }
 
 export interface AccessTokenPayload extends AccessTokenClaims {
@@ -26,7 +28,9 @@ export interface AccessTokenPayload extends AccessTokenClaims {
   exp: number;
 }
 
-export interface RefreshTokenPayload extends RefreshTokenClaims {
+export interface RefreshTokenPayload {
+  sub: string;
+  jti: string;
   typ: "refresh";
   iat: number;
   exp: number;
@@ -45,8 +49,9 @@ export function signAccessToken(claims: AccessTokenClaims): string {
 }
 
 export function signRefreshToken(claims: RefreshTokenClaims): string {
+  const jti = claims.jti ?? randomUUID();
   return jwt.sign(
-    { ...claims, typ: "refresh" },
+    { sub: claims.sub, jti, typ: "refresh" },
     JWT_SECRET,
     { ...COMMON_OPTIONS, expiresIn: REFRESH_TOKEN_TTL_SECONDS },
   );
@@ -63,6 +68,9 @@ export function verifyRefreshToken(token: string): RefreshTokenPayload {
   }
   if (typeof payload.sub !== "string" || !payload.sub) {
     throw new Error("Refresh token: missing sub claim");
+  }
+  if (typeof payload.jti !== "string" || !payload.jti) {
+    throw new Error("Refresh token: missing jti claim");
   }
   return payload as unknown as RefreshTokenPayload;
 }
