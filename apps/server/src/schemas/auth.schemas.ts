@@ -21,6 +21,14 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Mot de passe requis"),
 });
 
+export const refreshTokenSchema = z.object({
+  refreshToken: z.string().min(1, "refreshToken requis"),
+});
+
+export const logoutSchema = z.object({
+  refreshToken: z.string().min(1, "refreshToken requis"),
+});
+
 /**
  * Snowflake Discord : 17 à 20 chiffres (cf. https://discord.com/developers/docs/reference#snowflakes).
  * Chaîne vide acceptée et traitée comme un effacement (null) côté route.
