@@ -36,6 +36,8 @@ export interface SkillContext {
   blockResult?: BlockResult;
   diceRoll?: number;
   targetNumber?: number;
+  /** Distance categorielle de la passe en cours, pour les skills de passe range-dependants (Accurate/Strong Arm/Cannoneer). */
+  passRange?: 'quick' | 'short' | 'long' | 'bomb';
 }
 
 export interface SkillModifier {
@@ -428,7 +430,9 @@ registerSkill({
   triggers: ['on-pass', 'on-catch'],
   description: 'Ignore les zones de tacle adverses pour les jets de passe et de réception.',
   canApply: (ctx) => hasSkill(ctx.player, 'nerves-of-steel') || hasSkill(ctx.player, 'nerves_of_steel'),
-  getModifiers: () => ({ passModifier: 99, catchModifier: 99 }), // Annule les malus TZ (capped côté appelant)
+  // L'effet "ignore TZ" n'est pas un modificateur numerique : il est resolu
+  // hardcoded dans `mechanics/passing.ts` (skip du `-= opponentsNearXxx.length`).
+  // Pas de getModifiers : eviter le double-comptage avec collectModifiers.
 });
 
 // SPRINT
@@ -487,7 +491,9 @@ registerSkill({
   slug: 'accurate',
   triggers: ['on-pass'],
   description: '+1 au jet de passe pour les passes Quick et Short.',
-  canApply: (ctx) => hasSkill(ctx.player, 'accurate'),
+  canApply: (ctx) =>
+    hasSkill(ctx.player, 'accurate') &&
+    (ctx.passRange === 'quick' || ctx.passRange === 'short'),
   getModifiers: () => ({ passModifier: 1 }),
 });
 
@@ -496,17 +502,21 @@ registerSkill({
   slug: 'strong-arm',
   triggers: ['on-pass'],
   description: '+1 au jet de passe pour les passes Short, Long et Bomb.',
-  canApply: (ctx) => hasSkill(ctx.player, 'strong-arm') || hasSkill(ctx.player, 'strong_arm'),
+  canApply: (ctx) =>
+    (hasSkill(ctx.player, 'strong-arm') || hasSkill(ctx.player, 'strong_arm')) &&
+    (ctx.passRange === 'short' || ctx.passRange === 'long' || ctx.passRange === 'bomb'),
   getModifiers: () => ({ passModifier: 1 }),
 });
 
 // CANNONEER (O.1 batch 3f) : +1 au jet de passe sur Long et Bomb.
-// Effectivement resolu par `calculatePassModifiers` dans `mechanics/passing.ts`.
+// Effectivement resolu via collectModifiers depuis `mechanics/passing.ts`.
 registerSkill({
   slug: 'cannoneer',
   triggers: ['on-pass'],
   description: '+1 au jet de passe pour les passes Long et Long Bomb.',
-  canApply: (ctx) => hasSkill(ctx.player, 'cannoneer'),
+  canApply: (ctx) =>
+    hasSkill(ctx.player, 'cannoneer') &&
+    (ctx.passRange === 'long' || ctx.passRange === 'bomb'),
   getModifiers: () => ({ passModifier: 1 }),
 });
 

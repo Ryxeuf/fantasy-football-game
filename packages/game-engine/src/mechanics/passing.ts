@@ -9,6 +9,7 @@ import { samePos, isAdjacent, getAdjacentOpponents } from './movement';
 import { createLogEntry } from '../utils/logging';
 import { bounceBall, checkTouchdowns, isInOpponentEndzone, awardTouchdown } from './ball';
 import { hasSkill } from '../skills/skill-effects';
+import { collectModifiers } from '../skills/skill-registry';
 import { getDisturbingPresenceModifier } from './disturbing-presence';
 
 /**
@@ -80,35 +81,12 @@ export function calculatePassModifiers(
     modifiers += getPassRangeModifier(range);
   }
 
-  // Accurate (O.1 batch 3b) : +1 sur Quick et Short.
-  if (
-    range &&
-    (range === 'quick' || range === 'short') &&
-    (passer.skills.includes('accurate') || passer.skills.includes('Accurate'))
-  ) {
-    modifiers += 1;
-  }
-
-  // Strong Arm (O.1 batch 3b) : +1 sur Short, Long et Bomb.
-  if (
-    range &&
-    (range === 'short' || range === 'long' || range === 'bomb') &&
-    (passer.skills.includes('strong-arm') ||
-      passer.skills.includes('strong_arm') ||
-      passer.skills.includes('Strong Arm'))
-  ) {
-    modifiers += 1;
-  }
-
-  // Cannoneer (O.1 batch 3f) : +1 sur Long et Bomb. Complement symetrique
-  // d'Accurate qui lui couvre Quick et Short.
-  if (
-    range &&
-    (range === 'long' || range === 'bomb') &&
-    (passer.skills.includes('cannoneer') ||
-      passer.skills.includes('Cannoneer'))
-  ) {
-    modifiers += 1;
+  // Accurate / Strong Arm / Cannoneer : modificateurs range-dependants
+  // collectes depuis le skill-registry (B0.1). Le filtre par range est
+  // dans le canApply de chaque skill, additionne ici via passModifier.
+  if (range) {
+    const passMods = collectModifiers(passer, 'on-pass', { state, passRange: range });
+    modifiers += passMods.passModifier ?? 0;
   }
 
   // Malus pour chaque adversaire en zone de tacle du passeur.
@@ -165,24 +143,12 @@ export function calculateCatchModifiers(
     modifiers -= opponentsNearCatcher.length;
   }
 
-  // Extra Arms (O.1 batch 3) : +1 au jet de reception.
-  if (
-    catcher.skills.includes('extra-arms') ||
-    catcher.skills.includes('extra_arms')
-  ) {
-    modifiers += 1;
-  }
-
-  // Diving Catch (O.1 batch 3d) : +1 au jet de reception du ballon.
-  // Note : l'effet "peut receptionner sur une case adjacente" n'est pas
-  // encore implemente (deviation/scatter vers une case voisine suite a une
-  // passe ratee).
-  if (
-    catcher.skills.includes('diving-catch') ||
-    catcher.skills.includes('diving_catch')
-  ) {
-    modifiers += 1;
-  }
+  // Extra Arms / Diving Catch : modificateurs de reception collectes via
+  // skill-registry (B0.1). Note : l'effet "peut receptionner sur une case
+  // adjacente" de Diving Catch n'est pas encore implemente (deviation/scatter
+  // vers une case voisine suite a une passe ratee).
+  const catchMods = collectModifiers(catcher, 'on-catch', { state });
+  modifiers += catchMods.catchModifier ?? 0;
 
   // Disturbing Presence : -1 par adversaire avec le skill a <= 3 cases
   modifiers += getDisturbingPresenceModifier(state, catcher.pos, catcher.team);
