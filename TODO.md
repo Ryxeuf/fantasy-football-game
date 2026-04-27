@@ -1,7 +1,7 @@
 # TODO — Nuffle Arena (Blood Bowl 3 Online)
 
 > Backlog priorise par valeur (Gain) et effort (Difficulte).
-> Derniere mise a jour : 2026-04-24 (ajout Sprint 23 SEO/GEO, socle livre)
+> Derniere mise a jour : 2026-04-27 (resync resume par phase : toutes phases terminees)
 >
 > **Objectif** : livrer un jeu 100% fonctionnel avec un scope reduit a 5 equipes prioritaires,
 > puis rayonner sur le reste du contenu.
@@ -419,15 +419,15 @@
 | **G — Notifications push** | 5 | 5 | 0 | 0 | TERMINE |
 | **H — Polish** | 7 | 7 | 0 | 0 | TERMINE |
 | **I — Contenu & donnees** | 10 | 10 | 0 | 0 | TERMINE |
-| **P1 — Skills intrinseques 5 equipes** | 13 | 0 | 0 | 13 | CRITIQUE (Sprint 13) |
-| **P2 — Progression & Stars 5 equipes** | 10 | 1 | 0 | 9 | CRITIQUE (Sprint 14) |
-| **N — Croissance & engagement** | 8 | 0 | 0 | 8 | HAUTE (Sprint 15-16) |
-| **L — Ligues** | 9 | 0 | 0 | 9 | HAUTE (Sprint 17) |
-| **M — Parite mobile** | 12 | 0 | 0 | 12 | MOYENNE (Sprint 18-19) |
-| **J — Traits negatifs restants** | 4 | 4 | 0 | 0 | TERMINE (livre avant ordonnancement) |
-| **K — Skills fort impact (non-5 equipes)** | 8 | 3 | 0 | 5 | BASSE (Sprint 20-21) |
-| **O — Contenu & polish** | 10 | 0 | 0 | 10 | SOUHAITABLE (Sprint 22+) |
-| **Q — SEO, GEO & rayonnement** | 27 | 9 | 0 | 18 | HAUTE (Sprint 23) |
+| **J — Traits negatifs** | 11 | 11 | 0 | 0 | TERMINE (Sprint 12-13) |
+| **K — Skills fort impact** | 13 | 13 | 0 | 0 | TERMINE (Sprint 13 + 20-21) |
+| **L — Ligues** | 9 | 9 | 0 | 0 | TERMINE (Sprint 17) |
+| **M — Parite mobile** | 12 | 12 | 0 | 0 | TERMINE (Sprint 18-19) |
+| **N — Croissance & engagement** | 9 | 9 | 0 | 0 | TERMINE (Sprint 15-16) |
+| **O — Contenu & polish** | 11 | 11 | 0 | 0 | TERMINE (Sprint 20-22) |
+| **P1 — Skills intrinseques 5 equipes** | 11 | 11 | 0 | 0 | TERMINE (Sprint 13) |
+| **P2 — Progression & Stars 5 equipes** | 10 | 10 | 0 | 0 | TERMINE (Sprint 14) |
+| **Q — SEO, GEO & rayonnement** | 27 | 27 | 0 | 0 | TERMINE (Sprint 23) |
 
 ---
 
