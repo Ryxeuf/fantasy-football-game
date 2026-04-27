@@ -1,3 +1,42 @@
+## [1.73.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.72.1...v1.73.0) (2026-04-27)
+
+
+### ✨ Features
+
+* **a11y:** WCAG AA helpers + focus rings + skip-link (Q.21) ([#386](https://github.com/Ryxeuf/fantasy-football-game/issues/386)) ([d468a67](https://github.com/Ryxeuf/fantasy-football-game/commit/d468a67870f71115a28aad0756bf444439cfae7e)), closes [#CBA135](https://github.com/Ryxeuf/fantasy-football-game/issues/CBA135) [#E9E2D0](https://github.com/Ryxeuf/fantasy-football-game/issues/E9E2D0)
+* **analytics:** dashboards personnel et global (O.10) ([#379](https://github.com/Ryxeuf/fantasy-football-game/issues/379)) ([260cce8](https://github.com/Ryxeuf/fantasy-football-game/commit/260cce8a765e80c2339f50c2742a6f3a36d8eb00))
+* **analytics:** Umami events cles (Q.19) ([#384](https://github.com/Ryxeuf/fantasy-football-game/issues/384)) ([d1bdef7](https://github.com/Ryxeuf/fantasy-football-game/commit/d1bdef72dbae65f0ad82a1cf21e46c80c520b450))
+* **community:** match of the week + Discord helpers (O.9) ([#378](https://github.com/Ryxeuf/fantasy-football-game/issues/378)) ([5d8494e](https://github.com/Ryxeuf/fantasy-football-game/commit/5d8494ee821b7165f3cadb56dd77e0fc243a8137))
+* **cosmetics:** logos d'equipe SVG programmatiques (O.8b) ([#377](https://github.com/Ryxeuf/fantasy-football-game/issues/377)) ([09ab105](https://github.com/Ryxeuf/fantasy-football-game/commit/09ab105d1d0b09734645865b204061a9f47d0a7e))
+* generateur de noms d'equipe par roster (O.8a) ([#371](https://github.com/Ryxeuf/fantasy-football-game/issues/371)) ([d19b672](https://github.com/Ryxeuf/fantasy-football-game/commit/d19b672cb5d0967985f91eea7c235a4072a59162))
+* **perf:** Core Web Vitals monitoring + budget (Q.20) ([#385](https://github.com/Ryxeuf/fantasy-football-game/issues/385)) ([258df18](https://github.com/Ryxeuf/fantasy-football-game/commit/258df18d37b0ef109cf53ed2a4a0645f7a933c4f))
+* **seo:** /humans.txt + /.well-known/security.txt (Q.22) ([#387](https://github.com/Ryxeuf/fantasy-football-game/issues/387)) ([32802a1](https://github.com/Ryxeuf/fantasy-football-game/commit/32802a17acb72d6269c83926d8e2d0d1bdf664d1))
+* **seo:** BreadcrumbList JSON-LD sur /tutoriel + helper partage (Q.13) ([#375](https://github.com/Ryxeuf/fantasy-football-game/issues/375)) ([9497e3b](https://github.com/Ryxeuf/fantasy-football-game/commit/9497e3b0abb4818101a39c208bd2ad95f611f5f9))
+* **seo:** builder schema.org Event pour ligues publiques (Q.24) ([#388](https://github.com/Ryxeuf/fantasy-football-game/issues/388)) ([081281e](https://github.com/Ryxeuf/fantasy-football-game/commit/081281e0df22b512c74ebeb0a1a24df04c2d3b94))
+* **seo:** codes verification webmasters (Q.17) ([#382](https://github.com/Ryxeuf/fantasy-football-game/issues/382)) ([cef2562](https://github.com/Ryxeuf/fantasy-football-game/commit/cef2562ff347963a1ff7369481482ccbfb11ff85))
+* **seo:** helper hreflang centralise + split i18n ready (Q.27) ([#392](https://github.com/Ryxeuf/fantasy-football-game/issues/392)) ([61da4b7](https://github.com/Ryxeuf/fantasy-football-game/commit/61da4b77bd21885b7d13a0de9460ac178e963db3))
+* **seo:** IndexNow protocol — soumission auto Bing/Yandex/Naver (Q.18) ([#383](https://github.com/Ryxeuf/fantasy-football-game/issues/383)) ([5da63dc](https://github.com/Ryxeuf/fantasy-football-game/commit/5da63dc825963e5b9fa9a7f7d9752966d1f25152))
+* **seo:** JSON-LD DefinedTermSet/ItemList + metadata sur /skills (Q.12) ([#374](https://github.com/Ryxeuf/fantasy-football-game/issues/374)) ([69f591a](https://github.com/Ryxeuf/fantasy-football-game/commit/69f591a10f3af5fbcbd901ac530f2f2fdd26c282))
+* **seo:** JSON-LD Person/SportsAthlete + canonical/hreflang sur /star-players/[slug] (Q.11) ([#373](https://github.com/Ryxeuf/fantasy-football-game/issues/373)) ([7c0d2f7](https://github.com/Ryxeuf/fantasy-football-game/commit/7c0d2f7f26f1f7fac58a32643f0d61746ede1375))
+* **seo:** JSON-LD SportsTeam + canonical/hreflang sur /teams/[slug] (Q.10) ([#372](https://github.com/Ryxeuf/fantasy-football-game/issues/372)) ([e146230](https://github.com/Ryxeuf/fantasy-football-game/commit/e146230690a748ad0c6ded4720eac3a0fa10a14a))
+* **seo:** Open Graph images dynamiques par page (Q.14) ([#393](https://github.com/Ryxeuf/fantasy-football-game/issues/393)) ([46b6758](https://github.com/Ryxeuf/fantasy-football-game/commit/46b6758d9f511b770e11bbd82cd4d2c08bab1d53))
+* **seo:** page /a-propos citable (Q.15) ([#380](https://github.com/Ryxeuf/fantasy-football-game/issues/380)) ([9ed8282](https://github.com/Ryxeuf/fantasy-football-game/commit/9ed8282743684f72b9f0eb9a6c76a5948a46199b))
+* **seo:** page /changelog publique + flux RSS /feed.xml (Q.16) ([#381](https://github.com/Ryxeuf/fantasy-football-game/issues/381)) ([8907f53](https://github.com/Ryxeuf/fantasy-football-game/commit/8907f5391b56e70455b468019a6eeeca400150de))
+* **seo:** protocole de test presence IA (Q.25) ([#390](https://github.com/Ryxeuf/fantasy-football-game/issues/390)) ([a30f24f](https://github.com/Ryxeuf/fantasy-football-game/commit/a30f24f7dc0deebc0b5c0a14cc581ea298e6b6ad))
+* **seo:** strategie liens entrants - templates outreach (Q.26) ([#391](https://github.com/Ryxeuf/fantasy-football-game/issues/391)) ([7d9abda](https://github.com/Ryxeuf/fantasy-football-game/commit/7d9abda2b08421328674a218ce2a93d332da124e))
+* **seo:** support Wikidata QID + Wikipedia sameAs (Q.23) ([#389](https://github.com/Ryxeuf/fantasy-football-game/issues/389)) ([dea1667](https://github.com/Ryxeuf/fantasy-football-game/commit/dea1667a1dc69e612997ba677c864504c77b8375))
+
+
+### ⚡ Performance Improvements
+
+* pagination + bornes sur queries DB non bornees (O.7) ([#370](https://github.com/Ryxeuf/fantasy-football-game/issues/370)) ([88179ce](https://github.com/Ryxeuf/fantasy-football-game/commit/88179ce61d1649c0a9ddc3eeb437b48304c9adfa))
+* truncate gameLog in WebSocket broadcasts (O.5) ([#368](https://github.com/Ryxeuf/fantasy-football-game/issues/368)) ([923a4ff](https://github.com/Ryxeuf/fantasy-football-game/commit/923a4ffdd51416ab478202439ab52ddbb89f5abd))
+
+
+### ♻️ Code Refactoring
+
+* standardize ApiResponse&lt;T&gt; envelope with helpers (O.6) ([#369](https://github.com/Ryxeuf/fantasy-football-game/issues/369)) ([43843f1](https://github.com/Ryxeuf/fantasy-football-game/commit/43843f130c74eabef56073e6ddffa92fec905932))
+
 ## [1.72.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.72.0...v1.72.1) (2026-04-24)
 
 
