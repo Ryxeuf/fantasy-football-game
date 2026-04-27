@@ -2,6 +2,7 @@
 import { Suspense, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { API_BASE } from "../../auth-client";
+import { syncAuthCookie, clearAuthCookie } from "../../lib/auth-cookie";
 
 /**
  * Page de synchronisation du token depuis localStorage vers les cookies pour les
@@ -41,31 +42,25 @@ function AuthSyncContent() {
     fetch(`${API_BASE}/auth/me`, {
       headers: { Authorization: `Bearer ${token}` },
     })
-      .then((r) => {
+      .then(async (r) => {
         if (!r.ok) {
           // Token invalide/expiré : on le supprime et on redirige vers login.
           localStorage.removeItem("auth_token");
-          document.cookie = "auth_token=; path=/; max-age=0";
+          await clearAuthCookie();
           router.replace(`/login?redirect=${encodeURIComponent(redirectTo)}`);
           return null;
         }
         return r.json();
       })
-      .then((data) => {
+      .then(async (data) => {
         if (!data) return;
 
-        // Token valide : on synchronise le cookie pour que le middleware le voie.
-        const isHttps =
-          typeof window !== "undefined" &&
-          window.location.protocol === "https:";
-        document.cookie = `auth_token=${token}; path=/; max-age=86400; SameSite=Lax${
-          isHttps ? "; Secure" : ""
-        }`;
+        // Token valide : on synchronise le cookie httpOnly via la route
+        // serveur dediee (S24.1).
+        await syncAuthCookie(token);
 
         // Recharge complet pour que le middleware prenne le cookie en compte.
-        setTimeout(() => {
-          window.location.href = redirectTo;
-        }, 100);
+        window.location.href = redirectTo;
       })
       .catch(() => {
         router.replace(`/login?redirect=${encodeURIComponent(redirectTo)}`);

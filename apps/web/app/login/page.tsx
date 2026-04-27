@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { apiPost, API_BASE } from "../auth-client";
 import { useLanguage } from "../contexts/LanguageContext";
+import { syncAuthCookie } from "../lib/auth-cookie";
 
 // Autorise uniquement les redirections internes (chemins relatifs commençant par "/"
 // et ne pouvant être interprétés comme des URLs externes).
@@ -51,8 +52,8 @@ export default function LoginPage() {
     try {
       const { token } = await apiPost("/auth/login", { email, password });
       localStorage.setItem("auth_token", token);
-      // Stocke aussi dans les cookies pour le middleware Next.js
-      document.cookie = `auth_token=${token}; path=/; max-age=86400; SameSite=Lax`;
+      // Cookie httpOnly synchronise via la route serveur (S24.1).
+      await syncAuthCookie(token);
       window.location.href = redirectTo;
     } catch (err: any) {
       setError(err.message || t.login.error);

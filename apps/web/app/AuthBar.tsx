@@ -4,6 +4,7 @@ import { API_BASE } from "./auth-client";
 import { useLanguage } from "./contexts/LanguageContext";
 import { useFeatureFlag } from "./hooks/useFeatureFlag";
 import { ONLINE_PLAY_FLAG } from "./lib/featureFlagKeys";
+import { syncAuthCookie, clearAuthCookie } from "./lib/auth-cookie";
 
 type UserData = {
   email: string;
@@ -29,13 +30,10 @@ export default function AuthBar({ isMobileMenu = false }: AuthBarProps) {
     const token = localStorage.getItem("auth_token");
     setHasToken(!!token);
     if (token) {
-      // Synchronise le token dans les cookies pour le middleware
-      const cookieExists = document.cookie
-        .split("; ")
-        .some((cookie) => cookie.startsWith("auth_token="));
-      if (!cookieExists) {
-        document.cookie = `auth_token=${token}; path=/; max-age=86400; SameSite=Lax`;
-      }
+      // Synchronise le cookie httpOnly pour le middleware (S24.1).
+      // On ne peut pas detecter sa presence depuis JS, donc on tente
+      // toujours la synchro : la route est idempotente.
+      void syncAuthCookie(token);
 
       fetch(`${API_BASE}/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -78,10 +76,10 @@ export default function AuthBar({ isMobileMenu = false }: AuthBarProps) {
     };
   }, [menuOpen]);
 
-  function logout() {
+  async function logout() {
     localStorage.removeItem("auth_token");
-    // Supprime aussi le cookie
-    document.cookie = "auth_token=; path=/; max-age=0";
+    // Le cookie est httpOnly : seul le serveur peut l'effacer (S24.1).
+    await clearAuthCookie();
     setHasToken(false);
     setUserData(null);
     setMenuOpen(false);

@@ -2,6 +2,7 @@
 import { Suspense, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { API_BASE } from "../../auth-client";
+import { syncAuthCookie } from "../../lib/auth-cookie";
 
 /**
  * Page de synchronisation du token depuis localStorage vers les cookies
@@ -41,7 +42,7 @@ function AdminSyncContent() {
         }
         return r.json();
       })
-      .then((data) => {
+      .then(async (data) => {
         if (!data) return;
 
         const user = data?.user;
@@ -57,14 +58,11 @@ function AdminSyncContent() {
           return;
         }
 
-        // Crée le cookie avec tous les attributs nécessaires
-        document.cookie = `auth_token=${token}; path=/; max-age=86400; SameSite=Lax; Secure=${window.location.protocol === 'https:'}`;
-        
-        // Attendre un peu pour que le cookie soit bien enregistré avant de rediriger
-        // Utilise window.location.href pour forcer un rechargement complet et que le cookie soit pris en compte
-        setTimeout(() => {
-          window.location.href = redirectTo;
-        }, 100);
+        // Synchronise le cookie httpOnly via la route serveur (S24.1).
+        await syncAuthCookie(token);
+
+        // Recharge complet pour que le middleware lise le nouveau cookie.
+        window.location.href = redirectTo;
       })
       .catch(() => {
         router.push("/login");
