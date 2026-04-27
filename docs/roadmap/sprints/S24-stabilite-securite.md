@@ -10,7 +10,7 @@
 | # | Tache | Cat | Effort | Statut | Detail |
 |---|-------|-----|--------|--------|--------|
 | S24.1 | Cookie `auth_token` httpOnly=true + sameSite=strict + secure=true | FIX | S | [x] | `apps/web/app/api/sync-auth-cookie/route.ts:22`. Bloque le vol via XSS. Actuellement httpOnly=false "pour synchro JS" mais le token est deja en localStorage donc surface deja redondante. |
-| S24.2 | Helmet + CSP + HSTS + X-Frame-Options DENY | FIX | M | [ ] | `apps/server/src/index.ts:65-100`. Aucun en-tete securite actuellement. Au minimum X-Frame, X-Content-Type-Options nosniff, HSTS 1 an, CSP img-src + script-src self. |
+| S24.2 | Helmet + CSP + HSTS + X-Frame-Options DENY | FIX | M | [x] | `apps/server/src/index.ts:65-100`. Aucun en-tete securite actuellement. Au minimum X-Frame, X-Content-Type-Options nosniff, HSTS 1 an, CSP img-src + script-src self. |
 | S24.3 | JWT refresh token (15 min access + 7j refresh, rotation + blacklist) | FIX | M | [ ] | `apps/server/src/routes/auth.ts:90-100`. Token actuel 7j sans rotation = 7j de fenetre si compromission. Pattern refresh + access. |
 | S24.4 | WebSocket cleanup listeners + room leak | FIX | S | [ ] | `apps/web/app/play/[id]/hooks/useGameSocket.ts:365-370`. Listeners non desabonnes apres disconnect : fuite memoire progressive sur sessions longues. |
 | S24.5 | Polling fallback 3s -> 10s + backoff exponentiel | FIX | M | [ ] | `apps/web/app/play/[id]/hooks/useGameState.ts:301`. Quand WS degrade, X clients = X requetes/3s. Trop agressif a la scale beta. |
