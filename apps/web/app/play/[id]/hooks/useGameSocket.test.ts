@@ -129,7 +129,7 @@ describe("useGameSocket — createGameSocket", () => {
   });
 
   describe("cleanup", () => {
-    it("removes all game event listeners on cleanup", () => {
+    it("removes every game event listener on cleanup (S24.4 — no leak)", () => {
       const { cleanup } = createGameSocketHelpers(mockSocket as any);
       cleanup();
 
@@ -137,6 +137,23 @@ describe("useGameSocket — createGameSocket", () => {
       expect(mockSocket.off).toHaveBeenCalledWith("game:player-connected");
       expect(mockSocket.off).toHaveBeenCalledWith("game:player-disconnected");
       expect(mockSocket.off).toHaveBeenCalledWith("game:match-ended");
+      expect(mockSocket.off).toHaveBeenCalledWith("game:match-forfeited");
+      expect(mockSocket.off).toHaveBeenCalledWith("game:turn-timer-started");
+    });
+
+    it("performs a defensive removeAllListeners on socket and manager (S24.4)", () => {
+      const removeAll = vi.fn();
+      const ioRemoveAll = vi.fn();
+      const sock = {
+        off: vi.fn(),
+        removeAllListeners: removeAll,
+        io: { removeAllListeners: ioRemoveAll },
+      };
+      const { cleanupAll } = createGameSocketHelpers(sock as any);
+      cleanupAll();
+
+      expect(removeAll).toHaveBeenCalledTimes(1);
+      expect(ioRemoveAll).toHaveBeenCalledTimes(1);
     });
   });
 });
