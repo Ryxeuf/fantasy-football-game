@@ -1,11 +1,18 @@
 import React from "react";
 
+type Action =
+  | "MOVE"
+  | "BLOCK"
+  | "BLITZ"
+  | "PASS"
+  | "HANDOFF"
+  | "FOUL"
+  | "THROW_TEAM_MATE";
+
 interface ActionPickerPopupProps {
   playerName: string;
-  available: Array<"MOVE" | "BLOCK" | "BLITZ" | "PASS" | "HANDOFF" | "FOUL">;
-  onPick: (
-    action: "MOVE" | "BLOCK" | "BLITZ" | "PASS" | "HANDOFF" | "FOUL",
-  ) => void;
+  available: Array<Action>;
+  onPick: (action: Action) => void;
   onClose: () => void;
 }
 
@@ -44,7 +51,7 @@ export default function ActionPickerPopup({
   );
 }
 
-function label(a: ActionPickerPopupProps["available"][number]) {
+function label(a: Action) {
   switch (a) {
     case "MOVE":
       return "Mouvement";
@@ -58,5 +65,7 @@ function label(a: ActionPickerPopupProps["available"][number]) {
       return "Transmission";
     case "FOUL":
       return "Faute";
+    case "THROW_TEAM_MATE":
+      return "Lancer coéquipier";
   }
 }

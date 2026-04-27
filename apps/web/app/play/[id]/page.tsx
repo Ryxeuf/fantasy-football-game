@@ -245,8 +245,16 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
 
   const [showDicePopup, setShowDicePopup] = useState(false);
   const [currentAction, setCurrentAction] = useState<
-    "MOVE" | "BLOCK" | "BLITZ" | "PASS" | "HANDOFF" | "FOUL" | null
+    | "MOVE"
+    | "BLOCK"
+    | "BLITZ"
+    | "PASS"
+    | "HANDOFF"
+    | "FOUL"
+    | "THROW_TEAM_MATE"
+    | null
   >(null);
+  const [throwTeamMateThrownId, setThrowTeamMateThrownId] = useState<string | null>(null);
   const createRNG = () => makeRNG(`ui-seed-${Date.now()}-${Math.random()}`);
 
   // Move submission uses the single WebSocket from useGameState (no duplicate connection)
@@ -728,11 +736,14 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
     if (
       player &&
       player.team === state.currentPlayer &&
-      (!extState.preMatch || (extState.preMatch.phase as string) !== "setup")
+      (!extState.preMatch || (extState.preMatch.phase as string) !== "setup") &&
+      // En mode THROW_TEAM_MATE, ne PAS re-selectionner un coequipier : il sera traite comme cible a lancer ci-dessous
+      !(currentAction === "THROW_TEAM_MATE" && player.id !== state.selectedPlayerId)
     ) {
       console.log("Setting selectedPlayerId from onCellClick:", player.id);
       setState((s) => (s ? { ...s, selectedPlayerId: player.id } : null));
       setCurrentAction(null);
+      setThrowTeamMateThrownId(null);
       setSelectedFromReserve(null);
       return;
     }
@@ -740,6 +751,60 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
       state.selectedPlayerId &&
       (!extState.preMatch || (extState.preMatch.phase as string) !== "setup")
     ) {
+      // Handle THROW_TEAM_MATE: 2-click flow (1) coequipier a lancer, (2) case cible
+      if (currentAction === "THROW_TEAM_MATE") {
+        const clickedPlayer = state.players.find(
+          (p) => p.pos.x === pos.x && p.pos.y === pos.y,
+        );
+        if (!throwTeamMateThrownId) {
+          // Phase 1 : selectionner un coequipier lancable
+          if (
+            clickedPlayer &&
+            clickedPlayer.team === state.currentPlayer &&
+            clickedPlayer.id !== state.selectedPlayerId &&
+            legal.some(
+              (m) =>
+                m.type === "THROW_TEAM_MATE" &&
+                (m as any).playerId === state.selectedPlayerId &&
+                (m as any).thrownPlayerId === clickedPlayer.id,
+            )
+          ) {
+            setThrowTeamMateThrownId(clickedPlayer.id);
+          }
+          return;
+        }
+        // Phase 2 : selectionner la position cible
+        const move = legal.find(
+          (m) =>
+            m.type === "THROW_TEAM_MATE" &&
+            (m as any).playerId === state.selectedPlayerId &&
+            (m as any).thrownPlayerId === throwTeamMateThrownId &&
+            (m as any).targetPos.x === pos.x &&
+            (m as any).targetPos.y === pos.y,
+        );
+        if (!move) return; // hors portee : ignore
+        if (isActiveMatch) {
+          submitMove(move).then((result) => {
+            if (result?.success && result.gameState) {
+              const ns = normalizeState(result.gameState);
+              setState(ns);
+              setIsMyTurn(result.isMyTurn);
+              if (ns.lastDiceResult) setShowDicePopup(true);
+            }
+          });
+        } else {
+          setState((s) => {
+            if (!s) return null;
+            const s2 = applyMove(s, move, createRNG());
+            if (s2.lastDiceResult) setShowDicePopup(true);
+            return s2 as ExtendedGameState;
+          });
+        }
+        setThrowTeamMateThrownId(null);
+        setCurrentAction(null);
+        return;
+      }
+
       // Handle BLOCK action: clicking an opponent to initiate a block
       const target = state.players.find(
         (p) =>
@@ -1229,6 +1294,17 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
                     return;
                   }
 
+                  // En mode THROW_TEAM_MATE, un clic sur un coequipier doit declencher la selection (pas changer le selectedPlayerId)
+                  if (
+                    currentAction === "THROW_TEAM_MATE" &&
+                    state.selectedPlayerId &&
+                    player.team === state.currentPlayer &&
+                    player.id !== state.selectedPlayerId
+                  ) {
+                    onCellClick(player.pos);
+                    return;
+                  }
+
                   if (
                     player.team === state.currentPlayer &&
                     (!extState.preMatch ||
@@ -1238,6 +1314,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
                       s ? { ...s, selectedPlayerId: player.id } : null,
                     );
                     setCurrentAction(null);
+                    setThrowTeamMateThrownId(null);
                     setSelectedFromReserve(null);
                   }
                 }}
@@ -1300,17 +1377,54 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
       {state.selectedPlayerId &&
         currentAction === null &&
         !hasPlayerActed(state, state.selectedPlayerId) &&
-        (state as ExtendedGameState).preMatch?.phase !== "setup" && (
-          <ActionPickerPopup
-            playerName={
-              state.players.find((p) => p.id === state.selectedPlayerId)
-                ?.name || "Joueur"
-            }
-            available={["MOVE", "BLOCK", "BLITZ", "PASS", "HANDOFF", "FOUL"]}
-            onPick={(a) => setCurrentAction(a)}
-            onClose={() => setCurrentAction("MOVE")}
-          />
-        )}
+        (state as ExtendedGameState).preMatch?.phase !== "setup" && (() => {
+          const sp = state.players.find((p) => p.id === state.selectedPlayerId);
+          const canThrowTM =
+            !!sp &&
+            sp.skills.some(
+              (s) => s.toLowerCase() === "throw-team-mate",
+            ) &&
+            legal.some(
+              (m) =>
+                m.type === "THROW_TEAM_MATE" &&
+                (m as any).playerId === state.selectedPlayerId,
+            );
+          const available: Array<
+            "MOVE" | "BLOCK" | "BLITZ" | "PASS" | "HANDOFF" | "FOUL" | "THROW_TEAM_MATE"
+          > = ["MOVE", "BLOCK", "BLITZ", "PASS", "HANDOFF", "FOUL"];
+          if (canThrowTM) available.push("THROW_TEAM_MATE");
+          return (
+            <ActionPickerPopup
+              playerName={sp?.name || "Joueur"}
+              available={available}
+              onPick={(a) => {
+                setThrowTeamMateThrownId(null);
+                setCurrentAction(a);
+              }}
+              onClose={() => setCurrentAction("MOVE")}
+            />
+          );
+        })()}
+      {/* Indicateur THROW_TEAM_MATE : explique l'etape en cours */}
+      {currentAction === "THROW_TEAM_MATE" && state.selectedPlayerId && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-40 bg-purple-700 text-white px-4 py-2 rounded-lg shadow-lg text-sm font-semibold flex items-center gap-3">
+          <span>
+            {throwTeamMateThrownId
+              ? "Cliquez sur la case d'arrivée"
+              : "Cliquez sur le coéquipier à lancer"}
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              setThrowTeamMateThrownId(null);
+              setCurrentAction(null);
+            }}
+            className="px-2 py-0.5 bg-purple-900 rounded text-xs hover:bg-purple-950"
+          >
+            Annuler
+          </button>
+        </div>
+      )}
       {/* Bouton fin d'activation du joueur */}
       {/* Barre d'activation du joueur : PM restants + bouton terminer */}
       {state && state.selectedPlayerId && isMyTurn &&
