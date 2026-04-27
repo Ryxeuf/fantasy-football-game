@@ -1,3 +1,20 @@
+## [1.74.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.73.0...v1.74.0) (2026-04-27)
+
+
+### ✨ Features
+
+* **b2.4:** UI Throw Team-Mate cote web ([28c31e4](https://github.com/Ryxeuf/fantasy-football-game/commit/28c31e415032768d5d9285cb334a05bcef098ef1))
+
+
+### 📝 Documentation
+
+* **b0.1:** note de suivi pour les hardcodes residuels du skill registry ([e469bb4](https://github.com/Ryxeuf/fantasy-football-game/commit/e469bb4b6158fb3970b183fd1267da3f58f8f2e6))
+
+
+### ♻️ Code Refactoring
+
+* **b0.1:** passing.ts via skill-registry collectModifiers ([97e063b](https://github.com/Ryxeuf/fantasy-football-game/commit/97e063bb8454964da388fb1e9781daedc58b909c))
+
 ## [1.73.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.72.1...v1.73.0) (2026-04-27)
 
 
