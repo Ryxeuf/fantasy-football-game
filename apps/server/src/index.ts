@@ -35,6 +35,7 @@ import { prisma } from "./prisma";
 import { authRateLimiter, apiRateLimiter } from "./middleware/rateLimiter";
 import { publicCache } from "./middleware/publicCache";
 import { requestTiming } from "./middleware/requestTiming";
+import { securityHeaders } from "./middleware/securityHeaders";
 import { setupSocket } from "./socket";
 import { CORS_ORIGINS } from "./config";
 import { invalidateAllMemo } from "./utils/memoize-async";
@@ -65,6 +66,11 @@ const API_PORT = parseInt(process.env.API_PORT || "8201", 10);
 const app = express();
 // Trust le premier proxy (Traefik) pour obtenir la vraie IP client via X-Forwarded-For
 app.set("trust proxy", 1);
+// Security envelope (HSTS, X-Frame-Options, CSP, X-Content-Type-Options,
+// Referrer-Policy). Must run before route handlers so the headers ship on
+// every response, including 4xx/5xx. CSP defaults to Report-Only — set
+// SECURITY_CSP_MODE=enforce once the report endpoint is wired.
+app.use(securityHeaders());
 app.use(cors({ origin: CORS_ORIGINS }));
 // gzip/deflate/br responses over ~1KB. Team payloads with 11-16 players
 // plus star players commonly exceed 50KB uncompressed.
