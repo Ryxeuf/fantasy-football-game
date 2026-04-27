@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { API_BASE } from "../../auth-client";
+import { webLog } from "../../lib/log";
 import LocalMatchActions from "./LocalMatchActions";
 import LocalMatchInducements from "./LocalMatchInducements";
 import LocalMatchSummary from "./LocalMatchSummary";
@@ -221,7 +222,7 @@ export default function LocalMatchPage() {
     setError(null);
     try {
       const { localMatch: data } = await fetchJSON(`/local-match/${matchId}`);
-      console.log("Match chargé:", {
+      webLog.debug("Match chargé:", {
         teamA: data?.teamA?.name,
         teamB: data?.teamB?.name || null,
         status: data?.status,
