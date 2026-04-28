@@ -1,3 +1,10 @@
+## [1.76.3](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.76.2...v1.76.3) (2026-04-28)
+
+
+### 🐛 Bug Fixes
+
+* **engine:** compute legalSetupPositions on post-touchdown ([6a0442f](https://github.com/Ryxeuf/fantasy-football-game/commit/6a0442f58462d551cadc88d98f5b86cc1160b4c5))
+
 ## [1.76.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.76.1...v1.76.2) (2026-04-28)
 
 
