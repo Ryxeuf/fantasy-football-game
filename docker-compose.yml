@@ -21,13 +21,27 @@ services:
     ports:
       - "8200:3100"
     container_name: nufflearena_web
+    init: true
     environment:
       - NODE_ENV=development
       - PORT=3100
       - NEXT_PUBLIC_API_BASE=https://api.nufflearena.fr
       - SERVER_API_BASE=http://nufflearena_server:8201
+      # Force polling so chokidar/Next picks up file changes through the
+      # bind mount on macOS/Windows hosts where inotify events are lost.
+      - CHOKIDAR_USEPOLLING=1
+      - WATCHPACK_POLLING=true
     volumes:
+      # S24.9 hot-reload : bind mount du workspace + anonymous volumes
+      # pour preserver les binaires node_modules Linux du conteneur et
+      # eviter qu'un node_modules cote hote (macOS/Windows) ne les ecrase.
       - .:/app
+      - /app/node_modules
+      - /app/apps/web/node_modules
+      - /app/apps/server/node_modules
+      - /app/packages/game-engine/node_modules
+      - /app/packages/ui/node_modules
+      - /app/apps/web/.next
     working_dir: /app
     command: >
       sh -c "
@@ -60,6 +74,7 @@ services:
       dockerfile: Dockerfile.server
     restart: unless-stopped
     container_name: nufflearena_server
+    init: true
     healthcheck:
       disable: true
     ports:
@@ -70,8 +85,17 @@ services:
       - DATABASE_URL=postgresql://bb_user:bb_pass@db:5432/bb_db?schema=public
       - CORS_ORIGINS=https://nufflearena.fr,http://localhost:3100
       - RATE_LIMIT_WHITELIST=82.67.200.127
+      # tsx watch utilise chokidar en interne — polling necessaire si le
+      # host n'emet pas d'evenements inotify a travers le bind mount.
+      - CHOKIDAR_USEPOLLING=1
+      - TSX_WATCH_POLL=1
     volumes:
       - .:/app
+      - /app/node_modules
+      - /app/apps/web/node_modules
+      - /app/apps/server/node_modules
+      - /app/packages/game-engine/node_modules
+      - /app/packages/ui/node_modules
     working_dir: /app/apps/server
     networks:
       - traefik-network

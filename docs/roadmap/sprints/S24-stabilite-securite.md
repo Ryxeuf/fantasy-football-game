@@ -17,7 +17,7 @@
 | S24.6 | Verifier `app.use(authRateLimiter)` + couverture `/leagues` GET | FIX | S | [x] | Divergence detectee entre agents backend ("non applique") et securite ("present"). Confirmer end-to-end + ajouter tests. |
 | S24.7 | Retirer `console.log` debug en prod (web) | FIX | S | [x] | `apps/web/app/play/[id]/page.tsx:615,729,743` + autres. 10+ logs de debug visibles dans les devtools. |
 | S24.8 | Wrapper minimal pour `console.error` backend (preparation S25) | FIX | S | [x] | 270 console.* eparpilles dans `apps/server/src/`. Wrapper temporaire `serverLog.error()` qui delegue a console mais permet swap vers pino en S25 sans toucher chaque call site. |
-| S24.9 | Docker compose dev hot-reload + 5 make targets quotidiens | CONFORT | S | [ ] | `docker-compose.yml` actuellement statique (`pnpm install && pnpm run dev`). Ajouter bind mount + nodemon/turbopack hot reload. Targets : `make logs`, `make reset-db`, `make seed`, `make tunnel`, `make snapshot-prod`. Cycle dev x5 plus rapide. |
+| S24.9 | Docker compose dev hot-reload + 5 make targets quotidiens | CONFORT | S | [x] | `docker-compose.yml` actuellement statique (`pnpm install && pnpm run dev`). Ajouter bind mount + nodemon/turbopack hot reload. Targets : `make logs`, `make reset-db`, `make seed`, `make tunnel`, `make snapshot-prod`. Cycle dev x5 plus rapide. |
 
 ## Definition of done
 
