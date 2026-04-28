@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { API_BASE } from "../auth-client";
+import { apiRequest } from "../lib/api-client";
 import { RULESETS } from "@bb/game-engine";
 
 type Cup = {
@@ -114,7 +115,7 @@ export default function CupsPage() {
 
   const loadTeams = async () => {
     try {
-      const { teams: data } = await fetchJSON("/team/mine");
+      const { teams: data } = await apiRequest<{ teams: Team[] }>("/team/mine");
       setTeams(data);
     } catch (e: any) {
       console.error("Erreur lors du chargement des équipes:", e);
@@ -132,7 +133,9 @@ export default function CupsPage() {
       }
       const { cups: data } = await fetchJSON("/cup");
       // Récupérer les équipes de l'utilisateur pour vérifier s'il a une équipe inscrite
-      const { teams: userTeams } = await fetchJSON("/team/mine");
+      const { teams: userTeams } = await apiRequest<{ teams: Team[] }>(
+        "/team/mine",
+      );
       const userTeamIds = new Set(userTeams.map((t: Team) => t.id));
       
       // Enrichir avec les informations de l'utilisateur connecté

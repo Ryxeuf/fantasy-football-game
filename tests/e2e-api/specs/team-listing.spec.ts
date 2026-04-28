@@ -165,7 +165,12 @@ describe("E2E API — /team/* (listing & detail)", () => {
         "pwd",
         "Fresh",
       );
-      const json = await get<TeamMineResponse>("/team/mine", token);
+      const json = unwrap(
+        await get<{ success: true; data: TeamMineResponse }>(
+          "/team/mine",
+          token,
+        ),
+      );
       expect(json.teams).toEqual([]);
     });
 
@@ -177,7 +182,12 @@ describe("E2E API — /team/* (listing & detail)", () => {
       );
       const team = await createTeam(userId, "Alice Skavens", "skaven");
 
-      const json = await get<TeamMineResponse>("/team/mine", token);
+      const json = unwrap(
+        await get<{ success: true; data: TeamMineResponse }>(
+          "/team/mine",
+          token,
+        ),
+      );
       expect(json.teams).toHaveLength(1);
       expect(json.teams[0]!.id).toBe(team.teamId);
       expect(json.teams[0]!.name).toBe("Alice Skavens");
@@ -190,10 +200,20 @@ describe("E2E API — /team/* (listing & detail)", () => {
       await createTeam(alice.userId, "Alice", "skaven");
       await createTeam(bob.userId, "Bob", "lizardmen");
 
-      const aJson = await get<TeamMineResponse>("/team/mine", alice.token);
+      const aJson = unwrap(
+        await get<{ success: true; data: TeamMineResponse }>(
+          "/team/mine",
+          alice.token,
+        ),
+      );
       expect(aJson.teams.map((t) => t.name)).toEqual(["Alice"]);
 
-      const bJson = await get<TeamMineResponse>("/team/mine", bob.token);
+      const bJson = unwrap(
+        await get<{ success: true; data: TeamMineResponse }>(
+          "/team/mine",
+          bob.token,
+        ),
+      );
       expect(bJson.teams.map((t) => t.name)).toEqual(["Bob"]);
     });
 
@@ -205,9 +225,11 @@ describe("E2E API — /team/* (listing & detail)", () => {
       );
       // Le seed-team cree par defaut en season_3.
       await createTeam(userId, "Alice", "skaven");
-      const json = await get<TeamMineResponse>(
-        "/team/mine?ruleset=season_2",
-        token,
+      const json = unwrap(
+        await get<{ success: true; data: TeamMineResponse }>(
+          "/team/mine?ruleset=season_2",
+          token,
+        ),
       );
       expect(json.teams).toEqual([]);
     });

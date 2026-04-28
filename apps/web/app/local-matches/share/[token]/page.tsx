@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { API_BASE } from "../../../auth-client";
+import { apiRequest } from "../../../lib/api-client";
 
 type LocalMatch = {
   id: string;
@@ -134,7 +135,11 @@ export default function ShareLocalMatchPage() {
     try {
       const [matchData, teamsData] = await Promise.all([
         fetchJSON(`/local-match/share/${token}`),
-        isAuthenticated ? fetchJSON("/team/mine").catch(() => ({ teams: [] })) : Promise.resolve({ teams: [] }),
+        isAuthenticated
+          ? apiRequest<{ teams: Array<{ id: string; name: string; roster: string }> }>(
+              "/team/mine",
+            ).catch(() => ({ teams: [] }))
+          : Promise.resolve({ teams: [] }),
       ]);
       setLocalMatch(matchData.localMatch);
       if (teamsData.teams) {
