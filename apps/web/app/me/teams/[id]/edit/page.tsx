@@ -344,19 +344,14 @@ export default function TeamEditPage() {
     }
 
     try {
-      const response = await fetch(`${API_BASE}/team/${id}/players`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: localStorage.getItem("auth_token") ? `Bearer ${localStorage.getItem("auth_token")}` : "",
+      // S25.5z — apiRequest unwrap l'enveloppe ApiResponse<T>
+      await apiRequest<{ team: unknown; newPlayer: unknown }>(
+        `/team/${id}/players`,
+        {
+          method: "POST",
+          body: JSON.stringify(newPlayerForm),
         },
-        body: JSON.stringify(newPlayerForm),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Erreur lors de l'ajout du joueur");
-      }
+      );
 
       const [d, positionsData] = await Promise.all([
         fetchJSON(`/team/${id}`),

@@ -1153,106 +1153,123 @@ export async function handleUpdateTeam(
 router.put("/:id", authUser, validate(updateTeamSchema), handleUpdateTeam);
 
 // Endpoint pour ajouter un joueur à une équipe
-router.post("/:id/players", authUser, validate(addPlayerSchema), async (req: AuthenticatedRequest, res) => {
+// Endpoint pour ajouter un joueur a une equipe (S25.5z — ApiResponse<T>)
+export async function handleAddTeamPlayer(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
   const teamId = req.params.id;
   const { position, name, number } = req.body;
 
   try {
-    // Vérifier que l'équipe appartient à l'utilisateur
     const team = await prisma.team.findFirst({
       where: { id: teamId, ownerId: req.user!.id },
-      include: { players: true }
+      include: { players: true },
     });
 
     if (!team) {
-      return res.status(404).json({ error: "Équipe introuvable" });
+      sendError(res, "Equipe introuvable", 404);
+      return;
     }
 
-    // Vérifier que l'équipe n'est pas engagée dans un match actif
     const activeSelection = await prisma.teamSelection.findFirst({
-      where: { 
+      where: {
         teamId: teamId,
-        match: { status: { in: ["pending", "active"] } }
-      }
+        match: { status: { in: ["pending", "active"] } },
+      },
     });
 
     if (activeSelection) {
-      return res.status(400).json({ 
-        error: "Impossible de modifier cette équipe car elle est engagée dans un match en cours" 
-      });
+      sendError(
+        res,
+        "Impossible de modifier cette equipe car elle est engagee dans un match en cours",
+        400,
+      );
+      return;
     }
 
-    // Vérifier que l'équipe n'a pas déjà 16 joueurs (limite Blood Bowl)
     if (team.players.length >= 16) {
-      return res.status(400).json({ 
-        error: "Une équipe ne peut pas avoir plus de 16 joueurs" 
-      });
+      sendError(res, "Une equipe ne peut pas avoir plus de 16 joueurs", 400);
+      return;
     }
 
-    // Vérifier que le numéro n'est pas déjà utilisé
     const existingPlayer = team.players.find((p: any) => p.number === number);
     if (existingPlayer) {
-      return res.status(400).json({ 
-        error: `Le numéro ${number} est déjà utilisé par ${existingPlayer.name}` 
-      });
+      sendError(
+        res,
+        `Le numero ${number} est deja utilise par ${existingPlayer.name}`,
+        400,
+      );
+      return;
     }
 
-    // Validation du numéro (entre 1-99)
     if (number < 1 || number > 99 || !Number.isInteger(number)) {
-      return res.status(400).json({ 
-        error: "Le numéro doit être un entier entre 1 et 99" 
-      });
+      sendError(res, "Le numero doit etre un entier entre 1 et 99", 400);
+      return;
     }
 
-    // Validation du nom (non vide)
     if (!name.trim()) {
-      return res.status(400).json({ 
-        error: "Le nom ne peut pas être vide" 
-      });
+      sendError(res, "Le nom ne peut pas etre vide", 400);
+      return;
     }
 
-    // Récupérer les informations de la position depuis le roster
     const rosterData = await getRosterFromDb(
       team.roster as AllowedRoster,
       "fr",
       (team.ruleset as Ruleset) ?? DEFAULT_RULESET,
     );
     if (!rosterData) {
-      return res.status(400).json({ error: "Roster non reconnu" });
+      sendError(res, "Roster non reconnu", 400);
+      return;
     }
 
-    const positionData = rosterData.positions.find((p: any) => p.slug === position);
+    const positionData = rosterData.positions.find(
+      (p: any) => p.slug === position,
+    );
     if (!positionData) {
-      return res.status(400).json({ 
-        error: `Position '${position}' non trouvée dans le roster ${team.roster}` 
-      });
+      sendError(
+        res,
+        `Position '${position}' non trouvee dans le roster ${team.roster}`,
+        400,
+      );
+      return;
     }
 
-    // Vérifier les limites min/max pour cette position
-    const currentPositionCount = team.players.filter((p: any) => p.position === position).length;
+    const currentPositionCount = team.players.filter(
+      (p: any) => p.position === position,
+    ).length;
     if (currentPositionCount >= positionData.max) {
-      return res.status(400).json({ 
-        error: `Limite maximale atteinte pour la position ${positionData.displayName} (${positionData.max})` 
-      });
+      sendError(
+        res,
+        `Limite maximale atteinte pour la position ${positionData.displayName} (${positionData.max})`,
+        400,
+      );
+      return;
     }
 
-    // Vérifier le budget avant d'ajouter le joueur
-    const { getPlayerCost } = await import('../../../../packages/game-engine/src/utils/team-value-calculator');
+    const { getPlayerCost } = await import(
+      "../../../../packages/game-engine/src/utils/team-value-calculator"
+    );
     const teamRuleset = (team.ruleset as Ruleset) ?? DEFAULT_RULESET;
-    const currentTotalCost = team.players.reduce((total: number, player: any) => {
-      return total + getPlayerCost(player.position, team.roster, teamRuleset);
-    }, 0);
-    
-    const newPlayerCost = positionData.cost * 1000; // Convertir le coût de kpo en po
+    const currentTotalCost = team.players.reduce(
+      (total: number, player: any) => {
+        return total + getPlayerCost(player.position, team.roster, teamRuleset);
+      },
+      0,
+    );
+
+    const newPlayerCost = positionData.cost * 1000;
     const newTotalCost = currentTotalCost + newPlayerCost;
-    const budgetInPo = team.initialBudget * 1000; // Convertir le budget de kpo en po
+    const budgetInPo = team.initialBudget * 1000;
     if (newTotalCost > budgetInPo) {
-      return res.status(400).json({ 
-        error: `Budget dépassé ! Coût actuel: ${Math.round(currentTotalCost / 1000)}k po, nouveau coût: ${Math.round(newTotalCost / 1000)}k po, budget: ${team.initialBudget}k po` 
-      });
+      sendError(
+        res,
+        `Budget depasse ! Cout actuel: ${Math.round(currentTotalCost / 1000)}k po, nouveau cout: ${Math.round(newTotalCost / 1000)}k po, budget: ${team.initialBudget}k po`,
+        400,
+      );
+      return;
     }
 
-    // Créer le nouveau joueur
     const newPlayer = await prisma.teamPlayer.create({
       data: {
         teamId: teamId,
@@ -1265,27 +1282,36 @@ router.post("/:id/players", authUser, validate(addPlayerSchema), async (req: Aut
         pa: positionData.pa,
         av: positionData.av,
         skills: positionData.skills,
-      }
+      },
     });
 
-    // Recalculer les valeurs d'équipe
     await updateTeamValues(prisma, teamId);
 
-    // Retourner l'équipe mise à jour
     const updatedTeam = await prisma.team.findUnique({
       where: { id: teamId },
-      include: { players: true }
+      include: { players: true },
     });
 
-    res.status(201).json({ 
-      team: updatedTeam,
-      newPlayer: newPlayer
-    });
-  } catch (e: any) {
+    sendSuccess(
+      res,
+      {
+        team: updatedTeam,
+        newPlayer: newPlayer,
+      },
+      201,
+    );
+  } catch (e: unknown) {
     serverLog.error("Erreur lors de l'ajout du joueur:", e);
-    return res.status(500).json({ error: "Erreur serveur" });
+    sendError(res, "Erreur serveur", 500);
   }
-});
+}
+
+router.post(
+  "/:id/players",
+  authUser,
+  validate(addPlayerSchema),
+  handleAddTeamPlayer,
+);
 
 // Endpoint pour supprimer un joueur d'une equipe (S25.5t — ApiResponse<T>)
 export async function handleDeleteTeamPlayer(
