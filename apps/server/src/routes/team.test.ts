@@ -55,6 +55,7 @@ import {
   handleListMyTeams,
   handleListTeamStarPlayers,
   handleRecalculateTeam,
+  handleListAvailablePositions,
 } from "./team";
 import { updateTeamValues } from "../utils/team-values";
 import type { AuthenticatedRequest } from "../middleware/authUser";
@@ -592,6 +593,146 @@ describe("Route: POST /team/:id/recalculate (S25.5r)", () => {
     const req = createReq({ params: { id: "team-1" } });
     const res = createRes();
     await handleRecalculateTeam(req, res);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+});
+
+describe("Route: GET /team/:id/available-positions (S25.5s)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  async function getMocks() {
+    return {
+      findFirst: vi.mocked(await import("../prisma")).prisma.team
+        .findFirst as ReturnType<typeof vi.fn>,
+    };
+  }
+
+  it("returns 404 ApiError when team not found", async () => {
+    const { findFirst } = await getMocks();
+    findFirst.mockResolvedValue(null);
+
+    const req = createReq({ params: { id: "team-1" } });
+    const res = createRes();
+    await handleListAvailablePositions(req, res);
+
+    expect(findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "team-1", ownerId: "user-1" },
+      }),
+    );
+    expect(res.statusCode).toBe(404);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+
+  it("returns 400 ApiError when roster not recognized", async () => {
+    const { findFirst } = await getMocks();
+    findFirst.mockResolvedValue({
+      id: "team-1",
+      ownerId: "user-1",
+      roster: "unknown",
+      ruleset: "season_3",
+      players: [],
+    });
+    mockGetRosterFromDb.mockResolvedValue(null);
+
+    const req = createReq({ params: { id: "team-1" } });
+    const res = createRes();
+    await handleListAvailablePositions(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+
+  it("returns ApiSuccess with computed availability per position", async () => {
+    const { findFirst } = await getMocks();
+    findFirst.mockResolvedValue({
+      id: "team-1",
+      ownerId: "user-1",
+      roster: "skaven",
+      ruleset: "season_3",
+      players: [
+        { id: "p-1", position: "skaven_lineman" },
+        { id: "p-2", position: "skaven_lineman" },
+        { id: "p-3", position: "skaven_blitzer" },
+      ],
+    });
+    mockGetRosterFromDb.mockResolvedValue({
+      name: "Skaven",
+      budget: 1000,
+      tier: "B",
+      naf: true,
+      positions: [
+        {
+          slug: "skaven_lineman",
+          displayName: "Lineman",
+          cost: 50,
+          min: 0,
+          max: 12,
+          ma: 7,
+          st: 3,
+          ag: 3,
+          pa: 4,
+          av: 8,
+          skills: "",
+        },
+        {
+          slug: "skaven_blitzer",
+          displayName: "Blitzer",
+          cost: 90,
+          min: 0,
+          max: 4,
+          ma: 7,
+          st: 3,
+          ag: 3,
+          pa: 4,
+          av: 9,
+          skills: "block",
+        },
+      ],
+    });
+
+    const req = createReq({ params: { id: "team-1" } });
+    const res = createRes();
+    await handleListAvailablePositions(req, res);
+
+    expect(res.statusCode).toBe(200);
+    const payload = res.payload as {
+      success: boolean;
+      data: {
+        availablePositions: Array<{
+          key: string;
+          currentCount: number;
+          maxCount: number;
+          canAdd: boolean;
+        }>;
+        currentPlayerCount: number;
+        maxPlayers: number;
+      };
+    };
+    expect(payload.success).toBe(true);
+    expect(payload.data.currentPlayerCount).toBe(3);
+    expect(payload.data.maxPlayers).toBe(16);
+    expect(payload.data.availablePositions).toHaveLength(2);
+    const lineman = payload.data.availablePositions.find(
+      (p) => p.key === "skaven_lineman",
+    );
+    expect(lineman?.currentCount).toBe(2);
+    expect(lineman?.canAdd).toBe(true);
+    const blitzer = payload.data.availablePositions.find(
+      (p) => p.key === "skaven_blitzer",
+    );
+    expect(blitzer?.currentCount).toBe(1);
+  });
+
+  it("returns 500 ApiError when prisma throws", async () => {
+    const { findFirst } = await getMocks();
+    findFirst.mockRejectedValue(new Error("db down"));
+
+    const req = createReq({ params: { id: "team-1" } });
+    const res = createRes();
+    await handleListAvailablePositions(req, res);
 
     expect(res.statusCode).toBe(500);
     expect(res.payload).toMatchObject({ success: false });
