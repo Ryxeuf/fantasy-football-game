@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { rawGet, rawPost, post, get, resetDb } from "../helpers/api";
+import { rawGet, rawPost, post, get, resetDb, unwrap } from "../helpers/api";
 import { seedAndLogin } from "../helpers/factories";
 
 /**
@@ -60,7 +60,9 @@ describe("E2E API — /leagues", () => {
       "password-lg1",
       "LG1",
     );
-    const json = await get<ListResponse>("/leagues", token);
+    const json = unwrap(
+      await get<{ success: true; data: ListResponse }>("/leagues", token),
+    );
     expect(json).toHaveProperty("leagues");
     expect(Array.isArray(json.leagues)).toBe(true);
     expect(json.leagues).toEqual([]);
@@ -72,10 +74,12 @@ describe("E2E API — /leagues", () => {
       "password-lg2",
       "LG2",
     );
-    const created = await post<League>("/leagues", token, {
-      name: "Ligue E2E",
-      description: "Creee par le spec leagues.spec.ts",
-    });
+    const created = unwrap(
+      await post<{ success: true; data: League }>("/leagues", token, {
+        name: "Ligue E2E",
+        description: "Creee par le spec leagues.spec.ts",
+      }),
+    );
     expect(created.id).toBeTruthy();
     expect(created.name).toBe("Ligue E2E");
     expect(created.creatorId).toBe(userId);
@@ -90,7 +94,9 @@ describe("E2E API — /leagues", () => {
     // allowedRosters par defaut = null (pas de restriction)
     expect(created.allowedRosters).toBeNull();
 
-    const list = await get<ListResponse>("/leagues", token);
+    const list = unwrap(
+      await get<{ success: true; data: ListResponse }>("/leagues", token),
+    );
     expect(list.leagues.length).toBe(1);
     expect(list.leagues[0].id).toBe(created.id);
   });
@@ -101,10 +107,12 @@ describe("E2E API — /leagues", () => {
       "password-lg3",
       "LG3",
     );
-    const created = await post<League>("/leagues", token, {
-      name: "Open 5 Teams",
-      allowedRosters: ["skaven", "lizardmen", "dwarves"],
-    });
+    const created = unwrap(
+      await post<{ success: true; data: League }>("/leagues", token, {
+        name: "Open 5 Teams",
+        allowedRosters: ["skaven", "lizardmen", "dwarves"],
+      }),
+    );
     expect(Array.isArray(created.allowedRosters)).toBe(true);
     expect(created.allowedRosters).toEqual([
       "skaven",
@@ -159,13 +167,17 @@ describe("E2E API — /leagues", () => {
       "password-lg7",
       "LG7",
     );
-    const created = await post<League>("/leagues", token, {
-      name: "Ligue detail",
-      description: "Pour le test /:id",
-    });
-    const detail = await get<DetailResponse>(
-      `/leagues/${created.id}`,
-      token,
+    const created = unwrap(
+      await post<{ success: true; data: League }>("/leagues", token, {
+        name: "Ligue detail",
+        description: "Pour le test /:id",
+      }),
+    );
+    const detail = unwrap(
+      await get<{ success: true; data: DetailResponse }>(
+        `/leagues/${created.id}`,
+        token,
+      ),
     );
     expect(detail.league.id).toBe(created.id);
     expect(detail.league.name).toBe("Ligue detail");
@@ -183,13 +195,17 @@ describe("E2E API — /leagues", () => {
       "password-lg8b",
       "LG8B",
     );
-    const created = await post<League>("/leagues", creator.token, {
-      name: "Ligue publique",
-      isPublic: true,
-    });
-    const list = await get<ListResponse>(
-      "/leagues?publicOnly=true",
-      viewer.token,
+    const created = unwrap(
+      await post<{ success: true; data: League }>("/leagues", creator.token, {
+        name: "Ligue publique",
+        isPublic: true,
+      }),
+    );
+    const list = unwrap(
+      await get<{ success: true; data: ListResponse }>(
+        "/leagues?publicOnly=true",
+        viewer.token,
+      ),
     );
     const ids = list.leagues.map((l) => l.id);
     expect(ids).toContain(created.id);

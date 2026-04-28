@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { get, post, rawGet, rawPost, resetDb } from "../helpers/api";
+import { get, post, rawGet, rawPost, resetDb, unwrap } from "../helpers/api";
 import { seedAndLogin, createTeam } from "../helpers/factories";
 
 /**
@@ -142,26 +142,26 @@ describe("E2E API — /leagues (saisons & rondes)", () => {
       const team = await createTeam(userId, "Alice Skavens", "skaven");
 
       // 1. Creer la ligue (autorise le roster Skaven via allowedRosters=null).
-      const league = await post<League>("/leagues", token, {
+      const league = unwrap(await post<{ success: true; data: League }>("/leagues", token, {
         name: "Ligue Saison",
-      });
+      }));
 
       // 2. Creer une saison (createur uniquement).
-      const seasonResponse = await post<Season>(
+      const seasonResponse = unwrap(await post<{ success: true; data: Season }>(
         `/leagues/${league.id}/seasons`,
         token,
         { name: "Saison 1" },
-      );
+      ));
       expect(seasonResponse.id).toBeTruthy();
       expect(seasonResponse.leagueId).toBe(league.id);
       expect(seasonResponse.name).toBe("Saison 1");
       const seasonId = seasonResponse.id;
 
       // 3. GET /seasons/:id renvoie la saison + sa ligue serialisee.
-      const detail = await get<SeasonResponse>(
+      const detail = unwrap(await get<{ success: true; data: SeasonResponse }>(
         `/leagues/seasons/${seasonId}`,
         token,
-      );
+      ));
       expect(detail.season.id).toBe(seasonId);
       expect(detail.season.league?.id).toBe(league.id);
 
@@ -188,18 +188,18 @@ describe("E2E API — /leagues (saisons & rondes)", () => {
         "pwd",
         "Alice",
       );
-      const league = await post<League>("/leagues", token, {
+      const league = unwrap(await post<{ success: true; data: League }>("/leagues", token, {
         name: "Ligue Standings",
-      });
-      const season = await post<Season>(
+      }));
+      const season = unwrap(await post<{ success: true; data: Season }>(
         `/leagues/${league.id}/seasons`,
         token,
         { name: "S1" },
-      );
-      const standings = await get<StandingsResponse>(
+      ));
+      const standings = unwrap(await get<{ success: true; data: StandingsResponse }>(
         `/leagues/seasons/${season.id}/standings`,
         token,
-      );
+      ));
       expect(standings).toBeDefined();
       // computeSeasonStandings renvoie un objet avec standings (peut etre
       // un tableau vide si aucun match termine).
@@ -211,9 +211,9 @@ describe("E2E API — /leagues (saisons & rondes)", () => {
     it("POST /leagues/:id/seasons par non-createur -> 403", async () => {
       const alice = await seedAndLogin("alice@ls.test", "pwd-a", "Alice");
       const bob = await seedAndLogin("bob@ls.test", "pwd-b", "Bob");
-      const league = await post<League>("/leagues", alice.token, {
+      const league = unwrap(await post<{ success: true; data: League }>("/leagues", alice.token, {
         name: "Ligue Alice",
-      });
+      }));
       const res = await rawPost(
         `/leagues/${league.id}/seasons`,
         bob.token,
@@ -225,14 +225,14 @@ describe("E2E API — /leagues (saisons & rondes)", () => {
     it("POST /leagues/seasons/:seasonId/rounds par non-createur -> 403", async () => {
       const alice = await seedAndLogin("alice@ls.test", "pwd-a", "Alice");
       const bob = await seedAndLogin("bob@ls.test", "pwd-b", "Bob");
-      const league = await post<League>("/leagues", alice.token, {
+      const league = unwrap(await post<{ success: true; data: League }>("/leagues", alice.token, {
         name: "Ligue rondes",
-      });
-      const season = await post<Season>(
+      }));
+      const season = unwrap(await post<{ success: true; data: Season }>(
         `/leagues/${league.id}/seasons`,
         alice.token,
         { name: "S1" },
-      );
+      ));
       const res = await rawPost(
         `/leagues/seasons/${season.id}/rounds`,
         bob.token,
@@ -249,9 +249,9 @@ describe("E2E API — /leagues (saisons & rondes)", () => {
         "pwd",
         "Alice",
       );
-      const league = await post<League>("/leagues", token, {
+      const league = unwrap(await post<{ success: true; data: League }>("/leagues", token, {
         name: "Ligue Validation",
-      });
+      }));
       const res = await rawPost(
         `/leagues/${league.id}/seasons`,
         token,
@@ -266,14 +266,14 @@ describe("E2E API — /leagues (saisons & rondes)", () => {
         "pwd",
         "Alice",
       );
-      const league = await post<League>("/leagues", token, {
+      const league = unwrap(await post<{ success: true; data: League }>("/leagues", token, {
         name: "Ligue Join",
-      });
-      const season = await post<Season>(
+      }));
+      const season = unwrap(await post<{ success: true; data: Season }>(
         `/leagues/${league.id}/seasons`,
         token,
         { name: "S1" },
-      );
+      ));
       const res = await rawPost(
         `/leagues/seasons/${season.id}/join`,
         token,
@@ -288,14 +288,14 @@ describe("E2E API — /leagues (saisons & rondes)", () => {
         "pwd",
         "Alice",
       );
-      const league = await post<League>("/leagues", token, {
+      const league = unwrap(await post<{ success: true; data: League }>("/leagues", token, {
         name: "Ligue Rounds",
-      });
-      const season = await post<Season>(
+      }));
+      const season = unwrap(await post<{ success: true; data: Season }>(
         `/leagues/${league.id}/seasons`,
         token,
         { name: "S1" },
-      );
+      ));
       const res = await rawPost(
         `/leagues/seasons/${season.id}/rounds`,
         token,
