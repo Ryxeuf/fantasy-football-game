@@ -1089,16 +1089,37 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
                     {state.preMatch?.kickoffStep === "place-ball" && (
                       <div>
                         <p className="text-sm text-gray-600 mb-2">
-                          L&apos;equipe qui frappe doit placer le ballon dans la moitie adverse.
+                          L&apos;equipe qui frappe doit placer le ballon dans la moitie adverse
+                          {state.preMatch?.receivingTeam && (
+                            <>
+                              {" "}(zone de{" "}
+                              <span className="font-semibold text-green-700">
+                                {state.preMatch.receivingTeam === "A"
+                                  ? state.teamNames.teamA
+                                  : state.teamNames.teamB}
+                              </span>
+                              )
+                            </>
+                          )}
+                          .
                         </p>
                         {myTeamSide === state.preMatch?.kickingTeam ? (
                           <p className="text-sm font-semibold text-blue-600">
                             Cliquez sur une case de la moitie adverse pour placer le ballon.
                           </p>
                         ) : (
-                          <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
-                            <span className="inline-block w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-                            En attente du placement du ballon par l&apos;adversaire...
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+                              <span className="inline-block w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                              En attente du placement du ballon par l&apos;adversaire...
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => window.location.reload()}
+                              className="text-xs text-gray-500 underline hover:text-gray-700"
+                            >
+                              Rien ne se passe ? Rafraichir la page
+                            </button>
                           </div>
                         )}
                       </div>
