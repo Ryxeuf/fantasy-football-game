@@ -11,6 +11,7 @@ import {
   RULESETS,
 } from "../utils/ruleset-helpers";
 import { memoizeAsync } from "../utils/memoize-async";
+import { serverLog } from "../utils/server-log";
 
 const router = Router();
 
@@ -78,7 +79,7 @@ async function loadRosterList(
   });
 
   if (rosters.length === 0) {
-    console.warn(
+    serverLog.warn(
       `[public-rosters] No rosters found for ruleset=${ruleset}. ` +
         "The database may need a seed for this ruleset.",
     );
@@ -159,7 +160,7 @@ router.get("/rosters", async (req, res) => {
     res.json(payload);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Erreur serveur";
-    console.error("Erreur lors de la récupération des rosters:", error);
+    serverLog.error("Erreur lors de la récupération des rosters:", error);
     res.setHeader("Cache-Control", "no-store");
     res.status(500).json({ error: message });
   }
@@ -188,7 +189,7 @@ router.get("/rosters/:slug", async (req, res) => {
     res.json(payload);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Erreur serveur";
-    console.error("Erreur lors de la récupération du roster:", error);
+    serverLog.error("Erreur lors de la récupération du roster:", error);
     res.setHeader("Cache-Control", "no-store");
     res.status(500).json({ error: message });
   }

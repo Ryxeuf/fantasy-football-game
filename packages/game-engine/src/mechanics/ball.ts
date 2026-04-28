@@ -250,6 +250,148 @@ export function bounceBall(state: GameState, rng: RNG): GameState {
 }
 
 /**
+ * Résout l'atterrissage du ballon après la déviation du kickoff.
+ *
+ * Règles BB 2020 appliquées :
+ * - Touchback si le ballon atterrit hors du terrain ou dans la moitié de
+ *   l'équipe qui frappe : le ballon est attribué automatiquement à un
+ *   joueur de l'équipe receveuse (le plus proche du centre du terrain).
+ * - Si le ballon atterrit sur un joueur debout (de n'importe quelle
+ *   équipe), tentative de réception ; échec → rebond.
+ * - Sinon, le ballon reste au sol pour être ramassé manuellement.
+ *
+ * @param state - État de jeu post-`startMatchFromKickoff` (ball positionné)
+ * @param receivingTeam - Équipe qui reçoit (= receivingTeam du préMatch)
+ * @param rng - Générateur aléatoire (pour catch rolls et rebonds)
+ */
+export function resolveKickoffBallLanding(
+  state: GameState,
+  receivingTeam: TeamId,
+  rng: RNG,
+): GameState {
+  if (!state.ball) return state;
+
+  const ballPos = state.ball;
+  const inReceivingHalf = isInReceivingHalf(state, ballPos, receivingTeam);
+
+  if (!inReceivingHalf) {
+    return applyTouchback(state, receivingTeam);
+  }
+
+  const playerAtBall = state.players.find(
+    p => samePos(p.pos, ballPos) && !p.stunned && p.pm > 0,
+  );
+
+  if (!playerAtBall) {
+    return state;
+  }
+
+  if (hasSkill(playerAtBall, 'no-hands')) {
+    const noHandsLog = createLogEntry(
+      'info',
+      `Sans Ballon: ${playerAtBall.name} ne peut pas réceptionner le ballon !`,
+      playerAtBall.id,
+      playerAtBall.team,
+      { skill: 'no-hands' },
+    );
+    return bounceBall(addLogEntry(state, noHandsLog), rng);
+  }
+
+  const catchModifiers = calculatePickupModifiers(state, ballPos, playerAtBall.team);
+  const catchResult = performPickupRoll(playerAtBall, rng, catchModifiers);
+
+  const catchLog = createLogEntry(
+    'dice',
+    `Réception du kickoff: ${catchResult.diceRoll}/${catchResult.targetNumber} ${catchResult.success ? '✓' : '✗'}`,
+    playerAtBall.id,
+    playerAtBall.team,
+    {
+      diceRoll: catchResult.diceRoll,
+      targetNumber: catchResult.targetNumber,
+      success: catchResult.success,
+      modifiers: catchModifiers,
+    },
+  );
+
+  let nextState: GameState = {
+    ...state,
+    lastDiceResult: {
+      type: 'catch',
+      playerId: playerAtBall.id,
+      diceRoll: catchResult.diceRoll,
+      targetNumber: catchResult.targetNumber,
+      success: catchResult.success,
+      modifiers: catchResult.modifiers,
+    },
+    gameLog: [...state.gameLog, catchLog],
+  };
+
+  if (catchResult.success) {
+    nextState = {
+      ...nextState,
+      ball: undefined,
+      players: nextState.players.map(p =>
+        p.id === playerAtBall.id ? { ...p, hasBall: true } : p,
+      ),
+    };
+    return nextState;
+  }
+
+  return bounceBall(nextState, rng);
+}
+
+function isInReceivingHalf(
+  state: GameState,
+  pos: Position,
+  receivingTeam: TeamId,
+): boolean {
+  if (pos.x <= 0 || pos.x >= state.width - 1) return false;
+  if (pos.y < 0 || pos.y >= state.height) return false;
+  const midX = Math.floor(state.width / 2);
+  return receivingTeam === 'A' ? pos.x < midX : pos.x >= midX;
+}
+
+function applyTouchback(state: GameState, receivingTeam: TeamId): GameState {
+  const receivers = state.players.filter(
+    p => p.team === receivingTeam && !p.stunned && p.pm > 0 && p.pos.x >= 0,
+  );
+
+  if (receivers.length === 0) {
+    const noReceiverLog = createLogEntry(
+      'info',
+      `Touchback : aucun joueur valide dans l'équipe receveuse, le ballon reste au sol.`,
+      undefined,
+      receivingTeam,
+    );
+    return addLogEntry(state, noReceiverLog);
+  }
+
+  const midX = Math.floor(state.width / 2);
+  const midY = Math.floor(state.height / 2);
+  const chosen = [...receivers].sort((a, b) => {
+    const distA = Math.abs(a.pos.x - midX) + Math.abs(a.pos.y - midY);
+    const distB = Math.abs(b.pos.x - midX) + Math.abs(b.pos.y - midY);
+    return distA - distB;
+  })[0];
+
+  const touchbackLog = createLogEntry(
+    'action',
+    `Touchback : le ballon est donné à ${chosen.name}.`,
+    chosen.id,
+    receivingTeam,
+  );
+
+  return {
+    ...state,
+    ball: undefined,
+    players: state.players.map(p =>
+      p.id === chosen.id ? { ...p, hasBall: true } : p,
+    ),
+    gameLog: [...state.gameLog, touchbackLog],
+  };
+}
+
+/**
  * Fait tomber la balle d'un joueur
  * @param state - État du jeu
  * @returns Nouvel état du jeu avec la balle au sol

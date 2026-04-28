@@ -3,8 +3,10 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import type { ExtendedGameState } from "@bb/game-engine";
 import { setupPreMatchWithTeams } from "@bb/game-engine";
 import { API_BASE } from "../../../auth-client";
+import { apiRequest, ApiClientError } from "../../../lib/api-client";
 import { useGameSocket } from "./useGameSocket";
 import { deriveIsMyTurn } from "./deriveSetupTurn";
+import { computePollDelay } from "./pollDelay";
 import type { StateUpdatedPayload, MatchEndedPayload, PlayerConnectionPayload, MatchForfeitedPayload, TurnTimerStartedPayload } from "./useGameSocket";
 
 function normalizeState(state: any): ExtendedGameState {
@@ -83,16 +85,15 @@ export function useGameState(matchId: string): GameStateInfo {
       try {
         const authToken = localStorage.getItem("auth_token");
         if (!authToken) { window.location.href = "/lobby"; return; }
-        const res = await fetch(`${API_BASE}/match/join`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${authToken}` },
-          body: JSON.stringify({ matchId }),
-        });
-        const data = await res.json().catch(() => ({}) as any);
-        if (res.ok && data?.matchToken) {
-          localStorage.setItem("match_token", data.matchToken as string);
-        } else {
+        try {
+          const data = await apiRequest<{ match: { id: string }; matchToken: string }>(
+            "/match/join",
+            { method: "POST", body: JSON.stringify({ matchId }) },
+          );
+          localStorage.setItem("match_token", data.matchToken);
+        } catch (err) {
           // Match introuvable — nettoyer session + queue matchmaking
+          if (!(err instanceof ApiClientError)) throw err;
           localStorage.removeItem("match_token");
           await fetch(`${API_BASE}/matchmaking/leave`, {
             method: "DELETE",
@@ -292,17 +293,27 @@ export function useGameState(matchId: string): GameStateInfo {
     }, []),
   });
 
-  // Fallback polling — slow interval (30s) when WebSocket is connected, faster (5s) when not.
-  // Disabled during our setup placement turn to avoid conflicts.
+  // Fallback polling (S24.5):
+  //   - 30 s heartbeat when WebSocket is healthy.
+  //   - 10 s base when WS is degraded, with exponential backoff up to 60 s
+  //     on consecutive failures to avoid stampeding the API at scale.
+  //   - Disabled during our setup placement turn to avoid conflicts.
   const isMySetupTurn = state?.preMatch?.phase === "setup" && state?.preMatch?.currentCoach === myTeamSide;
   useEffect(() => {
     if (isMySetupTurn) return;
 
-    const pollInterval = wsConnected ? 30000 : (isActiveMatch && !isMyTurn ? 3000 : 10000);
-    const interval = setInterval(async () => {
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let failureCount = 0;
+
+    const tick = async () => {
       try {
         const token = localStorage.getItem("auth_token");
-        if (!token) return;
+        if (!token) {
+          // No-op: keep polling cadence; treat as transient failure.
+          failureCount = Math.min(failureCount + 1, 30);
+          return;
+        }
         const res = await fetch(`${API_BASE}/match/${matchId}/state`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -315,11 +326,31 @@ export function useGameState(matchId: string): GameStateInfo {
             if (data.myTeamSide) setMyTeamSide(data.myTeamSide);
             if (typeof data.isMyTurn === "boolean") setIsMyTurn(data.isMyTurn);
           }
+          failureCount = 0;
+        } else {
+          failureCount = Math.min(failureCount + 1, 30);
         }
-      } catch {}
-    }, pollInterval);
-    return () => clearInterval(interval);
-  }, [matchId, isActiveMatch, isMyTurn, isMySetupTurn, wsConnected]);
+      } catch {
+        failureCount = Math.min(failureCount + 1, 30);
+      }
+    };
+
+    const schedule = () => {
+      if (cancelled) return;
+      const delay = computePollDelay({ wsConnected, failureCount });
+      timer = setTimeout(async () => {
+        await tick();
+        schedule();
+      }, delay);
+    };
+
+    schedule();
+
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [matchId, isMySetupTurn, wsConnected]);
 
   // Load summary
   useEffect(() => {

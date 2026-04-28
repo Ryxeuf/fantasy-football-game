@@ -4,6 +4,7 @@ import compression from "compression";
 import bodyParser from "body-parser";
 import { createServer } from "node:http";
 import authRoutes from "./routes/auth";
+import authRefreshRoutes from "./routes/auth-refresh";
 import matchRoutes from "./routes/match";
 import adminRoutes from "./routes/admin";
 import adminDataRoutes from "./routes/admin-data";
@@ -39,8 +40,22 @@ import { securityHeaders } from "./middleware/securityHeaders";
 import { setupSocket } from "./socket";
 import { CORS_ORIGINS } from "./config";
 import { invalidateAllMemo } from "./utils/memoize-async";
+import { serverLog, setServerLogImpl } from "./utils/server-log";
+import { pinoServerLogImpl } from "./utils/pino-logger";
+import { requestContext } from "./middleware/requestContext";
+import { liveness, readiness } from "./utils/healthcheck";
+import { appMetrics, metricsExposition } from "./utils/metrics";
 
 dotenv.config({ path: "../../prisma/.env" });
+
+// S25.1 — Branche pino comme implementation de serverLog en prod/dev. En
+// test (TEST_SQLITE=1 ou NODE_ENV=test) on garde la delegation console.*
+// pour ne pas casser les spies des suites existantes.
+const inTestEnv =
+  process.env.NODE_ENV === "test" || process.env.TEST_SQLITE === "1";
+if (!inTestEnv && process.env.LOG_FORMAT !== "console") {
+  setServerLogImpl(pinoServerLogImpl);
+}
 // Si tests SQLite: pousser le schéma SQLite en mémoire partagée au démarrage
 if (process.env.TEST_SQLITE === "1") {
   const url =
@@ -54,9 +69,9 @@ if (process.env.TEST_SQLITE === "1") {
         env: { ...process.env, TEST_DATABASE_URL: url },
       },
     );
-    console.log(`SQLite schema pushed (TEST_DATABASE_URL=${url})`);
+    serverLog.log(`SQLite schema pushed (TEST_DATABASE_URL=${url})`);
   } catch (e) {
-    console.error("Failed to push SQLite schema for tests", e);
+    serverLog.error("Failed to push SQLite schema for tests", e);
   }
 }
 
@@ -75,6 +90,9 @@ app.use(cors({ origin: CORS_ORIGINS }));
 // gzip/deflate/br responses over ~1KB. Team payloads with 11-16 players
 // plus star players commonly exceed 50KB uncompressed.
 app.use(compression());
+// S25.1 — Correlation ID + per-request pino child logger. Mounted before
+// requestTiming so the requestId is visible in slow-call warnings.
+app.use(requestContext());
 // Warn on any request that took >=500ms. Set REQUEST_LOG=1 to see every
 // request (useful locally; stays off in prod to avoid log spam).
 app.use(requestTiming(500));
@@ -83,11 +101,35 @@ app.use(bodyParser.json());
 // Rate limiting global sur toutes les routes API (100 req/min par IP)
 app.use(apiRateLimiter);
 
-app.get("/health", (_req, res) => res.json({ ok: true }));
+// Healthchecks S25.1 :
+//  - /health      : alias retro-compatible vers liveness ({ok:true,status:"live"})
+//  - /health/live : liveness pure (process up)
+//  - /health/ready: readiness profond (ping DB, 503 si la DB est down)
+const probeReadiness = readiness({
+  dbPing: () => prisma.$queryRaw`SELECT 1`,
+  timeoutMs: 1500,
+});
+app.get("/health", liveness);
+app.get("/health/live", liveness);
+app.get("/health/ready", probeReadiness);
 
-// Rate limiting strict uniquement sur login/register (anti brute-force)
+// Endpoint Prometheus (S25.3). Format texte standard, scrape par
+// Prometheus qui le pousse ensuite vers Grafana LGTM.
+app.get("/metrics", async (_req, res, next) => {
+  try {
+    const body = await metricsExposition(appMetrics.registry);
+    res.setHeader("Content-Type", appMetrics.registry.contentType);
+    res.send(body);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Rate limiting strict uniquement sur login/register/refresh (anti brute-force)
 app.use("/auth/login", authRateLimiter);
 app.use("/auth/register", authRateLimiter);
+app.use("/auth/refresh", authRateLimiter);
+app.use("/auth", authRefreshRoutes);
 app.use("/auth", authRoutes);
 app.use("/match", requireFeatureFlag(ONLINE_PLAY_FLAG), matchRoutes);
 app.use("/admin", adminRoutes);
@@ -131,7 +173,7 @@ if (process.env.TEST_SQLITE === "1") {
         await fn();
       } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : String(e);
-        console.warn(`[__test/reset] ${label}: ${msg.slice(0, 160)}`);
+        serverLog.warn(`[__test/reset] ${label}: ${msg.slice(0, 160)}`);
       }
     };
     try {
@@ -182,7 +224,7 @@ if (process.env.TEST_SQLITE === "1") {
       invalidateAllMemo();
       return res.json({ ok: true });
     } catch (e: any) {
-      console.error(e);
+      serverLog.error(e);
       return res.status(500).json({ error: e?.message || "reset failed" });
     }
   });
@@ -232,7 +274,7 @@ if (process.env.TEST_SQLITE === "1") {
 
       return res.json({ id: user.id, email: user.email, name: user.name });
     } catch (e: any) {
-      console.error(e);
+      serverLog.error(e);
       return res
         .status(500)
         .json({ error: e?.message || "seed-user failed" });
@@ -292,7 +334,7 @@ if (process.env.TEST_SQLITE === "1") {
 
       return res.json({ id: team.id, name: team.name, roster: team.roster });
     } catch (e: any) {
-      console.error(e);
+      serverLog.error(e);
       return res
         .status(500)
         .json({ error: e?.message || "seed-team failed" });
@@ -345,7 +387,7 @@ if (process.env.TEST_SQLITE === "1") {
       });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
-      console.error("[__test/seed-skills]", msg);
+      serverLog.error("[__test/seed-skills]", msg);
       return res.status(500).json({ error: msg || "seed-skills failed" });
     }
   });
@@ -420,7 +462,7 @@ if (process.env.TEST_SQLITE === "1") {
       });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
-      console.error("[__test/seed-rosters]", msg);
+      serverLog.error("[__test/seed-rosters]", msg);
       return res.status(500).json({ error: msg || "seed-rosters failed" });
     }
   });
@@ -430,5 +472,5 @@ const httpServer = createServer(app);
 setupSocket(httpServer);
 
 httpServer.listen(API_PORT, () => {
-  console.log(`Express API server listening on http://localhost:${API_PORT}`);
+  serverLog.log(`Express API server listening on http://localhost:${API_PORT}`);
 });

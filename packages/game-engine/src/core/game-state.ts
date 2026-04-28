@@ -5,7 +5,7 @@
 
 import { GameState, PreMatchState, TeamId, ActionType, Player, Position, RNG } from './types';
 import { createLogEntry } from '../utils/logging';
-import { checkTouchdowns } from '../mechanics/ball';
+import { checkTouchdowns, resolveKickoffBallLanding } from '../mechanics/ball';
 import { initializeDugouts } from '../mechanics/dugout';
 import { rollKickoffEvent, applyKickoffEvent } from '../mechanics/kickoff-events';
 import { applyKickSkillToDeviation } from '../mechanics/kick-skill';
@@ -1491,6 +1491,18 @@ export function startMatchFromKickoff(state: ExtendedGameState, rng?: RNG): Game
       );
       resultState = applyWeatherDriveEffects(resultState, weatherMods, rng);
       resultState = { ...resultState, gameLog: [...resultState.gameLog, weatherLog] };
+    }
+  }
+
+  // Résoudre l'atterrissage du ballon : touchback si hors moitié receveuse,
+  // tentative de catch si la balle tombe sur un joueur debout, sinon le
+  // ballon reste au sol pour être ramassé manuellement. Sans cette étape,
+  // un ballon dévié hors zone laissait le terrain dans un état où aucun
+  // joueur ne pouvait être activé tant que personne ne pouvait l'atteindre.
+  if (rng) {
+    const receivingTeam = preMatch.receivingTeam;
+    if (receivingTeam) {
+      resultState = resolveKickoffBallLanding(resultState, receivingTeam, rng);
     }
   }
 

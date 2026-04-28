@@ -154,3 +154,19 @@ export async function rawDelete(
 export async function resetDb(): Promise<void> {
   await fetch(`${API_BASE}/__test/reset`, { method: "POST" });
 }
+
+/**
+ * S25.5 — Helper d'unwrap pour les routes ayant migre vers
+ * `ApiResponse<T>` (`{ success, data, error }`). Permet aux specs
+ * d'ecrire :
+ *
+ *   const league = unwrap(await post<{success: true; data: League}>(...));
+ *
+ * sans repeter `.data` partout. Ne touche pas au runtime des helpers
+ * `get`/`post` qui restent generiques (les specs envelope-aware comme
+ * leaderboard, feature-flags, achievements, friends continuent de lire
+ * `.data` / `.meta` / `.success` directement).
+ */
+export function unwrap<T>(envelope: { data: T }): T {
+  return envelope.data;
+}

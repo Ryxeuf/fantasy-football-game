@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { API_BASE } from "../../auth-client";
+import { apiRequest } from "../../lib/api-client";
 
 interface MatchTeamInfo {
   coachName: string;
@@ -21,15 +21,6 @@ interface MatchSummary {
   opponent: MatchTeamInfo | null;
 }
 
-async function fetchJSON(path: string) {
-  const token = localStorage.getItem("auth_token");
-  const res = await fetch(`${API_BASE}${path}`, {
-    headers: { Authorization: token ? `Bearer ${token}` : "" },
-  });
-  if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error || `Erreur ${res.status}`);
-  return res.json();
-}
-
 function getStatusLabel(status: string): string {
   switch (status) {
     case "active": return "En cours";
@@ -37,6 +28,7 @@ function getStatusLabel(status: string): string {
     case "prematch": return "Pré-match";
     case "prematch-setup": return "Configuration";
     case "ended": return "Terminé";
+    case "cancelled": return "Annulé";
     default: return status;
   }
 }
@@ -47,6 +39,7 @@ function getStatusColor(status: string): string {
     case "pending": return "bg-yellow-500";
     case "prematch": case "prematch-setup": return "bg-blue-500";
     case "ended": return "bg-gray-500";
+    case "cancelled": return "bg-red-500";
     default: return "bg-gray-400";
   }
 }
@@ -63,9 +56,9 @@ export default function MyMatchesPage() {
   const [filter, setFilter] = useState<"all" | "my-turn" | "active" | "ended">("all");
 
   useEffect(() => {
-    fetchJSON("/match/my-matches")
+    apiRequest<{ matches: MatchSummary[] }>("/match/my-matches")
       .then((data) => setMatches(data.matches || []))
-      .catch((e) => setError(e.message))
+      .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
   }, []);
 

@@ -38,11 +38,12 @@ import {
   type ListLeaguesQuery,
   type AttachMatchBody,
 } from "../schemas/league.schemas";
+import { sendError, sendSuccess } from "../utils/api-response";
 
 function requireUserId(req: AuthenticatedRequest, res: Response): string | null {
   const id = req.user?.id;
   if (!id) {
-    res.status(401).json({ error: "Non authentifie" });
+    sendError(res, "Non authentifie", 401);
     return null;
   }
   return id;
@@ -62,7 +63,7 @@ function serializeLeague(
 function domainError(res: Response, e: unknown): void {
   const message = e instanceof Error ? e.message : "Erreur inconnue";
   const isMissing = /introuvable|not found/i.test(message);
-  res.status(isMissing ? 404 : 400).json({ error: message });
+  sendError(res, message, isMissing ? 404 : 400);
 }
 
 export async function handleCreateLeague(
@@ -86,7 +87,7 @@ export async function handleCreateLeague(
       lossPoints: body.lossPoints,
       forfeitPoints: body.forfeitPoints,
     });
-    res.status(201).json(serializeLeague(league as Record<string, unknown>));
+    sendSuccess(res, serializeLeague(league as Record<string, unknown>), 201);
   } catch (e: unknown) {
     domainError(res, e);
   }
@@ -98,13 +99,22 @@ export async function handleListLeagues(
 ): Promise<void> {
   const query = req.query as unknown as ListLeaguesQuery;
   try {
-    const leagues = await listLeagues({
+    const { items, total, limit, offset } = await listLeagues({
       creatorId: query.creatorId,
       status: query.status,
       publicOnly: query.publicOnly,
+      limit: query.limit,
+      offset: query.offset,
     });
+    // S25.6 — pagination : on garde le champ `leagues` pour la
+    // retro-compat des clients existants, et on expose total/limit/offset
+    // dans `meta` (cf. ApiSuccess<T>.meta).
     res.status(200).json({
-      leagues: (leagues as Array<Record<string, unknown>>).map(serializeLeague),
+      success: true,
+      data: {
+        leagues: (items as Array<Record<string, unknown>>).map(serializeLeague),
+      },
+      meta: { total, limit, page: Math.floor(offset / limit) },
     });
   } catch (e: unknown) {
     domainError(res, e);
@@ -118,10 +128,10 @@ export async function handleGetLeague(
   const leagueId = req.params.id;
   const league = await getLeagueById(leagueId);
   if (!league) {
-    res.status(404).json({ error: "Ligue introuvable" });
+    sendError(res, "Ligue introuvable", 404);
     return;
   }
-  res.status(200).json({
+  sendSuccess(res, {
     league: serializeLeague(league as unknown as Record<string, unknown>),
   });
 }
@@ -133,7 +143,7 @@ export async function handleGetSeason(
   const seasonId = req.params.seasonId;
   const season = await getSeasonById(seasonId);
   if (!season) {
-    res.status(404).json({ error: "Saison introuvable" });
+    sendError(res, "Saison introuvable", 404);
     return;
   }
   const raw = season as unknown as Record<string, unknown> & {
@@ -146,7 +156,7 @@ export async function handleGetSeason(
         allowedRosters: parseAllowedRosters(league.allowedRosters ?? null),
       }
     : league;
-  res.status(200).json({
+  sendSuccess(res, {
     season: {
       ...raw,
       league: serializedLeague,
@@ -163,13 +173,15 @@ export async function handleCreateSeason(
   const leagueId = req.params.id;
   const league = await getLeagueById(leagueId);
   if (!league) {
-    res.status(404).json({ error: "Ligue introuvable" });
+    sendError(res, "Ligue introuvable", 404);
     return;
   }
   if ((league as { creatorId: string }).creatorId !== userId) {
-    res
-      .status(403)
-      .json({ error: "Seul le createur de la ligue peut creer une saison" });
+    sendError(
+      res,
+      "Seul le createur de la ligue peut creer une saison",
+      403,
+    );
     return;
   }
   const body = req.body as CreateSeasonBody;
@@ -181,7 +193,7 @@ export async function handleCreateSeason(
       startDate: body.startDate ?? null,
       endDate: body.endDate ?? null,
     });
-    res.status(201).json(season);
+    sendSuccess(res, season, 201);
   } catch (e: unknown) {
     domainError(res, e);
   }
@@ -198,19 +210,21 @@ export async function handleJoinSeason(
 
   const season = await getSeasonById(seasonId);
   if (!season) {
-    res.status(404).json({ error: "Saison introuvable" });
+    sendError(res, "Saison introuvable", 404);
     return;
   }
 
   const team = await prisma.team.findUnique({ where: { id: body.teamId } });
   if (!team) {
-    res.status(404).json({ error: "Equipe introuvable" });
+    sendError(res, "Equipe introuvable", 404);
     return;
   }
   if ((team as { ownerId: string }).ownerId !== userId) {
-    res
-      .status(403)
-      .json({ error: "Vous ne pouvez inscrire que vos propres equipes" });
+    sendError(
+      res,
+      "Vous ne pouvez inscrire que vos propres equipes",
+      403,
+    );
     return;
   }
 
@@ -218,7 +232,7 @@ export async function handleJoinSeason(
   // (source de verite metier). Le domainError ci-dessous convertit en 400.
   try {
     const participant = await addParticipant({ seasonId, teamId: body.teamId });
-    res.status(201).json(participant);
+    sendSuccess(res, participant, 201);
   } catch (e: unknown) {
     domainError(res, e);
   }
@@ -235,19 +249,21 @@ export async function handleLeaveSeason(
 
   const team = await prisma.team.findUnique({ where: { id: body.teamId } });
   if (!team) {
-    res.status(404).json({ error: "Equipe introuvable" });
+    sendError(res, "Equipe introuvable", 404);
     return;
   }
   if ((team as { ownerId: string }).ownerId !== userId) {
-    res
-      .status(403)
-      .json({ error: "Vous ne pouvez retirer que vos propres equipes" });
+    sendError(
+      res,
+      "Vous ne pouvez retirer que vos propres equipes",
+      403,
+    );
     return;
   }
 
   try {
     const updated = await withdrawParticipant({ seasonId, teamId: body.teamId });
-    res.status(200).json(updated);
+    sendSuccess(res, updated);
   } catch (e: unknown) {
     domainError(res, e);
   }
@@ -264,13 +280,11 @@ export async function handleCreateRound(
 
   const season = await getSeasonById(seasonId);
   if (!season) {
-    res.status(404).json({ error: "Saison introuvable" });
+    sendError(res, "Saison introuvable", 404);
     return;
   }
   if ((season as { league: { creatorId: string } }).league.creatorId !== userId) {
-    res
-      .status(403)
-      .json({ error: "Seul le createur de la ligue peut planifier" });
+    sendError(res, "Seul le createur de la ligue peut planifier", 403);
     return;
   }
 
@@ -282,7 +296,7 @@ export async function handleCreateRound(
       startDate: body.startDate ?? null,
       endDate: body.endDate ?? null,
     });
-    res.status(201).json(round);
+    sendSuccess(res, round, 201);
   } catch (e: unknown) {
     domainError(res, e);
   }
@@ -304,19 +318,21 @@ export async function handleAttachMatch(
 
   const season = await getSeasonById(seasonId);
   if (!season) {
-    res.status(404).json({ error: "Saison introuvable" });
+    sendError(res, "Saison introuvable", 404);
     return;
   }
   if ((season as { league: { creatorId: string } }).league.creatorId !== userId) {
-    res
-      .status(403)
-      .json({ error: "Seul le createur de la ligue peut rattacher un match" });
+    sendError(
+      res,
+      "Seul le createur de la ligue peut rattacher un match",
+      403,
+    );
     return;
   }
 
   const round = await prisma.leagueRound.findUnique({ where: { id: roundId } });
   if (!round || (round as { seasonId: string }).seasonId !== seasonId) {
-    res.status(404).json({ error: "Journee introuvable dans cette saison" });
+    sendError(res, "Journee introuvable dans cette saison", 404);
     return;
   }
 
@@ -330,17 +346,19 @@ export async function handleAttachMatch(
     },
   });
   if (!match) {
-    res.status(404).json({ error: "Partie introuvable" });
+    sendError(res, "Partie introuvable", 404);
     return;
   }
   if (match.status === "ended" || match.leagueScoredAt) {
-    res.status(400).json({
-      error: "Impossible de rattacher un match deja termine ou deja comptabilise",
-    });
+    sendError(
+      res,
+      "Impossible de rattacher un match deja termine ou deja comptabilise",
+      400,
+    );
     return;
   }
   if (match.leagueSeasonId && match.leagueSeasonId !== seasonId) {
-    res.status(409).json({ error: "Match deja rattache a une autre saison" });
+    sendError(res, "Match deja rattache a une autre saison", 409);
     return;
   }
 
@@ -348,7 +366,7 @@ export async function handleAttachMatch(
     where: { id: match.id },
     data: { leagueSeasonId: seasonId, leagueRoundId: roundId },
   });
-  res.status(200).json({ matchId: match.id, seasonId, roundId });
+  sendSuccess(res, { matchId: match.id, seasonId, roundId });
 }
 
 export async function handleGetStandings(
@@ -358,7 +376,7 @@ export async function handleGetStandings(
   const seasonId = req.params.seasonId;
   try {
     const standings = await computeSeasonStandings(seasonId);
-    res.status(200).json({ seasonId, standings });
+    sendSuccess(res, { seasonId, standings });
   } catch (e: unknown) {
     domainError(res, e);
   }

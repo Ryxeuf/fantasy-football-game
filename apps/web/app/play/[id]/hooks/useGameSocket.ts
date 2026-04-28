@@ -178,6 +178,17 @@ export function createGameSocketHelpers(socket: Socket) {
       socket.off("game:match-forfeited");
       socket.off("game:turn-timer-started");
     },
+
+    /**
+     * S24.4 — Defensive cleanup: remove every listener attached to the socket
+     * and to its underlying Manager. Catches stragglers our explicit `cleanup`
+     * misses (pending ack callbacks from emit-with-ack, future event names,
+     * etc.) and prevents the slow listener leak observed on long sessions.
+     */
+    cleanupAll(): void {
+      socket.removeAllListeners();
+      socket.io.removeAllListeners();
+    },
   };
 }
 
@@ -357,9 +368,12 @@ export function useGameSocket(
     // Connect
     socket.connect();
 
-    // Cleanup
+    // Cleanup (S24.4 — listeners + room leak)
     return () => {
       helpers.leaveMatch(matchId);
+      // Explicit per-event off() preserves intent and helps stack traces if
+      // socket.io is mocked in tests; cleanupAll() is the safety net that
+      // also removes ack listeners pending on in-flight emits.
       helpers.cleanup();
       socket.off("connect");
       socket.off("disconnect");
@@ -367,6 +381,7 @@ export function useGameSocket(
       socket.io.off("reconnect_attempt");
       socket.io.off("reconnect");
       socket.io.off("reconnect_failed");
+      helpers.cleanupAll();
       socket.disconnect();
       helpersRef.current = null;
       socketRef.current = null;

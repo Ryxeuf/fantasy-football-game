@@ -123,14 +123,22 @@ if [ -z "$LAST_DEPLOYED_COMMIT" ] || ! git cat-file -e "${LAST_DEPLOYED_COMMIT}^
   LAST_DEPLOYED_COMMIT="$PREVIOUS_COMMIT"
 fi
 
+# Commit de rollback fiable : dernier commit reellement deploye en prod.
+# PREVIOUS_COMMIT peut pointer vers un HEAD local jamais passe en prod.
+ROLLBACK_COMMIT="$LAST_DEPLOYED_COMMIT"
+if [ -z "$ROLLBACK_COMMIT" ] || [ "$ROLLBACK_COMMIT" = "unknown" ]; then
+  ROLLBACK_COMMIT="$PREVIOUS_COMMIT"
+fi
+
 echo -e "\n${BOLD}🏈 Deploiement Nuffle Arena${NC}"
 echo -e "   Branche: ${CYAN}$BRANCH${NC}"
 echo -e "   Commit actuel: ${CYAN}${PREVIOUS_COMMIT:0:7}${NC}"
 echo -e "   Dernier deploy: ${CYAN}${LAST_DEPLOYED_COMMIT:0:7}${NC}"
+echo -e "   Cible rollback: ${CYAN}${ROLLBACK_COMMIT:0:7}${NC}"
 echo -e "   Options: cache=${NO_CACHE:-oui} pull=${SKIP_PULL/true/non}"
 echo ""
 
-log_deploy "deploy start - branch $BRANCH - commit ${PREVIOUS_COMMIT:0:7} - last deployed ${LAST_DEPLOYED_COMMIT:0:7} - options: no-cache=${NO_CACHE:-false} skip-pull=$SKIP_PULL"
+log_deploy "deploy start - branch $BRANCH - commit ${PREVIOUS_COMMIT:0:7} - last deployed ${LAST_DEPLOYED_COMMIT:0:7} - rollback target ${ROLLBACK_COMMIT:0:7} - options: no-cache=${NO_CACHE:-false} skip-pull=$SKIP_PULL"
 
 # --- Calcul des commits a deployer (pour les notifications Discord) ---
 # Fetch non destructif pour connaitre la cible du deploiement avant de
@@ -160,14 +168,14 @@ fi
 rollback() {
   log_section "ROLLBACK"
   log_error "Le deploiement a echoue. Rollback en cours..."
-  log_deploy "deploy FAILED - rollback to ${PREVIOUS_COMMIT:0:7}"
+  log_deploy "deploy FAILED - rollback to ${ROLLBACK_COMMIT:0:7}"
 
   # Desactiver la maintenance en cas d'erreur pendant le rollback
   trap '' ERR
 
-  if [ "$PREVIOUS_COMMIT" != "unknown" ] && [ "$SKIP_PULL" = false ]; then
-    log_info "Retour au commit $PREVIOUS_COMMIT..."
-    git reset --hard "$PREVIOUS_COMMIT"
+  if [ "$ROLLBACK_COMMIT" != "unknown" ]; then
+    log_info "Retour au commit $ROLLBACK_COMMIT..."
+    git reset --hard "$ROLLBACK_COMMIT"
   fi
 
   log_info "Rebuild des services (rollback)..."
@@ -180,10 +188,10 @@ rollback() {
   # Desactiver la maintenance apres rollback
   "$MAINTENANCE_SCRIPT" off 2>/dev/null || true
 
-  discord_notify ":warning: **Nuffle Arena** - Deploiement echoue, rollback effectue vers \`${PREVIOUS_COMMIT:0:7}\` sur \`$BRANCH\`. Site de nouveau accessible."
+  discord_notify ":warning: **Nuffle Arena** - Deploiement echoue, rollback effectue vers \`${ROLLBACK_COMMIT:0:7}\` sur \`$BRANCH\`. Site de nouveau accessible."
 
   log_error "Rollback termine. Verifiez les logs : docker compose -f docker-compose.prod.yml logs"
-  log_deploy "rollback completed to ${PREVIOUS_COMMIT:0:7}"
+  log_deploy "rollback completed to ${ROLLBACK_COMMIT:0:7}"
   exit 1
 }
 

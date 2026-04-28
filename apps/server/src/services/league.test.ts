@@ -15,6 +15,7 @@ vi.mock("../prisma", () => ({
       findMany: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      count: vi.fn(),
     },
     leagueSeason: {
       findUnique: vi.fn(),
@@ -549,18 +550,26 @@ describe("Rule: League service", () => {
   describe("listLeagues", () => {
     it("returns only public leagues by default", async () => {
       mockPrisma.league.findMany.mockResolvedValue([]);
+      mockPrisma.league.count.mockResolvedValue(0);
 
-      await listLeagues({});
+      const result = await listLeagues({});
 
       expect(mockPrisma.league.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({ isPublic: true }),
         }),
       );
+      expect(result).toEqual({
+        items: [],
+        total: 0,
+        limit: 50,
+        offset: 0,
+      });
     });
 
     it("can filter by creator", async () => {
       mockPrisma.league.findMany.mockResolvedValue([]);
+      mockPrisma.league.count.mockResolvedValue(0);
 
       await listLeagues({ creatorId });
 
@@ -568,6 +577,32 @@ describe("Rule: League service", () => {
         expect.objectContaining({
           where: expect.objectContaining({ creatorId }),
         }),
+      );
+    });
+
+    // S25.6 — pagination
+    it("respects limit and offset, capped at 100", async () => {
+      mockPrisma.league.findMany.mockResolvedValue([]);
+      mockPrisma.league.count.mockResolvedValue(250);
+
+      const result = await listLeagues({ limit: 999, offset: 50 });
+
+      expect(mockPrisma.league.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ take: 100, skip: 50 }),
+      );
+      expect(result.limit).toBe(100);
+      expect(result.offset).toBe(50);
+      expect(result.total).toBe(250);
+    });
+
+    it("clamps negative offset and limit < 1 to safe defaults", async () => {
+      mockPrisma.league.findMany.mockResolvedValue([]);
+      mockPrisma.league.count.mockResolvedValue(0);
+
+      await listLeagues({ limit: -10, offset: -5 });
+
+      expect(mockPrisma.league.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ take: 1, skip: 0 }),
       );
     });
   });

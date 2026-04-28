@@ -8,6 +8,7 @@
 import { resetTurnTimer, cancelTurnTimer, getTurnTimerDeadline } from "./turn-timer";
 import { broadcastTurnTimerStarted } from "./game-broadcast";
 import { processMove } from "./move-processor";
+import { serverLog } from "../utils/server-log";
 
 export const TURN_TIMER_CONFIG_KEY = "turnTimerSeconds";
 
@@ -85,13 +86,13 @@ export async function handleTurnTimerAutoEnd(
   try {
     const result = await processMove(matchId, userId, { type: "END_TURN" });
     if (result.success) {
-      console.log(
+      serverLog.log(
         `[turn-timer] Auto-ended turn for match ${matchId} (user ${userId})`,
       );
     }
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Unknown error";
-    console.error(
+    serverLog.error(
       `[turn-timer] Failed to auto-end turn for match ${matchId}: ${msg}`,
     );
   }

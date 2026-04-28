@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { API_BASE } from "../../auth-client";
+import { apiRequest } from "../../lib/api-client";
 
 type Summary = {
   id: string;
@@ -18,9 +19,12 @@ export default function WaitingPage({ params }: { params: { id: string } }) {
   const [error, setError] = useState<string | null>(null);
   const [accepting, setAccepting] = useState(false);
   const [acceptedOnce, setAcceptedOnce] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelled, setCancelled] = useState(false);
 
   useEffect(() => {
     let timer: any;
+    let aborted = false;
     const fetchSummary = async () => {
       try {
         setError(null);
@@ -45,15 +49,24 @@ export default function WaitingPage({ params }: { params: { id: string } }) {
         ) {
           // Dès que la partie devient active ou en pré-match, rediriger vers /play/[id]
           window.location.href = `/play/${matchId}`;
+          return;
+        }
+        if (data?.status === "cancelled") {
+          setCancelled(true);
+          aborted = true;
+          return;
         }
       } catch (e: any) {
         setError(e?.message || "Erreur");
       } finally {
-        timer = setTimeout(fetchSummary, 2000);
+        if (!aborted) {
+          timer = setTimeout(fetchSummary, 2000);
+        }
       }
     };
     fetchSummary();
     return () => {
+      aborted = true;
       if (timer) clearTimeout(timer);
     };
   }, [matchId]);
@@ -85,18 +98,10 @@ export default function WaitingPage({ params }: { params: { id: string } }) {
         window.location.href = "/login";
         return;
       }
-      const res = await fetch(`${API_BASE}/match/accept`, {
+      await apiRequest<{ ok: boolean; started?: boolean }>("/match/accept", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({ matchId }),
       });
-      const data = await res.json().catch(() => ({}) as any);
-      if (!res.ok) {
-        throw new Error(data?.error || `HTTP ${res.status}`);
-      }
       setAcceptedOnce(true);
       // Actualiser une fois immédiatement après acceptation
       const sumRes = await fetch(`${API_BASE}/match/${matchId}/summary`, {
@@ -120,6 +125,49 @@ export default function WaitingPage({ params }: { params: { id: string } }) {
       setAccepting(false);
     }
   }
+
+  async function handleCancel() {
+    const confirmed = window.confirm(
+      "Voulez-vous vraiment annuler ce match ? Cette action est definitive.",
+    );
+    if (!confirmed) return;
+    try {
+      setCancelling(true);
+      setError(null);
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        window.location.href = "/login";
+        return;
+      }
+      await apiRequest<{ ok: boolean; status: string }>(
+        `/match/${matchId}/cancel`,
+        { method: "POST" },
+      );
+      setCancelled(true);
+      window.location.href = "/play";
+    } catch (e: any) {
+      setError(e?.message || "Erreur lors de l'annulation");
+    } finally {
+      setCancelling(false);
+    }
+  }
+
+  if (cancelled) {
+    return (
+      <div className="max-w-lg mx-auto p-6 space-y-4" data-testid="waiting-room">
+        <h1 className="text-2xl font-bold">Match annule</h1>
+        <p className="text-sm text-gray-700">
+          Ce match a ete annule. Vous pouvez retourner au lobby pour en creer un
+          nouveau.
+        </p>
+        <a className="px-3 py-2 bg-neutral-200 rounded inline-block" href="/play">
+          Retour au lobby
+        </a>
+      </div>
+    );
+  }
+
+  const canCancel = summary?.status === "pending" && !cancelling;
 
   return (
     <div className="max-w-lg mx-auto p-6 space-y-4" data-testid="waiting-room">
@@ -182,6 +230,16 @@ export default function WaitingPage({ params }: { params: { id: string } }) {
             className="bg-green-500 text-white px-4 py-2 rounded"
           >
             Accepter
+          </button>
+        )}
+        {canCancel && (
+          <button
+            data-testid="waiting-cancel-button"
+            onClick={handleCancel}
+            disabled={cancelling}
+            className="bg-red-500 text-white px-4 py-2 rounded disabled:opacity-50"
+          >
+            {cancelling ? "Annulation..." : "Annuler le match"}
           </button>
         )}
       </div>

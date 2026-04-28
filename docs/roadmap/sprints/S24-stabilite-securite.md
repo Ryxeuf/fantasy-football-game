@@ -11,13 +11,13 @@
 |---|-------|-----|--------|--------|--------|
 | S24.1 | Cookie `auth_token` httpOnly=true + sameSite=strict + secure=true | FIX | S | [x] | `apps/web/app/api/sync-auth-cookie/route.ts:22`. Bloque le vol via XSS. Actuellement httpOnly=false "pour synchro JS" mais le token est deja en localStorage donc surface deja redondante. |
 | S24.2 | Helmet + CSP + HSTS + X-Frame-Options DENY | FIX | M | [x] | `apps/server/src/index.ts:65-100`. Aucun en-tete securite actuellement. Au minimum X-Frame, X-Content-Type-Options nosniff, HSTS 1 an, CSP img-src + script-src self. |
-| S24.3 | JWT refresh token (15 min access + 7j refresh, rotation + blacklist) | FIX | M | [x] | `apps/server/src/routes/auth.ts:90-100`. Token actuel 7j sans rotation = 7j de fenetre si compromission. Pattern refresh + access. |
-| S24.4 | WebSocket cleanup listeners + room leak | FIX | S | [ ] | `apps/web/app/play/[id]/hooks/useGameSocket.ts:365-370`. Listeners non desabonnes apres disconnect : fuite memoire progressive sur sessions longues. |
-| S24.5 | Polling fallback 3s -> 10s + backoff exponentiel | FIX | M | [ ] | `apps/web/app/play/[id]/hooks/useGameState.ts:301`. Quand WS degrade, X clients = X requetes/3s. Trop agressif a la scale beta. |
-| S24.6 | Verifier `app.use(authRateLimiter)` + couverture `/leagues` GET | FIX | S | [ ] | Divergence detectee entre agents backend ("non applique") et securite ("present"). Confirmer end-to-end + ajouter tests. |
-| S24.7 | Retirer `console.log` debug en prod (web) | FIX | S | [ ] | `apps/web/app/play/[id]/page.tsx:615,729,743` + autres. 10+ logs de debug visibles dans les devtools. |
-| S24.8 | Wrapper minimal pour `console.error` backend (preparation S25) | FIX | S | [ ] | 270 console.* eparpilles dans `apps/server/src/`. Wrapper temporaire `serverLog.error()` qui delegue a console mais permet swap vers pino en S25 sans toucher chaque call site. |
-| S24.9 | Docker compose dev hot-reload + 5 make targets quotidiens | CONFORT | S | [ ] | `docker-compose.yml` actuellement statique (`pnpm install && pnpm run dev`). Ajouter bind mount + nodemon/turbopack hot reload. Targets : `make logs`, `make reset-db`, `make seed`, `make tunnel`, `make snapshot-prod`. Cycle dev x5 plus rapide. |
+| S24.3 | JWT refresh token (15 min access + 7j refresh, rotation + blacklist) | FIX | M | [x] | `apps/server/src/routes/auth.ts:90-100`. Token actuel 7j sans rotation = 7j de fenetre si compromission. Pattern refresh + access. Livre en 5 slices : S24.3a helpers (#398), S24.3b in-memory store + jti (#399), S24.3c Prisma persistence + async (#400), S24.3d endpoint POST /auth/refresh (#401), S24.3e wiring login/register/logout + boucle silencieuse front (#403). |
+| S24.4 | WebSocket cleanup listeners + room leak | FIX | S | [x] | `apps/web/app/play/[id]/hooks/useGameSocket.ts:365-370`. Listeners non desabonnes apres disconnect : fuite memoire progressive sur sessions longues. |
+| S24.5 | Polling fallback 3s -> 10s + backoff exponentiel | FIX | M | [x] | `apps/web/app/play/[id]/hooks/useGameState.ts:301`. Quand WS degrade, X clients = X requetes/3s. Trop agressif a la scale beta. |
+| S24.6 | Verifier `app.use(authRateLimiter)` + couverture `/leagues` GET | FIX | S | [x] | Divergence detectee entre agents backend ("non applique") et securite ("present"). Confirmer end-to-end + ajouter tests. |
+| S24.7 | Retirer `console.log` debug en prod (web) | FIX | S | [x] | `apps/web/app/play/[id]/page.tsx:615,729,743` + autres. 10+ logs de debug visibles dans les devtools. |
+| S24.8 | Wrapper minimal pour `console.error` backend (preparation S25) | FIX | S | [x] | 270 console.* eparpilles dans `apps/server/src/`. Wrapper temporaire `serverLog.error()` qui delegue a console mais permet swap vers pino en S25 sans toucher chaque call site. |
+| S24.9 | Docker compose dev hot-reload + 5 make targets quotidiens | CONFORT | S | [x] | `docker-compose.yml` actuellement statique (`pnpm install && pnpm run dev`). Ajouter bind mount + nodemon/turbopack hot reload. Targets : `make logs`, `make reset-db`, `make seed`, `make tunnel`, `make snapshot-prod`. Cycle dev x5 plus rapide. |
 
 ## Definition of done
 

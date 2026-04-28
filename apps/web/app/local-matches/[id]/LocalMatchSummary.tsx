@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { API_BASE } from "../../auth-client";
+import { webLog } from "../../lib/log";
 
 type ActionType = "passe" | "reception" | "td" | "blocage" | "blitz" | "transmission" | "aggression" | "sprint" | "esquive" | "apothicaire" | "interception";
 
@@ -57,10 +58,12 @@ type LocalMatch = {
   teamA: {
     id: string;
     name: string;
+    roster?: string | null;
   };
   teamB: {
     id: string;
     name: string;
+    roster?: string | null;
   };
   scoreTeamA: number | null;
   scoreTeamB: number | null;
@@ -83,6 +86,24 @@ type LocalMatch = {
         description: string;
       };
     };
+    matchStats?: Record<string, {
+      touchdowns: number;
+      casualties: number;
+      completions: number;
+      interceptions: number;
+      mvp: boolean;
+    }>;
+    matchResult?: {
+      winner?: "A" | "B";
+      spp?: Record<string, number>;
+    };
+    players?: Array<{
+      id: string;
+      team: "A" | "B";
+      name: string;
+      number: number;
+      position: string;
+    }>;
   };
 };
 
@@ -138,57 +159,6 @@ function formatActionDescription(action: LocalMatchAction, teamAName: string, te
   return desc;
 }
 
-// Fonction pour formater les actions pour le PDF (sans emojis)
-function formatActionDescriptionForPDF(action: LocalMatchAction, teamAName: string, teamBName: string): string {
-  const teamName = action.playerTeam === "A" ? teamAName : teamBName;
-  const opponentTeamName = action.playerTeam === "A" ? teamBName : teamAName;
-  
-  // Utiliser des symboles texte au lieu d'emojis
-  const actionSymbols: Record<ActionType, string> = {
-    passe: "[P]",
-    reception: "[R]",
-    td: "[TD]",
-    blocage: "[B]",
-    blitz: "[BL]",
-    transmission: "[T]",
-    aggression: "[A]",
-    sprint: "[S]",
-    esquive: "[E]",
-    apothicaire: "[AP]",
-    interception: "[I]",
-  };
-  
-  let desc = `${actionSymbols[action.actionType]} ${ActionLabels[action.actionType]} - ${action.playerName} (${teamName})`;
-  
-  if (action.opponentName) {
-    desc += ` vs ${action.opponentName} (${opponentTeamName})`;
-  }
-  
-  if (action.diceResult !== null) {
-    desc += ` - Dé: ${action.diceResult}`;
-  }
-  
-  if (action.fumble) {
-    desc += " [ECHEC]";
-    if (action.playerState) {
-      desc += ` (${action.playerState})`;
-    }
-  } else if (action.actionType === "blocage" || action.actionType === "blitz") {
-    if (action.armorBroken) {
-      desc += " [ARMURE CASSEE]";
-      if (action.opponentState) {
-        desc += ` (${action.opponentState})`;
-      }
-    } else {
-      desc += " [ARMURE NON CASSEE]";
-    }
-  } else if (action.actionType === "passe" && action.passType) {
-    desc += ` - ${action.passType}`;
-  }
-  
-  return desc;
-}
-
 export default function LocalMatchSummary({ matchId, match }: LocalMatchSummaryProps) {
   const [actions, setActions] = useState<LocalMatchAction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -205,9 +175,8 @@ export default function LocalMatchSummary({ matchId, match }: LocalMatchSummaryP
     loadActions();
   }, [matchId]);
 
-  // Debug: vérifier les données de pré-match
   useEffect(() => {
-    console.log("LocalMatchSummary - match data:", {
+    webLog.debug("LocalMatchSummary - match data:", {
       hasGameState: !!match.gameState,
       hasPreMatch: !!match.gameState?.preMatch,
       hasFanFactor: !!match.gameState?.preMatch?.fanFactor,
@@ -232,223 +201,12 @@ export default function LocalMatchSummary({ matchId, match }: LocalMatchSummaryP
 
   const exportToPDF = async () => {
     try {
-      const { default: jsPDF } = await import('jspdf');
-      const { default: autoTable } = await import('jspdf-autotable');
-
-      const doc = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-      });
-
-      // Titre
-      doc.setFontSize(20);
-      doc.text('Récapitulatif du Match', 105, 20, { align: 'center' });
-
-      // Informations du match
-      doc.setFontSize(14);
-      doc.text(match.name || 'Partie offline', 105, 30, { align: 'center' });
-      
-      doc.setFontSize(12);
-      const yStart = 40;
-      let yPos = yStart;
-      
-      doc.text(`${match.teamA.name} vs ${match.teamB.name}`, 105, yPos, { align: 'center' });
-      yPos += 10;
-      
-      if (match.cup) {
-        doc.text(`Coupe: ${match.cup.name}`, 105, yPos, { align: 'center' });
-        yPos += 10;
-      }
-
-      // Score façon football US
-      const scoreTeamA = match.scoreTeamA || 0;
-      const scoreTeamB = match.scoreTeamB || 0;
-      
-      // Compter les joueurs éliminés/exclus par équipe
-      const eliminatedA = actions.filter(a => 
-        (a.playerTeam === "A" && a.playerState === "elimine") ||
-        (a.playerTeam === "B" && a.opponentState === "elimine" && a.opponentId && a.opponentName)
-      ).length;
-      const eliminatedB = actions.filter(a => 
-        (a.playerTeam === "B" && a.playerState === "elimine") ||
-        (a.playerTeam === "A" && a.opponentState === "elimine" && a.opponentId && a.opponentName)
-      ).length;
-      
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.text('SCORE FINAL', 105, yPos + 5, { align: 'center' });
-      yPos += 12;
-      
-      // Score en grand
-      doc.setFontSize(28);
-      doc.setFont('helvetica', 'bold');
-      const scoreText = `${scoreTeamA} - ${scoreTeamB}`;
-      doc.text(scoreText, 105, yPos, { align: 'center' });
-      yPos += 12;
-      
-      // Équipes et éliminations
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'normal');
-      const teamAText = `${match.teamA.name}: ${eliminatedA} Éliminé${eliminatedA > 1 ? 's' : ''}`;
-      const teamBText = `${match.teamB.name}: ${eliminatedB} Éliminé${eliminatedB > 1 ? 's' : ''}`;
-      doc.text(teamAText, 105, yPos, { align: 'center' });
-      yPos += 6;
-      doc.text(teamBText, 105, yPos, { align: 'center' });
-      yPos += 15;
-
-      // Dates
-      if (match.startedAt) {
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`Début: ${new Date(match.startedAt).toLocaleString('fr-FR')}`, 20, yPos);
-        yPos += 6;
-      }
-      if (match.completedAt) {
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`Fin: ${new Date(match.completedAt).toLocaleString('fr-FR')}`, 20, yPos);
-        yPos += 12;
-      }
-
-      // Informations de pré-match
-      if (match.gameState?.preMatch && (match.gameState.preMatch.fanFactor || match.gameState.preMatch.weather)) {
-        // Nouvelle page si nécessaire
-        if (yPos > 250) {
-          doc.addPage();
-          yPos = 20;
-        }
-
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'bold');
-        doc.text('INFORMATIONS D\'AVANT-MATCH', 105, yPos, { align: 'center' });
-        yPos += 12;
-
-        // Fans dévoués
-        if (match.gameState.preMatch.fanFactor) {
-          doc.setFontSize(12);
-          doc.setFont('helvetica', 'bold');
-          doc.text('Fans dévoués', 20, yPos);
-          yPos += 8;
-
-          doc.setFontSize(10);
-          doc.setFont('helvetica', 'normal');
-          const fanFactorA = match.gameState.preMatch.fanFactor.teamA;
-          const fanFactorB = match.gameState.preMatch.fanFactor.teamB;
-          doc.text(`${match.teamA.name}: Fan Factor ${fanFactorA.total} (D3: ${fanFactorA.d3} + Fans: ${fanFactorA.dedicatedFans})`, 25, yPos);
-          yPos += 6;
-          doc.text(`${match.teamB.name}: Fan Factor ${fanFactorB.total} (D3: ${fanFactorB.d3} + Fans: ${fanFactorB.dedicatedFans})`, 25, yPos);
-          yPos += 10;
-        }
-
-        // Conditions météorologiques
-        if (match.gameState.preMatch.weather) {
-          doc.setFontSize(12);
-          doc.setFont('helvetica', 'bold');
-          doc.text('Conditions météorologiques', 20, yPos);
-          yPos += 8;
-
-          doc.setFontSize(10);
-          doc.setFont('helvetica', 'normal');
-          const weather = match.gameState.preMatch.weather;
-          doc.text(`Type: ${match.gameState.preMatch.weatherType || 'classique'}`, 25, yPos);
-          yPos += 6;
-          doc.text(`Total 2D6: ${weather.total}`, 25, yPos);
-          yPos += 6;
-          doc.setFont('helvetica', 'bold');
-          doc.text(weather.condition, 25, yPos);
-          yPos += 6;
-          doc.setFont('helvetica', 'normal');
-          const descLines = doc.splitTextToSize(weather.description, 160);
-          doc.text(descLines, 25, yPos);
-          yPos += descLines.length * 5 + 10;
-        }
-      }
-
-      // Liste des actions par mi-temps
-      const actionsByHalf = actions.reduce((acc, action) => {
-        if (!acc[action.half]) {
-          acc[action.half] = [];
-        }
-        acc[action.half].push(action);
-        return acc;
-      }, {} as Record<number, LocalMatchAction[]>);
-
-      for (const half of [1, 2]) {
-        const halfActions = actionsByHalf[half] || [];
-        if (halfActions.length === 0) continue;
-
-        // Nouvelle page si nécessaire
-        if (yPos > 250) {
-          doc.addPage();
-          yPos = 20;
-        }
-
-        doc.setFontSize(14);
-        doc.text(`MI-TEMPS ${half}`, 20, yPos);
-        yPos += 10;
-
-        // Grouper par tour
-        const actionsByTurn = halfActions.reduce((acc, action) => {
-          if (!acc[action.turn]) {
-            acc[action.turn] = [];
-          }
-          acc[action.turn].push(action);
-          return acc;
-        }, {} as Record<number, LocalMatchAction[]>);
-
-        for (const turn of Object.keys(actionsByTurn).map(Number).sort((a, b) => a - b)) {
-          const turnActions = actionsByTurn[turn];
-          
-          // Vérifier si on a besoin d'une nouvelle page avant d'ajouter le tour
-          // Laisser plus d'espace pour éviter les superpositions
-          if (yPos > 240) {
-            doc.addPage();
-            yPos = 20;
-          }
-          
-          doc.setFontSize(11);
-          doc.setFont('helvetica', 'bold');
-          doc.text(`Tour ${turn}`, 25, yPos);
-          yPos += 8;
-
-          doc.setFontSize(9);
-          doc.setFont('helvetica', 'normal');
-          for (const action of turnActions) {
-            // Vérifier si on a besoin d'une nouvelle page avant chaque action
-            // Laisser plus d'espace pour éviter les superpositions
-            if (yPos > 270) {
-              doc.addPage();
-              yPos = 20;
-            }
-            
-            // Utiliser la fonction sans emojis pour le PDF
-            const desc = formatActionDescriptionForPDF(action, match.teamA.name, match.teamB.name);
-            // Largeur réduite pour éviter les coupures et permettre les retours à la ligne
-            const lines = doc.splitTextToSize(desc, 160);
-            
-            // Vérifier qu'on a assez d'espace pour toutes les lignes
-            const neededSpace = lines.length * 5 + 3;
-            if (yPos + neededSpace > 280) {
-              doc.addPage();
-              yPos = 20;
-            }
-            
-            doc.text(lines, 30, yPos);
-            // Espacement dynamique selon le nombre de lignes avec marge supplémentaire
-            yPos += neededSpace;
-          }
-          yPos += 6; // Espacement entre les tours
-        }
-        yPos += 5;
-      }
-
-      // Sauvegarder le PDF
-      const fileName = `${(match.name || 'match').replace(/[^a-z0-9]/gi, '_')}_recap.pdf`;
-      doc.save(fileName);
+      const { generateMatchPdf } = await import("./pdf");
+      const result = await generateMatchPdf(match, actions);
+      result.save();
     } catch (error) {
-      console.error('Erreur lors de l\'export PDF:', error);
-      alert('Erreur lors de la génération du PDF');
+      console.error("Erreur lors de l'export PDF:", error);
+      alert("Erreur lors de la génération du PDF");
     }
   };
 

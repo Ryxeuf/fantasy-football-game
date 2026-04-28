@@ -2,10 +2,27 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
+import dynamic from "next/dynamic";
 import { buildReplayFrames, type ReplayFrame, type ReplayTurnPayload } from "@bb/game-engine";
-import { GameBoardWithDugouts, GameScoreboard, GameLog } from "@bb/ui";
-import { API_BASE } from "../../auth-client";
+import { GameScoreboard, GameLog } from "@bb/ui";
+import { apiRequest, ApiClientError } from "../../lib/api-client";
 import { useReplayControls } from "./hooks/useReplayControls";
+
+// S25.7 — GameBoardWithDugouts pulls in Pixi.js + @pixi/react bundle
+// (>500KB). Same pattern as `play/[id]/page.tsx` : on lazy-load via
+// next/dynamic + ssr:false pour qu'il n'apparaisse pas dans le bundle
+// principal de l'app, et seulement dans le chunk /replay.
+const GameBoardWithDugouts = dynamic(
+  () => import("@bb/ui").then((m) => m.GameBoardWithDugouts),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full aspect-[2/1] bg-gray-900 text-gray-400 flex items-center justify-center rounded-lg">
+        Chargement du plateau…
+      </div>
+    ),
+  },
+);
 
 interface TeamMeta {
   coachName: string;
@@ -41,26 +58,21 @@ export default function ReplayPage() {
   useEffect(() => {
     if (!matchId) return;
 
-    const token = localStorage.getItem("auth_token");
-    if (!token) {
+    if (typeof window !== "undefined" && !localStorage.getItem("auth_token")) {
       setError("Authentification requise");
       setLoading(false);
       return;
     }
 
-    fetch(`${API_BASE}/match/${matchId}/replay`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Replay non disponible");
-        return res.json();
-      })
-      .then((data: ReplayResponse) => {
+    apiRequest<ReplayResponse>(`/match/${matchId}/replay`)
+      .then((data) => {
         setReplayData(data);
         const builtFrames = buildReplayFrames(data.turns);
         setFrames(builtFrames);
       })
-      .catch((err) => setError(err.message))
+      .catch((err) =>
+        setError(err instanceof ApiClientError ? err.message : "Replay non disponible"),
+      )
       .finally(() => setLoading(false));
   }, [matchId]);
 

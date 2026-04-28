@@ -7,6 +7,7 @@ import { registerGameChatHandlers } from "./game-chat";
 import { registerSpectatorHandlers } from "./game-spectator";
 import { authSocket } from "./middleware/authSocket";
 import { CORS_ORIGINS } from "./config";
+import { serverLog } from "./utils/server-log";
 
 let io: Server | null = null;
 let gameNamespace: Namespace | null = null;
@@ -42,10 +43,10 @@ export function setupSocket(
 
   gameNamespace.on("connection", (socket) => {
     const userId = socket.data.user?.id ?? "unknown";
-    console.log(`[socket.io] /game client connected: ${socket.id} (user: ${userId})`);
+    serverLog.log(`[socket.io] /game client connected: ${socket.id} (user: ${userId})`);
 
     socket.on("disconnect", (reason) => {
-      console.log(
+      serverLog.log(
         `[socket.io] /game client disconnected: ${socket.id} (${reason})`,
       );
     });

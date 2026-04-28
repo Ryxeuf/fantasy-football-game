@@ -7,6 +7,7 @@ import { Router } from "express";
 import { prisma } from "../prisma";
 import { resolveRuleset } from "../utils/ruleset-helpers";
 import { memoizeAsync } from "../utils/memoize-async";
+import { serverLog } from "../utils/server-log";
 
 const router = Router();
 
@@ -91,7 +92,7 @@ router.get("/skills", async (req, res) => {
     );
     res.json(payload);
   } catch (error: any) {
-    console.error(
+    serverLog.error(
       "Erreur lors de la récupération des compétences publiques:",
       error,
     );

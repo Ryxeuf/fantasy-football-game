@@ -1,4 +1,4 @@
-import { API_BASE } from "../auth-client";
+import { apiRequest } from "./api-client";
 
 export interface FeatureFlag {
   id: string;
@@ -18,35 +18,10 @@ export interface FeatureFlagUser {
   createdAt: string;
 }
 
-interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-}
-
-function getToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("auth_token");
-}
-
-function authHeaders(): Record<string, string> {
-  const token = getToken();
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
-  if (token) headers.Authorization = `Bearer ${token}`;
-  return headers;
-}
-
-async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...init,
-    headers: { ...authHeaders(), ...(init.headers ?? {}) },
-  });
-  const json = (await res.json().catch(() => ({}))) as ApiResponse<T>;
-  if (!res.ok || !json.success) {
-    throw new Error(json.error || `Erreur ${res.status}`);
-  }
-  return json.data as T;
-}
+// S25.5b — request<T> remplace par apiRequest<T> partage (lib/api-client).
+// L'ancienne implementation locale est supprimee : elle dupliquait l'auth
+// header et le parse de l'enveloppe `{ success, data, error }`.
+const request = apiRequest;
 
 // ── API utilisateur ────────────────────────────────────────────────
 

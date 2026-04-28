@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { API_BASE } from "../../auth-client";
+import { webLog } from "../../lib/log";
 import LocalMatchActions from "./LocalMatchActions";
 import LocalMatchInducements from "./LocalMatchInducements";
 import LocalMatchSummary from "./LocalMatchSummary";
@@ -221,7 +222,7 @@ export default function LocalMatchPage() {
     setError(null);
     try {
       const { localMatch: data } = await fetchJSON(`/local-match/${matchId}`);
-      console.log("Match chargé:", {
+      webLog.debug("Match chargé:", {
         teamA: data?.teamA?.name,
         teamB: data?.teamB?.name || null,
         status: data?.status,
@@ -282,22 +283,27 @@ export default function LocalMatchPage() {
   };
 
   const handleComplete = async () => {
-    const scoreTeamAStr = prompt("Score de l'équipe A :", "0");
-    const scoreTeamBStr = prompt("Score de l'équipe B :", "0");
-    
-    if (scoreTeamAStr === null || scoreTeamBStr === null) {
+    const teamAName = localMatch?.teamA?.name ?? "Équipe A";
+    const teamBName = localMatch?.teamB?.name ?? "Équipe B";
+
+    const scoreTeamAStr = prompt(`Score de ${teamAName} :`, "0");
+    if (scoreTeamAStr === null) {
       return; // L'utilisateur a annulé
     }
-    
+    const scoreTeamBStr = prompt(`Score de ${teamBName} :`, "0");
+    if (scoreTeamBStr === null) {
+      return; // L'utilisateur a annulé
+    }
+
     const scoreTeamA = parseInt(scoreTeamAStr, 10);
     const scoreTeamB = parseInt(scoreTeamBStr, 10);
-    
+
     if (isNaN(scoreTeamA) || isNaN(scoreTeamB)) {
       alert("Les scores doivent être des nombres valides");
       return;
     }
-    
-    if (!confirm(`Terminer la partie avec le score ${scoreTeamA} - ${scoreTeamB} ?`)) {
+
+    if (!confirm(`Terminer la partie avec le score ${teamAName} ${scoreTeamA} - ${scoreTeamB} ${teamBName} ?`)) {
       return;
     }
 
@@ -903,10 +909,12 @@ export default function LocalMatchPage() {
               teamA: {
                 id: localMatch.teamA.id,
                 name: localMatch.teamA.name,
+                roster: localMatch.teamA.roster,
               },
               teamB: {
                 id: localMatch.teamB.id,
                 name: localMatch.teamB.name,
+                roster: localMatch.teamB.roster,
               },
               scoreTeamA: localMatch.scoreTeamA,
               scoreTeamB: localMatch.scoreTeamB,

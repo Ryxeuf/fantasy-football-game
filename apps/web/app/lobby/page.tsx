@@ -2,20 +2,11 @@
 import { useEffect, useState } from "react";
 
 import { API_BASE } from "../auth-client";
+import { apiRequest } from "../lib/api-client";
 
-async function api(path: string, body?: unknown) {
-  const token = localStorage.getItem("auth_token");
-  const res = await fetch(`${API_BASE}${path}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: token ? `Bearer ${token}` : "",
-    },
-    body: JSON.stringify(body ?? {}),
-  });
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(json?.error || `Erreur ${res.status}`);
-  return json;
+interface MatchTokenResponse {
+  match: { id: string };
+  matchToken: string;
 }
 
 export default function LobbyPage() {
@@ -48,22 +39,28 @@ export default function LobbyPage() {
   async function createMatch() {
     setError(null);
     try {
-      const { match, matchToken } = await api("/match/create");
+      const { match, matchToken } = await apiRequest<MatchTokenResponse>(
+        "/match/create",
+        { method: "POST", body: JSON.stringify({}) },
+      );
       localStorage.setItem("match_token", matchToken);
       window.location.href = `/team/select?matchId=${match.id}`;
-    } catch (e: any) {
-      setError(e.message || "Erreur");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Erreur");
     }
   }
 
   async function joinMatch() {
     setError(null);
     try {
-      const { match, matchToken } = await api("/match/join", { matchId });
+      const { match, matchToken } = await apiRequest<MatchTokenResponse>(
+        "/match/join",
+        { method: "POST", body: JSON.stringify({ matchId }) },
+      );
       localStorage.setItem("match_token", matchToken);
       window.location.href = `/team/select?matchId=${match.id}`;
-    } catch (e: any) {
-      setError(e.message || "Erreur");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Erreur");
     }
   }
 

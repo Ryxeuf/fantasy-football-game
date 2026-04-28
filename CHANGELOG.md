@@ -1,3 +1,83 @@
+## [1.76.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.76.1...v1.76.2) (2026-04-28)
+
+
+### ♻️ Code Refactoring
+
+* **match:** migrate GET routes to ApiResponse<T> envelope (S25.5i) ([95a0f37](https://github.com/Ryxeuf/fantasy-football-game/commit/95a0f37640b09a7cd127b4d418c0fd8fac905344))
+
+## [1.76.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.76.0...v1.76.1) (2026-04-28)
+
+
+### 🐛 Bug Fixes
+
+* **server:** route AI to setup/kickoff helpers instead of gameplay loop ([1a9317c](https://github.com/Ryxeuf/fantasy-football-game/commit/1a9317c9e038487af598ec6309c93f3ade41d47d))
+
+## [1.76.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.75.0...v1.76.0) (2026-04-28)
+
+
+### ✨ Features
+
+* **api:** migrate /match/create|join|accept to ApiResponse&lt;T&gt; (S25.5f) ([#424](https://github.com/Ryxeuf/fantasy-football-game/issues/424)) ([8a7cbe8](https://github.com/Ryxeuf/fantasy-football-game/commit/8a7cbe87669a17d36e79c102431033a72a59c3f0))
+* **api:** migrate /match/my-matches and /match/live to ApiResponse<T> (S25.5h) ([#426](https://github.com/Ryxeuf/fantasy-football-game/issues/426)) ([a26048b](https://github.com/Ryxeuf/fantasy-football-game/commit/a26048b59d1f645896f6349b33d19b4fa2c5bfc2))
+* **api:** migrate /match/practice and /match/:id/cancel to ApiResponse&lt;T&gt; (S25.5g) ([#425](https://github.com/Ryxeuf/fantasy-football-game/issues/425)) ([9182a30](https://github.com/Ryxeuf/fantasy-football-game/commit/9182a30674548d201a4e340b80d65e0d15f6ac16)), closes [#424](https://github.com/Ryxeuf/fantasy-football-game/issues/424)
+* **engine:** resolve kickoff ball landing with touchback and auto-catch ([45b04ed](https://github.com/Ryxeuf/fantasy-football-game/commit/45b04ed0daf4db16e40f7e0aea324b78b0dd611a))
+* **web:** clarify kickoff ball placement panel ([4d1f189](https://github.com/Ryxeuf/fantasy-football-game/commit/4d1f189c9184d1acc8fcc4d05eeae057723bb3c8))
+
+
+### 🐛 Bug Fixes
+
+* **server:** GET /:id/state returns latest turn for active matches ([9fced19](https://github.com/Ryxeuf/fantasy-football-game/commit/9fced19126c3b81635bc805bba0cbfad7abb0049))
+
+## [1.75.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.74.0...v1.75.0) (2026-04-28)
+
+
+### ✨ Features
+
+* **auth:** cookie auth_token httpOnly + sameSite=strict + secure (S24.1) ([#395](https://github.com/Ryxeuf/fantasy-football-game/issues/395)) ([eb9c87e](https://github.com/Ryxeuf/fantasy-football-game/commit/eb9c87eb16ed7d618780e54def539ec58c423c39))
+* **auth:** JWT access/refresh helpers (S24.3a, slice 1/4) ([#398](https://github.com/Ryxeuf/fantasy-football-game/issues/398)) ([d1184b2](https://github.com/Ryxeuf/fantasy-football-game/commit/d1184b27661bea16ba9229004fd7b81e7eb08bef))
+* **auth:** POST /auth/refresh endpoint with rotation (S24.3d) ([#401](https://github.com/Ryxeuf/fantasy-football-game/issues/401)) ([9b2511c](https://github.com/Ryxeuf/fantasy-football-game/commit/9b2511c978ebda1c83c9e4c606a199e5c0d7a68f))
+* **auth:** refresh token Prisma persistence + async store (S24.3c) ([#400](https://github.com/Ryxeuf/fantasy-football-game/issues/400)) ([309e767](https://github.com/Ryxeuf/fantasy-football-game/commit/309e7670482f31f13a62b6952beb58cdcbec709c))
+* **auth:** refresh-token jti + in-memory store rotation (S24.3b) ([#399](https://github.com/Ryxeuf/fantasy-football-game/issues/399)) ([10d228e](https://github.com/Ryxeuf/fantasy-football-game/commit/10d228e055bbc2e429112f7d5b7494f74d1ae7a9))
+* **devops:** docker hot-reload + 5 daily-dev make targets (S24.9) ([#408](https://github.com/Ryxeuf/fantasy-football-game/issues/408)) ([d909169](https://github.com/Ryxeuf/fantasy-football-game/commit/d909169103f8fdc2e025c8697e0e7ac1c333edca))
+* **server:** Helmet + HSTS + CSP + X-Frame-Options DENY (S24.2) ([#397](https://github.com/Ryxeuf/fantasy-football-game/issues/397)) ([ff0f21c](https://github.com/Ryxeuf/fantasy-football-game/commit/ff0f21c06878ffb93cb3f7003864f6ebafb47112))
+* **server:** paginate listLeagues + audit unbounded findMany (S25.6) ([#419](https://github.com/Ryxeuf/fantasy-football-game/issues/419)) ([5a6d536](https://github.com/Ryxeuf/fantasy-football-game/commit/5a6d536f6e83e59e16092ad2ad14b30ab506e1b0))
+* **server:** pino logger + correlation IDs + deep healthcheck (S25.1) ([#409](https://github.com/Ryxeuf/fantasy-football-game/issues/409)) ([4759740](https://github.com/Ryxeuf/fantasy-football-game/commit/4759740b00f0929d73731b67ec24f955a19c5c94))
+* **server:** Prometheus /metrics endpoint + 5 custom metrics (S25.3) ([#411](https://github.com/Ryxeuf/fantasy-football-game/issues/411)) ([3d9f48a](https://github.com/Ryxeuf/fantasy-football-game/commit/3d9f48afb01aebeb83a11d6ea56b8199029d748d))
+* **web:** @sentry/nextjs DSN-gated init + 10% prod sample rate (S25.2) ([#410](https://github.com/Ryxeuf/fantasy-football-game/issues/410)) ([5756cd4](https://github.com/Ryxeuf/fantasy-football-game/commit/5756cd48a4550dc1930ad488a2ac095eab55517c))
+* **web:** shared apiRequest<T> helper unwrapping ApiResponse (S25.5b) ([#414](https://github.com/Ryxeuf/fantasy-football-game/issues/414)) ([c269b7b](https://github.com/Ryxeuf/fantasy-football-game/commit/c269b7b32a0ce6eb780d4212107045cad3ee7ede))
+
+
+### 🐛 Bug Fixes
+
+* **e2e:** leagues spec uses envelope after sendSuccess migration (S25.5f) ([#418](https://github.com/Ryxeuf/fantasy-football-game/issues/418)) ([5da3d62](https://github.com/Ryxeuf/fantasy-football-game/commit/5da3d62f5cdbd74e6e1e228b6617b68a47f18efd)), closes [#417](https://github.com/Ryxeuf/fantasy-football-game/issues/417)
+* **server:** introduce serverLog wrapper for console.* (S24.8) ([#407](https://github.com/Ryxeuf/fantasy-football-game/issues/407)) ([36c8182](https://github.com/Ryxeuf/fantasy-football-game/commit/36c81827413eeea962ed07ea0eceeac34e60adb0))
+* **web:** polling fallback 10s + exponential backoff (S24.5) ([#404](https://github.com/Ryxeuf/fantasy-football-game/issues/404)) ([8d4fe57](https://github.com/Ryxeuf/fantasy-football-game/commit/8d4fe57d09067d2196f7573954681f74d430869f))
+* **web:** silence debug console.log in prod via webLog wrapper (S24.7) ([#406](https://github.com/Ryxeuf/fantasy-football-game/issues/406)) ([006e807](https://github.com/Ryxeuf/fantasy-football-game/commit/006e807f529550e6beb0ef447f3ce439f12ea29b))
+* **web:** WebSocket cleanup defensive removeAllListeners (S24.4) ([#402](https://github.com/Ryxeuf/fantasy-football-game/issues/402)) ([ea1d3c4](https://github.com/Ryxeuf/fantasy-football-game/commit/ea1d3c473f681cb10293fe1988d3d4fd98e1ca43))
+
+
+### ⚡ Performance Improvements
+
+* **engine:** truncate gameLog at end-of-turn (S25.9) ([#422](https://github.com/Ryxeuf/fantasy-football-game/issues/422)) ([fc15d93](https://github.com/Ryxeuf/fantasy-football-game/commit/fc15d9392d6afa1a7829572ededa732104953071))
+* **web:** lazy-load Pixi board on /replay, /spectate, /dugout-demo (S25.7) ([#420](https://github.com/Ryxeuf/fantasy-football-game/issues/420)) ([979d067](https://github.com/Ryxeuf/fantasy-football-game/commit/979d0672408d0a4ff00a5e7a3a0be6567ac33442))
+* **web:** use next/image for star player detail (S25.8) ([#421](https://github.com/Ryxeuf/fantasy-football-game/issues/421)) ([07cf1d1](https://github.com/Ryxeuf/fantasy-football-game/commit/07cf1d157feb627664eff9625751dfbab6dd77e4))
+
+
+### 📝 Documentation
+
+* add deployment incident documentation and improve rollback logic ([5adbd3b](https://github.com/Ryxeuf/fantasy-football-game/commit/5adbd3bee328b46ba506b13fef6f06111f191cd3))
+* **prompts:** cron dev loop aligne avec roadmap v2 ([ca3aaab](https://github.com/Ryxeuf/fantasy-football-game/commit/ca3aaaba7088c6beb9e4221a8c4b63beb528b10a))
+* **roadmap:** archive v1 (Sprints 0-23 / Phases A-Q) et page blanche v2 ([99515e7](https://github.com/Ryxeuf/fantasy-football-game/commit/99515e74cf37801b7bc6d0c9a95068e665411ed6))
+* **roadmap:** plan sprints 24-27 derive d'un audit a 10 agents ([48c7cce](https://github.com/Ryxeuf/fantasy-football-game/commit/48c7ccefb0bb03f4ee12a81f8a2a3df293721a5a))
+
+
+### ♻️ Code Refactoring
+
+* **server:** league.ts success paths -> sendSuccess (S25.5e) ([#417](https://github.com/Ryxeuf/fantasy-football-game/issues/417)) ([219ec1e](https://github.com/Ryxeuf/fantasy-football-game/commit/219ec1e6fb3124ee6a507efa28942fef6467f0f0))
+* **server:** standardize error envelope on league.ts (S25.5a) ([#413](https://github.com/Ryxeuf/fantasy-football-game/issues/413)) ([e0b9c72](https://github.com/Ryxeuf/fantasy-football-game/commit/e0b9c72493ec7ef364b5e4795c2985778b9310f8))
+* **web:** leagues page uses shared apiRequest helper (S25.5c) ([#415](https://github.com/Ryxeuf/fantasy-football-game/issues/415)) ([f453328](https://github.com/Ryxeuf/fantasy-football-game/commit/f45332895a9b134cb34d36793a4e2283c5e749f4))
+* **web:** leagues/[id] page uses shared apiRequest helper (S25.5d) ([#416](https://github.com/Ryxeuf/fantasy-football-game/issues/416)) ([ccd757b](https://github.com/Ryxeuf/fantasy-football-game/commit/ccd757b8e7be09ae64213ab6e3dd99155ba86787))
+
 ## [1.74.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.73.0...v1.74.0) (2026-04-27)
 
 

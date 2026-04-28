@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { API_BASE } from "../../auth-client";
+import { webLog } from "../../lib/log";
 
 type ActionType = "passe" | "reception" | "td" | "blocage" | "blitz" | "transmission" | "aggression" | "sprint" | "esquive" | "apothicaire" | "interception";
 
@@ -346,10 +347,9 @@ export default function LocalMatchActions({
     ? opponentTeam.players
     : (opponentTeam?.players === undefined ? [] : []);
 
-  // Debug: afficher un message si pas de joueurs
   useEffect(() => {
     if (currentTeamPlayers.length === 0 && teamA && teamB) {
-      console.warn("Aucun joueur trouvé pour l'équipe sélectionnée", {
+      webLog.debug("Aucun joueur trouvé pour l'équipe sélectionnée", {
         teamA: teamA.name,
         teamB: teamB.name,
         teamAPlayers: teamA.players?.length || 0,

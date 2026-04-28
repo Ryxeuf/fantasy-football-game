@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { get, rawGet, rawPost, resetDb } from "../helpers/api";
+import { get, rawGet, rawPost, resetDb, unwrap } from "../helpers/api";
 import {
   bootMatch,
   createMatch,
@@ -116,12 +116,22 @@ describe("E2E API — routes /match/*", () => {
   it("GET /match/my-matches liste les matches du coach courant uniquement", async () => {
     const { coachA, coachB, match } = await bootMatch();
 
-    const aMatches = await get<{
-      matches: Array<{ id: string; myTeam: unknown; opponent: unknown }>;
-    }>("/match/my-matches", coachA.token);
-    const bMatches = await get<{
-      matches: Array<{ id: string; myTeam: unknown; opponent: unknown }>;
-    }>("/match/my-matches", coachB.token);
+    const aMatches = unwrap(
+      await get<{
+        success: true;
+        data: {
+          matches: Array<{ id: string; myTeam: unknown; opponent: unknown }>;
+        };
+      }>("/match/my-matches", coachA.token),
+    );
+    const bMatches = unwrap(
+      await get<{
+        success: true;
+        data: {
+          matches: Array<{ id: string; myTeam: unknown; opponent: unknown }>;
+        };
+      }>("/match/my-matches", coachB.token),
+    );
 
     expect(aMatches.matches.length).toBeGreaterThan(0);
     expect(bMatches.matches.length).toBeGreaterThan(0);
@@ -147,9 +157,11 @@ describe("E2E API — routes /match/*", () => {
       "password-c",
       "Carol",
     );
-    const list = await get<{ matches: Array<{ id: string }> }>(
-      "/match/my-matches",
-      outsiderToken,
+    const list = unwrap(
+      await get<{ success: true; data: { matches: Array<{ id: string }> } }>(
+        "/match/my-matches",
+        outsiderToken,
+      ),
     );
     expect(list.matches.some((m) => m.id === match.id)).toBe(false);
   });

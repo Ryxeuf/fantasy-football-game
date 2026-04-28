@@ -29,7 +29,7 @@ import {
   rollBlockDiceManyWithNotification,
 } from '../utils/dice-notifications';
 import { performInjuryRoll } from '../mechanics/injury';
-import { createLogEntry } from '../utils/logging';
+import { createLogEntry, truncateGameLog } from '../utils/logging';
 import {
   checkTouchdowns,
   isInOpponentEndzone,
@@ -735,7 +735,13 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
 
   switch (move.type) {
     case 'END_TURN':
-      return handleEndTurn(activeState, rng);
+      // S25.9 — borne `gameLog` au start-of-turn (apres END_TURN). Sans
+      // ce cap, le log du serveur grandit indefiniment sur les longs
+      // matches (cf. broadcasts deja tronques en S22+ via game-broadcast).
+      // 200 entrees laisse une marge confortable au-dessus du seuil
+      // broadcast (100) pour que les lookups historiques cote serveur
+      // disposent d'un buffer.
+      return truncateGameLog(handleEndTurn(activeState, rng), 200);
     case 'END_PLAYER_TURN':
       return handleEndPlayerTurn(activeState, move);
     case 'MOVE':

@@ -13,6 +13,7 @@ import {
   updateUserValidSchema,
   updateMatchStatusSchema,
 } from "../schemas/admin.schemas";
+import { serverLog } from "../utils/server-log";
 
 const router = Router();
 
@@ -100,7 +101,7 @@ router.get("/users", validateQuery(adminUsersQuerySchema), async (req, res) => {
       },
     });
   } catch (e) {
-    console.error(e);
+    serverLog.error(e);
     res.status(500).json({ error: "Erreur lors de la récupération des utilisateurs" });
   }
 });
@@ -172,7 +173,7 @@ router.get("/users/:id", async (req, res) => {
 
     res.json({ user: userWithRoles });
   } catch (e) {
-    console.error(e);
+    serverLog.error(e);
     res.status(500).json({ error: "Erreur lors de la récupération de l'utilisateur" });
   }
 });
@@ -229,7 +230,7 @@ router.patch("/users/:id/role", validate(updateUserRoleSchema), async (req, res)
     if (e.code === "P2025") {
       return res.status(404).json({ error: "Utilisateur non trouvé" });
     }
-    console.error(e);
+    serverLog.error(e);
     res.status(500).json({ error: "Erreur lors de la modification du rôle" });
   }
 });
@@ -251,7 +252,7 @@ router.patch("/users/:id/patreon", validate(updateUserPatreonSchema), async (req
     if (e.code === "P2025") {
       return res.status(404).json({ error: "Utilisateur non trouvé" });
     }
-    console.error(e);
+    serverLog.error(e);
     res.status(500).json({ error: "Erreur lors de la modification du statut Patreon" });
   }
 });
@@ -273,7 +274,7 @@ router.patch("/users/:id/valid", validate(updateUserValidSchema), async (req, re
     if (e.code === "P2025") {
       return res.status(404).json({ error: "Utilisateur non trouvé" });
     }
-    console.error(e);
+    serverLog.error(e);
     res.status(500).json({ error: "Erreur lors de la modification du statut de validation" });
   }
 });
@@ -297,7 +298,7 @@ router.delete("/users/:id", async (req, res) => {
     if (e.code === "P2025") {
       return res.status(404).json({ error: "Utilisateur non trouvé" });
     }
-    console.error(e);
+    serverLog.error(e);
     res.status(500).json({ error: "Erreur lors de la suppression de l'utilisateur" });
   }
 });
@@ -400,7 +401,7 @@ router.get("/matches", validateQuery(adminMatchesQuerySchema), async (req, res) 
       },
     });
   } catch (e: any) {
-    console.error("Erreur lors de la récupération des parties:", e);
+    serverLog.error("Erreur lors de la récupération des parties:", e);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -447,7 +448,7 @@ router.get("/matches/:id", async (req, res) => {
 
     res.json({ match });
   } catch (e) {
-    console.error(e);
+    serverLog.error(e);
     res.status(500).json({ error: "Erreur lors de la récupération de la partie" });
   }
 });
@@ -469,7 +470,7 @@ router.patch("/matches/:id/status", validate(updateMatchStatusSchema), async (re
     if (e.code === "P2025") {
       return res.status(404).json({ error: "Partie non trouvée" });
     }
-    console.error(e);
+    serverLog.error(e);
     res.status(500).json({ error: "Erreur lors de la modification du statut" });
   }
 });
@@ -502,7 +503,7 @@ router.delete("/matches/:id", async (req, res) => {
     if (e.code === "P2025") {
       return res.status(404).json({ error: "Partie non trouvée" });
     }
-    console.error(e);
+    serverLog.error(e);
     res.status(500).json({ error: "Erreur lors de la suppression de la partie" });
   }
 });
@@ -517,7 +518,7 @@ router.post("/matches/purge", async (_req, res) => {
     await prisma.match.deleteMany({});
     res.json({ ok: true });
   } catch (e) {
-    console.error(e);
+    serverLog.error(e);
     res.status(500).json({ error: "Erreur lors de la purge des parties" });
   }
 });
@@ -536,7 +537,7 @@ router.post("/test/reset", async (_req, res) => {
     await prisma.user.deleteMany({});
     res.json({ ok: true });
   } catch (e) {
-    console.error(e);
+    serverLog.error(e);
     res.status(500).json({ error: "Erreur reset tests" });
   }
 });
@@ -628,7 +629,7 @@ router.get("/stats", async (_req, res) => {
       time: new Date().toISOString(),
     });
   } catch (e: any) {
-    console.error("Erreur lors de la récupération des statistiques:", e);
+    serverLog.error("Erreur lors de la récupération des statistiques:", e);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -723,7 +724,7 @@ router.get("/teams", validateQuery(adminTeamsQuerySchema), async (req, res) => {
       },
     });
   } catch (e) {
-    console.error(e);
+    serverLog.error(e);
     res.status(500).json({ error: "Erreur lors de la récupération des équipes" });
   }
 });
@@ -756,7 +757,7 @@ router.get("/teams/:id", async (req, res) => {
 
     res.json({ team });
   } catch (e) {
-    console.error(e);
+    serverLog.error(e);
     res.status(500).json({ error: "Erreur lors de la récupération de l'équipe" });
   }
 });
@@ -801,7 +802,7 @@ router.delete("/teams/:id", async (req, res) => {
     if (e.code === "P2025") {
       return res.status(404).json({ error: "Équipe non trouvée" });
     }
-    console.error(e);
+    serverLog.error(e);
     res.status(500).json({ error: "Erreur lors de la suppression de l'équipe" });
   }
 });

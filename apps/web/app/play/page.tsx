@@ -1,10 +1,16 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { API_BASE } from "../auth-client";
+import { apiRequest } from "../lib/api-client";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useMatchmakingSocket } from "./hooks/useMatchmakingSocket";
 import { useFeatureFlag } from "../hooks/useFeatureFlag";
 import { AI_TRAINING_FLAG } from "../lib/featureFlagKeys";
+
+interface MatchTokenResponse {
+  match: { id: string };
+  matchToken: string;
+}
 
 interface MatchSummary {
   id: string;
@@ -151,7 +157,7 @@ export default function PlayPage() {
   const loadMatches = useCallback(async () => {
     try {
       setLoadingMatches(true);
-      const data = await apiGet("/match/my-matches");
+      const data = await apiRequest<{ matches: MatchSummary[] }>("/match/my-matches");
       setMatches(data.matches || []);
     } catch {
       // silently fail
@@ -280,11 +286,17 @@ export default function PlayPage() {
     setError(null);
     setCreating(true);
     try {
-      const { match, matchToken } = await apiPost("/match/create", {
-        terrainSkin: selectedTerrain,
-        turnTimerEnabled,
-        rulesMode: simplifiedMode ? "simplified" : "full",
-      });
+      const { match, matchToken } = await apiRequest<MatchTokenResponse>(
+        "/match/create",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            terrainSkin: selectedTerrain,
+            turnTimerEnabled,
+            rulesMode: simplifiedMode ? "simplified" : "full",
+          }),
+        },
+      );
       localStorage.setItem("match_token", matchToken);
       window.location.href = `/team/select?matchId=${match.id}`;
     } catch (e: unknown) {
@@ -299,7 +311,13 @@ export default function PlayPage() {
     setError(null);
     setJoining(true);
     try {
-      const { match, matchToken } = await apiPost("/match/join", { matchId: matchIdInput.trim() });
+      const { match, matchToken } = await apiRequest<MatchTokenResponse>(
+        "/match/join",
+        {
+          method: "POST",
+          body: JSON.stringify({ matchId: matchIdInput.trim() }),
+        },
+      );
       localStorage.setItem("match_token", matchToken);
       window.location.href = `/team/select?matchId=${match.id}`;
     } catch (e: unknown) {
@@ -332,9 +350,15 @@ export default function PlayPage() {
     setError(null);
     setStartingPractice(true);
     try {
-      const result = await apiPost("/match/practice", {
-        userTeamId: practiceTeamId,
-        difficulty: practiceDifficulty,
+      const result = await apiRequest<{
+        match: { id: string };
+        matchToken: string;
+      }>("/match/practice", {
+        method: "POST",
+        body: JSON.stringify({
+          userTeamId: practiceTeamId,
+          difficulty: practiceDifficulty,
+        }),
       });
       const matchId = result?.match?.id;
       const matchToken = result?.matchToken;

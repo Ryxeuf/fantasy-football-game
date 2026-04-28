@@ -4,6 +4,7 @@ import { isEnabled } from "../services/featureFlags";
 import { JWT_SECRET } from "../config";
 import { normalizeRoles } from "../utils/roles";
 import { AuthenticatedRequest } from "./authUser";
+import { serverLog } from "../utils/server-log";
 
 /**
  * Middleware Express qui bloque la route avec un 403 lorsque le feature flag
@@ -57,7 +58,7 @@ export function requireFeatureFlag(key: string) {
       });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "Erreur serveur";
-      console.error(`[requireFeatureFlag:${key}]`, message);
+      serverLog.error(`[requireFeatureFlag:${key}]`, message);
       return res.status(500).json({ error: message });
     }
   };

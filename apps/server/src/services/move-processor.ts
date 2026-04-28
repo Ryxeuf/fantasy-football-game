@@ -12,6 +12,8 @@ import { isUserConnectedToMatch } from "./connected-users";
 import { handleTurnTimerAfterMove } from "./turn-timer-orchestrator";
 import { FULL_RULES } from "@bb/game-engine";
 import { scheduleAILoop } from "./ai-loop";
+import { runAISetupIfNeeded } from "./ai-setup";
+import { runAIKickoffIfNeeded } from "./ai-kickoff";
 import { recordLeagueMatchResult } from "./league-match-result";
 
 export interface MoveResult {
@@ -317,16 +319,61 @@ export async function processMove(
     nextUserId ?? undefined,
   );
 
-  // Practice vs AI — if the next turn belongs to the AI, schedule the loop
-  // (fire-and-forget). The loop persists AI moves as turns and broadcasts
-  // them via WebSocket; HTTP response returns immediately.
+  // Practice vs AI — route to the right handler depending on the phase.
+  // After a touchdown, `handlePostTouchdown` brings the state back into
+  // `preMatch.phase === 'setup'` so the next drive can be staged. In that
+  // shape `scheduleAILoop` would call `computeAIMove`, which has no setup
+  // logic and returns null → forced END_TURN, leaving `currentCoach` and
+  // `currentPlayer` desynchronised and the match unrecoverable. We dispatch
+  // to the dedicated AI helpers (setup → kickoff ball placement) and only
+  // fall back to the gameplay loop once we are out of those phases.
   if (
     !matchEnded &&
     match.aiOpponent &&
-    match.aiTeamSide &&
-    newState.currentPlayer === match.aiTeamSide
+    match.aiTeamSide
   ) {
-    scheduleAILoop(matchId);
+    let postState = newState;
+    if (
+      postState.preMatch?.phase === "setup" &&
+      postState.preMatch.currentCoach === match.aiTeamSide
+    ) {
+      const setupReport = await runAISetupIfNeeded(matchId, prisma as any);
+      if (setupReport.ran && setupReport.gameState) {
+        postState = setupReport.gameState as ExtendedGameState;
+      }
+    }
+    if (
+      postState.preMatch?.phase === "kickoff-sequence" &&
+      postState.preMatch.kickoffStep === "place-ball" &&
+      postState.preMatch.kickingTeam === match.aiTeamSide
+    ) {
+      const kickoffReport = await runAIKickoffIfNeeded(matchId, prisma as any);
+      if (kickoffReport.ran && kickoffReport.gameState) {
+        postState = kickoffReport.gameState as ExtendedGameState;
+      }
+    }
+    if (
+      !postState.preMatch &&
+      postState.currentPlayer === match.aiTeamSide
+    ) {
+      scheduleAILoop(matchId);
+    }
+
+    // After AI setup/kickoff helpers, the active coach (or the gameplay
+    // currentPlayer) may now be the human. Keep currentTurnUserId in sync
+    // so the human client is unblocked.
+    if (postState !== newState) {
+      const activeTeam = postState.preMatch?.currentCoach ?? postState.currentPlayer;
+      const updatedUserId = activeTeam === "A"
+        ? selections[0]?.userId
+        : selections[1]?.userId;
+      if (updatedUserId && updatedUserId !== nextUserId) {
+        await prisma.match.update({
+          where: { id: matchId },
+          data: { currentTurnUserId: updatedUserId, lastMoveAt: new Date() },
+        });
+      }
+    }
   }
 
   const isMyTurn = newState.currentPlayer === userTeamSide;
