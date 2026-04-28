@@ -45,8 +45,12 @@ vi.mock("../services/match-cancel", () => ({
 }));
 
 vi.mock("jsonwebtoken", () => ({
-  default: { sign: vi.fn(() => "signed-token") },
+  default: {
+    sign: vi.fn(() => "signed-token"),
+    verify: vi.fn(() => ({ matchId: "m1", userId: "user-1" })),
+  },
   sign: vi.fn(() => "signed-token"),
+  verify: vi.fn(() => ({ matchId: "m1", userId: "user-1" })),
 }));
 
 vi.mock("../utils/server-log", () => ({
@@ -62,6 +66,7 @@ import { prisma } from "../prisma";
 import { acceptAndMaybeStartMatch } from "../services/match-start";
 import { createOnlinePracticeMatch } from "../services/practice-match";
 import { cancelMatch } from "../services/match-cancel";
+import jwt from "jsonwebtoken";
 import {
   handleCreateMatch,
   handleJoinMatch,
@@ -75,6 +80,9 @@ import {
   handleSpectateMatch,
   handleReplayMatch,
   handleGetMatchSummary,
+  handleGetMatchDetailsByToken,
+  handleGetMatchDetails,
+  handleGetMatchTeams,
 } from "./match";
 import { getSpectatorCount } from "../game-spectator";
 import type { AuthenticatedRequest } from "../middleware/authUser";
@@ -920,6 +928,202 @@ describe("Route: GET /match/:id/replay (S25.5i)", () => {
     const req = createReq({ params: { id: "m1" } });
     const res = createRes();
     await handleReplayMatch(req, res);
+    expect(res.statusCode).toBe(500);
+    expect(res.payload).toMatchObject({ success: false, error: "Erreur serveur" });
+  });
+});
+
+describe("Route: GET /match/details (S25.5j)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (jwt.verify as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+      matchId: "m1",
+      userId: "user-1",
+    });
+  });
+
+  function createTokenReq(token: string | null = "valid-token"): AuthenticatedRequest {
+    const headers: Record<string, string> = {};
+    if (token) headers["x-match-token"] = token;
+    return { headers, body: {}, params: {}, query: {} } as unknown as AuthenticatedRequest;
+  }
+
+  it("returns ApiSuccess with local/visitor team and coach names", async () => {
+    mockPrisma.match.findUnique.mockResolvedValue({ id: "m1", creatorId: "user-1" });
+    mockPrisma.teamSelection.findMany.mockResolvedValue([
+      {
+        userId: "user-1",
+        user: { id: "user-1", name: "Alice", email: "a@x" },
+        teamRef: { name: "Reds", roster: "skaven" },
+      },
+      {
+        userId: "user-2",
+        user: { id: "user-2", name: "Bob", email: "b@x" },
+        teamRef: { name: "Blues", roster: "lizardmen" },
+      },
+    ]);
+
+    const req = createTokenReq();
+    const res = createRes();
+    await handleGetMatchDetailsByToken(req, res);
+
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: {
+        matchId: "m1",
+        local: { teamName: "Reds", coachName: "Alice", userId: "user-1" },
+        visitor: { teamName: "Blues", coachName: "Bob", userId: "user-2" },
+      },
+    });
+  });
+
+  it("returns 401 ApiError when x-match-token is missing", async () => {
+    const req = createTokenReq(null);
+    const res = createRes();
+    await handleGetMatchDetailsByToken(req, res);
+    expect(res.statusCode).toBe(401);
+    expect(res.payload).toMatchObject({ success: false, error: "x-match-token requis" });
+  });
+
+  it("returns 401 ApiError when x-match-token is invalid", async () => {
+    (jwt.verify as unknown as ReturnType<typeof vi.fn>).mockImplementation(() => {
+      throw new Error("invalid");
+    });
+    const req = createTokenReq("bad-token");
+    const res = createRes();
+    await handleGetMatchDetailsByToken(req, res);
+    expect(res.statusCode).toBe(401);
+    expect(res.payload).toMatchObject({ success: false, error: "x-match-token invalide" });
+  });
+
+  it("returns 400 ApiError when matchId is missing from token payload", async () => {
+    (jwt.verify as unknown as ReturnType<typeof vi.fn>).mockReturnValue({});
+    const req = createTokenReq();
+    const res = createRes();
+    await handleGetMatchDetailsByToken(req, res);
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+
+  it("returns 500 ApiError when prisma throws", async () => {
+    mockPrisma.match.findUnique.mockRejectedValue(new Error("db down"));
+    const req = createTokenReq();
+    const res = createRes();
+    await handleGetMatchDetailsByToken(req, res);
+    expect(res.statusCode).toBe(500);
+    expect(res.payload).toMatchObject({ success: false, error: "Erreur serveur" });
+  });
+});
+
+describe("Route: GET /match/:id/details (S25.5j)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("returns ApiSuccess with local/visitor team, coach and elo for current user", async () => {
+    mockPrisma.match.findUnique.mockResolvedValue({ id: "m1", creatorId: "user-1" });
+    mockPrisma.teamSelection.findMany.mockResolvedValue([
+      {
+        userId: "user-1",
+        user: { id: "user-1", name: "Alice", email: "a@x", eloRating: 1200 },
+        teamRef: { name: "Reds", roster: "skaven" },
+      },
+      {
+        userId: "user-2",
+        user: { id: "user-2", name: "Bob", email: "b@x", eloRating: 1100 },
+        teamRef: { name: "Blues", roster: "lizardmen" },
+      },
+    ]);
+
+    const req = createReq({ params: { id: "m1" } });
+    const res = createRes();
+    await handleGetMatchDetails(req, res);
+
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: {
+        matchId: "m1",
+        local: { teamName: "Reds", coachName: "Alice", eloRating: 1200 },
+        visitor: { teamName: "Blues", coachName: "Bob", eloRating: 1100 },
+      },
+    });
+  });
+
+  it("returns 404 ApiError when match is not found", async () => {
+    mockPrisma.match.findUnique.mockResolvedValue(null);
+    mockPrisma.teamSelection.findMany.mockResolvedValue([]);
+    const req = createReq({ params: { id: "missing" } });
+    const res = createRes();
+    await handleGetMatchDetails(req, res);
+    expect(res.statusCode).toBe(404);
+    expect(res.payload).toMatchObject({ success: false, error: "Partie introuvable" });
+  });
+
+  it("returns 500 ApiError when prisma throws", async () => {
+    mockPrisma.match.findUnique.mockRejectedValue(new Error("db down"));
+    const req = createReq({ params: { id: "m1" } });
+    const res = createRes();
+    await handleGetMatchDetails(req, res);
+    expect(res.statusCode).toBe(500);
+    expect(res.payload).toMatchObject({ success: false, error: "Erreur serveur" });
+  });
+});
+
+describe("Route: GET /match/:id/teams (S25.5j)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("returns ApiSuccess with absolute teamA/teamB views including players", async () => {
+    mockPrisma.match.findUnique.mockResolvedValue({ id: "m1" });
+    mockPrisma.teamSelection.findMany.mockResolvedValue([
+      {
+        teamRef: {
+          name: "Reds",
+          players: [
+            { id: "p1", name: "Skitter", position: "Lineman", number: 1, ma: 7, st: 3, ag: 3, pa: 4, av: 7, skills: "" },
+          ],
+        },
+      },
+      {
+        teamRef: {
+          name: "Blues",
+          players: [
+            { id: "p2", name: "Krox", position: "Lineman", number: 1, ma: 6, st: 3, ag: 3, pa: 4, av: 8, skills: "" },
+          ],
+        },
+      },
+    ]);
+
+    const req = createReq({ params: { id: "m1" } });
+    const res = createRes();
+    await handleGetMatchTeams(req, res);
+
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: {
+        teamA: expect.objectContaining({
+          teamName: "Reds",
+          players: [expect.objectContaining({ id: "p1", name: "Skitter", ma: 7 })],
+        }),
+        teamB: expect.objectContaining({
+          teamName: "Blues",
+          players: [expect.objectContaining({ id: "p2", name: "Krox", av: 8 })],
+        }),
+      },
+    });
+  });
+
+  it("returns 404 ApiError when match is not found", async () => {
+    mockPrisma.match.findUnique.mockResolvedValue(null);
+    const req = createReq({ params: { id: "missing" } });
+    const res = createRes();
+    await handleGetMatchTeams(req, res);
+    expect(res.statusCode).toBe(404);
+    expect(res.payload).toMatchObject({ success: false, error: "Partie introuvable" });
+  });
+
+  it("returns 500 ApiError when prisma throws", async () => {
+    mockPrisma.match.findUnique.mockRejectedValue(new Error("db down"));
+    const req = createReq({ params: { id: "m1" } });
+    const res = createRes();
+    await handleGetMatchTeams(req, res);
     expect(res.statusCode).toBe(500);
     expect(res.payload).toMatchObject({ success: false, error: "Erreur serveur" });
   });

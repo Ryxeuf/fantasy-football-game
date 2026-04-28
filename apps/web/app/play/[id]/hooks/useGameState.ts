@@ -166,24 +166,26 @@ export function useGameState(matchId: string): GameStateInfo {
         if (!token) return;
         const matchToken = localStorage.getItem("match_token");
         if (matchToken) {
-          const res = await fetch(`${API_BASE}/match/details`, {
-            headers: { "X-Match-Token": matchToken },
-          });
-          const data = await res.json().catch(() => ({}) as any);
-          if (res.ok && data) {
+          try {
+            const data = await apiRequest<{
+              local: { teamName?: string };
+              visitor: { teamName?: string };
+            }>("/match/details", {
+              headers: { "X-Match-Token": matchToken },
+            });
             setTeamNameA(data?.local?.teamName || undefined);
             setTeamNameB(data?.visitor?.teamName || undefined);
             return;
+          } catch {
+            // fallthrough vers /match/:id/details
           }
         }
-        const res = await fetch(`${API_BASE}/match/${matchId}/details`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json().catch(() => ({}) as any);
-        if (res.ok && data) {
-          setTeamNameA(data?.local?.teamName || undefined);
-          setTeamNameB(data?.visitor?.teamName || undefined);
-        }
+        const data = await apiRequest<{
+          local: { teamName?: string };
+          visitor: { teamName?: string };
+        }>(`/match/${matchId}/details`);
+        setTeamNameA(data?.local?.teamName || undefined);
+        setTeamNameB(data?.visitor?.teamName || undefined);
       } catch {
         setTeamNameA("Équipe Locale");
         setTeamNameB("Équipe Visiteuse");
@@ -223,15 +225,17 @@ export function useGameState(matchId: string): GameStateInfo {
           initialLoadDone.current = true;
           return;
         }
-        const teamsRes = await fetch(`${API_BASE}/match/${matchId}/teams`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const teamsData = await teamsRes.json().catch(() => ({}) as any);
-        if (teamsRes.ok && (teamsData.teamA || (teamsData.local && teamsData.visitor))) {
+        const teamsData = await apiRequest<{
+          teamA?: { teamName?: string; players?: unknown[] };
+          teamB?: { teamName?: string; players?: unknown[] };
+          local?: { teamName?: string; players?: unknown[] };
+          visitor?: { teamName?: string; players?: unknown[] };
+        }>(`/match/${matchId}/teams`);
+        if (teamsData.teamA || (teamsData.local && teamsData.visitor)) {
           const a = teamsData.teamA || teamsData.local;
           const b = teamsData.teamB || teamsData.visitor;
           setState(normalizeState(
-            setupPreMatchWithTeams(a.players || [], b.players || [], teamNameA || a.teamName || "Équipe Locale", teamNameB || b.teamName || "Équipe Visiteuse")
+            setupPreMatchWithTeams((a as any)?.players || [], (b as any)?.players || [], teamNameA || (a as any)?.teamName || "Équipe Locale", teamNameB || (b as any)?.teamName || "Équipe Visiteuse")
           ));
           setStateSource("fallback");
           initialLoadDone.current = true;
