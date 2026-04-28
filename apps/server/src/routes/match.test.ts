@@ -22,6 +22,14 @@ vi.mock("../services/match-start", () => ({
   acceptAndMaybeStartMatch: vi.fn(),
 }));
 
+vi.mock("../services/practice-match", () => ({
+  createOnlinePracticeMatch: vi.fn(),
+}));
+
+vi.mock("../services/match-cancel", () => ({
+  cancelMatch: vi.fn(),
+}));
+
 vi.mock("jsonwebtoken", () => ({
   default: { sign: vi.fn(() => "signed-token") },
   sign: vi.fn(() => "signed-token"),
@@ -38,10 +46,14 @@ vi.mock("../utils/server-log", () => ({
 import type { Response } from "express";
 import { prisma } from "../prisma";
 import { acceptAndMaybeStartMatch } from "../services/match-start";
+import { createOnlinePracticeMatch } from "../services/practice-match";
+import { cancelMatch } from "../services/match-cancel";
 import {
   handleCreateMatch,
   handleJoinMatch,
   handleAcceptMatch,
+  handlePracticeMatch,
+  handleCancelMatch,
 } from "./match";
 import type { AuthenticatedRequest } from "../middleware/authUser";
 
@@ -55,6 +67,10 @@ const mockPrisma = prisma as unknown as {
 const mockAcceptAndMaybeStart = acceptAndMaybeStartMatch as ReturnType<
   typeof vi.fn
 >;
+const mockCreatePractice = createOnlinePracticeMatch as ReturnType<
+  typeof vi.fn
+>;
+const mockCancelMatch = cancelMatch as ReturnType<typeof vi.fn>;
 
 function createRes() {
   const res: Partial<Response> & {
@@ -218,6 +234,138 @@ describe("Route: POST /match/accept (S25.5)", () => {
     const req = createReq({ body: { matchId: "m-1" } });
     const res = createRes();
     await handleAcceptMatch(req, res);
+    expect(res.statusCode).toBe(500);
+    expect(res.payload).toMatchObject({ success: false, error: "boom" });
+  });
+});
+
+describe("Route: POST /match/practice (S25.5g)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("creates a practice match and returns ApiSuccess with match + matchToken + ai", async () => {
+    mockCreatePractice.mockResolvedValue({
+      matchId: "match-prac-1",
+      aiUserId: "ai-user",
+      aiTeamId: "ai-team",
+      aiTeamSide: "B",
+      aiRoster: "skaven",
+    });
+    const req = createReq({
+      body: { userTeamId: "team-1", difficulty: "medium" },
+    });
+    const res = createRes();
+    await handlePracticeMatch(req, res);
+
+    expect(mockCreatePractice).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        creatorId: "user-1",
+        userTeamId: "team-1",
+        difficulty: "medium",
+      }),
+    );
+    expect(res.statusCode).toBe(201);
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: {
+        match: { id: "match-prac-1" },
+        matchToken: "signed-token",
+        ai: {
+          roster: "skaven",
+          teamId: "ai-team",
+          teamSide: "B",
+          userId: "ai-user",
+          difficulty: "medium",
+        },
+      },
+    });
+  });
+
+  it("maps 'introuvable' errors to 404 ApiError", async () => {
+    mockCreatePractice.mockRejectedValue(new Error("Equipe introuvable"));
+    const req = createReq({
+      body: { userTeamId: "missing", difficulty: "medium" },
+    });
+    const res = createRes();
+    await handlePracticeMatch(req, res);
+    expect(res.statusCode).toBe(404);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: "Equipe introuvable",
+    });
+  });
+
+  it("maps 'proprietaire' errors to 403 ApiError", async () => {
+    mockCreatePractice.mockRejectedValue(
+      new Error("Vous n'etes pas proprietaire de cette equipe"),
+    );
+    const req = createReq({
+      body: { userTeamId: "other-team", difficulty: "medium" },
+    });
+    const res = createRes();
+    await handlePracticeMatch(req, res);
+    expect(res.statusCode).toBe(403);
+  });
+
+  it("maps 'non autorise' errors to 400 ApiError", async () => {
+    mockCreatePractice.mockRejectedValue(
+      new Error("Roster non autorise dans cette ligue"),
+    );
+    const req = createReq({ body: { userTeamId: "t", difficulty: "easy" } });
+    const res = createRes();
+    await handlePracticeMatch(req, res);
+    expect(res.statusCode).toBe(400);
+  });
+
+  it("falls back to 500 for unmapped errors", async () => {
+    mockCreatePractice.mockRejectedValue(new Error("boom"));
+    const req = createReq({ body: { userTeamId: "t", difficulty: "easy" } });
+    const res = createRes();
+    await handlePracticeMatch(req, res);
+    expect(res.statusCode).toBe(500);
+  });
+});
+
+describe("Route: POST /match/:id/cancel (S25.5g)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("cancels and returns ApiSuccess with the service result", async () => {
+    mockCancelMatch.mockResolvedValue({ ok: true, status: "cancelled" });
+    const req = createReq({ params: { id: "match-1" } });
+    const res = createRes();
+    await handleCancelMatch(req, res);
+
+    expect(mockCancelMatch).toHaveBeenCalledWith(
+      expect.anything(),
+      { matchId: "match-1", userId: "user-1" },
+    );
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: { ok: true, status: "cancelled" },
+    });
+  });
+
+  it("forwards service status when ok=false (e.g., 404)", async () => {
+    mockCancelMatch.mockResolvedValue({
+      ok: false,
+      error: "Partie introuvable",
+      status: 404,
+    });
+    const req = createReq({ params: { id: "missing" } });
+    const res = createRes();
+    await handleCancelMatch(req, res);
+    expect(res.statusCode).toBe(404);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: "Partie introuvable",
+    });
+  });
+
+  it("returns 500 ApiError when service throws", async () => {
+    mockCancelMatch.mockRejectedValue(new Error("boom"));
+    const req = createReq({ params: { id: "m" } });
+    const res = createRes();
+    await handleCancelMatch(req, res);
     expect(res.statusCode).toBe(500);
     expect(res.payload).toMatchObject({ success: false, error: "boom" });
   });
