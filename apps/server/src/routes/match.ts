@@ -234,37 +234,47 @@ router.post(
   handlePracticeMatch,
 );
 
-// Soumettre un coup pendant la phase active du match
-router.post(
-  "/:id/move",
-  authUser,
-  validate(moveSchema),
-  async (req: AuthenticatedRequest, res) => {
-    try {
-      const matchId = req.params.id;
-      const { move } = req.body as { move: Move };
+// Soumettre un coup pendant la phase active du match (S25.5m — ApiResponse<T>).
+// La collision entre le `success` du handler et celui de `MoveAckPayload`
+// (cote client WS) est resolue en n'exposant cote HTTP que la donnee
+// metier ({gameState,isMyTurn,moveCount}) sous `data`. Le client adapte
+// l'enveloppe vers `MoveAckPayload` (voir `submitMoveHttp.ts`).
+const MOVE_ERROR_STATUS: Record<string, number> = {
+  NOT_FOUND: 404,
+  INVALID_STATUS: 400,
+  NOT_PLAYER: 403,
+  NO_STATE: 500,
+  NOT_YOUR_TURN: 403,
+  ENGINE_ERROR: 400,
+};
 
-      const result = await processMove(matchId, req.user!.id, move);
+export async function handleSubmitMove(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  try {
+    const matchId = req.params.id;
+    const { move } = req.body as { move: Move };
 
-      if (!result.success) {
-        const statusMap: Record<string, number> = {
-          NOT_FOUND: 404,
-          INVALID_STATUS: 400,
-          NOT_PLAYER: 403,
-          NO_STATE: 500,
-          NOT_YOUR_TURN: 403,
-          ENGINE_ERROR: 400,
-        };
-        return res.status(statusMap[result.code] ?? 500).json({ error: result.error });
-      }
+    const result = await processMove(matchId, req.user!.id, move);
 
-      return res.json(result);
-    } catch (e: any) {
-      serverLog.error("Erreur lors de l'application du coup:", e);
-      return res.status(500).json({ error: e?.message || "Erreur serveur" });
+    if (!result.success) {
+      sendError(res, result.error, MOVE_ERROR_STATUS[result.code] ?? 500);
+      return;
     }
-  },
-);
+
+    sendSuccess(res, {
+      gameState: result.gameState,
+      isMyTurn: result.isMyTurn,
+      moveCount: result.moveCount,
+    });
+  } catch (e: unknown) {
+    serverLog.error("Erreur lors de l'application du coup:", e);
+    sendError(res, errorMessage(e), 500);
+  }
+}
+
+router.post("/:id/move", authUser, validate(moveSchema), handleSubmitMove);
 
 export default router;
 

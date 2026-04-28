@@ -60,6 +60,10 @@ vi.mock("../services/turn-ownership", () => ({
   getUserTeamSide: vi.fn(),
 }));
 
+vi.mock("../services/move-processor", () => ({
+  processMove: vi.fn(),
+}));
+
 vi.mock("jsonwebtoken", () => ({
   default: {
     sign: vi.fn(() => "signed-token"),
@@ -82,6 +86,7 @@ import { prisma } from "../prisma";
 import { acceptAndMaybeStartMatch } from "../services/match-start";
 import { createOnlinePracticeMatch } from "../services/practice-match";
 import { cancelMatch } from "../services/match-cancel";
+import { processMove } from "../services/move-processor";
 import jwt from "jsonwebtoken";
 import {
   handleCreateMatch,
@@ -100,6 +105,7 @@ import {
   handleGetMatchDetails,
   handleGetMatchTeams,
   handleGetMatchState,
+  handleSubmitMove,
 } from "./match";
 import { ensureSetupPhasePersisted } from "../services/prematch-setup";
 import { runAISetupIfNeeded } from "../services/ai-setup";
@@ -137,6 +143,7 @@ const mockEnsureSetupPhasePersisted = ensureSetupPhasePersisted as ReturnType<
 >;
 const mockRunAISetupIfNeeded = runAISetupIfNeeded as ReturnType<typeof vi.fn>;
 const mockGetUserTeamSide = getUserTeamSide as ReturnType<typeof vi.fn>;
+const mockProcessMove = processMove as ReturnType<typeof vi.fn>;
 
 function createRes() {
   const res: Partial<Response> & {
@@ -1374,5 +1381,109 @@ describe("Route: GET /match/:id/state (S25.5l)", () => {
     await handleGetMatchState(req, res);
     expect(res.statusCode).toBe(500);
     expect(res.payload).toMatchObject({ success: false, error: "Erreur serveur" });
+  });
+});
+
+describe("Route: POST /match/:id/move (S25.5m)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("returns ApiSuccess with gameState/isMyTurn/moveCount when processMove succeeds", async () => {
+    const newState = { currentPlayer: "B", players: [] } as unknown;
+    mockProcessMove.mockResolvedValue({
+      success: true,
+      gameState: newState,
+      isMyTurn: false,
+      moveCount: 7,
+    });
+    const move = { type: "END_TURN" };
+    const req = createReq({
+      params: { id: "match-42" },
+      body: { move },
+    });
+    const res = createRes();
+
+    await handleSubmitMove(req, res);
+
+    expect(mockProcessMove).toHaveBeenCalledWith("match-42", "user-1", move);
+    expect(res.statusCode ?? 200).toBe(200);
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: {
+        gameState: newState,
+        isMyTurn: false,
+        moveCount: 7,
+      },
+    });
+    // No raw `success` field collision: data must NOT carry success itself.
+    const data = (res.payload as { data: Record<string, unknown> }).data;
+    expect(data).not.toHaveProperty("success");
+  });
+
+  it("returns 404 ApiError when processMove returns NOT_FOUND", async () => {
+    mockProcessMove.mockResolvedValue({
+      success: false,
+      error: "Partie introuvable",
+      code: "NOT_FOUND",
+    });
+    const req = createReq({ params: { id: "missing" }, body: { move: { type: "END_TURN" } } });
+    const res = createRes();
+
+    await handleSubmitMove(req, res);
+
+    expect(res.statusCode).toBe(404);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: "Partie introuvable",
+    });
+  });
+
+  it("returns 403 ApiError when processMove returns NOT_YOUR_TURN", async () => {
+    mockProcessMove.mockResolvedValue({
+      success: false,
+      error: "Ce n'est pas votre tour.",
+      code: "NOT_YOUR_TURN",
+    });
+    const req = createReq({ params: { id: "m1" }, body: { move: { type: "END_TURN" } } });
+    const res = createRes();
+
+    await handleSubmitMove(req, res);
+
+    expect(res.statusCode).toBe(403);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: "Ce n'est pas votre tour.",
+    });
+  });
+
+  it("returns 400 ApiError when processMove returns ENGINE_ERROR", async () => {
+    mockProcessMove.mockResolvedValue({
+      success: false,
+      error: "Coup illegal",
+      code: "ENGINE_ERROR",
+    });
+    const req = createReq({ params: { id: "m1" }, body: { move: { type: "MOVE", from: { x: 1, y: 1 }, to: { x: 2, y: 2 } } } });
+    const res = createRes();
+
+    await handleSubmitMove(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: "Coup illegal",
+    });
+  });
+
+  it("returns 500 ApiError when processMove throws unexpectedly", async () => {
+    mockProcessMove.mockRejectedValue(new Error("DB down"));
+    const req = createReq({ params: { id: "m1" }, body: { move: { type: "END_TURN" } } });
+    const res = createRes();
+
+    await handleSubmitMove(req, res);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: "DB down",
+    });
   });
 });
