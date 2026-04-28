@@ -1256,69 +1256,69 @@ router.post("/:id/players", authUser, validate(addPlayerSchema), async (req: Aut
   }
 });
 
-// Endpoint pour supprimer un joueur d'une équipe
-router.delete("/:id/players/:playerId", authUser, async (req: AuthenticatedRequest, res) => {
+// Endpoint pour supprimer un joueur d'une equipe (S25.5t — ApiResponse<T>)
+export async function handleDeleteTeamPlayer(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
   const teamId = req.params.id;
   const playerId = req.params.playerId;
 
   try {
-    // Vérifier que l'équipe appartient à l'utilisateur
     const team = await prisma.team.findFirst({
       where: { id: teamId, ownerId: req.user!.id },
-      include: { players: true }
+      include: { players: true },
     });
 
     if (!team) {
-      return res.status(404).json({ error: "Équipe introuvable" });
+      sendError(res, "Equipe introuvable", 404);
+      return;
     }
 
-    // Vérifier que l'équipe n'est pas engagée dans un match actif
     const activeSelection = await prisma.teamSelection.findFirst({
-      where: { 
+      where: {
         teamId: teamId,
-        match: { status: { in: ["pending", "active"] } }
-      }
+        match: { status: { in: ["pending", "active"] } },
+      },
     });
 
     if (activeSelection) {
-      return res.status(400).json({ 
-        error: "Impossible de modifier cette équipe car elle est engagée dans un match en cours" 
-      });
+      sendError(
+        res,
+        "Impossible de modifier cette equipe car elle est engagee dans un match en cours",
+        400,
+      );
+      return;
     }
 
-    // Vérifier que le joueur existe et appartient à cette équipe
     const player = team.players.find((p: any) => p.id === playerId);
     if (!player) {
-      return res.status(404).json({ error: "Joueur introuvable" });
+      sendError(res, "Joueur introuvable", 404);
+      return;
     }
 
-    // Vérifier qu'il reste au moins 11 joueurs après suppression (minimum Blood Bowl)
     if (team.players.length <= 11) {
-      return res.status(400).json({ 
-        error: "Une équipe doit avoir au minimum 11 joueurs" 
-      });
+      sendError(res, "Une equipe doit avoir au minimum 11 joueurs", 400);
+      return;
     }
 
-    // Supprimer le joueur
-    await prisma.teamPlayer.delete({
-      where: { id: playerId }
-    });
+    await prisma.teamPlayer.delete({ where: { id: playerId } });
 
-    // Recalculer les valeurs d'équipe
     await updateTeamValues(prisma, teamId);
 
-    // Retourner l'équipe mise à jour
     const updatedTeam = await prisma.team.findUnique({
       where: { id: teamId },
-      include: { players: true }
+      include: { players: true },
     });
 
-    res.json({ team: updatedTeam });
-  } catch (e: any) {
+    sendSuccess(res, { team: updatedTeam });
+  } catch (e: unknown) {
     serverLog.error("Erreur lors de la suppression du joueur:", e);
-    return res.status(500).json({ error: "Erreur serveur" });
+    sendError(res, "Erreur serveur", 500);
   }
-});
+}
+
+router.delete("/:id/players/:playerId", authUser, handleDeleteTeamPlayer);
 
 // Endpoint pour ajouter une compétence à un joueur (level-up avec validation SPP)
 router.put("/:id/players/:playerId/skills", authUser, validate(updatePlayerSkillsSchema), async (req: AuthenticatedRequest, res) => {

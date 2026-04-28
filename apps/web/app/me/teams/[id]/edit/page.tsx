@@ -294,17 +294,11 @@ export default function TeamEditPage() {
     }
 
     try {
-      const response = await fetch(`${API_BASE}/team/${id}/players/${playerId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: localStorage.getItem("auth_token") ? `Bearer ${localStorage.getItem("auth_token")}` : "",
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Erreur lors de la suppression");
-      }
+      // S25.5t — apiRequest unwrap l'enveloppe ApiResponse<T>
+      await apiRequest<{ team: unknown }>(
+        `/team/${id}/players/${playerId}`,
+        { method: "DELETE" },
+      );
 
       // Parallelize the two refetches; they are independent.
       const [d, positionsData] = await Promise.all([
