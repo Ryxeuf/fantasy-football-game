@@ -1861,89 +1861,91 @@ router.post("/:id/star-players", authUser, validate(addStarPlayerToTeamSchema), 
   }
 });
 
-// Endpoint pour retirer un Star Player
-router.delete("/:id/star-players/:starPlayerId", authUser, async (req: AuthenticatedRequest, res) => {
+// Endpoint pour retirer un Star Player (S25.5v — ApiResponse<T>)
+export async function handleDeleteTeamStarPlayer(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
   const teamId = req.params.id;
   const starPlayerId = req.params.starPlayerId;
 
   try {
-    // Vérifier que l'équipe appartient à l'utilisateur
     const team = await prisma.team.findFirst({
       where: { id: teamId, ownerId: req.user!.id },
-      include: { 
-        players: true,
-        starPlayers: true
-      }
+      include: { players: true, starPlayers: true },
     });
 
     if (!team) {
-      return res.status(404).json({ error: "Équipe introuvable" });
+      sendError(res, "Equipe introuvable", 404);
+      return;
     }
 
-    // Vérifier que l'équipe n'est pas engagée dans un match actif
     const activeSelection = await prisma.teamSelection.findFirst({
-      where: { 
+      where: {
         teamId: teamId,
-        match: { status: { in: ["pending", "active"] } }
-      }
+        match: { status: { in: ["pending", "active"] } },
+      },
     });
 
     if (activeSelection) {
-      return res.status(400).json({ 
-        error: "Impossible de modifier cette équipe car elle est engagée dans un match en cours" 
-      });
+      sendError(
+        res,
+        "Impossible de modifier cette equipe car elle est engagee dans un match en cours",
+        400,
+      );
+      return;
     }
 
-    // Vérifier que le Star Player existe et appartient à cette équipe
-    const starPlayer = team.starPlayers.find((sp: any) => sp.id === starPlayerId);
+    const starPlayer = team.starPlayers.find(
+      (sp: any) => sp.id === starPlayerId,
+    );
     if (!starPlayer) {
-      return res.status(404).json({ error: "Star Player introuvable" });
+      sendError(res, "Star Player introuvable", 404);
+      return;
     }
 
-    // Vérifier les paires obligatoires
     const pairSlug = requiresPair(starPlayer.starPlayerSlug);
     const starPlayersToRemove: string[] = [starPlayerId];
 
     if (pairSlug) {
-      // Trouver le partenaire
-      const pairStarPlayer = team.starPlayers.find((sp: any) => sp.starPlayerSlug === pairSlug);
-      
+      const pairStarPlayer = team.starPlayers.find(
+        (sp: any) => sp.starPlayerSlug === pairSlug,
+      );
       if (pairStarPlayer) {
         starPlayersToRemove.push(pairStarPlayer.id);
       }
     }
 
-    // Supprimer le(s) Star Player(s)
     await prisma.teamStarPlayer.deleteMany({
-      where: {
-        id: { in: starPlayersToRemove }
-      }
+      where: { id: { in: starPlayersToRemove } },
     });
 
-    // Recalculer les valeurs d'équipe
     await updateTeamValues(prisma, teamId);
 
-    // Retourner l'équipe mise à jour
     const updatedTeam = await prisma.team.findUnique({
       where: { id: teamId },
-      include: { 
-        players: true,
-        starPlayers: true
-      }
+      include: { players: true, starPlayers: true },
     });
 
     const removedCount = starPlayersToRemove.length;
-    res.json({ 
+    sendSuccess(res, {
       team: updatedTeam,
-      message: removedCount > 1 
-        ? `${removedCount} Star Players retirés avec succès`
-        : "Star Player retiré avec succès"
+      message:
+        removedCount > 1
+          ? `${removedCount} Star Players retires avec succes`
+          : "Star Player retire avec succes",
     });
-  } catch (e: any) {
+  } catch (e: unknown) {
     serverLog.error("Erreur lors du retrait du Star Player:", e);
-    return res.status(500).json({ error: "Erreur serveur" });
+    sendError(res, "Erreur serveur", 500);
   }
-});
+}
+
+router.delete(
+  "/:id/star-players/:starPlayerId",
+  authUser,
+  handleDeleteTeamStarPlayer,
+);
 
 // Endpoint pour acheter avec la trésorerie (entre les matchs)
 router.post("/:id/purchase", authUser, validate(purchaseSchema), async (req: AuthenticatedRequest, res) => {

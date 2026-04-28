@@ -143,21 +143,14 @@ export default function TeamStarPlayersManager({ teamId, token }: TeamStarPlayer
       setError(null);
       setSuccessMessage(null);
 
-      const res = await fetch(`${API_URL}/team/${teamId}/star-players/${starPlayerId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Erreur lors du retrait');
-      }
+      // S25.5v — apiRequest unwrap l'enveloppe ApiResponse<T>
+      const data = await apiRequest<{ team: unknown; message: string }>(
+        `/team/${teamId}/star-players/${starPlayerId}`,
+        { method: 'DELETE' },
+      );
 
       setSuccessMessage(data.message);
-      
+
       // Recharger les données
       await loadStarPlayers();
     } catch (err: any) {
