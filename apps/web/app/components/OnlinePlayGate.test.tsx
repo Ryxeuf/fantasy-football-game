@@ -55,8 +55,9 @@ describe("OnlinePlayGate", () => {
     expect(screen.queryByTestId("inside")).toBeNull();
   });
 
-  it("renders disabled screen for unauthenticated visitors", async () => {
+  it("appelle fetchMyFlags pour les visiteurs anonymes (le serveur peut\n      retourner les flags globalement actifs)", async () => {
     window.localStorage.removeItem("auth_token");
+    mockedFetchMyFlags.mockResolvedValue([]);
     renderWithProvider(
       <OnlinePlayGate>
         <Inside />
@@ -65,6 +66,19 @@ describe("OnlinePlayGate", () => {
     await waitFor(() =>
       expect(screen.getByTestId("online-play-gate-disabled")).toBeTruthy(),
     );
-    expect(mockedFetchMyFlags).not.toHaveBeenCalled();
+    // Le contexte tente la requête sans token : c'est /api/feature-flags/me
+    // qui décide quoi renvoyer (ici on simule un set vide).
+    expect(mockedFetchMyFlags).toHaveBeenCalledTimes(1);
+  });
+
+  it("rend les enfants quand le flag est globalement actif (anonyme)", async () => {
+    window.localStorage.removeItem("auth_token");
+    mockedFetchMyFlags.mockResolvedValue(["online_play"]);
+    renderWithProvider(
+      <OnlinePlayGate>
+        <Inside />
+      </OnlinePlayGate>,
+    );
+    await waitFor(() => expect(screen.getByTestId("inside")).toBeTruthy());
   });
 });

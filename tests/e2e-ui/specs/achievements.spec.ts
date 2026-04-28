@@ -107,10 +107,13 @@ test.describe("E2E UI — achievements", () => {
     await achievements.goto();
     await achievements.waitUntilLoaded();
 
-    // Les 4 cartes de stats doivent etre visibles.
-    await expect(page.getByText(/Matchs joués/i)).toBeVisible();
-    await expect(page.getByText(/Victoires/i)).toBeVisible();
-    await expect(page.getByText(/Touchdowns/i)).toBeVisible();
+    // Les 4 cartes de stats doivent etre visibles. On utilise `.first()`
+    // car certaines etiquettes ("Touchdowns", "Sorties") apparaissent aussi
+    // dans le titre de section (CATEGORY_LABELS) et declenchent sinon une
+    // strict mode violation.
+    await expect(page.getByText(/Matchs joués/i).first()).toBeVisible();
+    await expect(page.getByText(/Victoires/i).first()).toBeVisible();
+    await expect(page.getByText(/Touchdowns/i).first()).toBeVisible();
     await expect(page.getByText(/Sorties/i).first()).toBeVisible();
   });
 });

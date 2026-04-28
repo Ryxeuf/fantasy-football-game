@@ -18,6 +18,19 @@ import { TeamBuilderPage } from "../pages/TeamBuilderPage";
  */
 
 /**
+ * Le team builder rend chaque bouton "+" deux fois (une fois dans la liste
+ * mobile `<ul className="md:hidden">` et une fois dans la table desktop
+ * `<div className="hidden md:block">`). On filtre par `visible` pour ne
+ * cibler que la version effectivement rendue dans la viewport courante
+ * (Desktop Chrome 1280×720 par défaut → version desktop).
+ */
+function visibleAddButtons(page: Page) {
+  return page
+    .locator('[data-testid^="position-add-"]')
+    .filter({ visible: true });
+}
+
+/**
  * Ajoute des joueurs position par position jusqu'à ce que le bouton
  * submit soit activé (>= 11 joueurs). Attend la stabilisation du DOM
  * après chaque clic pour éviter les races sur l'état disabled.
@@ -26,7 +39,7 @@ async function fillRosterUntilValid(
   page: Page,
   builder: TeamBuilderPage,
 ): Promise<void> {
-  const allAddButtons = page.locator('[data-testid^="position-add-"]');
+  const allAddButtons = visibleAddButtons(page);
   const count = await allAddButtons.count();
 
   for (let i = 0; i < count; i++) {
@@ -87,8 +100,7 @@ test.describe("E2E UI — team creation", () => {
     await builder.fillName("Rats of E2E");
 
     // On attend que les positions soient chargées avant de cliquer.
-    await page
-      .locator('[data-testid^="position-add-"]')
+    await visibleAddButtons(page)
       .first()
       .waitFor({ state: "visible", timeout: 10_000 });
 
@@ -145,8 +157,7 @@ test.describe("E2E UI — team creation", () => {
     // Staff skaven : 2*50 + 1*10 + 1*10 + 50 + (2-1)*10 = 180k
     await expect(builder.staffCost).toHaveText(/180.*po/);
 
-    await page
-      .locator('[data-testid^="position-add-"]')
+    await visibleAddButtons(page)
       .first()
       .waitFor({ state: "visible", timeout: 10_000 });
 
@@ -176,8 +187,7 @@ test.describe("E2E UI — team creation", () => {
     const teamName = `E2E Team ${Date.now()}`;
     await builder.fillName(teamName);
 
-    await page
-      .locator('[data-testid^="position-add-"]')
+    await visibleAddButtons(page)
       .first()
       .waitFor({ state: "visible", timeout: 10_000 });
 

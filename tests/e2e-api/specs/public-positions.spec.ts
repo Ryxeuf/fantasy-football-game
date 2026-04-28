@@ -156,7 +156,9 @@ describe("E2E API — /api/positions (public)", () => {
     expect(json).toHaveProperty("ruleset");
     expect(json.position.slug).toBe("skaven_lineman");
     expect(json.position.rosterSlug).toBe("skaven");
-    expect(json.position.cost).toBe(50_000);
+    // Cost stocké en kpo (kilo-pieces d'or) — convention alignée sur
+    // `season3-reference-data.ts` (Lineman = 50 kpo).
+    expect(json.position.cost).toBe(50);
   });
 
   it("GET /api/positions/:slug inconnu renvoie 404", async () => {

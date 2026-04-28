@@ -6,18 +6,20 @@ import { seedAndLogin } from "../helpers/factories";
  * Spec /api/feature-flags/me (O.4 expansion E2E).
  *
  * La route `GET /api/feature-flags/me` expose la liste des feature
- * flags actuellement actifs pour l'utilisateur authentifie. Le service
- * `listEnabledKeysForUser` retourne :
+ * flags actuellement actifs pour l'utilisateur courant. Elle accepte
+ * aussi les visiteurs anonymes (les pages publiques wrappees par
+ * <OnlinePlayGate> ont besoin de connaitre les flags globalement
+ * actives sans token). Le service `listEnabledKeysForUser` retourne :
  *
  *  - tous les flags quand `FEATURE_FLAGS_FORCE_ENABLED=true` (setup
  *    e2e-api met ce flag par defaut, donc le test runner voit
  *    l'ensemble des flags declares) ;
  *  - sinon la combinaison flags globalement actives + overrides
- *    utilisateur.
+ *    utilisateur (ou juste globalement actives si anonyme).
  *
  * Ce spec valide :
  *
- *  - refus sans token (401) — middleware `authUser` poste en premier ;
+ *  - reponse 200 sans token (anonyme) ;
  *  - reponse 200 + enveloppe `{ success: true, data: string[] }` avec
  *    token valide ;
  *  - le data est trie alphabetiquement (contrat de la fonction
@@ -37,9 +39,12 @@ describe("E2E API — /api/feature-flags/me", () => {
     await resetDb();
   });
 
-  it("GET /api/feature-flags/me sans token -> 401", async () => {
+  it("GET /api/feature-flags/me sans token -> 200 (anonyme)", async () => {
     const res = await rawGet("/api/feature-flags/me", null);
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as FeatureFlagsResponse;
+    expect(json.success).toBe(true);
+    expect(Array.isArray(json.data)).toBe(true);
   });
 
   it("GET /api/feature-flags/me avec token -> 200 + `{ success, data: string[] }`", async () => {
@@ -92,11 +97,14 @@ describe("E2E API — /api/feature-flags/me", () => {
     expect(second.data).toEqual(first.data);
   });
 
-  it("GET /api/feature-flags/me avec token invalide -> 401", async () => {
+  it("GET /api/feature-flags/me avec token invalide -> 200 (traite comme anonyme)", async () => {
     const res = await rawGet(
       "/api/feature-flags/me",
       "invalid.jwt.token",
     );
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as FeatureFlagsResponse;
+    expect(json.success).toBe(true);
+    expect(Array.isArray(json.data)).toBe(true);
   });
 });
