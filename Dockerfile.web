@@ -9,7 +9,10 @@ ENV NEXT_PUBLIC_API_BASE=$NEXT_PUBLIC_API_BASE
 ENV NEXT_PUBLIC_UMAMI_ENABLED=$NEXT_PUBLIC_UMAMI_ENABLED
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN npm install -g pnpm
+# Install pnpm — version pinnee a celle declaree dans package.json (packageManager).
+# Sans pin, npm installe la derniere version (10.x) qui change le comportement de
+# hoisting et casse `next` dans apps/web/node_modules avec le lockfile v9.
+RUN npm install -g pnpm@9.7.0
 
 WORKDIR /app
 

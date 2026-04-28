@@ -1,16 +1,20 @@
-node_modules
+# Patterns recursifs (**/) indispensables pour les workspaces pnpm :
+# sans **/node_modules, COPY . . embarque apps/web/node_modules de l'hote
+# par-dessus l'install pnpm faite dans l'image, cassant les symlinks
+# (next introuvable au build).
+**/node_modules
+**/.next
+**/.turbo
+**/.cache
+**/.nyc_output
+**/coverage
+**/dist
+**/build
+**/tsconfig.tsbuildinfo
 npm-debug.log
 .git
 .gitignore
 README.md
 .env
-.nyc_output
-coverage
-.nyc_output
-.coverage
-.cache
-.next
-dist
-build
 .DS_Store
 *.log
