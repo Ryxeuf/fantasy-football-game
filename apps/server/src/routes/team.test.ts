@@ -33,6 +33,19 @@ vi.mock("../utils/team-values", () => ({
   updateTeamValues: vi.fn(),
 }));
 
+vi.mock("../utils/star-player-validation", () => ({
+  validateStarPlayerHire: vi.fn(),
+  validateStarPlayerPairs: vi.fn(),
+  validateStarPlayersForTeam: vi.fn(),
+  getTeamAvailableStarPlayers: vi.fn(),
+  calculateStarPlayersCost: vi.fn(),
+  requiresPair: vi.fn(() => null),
+}));
+
+vi.mock("../../../../packages/game-engine/src/utils/team-value-calculator", () => ({
+  getPlayerCost: vi.fn(() => 50000),
+}));
+
 vi.mock("../services/team-name-generator", () => ({
   generateTeamName: vi.fn((roster: string, _opts: unknown) => `Generated ${roster}`),
 }));
@@ -51,11 +64,16 @@ import { generateTeamName } from "../services/team-name-generator";
 import {
   handleGenerateTeamName,
   handleGetRoster,
+  handleListAvailableStarPlayers,
   handleListAvailableTeams,
   handleListMyTeams,
   handleListTeamStarPlayers,
   handleRecalculateTeam,
 } from "./team";
+import {
+  getTeamAvailableStarPlayers,
+  requiresPair,
+} from "../utils/star-player-validation";
 import { updateTeamValues } from "../utils/team-values";
 import type { AuthenticatedRequest } from "../middleware/authUser";
 
@@ -592,6 +610,184 @@ describe("Route: POST /team/:id/recalculate (S25.5r)", () => {
     const req = createReq({ params: { id: "team-1" } });
     const res = createRes();
     await handleRecalculateTeam(req, res);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+});
+
+describe("Route: GET /team/:id/available-star-players (S25.5t)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (requiresPair as ReturnType<typeof vi.fn>).mockReturnValue(null);
+    (getTeamAvailableStarPlayers as ReturnType<typeof vi.fn>).mockReturnValue([]);
+  });
+
+  async function getMocks() {
+    return {
+      findFirst: vi.mocked(await import("../prisma")).prisma.team
+        .findFirst as ReturnType<typeof vi.fn>,
+      mockGetAvailable: getTeamAvailableStarPlayers as ReturnType<typeof vi.fn>,
+      mockRequiresPair: requiresPair as ReturnType<typeof vi.fn>,
+    };
+  }
+
+  it("returns 404 ApiError when team not found or owned by other user", async () => {
+    const { findFirst } = await getMocks();
+    findFirst.mockResolvedValue(null);
+
+    const req = createReq({ params: { id: "team-1" } });
+    const res = createRes();
+    await handleListAvailableStarPlayers(req, res);
+
+    expect(findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "team-1", ownerId: "user-1" },
+      }),
+    );
+    expect(res.statusCode).toBe(404);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+
+  it("returns ApiSuccess with empty list and budget metadata when no star players are available", async () => {
+    const { findFirst, mockGetAvailable } = await getMocks();
+    findFirst.mockResolvedValue({
+      id: "team-1",
+      ownerId: "user-1",
+      ruleset: "season_3",
+      roster: "skaven",
+      initialBudget: 1000,
+      players: [],
+      starPlayers: [],
+    });
+    mockGetAvailable.mockReturnValue([]);
+
+    const req = createReq({ params: { id: "team-1" } });
+    const res = createRes();
+    await handleListAvailableStarPlayers(req, res);
+
+    expect(mockGetAvailable).toHaveBeenCalledWith("skaven", "season_3");
+    expect(res.statusCode).toBe(200);
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: {
+        availableStarPlayers: [],
+        currentPlayerCount: 0,
+        currentStarPlayerCount: 0,
+        totalPlayers: 0,
+        maxPlayers: 16,
+        availableBudget: 1000,
+        totalBudget: 1000,
+      },
+    });
+  });
+
+  it("returns ApiSuccess enriched with isHired/canHire and budget deduction", async () => {
+    const { findFirst, mockGetAvailable } = await getMocks();
+    findFirst.mockResolvedValue({
+      id: "team-1",
+      ownerId: "user-1",
+      ruleset: "season_3",
+      roster: "skaven",
+      initialBudget: 1000,
+      players: [
+        { id: "p-1", position: "lineman" },
+        { id: "p-2", position: "lineman" },
+      ],
+      starPlayers: [],
+    });
+    mockGetAvailable.mockReturnValue([
+      {
+        slug: "morg-n-thorg",
+        displayName: "Morg N Thorg",
+        cost: 430000,
+      },
+      {
+        slug: "deeproot-strongbranch",
+        displayName: "Deeproot",
+        cost: 950000,
+      },
+    ]);
+
+    const req = createReq({ params: { id: "team-1" } });
+    const res = createRes();
+    await handleListAvailableStarPlayers(req, res);
+
+    const payload = res.payload as {
+      success: boolean;
+      data: {
+        availableStarPlayers: Array<{
+          slug: string;
+          isHired: boolean;
+          canHire: boolean;
+          needsPair: boolean;
+        }>;
+        availableBudget: number;
+        currentPlayerCount: number;
+        totalPlayers: number;
+      };
+    };
+    expect(payload.success).toBe(true);
+    expect(payload.data.currentPlayerCount).toBe(2);
+    expect(payload.data.totalPlayers).toBe(2);
+    expect(payload.data.availableBudget).toBe(900);
+    expect(payload.data.availableStarPlayers).toHaveLength(2);
+    const morg = payload.data.availableStarPlayers.find((sp) => sp.slug === "morg-n-thorg");
+    expect(morg).toMatchObject({ isHired: false, canHire: true, needsPair: false });
+    const deeproot = payload.data.availableStarPlayers.find(
+      (sp) => sp.slug === "deeproot-strongbranch",
+    );
+    expect(deeproot).toMatchObject({ isHired: false, canHire: false, needsPair: false });
+  });
+
+  it("flags already hired star players as isHired=true and canHire=false", async () => {
+    const { findFirst, mockGetAvailable } = await getMocks();
+    findFirst.mockResolvedValue({
+      id: "team-1",
+      ownerId: "user-1",
+      ruleset: "season_3",
+      roster: "skaven",
+      initialBudget: 1000,
+      players: [],
+      starPlayers: [
+        { starPlayerSlug: "morg-n-thorg", cost: 430000 },
+      ],
+    });
+    mockGetAvailable.mockReturnValue([
+      { slug: "morg-n-thorg", displayName: "Morg N Thorg", cost: 430000 },
+    ]);
+
+    const req = createReq({ params: { id: "team-1" } });
+    const res = createRes();
+    await handleListAvailableStarPlayers(req, res);
+
+    const payload = res.payload as {
+      success: boolean;
+      data: {
+        availableStarPlayers: Array<{ slug: string; isHired: boolean; canHire: boolean }>;
+        currentStarPlayerCount: number;
+        totalPlayers: number;
+        availableBudget: number;
+      };
+    };
+    expect(payload.success).toBe(true);
+    expect(payload.data.currentStarPlayerCount).toBe(1);
+    expect(payload.data.totalPlayers).toBe(1);
+    expect(payload.data.availableBudget).toBe(570);
+    expect(payload.data.availableStarPlayers[0]).toMatchObject({
+      slug: "morg-n-thorg",
+      isHired: true,
+      canHire: false,
+    });
+  });
+
+  it("returns 500 ApiError when prisma throws", async () => {
+    const { findFirst } = await getMocks();
+    findFirst.mockRejectedValue(new Error("db down"));
+
+    const req = createReq({ params: { id: "team-1" } });
+    const res = createRes();
+    await handleListAvailableStarPlayers(req, res);
 
     expect(res.statusCode).toBe(500);
     expect(res.payload).toMatchObject({ success: false });
