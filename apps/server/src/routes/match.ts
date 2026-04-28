@@ -26,6 +26,7 @@ import type { AIDifficulty } from "@bb/game-engine";
 import { getSpectatorCount } from "../game-spectator";
 import { MATCH_SECRET } from "../config";
 import { serverLog } from "../utils/server-log";
+import { sendError } from "../utils/api-response";
 
 const router = Router();
 const ALLOWED_TEAMS = ["skaven", "lizardmen"] as const;
@@ -69,7 +70,7 @@ router.post("/create", authUser, validate(createMatchSchema), async (req: Authen
     return res.status(201).json({ match, matchToken: token });
   } catch (e: any) {
     serverLog.error(e);
-    return res.status(500).json({ error: e?.message || "Erreur serveur" });
+    return sendError(res, e?.message || "Erreur serveur", 500);
   }
 });
 
@@ -81,7 +82,7 @@ router.post("/join", authUser, validate(joinMatchSchema), async (req: Authentica
       where: { id: matchId },
       data: { players: { connect: { id: req.user!.id } } },
     });
-    if (!match) return res.status(404).json({ error: "Partie introuvable" });
+    if (!match) return sendError(res, "Partie introuvable", 404);
     const token = jwt.sign(
       { matchId: match.id, userId: req.user!.id },
       MATCH_SECRET,
@@ -90,7 +91,7 @@ router.post("/join", authUser, validate(joinMatchSchema), async (req: Authentica
     return res.json({ match, matchToken: token });
   } catch (e: any) {
     serverLog.error(e);
-    return res.status(500).json({ error: e?.message || "Erreur serveur" });
+    return sendError(res, e?.message || "Erreur serveur", 500);
   }
 });
 
@@ -103,11 +104,11 @@ router.post("/accept", authUser, validate(acceptMatchSchema), async (req: Authen
       userId: req.user!.id,
     });
     if (!result.ok && "status" in result && typeof result.status === "number")
-      return res.status(result.status).json({ error: result.error });
+      return sendError(res, result.error, result.status);
     return res.json(result);
   } catch (e: any) {
     serverLog.error(e);
-    return res.status(500).json({ error: e?.message || "Erreur serveur" });
+    return sendError(res, e?.message || "Erreur serveur", 500);
   }
 });
 
@@ -121,12 +122,12 @@ router.post("/:id/cancel", authUser, async (req: AuthenticatedRequest, res) => {
       userId: req.user!.id,
     });
     if (!result.ok) {
-      return res.status(result.status).json({ error: result.error });
+      return sendError(res, result.error, result.status);
     }
     return res.json(result);
   } catch (e: any) {
     serverLog.error(e);
-    return res.status(500).json({ error: e?.message || "Erreur serveur" });
+    return sendError(res, e?.message || "Erreur serveur", 500);
   }
 });
 
@@ -189,7 +190,7 @@ router.post(
       if (status >= 500) {
         serverLog.error("Erreur creation match pratique online:", e);
       }
-      return res.status(status).json({ error: message });
+      return sendError(res, message, status);
     }
   },
 );
@@ -215,13 +216,13 @@ router.post(
           NOT_YOUR_TURN: 403,
           ENGINE_ERROR: 400,
         };
-        return res.status(statusMap[result.code] ?? 500).json({ error: result.error });
+        return sendError(res, result.error, statusMap[result.code] ?? 500);
       }
 
       return res.json(result);
     } catch (e: any) {
       serverLog.error("Erreur lors de l'application du coup:", e);
-      return res.status(500).json({ error: e?.message || "Erreur serveur" });
+      return sendError(res, e?.message || "Erreur serveur", 500);
     }
   },
 );
@@ -232,16 +233,16 @@ export default router;
 router.get("/details", async (req, res) => {
   try {
     const token = (req.headers["x-match-token"] as string) || "";
-    if (!token) return res.status(401).json({ error: "x-match-token requis" });
+    if (!token) return sendError(res, "x-match-token requis", 401);
     let payload: any;
     try {
       payload = jwt.verify(token, MATCH_SECRET) as any;
     } catch {
-      return res.status(401).json({ error: "x-match-token invalide" });
+      return sendError(res, "x-match-token invalide", 401);
     }
     const matchId = payload?.matchId as string | undefined;
     if (!matchId)
-      return res.status(400).json({ error: "matchId manquant dans le token" });
+      return sendError(res, "matchId manquant dans le token", 400);
 
     const [match, selections] = await Promise.all([
       prisma.match.findUnique({
@@ -302,7 +303,7 @@ router.get("/details", async (req, res) => {
     });
   } catch (e: any) {
     serverLog.error(e);
-    return res.status(500).json({ error: "Erreur serveur" });
+    return sendError(res, "Erreur serveur", 500);
   }
 });
 
@@ -324,7 +325,7 @@ router.get("/:id/details", authUser, async (req: AuthenticatedRequest, res) => {
         },
       }),
     ]);
-    if (!match) return res.status(404).json({ error: "Partie introuvable" });
+    if (!match) return sendError(res, "Partie introuvable", 404);
     // Déterminer local/visiteur: l'utilisateur authentifié est local
     const authenticatedUserId = req.user!.id;
     let local =
@@ -358,7 +359,7 @@ router.get("/:id/details", authUser, async (req: AuthenticatedRequest, res) => {
     });
   } catch (e) {
     serverLog.error(e);
-    return res.status(500).json({ error: "Erreur serveur" });
+    return sendError(res, "Erreur serveur", 500);
   }
 });
 
@@ -371,7 +372,7 @@ router.get("/:id/teams", authUser, async (req: AuthenticatedRequest, res) => {
       where: { id: matchId },
       select: { id: true },
     });
-    if (!match) return res.status(404).json({ error: "Partie introuvable" });
+    if (!match) return sendError(res, "Partie introuvable", 404);
 
     const selections = await prisma.teamSelection.findMany({
       where: { matchId },
@@ -405,7 +406,7 @@ router.get("/:id/teams", authUser, async (req: AuthenticatedRequest, res) => {
     return res.json({ teamA, teamB });
   } catch (e: any) {
     serverLog.error(e);
-    return res.status(500).json({ error: "Erreur serveur" });
+    return sendError(res, "Erreur serveur", 500);
   }
 });
 
@@ -489,7 +490,7 @@ router.get("/my-matches", authUser, async (req: AuthenticatedRequest, res) => {
     return res.json({ matches: result });
   } catch (e: any) {
     serverLog.error(e);
-    return res.status(500).json({ error: "Erreur serveur" });
+    return sendError(res, "Erreur serveur", 500);
   }
 });
 
@@ -507,7 +508,7 @@ router.get("/:id/summary", authUser, async (req: AuthenticatedRequest, res) => {
         createdAt: true,
       },
     });
-    if (!match) return res.status(404).json({ error: "Partie introuvable" });
+    if (!match) return sendError(res, "Partie introuvable", 404);
 
     const [selections, acceptTurns] = await Promise.all([
       prisma.teamSelection.findMany({
@@ -577,7 +578,7 @@ router.get("/:id/summary", authUser, async (req: AuthenticatedRequest, res) => {
     });
   } catch (e) {
     serverLog.error(e);
-    return res.status(500).json({ error: "Erreur serveur" });
+    return sendError(res, "Erreur serveur", 500);
   }
 });
 
@@ -605,10 +606,10 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
       where: { id: matchId },
       include: { turns: { orderBy: { number: "asc" } } },
     });
-    if (!match) return res.status(404).json({ error: "Partie introuvable" });
+    if (!match) return sendError(res, "Partie introuvable", 404);
 
     if (match.status === "pending")
-      return res.status(400).json({ error: "Partie pas encore prête" });
+      return sendError(res, "Partie pas encore prête", 400);
 
     let gameState: any;
 
@@ -654,7 +655,7 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
         orderBy: { createdAt: "asc" },
       });
       if (selections.length < 2)
-        return res.status(400).json({ error: "Équipes pas prêtes" });
+        return sendError(res, "Équipes pas prêtes", 400);
 
       const [s1, s2] = selections;
 
@@ -674,7 +675,7 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
 
       if (!teamA || !teamB) {
         serverLog.log("Teams not found:", s1.teamId, s2.teamId);
-        return res.status(400).json({ error: "Équipes non trouvées" });
+        return sendError(res, "Équipes non trouvées", 400);
       }
 
       const teamAData = teamA.players
@@ -731,7 +732,7 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
       // Pour active, dernier turn
       const lastTurn = match.turns[match.turns.length - 1];
       if (!lastTurn.payload?.gameState)
-        return res.status(500).json({ error: "État non trouvé" });
+        return sendError(res, "État non trouvé", 500);
       const gs = lastTurn.payload.gameState;
       gameState = typeof gs === "string" ? JSON.parse(gs) : gs;
     }
@@ -778,7 +779,7 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
     res.json({ gameState });
   } catch (e: any) {
     serverLog.error(e);
-    res.status(500).json({ error: "Erreur serveur" });
+    sendError(res, "Erreur serveur", 500);
   }
 });
 
@@ -799,13 +800,11 @@ router.post(
       });
 
       if (!match) {
-        return res.status(404).json({ error: "Partie introuvable" });
+        return sendError(res, "Partie introuvable", 404);
       }
 
       if (match.status !== "prematch-setup" && match.status !== "active") {
-        return res
-          .status(400)
-          .json({ error: "La partie n'est pas en phase de setup" });
+        return sendError(res, "La partie n'est pas en phase de setup", 400);
       }
 
       // Vérifier que l'utilisateur est bien un des joueurs de la partie
@@ -816,9 +815,7 @@ router.post(
 
       const userIds = selections.map((s: any) => s.userId);
       if (!userIds.includes(req.user!.id)) {
-        return res
-          .status(403)
-          .json({ error: "Vous n'êtes pas un joueur de cette partie" });
+        return sendError(res, "Vous n'êtes pas un joueur de cette partie", 403);
       }
 
       // Idempotently persist the idle → setup transition before doing anything
@@ -881,7 +878,7 @@ router.post(
       const userTeamSide = await getUserTeamSide(prisma as any, matchId, req.user!.id);
       const currentCoach = gameState.preMatch?.currentCoach;
       if (userTeamSide !== currentCoach) {
-        return res.status(403).json({ error: "Ce n'est pas votre tour de placer" });
+        return sendError(res, "Ce n'est pas votre tour de placer", 403);
       }
 
       const playersOnField = gameState.players?.filter(
@@ -989,7 +986,7 @@ router.post(
       });
     } catch (e: any) {
       serverLog.error("Erreur lors de la validation du setup:", e);
-      return res.status(500).json({ error: "Erreur serveur" });
+      return sendError(res, "Erreur serveur", 500);
     }
   },
 );
@@ -1011,11 +1008,11 @@ router.post(
       });
 
       if (!match) {
-        return res.status(404).json({ error: "Partie introuvable" });
+        return sendError(res, "Partie introuvable", 404);
       }
 
       if (match.status !== "prematch-setup" && match.status !== "active") {
-        return res.status(400).json({ error: "La partie n'est pas en phase de kickoff" });
+        return sendError(res, "La partie n'est pas en phase de kickoff", 400);
       }
 
       // Récupérer le dernier état du jeu
@@ -1026,7 +1023,7 @@ router.post(
       }
 
       if (gameState.preMatch?.phase !== "kickoff-sequence") {
-        return res.status(400).json({ error: "Pas en phase de séquence de kickoff" });
+        return sendError(res, "Pas en phase de séquence de kickoff", 400);
       }
 
       // Placer le ballon
@@ -1066,7 +1063,7 @@ router.post(
       });
     } catch (e: any) {
       serverLog.error("Erreur lors du placement du ballon:", e);
-      return res.status(500).json({ error: "Erreur serveur" });
+      return sendError(res, "Erreur serveur", 500);
     }
   }
 );
@@ -1086,7 +1083,7 @@ router.post(
       });
 
       if (!match) {
-        return res.status(404).json({ error: "Partie introuvable" });
+        return sendError(res, "Partie introuvable", 404);
       }
 
       // Récupérer le dernier état du jeu
@@ -1097,7 +1094,7 @@ router.post(
       }
 
       if (gameState.preMatch?.phase !== "kickoff-sequence" || gameState.preMatch?.kickoffStep !== "kick-deviation") {
-        return res.status(400).json({ error: "Pas en phase de calcul de déviation" });
+        return sendError(res, "Pas en phase de calcul de déviation", 400);
       }
 
       // Calculer la déviation avec un RNG déterministe
@@ -1133,7 +1130,7 @@ router.post(
       });
     } catch (e: any) {
       serverLog.error("Erreur lors du calcul de déviation:", e);
-      return res.status(500).json({ error: "Erreur serveur" });
+      return sendError(res, "Erreur serveur", 500);
     }
   }
 );
@@ -1153,7 +1150,7 @@ router.post(
       });
 
       if (!match) {
-        return res.status(404).json({ error: "Partie introuvable" });
+        return sendError(res, "Partie introuvable", 404);
       }
 
       // Récupérer le dernier état du jeu
@@ -1164,7 +1161,7 @@ router.post(
       }
 
       if (gameState.preMatch?.phase !== "kickoff-sequence" || gameState.preMatch?.kickoffStep !== "kickoff-event") {
-        return res.status(400).json({ error: "Pas en phase d'événement de kickoff" });
+        return sendError(res, "Pas en phase d'événement de kickoff", 400);
       }
 
       // Résoudre l'événement avec un RNG déterministe
@@ -1237,7 +1234,7 @@ router.post(
       });
     } catch (e: any) {
       serverLog.error("Erreur lors de la résolution de l'événement:", e);
-      return res.status(500).json({ error: "Erreur serveur" });
+      return sendError(res, "Erreur serveur", 500);
     }
   }
 );
@@ -1254,13 +1251,13 @@ router.get("/:id/turns", authUser, async (req: AuthenticatedRequest, res) => {
     });
 
     if (!match) {
-      return res.status(404).json({ error: "Partie introuvable" });
+      return sendError(res, "Partie introuvable", 404);
     }
 
     // Vérifier que l'utilisateur est un joueur du match
     const isPlayer = match.players.some((p: { id: string }) => p.id === userId);
     if (!isPlayer) {
-      return res.status(403).json({ error: "Vous n'etes pas un joueur de cette partie" });
+      return sendError(res, "Vous n'etes pas un joueur de cette partie", 403);
     }
 
     const turns = await prisma.turn.findMany({
@@ -1295,7 +1292,7 @@ router.get("/:id/turns", authUser, async (req: AuthenticatedRequest, res) => {
     return res.json({ matchId, turns: turnSummaries });
   } catch (e: any) {
     serverLog.error("Erreur lors de la récupération des turns:", e);
-    return res.status(500).json({ error: "Erreur serveur" });
+    return sendError(res, "Erreur serveur", 500);
   }
 });
 
@@ -1308,9 +1305,9 @@ router.get("/:id/results", authUser, async (req: AuthenticatedRequest, res) => {
       where: { id: matchId },
       select: { id: true, status: true, createdAt: true },
     });
-    if (!match) return res.status(404).json({ error: "Partie introuvable" });
+    if (!match) return sendError(res, "Partie introuvable", 404);
     if (match.status !== "ended") {
-      return res.status(400).json({ error: "Le match n'est pas encore termine" });
+      return sendError(res, "Le match n'est pas encore termine", 400);
     }
 
     // Load team selections with user ELO and team info
@@ -1407,7 +1404,7 @@ router.get("/:id/results", authUser, async (req: AuthenticatedRequest, res) => {
     });
   } catch (e) {
     serverLog.error("Erreur lors de la récupération des résultats:", e);
-    return res.status(500).json({ error: "Erreur serveur" });
+    return sendError(res, "Erreur serveur", 500);
   }
 });
 
@@ -1480,7 +1477,7 @@ router.get("/live", authUser, async (_req: AuthenticatedRequest, res) => {
     return res.json({ matches: result });
   } catch (e) {
     serverLog.error(e);
-    return res.status(500).json({ error: "Erreur serveur" });
+    return sendError(res, "Erreur serveur", 500);
   }
 });
 
@@ -1494,13 +1491,11 @@ router.get("/:id/spectate", authUser, async (req: AuthenticatedRequest, res) => 
     });
 
     if (!match) {
-      return res.status(404).json({ error: "Partie introuvable" });
+      return sendError(res, "Partie introuvable", 404);
     }
 
     if (match.status !== "active" && match.status !== "prematch-setup") {
-      return res.status(400).json({
-        error: "Ce match n'est pas en cours",
-      });
+      return sendError(res, "Ce match n'est pas en cours", 400);
     }
 
     // Get latest game state from turns
@@ -1509,7 +1504,7 @@ router.get("/:id/spectate", authUser, async (req: AuthenticatedRequest, res) => 
       .find((t: any) => t.payload?.gameState);
 
     if (!latestStateTurn) {
-      return res.status(400).json({ error: "Etat de jeu introuvable" });
+      return sendError(res, "Etat de jeu introuvable", 400);
     }
 
     let gameState = (latestStateTurn as any).payload.gameState;
@@ -1549,7 +1544,7 @@ router.get("/:id/spectate", authUser, async (req: AuthenticatedRequest, res) => 
     });
   } catch (e) {
     serverLog.error(e);
-    return res.status(500).json({ error: "Erreur serveur" });
+    return sendError(res, "Erreur serveur", 500);
   }
 });
 
@@ -1576,11 +1571,11 @@ router.get("/:id/replay", authUser, async (req: AuthenticatedRequest, res) => {
     });
 
     if (!match) {
-      return res.status(404).json({ error: "Partie introuvable" });
+      return sendError(res, "Partie introuvable", 404);
     }
 
     if (match.status !== "ended") {
-      return res.status(400).json({ error: "Le replay n'est disponible que pour les matchs termines" });
+      return sendError(res, "Le replay n'est disponible que pour les matchs termines", 400);
     }
 
     // Extract turn payloads that contain game state
@@ -1621,6 +1616,6 @@ router.get("/:id/replay", authUser, async (req: AuthenticatedRequest, res) => {
     });
   } catch (e) {
     serverLog.error(e);
-    return res.status(500).json({ error: "Erreur serveur" });
+    return sendError(res, "Erreur serveur", 500);
   }
 });
