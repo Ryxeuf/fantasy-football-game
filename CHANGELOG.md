@@ -1,3 +1,21 @@
+## [1.77.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.76.3...v1.77.0) (2026-04-28)
+
+
+### ✨ Features
+
+* **auth:** wire access+refresh rotation into login/register/logout (S24.3e) ([#431](https://github.com/Ryxeuf/fantasy-football-game/issues/431)) ([e1758f9](https://github.com/Ryxeuf/fantasy-football-game/commit/e1758f9b587612ada018abf268c2a6ee4e751c60))
+
+
+### 🐛 Bug Fixes
+
+* keep KO/sent-off/casualty out of post-TD setup, allow validate <11 ([0a83053](https://github.com/Ryxeuf/fantasy-football-game/commit/0a8305324fddd386b157138cb539f2973cec9731))
+
+
+### ♻️ Code Refactoring
+
+* **match:** migrate /:id/summary to ApiResponse (S25.5k) ([#432](https://github.com/Ryxeuf/fantasy-football-game/issues/432)) ([090ce87](https://github.com/Ryxeuf/fantasy-football-game/commit/090ce87ae8cedc06466e69f06483086111152f19))
+* **match:** migrate /details, /:id/details, /:id/teams to ApiResponse<T> (S25.5j) ([#430](https://github.com/Ryxeuf/fantasy-football-game/issues/430)) ([80ec54d](https://github.com/Ryxeuf/fantasy-football-game/commit/80ec54d7956c3d9f7a56aebc8d3a1dedcb975bbf))
+
 ## [1.76.3](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.76.2...v1.76.3) (2026-04-28)
 
 
