@@ -38,7 +38,7 @@ import {
   type ListLeaguesQuery,
   type AttachMatchBody,
 } from "../schemas/league.schemas";
-import { sendError } from "../utils/api-response";
+import { sendError, sendSuccess } from "../utils/api-response";
 
 function requireUserId(req: AuthenticatedRequest, res: Response): string | null {
   const id = req.user?.id;
@@ -87,7 +87,7 @@ export async function handleCreateLeague(
       lossPoints: body.lossPoints,
       forfeitPoints: body.forfeitPoints,
     });
-    res.status(201).json(serializeLeague(league as Record<string, unknown>));
+    sendSuccess(res, serializeLeague(league as Record<string, unknown>), 201);
   } catch (e: unknown) {
     domainError(res, e);
   }
@@ -104,7 +104,7 @@ export async function handleListLeagues(
       status: query.status,
       publicOnly: query.publicOnly,
     });
-    res.status(200).json({
+    sendSuccess(res, {
       leagues: (leagues as Array<Record<string, unknown>>).map(serializeLeague),
     });
   } catch (e: unknown) {
@@ -122,7 +122,7 @@ export async function handleGetLeague(
     sendError(res, "Ligue introuvable", 404);
     return;
   }
-  res.status(200).json({
+  sendSuccess(res, {
     league: serializeLeague(league as unknown as Record<string, unknown>),
   });
 }
@@ -147,7 +147,7 @@ export async function handleGetSeason(
         allowedRosters: parseAllowedRosters(league.allowedRosters ?? null),
       }
     : league;
-  res.status(200).json({
+  sendSuccess(res, {
     season: {
       ...raw,
       league: serializedLeague,
@@ -184,7 +184,7 @@ export async function handleCreateSeason(
       startDate: body.startDate ?? null,
       endDate: body.endDate ?? null,
     });
-    res.status(201).json(season);
+    sendSuccess(res, season, 201);
   } catch (e: unknown) {
     domainError(res, e);
   }
@@ -223,7 +223,7 @@ export async function handleJoinSeason(
   // (source de verite metier). Le domainError ci-dessous convertit en 400.
   try {
     const participant = await addParticipant({ seasonId, teamId: body.teamId });
-    res.status(201).json(participant);
+    sendSuccess(res, participant, 201);
   } catch (e: unknown) {
     domainError(res, e);
   }
@@ -254,7 +254,7 @@ export async function handleLeaveSeason(
 
   try {
     const updated = await withdrawParticipant({ seasonId, teamId: body.teamId });
-    res.status(200).json(updated);
+    sendSuccess(res, updated);
   } catch (e: unknown) {
     domainError(res, e);
   }
@@ -287,7 +287,7 @@ export async function handleCreateRound(
       startDate: body.startDate ?? null,
       endDate: body.endDate ?? null,
     });
-    res.status(201).json(round);
+    sendSuccess(res, round, 201);
   } catch (e: unknown) {
     domainError(res, e);
   }
@@ -357,7 +357,7 @@ export async function handleAttachMatch(
     where: { id: match.id },
     data: { leagueSeasonId: seasonId, leagueRoundId: roundId },
   });
-  res.status(200).json({ matchId: match.id, seasonId, roundId });
+  sendSuccess(res, { matchId: match.id, seasonId, roundId });
 }
 
 export async function handleGetStandings(
@@ -367,7 +367,7 @@ export async function handleGetStandings(
   const seasonId = req.params.seasonId;
   try {
     const standings = await computeSeasonStandings(seasonId);
-    res.status(200).json({ seasonId, standings });
+    sendSuccess(res, { seasonId, standings });
   } catch (e: unknown) {
     domainError(res, e);
   }
