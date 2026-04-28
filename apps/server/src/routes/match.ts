@@ -1282,8 +1282,11 @@ router.post(
   }
 );
 
-// Historique des turns d'un match
-router.get("/:id/turns", authUser, async (req: AuthenticatedRequest, res) => {
+// Historique des turns d'un match (S25.5i — ApiResponse<T>)
+export async function handleListMatchTurns(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
   try {
     const matchId = req.params.id;
     const userId = req.user!.id;
@@ -1294,13 +1297,14 @@ router.get("/:id/turns", authUser, async (req: AuthenticatedRequest, res) => {
     });
 
     if (!match) {
-      return res.status(404).json({ error: "Partie introuvable" });
+      sendError(res, "Partie introuvable", 404);
+      return;
     }
 
-    // Vérifier que l'utilisateur est un joueur du match
     const isPlayer = match.players.some((p: { id: string }) => p.id === userId);
     if (!isPlayer) {
-      return res.status(403).json({ error: "Vous n'etes pas un joueur de cette partie" });
+      sendError(res, "Vous n'etes pas un joueur de cette partie", 403);
+      return;
     }
 
     const turns = await prisma.turn.findMany({
@@ -1314,7 +1318,6 @@ router.get("/:id/turns", authUser, async (req: AuthenticatedRequest, res) => {
       },
     });
 
-    // Retourner un résumé léger de chaque turn (sans le gameState complet)
     const turnSummaries = turns.map((t: any) => {
       const payload = t.payload || {};
       const rawGs = payload.gameState;
@@ -1332,15 +1335,21 @@ router.get("/:id/turns", authUser, async (req: AuthenticatedRequest, res) => {
       };
     });
 
-    return res.json({ matchId, turns: turnSummaries });
-  } catch (e: any) {
+    sendSuccess(res, { matchId, turns: turnSummaries });
+  } catch (e: unknown) {
     serverLog.error("Erreur lors de la récupération des turns:", e);
-    return res.status(500).json({ error: "Erreur serveur" });
+    sendError(res, "Erreur serveur", 500);
   }
-});
+}
+
+router.get("/:id/turns", authUser, handleListMatchTurns);
 
 // Match results endpoint — returns final score, winner, ELO changes, team/coach names
-router.get("/:id/results", authUser, async (req: AuthenticatedRequest, res) => {
+// (S25.5i — ApiResponse<T>)
+export async function handleGetMatchResults(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
   try {
     const matchId = req.params.id;
 
@@ -1348,12 +1357,15 @@ router.get("/:id/results", authUser, async (req: AuthenticatedRequest, res) => {
       where: { id: matchId },
       select: { id: true, status: true, createdAt: true },
     });
-    if (!match) return res.status(404).json({ error: "Partie introuvable" });
+    if (!match) {
+      sendError(res, "Partie introuvable", 404);
+      return;
+    }
     if (match.status !== "ended") {
-      return res.status(400).json({ error: "Le match n'est pas encore termine" });
+      sendError(res, "Le match n'est pas encore termine", 400);
+      return;
     }
 
-    // Load team selections with user ELO and team info
     const selections = await prisma.teamSelection.findMany({
       where: { matchId },
       orderBy: { createdAt: "asc" },
@@ -1366,7 +1378,6 @@ router.get("/:id/results", authUser, async (req: AuthenticatedRequest, res) => {
     const selA = selections[0] || null;
     const selB = selections[1] || null;
 
-    // Get final game state from last turn
     const lastTurn = await prisma.turn.findFirst({
       where: { matchId },
       orderBy: { number: "desc" },
@@ -1383,18 +1394,17 @@ router.get("/:id/results", authUser, async (req: AuthenticatedRequest, res) => {
     const teamName = (sel: any) => sel?.teamRef?.name || sel?.teamRef?.roster || "";
     const coachName = (sel: any) => sel?.user?.name || sel?.user?.email || "";
 
-    // Compute ELO deltas: look for stored ELO history in turns, or derive from current ratings
-    // Since ELO was updated at match end, we can compute deltas from the match result
     const currentEloA = selA?.user?.eloRating ?? 1000;
     const currentEloB = selB?.user?.eloRating ?? 1000;
 
-    // Aggregate match stats from game state
     const matchStats = gameState?.matchStats || {};
     const players = gameState?.players || [];
     const matchResult = gameState?.matchResult || {};
 
-    // Compute team-level stats
-    const teamStats = { A: { touchdowns: 0, casualties: 0, completions: 0, interceptions: 0 }, B: { touchdowns: 0, casualties: 0, completions: 0, interceptions: 0 } };
+    const teamStats = {
+      A: { touchdowns: 0, casualties: 0, completions: 0, interceptions: 0 },
+      B: { touchdowns: 0, casualties: 0, completions: 0, interceptions: 0 },
+    };
     for (const p of players) {
       const stats = matchStats[p.id];
       if (!stats) continue;
@@ -1406,12 +1416,11 @@ router.get("/:id/results", authUser, async (req: AuthenticatedRequest, res) => {
       teamStats[side].interceptions += stats.interceptions || 0;
     }
 
-    // Extract winnings and dedicated fans change from matchResult
     const winnings = matchResult?.winnings || null;
     const dedicatedFansChange = matchResult?.dedicatedFansChange || null;
     const fanAttendance = gameState?.fanAttendance || null;
 
-    return res.json({
+    sendSuccess(res, {
       matchId,
       status: "ended",
       createdAt: match.createdAt,
@@ -1445,11 +1454,13 @@ router.get("/:id/results", authUser, async (req: AuthenticatedRequest, res) => {
         position: p.position ?? "",
       })),
     });
-  } catch (e) {
+  } catch (e: unknown) {
     serverLog.error("Erreur lors de la récupération des résultats:", e);
-    return res.status(500).json({ error: "Erreur serveur" });
+    sendError(res, "Erreur serveur", 500);
   }
-});
+}
+
+router.get("/:id/results", authUser, handleGetMatchResults);
 
 // ─── Spectator Mode ──────────────────────────────────────────────
 
@@ -1530,8 +1541,11 @@ export async function handleListLiveMatches(
 
 router.get("/live", authUser, handleListLiveMatches);
 
-// Get match state for spectators (no participant check)
-router.get("/:id/spectate", authUser, async (req: AuthenticatedRequest, res) => {
+// Get match state for spectators (no participant check) (S25.5i — ApiResponse<T>)
+export async function handleSpectateMatch(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
   try {
     const matchId = req.params.id;
     const match = await prisma.match.findUnique({
@@ -1540,22 +1554,22 @@ router.get("/:id/spectate", authUser, async (req: AuthenticatedRequest, res) => 
     });
 
     if (!match) {
-      return res.status(404).json({ error: "Partie introuvable" });
+      sendError(res, "Partie introuvable", 404);
+      return;
     }
 
     if (match.status !== "active" && match.status !== "prematch-setup") {
-      return res.status(400).json({
-        error: "Ce match n'est pas en cours",
-      });
+      sendError(res, "Ce match n'est pas en cours", 400);
+      return;
     }
 
-    // Get latest game state from turns
     const latestStateTurn = [...match.turns]
       .reverse()
       .find((t: any) => t.payload?.gameState);
 
     if (!latestStateTurn) {
-      return res.status(400).json({ error: "Etat de jeu introuvable" });
+      sendError(res, "Etat de jeu introuvable", 400);
+      return;
     }
 
     let gameState = (latestStateTurn as any).payload.gameState;
@@ -1563,7 +1577,6 @@ router.get("/:id/spectate", authUser, async (req: AuthenticatedRequest, res) => 
       gameState = JSON.parse(gameState);
     }
 
-    // Get team details
     const selections = await prisma.teamSelection.findMany({
       where: { matchId },
       orderBy: { createdAt: "asc" },
@@ -1576,7 +1589,7 @@ router.get("/:id/spectate", authUser, async (req: AuthenticatedRequest, res) => 
     const teamA = selections[0];
     const teamB = selections[1];
 
-    return res.json({
+    sendSuccess(res, {
       gameState,
       matchStatus: match.status,
       spectatorCount: getSpectatorCount(matchId),
@@ -1593,14 +1606,20 @@ router.get("/:id/spectate", authUser, async (req: AuthenticatedRequest, res) => 
           }
         : null,
     });
-  } catch (e) {
+  } catch (e: unknown) {
     serverLog.error(e);
-    return res.status(500).json({ error: "Erreur serveur" });
+    sendError(res, "Erreur serveur", 500);
   }
-});
+}
+
+router.get("/:id/spectate", authUser, handleSpectateMatch);
 
 // Replay data: returns all turns with game states for replaying a finished match
-router.get("/:id/replay", authUser, async (req: AuthenticatedRequest, res) => {
+// (S25.5i — ApiResponse<T>)
+export async function handleReplayMatch(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
   try {
     const matchId = req.params.id;
 
@@ -1622,14 +1641,15 @@ router.get("/:id/replay", authUser, async (req: AuthenticatedRequest, res) => {
     });
 
     if (!match) {
-      return res.status(404).json({ error: "Partie introuvable" });
+      sendError(res, "Partie introuvable", 404);
+      return;
     }
 
     if (match.status !== "ended") {
-      return res.status(400).json({ error: "Le replay n'est disponible que pour les matchs termines" });
+      sendError(res, "Le replay n'est disponible que pour les matchs termines", 400);
+      return;
     }
 
-    // Extract turn payloads that contain game state
     const replayTurns = match.turns
       .filter((t: any) => t.payload?.gameState != null)
       .map((t: any) => ({
@@ -1639,7 +1659,6 @@ router.get("/:id/replay", authUser, async (req: AuthenticatedRequest, res) => {
         timestamp: t.payload.timestamp || t.createdAt?.toISOString(),
       }));
 
-    // Team metadata for display
     const [selA, selB] = match.teamSelections;
     const teamMeta = {
       teamA: selA
@@ -1658,15 +1677,17 @@ router.get("/:id/replay", authUser, async (req: AuthenticatedRequest, res) => {
         : null,
     };
 
-    return res.json({
+    sendSuccess(res, {
       matchId,
       status: match.status,
       turns: replayTurns,
       teams: teamMeta,
       createdAt: match.createdAt,
     });
-  } catch (e) {
+  } catch (e: unknown) {
     serverLog.error(e);
-    return res.status(500).json({ error: "Erreur serveur" });
+    sendError(res, "Erreur serveur", 500);
   }
-});
+}
+
+router.get("/:id/replay", authUser, handleReplayMatch);

@@ -4,6 +4,7 @@ import {
   rawGet,
   rawPost,
   resetDb,
+  unwrap,
 } from "../helpers/api";
 import { seedAndLogin } from "../helpers/factories";
 
@@ -41,8 +42,9 @@ import { seedAndLogin } from "../helpers/factories";
  * (cf. tests/e2e-api/setup.ts), donc le gate ne nous bloque pas.
  */
 
-interface LiveMatchesResponse {
-  matches: unknown[];
+interface LiveMatchesEnvelope {
+  success: true;
+  data: { matches: unknown[] };
 }
 
 describe("E2E API — /match/* (extended)", () => {
@@ -194,7 +196,7 @@ describe("E2E API — /match/* (extended)", () => {
         "pwd",
         "Alice",
       );
-      const json = await get<LiveMatchesResponse>("/match/live", token);
+      const json = unwrap(await get<LiveMatchesEnvelope>("/match/live", token));
       expect(json).toHaveProperty("matches");
       expect(Array.isArray(json.matches)).toBe(true);
       expect(json.matches).toEqual([]);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { API_BASE } from "../auth-client";
+import { apiRequest, ApiClientError } from "../lib/api-client";
 import PostMatchSPP from "./PostMatchSPP";
 
 interface TeamStats {
@@ -70,24 +70,19 @@ export default function MatchEndScreen({ matchId, myTeamSide, onClose }: MatchEn
   useEffect(() => {
     (async () => {
       try {
-        const token = localStorage.getItem("auth_token");
-        if (!token) {
+        if (typeof window !== "undefined" && !localStorage.getItem("auth_token")) {
           setError("Non authentifié");
           setLoading(false);
           return;
         }
-        const res = await fetch(`${API_BASE}/match/${matchId}/results`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) {
-          setError("Erreur lors du chargement des résultats");
-          setLoading(false);
-          return;
-        }
-        const data = await res.json();
+        const data = await apiRequest<MatchResults>(`/match/${matchId}/results`);
         setResults(data);
-      } catch {
-        setError("Erreur de connexion");
+      } catch (e) {
+        setError(
+          e instanceof ApiClientError
+            ? e.message || "Erreur lors du chargement des résultats"
+            : "Erreur de connexion",
+        );
       } finally {
         setLoading(false);
       }

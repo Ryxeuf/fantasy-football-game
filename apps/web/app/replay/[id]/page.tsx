@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { buildReplayFrames, type ReplayFrame, type ReplayTurnPayload } from "@bb/game-engine";
 import { GameScoreboard, GameLog } from "@bb/ui";
-import { API_BASE } from "../../auth-client";
+import { apiRequest, ApiClientError } from "../../lib/api-client";
 import { useReplayControls } from "./hooks/useReplayControls";
 
 // S25.7 — GameBoardWithDugouts pulls in Pixi.js + @pixi/react bundle
@@ -58,26 +58,21 @@ export default function ReplayPage() {
   useEffect(() => {
     if (!matchId) return;
 
-    const token = localStorage.getItem("auth_token");
-    if (!token) {
+    if (typeof window !== "undefined" && !localStorage.getItem("auth_token")) {
       setError("Authentification requise");
       setLoading(false);
       return;
     }
 
-    fetch(`${API_BASE}/match/${matchId}/replay`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Replay non disponible");
-        return res.json();
-      })
-      .then((data: ReplayResponse) => {
+    apiRequest<ReplayResponse>(`/match/${matchId}/replay`)
+      .then((data) => {
         setReplayData(data);
         const builtFrames = buildReplayFrames(data.turns);
         setFrames(builtFrames);
       })
-      .catch((err) => setError(err.message))
+      .catch((err) =>
+        setError(err instanceof ApiClientError ? err.message : "Replay non disponible"),
+      )
       .finally(() => setLoading(false));
   }, [matchId]);
 
