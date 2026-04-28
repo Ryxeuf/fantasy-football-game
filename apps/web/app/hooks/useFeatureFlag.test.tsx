@@ -45,13 +45,24 @@ describe("useFeatureFlag", () => {
     );
   });
 
-  it("returns false when no token is present (no fetch)", async () => {
+  it("appelle fetchMyFlags même sans token (résolu côté serveur)", async () => {
     window.localStorage.removeItem("auth_token");
+    // Simule la réponse anonyme : aucune clé renvoyée par le serveur.
+    mockedFetchMyFlags.mockResolvedValue([]);
     renderWithProvider(<Probe flagKey="beta_ui" />);
     await waitFor(() =>
       expect(screen.getByTestId("result").textContent).toBe("off"),
     );
-    expect(mockedFetchMyFlags).not.toHaveBeenCalled();
+    expect(mockedFetchMyFlags).toHaveBeenCalledTimes(1);
+  });
+
+  it("retourne true pour un flag globalement actif côté serveur", async () => {
+    window.localStorage.removeItem("auth_token");
+    mockedFetchMyFlags.mockResolvedValue(["beta_ui"]);
+    renderWithProvider(<Probe flagKey="beta_ui" />);
+    await waitFor(() =>
+      expect(screen.getByTestId("result").textContent).toBe("on"),
+    );
   });
 
   it("returns false if the fetch throws", async () => {
