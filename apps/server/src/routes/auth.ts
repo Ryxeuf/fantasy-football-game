@@ -1,7 +1,6 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import { prisma } from "../prisma";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
 import { normalizeRoles } from "../utils/roles";
 import { validate } from "../middleware/validate";
@@ -11,15 +10,60 @@ import {
   updateProfileSchema,
   changePasswordSchema,
 } from "../schemas/auth.schemas";
-import { JWT_SECRET } from "../config";
 import {
   claimOrphanKofiTransactions,
   ensureKofiLinkCode,
 } from "../services/kofi-claim";
 import { isSupporter } from "../services/kofi";
 import { serverLog } from "../utils/server-log";
+import {
+  REFRESH_TOKEN_TTL_SECONDS,
+  signAccessToken,
+  signRefreshToken,
+  verifyRefreshToken,
+} from "../services/auth-tokens";
+import { type RefreshTokenStore } from "../services/refresh-token-store";
+import { PrismaRefreshTokenStore } from "../services/prisma-refresh-token-store";
 
 const router = Router();
+
+/**
+ * Default Prisma-backed store. Tests inject a fake via `setRefreshTokenStore`
+ * to avoid coupling to the database layer.
+ */
+let refreshTokenStore: RefreshTokenStore = new PrismaRefreshTokenStore();
+
+export function setRefreshTokenStore(store: RefreshTokenStore): void {
+  refreshTokenStore = store;
+}
+
+export function getRefreshTokenStore(): RefreshTokenStore {
+  return refreshTokenStore;
+}
+
+/**
+ * S24.3 — Issues a fresh access/refresh pair for `userId` and registers the
+ * refresh jti in the store. Returns both tokens to the caller.
+ */
+async function issueTokenPair(params: {
+  userId: string;
+  primaryRole: string | undefined;
+  roles: string[];
+}): Promise<{ token: string; refreshToken: string }> {
+  const accessToken = signAccessToken({
+    sub: params.userId,
+    role: params.primaryRole ?? "user",
+    roles: params.roles,
+  });
+  const refreshToken = signRefreshToken({ sub: params.userId });
+  const refreshPayload = verifyRefreshToken(refreshToken);
+  await refreshTokenStore.register({
+    jti: refreshPayload.jti,
+    sub: params.userId,
+    expiresAt: Math.floor(Date.now() / 1000) + REFRESH_TOKEN_TTL_SECONDS,
+  });
+  return { token: accessToken, refreshToken };
+}
 
 router.post("/register", validate(registerSchema), async (req, res) => {
   try {
@@ -79,12 +123,12 @@ router.post("/register", validate(registerSchema), async (req, res) => {
       createdAt: created.createdAt,
     };
 
-    const token = jwt.sign(
-      { sub: created.id, role: primaryRole, roles },
-      JWT_SECRET,
-      { expiresIn: "7d" },
-    );
-    return res.status(201).json({ user: publicUser, token });
+    const { token, refreshToken } = await issueTokenPair({
+      userId: created.id,
+      primaryRole,
+      roles,
+    });
+    return res.status(201).json({ user: publicUser, token, refreshToken });
   } catch (err: any) {
     if (err?.code === "P2002") {
       return res.status(409).json({ error: "Email déjà utilisé" });
@@ -148,19 +192,40 @@ router.post("/login", validate(loginSchema), async (req, res) => {
       roles,
       createdAt: user.createdAt,
     };
-    const token = jwt.sign(
-      { sub: user.id, role: primaryRole, roles },
-      JWT_SECRET,
-      {
-        expiresIn: "7d",
-      },
-    );
-    return res.json({ user: publicUser, token });
+    const { token, refreshToken } = await issueTokenPair({
+      userId: user.id,
+      primaryRole,
+      roles,
+    });
+    return res.json({ user: publicUser, token, refreshToken });
   } catch (err) {
     serverLog.error(err);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
+
+/**
+ * POST /auth/logout — S24.3
+ *
+ * Revokes the presented refresh token. Idempotent: missing or already-revoked
+ * tokens still respond 204. Access tokens themselves are stateless — they
+ * remain valid until expiry, but their <=15min TTL bounds the exposure.
+ */
+export async function handleLogout(req: Request, res: Response): Promise<Response> {
+  const refreshToken = (req.body as { refreshToken?: string })?.refreshToken;
+  if (typeof refreshToken !== "string" || refreshToken.length === 0) {
+    return res.status(204).send();
+  }
+  try {
+    const payload = verifyRefreshToken(refreshToken);
+    await refreshTokenStore.revoke(payload.jti);
+  } catch {
+    // ignore: malformed/expired tokens are already useless
+  }
+  return res.status(204).send();
+}
+
+router.post("/logout", handleLogout);
 
 // Désactiver le compte courant (suppression logique)
 router.delete("/me", authUser, async (req: AuthenticatedRequest, res) => {

@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { apiPost, API_BASE } from "../auth-client";
 import { useLanguage } from "../contexts/LanguageContext";
 import { syncAuthCookie } from "../lib/auth-cookie";
+import { setAuthTokens } from "../lib/auth-storage";
 
 // Autorise uniquement les redirections internes (chemins relatifs commençant par "/"
 // et ne pouvant être interprétés comme des URLs externes).
@@ -50,8 +51,11 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
     try {
-      const { token } = await apiPost("/auth/login", { email, password });
-      localStorage.setItem("auth_token", token);
+      const { token, refreshToken } = await apiPost("/auth/login", {
+        email,
+        password,
+      });
+      setAuthTokens({ token, refreshToken });
       // Cookie httpOnly synchronise via la route serveur (S24.1).
       await syncAuthCookie(token);
       window.location.href = redirectTo;

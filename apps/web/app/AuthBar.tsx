@@ -5,6 +5,10 @@ import { useLanguage } from "./contexts/LanguageContext";
 import { useFeatureFlag } from "./hooks/useFeatureFlag";
 import { ONLINE_PLAY_FLAG } from "./lib/featureFlagKeys";
 import { syncAuthCookie, clearAuthCookie } from "./lib/auth-cookie";
+import {
+  clearAuthTokens,
+  getRefreshToken,
+} from "./lib/auth-storage";
 
 type UserData = {
   email: string;
@@ -77,7 +81,21 @@ export default function AuthBar({ isMobileMenu = false }: AuthBarProps) {
   }, [menuOpen]);
 
   async function logout() {
-    localStorage.removeItem("auth_token");
+    // Best-effort : revoque le refresh jti cote serveur (S24.3). On ne bloque
+    // pas le logout si le serveur est down ou repond une erreur.
+    const refreshToken = getRefreshToken();
+    if (refreshToken) {
+      try {
+        await fetch(`${API_BASE}/auth/logout`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refreshToken }),
+        });
+      } catch {
+        // ignore
+      }
+    }
+    clearAuthTokens();
     // Le cookie est httpOnly : seul le serveur peut l'effacer (S24.1).
     await clearAuthCookie();
     setHasToken(false);
