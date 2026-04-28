@@ -46,29 +46,32 @@ const AGGRESSIVE_MOVE_TYPES: ReadonlySet<Move['type']> = new Set([
   'PASS',
 ]);
 
-export const AI_DIFFICULTY_PROFILES: Readonly<Record<AIDifficulty, AIDifficultyProfile>> = Object.freeze({
-  easy: Object.freeze({
-    slug: 'easy',
-    noise: 80,
-    blunderRate: 0.35,
-    timidityRate: 0.35,
-    endTurnBias: 40,
-  }),
-  medium: Object.freeze({
-    slug: 'medium',
-    noise: 20,
-    blunderRate: 0.1,
-    timidityRate: 0.05,
-    endTurnBias: 5,
-  }),
-  hard: Object.freeze({
-    slug: 'hard',
-    noise: 0,
-    blunderRate: 0,
-    timidityRate: 0,
-    endTurnBias: 0,
-  }),
-});
+export const AI_DIFFICULTY_PROFILES: Readonly<Record<AIDifficulty, AIDifficultyProfile>> =
+  Object.freeze({
+    easy: Object.freeze({
+      slug: 'easy',
+      noise: 80,
+      blunderRate: 0.35,
+      timidityRate: 0.35,
+      endTurnBias: 40,
+    }),
+    medium: Object.freeze({
+      slug: 'medium',
+      noise: 20,
+      blunderRate: 0.1,
+      timidityRate: 0.05,
+      // Pas de bias pro-END_TURN : un coach moyen joue tous ses joueurs.
+      // Le bruit et le blunderRate suffisent a donner un comportement faillible.
+      endTurnBias: 0,
+    }),
+    hard: Object.freeze({
+      slug: 'hard',
+      noise: 0,
+      blunderRate: 0,
+      timidityRate: 0,
+      endTurnBias: 0,
+    }),
+  });
 
 export function getAIDifficultyProfile(difficulty: AIDifficulty): AIDifficultyProfile {
   return AI_DIFFICULTY_PROFILES[difficulty];
@@ -87,7 +90,7 @@ export function scoreMoveForDifficulty(
   move: Move,
   team: TeamId,
   difficulty: AIDifficulty,
-  rng?: RNG,
+  rng?: RNG
 ): number {
   const base = scoreMove(state, move, team);
   const profile = getAIDifficultyProfile(difficulty);
@@ -116,7 +119,7 @@ export interface PickAIMoveOptions {
 export function pickAIMove(
   state: GameState,
   team: TeamId,
-  options: PickAIMoveOptions = {},
+  options: PickAIMoveOptions = {}
 ): Move | null {
   const difficulty = options.difficulty ?? DEFAULT_AI_DIFFICULTY;
 
@@ -150,11 +153,7 @@ export function pickAIMove(
   return sorted[0].move;
 }
 
-function filterTimidMoves(
-  moves: readonly Move[],
-  timidityRate: number,
-  rng: RNG,
-): Move[] {
+function filterTimidMoves(moves: readonly Move[], timidityRate: number, rng: RNG): Move[] {
   if (timidityRate <= 0) return [...moves];
   const kept: Move[] = [];
   for (const move of moves) {
@@ -166,7 +165,10 @@ function filterTimidMoves(
   return kept;
 }
 
-interface ScoredMove { readonly move: Move; readonly score: number; }
+interface ScoredMove {
+  readonly move: Move;
+  readonly score: number;
+}
 
 function sortByScoreDescStable(scored: readonly ScoredMove[]): ScoredMove[] {
   return scored
