@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import type { ExtendedGameState } from "@bb/game-engine";
 import { setupPreMatchWithTeams } from "@bb/game-engine";
 import { API_BASE } from "../../../auth-client";
+import { apiRequest, ApiClientError } from "../../../lib/api-client";
 import { useGameSocket } from "./useGameSocket";
 import { deriveIsMyTurn } from "./deriveSetupTurn";
 import { computePollDelay } from "./pollDelay";
@@ -84,16 +85,15 @@ export function useGameState(matchId: string): GameStateInfo {
       try {
         const authToken = localStorage.getItem("auth_token");
         if (!authToken) { window.location.href = "/lobby"; return; }
-        const res = await fetch(`${API_BASE}/match/join`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${authToken}` },
-          body: JSON.stringify({ matchId }),
-        });
-        const data = await res.json().catch(() => ({}) as any);
-        if (res.ok && data?.matchToken) {
-          localStorage.setItem("match_token", data.matchToken as string);
-        } else {
+        try {
+          const data = await apiRequest<{ match: { id: string }; matchToken: string }>(
+            "/match/join",
+            { method: "POST", body: JSON.stringify({ matchId }) },
+          );
+          localStorage.setItem("match_token", data.matchToken);
+        } catch (err) {
           // Match introuvable — nettoyer session + queue matchmaking
+          if (!(err instanceof ApiClientError)) throw err;
           localStorage.removeItem("match_token");
           await fetch(`${API_BASE}/matchmaking/leave`, {
             method: "DELETE",

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { API_BASE } from "../../auth-client";
+import { apiRequest } from "../../lib/api-client";
 
 type Summary = {
   id: string;
@@ -85,18 +86,10 @@ export default function WaitingPage({ params }: { params: { id: string } }) {
         window.location.href = "/login";
         return;
       }
-      const res = await fetch(`${API_BASE}/match/accept`, {
+      await apiRequest<{ ok: boolean; started?: boolean }>("/match/accept", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({ matchId }),
       });
-      const data = await res.json().catch(() => ({}) as any);
-      if (!res.ok) {
-        throw new Error(data?.error || `HTTP ${res.status}`);
-      }
       setAcceptedOnce(true);
       // Actualiser une fois immédiatement après acceptation
       const sumRes = await fetch(`${API_BASE}/match/${matchId}/summary`, {
