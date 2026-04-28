@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { API_BASE } from "../../../auth-client";
+import { apiRequest } from "../../../lib/api-client";
 import StarPlayerSelector from "../../../components/StarPlayerSelector";
 import SkillTooltip from "../components/SkillTooltip";
 import QuantityStepper from "../components/QuantityStepper";
@@ -115,12 +116,10 @@ export default function NewTeamBuilder() {
   }, [language, ruleset]);
 
   useEffect(() => {
-    const token = localStorage.getItem("auth_token");
     const query = ruleset ? `?ruleset=${encodeURIComponent(ruleset)}` : "";
-    fetch(`${API_BASE}/team/rosters/${rosterId}${query}`, {
-      headers: { Authorization: token ? `Bearer ${token}` : "" },
-    })
-      .then((r) => r.json())
+    apiRequest<{ roster: { positions?: Position[] }; ruleset: string }>(
+      `/team/rosters/${rosterId}${query}`,
+    )
       .then((d) => {
         setPositions(d.roster.positions || []);
         const init: Record<string, number> = {};
