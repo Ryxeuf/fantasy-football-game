@@ -2,6 +2,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { API_BASE } from "../../auth-client";
+import { apiRequest } from "../../lib/api-client";
 
 type Team = {
   id: string;
@@ -101,7 +102,7 @@ function NewLocalMatchContent() {
     setLoading(true);
     try {
       const [teamsData, cupData] = await Promise.all([
-        fetchJSON("/team/mine"),
+        apiRequest<{ teams: Team[] }>("/team/mine"),
         cupId ? fetchJSON(`/cup/${cupId}`).catch(() => null) : Promise.resolve(null),
       ]);
       

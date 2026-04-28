@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { API_BASE } from "../../auth-client";
+import { apiRequest } from "../../lib/api-client";
 import { useLanguage } from "../../contexts/LanguageContext";
 
 type Team = {
@@ -61,7 +62,7 @@ export default function MyTeamsPage() {
         // public, so no auth guard is needed before kicking it off.
         const [me, mine, rostersResponse] = await Promise.all([
           fetchJSON("/auth/me"),
-          fetchJSON("/team/mine").catch((err) => {
+          apiRequest<{ teams: Team[] }>("/team/mine").catch((err) => {
             // Surface auth errors through the me check below, swallow here.
             return { teams: [] as Team[], _err: err };
           }),

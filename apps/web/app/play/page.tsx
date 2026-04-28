@@ -168,7 +168,7 @@ export default function PlayPage() {
 
   const loadTeams = useCallback(async () => {
     try {
-      const data = await apiGet("/team/mine");
+      const data = await apiRequest<{ teams: TeamOption[] }>("/team/mine");
       setTeams(data.teams || []);
     } catch {
       // silently fail

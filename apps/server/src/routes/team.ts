@@ -259,7 +259,11 @@ export async function handleListAvailableTeams(
 
 router.get("/available", authUser, handleListAvailableTeams);
 
-router.get("/mine", authUser, async (req: AuthenticatedRequest, res) => {
+// (S25.5p — ApiResponse<T>)
+export async function handleListMyTeams(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
   const requestedRuleset = req.query.ruleset as string | undefined;
   const filterRuleset = isValidRuleset(requestedRuleset)
     ? (requestedRuleset as Ruleset)
@@ -281,8 +285,10 @@ router.get("/mine", authUser, async (req: AuthenticatedRequest, res) => {
     }),
     prisma.team.count({ where }),
   ]);
-  res.json({ teams, meta: buildApiMeta({ total, limit, offset }) });
-});
+  sendSuccess(res, { teams, meta: buildApiMeta({ total, limit, offset }) });
+}
+
+router.get("/mine", authUser, handleListMyTeams);
 
 // (S25.5n — ApiResponse<T>)
 export async function handleGetRoster(

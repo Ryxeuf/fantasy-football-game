@@ -47,6 +47,7 @@ import {
   handleGenerateTeamName,
   handleGetRoster,
   handleListAvailableTeams,
+  handleListMyTeams,
 } from "./team";
 import type { AuthenticatedRequest } from "../middleware/authUser";
 
@@ -299,5 +300,119 @@ describe("Route: GET /team/available (S25.5o)", () => {
 
     const callArgs = findMany.mock.calls[0]![0];
     expect(callArgs.where).not.toHaveProperty("ruleset");
+  });
+});
+
+describe("Route: GET /team/mine (S25.5p)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  async function getMocks() {
+    const mod = vi.mocked(await import("../prisma")).prisma;
+    return {
+      findMany: mod.team.findMany as ReturnType<typeof vi.fn>,
+      count: mod.team.count as ReturnType<typeof vi.fn>,
+    };
+  }
+
+  it("returns ApiSuccess with paginated teams + meta when query empty", async () => {
+    const { findMany, count } = await getMocks();
+    findMany.mockResolvedValue([]);
+    count.mockResolvedValue(0);
+
+    const req = createReq({ query: {} });
+    const res = createRes();
+    await handleListMyTeams(req, res);
+
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { ownerId: "user-1" },
+        orderBy: { createdAt: "desc" },
+      }),
+    );
+    expect(res.statusCode).toBe(200);
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: {
+        teams: [],
+        meta: expect.objectContaining({
+          total: 0,
+          page: expect.any(Number),
+          limit: expect.any(Number),
+        }),
+      },
+    });
+  });
+
+  it("returns ApiSuccess with team list and total count when prisma returns rows", async () => {
+    const { findMany, count } = await getMocks();
+    const fakeTeams = [
+      {
+        id: "t-1",
+        name: "Skavens A",
+        roster: "skaven",
+        ruleset: "season_3",
+        createdAt: new Date("2026-01-01"),
+        currentValue: 1000,
+      },
+      {
+        id: "t-2",
+        name: "Lizardmen B",
+        roster: "lizardmen",
+        ruleset: "season_3",
+        createdAt: new Date("2026-01-02"),
+        currentValue: 950,
+      },
+    ];
+    findMany.mockResolvedValue(fakeTeams);
+    count.mockResolvedValue(2);
+
+    const req = createReq({ query: {} });
+    const res = createRes();
+    await handleListMyTeams(req, res);
+
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: {
+        teams: fakeTeams,
+        meta: expect.objectContaining({ total: 2 }),
+      },
+    });
+  });
+
+  it("filters by ruleset when query param provided and valid", async () => {
+    const { findMany, count } = await getMocks();
+    findMany.mockResolvedValue([]);
+    count.mockResolvedValue(0);
+
+    const req = createReq({ query: { ruleset: "season_2" } });
+    const res = createRes();
+    await handleListMyTeams(req, res);
+
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { ownerId: "user-1", ruleset: "season_2" },
+      }),
+    );
+    expect(count).toHaveBeenCalledWith({
+      where: { ownerId: "user-1", ruleset: "season_2" },
+    });
+  });
+
+  it("forwards limit/offset query params to prisma", async () => {
+    const { findMany, count } = await getMocks();
+    findMany.mockResolvedValue([]);
+    count.mockResolvedValue(42);
+
+    const req = createReq({ query: { limit: "10", offset: "20" } });
+    const res = createRes();
+    await handleListMyTeams(req, res);
+
+    const callArgs = findMany.mock.calls[0]![0];
+    expect(callArgs.take).toBe(10);
+    expect(callArgs.skip).toBe(20);
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: { meta: expect.objectContaining({ total: 42 }) },
+    });
   });
 });

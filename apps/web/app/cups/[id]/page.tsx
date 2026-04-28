@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { API_BASE } from "../../auth-client";
+import { apiRequest } from "../../lib/api-client";
 
 type CupScoringConfig = {
   winPoints: number;
@@ -158,7 +159,7 @@ export default function CupDetailPage() {
 
   const loadTeams = async () => {
     try {
-      const { teams: data } = await fetchJSON("/team/mine");
+      const { teams: data } = await apiRequest<{ teams: Team[] }>("/team/mine");
       setTeams(data);
     } catch (e: any) {
       console.error("Erreur lors du chargement des équipes:", e);
