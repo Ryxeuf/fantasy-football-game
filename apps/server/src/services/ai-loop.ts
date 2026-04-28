@@ -23,6 +23,7 @@ import {
 import { prisma } from "../prisma";
 import { computeAIMove, isAITurnToAct } from "./ai-turn";
 import { broadcastGameState, broadcastMatchEnd } from "./game-broadcast";
+import { serverLog } from "../utils/server-log";
 
 export const MAX_MOVES_PER_TURN = 64;
 export const MAX_MS_PER_TURN = 15_000;
@@ -85,7 +86,7 @@ function hashProgress(state: GameState): string {
 /** Fire-and-forget entrypoint used by `processMove`. */
 export function scheduleAILoop(matchId: string): void {
   void runAILoop({ matchId }).catch((err) => {
-    console.error(`[ai-loop] ${matchId} failed:`, err);
+    serverLog.error(`[ai-loop] ${matchId} failed:`, err);
   });
 }
 
@@ -191,7 +192,7 @@ async function executeAILoop(
     try {
       nextState = applyMove(state, chosen, makeRNG(seed)) as ExtendedGameState;
     } catch (err) {
-      console.error(`[ai-loop] ${matchId} applyMove failed`, err);
+      serverLog.error(`[ai-loop] ${matchId} applyMove failed`, err);
       return report("engine-error", start, now, movesApplied);
     }
 

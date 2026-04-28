@@ -8,6 +8,7 @@ import {
   type TeamMatchRecord,
   type TeamPlayerForStats,
 } from "../services/career-stats";
+import { serverLog } from "../utils/server-log";
 
 const router = Router();
 
@@ -171,7 +172,7 @@ router.get(
         players,
       });
     } catch (e: any) {
-      console.error("Erreur lors du calcul des stats de carriere:", e);
+      serverLog.error("Erreur lors du calcul des stats de carriere:", e);
       return res.status(500).json({ error: "Erreur serveur" });
     }
   },

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
 import { getUserAchievements } from "../services/achievements";
+import { serverLog } from "../utils/server-log";
 
 const router = Router();
 
@@ -18,7 +19,7 @@ router.get("/", authUser, async (req: AuthenticatedRequest, res) => {
     return res.json({ success: true, data: result });
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : "Erreur serveur";
-    console.error("[GET /achievements] error:", message);
+    serverLog.error("[GET /achievements] error:", message);
     return res.status(500).json({ success: false, error: message });
   }
 });

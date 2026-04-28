@@ -44,6 +44,7 @@ import {
   addStarPlayerToTeamSchema,
 } from "../schemas/team.schemas";
 import { chooseTeamSchema } from "../schemas/match.schemas";
+import { serverLog } from "../utils/server-log";
 
 const router = Router();
 const ALLOWED_TEAMS = [
@@ -339,7 +340,7 @@ router.post("/choose", authUser, validate(chooseTeamSchema), async (req: Authent
             ? "Vous avez déjà choisi une équipe pour ce match"
             : "Conflit d'unicité pour ce match",
         });
-    console.error(e);
+    serverLog.error(e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -919,7 +920,7 @@ router.put("/:id/info", authUser, validate(updateTeamInfoSchema), async (req: Au
 
     res.json({ team: finalTeam });
   } catch (e: any) {
-    console.error("Erreur lors de la modification des informations d'équipe:", e);
+    serverLog.error("Erreur lors de la modification des informations d'équipe:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -952,7 +953,7 @@ router.post("/:id/recalculate", authUser, async (req: AuthenticatedRequest, res)
       message: `Valeurs recalculées: VE=${teamValue.toLocaleString()} po, VEA=${currentValue.toLocaleString()} po`
     });
   } catch (e: any) {
-    console.error("Erreur lors du recalcul des valeurs d'équipe:", e);
+    serverLog.error("Erreur lors du recalcul des valeurs d'équipe:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -1083,7 +1084,7 @@ router.put("/:id", authUser, validate(updateTeamSchema), async (req: Authenticat
 
     res.json({ team: updatedTeam });
   } catch (e: any) {
-    console.error("Erreur lors de la modification de l'équipe:", e);
+    serverLog.error("Erreur lors de la modification de l'équipe:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -1218,7 +1219,7 @@ router.post("/:id/players", authUser, validate(addPlayerSchema), async (req: Aut
       newPlayer: newPlayer
     });
   } catch (e: any) {
-    console.error("Erreur lors de l'ajout du joueur:", e);
+    serverLog.error("Erreur lors de l'ajout du joueur:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -1282,7 +1283,7 @@ router.delete("/:id/players/:playerId", authUser, async (req: AuthenticatedReque
 
     res.json({ team: updatedTeam });
   } catch (e: any) {
-    console.error("Erreur lors de la suppression du joueur:", e);
+    serverLog.error("Erreur lors de la suppression du joueur:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -1449,7 +1450,7 @@ router.put("/:id/players/:playerId/skills", authUser, validate(updatePlayerSkill
       advancement: newAdvancement,
     });
   } catch (e: any) {
-    console.error("Erreur lors de l'ajout de compétence:", e);
+    serverLog.error("Erreur lors de l'ajout de compétence:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -1508,7 +1509,7 @@ router.get("/:id/available-positions", authUser, async (req: AuthenticatedReques
       maxPlayers: 16
     });
   } catch (e: any) {
-    console.error("Erreur lors de la récupération des positions disponibles:", e);
+    serverLog.error("Erreur lors de la récupération des positions disponibles:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -1549,7 +1550,7 @@ router.get("/:id/star-players", authUser, async (req: AuthenticatedRequest, res)
       count: enrichedStarPlayers.length
     });
   } catch (e: any) {
-    console.error("Erreur lors de la récupération des Star Players:", e);
+    serverLog.error("Erreur lors de la récupération des Star Players:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -1647,7 +1648,7 @@ router.get("/:id/available-star-players", authUser, async (req: AuthenticatedReq
       totalBudget: team.initialBudget
     });
   } catch (e: any) {
-    console.error("Erreur lors de la récupération des Star Players disponibles:", e);
+    serverLog.error("Erreur lors de la récupération des Star Players disponibles:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -1798,7 +1799,7 @@ router.post("/:id/star-players", authUser, validate(addStarPlayerToTeamSchema), 
         : `${enrichedNewStarPlayers[0].displayName} recruté avec succès`
     });
   } catch (e: any) {
-    console.error("Erreur lors du recrutement du Star Player:", e);
+    serverLog.error("Erreur lors du recrutement du Star Player:", e);
     
     // Gérer les erreurs de contrainte unique
     if (e?.code === "P2002") {
@@ -1890,7 +1891,7 @@ router.delete("/:id/star-players/:starPlayerId", authUser, async (req: Authentic
         : "Star Player retiré avec succès"
     });
   } catch (e: any) {
-    console.error("Erreur lors du retrait du Star Player:", e);
+    serverLog.error("Erreur lors du retrait du Star Player:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -2142,7 +2143,7 @@ router.post("/:id/purchase", authUser, validate(purchaseSchema), async (req: Aut
       purchase: { type, cost, description },
     });
   } catch (e: any) {
-    console.error("Erreur lors de l'achat:", e);
+    serverLog.error("Erreur lors de l'achat:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });

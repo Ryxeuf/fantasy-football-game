@@ -7,6 +7,7 @@ import {
   type StarPlayerDefinition,
 } from "@bb/game-engine";
 import { resolveRuleset, DEFAULT_RULESET } from "../utils/ruleset-helpers";
+import { serverLog } from "../utils/server-log";
 
 const router = Router();
 
@@ -53,7 +54,7 @@ router.get("/", async (req, res) => {
       data: transformedStarPlayers
     });
   } catch (error) {
-    console.error("Error fetching star players:", error);
+    serverLog.error("Error fetching star players:", error);
     res.status(500).json({
       success: false,
       error: "Failed to fetch star players"
@@ -109,7 +110,7 @@ router.get("/:slug", async (req, res) => {
       data: transformedStarPlayer
     });
   } catch (error) {
-    console.error("Error fetching star player:", error);
+    serverLog.error("Error fetching star player:", error);
     res.status(500).json({
       success: false,
       error: "Failed to fetch star player"
@@ -205,7 +206,7 @@ router.get("/available/:roster", async (req, res) => {
       starPlayers: transformedStarPlayers
     });
   } catch (error) {
-    console.error("Error fetching available star players:", error);
+    serverLog.error("Error fetching available star players:", error);
     res.status(500).json({
       success: false,
       error: "Failed to fetch available star players"
@@ -236,7 +237,7 @@ router.get("/regional-rules/:roster", (req, res) => {
       regionalRules
     });
   } catch (error) {
-    console.error("Error fetching regional rules:", error);
+    serverLog.error("Error fetching regional rules:", error);
     res.status(500).json({
       success: false,
       error: "Failed to fetch regional rules"
@@ -323,7 +324,7 @@ router.get("/search", async (req, res) => {
       data: transformedStarPlayers
     });
   } catch (error) {
-    console.error("Error searching star players:", error);
+    serverLog.error("Error searching star players:", error);
     res.status(500).json({
       success: false,
       error: "Failed to search star players"

@@ -24,6 +24,7 @@ import { runAIKickoffIfNeeded } from "../services/ai-kickoff";
 import type { AIDifficulty } from "@bb/game-engine";
 import { getSpectatorCount } from "../game-spectator";
 import { MATCH_SECRET } from "../config";
+import { serverLog } from "../utils/server-log";
 
 const router = Router();
 const ALLOWED_TEAMS = ["skaven", "lizardmen"] as const;
@@ -66,7 +67,7 @@ router.post("/create", authUser, validate(createMatchSchema), async (req: Authen
     );
     return res.status(201).json({ match, matchToken: token });
   } catch (e: any) {
-    console.error(e);
+    serverLog.error(e);
     return res.status(500).json({ error: e?.message || "Erreur serveur" });
   }
 });
@@ -87,7 +88,7 @@ router.post("/join", authUser, validate(joinMatchSchema), async (req: Authentica
     );
     return res.json({ match, matchToken: token });
   } catch (e: any) {
-    console.error(e);
+    serverLog.error(e);
     return res.status(500).json({ error: e?.message || "Erreur serveur" });
   }
 });
@@ -104,7 +105,7 @@ router.post("/accept", authUser, validate(acceptMatchSchema), async (req: Authen
       return res.status(result.status).json({ error: result.error });
     return res.json(result);
   } catch (e: any) {
-    console.error(e);
+    serverLog.error(e);
     return res.status(500).json({ error: e?.message || "Erreur serveur" });
   }
 });
@@ -166,7 +167,7 @@ router.post(
               ? 400
               : 500;
       if (status >= 500) {
-        console.error("Erreur creation match pratique online:", e);
+        serverLog.error("Erreur creation match pratique online:", e);
       }
       return res.status(status).json({ error: message });
     }
@@ -199,7 +200,7 @@ router.post(
 
       return res.json(result);
     } catch (e: any) {
-      console.error("Erreur lors de l'application du coup:", e);
+      serverLog.error("Erreur lors de l'application du coup:", e);
       return res.status(500).json({ error: e?.message || "Erreur serveur" });
     }
   },
@@ -280,7 +281,7 @@ router.get("/details", async (req, res) => {
       },
     });
   } catch (e: any) {
-    console.error(e);
+    serverLog.error(e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -336,7 +337,7 @@ router.get("/:id/details", authUser, async (req: AuthenticatedRequest, res) => {
       visitor: { teamName: teamName(visitor), coachName: coachName(visitor), eloRating: eloRating(visitor) },
     });
   } catch (e) {
-    console.error(e);
+    serverLog.error(e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -383,7 +384,7 @@ router.get("/:id/teams", authUser, async (req: AuthenticatedRequest, res) => {
 
     return res.json({ teamA, teamB });
   } catch (e: any) {
-    console.error(e);
+    serverLog.error(e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -467,7 +468,7 @@ router.get("/my-matches", authUser, async (req: AuthenticatedRequest, res) => {
 
     return res.json({ matches: result });
   } catch (e: any) {
-    console.error(e);
+    serverLog.error(e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -555,7 +556,7 @@ router.get("/:id/summary", authUser, async (req: AuthenticatedRequest, res) => {
       acceptances: { local: localAccepted, visitor: visitorAccepted },
     });
   } catch (e) {
-    console.error(e);
+    serverLog.error(e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -652,7 +653,7 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
         : null;
 
       if (!teamA || !teamB) {
-        console.log("Teams not found:", s1.teamId, s2.teamId);
+        serverLog.log("Teams not found:", s1.teamId, s2.teamId);
         return res.status(400).json({ error: "Équipes non trouvées" });
       }
 
@@ -685,7 +686,7 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
           skills: p.skills || "",
         }));
 
-      console.log(
+      serverLog.log(
         "Players loaded for prematch:",
         teamAData.length,
         teamBData.length,
@@ -756,7 +757,7 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
 
     res.json({ gameState });
   } catch (e: any) {
-    console.error(e);
+    serverLog.error(e);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -967,7 +968,7 @@ router.post(
         myTeamSide: userTeamSide,
       });
     } catch (e: any) {
-      console.error("Erreur lors de la validation du setup:", e);
+      serverLog.error("Erreur lors de la validation du setup:", e);
       return res.status(500).json({ error: "Erreur serveur" });
     }
   },
@@ -1044,7 +1045,7 @@ router.post(
         message: "Ballon placé pour le kickoff",
       });
     } catch (e: any) {
-      console.error("Erreur lors du placement du ballon:", e);
+      serverLog.error("Erreur lors du placement du ballon:", e);
       return res.status(500).json({ error: "Erreur serveur" });
     }
   }
@@ -1111,7 +1112,7 @@ router.post(
         message: "Déviation du kickoff calculée",
       });
     } catch (e: any) {
-      console.error("Erreur lors du calcul de déviation:", e);
+      serverLog.error("Erreur lors du calcul de déviation:", e);
       return res.status(500).json({ error: "Erreur serveur" });
     }
   }
@@ -1215,7 +1216,7 @@ router.post(
         message: "Événement de kickoff résolu - Le match commence !",
       });
     } catch (e: any) {
-      console.error("Erreur lors de la résolution de l'événement:", e);
+      serverLog.error("Erreur lors de la résolution de l'événement:", e);
       return res.status(500).json({ error: "Erreur serveur" });
     }
   }
@@ -1273,7 +1274,7 @@ router.get("/:id/turns", authUser, async (req: AuthenticatedRequest, res) => {
 
     return res.json({ matchId, turns: turnSummaries });
   } catch (e: any) {
-    console.error("Erreur lors de la récupération des turns:", e);
+    serverLog.error("Erreur lors de la récupération des turns:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -1385,7 +1386,7 @@ router.get("/:id/results", authUser, async (req: AuthenticatedRequest, res) => {
       })),
     });
   } catch (e) {
-    console.error("Erreur lors de la récupération des résultats:", e);
+    serverLog.error("Erreur lors de la récupération des résultats:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -1458,7 +1459,7 @@ router.get("/live", authUser, async (_req: AuthenticatedRequest, res) => {
 
     return res.json({ matches: result });
   } catch (e) {
-    console.error(e);
+    serverLog.error(e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -1527,7 +1528,7 @@ router.get("/:id/spectate", authUser, async (req: AuthenticatedRequest, res) => 
         : null,
     });
   } catch (e) {
-    console.error(e);
+    serverLog.error(e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -1599,7 +1600,7 @@ router.get("/:id/replay", authUser, async (req: AuthenticatedRequest, res) => {
       createdAt: match.createdAt,
     });
   } catch (e) {
-    console.error(e);
+    serverLog.error(e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });

@@ -1,4 +1,5 @@
 import { Namespace, Socket } from "socket.io";
+import { serverLog } from "./utils/server-log";
 
 /**
  * Tracks spectator sockets per match room.
@@ -51,7 +52,7 @@ export function registerSpectatorHandlers(gameNamespace: Namespace): void {
         spectatorSockets.get(matchId)!.add(socket.id);
 
         const count = spectatorSockets.get(matchId)!.size;
-        console.log(
+        serverLog.log(
           `[game-spectator] Socket ${socket.id} spectating ${matchId} (${count} spectators)`,
         );
 
@@ -109,7 +110,7 @@ function leaveSpectate(
       spectatorSockets.delete(matchId);
     }
 
-    console.log(
+    serverLog.log(
       `[game-spectator] Socket ${socket.id} stopped spectating ${matchId} (${remaining} spectators)`,
     );
 

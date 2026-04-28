@@ -7,6 +7,7 @@ import { Router } from "express";
 import { prisma } from "../prisma";
 import { resolveRuleset, DEFAULT_RULESET } from "../utils/ruleset-helpers";
 import { memoizeAsync } from "../utils/memoize-async";
+import { serverLog } from "../utils/server-log";
 
 const router = Router();
 
@@ -107,7 +108,7 @@ router.get("/positions", async (req, res) => {
     );
     res.json(payload);
   } catch (error: any) {
-    console.error("Erreur lors de la récupération des positions:", error);
+    serverLog.error("Erreur lors de la récupération des positions:", error);
     res.setHeader("Cache-Control", "no-store");
     res.status(500).json({ error: error.message || "Erreur serveur" });
   }
@@ -135,7 +136,7 @@ router.get("/positions/:slug", async (req, res) => {
     }
     res.json(payload);
   } catch (error: any) {
-    console.error("Erreur lors de la récupération de la position:", error);
+    serverLog.error("Erreur lors de la récupération de la position:", error);
     res.setHeader("Cache-Control", "no-store");
     res.status(500).json({ error: error.message || "Erreur serveur" });
   }

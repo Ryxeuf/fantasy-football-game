@@ -2,6 +2,7 @@ import { Namespace, Socket } from "socket.io";
 import { prisma } from "./prisma";
 import { startForfeitTimer, cancelForfeitTimer } from "./services/forfeit-tracker";
 import { trackUserJoin, trackUserLeave, resetConnectedUsers } from "./services/connected-users";
+import { serverLog } from "./utils/server-log";
 
 /**
  * Tracks which users are connected to which match rooms.
@@ -89,7 +90,7 @@ export function registerGameRoomHandlers(gameNamespace: Namespace): void {
       trackUserJoin(matchId, socket.id, userId);
 
       const connectedCount = matchRooms.get(matchId)!.size;
-      console.log(
+      serverLog.log(
         `[game-rooms] Socket ${socket.id} joined room ${matchId} (${connectedCount} connected)`,
       );
 
@@ -141,7 +142,7 @@ function leaveRoom(socket: Socket, matchId: string): void {
       matchRooms.delete(matchId);
     }
 
-    console.log(
+    serverLog.log(
       `[game-rooms] Socket ${socket.id} left room ${matchId} (${remaining} remaining)`,
     );
 

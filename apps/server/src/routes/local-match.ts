@@ -44,6 +44,7 @@ import {
   validateShareTokenSchema,
   localMatchInducementsSchema,
 } from "../schemas/local-match.schemas";
+import { serverLog } from "../utils/server-log";
 
 const router = Router();
 
@@ -183,7 +184,7 @@ router.get("/", authUser, validateQuery(localMatchListQuerySchema), async (req: 
 
     res.json({ localMatches, meta: buildApiMeta({ total, limit, offset }) });
   } catch (e: any) {
-    console.error("Erreur lors de la récupération des parties offline:", e);
+    serverLog.error("Erreur lors de la récupération des parties offline:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -254,7 +255,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
     
     res.json({ localMatch });
   } catch (e: any) {
-    console.error("Erreur lors de la récupération de la partie offline:", e);
+    serverLog.error("Erreur lors de la récupération de la partie offline:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -421,7 +422,7 @@ router.post("/", authUser, validate(createLocalMatchSchema), async (req: Authent
     
     res.status(201).json({ localMatch });
   } catch (e: any) {
-    console.error("Erreur lors de la création de la partie offline:", e);
+    serverLog.error("Erreur lors de la création de la partie offline:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -665,7 +666,7 @@ router.post("/:id/start", authUser, async (req: AuthenticatedRequest, res) => {
       gameState,
     });
   } catch (e: any) {
-    console.error("Erreur lors du démarrage de la partie offline:", e);
+    serverLog.error("Erreur lors du démarrage de la partie offline:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -803,7 +804,7 @@ router.post("/:id/inducements", authUser, validate(localMatchInducementsSchema),
       pettyCash: calculatePettyCash(pettyCashInput),
     });
   } catch (e: any) {
-    console.error("Erreur lors du traitement des inducements:", e);
+    serverLog.error("Erreur lors du traitement des inducements:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -871,7 +872,7 @@ router.get("/:id/inducements-info", authUser, async (req: AuthenticatedRequest, 
       },
     });
   } catch (e: any) {
-    console.error("Erreur lors de la récupération des infos d'inducements:", e);
+    serverLog.error("Erreur lors de la récupération des infos d'inducements:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -929,7 +930,7 @@ router.put("/:id/state", authUser, validate(updateLocalMatchStateSchema), async 
     
     res.json({ localMatch: updatedMatch });
   } catch (e: any) {
-    console.error("Erreur lors de la sauvegarde de l'état:", e);
+    serverLog.error("Erreur lors de la sauvegarde de l'état:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -1017,7 +1018,7 @@ router.post("/:id/complete", authUser, validate(completeLocalMatchSchema), async
           );
         }
       } catch (sppError) {
-        console.error("Erreur lors de la persistence des SPP:", sppError);
+        serverLog.error("Erreur lors de la persistence des SPP:", sppError);
         // Non-blocking: match completion succeeds even if SPP persistence fails
       }
 
@@ -1032,7 +1033,7 @@ router.post("/:id/complete", authUser, validate(completeLocalMatchSchema), async
           );
         }
       } catch (deathError) {
-        console.error("Erreur lors de la persistence des morts:", deathError);
+        serverLog.error("Erreur lors de la persistence des morts:", deathError);
         // Non-blocking: match completion succeeds even if death persistence fails
       }
 
@@ -1047,14 +1048,14 @@ router.post("/:id/complete", authUser, validate(completeLocalMatchSchema), async
           );
         }
       } catch (injuryError) {
-        console.error("Erreur lors de la persistence des blessures permanentes:", injuryError);
+        serverLog.error("Erreur lors de la persistence des blessures permanentes:", injuryError);
         // Non-blocking: match completion succeeds even if injury persistence fails
       }
     }
 
     res.json({ localMatch: updatedMatch, sppUpdatedCount, deathsPersistedCount, injuriesPersistedCount });
   } catch (e: any) {
-    console.error("Erreur lors de la finalisation de la partie offline:", e);
+    serverLog.error("Erreur lors de la finalisation de la partie offline:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -1149,7 +1150,7 @@ router.patch("/:id/status", authUser, validate(updateLocalMatchStatusSchema), as
     
     res.json({ localMatch: updatedMatch });
   } catch (e: any) {
-    console.error("Erreur lors de la modification du statut:", e);
+    serverLog.error("Erreur lors de la modification du statut:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -1178,7 +1179,7 @@ router.delete("/:id", authUser, async (req: AuthenticatedRequest, res) => {
     
     res.json({ message: "Partie offline supprimée avec succès" });
   } catch (e: any) {
-    console.error("Erreur lors de la suppression de la partie offline:", e);
+    serverLog.error("Erreur lors de la suppression de la partie offline:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -1236,7 +1237,7 @@ router.get("/:id/actions", authUser, async (req: AuthenticatedRequest, res) => {
 
     res.json({ actions, meta: buildApiMeta({ total, limit, offset }) });
   } catch (e: any) {
-    console.error("Erreur lors de la récupération des actions:", e);
+    serverLog.error("Erreur lors de la récupération des actions:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -1314,7 +1315,7 @@ router.post("/:id/actions", authUser, validate(createLocalMatchActionSchema), as
     
     res.json({ action });
   } catch (e: any) {
-    console.error("Erreur lors de la création de l'action:", e);
+    serverLog.error("Erreur lors de la création de l'action:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -1362,7 +1363,7 @@ router.delete("/:id/actions/:actionId", authUser, async (req: AuthenticatedReque
     
     res.json({ message: "Action supprimée avec succès" });
   } catch (e: any) {
-    console.error("Erreur lors de la suppression de l'action:", e);
+    serverLog.error("Erreur lors de la suppression de l'action:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -1428,7 +1429,7 @@ router.get("/share/:token", async (req, res) => {
     
     res.json({ localMatch });
   } catch (e: any) {
-    console.error("Erreur lors de la récupération du match via le token:", e);
+    serverLog.error("Erreur lors de la récupération du match via le token:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -1615,7 +1616,7 @@ router.post("/share/:token/validate", authUser, validate(validateShareTokenSchem
     
     res.json({ localMatch: updatedMatch });
   } catch (e: any) {
-    console.error("Erreur lors de la validation de la participation:", e);
+    serverLog.error("Erreur lors de la validation de la participation:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });

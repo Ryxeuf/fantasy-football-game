@@ -28,6 +28,7 @@ import {
   createStarPlayerDataSchema,
   updateStarPlayerDataSchema,
 } from "../schemas/admin-data.schemas";
+import { serverLog } from "../utils/server-log";
 
 const router = Router();
 
@@ -64,7 +65,7 @@ router.get("/skills", validateQuery(adminSkillsQuerySchema), async (req, res) =>
     });
     res.json({ skills });
   } catch (error: any) {
-    console.error("Erreur lors de la récupération des compétences:", error);
+    serverLog.error("Erreur lors de la récupération des compétences:", error);
     res.status(500).json({ error: error.message || "Erreur serveur" });
   }
 });
@@ -87,7 +88,7 @@ router.get("/skills/:id", async (req, res) => {
     }
     res.json({ skill });
   } catch (error: any) {
-    console.error("Erreur lors de la récupération de la compétence:", error);
+    serverLog.error("Erreur lors de la récupération de la compétence:", error);
     res.status(500).json({ error: error.message || "Erreur serveur" });
   }
 });
@@ -106,7 +107,7 @@ router.post("/skills", validate(createSkillSchema), async (req, res) => {
     if (error.code === "P2002") {
       return res.status(409).json({ error: "Cette compétence existe déjà pour ce ruleset" });
     }
-    console.error("Erreur lors de la création de la compétence:", error);
+    serverLog.error("Erreur lors de la création de la compétence:", error);
     res.status(500).json({ error: error.message || "Erreur serveur" });
   }
 });
@@ -150,7 +151,7 @@ router.put("/skills/:id", validate(updateSkillSchema), async (req, res) => {
     if (error.code === "P2002") {
       return res.status(409).json({ error: "Ce slug existe déjà pour ce ruleset" });
     }
-    console.error("Erreur lors de la mise à jour de la compétence:", error);
+    serverLog.error("Erreur lors de la mise à jour de la compétence:", error);
     res.status(500).json({ error: error.message || "Erreur serveur" });
   }
 });
@@ -203,7 +204,7 @@ router.post("/skills/:id/duplicate", validate(duplicateToRulesetSchema), async (
       message: `Compétence dupliquée avec succès vers ${newRuleset}`,
     });
   } catch (error: any) {
-    console.error("Erreur lors de la duplication de la compétence:", error);
+    serverLog.error("Erreur lors de la duplication de la compétence:", error);
     res.status(500).json({ error: error.message || "Erreur serveur" });
   }
 });
@@ -218,7 +219,7 @@ router.delete("/skills/:id", async (req, res) => {
     if (error.code === "P2025") {
       return res.status(404).json({ error: "Compétence non trouvée" });
     }
-    console.error("Erreur lors de la suppression de la compétence:", error);
+    serverLog.error("Erreur lors de la suppression de la compétence:", error);
     res.status(500).json({ error: error.message || "Erreur serveur" });
   }
 });
@@ -270,7 +271,7 @@ router.get("/rosters", validateQuery(adminRostersQuerySchema), async (req, res) 
     }));
     res.json({ rosters: rostersWithParsedRules });
   } catch (error: any) {
-    console.error("Erreur lors de la récupération des rosters:", error);
+    serverLog.error("Erreur lors de la récupération des rosters:", error);
     res.status(500).json({ error: error.message || "Erreur serveur" });
   }
 });
@@ -314,7 +315,7 @@ router.get("/rosters/:id", async (req, res) => {
     };
     res.json({ roster: rosterWithParsedRules });
   } catch (error: any) {
-    console.error("Erreur lors de la récupération du roster:", error);
+    serverLog.error("Erreur lors de la récupération du roster:", error);
     res.status(500).json({ error: error.message || "Erreur serveur" });
   }
 });
@@ -358,7 +359,7 @@ router.post("/rosters", validate(createRosterSchema), async (req, res) => {
     if (error.code === "P2002") {
       return res.status(409).json({ error: "Ce roster existe déjà pour ce ruleset" });
     }
-    console.error("Erreur lors de la création du roster:", error);
+    serverLog.error("Erreur lors de la création du roster:", error);
     res.status(500).json({ error: error.message || "Erreur serveur" });
   }
 });
@@ -407,7 +408,7 @@ router.put("/rosters/:id", validate(updateRosterSchema), async (req, res) => {
     if (error.code === "P2002") {
       return res.status(409).json({ error: "Slug déjà utilisé pour ce ruleset" });
     }
-    console.error("Erreur lors de la mise à jour du roster:", error);
+    serverLog.error("Erreur lors de la mise à jour du roster:", error);
     res.status(500).json({ error: error.message || "Erreur serveur" });
   }
 });
@@ -500,7 +501,7 @@ router.post("/rosters/:id/duplicate", validate(duplicateToRulesetSchema), async 
       message: `Roster dupliqué avec succès vers ${newRuleset}`,
     });
   } catch (error: any) {
-    console.error("Erreur lors de la duplication du roster:", error);
+    serverLog.error("Erreur lors de la duplication du roster:", error);
     res.status(500).json({ error: error.message || "Erreur serveur" });
   }
 });
@@ -515,7 +516,7 @@ router.delete("/rosters/:id", async (req, res) => {
     if (error.code === "P2025") {
       return res.status(404).json({ error: "Roster non trouvé" });
     }
-    console.error("Erreur lors de la suppression du roster:", error);
+    serverLog.error("Erreur lors de la suppression du roster:", error);
     res.status(500).json({ error: error.message || "Erreur serveur" });
   }
 });
@@ -559,7 +560,7 @@ router.get("/positions", validateQuery(adminPositionsQuerySchema), async (req, r
     });
     res.json({ positions });
   } catch (error: any) {
-    console.error("Erreur lors de la récupération des positions:", error);
+    serverLog.error("Erreur lors de la récupération des positions:", error);
     res.status(500).json({ error: error.message || "Erreur serveur" });
   }
 });
@@ -588,7 +589,7 @@ router.get("/positions/:id", async (req, res) => {
     }
     res.json({ position });
   } catch (error: any) {
-    console.error("Erreur lors de la récupération de la position:", error);
+    serverLog.error("Erreur lors de la récupération de la position:", error);
     res.status(500).json({ error: error.message || "Erreur serveur" });
   }
 });
@@ -630,7 +631,7 @@ router.post("/positions", validate(createPositionSchema), async (req, res) => {
     if (error.code === "P2002") {
       return res.status(409).json({ error: "Cette position existe déjà pour ce roster" });
     }
-    console.error("Erreur lors de la création de la position:", error);
+    serverLog.error("Erreur lors de la création de la position:", error);
     res.status(500).json({ error: error.message || "Erreur serveur" });
   }
 });
@@ -677,7 +678,7 @@ router.put("/positions/:id", validate(updatePositionSchema), async (req, res) =>
     if (error.code === "P2025") {
       return res.status(404).json({ error: "Position non trouvée" });
     }
-    console.error("Erreur lors de la mise à jour de la position:", error);
+    serverLog.error("Erreur lors de la mise à jour de la position:", error);
     res.status(500).json({ error: error.message || "Erreur serveur" });
   }
 });
@@ -752,7 +753,7 @@ router.post("/positions/:id/duplicate", validate(duplicatePositionSchema), async
       message: `Position dupliquée avec succès vers le roster ${targetRoster.name}`,
     });
   } catch (error: any) {
-    console.error("Erreur lors de la duplication de la position:", error);
+    serverLog.error("Erreur lors de la duplication de la position:", error);
     res.status(500).json({ error: error.message || "Erreur serveur" });
   }
 });
@@ -767,7 +768,7 @@ router.delete("/positions/:id", async (req, res) => {
     if (error.code === "P2025") {
       return res.status(404).json({ error: "Position non trouvée" });
     }
-    console.error("Erreur lors de la suppression de la position:", error);
+    serverLog.error("Erreur lors de la suppression de la position:", error);
     res.status(500).json({ error: error.message || "Erreur serveur" });
   }
 });
@@ -802,7 +803,7 @@ router.get("/star-players", validateQuery(adminStarPlayersQuerySchema), async (r
     });
     res.json({ starPlayers });
   } catch (error: any) {
-    console.error("Erreur lors de la récupération des Star Players:", error);
+    serverLog.error("Erreur lors de la récupération des Star Players:", error);
     res.status(500).json({ error: error.message || "Erreur serveur" });
   }
 });
@@ -825,7 +826,7 @@ router.get("/star-players/:id", async (req, res) => {
     }
     res.json({ starPlayer });
   } catch (error: any) {
-    console.error("Erreur lors de la récupération du Star Player:", error);
+    serverLog.error("Erreur lors de la récupération du Star Player:", error);
     res.status(500).json({ error: error.message || "Erreur serveur" });
   }
 });
@@ -876,7 +877,7 @@ router.post("/star-players", validate(createStarPlayerDataSchema), async (req, r
     if (error.code === "P2002") {
       return res.status(409).json({ error: "Ce Star Player existe déjà" });
     }
-    console.error("Erreur lors de la création du Star Player:", error);
+    serverLog.error("Erreur lors de la création du Star Player:", error);
     res.status(500).json({ error: error.message || "Erreur serveur" });
   }
 });
@@ -936,7 +937,7 @@ router.put("/star-players/:id", validate(updateStarPlayerDataSchema), async (req
     if (error.code === "P2025") {
       return res.status(404).json({ error: "Star Player non trouvé" });
     }
-    console.error("Erreur lors de la mise à jour du Star Player:", error);
+    serverLog.error("Erreur lors de la mise à jour du Star Player:", error);
     res.status(500).json({ error: error.message || "Erreur serveur" });
   }
 });
@@ -951,7 +952,7 @@ router.delete("/star-players/:id", async (req, res) => {
     if (error.code === "P2025") {
       return res.status(404).json({ error: "Star Player non trouvé" });
     }
-    console.error("Erreur lors de la suppression du Star Player:", error);
+    serverLog.error("Erreur lors de la suppression du Star Player:", error);
     res.status(500).json({ error: error.message || "Erreur serveur" });
   }
 });

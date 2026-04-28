@@ -19,19 +19,20 @@ import {
 import { UNKNOWN_USER_ID } from "./utils/user-constants";
 import { ONLINE_PLAY_FLAG, AI_TRAINING_FLAG } from "./services/featureFlags";
 import { seedDefaultLeagues, DEFAULT_LEAGUE_NAME } from "./seeders/leagues";
+import { serverLog } from "./utils/server-log";
 
 async function main() {
-  console.log("🌱 Début du seed...\n");
+  serverLog.log("🌱 Début du seed...\n");
 
   // =============================================================================
   // 1. SEED DES COMPÉTENCES (Skills) - Pour chaque ruleset
   // =============================================================================
-  console.log("📚 Seed des compétences...");
+  serverLog.log("📚 Seed des compétences...");
   let skillsCreated = 0;
   let skillsSkipped = 0;
   
   // Supprimer les compétences S3-only qui ont été créées par erreur en S2
-  console.log("   🧹 Nettoyage des compétences S3-only créées par erreur en S2...");
+  serverLog.log("   🧹 Nettoyage des compétences S3-only créées par erreur en S2...");
   const s3OnlySlugs = SKILLS_DEFINITIONS
     .filter(s => s.season3Only)
     .map(s => s.slug);
@@ -44,13 +45,13 @@ async function main() {
       }
     });
     if (deleted.count > 0) {
-      console.log(`   ✅ ${deleted.count} compétences S3-only supprimées de S2`);
+      serverLog.log(`   ✅ ${deleted.count} compétences S3-only supprimées de S2`);
     }
   }
 
   // Créer les compétences pour chaque ruleset (season_2 et season_3)
   for (const ruleset of RULESETS) {
-    console.log(`   📖 Seed des compétences pour ${ruleset}...`);
+    serverLog.log(`   📖 Seed des compétences pour ${ruleset}...`);
     const isSeason3 = ruleset === "season_3";
     
     for (const skillDef of SKILLS_DEFINITIONS) {
@@ -130,7 +131,7 @@ async function main() {
           skillsCreated++;
         }
       } catch (error) {
-        console.error(`❌ Erreur lors du seed de la compétence ${skillDef.slug} (${ruleset}):`, error);
+        serverLog.error(`❌ Erreur lors du seed de la compétence ${skillDef.slug} (${ruleset}):`, error);
       }
     }
   }
@@ -138,7 +139,7 @@ async function main() {
   // =============================================================================
   // 1b. SEED DES NOUVELLES COMPÉTENCES SAISON 3
   // =============================================================================
-  console.log("📚 Seed des nouvelles compétences Saison 3...");
+  serverLog.log("📚 Seed des nouvelles compétences Saison 3...");
   let s3SkillsCreated = 0;
   let s3SkillsUpdated = 0;
 
@@ -179,17 +180,17 @@ async function main() {
         s3SkillsCreated++;
       }
     } catch (error) {
-      console.error(`❌ Erreur lors du seed de la compétence S3 ${s3Skill.slug}:`, error);
+      serverLog.error(`❌ Erreur lors du seed de la compétence S3 ${s3Skill.slug}:`, error);
     }
   }
 
-  console.log(`✅ Compétences: ${skillsCreated} créées, ${skillsSkipped} mises à jour`);
-  console.log(`✅ Nouvelles compétences S3: ${s3SkillsCreated} créées, ${s3SkillsUpdated} mises à jour\n`);
+  serverLog.log(`✅ Compétences: ${skillsCreated} créées, ${skillsSkipped} mises à jour`);
+  serverLog.log(`✅ Nouvelles compétences S3: ${s3SkillsCreated} créées, ${s3SkillsUpdated} mises à jour\n`);
 
   // =============================================================================
   // 2. SEED DES ROSTERS
   // =============================================================================
-  console.log("🏈 Seed des rosters...");
+  serverLog.log("🏈 Seed des rosters...");
   let rostersCreated = 0;
   let rostersSkipped = 0;
   
@@ -275,19 +276,19 @@ async function main() {
           rostersCreated++;
         }
       } catch (error) {
-        console.error(
+        serverLog.error(
           `❌ Erreur lors du seed du roster ${slug} (${ruleset}):`,
           error,
         );
       }
     }
   }
-  console.log(`✅ Rosters: ${rostersCreated} créés, ${rostersSkipped} mis à jour\n`);
+  serverLog.log(`✅ Rosters: ${rostersCreated} créés, ${rostersSkipped} mis à jour\n`);
 
   // =============================================================================
   // 3. SEED DES POSITIONS
   // =============================================================================
-  console.log("👥 Seed des positions...");
+  serverLog.log("👥 Seed des positions...");
   let positionsCreated = 0;
   let positionsSkipped = 0;
   
@@ -299,7 +300,7 @@ async function main() {
       });
 
       if (!roster) {
-        console.error(
+        serverLog.error(
           `❌ Roster ${rosterSlug} (${ruleset}) non trouvé, impossible de créer les positions`,
         );
         continue;
@@ -367,14 +368,14 @@ async function main() {
                   },
                 });
               } else {
-                console.warn(
+                serverLog.warn(
                   `⚠️  Compétence ${skillSlug} non trouvée pour la position ${positionDef.slug} (${ruleset})`,
                 );
               }
             }
           }
         } catch (error) {
-          console.error(
+          serverLog.error(
             `❌ Erreur lors du seed de la position ${positionDef.slug} (${ruleset}):`,
             error,
           );
@@ -382,12 +383,12 @@ async function main() {
       }
     }
   }
-  console.log(`✅ Positions: ${positionsCreated} créées, ${positionsSkipped} mises à jour\n`);
+  serverLog.log(`✅ Positions: ${positionsCreated} créées, ${positionsSkipped} mises à jour\n`);
 
   // =============================================================================
   // 4. SEED DES STAR PLAYERS
   // =============================================================================
-  console.log("⭐ Seed des Star Players...");
+  serverLog.log("⭐ Seed des Star Players...");
   let starPlayersCreated = 0;
   let starPlayersSkipped = 0;
   
@@ -450,7 +451,7 @@ async function main() {
                 }
               });
             } else {
-              console.warn(`⚠️  Compétence ${skillSlug} non trouvée pour le Star Player ${slug} (${ruleset})`);
+              serverLog.warn(`⚠️  Compétence ${skillSlug} non trouvée pour le Star Player ${slug} (${ruleset})`);
             }
           }
         }
@@ -499,21 +500,21 @@ async function main() {
           }
         }
       } catch (error) {
-        console.error(`❌ Erreur lors du seed du Star Player ${slug} (${ruleset}):`, error);
+        serverLog.error(`❌ Erreur lors du seed du Star Player ${slug} (${ruleset}):`, error);
       }
     }
   }
-  console.log(`✅ Star Players: ${starPlayersCreated} créés, ${starPlayersSkipped} mis à jour\n`);
+  serverLog.log(`✅ Star Players: ${starPlayersCreated} créés, ${starPlayersSkipped} mis à jour\n`);
 
   // =============================================================================
   // 5. SEED DES UTILISATEURS ET ÉQUIPES (code existant)
   // =============================================================================
-  console.log("👤 Seed des utilisateurs et équipes...");
+  serverLog.log("👤 Seed des utilisateurs et équipes...");
 
   // Utilisateur technique "Unknown" utilisé pour représenter un compte inconnu/supprimé
   // Cet utilisateur possède un ID fixe défini dans UNKNOWN_USER_ID pour pouvoir
   // être référencé de manière stable dans le code applicatif.
-  console.log("👤 Seed de l'utilisateur technique 'Unknown'...");
+  serverLog.log("👤 Seed de l'utilisateur technique 'Unknown'...");
   const unknownPasswordHash = await bcrypt.hash("unknown123", 10);
   await prisma.user.upsert({
     where: { id: UNKNOWN_USER_ID },
@@ -893,7 +894,7 @@ async function main() {
   // =============================================================================
   // 6. SEED D'UN COACH ET D'UNE ÉQUIPE PAR ROSTER
   // =============================================================================
-  console.log("👥 Seed d'un coach et d'une équipe type par roster...");
+  serverLog.log("👥 Seed d'un coach et d'une équipe type par roster...");
   for (const [rosterSlug, rosterDef] of Object.entries(TEAM_ROSTERS)) {
     const email = `coach+${rosterSlug}@example.com`;
     let coach = await prisma.user.findUnique({
@@ -942,7 +943,7 @@ async function main() {
   // =============================================================================
   // 6b. SEED DES FEATURE FLAGS
   // =============================================================================
-  console.log("🚩 Seed des feature flags...");
+  serverLog.log("🚩 Seed des feature flags...");
   // "online_play" : gate toute la partie "Jouer en ligne" du site.
   // Par défaut désactivé globalement ; les admins ont un bypass automatique
   // (cf. services/featureFlags.ts) et l'utilisateur "user@example.com" reçoit
@@ -960,7 +961,7 @@ async function main() {
       enabled: false,
     },
   });
-  console.log(
+  serverLog.log(
     `   ✅ Flag '${ONLINE_PLAY_FLAG}' ${onlinePlayFlag.enabled ? "actif" : "inactif (override admin/user)"}`,
   );
 
@@ -975,7 +976,7 @@ async function main() {
       create: { flagId: onlinePlayFlag.id, userId: testUser.id },
       update: {},
     });
-    console.log(
+    serverLog.log(
       `   ✅ Override '${ONLINE_PLAY_FLAG}' ajouté pour user@example.com`,
     );
   }
@@ -998,7 +999,7 @@ async function main() {
       enabled: false,
     },
   });
-  console.log(
+  serverLog.log(
     `   ✅ Flag '${AI_TRAINING_FLAG}' ${aiTrainingFlag.enabled ? "actif" : "inactif (override admin/user)"}`,
   );
 
@@ -1010,7 +1011,7 @@ async function main() {
       create: { flagId: aiTrainingFlag.id, userId: testUser.id },
       update: {},
     });
-    console.log(
+    serverLog.log(
       `   ✅ Override '${AI_TRAINING_FLAG}' ajouté pour user@example.com`,
     );
   }
@@ -1018,7 +1019,7 @@ async function main() {
   // =============================================================================
   // 7. SEED D'UNE COUPE ET D'UN MATCH LOCAL (fixtures de test)
   // =============================================================================
-  console.log("🏆 Seed d'une coupe et d'un match local de test...");
+  serverLog.log("🏆 Seed d'une coupe et d'un match local de test...");
   
   const adminUser = await prisma.user.findUnique({
     where: { email: "admin@example.com" },
@@ -1061,7 +1062,7 @@ async function main() {
 
       let cup;
       if (existingCup) {
-        console.log("   ⚠️  La coupe 'Test 1' existe déjà, mise à jour de la configuration de points");
+        serverLog.log("   ⚠️  La coupe 'Test 1' existe déjà, mise à jour de la configuration de points");
         cup = await prisma.cup.update({
           where: { id: existingCup.id },
           data: {
@@ -1080,7 +1081,7 @@ async function main() {
             ...defaultCupScoring,
           },
         });
-        console.log("   ✅ Coupe 'Test 1' créée");
+        serverLog.log("   ✅ Coupe 'Test 1' créée");
       }
 
       // Inscrire les équipes à la coupe : Admin (Skaven) + 11 rosters différents
@@ -1114,7 +1115,7 @@ async function main() {
         }
       }
 
-      console.log(
+      serverLog.log(
         `   ✅ ${participantTeams.length} équipes sélectionnées pour la coupe (objectif 12)`,
       );
 
@@ -1132,7 +1133,7 @@ async function main() {
               teamId: team.id,
             },
           });
-          console.log(
+          serverLog.log(
             `   ✅ Équipe ${team.name} (${team.roster}) inscrite à la coupe`,
           );
         }
@@ -1160,9 +1161,9 @@ async function main() {
             teamBOwnerValidated: false,
           },
         });
-        console.log("   ✅ Match local créé (Admin-Skavens vs User-Lizardmen)");
+        serverLog.log("   ✅ Match local créé (Admin-Skavens vs User-Lizardmen)");
       } else {
-        console.log("   ⚠️  Le match local existe déjà");
+        serverLog.log("   ⚠️  Le match local existe déjà");
       }
 
       // Valider le match et générer les actions
@@ -1206,7 +1207,7 @@ async function main() {
             gameState: gameState as any,
           },
         });
-        console.log("   ✅ Match validé et complété avec informations de pré-match");
+        serverLog.log("   ✅ Match validé et complété avec informations de pré-match");
 
         // Récupérer les joueurs des deux équipes
         const skavenPlayers = await prisma.teamPlayer.findMany({
@@ -1830,9 +1831,9 @@ async function main() {
           await prisma.localMatchAction.createMany({
             data: actions,
           });
-          console.log(`   ✅ ${actions.length} actions générées pour le match`);
+          serverLog.log(`   ✅ ${actions.length} actions générées pour le match`);
         } else {
-          console.log(`   ⚠️  Le match a déjà ${existingActions.length} actions`);
+          serverLog.log(`   ⚠️  Le match a déjà ${existingActions.length} actions`);
         }
       }
 
@@ -1883,7 +1884,7 @@ async function main() {
               completedAt: new Date(Date.now() - 60 * 60 * 1000),
             },
           });
-          console.log(
+          serverLog.log(
             `   ✅ Match local créé pour le premier round: ${teamA.name} vs ${teamB.name}`,
           );
         }
@@ -1954,50 +1955,50 @@ async function main() {
           await prisma.localMatchAction.createMany({
             data: simpleActions,
           });
-          console.log(
+          serverLog.log(
             `   ✅ Actions générées pour le match ${teamA.name} vs ${teamB.name}`,
           );
         }
       }
     } else {
-      console.log("   ⚠️  Impossible de créer la coupe : équipes non trouvées");
+      serverLog.log("   ⚠️  Impossible de créer la coupe : équipes non trouvées");
     }
   } else {
-    console.log("   ⚠️  Impossible de créer la coupe : utilisateurs non trouvés");
+    serverLog.log("   ⚠️  Impossible de créer la coupe : utilisateurs non trouvés");
   }
-  console.log("✅ Fixtures de coupe et match local terminées\n");
+  serverLog.log("✅ Fixtures de coupe et match local terminées\n");
 
   // =============================================================================
   // 8. SEED DES LIGUES PAR DEFAUT (L.2 — Sprint 17)
   // =============================================================================
-  console.log("🏟️  Seed des ligues par défaut...");
+  serverLog.log("🏟️  Seed des ligues par défaut...");
   const leagueCreator = await prisma.user.findUnique({
     where: { email: "admin@example.com" },
     select: { id: true },
   });
   if (leagueCreator) {
     await seedDefaultLeagues({ creatorId: leagueCreator.id });
-    console.log(`   ✅ Ligue '${DEFAULT_LEAGUE_NAME}' prête (saison 1, rounds initiaux, 5 équipes prioritaires)`);
+    serverLog.log(`   ✅ Ligue '${DEFAULT_LEAGUE_NAME}' prête (saison 1, rounds initiaux, 5 équipes prioritaires)`);
   } else {
-    console.log("   ⚠️  Admin introuvable, seeder des ligues ignoré");
+    serverLog.log("   ⚠️  Admin introuvable, seeder des ligues ignoré");
   }
-  console.log("✅ Ligues par défaut terminées\n");
+  serverLog.log("✅ Ligues par défaut terminées\n");
 }
 
 main()
   .then(async () => {
     await prisma.$disconnect();
-    console.log("\n🎉 Seed terminé avec succès !");
-    console.log("   - Toutes les compétences ont été importées");
-    console.log("   - Tous les rosters ont été importés");
-    console.log("   - Toutes les positions ont été importées");
-    console.log("   - Tous les Star Players ont été importés");
-    console.log("   - Les comptes par défaut sont prêts");
-    console.log("   - La coupe 'Test 1' et un match local ont été créés");
-    console.log(`   - La ligue '${DEFAULT_LEAGUE_NAME}' est prête`);
+    serverLog.log("\n🎉 Seed terminé avec succès !");
+    serverLog.log("   - Toutes les compétences ont été importées");
+    serverLog.log("   - Tous les rosters ont été importés");
+    serverLog.log("   - Toutes les positions ont été importées");
+    serverLog.log("   - Tous les Star Players ont été importés");
+    serverLog.log("   - Les comptes par défaut sont prêts");
+    serverLog.log("   - La coupe 'Test 1' et un match local ont été créés");
+    serverLog.log(`   - La ligue '${DEFAULT_LEAGUE_NAME}' est prête`);
   })
   .catch(async (e) => {
-    console.error("❌ Erreur lors du seed:", e);
+    serverLog.error("❌ Erreur lors du seed:", e);
     await prisma.$disconnect();
     process.exit(1);
   });

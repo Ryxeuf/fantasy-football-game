@@ -6,6 +6,7 @@ import {
 } from "@bb/game-engine";
 import { getLinemanStats } from "./journeymen";
 import { runAutomatedPreMatchSequence } from "./pre-match-automation";
+import { serverLog } from "../utils/server-log";
 
 type PrismaLike = {
   match: {
@@ -214,7 +215,7 @@ export async function acceptAndMaybeStartMatch(
         }
       }
     } catch (journeymenError) {
-      console.error("Erreur lors de l'ajout des journeymen:", journeymenError);
+      serverLog.error("Erreur lors de l'ajout des journeymen:", journeymenError);
     }
   }
 
@@ -276,7 +277,7 @@ export async function acceptAndMaybeStartMatch(
   // This is fire-and-forget: the accept response returns immediately,
   // and the client receives the updated state via WebSocket broadcast.
   runAutomatedPreMatchSequence(prisma as any, matchId, gameState, match.seed)
-    .catch((err) => console.error("Pre-match automation error:", err));
+    .catch((err) => serverLog.error("Pre-match automation error:", err));
 
   return {
     ok: true,

@@ -15,6 +15,7 @@ import {
   unregisterCupSchema,
   updateCupStatusSchema,
 } from "../schemas/cup.schemas";
+import { serverLog } from "../utils/server-log";
 
 const router = Router();
 
@@ -136,7 +137,7 @@ router.get("/", authUser, async (req: AuthenticatedRequest, res) => {
 
     res.json({ cups: formattedCups });
   } catch (e: any) {
-    console.error("Erreur lors de la récupération des coupes:", e);
+    serverLog.error("Erreur lors de la récupération des coupes:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -221,7 +222,7 @@ router.get("/archived", authUser, async (req: AuthenticatedRequest, res) => {
 
     res.json({ cups: formattedCups });
   } catch (e: any) {
-    console.error("Erreur lors de la récupération des coupes archivées:", e);
+    serverLog.error("Erreur lors de la récupération des coupes archivées:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -412,7 +413,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
 
     res.json({ cup: formattedCup });
   } catch (e: any) {
-    console.error("Erreur lors de la récupération de la coupe:", e);
+    serverLog.error("Erreur lors de la récupération de la coupe:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -556,7 +557,7 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
 
     res.status(201).json({ cup: formattedCup });
   } catch (e: any) {
-    console.error("Erreur lors de la création de la coupe:", e);
+    serverLog.error("Erreur lors de la création de la coupe:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -679,7 +680,7 @@ router.post(
         message: "Équipe inscrite avec succès",
       });
     } catch (e: any) {
-      console.error("Erreur lors de l'inscription à la coupe:", e);
+      serverLog.error("Erreur lors de l'inscription à la coupe:", e);
       if (e?.code === "P2002") {
         return res
           .status(409)
@@ -799,7 +800,7 @@ router.post(
         message: "Équipe retirée avec succès",
       });
     } catch (e: any) {
-      console.error("Erreur lors du retrait de l'équipe:", e);
+      serverLog.error("Erreur lors du retrait de l'équipe:", e);
       return res.status(500).json({ error: "Erreur serveur" });
     }
   },
@@ -894,7 +895,7 @@ router.post(
         message: "Coupe validée avec succès",
       });
     } catch (e: any) {
-      console.error("Erreur lors de la validation de la coupe:", e);
+      serverLog.error("Erreur lors de la validation de la coupe:", e);
       return res.status(500).json({ error: "Erreur serveur" });
     }
   },
@@ -1006,7 +1007,7 @@ router.post(
         message: "Statut mis à jour avec succès",
       });
     } catch (e: any) {
-      console.error("Erreur lors de la mise à jour du statut:", e);
+      serverLog.error("Erreur lors de la mise à jour du statut:", e);
       return res.status(500).json({ error: "Erreur serveur" });
     }
   },
