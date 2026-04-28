@@ -391,128 +391,140 @@ router.post(
   handleChooseTeam,
 );
 
-router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
-  const team = await prisma.team.findFirst({
-    where: { id: req.params.id, ownerId: req.user!.id },
-    include: { 
-      players: true,
-      starPlayers: true
-    },
-  });
-  if (!team) return res.status(404).json({ error: "Introuvable" });
-  
-  // Enrichir les Star Players avec leurs données complètes
-  const enrichedStarPlayers = team.starPlayers.map((sp: any) => {
-    const starPlayerData = getStarPlayerBySlug(sp.starPlayerSlug, team.ruleset);
-    return {
-      id: sp.id,
-      slug: sp.starPlayerSlug,
-      cost: sp.cost,
-      hiredAt: sp.hiredAt,
-      ...starPlayerData
-    };
-  });
-  
-  // état de match si sélectionnée
-  const selection = await prisma.teamSelection.findFirst({
-    where: { teamId: team.id },
-    include: { match: true },
-  });
-
-  // Statistiques de matchs locaux pour cette équipe — bornées pour éviter
-  // une croissance illimitée (cap à 500 derniers matchs, agrégats locaux).
-  const localMatches = await prisma.localMatch.findMany({
-    where: {
-      OR: [{ teamAId: team.id }, { teamBId: team.id }],
-    },
-    select: {
-      id: true,
-      status: true,
-      teamAId: true,
-      teamBId: true,
-      scoreTeamA: true,
-      scoreTeamB: true,
-    },
-    orderBy: { createdAt: "desc" },
-    take: 500,
-  });
-
-  let pending = 0;
-  let waitingForPlayer = 0;
-  let inProgress = 0;
-  let completed = 0;
-  let cancelled = 0;
-
-  let wins = 0;
-  let draws = 0;
-  let losses = 0;
-  let touchdownsFor = 0;
-  let touchdownsAgainst = 0;
-
-  for (const match of localMatches) {
-    switch (match.status) {
-      case "pending":
-        pending += 1;
-        break;
-      case "waiting_for_player":
-        waitingForPlayer += 1;
-        break;
-      case "in_progress":
-        inProgress += 1;
-        break;
-      case "completed":
-        completed += 1;
-        break;
-      case "cancelled":
-        cancelled += 1;
-        break;
-      default:
-        break;
+// Endpoint pour obtenir le detail d'une equipe (S25.5ae — ApiResponse<T>)
+export async function handleGetTeamDetail(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  try {
+    const team = await prisma.team.findFirst({
+      where: { id: req.params.id, ownerId: req.user!.id },
+      include: {
+        players: true,
+        starPlayers: true,
+      },
+    });
+    if (!team) {
+      sendError(res, "Introuvable", 404);
+      return;
     }
 
-    if (match.status === "completed") {
-      const isTeamA = match.teamAId === team.id;
-      const myScore = isTeamA ? match.scoreTeamA ?? 0 : match.scoreTeamB ?? 0;
-      const oppScore = isTeamA ? match.scoreTeamB ?? 0 : match.scoreTeamA ?? 0;
+    const enrichedStarPlayers = team.starPlayers.map((sp: any) => {
+      const starPlayerData = getStarPlayerBySlug(sp.starPlayerSlug, team.ruleset);
+      return {
+        id: sp.id,
+        slug: sp.starPlayerSlug,
+        cost: sp.cost,
+        hiredAt: sp.hiredAt,
+        ...starPlayerData,
+      };
+    });
 
-      touchdownsFor += myScore;
-      touchdownsAgainst += oppScore;
+    const selection = await prisma.teamSelection.findFirst({
+      where: { teamId: team.id },
+      include: { match: true },
+    });
 
-      if (myScore > oppScore) {
-        wins += 1;
-      } else if (myScore < oppScore) {
-        losses += 1;
-      } else {
-        draws += 1;
+    const localMatches = await prisma.localMatch.findMany({
+      where: {
+        OR: [{ teamAId: team.id }, { teamBId: team.id }],
+      },
+      select: {
+        id: true,
+        status: true,
+        teamAId: true,
+        teamBId: true,
+        scoreTeamA: true,
+        scoreTeamB: true,
+      },
+      orderBy: { createdAt: "desc" },
+      take: 500,
+    });
+
+    let pending = 0;
+    let waitingForPlayer = 0;
+    let inProgress = 0;
+    let completed = 0;
+    let cancelled = 0;
+
+    let wins = 0;
+    let draws = 0;
+    let losses = 0;
+    let touchdownsFor = 0;
+    let touchdownsAgainst = 0;
+
+    for (const match of localMatches) {
+      switch (match.status) {
+        case "pending":
+          pending += 1;
+          break;
+        case "waiting_for_player":
+          waitingForPlayer += 1;
+          break;
+        case "in_progress":
+          inProgress += 1;
+          break;
+        case "completed":
+          completed += 1;
+          break;
+        case "cancelled":
+          cancelled += 1;
+          break;
+        default:
+          break;
+      }
+
+      if (match.status === "completed") {
+        const isTeamA = match.teamAId === team.id;
+        const myScore = isTeamA ? match.scoreTeamA ?? 0 : match.scoreTeamB ?? 0;
+        const oppScore = isTeamA
+          ? match.scoreTeamB ?? 0
+          : match.scoreTeamA ?? 0;
+
+        touchdownsFor += myScore;
+        touchdownsAgainst += oppScore;
+
+        if (myScore > oppScore) {
+          wins += 1;
+        } else if (myScore < oppScore) {
+          losses += 1;
+        } else {
+          draws += 1;
+        }
       }
     }
+
+    const localMatchStats = {
+      total: localMatches.length,
+      pending,
+      waitingForPlayer,
+      inProgress,
+      completed,
+      cancelled,
+      matchesPlayed: completed,
+      wins,
+      draws,
+      losses,
+      touchdownsFor,
+      touchdownsAgainst,
+      touchdownDiff: touchdownsFor - touchdownsAgainst,
+    };
+
+    sendSuccess(res, {
+      team: {
+        ...team,
+        starPlayers: enrichedStarPlayers,
+      },
+      currentMatch: selection?.match || null,
+      localMatchStats,
+    });
+  } catch (e: unknown) {
+    serverLog.error("Erreur lors de la recuperation de l'equipe:", e);
+    sendError(res, "Erreur serveur", 500);
   }
+}
 
-  const localMatchStats = {
-    total: localMatches.length,
-    pending,
-    waitingForPlayer,
-    inProgress,
-    completed,
-    cancelled,
-    matchesPlayed: completed,
-    wins,
-    draws,
-    losses,
-    touchdownsFor,
-    touchdownsAgainst,
-    touchdownDiff: touchdownsFor - touchdownsAgainst,
-  };
-
-  res.json({ 
-    team: {
-      ...team,
-      starPlayers: enrichedStarPlayers
-    }, 
-    currentMatch: selection?.match || null,
-    localMatchStats,
-  });
-});
+router.get("/:id", authUser, handleGetTeamDetail);
 
 router.post(
   "/create-from-roster",

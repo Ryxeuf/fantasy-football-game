@@ -92,6 +92,7 @@ import {
   handleHireStarPlayer,
   handleUpdatePlayerSkills,
   handleBuildTeam,
+  handleGetTeamDetail,
 } from "./team";
 import {
   requiresPair,
@@ -2536,6 +2537,197 @@ describe("Route: POST /team/build (S25.5ad)", () => {
     });
     const res = createRes();
     await handleBuildTeam(req, res);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+});
+
+describe("Route: GET /team/:id (S25.5ae)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  async function getMocks() {
+    const prismaMock = vi.mocked(await import("../prisma")).prisma;
+    return {
+      teamFindFirst: prismaMock.team.findFirst as ReturnType<typeof vi.fn>,
+      selectionFindFirst: prismaMock.teamSelection.findFirst as ReturnType<
+        typeof vi.fn
+      >,
+      localMatchFindMany: prismaMock.localMatch.findMany as ReturnType<
+        typeof vi.fn
+      >,
+    };
+  }
+
+  it("returns 404 ApiError when team not found", async () => {
+    const { teamFindFirst } = await getMocks();
+    teamFindFirst.mockResolvedValue(null);
+
+    const req = createReq({ params: { id: "team-1" } });
+    const res = createRes();
+    await handleGetTeamDetail(req, res);
+
+    expect(res.statusCode).toBe(404);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: expect.stringContaining("Introuvable"),
+    });
+  });
+
+  it("returns ApiSuccess with team + currentMatch + zero localMatchStats when no local matches", async () => {
+    const { teamFindFirst, selectionFindFirst, localMatchFindMany } =
+      await getMocks();
+    teamFindFirst.mockResolvedValue({
+      id: "team-1",
+      ownerId: "user-1",
+      ruleset: "season_3",
+      players: [],
+      starPlayers: [],
+    });
+    selectionFindFirst.mockResolvedValue(null);
+    localMatchFindMany.mockResolvedValue([]);
+
+    const req = createReq({ params: { id: "team-1" } });
+    const res = createRes();
+    await handleGetTeamDetail(req, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: {
+        team: expect.objectContaining({ id: "team-1" }),
+        currentMatch: null,
+        localMatchStats: {
+          total: 0,
+          pending: 0,
+          waitingForPlayer: 0,
+          inProgress: 0,
+          completed: 0,
+          cancelled: 0,
+          matchesPlayed: 0,
+          wins: 0,
+          draws: 0,
+          losses: 0,
+          touchdownsFor: 0,
+          touchdownsAgainst: 0,
+          touchdownDiff: 0,
+        },
+      },
+    });
+  });
+
+  it("computes localMatchStats with wins/losses/draws and TD totals", async () => {
+    const { teamFindFirst, selectionFindFirst, localMatchFindMany } =
+      await getMocks();
+    teamFindFirst.mockResolvedValue({
+      id: "team-1",
+      ownerId: "user-1",
+      ruleset: "season_3",
+      players: [],
+      starPlayers: [],
+    });
+    selectionFindFirst.mockResolvedValue(null);
+    // 1 win as A, 1 loss as B, 1 draw as A, 1 in_progress, 1 cancelled
+    localMatchFindMany.mockResolvedValue([
+      {
+        id: "lm-win",
+        status: "completed",
+        teamAId: "team-1",
+        teamBId: "other",
+        scoreTeamA: 3,
+        scoreTeamB: 1,
+      },
+      {
+        id: "lm-loss",
+        status: "completed",
+        teamAId: "other",
+        teamBId: "team-1",
+        scoreTeamA: 4,
+        scoreTeamB: 2,
+      },
+      {
+        id: "lm-draw",
+        status: "completed",
+        teamAId: "team-1",
+        teamBId: "other",
+        scoreTeamA: 1,
+        scoreTeamB: 1,
+      },
+      {
+        id: "lm-prog",
+        status: "in_progress",
+        teamAId: "team-1",
+        teamBId: "other",
+        scoreTeamA: 0,
+        scoreTeamB: 0,
+      },
+      {
+        id: "lm-cancel",
+        status: "cancelled",
+        teamAId: "team-1",
+        teamBId: "other",
+        scoreTeamA: 0,
+        scoreTeamB: 0,
+      },
+    ]);
+
+    const req = createReq({ params: { id: "team-1" } });
+    const res = createRes();
+    await handleGetTeamDetail(req, res);
+
+    const payload = res.payload as {
+      success: boolean;
+      data: { localMatchStats: Record<string, number> };
+    };
+    expect(payload.success).toBe(true);
+    expect(payload.data.localMatchStats).toMatchObject({
+      total: 5,
+      completed: 3,
+      inProgress: 1,
+      cancelled: 1,
+      matchesPlayed: 3,
+      wins: 1,
+      draws: 1,
+      losses: 1,
+      // wins TF=3, loss TF=2, draw TF=1 -> 6
+      touchdownsFor: 6,
+      // wins TA=1, loss TA=4, draw TA=1 -> 6
+      touchdownsAgainst: 6,
+      touchdownDiff: 0,
+    });
+  });
+
+  it("returns ApiSuccess with currentMatch when team is selected for a match", async () => {
+    const { teamFindFirst, selectionFindFirst, localMatchFindMany } =
+      await getMocks();
+    teamFindFirst.mockResolvedValue({
+      id: "team-1",
+      ownerId: "user-1",
+      ruleset: "season_3",
+      players: [],
+      starPlayers: [],
+    });
+    const match = { id: "m-1", status: "active" };
+    selectionFindFirst.mockResolvedValue({ id: "sel-1", match });
+    localMatchFindMany.mockResolvedValue([]);
+
+    const req = createReq({ params: { id: "team-1" } });
+    const res = createRes();
+    await handleGetTeamDetail(req, res);
+
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: { currentMatch: match },
+    });
+  });
+
+  it("returns 500 ApiError when prisma throws", async () => {
+    const { teamFindFirst } = await getMocks();
+    teamFindFirst.mockRejectedValue(new Error("db down"));
+
+    const req = createReq({ params: { id: "team-1" } });
+    const res = createRes();
+    await handleGetTeamDetail(req, res);
 
     expect(res.statusCode).toBe(500);
     expect(res.payload).toMatchObject({ success: false });
