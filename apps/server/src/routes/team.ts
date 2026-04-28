@@ -232,7 +232,11 @@ export function handleGenerateTeamName(
 
 router.get("/name-generator", handleGenerateTeamName);
 
-router.get("/available", authUser, async (req: AuthenticatedRequest, res) => {
+// (S25.5o — ApiResponse<T>)
+export async function handleListAvailableTeams(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
   const requestedRuleset = req.query.ruleset as string | undefined;
   const filterRuleset = isValidRuleset(requestedRuleset)
     ? (requestedRuleset as Ruleset)
@@ -250,8 +254,10 @@ router.get("/available", authUser, async (req: AuthenticatedRequest, res) => {
     select: { id: true, name: true, roster: true, ruleset: true, createdAt: true },
     orderBy: { createdAt: "desc" },
   });
-  res.json({ teams });
-});
+  sendSuccess(res, { teams });
+}
+
+router.get("/available", authUser, handleListAvailableTeams);
 
 router.get("/mine", authUser, async (req: AuthenticatedRequest, res) => {
   const requestedRuleset = req.query.ruleset as string | undefined;
