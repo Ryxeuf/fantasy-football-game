@@ -10,6 +10,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("../prisma", () => ({
   prisma: {
+    match: {
+      findUnique: vi.fn(),
+    },
     team: {
       findMany: vi.fn(),
       findFirst: vi.fn(),
@@ -19,6 +22,7 @@ vi.mock("../prisma", () => ({
     },
     teamSelection: {
       findFirst: vi.fn(),
+      create: vi.fn(),
     },
     teamPlayer: {
       delete: vi.fn(),
@@ -79,6 +83,7 @@ import {
   handlePutTeamInfo,
   handleDeleteTeamStarPlayer,
   handlePurchase,
+  handleChooseTeam,
 } from "./team";
 import { requiresPair } from "../utils/star-player-validation";
 import { updateTeamValues } from "../utils/team-values";
@@ -1333,6 +1338,121 @@ describe("Route: POST /team/:id/purchase (S25.5w)", () => {
     });
     const res = createRes();
     await handlePurchase(req, res);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+});
+
+describe("Route: POST /team/choose (S25.5x)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  async function getMocks() {
+    const prismaMock = vi.mocked(await import("../prisma")).prisma;
+    return {
+      matchFindUnique: prismaMock.match.findUnique as ReturnType<typeof vi.fn>,
+      transaction: prismaMock.$transaction as ReturnType<typeof vi.fn>,
+    };
+  }
+
+  it("returns 404 ApiError when match not found", async () => {
+    const { matchFindUnique } = await getMocks();
+    matchFindUnique.mockResolvedValue(null);
+
+    const req = createReq({ body: { matchId: "m-1", teamId: "t-1" } });
+    const res = createRes();
+    await handleChooseTeam(req, res);
+
+    expect(res.statusCode).toBe(404);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+
+  it("returns 400 ApiError when match status is not pending", async () => {
+    const { matchFindUnique } = await getMocks();
+    matchFindUnique.mockResolvedValue({ id: "m-1", status: "active" });
+
+    const req = createReq({ body: { matchId: "m-1", teamId: "t-1" } });
+    const res = createRes();
+    await handleChooseTeam(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: expect.stringContaining("active"),
+    });
+  });
+
+  it("returns 201 ApiSuccess with selection when transaction completes", async () => {
+    const { matchFindUnique, transaction } = await getMocks();
+    matchFindUnique.mockResolvedValue({ id: "m-1", status: "pending" });
+    const selection = {
+      id: "sel-1",
+      matchId: "m-1",
+      userId: "user-1",
+      team: "t-1",
+      teamRef: { id: "t-1", name: "Skavens" },
+    };
+    transaction.mockResolvedValue(selection);
+
+    const req = createReq({ body: { matchId: "m-1", teamId: "t-1" } });
+    const res = createRes();
+    await handleChooseTeam(req, res);
+
+    expect(res.statusCode).toBe(201);
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: { selection },
+    });
+  });
+
+  it("returns 409 ApiError when transaction throws status=409", async () => {
+    const { matchFindUnique, transaction } = await getMocks();
+    matchFindUnique.mockResolvedValue({ id: "m-1", status: "pending" });
+    const err = Object.assign(
+      new Error("Vous avez deja choisi une equipe pour ce match"),
+      { status: 409 },
+    );
+    transaction.mockRejectedValue(err);
+
+    const req = createReq({ body: { matchId: "m-1", teamId: "t-1" } });
+    const res = createRes();
+    await handleChooseTeam(req, res);
+
+    expect(res.statusCode).toBe(409);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: expect.stringContaining("deja choisi"),
+    });
+  });
+
+  it("returns 409 ApiError on prisma P2002 unique constraint with userId", async () => {
+    const { matchFindUnique, transaction } = await getMocks();
+    matchFindUnique.mockResolvedValue({ id: "m-1", status: "pending" });
+    const err = Object.assign(new Error("Unique constraint failed"), {
+      code: "P2002",
+      meta: { target: ["matchId", "userId"] },
+    });
+    transaction.mockRejectedValue(err);
+
+    const req = createReq({ body: { matchId: "m-1", teamId: "t-1" } });
+    const res = createRes();
+    await handleChooseTeam(req, res);
+
+    expect(res.statusCode).toBe(409);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: expect.stringContaining("deja choisi"),
+    });
+  });
+
+  it("returns 500 ApiError on unexpected throw without status/code", async () => {
+    const { matchFindUnique, transaction } = await getMocks();
+    matchFindUnique.mockResolvedValue({ id: "m-1", status: "pending" });
+    transaction.mockRejectedValue(new Error("boom"));
+
+    const req = createReq({ body: { matchId: "m-1", teamId: "t-1" } });
+    const res = createRes();
+    await handleChooseTeam(req, res);
 
     expect(res.statusCode).toBe(500);
     expect(res.payload).toMatchObject({ success: false });

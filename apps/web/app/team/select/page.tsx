@@ -1,22 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { API_BASE } from "../../auth-client";
 import { apiRequest } from "../../lib/api-client";
-
-async function postJSON(path: string, body: unknown) {
-  const token = localStorage.getItem("auth_token");
-  const res = await fetch(`${API_BASE}${path}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: token ? `Bearer ${token}` : "",
-    },
-    body: JSON.stringify(body),
-  });
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(json?.error || `Erreur ${res.status}`);
-  return json;
-}
 
 export default function TeamSelectPage() {
   const [teams, setTeams] = useState<
@@ -40,7 +24,11 @@ export default function TeamSelectPage() {
   async function choose(teamId: string) {
     try {
       setError(null);
-      await postJSON(`/team/choose`, { matchId, teamId });
+      // S25.5x — apiRequest unwrap l'enveloppe ApiResponse<T>
+      await apiRequest<{ selection: unknown }>(`/team/choose`, {
+        method: "POST",
+        body: JSON.stringify({ matchId, teamId }),
+      });
       window.location.href = `/waiting/${matchId}`;
     } catch (e: any) {
       setError(e.message || "Erreur");
