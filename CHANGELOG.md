@@ -1,3 +1,15 @@
+## [1.77.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.77.0...v1.77.1) (2026-04-28)
+
+
+### 🐛 Bug Fixes
+
+* **server,engine:** adapt setup checks to placeable count below 11 ([ca714eb](https://github.com/Ryxeuf/fantasy-football-game/commit/ca714eb71e7e7787007ad1d1431fc640be17bf89))
+
+
+### ♻️ Code Refactoring
+
+* **match:** migrate /:id/state to ApiResponse (S25.5l) ([#435](https://github.com/Ryxeuf/fantasy-football-game/issues/435)) ([a8074c1](https://github.com/Ryxeuf/fantasy-football-game/commit/a8074c177dcd3057290ae1168959aa03c742a492))
+
 ## [1.77.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.76.3...v1.77.0) (2026-04-28)
 
 
