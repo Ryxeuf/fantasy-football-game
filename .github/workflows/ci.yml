@@ -40,4 +40,11 @@ jobs:
       - name: Build
         run: pnpm build
       - name: Unit tests
-        run: pnpm -w test || echo "No test scripts yet"
+        run: pnpm -w test
+      - name: Coverage thresholds (S25.4)
+        # Lance la suite avec --coverage. Les seuils par package sont
+        # definis dans chaque `vitest.config.ts` via `coverage.thresholds`.
+        # Echec CI si la couverture passe en dessous du baseline ; les
+        # cibles 70% web/server, 85% game-engine seront atteintes par
+        # paliers (cf. roadmap S25.4).
+        run: pnpm -w test -- --coverage
