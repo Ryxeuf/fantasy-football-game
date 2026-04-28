@@ -43,7 +43,11 @@ vi.mock("../utils/server-log", () => ({
 import type { Response } from "express";
 import { getRosterFromDb } from "../utils/roster-helpers";
 import { generateTeamName } from "../services/team-name-generator";
-import { handleGenerateTeamName, handleGetRoster } from "./team";
+import {
+  handleGenerateTeamName,
+  handleGetRoster,
+  handleListAvailableTeams,
+} from "./team";
 import type { AuthenticatedRequest } from "../middleware/authUser";
 
 const mockGetRosterFromDb = getRosterFromDb as ReturnType<typeof vi.fn>;
@@ -198,5 +202,102 @@ describe("Route: GET /team/rosters/:id (S25.5n)", () => {
       success: true,
       data: { ruleset: expect.any(String) },
     });
+  });
+});
+
+describe("Route: GET /team/available (S25.5o)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("returns ApiSuccess with empty list for new user", async () => {
+    const findMany = (
+      vi.mocked(await import("../prisma")).prisma.team.findMany as ReturnType<
+        typeof vi.fn
+      >
+    );
+    findMany.mockResolvedValue([]);
+
+    const req = createReq({ query: {} });
+    const res = createRes();
+    await handleListAvailableTeams(req, res);
+
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          ownerId: "user-1",
+          selections: {
+            none: {
+              match: { status: { in: ["pending", "active"] } },
+            },
+          },
+        }),
+      }),
+    );
+    expect(res.statusCode).toBe(200);
+    expect(res.payload).toMatchObject({ success: true, data: { teams: [] } });
+  });
+
+  it("returns ApiSuccess with team list when prisma returns rows", async () => {
+    const findMany = (
+      vi.mocked(await import("../prisma")).prisma.team.findMany as ReturnType<
+        typeof vi.fn
+      >
+    );
+    const fakeTeams = [
+      {
+        id: "t-1",
+        name: "Skavens A",
+        roster: "skaven",
+        ruleset: "season_3",
+        createdAt: new Date("2026-01-01"),
+      },
+    ];
+    findMany.mockResolvedValue(fakeTeams);
+
+    const req = createReq({ query: {} });
+    const res = createRes();
+    await handleListAvailableTeams(req, res);
+
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: { teams: fakeTeams },
+    });
+  });
+
+  it("filters by ruleset when query param provided and valid", async () => {
+    const findMany = (
+      vi.mocked(await import("../prisma")).prisma.team.findMany as ReturnType<
+        typeof vi.fn
+      >
+    );
+    findMany.mockResolvedValue([]);
+
+    const req = createReq({ query: { ruleset: "season_2" } });
+    const res = createRes();
+    await handleListAvailableTeams(req, res);
+
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          ownerId: "user-1",
+          ruleset: "season_2",
+        }),
+      }),
+    );
+  });
+
+  it("ignores invalid ruleset and returns all rulesets", async () => {
+    const findMany = (
+      vi.mocked(await import("../prisma")).prisma.team.findMany as ReturnType<
+        typeof vi.fn
+      >
+    );
+    findMany.mockResolvedValue([]);
+
+    const req = createReq({ query: { ruleset: "definitely-not-valid" } });
+    const res = createRes();
+    await handleListAvailableTeams(req, res);
+
+    const callArgs = findMany.mock.calls[0]![0];
+    expect(callArgs.where).not.toHaveProperty("ruleset");
   });
 });

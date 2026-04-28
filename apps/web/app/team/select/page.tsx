@@ -1,18 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { API_BASE } from "../../auth-client";
-
-async function fetchJSON(path: string) {
-  const token = localStorage.getItem("auth_token");
-  const res = await fetch(`${API_BASE}${path}`, {
-    headers: { Authorization: token ? `Bearer ${token}` : "" },
-  });
-  if (!res.ok)
-    throw new Error(
-      (await res.json().catch(() => ({})))?.error || `Erreur ${res.status}`,
-    );
-  return res.json();
-}
+import { apiRequest } from "../../lib/api-client";
 
 async function postJSON(path: string, body: unknown) {
   const token = localStorage.getItem("auth_token");
@@ -36,7 +25,9 @@ export default function TeamSelectPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchJSON(`/team/available`)
+    apiRequest<{ teams: Array<{ id: string; name: string; roster: string }> }>(
+      `/team/available`,
+    )
       .then((d) => setTeams(d.teams || []))
       .catch((e) => setError(e.message || "Erreur"));
   }, []);

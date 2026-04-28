@@ -6,6 +6,7 @@ import {
   rawPost,
   rawPut,
   resetDb,
+  unwrap,
 } from "../helpers/api";
 import { createTeam, seedAndLogin } from "../helpers/factories";
 
@@ -219,7 +220,12 @@ describe("E2E API — /team/* (listing & detail)", () => {
         "pwd",
         "Fresh",
       );
-      const json = await get<TeamAvailableResponse>("/team/available", token);
+      const json = unwrap(
+        await get<{ success: true; data: TeamAvailableResponse }>(
+          "/team/available",
+          token,
+        ),
+      );
       expect(json.teams).toEqual([]);
     });
 
@@ -230,7 +236,12 @@ describe("E2E API — /team/* (listing & detail)", () => {
         "Alice",
       );
       const team = await createTeam(userId, "Alice Skavens", "skaven");
-      const json = await get<TeamAvailableResponse>("/team/available", token);
+      const json = unwrap(
+        await get<{ success: true; data: TeamAvailableResponse }>(
+          "/team/available",
+          token,
+        ),
+      );
       expect(json.teams).toHaveLength(1);
       expect(json.teams[0]!.id).toBe(team.teamId);
     });
