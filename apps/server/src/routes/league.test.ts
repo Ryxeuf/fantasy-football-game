@@ -118,7 +118,11 @@ describe("Route: POST /leagues (create)", () => {
       expect.objectContaining({ creatorId: "user-1", name: "Open 5 Teams" }),
     );
     expect(res.statusCode).toBe(201);
-    expect(res.payload).toMatchObject({ id: "league-1" });
+    // S25.5e — sendSuccess wraps in { success, data }
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: expect.objectContaining({ id: "league-1" }),
+    });
   });
 
   it("passes allowedRosters through to the service", async () => {
@@ -163,7 +167,10 @@ describe("Route: GET /leagues (list)", () => {
     expect(mockService.listLeagues).toHaveBeenCalledWith(
       expect.objectContaining({ publicOnly: undefined }),
     );
-    expect(res.payload).toMatchObject({ leagues: expect.any(Array) });
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: expect.objectContaining({ leagues: expect.any(Array) }),
+    });
   });
 
   it("forwards query filters to the service (post validateQuery coercion)", async () => {
@@ -205,9 +212,12 @@ describe("Route: GET /leagues/:id", () => {
     const res = createRes();
     await handleGetLeague(req, res);
     expect(res.payload).toMatchObject({
-      league: expect.objectContaining({
-        id: "league-1",
-        allowedRosters: ["skaven", "dwarf"],
+      success: true,
+      data: expect.objectContaining({
+        league: expect.objectContaining({
+          id: "league-1",
+          allowedRosters: ["skaven", "dwarf"],
+        }),
       }),
     });
   });
@@ -277,12 +287,15 @@ describe("Route: GET /leagues/seasons/:seasonId (season detail)", () => {
     await handleGetSeason(req, res);
     expect(res.statusCode).toBe(200);
     expect(res.payload).toMatchObject({
-      season: expect.objectContaining({
-        id: "season-1",
-        rounds: expect.any(Array),
-        participants: expect.any(Array),
-        league: expect.objectContaining({
-          allowedRosters: ["skaven", "dwarf"],
+      success: true,
+      data: expect.objectContaining({
+        season: expect.objectContaining({
+          id: "season-1",
+          rounds: expect.any(Array),
+          participants: expect.any(Array),
+          league: expect.objectContaining({
+            allowedRosters: ["skaven", "dwarf"],
+          }),
         }),
       }),
     });
@@ -486,10 +499,13 @@ describe("Route: GET /leagues/seasons/:seasonId/standings", () => {
     await handleGetStandings(req, res);
     expect(mockService.computeSeasonStandings).toHaveBeenCalledWith("season-1");
     expect(res.payload).toMatchObject({
-      standings: [
-        expect.objectContaining({ teamId: "t1" }),
-        expect.objectContaining({ teamId: "t2" }),
-      ],
+      success: true,
+      data: expect.objectContaining({
+        standings: [
+          expect.objectContaining({ teamId: "t1" }),
+          expect.objectContaining({ teamId: "t2" }),
+        ],
+      }),
     });
   });
 
