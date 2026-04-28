@@ -7,8 +7,16 @@ import {
   GameLog,
 } from "@bb/ui";
 import type { ExtendedGameState } from "@bb/game-engine";
-import { API_BASE } from "../../auth-client";
+import { apiRequest, ApiClientError } from "../../lib/api-client";
 import { useSpectatorSocket } from "./hooks/useSpectatorSocket";
+
+interface SpectateResponse {
+  gameState: any;
+  matchStatus: string;
+  spectatorCount: number;
+  teamA: { coachName: string; teamName: string } | null;
+  teamB: { coachName: string; teamName: string } | null;
+}
 
 // S25.7 — Lazy-load Pixi.js board (>500KB) ; meme pattern que /play et
 // /replay. Le chunk /spectate ne porte plus le moteur de rendu en main
@@ -59,29 +67,24 @@ export default function SpectatePage({ params }: { params: { id: string } }) {
     if (initialLoadDone.current) return;
     (async () => {
       try {
-        const token = localStorage.getItem("auth_token");
-        if (!token) {
+        if (typeof window !== "undefined" && !localStorage.getItem("auth_token")) {
           setError("Connexion requise pour regarder un match");
           setLoading(false);
           return;
         }
-        const res = await fetch(`${API_BASE}/match/${matchId}/spectate`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json().catch(() => ({}) as any);
-        if (!res.ok) {
-          setError(data.error || "Impossible de charger le match");
-          setLoading(false);
-          return;
-        }
+        const data = await apiRequest<SpectateResponse>(`/match/${matchId}/spectate`);
         if (data.gameState) {
           setState(normalizeState(data.gameState));
           setMatchStatus(data.matchStatus);
         }
         initialLoadDone.current = true;
         setLoading(false);
-      } catch {
-        setError("Erreur de connexion au serveur");
+      } catch (e) {
+        setError(
+          e instanceof ApiClientError
+            ? e.message || "Impossible de charger le match"
+            : "Erreur de connexion au serveur",
+        );
         setLoading(false);
       }
     })();
@@ -131,17 +134,11 @@ export default function SpectatePage({ params }: { params: { id: string } }) {
     const pollInterval = wsConnected ? 30000 : 10000;
     const interval = setInterval(async () => {
       try {
-        const token = localStorage.getItem("auth_token");
-        if (!token) return;
-        const res = await fetch(`${API_BASE}/match/${matchId}/spectate`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data?.gameState) {
-            setState(normalizeState(data.gameState));
-            if (data.matchStatus) setMatchStatus(data.matchStatus);
-          }
+        if (typeof window !== "undefined" && !localStorage.getItem("auth_token")) return;
+        const data = await apiRequest<SpectateResponse>(`/match/${matchId}/spectate`);
+        if (data?.gameState) {
+          setState(normalizeState(data.gameState));
+          if (data.matchStatus) setMatchStatus(data.matchStatus);
         }
       } catch {
         // Silently ignore polling errors
