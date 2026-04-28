@@ -909,10 +909,12 @@ export default function LocalMatchPage() {
               teamA: {
                 id: localMatch.teamA.id,
                 name: localMatch.teamA.name,
+                roster: localMatch.teamA.roster,
               },
               teamB: {
                 id: localMatch.teamB.id,
                 name: localMatch.teamB.name,
+                roster: localMatch.teamB.roster,
               },
               scoreTeamA: localMatch.scoreTeamA,
               scoreTeamB: localMatch.scoreTeamB,
