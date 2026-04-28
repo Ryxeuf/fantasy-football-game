@@ -157,7 +157,7 @@ export default function PlayPage() {
   const loadMatches = useCallback(async () => {
     try {
       setLoadingMatches(true);
-      const data = await apiGet("/match/my-matches");
+      const data = await apiRequest<{ matches: MatchSummary[] }>("/match/my-matches");
       setMatches(data.matches || []);
     } catch {
       // silently fail

@@ -450,7 +450,11 @@ router.get("/:id/teams", authUser, async (req: AuthenticatedRequest, res) => {
 });
 
 // Liste des matchs de l'utilisateur connecté
-router.get("/my-matches", authUser, async (req: AuthenticatedRequest, res) => {
+// Liste des matchs du joueur connecte (S25.5h — ApiResponse<T>)
+export async function handleListMyMatches(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
   try {
     const userId = req.user!.id;
 
@@ -526,12 +530,14 @@ router.get("/my-matches", authUser, async (req: AuthenticatedRequest, res) => {
       };
     });
 
-    return res.json({ matches: result });
-  } catch (e: any) {
+    sendSuccess(res, { matches: result });
+  } catch (e: unknown) {
     serverLog.error(e);
-    return res.status(500).json({ error: "Erreur serveur" });
+    sendError(res, "Erreur serveur", 500);
   }
-});
+}
+
+router.get("/my-matches", authUser, handleListMyMatches);
 
 // Résumé d'un match: équipes, coachs, score (approx), tour/mi-temps
 router.get("/:id/summary", authUser, async (req: AuthenticatedRequest, res) => {
@@ -1454,7 +1460,11 @@ router.get("/:id/results", authUser, async (req: AuthenticatedRequest, res) => {
 // ─── Spectator Mode ──────────────────────────────────────────────
 
 // List active matches available for spectating
-router.get("/live", authUser, async (_req: AuthenticatedRequest, res) => {
+// Liste des matchs en direct pour le mode spectateur (S25.5h — ApiResponse<T>)
+export async function handleListLiveMatches(
+  _req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
   try {
     const matches = await prisma.match.findMany({
       where: {
@@ -1517,12 +1527,14 @@ router.get("/live", authUser, async (_req: AuthenticatedRequest, res) => {
       };
     });
 
-    return res.json({ matches: result });
-  } catch (e) {
+    sendSuccess(res, { matches: result });
+  } catch (e: unknown) {
     serverLog.error(e);
-    return res.status(500).json({ error: "Erreur serveur" });
+    sendError(res, "Erreur serveur", 500);
   }
-});
+}
+
+router.get("/live", authUser, handleListLiveMatches);
 
 // Get match state for spectators (no participant check)
 router.get("/:id/spectate", authUser, async (req: AuthenticatedRequest, res) => {
