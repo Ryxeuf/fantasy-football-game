@@ -72,17 +72,25 @@ export async function runAISetupIfNeeded(
     if (state.preMatch.phase !== "setup") break;
     if (state.preMatch.currentCoach !== aiTeam) break;
 
+    // Only active players are placeable. With KO'd, casualtied or sent-off
+    // players (e.g. expelled secret weapons), the AI team can have fewer
+    // than 11 placeable players — the target is `min(11, active)`.
+    const availableCount = state.players.filter(
+      (p) => p.team === aiTeam && (!p.state || p.state === "active"),
+    ).length;
+    const target = Math.min(11, availableCount);
+
     const alreadyPlaced = state.players.filter(
       (p) => p.team === aiTeam && p.pos.x >= 0,
     ).length;
-    if (alreadyPlaced < 11) {
+    if (alreadyPlaced < target) {
       state = autoSetupAITeam(state, aiTeam);
     }
 
     const placedCount = state.players.filter(
       (p) => p.team === aiTeam && p.pos.x >= 0,
     ).length;
-    if (placedCount < 11) {
+    if (placedCount < target) {
       break;
     }
 

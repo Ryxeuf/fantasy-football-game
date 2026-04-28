@@ -1288,14 +1288,19 @@ export function placePlayerInSetup(
     return { success: false, state }; // max 2 par wide zone
   }
 
-  // Vérifier à partir de l'avant-dernier joueur (quand il reste 2 joueurs à placer)
-  // Si on a placé 9 joueurs ou plus, vérifier qu'on peut encore respecter la contrainte LOS
-  if (simulatedPlaced.length >= 9) {
+  // Contrainte LOS (≥ 3) : on la vérifie quand il ne reste qu'1 ou 2 joueurs
+  // à placer. Le calcul est basé sur le nombre de joueurs réellement placables
+  // (active uniquement) plafonné à 11, pour gérer les drives post-TD où une
+  // équipe peut être réduite par les KO/sent-off.
+  const placeableTotal = state.players.filter(
+    p => p.team === teamId && (!p.state || p.state === 'active')
+  ).length;
+  const targetTotal = Math.min(11, placeableTotal);
+  const remainingPlayers = Math.max(0, targetTotal - simulatedPlaced.length);
+  if (targetTotal >= 3 && remainingPlayers <= 2) {
     const losCount = teamPlayersOnPitch.filter(p => isOnLos(p.pos.x)).length;
-    const remainingPlayers = 11 - simulatedPlaced.length;
     const minLosRequired = 3;
 
-    // Si on n'a pas assez de joueurs sur la LOS et qu'il ne reste pas assez de joueurs pour atteindre 3
     if (losCount < minLosRequired && losCount + remainingPlayers < minLosRequired) {
       return { success: false, state }; // Impossible d'atteindre 3 joueurs sur la LOS
     }
