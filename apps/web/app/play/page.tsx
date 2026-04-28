@@ -185,7 +185,9 @@ export default function PlayPage() {
       if (data.inQueue && data.status === "matched" && data.matchId) {
         // Verify match still exists and is not ended before redirecting
         try {
-          const summary = await apiGet(`/match/${data.matchId}/summary`);
+          const summary = await apiRequest<{ status?: string }>(
+            `/match/${data.matchId}/summary`,
+          );
           if (summary?.status === "ended") {
             // Match is finished — clean up stale queue entry, don't redirect
             await apiDelete("/matchmaking/leave").catch(() => {});
@@ -240,7 +242,9 @@ export default function PlayPage() {
         if (data.inQueue && data.status === "matched" && data.matchId) {
           // Verify match still exists and is not ended before redirecting
           try {
-            const summary = await apiGet(`/match/${data.matchId}/summary`);
+            const summary = await apiRequest<{ status?: string }>(
+              `/match/${data.matchId}/summary`,
+            );
             if (summary?.status === "ended") {
               // Match is finished — clean up stale queue entry, don't redirect
               await apiDelete("/matchmaking/leave").catch(() => {});

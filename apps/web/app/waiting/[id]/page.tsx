@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import { API_BASE } from "../../auth-client";
 import { apiRequest } from "../../lib/api-client";
 
 type Summary = {
@@ -33,15 +32,8 @@ export default function WaitingPage({ params }: { params: { id: string } }) {
           window.location.href = "/login";
           return;
         }
-        const res = await fetch(`${API_BASE}/match/${matchId}/summary`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json().catch(() => ({}) as any);
-        if (!res.ok) {
-          setError(data?.error || `Erreur ${res.status}`);
-          return;
-        }
-        setSummary(data as Summary);
+        const data = await apiRequest<Summary>(`/match/${matchId}/summary`);
+        setSummary(data);
         if (
           data?.status === "active" ||
           data?.status === "prematch" ||
@@ -104,12 +96,11 @@ export default function WaitingPage({ params }: { params: { id: string } }) {
       });
       setAcceptedOnce(true);
       // Actualiser une fois immédiatement après acceptation
-      const sumRes = await fetch(`${API_BASE}/match/${matchId}/summary`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const sumData = await sumRes.json().catch(() => ({}) as any);
-      if (sumRes.ok) {
-        setSummary(sumData as Summary);
+      try {
+        const sumData = await apiRequest<Summary>(
+          `/match/${matchId}/summary`,
+        );
+        setSummary(sumData);
         // Vérifier et rediriger manuellement si statut changé
         if (
           sumData?.status === "prematch-setup" ||
@@ -118,6 +109,8 @@ export default function WaitingPage({ params }: { params: { id: string } }) {
         ) {
           window.location.href = `/play/${matchId}`;
         }
+      } catch {
+        // Si le rafraîchissement échoue, on laisse le polling principal reprendre.
       }
     } catch (e: any) {
       setError(e?.message || "Erreur lors de l'acceptation");

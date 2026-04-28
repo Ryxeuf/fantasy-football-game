@@ -121,11 +121,21 @@ export function useGameState(matchId: string): GameStateInfo {
       try {
         const token = localStorage.getItem("auth_token");
         if (!token) { window.location.href = "/lobby"; return; }
-        const res = await fetch(`${API_BASE}/match/${matchId}/summary`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json().catch(() => ({}) as any);
-        if (!res.ok) {
+        try {
+          const data = await apiRequest<{ status?: string }>(
+            `/match/${matchId}/summary`,
+          );
+          const status = data?.status;
+          if (status) setMatchStatus(status);
+          if (
+            status !== "active" &&
+            status !== "prematch" &&
+            status !== "prematch-setup" &&
+            status !== "ended"
+          ) {
+            window.location.href = `/waiting/${matchId}`;
+          }
+        } catch {
           // Match introuvable — nettoyer session + queue matchmaking
           localStorage.removeItem("match_token");
           await fetch(`${API_BASE}/matchmaking/leave`, {
@@ -133,12 +143,6 @@ export function useGameState(matchId: string): GameStateInfo {
             headers: { Authorization: `Bearer ${token}` },
           }).catch(() => {});
           window.location.href = "/play";
-          return;
-        }
-        const status = data?.status;
-        if (status) setMatchStatus(status);
-        if (status !== "active" && status !== "prematch" && status !== "prematch-setup" && status !== "ended") {
-          window.location.href = `/waiting/${matchId}`;
         }
       } catch {
         localStorage.removeItem("match_token");
@@ -358,11 +362,12 @@ export function useGameState(matchId: string): GameStateInfo {
       try {
         const token = localStorage.getItem("auth_token");
         if (!token) return;
-        const res = await fetch(`${API_BASE}/match/${matchId}/summary`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json().catch(() => ({}) as any);
-        if (!res.ok || !data) return;
+        const data = await apiRequest<{
+          half?: number;
+          turn?: number;
+          score?: { teamA?: number; teamB?: number };
+        }>(`/match/${matchId}/summary`);
+        if (!data) return;
         setState((prev) => {
           if (!prev) return prev;
           const updated = {
