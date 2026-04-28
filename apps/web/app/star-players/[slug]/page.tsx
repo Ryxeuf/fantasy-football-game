@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import CopyrightFooter from '../../components/CopyrightFooter';
 import SkillTooltip from '../../components/SkillTooltip';
 import type { StarPlayerDefinition } from '@bb/game-engine';
@@ -139,14 +140,18 @@ export default function StarPlayerDetailPage() {
         <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6 sm:mb-8">
           <div className="bg-gradient-to-r from-red-800 to-red-600 text-white p-4 sm:p-6 md:p-8">
             <div className="flex flex-col md:flex-row items-center gap-4 sm:gap-6 md:gap-8">
-              {/* Image */}
+              {/* Image — S25.8 : `next/image` apporte lazy-load par defaut,
+                  responsive sizes, et bascule automatique vers AVIF/WebP
+                  selon le navigateur (cf. next.config.mjs `formats`). */}
               <div className="flex-shrink-0">
-                <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 bg-gray-200 rounded-lg overflow-hidden shadow-lg">
+                <div className="relative w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 bg-gray-200 rounded-lg overflow-hidden shadow-lg">
                   {!imageError ? (
-                    <img
+                    <Image
                       src={starPlayer.imageUrl?.replace('/data/Star-Players_files/', '/images/star-players/') || `/images/star-players/${slug}.jpg`}
                       alt={starPlayer.displayName}
-                      className="w-full h-full object-cover"
+                      fill
+                      sizes="(max-width: 640px) 128px, (max-width: 768px) 160px, 192px"
+                      className="object-cover"
                       onError={() => setImageError(true)}
                     />
                   ) : (
