@@ -25,6 +25,7 @@ import type { AIDifficulty } from "@bb/game-engine";
 import { getSpectatorCount } from "../game-spectator";
 import { MATCH_SECRET } from "../config";
 import { serverLog } from "../utils/server-log";
+import { sendError } from "../utils/api-response";
 
 const router = Router();
 const ALLOWED_TEAMS = ["skaven", "lizardmen"] as const;
@@ -68,7 +69,7 @@ router.post("/create", authUser, validate(createMatchSchema), async (req: Authen
     return res.status(201).json({ match, matchToken: token });
   } catch (e: any) {
     serverLog.error(e);
-    return res.status(500).json({ error: e?.message || "Erreur serveur" });
+    return sendError(res, e?.message || "Erreur serveur", 500);
   }
 });
 
@@ -80,7 +81,7 @@ router.post("/join", authUser, validate(joinMatchSchema), async (req: Authentica
       where: { id: matchId },
       data: { players: { connect: { id: req.user!.id } } },
     });
-    if (!match) return res.status(404).json({ error: "Partie introuvable" });
+    if (!match) return sendError(res, "Partie introuvable", 404);
     const token = jwt.sign(
       { matchId: match.id, userId: req.user!.id },
       MATCH_SECRET,
@@ -89,7 +90,7 @@ router.post("/join", authUser, validate(joinMatchSchema), async (req: Authentica
     return res.json({ match, matchToken: token });
   } catch (e: any) {
     serverLog.error(e);
-    return res.status(500).json({ error: e?.message || "Erreur serveur" });
+    return sendError(res, e?.message || "Erreur serveur", 500);
   }
 });
 
@@ -102,11 +103,11 @@ router.post("/accept", authUser, validate(acceptMatchSchema), async (req: Authen
       userId: req.user!.id,
     });
     if (!result.ok && "status" in result && typeof result.status === "number")
-      return res.status(result.status).json({ error: result.error });
+      return sendError(res, result.error, result.status);
     return res.json(result);
   } catch (e: any) {
     serverLog.error(e);
-    return res.status(500).json({ error: e?.message || "Erreur serveur" });
+    return sendError(res, e?.message || "Erreur serveur", 500);
   }
 });
 
