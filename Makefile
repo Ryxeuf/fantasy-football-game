@@ -1,7 +1,7 @@
 # BlooBowl - Makefile
 # Commandes utiles pour le développement du jeu Blood Bowl
 
-.PHONY: help install dev dev-web dev-mobile dev-server dev-engine build clean lint format typecheck test docker docker-up docker-down docker-logs setup db-seed db-reset-pg db-migrate db-migrate-deploy db-migrate-status db-migrate-data deploy deploy-no-cache maintenance-on maintenance-off maintenance-status
+.PHONY: help install dev dev-web dev-mobile dev-server dev-engine build clean lint format typecheck test docker docker-up docker-down docker-logs setup db-seed db-reset-pg db-migrate db-migrate-deploy db-migrate-status db-migrate-data deploy deploy-no-cache maintenance-on maintenance-off maintenance-status seed reset-db tunnel snapshot-prod
 
 # Variables
 PNPM := pnpm
@@ -327,3 +327,37 @@ db-migrate-data: ## Exécute le script de migration des données statiques (rost
 	@echo "📦 Migration des données statiques vers la base de données..."
 	@cd apps/server && $(PNPM) exec tsx migrate-static-data-to-db.ts
 	@echo "✅ Migration des données terminée"
+
+# Daily-dev shortcuts (S24.9) — alias courts vers les cibles existantes +
+# nouveaux raccourcis pour les workflows quotidiens.
+seed: db-seed ## Alias court de db-seed (importe les fixtures dans Postgres)
+
+reset-db: db-reset-pg ## Alias court de db-reset-pg (drop + push + seed)
+
+tunnel: ## Expose le web local via un tunnel cloudflared (override : TUNNEL_PORT, TUNNEL_HOSTNAME)
+	@echo "🌐 Tunnel cloudflared vers http://localhost:$${TUNNEL_PORT:-$(WEB_PORT)}..."
+	@command -v cloudflared >/dev/null 2>&1 || { \
+		echo "❌ cloudflared introuvable."; \
+		echo "   Installation: https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/"; \
+		echo "   macOS  : brew install cloudflared"; \
+		echo "   Linux  : sudo apt-get install cloudflared (ou téléchargement direct)"; \
+		exit 1; \
+	}
+	@if [ -n "$$TUNNEL_HOSTNAME" ]; then \
+		cloudflared tunnel run --hostname "$$TUNNEL_HOSTNAME" --url "http://localhost:$${TUNNEL_PORT:-$(WEB_PORT)}"; \
+	else \
+		cloudflared tunnel --url "http://localhost:$${TUNNEL_PORT:-$(WEB_PORT)}"; \
+	fi
+
+snapshot-prod: ## Dump Postgres prod compressé vers snapshots/ (PROD_DATABASE_URL requis)
+	@if [ -z "$$PROD_DATABASE_URL" ]; then \
+		echo "❌ PROD_DATABASE_URL requis."; \
+		echo "   Exemple: PROD_DATABASE_URL=postgresql://user:pass@prod-host:5432/db make snapshot-prod"; \
+		exit 1; \
+	fi
+	@command -v pg_dump >/dev/null 2>&1 || { echo "❌ pg_dump introuvable (apt-get install postgresql-client)"; exit 1; }
+	@mkdir -p snapshots
+	@SNAPSHOT_FILE="snapshots/prod-$$(date -u +%Y%m%dT%H%M%SZ).sql.gz"; \
+		echo "📸 Dump prod -> $$SNAPSHOT_FILE..."; \
+		pg_dump --no-owner --no-acl --clean --if-exists "$$PROD_DATABASE_URL" | gzip > "$$SNAPSHOT_FILE" && \
+		echo "✅ Snapshot écrit ($$(du -h "$$SNAPSHOT_FILE" | cut -f1))"
