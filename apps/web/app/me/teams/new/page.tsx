@@ -184,13 +184,14 @@ export default function NewTeamBuilder() {
     setSaving(true);
     setError(null);
     try {
-      const token = localStorage.getItem("auth_token");
-      const res = await fetch(`${API_BASE}/team/build`, {
+      // S25.5ad — apiRequest unwrap l'enveloppe ApiResponse<T>
+      const json = await apiRequest<{
+        team: { id: string };
+        cost: number;
+        budget: number;
+        breakdown: { players: number; starPlayers: number; staff: number };
+      }>(`/team/build`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
-        },
         body: JSON.stringify({
           name,
           roster: rosterId,
@@ -208,8 +209,6 @@ export default function NewTeamBuilder() {
           dedicatedFans,
         }),
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json?.error || `${t.teams.error} ${res.status}`);
       toast.success(t.teams.teamCreatedToast);
       router.push(`/me/teams/${json.team.id}`);
     } catch (e: any) {
