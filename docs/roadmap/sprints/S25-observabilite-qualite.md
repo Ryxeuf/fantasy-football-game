@@ -10,7 +10,7 @@
 | # | Tache | Cat | Effort | Statut | Detail |
 |---|-------|-----|--------|--------|--------|
 | S25.1 | Logger pino structure + correlation ID + healthcheck profond | AMELIO | M | [x] | Remplace les 270 `console.*` backend par pino avec `{ requestId, userId, duration, statusCode }`. Healthcheck `/health` actuellement renvoie `{ok:true}` sans verifier DB : ajouter liveness + readiness. Exportable Loki/Grafana LGTM (grafana.ryxeuf.fr). |
-| S25.2 | Sentry front (Web Vitals deja monitores Q.20) | AMELIO | M | [ ] | Couverture exceptions JS + RUM. Q.20 monitor LCP/INP/CLS mais zero capture exceptions. Ajouter `@sentry/nextjs` avec sample rate 10% en prod. |
+| S25.2 | Sentry front (Web Vitals deja monitores Q.20) | AMELIO | M | [x] | Couverture exceptions JS + RUM. Q.20 monitor LCP/INP/CLS mais zero capture exceptions. Ajouter `@sentry/nextjs` avec sample rate 10% en prod. |
 | S25.3 | `/metrics` Prometheus (latence p95, queue size, ws connexions) | EVO | L | [ ] | Pair avec Grafana LGTM existant. Custom metrics : `match_active_count`, `matchmaking_queue_size`, `ws_connections_open`, `pass_attempts_total`, `armor_break_total`. |
 | S25.4 | Coverage thresholds 80% en CI + desactiver `passWithNoTests` | AMELIO | M | [ ] | `apps/server/vitest.config.ts:10` et autres. Deps coverage installees mais `--coverage` jamais lance en CI. Activer `coverage.thresholds.lines: 80` + lifter le seuil progressivement par package. |
 | S25.5 | Adopter `ApiResponse<T>` sur les 75% routes restantes | AMELIO | L | [ ] | Std error handling. Aujourd'hui ~25/200+ routes l'utilisent (`utils/api-response.ts` cree pour O.6). Refactor `match.ts`, `team.ts`, `league.ts` en priorite. |

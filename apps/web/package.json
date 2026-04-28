@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@pixi/react": "^7.1.1",
+    "@sentry/nextjs": "^10.50.0",
     "jose": "^6.1.0",
     "jspdf": "^3.0.3",
     "jspdf-autotable": "^5.0.2",
