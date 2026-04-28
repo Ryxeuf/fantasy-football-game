@@ -94,9 +94,9 @@ describe('IA: evaluatePosition', () => {
     const deepState = baseState([nearOwn, b], { ball: nearOwn.pos });
     const advancedState = baseState([nearOpp, b], { ball: nearOpp.pos });
 
-    expect(
-      evaluatePosition(advancedState, 'A').breakdown.ballProgress,
-    ).toBeGreaterThan(evaluatePosition(deepState, 'A').breakdown.ballProgress);
+    expect(evaluatePosition(advancedState, 'A').breakdown.ballProgress).toBeGreaterThan(
+      evaluatePosition(deepState, 'A').breakdown.ballProgress
+    );
   });
 
   it('penalise les joueurs blesses et valorise les blessures adverses', () => {
@@ -115,6 +115,47 @@ describe('IA: evaluatePosition', () => {
 
     const evaluation = evaluatePosition(state, 'A');
     expect(evaluation.total).toBe(0);
+  });
+
+  it('valorise le placement des joueurs de l equipe en possession vers la endzone adverse', () => {
+    const carrier = makePlayer({ id: 'a1', team: 'A', pos: { x: 13, y: 7 }, hasBall: true });
+    const supportClose = makePlayer({ id: 'a2', team: 'A', pos: { x: 18, y: 7 } });
+    const supportFar = makePlayer({ id: 'a2', team: 'A', pos: { x: 4, y: 7 } });
+    const opponent = makePlayer({ id: 'b1', team: 'B', pos: { x: 24, y: 7 } });
+
+    const closeState = baseState([carrier, supportClose, opponent], { ball: carrier.pos });
+    const farState = baseState([carrier, supportFar, opponent], { ball: carrier.pos });
+
+    expect(evaluatePosition(closeState, 'A').breakdown.positioning).toBeGreaterThan(
+      evaluatePosition(farState, 'A').breakdown.positioning
+    );
+  });
+
+  it('valorise les defenseurs proches du porteur adverse quand l equipe ne porte pas la balle', () => {
+    const carrierB = makePlayer({ id: 'b1', team: 'B', pos: { x: 13, y: 7 }, hasBall: true });
+    const defenderClose = makePlayer({ id: 'a1', team: 'A', pos: { x: 11, y: 7 } });
+    const defenderFar = makePlayer({ id: 'a1', team: 'A', pos: { x: 2, y: 0 } });
+
+    const closeState = baseState([defenderClose, carrierB], { ball: carrierB.pos });
+    const farState = baseState([defenderFar, carrierB], { ball: carrierB.pos });
+
+    expect(evaluatePosition(closeState, 'A').breakdown.positioning).toBeGreaterThan(
+      evaluatePosition(farState, 'A').breakdown.positioning
+    );
+  });
+
+  it('valorise les joueurs proches du ballon libre quand personne ne le porte', () => {
+    const close = makePlayer({ id: 'a1', team: 'A', pos: { x: 11, y: 7 } });
+    const far = makePlayer({ id: 'a1', team: 'A', pos: { x: 2, y: 0 } });
+    const opponent = makePlayer({ id: 'b1', team: 'B', pos: { x: 25, y: 14 } });
+    const ballPos = { x: 13, y: 7 };
+
+    const closeState = baseState([close, opponent], { ball: ballPos });
+    const farState = baseState([far, opponent], { ball: ballPos });
+
+    expect(evaluatePosition(closeState, 'A').breakdown.positioning).toBeGreaterThan(
+      evaluatePosition(farState, 'A').breakdown.positioning
+    );
   });
 });
 
@@ -181,6 +222,51 @@ describe('IA: scoreMove', () => {
 
     expect(scoreMove(state, pass, 'A')).toBeGreaterThan(scoreMove(state, end, 'A'));
   });
+
+  it('un MOVE non-porteur vers le porteur adverse score plus haut que END_TURN', () => {
+    const carrier = makePlayer({ id: 'b1', team: 'B', pos: { x: 18, y: 7 }, hasBall: true });
+    const defender = makePlayer({ id: 'a1', team: 'A', pos: { x: 5, y: 7 }, pm: 6 });
+    const state = baseState([defender, carrier], { ball: carrier.pos });
+
+    const towardCarrier: Move = { type: 'MOVE', playerId: 'a1', to: { x: 6, y: 7 } };
+    const endTurn: Move = { type: 'END_TURN' };
+
+    expect(scoreMove(state, towardCarrier, 'A')).toBeGreaterThan(scoreMove(state, endTurn, 'A'));
+  });
+
+  it('un MOVE non-porteur vers le porteur adverse score plus haut qu un MOVE qui s eloigne', () => {
+    const carrier = makePlayer({ id: 'b1', team: 'B', pos: { x: 18, y: 7 }, hasBall: true });
+    const defender = makePlayer({ id: 'a1', team: 'A', pos: { x: 5, y: 7 }, pm: 6 });
+    const state = baseState([defender, carrier], { ball: carrier.pos });
+
+    const toward: Move = { type: 'MOVE', playerId: 'a1', to: { x: 6, y: 7 } };
+    const away: Move = { type: 'MOVE', playerId: 'a1', to: { x: 4, y: 7 } };
+
+    expect(scoreMove(state, toward, 'A')).toBeGreaterThan(scoreMove(state, away, 'A'));
+  });
+
+  it('un MOVE de support qui s avance vers la endzone adverse score plus haut que END_TURN', () => {
+    const carrier = makePlayer({ id: 'a1', team: 'A', pos: { x: 13, y: 7 }, hasBall: true });
+    const support = makePlayer({ id: 'a2', team: 'A', pos: { x: 12, y: 9 }, pm: 6 });
+    const opp = makePlayer({ id: 'b1', team: 'B', pos: { x: 22, y: 7 } });
+    const state = baseState([carrier, support, opp], { ball: carrier.pos });
+
+    const advance: Move = { type: 'MOVE', playerId: 'a2', to: { x: 13, y: 9 } };
+    const endTurn: Move = { type: 'END_TURN' };
+
+    expect(scoreMove(state, advance, 'A')).toBeGreaterThan(scoreMove(state, endTurn, 'A'));
+  });
+
+  it('un BLOCK 50/50 (forces egales) score plus haut que END_TURN', () => {
+    const equal1 = makePlayer({ id: 'a1', team: 'A', pos: { x: 5, y: 5 }, st: 3 });
+    const equal2 = makePlayer({ id: 'b1', team: 'B', pos: { x: 6, y: 5 }, st: 3 });
+    const state = baseState([equal1, equal2]);
+
+    const blockMove: Move = { type: 'BLOCK', playerId: 'a1', targetId: 'b1' };
+    const endTurn: Move = { type: 'END_TURN' };
+
+    expect(scoreMove(state, blockMove, 'A')).toBeGreaterThan(scoreMove(state, endTurn, 'A'));
+  });
 });
 
 describe('IA: pickBestMove', () => {
@@ -237,5 +323,18 @@ describe('IA: pickBestMove', () => {
     const m1 = pickBestMove(state, 'A');
     const m2 = pickBestMove(state, 'A');
     expect(m1).toEqual(m2);
+  });
+
+  it('ne choisit pas END_TURN quand au moins une action concrete est disponible', () => {
+    // Deux joueurs eloignes sans porteur ni cible : la majorite des MOVE
+    // ne change pas l evaluation globale. END_TURN doit malgre tout perdre
+    // contre une action disponible (tie-break en faveur du jeu actif).
+    const a = makePlayer({ id: 'a1', team: 'A', pos: { x: 5, y: 5 }, pm: 6 });
+    const b = makePlayer({ id: 'b1', team: 'B', pos: { x: 22, y: 14 } });
+    const state = baseState([a, b]);
+
+    const move = pickBestMove(state, 'A');
+    expect(move).not.toBeNull();
+    expect(move?.type).not.toBe('END_TURN');
   });
 });

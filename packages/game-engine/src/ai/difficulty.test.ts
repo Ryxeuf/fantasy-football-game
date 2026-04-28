@@ -46,7 +46,11 @@ function blockAdvantageState(): GameState {
 
 function carrierAdvancedState(): GameState {
   const carrier = makePlayer({
-    id: 'a1', team: 'A', pos: { x: 10, y: 7 }, hasBall: true, pm: 6,
+    id: 'a1',
+    team: 'A',
+    pos: { x: 10, y: 7 },
+    hasBall: true,
+    pm: 6,
   });
   const defender = makePlayer({ id: 'b1', team: 'B', pos: { x: 22, y: 14 } });
   return baseState([carrier, defender], { ball: carrier.pos });
@@ -91,6 +95,12 @@ describe('IA difficulty: profiles registry', () => {
     expect(hard.noise).toBe(0);
     expect(hard.blunderRate).toBe(0);
     expect(hard.timidityRate).toBe(0);
+  });
+
+  it('seuls les niveaux faciles biaisent vers END_TURN', () => {
+    expect(AI_DIFFICULTY_PROFILES.hard.endTurnBias).toBe(0);
+    expect(AI_DIFFICULTY_PROFILES.medium.endTurnBias).toBe(0);
+    expect(AI_DIFFICULTY_PROFILES.easy.endTurnBias).toBeGreaterThan(0);
   });
 });
 
@@ -159,11 +169,11 @@ describe('IA difficulty: differences de comportement', () => {
     expect(choices.size).toBeGreaterThan(1);
   });
 
-  it('hard choisit toujours un BLOCK avantageux face a un END_TURN', () => {
+  it('hard choisit toujours une action agressive (BLOCK ou BLITZ) face a un END_TURN', () => {
     const state = blockAdvantageState();
     const move = pickAIMove(state, 'A', { difficulty: 'hard' });
     expect(move).not.toBeNull();
-    expect(move?.type).toBe('BLOCK');
+    expect(['BLOCK', 'BLITZ']).toContain(move?.type);
   });
 
   it('easy privilegie globalement davantage END_TURN que hard', () => {
@@ -240,10 +250,7 @@ describe('IA difficulty: boucle de tour (integration)', () => {
 
 describe('IA difficulty: qualite relative (hard > easy en moyenne)', () => {
   it('sur des etats varies, hard privilegie plus souvent des coups de score positif', () => {
-    const scenarios: GameState[] = [
-      blockAdvantageState(),
-      carrierAdvancedState(),
-    ];
+    const scenarios: GameState[] = [blockAdvantageState(), carrierAdvancedState()];
 
     let easyPositive = 0;
     let hardPositive = 0;

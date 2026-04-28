@@ -24,6 +24,7 @@ export interface EvaluationBreakdown {
   playerCount: number;
   carrierSafety: number;
   attrition: number;
+  positioning: number;
 }
 
 export interface PositionEvaluation {
@@ -43,6 +44,18 @@ export const EVAL_WEIGHTS = {
   CARRIER_PROTECTION_ALLY: 20,
   CARRIER_TACKLEZONE_PENALTY: 35,
   CARRIER_IN_ENDZONE_BONUS: 250,
+  /**
+   * Recompense par case de progression positionnelle pour les joueurs
+   * non-porteurs : sans ce signal, deplacer un defenseur ou un soutien
+   * laisse l evaluation globale identique et l IA prefere END_TURN.
+   */
+  POSITIONING_PER_STEP: 2,
+  /**
+   * Petit malus applique a END_TURN quand au moins une autre action existe :
+   * il casse les egalites avec les coups au score 0 (la majorite des MOVE
+   * sans incidence directe) en faveur du jeu actif.
+   */
+  END_TURN_PENALTY: 1,
 } as const;
 
 const OPPOSITE: Record<TeamId, TeamId> = { A: 'B', B: 'A' };
@@ -52,8 +65,12 @@ function otherTeam(team: TeamId): TeamId {
 }
 
 function isActive(player: Player): boolean {
-  return !player.stunned && player.state !== 'casualty'
-    && player.state !== 'knocked_out' && player.state !== 'sent_off';
+  return (
+    !player.stunned &&
+    player.state !== 'casualty' &&
+    player.state !== 'knocked_out' &&
+    player.state !== 'sent_off'
+  );
 }
 
 function teamScore(state: GameState, team: TeamId): number {
@@ -108,14 +125,63 @@ function carrierSafetyScore(state: GameState, team: TeamId): number {
   const sign = carrier.team === team ? 1 : -1;
 
   const allies = state.players.filter(
-    p => p.team === carrier.team && p.id !== carrier.id && isActive(p) && isAdjacent(p.pos, carrier.pos),
+    p =>
+      p.team === carrier.team &&
+      p.id !== carrier.id &&
+      isActive(p) &&
+      isAdjacent(p.pos, carrier.pos)
   ).length;
   const opponentsInTz = getAdjacentOpponents(state, carrier.pos, carrier.team).length;
 
-  return sign * (
-    allies * EVAL_WEIGHTS.CARRIER_PROTECTION_ALLY
-    - opponentsInTz * EVAL_WEIGHTS.CARRIER_TACKLEZONE_PENALTY
+  return (
+    sign *
+    (allies * EVAL_WEIGHTS.CARRIER_PROTECTION_ALLY -
+      opponentsInTz * EVAL_WEIGHTS.CARRIER_TACKLEZONE_PENALTY)
   );
+}
+
+function chebyshevDistance(a: Position, b: Position): number {
+  return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
+}
+
+/**
+ * Score positionnel agrege sur tous les joueurs actifs de chaque equipe.
+ * Sans cette composante, deplacer un joueur sans ballon laisse l evaluation
+ * globale inchangee et l IA prefere systematiquement END_TURN.
+ *
+ * Heuristique simple :
+ *  - Equipe en possession : on recompense la progression de chaque joueur
+ *    actif vers la endzone adverse (pour escorter le porteur ou se rendre
+ *    receveur).
+ *  - Equipe sans la balle : on recompense la proximite au porteur adverse
+ *    (pression / marquage). Si la balle est libre, on recompense la
+ *    proximite a la balle (course au pickup).
+ */
+function positioningScore(state: GameState, team: TeamId): number {
+  const carrier = findBallCarrier(state);
+  let total = 0;
+  for (const p of state.players) {
+    if (!isActive(p)) continue;
+    const sign = p.team === team ? 1 : -1;
+
+    if (carrier && p.team === carrier.team) {
+      const distance = distanceToEndzone(state, p.pos, p.team);
+      total += sign * (state.width - 1 - distance) * EVAL_WEIGHTS.POSITIONING_PER_STEP;
+      continue;
+    }
+
+    if (carrier) {
+      const distance = chebyshevDistance(p.pos, carrier.pos);
+      total += sign * Math.max(0, state.width - distance) * EVAL_WEIGHTS.POSITIONING_PER_STEP;
+      continue;
+    }
+
+    if (state.ball) {
+      const distance = chebyshevDistance(p.pos, state.ball);
+      total += sign * Math.max(0, state.width - distance) * EVAL_WEIGHTS.POSITIONING_PER_STEP;
+    }
+  }
+  return total;
 }
 
 function ballProgressScore(state: GameState, team: TeamId): number {
@@ -144,11 +210,15 @@ function scoreDifferenceScore(state: GameState, team: TeamId): number {
  * Plus haut = meilleur pour `team`.
  */
 export function evaluatePosition(state: GameState, team: TeamId): PositionEvaluation {
-  if (state.gamePhase === 'ended'
-      && state.score.teamA === 0 && state.score.teamB === 0) {
+  if (state.gamePhase === 'ended' && state.score.teamA === 0 && state.score.teamB === 0) {
     const zero: EvaluationBreakdown = {
-      score: 0, possession: 0, ballProgress: 0,
-      playerCount: 0, carrierSafety: 0, attrition: 0,
+      score: 0,
+      possession: 0,
+      ballProgress: 0,
+      playerCount: 0,
+      carrierSafety: 0,
+      attrition: 0,
+      positioning: 0,
     };
     return { total: 0, breakdown: zero };
   }
@@ -160,10 +230,17 @@ export function evaluatePosition(state: GameState, team: TeamId): PositionEvalua
     playerCount: playerCountScore(state, team),
     carrierSafety: carrierSafetyScore(state, team),
     attrition: attritionScore(state, team),
+    positioning: positioningScore(state, team),
   };
 
-  const total = breakdown.score + breakdown.possession + breakdown.ballProgress
-    + breakdown.playerCount + breakdown.carrierSafety + breakdown.attrition;
+  const total =
+    breakdown.score +
+    breakdown.possession +
+    breakdown.ballProgress +
+    breakdown.playerCount +
+    breakdown.carrierSafety +
+    breakdown.attrition +
+    breakdown.positioning;
 
   return { total, breakdown };
 }
@@ -175,10 +252,15 @@ export function evaluatePosition(state: GameState, team: TeamId): PositionEvalua
  */
 function estimateBlockKnockdown(state: GameState, attacker: Player, target: Player): number {
   const atkAssists = state.players.filter(
-    p => p.team === attacker.team && p.id !== attacker.id && isActive(p) && isAdjacent(p.pos, target.pos),
+    p =>
+      p.team === attacker.team &&
+      p.id !== attacker.id &&
+      isActive(p) &&
+      isAdjacent(p.pos, target.pos)
   ).length;
   const defAssists = state.players.filter(
-    p => p.team === target.team && p.id !== target.id && isActive(p) && isAdjacent(p.pos, attacker.pos),
+    p =>
+      p.team === target.team && p.id !== target.id && isActive(p) && isAdjacent(p.pos, attacker.pos)
   ).length;
   const atkStrength = attacker.st + atkAssists;
   const defStrength = target.st + defAssists;
@@ -190,36 +272,55 @@ function estimateBlockKnockdown(state: GameState, attacker: Player, target: Play
   return 0.18;
 }
 
-function scoreMoveMove(state: GameState, move: Extract<Move, { type: 'MOVE' }>, team: TeamId): number {
+function scoreMoveMove(
+  state: GameState,
+  move: Extract<Move, { type: 'MOVE' }>,
+  team: TeamId
+): number {
   const player = findPlayer(state, move.playerId);
   if (!player) return -Infinity;
 
   const before = evaluatePosition(state, team).total;
   const simulated: GameState = {
     ...state,
-    players: state.players.map(p => (p.id === player.id ? { ...p, pos: move.to, pm: Math.max(0, p.pm - 1) } : p)),
+    players: state.players.map(p =>
+      p.id === player.id ? { ...p, pos: move.to, pm: Math.max(0, p.pm - 1) } : p
+    ),
     ball: player.hasBall ? { ...move.to } : state.ball,
   };
   const after = evaluatePosition(simulated, team).total;
   return after - before;
 }
 
-function scoreMoveBlock(state: GameState, move: Extract<Move, { type: 'BLOCK' }>, team: TeamId): number {
+function scoreMoveBlock(
+  state: GameState,
+  move: Extract<Move, { type: 'BLOCK' }>,
+  team: TeamId
+): number {
   const attacker = findPlayer(state, move.playerId);
   const target = findPlayer(state, move.targetId);
   if (!attacker || !target) return -Infinity;
 
   const knockdown = estimateBlockKnockdown(state, attacker, target);
-  const knockoutValue = target.team === team
-    ? -EVAL_WEIGHTS.PLAYER_ACTIVE - EVAL_WEIGHTS.PLAYER_STUNNED_PENALTY
-    : EVAL_WEIGHTS.PLAYER_ACTIVE + EVAL_WEIGHTS.PLAYER_STUNNED_PENALTY;
+  const knockoutValue =
+    target.team === team
+      ? -EVAL_WEIGHTS.PLAYER_ACTIVE - EVAL_WEIGHTS.PLAYER_STUNNED_PENALTY
+      : EVAL_WEIGHTS.PLAYER_ACTIVE + EVAL_WEIGHTS.PLAYER_STUNNED_PENALTY;
 
   const possessionSwing = target.hasBall ? EVAL_WEIGHTS.POSSESSION * 0.5 : 0;
-  const selfRisk = knockdown < 0.4 ? -40 : 0;
+  // Risque calibre pour qu un block 50/50 reste preferable a END_TURN :
+  // un attaquant tombe rarement (defAssists > atkAssists) sur un block
+  // equilibre, le malus reflete le risque reel de turnover sans le rendre
+  // prohibitif.
+  const selfRisk = knockdown < 0.2 ? -30 : knockdown < 0.4 ? -10 : 0;
   return knockdown * (knockoutValue + possessionSwing) + selfRisk;
 }
 
-function scoreMoveBlitz(state: GameState, move: Extract<Move, { type: 'BLITZ' }>, team: TeamId): number {
+function scoreMoveBlitz(
+  state: GameState,
+  move: Extract<Move, { type: 'BLITZ' }>,
+  team: TeamId
+): number {
   const attacker = findPlayer(state, move.playerId);
   const target = findPlayer(state, move.targetId);
   if (!attacker || !target) return -Infinity;
@@ -227,17 +328,25 @@ function scoreMoveBlitz(state: GameState, move: Extract<Move, { type: 'BLITZ' }>
   const moveDelta = scoreMoveMove(
     state,
     { type: 'MOVE', playerId: move.playerId, to: move.to },
-    team,
+    team
   );
   const simulated: GameState = {
     ...state,
     players: state.players.map(p => (p.id === attacker.id ? { ...p, pos: move.to } : p)),
   };
-  const blockDelta = scoreMoveBlock(simulated, { type: 'BLOCK', playerId: move.playerId, targetId: move.targetId }, team);
+  const blockDelta = scoreMoveBlock(
+    simulated,
+    { type: 'BLOCK', playerId: move.playerId, targetId: move.targetId },
+    team
+  );
   return moveDelta + blockDelta;
 }
 
-function scoreMovePass(state: GameState, move: Extract<Move, { type: 'PASS' | 'HANDOFF' }>, team: TeamId): number {
+function scoreMovePass(
+  state: GameState,
+  move: Extract<Move, { type: 'PASS' | 'HANDOFF' }>,
+  team: TeamId
+): number {
   const passer = findPlayer(state, move.playerId);
   const receiver = findPlayer(state, move.targetId);
   if (!passer || !receiver) return -Infinity;
@@ -252,11 +361,17 @@ function scoreMovePass(state: GameState, move: Extract<Move, { type: 'PASS' | 'H
     }),
   };
   const delta = evaluatePosition(simulated, team).total - evaluatePosition(state, team).total;
-  const risk = move.type === 'PASS' ? -20 : 0;
+  // Risque de PASS reduit (echec/intercept) : avec l ancien -20, l IA refusait
+  // toute passe sauf gain positionnel exceptionnel.
+  const risk = move.type === 'PASS' ? -8 : 0;
   return delta + risk;
 }
 
-function scoreMoveFoul(state: GameState, move: Extract<Move, { type: 'FOUL' }>, team: TeamId): number {
+function scoreMoveFoul(
+  state: GameState,
+  move: Extract<Move, { type: 'FOUL' }>,
+  team: TeamId
+): number {
   const target = findPlayer(state, move.targetId);
   if (!target) return -Infinity;
   if (target.team === team) return -Infinity;
@@ -271,11 +386,16 @@ function scoreMoveFoul(state: GameState, move: Extract<Move, { type: 'FOUL' }>, 
 export function scoreMove(state: GameState, move: Move, team: TeamId): number {
   switch (move.type) {
     case 'END_TURN':
-      return 0;
+      // Petite penalite pour casser les egalites avec les MOVE neutres.
+      // Sans ca, END_TURN (premier dans getLegalMoves) gagne tout tie-break
+      // stable et l IA passe son tour des qu un coup ne change pas l evaluation.
+      return -EVAL_WEIGHTS.END_TURN_PENALTY;
     case 'MOVE':
       return scoreMoveMove(state, move, team);
     case 'LEAP':
-      return scoreMoveMove(state, { type: 'MOVE', playerId: move.playerId, to: move.to }, team) - 15;
+      return (
+        scoreMoveMove(state, { type: 'MOVE', playerId: move.playerId, to: move.to }, team) - 15
+      );
     case 'BLOCK':
       return scoreMoveBlock(state, move, team);
     case 'BLITZ':
