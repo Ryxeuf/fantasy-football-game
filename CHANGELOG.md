@@ -1,3 +1,10 @@
+## [1.76.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.76.1...v1.76.2) (2026-04-28)
+
+
+### ♻️ Code Refactoring
+
+* **match:** migrate GET routes to ApiResponse<T> envelope (S25.5i) ([95a0f37](https://github.com/Ryxeuf/fantasy-football-game/commit/95a0f37640b09a7cd127b4d418c0fd8fac905344))
+
 ## [1.76.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.76.0...v1.76.1) (2026-04-28)
 
 
