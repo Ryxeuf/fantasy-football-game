@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { API_BASE } from "../auth-client";
+import { apiRequest } from "../lib/api-client";
 
 interface LiveMatch {
   id: string;
@@ -23,21 +23,12 @@ export default function SpectateLobbyPage() {
 
   const fetchMatches = async () => {
     try {
-      const token = localStorage.getItem("auth_token");
-      if (!token) {
+      if (typeof window !== "undefined" && !localStorage.getItem("auth_token")) {
         setError("Connexion requise");
         setLoading(false);
         return;
       }
-      const res = await fetch(`${API_BASE}/match/live`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) {
-        setError("Impossible de charger les matchs en direct");
-        setLoading(false);
-        return;
-      }
-      const data = await res.json();
+      const data = await apiRequest<{ matches: LiveMatch[] }>("/match/live");
       setMatches(data.matches || []);
       setLoading(false);
     } catch {

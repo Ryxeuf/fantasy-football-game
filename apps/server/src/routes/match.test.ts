@@ -13,9 +13,14 @@ vi.mock("../prisma", () => ({
     match: {
       create: vi.fn(),
       update: vi.fn(),
+      findMany: vi.fn(),
     },
     turn: { create: vi.fn() },
   },
+}));
+
+vi.mock("../game-spectator", () => ({
+  getSpectatorCount: vi.fn(() => 0),
 }));
 
 vi.mock("../services/match-start", () => ({
@@ -54,16 +59,21 @@ import {
   handleAcceptMatch,
   handlePracticeMatch,
   handleCancelMatch,
+  handleListMyMatches,
+  handleListLiveMatches,
 } from "./match";
+import { getSpectatorCount } from "../game-spectator";
 import type { AuthenticatedRequest } from "../middleware/authUser";
 
 const mockPrisma = prisma as unknown as {
   match: {
     create: ReturnType<typeof vi.fn>;
     update: ReturnType<typeof vi.fn>;
+    findMany: ReturnType<typeof vi.fn>;
   };
   turn: { create: ReturnType<typeof vi.fn> };
 };
+const mockGetSpectatorCount = getSpectatorCount as ReturnType<typeof vi.fn>;
 const mockAcceptAndMaybeStart = acceptAndMaybeStartMatch as ReturnType<
   typeof vi.fn
 >;
@@ -368,5 +378,175 @@ describe("Route: POST /match/:id/cancel (S25.5g)", () => {
     await handleCancelMatch(req, res);
     expect(res.statusCode).toBe(500);
     expect(res.payload).toMatchObject({ success: false, error: "boom" });
+  });
+});
+
+describe("Route: GET /match/my-matches (S25.5h)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("returns ApiSuccess with matches enriched with score/turn/sides", async () => {
+    const now = new Date("2026-04-28T10:00:00Z");
+    mockPrisma.match.findMany.mockResolvedValue([
+      {
+        id: "match-mm-1",
+        status: "active",
+        createdAt: now,
+        lastMoveAt: now,
+        currentTurnUserId: "user-1",
+        teamSelections: [
+          {
+            userId: "user-1",
+            createdAt: new Date("2026-04-28T09:59:00Z"),
+            user: { id: "user-1", coachName: "Me", eloRating: 1200 },
+            teamRef: { id: "t1", name: "Reds", roster: "skaven" },
+            team: "skaven",
+          },
+          {
+            userId: "user-2",
+            createdAt: new Date("2026-04-28T09:59:30Z"),
+            user: { id: "user-2", coachName: "Foe", eloRating: 1100 },
+            teamRef: { id: "t2", name: "Blues", roster: "lizardmen" },
+            team: "lizardmen",
+          },
+        ],
+        turns: [
+          {
+            payload: {
+              gameState: { score: { teamA: 2, teamB: 1 }, half: 2, turn: 5 },
+            },
+          },
+        ],
+      },
+    ]);
+
+    const req = createReq();
+    const res = createRes();
+    await handleListMyMatches(req, res);
+
+    expect(mockPrisma.match.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { players: { some: { id: "user-1" } } },
+        take: 50,
+      }),
+    );
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: {
+        matches: [
+          expect.objectContaining({
+            id: "match-mm-1",
+            status: "active",
+            isMyTurn: true,
+            myScore: 2,
+            opponentScore: 1,
+            half: 2,
+            turn: 5,
+            myTeam: expect.objectContaining({
+              coachName: "Me",
+              teamName: "Reds",
+              eloRating: 1200,
+            }),
+            opponent: expect.objectContaining({
+              coachName: "Foe",
+              teamName: "Blues",
+              eloRating: 1100,
+            }),
+          }),
+        ],
+      },
+    });
+  });
+
+  it("returns ApiSuccess with empty matches array when none found", async () => {
+    mockPrisma.match.findMany.mockResolvedValue([]);
+    const req = createReq();
+    const res = createRes();
+    await handleListMyMatches(req, res);
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: { matches: [] },
+    });
+  });
+
+  it("returns 500 ApiError when prisma throws", async () => {
+    mockPrisma.match.findMany.mockRejectedValue(new Error("db down"));
+    const req = createReq();
+    const res = createRes();
+    await handleListMyMatches(req, res);
+    expect(res.statusCode).toBe(500);
+    expect(res.payload).toMatchObject({ success: false, error: "Erreur serveur" });
+  });
+});
+
+describe("Route: GET /match/live (S25.5h)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("returns ApiSuccess with live matches and spectator count", async () => {
+    mockGetSpectatorCount.mockReturnValue(7);
+    const now = new Date("2026-04-28T10:00:00Z");
+    mockPrisma.match.findMany.mockResolvedValue([
+      {
+        id: "live-1",
+        status: "active",
+        createdAt: now,
+        lastMoveAt: now,
+        teamSelections: [
+          {
+            createdAt: new Date("2026-04-28T09:59:00Z"),
+            user: { id: "u1", coachName: "Alice" },
+            teamRef: { name: "AA", roster: "skaven" },
+          },
+          {
+            createdAt: new Date("2026-04-28T09:59:30Z"),
+            user: { id: "u2", coachName: "Bob" },
+            teamRef: { name: "BB", roster: "lizardmen" },
+          },
+        ],
+        turns: [
+          {
+            payload: {
+              gameState: { score: { teamA: 1, teamB: 0 }, half: 1, turn: 3 },
+            },
+          },
+        ],
+      },
+    ]);
+
+    const req = createReq();
+    const res = createRes();
+    await handleListLiveMatches(req, res);
+
+    expect(mockPrisma.match.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { status: { in: ["active", "prematch-setup"] } },
+        take: 20,
+      }),
+    );
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: {
+        matches: [
+          expect.objectContaining({
+            id: "live-1",
+            status: "active",
+            spectatorCount: 7,
+            score: { teamA: 1, teamB: 0 },
+            half: 1,
+            turn: 3,
+            teamA: expect.objectContaining({ coachName: "Alice", teamName: "AA" }),
+            teamB: expect.objectContaining({ coachName: "Bob", teamName: "BB" }),
+          }),
+        ],
+      },
+    });
+  });
+
+  it("returns 500 ApiError when prisma throws", async () => {
+    mockPrisma.match.findMany.mockRejectedValue(new Error("boom"));
+    const req = createReq();
+    const res = createRes();
+    await handleListLiveMatches(req, res);
+    expect(res.statusCode).toBe(500);
+    expect(res.payload).toMatchObject({ success: false, error: "Erreur serveur" });
   });
 });

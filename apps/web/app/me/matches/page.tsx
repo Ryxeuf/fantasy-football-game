@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { API_BASE } from "../../auth-client";
+import { apiRequest } from "../../lib/api-client";
 
 interface MatchTeamInfo {
   coachName: string;
@@ -19,15 +19,6 @@ interface MatchSummary {
   turn: number;
   myTeam: MatchTeamInfo | null;
   opponent: MatchTeamInfo | null;
-}
-
-async function fetchJSON(path: string) {
-  const token = localStorage.getItem("auth_token");
-  const res = await fetch(`${API_BASE}${path}`, {
-    headers: { Authorization: token ? `Bearer ${token}` : "" },
-  });
-  if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error || `Erreur ${res.status}`);
-  return res.json();
 }
 
 function getStatusLabel(status: string): string {
@@ -65,9 +56,9 @@ export default function MyMatchesPage() {
   const [filter, setFilter] = useState<"all" | "my-turn" | "active" | "ended">("all");
 
   useEffect(() => {
-    fetchJSON("/match/my-matches")
+    apiRequest<{ matches: MatchSummary[] }>("/match/my-matches")
       .then((data) => setMatches(data.matches || []))
-      .catch((e) => setError(e.message))
+      .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
   }, []);
 
