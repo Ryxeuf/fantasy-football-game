@@ -1,7 +1,9 @@
 import { Router } from "express";
+import type { Response } from "express";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../prisma";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
+import { sendError, sendSuccess } from "../utils/api-response";
 import { updateTeamValues } from "../utils/team-values";
 import {
   getPositionBySlug,
@@ -211,7 +213,11 @@ function rosterTemplates(roster: AllowedRoster) {
 
 // O.8a — Générateur de noms d'équipe par roster.
 // Public (pas d'auth) : aide à la création d'équipe, sans contenu sensible.
-router.get("/name-generator", (req, res) => {
+// (S25.5n — ApiResponse<T>)
+export function handleGenerateTeamName(
+  req: AuthenticatedRequest,
+  res: Response,
+): void {
   const roster =
     typeof req.query.roster === "string" && req.query.roster.length > 0
       ? req.query.roster
@@ -221,8 +227,10 @@ router.get("/name-generator", (req, res) => {
       ? req.query.seed
       : undefined;
   const name = generateTeamName(roster, seed ? { seed } : {});
-  res.json({ name, roster });
-});
+  sendSuccess(res, { name, roster });
+}
+
+router.get("/name-generator", handleGenerateTeamName);
 
 router.get("/available", authUser, async (req: AuthenticatedRequest, res) => {
   const requestedRuleset = req.query.ruleset as string | undefined;
@@ -270,19 +278,28 @@ router.get("/mine", authUser, async (req: AuthenticatedRequest, res) => {
   res.json({ teams, meta: buildApiMeta({ total, limit, offset }) });
 });
 
-router.get("/rosters/:id", authUser, async (req: AuthenticatedRequest, res) => {
+// (S25.5n — ApiResponse<T>)
+export async function handleGetRoster(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
   const id = req.params.id;
-  if (!(ALLOWED_TEAMS as readonly string[]).includes(id))
-    return res.status(404).json({ error: "Roster inconnu" });
+  if (!(ALLOWED_TEAMS as readonly string[]).includes(id)) {
+    sendError(res, "Roster inconnu", 404);
+    return;
+  }
   const ruleset = resolveRuleset(req.query.ruleset as string | undefined);
-  
+
   const roster = await getRosterFromDb(id, "fr", ruleset);
   if (!roster) {
-    return res.status(404).json({ error: "Roster non trouvé en base de données" });
+    sendError(res, "Roster non trouve en base de donnees", 404);
+    return;
   }
-  
-  res.json({ roster, ruleset });
-});
+
+  sendSuccess(res, { roster, ruleset });
+}
+
+router.get("/rosters/:id", authUser, handleGetRoster);
 
 router.post("/choose", authUser, validate(chooseTeamSchema), async (req: AuthenticatedRequest, res) => {
   const { matchId, teamId } = req.body;
