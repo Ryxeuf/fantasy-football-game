@@ -1,4 +1,4 @@
-import { post, get } from "./api";
+import { post, get, unwrap } from "./api";
 
 /**
  * Factories haut niveau pour mettre en place un match multijoueur minimal.
@@ -136,14 +136,19 @@ export async function createMatch(
   coachA: Coach,
   coachB: Coach,
 ): Promise<Match> {
-  const created = await post<{
-    match: { id: string };
-    matchToken: string;
-  }>("/match/create", coachA.token, {});
-  const joined = await post<{
-    match: { id: string };
-    matchToken: string;
-  }>("/match/join", coachB.token, { matchId: created.match.id });
+  // S25.5f — /match/create et /match/join migres vers ApiResponse<T>
+  const created = unwrap(
+    await post<{
+      success: true;
+      data: { match: { id: string }; matchToken: string };
+    }>("/match/create", coachA.token, {}),
+  );
+  const joined = unwrap(
+    await post<{
+      success: true;
+      data: { match: { id: string }; matchToken: string };
+    }>("/match/join", coachB.token, { matchId: created.match.id }),
+  );
   return {
     id: created.match.id,
     aToken: created.matchToken,
@@ -176,10 +181,13 @@ export async function acceptAndStart(
   coachA: Coach,
   coachB: Coach,
 ): Promise<StartedMatch> {
-  const accA = await post<{ status: string }>(
-    "/match/accept",
-    coachA.token,
-    { matchId: match.id },
+  // S25.5f — /match/accept migre vers ApiResponse<T>
+  const accA = unwrap(
+    await post<{ success: true; data: { status: string } }>(
+      "/match/accept",
+      coachA.token,
+      { matchId: match.id },
+    ),
   );
   if (
     accA.status !== "waiting_other_player" &&
@@ -189,11 +197,16 @@ export async function acceptAndStart(
       `Premier accept inattendu: ${JSON.stringify(accA)}`,
     );
   }
-  const accB = await post<{
-    status: string;
-    kickingUserId: string;
-    receivingUserId: string;
-  }>("/match/accept", coachB.token, { matchId: match.id });
+  const accB = unwrap(
+    await post<{
+      success: true;
+      data: {
+        status: string;
+        kickingUserId: string;
+        receivingUserId: string;
+      };
+    }>("/match/accept", coachB.token, { matchId: match.id }),
+  );
   // Le serveur retourne "prematch-setup" quand le 2e coach accepte et que la
   // séquence pré-match démarre automatiquement (voir services/match-start.ts).
   // On accepte aussi "started" pour rester tolérant si ce nom change.
