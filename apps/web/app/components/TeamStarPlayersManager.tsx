@@ -107,24 +107,19 @@ export default function TeamStarPlayersManager({ teamId, token }: TeamStarPlayer
       setError(null);
       setSuccessMessage(null);
 
-      const res = await fetch(`${API_URL}/team/${teamId}/star-players`, {
+      // S25.5ab — apiRequest unwrap l'enveloppe ApiResponse<T>
+      const data = await apiRequest<{
+        team: unknown;
+        newStarPlayers: unknown[];
+        message: string;
+      }>(`/team/${teamId}/star-players`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ starPlayerSlug })
+        body: JSON.stringify({ starPlayerSlug }),
       });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Erreur lors du recrutement');
-      }
 
       setSuccessMessage(data.message);
       setShowRecruitModal(false);
-      
+
       // Recharger les données
       await loadStarPlayers();
     } catch (err: any) {

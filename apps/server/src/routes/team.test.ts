@@ -31,6 +31,7 @@ vi.mock("../prisma", () => ({
     },
     teamStarPlayer: {
       deleteMany: vi.fn(),
+      create: vi.fn(),
     },
     localMatch: {
       findMany: vi.fn(),
@@ -88,10 +89,12 @@ import {
   handleUpdateTeam,
   handleAddTeamPlayer,
   handleListAvailableStarPlayers,
+  handleHireStarPlayer,
 } from "./team";
 import {
   requiresPair,
   getTeamAvailableStarPlayers,
+  validateStarPlayerHire,
 } from "../utils/star-player-validation";
 import { updateTeamValues } from "../utils/team-values";
 import type { AuthenticatedRequest } from "../middleware/authUser";
@@ -1964,6 +1967,214 @@ describe("Route: GET /team/:id/available-star-players (S25.5aa)", () => {
     const req = createReq({ params: { id: "team-1" } });
     const res = createRes();
     await handleListAvailableStarPlayers(req, res);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+});
+
+describe("Route: POST /team/:id/star-players (S25.5ab)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  async function getMocks() {
+    const prismaMock = vi.mocked(await import("../prisma")).prisma;
+    return {
+      teamFindFirst: prismaMock.team.findFirst as ReturnType<typeof vi.fn>,
+      teamFindUnique: prismaMock.team.findUnique as ReturnType<typeof vi.fn>,
+      selectionFindFirst: prismaMock.teamSelection.findFirst as ReturnType<
+        typeof vi.fn
+      >,
+      starPlayerCreate: prismaMock.teamStarPlayer.create as ReturnType<
+        typeof vi.fn
+      >,
+      mockValidate: validateStarPlayerHire as ReturnType<typeof vi.fn>,
+      mockRequiresPair: requiresPair as ReturnType<typeof vi.fn>,
+    };
+  }
+
+  it("returns 404 ApiError when team not found", async () => {
+    const { teamFindFirst } = await getMocks();
+    teamFindFirst.mockResolvedValue(null);
+
+    const req = createReq({
+      params: { id: "team-1" },
+      body: { starPlayerSlug: "morg-n-thorg" },
+    });
+    const res = createRes();
+    await handleHireStarPlayer(req, res);
+
+    expect(res.statusCode).toBe(404);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+
+  it("returns 400 ApiError when team is engaged in active match", async () => {
+    const { teamFindFirst, selectionFindFirst } = await getMocks();
+    teamFindFirst.mockResolvedValue({
+      id: "team-1",
+      ownerId: "user-1",
+      roster: "skaven",
+      ruleset: "season_3",
+      initialBudget: 1000,
+      players: [],
+      starPlayers: [],
+    });
+    selectionFindFirst.mockResolvedValue({ id: "sel-1" });
+
+    const req = createReq({
+      params: { id: "team-1" },
+      body: { starPlayerSlug: "morg-n-thorg" },
+    });
+    const res = createRes();
+    await handleHireStarPlayer(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+
+  it("returns 400 ApiError when validation fails", async () => {
+    const { teamFindFirst, selectionFindFirst, mockValidate } =
+      await getMocks();
+    teamFindFirst.mockResolvedValue({
+      id: "team-1",
+      ownerId: "user-1",
+      roster: "skaven",
+      ruleset: "season_3",
+      initialBudget: 1000,
+      players: [],
+      starPlayers: [],
+    });
+    selectionFindFirst.mockResolvedValue(null);
+    mockValidate.mockReturnValue({
+      valid: false,
+      error: "Star Player non eligible",
+    });
+
+    const req = createReq({
+      params: { id: "team-1" },
+      body: { starPlayerSlug: "morg-n-thorg" },
+    });
+    const res = createRes();
+    await handleHireStarPlayer(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: expect.stringContaining("eligible"),
+    });
+  });
+
+  it("returns 201 ApiSuccess when single star player is hired (no pair)", async () => {
+    const {
+      teamFindFirst,
+      teamFindUnique,
+      selectionFindFirst,
+      starPlayerCreate,
+      mockValidate,
+      mockRequiresPair,
+    } = await getMocks();
+    teamFindFirst.mockResolvedValue({
+      id: "team-1",
+      ownerId: "user-1",
+      roster: "skaven",
+      ruleset: "season_3",
+      initialBudget: 1000,
+      players: [],
+      starPlayers: [],
+    });
+    selectionFindFirst.mockResolvedValue(null);
+    mockValidate.mockReturnValue({
+      valid: true,
+      starPlayer: { slug: "morg-n-thorg", displayName: "Morg", cost: 430 },
+    });
+    mockRequiresPair.mockReturnValue(null);
+    starPlayerCreate.mockResolvedValue({
+      id: "sp-1",
+      starPlayerSlug: "morg-n-thorg",
+      cost: 430,
+      hiredAt: new Date(),
+    });
+    teamFindUnique.mockResolvedValue({
+      id: "team-1",
+      players: [],
+      starPlayers: [],
+    });
+
+    const req = createReq({
+      params: { id: "team-1" },
+      body: { starPlayerSlug: "morg-n-thorg" },
+    });
+    const res = createRes();
+    await handleHireStarPlayer(req, res);
+
+    expect(starPlayerCreate).toHaveBeenCalledWith({
+      data: {
+        teamId: "team-1",
+        starPlayerSlug: "morg-n-thorg",
+        cost: 430,
+      },
+    });
+    expect(res.statusCode).toBe(201);
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: {
+        team: expect.any(Object),
+        newStarPlayers: expect.any(Array),
+        message: expect.stringContaining("recrute"),
+      },
+    });
+  });
+
+  it("returns 409 ApiError on prisma P2002 unique constraint", async () => {
+    const {
+      teamFindFirst,
+      selectionFindFirst,
+      starPlayerCreate,
+      mockValidate,
+      mockRequiresPair,
+    } = await getMocks();
+    teamFindFirst.mockResolvedValue({
+      id: "team-1",
+      ownerId: "user-1",
+      roster: "skaven",
+      ruleset: "season_3",
+      initialBudget: 1000,
+      players: [],
+      starPlayers: [],
+    });
+    selectionFindFirst.mockResolvedValue(null);
+    mockValidate.mockReturnValue({
+      valid: true,
+      starPlayer: { slug: "morg-n-thorg", displayName: "Morg", cost: 430 },
+    });
+    mockRequiresPair.mockReturnValue(null);
+    starPlayerCreate.mockRejectedValue(
+      Object.assign(new Error("Unique constraint failed"), { code: "P2002" }),
+    );
+
+    const req = createReq({
+      params: { id: "team-1" },
+      body: { starPlayerSlug: "morg-n-thorg" },
+    });
+    const res = createRes();
+    await handleHireStarPlayer(req, res);
+
+    expect(res.statusCode).toBe(409);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: expect.stringContaining("deja"),
+    });
+  });
+
+  it("returns 500 ApiError on unexpected throw without P2002", async () => {
+    const { teamFindFirst } = await getMocks();
+    teamFindFirst.mockRejectedValue(new Error("db down"));
+
+    const req = createReq({
+      params: { id: "team-1" },
+      body: { starPlayerSlug: "morg-n-thorg" },
+    });
+    const res = createRes();
+    await handleHireStarPlayer(req, res);
 
     expect(res.statusCode).toBe(500);
     expect(res.payload).toMatchObject({ success: false });
