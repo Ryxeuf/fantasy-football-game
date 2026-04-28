@@ -65,6 +65,11 @@ export const listLeaguesQuerySchema = z.object({
     .enum(["true", "false"])
     .optional()
     .transform((v) => (v === undefined ? undefined : v === "true")),
+  // S25.6 — pagination obligatoire pour limiter le coût mémoire serveur.
+  // Plafond limit=100 pour éviter qu'un client demande l'intégralité de
+  // la table en un seul appel quand la base scale.
+  limit: z.coerce.number().int().min(1).max(100).optional().default(50),
+  offset: z.coerce.number().int().min(0).optional().default(0),
 });
 
 export type CreateLeagueBody = z.infer<typeof createLeagueSchema>;

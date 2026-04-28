@@ -158,9 +158,13 @@ describe("Route: GET /leagues (list)", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("returns the list of leagues with publicOnly default", async () => {
-    mockService.listLeagues.mockResolvedValue([
-      { id: "league-1", name: "A", isPublic: true },
-    ]);
+    // S25.6 — listLeagues retourne maintenant un objet { items, total, limit, offset }
+    mockService.listLeagues.mockResolvedValue({
+      items: [{ id: "league-1", name: "A", isPublic: true }],
+      total: 1,
+      limit: 50,
+      offset: 0,
+    });
     const req = createReq({ query: {} });
     const res = createRes();
     await handleListLeagues(req, res);
