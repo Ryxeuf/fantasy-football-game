@@ -82,16 +82,21 @@ describe("E2E API — routes /match/*", () => {
   it("GET /match/:id/summary retourne un objet stable pour un coach membre", async () => {
     const { coachA, match } = await bootMatch();
 
-    const summary = await get<{
-      id: string;
-      status: string;
-      teams: {
-        local: { name: string; coach: string };
-        visitor: { name: string; coach: string };
-      };
-      acceptances: { local: boolean; visitor: boolean };
-      score: { teamA: number; teamB: number };
-    }>(`/match/${match.id}/summary`, coachA.token);
+    const summary = unwrap(
+      await get<{
+        success: true;
+        data: {
+          id: string;
+          status: string;
+          teams: {
+            local: { name: string; coach: string };
+            visitor: { name: string; coach: string };
+          };
+          acceptances: { local: boolean; visitor: boolean };
+          score: { teamA: number; teamB: number };
+        };
+      }>(`/match/${match.id}/summary`, coachA.token),
+    );
 
     expect(summary.id).toBe(match.id);
     expect(typeof summary.status).toBe("string");
