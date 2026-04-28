@@ -91,6 +91,7 @@ import {
   handleListAvailableStarPlayers,
   handleHireStarPlayer,
   handleUpdatePlayerSkills,
+  handleBuildTeam,
 } from "./team";
 import {
   requiresPair,
@@ -2355,6 +2356,186 @@ describe("Route: PUT /team/:id/players/:playerId/skills (S25.5ac)", () => {
     });
     const res = createRes();
     await handleUpdatePlayerSkills(req, res);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+});
+
+describe("Route: POST /team/build (S25.5ad)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("returns 400 ApiError when roster is not allowed", async () => {
+    const req = createReq({
+      body: {
+        name: "X",
+        roster: "not-a-roster",
+        choices: [],
+      },
+    });
+    const res = createRes();
+    await handleBuildTeam(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: expect.stringContaining("Roster"),
+    });
+  });
+
+  it("returns 400 ApiError when roster not found in DB", async () => {
+    mockGetRosterFromDb.mockResolvedValue(null);
+
+    const req = createReq({
+      body: {
+        name: "X",
+        roster: "skaven",
+        choices: [],
+      },
+    });
+    const res = createRes();
+    await handleBuildTeam(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: expect.stringContaining("Roster"),
+    });
+  });
+
+  it("returns 400 ApiError when a position count violates min/max", async () => {
+    mockGetRosterFromDb.mockResolvedValue({
+      name: "Skaven",
+      budget: 1000,
+      tier: "B",
+      naf: true,
+      positions: [
+        {
+          slug: "skaven_blitzer",
+          displayName: "Blitzer",
+          cost: 90,
+          min: 1,
+          max: 4,
+          ma: 7,
+          st: 3,
+          ag: 3,
+          pa: 4,
+          av: 9,
+          skills: "",
+        },
+      ],
+    });
+
+    const req = createReq({
+      body: {
+        name: "X",
+        roster: "skaven",
+        choices: [{ key: "skaven_blitzer", count: 0 }],
+      },
+    });
+    const res = createRes();
+    await handleBuildTeam(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: expect.stringContaining("Blitzer"),
+    });
+  });
+
+  it("returns 400 ApiError when total players is below 11", async () => {
+    mockGetRosterFromDb.mockResolvedValue({
+      name: "Skaven",
+      budget: 1000,
+      tier: "B",
+      naf: true,
+      positions: [
+        {
+          slug: "skaven_lineman",
+          displayName: "Lineman",
+          cost: 50,
+          min: 0,
+          max: 12,
+          ma: 7,
+          st: 3,
+          ag: 3,
+          pa: 4,
+          av: 8,
+          skills: "",
+        },
+      ],
+    });
+
+    const req = createReq({
+      body: {
+        name: "X",
+        roster: "skaven",
+        choices: [{ key: "skaven_lineman", count: 5 }],
+      },
+    });
+    const res = createRes();
+    await handleBuildTeam(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: expect.stringContaining("11"),
+    });
+  });
+
+  it("returns 400 ApiError when budget is exceeded", async () => {
+    mockGetRosterFromDb.mockResolvedValue({
+      name: "Skaven",
+      budget: 1000,
+      tier: "B",
+      naf: true,
+      positions: [
+        {
+          slug: "skaven_lineman",
+          displayName: "Lineman",
+          cost: 200,
+          min: 0,
+          max: 12,
+          ma: 7,
+          st: 3,
+          ag: 3,
+          pa: 4,
+          av: 8,
+          skills: "",
+        },
+      ],
+    });
+
+    const req = createReq({
+      body: {
+        name: "X",
+        roster: "skaven",
+        teamValue: 1000,
+        choices: [{ key: "skaven_lineman", count: 11 }],
+      },
+    });
+    const res = createRes();
+    await handleBuildTeam(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: expect.stringContaining("Budget"),
+    });
+  });
+
+  it("returns 500 ApiError when getRosterFromDb throws", async () => {
+    mockGetRosterFromDb.mockRejectedValue(new Error("db down"));
+
+    const req = createReq({
+      body: {
+        name: "X",
+        roster: "skaven",
+        choices: [],
+      },
+    });
+    const res = createRes();
+    await handleBuildTeam(req, res);
 
     expect(res.statusCode).toBe(500);
     expect(res.payload).toMatchObject({ success: false });
