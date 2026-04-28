@@ -43,10 +43,15 @@ export class TeamBuilderPage {
 
   /**
    * Clique N fois sur le bouton "+" d'une position donnée.
-   * Attend que le bouton soit visible avant chaque clic.
+   * Le team builder rend chaque bouton 2 fois (mobile + desktop) — on filtre
+   * sur la version visible dans la viewport courante pour éviter de cibler
+   * la version cachée par `display:none`.
    */
   async addPlayers(positionSlug: string, count: number): Promise<void> {
-    const addButton = this.page.getByTestId(`position-add-${positionSlug}`);
+    const addButton = this.page
+      .getByTestId(`position-add-${positionSlug}`)
+      .filter({ visible: true })
+      .first();
     for (let i = 0; i < count; i++) {
       await addButton.click();
     }
@@ -109,9 +114,13 @@ export class TeamBuilderPage {
       await this.setStepperValue("staff-dedicated-fans", staff.dedicatedFans);
     }
     if (staff.apothecary !== undefined) {
-      // L'input apothécaire est visuellement caché derrière un toggle,
-      // donc on utilise setChecked qui cible directement l'input.
-      await this.apothecaryCheckbox.setChecked(staff.apothecary);
+      // L'input apothécaire est visuellement caché derrière un toggle
+      // (`<input class="sr-only">` couvert par un `<label>` cliquable).
+      // `setChecked` simule un click qui peut être intercepté par le label
+      // — on force l'action pour cibler l'input directement.
+      await this.apothecaryCheckbox.setChecked(staff.apothecary, {
+        force: true,
+      });
     }
   }
 }

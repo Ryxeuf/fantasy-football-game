@@ -25,19 +25,17 @@ export function FeatureFlagProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState<boolean>(true);
 
   const refresh = useCallback(async () => {
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
-    if (!token) {
-      setFlags(new Set());
-      setLoading(false);
-      return;
-    }
+    // /api/feature-flags/me accepte les visiteurs anonymes : il retourne
+    // les flags globalement activés (et tous les flags si
+    // FEATURE_FLAGS_FORCE_ENABLED=true côté serveur). On l'appelle donc
+    // même sans `auth_token` pour que les pages publiques (/leaderboard,
+    // /play en mode discovery, etc.) reçoivent l'autorisation correcte.
     try {
       const keys = await fetchMyFlags();
       setFlags(new Set(keys));
     } catch (error: unknown) {
-      // L'utilisateur n'est peut-être pas connecté ou le token est expiré —
-      // on reste silencieux et on renvoie un set vide.
+      // L'API peut échouer (réseau, token expiré 401) — on reste silencieux
+      // et on renvoie un set vide pour ne pas bloquer la page.
       setFlags(new Set());
     } finally {
       setLoading(false);

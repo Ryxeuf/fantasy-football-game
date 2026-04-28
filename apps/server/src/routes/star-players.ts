@@ -12,13 +12,28 @@ import { serverLog } from "../utils/server-log";
 const router = Router();
 
 /**
+ * Le schéma SQLite (utilisé en CI/E2E) n'inclut pas le modèle StarPlayer
+ * — il est réservé au schéma Postgres complet. On expose un accès safe
+ * pour ne pas faire crasher les routes (et donc les pages publiques)
+ * dans cet environnement réduit.
+ */
+function getStarPlayerModel(): any | null {
+  const model = (prisma as unknown as { starPlayer?: any }).starPlayer;
+  return model ?? null;
+}
+
+/**
  * GET /api/star-players
  * Obtenir la liste complète des star players depuis la base de données
  */
 router.get("/", async (req, res) => {
   try {
     const ruleset = resolveRuleset(req.query.ruleset as string | undefined);
-    const starPlayers = await prisma.starPlayer.findMany({
+    const starPlayerModel = getStarPlayerModel();
+    if (!starPlayerModel) {
+      return res.json({ success: true, count: 0, data: [] });
+    }
+    const starPlayers = await starPlayerModel.findMany({
       where: { ruleset },
       include: {
         skills: {
@@ -69,7 +84,14 @@ router.get("/", async (req, res) => {
 router.get("/:slug", async (req, res) => {
   try {
     const { slug } = req.params;
-    const starPlayer = await prisma.starPlayer.findUnique({
+    const starPlayerModel = getStarPlayerModel();
+    if (!starPlayerModel) {
+      return res.status(404).json({
+        success: false,
+        error: "Star player not found",
+      });
+    }
+    const starPlayer = await starPlayerModel.findUnique({
       where: { slug },
       include: {
         skills: {
@@ -153,13 +175,25 @@ router.get("/available/:roster", async (req, res) => {
 
     // Récupérer les règles régionales depuis le game-engine (pour l'instant)
     const regionalRules = getRegionalRulesForTeam(roster, ruleset);
-    
+
+    const starPlayerModel = getStarPlayerModel();
+    if (!starPlayerModel) {
+      return res.json({
+        success: true,
+        roster,
+        ruleset,
+        regionalRules,
+        count: 0,
+        starPlayers: [],
+      });
+    }
+
     // Récupérer tous les star players disponibles pour ce roster
     // Un star player est disponible si :
     // - hirableBy contient "all"
     // - hirableBy contient le slug du roster
     // - hirableBy contient une règle régionale qui correspond au roster
-    const starPlayers = await prisma.starPlayer.findMany({
+    const starPlayers = await starPlayerModel.findMany({
       where: {
         OR: [
           { hirableBy: { some: { rule: "all" } } },
@@ -287,7 +321,16 @@ router.get("/search", async (req, res) => {
       where.cost = { ...where.cost, lte: Number(maxCost) };
     }
 
-    const starPlayers = await prisma.starPlayer.findMany({
+    const starPlayerModel = getStarPlayerModel();
+    if (!starPlayerModel) {
+      return res.json({
+        success: true,
+        count: 0,
+        filters: { q, skill, minCost, maxCost },
+        data: [],
+      });
+    }
+    const starPlayers = await starPlayerModel.findMany({
       where,
       include: {
         skills: {

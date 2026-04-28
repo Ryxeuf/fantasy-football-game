@@ -29,7 +29,11 @@ import {
   adminFeatureFlagsRouter,
 } from "./routes/feature-flags";
 import { requireFeatureFlag } from "./middleware/requireFeatureFlag";
-import { ONLINE_PLAY_FLAG } from "./services/featureFlags";
+import {
+  AI_TRAINING_FLAG,
+  ONLINE_PLAY_FLAG,
+  invalidateFeatureFlagsCache,
+} from "./services/featureFlags";
 import dotenv from "dotenv";
 import { execSync } from "node:child_process";
 import { prisma } from "./prisma";
@@ -419,17 +423,22 @@ if (process.env.TEST_SQLITE === "1") {
         for (const r of rosters) {
           const roster = await prisma.roster.upsert({
             where: { slug_ruleset: { slug: r.slug, ruleset } },
-            update: {},
+            update: { budget: 1000 },
             create: {
               slug: r.slug,
               ruleset,
               name: r.name,
               nameEn: r.nameEn,
-              budget: 1_000_000,
+              // Budget en kpo, comme dans `season3-reference-data.ts`.
+              budget: 1000,
               tier: r.tier,
             },
           });
 
+          // Cost et budget sont exprimés en kpo (kilo-pièces d'or), unité
+          // utilisée par le team builder côté front (ex: Lineman = 50, budget
+          // équipe = 1000). Aligner sur cette convention pour que les boutons
+          // "+ Ajouter" soient cliquables (cost <= teamValue) dans l'E2E UI.
           await prisma.position.upsert({
             where: {
               rosterId_slug: {
@@ -437,12 +446,12 @@ if (process.env.TEST_SQLITE === "1") {
                 slug: `${r.slug}_lineman`,
               },
             },
-            update: {},
+            update: { cost: 50, displayName: "Lineman" },
             create: {
               rosterId: roster.id,
               slug: `${r.slug}_lineman`,
               displayName: "Lineman",
-              cost: 50_000,
+              cost: 50,
               min: 0,
               max: 16, // getLinemanStats prend la position avec le plus grand max
               ma: 6,
@@ -455,10 +464,41 @@ if (process.env.TEST_SQLITE === "1") {
         }
       }
 
+      // Seed les feature flags de base. Les pages /play, /lobby, /waiting,
+      // /leaderboard, etc. sont gatées par <OnlinePlayGate> qui exige le flag
+      // `online_play`. En tests on s'appuie sur FEATURE_FLAGS_FORCE_ENABLED=true
+      // pour bypass la vérification ; mais l'API /api/feature-flags/me ne
+      // renvoie que les clés présentes en base, donc sans cette seed la
+      // sentinelle côté client reste à `loading=false, flags=∅` et la gate
+      // affiche "fonctionnalité indisponible".
+      const flagSeeds: Array<{ key: string; description: string }> = [
+        {
+          key: ONLINE_PLAY_FLAG,
+          description: "Active toute la zone multijoueur (lobby, leaderboard, etc.)",
+        },
+        {
+          key: AI_TRAINING_FLAG,
+          description: "Active les matchs d'entrainement contre l'IA",
+        },
+      ];
+      for (const flag of flagSeeds) {
+        await prisma.featureFlag.upsert({
+          where: { key: flag.key },
+          update: { enabled: true },
+          create: {
+            key: flag.key,
+            description: flag.description,
+            enabled: true,
+          },
+        });
+      }
+      invalidateFeatureFlagsCache();
+
       return res.json({
         ok: true,
         rulesets,
         rosters: rosters.map((r) => r.slug),
+        flags: flagSeeds.map((f) => f.key),
       });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);

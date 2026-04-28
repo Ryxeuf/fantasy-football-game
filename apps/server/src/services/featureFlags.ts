@@ -115,11 +115,13 @@ export async function isEnabled(
 }
 
 /**
- * Liste toutes les clés actives pour un utilisateur donné.
- * Les admins (et le mode "force") voient TOUTES les clés de flags existantes.
+ * Liste toutes les clés actives pour un utilisateur donné (ou un visiteur
+ * anonyme si `userId` n'est pas fourni). Les admins (et le mode "force")
+ * voient TOUTES les clés de flags existantes. Les visiteurs anonymes ne
+ * voient que les flags globalement activés.
  */
 export async function listEnabledKeysForUser(
-  userId: string,
+  userId?: string,
   context?: EvaluationContext,
 ): Promise<string[]> {
   const flags = await getAllFlagsCached();
@@ -127,6 +129,9 @@ export async function listEnabledKeysForUser(
     return flags.map((f) => f.key).sort();
   }
   const globallyEnabled = flags.filter((f) => f.enabled).map((f) => f.key);
+  if (!userId) {
+    return globallyEnabled.slice().sort();
+  }
   const overrides = await prisma.featureFlagUser.findMany({
     where: { userId },
     include: { flag: { select: { key: true, enabled: true } } },
