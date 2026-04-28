@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { resetDb, get, rawPost } from "../helpers/api";
+import { resetDb, get, rawPost, unwrap } from "../helpers/api";
 import { bootMatch } from "../helpers/factories";
 
 /**
@@ -50,9 +50,11 @@ describe("E2E API — phase de setup", () => {
     const deadline = Date.now() + 12_000;
     while (Date.now() < deadline) {
       try {
-        const res = await get<SetupStateResponse>(
-          `/match/${matchId}/state`,
-          coachToken,
+        const res = unwrap(
+          await get<{ success: true; data: SetupStateResponse }>(
+            `/match/${matchId}/state`,
+            coachToken,
+          ),
         );
         if (
           res.gameState?.preMatch?.phase === "setup" ||
@@ -164,10 +166,18 @@ describe("E2E API — phase de setup", () => {
       // la transition idle → setup s'exécutait sans persistance dans /state,
       // donc deux appels concurrents pouvaient renvoyer des gameState
       // distincts (joueurs ou positions différents) ou un 500.
-      const [resA, resB] = await Promise.all([
-        get<SetupStateResponse>(`/match/${match.id}/state`, coachA.token),
-        get<SetupStateResponse>(`/match/${match.id}/state`, coachB.token),
+      const [envA, envB] = await Promise.all([
+        get<{ success: true; data: SetupStateResponse }>(
+          `/match/${match.id}/state`,
+          coachA.token,
+        ),
+        get<{ success: true; data: SetupStateResponse }>(
+          `/match/${match.id}/state`,
+          coachB.token,
+        ),
       ]);
+      const resA = unwrap(envA);
+      const resB = unwrap(envB);
 
       const idsA = resA.gameState.players.map((p) => p.id).sort();
       const idsB = resB.gameState.players.map((p) => p.id).sort();

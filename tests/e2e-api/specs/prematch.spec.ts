@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { resetDb, get } from "../helpers/api";
+import { resetDb, get, unwrap } from "../helpers/api";
 import {
   bootMatch,
   createTwoCoaches,
@@ -71,9 +71,12 @@ describe("E2E API — pré-match automatisé", () => {
     let lastPhase: string | undefined;
     while (Date.now() < deadline) {
       try {
-        const state = await get<{
-          gameState: { preMatch?: { phase?: string } };
-        }>(`/match/${match.id}/state`, coachA.token);
+        const state = unwrap(
+          await get<{
+            success: true;
+            data: { gameState: { preMatch?: { phase?: string } } };
+          }>(`/match/${match.id}/state`, coachA.token),
+        );
         lastPhase = state.gameState?.preMatch?.phase;
         if (
           lastPhase === "inducements" ||
