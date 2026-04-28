@@ -201,11 +201,13 @@ export function useGameState(matchId: string): GameStateInfo {
       try {
         const token = localStorage.getItem("auth_token");
         if (!token) return;
-        const res = await fetch(`${API_BASE}/match/${matchId}/state`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json().catch(() => ({}) as any);
-        if (res.ok && data?.gameState) {
+        const data = await apiRequest<{
+          gameState?: unknown;
+          matchStatus?: string;
+          myTeamSide?: "A" | "B";
+          isMyTurn?: boolean;
+        }>(`/match/${matchId}/state`);
+        if (data?.gameState) {
           setState(normalizeState(data.gameState));
           setStateSource("server");
           if (data.matchStatus) setMatchStatus(data.matchStatus);
@@ -322,22 +324,20 @@ export function useGameState(matchId: string): GameStateInfo {
           failureCount = Math.min(failureCount + 1, 30);
           return;
         }
-        const res = await fetch(`${API_BASE}/match/${matchId}/state`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data?.gameState) {
-            setState(normalizeState(data.gameState));
-            setStateSource("server");
-            if (data.matchStatus) setMatchStatus(data.matchStatus);
-            if (data.myTeamSide) setMyTeamSide(data.myTeamSide);
-            if (typeof data.isMyTurn === "boolean") setIsMyTurn(data.isMyTurn);
-          }
-          failureCount = 0;
-        } else {
-          failureCount = Math.min(failureCount + 1, 30);
+        const data = await apiRequest<{
+          gameState?: unknown;
+          matchStatus?: string;
+          myTeamSide?: "A" | "B";
+          isMyTurn?: boolean;
+        }>(`/match/${matchId}/state`);
+        if (data?.gameState) {
+          setState(normalizeState(data.gameState));
+          setStateSource("server");
+          if (data.matchStatus) setMatchStatus(data.matchStatus);
+          if (data.myTeamSide) setMyTeamSide(data.myTeamSide);
+          if (typeof data.isMyTurn === "boolean") setIsMyTurn(data.isMyTurn);
         }
+        failureCount = 0;
       } catch {
         failureCount = Math.min(failureCount + 1, 30);
       }

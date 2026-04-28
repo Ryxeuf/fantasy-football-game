@@ -660,8 +660,11 @@ export async function handleGetMatchSummary(
 
 router.get("/:id/summary", authUser, handleGetMatchSummary);
 
-// Nouvel endpoint pour l'état du jeu
-router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
+// Nouvel endpoint pour l'état du jeu (S25.5l — ApiResponse<T>)
+export async function handleGetMatchState(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
   try {
     const matchId = req.params.id;
 
@@ -684,16 +687,24 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
       where: { id: matchId },
       include: { turns: { orderBy: { number: "asc" } } },
     });
-    if (!match) return res.status(404).json({ error: "Partie introuvable" });
+    if (!match) {
+      sendError(res, "Partie introuvable", 404);
+      return;
+    }
 
-    if (match.status === "pending")
-      return res.status(400).json({ error: "Partie pas encore prête" });
+    if (match.status === "pending") {
+      sendError(res, "Partie pas encore prête", 400);
+      return;
+    }
 
     let gameState: any;
 
     // Pour prematch-setup, chercher le dernier turn avec gameState
     // (validate-setup, pre-match-sequence, inducements, ou coin-toss)
-    const startTurn = match.turns.find((t: any) => t.payload?.type === "start" || t.payload?.type === "coin-toss");
+    const startTurn = match.turns.find(
+      (t: any) =>
+        t.payload?.type === "start" || t.payload?.type === "coin-toss",
+    );
     if (match.status === "prematch-setup" || match.status === "active") {
       // L'état canonique est TOUJOURS le dernier turn avec gameState : il
       // intègre les étapes post-setup (place-kickoff-ball, kick-deviation,
@@ -726,8 +737,10 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
         },
         orderBy: { createdAt: "asc" },
       });
-      if (selections.length < 2)
-        return res.status(400).json({ error: "Équipes pas prêtes" });
+      if (selections.length < 2) {
+        sendError(res, "Équipes pas prêtes", 400);
+        return;
+      }
 
       const [s1, s2] = selections;
 
@@ -747,7 +760,8 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
 
       if (!teamA || !teamB) {
         serverLog.log("Teams not found:", s1.teamId, s2.teamId);
-        return res.status(400).json({ error: "Équipes non trouvées" });
+        sendError(res, "Équipes non trouvées", 400);
+        return;
       }
 
       const teamAData = teamA.players
@@ -803,18 +817,24 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
     } else {
       // Pour active, dernier turn
       const lastTurn = match.turns[match.turns.length - 1];
-      if (!lastTurn.payload?.gameState)
-        return res.status(500).json({ error: "État non trouvé" });
+      if (!lastTurn?.payload?.gameState) {
+        sendError(res, "État non trouvé", 500);
+        return;
+      }
       const gs = lastTurn.payload.gameState;
       gameState = typeof gs === "string" ? JSON.parse(gs) : gs;
     }
 
     // Pour les matchs actifs, enrichir la réponse avec des métadonnées
     if (match.status === "active" && gameState) {
-      const userTeamSide = await getUserTeamSide(prisma as any, matchId, req.user!.id);
+      const userTeamSide = await getUserTeamSide(
+        prisma as any,
+        matchId,
+        req.user!.id,
+      );
       const phase = gameState.preMatch?.phase;
       const isMyTurn = userTeamSide
-        ? (phase === "setup" || phase === "kickoff-sequence")
+        ? phase === "setup" || phase === "kickoff-sequence"
           ? gameState.preMatch?.currentCoach === userTeamSide
           : gameState.currentPlayer === userTeamSide
         : false;
@@ -825,7 +845,7 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
         .reverse()
         .find((t: any) => t.payload?.type === "gameplay-move");
 
-      return res.json({
+      sendSuccess(res, {
         gameState,
         matchStatus: match.status,
         currentTeam: gameState.currentPlayer,
@@ -834,26 +854,36 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
         moveCount,
         lastMoveAt: lastMoveTurn?.createdAt || null,
       });
+      return;
     }
 
     // Pure read for prematch-setup: the idle → setup transition was already
     // persisted by ensureSetupPhasePersisted at the top of this handler.
     if (match.status === "prematch-setup") {
-      const userTeamSide = await getUserTeamSide(prisma as any, matchId, req.user!.id);
-      return res.json({
+      const userTeamSide = await getUserTeamSide(
+        prisma as any,
+        matchId,
+        req.user!.id,
+      );
+      sendSuccess(res, {
         gameState,
         matchStatus: match.status,
         myTeamSide: userTeamSide,
-        isMyTurn: userTeamSide ? gameState.preMatch?.currentCoach === userTeamSide : false,
+        isMyTurn: userTeamSide
+          ? gameState?.preMatch?.currentCoach === userTeamSide
+          : false,
       });
+      return;
     }
 
-    res.json({ gameState });
-  } catch (e: any) {
+    sendSuccess(res, { gameState });
+  } catch (e: unknown) {
     serverLog.error(e);
-    res.status(500).json({ error: "Erreur serveur" });
+    sendError(res, "Erreur serveur", 500);
   }
-});
+}
+
+router.get("/:id/state", authUser, handleGetMatchState);
 
 // Valider le placement des joueurs en phase setup
 router.post(
