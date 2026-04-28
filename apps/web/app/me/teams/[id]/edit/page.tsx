@@ -255,13 +255,17 @@ export default function TeamEditPage() {
     setError(null);
 
     try {
-      await putJSON(`/team/${id}`, {
-        name: teamName.trim(),
-        players: players.map(p => ({
-          id: p.id,
-          name: p.name.trim(),
-          number: p.number
-        }))
+      // S25.5y — apiRequest unwrap l'enveloppe ApiResponse<T>
+      await apiRequest<{ team: unknown }>(`/team/${id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          name: teamName.trim(),
+          players: players.map(p => ({
+            id: p.id,
+            name: p.name.trim(),
+            number: p.number
+          }))
+        }),
       });
 
       toast.success(t.teams.teamSavedToast);

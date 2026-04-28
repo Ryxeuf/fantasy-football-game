@@ -27,6 +27,7 @@ vi.mock("../prisma", () => ({
     teamPlayer: {
       delete: vi.fn(),
       create: vi.fn(),
+      update: vi.fn(),
     },
     teamStarPlayer: {
       deleteMany: vi.fn(),
@@ -84,6 +85,7 @@ import {
   handleDeleteTeamStarPlayer,
   handlePurchase,
   handleChooseTeam,
+  handleUpdateTeam,
 } from "./team";
 import { requiresPair } from "../utils/star-player-validation";
 import { updateTeamValues } from "../utils/team-values";
@@ -1453,6 +1455,172 @@ describe("Route: POST /team/choose (S25.5x)", () => {
     const req = createReq({ body: { matchId: "m-1", teamId: "t-1" } });
     const res = createRes();
     await handleChooseTeam(req, res);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+});
+
+describe("Route: PUT /team/:id (S25.5y)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  async function getMocks() {
+    const prismaMock = vi.mocked(await import("../prisma")).prisma;
+    return {
+      teamFindFirst: prismaMock.team.findFirst as ReturnType<typeof vi.fn>,
+      selectionFindFirst: prismaMock.teamSelection.findFirst as ReturnType<
+        typeof vi.fn
+      >,
+      transaction: prismaMock.$transaction as ReturnType<typeof vi.fn>,
+    };
+  }
+
+  function makeTeamWithPlayers() {
+    return {
+      id: "team-1",
+      ownerId: "user-1",
+      name: "Original Name",
+      players: [
+        { id: "p-1", name: "Joueur A", number: 1 },
+        { id: "p-2", name: "Joueur B", number: 2 },
+      ],
+    };
+  }
+
+  it("returns 404 ApiError when team not found", async () => {
+    const { teamFindFirst } = await getMocks();
+    teamFindFirst.mockResolvedValue(null);
+
+    const req = createReq({
+      params: { id: "team-1" },
+      body: { name: "x", players: [] },
+    });
+    const res = createRes();
+    await handleUpdateTeam(req, res);
+
+    expect(res.statusCode).toBe(404);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+
+  it("returns 400 ApiError when team is engaged in active match", async () => {
+    const { teamFindFirst, selectionFindFirst } = await getMocks();
+    teamFindFirst.mockResolvedValue(makeTeamWithPlayers());
+    selectionFindFirst.mockResolvedValue({ id: "sel-1" });
+
+    const req = createReq({
+      params: { id: "team-1" },
+      body: { players: [] },
+    });
+    const res = createRes();
+    await handleUpdateTeam(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+
+  it("returns 400 ApiError when provided player ids contain invalid ids", async () => {
+    const { teamFindFirst, selectionFindFirst } = await getMocks();
+    teamFindFirst.mockResolvedValue(makeTeamWithPlayers());
+    selectionFindFirst.mockResolvedValue(null);
+
+    const req = createReq({
+      params: { id: "team-1" },
+      body: {
+        players: [
+          { id: "p-1", name: "A", number: 1 },
+          { id: "p-rogue", name: "X", number: 99 },
+        ],
+      },
+    });
+    const res = createRes();
+    await handleUpdateTeam(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: expect.stringContaining("invalides"),
+    });
+  });
+
+  it("returns 400 ApiError when player numbers are not unique", async () => {
+    const { teamFindFirst, selectionFindFirst } = await getMocks();
+    teamFindFirst.mockResolvedValue(makeTeamWithPlayers());
+    selectionFindFirst.mockResolvedValue(null);
+
+    const req = createReq({
+      params: { id: "team-1" },
+      body: {
+        players: [
+          { id: "p-1", name: "A", number: 5 },
+          { id: "p-2", name: "B", number: 5 },
+        ],
+      },
+    });
+    const res = createRes();
+    await handleUpdateTeam(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: expect.stringContaining("uniques"),
+    });
+  });
+
+  it("returns ApiSuccess with optimistic team payload after transaction", async () => {
+    const { teamFindFirst, selectionFindFirst, transaction } =
+      await getMocks();
+    teamFindFirst.mockResolvedValue(makeTeamWithPlayers());
+    selectionFindFirst.mockResolvedValue(null);
+    transaction.mockResolvedValue([]);
+
+    const req = createReq({
+      params: { id: "team-1" },
+      body: {
+        name: "  New Name  ",
+        players: [
+          { id: "p-1", name: "  A renamed ", number: 10 },
+          { id: "p-2", name: "B renamed", number: 11 },
+        ],
+      },
+    });
+    const res = createRes();
+    await handleUpdateTeam(req, res);
+
+    expect(transaction).toHaveBeenCalled();
+    expect(res.statusCode).toBe(200);
+    const payload = res.payload as {
+      success: boolean;
+      data: {
+        team: {
+          name: string;
+          players: Array<{ id: string; name: string; number: number }>;
+        };
+      };
+    };
+    expect(payload.success).toBe(true);
+    expect(payload.data.team.name).toBe("New Name");
+    expect(payload.data.team.players[0]).toMatchObject({
+      id: "p-1",
+      name: "A renamed",
+      number: 10,
+    });
+    expect(payload.data.team.players[1]).toMatchObject({
+      id: "p-2",
+      name: "B renamed",
+      number: 11,
+    });
+  });
+
+  it("returns 500 ApiError when prisma throws", async () => {
+    const { teamFindFirst } = await getMocks();
+    teamFindFirst.mockRejectedValue(new Error("db down"));
+
+    const req = createReq({
+      params: { id: "team-1" },
+      body: { players: [] },
+    });
+    const res = createRes();
+    await handleUpdateTeam(req, res);
 
     expect(res.statusCode).toBe(500);
     expect(res.payload).toMatchObject({ success: false });

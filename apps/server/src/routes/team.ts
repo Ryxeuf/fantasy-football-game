@@ -1011,7 +1011,11 @@ export async function handleRecalculateTeam(
 
 router.post("/:id/recalculate", authUser, handleRecalculateTeam);
 
-router.put("/:id", authUser, validate(updateTeamSchema), async (req: AuthenticatedRequest, res) => {
+// Endpoint pour mettre a jour une equipe (S25.5y — ApiResponse<T>)
+export async function handleUpdateTeam(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
   const teamId = req.params.id;
   const { players, name } = req.body as {
     players: Array<{ id: string; name: string; number: number }>;
@@ -1019,81 +1023,87 @@ router.put("/:id", authUser, validate(updateTeamSchema), async (req: Authenticat
   };
 
   try {
-    // Vérifier que l'équipe appartient à l'utilisateur
     const team = await prisma.team.findFirst({
       where: { id: teamId, ownerId: req.user!.id },
-      include: { players: true }
+      include: { players: true },
     });
 
     if (!team) {
-      return res.status(404).json({ error: "Équipe introuvable" });
+      sendError(res, "Equipe introuvable", 404);
+      return;
     }
 
-    // Vérifier que l'équipe n'est pas engagée dans un match actif
     const activeSelection = await prisma.teamSelection.findFirst({
-      where: { 
+      where: {
         teamId: teamId,
-        match: { status: { in: ["pending", "active"] } }
-      }
+        match: { status: { in: ["pending", "active"] } },
+      },
     });
 
     if (activeSelection) {
-      return res.status(400).json({ 
-        error: "Impossible de modifier cette équipe car elle est engagée dans un match en cours" 
-      });
+      sendError(
+        res,
+        "Impossible de modifier cette equipe car elle est engagee dans un match en cours",
+        400,
+      );
+      return;
     }
 
-    // Validation des données
     const playerIds = team.players.map((p: any) => p.id);
     const providedPlayerIds = players.map((p: any) => p.id);
-    
-    // Vérifier que tous les joueurs fournis appartiennent à cette équipe
-    const invalidPlayerIds = providedPlayerIds.filter((id: any) => !playerIds.includes(id));
+
+    const invalidPlayerIds = providedPlayerIds.filter(
+      (id: any) => !playerIds.includes(id),
+    );
     if (invalidPlayerIds.length > 0) {
-      return res.status(400).json({ 
-        error: `Joueurs invalides: ${invalidPlayerIds.join(", ")}` 
-      });
+      sendError(res, `Joueurs invalides: ${invalidPlayerIds.join(", ")}`, 400);
+      return;
     }
 
-    // Vérifier que tous les joueurs de l'équipe sont présents
-    const missingPlayerIds = playerIds.filter((id: any) => !providedPlayerIds.includes(id));
+    const missingPlayerIds = playerIds.filter(
+      (id: any) => !providedPlayerIds.includes(id),
+    );
     if (missingPlayerIds.length > 0) {
-      return res.status(400).json({ 
-        error: `Joueurs manquants: ${missingPlayerIds.join(", ")}` 
-      });
+      sendError(res, `Joueurs manquants: ${missingPlayerIds.join(", ")}`, 400);
+      return;
     }
 
-    // Validation des numéros (unique dans l'équipe, entre 1-99)
-    const numbers = players.map(p => p.number);
+    const numbers = players.map((p) => p.number);
     const uniqueNumbers = new Set(numbers);
     if (uniqueNumbers.size !== numbers.length) {
-      return res.status(400).json({ error: "Les numéros de joueurs doivent être uniques" });
+      sendError(res, "Les numeros de joueurs doivent etre uniques", 400);
+      return;
     }
 
-    const invalidNumbers = numbers.filter(n => n < 1 || n > 99 || !Number.isInteger(n));
+    const invalidNumbers = numbers.filter(
+      (n) => n < 1 || n > 99 || !Number.isInteger(n),
+    );
     if (invalidNumbers.length > 0) {
-      return res.status(400).json({ error: "Les numéros doivent être des entiers entre 1 et 99" });
+      sendError(res, "Les numeros doivent etre des entiers entre 1 et 99", 400);
+      return;
     }
 
-    // Validation des noms (non vides)
-    const emptyNames = players.filter(p => !p.name || p.name.trim() === "");
+    const emptyNames = players.filter((p) => !p.name || p.name.trim() === "");
     if (emptyNames.length > 0) {
-      return res.status(400).json({ error: "Tous les joueurs doivent avoir un nom" });
+      sendError(res, "Tous les joueurs doivent avoir un nom", 400);
+      return;
     }
 
-    // Validation du nom de l'équipe si fourni
     if (name !== undefined) {
       if (!name || name.trim() === "") {
-        return res.status(400).json({ error: "Le nom de l'équipe ne peut pas être vide" });
+        sendError(res, "Le nom de l'equipe ne peut pas etre vide", 400);
+        return;
       }
       if (name.trim().length > 100) {
-        return res.status(400).json({ error: "Le nom de l'équipe ne peut pas dépasser 100 caractères" });
+        sendError(
+          res,
+          "Le nom de l'equipe ne peut pas depasser 100 caracteres",
+          400,
+        );
+        return;
       }
     }
 
-    // Batch every write into a single Prisma transaction so Postgres
-    // sees one pipelined round-trip instead of (N players + 1 team)
-    // separate queries.
     const operations: Prisma.PrismaPromise<unknown>[] = [];
     if (name !== undefined) {
       operations.push(
@@ -1118,8 +1128,6 @@ router.put("/:id", authUser, validate(updateTeamSchema), async (req: Authenticat
       await prisma.$transaction(operations);
     }
 
-    // Build the response from the state we already have in memory to
-    // avoid a third round-trip — nothing else on the team mutates here.
     const updates = new Map(
       players.map((p) => [
         p.id,
@@ -1135,12 +1143,14 @@ router.put("/:id", authUser, validate(updateTeamSchema), async (req: Authenticat
       }),
     };
 
-    res.json({ team: updatedTeam });
-  } catch (e: any) {
-    serverLog.error("Erreur lors de la modification de l'équipe:", e);
-    return res.status(500).json({ error: "Erreur serveur" });
+    sendSuccess(res, { team: updatedTeam });
+  } catch (e: unknown) {
+    serverLog.error("Erreur lors de la modification de l'equipe:", e);
+    sendError(res, "Erreur serveur", 500);
   }
-});
+}
+
+router.put("/:id", authUser, validate(updateTeamSchema), handleUpdateTeam);
 
 // Endpoint pour ajouter un joueur à une équipe
 router.post("/:id/players", authUser, validate(addPlayerSchema), async (req: AuthenticatedRequest, res) => {
