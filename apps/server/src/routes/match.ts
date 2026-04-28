@@ -662,26 +662,20 @@ router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
     // (validate-setup, pre-match-sequence, inducements, ou coin-toss)
     const startTurn = match.turns.find((t: any) => t.payload?.type === "start" || t.payload?.type === "coin-toss");
     if (match.status === "prematch-setup" || match.status === "active") {
-      // Prefer the latest validate-setup turn (carries player placements),
-      // then the canonical state from `ensureSetupPhasePersisted`, then any
-      // gameState turn as a last resort.
-      const latestValidateSetup = [...match.turns]
-        .reverse()
-        .find(
-          (t: any) =>
-            t.payload?.type === "validate-setup" && t.payload?.gameState,
-        );
+      // L'état canonique est TOUJOURS le dernier turn avec gameState : il
+      // intègre les étapes post-setup (place-kickoff-ball, kick-deviation,
+      // resolve-kickoff-event, gameplay-move). Préférer un `validate-setup`
+      // plus ancien renvoyait un état figé au client après que la séquence
+      // kickoff ait progressé côté serveur, bloquant le joueur sur l'écran
+      // "En attente du placement du ballon".
       const latestStateTurn = [...match.turns]
         .reverse()
         .find((t: any) => t.payload?.gameState);
-      if (latestValidateSetup) {
-        const gs = latestValidateSetup.payload.gameState;
+      if (latestStateTurn) {
+        const gs = latestStateTurn.payload.gameState;
         gameState = typeof gs === "string" ? JSON.parse(gs) : gs;
       } else if (ensured) {
         gameState = ensured.gameState;
-      } else if (latestStateTurn) {
-        const gs = latestStateTurn.payload.gameState;
-        gameState = typeof gs === "string" ? JSON.parse(gs) : gs;
       } else if (startTurn) {
         const gs = startTurn.payload.gameState;
         gameState = typeof gs === "string" ? JSON.parse(gs) : gs;
