@@ -1377,38 +1377,47 @@ export async function handleDeleteTeamPlayer(
 
 router.delete("/:id/players/:playerId", authUser, handleDeleteTeamPlayer);
 
-// Endpoint pour ajouter une compétence à un joueur (level-up avec validation SPP)
-router.put("/:id/players/:playerId/skills", authUser, validate(updatePlayerSkillsSchema), async (req: AuthenticatedRequest, res) => {
+// Endpoint pour ajouter une competence a un joueur (S25.5ac — ApiResponse<T>)
+export async function handleUpdatePlayerSkills(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
   const teamId = req.params.id;
   const playerId = req.params.playerId;
-  const { skillSlug: clientSkillSlug, advancementType, skillCategory } = req.body as {
+  const {
+    skillSlug: clientSkillSlug,
+    advancementType,
+    skillCategory,
+  } = req.body as {
     skillSlug?: string;
     advancementType: AdvancementType;
     skillCategory?: string;
   };
 
   try {
-    const isRandom = advancementType === 'random-primary' || advancementType === 'random-secondary';
+    const isRandom =
+      advancementType === "random-primary" ||
+      advancementType === "random-secondary";
 
-    // For chosen types, skillSlug is required; for random, skillCategory is required
     if (!isRandom && !clientSkillSlug) {
-      return res.status(400).json({ error: "skillSlug est requis pour un avancement choisi" });
+      sendError(res, "skillSlug est requis pour un avancement choisi", 400);
+      return;
     }
     if (isRandom && !skillCategory) {
-      return res.status(400).json({ error: "skillCategory est requis pour un avancement aléatoire" });
+      sendError(res, "skillCategory est requis pour un avancement aleatoire", 400);
+      return;
     }
 
-    // Verify team ownership
     const team = await prisma.team.findFirst({
       where: { id: teamId, ownerId: req.user!.id },
       include: { players: true },
     });
 
     if (!team) {
-      return res.status(404).json({ error: "Équipe introuvable" });
+      sendError(res, "Equipe introuvable", 404);
+      return;
     }
 
-    // Verify team not in active match
     const activeSelection = await prisma.teamSelection.findFirst({
       where: {
         teamId,
@@ -1417,96 +1426,113 @@ router.put("/:id/players/:playerId/skills", authUser, validate(updatePlayerSkill
     });
 
     if (activeSelection) {
-      return res.status(400).json({
-        error: "Impossible de modifier cette équipe car elle est engagée dans un match en cours",
-      });
+      sendError(
+        res,
+        "Impossible de modifier cette equipe car elle est engagee dans un match en cours",
+        400,
+      );
+      return;
     }
 
-    // Find the player
     const player = team.players.find((p: any) => p.id === playerId);
     if (!player) {
-      return res.status(404).json({ error: "Joueur introuvable" });
+      sendError(res, "Joueur introuvable", 404);
+      return;
     }
 
-    // Check player is not dead
     if ((player as any).dead) {
-      return res.status(400).json({ error: "Ce joueur est mort et ne peut pas recevoir d'avancement" });
+      sendError(
+        res,
+        "Ce joueur est mort et ne peut pas recevoir d'avancement",
+        400,
+      );
+      return;
     }
 
-    // Parse existing advancements
     let advancements: PlayerAdvancement[] = [];
     try {
-      advancements = JSON.parse((player as any).advancements || '[]');
+      advancements = JSON.parse((player as any).advancements || "[]");
     } catch {
       advancements = [];
     }
 
-    // Check max 6 advancements
     if (advancements.length >= 6) {
-      return res.status(400).json({ error: "Ce joueur a atteint le maximum de 6 avancements" });
+      sendError(res, "Ce joueur a atteint le maximum de 6 avancements", 400);
+      return;
     }
 
-    const currentSkills = player.skills.split(',').filter(Boolean);
+    const currentSkills = player.skills.split(",").filter(Boolean);
 
-    // Determine allowed categories for this advancement type
-    const categoryAccessType = (advancementType === 'primary' || advancementType === 'random-primary') ? 'primary' : 'secondary';
+    const categoryAccessType =
+      advancementType === "primary" || advancementType === "random-primary"
+        ? "primary"
+        : "secondary";
     const access = getPositionCategoryAccess(player.position);
-    const allowedCategories = categoryAccessType === 'primary' ? access.primary : access.secondary;
+    const allowedCategories =
+      categoryAccessType === "primary" ? access.primary : access.secondary;
 
     let finalSkillSlug: string;
 
     if (isRandom) {
-      // Server-side random selection: pick a random skill from the given category
       if (!allowedCategories.includes(skillCategory as any)) {
-        return res.status(400).json({
-          error: `La catégorie '${skillCategory}' n'est pas accessible en ${categoryAccessType} pour cette position`,
-        });
+        sendError(
+          res,
+          `La categorie '${skillCategory}' n'est pas accessible en ${categoryAccessType} pour cette position`,
+          400,
+        );
+        return;
       }
 
-      const eligibleSkills = SKILLS_DEFINITIONS
-        .filter(s => s.category === skillCategory)
-        .filter(s => !currentSkills.includes(s.slug));
+      const eligibleSkills = SKILLS_DEFINITIONS.filter(
+        (s) => s.category === skillCategory,
+      ).filter((s) => !currentSkills.includes(s.slug));
 
       if (eligibleSkills.length === 0) {
-        return res.status(400).json({ error: "Aucune compétence disponible dans cette catégorie" });
+        sendError(res, "Aucune competence disponible dans cette categorie", 400);
+        return;
       }
 
-      // Cryptographically random selection
       const randomIndex = Math.floor(Math.random() * eligibleSkills.length);
       finalSkillSlug = eligibleSkills[randomIndex].slug;
     } else {
-      // Chosen advancement: validate client-provided skill
       finalSkillSlug = clientSkillSlug!;
       const skillDef = SKILLS_BY_SLUG[finalSkillSlug];
       if (!skillDef) {
-        return res.status(400).json({ error: `Compétence '${finalSkillSlug}' inconnue` });
+        sendError(res, `Competence '${finalSkillSlug}' inconnue`, 400);
+        return;
       }
 
       if (currentSkills.includes(finalSkillSlug)) {
-        return res.status(400).json({ error: "Ce joueur possède déjà cette compétence" });
+        sendError(res, "Ce joueur possede deja cette competence", 400);
+        return;
       }
 
       if (!allowedCategories.includes(skillDef.category as any)) {
-        return res.status(400).json({
-          error: `La compétence '${skillDef.nameFr}' (${skillDef.category}) n'est pas accessible en ${categoryAccessType} pour cette position`,
-        });
+        sendError(
+          res,
+          `La competence '${skillDef.nameFr}' (${skillDef.category}) n'est pas accessible en ${categoryAccessType} pour cette position`,
+          400,
+        );
+        return;
       }
     }
 
-    // Calculate SPP cost
-    const sppCost = getNextAdvancementPspCost(advancements.length, advancementType);
+    const sppCost = getNextAdvancementPspCost(
+      advancements.length,
+      advancementType,
+    );
     const playerSpp = (player as any).spp || 0;
 
     if (playerSpp < sppCost) {
-      return res.status(400).json({
-        error: `SPP insuffisants : ${playerSpp} disponibles, ${sppCost} requis pour un avancement ${advancementType}`,
-        required: sppCost,
-        available: playerSpp,
-      });
+      sendError(
+        res,
+        `SPP insuffisants : ${playerSpp} disponibles, ${sppCost} requis pour un avancement ${advancementType}`,
+        400,
+      );
+      return;
     }
 
-    // Apply the advancement
-    const newSkills = [...currentSkills, finalSkillSlug].join(',');
+    const newSkills = [...currentSkills, finalSkillSlug].join(",");
     const newAdvancement: PlayerAdvancement = {
       skillSlug: finalSkillSlug,
       type: advancementType,
@@ -1515,7 +1541,6 @@ router.put("/:id/players/:playerId/skills", authUser, validate(updatePlayerSkill
     };
     const newAdvancements = [...advancements, newAdvancement];
 
-    // Update player: add skill, record advancement, deduct SPP
     await prisma.teamPlayer.update({
       where: { id: playerId },
       data: {
@@ -1525,24 +1550,29 @@ router.put("/:id/players/:playerId/skills", authUser, validate(updatePlayerSkill
       },
     });
 
-    // Recalculate team values
     await updateTeamValues(prisma, teamId);
 
-    // Return updated player
     const updatedPlayer = await prisma.teamPlayer.findUnique({
       where: { id: playerId },
     });
 
-    res.json({
+    sendSuccess(res, {
       player: updatedPlayer,
       sppSpent: sppCost,
       advancement: newAdvancement,
     });
-  } catch (e: any) {
-    serverLog.error("Erreur lors de l'ajout de compétence:", e);
-    return res.status(500).json({ error: "Erreur serveur" });
+  } catch (e: unknown) {
+    serverLog.error("Erreur lors de l'ajout de competence:", e);
+    sendError(res, "Erreur serveur", 500);
   }
-});
+}
+
+router.put(
+  "/:id/players/:playerId/skills",
+  authUser,
+  validate(updatePlayerSkillsSchema),
+  handleUpdatePlayerSkills,
+);
 
 // Endpoint pour obtenir les positions disponibles pour ajout (S25.5s — ApiResponse<T>)
 export async function handleListAvailablePositions(

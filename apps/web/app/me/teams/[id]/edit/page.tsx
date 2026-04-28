@@ -30,24 +30,6 @@ async function fetchJSON(path: string) {
   return res.json();
 }
 
-async function putJSON(path: string, body: any) {
-  const token = localStorage.getItem("auth_token");
-  const res = await fetch(`${API_BASE}${path}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: token ? `Bearer ${token}` : "",
-    },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok)
-    throw new Error(
-      (await res.json().catch(() => ({})))?.error || `Erreur ${res.status}`,
-    );
-  return res.json();
-}
-
-
 interface Player {
   id: string;
   name: string;
@@ -1315,7 +1297,15 @@ export default function TeamEditPage() {
                             if (currentSkills.includes(selectedSkillSlug)) return;
                             body.skillSlug = selectedSkillSlug;
                           }
-                          const result = await putJSON(`/team/${id}/players/${player.id}/skills`, body);
+                          // S25.5ac — apiRequest unwrap l'enveloppe ApiResponse<T>
+                          const result = await apiRequest<{
+                            player: { skills: string; advancements: string; spp: number };
+                            sppSpent: number;
+                            advancement: unknown;
+                          }>(`/team/${id}/players/${player.id}/skills`, {
+                            method: "PUT",
+                            body: JSON.stringify(body),
+                          });
                           // Update local state with server response
                           if (result.player) {
                             setPlayers(prev => prev.map(p => p.id === player.id ? {

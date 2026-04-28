@@ -90,6 +90,7 @@ import {
   handleAddTeamPlayer,
   handleListAvailableStarPlayers,
   handleHireStarPlayer,
+  handleUpdatePlayerSkills,
 } from "./team";
 import {
   requiresPair,
@@ -2175,6 +2176,185 @@ describe("Route: POST /team/:id/star-players (S25.5ab)", () => {
     });
     const res = createRes();
     await handleHireStarPlayer(req, res);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+});
+
+describe("Route: PUT /team/:id/players/:playerId/skills (S25.5ac)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  async function getMocks() {
+    const prismaMock = vi.mocked(await import("../prisma")).prisma;
+    return {
+      teamFindFirst: prismaMock.team.findFirst as ReturnType<typeof vi.fn>,
+      selectionFindFirst: prismaMock.teamSelection.findFirst as ReturnType<
+        typeof vi.fn
+      >,
+    };
+  }
+
+  function makeTeamWithPlayer(playerOverrides: Record<string, unknown> = {}) {
+    return {
+      id: "team-1",
+      ownerId: "user-1",
+      players: [
+        {
+          id: "p-1",
+          position: "skaven_lineman",
+          skills: "",
+          dead: false,
+          spp: 0,
+          advancements: "[]",
+          ...playerOverrides,
+        },
+      ],
+    };
+  }
+
+  it("returns 400 ApiError when chosen advancement missing skillSlug", async () => {
+    const req = createReq({
+      params: { id: "team-1", playerId: "p-1" },
+      body: { advancementType: "primary" },
+    });
+    const res = createRes();
+    await handleUpdatePlayerSkills(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: expect.stringContaining("skillSlug"),
+    });
+  });
+
+  it("returns 400 ApiError when random advancement missing skillCategory", async () => {
+    const req = createReq({
+      params: { id: "team-1", playerId: "p-1" },
+      body: { advancementType: "random-primary" },
+    });
+    const res = createRes();
+    await handleUpdatePlayerSkills(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: expect.stringContaining("skillCategory"),
+    });
+  });
+
+  it("returns 404 ApiError when team not found", async () => {
+    const { teamFindFirst } = await getMocks();
+    teamFindFirst.mockResolvedValue(null);
+
+    const req = createReq({
+      params: { id: "team-1", playerId: "p-1" },
+      body: { advancementType: "primary", skillSlug: "block" },
+    });
+    const res = createRes();
+    await handleUpdatePlayerSkills(req, res);
+
+    expect(res.statusCode).toBe(404);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+
+  it("returns 400 ApiError when team is engaged in active match", async () => {
+    const { teamFindFirst, selectionFindFirst } = await getMocks();
+    teamFindFirst.mockResolvedValue(makeTeamWithPlayer());
+    selectionFindFirst.mockResolvedValue({ id: "sel-1" });
+
+    const req = createReq({
+      params: { id: "team-1", playerId: "p-1" },
+      body: { advancementType: "primary", skillSlug: "block" },
+    });
+    const res = createRes();
+    await handleUpdatePlayerSkills(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: expect.stringContaining("match"),
+    });
+  });
+
+  it("returns 404 ApiError when player not in team", async () => {
+    const { teamFindFirst, selectionFindFirst } = await getMocks();
+    teamFindFirst.mockResolvedValue(makeTeamWithPlayer());
+    selectionFindFirst.mockResolvedValue(null);
+
+    const req = createReq({
+      params: { id: "team-1", playerId: "p-rogue" },
+      body: { advancementType: "primary", skillSlug: "block" },
+    });
+    const res = createRes();
+    await handleUpdatePlayerSkills(req, res);
+
+    expect(res.statusCode).toBe(404);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: expect.stringContaining("Joueur"),
+    });
+  });
+
+  it("returns 400 ApiError when player is dead", async () => {
+    const { teamFindFirst, selectionFindFirst } = await getMocks();
+    teamFindFirst.mockResolvedValue(makeTeamWithPlayer({ dead: true }));
+    selectionFindFirst.mockResolvedValue(null);
+
+    const req = createReq({
+      params: { id: "team-1", playerId: "p-1" },
+      body: { advancementType: "primary", skillSlug: "block" },
+    });
+    const res = createRes();
+    await handleUpdatePlayerSkills(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: expect.stringContaining("mort"),
+    });
+  });
+
+  it("returns 400 ApiError when player has 6 advancements already", async () => {
+    const { teamFindFirst, selectionFindFirst } = await getMocks();
+    teamFindFirst.mockResolvedValue(
+      makeTeamWithPlayer({
+        advancements: JSON.stringify(
+          Array.from({ length: 6 }, (_, i) => ({
+            skillSlug: `s${i}`,
+            type: "primary",
+            isRandom: false,
+            at: 0,
+          })),
+        ),
+      }),
+    );
+    selectionFindFirst.mockResolvedValue(null);
+
+    const req = createReq({
+      params: { id: "team-1", playerId: "p-1" },
+      body: { advancementType: "primary", skillSlug: "block" },
+    });
+    const res = createRes();
+    await handleUpdatePlayerSkills(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: expect.stringContaining("6 avancements"),
+    });
+  });
+
+  it("returns 500 ApiError when prisma throws", async () => {
+    const { teamFindFirst } = await getMocks();
+    teamFindFirst.mockRejectedValue(new Error("db down"));
+
+    const req = createReq({
+      params: { id: "team-1", playerId: "p-1" },
+      body: { advancementType: "primary", skillSlug: "block" },
+    });
+    const res = createRes();
+    await handleUpdatePlayerSkills(req, res);
 
     expect(res.statusCode).toBe(500);
     expect(res.payload).toMatchObject({ success: false });
