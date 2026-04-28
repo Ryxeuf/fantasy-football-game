@@ -269,19 +269,29 @@ router.post(
 export default router;
 
 // Détails du match: noms des équipes et coachs (via token de match)
-router.get("/details", async (req, res) => {
+// (S25.5j — ApiResponse<T>)
+export async function handleGetMatchDetailsByToken(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
   try {
     const token = (req.headers["x-match-token"] as string) || "";
-    if (!token) return res.status(401).json({ error: "x-match-token requis" });
+    if (!token) {
+      sendError(res, "x-match-token requis", 401);
+      return;
+    }
     let payload: any;
     try {
       payload = jwt.verify(token, MATCH_SECRET) as any;
     } catch {
-      return res.status(401).json({ error: "x-match-token invalide" });
+      sendError(res, "x-match-token invalide", 401);
+      return;
     }
     const matchId = payload?.matchId as string | undefined;
-    if (!matchId)
-      return res.status(400).json({ error: "matchId manquant dans le token" });
+    if (!matchId) {
+      sendError(res, "matchId manquant dans le token", 400);
+      return;
+    }
 
     const [match, selections] = await Promise.all([
       prisma.match.findUnique({
@@ -298,12 +308,10 @@ router.get("/details", async (req, res) => {
       }),
     ]);
 
-    // Déterminer local/visiteur: par défaut l'utilisateur du token est "local"
     const tokenUserId = (payload as any)?.userId as string | undefined;
     let local = selections.find((s: any) => s.userId === tokenUserId) || null;
     let visitor = selections.find((s: any) => s.userId !== tokenUserId) || null;
     if (!local || !visitor) {
-      // Fallback si une des équipes manque
       if (match?.creatorId) {
         local =
           selections.find((s: any) => s.userId === match.creatorId) || selections[0];
@@ -312,22 +320,21 @@ router.get("/details", async (req, res) => {
           selections[1] ||
           null;
       } else {
-        // Pas de creatorId: ordonner simplement
         local = selections[0] || null;
         visitor = selections.length > 1 ? selections[1] : null;
       }
     }
 
-    function teamName(sel: any): string {
+    const teamName = (sel: any): string => {
       if (!sel) return "";
       return sel.teamRef?.name || sel.teamRef?.roster || sel.team || "";
-    }
-    function coachName(sel: any): string {
+    };
+    const coachName = (sel: any): string => {
       if (!sel) return "";
       return sel.user?.name || sel.user?.email || "";
-    }
+    };
 
-    return res.json({
+    sendSuccess(res, {
       matchId,
       local: {
         teamName: teamName(local),
@@ -340,14 +347,19 @@ router.get("/details", async (req, res) => {
         userId: visitor?.userId || null,
       },
     });
-  } catch (e: any) {
+  } catch (e: unknown) {
     serverLog.error(e);
-    return res.status(500).json({ error: "Erreur serveur" });
+    sendError(res, "Erreur serveur", 500);
   }
-});
+}
 
-// Détails du match (auth) par id
-router.get("/:id/details", authUser, async (req: AuthenticatedRequest, res) => {
+router.get("/details", handleGetMatchDetailsByToken);
+
+// Détails du match (auth) par id (S25.5j — ApiResponse<T>)
+export async function handleGetMatchDetails(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
   try {
     const matchId = req.params.id;
     const [match, selections] = await Promise.all([
@@ -364,15 +376,16 @@ router.get("/:id/details", authUser, async (req: AuthenticatedRequest, res) => {
         },
       }),
     ]);
-    if (!match) return res.status(404).json({ error: "Partie introuvable" });
-    // Déterminer local/visiteur: l'utilisateur authentifié est local
+    if (!match) {
+      sendError(res, "Partie introuvable", 404);
+      return;
+    }
     const authenticatedUserId = req.user!.id;
     let local =
       selections.find((s: any) => s.userId === authenticatedUserId) || null;
     let visitor =
       selections.find((s: any) => s.userId !== authenticatedUserId) || null;
     if (!local || !visitor) {
-      // Fallback: creatorId si présent, sinon ordre de sélection
       if (match.creatorId) {
         local =
           selections.find((s: any) => s.userId === match.creatorId) ||
@@ -391,27 +404,36 @@ router.get("/:id/details", authUser, async (req: AuthenticatedRequest, res) => {
       sel?.teamRef?.name || sel?.teamRef?.roster || sel?.team || "";
     const coachName = (sel: any) => sel?.user?.name || sel?.user?.email || "";
     const eloRating = (sel: any) => sel?.user?.eloRating ?? 1000;
-    return res.json({
+    sendSuccess(res, {
       matchId,
       local: { teamName: teamName(local), coachName: coachName(local), eloRating: eloRating(local) },
       visitor: { teamName: teamName(visitor), coachName: coachName(visitor), eloRating: eloRating(visitor) },
     });
-  } catch (e) {
+  } catch (e: unknown) {
     serverLog.error(e);
-    return res.status(500).json({ error: "Erreur serveur" });
+    sendError(res, "Erreur serveur", 500);
   }
-});
+}
+
+router.get("/:id/details", authUser, handleGetMatchDetails);
 
 // Nouvel endpoint pour les équipes et joueurs (auth) par id - pour fallback prematch
 // IMPORTANT: retourne une vue absolue A/B, indépendante de l'utilisateur connecté
-router.get("/:id/teams", authUser, async (req: AuthenticatedRequest, res) => {
+// (S25.5j — ApiResponse<T>)
+export async function handleGetMatchTeams(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
   try {
     const matchId = req.params.id;
     const match = await prisma.match.findUnique({
       where: { id: matchId },
       select: { id: true },
     });
-    if (!match) return res.status(404).json({ error: "Partie introuvable" });
+    if (!match) {
+      sendError(res, "Partie introuvable", 404);
+      return;
+    }
 
     const selections = await prisma.teamSelection.findMany({
       where: { matchId },
@@ -442,12 +464,14 @@ router.get("/:id/teams", authUser, async (req: AuthenticatedRequest, res) => {
     const teamA = getTeamData(s1);
     const teamB = getTeamData(s2);
 
-    return res.json({ teamA, teamB });
-  } catch (e: any) {
+    sendSuccess(res, { teamA, teamB });
+  } catch (e: unknown) {
     serverLog.error(e);
-    return res.status(500).json({ error: "Erreur serveur" });
+    sendError(res, "Erreur serveur", 500);
   }
-});
+}
+
+router.get("/:id/teams", authUser, handleGetMatchTeams);
 
 // Liste des matchs de l'utilisateur connecté
 // Liste des matchs du joueur connecte (S25.5h — ApiResponse<T>)
