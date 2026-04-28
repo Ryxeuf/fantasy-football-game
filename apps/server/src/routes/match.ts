@@ -137,7 +137,11 @@ router.post("/accept", authUser, validate(acceptMatchSchema), handleAcceptMatch)
 
 // Annuler un match en attente. N'est possible que tant que le match n'a pas
 // commence (status === "pending"). L'utilisateur doit etre inscrit au match.
-router.post("/:id/cancel", authUser, async (req: AuthenticatedRequest, res) => {
+// (S25.5g — ApiResponse<T>)
+export async function handleCancelMatch(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
   try {
     const matchId = req.params.id;
     const result = await cancelMatch(prisma as any, {
@@ -145,50 +149,54 @@ router.post("/:id/cancel", authUser, async (req: AuthenticatedRequest, res) => {
       userId: req.user!.id,
     });
     if (!result.ok) {
-      return res.status(result.status).json({ error: result.error });
+      sendError(res, result.error, result.status);
+      return;
     }
-    return res.json(result);
-  } catch (e: any) {
+    sendSuccess(res, result);
+  } catch (e: unknown) {
     serverLog.error(e);
-    return res.status(500).json({ error: e?.message || "Erreur serveur" });
+    sendError(res, errorMessage(e), 500);
   }
-});
+}
 
-// Create an online match vs AI (practice mode).
+router.post("/:id/cancel", authUser, handleCancelMatch);
+
+// Create an online match vs AI (practice mode). (S25.5g — ApiResponse<T>)
 // Reuses the ensureAISystemUser / spawnAITeam helpers from the LocalMatch
 // practice service, but creates a regular Match so the standard /play/:id
 // flow kicks in (same pre-match, same WebSocket broadcasts).
-router.post(
-  "/practice",
-  authUser,
-  validate(createPracticeOnlineMatchSchema),
-  async (req: AuthenticatedRequest, res) => {
-    try {
-      const { userTeamId, difficulty, aiRosterSlug, userSide, seed } =
-        req.body as {
-          userTeamId: string;
-          difficulty: AIDifficulty;
-          aiRosterSlug?: string;
-          userSide?: "A" | "B";
-          seed?: string;
-        };
+export async function handlePracticeMatch(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  try {
+    const { userTeamId, difficulty, aiRosterSlug, userSide, seed } =
+      req.body as {
+        userTeamId: string;
+        difficulty: AIDifficulty;
+        aiRosterSlug?: string;
+        userSide?: "A" | "B";
+        seed?: string;
+      };
 
-      const result = await createOnlinePracticeMatch(prisma as any, {
-        creatorId: req.user!.id,
-        userTeamId,
-        difficulty,
-        aiRosterSlug,
-        userSide,
-        seed,
-      });
+    const result = await createOnlinePracticeMatch(prisma as any, {
+      creatorId: req.user!.id,
+      userTeamId,
+      difficulty,
+      aiRosterSlug,
+      userSide,
+      seed,
+    });
 
-      const matchToken = jwt.sign(
-        { matchId: result.matchId, userId: req.user!.id },
-        MATCH_SECRET,
-        { expiresIn: "2h" },
-      );
+    const matchToken = jwt.sign(
+      { matchId: result.matchId, userId: req.user!.id },
+      MATCH_SECRET,
+      { expiresIn: "2h" },
+    );
 
-      return res.status(201).json({
+    sendSuccess(
+      res,
+      {
         match: { id: result.matchId },
         matchToken,
         ai: {
@@ -198,24 +206,32 @@ router.post(
           userId: result.aiUserId,
           difficulty,
         },
-      });
-    } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : "Erreur serveur";
-      const status = message.includes("introuvable")
-        ? 404
-        : message.includes("proprietaire")
-          ? 403
-          : message.includes("non autorise")
+      },
+      201,
+    );
+  } catch (e: unknown) {
+    const message = errorMessage(e);
+    const status = message.includes("introuvable")
+      ? 404
+      : message.includes("proprietaire")
+        ? 403
+        : message.includes("non autorise")
+          ? 400
+          : message.includes("est requis")
             ? 400
-            : message.includes("est requis")
-              ? 400
-              : 500;
-      if (status >= 500) {
-        serverLog.error("Erreur creation match pratique online:", e);
-      }
-      return res.status(status).json({ error: message });
+            : 500;
+    if (status >= 500) {
+      serverLog.error("Erreur creation match pratique online:", e);
     }
-  },
+    sendError(res, message, status);
+  }
+}
+
+router.post(
+  "/practice",
+  authUser,
+  validate(createPracticeOnlineMatchSchema),
+  handlePracticeMatch,
 );
 
 // Soumettre un coup pendant la phase active du match

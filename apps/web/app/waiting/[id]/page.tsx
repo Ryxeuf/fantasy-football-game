@@ -139,14 +139,10 @@ export default function WaitingPage({ params }: { params: { id: string } }) {
         window.location.href = "/login";
         return;
       }
-      const res = await fetch(`${API_BASE}/match/${matchId}/cancel`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json().catch(() => ({}) as any);
-      if (!res.ok) {
-        throw new Error(data?.error || `HTTP ${res.status}`);
-      }
+      await apiRequest<{ ok: boolean; status: string }>(
+        `/match/${matchId}/cancel`,
+        { method: "POST" },
+      );
       setCancelled(true);
       window.location.href = "/play";
     } catch (e: any) {

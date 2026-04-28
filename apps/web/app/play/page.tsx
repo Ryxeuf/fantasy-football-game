@@ -350,9 +350,15 @@ export default function PlayPage() {
     setError(null);
     setStartingPractice(true);
     try {
-      const result = await apiPost("/match/practice", {
-        userTeamId: practiceTeamId,
-        difficulty: practiceDifficulty,
+      const result = await apiRequest<{
+        match: { id: string };
+        matchToken: string;
+      }>("/match/practice", {
+        method: "POST",
+        body: JSON.stringify({
+          userTeamId: practiceTeamId,
+          difficulty: practiceDifficulty,
+        }),
       });
       const matchId = result?.match?.id;
       const matchToken = result?.matchToken;
