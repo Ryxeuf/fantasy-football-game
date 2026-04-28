@@ -65,6 +65,7 @@ import PreMatchSummary from "../../components/PreMatchSummary";
 import HalftimeTransition from "../../components/HalftimeTransition";
 import { InducementsPhaseUI } from "./components/InducementsPhaseUI";
 import { normalizeState } from "./utils/normalize-state";
+import { getMySide, validatePlacement } from "./utils/setup-validation";
 import { ForfeitWarning } from "../../components/ForfeitWarning";
 import GameChat from "../../components/GameChat";
 import {
@@ -149,87 +150,10 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
   const [setupError, setSetupError] = useState<string | null>(null);
   const [setupSubmitting, setSetupSubmitting] = useState(false);
 
+  // `getMySide` and `validatePlacement` extracted to ./utils/setup-validation.ts (S26.0c).
   function showSetupError(msg: string) {
     setSetupError(msg);
     setTimeout(() => setSetupError(null), 2500);
-  }
-
-  function getMySide(ext: ExtendedGameState): "A" | "B" | null {
-    if (!teamNameA || !teamNameB) return null;
-    return teamNameA === ext.teamNames.teamA ? "A" : "B";
-  }
-
-  function validatePlacement(
-    ext: ExtendedGameState,
-    playerId: string,
-    pos: Position,
-  ): string | null {
-    // Phase
-    if (ext.preMatch?.phase !== "setup")
-      return "Placement uniquement en phase de configuration";
-    const player = ext.players.find((p) => p.id === playerId);
-    if (!player) return "Joueur introuvable";
-    const mySide = getMySide(ext);
-    if (mySide && mySide !== ext.preMatch.currentCoach)
-      return "Ce n'est pas votre tour de placer";
-    if (mySide && player.team !== mySide)
-      return "Vous ne pouvez placer que vos joueurs";
-    // Position légale
-    const legal = ext.preMatch.legalSetupPositions.some(
-      (p) => p.x === pos.x && p.y === pos.y,
-    );
-    if (!legal)
-      return "Position illégale: hors de votre moitié (jusqu'à la LOS)";
-
-    // Vérifier qu'aucun autre joueur n'occupe déjà cette position
-    // Simuler la position du joueur pour vérifier les conflits
-    const simulatedPlayers = ext.players.map((p) =>
-      p.id === playerId ? { ...p, pos } : p,
-    );
-    const existingPlayerAtPos = simulatedPlayers.find(
-      (p) => p.pos.x === pos.x && p.pos.y === pos.y && p.id !== playerId,
-    );
-    if (existingPlayerAtPos) {
-      return "Position déjà occupée par un autre joueur";
-    }
-
-    // Max 11 (prendre en compte le repositionnement)
-    const teamId = player.team;
-    const isRepositioning = player.pos.x >= 0;
-    const onPitch = ext.players.filter(
-      (p) => p.team === teamId && p.pos.x >= 0,
-    ).length;
-    // Si on repositionne, on ne compte pas le joueur actuel car il sera déplacé
-    const effectiveOnPitch = isRepositioning ? onPitch : onPitch + 1;
-    if (effectiveOnPitch > 11) return "Maximum 11 joueurs sur le terrain";
-    // Wide zones
-    const isLeftWZ = (y: number) => y >= 0 && y <= 2;
-    const isRightWZ = (y: number) => y >= 12 && y <= 14;
-    const teamPlayersAfter = ext.players
-      .map((p) => (p.id === playerId ? { ...p, pos } : p))
-      .filter((p) => p.team === teamId && p.pos.x >= 0);
-    const leftCount = teamPlayersAfter.filter((p) => isLeftWZ(p.pos.y)).length;
-    const rightCount = teamPlayersAfter.filter((p) =>
-      isRightWZ(p.pos.y),
-    ).length;
-    if (leftCount > 2) return "Maximum 2 joueurs dans la large zone gauche";
-    if (rightCount > 2) return "Maximum 2 joueurs dans la large zone droite";
-    // LOS (vérifier à partir de l'avant-dernier joueur)
-    if (teamPlayersAfter.length >= 9) {
-      const isOnLos = (x: number) => (teamId === "A" ? x === 12 : x === 13);
-      const losCount = teamPlayersAfter.filter((p) => isOnLos(p.pos.x)).length;
-      const remainingPlayers = 11 - teamPlayersAfter.length;
-      const minLosRequired = 3;
-
-      // Si on n'a pas assez de joueurs sur la LOS et qu'il ne reste pas assez de joueurs pour atteindre 3
-      if (
-        losCount < minLosRequired &&
-        losCount + remainingPlayers < minLosRequired
-      ) {
-        return "Au moins 3 joueurs doivent être sur la LOS";
-      }
-    }
-    return null;
   }
 
   const legal = useMemo(() => {
@@ -335,7 +259,12 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
     ) {
       const pos: Position = { x: gridRow, y: gridCol };
 
-      const err = validatePlacement(extState, draggedPlayerId, pos);
+      const err = validatePlacement(
+        extState,
+        draggedPlayerId,
+        pos,
+        getMySide(extState, teamNameA, teamNameB),
+      );
       if (err) {
         showSetupError(err);
         setDraggedPlayerId(null);
@@ -534,14 +463,19 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
     if (isActiveMatch && (!isMyTurn || moveSubmitting)) return;
     // Bloquer les interactions setup quand ce n'est pas mon tour ou soumission en cours
     if (extState.preMatch?.phase === "setup") {
-      const mySide = myTeamSide || getMySide(extState);
+      const mySide = myTeamSide || getMySide(extState, teamNameA, teamNameB);
       if (mySide && mySide !== extState.preMatch.currentCoach) return;
       if (setupSubmitting) return;
     }
     if (extState.preMatch?.phase === "setup") {
       // Mode setup : placer selectedFromReserve sur pos si légal
       if (selectedFromReserve) {
-        const err = validatePlacement(extState, selectedFromReserve, pos);
+        const err = validatePlacement(
+          extState,
+          selectedFromReserve,
+          pos,
+          myTeamSide || getMySide(extState, teamNameA, teamNameB),
+        );
         if (err) {
           showSetupError(err);
           setSelectedFromReserve(null);
@@ -1068,7 +1002,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
                       ).length || 0;
                       const target = Math.min(11, availableCount);
                       const playersOnField = state.players?.filter(p => p.team === currentCoach && p.pos.x >= 0).length || 0;
-                      const mySide = myTeamSide || getMySide(state as ExtendedGameState);
+                      const mySide = myTeamSide || getMySide(state as ExtendedGameState, teamNameA, teamNameB);
 
                       if (mySide && mySide !== currentCoach) {
                         return (
