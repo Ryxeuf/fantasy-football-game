@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import StarPlayerCard from './StarPlayerCard';
+import { apiRequest } from '../lib/api-client';
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8201';
 
@@ -64,18 +65,12 @@ export default function TeamStarPlayersManager({ teamId, token }: TeamStarPlayer
       setLoading(true);
       setError(null);
 
-      // Charger les Star Players recrutés
-      const hiredRes = await fetch(`${API_URL}/team/${teamId}/star-players`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      // Charger les Star Players recrutés (S25.5q — ApiResponse<T>)
+      const hiredData = await apiRequest<{ starPlayers: StarPlayer[]; count: number }>(
+        `/team/${teamId}/star-players`,
+      ).catch((e) => {
+        throw new Error(e?.message || 'Erreur lors du chargement des Star Players recrutés');
       });
-
-      if (!hiredRes.ok) {
-        throw new Error('Erreur lors du chargement des Star Players recrutés');
-      }
-
-      const hiredData = await hiredRes.json();
       setHiredStarPlayers(hiredData.starPlayers || []);
 
       // Charger les Star Players disponibles
