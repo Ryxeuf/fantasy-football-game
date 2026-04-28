@@ -142,7 +142,7 @@ export default function TeamEditPage() {
         // awaiting them sequentially (previously ~3 round-trips ≈ 600ms).
         const [me, d, positionsData] = await Promise.all([
           fetchJSON("/auth/me"),
-          fetchJSON(`/team/${id}`),
+          apiRequest<any>(`/team/${id}`),
           apiRequest(`/team/${id}/available-positions`),
         ]);
 
@@ -288,7 +288,7 @@ export default function TeamEditPage() {
 
       // Parallelize the two refetches; they are independent.
       const [d, positionsData] = await Promise.all([
-        fetchJSON(`/team/${id}`),
+        apiRequest<any>(`/team/${id}`),
         apiRequest<{ availablePositions: unknown[] }>(
           `/team/${id}/available-positions`,
         ),
@@ -336,7 +336,7 @@ export default function TeamEditPage() {
       );
 
       const [d, positionsData] = await Promise.all([
-        fetchJSON(`/team/${id}`),
+        apiRequest<any>(`/team/${id}`),
         apiRequest<{ availablePositions: unknown[] }>(
           `/team/${id}/available-positions`,
         ),
@@ -1396,7 +1396,7 @@ export default function TeamEditPage() {
           }}
           availablePositions={availablePositions}
           onPurchaseComplete={async () => {
-            const d = await fetchJSON(`/team/${id}`);
+            const d = await apiRequest<any>(`/team/${id}`);
             setData(d);
             setPlayers(d.team?.players || []);
             const positionsData = await apiRequest<{ availablePositions: unknown[] }>(

@@ -278,7 +278,12 @@ describe("E2E API — /team/* (listing & detail)", () => {
       );
       const team = await createTeam(userId, "Alice Skavens", "skaven");
 
-      const json = await get<TeamDetail>(`/team/${team.teamId}`, token);
+      const json = unwrap(
+        await get<{ success: true; data: TeamDetail }>(
+          `/team/${team.teamId}`,
+          token,
+        ),
+      );
       expect(json.team.id).toBe(team.teamId);
       expect(json.team.name).toBe("Alice Skavens");
       expect(json.team.roster).toBe("skaven");

@@ -49,7 +49,12 @@ export default function TeamDetailPage() {
           return;
         }
         setUserName(me.user.name || me.user.username || me.user.email || "");
-        const d = await fetchJSON(`/team/${id}`);
+        // S25.5ae — apiRequest unwrap l'enveloppe ApiResponse<T>
+        const d = await apiRequest<{
+          team: { roster: string; ruleset?: string };
+          currentMatch: unknown;
+          localMatchStats: unknown;
+        }>(`/team/${id}`);
         setData(d);
         
         // Charger le nom du roster depuis l'API selon la langue
