@@ -23,6 +23,9 @@ vi.mock("../prisma", () => ({
     teamPlayer: {
       delete: vi.fn(),
     },
+    teamStarPlayer: {
+      deleteMany: vi.fn(),
+    },
     localMatch: {
       findMany: vi.fn(),
     },
@@ -35,6 +38,16 @@ vi.mock("../utils/roster-helpers", () => ({
 
 vi.mock("../utils/team-values", () => ({
   updateTeamValues: vi.fn(),
+}));
+
+vi.mock("../utils/star-player-validation", () => ({
+  requiresPair: vi.fn(),
+  // Other exports kept undefined; tests only invoke routes that need requiresPair.
+  validateStarPlayerHire: vi.fn(),
+  validateStarPlayerPairs: vi.fn(),
+  validateStarPlayersForTeam: vi.fn(),
+  getTeamAvailableStarPlayers: vi.fn(),
+  calculateStarPlayersCost: vi.fn(),
 }));
 
 vi.mock("../services/team-name-generator", () => ({
@@ -62,7 +75,9 @@ import {
   handleListAvailablePositions,
   handleDeleteTeamPlayer,
   handlePutTeamInfo,
+  handleDeleteTeamStarPlayer,
 } from "./team";
+import { requiresPair } from "../utils/star-player-validation";
 import { updateTeamValues } from "../utils/team-values";
 import type { AuthenticatedRequest } from "../middleware/authUser";
 
@@ -966,6 +981,174 @@ describe("Route: PUT /team/:id/info (S25.5u)", () => {
     const req = createReq({ params: { id: "team-1" }, body: { rerolls: 4 } });
     const res = createRes();
     await handlePutTeamInfo(req, res);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+});
+
+describe("Route: DELETE /team/:id/star-players/:starPlayerId (S25.5v)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  async function getMocks() {
+    const prismaMock = vi.mocked(await import("../prisma")).prisma;
+    return {
+      teamFindFirst: prismaMock.team.findFirst as ReturnType<typeof vi.fn>,
+      teamFindUnique: prismaMock.team.findUnique as ReturnType<typeof vi.fn>,
+      selectionFindFirst: prismaMock.teamSelection.findFirst as ReturnType<
+        typeof vi.fn
+      >,
+      starPlayerDeleteMany: prismaMock.teamStarPlayer.deleteMany as ReturnType<
+        typeof vi.fn
+      >,
+      mockRequiresPair: requiresPair as ReturnType<typeof vi.fn>,
+      updateValues: updateTeamValues as ReturnType<typeof vi.fn>,
+    };
+  }
+
+  it("returns 404 ApiError when team not found", async () => {
+    const { teamFindFirst } = await getMocks();
+    teamFindFirst.mockResolvedValue(null);
+
+    const req = createReq({
+      params: { id: "team-1", starPlayerId: "sp-1" },
+    });
+    const res = createRes();
+    await handleDeleteTeamStarPlayer(req, res);
+
+    expect(res.statusCode).toBe(404);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+
+  it("returns 400 ApiError when team is engaged in active match", async () => {
+    const { teamFindFirst, selectionFindFirst } = await getMocks();
+    teamFindFirst.mockResolvedValue({
+      id: "team-1",
+      ownerId: "user-1",
+      starPlayers: [{ id: "sp-1", starPlayerSlug: "morg-n-thorg" }],
+    });
+    selectionFindFirst.mockResolvedValue({ id: "sel-1" });
+
+    const req = createReq({
+      params: { id: "team-1", starPlayerId: "sp-1" },
+    });
+    const res = createRes();
+    await handleDeleteTeamStarPlayer(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+
+  it("returns 404 ApiError when star player not in team", async () => {
+    const { teamFindFirst, selectionFindFirst } = await getMocks();
+    teamFindFirst.mockResolvedValue({
+      id: "team-1",
+      ownerId: "user-1",
+      starPlayers: [{ id: "sp-other", starPlayerSlug: "headsplitter" }],
+    });
+    selectionFindFirst.mockResolvedValue(null);
+
+    const req = createReq({
+      params: { id: "team-1", starPlayerId: "sp-missing" },
+    });
+    const res = createRes();
+    await handleDeleteTeamStarPlayer(req, res);
+
+    expect(res.statusCode).toBe(404);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+
+  it("removes a single star player and returns ApiSuccess with updated team", async () => {
+    const {
+      teamFindFirst,
+      teamFindUnique,
+      selectionFindFirst,
+      starPlayerDeleteMany,
+      mockRequiresPair,
+      updateValues,
+    } = await getMocks();
+    teamFindFirst.mockResolvedValue({
+      id: "team-1",
+      ownerId: "user-1",
+      starPlayers: [{ id: "sp-1", starPlayerSlug: "morg-n-thorg" }],
+    });
+    selectionFindFirst.mockResolvedValue(null);
+    mockRequiresPair.mockReturnValue(null);
+    starPlayerDeleteMany.mockResolvedValue({ count: 1 });
+    updateValues.mockResolvedValue({ teamValue: 1000, currentValue: 1000 });
+    const updatedTeam = { id: "team-1", players: [], starPlayers: [] };
+    teamFindUnique.mockResolvedValue(updatedTeam);
+
+    const req = createReq({
+      params: { id: "team-1", starPlayerId: "sp-1" },
+    });
+    const res = createRes();
+    await handleDeleteTeamStarPlayer(req, res);
+
+    expect(starPlayerDeleteMany).toHaveBeenCalledWith({
+      where: { id: { in: ["sp-1"] } },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: {
+        team: updatedTeam,
+        message: expect.stringContaining("retire"),
+      },
+    });
+  });
+
+  it("removes pair when star player has a required partner", async () => {
+    const {
+      teamFindFirst,
+      teamFindUnique,
+      selectionFindFirst,
+      starPlayerDeleteMany,
+      mockRequiresPair,
+      updateValues,
+    } = await getMocks();
+    teamFindFirst.mockResolvedValue({
+      id: "team-1",
+      ownerId: "user-1",
+      starPlayers: [
+        { id: "sp-1", starPlayerSlug: "deeproot-strongbranch" },
+        { id: "sp-2", starPlayerSlug: "willow-rosebark" },
+      ],
+    });
+    selectionFindFirst.mockResolvedValue(null);
+    mockRequiresPair.mockReturnValue("willow-rosebark");
+    starPlayerDeleteMany.mockResolvedValue({ count: 2 });
+    updateValues.mockResolvedValue({ teamValue: 1000, currentValue: 1000 });
+    teamFindUnique.mockResolvedValue({
+      id: "team-1",
+      players: [],
+      starPlayers: [],
+    });
+
+    const req = createReq({
+      params: { id: "team-1", starPlayerId: "sp-1" },
+    });
+    const res = createRes();
+    await handleDeleteTeamStarPlayer(req, res);
+
+    expect(starPlayerDeleteMany).toHaveBeenCalledWith({
+      where: { id: { in: ["sp-1", "sp-2"] } },
+    });
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: { message: expect.stringContaining("2 Star Players") },
+    });
+  });
+
+  it("returns 500 ApiError when prisma throws", async () => {
+    const { teamFindFirst } = await getMocks();
+    teamFindFirst.mockRejectedValue(new Error("db down"));
+
+    const req = createReq({
+      params: { id: "team-1", starPlayerId: "sp-1" },
+    });
+    const res = createRes();
+    await handleDeleteTeamStarPlayer(req, res);
 
     expect(res.statusCode).toBe(500);
     expect(res.payload).toMatchObject({ success: false });
