@@ -87,8 +87,12 @@ import {
   handleChooseTeam,
   handleUpdateTeam,
   handleAddTeamPlayer,
+  handleListAvailableStarPlayers,
 } from "./team";
-import { requiresPair } from "../utils/star-player-validation";
+import {
+  requiresPair,
+  getTeamAvailableStarPlayers,
+} from "../utils/star-player-validation";
 import { updateTeamValues } from "../utils/team-values";
 import type { AuthenticatedRequest } from "../middleware/authUser";
 
@@ -1846,6 +1850,120 @@ describe("Route: POST /team/:id/players (S25.5z)", () => {
     });
     const res = createRes();
     await handleAddTeamPlayer(req, res);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+});
+
+describe("Route: GET /team/:id/available-star-players (S25.5aa)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  async function getMocks() {
+    const prismaMock = vi.mocked(await import("../prisma")).prisma;
+    return {
+      teamFindFirst: prismaMock.team.findFirst as ReturnType<typeof vi.fn>,
+      mockGetTeamAvailable: getTeamAvailableStarPlayers as ReturnType<
+        typeof vi.fn
+      >,
+      mockRequiresPair: requiresPair as ReturnType<typeof vi.fn>,
+    };
+  }
+
+  it("returns 404 ApiError when team not found", async () => {
+    const { teamFindFirst } = await getMocks();
+    teamFindFirst.mockResolvedValue(null);
+
+    const req = createReq({ params: { id: "team-1" } });
+    const res = createRes();
+    await handleListAvailableStarPlayers(req, res);
+
+    expect(res.statusCode).toBe(404);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+
+  it("returns ApiSuccess with empty list when no star players available for roster", async () => {
+    const { teamFindFirst, mockGetTeamAvailable } = await getMocks();
+    teamFindFirst.mockResolvedValue({
+      id: "team-1",
+      ownerId: "user-1",
+      roster: "skaven",
+      ruleset: "season_3",
+      initialBudget: 1000,
+      players: [],
+      starPlayers: [],
+    });
+    mockGetTeamAvailable.mockReturnValue([]);
+
+    const req = createReq({ params: { id: "team-1" } });
+    const res = createRes();
+    await handleListAvailableStarPlayers(req, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: {
+        availableStarPlayers: [],
+        currentPlayerCount: 0,
+        currentStarPlayerCount: 0,
+        totalPlayers: 0,
+        maxPlayers: 16,
+        availableBudget: 1000,
+        totalBudget: 1000,
+      },
+    });
+  });
+
+  it("enriches star players with hire-state flags (no pair, can hire)", async () => {
+    const { teamFindFirst, mockGetTeamAvailable, mockRequiresPair } =
+      await getMocks();
+    teamFindFirst.mockResolvedValue({
+      id: "team-1",
+      ownerId: "user-1",
+      roster: "skaven",
+      ruleset: "season_3",
+      initialBudget: 1000,
+      players: [],
+      starPlayers: [],
+    });
+    mockGetTeamAvailable.mockReturnValue([
+      { slug: "morg-n-thorg", displayName: "Morg", cost: 430 },
+    ]);
+    mockRequiresPair.mockReturnValue(null);
+
+    const req = createReq({ params: { id: "team-1" } });
+    const res = createRes();
+    await handleListAvailableStarPlayers(req, res);
+
+    expect(res.statusCode).toBe(200);
+    const payload = res.payload as {
+      success: boolean;
+      data: {
+        availableStarPlayers: Array<{
+          slug: string;
+          isHired: boolean;
+          canHire: boolean;
+          needsPair: boolean;
+        }>;
+      };
+    };
+    expect(payload.success).toBe(true);
+    expect(payload.data.availableStarPlayers).toHaveLength(1);
+    expect(payload.data.availableStarPlayers[0]).toMatchObject({
+      slug: "morg-n-thorg",
+      isHired: false,
+      canHire: true,
+      needsPair: false,
+    });
+  });
+
+  it("returns 500 ApiError when prisma throws", async () => {
+    const { teamFindFirst } = await getMocks();
+    teamFindFirst.mockRejectedValue(new Error("db down"));
+
+    const req = createReq({ params: { id: "team-1" } });
+    const res = createRes();
+    await handleListAvailableStarPlayers(req, res);
 
     expect(res.statusCode).toBe(500);
     expect(res.payload).toMatchObject({ success: false });

@@ -1657,60 +1657,65 @@ export async function handleListTeamStarPlayers(
 
 router.get("/:id/star-players", authUser, handleListTeamStarPlayers);
 
-// Endpoint pour obtenir les Star Players disponibles pour une équipe
-router.get("/:id/available-star-players", authUser, async (req: AuthenticatedRequest, res) => {
+// Endpoint pour obtenir les Star Players disponibles pour une equipe (S25.5aa — ApiResponse<T>)
+export async function handleListAvailableStarPlayers(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
   const teamId = req.params.id;
 
   try {
-    // Vérifier que l'équipe appartient à l'utilisateur
     const team = await prisma.team.findFirst({
       where: { id: teamId, ownerId: req.user!.id },
-      include: { 
-        players: true,
-        starPlayers: true
-      }
+      include: { players: true, starPlayers: true },
     });
 
     if (!team) {
-      return res.status(404).json({ error: "Équipe introuvable" });
+      sendError(res, "Equipe introuvable", 404);
+      return;
     }
 
     const teamRuleset = (team.ruleset as Ruleset) ?? DEFAULT_RULESET;
-    // Obtenir les Star Players disponibles pour ce roster
     const availableStarPlayers = getTeamAvailableStarPlayers(
       team.roster,
       teamRuleset,
     );
 
-    // Calculer le budget disponible
     const { getPlayerCost } = await import(
       "../../../../packages/game-engine/src/utils/team-value-calculator"
     );
-    const currentPlayersCost = team.players.reduce((total: number, player: any) => {
-      return total + getPlayerCost(player.position, team.roster, teamRuleset);
-    }, 0);
-    
-    const currentStarPlayersCost = team.starPlayers.reduce((total: number, sp: any) => {
-      return total + sp.cost;
-    }, 0);
+    const currentPlayersCost = team.players.reduce(
+      (total: number, player: any) => {
+        return total + getPlayerCost(player.position, team.roster, teamRuleset);
+      },
+      0,
+    );
+
+    const currentStarPlayersCost = team.starPlayers.reduce(
+      (total: number, sp: any) => {
+        return total + sp.cost;
+      },
+      0,
+    );
 
     const budgetInPo = team.initialBudget * 1000;
-    const availableBudget = budgetInPo - currentPlayersCost - currentStarPlayersCost;
+    const availableBudget =
+      budgetInPo - currentPlayersCost - currentStarPlayersCost;
 
-    // Marquer ceux qui sont déjà recrutés
-    const hiredSlugs = new Set(team.starPlayers.map((sp: any) => sp.starPlayerSlug));
+    const hiredSlugs = new Set(
+      team.starPlayers.map((sp: any) => sp.starPlayerSlug),
+    );
     const totalPlayers = team.players.length + team.starPlayers.length;
 
     const enrichedStarPlayers = availableStarPlayers.map((sp: any) => {
       const isHired = hiredSlugs.has(sp.slug);
       const canAfford = sp.cost <= availableBudget;
       const hasRoomForOne = totalPlayers < 16;
-      
-      // Vérifier les paires obligatoires
+
       const pairSlug = requiresPair(sp.slug);
       let needsPair = false;
       let pairStatus = null;
-      
+
       if (pairSlug) {
         needsPair = true;
         const pairHired = hiredSlugs.has(pairSlug);
@@ -1719,15 +1724,14 @@ router.get("/:id/available-star-players", authUser, async (req: AuthenticatedReq
           slug: pairSlug,
           name: pairData?.displayName,
           hired: pairHired,
-          cost: pairData?.cost || 0
+          cost: pairData?.cost || 0,
         };
       }
 
-      // Pour les paires, vérifier si on peut recruter les deux
       let canHire = !isHired && hasRoomForOne && canAfford;
       if (needsPair && !pairStatus?.hired) {
         const totalPairCost = sp.cost + (pairStatus?.cost || 0);
-        const hasRoomForPair = totalPlayers + 1 < 16; // +1 car on recrute 2 à la fois
+        const hasRoomForPair = totalPlayers + 1 < 16;
         canHire = !isHired && hasRoomForPair && totalPairCost <= availableBudget;
       }
 
@@ -1736,24 +1740,33 @@ router.get("/:id/available-star-players", authUser, async (req: AuthenticatedReq
         isHired,
         canHire,
         needsPair,
-        pairStatus
+        pairStatus,
       };
     });
 
-    res.json({
+    sendSuccess(res, {
       availableStarPlayers: enrichedStarPlayers,
       currentPlayerCount: team.players.length,
       currentStarPlayerCount: team.starPlayers.length,
       totalPlayers,
       maxPlayers: 16,
-      availableBudget: Math.round(availableBudget / 1000), // en K po
-      totalBudget: team.initialBudget
+      availableBudget: Math.round(availableBudget / 1000),
+      totalBudget: team.initialBudget,
     });
-  } catch (e: any) {
-    serverLog.error("Erreur lors de la récupération des Star Players disponibles:", e);
-    return res.status(500).json({ error: "Erreur serveur" });
+  } catch (e: unknown) {
+    serverLog.error(
+      "Erreur lors de la recuperation des Star Players disponibles:",
+      e,
+    );
+    sendError(res, "Erreur serveur", 500);
   }
-});
+}
+
+router.get(
+  "/:id/available-star-players",
+  authUser,
+  handleListAvailableStarPlayers,
+);
 
 // Endpoint pour recruter un Star Player
 router.post("/:id/star-players", authUser, validate(addStarPlayerToTeamSchema), async (req: AuthenticatedRequest, res) => {
