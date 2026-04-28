@@ -96,8 +96,13 @@ export function autoSetupAITeam(
 
   const positions = buildAISetupPositions(teamId);
 
+  // Only `active` players are eligible to take the field at the start of a
+  // drive. Knocked-out, casualty, dead and sent-off players keep their
+  // logical state but their pos.x has been reset to -1 elsewhere — without
+  // this filter the AI would happily place a KO'd or expelled secret
+  // weapon back on the pitch for the next drive.
   const teamPlayersInReserves = state.players
-    .filter((p) => p.team === teamId && p.pos.x < 0)
+    .filter((p) => p.team === teamId && p.pos.x < 0 && (!p.state || p.state === 'active'))
     .slice(0, 11);
 
   let current = state;

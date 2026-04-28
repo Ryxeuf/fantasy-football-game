@@ -1242,6 +1242,13 @@ export function placePlayerInSetup(
   const player = state.players.find(p => p.id === playerId);
   if (!player) return { success: false, state };
 
+  // Only active players can take the field. Knocked-out, casualty, dead
+  // and sent-off players (e.g. expelled secret weapons) stay in their
+  // dugout box and must not be placed during setup.
+  if (player.state && player.state !== 'active') {
+    return { success: false, state };
+  }
+
   // Permettre le repositionnement : si le joueur est déjà placé, on le retire d'abord
   const isRepositioning = player.pos.x >= 0;
   let currentPlacedPlayers = [...state.preMatch.placedPlayers];
@@ -1319,14 +1326,21 @@ export function validatePlayerPlacement(state: ExtendedGameState): ExtendedGameS
   
   const currentCoach = state.preMatch.currentCoach;
   const placedPlayers = state.preMatch.placedPlayers;
-  
-  // Vérifier que le coach actuel a bien placé 11 joueurs
+
+  // Vérifier que le coach a placé tous les joueurs qu'il pouvait : exactement
+  // 11 quand l'équipe en a au moins autant en réserve, sinon le total des
+  // joueurs encore actifs (cas post-touchdown : KO, casualty, sent-off ne
+  // sont pas plaçables, mais l'équipe doit pouvoir valider quand même).
+  const availablePlayers = state.players.filter(
+    p => p.team === currentCoach && (!p.state || p.state === 'active')
+  ).length;
+  const expectedOnField = Math.min(11, availablePlayers);
   const coachPlayersOnField = state.players.filter(
     p => p.team === currentCoach && p.pos.x >= 0
   ).length;
-  
-  if (coachPlayersOnField !== 11) {
-    return state; // Pas assez de joueurs placés
+
+  if (coachPlayersOnField !== expectedOnField) {
+    return state; // Pas le bon nombre de joueurs placés
   }
 
   const logEntry = createLogEntry(

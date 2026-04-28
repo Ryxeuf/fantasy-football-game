@@ -1192,9 +1192,21 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
                       </span>{" "}
                       de placer ses joueurs
                     </div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      Joueurs placés : {state.players?.filter(p => p.team === state.preMatch?.currentCoach && p.pos.x >= 0).length || 0}/11
-                    </div>
+                    {(() => {
+                      const currentCoach = state.preMatch?.currentCoach;
+                      const availableCount = state.players?.filter(
+                        p => p.team === currentCoach && (!p.state || p.state === "active")
+                      ).length || 0;
+                      const target = Math.min(11, availableCount);
+                      const onFieldCount = state.players?.filter(
+                        p => p.team === currentCoach && p.pos.x >= 0
+                      ).length || 0;
+                      return (
+                        <div className="text-xs text-gray-500 mt-1">
+                          Joueurs placés : {onFieldCount}/{target}
+                        </div>
+                      );
+                    })()}
                     {setupError && (
                       <div className="mt-2 px-3 py-2 bg-red-100 text-red-700 rounded border border-red-300">
                         {setupError}
@@ -1203,6 +1215,10 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
                     {/* Bouton de validation ou message d'attente */}
                     {(() => {
                       const currentCoach = state.preMatch?.currentCoach;
+                      const availableCount = state.players?.filter(
+                        p => p.team === currentCoach && (!p.state || p.state === "active")
+                      ).length || 0;
+                      const target = Math.min(11, availableCount);
                       const playersOnField = state.players?.filter(p => p.team === currentCoach && p.pos.x >= 0).length || 0;
                       const mySide = myTeamSide || getMySide(state as ExtendedGameState);
 
@@ -1214,7 +1230,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
                         );
                       }
 
-                      if (playersOnField === 11 && mySide === currentCoach) {
+                      if (playersOnField === target && mySide === currentCoach) {
                         return (
                           <div className="mt-3">
                             <button

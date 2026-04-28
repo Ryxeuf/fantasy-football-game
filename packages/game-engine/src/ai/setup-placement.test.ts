@@ -154,4 +154,24 @@ describe('autoSetupAITeam', () => {
         occupied.add(key);
       });
   });
+
+  it('does not place KO, casualty, dead or sent-off players', () => {
+    const base = createSetupState('A', 'A');
+    const sidelined: ExtendedGameState = {
+      ...base,
+      players: base.players.map((p, idx) => {
+        if (p.team !== 'A') return p;
+        if (idx === 0) return { ...p, state: 'knocked_out' as const };
+        if (idx === 1) return { ...p, state: 'sent_off' as const };
+        if (idx === 2) return { ...p, state: 'casualty' as const };
+        if (idx === 3) return { ...p, state: 'dead' as const };
+        return p;
+      }),
+    };
+    const placed = autoSetupAITeam(sidelined, 'A');
+    const onField = placed.players.filter((p) => p.team === 'A' && p.pos.x >= 0);
+    expect(onField.every((p) => !p.state || p.state === 'active')).toBe(true);
+    // Only 7 active players left in reserves → only 7 placed.
+    expect(onField).toHaveLength(7);
+  });
 });
