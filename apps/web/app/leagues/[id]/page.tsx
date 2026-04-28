@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { API_BASE } from "../../auth-client";
+import { apiRequest } from "../../lib/api-client";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { SeasonCalendar } from "./SeasonCalendar";
 import { SeasonStandings } from "./SeasonStandings";
@@ -13,20 +13,11 @@ import type {
   StandingRow,
 } from "./types";
 
-function authHeaders(): Record<string, string> {
-  if (typeof window === "undefined") return {};
-  const token = localStorage.getItem("auth_token");
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
-async function fetchJson<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, { headers: authHeaders() });
-  if (!res.ok) {
-    const body = (await res.json().catch(() => ({}))) as { error?: string };
-    throw new Error(body.error ?? `HTTP ${res.status}`);
-  }
-  return (await res.json()) as T;
-}
+// S25.5d — `apiRequest<T>` (lib/api-client) prend en charge `API_BASE`,
+// l'`Authorization: Bearer ...`, et l'unwrap de l'enveloppe
+// `ApiResponse<T>` quand le serveur l'expose. Tolere encore le format
+// legacy le temps que les success paths de `routes/league.ts` soient
+// migres (cf. roadmap S25.5).
 
 export default function LeagueDetailPage() {
   const { t } = useLanguage();
@@ -50,7 +41,7 @@ export default function LeagueDetailPage() {
       try {
         setLoading(true);
         setError(null);
-        const { league: data } = await fetchJson<{ league: LeagueDetail }>(
+        const { league: data } = await apiRequest<{ league: LeagueDetail }>(
           `/league/${leagueId}`,
         );
         if (cancelled) return;
@@ -81,10 +72,10 @@ export default function LeagueDetailPage() {
         setSeasonLoading(true);
         setSeasonError(null);
         const [seasonRes, standingsRes] = await Promise.all([
-          fetchJson<{ season: LeagueSeasonDetail }>(
+          apiRequest<{ season: LeagueSeasonDetail }>(
             `/league/seasons/${seasonId}`,
           ),
-          fetchJson<{ seasonId: string; standings: StandingRow[] }>(
+          apiRequest<{ seasonId: string; standings: StandingRow[] }>(
             `/league/seasons/${seasonId}/standings`,
           ),
         ]);
