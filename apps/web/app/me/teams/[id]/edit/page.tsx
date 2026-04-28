@@ -143,7 +143,9 @@ export default function TeamEditPage() {
         const [me, d, positionsData] = await Promise.all([
           fetchJSON("/auth/me"),
           apiRequest<any>(`/team/${id}`),
-          apiRequest(`/team/${id}/available-positions`),
+          apiRequest<{ availablePositions: AvailablePosition[] }>(
+            `/team/${id}/available-positions`,
+          ),
         ]);
 
         if (!me?.user) {
@@ -289,7 +291,7 @@ export default function TeamEditPage() {
       // Parallelize the two refetches; they are independent.
       const [d, positionsData] = await Promise.all([
         apiRequest<any>(`/team/${id}`),
-        apiRequest<{ availablePositions: unknown[] }>(
+        apiRequest<{ availablePositions: AvailablePosition[] }>(
           `/team/${id}/available-positions`,
         ),
       ]);
@@ -337,7 +339,7 @@ export default function TeamEditPage() {
 
       const [d, positionsData] = await Promise.all([
         apiRequest<any>(`/team/${id}`),
-        apiRequest<{ availablePositions: unknown[] }>(
+        apiRequest<{ availablePositions: AvailablePosition[] }>(
           `/team/${id}/available-positions`,
         ),
       ]);
@@ -1301,7 +1303,7 @@ export default function TeamEditPage() {
                           const result = await apiRequest<{
                             player: { skills: string; advancements: string; spp: number };
                             sppSpent: number;
-                            advancement: unknown;
+                            advancement: { skillSlug: string };
                           }>(`/team/${id}/players/${player.id}/skills`, {
                             method: "PUT",
                             body: JSON.stringify(body),
@@ -1399,7 +1401,7 @@ export default function TeamEditPage() {
             const d = await apiRequest<any>(`/team/${id}`);
             setData(d);
             setPlayers(d.team?.players || []);
-            const positionsData = await apiRequest<{ availablePositions: unknown[] }>(
+            const positionsData = await apiRequest<{ availablePositions: AvailablePosition[] }>(
               `/team/${id}/available-positions`,
             );
             setAvailablePositions(positionsData.availablePositions || []);

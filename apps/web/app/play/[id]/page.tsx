@@ -63,8 +63,8 @@ import PostMatchSPP from "../../components/PostMatchSPP";
 import MatchEndScreen from "../../components/MatchEndScreen";
 import PreMatchSummary from "../../components/PreMatchSummary";
 import HalftimeTransition from "../../components/HalftimeTransition";
-import InducementSelector from "../../components/InducementSelector";
-import { INDUCEMENT_CATALOGUE, type InducementSelection, type InducementDefinition } from "@bb/game-engine";
+import { InducementsPhaseUI } from "./components/InducementsPhaseUI";
+import { normalizeState } from "./utils/normalize-state";
 import { ForfeitWarning } from "../../components/ForfeitWarning";
 import GameChat from "../../components/GameChat";
 import { useTurnNotification } from "./hooks/useTurnNotification";
@@ -87,102 +87,6 @@ function SoundEffectsListener({ state }: { state: ExtendedGameState | null }) {
 /** Inducements phase UI for online pre-match.
  *  Each player only sees and submits inducements for their own team.
  *  Submission goes via WebSocket (game:submit-inducements). */
-function InducementsPhaseUI({
-  matchId,
-  state,
-  stateSource,
-  setState,
-  myTeamSide,
-  gameSocket,
-}: {
-  matchId: string;
-  state: ExtendedGameState;
-  stateSource: string | null;
-  setState: (s: ExtendedGameState | ((prev: ExtendedGameState | null) => ExtendedGameState | null)) => void;
-  myTeamSide: "A" | "B" | null;
-  gameSocket: ReturnType<typeof import("./hooks/useGameSocket").useGameSocket>["socket"];
-}) {
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [inducementError, setInducementError] = useState<string | null>(null);
-
-  const catalogue = INDUCEMENT_CATALOGUE.filter(
-    (ind) => ind.slug !== "star_player",
-  ) as InducementDefinition[];
-
-  const myTeamName = myTeamSide === "A" ? state.teamNames.teamA : state.teamNames.teamB;
-  // Budget info from preMatch state (petty cash computed server-side during pre-match sequence)
-  const myBudget = myTeamSide === "A"
-    ? (state.preMatch?.inducements?.teamA?.pettyCash ?? 0)
-    : (state.preMatch?.inducements?.teamB?.pettyCash ?? 0);
-
-  const handleConfirm = useCallback((selection: InducementSelection) => {
-    if (!gameSocket || submitting || submitted) return;
-    setSubmitting(true);
-    setInducementError(null);
-
-    gameSocket.emit(
-      "game:submit-inducements",
-      { matchId, selection },
-      (response: any) => {
-        setSubmitting(false);
-        if (!response?.success) {
-          setInducementError(response?.error || "Erreur");
-          return;
-        }
-        setSubmitted(true);
-        if (response.gameState) {
-          setState(normalizeState(response.gameState));
-        }
-      },
-    );
-  }, [gameSocket, matchId, submitting, submitted, setState]);
-
-  const handleSkip = useCallback(() => {
-    handleConfirm({ items: [] });
-  }, [handleConfirm]);
-
-  return (
-    <div className="w-full max-w-lg mx-auto">
-      <div className="text-center mb-4">
-        <h2 className="text-xl font-bold text-gray-800">Phase d&apos;Inducements</h2>
-        <p className="text-sm text-gray-500 mt-1">
-          Depensez votre budget pour des avantages de match.
-        </p>
-      </div>
-
-      {inducementError && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm text-center">
-          {inducementError}
-        </div>
-      )}
-
-      {submitted ? (
-        <div className="rounded border bg-emerald-50 border-emerald-300 p-6 text-center">
-          <div className="font-semibold text-emerald-700">{myTeamName}</div>
-          <div className="text-sm text-emerald-600 mt-1">Selection confirmee</div>
-          <div className="text-xs text-gray-500 mt-3">En attente de l&apos;adversaire...</div>
-        </div>
-      ) : (
-        <InducementSelector
-          catalogue={catalogue}
-          budget={myBudget}
-          pettyCash={myBudget}
-          teamName={myTeamName}
-          disabled={submitting}
-          onConfirm={handleConfirm}
-          onSkip={handleSkip}
-        />
-      )}
-
-      {submitting && (
-        <div className="mt-4 text-center text-gray-500 text-sm">
-          Envoi de la selection...
-        </div>
-      )}
-    </div>
-  );
-}
 
 /** Floating mute/unmute toggle button for sound effects. */
 function SoundToggleButton() {
@@ -215,20 +119,7 @@ function SoundToggleButton() {
   );
 }
 
-// Normalise un état reçu du serveur (immutable — returns new object)
-function normalizeState(state: any): ExtendedGameState {
-  if (!state) return state;
-  return {
-    ...state,
-    playerActions: state.playerActions ?? {},
-    teamBlitzCount: state.teamBlitzCount ?? {},
-    teamFoulCount: state.teamFoulCount ?? {},
-    matchStats: state.matchStats ?? {},
-    width: typeof state.width === "number" ? state.width : 26,
-    height: typeof state.height === "number" ? state.height : 15,
-    selectedPlayerId: state.preMatch?.phase === "setup" ? null : state.selectedPlayerId,
-  } as ExtendedGameState;
-}
+// `normalizeState` extracted to ./utils/normalize-state.ts (S26.0a refactor).
 
 export default function PlayByIdPage({ params }: { params: { id: string } }) {
   const matchId = params.id;
