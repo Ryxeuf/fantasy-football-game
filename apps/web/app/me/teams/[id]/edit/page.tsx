@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { API_BASE } from "../../../../auth-client";
+import { apiRequest } from "../../../../lib/api-client";
 import SkillTooltip from "../../components/SkillTooltip";
 import TeamInfoEditor from "../../components/TeamInfoEditor";
 import TreasuryPurchasePanel from "../../components/TreasuryPurchasePanel";
@@ -160,7 +161,7 @@ export default function TeamEditPage() {
         const [me, d, positionsData] = await Promise.all([
           fetchJSON("/auth/me"),
           fetchJSON(`/team/${id}`),
-          fetchJSON(`/team/${id}/available-positions`),
+          apiRequest(`/team/${id}/available-positions`),
         ]);
 
         if (!me?.user) {
@@ -308,7 +309,9 @@ export default function TeamEditPage() {
       // Parallelize the two refetches; they are independent.
       const [d, positionsData] = await Promise.all([
         fetchJSON(`/team/${id}`),
-        fetchJSON(`/team/${id}/available-positions`),
+        apiRequest<{ availablePositions: unknown[] }>(
+          `/team/${id}/available-positions`,
+        ),
       ]);
       setData(d);
       setPlayers(d.team?.players || []);
@@ -359,7 +362,9 @@ export default function TeamEditPage() {
 
       const [d, positionsData] = await Promise.all([
         fetchJSON(`/team/${id}`),
-        fetchJSON(`/team/${id}/available-positions`),
+        apiRequest<{ availablePositions: unknown[] }>(
+          `/team/${id}/available-positions`,
+        ),
       ]);
       setData(d);
       setPlayers(d.team?.players || []);
@@ -1411,7 +1416,9 @@ export default function TeamEditPage() {
             const d = await fetchJSON(`/team/${id}`);
             setData(d);
             setPlayers(d.team?.players || []);
-            const positionsData = await fetchJSON(`/team/${id}/available-positions`);
+            const positionsData = await apiRequest<{ availablePositions: unknown[] }>(
+              `/team/${id}/available-positions`,
+            );
             setAvailablePositions(positionsData.availablePositions || []);
           }}
         />

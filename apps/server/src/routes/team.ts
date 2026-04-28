@@ -1487,36 +1487,40 @@ router.put("/:id/players/:playerId/skills", authUser, validate(updatePlayerSkill
   }
 });
 
-// Endpoint pour obtenir les positions disponibles pour ajout
-router.get("/:id/available-positions", authUser, async (req: AuthenticatedRequest, res) => {
+// Endpoint pour obtenir les positions disponibles pour ajout (S25.5s — ApiResponse<T>)
+export async function handleListAvailablePositions(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
   const teamId = req.params.id;
 
   try {
-    // Vérifier que l'équipe appartient à l'utilisateur
     const team = await prisma.team.findFirst({
       where: { id: teamId, ownerId: req.user!.id },
-      include: { players: true }
+      include: { players: true },
     });
 
     if (!team) {
-      return res.status(404).json({ error: "Équipe introuvable" });
+      sendError(res, "Equipe introuvable", 404);
+      return;
     }
 
-    // Récupérer les informations du roster
     const rosterData = await getRosterFromDb(
       team.roster as AllowedRoster,
       "fr",
       (team.ruleset as Ruleset) ?? DEFAULT_RULESET,
     );
     if (!rosterData) {
-      return res.status(400).json({ error: "Roster non reconnu" });
+      sendError(res, "Roster non reconnu", 400);
+      return;
     }
 
-    // Calculer les positions disponibles
     const availablePositions = rosterData.positions.map((position: any) => {
-      const currentCount = team.players.filter((p: any) => p.position === position.slug).length;
+      const currentCount = team.players.filter(
+        (p: any) => p.position === position.slug,
+      ).length;
       const canAdd = currentCount < position.max && team.players.length < 16;
-      
+
       return {
         key: position.slug,
         name: position.displayName,
@@ -1530,21 +1534,26 @@ router.get("/:id/available-positions", authUser, async (req: AuthenticatedReques
           ag: position.ag,
           pa: position.pa,
           av: position.av,
-          skills: position.skills
-        }
+          skills: position.skills,
+        },
       };
     });
 
-    res.json({ 
+    sendSuccess(res, {
       availablePositions,
       currentPlayerCount: team.players.length,
-      maxPlayers: 16
+      maxPlayers: 16,
     });
-  } catch (e: any) {
-    serverLog.error("Erreur lors de la récupération des positions disponibles:", e);
-    return res.status(500).json({ error: "Erreur serveur" });
+  } catch (e: unknown) {
+    serverLog.error(
+      "Erreur lors de la recuperation des positions disponibles:",
+      e,
+    );
+    sendError(res, "Erreur serveur", 500);
   }
-});
+}
+
+router.get("/:id/available-positions", authUser, handleListAvailablePositions);
 
 // =============================================================================
 // STAR PLAYERS ENDPOINTS
