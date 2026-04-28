@@ -22,6 +22,7 @@ vi.mock("../prisma", () => ({
     },
     teamPlayer: {
       delete: vi.fn(),
+      create: vi.fn(),
     },
     teamStarPlayer: {
       deleteMany: vi.fn(),
@@ -29,6 +30,7 @@ vi.mock("../prisma", () => ({
     localMatch: {
       findMany: vi.fn(),
     },
+    $transaction: vi.fn(),
   },
 }));
 
@@ -76,6 +78,7 @@ import {
   handleDeleteTeamPlayer,
   handlePutTeamInfo,
   handleDeleteTeamStarPlayer,
+  handlePurchase,
 } from "./team";
 import { requiresPair } from "../utils/star-player-validation";
 import { updateTeamValues } from "../utils/team-values";
@@ -1149,6 +1152,187 @@ describe("Route: DELETE /team/:id/star-players/:starPlayerId (S25.5v)", () => {
     });
     const res = createRes();
     await handleDeleteTeamStarPlayer(req, res);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+});
+
+describe("Route: POST /team/:id/purchase (S25.5w)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  async function getMocks() {
+    const prismaMock = vi.mocked(await import("../prisma")).prisma;
+    return {
+      teamFindFirst: prismaMock.team.findFirst as ReturnType<typeof vi.fn>,
+      teamFindUnique: prismaMock.team.findUnique as ReturnType<typeof vi.fn>,
+      teamUpdate: prismaMock.team.update as ReturnType<typeof vi.fn>,
+      selectionFindFirst: prismaMock.teamSelection.findFirst as ReturnType<
+        typeof vi.fn
+      >,
+      updateValues: updateTeamValues as ReturnType<typeof vi.fn>,
+    };
+  }
+
+  it("returns 404 ApiError when team not found", async () => {
+    const { teamFindFirst } = await getMocks();
+    teamFindFirst.mockResolvedValue(null);
+
+    const req = createReq({
+      params: { id: "team-1" },
+      body: { type: "cheerleader" },
+    });
+    const res = createRes();
+    await handlePurchase(req, res);
+
+    expect(res.statusCode).toBe(404);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+
+  it("returns 400 ApiError when team is engaged in active match", async () => {
+    const { teamFindFirst, selectionFindFirst } = await getMocks();
+    teamFindFirst.mockResolvedValue({
+      id: "team-1",
+      ownerId: "user-1",
+      treasury: 100000,
+      cheerleaders: 0,
+      assistants: 0,
+      apothecary: false,
+      dedicatedFans: 0,
+      rerolls: 0,
+      players: [],
+    });
+    selectionFindFirst.mockResolvedValue({ id: "sel-1" });
+
+    const req = createReq({
+      params: { id: "team-1" },
+      body: { type: "cheerleader" },
+    });
+    const res = createRes();
+    await handlePurchase(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+
+  it("buys a cheerleader and returns ApiSuccess with description", async () => {
+    const {
+      teamFindFirst,
+      teamFindUnique,
+      teamUpdate,
+      selectionFindFirst,
+      updateValues,
+    } = await getMocks();
+    teamFindFirst.mockResolvedValue({
+      id: "team-1",
+      ownerId: "user-1",
+      treasury: 50000,
+      cheerleaders: 0,
+      assistants: 0,
+      apothecary: false,
+      dedicatedFans: 0,
+      rerolls: 0,
+      players: [],
+    });
+    selectionFindFirst.mockResolvedValue(null);
+    teamUpdate.mockResolvedValue({});
+    updateValues.mockResolvedValue({ teamValue: 1000, currentValue: 1000 });
+    const updatedTeam = { id: "team-1", players: [], cheerleaders: 1 };
+    teamFindUnique.mockResolvedValue(updatedTeam);
+
+    const req = createReq({
+      params: { id: "team-1" },
+      body: { type: "cheerleader" },
+    });
+    const res = createRes();
+    await handlePurchase(req, res);
+
+    expect(teamUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          cheerleaders: 1,
+          treasury: 40000,
+        }),
+      }),
+    );
+    expect(res.statusCode).toBe(200);
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: {
+        team: updatedTeam,
+        purchase: { type: "cheerleader", cost: 10000 },
+      },
+    });
+  });
+
+  it("returns 400 ApiError when treasury insufficient (cheerleader)", async () => {
+    const { teamFindFirst, selectionFindFirst } = await getMocks();
+    teamFindFirst.mockResolvedValue({
+      id: "team-1",
+      ownerId: "user-1",
+      treasury: 5000,
+      cheerleaders: 0,
+      assistants: 0,
+      apothecary: false,
+      dedicatedFans: 0,
+      rerolls: 0,
+      players: [],
+    });
+    selectionFindFirst.mockResolvedValue(null);
+
+    const req = createReq({
+      params: { id: "team-1" },
+      body: { type: "cheerleader" },
+    });
+    const res = createRes();
+    await handlePurchase(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: expect.stringContaining("insuffisante"),
+    });
+  });
+
+  it("returns 400 ApiError when apothecary already hired", async () => {
+    const { teamFindFirst, selectionFindFirst } = await getMocks();
+    teamFindFirst.mockResolvedValue({
+      id: "team-1",
+      ownerId: "user-1",
+      treasury: 100000,
+      cheerleaders: 0,
+      assistants: 0,
+      apothecary: true,
+      dedicatedFans: 0,
+      rerolls: 0,
+      players: [],
+    });
+    selectionFindFirst.mockResolvedValue(null);
+
+    const req = createReq({
+      params: { id: "team-1" },
+      body: { type: "apothecary" },
+    });
+    const res = createRes();
+    await handlePurchase(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: expect.stringContaining("apothicaire"),
+    });
+  });
+
+  it("returns 500 ApiError when prisma throws", async () => {
+    const { teamFindFirst } = await getMocks();
+    teamFindFirst.mockRejectedValue(new Error("db down"));
+
+    const req = createReq({
+      params: { id: "team-1" },
+      body: { type: "cheerleader" },
+    });
+    const res = createRes();
+    await handlePurchase(req, res);
 
     expect(res.statusCode).toBe(500);
     expect(res.payload).toMatchObject({ success: false });

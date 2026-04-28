@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { API_BASE } from "../../../auth-client";
+import { apiRequest } from "../../../lib/api-client";
 import { getRerollCost, getDisplayName } from "@bb/game-engine";
 
 interface AvailablePosition {
@@ -41,20 +42,14 @@ interface TreasuryPurchasePanelProps {
 type PurchaseType = "player" | "reroll" | "cheerleader" | "assistant" | "apothecary" | "dedicated_fan";
 
 async function postPurchase(teamId: string, body: Record<string, unknown>) {
-  const token = localStorage.getItem("auth_token");
-  const res = await fetch(`${API_BASE}/team/${teamId}/purchase`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: token ? `Bearer ${token}` : "",
+  // S25.5w — apiRequest unwrap l'enveloppe ApiResponse<T>
+  return apiRequest<{ team: unknown; purchase: { type: string; cost: number; description: string } }>(
+    `/team/${teamId}/purchase`,
+    {
+      method: "POST",
+      body: JSON.stringify(body),
     },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data?.error || `Erreur ${res.status}`);
-  }
-  return res.json();
+  );
 }
 
 export default function TreasuryPurchasePanel({
