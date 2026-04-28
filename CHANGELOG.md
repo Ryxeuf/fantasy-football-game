@@ -1,3 +1,19 @@
+## [1.76.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.75.0...v1.76.0) (2026-04-28)
+
+
+### ✨ Features
+
+* **api:** migrate /match/create|join|accept to ApiResponse&lt;T&gt; (S25.5f) ([#424](https://github.com/Ryxeuf/fantasy-football-game/issues/424)) ([8a7cbe8](https://github.com/Ryxeuf/fantasy-football-game/commit/8a7cbe87669a17d36e79c102431033a72a59c3f0))
+* **api:** migrate /match/my-matches and /match/live to ApiResponse<T> (S25.5h) ([#426](https://github.com/Ryxeuf/fantasy-football-game/issues/426)) ([a26048b](https://github.com/Ryxeuf/fantasy-football-game/commit/a26048b59d1f645896f6349b33d19b4fa2c5bfc2))
+* **api:** migrate /match/practice and /match/:id/cancel to ApiResponse&lt;T&gt; (S25.5g) ([#425](https://github.com/Ryxeuf/fantasy-football-game/issues/425)) ([9182a30](https://github.com/Ryxeuf/fantasy-football-game/commit/9182a30674548d201a4e340b80d65e0d15f6ac16)), closes [#424](https://github.com/Ryxeuf/fantasy-football-game/issues/424)
+* **engine:** resolve kickoff ball landing with touchback and auto-catch ([45b04ed](https://github.com/Ryxeuf/fantasy-football-game/commit/45b04ed0daf4db16e40f7e0aea324b78b0dd611a))
+* **web:** clarify kickoff ball placement panel ([4d1f189](https://github.com/Ryxeuf/fantasy-football-game/commit/4d1f189c9184d1acc8fcc4d05eeae057723bb3c8))
+
+
+### 🐛 Bug Fixes
+
+* **server:** GET /:id/state returns latest turn for active matches ([9fced19](https://github.com/Ryxeuf/fantasy-football-game/commit/9fced19126c3b81635bc805bba0cbfad7abb0049))
+
 ## [1.75.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.74.0...v1.75.0) (2026-04-28)
 
 
