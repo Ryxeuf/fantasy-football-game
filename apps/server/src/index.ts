@@ -44,6 +44,7 @@ import { serverLog, setServerLogImpl } from "./utils/server-log";
 import { pinoServerLogImpl } from "./utils/pino-logger";
 import { requestContext } from "./middleware/requestContext";
 import { liveness, readiness } from "./utils/healthcheck";
+import { appMetrics, metricsExposition } from "./utils/metrics";
 
 dotenv.config({ path: "../../prisma/.env" });
 
@@ -111,6 +112,18 @@ const probeReadiness = readiness({
 app.get("/health", liveness);
 app.get("/health/live", liveness);
 app.get("/health/ready", probeReadiness);
+
+// Endpoint Prometheus (S25.3). Format texte standard, scrape par
+// Prometheus qui le pousse ensuite vers Grafana LGTM.
+app.get("/metrics", async (_req, res, next) => {
+  try {
+    const body = await metricsExposition(appMetrics.registry);
+    res.setHeader("Content-Type", appMetrics.registry.contentType);
+    res.send(body);
+  } catch (err) {
+    next(err);
+  }
+});
 
 // Rate limiting strict uniquement sur login/register/refresh (anti brute-force)
 app.use("/auth/login", authRateLimiter);
