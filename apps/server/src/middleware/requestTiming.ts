@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
+import { serverLog } from "../utils/server-log";
 
 /**
  * Logs `method path status duration_ms` for every HTTP request. Slow calls
@@ -19,13 +20,13 @@ export function requestTiming(warnThresholdMs = 500) {
         Number(process.hrtime.bigint() - startedAt) / 1_000_000;
       const line = `${req.method} ${req.originalUrl || req.url} ${res.statusCode} ${durationMs.toFixed(1)}ms`;
       if (durationMs >= warnThresholdMs) {
-        console.warn(`[slow] ${line}`);
+        serverLog.warn(`[slow] ${line}`);
         return;
       }
       if (process.env.REQUEST_LOG !== "1") return;
       const isHealth = req.path === "/health" && res.statusCode < 400;
       if (isHealth) return;
-      console.log(line);
+      serverLog.log(line);
     });
     next();
   };

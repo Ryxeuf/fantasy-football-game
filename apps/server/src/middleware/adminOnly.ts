@@ -2,6 +2,7 @@ import { Response, NextFunction } from "express";
 import { AuthenticatedRequest } from "./authUser";
 import { prisma } from "../prisma";
 import { hasRole, normalizeRoles } from "../utils/roles";
+import { serverLog } from "../utils/server-log";
 
 export async function adminOnly(
   req: AuthenticatedRequest,
@@ -28,7 +29,7 @@ export async function adminOnly(
 
     return next();
   } catch (error) {
-    console.error("Erreur lors de la vérification du rôle admin:", error);
+    serverLog.error("Erreur lors de la vérification du rôle admin:", error);
     return res.status(500).json({ error: "Erreur serveur lors de la vérification des droits" });
   }
 }

@@ -15,6 +15,7 @@ import type {
 import { getUserTeamSide } from "./turn-ownership";
 import { broadcastGameState } from "./game-broadcast";
 import { runAISetupIfNeeded } from "./ai-setup";
+import { serverLog } from "../utils/server-log";
 
 /**
  * In-memory store for pending inducement selections per match.
@@ -212,7 +213,7 @@ export async function processInducementSubmission(
         gameState = report.gameState;
       }
     } catch (err) {
-      console.error(`[inducement-processor] AI auto-setup failed for ${matchId}:`, err);
+      serverLog.error(`[inducement-processor] AI auto-setup failed for ${matchId}:`, err);
     }
   }
 

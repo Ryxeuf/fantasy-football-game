@@ -13,6 +13,7 @@ import {
   matchKofiPayloadToUser,
   normaliseEmail,
 } from "../services/kofi";
+import { serverLog } from "../utils/server-log";
 
 const router = Router();
 
@@ -194,7 +195,7 @@ export async function handleKofiWebhook(
       matchedVia: match?.matchedVia ?? null,
     });
   } catch (err) {
-    console.error("[kofi-webhook] error processing payload:", err);
+    serverLog.error("[kofi-webhook] error processing payload:", err);
     // On retourne 500 pour que Ko-fi retente la livraison.
     return res.status(500).json({ error: "Server error" });
   }

@@ -1,8 +1,9 @@
 import { prisma } from "./prisma";
 import bcrypt from "bcryptjs";
+import { serverLog } from "./utils/server-log";
 
 async function main() {
-  console.log("🔧 Correction du compte admin...\n");
+  serverLog.log("🔧 Correction du compte admin...\n");
 
   const adminEmail = "admin@example.com";
   const adminPassword = "admin123";
@@ -13,7 +14,7 @@ async function main() {
   });
 
   if (!existing) {
-    console.log("❌ Le compte admin n'existe pas. Création...");
+    serverLog.log("❌ Le compte admin n'existe pas. Création...");
     const passwordHash = await bcrypt.hash(adminPassword, 10);
     await prisma.user.create({
       data: {
@@ -27,12 +28,12 @@ async function main() {
         valid: true,
       },
     });
-    console.log("✅ Compte admin créé avec valid: true");
+    serverLog.log("✅ Compte admin créé avec valid: true");
   } else {
-    console.log("📝 Compte admin trouvé. Mise à jour...");
-    console.log(`   - Email: ${existing.email}`);
-    console.log(`   - Rôle: ${existing.role}`);
-    console.log(`   - Valid actuel: ${existing.valid}`);
+    serverLog.log("📝 Compte admin trouvé. Mise à jour...");
+    serverLog.log(`   - Email: ${existing.email}`);
+    serverLog.log(`   - Rôle: ${existing.role}`);
+    serverLog.log(`   - Valid actuel: ${existing.valid}`);
 
     // Mettre à jour le compte pour s'assurer qu'il est validé et a le bon rôle
     const passwordHash = await bcrypt.hash(adminPassword, 10);
@@ -45,10 +46,10 @@ async function main() {
       },
     });
 
-    console.log("✅ Compte admin mis à jour:");
-    console.log(`   - Rôle: ${updated.role}`);
-    console.log(`   - Valid: ${updated.valid}`);
-    console.log(`   - Mot de passe: ${adminPassword}`);
+    serverLog.log("✅ Compte admin mis à jour:");
+    serverLog.log(`   - Rôle: ${updated.role}`);
+    serverLog.log(`   - Valid: ${updated.valid}`);
+    serverLog.log(`   - Mot de passe: ${adminPassword}`);
   }
 
   // Vérifier aussi le compte user
@@ -59,7 +60,7 @@ async function main() {
   });
 
   if (!existingUser) {
-    console.log("\n❌ Le compte user n'existe pas. Création...");
+    serverLog.log("\n❌ Le compte user n'existe pas. Création...");
     const passwordHash = await bcrypt.hash(userPassword, 10);
     await prisma.user.create({
       data: {
@@ -73,9 +74,9 @@ async function main() {
         valid: true,
       },
     });
-    console.log("✅ Compte user créé avec valid: true");
+    serverLog.log("✅ Compte user créé avec valid: true");
   } else if (!existingUser.valid) {
-    console.log("\n📝 Compte user trouvé mais non validé. Mise à jour...");
+    serverLog.log("\n📝 Compte user trouvé mais non validé. Mise à jour...");
     const passwordHash = await bcrypt.hash(userPassword, 10);
     await prisma.user.update({
       where: { email: userEmail },
@@ -84,15 +85,15 @@ async function main() {
         passwordHash,
       },
     });
-    console.log("✅ Compte user validé");
+    serverLog.log("✅ Compte user validé");
   } else {
-    console.log("\n✅ Compte user déjà validé");
+    serverLog.log("\n✅ Compte user déjà validé");
   }
 
-  console.log("\n🎉 Correction terminée !");
-  console.log("\n📋 Identifiants:");
-  console.log(`   Admin: ${adminEmail} / ${adminPassword}`);
-  console.log(`   User:  ${userEmail} / ${userPassword}`);
+  serverLog.log("\n🎉 Correction terminée !");
+  serverLog.log("\n📋 Identifiants:");
+  serverLog.log(`   Admin: ${adminEmail} / ${adminPassword}`);
+  serverLog.log(`   User:  ${userEmail} / ${userPassword}`);
 }
 
 main()
@@ -100,7 +101,7 @@ main()
     await prisma.$disconnect();
   })
   .catch(async (e) => {
-    console.error("❌ Erreur:", e);
+    serverLog.error("❌ Erreur:", e);
     await prisma.$disconnect();
     process.exit(1);
   });

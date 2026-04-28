@@ -17,6 +17,7 @@ import {
   ensureKofiLinkCode,
 } from "../services/kofi-claim";
 import { isSupporter } from "../services/kofi";
+import { serverLog } from "../utils/server-log";
 
 const router = Router();
 
@@ -59,7 +60,7 @@ router.post("/register", validate(registerSchema), async (req, res) => {
       await ensureKofiLinkCode(created.id);
       await claimOrphanKofiTransactions(created.id, created.email);
     } catch (kofiErr) {
-      console.error("[register] kofi post-create hooks failed:", kofiErr);
+      serverLog.error("[register] kofi post-create hooks failed:", kofiErr);
     }
 
     const roles = normalizeRoles((created as any).roles ?? created.role);
@@ -88,7 +89,7 @@ router.post("/register", validate(registerSchema), async (req, res) => {
     if (err?.code === "P2002") {
       return res.status(409).json({ error: "Email déjà utilisé" });
     }
-    console.error(err);
+    serverLog.error(err);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -99,11 +100,11 @@ router.post("/login", validate(loginSchema), async (req, res) => {
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
-      console.log(`[LOGIN] Utilisateur non trouvé: ${email}`);
+      serverLog.log(`[LOGIN] Utilisateur non trouvé: ${email}`);
       return res.status(401).json({ error: "Identifiants invalides" });
     }
 
-    console.log(
+    serverLog.log(
       `[LOGIN] Tentative de connexion pour ${email}: valid=${user.valid}, role=${user.role}`,
     );
     
@@ -111,17 +112,17 @@ router.post("/login", validate(loginSchema), async (req, res) => {
     // Sur les autres schémas (ex: SQLite de test), il est undefined et le
     // compte doit être traité comme valide.
     if (user.valid === false) {
-      console.log(`[LOGIN] Compte non validé pour ${email}`);
+      serverLog.log(`[LOGIN] Compte non validé pour ${email}`);
       return res.status(403).json({ error: "Votre compte n'est pas encore validé. Veuillez contacter un administrateur." });
     }
 
     const ok = await bcrypt.compare(password, user.passwordHash);
     if (!ok) {
-      console.log(`[LOGIN] Mot de passe incorrect pour ${email}`);
+      serverLog.log(`[LOGIN] Mot de passe incorrect pour ${email}`);
       return res.status(401).json({ error: "Identifiants invalides" });
     }
 
-    console.log(`[LOGIN] Connexion réussie pour ${email}`);
+    serverLog.log(`[LOGIN] Connexion réussie pour ${email}`);
 
     // Rattrape les dons orphelins reçus avant l'inscription et garantit que
     // le compte a un kofiLinkCode. Jamais bloquant sur le login.
@@ -129,7 +130,7 @@ router.post("/login", validate(loginSchema), async (req, res) => {
       await ensureKofiLinkCode(user.id);
       await claimOrphanKofiTransactions(user.id, user.email);
     } catch (kofiErr) {
-      console.error("[login] kofi post-login hooks failed:", kofiErr);
+      serverLog.error("[login] kofi post-login hooks failed:", kofiErr);
     }
 
     const roles = normalizeRoles((user as any).roles ?? user.role);
@@ -156,7 +157,7 @@ router.post("/login", validate(loginSchema), async (req, res) => {
     );
     return res.json({ user: publicUser, token });
   } catch (err) {
-    console.error(err);
+    serverLog.error(err);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -184,7 +185,7 @@ router.delete("/me", authUser, async (req: AuthenticatedRequest, res) => {
         "Votre compte a été désactivé avec succès. Vous ne pourrez plus vous connecter avec cet accès.",
     });
   } catch (err) {
-    console.error(err);
+    serverLog.error(err);
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -240,7 +241,7 @@ router.get("/me", authUser, async (req: AuthenticatedRequest, res) => {
 
     res.json({ user: publicUser });
   } catch (e) {
-    console.error(e);
+    serverLog.error(e);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -308,7 +309,7 @@ router.put("/me", authUser, validate(updateProfileSchema), async (req: Authentic
       }
       return res.status(409).json({ error: "Email déjà utilisé" });
     }
-    console.error(e);
+    serverLog.error(e);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -354,7 +355,7 @@ router.put("/me/password", authUser, validate(changePasswordSchema), async (req:
     
     res.json({ message: "Mot de passe modifié avec succès" });
   } catch (e: any) {
-    console.error(e);
+    serverLog.error(e);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });

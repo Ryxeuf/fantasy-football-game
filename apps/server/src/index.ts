@@ -40,6 +40,7 @@ import { securityHeaders } from "./middleware/securityHeaders";
 import { setupSocket } from "./socket";
 import { CORS_ORIGINS } from "./config";
 import { invalidateAllMemo } from "./utils/memoize-async";
+import { serverLog } from "./utils/server-log";
 
 dotenv.config({ path: "../../prisma/.env" });
 // Si tests SQLite: pousser le schéma SQLite en mémoire partagée au démarrage
@@ -55,9 +56,9 @@ if (process.env.TEST_SQLITE === "1") {
         env: { ...process.env, TEST_DATABASE_URL: url },
       },
     );
-    console.log(`SQLite schema pushed (TEST_DATABASE_URL=${url})`);
+    serverLog.log(`SQLite schema pushed (TEST_DATABASE_URL=${url})`);
   } catch (e) {
-    console.error("Failed to push SQLite schema for tests", e);
+    serverLog.error("Failed to push SQLite schema for tests", e);
   }
 }
 
@@ -134,7 +135,7 @@ if (process.env.TEST_SQLITE === "1") {
         await fn();
       } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : String(e);
-        console.warn(`[__test/reset] ${label}: ${msg.slice(0, 160)}`);
+        serverLog.warn(`[__test/reset] ${label}: ${msg.slice(0, 160)}`);
       }
     };
     try {
@@ -185,7 +186,7 @@ if (process.env.TEST_SQLITE === "1") {
       invalidateAllMemo();
       return res.json({ ok: true });
     } catch (e: any) {
-      console.error(e);
+      serverLog.error(e);
       return res.status(500).json({ error: e?.message || "reset failed" });
     }
   });
@@ -235,7 +236,7 @@ if (process.env.TEST_SQLITE === "1") {
 
       return res.json({ id: user.id, email: user.email, name: user.name });
     } catch (e: any) {
-      console.error(e);
+      serverLog.error(e);
       return res
         .status(500)
         .json({ error: e?.message || "seed-user failed" });
@@ -295,7 +296,7 @@ if (process.env.TEST_SQLITE === "1") {
 
       return res.json({ id: team.id, name: team.name, roster: team.roster });
     } catch (e: any) {
-      console.error(e);
+      serverLog.error(e);
       return res
         .status(500)
         .json({ error: e?.message || "seed-team failed" });
@@ -348,7 +349,7 @@ if (process.env.TEST_SQLITE === "1") {
       });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
-      console.error("[__test/seed-skills]", msg);
+      serverLog.error("[__test/seed-skills]", msg);
       return res.status(500).json({ error: msg || "seed-skills failed" });
     }
   });
@@ -423,7 +424,7 @@ if (process.env.TEST_SQLITE === "1") {
       });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
-      console.error("[__test/seed-rosters]", msg);
+      serverLog.error("[__test/seed-rosters]", msg);
       return res.status(500).json({ error: msg || "seed-rosters failed" });
     }
   });
@@ -433,5 +434,5 @@ const httpServer = createServer(app);
 setupSocket(httpServer);
 
 httpServer.listen(API_PORT, () => {
-  console.log(`Express API server listening on http://localhost:${API_PORT}`);
+  serverLog.log(`Express API server listening on http://localhost:${API_PORT}`);
 });

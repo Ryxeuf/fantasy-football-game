@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { createRequire } from "node:module";
+import { serverLog } from "./utils/server-log";
 
 let client: any;
 if (process.env.TEST_SQLITE === "1") {
@@ -21,9 +22,9 @@ if (process.env.TEST_SQLITE === "1") {
       );
     }
     client = new SQLiteClient();
-    console.log("[prisma] Using SQLite test client");
+    serverLog.log("[prisma] Using SQLite test client");
   } catch (e) {
-    console.error(
+    serverLog.error(
       "[prisma] Impossible de charger le client SQLite de test, fallback Postgres:",
       e instanceof Error ? e.message : e,
     );

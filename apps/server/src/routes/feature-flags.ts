@@ -20,6 +20,7 @@ import {
   removeUserOverride,
 } from "../services/featureFlags";
 import { sendSuccess, sendError } from "../utils/api-response";
+import { serverLog } from "../utils/server-log";
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Erreur serveur";
@@ -43,7 +44,7 @@ userFeatureFlagsRouter.get("/me", async (req: AuthenticatedRequest, res) => {
     });
     return sendSuccess(res, keys);
   } catch (error: unknown) {
-    console.error("[featureFlags] /me error:", error);
+    serverLog.error("[featureFlags] /me error:", error);
     return sendError(res, errorMessage(error));
   }
 });
@@ -61,7 +62,7 @@ adminFeatureFlagsRouter.get("/", async (_req, res) => {
     const flags = await listAll();
     return sendSuccess(res, flags);
   } catch (error: unknown) {
-    console.error("[featureFlags] GET / error:", error);
+    serverLog.error("[featureFlags] GET / error:", error);
     return sendError(res, errorMessage(error));
   }
 });
@@ -83,7 +84,7 @@ adminFeatureFlagsRouter.post(
       const flag = await createFlag({ key, description, enabled });
       return sendSuccess(res, flag, 201);
     } catch (error: unknown) {
-      console.error("[featureFlags] POST / error:", error);
+      serverLog.error("[featureFlags] POST / error:", error);
       return sendError(res, errorMessage(error));
     }
   },
@@ -101,7 +102,7 @@ adminFeatureFlagsRouter.patch(
       const flag = await updateFlag(req.params.id, req.body);
       return sendSuccess(res, flag);
     } catch (error: unknown) {
-      console.error("[featureFlags] PATCH /:id error:", error);
+      serverLog.error("[featureFlags] PATCH /:id error:", error);
       return sendError(res, errorMessage(error));
     }
   },
@@ -116,7 +117,7 @@ adminFeatureFlagsRouter.delete("/:id", async (req, res) => {
     await deleteFlag(req.params.id);
     return sendSuccess(res, { id: req.params.id });
   } catch (error: unknown) {
-    console.error("[featureFlags] DELETE /:id error:", error);
+    serverLog.error("[featureFlags] DELETE /:id error:", error);
     return sendError(res, errorMessage(error));
   }
 });
@@ -130,7 +131,7 @@ adminFeatureFlagsRouter.get("/:id/users", async (req, res) => {
     const users = await listUsersForFlag(req.params.id);
     return sendSuccess(res, users);
   } catch (error: unknown) {
-    console.error("[featureFlags] GET /:id/users error:", error);
+    serverLog.error("[featureFlags] GET /:id/users error:", error);
     return sendError(res, errorMessage(error));
   }
 });
@@ -152,7 +153,7 @@ adminFeatureFlagsRouter.post(
       await addUserOverride(req.params.id, userId);
       return sendSuccess(res, { userId }, 201);
     } catch (error: unknown) {
-      console.error("[featureFlags] POST /:id/users error:", error);
+      serverLog.error("[featureFlags] POST /:id/users error:", error);
       return sendError(res, errorMessage(error));
     }
   },
@@ -167,7 +168,7 @@ adminFeatureFlagsRouter.delete("/:id/users/:userId", async (req, res) => {
     await removeUserOverride(req.params.id, req.params.userId);
     return sendSuccess(res, { userId: req.params.userId });
   } catch (error: unknown) {
-    console.error("[featureFlags] DELETE /:id/users/:userId error:", error);
+    serverLog.error("[featureFlags] DELETE /:id/users/:userId error:", error);
     return sendError(res, errorMessage(error));
   }
 });
