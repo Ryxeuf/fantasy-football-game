@@ -1,7 +1,23 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { GameBoardWithDugouts } from "@bb/ui";
+import dynamic from "next/dynamic";
+
+// S25.7 — Lazy-load Pixi.js board (>500KB). Meme pattern que /play, /replay,
+// /spectate : la page /dugout-demo expose le moteur de rendu mais ne le
+// charge que lorsqu'elle est visitee, plutot que de le bundler dans
+// l'app principale.
+const GameBoardWithDugouts = dynamic(
+  () => import("@bb/ui").then((m) => m.GameBoardWithDugouts),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full aspect-[2/1] bg-gray-900 text-gray-400 flex items-center justify-center rounded-lg">
+        Chargement du plateau…
+      </div>
+    ),
+  },
+);
 import {
   setup,
   getLegalMoves,

@@ -1,14 +1,29 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import dynamic from "next/dynamic";
 import {
   GameScoreboard,
-  GameBoardWithDugouts,
   GameLog,
 } from "@bb/ui";
 import type { ExtendedGameState } from "@bb/game-engine";
 import { API_BASE } from "../../auth-client";
 import { useSpectatorSocket } from "./hooks/useSpectatorSocket";
+
+// S25.7 — Lazy-load Pixi.js board (>500KB) ; meme pattern que /play et
+// /replay. Le chunk /spectate ne porte plus le moteur de rendu en main
+// bundle.
+const GameBoardWithDugouts = dynamic(
+  () => import("@bb/ui").then((m) => m.GameBoardWithDugouts),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full aspect-[2/1] bg-gray-900 text-gray-400 flex items-center justify-center rounded-lg">
+        Chargement du plateau…
+      </div>
+    ),
+  },
+);
 import type {
   StateUpdatedPayload,
   MatchEndedPayload,
