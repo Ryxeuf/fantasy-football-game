@@ -112,6 +112,20 @@ describe('Règle: Post-touchdown re-kickoff', () => {
       expect(result.preMatch?.kickingTeam).toBe('A');
     });
 
+    it('devrait préparer les positions légales de la moitié receveuse pour le drive suivant', () => {
+      const state = createPostTdState();
+      const rng = makeRNG('post-td-legal-positions');
+      const result = handlePostTouchdown(state, rng);
+
+      const legal = result.preMatch?.legalSetupPositions ?? [];
+      // B reçoit (kicker = A), donc moitié droite x=13..24, toute hauteur 0..14
+      expect(legal.length).toBe(12 * state.height);
+      expect(legal.every(p => p.x >= 13 && p.x <= 24)).toBe(true);
+      expect(legal.some(p => p.x === 13 && p.y === 7)).toBe(true);
+      expect(legal.some(p => p.x === 24 && p.y === 0)).toBe(true);
+      expect(legal.some(p => p.x === 12)).toBe(false);
+    });
+
     it('devrait ajouter un log de re-kickoff', () => {
       const state = createPostTdState();
       const rng = makeRNG('post-td-log');

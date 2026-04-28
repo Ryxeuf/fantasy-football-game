@@ -885,7 +885,10 @@ export function handlePostTouchdown(state: GameState, rng: RNG): GameState {
       kickingTeam: newKickingTeam,
       receivingTeam: receivingTeam,
       placedPlayers: [],
-      legalSetupPositions: [],
+      // Calculer la moitié receveuse pour le drive suivant. Sans cela,
+      // `placePlayerInSetup` rejette toute position et le post-touchdown
+      // bloque définitivement le match (ni IA ni humain ne peuvent placer).
+      legalSetupPositions: computeLegalSetupPositions(receivingTeam, newState.height),
     },
   };
 
@@ -1182,6 +1185,25 @@ export function clearDiceResult(state: GameState): GameState {
   };
 }
 
+/**
+ * Compute the legal setup positions for `team` on a board of `height` rows.
+ * Team A occupies the left half (x=1..12), team B the right half
+ * (x=13..24). Touchdown lines (x=0 and x=width-1) are excluded. All
+ * vertical rows (y=0..height-1) are valid; the LOS / wide-zone constraints
+ * are enforced later by `placePlayerInSetup`.
+ */
+export function computeLegalSetupPositions(team: TeamId, height: number): Position[] {
+  const xStart = team === 'A' ? 1 : 13;
+  const xEnd = team === 'A' ? 12 : 24;
+  const positions: Position[] = [];
+  for (let x = xStart; x <= xEnd; x += 1) {
+    for (let y = 0; y < height; y += 1) {
+      positions.push({ x, y });
+    }
+  }
+  return positions;
+}
+
 // Fonction pour entrer en phase setup (appelée après accepts et coin toss)
 export function enterSetupPhase(
   state: ExtendedGameState,
@@ -1189,24 +1211,7 @@ export function enterSetupPhase(
 ): ExtendedGameState {
   if (state.half !== 0 || (state.preMatch.phase !== 'idle' && state.preMatch.phase !== 'setup')) return state;
 
-  // Positions légales de setup pour toute la moitié de terrain de l'équipe
-  // Repère: board 26x15 (x: 0..25, y: 0..14). Bande touchdown sur y=0 (haut) et y=14 (bas).
-  // On autorise: équipe A (haut) sur y=1..6, équipe B (bas) sur y=8..13. Toutes colonnes x=0..25.
-  const buildHalf = (topHalf: boolean): Position[] => {
-    const positions: Position[] = [];
-    // Corriger la logique : équipe A (haut) sur x=1..12, équipe B (bas) sur x=13..24
-    // Toutes les colonnes y=0..14 sont autorisées
-    const xStart = topHalf ? 1 : 13; // exclure touchdown: 0 et 25
-    const xEnd = topHalf ? 12 : 24;
-    for (let x = xStart; x <= xEnd; x++) {
-      for (let y = 0; y < state.height; y++) {
-        positions.push({ x, y });
-      }
-    }
-    return positions;
-  };
-
-  const setupPositions: Position[] = buildHalf(receivingTeam === 'A');
+  const setupPositions = computeLegalSetupPositions(receivingTeam, state.height);
 
   return {
     ...state,
@@ -1334,16 +1339,7 @@ export function validatePlayerPlacement(state: ExtendedGameState): ExtendedGameS
   
   if (currentCoach === state.preMatch.receivingTeam) {
       // L'équipe receveuse a terminé, passer à l'équipe frappeuse
-      // Recalculer les positions légales pour l'autre moitié du terrain
-      const kickingTeamIsA = nextCoach === 'A';
-      const xStart = kickingTeamIsA ? 1 : 13;
-      const xEnd = kickingTeamIsA ? 12 : 24;
-      const kickingSetupPositions: Position[] = [];
-      for (let x = xStart; x <= xEnd; x++) {
-        for (let y = 0; y < state.height; y++) {
-          kickingSetupPositions.push({ x, y });
-        }
-      }
+      const kickingSetupPositions = computeLegalSetupPositions(nextCoach, state.height);
     return {
       ...state,
       preMatch: {
