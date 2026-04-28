@@ -1,3 +1,10 @@
+## [1.76.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.76.0...v1.76.1) (2026-04-28)
+
+
+### 🐛 Bug Fixes
+
+* **server:** route AI to setup/kickoff helpers instead of gameplay loop ([1a9317c](https://github.com/Ryxeuf/fantasy-football-game/commit/1a9317c9e038487af598ec6309c93f3ade41d47d))
+
 ## [1.76.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.75.0...v1.76.0) (2026-04-28)
 
 
