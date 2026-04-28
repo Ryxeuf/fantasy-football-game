@@ -3,6 +3,7 @@ import { prisma } from "../prisma";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
 import jwt from "jsonwebtoken";
 import { acceptAndMaybeStartMatch } from "../services/match-start";
+import { cancelMatch } from "../services/match-cancel";
 import type { Move } from "@bb/game-engine";
 import { getUserTeamSide } from "../services/turn-ownership";
 import { ensureSetupPhasePersisted } from "../services/prematch-setup";
@@ -103,6 +104,25 @@ router.post("/accept", authUser, validate(acceptMatchSchema), async (req: Authen
     });
     if (!result.ok && "status" in result && typeof result.status === "number")
       return res.status(result.status).json({ error: result.error });
+    return res.json(result);
+  } catch (e: any) {
+    serverLog.error(e);
+    return res.status(500).json({ error: e?.message || "Erreur serveur" });
+  }
+});
+
+// Annuler un match en attente. N'est possible que tant que le match n'a pas
+// commence (status === "pending"). L'utilisateur doit etre inscrit au match.
+router.post("/:id/cancel", authUser, async (req: AuthenticatedRequest, res) => {
+  try {
+    const matchId = req.params.id;
+    const result = await cancelMatch(prisma as any, {
+      matchId,
+      userId: req.user!.id,
+    });
+    if (!result.ok) {
+      return res.status(result.status).json({ error: result.error });
+    }
     return res.json(result);
   } catch (e: any) {
     serverLog.error(e);

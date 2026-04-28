@@ -37,6 +37,7 @@ function getStatusLabel(status: string): string {
     case "prematch": return "Pré-match";
     case "prematch-setup": return "Configuration";
     case "ended": return "Terminé";
+    case "cancelled": return "Annulé";
     default: return status;
   }
 }
@@ -47,6 +48,7 @@ function getStatusColor(status: string): string {
     case "pending": return "bg-yellow-500";
     case "prematch": case "prematch-setup": return "bg-blue-500";
     case "ended": return "bg-gray-500";
+    case "cancelled": return "bg-red-500";
     default: return "bg-gray-400";
   }
 }
