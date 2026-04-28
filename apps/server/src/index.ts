@@ -40,9 +40,21 @@ import { securityHeaders } from "./middleware/securityHeaders";
 import { setupSocket } from "./socket";
 import { CORS_ORIGINS } from "./config";
 import { invalidateAllMemo } from "./utils/memoize-async";
-import { serverLog } from "./utils/server-log";
+import { serverLog, setServerLogImpl } from "./utils/server-log";
+import { pinoServerLogImpl } from "./utils/pino-logger";
+import { requestContext } from "./middleware/requestContext";
+import { liveness, readiness } from "./utils/healthcheck";
 
 dotenv.config({ path: "../../prisma/.env" });
+
+// S25.1 — Branche pino comme implementation de serverLog en prod/dev. En
+// test (TEST_SQLITE=1 ou NODE_ENV=test) on garde la delegation console.*
+// pour ne pas casser les spies des suites existantes.
+const inTestEnv =
+  process.env.NODE_ENV === "test" || process.env.TEST_SQLITE === "1";
+if (!inTestEnv && process.env.LOG_FORMAT !== "console") {
+  setServerLogImpl(pinoServerLogImpl);
+}
 // Si tests SQLite: pousser le schéma SQLite en mémoire partagée au démarrage
 if (process.env.TEST_SQLITE === "1") {
   const url =
@@ -77,6 +89,9 @@ app.use(cors({ origin: CORS_ORIGINS }));
 // gzip/deflate/br responses over ~1KB. Team payloads with 11-16 players
 // plus star players commonly exceed 50KB uncompressed.
 app.use(compression());
+// S25.1 — Correlation ID + per-request pino child logger. Mounted before
+// requestTiming so the requestId is visible in slow-call warnings.
+app.use(requestContext());
 // Warn on any request that took >=500ms. Set REQUEST_LOG=1 to see every
 // request (useful locally; stays off in prod to avoid log spam).
 app.use(requestTiming(500));
@@ -85,7 +100,17 @@ app.use(bodyParser.json());
 // Rate limiting global sur toutes les routes API (100 req/min par IP)
 app.use(apiRateLimiter);
 
-app.get("/health", (_req, res) => res.json({ ok: true }));
+// Healthchecks S25.1 :
+//  - /health      : alias retro-compatible vers liveness ({ok:true,status:"live"})
+//  - /health/live : liveness pure (process up)
+//  - /health/ready: readiness profond (ping DB, 503 si la DB est down)
+const probeReadiness = readiness({
+  dbPing: () => prisma.$queryRaw`SELECT 1`,
+  timeoutMs: 1500,
+});
+app.get("/health", liveness);
+app.get("/health/live", liveness);
+app.get("/health/ready", probeReadiness);
 
 // Rate limiting strict uniquement sur login/register/refresh (anti brute-force)
 app.use("/auth/login", authRateLimiter);
