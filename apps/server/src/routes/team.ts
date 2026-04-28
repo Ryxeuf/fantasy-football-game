@@ -1768,54 +1768,63 @@ router.get(
   handleListAvailableStarPlayers,
 );
 
-// Endpoint pour recruter un Star Player
-router.post("/:id/star-players", authUser, validate(addStarPlayerToTeamSchema), async (req: AuthenticatedRequest, res) => {
+// Endpoint pour recruter un Star Player (S25.5ab — ApiResponse<T>)
+export async function handleHireStarPlayer(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
   const teamId = req.params.id;
   const { starPlayerSlug } = req.body;
 
   try {
-    // Vérifier que l'équipe appartient à l'utilisateur
     const team = await prisma.team.findFirst({
       where: { id: teamId, ownerId: req.user!.id },
-      include: { 
-        players: true,
-        starPlayers: true
-      }
+      include: { players: true, starPlayers: true },
     });
 
     if (!team) {
-      return res.status(404).json({ error: "Équipe introuvable" });
+      sendError(res, "Equipe introuvable", 404);
+      return;
     }
 
-    // Vérifier que l'équipe n'est pas engagée dans un match actif
     const activeSelection = await prisma.teamSelection.findFirst({
-      where: { 
+      where: {
         teamId: teamId,
-        match: { status: { in: ["pending", "active"] } }
-      }
+        match: { status: { in: ["pending", "active"] } },
+      },
     });
 
     if (activeSelection) {
-      return res.status(400).json({ 
-        error: "Impossible de modifier cette équipe car elle est engagée dans un match en cours" 
-      });
+      sendError(
+        res,
+        "Impossible de modifier cette equipe car elle est engagee dans un match en cours",
+        400,
+      );
+      return;
     }
 
-    // Calculer le budget disponible
-    const { getPlayerCost } = await import('../../../../packages/game-engine/src/utils/team-value-calculator');
+    const { getPlayerCost } = await import(
+      "../../../../packages/game-engine/src/utils/team-value-calculator"
+    );
     const teamRuleset = (team.ruleset as Ruleset) ?? DEFAULT_RULESET;
-    const currentPlayersCost = team.players.reduce((total: number, player: any) => {
-      return total + getPlayerCost(player.position, team.roster, teamRuleset);
-    }, 0);
-    
-    const currentStarPlayersCost = team.starPlayers.reduce((total: number, sp: any) => {
-      return total + sp.cost;
-    }, 0);
+    const currentPlayersCost = team.players.reduce(
+      (total: number, player: any) => {
+        return total + getPlayerCost(player.position, team.roster, teamRuleset);
+      },
+      0,
+    );
+
+    const currentStarPlayersCost = team.starPlayers.reduce(
+      (total: number, sp: any) => {
+        return total + sp.cost;
+      },
+      0,
+    );
 
     const budgetInPo = team.initialBudget * 1000;
-    const availableBudget = budgetInPo - currentPlayersCost - currentStarPlayersCost;
+    const availableBudget =
+      budgetInPo - currentPlayersCost - currentStarPlayersCost;
 
-    // Valider le recrutement
     const validation = validateStarPlayerHire(
       starPlayerSlug,
       team.roster,
@@ -1826,106 +1835,122 @@ router.post("/:id/star-players", authUser, validate(addStarPlayerToTeamSchema), 
     );
 
     if (!validation.valid) {
-      return res.status(400).json({ error: validation.error });
+      sendError(res, validation.error ?? "Validation echouee", 400);
+      return;
     }
 
     const starPlayer = validation.starPlayer!;
 
-    // Vérifier les paires obligatoires
     const pairSlug = requiresPair(starPlayerSlug);
     const starPlayersToHire: Array<{ slug: string; cost: number }> = [
-      { slug: starPlayerSlug, cost: starPlayer.cost }
+      { slug: starPlayerSlug, cost: starPlayer.cost },
     ];
 
     if (pairSlug) {
-      // Vérifier que le partenaire n'est pas déjà recruté
-      const pairAlreadyHired = team.starPlayers.some((sp: any) => sp.starPlayerSlug === pairSlug);
-      
+      const pairAlreadyHired = team.starPlayers.some(
+        (sp: any) => sp.starPlayerSlug === pairSlug,
+      );
+
       if (!pairAlreadyHired) {
         const pairData = getStarPlayerBySlug(pairSlug, team.ruleset);
         if (!pairData) {
-          return res.status(400).json({ 
-            error: `Star Player partenaire '${pairSlug}' introuvable` 
-          });
+          sendError(
+            res,
+            `Star Player partenaire '${pairSlug}' introuvable`,
+            400,
+          );
+          return;
         }
 
-        // Vérifier qu'on a la place pour les deux
         const totalPlayers = team.players.length + team.starPlayers.length;
-        if (totalPlayers + 1 >= 16) { // +1 car on recrute 2
-          return res.status(400).json({ 
-            error: "Pas assez de place pour recruter la paire (limite de 16 joueurs)" 
-          });
+        if (totalPlayers + 1 >= 16) {
+          sendError(
+            res,
+            "Pas assez de place pour recruter la paire (limite de 16 joueurs)",
+            400,
+          );
+          return;
         }
 
-        // Vérifier le budget pour les deux
         const totalCost = starPlayer.cost + pairData.cost;
         if (totalCost > availableBudget) {
-          return res.status(400).json({ 
-            error: `Budget insuffisant pour recruter la paire. Coût: ${(totalCost / 1000).toLocaleString()} K po, disponible: ${(availableBudget / 1000).toLocaleString()} K po` 
-          });
+          sendError(
+            res,
+            `Budget insuffisant pour recruter la paire. Cout: ${(totalCost / 1000).toLocaleString()} K po, disponible: ${(availableBudget / 1000).toLocaleString()} K po`,
+            400,
+          );
+          return;
         }
 
         starPlayersToHire.push({ slug: pairSlug, cost: pairData.cost });
       }
     }
 
-    // Recruter le(s) Star Player(s)
     const createdStarPlayers = await Promise.all(
       starPlayersToHire.map((sp) =>
         prisma.teamStarPlayer.create({
           data: {
             teamId: teamId,
             starPlayerSlug: sp.slug,
-            cost: sp.cost
-          }
-        })
-      )
+            cost: sp.cost,
+          },
+        }),
+      ),
     );
 
-    // Recalculer les valeurs d'équipe
     await updateTeamValues(prisma, teamId);
 
-    // Retourner l'équipe mise à jour
     const updatedTeam = await prisma.team.findUnique({
       where: { id: teamId },
-      include: { 
-        players: true,
-        starPlayers: true
-      }
+      include: { players: true, starPlayers: true },
     });
 
-    // Enrichir les Star Players recrutés
     const enrichedNewStarPlayers = createdStarPlayers.map((sp: any) => {
-      const starPlayerData = getStarPlayerBySlug(sp.starPlayerSlug, team.ruleset);
+      const starPlayerData = getStarPlayerBySlug(
+        sp.starPlayerSlug,
+        team.ruleset,
+      );
       return {
         id: sp.id,
         slug: sp.starPlayerSlug,
         cost: sp.cost,
         hiredAt: sp.hiredAt,
-        ...starPlayerData
+        ...starPlayerData,
       };
     });
 
-    res.status(201).json({ 
-      team: updatedTeam,
-      newStarPlayers: enrichedNewStarPlayers,
-      message: enrichedNewStarPlayers.length > 1 
-        ? `${enrichedNewStarPlayers.map((sp: any) => sp.displayName).join(" et ")} recrutés avec succès`
-        : `${enrichedNewStarPlayers[0].displayName} recruté avec succès`
-    });
+    sendSuccess(
+      res,
+      {
+        team: updatedTeam,
+        newStarPlayers: enrichedNewStarPlayers,
+        message:
+          enrichedNewStarPlayers.length > 1
+            ? `${enrichedNewStarPlayers
+                .map((sp: any) => sp.displayName)
+                .join(" et ")} recrutes avec succes`
+            : `${enrichedNewStarPlayers[0]?.displayName ?? starPlayerSlug} recrute avec succes`,
+      },
+      201,
+    );
   } catch (e: any) {
     serverLog.error("Erreur lors du recrutement du Star Player:", e);
-    
-    // Gérer les erreurs de contrainte unique
+
     if (e?.code === "P2002") {
-      return res.status(409).json({ 
-        error: "Ce Star Player est déjà recruté dans cette équipe" 
-      });
+      sendError(res, "Ce Star Player est deja recrute dans cette equipe", 409);
+      return;
     }
-    
-    return res.status(500).json({ error: "Erreur serveur" });
+
+    sendError(res, "Erreur serveur", 500);
   }
-});
+}
+
+router.post(
+  "/:id/star-players",
+  authUser,
+  validate(addStarPlayerToTeamSchema),
+  handleHireStarPlayer,
+);
 
 // Endpoint pour retirer un Star Player (S25.5v — ApiResponse<T>)
 export async function handleDeleteTeamStarPlayer(
