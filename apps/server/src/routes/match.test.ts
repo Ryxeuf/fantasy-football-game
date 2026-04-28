@@ -20,6 +20,7 @@ vi.mock("../prisma", () => ({
       create: vi.fn(),
       findMany: vi.fn(),
       findFirst: vi.fn(),
+      count: vi.fn(),
     },
     teamSelection: {
       findMany: vi.fn(),
@@ -78,6 +79,7 @@ import {
   handleGetMatchResults,
   handleSpectateMatch,
   handleReplayMatch,
+  handleGetMatchSummary,
   handleGetMatchDetailsByToken,
   handleGetMatchDetails,
   handleGetMatchTeams,
@@ -96,6 +98,7 @@ const mockPrisma = prisma as unknown as {
     create: ReturnType<typeof vi.fn>;
     findMany: ReturnType<typeof vi.fn>;
     findFirst: ReturnType<typeof vi.fn>;
+    count: ReturnType<typeof vi.fn>;
   };
   teamSelection: {
     findMany: ReturnType<typeof vi.fn>;
@@ -1123,5 +1126,113 @@ describe("Route: GET /match/:id/teams (S25.5j)", () => {
     await handleGetMatchTeams(req, res);
     expect(res.statusCode).toBe(500);
     expect(res.payload).toMatchObject({ success: false, error: "Erreur serveur" });
+  });
+});
+
+describe("Route: GET /match/:id/summary (S25.5k)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("returns ApiSuccess with teams, score, half, turn and acceptances", async () => {
+    mockPrisma.match.findUnique.mockResolvedValue({
+      id: "m1",
+      status: "active",
+      seed: "seed-1",
+      creatorId: "user-1",
+      createdAt: new Date("2026-04-28T09:00:00Z"),
+    });
+    mockPrisma.teamSelection.findMany.mockResolvedValue([
+      {
+        userId: "user-1",
+        user: { id: "user-1", name: "Alice", email: "a@x", eloRating: 1200 },
+        teamRef: { id: "t1", name: "Reds", roster: "skaven" },
+      },
+      {
+        userId: "user-2",
+        user: { id: "user-2", name: "Bob", email: "b@x", eloRating: 1100 },
+        teamRef: { id: "t2", name: "Blues", roster: "lizardmen" },
+      },
+    ]);
+    mockPrisma.turn.findMany.mockResolvedValue([
+      { payload: { type: "accept", userId: "user-1" } },
+      { payload: { type: "init" } },
+    ]);
+    mockPrisma.turn.count.mockResolvedValue(3);
+
+    const req = createReq({ params: { id: "m1" } });
+    const res = createRes();
+    await handleGetMatchSummary(req, res);
+
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: {
+        id: "m1",
+        status: "active",
+        teams: {
+          local: { name: "Reds", coach: "Alice", eloRating: 1200 },
+          visitor: { name: "Blues", coach: "Bob", eloRating: 1100 },
+        },
+        score: { teamA: 0, teamB: 0 },
+        half: 1,
+        turn: 4,
+        acceptances: { local: true, visitor: false },
+      },
+    });
+  });
+
+  it("returns 404 ApiError when match is not found", async () => {
+    mockPrisma.match.findUnique.mockResolvedValue(null);
+    const req = createReq({ params: { id: "missing" } });
+    const res = createRes();
+    await handleGetMatchSummary(req, res);
+    expect(res.statusCode).toBe(404);
+    expect(res.payload).toMatchObject({ success: false, error: "Partie introuvable" });
+  });
+
+  it("returns 500 ApiError when prisma throws", async () => {
+    mockPrisma.match.findUnique.mockRejectedValue(new Error("db down"));
+    const req = createReq({ params: { id: "m1" } });
+    const res = createRes();
+    await handleGetMatchSummary(req, res);
+    expect(res.statusCode).toBe(500);
+    expect(res.payload).toMatchObject({ success: false, error: "Erreur serveur" });
+  });
+
+  it("falls back to selection order when creatorId is missing", async () => {
+    mockPrisma.match.findUnique.mockResolvedValue({
+      id: "m2",
+      status: "pending",
+      seed: "seed-2",
+      creatorId: null,
+      createdAt: new Date("2026-04-28T09:00:00Z"),
+    });
+    mockPrisma.teamSelection.findMany.mockResolvedValue([
+      {
+        userId: "user-3",
+        user: { id: "user-3", name: "Carla", email: "c@x", eloRating: 950 },
+        teamRef: { id: "t3", name: "Greens", roster: "orc" },
+      },
+      {
+        userId: "user-4",
+        user: { id: "user-4", name: "Dan", email: "d@x", eloRating: 1050 },
+        teamRef: { id: "t4", name: "Yellows", roster: "human" },
+      },
+    ]);
+    mockPrisma.turn.findMany.mockResolvedValue([]);
+    mockPrisma.turn.count.mockResolvedValue(0);
+
+    const req = createReq({ params: { id: "m2" } });
+    const res = createRes();
+    await handleGetMatchSummary(req, res);
+
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: {
+        teams: {
+          local: { name: "Greens", coach: "Carla" },
+          visitor: { name: "Yellows", coach: "Dan" },
+        },
+        acceptances: { local: false, visitor: false },
+      },
+    });
   });
 });

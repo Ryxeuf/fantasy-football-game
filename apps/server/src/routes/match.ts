@@ -564,7 +564,11 @@ export async function handleListMyMatches(
 router.get("/my-matches", authUser, handleListMyMatches);
 
 // Résumé d'un match: équipes, coachs, score (approx), tour/mi-temps
-router.get("/:id/summary", authUser, async (req: AuthenticatedRequest, res) => {
+// (S25.5k — ApiResponse<T>)
+export async function handleGetMatchSummary(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
   try {
     const matchId = req.params.id;
     const match = await prisma.match.findUnique({
@@ -577,7 +581,10 @@ router.get("/:id/summary", authUser, async (req: AuthenticatedRequest, res) => {
         createdAt: true,
       },
     });
-    if (!match) return res.status(404).json({ error: "Partie introuvable" });
+    if (!match) {
+      sendError(res, "Partie introuvable", 404);
+      return;
+    }
 
     const [selections, acceptTurns] = await Promise.all([
       prisma.teamSelection.findMany({
@@ -632,7 +639,7 @@ router.get("/:id/summary", authUser, async (req: AuthenticatedRequest, res) => {
       visitor && acceptedUserIds.includes(visitor.userId)
     );
 
-    return res.json({
+    sendSuccess(res, {
       id: match.id,
       status: match.status,
       createdAt: match.createdAt,
@@ -645,11 +652,13 @@ router.get("/:id/summary", authUser, async (req: AuthenticatedRequest, res) => {
       turn,
       acceptances: { local: localAccepted, visitor: visitorAccepted },
     });
-  } catch (e) {
+  } catch (e: unknown) {
     serverLog.error(e);
-    return res.status(500).json({ error: "Erreur serveur" });
+    sendError(res, "Erreur serveur", 500);
   }
-});
+}
+
+router.get("/:id/summary", authUser, handleGetMatchSummary);
 
 // Nouvel endpoint pour l'état du jeu
 router.get("/:id/state", authUser, async (req: AuthenticatedRequest, res) => {
