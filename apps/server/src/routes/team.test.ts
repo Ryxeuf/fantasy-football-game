@@ -86,6 +86,7 @@ import {
   handlePurchase,
   handleChooseTeam,
   handleUpdateTeam,
+  handleAddTeamPlayer,
 } from "./team";
 import { requiresPair } from "../utils/star-player-validation";
 import { updateTeamValues } from "../utils/team-values";
@@ -1621,6 +1622,230 @@ describe("Route: PUT /team/:id (S25.5y)", () => {
     });
     const res = createRes();
     await handleUpdateTeam(req, res);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+});
+
+describe("Route: POST /team/:id/players (S25.5z)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  async function getMocks() {
+    const prismaMock = vi.mocked(await import("../prisma")).prisma;
+    return {
+      teamFindFirst: prismaMock.team.findFirst as ReturnType<typeof vi.fn>,
+      selectionFindFirst: prismaMock.teamSelection.findFirst as ReturnType<
+        typeof vi.fn
+      >,
+    };
+  }
+
+  function makeTeam(overrides: Partial<{ players: any[] }> = {}) {
+    return {
+      id: "team-1",
+      ownerId: "user-1",
+      roster: "skaven",
+      ruleset: "season_3",
+      initialBudget: 1000,
+      players: [],
+      ...overrides,
+    };
+  }
+
+  it("returns 404 ApiError when team not found", async () => {
+    const { teamFindFirst } = await getMocks();
+    teamFindFirst.mockResolvedValue(null);
+
+    const req = createReq({
+      params: { id: "team-1" },
+      body: { position: "skaven_lineman", name: "X", number: 5 },
+    });
+    const res = createRes();
+    await handleAddTeamPlayer(req, res);
+
+    expect(res.statusCode).toBe(404);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+
+  it("returns 400 ApiError when team is engaged in active match", async () => {
+    const { teamFindFirst, selectionFindFirst } = await getMocks();
+    teamFindFirst.mockResolvedValue(makeTeam());
+    selectionFindFirst.mockResolvedValue({ id: "sel-1" });
+
+    const req = createReq({
+      params: { id: "team-1" },
+      body: { position: "skaven_lineman", name: "X", number: 5 },
+    });
+    const res = createRes();
+    await handleAddTeamPlayer(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+
+  it("returns 400 ApiError when team already has 16 players", async () => {
+    const { teamFindFirst, selectionFindFirst } = await getMocks();
+    const fullPlayers = Array.from({ length: 16 }, (_, i) => ({
+      id: `p-${i}`,
+      number: i + 1,
+      name: `Player ${i}`,
+      position: "skaven_lineman",
+    }));
+    teamFindFirst.mockResolvedValue(makeTeam({ players: fullPlayers }));
+    selectionFindFirst.mockResolvedValue(null);
+
+    const req = createReq({
+      params: { id: "team-1" },
+      body: { position: "skaven_lineman", name: "X", number: 99 },
+    });
+    const res = createRes();
+    await handleAddTeamPlayer(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: expect.stringContaining("16"),
+    });
+  });
+
+  it("returns 400 ApiError when number already used", async () => {
+    const { teamFindFirst, selectionFindFirst } = await getMocks();
+    teamFindFirst.mockResolvedValue(
+      makeTeam({
+        players: [
+          {
+            id: "p-1",
+            number: 5,
+            name: "Existing",
+            position: "skaven_lineman",
+          },
+        ],
+      }),
+    );
+    selectionFindFirst.mockResolvedValue(null);
+
+    const req = createReq({
+      params: { id: "team-1" },
+      body: { position: "skaven_lineman", name: "Newcomer", number: 5 },
+    });
+    const res = createRes();
+    await handleAddTeamPlayer(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: expect.stringContaining("Existing"),
+    });
+  });
+
+  it("returns 400 ApiError when roster not recognized", async () => {
+    const { teamFindFirst, selectionFindFirst } = await getMocks();
+    teamFindFirst.mockResolvedValue(makeTeam());
+    selectionFindFirst.mockResolvedValue(null);
+    mockGetRosterFromDb.mockResolvedValue(null);
+
+    const req = createReq({
+      params: { id: "team-1" },
+      body: { position: "skaven_lineman", name: "X", number: 5 },
+    });
+    const res = createRes();
+    await handleAddTeamPlayer(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: expect.stringContaining("Roster"),
+    });
+  });
+
+  it("returns 400 ApiError when position not in roster", async () => {
+    const { teamFindFirst, selectionFindFirst } = await getMocks();
+    teamFindFirst.mockResolvedValue(makeTeam());
+    selectionFindFirst.mockResolvedValue(null);
+    mockGetRosterFromDb.mockResolvedValue({
+      name: "Skaven",
+      budget: 1000,
+      tier: "B",
+      naf: true,
+      positions: [],
+    });
+
+    const req = createReq({
+      params: { id: "team-1" },
+      body: { position: "unknown_position", name: "X", number: 5 },
+    });
+    const res = createRes();
+    await handleAddTeamPlayer(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: expect.stringContaining("Position"),
+    });
+  });
+
+  it("returns 400 ApiError when position max reached", async () => {
+    const { teamFindFirst, selectionFindFirst } = await getMocks();
+    teamFindFirst.mockResolvedValue(
+      makeTeam({
+        players: [
+          {
+            id: "p-1",
+            number: 1,
+            name: "A",
+            position: "skaven_blitzer",
+          },
+        ],
+      }),
+    );
+    selectionFindFirst.mockResolvedValue(null);
+    mockGetRosterFromDb.mockResolvedValue({
+      name: "Skaven",
+      budget: 1000,
+      tier: "B",
+      naf: true,
+      positions: [
+        {
+          slug: "skaven_blitzer",
+          displayName: "Blitzer",
+          cost: 90,
+          min: 0,
+          max: 1,
+          ma: 7,
+          st: 3,
+          ag: 3,
+          pa: 4,
+          av: 9,
+          skills: "",
+        },
+      ],
+    });
+
+    const req = createReq({
+      params: { id: "team-1" },
+      body: { position: "skaven_blitzer", name: "B", number: 2 },
+    });
+    const res = createRes();
+    await handleAddTeamPlayer(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: expect.stringContaining("Limite"),
+    });
+  });
+
+  it("returns 500 ApiError when prisma throws", async () => {
+    const { teamFindFirst } = await getMocks();
+    teamFindFirst.mockRejectedValue(new Error("db down"));
+
+    const req = createReq({
+      params: { id: "team-1" },
+      body: { position: "skaven_lineman", name: "X", number: 5 },
+    });
+    const res = createRes();
+    await handleAddTeamPlayer(req, res);
 
     expect(res.statusCode).toBe(500);
     expect(res.payload).toMatchObject({ success: false });
