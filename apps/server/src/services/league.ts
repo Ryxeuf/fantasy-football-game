@@ -84,6 +84,10 @@ export interface ListLeaguesFilter {
   creatorId?: string;
   status?: LeagueStatus;
   publicOnly?: boolean;
+  // S25.6 — pagination. Si non fournis, on retombe sur des defauts
+  // raisonnables (50 / 0) pour eviter qu'un client legacy charge tout.
+  limit?: number;
+  offset?: number;
 }
 
 const DEFAULT_INITIAL_ELO = 1000;
@@ -285,10 +289,20 @@ export async function listLeagues(filter: ListLeaguesFilter) {
   if (filter.status) {
     where.status = filter.status;
   }
-  return prisma.league.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
-  });
+  // S25.6 — defaults raisonnables si limit/offset non fournis. Cap a 100
+  // pour eviter qu'un caller passe une valeur exagerement grande.
+  const limit = Math.min(Math.max(filter.limit ?? 50, 1), 100);
+  const offset = Math.max(filter.offset ?? 0, 0);
+  const [items, total] = await Promise.all([
+    prisma.league.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      skip: offset,
+    }),
+    prisma.league.count({ where }),
+  ]);
+  return { items, total, limit, offset };
 }
 
 /**

@@ -99,13 +99,22 @@ export async function handleListLeagues(
 ): Promise<void> {
   const query = req.query as unknown as ListLeaguesQuery;
   try {
-    const leagues = await listLeagues({
+    const { items, total, limit, offset } = await listLeagues({
       creatorId: query.creatorId,
       status: query.status,
       publicOnly: query.publicOnly,
+      limit: query.limit,
+      offset: query.offset,
     });
-    sendSuccess(res, {
-      leagues: (leagues as Array<Record<string, unknown>>).map(serializeLeague),
+    // S25.6 — pagination : on garde le champ `leagues` pour la
+    // retro-compat des clients existants, et on expose total/limit/offset
+    // dans `meta` (cf. ApiSuccess<T>.meta).
+    res.status(200).json({
+      success: true,
+      data: {
+        leagues: (items as Array<Record<string, unknown>>).map(serializeLeague),
+      },
+      meta: { total, limit, page: Math.floor(offset / limit) },
     });
   } catch (e: unknown) {
     domainError(res, e);
