@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { resetDb, get } from "../helpers/api";
+import { resetDb, get, unwrap } from "../helpers/api";
 import {
   bootMatch,
   createTwoCoaches,
@@ -54,9 +54,11 @@ describe("E2E API — smoke", () => {
     expect(started.receivingUserId).toBeTruthy();
     expect(started.kickingUserId).not.toBe(started.receivingUserId);
 
-    const summary = await get<{ status: string }>(
-      `/match/${match.id}/summary`,
-      coachA.token,
+    const summary = unwrap(
+      await get<{ success: true; data: { status: string } }>(
+        `/match/${match.id}/summary`,
+        coachA.token,
+      ),
     );
     // Au retour de /match/accept le serveur passe la partie en prematch-setup
     // et lance la séquence pré-match automatique. Le statut "active" n'arrive
@@ -73,13 +75,17 @@ describe("E2E API — smoke", () => {
     expect(started.kickingUserId).toBeTruthy();
 
     // Le match n'est plus en pending; on le vérifie via /summary (route légère).
-    const summaryA = await get<{ status: string }>(
-      `/match/${match.id}/summary`,
-      coachA.token,
+    const summaryA = unwrap(
+      await get<{ success: true; data: { status: string } }>(
+        `/match/${match.id}/summary`,
+        coachA.token,
+      ),
     );
-    const summaryB = await get<{ status: string }>(
-      `/match/${match.id}/summary`,
-      coachB.token,
+    const summaryB = unwrap(
+      await get<{ success: true; data: { status: string } }>(
+        `/match/${match.id}/summary`,
+        coachB.token,
+      ),
     );
     expect(summaryA.status).not.toBe("pending");
     expect(summaryB.status).not.toBe("pending");
