@@ -1,6 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import { API_BASE } from "../../../auth-client";
+import { apiRequest } from "../../../lib/api-client";
 import { getRerollCost } from "@bb/game-engine";
 
 interface TeamInfo {
@@ -58,22 +59,11 @@ export default function TeamInfoEditor({
     setSuccess(false);
 
     try {
-      const token = localStorage.getItem("auth_token");
-      const response = await fetch(`${API_BASE}/team/${teamId}/info`, {
+      // S25.5u — apiRequest unwrap l'enveloppe ApiResponse<T>
+      await apiRequest<{ team: unknown }>(`/team/${teamId}/info`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
-        },
         body: JSON.stringify(info),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Erreur ${response.status}`);
-      }
-
-      const result = await response.json();
       onUpdate(info);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);

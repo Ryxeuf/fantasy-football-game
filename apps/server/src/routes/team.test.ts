@@ -14,6 +14,7 @@ vi.mock("../prisma", () => ({
       findMany: vi.fn(),
       findFirst: vi.fn(),
       findUnique: vi.fn(),
+      update: vi.fn(),
       count: vi.fn(),
     },
     teamSelection: {
@@ -60,6 +61,7 @@ import {
   handleRecalculateTeam,
   handleListAvailablePositions,
   handleDeleteTeamPlayer,
+  handlePutTeamInfo,
 } from "./team";
 import { updateTeamValues } from "../utils/team-values";
 import type { AuthenticatedRequest } from "../middleware/authUser";
@@ -865,6 +867,105 @@ describe("Route: DELETE /team/:id/players/:playerId (S25.5t)", () => {
     const req = createReq({ params: { id: "team-1", playerId: "p-1" } });
     const res = createRes();
     await handleDeleteTeamPlayer(req, res);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+});
+
+describe("Route: PUT /team/:id/info (S25.5u)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  async function getMocks() {
+    const prismaMock = vi.mocked(await import("../prisma")).prisma;
+    return {
+      teamFindFirst: prismaMock.team.findFirst as ReturnType<typeof vi.fn>,
+      teamFindUnique: prismaMock.team.findUnique as ReturnType<typeof vi.fn>,
+      teamUpdate: prismaMock.team.update as ReturnType<typeof vi.fn>,
+      selectionFindFirst: prismaMock.teamSelection.findFirst as ReturnType<
+        typeof vi.fn
+      >,
+      updateValues: updateTeamValues as ReturnType<typeof vi.fn>,
+    };
+  }
+
+  it("returns 404 ApiError when team not found", async () => {
+    const { teamFindFirst } = await getMocks();
+    teamFindFirst.mockResolvedValue(null);
+
+    const req = createReq({ params: { id: "team-1" }, body: { rerolls: 4 } });
+    const res = createRes();
+    await handlePutTeamInfo(req, res);
+
+    expect(res.statusCode).toBe(404);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+
+  it("returns 400 ApiError when team is engaged in active match", async () => {
+    const { teamFindFirst, selectionFindFirst } = await getMocks();
+    teamFindFirst.mockResolvedValue({ id: "team-1", ownerId: "user-1" });
+    selectionFindFirst.mockResolvedValue({ id: "sel-1" });
+
+    const req = createReq({ params: { id: "team-1" }, body: { rerolls: 4 } });
+    const res = createRes();
+    await handlePutTeamInfo(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: expect.stringContaining("match"),
+    });
+  });
+
+  it("returns ApiSuccess with updated team and forwards only defined fields", async () => {
+    const {
+      teamFindFirst,
+      teamFindUnique,
+      teamUpdate,
+      selectionFindFirst,
+      updateValues,
+    } = await getMocks();
+    teamFindFirst.mockResolvedValue({ id: "team-1", ownerId: "user-1" });
+    selectionFindFirst.mockResolvedValue(null);
+    teamUpdate.mockResolvedValue({ id: "team-1", players: [] });
+    updateValues.mockResolvedValue({ teamValue: 1000, currentValue: 1000 });
+    const finalTeam = { id: "team-1", rerolls: 4, players: [] };
+    teamFindUnique.mockResolvedValue(finalTeam);
+
+    const req = createReq({
+      params: { id: "team-1" },
+      body: {
+        rerolls: 4,
+        cheerleaders: 2,
+        // assistants/apothecary/dedicatedFans intentionally omitted
+      },
+    });
+    const res = createRes();
+    await handlePutTeamInfo(req, res);
+
+    expect(teamUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "team-1" },
+        data: { rerolls: 4, cheerleaders: 2 },
+      }),
+    );
+    expect(updateValues).toHaveBeenCalledWith(expect.anything(), "team-1");
+    expect(res.statusCode).toBe(200);
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: { team: finalTeam },
+    });
+  });
+
+  it("returns 500 ApiError when prisma update throws", async () => {
+    const { teamFindFirst, selectionFindFirst, teamUpdate } = await getMocks();
+    teamFindFirst.mockResolvedValue({ id: "team-1", ownerId: "user-1" });
+    selectionFindFirst.mockResolvedValue(null);
+    teamUpdate.mockRejectedValue(new Error("update failed"));
+
+    const req = createReq({ params: { id: "team-1" }, body: { rerolls: 4 } });
+    const res = createRes();
+    await handlePutTeamInfo(req, res);
 
     expect(res.statusCode).toBe(500);
     expect(res.payload).toMatchObject({ success: false });

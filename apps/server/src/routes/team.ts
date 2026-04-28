@@ -884,49 +884,48 @@ router.post("/build", authUser, validate(buildTeamSchema), async (req: Authentic
     });
 });
 
-// Endpoint pour mettre à jour les informations d'équipe (fans, coachs, relances, etc.)
-router.put("/:id/info", authUser, validate(updateTeamInfoSchema), async (req: AuthenticatedRequest, res) => {
+// Endpoint pour mettre a jour les informations d'equipe (S25.5u — ApiResponse<T>)
+export async function handlePutTeamInfo(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
   const teamId = req.params.id;
-  const {
-    rerolls,
-    cheerleaders,
-    assistants,
-    apothecary,
-    dedicatedFans
-  } = req.body as {
-    rerolls?: number;
-    cheerleaders?: number;
-    assistants?: number;
-    apothecary?: boolean;
-    dedicatedFans?: number;
-  };
+  const { rerolls, cheerleaders, assistants, apothecary, dedicatedFans } =
+    req.body as {
+      rerolls?: number;
+      cheerleaders?: number;
+      assistants?: number;
+      apothecary?: boolean;
+      dedicatedFans?: number;
+    };
 
   try {
-    // Vérifier que l'équipe appartient à l'utilisateur
     const team = await prisma.team.findFirst({
-      where: { id: teamId, ownerId: req.user!.id }
+      where: { id: teamId, ownerId: req.user!.id },
     });
 
     if (!team) {
-      return res.status(404).json({ error: "Équipe introuvable" });
+      sendError(res, "Equipe introuvable", 404);
+      return;
     }
 
-    // Vérifier que l'équipe n'est pas engagée dans un match actif
     const activeSelection = await prisma.teamSelection.findFirst({
-      where: { 
+      where: {
         teamId: teamId,
-        match: { status: { in: ["pending", "active"] } }
-      }
+        match: { status: { in: ["pending", "active"] } },
+      },
     });
 
     if (activeSelection) {
-      return res.status(400).json({ 
-        error: "Impossible de modifier cette équipe car elle est engagée dans un match en cours" 
-      });
+      sendError(
+        res,
+        "Impossible de modifier cette equipe car elle est engagee dans un match en cours",
+        400,
+      );
+      return;
     }
 
-    // Mise à jour de l'équipe
-    const updatedTeam = await prisma.team.update({
+    await prisma.team.update({
       where: { id: teamId },
       data: {
         ...(rerolls !== undefined && { rerolls }),
@@ -935,24 +934,29 @@ router.put("/:id/info", authUser, validate(updateTeamInfoSchema), async (req: Au
         ...(apothecary !== undefined && { apothecary }),
         ...(dedicatedFans !== undefined && { dedicatedFans }),
       },
-      include: { players: true }
+      include: { players: true },
     });
 
-    // Recalculer les valeurs d'équipe après modification
     await updateTeamValues(prisma, teamId);
 
-    // Récupérer l'équipe mise à jour avec les nouvelles valeurs
     const finalTeam = await prisma.team.findUnique({
       where: { id: teamId },
-      include: { players: true }
+      include: { players: true },
     });
 
-    res.json({ team: finalTeam });
-  } catch (e: any) {
-    serverLog.error("Erreur lors de la modification des informations d'équipe:", e);
-    return res.status(500).json({ error: "Erreur serveur" });
+    sendSuccess(res, { team: finalTeam });
+  } catch (e: unknown) {
+    serverLog.error("Erreur lors de la modification des informations d'equipe:", e);
+    sendError(res, "Erreur serveur", 500);
   }
-});
+}
+
+router.put(
+  "/:id/info",
+  authUser,
+  validate(updateTeamInfoSchema),
+  handlePutTeamInfo,
+);
 
 // Endpoint pour recalculer les valeurs d'equipe (S25.5r — ApiResponse<T>)
 export async function handleRecalculateTeam(
