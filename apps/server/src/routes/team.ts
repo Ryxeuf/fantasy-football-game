@@ -954,38 +954,41 @@ router.put("/:id/info", authUser, validate(updateTeamInfoSchema), async (req: Au
   }
 });
 
-// Endpoint pour recalculer les valeurs d'équipe
-router.post("/:id/recalculate", authUser, async (req: AuthenticatedRequest, res) => {
+// Endpoint pour recalculer les valeurs d'equipe (S25.5r — ApiResponse<T>)
+export async function handleRecalculateTeam(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
   const teamId = req.params.id;
 
   try {
-    // Vérifier que l'équipe appartient à l'utilisateur
     const team = await prisma.team.findFirst({
-      where: { id: teamId, ownerId: req.user!.id }
+      where: { id: teamId, ownerId: req.user!.id },
     });
 
     if (!team) {
-      return res.status(404).json({ error: "Équipe introuvable" });
+      sendError(res, "Equipe introuvable", 404);
+      return;
     }
 
-    // Recalculer les valeurs d'équipe
     const { teamValue, currentValue } = await updateTeamValues(prisma, teamId);
 
-    // Récupérer l'équipe mise à jour
     const updatedTeam = await prisma.team.findUnique({
       where: { id: teamId },
-      include: { players: true }
+      include: { players: true },
     });
 
-    res.json({ 
+    sendSuccess(res, {
       team: updatedTeam,
-      message: `Valeurs recalculées: VE=${teamValue.toLocaleString()} po, VEA=${currentValue.toLocaleString()} po`
+      message: `Valeurs recalculees: VE=${teamValue.toLocaleString()} po, VEA=${currentValue.toLocaleString()} po`,
     });
-  } catch (e: any) {
-    serverLog.error("Erreur lors du recalcul des valeurs d'équipe:", e);
-    return res.status(500).json({ error: "Erreur serveur" });
+  } catch (e: unknown) {
+    serverLog.error("Erreur lors du recalcul des valeurs d'equipe:", e);
+    sendError(res, "Erreur serveur", 500);
   }
-});
+}
+
+router.post("/:id/recalculate", authUser, handleRecalculateTeam);
 
 router.put("/:id", authUser, validate(updateTeamSchema), async (req: AuthenticatedRequest, res) => {
   const teamId = req.params.id;

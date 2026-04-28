@@ -13,6 +13,7 @@ vi.mock("../prisma", () => ({
     team: {
       findMany: vi.fn(),
       findFirst: vi.fn(),
+      findUnique: vi.fn(),
       count: vi.fn(),
     },
     teamSelection: {
@@ -26,6 +27,10 @@ vi.mock("../prisma", () => ({
 
 vi.mock("../utils/roster-helpers", () => ({
   getRosterFromDb: vi.fn(),
+}));
+
+vi.mock("../utils/team-values", () => ({
+  updateTeamValues: vi.fn(),
 }));
 
 vi.mock("../services/team-name-generator", () => ({
@@ -49,7 +54,9 @@ import {
   handleListAvailableTeams,
   handleListMyTeams,
   handleListTeamStarPlayers,
+  handleRecalculateTeam,
 } from "./team";
+import { updateTeamValues } from "../utils/team-values";
 import type { AuthenticatedRequest } from "../middleware/authUser";
 
 const mockGetRosterFromDb = getRosterFromDb as ReturnType<typeof vi.fn>;
@@ -510,6 +517,81 @@ describe("Route: GET /team/:id/star-players (S25.5q)", () => {
     const req = createReq({ params: { id: "team-1" } });
     const res = createRes();
     await handleListTeamStarPlayers(req, res);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+});
+
+describe("Route: POST /team/:id/recalculate (S25.5r)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  async function getMocks() {
+    const prismaMock = vi.mocked(await import("../prisma")).prisma;
+    return {
+      findFirst: prismaMock.team.findFirst as ReturnType<typeof vi.fn>,
+      findUnique: prismaMock.team.findUnique as ReturnType<typeof vi.fn>,
+      updateValues: updateTeamValues as ReturnType<typeof vi.fn>,
+    };
+  }
+
+  it("returns 404 ApiError when team not found or owned by other user", async () => {
+    const { findFirst } = await getMocks();
+    findFirst.mockResolvedValue(null);
+
+    const req = createReq({ params: { id: "team-1" } });
+    const res = createRes();
+    await handleRecalculateTeam(req, res);
+
+    expect(findFirst).toHaveBeenCalledWith({
+      where: { id: "team-1", ownerId: "user-1" },
+    });
+    expect(res.statusCode).toBe(404);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+
+  it("returns ApiSuccess with updated team and recalculated message", async () => {
+    const { findFirst, findUnique, updateValues } = await getMocks();
+    findFirst.mockResolvedValue({ id: "team-1", ownerId: "user-1" });
+    updateValues.mockResolvedValue({ teamValue: 1100, currentValue: 1050 });
+    const updatedTeam = { id: "team-1", currentValue: 1050, players: [] };
+    findUnique.mockResolvedValue(updatedTeam);
+
+    const req = createReq({ params: { id: "team-1" } });
+    const res = createRes();
+    await handleRecalculateTeam(req, res);
+
+    expect(updateValues).toHaveBeenCalledWith(expect.anything(), "team-1");
+    expect(res.statusCode).toBe(200);
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: {
+        team: updatedTeam,
+        message: expect.stringContaining("VE="),
+      },
+    });
+  });
+
+  it("returns 500 ApiError when updateTeamValues throws", async () => {
+    const { findFirst, updateValues } = await getMocks();
+    findFirst.mockResolvedValue({ id: "team-1", ownerId: "user-1" });
+    updateValues.mockRejectedValue(new Error("compute failed"));
+
+    const req = createReq({ params: { id: "team-1" } });
+    const res = createRes();
+    await handleRecalculateTeam(req, res);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+
+  it("returns 500 ApiError when prisma findFirst throws", async () => {
+    const { findFirst } = await getMocks();
+    findFirst.mockRejectedValue(new Error("db down"));
+
+    const req = createReq({ params: { id: "team-1" } });
+    const res = createRes();
+    await handleRecalculateTeam(req, res);
 
     expect(res.statusCode).toBe(500);
     expect(res.payload).toMatchObject({ success: false });

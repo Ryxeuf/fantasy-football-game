@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { API_BASE } from "../../../auth-client";
+import { apiRequest } from "../../../lib/api-client";
 import SkillTooltip from "../components/SkillTooltip";
 import TeamInfoDisplay from "../components/TeamInfoDisplay";
 import { getPlayerCost, getDisplayName, getRerollCost } from "@bb/game-engine";
@@ -78,18 +79,11 @@ export default function TeamDetailPage() {
   const handleRecalculate = async () => {
     setRecalculating(true);
     try {
-      const token = localStorage.getItem("auth_token");
-      const res = await fetch(`${API_BASE}/team/${id}/recalculate`, {
-        method: "POST",
-        headers: { Authorization: token ? `Bearer ${token}` : "" },
-      });
-      
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData?.error || `${t.teams.error} ${res.status}`);
-      }
-      
-      const result = await res.json();
+      // S25.5r — apiRequest unwrap l'enveloppe ApiResponse<T>
+      const result = await apiRequest<{ team: unknown; message: string }>(
+        `/team/${id}/recalculate`,
+        { method: "POST" },
+      );
       // Mettre à jour les données en conservant currentMatch si présent
       setData((prev: any) => ({
         ...prev,
