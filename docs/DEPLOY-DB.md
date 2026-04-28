@@ -79,3 +79,8 @@ supportés est également exposée par l'API via le champ
 Adoption de `prisma migrate deploy` pour tracer l'historique des schémas
 et sécuriser les migrations de données : voir le ticket de suivi ouvert
 après la correction du bug « Saison 3 vide » sur `/teams`.
+
+## Mémoire incidents
+
+Pour les causes racines et correctifs des incidents de déploiement
+(`deploy.sh`, rollback, etc.), voir `docs/DEPLOY-INCIDENTS.md`.
