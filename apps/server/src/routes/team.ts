@@ -1547,22 +1547,24 @@ router.get("/:id/available-positions", authUser, async (req: AuthenticatedReques
 // STAR PLAYERS ENDPOINTS
 // =============================================================================
 
-// Endpoint pour obtenir les Star Players d'une équipe
-router.get("/:id/star-players", authUser, async (req: AuthenticatedRequest, res) => {
+// Endpoint pour obtenir les Star Players d'une equipe (S25.5q — ApiResponse<T>)
+export async function handleListTeamStarPlayers(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
   const teamId = req.params.id;
 
   try {
-    // Vérifier que l'équipe appartient à l'utilisateur
     const team = await prisma.team.findFirst({
       where: { id: teamId, ownerId: req.user!.id },
-      include: { starPlayers: true }
+      include: { starPlayers: true },
     });
 
     if (!team) {
-      return res.status(404).json({ error: "Équipe introuvable" });
+      sendError(res, "Equipe introuvable", 404);
+      return;
     }
 
-    // Enrichir les Star Players avec leurs données complètes
     const enrichedStarPlayers = team.starPlayers.map((sp: any) => {
       const starPlayerData = getStarPlayerBySlug(sp.starPlayerSlug);
       return {
@@ -1570,19 +1572,21 @@ router.get("/:id/star-players", authUser, async (req: AuthenticatedRequest, res)
         slug: sp.starPlayerSlug,
         cost: sp.cost,
         hiredAt: sp.hiredAt,
-        ...starPlayerData
+        ...starPlayerData,
       };
     });
 
-    res.json({
+    sendSuccess(res, {
       starPlayers: enrichedStarPlayers,
-      count: enrichedStarPlayers.length
+      count: enrichedStarPlayers.length,
     });
-  } catch (e: any) {
-    serverLog.error("Erreur lors de la récupération des Star Players:", e);
-    return res.status(500).json({ error: "Erreur serveur" });
+  } catch (e: unknown) {
+    serverLog.error("Erreur lors de la recuperation des Star Players:", e);
+    sendError(res, "Erreur serveur", 500);
   }
-});
+}
+
+router.get("/:id/star-players", authUser, handleListTeamStarPlayers);
 
 // Endpoint pour obtenir les Star Players disponibles pour une équipe
 router.get("/:id/available-star-players", authUser, async (req: AuthenticatedRequest, res) => {

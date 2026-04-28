@@ -48,6 +48,7 @@ import {
   handleGetRoster,
   handleListAvailableTeams,
   handleListMyTeams,
+  handleListTeamStarPlayers,
 } from "./team";
 import type { AuthenticatedRequest } from "../middleware/authUser";
 
@@ -414,5 +415,103 @@ describe("Route: GET /team/mine (S25.5p)", () => {
       success: true,
       data: { meta: expect.objectContaining({ total: 42 }) },
     });
+  });
+});
+
+describe("Route: GET /team/:id/star-players (S25.5q)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  async function getMocks() {
+    return {
+      findFirst: vi.mocked(await import("../prisma")).prisma.team
+        .findFirst as ReturnType<typeof vi.fn>,
+    };
+  }
+
+  it("returns 404 ApiError when team not found or owned by other user", async () => {
+    const { findFirst } = await getMocks();
+    findFirst.mockResolvedValue(null);
+
+    const req = createReq({ params: { id: "team-1" } });
+    const res = createRes();
+    await handleListTeamStarPlayers(req, res);
+
+    expect(findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "team-1", ownerId: "user-1" },
+      }),
+    );
+    expect(res.statusCode).toBe(404);
+    expect(res.payload).toMatchObject({ success: false });
+  });
+
+  it("returns ApiSuccess with empty list when team has no star players", async () => {
+    const { findFirst } = await getMocks();
+    findFirst.mockResolvedValue({
+      id: "team-1",
+      ownerId: "user-1",
+      ruleset: "season_3",
+      starPlayers: [],
+    });
+
+    const req = createReq({ params: { id: "team-1" } });
+    const res = createRes();
+    await handleListTeamStarPlayers(req, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: { starPlayers: [], count: 0 },
+    });
+  });
+
+  it("returns ApiSuccess enriched with star player base fields", async () => {
+    const { findFirst } = await getMocks();
+    const hiredAt = new Date("2026-01-01");
+    findFirst.mockResolvedValue({
+      id: "team-1",
+      ownerId: "user-1",
+      ruleset: "season_3",
+      starPlayers: [
+        {
+          id: "sp-1",
+          starPlayerSlug: "morg-n-thorg",
+          cost: 430,
+          hiredAt,
+        },
+      ],
+    });
+
+    const req = createReq({ params: { id: "team-1" } });
+    const res = createRes();
+    await handleListTeamStarPlayers(req, res);
+
+    const payload = res.payload as {
+      success: boolean;
+      data: {
+        starPlayers: Array<{ id: string; slug: string; cost: number; hiredAt: Date }>;
+        count: number;
+      };
+    };
+    expect(payload.success).toBe(true);
+    expect(payload.data.count).toBe(1);
+    expect(payload.data.starPlayers[0]).toMatchObject({
+      id: "sp-1",
+      slug: "morg-n-thorg",
+      cost: 430,
+      hiredAt,
+    });
+  });
+
+  it("returns 500 ApiError when prisma throws", async () => {
+    const { findFirst } = await getMocks();
+    findFirst.mockRejectedValue(new Error("db down"));
+
+    const req = createReq({ params: { id: "team-1" } });
+    const res = createRes();
+    await handleListTeamStarPlayers(req, res);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.payload).toMatchObject({ success: false });
   });
 });
