@@ -1,4 +1,5 @@
 import { Router } from "express";
+import type { Response } from "express";
 import { prisma } from "../prisma";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
 import jwt from "jsonwebtoken";
@@ -26,12 +27,20 @@ import type { AIDifficulty } from "@bb/game-engine";
 import { getSpectatorCount } from "../game-spectator";
 import { MATCH_SECRET } from "../config";
 import { serverLog } from "../utils/server-log";
+import { sendError, sendSuccess } from "../utils/api-response";
 
 const router = Router();
 const ALLOWED_TEAMS = ["skaven", "lizardmen"] as const;
 
-// Créer une partie, le créateur reçoit un token de match
-router.post("/create", authUser, validate(createMatchSchema), async (req: AuthenticatedRequest, res) => {
+function errorMessage(e: unknown): string {
+  return e instanceof Error ? e.message : "Erreur serveur";
+}
+
+// Créer une partie, le créateur reçoit un token de match (S25.5 — ApiResponse<T>)
+export async function handleCreateMatch(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
   try {
     const { terrainSkin, turnTimerEnabled, rulesMode } = req.body || {};
     const seed = `match-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -45,7 +54,7 @@ router.post("/create", authUser, validate(createMatchSchema), async (req: Authen
 
     // Stocker les options de match dans un turn initial de type "options"
     const hasOptions =
-      terrainSkin || typeof turnTimerEnabled === 'boolean' || rulesMode;
+      terrainSkin || typeof turnTimerEnabled === "boolean" || rulesMode;
     if (hasOptions) {
       await prisma.turn.create({
         data: {
@@ -56,60 +65,75 @@ router.post("/create", authUser, validate(createMatchSchema), async (req: Authen
             terrainSkin: terrainSkin || "grass",
             turnTimerEnabled: turnTimerEnabled !== false,
             // N.2 — Mode simplifie pour debutants (leverager SIMPLIFIED_RULES).
-            rulesMode: rulesMode === 'simplified' ? 'simplified' : 'full',
+            rulesMode: rulesMode === "simplified" ? "simplified" : "full",
           },
         },
       });
     }
-    const token = jwt.sign(
+    const matchToken = jwt.sign(
       { matchId: match.id, userId: req.user!.id },
       MATCH_SECRET,
       { expiresIn: "2h" },
     );
-    return res.status(201).json({ match, matchToken: token });
-  } catch (e: any) {
+    sendSuccess(res, { match, matchToken }, 201);
+  } catch (e: unknown) {
     serverLog.error(e);
-    return res.status(500).json({ error: e?.message || "Erreur serveur" });
+    sendError(res, errorMessage(e), 500);
   }
-});
+}
 
-// Rejoindre une partie existante, retourne un token de match
-router.post("/join", authUser, validate(joinMatchSchema), async (req: AuthenticatedRequest, res) => {
+// Rejoindre une partie existante, retourne un token de match (S25.5 — ApiResponse<T>)
+export async function handleJoinMatch(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
   try {
     const { matchId } = req.body;
     const match = await prisma.match.update({
       where: { id: matchId },
       data: { players: { connect: { id: req.user!.id } } },
     });
-    if (!match) return res.status(404).json({ error: "Partie introuvable" });
-    const token = jwt.sign(
+    if (!match) {
+      sendError(res, "Partie introuvable", 404);
+      return;
+    }
+    const matchToken = jwt.sign(
       { matchId: match.id, userId: req.user!.id },
       MATCH_SECRET,
       { expiresIn: "2h" },
     );
-    return res.json({ match, matchToken: token });
-  } catch (e: any) {
+    sendSuccess(res, { match, matchToken });
+  } catch (e: unknown) {
     serverLog.error(e);
-    return res.status(500).json({ error: e?.message || "Erreur serveur" });
+    sendError(res, errorMessage(e), 500);
   }
-});
+}
 
-// Accepter le match: chaque coach doit accepter. Au second accept, on lance la séquence de pré-match
-router.post("/accept", authUser, validate(acceptMatchSchema), async (req: AuthenticatedRequest, res) => {
+// Accepter le match: chaque coach doit accepter. Au second accept, on lance la séquence de pré-match (S25.5 — ApiResponse<T>)
+export async function handleAcceptMatch(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
   try {
     const { matchId } = req.body as { matchId: string };
     const result = await acceptAndMaybeStartMatch(prisma as any, {
       matchId,
       userId: req.user!.id,
     });
-    if (!result.ok && "status" in result && typeof result.status === "number")
-      return res.status(result.status).json({ error: result.error });
-    return res.json(result);
-  } catch (e: any) {
+    if (!result.ok && "status" in result && typeof result.status === "number") {
+      sendError(res, result.error ?? "Erreur", result.status);
+      return;
+    }
+    sendSuccess(res, result);
+  } catch (e: unknown) {
     serverLog.error(e);
-    return res.status(500).json({ error: e?.message || "Erreur serveur" });
+    sendError(res, errorMessage(e), 500);
   }
-});
+}
+
+router.post("/create", authUser, validate(createMatchSchema), handleCreateMatch);
+router.post("/join", authUser, validate(joinMatchSchema), handleJoinMatch);
+router.post("/accept", authUser, validate(acceptMatchSchema), handleAcceptMatch);
 
 // Annuler un match en attente. N'est possible que tant que le match n'a pas
 // commence (status === "pending"). L'utilisateur doit etre inscrit au match.
