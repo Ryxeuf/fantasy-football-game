@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { post, rawPost, resetDb } from "../helpers/api";
+import { post, rawPost, resetDb, unwrap } from "../helpers/api";
 import {
   createMatch,
   createTeam,
@@ -41,16 +41,21 @@ describe("E2E API — /team/choose", () => {
     const { coachA, coachB } = await createTwoCoaches();
     const match = await createMatch(coachA, coachB);
 
-    const result = await post<{
-      selection: {
-        userId: string;
-        matchId: string;
-        teamRef: { name: string; roster: string };
-      };
-    }>("/team/choose", coachA.token, {
-      matchId: match.id,
-      teamId: coachA.teamId,
-    });
+    const result = unwrap(
+      await post<{
+        success: true;
+        data: {
+          selection: {
+            userId: string;
+            matchId: string;
+            teamRef: { name: string; roster: string };
+          };
+        };
+      }>("/team/choose", coachA.token, {
+        matchId: match.id,
+        teamId: coachA.teamId,
+      }),
+    );
 
     expect(result.selection.userId).toBe(coachA.userId);
     expect(result.selection.matchId).toBe(match.id);
