@@ -73,18 +73,18 @@ export default function TeamStarPlayersManager({ teamId, token }: TeamStarPlayer
       });
       setHiredStarPlayers(hiredData.starPlayers || []);
 
-      // Charger les Star Players disponibles
-      const availableRes = await fetch(`${API_URL}/team/${teamId}/available-star-players`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      // Charger les Star Players disponibles (S25.5aa — ApiResponse<T>)
+      const availableData = await apiRequest<{
+        availableStarPlayers: StarPlayer[];
+        availableBudget: number;
+        totalBudget: number;
+        currentPlayerCount: number;
+        currentStarPlayerCount: number;
+        totalPlayers: number;
+        maxPlayers: number;
+      }>(`/team/${teamId}/available-star-players`).catch((e) => {
+        throw new Error(e?.message || 'Erreur lors du chargement des Star Players disponibles');
       });
-
-      if (!availableRes.ok) {
-        throw new Error('Erreur lors du chargement des Star Players disponibles');
-      }
-
-      const availableData = await availableRes.json();
       setAvailableStarPlayers(availableData.availableStarPlayers || []);
       setBudgetInfo({
         availableBudget: availableData.availableBudget || 0,
