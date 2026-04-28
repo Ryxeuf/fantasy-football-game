@@ -44,6 +44,22 @@ vi.mock("../services/match-cancel", () => ({
   cancelMatch: vi.fn(),
 }));
 
+vi.mock("../services/prematch-setup", () => ({
+  ensureSetupPhasePersisted: vi.fn(),
+}));
+
+vi.mock("../services/ai-setup", () => ({
+  runAISetupIfNeeded: vi.fn(),
+}));
+
+vi.mock("../services/ai-kickoff", () => ({
+  runAIKickoffIfNeeded: vi.fn(),
+}));
+
+vi.mock("../services/turn-ownership", () => ({
+  getUserTeamSide: vi.fn(),
+}));
+
 vi.mock("jsonwebtoken", () => ({
   default: {
     sign: vi.fn(() => "signed-token"),
@@ -83,7 +99,11 @@ import {
   handleGetMatchDetailsByToken,
   handleGetMatchDetails,
   handleGetMatchTeams,
+  handleGetMatchState,
 } from "./match";
+import { ensureSetupPhasePersisted } from "../services/prematch-setup";
+import { runAISetupIfNeeded } from "../services/ai-setup";
+import { getUserTeamSide } from "../services/turn-ownership";
 import { getSpectatorCount } from "../game-spectator";
 import type { AuthenticatedRequest } from "../middleware/authUser";
 
@@ -112,6 +132,11 @@ const mockCreatePractice = createOnlinePracticeMatch as ReturnType<
   typeof vi.fn
 >;
 const mockCancelMatch = cancelMatch as ReturnType<typeof vi.fn>;
+const mockEnsureSetupPhasePersisted = ensureSetupPhasePersisted as ReturnType<
+  typeof vi.fn
+>;
+const mockRunAISetupIfNeeded = runAISetupIfNeeded as ReturnType<typeof vi.fn>;
+const mockGetUserTeamSide = getUserTeamSide as ReturnType<typeof vi.fn>;
 
 function createRes() {
   const res: Partial<Response> & {
@@ -1234,5 +1259,120 @@ describe("Route: GET /match/:id/summary (S25.5k)", () => {
         acceptances: { local: false, visitor: false },
       },
     });
+  });
+});
+
+describe("Route: GET /match/:id/state (S25.5l)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockEnsureSetupPhasePersisted.mockResolvedValue(null);
+    mockRunAISetupIfNeeded.mockResolvedValue(undefined);
+    mockGetUserTeamSide.mockResolvedValue("A");
+  });
+
+  it("returns 404 ApiError when match is not found", async () => {
+    mockPrisma.match.findUnique.mockResolvedValue(null);
+    const req = createReq({ params: { id: "missing" } });
+    const res = createRes();
+    await handleGetMatchState(req, res);
+    expect(res.statusCode).toBe(404);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: "Partie introuvable",
+    });
+  });
+
+  it("returns 400 ApiError when match status is pending", async () => {
+    mockPrisma.match.findUnique.mockResolvedValue({
+      id: "m1",
+      status: "pending",
+      turns: [],
+    });
+    const req = createReq({ params: { id: "m1" } });
+    const res = createRes();
+    await handleGetMatchState(req, res);
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toMatchObject({
+      success: false,
+      error: "Partie pas encore prête",
+    });
+  });
+
+  it("returns ApiSuccess with active metadata (currentTeam, isMyTurn, moveCount, lastMoveAt) for active match", async () => {
+    const now = new Date("2026-04-28T10:00:00Z");
+    mockPrisma.match.findUnique.mockResolvedValue({
+      id: "m1",
+      status: "active",
+      turns: [
+        {
+          number: 1,
+          payload: {
+            type: "gameplay-move",
+            gameState: { currentPlayer: "A", preMatch: { phase: "playing" } },
+          },
+          createdAt: now,
+        },
+      ],
+    });
+    mockGetUserTeamSide.mockResolvedValue("A");
+
+    const req = createReq({ params: { id: "m1" } });
+    const res = createRes();
+    await handleGetMatchState(req, res);
+
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: {
+        gameState: { currentPlayer: "A" },
+        matchStatus: "active",
+        currentTeam: "A",
+        isMyTurn: true,
+        myTeamSide: "A",
+        moveCount: 1,
+        lastMoveAt: now,
+      },
+    });
+  });
+
+  it("returns ApiSuccess with prematch-setup metadata (myTeamSide, isMyTurn) for prematch-setup match", async () => {
+    mockPrisma.match.findUnique.mockResolvedValue({
+      id: "m2",
+      status: "prematch-setup",
+      turns: [
+        {
+          number: 0,
+          payload: {
+            type: "validate-setup",
+            gameState: {
+              preMatch: { phase: "setup", currentCoach: "B" },
+            },
+          },
+        },
+      ],
+    });
+    mockGetUserTeamSide.mockResolvedValue("B");
+
+    const req = createReq({ params: { id: "m2" } });
+    const res = createRes();
+    await handleGetMatchState(req, res);
+
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: {
+        matchStatus: "prematch-setup",
+        myTeamSide: "B",
+        isMyTurn: true,
+      },
+    });
+    expect((res.payload as { data: { gameState: unknown } }).data.gameState).toBeDefined();
+  });
+
+  it("returns 500 ApiError when prisma throws", async () => {
+    mockPrisma.match.findUnique.mockRejectedValue(new Error("db down"));
+    const req = createReq({ params: { id: "m1" } });
+    const res = createRes();
+    await handleGetMatchState(req, res);
+    expect(res.statusCode).toBe(500);
+    expect(res.payload).toMatchObject({ success: false, error: "Erreur serveur" });
   });
 });
