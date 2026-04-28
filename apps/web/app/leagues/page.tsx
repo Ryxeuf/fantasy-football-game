@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { API_BASE } from "../auth-client";
+import { apiRequest } from "../lib/api-client";
 import { useLanguage } from "../contexts/LanguageContext";
 
 type LeagueStatus =
@@ -39,11 +39,14 @@ const STATUS_VALUES: LeagueStatus[] = [
   "archived",
 ];
 
-function buildListUrl(status: StatusFilter): string {
+// S25.5c — chemin relatif (sans API_BASE) : `apiRequest` re-prefixe en
+// ajoutant API_BASE et l'`Authorization: Bearer ...` automatiquement,
+// puis unwrap l'enveloppe `ApiResponse<T>` quand elle est presente.
+function buildListPath(status: StatusFilter): string {
   const params = new URLSearchParams();
   if (status !== "all") params.set("status", status);
   const qs = params.toString();
-  return `${API_BASE}/league${qs ? `?${qs}` : ""}`;
+  return `/league${qs ? `?${qs}` : ""}`;
 }
 
 export default function LeaguesPage() {
@@ -59,21 +62,10 @@ export default function LeaguesPage() {
       try {
         setLoading(true);
         setError(null);
-        const token =
-          typeof window !== "undefined"
-            ? localStorage.getItem("auth_token")
-            : null;
-        const headers: Record<string, string> = {};
-        if (token) headers.Authorization = `Bearer ${token}`;
-        const response = await fetch(buildListUrl(statusFilter), { headers });
-        if (!response.ok) {
-          const body = (await response.json().catch(() => ({}))) as {
-            error?: string;
-          };
-          throw new Error(body.error ?? t.leagues.errorLoad);
-        }
-        const json = (await response.json()) as { leagues: League[] };
-        if (!cancelled) setLeagues(json.leagues);
+        const body = await apiRequest<{ leagues: League[] }>(
+          buildListPath(statusFilter),
+        );
+        if (!cancelled) setLeagues(body.leagues ?? []);
       } catch (err: unknown) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : t.leagues.errorLoad);
