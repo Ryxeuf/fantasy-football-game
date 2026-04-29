@@ -49,3 +49,10 @@ export const changePasswordSchema = z.object({
 export const refreshTokenSchema = z.object({
   refreshToken: z.string().min(1, "Refresh token requis"),
 });
+
+/**
+ * S26.3j — Toggle "Profil prive" RGPD pour `/coach/{slug}`.
+ */
+export const updatePrivacySchema = z.object({
+  privateProfile: z.boolean(),
+});
