@@ -66,6 +66,7 @@ import PreMatchSummary from "../../components/PreMatchSummary";
 import HalftimeTransition from "../../components/HalftimeTransition";
 import { InducementsPhaseUI } from "./components/InducementsPhaseUI";
 import { KickoffSequencePanel } from "./components/KickoffSequencePanel";
+import { SetupPhasePanel } from "./components/SetupPhasePanel";
 import { normalizeState } from "./utils/normalize-state";
 import * as kickoffActions from "./utils/kickoff-actions";
 import { validateSetupPlacement } from "./utils/validate-setup";
@@ -750,100 +751,15 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
                     onResolveKickoffEvent={handleResolveKickoffEvent}
                   />
                 ) : state.preMatch?.phase === "setup" ? (
-                  <div>
-                    {/* Étapes de setup */}
-                    <div className="mb-2">
-                      <div className="flex items-center justify-center gap-2 text-xs text-gray-400 mb-2">
-                        <span className={`px-2 py-0.5 rounded ${
-                          state.preMatch.currentCoach === state.preMatch.receivingTeam
-                            ? "bg-green-100 text-green-700 font-semibold"
-                            : "bg-gray-100 text-gray-500 line-through"
-                        }`}>
-                          1. {state.preMatch.receivingTeam === "A" ? state.teamNames.teamA : state.teamNames.teamB} place
-                        </span>
-                        <span className="text-gray-300">&rarr;</span>
-                        <span className={`px-2 py-0.5 rounded ${
-                          state.preMatch.currentCoach === state.preMatch.kickingTeam
-                            ? "bg-green-100 text-green-700 font-semibold"
-                            : "bg-gray-100 text-gray-400"
-                        }`}>
-                          2. {state.preMatch.kickingTeam === "A" ? state.teamNames.teamA : state.teamNames.teamB} place
-                        </span>
-                        <span className="text-gray-300">&rarr;</span>
-                        <span className="px-2 py-0.5 rounded bg-gray-100 text-gray-400">
-                          3. Kickoff
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="font-semibold text-gray-800">
-                      Au tour de{" "}
-                      <span className="px-2 py-1 rounded bg-green-600 text-white">
-                        {state.preMatch.currentCoach === "A"
-                          ? state.teamNames.teamA
-                          : state.teamNames.teamB}
-                      </span>{" "}
-                      de placer ses joueurs
-                    </div>
-                    {(() => {
-                      const currentCoach = state.preMatch?.currentCoach;
-                      const availableCount = state.players?.filter(
-                        p => p.team === currentCoach && (!p.state || p.state === "active")
-                      ).length || 0;
-                      const target = Math.min(11, availableCount);
-                      const onFieldCount = state.players?.filter(
-                        p => p.team === currentCoach && p.pos.x >= 0
-                      ).length || 0;
-                      return (
-                        <div className="text-xs text-gray-500 mt-1">
-                          Joueurs placés : {onFieldCount}/{target}
-                        </div>
-                      );
-                    })()}
-                    {setupError && (
-                      <div className="mt-2 px-3 py-2 bg-red-100 text-red-700 rounded border border-red-300">
-                        {setupError}
-                      </div>
-                    )}
-                    {/* Bouton de validation ou message d'attente */}
-                    {(() => {
-                      const currentCoach = state.preMatch?.currentCoach;
-                      const availableCount = state.players?.filter(
-                        p => p.team === currentCoach && (!p.state || p.state === "active")
-                      ).length || 0;
-                      const target = Math.min(11, availableCount);
-                      const playersOnField = state.players?.filter(p => p.team === currentCoach && p.pos.x >= 0).length || 0;
-                      const mySide = myTeamSide || getMySide(state as ExtendedGameState, teamNameA, teamNameB);
-
-                      if (mySide && mySide !== currentCoach) {
-                        return (
-                          <div className="mt-3 px-3 py-2 bg-yellow-50 text-yellow-700 rounded border border-yellow-300 text-sm">
-                            En attente du placement adverse...
-                          </div>
-                        );
-                      }
-
-                      if (playersOnField === target && mySide === currentCoach) {
-                        return (
-                          <div className="mt-3">
-                            <button
-                              onClick={handleValidatePlacement}
-                              disabled={setupSubmitting}
-                              className={`px-6 py-3 text-white rounded-lg font-bold text-lg transition-all shadow-md ${
-                                setupSubmitting
-                                  ? "bg-gray-400 cursor-not-allowed"
-                                  : "bg-green-600 hover:bg-green-700 hover:shadow-lg active:scale-95"
-                              }`}
-                            >
-                              {setupSubmitting ? "Validation..." : "Prêt !"}
-                            </button>
-                          </div>
-                        );
-                      }
-
-                      return null;
-                    })()}
-                  </div>
+                  <SetupPhasePanel
+                    state={state as ExtendedGameState}
+                    myTeamSide={myTeamSide}
+                    teamNameA={teamNameA}
+                    teamNameB={teamNameB}
+                    setupError={setupError}
+                    setupSubmitting={setupSubmitting}
+                    onValidatePlacement={handleValidatePlacement}
+                  />
                 ) : (
                   <div>
                     <div className="text-gray-500">Phase pré-match en cours...</div>
