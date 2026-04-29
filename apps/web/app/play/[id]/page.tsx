@@ -69,6 +69,10 @@ import { KickoffSequencePanel } from "./components/KickoffSequencePanel";
 import { SetupPhasePanel } from "./components/SetupPhasePanel";
 import { ThrowTeamMateIndicator } from "./components/ThrowTeamMateIndicator";
 import { PlayerActivationBar } from "./components/PlayerActivationBar";
+import {
+  TurnStatusBanner,
+  PreMatchSetupBanner,
+} from "./components/TopStatusBanners";
 import { normalizeState } from "./utils/normalize-state";
 import * as kickoffActions from "./utils/kickoff-actions";
 import { applyOrSubmitMove } from "./utils/apply-or-submit-move";
@@ -644,55 +648,15 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
       )}
       {/* Bandeau de statut de tour (match actif) */}
       {isActiveMatch && (
-        <div
-          className={`fixed top-0 left-0 right-0 z-50 text-center py-2 text-sm font-bold flex items-center justify-center gap-4 ${
-            isMyTurn
-              ? "bg-green-500 text-white"
-              : "bg-yellow-400 text-gray-900"
-          }`}
-        >
-          <span>
-            {moveSubmitting
-              ? "Envoi du coup..."
-              : isMyTurn
-                ? "C'est votre tour !"
-                : "En attente de l'adversaire..."}
-          </span>
-          {state && state.pendingReroll && isMyTurn && (
-            <span className="bg-orange-500 text-white px-2 py-0.5 rounded text-xs animate-pulse">
-              Relance disponible !
-            </span>
-          )}
-          {state && state.pendingApothecary && isMyTurn && (
-            <span className="bg-green-500 text-white px-2 py-0.5 rounded text-xs animate-pulse">
-              Apothicaire disponible !
-            </span>
-          )}
-          {state && state.gamePhase === "ended" && (
-            <span className="bg-gray-700 text-white px-2 py-0.5 rounded text-xs">
-              Match terminé — {state.score.teamA} - {state.score.teamB}
-            </span>
-          )}
-        </div>
+        <TurnStatusBanner
+          state={state as ExtendedGameState | null}
+          isMyTurn={isMyTurn}
+          moveSubmitting={moveSubmitting}
+        />
       )}
       {/* Bandeau de statut pré-match (setup) */}
       {!isActiveMatch && matchStatus === "prematch-setup" && state?.preMatch?.phase === "setup" && (
-        <div
-          className={`fixed top-0 left-0 right-0 z-50 text-center py-3 text-sm font-bold flex items-center justify-center gap-4 transition-colors duration-300 ${
-            isMyTurn
-              ? "bg-green-600 text-white"
-              : "bg-yellow-400 text-gray-900"
-          }`}
-        >
-          <span>
-            {isMyTurn
-              ? "Placez vos 11 joueurs puis cliquez Prêt !"
-              : `En attente du placement de ${state.preMatch.currentCoach === "A" ? state.teamNames.teamA : state.teamNames.teamB}...`}
-          </span>
-          {!isMyTurn && (
-            <span className="inline-block w-4 h-4 border-2 border-gray-700 border-t-transparent rounded-full animate-spin" />
-          )}
-        </div>
+        <PreMatchSetupBanner state={state as ExtendedGameState} isMyTurn={isMyTurn} />
       )}
       {/* Wrapper pour éléments pré-match, à l'intérieur du container principal */}
       <div className="pt-32">
