@@ -82,6 +82,7 @@ import { handleSetupDragStart } from "./utils/handle-drag-start";
 import { handleSetupDrop } from "./utils/handle-drop";
 import { handleSetupCellClick } from "./utils/handle-setup-cell-click";
 import { handleThrowTeamMateClick } from "./utils/handle-throw-team-mate-click";
+import { handleBlockClick } from "./utils/handle-block-click";
 import { validateSetupPlacement } from "./utils/validate-setup";
 import { getMySide, validatePlacement } from "./utils/setup-validation";
 import { type LegalAction } from "./utils/legal-action";
@@ -354,40 +355,22 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
         return;
       }
 
-      // Handle BLOCK action: clicking an opponent to initiate a block
-      const target = state.players.find(
-        (p) =>
-          p.team !== state.currentPlayer &&
-          p.pos.x === pos.x &&
-          p.pos.y === pos.y,
-      );
-      if (target && (currentAction === "BLOCK" || currentAction === "BLITZ")) {
-        const blockMove = legal.find(
-          (m): m is Extract<Move, { type: "BLOCK" }> =>
-            m.type === "BLOCK" &&
-            m.playerId === state.selectedPlayerId &&
-            m.targetId === target.id,
-        );
-        if (blockMove) {
-          if (isActiveMatch) {
-            submitMove(blockMove).then((result) => {
-              if (result?.success && result.gameState) {
-                const ns = normalizeState(result.gameState);
-                setState(ns);
-                setIsMyTurn(result.isMyTurn);
-                if (ns.lastDiceResult) setShowDicePopup(true);
-              }
-            });
-          } else {
-            setState((s) => {
-              if (!s) return null;
-              const s2 = applyMove(s, blockMove, createRNG());
-              if (s2.lastDiceResult) setShowDicePopup(true);
-              return s2 as ExtendedGameState;
-            });
-          }
-          return;
-        }
+      // Handle BLOCK action: clicking an opponent to initiate a block (S26.0r — extracted)
+      if (
+        handleBlockClick({
+          pos,
+          state: extState,
+          legal,
+          currentAction,
+          isActiveMatch,
+          submitMove,
+          setState,
+          setIsMyTurn,
+          setShowDicePopup,
+          createRNG,
+        })
+      ) {
+        return;
       }
 
       const candidate = legal.find(
