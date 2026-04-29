@@ -83,6 +83,7 @@ import { handleSetupDrop } from "./utils/handle-drop";
 import { handleSetupCellClick } from "./utils/handle-setup-cell-click";
 import { handleThrowTeamMateClick } from "./utils/handle-throw-team-mate-click";
 import { handleBlockClick } from "./utils/handle-block-click";
+import { handleMoveClick } from "./utils/handle-move-click";
 import { validateSetupPlacement } from "./utils/validate-setup";
 import { getMySide, validatePlacement } from "./utils/setup-validation";
 import { type LegalAction } from "./utils/legal-action";
@@ -373,46 +374,20 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
         return;
       }
 
-      const candidate = legal.find(
-        (m) =>
-          m.type === "MOVE" &&
-          m.playerId === state.selectedPlayerId &&
-          m.to.x === pos.x &&
-          m.to.y === pos.y,
-      );
-      if (
-        candidate &&
-        candidate.type === "MOVE" &&
-        (currentAction === "MOVE" ||
-          currentAction === "BLITZ" ||
-          currentAction === null)
-      ) {
-        if (isActiveMatch) {
-          // Match actif : envoyer le coup au serveur
-          submitMove(candidate).then((result) => {
-            if (result?.success && result.gameState) {
-              const ns = normalizeState(result.gameState);
-              setState(ns);
-              setIsMyTurn(result.isMyTurn);
-              const p = ns.players.find((pl) => pl.id === candidate.playerId);
-              if (!p || p.pm <= 0) setState((s) => s ? { ...s, selectedPlayerId: null } : null);
-              if (ns.lastDiceResult) setShowDicePopup(true);
-              setSelectedFromReserve(null);
-            }
-          });
-        } else {
-          // Pré-match / fallback local
-          setState((s) => {
-            if (!s) return null;
-            let s2 = applyMove(s, candidate, createRNG());
-            const p = s2.players.find((pl) => pl.id === candidate.playerId);
-            if (!p || p.pm <= 0) s2 = { ...s2, selectedPlayerId: null };
-            if (s2.lastDiceResult) setShowDicePopup(true);
-            setSelectedFromReserve(null);
-            return s2 as ExtendedGameState;
-          });
-        }
-      }
+      // Handle MOVE: clicking a cell to move the selected player (S26.0s — extracted)
+      handleMoveClick({
+        pos,
+        state: extState,
+        legal,
+        currentAction,
+        isActiveMatch,
+        submitMove,
+        setState,
+        setIsMyTurn,
+        setShowDicePopup,
+        setSelectedFromReserve,
+        createRNG,
+      });
     }
   }
 
