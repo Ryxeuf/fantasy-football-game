@@ -81,6 +81,7 @@ import { handlePlayerClick } from "./utils/handle-player-click";
 import { handleSetupDragStart } from "./utils/handle-drag-start";
 import { handleSetupDrop } from "./utils/handle-drop";
 import { handleSetupCellClick } from "./utils/handle-setup-cell-click";
+import { handleThrowTeamMateClick } from "./utils/handle-throw-team-mate-click";
 import { validateSetupPlacement } from "./utils/validate-setup";
 import { getMySide, validatePlacement } from "./utils/setup-validation";
 import { type LegalAction } from "./utils/legal-action";
@@ -332,57 +333,24 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
       state.selectedPlayerId &&
       (!extState.preMatch || (extState.preMatch.phase as string) !== "setup")
     ) {
-      // Handle THROW_TEAM_MATE: 2-click flow (1) coequipier a lancer, (2) case cible
-      if (currentAction === "THROW_TEAM_MATE") {
-        const clickedPlayer = state.players.find(
-          (p) => p.pos.x === pos.x && p.pos.y === pos.y,
-        );
-        if (!throwTeamMateThrownId) {
-          // Phase 1 : selectionner un coequipier lancable
-          if (
-            clickedPlayer &&
-            clickedPlayer.team === state.currentPlayer &&
-            clickedPlayer.id !== state.selectedPlayerId &&
-            legal.some(
-              (m) =>
-                m.type === "THROW_TEAM_MATE" &&
-                m.playerId === state.selectedPlayerId &&
-                m.thrownPlayerId === clickedPlayer.id,
-            )
-          ) {
-            setThrowTeamMateThrownId(clickedPlayer.id);
-          }
-          return;
-        }
-        // Phase 2 : selectionner la position cible
-        const move = legal.find(
-          (m): m is Extract<Move, { type: "THROW_TEAM_MATE" }> =>
-            m.type === "THROW_TEAM_MATE" &&
-            m.playerId === state.selectedPlayerId &&
-            m.thrownPlayerId === throwTeamMateThrownId &&
-            m.targetPos.x === pos.x &&
-            m.targetPos.y === pos.y,
-        );
-        if (!move) return; // hors portee : ignore
-        if (isActiveMatch) {
-          submitMove(move).then((result) => {
-            if (result?.success && result.gameState) {
-              const ns = normalizeState(result.gameState);
-              setState(ns);
-              setIsMyTurn(result.isMyTurn);
-              if (ns.lastDiceResult) setShowDicePopup(true);
-            }
-          });
-        } else {
-          setState((s) => {
-            if (!s) return null;
-            const s2 = applyMove(s, move, createRNG());
-            if (s2.lastDiceResult) setShowDicePopup(true);
-            return s2 as ExtendedGameState;
-          });
-        }
-        setThrowTeamMateThrownId(null);
-        setCurrentAction(null);
+      // Handle THROW_TEAM_MATE: 2-click flow (S26.0q — extracted)
+      if (
+        handleThrowTeamMateClick({
+          pos,
+          state: extState,
+          legal,
+          currentAction,
+          throwTeamMateThrownId,
+          isActiveMatch,
+          submitMove,
+          setState,
+          setIsMyTurn,
+          setShowDicePopup,
+          setThrowTeamMateThrownId,
+          setCurrentAction,
+          createRNG,
+        })
+      ) {
         return;
       }
 
