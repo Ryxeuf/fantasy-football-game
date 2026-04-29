@@ -54,4 +54,37 @@ describe("TutorielListPage — N.1 interactive tutorial listing", () => {
     const link = screen.getByRole("link", { name: /revoir/i });
     expect(link.getAttribute("href")).toBe("/tutoriel/mon-premier-match");
   });
+
+  it("renders the XP progression bar at 0/max when nothing is completed (S26.1c)", () => {
+    renderWithProvider();
+    const bar = screen.getByTestId("tutorial-xp-bar");
+    expect(bar.getAttribute("aria-valuemin")).toBe("0");
+    expect(bar.getAttribute("aria-valuenow")).toBe("0");
+    const max = Number(bar.getAttribute("aria-valuemax"));
+    expect(max).toBeGreaterThan(0);
+    expect(screen.getByTestId("tutorial-xp-label").textContent).toMatch(
+      new RegExp(`0\\s*XP\\s*/\\s*${max}\\s*XP`),
+    );
+  });
+
+  it("updates the XP progression bar when a tutorial is completed (S26.1c)", async () => {
+    window.localStorage.setItem(
+      "nuffle.tutorial.progress.mon-premier-match",
+      JSON.stringify({
+        slug: "mon-premier-match",
+        currentStepIndex: 5,
+        completed: true,
+        completedAt: "2026-04-29T00:00:00.000Z",
+      }),
+    );
+    renderWithProvider();
+    const bar = await screen.findByTestId("tutorial-xp-bar");
+    const earned = Number(bar.getAttribute("aria-valuenow"));
+    const max = Number(bar.getAttribute("aria-valuemax"));
+    expect(earned).toBeGreaterThan(0);
+    expect(earned).toBeLessThanOrEqual(max);
+    expect(screen.getByTestId("tutorial-xp-label").textContent).toMatch(
+      new RegExp(`${earned}\\s*XP\\s*/\\s*${max}\\s*XP`),
+    );
+  });
 });

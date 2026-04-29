@@ -155,6 +155,25 @@ export function isTutorialComplete(progress: TutorialProgress): boolean {
   return progress.completed === true;
 }
 
+export function getMaxTutorialXP(): number {
+  return REGISTRY.reduce((sum, script) => sum + getTutorialBadge(script).xp, 0);
+}
+
+export function getTotalTutorialXP(completedSlugs: readonly string[]): number {
+  const knownSlugs = new Set(REGISTRY.map((script) => script.slug));
+  const uniqueCompleted = new Set(
+    completedSlugs.filter((slug) => knownSlugs.has(slug)),
+  );
+  let total = 0;
+  for (const slug of uniqueCompleted) {
+    const script = findTutorialScript(slug);
+    if (script) {
+      total += getTutorialBadge(script).xp;
+    }
+  }
+  return total;
+}
+
 export function getProgressRatio(
   progress: TutorialProgress,
   script: TutorialScript

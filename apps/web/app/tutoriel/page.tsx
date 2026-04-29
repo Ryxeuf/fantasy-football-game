@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
+  getMaxTutorialXP,
+  getTotalTutorialXP,
   getTutorialBadge,
   listTutorialScripts,
   type TutorialScript,
@@ -85,6 +87,10 @@ export default function TutorielListPage() {
     setCompletedSlugs(new Set(readCompletedTutorials().map((e) => e.slug)));
   }, []);
 
+  const maxXp = getMaxTutorialXP();
+  const earnedXp = getTotalTutorialXP(Array.from(completedSlugs));
+  const xpRatio = maxXp === 0 ? 0 : Math.min(1, earnedXp / maxXp);
+
   return (
     <main className="max-w-4xl mx-auto px-4 py-8">
       <header className="mb-8">
@@ -96,6 +102,39 @@ export default function TutorielListPage() {
             ? "Apprenez Nuffle Arena pas a pas. Chaque tutoriel vous guide dans une facette du jeu."
             : "Learn Nuffle Arena step by step. Each tutorial walks you through a core part of the game."}
         </p>
+        <div className="mt-5 bg-white border border-amber-200 rounded-lg p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <p className="text-sm font-semibold text-nuffle-anthracite">
+              {language === "fr"
+                ? "Progression XP des tutoriels"
+                : "Tutorial XP progression"}
+            </p>
+            <p
+              data-testid="tutorial-xp-label"
+              className="text-sm font-bold text-amber-800"
+            >
+              {earnedXp} XP / {maxXp} XP
+            </p>
+          </div>
+          <div
+            data-testid="tutorial-xp-bar"
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={maxXp}
+            aria-valuenow={earnedXp}
+            aria-label={
+              language === "fr"
+                ? "Progression XP des tutoriels"
+                : "Tutorial XP progression"
+            }
+            className="mt-2 h-3 bg-amber-100 rounded-full overflow-hidden"
+          >
+            <div
+              className="h-full bg-gradient-to-r from-amber-400 to-nuffle-gold transition-all"
+              style={{ width: `${Math.round(xpRatio * 100)}%` }}
+            />
+          </div>
+        </div>
       </header>
 
       {scripts.length === 0 ? (
