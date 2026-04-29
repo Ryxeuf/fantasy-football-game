@@ -40,3 +40,40 @@ export async function findUserByCoachName(
 
   return user;
 }
+
+const DEFAULT_SEARCH_LIMIT = 10;
+const MAX_SEARCH_LIMIT = 50;
+
+/**
+ * S26.4c — Recherche par sous-chaine pour l'autocomplete UI.
+ *
+ * Filtre `valid + privateProfile=false` (RGPD), match `contains`
+ * insensible a la casse. Limite plafonnee a 50 pour eviter de
+ * dumper toute la base via une requete vide.
+ */
+export async function searchUsersByCoachName(
+  raw: string,
+  limit: number = DEFAULT_SEARCH_LIMIT,
+): Promise<CoachLookupResult[]> {
+  const normalized = raw.trim().replace(/^@+/, "").trim();
+  if (normalized.length === 0) return [];
+
+  const cappedLimit = Math.min(Math.max(1, Math.floor(limit)), MAX_SEARCH_LIMIT);
+
+  const rows = (await (prisma as unknown as {
+    user: {
+      findMany: (args: unknown) => Promise<CoachLookupResult[]>;
+    };
+  }).user.findMany({
+    where: {
+      valid: true,
+      privateProfile: false,
+      coachName: { contains: normalized, mode: "insensitive" },
+    },
+    select: { id: true, coachName: true },
+    orderBy: { coachName: "asc" },
+    take: cappedLimit,
+  })) as CoachLookupResult[];
+
+  return rows;
+}

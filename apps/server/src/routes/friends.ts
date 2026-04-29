@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, type Response } from "express";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
 import { validate, validateQuery } from "../middleware/validate";
 import {
@@ -13,7 +13,10 @@ import {
   removeFriendship,
   FriendshipStatus,
 } from "../services/friendship";
-import { findUserByCoachName } from "../services/user-lookup";
+import {
+  findUserByCoachName,
+  searchUsersByCoachName,
+} from "../services/user-lookup";
 
 const router = Router();
 
@@ -131,5 +134,32 @@ router.delete("/:id", authUser, async (req: AuthenticatedRequest, res) => {
       .json({ success: false, error: message });
   }
 });
+
+/**
+ * S26.4c — Recherche d'utilisateurs pour l'autocomplete d'invitation.
+ *
+ * GET /friends/search?q=al&limit=10
+ *   Renvoie jusqu'a `limit` (default 10, max 50) coachs publics dont
+ *   le pseudo contient `q` (case-insensitive). Filtre RGPD applique.
+ */
+export async function handleSearchUsers(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  try {
+    const q = String((req.query as { q?: unknown }).q ?? "");
+    const limitRaw = (req.query as { limit?: unknown }).limit;
+    const limit =
+      typeof limitRaw === "string" && Number.isFinite(Number(limitRaw))
+        ? Number(limitRaw)
+        : undefined;
+    const results = await searchUsersByCoachName(q, limit);
+    res.status(200).json({ success: true, data: { results } });
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : "Erreur serveur";
+    res.status(500).json({ success: false, error: message });
+  }
+}
+router.get("/search", authUser, handleSearchUsers);
 
 export default router;

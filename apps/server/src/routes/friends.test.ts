@@ -11,12 +11,35 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("../services/user-lookup", () => ({
   findUserByCoachName: vi.fn(),
+  searchUsersByCoachName: vi.fn(),
 }));
 
-import { findUserByCoachName } from "../services/user-lookup";
-import { resolveReceiverIdFromBody } from "./friends";
+import {
+  findUserByCoachName,
+  searchUsersByCoachName,
+} from "../services/user-lookup";
+import { handleSearchUsers, resolveReceiverIdFromBody } from "./friends";
+import type { AuthenticatedRequest } from "../middleware/authUser";
+import type { Response } from "express";
 
 const mockedLookup = vi.mocked(findUserByCoachName);
+const mockedSearch = vi.mocked(searchUsersByCoachName);
+
+function buildRes(): Response & { statusCode: number; body: unknown } {
+  const res = {
+    statusCode: 200,
+    body: undefined as unknown,
+    status(code: number) {
+      this.statusCode = code;
+      return this;
+    },
+    json(payload: unknown) {
+      this.body = payload;
+      return this;
+    },
+  };
+  return res as unknown as Response & { statusCode: number; body: unknown };
+}
 
 describe("resolveReceiverIdFromBody (S26.4b)", () => {
   beforeEach(() => {
@@ -50,5 +73,72 @@ describe("resolveReceiverIdFromBody (S26.4b)", () => {
     });
     expect(id).toBe("u-1");
     expect(mockedLookup).not.toHaveBeenCalled();
+  });
+});
+
+describe("handleSearchUsers (S26.4c)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns 200 + ApiResponse with the search results", async () => {
+    mockedSearch.mockResolvedValue([
+      { id: "u-1", coachName: "Alice" },
+      { id: "u-2", coachName: "Aline" },
+    ]);
+
+    const req = {
+      query: { q: "ali" },
+      user: { id: "caller" },
+    } as unknown as AuthenticatedRequest;
+    const res = buildRes();
+    await handleSearchUsers(req, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toEqual({
+      success: true,
+      data: {
+        results: [
+          { id: "u-1", coachName: "Alice" },
+          { id: "u-2", coachName: "Aline" },
+        ],
+      },
+    });
+    expect(mockedSearch).toHaveBeenCalledWith("ali", undefined);
+  });
+
+  it("forwards the parsed limit query param when provided", async () => {
+    mockedSearch.mockResolvedValue([]);
+    const req = {
+      query: { q: "ali", limit: "5" },
+      user: { id: "caller" },
+    } as unknown as AuthenticatedRequest;
+    const res = buildRes();
+    await handleSearchUsers(req, res);
+    expect(mockedSearch).toHaveBeenCalledWith("ali", 5);
+  });
+
+  it("returns 200 with empty results when q is empty (delegated to service)", async () => {
+    mockedSearch.mockResolvedValue([]);
+    const req = {
+      query: {},
+      user: { id: "caller" },
+    } as unknown as AuthenticatedRequest;
+    const res = buildRes();
+    await handleSearchUsers(req, res);
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toEqual({ success: true, data: { results: [] } });
+  });
+
+  it("returns 500 when the service throws", async () => {
+    mockedSearch.mockRejectedValue(new Error("DB down"));
+    const req = {
+      query: { q: "ali" },
+      user: { id: "caller" },
+    } as unknown as AuthenticatedRequest;
+    const res = buildRes();
+    await handleSearchUsers(req, res);
+    expect(res.statusCode).toBe(500);
+    expect(res.body).toMatchObject({ success: false });
   });
 });
