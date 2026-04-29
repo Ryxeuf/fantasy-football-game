@@ -14,16 +14,26 @@ vi.mock("../services/user-lookup", () => ({
   searchUsersByCoachName: vi.fn(),
 }));
 
+vi.mock("../services/friend-suggestions", () => ({
+  suggestFriendsByElo: vi.fn(),
+}));
+
 import {
   findUserByCoachName,
   searchUsersByCoachName,
 } from "../services/user-lookup";
-import { handleSearchUsers, resolveReceiverIdFromBody } from "./friends";
+import { suggestFriendsByElo } from "../services/friend-suggestions";
+import {
+  handleFriendSuggestions,
+  handleSearchUsers,
+  resolveReceiverIdFromBody,
+} from "./friends";
 import type { AuthenticatedRequest } from "../middleware/authUser";
 import type { Response } from "express";
 
 const mockedLookup = vi.mocked(findUserByCoachName);
 const mockedSearch = vi.mocked(searchUsersByCoachName);
+const mockedSuggest = vi.mocked(suggestFriendsByElo);
 
 function buildRes(): Response & { statusCode: number; body: unknown } {
   const res = {
@@ -138,6 +148,69 @@ describe("handleSearchUsers (S26.4c)", () => {
     } as unknown as AuthenticatedRequest;
     const res = buildRes();
     await handleSearchUsers(req, res);
+    expect(res.statusCode).toBe(500);
+    expect(res.body).toMatchObject({ success: false });
+  });
+});
+
+describe("handleFriendSuggestions (S26.5a)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns 200 + ApiResponse with the suggestions list", async () => {
+    mockedSuggest.mockResolvedValue([
+      { id: "u-1", coachName: "Alice", eloRating: 1205, eloDelta: 5 },
+    ]);
+    const req = {
+      query: {},
+      user: { id: "u-self" },
+    } as unknown as AuthenticatedRequest;
+    const res = buildRes();
+    await handleFriendSuggestions(req, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toEqual({
+      success: true,
+      data: {
+        suggestions: [
+          { id: "u-1", coachName: "Alice", eloRating: 1205, eloDelta: 5 },
+        ],
+      },
+    });
+    expect(mockedSuggest).toHaveBeenCalledWith("u-self", undefined, undefined);
+  });
+
+  it("forwards the parsed range and limit query params", async () => {
+    mockedSuggest.mockResolvedValue([]);
+    const req = {
+      query: { range: "150", limit: "20" },
+      user: { id: "u-self" },
+    } as unknown as AuthenticatedRequest;
+    const res = buildRes();
+    await handleFriendSuggestions(req, res);
+    expect(mockedSuggest).toHaveBeenCalledWith("u-self", 150, 20);
+  });
+
+  it("clamps a negative range to 0", async () => {
+    mockedSuggest.mockResolvedValue([]);
+    const req = {
+      query: { range: "-50" },
+      user: { id: "u-self" },
+    } as unknown as AuthenticatedRequest;
+    const res = buildRes();
+    await handleFriendSuggestions(req, res);
+    expect(mockedSuggest).toHaveBeenCalledWith("u-self", 0, undefined);
+  });
+
+  it("returns 500 when the service throws", async () => {
+    mockedSuggest.mockRejectedValue(new Error("DB down"));
+    const req = {
+      query: {},
+      user: { id: "u-self" },
+    } as unknown as AuthenticatedRequest;
+    const res = buildRes();
+    await handleFriendSuggestions(req, res);
     expect(res.statusCode).toBe(500);
     expect(res.body).toMatchObject({ success: false });
   });
