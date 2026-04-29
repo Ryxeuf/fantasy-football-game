@@ -68,6 +68,7 @@ import { InducementsPhaseUI } from "./components/InducementsPhaseUI";
 import { KickoffSequencePanel } from "./components/KickoffSequencePanel";
 import { SetupPhasePanel } from "./components/SetupPhasePanel";
 import { ThrowTeamMateIndicator } from "./components/ThrowTeamMateIndicator";
+import { PlayerActivationBar } from "./components/PlayerActivationBar";
 import { normalizeState } from "./utils/normalize-state";
 import * as kickoffActions from "./utils/kickoff-actions";
 import { applyOrSubmitMove } from "./utils/apply-or-submit-move";
@@ -959,48 +960,16 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
       {/* Barre d'activation du joueur : PM restants + bouton terminer */}
       {state && state.selectedPlayerId && isMyTurn &&
         (state as ExtendedGameState).preMatch?.phase !== "setup" &&
-        !state.pendingBlock && !state.pendingPushChoice && !state.pendingFollowUpChoice && (() => {
-          const selectedPlayer = state.players.find(p => p.id === state.selectedPlayerId);
-          const hasActed = !!state.playerActions?.[state.selectedPlayerId!];
-          if (!selectedPlayer) return null;
-          return (
-            <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3">
-              {/* Compteur de mouvements restants */}
-              <div className="bg-gray-900/90 text-white px-3 py-2 rounded-lg shadow-lg text-sm font-mono flex items-center gap-2">
-                <span className="text-xs text-gray-400">PM</span>
-                <span className={`font-bold ${selectedPlayer.pm > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {selectedPlayer.pm}/{selectedPlayer.ma}
-                </span>
-                {(selectedPlayer.gfiUsed ?? 0) < 2 && selectedPlayer.pm <= 0 && (
-                  <span className="text-xs text-yellow-400 ml-1">
-                    +{2 - (selectedPlayer.gfiUsed ?? 0)} GFI
-                  </span>
-                )}
-              </div>
-              {/* Bouton terminer l'activation */}
-              {hasActed && (
-                <button
-                  onClick={() => {
-                    const move = { type: 'END_PLAYER_TURN' as const, playerId: state.selectedPlayerId! };
-                    if (isActiveMatch) {
-                      submitMove(move).then((res) => {
-                        if (res?.success && res.gameState) {
-                          setState(normalizeState(res.gameState));
-                          setIsMyTurn(res.isMyTurn);
-                        }
-                      });
-                    } else {
-                      setState((s) => s ? applyMove(s, move, createRNG()) as ExtendedGameState : null);
-                    }
-                  }}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow-lg transition-all text-sm"
-                >
-                  Terminer l&apos;activation
-                </button>
-              )}
-            </div>
-          );
-        })()}
+        !state.pendingBlock && !state.pendingPushChoice && !state.pendingFollowUpChoice && (
+          <PlayerActivationBar
+            state={state as ExtendedGameState}
+            isActiveMatch={isActiveMatch}
+            submitMove={submitMove}
+            setState={setState}
+            setIsMyTurn={setIsMyTurn}
+            createRNG={createRNG}
+          />
+        )}
       {/* Block/Push/FollowUp decision popups */}
       {state && shouldShowBlockPopup(state) && state.pendingBlock && (
         <BlockChoicePopup
