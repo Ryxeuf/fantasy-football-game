@@ -10,6 +10,7 @@ type User = {
   roles?: string[];
   patreon?: boolean;
   valid?: boolean;
+  lastLoginAt?: string | null;
   createdAt: string;
   updatedAt: string;
   _count: {
@@ -358,6 +359,14 @@ export default function AdminUsersPage() {
                     Créé le <SortIcon column="createdAt" />
                   </div>
                 </th>
+                <th
+                  className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider cursor-pointer hover:bg-nuffle-gold/20 transition-colors"
+                  onClick={() => handleSort("lastLoginAt")}
+                >
+                  <div className="flex items-center gap-2">
+                    Dernière connexion <SortIcon column="lastLoginAt" />
+                  </div>
+                </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
                   Actions
                 </th>
@@ -417,6 +426,15 @@ export default function AdminUsersPage() {
                       month: "short",
                       day: "numeric",
                     })}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-600">
+                    {u.lastLoginAt
+                      ? new Date(u.lastLoginAt).toLocaleDateString("fr-FR", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })
+                      : <span className="text-gray-400 italic">Jamais</span>}
                   </td>
                   <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                     <div className="flex gap-2 flex-wrap">
@@ -625,6 +643,12 @@ export default function AdminUsersPage() {
                   <div>
                     <span className="text-gray-600">Modifié le:</span>{" "}
                     {new Date(userDetails.updatedAt).toLocaleString("fr-FR")}
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Dernière connexion:</span>{" "}
+                    {userDetails.lastLoginAt
+                      ? new Date(userDetails.lastLoginAt).toLocaleString("fr-FR")
+                      : <span className="text-gray-400 italic">Jamais</span>}
                   </div>
                 </div>
               </div>

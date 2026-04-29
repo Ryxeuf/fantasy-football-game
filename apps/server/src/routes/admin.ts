@@ -69,6 +69,7 @@ router.get("/users", validateQuery(adminUsersQuerySchema), async (req, res) => {
         roles: true,
         patreon: true,
         valid: true,
+        lastLoginAt: true,
         createdAt: true,
         updatedAt: true,
         _count: {
@@ -120,6 +121,7 @@ router.get("/users/:id", async (req, res) => {
         roles: true,
         patreon: true,
         valid: true,
+        lastLoginAt: true,
         createdAt: true,
         updatedAt: true,
         teams: {

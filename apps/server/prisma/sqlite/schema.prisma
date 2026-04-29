@@ -49,6 +49,8 @@ model User {
   privateProfile Boolean  @default(false)
   /// Pré-alpha gate côté Postgres ; en SQLite tous les comptes sont valides.
   valid     Boolean  @default(true)
+  /// Date de la dernière connexion réussie de l'utilisateur.
+  lastLoginAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   matches   Match[]
