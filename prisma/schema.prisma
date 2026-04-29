@@ -48,6 +48,8 @@ model User {
   /// `true` = profil retire de la lookup publique et du sitemap.
   privateProfile      Boolean         @default(false)
   valid               Boolean         @default(false)
+  /// Date de la dernière connexion réussie de l'utilisateur.
+  lastLoginAt         DateTime?
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
   matches             Match[]

@@ -177,6 +177,11 @@ router.post("/login", validate(loginSchema), async (req, res) => {
       serverLog.error("[login] kofi post-login hooks failed:", kofiErr);
     }
 
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastLoginAt: new Date() },
+    });
+
     const roles = normalizeRoles((user as any).roles ?? user.role);
     const primaryRole = roles[0];
 
