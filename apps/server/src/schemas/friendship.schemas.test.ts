@@ -19,8 +19,29 @@ describe("Rule: friendship schemas", () => {
       );
     });
 
-    it("rejects missing receiverId", () => {
+    it("rejects missing receiverId AND missing username (S26.4b)", () => {
       expect(sendFriendRequestSchema.safeParse({}).success).toBe(false);
+    });
+
+    it("accepts a non-empty username (S26.4b)", () => {
+      expect(
+        sendFriendRequestSchema.safeParse({ username: "@alice" }).success,
+      ).toBe(true);
+    });
+
+    it("rejects an empty username (S26.4b)", () => {
+      expect(
+        sendFriendRequestSchema.safeParse({ username: "" }).success,
+      ).toBe(false);
+    });
+
+    it("rejects providing BOTH receiverId AND username (S26.4b — exclusive)", () => {
+      expect(
+        sendFriendRequestSchema.safeParse({
+          receiverId: "user-1",
+          username: "@alice",
+        }).success,
+      ).toBe(false);
     });
   });
 

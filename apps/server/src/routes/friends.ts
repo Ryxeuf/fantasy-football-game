@@ -13,6 +13,7 @@ import {
   removeFriendship,
   FriendshipStatus,
 } from "../services/friendship";
+import { findUserByCoachName } from "../services/user-lookup";
 
 const router = Router();
 
@@ -21,6 +22,25 @@ function errorToStatus(message: string): number {
   if (/autorise|unauthorized/i.test(message)) return 403;
   if (/existe|soi-meme|pending|attente/i.test(message)) return 409;
   return 400;
+}
+
+/**
+ * S26.4b — Resout `username` (pseudo coach, eventuellement prefixe @)
+ * en userId via `findUserByCoachName`. Throw une Error "introuvable"
+ * (mappee 404 par `errorToStatus`) si le pseudo n'existe pas ou si le
+ * coach est en mode prive (S26.3i).
+ */
+export async function resolveReceiverIdFromBody(body: {
+  receiverId?: string;
+  username?: string;
+}): Promise<string> {
+  if (body.receiverId) return body.receiverId;
+  const username = body.username ?? "";
+  const lookup = await findUserByCoachName(username);
+  if (!lookup) {
+    throw new Error("Coach introuvable");
+  }
+  return lookup.id;
 }
 
 /**
@@ -55,7 +75,8 @@ router.post(
   validate(sendFriendRequestSchema),
   async (req: AuthenticatedRequest, res) => {
     try {
-      const { receiverId } = req.body as { receiverId: string };
+      const body = req.body as { receiverId?: string; username?: string };
+      const receiverId = await resolveReceiverIdFromBody(body);
       const friendship = await sendFriendRequest(req.user!.id, receiverId);
       return res.status(201).json({ success: true, data: friendship });
     } catch (e: unknown) {
