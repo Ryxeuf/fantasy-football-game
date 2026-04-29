@@ -1,20 +1,15 @@
 "use client";
 import { useMemo, useState, useRef, useCallback, useEffect } from "react";
 import {
-  DiceResultPopup,
   GameScoreboard,
-  ActionPickerPopup,
   ToastProvider,
 } from "@bb/ui";
 import {
   getLegalMoves,
   applyMove,
   makeRNG,
-  clearDiceResult,
-  hasPlayerActed,
   type Position,
   type Move,
-  placePlayerInSetup,
   type ExtendedGameState,
   type Player,
   type TeamId,
@@ -27,16 +22,13 @@ import { useGameState } from "./hooks/useGameState";
 import {
   computeBlockTargets,
 } from "./hooks/useBlockPopups";
-import MatchEndScreen from "../../components/MatchEndScreen";
 import PreMatchSummary from "../../components/PreMatchSummary";
-import HalftimeTransition from "../../components/HalftimeTransition";
+import { BlockingOverlays } from "./components/BlockingOverlays";
 import { InducementsPhaseUI } from "./components/InducementsPhaseUI";
 import { PreMatchPanel } from "./components/PreMatchPanel";
-import { ChoicePopups } from "./components/ChoicePopups";
 import { BoardSection } from "./components/BoardSection";
 import { MatchLogAndSpp } from "./components/MatchLogAndSpp";
-import { ThrowTeamMateIndicator } from "./components/ThrowTeamMateIndicator";
-import { PlayerActivationBar } from "./components/PlayerActivationBar";
+import { MatchOverlays } from "./components/MatchOverlays";
 import {
   TurnStatusBanner,
   PreMatchSetupBanner,
@@ -44,7 +36,6 @@ import {
 import { normalizeState } from "./utils/normalize-state";
 import * as kickoffActions from "./utils/kickoff-actions";
 import { applyOrSubmitMove } from "./utils/apply-or-submit-move";
-import { getAvailableActions } from "./utils/available-actions";
 import { handlePlayerClick } from "./utils/handle-player-click";
 import { handleSetupDragStart } from "./utils/handle-drag-start";
 import { handleSetupDrop } from "./utils/handle-drop";
@@ -56,7 +47,6 @@ import { validateSetupPlacement } from "./utils/validate-setup";
 import { getMySide, validatePlacement } from "./utils/setup-validation";
 import { type LegalAction } from "./utils/legal-action";
 import { ForfeitWarning } from "../../components/ForfeitWarning";
-import GameChat from "../../components/GameChat";
 import {
   TurnNotificationListener,
   SoundEffectsListener,
@@ -408,21 +398,15 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
     <TurnNotificationListener isMyTurn={isMyTurn} isActiveMatch={isActiveMatch} />
     <SoundEffectsListener state={state} />
     <SoundToggleButton />
-    {/* End-of-match results overlay for online matches */}
-    {matchStatus === "ended" && state.gamePhase === "ended" && (
-      <MatchEndScreen
-        matchId={matchId}
-        myTeamSide={myTeamSide}
-        onClose={() => { window.location.href = "/lobby"; }}
-      />
-    )}
-    {/* B1.7 — Halftime transition overlay (bloquant, CTA requis) */}
-    {state?.gamePhase === "halftime" && halftimeDismissedHalf !== state.half && (
-      <HalftimeTransition
-        state={state}
-        onAcknowledge={() => setHalftimeDismissedHalf(state.half)}
-      />
-    )}
+    {/* End-of-match results overlay + Halftime transition (S26.0x — extracted) */}
+    <BlockingOverlays
+      state={state as ExtendedGameState}
+      matchStatus={matchStatus}
+      matchId={matchId}
+      myTeamSide={myTeamSide}
+      halftimeDismissedHalf={halftimeDismissedHalf}
+      onAcknowledgeHalftime={setHalftimeDismissedHalf}
+    />
     <div
       className="min-h-screen bg-gray-100"
       data-testid="game-view"
@@ -561,85 +545,28 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
           />
         </div>
       </div>
-      {showDicePopup && state.lastDiceResult && (
-        <DiceResultPopup
-          result={state.lastDiceResult}
-          onClose={() => {
-            setShowDicePopup(false);
-            setState((s) =>
-              s ? (clearDiceResult(s) as ExtendedGameState) : null,
-            );
-          }}
-        />
-      )}
-      {state.selectedPlayerId &&
-        currentAction === null &&
-        !hasPlayerActed(state, state.selectedPlayerId) &&
-        (state as ExtendedGameState).preMatch?.phase !== "setup" && (
-          <ActionPickerPopup
-            playerName={
-              state.players.find((p) => p.id === state.selectedPlayerId)?.name ||
-              "Joueur"
-            }
-            available={getAvailableActions(
-              state as ExtendedGameState,
-              legal,
-              state.selectedPlayerId,
-            )}
-            onPick={(a) => {
-              setThrowTeamMateThrownId(null);
-              setCurrentAction(a);
-            }}
-            onClose={() => setCurrentAction("MOVE")}
-          />
-        )}
-      {/* Indicateur THROW_TEAM_MATE : explique l'etape en cours */}
-      {currentAction === "THROW_TEAM_MATE" && state.selectedPlayerId && (
-        <ThrowTeamMateIndicator
-          thrownPlayerId={throwTeamMateThrownId}
-          onCancel={() => {
-            setThrowTeamMateThrownId(null);
-            setCurrentAction(null);
-          }}
-        />
-      )}
-      {/* Bouton fin d'activation du joueur */}
-      {/* Barre d'activation du joueur : PM restants + bouton terminer */}
-      {state && state.selectedPlayerId && isMyTurn &&
-        (state as ExtendedGameState).preMatch?.phase !== "setup" &&
-        !state.pendingBlock && !state.pendingPushChoice && !state.pendingFollowUpChoice && (
-          <PlayerActivationBar
-            state={state as ExtendedGameState}
-            isActiveMatch={isActiveMatch}
-            submitMove={submitMove}
-            setState={setState}
-            setIsMyTurn={setIsMyTurn}
-            createRNG={createRNG}
-          />
-        )}
-      {/* All choice popups: Block / Push / FollowUp / Reroll / Apothecary (S26.0u — extracted) */}
-      {state && (
-        <ChoicePopups
-          state={state as ExtendedGameState}
-          isMyTurn={isMyTurn}
-          myTeamSide={myTeamSide}
-          isActiveMatch={isActiveMatch}
-          submitMove={submitMove}
-          setState={setState}
-          setIsMyTurn={setIsMyTurn}
-          setShowDicePopup={setShowDicePopup}
-          createRNG={createRNG}
-        />
-      )}
-      {/* In-game chat */}
-      {isActiveMatch && (
-        <GameChat
-          messages={chatMessages}
-          sendMessage={sendChatMessage}
-          currentUserId={currentUserId}
-        />
-      )}
-      {/* Apothecary popup is now in ChoicePopups (S26.0u) */}
+      {/* Match overlays: dice popup, action picker, indicator, activation bar,
+          choice popups, in-game chat (S26.0x — extracted) */}
+      <MatchOverlays
+        state={state as ExtendedGameState}
+        legal={legal}
+        isMyTurn={isMyTurn}
+        isActiveMatch={isActiveMatch}
+        myTeamSide={myTeamSide}
+        showDicePopup={showDicePopup}
+        currentAction={currentAction}
+        throwTeamMateThrownId={throwTeamMateThrownId}
+        chatMessages={chatMessages}
+        sendChatMessage={sendChatMessage}
+        currentUserId={currentUserId}
+        submitMove={submitMove}
+        setState={setState}
+        setIsMyTurn={setIsMyTurn}
+        setShowDicePopup={setShowDicePopup}
+        setCurrentAction={setCurrentAction}
+        setThrowTeamMateThrownId={setThrowTeamMateThrownId}
+        createRNG={createRNG}
+      />
     </div>
     </ToastProvider>
   );
