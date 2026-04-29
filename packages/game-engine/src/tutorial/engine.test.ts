@@ -13,6 +13,7 @@ import {
   getProgressRatio,
   findTutorialScript,
   listTutorialScripts,
+  getTutorialBadge,
 } from './engine';
 import type { TutorialScript } from './types';
 
@@ -163,5 +164,80 @@ describe('Regle: Tutorial Engine', () => {
         expect(step.bodyEn.length).toBeGreaterThan(0);
       }
     }
+  });
+
+  it('createTutorialProgress initialises completedAt to null', () => {
+    const progress = createTutorialProgress(fixture);
+    expect(progress.completedAt).toBeNull();
+  });
+
+  it('advanceTutorialProgress sets completedAt on transition to complete', () => {
+    const at2 = { ...createTutorialProgress(fixture), currentStepIndex: 2 };
+    const after = advanceTutorialProgress(at2, fixture);
+    expect(after.completed).toBe(true);
+    expect(typeof after.completedAt).toBe('string');
+    expect(() => new Date(after.completedAt as string).toISOString()).not.toThrow();
+  });
+
+  it('advanceTutorialProgress preserves completedAt once already completed', () => {
+    const completedAt = '2026-01-01T00:00:00.000Z';
+    const done = {
+      ...createTutorialProgress(fixture),
+      currentStepIndex: 2,
+      completed: true,
+      completedAt,
+    };
+    const after = advanceTutorialProgress(done, fixture);
+    expect(after.completedAt).toBe(completedAt);
+  });
+
+  it('advanceTutorialProgress does not set completedAt when not on the final step', () => {
+    const progress = createTutorialProgress(fixture);
+    const after = advanceTutorialProgress(progress, fixture);
+    expect(after.completed).toBe(false);
+    expect(after.completedAt).toBeNull();
+  });
+
+  it('goBackTutorialProgress clears completedAt', () => {
+    const done = {
+      ...createTutorialProgress(fixture),
+      currentStepIndex: 2,
+      completed: true,
+      completedAt: '2026-01-01T00:00:00.000Z',
+    };
+    const back = goBackTutorialProgress(done);
+    expect(back.completedAt).toBeNull();
+  });
+
+  it('restartTutorialProgress clears completedAt', () => {
+    const done = {
+      ...createTutorialProgress(fixture),
+      currentStepIndex: 2,
+      completed: true,
+      completedAt: '2026-01-01T00:00:00.000Z',
+    };
+    const fresh = restartTutorialProgress(done);
+    expect(fresh.completedAt).toBeNull();
+  });
+
+  it('getTutorialBadge returns bilingual badge metadata for the intro tutorial', () => {
+    const script = findTutorialScript('mon-premier-match');
+    expect(script).toBeDefined();
+    const badge = getTutorialBadge(script as TutorialScript);
+    expect(badge.id).toBe('tutorial:mon-premier-match');
+    expect(badge.labelFr.length).toBeGreaterThan(0);
+    expect(badge.labelEn.length).toBeGreaterThan(0);
+    expect(badge.emoji.length).toBeGreaterThan(0);
+    expect(badge.xp).toBeGreaterThan(0);
+  });
+
+  it('getTutorialBadge returns a default badge for an unknown slug', () => {
+    const fakeScript: TutorialScript = { ...fixture, slug: 'unknown-tutorial' };
+    const badge = getTutorialBadge(fakeScript);
+    expect(badge.id).toBe('tutorial:unknown-tutorial');
+    expect(badge.labelFr.length).toBeGreaterThan(0);
+    expect(badge.labelEn.length).toBeGreaterThan(0);
+    expect(badge.emoji.length).toBeGreaterThan(0);
+    expect(badge.xp).toBeGreaterThan(0);
   });
 });

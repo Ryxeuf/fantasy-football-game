@@ -60,4 +60,16 @@ export interface TutorialProgress {
   completed: boolean;
   /** Horodatage ISO de la derniere mise a jour (facultatif pour la persistance). */
   updatedAt?: string;
+  /** Horodatage ISO de la completion finale (null tant que non termine). */
+  completedAt: string | null;
+}
+
+export interface TutorialBadge {
+  /** Identifiant stable, prefixe par "tutorial:" pour eviter les collisions. */
+  id: string;
+  labelFr: string;
+  labelEn: string;
+  emoji: string;
+  /** Points d'experience accordes a la completion. */
+  xp: number;
 }
