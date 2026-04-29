@@ -346,4 +346,66 @@ describe("getUserAchievements (lazy evaluation)", () => {
     expect(unlocked).toContain("first-win");
     expect(unlocked).toContain("roster-skaven");
   });
+
+  it("surfaces newlyUnlocked slugs only for this read (S26.2a)", async () => {
+    // No prior unlocks
+    mockPrisma.userAchievement.findMany.mockResolvedValueOnce([]);
+    mockPrisma.teamSelection.findMany.mockResolvedValue([
+      {
+        id: "s-1",
+        userId: "user-1",
+        teamRef: { roster: "skaven" },
+        match: {
+          id: "m-1",
+          status: "ended",
+          turns: [
+            {
+              payload: {
+                gameState: {
+                  score: { teamA: 2, teamB: 0 },
+                  players: [],
+                  matchStats: {},
+                },
+              },
+            },
+          ],
+          teamSelections: [
+            { id: "s-1", userId: "user-1" },
+            { id: "s-2", userId: "user-x" },
+          ],
+        },
+      },
+    ]);
+    mockPrisma.friendship.count.mockResolvedValue(0);
+    mockPrisma.userAchievement.createMany.mockResolvedValue({ count: 3 });
+    mockPrisma.userAchievement.findMany.mockResolvedValueOnce([
+      { slug: "first-match", unlockedAt: new Date() },
+      { slug: "first-win", unlockedAt: new Date() },
+      { slug: "roster-skaven", unlockedAt: new Date() },
+    ]);
+
+    const result = await getUserAchievements("user-1");
+
+    expect(Array.isArray(result.newlyUnlocked)).toBe(true);
+    expect(result.newlyUnlocked).toContain("first-match");
+    expect(result.newlyUnlocked).toContain("first-win");
+    expect(result.newlyUnlocked).toContain("roster-skaven");
+  });
+
+  it("returns empty newlyUnlocked when nothing changed (S26.2a)", async () => {
+    mockPrisma.userAchievement.findMany.mockResolvedValue([
+      {
+        userId: "user-1",
+        slug: "first-match",
+        unlockedAt: new Date("2026-04-20"),
+      },
+    ]);
+    mockPrisma.teamSelection.findMany.mockResolvedValue([]);
+    mockPrisma.friendship.count.mockResolvedValue(0);
+    mockPrisma.userAchievement.createMany.mockResolvedValue({ count: 0 });
+
+    const result = await getUserAchievements("user-1");
+
+    expect(result.newlyUnlocked).toEqual([]);
+  });
 });

@@ -65,6 +65,11 @@ export interface UserAchievementsResult {
     winsByRoster: Record<string, number>;
   };
   achievements: AchievementView[];
+  /**
+   * S26.2a — Slugs unlocked during this read. Empty when nothing changed.
+   * Consumed by the client to fire toast notifications in real time.
+   */
+  newlyUnlocked: string[];
 }
 
 // ---------------------------------------------------------------------------
@@ -436,5 +441,6 @@ export async function getUserAchievements(
       winsByRoster: Object.fromEntries(stats.winsByRoster),
     },
     achievements,
+    newlyUnlocked: newly,
   };
 }
