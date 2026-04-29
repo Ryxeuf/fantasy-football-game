@@ -17,6 +17,8 @@ export interface CoachPublicProfile {
   memberSince: string;
   /** S26.3f — vitrine des derniers succes deverrouilles. */
   achievements: CoachShowcaseAchievement[];
+  /** S26.3h — equipes recentes du coach. */
+  recentTeams: CoachRecentTeam[];
 }
 
 export interface CoachShowcaseAchievement {
@@ -27,4 +29,13 @@ export interface CoachShowcaseAchievement {
   category: string;
   /** ISO 8601 timestamp. */
   unlockedAt: string;
+}
+
+export interface CoachRecentTeam {
+  id: string;
+  name: string;
+  roster: string;
+  currentValue: number;
+  /** ISO 8601 timestamp of the team creation. */
+  createdAt: string;
 }

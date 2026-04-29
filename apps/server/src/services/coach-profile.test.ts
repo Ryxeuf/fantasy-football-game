@@ -17,12 +17,16 @@ vi.mock("../prisma", () => ({
     userAchievement: {
       findMany: vi.fn(),
     },
+    team: {
+      findMany: vi.fn(),
+    },
   },
 }));
 
 import { prisma } from "../prisma";
 import {
   getCoachPublicProfile,
+  getCoachRecentTeams,
   getCoachShowcaseAchievements,
   listPublicCoachSlugs,
 } from "./coach-profile";
@@ -32,6 +36,9 @@ const mockPrisma = prisma as unknown as {
     findMany: ReturnType<typeof vi.fn>;
   };
   userAchievement: {
+    findMany: ReturnType<typeof vi.fn>;
+  };
+  team: {
     findMany: ReturnType<typeof vi.fn>;
   };
 };
@@ -262,5 +269,59 @@ describe("listPublicCoachSlugs (S26.3g)", () => {
     await listPublicCoachSlugs(50);
     const arg = mockPrisma.user.findMany.mock.calls[0][0] as { take: number };
     expect(arg.take).toBe(50);
+  });
+});
+
+describe("getCoachRecentTeams (S26.3h)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns an empty array (no DB call) for empty userId", async () => {
+    expect(await getCoachRecentTeams("")).toEqual([]);
+    expect(mockPrisma.team.findMany).not.toHaveBeenCalled();
+  });
+
+  it("queries teams scoped to ownerId, sorted desc by createdAt, default limit 5", async () => {
+    mockPrisma.team.findMany.mockResolvedValue([]);
+    await getCoachRecentTeams("u-1");
+    expect(mockPrisma.team.findMany).toHaveBeenCalledTimes(1);
+    const arg = mockPrisma.team.findMany.mock.calls[0][0] as {
+      where: { ownerId: string };
+      orderBy: { createdAt: "asc" | "desc" };
+      take: number;
+    };
+    expect(arg.where).toEqual({ ownerId: "u-1" });
+    expect(arg.orderBy).toEqual({ createdAt: "desc" });
+    expect(arg.take).toBe(5);
+  });
+
+  it("respects a custom limit", async () => {
+    mockPrisma.team.findMany.mockResolvedValue([]);
+    await getCoachRecentTeams("u-1", 10);
+    const arg = mockPrisma.team.findMany.mock.calls[0][0] as { take: number };
+    expect(arg.take).toBe(10);
+  });
+
+  it("maps each team to a public DTO with ISO createdAt", async () => {
+    mockPrisma.team.findMany.mockResolvedValue([
+      {
+        id: "t-1",
+        name: "Skaven Stars",
+        roster: "skaven",
+        currentValue: 1500,
+        createdAt: new Date("2026-04-15T12:00:00.000Z"),
+      },
+    ]);
+    const result = await getCoachRecentTeams("u-1");
+    expect(result).toEqual([
+      {
+        id: "t-1",
+        name: "Skaven Stars",
+        roster: "skaven",
+        currentValue: 1500,
+        createdAt: "2026-04-15T12:00:00.000Z",
+      },
+    ]);
   });
 });

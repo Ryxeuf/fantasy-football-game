@@ -1,6 +1,7 @@
 import { Router, type Request, type Response } from "express";
 import {
   getCoachPublicProfile,
+  getCoachRecentTeams,
   getCoachShowcaseAchievements,
   listPublicCoachSlugs,
 } from "../services/coach-profile";
@@ -33,10 +34,14 @@ export async function handleGetCoachPublicProfile(
       res.status(404).json({ success: false, error: "Coach introuvable" });
       return;
     }
-    const achievements = await getCoachShowcaseAchievements(profile.id);
-    res
-      .status(200)
-      .json({ success: true, data: { ...profile, achievements } });
+    const [achievements, recentTeams] = await Promise.all([
+      getCoachShowcaseAchievements(profile.id),
+      getCoachRecentTeams(profile.id),
+    ]);
+    res.status(200).json({
+      success: true,
+      data: { ...profile, achievements, recentTeams },
+    });
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : "Erreur serveur";
     serverLog.error("[GET /coach/:slug] error:", message);
