@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { API_BASE } from "../../auth-client";
 import NotificationPreferences from "../../components/NotificationPreferences";
+import PrivateProfileToggle from "./PrivateProfileToggle";
 
 type UserProfile = {
   id: string;
@@ -17,6 +18,7 @@ type UserProfile = {
   patreon?: boolean;
   isSupporter?: boolean;
   supporterTier?: string | null;
+  privateProfile?: boolean;
   eloRating: number;
   createdAt: string;
   updatedAt: string;
@@ -623,6 +625,13 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
+
+      {/* Profil prive (S26.3k) */}
+      {profile && (
+        <PrivateProfileToggle
+          initialValue={profile.privateProfile === true}
+        />
+      )}
 
       {/* Preferences de notifications */}
       <NotificationPreferences />
