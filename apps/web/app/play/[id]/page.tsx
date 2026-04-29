@@ -79,6 +79,7 @@ import { applyOrSubmitMove } from "./utils/apply-or-submit-move";
 import { getAvailableActions } from "./utils/available-actions";
 import { handlePlayerClick } from "./utils/handle-player-click";
 import { handleSetupDragStart } from "./utils/handle-drag-start";
+import { handleSetupDrop } from "./utils/handle-drop";
 import { validateSetupPlacement } from "./utils/validate-setup";
 import { getMySide, validatePlacement } from "./utils/setup-validation";
 import { type LegalAction } from "./utils/legal-action";
@@ -223,74 +224,19 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
   };
 
   const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    if (!state || !draggedPlayerId || !boardRef.current) return;
-
-    const extState = state as ExtendedGameState;
-    if (extState.preMatch?.phase !== "setup") return;
-    // Bloquer si je ne suis pas le coach courant
-    if (teamNameA && teamNameB) {
-      const mySide: "A" | "B" =
-        teamNameA === extState.teamNames.teamA ? "A" : "B";
-      if (mySide !== extState.preMatch.currentCoach) {
-        setDraggedPlayerId(null);
-        showSetupError("Ce n'est pas votre tour de placer");
-        return;
-      }
-      const playerTeam = extState.players.find(
-        (p) => p.id === draggedPlayerId,
-      )?.team;
-      if (playerTeam !== mySide) {
-        setDraggedPlayerId(null);
-        showSetupError("Vous ne pouvez placer que vos joueurs");
-        return;
-      }
-    }
-
-    // Utiliser rect du canvas Pixi (pas le wrapper div qui peut être plus large)
-    const canvas = boardRef.current.querySelector('canvas');
-    const rect = (canvas || boardRef.current).getBoundingClientRect();
-    const nativeEvent = e.nativeEvent;
-    const pixelX = nativeEvent.clientX - rect.left;
-    const pixelY = nativeEvent.clientY - rect.top;
-    // pixelX → colonne (y), pixelY → ligne (x) — même logique que PixiBoard.handleStageClick
-    const gridCol = Math.floor(pixelX / currentCellSize);
-    const gridRow = Math.floor(pixelY / currentCellSize);
-
-    if (
-      gridCol >= 0 &&
-      gridCol < state.height &&
-      gridRow >= 0 &&
-      gridRow < state.width
-    ) {
-      const pos: Position = { x: gridRow, y: gridCol };
-
-      const err = validatePlacement(
-        extState,
-        draggedPlayerId,
-        pos,
-        getMySide(extState, teamNameA, teamNameB),
-      );
-      if (err) {
-        showSetupError(err);
-        setDraggedPlayerId(null);
-        return;
-      }
-
-      const result = placePlayerInSetup(extState, draggedPlayerId, pos);
-      if (!result.success) {
-        showSetupError("Placement refusé");
-        setDraggedPlayerId(null);
-        return;
-      }
-      
-      const newState = result.state;
-      setState(newState);
-      if (newState.preMatch.placedPlayers.length === 11) {
-        setDraggedPlayerId(null);
-      }
-    }
-    setDraggedPlayerId(null);
+    if (!state) return;
+    handleSetupDrop({
+      e,
+      state: state as ExtendedGameState,
+      draggedPlayerId,
+      boardEl: boardRef.current,
+      teamNameA,
+      teamNameB,
+      currentCellSize,
+      showSetupError,
+      setState,
+      setDraggedPlayerId,
+    });
   };
 
   // Kickoff handlers extracted to ./utils/kickoff-actions.ts (S26.0d).
