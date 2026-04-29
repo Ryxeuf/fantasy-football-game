@@ -17,6 +17,7 @@ import {
   findUserByCoachName,
   searchUsersByCoachName,
 } from "../services/user-lookup";
+import { suggestFriendsByElo } from "../services/friend-suggestions";
 
 const router = Router();
 
@@ -161,5 +162,41 @@ export async function handleSearchUsers(
   }
 }
 router.get("/search", authUser, handleSearchUsers);
+
+/**
+ * S26.5a — Suggestions d'amis par proximite ELO.
+ *
+ * GET /friends/suggestions?range=100&limit=10
+ *   `range` : amplitude +/- ELO (default 100, plafond service-side
+ *   non gere ici — mais une valeur denuee de sens reste safe).
+ *   `limit` : default 10, plafond 50 (service).
+ */
+export async function handleFriendSuggestions(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  try {
+    const rangeRaw = (req.query as { range?: unknown }).range;
+    const limitRaw = (req.query as { limit?: unknown }).limit;
+    const range =
+      typeof rangeRaw === "string" && Number.isFinite(Number(rangeRaw))
+        ? Math.max(0, Number(rangeRaw))
+        : undefined;
+    const limit =
+      typeof limitRaw === "string" && Number.isFinite(Number(limitRaw))
+        ? Number(limitRaw)
+        : undefined;
+    const suggestions = await suggestFriendsByElo(
+      req.user!.id,
+      range,
+      limit,
+    );
+    res.status(200).json({ success: true, data: { suggestions } });
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : "Erreur serveur";
+    res.status(500).json({ success: false, error: message });
+  }
+}
+router.get("/suggestions", authUser, handleFriendSuggestions);
 
 export default router;
