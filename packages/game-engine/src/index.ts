@@ -442,6 +442,7 @@ export {
   isTutorialComplete,
   getCurrentStep,
   getProgressRatio,
+  getTutorialBadge,
   MON_PREMIER_MATCH,
   type TutorialScript,
   type TutorialStep,
@@ -449,4 +450,5 @@ export {
   type TutorialStepHighlight,
   type TutorialProgress,
   type TutorialDifficulty,
+  type TutorialBadge,
 } from './tutorial';

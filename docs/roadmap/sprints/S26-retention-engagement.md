@@ -10,7 +10,7 @@
 
 | # | Tache | Cat | Effort | Statut | Detail |
 |---|-------|-----|--------|--------|--------|
-| S26.0 | **PREREQUIS** Refactor `play/[id]/page.tsx` (1628l → ~600l) + retirer 15 `as any` | AMELIO | XL | [ ] | `apps/web/app/play/[id]/page.tsx`. Extraire `InducementsPhaseUI`, `SetupPhaseUI`, `MatchEndUI`, `BlockChoiceFlow`, `ThrowTeamMateFlow` en modules. Creer types Move unions explicites (`hooks/types.ts`) pour eliminer les casts. Etalable sur 2-3j en debut de sprint, BLOQUE le reste sinon. |
+| S26.0 | **PREREQUIS** Refactor `play/[id]/page.tsx` (1628l → ~600l) + retirer 15 `as any` | AMELIO | XL | [x] | `apps/web/app/play/[id]/page.tsx`. Extraire `InducementsPhaseUI`, `SetupPhaseUI`, `MatchEndUI`, `BlockChoiceFlow`, `ThrowTeamMateFlow` en modules. Creer types Move unions explicites (`hooks/types.ts`) pour eliminer les casts. Etalable sur 2-3j en debut de sprint, BLOQUE le reste sinon. **TERMINE en S26.0a-x : 1666 -> 573 lignes (-65.6%), 0 `as any`, types Move unions stricts (`LegalAction`, `ActivationAction`), 21 utils + 13 composants extraits.** |
 | S26.1 | Tutoriel onboarding plus engageant (progression visuelle, badges unlock) | FIX | M | [ ] | `apps/web/app/tutoriel/page.tsx`. N.1 livre mais UI basique : checkpoints lineaires sans recompense visible. Ajouter : barre de progression XP, badges debloques en temps reel, recommandation "essaie ces 3 equipes" a la fin. |
 | S26.2 | Notifications temps-reel achievement unlock | AMELIO | M | [ ] | 38 achievements existent (4 rosters Master + milestones match/win/td/cas + 2 social) mais aucune notification visible quand debloques. Ajouter : toast in-game, son optionnel, redirect vers `/me/achievements` au clic. |
 | S26.3 | Profil coach sharable `/coach/{slug}` + courbe ELO temporelle | AMELIO | M | [ ] | `apps/web/app/me/profile/page.tsx` montre les stats mais pas en URL publique. Creer `/coach/{slug}` avec : header (pseudo, ELO actuel, badge supporter), graph ELO 90j, achievements vitrine, equipes recentes, export PDF roster. SEO bonus : indexable. |
@@ -20,7 +20,7 @@
 
 ## Definition of done
 
-- [ ] `play/[id]/page.tsx` < 600 lignes, 0 `as any`, types Move unions stricts
+- [x] `play/[id]/page.tsx` < 600 lignes, 0 `as any`, types Move unions stricts
 - [ ] Tutoriel : 80% des nouveaux comptes finissent au moins une lecon
 - [ ] 1 achievement debloque -> 1 toast visible + 1 ligne dans `/me/achievements`
 - [ ] `/coach/foo` accessible publiquement + indexe sitemap

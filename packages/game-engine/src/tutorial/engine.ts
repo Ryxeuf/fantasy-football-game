@@ -3,10 +3,31 @@
  * Gestion du progres pas a pas, navigation avant/arriere et registre de scripts.
  * N.1 — Tutoriel interactif (match guide, scripts pas a pas).
  */
-import type { TutorialProgress, TutorialScript, TutorialStep } from './types';
+import type {
+  TutorialBadge,
+  TutorialProgress,
+  TutorialScript,
+  TutorialStep,
+} from './types';
 import { MON_PREMIER_MATCH } from './scripts/intro';
 
 const REGISTRY: readonly TutorialScript[] = Object.freeze([MON_PREMIER_MATCH]);
+
+const BADGE_REGISTRY: Readonly<Record<string, Omit<TutorialBadge, 'id'>>> = Object.freeze({
+  'mon-premier-match': {
+    labelFr: 'Premiere foulee',
+    labelEn: 'First Stride',
+    emoji: '🏆',
+    xp: 50,
+  },
+});
+
+const DEFAULT_BADGE: Omit<TutorialBadge, 'id'> = Object.freeze({
+  labelFr: 'Tutoriel termine',
+  labelEn: 'Tutorial complete',
+  emoji: '🎓',
+  xp: 25,
+});
 
 export function listTutorialScripts(): readonly TutorialScript[] {
   return REGISTRY;
@@ -21,6 +42,7 @@ export function createTutorialProgress(script: TutorialScript): TutorialProgress
     slug: script.slug,
     currentStepIndex: 0,
     completed: false,
+    completedAt: null,
     updatedAt: new Date().toISOString(),
   };
 }
@@ -42,20 +64,23 @@ export function advanceTutorialProgress(
   if (progress.completed) {
     return progress;
   }
+  const now = new Date().toISOString();
   const lastIndex = script.steps.length - 1;
   if (progress.currentStepIndex >= lastIndex) {
     return {
       ...progress,
       currentStepIndex: lastIndex,
       completed: true,
-      updatedAt: new Date().toISOString(),
+      completedAt: progress.completedAt ?? now,
+      updatedAt: now,
     };
   }
   return {
     ...progress,
     currentStepIndex: progress.currentStepIndex + 1,
     completed: false,
-    updatedAt: new Date().toISOString(),
+    completedAt: progress.completedAt ?? null,
+    updatedAt: now,
   };
 }
 
@@ -65,6 +90,7 @@ export function goBackTutorialProgress(progress: TutorialProgress): TutorialProg
     ...progress,
     currentStepIndex: nextIndex,
     completed: false,
+    completedAt: null,
     updatedAt: new Date().toISOString(),
   };
 }
@@ -74,7 +100,16 @@ export function restartTutorialProgress(progress: TutorialProgress): TutorialPro
     ...progress,
     currentStepIndex: 0,
     completed: false,
+    completedAt: null,
     updatedAt: new Date().toISOString(),
+  };
+}
+
+export function getTutorialBadge(script: TutorialScript): TutorialBadge {
+  const meta = BADGE_REGISTRY[script.slug] ?? DEFAULT_BADGE;
+  return {
+    id: `tutorial:${script.slug}`,
+    ...meta,
   };
 }
 

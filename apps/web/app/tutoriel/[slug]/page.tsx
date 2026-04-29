@@ -8,6 +8,7 @@ import {
   findTutorialScript,
   getCurrentStep,
   getProgressRatio,
+  getTutorialBadge,
   goBackTutorialProgress,
   isTutorialComplete,
   restartTutorialProgress,
@@ -42,7 +43,19 @@ function loadStoredProgress(slug: string): TutorialProgress | null {
       (parsed as TutorialProgress).slug === slug &&
       typeof (parsed as TutorialProgress).currentStepIndex === "number"
     ) {
-      return parsed as TutorialProgress;
+      const candidate = parsed as Partial<TutorialProgress> & {
+        slug: string;
+        currentStepIndex: number;
+      };
+      return {
+        slug: candidate.slug,
+        currentStepIndex: candidate.currentStepIndex,
+        completed: candidate.completed === true,
+        completedAt:
+          typeof candidate.completedAt === "string" ? candidate.completedAt : null,
+        updatedAt:
+          typeof candidate.updatedAt === "string" ? candidate.updatedAt : undefined,
+      };
     }
   } catch {
     // Corrupted payload; discard.
@@ -147,6 +160,8 @@ export default function TutorielRunnerPage() {
   const stepTitle = getLocalizedStepText(step, "title", language);
   const stepBody = getLocalizedStepText(step, "body", language);
   const stepTip = getLocalizedStepText(step, "tip", language);
+  const badge = getTutorialBadge(script);
+  const badgeLabel = language === "fr" ? badge.labelFr : badge.labelEn;
 
   return (
     <main className="max-w-3xl mx-auto px-4 py-8">
@@ -190,6 +205,35 @@ export default function TutorielRunnerPage() {
           </p>
         )}
       </section>
+
+      {complete && (
+        <section
+          data-testid="tutorial-badge-card"
+          className="mt-6 bg-gradient-to-br from-amber-50 to-yellow-100 border border-amber-300 rounded-lg p-6 shadow-md"
+        >
+          <div className="flex items-start gap-4">
+            <span className="text-5xl" aria-hidden>
+              {badge.emoji}
+            </span>
+            <div className="flex-1">
+              <p className="text-xs uppercase tracking-wide text-amber-700 font-semibold">
+                {language === "fr" ? "Badge debloque" : "Badge unlocked"}
+              </p>
+              <h3 className="text-xl font-bold text-nuffle-anthracite mt-1">
+                {badgeLabel}
+              </h3>
+              <p className="mt-2 text-sm text-amber-900 font-medium">
+                +{badge.xp} XP
+              </p>
+              <p className="mt-3 text-sm text-gray-700">
+                {language === "fr"
+                  ? "Continue ton apprentissage en explorant les autres tutoriels ou en lancant ton premier match contre l'IA."
+                  : "Keep learning by exploring more tutorials or starting your first match against the AI."}
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
 
       <div className="flex items-center justify-between mt-6 gap-3 flex-wrap">
         <button
