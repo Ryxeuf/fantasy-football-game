@@ -109,9 +109,9 @@ describe("getCoachPublicProfile", () => {
     await getCoachPublicProfile("coach-alpha", FIXED_NOW);
     expect(mockPrisma.user.findMany).toHaveBeenCalledTimes(1);
     const arg = mockPrisma.user.findMany.mock.calls[0][0] as {
-      where: { valid: boolean };
+      where: { valid: boolean; privateProfile: boolean };
     };
-    expect(arg.where).toEqual({ valid: true });
+    expect(arg.where).toEqual({ valid: true, privateProfile: false });
   });
 
   it("disambiguates collisions by returning the oldest matching account", async () => {
@@ -253,14 +253,14 @@ describe("listPublicCoachSlugs (S26.3g)", () => {
     expect(result).toEqual(["coach-alpha"]);
   });
 
-  it("queries only valid users and applies the requested limit (default 1000)", async () => {
+  it("queries only valid + non-private users and applies the requested limit (default 1000)", async () => {
     mockPrisma.user.findMany.mockResolvedValue([]);
     await listPublicCoachSlugs();
     const arg = mockPrisma.user.findMany.mock.calls[0][0] as {
-      where: { valid: boolean };
+      where: { valid: boolean; privateProfile: boolean };
       take: number;
     };
-    expect(arg.where).toEqual({ valid: true });
+    expect(arg.where).toEqual({ valid: true, privateProfile: false });
     expect(arg.take).toBe(1000);
   });
 
