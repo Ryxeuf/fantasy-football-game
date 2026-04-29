@@ -17,6 +17,7 @@
 
 import { prisma } from "../prisma";
 import { coachSlugFrom } from "../utils/coach-slug";
+import { ACHIEVEMENTS_CATALOG } from "./achievements";
 import { isSupporter } from "./kofi";
 
 export interface CoachPublicProfile {
@@ -29,6 +30,18 @@ export interface CoachPublicProfile {
   /** ISO 8601 timestamp of the User.createdAt. */
   memberSince: string;
 }
+
+export interface CoachShowcaseAchievement {
+  slug: string;
+  nameFr: string;
+  nameEn: string;
+  icon: string;
+  category: string;
+  /** ISO 8601 timestamp of when the user unlocked the achievement. */
+  unlockedAt: string;
+}
+
+const DEFAULT_SHOWCASE_LIMIT = 6;
 
 interface CandidateUser {
   id: string;
@@ -85,4 +98,51 @@ export async function getCoachPublicProfile(
     supporterTier: match.supporterTier,
     memberSince: match.createdAt.toISOString(),
   };
+}
+
+/**
+ * S26.3e — Vitrine succes pour `/coach/{slug}`.
+ *
+ * Renvoie les derniers achievements deverrouilles par l'utilisateur,
+ * enrichis avec leur metadata catalogue (nom FR/EN, icone, categorie).
+ * Les unlocks dont le slug n'existe plus dans le catalogue (succes
+ * deprecie/renomme) sont silencieusement ignores — forward-compat.
+ */
+export async function getCoachShowcaseAchievements(
+  userId: string,
+  limit: number = DEFAULT_SHOWCASE_LIMIT,
+): Promise<CoachShowcaseAchievement[]> {
+  if (!userId) return [];
+
+  const rows = (await (prisma as unknown as {
+    userAchievement: {
+      findMany: (args: unknown) => Promise<
+        Array<{ slug: string; unlockedAt: Date }>
+      >;
+    };
+  }).userAchievement.findMany({
+    where: { userId },
+    select: { slug: true, unlockedAt: true },
+    orderBy: { unlockedAt: "desc" },
+    take: limit,
+  })) as Array<{ slug: string; unlockedAt: Date }>;
+
+  const catalogBySlug = new Map(
+    ACHIEVEMENTS_CATALOG.map((def) => [def.slug, def] as const),
+  );
+
+  const showcase: CoachShowcaseAchievement[] = [];
+  for (const row of rows) {
+    const def = catalogBySlug.get(row.slug);
+    if (!def) continue;
+    showcase.push({
+      slug: def.slug,
+      nameFr: def.nameFr,
+      nameEn: def.nameEn,
+      icon: def.icon,
+      category: def.category,
+      unlockedAt: row.unlockedAt.toISOString(),
+    });
+  }
+  return showcase;
 }

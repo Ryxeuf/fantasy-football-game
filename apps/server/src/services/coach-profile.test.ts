@@ -14,14 +14,23 @@ vi.mock("../prisma", () => ({
     user: {
       findMany: vi.fn(),
     },
+    userAchievement: {
+      findMany: vi.fn(),
+    },
   },
 }));
 
 import { prisma } from "../prisma";
-import { getCoachPublicProfile } from "./coach-profile";
+import {
+  getCoachPublicProfile,
+  getCoachShowcaseAchievements,
+} from "./coach-profile";
 
 const mockPrisma = prisma as unknown as {
   user: {
+    findMany: ReturnType<typeof vi.fn>;
+  };
+  userAchievement: {
     findMany: ReturnType<typeof vi.fn>;
   };
 };
@@ -128,5 +137,75 @@ describe("getCoachPublicProfile", () => {
     expect(await getCoachPublicProfile("", FIXED_NOW)).toBeNull();
     expect(await getCoachPublicProfile("   ", FIXED_NOW)).toBeNull();
     expect(mockPrisma.user.findMany).not.toHaveBeenCalled();
+  });
+});
+
+describe("getCoachShowcaseAchievements (S26.3e)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns an empty array when the user has no unlocks", async () => {
+    mockPrisma.userAchievement.findMany.mockResolvedValue([]);
+    const result = await getCoachShowcaseAchievements("u-1");
+    expect(result).toEqual([]);
+  });
+
+  it("queries userAchievement scoped to userId, sorted desc by unlockedAt, with default limit 6", async () => {
+    mockPrisma.userAchievement.findMany.mockResolvedValue([]);
+    await getCoachShowcaseAchievements("u-42");
+    expect(mockPrisma.userAchievement.findMany).toHaveBeenCalledTimes(1);
+    const arg = mockPrisma.userAchievement.findMany.mock.calls[0][0] as {
+      where: { userId: string };
+      orderBy: { unlockedAt: "asc" | "desc" };
+      take: number;
+    };
+    expect(arg.where).toEqual({ userId: "u-42" });
+    expect(arg.orderBy).toEqual({ unlockedAt: "desc" });
+    expect(arg.take).toBe(6);
+  });
+
+  it("respects a custom limit", async () => {
+    mockPrisma.userAchievement.findMany.mockResolvedValue([]);
+    await getCoachShowcaseAchievements("u-1", 3);
+    const arg = mockPrisma.userAchievement.findMany.mock.calls[0][0] as {
+      take: number;
+    };
+    expect(arg.take).toBe(3);
+  });
+
+  it("enriches each unlock with catalog metadata (name, icon, category)", async () => {
+    const unlockedAt = new Date("2026-04-15T12:00:00.000Z");
+    mockPrisma.userAchievement.findMany.mockResolvedValue([
+      { slug: "first-match", unlockedAt },
+    ]);
+    const result = await getCoachShowcaseAchievements("u-1");
+    expect(result.length).toBe(1);
+    expect(result[0].slug).toBe("first-match");
+    expect(result[0].nameFr.length).toBeGreaterThan(0);
+    expect(result[0].icon.length).toBeGreaterThan(0);
+    expect(result[0].category.length).toBeGreaterThan(0);
+    expect(result[0].unlockedAt).toBe(unlockedAt.toISOString());
+  });
+
+  it("silently drops unlocks whose slug is no longer in the catalog (forward-compat)", async () => {
+    mockPrisma.userAchievement.findMany.mockResolvedValue([
+      {
+        slug: "first-match",
+        unlockedAt: new Date("2026-04-15T12:00:00.000Z"),
+      },
+      {
+        slug: "ghost-achievement-removed",
+        unlockedAt: new Date("2026-04-16T12:00:00.000Z"),
+      },
+    ]);
+    const result = await getCoachShowcaseAchievements("u-1");
+    expect(result.length).toBe(1);
+    expect(result[0].slug).toBe("first-match");
+  });
+
+  it("returns an empty array (no DB call) for empty userId", async () => {
+    expect(await getCoachShowcaseAchievements("")).toEqual([]);
+    expect(mockPrisma.userAchievement.findMany).not.toHaveBeenCalled();
   });
 });
