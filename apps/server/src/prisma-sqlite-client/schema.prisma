@@ -43,6 +43,10 @@ model User {
   /// Map devise→centimes sérialisée en JSON (SQLite n'a pas de type Json).
   /// Exemple : '{"USD":300,"EUR":1000}'.
   totalDonatedCentsByCurrency String            @default("{}")
+  /// S26.3i — RGPD : opt-in pour cacher le profil public `/coach/{slug}`.
+  /// Stub côté SQLite pour que la lookup publique puisse filtrer ce champ
+  /// sans diverger entre les deux schémas.
+  privateProfile              Boolean           @default(false)
   /// Pré-alpha gate côté Postgres ; en SQLite tous les comptes sont valides.
   valid                       Boolean           @default(true)
   createdAt                   DateTime          @default(now())
