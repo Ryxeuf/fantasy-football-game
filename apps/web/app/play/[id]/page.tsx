@@ -71,6 +71,7 @@ import { ThrowTeamMateIndicator } from "./components/ThrowTeamMateIndicator";
 import { normalizeState } from "./utils/normalize-state";
 import * as kickoffActions from "./utils/kickoff-actions";
 import { applyOrSubmitMove } from "./utils/apply-or-submit-move";
+import { getAvailableActions } from "./utils/available-actions";
 import { validateSetupPlacement } from "./utils/validate-setup";
 import { getMySide, validatePlacement } from "./utils/setup-validation";
 import { type LegalAction } from "./utils/legal-action";
@@ -926,34 +927,24 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
       {state.selectedPlayerId &&
         currentAction === null &&
         !hasPlayerActed(state, state.selectedPlayerId) &&
-        (state as ExtendedGameState).preMatch?.phase !== "setup" && (() => {
-          const sp = state.players.find((p) => p.id === state.selectedPlayerId);
-          const canThrowTM =
-            !!sp &&
-            sp.skills.some(
-              (s) => s.toLowerCase() === "throw-team-mate",
-            ) &&
-            legal.some(
-              (m) =>
-                m.type === "THROW_TEAM_MATE" &&
-                m.playerId === state.selectedPlayerId,
-            );
-          const available: Array<
-            "MOVE" | "BLOCK" | "BLITZ" | "PASS" | "HANDOFF" | "FOUL" | "THROW_TEAM_MATE"
-          > = ["MOVE", "BLOCK", "BLITZ", "PASS", "HANDOFF", "FOUL"];
-          if (canThrowTM) available.push("THROW_TEAM_MATE");
-          return (
-            <ActionPickerPopup
-              playerName={sp?.name || "Joueur"}
-              available={available}
-              onPick={(a) => {
-                setThrowTeamMateThrownId(null);
-                setCurrentAction(a);
-              }}
-              onClose={() => setCurrentAction("MOVE")}
-            />
-          );
-        })()}
+        (state as ExtendedGameState).preMatch?.phase !== "setup" && (
+          <ActionPickerPopup
+            playerName={
+              state.players.find((p) => p.id === state.selectedPlayerId)?.name ||
+              "Joueur"
+            }
+            available={getAvailableActions(
+              state as ExtendedGameState,
+              legal,
+              state.selectedPlayerId,
+            )}
+            onPick={(a) => {
+              setThrowTeamMateThrownId(null);
+              setCurrentAction(a);
+            }}
+            onClose={() => setCurrentAction("MOVE")}
+          />
+        )}
       {/* Indicateur THROW_TEAM_MATE : explique l'etape en cours */}
       {currentAction === "THROW_TEAM_MATE" && state.selectedPlayerId && (
         <ThrowTeamMateIndicator
