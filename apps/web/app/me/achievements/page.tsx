@@ -33,6 +33,7 @@ interface AchievementsResponse {
   data?: {
     stats: StatsSummary;
     achievements: AchievementView[];
+    newlyUnlocked?: string[];
   };
   error?: string;
 }
@@ -114,6 +115,16 @@ export default function AchievementsPage() {
   const progress =
     totalCount === 0 ? 0 : Math.round((unlockedCount / totalCount) * 100);
 
+  const newlyUnlockedSet = useMemo(
+    () => new Set(data?.newlyUnlocked ?? []),
+    [data?.newlyUnlocked],
+  );
+  const newlyUnlockedAchievements = useMemo(
+    () =>
+      data?.achievements.filter((a) => newlyUnlockedSet.has(a.slug)) ?? [],
+    [data?.achievements, newlyUnlockedSet],
+  );
+
   if (loading) {
     return (
       <div className="w-full max-w-5xl mx-auto p-6">
@@ -146,6 +157,35 @@ export default function AchievementsPage() {
           />
         </div>
       </div>
+
+      {newlyUnlockedAchievements.length > 0 && (
+        <div
+          data-testid="achievements-newly-unlocked-banner"
+          role="status"
+          className="rounded-lg border border-amber-300 bg-gradient-to-br from-amber-50 to-yellow-100 p-4 shadow-md"
+        >
+          <div className="flex items-center gap-2 text-amber-900 font-bold">
+            <span aria-hidden>🎉</span>
+            <span>
+              {newlyUnlockedAchievements.length} nouveau
+              {newlyUnlockedAchievements.length > 1 ? "x" : ""} succès
+              débloqué{newlyUnlockedAchievements.length > 1 ? "s" : ""} !
+            </span>
+          </div>
+          <ul className="mt-2 flex flex-wrap gap-2">
+            {newlyUnlockedAchievements.map((ach) => (
+              <li
+                key={ach.slug}
+                data-testid={`achievements-newly-unlocked-item-${ach.slug}`}
+                className="inline-flex items-center gap-1.5 rounded-full bg-white/80 border border-amber-300 px-3 py-1 text-sm font-semibold text-amber-900"
+              >
+                <span aria-hidden>{ach.icon}</span>
+                <span>{ach.nameFr}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {data?.stats && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-white">
@@ -182,7 +222,11 @@ export default function AchievementsPage() {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {items.map((ach) => (
-                <AchievementCard key={ach.slug} ach={ach} />
+                <AchievementCard
+                  key={ach.slug}
+                  ach={ach}
+                  isNew={newlyUnlockedSet.has(ach.slug)}
+                />
               ))}
             </div>
           </section>
@@ -201,29 +245,48 @@ function StatCard({ label, value }: { label: string; value: number }) {
   );
 }
 
-function AchievementCard({ ach }: { ach: AchievementView }) {
+function AchievementCard({
+  ach,
+  isNew,
+}: {
+  ach: AchievementView;
+  isNew: boolean;
+}) {
   const unlocked = ach.unlocked;
   return (
     <div
       data-testid="achievement-card"
       data-unlocked={unlocked ? "true" : "false"}
+      data-new={isNew ? "true" : "false"}
       className={`rounded-lg p-4 border transition-colors ${
-        unlocked
-          ? "bg-gray-800 border-nuffle-gold/60"
-          : "bg-gray-900 border-gray-700 opacity-60"
+        isNew
+          ? "bg-gray-800 border-amber-400 ring-2 ring-amber-300/60"
+          : unlocked
+            ? "bg-gray-800 border-nuffle-gold/60"
+            : "bg-gray-900 border-gray-700 opacity-60"
       }`}
     >
       <div className="flex items-start gap-3">
         <div className="text-3xl leading-none" aria-hidden>
           {unlocked ? ach.icon : "🔒"}
         </div>
-        <div className="min-w-0">
-          <div
-            className={`font-semibold truncate ${
-              unlocked ? "text-white" : "text-gray-400"
-            }`}
-          >
-            {ach.nameFr}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <div
+              className={`font-semibold truncate ${
+                unlocked ? "text-white" : "text-gray-400"
+              }`}
+            >
+              {ach.nameFr}
+            </div>
+            {isNew && (
+              <span
+                data-testid={`achievement-card-new-${ach.slug}`}
+                className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide bg-amber-400 text-amber-950 animate-pulse"
+              >
+                Nouveau
+              </span>
+            )}
           </div>
           <div className="text-sm text-gray-400">{ach.descriptionFr}</div>
           {unlocked && ach.unlockedAt && (
