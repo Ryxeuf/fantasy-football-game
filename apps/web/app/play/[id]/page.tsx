@@ -66,6 +66,7 @@ import HalftimeTransition from "../../components/HalftimeTransition";
 import { InducementsPhaseUI } from "./components/InducementsPhaseUI";
 import { normalizeState } from "./utils/normalize-state";
 import * as kickoffActions from "./utils/kickoff-actions";
+import { validateSetupPlacement } from "./utils/validate-setup";
 import { getMySide, validatePlacement } from "./utils/setup-validation";
 import { ForfeitWarning } from "../../components/ForfeitWarning";
 import GameChat from "../../components/GameChat";
@@ -296,47 +297,20 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
   const handleResolveKickoffEvent = () =>
     kickoffActions.handleResolveKickoffEvent(matchId, setState);
 
-  // Fonction pour valider le placement et sauvegarder en base
+  // Fonction pour valider le placement et sauvegarder en base (S26.0e — extracted)
   const handleValidatePlacement = async () => {
     if (!state || setupSubmitting) return;
     const extState = state as ExtendedGameState;
 
     setSetupSubmitting(true);
     try {
-      const token = localStorage.getItem("auth_token");
-      if (!token) {
-        window.location.href = "/lobby";
-        return;
-      }
-
-      // Sauvegarder le placement en base de données
-      const response = await fetch(
-        `${API_BASE}/match/${matchId}/validate-setup`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            placedPlayers: extState.preMatch.placedPlayers,
-            playerPositions: extState.players
-              .filter((p) => p.pos.x >= 0) // Seulement les joueurs sur le terrain
-              .map((p) => ({ playerId: p.id, x: p.pos.x, y: p.pos.y })),
-          }),
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error("Erreur lors de la sauvegarde du placement");
-      }
-
-      // Mettre à jour l'état local
-      const responseData = await response.json();
-      const normalizedState = normalizeState(responseData.gameState);
-      setState(normalizedState);
-      if (typeof responseData.isMyTurn === "boolean") setIsMyTurn(responseData.isMyTurn);
-      if (responseData.myTeamSide) setMyTeamSide(responseData.myTeamSide);
+      await validateSetupPlacement({
+        matchId,
+        extState,
+        setState,
+        setIsMyTurn,
+        setMyTeamSide,
+      });
     } catch (error) {
       console.error("Erreur lors de la validation du placement:", error);
       showSetupError("Erreur lors de la sauvegarde du placement");
