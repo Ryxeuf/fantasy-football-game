@@ -12,16 +12,19 @@ vi.mock("../services/coach-profile", () => ({
   getCoachRecentTeams: vi.fn(),
   getCoachShowcaseAchievements: vi.fn(),
   listPublicCoachSlugs: vi.fn(),
+  getCoachEloHistory: vi.fn(),
 }));
 
 import type { Request, Response } from "express";
 import {
+  getCoachEloHistory,
   getCoachPublicProfile,
   getCoachRecentTeams,
   getCoachShowcaseAchievements,
   listPublicCoachSlugs,
 } from "../services/coach-profile";
 import {
+  handleGetCoachEloHistory,
   handleGetCoachPublicProfile,
   handleListPublicCoachSlugs,
 } from "./coach";
@@ -30,6 +33,7 @@ const mockedGetProfile = vi.mocked(getCoachPublicProfile);
 const mockedGetShowcase = vi.mocked(getCoachShowcaseAchievements);
 const mockedGetRecentTeams = vi.mocked(getCoachRecentTeams);
 const mockedListSlugs = vi.mocked(listPublicCoachSlugs);
+const mockedGetEloHistory = vi.mocked(getCoachEloHistory);
 
 function buildRes(): Response {
   const res = {
@@ -240,6 +244,119 @@ describe("GET /coach — handleListPublicCoachSlugs (S26.3g)", () => {
     const req = {} as Request;
     const res = buildRes() as Response & { statusCode: number; body: unknown };
     await handleListPublicCoachSlugs(req, res);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.body).toMatchObject({ success: false });
+  });
+});
+
+describe("GET /coach/:slug/elo-history — handleGetCoachEloHistory (S26.3m)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  function buildProfile(id = "u-1") {
+    return {
+      id,
+      slug: "coach-alpha",
+      coachName: "Coach Alpha",
+      eloRating: 1234,
+      isSupporter: false,
+      supporterTier: null,
+      memberSince: "2025-12-01T00:00:00.000Z",
+    };
+  }
+
+  it("returns 200 + ApiResponse with snapshots when the coach exists", async () => {
+    mockedGetProfile.mockResolvedValue(buildProfile());
+    mockedGetEloHistory.mockResolvedValue([
+      { rating: 1015, delta: 15, recordedAt: "2026-03-01T08:00:00.000Z" },
+    ]);
+
+    const req = {
+      params: { slug: "coach-alpha" },
+      query: {},
+    } as unknown as Request;
+    const res = buildRes() as Response & { statusCode: number; body: unknown };
+    await handleGetCoachEloHistory(req, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toEqual({
+      success: true,
+      data: {
+        snapshots: [
+          { rating: 1015, delta: 15, recordedAt: "2026-03-01T08:00:00.000Z" },
+        ],
+      },
+    });
+    expect(mockedGetEloHistory).toHaveBeenCalledWith("u-1", 90);
+  });
+
+  it("forwards a custom days query to the service", async () => {
+    mockedGetProfile.mockResolvedValue(buildProfile());
+    mockedGetEloHistory.mockResolvedValue([]);
+
+    const req = {
+      params: { slug: "coach-alpha" },
+      query: { days: "30" },
+    } as unknown as Request;
+    const res = buildRes() as Response & { statusCode: number; body: unknown };
+    await handleGetCoachEloHistory(req, res);
+
+    expect(mockedGetEloHistory).toHaveBeenCalledWith("u-1", 30);
+  });
+
+  it("ignores a non-numeric days query (falls back to 90)", async () => {
+    mockedGetProfile.mockResolvedValue(buildProfile());
+    mockedGetEloHistory.mockResolvedValue([]);
+
+    const req = {
+      params: { slug: "coach-alpha" },
+      query: { days: "lol" },
+    } as unknown as Request;
+    const res = buildRes() as Response & { statusCode: number; body: unknown };
+    await handleGetCoachEloHistory(req, res);
+
+    expect(mockedGetEloHistory).toHaveBeenCalledWith("u-1", 90);
+  });
+
+  it("returns 404 when the slug does not match any coach", async () => {
+    mockedGetProfile.mockResolvedValue(null);
+
+    const req = {
+      params: { slug: "ghost" },
+      query: {},
+    } as unknown as Request;
+    const res = buildRes() as Response & { statusCode: number; body: unknown };
+    await handleGetCoachEloHistory(req, res);
+
+    expect(res.statusCode).toBe(404);
+    expect(res.body).toMatchObject({ success: false });
+    expect(mockedGetEloHistory).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 when the slug param is empty", async () => {
+    const req = {
+      params: { slug: " " },
+      query: {},
+    } as unknown as Request;
+    const res = buildRes() as Response & { statusCode: number; body: unknown };
+    await handleGetCoachEloHistory(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(mockedGetProfile).not.toHaveBeenCalled();
+  });
+
+  it("returns 500 when the service throws", async () => {
+    mockedGetProfile.mockResolvedValue(buildProfile());
+    mockedGetEloHistory.mockRejectedValue(new Error("DB down"));
+
+    const req = {
+      params: { slug: "coach-alpha" },
+      query: {},
+    } as unknown as Request;
+    const res = buildRes() as Response & { statusCode: number; body: unknown };
+    await handleGetCoachEloHistory(req, res);
 
     expect(res.statusCode).toBe(500);
     expect(res.body).toMatchObject({ success: false });

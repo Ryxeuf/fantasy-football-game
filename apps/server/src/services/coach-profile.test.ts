@@ -20,11 +20,15 @@ vi.mock("../prisma", () => ({
     team: {
       findMany: vi.fn(),
     },
+    eloSnapshot: {
+      findMany: vi.fn(),
+    },
   },
 }));
 
 import { prisma } from "../prisma";
 import {
+  getCoachEloHistory,
   getCoachPublicProfile,
   getCoachRecentTeams,
   getCoachShowcaseAchievements,
@@ -39,6 +43,9 @@ const mockPrisma = prisma as unknown as {
     findMany: ReturnType<typeof vi.fn>;
   };
   team: {
+    findMany: ReturnType<typeof vi.fn>;
+  };
+  eloSnapshot: {
     findMany: ReturnType<typeof vi.fn>;
   };
 };
@@ -323,5 +330,90 @@ describe("getCoachRecentTeams (S26.3h)", () => {
         createdAt: "2026-04-15T12:00:00.000Z",
       },
     ]);
+  });
+});
+
+describe("getCoachEloHistory (S26.3m)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns an empty array (no DB call) for empty userId", async () => {
+    expect(await getCoachEloHistory("", 90, FIXED_NOW)).toEqual([]);
+    expect(mockPrisma.eloSnapshot.findMany).not.toHaveBeenCalled();
+  });
+
+  it("queries snapshots scoped to userId, sorted asc by recordedAt", async () => {
+    mockPrisma.eloSnapshot.findMany.mockResolvedValue([]);
+    await getCoachEloHistory("u-1", 90, FIXED_NOW);
+    expect(mockPrisma.eloSnapshot.findMany).toHaveBeenCalledTimes(1);
+    const arg = mockPrisma.eloSnapshot.findMany.mock.calls[0][0] as {
+      where: { userId: string; recordedAt: { gte: Date } };
+      orderBy: { recordedAt: "asc" | "desc" };
+    };
+    expect(arg.where.userId).toBe("u-1");
+    expect(arg.orderBy).toEqual({ recordedAt: "asc" });
+  });
+
+  it("filters on recordedAt >= now - daysBack", async () => {
+    mockPrisma.eloSnapshot.findMany.mockResolvedValue([]);
+    await getCoachEloHistory("u-1", 90, FIXED_NOW);
+    const arg = mockPrisma.eloSnapshot.findMany.mock.calls[0][0] as {
+      where: { recordedAt: { gte: Date } };
+    };
+    const expected = new Date(FIXED_NOW.getTime() - 90 * 24 * 60 * 60 * 1000);
+    expect(arg.where.recordedAt.gte.toISOString()).toBe(expected.toISOString());
+  });
+
+  it("clamps daysBack to [1, 365]", async () => {
+    mockPrisma.eloSnapshot.findMany.mockResolvedValue([]);
+    await getCoachEloHistory("u-1", 1000, FIXED_NOW);
+    const argHigh = mockPrisma.eloSnapshot.findMany.mock.calls[0][0] as {
+      where: { recordedAt: { gte: Date } };
+    };
+    const expectedHigh = new Date(FIXED_NOW.getTime() - 365 * 24 * 60 * 60 * 1000);
+    expect(argHigh.where.recordedAt.gte.toISOString()).toBe(expectedHigh.toISOString());
+
+    mockPrisma.eloSnapshot.findMany.mockClear();
+    await getCoachEloHistory("u-1", 0, FIXED_NOW);
+    const argLow = mockPrisma.eloSnapshot.findMany.mock.calls[0][0] as {
+      where: { recordedAt: { gte: Date } };
+    };
+    const expectedLow = new Date(FIXED_NOW.getTime() - 1 * 24 * 60 * 60 * 1000);
+    expect(argLow.where.recordedAt.gte.toISOString()).toBe(expectedLow.toISOString());
+  });
+
+  it("maps each snapshot to a public DTO with ISO recordedAt", async () => {
+    mockPrisma.eloSnapshot.findMany.mockResolvedValue([
+      {
+        rating: 1015,
+        delta: 15,
+        recordedAt: new Date("2026-03-01T08:00:00.000Z"),
+      },
+      {
+        rating: 1007,
+        delta: -8,
+        recordedAt: new Date("2026-03-15T18:30:00.000Z"),
+      },
+    ]);
+    const result = await getCoachEloHistory("u-1", 90, FIXED_NOW);
+    expect(result).toEqual([
+      {
+        rating: 1015,
+        delta: 15,
+        recordedAt: "2026-03-01T08:00:00.000Z",
+      },
+      {
+        rating: 1007,
+        delta: -8,
+        recordedAt: "2026-03-15T18:30:00.000Z",
+      },
+    ]);
+  });
+
+  it("uses 90 day default when daysBack is omitted", async () => {
+    mockPrisma.eloSnapshot.findMany.mockResolvedValue([]);
+    await getCoachEloHistory("u-1");
+    expect(mockPrisma.eloSnapshot.findMany).toHaveBeenCalledTimes(1);
   });
 });

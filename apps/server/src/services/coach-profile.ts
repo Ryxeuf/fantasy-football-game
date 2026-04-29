@@ -51,8 +51,20 @@ export interface CoachRecentTeam {
   createdAt: string;
 }
 
+/** S26.3m — Point dans la courbe ELO pour `/coach/{slug}` (90j par defaut). */
+export interface CoachEloSnapshot {
+  rating: number;
+  delta: number;
+  /** ISO 8601 timestamp of the snapshot creation. */
+  recordedAt: string;
+}
+
 const DEFAULT_SHOWCASE_LIMIT = 6;
 const DEFAULT_RECENT_TEAMS_LIMIT = 5;
+const DEFAULT_ELO_HISTORY_DAYS = 90;
+const MIN_ELO_HISTORY_DAYS = 1;
+const MAX_ELO_HISTORY_DAYS = 365;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 interface CandidateUser {
   id: string;
@@ -246,5 +258,45 @@ export async function getCoachRecentTeams(
     roster: row.roster,
     currentValue: row.currentValue,
     createdAt: row.createdAt.toISOString(),
+  }));
+}
+
+/**
+ * S26.3m — Historique ELO du coach pour la courbe `/coach/{slug}`.
+ *
+ * Lit la table `EloSnapshot` (alimentee par `updateEloAfterMatch` depuis
+ * S26.3l) en filtrant sur la fenetre `[now - daysBack, now]`. La fenetre
+ * est clampee a `[1, 365]` jours pour eviter qu'un client ne demande
+ * tout l'historique d'un compte. Resultat trie par `recordedAt asc`
+ * pour que le client puisse trace la courbe sans tri additionnel.
+ */
+export async function getCoachEloHistory(
+  userId: string,
+  daysBack: number = DEFAULT_ELO_HISTORY_DAYS,
+  now: Date = new Date(),
+): Promise<CoachEloSnapshot[]> {
+  if (!userId) return [];
+  const days = Math.min(
+    MAX_ELO_HISTORY_DAYS,
+    Math.max(MIN_ELO_HISTORY_DAYS, Math.trunc(daysBack)),
+  );
+  const since = new Date(now.getTime() - days * MS_PER_DAY);
+
+  const rows = (await (prisma as unknown as {
+    eloSnapshot: {
+      findMany: (args: unknown) => Promise<
+        Array<{ rating: number; delta: number; recordedAt: Date }>
+      >;
+    };
+  }).eloSnapshot.findMany({
+    where: { userId, recordedAt: { gte: since } },
+    select: { rating: true, delta: true, recordedAt: true },
+    orderBy: { recordedAt: "asc" },
+  })) as Array<{ rating: number; delta: number; recordedAt: Date }>;
+
+  return rows.map((row) => ({
+    rating: row.rating,
+    delta: row.delta,
+    recordedAt: row.recordedAt.toISOString(),
   }));
 }
