@@ -67,8 +67,10 @@ import HalftimeTransition from "../../components/HalftimeTransition";
 import { InducementsPhaseUI } from "./components/InducementsPhaseUI";
 import { KickoffSequencePanel } from "./components/KickoffSequencePanel";
 import { SetupPhasePanel } from "./components/SetupPhasePanel";
+import { ThrowTeamMateIndicator } from "./components/ThrowTeamMateIndicator";
 import { normalizeState } from "./utils/normalize-state";
 import * as kickoffActions from "./utils/kickoff-actions";
+import { applyOrSubmitMove } from "./utils/apply-or-submit-move";
 import { validateSetupPlacement } from "./utils/validate-setup";
 import { getMySide, validatePlacement } from "./utils/setup-validation";
 import { type LegalAction } from "./utils/legal-action";
@@ -954,23 +956,13 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
         })()}
       {/* Indicateur THROW_TEAM_MATE : explique l'etape en cours */}
       {currentAction === "THROW_TEAM_MATE" && state.selectedPlayerId && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-40 bg-purple-700 text-white px-4 py-2 rounded-lg shadow-lg text-sm font-semibold flex items-center gap-3">
-          <span>
-            {throwTeamMateThrownId
-              ? "Cliquez sur la case d'arrivée"
-              : "Cliquez sur le coéquipier à lancer"}
-          </span>
-          <button
-            type="button"
-            onClick={() => {
-              setThrowTeamMateThrownId(null);
-              setCurrentAction(null);
-            }}
-            className="px-2 py-0.5 bg-purple-900 rounded text-xs hover:bg-purple-950"
-          >
-            Annuler
-          </button>
-        </div>
+        <ThrowTeamMateIndicator
+          thrownPlayerId={throwTeamMateThrownId}
+          onCancel={() => {
+            setThrowTeamMateThrownId(null);
+            setCurrentAction(null);
+          }}
+        />
       )}
       {/* Bouton fin d'activation du joueur */}
       {/* Barre d'activation du joueur : PM restants + bouton terminer */}
@@ -1030,23 +1022,16 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
           chooser={state.pendingBlock.chooser}
           options={state.pendingBlock.options}
           onChoose={(result) => {
-            const move = buildBlockChooseMove(state.pendingBlock!, result);
-            if (isActiveMatch) {
-              submitMove(move).then((res) => {
-                if (res?.success && res.gameState) {
-                  setState(normalizeState(res.gameState));
-                  setIsMyTurn(res.isMyTurn);
-                  if (res.gameState.lastDiceResult) setShowDicePopup(true);
-                }
-              });
-            } else {
-              setState((s) => {
-                if (!s) return null;
-                const s2 = applyMove(s, move, createRNG());
-                if (s2.lastDiceResult) setShowDicePopup(true);
-                return s2 as ExtendedGameState;
-              });
-            }
+            applyOrSubmitMove({
+              move: buildBlockChooseMove(state.pendingBlock!, result),
+              isActiveMatch,
+              submitMove,
+              setState,
+              setIsMyTurn,
+              createRNG,
+              withDicePopup: true,
+              setShowDicePopup,
+            });
           }}
           onClose={() => {}}
         />
@@ -1061,17 +1046,14 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
           }
           availableDirections={state.pendingPushChoice.availableDirections}
           onChoose={(direction) => {
-            const move = buildPushChooseMove(state.pendingPushChoice!, direction);
-            if (isActiveMatch) {
-              submitMove(move).then((res) => {
-                if (res?.success && res.gameState) {
-                  setState(normalizeState(res.gameState));
-                  setIsMyTurn(res.isMyTurn);
-                }
-              });
-            } else {
-              setState((s) => s ? applyMove(s, move, createRNG()) as ExtendedGameState : null);
-            }
+            applyOrSubmitMove({
+              move: buildPushChooseMove(state.pendingPushChoice!, direction),
+              isActiveMatch,
+              submitMove,
+              setState,
+              setIsMyTurn,
+              createRNG,
+            });
           }}
           onClose={() => {}}
         />
@@ -1087,17 +1069,14 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
           targetNewPosition={state.pendingFollowUpChoice.targetNewPosition}
           targetOldPosition={state.pendingFollowUpChoice.targetOldPosition}
           onChoose={(followUp) => {
-            const move = buildFollowUpChooseMove(state.pendingFollowUpChoice!, followUp);
-            if (isActiveMatch) {
-              submitMove(move).then((res) => {
-                if (res?.success && res.gameState) {
-                  setState(normalizeState(res.gameState));
-                  setIsMyTurn(res.isMyTurn);
-                }
-              });
-            } else {
-              setState((s) => s ? applyMove(s, move, createRNG()) as ExtendedGameState : null);
-            }
+            applyOrSubmitMove({
+              move: buildFollowUpChooseMove(state.pendingFollowUpChoice!, followUp),
+              isActiveMatch,
+              submitMove,
+              setState,
+              setIsMyTurn,
+              createRNG,
+            });
           }}
           onClose={() => {}}
         />
@@ -1115,23 +1094,16 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
               : state.teamRerolls.teamB
           }
           onChoose={(useReroll) => {
-            const move = buildRerollChooseMove(useReroll);
-            if (isActiveMatch) {
-              submitMove(move).then((res) => {
-                if (res?.success && res.gameState) {
-                  setState(normalizeState(res.gameState));
-                  setIsMyTurn(res.isMyTurn);
-                  if (res.gameState.lastDiceResult) setShowDicePopup(true);
-                }
-              });
-            } else {
-              setState((s) => {
-                if (!s) return null;
-                const s2 = applyMove(s, move, createRNG());
-                if (s2.lastDiceResult) setShowDicePopup(true);
-                return s2 as ExtendedGameState;
-              });
-            }
+            applyOrSubmitMove({
+              move: buildRerollChooseMove(useReroll),
+              isActiveMatch,
+              submitMove,
+              setState,
+              setIsMyTurn,
+              createRNG,
+              withDicePopup: true,
+              setShowDicePopup,
+            });
           }}
         />
       )}
