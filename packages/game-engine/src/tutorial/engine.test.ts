@@ -15,6 +15,8 @@ import {
   listTutorialScripts,
   getTutorialBadge,
   getRecommendedTeamsForBeginners,
+  getTotalTutorialXP,
+  getMaxTutorialXP,
 } from './engine';
 import type { TutorialScript } from './types';
 
@@ -268,5 +270,46 @@ describe('Regle: Tutorial Engine', () => {
     expect(slugs).toContain('human');
     expect(slugs).toContain('orc');
     expect(slugs).toContain('dwarf');
+  });
+
+  it('getMaxTutorialXP sums the XP of every registered tutorial badge (S26.1c)', () => {
+    const maxXp = getMaxTutorialXP();
+    const expected = listTutorialScripts().reduce(
+      (sum, script) => sum + getTutorialBadge(script).xp,
+      0,
+    );
+    expect(maxXp).toBe(expected);
+    expect(maxXp).toBeGreaterThan(0);
+  });
+
+  it('getTotalTutorialXP returns 0 when no tutorial is completed (S26.1c)', () => {
+    expect(getTotalTutorialXP([])).toBe(0);
+  });
+
+  it('getTotalTutorialXP sums XP of completed tutorials (S26.1c)', () => {
+    const introBadge = getTutorialBadge(
+      findTutorialScript('mon-premier-match') as TutorialScript,
+    );
+    expect(getTotalTutorialXP(['mon-premier-match'])).toBe(introBadge.xp);
+  });
+
+  it('getTotalTutorialXP ignores unknown slugs and dedupes duplicates (S26.1c)', () => {
+    const introBadge = getTutorialBadge(
+      findTutorialScript('mon-premier-match') as TutorialScript,
+    );
+    expect(
+      getTotalTutorialXP([
+        'mon-premier-match',
+        'mon-premier-match',
+        'unknown-slug',
+      ]),
+    ).toBe(introBadge.xp);
+  });
+
+  it('getTotalTutorialXP never exceeds getMaxTutorialXP (S26.1c)', () => {
+    const allSlugs = listTutorialScripts().map((s) => s.slug);
+    expect(getTotalTutorialXP([...allSlugs, ...allSlugs])).toBe(
+      getMaxTutorialXP(),
+    );
   });
 });

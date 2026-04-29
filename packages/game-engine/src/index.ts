@@ -444,6 +444,8 @@ export {
   getProgressRatio,
   getTutorialBadge,
   getRecommendedTeamsForBeginners,
+  getMaxTutorialXP,
+  getTotalTutorialXP,
   MON_PREMIER_MATCH,
   type TutorialScript,
   type TutorialStep,
