@@ -193,4 +193,104 @@ describe("MatchEndScreen", () => {
       expect(screen.getByText("Skaven Stars")).toBeTruthy();
     });
   });
+
+  // S26.2c — Newly unlocked achievements panel at match end
+  function buildMatchEndMock(
+    newlyUnlocked: string[] = [],
+    achievements: Array<{ slug: string; nameFr: string; icon: string }> = [],
+  ) {
+    return (url: RequestInfo | URL) => {
+      const u = typeof url === "string" ? url : url.toString();
+      if (u.endsWith("/achievements")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            success: true,
+            data: {
+              stats: {
+                matchesPlayed: 1,
+                wins: 1,
+                draws: 0,
+                losses: 0,
+                touchdowns: 2,
+                casualties: 0,
+                friendsCount: 0,
+                rostersPlayed: ["skaven"],
+                winsByRoster: { skaven: 1 },
+              },
+              achievements: achievements.map((a) => ({
+                ...a,
+                nameEn: a.nameFr,
+                descriptionFr: a.nameFr,
+                descriptionEn: a.nameFr,
+                category: "matches",
+                unlocked: true,
+                unlockedAt: "2026-04-29T00:00:00.000Z",
+              })),
+              newlyUnlocked,
+            },
+          }),
+        } as Response);
+      }
+      return Promise.resolve({
+        ok: true,
+        json: async () => mockResults,
+      } as Response);
+    };
+  }
+
+  it("shows the newly-unlocked achievements panel when /achievements returns slugs (S26.2c)", async () => {
+    mockFetch.mockImplementation(
+      buildMatchEndMock(
+        ["first-match", "first-win"],
+        [
+          { slug: "first-match", nameFr: "Premier match", icon: "🏆" },
+          { slug: "first-win", nameFr: "Premiere victoire", icon: "🎉" },
+        ],
+      ),
+    );
+
+    render(<MatchEndScreen matchId="match-123" myTeamSide="A" />);
+
+    const panel = await screen.findByTestId("match-end-newly-unlocked");
+    expect(panel.textContent).toMatch(/Premier match/);
+    expect(panel.textContent).toMatch(/Premiere victoire/);
+
+    const cta = screen.getByTestId("match-end-newly-unlocked-cta");
+    expect(cta.getAttribute("href")).toBe("/me/achievements");
+  });
+
+  it("hides the panel when newlyUnlocked is empty (S26.2c)", async () => {
+    mockFetch.mockImplementation(buildMatchEndMock([], []));
+
+    render(<MatchEndScreen matchId="match-123" myTeamSide="A" />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/retour/i)).toBeTruthy();
+    });
+    expect(screen.queryByTestId("match-end-newly-unlocked")).toBeNull();
+  });
+
+  it("does not crash when /achievements fetch fails (S26.2c)", async () => {
+    mockFetch.mockImplementation((url: RequestInfo | URL) => {
+      const u = typeof url === "string" ? url : url.toString();
+      if (u.endsWith("/achievements")) {
+        return Promise.resolve({
+          ok: false,
+          json: async () => ({ error: "boom" }),
+        } as Response);
+      }
+      return Promise.resolve({
+        ok: true,
+        json: async () => mockResults,
+      } as Response);
+    });
+
+    render(<MatchEndScreen matchId="match-123" myTeamSide="A" />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/victoire/i)).toBeTruthy();
+    });
+    expect(screen.queryByTestId("match-end-newly-unlocked")).toBeNull();
+  });
 });

@@ -46,6 +46,22 @@ interface MatchEndScreenProps {
   onClose?: () => void;
 }
 
+interface NewlyUnlockedAchievement {
+  slug: string;
+  nameFr: string;
+  icon: string;
+}
+
+interface AchievementsApiResult {
+  achievements?: Array<{
+    slug: string;
+    nameFr: string;
+    icon: string;
+    [k: string]: unknown;
+  }>;
+  newlyUnlocked?: string[];
+}
+
 function StatRow({ label, valueA, valueB }: { label: string; valueA: number; valueB: number }) {
   return (
     <div className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
@@ -66,6 +82,7 @@ export default function MatchEndScreen({ matchId, myTeamSide, onClose }: MatchEn
   const [results, setResults] = useState<MatchResults | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [newlyUnlocked, setNewlyUnlocked] = useState<NewlyUnlockedAchievement[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -88,6 +105,40 @@ export default function MatchEndScreen({ matchId, myTeamSide, onClose }: MatchEn
       }
     })();
   }, [matchId]);
+
+  // S26.2c — Fetch achievements after match ends to surface newly-unlocked
+  // ones in a celebration panel with a CTA to /me/achievements.
+  useEffect(() => {
+    if (!results) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const ach = await apiRequest<AchievementsApiResult>("/achievements");
+        if (cancelled) return;
+        const slugs = ach.newlyUnlocked ?? [];
+        if (slugs.length === 0) {
+          setNewlyUnlocked([]);
+          return;
+        }
+        const bySlug = new Map(
+          (ach.achievements ?? []).map((a) => [a.slug, a] as const),
+        );
+        const items: NewlyUnlockedAchievement[] = [];
+        for (const slug of slugs) {
+          const def = bySlug.get(slug);
+          if (def) items.push({ slug, nameFr: def.nameFr, icon: def.icon });
+        }
+        setNewlyUnlocked(items);
+      } catch {
+        // Silently ignore — the match-end screen must remain usable even
+        // if the achievements endpoint fails or is unavailable.
+        if (!cancelled) setNewlyUnlocked([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [results]);
 
   const handleReturnToLobby = () => {
     if (onClose) {
@@ -255,6 +306,43 @@ export default function MatchEndScreen({ matchId, myTeamSide, onClose }: MatchEn
               teamAName={teams.A.name}
               teamBName={teams.B.name}
             />
+          </div>
+        )}
+
+        {/* S26.2c — Newly unlocked achievements panel */}
+        {newlyUnlocked.length > 0 && (
+          <div className="px-6 pb-4">
+            <div
+              data-testid="match-end-newly-unlocked"
+              className="rounded-xl border border-amber-300 bg-gradient-to-br from-amber-50 to-yellow-100 p-4 shadow-md"
+            >
+              <h3 className="text-center text-sm font-bold text-amber-900 uppercase tracking-wide">
+                <span aria-hidden>🎉 </span>
+                {newlyUnlocked.length} nouveau
+                {newlyUnlocked.length > 1 ? "x" : ""} succès débloqué
+                {newlyUnlocked.length > 1 ? "s" : ""}
+              </h3>
+              <ul className="mt-3 flex flex-wrap justify-center gap-2">
+                {newlyUnlocked.map((ach) => (
+                  <li
+                    key={ach.slug}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-white/80 border border-amber-300 px-3 py-1 text-sm font-semibold text-amber-900"
+                  >
+                    <span aria-hidden>{ach.icon}</span>
+                    <span>{ach.nameFr}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-3 text-center">
+                <a
+                  data-testid="match-end-newly-unlocked-cta"
+                  href="/me/achievements"
+                  className="inline-block px-4 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-semibold text-sm transition-colors"
+                >
+                  Voir mes succès
+                </a>
+              </div>
+            </div>
           </div>
         )}
 
