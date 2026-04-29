@@ -174,3 +174,32 @@ export async function areFriends(
   });
   return row !== null;
 }
+
+/**
+ * S26.5b — Liste les userIds des amis acceptes (dans les deux sens
+ * de la relation). Utile pour cibler les notifications "ami demarre
+ * un match" (S26.5) sans avoir a deballer la liste complete des
+ * relations cote caller.
+ *
+ * Renvoie un tableau dedupe (au cas ou la base contiendrait
+ * historiquement des lignes dupliquees) et n'inclut jamais le
+ * `userId` lui-meme.
+ */
+export async function listAcceptedFriendIds(
+  userId: string,
+): Promise<string[]> {
+  if (!userId) return [];
+  const rows = await prisma.friendship.findMany({
+    where: {
+      status: FriendshipStatus.Accepted,
+      OR: [{ requesterId: userId }, { receiverId: userId }],
+    },
+    select: { requesterId: true, receiverId: true },
+  });
+  const ids = new Set<string>();
+  for (const row of rows) {
+    if (row.requesterId !== userId) ids.add(row.requesterId);
+    if (row.receiverId !== userId) ids.add(row.receiverId);
+  }
+  return Array.from(ids);
+}

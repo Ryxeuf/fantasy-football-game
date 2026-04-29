@@ -23,6 +23,7 @@ import {
   listFriendships,
   removeFriendship,
   areFriends,
+  listAcceptedFriendIds,
   FriendshipStatus,
 } from "./friendship";
 
@@ -273,6 +274,50 @@ describe("Rule: Friendship service", () => {
       expect(FriendshipStatus.Accepted).toBe("accepted");
       expect(FriendshipStatus.Declined).toBe("declined");
       expect(FriendshipStatus.Blocked).toBe("blocked");
+    });
+  });
+
+  describe("listAcceptedFriendIds (S26.5b)", () => {
+    it("returns an empty array (no DB call) for empty userId", async () => {
+      expect(await listAcceptedFriendIds("")).toEqual([]);
+      expect(mockPrisma.friendship.findMany).not.toHaveBeenCalled();
+    });
+
+    it("queries only accepted friendships involving the user", async () => {
+      mockPrisma.friendship.findMany.mockResolvedValue([]);
+      await listAcceptedFriendIds("u-self");
+      const arg = mockPrisma.friendship.findMany.mock.calls[0][0];
+      expect(arg.where.status).toBe(FriendshipStatus.Accepted);
+      expect(arg.where.OR).toEqual([
+        { requesterId: "u-self" },
+        { receiverId: "u-self" },
+      ]);
+    });
+
+    it("returns the friend id from each row, regardless of direction", async () => {
+      mockPrisma.friendship.findMany.mockResolvedValue([
+        { requesterId: "u-self", receiverId: "u-friend1" },
+        { requesterId: "u-friend2", receiverId: "u-self" },
+      ]);
+      const result = await listAcceptedFriendIds("u-self");
+      expect(new Set(result)).toEqual(new Set(["u-friend1", "u-friend2"]));
+    });
+
+    it("dedupes when the same friend appears twice (defensive)", async () => {
+      mockPrisma.friendship.findMany.mockResolvedValue([
+        { requesterId: "u-self", receiverId: "u-friend1" },
+        { requesterId: "u-friend1", receiverId: "u-self" },
+      ]);
+      const result = await listAcceptedFriendIds("u-self");
+      expect(result).toEqual(["u-friend1"]);
+    });
+
+    it("never includes the requester itself", async () => {
+      mockPrisma.friendship.findMany.mockResolvedValue([
+        { requesterId: "u-self", receiverId: "u-friend1" },
+      ]);
+      const result = await listAcceptedFriendIds("u-self");
+      expect(result).not.toContain("u-self");
     });
   });
 });
