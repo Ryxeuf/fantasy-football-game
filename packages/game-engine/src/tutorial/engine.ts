@@ -4,6 +4,7 @@
  * N.1 — Tutoriel interactif (match guide, scripts pas a pas).
  */
 import type {
+  RecommendedTeam,
   TutorialBadge,
   TutorialProgress,
   TutorialScript,
@@ -111,6 +112,43 @@ export function getTutorialBadge(script: TutorialScript): TutorialBadge {
     id: `tutorial:${script.slug}`,
     ...meta,
   };
+}
+
+const BEGINNER_RECOMMENDATIONS: readonly RecommendedTeam[] = Object.freeze([
+  {
+    slug: 'human',
+    labelFr: 'Humains',
+    labelEn: 'Humans',
+    descriptionFr:
+      'Equipe equilibree, sans piege. Bonne armure, bons lanceurs, bons receveurs : ideale pour apprendre tous les aspects du jeu.',
+    descriptionEn:
+      'A balanced, no-trap team. Decent armour, solid throwers and catchers — perfect to learn every aspect of the game.',
+    emoji: '🛡️',
+  },
+  {
+    slug: 'orc',
+    labelFr: 'Orques',
+    labelEn: 'Orcs',
+    descriptionFr:
+      'Tres resistants, faciles a jouer en force. Pardonnent les erreurs grace a leur armure elevee.',
+    descriptionEn:
+      'Tough and forgiving. High armour means rookie mistakes hurt less while you learn positional play.',
+    emoji: '⚔️',
+  },
+  {
+    slug: 'dwarf',
+    labelFr: 'Nains',
+    labelEn: 'Dwarves',
+    descriptionFr:
+      'Lents mais blindes : presque impossibles a blesser. Excellent choix pour comprendre la guerre de tranchees.',
+    descriptionEn:
+      'Slow but heavily armoured — almost impossible to injure. Great pick to learn trench-warfare positioning.',
+    emoji: '🪓',
+  },
+]);
+
+export function getRecommendedTeamsForBeginners(): readonly RecommendedTeam[] {
+  return BEGINNER_RECOMMENDATIONS;
 }
 
 export function isTutorialComplete(progress: TutorialProgress): boolean {

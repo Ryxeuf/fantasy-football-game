@@ -14,6 +14,7 @@ import {
   findTutorialScript,
   listTutorialScripts,
   getTutorialBadge,
+  getRecommendedTeamsForBeginners,
 } from './engine';
 import type { TutorialScript } from './types';
 
@@ -239,5 +240,33 @@ describe('Regle: Tutorial Engine', () => {
     expect(badge.labelEn.length).toBeGreaterThan(0);
     expect(badge.emoji.length).toBeGreaterThan(0);
     expect(badge.xp).toBeGreaterThan(0);
+  });
+
+  it('getRecommendedTeamsForBeginners returns exactly 3 beginner-friendly rosters', () => {
+    const recos = getRecommendedTeamsForBeginners();
+    expect(recos.length).toBe(3);
+    const slugs = recos.map((r) => r.slug);
+    expect(new Set(slugs).size).toBe(3);
+  });
+
+  it('getRecommendedTeamsForBeginners returns rosters that exist in the registry', () => {
+    const recos = getRecommendedTeamsForBeginners();
+    for (const reco of recos) {
+      expect(typeof reco.slug).toBe('string');
+      expect(reco.slug.length).toBeGreaterThan(0);
+      expect(reco.labelFr.length).toBeGreaterThan(0);
+      expect(reco.labelEn.length).toBeGreaterThan(0);
+      expect(reco.descriptionFr.length).toBeGreaterThan(0);
+      expect(reco.descriptionEn.length).toBeGreaterThan(0);
+      expect(reco.emoji.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('getRecommendedTeamsForBeginners includes the canonical beginner rosters', () => {
+    const recos = getRecommendedTeamsForBeginners();
+    const slugs = recos.map((r) => r.slug);
+    expect(slugs).toContain('human');
+    expect(slugs).toContain('orc');
+    expect(slugs).toContain('dwarf');
   });
 });

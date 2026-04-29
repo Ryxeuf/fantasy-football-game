@@ -73,3 +73,14 @@ export interface TutorialBadge {
   /** Points d'experience accordes a la completion. */
   xp: number;
 }
+
+export interface RecommendedTeam {
+  /** Slug du roster (ex: 'human', 'orc', 'dwarf'). Doit etre une cle valide de TEAM_ROSTERS. */
+  slug: string;
+  labelFr: string;
+  labelEn: string;
+  /** Pitch court pour expliquer pourquoi cette equipe est adaptee aux debutants. */
+  descriptionFr: string;
+  descriptionEn: string;
+  emoji: string;
+}

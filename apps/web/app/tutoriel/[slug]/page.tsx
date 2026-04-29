@@ -8,6 +8,7 @@ import {
   findTutorialScript,
   getCurrentStep,
   getProgressRatio,
+  getRecommendedTeamsForBeginners,
   getTutorialBadge,
   goBackTutorialProgress,
   isTutorialComplete,
@@ -162,6 +163,7 @@ export default function TutorielRunnerPage() {
   const stepTip = getLocalizedStepText(step, "tip", language);
   const badge = getTutorialBadge(script);
   const badgeLabel = language === "fr" ? badge.labelFr : badge.labelEn;
+  const recommendedTeams = getRecommendedTeamsForBeginners();
 
   return (
     <main className="max-w-3xl mx-auto px-4 py-8">
@@ -207,32 +209,85 @@ export default function TutorielRunnerPage() {
       </section>
 
       {complete && (
-        <section
-          data-testid="tutorial-badge-card"
-          className="mt-6 bg-gradient-to-br from-amber-50 to-yellow-100 border border-amber-300 rounded-lg p-6 shadow-md"
-        >
-          <div className="flex items-start gap-4">
-            <span className="text-5xl" aria-hidden>
-              {badge.emoji}
-            </span>
-            <div className="flex-1">
-              <p className="text-xs uppercase tracking-wide text-amber-700 font-semibold">
-                {language === "fr" ? "Badge debloque" : "Badge unlocked"}
-              </p>
-              <h3 className="text-xl font-bold text-nuffle-anthracite mt-1">
-                {badgeLabel}
-              </h3>
-              <p className="mt-2 text-sm text-amber-900 font-medium">
-                +{badge.xp} XP
-              </p>
-              <p className="mt-3 text-sm text-gray-700">
-                {language === "fr"
-                  ? "Continue ton apprentissage en explorant les autres tutoriels ou en lancant ton premier match contre l'IA."
-                  : "Keep learning by exploring more tutorials or starting your first match against the AI."}
-              </p>
+        <>
+          <section
+            data-testid="tutorial-badge-card"
+            className="mt-6 bg-gradient-to-br from-amber-50 to-yellow-100 border border-amber-300 rounded-lg p-6 shadow-md"
+          >
+            <div className="flex items-start gap-4">
+              <span className="text-5xl" aria-hidden>
+                {badge.emoji}
+              </span>
+              <div className="flex-1">
+                <p className="text-xs uppercase tracking-wide text-amber-700 font-semibold">
+                  {language === "fr" ? "Badge debloque" : "Badge unlocked"}
+                </p>
+                <h3 className="text-xl font-bold text-nuffle-anthracite mt-1">
+                  {badgeLabel}
+                </h3>
+                <p className="mt-2 text-sm text-amber-900 font-medium">
+                  +{badge.xp} XP
+                </p>
+                <p className="mt-3 text-sm text-gray-700">
+                  {language === "fr"
+                    ? "Continue ton apprentissage en explorant les autres tutoriels ou en lancant ton premier match contre l'IA."
+                    : "Keep learning by exploring more tutorials or starting your first match against the AI."}
+                </p>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+
+          <section
+            data-testid="tutorial-recommended-teams"
+            className="mt-6 bg-white border border-gray-200 rounded-lg p-6 shadow-sm"
+          >
+            <h3 className="text-lg font-bold text-nuffle-anthracite">
+              {language === "fr"
+                ? "Essaie ces 3 equipes pour ton premier match"
+                : "Try these 3 teams for your first match"}
+            </h3>
+            <p className="mt-1 text-sm text-gray-600">
+              {language === "fr"
+                ? "Ces rosters sont conseilles aux nouveaux coachs : faciles a prendre en main et resistants a l'erreur."
+                : "These rosters are recommended for new coaches: easy to learn and forgiving on mistakes."}
+            </p>
+            <ul className="mt-4 grid gap-3 md:grid-cols-3">
+              {recommendedTeams.map((reco) => {
+                const recoLabel =
+                  language === "fr" ? reco.labelFr : reco.labelEn;
+                const recoDescription =
+                  language === "fr" ? reco.descriptionFr : reco.descriptionEn;
+                return (
+                  <li
+                    key={reco.slug}
+                    data-testid={`tutorial-reco-${reco.slug}`}
+                    className="border border-gray-200 rounded-md p-4 hover:border-nuffle-gold transition-colors flex flex-col"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl" aria-hidden>
+                        {reco.emoji}
+                      </span>
+                      <span className="font-semibold text-nuffle-anthracite">
+                        {recoLabel}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-xs text-gray-600 flex-1">
+                      {recoDescription}
+                    </p>
+                    <Link
+                      href={`/me/teams/new?roster=${reco.slug}`}
+                      className="mt-3 inline-flex justify-center px-3 py-1.5 rounded-md bg-nuffle-gold hover:bg-nuffle-bronze text-white font-semibold text-xs transition-colors"
+                    >
+                      {language === "fr"
+                        ? "Creer cette equipe"
+                        : "Create this team"}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        </>
       )}
 
       <div className="flex items-center justify-between mt-6 gap-3 flex-wrap">
