@@ -1,5 +1,8 @@
 import { Router, type Request, type Response } from "express";
-import { getCoachPublicProfile } from "../services/coach-profile";
+import {
+  getCoachPublicProfile,
+  getCoachShowcaseAchievements,
+} from "../services/coach-profile";
 import { serverLog } from "../utils/server-log";
 
 /**
@@ -9,6 +12,9 @@ import { serverLog } from "../utils/server-log";
  * profil public via le service S26.3b `getCoachPublicProfile`. Pas
  * d'authentification : la page `/coach/{slug}` doit etre indexable
  * (SEO bonus — voir DoD S26.3).
+ *
+ * S26.3f — Enrichit la reponse avec la vitrine succes
+ * (`getCoachShowcaseAchievements`).
  */
 export async function handleGetCoachPublicProfile(
   req: Request,
@@ -26,7 +32,10 @@ export async function handleGetCoachPublicProfile(
       res.status(404).json({ success: false, error: "Coach introuvable" });
       return;
     }
-    res.status(200).json({ success: true, data: profile });
+    const achievements = await getCoachShowcaseAchievements(profile.id);
+    res
+      .status(200)
+      .json({ success: true, data: { ...profile, achievements } });
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : "Erreur serveur";
     serverLog.error("[GET /coach/:slug] error:", message);
