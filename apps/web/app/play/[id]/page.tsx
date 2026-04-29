@@ -65,6 +65,7 @@ import MatchEndScreen from "../../components/MatchEndScreen";
 import PreMatchSummary from "../../components/PreMatchSummary";
 import HalftimeTransition from "../../components/HalftimeTransition";
 import { InducementsPhaseUI } from "./components/InducementsPhaseUI";
+import { KickoffSequencePanel } from "./components/KickoffSequencePanel";
 import { normalizeState } from "./utils/normalize-state";
 import * as kickoffActions from "./utils/kickoff-actions";
 import { validateSetupPlacement } from "./utils/validate-setup";
@@ -742,79 +743,12 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
                 )}
 
                 {state.preMatch?.phase === "kickoff" || state.preMatch?.phase === "kickoff-sequence" ? (
-                  <div className="space-y-3">
-                    <div className="text-lg font-bold text-green-600 mb-1">Sequence de Kickoff</div>
-
-                    {state.preMatch?.kickoffStep === "place-ball" && (
-                      <div>
-                        <p className="text-sm text-gray-600 mb-2">
-                          L&apos;equipe qui frappe doit placer le ballon dans la moitie adverse
-                          {state.preMatch?.receivingTeam && (
-                            <>
-                              {" "}(zone de{" "}
-                              <span className="font-semibold text-green-700">
-                                {state.preMatch.receivingTeam === "A"
-                                  ? state.teamNames.teamA
-                                  : state.teamNames.teamB}
-                              </span>
-                              )
-                            </>
-                          )}
-                          .
-                        </p>
-                        {myTeamSide === state.preMatch?.kickingTeam ? (
-                          <p className="text-sm font-semibold text-blue-600">
-                            Cliquez sur une case de la moitie adverse pour placer le ballon.
-                          </p>
-                        ) : (
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
-                              <span className="inline-block w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-                              En attente du placement du ballon par l&apos;adversaire...
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => window.location.reload()}
-                              className="text-xs text-gray-500 underline hover:text-gray-700"
-                            >
-                              Rien ne se passe ? Rafraichir la page
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {state.preMatch?.kickoffStep === "kick-deviation" && (
-                      <div>
-                        <p className="text-sm text-gray-600 mb-2">Calcul de la deviation du ballon...</p>
-                        <button
-                          onClick={handleCalculateDeviation}
-                          className="px-4 py-2 bg-nuffle-gold hover:bg-nuffle-gold/90 text-nuffle-anthracite font-semibold rounded-lg shadow transition-all"
-                        >
-                          Calculer la deviation
-                        </button>
-                      </div>
-                    )}
-
-                    {state.preMatch?.kickoffStep === "kickoff-event" && (
-                      <div>
-                        <p className="text-sm text-gray-600 mb-2">Resolution de l&apos;evenement de kickoff...</p>
-                        <button
-                          onClick={handleResolveKickoffEvent}
-                          className="px-4 py-2 bg-nuffle-gold hover:bg-nuffle-gold/90 text-nuffle-anthracite font-semibold rounded-lg shadow transition-all"
-                        >
-                          Resoudre l&apos;evenement
-                        </button>
-                      </div>
-                    )}
-
-                    {!state.preMatch?.kickoffStep && (
-                      <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
-                        <span className="inline-block w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-                        Preparation du kickoff...
-                      </div>
-                    )}
-                  </div>
+                  <KickoffSequencePanel
+                    state={state as ExtendedGameState}
+                    myTeamSide={myTeamSide}
+                    onCalculateDeviation={handleCalculateDeviation}
+                    onResolveKickoffEvent={handleResolveKickoffEvent}
+                  />
                 ) : state.preMatch?.phase === "setup" ? (
                   <div>
                     {/* Étapes de setup */}
