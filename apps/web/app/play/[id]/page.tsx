@@ -5,11 +5,6 @@ import {
   DiceResultPopup,
   GameScoreboard,
   ActionPickerPopup,
-  BlockChoicePopup,
-  PushChoicePopup,
-  FollowUpChoicePopup,
-  RerollChoicePopup,
-  ApothecaryChoicePopup,
   GameLog,
   ToastProvider,
   type TerrainSkinId,
@@ -48,24 +43,14 @@ import { webLog } from "../../lib/log";
 import { useGameMoves } from "./hooks/useGameMoves";
 // useGameSocket is now called only inside useGameState to avoid duplicate connections
 import { useGameState } from "./hooks/useGameState";
-import {
-  shouldShowBlockPopup,
-  shouldShowPushPopup,
-  shouldShowFollowUpPopup,
-  shouldShowRerollPopup,
-  buildBlockChooseMove,
-  buildPushChooseMove,
-  buildFollowUpChooseMove,
-  buildRerollChooseMove,
-  buildApothecaryChooseMove,
-  computeBlockTargets,
-} from "./hooks/useBlockPopups";
+import { computeBlockTargets } from "./hooks/useBlockPopups";
 import PostMatchSPP from "../../components/PostMatchSPP";
 import MatchEndScreen from "../../components/MatchEndScreen";
 import PreMatchSummary from "../../components/PreMatchSummary";
 import HalftimeTransition from "../../components/HalftimeTransition";
 import { InducementsPhaseUI } from "./components/InducementsPhaseUI";
 import { KickoffSequencePanel } from "./components/KickoffSequencePanel";
+import { DecisionPopupsLayer } from "./components/DecisionPopupsLayer";
 import { normalizeState } from "./utils/normalize-state";
 import * as kickoffActions from "./utils/kickoff-actions";
 import { validateSetupPlacement } from "./utils/validate-setup";
@@ -572,7 +557,37 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state, isActiveMatch, submitMove, setState, setIsMyTurn]);
 
-
+  /**
+   * Dispatcher commun pour les decisions in-match (Block / Push / FollowUp /
+   * Reroll / Apothecary). Centralise le branchement online/local et la
+   * mise a jour optionnelle de `showDicePopup` apres un jet declenche.
+   */
+  const dispatchDecisionMove = useCallback(
+    (move: Move, opts?: { showDiceOnResult?: boolean }) => {
+      if (isActiveMatch) {
+        submitMove(move).then((res) => {
+          if (res?.success && res.gameState) {
+            setState(normalizeState(res.gameState));
+            setIsMyTurn(res.isMyTurn);
+            if (opts?.showDiceOnResult && res.gameState.lastDiceResult) {
+              setShowDicePopup(true);
+            }
+          }
+        });
+      } else {
+        setState((s) => {
+          if (!s) return null;
+          const s2 = applyMove(s, move, createRNG()) as ExtendedGameState;
+          if (opts?.showDiceOnResult && s2.lastDiceResult) {
+            setShowDicePopup(true);
+          }
+          return s2;
+        });
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isActiveMatch, submitMove, setState, setIsMyTurn],
+  );
 
   const localSide = useMemo(() => {
     if (!state || !teamNameA || !teamNameB || !state.teamNames) {
@@ -1102,121 +1117,13 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
             </div>
           );
         })()}
-      {/* Block/Push/FollowUp decision popups */}
-      {state && shouldShowBlockPopup(state) && state.pendingBlock && (
-        <BlockChoicePopup
-          attackerName={
-            state.players.find((p) => p.id === state.pendingBlock!.attackerId)?.name || "Attaquant"
-          }
-          defenderName={
-            state.players.find((p) => p.id === state.pendingBlock!.targetId)?.name || "Défenseur"
-          }
-          chooser={state.pendingBlock.chooser}
-          options={state.pendingBlock.options}
-          onChoose={(result) => {
-            const move = buildBlockChooseMove(state.pendingBlock!, result);
-            if (isActiveMatch) {
-              submitMove(move).then((res) => {
-                if (res?.success && res.gameState) {
-                  setState(normalizeState(res.gameState));
-                  setIsMyTurn(res.isMyTurn);
-                  if (res.gameState.lastDiceResult) setShowDicePopup(true);
-                }
-              });
-            } else {
-              setState((s) => {
-                if (!s) return null;
-                const s2 = applyMove(s, move, createRNG());
-                if (s2.lastDiceResult) setShowDicePopup(true);
-                return s2 as ExtendedGameState;
-              });
-            }
-          }}
-          onClose={() => {}}
-        />
-      )}
-      {state && shouldShowPushPopup(state) && state.pendingPushChoice && (
-        <PushChoicePopup
-          attackerName={
-            state.players.find((p) => p.id === state.pendingPushChoice!.attackerId)?.name || "Attaquant"
-          }
-          targetName={
-            state.players.find((p) => p.id === state.pendingPushChoice!.targetId)?.name || "Défenseur"
-          }
-          availableDirections={state.pendingPushChoice.availableDirections}
-          onChoose={(direction) => {
-            const move = buildPushChooseMove(state.pendingPushChoice!, direction);
-            if (isActiveMatch) {
-              submitMove(move).then((res) => {
-                if (res?.success && res.gameState) {
-                  setState(normalizeState(res.gameState));
-                  setIsMyTurn(res.isMyTurn);
-                }
-              });
-            } else {
-              setState((s) => s ? applyMove(s, move, createRNG()) as ExtendedGameState : null);
-            }
-          }}
-          onClose={() => {}}
-        />
-      )}
-      {state && shouldShowFollowUpPopup(state) && state.pendingFollowUpChoice && (
-        <FollowUpChoicePopup
-          attackerName={
-            state.players.find((p) => p.id === state.pendingFollowUpChoice!.attackerId)?.name || "Attaquant"
-          }
-          targetName={
-            state.players.find((p) => p.id === state.pendingFollowUpChoice!.targetId)?.name || "Défenseur"
-          }
-          targetNewPosition={state.pendingFollowUpChoice.targetNewPosition}
-          targetOldPosition={state.pendingFollowUpChoice.targetOldPosition}
-          onChoose={(followUp) => {
-            const move = buildFollowUpChooseMove(state.pendingFollowUpChoice!, followUp);
-            if (isActiveMatch) {
-              submitMove(move).then((res) => {
-                if (res?.success && res.gameState) {
-                  setState(normalizeState(res.gameState));
-                  setIsMyTurn(res.isMyTurn);
-                }
-              });
-            } else {
-              setState((s) => s ? applyMove(s, move, createRNG()) as ExtendedGameState : null);
-            }
-          }}
-          onClose={() => {}}
-        />
-      )}
-      {/* Reroll decision popup */}
-      {state && shouldShowRerollPopup(state) && state.pendingReroll && isMyTurn && (
-        <RerollChoicePopup
-          rollType={state.pendingReroll.rollType}
-          playerName={
-            state.players.find((p) => p.id === state.pendingReroll!.playerId)?.name || "Joueur"
-          }
-          teamRerollsLeft={
-            myTeamSide === "A"
-              ? state.teamRerolls.teamA
-              : state.teamRerolls.teamB
-          }
-          onChoose={(useReroll) => {
-            const move = buildRerollChooseMove(useReroll);
-            if (isActiveMatch) {
-              submitMove(move).then((res) => {
-                if (res?.success && res.gameState) {
-                  setState(normalizeState(res.gameState));
-                  setIsMyTurn(res.isMyTurn);
-                  if (res.gameState.lastDiceResult) setShowDicePopup(true);
-                }
-              });
-            } else {
-              setState((s) => {
-                if (!s) return null;
-                const s2 = applyMove(s, move, createRNG());
-                if (s2.lastDiceResult) setShowDicePopup(true);
-                return s2 as ExtendedGameState;
-              });
-            }
-          }}
+      {/* Decision popups (Block / Push / FollowUp / Reroll / Apothecary) */}
+      {state && (
+        <DecisionPopupsLayer
+          state={state}
+          isMyTurn={isMyTurn}
+          myTeamSide={myTeamSide}
+          onSubmitMove={dispatchDecisionMove}
         />
       )}
       {/* In-game chat */}
@@ -1225,32 +1132,6 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
           messages={chatMessages}
           sendMessage={sendChatMessage}
           currentUserId={currentUserId}
-        />
-      )}
-      {/* Apothecary decision popup */}
-      {state && state.pendingApothecary && isMyTurn && (
-        <ApothecaryChoicePopup
-          playerName={
-            state.players.find((p) => p.id === state.pendingApothecary!.playerId)?.name || "Joueur"
-          }
-          injuryType={state.pendingApothecary.injuryType}
-          casualtyOutcome={state.pendingApothecary.originalCasualtyOutcome}
-          onChoose={(useApothecary) => {
-            const move = buildApothecaryChooseMove(useApothecary);
-            if (isActiveMatch) {
-              submitMove(move).then((res) => {
-                if (res?.success && res.gameState) {
-                  setState(normalizeState(res.gameState));
-                  setIsMyTurn(res.isMyTurn);
-                }
-              });
-            } else {
-              setState((s) => {
-                if (!s) return null;
-                return applyMove(s, move, createRNG()) as ExtendedGameState;
-              });
-            }
-          }}
         />
       )}
     </div>
