@@ -146,3 +146,40 @@ export async function getCoachShowcaseAchievements(
   }
   return showcase;
 }
+
+const DEFAULT_PUBLIC_SLUGS_LIMIT = 1000;
+
+/**
+ * S26.3g — Liste les slugs des profils coach publics (`/coach/{slug}`).
+ *
+ * Utilisee par le sitemap pour permettre l'indexation SEO des profils.
+ * Borne par defaut a 1000 entrees pour eviter de generer un sitemap
+ * geant — pourra evoluer en sitemap-index si la base depasse cette
+ * limite. RGPD : opt-in `private profile` viendra dans une slice
+ * ulterieure (S26.3 backlog).
+ */
+export async function listPublicCoachSlugs(
+  limit: number = DEFAULT_PUBLIC_SLUGS_LIMIT,
+): Promise<string[]> {
+  const rows = (await (prisma as unknown as {
+    user: {
+      findMany: (args: unknown) => Promise<Array<{ coachName: string }>>;
+    };
+  }).user.findMany({
+    where: { valid: true },
+    select: { coachName: true },
+    orderBy: { createdAt: "asc" },
+    take: limit,
+  })) as Array<{ coachName: string }>;
+
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const row of rows) {
+    const slug = coachSlugFrom(row.coachName);
+    if (slug.length === 0) continue;
+    if (seen.has(slug)) continue;
+    seen.add(slug);
+    result.push(slug);
+  }
+  return result;
+}

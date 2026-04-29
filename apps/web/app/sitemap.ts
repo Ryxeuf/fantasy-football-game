@@ -130,5 +130,34 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error('Erreur lors de la récupération des Star Players pour le sitemap:', error);
   }
 
-  return [...staticPages, ...teamPages, ...starPlayerPages];
+  // Pages dynamiques - Profils coach (S26.3g)
+  let coachPages: MetadataRoute.Sitemap = [];
+  try {
+    const coachResponse = await fetch(`${API_BASE}/coach`, {
+      next: { revalidate: 3600 }, // Cache 1h
+    });
+    if (coachResponse.ok) {
+      const body = (await coachResponse.json()) as {
+        success?: boolean;
+        data?: { slugs?: unknown };
+      };
+      const slugs = Array.isArray(body?.data?.slugs)
+        ? (body.data.slugs as unknown[]).filter(
+            (s): s is string => typeof s === 'string' && s.length > 0,
+          )
+        : [];
+      if (body?.success && slugs.length > 0) {
+        coachPages = slugs.map((slug) => ({
+          url: `${BASE_URL}/coach/${slug}`,
+          lastModified: now,
+          changeFrequency: 'weekly' as const,
+          priority: 0.5,
+        }));
+      }
+    }
+  } catch (error) {
+    console.error('Erreur lors de la récupération des profils coach pour le sitemap:', error);
+  }
+
+  return [...staticPages, ...teamPages, ...starPlayerPages, ...coachPages];
 }

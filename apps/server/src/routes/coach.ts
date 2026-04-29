@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from "express";
 import {
   getCoachPublicProfile,
   getCoachShowcaseAchievements,
+  listPublicCoachSlugs,
 } from "../services/coach-profile";
 import { serverLog } from "../utils/server-log";
 
@@ -43,7 +44,32 @@ export async function handleGetCoachPublicProfile(
   }
 }
 
+/**
+ * S26.3g — Liste des profils coach publics (sitemap-friendly).
+ *
+ * Renvoie l'ensemble des slugs `/coach/:slug` indexables. La page
+ * sitemap.ts du Next.js consomme cette liste pour reflechir les
+ * URLs publiques de profils dans le sitemap SEO.
+ */
+export async function handleListPublicCoachSlugs(
+  _req: Request,
+  res: Response,
+): Promise<void> {
+  try {
+    const slugs = await listPublicCoachSlugs();
+    res.status(200).json({ success: true, data: { slugs } });
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : "Erreur serveur";
+    serverLog.error("[GET /coach] error:", message);
+    res.status(500).json({ success: false, error: message });
+  }
+}
+
 const router = Router();
+// L'ordre importe : la route specifique `/` (liste) doit etre montee
+// avant `/:slug` qui matcherait sinon n'importe quoi (Express 4
+// resout par ordre d'enregistrement).
+router.get("/", handleListPublicCoachSlugs);
 router.get("/:slug", handleGetCoachPublicProfile);
 
 export default router;
