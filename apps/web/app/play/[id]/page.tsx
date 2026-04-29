@@ -1,30 +1,12 @@
 "use client";
 import { useMemo, useState, useRef, useCallback, useEffect } from "react";
-import dynamic from "next/dynamic";
 import {
   DiceResultPopup,
   GameScoreboard,
   ActionPickerPopup,
   GameLog,
   ToastProvider,
-  type TerrainSkinId,
 } from "@bb/ui";
-
-// GameBoardWithDugouts pulls in the entire Pixi.js + @pixi/react bundle.
-// It uses Canvas APIs that don't exist on the server, so disable SSR and
-// let Next.js emit it as a separate chunk that only ships when the user
-// actually opens an online match.
-const GameBoardWithDugouts = dynamic(
-  () => import("@bb/ui").then((m) => m.GameBoardWithDugouts),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="w-full aspect-[2/1] bg-gray-900 text-gray-400 flex items-center justify-center rounded-lg">
-        Chargement du plateau…
-      </div>
-    ),
-  },
-);
 import {
   getLegalMoves,
   applyMove,
@@ -53,6 +35,7 @@ import HalftimeTransition from "../../components/HalftimeTransition";
 import { InducementsPhaseUI } from "./components/InducementsPhaseUI";
 import { PreMatchPanel } from "./components/PreMatchPanel";
 import { ChoicePopups } from "./components/ChoicePopups";
+import { BoardSection } from "./components/BoardSection";
 import { ThrowTeamMateIndicator } from "./components/ThrowTeamMateIndicator";
 import { PlayerActivationBar } from "./components/PlayerActivationBar";
 import {
@@ -543,55 +526,33 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
             {/* Le kick-off est géré automatiquement par le backend après validation des deux placements */}
           </div>
 
-          <div
-            className="flex flex-col lg:flex-row items-start gap-6 mb-6"
+          <BoardSection
+            state={state as ExtendedGameState}
+            onCellClick={onCellClick}
+            movesForSelected={movesForSelected}
+            blockTargets={blockTargets}
+            draggedPlayerId={draggedPlayerId}
+            selectedFromReserve={selectedFromReserve}
+            onPlayerClick={(playerId) => {
+              if (!state) return;
+              handlePlayerClick({
+                state: state as ExtendedGameState,
+                playerId,
+                draggedPlayerId,
+                currentAction,
+                setState,
+                setCurrentAction,
+                setThrowTeamMateThrownId,
+                setSelectedFromReserve,
+                onCellClick,
+              });
+            }}
+            onDragStart={handleDragStart}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
-          >
-            {/* Board et sidebar */}
-            <div className="flex-1 flex justify-center">
-              <GameBoardWithDugouts
-                state={state}
-                onCellClick={onCellClick}
-                legalMoves={
-                  draggedPlayerId &&
-                  (state as ExtendedGameState).preMatch?.phase === "setup"
-                    ? (state as ExtendedGameState).preMatch.legalSetupPositions
-                    : movesForSelected
-                }
-                blockTargets={blockTargets}
-                selectedPlayerId={state.selectedPlayerId || undefined}
-                selectedForRepositioning={selectedFromReserve}
-                placedPlayers={
-                  (state as ExtendedGameState).preMatch?.placedPlayers || []
-                } // Nouvelle prop
-                onPlayerClick={(playerId) => {
-                  if (!state) return;
-                  handlePlayerClick({
-                    state: state as ExtendedGameState,
-                    playerId,
-                    draggedPlayerId,
-                    currentAction,
-                    setState,
-                    setCurrentAction,
-                    setThrowTeamMateThrownId,
-                    setSelectedFromReserve,
-                    onCellClick,
-                  });
-                }}
-                onDragStart={handleDragStart}
-                boardContainerRef={boardRef}
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
-                onCellSizeChange={setCurrentCellSize}
-                isSetupPhase={
-                  (state as ExtendedGameState).preMatch?.phase === "setup"
-                }
-                initialTerrainSkin={(state as ExtendedGameState).terrainSkin as TerrainSkinId | undefined}
-              />
-            </div>
-            {/* PlayerDetails is now integrated in GameBoardWithDugouts */}
-          </div>
+            boardContainerRef={boardRef}
+            onCellSizeChange={setCurrentCellSize}
+          />
 
           {/* Match log below the game board */}
           {state.gameLog && state.gameLog.length > 0 && (
