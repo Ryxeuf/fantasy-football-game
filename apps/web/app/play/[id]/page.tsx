@@ -4,7 +4,6 @@ import {
   DiceResultPopup,
   GameScoreboard,
   ActionPickerPopup,
-  GameLog,
   ToastProvider,
 } from "@bb/ui";
 import {
@@ -28,7 +27,6 @@ import { useGameState } from "./hooks/useGameState";
 import {
   computeBlockTargets,
 } from "./hooks/useBlockPopups";
-import PostMatchSPP from "../../components/PostMatchSPP";
 import MatchEndScreen from "../../components/MatchEndScreen";
 import PreMatchSummary from "../../components/PreMatchSummary";
 import HalftimeTransition from "../../components/HalftimeTransition";
@@ -36,6 +34,7 @@ import { InducementsPhaseUI } from "./components/InducementsPhaseUI";
 import { PreMatchPanel } from "./components/PreMatchPanel";
 import { ChoicePopups } from "./components/ChoicePopups";
 import { BoardSection } from "./components/BoardSection";
+import { MatchLogAndSpp } from "./components/MatchLogAndSpp";
 import { ThrowTeamMateIndicator } from "./components/ThrowTeamMateIndicator";
 import { PlayerActivationBar } from "./components/PlayerActivationBar";
 import {
@@ -554,35 +553,12 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
             onCellSizeChange={setCurrentCellSize}
           />
 
-          {/* Match log below the game board */}
-          {state.gameLog && state.gameLog.length > 0 && (
-            <div className="mt-2 w-full max-w-5xl mx-auto">
-              <GameLog logEntries={state.gameLog} />
-            </div>
-          )}
-
-          {/* Post-match SPP display when game has ended */}
-          {state.gamePhase === "ended" &&
-            state.matchStats &&
-            Object.keys(state.matchStats).length > 0 &&
-            state.matchResult &&
-            state.players && (
-            <div className="mt-6">
-              <PostMatchSPP
-                matchStats={state.matchStats}
-                matchResult={state.matchResult}
-                players={state.players.map((p) => ({
-                  id: p.id,
-                  team: p.team,
-                  name: p.name,
-                  number: p.number ?? 0,
-                  position: p.position ?? "",
-                }))}
-                teamAName={teamNameA || state.teamNames?.teamA || "Équipe A"}
-                teamBName={teamNameB || state.teamNames?.teamB || "Équipe B"}
-              />
-            </div>
-          )}
+          {/* Match log + post-match SPP (S26.0w — extracted) */}
+          <MatchLogAndSpp
+            state={state as ExtendedGameState}
+            teamNameA={teamNameA}
+            teamNameB={teamNameB}
+          />
         </div>
       </div>
       {showDicePopup && state.lastDiceResult && (
