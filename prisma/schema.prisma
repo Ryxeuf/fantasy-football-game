@@ -44,6 +44,9 @@ model User {
   /// Pas de conversion : chaque devise reste indépendante (USD ≠ EUR).
   /// Exemple : {"USD": 300, "EUR": 1000}.
   totalDonatedCentsByCurrency Json    @default("{}")
+  /// S26.3i — RGPD : opt-in pour cacher le profil public `/coach/{slug}`.
+  /// `true` = profil retire de la lookup publique et du sitemap.
+  privateProfile      Boolean         @default(false)
   valid               Boolean         @default(false)
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt

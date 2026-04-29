@@ -76,7 +76,7 @@ export async function getCoachPublicProfile(
       findMany: (args: unknown) => Promise<CandidateUser[]>;
     };
   }).user.findMany({
-    where: { valid: true },
+    where: { valid: true, privateProfile: false },
     select: {
       id: true,
       coachName: true,
@@ -177,7 +177,7 @@ export async function listPublicCoachSlugs(
       findMany: (args: unknown) => Promise<Array<{ coachName: string }>>;
     };
   }).user.findMany({
-    where: { valid: true },
+    where: { valid: true, privateProfile: false },
     select: { coachName: true },
     orderBy: { createdAt: "asc" },
     take: limit,
