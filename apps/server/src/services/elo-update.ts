@@ -1,10 +1,21 @@
 import { calculateEloChange } from "./elo";
 import type { MatchOutcome } from "./elo";
 
+interface EloSnapshotInput {
+  userId: string;
+  rating: number;
+  delta: number;
+  matchId: string | null;
+}
+
 interface PrismaClient {
   user: {
     findUnique(args: { where: { id: string }; select: { eloRating: true } }): Promise<{ eloRating: number } | null>;
     update(args: { where: { id: string }; data: { eloRating: number } }): Promise<unknown>;
+  };
+  // S26.3l — historize each ELO change so /coach/{slug} can plot a 90 day curve.
+  eloSnapshot: {
+    create(args: { data: EloSnapshotInput }): Promise<unknown>;
   };
 }
 
@@ -36,6 +47,7 @@ export async function updateEloAfterMatch(
   userBId: string,
   scoreA: number,
   scoreB: number,
+  matchId: string | null = null,
 ): Promise<EloUpdateResult> {
   const [userA, userB] = await Promise.all([
     prisma.user.findUnique({ where: { id: userAId }, select: { eloRating: true } }),
@@ -90,6 +102,20 @@ export async function updateEloAfterMatch(
     prisma.user.update({ where: { id: userBId }, data: { eloRating: newRatingB } }),
   ]);
 
+  const finalDeltaA = newRatingA - oldRatingA;
+  const finalDeltaB = newRatingB - oldRatingB;
+
+  // Snapshot rows feed the 90-day ELO curve on /coach/{slug}. We persist the
+  // post-update rating + clamped delta so historical reads need no recomputation.
+  await Promise.all([
+    prisma.eloSnapshot.create({
+      data: { userId: userAId, rating: newRatingA, delta: finalDeltaA, matchId },
+    }),
+    prisma.eloSnapshot.create({
+      data: { userId: userBId, rating: newRatingB, delta: finalDeltaB, matchId },
+    }),
+  ]);
+
   return {
     userAId,
     userBId,
@@ -97,7 +123,7 @@ export async function updateEloAfterMatch(
     oldRatingB,
     newRatingA,
     newRatingB,
-    deltaA: newRatingA - oldRatingA,
-    deltaB: newRatingB - oldRatingB,
+    deltaA: finalDeltaA,
+    deltaB: finalDeltaB,
   };
 }
