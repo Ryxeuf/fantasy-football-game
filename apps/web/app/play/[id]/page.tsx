@@ -77,6 +77,7 @@ import { normalizeState } from "./utils/normalize-state";
 import * as kickoffActions from "./utils/kickoff-actions";
 import { applyOrSubmitMove } from "./utils/apply-or-submit-move";
 import { getAvailableActions } from "./utils/available-actions";
+import { handlePlayerClick } from "./utils/handle-player-click";
 import { validateSetupPlacement } from "./utils/validate-setup";
 import { getMySide, validatePlacement } from "./utils/setup-validation";
 import { type LegalAction } from "./utils/legal-action";
@@ -772,66 +773,17 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
                 } // Nouvelle prop
                 onPlayerClick={(playerId) => {
                   if (!state) return;
-                  const extState = state as ExtendedGameState;
-                  webLog.debug("onPlayerClick called:", {
+                  handlePlayerClick({
+                    state: state as ExtendedGameState,
                     playerId,
-                    phase: extState.preMatch?.phase,
-                    currentCoach: extState.preMatch?.currentCoach,
+                    draggedPlayerId,
+                    currentAction,
+                    setState,
+                    setCurrentAction,
+                    setThrowTeamMateThrownId,
+                    setSelectedFromReserve,
+                    onCellClick,
                   });
-
-                  if (extState.preMatch?.phase === "setup") {
-                    const player = state.players.find((p) => p.id === playerId);
-                    if (
-                      player &&
-                      player.team === extState.preMatch.currentCoach
-                    ) {
-                      // Permettre de sélectionner les joueurs déjà placés ou ceux en réserves
-                      if (!draggedPlayerId) {
-                        webLog.debug("Setting selectedFromReserve:", playerId);
-                        setSelectedFromReserve(playerId);
-                      }
-                      return;
-                    }
-                    webLog.debug("Ignoring player click in setup phase");
-                    return; // Ignore autres en setup
-                  }
-                  // Logique normale (seulement si pas en phase setup)
-                  const player = state.players.find((p) => p.id === playerId);
-                  if (!player) return;
-
-                  // Clic sur un adversaire avec une action Block/Blitz active → traiter comme un clic de cellule
-                  if (
-                    player.team !== state.currentPlayer &&
-                    state.selectedPlayerId &&
-                    (currentAction === "BLOCK" || currentAction === "BLITZ" || currentAction === "FOUL")
-                  ) {
-                    onCellClick(player.pos);
-                    return;
-                  }
-
-                  // En mode THROW_TEAM_MATE, un clic sur un coequipier doit declencher la selection (pas changer le selectedPlayerId)
-                  if (
-                    currentAction === "THROW_TEAM_MATE" &&
-                    state.selectedPlayerId &&
-                    player.team === state.currentPlayer &&
-                    player.id !== state.selectedPlayerId
-                  ) {
-                    onCellClick(player.pos);
-                    return;
-                  }
-
-                  if (
-                    player.team === state.currentPlayer &&
-                    (!extState.preMatch ||
-                      (extState.preMatch.phase as string) !== "setup")
-                  ) {
-                    setState((s) =>
-                      s ? { ...s, selectedPlayerId: player.id } : null,
-                    );
-                    setCurrentAction(null);
-                    setThrowTeamMateThrownId(null);
-                    setSelectedFromReserve(null);
-                  }
                 }}
                 onDragStart={handleDragStart}
                 boardContainerRef={boardRef}
