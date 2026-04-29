@@ -24,6 +24,7 @@ import { prisma } from "../prisma";
 import {
   getCoachPublicProfile,
   getCoachShowcaseAchievements,
+  listPublicCoachSlugs,
 } from "./coach-profile";
 
 const mockPrisma = prisma as unknown as {
@@ -207,5 +208,59 @@ describe("getCoachShowcaseAchievements (S26.3e)", () => {
   it("returns an empty array (no DB call) for empty userId", async () => {
     expect(await getCoachShowcaseAchievements("")).toEqual([]);
     expect(mockPrisma.userAchievement.findMany).not.toHaveBeenCalled();
+  });
+});
+
+describe("listPublicCoachSlugs (S26.3g)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns the list of unique slugs derived from coach names", async () => {
+    mockPrisma.user.findMany.mockResolvedValue([
+      { coachName: "Coach Alpha" },
+      { coachName: "Émile" },
+      { coachName: "Player One" },
+    ]);
+    const result = await listPublicCoachSlugs();
+    expect(result).toEqual(["coach-alpha", "emile", "player-one"]);
+  });
+
+  it("dedupes slugs that collide after normalisation", async () => {
+    mockPrisma.user.findMany.mockResolvedValue([
+      { coachName: "Coach Alpha" },
+      { coachName: "coach-alpha" },
+      { coachName: "COACH ALPHA" },
+    ]);
+    const result = await listPublicCoachSlugs();
+    expect(result).toEqual(["coach-alpha"]);
+  });
+
+  it("filters out coach names whose slug is empty after normalisation", async () => {
+    mockPrisma.user.findMany.mockResolvedValue([
+      { coachName: "Coach Alpha" },
+      { coachName: "!!!" },
+      { coachName: "" },
+    ]);
+    const result = await listPublicCoachSlugs();
+    expect(result).toEqual(["coach-alpha"]);
+  });
+
+  it("queries only valid users and applies the requested limit (default 1000)", async () => {
+    mockPrisma.user.findMany.mockResolvedValue([]);
+    await listPublicCoachSlugs();
+    const arg = mockPrisma.user.findMany.mock.calls[0][0] as {
+      where: { valid: boolean };
+      take: number;
+    };
+    expect(arg.where).toEqual({ valid: true });
+    expect(arg.take).toBe(1000);
+  });
+
+  it("respects a custom limit", async () => {
+    mockPrisma.user.findMany.mockResolvedValue([]);
+    await listPublicCoachSlugs(50);
+    const arg = mockPrisma.user.findMany.mock.calls[0][0] as { take: number };
+    expect(arg.take).toBe(50);
   });
 });

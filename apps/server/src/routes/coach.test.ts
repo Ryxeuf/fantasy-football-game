@@ -10,17 +10,23 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.mock("../services/coach-profile", () => ({
   getCoachPublicProfile: vi.fn(),
   getCoachShowcaseAchievements: vi.fn(),
+  listPublicCoachSlugs: vi.fn(),
 }));
 
 import type { Request, Response } from "express";
 import {
   getCoachPublicProfile,
   getCoachShowcaseAchievements,
+  listPublicCoachSlugs,
 } from "../services/coach-profile";
-import { handleGetCoachPublicProfile } from "./coach";
+import {
+  handleGetCoachPublicProfile,
+  handleListPublicCoachSlugs,
+} from "./coach";
 
 const mockedGetProfile = vi.mocked(getCoachPublicProfile);
 const mockedGetShowcase = vi.mocked(getCoachShowcaseAchievements);
+const mockedListSlugs = vi.mocked(listPublicCoachSlugs);
 
 function buildRes(): Response {
   const res = {
@@ -151,6 +157,48 @@ describe("GET /coach/:slug — handleGetCoachPublicProfile", () => {
     const req = { params: { slug: "coach-alpha" } } as unknown as Request;
     const res = buildRes() as Response & { statusCode: number; body: unknown };
     await handleGetCoachPublicProfile(req, res);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.body).toMatchObject({ success: false });
+  });
+});
+
+describe("GET /coach — handleListPublicCoachSlugs (S26.3g)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns 200 + ApiResponse with the slugs list", async () => {
+    mockedListSlugs.mockResolvedValue(["coach-alpha", "emile"]);
+
+    const req = {} as Request;
+    const res = buildRes() as Response & { statusCode: number; body: unknown };
+    await handleListPublicCoachSlugs(req, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toEqual({
+      success: true,
+      data: { slugs: ["coach-alpha", "emile"] },
+    });
+  });
+
+  it("returns 200 with empty list when no public coach exists", async () => {
+    mockedListSlugs.mockResolvedValue([]);
+
+    const req = {} as Request;
+    const res = buildRes() as Response & { statusCode: number; body: unknown };
+    await handleListPublicCoachSlugs(req, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toEqual({ success: true, data: { slugs: [] } });
+  });
+
+  it("returns 500 when the service throws", async () => {
+    mockedListSlugs.mockRejectedValue(new Error("DB down"));
+
+    const req = {} as Request;
+    const res = buildRes() as Response & { statusCode: number; body: unknown };
+    await handleListPublicCoachSlugs(req, res);
 
     expect(res.statusCode).toBe(500);
     expect(res.body).toMatchObject({ success: false });
