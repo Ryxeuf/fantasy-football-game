@@ -1,3 +1,12 @@
+## [1.79.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.78.0...v1.79.0) (2026-04-29)
+
+
+### ✨ Features
+
+* **coach-profile:** EloSnapshot model + persist on match end (S26.3l) ([#503](https://github.com/Ryxeuf/fantasy-football-game/issues/503)) ([5b31753](https://github.com/Ryxeuf/fantasy-football-game/commit/5b3175304377a1cad3e8298af6ef98d3a9fa7645))
+* **coach-profile:** GET /coach/:slug/elo-history endpoint (S26.3m) ([#507](https://github.com/Ryxeuf/fantasy-football-game/issues/507)) ([a642614](https://github.com/Ryxeuf/fantasy-football-game/commit/a642614bb20459014c83493473c8265c976e9bb4))
+* **friends:** suggestFriendsByElo + /friends/suggestions route (S26.5a) ([a20212c](https://github.com/Ryxeuf/fantasy-football-game/commit/a20212c06f60599210b51b582214a25e5743e4de))
+
 ## [1.78.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.77.1...v1.78.0) (2026-04-29)
 
 
