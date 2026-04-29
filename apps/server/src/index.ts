@@ -22,6 +22,7 @@ import pushRoutes from "./routes/push";
 import friendsRoutes from "./routes/friends";
 import careerStatsRoutes from "./routes/career-stats";
 import achievementsRoutes from "./routes/achievements";
+import coachRoutes from "./routes/coach";
 import leagueRoutes from "./routes/league";
 import kofiRoutes from "./routes/kofi";
 import {
@@ -157,6 +158,7 @@ app.use("/push", pushRoutes);
 app.use("/friends", friendsRoutes);
 app.use("/career-stats", careerStatsRoutes);
 app.use("/achievements", achievementsRoutes);
+app.use("/coach", publicCache(), coachRoutes);
 app.use("/leagues", leagueRoutes);
 // Webhook Ko-fi : public (authentifié via `verification_token` dans le payload).
 // Pas de rate limiter applicatif : Ko-fi doit pouvoir retenter.
