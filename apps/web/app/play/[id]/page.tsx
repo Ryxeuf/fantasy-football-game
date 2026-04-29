@@ -80,6 +80,7 @@ import { getAvailableActions } from "./utils/available-actions";
 import { handlePlayerClick } from "./utils/handle-player-click";
 import { handleSetupDragStart } from "./utils/handle-drag-start";
 import { handleSetupDrop } from "./utils/handle-drop";
+import { handleSetupCellClick } from "./utils/handle-setup-cell-click";
 import { validateSetupPlacement } from "./utils/validate-setup";
 import { getMySide, validatePlacement } from "./utils/setup-validation";
 import { type LegalAction } from "./utils/legal-action";
@@ -285,48 +286,21 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
 
     // Bloquer si match actif et pas mon tour (ou soumission en cours)
     if (isActiveMatch && (!isMyTurn || moveSubmitting)) return;
-    // Bloquer les interactions setup quand ce n'est pas mon tour ou soumission en cours
-    if (extState.preMatch?.phase === "setup") {
-      const mySide = myTeamSide || getMySide(extState, teamNameA, teamNameB);
-      if (mySide && mySide !== extState.preMatch.currentCoach) return;
-      if (setupSubmitting) return;
-    }
-    if (extState.preMatch?.phase === "setup") {
-      // Mode setup : placer selectedFromReserve sur pos si légal
-      if (selectedFromReserve) {
-        const err = validatePlacement(
-          extState,
-          selectedFromReserve,
-          pos,
-          myTeamSide || getMySide(extState, teamNameA, teamNameB),
-        );
-        if (err) {
-          showSetupError(err);
-          setSelectedFromReserve(null);
-          return;
-        }
-        const result = placePlayerInSetup(extState, selectedFromReserve, pos);
-        if (!result.success) {
-          showSetupError("Placement refusé");
-          setSelectedFromReserve(null);
-          return;
-        }
-        
-        const newState = result.state;
-        setState(newState);
-        if (newState.preMatch.placedPlayers.length === 11) {
-          // TODO: Switch coach ou kickoff
-          setSelectedFromReserve(null);
-        }
-        setSelectedFromReserve(null); // Deselect après placement
-        return;
-      }
-      // Sinon, clic sur terrain vide : ignore ou deselect
-      setSelectedFromReserve(null);
-      // Réinitialiser selectedPlayerId en phase setup
-      if (state.selectedPlayerId) {
-        setState((s) => (s ? { ...s, selectedPlayerId: null } : null));
-      }
+    // Phase setup : delegue au util S26.0p
+    if (
+      handleSetupCellClick({
+        pos,
+        state: extState,
+        myTeamSide,
+        teamNameA,
+        teamNameB,
+        setupSubmitting,
+        selectedFromReserve,
+        showSetupError,
+        setState,
+        setSelectedFromReserve,
+      })
+    ) {
       return;
     }
     // Logique normale pour match en cours (seulement si pas en phase setup)
