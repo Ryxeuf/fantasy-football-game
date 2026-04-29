@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { fetchServerJson, getServerApiBase } from "../../lib/serverApi";
+import CoachAchievementsShowcase from "./CoachAchievementsShowcase";
 import CoachProfileHeader from "./CoachProfileHeader";
 import type { CoachPublicProfile } from "./types";
 
@@ -43,9 +44,10 @@ export default async function CoachProfilePage({
   return (
     <main className="max-w-4xl mx-auto p-6 space-y-6">
       <CoachProfileHeader profile={profile} />
+      <CoachAchievementsShowcase achievements={profile.achievements} />
       <p className="text-sm text-gray-500 italic">
-        Profil public. Plus de detail (graph ELO 90j, succes vitrine,
-        equipes recentes) viendra dans les prochaines slices de S26.3.
+        Profil public. Plus de detail (graph ELO 90j, equipes recentes,
+        export PDF) viendra dans les prochaines slices de S26.3.
       </p>
     </main>
   );
