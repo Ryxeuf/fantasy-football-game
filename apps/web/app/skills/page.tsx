@@ -25,7 +25,7 @@ export async function generateMetadata({
   searchParams,
 }: SkillsPageProps): Promise<Metadata> {
   const selectedRuleset =
-    searchParams.ruleset === "season_3" ? "season_3" : "season_2";
+    searchParams.ruleset === "season_2" ? "season_2" : "season_3";
   const url = `${BASE_URL}/skills`;
   const title = "Compétences Blood Bowl - Skills, Mutations et Traits";
   const description =
@@ -76,7 +76,7 @@ export async function generateMetadata({
 
 export default async function SkillsPage({ searchParams }: SkillsPageProps) {
   const selectedRuleset =
-    searchParams.ruleset === "season_3" ? "season_3" : "season_2";
+    searchParams.ruleset === "season_2" ? "season_2" : "season_3";
   const skills = await fetchSkills(selectedRuleset);
 
   return (
