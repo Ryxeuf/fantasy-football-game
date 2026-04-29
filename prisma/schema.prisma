@@ -66,6 +66,28 @@ model User {
   achievements        UserAchievement[]
   kofiTransactions    KofiTransaction[]
   refreshTokens       RefreshToken[]
+  eloSnapshots        EloSnapshot[]
+}
+
+/// S26.3l — Historique ELO du coach. Une ligne par mise a jour ELO (donc 2
+/// par match termine en ranked). Sert a tracer la courbe 90j sur la page
+/// publique `/coach/{slug}` sans avoir a recalculer l'ELO retroactivement.
+/// `matchId` est nullable pour preserver l'historique meme si le match est
+/// supprime ulterieurement.
+model EloSnapshot {
+  id         String   @id @default(cuid())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+  /// ELO du coach apres application de cette mise a jour (clampe a 100).
+  rating     Int
+  /// Variation appliquee (`newRating - oldRating`, peut etre negative).
+  delta      Int
+  /// Match a l'origine du snapshot. Null si genere par un job batch ou un
+  /// recalcul administratif.
+  matchId    String?
+  recordedAt DateTime @default(now())
+
+  @@index([userId, recordedAt])
 }
 
 /// S24.3c — Registre des refresh tokens JWT.

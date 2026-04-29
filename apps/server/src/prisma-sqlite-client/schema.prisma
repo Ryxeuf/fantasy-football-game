@@ -66,6 +66,20 @@ model User {
   achievements                UserAchievement[]
   kofiTransactions            KofiTransaction[]
   refreshTokens               RefreshToken[]
+  eloSnapshots                EloSnapshot[]
+}
+
+/// S26.3l — mirror SQLite de l'historique ELO Postgres (snapshot par mise a jour).
+model EloSnapshot {
+  id         String   @id @default(cuid())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+  rating     Int
+  delta      Int
+  matchId    String?
+  recordedAt DateTime @default(now())
+
+  @@index([userId, recordedAt])
 }
 
 /// S24.3c — mirror SQLite du registre Postgres des refresh tokens.

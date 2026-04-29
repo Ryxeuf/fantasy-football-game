@@ -19,6 +19,11 @@ export type PrismaPromise<T> = $Public.PrismaPromise<T>
  */
 export type User = $Result.DefaultSelection<Prisma.$UserPayload>
 /**
+ * Model EloSnapshot
+ * S26.3l — mirror SQLite de l'historique ELO Postgres (snapshot par mise a jour).
+ */
+export type EloSnapshot = $Result.DefaultSelection<Prisma.$EloSnapshotPayload>
+/**
  * Model RefreshToken
  * S24.3c — mirror SQLite du registre Postgres des refresh tokens.
  */
@@ -288,6 +293,16 @@ export class PrismaClient<
     * ```
     */
   get user(): Prisma.UserDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.eloSnapshot`: Exposes CRUD operations for the **EloSnapshot** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more EloSnapshots
+    * const eloSnapshots = await prisma.eloSnapshot.findMany()
+    * ```
+    */
+  get eloSnapshot(): Prisma.EloSnapshotDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.refreshToken`: Exposes CRUD operations for the **RefreshToken** model.
@@ -979,6 +994,7 @@ export namespace Prisma {
 
   export const ModelName: {
     User: 'User',
+    EloSnapshot: 'EloSnapshot',
     RefreshToken: 'RefreshToken',
     KofiTransaction: 'KofiTransaction',
     UserAchievement: 'UserAchievement',
@@ -1022,7 +1038,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "refreshToken" | "kofiTransaction" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamStarPlayer" | "roster" | "skill" | "position" | "positionSkill" | "cup" | "cupParticipant" | "matchQueue" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leagueParticipant" | "leagueRound"
+      modelProps: "user" | "eloSnapshot" | "refreshToken" | "kofiTransaction" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamStarPlayer" | "roster" | "skill" | "position" | "positionSkill" | "cup" | "cupParticipant" | "matchQueue" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leagueParticipant" | "leagueRound"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1097,6 +1113,80 @@ export namespace Prisma {
           count: {
             args: Prisma.UserCountArgs<ExtArgs>
             result: $Utils.Optional<UserCountAggregateOutputType> | number
+          }
+        }
+      }
+      EloSnapshot: {
+        payload: Prisma.$EloSnapshotPayload<ExtArgs>
+        fields: Prisma.EloSnapshotFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.EloSnapshotFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EloSnapshotPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.EloSnapshotFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EloSnapshotPayload>
+          }
+          findFirst: {
+            args: Prisma.EloSnapshotFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EloSnapshotPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.EloSnapshotFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EloSnapshotPayload>
+          }
+          findMany: {
+            args: Prisma.EloSnapshotFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EloSnapshotPayload>[]
+          }
+          create: {
+            args: Prisma.EloSnapshotCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EloSnapshotPayload>
+          }
+          createMany: {
+            args: Prisma.EloSnapshotCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.EloSnapshotCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EloSnapshotPayload>[]
+          }
+          delete: {
+            args: Prisma.EloSnapshotDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EloSnapshotPayload>
+          }
+          update: {
+            args: Prisma.EloSnapshotUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EloSnapshotPayload>
+          }
+          deleteMany: {
+            args: Prisma.EloSnapshotDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.EloSnapshotUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.EloSnapshotUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EloSnapshotPayload>[]
+          }
+          upsert: {
+            args: Prisma.EloSnapshotUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EloSnapshotPayload>
+          }
+          aggregate: {
+            args: Prisma.EloSnapshotAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateEloSnapshot>
+          }
+          groupBy: {
+            args: Prisma.EloSnapshotGroupByArgs<ExtArgs>
+            result: $Utils.Optional<EloSnapshotGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.EloSnapshotCountArgs<ExtArgs>
+            result: $Utils.Optional<EloSnapshotCountAggregateOutputType> | number
           }
         }
       }
@@ -3047,6 +3137,7 @@ export namespace Prisma {
   }
   export type GlobalOmitConfig = {
     user?: UserOmit
+    eloSnapshot?: EloSnapshotOmit
     refreshToken?: RefreshTokenOmit
     kofiTransaction?: KofiTransactionOmit
     userAchievement?: UserAchievementOmit
@@ -3165,6 +3256,7 @@ export namespace Prisma {
     achievements: number
     kofiTransactions: number
     refreshTokens: number
+    eloSnapshots: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -3181,6 +3273,7 @@ export namespace Prisma {
     achievements?: boolean | UserCountOutputTypeCountAchievementsArgs
     kofiTransactions?: boolean | UserCountOutputTypeCountKofiTransactionsArgs
     refreshTokens?: boolean | UserCountOutputTypeCountRefreshTokensArgs
+    eloSnapshots?: boolean | UserCountOutputTypeCountEloSnapshotsArgs
   }
 
   // Custom InputTypes
@@ -3283,6 +3376,13 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountRefreshTokensArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: RefreshTokenWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountEloSnapshotsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: EloSnapshotWhereInput
   }
 
 
@@ -3736,6 +3836,7 @@ export namespace Prisma {
     supporterTier: string | null
     supporterActiveUntil: Date | null
     totalDonatedCentsByCurrency: string | null
+    privateProfile: boolean | null
     valid: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -3759,6 +3860,7 @@ export namespace Prisma {
     supporterTier: string | null
     supporterActiveUntil: Date | null
     totalDonatedCentsByCurrency: string | null
+    privateProfile: boolean | null
     valid: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -3782,6 +3884,7 @@ export namespace Prisma {
     supporterTier: number
     supporterActiveUntil: number
     totalDonatedCentsByCurrency: number
+    privateProfile: number
     valid: number
     createdAt: number
     updatedAt: number
@@ -3815,6 +3918,7 @@ export namespace Prisma {
     supporterTier?: true
     supporterActiveUntil?: true
     totalDonatedCentsByCurrency?: true
+    privateProfile?: true
     valid?: true
     createdAt?: true
     updatedAt?: true
@@ -3838,6 +3942,7 @@ export namespace Prisma {
     supporterTier?: true
     supporterActiveUntil?: true
     totalDonatedCentsByCurrency?: true
+    privateProfile?: true
     valid?: true
     createdAt?: true
     updatedAt?: true
@@ -3861,6 +3966,7 @@ export namespace Prisma {
     supporterTier?: true
     supporterActiveUntil?: true
     totalDonatedCentsByCurrency?: true
+    privateProfile?: true
     valid?: true
     createdAt?: true
     updatedAt?: true
@@ -3971,6 +4077,7 @@ export namespace Prisma {
     supporterTier: string | null
     supporterActiveUntil: Date | null
     totalDonatedCentsByCurrency: string
+    privateProfile: boolean
     valid: boolean
     createdAt: Date
     updatedAt: Date
@@ -4013,6 +4120,7 @@ export namespace Prisma {
     supporterTier?: boolean
     supporterActiveUntil?: boolean
     totalDonatedCentsByCurrency?: boolean
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -4031,6 +4139,7 @@ export namespace Prisma {
     achievements?: boolean | User$achievementsArgs<ExtArgs>
     kofiTransactions?: boolean | User$kofiTransactionsArgs<ExtArgs>
     refreshTokens?: boolean | User$refreshTokensArgs<ExtArgs>
+    eloSnapshots?: boolean | User$eloSnapshotsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -4051,6 +4160,7 @@ export namespace Prisma {
     supporterTier?: boolean
     supporterActiveUntil?: boolean
     totalDonatedCentsByCurrency?: boolean
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -4074,6 +4184,7 @@ export namespace Prisma {
     supporterTier?: boolean
     supporterActiveUntil?: boolean
     totalDonatedCentsByCurrency?: boolean
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -4097,13 +4208,14 @@ export namespace Prisma {
     supporterTier?: boolean
     supporterActiveUntil?: boolean
     totalDonatedCentsByCurrency?: boolean
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     eloRating?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "passwordHash" | "name" | "coachName" | "firstName" | "lastName" | "dateOfBirth" | "role" | "roles" | "patreon" | "kofiLinkCode" | "discordUserId" | "supporterTier" | "supporterActiveUntil" | "totalDonatedCentsByCurrency" | "valid" | "createdAt" | "updatedAt" | "eloRating", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "passwordHash" | "name" | "coachName" | "firstName" | "lastName" | "dateOfBirth" | "role" | "roles" | "patreon" | "kofiLinkCode" | "discordUserId" | "supporterTier" | "supporterActiveUntil" | "totalDonatedCentsByCurrency" | "privateProfile" | "valid" | "createdAt" | "updatedAt" | "eloRating", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     matches?: boolean | User$matchesArgs<ExtArgs>
     createdMatches?: boolean | User$createdMatchesArgs<ExtArgs>
@@ -4119,6 +4231,7 @@ export namespace Prisma {
     achievements?: boolean | User$achievementsArgs<ExtArgs>
     kofiTransactions?: boolean | User$kofiTransactionsArgs<ExtArgs>
     refreshTokens?: boolean | User$refreshTokensArgs<ExtArgs>
+    eloSnapshots?: boolean | User$eloSnapshotsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -4141,6 +4254,7 @@ export namespace Prisma {
       achievements: Prisma.$UserAchievementPayload<ExtArgs>[]
       kofiTransactions: Prisma.$KofiTransactionPayload<ExtArgs>[]
       refreshTokens: Prisma.$RefreshTokenPayload<ExtArgs>[]
+      eloSnapshots: Prisma.$EloSnapshotPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -4187,6 +4301,12 @@ export namespace Prisma {
        * Exemple : '{"USD":300,"EUR":1000}'.
        */
       totalDonatedCentsByCurrency: string
+      /**
+       * S26.3i — RGPD : opt-in pour cacher le profil public `/coach/{slug}`.
+       * Stub côté SQLite pour que la lookup publique puisse filtrer ce champ
+       * sans diverger entre les deux schémas.
+       */
+      privateProfile: boolean
       /**
        * Pré-alpha gate côté Postgres ; en SQLite tous les comptes sont valides.
        */
@@ -4602,6 +4722,7 @@ export namespace Prisma {
     achievements<T extends User$achievementsArgs<ExtArgs> = {}>(args?: Subset<T, User$achievementsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserAchievementPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     kofiTransactions<T extends User$kofiTransactionsArgs<ExtArgs> = {}>(args?: Subset<T, User$kofiTransactionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$KofiTransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     refreshTokens<T extends User$refreshTokensArgs<ExtArgs> = {}>(args?: Subset<T, User$refreshTokensArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RefreshTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    eloSnapshots<T extends User$eloSnapshotsArgs<ExtArgs> = {}>(args?: Subset<T, User$eloSnapshotsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EloSnapshotPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -4647,6 +4768,7 @@ export namespace Prisma {
     readonly supporterTier: FieldRef<"User", 'String'>
     readonly supporterActiveUntil: FieldRef<"User", 'DateTime'>
     readonly totalDonatedCentsByCurrency: FieldRef<"User", 'String'>
+    readonly privateProfile: FieldRef<"User", 'Boolean'>
     readonly valid: FieldRef<"User", 'Boolean'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
@@ -5368,6 +5490,30 @@ export namespace Prisma {
   }
 
   /**
+   * User.eloSnapshots
+   */
+  export type User$eloSnapshotsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EloSnapshot
+     */
+    select?: EloSnapshotSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EloSnapshot
+     */
+    omit?: EloSnapshotOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EloSnapshotInclude<ExtArgs> | null
+    where?: EloSnapshotWhereInput
+    orderBy?: EloSnapshotOrderByWithRelationInput | EloSnapshotOrderByWithRelationInput[]
+    cursor?: EloSnapshotWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: EloSnapshotScalarFieldEnum | EloSnapshotScalarFieldEnum[]
+  }
+
+  /**
    * User without action
    */
   export type UserDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -5383,6 +5529,1113 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: UserInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model EloSnapshot
+   */
+
+  export type AggregateEloSnapshot = {
+    _count: EloSnapshotCountAggregateOutputType | null
+    _avg: EloSnapshotAvgAggregateOutputType | null
+    _sum: EloSnapshotSumAggregateOutputType | null
+    _min: EloSnapshotMinAggregateOutputType | null
+    _max: EloSnapshotMaxAggregateOutputType | null
+  }
+
+  export type EloSnapshotAvgAggregateOutputType = {
+    rating: number | null
+    delta: number | null
+  }
+
+  export type EloSnapshotSumAggregateOutputType = {
+    rating: number | null
+    delta: number | null
+  }
+
+  export type EloSnapshotMinAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    rating: number | null
+    delta: number | null
+    matchId: string | null
+    recordedAt: Date | null
+  }
+
+  export type EloSnapshotMaxAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    rating: number | null
+    delta: number | null
+    matchId: string | null
+    recordedAt: Date | null
+  }
+
+  export type EloSnapshotCountAggregateOutputType = {
+    id: number
+    userId: number
+    rating: number
+    delta: number
+    matchId: number
+    recordedAt: number
+    _all: number
+  }
+
+
+  export type EloSnapshotAvgAggregateInputType = {
+    rating?: true
+    delta?: true
+  }
+
+  export type EloSnapshotSumAggregateInputType = {
+    rating?: true
+    delta?: true
+  }
+
+  export type EloSnapshotMinAggregateInputType = {
+    id?: true
+    userId?: true
+    rating?: true
+    delta?: true
+    matchId?: true
+    recordedAt?: true
+  }
+
+  export type EloSnapshotMaxAggregateInputType = {
+    id?: true
+    userId?: true
+    rating?: true
+    delta?: true
+    matchId?: true
+    recordedAt?: true
+  }
+
+  export type EloSnapshotCountAggregateInputType = {
+    id?: true
+    userId?: true
+    rating?: true
+    delta?: true
+    matchId?: true
+    recordedAt?: true
+    _all?: true
+  }
+
+  export type EloSnapshotAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which EloSnapshot to aggregate.
+     */
+    where?: EloSnapshotWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of EloSnapshots to fetch.
+     */
+    orderBy?: EloSnapshotOrderByWithRelationInput | EloSnapshotOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: EloSnapshotWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` EloSnapshots from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` EloSnapshots.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned EloSnapshots
+    **/
+    _count?: true | EloSnapshotCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: EloSnapshotAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: EloSnapshotSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: EloSnapshotMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: EloSnapshotMaxAggregateInputType
+  }
+
+  export type GetEloSnapshotAggregateType<T extends EloSnapshotAggregateArgs> = {
+        [P in keyof T & keyof AggregateEloSnapshot]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateEloSnapshot[P]>
+      : GetScalarType<T[P], AggregateEloSnapshot[P]>
+  }
+
+
+
+
+  export type EloSnapshotGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: EloSnapshotWhereInput
+    orderBy?: EloSnapshotOrderByWithAggregationInput | EloSnapshotOrderByWithAggregationInput[]
+    by: EloSnapshotScalarFieldEnum[] | EloSnapshotScalarFieldEnum
+    having?: EloSnapshotScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: EloSnapshotCountAggregateInputType | true
+    _avg?: EloSnapshotAvgAggregateInputType
+    _sum?: EloSnapshotSumAggregateInputType
+    _min?: EloSnapshotMinAggregateInputType
+    _max?: EloSnapshotMaxAggregateInputType
+  }
+
+  export type EloSnapshotGroupByOutputType = {
+    id: string
+    userId: string
+    rating: number
+    delta: number
+    matchId: string | null
+    recordedAt: Date
+    _count: EloSnapshotCountAggregateOutputType | null
+    _avg: EloSnapshotAvgAggregateOutputType | null
+    _sum: EloSnapshotSumAggregateOutputType | null
+    _min: EloSnapshotMinAggregateOutputType | null
+    _max: EloSnapshotMaxAggregateOutputType | null
+  }
+
+  type GetEloSnapshotGroupByPayload<T extends EloSnapshotGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<EloSnapshotGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof EloSnapshotGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], EloSnapshotGroupByOutputType[P]>
+            : GetScalarType<T[P], EloSnapshotGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type EloSnapshotSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    rating?: boolean
+    delta?: boolean
+    matchId?: boolean
+    recordedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["eloSnapshot"]>
+
+  export type EloSnapshotSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    rating?: boolean
+    delta?: boolean
+    matchId?: boolean
+    recordedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["eloSnapshot"]>
+
+  export type EloSnapshotSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    rating?: boolean
+    delta?: boolean
+    matchId?: boolean
+    recordedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["eloSnapshot"]>
+
+  export type EloSnapshotSelectScalar = {
+    id?: boolean
+    userId?: boolean
+    rating?: boolean
+    delta?: boolean
+    matchId?: boolean
+    recordedAt?: boolean
+  }
+
+  export type EloSnapshotOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "rating" | "delta" | "matchId" | "recordedAt", ExtArgs["result"]["eloSnapshot"]>
+  export type EloSnapshotInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type EloSnapshotIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type EloSnapshotIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $EloSnapshotPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "EloSnapshot"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      userId: string
+      rating: number
+      delta: number
+      matchId: string | null
+      recordedAt: Date
+    }, ExtArgs["result"]["eloSnapshot"]>
+    composites: {}
+  }
+
+  type EloSnapshotGetPayload<S extends boolean | null | undefined | EloSnapshotDefaultArgs> = $Result.GetResult<Prisma.$EloSnapshotPayload, S>
+
+  type EloSnapshotCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<EloSnapshotFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: EloSnapshotCountAggregateInputType | true
+    }
+
+  export interface EloSnapshotDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['EloSnapshot'], meta: { name: 'EloSnapshot' } }
+    /**
+     * Find zero or one EloSnapshot that matches the filter.
+     * @param {EloSnapshotFindUniqueArgs} args - Arguments to find a EloSnapshot
+     * @example
+     * // Get one EloSnapshot
+     * const eloSnapshot = await prisma.eloSnapshot.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends EloSnapshotFindUniqueArgs>(args: SelectSubset<T, EloSnapshotFindUniqueArgs<ExtArgs>>): Prisma__EloSnapshotClient<$Result.GetResult<Prisma.$EloSnapshotPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one EloSnapshot that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {EloSnapshotFindUniqueOrThrowArgs} args - Arguments to find a EloSnapshot
+     * @example
+     * // Get one EloSnapshot
+     * const eloSnapshot = await prisma.eloSnapshot.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends EloSnapshotFindUniqueOrThrowArgs>(args: SelectSubset<T, EloSnapshotFindUniqueOrThrowArgs<ExtArgs>>): Prisma__EloSnapshotClient<$Result.GetResult<Prisma.$EloSnapshotPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first EloSnapshot that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EloSnapshotFindFirstArgs} args - Arguments to find a EloSnapshot
+     * @example
+     * // Get one EloSnapshot
+     * const eloSnapshot = await prisma.eloSnapshot.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends EloSnapshotFindFirstArgs>(args?: SelectSubset<T, EloSnapshotFindFirstArgs<ExtArgs>>): Prisma__EloSnapshotClient<$Result.GetResult<Prisma.$EloSnapshotPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first EloSnapshot that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EloSnapshotFindFirstOrThrowArgs} args - Arguments to find a EloSnapshot
+     * @example
+     * // Get one EloSnapshot
+     * const eloSnapshot = await prisma.eloSnapshot.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends EloSnapshotFindFirstOrThrowArgs>(args?: SelectSubset<T, EloSnapshotFindFirstOrThrowArgs<ExtArgs>>): Prisma__EloSnapshotClient<$Result.GetResult<Prisma.$EloSnapshotPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more EloSnapshots that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EloSnapshotFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all EloSnapshots
+     * const eloSnapshots = await prisma.eloSnapshot.findMany()
+     * 
+     * // Get first 10 EloSnapshots
+     * const eloSnapshots = await prisma.eloSnapshot.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const eloSnapshotWithIdOnly = await prisma.eloSnapshot.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends EloSnapshotFindManyArgs>(args?: SelectSubset<T, EloSnapshotFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EloSnapshotPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a EloSnapshot.
+     * @param {EloSnapshotCreateArgs} args - Arguments to create a EloSnapshot.
+     * @example
+     * // Create one EloSnapshot
+     * const EloSnapshot = await prisma.eloSnapshot.create({
+     *   data: {
+     *     // ... data to create a EloSnapshot
+     *   }
+     * })
+     * 
+     */
+    create<T extends EloSnapshotCreateArgs>(args: SelectSubset<T, EloSnapshotCreateArgs<ExtArgs>>): Prisma__EloSnapshotClient<$Result.GetResult<Prisma.$EloSnapshotPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many EloSnapshots.
+     * @param {EloSnapshotCreateManyArgs} args - Arguments to create many EloSnapshots.
+     * @example
+     * // Create many EloSnapshots
+     * const eloSnapshot = await prisma.eloSnapshot.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends EloSnapshotCreateManyArgs>(args?: SelectSubset<T, EloSnapshotCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many EloSnapshots and returns the data saved in the database.
+     * @param {EloSnapshotCreateManyAndReturnArgs} args - Arguments to create many EloSnapshots.
+     * @example
+     * // Create many EloSnapshots
+     * const eloSnapshot = await prisma.eloSnapshot.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many EloSnapshots and only return the `id`
+     * const eloSnapshotWithIdOnly = await prisma.eloSnapshot.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends EloSnapshotCreateManyAndReturnArgs>(args?: SelectSubset<T, EloSnapshotCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EloSnapshotPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a EloSnapshot.
+     * @param {EloSnapshotDeleteArgs} args - Arguments to delete one EloSnapshot.
+     * @example
+     * // Delete one EloSnapshot
+     * const EloSnapshot = await prisma.eloSnapshot.delete({
+     *   where: {
+     *     // ... filter to delete one EloSnapshot
+     *   }
+     * })
+     * 
+     */
+    delete<T extends EloSnapshotDeleteArgs>(args: SelectSubset<T, EloSnapshotDeleteArgs<ExtArgs>>): Prisma__EloSnapshotClient<$Result.GetResult<Prisma.$EloSnapshotPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one EloSnapshot.
+     * @param {EloSnapshotUpdateArgs} args - Arguments to update one EloSnapshot.
+     * @example
+     * // Update one EloSnapshot
+     * const eloSnapshot = await prisma.eloSnapshot.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends EloSnapshotUpdateArgs>(args: SelectSubset<T, EloSnapshotUpdateArgs<ExtArgs>>): Prisma__EloSnapshotClient<$Result.GetResult<Prisma.$EloSnapshotPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more EloSnapshots.
+     * @param {EloSnapshotDeleteManyArgs} args - Arguments to filter EloSnapshots to delete.
+     * @example
+     * // Delete a few EloSnapshots
+     * const { count } = await prisma.eloSnapshot.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends EloSnapshotDeleteManyArgs>(args?: SelectSubset<T, EloSnapshotDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more EloSnapshots.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EloSnapshotUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many EloSnapshots
+     * const eloSnapshot = await prisma.eloSnapshot.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends EloSnapshotUpdateManyArgs>(args: SelectSubset<T, EloSnapshotUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more EloSnapshots and returns the data updated in the database.
+     * @param {EloSnapshotUpdateManyAndReturnArgs} args - Arguments to update many EloSnapshots.
+     * @example
+     * // Update many EloSnapshots
+     * const eloSnapshot = await prisma.eloSnapshot.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more EloSnapshots and only return the `id`
+     * const eloSnapshotWithIdOnly = await prisma.eloSnapshot.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends EloSnapshotUpdateManyAndReturnArgs>(args: SelectSubset<T, EloSnapshotUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EloSnapshotPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one EloSnapshot.
+     * @param {EloSnapshotUpsertArgs} args - Arguments to update or create a EloSnapshot.
+     * @example
+     * // Update or create a EloSnapshot
+     * const eloSnapshot = await prisma.eloSnapshot.upsert({
+     *   create: {
+     *     // ... data to create a EloSnapshot
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the EloSnapshot we want to update
+     *   }
+     * })
+     */
+    upsert<T extends EloSnapshotUpsertArgs>(args: SelectSubset<T, EloSnapshotUpsertArgs<ExtArgs>>): Prisma__EloSnapshotClient<$Result.GetResult<Prisma.$EloSnapshotPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of EloSnapshots.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EloSnapshotCountArgs} args - Arguments to filter EloSnapshots to count.
+     * @example
+     * // Count the number of EloSnapshots
+     * const count = await prisma.eloSnapshot.count({
+     *   where: {
+     *     // ... the filter for the EloSnapshots we want to count
+     *   }
+     * })
+    **/
+    count<T extends EloSnapshotCountArgs>(
+      args?: Subset<T, EloSnapshotCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], EloSnapshotCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a EloSnapshot.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EloSnapshotAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends EloSnapshotAggregateArgs>(args: Subset<T, EloSnapshotAggregateArgs>): Prisma.PrismaPromise<GetEloSnapshotAggregateType<T>>
+
+    /**
+     * Group by EloSnapshot.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EloSnapshotGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends EloSnapshotGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: EloSnapshotGroupByArgs['orderBy'] }
+        : { orderBy?: EloSnapshotGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, EloSnapshotGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetEloSnapshotGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the EloSnapshot model
+   */
+  readonly fields: EloSnapshotFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for EloSnapshot.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__EloSnapshotClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the EloSnapshot model
+   */
+  interface EloSnapshotFieldRefs {
+    readonly id: FieldRef<"EloSnapshot", 'String'>
+    readonly userId: FieldRef<"EloSnapshot", 'String'>
+    readonly rating: FieldRef<"EloSnapshot", 'Int'>
+    readonly delta: FieldRef<"EloSnapshot", 'Int'>
+    readonly matchId: FieldRef<"EloSnapshot", 'String'>
+    readonly recordedAt: FieldRef<"EloSnapshot", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * EloSnapshot findUnique
+   */
+  export type EloSnapshotFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EloSnapshot
+     */
+    select?: EloSnapshotSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EloSnapshot
+     */
+    omit?: EloSnapshotOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EloSnapshotInclude<ExtArgs> | null
+    /**
+     * Filter, which EloSnapshot to fetch.
+     */
+    where: EloSnapshotWhereUniqueInput
+  }
+
+  /**
+   * EloSnapshot findUniqueOrThrow
+   */
+  export type EloSnapshotFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EloSnapshot
+     */
+    select?: EloSnapshotSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EloSnapshot
+     */
+    omit?: EloSnapshotOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EloSnapshotInclude<ExtArgs> | null
+    /**
+     * Filter, which EloSnapshot to fetch.
+     */
+    where: EloSnapshotWhereUniqueInput
+  }
+
+  /**
+   * EloSnapshot findFirst
+   */
+  export type EloSnapshotFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EloSnapshot
+     */
+    select?: EloSnapshotSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EloSnapshot
+     */
+    omit?: EloSnapshotOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EloSnapshotInclude<ExtArgs> | null
+    /**
+     * Filter, which EloSnapshot to fetch.
+     */
+    where?: EloSnapshotWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of EloSnapshots to fetch.
+     */
+    orderBy?: EloSnapshotOrderByWithRelationInput | EloSnapshotOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for EloSnapshots.
+     */
+    cursor?: EloSnapshotWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` EloSnapshots from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` EloSnapshots.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of EloSnapshots.
+     */
+    distinct?: EloSnapshotScalarFieldEnum | EloSnapshotScalarFieldEnum[]
+  }
+
+  /**
+   * EloSnapshot findFirstOrThrow
+   */
+  export type EloSnapshotFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EloSnapshot
+     */
+    select?: EloSnapshotSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EloSnapshot
+     */
+    omit?: EloSnapshotOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EloSnapshotInclude<ExtArgs> | null
+    /**
+     * Filter, which EloSnapshot to fetch.
+     */
+    where?: EloSnapshotWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of EloSnapshots to fetch.
+     */
+    orderBy?: EloSnapshotOrderByWithRelationInput | EloSnapshotOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for EloSnapshots.
+     */
+    cursor?: EloSnapshotWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` EloSnapshots from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` EloSnapshots.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of EloSnapshots.
+     */
+    distinct?: EloSnapshotScalarFieldEnum | EloSnapshotScalarFieldEnum[]
+  }
+
+  /**
+   * EloSnapshot findMany
+   */
+  export type EloSnapshotFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EloSnapshot
+     */
+    select?: EloSnapshotSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EloSnapshot
+     */
+    omit?: EloSnapshotOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EloSnapshotInclude<ExtArgs> | null
+    /**
+     * Filter, which EloSnapshots to fetch.
+     */
+    where?: EloSnapshotWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of EloSnapshots to fetch.
+     */
+    orderBy?: EloSnapshotOrderByWithRelationInput | EloSnapshotOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing EloSnapshots.
+     */
+    cursor?: EloSnapshotWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` EloSnapshots from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` EloSnapshots.
+     */
+    skip?: number
+    distinct?: EloSnapshotScalarFieldEnum | EloSnapshotScalarFieldEnum[]
+  }
+
+  /**
+   * EloSnapshot create
+   */
+  export type EloSnapshotCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EloSnapshot
+     */
+    select?: EloSnapshotSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EloSnapshot
+     */
+    omit?: EloSnapshotOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EloSnapshotInclude<ExtArgs> | null
+    /**
+     * The data needed to create a EloSnapshot.
+     */
+    data: XOR<EloSnapshotCreateInput, EloSnapshotUncheckedCreateInput>
+  }
+
+  /**
+   * EloSnapshot createMany
+   */
+  export type EloSnapshotCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many EloSnapshots.
+     */
+    data: EloSnapshotCreateManyInput | EloSnapshotCreateManyInput[]
+  }
+
+  /**
+   * EloSnapshot createManyAndReturn
+   */
+  export type EloSnapshotCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EloSnapshot
+     */
+    select?: EloSnapshotSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the EloSnapshot
+     */
+    omit?: EloSnapshotOmit<ExtArgs> | null
+    /**
+     * The data used to create many EloSnapshots.
+     */
+    data: EloSnapshotCreateManyInput | EloSnapshotCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EloSnapshotIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * EloSnapshot update
+   */
+  export type EloSnapshotUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EloSnapshot
+     */
+    select?: EloSnapshotSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EloSnapshot
+     */
+    omit?: EloSnapshotOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EloSnapshotInclude<ExtArgs> | null
+    /**
+     * The data needed to update a EloSnapshot.
+     */
+    data: XOR<EloSnapshotUpdateInput, EloSnapshotUncheckedUpdateInput>
+    /**
+     * Choose, which EloSnapshot to update.
+     */
+    where: EloSnapshotWhereUniqueInput
+  }
+
+  /**
+   * EloSnapshot updateMany
+   */
+  export type EloSnapshotUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update EloSnapshots.
+     */
+    data: XOR<EloSnapshotUpdateManyMutationInput, EloSnapshotUncheckedUpdateManyInput>
+    /**
+     * Filter which EloSnapshots to update
+     */
+    where?: EloSnapshotWhereInput
+    /**
+     * Limit how many EloSnapshots to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * EloSnapshot updateManyAndReturn
+   */
+  export type EloSnapshotUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EloSnapshot
+     */
+    select?: EloSnapshotSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the EloSnapshot
+     */
+    omit?: EloSnapshotOmit<ExtArgs> | null
+    /**
+     * The data used to update EloSnapshots.
+     */
+    data: XOR<EloSnapshotUpdateManyMutationInput, EloSnapshotUncheckedUpdateManyInput>
+    /**
+     * Filter which EloSnapshots to update
+     */
+    where?: EloSnapshotWhereInput
+    /**
+     * Limit how many EloSnapshots to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EloSnapshotIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * EloSnapshot upsert
+   */
+  export type EloSnapshotUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EloSnapshot
+     */
+    select?: EloSnapshotSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EloSnapshot
+     */
+    omit?: EloSnapshotOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EloSnapshotInclude<ExtArgs> | null
+    /**
+     * The filter to search for the EloSnapshot to update in case it exists.
+     */
+    where: EloSnapshotWhereUniqueInput
+    /**
+     * In case the EloSnapshot found by the `where` argument doesn't exist, create a new EloSnapshot with this data.
+     */
+    create: XOR<EloSnapshotCreateInput, EloSnapshotUncheckedCreateInput>
+    /**
+     * In case the EloSnapshot was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<EloSnapshotUpdateInput, EloSnapshotUncheckedUpdateInput>
+  }
+
+  /**
+   * EloSnapshot delete
+   */
+  export type EloSnapshotDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EloSnapshot
+     */
+    select?: EloSnapshotSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EloSnapshot
+     */
+    omit?: EloSnapshotOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EloSnapshotInclude<ExtArgs> | null
+    /**
+     * Filter which EloSnapshot to delete.
+     */
+    where: EloSnapshotWhereUniqueInput
+  }
+
+  /**
+   * EloSnapshot deleteMany
+   */
+  export type EloSnapshotDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which EloSnapshots to delete
+     */
+    where?: EloSnapshotWhereInput
+    /**
+     * Limit how many EloSnapshots to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * EloSnapshot without action
+   */
+  export type EloSnapshotDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EloSnapshot
+     */
+    select?: EloSnapshotSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EloSnapshot
+     */
+    omit?: EloSnapshotOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EloSnapshotInclude<ExtArgs> | null
   }
 
 
@@ -35202,6 +36455,7 @@ export namespace Prisma {
     supporterTier: 'supporterTier',
     supporterActiveUntil: 'supporterActiveUntil',
     totalDonatedCentsByCurrency: 'totalDonatedCentsByCurrency',
+    privateProfile: 'privateProfile',
     valid: 'valid',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
@@ -35209,6 +36463,18 @@ export namespace Prisma {
   };
 
   export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+  export const EloSnapshotScalarFieldEnum: {
+    id: 'id',
+    userId: 'userId',
+    rating: 'rating',
+    delta: 'delta',
+    matchId: 'matchId',
+    recordedAt: 'recordedAt'
+  };
+
+  export type EloSnapshotScalarFieldEnum = (typeof EloSnapshotScalarFieldEnum)[keyof typeof EloSnapshotScalarFieldEnum]
 
 
   export const RefreshTokenScalarFieldEnum: {
@@ -35766,6 +37032,7 @@ export namespace Prisma {
     supporterTier?: StringNullableFilter<"User"> | string | null
     supporterActiveUntil?: DateTimeNullableFilter<"User"> | Date | string | null
     totalDonatedCentsByCurrency?: StringFilter<"User"> | string
+    privateProfile?: BoolFilter<"User"> | boolean
     valid?: BoolFilter<"User"> | boolean
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
@@ -35784,6 +37051,7 @@ export namespace Prisma {
     achievements?: UserAchievementListRelationFilter
     kofiTransactions?: KofiTransactionListRelationFilter
     refreshTokens?: RefreshTokenListRelationFilter
+    eloSnapshots?: EloSnapshotListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -35803,6 +37071,7 @@ export namespace Prisma {
     supporterTier?: SortOrderInput | SortOrder
     supporterActiveUntil?: SortOrderInput | SortOrder
     totalDonatedCentsByCurrency?: SortOrder
+    privateProfile?: SortOrder
     valid?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -35821,6 +37090,7 @@ export namespace Prisma {
     achievements?: UserAchievementOrderByRelationAggregateInput
     kofiTransactions?: KofiTransactionOrderByRelationAggregateInput
     refreshTokens?: RefreshTokenOrderByRelationAggregateInput
+    eloSnapshots?: EloSnapshotOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -35843,6 +37113,7 @@ export namespace Prisma {
     supporterTier?: StringNullableFilter<"User"> | string | null
     supporterActiveUntil?: DateTimeNullableFilter<"User"> | Date | string | null
     totalDonatedCentsByCurrency?: StringFilter<"User"> | string
+    privateProfile?: BoolFilter<"User"> | boolean
     valid?: BoolFilter<"User"> | boolean
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
@@ -35861,6 +37132,7 @@ export namespace Prisma {
     achievements?: UserAchievementListRelationFilter
     kofiTransactions?: KofiTransactionListRelationFilter
     refreshTokens?: RefreshTokenListRelationFilter
+    eloSnapshots?: EloSnapshotListRelationFilter
   }, "id" | "email" | "kofiLinkCode" | "discordUserId">
 
   export type UserOrderByWithAggregationInput = {
@@ -35880,6 +37152,7 @@ export namespace Prisma {
     supporterTier?: SortOrderInput | SortOrder
     supporterActiveUntil?: SortOrderInput | SortOrder
     totalDonatedCentsByCurrency?: SortOrder
+    privateProfile?: SortOrder
     valid?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -35911,10 +37184,73 @@ export namespace Prisma {
     supporterTier?: StringNullableWithAggregatesFilter<"User"> | string | null
     supporterActiveUntil?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
     totalDonatedCentsByCurrency?: StringWithAggregatesFilter<"User"> | string
+    privateProfile?: BoolWithAggregatesFilter<"User"> | boolean
     valid?: BoolWithAggregatesFilter<"User"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     eloRating?: IntWithAggregatesFilter<"User"> | number
+  }
+
+  export type EloSnapshotWhereInput = {
+    AND?: EloSnapshotWhereInput | EloSnapshotWhereInput[]
+    OR?: EloSnapshotWhereInput[]
+    NOT?: EloSnapshotWhereInput | EloSnapshotWhereInput[]
+    id?: StringFilter<"EloSnapshot"> | string
+    userId?: StringFilter<"EloSnapshot"> | string
+    rating?: IntFilter<"EloSnapshot"> | number
+    delta?: IntFilter<"EloSnapshot"> | number
+    matchId?: StringNullableFilter<"EloSnapshot"> | string | null
+    recordedAt?: DateTimeFilter<"EloSnapshot"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }
+
+  export type EloSnapshotOrderByWithRelationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    rating?: SortOrder
+    delta?: SortOrder
+    matchId?: SortOrderInput | SortOrder
+    recordedAt?: SortOrder
+    user?: UserOrderByWithRelationInput
+  }
+
+  export type EloSnapshotWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: EloSnapshotWhereInput | EloSnapshotWhereInput[]
+    OR?: EloSnapshotWhereInput[]
+    NOT?: EloSnapshotWhereInput | EloSnapshotWhereInput[]
+    userId?: StringFilter<"EloSnapshot"> | string
+    rating?: IntFilter<"EloSnapshot"> | number
+    delta?: IntFilter<"EloSnapshot"> | number
+    matchId?: StringNullableFilter<"EloSnapshot"> | string | null
+    recordedAt?: DateTimeFilter<"EloSnapshot"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id">
+
+  export type EloSnapshotOrderByWithAggregationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    rating?: SortOrder
+    delta?: SortOrder
+    matchId?: SortOrderInput | SortOrder
+    recordedAt?: SortOrder
+    _count?: EloSnapshotCountOrderByAggregateInput
+    _avg?: EloSnapshotAvgOrderByAggregateInput
+    _max?: EloSnapshotMaxOrderByAggregateInput
+    _min?: EloSnapshotMinOrderByAggregateInput
+    _sum?: EloSnapshotSumOrderByAggregateInput
+  }
+
+  export type EloSnapshotScalarWhereWithAggregatesInput = {
+    AND?: EloSnapshotScalarWhereWithAggregatesInput | EloSnapshotScalarWhereWithAggregatesInput[]
+    OR?: EloSnapshotScalarWhereWithAggregatesInput[]
+    NOT?: EloSnapshotScalarWhereWithAggregatesInput | EloSnapshotScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"EloSnapshot"> | string
+    userId?: StringWithAggregatesFilter<"EloSnapshot"> | string
+    rating?: IntWithAggregatesFilter<"EloSnapshot"> | number
+    delta?: IntWithAggregatesFilter<"EloSnapshot"> | number
+    matchId?: StringNullableWithAggregatesFilter<"EloSnapshot"> | string | null
+    recordedAt?: DateTimeWithAggregatesFilter<"EloSnapshot"> | Date | string
   }
 
   export type RefreshTokenWhereInput = {
@@ -38180,6 +39516,7 @@ export namespace Prisma {
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
     totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -38198,6 +39535,7 @@ export namespace Prisma {
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -38217,6 +39555,7 @@ export namespace Prisma {
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
     totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -38235,6 +39574,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserUpdateInput = {
@@ -38254,6 +39594,7 @@ export namespace Prisma {
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -38272,6 +39613,7 @@ export namespace Prisma {
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -38291,6 +39633,7 @@ export namespace Prisma {
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -38309,6 +39652,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -38328,6 +39672,7 @@ export namespace Prisma {
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
     totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -38351,6 +39696,7 @@ export namespace Prisma {
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -38374,10 +39720,73 @@ export namespace Prisma {
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type EloSnapshotCreateInput = {
+    id?: string
+    rating: number
+    delta: number
+    matchId?: string | null
+    recordedAt?: Date | string
+    user: UserCreateNestedOneWithoutEloSnapshotsInput
+  }
+
+  export type EloSnapshotUncheckedCreateInput = {
+    id?: string
+    userId: string
+    rating: number
+    delta: number
+    matchId?: string | null
+    recordedAt?: Date | string
+  }
+
+  export type EloSnapshotUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    rating?: IntFieldUpdateOperationsInput | number
+    delta?: IntFieldUpdateOperationsInput | number
+    matchId?: NullableStringFieldUpdateOperationsInput | string | null
+    recordedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutEloSnapshotsNestedInput
+  }
+
+  export type EloSnapshotUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    rating?: IntFieldUpdateOperationsInput | number
+    delta?: IntFieldUpdateOperationsInput | number
+    matchId?: NullableStringFieldUpdateOperationsInput | string | null
+    recordedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type EloSnapshotCreateManyInput = {
+    id?: string
+    userId: string
+    rating: number
+    delta: number
+    matchId?: string | null
+    recordedAt?: Date | string
+  }
+
+  export type EloSnapshotUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    rating?: IntFieldUpdateOperationsInput | number
+    delta?: IntFieldUpdateOperationsInput | number
+    matchId?: NullableStringFieldUpdateOperationsInput | string | null
+    recordedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type EloSnapshotUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    rating?: IntFieldUpdateOperationsInput | number
+    delta?: IntFieldUpdateOperationsInput | number
+    matchId?: NullableStringFieldUpdateOperationsInput | string | null
+    recordedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type RefreshTokenCreateInput = {
@@ -41004,6 +42413,12 @@ export namespace Prisma {
     none?: RefreshTokenWhereInput
   }
 
+  export type EloSnapshotListRelationFilter = {
+    every?: EloSnapshotWhereInput
+    some?: EloSnapshotWhereInput
+    none?: EloSnapshotWhereInput
+  }
+
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
@@ -41053,6 +42468,10 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
+  export type EloSnapshotOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
   export type UserCountOrderByAggregateInput = {
     id?: SortOrder
     email?: SortOrder
@@ -41070,6 +42489,7 @@ export namespace Prisma {
     supporterTier?: SortOrder
     supporterActiveUntil?: SortOrder
     totalDonatedCentsByCurrency?: SortOrder
+    privateProfile?: SortOrder
     valid?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -41097,6 +42517,7 @@ export namespace Prisma {
     supporterTier?: SortOrder
     supporterActiveUntil?: SortOrder
     totalDonatedCentsByCurrency?: SortOrder
+    privateProfile?: SortOrder
     valid?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -41120,6 +42541,7 @@ export namespace Prisma {
     supporterTier?: SortOrder
     supporterActiveUntil?: SortOrder
     totalDonatedCentsByCurrency?: SortOrder
+    privateProfile?: SortOrder
     valid?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -41219,6 +42641,43 @@ export namespace Prisma {
   export type UserScalarRelationFilter = {
     is?: UserWhereInput
     isNot?: UserWhereInput
+  }
+
+  export type EloSnapshotCountOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    rating?: SortOrder
+    delta?: SortOrder
+    matchId?: SortOrder
+    recordedAt?: SortOrder
+  }
+
+  export type EloSnapshotAvgOrderByAggregateInput = {
+    rating?: SortOrder
+    delta?: SortOrder
+  }
+
+  export type EloSnapshotMaxOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    rating?: SortOrder
+    delta?: SortOrder
+    matchId?: SortOrder
+    recordedAt?: SortOrder
+  }
+
+  export type EloSnapshotMinOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    rating?: SortOrder
+    delta?: SortOrder
+    matchId?: SortOrder
+    recordedAt?: SortOrder
+  }
+
+  export type EloSnapshotSumOrderByAggregateInput = {
+    rating?: SortOrder
+    delta?: SortOrder
   }
 
   export type RefreshTokenCountOrderByAggregateInput = {
@@ -42962,6 +44421,13 @@ export namespace Prisma {
     connect?: RefreshTokenWhereUniqueInput | RefreshTokenWhereUniqueInput[]
   }
 
+  export type EloSnapshotCreateNestedManyWithoutUserInput = {
+    create?: XOR<EloSnapshotCreateWithoutUserInput, EloSnapshotUncheckedCreateWithoutUserInput> | EloSnapshotCreateWithoutUserInput[] | EloSnapshotUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: EloSnapshotCreateOrConnectWithoutUserInput | EloSnapshotCreateOrConnectWithoutUserInput[]
+    createMany?: EloSnapshotCreateManyUserInputEnvelope
+    connect?: EloSnapshotWhereUniqueInput | EloSnapshotWhereUniqueInput[]
+  }
+
   export type MatchUncheckedCreateNestedManyWithoutPlayersInput = {
     create?: XOR<MatchCreateWithoutPlayersInput, MatchUncheckedCreateWithoutPlayersInput> | MatchCreateWithoutPlayersInput[] | MatchUncheckedCreateWithoutPlayersInput[]
     connectOrCreate?: MatchCreateOrConnectWithoutPlayersInput | MatchCreateOrConnectWithoutPlayersInput[]
@@ -43056,6 +44522,13 @@ export namespace Prisma {
     connectOrCreate?: RefreshTokenCreateOrConnectWithoutUserInput | RefreshTokenCreateOrConnectWithoutUserInput[]
     createMany?: RefreshTokenCreateManyUserInputEnvelope
     connect?: RefreshTokenWhereUniqueInput | RefreshTokenWhereUniqueInput[]
+  }
+
+  export type EloSnapshotUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<EloSnapshotCreateWithoutUserInput, EloSnapshotUncheckedCreateWithoutUserInput> | EloSnapshotCreateWithoutUserInput[] | EloSnapshotUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: EloSnapshotCreateOrConnectWithoutUserInput | EloSnapshotCreateOrConnectWithoutUserInput[]
+    createMany?: EloSnapshotCreateManyUserInputEnvelope
+    connect?: EloSnapshotWhereUniqueInput | EloSnapshotWhereUniqueInput[]
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -43277,6 +44750,20 @@ export namespace Prisma {
     deleteMany?: RefreshTokenScalarWhereInput | RefreshTokenScalarWhereInput[]
   }
 
+  export type EloSnapshotUpdateManyWithoutUserNestedInput = {
+    create?: XOR<EloSnapshotCreateWithoutUserInput, EloSnapshotUncheckedCreateWithoutUserInput> | EloSnapshotCreateWithoutUserInput[] | EloSnapshotUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: EloSnapshotCreateOrConnectWithoutUserInput | EloSnapshotCreateOrConnectWithoutUserInput[]
+    upsert?: EloSnapshotUpsertWithWhereUniqueWithoutUserInput | EloSnapshotUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: EloSnapshotCreateManyUserInputEnvelope
+    set?: EloSnapshotWhereUniqueInput | EloSnapshotWhereUniqueInput[]
+    disconnect?: EloSnapshotWhereUniqueInput | EloSnapshotWhereUniqueInput[]
+    delete?: EloSnapshotWhereUniqueInput | EloSnapshotWhereUniqueInput[]
+    connect?: EloSnapshotWhereUniqueInput | EloSnapshotWhereUniqueInput[]
+    update?: EloSnapshotUpdateWithWhereUniqueWithoutUserInput | EloSnapshotUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: EloSnapshotUpdateManyWithWhereWithoutUserInput | EloSnapshotUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: EloSnapshotScalarWhereInput | EloSnapshotScalarWhereInput[]
+  }
+
   export type MatchUncheckedUpdateManyWithoutPlayersNestedInput = {
     create?: XOR<MatchCreateWithoutPlayersInput, MatchUncheckedCreateWithoutPlayersInput> | MatchCreateWithoutPlayersInput[] | MatchUncheckedCreateWithoutPlayersInput[]
     connectOrCreate?: MatchCreateOrConnectWithoutPlayersInput | MatchCreateOrConnectWithoutPlayersInput[]
@@ -43466,6 +44953,34 @@ export namespace Prisma {
     update?: RefreshTokenUpdateWithWhereUniqueWithoutUserInput | RefreshTokenUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: RefreshTokenUpdateManyWithWhereWithoutUserInput | RefreshTokenUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: RefreshTokenScalarWhereInput | RefreshTokenScalarWhereInput[]
+  }
+
+  export type EloSnapshotUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<EloSnapshotCreateWithoutUserInput, EloSnapshotUncheckedCreateWithoutUserInput> | EloSnapshotCreateWithoutUserInput[] | EloSnapshotUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: EloSnapshotCreateOrConnectWithoutUserInput | EloSnapshotCreateOrConnectWithoutUserInput[]
+    upsert?: EloSnapshotUpsertWithWhereUniqueWithoutUserInput | EloSnapshotUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: EloSnapshotCreateManyUserInputEnvelope
+    set?: EloSnapshotWhereUniqueInput | EloSnapshotWhereUniqueInput[]
+    disconnect?: EloSnapshotWhereUniqueInput | EloSnapshotWhereUniqueInput[]
+    delete?: EloSnapshotWhereUniqueInput | EloSnapshotWhereUniqueInput[]
+    connect?: EloSnapshotWhereUniqueInput | EloSnapshotWhereUniqueInput[]
+    update?: EloSnapshotUpdateWithWhereUniqueWithoutUserInput | EloSnapshotUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: EloSnapshotUpdateManyWithWhereWithoutUserInput | EloSnapshotUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: EloSnapshotScalarWhereInput | EloSnapshotScalarWhereInput[]
+  }
+
+  export type UserCreateNestedOneWithoutEloSnapshotsInput = {
+    create?: XOR<UserCreateWithoutEloSnapshotsInput, UserUncheckedCreateWithoutEloSnapshotsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutEloSnapshotsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserUpdateOneRequiredWithoutEloSnapshotsNestedInput = {
+    create?: XOR<UserCreateWithoutEloSnapshotsInput, UserUncheckedCreateWithoutEloSnapshotsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutEloSnapshotsInput
+    upsert?: UserUpsertWithoutEloSnapshotsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutEloSnapshotsInput, UserUpdateWithoutEloSnapshotsInput>, UserUncheckedUpdateWithoutEloSnapshotsInput>
   }
 
   export type UserCreateNestedOneWithoutRefreshTokensInput = {
@@ -45588,6 +47103,31 @@ export namespace Prisma {
     data: RefreshTokenCreateManyUserInput | RefreshTokenCreateManyUserInput[]
   }
 
+  export type EloSnapshotCreateWithoutUserInput = {
+    id?: string
+    rating: number
+    delta: number
+    matchId?: string | null
+    recordedAt?: Date | string
+  }
+
+  export type EloSnapshotUncheckedCreateWithoutUserInput = {
+    id?: string
+    rating: number
+    delta: number
+    matchId?: string | null
+    recordedAt?: Date | string
+  }
+
+  export type EloSnapshotCreateOrConnectWithoutUserInput = {
+    where: EloSnapshotWhereUniqueInput
+    create: XOR<EloSnapshotCreateWithoutUserInput, EloSnapshotUncheckedCreateWithoutUserInput>
+  }
+
+  export type EloSnapshotCreateManyUserInputEnvelope = {
+    data: EloSnapshotCreateManyUserInput | EloSnapshotCreateManyUserInput[]
+  }
+
   export type MatchUpsertWithWhereUniqueWithoutPlayersInput = {
     where: MatchWhereUniqueInput
     update: XOR<MatchUpdateWithoutPlayersInput, MatchUncheckedUpdateWithoutPlayersInput>
@@ -46014,7 +47554,35 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"RefreshToken"> | Date | string
   }
 
-  export type UserCreateWithoutRefreshTokensInput = {
+  export type EloSnapshotUpsertWithWhereUniqueWithoutUserInput = {
+    where: EloSnapshotWhereUniqueInput
+    update: XOR<EloSnapshotUpdateWithoutUserInput, EloSnapshotUncheckedUpdateWithoutUserInput>
+    create: XOR<EloSnapshotCreateWithoutUserInput, EloSnapshotUncheckedCreateWithoutUserInput>
+  }
+
+  export type EloSnapshotUpdateWithWhereUniqueWithoutUserInput = {
+    where: EloSnapshotWhereUniqueInput
+    data: XOR<EloSnapshotUpdateWithoutUserInput, EloSnapshotUncheckedUpdateWithoutUserInput>
+  }
+
+  export type EloSnapshotUpdateManyWithWhereWithoutUserInput = {
+    where: EloSnapshotScalarWhereInput
+    data: XOR<EloSnapshotUpdateManyMutationInput, EloSnapshotUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type EloSnapshotScalarWhereInput = {
+    AND?: EloSnapshotScalarWhereInput | EloSnapshotScalarWhereInput[]
+    OR?: EloSnapshotScalarWhereInput[]
+    NOT?: EloSnapshotScalarWhereInput | EloSnapshotScalarWhereInput[]
+    id?: StringFilter<"EloSnapshot"> | string
+    userId?: StringFilter<"EloSnapshot"> | string
+    rating?: IntFilter<"EloSnapshot"> | number
+    delta?: IntFilter<"EloSnapshot"> | number
+    matchId?: StringNullableFilter<"EloSnapshot"> | string | null
+    recordedAt?: DateTimeFilter<"EloSnapshot"> | Date | string
+  }
+
+  export type UserCreateWithoutEloSnapshotsInput = {
     id?: string
     email: string
     passwordHash: string
@@ -46031,6 +47599,7 @@ export namespace Prisma {
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
     totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -46048,6 +47617,175 @@ export namespace Prisma {
     friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
+    refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutEloSnapshotsInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name?: string | null
+    coachName: string
+    firstName?: string | null
+    lastName?: string | null
+    dateOfBirth?: Date | string | null
+    role?: string
+    roles?: string
+    patreon?: boolean
+    kofiLinkCode?: string | null
+    discordUserId?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
+    valid?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    eloRating?: number
+    matches?: MatchUncheckedCreateNestedManyWithoutPlayersInput
+    createdMatches?: MatchUncheckedCreateNestedManyWithoutCreatorInput
+    teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
+    teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
+    createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
+    createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
+    matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
+    featureFlagOverrides?: FeatureFlagUserUncheckedCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipUncheckedCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
+    achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
+    refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutEloSnapshotsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutEloSnapshotsInput, UserUncheckedCreateWithoutEloSnapshotsInput>
+  }
+
+  export type UserUpsertWithoutEloSnapshotsInput = {
+    update: XOR<UserUpdateWithoutEloSnapshotsInput, UserUncheckedUpdateWithoutEloSnapshotsInput>
+    create: XOR<UserCreateWithoutEloSnapshotsInput, UserUncheckedCreateWithoutEloSnapshotsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutEloSnapshotsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutEloSnapshotsInput, UserUncheckedUpdateWithoutEloSnapshotsInput>
+  }
+
+  export type UserUpdateWithoutEloSnapshotsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    coachName?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
+    valid?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
+    matches?: MatchUpdateManyWithoutPlayersNestedInput
+    createdMatches?: MatchUpdateManyWithoutCreatorNestedInput
+    teams?: TeamUpdateManyWithoutOwnerNestedInput
+    teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
+    createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
+    createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
+    matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
+    featureFlagOverrides?: FeatureFlagUserUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
+    achievements?: UserAchievementUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
+    refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutEloSnapshotsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    coachName?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
+    valid?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
+    matches?: MatchUncheckedUpdateManyWithoutPlayersNestedInput
+    createdMatches?: MatchUncheckedUpdateManyWithoutCreatorNestedInput
+    teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
+    teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
+    createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
+    createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
+    matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
+    featureFlagOverrides?: FeatureFlagUserUncheckedUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUncheckedUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
+    achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
+    refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserCreateWithoutRefreshTokensInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name?: string | null
+    coachName: string
+    firstName?: string | null
+    lastName?: string | null
+    dateOfBirth?: Date | string | null
+    role?: string
+    roles?: string
+    patreon?: boolean
+    kofiLinkCode?: string | null
+    discordUserId?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
+    valid?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    eloRating?: number
+    matches?: MatchCreateNestedManyWithoutPlayersInput
+    createdMatches?: MatchCreateNestedManyWithoutCreatorInput
+    teams?: TeamCreateNestedManyWithoutOwnerInput
+    teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
+    createdCups?: CupCreateNestedManyWithoutCreatorInput
+    createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
+    createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
+    matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
+    featureFlagOverrides?: FeatureFlagUserCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
+    achievements?: UserAchievementCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutRefreshTokensInput = {
@@ -46067,6 +47805,7 @@ export namespace Prisma {
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
     totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -46084,6 +47823,7 @@ export namespace Prisma {
     friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutRefreshTokensInput = {
@@ -46119,6 +47859,7 @@ export namespace Prisma {
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -46136,6 +47877,7 @@ export namespace Prisma {
     friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutRefreshTokensInput = {
@@ -46155,6 +47897,7 @@ export namespace Prisma {
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -46172,6 +47915,7 @@ export namespace Prisma {
     friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutKofiTransactionsInput = {
@@ -46191,6 +47935,7 @@ export namespace Prisma {
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
     totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -46208,6 +47953,7 @@ export namespace Prisma {
     friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutKofiTransactionsInput = {
@@ -46227,6 +47973,7 @@ export namespace Prisma {
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
     totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -46244,6 +47991,7 @@ export namespace Prisma {
     friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutKofiTransactionsInput = {
@@ -46279,6 +48027,7 @@ export namespace Prisma {
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -46296,6 +48045,7 @@ export namespace Prisma {
     friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutKofiTransactionsInput = {
@@ -46315,6 +48065,7 @@ export namespace Prisma {
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -46332,6 +48083,7 @@ export namespace Prisma {
     friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutAchievementsInput = {
@@ -46351,6 +48103,7 @@ export namespace Prisma {
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
     totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -46368,6 +48121,7 @@ export namespace Prisma {
     friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutAchievementsInput = {
@@ -46387,6 +48141,7 @@ export namespace Prisma {
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
     totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -46404,6 +48159,7 @@ export namespace Prisma {
     friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutAchievementsInput = {
@@ -46439,6 +48195,7 @@ export namespace Prisma {
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -46456,6 +48213,7 @@ export namespace Prisma {
     friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutAchievementsInput = {
@@ -46475,6 +48233,7 @@ export namespace Prisma {
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -46492,6 +48251,7 @@ export namespace Prisma {
     friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutFriendshipsSentInput = {
@@ -46511,6 +48271,7 @@ export namespace Prisma {
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
     totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -46528,6 +48289,7 @@ export namespace Prisma {
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutFriendshipsSentInput = {
@@ -46547,6 +48309,7 @@ export namespace Prisma {
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
     totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -46564,6 +48327,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutFriendshipsSentInput = {
@@ -46588,6 +48352,7 @@ export namespace Prisma {
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
     totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -46605,6 +48370,7 @@ export namespace Prisma {
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutFriendshipsReceivedInput = {
@@ -46624,6 +48390,7 @@ export namespace Prisma {
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
     totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -46641,6 +48408,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutFriendshipsReceivedInput = {
@@ -46676,6 +48444,7 @@ export namespace Prisma {
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -46693,6 +48462,7 @@ export namespace Prisma {
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutFriendshipsSentInput = {
@@ -46712,6 +48482,7 @@ export namespace Prisma {
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -46729,6 +48500,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutFriendshipsReceivedInput = {
@@ -46759,6 +48531,7 @@ export namespace Prisma {
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -46776,6 +48549,7 @@ export namespace Prisma {
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutFriendshipsReceivedInput = {
@@ -46795,6 +48569,7 @@ export namespace Prisma {
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -46812,6 +48587,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type FeatureFlagUserCreateWithoutFlagInput = {
@@ -46891,6 +48667,7 @@ export namespace Prisma {
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
     totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -46908,6 +48685,7 @@ export namespace Prisma {
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutFeatureFlagOverridesInput = {
@@ -46927,6 +48705,7 @@ export namespace Prisma {
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
     totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -46944,6 +48723,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutFeatureFlagOverridesInput = {
@@ -47008,6 +48788,7 @@ export namespace Prisma {
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -47025,6 +48806,7 @@ export namespace Prisma {
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutFeatureFlagOverridesInput = {
@@ -47044,6 +48826,7 @@ export namespace Prisma {
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -47061,6 +48844,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutCreatedMatchesInput = {
@@ -47080,6 +48864,7 @@ export namespace Prisma {
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
     totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -47097,6 +48882,7 @@ export namespace Prisma {
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutCreatedMatchesInput = {
@@ -47116,6 +48902,7 @@ export namespace Prisma {
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
     totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -47133,6 +48920,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutCreatedMatchesInput = {
@@ -47157,6 +48945,7 @@ export namespace Prisma {
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
     totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -47174,6 +48963,7 @@ export namespace Prisma {
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutMatchesInput = {
@@ -47193,6 +48983,7 @@ export namespace Prisma {
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
     totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -47210,6 +49001,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutMatchesInput = {
@@ -47293,6 +49085,7 @@ export namespace Prisma {
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -47310,6 +49103,7 @@ export namespace Prisma {
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutCreatedMatchesInput = {
@@ -47329,6 +49123,7 @@ export namespace Prisma {
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -47346,6 +49141,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithWhereUniqueWithoutMatchesInput = {
@@ -47384,6 +49180,7 @@ export namespace Prisma {
     supporterTier?: StringNullableFilter<"User"> | string | null
     supporterActiveUntil?: DateTimeNullableFilter<"User"> | Date | string | null
     totalDonatedCentsByCurrency?: StringFilter<"User"> | string
+    privateProfile?: BoolFilter<"User"> | boolean
     valid?: BoolFilter<"User"> | boolean
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
@@ -47567,6 +49364,7 @@ export namespace Prisma {
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
     totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -47584,6 +49382,7 @@ export namespace Prisma {
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutTeamSelectionsInput = {
@@ -47603,6 +49402,7 @@ export namespace Prisma {
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
     totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -47620,6 +49420,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutTeamSelectionsInput = {
@@ -47753,6 +49554,7 @@ export namespace Prisma {
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -47770,6 +49572,7 @@ export namespace Prisma {
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutTeamSelectionsInput = {
@@ -47789,6 +49592,7 @@ export namespace Prisma {
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -47806,6 +49610,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type TeamUpsertWithoutSelectionsInput = {
@@ -47886,6 +49691,7 @@ export namespace Prisma {
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
     totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -47903,6 +49709,7 @@ export namespace Prisma {
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutTeamsInput = {
@@ -47922,6 +49729,7 @@ export namespace Prisma {
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
     totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -47939,6 +49747,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutTeamsInput = {
@@ -48294,6 +50103,7 @@ export namespace Prisma {
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -48311,6 +50121,7 @@ export namespace Prisma {
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutTeamsInput = {
@@ -48330,6 +50141,7 @@ export namespace Prisma {
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -48347,6 +50159,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type TeamPlayerUpsertWithWhereUniqueWithoutTeamInput = {
@@ -49227,6 +51040,7 @@ export namespace Prisma {
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
     totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -49244,6 +51058,7 @@ export namespace Prisma {
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutCreatedCupsInput = {
@@ -49263,6 +51078,7 @@ export namespace Prisma {
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
     totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -49280,6 +51096,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutCreatedCupsInput = {
@@ -49393,6 +51210,7 @@ export namespace Prisma {
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -49410,6 +51228,7 @@ export namespace Prisma {
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutCreatedCupsInput = {
@@ -49429,6 +51248,7 @@ export namespace Prisma {
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -49446,6 +51266,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type CupParticipantUpsertWithWhereUniqueWithoutCupInput = {
@@ -49713,6 +51534,7 @@ export namespace Prisma {
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
     totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -49730,6 +51552,7 @@ export namespace Prisma {
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutMatchQueueInput = {
@@ -49749,6 +51572,7 @@ export namespace Prisma {
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
     totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -49766,6 +51590,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutMatchQueueInput = {
@@ -49856,6 +51681,7 @@ export namespace Prisma {
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -49873,6 +51699,7 @@ export namespace Prisma {
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutMatchQueueInput = {
@@ -49892,6 +51719,7 @@ export namespace Prisma {
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -49909,6 +51737,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type TeamUpsertWithoutMatchQueueInput = {
@@ -49989,6 +51818,7 @@ export namespace Prisma {
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
     totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -50006,6 +51836,7 @@ export namespace Prisma {
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutCreatedLocalMatchesInput = {
@@ -50025,6 +51856,7 @@ export namespace Prisma {
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
     totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -50042,6 +51874,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutCreatedLocalMatchesInput = {
@@ -50283,6 +52116,7 @@ export namespace Prisma {
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -50300,6 +52134,7 @@ export namespace Prisma {
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutCreatedLocalMatchesInput = {
@@ -50319,6 +52154,7 @@ export namespace Prisma {
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -50336,6 +52172,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type TeamUpsertWithoutLocalMatchesAsTeamAInput = {
@@ -50682,6 +52519,7 @@ export namespace Prisma {
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
     totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -50699,6 +52537,7 @@ export namespace Prisma {
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutCreatedLeaguesInput = {
@@ -50718,6 +52557,7 @@ export namespace Prisma {
     supporterTier?: string | null
     supporterActiveUntil?: Date | string | null
     totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
     valid?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -50735,6 +52575,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutCreatedLeaguesInput = {
@@ -50805,6 +52646,7 @@ export namespace Prisma {
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -50822,6 +52664,7 @@ export namespace Prisma {
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutCreatedLeaguesInput = {
@@ -50841,6 +52684,7 @@ export namespace Prisma {
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -50858,6 +52702,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type LeagueSeasonUpsertWithWhereUniqueWithoutLeagueInput = {
@@ -51503,6 +53348,14 @@ export namespace Prisma {
     createdAt?: Date | string
   }
 
+  export type EloSnapshotCreateManyUserInput = {
+    id?: string
+    rating: number
+    delta: number
+    matchId?: string | null
+    recordedAt?: Date | string
+  }
+
   export type MatchUpdateWithoutPlayersInput = {
     id?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -52038,6 +53891,30 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type EloSnapshotUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    rating?: IntFieldUpdateOperationsInput | number
+    delta?: IntFieldUpdateOperationsInput | number
+    matchId?: NullableStringFieldUpdateOperationsInput | string | null
+    recordedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type EloSnapshotUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    rating?: IntFieldUpdateOperationsInput | number
+    delta?: IntFieldUpdateOperationsInput | number
+    matchId?: NullableStringFieldUpdateOperationsInput | string | null
+    recordedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type EloSnapshotUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    rating?: IntFieldUpdateOperationsInput | number
+    delta?: IntFieldUpdateOperationsInput | number
+    matchId?: NullableStringFieldUpdateOperationsInput | string | null
+    recordedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type FeatureFlagUserCreateManyFlagInput = {
     id?: string
     userId: string
@@ -52094,6 +53971,7 @@ export namespace Prisma {
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -52111,6 +53989,7 @@ export namespace Prisma {
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutMatchesInput = {
@@ -52130,6 +54009,7 @@ export namespace Prisma {
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -52147,6 +54027,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateManyWithoutMatchesInput = {
@@ -52166,6 +54047,7 @@ export namespace Prisma {
     supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
     supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string

@@ -134,10 +134,20 @@ exports.Prisma.UserScalarFieldEnum = {
   supporterTier: 'supporterTier',
   supporterActiveUntil: 'supporterActiveUntil',
   totalDonatedCentsByCurrency: 'totalDonatedCentsByCurrency',
+  privateProfile: 'privateProfile',
   valid: 'valid',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   eloRating: 'eloRating'
+};
+
+exports.Prisma.EloSnapshotScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  rating: 'rating',
+  delta: 'delta',
+  matchId: 'matchId',
+  recordedAt: 'recordedAt'
 };
 
 exports.Prisma.RefreshTokenScalarFieldEnum = {
@@ -524,6 +534,7 @@ exports.Ruleset = exports.$Enums.Ruleset = {
 
 exports.Prisma.ModelName = {
   User: 'User',
+  EloSnapshot: 'EloSnapshot',
   RefreshToken: 'RefreshToken',
   KofiTransaction: 'KofiTransaction',
   UserAchievement: 'UserAchievement',
