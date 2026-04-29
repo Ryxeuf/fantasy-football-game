@@ -78,6 +78,7 @@ import * as kickoffActions from "./utils/kickoff-actions";
 import { applyOrSubmitMove } from "./utils/apply-or-submit-move";
 import { getAvailableActions } from "./utils/available-actions";
 import { handlePlayerClick } from "./utils/handle-player-click";
+import { handleSetupDragStart } from "./utils/handle-drag-start";
 import { validateSetupPlacement } from "./utils/validate-setup";
 import { getMySide, validatePlacement } from "./utils/setup-validation";
 import { type LegalAction } from "./utils/legal-action";
@@ -205,28 +206,17 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
     return computeBlockTargets(state.selectedPlayerId, realMoves, state.players);
   }, [state?.selectedPlayerId, legal, state?.players]);
 
-  // Ajouter handlers après onCellClick
-  const handleDragStart = (e: React.DragEvent, playerId: string) => {
-    const ext = state as ExtendedGameState | null;
-    if (!ext || ext.preMatch?.phase !== "setup") return;
-    if (setupSubmitting) return; // Bloquer pendant la soumission
-    // Autoriser uniquement le coach courant et ses joueurs
-    const isMyTeam = (() => {
-      // On déduit mon côté via teamNameA/B comparés à state.teamNames
-      if (!teamNameA || !teamNameB) return true; // fallback permissif
-      const mySide: "A" | "B" = teamNameA === ext.teamNames.teamA ? "A" : "B";
-      const playerTeam = ext.players.find((p) => p.id === playerId)?.team;
-      return mySide === ext.preMatch.currentCoach && playerTeam === mySide;
-    })();
-    if (!isMyTeam) return;
-
-    // Permettre de déplacer les joueurs déjà placés ou ceux en réserves
-    const player = ext.players.find((p) => p.id === playerId);
-    if (!player) return;
-
-    e.dataTransfer.setData("text/plain", playerId);
-    setDraggedPlayerId(playerId);
-  };
+  // Drag handlers (S26.0n — handleDragStart extracted to ./utils/handle-drag-start.ts).
+  const handleDragStart = (e: React.DragEvent, playerId: string) =>
+    handleSetupDragStart({
+      e,
+      playerId,
+      state: state as ExtendedGameState | null,
+      teamNameA,
+      teamNameB,
+      setupSubmitting,
+      setDraggedPlayerId,
+    });
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault(); // Permettre drop
