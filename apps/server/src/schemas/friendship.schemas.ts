@@ -8,9 +8,22 @@ import { z } from "zod";
  *  - listingstatus filtre optionnel
  */
 
-export const sendFriendRequestSchema = z.object({
-  receiverId: z.string().min(1, "receiverId requis"),
-});
+/**
+ * S26.4b — Le client peut envoyer soit `receiverId` (userId interne,
+ * historique) soit `username` (pseudo de coach, nouveau). La route
+ * resoud `username -> userId` via `findUserByCoachName`.
+ */
+export const sendFriendRequestSchema = z
+  .object({
+    receiverId: z.string().min(1).optional(),
+    username: z.string().min(1).optional(),
+  })
+  .refine(
+    (data) => Boolean(data.receiverId) !== Boolean(data.username),
+    {
+      message: "fournir exactement un de receiverId ou username",
+    },
+  );
 
 export const respondFriendRequestSchema = z.object({
   action: z.enum(["accept", "decline"], {
