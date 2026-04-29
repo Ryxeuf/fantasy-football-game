@@ -279,6 +279,7 @@ router.get("/me", authUser, async (req: AuthenticatedRequest, res) => {
         discordUserId: true,
         valid: true,
         eloRating: true,
+        privateProfile: true,
         createdAt: true,
         updatedAt: true,
         _count: {
