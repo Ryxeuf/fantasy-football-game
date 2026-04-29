@@ -443,6 +443,7 @@ export {
   getCurrentStep,
   getProgressRatio,
   getTutorialBadge,
+  getRecommendedTeamsForBeginners,
   MON_PREMIER_MATCH,
   type TutorialScript,
   type TutorialStep,
@@ -451,4 +452,5 @@ export {
   type TutorialProgress,
   type TutorialDifficulty,
   type TutorialBadge,
+  type RecommendedTeam,
 } from './tutorial';
