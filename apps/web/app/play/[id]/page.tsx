@@ -65,6 +65,7 @@ import PreMatchSummary from "../../components/PreMatchSummary";
 import HalftimeTransition from "../../components/HalftimeTransition";
 import { InducementsPhaseUI } from "./components/InducementsPhaseUI";
 import { normalizeState } from "./utils/normalize-state";
+import * as kickoffActions from "./utils/kickoff-actions";
 import { getMySide, validatePlacement } from "./utils/setup-validation";
 import { ForfeitWarning } from "../../components/ForfeitWarning";
 import GameChat from "../../components/GameChat";
@@ -287,114 +288,13 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
     setDraggedPlayerId(null);
   };
 
-  // Fonction pour placer le ballon de kickoff
-  const handlePlaceKickoffBall = async (position: Position) => {
-    if (!state) return;
-
-    try {
-      const token = localStorage.getItem("auth_token");
-      if (!token) {
-        window.location.href = "/lobby";
-        return;
-      }
-
-      const response = await fetch(
-        `${API_BASE}/match/${matchId}/place-kickoff-ball`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ position }),
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error("Erreur lors du placement du ballon");
-      }
-
-      const responseData = await response.json();
-      const normalizedState = normalizeState(responseData.gameState);
-      setState(normalizedState);
-
-      webLog.debug("Ballon placé:", responseData.message);
-    } catch (error) {
-      console.error("Erreur lors du placement du ballon:", error);
-    }
-  };
-
-  // Fonction pour calculer la déviation
-  const handleCalculateDeviation = async () => {
-    if (!state) return;
-
-    try {
-      const token = localStorage.getItem("auth_token");
-      if (!token) {
-        window.location.href = "/lobby";
-        return;
-      }
-
-      const response = await fetch(
-        `${API_BASE}/match/${matchId}/calculate-kick-deviation`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error("Erreur lors du calcul de déviation");
-      }
-
-      const responseData = await response.json();
-      const normalizedState = normalizeState(responseData.gameState);
-      setState(normalizedState);
-
-      webLog.debug("Déviation calculée:", responseData.message);
-    } catch (error) {
-      console.error("Erreur lors du calcul de déviation:", error);
-    }
-  };
-
-  // Fonction pour résoudre l'événement de kickoff
-  const handleResolveKickoffEvent = async () => {
-    if (!state) return;
-
-    try {
-      const token = localStorage.getItem("auth_token");
-      if (!token) {
-        window.location.href = "/lobby";
-        return;
-      }
-
-      const response = await fetch(
-        `${API_BASE}/match/${matchId}/resolve-kickoff-event`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error("Erreur lors de la résolution de l'événement");
-      }
-
-      const responseData = await response.json();
-      const normalizedState = normalizeState(responseData.gameState);
-      setState(normalizedState);
-
-      webLog.debug("Événement résolu:", responseData.message);
-    } catch (error) {
-      console.error("Erreur lors de la résolution de l'événement:", error);
-    }
-  };
+  // Kickoff handlers extracted to ./utils/kickoff-actions.ts (S26.0d).
+  const handlePlaceKickoffBall = (position: Position) =>
+    kickoffActions.handlePlaceKickoffBall(matchId, setState, position);
+  const handleCalculateDeviation = () =>
+    kickoffActions.handleCalculateDeviation(matchId, setState);
+  const handleResolveKickoffEvent = () =>
+    kickoffActions.handleResolveKickoffEvent(matchId, setState);
 
   // Fonction pour valider le placement et sauvegarder en base
   const handleValidatePlacement = async () => {
