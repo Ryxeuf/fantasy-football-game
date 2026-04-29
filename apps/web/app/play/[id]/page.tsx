@@ -12,6 +12,7 @@ import {
   ApothecaryChoicePopup,
   GameLog,
   ToastProvider,
+  type TerrainSkinId,
 } from "@bb/ui";
 
 // GameBoardWithDugouts pulls in the entire Pixi.js + @pixi/react bundle.
@@ -68,6 +69,7 @@ import { normalizeState } from "./utils/normalize-state";
 import * as kickoffActions from "./utils/kickoff-actions";
 import { validateSetupPlacement } from "./utils/validate-setup";
 import { getMySide, validatePlacement } from "./utils/setup-validation";
+import { type LegalAction } from "./utils/legal-action";
 import { ForfeitWarning } from "../../components/ForfeitWarning";
 import GameChat from "../../components/GameChat";
 import {
@@ -158,27 +160,26 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
     setTimeout(() => setSetupError(null), 2500);
   }
 
-  const legal = useMemo(() => {
+  const legal = useMemo<LegalAction[]>(() => {
     if (!state) return [];
     const extState = state as ExtendedGameState;
     if (extState.preMatch?.phase === "setup") {
       // En setup, legal moves = positions pour placer selectedFromReserve
       if (selectedFromReserve) {
-        return extState.preMatch.legalSetupPositions.map(
-          (p) =>
-            ({
-              type: "PLACE" as const,
-              playerId: selectedFromReserve,
-              to: p,
-            }) as any,
+        return extState.preMatch.legalSetupPositions.map<LegalAction>(
+          (p) => ({
+            type: "PLACE",
+            playerId: selectedFromReserve,
+            to: p,
+          }),
         );
       }
       return []; // Pas de moves sans sélection
     }
     return getLegalMoves(state);
   }, [state, selectedFromReserve]);
-  const isMove = (m: Move, pid: string): m is Extract<Move, { type: "MOVE" }> =>
-    m.type === "MOVE" && (m as any).playerId === pid;
+  const isMove = (m: LegalAction, pid: string): m is Extract<Move, { type: "MOVE" }> =>
+    m.type === "MOVE" && m.playerId === pid;
   const movesForSelected = useMemo(() => {
     if (!state || !state.selectedPlayerId) return [];
     return legal
@@ -188,7 +189,9 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
 
   const blockTargets = useMemo(() => {
     if (!state || !state.selectedPlayerId) return [];
-    return computeBlockTargets(state.selectedPlayerId, legal, state.players);
+    // computeBlockTargets ignore les PLACE synthetiques (S26.0f).
+    const realMoves = legal.filter((m): m is Move => m.type !== "PLACE");
+    return computeBlockTargets(state.selectedPlayerId, realMoves, state.players);
   }, [state?.selectedPlayerId, legal, state?.players]);
 
   // Ajouter handlers après onCellClick
@@ -422,8 +425,8 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
             legal.some(
               (m) =>
                 m.type === "THROW_TEAM_MATE" &&
-                (m as any).playerId === state.selectedPlayerId &&
-                (m as any).thrownPlayerId === clickedPlayer.id,
+                m.playerId === state.selectedPlayerId &&
+                m.thrownPlayerId === clickedPlayer.id,
             )
           ) {
             setThrowTeamMateThrownId(clickedPlayer.id);
@@ -432,12 +435,12 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
         }
         // Phase 2 : selectionner la position cible
         const move = legal.find(
-          (m) =>
+          (m): m is Extract<Move, { type: "THROW_TEAM_MATE" }> =>
             m.type === "THROW_TEAM_MATE" &&
-            (m as any).playerId === state.selectedPlayerId &&
-            (m as any).thrownPlayerId === throwTeamMateThrownId &&
-            (m as any).targetPos.x === pos.x &&
-            (m as any).targetPos.y === pos.y,
+            m.playerId === state.selectedPlayerId &&
+            m.thrownPlayerId === throwTeamMateThrownId &&
+            m.targetPos.x === pos.x &&
+            m.targetPos.y === pos.y,
         );
         if (!move) return; // hors portee : ignore
         if (isActiveMatch) {
@@ -471,10 +474,10 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
       );
       if (target && (currentAction === "BLOCK" || currentAction === "BLITZ")) {
         const blockMove = legal.find(
-          (m) =>
+          (m): m is Extract<Move, { type: "BLOCK" }> =>
             m.type === "BLOCK" &&
-            (m as any).playerId === state.selectedPlayerId &&
-            (m as any).targetId === target.id,
+            m.playerId === state.selectedPlayerId &&
+            m.targetId === target.id,
         );
         if (blockMove) {
           if (isActiveMatch) {
@@ -519,7 +522,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
               const ns = normalizeState(result.gameState);
               setState(ns);
               setIsMyTurn(result.isMyTurn);
-              const p = ns.players.find((pl) => pl.id === (candidate as any).playerId);
+              const p = ns.players.find((pl) => pl.id === candidate.playerId);
               if (!p || p.pm <= 0) setState((s) => s ? { ...s, selectedPlayerId: null } : null);
               if (ns.lastDiceResult) setShowDicePopup(true);
               setSelectedFromReserve(null);
@@ -1020,7 +1023,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
                 isSetupPhase={
                   (state as ExtendedGameState).preMatch?.phase === "setup"
                 }
-                initialTerrainSkin={(state as any).terrainSkin || undefined}
+                initialTerrainSkin={(state as ExtendedGameState).terrainSkin as TerrainSkinId | undefined}
               />
             </div>
             {/* PlayerDetails is now integrated in GameBoardWithDugouts */}
@@ -1081,7 +1084,7 @@ export default function PlayByIdPage({ params }: { params: { id: string } }) {
             legal.some(
               (m) =>
                 m.type === "THROW_TEAM_MATE" &&
-                (m as any).playerId === state.selectedPlayerId,
+                m.playerId === state.selectedPlayerId,
             );
           const available: Array<
             "MOVE" | "BLOCK" | "BLITZ" | "PASS" | "HANDOFF" | "FOUL" | "THROW_TEAM_MATE"
