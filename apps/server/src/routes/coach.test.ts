@@ -9,6 +9,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("../services/coach-profile", () => ({
   getCoachPublicProfile: vi.fn(),
+  getCoachRecentTeams: vi.fn(),
   getCoachShowcaseAchievements: vi.fn(),
   listPublicCoachSlugs: vi.fn(),
 }));
@@ -16,6 +17,7 @@ vi.mock("../services/coach-profile", () => ({
 import type { Request, Response } from "express";
 import {
   getCoachPublicProfile,
+  getCoachRecentTeams,
   getCoachShowcaseAchievements,
   listPublicCoachSlugs,
 } from "../services/coach-profile";
@@ -26,6 +28,7 @@ import {
 
 const mockedGetProfile = vi.mocked(getCoachPublicProfile);
 const mockedGetShowcase = vi.mocked(getCoachShowcaseAchievements);
+const mockedGetRecentTeams = vi.mocked(getCoachRecentTeams);
 const mockedListSlugs = vi.mocked(listPublicCoachSlugs);
 
 function buildRes(): Response {
@@ -60,6 +63,7 @@ describe("GET /coach/:slug — handleGetCoachPublicProfile", () => {
       memberSince: "2025-12-01T00:00:00.000Z",
     });
     mockedGetShowcase.mockResolvedValue([]);
+    mockedGetRecentTeams.mockResolvedValue([]);
 
     const req = { params: { slug: "coach-alpha" } } as unknown as Request;
     const res = buildRes() as Response & { statusCode: number; body: unknown };
@@ -77,10 +81,12 @@ describe("GET /coach/:slug — handleGetCoachPublicProfile", () => {
         supporterTier: null,
         memberSince: "2025-12-01T00:00:00.000Z",
         achievements: [],
+        recentTeams: [],
       },
     });
     expect(mockedGetProfile).toHaveBeenCalledWith("coach-alpha");
     expect(mockedGetShowcase).toHaveBeenCalledWith("u-1");
+    expect(mockedGetRecentTeams).toHaveBeenCalledWith("u-1");
   });
 
   it("includes the showcase achievements in the response (S26.3f)", async () => {
@@ -103,6 +109,7 @@ describe("GET /coach/:slug — handleGetCoachPublicProfile", () => {
         unlockedAt: "2026-04-15T12:00:00.000Z",
       },
     ]);
+    mockedGetRecentTeams.mockResolvedValue([]);
 
     const req = { params: { slug: "coach-alpha" } } as unknown as Request;
     const res = buildRes() as Response & { statusCode: number; body: unknown };
@@ -116,7 +123,40 @@ describe("GET /coach/:slug — handleGetCoachPublicProfile", () => {
     expect(payload.data.achievements[0].slug).toBe("first-match");
   });
 
-  it("does not call the showcase service when the profile is missing", async () => {
+  it("includes recent teams in the response (S26.3h)", async () => {
+    mockedGetProfile.mockResolvedValue({
+      id: "u-1",
+      slug: "coach-alpha",
+      coachName: "Coach Alpha",
+      eloRating: 1234,
+      isSupporter: false,
+      supporterTier: null,
+      memberSince: "2025-12-01T00:00:00.000Z",
+    });
+    mockedGetShowcase.mockResolvedValue([]);
+    mockedGetRecentTeams.mockResolvedValue([
+      {
+        id: "t-1",
+        name: "Skaven Stars",
+        roster: "skaven",
+        currentValue: 1500,
+        createdAt: "2026-04-15T12:00:00.000Z",
+      },
+    ]);
+
+    const req = { params: { slug: "coach-alpha" } } as unknown as Request;
+    const res = buildRes() as Response & { statusCode: number; body: unknown };
+    await handleGetCoachPublicProfile(req, res);
+
+    const payload = res.body as {
+      success: boolean;
+      data: { recentTeams: Array<{ id: string }> };
+    };
+    expect(payload.data.recentTeams.length).toBe(1);
+    expect(payload.data.recentTeams[0].id).toBe("t-1");
+  });
+
+  it("does not call the showcase / recent-teams services when the profile is missing", async () => {
     mockedGetProfile.mockResolvedValue(null);
 
     const req = { params: { slug: "ghost-slug" } } as unknown as Request;
@@ -125,6 +165,7 @@ describe("GET /coach/:slug — handleGetCoachPublicProfile", () => {
 
     expect(res.statusCode).toBe(404);
     expect(mockedGetShowcase).not.toHaveBeenCalled();
+    expect(mockedGetRecentTeams).not.toHaveBeenCalled();
   });
 
   it("returns 404 when the slug does not match any coach", async () => {

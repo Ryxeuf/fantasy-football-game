@@ -41,7 +41,18 @@ export interface CoachShowcaseAchievement {
   unlockedAt: string;
 }
 
+export interface CoachRecentTeam {
+  id: string;
+  name: string;
+  roster: string;
+  /** Current team value (Valeur d'Equipe Actuelle, in gold pieces). */
+  currentValue: number;
+  /** ISO 8601 timestamp of the team creation. */
+  createdAt: string;
+}
+
 const DEFAULT_SHOWCASE_LIMIT = 6;
+const DEFAULT_RECENT_TEAMS_LIMIT = 5;
 
 interface CandidateUser {
   id: string;
@@ -182,4 +193,58 @@ export async function listPublicCoachSlugs(
     result.push(slug);
   }
   return result;
+}
+
+/**
+ * S26.3h — Equipes recentes du coach pour `/coach/{slug}`.
+ *
+ * Renvoie les dernieres equipes creees par l'utilisateur (id, nom,
+ * roster, valeur actuelle, date de creation). Donnees deja publiques
+ * via la liste `/teams` non-authentifiee — on les surface ici en
+ * format compact pour le profil.
+ */
+export async function getCoachRecentTeams(
+  userId: string,
+  limit: number = DEFAULT_RECENT_TEAMS_LIMIT,
+): Promise<CoachRecentTeam[]> {
+  if (!userId) return [];
+
+  const rows = (await (prisma as unknown as {
+    team: {
+      findMany: (args: unknown) => Promise<
+        Array<{
+          id: string;
+          name: string;
+          roster: string;
+          currentValue: number;
+          createdAt: Date;
+        }>
+      >;
+    };
+  }).team.findMany({
+    where: { ownerId: userId },
+    select: {
+      id: true,
+      name: true,
+      roster: true,
+      currentValue: true,
+      createdAt: true,
+    },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+  })) as Array<{
+    id: string;
+    name: string;
+    roster: string;
+    currentValue: number;
+    createdAt: Date;
+  }>;
+
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    roster: row.roster,
+    currentValue: row.currentValue,
+    createdAt: row.createdAt.toISOString(),
+  }));
 }
