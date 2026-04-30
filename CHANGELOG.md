@@ -1,3 +1,11 @@
+## [1.80.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.79.0...v1.80.0) (2026-04-30)
+
+
+### ✨ Features
+
+* **extraction:** add OCR transcriptions for Blood Bowl rules, skills, and traits ([7ff9a48](https://github.com/Ryxeuf/fantasy-football-game/commit/7ff9a4811ac19ac004ca5fb111d88e8230bc143e))
+* **friends:** listAcceptedFriendIds helper (S26.5b) ([#508](https://github.com/Ryxeuf/fantasy-football-game/issues/508)) ([26c2fb8](https://github.com/Ryxeuf/fantasy-football-game/commit/26c2fb8689e22d756ead743640e8a6054d5ce853))
+
 ## [1.79.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.78.0...v1.79.0) (2026-04-29)
 
 
