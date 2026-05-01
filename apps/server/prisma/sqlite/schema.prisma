@@ -654,4 +654,34 @@ model LeagueRound {
   @@index([status])
 }
 
+/// Catalogue des Règles Spéciales d'équipe (S3 — OCR officielle).
+model TeamSpecialRule {
+  id            String   @id @default(cuid())
+  slug          String
+  ruleset       Ruleset  @default(season_3)
+  nameFr        String
+  nameEn        String
+  description   String
+  descriptionEn String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([slug, ruleset])
+}
+
+/// Catalogue des Ligues régionales (S3 — OCR officielle).
+model RegionalLeague {
+  id            String   @id @default(cuid())
+  slug          String
+  ruleset       Ruleset  @default(season_3)
+  nameFr        String
+  nameEn        String
+  description   String
+  descriptionEn String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([slug, ruleset])
+}
+
 

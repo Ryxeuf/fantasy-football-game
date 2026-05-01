@@ -10,11 +10,12 @@ import {
 } from "../../../packages/game-engine/src/rosters/positions";
 import { STAR_PLAYERS_BY_RULESET } from "../../../packages/game-engine/src/rosters/star-players";
 import { STATIC_SKILLS_DATA } from "./static-skills-data";
-import { 
-  SEASON_3_NEW_SKILLS, 
-  SEASON_3_CATEGORY_CHANGES, 
+import {
+  SEASON_3_NEW_SKILLS,
+  SEASON_3_CATEGORY_CHANGES,
   SEASON_3_ELITE_SKILLS,
-  SEASON_3_RENAMED_SKILLS 
+  SEASON_3_RENAMED_SKILLS,
+  SEASON_3_SKILL_DESCRIPTIONS
 } from "./static-skills-data-s3";
 import { UNKNOWN_USER_ID } from "./utils/user-constants";
 import { ONLINE_PLAY_FLAG, AI_TRAINING_FLAG } from "./services/featureFlags";
@@ -67,12 +68,19 @@ async function main() {
 
         // Récupérer toutes les données depuis les données statiques (description FR et EN mises à jour)
         const staticData = STATIC_SKILLS_DATA[skillDef.nameEn];
-        
+        // Override OCR Saison 3 (uniquement appliqué au ruleset season_3, voir ci-dessous)
+        const s3OcrOverride = isSeason3 ? SEASON_3_SKILL_DESCRIPTIONS[skillDef.slug] : undefined;
+
         // Utiliser les données statiques si disponibles, sinon utiliser les données du game-engine
         let finalNameFr = staticData?.nameFr || skillDef.nameFr;
         let finalNameEn = staticData?.nameEn || skillDef.nameEn;
-        const finalDescription = staticData?.description || skillDef.description;
-        const finalDescriptionEn = staticData?.descriptionEn || null;
+        let finalDescription = staticData?.description || skillDef.description;
+        let finalDescriptionEn = staticData?.descriptionEn || skillDef.descriptionEn || null;
+        if (s3OcrOverride) {
+          // En Saison 3 uniquement, on remplace par la description OCR officielle
+          finalDescription = s3OcrOverride.description;
+          finalDescriptionEn = s3OcrOverride.descriptionEn || finalDescriptionEn;
+        }
         let finalCategory = staticData?.category || skillDef.category;
         // En Saison 2, aucune compétence n'est Elite
         // En Saison 3, on applique SEASON_3_ELITE_SKILLS

@@ -49,6 +49,8 @@ model User {
   privateProfile              Boolean           @default(false)
   /// Pré-alpha gate côté Postgres ; en SQLite tous les comptes sont valides.
   valid                       Boolean           @default(true)
+  /// Date de la dernière connexion réussie de l'utilisateur.
+  lastLoginAt                 DateTime?
   createdAt                   DateTime          @default(now())
   updatedAt                   DateTime          @updatedAt
   matches                     Match[]
@@ -650,4 +652,34 @@ model LeagueRound {
   @@unique([seasonId, roundNumber])
   @@index([seasonId])
   @@index([status])
+}
+
+/// Catalogue des Règles Spéciales d'équipe (S3 — OCR officielle).
+model TeamSpecialRule {
+  id            String   @id @default(cuid())
+  slug          String
+  ruleset       Ruleset  @default(season_3)
+  nameFr        String
+  nameEn        String
+  description   String
+  descriptionEn String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([slug, ruleset])
+}
+
+/// Catalogue des Ligues régionales (S3 — OCR officielle).
+model RegionalLeague {
+  id            String   @id @default(cuid())
+  slug          String
+  ruleset       Ruleset  @default(season_3)
+  nameFr        String
+  nameEn        String
+  description   String
+  descriptionEn String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([slug, ruleset])
 }

@@ -789,3 +789,44 @@ model LeagueRound {
   @@index([seasonId])
   @@index([status])
 }
+
+/// Catalogue des Règles Spéciales d'équipe (Bagarreurs Brutaux, Chantage et
+/// Corruption, Favori de..., Trois-quarts à vil prix, Maîtres de la Non-vie,
+/// Déferlement, Capitaine). Source : retranscription OCR officielle Saison 3.
+/// Une règle spéciale est unique par (slug, ruleset). Aucune relation
+/// directe avec Roster n'est créée ici : l'attribution se fait via le champ
+/// libre `Roster.specialRules` (CSV de slugs) pour rester compatible avec
+/// l'existant et ne pas modifier les données déjà présentes en prod.
+model TeamSpecialRule {
+  id            String   @id @default(cuid())
+  slug          String
+  ruleset       Ruleset  @default(season_3)
+  nameFr        String
+  nameEn        String
+  description   String
+  descriptionEn String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([slug, ruleset])
+}
+
+/// Catalogue des Ligues régionales (Bagarre des Terres Arides, Clash du Chaos,
+/// Ligue des Royaumes Elfiques, Coupe Dé à Coudre Halfling, Super-ligue de
+/// Lustrie, Classique du Vieux Monde, Spot de Sylvanie, Ligue Sylvestre,
+/// Défi des Bas-fonds, Super-ligue du Bord du Monde). Source : retranscription
+/// OCR officielle Saison 3. Le slug correspond à celui utilisé dans
+/// `TEAM_REGIONAL_RULES` côté game-engine.
+model RegionalLeague {
+  id            String   @id @default(cuid())
+  slug          String
+  ruleset       Ruleset  @default(season_3)
+  nameFr        String
+  nameEn        String
+  description   String
+  descriptionEn String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([slug, ruleset])
+}
