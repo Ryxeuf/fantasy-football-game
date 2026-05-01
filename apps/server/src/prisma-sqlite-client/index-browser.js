@@ -136,6 +136,7 @@ exports.Prisma.UserScalarFieldEnum = {
   totalDonatedCentsByCurrency: 'totalDonatedCentsByCurrency',
   privateProfile: 'privateProfile',
   valid: 'valid',
+  lastLoginAt: 'lastLoginAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   eloRating: 'eloRating'
@@ -498,6 +499,30 @@ exports.Prisma.LeagueRoundScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.TeamSpecialRuleScalarFieldEnum = {
+  id: 'id',
+  slug: 'slug',
+  ruleset: 'ruleset',
+  nameFr: 'nameFr',
+  nameEn: 'nameEn',
+  description: 'description',
+  descriptionEn: 'descriptionEn',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.RegionalLeagueScalarFieldEnum = {
+  id: 'id',
+  slug: 'slug',
+  ruleset: 'ruleset',
+  nameFr: 'nameFr',
+  nameEn: 'nameEn',
+  description: 'description',
+  descriptionEn: 'descriptionEn',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -559,7 +584,9 @@ exports.Prisma.ModelName = {
   League: 'League',
   LeagueSeason: 'LeagueSeason',
   LeagueParticipant: 'LeagueParticipant',
-  LeagueRound: 'LeagueRound'
+  LeagueRound: 'LeagueRound',
+  TeamSpecialRule: 'TeamSpecialRule',
+  RegionalLeague: 'RegionalLeague'
 };
 
 /**

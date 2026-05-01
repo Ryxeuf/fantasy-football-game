@@ -328,6 +328,11 @@ db-migrate-data: ## Exécute le script de migration des données statiques (rost
 	@cd apps/server && $(PNPM) exec tsx migrate-static-data-to-db.ts
 	@echo "✅ Migration des données terminée"
 
+db-update-ocr-s3: ## Applique les données OCR Saison 3 (descriptions skills + règles spéciales + ligues), idempotent
+	@echo "📜 Application des données OCR Saison 3 (idempotent)..."
+	@cd apps/server && $(PNPM) exec tsx src/scripts/update-skills-and-rules-from-ocr.ts
+	@echo "✅ Données OCR Saison 3 appliquées"
+
 # Daily-dev shortcuts (S24.9) — alias courts vers les cibles existantes +
 # nouveaux raccourcis pour les workflows quotidiens.
 seed: db-seed ## Alias court de db-seed (importe les fixtures dans Postgres)

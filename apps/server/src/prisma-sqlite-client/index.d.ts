@@ -148,6 +148,16 @@ export type LeagueParticipant = $Result.DefaultSelection<Prisma.$LeagueParticipa
  * 
  */
 export type LeagueRound = $Result.DefaultSelection<Prisma.$LeagueRoundPayload>
+/**
+ * Model TeamSpecialRule
+ * Catalogue des Règles Spéciales d'équipe (S3 — OCR officielle).
+ */
+export type TeamSpecialRule = $Result.DefaultSelection<Prisma.$TeamSpecialRulePayload>
+/**
+ * Model RegionalLeague
+ * Catalogue des Ligues régionales (S3 — OCR officielle).
+ */
+export type RegionalLeague = $Result.DefaultSelection<Prisma.$RegionalLeaguePayload>
 
 /**
  * Enums
@@ -553,6 +563,26 @@ export class PrismaClient<
     * ```
     */
   get leagueRound(): Prisma.LeagueRoundDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.teamSpecialRule`: Exposes CRUD operations for the **TeamSpecialRule** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more TeamSpecialRules
+    * const teamSpecialRules = await prisma.teamSpecialRule.findMany()
+    * ```
+    */
+  get teamSpecialRule(): Prisma.TeamSpecialRuleDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.regionalLeague`: Exposes CRUD operations for the **RegionalLeague** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more RegionalLeagues
+    * const regionalLeagues = await prisma.regionalLeague.findMany()
+    * ```
+    */
+  get regionalLeague(): Prisma.RegionalLeagueDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -1019,7 +1049,9 @@ export namespace Prisma {
     League: 'League',
     LeagueSeason: 'LeagueSeason',
     LeagueParticipant: 'LeagueParticipant',
-    LeagueRound: 'LeagueRound'
+    LeagueRound: 'LeagueRound',
+    TeamSpecialRule: 'TeamSpecialRule',
+    RegionalLeague: 'RegionalLeague'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1038,7 +1070,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "eloSnapshot" | "refreshToken" | "kofiTransaction" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamStarPlayer" | "roster" | "skill" | "position" | "positionSkill" | "cup" | "cupParticipant" | "matchQueue" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leagueParticipant" | "leagueRound"
+      modelProps: "user" | "eloSnapshot" | "refreshToken" | "kofiTransaction" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamStarPlayer" | "roster" | "skill" | "position" | "positionSkill" | "cup" | "cupParticipant" | "matchQueue" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leagueParticipant" | "leagueRound" | "teamSpecialRule" | "regionalLeague"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -3040,6 +3072,154 @@ export namespace Prisma {
           }
         }
       }
+      TeamSpecialRule: {
+        payload: Prisma.$TeamSpecialRulePayload<ExtArgs>
+        fields: Prisma.TeamSpecialRuleFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.TeamSpecialRuleFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamSpecialRulePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.TeamSpecialRuleFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamSpecialRulePayload>
+          }
+          findFirst: {
+            args: Prisma.TeamSpecialRuleFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamSpecialRulePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.TeamSpecialRuleFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamSpecialRulePayload>
+          }
+          findMany: {
+            args: Prisma.TeamSpecialRuleFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamSpecialRulePayload>[]
+          }
+          create: {
+            args: Prisma.TeamSpecialRuleCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamSpecialRulePayload>
+          }
+          createMany: {
+            args: Prisma.TeamSpecialRuleCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.TeamSpecialRuleCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamSpecialRulePayload>[]
+          }
+          delete: {
+            args: Prisma.TeamSpecialRuleDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamSpecialRulePayload>
+          }
+          update: {
+            args: Prisma.TeamSpecialRuleUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamSpecialRulePayload>
+          }
+          deleteMany: {
+            args: Prisma.TeamSpecialRuleDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.TeamSpecialRuleUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.TeamSpecialRuleUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamSpecialRulePayload>[]
+          }
+          upsert: {
+            args: Prisma.TeamSpecialRuleUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamSpecialRulePayload>
+          }
+          aggregate: {
+            args: Prisma.TeamSpecialRuleAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateTeamSpecialRule>
+          }
+          groupBy: {
+            args: Prisma.TeamSpecialRuleGroupByArgs<ExtArgs>
+            result: $Utils.Optional<TeamSpecialRuleGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.TeamSpecialRuleCountArgs<ExtArgs>
+            result: $Utils.Optional<TeamSpecialRuleCountAggregateOutputType> | number
+          }
+        }
+      }
+      RegionalLeague: {
+        payload: Prisma.$RegionalLeaguePayload<ExtArgs>
+        fields: Prisma.RegionalLeagueFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.RegionalLeagueFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RegionalLeaguePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.RegionalLeagueFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RegionalLeaguePayload>
+          }
+          findFirst: {
+            args: Prisma.RegionalLeagueFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RegionalLeaguePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.RegionalLeagueFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RegionalLeaguePayload>
+          }
+          findMany: {
+            args: Prisma.RegionalLeagueFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RegionalLeaguePayload>[]
+          }
+          create: {
+            args: Prisma.RegionalLeagueCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RegionalLeaguePayload>
+          }
+          createMany: {
+            args: Prisma.RegionalLeagueCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.RegionalLeagueCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RegionalLeaguePayload>[]
+          }
+          delete: {
+            args: Prisma.RegionalLeagueDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RegionalLeaguePayload>
+          }
+          update: {
+            args: Prisma.RegionalLeagueUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RegionalLeaguePayload>
+          }
+          deleteMany: {
+            args: Prisma.RegionalLeagueDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.RegionalLeagueUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.RegionalLeagueUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RegionalLeaguePayload>[]
+          }
+          upsert: {
+            args: Prisma.RegionalLeagueUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RegionalLeaguePayload>
+          }
+          aggregate: {
+            args: Prisma.RegionalLeagueAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateRegionalLeague>
+          }
+          groupBy: {
+            args: Prisma.RegionalLeagueGroupByArgs<ExtArgs>
+            result: $Utils.Optional<RegionalLeagueGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.RegionalLeagueCountArgs<ExtArgs>
+            result: $Utils.Optional<RegionalLeagueCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -3163,6 +3343,8 @@ export namespace Prisma {
     leagueSeason?: LeagueSeasonOmit
     leagueParticipant?: LeagueParticipantOmit
     leagueRound?: LeagueRoundOmit
+    teamSpecialRule?: TeamSpecialRuleOmit
+    regionalLeague?: RegionalLeagueOmit
   }
 
   /* Types for Logging */
@@ -3838,6 +4020,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency: string | null
     privateProfile: boolean | null
     valid: boolean | null
+    lastLoginAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
     eloRating: number | null
@@ -3862,6 +4045,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency: string | null
     privateProfile: boolean | null
     valid: boolean | null
+    lastLoginAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
     eloRating: number | null
@@ -3886,6 +4070,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency: number
     privateProfile: number
     valid: number
+    lastLoginAt: number
     createdAt: number
     updatedAt: number
     eloRating: number
@@ -3920,6 +4105,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: true
     privateProfile?: true
     valid?: true
+    lastLoginAt?: true
     createdAt?: true
     updatedAt?: true
     eloRating?: true
@@ -3944,6 +4130,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: true
     privateProfile?: true
     valid?: true
+    lastLoginAt?: true
     createdAt?: true
     updatedAt?: true
     eloRating?: true
@@ -3968,6 +4155,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: true
     privateProfile?: true
     valid?: true
+    lastLoginAt?: true
     createdAt?: true
     updatedAt?: true
     eloRating?: true
@@ -4079,6 +4267,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency: string
     privateProfile: boolean
     valid: boolean
+    lastLoginAt: Date | null
     createdAt: Date
     updatedAt: Date
     eloRating: number
@@ -4122,6 +4311,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: boolean
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     eloRating?: boolean
@@ -4162,6 +4352,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: boolean
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     eloRating?: boolean
@@ -4186,6 +4377,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: boolean
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     eloRating?: boolean
@@ -4210,12 +4402,13 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: boolean
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     eloRating?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "passwordHash" | "name" | "coachName" | "firstName" | "lastName" | "dateOfBirth" | "role" | "roles" | "patreon" | "kofiLinkCode" | "discordUserId" | "supporterTier" | "supporterActiveUntil" | "totalDonatedCentsByCurrency" | "privateProfile" | "valid" | "createdAt" | "updatedAt" | "eloRating", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "passwordHash" | "name" | "coachName" | "firstName" | "lastName" | "dateOfBirth" | "role" | "roles" | "patreon" | "kofiLinkCode" | "discordUserId" | "supporterTier" | "supporterActiveUntil" | "totalDonatedCentsByCurrency" | "privateProfile" | "valid" | "lastLoginAt" | "createdAt" | "updatedAt" | "eloRating", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     matches?: boolean | User$matchesArgs<ExtArgs>
     createdMatches?: boolean | User$createdMatchesArgs<ExtArgs>
@@ -4311,6 +4504,10 @@ export namespace Prisma {
        * Pré-alpha gate côté Postgres ; en SQLite tous les comptes sont valides.
        */
       valid: boolean
+      /**
+       * Date de la dernière connexion réussie de l'utilisateur.
+       */
+      lastLoginAt: Date | null
       createdAt: Date
       updatedAt: Date
       eloRating: number
@@ -4770,6 +4967,7 @@ export namespace Prisma {
     readonly totalDonatedCentsByCurrency: FieldRef<"User", 'String'>
     readonly privateProfile: FieldRef<"User", 'Boolean'>
     readonly valid: FieldRef<"User", 'Boolean'>
+    readonly lastLoginAt: FieldRef<"User", 'DateTime'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
     readonly eloRating: FieldRef<"User", 'Int'>
@@ -36428,6 +36626,2096 @@ export namespace Prisma {
 
 
   /**
+   * Model TeamSpecialRule
+   */
+
+  export type AggregateTeamSpecialRule = {
+    _count: TeamSpecialRuleCountAggregateOutputType | null
+    _min: TeamSpecialRuleMinAggregateOutputType | null
+    _max: TeamSpecialRuleMaxAggregateOutputType | null
+  }
+
+  export type TeamSpecialRuleMinAggregateOutputType = {
+    id: string | null
+    slug: string | null
+    ruleset: $Enums.Ruleset | null
+    nameFr: string | null
+    nameEn: string | null
+    description: string | null
+    descriptionEn: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type TeamSpecialRuleMaxAggregateOutputType = {
+    id: string | null
+    slug: string | null
+    ruleset: $Enums.Ruleset | null
+    nameFr: string | null
+    nameEn: string | null
+    description: string | null
+    descriptionEn: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type TeamSpecialRuleCountAggregateOutputType = {
+    id: number
+    slug: number
+    ruleset: number
+    nameFr: number
+    nameEn: number
+    description: number
+    descriptionEn: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type TeamSpecialRuleMinAggregateInputType = {
+    id?: true
+    slug?: true
+    ruleset?: true
+    nameFr?: true
+    nameEn?: true
+    description?: true
+    descriptionEn?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type TeamSpecialRuleMaxAggregateInputType = {
+    id?: true
+    slug?: true
+    ruleset?: true
+    nameFr?: true
+    nameEn?: true
+    description?: true
+    descriptionEn?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type TeamSpecialRuleCountAggregateInputType = {
+    id?: true
+    slug?: true
+    ruleset?: true
+    nameFr?: true
+    nameEn?: true
+    description?: true
+    descriptionEn?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type TeamSpecialRuleAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which TeamSpecialRule to aggregate.
+     */
+    where?: TeamSpecialRuleWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TeamSpecialRules to fetch.
+     */
+    orderBy?: TeamSpecialRuleOrderByWithRelationInput | TeamSpecialRuleOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: TeamSpecialRuleWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TeamSpecialRules from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TeamSpecialRules.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned TeamSpecialRules
+    **/
+    _count?: true | TeamSpecialRuleCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: TeamSpecialRuleMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: TeamSpecialRuleMaxAggregateInputType
+  }
+
+  export type GetTeamSpecialRuleAggregateType<T extends TeamSpecialRuleAggregateArgs> = {
+        [P in keyof T & keyof AggregateTeamSpecialRule]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateTeamSpecialRule[P]>
+      : GetScalarType<T[P], AggregateTeamSpecialRule[P]>
+  }
+
+
+
+
+  export type TeamSpecialRuleGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TeamSpecialRuleWhereInput
+    orderBy?: TeamSpecialRuleOrderByWithAggregationInput | TeamSpecialRuleOrderByWithAggregationInput[]
+    by: TeamSpecialRuleScalarFieldEnum[] | TeamSpecialRuleScalarFieldEnum
+    having?: TeamSpecialRuleScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: TeamSpecialRuleCountAggregateInputType | true
+    _min?: TeamSpecialRuleMinAggregateInputType
+    _max?: TeamSpecialRuleMaxAggregateInputType
+  }
+
+  export type TeamSpecialRuleGroupByOutputType = {
+    id: string
+    slug: string
+    ruleset: $Enums.Ruleset
+    nameFr: string
+    nameEn: string
+    description: string
+    descriptionEn: string | null
+    createdAt: Date
+    updatedAt: Date
+    _count: TeamSpecialRuleCountAggregateOutputType | null
+    _min: TeamSpecialRuleMinAggregateOutputType | null
+    _max: TeamSpecialRuleMaxAggregateOutputType | null
+  }
+
+  type GetTeamSpecialRuleGroupByPayload<T extends TeamSpecialRuleGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<TeamSpecialRuleGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof TeamSpecialRuleGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], TeamSpecialRuleGroupByOutputType[P]>
+            : GetScalarType<T[P], TeamSpecialRuleGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type TeamSpecialRuleSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    slug?: boolean
+    ruleset?: boolean
+    nameFr?: boolean
+    nameEn?: boolean
+    description?: boolean
+    descriptionEn?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["teamSpecialRule"]>
+
+  export type TeamSpecialRuleSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    slug?: boolean
+    ruleset?: boolean
+    nameFr?: boolean
+    nameEn?: boolean
+    description?: boolean
+    descriptionEn?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["teamSpecialRule"]>
+
+  export type TeamSpecialRuleSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    slug?: boolean
+    ruleset?: boolean
+    nameFr?: boolean
+    nameEn?: boolean
+    description?: boolean
+    descriptionEn?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["teamSpecialRule"]>
+
+  export type TeamSpecialRuleSelectScalar = {
+    id?: boolean
+    slug?: boolean
+    ruleset?: boolean
+    nameFr?: boolean
+    nameEn?: boolean
+    description?: boolean
+    descriptionEn?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type TeamSpecialRuleOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "slug" | "ruleset" | "nameFr" | "nameEn" | "description" | "descriptionEn" | "createdAt" | "updatedAt", ExtArgs["result"]["teamSpecialRule"]>
+
+  export type $TeamSpecialRulePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "TeamSpecialRule"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      slug: string
+      ruleset: $Enums.Ruleset
+      nameFr: string
+      nameEn: string
+      description: string
+      descriptionEn: string | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["teamSpecialRule"]>
+    composites: {}
+  }
+
+  type TeamSpecialRuleGetPayload<S extends boolean | null | undefined | TeamSpecialRuleDefaultArgs> = $Result.GetResult<Prisma.$TeamSpecialRulePayload, S>
+
+  type TeamSpecialRuleCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<TeamSpecialRuleFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: TeamSpecialRuleCountAggregateInputType | true
+    }
+
+  export interface TeamSpecialRuleDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['TeamSpecialRule'], meta: { name: 'TeamSpecialRule' } }
+    /**
+     * Find zero or one TeamSpecialRule that matches the filter.
+     * @param {TeamSpecialRuleFindUniqueArgs} args - Arguments to find a TeamSpecialRule
+     * @example
+     * // Get one TeamSpecialRule
+     * const teamSpecialRule = await prisma.teamSpecialRule.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends TeamSpecialRuleFindUniqueArgs>(args: SelectSubset<T, TeamSpecialRuleFindUniqueArgs<ExtArgs>>): Prisma__TeamSpecialRuleClient<$Result.GetResult<Prisma.$TeamSpecialRulePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one TeamSpecialRule that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {TeamSpecialRuleFindUniqueOrThrowArgs} args - Arguments to find a TeamSpecialRule
+     * @example
+     * // Get one TeamSpecialRule
+     * const teamSpecialRule = await prisma.teamSpecialRule.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends TeamSpecialRuleFindUniqueOrThrowArgs>(args: SelectSubset<T, TeamSpecialRuleFindUniqueOrThrowArgs<ExtArgs>>): Prisma__TeamSpecialRuleClient<$Result.GetResult<Prisma.$TeamSpecialRulePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first TeamSpecialRule that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamSpecialRuleFindFirstArgs} args - Arguments to find a TeamSpecialRule
+     * @example
+     * // Get one TeamSpecialRule
+     * const teamSpecialRule = await prisma.teamSpecialRule.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends TeamSpecialRuleFindFirstArgs>(args?: SelectSubset<T, TeamSpecialRuleFindFirstArgs<ExtArgs>>): Prisma__TeamSpecialRuleClient<$Result.GetResult<Prisma.$TeamSpecialRulePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first TeamSpecialRule that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamSpecialRuleFindFirstOrThrowArgs} args - Arguments to find a TeamSpecialRule
+     * @example
+     * // Get one TeamSpecialRule
+     * const teamSpecialRule = await prisma.teamSpecialRule.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends TeamSpecialRuleFindFirstOrThrowArgs>(args?: SelectSubset<T, TeamSpecialRuleFindFirstOrThrowArgs<ExtArgs>>): Prisma__TeamSpecialRuleClient<$Result.GetResult<Prisma.$TeamSpecialRulePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more TeamSpecialRules that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamSpecialRuleFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all TeamSpecialRules
+     * const teamSpecialRules = await prisma.teamSpecialRule.findMany()
+     * 
+     * // Get first 10 TeamSpecialRules
+     * const teamSpecialRules = await prisma.teamSpecialRule.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const teamSpecialRuleWithIdOnly = await prisma.teamSpecialRule.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends TeamSpecialRuleFindManyArgs>(args?: SelectSubset<T, TeamSpecialRuleFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeamSpecialRulePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a TeamSpecialRule.
+     * @param {TeamSpecialRuleCreateArgs} args - Arguments to create a TeamSpecialRule.
+     * @example
+     * // Create one TeamSpecialRule
+     * const TeamSpecialRule = await prisma.teamSpecialRule.create({
+     *   data: {
+     *     // ... data to create a TeamSpecialRule
+     *   }
+     * })
+     * 
+     */
+    create<T extends TeamSpecialRuleCreateArgs>(args: SelectSubset<T, TeamSpecialRuleCreateArgs<ExtArgs>>): Prisma__TeamSpecialRuleClient<$Result.GetResult<Prisma.$TeamSpecialRulePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many TeamSpecialRules.
+     * @param {TeamSpecialRuleCreateManyArgs} args - Arguments to create many TeamSpecialRules.
+     * @example
+     * // Create many TeamSpecialRules
+     * const teamSpecialRule = await prisma.teamSpecialRule.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends TeamSpecialRuleCreateManyArgs>(args?: SelectSubset<T, TeamSpecialRuleCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many TeamSpecialRules and returns the data saved in the database.
+     * @param {TeamSpecialRuleCreateManyAndReturnArgs} args - Arguments to create many TeamSpecialRules.
+     * @example
+     * // Create many TeamSpecialRules
+     * const teamSpecialRule = await prisma.teamSpecialRule.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many TeamSpecialRules and only return the `id`
+     * const teamSpecialRuleWithIdOnly = await prisma.teamSpecialRule.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends TeamSpecialRuleCreateManyAndReturnArgs>(args?: SelectSubset<T, TeamSpecialRuleCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeamSpecialRulePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a TeamSpecialRule.
+     * @param {TeamSpecialRuleDeleteArgs} args - Arguments to delete one TeamSpecialRule.
+     * @example
+     * // Delete one TeamSpecialRule
+     * const TeamSpecialRule = await prisma.teamSpecialRule.delete({
+     *   where: {
+     *     // ... filter to delete one TeamSpecialRule
+     *   }
+     * })
+     * 
+     */
+    delete<T extends TeamSpecialRuleDeleteArgs>(args: SelectSubset<T, TeamSpecialRuleDeleteArgs<ExtArgs>>): Prisma__TeamSpecialRuleClient<$Result.GetResult<Prisma.$TeamSpecialRulePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one TeamSpecialRule.
+     * @param {TeamSpecialRuleUpdateArgs} args - Arguments to update one TeamSpecialRule.
+     * @example
+     * // Update one TeamSpecialRule
+     * const teamSpecialRule = await prisma.teamSpecialRule.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends TeamSpecialRuleUpdateArgs>(args: SelectSubset<T, TeamSpecialRuleUpdateArgs<ExtArgs>>): Prisma__TeamSpecialRuleClient<$Result.GetResult<Prisma.$TeamSpecialRulePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more TeamSpecialRules.
+     * @param {TeamSpecialRuleDeleteManyArgs} args - Arguments to filter TeamSpecialRules to delete.
+     * @example
+     * // Delete a few TeamSpecialRules
+     * const { count } = await prisma.teamSpecialRule.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends TeamSpecialRuleDeleteManyArgs>(args?: SelectSubset<T, TeamSpecialRuleDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more TeamSpecialRules.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamSpecialRuleUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many TeamSpecialRules
+     * const teamSpecialRule = await prisma.teamSpecialRule.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends TeamSpecialRuleUpdateManyArgs>(args: SelectSubset<T, TeamSpecialRuleUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more TeamSpecialRules and returns the data updated in the database.
+     * @param {TeamSpecialRuleUpdateManyAndReturnArgs} args - Arguments to update many TeamSpecialRules.
+     * @example
+     * // Update many TeamSpecialRules
+     * const teamSpecialRule = await prisma.teamSpecialRule.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more TeamSpecialRules and only return the `id`
+     * const teamSpecialRuleWithIdOnly = await prisma.teamSpecialRule.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends TeamSpecialRuleUpdateManyAndReturnArgs>(args: SelectSubset<T, TeamSpecialRuleUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeamSpecialRulePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one TeamSpecialRule.
+     * @param {TeamSpecialRuleUpsertArgs} args - Arguments to update or create a TeamSpecialRule.
+     * @example
+     * // Update or create a TeamSpecialRule
+     * const teamSpecialRule = await prisma.teamSpecialRule.upsert({
+     *   create: {
+     *     // ... data to create a TeamSpecialRule
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the TeamSpecialRule we want to update
+     *   }
+     * })
+     */
+    upsert<T extends TeamSpecialRuleUpsertArgs>(args: SelectSubset<T, TeamSpecialRuleUpsertArgs<ExtArgs>>): Prisma__TeamSpecialRuleClient<$Result.GetResult<Prisma.$TeamSpecialRulePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of TeamSpecialRules.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamSpecialRuleCountArgs} args - Arguments to filter TeamSpecialRules to count.
+     * @example
+     * // Count the number of TeamSpecialRules
+     * const count = await prisma.teamSpecialRule.count({
+     *   where: {
+     *     // ... the filter for the TeamSpecialRules we want to count
+     *   }
+     * })
+    **/
+    count<T extends TeamSpecialRuleCountArgs>(
+      args?: Subset<T, TeamSpecialRuleCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], TeamSpecialRuleCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a TeamSpecialRule.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamSpecialRuleAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends TeamSpecialRuleAggregateArgs>(args: Subset<T, TeamSpecialRuleAggregateArgs>): Prisma.PrismaPromise<GetTeamSpecialRuleAggregateType<T>>
+
+    /**
+     * Group by TeamSpecialRule.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamSpecialRuleGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends TeamSpecialRuleGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: TeamSpecialRuleGroupByArgs['orderBy'] }
+        : { orderBy?: TeamSpecialRuleGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, TeamSpecialRuleGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetTeamSpecialRuleGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the TeamSpecialRule model
+   */
+  readonly fields: TeamSpecialRuleFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for TeamSpecialRule.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__TeamSpecialRuleClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the TeamSpecialRule model
+   */
+  interface TeamSpecialRuleFieldRefs {
+    readonly id: FieldRef<"TeamSpecialRule", 'String'>
+    readonly slug: FieldRef<"TeamSpecialRule", 'String'>
+    readonly ruleset: FieldRef<"TeamSpecialRule", 'Ruleset'>
+    readonly nameFr: FieldRef<"TeamSpecialRule", 'String'>
+    readonly nameEn: FieldRef<"TeamSpecialRule", 'String'>
+    readonly description: FieldRef<"TeamSpecialRule", 'String'>
+    readonly descriptionEn: FieldRef<"TeamSpecialRule", 'String'>
+    readonly createdAt: FieldRef<"TeamSpecialRule", 'DateTime'>
+    readonly updatedAt: FieldRef<"TeamSpecialRule", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * TeamSpecialRule findUnique
+   */
+  export type TeamSpecialRuleFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamSpecialRule
+     */
+    select?: TeamSpecialRuleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamSpecialRule
+     */
+    omit?: TeamSpecialRuleOmit<ExtArgs> | null
+    /**
+     * Filter, which TeamSpecialRule to fetch.
+     */
+    where: TeamSpecialRuleWhereUniqueInput
+  }
+
+  /**
+   * TeamSpecialRule findUniqueOrThrow
+   */
+  export type TeamSpecialRuleFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamSpecialRule
+     */
+    select?: TeamSpecialRuleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamSpecialRule
+     */
+    omit?: TeamSpecialRuleOmit<ExtArgs> | null
+    /**
+     * Filter, which TeamSpecialRule to fetch.
+     */
+    where: TeamSpecialRuleWhereUniqueInput
+  }
+
+  /**
+   * TeamSpecialRule findFirst
+   */
+  export type TeamSpecialRuleFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamSpecialRule
+     */
+    select?: TeamSpecialRuleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamSpecialRule
+     */
+    omit?: TeamSpecialRuleOmit<ExtArgs> | null
+    /**
+     * Filter, which TeamSpecialRule to fetch.
+     */
+    where?: TeamSpecialRuleWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TeamSpecialRules to fetch.
+     */
+    orderBy?: TeamSpecialRuleOrderByWithRelationInput | TeamSpecialRuleOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for TeamSpecialRules.
+     */
+    cursor?: TeamSpecialRuleWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TeamSpecialRules from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TeamSpecialRules.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of TeamSpecialRules.
+     */
+    distinct?: TeamSpecialRuleScalarFieldEnum | TeamSpecialRuleScalarFieldEnum[]
+  }
+
+  /**
+   * TeamSpecialRule findFirstOrThrow
+   */
+  export type TeamSpecialRuleFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamSpecialRule
+     */
+    select?: TeamSpecialRuleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamSpecialRule
+     */
+    omit?: TeamSpecialRuleOmit<ExtArgs> | null
+    /**
+     * Filter, which TeamSpecialRule to fetch.
+     */
+    where?: TeamSpecialRuleWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TeamSpecialRules to fetch.
+     */
+    orderBy?: TeamSpecialRuleOrderByWithRelationInput | TeamSpecialRuleOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for TeamSpecialRules.
+     */
+    cursor?: TeamSpecialRuleWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TeamSpecialRules from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TeamSpecialRules.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of TeamSpecialRules.
+     */
+    distinct?: TeamSpecialRuleScalarFieldEnum | TeamSpecialRuleScalarFieldEnum[]
+  }
+
+  /**
+   * TeamSpecialRule findMany
+   */
+  export type TeamSpecialRuleFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamSpecialRule
+     */
+    select?: TeamSpecialRuleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamSpecialRule
+     */
+    omit?: TeamSpecialRuleOmit<ExtArgs> | null
+    /**
+     * Filter, which TeamSpecialRules to fetch.
+     */
+    where?: TeamSpecialRuleWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TeamSpecialRules to fetch.
+     */
+    orderBy?: TeamSpecialRuleOrderByWithRelationInput | TeamSpecialRuleOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing TeamSpecialRules.
+     */
+    cursor?: TeamSpecialRuleWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TeamSpecialRules from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TeamSpecialRules.
+     */
+    skip?: number
+    distinct?: TeamSpecialRuleScalarFieldEnum | TeamSpecialRuleScalarFieldEnum[]
+  }
+
+  /**
+   * TeamSpecialRule create
+   */
+  export type TeamSpecialRuleCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamSpecialRule
+     */
+    select?: TeamSpecialRuleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamSpecialRule
+     */
+    omit?: TeamSpecialRuleOmit<ExtArgs> | null
+    /**
+     * The data needed to create a TeamSpecialRule.
+     */
+    data: XOR<TeamSpecialRuleCreateInput, TeamSpecialRuleUncheckedCreateInput>
+  }
+
+  /**
+   * TeamSpecialRule createMany
+   */
+  export type TeamSpecialRuleCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many TeamSpecialRules.
+     */
+    data: TeamSpecialRuleCreateManyInput | TeamSpecialRuleCreateManyInput[]
+  }
+
+  /**
+   * TeamSpecialRule createManyAndReturn
+   */
+  export type TeamSpecialRuleCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamSpecialRule
+     */
+    select?: TeamSpecialRuleSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamSpecialRule
+     */
+    omit?: TeamSpecialRuleOmit<ExtArgs> | null
+    /**
+     * The data used to create many TeamSpecialRules.
+     */
+    data: TeamSpecialRuleCreateManyInput | TeamSpecialRuleCreateManyInput[]
+  }
+
+  /**
+   * TeamSpecialRule update
+   */
+  export type TeamSpecialRuleUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamSpecialRule
+     */
+    select?: TeamSpecialRuleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamSpecialRule
+     */
+    omit?: TeamSpecialRuleOmit<ExtArgs> | null
+    /**
+     * The data needed to update a TeamSpecialRule.
+     */
+    data: XOR<TeamSpecialRuleUpdateInput, TeamSpecialRuleUncheckedUpdateInput>
+    /**
+     * Choose, which TeamSpecialRule to update.
+     */
+    where: TeamSpecialRuleWhereUniqueInput
+  }
+
+  /**
+   * TeamSpecialRule updateMany
+   */
+  export type TeamSpecialRuleUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update TeamSpecialRules.
+     */
+    data: XOR<TeamSpecialRuleUpdateManyMutationInput, TeamSpecialRuleUncheckedUpdateManyInput>
+    /**
+     * Filter which TeamSpecialRules to update
+     */
+    where?: TeamSpecialRuleWhereInput
+    /**
+     * Limit how many TeamSpecialRules to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * TeamSpecialRule updateManyAndReturn
+   */
+  export type TeamSpecialRuleUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamSpecialRule
+     */
+    select?: TeamSpecialRuleSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamSpecialRule
+     */
+    omit?: TeamSpecialRuleOmit<ExtArgs> | null
+    /**
+     * The data used to update TeamSpecialRules.
+     */
+    data: XOR<TeamSpecialRuleUpdateManyMutationInput, TeamSpecialRuleUncheckedUpdateManyInput>
+    /**
+     * Filter which TeamSpecialRules to update
+     */
+    where?: TeamSpecialRuleWhereInput
+    /**
+     * Limit how many TeamSpecialRules to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * TeamSpecialRule upsert
+   */
+  export type TeamSpecialRuleUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamSpecialRule
+     */
+    select?: TeamSpecialRuleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamSpecialRule
+     */
+    omit?: TeamSpecialRuleOmit<ExtArgs> | null
+    /**
+     * The filter to search for the TeamSpecialRule to update in case it exists.
+     */
+    where: TeamSpecialRuleWhereUniqueInput
+    /**
+     * In case the TeamSpecialRule found by the `where` argument doesn't exist, create a new TeamSpecialRule with this data.
+     */
+    create: XOR<TeamSpecialRuleCreateInput, TeamSpecialRuleUncheckedCreateInput>
+    /**
+     * In case the TeamSpecialRule was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<TeamSpecialRuleUpdateInput, TeamSpecialRuleUncheckedUpdateInput>
+  }
+
+  /**
+   * TeamSpecialRule delete
+   */
+  export type TeamSpecialRuleDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamSpecialRule
+     */
+    select?: TeamSpecialRuleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamSpecialRule
+     */
+    omit?: TeamSpecialRuleOmit<ExtArgs> | null
+    /**
+     * Filter which TeamSpecialRule to delete.
+     */
+    where: TeamSpecialRuleWhereUniqueInput
+  }
+
+  /**
+   * TeamSpecialRule deleteMany
+   */
+  export type TeamSpecialRuleDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which TeamSpecialRules to delete
+     */
+    where?: TeamSpecialRuleWhereInput
+    /**
+     * Limit how many TeamSpecialRules to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * TeamSpecialRule without action
+   */
+  export type TeamSpecialRuleDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamSpecialRule
+     */
+    select?: TeamSpecialRuleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamSpecialRule
+     */
+    omit?: TeamSpecialRuleOmit<ExtArgs> | null
+  }
+
+
+  /**
+   * Model RegionalLeague
+   */
+
+  export type AggregateRegionalLeague = {
+    _count: RegionalLeagueCountAggregateOutputType | null
+    _min: RegionalLeagueMinAggregateOutputType | null
+    _max: RegionalLeagueMaxAggregateOutputType | null
+  }
+
+  export type RegionalLeagueMinAggregateOutputType = {
+    id: string | null
+    slug: string | null
+    ruleset: $Enums.Ruleset | null
+    nameFr: string | null
+    nameEn: string | null
+    description: string | null
+    descriptionEn: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type RegionalLeagueMaxAggregateOutputType = {
+    id: string | null
+    slug: string | null
+    ruleset: $Enums.Ruleset | null
+    nameFr: string | null
+    nameEn: string | null
+    description: string | null
+    descriptionEn: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type RegionalLeagueCountAggregateOutputType = {
+    id: number
+    slug: number
+    ruleset: number
+    nameFr: number
+    nameEn: number
+    description: number
+    descriptionEn: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type RegionalLeagueMinAggregateInputType = {
+    id?: true
+    slug?: true
+    ruleset?: true
+    nameFr?: true
+    nameEn?: true
+    description?: true
+    descriptionEn?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type RegionalLeagueMaxAggregateInputType = {
+    id?: true
+    slug?: true
+    ruleset?: true
+    nameFr?: true
+    nameEn?: true
+    description?: true
+    descriptionEn?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type RegionalLeagueCountAggregateInputType = {
+    id?: true
+    slug?: true
+    ruleset?: true
+    nameFr?: true
+    nameEn?: true
+    description?: true
+    descriptionEn?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type RegionalLeagueAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which RegionalLeague to aggregate.
+     */
+    where?: RegionalLeagueWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of RegionalLeagues to fetch.
+     */
+    orderBy?: RegionalLeagueOrderByWithRelationInput | RegionalLeagueOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: RegionalLeagueWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` RegionalLeagues from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` RegionalLeagues.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned RegionalLeagues
+    **/
+    _count?: true | RegionalLeagueCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: RegionalLeagueMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: RegionalLeagueMaxAggregateInputType
+  }
+
+  export type GetRegionalLeagueAggregateType<T extends RegionalLeagueAggregateArgs> = {
+        [P in keyof T & keyof AggregateRegionalLeague]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateRegionalLeague[P]>
+      : GetScalarType<T[P], AggregateRegionalLeague[P]>
+  }
+
+
+
+
+  export type RegionalLeagueGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: RegionalLeagueWhereInput
+    orderBy?: RegionalLeagueOrderByWithAggregationInput | RegionalLeagueOrderByWithAggregationInput[]
+    by: RegionalLeagueScalarFieldEnum[] | RegionalLeagueScalarFieldEnum
+    having?: RegionalLeagueScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: RegionalLeagueCountAggregateInputType | true
+    _min?: RegionalLeagueMinAggregateInputType
+    _max?: RegionalLeagueMaxAggregateInputType
+  }
+
+  export type RegionalLeagueGroupByOutputType = {
+    id: string
+    slug: string
+    ruleset: $Enums.Ruleset
+    nameFr: string
+    nameEn: string
+    description: string
+    descriptionEn: string | null
+    createdAt: Date
+    updatedAt: Date
+    _count: RegionalLeagueCountAggregateOutputType | null
+    _min: RegionalLeagueMinAggregateOutputType | null
+    _max: RegionalLeagueMaxAggregateOutputType | null
+  }
+
+  type GetRegionalLeagueGroupByPayload<T extends RegionalLeagueGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<RegionalLeagueGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof RegionalLeagueGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], RegionalLeagueGroupByOutputType[P]>
+            : GetScalarType<T[P], RegionalLeagueGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type RegionalLeagueSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    slug?: boolean
+    ruleset?: boolean
+    nameFr?: boolean
+    nameEn?: boolean
+    description?: boolean
+    descriptionEn?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["regionalLeague"]>
+
+  export type RegionalLeagueSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    slug?: boolean
+    ruleset?: boolean
+    nameFr?: boolean
+    nameEn?: boolean
+    description?: boolean
+    descriptionEn?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["regionalLeague"]>
+
+  export type RegionalLeagueSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    slug?: boolean
+    ruleset?: boolean
+    nameFr?: boolean
+    nameEn?: boolean
+    description?: boolean
+    descriptionEn?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["regionalLeague"]>
+
+  export type RegionalLeagueSelectScalar = {
+    id?: boolean
+    slug?: boolean
+    ruleset?: boolean
+    nameFr?: boolean
+    nameEn?: boolean
+    description?: boolean
+    descriptionEn?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type RegionalLeagueOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "slug" | "ruleset" | "nameFr" | "nameEn" | "description" | "descriptionEn" | "createdAt" | "updatedAt", ExtArgs["result"]["regionalLeague"]>
+
+  export type $RegionalLeaguePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "RegionalLeague"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      slug: string
+      ruleset: $Enums.Ruleset
+      nameFr: string
+      nameEn: string
+      description: string
+      descriptionEn: string | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["regionalLeague"]>
+    composites: {}
+  }
+
+  type RegionalLeagueGetPayload<S extends boolean | null | undefined | RegionalLeagueDefaultArgs> = $Result.GetResult<Prisma.$RegionalLeaguePayload, S>
+
+  type RegionalLeagueCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<RegionalLeagueFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: RegionalLeagueCountAggregateInputType | true
+    }
+
+  export interface RegionalLeagueDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['RegionalLeague'], meta: { name: 'RegionalLeague' } }
+    /**
+     * Find zero or one RegionalLeague that matches the filter.
+     * @param {RegionalLeagueFindUniqueArgs} args - Arguments to find a RegionalLeague
+     * @example
+     * // Get one RegionalLeague
+     * const regionalLeague = await prisma.regionalLeague.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends RegionalLeagueFindUniqueArgs>(args: SelectSubset<T, RegionalLeagueFindUniqueArgs<ExtArgs>>): Prisma__RegionalLeagueClient<$Result.GetResult<Prisma.$RegionalLeaguePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one RegionalLeague that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {RegionalLeagueFindUniqueOrThrowArgs} args - Arguments to find a RegionalLeague
+     * @example
+     * // Get one RegionalLeague
+     * const regionalLeague = await prisma.regionalLeague.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends RegionalLeagueFindUniqueOrThrowArgs>(args: SelectSubset<T, RegionalLeagueFindUniqueOrThrowArgs<ExtArgs>>): Prisma__RegionalLeagueClient<$Result.GetResult<Prisma.$RegionalLeaguePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first RegionalLeague that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RegionalLeagueFindFirstArgs} args - Arguments to find a RegionalLeague
+     * @example
+     * // Get one RegionalLeague
+     * const regionalLeague = await prisma.regionalLeague.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends RegionalLeagueFindFirstArgs>(args?: SelectSubset<T, RegionalLeagueFindFirstArgs<ExtArgs>>): Prisma__RegionalLeagueClient<$Result.GetResult<Prisma.$RegionalLeaguePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first RegionalLeague that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RegionalLeagueFindFirstOrThrowArgs} args - Arguments to find a RegionalLeague
+     * @example
+     * // Get one RegionalLeague
+     * const regionalLeague = await prisma.regionalLeague.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends RegionalLeagueFindFirstOrThrowArgs>(args?: SelectSubset<T, RegionalLeagueFindFirstOrThrowArgs<ExtArgs>>): Prisma__RegionalLeagueClient<$Result.GetResult<Prisma.$RegionalLeaguePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more RegionalLeagues that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RegionalLeagueFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all RegionalLeagues
+     * const regionalLeagues = await prisma.regionalLeague.findMany()
+     * 
+     * // Get first 10 RegionalLeagues
+     * const regionalLeagues = await prisma.regionalLeague.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const regionalLeagueWithIdOnly = await prisma.regionalLeague.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends RegionalLeagueFindManyArgs>(args?: SelectSubset<T, RegionalLeagueFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RegionalLeaguePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a RegionalLeague.
+     * @param {RegionalLeagueCreateArgs} args - Arguments to create a RegionalLeague.
+     * @example
+     * // Create one RegionalLeague
+     * const RegionalLeague = await prisma.regionalLeague.create({
+     *   data: {
+     *     // ... data to create a RegionalLeague
+     *   }
+     * })
+     * 
+     */
+    create<T extends RegionalLeagueCreateArgs>(args: SelectSubset<T, RegionalLeagueCreateArgs<ExtArgs>>): Prisma__RegionalLeagueClient<$Result.GetResult<Prisma.$RegionalLeaguePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many RegionalLeagues.
+     * @param {RegionalLeagueCreateManyArgs} args - Arguments to create many RegionalLeagues.
+     * @example
+     * // Create many RegionalLeagues
+     * const regionalLeague = await prisma.regionalLeague.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends RegionalLeagueCreateManyArgs>(args?: SelectSubset<T, RegionalLeagueCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many RegionalLeagues and returns the data saved in the database.
+     * @param {RegionalLeagueCreateManyAndReturnArgs} args - Arguments to create many RegionalLeagues.
+     * @example
+     * // Create many RegionalLeagues
+     * const regionalLeague = await prisma.regionalLeague.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many RegionalLeagues and only return the `id`
+     * const regionalLeagueWithIdOnly = await prisma.regionalLeague.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends RegionalLeagueCreateManyAndReturnArgs>(args?: SelectSubset<T, RegionalLeagueCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RegionalLeaguePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a RegionalLeague.
+     * @param {RegionalLeagueDeleteArgs} args - Arguments to delete one RegionalLeague.
+     * @example
+     * // Delete one RegionalLeague
+     * const RegionalLeague = await prisma.regionalLeague.delete({
+     *   where: {
+     *     // ... filter to delete one RegionalLeague
+     *   }
+     * })
+     * 
+     */
+    delete<T extends RegionalLeagueDeleteArgs>(args: SelectSubset<T, RegionalLeagueDeleteArgs<ExtArgs>>): Prisma__RegionalLeagueClient<$Result.GetResult<Prisma.$RegionalLeaguePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one RegionalLeague.
+     * @param {RegionalLeagueUpdateArgs} args - Arguments to update one RegionalLeague.
+     * @example
+     * // Update one RegionalLeague
+     * const regionalLeague = await prisma.regionalLeague.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends RegionalLeagueUpdateArgs>(args: SelectSubset<T, RegionalLeagueUpdateArgs<ExtArgs>>): Prisma__RegionalLeagueClient<$Result.GetResult<Prisma.$RegionalLeaguePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more RegionalLeagues.
+     * @param {RegionalLeagueDeleteManyArgs} args - Arguments to filter RegionalLeagues to delete.
+     * @example
+     * // Delete a few RegionalLeagues
+     * const { count } = await prisma.regionalLeague.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends RegionalLeagueDeleteManyArgs>(args?: SelectSubset<T, RegionalLeagueDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more RegionalLeagues.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RegionalLeagueUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many RegionalLeagues
+     * const regionalLeague = await prisma.regionalLeague.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends RegionalLeagueUpdateManyArgs>(args: SelectSubset<T, RegionalLeagueUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more RegionalLeagues and returns the data updated in the database.
+     * @param {RegionalLeagueUpdateManyAndReturnArgs} args - Arguments to update many RegionalLeagues.
+     * @example
+     * // Update many RegionalLeagues
+     * const regionalLeague = await prisma.regionalLeague.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more RegionalLeagues and only return the `id`
+     * const regionalLeagueWithIdOnly = await prisma.regionalLeague.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends RegionalLeagueUpdateManyAndReturnArgs>(args: SelectSubset<T, RegionalLeagueUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RegionalLeaguePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one RegionalLeague.
+     * @param {RegionalLeagueUpsertArgs} args - Arguments to update or create a RegionalLeague.
+     * @example
+     * // Update or create a RegionalLeague
+     * const regionalLeague = await prisma.regionalLeague.upsert({
+     *   create: {
+     *     // ... data to create a RegionalLeague
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the RegionalLeague we want to update
+     *   }
+     * })
+     */
+    upsert<T extends RegionalLeagueUpsertArgs>(args: SelectSubset<T, RegionalLeagueUpsertArgs<ExtArgs>>): Prisma__RegionalLeagueClient<$Result.GetResult<Prisma.$RegionalLeaguePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of RegionalLeagues.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RegionalLeagueCountArgs} args - Arguments to filter RegionalLeagues to count.
+     * @example
+     * // Count the number of RegionalLeagues
+     * const count = await prisma.regionalLeague.count({
+     *   where: {
+     *     // ... the filter for the RegionalLeagues we want to count
+     *   }
+     * })
+    **/
+    count<T extends RegionalLeagueCountArgs>(
+      args?: Subset<T, RegionalLeagueCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], RegionalLeagueCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a RegionalLeague.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RegionalLeagueAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends RegionalLeagueAggregateArgs>(args: Subset<T, RegionalLeagueAggregateArgs>): Prisma.PrismaPromise<GetRegionalLeagueAggregateType<T>>
+
+    /**
+     * Group by RegionalLeague.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RegionalLeagueGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends RegionalLeagueGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: RegionalLeagueGroupByArgs['orderBy'] }
+        : { orderBy?: RegionalLeagueGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, RegionalLeagueGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetRegionalLeagueGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the RegionalLeague model
+   */
+  readonly fields: RegionalLeagueFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for RegionalLeague.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__RegionalLeagueClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the RegionalLeague model
+   */
+  interface RegionalLeagueFieldRefs {
+    readonly id: FieldRef<"RegionalLeague", 'String'>
+    readonly slug: FieldRef<"RegionalLeague", 'String'>
+    readonly ruleset: FieldRef<"RegionalLeague", 'Ruleset'>
+    readonly nameFr: FieldRef<"RegionalLeague", 'String'>
+    readonly nameEn: FieldRef<"RegionalLeague", 'String'>
+    readonly description: FieldRef<"RegionalLeague", 'String'>
+    readonly descriptionEn: FieldRef<"RegionalLeague", 'String'>
+    readonly createdAt: FieldRef<"RegionalLeague", 'DateTime'>
+    readonly updatedAt: FieldRef<"RegionalLeague", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * RegionalLeague findUnique
+   */
+  export type RegionalLeagueFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RegionalLeague
+     */
+    select?: RegionalLeagueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RegionalLeague
+     */
+    omit?: RegionalLeagueOmit<ExtArgs> | null
+    /**
+     * Filter, which RegionalLeague to fetch.
+     */
+    where: RegionalLeagueWhereUniqueInput
+  }
+
+  /**
+   * RegionalLeague findUniqueOrThrow
+   */
+  export type RegionalLeagueFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RegionalLeague
+     */
+    select?: RegionalLeagueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RegionalLeague
+     */
+    omit?: RegionalLeagueOmit<ExtArgs> | null
+    /**
+     * Filter, which RegionalLeague to fetch.
+     */
+    where: RegionalLeagueWhereUniqueInput
+  }
+
+  /**
+   * RegionalLeague findFirst
+   */
+  export type RegionalLeagueFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RegionalLeague
+     */
+    select?: RegionalLeagueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RegionalLeague
+     */
+    omit?: RegionalLeagueOmit<ExtArgs> | null
+    /**
+     * Filter, which RegionalLeague to fetch.
+     */
+    where?: RegionalLeagueWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of RegionalLeagues to fetch.
+     */
+    orderBy?: RegionalLeagueOrderByWithRelationInput | RegionalLeagueOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for RegionalLeagues.
+     */
+    cursor?: RegionalLeagueWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` RegionalLeagues from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` RegionalLeagues.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of RegionalLeagues.
+     */
+    distinct?: RegionalLeagueScalarFieldEnum | RegionalLeagueScalarFieldEnum[]
+  }
+
+  /**
+   * RegionalLeague findFirstOrThrow
+   */
+  export type RegionalLeagueFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RegionalLeague
+     */
+    select?: RegionalLeagueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RegionalLeague
+     */
+    omit?: RegionalLeagueOmit<ExtArgs> | null
+    /**
+     * Filter, which RegionalLeague to fetch.
+     */
+    where?: RegionalLeagueWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of RegionalLeagues to fetch.
+     */
+    orderBy?: RegionalLeagueOrderByWithRelationInput | RegionalLeagueOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for RegionalLeagues.
+     */
+    cursor?: RegionalLeagueWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` RegionalLeagues from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` RegionalLeagues.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of RegionalLeagues.
+     */
+    distinct?: RegionalLeagueScalarFieldEnum | RegionalLeagueScalarFieldEnum[]
+  }
+
+  /**
+   * RegionalLeague findMany
+   */
+  export type RegionalLeagueFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RegionalLeague
+     */
+    select?: RegionalLeagueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RegionalLeague
+     */
+    omit?: RegionalLeagueOmit<ExtArgs> | null
+    /**
+     * Filter, which RegionalLeagues to fetch.
+     */
+    where?: RegionalLeagueWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of RegionalLeagues to fetch.
+     */
+    orderBy?: RegionalLeagueOrderByWithRelationInput | RegionalLeagueOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing RegionalLeagues.
+     */
+    cursor?: RegionalLeagueWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` RegionalLeagues from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` RegionalLeagues.
+     */
+    skip?: number
+    distinct?: RegionalLeagueScalarFieldEnum | RegionalLeagueScalarFieldEnum[]
+  }
+
+  /**
+   * RegionalLeague create
+   */
+  export type RegionalLeagueCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RegionalLeague
+     */
+    select?: RegionalLeagueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RegionalLeague
+     */
+    omit?: RegionalLeagueOmit<ExtArgs> | null
+    /**
+     * The data needed to create a RegionalLeague.
+     */
+    data: XOR<RegionalLeagueCreateInput, RegionalLeagueUncheckedCreateInput>
+  }
+
+  /**
+   * RegionalLeague createMany
+   */
+  export type RegionalLeagueCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many RegionalLeagues.
+     */
+    data: RegionalLeagueCreateManyInput | RegionalLeagueCreateManyInput[]
+  }
+
+  /**
+   * RegionalLeague createManyAndReturn
+   */
+  export type RegionalLeagueCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RegionalLeague
+     */
+    select?: RegionalLeagueSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the RegionalLeague
+     */
+    omit?: RegionalLeagueOmit<ExtArgs> | null
+    /**
+     * The data used to create many RegionalLeagues.
+     */
+    data: RegionalLeagueCreateManyInput | RegionalLeagueCreateManyInput[]
+  }
+
+  /**
+   * RegionalLeague update
+   */
+  export type RegionalLeagueUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RegionalLeague
+     */
+    select?: RegionalLeagueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RegionalLeague
+     */
+    omit?: RegionalLeagueOmit<ExtArgs> | null
+    /**
+     * The data needed to update a RegionalLeague.
+     */
+    data: XOR<RegionalLeagueUpdateInput, RegionalLeagueUncheckedUpdateInput>
+    /**
+     * Choose, which RegionalLeague to update.
+     */
+    where: RegionalLeagueWhereUniqueInput
+  }
+
+  /**
+   * RegionalLeague updateMany
+   */
+  export type RegionalLeagueUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update RegionalLeagues.
+     */
+    data: XOR<RegionalLeagueUpdateManyMutationInput, RegionalLeagueUncheckedUpdateManyInput>
+    /**
+     * Filter which RegionalLeagues to update
+     */
+    where?: RegionalLeagueWhereInput
+    /**
+     * Limit how many RegionalLeagues to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * RegionalLeague updateManyAndReturn
+   */
+  export type RegionalLeagueUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RegionalLeague
+     */
+    select?: RegionalLeagueSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the RegionalLeague
+     */
+    omit?: RegionalLeagueOmit<ExtArgs> | null
+    /**
+     * The data used to update RegionalLeagues.
+     */
+    data: XOR<RegionalLeagueUpdateManyMutationInput, RegionalLeagueUncheckedUpdateManyInput>
+    /**
+     * Filter which RegionalLeagues to update
+     */
+    where?: RegionalLeagueWhereInput
+    /**
+     * Limit how many RegionalLeagues to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * RegionalLeague upsert
+   */
+  export type RegionalLeagueUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RegionalLeague
+     */
+    select?: RegionalLeagueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RegionalLeague
+     */
+    omit?: RegionalLeagueOmit<ExtArgs> | null
+    /**
+     * The filter to search for the RegionalLeague to update in case it exists.
+     */
+    where: RegionalLeagueWhereUniqueInput
+    /**
+     * In case the RegionalLeague found by the `where` argument doesn't exist, create a new RegionalLeague with this data.
+     */
+    create: XOR<RegionalLeagueCreateInput, RegionalLeagueUncheckedCreateInput>
+    /**
+     * In case the RegionalLeague was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<RegionalLeagueUpdateInput, RegionalLeagueUncheckedUpdateInput>
+  }
+
+  /**
+   * RegionalLeague delete
+   */
+  export type RegionalLeagueDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RegionalLeague
+     */
+    select?: RegionalLeagueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RegionalLeague
+     */
+    omit?: RegionalLeagueOmit<ExtArgs> | null
+    /**
+     * Filter which RegionalLeague to delete.
+     */
+    where: RegionalLeagueWhereUniqueInput
+  }
+
+  /**
+   * RegionalLeague deleteMany
+   */
+  export type RegionalLeagueDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which RegionalLeagues to delete
+     */
+    where?: RegionalLeagueWhereInput
+    /**
+     * Limit how many RegionalLeagues to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * RegionalLeague without action
+   */
+  export type RegionalLeagueDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RegionalLeague
+     */
+    select?: RegionalLeagueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RegionalLeague
+     */
+    omit?: RegionalLeagueOmit<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -36457,6 +38745,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency: 'totalDonatedCentsByCurrency',
     privateProfile: 'privateProfile',
     valid: 'valid',
+    lastLoginAt: 'lastLoginAt',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
     eloRating: 'eloRating'
@@ -36900,6 +39189,36 @@ export namespace Prisma {
   export type LeagueRoundScalarFieldEnum = (typeof LeagueRoundScalarFieldEnum)[keyof typeof LeagueRoundScalarFieldEnum]
 
 
+  export const TeamSpecialRuleScalarFieldEnum: {
+    id: 'id',
+    slug: 'slug',
+    ruleset: 'ruleset',
+    nameFr: 'nameFr',
+    nameEn: 'nameEn',
+    description: 'description',
+    descriptionEn: 'descriptionEn',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type TeamSpecialRuleScalarFieldEnum = (typeof TeamSpecialRuleScalarFieldEnum)[keyof typeof TeamSpecialRuleScalarFieldEnum]
+
+
+  export const RegionalLeagueScalarFieldEnum: {
+    id: 'id',
+    slug: 'slug',
+    ruleset: 'ruleset',
+    nameFr: 'nameFr',
+    nameEn: 'nameEn',
+    description: 'description',
+    descriptionEn: 'descriptionEn',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type RegionalLeagueScalarFieldEnum = (typeof RegionalLeagueScalarFieldEnum)[keyof typeof RegionalLeagueScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
@@ -37034,6 +39353,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFilter<"User"> | string
     privateProfile?: BoolFilter<"User"> | boolean
     valid?: BoolFilter<"User"> | boolean
+    lastLoginAt?: DateTimeNullableFilter<"User"> | Date | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     eloRating?: IntFilter<"User"> | number
@@ -37073,6 +39393,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: SortOrder
     privateProfile?: SortOrder
     valid?: SortOrder
+    lastLoginAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     eloRating?: SortOrder
@@ -37115,6 +39436,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFilter<"User"> | string
     privateProfile?: BoolFilter<"User"> | boolean
     valid?: BoolFilter<"User"> | boolean
+    lastLoginAt?: DateTimeNullableFilter<"User"> | Date | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     eloRating?: IntFilter<"User"> | number
@@ -37154,6 +39476,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: SortOrder
     privateProfile?: SortOrder
     valid?: SortOrder
+    lastLoginAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     eloRating?: SortOrder
@@ -37186,6 +39509,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringWithAggregatesFilter<"User"> | string
     privateProfile?: BoolWithAggregatesFilter<"User"> | boolean
     valid?: BoolWithAggregatesFilter<"User"> | boolean
+    lastLoginAt?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     eloRating?: IntWithAggregatesFilter<"User"> | number
@@ -39499,6 +41823,152 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"LeagueRound"> | Date | string
   }
 
+  export type TeamSpecialRuleWhereInput = {
+    AND?: TeamSpecialRuleWhereInput | TeamSpecialRuleWhereInput[]
+    OR?: TeamSpecialRuleWhereInput[]
+    NOT?: TeamSpecialRuleWhereInput | TeamSpecialRuleWhereInput[]
+    id?: StringFilter<"TeamSpecialRule"> | string
+    slug?: StringFilter<"TeamSpecialRule"> | string
+    ruleset?: EnumRulesetFilter<"TeamSpecialRule"> | $Enums.Ruleset
+    nameFr?: StringFilter<"TeamSpecialRule"> | string
+    nameEn?: StringFilter<"TeamSpecialRule"> | string
+    description?: StringFilter<"TeamSpecialRule"> | string
+    descriptionEn?: StringNullableFilter<"TeamSpecialRule"> | string | null
+    createdAt?: DateTimeFilter<"TeamSpecialRule"> | Date | string
+    updatedAt?: DateTimeFilter<"TeamSpecialRule"> | Date | string
+  }
+
+  export type TeamSpecialRuleOrderByWithRelationInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    ruleset?: SortOrder
+    nameFr?: SortOrder
+    nameEn?: SortOrder
+    description?: SortOrder
+    descriptionEn?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type TeamSpecialRuleWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    slug_ruleset?: TeamSpecialRuleSlugRulesetCompoundUniqueInput
+    AND?: TeamSpecialRuleWhereInput | TeamSpecialRuleWhereInput[]
+    OR?: TeamSpecialRuleWhereInput[]
+    NOT?: TeamSpecialRuleWhereInput | TeamSpecialRuleWhereInput[]
+    slug?: StringFilter<"TeamSpecialRule"> | string
+    ruleset?: EnumRulesetFilter<"TeamSpecialRule"> | $Enums.Ruleset
+    nameFr?: StringFilter<"TeamSpecialRule"> | string
+    nameEn?: StringFilter<"TeamSpecialRule"> | string
+    description?: StringFilter<"TeamSpecialRule"> | string
+    descriptionEn?: StringNullableFilter<"TeamSpecialRule"> | string | null
+    createdAt?: DateTimeFilter<"TeamSpecialRule"> | Date | string
+    updatedAt?: DateTimeFilter<"TeamSpecialRule"> | Date | string
+  }, "id" | "slug_ruleset">
+
+  export type TeamSpecialRuleOrderByWithAggregationInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    ruleset?: SortOrder
+    nameFr?: SortOrder
+    nameEn?: SortOrder
+    description?: SortOrder
+    descriptionEn?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: TeamSpecialRuleCountOrderByAggregateInput
+    _max?: TeamSpecialRuleMaxOrderByAggregateInput
+    _min?: TeamSpecialRuleMinOrderByAggregateInput
+  }
+
+  export type TeamSpecialRuleScalarWhereWithAggregatesInput = {
+    AND?: TeamSpecialRuleScalarWhereWithAggregatesInput | TeamSpecialRuleScalarWhereWithAggregatesInput[]
+    OR?: TeamSpecialRuleScalarWhereWithAggregatesInput[]
+    NOT?: TeamSpecialRuleScalarWhereWithAggregatesInput | TeamSpecialRuleScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"TeamSpecialRule"> | string
+    slug?: StringWithAggregatesFilter<"TeamSpecialRule"> | string
+    ruleset?: EnumRulesetWithAggregatesFilter<"TeamSpecialRule"> | $Enums.Ruleset
+    nameFr?: StringWithAggregatesFilter<"TeamSpecialRule"> | string
+    nameEn?: StringWithAggregatesFilter<"TeamSpecialRule"> | string
+    description?: StringWithAggregatesFilter<"TeamSpecialRule"> | string
+    descriptionEn?: StringNullableWithAggregatesFilter<"TeamSpecialRule"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"TeamSpecialRule"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"TeamSpecialRule"> | Date | string
+  }
+
+  export type RegionalLeagueWhereInput = {
+    AND?: RegionalLeagueWhereInput | RegionalLeagueWhereInput[]
+    OR?: RegionalLeagueWhereInput[]
+    NOT?: RegionalLeagueWhereInput | RegionalLeagueWhereInput[]
+    id?: StringFilter<"RegionalLeague"> | string
+    slug?: StringFilter<"RegionalLeague"> | string
+    ruleset?: EnumRulesetFilter<"RegionalLeague"> | $Enums.Ruleset
+    nameFr?: StringFilter<"RegionalLeague"> | string
+    nameEn?: StringFilter<"RegionalLeague"> | string
+    description?: StringFilter<"RegionalLeague"> | string
+    descriptionEn?: StringNullableFilter<"RegionalLeague"> | string | null
+    createdAt?: DateTimeFilter<"RegionalLeague"> | Date | string
+    updatedAt?: DateTimeFilter<"RegionalLeague"> | Date | string
+  }
+
+  export type RegionalLeagueOrderByWithRelationInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    ruleset?: SortOrder
+    nameFr?: SortOrder
+    nameEn?: SortOrder
+    description?: SortOrder
+    descriptionEn?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type RegionalLeagueWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    slug_ruleset?: RegionalLeagueSlugRulesetCompoundUniqueInput
+    AND?: RegionalLeagueWhereInput | RegionalLeagueWhereInput[]
+    OR?: RegionalLeagueWhereInput[]
+    NOT?: RegionalLeagueWhereInput | RegionalLeagueWhereInput[]
+    slug?: StringFilter<"RegionalLeague"> | string
+    ruleset?: EnumRulesetFilter<"RegionalLeague"> | $Enums.Ruleset
+    nameFr?: StringFilter<"RegionalLeague"> | string
+    nameEn?: StringFilter<"RegionalLeague"> | string
+    description?: StringFilter<"RegionalLeague"> | string
+    descriptionEn?: StringNullableFilter<"RegionalLeague"> | string | null
+    createdAt?: DateTimeFilter<"RegionalLeague"> | Date | string
+    updatedAt?: DateTimeFilter<"RegionalLeague"> | Date | string
+  }, "id" | "slug_ruleset">
+
+  export type RegionalLeagueOrderByWithAggregationInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    ruleset?: SortOrder
+    nameFr?: SortOrder
+    nameEn?: SortOrder
+    description?: SortOrder
+    descriptionEn?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: RegionalLeagueCountOrderByAggregateInput
+    _max?: RegionalLeagueMaxOrderByAggregateInput
+    _min?: RegionalLeagueMinOrderByAggregateInput
+  }
+
+  export type RegionalLeagueScalarWhereWithAggregatesInput = {
+    AND?: RegionalLeagueScalarWhereWithAggregatesInput | RegionalLeagueScalarWhereWithAggregatesInput[]
+    OR?: RegionalLeagueScalarWhereWithAggregatesInput[]
+    NOT?: RegionalLeagueScalarWhereWithAggregatesInput | RegionalLeagueScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"RegionalLeague"> | string
+    slug?: StringWithAggregatesFilter<"RegionalLeague"> | string
+    ruleset?: EnumRulesetWithAggregatesFilter<"RegionalLeague"> | $Enums.Ruleset
+    nameFr?: StringWithAggregatesFilter<"RegionalLeague"> | string
+    nameEn?: StringWithAggregatesFilter<"RegionalLeague"> | string
+    description?: StringWithAggregatesFilter<"RegionalLeague"> | string
+    descriptionEn?: StringNullableWithAggregatesFilter<"RegionalLeague"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"RegionalLeague"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"RegionalLeague"> | Date | string
+  }
+
   export type UserCreateInput = {
     id?: string
     email: string
@@ -39518,6 +41988,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -39557,6 +42028,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -39596,6 +42068,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -39635,6 +42108,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -39674,6 +42148,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -39698,6 +42173,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -39722,6 +42198,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -42276,6 +44753,174 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type TeamSpecialRuleCreateInput = {
+    id?: string
+    slug: string
+    ruleset?: $Enums.Ruleset
+    nameFr: string
+    nameEn: string
+    description: string
+    descriptionEn?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type TeamSpecialRuleUncheckedCreateInput = {
+    id?: string
+    slug: string
+    ruleset?: $Enums.Ruleset
+    nameFr: string
+    nameEn: string
+    description: string
+    descriptionEn?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type TeamSpecialRuleUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    nameFr?: StringFieldUpdateOperationsInput | string
+    nameEn?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TeamSpecialRuleUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    nameFr?: StringFieldUpdateOperationsInput | string
+    nameEn?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TeamSpecialRuleCreateManyInput = {
+    id?: string
+    slug: string
+    ruleset?: $Enums.Ruleset
+    nameFr: string
+    nameEn: string
+    description: string
+    descriptionEn?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type TeamSpecialRuleUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    nameFr?: StringFieldUpdateOperationsInput | string
+    nameEn?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TeamSpecialRuleUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    nameFr?: StringFieldUpdateOperationsInput | string
+    nameEn?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RegionalLeagueCreateInput = {
+    id?: string
+    slug: string
+    ruleset?: $Enums.Ruleset
+    nameFr: string
+    nameEn: string
+    description: string
+    descriptionEn?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type RegionalLeagueUncheckedCreateInput = {
+    id?: string
+    slug: string
+    ruleset?: $Enums.Ruleset
+    nameFr: string
+    nameEn: string
+    description: string
+    descriptionEn?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type RegionalLeagueUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    nameFr?: StringFieldUpdateOperationsInput | string
+    nameEn?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RegionalLeagueUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    nameFr?: StringFieldUpdateOperationsInput | string
+    nameEn?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RegionalLeagueCreateManyInput = {
+    id?: string
+    slug: string
+    ruleset?: $Enums.Ruleset
+    nameFr: string
+    nameEn: string
+    description: string
+    descriptionEn?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type RegionalLeagueUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    nameFr?: StringFieldUpdateOperationsInput | string
+    nameEn?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RegionalLeagueUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    nameFr?: StringFieldUpdateOperationsInput | string
+    nameEn?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -42491,6 +45136,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: SortOrder
     privateProfile?: SortOrder
     valid?: SortOrder
+    lastLoginAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     eloRating?: SortOrder
@@ -42519,6 +45165,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: SortOrder
     privateProfile?: SortOrder
     valid?: SortOrder
+    lastLoginAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     eloRating?: SortOrder
@@ -42543,6 +45190,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: SortOrder
     privateProfile?: SortOrder
     valid?: SortOrder
+    lastLoginAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     eloRating?: SortOrder
@@ -44323,6 +46971,88 @@ export namespace Prisma {
 
   export type LeagueRoundSumOrderByAggregateInput = {
     roundNumber?: SortOrder
+  }
+
+  export type TeamSpecialRuleSlugRulesetCompoundUniqueInput = {
+    slug: string
+    ruleset: $Enums.Ruleset
+  }
+
+  export type TeamSpecialRuleCountOrderByAggregateInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    ruleset?: SortOrder
+    nameFr?: SortOrder
+    nameEn?: SortOrder
+    description?: SortOrder
+    descriptionEn?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type TeamSpecialRuleMaxOrderByAggregateInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    ruleset?: SortOrder
+    nameFr?: SortOrder
+    nameEn?: SortOrder
+    description?: SortOrder
+    descriptionEn?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type TeamSpecialRuleMinOrderByAggregateInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    ruleset?: SortOrder
+    nameFr?: SortOrder
+    nameEn?: SortOrder
+    description?: SortOrder
+    descriptionEn?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type RegionalLeagueSlugRulesetCompoundUniqueInput = {
+    slug: string
+    ruleset: $Enums.Ruleset
+  }
+
+  export type RegionalLeagueCountOrderByAggregateInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    ruleset?: SortOrder
+    nameFr?: SortOrder
+    nameEn?: SortOrder
+    description?: SortOrder
+    descriptionEn?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type RegionalLeagueMaxOrderByAggregateInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    ruleset?: SortOrder
+    nameFr?: SortOrder
+    nameEn?: SortOrder
+    description?: SortOrder
+    descriptionEn?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type RegionalLeagueMinOrderByAggregateInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    ruleset?: SortOrder
+    nameFr?: SortOrder
+    nameEn?: SortOrder
+    description?: SortOrder
+    descriptionEn?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type MatchCreateNestedManyWithoutPlayersInput = {
@@ -47601,6 +50331,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -47639,6 +50370,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -47693,6 +50425,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -47731,6 +50464,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -47769,6 +50503,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -47807,6 +50542,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -47861,6 +50597,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -47899,6 +50636,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -47937,6 +50675,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -47975,6 +50714,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -48029,6 +50769,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -48067,6 +50808,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -48105,6 +50847,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -48143,6 +50886,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -48197,6 +50941,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -48235,6 +50980,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -48273,6 +51019,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -48311,6 +51058,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -48354,6 +51102,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -48392,6 +51141,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -48446,6 +51196,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -48484,6 +51235,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -48533,6 +51285,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -48571,6 +51324,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -48669,6 +51423,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -48707,6 +51462,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -48790,6 +51546,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -48828,6 +51585,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -48866,6 +51624,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -48904,6 +51663,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -48947,6 +51707,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -48985,6 +51746,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -49087,6 +51849,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -49125,6 +51888,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -49182,6 +51946,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFilter<"User"> | string
     privateProfile?: BoolFilter<"User"> | boolean
     valid?: BoolFilter<"User"> | boolean
+    lastLoginAt?: DateTimeNullableFilter<"User"> | Date | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     eloRating?: IntFilter<"User"> | number
@@ -49366,6 +52131,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -49404,6 +52170,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -49556,6 +52323,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -49594,6 +52362,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -49693,6 +52462,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -49731,6 +52501,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -50105,6 +52876,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -50143,6 +52915,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -51042,6 +53815,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -51080,6 +53854,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -51212,6 +53987,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -51250,6 +54026,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -51536,6 +54313,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -51574,6 +54352,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -51683,6 +54462,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -51721,6 +54501,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -51820,6 +54601,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -51858,6 +54640,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -52118,6 +54901,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -52156,6 +54940,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -52521,6 +55306,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -52559,6 +55345,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     valid?: boolean
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     eloRating?: number
@@ -52648,6 +55435,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -52686,6 +55474,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -53973,6 +56762,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -54011,6 +56801,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number
@@ -54049,6 +56840,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     valid?: BoolFieldUpdateOperationsInput | boolean
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eloRating?: IntFieldUpdateOperationsInput | number

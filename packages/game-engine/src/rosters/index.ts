@@ -78,6 +78,23 @@ export {
   formatStarPlayerSkills
 } from './star-players-utils';
 
+// Règles spéciales d'équipe (S3 — extraction OCR officielle)
+export {
+  TEAM_SPECIAL_RULES,
+  TEAM_SPECIAL_RULES_BY_SLUG,
+  getTeamSpecialRuleBySlug,
+  type TeamSpecialRuleDefinition,
+  type TeamSpecialRuleSlug,
+} from "./team-special-rules";
+
+// Ligues régionales (S3 — extraction OCR officielle)
+export {
+  REGIONAL_LEAGUES,
+  REGIONAL_LEAGUES_BY_SLUG,
+  getRegionalLeagueBySlug,
+  type RegionalLeagueDefinition,
+} from "./regional-leagues";
+
 // Types pour compatibilité
 export type AllowedRoster = keyof typeof TEAM_ROSTERS;
 export const ALLOWED_TEAMS: AllowedRoster[] = Object.keys(TEAM_ROSTERS) as AllowedRoster[];

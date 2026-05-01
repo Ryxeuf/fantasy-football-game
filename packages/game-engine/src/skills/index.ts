@@ -7,7 +7,13 @@ export interface SkillDefinition {
   slug: string;           // Identifiant unique (ex: "block", "dodge")
   nameFr: string;         // Nom français (ex: "Blocage")
   nameEn: string;         // Nom anglais (ex: "Block")
-  description: string;    // Description de la compétence
+  description: string;    // Description de la compétence (français)
+  /**
+   * Description anglaise (optionnelle pour compatibilité historique).
+   * Quand renseignée, sert de source principale lors du seed du champ
+   * `Skill.descriptionEn` en base.
+   */
+  descriptionEn?: string;
   category: "General" | "Agility" | "Strength" | "Passing" | "Mutation" | "Trait" | "Scélérates";
   isElite?: boolean;      // Compétence Elite (+10 000 de valeur d'équipe)
   isPassive?: boolean;     // Compétence passive (soulignée)
@@ -896,23 +902,26 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
     slug: "trickster",
     nameFr: "Farceur",
     nameEn: "Trickster",
-    description: "Lorsque ce joueur est sur le point d'être touché par une action de Bloc ou une action Spéciale qui remplace une action de Bloc, avant de déterminer combien de dés sont lancés, il peut être retiré du terrain et placé dans n'importe quelle autre case inoccupée adjacente au joueur effectuant l'action de Bloc.",
+    description: "Chaque fois qu'un joueur adverse tente d'effectuer une Action de Blocage contre ce joueur, ou une Action Spéciale qui cible directement ce joueur (à l'exception d'une Action de Blocage causée par Chaîne et Boulet), ce joueur peut utiliser ce Trait. Avant de déterminer combien de dés on jette, ce joueur peut être retiré du terrain et placé sur n'importe quelle autre case inoccupée adjacente au joueur effectuant l'action. L'action se déroule ensuite normalement.",
+    descriptionEn: "Whenever an opposition player attempts a Block action against this player, or a Special action targeting this player directly (except a Block triggered by Ball and Chain), this player may use this Trait. Before determining how many dice to roll, this player may be removed from the pitch and placed on any other unoccupied square adjacent to the player performing the action. The action then proceeds normally.",
     category: "Trait",
     season3Only: true
   },
   {
     slug: "hate",
-    nameFr: "Haine (X)",
+    nameFr: "Haine (X)*",
     nameEn: "Hate (X)",
-    description: "Chaque fois que ce joueur effectue une Action de Blocage contre un joueur ayant le même Mot-Clé que celui entre parenthèses, ce joueur peut relancer un résultat Attaquant Plaqué.",
+    description: "Chaque fois que ce joueur effectue une Action de Blocage contre un joueur ayant le même Mot-clé que celui entre parenthèses, ce joueur peut relancer un résultat Attaquant Plaqué.",
+    descriptionEn: "Whenever this player performs a Block action against a player with the same keyword as the one in parentheses, this player may re-roll an Attacker Down result.",
     category: "Trait",
     season3Only: true
   },
   {
     slug: "insignifiant",
-    nameFr: "Insignifiant",
+    nameFr: "Insignifiant*",
     nameEn: "Insignificant",
     description: "Quand vous créez une Liste d'Équipe, vous ne pouvez pas inclure plus de joueurs ayant ce Trait que de joueurs n'ayant pas ce Trait.",
+    descriptionEn: "When you create a roster, you cannot include more players with this Trait than players without it.",
     category: "Trait",
     season3Only: true
   },
@@ -920,15 +929,17 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
     slug: "contagieux",
     nameFr: "Contagieux",
     nameEn: "Contagious",
-    description: "Ce trait permet au joueur de transmettre une maladie ou une infection aux joueurs adverses.",
+    description: "Une fois par match, quand un joueur ayant ce Trait inflige une Élimination à un joueur adverse suite à une Action de Blocage et que celui-ci subit un résultat Mort sur son Jet d'Élimination, s'il n'est pas sauvé par un Apothicaire, vous pouvez immédiatement ajouter 1 nouveau joueur Trois-quart de votre Fiche d'Équipe à votre Box des Réserves (cela peut amener votre équipe à compter plus de 16 joueurs pour le restant du match). Pendant la Séquence d'Après Match, vous pouvez embaucher ce joueur comme un Joueur Journalier. Inutilisable contre les Gros Bras, ni contre un joueur ayant les Traits Décomposition, Régénération ou Minus.",
+    descriptionEn: "Once per match, when a player with this Trait inflicts a Casualty on an opposing player via a Block action and that player suffers a Dead result on the Casualty roll, if they are not saved by an Apothecary, you may immediately add a new Lineman from your roster to your Reserves Box (this can temporarily exceed 16 players). During the Post-Game Sequence you may permanently hire this player like a Journeyman. Cannot be used against Big Guys or against a player with Decay, Regeneration or Titchy.",
     category: "Trait",
     season3Only: true
   },
   {
     slug: "instable",
-    nameFr: "Instable",
+    nameFr: "Instable*",
     nameEn: "Unstable",
-    description: "Ce joueur ne peut pas déclarer d'Action Sécurisation du Ballon",
+    description: "Ce joueur ne peut pas déclarer d'Action de Sécurisation du Ballon.",
+    descriptionEn: "This player cannot declare a Secure the Ball action.",
     category: "Trait",
     season3Only: true
   },
@@ -936,31 +947,35 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
     slug: "breathe-fire",
     nameFr: "Souffle Ardent",
     nameEn: "Breathe Fire",
-    description: "Une fois par activation, au lieu d'effectuer une action de Bloc, ce joueur peut effectuer une action Spéciale Souffle de Feu.",
+    description: "Quand on active ce joueur, il peut annoncer une Action Spéciale de Souffle Ardent (pas de limite par tour). Choisissez un joueur adverse Debout qu'il Marque et jetez un D6, en appliquant un modificateur de -1 si la cible a une Force de 5 ou plus. Sur un 1, ce joueur est immédiatement Plaqué. Sur 2-3, rien ne se passe. Sur 4+, le joueur adverse est Mis À Terre. Sur un 6 naturel, le joueur adverse est Plaqué à la place. L'Action Spéciale peut remplacer le Bloc d'un Blitz, mais l'activation prend fin sitôt qu'elle est effectuée.",
+    descriptionEn: "When activated, this player may declare a Breathe Fire Special Action (no per-turn limit). Choose an adjacent Standing opposing player they Mark and roll a D6 (apply a -1 modifier if the target has Strength 5+). On a 1, this player is immediately Knocked Down. On 2-3, nothing happens. On 4+, the target is Placed Prone. On a natural 6, the target is Knocked Down instead. The Special Action may replace the Block of a Blitz, but the activation ends after it.",
     category: "Trait",
     season3Only: true
   },
   {
     slug: "my-ball",
-    nameFr: "Mon Ballon",
+    nameFr: "Mon Ballon*",
     nameEn: "My Ball",
-    description: "Un joueur avec ce trait ne peut pas abandonner volontairement le ballon quand il en est en possession, et ne peut donc pas faire d'actions de Passe, d'actions de Passe à la main, ou utiliser toute autre compétence ou trait qui lui permettrait de renoncer à la possession du ballon.",
+    description: "Un joueur ayant ce Trait ne peut pas abandonner volontairement le ballon quand il en est en possession, et ne peut donc pas déclarer d'Actions de Passe ni de Transmission, ni utiliser la moindre Compétence ou Trait qui l'autoriserait à renoncer à la possession du ballon.",
+    descriptionEn: "A player with this Trait cannot voluntarily give up the ball while they possess it, and therefore cannot declare Pass or Hand-off actions, nor use any Skill or Trait that would let them relinquish possession.",
     category: "Trait",
     season3Only: true
   },
   {
     slug: "pick-me-up",
-    nameFr: "Petit remontant",
+    nameFr: "Petit Remontant",
     nameEn: "Pick-me-up",
-    description: "À la fin du tour d'équipe adverse, lancez un D6 pour chaque équipier à Terre et non-Étourdi dans les trois cases d'un joueur debout avec ce trait.",
+    description: "À la fin de chaque Tour adverse, jetez un D6 pour chaque coéquipier À Terre à 3 cases ou moins d'un ou plusieurs joueurs Debout ayant ce Trait. Sur 5+, le joueur À Terre peut immédiatement se relever. Si un joueur ayant ce Trait se relève suite à un coéquipier utilisant ce Trait, il ne peut pas aussi utiliser ce Trait pendant le même Tour.",
+    descriptionEn: "At the end of each opposing turn, roll a D6 for each Prone teammate within 3 squares of one or more Standing players with this Trait. On 5+, the Prone player may immediately stand up. A player who stood up via another teammate's use of this Trait cannot themselves use it during the same turn.",
     category: "Trait",
     season3Only: true
   },
   {
     slug: "hit-and-run",
-    nameFr: "Frappe-et-cours",
+    nameFr: "Frappe-et-court",
     nameEn: "Hit and Run",
-    description: "Ce joueur peut effectuer un mouvement après avoir effectué une action de Blocage.",
+    description: "Quand un joueur ayant cette Compétence effectue une Action de Blocage ou une Action Spéciale de Poignard, après avoir entièrement résolu l'Action avec succès, il peut immédiatement se déplacer de 1 case gratuitement en ignorant les Zones de Tacle, tant qu'il est toujours Debout. Le joueur doit s'assurer qu'après ce mouvement gratuit, il ne Marque ni n'est Marqué par aucun joueur adverse. Incompatible avec Frénésie.",
+    descriptionEn: "When a player with this Skill performs a Block action or a Stab Special Action, after fully resolving it successfully, they may immediately move 1 square for free, ignoring Tackle Zones, as long as they are still Standing. After this free move, they must not be Marking or Marked by any opposing player. Incompatible with Frenzy.",
     category: "Agility",
     season3Only: true
   },
