@@ -602,6 +602,9 @@ model LeagueSeason {
   status       String    @default("draft") // "draft" | "scheduled" | "in_progress" | "completed"
   startDate    DateTime?
   endDate      DateTime?
+  // S26.6 — themes saisonniers (cf. services/league-themes.ts).
+  theme        String?
+  themeYear    Int?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
@@ -611,6 +614,7 @@ model LeagueSeason {
   @@unique([leagueId, seasonNumber])
   @@index([leagueId])
   @@index([status])
+  @@index([theme, themeYear])
 }
 
 model LeagueParticipant {

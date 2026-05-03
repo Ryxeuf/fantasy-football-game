@@ -17,6 +17,7 @@
 
 import { prisma } from "../prisma";
 import { deriveSeasonEloFromGlobal } from "./season-elo";
+import { isLeagueThemeSlug, type LeagueThemeSlug } from "./league-themes";
 
 export type LeagueStatus =
   | "draft"
@@ -55,6 +56,17 @@ export interface CreateSeasonInput {
   seasonNumber?: number;
   startDate?: Date | null;
   endDate?: Date | null;
+  /**
+   * S26.6 — slug du theme saisonnier ("skaven_cup" | "nordic_challenge" |
+   * "underworld_open"). Doit etre fourni en couple avec `themeYear`.
+   * Si fourni mais inconnu, la creation est rejetee.
+   */
+  theme?: LeagueThemeSlug;
+  /**
+   * S26.6 — annee canonique (4 chiffres) du theme. Doit etre fournie
+   * en couple avec `theme`.
+   */
+  themeYear?: number;
 }
 
 export interface AddParticipantInput {
@@ -159,6 +171,40 @@ export async function createSeason(input: CreateSeasonInput) {
     throw new Error("seasonNumber doit etre un entier >= 1");
   }
 
+  // S26.6 — theme + themeYear : couple obligatoire si l'un est fourni.
+  const hasTheme = input.theme !== undefined && input.theme !== null;
+  const hasThemeYear =
+    input.themeYear !== undefined && input.themeYear !== null;
+  if (hasTheme && !hasThemeYear) {
+    throw new Error(
+      "themeYear est obligatoire quand theme est fourni (annee a 4 chiffres)",
+    );
+  }
+  if (hasThemeYear && !hasTheme) {
+    throw new Error(
+      "theme est obligatoire quand themeYear est fourni (slug canonique)",
+    );
+  }
+  let theme: LeagueThemeSlug | null = null;
+  let themeYear: number | null = null;
+  if (hasTheme && hasThemeYear) {
+    if (!isLeagueThemeSlug(input.theme)) {
+      throw new Error(
+        `theme inconnu: ${String(input.theme)} (slugs valides: skaven_cup, nordic_challenge, underworld_open)`,
+      );
+    }
+    if (
+      !Number.isInteger(input.themeYear) ||
+      (input.themeYear as number) <= 0
+    ) {
+      throw new Error(
+        "themeYear doit etre un entier strictement positif (annee a 4 chiffres)",
+      );
+    }
+    theme = input.theme as LeagueThemeSlug;
+    themeYear = input.themeYear as number;
+  }
+
   return prisma.leagueSeason.create({
     data: {
       leagueId: input.leagueId,
@@ -167,6 +213,8 @@ export async function createSeason(input: CreateSeasonInput) {
       status: "draft",
       startDate: input.startDate ?? null,
       endDate: input.endDate ?? null,
+      theme,
+      themeYear,
     },
   });
 }

@@ -33050,10 +33050,12 @@ export namespace Prisma {
 
   export type LeagueSeasonAvgAggregateOutputType = {
     seasonNumber: number | null
+    themeYear: number | null
   }
 
   export type LeagueSeasonSumAggregateOutputType = {
     seasonNumber: number | null
+    themeYear: number | null
   }
 
   export type LeagueSeasonMinAggregateOutputType = {
@@ -33064,6 +33066,8 @@ export namespace Prisma {
     status: string | null
     startDate: Date | null
     endDate: Date | null
+    theme: string | null
+    themeYear: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -33076,6 +33080,8 @@ export namespace Prisma {
     status: string | null
     startDate: Date | null
     endDate: Date | null
+    theme: string | null
+    themeYear: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -33088,6 +33094,8 @@ export namespace Prisma {
     status: number
     startDate: number
     endDate: number
+    theme: number
+    themeYear: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -33096,10 +33104,12 @@ export namespace Prisma {
 
   export type LeagueSeasonAvgAggregateInputType = {
     seasonNumber?: true
+    themeYear?: true
   }
 
   export type LeagueSeasonSumAggregateInputType = {
     seasonNumber?: true
+    themeYear?: true
   }
 
   export type LeagueSeasonMinAggregateInputType = {
@@ -33110,6 +33120,8 @@ export namespace Prisma {
     status?: true
     startDate?: true
     endDate?: true
+    theme?: true
+    themeYear?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -33122,6 +33134,8 @@ export namespace Prisma {
     status?: true
     startDate?: true
     endDate?: true
+    theme?: true
+    themeYear?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -33134,6 +33148,8 @@ export namespace Prisma {
     status?: true
     startDate?: true
     endDate?: true
+    theme?: true
+    themeYear?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -33233,6 +33249,8 @@ export namespace Prisma {
     status: string
     startDate: Date | null
     endDate: Date | null
+    theme: string | null
+    themeYear: number | null
     createdAt: Date
     updatedAt: Date
     _count: LeagueSeasonCountAggregateOutputType | null
@@ -33264,6 +33282,8 @@ export namespace Prisma {
     status?: boolean
     startDate?: boolean
     endDate?: boolean
+    theme?: boolean
+    themeYear?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     league?: boolean | LeagueDefaultArgs<ExtArgs>
@@ -33280,6 +33300,8 @@ export namespace Prisma {
     status?: boolean
     startDate?: boolean
     endDate?: boolean
+    theme?: boolean
+    themeYear?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     league?: boolean | LeagueDefaultArgs<ExtArgs>
@@ -33293,6 +33315,8 @@ export namespace Prisma {
     status?: boolean
     startDate?: boolean
     endDate?: boolean
+    theme?: boolean
+    themeYear?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     league?: boolean | LeagueDefaultArgs<ExtArgs>
@@ -33306,11 +33330,13 @@ export namespace Prisma {
     status?: boolean
     startDate?: boolean
     endDate?: boolean
+    theme?: boolean
+    themeYear?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type LeagueSeasonOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "leagueId" | "seasonNumber" | "name" | "status" | "startDate" | "endDate" | "createdAt" | "updatedAt", ExtArgs["result"]["leagueSeason"]>
+  export type LeagueSeasonOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "leagueId" | "seasonNumber" | "name" | "status" | "startDate" | "endDate" | "theme" | "themeYear" | "createdAt" | "updatedAt", ExtArgs["result"]["leagueSeason"]>
   export type LeagueSeasonInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     league?: boolean | LeagueDefaultArgs<ExtArgs>
     participants?: boolean | LeagueSeason$participantsArgs<ExtArgs>
@@ -33339,6 +33365,8 @@ export namespace Prisma {
       status: string
       startDate: Date | null
       endDate: Date | null
+      theme: string | null
+      themeYear: number | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["leagueSeason"]>
@@ -33774,6 +33802,8 @@ export namespace Prisma {
     readonly status: FieldRef<"LeagueSeason", 'String'>
     readonly startDate: FieldRef<"LeagueSeason", 'DateTime'>
     readonly endDate: FieldRef<"LeagueSeason", 'DateTime'>
+    readonly theme: FieldRef<"LeagueSeason", 'String'>
+    readonly themeYear: FieldRef<"LeagueSeason", 'Int'>
     readonly createdAt: FieldRef<"LeagueSeason", 'DateTime'>
     readonly updatedAt: FieldRef<"LeagueSeason", 'DateTime'>
   }
@@ -39147,6 +39177,8 @@ export namespace Prisma {
     status: 'status',
     startDate: 'startDate',
     endDate: 'endDate',
+    theme: 'theme',
+    themeYear: 'themeYear',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -41566,6 +41598,8 @@ export namespace Prisma {
     status?: StringFilter<"LeagueSeason"> | string
     startDate?: DateTimeNullableFilter<"LeagueSeason"> | Date | string | null
     endDate?: DateTimeNullableFilter<"LeagueSeason"> | Date | string | null
+    theme?: StringNullableFilter<"LeagueSeason"> | string | null
+    themeYear?: IntNullableFilter<"LeagueSeason"> | number | null
     createdAt?: DateTimeFilter<"LeagueSeason"> | Date | string
     updatedAt?: DateTimeFilter<"LeagueSeason"> | Date | string
     league?: XOR<LeagueScalarRelationFilter, LeagueWhereInput>
@@ -41581,6 +41615,8 @@ export namespace Prisma {
     status?: SortOrder
     startDate?: SortOrderInput | SortOrder
     endDate?: SortOrderInput | SortOrder
+    theme?: SortOrderInput | SortOrder
+    themeYear?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     league?: LeagueOrderByWithRelationInput
@@ -41600,6 +41636,8 @@ export namespace Prisma {
     status?: StringFilter<"LeagueSeason"> | string
     startDate?: DateTimeNullableFilter<"LeagueSeason"> | Date | string | null
     endDate?: DateTimeNullableFilter<"LeagueSeason"> | Date | string | null
+    theme?: StringNullableFilter<"LeagueSeason"> | string | null
+    themeYear?: IntNullableFilter<"LeagueSeason"> | number | null
     createdAt?: DateTimeFilter<"LeagueSeason"> | Date | string
     updatedAt?: DateTimeFilter<"LeagueSeason"> | Date | string
     league?: XOR<LeagueScalarRelationFilter, LeagueWhereInput>
@@ -41615,6 +41653,8 @@ export namespace Prisma {
     status?: SortOrder
     startDate?: SortOrderInput | SortOrder
     endDate?: SortOrderInput | SortOrder
+    theme?: SortOrderInput | SortOrder
+    themeYear?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: LeagueSeasonCountOrderByAggregateInput
@@ -41635,6 +41675,8 @@ export namespace Prisma {
     status?: StringWithAggregatesFilter<"LeagueSeason"> | string
     startDate?: DateTimeNullableWithAggregatesFilter<"LeagueSeason"> | Date | string | null
     endDate?: DateTimeNullableWithAggregatesFilter<"LeagueSeason"> | Date | string | null
+    theme?: StringNullableWithAggregatesFilter<"LeagueSeason"> | string | null
+    themeYear?: IntNullableWithAggregatesFilter<"LeagueSeason"> | number | null
     createdAt?: DateTimeWithAggregatesFilter<"LeagueSeason"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"LeagueSeason"> | Date | string
   }
@@ -44469,6 +44511,8 @@ export namespace Prisma {
     status?: string
     startDate?: Date | string | null
     endDate?: Date | string | null
+    theme?: string | null
+    themeYear?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     league: LeagueCreateNestedOneWithoutSeasonsInput
@@ -44484,6 +44528,8 @@ export namespace Prisma {
     status?: string
     startDate?: Date | string | null
     endDate?: Date | string | null
+    theme?: string | null
+    themeYear?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     participants?: LeagueParticipantUncheckedCreateNestedManyWithoutSeasonInput
@@ -44497,6 +44543,8 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    theme?: NullableStringFieldUpdateOperationsInput | string | null
+    themeYear?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     league?: LeagueUpdateOneRequiredWithoutSeasonsNestedInput
@@ -44512,6 +44560,8 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    theme?: NullableStringFieldUpdateOperationsInput | string | null
+    themeYear?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     participants?: LeagueParticipantUncheckedUpdateManyWithoutSeasonNestedInput
@@ -44526,6 +44576,8 @@ export namespace Prisma {
     status?: string
     startDate?: Date | string | null
     endDate?: Date | string | null
+    theme?: string | null
+    themeYear?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -44537,6 +44589,8 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    theme?: NullableStringFieldUpdateOperationsInput | string | null
+    themeYear?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -44549,6 +44603,8 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    theme?: NullableStringFieldUpdateOperationsInput | string | null
+    themeYear?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -46803,12 +46859,15 @@ export namespace Prisma {
     status?: SortOrder
     startDate?: SortOrder
     endDate?: SortOrder
+    theme?: SortOrder
+    themeYear?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
 
   export type LeagueSeasonAvgOrderByAggregateInput = {
     seasonNumber?: SortOrder
+    themeYear?: SortOrder
   }
 
   export type LeagueSeasonMaxOrderByAggregateInput = {
@@ -46819,6 +46878,8 @@ export namespace Prisma {
     status?: SortOrder
     startDate?: SortOrder
     endDate?: SortOrder
+    theme?: SortOrder
+    themeYear?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -46831,12 +46892,15 @@ export namespace Prisma {
     status?: SortOrder
     startDate?: SortOrder
     endDate?: SortOrder
+    theme?: SortOrder
+    themeYear?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
 
   export type LeagueSeasonSumOrderByAggregateInput = {
     seasonNumber?: SortOrder
+    themeYear?: SortOrder
   }
 
   export type LeagueSeasonScalarRelationFilter = {
@@ -55377,6 +55441,8 @@ export namespace Prisma {
     status?: string
     startDate?: Date | string | null
     endDate?: Date | string | null
+    theme?: string | null
+    themeYear?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     participants?: LeagueParticipantCreateNestedManyWithoutSeasonInput
@@ -55390,6 +55456,8 @@ export namespace Prisma {
     status?: string
     startDate?: Date | string | null
     endDate?: Date | string | null
+    theme?: string | null
+    themeYear?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     participants?: LeagueParticipantUncheckedCreateNestedManyWithoutSeasonInput
@@ -55521,6 +55589,8 @@ export namespace Prisma {
     status?: StringFilter<"LeagueSeason"> | string
     startDate?: DateTimeNullableFilter<"LeagueSeason"> | Date | string | null
     endDate?: DateTimeNullableFilter<"LeagueSeason"> | Date | string | null
+    theme?: StringNullableFilter<"LeagueSeason"> | string | null
+    themeYear?: IntNullableFilter<"LeagueSeason"> | number | null
     createdAt?: DateTimeFilter<"LeagueSeason"> | Date | string
     updatedAt?: DateTimeFilter<"LeagueSeason"> | Date | string
   }
@@ -55739,6 +55809,8 @@ export namespace Prisma {
     status?: string
     startDate?: Date | string | null
     endDate?: Date | string | null
+    theme?: string | null
+    themeYear?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     league: LeagueCreateNestedOneWithoutSeasonsInput
@@ -55753,6 +55825,8 @@ export namespace Prisma {
     status?: string
     startDate?: Date | string | null
     endDate?: Date | string | null
+    theme?: string | null
+    themeYear?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     rounds?: LeagueRoundUncheckedCreateNestedManyWithoutSeasonInput
@@ -55836,6 +55910,8 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    theme?: NullableStringFieldUpdateOperationsInput | string | null
+    themeYear?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     league?: LeagueUpdateOneRequiredWithoutSeasonsNestedInput
@@ -55850,6 +55926,8 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    theme?: NullableStringFieldUpdateOperationsInput | string | null
+    themeYear?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     rounds?: LeagueRoundUncheckedUpdateManyWithoutSeasonNestedInput
@@ -55923,6 +56001,8 @@ export namespace Prisma {
     status?: string
     startDate?: Date | string | null
     endDate?: Date | string | null
+    theme?: string | null
+    themeYear?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     league: LeagueCreateNestedOneWithoutSeasonsInput
@@ -55937,6 +56017,8 @@ export namespace Prisma {
     status?: string
     startDate?: Date | string | null
     endDate?: Date | string | null
+    theme?: string | null
+    themeYear?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     participants?: LeagueParticipantUncheckedCreateNestedManyWithoutSeasonInput
@@ -55965,6 +56047,8 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    theme?: NullableStringFieldUpdateOperationsInput | string | null
+    themeYear?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     league?: LeagueUpdateOneRequiredWithoutSeasonsNestedInput
@@ -55979,6 +56063,8 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    theme?: NullableStringFieldUpdateOperationsInput | string | null
+    themeYear?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     participants?: LeagueParticipantUncheckedUpdateManyWithoutSeasonNestedInput
@@ -57698,6 +57784,8 @@ export namespace Prisma {
     status?: string
     startDate?: Date | string | null
     endDate?: Date | string | null
+    theme?: string | null
+    themeYear?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -57709,6 +57797,8 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    theme?: NullableStringFieldUpdateOperationsInput | string | null
+    themeYear?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     participants?: LeagueParticipantUpdateManyWithoutSeasonNestedInput
@@ -57722,6 +57812,8 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    theme?: NullableStringFieldUpdateOperationsInput | string | null
+    themeYear?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     participants?: LeagueParticipantUncheckedUpdateManyWithoutSeasonNestedInput
@@ -57735,6 +57827,8 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    theme?: NullableStringFieldUpdateOperationsInput | string | null
+    themeYear?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

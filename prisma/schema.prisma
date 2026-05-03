@@ -718,6 +718,8 @@ model League {
 
 // L.1 — Saison de ligue. Une saison encapsule les participants,
 // le calendrier et le classement pour une edition donnee.
+// S26.6 — `theme` + `themeYear` : ligues thematiques saisonnieres
+// (Skaven Cup mars, Nordic Challenge avril, Underworld Open mai).
 model LeagueSeason {
   id           String   @id @default(cuid())
   league       League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
@@ -728,6 +730,12 @@ model LeagueSeason {
   status       String   @default("draft")
   startDate    DateTime?
   endDate      DateTime?
+  // S26.6 — slug du theme saisonnier (cf. services/league-themes.ts).
+  // null si la saison n'est pas thematique (mode classique).
+  theme        String?
+  // S26.6 — annee canonique du theme (4 chiffres). Toujours present si
+  // `theme` est present (couple atomique enforce par le service).
+  themeYear    Int?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -738,6 +746,7 @@ model LeagueSeason {
   @@unique([leagueId, seasonNumber])
   @@index([leagueId])
   @@index([status])
+  @@index([theme, themeYear])
 }
 
 // L.1 — Inscription d'une equipe sur une saison.
