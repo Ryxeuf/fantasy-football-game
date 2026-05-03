@@ -1,8 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import CoachProfileHeader from "./CoachProfileHeader";
+import type { CoachPublicProfile } from "./types";
 
-const baseProfile = {
+const baseProfile: CoachPublicProfile = {
   id: "u-1",
   slug: "coach-alpha",
   coachName: "Coach Alpha",
@@ -10,6 +11,8 @@ const baseProfile = {
   isSupporter: false,
   supporterTier: null,
   memberSince: "2025-12-01T00:00:00.000Z",
+  achievements: [],
+  recentTeams: [],
 };
 
 describe("CoachProfileHeader", () => {

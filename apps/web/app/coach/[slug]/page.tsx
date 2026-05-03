@@ -1,14 +1,17 @@
 import { notFound } from "next/navigation";
-import { fetchServerJson, getServerApiBase } from "../../lib/serverApi";
+import { fetchServerJson, getServerApiBase, safeServerJson } from "../../lib/serverApi";
 import CoachAchievementsShowcase from "./CoachAchievementsShowcase";
+import CoachEloChart from "./CoachEloChart";
 import CoachProfileHeader from "./CoachProfileHeader";
 import CoachRecentTeams from "./CoachRecentTeams";
-import type { CoachPublicProfile } from "./types";
+import type { CoachEloSnapshot, CoachPublicProfile } from "./types";
 
 // SEO bonus (S26.3 DoD) : la page doit etre indexable. ISR 60 minutes :
 // les profils publics changent peu (ELO, statut supporter), 1h reste
 // raisonnable et reduit la charge backend.
 export const revalidate = 3600;
+
+const ELO_HISTORY_DAYS = 90;
 
 interface CoachPageProps {
   params: { slug: string };
@@ -17,6 +20,12 @@ interface CoachPageProps {
 interface CoachApiEnvelope {
   success?: boolean;
   data?: CoachPublicProfile;
+  error?: string;
+}
+
+interface CoachEloHistoryEnvelope {
+  success?: boolean;
+  data?: { snapshots?: CoachEloSnapshot[] };
   error?: string;
 }
 
@@ -34,10 +43,29 @@ async function fetchCoachProfile(
   return envelope.data;
 }
 
+// S26.3n — Charge la courbe ELO 90j en parallele du profil. La degradation
+// douce (`safeServerJson`) protege la page : si l'historique echoue, on
+// rend le profil sans la courbe plutot qu'une erreur 500.
+async function fetchEloHistory(slug: string): Promise<CoachEloSnapshot[]> {
+  const base = getServerApiBase();
+  const envelope = await safeServerJson<CoachEloHistoryEnvelope>(
+    `${base}/coach/${encodeURIComponent(slug)}/elo-history?days=${ELO_HISTORY_DAYS}`,
+    { next: { revalidate: 3600 } },
+  );
+  if (!envelope || envelope.success !== true) return [];
+  const snapshots = envelope.data?.snapshots;
+  return Array.isArray(snapshots) ? snapshots : [];
+}
+
 export default async function CoachProfilePage({
   params,
 }: CoachPageProps): Promise<JSX.Element> {
-  const profile = await fetchCoachProfile(params.slug);
+  // Parallelise les deux fetches : si le profil n'existe pas on rend un
+  // 404 et l'historique vide est ignore. Pas de cout supplementaire.
+  const [profile, eloSnapshots] = await Promise.all([
+    fetchCoachProfile(params.slug),
+    fetchEloHistory(params.slug),
+  ]);
   if (!profile) {
     notFound();
   }
@@ -45,11 +73,11 @@ export default async function CoachProfilePage({
   return (
     <main className="max-w-4xl mx-auto p-6 space-y-6">
       <CoachProfileHeader profile={profile} />
+      <CoachEloChart snapshots={eloSnapshots} />
       <CoachAchievementsShowcase achievements={profile.achievements} />
       <CoachRecentTeams teams={profile.recentTeams} />
       <p className="text-sm text-gray-500 italic">
-        Profil public. Plus de detail (graph ELO 90j, export PDF)
-        viendra dans les prochaines slices de S26.3.
+        Profil public. Export PDF viendra dans une prochaine slice de S26.3.
       </p>
     </main>
   );

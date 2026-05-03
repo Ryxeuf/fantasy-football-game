@@ -39,3 +39,17 @@ export interface CoachRecentTeam {
   /** ISO 8601 timestamp of the team creation. */
   createdAt: string;
 }
+
+/**
+ * S26.3n — Single point in the ELO history curve rendered by `CoachEloChart`.
+ *
+ * Mirrors the server-side `CoachEloSnapshot` from
+ * `apps/server/src/services/coach-profile.ts`. Duplicated for the same
+ * reason as `CoachPublicProfile` above.
+ */
+export interface CoachEloSnapshot {
+  rating: number;
+  delta: number;
+  /** ISO 8601 timestamp. */
+  recordedAt: string;
+}
