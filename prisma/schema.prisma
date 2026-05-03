@@ -675,12 +675,13 @@ model UserAchievement {
 
 // Preferences de notification push par utilisateur
 model NotificationPreference {
-  id                     String  @id @default(cuid())
-  user                   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId                 String  @unique
-  pushEnabled            Boolean @default(true) // Master toggle notifications push
-  turnNotification       Boolean @default(true) // "C'est votre tour de jouer !"
-  matchFoundNotification Boolean @default(true) // "Un adversaire a ete trouve !"
+  id                             String  @id @default(cuid())
+  user                           User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId                         String  @unique
+  pushEnabled                    Boolean @default(true) // Master toggle notifications push
+  turnNotification               Boolean @default(true) // "C'est votre tour de jouer !"
+  matchFoundNotification         Boolean @default(true) // "Un adversaire a ete trouve !"
+  friendMatchStartedNotification Boolean @default(true) // S26.5 — "{ami} demarre un match contre {adversaire}"
 }
 
 // L.1 — Modele ligue (Sprint 17 : infrastructure competitive).

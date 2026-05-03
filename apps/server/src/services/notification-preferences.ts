@@ -7,18 +7,21 @@ import { prisma } from "../prisma";
 export enum NotificationType {
   Turn = "turn",
   MatchFound = "matchFound",
+  FriendMatchStarted = "friendMatchStarted",
 }
 
 export interface NotificationPreferences {
   pushEnabled: boolean;
   turnNotification: boolean;
   matchFoundNotification: boolean;
+  friendMatchStartedNotification: boolean;
 }
 
 const DEFAULTS: NotificationPreferences = {
   pushEnabled: true,
   turnNotification: true,
   matchFoundNotification: true,
+  friendMatchStartedNotification: true,
 };
 
 // ---------------------------------------------------------------------------
@@ -36,6 +39,12 @@ export async function getNotificationPreferences(
     pushEnabled: row.pushEnabled,
     turnNotification: row.turnNotification,
     matchFoundNotification: row.matchFoundNotification,
+    // Legacy rows pre-dating S26.5 lack the column entirely; fall back
+    // to the all-enabled default so existing users keep being notified.
+    friendMatchStartedNotification:
+      (row as { friendMatchStartedNotification?: boolean | null })
+        .friendMatchStartedNotification ??
+      DEFAULTS.friendMatchStartedNotification,
   };
 }
 
@@ -56,6 +65,10 @@ export async function updateNotificationPreferences(
     pushEnabled: row.pushEnabled,
     turnNotification: row.turnNotification,
     matchFoundNotification: row.matchFoundNotification,
+    friendMatchStartedNotification:
+      (row as { friendMatchStartedNotification?: boolean | null })
+        .friendMatchStartedNotification ??
+      DEFAULTS.friendMatchStartedNotification,
   };
 }
 
@@ -75,6 +88,8 @@ export async function shouldSendNotification(
       return prefs.turnNotification;
     case NotificationType.MatchFound:
       return prefs.matchFoundNotification;
+    case NotificationType.FriendMatchStarted:
+      return prefs.friendMatchStartedNotification;
     default:
       return true;
   }

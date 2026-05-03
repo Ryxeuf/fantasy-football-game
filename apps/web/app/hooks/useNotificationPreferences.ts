@@ -11,6 +11,7 @@ export interface NotificationPreferences {
   pushEnabled: boolean;
   turnNotification: boolean;
   matchFoundNotification: boolean;
+  friendMatchStartedNotification: boolean;
 }
 
 interface NotificationPreferencesState {
@@ -25,6 +26,7 @@ const DEFAULTS: NotificationPreferences = {
   pushEnabled: true,
   turnNotification: true,
   matchFoundNotification: true,
+  friendMatchStartedNotification: true,
 };
 
 // ---------------------------------------------------------------------------

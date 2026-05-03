@@ -15,7 +15,11 @@ vi.mock("web-push", () => ({
 // Mock notification preferences — default: all allowed
 vi.mock("./notification-preferences", () => ({
   shouldSendNotification: vi.fn().mockResolvedValue(true),
-  NotificationType: { Turn: "turn", MatchFound: "matchFound" },
+  NotificationType: {
+    Turn: "turn",
+    MatchFound: "matchFound",
+    FriendMatchStarted: "friendMatchStarted",
+  },
 }));
 
 import {
@@ -27,6 +31,7 @@ import {
   getVapidPublicKey,
   sendTurnPush,
   sendMatchFoundPush,
+  sendFriendMatchStartedPush,
   clearExpoSubscriptions,
 } from "./push-notifications";
 
@@ -244,6 +249,59 @@ describe("push-notifications", () => {
 
     it("does not throw if user has no subscriptions", () => {
       expect(() => sendMatchFoundPush("no-user", "match-xyz")).not.toThrow();
+    });
+  });
+
+  describe("sendFriendMatchStartedPush", () => {
+    it("sends a 'friend match started' notification with correct payload", async () => {
+      const webpush = (await import("web-push")).default;
+      addSubscription(userId, subscription);
+
+      sendFriendMatchStartedPush(userId, "match-fms", "Alice", "Bob");
+
+      await new Promise((r) => setTimeout(r, 10));
+
+      expect(webpush.sendNotification).toHaveBeenCalledWith(
+        subscription,
+        expect.any(String),
+      );
+      const payload = JSON.parse(
+        vi.mocked(webpush.sendNotification).mock.calls[0][1] as string,
+      );
+      expect(payload).toEqual({
+        title: "Nuffle Arena",
+        body: "Alice joue contre Bob",
+        icon: "/images/favicon-optimized.png",
+        url: "/play/match-fms",
+        tag: "friend-match-match-fms",
+        data: {
+          kind: "friendMatchStarted",
+          matchId: "match-fms",
+          friendCoachName: "Alice",
+          opponentCoachName: "Bob",
+          url: "/play/match-fms",
+        },
+      });
+    });
+
+    it("skips when user preferences disallow friend-match-started", async () => {
+      const webpush = (await import("web-push")).default;
+      const { shouldSendNotification } = await import("./notification-preferences");
+      vi.mocked(shouldSendNotification).mockResolvedValueOnce(false);
+      addSubscription(userId, subscription);
+
+      sendFriendMatchStartedPush(userId, "match-blocked", "Alice", "Bob");
+
+      await new Promise((r) => setTimeout(r, 20));
+
+      expect(shouldSendNotification).toHaveBeenCalled();
+      expect(webpush.sendNotification).not.toHaveBeenCalled();
+    });
+
+    it("does not throw if user has no subscriptions", () => {
+      expect(() =>
+        sendFriendMatchStartedPush("no-user", "match-xyz", "Alice", "Bob"),
+      ).not.toThrow();
     });
   });
 

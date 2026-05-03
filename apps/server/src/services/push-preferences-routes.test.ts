@@ -35,6 +35,7 @@ describe("Rule: Push notification preferences API", () => {
         pushEnabled: true,
         turnNotification: true,
         matchFoundNotification: true,
+        friendMatchStartedNotification: true,
       });
     });
 
@@ -45,6 +46,7 @@ describe("Rule: Push notification preferences API", () => {
         pushEnabled: true,
         turnNotification: false,
         matchFoundNotification: false,
+        friendMatchStartedNotification: false,
       });
 
       const prefs = await getNotificationPreferences(userId);
@@ -53,6 +55,7 @@ describe("Rule: Push notification preferences API", () => {
         pushEnabled: true,
         turnNotification: false,
         matchFoundNotification: false,
+        friendMatchStartedNotification: false,
       });
     });
   });
@@ -63,6 +66,7 @@ describe("Rule: Push notification preferences API", () => {
         pushEnabled: false,
         turnNotification: true,
         matchFoundNotification: false,
+        friendMatchStartedNotification: true,
       };
       mockPrisma.notificationPreference.upsert.mockResolvedValue({
         id: "pref-1",
@@ -87,6 +91,7 @@ describe("Rule: Push notification preferences API", () => {
         pushEnabled: true,
         turnNotification: false,
         matchFoundNotification: true,
+        friendMatchStartedNotification: true,
       });
 
       const result = await updateNotificationPreferences(userId, {

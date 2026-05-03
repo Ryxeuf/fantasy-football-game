@@ -6,6 +6,7 @@ import {
 } from "@bb/game-engine";
 import { getLinemanStats } from "./journeymen";
 import { runAutomatedPreMatchSequence } from "./pre-match-automation";
+import { notifyFriendMatchStarted } from "./notify-friend-match-started";
 import { serverLog } from "../utils/server-log";
 
 type PrismaLike = {
@@ -278,6 +279,14 @@ export async function acceptAndMaybeStartMatch(
   // and the client receives the updated state via WebSocket broadcast.
   runAutomatedPreMatchSequence(prisma as any, matchId, gameState, match.seed)
     .catch((err) => serverLog.error("Pre-match automation error:", err));
+
+  // S26.5 — Fire-and-forget : notify the friends of both players that
+  // a match just started. Ignored entirely if the listener has no
+  // friends or has disabled the preference.
+  notifyFriendMatchStarted(matchId, [s1.userId, s2.userId])
+    .catch((err) =>
+      serverLog.error("Friend match-started notification error:", err),
+    );
 
   return {
     ok: true,

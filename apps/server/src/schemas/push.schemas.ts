@@ -16,6 +16,7 @@ export const pushPreferencesSchema = z.object({
   pushEnabled: z.boolean().optional(),
   turnNotification: z.boolean().optional(),
   matchFoundNotification: z.boolean().optional(),
+  friendMatchStartedNotification: z.boolean().optional(),
 });
 
 // Expo Push tokens follow the `ExponentPushToken[...]` / `ExpoPushToken[...]`
