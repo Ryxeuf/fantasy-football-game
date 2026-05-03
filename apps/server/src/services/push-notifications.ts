@@ -335,6 +335,45 @@ export function sendTurnPush(userId: string, matchId: string): void {
 }
 
 /**
+ * S26.5 — Send a "friend started a match" push notification.
+ * Checks user preferences before sending.
+ * Non-blocking — errors are silently ignored.
+ */
+export function sendFriendMatchStartedPush(
+  friendUserId: string,
+  matchId: string,
+  friendCoachName: string,
+  opponentCoachName: string,
+): void {
+  shouldSendNotification(friendUserId, NotificationType.FriendMatchStarted)
+    .then(async (allowed) => {
+      if (!allowed) return;
+      const url = `/play/${matchId}`;
+      const payload: PushPayload = {
+        title: "Nuffle Arena",
+        body: `${friendCoachName} joue contre ${opponentCoachName}`,
+        icon: "/images/favicon-optimized.png",
+        url,
+        tag: `friend-match-${matchId}`,
+        data: {
+          kind: "friendMatchStarted",
+          matchId,
+          friendCoachName,
+          opponentCoachName,
+          url,
+        },
+      };
+      await Promise.all([
+        sendPushToUser(friendUserId, payload),
+        sendExpoPushToUser(friendUserId, payload),
+      ]);
+    })
+    .catch(() => {
+      // Push failure is non-blocking
+    });
+}
+
+/**
  * Send a "match found" push notification to a user.
  * Checks user preferences before sending.
  * Non-blocking — errors are silently ignored.

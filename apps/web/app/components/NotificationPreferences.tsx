@@ -17,7 +17,11 @@ export default function NotificationPreferences() {
   };
 
   const handleTogglePreference = async (
-    key: "pushEnabled" | "turnNotification" | "matchFoundNotification",
+    key:
+      | "pushEnabled"
+      | "turnNotification"
+      | "matchFoundNotification"
+      | "friendMatchStartedNotification",
   ) => {
     await updatePreferences({ [key]: !preferences[key] });
   };
@@ -117,6 +121,20 @@ export default function NotificationPreferences() {
               }
               disabled={saving || loading || !preferences.pushEnabled}
               onChange={() => handleTogglePreference("matchFoundNotification")}
+            />
+
+            {/* Friend match started notification (S26.5) */}
+            <ToggleRow
+              label={`"Un ami demarre un match"`}
+              description="Etre prevenu quand un ami lance une partie contre un autre coach"
+              checked={
+                preferences.pushEnabled &&
+                preferences.friendMatchStartedNotification
+              }
+              disabled={saving || loading || !preferences.pushEnabled}
+              onChange={() =>
+                handleTogglePreference("friendMatchStartedNotification")
+              }
             />
           </>
         )}
