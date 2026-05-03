@@ -221,6 +221,125 @@ describe("Rule: League service", () => {
       ).rejects.toThrow(/ligue|league|introuvable|not found/i);
       expect(mockPrisma.leagueSeason.create).not.toHaveBeenCalled();
     });
+
+    // S26.6 — themes saisonniers + reset ELO.
+    it("persists theme + themeYear when supplied with a known slug", async () => {
+      mockPrisma.league.findUnique.mockResolvedValue({ id: leagueId });
+      mockPrisma.leagueSeason.findFirst.mockResolvedValue(null);
+      mockPrisma.leagueSeason.create.mockImplementation(
+        async ({ data }: { data: Record<string, unknown> }) => ({
+          id: seasonId,
+          status: "draft",
+          startDate: null,
+          endDate: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          ...data,
+        }),
+      );
+
+      const result = await createSeason({
+        leagueId,
+        name: "Skaven Cup 2026",
+        theme: "skaven_cup",
+        themeYear: 2026,
+      });
+
+      expect(mockPrisma.leagueSeason.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          theme: "skaven_cup",
+          themeYear: 2026,
+        }),
+      });
+      expect((result as { theme: string }).theme).toBe("skaven_cup");
+      expect((result as { themeYear: number }).themeYear).toBe(2026);
+    });
+
+    it("rejects an unknown theme slug", async () => {
+      mockPrisma.league.findUnique.mockResolvedValue({ id: leagueId });
+      mockPrisma.leagueSeason.findFirst.mockResolvedValue(null);
+
+      await expect(
+        createSeason({
+          leagueId,
+          name: "Ghost Cup",
+          theme: "ghost_cup" as unknown as "skaven_cup",
+          themeYear: 2026,
+        }),
+      ).rejects.toThrow(/theme|inconnu|invalid/i);
+      expect(mockPrisma.leagueSeason.create).not.toHaveBeenCalled();
+    });
+
+    it("rejects an invalid themeYear (zero, negative, non-integer)", async () => {
+      mockPrisma.league.findUnique.mockResolvedValue({ id: leagueId });
+      mockPrisma.leagueSeason.findFirst.mockResolvedValue(null);
+
+      await expect(
+        createSeason({
+          leagueId,
+          name: "Skaven Cup ?",
+          theme: "skaven_cup",
+          themeYear: 0,
+        }),
+      ).rejects.toThrow(/year|annee/i);
+
+      await expect(
+        createSeason({
+          leagueId,
+          name: "Skaven Cup ?",
+          theme: "skaven_cup",
+          themeYear: 2026.5,
+        }),
+      ).rejects.toThrow(/year|annee/i);
+      expect(mockPrisma.leagueSeason.create).not.toHaveBeenCalled();
+    });
+
+    it("rejects theme without themeYear (and vice-versa)", async () => {
+      mockPrisma.league.findUnique.mockResolvedValue({ id: leagueId });
+      mockPrisma.leagueSeason.findFirst.mockResolvedValue(null);
+
+      await expect(
+        createSeason({
+          leagueId,
+          name: "Skaven Cup",
+          theme: "skaven_cup",
+        }),
+      ).rejects.toThrow(/year|annee/i);
+
+      await expect(
+        createSeason({
+          leagueId,
+          name: "Skaven Cup",
+          themeYear: 2026,
+        }),
+      ).rejects.toThrow(/theme/i);
+      expect(mockPrisma.leagueSeason.create).not.toHaveBeenCalled();
+    });
+
+    it("creates a season with theme=null when neither theme nor themeYear are supplied", async () => {
+      mockPrisma.league.findUnique.mockResolvedValue({ id: leagueId });
+      mockPrisma.leagueSeason.findFirst.mockResolvedValue(null);
+      mockPrisma.leagueSeason.create.mockImplementation(
+        async ({ data }: { data: Record<string, unknown> }) => ({
+          id: seasonId,
+          status: "draft",
+          startDate: null,
+          endDate: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          ...data,
+        }),
+      );
+
+      await createSeason({ leagueId, name: "Saison 1" });
+
+      expect(mockPrisma.leagueSeason.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          theme: null,
+          themeYear: null,
+        }),
+      });
+    });
   });
 
   describe("addParticipant", () => {

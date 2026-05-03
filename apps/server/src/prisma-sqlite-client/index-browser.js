@@ -466,6 +466,8 @@ exports.Prisma.LeagueSeasonScalarFieldEnum = {
   status: 'status',
   startDate: 'startDate',
   endDate: 'endDate',
+  theme: 'theme',
+  themeYear: 'themeYear',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
