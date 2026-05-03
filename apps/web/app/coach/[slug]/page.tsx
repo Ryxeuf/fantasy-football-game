@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { fetchServerJson, getServerApiBase, safeServerJson } from "../../lib/serverApi";
 import CoachAchievementsShowcase from "./CoachAchievementsShowcase";
 import CoachEloChart from "./CoachEloChart";
+import CoachExportPdfButton from "./CoachExportPdfButton";
 import CoachProfileHeader from "./CoachProfileHeader";
 import CoachRecentTeams from "./CoachRecentTeams";
 import type { CoachEloSnapshot, CoachPublicProfile } from "./types";
@@ -76,8 +77,10 @@ export default async function CoachProfilePage({
       <CoachEloChart snapshots={eloSnapshots} />
       <CoachAchievementsShowcase achievements={profile.achievements} />
       <CoachRecentTeams teams={profile.recentTeams} />
+      <CoachExportPdfButton profile={profile} eloSnapshots={eloSnapshots} />
       <p className="text-sm text-gray-500 italic">
-        Profil public. Export PDF viendra dans une prochaine slice de S26.3.
+        Profil public. PDF inclut header, courbe ELO 90j, succes recents et
+        equipes recentes (sans la liste des joueurs).
       </p>
     </main>
   );
