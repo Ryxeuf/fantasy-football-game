@@ -28,6 +28,7 @@ import {
 } from "./season-elo";
 import { applyThemedSeasonClosure } from "./themed-season-closure";
 import { runPostMatchLeagueSequence } from "./post-match-league-sequence";
+import { persistSeasonAwards } from "./league-scoring";
 import { serverLog } from "../utils/server-log";
 
 export interface RecordMatchResultInput {
@@ -280,6 +281,25 @@ export async function recordLeagueMatchResult(
           data: { status: "completed" },
         });
         seasonCompleted = true;
+
+        // L2.C.1 — fire-and-forget : persistance du snapshot d'awards
+        // de fin de saison. Echec non-bloquant : le score reste
+        // compte meme si l'award n'est pas cree (la page recap peut
+        // toujours recalculer a la demande via computeSeasonRecap).
+        persistSeasonAwards(seasonId)
+          .then((r) => {
+            if (r.created) {
+              serverLog.info(
+                `[league-scoring] season=${seasonId} award persisted (id=${r.awardId})`,
+              );
+            }
+          })
+          .catch((e: unknown) => {
+            const msg = e instanceof Error ? e.message : "unknown";
+            serverLog.error(
+              `[league-scoring] persistSeasonAwards failed: ${msg}`,
+            );
+          });
 
         // S26.6f — fire-and-forget : la cloture thematique est un point
         // d'extension non critique. Si elle echoue, le match reste

@@ -363,6 +363,19 @@ export default function LeagueDetailPage() {
                 />
               ) : null}
 
+              {/* L2.C.2c — lien vers le recap quand la saison est terminee.
+                  Le recap reste accessible meme si v2UiEnabled est off
+                  (l'endpoint awards est public). */}
+              {season.status === "completed" ? (
+                <Link
+                  href={`/leagues/${leagueId}/seasons/${season.id}/recap`}
+                  data-testid="season-recap-link"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-amber-100 border border-amber-300 text-amber-900 text-sm font-medium hover:bg-amber-200"
+                >
+                  🏆 Voir le recap de la saison
+                </Link>
+              ) : null}
+
               {canJoinSeason ? (
                 <div>
                   <button

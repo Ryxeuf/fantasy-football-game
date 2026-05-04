@@ -23,6 +23,10 @@ vi.mock("../services/cup-championships", () => ({
   getCoachCupChampionships: vi.fn(),
 }));
 
+vi.mock("../services/coach-league-championships", () => ({
+  getCoachLeagueChampionships: vi.fn(),
+}));
+
 import type { Request, Response } from "express";
 import {
   getCoachEloHistory,
@@ -33,6 +37,7 @@ import {
 } from "../services/coach-profile";
 import { getCoachThemedChampionships } from "../services/coach-championships";
 import { getCoachCupChampionships } from "../services/cup-championships";
+import { getCoachLeagueChampionships } from "../services/coach-league-championships";
 import {
   handleGetCoachEloHistory,
   handleGetCoachPublicProfile,
@@ -46,6 +51,7 @@ const mockedListSlugs = vi.mocked(listPublicCoachSlugs);
 const mockedGetEloHistory = vi.mocked(getCoachEloHistory);
 const mockedGetChampionships = vi.mocked(getCoachThemedChampionships);
 const mockedGetCupChampionships = vi.mocked(getCoachCupChampionships);
+const mockedGetLeagueChampionships = vi.mocked(getCoachLeagueChampionships);
 
 function buildRes(): Response {
   const res = {
@@ -70,6 +76,8 @@ describe("GET /coach/:slug — handleGetCoachPublicProfile", () => {
     mockedGetChampionships.mockResolvedValue([]);
     // S27.1d default : pas de cup championships, sauf override par test.
     mockedGetCupChampionships.mockResolvedValue([]);
+    // L2.C.2 default : pas de league championships, sauf override par test.
+    mockedGetLeagueChampionships.mockResolvedValue([]);
   });
 
   it("returns 200 + ApiResponse data when the coach exists", async () => {
@@ -104,6 +112,7 @@ describe("GET /coach/:slug — handleGetCoachPublicProfile", () => {
         recentTeams: [],
         championships: [],
         cupChampionships: [],
+        leagueChampionships: [],
       },
     });
     expect(mockedGetProfile).toHaveBeenCalledWith("coach-alpha");

@@ -3,6 +3,7 @@ import { fetchServerJson, getServerApiBase, safeServerJson } from "../../lib/ser
 import CoachAchievementsShowcase from "./CoachAchievementsShowcase";
 import CoachChampionshipsBanner from "./CoachChampionshipsBanner";
 import CoachCupChampionshipsBanner from "./CoachCupChampionshipsBanner";
+import CoachLeagueChampionshipsBanner from "./CoachLeagueChampionshipsBanner";
 import CoachEloChart from "./CoachEloChart";
 import CoachExportPdfButton from "./CoachExportPdfButton";
 import CoachProfileHeader from "./CoachProfileHeader";
@@ -78,6 +79,9 @@ export default async function CoachProfilePage({
       <CoachProfileHeader profile={profile} />
       <CoachChampionshipsBanner championships={profile.championships} />
       <CoachCupChampionshipsBanner cupChampionships={profile.cupChampionships} />
+      <CoachLeagueChampionshipsBanner
+        leagueChampionships={profile.leagueChampionships}
+      />
       <CoachEloChart snapshots={eloSnapshots} />
       <CoachAchievementsShowcase achievements={profile.achievements} />
       <CoachRecentTeams teams={profile.recentTeams} />
