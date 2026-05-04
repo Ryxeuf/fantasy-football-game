@@ -20,6 +20,11 @@ import {
 import PixiBoardNative from "../../../../packages/ui/src/board/PixiBoard.native";
 import MatchPopups from "../../components/popups/MatchPopups";
 import GameChat from "../../components/GameChat";
+import {
+  processThrowTeamMateClick,
+  canActivateThrowTeamMate,
+  type LegalThrow,
+} from "../../lib/throw-team-mate-click";
 
 function normalizeState(state: any): GameState {
   if (!state) return state;
@@ -42,6 +47,13 @@ export default function PlayScreen() {
   const [error, setError] = useState<string | null>(null);
   const [isMyTurn, setIsMyTurn] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  // S27.2.2 — flow Throw Team-Mate (Action Picker mobile).
+  const [currentAction, setCurrentAction] = useState<
+    "THROW_TEAM_MATE" | null
+  >(null);
+  const [throwTeamMateThrownId, setThrowTeamMateThrownId] = useState<
+    string | null
+  >(null);
 
   // Fetch game state
   const fetchState = useCallback(async () => {
@@ -198,6 +210,34 @@ export default function PlayScreen() {
     (pos: Position) => {
       if (!state || !isMyTurn || submitting) return;
 
+      // S27.2.2 — flow Throw Team-Mate prend la priorite quand actif.
+      if (currentAction === "THROW_TEAM_MATE") {
+        const ttmLegals = legal.filter(
+          (m): m is LegalThrow => m.type === "THROW_TEAM_MATE",
+        ) as readonly LegalThrow[];
+        const r = processThrowTeamMateClick({
+          pos,
+          state,
+          legal: ttmLegals,
+          currentAction,
+          throwTeamMateThrownId,
+        });
+        if (r.kind === "selectThrown") {
+          setThrowTeamMateThrownId(r.thrownPlayerId);
+          return;
+        }
+        if (r.kind === "submit") {
+          submitMove(r.move);
+          setThrowTeamMateThrownId(null);
+          setCurrentAction(null);
+          return;
+        }
+        if (r.kind === "noop") {
+          return; // ignore le clic mais reste dans le flow
+        }
+        // r.kind === "inactive" : laisser tomber, fallback aux branches normales
+      }
+
       // Check if tapped on own player -> select
       const player = state.players.find(
         (p) => p.pos.x === pos.x && p.pos.y === pos.y,
@@ -246,7 +286,15 @@ export default function PlayScreen() {
         setState((s) => (s ? { ...s, selectedPlayerId: null } : null));
       }
     },
-    [state, isMyTurn, submitting, legal, submitMove],
+    [
+      state,
+      isMyTurn,
+      submitting,
+      legal,
+      submitMove,
+      currentAction,
+      throwTeamMateThrownId,
+    ],
   );
 
   // Handle double-tap deselect
@@ -370,6 +418,41 @@ export default function PlayScreen() {
       {/* Actions bar */}
       {isMyTurn && state.half > 0 && (
         <View style={styles.actionsBar}>
+          {/* S27.2.2 — Action Picker Throw Team-Mate (apparait quand
+              le joueur selectionne a au moins 1 legal THROW_TEAM_MATE
+              et qu'on n'est pas deja dans le flow). */}
+          {currentAction !== "THROW_TEAM_MATE" &&
+            canActivateThrowTeamMate(
+              legal.filter(
+                (m): m is LegalThrow => m.type === "THROW_TEAM_MATE",
+              ) as readonly LegalThrow[],
+              state.selectedPlayerId ?? null,
+            ) && (
+              <Pressable
+                testID="throw-team-mate-button"
+                style={[styles.endTurnButton, submitting && styles.buttonDisabled]}
+                onPress={() => setCurrentAction("THROW_TEAM_MATE")}
+                disabled={submitting}
+              >
+                <Text style={styles.endTurnText}>Lancer un coéquipier</Text>
+              </Pressable>
+            )}
+          {currentAction === "THROW_TEAM_MATE" && (
+            <Pressable
+              testID="throw-team-mate-cancel"
+              style={[styles.endTurnButton, submitting && styles.buttonDisabled]}
+              onPress={() => {
+                setCurrentAction(null);
+                setThrowTeamMateThrownId(null);
+              }}
+            >
+              <Text style={styles.endTurnText}>
+                {throwTeamMateThrownId
+                  ? "Annuler (cible)"
+                  : "Annuler (lancer)"}
+              </Text>
+            </Pressable>
+          )}
           <Pressable
             style={[styles.endTurnButton, submitting && styles.buttonDisabled]}
             onPress={handleEndTurn}

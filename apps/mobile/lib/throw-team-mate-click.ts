@@ -83,3 +83,20 @@ export function processThrowTeamMateClick(
     move: move as Extract<Move, { type: "THROW_TEAM_MATE" }>,
   };
 }
+
+/**
+ * Indique si le joueur selectionne peut activer le flow Throw Team-Mate :
+ * existe-t-il au moins une option legale `THROW_TEAM_MATE` pour lui ?
+ *
+ * Utilise par la page mobile pour decider d'afficher le bouton
+ * "Lancer un coequipier" dans la barre d'actions.
+ */
+export function canActivateThrowTeamMate(
+  legal: readonly LegalThrow[],
+  playerId: string | null,
+): boolean {
+  if (!playerId) return false;
+  return legal.some(
+    (m) => m.type === "THROW_TEAM_MATE" && m.playerId === playerId,
+  );
+}
