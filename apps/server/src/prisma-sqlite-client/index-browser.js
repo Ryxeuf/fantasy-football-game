@@ -472,6 +472,7 @@ exports.Prisma.LeagueSeasonScalarFieldEnum = {
   endDate: 'endDate',
   theme: 'theme',
   themeYear: 'themeYear',
+  playoffSize: 'playoffSize',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -499,6 +500,8 @@ exports.Prisma.LeagueRoundScalarFieldEnum = {
   roundNumber: 'roundNumber',
   name: 'name',
   status: 'status',
+  kind: 'kind',
+  bracketSlot: 'bracketSlot',
   startDate: 'startDate',
   endDate: 'endDate',
   createdAt: 'createdAt',

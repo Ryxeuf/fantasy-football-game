@@ -767,6 +767,12 @@ model LeagueSeason {
   // S26.6 — annee canonique du theme (4 chiffres). Toujours present si
   // `theme` est present (couple atomique enforce par le service).
   themeYear    Int?
+  // L2.C.3 — taille du bracket de playoffs (top N qualifies pour
+  // l'elimination directe en fin de saison reguliere). 0 = pas de
+  // playoff (mode classique : champion = 1er du round-robin).
+  // Valeurs supportees : 0, 2 (final seulement), 4 (SF + final),
+  // 8 (QF + SF + final). 16+ : non supporte pour l'instant.
+  playoffSize  Int       @default(0)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
@@ -825,6 +831,14 @@ model LeagueRound {
   name        String?
   // "pending" | "in_progress" | "completed"
   status      String       @default("pending")
+  // L2.C.3 — type de round. "regular" (round-robin) ou "playoff"
+  // (bracket d'elimination directe). Default "regular" pour
+  // compatibilite avec les rounds Sprint 17 / PR1 existants.
+  kind        String       @default("regular")
+  // L2.C.3 — slot dans le bracket pour les rounds playoff. Format
+  // libre conventionnel : "qf1".."qf4", "sf1".."sf2", "final".
+  // Null pour les rounds reguliers.
+  bracketSlot String?
   startDate   DateTime?
   endDate     DateTime?
   createdAt   DateTime     @default(now())
@@ -836,6 +850,7 @@ model LeagueRound {
   @@unique([seasonId, roundNumber])
   @@index([seasonId])
   @@index([status])
+  @@index([seasonId, kind])
 }
 
 // L2.A.1 — Pairing pre-genere du calendrier round-robin.

@@ -61,6 +61,12 @@ export const createSeasonSchema = z
     // S26.6 — theme + themeYear : couple optionnel (les deux ou aucun).
     theme: leagueThemeSlug.optional(),
     themeYear: leagueThemeYear.optional(),
+    // L2.C.3 — taille du bracket de playoffs (top N qualifies).
+    // Valeurs supportees : 0 (default, mode classique), 2, 4, 8.
+    playoffSize: z
+      .union([z.literal(0), z.literal(2), z.literal(4), z.literal(8)])
+      .optional()
+      .default(0),
   })
   .refine(
     (data) =>

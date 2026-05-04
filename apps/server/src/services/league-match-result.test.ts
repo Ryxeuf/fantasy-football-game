@@ -25,6 +25,7 @@ vi.mock("../prisma", () => ({
       findUnique: vi.fn(),
       findMany: vi.fn(),
       update: vi.fn(),
+      count: vi.fn().mockResolvedValue(0),
     },
     leagueParticipant: {
       findUnique: vi.fn(),

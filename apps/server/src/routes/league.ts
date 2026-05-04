@@ -38,6 +38,7 @@ import {
   computeSeasonRecap,
   getPersistedSeasonAward,
 } from "../services/league-scoring";
+import { startPlayoffs } from "../services/league-playoffs";
 import { listLeagueThemes } from "../services/league-themes";
 import {
   createLeagueSchema,
@@ -219,6 +220,8 @@ export async function handleCreateSeason(
       // le service : isLeagueThemeSlug + Number.isInteger(year)).
       theme: body.theme,
       themeYear: body.themeYear,
+      // L2.C.3 — propagation playoffSize (default 0, mode classique).
+      playoffSize: body.playoffSize,
     });
     sendSuccess(res, season, 201);
   } catch (e: unknown) {
@@ -482,6 +485,109 @@ export async function handleGetStandings(
   try {
     const standings = await computeSeasonStandings(seasonId);
     sendSuccess(res, { seasonId, standings });
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/**
+ * L2.C.3 — bracket de playoffs d'une saison.
+ *
+ * Renvoie tous les rounds avec `kind="playoff"` ordonnes par
+ * roundNumber, avec leurs pairings + participants. Format pret a
+ * etre rendu par PlayoffBracketView. Endpoint public (pas d'auth).
+ */
+export async function handleGetPlayoffBracket(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const seasonId = req.params.seasonId;
+  try {
+    const seasonRow = await prisma.leagueSeason.findUnique({
+      where: { id: seasonId },
+      select: { id: true, playoffSize: true, status: true },
+    });
+    if (!seasonRow) {
+      sendError(res, "Saison introuvable", 404);
+      return;
+    }
+    const rounds = await prisma.leagueRound.findMany({
+      where: { seasonId, kind: "playoff" },
+      orderBy: { roundNumber: "asc" },
+      include: {
+        pairings: {
+          orderBy: { createdAt: "asc" },
+          include: {
+            match: { select: { id: true, status: true } },
+            homeParticipant: {
+              select: {
+                id: true,
+                team: {
+                  select: {
+                    id: true,
+                    name: true,
+                    roster: true,
+                    owner: { select: { id: true, coachName: true } },
+                  },
+                },
+              },
+            },
+            awayParticipant: {
+              select: {
+                id: true,
+                team: {
+                  select: {
+                    id: true,
+                    name: true,
+                    roster: true,
+                    owner: { select: { id: true, coachName: true } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+    sendSuccess(res, {
+      seasonId,
+      playoffSize: seasonRow.playoffSize,
+      seasonStatus: seasonRow.status,
+      rounds,
+    });
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/**
+ * L2.C.3 — Demarre manuellement les playoffs (admin force).
+ * Reserve au createur de la ligue. Le hook automatique fire-and-
+ * forget (a la cloture du dernier round regulier) doit normalement
+ * suffire ; ce levier permet de redemarrer en cas de skip ou de
+ * forcer manuellement quand `playoffSize=0` mais que l'admin veut
+ * tout de meme un bracket adhoc.
+ */
+export async function handleStartPlayoffs(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const seasonId = req.params.seasonId;
+  if (!(await ensureLeagueCreator(userId, seasonId, res))) return;
+
+  try {
+    const result = await startPlayoffs(seasonId);
+    if (!result.created) {
+      sendError(
+        res,
+        `Playoffs non demarres: ${result.skippedReason ?? "raison inconnue"}`,
+        400,
+      );
+      return;
+    }
+    sendSuccess(res, result, 201);
   } catch (e: unknown) {
     domainError(res, e);
   }
@@ -758,6 +864,17 @@ router.get("/seasons/:seasonId/standings", authUser, handleGetStandings);
 // L2.C.1 — recap public de fin de saison : champion + awards.
 // Pas d'auth : la page recap doit etre indexable / partageable.
 router.get("/seasons/:seasonId/awards", handleGetSeasonAwards);
+// L2.C.3 — bracket playoffs (public, indexable).
+router.get(
+  "/seasons/:seasonId/playoff-bracket",
+  handleGetPlayoffBracket,
+);
+// L2.C.3 — demarrage manuel des playoffs (createur de la ligue).
+router.post(
+  "/seasons/:seasonId/playoff/start",
+  authUser,
+  handleStartPlayoffs,
+);
 router.get("/seasons/:seasonId", authUser, handleGetSeason);
 
 export default router;

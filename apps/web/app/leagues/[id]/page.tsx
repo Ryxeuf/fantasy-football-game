@@ -8,6 +8,7 @@ import { useFeatureFlag } from "../../hooks/useFeatureFlag";
 import { LEAGUES_V2_UI_FLAG } from "../../lib/featureFlagKeys";
 import { SeasonCalendar } from "./SeasonCalendar";
 import { SeasonStandings } from "./SeasonStandings";
+import { PlayoffBracketView } from "./PlayoffBracketView";
 import { SeasonParticipants } from "./SeasonParticipants";
 import { NewSeasonModal } from "./NewSeasonModal";
 import { SeasonAdminPanel } from "./SeasonAdminPanel";
@@ -405,6 +406,11 @@ export default function LeagueDetailPage() {
                 </h3>
                 <SeasonStandings rows={standings} />
               </div>
+
+              {/* L2.C.3 — bracket de playoffs (rendu null si pas
+                  encore declenche : playoffSize=0 OU saison reguliere
+                  pas terminee). */}
+              <PlayoffBracketView seasonId={season.id} />
 
               <div className="space-y-3">
                 <h3 className="text-md font-semibold text-nuffle-anthracite">
