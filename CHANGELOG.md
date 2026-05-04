@@ -1,3 +1,44 @@
+## [1.81.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.80.0...v1.81.0) (2026-05-04)
+
+
+### ✨ Features
+
+* **coach-profile:** CoachEloChart inline SVG curve on /coach/{slug} (S26.3n) ([#511](https://github.com/Ryxeuf/fantasy-football-game/issues/511)) ([4d4189b](https://github.com/Ryxeuf/fantasy-football-game/commit/4d4189b9de4a002dbbd2757c7eb9ed19b649b96d))
+* **coach-profile:** export PDF coach-card on /coach/{slug} (S26.3o, closes S26.3) ([#512](https://github.com/Ryxeuf/fantasy-football-game/issues/512)) ([9c15be7](https://github.com/Ryxeuf/fantasy-football-game/commit/9c15be7471599945aad25d6bf78fb793b25ff2e3))
+* **coach-profile:** monthly Nuffle Cup champion badge backend (S27.1d) ([#524](https://github.com/Ryxeuf/fantasy-football-game/issues/524)) ([a522898](https://github.com/Ryxeuf/fantasy-football-game/commit/a5228983ec137ea656ac868119c3374bd85009e0))
+* **coach-profile:** monthly Nuffle Cup champion badge UI (S27.1e) ([#525](https://github.com/Ryxeuf/fantasy-football-game/issues/525)) ([8f6fd09](https://github.com/Ryxeuf/fantasy-football-game/commit/8f6fd09b2fe39f90291993909826084750971175))
+* **coach-profile:** themed championships badge backend (S26.6d) ([#517](https://github.com/Ryxeuf/fantasy-football-game/issues/517)) ([4121c71](https://github.com/Ryxeuf/fantasy-football-game/commit/4121c71c5a1d2ee90db0de741da6efb652999a45))
+* **coach-profile:** themed championships UI banner on /coach/[slug] (S26.6e) ([#518](https://github.com/Ryxeuf/fantasy-football-game/issues/518)) ([2188dd0](https://github.com/Ryxeuf/fantasy-football-game/commit/2188dd0b8f01be439f2b5b8fb3b689709d627260))
+* **cups:** admin can create monthly Nuffle Cups via POST /cup (S27.1i) ([#529](https://github.com/Ryxeuf/fantasy-football-game/issues/529)) ([81d5330](https://github.com/Ryxeuf/fantasy-football-game/commit/81d533041d635c0bfe171e67530be177bb144016))
+* **cups:** admin pick endpoint for match-of-the-week (S27.1g) ([#527](https://github.com/Ryxeuf/fantasy-football-game/issues/527)) ([3ff1616](https://github.com/Ryxeuf/fantasy-football-game/commit/3ff16164c057406baabfce45b3d142b73431e6fc))
+* **cups:** match-of-the-week public read foundation (S27.1f) ([#526](https://github.com/Ryxeuf/fantasy-football-game/issues/526)) ([443ab4a](https://github.com/Ryxeuf/fantasy-football-game/commit/443ab4adcedd306494e3215e04b80b6358e59225))
+* **cups:** match-of-the-week UI banner on /cups/monthly (S27.1h) ([#528](https://github.com/Ryxeuf/fantasy-football-game/issues/528)) ([88282dd](https://github.com/Ryxeuf/fantasy-football-game/commit/88282dd21bb4712f888aecd9527e2377df8ce793))
+* **cups:** monthly Nuffle Cup slot foundation (S27.1a) ([#521](https://github.com/Ryxeuf/fantasy-football-game/issues/521)) ([6f05ed6](https://github.com/Ryxeuf/fantasy-football-game/commit/6f05ed61bb2ee797f01aac43feaf9ccdf64de2ed))
+* **cups:** public listing of monthly Nuffle Cups (S27.1b) ([#522](https://github.com/Ryxeuf/fantasy-football-game/issues/522)) ([3137070](https://github.com/Ryxeuf/fantasy-football-game/commit/31370706c0c5fd68412caa1f15364d6c0dc1aa34))
+* **cups:** public monthly Nuffle Cup calendar UI /cups/monthly (S27.1c) ([#523](https://github.com/Ryxeuf/fantasy-football-game/issues/523)) ([d2258c3](https://github.com/Ryxeuf/fantasy-football-game/commit/d2258c36ea1a8abef6e20b49e73f17855d2869a4))
+* **cups:** visual bracket view on /cups/[id] (S27.1j, closes S27.1) ([#530](https://github.com/Ryxeuf/fantasy-football-game/issues/530)) ([6339e34](https://github.com/Ryxeuf/fantasy-football-game/commit/6339e34ab66a51422034f16656273c0125b74a3c))
+* **leagues:** PR2 UI — flag-gated UI for league management (L2.A.6-A.10) ([13ba0e0](https://github.com/Ryxeuf/fantasy-football-game/commit/13ba0e0034455a12e87c1d73f3b2275af155300b))
+* **leagues:** seasonal themes foundation on LeagueSeason (S26.6a) ([#514](https://github.com/Ryxeuf/fantasy-football-game/issues/514)) ([e9b1825](https://github.com/Ryxeuf/fantasy-football-game/commit/e9b18259aa6480342cd5446cb8e294de7de6e0de))
+* **leagues:** theme read endpoints + season creation propagation (S26.6b) ([#515](https://github.com/Ryxeuf/fantasy-football-game/issues/515)) ([c547ba9](https://github.com/Ryxeuf/fantasy-football-game/commit/c547ba96ec364caa3131d1b91e112a4358e618fb))
+* **leagues:** themed season closure hook (S26.6f, closes S26.6) ([#519](https://github.com/Ryxeuf/fantasy-football-game/issues/519)) ([f7cc242](https://github.com/Ryxeuf/fantasy-football-game/commit/f7cc2429d56a88d0a8c94bcb95a4b4924ddabe68))
+* **leagues:** themed seasons calendar UI /leagues/seasons (S26.6c) ([#516](https://github.com/Ryxeuf/fantasy-football-game/issues/516)) ([2ae09fd](https://github.com/Ryxeuf/fantasy-football-game/commit/2ae09fdaf9e2c2e3335fcccce6cc3e2796ba3dab))
+* **mobile:** i18n foundation (FR/EN) without external dep (S27.3.1) ([#533](https://github.com/Ryxeuf/fantasy-football-game/issues/533)) ([201bc6e](https://github.com/Ryxeuf/fantasy-football-game/commit/201bc6ec3689999691ab89e02862b9aa4bb99b41))
+* **mobile:** integrate Throw Team-Mate flow on play screen (S27.2.2, closes S27.2) ([#532](https://github.com/Ryxeuf/fantasy-football-game/issues/532)) ([666dde2](https://github.com/Ryxeuf/fantasy-football-game/commit/666dde2ac357a464c54938bf223f5c4680cc23eb))
+* **mobile:** port Throw Team-Mate click helper foundation (S27.2.1) ([#531](https://github.com/Ryxeuf/fantasy-football-game/issues/531)) ([3e1a878](https://github.com/Ryxeuf/fantasy-football-game/commit/3e1a8781d5ff1caf0f80eab76459a6768d212089))
+* **mobile:** useTranslation hook + i18n settings.tsx (S27.3.2) ([#534](https://github.com/Ryxeuf/fantasy-football-game/issues/534)) ([2d183c7](https://github.com/Ryxeuf/fantasy-football-game/commit/2d183c750deea5a83e81a4a0877f4cc6b463ee4b))
+* **notifications:** friend-match-started notification + user pref (S26.5) ([#513](https://github.com/Ryxeuf/fantasy-football-game/issues/513)) ([bc3f4fb](https://github.com/Ryxeuf/fantasy-football-game/commit/bc3f4fb071bcef6fc28ead1a28485720d455a9e7))
+* **s3-data:** apply OCR-canonical Saison 3 data (skills, special rules, leagues) ([#510](https://github.com/Ryxeuf/fantasy-football-game/issues/510)) ([379e14e](https://github.com/Ryxeuf/fantasy-football-game/commit/379e14ed573023140ec91a3b083f465536ff1cce))
+
+
+### 🐛 Bug Fixes
+
+* **leagues:** mirror LeaguePairing model + Match league fields in SQLite schema ([8075999](https://github.com/Ryxeuf/fantasy-football-game/commit/807599932387cd875c567473f74daf0fe31246b7)), closes [#536](https://github.com/Ryxeuf/fantasy-football-game/issues/536)
+
+
+### 📝 Documentation
+
+* **roadmap:** S26 termine ([#520](https://github.com/Ryxeuf/fantasy-football-game/issues/520)) ([8fa8747](https://github.com/Ryxeuf/fantasy-football-game/commit/8fa8747be43b9231072bbb28b5a52890b515582c))
+
 ## [1.80.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.79.0...v1.80.0) (2026-04-30)
 
 
