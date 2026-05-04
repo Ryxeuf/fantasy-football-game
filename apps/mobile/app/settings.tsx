@@ -13,6 +13,7 @@ import {
 import { useRouter } from "expo-router";
 import { apiDelete, apiGet, apiPut, ApiError } from "../lib/api";
 import { useAuth } from "../lib/auth-context";
+import { useTranslation } from "../lib/i18n-context";
 import {
   AccountInfoSection,
   StatsSection,
@@ -50,6 +51,7 @@ const EMPTY_PASSWORD: PasswordChange = {
 export default function SettingsScreen() {
   const router = useRouter();
   const { logout } = useAuth();
+  const { t } = useTranslation();
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [form, setForm] = useState<ProfileFormData>(EMPTY_FORM);
@@ -92,7 +94,7 @@ export default function SettingsScreen() {
       const response = await apiGet("/auth/me");
       const parsed = parseProfileResponse(response);
       if (!parsed) {
-        setLoadError("Profil introuvable");
+        setLoadError(t("settings.profile.notFound"));
         return;
       }
       setProfile(parsed);
@@ -101,10 +103,10 @@ export default function SettingsScreen() {
     } catch (err: unknown) {
       if (await handleAuthError(err)) return;
       const msg =
-        err instanceof Error ? err.message : "Erreur lors du chargement";
+        err instanceof Error ? err.message : t("settings.profile.loadError");
       setLoadError(msg);
     }
-  }, [handleAuthError]);
+  }, [handleAuthError, t]);
 
   useEffect(() => {
     setLoading(true);
@@ -149,11 +151,11 @@ export default function SettingsScreen() {
         setForm(profileToFormData(parsed));
       }
       setEditing(false);
-      setFormSuccess("Profil enregistre");
+      setFormSuccess(t("settings.profile.saveSuccess"));
     } catch (err: unknown) {
       if (await handleAuthError(err)) return;
       const msg =
-        err instanceof Error ? err.message : "Erreur lors de la sauvegarde";
+        err instanceof Error ? err.message : t("settings.profile.saveError");
       setFormError(msg);
     } finally {
       setSaving(false);
@@ -189,13 +191,11 @@ export default function SettingsScreen() {
       });
       setPassword(EMPTY_PASSWORD);
       setChangingPassword(false);
-      setPasswordSuccess("Mot de passe modifie avec succes");
+      setPasswordSuccess(t("settings.password.success"));
     } catch (err: unknown) {
       if (await handleAuthError(err)) return;
       const msg =
-        err instanceof Error
-          ? err.message
-          : "Erreur lors du changement de mot de passe";
+        err instanceof Error ? err.message : t("settings.password.error");
       setPasswordError(msg);
     } finally {
       setSavingPassword(false);
@@ -217,9 +217,7 @@ export default function SettingsScreen() {
     } catch (err: unknown) {
       if (await handleAuthError(err)) return;
       const msg =
-        err instanceof Error
-          ? err.message
-          : "Erreur lors de la suppression du compte";
+        err instanceof Error ? err.message : t("settings.delete.error");
       setDeleteError(msg);
     } finally {
       setDeleting(false);
@@ -228,12 +226,12 @@ export default function SettingsScreen() {
 
   const confirmDeleteAccount = () => {
     Alert.alert(
-      "Supprimer le compte",
-      "Etes-vous sur ? Cette action desactive votre acces de maniere permanente.",
+      t("settings.delete.title"),
+      t("settings.delete.confirm"),
       [
-        { text: "Annuler", style: "cancel" },
+        { text: t("common.cancel"), style: "cancel" },
         {
-          text: "Supprimer",
+          text: t("settings.delete.button"),
           style: "destructive",
           onPress: runDeleteAccount,
         },
@@ -253,10 +251,10 @@ export default function SettingsScreen() {
     return (
       <View style={styles.center}>
         <Text style={styles.errorText}>
-          {loadError ?? "Profil introuvable"}
+          {loadError ?? t("settings.profile.notFound")}
         </Text>
         <Pressable onPress={onRefresh} style={styles.retryButton}>
-          <Text style={styles.retryText}>Reessayer</Text>
+          <Text style={styles.retryText}>{t("common.retry")}</Text>
         </Pressable>
       </View>
     );
@@ -308,7 +306,9 @@ export default function SettingsScreen() {
             style={styles.logoutButton}
             testID="logout-button"
           >
-            <Text style={styles.logoutButtonText}>Deconnexion</Text>
+            <Text style={styles.logoutButtonText}>
+              {t("settings.actions.logout")}
+            </Text>
           </Pressable>
         </View>
 
