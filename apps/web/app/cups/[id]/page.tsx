@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { API_BASE } from "../../auth-client";
 import { apiRequest } from "../../lib/api-client";
+import CupBracketView from "./CupBracketView";
 
 type CupScoringConfig = {
   winPoints: number;
@@ -637,6 +638,12 @@ export default function CupDetailPage() {
                   </tbody>
                 </table>
               </div>
+            </div>
+          )}
+          {/* S27.1j — bracket visuel additif (vue chronologique) */}
+          {cup.matches && cup.matches.length > 0 && (
+            <div className="pt-6 border-t border-gray-200">
+              <CupBracketView matches={cup.matches} />
             </div>
           )}
           {cup.matches && cup.matches.length > 0 && (
