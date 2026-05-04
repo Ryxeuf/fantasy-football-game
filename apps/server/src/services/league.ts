@@ -459,6 +459,65 @@ export async function computeSeasonStandings(
   return rows;
 }
 
+/**
+ * S26.6b — Liste paginee des saisons d'un theme donne.
+ * `theme` est obligatoire et valide via `isLeagueThemeSlug`.
+ * `themeYear` filtre une edition precise (laisser absent pour toutes les
+ * editions du theme, dans l'ordre `themeYear DESC, seasonNumber DESC`).
+ *
+ * Retour identique a `listLeagues` (items / total / limit / offset) pour
+ * que les clients reutilisent la meme convention de pagination.
+ */
+export interface ListThemedSeasonsInput {
+  theme: LeagueThemeSlug;
+  themeYear?: number;
+  limit?: number;
+  offset?: number;
+}
+
+export async function listThemedSeasons(input: ListThemedSeasonsInput) {
+  if (!isLeagueThemeSlug(input.theme)) {
+    throw new Error(
+      `theme inconnu: ${String(input.theme)} (slugs valides: skaven_cup, nordic_challenge, underworld_open)`,
+    );
+  }
+  if (
+    input.themeYear !== undefined &&
+    (!Number.isInteger(input.themeYear) || input.themeYear <= 0)
+  ) {
+    throw new Error(
+      "themeYear doit etre un entier strictement positif (annee a 4 chiffres)",
+    );
+  }
+  const limit = Math.min(Math.max(input.limit ?? 50, 1), 100);
+  const offset = Math.max(input.offset ?? 0, 0);
+
+  const where: Record<string, unknown> = { theme: input.theme };
+  if (input.themeYear !== undefined) {
+    where.themeYear = input.themeYear;
+  }
+
+  const [items, total] = await Promise.all([
+    prisma.leagueSeason.findMany({
+      where,
+      orderBy: [
+        { themeYear: "desc" },
+        { seasonNumber: "desc" },
+      ],
+      take: limit,
+      skip: offset,
+      include: {
+        league: {
+          select: { id: true, name: true, isPublic: true, ruleset: true },
+        },
+      },
+    }),
+    prisma.leagueSeason.count({ where }),
+  ]);
+
+  return { items, total, limit, offset };
+}
+
 export async function getLeagueById(leagueId: string) {
   return prisma.league.findUnique({
     where: { id: leagueId },

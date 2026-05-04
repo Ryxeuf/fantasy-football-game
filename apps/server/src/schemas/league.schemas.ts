@@ -6,12 +6,30 @@
  */
 
 import { z } from "zod";
+import { isLeagueThemeSlug } from "../services/league-themes";
 
 const rosterSlug = z
   .string()
   .min(1)
   .max(64)
   .regex(/^[a-z0-9_-]+$/i, "slug de roster invalide");
+
+/**
+ * S26.6 — slug d'un theme saisonnier (canonique). La liste autoritative
+ * vit dans `services/league-themes.ts` ; on refuse ici tout slug inconnu
+ * pour eviter de creer des saisons avec un theme orphelin.
+ */
+const leagueThemeSlug = z
+  .string()
+  .refine((v) => isLeagueThemeSlug(v), {
+    message:
+      "theme inconnu (slugs valides : skaven_cup, nordic_challenge, underworld_open)",
+  });
+
+const leagueThemeYear = z
+  .number()
+  .int("themeYear doit etre un entier")
+  .positive("themeYear doit etre strictement positif");
 
 export const createLeagueSchema = z.object({
   name: z
@@ -30,15 +48,40 @@ export const createLeagueSchema = z.object({
   forfeitPoints: z.number().int().min(-10).max(10).optional(),
 });
 
-export const createSeasonSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, "Le nom de la saison est requis")
-    .max(100, "Le nom de la saison ne peut pas depasser 100 caracteres"),
-  seasonNumber: z.number().int().min(1).optional(),
-  startDate: z.coerce.date().optional().nullable(),
-  endDate: z.coerce.date().optional().nullable(),
+export const createSeasonSchema = z
+  .object({
+    name: z
+      .string()
+      .trim()
+      .min(1, "Le nom de la saison est requis")
+      .max(100, "Le nom de la saison ne peut pas depasser 100 caracteres"),
+    seasonNumber: z.number().int().min(1).optional(),
+    startDate: z.coerce.date().optional().nullable(),
+    endDate: z.coerce.date().optional().nullable(),
+    // S26.6 — theme + themeYear : couple optionnel (les deux ou aucun).
+    theme: leagueThemeSlug.optional(),
+    themeYear: leagueThemeYear.optional(),
+  })
+  .refine(
+    (data) =>
+      (data.theme === undefined && data.themeYear === undefined) ||
+      (data.theme !== undefined && data.themeYear !== undefined),
+    {
+      message: "theme et themeYear doivent etre fournis ensemble",
+      path: ["themeYear"],
+    },
+  );
+
+/**
+ * S26.6b — Query schema pour `GET /leagues/seasons/themed`.
+ * `theme` est obligatoire (sinon le client appellerait `GET /leagues`).
+ * `themeYear` filtre une edition precise.
+ */
+export const listSeasonsByThemeQuerySchema = z.object({
+  theme: leagueThemeSlug,
+  themeYear: z.coerce.number().int().positive().optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional().default(50),
+  offset: z.coerce.number().int().min(0).optional().default(0),
 });
 
 export const joinSeasonSchema = z.object({
@@ -78,3 +121,6 @@ export type JoinSeasonBody = z.infer<typeof joinSeasonSchema>;
 export type CreateRoundBody = z.infer<typeof createRoundSchema>;
 export type ListLeaguesQuery = z.infer<typeof listLeaguesQuerySchema>;
 export type AttachMatchBody = z.infer<typeof attachMatchSchema>;
+export type ListSeasonsByThemeQuery = z.infer<
+  typeof listSeasonsByThemeQuerySchema
+>;
