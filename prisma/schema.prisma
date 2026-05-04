@@ -591,6 +591,14 @@ model LocalMatch {
   // Actions manuelles enregistrées pour le match
   actions LocalMatchAction[]
 
+  /// S27.1f — Match-of-the-week. Picked by an admin to highlight the
+  /// match on the home / cups landing pages. `featuredAt` est nullable :
+  /// les matchs non featured restent retro-compatibles. Le pick est
+  /// opt-in par admin (pas auto). `featuredNote` est un commentaire
+  /// court FR/EN affiche sous le titre.
+  featuredAt   DateTime?
+  featuredNote String?
+
   @@index([creatorId])
   @@index([teamAId])
   @@index([teamBId])
@@ -600,6 +608,7 @@ model LocalMatch {
   @@index([createdAt])
   @@index([shareToken])
   @@index([aiOpponent])
+  @@index([featuredAt])
 }
 
 // Modèle pour les actions manuelles d'un match local
