@@ -8,13 +8,16 @@ import {
 } from "../cupScoring";
 import { hasRole } from "../utils/roles";
 import { resolveRuleset } from "../utils/ruleset-helpers";
-import { validate } from "../middleware/validate";
+import { validate, validateQuery } from "../middleware/validate";
 import {
   createCupSchema,
   registerCupSchema,
   unregisterCupSchema,
   updateCupStatusSchema,
+  listMonthlyCupsQuerySchema,
+  type ListMonthlyCupsQuery,
 } from "../schemas/cup.schemas";
+import { listMonthlyCups } from "../services/cup-monthly-listing";
 import { serverLog } from "../utils/server-log";
 
 const router = Router();
@@ -226,6 +229,36 @@ router.get("/archived", authUser, async (req: AuthenticatedRequest, res) => {
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
+
+// S27.1b — GET /cup/monthly : liste publique des Nuffle Cup mensuelles
+// (filtres optionnels year/month). Pas d'auth : contenu public, indispensable
+// au bracket visuel `/cups/{slug}` et au calendrier esport SEO.
+// IMPORTANT : monter avant `/:id` pour eviter le pattern matching `/:id`
+// qui capturerait "monthly".
+router.get(
+  "/monthly",
+  validateQuery(listMonthlyCupsQuerySchema),
+  async (req, res) => {
+    const query = req.query as unknown as ListMonthlyCupsQuery;
+    try {
+      const { items, total, limit, offset } = await listMonthlyCups({
+        year: query.year,
+        month: query.month,
+        limit: query.limit,
+        offset: query.offset,
+      });
+      res.status(200).json({
+        success: true,
+        data: { cups: items },
+        meta: { total, limit, page: Math.floor(offset / limit) },
+      });
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Erreur inconnue";
+      const status = /year|month/i.test(msg) ? 400 : 500;
+      res.status(status).json({ success: false, error: msg });
+    }
+  },
+);
 
 // GET /cup/:id - Détails d'une coupe
 router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
