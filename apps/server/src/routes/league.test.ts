@@ -18,6 +18,7 @@ vi.mock("../services/league", () => ({
   getSeasonById: vi.fn(),
   computeSeasonStandings: vi.fn(),
   withdrawParticipant: vi.fn(),
+  listThemedSeasons: vi.fn(),
   parseAllowedRosters: vi.fn((raw: string | null) =>
     raw ? (JSON.parse(raw) as string[]) : null,
   ),
@@ -41,6 +42,7 @@ import {
   getSeasonById,
   computeSeasonStandings,
   withdrawParticipant,
+  listThemedSeasons,
 } from "../services/league";
 import { prisma } from "../prisma";
 import {
@@ -53,6 +55,8 @@ import {
   handleCreateRound,
   handleGetStandings,
   handleLeaveSeason,
+  handleListThemes,
+  handleListSeasonsByTheme,
 } from "./league";
 import type { AuthenticatedRequest } from "../middleware/authUser";
 
@@ -66,6 +70,7 @@ const mockService = {
   getSeasonById: getSeasonById as ReturnType<typeof vi.fn>,
   computeSeasonStandings: computeSeasonStandings as ReturnType<typeof vi.fn>,
   withdrawParticipant: withdrawParticipant as ReturnType<typeof vi.fn>,
+  listThemedSeasons: listThemedSeasons as ReturnType<typeof vi.fn>,
 };
 const mockPrisma = prisma as unknown as {
   team: { findUnique: ReturnType<typeof vi.fn> };
@@ -356,6 +361,41 @@ describe("Route: POST /leagues/:id/seasons (schedule a season)", () => {
     await handleCreateSeason(req, res);
     expect(res.statusCode).toBe(404);
   });
+
+  // S26.6b — le handler doit transmettre theme + themeYear au service
+  // pour que la creation persiste l'edition thematique correcte.
+  it("forwards theme + themeYear to the service when both are provided", async () => {
+    mockService.getLeagueById.mockResolvedValue({
+      id: "league-1",
+      creatorId: "user-1",
+    });
+    mockService.createSeason.mockResolvedValue({
+      id: "season-1",
+      seasonNumber: 1,
+      name: "Skaven Cup 2026",
+      theme: "skaven_cup",
+      themeYear: 2026,
+    });
+    const req = createReq({
+      params: { id: "league-1" },
+      body: {
+        name: "Skaven Cup 2026",
+        theme: "skaven_cup",
+        themeYear: 2026,
+      },
+    });
+    const res = createRes();
+    await handleCreateSeason(req, res);
+    expect(mockService.createSeason).toHaveBeenCalledWith(
+      expect.objectContaining({
+        leagueId: "league-1",
+        name: "Skaven Cup 2026",
+        theme: "skaven_cup",
+        themeYear: 2026,
+      }),
+    );
+    expect(res.statusCode).toBe(201);
+  });
 });
 
 describe("Route: POST /leagues/seasons/:seasonId/join", () => {
@@ -562,5 +602,106 @@ describe("Route: POST /leagues/seasons/:seasonId/leave", () => {
       teamId: "team-1",
     });
     expect(res.statusCode).toBe(200);
+  });
+});
+
+// S26.6b — endpoints lecture des saisons thematiques.
+describe("Route: GET /leagues/themes (catalogue public)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("retourne le catalogue des themes ordonnes par mois croissant", async () => {
+    const req = createReq();
+    const res = createRes();
+    await handleListThemes(req, res);
+    expect(res.statusCode).toBe(200);
+    const payload = res.payload as {
+      success: boolean;
+      data: { themes: Array<{ slug: string; month: number }> };
+    };
+    expect(payload.success).toBe(true);
+    expect(payload.data.themes.length).toBeGreaterThanOrEqual(3);
+    const slugs = payload.data.themes.map((t) => t.slug);
+    expect(slugs).toEqual(
+      expect.arrayContaining([
+        "skaven_cup",
+        "nordic_challenge",
+        "underworld_open",
+      ]),
+    );
+    for (let i = 1; i < payload.data.themes.length; i++) {
+      expect(payload.data.themes[i].month).toBeGreaterThan(
+        payload.data.themes[i - 1].month,
+      );
+    }
+  });
+
+  it("expose chaque theme avec slug, title, month, badgeColor, description", async () => {
+    const req = createReq();
+    const res = createRes();
+    await handleListThemes(req, res);
+    const payload = res.payload as {
+      data: {
+        themes: Array<{
+          slug: string;
+          title: string;
+          month: number;
+          badgeColor: string;
+          description: string;
+        }>;
+      };
+    };
+    for (const t of payload.data.themes) {
+      expect(typeof t.slug).toBe("string");
+      expect(typeof t.title).toBe("string");
+      expect(typeof t.month).toBe("number");
+      expect(t.badgeColor).toMatch(/^#[0-9a-fA-F]{6}$/);
+      expect(typeof t.description).toBe("string");
+    }
+  });
+});
+
+describe("Route: GET /leagues/seasons/themed (lecture filtree)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("retourne les saisons d'un theme avec slug + annee", async () => {
+    mockService.listThemedSeasons.mockResolvedValue({
+      items: [
+        {
+          id: "s-1",
+          name: "Skaven Cup 2026",
+          theme: "skaven_cup",
+          themeYear: 2026,
+        },
+      ],
+      total: 1,
+      limit: 50,
+      offset: 0,
+    });
+    const req = createReq({
+      query: { theme: "skaven_cup", themeYear: 2026, limit: 50, offset: 0 },
+    });
+    const res = createRes();
+    await handleListSeasonsByTheme(req, res);
+    expect(res.statusCode).toBe(200);
+    const payload = res.payload as {
+      success: boolean;
+      data: { seasons: Array<{ id: string }> };
+      meta: { total: number };
+    };
+    expect(payload.success).toBe(true);
+    expect(payload.data.seasons).toHaveLength(1);
+    expect(payload.meta.total).toBe(1);
+  });
+
+  it("convertit une erreur de slug inconnu en 400", async () => {
+    mockService.listThemedSeasons.mockRejectedValue(
+      new Error("theme inconnu: ghost_league"),
+    );
+    const req = createReq({
+      query: { theme: "ghost_league", limit: 50, offset: 0 },
+    });
+    const res = createRes();
+    await handleListSeasonsByTheme(req, res);
+    expect(res.statusCode).toBe(400);
   });
 });

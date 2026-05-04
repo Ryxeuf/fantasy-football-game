@@ -22,20 +22,24 @@ import {
   getSeasonById,
   computeSeasonStandings,
   withdrawParticipant,
+  listThemedSeasons,
   parseAllowedRosters,
 } from "../services/league";
+import { listLeagueThemes } from "../services/league-themes";
 import {
   createLeagueSchema,
   createSeasonSchema,
   joinSeasonSchema,
   createRoundSchema,
   listLeaguesQuerySchema,
+  listSeasonsByThemeQuerySchema,
   attachMatchSchema,
   type CreateLeagueBody,
   type CreateSeasonBody,
   type JoinSeasonBody,
   type CreateRoundBody,
   type ListLeaguesQuery,
+  type ListSeasonsByThemeQuery,
   type AttachMatchBody,
 } from "../schemas/league.schemas";
 import { sendError, sendSuccess } from "../utils/api-response";
@@ -192,6 +196,10 @@ export async function handleCreateSeason(
       seasonNumber: body.seasonNumber,
       startDate: body.startDate ?? null,
       endDate: body.endDate ?? null,
+      // S26.6 — propagation du theme + themeYear (validation finale dans
+      // le service : isLeagueThemeSlug + Number.isInteger(year)).
+      theme: body.theme,
+      themeYear: body.themeYear,
     });
     sendSuccess(res, season, 201);
   } catch (e: unknown) {
@@ -369,6 +377,47 @@ export async function handleAttachMatch(
   sendSuccess(res, { matchId: match.id, seasonId, roundId });
 }
 
+/**
+ * S26.6b — Catalogue public des themes saisonniers (statique).
+ * Sert d'alimentation pour l'UI calendrier `/leagues/seasons` et le
+ * sitemap (themes indexables).
+ */
+export async function handleListThemes(
+  _req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const themes = listLeagueThemes();
+  sendSuccess(res, { themes });
+}
+
+/**
+ * S26.6b — Liste paginee des saisons d'un theme.
+ * Validation Zod en amont (slug refuse si non canonique). Le service
+ * fait une 2e validation defensive et renvoie une erreur metier si le
+ * slug est forge a la main.
+ */
+export async function handleListSeasonsByTheme(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const query = req.query as unknown as ListSeasonsByThemeQuery;
+  try {
+    const { items, total, limit, offset } = await listThemedSeasons({
+      theme: query.theme,
+      themeYear: query.themeYear,
+      limit: query.limit,
+      offset: query.offset,
+    });
+    res.status(200).json({
+      success: true,
+      data: { seasons: items },
+      meta: { total, limit, page: Math.floor(offset / limit) },
+    });
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
 export async function handleGetStandings(
   req: AuthenticatedRequest,
   res: Response,
@@ -386,6 +435,16 @@ const router = Router();
 
 router.post("/", authUser, validate(createLeagueSchema), handleCreateLeague);
 router.get("/", authUser, validateQuery(listLeaguesQuerySchema), handleListLeagues);
+// S26.6b — catalogue public des themes (pas d'auth : contenu de jeu
+// statique, utilise par l'UI calendrier et le sitemap SEO).
+router.get("/themes", handleListThemes);
+// S26.6b — listing public des saisons d'un theme (pas d'auth : sert
+// l'UI calendrier `/leagues/seasons` accessible aux non-loggues).
+router.get(
+  "/seasons/themed",
+  validateQuery(listSeasonsByThemeQuerySchema),
+  handleListSeasonsByTheme,
+);
 router.get("/:id", authUser, handleGetLeague);
 router.post(
   "/:id/seasons",

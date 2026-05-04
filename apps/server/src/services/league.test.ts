@@ -23,6 +23,7 @@ vi.mock("../prisma", () => ({
       findMany: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      count: vi.fn(),
     },
     leagueParticipant: {
       findUnique: vi.fn(),
@@ -50,6 +51,7 @@ import {
   addParticipant,
   createRound,
   listLeagues,
+  listThemedSeasons,
 } from "./league";
 
 const mockPrisma = prisma as any;
@@ -723,6 +725,85 @@ describe("Rule: League service", () => {
       expect(mockPrisma.league.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ take: 1, skip: 0 }),
       );
+    });
+  });
+
+  // S26.6b — listing public des saisons d'un theme.
+  describe("listThemedSeasons", () => {
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+
+    it("filtre par theme et applique l'ordre themeYear DESC, seasonNumber DESC", async () => {
+      mockPrisma.leagueSeason.findMany.mockResolvedValue([
+        { id: "s-2026", themeYear: 2026, seasonNumber: 1, theme: "skaven_cup" },
+        { id: "s-2025", themeYear: 2025, seasonNumber: 2, theme: "skaven_cup" },
+      ]);
+      mockPrisma.leagueSeason.count.mockResolvedValue(2);
+
+      const result = await listThemedSeasons({ theme: "skaven_cup" });
+
+      expect(mockPrisma.leagueSeason.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { theme: "skaven_cup" },
+          orderBy: [
+            { themeYear: "desc" },
+            { seasonNumber: "desc" },
+          ],
+        }),
+      );
+      expect(result.items).toHaveLength(2);
+      expect(result.total).toBe(2);
+    });
+
+    it("ajoute themeYear au filtre quand fourni", async () => {
+      mockPrisma.leagueSeason.findMany.mockResolvedValue([]);
+      mockPrisma.leagueSeason.count.mockResolvedValue(0);
+
+      await listThemedSeasons({ theme: "nordic_challenge", themeYear: 2026 });
+
+      expect(mockPrisma.leagueSeason.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { theme: "nordic_challenge", themeYear: 2026 },
+        }),
+      );
+    });
+
+    it("plafonne limit a 100 et applique offset", async () => {
+      mockPrisma.leagueSeason.findMany.mockResolvedValue([]);
+      mockPrisma.leagueSeason.count.mockResolvedValue(150);
+
+      const r = await listThemedSeasons({
+        theme: "skaven_cup",
+        limit: 9999,
+        offset: 25,
+      });
+
+      expect(mockPrisma.leagueSeason.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ take: 100, skip: 25 }),
+      );
+      expect(r.limit).toBe(100);
+      expect(r.offset).toBe(25);
+      expect(r.total).toBe(150);
+    });
+
+    it("rejette un slug de theme inconnu", async () => {
+      await expect(
+        listThemedSeasons({ theme: "ghost_league" as never }),
+      ).rejects.toThrow(/theme inconnu/i);
+      expect(mockPrisma.leagueSeason.findMany).not.toHaveBeenCalled();
+    });
+
+    it("rejette un themeYear non entier", async () => {
+      await expect(
+        listThemedSeasons({ theme: "skaven_cup", themeYear: 2026.5 }),
+      ).rejects.toThrow(/themeYear/i);
+    });
+
+    it("rejette un themeYear <= 0", async () => {
+      await expect(
+        listThemedSeasons({ theme: "skaven_cup", themeYear: 0 }),
+      ).rejects.toThrow(/themeYear/i);
     });
   });
 });
