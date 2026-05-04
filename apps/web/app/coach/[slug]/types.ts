@@ -19,6 +19,20 @@ export interface CoachPublicProfile {
   achievements: CoachShowcaseAchievement[];
   /** S26.3h — equipes recentes du coach. */
   recentTeams: CoachRecentTeam[];
+  /** S26.6d/e — titres de saisons thematiques remportes (Champion {Theme} {YYYY}). */
+  championships?: CoachThemedChampionship[];
+}
+
+export interface CoachThemedChampionship {
+  seasonId: string;
+  theme: string;
+  themeYear: number;
+  /** "Champion {Theme} {YYYY}". */
+  label: string;
+  leagueId: string;
+  leagueName: string;
+  /** Couleur hex du badge (derivee du catalogue serveur). */
+  badgeColor: string;
 }
 
 export interface CoachShowcaseAchievement {

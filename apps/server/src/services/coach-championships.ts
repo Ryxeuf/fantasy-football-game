@@ -20,6 +20,7 @@ import { prisma } from "../prisma";
 import { computeSeasonStandings } from "./league";
 import {
   formatLeagueThemeChampionLabel,
+  getLeagueThemeBySlug,
   isLeagueThemeSlug,
   type LeagueThemeSlug,
 } from "./league-themes";
@@ -32,6 +33,8 @@ export interface CoachThemedChampionship {
   label: string;
   leagueId: string;
   leagueName: string;
+  /** S26.6e — couleur hex du badge (derivee du catalogue, pas dupliquee front). */
+  badgeColor: string;
 }
 
 interface ThemedSeasonRow {
@@ -82,6 +85,8 @@ export async function getCoachThemedChampionships(
       s.themeYear,
     );
     if (!label) continue;
+    const theme = getLeagueThemeBySlug(s.theme);
+    if (!theme) continue;
 
     result.push({
       seasonId: s.id,
@@ -90,6 +95,7 @@ export async function getCoachThemedChampionships(
       label,
       leagueId: s.leagueId,
       leagueName: s.league?.name ?? "",
+      badgeColor: theme.badgeColor,
     });
   }
 

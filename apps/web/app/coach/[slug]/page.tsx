@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { fetchServerJson, getServerApiBase, safeServerJson } from "../../lib/serverApi";
 import CoachAchievementsShowcase from "./CoachAchievementsShowcase";
+import CoachChampionshipsBanner from "./CoachChampionshipsBanner";
 import CoachEloChart from "./CoachEloChart";
 import CoachExportPdfButton from "./CoachExportPdfButton";
 import CoachProfileHeader from "./CoachProfileHeader";
@@ -74,6 +75,7 @@ export default async function CoachProfilePage({
   return (
     <main className="max-w-4xl mx-auto p-6 space-y-6">
       <CoachProfileHeader profile={profile} />
+      <CoachChampionshipsBanner championships={profile.championships} />
       <CoachEloChart snapshots={eloSnapshots} />
       <CoachAchievementsShowcase achievements={profile.achievements} />
       <CoachRecentTeams teams={profile.recentTeams} />
