@@ -94,6 +94,7 @@ export async function recordLeagueMatchResult(
       id: true,
       leagueSeasonId: true,
       leagueRoundId: true,
+      leaguePairingId: true,
       leagueScoredAt: true,
       leagueSeason: {
         select: {
@@ -215,18 +216,52 @@ export async function recordLeagueMatchResult(
     data: { leagueScoredAt: new Date() },
   });
 
-  await prisma.$transaction([updateA, updateB, markMatch]);
+  // L2.A.5 — Si le match est rattache a un pairing pre-genere du
+  // calendrier round-robin, on bascule le pairing en `played` dans la
+  // meme transaction. Sans pairing (matchs Sprint 17 attaches a la
+  // main via `attachMatch`), on conserve le comportement legacy.
+  const updates =
+    match.leaguePairingId !== null && match.leaguePairingId !== undefined
+      ? [
+          updateA,
+          updateB,
+          markMatch,
+          prisma.leaguePairing.update({
+            where: { id: match.leaguePairingId },
+            data: { status: "played" },
+          }),
+        ]
+      : [updateA, updateB, markMatch];
+  await prisma.$transaction(updates);
 
   let roundCompleted = false;
   let seasonCompleted = false;
 
   if (match.leagueRoundId) {
-    const pending = await prisma.match.count({
+    // L2.A.5 — La completion du round se base desormais sur les
+    // pairings (nouveau modele) plutot que sur les matchs : un round
+    // est complet quand TOUS ses pairings sont dans un etat terminal
+    // (`played`, `forfeit_home`, `forfeit_away`, `cancelled`). Pour les
+    // saisons legacy sans pairing (Sprint 17), aucune ligne ne sera
+    // trouvee et on retombe sur le compteur historique base matchs.
+    const pendingPairings = await prisma.leaguePairing.count({
       where: {
-        leagueRoundId: match.leagueRoundId,
-        leagueScoredAt: null,
+        roundId: match.leagueRoundId,
+        status: { in: ["scheduled", "in_progress"] },
       },
     });
+    const totalPairings = await prisma.leaguePairing.count({
+      where: { roundId: match.leagueRoundId },
+    });
+    const pending =
+      totalPairings > 0
+        ? pendingPairings
+        : await prisma.match.count({
+            where: {
+              leagueRoundId: match.leagueRoundId,
+              leagueScoredAt: null,
+            },
+          });
     if (pending === 0) {
       await prisma.leagueRound.update({
         where: { id: match.leagueRoundId },

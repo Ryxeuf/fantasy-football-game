@@ -25,6 +25,14 @@ import {
   listThemedSeasons,
   parseAllowedRosters,
 } from "../services/league";
+import {
+  startSeason,
+  regenerateSchedule,
+  openSeasonForRegistration,
+  closeSeason,
+  requireLeagueCreator,
+} from "../services/league-scheduler";
+import { createMatchFromPairing } from "../services/league-match-from-pairing";
 import { listLeagueThemes } from "../services/league-themes";
 import {
   createLeagueSchema,
@@ -34,6 +42,8 @@ import {
   listLeaguesQuerySchema,
   listSeasonsByThemeQuerySchema,
   attachMatchSchema,
+  startSeasonSchema,
+  createMatchFromPairingSchema,
   type CreateLeagueBody,
   type CreateSeasonBody,
   type JoinSeasonBody,
@@ -41,6 +51,8 @@ import {
   type ListLeaguesQuery,
   type ListSeasonsByThemeQuery,
   type AttachMatchBody,
+  type StartSeasonBody,
+  type CreateMatchFromPairingBody,
 } from "../schemas/league.schemas";
 import { sendError, sendSuccess } from "../utils/api-response";
 
@@ -431,6 +443,154 @@ export async function handleGetStandings(
   }
 }
 
+/**
+ * L2.A.3 — Convertit les erreurs typees `season-not-found` /
+ * `forbidden` levees par `requireLeagueCreator` en HTTP 404 / 403.
+ * Retourne `true` si la verification a reussi (le handler peut
+ * continuer), `false` sinon (la reponse a deja ete envoyee).
+ */
+async function ensureLeagueCreator(
+  userId: string,
+  seasonId: string,
+  res: Response,
+): Promise<boolean> {
+  try {
+    await requireLeagueCreator(userId, seasonId);
+    return true;
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "";
+    if (msg === "season-not-found") {
+      sendError(res, "Saison introuvable", 404);
+    } else if (msg === "forbidden") {
+      sendError(res, "Seul le createur de la ligue peut faire cette action", 403);
+    } else {
+      domainError(res, e);
+    }
+    return false;
+  }
+}
+
+/**
+ * L2.A.3 — Ouvre une saison aux inscriptions (`draft -> scheduled`).
+ * Reserve au createur de la ligue. No-op si deja `scheduled`.
+ */
+export async function handleOpenSeason(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const seasonId = req.params.seasonId;
+  if (!(await ensureLeagueCreator(userId, seasonId, res))) return;
+  try {
+    await openSeasonForRegistration(seasonId);
+    sendSuccess(res, { seasonId, status: "scheduled" });
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/**
+ * L2.A.3 — Demarre une saison : genere le calendrier round-robin et
+ * passe la saison a `in_progress`. Reserve au createur de la ligue.
+ */
+export async function handleStartSeason(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const seasonId = req.params.seasonId;
+  if (!(await ensureLeagueCreator(userId, seasonId, res))) return;
+  const body = req.body as StartSeasonBody;
+  try {
+    const result = await startSeason(seasonId, {
+      doubleRoundRobin: body.doubleRoundRobin,
+      firstRoundStartDate: body.firstRoundStartDate ?? null,
+      roundDurationDays: body.roundDurationDays ?? null,
+    });
+    sendSuccess(res, result, 201);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/**
+ * L2.A.3 — Regenere le calendrier d'une saison. Refuse si un match a
+ * deja ete comptabilise. Reserve au createur de la ligue.
+ */
+export async function handleRegenerateSchedule(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const seasonId = req.params.seasonId;
+  if (!(await ensureLeagueCreator(userId, seasonId, res))) return;
+  const body = req.body as StartSeasonBody;
+  try {
+    const result = await regenerateSchedule(seasonId, {
+      doubleRoundRobin: body.doubleRoundRobin,
+      firstRoundStartDate: body.firstRoundStartDate ?? null,
+      roundDurationDays: body.roundDurationDays ?? null,
+    });
+    sendSuccess(res, result);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/**
+ * L2.A.3 — Force la cloture d'une saison (admin). Cancelle les
+ * pairings non joues et passe la saison en `completed`. Reserve au
+ * createur de la ligue.
+ */
+export async function handleCloseSeason(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const seasonId = req.params.seasonId;
+  if (!(await ensureLeagueCreator(userId, seasonId, res))) return;
+  try {
+    await closeSeason(seasonId);
+    sendSuccess(res, { seasonId, status: "completed" });
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/**
+ * L2.A.4 — Cree un Match a partir d'un pairing du calendrier. Reserve
+ * a un coach proprietaire de l'une des 2 equipes apparies. Idempotent :
+ * si le pairing a deja un match, retourne l'existant.
+ */
+export async function handleCreateMatchFromPairing(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const pairingId = req.params.pairingId;
+  const body = req.body as CreateMatchFromPairingBody;
+  try {
+    const result = await createMatchFromPairing({
+      pairingId,
+      userId,
+      seed: body?.seed,
+    });
+    sendSuccess(res, result, result.created ? 201 : 200);
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : "";
+    if (/un des deux coachs/i.test(message)) {
+      sendError(res, message, 403);
+      return;
+    }
+    domainError(res, e);
+  }
+}
+
 const router = Router();
 
 router.post("/", authUser, validate(createLeagueSchema), handleCreateLeague);
@@ -475,6 +635,29 @@ router.post(
   authUser,
   validate(attachMatchSchema),
   handleAttachMatch,
+);
+// L2.A.3 — Routes admin saison (ouverture inscriptions, demarrage,
+// regeneration calendrier, cloture forcee). Reservees au createur.
+router.post("/seasons/:seasonId/open", authUser, handleOpenSeason);
+router.post(
+  "/seasons/:seasonId/start",
+  authUser,
+  validate(startSeasonSchema),
+  handleStartSeason,
+);
+router.post(
+  "/seasons/:seasonId/regenerate",
+  authUser,
+  validate(startSeasonSchema),
+  handleRegenerateSchedule,
+);
+router.post("/seasons/:seasonId/close", authUser, handleCloseSeason);
+// L2.A.4 — Lancement d'une rencontre depuis un pairing pre-genere.
+router.post(
+  "/pairings/:pairingId/match",
+  authUser,
+  validate(createMatchFromPairingSchema),
+  handleCreateMatchFromPairing,
 );
 router.get("/seasons/:seasonId/standings", authUser, handleGetStandings);
 router.get("/seasons/:seasonId", authUser, handleGetSeason);
