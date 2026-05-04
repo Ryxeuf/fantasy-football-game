@@ -15,6 +15,10 @@ vi.mock("../services/coach-profile", () => ({
   getCoachEloHistory: vi.fn(),
 }));
 
+vi.mock("../services/coach-championships", () => ({
+  getCoachThemedChampionships: vi.fn(),
+}));
+
 import type { Request, Response } from "express";
 import {
   getCoachEloHistory,
@@ -23,6 +27,7 @@ import {
   getCoachShowcaseAchievements,
   listPublicCoachSlugs,
 } from "../services/coach-profile";
+import { getCoachThemedChampionships } from "../services/coach-championships";
 import {
   handleGetCoachEloHistory,
   handleGetCoachPublicProfile,
@@ -34,6 +39,7 @@ const mockedGetShowcase = vi.mocked(getCoachShowcaseAchievements);
 const mockedGetRecentTeams = vi.mocked(getCoachRecentTeams);
 const mockedListSlugs = vi.mocked(listPublicCoachSlugs);
 const mockedGetEloHistory = vi.mocked(getCoachEloHistory);
+const mockedGetChampionships = vi.mocked(getCoachThemedChampionships);
 
 function buildRes(): Response {
   const res = {
@@ -54,6 +60,8 @@ function buildRes(): Response {
 describe("GET /coach/:slug — handleGetCoachPublicProfile", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // S26.6d default : pas de championships, sauf override par test.
+    mockedGetChampionships.mockResolvedValue([]);
   });
 
   it("returns 200 + ApiResponse data when the coach exists", async () => {
@@ -86,11 +94,52 @@ describe("GET /coach/:slug — handleGetCoachPublicProfile", () => {
         memberSince: "2025-12-01T00:00:00.000Z",
         achievements: [],
         recentTeams: [],
+        championships: [],
       },
     });
     expect(mockedGetProfile).toHaveBeenCalledWith("coach-alpha");
     expect(mockedGetShowcase).toHaveBeenCalledWith("u-1");
     expect(mockedGetRecentTeams).toHaveBeenCalledWith("u-1");
+    expect(mockedGetChampionships).toHaveBeenCalledWith("u-1");
+  });
+
+  // S26.6d — badge profil champion thematique
+  it("includes themed championships when the coach has won themed seasons", async () => {
+    mockedGetProfile.mockResolvedValue({
+      id: "u-1",
+      slug: "coach-alpha",
+      coachName: "Coach Alpha",
+      eloRating: 1500,
+      isSupporter: false,
+      supporterTier: null,
+      memberSince: "2025-12-01T00:00:00.000Z",
+    });
+    mockedGetShowcase.mockResolvedValue([]);
+    mockedGetRecentTeams.mockResolvedValue([]);
+    mockedGetChampionships.mockResolvedValue([
+      {
+        seasonId: "season-1",
+        theme: "skaven_cup",
+        themeYear: 2026,
+        label: "Champion Skaven Cup 2026",
+        leagueId: "lg-1",
+        leagueName: "Skaven League",
+      },
+    ]);
+
+    const req = { params: { slug: "coach-alpha" } } as unknown as Request;
+    const res = buildRes() as Response & { statusCode: number; body: unknown };
+    await handleGetCoachPublicProfile(req, res);
+
+    const payload = res.body as {
+      success: boolean;
+      data: { championships: Array<{ label: string; theme: string }> };
+    };
+    expect(payload.data.championships).toHaveLength(1);
+    expect(payload.data.championships[0].label).toBe(
+      "Champion Skaven Cup 2026",
+    );
+    expect(payload.data.championships[0].theme).toBe("skaven_cup");
   });
 
   it("includes the showcase achievements in the response (S26.3f)", async () => {

@@ -6,6 +6,7 @@ import {
   getCoachShowcaseAchievements,
   listPublicCoachSlugs,
 } from "../services/coach-profile";
+import { getCoachThemedChampionships } from "../services/coach-championships";
 import { serverLog } from "../utils/server-log";
 
 const DEFAULT_ELO_HISTORY_DAYS = 90;
@@ -37,13 +38,16 @@ export async function handleGetCoachPublicProfile(
       res.status(404).json({ success: false, error: "Coach introuvable" });
       return;
     }
-    const [achievements, recentTeams] = await Promise.all([
+    // S26.6d — championships sont calcules en parallele avec les autres
+    // sections du profil pour eviter d'augmenter la latence /coach/:slug.
+    const [achievements, recentTeams, championships] = await Promise.all([
       getCoachShowcaseAchievements(profile.id),
       getCoachRecentTeams(profile.id),
+      getCoachThemedChampionships(profile.id),
     ]);
     res.status(200).json({
       success: true,
-      data: { ...profile, achievements, recentTeams },
+      data: { ...profile, achievements, recentTeams, championships },
     });
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : "Erreur serveur";
