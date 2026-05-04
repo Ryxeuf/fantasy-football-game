@@ -21,6 +21,17 @@ export interface CoachPublicProfile {
   recentTeams: CoachRecentTeam[];
   /** S26.6d/e — titres de saisons thematiques remportes (Champion {Theme} {YYYY}). */
   championships?: CoachThemedChampionship[];
+  /** S27.1d/e — titres de Nuffle Cup mensuelles remportes. */
+  cupChampionships?: CoachCupChampionship[];
+}
+
+export interface CoachCupChampionship {
+  cupId: string;
+  cupName: string;
+  monthlyYear: number;
+  monthlyMonth: number;
+  /** "Champion Nuffle Cup {Mois} {YYYY}". */
+  label: string;
 }
 
 export interface CoachThemedChampionship {
