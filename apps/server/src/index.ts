@@ -11,6 +11,7 @@ import adminRoutes from "./routes/admin";
 import adminDataRoutes from "./routes/admin-data";
 import userRoutes from "./routes/user";
 import teamRoutes from "./routes/team";
+import teamAdvancementRoutes from "./routes/team-advancement";
 import starPlayersRoutes from "./routes/star-players";
 import publicSkillsRoutes from "./routes/public-skills";
 import publicRostersRoutes from "./routes/public-rosters";
@@ -144,6 +145,10 @@ app.use("/admin", adminRoutes);
 app.use("/admin/data", adminDataRoutes);
 app.use("/user", userRoutes);
 app.use("/team", teamRoutes);
+// L2.B.3 — routes level-up Jeu en Ligue. Mountees sur /team aussi
+// pour partager le namespace, mais dans un router separe pour ne pas
+// gonfler `routes/team.ts` qui depasse deja 2000 lignes.
+app.use("/team", teamAdvancementRoutes);
 app.use("/star-players", starPlayersRoutes);
 // Public reference data: cache for 1h with 24h stale-while-revalidate.
 app.use("/api", publicCache(), publicSkillsRoutes);

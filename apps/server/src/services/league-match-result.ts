@@ -27,6 +27,7 @@ import {
   type SeasonMatchOutcome,
 } from "./season-elo";
 import { applyThemedSeasonClosure } from "./themed-season-closure";
+import { runPostMatchLeagueSequence } from "./post-match-league-sequence";
 import { serverLog } from "../utils/server-log";
 
 export interface RecordMatchResultInput {
@@ -300,6 +301,25 @@ export async function recordLeagueMatchResult(
       }
     }
   }
+
+  // L2.B.2b — fire-and-forget : cree la LeaguePostMatchSequence pour
+  // alimenter les pendingChoices de level-up. Non-bloquant : un echec
+  // ici ne doit pas casser la comptabilisation deja transactionnelle
+  // ci-dessus (winners/points/ELO/match.leagueScoredAt).
+  runPostMatchLeagueSequence({ matchId: match.id })
+    .then((r) => {
+      if ("created" in r && r.created) {
+        serverLog.info(
+          `[league-match-result] post-match sequence created: matchId=${match.id} status=${r.status} pending=${r.pendingChoices.length}`,
+        );
+      }
+    })
+    .catch((e: unknown) => {
+      const msg = e instanceof Error ? e.message : "unknown";
+      serverLog.error(
+        `[league-match-result] post-match sequence failed: ${msg}`,
+      );
+    });
 
   return {
     recorded: true,

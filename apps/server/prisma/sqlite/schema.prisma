@@ -15,60 +15,60 @@ enum Ruleset {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  passwordHash String
-  name      String?  // Conservé pour rétrocompatibilité
-  coachName String   // Nom de coach (obligatoire)
-  firstName String?  // Prénom (optionnel)
-  lastName  String?  // Nom (optionnel)
-  dateOfBirth DateTime? // Date de naissance (optionnel)
+  id                          String            @id @default(cuid())
+  email                       String            @unique
+  passwordHash                String
+  name                        String? // Conservé pour rétrocompatibilité
+  coachName                   String // Nom de coach (obligatoire)
+  firstName                   String? // Prénom (optionnel)
+  lastName                    String? // Nom (optionnel)
+  dateOfBirth                 DateTime? // Date de naissance (optionnel)
   /// Rôle principal (conservé pour compatibilité, ex: "user" | "admin")
-  role      String   @default("user")
+  role                        String            @default("user")
   /// Liste complète des rôles (stockée en JSON, ex: '["user","admin"]')
-  roles     String   @default("[]")
+  roles                       String            @default("[]")
   /// Présent dans le schéma Postgres pour les fonctionnalités premium.
   /// Stub côté SQLite pour que /auth/me puisse sélectionner ce champ
   /// sans diverger entre les deux schémas.
-  patreon   Boolean  @default(false)
+  patreon                     Boolean           @default(false)
   /// Code unique à coller dans le message Ko-fi pour lier le don au compte.
-  kofiLinkCode         String?   @unique
+  kofiLinkCode                String?           @unique
   /// Discord user ID renseigné par le titulaire du compte (3e stratégie de
   /// matching Ko-fi).
-  discordUserId        String?   @unique
+  discordUserId               String?           @unique
   /// Palier (tier_name Ko-fi) du dernier abonnement actif.
-  supporterTier        String?
+  supporterTier               String?
   /// Fin de la période de supporter payée.
-  supporterActiveUntil DateTime?
+  supporterActiveUntil        DateTime?
   /// Map devise→centimes sérialisée en JSON (SQLite n'a pas de type Json).
   /// Exemple : '{"USD":300,"EUR":1000}'.
-  totalDonatedCentsByCurrency String @default("{}")
+  totalDonatedCentsByCurrency String            @default("{}")
   /// S26.3i — RGPD : opt-in pour cacher le profil public `/coach/{slug}`.
   /// Stub côté SQLite pour que la lookup publique puisse filtrer ce champ
   /// sans diverger entre les deux schémas.
-  privateProfile Boolean  @default(false)
+  privateProfile              Boolean           @default(false)
   /// Pré-alpha gate côté Postgres ; en SQLite tous les comptes sont valides.
-  valid     Boolean  @default(true)
+  valid                       Boolean           @default(true)
   /// Date de la dernière connexion réussie de l'utilisateur.
-  lastLoginAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  matches   Match[]
-  createdMatches Match[] @relation("MatchCreator")
-  teams     Team[]
-  teamSelections TeamSelection[]
-  createdCups Cup[] @relation("CupCreator")
-  createdLeagues League[] @relation("LeagueCreator")
-  createdLocalMatches LocalMatch[] @relation("LocalMatchCreator")
-  eloRating Int @default(1000)
-  matchQueue MatchQueue?
-  featureFlagOverrides FeatureFlagUser[]
-  friendshipsSent     Friendship[] @relation("FriendshipRequester")
-  friendshipsReceived Friendship[] @relation("FriendshipReceiver")
-  achievements        UserAchievement[]
-  kofiTransactions    KofiTransaction[]
-  refreshTokens       RefreshToken[]
-  eloSnapshots        EloSnapshot[]
+  lastLoginAt                 DateTime?
+  createdAt                   DateTime          @default(now())
+  updatedAt                   DateTime          @updatedAt
+  matches                     Match[]
+  createdMatches              Match[]           @relation("MatchCreator")
+  teams                       Team[]
+  teamSelections              TeamSelection[]
+  createdCups                 Cup[]             @relation("CupCreator")
+  createdLeagues              League[]          @relation("LeagueCreator")
+  createdLocalMatches         LocalMatch[]      @relation("LocalMatchCreator")
+  eloRating                   Int               @default(1000)
+  matchQueue                  MatchQueue?
+  featureFlagOverrides        FeatureFlagUser[]
+  friendshipsSent             Friendship[]      @relation("FriendshipRequester")
+  friendshipsReceived         Friendship[]      @relation("FriendshipReceiver")
+  achievements                UserAchievement[]
+  kofiTransactions            KofiTransaction[]
+  refreshTokens               RefreshToken[]
+  eloSnapshots                EloSnapshot[]
 }
 
 /// S26.3l — mirror SQLite de l'historique ELO Postgres (snapshot par mise a jour).
@@ -99,14 +99,14 @@ model RefreshToken {
 }
 
 model KofiTransaction {
-  id                         String   @id @default(cuid())
-  kofiTransactionId          String   @unique
+  id                         String    @id @default(cuid())
+  kofiTransactionId          String    @unique
   messageId                  String?
   /// Horodatage Ko-fi (ISO 8601). Distinct de receivedAt.
   kofiTimestamp              DateTime?
   type                       String
-  isSubscriptionPayment      Boolean  @default(false)
-  isFirstSubscriptionPayment Boolean  @default(false)
+  isSubscriptionPayment      Boolean   @default(false)
+  isFirstSubscriptionPayment Boolean   @default(false)
   tierName                   String?
   amountCents                Int
   currency                   String
@@ -115,12 +115,12 @@ model KofiTransaction {
   /// discord_userid du payload Ko-fi (snowflake), conservé brut pour audit.
   discordUserId              String?
   message                    String?
-  user                       User?    @relation(fields: [userId], references: [id])
+  user                       User?     @relation(fields: [userId], references: [id])
   userId                     String?
   matchedVia                 String?
   /// SQLite n'a pas le type Json de Prisma : payload brut stocké en string.
   rawPayload                 String
-  receivedAt                 DateTime @default(now())
+  receivedAt                 DateTime  @default(now())
 
   @@index([userId])
   @@index([email])
@@ -179,11 +179,11 @@ model FeatureFlagUser {
 }
 
 model Match {
-  id                String   @id @default(cuid())
-  createdAt         DateTime @default(now())
+  id                String          @id @default(cuid())
+  createdAt         DateTime        @default(now())
   status            String
   seed              String
-  creator           User?    @relation("MatchCreator", fields: [creatorId], references: [id])
+  creator           User?           @relation("MatchCreator", fields: [creatorId], references: [id])
   creatorId         String?
   currentTurnUserId String?
   lastMoveAt        DateTime?
@@ -203,13 +203,15 @@ model Match {
   // de ligue. Miroir du schema Postgres : sans ces champs, les services
   // qui font des includes (`pairings`, `leagueSeason`...) crashent
   // l'instance SQLite des e2e-api avec PrismaClientValidationError.
-  leagueSeasonId   String?
-  leagueSeason     LeagueSeason? @relation("LeagueSeasonMatches", fields: [leagueSeasonId], references: [id])
-  leagueRoundId    String?
-  leagueRound      LeagueRound?  @relation("LeagueRoundMatches", fields: [leagueRoundId], references: [id])
-  leaguePairingId  String?         @unique
-  leaguePairing    LeaguePairing?  @relation(fields: [leaguePairingId], references: [id])
-  leagueScoredAt   DateTime?
+  leagueSeasonId          String?
+  leagueSeason            LeagueSeason?            @relation("LeagueSeasonMatches", fields: [leagueSeasonId], references: [id])
+  leagueRoundId           String?
+  leagueRound             LeagueRound?             @relation("LeagueRoundMatches", fields: [leagueRoundId], references: [id])
+  leaguePairingId         String?                  @unique
+  leaguePairing           LeaguePairing?           @relation(fields: [leaguePairingId], references: [id])
+  leagueScoredAt          DateTime?
+  // L2.B.1 — Sprint Ligues v2 PR4 : sequence post-match Jeu en Ligue.
+  leaguePostMatchSequence LeaguePostMatchSequence?
 
   @@index([aiOpponent])
   @@index([leagueSeasonId])
@@ -241,74 +243,74 @@ model TeamSelection {
 }
 
 model Team {
-  id        String   @id @default(cuid())
-  owner     User     @relation(fields: [ownerId], references: [id])
-  ownerId   String
-  name      String
-  roster    String
-  ruleset   Ruleset  @default(season_3)
-  createdAt DateTime @default(now())
-  players   TeamPlayer[]
-  starPlayers TeamStarPlayer[]
-  selections TeamSelection[]
-  cupParticipants CupParticipant[]
-  localMatchesAsTeamA LocalMatch[] @relation("LocalMatchTeamA")
-  localMatchesAsTeamB LocalMatch[] @relation("LocalMatchTeamB")
-  matchQueue MatchQueue[]
+  id                   String              @id @default(cuid())
+  owner                User                @relation(fields: [ownerId], references: [id])
+  ownerId              String
+  name                 String
+  roster               String
+  ruleset              Ruleset             @default(season_3)
+  createdAt            DateTime            @default(now())
+  players              TeamPlayer[]
+  starPlayers          TeamStarPlayer[]
+  selections           TeamSelection[]
+  cupParticipants      CupParticipant[]
+  localMatchesAsTeamA  LocalMatch[]        @relation("LocalMatchTeamA")
+  localMatchesAsTeamB  LocalMatch[]        @relation("LocalMatchTeamB")
+  matchQueue           MatchQueue[]
   leagueParticipations LeagueParticipant[]
 
   // Informations d'équipe Blood Bowl
-  treasury      Int @default(0)        // Trésorerie en pièces d'or (calculée automatiquement)
-  rerolls       Int @default(0)        // Nombre de relances (0-8)
-  cheerleaders  Int @default(0)        // Nombre de cheerleaders (0-12)
-  assistants    Int @default(0)        // Nombre d'assistants (0-6)
+  treasury      Int     @default(0) // Trésorerie en pièces d'or (calculée automatiquement)
+  rerolls       Int     @default(0) // Nombre de relances (0-8)
+  cheerleaders  Int     @default(0) // Nombre de cheerleaders (0-12)
+  assistants    Int     @default(0) // Nombre d'assistants (0-6)
   apothecary    Boolean @default(false) // Présence d'un apothicaire
-  dedicatedFans Int @default(1)        // Nombre de fans dévoués (1-6)
+  dedicatedFans Int     @default(1) // Nombre de fans dévoués (1-6)
 
   // Valeurs calculées automatiquement selon les règles Blood Bowl
-  teamValue     Int @default(0)        // VE - Valeur d'Équipe (calculée)
-  currentValue  Int @default(0)        // VEA - Valeur d'Équipe Actuelle (calculée)
-  initialBudget Int @default(0)        // Budget initial saisi par l'utilisateur lors de la création
+  teamValue     Int @default(0) // VE - Valeur d'Équipe (calculée)
+  currentValue  Int @default(0) // VEA - Valeur d'Équipe Actuelle (calculée)
+  initialBudget Int @default(0) // Budget initial saisi par l'utilisateur lors de la création
 }
 
 model TeamPlayer {
-  id        String   @id @default(cuid())
-  team      Team     @relation(fields: [teamId], references: [id])
-  teamId    String
-  name      String
-  position  String
-  number    Int
-  ma        Int
-  st        Int
-  ag        Int
-  pa        Int
-  av        Int
-  skills    String
+  id       String @id @default(cuid())
+  team     Team   @relation(fields: [teamId], references: [id])
+  teamId   String
+  name     String
+  position String
+  number   Int
+  ma       Int
+  st       Int
+  ag       Int
+  pa       Int
+  av       Int
+  skills   String
 
   // SPP tracking (Star Player Points)
-  spp               Int @default(0)
-  totalTouchdowns   Int @default(0)
-  totalCasualties   Int @default(0)
-  totalCompletions  Int @default(0)
+  spp                Int @default(0)
+  totalTouchdowns    Int @default(0)
+  totalCasualties    Int @default(0)
+  totalCompletions   Int @default(0)
   totalInterceptions Int @default(0)
-  totalMvpAwards    Int @default(0)
-  matchesPlayed     Int @default(0)
+  totalMvpAwards     Int @default(0)
+  matchesPlayed      Int @default(0)
 
   // Permanent injuries (BB2020/BB3 lasting injuries)
-  nigglingInjuries Int @default(0)
-  maReduction      Int @default(0)
-  stReduction      Int @default(0)
-  agReduction      Int @default(0)
-  paReduction      Int @default(0)
-  avReduction      Int @default(0)
+  nigglingInjuries Int     @default(0)
+  maReduction      Int     @default(0)
+  stReduction      Int     @default(0)
+  agReduction      Int     @default(0)
+  paReduction      Int     @default(0)
+  avReduction      Int     @default(0)
   missNextMatch    Boolean @default(false)
 
   // Advancement tracking (level-up history)
   advancements String @default("[]") // JSON array of PlayerAdvancement objects
 
   // Player death tracking
-  dead    Boolean   @default(false)
-  diedAt  DateTime?
+  dead   Boolean   @default(false)
+  diedAt DateTime?
 }
 
 // Star Player recruté pour une équipe (mirror minimal du schéma Postgres
@@ -416,12 +418,12 @@ model PositionSkill {
 // Modèle pour les coupes (tournois)
 model Cup {
   id        String   @id @default(cuid())
-  name      String   // Nom de la coupe (obligatoire)
+  name      String // Nom de la coupe (obligatoire)
   creator   User     @relation("CupCreator", fields: [creatorId], references: [id])
   creatorId String
   ruleset   Ruleset  @default(season_2)
   validated Boolean  @default(false) // Si true, la coupe est validée et fermée aux inscriptions
-  isPublic  Boolean  @default(true)  // Si true, la coupe est publique et apparaît dans la liste
+  isPublic  Boolean  @default(true) // Si true, la coupe est publique et apparaît dans la liste
   status    String   @default("ouverte") // Statut: "ouverte", "en_cours", "terminee", "archivee"
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -456,7 +458,7 @@ model CupParticipant {
   team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
   teamId    String
   createdAt DateTime @default(now())
-  
+
   @@unique([cupId, teamId])
   @@index([cupId])
   @@index([teamId])
@@ -469,9 +471,9 @@ model MatchQueue {
   userId    String   @unique // Un seul slot par utilisateur
   team      Team     @relation(fields: [teamId], references: [id])
   teamId    String
-  teamValue Int      // Valeur d'equipe au moment de la recherche (pour matching TV +/- 150k)
+  teamValue Int // Valeur d'equipe au moment de la recherche (pour matching TV +/- 150k)
   status    String   @default("searching") // "searching" | "matched" | "cancelled"
-  matchId   String?  // ID du match cree quand matched
+  matchId   String? // ID du match cree quand matched
   joinedAt  DateTime @default(now())
 
   @@index([status])
@@ -480,44 +482,44 @@ model MatchQueue {
 
 // Modèle pour les parties offline (Match Local)
 model LocalMatch {
-  id        String   @id @default(cuid())
-  name      String?  // Nom optionnel pour la partie
-  status    String   @default("pending") // "pending", "waiting_for_player", "in_progress", "completed", "cancelled"
+  id          String    @id @default(cuid())
+  name        String? // Nom optionnel pour la partie
+  status      String    @default("pending") // "pending", "waiting_for_player", "in_progress", "completed", "cancelled"
   // Miroir du schéma Postgres : la route `POST /local-match` set
   // `isPublic` explicitement, donc le champ doit exister en SQLite.
-  isPublic  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  startedAt DateTime? // Date de début de la partie
+  isPublic    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  startedAt   DateTime? // Date de début de la partie
   completedAt DateTime? // Date de fin de la partie
-  
+
   // Créateur de la partie
-  creator   User     @relation("LocalMatchCreator", fields: [creatorId], references: [id])
+  creator   User   @relation("LocalMatchCreator", fields: [creatorId], references: [id])
   creatorId String
-  
+
   // Les deux équipes qui s'affrontent
-  teamA     Team     @relation("LocalMatchTeamA", fields: [teamAId], references: [id])
-  teamAId   String
-  teamB     Team?    @relation("LocalMatchTeamB", fields: [teamBId], references: [id], onDelete: SetNull)
-  teamBId   String?
-  
+  teamA   Team    @relation("LocalMatchTeamA", fields: [teamAId], references: [id])
+  teamAId String
+  teamB   Team?   @relation("LocalMatchTeamB", fields: [teamBId], references: [id], onDelete: SetNull)
+  teamBId String?
+
   // Relation optionnelle avec une coupe
-  cup       Cup?     @relation(fields: [cupId], references: [id], onDelete: SetNull)
-  cupId     String?
-  
+  cup   Cup?    @relation(fields: [cupId], references: [id], onDelete: SetNull)
+  cupId String?
+
   // Lien de partage pour inviter le second joueur
   shareToken String? @unique // Token unique pour le lien de partage
-  
+
   // Validation de participation des propriétaires des équipes
   teamAOwnerValidated Boolean @default(false) // Le propriétaire de l'équipe A a validé sa participation
   teamBOwnerValidated Boolean @default(false) // Le propriétaire de l'équipe B a validé sa participation
-  
+
   // État du jeu sauvegardé (JSON)
-  gameState Json?    // État complet du jeu pour reprise
-  
+  gameState Json? // État complet du jeu pour reprise
+
   // Résultat du match (optionnel, rempli à la fin)
-  scoreTeamA Int?    // Score de l'équipe A
-  scoreTeamB Int?    // Score de l'équipe B
+  scoreTeamA Int? // Score de l'équipe A
+  scoreTeamB Int? // Score de l'équipe B
 
   // N.4 — Mode pratique contre IA.
   aiOpponent   Boolean @default(false)
@@ -539,43 +541,43 @@ model LocalMatch {
 
 // Modèle pour les actions manuelles d'un match local
 model LocalMatchAction {
-  id        String   @id @default(cuid())
-  match     LocalMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
-  matchId   String
-  
+  id      String     @id @default(cuid())
+  match   LocalMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  matchId String
+
   // Informations sur l'action
-  half      Int      // Mi-temps (1 ou 2)
-  turn      Int      // Tour (1-8)
-  actionType String   // Type d'action: "passe", "reception", "td", "blocage", "blitz", "transmission", "aggression", "sprint", "esquive", "apothicaire", "interception"
-  
+  half       Int // Mi-temps (1 ou 2)
+  turn       Int // Tour (1-8)
+  actionType String // Type d'action: "passe", "reception", "td", "blocage", "blitz", "transmission", "aggression", "sprint", "esquive", "apothicaire", "interception"
+
   // Joueur qui effectue l'action
-  playerId  String   // ID du joueur (peut être un ID de joueur de l'équipe A ou B)
-  playerName String  // Nom du joueur (pour référence)
-  playerTeam String  // "A" ou "B"
-  
+  playerId   String // ID du joueur (peut être un ID de joueur de l'équipe A ou B)
+  playerName String // Nom du joueur (pour référence)
+  playerTeam String // "A" ou "B"
+
   // Adversaire concerné (optionnel)
-  opponentId String? // ID du joueur adverse (si applicable)
+  opponentId   String? // ID du joueur adverse (si applicable)
   opponentName String? // Nom du joueur adverse (si applicable)
-  
+
   // Résultat du dé (optionnel)
-  diceResult Int?    // Résultat du dé (1-6, ou autre selon le type d'action)
-  
+  diceResult Int? // Résultat du dé (1-6, ou autre selon le type d'action)
+
   // Échec (fumble)
-  fumble     Boolean @default(false) // Si true, l'action a échoué (fumble)
-  
+  fumble Boolean @default(false) // Si true, l'action a échoué (fumble)
+
   // État du joueur en cas d'échec (sauf pour passe, transmission, réception, apothicaire, interception)
   playerState String? // État du joueur si l'action échoue: "sonne", "ko", "elimine"
-  
+
   // Champs spécifiques pour blitz et blocage
-  armorBroken Boolean @default(false) // Si true, l'armure de l'adversaire est passée
+  armorBroken   Boolean @default(false) // Si true, l'armure de l'adversaire est passée
   opponentState String? // État de l'adversaire si armure passée: "sonne", "ko", "elimine"
-  
+
   // Champ spécifique pour passe
   passType String? // Type de passe: "rapide", "courte", "longue", "longue_bombe"
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@index([matchId])
   @@index([half, turn])
   @@index([createdAt])
@@ -592,7 +594,7 @@ model League {
   status          String   @default("draft") // "draft" | "open" | "in_progress" | "completed" | "archived"
   isPublic        Boolean  @default(true)
   maxParticipants Int      @default(16)
-  allowedRosters  String?  // JSON array des rosters autorises (null = tous)
+  allowedRosters  String? // JSON array des rosters autorises (null = tous)
   winPoints       Int      @default(3)
   drawPoints      Int      @default(1)
   lossPoints      Int      @default(0)
@@ -608,23 +610,23 @@ model League {
 }
 
 model LeagueSeason {
-  id           String   @id @default(cuid())
-  league       League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  id           String    @id @default(cuid())
+  league       League    @relation(fields: [leagueId], references: [id], onDelete: Cascade)
   leagueId     String
   seasonNumber Int
   name         String
-  status       String   @default("draft") // "draft" | "scheduled" | "in_progress" | "completed"
+  status       String    @default("draft") // "draft" | "scheduled" | "in_progress" | "completed"
   startDate    DateTime?
   endDate      DateTime?
   // S26.6 — themes saisonniers (cf. services/league-themes.ts).
   theme        String?
   themeYear    Int?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   participants LeagueParticipant[]
   rounds       LeagueRound[]
-  matches      Match[] @relation("LeagueSeasonMatches")
+  matches      Match[]             @relation("LeagueSeasonMatches")
 
   @@unique([leagueId, seasonNumber])
   @@index([leagueId])
@@ -651,8 +653,8 @@ model LeagueParticipant {
   joinedAt          DateTime     @default(now())
 
   // Sprint Ligues v2 — back-relations vers les pairings (home/away)
-  homePairings      LeaguePairing[] @relation("LeaguePairingHome")
-  awayPairings      LeaguePairing[] @relation("LeaguePairingAway")
+  homePairings LeaguePairing[] @relation("LeaguePairingHome")
+  awayPairings LeaguePairing[] @relation("LeaguePairingAway")
 
   @@unique([seasonId, teamId])
   @@index([seasonId])
@@ -685,20 +687,20 @@ model LeagueRound {
 // font `prisma.leaguePairing.X(...)` ou des includes `rounds.pairings`
 // fonctionnent contre la DB SQLite in-memory utilisee par les e2e-api.
 model LeaguePairing {
-  id                String   @id @default(cuid())
-  round             LeagueRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  id                String            @id @default(cuid())
+  round             LeagueRound       @relation(fields: [roundId], references: [id], onDelete: Cascade)
   roundId           String
   homeParticipant   LeagueParticipant @relation("LeaguePairingHome", fields: [homeParticipantId], references: [id], onDelete: Cascade)
   homeParticipantId String
   awayParticipant   LeagueParticipant @relation("LeaguePairingAway", fields: [awayParticipantId], references: [id], onDelete: Cascade)
   awayParticipantId String
   // "scheduled" | "in_progress" | "played" | "forfeit_home" | "forfeit_away" | "cancelled"
-  status            String   @default("scheduled")
+  status            String            @default("scheduled")
   scheduledAt       DateTime?
   deadlineAt        DateTime?
   match             Match?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 
   @@index([roundId])
   @@index([status])
@@ -737,4 +739,27 @@ model RegionalLeague {
   @@unique([slug, ruleset])
 }
 
+// L2.B.1 — Sprint Ligues v2 PR4 : sequence post-match Jeu en Ligue.
+// Mirroir du schema Postgres (cf. prisma/schema.prisma) pour permettre
+// aux services post-match (`prisma.leaguePostMatchSequence.X(...)`) de
+// fonctionner contre la DB SQLite in-memory utilisee par les e2e-api.
+model LeaguePostMatchSequence {
+  id                     String    @id @default(cuid())
+  match                  Match     @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  matchId                String    @unique
+  seasonId               String
+  status                 String    @default("pending")
+  winningsApplied        Boolean   @default(false)
+  lastingInjuriesApplied Boolean   @default(false)
+  advancementsResolved   Boolean   @default(false)
+  treasuryDeltaA         Int       @default(0)
+  treasuryDeltaB         Int       @default(0)
+  fanFactorDeltaA        Int       @default(0)
+  fanFactorDeltaB        Int       @default(0)
+  pendingChoices         String    @default("[]")
+  createdAt              DateTime  @default(now())
+  completedAt            DateTime?
 
+  @@index([seasonId])
+  @@index([status])
+}

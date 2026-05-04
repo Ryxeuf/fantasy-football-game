@@ -203,13 +203,15 @@ model Match {
   // de ligue. Miroir du schema Postgres : sans ces champs, les services
   // qui font des includes (`pairings`, `leagueSeason`...) crashent
   // l'instance SQLite des e2e-api avec PrismaClientValidationError.
-  leagueSeasonId  String?
-  leagueSeason    LeagueSeason?  @relation("LeagueSeasonMatches", fields: [leagueSeasonId], references: [id])
-  leagueRoundId   String?
-  leagueRound     LeagueRound?   @relation("LeagueRoundMatches", fields: [leagueRoundId], references: [id])
-  leaguePairingId String?        @unique
-  leaguePairing   LeaguePairing? @relation(fields: [leaguePairingId], references: [id])
-  leagueScoredAt  DateTime?
+  leagueSeasonId          String?
+  leagueSeason            LeagueSeason?            @relation("LeagueSeasonMatches", fields: [leagueSeasonId], references: [id])
+  leagueRoundId           String?
+  leagueRound             LeagueRound?             @relation("LeagueRoundMatches", fields: [leagueRoundId], references: [id])
+  leaguePairingId         String?                  @unique
+  leaguePairing           LeaguePairing?           @relation(fields: [leaguePairingId], references: [id])
+  leagueScoredAt          DateTime?
+  // L2.B.1 — Sprint Ligues v2 PR4 : sequence post-match Jeu en Ligue.
+  leaguePostMatchSequence LeaguePostMatchSequence?
 
   @@index([aiOpponent])
   @@index([leagueSeasonId])
@@ -735,4 +737,29 @@ model RegionalLeague {
   updatedAt     DateTime @updatedAt
 
   @@unique([slug, ruleset])
+}
+
+// L2.B.1 — Sprint Ligues v2 PR4 : sequence post-match Jeu en Ligue.
+// Mirroir du schema Postgres (cf. prisma/schema.prisma) pour permettre
+// aux services post-match (`prisma.leaguePostMatchSequence.X(...)`) de
+// fonctionner contre la DB SQLite in-memory utilisee par les e2e-api.
+model LeaguePostMatchSequence {
+  id                     String    @id @default(cuid())
+  match                  Match     @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  matchId                String    @unique
+  seasonId               String
+  status                 String    @default("pending")
+  winningsApplied        Boolean   @default(false)
+  lastingInjuriesApplied Boolean   @default(false)
+  advancementsResolved   Boolean   @default(false)
+  treasuryDeltaA         Int       @default(0)
+  treasuryDeltaB         Int       @default(0)
+  fanFactorDeltaA        Int       @default(0)
+  fanFactorDeltaB        Int       @default(0)
+  pendingChoices         String    @default("[]")
+  createdAt              DateTime  @default(now())
+  completedAt            DateTime?
+
+  @@index([seasonId])
+  @@index([status])
 }
