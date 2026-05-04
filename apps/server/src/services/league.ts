@@ -533,7 +533,51 @@ export async function getSeasonById(seasonId: string) {
     where: { id: seasonId },
     include: {
       league: true,
-      rounds: { orderBy: { roundNumber: "asc" } },
+      // L2.A.10 — on inclut les pairings de chaque round pour que le
+      // frontend puisse afficher "home vs away" et le bouton "Lancer le
+      // match" sans faire un fetch supplementaire par round. Le `match`
+      // (id + status) est joint pour permettre le routage direct vers
+      // la partie en cours, et l'`ownerId` des deux teams permet a
+      // `SeasonCalendar` de decider qui voit le bouton de lancement.
+      rounds: {
+        orderBy: { roundNumber: "asc" },
+        include: {
+          pairings: {
+            orderBy: { createdAt: "asc" },
+            include: {
+              match: { select: { id: true, status: true } },
+              homeParticipant: {
+                select: {
+                  id: true,
+                  teamId: true,
+                  team: {
+                    select: {
+                      id: true,
+                      name: true,
+                      roster: true,
+                      ownerId: true,
+                    },
+                  },
+                },
+              },
+              awayParticipant: {
+                select: {
+                  id: true,
+                  teamId: true,
+                  team: {
+                    select: {
+                      id: true,
+                      name: true,
+                      roster: true,
+                      ownerId: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
       participants: {
         include: {
           team: {

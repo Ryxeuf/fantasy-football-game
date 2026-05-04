@@ -23,6 +23,18 @@ export const ONLINE_PLAY_FLAG = "online_play" as const;
  */
 export const AI_TRAINING_FLAG = "ai_training" as const;
 
+/**
+ * Sprint Ligues v2 (PR2) — gate les nouveaux ecrans frontend de gestion
+ * de ligue : creation `/leagues/new`, edition draft, creation saison,
+ * panneau admin saison (open/start/regenerate/close), bouton "Rejoindre
+ * cette saison", calendrier interactif avec pairings et bouton
+ * "Lancer le match". Le backend reste ouvert (les routes API existaient
+ * deja avant l'introduction du flag) ; ce flag controle uniquement la
+ * visibilite des nouveaux composants UI tant que la feature n'est pas
+ * pretement annoncee aux utilisateurs.
+ */
+export const LEAGUES_V2_UI_FLAG = "leagues_v2_ui" as const;
+
 export interface FeatureFlagDTO {
   id: string;
   key: string;

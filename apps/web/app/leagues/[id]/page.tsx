@@ -4,9 +4,14 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { apiRequest } from "../../lib/api-client";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { useFeatureFlag } from "../../hooks/useFeatureFlag";
+import { LEAGUES_V2_UI_FLAG } from "../../lib/featureFlagKeys";
 import { SeasonCalendar } from "./SeasonCalendar";
 import { SeasonStandings } from "./SeasonStandings";
 import { SeasonParticipants } from "./SeasonParticipants";
+import { NewSeasonModal } from "./NewSeasonModal";
+import { SeasonAdminPanel } from "./SeasonAdminPanel";
+import { JoinSeasonModal } from "./JoinSeasonModal";
 import type {
   LeagueDetail,
   LeagueSeasonDetail,
@@ -19,10 +24,15 @@ import type {
 // legacy le temps que les success paths de `routes/league.ts` soient
 // migres (cf. roadmap S25.5).
 
+interface MeResponse {
+  user: { id: string } | null;
+}
+
 export default function LeagueDetailPage() {
   const { t } = useLanguage();
   const params = useParams();
   const leagueId = typeof params.id === "string" ? params.id : "";
+  const v2UiEnabled = useFeatureFlag(LEAGUES_V2_UI_FLAG);
 
   const [league, setLeague] = useState<LeagueDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -33,6 +43,29 @@ export default function LeagueDetailPage() {
   const [standings, setStandings] = useState<StandingRow[]>([]);
   const [seasonLoading, setSeasonLoading] = useState(false);
   const [seasonError, setSeasonError] = useState<string | null>(null);
+
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [newSeasonOpen, setNewSeasonOpen] = useState(false);
+  const [joinSeasonOpen, setJoinSeasonOpen] = useState(false);
+
+  // Charge l'identite courante une seule fois pour permettre au
+  // calendrier de decider quels boutons "Lancer le match" afficher et
+  // au panneau admin de se montrer uniquement au creator.
+  useEffect(() => {
+    let cancelled = false;
+    async function loadMe() {
+      try {
+        const me = await apiRequest<MeResponse>("/auth/me");
+        if (!cancelled) setCurrentUserId(me.user?.id ?? null);
+      } catch {
+        if (!cancelled) setCurrentUserId(null);
+      }
+    }
+    loadMe();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!leagueId) return;
@@ -143,6 +176,23 @@ export default function LeagueDetailPage() {
     ],
   );
 
+  const isCreator = useMemo(() => {
+    if (!league || !currentUserId) return false;
+    return league.creatorId === currentUserId;
+  }, [league, currentUserId]);
+
+  const registeredTeamIds = useMemo<string[]>(() => {
+    if (!season) return [];
+    return season.participants.map((p) => p.teamId);
+  }, [season]);
+
+  const canJoinSeason = useMemo(() => {
+    if (!v2UiEnabled || !season || !currentUserId) return false;
+    if (isCreator) return false;
+    // Inscriptions ouvertes uniquement avant le demarrage de la saison.
+    return season.status === "draft" || season.status === "scheduled";
+  }, [v2UiEnabled, season, currentUserId, isCreator]);
+
   if (loading) {
     return (
       <div className="w-full p-6">
@@ -233,9 +283,21 @@ export default function LeagueDetailPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold text-nuffle-anthracite">
-          {t.leagues.seasonsSection}
-        </h2>
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-lg font-semibold text-nuffle-anthracite">
+            {t.leagues.seasonsSection}
+          </h2>
+          {v2UiEnabled && isCreator ? (
+            <button
+              type="button"
+              data-testid="open-new-season-modal"
+              onClick={() => setNewSeasonOpen(true)}
+              className="px-3 py-1.5 rounded-md bg-white border border-nuffle-gold text-nuffle-bronze text-sm font-medium hover:bg-nuffle-gold/10"
+            >
+              + {t.leagues.newSeasonButton}
+            </button>
+          ) : null}
+        </div>
         {league.seasons.length === 0 ? (
           <div
             data-testid="league-seasons-empty"
@@ -289,11 +351,39 @@ export default function LeagueDetailPage() {
 
           {season ? (
             <>
+              {v2UiEnabled && isCreator ? (
+                <SeasonAdminPanel
+                  seasonId={season.id}
+                  status={season.status}
+                  onActionDone={() => {
+                    if (selectedSeasonId) {
+                      loadSeason(selectedSeasonId);
+                    }
+                  }}
+                />
+              ) : null}
+
+              {canJoinSeason ? (
+                <div>
+                  <button
+                    type="button"
+                    data-testid="open-join-season"
+                    onClick={() => setJoinSeasonOpen(true)}
+                    className="px-3 py-1.5 rounded-md bg-nuffle-gold text-white text-sm font-medium hover:bg-nuffle-gold/90"
+                  >
+                    + {t.leagues.joinSeasonButton}
+                  </button>
+                </div>
+              ) : null}
+
               <div className="space-y-3">
                 <h3 className="text-md font-semibold text-nuffle-anthracite">
                   {t.leagues.calendarSection}
                 </h3>
-                <SeasonCalendar rounds={season.rounds} />
+                <SeasonCalendar
+                  rounds={season.rounds}
+                  currentUserId={currentUserId}
+                />
               </div>
 
               <div className="space-y-3">
@@ -316,6 +406,37 @@ export default function LeagueDetailPage() {
             </p>
           ) : null}
         </section>
+      ) : null}
+
+      {v2UiEnabled && isCreator ? (
+        <NewSeasonModal
+          leagueId={league.id}
+          open={newSeasonOpen}
+          onClose={() => setNewSeasonOpen(false)}
+          onCreated={(seasonId) => {
+            setSelectedSeasonId(seasonId);
+            // Reload the league so the new season appears in the tabs.
+            apiRequest<{ league: LeagueDetail }>(`/league/${leagueId}`)
+              .then(({ league: data }) => setLeague(data))
+              .catch(() => {
+                /* tolere : le tab apparaitra au prochain refresh manuel */
+              });
+          }}
+        />
+      ) : null}
+
+      {canJoinSeason && season ? (
+        <JoinSeasonModal
+          open={joinSeasonOpen}
+          onClose={() => setJoinSeasonOpen(false)}
+          onJoined={() => {
+            if (selectedSeasonId) loadSeason(selectedSeasonId);
+          }}
+          seasonId={season.id}
+          ruleset={league.ruleset}
+          allowedRosters={league.allowedRosters}
+          alreadyRegisteredTeamIds={registeredTeamIds}
+        />
       ) : null}
     </div>
   );

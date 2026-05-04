@@ -3,6 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { apiRequest } from "../lib/api-client";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useFeatureFlag } from "../hooks/useFeatureFlag";
+import { LEAGUES_V2_UI_FLAG } from "../lib/featureFlagKeys";
 
 type LeagueStatus =
   | "draft"
@@ -51,6 +53,7 @@ function buildListPath(status: StatusFilter): string {
 
 export default function LeaguesPage() {
   const { t } = useLanguage();
+  const v2UiEnabled = useFeatureFlag(LEAGUES_V2_UI_FLAG);
   const [leagues, setLeagues] = useState<League[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -128,13 +131,24 @@ export default function LeaguesPage() {
       data-testid="leagues-page"
       className="w-full p-4 sm:p-6 space-y-4 sm:space-y-6"
     >
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold mb-2">
-          {t.leagues.title}
-        </h1>
-        <p className="text-sm sm:text-base text-gray-600">
-          {t.leagues.description}
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">
+            {t.leagues.title}
+          </h1>
+          <p className="text-sm sm:text-base text-gray-600">
+            {t.leagues.description}
+          </p>
+        </div>
+        {v2UiEnabled ? (
+          <Link
+            href="/leagues/new"
+            data-testid="leagues-create-cta"
+            className="inline-flex items-center gap-1 px-3 py-2 rounded-md bg-nuffle-gold text-white text-sm font-medium hover:bg-nuffle-gold/90"
+          >
+            + {t.leagues.createLeagueButton}
+          </Link>
+        ) : null}
       </div>
 
       <div className="flex flex-wrap items-center gap-3">

@@ -18,7 +18,11 @@ import {
   SEASON_3_SKILL_DESCRIPTIONS
 } from "./static-skills-data-s3";
 import { UNKNOWN_USER_ID } from "./utils/user-constants";
-import { ONLINE_PLAY_FLAG, AI_TRAINING_FLAG } from "./services/featureFlags";
+import {
+  ONLINE_PLAY_FLAG,
+  AI_TRAINING_FLAG,
+  LEAGUES_V2_UI_FLAG,
+} from "./services/featureFlags";
 import { seedDefaultLeagues, DEFAULT_LEAGUE_NAME } from "./seeders/leagues";
 import { serverLog } from "./utils/server-log";
 
@@ -1021,6 +1025,39 @@ async function main() {
     });
     serverLog.log(
       `   ✅ Override '${AI_TRAINING_FLAG}' ajouté pour user@example.com`,
+    );
+  }
+
+  // Sprint Ligues v2 (PR2) — flag UI gestion des ligues. Desactive
+  // globalement par defaut ; admins l'ont via bypass de role et
+  // user@example.com via override pour faciliter les demos.
+  const leaguesV2UiFlag = await prisma.featureFlag.upsert({
+    where: { key: LEAGUES_V2_UI_FLAG },
+    update: {
+      description:
+        "Sprint Ligues v2 — UI de gestion complete des ligues (creation, edition, admin saison, inscription, calendrier interactif).",
+    },
+    create: {
+      key: LEAGUES_V2_UI_FLAG,
+      description:
+        "Sprint Ligues v2 — UI de gestion complete des ligues (creation, edition, admin saison, inscription, calendrier interactif).",
+      enabled: false,
+    },
+  });
+  serverLog.log(
+    `   ✅ Flag '${LEAGUES_V2_UI_FLAG}' ${leaguesV2UiFlag.enabled ? "actif" : "inactif (override admin/user)"}`,
+  );
+
+  if (testUser) {
+    await prisma.featureFlagUser.upsert({
+      where: {
+        flagId_userId: { flagId: leaguesV2UiFlag.id, userId: testUser.id },
+      },
+      create: { flagId: leaguesV2UiFlag.id, userId: testUser.id },
+      update: {},
+    });
+    serverLog.log(
+      `   ✅ Override '${LEAGUES_V2_UI_FLAG}' ajouté pour user@example.com`,
     );
   }
 

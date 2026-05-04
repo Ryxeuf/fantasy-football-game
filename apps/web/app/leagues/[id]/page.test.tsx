@@ -1,7 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
-import LeagueDetailPage from "./page";
 import { LanguageProvider } from "../../contexts/LanguageContext";
+
+// Sprint Ligues v2 PR2 — `LeagueDetailPage` consomme `useFeatureFlag`
+// pour gater le panneau admin / bouton de creation de saison /
+// inscription. On stub le hook pour que les tests existants restent
+// stables (pas de panneau admin visible) sans avoir a wrapper avec un
+// vrai `FeatureFlagProvider`.
+vi.mock("../../hooks/useFeatureFlag", () => ({
+  useFeatureFlag: vi.fn(() => false),
+}));
+
+import LeagueDetailPage from "./page";
 
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
@@ -177,9 +187,21 @@ function mockApi(sequence: {
   season?: unknown;
   standings?: unknown;
   leagueError?: { status?: number; body?: unknown };
+  /** Sprint Ligues v2 PR2 — userId courant retourne par /auth/me. */
+  meUserId?: string | null;
 }) {
   mockFetch.mockImplementation(async (input: RequestInfo | URL) => {
     const url = String(input);
+    // Sprint Ligues v2 PR2 — la page detail charge desormais /auth/me
+    // pour decider si l'utilisateur courant est creator de la ligue.
+    if (/\/auth\/me$/.test(url)) {
+      const userId = sequence.meUserId ?? null;
+      return {
+        ok: true,
+        json: () =>
+          Promise.resolve({ user: userId ? { id: userId } : null }),
+      };
+    }
     if (/\/league\/lg-1(?:$|\?)/.test(url)) {
       if (sequence.leagueError) {
         return {
@@ -327,5 +349,94 @@ describe("LeagueDetailPage", () => {
     const firstCall = mockFetch.mock.calls[0];
     const headers = (firstCall[1]?.headers ?? {}) as Record<string, string>;
     expect(headers.Authorization).toBe("Bearer test-token");
+  });
+
+  // Sprint Ligues v2 PR2 — gating UI flag + creator
+  describe("Sprint Ligues v2 PR2 — admin panel & join button", () => {
+    it("hides the season admin panel when the v2 flag is off", async () => {
+      const { useFeatureFlag } = await import("../../hooks/useFeatureFlag");
+      (
+        useFeatureFlag as unknown as ReturnType<typeof vi.fn>
+      ).mockReturnValue(false);
+      mockApi({
+        league: mockLeague,
+        season: mockSeason,
+        standings: mockStandings,
+        meUserId: mockLeague.creatorId,
+      });
+
+      renderWithProvider();
+
+      await waitFor(() => {
+        expect(screen.getByText("Open 5 Teams")).toBeTruthy();
+      });
+
+      expect(screen.queryByTestId("season-admin-panel")).toBeNull();
+      expect(screen.queryByTestId("open-new-season-modal")).toBeNull();
+    });
+
+    it("shows admin panel & new-season button when v2 flag is on AND user is creator", async () => {
+      const { useFeatureFlag } = await import("../../hooks/useFeatureFlag");
+      (
+        useFeatureFlag as unknown as ReturnType<typeof vi.fn>
+      ).mockReturnValue(true);
+      mockApi({
+        league: mockLeague,
+        season: mockSeason,
+        standings: mockStandings,
+        meUserId: mockLeague.creatorId,
+      });
+
+      renderWithProvider();
+
+      await waitFor(() => {
+        expect(screen.getByTestId("season-admin-panel")).toBeTruthy();
+      });
+      expect(screen.getByTestId("open-new-season-modal")).toBeTruthy();
+    });
+
+    it("hides admin controls but shows Join button for non-creator users when v2 flag is on", async () => {
+      const { useFeatureFlag } = await import("../../hooks/useFeatureFlag");
+      (
+        useFeatureFlag as unknown as ReturnType<typeof vi.fn>
+      ).mockReturnValue(true);
+      mockApi({
+        league: mockLeague,
+        season: { ...mockSeason, status: "draft" },
+        standings: mockStandings,
+        meUserId: "u-other",
+      });
+
+      renderWithProvider();
+
+      await waitFor(() => {
+        expect(screen.getByText("Open 5 Teams")).toBeTruthy();
+      });
+
+      expect(screen.queryByTestId("season-admin-panel")).toBeNull();
+      expect(screen.queryByTestId("open-new-season-modal")).toBeNull();
+      expect(screen.getByTestId("open-join-season")).toBeTruthy();
+    });
+
+    it("hides Join button when the season is in_progress (registrations closed)", async () => {
+      const { useFeatureFlag } = await import("../../hooks/useFeatureFlag");
+      (
+        useFeatureFlag as unknown as ReturnType<typeof vi.fn>
+      ).mockReturnValue(true);
+      mockApi({
+        league: mockLeague,
+        season: { ...mockSeason, status: "in_progress" },
+        standings: mockStandings,
+        meUserId: "u-other",
+      });
+
+      renderWithProvider();
+
+      await waitFor(() => {
+        expect(screen.getByText("Open 5 Teams")).toBeTruthy();
+      });
+
+      expect(screen.queryByTestId("open-join-season")).toBeNull();
+    });
   });
 });
