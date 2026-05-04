@@ -15,10 +15,15 @@ import {
   unregisterCupSchema,
   updateCupStatusSchema,
   listMonthlyCupsQuerySchema,
+  setMatchOfTheWeekSchema,
   type ListMonthlyCupsQuery,
+  type SetMatchOfTheWeekBody,
 } from "../schemas/cup.schemas";
 import { listMonthlyCups } from "../services/cup-monthly-listing";
-import { getCurrentMatchOfTheWeek } from "../services/match-of-the-week";
+import {
+  getCurrentMatchOfTheWeek,
+  setMatchOfTheWeek,
+} from "../services/match-of-the-week";
 import { serverLog } from "../utils/server-log";
 
 const router = Router();
@@ -256,6 +261,34 @@ router.get(
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Erreur inconnue";
       const status = /year|month/i.test(msg) ? 400 : 500;
+      res.status(status).json({ success: false, error: msg });
+    }
+  },
+);
+
+// S27.1g — POST /cup/match-of-the-week/:matchId : pick admin du match
+// du moment. Auth + adminOnly inline (pas de middleware adminOnly
+// global ici car les autres routes /cup ne sont pas admin).
+router.post(
+  "/match-of-the-week/:matchId",
+  authUser,
+  validate(setMatchOfTheWeekSchema),
+  async (req: AuthenticatedRequest, res) => {
+    if (!hasRole(req.user!.roles, "admin")) {
+      return res
+        .status(403)
+        .json({ success: false, error: "Action reservee aux administrateurs" });
+    }
+    const body = req.body as SetMatchOfTheWeekBody;
+    try {
+      const match = await setMatchOfTheWeek({
+        matchId: req.params.matchId,
+        note: body.note ?? null,
+      });
+      res.status(200).json({ success: true, data: { match } });
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Erreur inconnue";
+      const status = /introuvable/i.test(msg) ? 404 : 400;
       res.status(status).json({ success: false, error: msg });
     }
   },

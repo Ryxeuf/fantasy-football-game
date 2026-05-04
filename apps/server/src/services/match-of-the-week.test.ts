@@ -14,15 +14,24 @@ vi.mock("../prisma", () => ({
   prisma: {
     localMatch: {
       findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
     },
   },
 }));
 
 import { prisma } from "../prisma";
-import { getCurrentMatchOfTheWeek } from "./match-of-the-week";
+import {
+  getCurrentMatchOfTheWeek,
+  setMatchOfTheWeek,
+} from "./match-of-the-week";
 
 const mockPrisma = prisma as unknown as {
-  localMatch: { findFirst: ReturnType<typeof vi.fn> };
+  localMatch: {
+    findFirst: ReturnType<typeof vi.fn>;
+    findUnique: ReturnType<typeof vi.fn>;
+    update: ReturnType<typeof vi.fn>;
+  };
 };
 
 describe("getCurrentMatchOfTheWeek (S27.1f)", () => {
@@ -87,5 +96,92 @@ describe("getCurrentMatchOfTheWeek (S27.1f)", () => {
       where: Record<string, unknown>;
     };
     expect(call.where.isPublic).toBe(true);
+  });
+});
+
+describe("setMatchOfTheWeek (S27.1g admin pick)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("rejette quand le match n'existe pas", async () => {
+    mockPrisma.localMatch.findUnique.mockResolvedValue(null);
+    await expect(
+      setMatchOfTheWeek({ matchId: "missing", note: null }),
+    ).rejects.toThrow(/introuvable|not found/i);
+    expect(mockPrisma.localMatch.update).not.toHaveBeenCalled();
+  });
+
+  it("rejette quand le match n'est pas public (anti-fuite)", async () => {
+    mockPrisma.localMatch.findUnique.mockResolvedValue({
+      id: "m-1",
+      isPublic: false,
+      status: "completed",
+    });
+    await expect(
+      setMatchOfTheWeek({ matchId: "m-1", note: null }),
+    ).rejects.toThrow(/public/i);
+    expect(mockPrisma.localMatch.update).not.toHaveBeenCalled();
+  });
+
+  it("rejette quand le match n'est pas completed (pas de teaser pour un match en cours)", async () => {
+    mockPrisma.localMatch.findUnique.mockResolvedValue({
+      id: "m-1",
+      isPublic: true,
+      status: "in_progress",
+    });
+    await expect(
+      setMatchOfTheWeek({ matchId: "m-1", note: null }),
+    ).rejects.toThrow(/completed|terminé|status/i);
+    expect(mockPrisma.localMatch.update).not.toHaveBeenCalled();
+  });
+
+  it("met a jour featuredAt + featuredNote quand le match est valide", async () => {
+    mockPrisma.localMatch.findUnique.mockResolvedValue({
+      id: "m-1",
+      isPublic: true,
+      status: "completed",
+    });
+    mockPrisma.localMatch.update.mockResolvedValue({
+      id: "m-1",
+      featuredAt: new Date(),
+      featuredNote: "Le match du moment !",
+    });
+
+    const r = await setMatchOfTheWeek({
+      matchId: "m-1",
+      note: "Le match du moment !",
+    });
+
+    expect(mockPrisma.localMatch.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "m-1" },
+        data: expect.objectContaining({
+          featuredAt: expect.any(Date),
+          featuredNote: "Le match du moment !",
+        }),
+      }),
+    );
+    expect(r.id).toBe("m-1");
+  });
+
+  it("accepte note=null (set sans commentaire)", async () => {
+    mockPrisma.localMatch.findUnique.mockResolvedValue({
+      id: "m-1",
+      isPublic: true,
+      status: "completed",
+    });
+    mockPrisma.localMatch.update.mockResolvedValue({ id: "m-1" });
+
+    await setMatchOfTheWeek({ matchId: "m-1", note: null });
+
+    expect(mockPrisma.localMatch.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          featuredAt: expect.any(Date),
+          featuredNote: null,
+        }),
+      }),
+    );
   });
 });
