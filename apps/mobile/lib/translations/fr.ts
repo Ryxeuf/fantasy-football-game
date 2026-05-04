@@ -1,10 +1,11 @@
 /**
- * S27.3.1 — Traductions FR mobile.
+ * Traductions FR mobile.
  *
- * Foundation : seul `common.*` est defini pour l'instant. Les
- * namespaces dedies (lobby, settings, play, etc.) seront ajoutes
- * dans les slices suivantes au fur et a mesure du remplacement
- * des strings hardcodees.
+ * S27.3.1 (foundation) : namespace `common.*`.
+ * S27.3.2 : namespace `settings.*` (replacement strings settings.tsx).
+ *
+ * Les namespaces dedies (lobby, play, etc.) seront ajoutes au fur et a
+ * mesure du remplacement des strings hardcodees.
  */
 
 export const FR_TRANSLATIONS = {
@@ -15,6 +16,28 @@ export const FR_TRANSLATIONS = {
     loading: "Chargement…",
     error: "Erreur",
     retry: "Reessayer",
+  },
+  settings: {
+    profile: {
+      notFound: "Profil introuvable",
+      loadError: "Erreur lors du chargement",
+      saveSuccess: "Profil enregistre",
+      saveError: "Erreur lors de la sauvegarde",
+    },
+    password: {
+      success: "Mot de passe modifie avec succes",
+      error: "Erreur lors du changement de mot de passe",
+    },
+    delete: {
+      title: "Supprimer le compte",
+      confirm:
+        "Etes-vous sur ? Cette action desactive votre acces de maniere permanente.",
+      button: "Supprimer",
+      error: "Erreur lors de la suppression du compte",
+    },
+    actions: {
+      logout: "Deconnexion",
+    },
   },
 } as const;
 
