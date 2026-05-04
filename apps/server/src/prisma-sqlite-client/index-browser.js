@@ -541,6 +541,23 @@ exports.Prisma.RegionalLeagueScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.LeaguePostMatchSequenceScalarFieldEnum = {
+  id: 'id',
+  matchId: 'matchId',
+  seasonId: 'seasonId',
+  status: 'status',
+  winningsApplied: 'winningsApplied',
+  lastingInjuriesApplied: 'lastingInjuriesApplied',
+  advancementsResolved: 'advancementsResolved',
+  treasuryDeltaA: 'treasuryDeltaA',
+  treasuryDeltaB: 'treasuryDeltaB',
+  fanFactorDeltaA: 'fanFactorDeltaA',
+  fanFactorDeltaB: 'fanFactorDeltaB',
+  pendingChoices: 'pendingChoices',
+  createdAt: 'createdAt',
+  completedAt: 'completedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -605,7 +622,8 @@ exports.Prisma.ModelName = {
   LeagueRound: 'LeagueRound',
   LeaguePairing: 'LeaguePairing',
   TeamSpecialRule: 'TeamSpecialRule',
-  RegionalLeague: 'RegionalLeague'
+  RegionalLeague: 'RegionalLeague',
+  LeaguePostMatchSequence: 'LeaguePostMatchSequence'
 };
 
 /**

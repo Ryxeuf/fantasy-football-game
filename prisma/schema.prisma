@@ -201,21 +201,26 @@ model Match {
   // peut etre indepedant (amical, matchmaking classique) ou rattache a une
   // ligue. Quand les deux sont renseignes, la fin du match met a jour les
   // compteurs materialises du participant (wins/losses/points/td/cas).
-  leagueSeasonId  String?
-  leagueSeason    LeagueSeason?  @relation("LeagueSeasonMatches", fields: [leagueSeasonId], references: [id], onDelete: SetNull)
-  leagueRoundId   String?
-  leagueRound     LeagueRound?   @relation("LeagueRoundMatches", fields: [leagueRoundId], references: [id], onDelete: SetNull)
+  leagueSeasonId          String?
+  leagueSeason            LeagueSeason?            @relation("LeagueSeasonMatches", fields: [leagueSeasonId], references: [id], onDelete: SetNull)
+  leagueRoundId           String?
+  leagueRound             LeagueRound?             @relation("LeagueRoundMatches", fields: [leagueRoundId], references: [id], onDelete: SetNull)
   // L2.A.1 — Lien optionnel vers le pairing pre-genere du calendrier
   // round-robin. Permet de remonter du match au pairing pour mettre a
   // jour son status (`scheduled` -> `in_progress` -> `played`) sans
   // chercher par (round, teamA, teamB). Unique : un pairing donne ne
   // genere qu'un seul match.
-  leaguePairingId String?        @unique
-  leaguePairing   LeaguePairing? @relation(fields: [leaguePairingId], references: [id], onDelete: SetNull)
+  leaguePairingId         String?                  @unique
+  leaguePairing           LeaguePairing?           @relation(fields: [leaguePairingId], references: [id], onDelete: SetNull)
   // Marqueur d'idempotence pour recordLeagueMatchResult : une fois le score
   // reporte au classement, on ne le comptabilise plus, meme si la route/hook
   // est rejoue.
-  leagueScoredAt  DateTime?
+  leagueScoredAt          DateTime?
+  // L2.B.1 — Sequence post-match Jeu en Ligue. 1 sequence par match
+  // de ligue, cree apres recordLeagueMatchResult pour gerer le
+  // applique-une-fois des winnings, SPP cumules, lasting injuries,
+  // et la generation des pendingChoices de level-up.
+  leaguePostMatchSequence LeaguePostMatchSequence?
 
   @@index([aiOpponent])
   @@index([leagueSeasonId])
@@ -908,4 +913,50 @@ model RegionalLeague {
   updatedAt     DateTime @updatedAt
 
   @@unique([slug, ruleset])
+}
+
+// L2.B.1 — Sequence post-match Jeu en Ligue (Sprint Ligues v2 PR4).
+//
+// Une sequence par Match de ligue (matchId @unique). Cree apres la
+// comptabilisation du resultat (recordLeagueMatchResult) pour
+// orchestrer la phase post-match Blood Bowl :
+//   - applique winnings + dedicatedFansChange sur Team.treasury /
+//     Team.dedicatedFans (idempotent via `winningsApplied`)
+//   - persiste les SPP gagnes (deja gere par persistMatchSPP) et
+//     identifie les paliers atteints -> pendingChoices
+//   - applique les permanent / lasting injuries definitives
+//     (idempotent via `lastingInjuriesApplied`)
+//   - se ferme avec status="completed" quand tous les pendingChoices
+//     sont resolus (advancement choisi par le coach via L2.B.3)
+//
+// Idempotence : 1) contrainte unique matchId, 2) flags individuels
+// par etape pour rejouer une sequence interrompue sans double-effet.
+//
+// Le JSON `pendingChoices` stocke un tableau de
+//   { teamPlayerId: string, sppBeforeMatch: number, sppAfterMatch: number,
+//     advancementsTaken: number, eligibleAt: number[] }
+// ou `eligibleAt` est la liste des paliers SPP nouvellement franchis.
+model LeaguePostMatchSequence {
+  id                     String    @id @default(cuid())
+  match                  Match     @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  matchId                String    @unique
+  seasonId               String
+  // "pending" | "awaiting_choices" | "completed"
+  status                 String    @default("pending")
+  winningsApplied        Boolean   @default(false)
+  lastingInjuriesApplied Boolean   @default(false)
+  advancementsResolved   Boolean   @default(false)
+  treasuryDeltaA         Int       @default(0)
+  treasuryDeltaB         Int       @default(0)
+  fanFactorDeltaA        Int       @default(0)
+  fanFactorDeltaB        Int       @default(0)
+  // JSON-array : choix dappecement en attente (`PendingChoice[]`).
+  // Stockage textuel pour rester portable PG <-> SQLite (et aux
+  // ruleset evolutions).
+  pendingChoices         String    @default("[]")
+  createdAt              DateTime  @default(now())
+  completedAt            DateTime?
+
+  @@index([seasonId])
+  @@index([status])
 }
