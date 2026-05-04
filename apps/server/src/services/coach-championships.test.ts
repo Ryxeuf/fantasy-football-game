@@ -77,6 +77,8 @@ describe("getCoachThemedChampionships (S26.6d)", () => {
       label: "Champion Skaven Cup 2026",
       leagueId: "lg-1",
       leagueName: "Skaven League",
+      // S26.6e — badgeColor expose pour l'UI banner
+      badgeColor: "#7a8c2c",
     });
   });
 
