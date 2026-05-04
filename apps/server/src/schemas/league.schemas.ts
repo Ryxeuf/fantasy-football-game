@@ -115,6 +115,33 @@ export const listLeaguesQuerySchema = z.object({
   offset: z.coerce.number().int().min(0).optional().default(0),
 });
 
+/**
+ * L2.A.3 — Body schema pour `POST /league/seasons/:id/start` et
+ * `POST /league/seasons/:id/regenerate`. Tous les champs sont
+ * optionnels : par defaut on genere un single round-robin sans dates.
+ */
+export const startSeasonSchema = z.object({
+  doubleRoundRobin: z.boolean().optional().default(false),
+  firstRoundStartDate: z.coerce.date().optional().nullable(),
+  roundDurationDays: z
+    .number()
+    .int("roundDurationDays doit etre un entier")
+    .min(1, "roundDurationDays >= 1")
+    .max(365, "roundDurationDays <= 365")
+    .optional()
+    .nullable(),
+});
+
+/**
+ * L2.A.4 — Body schema pour `POST /league/pairings/:id/match`.
+ * Pas de body obligatoire pour l'instant : la creation utilise les
+ * deux participants du pairing. Un seed optionnel permet de
+ * reproduire un match (utile pour replay/tests).
+ */
+export const createMatchFromPairingSchema = z.object({
+  seed: z.string().min(1).max(64).optional(),
+});
+
 export type CreateLeagueBody = z.infer<typeof createLeagueSchema>;
 export type CreateSeasonBody = z.infer<typeof createSeasonSchema>;
 export type JoinSeasonBody = z.infer<typeof joinSeasonSchema>;
@@ -123,4 +150,8 @@ export type ListLeaguesQuery = z.infer<typeof listLeaguesQuerySchema>;
 export type AttachMatchBody = z.infer<typeof attachMatchSchema>;
 export type ListSeasonsByThemeQuery = z.infer<
   typeof listSeasonsByThemeQuerySchema
+>;
+export type StartSeasonBody = z.infer<typeof startSeasonSchema>;
+export type CreateMatchFromPairingBody = z.infer<
+  typeof createMatchFromPairingSchema
 >;

@@ -14,61 +14,61 @@ enum Ruleset {
 }
 
 model User {
-  id                  String          @id @default(cuid())
-  email               String          @unique
-  passwordHash        String
-  name                String? // Conservé pour rétrocompatibilité
-  coachName           String // Nom de coach (obligatoire)
-  firstName           String? // Prénom (optionnel)
-  lastName            String? // Nom (optionnel)
-  dateOfBirth         DateTime? // Date de naissance (optionnel)
+  id                          String                  @id @default(cuid())
+  email                       String                  @unique
+  passwordHash                String
+  name                        String? // Conservé pour rétrocompatibilité
+  coachName                   String // Nom de coach (obligatoire)
+  firstName                   String? // Prénom (optionnel)
+  lastName                    String? // Nom (optionnel)
+  dateOfBirth                 DateTime? // Date de naissance (optionnel)
   /// Rôle principal (conservé pour compatibilité, ex: "user" | "admin")
-  role                String          @default("user")
+  role                        String                  @default("user")
   /// Liste complète des rôles (ex: ["user","admin"])
-  roles               String[]        @default([])
+  roles                       String[]                @default([])
   /// Override manuel admin (cadeau, etc.). Conservé pour compatibilité.
   /// Le statut de supporter réel se lit via supporterActiveUntil.
-  patreon             Boolean         @default(false)
+  patreon                     Boolean                 @default(false)
   /// Code unique à coller dans le message Ko-fi pour lier le don au compte.
   /// Format : "KFI-XXXXXX" (base32 Crockford).
-  kofiLinkCode        String?         @unique
+  kofiLinkCode                String?                 @unique
   /// Discord user ID renseigné par le titulaire du compte (3e stratégie de
   /// matching Ko-fi : si Ko-fi expose discord_userid et qu'il correspond, on
   /// rattache le don automatiquement).
-  discordUserId       String?         @unique
+  discordUserId               String?                 @unique
   /// Palier (tier_name Ko-fi) du dernier abonnement actif. null = pas d'abo.
-  supporterTier       String?
+  supporterTier               String?
   /// Fin de la période de supporter payée. null ou < now() = pas actif.
-  supporterActiveUntil DateTime?
+  supporterActiveUntil        DateTime?
   /// Total des dons par devise, en centimes. Map ISO currency → centimes.
   /// Pas de conversion : chaque devise reste indépendante (USD ≠ EUR).
   /// Exemple : {"USD": 300, "EUR": 1000}.
-  totalDonatedCentsByCurrency Json    @default("{}")
+  totalDonatedCentsByCurrency Json                    @default("{}")
   /// S26.3i — RGPD : opt-in pour cacher le profil public `/coach/{slug}`.
   /// `true` = profil retire de la lookup publique et du sitemap.
-  privateProfile      Boolean         @default(false)
-  valid               Boolean         @default(false)
+  privateProfile              Boolean                 @default(false)
+  valid                       Boolean                 @default(false)
   /// Date de la dernière connexion réussie de l'utilisateur.
-  lastLoginAt         DateTime?
-  createdAt           DateTime        @default(now())
-  updatedAt           DateTime        @updatedAt
-  matches             Match[]
-  createdMatches      Match[]         @relation("MatchCreator")
-  teams               Team[]
-  teamSelections      TeamSelection[]
-  createdCups         Cup[]           @relation("CupCreator")
-  createdLeagues      League[]        @relation("LeagueCreator")
-  createdLocalMatches LocalMatch[]    @relation("LocalMatchCreator")
-  eloRating           Int             @default(1000) // ELO rating for ranked matchmaking
-  matchQueue          MatchQueue?
-  notificationPreference NotificationPreference?
-  featureFlagOverrides FeatureFlagUser[]
-  friendshipsSent     Friendship[]    @relation("FriendshipRequester")
-  friendshipsReceived Friendship[]    @relation("FriendshipReceiver")
-  achievements        UserAchievement[]
-  kofiTransactions    KofiTransaction[]
-  refreshTokens       RefreshToken[]
-  eloSnapshots        EloSnapshot[]
+  lastLoginAt                 DateTime?
+  createdAt                   DateTime                @default(now())
+  updatedAt                   DateTime                @updatedAt
+  matches                     Match[]
+  createdMatches              Match[]                 @relation("MatchCreator")
+  teams                       Team[]
+  teamSelections              TeamSelection[]
+  createdCups                 Cup[]                   @relation("CupCreator")
+  createdLeagues              League[]                @relation("LeagueCreator")
+  createdLocalMatches         LocalMatch[]            @relation("LocalMatchCreator")
+  eloRating                   Int                     @default(1000) // ELO rating for ranked matchmaking
+  matchQueue                  MatchQueue?
+  notificationPreference      NotificationPreference?
+  featureFlagOverrides        FeatureFlagUser[]
+  friendshipsSent             Friendship[]            @relation("FriendshipRequester")
+  friendshipsReceived         Friendship[]            @relation("FriendshipReceiver")
+  achievements                UserAchievement[]
+  kofiTransactions            KofiTransaction[]
+  refreshTokens               RefreshToken[]
+  eloSnapshots                EloSnapshot[]
 }
 
 /// S26.3l — Historique ELO du coach. Une ligne par mise a jour ELO (donc 2
@@ -117,39 +117,39 @@ model RefreshToken {
 /// userId est nullable : les dons orphelins sont rattachés au login suivant
 /// si l'email ou le kofiLinkCode correspondent.
 model KofiTransaction {
-  id                      String   @id @default(cuid())
+  id                         String    @id @default(cuid())
   /// Ko-fi "kofi_transaction_id" — UUID unique, sert à la déduplication.
-  kofiTransactionId       String   @unique
+  kofiTransactionId          String    @unique
   /// Ko-fi "message_id" — id d'événement propre à la notif (distinct de la transaction).
-  messageId               String?
+  messageId                  String?
   /// Horodatage fourni par Ko-fi dans le payload (ISO 8601). Distinct de
   /// receivedAt (= now()) pour pouvoir trier sur l'horloge Ko-fi en cas de
   /// retry tardif. null si parse échoue ou si payload pré-migration.
-  kofiTimestamp           DateTime?
+  kofiTimestamp              DateTime?
   /// "Donation" | "Subscription" | "Commission" | "Shop Order"
-  type                    String
-  isSubscriptionPayment   Boolean  @default(false)
-  isFirstSubscriptionPayment Boolean @default(false)
+  type                       String
+  isSubscriptionPayment      Boolean   @default(false)
+  isFirstSubscriptionPayment Boolean   @default(false)
   /// tier_name pour les abonnements mensuels (Gold Member, etc.).
-  tierName                String?
+  tierName                   String?
   /// Montant en centimes dans la devise d'origine (ex 500 pour 5.00 EUR).
-  amountCents             Int
-  currency                String
-  fromName                String?
+  amountCents                Int
+  currency                   String
+  fromName                   String?
   /// Stocké en lowercase pour le matching.
-  email                   String?
+  email                      String?
   /// discord_userid du payload Ko-fi (snowflake). Conservé brut pour audit
   /// même quand le matching s'est fait par code ou email.
-  discordUserId           String?
-  message                 String?
+  discordUserId              String?
+  message                    String?
   /// Rattachement au compte utilisateur. null = orphelin en attente de claim.
-  user                    User?    @relation(fields: [userId], references: [id])
-  userId                  String?
+  user                       User?     @relation(fields: [userId], references: [id])
+  userId                     String?
   /// "code" | "email" | "manual" | null
-  matchedVia              String?
+  matchedVia                 String?
   /// Payload brut pour diagnostic/rejeu.
-  rawPayload              Json
-  receivedAt              DateTime @default(now())
+  rawPayload                 Json
+  receivedAt                 DateTime  @default(now())
 
   @@index([userId])
   @@index([email])
@@ -185,8 +185,8 @@ model Match {
   seed              String
   creator           User?           @relation("MatchCreator", fields: [creatorId], references: [id])
   creatorId         String?
-  currentTurnUserId String?         // Qui doit jouer actuellement
-  lastMoveAt        DateTime?       // Dernière action de jeu
+  currentTurnUserId String? // Qui doit jouer actuellement
+  lastMoveAt        DateTime? // Dernière action de jeu
   players           User[]
   turns             Turn[]
   teamSelections    TeamSelection[]
@@ -201,14 +201,21 @@ model Match {
   // peut etre indepedant (amical, matchmaking classique) ou rattache a une
   // ligue. Quand les deux sont renseignes, la fin du match met a jour les
   // compteurs materialises du participant (wins/losses/points/td/cas).
-  leagueSeasonId   String?
-  leagueSeason     LeagueSeason? @relation("LeagueSeasonMatches", fields: [leagueSeasonId], references: [id], onDelete: SetNull)
-  leagueRoundId    String?
-  leagueRound      LeagueRound?  @relation("LeagueRoundMatches", fields: [leagueRoundId], references: [id], onDelete: SetNull)
+  leagueSeasonId  String?
+  leagueSeason    LeagueSeason?  @relation("LeagueSeasonMatches", fields: [leagueSeasonId], references: [id], onDelete: SetNull)
+  leagueRoundId   String?
+  leagueRound     LeagueRound?   @relation("LeagueRoundMatches", fields: [leagueRoundId], references: [id], onDelete: SetNull)
+  // L2.A.1 — Lien optionnel vers le pairing pre-genere du calendrier
+  // round-robin. Permet de remonter du match au pairing pour mettre a
+  // jour son status (`scheduled` -> `in_progress` -> `played`) sans
+  // chercher par (round, teamA, teamB). Unique : un pairing donne ne
+  // genere qu'un seul match.
+  leaguePairingId String?        @unique
+  leaguePairing   LeaguePairing? @relation(fields: [leaguePairingId], references: [id], onDelete: SetNull)
   // Marqueur d'idempotence pour recordLeagueMatchResult : une fois le score
   // reporte au classement, on ne le comptabilise plus, meme si la route/hook
   // est rejoue.
-  leagueScoredAt   DateTime?
+  leagueScoredAt  DateTime?
 
   @@index([aiOpponent])
   @@index([leagueSeasonId])
@@ -241,20 +248,20 @@ model TeamSelection {
 }
 
 model Team {
-  id                  String           @id @default(cuid())
-  owner               User             @relation(fields: [ownerId], references: [id])
-  ownerId             String
-  name                String
-  roster              String // 'skaven' | 'lizardmen'
-  ruleset             Ruleset          @default(season_3)
-  createdAt           DateTime         @default(now())
-  players             TeamPlayer[]
-  starPlayers         TeamStarPlayer[]
-  selections          TeamSelection[]
-  cupParticipants     CupParticipant[]
-  localMatchesAsTeamA LocalMatch[]     @relation("LocalMatchTeamA")
-  localMatchesAsTeamB LocalMatch[]     @relation("LocalMatchTeamB")
-  matchQueue          MatchQueue[]
+  id                   String              @id @default(cuid())
+  owner                User                @relation(fields: [ownerId], references: [id])
+  ownerId              String
+  name                 String
+  roster               String // 'skaven' | 'lizardmen'
+  ruleset              Ruleset             @default(season_3)
+  createdAt            DateTime            @default(now())
+  players              TeamPlayer[]
+  starPlayers          TeamStarPlayer[]
+  selections           TeamSelection[]
+  cupParticipants      CupParticipant[]
+  localMatchesAsTeamA  LocalMatch[]        @relation("LocalMatchTeamA")
+  localMatchesAsTeamB  LocalMatch[]        @relation("LocalMatchTeamB")
+  matchQueue           MatchQueue[]
   leagueParticipations LeagueParticipant[]
 
   // Informations d'équipe Blood Bowl
@@ -288,29 +295,29 @@ model TeamPlayer {
   skills   String
 
   // SPP tracking (Star Player Points)
-  spp               Int @default(0) // Total SPP accumulated
-  totalTouchdowns   Int @default(0) // Career touchdowns
-  totalCasualties   Int @default(0) // Career casualties inflicted
-  totalCompletions  Int @default(0) // Career pass completions
+  spp                Int @default(0) // Total SPP accumulated
+  totalTouchdowns    Int @default(0) // Career touchdowns
+  totalCasualties    Int @default(0) // Career casualties inflicted
+  totalCompletions   Int @default(0) // Career pass completions
   totalInterceptions Int @default(0) // Career interceptions
-  totalMvpAwards    Int @default(0) // Career MVP awards
-  matchesPlayed     Int @default(0) // Total matches played
+  totalMvpAwards     Int @default(0) // Career MVP awards
+  matchesPlayed      Int @default(0) // Total matches played
 
   // Permanent injuries (BB2020/BB3 lasting injuries)
-  nigglingInjuries Int @default(0) // Count of niggling injuries accumulated
-  maReduction      Int @default(0) // Total MA reduction from lasting injuries
-  stReduction      Int @default(0) // Total ST reduction from lasting injuries
-  agReduction      Int @default(0) // Total AG reduction from lasting injuries
-  paReduction      Int @default(0) // Total PA reduction from lasting injuries
-  avReduction      Int @default(0) // Total AV reduction from lasting injuries
+  nigglingInjuries Int     @default(0) // Count of niggling injuries accumulated
+  maReduction      Int     @default(0) // Total MA reduction from lasting injuries
+  stReduction      Int     @default(0) // Total ST reduction from lasting injuries
+  agReduction      Int     @default(0) // Total AG reduction from lasting injuries
+  paReduction      Int     @default(0) // Total PA reduction from lasting injuries
+  avReduction      Int     @default(0) // Total AV reduction from lasting injuries
   missNextMatch    Boolean @default(false) // Must sit out next match (seriously_hurt+)
 
   // Advancement tracking (level-up history)
   advancements String @default("[]") // JSON array of PlayerAdvancement objects
 
   // Player death tracking
-  dead    Boolean   @default(false) // Player is dead (killed during a match)
-  diedAt  DateTime? // When the player died
+  dead   Boolean   @default(false) // Player is dead (killed during a match)
+  diedAt DateTime? // When the player died
 
   @@index([teamId])
 }
@@ -532,9 +539,9 @@ model MatchQueue {
   userId    String   @unique // Un seul slot par utilisateur
   team      Team     @relation(fields: [teamId], references: [id])
   teamId    String
-  teamValue Int      // Valeur d'equipe au moment de la recherche (pour matching TV +/- 150k)
+  teamValue Int // Valeur d'equipe au moment de la recherche (pour matching TV +/- 150k)
   status    String   @default("searching") // "searching" | "matched" | "cancelled"
-  matchId   String?  // ID du match cree quand matched
+  matchId   String? // ID du match cree quand matched
   joinedAt  DateTime @default(now())
 
   @@index([status])
@@ -739,13 +746,13 @@ model League {
 // S26.6 — `theme` + `themeYear` : ligues thematiques saisonnieres
 // (Skaven Cup mars, Nordic Challenge avril, Underworld Open mai).
 model LeagueSeason {
-  id           String   @id @default(cuid())
-  league       League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  id           String    @id @default(cuid())
+  league       League    @relation(fields: [leagueId], references: [id], onDelete: Cascade)
   leagueId     String
   seasonNumber Int
   name         String
   // "draft" | "scheduled" | "in_progress" | "completed"
-  status       String   @default("draft")
+  status       String    @default("draft")
   startDate    DateTime?
   endDate      DateTime?
   // S26.6 — slug du theme saisonnier (cf. services/league-themes.ts).
@@ -754,8 +761,8 @@ model LeagueSeason {
   // S26.6 — annee canonique du theme (4 chiffres). Toujours present si
   // `theme` est present (couple atomique enforce par le service).
   themeYear    Int?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   participants LeagueParticipant[]
   rounds       LeagueRound[]
@@ -790,6 +797,11 @@ model LeagueParticipant {
   status            String       @default("active")
   joinedAt          DateTime     @default(now())
 
+  // L2.A.1 — Back-relations vers les pairings ou ce participant est
+  // implique comme equipe a domicile ou visiteuse.
+  homePairings LeaguePairing[] @relation("LeaguePairingHome")
+  awayPairings LeaguePairing[] @relation("LeaguePairingAway")
+
   @@unique([seasonId, teamId])
   @@index([seasonId])
   @@index([teamId])
@@ -799,23 +811,61 @@ model LeagueParticipant {
 // L.1 — Journee (round) d'une saison. Utilise par le generateur
 // de calendrier round-robin (L.4) et le rattachement des matchs (L.7).
 model LeagueRound {
-  id          String   @id @default(cuid())
+  id          String       @id @default(cuid())
   season      LeagueSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
   seasonId    String
   roundNumber Int
   name        String?
   // "pending" | "in_progress" | "completed"
-  status      String   @default("pending")
+  status      String       @default("pending")
   startDate   DateTime?
   endDate     DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
-  matches     Match[]  @relation("LeagueRoundMatches")
+  matches  Match[]         @relation("LeagueRoundMatches")
+  pairings LeaguePairing[]
 
   @@unique([seasonId, roundNumber])
   @@index([seasonId])
   @@index([status])
+}
+
+// L2.A.1 — Pairing pre-genere du calendrier round-robin.
+// Materialise une rencontre planifiee (home vs away) avant qu'un match
+// concret ne soit cree. Le statut suit le cycle :
+//   scheduled  -> aucun match cree
+//   in_progress -> match cree (matchId renseigne) et en cours
+//   played      -> match termine et resultat reporte au classement
+//   forfeit_home / forfeit_away -> forfait cron-applique
+//   cancelled   -> annule par admin
+// La nullabilite de `matchId` permet d'afficher le calendrier complet
+// avant que les matchs n'existent. `deadlineAt` alimente le cron de
+// forfait (L2.A.11).
+model LeaguePairing {
+  id                String            @id @default(cuid())
+  round             LeagueRound       @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  roundId           String
+  homeParticipant   LeagueParticipant @relation("LeaguePairingHome", fields: [homeParticipantId], references: [id], onDelete: Cascade)
+  homeParticipantId String
+  awayParticipant   LeagueParticipant @relation("LeaguePairingAway", fields: [awayParticipantId], references: [id], onDelete: Cascade)
+  awayParticipantId String
+  // "scheduled" | "in_progress" | "played" | "forfeit_home" | "forfeit_away" | "cancelled"
+  status            String            @default("scheduled")
+  scheduledAt       DateTime?
+  deadlineAt        DateTime?
+  // Match qui materialise ce pairing. Null tant qu'aucun coach n'a
+  // lance la partie. Ecrit par `POST /league/pairings/:id/match`
+  // (L2.A.4) en meme temps que la creation du Match.
+  match             Match?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@index([roundId])
+  @@index([status])
+  @@index([deadlineAt, status])
+  @@index([homeParticipantId])
+  @@index([awayParticipantId])
 }
 
 /// Catalogue des Règles Spéciales d'équipe (Bagarreurs Brutaux, Chantage et

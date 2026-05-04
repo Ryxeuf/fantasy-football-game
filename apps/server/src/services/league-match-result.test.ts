@@ -30,6 +30,10 @@ vi.mock("../prisma", () => ({
       findUnique: vi.fn(),
       update: vi.fn(),
     },
+    leaguePairing: {
+      count: vi.fn(),
+      update: vi.fn(),
+    },
     teamSelection: {
       findMany: vi.fn(),
     },
@@ -59,6 +63,10 @@ const mockPrisma = prisma as unknown as {
     findUnique: ReturnType<typeof vi.fn>;
     update: ReturnType<typeof vi.fn>;
   };
+  leaguePairing: {
+    count: ReturnType<typeof vi.fn>;
+    update: ReturnType<typeof vi.fn>;
+  };
   teamSelection: {
     findMany: ReturnType<typeof vi.fn>;
   };
@@ -78,6 +86,7 @@ function baseMatch(overrides: Record<string, unknown> = {}) {
     status: "ended",
     leagueSeasonId: "season-1",
     leagueRoundId: "round-1",
+    leaguePairingId: null,
     leagueScoredAt: null,
     leagueSeason: { id: "season-1", leagueId: "league-1", league: LEAGUE },
     ...overrides,
@@ -94,6 +103,10 @@ describe("Rule: recordLeagueMatchResult (L.7)", () => {
       }
       return ops;
     });
+    // L2.A.5 — defaut "legacy" : aucun pairing en DB, le code retombe
+    // sur le compteur de matchs historique. Les tests qui veulent
+    // tester la nouvelle voie (pairings) override ces defaults.
+    mockPrisma.leaguePairing.count.mockResolvedValue(0);
   });
 
   it("ignores matches not attached to a league", async () => {
@@ -457,6 +470,109 @@ describe("Rule: recordLeagueMatchResult (L.7)", () => {
 
       if (!("recorded" in result)) throw new Error("expected recorded");
       expect(result.seasonElo.newRatingB).toBeGreaterThanOrEqual(100);
+    });
+  });
+
+  describe("L2.A.5 — pairing status update", () => {
+    it("flips the linked pairing to 'played' when leaguePairingId is set", async () => {
+      mockPrisma.match.findUnique.mockResolvedValue(
+        baseMatch({ leaguePairingId: "pair-1" }),
+      );
+      mockPrisma.teamSelection.findMany.mockResolvedValue([
+        { teamId: "team-A", userId: "user-A" },
+        { teamId: "team-B", userId: "user-B" },
+      ]);
+      mockPrisma.leagueParticipant.findUnique.mockImplementation(
+        async (args: { where: { seasonId_teamId: { teamId: string } } }) => ({
+          id: `p-${args.where.seasonId_teamId.teamId}`,
+          teamId: args.where.seasonId_teamId.teamId,
+          seasonElo: 1000,
+          wins: 0,
+          draws: 0,
+          losses: 0,
+        }),
+      );
+      // 1 pairing total, 0 still pending → round completes.
+      mockPrisma.leaguePairing.count.mockResolvedValueOnce(0); // pendingPairings
+      mockPrisma.leaguePairing.count.mockResolvedValueOnce(1); // totalPairings
+      mockPrisma.leagueRound.findMany.mockResolvedValue([]);
+
+      await recordLeagueMatchResult({
+        matchId: "match-1",
+        scoreA: 2,
+        scoreB: 0,
+        casualtiesA: 0,
+        casualtiesB: 0,
+      });
+
+      expect(mockPrisma.leaguePairing.update).toHaveBeenCalledWith({
+        where: { id: "pair-1" },
+        data: { status: "played" },
+      });
+    });
+
+    it("does not touch leaguePairing when leaguePairingId is null (legacy)", async () => {
+      mockPrisma.match.findUnique.mockResolvedValue(baseMatch());
+      mockPrisma.teamSelection.findMany.mockResolvedValue([
+        { teamId: "team-A", userId: "user-A" },
+        { teamId: "team-B", userId: "user-B" },
+      ]);
+      mockPrisma.leagueParticipant.findUnique.mockImplementation(
+        async (args: { where: { seasonId_teamId: { teamId: string } } }) => ({
+          id: `p-${args.where.seasonId_teamId.teamId}`,
+          teamId: args.where.seasonId_teamId.teamId,
+          seasonElo: 1000,
+          wins: 0,
+          draws: 0,
+          losses: 0,
+        }),
+      );
+      mockPrisma.match.count.mockResolvedValue(0);
+      mockPrisma.leagueRound.findMany.mockResolvedValue([]);
+
+      await recordLeagueMatchResult({
+        matchId: "match-1",
+        scoreA: 2,
+        scoreB: 0,
+        casualtiesA: 0,
+        casualtiesB: 0,
+      });
+
+      expect(mockPrisma.leaguePairing.update).not.toHaveBeenCalled();
+    });
+
+    it("uses pairing count (not match count) to decide round completion when pairings exist", async () => {
+      mockPrisma.match.findUnique.mockResolvedValue(
+        baseMatch({ leaguePairingId: "pair-1" }),
+      );
+      mockPrisma.teamSelection.findMany.mockResolvedValue([
+        { teamId: "team-A", userId: "user-A" },
+        { teamId: "team-B", userId: "user-B" },
+      ]);
+      mockPrisma.leagueParticipant.findUnique.mockImplementation(
+        async (args: { where: { seasonId_teamId: { teamId: string } } }) => ({
+          id: `p-${args.where.seasonId_teamId.teamId}`,
+          teamId: args.where.seasonId_teamId.teamId,
+          seasonElo: 1000,
+          wins: 0,
+          draws: 0,
+          losses: 0,
+        }),
+      );
+      // 2 pairings still pending in the round → round NOT completed.
+      mockPrisma.leaguePairing.count.mockResolvedValueOnce(2); // pendingPairings
+      mockPrisma.leaguePairing.count.mockResolvedValueOnce(3); // totalPairings
+
+      await recordLeagueMatchResult({
+        matchId: "match-1",
+        scoreA: 2,
+        scoreB: 0,
+        casualtiesA: 0,
+        casualtiesB: 0,
+      });
+
+      expect(mockPrisma.leagueRound.update).not.toHaveBeenCalled();
+      expect(mockPrisma.match.count).not.toHaveBeenCalled();
     });
   });
 });
