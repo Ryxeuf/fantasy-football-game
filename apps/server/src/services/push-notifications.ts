@@ -400,3 +400,61 @@ export function sendMatchFoundPush(userId: string, matchId: string): void {
       // Push failure is non-blocking
     });
 }
+
+/**
+ * L2.A.12 — Sprint Ligues v2 PR3 : push "Vous avez ete apparie a
+ * {opponent} pour la J{n}, deadline {YYYY-MM-DD}". Envoye au
+ * demarrage d'une saison (`startSeason`) pour chaque coach implique
+ * dans un pairing du round 1. Verifie la preference utilisateur
+ * `leagueRoundReminderNotification`. Non-bloquant.
+ *
+ * `seasonId` est inclus dans la payload pour permettre au client de
+ * deep-link vers `/leagues/:leagueId` (route fournie par le caller).
+ */
+export interface LeagueRoundReminderInput {
+  readonly userId: string;
+  readonly leagueId: string;
+  readonly seasonId: string;
+  readonly opponentCoachName: string;
+  readonly roundNumber: number;
+  readonly deadlineAt: Date | null;
+}
+
+export function sendLeagueRoundReminderPush(
+  input: LeagueRoundReminderInput,
+): void {
+  shouldSendNotification(input.userId, NotificationType.LeagueRoundReminder)
+    .then(async (allowed) => {
+      if (!allowed) return;
+      const url = `/leagues/${input.leagueId}`;
+      const deadlineLabel = input.deadlineAt
+        ? input.deadlineAt.toISOString().slice(0, 10)
+        : null;
+      const body = deadlineLabel
+        ? `Apparie contre ${input.opponentCoachName} pour la J${input.roundNumber} (deadline ${deadlineLabel})`
+        : `Apparie contre ${input.opponentCoachName} pour la J${input.roundNumber}`;
+      const payload: PushPayload = {
+        title: "Nuffle Arena",
+        body,
+        icon: "/images/favicon-optimized.png",
+        url,
+        tag: `league-round-${input.seasonId}-${input.roundNumber}-${input.userId}`,
+        data: {
+          kind: "leagueRoundReminder",
+          leagueId: input.leagueId,
+          seasonId: input.seasonId,
+          roundNumber: input.roundNumber,
+          opponentCoachName: input.opponentCoachName,
+          deadlineAt: input.deadlineAt?.toISOString() ?? null,
+          url,
+        },
+      };
+      await Promise.all([
+        sendPushToUser(input.userId, payload),
+        sendExpoPushToUser(input.userId, payload),
+      ]);
+    })
+    .catch(() => {
+      // Push failure is non-blocking — match the existing pattern.
+    });
+}

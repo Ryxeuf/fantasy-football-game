@@ -524,3 +524,42 @@ setupSocket(httpServer);
 httpServer.listen(API_PORT, () => {
   serverLog.log(`Express API server listening on http://localhost:${API_PORT}`);
 });
+
+// L2.A.11 — Cron interne pour les forfaits de pairing de ligue.
+// Toutes les `LEAGUE_FORFEIT_TICK_MS` ms, on declenche un sweep des
+// pairings dont la deadline est depassee. En env de test (TEST_SQLITE
+// ou NODE_ENV=test), on desactive la boucle pour ne pas polluer les
+// suites avec des updates concurrents. Override possible via
+// `LEAGUE_FORFEIT_TICK_MS=0` pour desactiver explicitement (ex:
+// runner CI ou dev local quand on ne veut pas de side-effects).
+const inTestForfeitEnv =
+  process.env.NODE_ENV === "test" || process.env.TEST_SQLITE === "1";
+const tickMsEnv = Number(process.env.LEAGUE_FORFEIT_TICK_MS);
+const tickMs = Number.isFinite(tickMsEnv)
+  ? tickMsEnv
+  : 60 * 60 * 1000;
+if (!inTestForfeitEnv && tickMs > 0) {
+  // Import dynamique pour eviter de pulluler les workers de tests
+  // qui mockent `prisma` mais ne mockent pas la boucle.
+  void import("./services/league-forfeit").then(({ sweepDeadlinePairings }) => {
+    const tick = async () => {
+      try {
+        const out = await sweepDeadlinePairings();
+        if (out.forfeited > 0) {
+          serverLog.info(
+            `[league-forfeit] sweep: forfeited=${out.forfeited} skipped=${out.skipped} (inspected=${out.inspected})`,
+          );
+        }
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : "unknown";
+        serverLog.error(`[league-forfeit] sweep failed: ${msg}`);
+      }
+    };
+    // First tick scheduled `tickMs` after boot (donne le temps a la
+    // DB d'etre prete). Pas de tick immediat pour eviter de bloquer
+    // le boot.
+    setInterval(() => {
+      void tick();
+    }, tickMs).unref();
+  });
+}
