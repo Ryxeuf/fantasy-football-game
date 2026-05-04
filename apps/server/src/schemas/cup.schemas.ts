@@ -11,24 +11,38 @@ const scoringConfigSchema = z.object({
   passPoints: z.number().optional(),
 });
 
-export const createCupSchema = z.object({
-  name: z
-    .string()
-    .min(1, "Le nom de la coupe est requis")
-    .max(100, "Le nom de la coupe ne peut pas depasser 100 caracteres"),
-  isPublic: z.boolean().optional().default(true),
-  ruleset: z.string().max(50).optional(),
-  scoringConfig: scoringConfigSchema.optional(),
-  // Flat-level scoring fields (backwards compat)
-  winPoints: z.number().optional(),
-  drawPoints: z.number().optional(),
-  lossPoints: z.number().optional(),
-  forfeitPoints: z.number().optional(),
-  touchdownPoints: z.number().optional(),
-  blockCasualtyPoints: z.number().optional(),
-  foulCasualtyPoints: z.number().optional(),
-  passPoints: z.number().optional(),
-});
+export const createCupSchema = z
+  .object({
+    name: z
+      .string()
+      .min(1, "Le nom de la coupe est requis")
+      .max(100, "Le nom de la coupe ne peut pas depasser 100 caracteres"),
+    isPublic: z.boolean().optional().default(true),
+    ruleset: z.string().max(50).optional(),
+    scoringConfig: scoringConfigSchema.optional(),
+    // Flat-level scoring fields (backwards compat)
+    winPoints: z.number().optional(),
+    drawPoints: z.number().optional(),
+    lossPoints: z.number().optional(),
+    forfeitPoints: z.number().optional(),
+    touchdownPoints: z.number().optional(),
+    blockCasualtyPoints: z.number().optional(),
+    foulCasualtyPoints: z.number().optional(),
+    passPoints: z.number().optional(),
+    // S27.1i — couple optionnel pour designer une edition mensuelle
+    // canonique. Validation admin enforce cote handler.
+    monthlyYear: z.number().int().positive().optional(),
+    monthlyMonth: z.number().int().min(1).max(12).optional(),
+  })
+  .refine(
+    (data) =>
+      (data.monthlyYear === undefined && data.monthlyMonth === undefined) ||
+      (data.monthlyYear !== undefined && data.monthlyMonth !== undefined),
+    {
+      message: "monthlyYear et monthlyMonth doivent etre fournis ensemble",
+      path: ["monthlyMonth"],
+    },
+  );
 
 export const registerCupSchema = z.object({
   teamId: z.string().min(1, "teamId requis"),
