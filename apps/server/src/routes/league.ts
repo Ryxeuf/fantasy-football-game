@@ -33,6 +33,7 @@ import {
   requireLeagueCreator,
 } from "../services/league-scheduler";
 import { createMatchFromPairing } from "../services/league-match-from-pairing";
+import { recordForfeit } from "../services/league-forfeit";
 import { listLeagueThemes } from "../services/league-themes";
 import {
   createLeagueSchema,
@@ -44,6 +45,7 @@ import {
   attachMatchSchema,
   startSeasonSchema,
   createMatchFromPairingSchema,
+  forfeitPairingSchema,
   type CreateLeagueBody,
   type CreateSeasonBody,
   type JoinSeasonBody,
@@ -53,6 +55,7 @@ import {
   type AttachMatchBody,
   type StartSeasonBody,
   type CreateMatchFromPairingBody,
+  type ForfeitPairingBody,
 } from "../schemas/league.schemas";
 import { sendError, sendSuccess } from "../utils/api-response";
 
@@ -591,6 +594,48 @@ export async function handleCreateMatchFromPairing(
   }
 }
 
+/**
+ * L2.A.11c — Force un forfait sur un pairing. Reserve au createur de
+ * la ligue (verifie via le `seasonId` extrait du pairing). Le cron
+ * `sweepDeadlinePairings` fait pareil automatiquement a la deadline,
+ * ce handler donne juste un levier admin manuel anticipe.
+ */
+export async function handleForfeitPairing(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const pairingId = req.params.pairingId;
+  const body = req.body as ForfeitPairingBody;
+
+  // On a besoin du seasonId du pairing pour verifier que l'appelant
+  // est bien le creator de la ligue. On le lit ici plutot que dans
+  // `recordForfeit` pour garder le service decouple de l'autorisation.
+  const pairing = await prisma.leaguePairing.findUnique({
+    where: { id: pairingId },
+    select: { id: true, round: { select: { seasonId: true } } },
+  });
+  if (!pairing) {
+    sendError(res, "Pairing introuvable", 404);
+    return;
+  }
+  if (!(await ensureLeagueCreator(userId, pairing.round.seasonId, res))) {
+    return;
+  }
+
+  try {
+    const result = await recordForfeit({
+      pairingId,
+      side: body?.side,
+      winnerScore: body?.winnerScore,
+    });
+    sendSuccess(res, result);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
 const router = Router();
 
 router.post("/", authUser, validate(createLeagueSchema), handleCreateLeague);
@@ -658,6 +703,15 @@ router.post(
   authUser,
   validate(createMatchFromPairingSchema),
   handleCreateMatchFromPairing,
+);
+// L2.A.11c — Forfait force par le createur de la ligue. Le cron
+// `sweepDeadlinePairings` fait l'equivalent automatiquement a la
+// deadline, ceci permet un trigger admin manuel anticipe.
+router.post(
+  "/pairings/:pairingId/forfeit",
+  authUser,
+  validate(forfeitPairingSchema),
+  handleForfeitPairing,
 );
 router.get("/seasons/:seasonId/standings", authUser, handleGetStandings);
 router.get("/seasons/:seasonId", authUser, handleGetSeason);

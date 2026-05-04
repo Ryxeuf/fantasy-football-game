@@ -36,6 +36,7 @@ describe("Rule: Push notification preferences API", () => {
         turnNotification: true,
         matchFoundNotification: true,
         friendMatchStartedNotification: true,
+        leagueRoundReminderNotification: true,
       });
     });
 
@@ -47,6 +48,7 @@ describe("Rule: Push notification preferences API", () => {
         turnNotification: false,
         matchFoundNotification: false,
         friendMatchStartedNotification: false,
+        leagueRoundReminderNotification: false,
       });
 
       const prefs = await getNotificationPreferences(userId);
@@ -56,6 +58,7 @@ describe("Rule: Push notification preferences API", () => {
         turnNotification: false,
         matchFoundNotification: false,
         friendMatchStartedNotification: false,
+        leagueRoundReminderNotification: false,
       });
     });
   });
@@ -67,6 +70,7 @@ describe("Rule: Push notification preferences API", () => {
         turnNotification: true,
         matchFoundNotification: false,
         friendMatchStartedNotification: true,
+        leagueRoundReminderNotification: true,
       };
       mockPrisma.notificationPreference.upsert.mockResolvedValue({
         id: "pref-1",

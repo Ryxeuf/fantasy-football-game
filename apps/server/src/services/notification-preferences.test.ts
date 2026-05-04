@@ -36,6 +36,7 @@ describe("notification-preferences", () => {
         turnNotification: false,
         matchFoundNotification: true,
         friendMatchStartedNotification: false,
+        leagueRoundReminderNotification: false,
       };
       mockPrisma.notificationPreference.findUnique.mockResolvedValue(stored);
 
@@ -46,6 +47,7 @@ describe("notification-preferences", () => {
         turnNotification: false,
         matchFoundNotification: true,
         friendMatchStartedNotification: false,
+        leagueRoundReminderNotification: false,
       });
       expect(mockPrisma.notificationPreference.findUnique).toHaveBeenCalledWith({
         where: { userId },
@@ -62,6 +64,7 @@ describe("notification-preferences", () => {
         turnNotification: true,
         matchFoundNotification: true,
         friendMatchStartedNotification: true,
+        leagueRoundReminderNotification: true,
       });
     });
 
@@ -80,6 +83,22 @@ describe("notification-preferences", () => {
 
       expect(result.friendMatchStartedNotification).toBe(true);
     });
+
+    it("backfills leagueRoundReminderNotification default when missing on the row", async () => {
+      mockPrisma.notificationPreference.findUnique.mockResolvedValue({
+        id: "pref-1",
+        userId,
+        pushEnabled: true,
+        turnNotification: true,
+        matchFoundNotification: true,
+        friendMatchStartedNotification: true,
+        // leagueRoundReminderNotification missing (legacy row pre L2.A.12)
+      });
+
+      const result = await getNotificationPreferences(userId);
+
+      expect(result.leagueRoundReminderNotification).toBe(true);
+    });
   });
 
   describe("updateNotificationPreferences", () => {
@@ -89,6 +108,7 @@ describe("notification-preferences", () => {
         turnNotification: false,
         matchFoundNotification: true,
         friendMatchStartedNotification: false,
+        leagueRoundReminderNotification: false,
       };
       mockPrisma.notificationPreference.upsert.mockResolvedValue({
         id: "pref-1",
@@ -213,6 +233,25 @@ describe("notification-preferences", () => {
       expect(
         await shouldSendNotification(userId, NotificationType.FriendMatchStarted),
       ).toBe(true);
+      expect(
+        await shouldSendNotification(userId, NotificationType.LeagueRoundReminder),
+      ).toBe(true);
+    });
+
+    it("returns false when only leagueRoundReminderNotification is disabled", async () => {
+      mockPrisma.notificationPreference.findUnique.mockResolvedValue({
+        userId,
+        pushEnabled: true,
+        turnNotification: true,
+        matchFoundNotification: true,
+        friendMatchStartedNotification: true,
+        leagueRoundReminderNotification: false,
+      });
+
+      expect(
+        await shouldSendNotification(userId, NotificationType.LeagueRoundReminder),
+      ).toBe(false);
+      expect(await shouldSendNotification(userId, NotificationType.Turn)).toBe(true);
     });
   });
 });

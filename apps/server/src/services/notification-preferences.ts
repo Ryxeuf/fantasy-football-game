@@ -8,6 +8,12 @@ export enum NotificationType {
   Turn = "turn",
   MatchFound = "matchFound",
   FriendMatchStarted = "friendMatchStarted",
+  /**
+   * L2.A.12 — Sprint Ligues v2 PR3 : "Vous avez ete apparie a {coach}
+   * pour la J{n}, deadline {date}". Envoye au demarrage d'une saison
+   * (`startSeason`) pour informer chaque coach de ses pairings.
+   */
+  LeagueRoundReminder = "leagueRoundReminder",
 }
 
 export interface NotificationPreferences {
@@ -15,6 +21,7 @@ export interface NotificationPreferences {
   turnNotification: boolean;
   matchFoundNotification: boolean;
   friendMatchStartedNotification: boolean;
+  leagueRoundReminderNotification: boolean;
 }
 
 const DEFAULTS: NotificationPreferences = {
@@ -22,6 +29,7 @@ const DEFAULTS: NotificationPreferences = {
   turnNotification: true,
   matchFoundNotification: true,
   friendMatchStartedNotification: true,
+  leagueRoundReminderNotification: true,
 };
 
 // ---------------------------------------------------------------------------
@@ -45,6 +53,11 @@ export async function getNotificationPreferences(
       (row as { friendMatchStartedNotification?: boolean | null })
         .friendMatchStartedNotification ??
       DEFAULTS.friendMatchStartedNotification,
+    // L2.A.12 — meme logique pour la nouvelle preference ligues v2.
+    leagueRoundReminderNotification:
+      (row as { leagueRoundReminderNotification?: boolean | null })
+        .leagueRoundReminderNotification ??
+      DEFAULTS.leagueRoundReminderNotification,
   };
 }
 
@@ -69,6 +82,10 @@ export async function updateNotificationPreferences(
       (row as { friendMatchStartedNotification?: boolean | null })
         .friendMatchStartedNotification ??
       DEFAULTS.friendMatchStartedNotification,
+    leagueRoundReminderNotification:
+      (row as { leagueRoundReminderNotification?: boolean | null })
+        .leagueRoundReminderNotification ??
+      DEFAULTS.leagueRoundReminderNotification,
   };
 }
 
@@ -90,6 +107,8 @@ export async function shouldSendNotification(
       return prefs.matchFoundNotification;
     case NotificationType.FriendMatchStarted:
       return prefs.friendMatchStartedNotification;
+    case NotificationType.LeagueRoundReminder:
+      return prefs.leagueRoundReminderNotification;
     default:
       return true;
   }

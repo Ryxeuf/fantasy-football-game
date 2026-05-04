@@ -29,6 +29,8 @@
 
 import { prisma } from "../prisma";
 import { generateRoundRobin, type RoundRobinRound } from "./league-schedule";
+import { notifyParticipantsOfFirstRound } from "./league-round-reminder";
+import { serverLog } from "../utils/server-log";
 
 export interface StartSeasonOptions {
   /**
@@ -243,6 +245,16 @@ export async function startSeason(
     where: { id: seasonId },
     data: { status: "in_progress" },
   });
+
+  // L2.A.12 — fire-and-forget : push reminder a chaque coach implique
+  // dans un pairing du round 1. Echec non-bloquant : on log mais on
+  // ne propage pas pour ne pas faire echouer le startSeason si un
+  // user n'a pas de subscription push.
+  notifyParticipantsOfFirstRound({ seasonId })
+    .catch((e: unknown) => {
+      const msg = e instanceof Error ? e.message : "unknown";
+      serverLog.error(`[league-scheduler] notifyFirstRound failed: ${msg}`);
+    });
 
   return {
     seasonId,

@@ -142,6 +142,22 @@ export const createMatchFromPairingSchema = z.object({
   seed: z.string().min(1).max(64).optional(),
 });
 
+/**
+ * L2.A.11c — Body schema pour `POST /league/pairings/:id/forfeit`.
+ * Reservee au createur de la ligue. `side` indique quel cote forfait
+ * (default `home` cote service). `winnerScore` permet d'override le
+ * score symbolique attribue au gagnant (default 2).
+ */
+export const forfeitPairingSchema = z.object({
+  side: z.enum(["home", "away"]).optional(),
+  winnerScore: z
+    .number()
+    .int("winnerScore doit etre un entier")
+    .min(0, "winnerScore >= 0")
+    .max(20, "winnerScore <= 20")
+    .optional(),
+});
+
 export type CreateLeagueBody = z.infer<typeof createLeagueSchema>;
 export type CreateSeasonBody = z.infer<typeof createSeasonSchema>;
 export type JoinSeasonBody = z.infer<typeof joinSeasonSchema>;
@@ -155,3 +171,4 @@ export type StartSeasonBody = z.infer<typeof startSeasonSchema>;
 export type CreateMatchFromPairingBody = z.infer<
   typeof createMatchFromPairingSchema
 >;
+export type ForfeitPairingBody = z.infer<typeof forfeitPairingSchema>;
