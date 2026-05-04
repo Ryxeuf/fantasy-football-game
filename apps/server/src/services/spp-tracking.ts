@@ -16,6 +16,17 @@ const SPP_VALUES = {
   mvp: 4,
 } as const;
 
+/**
+ * L2.B.8 — Sprint Ligues v2 PR6 : override "Bagarreurs Brutaux".
+ * En Jeu en Ligue uniquement, une equipe avec la regle speciale
+ * `bagarreurs_brutaux` gagne 3 PSP (au lieu de 2) par Elimination
+ * et 2 PSP (au lieu de 3) par Touchdown.
+ */
+const BAGARREURS_BRUTAUX_OVERRIDE = {
+  touchdown: 2,
+  casualty: 3,
+} as const;
+
 export interface PlayerMatchStats {
   touchdowns: number;
   casualties: number;
@@ -34,16 +45,101 @@ export interface GameStateForSPP {
 }
 
 /**
- * Calculate SPP earned by a player from their match stats.
+ * L2.B.8 — Per-team SPP modifier. `bagarreursBrutaux=true` implique
+ * que la team a la regle speciale et que le match est en Jeu en
+ * Ligue (les modifs ne s'appliquent qu'en ligue, pas en match
+ * amical).
  */
-export function calculatePlayerSPP(stats: PlayerMatchStats): number {
+export interface TeamSPPModifier {
+  readonly bagarreursBrutaux: boolean;
+}
+
+/**
+ * L2.B.8 — Contexte SPP pour un match. `isLeagueMatch=false` desactive
+ * tous les overrides (les regles s'appliquent uniquement en ligue
+ * d'apres les regles BB officielles). Pour un match amical / cup, on
+ * ignore `teamA/B.bagarreursBrutaux` meme si la regle est presente.
+ */
+export interface LeagueSPPContext {
+  readonly isLeagueMatch: boolean;
+  readonly teamA: TeamSPPModifier;
+  readonly teamB: TeamSPPModifier;
+}
+
+const NEUTRAL_MODIFIER: TeamSPPModifier = { bagarreursBrutaux: false };
+const NEUTRAL_CONTEXT: LeagueSPPContext = {
+  isLeagueMatch: false,
+  teamA: NEUTRAL_MODIFIER,
+  teamB: NEUTRAL_MODIFIER,
+};
+
+/**
+ * Calculate SPP earned by a player from their match stats. Applies
+ * the per-team override `modifier` (default neutral = vanilla rules).
+ */
+export function calculatePlayerSPP(
+  stats: PlayerMatchStats,
+  modifier: TeamSPPModifier = NEUTRAL_MODIFIER,
+): number {
+  const useBagarreurs = modifier.bagarreursBrutaux;
+  const tdValue = useBagarreurs
+    ? BAGARREURS_BRUTAUX_OVERRIDE.touchdown
+    : SPP_VALUES.touchdown;
+  const casValue = useBagarreurs
+    ? BAGARREURS_BRUTAUX_OVERRIDE.casualty
+    : SPP_VALUES.casualty;
   return (
-    stats.touchdowns * SPP_VALUES.touchdown +
-    stats.casualties * SPP_VALUES.casualty +
+    stats.touchdowns * tdValue +
+    stats.casualties * casValue +
     stats.completions * SPP_VALUES.completion +
     stats.interceptions * SPP_VALUES.interception +
     (stats.mvp ? SPP_VALUES.mvp : 0)
   );
+}
+
+/**
+ * L2.B.8 — Helper qui charge `Roster.specialRules` (CSV de slugs)
+ * pour les rosters de deux teams, et construit un `LeagueSPPContext`
+ * exploitable par `persistMatchSPP`. Si la lecture echoue (ex:
+ * SQLite test client sans modele Roster), on retourne le contexte
+ * neutre (vanilla rules).
+ */
+export async function loadLeagueSPPContext(
+  prisma: PrismaClient,
+  args: {
+    isLeagueMatch: boolean;
+    teamARoster: string;
+    teamBRoster: string;
+  },
+): Promise<LeagueSPPContext> {
+  if (!args.isLeagueMatch) return NEUTRAL_CONTEXT;
+  try {
+    const rosters = await prisma.roster.findMany({
+      where: { slug: { in: [args.teamARoster, args.teamBRoster] } },
+      select: { slug: true, specialRules: true },
+    });
+    const bySlug = new Map(rosters.map((r) => [r.slug, r.specialRules ?? ""]));
+    return {
+      isLeagueMatch: true,
+      teamA: rosterToModifier(bySlug.get(args.teamARoster) ?? ""),
+      teamB: rosterToModifier(bySlug.get(args.teamBRoster) ?? ""),
+    };
+  } catch {
+    return NEUTRAL_CONTEXT;
+  }
+}
+
+function rosterToModifier(specialRulesText: string): TeamSPPModifier {
+  if (!specialRulesText) return NEUTRAL_MODIFIER;
+  // Tolerant parsing : split on `,` (CSV) ou tout whitespace pour
+  // accommoder les formats existants en base. Trim + lowercase.
+  const parts = specialRulesText
+    .split(/[,\s]+/g)
+    .map((s) => s.trim().toLowerCase())
+    .filter((s) => s.length > 0);
+  return {
+    bagarreursBrutaux: parts.includes("bagarreurs_brutaux"),
+  };
 }
 
 /**
@@ -63,6 +159,14 @@ export async function persistMatchSPP(
   gameState: GameStateForSPP,
   teamAId: string,
   teamBId: string,
+  /**
+   * L2.B.8 — Contexte SPP de match. Default = neutre (vanilla rules)
+   * pour preserver la retro-compat avec tous les call-sites
+   * existants (matchs amicaux, cups, AI practice). Le caller passe
+   * un contexte non-neutre uniquement pour les matchs de ligue
+   * dont une equipe a la regle "Bagarreurs Brutaux".
+   */
+  context: LeagueSPPContext = NEUTRAL_CONTEXT,
 ): Promise<number> {
   const { matchStats, players } = gameState;
 
@@ -83,23 +187,26 @@ export async function persistMatchSPP(
   ]);
 
   // Build lookup: game engine player ID -> database TeamPlayer ID
-  const playerIdMap = new Map<string, string>();
+  // + side ('A' or 'B') so we can apply the per-team modifier.
+  const playerIdMap = new Map<string, { dbId: string; side: "A" | "B" }>();
   for (const dbPlayer of teamAPlayers) {
-    playerIdMap.set(`A${dbPlayer.number}`, dbPlayer.id);
+    playerIdMap.set(`A${dbPlayer.number}`, { dbId: dbPlayer.id, side: "A" });
   }
   for (const dbPlayer of teamBPlayers) {
-    playerIdMap.set(`B${dbPlayer.number}`, dbPlayer.id);
+    playerIdMap.set(`B${dbPlayer.number}`, { dbId: dbPlayer.id, side: "B" });
   }
 
   // Build one update per player: increment matchesPlayed + SPP stats if any
   const updates: Promise<unknown>[] = [];
 
   for (const gamePlayer of players) {
-    const dbPlayerId = playerIdMap.get(gamePlayer.id);
-    if (!dbPlayerId) continue;
+    const found = playerIdMap.get(gamePlayer.id);
+    if (!found) continue;
+    const { dbId: dbPlayerId, side } = found;
+    const modifier = side === "A" ? context.teamA : context.teamB;
 
     const stats = matchStats[gamePlayer.id];
-    const earnedSPP = stats ? calculatePlayerSPP(stats) : 0;
+    const earnedSPP = stats ? calculatePlayerSPP(stats, modifier) : 0;
 
     updates.push(
       prisma.teamPlayer.update({

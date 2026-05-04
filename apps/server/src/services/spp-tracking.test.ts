@@ -2,8 +2,10 @@ import { describe, it, expect, vi } from "vitest";
 import {
   calculatePlayerSPP,
   persistMatchSPP,
+  loadLeagueSPPContext,
   type PlayerMatchStats,
   type GameStateForSPP,
+  type LeagueSPPContext,
 } from "./spp-tracking";
 
 describe("calculatePlayerSPP", () => {
@@ -212,5 +214,245 @@ describe("persistMatchSPP", () => {
       totalInterceptions: { increment: 0 },
       totalMvpAwards: { increment: 1 },
     });
+  });
+});
+
+describe("L2.B.8 — Bagarreurs Brutaux override", () => {
+  it("calculatePlayerSPP defaults to vanilla when no modifier provided", () => {
+    const stats: PlayerMatchStats = {
+      touchdowns: 1,
+      casualties: 1,
+      completions: 0,
+      interceptions: 0,
+      mvp: false,
+    };
+    expect(calculatePlayerSPP(stats)).toBe(5); // 3 TD + 2 cas
+  });
+
+  it("calculatePlayerSPP swaps TD/casualty values when bagarreursBrutaux=true", () => {
+    const stats: PlayerMatchStats = {
+      touchdowns: 1,
+      casualties: 1,
+      completions: 0,
+      interceptions: 0,
+      mvp: false,
+    };
+    // 2 TD + 3 cas = 5 (same total but inverted)
+    expect(
+      calculatePlayerSPP(stats, { bagarreursBrutaux: true }),
+    ).toBe(5);
+  });
+
+  it("Bagarreurs override differs from vanilla when TD != casualties", () => {
+    const stats: PlayerMatchStats = {
+      touchdowns: 2,
+      casualties: 0,
+      completions: 0,
+      interceptions: 0,
+      mvp: false,
+    };
+    expect(calculatePlayerSPP(stats)).toBe(6); // 2*3
+    expect(
+      calculatePlayerSPP(stats, { bagarreursBrutaux: true }),
+    ).toBe(4); // 2*2
+
+    const allCasualties: PlayerMatchStats = {
+      touchdowns: 0,
+      casualties: 3,
+      completions: 0,
+      interceptions: 0,
+      mvp: false,
+    };
+    expect(calculatePlayerSPP(allCasualties)).toBe(6); // 3*2
+    expect(
+      calculatePlayerSPP(allCasualties, { bagarreursBrutaux: true }),
+    ).toBe(9); // 3*3
+  });
+
+  it("override does not change completion / interception / MVP values", () => {
+    const stats: PlayerMatchStats = {
+      touchdowns: 0,
+      casualties: 0,
+      completions: 5,
+      interceptions: 2,
+      mvp: true,
+    };
+    const expected = 5 * 1 + 2 * 1 + 4; // 11
+    expect(calculatePlayerSPP(stats)).toBe(expected);
+    expect(
+      calculatePlayerSPP(stats, { bagarreursBrutaux: true }),
+    ).toBe(expected);
+  });
+
+  it("persistMatchSPP applies per-team override (only team A has bagarreurs)", async () => {
+    const mockPrisma = {
+      teamPlayer: {
+        findMany: vi.fn(),
+        update: vi.fn(),
+      },
+      $transaction: vi.fn(async (ops: unknown[]) =>
+        Promise.all(ops as Promise<unknown>[]),
+      ),
+    } as any;
+
+    mockPrisma.teamPlayer.findMany
+      .mockResolvedValueOnce([{ id: "a-1", number: 1 }])
+      .mockResolvedValueOnce([{ id: "b-1", number: 1 }]);
+
+    const gameState: GameStateForSPP = {
+      players: [
+        { id: "A1", team: "A", number: 1 },
+        { id: "B1", team: "B", number: 1 },
+      ],
+      matchStats: {
+        A1: { touchdowns: 1, casualties: 1, completions: 0, interceptions: 0, mvp: false },
+        B1: { touchdowns: 1, casualties: 1, completions: 0, interceptions: 0, mvp: false },
+      },
+    };
+
+    const context: LeagueSPPContext = {
+      isLeagueMatch: true,
+      teamA: { bagarreursBrutaux: true },
+      teamB: { bagarreursBrutaux: false },
+    };
+
+    await persistMatchSPP(mockPrisma, gameState, "team-A", "team-B", context);
+
+    const updates = mockPrisma.teamPlayer.update.mock.calls.map(
+      (c: unknown[]) => c[0],
+    ) as Array<{ where: { id: string }; data: Record<string, unknown> }>;
+    const a1 = updates.find((u) => u.where.id === "a-1");
+    const b1 = updates.find((u) => u.where.id === "b-1");
+
+    // Player A1 (Bagarreurs) : 1 TD * 2 + 1 cas * 3 = 5
+    expect((a1?.data.spp as { increment: number }).increment).toBe(5);
+    // Player B1 (vanilla) : 1 TD * 3 + 1 cas * 2 = 5
+    // (same total here but the breakdown is different)
+    expect((b1?.data.spp as { increment: number }).increment).toBe(5);
+  });
+
+  it("persistMatchSPP applies override consistently when only team B has the rule", async () => {
+    const mockPrisma = {
+      teamPlayer: {
+        findMany: vi.fn(),
+        update: vi.fn(),
+      },
+      $transaction: vi.fn(async (ops: unknown[]) =>
+        Promise.all(ops as Promise<unknown>[]),
+      ),
+    } as any;
+
+    mockPrisma.teamPlayer.findMany
+      .mockResolvedValueOnce([{ id: "a-1", number: 1 }])
+      .mockResolvedValueOnce([{ id: "b-1", number: 1 }]);
+
+    const gameState: GameStateForSPP = {
+      players: [
+        { id: "A1", team: "A", number: 1 },
+        { id: "B1", team: "B", number: 1 },
+      ],
+      matchStats: {
+        A1: { touchdowns: 2, casualties: 0, completions: 0, interceptions: 0, mvp: false },
+        B1: { touchdowns: 0, casualties: 3, completions: 0, interceptions: 0, mvp: false },
+      },
+    };
+
+    await persistMatchSPP(mockPrisma, gameState, "team-A", "team-B", {
+      isLeagueMatch: true,
+      teamA: { bagarreursBrutaux: false },
+      teamB: { bagarreursBrutaux: true },
+    });
+
+    const updates = mockPrisma.teamPlayer.update.mock.calls.map(
+      (c: unknown[]) => c[0],
+    ) as Array<{ where: { id: string }; data: Record<string, unknown> }>;
+    const a1 = updates.find((u) => u.where.id === "a-1");
+    const b1 = updates.find((u) => u.where.id === "b-1");
+
+    // A1 vanilla : 2 TD * 3 = 6
+    expect((a1?.data.spp as { increment: number }).increment).toBe(6);
+    // B1 Bagarreurs : 3 cas * 3 = 9
+    expect((b1?.data.spp as { increment: number }).increment).toBe(9);
+  });
+});
+
+describe("loadLeagueSPPContext", () => {
+  function makePrisma(rosters?: Array<{ slug: string; specialRules: string | null }>) {
+    return {
+      roster: {
+        findMany: vi.fn().mockResolvedValue(rosters ?? []),
+      },
+    } as any;
+  }
+
+  it("returns neutral context when isLeagueMatch=false", async () => {
+    const ctx = await loadLeagueSPPContext(makePrisma(), {
+      isLeagueMatch: false,
+      teamARoster: "skaven",
+      teamBRoster: "lizardmen",
+    });
+    expect(ctx.isLeagueMatch).toBe(false);
+    expect(ctx.teamA.bagarreursBrutaux).toBe(false);
+    expect(ctx.teamB.bagarreursBrutaux).toBe(false);
+  });
+
+  it("detects bagarreurs_brutaux on the roster CSV (team A only)", async () => {
+    const ctx = await loadLeagueSPPContext(
+      makePrisma([
+        { slug: "black_orcs", specialRules: "bagarreurs_brutaux,deferlement" },
+        { slug: "skaven", specialRules: "" },
+      ]),
+      {
+        isLeagueMatch: true,
+        teamARoster: "black_orcs",
+        teamBRoster: "skaven",
+      },
+    );
+    expect(ctx.teamA.bagarreursBrutaux).toBe(true);
+    expect(ctx.teamB.bagarreursBrutaux).toBe(false);
+  });
+
+  it("detects on team B only", async () => {
+    const ctx = await loadLeagueSPPContext(
+      makePrisma([
+        { slug: "skaven", specialRules: null },
+        { slug: "norse", specialRules: "bagarreurs_brutaux" },
+      ]),
+      {
+        isLeagueMatch: true,
+        teamARoster: "skaven",
+        teamBRoster: "norse",
+      },
+    );
+    expect(ctx.teamA.bagarreursBrutaux).toBe(false);
+    expect(ctx.teamB.bagarreursBrutaux).toBe(true);
+  });
+
+  it("falls back to neutral when prisma throws", async () => {
+    const failingPrisma = {
+      roster: { findMany: vi.fn().mockRejectedValue(new Error("no roster table")) },
+    } as any;
+    const ctx = await loadLeagueSPPContext(failingPrisma, {
+      isLeagueMatch: true,
+      teamARoster: "skaven",
+      teamBRoster: "norse",
+    });
+    expect(ctx.isLeagueMatch).toBe(false);
+    expect(ctx.teamA.bagarreursBrutaux).toBe(false);
+  });
+
+  it("tolerates whitespace + casing variations in specialRules CSV", async () => {
+    const ctx = await loadLeagueSPPContext(
+      makePrisma([
+        { slug: "black_orcs", specialRules: " Bagarreurs_Brutaux , deferlement" },
+        { slug: "skaven", specialRules: "" },
+      ]),
+      {
+        isLeagueMatch: true,
+        teamARoster: "black_orcs",
+        teamBRoster: "skaven",
+      },
+    );
+    expect(ctx.teamA.bagarreursBrutaux).toBe(true);
   });
 });
