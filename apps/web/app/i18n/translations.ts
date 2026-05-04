@@ -498,6 +498,10 @@ export const translations = {
       monthlyStatusEnCours: "En cours",
       monthlyStatusTerminee: "Terminée",
       monthlyStatusArchivee: "Archivée",
+      // S27.1h — Match du moment
+      matchOfTheWeekTitle: "Match du moment",
+      matchOfTheWeekScore: "Score",
+      matchOfTheWeekViewMatch: "Voir le match",
     },
     // Inducements (pre-match)
     inducements: {
@@ -1061,6 +1065,10 @@ export const translations = {
       monthlyStatusEnCours: "In progress",
       monthlyStatusTerminee: "Completed",
       monthlyStatusArchivee: "Archived",
+      // S27.1h — Match of the week
+      matchOfTheWeekTitle: "Match of the week",
+      matchOfTheWeekScore: "Score",
+      matchOfTheWeekViewMatch: "View match",
     },
     // Inducements (pre-match)
     inducements: {

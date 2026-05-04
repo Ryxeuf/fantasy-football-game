@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { apiRequest } from "../../lib/api-client";
 import { useLanguage } from "../../contexts/LanguageContext";
+import MatchOfTheWeekBanner from "../MatchOfTheWeekBanner";
 
 interface MonthlyCup {
   id: string;
@@ -86,6 +87,9 @@ export default function MonthlyCupsPage(): JSX.Element {
           {t.cups.monthlyDescription}
         </p>
       </header>
+
+      {/* S27.1h — teaser "Match du moment" si pick admin actif. */}
+      <MatchOfTheWeekBanner />
 
       {cups.length === 0 ? (
         <div
