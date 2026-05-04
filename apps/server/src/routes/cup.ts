@@ -523,7 +523,20 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
     blockCasualtyPoints?: number;
     foulCasualtyPoints?: number;
     passPoints?: number;
+    monthlyYear?: number;
+    monthlyMonth?: number;
   };
+
+  // S27.1i — La creation d'une cup mensuelle (avec slot canonique) est
+  // reservee aux admins. Les coachs reguliers peuvent creer des cups
+  // privees / non programmees comme avant.
+  const wantsMonthly =
+    body.monthlyYear !== undefined && body.monthlyMonth !== undefined;
+  if (wantsMonthly && !hasRole(req.user!.roles, "admin")) {
+    return res.status(403).json({
+      error: "Seuls les administrateurs peuvent creer une cup mensuelle",
+    });
+  }
 
   const { name, isPublic } = body;
   const ruleset = resolveRuleset(body.ruleset);
@@ -598,6 +611,13 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
         validated: false,
         isPublic: cupIsPublic,
         ...finalScoring,
+        // S27.1i — slot mensuel admin (couple deja valide par Zod).
+        ...(wantsMonthly
+          ? {
+              monthlyYear: body.monthlyYear,
+              monthlyMonth: body.monthlyMonth,
+            }
+          : {}),
       },
       include: {
         creator: {
