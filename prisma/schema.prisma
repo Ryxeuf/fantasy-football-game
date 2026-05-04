@@ -492,6 +492,14 @@ model Cup {
   foulCasualtyPoints  Int @default(2) // Points par sortie sur agression
   passPoints          Int @default(2) // Points par passe réussie
 
+  /// S27.1 — Mensualisation : edition canonique "Nuffle Cup {Mois} {YYYY}".
+  /// Les deux champs sont nullable pour rester retro-compatibles avec les
+  /// cups existantes (privees / non programmees). Quand fournis, ils
+  /// doivent former un couple valide (1-12, annee positive). Validation
+  /// applicable cote service `nuffle-cup-monthly.ts`.
+  monthlyYear  Int?
+  monthlyMonth Int?
+
   // Relations
   participants CupParticipant[]
   localMatches LocalMatch[]
@@ -500,6 +508,7 @@ model Cup {
   @@index([validated])
   @@index([isPublic])
   @@index([status])
+  @@index([monthlyYear, monthlyMonth])
 }
 
 // Relation many-to-many entre Cup et Team (participants)
