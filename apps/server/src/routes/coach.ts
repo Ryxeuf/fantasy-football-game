@@ -8,6 +8,7 @@ import {
 } from "../services/coach-profile";
 import { getCoachThemedChampionships } from "../services/coach-championships";
 import { getCoachCupChampionships } from "../services/cup-championships";
+import { getCoachLeagueChampionships } from "../services/coach-league-championships";
 import { serverLog } from "../utils/server-log";
 
 const DEFAULT_ELO_HISTORY_DAYS = 90;
@@ -41,13 +42,22 @@ export async function handleGetCoachPublicProfile(
     }
     // S26.6d / S27.1d — toutes les sections du profil sont calculees en
     // parallele pour eviter d'augmenter la latence /coach/:slug.
-    const [achievements, recentTeams, championships, cupChampionships] =
-      await Promise.all([
-        getCoachShowcaseAchievements(profile.id),
-        getCoachRecentTeams(profile.id),
-        getCoachThemedChampionships(profile.id),
-        getCoachCupChampionships(profile.id),
-      ]);
+    const [
+      achievements,
+      recentTeams,
+      championships,
+      cupChampionships,
+      leagueChampionships,
+    ] = await Promise.all([
+      getCoachShowcaseAchievements(profile.id),
+      getCoachRecentTeams(profile.id),
+      getCoachThemedChampionships(profile.id),
+      getCoachCupChampionships(profile.id),
+      // L2.C.2 — Sprint Ligues v2 PR7 : champions de saisons (toutes
+      // ligues, pas uniquement themed). Aggregation des
+      // LeagueSeasonAward.championUserId.
+      getCoachLeagueChampionships(profile.id),
+    ]);
     res.status(200).json({
       success: true,
       data: {
@@ -56,6 +66,7 @@ export async function handleGetCoachPublicProfile(
         recentTeams,
         championships,
         cupChampionships,
+        leagueChampionships,
       },
     });
   } catch (e: unknown) {

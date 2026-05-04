@@ -627,6 +627,7 @@ model LeagueSeason {
   participants LeagueParticipant[]
   rounds       LeagueRound[]
   matches      Match[]             @relation("LeagueSeasonMatches")
+  award        LeagueSeasonAward?
 
   @@unique([leagueId, seasonNumber])
   @@index([leagueId])
@@ -762,4 +763,17 @@ model LeaguePostMatchSequence {
 
   @@index([seasonId])
   @@index([status])
+}
+
+// L2.C.1 — Sprint Ligues v2 PR7 : awards de fin de saison (SQLite mirror).
+model LeagueSeasonAward {
+  id             String       @id @default(cuid())
+  season         LeagueSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  seasonId       String       @unique
+  championUserId String?
+  championTeamId String?
+  awards         String       @default("{}")
+  createdAt      DateTime     @default(now())
+
+  @@index([championUserId])
 }

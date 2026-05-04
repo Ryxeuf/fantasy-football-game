@@ -773,6 +773,7 @@ model LeagueSeason {
   participants LeagueParticipant[]
   rounds       LeagueRound[]
   matches      Match[]             @relation("LeagueSeasonMatches")
+  award        LeagueSeasonAward?
 
   @@unique([leagueId, seasonNumber])
   @@index([leagueId])
@@ -959,4 +960,30 @@ model LeaguePostMatchSequence {
 
   @@index([seasonId])
   @@index([status])
+}
+
+// L2.C.1 — Sprint Ligues v2 PR7 : awards de fin de saison.
+// Snapshot persiste a la cloture de saison (status=completed). Stocke
+// le tableau d'awards calcule par `services/leagueScoring.ts` pour
+// servir la page recap et le badge champion sans recalculer a chaque
+// vue. 1 row par saison via `seasonId @unique`.
+//
+// `awards` est stocke en JSON serialise (string) pour rester portable
+// PG <-> SQLite et evoluer sans migration quand on ajoute une
+// categorie d'award. Le service garantit la forme :
+//   { championUserId, championTeamId, awards: SeasonAwardEntry[] }.
+//
+// `championUserId` peut etre null si la saison s'est terminee sans
+// participants actifs (cas extreme : tous retires avant le dernier
+// match). Le service dans ce cas ne cree pas d'award.
+model LeagueSeasonAward {
+  id             String       @id @default(cuid())
+  season         LeagueSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  seasonId       String       @unique
+  championUserId String?
+  championTeamId String?
+  awards         String       @default("{}")
+  createdAt      DateTime     @default(now())
+
+  @@index([championUserId])
 }

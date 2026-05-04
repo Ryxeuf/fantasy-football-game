@@ -558,6 +558,15 @@ exports.Prisma.LeaguePostMatchSequenceScalarFieldEnum = {
   completedAt: 'completedAt'
 };
 
+exports.Prisma.LeagueSeasonAwardScalarFieldEnum = {
+  id: 'id',
+  seasonId: 'seasonId',
+  championUserId: 'championUserId',
+  championTeamId: 'championTeamId',
+  awards: 'awards',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -623,7 +632,8 @@ exports.Prisma.ModelName = {
   LeaguePairing: 'LeaguePairing',
   TeamSpecialRule: 'TeamSpecialRule',
   RegionalLeague: 'RegionalLeague',
-  LeaguePostMatchSequence: 'LeaguePostMatchSequence'
+  LeaguePostMatchSequence: 'LeaguePostMatchSequence',
+  LeagueSeasonAward: 'LeagueSeasonAward'
 };
 
 /**

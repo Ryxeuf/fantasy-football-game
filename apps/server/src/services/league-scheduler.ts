@@ -30,6 +30,7 @@
 import { prisma } from "../prisma";
 import { generateRoundRobin, type RoundRobinRound } from "./league-schedule";
 import { notifyParticipantsOfFirstRound } from "./league-round-reminder";
+import { persistSeasonAwards } from "./league-scoring";
 import { serverLog } from "../utils/server-log";
 
 export interface StartSeasonOptions {
@@ -399,5 +400,13 @@ export async function closeSeason(seasonId: string): Promise<void> {
   await prisma.leagueSeason.update({
     where: { id: seasonId },
     data: { status: "completed" },
+  });
+
+  // L2.C.1 — fire-and-forget : snapshot d'awards de fin de saison.
+  // closeSeason est l'admin path (force close), il faut aussi
+  // creer le snapshot a ce moment. Idempotent via seasonId @unique.
+  persistSeasonAwards(seasonId).catch((e: unknown) => {
+    const msg = e instanceof Error ? e.message : "unknown";
+    serverLog.error(`[closeSeason] persistSeasonAwards failed: ${msg}`);
   });
 }

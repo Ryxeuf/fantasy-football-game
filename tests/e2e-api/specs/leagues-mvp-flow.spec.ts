@@ -253,5 +253,36 @@ describe("E2E API — MVP ligue : create -> start -> launch -> forfeit -> standi
     expect(awayOwner === creator.userId || awayOwner === challenger.userId).toBe(
       true,
     );
+
+    // 13. L2.C.1c — recap de fin de saison : champion + awards
+    // calcules a la demande (ou snapshot si persistSeasonAwards a
+    // termine son fire-and-forget). Endpoint public, pas d'auth.
+    const recap = unwrap(
+      await get<{
+        success: true;
+        data: {
+          seasonId: string;
+          championUserId: string | null;
+          championTeamId: string | null;
+          awards: {
+            mostWins: Array<{ teamId: string; value: number }>;
+            topScorer: Array<{ teamId: string; value: number }>;
+          };
+          standings: Array<{ teamId: string; wins: number }>;
+        };
+      }>(`/leagues/seasons/${season.id}/awards`, creator.token),
+    );
+    expect(recap.seasonId).toBe(season.id);
+    expect(recap.championTeamId).toBe(awayTeamId); // gagnant du forfait
+    expect(recap.standings.length).toBe(2);
+    // mostWins doit contenir l'equipe gagnante (1 win).
+    expect(recap.awards.mostWins.length).toBeGreaterThan(0);
+    expect(
+      recap.awards.mostWins.some((e) => e.teamId === awayTeamId),
+    ).toBe(true);
+    // topScorer doit contenir l'equipe gagnante (2 TD via forfait).
+    expect(
+      recap.awards.topScorer.some((e) => e.teamId === awayTeamId),
+    ).toBe(true);
   });
 });

@@ -23,6 +23,8 @@ export interface CoachPublicProfile {
   championships?: CoachThemedChampionship[];
   /** S27.1d/e — titres de Nuffle Cup mensuelles remportes. */
   cupChampionships?: CoachCupChampionship[];
+  /** L2.C.2 — titres de saisons de ligue remportes (toutes ligues confondues). */
+  leagueChampionships?: CoachLeagueChampionship[];
 }
 
 export interface CoachCupChampionship {
@@ -32,6 +34,18 @@ export interface CoachCupChampionship {
   monthlyMonth: number;
   /** "Champion Nuffle Cup {Mois} {YYYY}". */
   label: string;
+}
+
+export interface CoachLeagueChampionship {
+  seasonId: string;
+  leagueId: string;
+  leagueName: string;
+  seasonNumber: number;
+  seasonName: string;
+  /** "Champion {LeagueName} — {SeasonName}". */
+  label: string;
+  /** ISO 8601 timestamp du snapshot d'awards (createdAt). null si pas de snapshot. */
+  wonAt: string | null;
 }
 
 export interface CoachThemedChampionship {

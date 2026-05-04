@@ -35,6 +35,7 @@
  */
 
 import { prisma } from "../prisma";
+import { persistSeasonAwards } from "./league-scoring";
 import { serverLog } from "../utils/server-log";
 
 export type ForfeitSide = "home" | "away";
@@ -256,6 +257,14 @@ async function maybeCompleteRoundAndSeason(
     await prisma.leagueSeason.update({
       where: { id: seasonId },
       data: { status: "completed" },
+    });
+    // L2.C.1 — fire-and-forget : snapshot d'awards quand la saison
+    // se cloture par un forfait final.
+    persistSeasonAwards(seasonId).catch((e: unknown) => {
+      const msg = e instanceof Error ? e.message : "unknown";
+      serverLog.error(
+        `[league-forfeit] persistSeasonAwards failed: ${msg}`,
+      );
     });
   }
 }

@@ -34,6 +34,10 @@ import {
 } from "../services/league-scheduler";
 import { createMatchFromPairing } from "../services/league-match-from-pairing";
 import { recordForfeit } from "../services/league-forfeit";
+import {
+  computeSeasonRecap,
+  getPersistedSeasonAward,
+} from "../services/league-scoring";
 import { listLeagueThemes } from "../services/league-themes";
 import {
   createLeagueSchema,
@@ -433,6 +437,43 @@ export async function handleListSeasonsByTheme(
   }
 }
 
+/**
+ * L2.C.1 — Awards/recap d'une saison de ligue.
+ *
+ * - Si la saison est `completed` ET un snapshot LeagueSeasonAward
+ *   existe : renvoie le snapshot persiste (champion + awards).
+ * - Sinon : recalcule a la demande via `computeSeasonRecap` (utile
+ *   pour la page recap "live" pendant une saison en cours).
+ *
+ * Le payload contient toujours `standings` (classement actuel) et
+ * `awards` (peut etre vide si aucun match joue). `champion*` est null
+ * tant qu'aucun match n'a ete joue.
+ */
+export async function handleGetSeasonAwards(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const seasonId = req.params.seasonId;
+  try {
+    const persisted = await getPersistedSeasonAward(seasonId);
+    const recap = await computeSeasonRecap(seasonId);
+    sendSuccess(res, {
+      seasonId,
+      // Le champion + awards persistes prennent priorite quand
+      // disponibles (snapshot fige a la cloture). Sinon on retombe
+      // sur le calcul live.
+      championUserId: persisted?.championUserId ?? recap.championUserId,
+      championTeamId: persisted?.championTeamId ?? recap.championTeamId,
+      championLabel: recap.championLabel,
+      awards: persisted?.awards ?? recap.awards,
+      standings: recap.standings,
+      persistedAt: persisted?.createdAt ?? null,
+    });
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
 export async function handleGetStandings(
   req: AuthenticatedRequest,
   res: Response,
@@ -714,6 +755,9 @@ router.post(
   handleForfeitPairing,
 );
 router.get("/seasons/:seasonId/standings", authUser, handleGetStandings);
+// L2.C.1 — recap public de fin de saison : champion + awards.
+// Pas d'auth : la page recap doit etre indexable / partageable.
+router.get("/seasons/:seasonId/awards", handleGetSeasonAwards);
 router.get("/seasons/:seasonId", authUser, handleGetSeason);
 
 export default router;

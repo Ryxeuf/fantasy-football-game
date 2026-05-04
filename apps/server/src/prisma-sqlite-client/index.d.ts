@@ -168,6 +168,11 @@ export type RegionalLeague = $Result.DefaultSelection<Prisma.$RegionalLeaguePayl
  * 
  */
 export type LeaguePostMatchSequence = $Result.DefaultSelection<Prisma.$LeaguePostMatchSequencePayload>
+/**
+ * Model LeagueSeasonAward
+ * 
+ */
+export type LeagueSeasonAward = $Result.DefaultSelection<Prisma.$LeagueSeasonAwardPayload>
 
 /**
  * Enums
@@ -613,6 +618,16 @@ export class PrismaClient<
     * ```
     */
   get leaguePostMatchSequence(): Prisma.LeaguePostMatchSequenceDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.leagueSeasonAward`: Exposes CRUD operations for the **LeagueSeasonAward** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more LeagueSeasonAwards
+    * const leagueSeasonAwards = await prisma.leagueSeasonAward.findMany()
+    * ```
+    */
+  get leagueSeasonAward(): Prisma.LeagueSeasonAwardDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -1083,7 +1098,8 @@ export namespace Prisma {
     LeaguePairing: 'LeaguePairing',
     TeamSpecialRule: 'TeamSpecialRule',
     RegionalLeague: 'RegionalLeague',
-    LeaguePostMatchSequence: 'LeaguePostMatchSequence'
+    LeaguePostMatchSequence: 'LeaguePostMatchSequence',
+    LeagueSeasonAward: 'LeagueSeasonAward'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1102,7 +1118,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "eloSnapshot" | "refreshToken" | "kofiTransaction" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamStarPlayer" | "roster" | "skill" | "position" | "positionSkill" | "cup" | "cupParticipant" | "matchQueue" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leagueParticipant" | "leagueRound" | "leaguePairing" | "teamSpecialRule" | "regionalLeague" | "leaguePostMatchSequence"
+      modelProps: "user" | "eloSnapshot" | "refreshToken" | "kofiTransaction" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamStarPlayer" | "roster" | "skill" | "position" | "positionSkill" | "cup" | "cupParticipant" | "matchQueue" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leagueParticipant" | "leagueRound" | "leaguePairing" | "teamSpecialRule" | "regionalLeague" | "leaguePostMatchSequence" | "leagueSeasonAward"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -3400,6 +3416,80 @@ export namespace Prisma {
           }
         }
       }
+      LeagueSeasonAward: {
+        payload: Prisma.$LeagueSeasonAwardPayload<ExtArgs>
+        fields: Prisma.LeagueSeasonAwardFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.LeagueSeasonAwardFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LeagueSeasonAwardPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.LeagueSeasonAwardFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LeagueSeasonAwardPayload>
+          }
+          findFirst: {
+            args: Prisma.LeagueSeasonAwardFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LeagueSeasonAwardPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.LeagueSeasonAwardFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LeagueSeasonAwardPayload>
+          }
+          findMany: {
+            args: Prisma.LeagueSeasonAwardFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LeagueSeasonAwardPayload>[]
+          }
+          create: {
+            args: Prisma.LeagueSeasonAwardCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LeagueSeasonAwardPayload>
+          }
+          createMany: {
+            args: Prisma.LeagueSeasonAwardCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.LeagueSeasonAwardCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LeagueSeasonAwardPayload>[]
+          }
+          delete: {
+            args: Prisma.LeagueSeasonAwardDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LeagueSeasonAwardPayload>
+          }
+          update: {
+            args: Prisma.LeagueSeasonAwardUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LeagueSeasonAwardPayload>
+          }
+          deleteMany: {
+            args: Prisma.LeagueSeasonAwardDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.LeagueSeasonAwardUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.LeagueSeasonAwardUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LeagueSeasonAwardPayload>[]
+          }
+          upsert: {
+            args: Prisma.LeagueSeasonAwardUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LeagueSeasonAwardPayload>
+          }
+          aggregate: {
+            args: Prisma.LeagueSeasonAwardAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateLeagueSeasonAward>
+          }
+          groupBy: {
+            args: Prisma.LeagueSeasonAwardGroupByArgs<ExtArgs>
+            result: $Utils.Optional<LeagueSeasonAwardGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.LeagueSeasonAwardCountArgs<ExtArgs>
+            result: $Utils.Optional<LeagueSeasonAwardCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -3527,6 +3617,7 @@ export namespace Prisma {
     teamSpecialRule?: TeamSpecialRuleOmit
     regionalLeague?: RegionalLeagueOmit
     leaguePostMatchSequence?: LeaguePostMatchSequenceOmit
+    leagueSeasonAward?: LeagueSeasonAwardOmit
   }
 
   /* Types for Logging */
@@ -33717,6 +33808,7 @@ export namespace Prisma {
     participants?: boolean | LeagueSeason$participantsArgs<ExtArgs>
     rounds?: boolean | LeagueSeason$roundsArgs<ExtArgs>
     matches?: boolean | LeagueSeason$matchesArgs<ExtArgs>
+    award?: boolean | LeagueSeason$awardArgs<ExtArgs>
     _count?: boolean | LeagueSeasonCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["leagueSeason"]>
 
@@ -33770,6 +33862,7 @@ export namespace Prisma {
     participants?: boolean | LeagueSeason$participantsArgs<ExtArgs>
     rounds?: boolean | LeagueSeason$roundsArgs<ExtArgs>
     matches?: boolean | LeagueSeason$matchesArgs<ExtArgs>
+    award?: boolean | LeagueSeason$awardArgs<ExtArgs>
     _count?: boolean | LeagueSeasonCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type LeagueSeasonIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -33786,6 +33879,7 @@ export namespace Prisma {
       participants: Prisma.$LeagueParticipantPayload<ExtArgs>[]
       rounds: Prisma.$LeagueRoundPayload<ExtArgs>[]
       matches: Prisma.$MatchPayload<ExtArgs>[]
+      award: Prisma.$LeagueSeasonAwardPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -34197,6 +34291,7 @@ export namespace Prisma {
     participants<T extends LeagueSeason$participantsArgs<ExtArgs> = {}>(args?: Subset<T, LeagueSeason$participantsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LeagueParticipantPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     rounds<T extends LeagueSeason$roundsArgs<ExtArgs> = {}>(args?: Subset<T, LeagueSeason$roundsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LeagueRoundPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     matches<T extends LeagueSeason$matchesArgs<ExtArgs> = {}>(args?: Subset<T, LeagueSeason$matchesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MatchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    award<T extends LeagueSeason$awardArgs<ExtArgs> = {}>(args?: Subset<T, LeagueSeason$awardArgs<ExtArgs>>): Prisma__LeagueSeasonAwardClient<$Result.GetResult<Prisma.$LeagueSeasonAwardPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -34700,6 +34795,25 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: MatchScalarFieldEnum | MatchScalarFieldEnum[]
+  }
+
+  /**
+   * LeagueSeason.award
+   */
+  export type LeagueSeason$awardArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeagueSeasonAward
+     */
+    select?: LeagueSeasonAwardSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeagueSeasonAward
+     */
+    omit?: LeagueSeasonAwardOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeagueSeasonAwardInclude<ExtArgs> | null
+    where?: LeagueSeasonAwardWhereInput
   }
 
   /**
@@ -41683,6 +41797,1075 @@ export namespace Prisma {
 
 
   /**
+   * Model LeagueSeasonAward
+   */
+
+  export type AggregateLeagueSeasonAward = {
+    _count: LeagueSeasonAwardCountAggregateOutputType | null
+    _min: LeagueSeasonAwardMinAggregateOutputType | null
+    _max: LeagueSeasonAwardMaxAggregateOutputType | null
+  }
+
+  export type LeagueSeasonAwardMinAggregateOutputType = {
+    id: string | null
+    seasonId: string | null
+    championUserId: string | null
+    championTeamId: string | null
+    awards: string | null
+    createdAt: Date | null
+  }
+
+  export type LeagueSeasonAwardMaxAggregateOutputType = {
+    id: string | null
+    seasonId: string | null
+    championUserId: string | null
+    championTeamId: string | null
+    awards: string | null
+    createdAt: Date | null
+  }
+
+  export type LeagueSeasonAwardCountAggregateOutputType = {
+    id: number
+    seasonId: number
+    championUserId: number
+    championTeamId: number
+    awards: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type LeagueSeasonAwardMinAggregateInputType = {
+    id?: true
+    seasonId?: true
+    championUserId?: true
+    championTeamId?: true
+    awards?: true
+    createdAt?: true
+  }
+
+  export type LeagueSeasonAwardMaxAggregateInputType = {
+    id?: true
+    seasonId?: true
+    championUserId?: true
+    championTeamId?: true
+    awards?: true
+    createdAt?: true
+  }
+
+  export type LeagueSeasonAwardCountAggregateInputType = {
+    id?: true
+    seasonId?: true
+    championUserId?: true
+    championTeamId?: true
+    awards?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type LeagueSeasonAwardAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which LeagueSeasonAward to aggregate.
+     */
+    where?: LeagueSeasonAwardWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LeagueSeasonAwards to fetch.
+     */
+    orderBy?: LeagueSeasonAwardOrderByWithRelationInput | LeagueSeasonAwardOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: LeagueSeasonAwardWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LeagueSeasonAwards from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LeagueSeasonAwards.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned LeagueSeasonAwards
+    **/
+    _count?: true | LeagueSeasonAwardCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: LeagueSeasonAwardMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: LeagueSeasonAwardMaxAggregateInputType
+  }
+
+  export type GetLeagueSeasonAwardAggregateType<T extends LeagueSeasonAwardAggregateArgs> = {
+        [P in keyof T & keyof AggregateLeagueSeasonAward]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateLeagueSeasonAward[P]>
+      : GetScalarType<T[P], AggregateLeagueSeasonAward[P]>
+  }
+
+
+
+
+  export type LeagueSeasonAwardGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: LeagueSeasonAwardWhereInput
+    orderBy?: LeagueSeasonAwardOrderByWithAggregationInput | LeagueSeasonAwardOrderByWithAggregationInput[]
+    by: LeagueSeasonAwardScalarFieldEnum[] | LeagueSeasonAwardScalarFieldEnum
+    having?: LeagueSeasonAwardScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: LeagueSeasonAwardCountAggregateInputType | true
+    _min?: LeagueSeasonAwardMinAggregateInputType
+    _max?: LeagueSeasonAwardMaxAggregateInputType
+  }
+
+  export type LeagueSeasonAwardGroupByOutputType = {
+    id: string
+    seasonId: string
+    championUserId: string | null
+    championTeamId: string | null
+    awards: string
+    createdAt: Date
+    _count: LeagueSeasonAwardCountAggregateOutputType | null
+    _min: LeagueSeasonAwardMinAggregateOutputType | null
+    _max: LeagueSeasonAwardMaxAggregateOutputType | null
+  }
+
+  type GetLeagueSeasonAwardGroupByPayload<T extends LeagueSeasonAwardGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<LeagueSeasonAwardGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof LeagueSeasonAwardGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], LeagueSeasonAwardGroupByOutputType[P]>
+            : GetScalarType<T[P], LeagueSeasonAwardGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type LeagueSeasonAwardSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    seasonId?: boolean
+    championUserId?: boolean
+    championTeamId?: boolean
+    awards?: boolean
+    createdAt?: boolean
+    season?: boolean | LeagueSeasonDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["leagueSeasonAward"]>
+
+  export type LeagueSeasonAwardSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    seasonId?: boolean
+    championUserId?: boolean
+    championTeamId?: boolean
+    awards?: boolean
+    createdAt?: boolean
+    season?: boolean | LeagueSeasonDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["leagueSeasonAward"]>
+
+  export type LeagueSeasonAwardSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    seasonId?: boolean
+    championUserId?: boolean
+    championTeamId?: boolean
+    awards?: boolean
+    createdAt?: boolean
+    season?: boolean | LeagueSeasonDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["leagueSeasonAward"]>
+
+  export type LeagueSeasonAwardSelectScalar = {
+    id?: boolean
+    seasonId?: boolean
+    championUserId?: boolean
+    championTeamId?: boolean
+    awards?: boolean
+    createdAt?: boolean
+  }
+
+  export type LeagueSeasonAwardOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "seasonId" | "championUserId" | "championTeamId" | "awards" | "createdAt", ExtArgs["result"]["leagueSeasonAward"]>
+  export type LeagueSeasonAwardInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    season?: boolean | LeagueSeasonDefaultArgs<ExtArgs>
+  }
+  export type LeagueSeasonAwardIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    season?: boolean | LeagueSeasonDefaultArgs<ExtArgs>
+  }
+  export type LeagueSeasonAwardIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    season?: boolean | LeagueSeasonDefaultArgs<ExtArgs>
+  }
+
+  export type $LeagueSeasonAwardPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "LeagueSeasonAward"
+    objects: {
+      season: Prisma.$LeagueSeasonPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      seasonId: string
+      championUserId: string | null
+      championTeamId: string | null
+      awards: string
+      createdAt: Date
+    }, ExtArgs["result"]["leagueSeasonAward"]>
+    composites: {}
+  }
+
+  type LeagueSeasonAwardGetPayload<S extends boolean | null | undefined | LeagueSeasonAwardDefaultArgs> = $Result.GetResult<Prisma.$LeagueSeasonAwardPayload, S>
+
+  type LeagueSeasonAwardCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<LeagueSeasonAwardFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: LeagueSeasonAwardCountAggregateInputType | true
+    }
+
+  export interface LeagueSeasonAwardDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['LeagueSeasonAward'], meta: { name: 'LeagueSeasonAward' } }
+    /**
+     * Find zero or one LeagueSeasonAward that matches the filter.
+     * @param {LeagueSeasonAwardFindUniqueArgs} args - Arguments to find a LeagueSeasonAward
+     * @example
+     * // Get one LeagueSeasonAward
+     * const leagueSeasonAward = await prisma.leagueSeasonAward.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends LeagueSeasonAwardFindUniqueArgs>(args: SelectSubset<T, LeagueSeasonAwardFindUniqueArgs<ExtArgs>>): Prisma__LeagueSeasonAwardClient<$Result.GetResult<Prisma.$LeagueSeasonAwardPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one LeagueSeasonAward that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {LeagueSeasonAwardFindUniqueOrThrowArgs} args - Arguments to find a LeagueSeasonAward
+     * @example
+     * // Get one LeagueSeasonAward
+     * const leagueSeasonAward = await prisma.leagueSeasonAward.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends LeagueSeasonAwardFindUniqueOrThrowArgs>(args: SelectSubset<T, LeagueSeasonAwardFindUniqueOrThrowArgs<ExtArgs>>): Prisma__LeagueSeasonAwardClient<$Result.GetResult<Prisma.$LeagueSeasonAwardPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first LeagueSeasonAward that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LeagueSeasonAwardFindFirstArgs} args - Arguments to find a LeagueSeasonAward
+     * @example
+     * // Get one LeagueSeasonAward
+     * const leagueSeasonAward = await prisma.leagueSeasonAward.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends LeagueSeasonAwardFindFirstArgs>(args?: SelectSubset<T, LeagueSeasonAwardFindFirstArgs<ExtArgs>>): Prisma__LeagueSeasonAwardClient<$Result.GetResult<Prisma.$LeagueSeasonAwardPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first LeagueSeasonAward that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LeagueSeasonAwardFindFirstOrThrowArgs} args - Arguments to find a LeagueSeasonAward
+     * @example
+     * // Get one LeagueSeasonAward
+     * const leagueSeasonAward = await prisma.leagueSeasonAward.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends LeagueSeasonAwardFindFirstOrThrowArgs>(args?: SelectSubset<T, LeagueSeasonAwardFindFirstOrThrowArgs<ExtArgs>>): Prisma__LeagueSeasonAwardClient<$Result.GetResult<Prisma.$LeagueSeasonAwardPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more LeagueSeasonAwards that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LeagueSeasonAwardFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all LeagueSeasonAwards
+     * const leagueSeasonAwards = await prisma.leagueSeasonAward.findMany()
+     * 
+     * // Get first 10 LeagueSeasonAwards
+     * const leagueSeasonAwards = await prisma.leagueSeasonAward.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const leagueSeasonAwardWithIdOnly = await prisma.leagueSeasonAward.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends LeagueSeasonAwardFindManyArgs>(args?: SelectSubset<T, LeagueSeasonAwardFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LeagueSeasonAwardPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a LeagueSeasonAward.
+     * @param {LeagueSeasonAwardCreateArgs} args - Arguments to create a LeagueSeasonAward.
+     * @example
+     * // Create one LeagueSeasonAward
+     * const LeagueSeasonAward = await prisma.leagueSeasonAward.create({
+     *   data: {
+     *     // ... data to create a LeagueSeasonAward
+     *   }
+     * })
+     * 
+     */
+    create<T extends LeagueSeasonAwardCreateArgs>(args: SelectSubset<T, LeagueSeasonAwardCreateArgs<ExtArgs>>): Prisma__LeagueSeasonAwardClient<$Result.GetResult<Prisma.$LeagueSeasonAwardPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many LeagueSeasonAwards.
+     * @param {LeagueSeasonAwardCreateManyArgs} args - Arguments to create many LeagueSeasonAwards.
+     * @example
+     * // Create many LeagueSeasonAwards
+     * const leagueSeasonAward = await prisma.leagueSeasonAward.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends LeagueSeasonAwardCreateManyArgs>(args?: SelectSubset<T, LeagueSeasonAwardCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many LeagueSeasonAwards and returns the data saved in the database.
+     * @param {LeagueSeasonAwardCreateManyAndReturnArgs} args - Arguments to create many LeagueSeasonAwards.
+     * @example
+     * // Create many LeagueSeasonAwards
+     * const leagueSeasonAward = await prisma.leagueSeasonAward.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many LeagueSeasonAwards and only return the `id`
+     * const leagueSeasonAwardWithIdOnly = await prisma.leagueSeasonAward.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends LeagueSeasonAwardCreateManyAndReturnArgs>(args?: SelectSubset<T, LeagueSeasonAwardCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LeagueSeasonAwardPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a LeagueSeasonAward.
+     * @param {LeagueSeasonAwardDeleteArgs} args - Arguments to delete one LeagueSeasonAward.
+     * @example
+     * // Delete one LeagueSeasonAward
+     * const LeagueSeasonAward = await prisma.leagueSeasonAward.delete({
+     *   where: {
+     *     // ... filter to delete one LeagueSeasonAward
+     *   }
+     * })
+     * 
+     */
+    delete<T extends LeagueSeasonAwardDeleteArgs>(args: SelectSubset<T, LeagueSeasonAwardDeleteArgs<ExtArgs>>): Prisma__LeagueSeasonAwardClient<$Result.GetResult<Prisma.$LeagueSeasonAwardPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one LeagueSeasonAward.
+     * @param {LeagueSeasonAwardUpdateArgs} args - Arguments to update one LeagueSeasonAward.
+     * @example
+     * // Update one LeagueSeasonAward
+     * const leagueSeasonAward = await prisma.leagueSeasonAward.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends LeagueSeasonAwardUpdateArgs>(args: SelectSubset<T, LeagueSeasonAwardUpdateArgs<ExtArgs>>): Prisma__LeagueSeasonAwardClient<$Result.GetResult<Prisma.$LeagueSeasonAwardPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more LeagueSeasonAwards.
+     * @param {LeagueSeasonAwardDeleteManyArgs} args - Arguments to filter LeagueSeasonAwards to delete.
+     * @example
+     * // Delete a few LeagueSeasonAwards
+     * const { count } = await prisma.leagueSeasonAward.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends LeagueSeasonAwardDeleteManyArgs>(args?: SelectSubset<T, LeagueSeasonAwardDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more LeagueSeasonAwards.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LeagueSeasonAwardUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many LeagueSeasonAwards
+     * const leagueSeasonAward = await prisma.leagueSeasonAward.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends LeagueSeasonAwardUpdateManyArgs>(args: SelectSubset<T, LeagueSeasonAwardUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more LeagueSeasonAwards and returns the data updated in the database.
+     * @param {LeagueSeasonAwardUpdateManyAndReturnArgs} args - Arguments to update many LeagueSeasonAwards.
+     * @example
+     * // Update many LeagueSeasonAwards
+     * const leagueSeasonAward = await prisma.leagueSeasonAward.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more LeagueSeasonAwards and only return the `id`
+     * const leagueSeasonAwardWithIdOnly = await prisma.leagueSeasonAward.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends LeagueSeasonAwardUpdateManyAndReturnArgs>(args: SelectSubset<T, LeagueSeasonAwardUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LeagueSeasonAwardPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one LeagueSeasonAward.
+     * @param {LeagueSeasonAwardUpsertArgs} args - Arguments to update or create a LeagueSeasonAward.
+     * @example
+     * // Update or create a LeagueSeasonAward
+     * const leagueSeasonAward = await prisma.leagueSeasonAward.upsert({
+     *   create: {
+     *     // ... data to create a LeagueSeasonAward
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the LeagueSeasonAward we want to update
+     *   }
+     * })
+     */
+    upsert<T extends LeagueSeasonAwardUpsertArgs>(args: SelectSubset<T, LeagueSeasonAwardUpsertArgs<ExtArgs>>): Prisma__LeagueSeasonAwardClient<$Result.GetResult<Prisma.$LeagueSeasonAwardPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of LeagueSeasonAwards.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LeagueSeasonAwardCountArgs} args - Arguments to filter LeagueSeasonAwards to count.
+     * @example
+     * // Count the number of LeagueSeasonAwards
+     * const count = await prisma.leagueSeasonAward.count({
+     *   where: {
+     *     // ... the filter for the LeagueSeasonAwards we want to count
+     *   }
+     * })
+    **/
+    count<T extends LeagueSeasonAwardCountArgs>(
+      args?: Subset<T, LeagueSeasonAwardCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], LeagueSeasonAwardCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a LeagueSeasonAward.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LeagueSeasonAwardAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends LeagueSeasonAwardAggregateArgs>(args: Subset<T, LeagueSeasonAwardAggregateArgs>): Prisma.PrismaPromise<GetLeagueSeasonAwardAggregateType<T>>
+
+    /**
+     * Group by LeagueSeasonAward.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LeagueSeasonAwardGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends LeagueSeasonAwardGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: LeagueSeasonAwardGroupByArgs['orderBy'] }
+        : { orderBy?: LeagueSeasonAwardGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, LeagueSeasonAwardGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetLeagueSeasonAwardGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the LeagueSeasonAward model
+   */
+  readonly fields: LeagueSeasonAwardFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for LeagueSeasonAward.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__LeagueSeasonAwardClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    season<T extends LeagueSeasonDefaultArgs<ExtArgs> = {}>(args?: Subset<T, LeagueSeasonDefaultArgs<ExtArgs>>): Prisma__LeagueSeasonClient<$Result.GetResult<Prisma.$LeagueSeasonPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the LeagueSeasonAward model
+   */
+  interface LeagueSeasonAwardFieldRefs {
+    readonly id: FieldRef<"LeagueSeasonAward", 'String'>
+    readonly seasonId: FieldRef<"LeagueSeasonAward", 'String'>
+    readonly championUserId: FieldRef<"LeagueSeasonAward", 'String'>
+    readonly championTeamId: FieldRef<"LeagueSeasonAward", 'String'>
+    readonly awards: FieldRef<"LeagueSeasonAward", 'String'>
+    readonly createdAt: FieldRef<"LeagueSeasonAward", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * LeagueSeasonAward findUnique
+   */
+  export type LeagueSeasonAwardFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeagueSeasonAward
+     */
+    select?: LeagueSeasonAwardSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeagueSeasonAward
+     */
+    omit?: LeagueSeasonAwardOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeagueSeasonAwardInclude<ExtArgs> | null
+    /**
+     * Filter, which LeagueSeasonAward to fetch.
+     */
+    where: LeagueSeasonAwardWhereUniqueInput
+  }
+
+  /**
+   * LeagueSeasonAward findUniqueOrThrow
+   */
+  export type LeagueSeasonAwardFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeagueSeasonAward
+     */
+    select?: LeagueSeasonAwardSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeagueSeasonAward
+     */
+    omit?: LeagueSeasonAwardOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeagueSeasonAwardInclude<ExtArgs> | null
+    /**
+     * Filter, which LeagueSeasonAward to fetch.
+     */
+    where: LeagueSeasonAwardWhereUniqueInput
+  }
+
+  /**
+   * LeagueSeasonAward findFirst
+   */
+  export type LeagueSeasonAwardFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeagueSeasonAward
+     */
+    select?: LeagueSeasonAwardSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeagueSeasonAward
+     */
+    omit?: LeagueSeasonAwardOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeagueSeasonAwardInclude<ExtArgs> | null
+    /**
+     * Filter, which LeagueSeasonAward to fetch.
+     */
+    where?: LeagueSeasonAwardWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LeagueSeasonAwards to fetch.
+     */
+    orderBy?: LeagueSeasonAwardOrderByWithRelationInput | LeagueSeasonAwardOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for LeagueSeasonAwards.
+     */
+    cursor?: LeagueSeasonAwardWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LeagueSeasonAwards from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LeagueSeasonAwards.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of LeagueSeasonAwards.
+     */
+    distinct?: LeagueSeasonAwardScalarFieldEnum | LeagueSeasonAwardScalarFieldEnum[]
+  }
+
+  /**
+   * LeagueSeasonAward findFirstOrThrow
+   */
+  export type LeagueSeasonAwardFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeagueSeasonAward
+     */
+    select?: LeagueSeasonAwardSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeagueSeasonAward
+     */
+    omit?: LeagueSeasonAwardOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeagueSeasonAwardInclude<ExtArgs> | null
+    /**
+     * Filter, which LeagueSeasonAward to fetch.
+     */
+    where?: LeagueSeasonAwardWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LeagueSeasonAwards to fetch.
+     */
+    orderBy?: LeagueSeasonAwardOrderByWithRelationInput | LeagueSeasonAwardOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for LeagueSeasonAwards.
+     */
+    cursor?: LeagueSeasonAwardWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LeagueSeasonAwards from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LeagueSeasonAwards.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of LeagueSeasonAwards.
+     */
+    distinct?: LeagueSeasonAwardScalarFieldEnum | LeagueSeasonAwardScalarFieldEnum[]
+  }
+
+  /**
+   * LeagueSeasonAward findMany
+   */
+  export type LeagueSeasonAwardFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeagueSeasonAward
+     */
+    select?: LeagueSeasonAwardSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeagueSeasonAward
+     */
+    omit?: LeagueSeasonAwardOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeagueSeasonAwardInclude<ExtArgs> | null
+    /**
+     * Filter, which LeagueSeasonAwards to fetch.
+     */
+    where?: LeagueSeasonAwardWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LeagueSeasonAwards to fetch.
+     */
+    orderBy?: LeagueSeasonAwardOrderByWithRelationInput | LeagueSeasonAwardOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing LeagueSeasonAwards.
+     */
+    cursor?: LeagueSeasonAwardWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LeagueSeasonAwards from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LeagueSeasonAwards.
+     */
+    skip?: number
+    distinct?: LeagueSeasonAwardScalarFieldEnum | LeagueSeasonAwardScalarFieldEnum[]
+  }
+
+  /**
+   * LeagueSeasonAward create
+   */
+  export type LeagueSeasonAwardCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeagueSeasonAward
+     */
+    select?: LeagueSeasonAwardSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeagueSeasonAward
+     */
+    omit?: LeagueSeasonAwardOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeagueSeasonAwardInclude<ExtArgs> | null
+    /**
+     * The data needed to create a LeagueSeasonAward.
+     */
+    data: XOR<LeagueSeasonAwardCreateInput, LeagueSeasonAwardUncheckedCreateInput>
+  }
+
+  /**
+   * LeagueSeasonAward createMany
+   */
+  export type LeagueSeasonAwardCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many LeagueSeasonAwards.
+     */
+    data: LeagueSeasonAwardCreateManyInput | LeagueSeasonAwardCreateManyInput[]
+  }
+
+  /**
+   * LeagueSeasonAward createManyAndReturn
+   */
+  export type LeagueSeasonAwardCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeagueSeasonAward
+     */
+    select?: LeagueSeasonAwardSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeagueSeasonAward
+     */
+    omit?: LeagueSeasonAwardOmit<ExtArgs> | null
+    /**
+     * The data used to create many LeagueSeasonAwards.
+     */
+    data: LeagueSeasonAwardCreateManyInput | LeagueSeasonAwardCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeagueSeasonAwardIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * LeagueSeasonAward update
+   */
+  export type LeagueSeasonAwardUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeagueSeasonAward
+     */
+    select?: LeagueSeasonAwardSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeagueSeasonAward
+     */
+    omit?: LeagueSeasonAwardOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeagueSeasonAwardInclude<ExtArgs> | null
+    /**
+     * The data needed to update a LeagueSeasonAward.
+     */
+    data: XOR<LeagueSeasonAwardUpdateInput, LeagueSeasonAwardUncheckedUpdateInput>
+    /**
+     * Choose, which LeagueSeasonAward to update.
+     */
+    where: LeagueSeasonAwardWhereUniqueInput
+  }
+
+  /**
+   * LeagueSeasonAward updateMany
+   */
+  export type LeagueSeasonAwardUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update LeagueSeasonAwards.
+     */
+    data: XOR<LeagueSeasonAwardUpdateManyMutationInput, LeagueSeasonAwardUncheckedUpdateManyInput>
+    /**
+     * Filter which LeagueSeasonAwards to update
+     */
+    where?: LeagueSeasonAwardWhereInput
+    /**
+     * Limit how many LeagueSeasonAwards to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * LeagueSeasonAward updateManyAndReturn
+   */
+  export type LeagueSeasonAwardUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeagueSeasonAward
+     */
+    select?: LeagueSeasonAwardSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeagueSeasonAward
+     */
+    omit?: LeagueSeasonAwardOmit<ExtArgs> | null
+    /**
+     * The data used to update LeagueSeasonAwards.
+     */
+    data: XOR<LeagueSeasonAwardUpdateManyMutationInput, LeagueSeasonAwardUncheckedUpdateManyInput>
+    /**
+     * Filter which LeagueSeasonAwards to update
+     */
+    where?: LeagueSeasonAwardWhereInput
+    /**
+     * Limit how many LeagueSeasonAwards to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeagueSeasonAwardIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * LeagueSeasonAward upsert
+   */
+  export type LeagueSeasonAwardUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeagueSeasonAward
+     */
+    select?: LeagueSeasonAwardSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeagueSeasonAward
+     */
+    omit?: LeagueSeasonAwardOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeagueSeasonAwardInclude<ExtArgs> | null
+    /**
+     * The filter to search for the LeagueSeasonAward to update in case it exists.
+     */
+    where: LeagueSeasonAwardWhereUniqueInput
+    /**
+     * In case the LeagueSeasonAward found by the `where` argument doesn't exist, create a new LeagueSeasonAward with this data.
+     */
+    create: XOR<LeagueSeasonAwardCreateInput, LeagueSeasonAwardUncheckedCreateInput>
+    /**
+     * In case the LeagueSeasonAward was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<LeagueSeasonAwardUpdateInput, LeagueSeasonAwardUncheckedUpdateInput>
+  }
+
+  /**
+   * LeagueSeasonAward delete
+   */
+  export type LeagueSeasonAwardDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeagueSeasonAward
+     */
+    select?: LeagueSeasonAwardSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeagueSeasonAward
+     */
+    omit?: LeagueSeasonAwardOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeagueSeasonAwardInclude<ExtArgs> | null
+    /**
+     * Filter which LeagueSeasonAward to delete.
+     */
+    where: LeagueSeasonAwardWhereUniqueInput
+  }
+
+  /**
+   * LeagueSeasonAward deleteMany
+   */
+  export type LeagueSeasonAwardDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which LeagueSeasonAwards to delete
+     */
+    where?: LeagueSeasonAwardWhereInput
+    /**
+     * Limit how many LeagueSeasonAwards to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * LeagueSeasonAward without action
+   */
+  export type LeagueSeasonAwardDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeagueSeasonAward
+     */
+    select?: LeagueSeasonAwardSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeagueSeasonAward
+     */
+    omit?: LeagueSeasonAwardOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeagueSeasonAwardInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -42225,6 +43408,18 @@ export namespace Prisma {
   };
 
   export type LeaguePostMatchSequenceScalarFieldEnum = (typeof LeaguePostMatchSequenceScalarFieldEnum)[keyof typeof LeaguePostMatchSequenceScalarFieldEnum]
+
+
+  export const LeagueSeasonAwardScalarFieldEnum: {
+    id: 'id',
+    seasonId: 'seasonId',
+    championUserId: 'championUserId',
+    championTeamId: 'championTeamId',
+    awards: 'awards',
+    createdAt: 'createdAt'
+  };
+
+  export type LeagueSeasonAwardScalarFieldEnum = (typeof LeagueSeasonAwardScalarFieldEnum)[keyof typeof LeagueSeasonAwardScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -44614,6 +45809,7 @@ export namespace Prisma {
     participants?: LeagueParticipantListRelationFilter
     rounds?: LeagueRoundListRelationFilter
     matches?: MatchListRelationFilter
+    award?: XOR<LeagueSeasonAwardNullableScalarRelationFilter, LeagueSeasonAwardWhereInput> | null
   }
 
   export type LeagueSeasonOrderByWithRelationInput = {
@@ -44632,6 +45828,7 @@ export namespace Prisma {
     participants?: LeagueParticipantOrderByRelationAggregateInput
     rounds?: LeagueRoundOrderByRelationAggregateInput
     matches?: MatchOrderByRelationAggregateInput
+    award?: LeagueSeasonAwardOrderByWithRelationInput
   }
 
   export type LeagueSeasonWhereUniqueInput = Prisma.AtLeast<{
@@ -44654,6 +45851,7 @@ export namespace Prisma {
     participants?: LeagueParticipantListRelationFilter
     rounds?: LeagueRoundListRelationFilter
     matches?: MatchListRelationFilter
+    award?: XOR<LeagueSeasonAwardNullableScalarRelationFilter, LeagueSeasonAwardWhereInput> | null
   }, "id" | "leagueId_seasonNumber">
 
   export type LeagueSeasonOrderByWithAggregationInput = {
@@ -45218,6 +46416,66 @@ export namespace Prisma {
     pendingChoices?: StringWithAggregatesFilter<"LeaguePostMatchSequence"> | string
     createdAt?: DateTimeWithAggregatesFilter<"LeaguePostMatchSequence"> | Date | string
     completedAt?: DateTimeNullableWithAggregatesFilter<"LeaguePostMatchSequence"> | Date | string | null
+  }
+
+  export type LeagueSeasonAwardWhereInput = {
+    AND?: LeagueSeasonAwardWhereInput | LeagueSeasonAwardWhereInput[]
+    OR?: LeagueSeasonAwardWhereInput[]
+    NOT?: LeagueSeasonAwardWhereInput | LeagueSeasonAwardWhereInput[]
+    id?: StringFilter<"LeagueSeasonAward"> | string
+    seasonId?: StringFilter<"LeagueSeasonAward"> | string
+    championUserId?: StringNullableFilter<"LeagueSeasonAward"> | string | null
+    championTeamId?: StringNullableFilter<"LeagueSeasonAward"> | string | null
+    awards?: StringFilter<"LeagueSeasonAward"> | string
+    createdAt?: DateTimeFilter<"LeagueSeasonAward"> | Date | string
+    season?: XOR<LeagueSeasonScalarRelationFilter, LeagueSeasonWhereInput>
+  }
+
+  export type LeagueSeasonAwardOrderByWithRelationInput = {
+    id?: SortOrder
+    seasonId?: SortOrder
+    championUserId?: SortOrderInput | SortOrder
+    championTeamId?: SortOrderInput | SortOrder
+    awards?: SortOrder
+    createdAt?: SortOrder
+    season?: LeagueSeasonOrderByWithRelationInput
+  }
+
+  export type LeagueSeasonAwardWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    seasonId?: string
+    AND?: LeagueSeasonAwardWhereInput | LeagueSeasonAwardWhereInput[]
+    OR?: LeagueSeasonAwardWhereInput[]
+    NOT?: LeagueSeasonAwardWhereInput | LeagueSeasonAwardWhereInput[]
+    championUserId?: StringNullableFilter<"LeagueSeasonAward"> | string | null
+    championTeamId?: StringNullableFilter<"LeagueSeasonAward"> | string | null
+    awards?: StringFilter<"LeagueSeasonAward"> | string
+    createdAt?: DateTimeFilter<"LeagueSeasonAward"> | Date | string
+    season?: XOR<LeagueSeasonScalarRelationFilter, LeagueSeasonWhereInput>
+  }, "id" | "seasonId">
+
+  export type LeagueSeasonAwardOrderByWithAggregationInput = {
+    id?: SortOrder
+    seasonId?: SortOrder
+    championUserId?: SortOrderInput | SortOrder
+    championTeamId?: SortOrderInput | SortOrder
+    awards?: SortOrder
+    createdAt?: SortOrder
+    _count?: LeagueSeasonAwardCountOrderByAggregateInput
+    _max?: LeagueSeasonAwardMaxOrderByAggregateInput
+    _min?: LeagueSeasonAwardMinOrderByAggregateInput
+  }
+
+  export type LeagueSeasonAwardScalarWhereWithAggregatesInput = {
+    AND?: LeagueSeasonAwardScalarWhereWithAggregatesInput | LeagueSeasonAwardScalarWhereWithAggregatesInput[]
+    OR?: LeagueSeasonAwardScalarWhereWithAggregatesInput[]
+    NOT?: LeagueSeasonAwardScalarWhereWithAggregatesInput | LeagueSeasonAwardScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"LeagueSeasonAward"> | string
+    seasonId?: StringWithAggregatesFilter<"LeagueSeasonAward"> | string
+    championUserId?: StringNullableWithAggregatesFilter<"LeagueSeasonAward"> | string | null
+    championTeamId?: StringNullableWithAggregatesFilter<"LeagueSeasonAward"> | string | null
+    awards?: StringWithAggregatesFilter<"LeagueSeasonAward"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"LeagueSeasonAward"> | Date | string
   }
 
   export type UserCreateInput = {
@@ -47757,6 +49015,7 @@ export namespace Prisma {
     participants?: LeagueParticipantCreateNestedManyWithoutSeasonInput
     rounds?: LeagueRoundCreateNestedManyWithoutSeasonInput
     matches?: MatchCreateNestedManyWithoutLeagueSeasonInput
+    award?: LeagueSeasonAwardCreateNestedOneWithoutSeasonInput
   }
 
   export type LeagueSeasonUncheckedCreateInput = {
@@ -47774,6 +49033,7 @@ export namespace Prisma {
     participants?: LeagueParticipantUncheckedCreateNestedManyWithoutSeasonInput
     rounds?: LeagueRoundUncheckedCreateNestedManyWithoutSeasonInput
     matches?: MatchUncheckedCreateNestedManyWithoutLeagueSeasonInput
+    award?: LeagueSeasonAwardUncheckedCreateNestedOneWithoutSeasonInput
   }
 
   export type LeagueSeasonUpdateInput = {
@@ -47791,6 +49051,7 @@ export namespace Prisma {
     participants?: LeagueParticipantUpdateManyWithoutSeasonNestedInput
     rounds?: LeagueRoundUpdateManyWithoutSeasonNestedInput
     matches?: MatchUpdateManyWithoutLeagueSeasonNestedInput
+    award?: LeagueSeasonAwardUpdateOneWithoutSeasonNestedInput
   }
 
   export type LeagueSeasonUncheckedUpdateInput = {
@@ -47808,6 +49069,7 @@ export namespace Prisma {
     participants?: LeagueParticipantUncheckedUpdateManyWithoutSeasonNestedInput
     rounds?: LeagueRoundUncheckedUpdateManyWithoutSeasonNestedInput
     matches?: MatchUncheckedUpdateManyWithoutLeagueSeasonNestedInput
+    award?: LeagueSeasonAwardUncheckedUpdateOneWithoutSeasonNestedInput
   }
 
   export type LeagueSeasonCreateManyInput = {
@@ -48436,6 +49698,68 @@ export namespace Prisma {
     pendingChoices?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type LeagueSeasonAwardCreateInput = {
+    id?: string
+    championUserId?: string | null
+    championTeamId?: string | null
+    awards?: string
+    createdAt?: Date | string
+    season: LeagueSeasonCreateNestedOneWithoutAwardInput
+  }
+
+  export type LeagueSeasonAwardUncheckedCreateInput = {
+    id?: string
+    seasonId: string
+    championUserId?: string | null
+    championTeamId?: string | null
+    awards?: string
+    createdAt?: Date | string
+  }
+
+  export type LeagueSeasonAwardUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    championUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    championTeamId?: NullableStringFieldUpdateOperationsInput | string | null
+    awards?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    season?: LeagueSeasonUpdateOneRequiredWithoutAwardNestedInput
+  }
+
+  export type LeagueSeasonAwardUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    seasonId?: StringFieldUpdateOperationsInput | string
+    championUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    championTeamId?: NullableStringFieldUpdateOperationsInput | string | null
+    awards?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LeagueSeasonAwardCreateManyInput = {
+    id?: string
+    seasonId: string
+    championUserId?: string | null
+    championTeamId?: string | null
+    awards?: string
+    createdAt?: Date | string
+  }
+
+  export type LeagueSeasonAwardUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    championUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    championTeamId?: NullableStringFieldUpdateOperationsInput | string | null
+    awards?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LeagueSeasonAwardUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    seasonId?: StringFieldUpdateOperationsInput | string
+    championUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    championTeamId?: NullableStringFieldUpdateOperationsInput | string | null
+    awards?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -50335,6 +51659,11 @@ export namespace Prisma {
     none?: LeagueRoundWhereInput
   }
 
+  export type LeagueSeasonAwardNullableScalarRelationFilter = {
+    is?: LeagueSeasonAwardWhereInput | null
+    isNot?: LeagueSeasonAwardWhereInput | null
+  }
+
   export type LeagueRoundOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -50736,6 +52065,33 @@ export namespace Prisma {
     treasuryDeltaB?: SortOrder
     fanFactorDeltaA?: SortOrder
     fanFactorDeltaB?: SortOrder
+  }
+
+  export type LeagueSeasonAwardCountOrderByAggregateInput = {
+    id?: SortOrder
+    seasonId?: SortOrder
+    championUserId?: SortOrder
+    championTeamId?: SortOrder
+    awards?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type LeagueSeasonAwardMaxOrderByAggregateInput = {
+    id?: SortOrder
+    seasonId?: SortOrder
+    championUserId?: SortOrder
+    championTeamId?: SortOrder
+    awards?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type LeagueSeasonAwardMinOrderByAggregateInput = {
+    id?: SortOrder
+    seasonId?: SortOrder
+    championUserId?: SortOrder
+    championTeamId?: SortOrder
+    awards?: SortOrder
+    createdAt?: SortOrder
   }
 
   export type MatchCreateNestedManyWithoutPlayersInput = {
@@ -52725,6 +54081,12 @@ export namespace Prisma {
     connect?: MatchWhereUniqueInput | MatchWhereUniqueInput[]
   }
 
+  export type LeagueSeasonAwardCreateNestedOneWithoutSeasonInput = {
+    create?: XOR<LeagueSeasonAwardCreateWithoutSeasonInput, LeagueSeasonAwardUncheckedCreateWithoutSeasonInput>
+    connectOrCreate?: LeagueSeasonAwardCreateOrConnectWithoutSeasonInput
+    connect?: LeagueSeasonAwardWhereUniqueInput
+  }
+
   export type LeagueParticipantUncheckedCreateNestedManyWithoutSeasonInput = {
     create?: XOR<LeagueParticipantCreateWithoutSeasonInput, LeagueParticipantUncheckedCreateWithoutSeasonInput> | LeagueParticipantCreateWithoutSeasonInput[] | LeagueParticipantUncheckedCreateWithoutSeasonInput[]
     connectOrCreate?: LeagueParticipantCreateOrConnectWithoutSeasonInput | LeagueParticipantCreateOrConnectWithoutSeasonInput[]
@@ -52744,6 +54106,12 @@ export namespace Prisma {
     connectOrCreate?: MatchCreateOrConnectWithoutLeagueSeasonInput | MatchCreateOrConnectWithoutLeagueSeasonInput[]
     createMany?: MatchCreateManyLeagueSeasonInputEnvelope
     connect?: MatchWhereUniqueInput | MatchWhereUniqueInput[]
+  }
+
+  export type LeagueSeasonAwardUncheckedCreateNestedOneWithoutSeasonInput = {
+    create?: XOR<LeagueSeasonAwardCreateWithoutSeasonInput, LeagueSeasonAwardUncheckedCreateWithoutSeasonInput>
+    connectOrCreate?: LeagueSeasonAwardCreateOrConnectWithoutSeasonInput
+    connect?: LeagueSeasonAwardWhereUniqueInput
   }
 
   export type LeagueUpdateOneRequiredWithoutSeasonsNestedInput = {
@@ -52796,6 +54164,16 @@ export namespace Prisma {
     deleteMany?: MatchScalarWhereInput | MatchScalarWhereInput[]
   }
 
+  export type LeagueSeasonAwardUpdateOneWithoutSeasonNestedInput = {
+    create?: XOR<LeagueSeasonAwardCreateWithoutSeasonInput, LeagueSeasonAwardUncheckedCreateWithoutSeasonInput>
+    connectOrCreate?: LeagueSeasonAwardCreateOrConnectWithoutSeasonInput
+    upsert?: LeagueSeasonAwardUpsertWithoutSeasonInput
+    disconnect?: LeagueSeasonAwardWhereInput | boolean
+    delete?: LeagueSeasonAwardWhereInput | boolean
+    connect?: LeagueSeasonAwardWhereUniqueInput
+    update?: XOR<XOR<LeagueSeasonAwardUpdateToOneWithWhereWithoutSeasonInput, LeagueSeasonAwardUpdateWithoutSeasonInput>, LeagueSeasonAwardUncheckedUpdateWithoutSeasonInput>
+  }
+
   export type LeagueParticipantUncheckedUpdateManyWithoutSeasonNestedInput = {
     create?: XOR<LeagueParticipantCreateWithoutSeasonInput, LeagueParticipantUncheckedCreateWithoutSeasonInput> | LeagueParticipantCreateWithoutSeasonInput[] | LeagueParticipantUncheckedCreateWithoutSeasonInput[]
     connectOrCreate?: LeagueParticipantCreateOrConnectWithoutSeasonInput | LeagueParticipantCreateOrConnectWithoutSeasonInput[]
@@ -52836,6 +54214,16 @@ export namespace Prisma {
     update?: MatchUpdateWithWhereUniqueWithoutLeagueSeasonInput | MatchUpdateWithWhereUniqueWithoutLeagueSeasonInput[]
     updateMany?: MatchUpdateManyWithWhereWithoutLeagueSeasonInput | MatchUpdateManyWithWhereWithoutLeagueSeasonInput[]
     deleteMany?: MatchScalarWhereInput | MatchScalarWhereInput[]
+  }
+
+  export type LeagueSeasonAwardUncheckedUpdateOneWithoutSeasonNestedInput = {
+    create?: XOR<LeagueSeasonAwardCreateWithoutSeasonInput, LeagueSeasonAwardUncheckedCreateWithoutSeasonInput>
+    connectOrCreate?: LeagueSeasonAwardCreateOrConnectWithoutSeasonInput
+    upsert?: LeagueSeasonAwardUpsertWithoutSeasonInput
+    disconnect?: LeagueSeasonAwardWhereInput | boolean
+    delete?: LeagueSeasonAwardWhereInput | boolean
+    connect?: LeagueSeasonAwardWhereUniqueInput
+    update?: XOR<XOR<LeagueSeasonAwardUpdateToOneWithWhereWithoutSeasonInput, LeagueSeasonAwardUpdateWithoutSeasonInput>, LeagueSeasonAwardUncheckedUpdateWithoutSeasonInput>
   }
 
   export type LeagueSeasonCreateNestedOneWithoutParticipantsInput = {
@@ -53134,6 +54522,20 @@ export namespace Prisma {
     upsert?: MatchUpsertWithoutLeaguePostMatchSequenceInput
     connect?: MatchWhereUniqueInput
     update?: XOR<XOR<MatchUpdateToOneWithWhereWithoutLeaguePostMatchSequenceInput, MatchUpdateWithoutLeaguePostMatchSequenceInput>, MatchUncheckedUpdateWithoutLeaguePostMatchSequenceInput>
+  }
+
+  export type LeagueSeasonCreateNestedOneWithoutAwardInput = {
+    create?: XOR<LeagueSeasonCreateWithoutAwardInput, LeagueSeasonUncheckedCreateWithoutAwardInput>
+    connectOrCreate?: LeagueSeasonCreateOrConnectWithoutAwardInput
+    connect?: LeagueSeasonWhereUniqueInput
+  }
+
+  export type LeagueSeasonUpdateOneRequiredWithoutAwardNestedInput = {
+    create?: XOR<LeagueSeasonCreateWithoutAwardInput, LeagueSeasonUncheckedCreateWithoutAwardInput>
+    connectOrCreate?: LeagueSeasonCreateOrConnectWithoutAwardInput
+    upsert?: LeagueSeasonUpsertWithoutAwardInput
+    connect?: LeagueSeasonWhereUniqueInput
+    update?: XOR<XOR<LeagueSeasonUpdateToOneWithWhereWithoutAwardInput, LeagueSeasonUpdateWithoutAwardInput>, LeagueSeasonUncheckedUpdateWithoutAwardInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -55918,6 +57320,7 @@ export namespace Prisma {
     league: LeagueCreateNestedOneWithoutSeasonsInput
     participants?: LeagueParticipantCreateNestedManyWithoutSeasonInput
     rounds?: LeagueRoundCreateNestedManyWithoutSeasonInput
+    award?: LeagueSeasonAwardCreateNestedOneWithoutSeasonInput
   }
 
   export type LeagueSeasonUncheckedCreateWithoutMatchesInput = {
@@ -55934,6 +57337,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     participants?: LeagueParticipantUncheckedCreateNestedManyWithoutSeasonInput
     rounds?: LeagueRoundUncheckedCreateNestedManyWithoutSeasonInput
+    award?: LeagueSeasonAwardUncheckedCreateNestedOneWithoutSeasonInput
   }
 
   export type LeagueSeasonCreateOrConnectWithoutMatchesInput = {
@@ -56239,6 +57643,7 @@ export namespace Prisma {
     league?: LeagueUpdateOneRequiredWithoutSeasonsNestedInput
     participants?: LeagueParticipantUpdateManyWithoutSeasonNestedInput
     rounds?: LeagueRoundUpdateManyWithoutSeasonNestedInput
+    award?: LeagueSeasonAwardUpdateOneWithoutSeasonNestedInput
   }
 
   export type LeagueSeasonUncheckedUpdateWithoutMatchesInput = {
@@ -56255,6 +57660,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     participants?: LeagueParticipantUncheckedUpdateManyWithoutSeasonNestedInput
     rounds?: LeagueRoundUncheckedUpdateManyWithoutSeasonNestedInput
+    award?: LeagueSeasonAwardUncheckedUpdateOneWithoutSeasonNestedInput
   }
 
   export type LeagueRoundUpsertWithoutMatchesInput = {
@@ -59805,6 +61211,7 @@ export namespace Prisma {
     participants?: LeagueParticipantCreateNestedManyWithoutSeasonInput
     rounds?: LeagueRoundCreateNestedManyWithoutSeasonInput
     matches?: MatchCreateNestedManyWithoutLeagueSeasonInput
+    award?: LeagueSeasonAwardCreateNestedOneWithoutSeasonInput
   }
 
   export type LeagueSeasonUncheckedCreateWithoutLeagueInput = {
@@ -59821,6 +61228,7 @@ export namespace Prisma {
     participants?: LeagueParticipantUncheckedCreateNestedManyWithoutSeasonInput
     rounds?: LeagueRoundUncheckedCreateNestedManyWithoutSeasonInput
     matches?: MatchUncheckedCreateNestedManyWithoutLeagueSeasonInput
+    award?: LeagueSeasonAwardUncheckedCreateNestedOneWithoutSeasonInput
   }
 
   export type LeagueSeasonCreateOrConnectWithoutLeagueInput = {
@@ -60126,6 +61534,27 @@ export namespace Prisma {
     data: MatchCreateManyLeagueSeasonInput | MatchCreateManyLeagueSeasonInput[]
   }
 
+  export type LeagueSeasonAwardCreateWithoutSeasonInput = {
+    id?: string
+    championUserId?: string | null
+    championTeamId?: string | null
+    awards?: string
+    createdAt?: Date | string
+  }
+
+  export type LeagueSeasonAwardUncheckedCreateWithoutSeasonInput = {
+    id?: string
+    championUserId?: string | null
+    championTeamId?: string | null
+    awards?: string
+    createdAt?: Date | string
+  }
+
+  export type LeagueSeasonAwardCreateOrConnectWithoutSeasonInput = {
+    where: LeagueSeasonAwardWhereUniqueInput
+    create: XOR<LeagueSeasonAwardCreateWithoutSeasonInput, LeagueSeasonAwardUncheckedCreateWithoutSeasonInput>
+  }
+
   export type LeagueUpsertWithoutSeasonsInput = {
     update: XOR<LeagueUpdateWithoutSeasonsInput, LeagueUncheckedUpdateWithoutSeasonsInput>
     create: XOR<LeagueCreateWithoutSeasonsInput, LeagueUncheckedCreateWithoutSeasonsInput>
@@ -60236,6 +61665,33 @@ export namespace Prisma {
     data: XOR<MatchUpdateManyMutationInput, MatchUncheckedUpdateManyWithoutLeagueSeasonInput>
   }
 
+  export type LeagueSeasonAwardUpsertWithoutSeasonInput = {
+    update: XOR<LeagueSeasonAwardUpdateWithoutSeasonInput, LeagueSeasonAwardUncheckedUpdateWithoutSeasonInput>
+    create: XOR<LeagueSeasonAwardCreateWithoutSeasonInput, LeagueSeasonAwardUncheckedCreateWithoutSeasonInput>
+    where?: LeagueSeasonAwardWhereInput
+  }
+
+  export type LeagueSeasonAwardUpdateToOneWithWhereWithoutSeasonInput = {
+    where?: LeagueSeasonAwardWhereInput
+    data: XOR<LeagueSeasonAwardUpdateWithoutSeasonInput, LeagueSeasonAwardUncheckedUpdateWithoutSeasonInput>
+  }
+
+  export type LeagueSeasonAwardUpdateWithoutSeasonInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    championUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    championTeamId?: NullableStringFieldUpdateOperationsInput | string | null
+    awards?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LeagueSeasonAwardUncheckedUpdateWithoutSeasonInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    championUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    championTeamId?: NullableStringFieldUpdateOperationsInput | string | null
+    awards?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type LeagueSeasonCreateWithoutParticipantsInput = {
     id?: string
     seasonNumber: number
@@ -60250,6 +61706,7 @@ export namespace Prisma {
     league: LeagueCreateNestedOneWithoutSeasonsInput
     rounds?: LeagueRoundCreateNestedManyWithoutSeasonInput
     matches?: MatchCreateNestedManyWithoutLeagueSeasonInput
+    award?: LeagueSeasonAwardCreateNestedOneWithoutSeasonInput
   }
 
   export type LeagueSeasonUncheckedCreateWithoutParticipantsInput = {
@@ -60266,6 +61723,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     rounds?: LeagueRoundUncheckedCreateNestedManyWithoutSeasonInput
     matches?: MatchUncheckedCreateNestedManyWithoutLeagueSeasonInput
+    award?: LeagueSeasonAwardUncheckedCreateNestedOneWithoutSeasonInput
   }
 
   export type LeagueSeasonCreateOrConnectWithoutParticipantsInput = {
@@ -60419,6 +61877,7 @@ export namespace Prisma {
     league?: LeagueUpdateOneRequiredWithoutSeasonsNestedInput
     rounds?: LeagueRoundUpdateManyWithoutSeasonNestedInput
     matches?: MatchUpdateManyWithoutLeagueSeasonNestedInput
+    award?: LeagueSeasonAwardUpdateOneWithoutSeasonNestedInput
   }
 
   export type LeagueSeasonUncheckedUpdateWithoutParticipantsInput = {
@@ -60435,6 +61894,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     rounds?: LeagueRoundUncheckedUpdateManyWithoutSeasonNestedInput
     matches?: MatchUncheckedUpdateManyWithoutLeagueSeasonNestedInput
+    award?: LeagueSeasonAwardUncheckedUpdateOneWithoutSeasonNestedInput
   }
 
   export type TeamUpsertWithoutLeagueParticipationsInput = {
@@ -60559,6 +62019,7 @@ export namespace Prisma {
     league: LeagueCreateNestedOneWithoutSeasonsInput
     participants?: LeagueParticipantCreateNestedManyWithoutSeasonInput
     matches?: MatchCreateNestedManyWithoutLeagueSeasonInput
+    award?: LeagueSeasonAwardCreateNestedOneWithoutSeasonInput
   }
 
   export type LeagueSeasonUncheckedCreateWithoutRoundsInput = {
@@ -60575,6 +62036,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     participants?: LeagueParticipantUncheckedCreateNestedManyWithoutSeasonInput
     matches?: MatchUncheckedCreateNestedManyWithoutLeagueSeasonInput
+    award?: LeagueSeasonAwardUncheckedCreateNestedOneWithoutSeasonInput
   }
 
   export type LeagueSeasonCreateOrConnectWithoutRoundsInput = {
@@ -60691,6 +62153,7 @@ export namespace Prisma {
     league?: LeagueUpdateOneRequiredWithoutSeasonsNestedInput
     participants?: LeagueParticipantUpdateManyWithoutSeasonNestedInput
     matches?: MatchUpdateManyWithoutLeagueSeasonNestedInput
+    award?: LeagueSeasonAwardUpdateOneWithoutSeasonNestedInput
   }
 
   export type LeagueSeasonUncheckedUpdateWithoutRoundsInput = {
@@ -60707,6 +62170,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     participants?: LeagueParticipantUncheckedUpdateManyWithoutSeasonNestedInput
     matches?: MatchUncheckedUpdateManyWithoutLeagueSeasonNestedInput
+    award?: LeagueSeasonAwardUncheckedUpdateOneWithoutSeasonNestedInput
   }
 
   export type MatchUpsertWithWhereUniqueWithoutLeagueRoundInput = {
@@ -61183,6 +62647,90 @@ export namespace Prisma {
     players?: UserUncheckedUpdateManyWithoutMatchesNestedInput
     turns?: TurnUncheckedUpdateManyWithoutMatchNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutMatchNestedInput
+  }
+
+  export type LeagueSeasonCreateWithoutAwardInput = {
+    id?: string
+    seasonNumber: number
+    name: string
+    status?: string
+    startDate?: Date | string | null
+    endDate?: Date | string | null
+    theme?: string | null
+    themeYear?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    league: LeagueCreateNestedOneWithoutSeasonsInput
+    participants?: LeagueParticipantCreateNestedManyWithoutSeasonInput
+    rounds?: LeagueRoundCreateNestedManyWithoutSeasonInput
+    matches?: MatchCreateNestedManyWithoutLeagueSeasonInput
+  }
+
+  export type LeagueSeasonUncheckedCreateWithoutAwardInput = {
+    id?: string
+    leagueId: string
+    seasonNumber: number
+    name: string
+    status?: string
+    startDate?: Date | string | null
+    endDate?: Date | string | null
+    theme?: string | null
+    themeYear?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    participants?: LeagueParticipantUncheckedCreateNestedManyWithoutSeasonInput
+    rounds?: LeagueRoundUncheckedCreateNestedManyWithoutSeasonInput
+    matches?: MatchUncheckedCreateNestedManyWithoutLeagueSeasonInput
+  }
+
+  export type LeagueSeasonCreateOrConnectWithoutAwardInput = {
+    where: LeagueSeasonWhereUniqueInput
+    create: XOR<LeagueSeasonCreateWithoutAwardInput, LeagueSeasonUncheckedCreateWithoutAwardInput>
+  }
+
+  export type LeagueSeasonUpsertWithoutAwardInput = {
+    update: XOR<LeagueSeasonUpdateWithoutAwardInput, LeagueSeasonUncheckedUpdateWithoutAwardInput>
+    create: XOR<LeagueSeasonCreateWithoutAwardInput, LeagueSeasonUncheckedCreateWithoutAwardInput>
+    where?: LeagueSeasonWhereInput
+  }
+
+  export type LeagueSeasonUpdateToOneWithWhereWithoutAwardInput = {
+    where?: LeagueSeasonWhereInput
+    data: XOR<LeagueSeasonUpdateWithoutAwardInput, LeagueSeasonUncheckedUpdateWithoutAwardInput>
+  }
+
+  export type LeagueSeasonUpdateWithoutAwardInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    seasonNumber?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    theme?: NullableStringFieldUpdateOperationsInput | string | null
+    themeYear?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    league?: LeagueUpdateOneRequiredWithoutSeasonsNestedInput
+    participants?: LeagueParticipantUpdateManyWithoutSeasonNestedInput
+    rounds?: LeagueRoundUpdateManyWithoutSeasonNestedInput
+    matches?: MatchUpdateManyWithoutLeagueSeasonNestedInput
+  }
+
+  export type LeagueSeasonUncheckedUpdateWithoutAwardInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    leagueId?: StringFieldUpdateOperationsInput | string
+    seasonNumber?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    theme?: NullableStringFieldUpdateOperationsInput | string | null
+    themeYear?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    participants?: LeagueParticipantUncheckedUpdateManyWithoutSeasonNestedInput
+    rounds?: LeagueRoundUncheckedUpdateManyWithoutSeasonNestedInput
+    matches?: MatchUncheckedUpdateManyWithoutLeagueSeasonNestedInput
   }
 
   export type MatchCreateManyCreatorInput = {
@@ -62955,6 +64503,7 @@ export namespace Prisma {
     participants?: LeagueParticipantUpdateManyWithoutSeasonNestedInput
     rounds?: LeagueRoundUpdateManyWithoutSeasonNestedInput
     matches?: MatchUpdateManyWithoutLeagueSeasonNestedInput
+    award?: LeagueSeasonAwardUpdateOneWithoutSeasonNestedInput
   }
 
   export type LeagueSeasonUncheckedUpdateWithoutLeagueInput = {
@@ -62971,6 +64520,7 @@ export namespace Prisma {
     participants?: LeagueParticipantUncheckedUpdateManyWithoutSeasonNestedInput
     rounds?: LeagueRoundUncheckedUpdateManyWithoutSeasonNestedInput
     matches?: MatchUncheckedUpdateManyWithoutLeagueSeasonNestedInput
+    award?: LeagueSeasonAwardUncheckedUpdateOneWithoutSeasonNestedInput
   }
 
   export type LeagueSeasonUncheckedUpdateManyWithoutLeagueInput = {
