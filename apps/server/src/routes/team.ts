@@ -1381,7 +1381,11 @@ export async function handleDeleteTeamPlayer(
       return;
     }
 
-    if (team.players.length <= 11) {
+    // L2.B.6 — Funeral : un joueur mort peut etre retire meme si
+    // l'equipe est sous le seuil de 11 (sa mort en est la cause).
+    // Pour un joueur vivant on garde la regle BB : minimum 11 joueurs
+    // a la liste, les remplacants sont des journeymen au match-start.
+    if (!(player as { dead?: boolean }).dead && team.players.length <= 11) {
       sendError(res, "Une equipe doit avoir au minimum 11 joueurs", 400);
       return;
     }

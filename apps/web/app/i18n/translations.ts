@@ -366,6 +366,23 @@ export const translations = {
       veTotal: "VE (Total)",
       veaTotal: "VEA (Total)",
       po: "po",
+      // Sprint Ligues v2 PR5 — page level-up et banner d'invitation.
+      backToTeam: "Retour a l'equipe",
+      levelUpTitle: "Ameliorations de joueurs",
+      levelUpDescription:
+        "Les joueurs ayant assez de PSP peuvent prendre une nouvelle competence ou amelioration.",
+      levelUpEmpty: "Aucun joueur en attente d'amelioration.",
+      levelUpAdvancementsTaken: "Ameliorations prises",
+      levelUpRemainingSpp: "PSP restants",
+      levelUpTypeLabel: "Type",
+      levelUpSkillLabel: "Skill (slug)",
+      levelUpApplyButton: "Appliquer",
+      levelUpInsufficientSpp: "PSP insuffisants",
+      levelUpNeedMoreSpp: "PSP insuffisants pour ce type",
+      levelUpApplyError: "Erreur lors de l'application",
+      pendingAdvancementsBanner: "{count} joueur(s) en attente d'amelioration",
+      pendingAdvancementsBannerCta:
+        "Cliquer pour leur attribuer une nouvelle competence.",
     },
     // Play / Lobby page
     play: {
@@ -988,6 +1005,23 @@ export const translations = {
       veTotal: "TV (Total)",
       veaTotal: "CAV (Total)",
       po: "po",
+      // Sprint Ligues v2 PR5 — level-up page and invite banner.
+      backToTeam: "Back to team",
+      levelUpTitle: "Player advancements",
+      levelUpDescription:
+        "Players with enough SPP can take a new skill or stat improvement.",
+      levelUpEmpty: "No player awaiting an advancement.",
+      levelUpAdvancementsTaken: "Advancements taken",
+      levelUpRemainingSpp: "Remaining SPP",
+      levelUpTypeLabel: "Type",
+      levelUpSkillLabel: "Skill (slug)",
+      levelUpApplyButton: "Apply",
+      levelUpInsufficientSpp: "Insufficient SPP",
+      levelUpNeedMoreSpp: "Insufficient SPP for this type",
+      levelUpApplyError: "Failed to apply advancement",
+      pendingAdvancementsBanner: "{count} player(s) awaiting advancement",
+      pendingAdvancementsBannerCta:
+        "Click to assign them a new skill.",
     },
     // Play / Lobby page
     play: {

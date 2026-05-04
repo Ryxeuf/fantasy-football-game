@@ -133,9 +133,17 @@ export async function acceptAndMaybeStartMatch(
     return { ok: false, error: "Équipes introuvables", status: 404 } as const;
   }
 
-  // Convertir les données des joueurs (exclure les joueurs morts)
+  // Convertir les données des joueurs (exclure les joueurs morts ou
+  // qui doivent manquer le prochain match — L2.B.7).
+  // Le flag `missNextMatch` est positionne par persistPermanentInjuries
+  // a la fin du match precedent (lasting injury type "serious"). On
+  // l'efface ensuite pour ces joueurs : ils sont *en train* de servir
+  // leur suspension en etant exclus de ce match, ils peuvent rejouer
+  // au suivant.
+  const isEligible = (p: { dead?: boolean; missNextMatch?: boolean }) =>
+    !p.dead && !p.missNextMatch;
   const teamAData: TeamPlayerData[] = teamA.players
-    .filter((p: any) => !p.dead)
+    .filter(isEligible)
     .map((p: any) => ({
       id: p.id,
       name: p.name,
@@ -150,7 +158,7 @@ export async function acceptAndMaybeStartMatch(
     }));
 
   const teamBData: TeamPlayerData[] = teamB.players
-    .filter((p: any) => !p.dead)
+    .filter(isEligible)
     .map((p: any) => ({
       id: p.id,
       name: p.name,
@@ -163,6 +171,26 @@ export async function acceptAndMaybeStartMatch(
       av: p.av,
       skills: p.skills || "",
     }));
+
+  // L2.B.7 — efface `missNextMatch` pour les joueurs qui viennent
+  // d'etre exclus : ils servent leur suspension par cette exclusion
+  // et redeviennent eligibles au prochain match. updateMany scope
+  // sur les joueurs des deux teams ayant le flag actif (sans
+  // distinction "viennent-d'etre-blessés" : `persistPermanentInjuries`
+  // re-ajoutera le flag pour les nouveaux blessés à la fin du match).
+  try {
+    await (prisma as any).teamPlayer.updateMany({
+      where: {
+        teamId: { in: [teamAId, teamBId] },
+        missNextMatch: true,
+        dead: false,
+      },
+      data: { missNextMatch: false },
+    });
+  } catch {
+    // updateMany non-bloquant : si la DB ne supporte pas le flag
+    // (legacy schema), on continue. Les schemas a jour propagent.
+  }
 
   // Ajouter des journeymen si une équipe a < 11 joueurs vivants
   if (teamAData.length < 11 || teamBData.length < 11) {
