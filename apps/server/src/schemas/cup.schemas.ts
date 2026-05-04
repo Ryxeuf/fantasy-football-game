@@ -60,3 +60,13 @@ export const listMonthlyCupsQuerySchema = z.object({
 });
 
 export type ListMonthlyCupsQuery = z.infer<typeof listMonthlyCupsQuerySchema>;
+
+/**
+ * S27.1g — Body schema pour `POST /cup/match-of-the-week/:matchId`.
+ * `note` optionnel (max 280 chars, format Twitter-like) et nullable.
+ */
+export const setMatchOfTheWeekSchema = z.object({
+  note: z.string().trim().max(280).optional().nullable(),
+});
+
+export type SetMatchOfTheWeekBody = z.infer<typeof setMatchOfTheWeekSchema>;
