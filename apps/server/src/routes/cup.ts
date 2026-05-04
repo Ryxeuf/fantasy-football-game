@@ -18,6 +18,7 @@ import {
   type ListMonthlyCupsQuery,
 } from "../schemas/cup.schemas";
 import { listMonthlyCups } from "../services/cup-monthly-listing";
+import { getCurrentMatchOfTheWeek } from "../services/match-of-the-week";
 import { serverLog } from "../utils/server-log";
 
 const router = Router();
@@ -259,6 +260,20 @@ router.get(
     }
   },
 );
+
+// S27.1f — GET /cup/match-of-the-week : match du moment pick par un admin.
+// Pas d'auth : teaser public consomme par la home / la page cups landing.
+// Monte avant `/:id` pour eviter le pattern matching.
+router.get("/match-of-the-week", async (_req, res) => {
+  try {
+    const match = await getCurrentMatchOfTheWeek();
+    res.status(200).json({ success: true, data: { match } });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "Erreur inconnue";
+    serverLog.error("[GET /cup/match-of-the-week] error:", msg);
+    res.status(500).json({ success: false, error: msg });
+  }
+});
 
 // GET /cup/:id - Détails d'une coupe
 router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
