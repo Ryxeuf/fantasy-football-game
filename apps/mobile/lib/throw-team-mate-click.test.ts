@@ -13,6 +13,7 @@
 import { describe, it, expect } from "vitest";
 import {
   processThrowTeamMateClick,
+  canActivateThrowTeamMate,
   type ThrowTeamMateClickResult,
   type LegalThrow,
 } from "./throw-team-mate-click";
@@ -154,5 +155,23 @@ describe("processThrowTeamMateClick (S27.2)", () => {
       throwTeamMateThrownId: null,
     });
     expect(r.kind).toBe("inactive");
+  });
+});
+
+describe("canActivateThrowTeamMate (S27.2)", () => {
+  it("retourne true quand le joueur a au moins un legal THROW_TEAM_MATE", () => {
+    expect(canActivateThrowTeamMate(legal, "p1")).toBe(true);
+  });
+
+  it("retourne false quand le joueur n'a aucun legal THROW_TEAM_MATE", () => {
+    expect(canActivateThrowTeamMate(legal, "p99")).toBe(false);
+  });
+
+  it("retourne false quand legal est vide", () => {
+    expect(canActivateThrowTeamMate([], "p1")).toBe(false);
+  });
+
+  it("retourne false quand playerId est null", () => {
+    expect(canActivateThrowTeamMate(legal, null)).toBe(false);
   });
 });
