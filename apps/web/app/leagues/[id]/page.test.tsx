@@ -367,8 +367,12 @@ describe("LeagueDetailPage", () => {
 
       renderWithProvider();
 
+      // Wait until the season finished loading (standings rendered)
+      // before asserting absence of admin elements: otherwise the
+      // assertion could pass for the wrong reason (season still
+      // loading = controls not yet rendered).
       await waitFor(() => {
-        expect(screen.getByText("Open 5 Teams")).toBeTruthy();
+        expect(screen.getByTestId("league-standings")).toBeTruthy();
       });
 
       expect(screen.queryByTestId("season-admin-panel")).toBeNull();
@@ -409,13 +413,16 @@ describe("LeagueDetailPage", () => {
 
       renderWithProvider();
 
+      // Le bouton "Inscrire une equipe" n'apparait qu'une fois que la
+      // saison est chargee (canJoinSeason && season). On waitFor
+      // directement dessus pour eviter les flakies sous coverage
+      // (instrumentation v8 ralentit les renders et expose la course).
       await waitFor(() => {
-        expect(screen.getByText("Open 5 Teams")).toBeTruthy();
+        expect(screen.getByTestId("open-join-season")).toBeTruthy();
       });
 
       expect(screen.queryByTestId("season-admin-panel")).toBeNull();
       expect(screen.queryByTestId("open-new-season-modal")).toBeNull();
-      expect(screen.getByTestId("open-join-season")).toBeTruthy();
     });
 
     it("hides Join button when the season is in_progress (registrations closed)", async () => {
@@ -432,8 +439,11 @@ describe("LeagueDetailPage", () => {
 
       renderWithProvider();
 
+      // On attend que la saison soit chargee (rendu standings) avant de
+      // tester l'absence du bouton, sinon le test pourrait passer pour
+      // la mauvaise raison (saison pas encore loadee = bouton absent).
       await waitFor(() => {
-        expect(screen.getByText("Open 5 Teams")).toBeTruthy();
+        expect(screen.getByTestId("league-standings")).toBeTruthy();
       });
 
       expect(screen.queryByTestId("open-join-season")).toBeNull();
