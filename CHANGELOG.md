@@ -1,3 +1,11 @@
+## [1.82.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.81.0...v1.82.0) (2026-05-04)
+
+
+### ✨ Features
+
+* Add player advancement UI (level-up page & banner) ([#539](https://github.com/Ryxeuf/fantasy-football-game/issues/539)) ([9c53949](https://github.com/Ryxeuf/fantasy-football-game/commit/9c53949223334cd80a109442aab8fa292abf820b))
+* **leagues:** PR6 Bagarreurs Brutaux override + integration tests (L2.B.8-B.9) ([238fdd2](https://github.com/Ryxeuf/fantasy-football-game/commit/238fdd2534181ced6fa5fae02f41e6cb307e76a7))
+
 ## [1.81.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.80.0...v1.81.0) (2026-05-04)
 
 
