@@ -19,6 +19,10 @@ vi.mock("../services/coach-championships", () => ({
   getCoachThemedChampionships: vi.fn(),
 }));
 
+vi.mock("../services/cup-championships", () => ({
+  getCoachCupChampionships: vi.fn(),
+}));
+
 import type { Request, Response } from "express";
 import {
   getCoachEloHistory,
@@ -28,6 +32,7 @@ import {
   listPublicCoachSlugs,
 } from "../services/coach-profile";
 import { getCoachThemedChampionships } from "../services/coach-championships";
+import { getCoachCupChampionships } from "../services/cup-championships";
 import {
   handleGetCoachEloHistory,
   handleGetCoachPublicProfile,
@@ -40,6 +45,7 @@ const mockedGetRecentTeams = vi.mocked(getCoachRecentTeams);
 const mockedListSlugs = vi.mocked(listPublicCoachSlugs);
 const mockedGetEloHistory = vi.mocked(getCoachEloHistory);
 const mockedGetChampionships = vi.mocked(getCoachThemedChampionships);
+const mockedGetCupChampionships = vi.mocked(getCoachCupChampionships);
 
 function buildRes(): Response {
   const res = {
@@ -62,6 +68,8 @@ describe("GET /coach/:slug — handleGetCoachPublicProfile", () => {
     vi.clearAllMocks();
     // S26.6d default : pas de championships, sauf override par test.
     mockedGetChampionships.mockResolvedValue([]);
+    // S27.1d default : pas de cup championships, sauf override par test.
+    mockedGetCupChampionships.mockResolvedValue([]);
   });
 
   it("returns 200 + ApiResponse data when the coach exists", async () => {
@@ -95,12 +103,52 @@ describe("GET /coach/:slug — handleGetCoachPublicProfile", () => {
         achievements: [],
         recentTeams: [],
         championships: [],
+        cupChampionships: [],
       },
     });
     expect(mockedGetProfile).toHaveBeenCalledWith("coach-alpha");
     expect(mockedGetShowcase).toHaveBeenCalledWith("u-1");
     expect(mockedGetRecentTeams).toHaveBeenCalledWith("u-1");
     expect(mockedGetChampionships).toHaveBeenCalledWith("u-1");
+    expect(mockedGetCupChampionships).toHaveBeenCalledWith("u-1");
+  });
+
+  // S27.1d — badge profil champion Nuffle Cup mensuelle
+  it("includes cup championships when the coach has won monthly cups", async () => {
+    mockedGetProfile.mockResolvedValue({
+      id: "u-1",
+      slug: "coach-alpha",
+      coachName: "Coach Alpha",
+      eloRating: 1500,
+      isSupporter: false,
+      supporterTier: null,
+      memberSince: "2025-12-01T00:00:00.000Z",
+    });
+    mockedGetShowcase.mockResolvedValue([]);
+    mockedGetRecentTeams.mockResolvedValue([]);
+    mockedGetCupChampionships.mockResolvedValue([
+      {
+        cupId: "cup-1",
+        cupName: "Nuffle Cup Avril 2026",
+        monthlyYear: 2026,
+        monthlyMonth: 4,
+        label: "Champion Nuffle Cup Avril 2026",
+      },
+    ]);
+
+    const req = { params: { slug: "coach-alpha" } } as unknown as Request;
+    const res = buildRes() as Response & { statusCode: number; body: unknown };
+    await handleGetCoachPublicProfile(req, res);
+
+    const payload = res.body as {
+      success: boolean;
+      data: { cupChampionships: Array<{ label: string; cupId: string }> };
+    };
+    expect(payload.data.cupChampionships).toHaveLength(1);
+    expect(payload.data.cupChampionships[0].label).toBe(
+      "Champion Nuffle Cup Avril 2026",
+    );
+    expect(payload.data.cupChampionships[0].cupId).toBe("cup-1");
   });
 
   // S26.6d — badge profil champion thematique
