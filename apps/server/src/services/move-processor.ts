@@ -2,7 +2,7 @@ import { prisma } from "../prisma";
 import { applyMove, makeRNG, isMatchEnded } from "@bb/game-engine";
 import type { Move, ExtendedGameState } from "@bb/game-engine";
 import { getUserTeamSide } from "./turn-ownership";
-import { persistMatchSPP } from "./spp-tracking";
+import { persistMatchSPP, loadLeagueSPPContext } from "./spp-tracking";
 import { persistPlayerDeaths } from "./player-death";
 import { persistPermanentInjuries } from "./permanent-injuries";
 import { broadcastGameState, broadcastMatchEnd } from "./game-broadcast";
@@ -196,7 +196,41 @@ export async function processMove(
     if (teamAId && teamBId) {
       try {
         if (newState.matchStats) {
-          await persistMatchSPP(prisma as any, newState, teamAId, teamBId);
+          // L2.B.8 — charge le contexte ligue (rosters + regles speciales)
+          // pour appliquer l'override "Bagarreurs Brutaux" sur le calcul
+          // de SPP. En match amical / cup / IA, isLeagueMatch=false ->
+          // contexte neutre = vanilla rules.
+          let leagueContext;
+          try {
+            const matchInfo = await prisma.match.findUnique({
+              where: { id: matchId },
+              select: { leagueSeasonId: true },
+            });
+            const teams = await prisma.team.findMany({
+              where: { id: { in: [teamAId, teamBId] } },
+              select: { id: true, roster: true },
+            });
+            const rosterA =
+              teams.find((t: { id: string }) => t.id === teamAId)?.roster ??
+              "";
+            const rosterB =
+              teams.find((t: { id: string }) => t.id === teamBId)?.roster ??
+              "";
+            leagueContext = await loadLeagueSPPContext(prisma as any, {
+              isLeagueMatch: !!matchInfo?.leagueSeasonId,
+              teamARoster: rosterA,
+              teamBRoster: rosterB,
+            });
+          } catch {
+            leagueContext = undefined;
+          }
+          await persistMatchSPP(
+            prisma as any,
+            newState,
+            teamAId,
+            teamBId,
+            leagueContext,
+          );
         }
       } catch {
         // SPP persistence error — non-blocking
