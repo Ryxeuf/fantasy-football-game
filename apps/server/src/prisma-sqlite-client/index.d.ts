@@ -149,6 +149,11 @@ export type LeagueParticipant = $Result.DefaultSelection<Prisma.$LeagueParticipa
  */
 export type LeagueRound = $Result.DefaultSelection<Prisma.$LeagueRoundPayload>
 /**
+ * Model LeaguePairing
+ * 
+ */
+export type LeaguePairing = $Result.DefaultSelection<Prisma.$LeaguePairingPayload>
+/**
  * Model TeamSpecialRule
  * Catalogue des Règles Spéciales d'équipe (S3 — OCR officielle).
  */
@@ -563,6 +568,16 @@ export class PrismaClient<
     * ```
     */
   get leagueRound(): Prisma.LeagueRoundDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.leaguePairing`: Exposes CRUD operations for the **LeaguePairing** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more LeaguePairings
+    * const leaguePairings = await prisma.leaguePairing.findMany()
+    * ```
+    */
+  get leaguePairing(): Prisma.LeaguePairingDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.teamSpecialRule`: Exposes CRUD operations for the **TeamSpecialRule** model.
@@ -1050,6 +1065,7 @@ export namespace Prisma {
     LeagueSeason: 'LeagueSeason',
     LeagueParticipant: 'LeagueParticipant',
     LeagueRound: 'LeagueRound',
+    LeaguePairing: 'LeaguePairing',
     TeamSpecialRule: 'TeamSpecialRule',
     RegionalLeague: 'RegionalLeague'
   };
@@ -1070,7 +1086,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "eloSnapshot" | "refreshToken" | "kofiTransaction" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamStarPlayer" | "roster" | "skill" | "position" | "positionSkill" | "cup" | "cupParticipant" | "matchQueue" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leagueParticipant" | "leagueRound" | "teamSpecialRule" | "regionalLeague"
+      modelProps: "user" | "eloSnapshot" | "refreshToken" | "kofiTransaction" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamStarPlayer" | "roster" | "skill" | "position" | "positionSkill" | "cup" | "cupParticipant" | "matchQueue" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leagueParticipant" | "leagueRound" | "leaguePairing" | "teamSpecialRule" | "regionalLeague"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -3072,6 +3088,80 @@ export namespace Prisma {
           }
         }
       }
+      LeaguePairing: {
+        payload: Prisma.$LeaguePairingPayload<ExtArgs>
+        fields: Prisma.LeaguePairingFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.LeaguePairingFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LeaguePairingPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.LeaguePairingFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LeaguePairingPayload>
+          }
+          findFirst: {
+            args: Prisma.LeaguePairingFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LeaguePairingPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.LeaguePairingFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LeaguePairingPayload>
+          }
+          findMany: {
+            args: Prisma.LeaguePairingFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LeaguePairingPayload>[]
+          }
+          create: {
+            args: Prisma.LeaguePairingCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LeaguePairingPayload>
+          }
+          createMany: {
+            args: Prisma.LeaguePairingCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.LeaguePairingCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LeaguePairingPayload>[]
+          }
+          delete: {
+            args: Prisma.LeaguePairingDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LeaguePairingPayload>
+          }
+          update: {
+            args: Prisma.LeaguePairingUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LeaguePairingPayload>
+          }
+          deleteMany: {
+            args: Prisma.LeaguePairingDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.LeaguePairingUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.LeaguePairingUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LeaguePairingPayload>[]
+          }
+          upsert: {
+            args: Prisma.LeaguePairingUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LeaguePairingPayload>
+          }
+          aggregate: {
+            args: Prisma.LeaguePairingAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateLeaguePairing>
+          }
+          groupBy: {
+            args: Prisma.LeaguePairingGroupByArgs<ExtArgs>
+            result: $Utils.Optional<LeaguePairingGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.LeaguePairingCountArgs<ExtArgs>
+            result: $Utils.Optional<LeaguePairingCountAggregateOutputType> | number
+          }
+        }
+      }
       TeamSpecialRule: {
         payload: Prisma.$TeamSpecialRulePayload<ExtArgs>
         fields: Prisma.TeamSpecialRuleFieldRefs
@@ -3343,6 +3433,7 @@ export namespace Prisma {
     leagueSeason?: LeagueSeasonOmit
     leagueParticipant?: LeagueParticipantOmit
     leagueRound?: LeagueRoundOmit
+    leaguePairing?: LeaguePairingOmit
     teamSpecialRule?: TeamSpecialRuleOmit
     regionalLeague?: RegionalLeagueOmit
   }
@@ -3944,11 +4035,13 @@ export namespace Prisma {
   export type LeagueSeasonCountOutputType = {
     participants: number
     rounds: number
+    matches: number
   }
 
   export type LeagueSeasonCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     participants?: boolean | LeagueSeasonCountOutputTypeCountParticipantsArgs
     rounds?: boolean | LeagueSeasonCountOutputTypeCountRoundsArgs
+    matches?: boolean | LeagueSeasonCountOutputTypeCountMatchesArgs
   }
 
   // Custom InputTypes
@@ -3974,6 +4067,93 @@ export namespace Prisma {
    */
   export type LeagueSeasonCountOutputTypeCountRoundsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: LeagueRoundWhereInput
+  }
+
+  /**
+   * LeagueSeasonCountOutputType without action
+   */
+  export type LeagueSeasonCountOutputTypeCountMatchesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MatchWhereInput
+  }
+
+
+  /**
+   * Count Type LeagueParticipantCountOutputType
+   */
+
+  export type LeagueParticipantCountOutputType = {
+    homePairings: number
+    awayPairings: number
+  }
+
+  export type LeagueParticipantCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    homePairings?: boolean | LeagueParticipantCountOutputTypeCountHomePairingsArgs
+    awayPairings?: boolean | LeagueParticipantCountOutputTypeCountAwayPairingsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * LeagueParticipantCountOutputType without action
+   */
+  export type LeagueParticipantCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeagueParticipantCountOutputType
+     */
+    select?: LeagueParticipantCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * LeagueParticipantCountOutputType without action
+   */
+  export type LeagueParticipantCountOutputTypeCountHomePairingsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: LeaguePairingWhereInput
+  }
+
+  /**
+   * LeagueParticipantCountOutputType without action
+   */
+  export type LeagueParticipantCountOutputTypeCountAwayPairingsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: LeaguePairingWhereInput
+  }
+
+
+  /**
+   * Count Type LeagueRoundCountOutputType
+   */
+
+  export type LeagueRoundCountOutputType = {
+    matches: number
+    pairings: number
+  }
+
+  export type LeagueRoundCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    matches?: boolean | LeagueRoundCountOutputTypeCountMatchesArgs
+    pairings?: boolean | LeagueRoundCountOutputTypeCountPairingsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * LeagueRoundCountOutputType without action
+   */
+  export type LeagueRoundCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeagueRoundCountOutputType
+     */
+    select?: LeagueRoundCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * LeagueRoundCountOutputType without action
+   */
+  export type LeagueRoundCountOutputTypeCountMatchesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MatchWhereInput
+  }
+
+  /**
+   * LeagueRoundCountOutputType without action
+   */
+  export type LeagueRoundCountOutputTypeCountPairingsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: LeaguePairingWhereInput
   }
 
 
@@ -13467,6 +13647,10 @@ export namespace Prisma {
     aiDifficulty: string | null
     aiTeamSide: string | null
     aiUserId: string | null
+    leagueSeasonId: string | null
+    leagueRoundId: string | null
+    leaguePairingId: string | null
+    leagueScoredAt: Date | null
   }
 
   export type MatchMaxAggregateOutputType = {
@@ -13481,6 +13665,10 @@ export namespace Prisma {
     aiDifficulty: string | null
     aiTeamSide: string | null
     aiUserId: string | null
+    leagueSeasonId: string | null
+    leagueRoundId: string | null
+    leaguePairingId: string | null
+    leagueScoredAt: Date | null
   }
 
   export type MatchCountAggregateOutputType = {
@@ -13495,6 +13683,10 @@ export namespace Prisma {
     aiDifficulty: number
     aiTeamSide: number
     aiUserId: number
+    leagueSeasonId: number
+    leagueRoundId: number
+    leaguePairingId: number
+    leagueScoredAt: number
     _all: number
   }
 
@@ -13511,6 +13703,10 @@ export namespace Prisma {
     aiDifficulty?: true
     aiTeamSide?: true
     aiUserId?: true
+    leagueSeasonId?: true
+    leagueRoundId?: true
+    leaguePairingId?: true
+    leagueScoredAt?: true
   }
 
   export type MatchMaxAggregateInputType = {
@@ -13525,6 +13721,10 @@ export namespace Prisma {
     aiDifficulty?: true
     aiTeamSide?: true
     aiUserId?: true
+    leagueSeasonId?: true
+    leagueRoundId?: true
+    leaguePairingId?: true
+    leagueScoredAt?: true
   }
 
   export type MatchCountAggregateInputType = {
@@ -13539,6 +13739,10 @@ export namespace Prisma {
     aiDifficulty?: true
     aiTeamSide?: true
     aiUserId?: true
+    leagueSeasonId?: true
+    leagueRoundId?: true
+    leaguePairingId?: true
+    leagueScoredAt?: true
     _all?: true
   }
 
@@ -13626,6 +13830,10 @@ export namespace Prisma {
     aiDifficulty: string | null
     aiTeamSide: string | null
     aiUserId: string | null
+    leagueSeasonId: string | null
+    leagueRoundId: string | null
+    leaguePairingId: string | null
+    leagueScoredAt: Date | null
     _count: MatchCountAggregateOutputType | null
     _min: MatchMinAggregateOutputType | null
     _max: MatchMaxAggregateOutputType | null
@@ -13657,10 +13865,17 @@ export namespace Prisma {
     aiDifficulty?: boolean
     aiTeamSide?: boolean
     aiUserId?: boolean
+    leagueSeasonId?: boolean
+    leagueRoundId?: boolean
+    leaguePairingId?: boolean
+    leagueScoredAt?: boolean
     creator?: boolean | Match$creatorArgs<ExtArgs>
     players?: boolean | Match$playersArgs<ExtArgs>
     turns?: boolean | Match$turnsArgs<ExtArgs>
     teamSelections?: boolean | Match$teamSelectionsArgs<ExtArgs>
+    leagueSeason?: boolean | Match$leagueSeasonArgs<ExtArgs>
+    leagueRound?: boolean | Match$leagueRoundArgs<ExtArgs>
+    leaguePairing?: boolean | Match$leaguePairingArgs<ExtArgs>
     _count?: boolean | MatchCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["match"]>
 
@@ -13676,7 +13891,14 @@ export namespace Prisma {
     aiDifficulty?: boolean
     aiTeamSide?: boolean
     aiUserId?: boolean
+    leagueSeasonId?: boolean
+    leagueRoundId?: boolean
+    leaguePairingId?: boolean
+    leagueScoredAt?: boolean
     creator?: boolean | Match$creatorArgs<ExtArgs>
+    leagueSeason?: boolean | Match$leagueSeasonArgs<ExtArgs>
+    leagueRound?: boolean | Match$leagueRoundArgs<ExtArgs>
+    leaguePairing?: boolean | Match$leaguePairingArgs<ExtArgs>
   }, ExtArgs["result"]["match"]>
 
   export type MatchSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -13691,7 +13913,14 @@ export namespace Prisma {
     aiDifficulty?: boolean
     aiTeamSide?: boolean
     aiUserId?: boolean
+    leagueSeasonId?: boolean
+    leagueRoundId?: boolean
+    leaguePairingId?: boolean
+    leagueScoredAt?: boolean
     creator?: boolean | Match$creatorArgs<ExtArgs>
+    leagueSeason?: boolean | Match$leagueSeasonArgs<ExtArgs>
+    leagueRound?: boolean | Match$leagueRoundArgs<ExtArgs>
+    leaguePairing?: boolean | Match$leaguePairingArgs<ExtArgs>
   }, ExtArgs["result"]["match"]>
 
   export type MatchSelectScalar = {
@@ -13706,21 +13935,34 @@ export namespace Prisma {
     aiDifficulty?: boolean
     aiTeamSide?: boolean
     aiUserId?: boolean
+    leagueSeasonId?: boolean
+    leagueRoundId?: boolean
+    leaguePairingId?: boolean
+    leagueScoredAt?: boolean
   }
 
-  export type MatchOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "createdAt" | "status" | "seed" | "creatorId" | "currentTurnUserId" | "lastMoveAt" | "aiOpponent" | "aiDifficulty" | "aiTeamSide" | "aiUserId", ExtArgs["result"]["match"]>
+  export type MatchOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "createdAt" | "status" | "seed" | "creatorId" | "currentTurnUserId" | "lastMoveAt" | "aiOpponent" | "aiDifficulty" | "aiTeamSide" | "aiUserId" | "leagueSeasonId" | "leagueRoundId" | "leaguePairingId" | "leagueScoredAt", ExtArgs["result"]["match"]>
   export type MatchInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     creator?: boolean | Match$creatorArgs<ExtArgs>
     players?: boolean | Match$playersArgs<ExtArgs>
     turns?: boolean | Match$turnsArgs<ExtArgs>
     teamSelections?: boolean | Match$teamSelectionsArgs<ExtArgs>
+    leagueSeason?: boolean | Match$leagueSeasonArgs<ExtArgs>
+    leagueRound?: boolean | Match$leagueRoundArgs<ExtArgs>
+    leaguePairing?: boolean | Match$leaguePairingArgs<ExtArgs>
     _count?: boolean | MatchCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type MatchIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     creator?: boolean | Match$creatorArgs<ExtArgs>
+    leagueSeason?: boolean | Match$leagueSeasonArgs<ExtArgs>
+    leagueRound?: boolean | Match$leagueRoundArgs<ExtArgs>
+    leaguePairing?: boolean | Match$leaguePairingArgs<ExtArgs>
   }
   export type MatchIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     creator?: boolean | Match$creatorArgs<ExtArgs>
+    leagueSeason?: boolean | Match$leagueSeasonArgs<ExtArgs>
+    leagueRound?: boolean | Match$leagueRoundArgs<ExtArgs>
+    leaguePairing?: boolean | Match$leaguePairingArgs<ExtArgs>
   }
 
   export type $MatchPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -13730,6 +13972,9 @@ export namespace Prisma {
       players: Prisma.$UserPayload<ExtArgs>[]
       turns: Prisma.$TurnPayload<ExtArgs>[]
       teamSelections: Prisma.$TeamSelectionPayload<ExtArgs>[]
+      leagueSeason: Prisma.$LeagueSeasonPayload<ExtArgs> | null
+      leagueRound: Prisma.$LeagueRoundPayload<ExtArgs> | null
+      leaguePairing: Prisma.$LeaguePairingPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -13743,6 +13988,10 @@ export namespace Prisma {
       aiDifficulty: string | null
       aiTeamSide: string | null
       aiUserId: string | null
+      leagueSeasonId: string | null
+      leagueRoundId: string | null
+      leaguePairingId: string | null
+      leagueScoredAt: Date | null
     }, ExtArgs["result"]["match"]>
     composites: {}
   }
@@ -14141,6 +14390,9 @@ export namespace Prisma {
     players<T extends Match$playersArgs<ExtArgs> = {}>(args?: Subset<T, Match$playersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     turns<T extends Match$turnsArgs<ExtArgs> = {}>(args?: Subset<T, Match$turnsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TurnPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     teamSelections<T extends Match$teamSelectionsArgs<ExtArgs> = {}>(args?: Subset<T, Match$teamSelectionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeamSelectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    leagueSeason<T extends Match$leagueSeasonArgs<ExtArgs> = {}>(args?: Subset<T, Match$leagueSeasonArgs<ExtArgs>>): Prisma__LeagueSeasonClient<$Result.GetResult<Prisma.$LeagueSeasonPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    leagueRound<T extends Match$leagueRoundArgs<ExtArgs> = {}>(args?: Subset<T, Match$leagueRoundArgs<ExtArgs>>): Prisma__LeagueRoundClient<$Result.GetResult<Prisma.$LeagueRoundPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    leaguePairing<T extends Match$leaguePairingArgs<ExtArgs> = {}>(args?: Subset<T, Match$leaguePairingArgs<ExtArgs>>): Prisma__LeaguePairingClient<$Result.GetResult<Prisma.$LeaguePairingPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -14181,6 +14433,10 @@ export namespace Prisma {
     readonly aiDifficulty: FieldRef<"Match", 'String'>
     readonly aiTeamSide: FieldRef<"Match", 'String'>
     readonly aiUserId: FieldRef<"Match", 'String'>
+    readonly leagueSeasonId: FieldRef<"Match", 'String'>
+    readonly leagueRoundId: FieldRef<"Match", 'String'>
+    readonly leaguePairingId: FieldRef<"Match", 'String'>
+    readonly leagueScoredAt: FieldRef<"Match", 'DateTime'>
   }
     
 
@@ -14663,6 +14919,63 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: TeamSelectionScalarFieldEnum | TeamSelectionScalarFieldEnum[]
+  }
+
+  /**
+   * Match.leagueSeason
+   */
+  export type Match$leagueSeasonArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeagueSeason
+     */
+    select?: LeagueSeasonSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeagueSeason
+     */
+    omit?: LeagueSeasonOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeagueSeasonInclude<ExtArgs> | null
+    where?: LeagueSeasonWhereInput
+  }
+
+  /**
+   * Match.leagueRound
+   */
+  export type Match$leagueRoundArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeagueRound
+     */
+    select?: LeagueRoundSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeagueRound
+     */
+    omit?: LeagueRoundOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeagueRoundInclude<ExtArgs> | null
+    where?: LeagueRoundWhereInput
+  }
+
+  /**
+   * Match.leaguePairing
+   */
+  export type Match$leaguePairingArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeaguePairing
+     */
+    select?: LeaguePairingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeaguePairing
+     */
+    omit?: LeaguePairingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeaguePairingInclude<ExtArgs> | null
+    where?: LeaguePairingWhereInput
   }
 
   /**
@@ -33289,6 +33602,7 @@ export namespace Prisma {
     league?: boolean | LeagueDefaultArgs<ExtArgs>
     participants?: boolean | LeagueSeason$participantsArgs<ExtArgs>
     rounds?: boolean | LeagueSeason$roundsArgs<ExtArgs>
+    matches?: boolean | LeagueSeason$matchesArgs<ExtArgs>
     _count?: boolean | LeagueSeasonCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["leagueSeason"]>
 
@@ -33341,6 +33655,7 @@ export namespace Prisma {
     league?: boolean | LeagueDefaultArgs<ExtArgs>
     participants?: boolean | LeagueSeason$participantsArgs<ExtArgs>
     rounds?: boolean | LeagueSeason$roundsArgs<ExtArgs>
+    matches?: boolean | LeagueSeason$matchesArgs<ExtArgs>
     _count?: boolean | LeagueSeasonCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type LeagueSeasonIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -33356,6 +33671,7 @@ export namespace Prisma {
       league: Prisma.$LeaguePayload<ExtArgs>
       participants: Prisma.$LeagueParticipantPayload<ExtArgs>[]
       rounds: Prisma.$LeagueRoundPayload<ExtArgs>[]
+      matches: Prisma.$MatchPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -33766,6 +34082,7 @@ export namespace Prisma {
     league<T extends LeagueDefaultArgs<ExtArgs> = {}>(args?: Subset<T, LeagueDefaultArgs<ExtArgs>>): Prisma__LeagueClient<$Result.GetResult<Prisma.$LeaguePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     participants<T extends LeagueSeason$participantsArgs<ExtArgs> = {}>(args?: Subset<T, LeagueSeason$participantsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LeagueParticipantPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     rounds<T extends LeagueSeason$roundsArgs<ExtArgs> = {}>(args?: Subset<T, LeagueSeason$roundsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LeagueRoundPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    matches<T extends LeagueSeason$matchesArgs<ExtArgs> = {}>(args?: Subset<T, LeagueSeason$matchesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MatchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -34248,6 +34565,30 @@ export namespace Prisma {
   }
 
   /**
+   * LeagueSeason.matches
+   */
+  export type LeagueSeason$matchesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Match
+     */
+    select?: MatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Match
+     */
+    omit?: MatchOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MatchInclude<ExtArgs> | null
+    where?: MatchWhereInput
+    orderBy?: MatchOrderByWithRelationInput | MatchOrderByWithRelationInput[]
+    cursor?: MatchWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: MatchScalarFieldEnum | MatchScalarFieldEnum[]
+  }
+
+  /**
    * LeagueSeason without action
    */
   export type LeagueSeasonDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -34570,6 +34911,9 @@ export namespace Prisma {
     joinedAt?: boolean
     season?: boolean | LeagueSeasonDefaultArgs<ExtArgs>
     team?: boolean | TeamDefaultArgs<ExtArgs>
+    homePairings?: boolean | LeagueParticipant$homePairingsArgs<ExtArgs>
+    awayPairings?: boolean | LeagueParticipant$awayPairingsArgs<ExtArgs>
+    _count?: boolean | LeagueParticipantCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["leagueParticipant"]>
 
   export type LeagueParticipantSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -34631,6 +34975,9 @@ export namespace Prisma {
   export type LeagueParticipantInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     season?: boolean | LeagueSeasonDefaultArgs<ExtArgs>
     team?: boolean | TeamDefaultArgs<ExtArgs>
+    homePairings?: boolean | LeagueParticipant$homePairingsArgs<ExtArgs>
+    awayPairings?: boolean | LeagueParticipant$awayPairingsArgs<ExtArgs>
+    _count?: boolean | LeagueParticipantCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type LeagueParticipantIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     season?: boolean | LeagueSeasonDefaultArgs<ExtArgs>
@@ -34646,6 +34993,8 @@ export namespace Prisma {
     objects: {
       season: Prisma.$LeagueSeasonPayload<ExtArgs>
       team: Prisma.$TeamPayload<ExtArgs>
+      homePairings: Prisma.$LeaguePairingPayload<ExtArgs>[]
+      awayPairings: Prisma.$LeaguePairingPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -35058,6 +35407,8 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     season<T extends LeagueSeasonDefaultArgs<ExtArgs> = {}>(args?: Subset<T, LeagueSeasonDefaultArgs<ExtArgs>>): Prisma__LeagueSeasonClient<$Result.GetResult<Prisma.$LeagueSeasonPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     team<T extends TeamDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TeamDefaultArgs<ExtArgs>>): Prisma__TeamClient<$Result.GetResult<Prisma.$TeamPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    homePairings<T extends LeagueParticipant$homePairingsArgs<ExtArgs> = {}>(args?: Subset<T, LeagueParticipant$homePairingsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LeaguePairingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    awayPairings<T extends LeagueParticipant$awayPairingsArgs<ExtArgs> = {}>(args?: Subset<T, LeagueParticipant$awayPairingsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LeaguePairingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -35495,6 +35846,54 @@ export namespace Prisma {
   }
 
   /**
+   * LeagueParticipant.homePairings
+   */
+  export type LeagueParticipant$homePairingsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeaguePairing
+     */
+    select?: LeaguePairingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeaguePairing
+     */
+    omit?: LeaguePairingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeaguePairingInclude<ExtArgs> | null
+    where?: LeaguePairingWhereInput
+    orderBy?: LeaguePairingOrderByWithRelationInput | LeaguePairingOrderByWithRelationInput[]
+    cursor?: LeaguePairingWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: LeaguePairingScalarFieldEnum | LeaguePairingScalarFieldEnum[]
+  }
+
+  /**
+   * LeagueParticipant.awayPairings
+   */
+  export type LeagueParticipant$awayPairingsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeaguePairing
+     */
+    select?: LeaguePairingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeaguePairing
+     */
+    omit?: LeaguePairingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeaguePairingInclude<ExtArgs> | null
+    where?: LeaguePairingWhereInput
+    orderBy?: LeaguePairingOrderByWithRelationInput | LeaguePairingOrderByWithRelationInput[]
+    cursor?: LeaguePairingWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: LeaguePairingScalarFieldEnum | LeaguePairingScalarFieldEnum[]
+  }
+
+  /**
    * LeagueParticipant without action
    */
   export type LeagueParticipantDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -35744,6 +36143,9 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     season?: boolean | LeagueSeasonDefaultArgs<ExtArgs>
+    matches?: boolean | LeagueRound$matchesArgs<ExtArgs>
+    pairings?: boolean | LeagueRound$pairingsArgs<ExtArgs>
+    _count?: boolean | LeagueRoundCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["leagueRound"]>
 
   export type LeagueRoundSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -35787,6 +36189,9 @@ export namespace Prisma {
   export type LeagueRoundOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "seasonId" | "roundNumber" | "name" | "status" | "startDate" | "endDate" | "createdAt" | "updatedAt", ExtArgs["result"]["leagueRound"]>
   export type LeagueRoundInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     season?: boolean | LeagueSeasonDefaultArgs<ExtArgs>
+    matches?: boolean | LeagueRound$matchesArgs<ExtArgs>
+    pairings?: boolean | LeagueRound$pairingsArgs<ExtArgs>
+    _count?: boolean | LeagueRoundCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type LeagueRoundIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     season?: boolean | LeagueSeasonDefaultArgs<ExtArgs>
@@ -35799,6 +36204,8 @@ export namespace Prisma {
     name: "LeagueRound"
     objects: {
       season: Prisma.$LeagueSeasonPayload<ExtArgs>
+      matches: Prisma.$MatchPayload<ExtArgs>[]
+      pairings: Prisma.$LeaguePairingPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -36205,6 +36612,8 @@ export namespace Prisma {
   export interface Prisma__LeagueRoundClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     season<T extends LeagueSeasonDefaultArgs<ExtArgs> = {}>(args?: Subset<T, LeagueSeasonDefaultArgs<ExtArgs>>): Prisma__LeagueSeasonClient<$Result.GetResult<Prisma.$LeagueSeasonPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    matches<T extends LeagueRound$matchesArgs<ExtArgs> = {}>(args?: Subset<T, LeagueRound$matchesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MatchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    pairings<T extends LeagueRound$pairingsArgs<ExtArgs> = {}>(args?: Subset<T, LeagueRound$pairingsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LeaguePairingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -36637,6 +37046,54 @@ export namespace Prisma {
   }
 
   /**
+   * LeagueRound.matches
+   */
+  export type LeagueRound$matchesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Match
+     */
+    select?: MatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Match
+     */
+    omit?: MatchOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MatchInclude<ExtArgs> | null
+    where?: MatchWhereInput
+    orderBy?: MatchOrderByWithRelationInput | MatchOrderByWithRelationInput[]
+    cursor?: MatchWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: MatchScalarFieldEnum | MatchScalarFieldEnum[]
+  }
+
+  /**
+   * LeagueRound.pairings
+   */
+  export type LeagueRound$pairingsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeaguePairing
+     */
+    select?: LeaguePairingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeaguePairing
+     */
+    omit?: LeaguePairingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeaguePairingInclude<ExtArgs> | null
+    where?: LeaguePairingWhereInput
+    orderBy?: LeaguePairingOrderByWithRelationInput | LeaguePairingOrderByWithRelationInput[]
+    cursor?: LeaguePairingWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: LeaguePairingScalarFieldEnum | LeaguePairingScalarFieldEnum[]
+  }
+
+  /**
    * LeagueRound without action
    */
   export type LeagueRoundDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -36652,6 +37109,1153 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: LeagueRoundInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model LeaguePairing
+   */
+
+  export type AggregateLeaguePairing = {
+    _count: LeaguePairingCountAggregateOutputType | null
+    _min: LeaguePairingMinAggregateOutputType | null
+    _max: LeaguePairingMaxAggregateOutputType | null
+  }
+
+  export type LeaguePairingMinAggregateOutputType = {
+    id: string | null
+    roundId: string | null
+    homeParticipantId: string | null
+    awayParticipantId: string | null
+    status: string | null
+    scheduledAt: Date | null
+    deadlineAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type LeaguePairingMaxAggregateOutputType = {
+    id: string | null
+    roundId: string | null
+    homeParticipantId: string | null
+    awayParticipantId: string | null
+    status: string | null
+    scheduledAt: Date | null
+    deadlineAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type LeaguePairingCountAggregateOutputType = {
+    id: number
+    roundId: number
+    homeParticipantId: number
+    awayParticipantId: number
+    status: number
+    scheduledAt: number
+    deadlineAt: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type LeaguePairingMinAggregateInputType = {
+    id?: true
+    roundId?: true
+    homeParticipantId?: true
+    awayParticipantId?: true
+    status?: true
+    scheduledAt?: true
+    deadlineAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type LeaguePairingMaxAggregateInputType = {
+    id?: true
+    roundId?: true
+    homeParticipantId?: true
+    awayParticipantId?: true
+    status?: true
+    scheduledAt?: true
+    deadlineAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type LeaguePairingCountAggregateInputType = {
+    id?: true
+    roundId?: true
+    homeParticipantId?: true
+    awayParticipantId?: true
+    status?: true
+    scheduledAt?: true
+    deadlineAt?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type LeaguePairingAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which LeaguePairing to aggregate.
+     */
+    where?: LeaguePairingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LeaguePairings to fetch.
+     */
+    orderBy?: LeaguePairingOrderByWithRelationInput | LeaguePairingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: LeaguePairingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LeaguePairings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LeaguePairings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned LeaguePairings
+    **/
+    _count?: true | LeaguePairingCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: LeaguePairingMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: LeaguePairingMaxAggregateInputType
+  }
+
+  export type GetLeaguePairingAggregateType<T extends LeaguePairingAggregateArgs> = {
+        [P in keyof T & keyof AggregateLeaguePairing]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateLeaguePairing[P]>
+      : GetScalarType<T[P], AggregateLeaguePairing[P]>
+  }
+
+
+
+
+  export type LeaguePairingGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: LeaguePairingWhereInput
+    orderBy?: LeaguePairingOrderByWithAggregationInput | LeaguePairingOrderByWithAggregationInput[]
+    by: LeaguePairingScalarFieldEnum[] | LeaguePairingScalarFieldEnum
+    having?: LeaguePairingScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: LeaguePairingCountAggregateInputType | true
+    _min?: LeaguePairingMinAggregateInputType
+    _max?: LeaguePairingMaxAggregateInputType
+  }
+
+  export type LeaguePairingGroupByOutputType = {
+    id: string
+    roundId: string
+    homeParticipantId: string
+    awayParticipantId: string
+    status: string
+    scheduledAt: Date | null
+    deadlineAt: Date | null
+    createdAt: Date
+    updatedAt: Date
+    _count: LeaguePairingCountAggregateOutputType | null
+    _min: LeaguePairingMinAggregateOutputType | null
+    _max: LeaguePairingMaxAggregateOutputType | null
+  }
+
+  type GetLeaguePairingGroupByPayload<T extends LeaguePairingGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<LeaguePairingGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof LeaguePairingGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], LeaguePairingGroupByOutputType[P]>
+            : GetScalarType<T[P], LeaguePairingGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type LeaguePairingSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    roundId?: boolean
+    homeParticipantId?: boolean
+    awayParticipantId?: boolean
+    status?: boolean
+    scheduledAt?: boolean
+    deadlineAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    round?: boolean | LeagueRoundDefaultArgs<ExtArgs>
+    homeParticipant?: boolean | LeagueParticipantDefaultArgs<ExtArgs>
+    awayParticipant?: boolean | LeagueParticipantDefaultArgs<ExtArgs>
+    match?: boolean | LeaguePairing$matchArgs<ExtArgs>
+  }, ExtArgs["result"]["leaguePairing"]>
+
+  export type LeaguePairingSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    roundId?: boolean
+    homeParticipantId?: boolean
+    awayParticipantId?: boolean
+    status?: boolean
+    scheduledAt?: boolean
+    deadlineAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    round?: boolean | LeagueRoundDefaultArgs<ExtArgs>
+    homeParticipant?: boolean | LeagueParticipantDefaultArgs<ExtArgs>
+    awayParticipant?: boolean | LeagueParticipantDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["leaguePairing"]>
+
+  export type LeaguePairingSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    roundId?: boolean
+    homeParticipantId?: boolean
+    awayParticipantId?: boolean
+    status?: boolean
+    scheduledAt?: boolean
+    deadlineAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    round?: boolean | LeagueRoundDefaultArgs<ExtArgs>
+    homeParticipant?: boolean | LeagueParticipantDefaultArgs<ExtArgs>
+    awayParticipant?: boolean | LeagueParticipantDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["leaguePairing"]>
+
+  export type LeaguePairingSelectScalar = {
+    id?: boolean
+    roundId?: boolean
+    homeParticipantId?: boolean
+    awayParticipantId?: boolean
+    status?: boolean
+    scheduledAt?: boolean
+    deadlineAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type LeaguePairingOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "roundId" | "homeParticipantId" | "awayParticipantId" | "status" | "scheduledAt" | "deadlineAt" | "createdAt" | "updatedAt", ExtArgs["result"]["leaguePairing"]>
+  export type LeaguePairingInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    round?: boolean | LeagueRoundDefaultArgs<ExtArgs>
+    homeParticipant?: boolean | LeagueParticipantDefaultArgs<ExtArgs>
+    awayParticipant?: boolean | LeagueParticipantDefaultArgs<ExtArgs>
+    match?: boolean | LeaguePairing$matchArgs<ExtArgs>
+  }
+  export type LeaguePairingIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    round?: boolean | LeagueRoundDefaultArgs<ExtArgs>
+    homeParticipant?: boolean | LeagueParticipantDefaultArgs<ExtArgs>
+    awayParticipant?: boolean | LeagueParticipantDefaultArgs<ExtArgs>
+  }
+  export type LeaguePairingIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    round?: boolean | LeagueRoundDefaultArgs<ExtArgs>
+    homeParticipant?: boolean | LeagueParticipantDefaultArgs<ExtArgs>
+    awayParticipant?: boolean | LeagueParticipantDefaultArgs<ExtArgs>
+  }
+
+  export type $LeaguePairingPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "LeaguePairing"
+    objects: {
+      round: Prisma.$LeagueRoundPayload<ExtArgs>
+      homeParticipant: Prisma.$LeagueParticipantPayload<ExtArgs>
+      awayParticipant: Prisma.$LeagueParticipantPayload<ExtArgs>
+      match: Prisma.$MatchPayload<ExtArgs> | null
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      roundId: string
+      homeParticipantId: string
+      awayParticipantId: string
+      status: string
+      scheduledAt: Date | null
+      deadlineAt: Date | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["leaguePairing"]>
+    composites: {}
+  }
+
+  type LeaguePairingGetPayload<S extends boolean | null | undefined | LeaguePairingDefaultArgs> = $Result.GetResult<Prisma.$LeaguePairingPayload, S>
+
+  type LeaguePairingCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<LeaguePairingFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: LeaguePairingCountAggregateInputType | true
+    }
+
+  export interface LeaguePairingDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['LeaguePairing'], meta: { name: 'LeaguePairing' } }
+    /**
+     * Find zero or one LeaguePairing that matches the filter.
+     * @param {LeaguePairingFindUniqueArgs} args - Arguments to find a LeaguePairing
+     * @example
+     * // Get one LeaguePairing
+     * const leaguePairing = await prisma.leaguePairing.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends LeaguePairingFindUniqueArgs>(args: SelectSubset<T, LeaguePairingFindUniqueArgs<ExtArgs>>): Prisma__LeaguePairingClient<$Result.GetResult<Prisma.$LeaguePairingPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one LeaguePairing that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {LeaguePairingFindUniqueOrThrowArgs} args - Arguments to find a LeaguePairing
+     * @example
+     * // Get one LeaguePairing
+     * const leaguePairing = await prisma.leaguePairing.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends LeaguePairingFindUniqueOrThrowArgs>(args: SelectSubset<T, LeaguePairingFindUniqueOrThrowArgs<ExtArgs>>): Prisma__LeaguePairingClient<$Result.GetResult<Prisma.$LeaguePairingPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first LeaguePairing that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LeaguePairingFindFirstArgs} args - Arguments to find a LeaguePairing
+     * @example
+     * // Get one LeaguePairing
+     * const leaguePairing = await prisma.leaguePairing.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends LeaguePairingFindFirstArgs>(args?: SelectSubset<T, LeaguePairingFindFirstArgs<ExtArgs>>): Prisma__LeaguePairingClient<$Result.GetResult<Prisma.$LeaguePairingPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first LeaguePairing that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LeaguePairingFindFirstOrThrowArgs} args - Arguments to find a LeaguePairing
+     * @example
+     * // Get one LeaguePairing
+     * const leaguePairing = await prisma.leaguePairing.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends LeaguePairingFindFirstOrThrowArgs>(args?: SelectSubset<T, LeaguePairingFindFirstOrThrowArgs<ExtArgs>>): Prisma__LeaguePairingClient<$Result.GetResult<Prisma.$LeaguePairingPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more LeaguePairings that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LeaguePairingFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all LeaguePairings
+     * const leaguePairings = await prisma.leaguePairing.findMany()
+     * 
+     * // Get first 10 LeaguePairings
+     * const leaguePairings = await prisma.leaguePairing.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const leaguePairingWithIdOnly = await prisma.leaguePairing.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends LeaguePairingFindManyArgs>(args?: SelectSubset<T, LeaguePairingFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LeaguePairingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a LeaguePairing.
+     * @param {LeaguePairingCreateArgs} args - Arguments to create a LeaguePairing.
+     * @example
+     * // Create one LeaguePairing
+     * const LeaguePairing = await prisma.leaguePairing.create({
+     *   data: {
+     *     // ... data to create a LeaguePairing
+     *   }
+     * })
+     * 
+     */
+    create<T extends LeaguePairingCreateArgs>(args: SelectSubset<T, LeaguePairingCreateArgs<ExtArgs>>): Prisma__LeaguePairingClient<$Result.GetResult<Prisma.$LeaguePairingPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many LeaguePairings.
+     * @param {LeaguePairingCreateManyArgs} args - Arguments to create many LeaguePairings.
+     * @example
+     * // Create many LeaguePairings
+     * const leaguePairing = await prisma.leaguePairing.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends LeaguePairingCreateManyArgs>(args?: SelectSubset<T, LeaguePairingCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many LeaguePairings and returns the data saved in the database.
+     * @param {LeaguePairingCreateManyAndReturnArgs} args - Arguments to create many LeaguePairings.
+     * @example
+     * // Create many LeaguePairings
+     * const leaguePairing = await prisma.leaguePairing.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many LeaguePairings and only return the `id`
+     * const leaguePairingWithIdOnly = await prisma.leaguePairing.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends LeaguePairingCreateManyAndReturnArgs>(args?: SelectSubset<T, LeaguePairingCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LeaguePairingPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a LeaguePairing.
+     * @param {LeaguePairingDeleteArgs} args - Arguments to delete one LeaguePairing.
+     * @example
+     * // Delete one LeaguePairing
+     * const LeaguePairing = await prisma.leaguePairing.delete({
+     *   where: {
+     *     // ... filter to delete one LeaguePairing
+     *   }
+     * })
+     * 
+     */
+    delete<T extends LeaguePairingDeleteArgs>(args: SelectSubset<T, LeaguePairingDeleteArgs<ExtArgs>>): Prisma__LeaguePairingClient<$Result.GetResult<Prisma.$LeaguePairingPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one LeaguePairing.
+     * @param {LeaguePairingUpdateArgs} args - Arguments to update one LeaguePairing.
+     * @example
+     * // Update one LeaguePairing
+     * const leaguePairing = await prisma.leaguePairing.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends LeaguePairingUpdateArgs>(args: SelectSubset<T, LeaguePairingUpdateArgs<ExtArgs>>): Prisma__LeaguePairingClient<$Result.GetResult<Prisma.$LeaguePairingPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more LeaguePairings.
+     * @param {LeaguePairingDeleteManyArgs} args - Arguments to filter LeaguePairings to delete.
+     * @example
+     * // Delete a few LeaguePairings
+     * const { count } = await prisma.leaguePairing.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends LeaguePairingDeleteManyArgs>(args?: SelectSubset<T, LeaguePairingDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more LeaguePairings.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LeaguePairingUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many LeaguePairings
+     * const leaguePairing = await prisma.leaguePairing.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends LeaguePairingUpdateManyArgs>(args: SelectSubset<T, LeaguePairingUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more LeaguePairings and returns the data updated in the database.
+     * @param {LeaguePairingUpdateManyAndReturnArgs} args - Arguments to update many LeaguePairings.
+     * @example
+     * // Update many LeaguePairings
+     * const leaguePairing = await prisma.leaguePairing.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more LeaguePairings and only return the `id`
+     * const leaguePairingWithIdOnly = await prisma.leaguePairing.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends LeaguePairingUpdateManyAndReturnArgs>(args: SelectSubset<T, LeaguePairingUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LeaguePairingPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one LeaguePairing.
+     * @param {LeaguePairingUpsertArgs} args - Arguments to update or create a LeaguePairing.
+     * @example
+     * // Update or create a LeaguePairing
+     * const leaguePairing = await prisma.leaguePairing.upsert({
+     *   create: {
+     *     // ... data to create a LeaguePairing
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the LeaguePairing we want to update
+     *   }
+     * })
+     */
+    upsert<T extends LeaguePairingUpsertArgs>(args: SelectSubset<T, LeaguePairingUpsertArgs<ExtArgs>>): Prisma__LeaguePairingClient<$Result.GetResult<Prisma.$LeaguePairingPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of LeaguePairings.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LeaguePairingCountArgs} args - Arguments to filter LeaguePairings to count.
+     * @example
+     * // Count the number of LeaguePairings
+     * const count = await prisma.leaguePairing.count({
+     *   where: {
+     *     // ... the filter for the LeaguePairings we want to count
+     *   }
+     * })
+    **/
+    count<T extends LeaguePairingCountArgs>(
+      args?: Subset<T, LeaguePairingCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], LeaguePairingCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a LeaguePairing.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LeaguePairingAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends LeaguePairingAggregateArgs>(args: Subset<T, LeaguePairingAggregateArgs>): Prisma.PrismaPromise<GetLeaguePairingAggregateType<T>>
+
+    /**
+     * Group by LeaguePairing.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LeaguePairingGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends LeaguePairingGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: LeaguePairingGroupByArgs['orderBy'] }
+        : { orderBy?: LeaguePairingGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, LeaguePairingGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetLeaguePairingGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the LeaguePairing model
+   */
+  readonly fields: LeaguePairingFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for LeaguePairing.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__LeaguePairingClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    round<T extends LeagueRoundDefaultArgs<ExtArgs> = {}>(args?: Subset<T, LeagueRoundDefaultArgs<ExtArgs>>): Prisma__LeagueRoundClient<$Result.GetResult<Prisma.$LeagueRoundPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    homeParticipant<T extends LeagueParticipantDefaultArgs<ExtArgs> = {}>(args?: Subset<T, LeagueParticipantDefaultArgs<ExtArgs>>): Prisma__LeagueParticipantClient<$Result.GetResult<Prisma.$LeagueParticipantPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    awayParticipant<T extends LeagueParticipantDefaultArgs<ExtArgs> = {}>(args?: Subset<T, LeagueParticipantDefaultArgs<ExtArgs>>): Prisma__LeagueParticipantClient<$Result.GetResult<Prisma.$LeagueParticipantPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    match<T extends LeaguePairing$matchArgs<ExtArgs> = {}>(args?: Subset<T, LeaguePairing$matchArgs<ExtArgs>>): Prisma__MatchClient<$Result.GetResult<Prisma.$MatchPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the LeaguePairing model
+   */
+  interface LeaguePairingFieldRefs {
+    readonly id: FieldRef<"LeaguePairing", 'String'>
+    readonly roundId: FieldRef<"LeaguePairing", 'String'>
+    readonly homeParticipantId: FieldRef<"LeaguePairing", 'String'>
+    readonly awayParticipantId: FieldRef<"LeaguePairing", 'String'>
+    readonly status: FieldRef<"LeaguePairing", 'String'>
+    readonly scheduledAt: FieldRef<"LeaguePairing", 'DateTime'>
+    readonly deadlineAt: FieldRef<"LeaguePairing", 'DateTime'>
+    readonly createdAt: FieldRef<"LeaguePairing", 'DateTime'>
+    readonly updatedAt: FieldRef<"LeaguePairing", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * LeaguePairing findUnique
+   */
+  export type LeaguePairingFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeaguePairing
+     */
+    select?: LeaguePairingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeaguePairing
+     */
+    omit?: LeaguePairingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeaguePairingInclude<ExtArgs> | null
+    /**
+     * Filter, which LeaguePairing to fetch.
+     */
+    where: LeaguePairingWhereUniqueInput
+  }
+
+  /**
+   * LeaguePairing findUniqueOrThrow
+   */
+  export type LeaguePairingFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeaguePairing
+     */
+    select?: LeaguePairingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeaguePairing
+     */
+    omit?: LeaguePairingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeaguePairingInclude<ExtArgs> | null
+    /**
+     * Filter, which LeaguePairing to fetch.
+     */
+    where: LeaguePairingWhereUniqueInput
+  }
+
+  /**
+   * LeaguePairing findFirst
+   */
+  export type LeaguePairingFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeaguePairing
+     */
+    select?: LeaguePairingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeaguePairing
+     */
+    omit?: LeaguePairingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeaguePairingInclude<ExtArgs> | null
+    /**
+     * Filter, which LeaguePairing to fetch.
+     */
+    where?: LeaguePairingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LeaguePairings to fetch.
+     */
+    orderBy?: LeaguePairingOrderByWithRelationInput | LeaguePairingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for LeaguePairings.
+     */
+    cursor?: LeaguePairingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LeaguePairings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LeaguePairings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of LeaguePairings.
+     */
+    distinct?: LeaguePairingScalarFieldEnum | LeaguePairingScalarFieldEnum[]
+  }
+
+  /**
+   * LeaguePairing findFirstOrThrow
+   */
+  export type LeaguePairingFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeaguePairing
+     */
+    select?: LeaguePairingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeaguePairing
+     */
+    omit?: LeaguePairingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeaguePairingInclude<ExtArgs> | null
+    /**
+     * Filter, which LeaguePairing to fetch.
+     */
+    where?: LeaguePairingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LeaguePairings to fetch.
+     */
+    orderBy?: LeaguePairingOrderByWithRelationInput | LeaguePairingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for LeaguePairings.
+     */
+    cursor?: LeaguePairingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LeaguePairings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LeaguePairings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of LeaguePairings.
+     */
+    distinct?: LeaguePairingScalarFieldEnum | LeaguePairingScalarFieldEnum[]
+  }
+
+  /**
+   * LeaguePairing findMany
+   */
+  export type LeaguePairingFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeaguePairing
+     */
+    select?: LeaguePairingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeaguePairing
+     */
+    omit?: LeaguePairingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeaguePairingInclude<ExtArgs> | null
+    /**
+     * Filter, which LeaguePairings to fetch.
+     */
+    where?: LeaguePairingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LeaguePairings to fetch.
+     */
+    orderBy?: LeaguePairingOrderByWithRelationInput | LeaguePairingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing LeaguePairings.
+     */
+    cursor?: LeaguePairingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LeaguePairings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LeaguePairings.
+     */
+    skip?: number
+    distinct?: LeaguePairingScalarFieldEnum | LeaguePairingScalarFieldEnum[]
+  }
+
+  /**
+   * LeaguePairing create
+   */
+  export type LeaguePairingCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeaguePairing
+     */
+    select?: LeaguePairingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeaguePairing
+     */
+    omit?: LeaguePairingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeaguePairingInclude<ExtArgs> | null
+    /**
+     * The data needed to create a LeaguePairing.
+     */
+    data: XOR<LeaguePairingCreateInput, LeaguePairingUncheckedCreateInput>
+  }
+
+  /**
+   * LeaguePairing createMany
+   */
+  export type LeaguePairingCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many LeaguePairings.
+     */
+    data: LeaguePairingCreateManyInput | LeaguePairingCreateManyInput[]
+  }
+
+  /**
+   * LeaguePairing createManyAndReturn
+   */
+  export type LeaguePairingCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeaguePairing
+     */
+    select?: LeaguePairingSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeaguePairing
+     */
+    omit?: LeaguePairingOmit<ExtArgs> | null
+    /**
+     * The data used to create many LeaguePairings.
+     */
+    data: LeaguePairingCreateManyInput | LeaguePairingCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeaguePairingIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * LeaguePairing update
+   */
+  export type LeaguePairingUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeaguePairing
+     */
+    select?: LeaguePairingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeaguePairing
+     */
+    omit?: LeaguePairingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeaguePairingInclude<ExtArgs> | null
+    /**
+     * The data needed to update a LeaguePairing.
+     */
+    data: XOR<LeaguePairingUpdateInput, LeaguePairingUncheckedUpdateInput>
+    /**
+     * Choose, which LeaguePairing to update.
+     */
+    where: LeaguePairingWhereUniqueInput
+  }
+
+  /**
+   * LeaguePairing updateMany
+   */
+  export type LeaguePairingUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update LeaguePairings.
+     */
+    data: XOR<LeaguePairingUpdateManyMutationInput, LeaguePairingUncheckedUpdateManyInput>
+    /**
+     * Filter which LeaguePairings to update
+     */
+    where?: LeaguePairingWhereInput
+    /**
+     * Limit how many LeaguePairings to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * LeaguePairing updateManyAndReturn
+   */
+  export type LeaguePairingUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeaguePairing
+     */
+    select?: LeaguePairingSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeaguePairing
+     */
+    omit?: LeaguePairingOmit<ExtArgs> | null
+    /**
+     * The data used to update LeaguePairings.
+     */
+    data: XOR<LeaguePairingUpdateManyMutationInput, LeaguePairingUncheckedUpdateManyInput>
+    /**
+     * Filter which LeaguePairings to update
+     */
+    where?: LeaguePairingWhereInput
+    /**
+     * Limit how many LeaguePairings to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeaguePairingIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * LeaguePairing upsert
+   */
+  export type LeaguePairingUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeaguePairing
+     */
+    select?: LeaguePairingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeaguePairing
+     */
+    omit?: LeaguePairingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeaguePairingInclude<ExtArgs> | null
+    /**
+     * The filter to search for the LeaguePairing to update in case it exists.
+     */
+    where: LeaguePairingWhereUniqueInput
+    /**
+     * In case the LeaguePairing found by the `where` argument doesn't exist, create a new LeaguePairing with this data.
+     */
+    create: XOR<LeaguePairingCreateInput, LeaguePairingUncheckedCreateInput>
+    /**
+     * In case the LeaguePairing was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<LeaguePairingUpdateInput, LeaguePairingUncheckedUpdateInput>
+  }
+
+  /**
+   * LeaguePairing delete
+   */
+  export type LeaguePairingDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeaguePairing
+     */
+    select?: LeaguePairingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeaguePairing
+     */
+    omit?: LeaguePairingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeaguePairingInclude<ExtArgs> | null
+    /**
+     * Filter which LeaguePairing to delete.
+     */
+    where: LeaguePairingWhereUniqueInput
+  }
+
+  /**
+   * LeaguePairing deleteMany
+   */
+  export type LeaguePairingDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which LeaguePairings to delete
+     */
+    where?: LeaguePairingWhereInput
+    /**
+     * Limit how many LeaguePairings to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * LeaguePairing.match
+   */
+  export type LeaguePairing$matchArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Match
+     */
+    select?: MatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Match
+     */
+    omit?: MatchOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MatchInclude<ExtArgs> | null
+    where?: MatchWhereInput
+  }
+
+  /**
+   * LeaguePairing without action
+   */
+  export type LeaguePairingDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeaguePairing
+     */
+    select?: LeaguePairingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeaguePairing
+     */
+    omit?: LeaguePairingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeaguePairingInclude<ExtArgs> | null
   }
 
 
@@ -38887,7 +40491,11 @@ export namespace Prisma {
     aiOpponent: 'aiOpponent',
     aiDifficulty: 'aiDifficulty',
     aiTeamSide: 'aiTeamSide',
-    aiUserId: 'aiUserId'
+    aiUserId: 'aiUserId',
+    leagueSeasonId: 'leagueSeasonId',
+    leagueRoundId: 'leagueRoundId',
+    leaguePairingId: 'leaguePairingId',
+    leagueScoredAt: 'leagueScoredAt'
   };
 
   export type MatchScalarFieldEnum = (typeof MatchScalarFieldEnum)[keyof typeof MatchScalarFieldEnum]
@@ -39219,6 +40827,21 @@ export namespace Prisma {
   };
 
   export type LeagueRoundScalarFieldEnum = (typeof LeagueRoundScalarFieldEnum)[keyof typeof LeagueRoundScalarFieldEnum]
+
+
+  export const LeaguePairingScalarFieldEnum: {
+    id: 'id',
+    roundId: 'roundId',
+    homeParticipantId: 'homeParticipantId',
+    awayParticipantId: 'awayParticipantId',
+    status: 'status',
+    scheduledAt: 'scheduledAt',
+    deadlineAt: 'deadlineAt',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type LeaguePairingScalarFieldEnum = (typeof LeaguePairingScalarFieldEnum)[keyof typeof LeaguePairingScalarFieldEnum]
 
 
   export const TeamSpecialRuleScalarFieldEnum: {
@@ -40035,10 +41658,17 @@ export namespace Prisma {
     aiDifficulty?: StringNullableFilter<"Match"> | string | null
     aiTeamSide?: StringNullableFilter<"Match"> | string | null
     aiUserId?: StringNullableFilter<"Match"> | string | null
+    leagueSeasonId?: StringNullableFilter<"Match"> | string | null
+    leagueRoundId?: StringNullableFilter<"Match"> | string | null
+    leaguePairingId?: StringNullableFilter<"Match"> | string | null
+    leagueScoredAt?: DateTimeNullableFilter<"Match"> | Date | string | null
     creator?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
     players?: UserListRelationFilter
     turns?: TurnListRelationFilter
     teamSelections?: TeamSelectionListRelationFilter
+    leagueSeason?: XOR<LeagueSeasonNullableScalarRelationFilter, LeagueSeasonWhereInput> | null
+    leagueRound?: XOR<LeagueRoundNullableScalarRelationFilter, LeagueRoundWhereInput> | null
+    leaguePairing?: XOR<LeaguePairingNullableScalarRelationFilter, LeaguePairingWhereInput> | null
   }
 
   export type MatchOrderByWithRelationInput = {
@@ -40053,14 +41683,22 @@ export namespace Prisma {
     aiDifficulty?: SortOrderInput | SortOrder
     aiTeamSide?: SortOrderInput | SortOrder
     aiUserId?: SortOrderInput | SortOrder
+    leagueSeasonId?: SortOrderInput | SortOrder
+    leagueRoundId?: SortOrderInput | SortOrder
+    leaguePairingId?: SortOrderInput | SortOrder
+    leagueScoredAt?: SortOrderInput | SortOrder
     creator?: UserOrderByWithRelationInput
     players?: UserOrderByRelationAggregateInput
     turns?: TurnOrderByRelationAggregateInput
     teamSelections?: TeamSelectionOrderByRelationAggregateInput
+    leagueSeason?: LeagueSeasonOrderByWithRelationInput
+    leagueRound?: LeagueRoundOrderByWithRelationInput
+    leaguePairing?: LeaguePairingOrderByWithRelationInput
   }
 
   export type MatchWhereUniqueInput = Prisma.AtLeast<{
     id?: string
+    leaguePairingId?: string
     AND?: MatchWhereInput | MatchWhereInput[]
     OR?: MatchWhereInput[]
     NOT?: MatchWhereInput | MatchWhereInput[]
@@ -40074,11 +41712,17 @@ export namespace Prisma {
     aiDifficulty?: StringNullableFilter<"Match"> | string | null
     aiTeamSide?: StringNullableFilter<"Match"> | string | null
     aiUserId?: StringNullableFilter<"Match"> | string | null
+    leagueSeasonId?: StringNullableFilter<"Match"> | string | null
+    leagueRoundId?: StringNullableFilter<"Match"> | string | null
+    leagueScoredAt?: DateTimeNullableFilter<"Match"> | Date | string | null
     creator?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
     players?: UserListRelationFilter
     turns?: TurnListRelationFilter
     teamSelections?: TeamSelectionListRelationFilter
-  }, "id">
+    leagueSeason?: XOR<LeagueSeasonNullableScalarRelationFilter, LeagueSeasonWhereInput> | null
+    leagueRound?: XOR<LeagueRoundNullableScalarRelationFilter, LeagueRoundWhereInput> | null
+    leaguePairing?: XOR<LeaguePairingNullableScalarRelationFilter, LeaguePairingWhereInput> | null
+  }, "id" | "leaguePairingId">
 
   export type MatchOrderByWithAggregationInput = {
     id?: SortOrder
@@ -40092,6 +41736,10 @@ export namespace Prisma {
     aiDifficulty?: SortOrderInput | SortOrder
     aiTeamSide?: SortOrderInput | SortOrder
     aiUserId?: SortOrderInput | SortOrder
+    leagueSeasonId?: SortOrderInput | SortOrder
+    leagueRoundId?: SortOrderInput | SortOrder
+    leaguePairingId?: SortOrderInput | SortOrder
+    leagueScoredAt?: SortOrderInput | SortOrder
     _count?: MatchCountOrderByAggregateInput
     _max?: MatchMaxOrderByAggregateInput
     _min?: MatchMinOrderByAggregateInput
@@ -40112,6 +41760,10 @@ export namespace Prisma {
     aiDifficulty?: StringNullableWithAggregatesFilter<"Match"> | string | null
     aiTeamSide?: StringNullableWithAggregatesFilter<"Match"> | string | null
     aiUserId?: StringNullableWithAggregatesFilter<"Match"> | string | null
+    leagueSeasonId?: StringNullableWithAggregatesFilter<"Match"> | string | null
+    leagueRoundId?: StringNullableWithAggregatesFilter<"Match"> | string | null
+    leaguePairingId?: StringNullableWithAggregatesFilter<"Match"> | string | null
+    leagueScoredAt?: DateTimeNullableWithAggregatesFilter<"Match"> | Date | string | null
   }
 
   export type TurnWhereInput = {
@@ -41605,6 +43257,7 @@ export namespace Prisma {
     league?: XOR<LeagueScalarRelationFilter, LeagueWhereInput>
     participants?: LeagueParticipantListRelationFilter
     rounds?: LeagueRoundListRelationFilter
+    matches?: MatchListRelationFilter
   }
 
   export type LeagueSeasonOrderByWithRelationInput = {
@@ -41622,6 +43275,7 @@ export namespace Prisma {
     league?: LeagueOrderByWithRelationInput
     participants?: LeagueParticipantOrderByRelationAggregateInput
     rounds?: LeagueRoundOrderByRelationAggregateInput
+    matches?: MatchOrderByRelationAggregateInput
   }
 
   export type LeagueSeasonWhereUniqueInput = Prisma.AtLeast<{
@@ -41643,6 +43297,7 @@ export namespace Prisma {
     league?: XOR<LeagueScalarRelationFilter, LeagueWhereInput>
     participants?: LeagueParticipantListRelationFilter
     rounds?: LeagueRoundListRelationFilter
+    matches?: MatchListRelationFilter
   }, "id" | "leagueId_seasonNumber">
 
   export type LeagueSeasonOrderByWithAggregationInput = {
@@ -41701,6 +43356,8 @@ export namespace Prisma {
     joinedAt?: DateTimeFilter<"LeagueParticipant"> | Date | string
     season?: XOR<LeagueSeasonScalarRelationFilter, LeagueSeasonWhereInput>
     team?: XOR<TeamScalarRelationFilter, TeamWhereInput>
+    homePairings?: LeaguePairingListRelationFilter
+    awayPairings?: LeaguePairingListRelationFilter
   }
 
   export type LeagueParticipantOrderByWithRelationInput = {
@@ -41720,6 +43377,8 @@ export namespace Prisma {
     joinedAt?: SortOrder
     season?: LeagueSeasonOrderByWithRelationInput
     team?: TeamOrderByWithRelationInput
+    homePairings?: LeaguePairingOrderByRelationAggregateInput
+    awayPairings?: LeaguePairingOrderByRelationAggregateInput
   }
 
   export type LeagueParticipantWhereUniqueInput = Prisma.AtLeast<{
@@ -41743,6 +43402,8 @@ export namespace Prisma {
     joinedAt?: DateTimeFilter<"LeagueParticipant"> | Date | string
     season?: XOR<LeagueSeasonScalarRelationFilter, LeagueSeasonWhereInput>
     team?: XOR<TeamScalarRelationFilter, TeamWhereInput>
+    homePairings?: LeaguePairingListRelationFilter
+    awayPairings?: LeaguePairingListRelationFilter
   }, "id" | "seasonId_teamId">
 
   export type LeagueParticipantOrderByWithAggregationInput = {
@@ -41801,6 +43462,8 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"LeagueRound"> | Date | string
     updatedAt?: DateTimeFilter<"LeagueRound"> | Date | string
     season?: XOR<LeagueSeasonScalarRelationFilter, LeagueSeasonWhereInput>
+    matches?: MatchListRelationFilter
+    pairings?: LeaguePairingListRelationFilter
   }
 
   export type LeagueRoundOrderByWithRelationInput = {
@@ -41814,6 +43477,8 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     season?: LeagueSeasonOrderByWithRelationInput
+    matches?: MatchOrderByRelationAggregateInput
+    pairings?: LeaguePairingOrderByRelationAggregateInput
   }
 
   export type LeagueRoundWhereUniqueInput = Prisma.AtLeast<{
@@ -41831,6 +43496,8 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"LeagueRound"> | Date | string
     updatedAt?: DateTimeFilter<"LeagueRound"> | Date | string
     season?: XOR<LeagueSeasonScalarRelationFilter, LeagueSeasonWhereInput>
+    matches?: MatchListRelationFilter
+    pairings?: LeaguePairingListRelationFilter
   }, "id" | "seasonId_roundNumber">
 
   export type LeagueRoundOrderByWithAggregationInput = {
@@ -41863,6 +43530,90 @@ export namespace Prisma {
     endDate?: DateTimeNullableWithAggregatesFilter<"LeagueRound"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"LeagueRound"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"LeagueRound"> | Date | string
+  }
+
+  export type LeaguePairingWhereInput = {
+    AND?: LeaguePairingWhereInput | LeaguePairingWhereInput[]
+    OR?: LeaguePairingWhereInput[]
+    NOT?: LeaguePairingWhereInput | LeaguePairingWhereInput[]
+    id?: StringFilter<"LeaguePairing"> | string
+    roundId?: StringFilter<"LeaguePairing"> | string
+    homeParticipantId?: StringFilter<"LeaguePairing"> | string
+    awayParticipantId?: StringFilter<"LeaguePairing"> | string
+    status?: StringFilter<"LeaguePairing"> | string
+    scheduledAt?: DateTimeNullableFilter<"LeaguePairing"> | Date | string | null
+    deadlineAt?: DateTimeNullableFilter<"LeaguePairing"> | Date | string | null
+    createdAt?: DateTimeFilter<"LeaguePairing"> | Date | string
+    updatedAt?: DateTimeFilter<"LeaguePairing"> | Date | string
+    round?: XOR<LeagueRoundScalarRelationFilter, LeagueRoundWhereInput>
+    homeParticipant?: XOR<LeagueParticipantScalarRelationFilter, LeagueParticipantWhereInput>
+    awayParticipant?: XOR<LeagueParticipantScalarRelationFilter, LeagueParticipantWhereInput>
+    match?: XOR<MatchNullableScalarRelationFilter, MatchWhereInput> | null
+  }
+
+  export type LeaguePairingOrderByWithRelationInput = {
+    id?: SortOrder
+    roundId?: SortOrder
+    homeParticipantId?: SortOrder
+    awayParticipantId?: SortOrder
+    status?: SortOrder
+    scheduledAt?: SortOrderInput | SortOrder
+    deadlineAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    round?: LeagueRoundOrderByWithRelationInput
+    homeParticipant?: LeagueParticipantOrderByWithRelationInput
+    awayParticipant?: LeagueParticipantOrderByWithRelationInput
+    match?: MatchOrderByWithRelationInput
+  }
+
+  export type LeaguePairingWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: LeaguePairingWhereInput | LeaguePairingWhereInput[]
+    OR?: LeaguePairingWhereInput[]
+    NOT?: LeaguePairingWhereInput | LeaguePairingWhereInput[]
+    roundId?: StringFilter<"LeaguePairing"> | string
+    homeParticipantId?: StringFilter<"LeaguePairing"> | string
+    awayParticipantId?: StringFilter<"LeaguePairing"> | string
+    status?: StringFilter<"LeaguePairing"> | string
+    scheduledAt?: DateTimeNullableFilter<"LeaguePairing"> | Date | string | null
+    deadlineAt?: DateTimeNullableFilter<"LeaguePairing"> | Date | string | null
+    createdAt?: DateTimeFilter<"LeaguePairing"> | Date | string
+    updatedAt?: DateTimeFilter<"LeaguePairing"> | Date | string
+    round?: XOR<LeagueRoundScalarRelationFilter, LeagueRoundWhereInput>
+    homeParticipant?: XOR<LeagueParticipantScalarRelationFilter, LeagueParticipantWhereInput>
+    awayParticipant?: XOR<LeagueParticipantScalarRelationFilter, LeagueParticipantWhereInput>
+    match?: XOR<MatchNullableScalarRelationFilter, MatchWhereInput> | null
+  }, "id">
+
+  export type LeaguePairingOrderByWithAggregationInput = {
+    id?: SortOrder
+    roundId?: SortOrder
+    homeParticipantId?: SortOrder
+    awayParticipantId?: SortOrder
+    status?: SortOrder
+    scheduledAt?: SortOrderInput | SortOrder
+    deadlineAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: LeaguePairingCountOrderByAggregateInput
+    _max?: LeaguePairingMaxOrderByAggregateInput
+    _min?: LeaguePairingMinOrderByAggregateInput
+  }
+
+  export type LeaguePairingScalarWhereWithAggregatesInput = {
+    AND?: LeaguePairingScalarWhereWithAggregatesInput | LeaguePairingScalarWhereWithAggregatesInput[]
+    OR?: LeaguePairingScalarWhereWithAggregatesInput[]
+    NOT?: LeaguePairingScalarWhereWithAggregatesInput | LeaguePairingScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"LeaguePairing"> | string
+    roundId?: StringWithAggregatesFilter<"LeaguePairing"> | string
+    homeParticipantId?: StringWithAggregatesFilter<"LeaguePairing"> | string
+    awayParticipantId?: StringWithAggregatesFilter<"LeaguePairing"> | string
+    status?: StringWithAggregatesFilter<"LeaguePairing"> | string
+    scheduledAt?: DateTimeNullableWithAggregatesFilter<"LeaguePairing"> | Date | string | null
+    deadlineAt?: DateTimeNullableWithAggregatesFilter<"LeaguePairing"> | Date | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"LeaguePairing"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"LeaguePairing"> | Date | string
   }
 
   export type TeamSpecialRuleWhereInput = {
@@ -42750,10 +44501,14 @@ export namespace Prisma {
     aiDifficulty?: string | null
     aiTeamSide?: string | null
     aiUserId?: string | null
+    leagueScoredAt?: Date | string | null
     creator?: UserCreateNestedOneWithoutCreatedMatchesInput
     players?: UserCreateNestedManyWithoutMatchesInput
     turns?: TurnCreateNestedManyWithoutMatchInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutMatchInput
+    leagueSeason?: LeagueSeasonCreateNestedOneWithoutMatchesInput
+    leagueRound?: LeagueRoundCreateNestedOneWithoutMatchesInput
+    leaguePairing?: LeaguePairingCreateNestedOneWithoutMatchInput
   }
 
   export type MatchUncheckedCreateInput = {
@@ -42768,6 +44523,10 @@ export namespace Prisma {
     aiDifficulty?: string | null
     aiTeamSide?: string | null
     aiUserId?: string | null
+    leagueSeasonId?: string | null
+    leagueRoundId?: string | null
+    leaguePairingId?: string | null
+    leagueScoredAt?: Date | string | null
     players?: UserUncheckedCreateNestedManyWithoutMatchesInput
     turns?: TurnUncheckedCreateNestedManyWithoutMatchInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutMatchInput
@@ -42784,10 +44543,14 @@ export namespace Prisma {
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
     aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueScoredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     creator?: UserUpdateOneWithoutCreatedMatchesNestedInput
     players?: UserUpdateManyWithoutMatchesNestedInput
     turns?: TurnUpdateManyWithoutMatchNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutMatchNestedInput
+    leagueSeason?: LeagueSeasonUpdateOneWithoutMatchesNestedInput
+    leagueRound?: LeagueRoundUpdateOneWithoutMatchesNestedInput
+    leaguePairing?: LeaguePairingUpdateOneWithoutMatchNestedInput
   }
 
   export type MatchUncheckedUpdateInput = {
@@ -42802,6 +44565,10 @@ export namespace Prisma {
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
     aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueSeasonId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueRoundId?: NullableStringFieldUpdateOperationsInput | string | null
+    leaguePairingId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueScoredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     players?: UserUncheckedUpdateManyWithoutMatchesNestedInput
     turns?: TurnUncheckedUpdateManyWithoutMatchNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutMatchNestedInput
@@ -42819,6 +44586,10 @@ export namespace Prisma {
     aiDifficulty?: string | null
     aiTeamSide?: string | null
     aiUserId?: string | null
+    leagueSeasonId?: string | null
+    leagueRoundId?: string | null
+    leaguePairingId?: string | null
+    leagueScoredAt?: Date | string | null
   }
 
   export type MatchUpdateManyMutationInput = {
@@ -42832,6 +44603,7 @@ export namespace Prisma {
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
     aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueScoredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type MatchUncheckedUpdateManyInput = {
@@ -42846,6 +44618,10 @@ export namespace Prisma {
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
     aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueSeasonId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueRoundId?: NullableStringFieldUpdateOperationsInput | string | null
+    leaguePairingId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueScoredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type TurnCreateInput = {
@@ -44518,6 +46294,7 @@ export namespace Prisma {
     league: LeagueCreateNestedOneWithoutSeasonsInput
     participants?: LeagueParticipantCreateNestedManyWithoutSeasonInput
     rounds?: LeagueRoundCreateNestedManyWithoutSeasonInput
+    matches?: MatchCreateNestedManyWithoutLeagueSeasonInput
   }
 
   export type LeagueSeasonUncheckedCreateInput = {
@@ -44534,6 +46311,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     participants?: LeagueParticipantUncheckedCreateNestedManyWithoutSeasonInput
     rounds?: LeagueRoundUncheckedCreateNestedManyWithoutSeasonInput
+    matches?: MatchUncheckedCreateNestedManyWithoutLeagueSeasonInput
   }
 
   export type LeagueSeasonUpdateInput = {
@@ -44550,6 +46328,7 @@ export namespace Prisma {
     league?: LeagueUpdateOneRequiredWithoutSeasonsNestedInput
     participants?: LeagueParticipantUpdateManyWithoutSeasonNestedInput
     rounds?: LeagueRoundUpdateManyWithoutSeasonNestedInput
+    matches?: MatchUpdateManyWithoutLeagueSeasonNestedInput
   }
 
   export type LeagueSeasonUncheckedUpdateInput = {
@@ -44566,6 +46345,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     participants?: LeagueParticipantUncheckedUpdateManyWithoutSeasonNestedInput
     rounds?: LeagueRoundUncheckedUpdateManyWithoutSeasonNestedInput
+    matches?: MatchUncheckedUpdateManyWithoutLeagueSeasonNestedInput
   }
 
   export type LeagueSeasonCreateManyInput = {
@@ -44624,6 +46404,8 @@ export namespace Prisma {
     joinedAt?: Date | string
     season: LeagueSeasonCreateNestedOneWithoutParticipantsInput
     team: TeamCreateNestedOneWithoutLeagueParticipationsInput
+    homePairings?: LeaguePairingCreateNestedManyWithoutHomeParticipantInput
+    awayPairings?: LeaguePairingCreateNestedManyWithoutAwayParticipantInput
   }
 
   export type LeagueParticipantUncheckedCreateInput = {
@@ -44641,6 +46423,8 @@ export namespace Prisma {
     casualtiesAgainst?: number
     status?: string
     joinedAt?: Date | string
+    homePairings?: LeaguePairingUncheckedCreateNestedManyWithoutHomeParticipantInput
+    awayPairings?: LeaguePairingUncheckedCreateNestedManyWithoutAwayParticipantInput
   }
 
   export type LeagueParticipantUpdateInput = {
@@ -44658,6 +46442,8 @@ export namespace Prisma {
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     season?: LeagueSeasonUpdateOneRequiredWithoutParticipantsNestedInput
     team?: TeamUpdateOneRequiredWithoutLeagueParticipationsNestedInput
+    homePairings?: LeaguePairingUpdateManyWithoutHomeParticipantNestedInput
+    awayPairings?: LeaguePairingUpdateManyWithoutAwayParticipantNestedInput
   }
 
   export type LeagueParticipantUncheckedUpdateInput = {
@@ -44675,6 +46461,8 @@ export namespace Prisma {
     casualtiesAgainst?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    homePairings?: LeaguePairingUncheckedUpdateManyWithoutHomeParticipantNestedInput
+    awayPairings?: LeaguePairingUncheckedUpdateManyWithoutAwayParticipantNestedInput
   }
 
   export type LeagueParticipantCreateManyInput = {
@@ -44736,6 +46524,8 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     season: LeagueSeasonCreateNestedOneWithoutRoundsInput
+    matches?: MatchCreateNestedManyWithoutLeagueRoundInput
+    pairings?: LeaguePairingCreateNestedManyWithoutRoundInput
   }
 
   export type LeagueRoundUncheckedCreateInput = {
@@ -44748,6 +46538,8 @@ export namespace Prisma {
     endDate?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    matches?: MatchUncheckedCreateNestedManyWithoutLeagueRoundInput
+    pairings?: LeaguePairingUncheckedCreateNestedManyWithoutRoundInput
   }
 
   export type LeagueRoundUpdateInput = {
@@ -44760,6 +46552,8 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     season?: LeagueSeasonUpdateOneRequiredWithoutRoundsNestedInput
+    matches?: MatchUpdateManyWithoutLeagueRoundNestedInput
+    pairings?: LeaguePairingUpdateManyWithoutRoundNestedInput
   }
 
   export type LeagueRoundUncheckedUpdateInput = {
@@ -44772,6 +46566,8 @@ export namespace Prisma {
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    matches?: MatchUncheckedUpdateManyWithoutLeagueRoundNestedInput
+    pairings?: LeaguePairingUncheckedUpdateManyWithoutRoundNestedInput
   }
 
   export type LeagueRoundCreateManyInput = {
@@ -44805,6 +46601,91 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LeaguePairingCreateInput = {
+    id?: string
+    status?: string
+    scheduledAt?: Date | string | null
+    deadlineAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    round: LeagueRoundCreateNestedOneWithoutPairingsInput
+    homeParticipant: LeagueParticipantCreateNestedOneWithoutHomePairingsInput
+    awayParticipant: LeagueParticipantCreateNestedOneWithoutAwayPairingsInput
+    match?: MatchCreateNestedOneWithoutLeaguePairingInput
+  }
+
+  export type LeaguePairingUncheckedCreateInput = {
+    id?: string
+    roundId: string
+    homeParticipantId: string
+    awayParticipantId: string
+    status?: string
+    scheduledAt?: Date | string | null
+    deadlineAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    match?: MatchUncheckedCreateNestedOneWithoutLeaguePairingInput
+  }
+
+  export type LeaguePairingUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    scheduledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deadlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    round?: LeagueRoundUpdateOneRequiredWithoutPairingsNestedInput
+    homeParticipant?: LeagueParticipantUpdateOneRequiredWithoutHomePairingsNestedInput
+    awayParticipant?: LeagueParticipantUpdateOneRequiredWithoutAwayPairingsNestedInput
+    match?: MatchUpdateOneWithoutLeaguePairingNestedInput
+  }
+
+  export type LeaguePairingUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    roundId?: StringFieldUpdateOperationsInput | string
+    homeParticipantId?: StringFieldUpdateOperationsInput | string
+    awayParticipantId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    scheduledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deadlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    match?: MatchUncheckedUpdateOneWithoutLeaguePairingNestedInput
+  }
+
+  export type LeaguePairingCreateManyInput = {
+    id?: string
+    roundId: string
+    homeParticipantId: string
+    awayParticipantId: string
+    status?: string
+    scheduledAt?: Date | string | null
+    deadlineAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type LeaguePairingUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    scheduledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deadlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LeaguePairingUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    roundId?: StringFieldUpdateOperationsInput | string
+    homeParticipantId?: StringFieldUpdateOperationsInput | string
+    awayParticipantId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    scheduledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deadlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -45615,6 +47496,21 @@ export namespace Prisma {
     none?: TurnWhereInput
   }
 
+  export type LeagueSeasonNullableScalarRelationFilter = {
+    is?: LeagueSeasonWhereInput | null
+    isNot?: LeagueSeasonWhereInput | null
+  }
+
+  export type LeagueRoundNullableScalarRelationFilter = {
+    is?: LeagueRoundWhereInput | null
+    isNot?: LeagueRoundWhereInput | null
+  }
+
+  export type LeaguePairingNullableScalarRelationFilter = {
+    is?: LeaguePairingWhereInput | null
+    isNot?: LeaguePairingWhereInput | null
+  }
+
   export type UserOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -45635,6 +47531,10 @@ export namespace Prisma {
     aiDifficulty?: SortOrder
     aiTeamSide?: SortOrder
     aiUserId?: SortOrder
+    leagueSeasonId?: SortOrder
+    leagueRoundId?: SortOrder
+    leaguePairingId?: SortOrder
+    leagueScoredAt?: SortOrder
   }
 
   export type MatchMaxOrderByAggregateInput = {
@@ -45649,6 +47549,10 @@ export namespace Prisma {
     aiDifficulty?: SortOrder
     aiTeamSide?: SortOrder
     aiUserId?: SortOrder
+    leagueSeasonId?: SortOrder
+    leagueRoundId?: SortOrder
+    leaguePairingId?: SortOrder
+    leagueScoredAt?: SortOrder
   }
 
   export type MatchMinOrderByAggregateInput = {
@@ -45663,6 +47567,10 @@ export namespace Prisma {
     aiDifficulty?: SortOrder
     aiTeamSide?: SortOrder
     aiUserId?: SortOrder
+    leagueSeasonId?: SortOrder
+    leagueRoundId?: SortOrder
+    leaguePairingId?: SortOrder
+    leagueScoredAt?: SortOrder
   }
   export type JsonFilter<$PrismaModel = never> =
     | PatchUndefined<
@@ -46908,6 +48816,16 @@ export namespace Prisma {
     isNot?: LeagueSeasonWhereInput
   }
 
+  export type LeaguePairingListRelationFilter = {
+    every?: LeaguePairingWhereInput
+    some?: LeaguePairingWhereInput
+    none?: LeaguePairingWhereInput
+  }
+
+  export type LeaguePairingOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
   export type LeagueParticipantSeasonIdTeamIdCompoundUniqueInput = {
     seasonId: string
     teamId: string
@@ -47035,6 +48953,57 @@ export namespace Prisma {
 
   export type LeagueRoundSumOrderByAggregateInput = {
     roundNumber?: SortOrder
+  }
+
+  export type LeagueRoundScalarRelationFilter = {
+    is?: LeagueRoundWhereInput
+    isNot?: LeagueRoundWhereInput
+  }
+
+  export type LeagueParticipantScalarRelationFilter = {
+    is?: LeagueParticipantWhereInput
+    isNot?: LeagueParticipantWhereInput
+  }
+
+  export type MatchNullableScalarRelationFilter = {
+    is?: MatchWhereInput | null
+    isNot?: MatchWhereInput | null
+  }
+
+  export type LeaguePairingCountOrderByAggregateInput = {
+    id?: SortOrder
+    roundId?: SortOrder
+    homeParticipantId?: SortOrder
+    awayParticipantId?: SortOrder
+    status?: SortOrder
+    scheduledAt?: SortOrder
+    deadlineAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type LeaguePairingMaxOrderByAggregateInput = {
+    id?: SortOrder
+    roundId?: SortOrder
+    homeParticipantId?: SortOrder
+    awayParticipantId?: SortOrder
+    status?: SortOrder
+    scheduledAt?: SortOrder
+    deadlineAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type LeaguePairingMinOrderByAggregateInput = {
+    id?: SortOrder
+    roundId?: SortOrder
+    homeParticipantId?: SortOrder
+    awayParticipantId?: SortOrder
+    status?: SortOrder
+    scheduledAt?: SortOrder
+    deadlineAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type TeamSpecialRuleSlugRulesetCompoundUniqueInput = {
@@ -47945,6 +49914,24 @@ export namespace Prisma {
     connect?: TeamSelectionWhereUniqueInput | TeamSelectionWhereUniqueInput[]
   }
 
+  export type LeagueSeasonCreateNestedOneWithoutMatchesInput = {
+    create?: XOR<LeagueSeasonCreateWithoutMatchesInput, LeagueSeasonUncheckedCreateWithoutMatchesInput>
+    connectOrCreate?: LeagueSeasonCreateOrConnectWithoutMatchesInput
+    connect?: LeagueSeasonWhereUniqueInput
+  }
+
+  export type LeagueRoundCreateNestedOneWithoutMatchesInput = {
+    create?: XOR<LeagueRoundCreateWithoutMatchesInput, LeagueRoundUncheckedCreateWithoutMatchesInput>
+    connectOrCreate?: LeagueRoundCreateOrConnectWithoutMatchesInput
+    connect?: LeagueRoundWhereUniqueInput
+  }
+
+  export type LeaguePairingCreateNestedOneWithoutMatchInput = {
+    create?: XOR<LeaguePairingCreateWithoutMatchInput, LeaguePairingUncheckedCreateWithoutMatchInput>
+    connectOrCreate?: LeaguePairingCreateOrConnectWithoutMatchInput
+    connect?: LeaguePairingWhereUniqueInput
+  }
+
   export type UserUncheckedCreateNestedManyWithoutMatchesInput = {
     create?: XOR<UserCreateWithoutMatchesInput, UserUncheckedCreateWithoutMatchesInput> | UserCreateWithoutMatchesInput[] | UserUncheckedCreateWithoutMatchesInput[]
     connectOrCreate?: UserCreateOrConnectWithoutMatchesInput | UserCreateOrConnectWithoutMatchesInput[]
@@ -48014,6 +50001,36 @@ export namespace Prisma {
     update?: TeamSelectionUpdateWithWhereUniqueWithoutMatchInput | TeamSelectionUpdateWithWhereUniqueWithoutMatchInput[]
     updateMany?: TeamSelectionUpdateManyWithWhereWithoutMatchInput | TeamSelectionUpdateManyWithWhereWithoutMatchInput[]
     deleteMany?: TeamSelectionScalarWhereInput | TeamSelectionScalarWhereInput[]
+  }
+
+  export type LeagueSeasonUpdateOneWithoutMatchesNestedInput = {
+    create?: XOR<LeagueSeasonCreateWithoutMatchesInput, LeagueSeasonUncheckedCreateWithoutMatchesInput>
+    connectOrCreate?: LeagueSeasonCreateOrConnectWithoutMatchesInput
+    upsert?: LeagueSeasonUpsertWithoutMatchesInput
+    disconnect?: LeagueSeasonWhereInput | boolean
+    delete?: LeagueSeasonWhereInput | boolean
+    connect?: LeagueSeasonWhereUniqueInput
+    update?: XOR<XOR<LeagueSeasonUpdateToOneWithWhereWithoutMatchesInput, LeagueSeasonUpdateWithoutMatchesInput>, LeagueSeasonUncheckedUpdateWithoutMatchesInput>
+  }
+
+  export type LeagueRoundUpdateOneWithoutMatchesNestedInput = {
+    create?: XOR<LeagueRoundCreateWithoutMatchesInput, LeagueRoundUncheckedCreateWithoutMatchesInput>
+    connectOrCreate?: LeagueRoundCreateOrConnectWithoutMatchesInput
+    upsert?: LeagueRoundUpsertWithoutMatchesInput
+    disconnect?: LeagueRoundWhereInput | boolean
+    delete?: LeagueRoundWhereInput | boolean
+    connect?: LeagueRoundWhereUniqueInput
+    update?: XOR<XOR<LeagueRoundUpdateToOneWithWhereWithoutMatchesInput, LeagueRoundUpdateWithoutMatchesInput>, LeagueRoundUncheckedUpdateWithoutMatchesInput>
+  }
+
+  export type LeaguePairingUpdateOneWithoutMatchNestedInput = {
+    create?: XOR<LeaguePairingCreateWithoutMatchInput, LeaguePairingUncheckedCreateWithoutMatchInput>
+    connectOrCreate?: LeaguePairingCreateOrConnectWithoutMatchInput
+    upsert?: LeaguePairingUpsertWithoutMatchInput
+    disconnect?: LeaguePairingWhereInput | boolean
+    delete?: LeaguePairingWhereInput | boolean
+    connect?: LeaguePairingWhereUniqueInput
+    update?: XOR<XOR<LeaguePairingUpdateToOneWithWhereWithoutMatchInput, LeaguePairingUpdateWithoutMatchInput>, LeaguePairingUncheckedUpdateWithoutMatchInput>
   }
 
   export type UserUncheckedUpdateManyWithoutMatchesNestedInput = {
@@ -49019,6 +51036,13 @@ export namespace Prisma {
     connect?: LeagueRoundWhereUniqueInput | LeagueRoundWhereUniqueInput[]
   }
 
+  export type MatchCreateNestedManyWithoutLeagueSeasonInput = {
+    create?: XOR<MatchCreateWithoutLeagueSeasonInput, MatchUncheckedCreateWithoutLeagueSeasonInput> | MatchCreateWithoutLeagueSeasonInput[] | MatchUncheckedCreateWithoutLeagueSeasonInput[]
+    connectOrCreate?: MatchCreateOrConnectWithoutLeagueSeasonInput | MatchCreateOrConnectWithoutLeagueSeasonInput[]
+    createMany?: MatchCreateManyLeagueSeasonInputEnvelope
+    connect?: MatchWhereUniqueInput | MatchWhereUniqueInput[]
+  }
+
   export type LeagueParticipantUncheckedCreateNestedManyWithoutSeasonInput = {
     create?: XOR<LeagueParticipantCreateWithoutSeasonInput, LeagueParticipantUncheckedCreateWithoutSeasonInput> | LeagueParticipantCreateWithoutSeasonInput[] | LeagueParticipantUncheckedCreateWithoutSeasonInput[]
     connectOrCreate?: LeagueParticipantCreateOrConnectWithoutSeasonInput | LeagueParticipantCreateOrConnectWithoutSeasonInput[]
@@ -49031,6 +51055,13 @@ export namespace Prisma {
     connectOrCreate?: LeagueRoundCreateOrConnectWithoutSeasonInput | LeagueRoundCreateOrConnectWithoutSeasonInput[]
     createMany?: LeagueRoundCreateManySeasonInputEnvelope
     connect?: LeagueRoundWhereUniqueInput | LeagueRoundWhereUniqueInput[]
+  }
+
+  export type MatchUncheckedCreateNestedManyWithoutLeagueSeasonInput = {
+    create?: XOR<MatchCreateWithoutLeagueSeasonInput, MatchUncheckedCreateWithoutLeagueSeasonInput> | MatchCreateWithoutLeagueSeasonInput[] | MatchUncheckedCreateWithoutLeagueSeasonInput[]
+    connectOrCreate?: MatchCreateOrConnectWithoutLeagueSeasonInput | MatchCreateOrConnectWithoutLeagueSeasonInput[]
+    createMany?: MatchCreateManyLeagueSeasonInputEnvelope
+    connect?: MatchWhereUniqueInput | MatchWhereUniqueInput[]
   }
 
   export type LeagueUpdateOneRequiredWithoutSeasonsNestedInput = {
@@ -49069,6 +51100,20 @@ export namespace Prisma {
     deleteMany?: LeagueRoundScalarWhereInput | LeagueRoundScalarWhereInput[]
   }
 
+  export type MatchUpdateManyWithoutLeagueSeasonNestedInput = {
+    create?: XOR<MatchCreateWithoutLeagueSeasonInput, MatchUncheckedCreateWithoutLeagueSeasonInput> | MatchCreateWithoutLeagueSeasonInput[] | MatchUncheckedCreateWithoutLeagueSeasonInput[]
+    connectOrCreate?: MatchCreateOrConnectWithoutLeagueSeasonInput | MatchCreateOrConnectWithoutLeagueSeasonInput[]
+    upsert?: MatchUpsertWithWhereUniqueWithoutLeagueSeasonInput | MatchUpsertWithWhereUniqueWithoutLeagueSeasonInput[]
+    createMany?: MatchCreateManyLeagueSeasonInputEnvelope
+    set?: MatchWhereUniqueInput | MatchWhereUniqueInput[]
+    disconnect?: MatchWhereUniqueInput | MatchWhereUniqueInput[]
+    delete?: MatchWhereUniqueInput | MatchWhereUniqueInput[]
+    connect?: MatchWhereUniqueInput | MatchWhereUniqueInput[]
+    update?: MatchUpdateWithWhereUniqueWithoutLeagueSeasonInput | MatchUpdateWithWhereUniqueWithoutLeagueSeasonInput[]
+    updateMany?: MatchUpdateManyWithWhereWithoutLeagueSeasonInput | MatchUpdateManyWithWhereWithoutLeagueSeasonInput[]
+    deleteMany?: MatchScalarWhereInput | MatchScalarWhereInput[]
+  }
+
   export type LeagueParticipantUncheckedUpdateManyWithoutSeasonNestedInput = {
     create?: XOR<LeagueParticipantCreateWithoutSeasonInput, LeagueParticipantUncheckedCreateWithoutSeasonInput> | LeagueParticipantCreateWithoutSeasonInput[] | LeagueParticipantUncheckedCreateWithoutSeasonInput[]
     connectOrCreate?: LeagueParticipantCreateOrConnectWithoutSeasonInput | LeagueParticipantCreateOrConnectWithoutSeasonInput[]
@@ -49097,6 +51142,20 @@ export namespace Prisma {
     deleteMany?: LeagueRoundScalarWhereInput | LeagueRoundScalarWhereInput[]
   }
 
+  export type MatchUncheckedUpdateManyWithoutLeagueSeasonNestedInput = {
+    create?: XOR<MatchCreateWithoutLeagueSeasonInput, MatchUncheckedCreateWithoutLeagueSeasonInput> | MatchCreateWithoutLeagueSeasonInput[] | MatchUncheckedCreateWithoutLeagueSeasonInput[]
+    connectOrCreate?: MatchCreateOrConnectWithoutLeagueSeasonInput | MatchCreateOrConnectWithoutLeagueSeasonInput[]
+    upsert?: MatchUpsertWithWhereUniqueWithoutLeagueSeasonInput | MatchUpsertWithWhereUniqueWithoutLeagueSeasonInput[]
+    createMany?: MatchCreateManyLeagueSeasonInputEnvelope
+    set?: MatchWhereUniqueInput | MatchWhereUniqueInput[]
+    disconnect?: MatchWhereUniqueInput | MatchWhereUniqueInput[]
+    delete?: MatchWhereUniqueInput | MatchWhereUniqueInput[]
+    connect?: MatchWhereUniqueInput | MatchWhereUniqueInput[]
+    update?: MatchUpdateWithWhereUniqueWithoutLeagueSeasonInput | MatchUpdateWithWhereUniqueWithoutLeagueSeasonInput[]
+    updateMany?: MatchUpdateManyWithWhereWithoutLeagueSeasonInput | MatchUpdateManyWithWhereWithoutLeagueSeasonInput[]
+    deleteMany?: MatchScalarWhereInput | MatchScalarWhereInput[]
+  }
+
   export type LeagueSeasonCreateNestedOneWithoutParticipantsInput = {
     create?: XOR<LeagueSeasonCreateWithoutParticipantsInput, LeagueSeasonUncheckedCreateWithoutParticipantsInput>
     connectOrCreate?: LeagueSeasonCreateOrConnectWithoutParticipantsInput
@@ -49107,6 +51166,34 @@ export namespace Prisma {
     create?: XOR<TeamCreateWithoutLeagueParticipationsInput, TeamUncheckedCreateWithoutLeagueParticipationsInput>
     connectOrCreate?: TeamCreateOrConnectWithoutLeagueParticipationsInput
     connect?: TeamWhereUniqueInput
+  }
+
+  export type LeaguePairingCreateNestedManyWithoutHomeParticipantInput = {
+    create?: XOR<LeaguePairingCreateWithoutHomeParticipantInput, LeaguePairingUncheckedCreateWithoutHomeParticipantInput> | LeaguePairingCreateWithoutHomeParticipantInput[] | LeaguePairingUncheckedCreateWithoutHomeParticipantInput[]
+    connectOrCreate?: LeaguePairingCreateOrConnectWithoutHomeParticipantInput | LeaguePairingCreateOrConnectWithoutHomeParticipantInput[]
+    createMany?: LeaguePairingCreateManyHomeParticipantInputEnvelope
+    connect?: LeaguePairingWhereUniqueInput | LeaguePairingWhereUniqueInput[]
+  }
+
+  export type LeaguePairingCreateNestedManyWithoutAwayParticipantInput = {
+    create?: XOR<LeaguePairingCreateWithoutAwayParticipantInput, LeaguePairingUncheckedCreateWithoutAwayParticipantInput> | LeaguePairingCreateWithoutAwayParticipantInput[] | LeaguePairingUncheckedCreateWithoutAwayParticipantInput[]
+    connectOrCreate?: LeaguePairingCreateOrConnectWithoutAwayParticipantInput | LeaguePairingCreateOrConnectWithoutAwayParticipantInput[]
+    createMany?: LeaguePairingCreateManyAwayParticipantInputEnvelope
+    connect?: LeaguePairingWhereUniqueInput | LeaguePairingWhereUniqueInput[]
+  }
+
+  export type LeaguePairingUncheckedCreateNestedManyWithoutHomeParticipantInput = {
+    create?: XOR<LeaguePairingCreateWithoutHomeParticipantInput, LeaguePairingUncheckedCreateWithoutHomeParticipantInput> | LeaguePairingCreateWithoutHomeParticipantInput[] | LeaguePairingUncheckedCreateWithoutHomeParticipantInput[]
+    connectOrCreate?: LeaguePairingCreateOrConnectWithoutHomeParticipantInput | LeaguePairingCreateOrConnectWithoutHomeParticipantInput[]
+    createMany?: LeaguePairingCreateManyHomeParticipantInputEnvelope
+    connect?: LeaguePairingWhereUniqueInput | LeaguePairingWhereUniqueInput[]
+  }
+
+  export type LeaguePairingUncheckedCreateNestedManyWithoutAwayParticipantInput = {
+    create?: XOR<LeaguePairingCreateWithoutAwayParticipantInput, LeaguePairingUncheckedCreateWithoutAwayParticipantInput> | LeaguePairingCreateWithoutAwayParticipantInput[] | LeaguePairingUncheckedCreateWithoutAwayParticipantInput[]
+    connectOrCreate?: LeaguePairingCreateOrConnectWithoutAwayParticipantInput | LeaguePairingCreateOrConnectWithoutAwayParticipantInput[]
+    createMany?: LeaguePairingCreateManyAwayParticipantInputEnvelope
+    connect?: LeaguePairingWhereUniqueInput | LeaguePairingWhereUniqueInput[]
   }
 
   export type LeagueSeasonUpdateOneRequiredWithoutParticipantsNestedInput = {
@@ -49125,10 +51212,94 @@ export namespace Prisma {
     update?: XOR<XOR<TeamUpdateToOneWithWhereWithoutLeagueParticipationsInput, TeamUpdateWithoutLeagueParticipationsInput>, TeamUncheckedUpdateWithoutLeagueParticipationsInput>
   }
 
+  export type LeaguePairingUpdateManyWithoutHomeParticipantNestedInput = {
+    create?: XOR<LeaguePairingCreateWithoutHomeParticipantInput, LeaguePairingUncheckedCreateWithoutHomeParticipantInput> | LeaguePairingCreateWithoutHomeParticipantInput[] | LeaguePairingUncheckedCreateWithoutHomeParticipantInput[]
+    connectOrCreate?: LeaguePairingCreateOrConnectWithoutHomeParticipantInput | LeaguePairingCreateOrConnectWithoutHomeParticipantInput[]
+    upsert?: LeaguePairingUpsertWithWhereUniqueWithoutHomeParticipantInput | LeaguePairingUpsertWithWhereUniqueWithoutHomeParticipantInput[]
+    createMany?: LeaguePairingCreateManyHomeParticipantInputEnvelope
+    set?: LeaguePairingWhereUniqueInput | LeaguePairingWhereUniqueInput[]
+    disconnect?: LeaguePairingWhereUniqueInput | LeaguePairingWhereUniqueInput[]
+    delete?: LeaguePairingWhereUniqueInput | LeaguePairingWhereUniqueInput[]
+    connect?: LeaguePairingWhereUniqueInput | LeaguePairingWhereUniqueInput[]
+    update?: LeaguePairingUpdateWithWhereUniqueWithoutHomeParticipantInput | LeaguePairingUpdateWithWhereUniqueWithoutHomeParticipantInput[]
+    updateMany?: LeaguePairingUpdateManyWithWhereWithoutHomeParticipantInput | LeaguePairingUpdateManyWithWhereWithoutHomeParticipantInput[]
+    deleteMany?: LeaguePairingScalarWhereInput | LeaguePairingScalarWhereInput[]
+  }
+
+  export type LeaguePairingUpdateManyWithoutAwayParticipantNestedInput = {
+    create?: XOR<LeaguePairingCreateWithoutAwayParticipantInput, LeaguePairingUncheckedCreateWithoutAwayParticipantInput> | LeaguePairingCreateWithoutAwayParticipantInput[] | LeaguePairingUncheckedCreateWithoutAwayParticipantInput[]
+    connectOrCreate?: LeaguePairingCreateOrConnectWithoutAwayParticipantInput | LeaguePairingCreateOrConnectWithoutAwayParticipantInput[]
+    upsert?: LeaguePairingUpsertWithWhereUniqueWithoutAwayParticipantInput | LeaguePairingUpsertWithWhereUniqueWithoutAwayParticipantInput[]
+    createMany?: LeaguePairingCreateManyAwayParticipantInputEnvelope
+    set?: LeaguePairingWhereUniqueInput | LeaguePairingWhereUniqueInput[]
+    disconnect?: LeaguePairingWhereUniqueInput | LeaguePairingWhereUniqueInput[]
+    delete?: LeaguePairingWhereUniqueInput | LeaguePairingWhereUniqueInput[]
+    connect?: LeaguePairingWhereUniqueInput | LeaguePairingWhereUniqueInput[]
+    update?: LeaguePairingUpdateWithWhereUniqueWithoutAwayParticipantInput | LeaguePairingUpdateWithWhereUniqueWithoutAwayParticipantInput[]
+    updateMany?: LeaguePairingUpdateManyWithWhereWithoutAwayParticipantInput | LeaguePairingUpdateManyWithWhereWithoutAwayParticipantInput[]
+    deleteMany?: LeaguePairingScalarWhereInput | LeaguePairingScalarWhereInput[]
+  }
+
+  export type LeaguePairingUncheckedUpdateManyWithoutHomeParticipantNestedInput = {
+    create?: XOR<LeaguePairingCreateWithoutHomeParticipantInput, LeaguePairingUncheckedCreateWithoutHomeParticipantInput> | LeaguePairingCreateWithoutHomeParticipantInput[] | LeaguePairingUncheckedCreateWithoutHomeParticipantInput[]
+    connectOrCreate?: LeaguePairingCreateOrConnectWithoutHomeParticipantInput | LeaguePairingCreateOrConnectWithoutHomeParticipantInput[]
+    upsert?: LeaguePairingUpsertWithWhereUniqueWithoutHomeParticipantInput | LeaguePairingUpsertWithWhereUniqueWithoutHomeParticipantInput[]
+    createMany?: LeaguePairingCreateManyHomeParticipantInputEnvelope
+    set?: LeaguePairingWhereUniqueInput | LeaguePairingWhereUniqueInput[]
+    disconnect?: LeaguePairingWhereUniqueInput | LeaguePairingWhereUniqueInput[]
+    delete?: LeaguePairingWhereUniqueInput | LeaguePairingWhereUniqueInput[]
+    connect?: LeaguePairingWhereUniqueInput | LeaguePairingWhereUniqueInput[]
+    update?: LeaguePairingUpdateWithWhereUniqueWithoutHomeParticipantInput | LeaguePairingUpdateWithWhereUniqueWithoutHomeParticipantInput[]
+    updateMany?: LeaguePairingUpdateManyWithWhereWithoutHomeParticipantInput | LeaguePairingUpdateManyWithWhereWithoutHomeParticipantInput[]
+    deleteMany?: LeaguePairingScalarWhereInput | LeaguePairingScalarWhereInput[]
+  }
+
+  export type LeaguePairingUncheckedUpdateManyWithoutAwayParticipantNestedInput = {
+    create?: XOR<LeaguePairingCreateWithoutAwayParticipantInput, LeaguePairingUncheckedCreateWithoutAwayParticipantInput> | LeaguePairingCreateWithoutAwayParticipantInput[] | LeaguePairingUncheckedCreateWithoutAwayParticipantInput[]
+    connectOrCreate?: LeaguePairingCreateOrConnectWithoutAwayParticipantInput | LeaguePairingCreateOrConnectWithoutAwayParticipantInput[]
+    upsert?: LeaguePairingUpsertWithWhereUniqueWithoutAwayParticipantInput | LeaguePairingUpsertWithWhereUniqueWithoutAwayParticipantInput[]
+    createMany?: LeaguePairingCreateManyAwayParticipantInputEnvelope
+    set?: LeaguePairingWhereUniqueInput | LeaguePairingWhereUniqueInput[]
+    disconnect?: LeaguePairingWhereUniqueInput | LeaguePairingWhereUniqueInput[]
+    delete?: LeaguePairingWhereUniqueInput | LeaguePairingWhereUniqueInput[]
+    connect?: LeaguePairingWhereUniqueInput | LeaguePairingWhereUniqueInput[]
+    update?: LeaguePairingUpdateWithWhereUniqueWithoutAwayParticipantInput | LeaguePairingUpdateWithWhereUniqueWithoutAwayParticipantInput[]
+    updateMany?: LeaguePairingUpdateManyWithWhereWithoutAwayParticipantInput | LeaguePairingUpdateManyWithWhereWithoutAwayParticipantInput[]
+    deleteMany?: LeaguePairingScalarWhereInput | LeaguePairingScalarWhereInput[]
+  }
+
   export type LeagueSeasonCreateNestedOneWithoutRoundsInput = {
     create?: XOR<LeagueSeasonCreateWithoutRoundsInput, LeagueSeasonUncheckedCreateWithoutRoundsInput>
     connectOrCreate?: LeagueSeasonCreateOrConnectWithoutRoundsInput
     connect?: LeagueSeasonWhereUniqueInput
+  }
+
+  export type MatchCreateNestedManyWithoutLeagueRoundInput = {
+    create?: XOR<MatchCreateWithoutLeagueRoundInput, MatchUncheckedCreateWithoutLeagueRoundInput> | MatchCreateWithoutLeagueRoundInput[] | MatchUncheckedCreateWithoutLeagueRoundInput[]
+    connectOrCreate?: MatchCreateOrConnectWithoutLeagueRoundInput | MatchCreateOrConnectWithoutLeagueRoundInput[]
+    createMany?: MatchCreateManyLeagueRoundInputEnvelope
+    connect?: MatchWhereUniqueInput | MatchWhereUniqueInput[]
+  }
+
+  export type LeaguePairingCreateNestedManyWithoutRoundInput = {
+    create?: XOR<LeaguePairingCreateWithoutRoundInput, LeaguePairingUncheckedCreateWithoutRoundInput> | LeaguePairingCreateWithoutRoundInput[] | LeaguePairingUncheckedCreateWithoutRoundInput[]
+    connectOrCreate?: LeaguePairingCreateOrConnectWithoutRoundInput | LeaguePairingCreateOrConnectWithoutRoundInput[]
+    createMany?: LeaguePairingCreateManyRoundInputEnvelope
+    connect?: LeaguePairingWhereUniqueInput | LeaguePairingWhereUniqueInput[]
+  }
+
+  export type MatchUncheckedCreateNestedManyWithoutLeagueRoundInput = {
+    create?: XOR<MatchCreateWithoutLeagueRoundInput, MatchUncheckedCreateWithoutLeagueRoundInput> | MatchCreateWithoutLeagueRoundInput[] | MatchUncheckedCreateWithoutLeagueRoundInput[]
+    connectOrCreate?: MatchCreateOrConnectWithoutLeagueRoundInput | MatchCreateOrConnectWithoutLeagueRoundInput[]
+    createMany?: MatchCreateManyLeagueRoundInputEnvelope
+    connect?: MatchWhereUniqueInput | MatchWhereUniqueInput[]
+  }
+
+  export type LeaguePairingUncheckedCreateNestedManyWithoutRoundInput = {
+    create?: XOR<LeaguePairingCreateWithoutRoundInput, LeaguePairingUncheckedCreateWithoutRoundInput> | LeaguePairingCreateWithoutRoundInput[] | LeaguePairingUncheckedCreateWithoutRoundInput[]
+    connectOrCreate?: LeaguePairingCreateOrConnectWithoutRoundInput | LeaguePairingCreateOrConnectWithoutRoundInput[]
+    createMany?: LeaguePairingCreateManyRoundInputEnvelope
+    connect?: LeaguePairingWhereUniqueInput | LeaguePairingWhereUniqueInput[]
   }
 
   export type LeagueSeasonUpdateOneRequiredWithoutRoundsNestedInput = {
@@ -49137,6 +51308,136 @@ export namespace Prisma {
     upsert?: LeagueSeasonUpsertWithoutRoundsInput
     connect?: LeagueSeasonWhereUniqueInput
     update?: XOR<XOR<LeagueSeasonUpdateToOneWithWhereWithoutRoundsInput, LeagueSeasonUpdateWithoutRoundsInput>, LeagueSeasonUncheckedUpdateWithoutRoundsInput>
+  }
+
+  export type MatchUpdateManyWithoutLeagueRoundNestedInput = {
+    create?: XOR<MatchCreateWithoutLeagueRoundInput, MatchUncheckedCreateWithoutLeagueRoundInput> | MatchCreateWithoutLeagueRoundInput[] | MatchUncheckedCreateWithoutLeagueRoundInput[]
+    connectOrCreate?: MatchCreateOrConnectWithoutLeagueRoundInput | MatchCreateOrConnectWithoutLeagueRoundInput[]
+    upsert?: MatchUpsertWithWhereUniqueWithoutLeagueRoundInput | MatchUpsertWithWhereUniqueWithoutLeagueRoundInput[]
+    createMany?: MatchCreateManyLeagueRoundInputEnvelope
+    set?: MatchWhereUniqueInput | MatchWhereUniqueInput[]
+    disconnect?: MatchWhereUniqueInput | MatchWhereUniqueInput[]
+    delete?: MatchWhereUniqueInput | MatchWhereUniqueInput[]
+    connect?: MatchWhereUniqueInput | MatchWhereUniqueInput[]
+    update?: MatchUpdateWithWhereUniqueWithoutLeagueRoundInput | MatchUpdateWithWhereUniqueWithoutLeagueRoundInput[]
+    updateMany?: MatchUpdateManyWithWhereWithoutLeagueRoundInput | MatchUpdateManyWithWhereWithoutLeagueRoundInput[]
+    deleteMany?: MatchScalarWhereInput | MatchScalarWhereInput[]
+  }
+
+  export type LeaguePairingUpdateManyWithoutRoundNestedInput = {
+    create?: XOR<LeaguePairingCreateWithoutRoundInput, LeaguePairingUncheckedCreateWithoutRoundInput> | LeaguePairingCreateWithoutRoundInput[] | LeaguePairingUncheckedCreateWithoutRoundInput[]
+    connectOrCreate?: LeaguePairingCreateOrConnectWithoutRoundInput | LeaguePairingCreateOrConnectWithoutRoundInput[]
+    upsert?: LeaguePairingUpsertWithWhereUniqueWithoutRoundInput | LeaguePairingUpsertWithWhereUniqueWithoutRoundInput[]
+    createMany?: LeaguePairingCreateManyRoundInputEnvelope
+    set?: LeaguePairingWhereUniqueInput | LeaguePairingWhereUniqueInput[]
+    disconnect?: LeaguePairingWhereUniqueInput | LeaguePairingWhereUniqueInput[]
+    delete?: LeaguePairingWhereUniqueInput | LeaguePairingWhereUniqueInput[]
+    connect?: LeaguePairingWhereUniqueInput | LeaguePairingWhereUniqueInput[]
+    update?: LeaguePairingUpdateWithWhereUniqueWithoutRoundInput | LeaguePairingUpdateWithWhereUniqueWithoutRoundInput[]
+    updateMany?: LeaguePairingUpdateManyWithWhereWithoutRoundInput | LeaguePairingUpdateManyWithWhereWithoutRoundInput[]
+    deleteMany?: LeaguePairingScalarWhereInput | LeaguePairingScalarWhereInput[]
+  }
+
+  export type MatchUncheckedUpdateManyWithoutLeagueRoundNestedInput = {
+    create?: XOR<MatchCreateWithoutLeagueRoundInput, MatchUncheckedCreateWithoutLeagueRoundInput> | MatchCreateWithoutLeagueRoundInput[] | MatchUncheckedCreateWithoutLeagueRoundInput[]
+    connectOrCreate?: MatchCreateOrConnectWithoutLeagueRoundInput | MatchCreateOrConnectWithoutLeagueRoundInput[]
+    upsert?: MatchUpsertWithWhereUniqueWithoutLeagueRoundInput | MatchUpsertWithWhereUniqueWithoutLeagueRoundInput[]
+    createMany?: MatchCreateManyLeagueRoundInputEnvelope
+    set?: MatchWhereUniqueInput | MatchWhereUniqueInput[]
+    disconnect?: MatchWhereUniqueInput | MatchWhereUniqueInput[]
+    delete?: MatchWhereUniqueInput | MatchWhereUniqueInput[]
+    connect?: MatchWhereUniqueInput | MatchWhereUniqueInput[]
+    update?: MatchUpdateWithWhereUniqueWithoutLeagueRoundInput | MatchUpdateWithWhereUniqueWithoutLeagueRoundInput[]
+    updateMany?: MatchUpdateManyWithWhereWithoutLeagueRoundInput | MatchUpdateManyWithWhereWithoutLeagueRoundInput[]
+    deleteMany?: MatchScalarWhereInput | MatchScalarWhereInput[]
+  }
+
+  export type LeaguePairingUncheckedUpdateManyWithoutRoundNestedInput = {
+    create?: XOR<LeaguePairingCreateWithoutRoundInput, LeaguePairingUncheckedCreateWithoutRoundInput> | LeaguePairingCreateWithoutRoundInput[] | LeaguePairingUncheckedCreateWithoutRoundInput[]
+    connectOrCreate?: LeaguePairingCreateOrConnectWithoutRoundInput | LeaguePairingCreateOrConnectWithoutRoundInput[]
+    upsert?: LeaguePairingUpsertWithWhereUniqueWithoutRoundInput | LeaguePairingUpsertWithWhereUniqueWithoutRoundInput[]
+    createMany?: LeaguePairingCreateManyRoundInputEnvelope
+    set?: LeaguePairingWhereUniqueInput | LeaguePairingWhereUniqueInput[]
+    disconnect?: LeaguePairingWhereUniqueInput | LeaguePairingWhereUniqueInput[]
+    delete?: LeaguePairingWhereUniqueInput | LeaguePairingWhereUniqueInput[]
+    connect?: LeaguePairingWhereUniqueInput | LeaguePairingWhereUniqueInput[]
+    update?: LeaguePairingUpdateWithWhereUniqueWithoutRoundInput | LeaguePairingUpdateWithWhereUniqueWithoutRoundInput[]
+    updateMany?: LeaguePairingUpdateManyWithWhereWithoutRoundInput | LeaguePairingUpdateManyWithWhereWithoutRoundInput[]
+    deleteMany?: LeaguePairingScalarWhereInput | LeaguePairingScalarWhereInput[]
+  }
+
+  export type LeagueRoundCreateNestedOneWithoutPairingsInput = {
+    create?: XOR<LeagueRoundCreateWithoutPairingsInput, LeagueRoundUncheckedCreateWithoutPairingsInput>
+    connectOrCreate?: LeagueRoundCreateOrConnectWithoutPairingsInput
+    connect?: LeagueRoundWhereUniqueInput
+  }
+
+  export type LeagueParticipantCreateNestedOneWithoutHomePairingsInput = {
+    create?: XOR<LeagueParticipantCreateWithoutHomePairingsInput, LeagueParticipantUncheckedCreateWithoutHomePairingsInput>
+    connectOrCreate?: LeagueParticipantCreateOrConnectWithoutHomePairingsInput
+    connect?: LeagueParticipantWhereUniqueInput
+  }
+
+  export type LeagueParticipantCreateNestedOneWithoutAwayPairingsInput = {
+    create?: XOR<LeagueParticipantCreateWithoutAwayPairingsInput, LeagueParticipantUncheckedCreateWithoutAwayPairingsInput>
+    connectOrCreate?: LeagueParticipantCreateOrConnectWithoutAwayPairingsInput
+    connect?: LeagueParticipantWhereUniqueInput
+  }
+
+  export type MatchCreateNestedOneWithoutLeaguePairingInput = {
+    create?: XOR<MatchCreateWithoutLeaguePairingInput, MatchUncheckedCreateWithoutLeaguePairingInput>
+    connectOrCreate?: MatchCreateOrConnectWithoutLeaguePairingInput
+    connect?: MatchWhereUniqueInput
+  }
+
+  export type MatchUncheckedCreateNestedOneWithoutLeaguePairingInput = {
+    create?: XOR<MatchCreateWithoutLeaguePairingInput, MatchUncheckedCreateWithoutLeaguePairingInput>
+    connectOrCreate?: MatchCreateOrConnectWithoutLeaguePairingInput
+    connect?: MatchWhereUniqueInput
+  }
+
+  export type LeagueRoundUpdateOneRequiredWithoutPairingsNestedInput = {
+    create?: XOR<LeagueRoundCreateWithoutPairingsInput, LeagueRoundUncheckedCreateWithoutPairingsInput>
+    connectOrCreate?: LeagueRoundCreateOrConnectWithoutPairingsInput
+    upsert?: LeagueRoundUpsertWithoutPairingsInput
+    connect?: LeagueRoundWhereUniqueInput
+    update?: XOR<XOR<LeagueRoundUpdateToOneWithWhereWithoutPairingsInput, LeagueRoundUpdateWithoutPairingsInput>, LeagueRoundUncheckedUpdateWithoutPairingsInput>
+  }
+
+  export type LeagueParticipantUpdateOneRequiredWithoutHomePairingsNestedInput = {
+    create?: XOR<LeagueParticipantCreateWithoutHomePairingsInput, LeagueParticipantUncheckedCreateWithoutHomePairingsInput>
+    connectOrCreate?: LeagueParticipantCreateOrConnectWithoutHomePairingsInput
+    upsert?: LeagueParticipantUpsertWithoutHomePairingsInput
+    connect?: LeagueParticipantWhereUniqueInput
+    update?: XOR<XOR<LeagueParticipantUpdateToOneWithWhereWithoutHomePairingsInput, LeagueParticipantUpdateWithoutHomePairingsInput>, LeagueParticipantUncheckedUpdateWithoutHomePairingsInput>
+  }
+
+  export type LeagueParticipantUpdateOneRequiredWithoutAwayPairingsNestedInput = {
+    create?: XOR<LeagueParticipantCreateWithoutAwayPairingsInput, LeagueParticipantUncheckedCreateWithoutAwayPairingsInput>
+    connectOrCreate?: LeagueParticipantCreateOrConnectWithoutAwayPairingsInput
+    upsert?: LeagueParticipantUpsertWithoutAwayPairingsInput
+    connect?: LeagueParticipantWhereUniqueInput
+    update?: XOR<XOR<LeagueParticipantUpdateToOneWithWhereWithoutAwayPairingsInput, LeagueParticipantUpdateWithoutAwayPairingsInput>, LeagueParticipantUncheckedUpdateWithoutAwayPairingsInput>
+  }
+
+  export type MatchUpdateOneWithoutLeaguePairingNestedInput = {
+    create?: XOR<MatchCreateWithoutLeaguePairingInput, MatchUncheckedCreateWithoutLeaguePairingInput>
+    connectOrCreate?: MatchCreateOrConnectWithoutLeaguePairingInput
+    upsert?: MatchUpsertWithoutLeaguePairingInput
+    disconnect?: MatchWhereInput | boolean
+    delete?: MatchWhereInput | boolean
+    connect?: MatchWhereUniqueInput
+    update?: XOR<XOR<MatchUpdateToOneWithWhereWithoutLeaguePairingInput, MatchUpdateWithoutLeaguePairingInput>, MatchUncheckedUpdateWithoutLeaguePairingInput>
+  }
+
+  export type MatchUncheckedUpdateOneWithoutLeaguePairingNestedInput = {
+    create?: XOR<MatchCreateWithoutLeaguePairingInput, MatchUncheckedCreateWithoutLeaguePairingInput>
+    connectOrCreate?: MatchCreateOrConnectWithoutLeaguePairingInput
+    upsert?: MatchUpsertWithoutLeaguePairingInput
+    disconnect?: MatchWhereInput | boolean
+    delete?: MatchWhereInput | boolean
+    connect?: MatchWhereUniqueInput
+    update?: XOR<XOR<MatchUpdateToOneWithWhereWithoutLeaguePairingInput, MatchUpdateWithoutLeaguePairingInput>, MatchUncheckedUpdateWithoutLeaguePairingInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -49404,9 +51705,13 @@ export namespace Prisma {
     aiDifficulty?: string | null
     aiTeamSide?: string | null
     aiUserId?: string | null
+    leagueScoredAt?: Date | string | null
     creator?: UserCreateNestedOneWithoutCreatedMatchesInput
     turns?: TurnCreateNestedManyWithoutMatchInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutMatchInput
+    leagueSeason?: LeagueSeasonCreateNestedOneWithoutMatchesInput
+    leagueRound?: LeagueRoundCreateNestedOneWithoutMatchesInput
+    leaguePairing?: LeaguePairingCreateNestedOneWithoutMatchInput
   }
 
   export type MatchUncheckedCreateWithoutPlayersInput = {
@@ -49421,6 +51726,10 @@ export namespace Prisma {
     aiDifficulty?: string | null
     aiTeamSide?: string | null
     aiUserId?: string | null
+    leagueSeasonId?: string | null
+    leagueRoundId?: string | null
+    leaguePairingId?: string | null
+    leagueScoredAt?: Date | string | null
     turns?: TurnUncheckedCreateNestedManyWithoutMatchInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutMatchInput
   }
@@ -49441,9 +51750,13 @@ export namespace Prisma {
     aiDifficulty?: string | null
     aiTeamSide?: string | null
     aiUserId?: string | null
+    leagueScoredAt?: Date | string | null
     players?: UserCreateNestedManyWithoutMatchesInput
     turns?: TurnCreateNestedManyWithoutMatchInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutMatchInput
+    leagueSeason?: LeagueSeasonCreateNestedOneWithoutMatchesInput
+    leagueRound?: LeagueRoundCreateNestedOneWithoutMatchesInput
+    leaguePairing?: LeaguePairingCreateNestedOneWithoutMatchInput
   }
 
   export type MatchUncheckedCreateWithoutCreatorInput = {
@@ -49457,6 +51770,10 @@ export namespace Prisma {
     aiDifficulty?: string | null
     aiTeamSide?: string | null
     aiUserId?: string | null
+    leagueSeasonId?: string | null
+    leagueRoundId?: string | null
+    leaguePairingId?: string | null
+    leagueScoredAt?: Date | string | null
     players?: UserUncheckedCreateNestedManyWithoutMatchesInput
     turns?: TurnUncheckedCreateNestedManyWithoutMatchInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutMatchInput
@@ -49953,6 +52270,10 @@ export namespace Prisma {
     aiDifficulty?: StringNullableFilter<"Match"> | string | null
     aiTeamSide?: StringNullableFilter<"Match"> | string | null
     aiUserId?: StringNullableFilter<"Match"> | string | null
+    leagueSeasonId?: StringNullableFilter<"Match"> | string | null
+    leagueRoundId?: StringNullableFilter<"Match"> | string | null
+    leaguePairingId?: StringNullableFilter<"Match"> | string | null
+    leagueScoredAt?: DateTimeNullableFilter<"Match"> | Date | string | null
   }
 
   export type MatchUpsertWithWhereUniqueWithoutCreatorInput = {
@@ -51883,6 +54204,103 @@ export namespace Prisma {
     data: TeamSelectionCreateManyMatchInput | TeamSelectionCreateManyMatchInput[]
   }
 
+  export type LeagueSeasonCreateWithoutMatchesInput = {
+    id?: string
+    seasonNumber: number
+    name: string
+    status?: string
+    startDate?: Date | string | null
+    endDate?: Date | string | null
+    theme?: string | null
+    themeYear?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    league: LeagueCreateNestedOneWithoutSeasonsInput
+    participants?: LeagueParticipantCreateNestedManyWithoutSeasonInput
+    rounds?: LeagueRoundCreateNestedManyWithoutSeasonInput
+  }
+
+  export type LeagueSeasonUncheckedCreateWithoutMatchesInput = {
+    id?: string
+    leagueId: string
+    seasonNumber: number
+    name: string
+    status?: string
+    startDate?: Date | string | null
+    endDate?: Date | string | null
+    theme?: string | null
+    themeYear?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    participants?: LeagueParticipantUncheckedCreateNestedManyWithoutSeasonInput
+    rounds?: LeagueRoundUncheckedCreateNestedManyWithoutSeasonInput
+  }
+
+  export type LeagueSeasonCreateOrConnectWithoutMatchesInput = {
+    where: LeagueSeasonWhereUniqueInput
+    create: XOR<LeagueSeasonCreateWithoutMatchesInput, LeagueSeasonUncheckedCreateWithoutMatchesInput>
+  }
+
+  export type LeagueRoundCreateWithoutMatchesInput = {
+    id?: string
+    roundNumber: number
+    name?: string | null
+    status?: string
+    startDate?: Date | string | null
+    endDate?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    season: LeagueSeasonCreateNestedOneWithoutRoundsInput
+    pairings?: LeaguePairingCreateNestedManyWithoutRoundInput
+  }
+
+  export type LeagueRoundUncheckedCreateWithoutMatchesInput = {
+    id?: string
+    seasonId: string
+    roundNumber: number
+    name?: string | null
+    status?: string
+    startDate?: Date | string | null
+    endDate?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    pairings?: LeaguePairingUncheckedCreateNestedManyWithoutRoundInput
+  }
+
+  export type LeagueRoundCreateOrConnectWithoutMatchesInput = {
+    where: LeagueRoundWhereUniqueInput
+    create: XOR<LeagueRoundCreateWithoutMatchesInput, LeagueRoundUncheckedCreateWithoutMatchesInput>
+  }
+
+  export type LeaguePairingCreateWithoutMatchInput = {
+    id?: string
+    status?: string
+    scheduledAt?: Date | string | null
+    deadlineAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    round: LeagueRoundCreateNestedOneWithoutPairingsInput
+    homeParticipant: LeagueParticipantCreateNestedOneWithoutHomePairingsInput
+    awayParticipant: LeagueParticipantCreateNestedOneWithoutAwayPairingsInput
+  }
+
+  export type LeaguePairingUncheckedCreateWithoutMatchInput = {
+    id?: string
+    roundId: string
+    homeParticipantId: string
+    awayParticipantId: string
+    status?: string
+    scheduledAt?: Date | string | null
+    deadlineAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type LeaguePairingCreateOrConnectWithoutMatchInput = {
+    where: LeaguePairingWhereUniqueInput
+    create: XOR<LeaguePairingCreateWithoutMatchInput, LeaguePairingUncheckedCreateWithoutMatchInput>
+  }
+
   export type UserUpsertWithoutCreatedMatchesInput = {
     update: XOR<UserUpdateWithoutCreatedMatchesInput, UserUncheckedUpdateWithoutCreatedMatchesInput>
     create: XOR<UserCreateWithoutCreatedMatchesInput, UserUncheckedCreateWithoutCreatedMatchesInput>
@@ -52059,6 +54477,121 @@ export namespace Prisma {
     data: XOR<TeamSelectionUpdateManyMutationInput, TeamSelectionUncheckedUpdateManyWithoutMatchInput>
   }
 
+  export type LeagueSeasonUpsertWithoutMatchesInput = {
+    update: XOR<LeagueSeasonUpdateWithoutMatchesInput, LeagueSeasonUncheckedUpdateWithoutMatchesInput>
+    create: XOR<LeagueSeasonCreateWithoutMatchesInput, LeagueSeasonUncheckedCreateWithoutMatchesInput>
+    where?: LeagueSeasonWhereInput
+  }
+
+  export type LeagueSeasonUpdateToOneWithWhereWithoutMatchesInput = {
+    where?: LeagueSeasonWhereInput
+    data: XOR<LeagueSeasonUpdateWithoutMatchesInput, LeagueSeasonUncheckedUpdateWithoutMatchesInput>
+  }
+
+  export type LeagueSeasonUpdateWithoutMatchesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    seasonNumber?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    theme?: NullableStringFieldUpdateOperationsInput | string | null
+    themeYear?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    league?: LeagueUpdateOneRequiredWithoutSeasonsNestedInput
+    participants?: LeagueParticipantUpdateManyWithoutSeasonNestedInput
+    rounds?: LeagueRoundUpdateManyWithoutSeasonNestedInput
+  }
+
+  export type LeagueSeasonUncheckedUpdateWithoutMatchesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    leagueId?: StringFieldUpdateOperationsInput | string
+    seasonNumber?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    theme?: NullableStringFieldUpdateOperationsInput | string | null
+    themeYear?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    participants?: LeagueParticipantUncheckedUpdateManyWithoutSeasonNestedInput
+    rounds?: LeagueRoundUncheckedUpdateManyWithoutSeasonNestedInput
+  }
+
+  export type LeagueRoundUpsertWithoutMatchesInput = {
+    update: XOR<LeagueRoundUpdateWithoutMatchesInput, LeagueRoundUncheckedUpdateWithoutMatchesInput>
+    create: XOR<LeagueRoundCreateWithoutMatchesInput, LeagueRoundUncheckedCreateWithoutMatchesInput>
+    where?: LeagueRoundWhereInput
+  }
+
+  export type LeagueRoundUpdateToOneWithWhereWithoutMatchesInput = {
+    where?: LeagueRoundWhereInput
+    data: XOR<LeagueRoundUpdateWithoutMatchesInput, LeagueRoundUncheckedUpdateWithoutMatchesInput>
+  }
+
+  export type LeagueRoundUpdateWithoutMatchesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    roundNumber?: IntFieldUpdateOperationsInput | number
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    season?: LeagueSeasonUpdateOneRequiredWithoutRoundsNestedInput
+    pairings?: LeaguePairingUpdateManyWithoutRoundNestedInput
+  }
+
+  export type LeagueRoundUncheckedUpdateWithoutMatchesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    seasonId?: StringFieldUpdateOperationsInput | string
+    roundNumber?: IntFieldUpdateOperationsInput | number
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    pairings?: LeaguePairingUncheckedUpdateManyWithoutRoundNestedInput
+  }
+
+  export type LeaguePairingUpsertWithoutMatchInput = {
+    update: XOR<LeaguePairingUpdateWithoutMatchInput, LeaguePairingUncheckedUpdateWithoutMatchInput>
+    create: XOR<LeaguePairingCreateWithoutMatchInput, LeaguePairingUncheckedCreateWithoutMatchInput>
+    where?: LeaguePairingWhereInput
+  }
+
+  export type LeaguePairingUpdateToOneWithWhereWithoutMatchInput = {
+    where?: LeaguePairingWhereInput
+    data: XOR<LeaguePairingUpdateWithoutMatchInput, LeaguePairingUncheckedUpdateWithoutMatchInput>
+  }
+
+  export type LeaguePairingUpdateWithoutMatchInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    scheduledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deadlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    round?: LeagueRoundUpdateOneRequiredWithoutPairingsNestedInput
+    homeParticipant?: LeagueParticipantUpdateOneRequiredWithoutHomePairingsNestedInput
+    awayParticipant?: LeagueParticipantUpdateOneRequiredWithoutAwayPairingsNestedInput
+  }
+
+  export type LeaguePairingUncheckedUpdateWithoutMatchInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    roundId?: StringFieldUpdateOperationsInput | string
+    homeParticipantId?: StringFieldUpdateOperationsInput | string
+    awayParticipantId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    scheduledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deadlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type MatchCreateWithoutTurnsInput = {
     id?: string
     createdAt?: Date | string
@@ -52070,9 +54603,13 @@ export namespace Prisma {
     aiDifficulty?: string | null
     aiTeamSide?: string | null
     aiUserId?: string | null
+    leagueScoredAt?: Date | string | null
     creator?: UserCreateNestedOneWithoutCreatedMatchesInput
     players?: UserCreateNestedManyWithoutMatchesInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutMatchInput
+    leagueSeason?: LeagueSeasonCreateNestedOneWithoutMatchesInput
+    leagueRound?: LeagueRoundCreateNestedOneWithoutMatchesInput
+    leaguePairing?: LeaguePairingCreateNestedOneWithoutMatchInput
   }
 
   export type MatchUncheckedCreateWithoutTurnsInput = {
@@ -52087,6 +54624,10 @@ export namespace Prisma {
     aiDifficulty?: string | null
     aiTeamSide?: string | null
     aiUserId?: string | null
+    leagueSeasonId?: string | null
+    leagueRoundId?: string | null
+    leaguePairingId?: string | null
+    leagueScoredAt?: Date | string | null
     players?: UserUncheckedCreateNestedManyWithoutMatchesInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutMatchInput
   }
@@ -52118,9 +54659,13 @@ export namespace Prisma {
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
     aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueScoredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     creator?: UserUpdateOneWithoutCreatedMatchesNestedInput
     players?: UserUpdateManyWithoutMatchesNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutMatchNestedInput
+    leagueSeason?: LeagueSeasonUpdateOneWithoutMatchesNestedInput
+    leagueRound?: LeagueRoundUpdateOneWithoutMatchesNestedInput
+    leaguePairing?: LeaguePairingUpdateOneWithoutMatchNestedInput
   }
 
   export type MatchUncheckedUpdateWithoutTurnsInput = {
@@ -52135,6 +54680,10 @@ export namespace Prisma {
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
     aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueSeasonId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueRoundId?: NullableStringFieldUpdateOperationsInput | string | null
+    leaguePairingId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueScoredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     players?: UserUncheckedUpdateManyWithoutMatchesNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutMatchNestedInput
   }
@@ -52150,9 +54699,13 @@ export namespace Prisma {
     aiDifficulty?: string | null
     aiTeamSide?: string | null
     aiUserId?: string | null
+    leagueScoredAt?: Date | string | null
     creator?: UserCreateNestedOneWithoutCreatedMatchesInput
     players?: UserCreateNestedManyWithoutMatchesInput
     turns?: TurnCreateNestedManyWithoutMatchInput
+    leagueSeason?: LeagueSeasonCreateNestedOneWithoutMatchesInput
+    leagueRound?: LeagueRoundCreateNestedOneWithoutMatchesInput
+    leaguePairing?: LeaguePairingCreateNestedOneWithoutMatchInput
   }
 
   export type MatchUncheckedCreateWithoutTeamSelectionsInput = {
@@ -52167,6 +54720,10 @@ export namespace Prisma {
     aiDifficulty?: string | null
     aiTeamSide?: string | null
     aiUserId?: string | null
+    leagueSeasonId?: string | null
+    leagueRoundId?: string | null
+    leaguePairingId?: string | null
+    leagueScoredAt?: Date | string | null
     players?: UserUncheckedCreateNestedManyWithoutMatchesInput
     turns?: TurnUncheckedCreateNestedManyWithoutMatchInput
   }
@@ -52336,9 +54893,13 @@ export namespace Prisma {
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
     aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueScoredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     creator?: UserUpdateOneWithoutCreatedMatchesNestedInput
     players?: UserUpdateManyWithoutMatchesNestedInput
     turns?: TurnUpdateManyWithoutMatchNestedInput
+    leagueSeason?: LeagueSeasonUpdateOneWithoutMatchesNestedInput
+    leagueRound?: LeagueRoundUpdateOneWithoutMatchesNestedInput
+    leaguePairing?: LeaguePairingUpdateOneWithoutMatchNestedInput
   }
 
   export type MatchUncheckedUpdateWithoutTeamSelectionsInput = {
@@ -52353,6 +54914,10 @@ export namespace Prisma {
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
     aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueSeasonId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueRoundId?: NullableStringFieldUpdateOperationsInput | string | null
+    leaguePairingId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueScoredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     players?: UserUncheckedUpdateManyWithoutMatchesNestedInput
     turns?: TurnUncheckedUpdateManyWithoutMatchNestedInput
   }
@@ -52883,6 +55448,8 @@ export namespace Prisma {
     status?: string
     joinedAt?: Date | string
     season: LeagueSeasonCreateNestedOneWithoutParticipantsInput
+    homePairings?: LeaguePairingCreateNestedManyWithoutHomeParticipantInput
+    awayPairings?: LeaguePairingCreateNestedManyWithoutAwayParticipantInput
   }
 
   export type LeagueParticipantUncheckedCreateWithoutTeamInput = {
@@ -52899,6 +55466,8 @@ export namespace Prisma {
     casualtiesAgainst?: number
     status?: string
     joinedAt?: Date | string
+    homePairings?: LeaguePairingUncheckedCreateNestedManyWithoutHomeParticipantInput
+    awayPairings?: LeaguePairingUncheckedCreateNestedManyWithoutAwayParticipantInput
   }
 
   export type LeagueParticipantCreateOrConnectWithoutTeamInput = {
@@ -55447,6 +58016,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     participants?: LeagueParticipantCreateNestedManyWithoutSeasonInput
     rounds?: LeagueRoundCreateNestedManyWithoutSeasonInput
+    matches?: MatchCreateNestedManyWithoutLeagueSeasonInput
   }
 
   export type LeagueSeasonUncheckedCreateWithoutLeagueInput = {
@@ -55462,6 +58032,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     participants?: LeagueParticipantUncheckedCreateNestedManyWithoutSeasonInput
     rounds?: LeagueRoundUncheckedCreateNestedManyWithoutSeasonInput
+    matches?: MatchUncheckedCreateNestedManyWithoutLeagueSeasonInput
   }
 
   export type LeagueSeasonCreateOrConnectWithoutLeagueInput = {
@@ -55650,6 +58221,8 @@ export namespace Prisma {
     status?: string
     joinedAt?: Date | string
     team: TeamCreateNestedOneWithoutLeagueParticipationsInput
+    homePairings?: LeaguePairingCreateNestedManyWithoutHomeParticipantInput
+    awayPairings?: LeaguePairingCreateNestedManyWithoutAwayParticipantInput
   }
 
   export type LeagueParticipantUncheckedCreateWithoutSeasonInput = {
@@ -55666,6 +58239,8 @@ export namespace Prisma {
     casualtiesAgainst?: number
     status?: string
     joinedAt?: Date | string
+    homePairings?: LeaguePairingUncheckedCreateNestedManyWithoutHomeParticipantInput
+    awayPairings?: LeaguePairingUncheckedCreateNestedManyWithoutAwayParticipantInput
   }
 
   export type LeagueParticipantCreateOrConnectWithoutSeasonInput = {
@@ -55686,6 +58261,8 @@ export namespace Prisma {
     endDate?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    matches?: MatchCreateNestedManyWithoutLeagueRoundInput
+    pairings?: LeaguePairingCreateNestedManyWithoutRoundInput
   }
 
   export type LeagueRoundUncheckedCreateWithoutSeasonInput = {
@@ -55697,6 +58274,8 @@ export namespace Prisma {
     endDate?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    matches?: MatchUncheckedCreateNestedManyWithoutLeagueRoundInput
+    pairings?: LeaguePairingUncheckedCreateNestedManyWithoutRoundInput
   }
 
   export type LeagueRoundCreateOrConnectWithoutSeasonInput = {
@@ -55706,6 +58285,55 @@ export namespace Prisma {
 
   export type LeagueRoundCreateManySeasonInputEnvelope = {
     data: LeagueRoundCreateManySeasonInput | LeagueRoundCreateManySeasonInput[]
+  }
+
+  export type MatchCreateWithoutLeagueSeasonInput = {
+    id?: string
+    createdAt?: Date | string
+    status: string
+    seed: string
+    currentTurnUserId?: string | null
+    lastMoveAt?: Date | string | null
+    aiOpponent?: boolean
+    aiDifficulty?: string | null
+    aiTeamSide?: string | null
+    aiUserId?: string | null
+    leagueScoredAt?: Date | string | null
+    creator?: UserCreateNestedOneWithoutCreatedMatchesInput
+    players?: UserCreateNestedManyWithoutMatchesInput
+    turns?: TurnCreateNestedManyWithoutMatchInput
+    teamSelections?: TeamSelectionCreateNestedManyWithoutMatchInput
+    leagueRound?: LeagueRoundCreateNestedOneWithoutMatchesInput
+    leaguePairing?: LeaguePairingCreateNestedOneWithoutMatchInput
+  }
+
+  export type MatchUncheckedCreateWithoutLeagueSeasonInput = {
+    id?: string
+    createdAt?: Date | string
+    status: string
+    seed: string
+    creatorId?: string | null
+    currentTurnUserId?: string | null
+    lastMoveAt?: Date | string | null
+    aiOpponent?: boolean
+    aiDifficulty?: string | null
+    aiTeamSide?: string | null
+    aiUserId?: string | null
+    leagueRoundId?: string | null
+    leaguePairingId?: string | null
+    leagueScoredAt?: Date | string | null
+    players?: UserUncheckedCreateNestedManyWithoutMatchesInput
+    turns?: TurnUncheckedCreateNestedManyWithoutMatchInput
+    teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutMatchInput
+  }
+
+  export type MatchCreateOrConnectWithoutLeagueSeasonInput = {
+    where: MatchWhereUniqueInput
+    create: XOR<MatchCreateWithoutLeagueSeasonInput, MatchUncheckedCreateWithoutLeagueSeasonInput>
+  }
+
+  export type MatchCreateManyLeagueSeasonInputEnvelope = {
+    data: MatchCreateManyLeagueSeasonInput | MatchCreateManyLeagueSeasonInput[]
   }
 
   export type LeagueUpsertWithoutSeasonsInput = {
@@ -55802,6 +58430,22 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"LeagueRound"> | Date | string
   }
 
+  export type MatchUpsertWithWhereUniqueWithoutLeagueSeasonInput = {
+    where: MatchWhereUniqueInput
+    update: XOR<MatchUpdateWithoutLeagueSeasonInput, MatchUncheckedUpdateWithoutLeagueSeasonInput>
+    create: XOR<MatchCreateWithoutLeagueSeasonInput, MatchUncheckedCreateWithoutLeagueSeasonInput>
+  }
+
+  export type MatchUpdateWithWhereUniqueWithoutLeagueSeasonInput = {
+    where: MatchWhereUniqueInput
+    data: XOR<MatchUpdateWithoutLeagueSeasonInput, MatchUncheckedUpdateWithoutLeagueSeasonInput>
+  }
+
+  export type MatchUpdateManyWithWhereWithoutLeagueSeasonInput = {
+    where: MatchScalarWhereInput
+    data: XOR<MatchUpdateManyMutationInput, MatchUncheckedUpdateManyWithoutLeagueSeasonInput>
+  }
+
   export type LeagueSeasonCreateWithoutParticipantsInput = {
     id?: string
     seasonNumber: number
@@ -55815,6 +58459,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     league: LeagueCreateNestedOneWithoutSeasonsInput
     rounds?: LeagueRoundCreateNestedManyWithoutSeasonInput
+    matches?: MatchCreateNestedManyWithoutLeagueSeasonInput
   }
 
   export type LeagueSeasonUncheckedCreateWithoutParticipantsInput = {
@@ -55830,6 +58475,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     rounds?: LeagueRoundUncheckedCreateNestedManyWithoutSeasonInput
+    matches?: MatchUncheckedCreateNestedManyWithoutLeagueSeasonInput
   }
 
   export type LeagueSeasonCreateOrConnectWithoutParticipantsInput = {
@@ -55892,6 +58538,72 @@ export namespace Prisma {
     create: XOR<TeamCreateWithoutLeagueParticipationsInput, TeamUncheckedCreateWithoutLeagueParticipationsInput>
   }
 
+  export type LeaguePairingCreateWithoutHomeParticipantInput = {
+    id?: string
+    status?: string
+    scheduledAt?: Date | string | null
+    deadlineAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    round: LeagueRoundCreateNestedOneWithoutPairingsInput
+    awayParticipant: LeagueParticipantCreateNestedOneWithoutAwayPairingsInput
+    match?: MatchCreateNestedOneWithoutLeaguePairingInput
+  }
+
+  export type LeaguePairingUncheckedCreateWithoutHomeParticipantInput = {
+    id?: string
+    roundId: string
+    awayParticipantId: string
+    status?: string
+    scheduledAt?: Date | string | null
+    deadlineAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    match?: MatchUncheckedCreateNestedOneWithoutLeaguePairingInput
+  }
+
+  export type LeaguePairingCreateOrConnectWithoutHomeParticipantInput = {
+    where: LeaguePairingWhereUniqueInput
+    create: XOR<LeaguePairingCreateWithoutHomeParticipantInput, LeaguePairingUncheckedCreateWithoutHomeParticipantInput>
+  }
+
+  export type LeaguePairingCreateManyHomeParticipantInputEnvelope = {
+    data: LeaguePairingCreateManyHomeParticipantInput | LeaguePairingCreateManyHomeParticipantInput[]
+  }
+
+  export type LeaguePairingCreateWithoutAwayParticipantInput = {
+    id?: string
+    status?: string
+    scheduledAt?: Date | string | null
+    deadlineAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    round: LeagueRoundCreateNestedOneWithoutPairingsInput
+    homeParticipant: LeagueParticipantCreateNestedOneWithoutHomePairingsInput
+    match?: MatchCreateNestedOneWithoutLeaguePairingInput
+  }
+
+  export type LeaguePairingUncheckedCreateWithoutAwayParticipantInput = {
+    id?: string
+    roundId: string
+    homeParticipantId: string
+    status?: string
+    scheduledAt?: Date | string | null
+    deadlineAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    match?: MatchUncheckedCreateNestedOneWithoutLeaguePairingInput
+  }
+
+  export type LeaguePairingCreateOrConnectWithoutAwayParticipantInput = {
+    where: LeaguePairingWhereUniqueInput
+    create: XOR<LeaguePairingCreateWithoutAwayParticipantInput, LeaguePairingUncheckedCreateWithoutAwayParticipantInput>
+  }
+
+  export type LeaguePairingCreateManyAwayParticipantInputEnvelope = {
+    data: LeaguePairingCreateManyAwayParticipantInput | LeaguePairingCreateManyAwayParticipantInput[]
+  }
+
   export type LeagueSeasonUpsertWithoutParticipantsInput = {
     update: XOR<LeagueSeasonUpdateWithoutParticipantsInput, LeagueSeasonUncheckedUpdateWithoutParticipantsInput>
     create: XOR<LeagueSeasonCreateWithoutParticipantsInput, LeagueSeasonUncheckedCreateWithoutParticipantsInput>
@@ -55916,6 +58628,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     league?: LeagueUpdateOneRequiredWithoutSeasonsNestedInput
     rounds?: LeagueRoundUpdateManyWithoutSeasonNestedInput
+    matches?: MatchUpdateManyWithoutLeagueSeasonNestedInput
   }
 
   export type LeagueSeasonUncheckedUpdateWithoutParticipantsInput = {
@@ -55931,6 +58644,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     rounds?: LeagueRoundUncheckedUpdateManyWithoutSeasonNestedInput
+    matches?: MatchUncheckedUpdateManyWithoutLeagueSeasonNestedInput
   }
 
   export type TeamUpsertWithoutLeagueParticipationsInput = {
@@ -55994,6 +58708,53 @@ export namespace Prisma {
     matchQueue?: MatchQueueUncheckedUpdateManyWithoutTeamNestedInput
   }
 
+  export type LeaguePairingUpsertWithWhereUniqueWithoutHomeParticipantInput = {
+    where: LeaguePairingWhereUniqueInput
+    update: XOR<LeaguePairingUpdateWithoutHomeParticipantInput, LeaguePairingUncheckedUpdateWithoutHomeParticipantInput>
+    create: XOR<LeaguePairingCreateWithoutHomeParticipantInput, LeaguePairingUncheckedCreateWithoutHomeParticipantInput>
+  }
+
+  export type LeaguePairingUpdateWithWhereUniqueWithoutHomeParticipantInput = {
+    where: LeaguePairingWhereUniqueInput
+    data: XOR<LeaguePairingUpdateWithoutHomeParticipantInput, LeaguePairingUncheckedUpdateWithoutHomeParticipantInput>
+  }
+
+  export type LeaguePairingUpdateManyWithWhereWithoutHomeParticipantInput = {
+    where: LeaguePairingScalarWhereInput
+    data: XOR<LeaguePairingUpdateManyMutationInput, LeaguePairingUncheckedUpdateManyWithoutHomeParticipantInput>
+  }
+
+  export type LeaguePairingScalarWhereInput = {
+    AND?: LeaguePairingScalarWhereInput | LeaguePairingScalarWhereInput[]
+    OR?: LeaguePairingScalarWhereInput[]
+    NOT?: LeaguePairingScalarWhereInput | LeaguePairingScalarWhereInput[]
+    id?: StringFilter<"LeaguePairing"> | string
+    roundId?: StringFilter<"LeaguePairing"> | string
+    homeParticipantId?: StringFilter<"LeaguePairing"> | string
+    awayParticipantId?: StringFilter<"LeaguePairing"> | string
+    status?: StringFilter<"LeaguePairing"> | string
+    scheduledAt?: DateTimeNullableFilter<"LeaguePairing"> | Date | string | null
+    deadlineAt?: DateTimeNullableFilter<"LeaguePairing"> | Date | string | null
+    createdAt?: DateTimeFilter<"LeaguePairing"> | Date | string
+    updatedAt?: DateTimeFilter<"LeaguePairing"> | Date | string
+  }
+
+  export type LeaguePairingUpsertWithWhereUniqueWithoutAwayParticipantInput = {
+    where: LeaguePairingWhereUniqueInput
+    update: XOR<LeaguePairingUpdateWithoutAwayParticipantInput, LeaguePairingUncheckedUpdateWithoutAwayParticipantInput>
+    create: XOR<LeaguePairingCreateWithoutAwayParticipantInput, LeaguePairingUncheckedCreateWithoutAwayParticipantInput>
+  }
+
+  export type LeaguePairingUpdateWithWhereUniqueWithoutAwayParticipantInput = {
+    where: LeaguePairingWhereUniqueInput
+    data: XOR<LeaguePairingUpdateWithoutAwayParticipantInput, LeaguePairingUncheckedUpdateWithoutAwayParticipantInput>
+  }
+
+  export type LeaguePairingUpdateManyWithWhereWithoutAwayParticipantInput = {
+    where: LeaguePairingScalarWhereInput
+    data: XOR<LeaguePairingUpdateManyMutationInput, LeaguePairingUncheckedUpdateManyWithoutAwayParticipantInput>
+  }
+
   export type LeagueSeasonCreateWithoutRoundsInput = {
     id?: string
     seasonNumber: number
@@ -56007,6 +58768,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     league: LeagueCreateNestedOneWithoutSeasonsInput
     participants?: LeagueParticipantCreateNestedManyWithoutSeasonInput
+    matches?: MatchCreateNestedManyWithoutLeagueSeasonInput
   }
 
   export type LeagueSeasonUncheckedCreateWithoutRoundsInput = {
@@ -56022,11 +58784,94 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     participants?: LeagueParticipantUncheckedCreateNestedManyWithoutSeasonInput
+    matches?: MatchUncheckedCreateNestedManyWithoutLeagueSeasonInput
   }
 
   export type LeagueSeasonCreateOrConnectWithoutRoundsInput = {
     where: LeagueSeasonWhereUniqueInput
     create: XOR<LeagueSeasonCreateWithoutRoundsInput, LeagueSeasonUncheckedCreateWithoutRoundsInput>
+  }
+
+  export type MatchCreateWithoutLeagueRoundInput = {
+    id?: string
+    createdAt?: Date | string
+    status: string
+    seed: string
+    currentTurnUserId?: string | null
+    lastMoveAt?: Date | string | null
+    aiOpponent?: boolean
+    aiDifficulty?: string | null
+    aiTeamSide?: string | null
+    aiUserId?: string | null
+    leagueScoredAt?: Date | string | null
+    creator?: UserCreateNestedOneWithoutCreatedMatchesInput
+    players?: UserCreateNestedManyWithoutMatchesInput
+    turns?: TurnCreateNestedManyWithoutMatchInput
+    teamSelections?: TeamSelectionCreateNestedManyWithoutMatchInput
+    leagueSeason?: LeagueSeasonCreateNestedOneWithoutMatchesInput
+    leaguePairing?: LeaguePairingCreateNestedOneWithoutMatchInput
+  }
+
+  export type MatchUncheckedCreateWithoutLeagueRoundInput = {
+    id?: string
+    createdAt?: Date | string
+    status: string
+    seed: string
+    creatorId?: string | null
+    currentTurnUserId?: string | null
+    lastMoveAt?: Date | string | null
+    aiOpponent?: boolean
+    aiDifficulty?: string | null
+    aiTeamSide?: string | null
+    aiUserId?: string | null
+    leagueSeasonId?: string | null
+    leaguePairingId?: string | null
+    leagueScoredAt?: Date | string | null
+    players?: UserUncheckedCreateNestedManyWithoutMatchesInput
+    turns?: TurnUncheckedCreateNestedManyWithoutMatchInput
+    teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutMatchInput
+  }
+
+  export type MatchCreateOrConnectWithoutLeagueRoundInput = {
+    where: MatchWhereUniqueInput
+    create: XOR<MatchCreateWithoutLeagueRoundInput, MatchUncheckedCreateWithoutLeagueRoundInput>
+  }
+
+  export type MatchCreateManyLeagueRoundInputEnvelope = {
+    data: MatchCreateManyLeagueRoundInput | MatchCreateManyLeagueRoundInput[]
+  }
+
+  export type LeaguePairingCreateWithoutRoundInput = {
+    id?: string
+    status?: string
+    scheduledAt?: Date | string | null
+    deadlineAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    homeParticipant: LeagueParticipantCreateNestedOneWithoutHomePairingsInput
+    awayParticipant: LeagueParticipantCreateNestedOneWithoutAwayPairingsInput
+    match?: MatchCreateNestedOneWithoutLeaguePairingInput
+  }
+
+  export type LeaguePairingUncheckedCreateWithoutRoundInput = {
+    id?: string
+    homeParticipantId: string
+    awayParticipantId: string
+    status?: string
+    scheduledAt?: Date | string | null
+    deadlineAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    match?: MatchUncheckedCreateNestedOneWithoutLeaguePairingInput
+  }
+
+  export type LeaguePairingCreateOrConnectWithoutRoundInput = {
+    where: LeaguePairingWhereUniqueInput
+    create: XOR<LeaguePairingCreateWithoutRoundInput, LeaguePairingUncheckedCreateWithoutRoundInput>
+  }
+
+  export type LeaguePairingCreateManyRoundInputEnvelope = {
+    data: LeaguePairingCreateManyRoundInput | LeaguePairingCreateManyRoundInput[]
   }
 
   export type LeagueSeasonUpsertWithoutRoundsInput = {
@@ -56053,6 +58898,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     league?: LeagueUpdateOneRequiredWithoutSeasonsNestedInput
     participants?: LeagueParticipantUpdateManyWithoutSeasonNestedInput
+    matches?: MatchUpdateManyWithoutLeagueSeasonNestedInput
   }
 
   export type LeagueSeasonUncheckedUpdateWithoutRoundsInput = {
@@ -56068,6 +58914,379 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     participants?: LeagueParticipantUncheckedUpdateManyWithoutSeasonNestedInput
+    matches?: MatchUncheckedUpdateManyWithoutLeagueSeasonNestedInput
+  }
+
+  export type MatchUpsertWithWhereUniqueWithoutLeagueRoundInput = {
+    where: MatchWhereUniqueInput
+    update: XOR<MatchUpdateWithoutLeagueRoundInput, MatchUncheckedUpdateWithoutLeagueRoundInput>
+    create: XOR<MatchCreateWithoutLeagueRoundInput, MatchUncheckedCreateWithoutLeagueRoundInput>
+  }
+
+  export type MatchUpdateWithWhereUniqueWithoutLeagueRoundInput = {
+    where: MatchWhereUniqueInput
+    data: XOR<MatchUpdateWithoutLeagueRoundInput, MatchUncheckedUpdateWithoutLeagueRoundInput>
+  }
+
+  export type MatchUpdateManyWithWhereWithoutLeagueRoundInput = {
+    where: MatchScalarWhereInput
+    data: XOR<MatchUpdateManyMutationInput, MatchUncheckedUpdateManyWithoutLeagueRoundInput>
+  }
+
+  export type LeaguePairingUpsertWithWhereUniqueWithoutRoundInput = {
+    where: LeaguePairingWhereUniqueInput
+    update: XOR<LeaguePairingUpdateWithoutRoundInput, LeaguePairingUncheckedUpdateWithoutRoundInput>
+    create: XOR<LeaguePairingCreateWithoutRoundInput, LeaguePairingUncheckedCreateWithoutRoundInput>
+  }
+
+  export type LeaguePairingUpdateWithWhereUniqueWithoutRoundInput = {
+    where: LeaguePairingWhereUniqueInput
+    data: XOR<LeaguePairingUpdateWithoutRoundInput, LeaguePairingUncheckedUpdateWithoutRoundInput>
+  }
+
+  export type LeaguePairingUpdateManyWithWhereWithoutRoundInput = {
+    where: LeaguePairingScalarWhereInput
+    data: XOR<LeaguePairingUpdateManyMutationInput, LeaguePairingUncheckedUpdateManyWithoutRoundInput>
+  }
+
+  export type LeagueRoundCreateWithoutPairingsInput = {
+    id?: string
+    roundNumber: number
+    name?: string | null
+    status?: string
+    startDate?: Date | string | null
+    endDate?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    season: LeagueSeasonCreateNestedOneWithoutRoundsInput
+    matches?: MatchCreateNestedManyWithoutLeagueRoundInput
+  }
+
+  export type LeagueRoundUncheckedCreateWithoutPairingsInput = {
+    id?: string
+    seasonId: string
+    roundNumber: number
+    name?: string | null
+    status?: string
+    startDate?: Date | string | null
+    endDate?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    matches?: MatchUncheckedCreateNestedManyWithoutLeagueRoundInput
+  }
+
+  export type LeagueRoundCreateOrConnectWithoutPairingsInput = {
+    where: LeagueRoundWhereUniqueInput
+    create: XOR<LeagueRoundCreateWithoutPairingsInput, LeagueRoundUncheckedCreateWithoutPairingsInput>
+  }
+
+  export type LeagueParticipantCreateWithoutHomePairingsInput = {
+    id?: string
+    seasonElo?: number
+    wins?: number
+    draws?: number
+    losses?: number
+    points?: number
+    touchdownsFor?: number
+    touchdownsAgainst?: number
+    casualtiesFor?: number
+    casualtiesAgainst?: number
+    status?: string
+    joinedAt?: Date | string
+    season: LeagueSeasonCreateNestedOneWithoutParticipantsInput
+    team: TeamCreateNestedOneWithoutLeagueParticipationsInput
+    awayPairings?: LeaguePairingCreateNestedManyWithoutAwayParticipantInput
+  }
+
+  export type LeagueParticipantUncheckedCreateWithoutHomePairingsInput = {
+    id?: string
+    seasonId: string
+    teamId: string
+    seasonElo?: number
+    wins?: number
+    draws?: number
+    losses?: number
+    points?: number
+    touchdownsFor?: number
+    touchdownsAgainst?: number
+    casualtiesFor?: number
+    casualtiesAgainst?: number
+    status?: string
+    joinedAt?: Date | string
+    awayPairings?: LeaguePairingUncheckedCreateNestedManyWithoutAwayParticipantInput
+  }
+
+  export type LeagueParticipantCreateOrConnectWithoutHomePairingsInput = {
+    where: LeagueParticipantWhereUniqueInput
+    create: XOR<LeagueParticipantCreateWithoutHomePairingsInput, LeagueParticipantUncheckedCreateWithoutHomePairingsInput>
+  }
+
+  export type LeagueParticipantCreateWithoutAwayPairingsInput = {
+    id?: string
+    seasonElo?: number
+    wins?: number
+    draws?: number
+    losses?: number
+    points?: number
+    touchdownsFor?: number
+    touchdownsAgainst?: number
+    casualtiesFor?: number
+    casualtiesAgainst?: number
+    status?: string
+    joinedAt?: Date | string
+    season: LeagueSeasonCreateNestedOneWithoutParticipantsInput
+    team: TeamCreateNestedOneWithoutLeagueParticipationsInput
+    homePairings?: LeaguePairingCreateNestedManyWithoutHomeParticipantInput
+  }
+
+  export type LeagueParticipantUncheckedCreateWithoutAwayPairingsInput = {
+    id?: string
+    seasonId: string
+    teamId: string
+    seasonElo?: number
+    wins?: number
+    draws?: number
+    losses?: number
+    points?: number
+    touchdownsFor?: number
+    touchdownsAgainst?: number
+    casualtiesFor?: number
+    casualtiesAgainst?: number
+    status?: string
+    joinedAt?: Date | string
+    homePairings?: LeaguePairingUncheckedCreateNestedManyWithoutHomeParticipantInput
+  }
+
+  export type LeagueParticipantCreateOrConnectWithoutAwayPairingsInput = {
+    where: LeagueParticipantWhereUniqueInput
+    create: XOR<LeagueParticipantCreateWithoutAwayPairingsInput, LeagueParticipantUncheckedCreateWithoutAwayPairingsInput>
+  }
+
+  export type MatchCreateWithoutLeaguePairingInput = {
+    id?: string
+    createdAt?: Date | string
+    status: string
+    seed: string
+    currentTurnUserId?: string | null
+    lastMoveAt?: Date | string | null
+    aiOpponent?: boolean
+    aiDifficulty?: string | null
+    aiTeamSide?: string | null
+    aiUserId?: string | null
+    leagueScoredAt?: Date | string | null
+    creator?: UserCreateNestedOneWithoutCreatedMatchesInput
+    players?: UserCreateNestedManyWithoutMatchesInput
+    turns?: TurnCreateNestedManyWithoutMatchInput
+    teamSelections?: TeamSelectionCreateNestedManyWithoutMatchInput
+    leagueSeason?: LeagueSeasonCreateNestedOneWithoutMatchesInput
+    leagueRound?: LeagueRoundCreateNestedOneWithoutMatchesInput
+  }
+
+  export type MatchUncheckedCreateWithoutLeaguePairingInput = {
+    id?: string
+    createdAt?: Date | string
+    status: string
+    seed: string
+    creatorId?: string | null
+    currentTurnUserId?: string | null
+    lastMoveAt?: Date | string | null
+    aiOpponent?: boolean
+    aiDifficulty?: string | null
+    aiTeamSide?: string | null
+    aiUserId?: string | null
+    leagueSeasonId?: string | null
+    leagueRoundId?: string | null
+    leagueScoredAt?: Date | string | null
+    players?: UserUncheckedCreateNestedManyWithoutMatchesInput
+    turns?: TurnUncheckedCreateNestedManyWithoutMatchInput
+    teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutMatchInput
+  }
+
+  export type MatchCreateOrConnectWithoutLeaguePairingInput = {
+    where: MatchWhereUniqueInput
+    create: XOR<MatchCreateWithoutLeaguePairingInput, MatchUncheckedCreateWithoutLeaguePairingInput>
+  }
+
+  export type LeagueRoundUpsertWithoutPairingsInput = {
+    update: XOR<LeagueRoundUpdateWithoutPairingsInput, LeagueRoundUncheckedUpdateWithoutPairingsInput>
+    create: XOR<LeagueRoundCreateWithoutPairingsInput, LeagueRoundUncheckedCreateWithoutPairingsInput>
+    where?: LeagueRoundWhereInput
+  }
+
+  export type LeagueRoundUpdateToOneWithWhereWithoutPairingsInput = {
+    where?: LeagueRoundWhereInput
+    data: XOR<LeagueRoundUpdateWithoutPairingsInput, LeagueRoundUncheckedUpdateWithoutPairingsInput>
+  }
+
+  export type LeagueRoundUpdateWithoutPairingsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    roundNumber?: IntFieldUpdateOperationsInput | number
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    season?: LeagueSeasonUpdateOneRequiredWithoutRoundsNestedInput
+    matches?: MatchUpdateManyWithoutLeagueRoundNestedInput
+  }
+
+  export type LeagueRoundUncheckedUpdateWithoutPairingsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    seasonId?: StringFieldUpdateOperationsInput | string
+    roundNumber?: IntFieldUpdateOperationsInput | number
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    matches?: MatchUncheckedUpdateManyWithoutLeagueRoundNestedInput
+  }
+
+  export type LeagueParticipantUpsertWithoutHomePairingsInput = {
+    update: XOR<LeagueParticipantUpdateWithoutHomePairingsInput, LeagueParticipantUncheckedUpdateWithoutHomePairingsInput>
+    create: XOR<LeagueParticipantCreateWithoutHomePairingsInput, LeagueParticipantUncheckedCreateWithoutHomePairingsInput>
+    where?: LeagueParticipantWhereInput
+  }
+
+  export type LeagueParticipantUpdateToOneWithWhereWithoutHomePairingsInput = {
+    where?: LeagueParticipantWhereInput
+    data: XOR<LeagueParticipantUpdateWithoutHomePairingsInput, LeagueParticipantUncheckedUpdateWithoutHomePairingsInput>
+  }
+
+  export type LeagueParticipantUpdateWithoutHomePairingsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    seasonElo?: IntFieldUpdateOperationsInput | number
+    wins?: IntFieldUpdateOperationsInput | number
+    draws?: IntFieldUpdateOperationsInput | number
+    losses?: IntFieldUpdateOperationsInput | number
+    points?: IntFieldUpdateOperationsInput | number
+    touchdownsFor?: IntFieldUpdateOperationsInput | number
+    touchdownsAgainst?: IntFieldUpdateOperationsInput | number
+    casualtiesFor?: IntFieldUpdateOperationsInput | number
+    casualtiesAgainst?: IntFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    season?: LeagueSeasonUpdateOneRequiredWithoutParticipantsNestedInput
+    team?: TeamUpdateOneRequiredWithoutLeagueParticipationsNestedInput
+    awayPairings?: LeaguePairingUpdateManyWithoutAwayParticipantNestedInput
+  }
+
+  export type LeagueParticipantUncheckedUpdateWithoutHomePairingsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    seasonId?: StringFieldUpdateOperationsInput | string
+    teamId?: StringFieldUpdateOperationsInput | string
+    seasonElo?: IntFieldUpdateOperationsInput | number
+    wins?: IntFieldUpdateOperationsInput | number
+    draws?: IntFieldUpdateOperationsInput | number
+    losses?: IntFieldUpdateOperationsInput | number
+    points?: IntFieldUpdateOperationsInput | number
+    touchdownsFor?: IntFieldUpdateOperationsInput | number
+    touchdownsAgainst?: IntFieldUpdateOperationsInput | number
+    casualtiesFor?: IntFieldUpdateOperationsInput | number
+    casualtiesAgainst?: IntFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    awayPairings?: LeaguePairingUncheckedUpdateManyWithoutAwayParticipantNestedInput
+  }
+
+  export type LeagueParticipantUpsertWithoutAwayPairingsInput = {
+    update: XOR<LeagueParticipantUpdateWithoutAwayPairingsInput, LeagueParticipantUncheckedUpdateWithoutAwayPairingsInput>
+    create: XOR<LeagueParticipantCreateWithoutAwayPairingsInput, LeagueParticipantUncheckedCreateWithoutAwayPairingsInput>
+    where?: LeagueParticipantWhereInput
+  }
+
+  export type LeagueParticipantUpdateToOneWithWhereWithoutAwayPairingsInput = {
+    where?: LeagueParticipantWhereInput
+    data: XOR<LeagueParticipantUpdateWithoutAwayPairingsInput, LeagueParticipantUncheckedUpdateWithoutAwayPairingsInput>
+  }
+
+  export type LeagueParticipantUpdateWithoutAwayPairingsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    seasonElo?: IntFieldUpdateOperationsInput | number
+    wins?: IntFieldUpdateOperationsInput | number
+    draws?: IntFieldUpdateOperationsInput | number
+    losses?: IntFieldUpdateOperationsInput | number
+    points?: IntFieldUpdateOperationsInput | number
+    touchdownsFor?: IntFieldUpdateOperationsInput | number
+    touchdownsAgainst?: IntFieldUpdateOperationsInput | number
+    casualtiesFor?: IntFieldUpdateOperationsInput | number
+    casualtiesAgainst?: IntFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    season?: LeagueSeasonUpdateOneRequiredWithoutParticipantsNestedInput
+    team?: TeamUpdateOneRequiredWithoutLeagueParticipationsNestedInput
+    homePairings?: LeaguePairingUpdateManyWithoutHomeParticipantNestedInput
+  }
+
+  export type LeagueParticipantUncheckedUpdateWithoutAwayPairingsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    seasonId?: StringFieldUpdateOperationsInput | string
+    teamId?: StringFieldUpdateOperationsInput | string
+    seasonElo?: IntFieldUpdateOperationsInput | number
+    wins?: IntFieldUpdateOperationsInput | number
+    draws?: IntFieldUpdateOperationsInput | number
+    losses?: IntFieldUpdateOperationsInput | number
+    points?: IntFieldUpdateOperationsInput | number
+    touchdownsFor?: IntFieldUpdateOperationsInput | number
+    touchdownsAgainst?: IntFieldUpdateOperationsInput | number
+    casualtiesFor?: IntFieldUpdateOperationsInput | number
+    casualtiesAgainst?: IntFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    homePairings?: LeaguePairingUncheckedUpdateManyWithoutHomeParticipantNestedInput
+  }
+
+  export type MatchUpsertWithoutLeaguePairingInput = {
+    update: XOR<MatchUpdateWithoutLeaguePairingInput, MatchUncheckedUpdateWithoutLeaguePairingInput>
+    create: XOR<MatchCreateWithoutLeaguePairingInput, MatchUncheckedCreateWithoutLeaguePairingInput>
+    where?: MatchWhereInput
+  }
+
+  export type MatchUpdateToOneWithWhereWithoutLeaguePairingInput = {
+    where?: MatchWhereInput
+    data: XOR<MatchUpdateWithoutLeaguePairingInput, MatchUncheckedUpdateWithoutLeaguePairingInput>
+  }
+
+  export type MatchUpdateWithoutLeaguePairingInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    status?: StringFieldUpdateOperationsInput | string
+    seed?: StringFieldUpdateOperationsInput | string
+    currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    aiOpponent?: BoolFieldUpdateOperationsInput | boolean
+    aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
+    aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
+    aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueScoredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    creator?: UserUpdateOneWithoutCreatedMatchesNestedInput
+    players?: UserUpdateManyWithoutMatchesNestedInput
+    turns?: TurnUpdateManyWithoutMatchNestedInput
+    teamSelections?: TeamSelectionUpdateManyWithoutMatchNestedInput
+    leagueSeason?: LeagueSeasonUpdateOneWithoutMatchesNestedInput
+    leagueRound?: LeagueRoundUpdateOneWithoutMatchesNestedInput
+  }
+
+  export type MatchUncheckedUpdateWithoutLeaguePairingInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    status?: StringFieldUpdateOperationsInput | string
+    seed?: StringFieldUpdateOperationsInput | string
+    creatorId?: NullableStringFieldUpdateOperationsInput | string | null
+    currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    aiOpponent?: BoolFieldUpdateOperationsInput | boolean
+    aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
+    aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
+    aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueSeasonId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueRoundId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueScoredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    players?: UserUncheckedUpdateManyWithoutMatchesNestedInput
+    turns?: TurnUncheckedUpdateManyWithoutMatchNestedInput
+    teamSelections?: TeamSelectionUncheckedUpdateManyWithoutMatchNestedInput
   }
 
   export type MatchCreateManyCreatorInput = {
@@ -56081,6 +59300,10 @@ export namespace Prisma {
     aiDifficulty?: string | null
     aiTeamSide?: string | null
     aiUserId?: string | null
+    leagueSeasonId?: string | null
+    leagueRoundId?: string | null
+    leaguePairingId?: string | null
+    leagueScoredAt?: Date | string | null
   }
 
   export type TeamCreateManyOwnerInput = {
@@ -56242,9 +59465,13 @@ export namespace Prisma {
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
     aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueScoredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     creator?: UserUpdateOneWithoutCreatedMatchesNestedInput
     turns?: TurnUpdateManyWithoutMatchNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutMatchNestedInput
+    leagueSeason?: LeagueSeasonUpdateOneWithoutMatchesNestedInput
+    leagueRound?: LeagueRoundUpdateOneWithoutMatchesNestedInput
+    leaguePairing?: LeaguePairingUpdateOneWithoutMatchNestedInput
   }
 
   export type MatchUncheckedUpdateWithoutPlayersInput = {
@@ -56259,6 +59486,10 @@ export namespace Prisma {
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
     aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueSeasonId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueRoundId?: NullableStringFieldUpdateOperationsInput | string | null
+    leaguePairingId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueScoredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     turns?: TurnUncheckedUpdateManyWithoutMatchNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutMatchNestedInput
   }
@@ -56275,6 +59506,10 @@ export namespace Prisma {
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
     aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueSeasonId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueRoundId?: NullableStringFieldUpdateOperationsInput | string | null
+    leaguePairingId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueScoredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type MatchUpdateWithoutCreatorInput = {
@@ -56288,9 +59523,13 @@ export namespace Prisma {
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
     aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueScoredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     players?: UserUpdateManyWithoutMatchesNestedInput
     turns?: TurnUpdateManyWithoutMatchNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutMatchNestedInput
+    leagueSeason?: LeagueSeasonUpdateOneWithoutMatchesNestedInput
+    leagueRound?: LeagueRoundUpdateOneWithoutMatchesNestedInput
+    leaguePairing?: LeaguePairingUpdateOneWithoutMatchNestedInput
   }
 
   export type MatchUncheckedUpdateWithoutCreatorInput = {
@@ -56304,6 +59543,10 @@ export namespace Prisma {
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
     aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueSeasonId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueRoundId?: NullableStringFieldUpdateOperationsInput | string | null
+    leaguePairingId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueScoredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     players?: UserUncheckedUpdateManyWithoutMatchesNestedInput
     turns?: TurnUncheckedUpdateManyWithoutMatchNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutMatchNestedInput
@@ -56320,6 +59563,10 @@ export namespace Prisma {
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
     aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueSeasonId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueRoundId?: NullableStringFieldUpdateOperationsInput | string | null
+    leaguePairingId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueScoredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type TeamUpdateWithoutOwnerInput = {
@@ -57435,6 +60682,8 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     season?: LeagueSeasonUpdateOneRequiredWithoutParticipantsNestedInput
+    homePairings?: LeaguePairingUpdateManyWithoutHomeParticipantNestedInput
+    awayPairings?: LeaguePairingUpdateManyWithoutAwayParticipantNestedInput
   }
 
   export type LeagueParticipantUncheckedUpdateWithoutTeamInput = {
@@ -57451,6 +60700,8 @@ export namespace Prisma {
     casualtiesAgainst?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    homePairings?: LeaguePairingUncheckedUpdateManyWithoutHomeParticipantNestedInput
+    awayPairings?: LeaguePairingUncheckedUpdateManyWithoutAwayParticipantNestedInput
   }
 
   export type LeagueParticipantUncheckedUpdateManyWithoutTeamInput = {
@@ -57803,6 +61054,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     participants?: LeagueParticipantUpdateManyWithoutSeasonNestedInput
     rounds?: LeagueRoundUpdateManyWithoutSeasonNestedInput
+    matches?: MatchUpdateManyWithoutLeagueSeasonNestedInput
   }
 
   export type LeagueSeasonUncheckedUpdateWithoutLeagueInput = {
@@ -57818,6 +61070,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     participants?: LeagueParticipantUncheckedUpdateManyWithoutSeasonNestedInput
     rounds?: LeagueRoundUncheckedUpdateManyWithoutSeasonNestedInput
+    matches?: MatchUncheckedUpdateManyWithoutLeagueSeasonNestedInput
   }
 
   export type LeagueSeasonUncheckedUpdateManyWithoutLeagueInput = {
@@ -57860,6 +61113,23 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
+  export type MatchCreateManyLeagueSeasonInput = {
+    id?: string
+    createdAt?: Date | string
+    status: string
+    seed: string
+    creatorId?: string | null
+    currentTurnUserId?: string | null
+    lastMoveAt?: Date | string | null
+    aiOpponent?: boolean
+    aiDifficulty?: string | null
+    aiTeamSide?: string | null
+    aiUserId?: string | null
+    leagueRoundId?: string | null
+    leaguePairingId?: string | null
+    leagueScoredAt?: Date | string | null
+  }
+
   export type LeagueParticipantUpdateWithoutSeasonInput = {
     id?: StringFieldUpdateOperationsInput | string
     seasonElo?: IntFieldUpdateOperationsInput | number
@@ -57874,6 +61144,8 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     team?: TeamUpdateOneRequiredWithoutLeagueParticipationsNestedInput
+    homePairings?: LeaguePairingUpdateManyWithoutHomeParticipantNestedInput
+    awayPairings?: LeaguePairingUpdateManyWithoutAwayParticipantNestedInput
   }
 
   export type LeagueParticipantUncheckedUpdateWithoutSeasonInput = {
@@ -57890,6 +61162,8 @@ export namespace Prisma {
     casualtiesAgainst?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    homePairings?: LeaguePairingUncheckedUpdateManyWithoutHomeParticipantNestedInput
+    awayPairings?: LeaguePairingUncheckedUpdateManyWithoutAwayParticipantNestedInput
   }
 
   export type LeagueParticipantUncheckedUpdateManyWithoutSeasonInput = {
@@ -57917,6 +61191,8 @@ export namespace Prisma {
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    matches?: MatchUpdateManyWithoutLeagueRoundNestedInput
+    pairings?: LeaguePairingUpdateManyWithoutRoundNestedInput
   }
 
   export type LeagueRoundUncheckedUpdateWithoutSeasonInput = {
@@ -57928,6 +61204,8 @@ export namespace Prisma {
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    matches?: MatchUncheckedUpdateManyWithoutLeagueRoundNestedInput
+    pairings?: LeaguePairingUncheckedUpdateManyWithoutRoundNestedInput
   }
 
   export type LeagueRoundUncheckedUpdateManyWithoutSeasonInput = {
@@ -57937,6 +61215,275 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MatchUpdateWithoutLeagueSeasonInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    status?: StringFieldUpdateOperationsInput | string
+    seed?: StringFieldUpdateOperationsInput | string
+    currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    aiOpponent?: BoolFieldUpdateOperationsInput | boolean
+    aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
+    aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
+    aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueScoredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    creator?: UserUpdateOneWithoutCreatedMatchesNestedInput
+    players?: UserUpdateManyWithoutMatchesNestedInput
+    turns?: TurnUpdateManyWithoutMatchNestedInput
+    teamSelections?: TeamSelectionUpdateManyWithoutMatchNestedInput
+    leagueRound?: LeagueRoundUpdateOneWithoutMatchesNestedInput
+    leaguePairing?: LeaguePairingUpdateOneWithoutMatchNestedInput
+  }
+
+  export type MatchUncheckedUpdateWithoutLeagueSeasonInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    status?: StringFieldUpdateOperationsInput | string
+    seed?: StringFieldUpdateOperationsInput | string
+    creatorId?: NullableStringFieldUpdateOperationsInput | string | null
+    currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    aiOpponent?: BoolFieldUpdateOperationsInput | boolean
+    aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
+    aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
+    aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueRoundId?: NullableStringFieldUpdateOperationsInput | string | null
+    leaguePairingId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueScoredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    players?: UserUncheckedUpdateManyWithoutMatchesNestedInput
+    turns?: TurnUncheckedUpdateManyWithoutMatchNestedInput
+    teamSelections?: TeamSelectionUncheckedUpdateManyWithoutMatchNestedInput
+  }
+
+  export type MatchUncheckedUpdateManyWithoutLeagueSeasonInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    status?: StringFieldUpdateOperationsInput | string
+    seed?: StringFieldUpdateOperationsInput | string
+    creatorId?: NullableStringFieldUpdateOperationsInput | string | null
+    currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    aiOpponent?: BoolFieldUpdateOperationsInput | boolean
+    aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
+    aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
+    aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueRoundId?: NullableStringFieldUpdateOperationsInput | string | null
+    leaguePairingId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueScoredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type LeaguePairingCreateManyHomeParticipantInput = {
+    id?: string
+    roundId: string
+    awayParticipantId: string
+    status?: string
+    scheduledAt?: Date | string | null
+    deadlineAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type LeaguePairingCreateManyAwayParticipantInput = {
+    id?: string
+    roundId: string
+    homeParticipantId: string
+    status?: string
+    scheduledAt?: Date | string | null
+    deadlineAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type LeaguePairingUpdateWithoutHomeParticipantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    scheduledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deadlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    round?: LeagueRoundUpdateOneRequiredWithoutPairingsNestedInput
+    awayParticipant?: LeagueParticipantUpdateOneRequiredWithoutAwayPairingsNestedInput
+    match?: MatchUpdateOneWithoutLeaguePairingNestedInput
+  }
+
+  export type LeaguePairingUncheckedUpdateWithoutHomeParticipantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    roundId?: StringFieldUpdateOperationsInput | string
+    awayParticipantId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    scheduledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deadlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    match?: MatchUncheckedUpdateOneWithoutLeaguePairingNestedInput
+  }
+
+  export type LeaguePairingUncheckedUpdateManyWithoutHomeParticipantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    roundId?: StringFieldUpdateOperationsInput | string
+    awayParticipantId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    scheduledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deadlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LeaguePairingUpdateWithoutAwayParticipantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    scheduledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deadlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    round?: LeagueRoundUpdateOneRequiredWithoutPairingsNestedInput
+    homeParticipant?: LeagueParticipantUpdateOneRequiredWithoutHomePairingsNestedInput
+    match?: MatchUpdateOneWithoutLeaguePairingNestedInput
+  }
+
+  export type LeaguePairingUncheckedUpdateWithoutAwayParticipantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    roundId?: StringFieldUpdateOperationsInput | string
+    homeParticipantId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    scheduledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deadlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    match?: MatchUncheckedUpdateOneWithoutLeaguePairingNestedInput
+  }
+
+  export type LeaguePairingUncheckedUpdateManyWithoutAwayParticipantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    roundId?: StringFieldUpdateOperationsInput | string
+    homeParticipantId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    scheduledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deadlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MatchCreateManyLeagueRoundInput = {
+    id?: string
+    createdAt?: Date | string
+    status: string
+    seed: string
+    creatorId?: string | null
+    currentTurnUserId?: string | null
+    lastMoveAt?: Date | string | null
+    aiOpponent?: boolean
+    aiDifficulty?: string | null
+    aiTeamSide?: string | null
+    aiUserId?: string | null
+    leagueSeasonId?: string | null
+    leaguePairingId?: string | null
+    leagueScoredAt?: Date | string | null
+  }
+
+  export type LeaguePairingCreateManyRoundInput = {
+    id?: string
+    homeParticipantId: string
+    awayParticipantId: string
+    status?: string
+    scheduledAt?: Date | string | null
+    deadlineAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type MatchUpdateWithoutLeagueRoundInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    status?: StringFieldUpdateOperationsInput | string
+    seed?: StringFieldUpdateOperationsInput | string
+    currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    aiOpponent?: BoolFieldUpdateOperationsInput | boolean
+    aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
+    aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
+    aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueScoredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    creator?: UserUpdateOneWithoutCreatedMatchesNestedInput
+    players?: UserUpdateManyWithoutMatchesNestedInput
+    turns?: TurnUpdateManyWithoutMatchNestedInput
+    teamSelections?: TeamSelectionUpdateManyWithoutMatchNestedInput
+    leagueSeason?: LeagueSeasonUpdateOneWithoutMatchesNestedInput
+    leaguePairing?: LeaguePairingUpdateOneWithoutMatchNestedInput
+  }
+
+  export type MatchUncheckedUpdateWithoutLeagueRoundInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    status?: StringFieldUpdateOperationsInput | string
+    seed?: StringFieldUpdateOperationsInput | string
+    creatorId?: NullableStringFieldUpdateOperationsInput | string | null
+    currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    aiOpponent?: BoolFieldUpdateOperationsInput | boolean
+    aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
+    aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
+    aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueSeasonId?: NullableStringFieldUpdateOperationsInput | string | null
+    leaguePairingId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueScoredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    players?: UserUncheckedUpdateManyWithoutMatchesNestedInput
+    turns?: TurnUncheckedUpdateManyWithoutMatchNestedInput
+    teamSelections?: TeamSelectionUncheckedUpdateManyWithoutMatchNestedInput
+  }
+
+  export type MatchUncheckedUpdateManyWithoutLeagueRoundInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    status?: StringFieldUpdateOperationsInput | string
+    seed?: StringFieldUpdateOperationsInput | string
+    creatorId?: NullableStringFieldUpdateOperationsInput | string | null
+    currentTurnUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastMoveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    aiOpponent?: BoolFieldUpdateOperationsInput | boolean
+    aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
+    aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
+    aiUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueSeasonId?: NullableStringFieldUpdateOperationsInput | string | null
+    leaguePairingId?: NullableStringFieldUpdateOperationsInput | string | null
+    leagueScoredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type LeaguePairingUpdateWithoutRoundInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    scheduledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deadlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    homeParticipant?: LeagueParticipantUpdateOneRequiredWithoutHomePairingsNestedInput
+    awayParticipant?: LeagueParticipantUpdateOneRequiredWithoutAwayPairingsNestedInput
+    match?: MatchUpdateOneWithoutLeaguePairingNestedInput
+  }
+
+  export type LeaguePairingUncheckedUpdateWithoutRoundInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    homeParticipantId?: StringFieldUpdateOperationsInput | string
+    awayParticipantId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    scheduledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deadlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    match?: MatchUncheckedUpdateOneWithoutLeaguePairingNestedInput
+  }
+
+  export type LeaguePairingUncheckedUpdateManyWithoutRoundInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    homeParticipantId?: StringFieldUpdateOperationsInput | string
+    awayParticipantId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    scheduledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deadlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

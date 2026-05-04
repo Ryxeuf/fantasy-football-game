@@ -199,7 +199,21 @@ model Match {
   aiTeamSide   String?
   aiUserId     String?
 
+  // L.7 / Sprint Ligues v2 — rattachement a une saison/journee/pairing
+  // de ligue. Miroir du schema Postgres : sans ces champs, les services
+  // qui font des includes (`pairings`, `leagueSeason`...) crashent
+  // l'instance SQLite des e2e-api avec PrismaClientValidationError.
+  leagueSeasonId   String?
+  leagueSeason     LeagueSeason? @relation("LeagueSeasonMatches", fields: [leagueSeasonId], references: [id])
+  leagueRoundId    String?
+  leagueRound      LeagueRound?  @relation("LeagueRoundMatches", fields: [leagueRoundId], references: [id])
+  leaguePairingId  String?         @unique
+  leaguePairing    LeaguePairing?  @relation(fields: [leaguePairingId], references: [id])
+  leagueScoredAt   DateTime?
+
   @@index([aiOpponent])
+  @@index([leagueSeasonId])
+  @@index([leagueRoundId])
 }
 
 model Turn {
@@ -610,6 +624,7 @@ model LeagueSeason {
 
   participants LeagueParticipant[]
   rounds       LeagueRound[]
+  matches      Match[] @relation("LeagueSeasonMatches")
 
   @@unique([leagueId, seasonNumber])
   @@index([leagueId])
@@ -635,6 +650,10 @@ model LeagueParticipant {
   status            String       @default("active") // "active" | "withdrawn"
   joinedAt          DateTime     @default(now())
 
+  // Sprint Ligues v2 — back-relations vers les pairings (home/away)
+  homePairings      LeaguePairing[] @relation("LeaguePairingHome")
+  awayPairings      LeaguePairing[] @relation("LeaguePairingAway")
+
   @@unique([seasonId, teamId])
   @@index([seasonId])
   @@index([teamId])
@@ -653,9 +672,39 @@ model LeagueRound {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
+  matches  Match[]         @relation("LeagueRoundMatches")
+  pairings LeaguePairing[]
+
   @@unique([seasonId, roundNumber])
   @@index([seasonId])
   @@index([status])
+}
+
+// Sprint Ligues v2 (PR1) — pairing pre-genere du calendrier round-robin.
+// Mirroir du schema Postgres : indispensable pour que les services qui
+// font `prisma.leaguePairing.X(...)` ou des includes `rounds.pairings`
+// fonctionnent contre la DB SQLite in-memory utilisee par les e2e-api.
+model LeaguePairing {
+  id                String   @id @default(cuid())
+  round             LeagueRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  roundId           String
+  homeParticipant   LeagueParticipant @relation("LeaguePairingHome", fields: [homeParticipantId], references: [id], onDelete: Cascade)
+  homeParticipantId String
+  awayParticipant   LeagueParticipant @relation("LeaguePairingAway", fields: [awayParticipantId], references: [id], onDelete: Cascade)
+  awayParticipantId String
+  // "scheduled" | "in_progress" | "played" | "forfeit_home" | "forfeit_away" | "cancelled"
+  status            String   @default("scheduled")
+  scheduledAt       DateTime?
+  deadlineAt        DateTime?
+  match             Match?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([roundId])
+  @@index([status])
+  @@index([deadlineAt, status])
+  @@index([homeParticipantId])
+  @@index([awayParticipantId])
 }
 
 /// Catalogue des Règles Spéciales d'équipe (S3 — OCR officielle).

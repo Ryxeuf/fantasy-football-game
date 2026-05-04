@@ -224,7 +224,11 @@ exports.Prisma.MatchScalarFieldEnum = {
   aiOpponent: 'aiOpponent',
   aiDifficulty: 'aiDifficulty',
   aiTeamSide: 'aiTeamSide',
-  aiUserId: 'aiUserId'
+  aiUserId: 'aiUserId',
+  leagueSeasonId: 'leagueSeasonId',
+  leagueRoundId: 'leagueRoundId',
+  leaguePairingId: 'leaguePairingId',
+  leagueScoredAt: 'leagueScoredAt'
 };
 
 exports.Prisma.TurnScalarFieldEnum = {
@@ -501,6 +505,18 @@ exports.Prisma.LeagueRoundScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.LeaguePairingScalarFieldEnum = {
+  id: 'id',
+  roundId: 'roundId',
+  homeParticipantId: 'homeParticipantId',
+  awayParticipantId: 'awayParticipantId',
+  status: 'status',
+  scheduledAt: 'scheduledAt',
+  deadlineAt: 'deadlineAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.TeamSpecialRuleScalarFieldEnum = {
   id: 'id',
   slug: 'slug',
@@ -587,6 +603,7 @@ exports.Prisma.ModelName = {
   LeagueSeason: 'LeagueSeason',
   LeagueParticipant: 'LeagueParticipant',
   LeagueRound: 'LeagueRound',
+  LeaguePairing: 'LeaguePairing',
   TeamSpecialRule: 'TeamSpecialRule',
   RegionalLeague: 'RegionalLeague'
 };

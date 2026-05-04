@@ -44,6 +44,35 @@ export interface LeagueDetail {
   seasons: LeagueSeasonSummary[];
 }
 
+export type LeaguePairingStatus =
+  | "scheduled"
+  | "in_progress"
+  | "played"
+  | "forfeit_home"
+  | "forfeit_away"
+  | "cancelled";
+
+export interface LeaguePairingTeamDetail {
+  id: string;
+  teamId: string;
+  team: {
+    id: string;
+    name: string;
+    roster: string;
+    ownerId: string;
+  };
+}
+
+export interface LeaguePairingDetail {
+  id: string;
+  status: LeaguePairingStatus | string;
+  scheduledAt: string | null;
+  deadlineAt: string | null;
+  homeParticipant: LeaguePairingTeamDetail;
+  awayParticipant: LeaguePairingTeamDetail;
+  match: { id: string; status: string } | null;
+}
+
 export interface LeagueRoundDetail {
   id: string;
   roundNumber: number;
@@ -51,6 +80,7 @@ export interface LeagueRoundDetail {
   status: LeagueRoundStatus | string;
   startDate: string | null;
   endDate: string | null;
+  pairings?: LeaguePairingDetail[];
 }
 
 export interface LeagueParticipantDetail {

@@ -34,6 +34,7 @@ import { requireFeatureFlag } from "./middleware/requireFeatureFlag";
 import {
   AI_TRAINING_FLAG,
   ONLINE_PLAY_FLAG,
+  LEAGUES_V2_UI_FLAG,
   invalidateFeatureFlagsCache,
 } from "./services/featureFlags";
 import dotenv from "dotenv";
@@ -483,6 +484,11 @@ if (process.env.TEST_SQLITE === "1") {
         {
           key: AI_TRAINING_FLAG,
           description: "Active les matchs d'entrainement contre l'IA",
+        },
+        {
+          key: LEAGUES_V2_UI_FLAG,
+          description:
+            "Sprint Ligues v2 — UI de gestion complete des ligues (creation, edition, admin saison, inscription, calendrier interactif).",
         },
       ];
       for (const flag of flagSeeds) {

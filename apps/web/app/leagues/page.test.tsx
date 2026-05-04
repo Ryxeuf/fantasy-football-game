@@ -1,7 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import LeaguesPage from "./page";
 import { LanguageProvider } from "../contexts/LanguageContext";
+
+// Sprint Ligues v2 PR2 — `LeaguesPage` consomme desormais
+// `useFeatureFlag(LEAGUES_V2_UI_FLAG)` pour decider d'afficher le CTA
+// "Creer une ligue". On stub le hook ici plutot que de wrapper avec un
+// vrai `FeatureFlagProvider` : ca evite que la fetch mock globale
+// reponde aussi au call `/api/feature-flags/me` (qui sinon recevrait
+// un body `{ leagues: [...] }` et casserait le `new Set(...)` du
+// provider).
+vi.mock("../hooks/useFeatureFlag", () => ({
+  useFeatureFlag: vi.fn(() => false),
+}));
+
+import LeaguesPage from "./page";
 
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
@@ -193,5 +205,42 @@ describe("LeaguesPage", () => {
     // Max participants should be shown
     expect(screen.getAllByText(/16/).length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText(/8/).length).toBeGreaterThanOrEqual(1);
+  });
+
+  // Sprint Ligues v2 PR2 — bouton "Creer une ligue" gate par flag.
+  it("hides the create-league CTA when leagues_v2_ui flag is off", async () => {
+    const { useFeatureFlag } = await import("../hooks/useFeatureFlag");
+    (useFeatureFlag as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
+      false,
+    );
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockLeaguesData),
+    });
+
+    renderWithProvider();
+
+    await waitFor(() => {
+      expect(screen.getByText("Open 5 Teams")).toBeTruthy();
+    });
+
+    expect(screen.queryByTestId("leagues-create-cta")).toBeNull();
+  });
+
+  it("shows the create-league CTA when leagues_v2_ui flag is on", async () => {
+    const { useFeatureFlag } = await import("../hooks/useFeatureFlag");
+    (useFeatureFlag as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
+      true,
+    );
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockLeaguesData),
+    });
+
+    renderWithProvider();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("leagues-create-cta")).toBeTruthy();
+    });
   });
 });
