@@ -26,6 +26,8 @@ import {
   isInPlacement,
   type SeasonMatchOutcome,
 } from "./season-elo";
+import { applyThemedSeasonClosure } from "./themed-season-closure";
+import { serverLog } from "../utils/server-log";
 
 export interface RecordMatchResultInput {
   readonly matchId: string;
@@ -242,6 +244,24 @@ export async function recordLeagueMatchResult(
           data: { status: "completed" },
         });
         seasonCompleted = true;
+
+        // S26.6f — fire-and-forget : la cloture thematique est un point
+        // d'extension non critique. Si elle echoue, le match reste
+        // correctement comptabilise et la saison reste cloturee.
+        applyThemedSeasonClosure(seasonId)
+          .then((r) => {
+            if (!r.skipped) {
+              serverLog.info(
+                "[themed-season-closure] champion:",
+                r.label,
+                r.championUserId,
+              );
+            }
+          })
+          .catch((e: unknown) => {
+            const msg = e instanceof Error ? e.message : "unknown";
+            serverLog.error("[themed-season-closure] error:", msg);
+          });
       }
     }
   }
