@@ -46,3 +46,17 @@ export const updateCupStatusSchema = z.object({
     message: "Statut invalide",
   }),
 });
+
+/**
+ * S27.1b — Query schema pour `GET /cup/monthly`. Tous les filtres sont
+ * optionnels : year/month restreignent l'edition, limit/offset bornent
+ * la pagination (cap 100, defaut 50).
+ */
+export const listMonthlyCupsQuerySchema = z.object({
+  year: z.coerce.number().int().positive().optional(),
+  month: z.coerce.number().int().min(1).max(12).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional().default(50),
+  offset: z.coerce.number().int().min(0).optional().default(0),
+});
+
+export type ListMonthlyCupsQuery = z.infer<typeof listMonthlyCupsQuerySchema>;
