@@ -486,6 +486,19 @@ export const translations = {
       themeSeasonsEmpty: "Aucune édition pour ce thème pour le moment.",
       themeNoSeasonsYet: "Aucune édition prévue pour le moment.",
     },
+    // S27.1c — Calendrier Nuffle Cup mensuelles
+    cups: {
+      monthlyTitle: "Calendrier Nuffle Cup",
+      monthlyDescription:
+        "1 Nuffle Cup mensuelle ouverte aux coachs de Nuffle Arena. Trophées numériques + badge profil.",
+      monthlyLoading: "Chargement des cups…",
+      monthlyError: "Erreur lors du chargement des cups",
+      monthlyEmpty: "Aucune Nuffle Cup mensuelle planifiée pour le moment.",
+      monthlyStatusOuverte: "Inscriptions ouvertes",
+      monthlyStatusEnCours: "En cours",
+      monthlyStatusTerminee: "Terminée",
+      monthlyStatusArchivee: "Archivée",
+    },
     // Inducements (pre-match)
     inducements: {
       title: "Inducements",
@@ -1035,6 +1048,19 @@ export const translations = {
       themeSeasonsTitle: "Editions",
       themeSeasonsEmpty: "No edition for this theme yet.",
       themeNoSeasonsYet: "No edition scheduled yet.",
+    },
+    // S27.1c — Monthly Nuffle Cup calendar
+    cups: {
+      monthlyTitle: "Nuffle Cup calendar",
+      monthlyDescription:
+        "1 monthly Nuffle Cup open to all Nuffle Arena coaches. Digital trophies + profile badge.",
+      monthlyLoading: "Loading cups…",
+      monthlyError: "Failed to load cups",
+      monthlyEmpty: "No monthly Nuffle Cup scheduled yet.",
+      monthlyStatusOuverte: "Registration open",
+      monthlyStatusEnCours: "In progress",
+      monthlyStatusTerminee: "Completed",
+      monthlyStatusArchivee: "Archived",
     },
     // Inducements (pre-match)
     inducements: {
