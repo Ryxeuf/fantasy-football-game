@@ -475,6 +475,16 @@ export const translations = {
       participantsSection: "Équipes inscrites",
       participantsEmpty: "Aucune équipe inscrite sur cette saison.",
       participantStatusWithdrawn: "Retirée",
+      // S26.6c — calendrier des thèmes saisonniers
+      themesCalendarTitle: "Calendrier des thèmes",
+      themesCalendarDescription:
+        "Découvrez les éditions saisonnières de Nuffle Arena : un thème par mois, avec ses propres rosters et récompenses.",
+      themesCalendarLoading: "Chargement des thèmes…",
+      themesCalendarError: "Erreur lors du chargement des thèmes",
+      themeMonthLabel: "Mois",
+      themeSeasonsTitle: "Éditions",
+      themeSeasonsEmpty: "Aucune édition pour ce thème pour le moment.",
+      themeNoSeasonsYet: "Aucune édition prévue pour le moment.",
     },
     // Inducements (pre-match)
     inducements: {
@@ -1015,6 +1025,16 @@ export const translations = {
       participantsSection: "Registered teams",
       participantsEmpty: "No team registered in this season.",
       participantStatusWithdrawn: "Withdrawn",
+      // S26.6c — themed seasons calendar
+      themesCalendarTitle: "Themed seasons calendar",
+      themesCalendarDescription:
+        "Discover Nuffle Arena's seasonal editions: one theme per month, each with its own rosters and rewards.",
+      themesCalendarLoading: "Loading themes…",
+      themesCalendarError: "Failed to load themes",
+      themeMonthLabel: "Month",
+      themeSeasonsTitle: "Editions",
+      themeSeasonsEmpty: "No edition for this theme yet.",
+      themeNoSeasonsYet: "No edition scheduled yet.",
     },
     // Inducements (pre-match)
     inducements: {
