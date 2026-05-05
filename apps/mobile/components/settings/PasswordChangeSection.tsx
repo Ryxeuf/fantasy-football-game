@@ -1,6 +1,7 @@
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { Field } from "./SettingsFields";
 import { settingsStyles as styles } from "../../app/settings.styles";
+import { useTranslation } from "../../lib/i18n-context";
 import type { PasswordChange } from "../../lib/profile";
 
 interface PasswordChangeSectionProps {
@@ -26,10 +27,11 @@ export function PasswordChangeSection({
   onSave,
   onCancel,
 }: PasswordChangeSectionProps) {
+  const { t } = useTranslation();
   return (
     <View style={styles.section} testID="security-section">
       <View style={styles.sectionHeaderRow}>
-        <Text style={styles.sectionTitle}>Securite</Text>
+        <Text style={styles.sectionTitle}>{t("settings.security.title")}</Text>
         {!changing && (
           <Pressable
             onPress={onStart}
@@ -37,7 +39,7 @@ export function PasswordChangeSection({
             testID="change-password-button"
           >
             <Text style={styles.secondaryButtonText}>
-              Changer le mot de passe
+              {t("settings.security.changeButton")}
             </Text>
           </Pressable>
         )}
@@ -49,7 +51,7 @@ export function PasswordChangeSection({
         <View>
           {error && <Text style={styles.error}>{error}</Text>}
           <Field
-            label="Mot de passe actuel"
+            label={t("settings.security.fields.currentPassword")}
             required
             value={password.currentPassword}
             onChangeText={(v) =>
@@ -60,7 +62,7 @@ export function PasswordChangeSection({
             autoComplete="current-password"
           />
           <Field
-            label="Nouveau mot de passe"
+            label={t("settings.security.fields.newPassword")}
             required
             value={password.newPassword}
             onChangeText={(v) => onChange({ ...password, newPassword: v })}
@@ -69,7 +71,7 @@ export function PasswordChangeSection({
             autoComplete="new-password"
           />
           <Field
-            label="Confirmer le mot de passe"
+            label={t("settings.security.fields.confirmPassword")}
             required
             value={password.confirmPassword}
             onChangeText={(v) =>
@@ -89,7 +91,9 @@ export function PasswordChangeSection({
               {saving ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.primaryButtonText}>Enregistrer</Text>
+                <Text style={styles.primaryButtonText}>
+                  {t("settings.security.saveButton")}
+                </Text>
               )}
             </Pressable>
             <Pressable
@@ -97,7 +101,9 @@ export function PasswordChangeSection({
               disabled={saving}
               style={styles.secondaryButton}
             >
-              <Text style={styles.secondaryButtonText}>Annuler</Text>
+              <Text style={styles.secondaryButtonText}>
+                {t("common.cancel")}
+              </Text>
             </Pressable>
           </View>
         </View>

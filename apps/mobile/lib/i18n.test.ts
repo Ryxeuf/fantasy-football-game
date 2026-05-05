@@ -80,3 +80,117 @@ describe("t (S27.3)", () => {
     expect(typeof t("common.cancel", undefined, "fr")).toBe("string");
   });
 });
+
+/**
+ * S27.3.3 — Sub-components settings/* migration vers i18n.
+ *
+ * Couvre les nouvelles cles utilisees par :
+ *  - ProfileEditSection (settings.profile.*)
+ *  - PasswordChangeSection (settings.security.*)
+ *  - DangerZone (settings.danger.*)
+ *  - AccountInfoSection / StatsSection (settings.account.*, settings.stats.*)
+ *  - ProfileHeader (settings.profileHeader.*)
+ *
+ * On valide que chaque cle :
+ *  - retourne une chaine non vide en FR (default),
+ *  - retourne une chaine non vide en EN,
+ *  - les deux locales different (sinon trad EN oubliee).
+ */
+const SETTINGS_I18N_KEYS = [
+  "settings.profile.title",
+  "settings.profile.editButton",
+  "settings.profile.fields.email",
+  "settings.profile.fields.coachName",
+  "settings.profile.fields.firstName",
+  "settings.profile.fields.lastName",
+  "settings.profile.fields.dateOfBirth",
+  "settings.profile.fields.dateOfBirthPlaceholder",
+  "settings.profile.saveButton",
+  "settings.security.title",
+  "settings.security.changeButton",
+  "settings.security.fields.currentPassword",
+  "settings.security.fields.newPassword",
+  "settings.security.fields.confirmPassword",
+  "settings.security.saveButton",
+  "settings.danger.title",
+  "settings.danger.description",
+  "settings.danger.button",
+  "settings.account.title",
+  "settings.account.registeredAt",
+  "settings.account.lastUpdate",
+  "settings.account.firstName",
+  "settings.account.lastName",
+  "settings.account.dateOfBirth",
+  "settings.account.role",
+  "settings.account.adminRole",
+  "settings.stats.title",
+  "settings.stats.elo",
+  "settings.stats.teams",
+  "settings.stats.matchesPlayed",
+  "settings.stats.matchesCreated",
+  "settings.profileHeader.patreonBadge",
+] as const;
+
+describe("settings sub-components i18n keys (S27.3.3)", () => {
+  it.each(SETTINGS_I18N_KEYS)(
+    "FR : '%s' retourne une chaine non vide differente de la cle",
+    (key) => {
+      const value = t(key as never);
+      expect(typeof value).toBe("string");
+      expect(value.length).toBeGreaterThan(0);
+      expect(value).not.toBe(key);
+    },
+  );
+
+  it.each(SETTINGS_I18N_KEYS)(
+    "EN : '%s' retourne une chaine non vide differente de la cle",
+    (key) => {
+      const value = t(key as never, undefined, "en" as Locale);
+      expect(typeof value).toBe("string");
+      expect(value.length).toBeGreaterThan(0);
+      expect(value).not.toBe(key);
+    },
+  );
+
+  // Sous-ensemble des cles dont la traduction EN doit explicitement
+  // differer du FR (les autres comme "ELO", "Email", "Patreon" sont
+  // legitimement identiques entre langues).
+  const KEYS_REQUIRING_DISTINCT_EN = [
+    "settings.profile.title",
+    "settings.profile.editButton",
+    "settings.profile.fields.coachName",
+    "settings.profile.fields.firstName",
+    "settings.profile.fields.lastName",
+    "settings.profile.fields.dateOfBirth",
+    "settings.profile.saveButton",
+    "settings.security.title",
+    "settings.security.changeButton",
+    "settings.security.fields.currentPassword",
+    "settings.security.fields.newPassword",
+    "settings.security.fields.confirmPassword",
+    "settings.security.saveButton",
+    "settings.danger.title",
+    "settings.danger.description",
+    "settings.danger.button",
+    "settings.account.title",
+    "settings.account.registeredAt",
+    "settings.account.lastUpdate",
+    "settings.account.firstName",
+    "settings.account.lastName",
+    "settings.account.dateOfBirth",
+    "settings.account.adminRole",
+    "settings.stats.title",
+    "settings.stats.teams",
+    "settings.stats.matchesPlayed",
+    "settings.stats.matchesCreated",
+  ] as const;
+
+  it.each(KEYS_REQUIRING_DISTINCT_EN)(
+    "FR != EN pour '%s' (parite stricte, pas de copie oubliee)",
+    (key) => {
+      const fr = t(key as never);
+      const en = t(key as never, undefined, "en" as Locale);
+      expect(fr).not.toBe(en);
+    },
+  );
+});

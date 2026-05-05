@@ -1,6 +1,7 @@
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { Field } from "./SettingsFields";
 import { settingsStyles as styles } from "../../app/settings.styles";
+import { useTranslation } from "../../lib/i18n-context";
 import type { ProfileFormData } from "../../lib/profile";
 
 interface ProfileEditSectionProps {
@@ -26,17 +27,20 @@ export function ProfileEditSection({
   onSave,
   onCancel,
 }: ProfileEditSectionProps) {
+  const { t } = useTranslation();
   return (
     <View style={styles.section} testID="profile-edit">
       <View style={styles.sectionHeaderRow}>
-        <Text style={styles.sectionTitle}>Profil</Text>
+        <Text style={styles.sectionTitle}>{t("settings.profile.title")}</Text>
         {!editing && (
           <Pressable
             onPress={onStart}
             style={styles.secondaryButton}
             testID="edit-profile-button"
           >
-            <Text style={styles.secondaryButtonText}>Modifier</Text>
+            <Text style={styles.secondaryButtonText}>
+              {t("settings.profile.editButton")}
+            </Text>
           </Pressable>
         )}
       </View>
@@ -49,7 +53,7 @@ export function ProfileEditSection({
         <View>
           {formError && <Text style={styles.error}>{formError}</Text>}
           <Field
-            label="Email"
+            label={t("settings.profile.fields.email")}
             required
             value={form.email}
             onChangeText={(v) => onChange({ ...form, email: v })}
@@ -59,7 +63,7 @@ export function ProfileEditSection({
             testID="input-email"
           />
           <Field
-            label="Nom de coach"
+            label={t("settings.profile.fields.coachName")}
             required
             value={form.coachName}
             onChangeText={(v) => onChange({ ...form, coachName: v })}
@@ -67,22 +71,22 @@ export function ProfileEditSection({
             testID="input-coach-name"
           />
           <Field
-            label="Prenom"
+            label={t("settings.profile.fields.firstName")}
             value={form.firstName}
             onChangeText={(v) => onChange({ ...form, firstName: v })}
             autoCapitalize="words"
           />
           <Field
-            label="Nom"
+            label={t("settings.profile.fields.lastName")}
             value={form.lastName}
             onChangeText={(v) => onChange({ ...form, lastName: v })}
             autoCapitalize="words"
           />
           <Field
-            label="Date de naissance (YYYY-MM-DD)"
+            label={t("settings.profile.fields.dateOfBirth")}
             value={form.dateOfBirth}
             onChangeText={(v) => onChange({ ...form, dateOfBirth: v })}
-            placeholder="1990-05-15"
+            placeholder={t("settings.profile.fields.dateOfBirthPlaceholder")}
             autoCapitalize="none"
           />
           <View style={styles.buttonRow}>
@@ -95,7 +99,9 @@ export function ProfileEditSection({
               {saving ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.primaryButtonText}>Enregistrer</Text>
+                <Text style={styles.primaryButtonText}>
+                  {t("settings.profile.saveButton")}
+                </Text>
               )}
             </Pressable>
             <Pressable
@@ -103,7 +109,9 @@ export function ProfileEditSection({
               disabled={saving}
               style={styles.secondaryButton}
             >
-              <Text style={styles.secondaryButtonText}>Annuler</Text>
+              <Text style={styles.secondaryButtonText}>
+                {t("common.cancel")}
+              </Text>
             </Pressable>
           </View>
         </View>

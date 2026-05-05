@@ -1,5 +1,6 @@
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { settingsStyles as styles } from "../../app/settings.styles";
+import { useTranslation } from "../../lib/i18n-context";
 
 interface DangerZoneProps {
   deleting: boolean;
@@ -8,15 +9,12 @@ interface DangerZoneProps {
 }
 
 export function DangerZone({ deleting, error, onPress }: DangerZoneProps) {
+  const { t } = useTranslation();
   return (
     <View style={styles.dangerSection} testID="danger-zone">
-      <Text style={styles.dangerTitle}>Suppression du compte</Text>
+      <Text style={styles.dangerTitle}>{t("settings.danger.title")}</Text>
       {error && <Text style={styles.error}>{error}</Text>}
-      <Text style={styles.dangerText}>
-        La suppression desactive votre acces. Vos donnees de jeu peuvent etre
-        conservees pour les statistiques, mais vous ne pourrez plus vous
-        reconnecter.
-      </Text>
+      <Text style={styles.dangerText}>{t("settings.danger.description")}</Text>
       <Pressable
         onPress={onPress}
         disabled={deleting}
@@ -26,7 +24,9 @@ export function DangerZone({ deleting, error, onPress }: DangerZoneProps) {
         {deleting ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <Text style={styles.dangerButtonText}>Supprimer mon compte</Text>
+          <Text style={styles.dangerButtonText}>
+            {t("settings.danger.button")}
+          </Text>
         )}
       </Pressable>
     </View>
