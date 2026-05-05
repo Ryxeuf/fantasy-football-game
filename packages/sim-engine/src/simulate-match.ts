@@ -1,28 +1,15 @@
 /**
  * Public entrypoint for the Pro League sim engine.
  *
- * Sprint Pro League — task 0.A.1 only delivers the workspace + the public
- * interface contract. The hybrid drive-level driver lands in 0.A.2 ; the
- * `MatchEvent` enum + `displayAtMs` channel in 0.A.3 ; the seeded PRNG in
- * 0.A.4 ; the action resolvers in 0.A.5.
- *
- * The current implementation is intentionally a deterministic placeholder
- * that satisfies the documented contract so consumers (broadcaster 1.B,
- * scheduler 1.A, bench 0.D) can wire against it today.
+ * Sprint Pro League — taches 0.A.1 a 0.A.5 lui ont fourni le contrat,
+ * la PRNG seedee, le format MatchEvent et les resolvers BB. La tache
+ * 0.A.2 (driver hybride) execute desormais effectivement le match en
+ * orchestrant ces pieces : `simulateMatch` ne fait que valider les
+ * inputs et deleguer a `runHybridDriver`.
  */
 
-import { createRng } from './rng/seeded';
-import {
-  ENGINE_VER,
-  type Casualty,
-  type MatchEvent,
-  type MatchOutcome,
-  type MatchSummary,
-  type SimInput,
-  type SimResult,
-} from './types';
-
-const KICKOFF_TIME_MS = 0;
+import { runHybridDriver } from './driver/hybrid-driver';
+import type { SimInput, SimResult } from './types';
 
 function validate(input: SimInput): void {
   if (!input || typeof input !== 'object') {
@@ -42,49 +29,7 @@ function validate(input: SimInput): void {
   }
 }
 
-function decideOutcome(home: number, away: number): MatchOutcome {
-  if (home > away) return 'home';
-  if (away > home) return 'away';
-  return 'draw';
-}
-
 export function simulateMatch(input: SimInput): SimResult {
   validate(input);
-
-  // Single root PRNG ; downstream lots (0.A.5 resolvers, 0.A.2 driver)
-  // will fork dedicated children per resolver to keep streams independent.
-  const rng = createRng(input.seed);
-
-  const events: MatchEvent[] = [
-    {
-      type: 'KICKOFF',
-      displayAtMs: KICKOFF_TIME_MS,
-      engineVer: ENGINE_VER,
-      seed: input.seed,
-      meta: {
-        home: input.home.id,
-        away: input.away.id,
-        rngSnapshot: rng.snapshot(),
-      },
-    },
-  ];
-
-  const score = { home: 0, away: 0 };
-  const summary: MatchSummary = {
-    outcome: decideOutcome(score.home, score.away),
-    score,
-    turnoverCount: 0,
-    touchdownCount: 0,
-    durationMs: 0,
-  };
-
-  const casualties: readonly Casualty[] = [];
-
-  return {
-    result: summary.outcome,
-    events,
-    summary,
-    casualties,
-    engineVer: ENGINE_VER,
-  };
+  return runHybridDriver(input);
 }
