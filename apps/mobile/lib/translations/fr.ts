@@ -7,9 +7,11 @@
  *   pour les sub-components settings/* (ProfileEditSection,
  *   PasswordChangeSection, DangerZone, AccountInfoSection, StatsSection,
  *   ProfileHeader).
+ * S27.3.4 : namespace `lobby.*` pour le refactor `lobby.tsx` -> `MatchCard`,
+ *   `MatchList`, `FilterBar`, `LobbyHeader`, `LobbyActions`, `JoinMatchModal`.
  *
- * Les namespaces dedies (lobby, play, etc.) seront ajoutes au fur et a
- * mesure du remplacement des strings hardcodees.
+ * Les autres namespaces (play, etc.) seront ajoutes au fur et a mesure du
+ * remplacement des strings hardcodees.
  */
 
 export const FR_TRANSLATIONS = {
@@ -21,6 +23,7 @@ export const FR_TRANSLATIONS = {
     error: "Erreur",
     retry: "Reessayer",
     save: "Enregistrer",
+    logout: "Deconnexion",
   },
   settings: {
     profile: {
@@ -89,6 +92,60 @@ export const FR_TRANSLATIONS = {
     },
     actions: {
       logout: "Deconnexion",
+    },
+  },
+  lobby: {
+    title: "Mes matchs",
+    greeting: "Salut, {{name}} !",
+    status: {
+      active: "En cours",
+      pending: "En attente",
+      prematch: "Pre-match",
+      prematchSetup: "Configuration",
+      ended: "Termine",
+    },
+    myTurnBadge: "Votre tour",
+    myTurnBannerSingular: "{{count}} match en attente de votre tour",
+    myTurnBannerPlural: "{{count}} matchs en attente de votre tour",
+    teamPlaceholder: "Mon equipe",
+    waitingOpponent: "En attente...",
+    vsCoach: "vs Coach {{name}}",
+    roundLabel: "MT {{half}}, Tour {{turn}}",
+    filters: {
+      all: "Tous",
+      myTurn: "Mon tour ({{count}})",
+      active: "En cours",
+      ended: "Termines",
+    },
+    actions: {
+      teams: "Mes equipes",
+      leaderboard: "Classement",
+      profile: "Profil",
+      matchmaking: "Chercher un match",
+      cups: "Coupes",
+      leagues: "Ligues",
+      stars: "Stars",
+      create: "Creer un match",
+      join: "Rejoindre",
+      replay: "▶ Voir le replay",
+      replayA11y: "Voir le replay",
+    },
+    alerts: {
+      matchCreatedTitle: "Match cree",
+      matchCreatedBody: "ID du match : {{id}}",
+      createError: "Impossible de creer le match",
+      joinSuccessTitle: "Succes",
+      joinSuccessBody: "Vous avez rejoint le match !",
+      joinError: "Impossible de rejoindre le match",
+      loadError: "Erreur de chargement",
+    },
+    errors: {
+      prefix: "Erreur : {{message}}",
+      empty: "Aucun match trouve.",
+    },
+    joinModal: {
+      title: "Rejoindre un match",
+      inputPlaceholder: "ID du match",
     },
   },
 } as const;
