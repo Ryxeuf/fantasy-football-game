@@ -1,3 +1,17 @@
+## [1.84.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.83.0...v1.84.0) (2026-05-05)
+
+
+### ✨ Features
+
+* Add admin leagues management console (L2.C.6) ([#544](https://github.com/Ryxeuf/fantasy-football-game/issues/544)) ([9fc74cf](https://github.com/Ryxeuf/fantasy-football-game/commit/9fc74cfe2c609801a4ee6c9ea8ecb135ee3d8aa8))
+
+
+### 📝 Documentation
+
+* add new sprints for leagues v2 and Pro League ([a2f93e5](https://github.com/Ryxeuf/fantasy-football-game/commit/a2f93e5191e62886cde89f397428d0e61899895e))
+* add Pro League sprint and future ideas backlog ([#547](https://github.com/Ryxeuf/fantasy-football-game/issues/547)) ([bf1e313](https://github.com/Ryxeuf/fantasy-football-game/commit/bf1e3136009c150e13a6a36b683964e3c4fcad08))
+* Update TODO roadmap — Ligues v2 sprint completion ([#546](https://github.com/Ryxeuf/fantasy-football-game/issues/546)) ([29329b1](https://github.com/Ryxeuf/fantasy-football-game/commit/29329b1fb5bdbe491ecde0b9b258d018e04e61b1))
+
 ## [1.83.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.82.0...v1.83.0) (2026-05-05)
 
 
