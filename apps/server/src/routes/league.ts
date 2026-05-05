@@ -39,6 +39,10 @@ import {
   getPersistedSeasonAward,
 } from "../services/league-scoring";
 import { startPlayoffs } from "../services/league-playoffs";
+import {
+  playMecene,
+  LeaguePatronError,
+} from "../services/league-patron";
 import { listLeagueThemes } from "../services/league-themes";
 import {
   createLeagueSchema,
@@ -815,6 +819,53 @@ export async function handleForfeitPairing(
   }
 }
 
+// L2.B.5 — Coup de mecene (1x par saison ligue par equipe). Le coach
+// proprietaire de l'equipe declenche, on credite +100k po.
+async function handlePlayMecene(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = req.user?.id;
+  if (!userId) {
+    sendError(res, "Non authentifie", 401);
+    return;
+  }
+  const { seasonId, teamId } = req.params;
+  if (!seasonId || !teamId) {
+    sendError(res, "seasonId et teamId requis", 400);
+    return;
+  }
+
+  // Verite cote serveur : seul le owner de l'equipe peut declencher.
+  const team = await prisma.team.findFirst({
+    where: { id: teamId, ownerId: userId },
+    select: { id: true },
+  });
+  if (!team) {
+    sendError(res, "Equipe introuvable ou non autorisee", 404);
+    return;
+  }
+
+  try {
+    const result = await playMecene({ prisma, seasonId, teamId });
+    sendSuccess(res, result);
+  } catch (e: unknown) {
+    if (e instanceof LeaguePatronError) {
+      const status =
+        e.code === "season_not_found" || e.code === "team_not_found"
+          ? 404
+          : e.code === "team_not_in_season"
+            ? 404
+            : e.code === "already_played"
+              ? 409
+              : 400;
+      sendError(res, e.message, status);
+      return;
+    }
+    domainError(res, e);
+  }
+}
+
 const router = Router();
 
 router.post("/", authUser, validate(createLeagueSchema), handleCreateLeague);
@@ -908,5 +959,12 @@ router.post(
   handleStartPlayoffs,
 );
 router.get("/seasons/:seasonId", authUser, handleGetSeason);
+
+// L2.B.5 — Coup de mecene par equipe et par saison.
+router.post(
+  "/seasons/:seasonId/teams/:teamId/mecene",
+  authUser,
+  handlePlayMecene,
+);
 
 export default router;

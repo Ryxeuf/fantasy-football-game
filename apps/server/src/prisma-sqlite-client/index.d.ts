@@ -34916,6 +34916,8 @@ export namespace Prisma {
     casualtiesAgainst: number | null
     status: string | null
     joinedAt: Date | null
+    mecenePlayed: boolean | null
+    mecenePlayedAt: Date | null
   }
 
   export type LeagueParticipantMaxAggregateOutputType = {
@@ -34933,6 +34935,8 @@ export namespace Prisma {
     casualtiesAgainst: number | null
     status: string | null
     joinedAt: Date | null
+    mecenePlayed: boolean | null
+    mecenePlayedAt: Date | null
   }
 
   export type LeagueParticipantCountAggregateOutputType = {
@@ -34950,6 +34954,8 @@ export namespace Prisma {
     casualtiesAgainst: number
     status: number
     joinedAt: number
+    mecenePlayed: number
+    mecenePlayedAt: number
     _all: number
   }
 
@@ -34993,6 +34999,8 @@ export namespace Prisma {
     casualtiesAgainst?: true
     status?: true
     joinedAt?: true
+    mecenePlayed?: true
+    mecenePlayedAt?: true
   }
 
   export type LeagueParticipantMaxAggregateInputType = {
@@ -35010,6 +35018,8 @@ export namespace Prisma {
     casualtiesAgainst?: true
     status?: true
     joinedAt?: true
+    mecenePlayed?: true
+    mecenePlayedAt?: true
   }
 
   export type LeagueParticipantCountAggregateInputType = {
@@ -35027,6 +35037,8 @@ export namespace Prisma {
     casualtiesAgainst?: true
     status?: true
     joinedAt?: true
+    mecenePlayed?: true
+    mecenePlayedAt?: true
     _all?: true
   }
 
@@ -35131,6 +35143,8 @@ export namespace Prisma {
     casualtiesAgainst: number
     status: string
     joinedAt: Date
+    mecenePlayed: boolean
+    mecenePlayedAt: Date | null
     _count: LeagueParticipantCountAggregateOutputType | null
     _avg: LeagueParticipantAvgAggregateOutputType | null
     _sum: LeagueParticipantSumAggregateOutputType | null
@@ -35167,6 +35181,8 @@ export namespace Prisma {
     casualtiesAgainst?: boolean
     status?: boolean
     joinedAt?: boolean
+    mecenePlayed?: boolean
+    mecenePlayedAt?: boolean
     season?: boolean | LeagueSeasonDefaultArgs<ExtArgs>
     team?: boolean | TeamDefaultArgs<ExtArgs>
     homePairings?: boolean | LeagueParticipant$homePairingsArgs<ExtArgs>
@@ -35189,6 +35205,8 @@ export namespace Prisma {
     casualtiesAgainst?: boolean
     status?: boolean
     joinedAt?: boolean
+    mecenePlayed?: boolean
+    mecenePlayedAt?: boolean
     season?: boolean | LeagueSeasonDefaultArgs<ExtArgs>
     team?: boolean | TeamDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["leagueParticipant"]>
@@ -35208,6 +35226,8 @@ export namespace Prisma {
     casualtiesAgainst?: boolean
     status?: boolean
     joinedAt?: boolean
+    mecenePlayed?: boolean
+    mecenePlayedAt?: boolean
     season?: boolean | LeagueSeasonDefaultArgs<ExtArgs>
     team?: boolean | TeamDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["leagueParticipant"]>
@@ -35227,9 +35247,11 @@ export namespace Prisma {
     casualtiesAgainst?: boolean
     status?: boolean
     joinedAt?: boolean
+    mecenePlayed?: boolean
+    mecenePlayedAt?: boolean
   }
 
-  export type LeagueParticipantOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "seasonId" | "teamId" | "seasonElo" | "wins" | "draws" | "losses" | "points" | "touchdownsFor" | "touchdownsAgainst" | "casualtiesFor" | "casualtiesAgainst" | "status" | "joinedAt", ExtArgs["result"]["leagueParticipant"]>
+  export type LeagueParticipantOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "seasonId" | "teamId" | "seasonElo" | "wins" | "draws" | "losses" | "points" | "touchdownsFor" | "touchdownsAgainst" | "casualtiesFor" | "casualtiesAgainst" | "status" | "joinedAt" | "mecenePlayed" | "mecenePlayedAt", ExtArgs["result"]["leagueParticipant"]>
   export type LeagueParticipantInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     season?: boolean | LeagueSeasonDefaultArgs<ExtArgs>
     team?: boolean | TeamDefaultArgs<ExtArgs>
@@ -35269,6 +35291,8 @@ export namespace Prisma {
       casualtiesAgainst: number
       status: string
       joinedAt: Date
+      mecenePlayed: boolean
+      mecenePlayedAt: Date | null
     }, ExtArgs["result"]["leagueParticipant"]>
     composites: {}
   }
@@ -35710,6 +35734,8 @@ export namespace Prisma {
     readonly casualtiesAgainst: FieldRef<"LeagueParticipant", 'Int'>
     readonly status: FieldRef<"LeagueParticipant", 'String'>
     readonly joinedAt: FieldRef<"LeagueParticipant", 'DateTime'>
+    readonly mecenePlayed: FieldRef<"LeagueParticipant", 'Boolean'>
+    readonly mecenePlayedAt: FieldRef<"LeagueParticipant", 'DateTime'>
   }
     
 
@@ -43382,7 +43408,9 @@ export namespace Prisma {
     casualtiesFor: 'casualtiesFor',
     casualtiesAgainst: 'casualtiesAgainst',
     status: 'status',
-    joinedAt: 'joinedAt'
+    joinedAt: 'joinedAt',
+    mecenePlayed: 'mecenePlayed',
+    mecenePlayedAt: 'mecenePlayedAt'
   };
 
   export type LeagueParticipantScalarFieldEnum = (typeof LeagueParticipantScalarFieldEnum)[keyof typeof LeagueParticipantScalarFieldEnum]
@@ -45978,6 +46006,8 @@ export namespace Prisma {
     casualtiesAgainst?: IntFilter<"LeagueParticipant"> | number
     status?: StringFilter<"LeagueParticipant"> | string
     joinedAt?: DateTimeFilter<"LeagueParticipant"> | Date | string
+    mecenePlayed?: BoolFilter<"LeagueParticipant"> | boolean
+    mecenePlayedAt?: DateTimeNullableFilter<"LeagueParticipant"> | Date | string | null
     season?: XOR<LeagueSeasonScalarRelationFilter, LeagueSeasonWhereInput>
     team?: XOR<TeamScalarRelationFilter, TeamWhereInput>
     homePairings?: LeaguePairingListRelationFilter
@@ -45999,6 +46029,8 @@ export namespace Prisma {
     casualtiesAgainst?: SortOrder
     status?: SortOrder
     joinedAt?: SortOrder
+    mecenePlayed?: SortOrder
+    mecenePlayedAt?: SortOrderInput | SortOrder
     season?: LeagueSeasonOrderByWithRelationInput
     team?: TeamOrderByWithRelationInput
     homePairings?: LeaguePairingOrderByRelationAggregateInput
@@ -46024,6 +46056,8 @@ export namespace Prisma {
     casualtiesAgainst?: IntFilter<"LeagueParticipant"> | number
     status?: StringFilter<"LeagueParticipant"> | string
     joinedAt?: DateTimeFilter<"LeagueParticipant"> | Date | string
+    mecenePlayed?: BoolFilter<"LeagueParticipant"> | boolean
+    mecenePlayedAt?: DateTimeNullableFilter<"LeagueParticipant"> | Date | string | null
     season?: XOR<LeagueSeasonScalarRelationFilter, LeagueSeasonWhereInput>
     team?: XOR<TeamScalarRelationFilter, TeamWhereInput>
     homePairings?: LeaguePairingListRelationFilter
@@ -46045,6 +46079,8 @@ export namespace Prisma {
     casualtiesAgainst?: SortOrder
     status?: SortOrder
     joinedAt?: SortOrder
+    mecenePlayed?: SortOrder
+    mecenePlayedAt?: SortOrderInput | SortOrder
     _count?: LeagueParticipantCountOrderByAggregateInput
     _avg?: LeagueParticipantAvgOrderByAggregateInput
     _max?: LeagueParticipantMaxOrderByAggregateInput
@@ -46070,6 +46106,8 @@ export namespace Prisma {
     casualtiesAgainst?: IntWithAggregatesFilter<"LeagueParticipant"> | number
     status?: StringWithAggregatesFilter<"LeagueParticipant"> | string
     joinedAt?: DateTimeWithAggregatesFilter<"LeagueParticipant"> | Date | string
+    mecenePlayed?: BoolWithAggregatesFilter<"LeagueParticipant"> | boolean
+    mecenePlayedAt?: DateTimeNullableWithAggregatesFilter<"LeagueParticipant"> | Date | string | null
   }
 
   export type LeagueRoundWhereInput = {
@@ -49220,6 +49258,8 @@ export namespace Prisma {
     casualtiesAgainst?: number
     status?: string
     joinedAt?: Date | string
+    mecenePlayed?: boolean
+    mecenePlayedAt?: Date | string | null
     season: LeagueSeasonCreateNestedOneWithoutParticipantsInput
     team: TeamCreateNestedOneWithoutLeagueParticipationsInput
     homePairings?: LeaguePairingCreateNestedManyWithoutHomeParticipantInput
@@ -49241,6 +49281,8 @@ export namespace Prisma {
     casualtiesAgainst?: number
     status?: string
     joinedAt?: Date | string
+    mecenePlayed?: boolean
+    mecenePlayedAt?: Date | string | null
     homePairings?: LeaguePairingUncheckedCreateNestedManyWithoutHomeParticipantInput
     awayPairings?: LeaguePairingUncheckedCreateNestedManyWithoutAwayParticipantInput
   }
@@ -49258,6 +49300,8 @@ export namespace Prisma {
     casualtiesAgainst?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    mecenePlayed?: BoolFieldUpdateOperationsInput | boolean
+    mecenePlayedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     season?: LeagueSeasonUpdateOneRequiredWithoutParticipantsNestedInput
     team?: TeamUpdateOneRequiredWithoutLeagueParticipationsNestedInput
     homePairings?: LeaguePairingUpdateManyWithoutHomeParticipantNestedInput
@@ -49279,6 +49323,8 @@ export namespace Prisma {
     casualtiesAgainst?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    mecenePlayed?: BoolFieldUpdateOperationsInput | boolean
+    mecenePlayedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     homePairings?: LeaguePairingUncheckedUpdateManyWithoutHomeParticipantNestedInput
     awayPairings?: LeaguePairingUncheckedUpdateManyWithoutAwayParticipantNestedInput
   }
@@ -49298,6 +49344,8 @@ export namespace Prisma {
     casualtiesAgainst?: number
     status?: string
     joinedAt?: Date | string
+    mecenePlayed?: boolean
+    mecenePlayedAt?: Date | string | null
   }
 
   export type LeagueParticipantUpdateManyMutationInput = {
@@ -49313,6 +49361,8 @@ export namespace Prisma {
     casualtiesAgainst?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    mecenePlayed?: BoolFieldUpdateOperationsInput | boolean
+    mecenePlayedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type LeagueParticipantUncheckedUpdateManyInput = {
@@ -49330,6 +49380,8 @@ export namespace Prisma {
     casualtiesAgainst?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    mecenePlayed?: BoolFieldUpdateOperationsInput | boolean
+    mecenePlayedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type LeagueRoundCreateInput = {
@@ -51876,6 +51928,8 @@ export namespace Prisma {
     casualtiesAgainst?: SortOrder
     status?: SortOrder
     joinedAt?: SortOrder
+    mecenePlayed?: SortOrder
+    mecenePlayedAt?: SortOrder
   }
 
   export type LeagueParticipantAvgOrderByAggregateInput = {
@@ -51905,6 +51959,8 @@ export namespace Prisma {
     casualtiesAgainst?: SortOrder
     status?: SortOrder
     joinedAt?: SortOrder
+    mecenePlayed?: SortOrder
+    mecenePlayedAt?: SortOrder
   }
 
   export type LeagueParticipantMinOrderByAggregateInput = {
@@ -51922,6 +51978,8 @@ export namespace Prisma {
     casualtiesAgainst?: SortOrder
     status?: SortOrder
     joinedAt?: SortOrder
+    mecenePlayed?: SortOrder
+    mecenePlayedAt?: SortOrder
   }
 
   export type LeagueParticipantSumOrderByAggregateInput = {
@@ -58778,6 +58836,8 @@ export namespace Prisma {
     casualtiesAgainst?: number
     status?: string
     joinedAt?: Date | string
+    mecenePlayed?: boolean
+    mecenePlayedAt?: Date | string | null
     season: LeagueSeasonCreateNestedOneWithoutParticipantsInput
     homePairings?: LeaguePairingCreateNestedManyWithoutHomeParticipantInput
     awayPairings?: LeaguePairingCreateNestedManyWithoutAwayParticipantInput
@@ -58797,6 +58857,8 @@ export namespace Prisma {
     casualtiesAgainst?: number
     status?: string
     joinedAt?: Date | string
+    mecenePlayed?: boolean
+    mecenePlayedAt?: Date | string | null
     homePairings?: LeaguePairingUncheckedCreateNestedManyWithoutHomeParticipantInput
     awayPairings?: LeaguePairingUncheckedCreateNestedManyWithoutAwayParticipantInput
   }
@@ -59113,6 +59175,8 @@ export namespace Prisma {
     casualtiesAgainst?: IntFilter<"LeagueParticipant"> | number
     status?: StringFilter<"LeagueParticipant"> | string
     joinedAt?: DateTimeFilter<"LeagueParticipant"> | Date | string
+    mecenePlayed?: BoolFilter<"LeagueParticipant"> | boolean
+    mecenePlayedAt?: DateTimeNullableFilter<"LeagueParticipant"> | Date | string | null
   }
 
   export type TeamCreateWithoutPlayersInput = {
@@ -61558,6 +61622,8 @@ export namespace Prisma {
     casualtiesAgainst?: number
     status?: string
     joinedAt?: Date | string
+    mecenePlayed?: boolean
+    mecenePlayedAt?: Date | string | null
     team: TeamCreateNestedOneWithoutLeagueParticipationsInput
     homePairings?: LeaguePairingCreateNestedManyWithoutHomeParticipantInput
     awayPairings?: LeaguePairingCreateNestedManyWithoutAwayParticipantInput
@@ -61577,6 +61643,8 @@ export namespace Prisma {
     casualtiesAgainst?: number
     status?: string
     joinedAt?: Date | string
+    mecenePlayed?: boolean
+    mecenePlayedAt?: Date | string | null
     homePairings?: LeaguePairingUncheckedCreateNestedManyWithoutHomeParticipantInput
     awayPairings?: LeaguePairingUncheckedCreateNestedManyWithoutAwayParticipantInput
   }
@@ -62411,6 +62479,8 @@ export namespace Prisma {
     casualtiesAgainst?: number
     status?: string
     joinedAt?: Date | string
+    mecenePlayed?: boolean
+    mecenePlayedAt?: Date | string | null
     season: LeagueSeasonCreateNestedOneWithoutParticipantsInput
     team: TeamCreateNestedOneWithoutLeagueParticipationsInput
     awayPairings?: LeaguePairingCreateNestedManyWithoutAwayParticipantInput
@@ -62431,6 +62501,8 @@ export namespace Prisma {
     casualtiesAgainst?: number
     status?: string
     joinedAt?: Date | string
+    mecenePlayed?: boolean
+    mecenePlayedAt?: Date | string | null
     awayPairings?: LeaguePairingUncheckedCreateNestedManyWithoutAwayParticipantInput
   }
 
@@ -62452,6 +62524,8 @@ export namespace Prisma {
     casualtiesAgainst?: number
     status?: string
     joinedAt?: Date | string
+    mecenePlayed?: boolean
+    mecenePlayedAt?: Date | string | null
     season: LeagueSeasonCreateNestedOneWithoutParticipantsInput
     team: TeamCreateNestedOneWithoutLeagueParticipationsInput
     homePairings?: LeaguePairingCreateNestedManyWithoutHomeParticipantInput
@@ -62472,6 +62546,8 @@ export namespace Prisma {
     casualtiesAgainst?: number
     status?: string
     joinedAt?: Date | string
+    mecenePlayed?: boolean
+    mecenePlayedAt?: Date | string | null
     homePairings?: LeaguePairingUncheckedCreateNestedManyWithoutHomeParticipantInput
   }
 
@@ -62592,6 +62668,8 @@ export namespace Prisma {
     casualtiesAgainst?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    mecenePlayed?: BoolFieldUpdateOperationsInput | boolean
+    mecenePlayedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     season?: LeagueSeasonUpdateOneRequiredWithoutParticipantsNestedInput
     team?: TeamUpdateOneRequiredWithoutLeagueParticipationsNestedInput
     awayPairings?: LeaguePairingUpdateManyWithoutAwayParticipantNestedInput
@@ -62612,6 +62690,8 @@ export namespace Prisma {
     casualtiesAgainst?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    mecenePlayed?: BoolFieldUpdateOperationsInput | boolean
+    mecenePlayedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     awayPairings?: LeaguePairingUncheckedUpdateManyWithoutAwayParticipantNestedInput
   }
 
@@ -62639,6 +62719,8 @@ export namespace Prisma {
     casualtiesAgainst?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    mecenePlayed?: BoolFieldUpdateOperationsInput | boolean
+    mecenePlayedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     season?: LeagueSeasonUpdateOneRequiredWithoutParticipantsNestedInput
     team?: TeamUpdateOneRequiredWithoutLeagueParticipationsNestedInput
     homePairings?: LeaguePairingUpdateManyWithoutHomeParticipantNestedInput
@@ -62659,6 +62741,8 @@ export namespace Prisma {
     casualtiesAgainst?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    mecenePlayed?: BoolFieldUpdateOperationsInput | boolean
+    mecenePlayedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     homePairings?: LeaguePairingUncheckedUpdateManyWithoutHomeParticipantNestedInput
   }
 
@@ -63966,6 +64050,8 @@ export namespace Prisma {
     casualtiesAgainst?: number
     status?: string
     joinedAt?: Date | string
+    mecenePlayed?: boolean
+    mecenePlayedAt?: Date | string | null
   }
 
   export type TeamPlayerUpdateWithoutTeamInput = {
@@ -64303,6 +64389,8 @@ export namespace Prisma {
     casualtiesAgainst?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    mecenePlayed?: BoolFieldUpdateOperationsInput | boolean
+    mecenePlayedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     season?: LeagueSeasonUpdateOneRequiredWithoutParticipantsNestedInput
     homePairings?: LeaguePairingUpdateManyWithoutHomeParticipantNestedInput
     awayPairings?: LeaguePairingUpdateManyWithoutAwayParticipantNestedInput
@@ -64322,6 +64410,8 @@ export namespace Prisma {
     casualtiesAgainst?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    mecenePlayed?: BoolFieldUpdateOperationsInput | boolean
+    mecenePlayedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     homePairings?: LeaguePairingUncheckedUpdateManyWithoutHomeParticipantNestedInput
     awayPairings?: LeaguePairingUncheckedUpdateManyWithoutAwayParticipantNestedInput
   }
@@ -64340,6 +64430,8 @@ export namespace Prisma {
     casualtiesAgainst?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    mecenePlayed?: BoolFieldUpdateOperationsInput | boolean
+    mecenePlayedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type PositionCreateManyRosterInput = {
@@ -64728,6 +64820,8 @@ export namespace Prisma {
     casualtiesAgainst?: number
     status?: string
     joinedAt?: Date | string
+    mecenePlayed?: boolean
+    mecenePlayedAt?: Date | string | null
   }
 
   export type LeagueRoundCreateManySeasonInput = {
@@ -64773,6 +64867,8 @@ export namespace Prisma {
     casualtiesAgainst?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    mecenePlayed?: BoolFieldUpdateOperationsInput | boolean
+    mecenePlayedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     team?: TeamUpdateOneRequiredWithoutLeagueParticipationsNestedInput
     homePairings?: LeaguePairingUpdateManyWithoutHomeParticipantNestedInput
     awayPairings?: LeaguePairingUpdateManyWithoutAwayParticipantNestedInput
@@ -64792,6 +64888,8 @@ export namespace Prisma {
     casualtiesAgainst?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    mecenePlayed?: BoolFieldUpdateOperationsInput | boolean
+    mecenePlayedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     homePairings?: LeaguePairingUncheckedUpdateManyWithoutHomeParticipantNestedInput
     awayPairings?: LeaguePairingUncheckedUpdateManyWithoutAwayParticipantNestedInput
   }
@@ -64810,6 +64908,8 @@ export namespace Prisma {
     casualtiesAgainst?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    mecenePlayed?: BoolFieldUpdateOperationsInput | boolean
+    mecenePlayedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type LeagueRoundUpdateWithoutSeasonInput = {

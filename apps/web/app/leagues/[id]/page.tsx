@@ -13,6 +13,7 @@ import { SeasonParticipants } from "./SeasonParticipants";
 import { NewSeasonModal } from "./NewSeasonModal";
 import { SeasonAdminPanel } from "./SeasonAdminPanel";
 import { JoinSeasonModal } from "./JoinSeasonModal";
+import { MeceneButton } from "./MeceneButton";
 import type {
   LeagueDetail,
   LeagueSeasonDetail,
@@ -193,6 +194,22 @@ export default function LeagueDetailPage() {
     // Inscriptions ouvertes uniquement avant le demarrage de la saison.
     return season.status === "draft" || season.status === "scheduled";
   }, [v2UiEnabled, season, currentUserId, isCreator]);
+
+  // L2.B.5 — participant actif du coach courant (si inscrit). Sert au
+  // bouton "Coup de mecene" et au lien "Gerer mon equipe".
+  const myParticipant = useMemo(() => {
+    if (!season || !currentUserId) return null;
+    return (
+      season.participants.find(
+        (p) => p.team.owner.id === currentUserId && p.status === "active",
+      ) ?? null
+    );
+  }, [season, currentUserId]);
+
+  const canPlayMecene = useMemo(() => {
+    if (!myParticipant || !season) return false;
+    return season.status === "in_progress";
+  }, [myParticipant, season]);
 
   if (loading) {
     return (
@@ -387,6 +404,34 @@ export default function LeagueDetailPage() {
                   >
                     + {t.leagues.joinSeasonButton}
                   </button>
+                </div>
+              ) : null}
+
+              {/* L2.B.5 — actions reservees au coach inscrit pendant
+                  une saison en cours. */}
+              {myParticipant ? (
+                <div
+                  data-testid="my-team-actions"
+                  className="flex flex-wrap items-center gap-2"
+                >
+                  <Link
+                    href={`/me/teams/${myParticipant.teamId}/edit`}
+                    data-testid="manage-my-team"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-gray-300 bg-white text-sm font-medium hover:bg-gray-50"
+                  >
+                    🛠 Gerer mon equipe
+                  </Link>
+                  {canPlayMecene ? (
+                    <MeceneButton
+                      seasonId={season.id}
+                      participant={myParticipant}
+                      onPlayed={() => {
+                        if (selectedSeasonId) {
+                          loadSeason(selectedSeasonId);
+                        }
+                      }}
+                    />
+                  ) : null}
                 </div>
               ) : null}
 

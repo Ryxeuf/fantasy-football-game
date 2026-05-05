@@ -492,7 +492,9 @@ exports.Prisma.LeagueParticipantScalarFieldEnum = {
   casualtiesFor: 'casualtiesFor',
   casualtiesAgainst: 'casualtiesAgainst',
   status: 'status',
-  joinedAt: 'joinedAt'
+  joinedAt: 'joinedAt',
+  mecenePlayed: 'mecenePlayed',
+  mecenePlayedAt: 'mecenePlayedAt'
 };
 
 exports.Prisma.LeagueRoundScalarFieldEnum = {
