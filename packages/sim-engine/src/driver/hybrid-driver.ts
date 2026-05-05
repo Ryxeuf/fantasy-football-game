@@ -35,6 +35,13 @@ import {
   type ResolverState,
 } from '../resolvers';
 import {
+  createMomentumTracker,
+  recordBlock,
+  recordFailure,
+  recordTouchdown,
+  type MomentumTracker,
+} from '../tactics/momentum';
+import {
   DEFAULT_TACTICAL_PROFILE,
   type TacticalProfile,
 } from '../tactics/tactical-profile';
@@ -312,6 +319,9 @@ interface MutableMatch {
   casualties: Casualty[];
   turnover: number;
   touchdowns: number;
+  /** Per-player momentum tracker (lot 0.B.4). The MVP synthesises LOS
+   *  player IDs ; the full driver (post-MVP) will plug real roster IDs. */
+  momentum: MomentumTracker;
 }
 
 function emitTurnStart(m: MutableMatch): void {
@@ -368,6 +378,10 @@ function processTurn(
     );
     m.events.push(...keyEvents);
 
+    // Synthetic LOS player ids — the full driver (post-MVP) will pass
+    // real roster ids ; for now we use the same ids the resolvers see.
+    const drivingPlayerId = `${m.state.drive.drivingTeam}-LOS`;
+
     for (const ev of keyEvents) {
       if (ev.type === 'CASUALTY') {
         const meta = ev.meta as { playerId?: string; causedBy?: string } | undefined;
@@ -377,11 +391,16 @@ function processTurn(
           outcome: 'badly_hurt',
           causedById: meta?.causedBy,
         });
+      } else if (ev.type === 'BLOCK') {
+        const meta = ev.meta as { resolution?: string } | undefined;
+        const success = meta?.resolution === 'defender_down';
+        recordBlock(m.momentum, drivingPlayerId, { success });
       }
     }
 
     if (turnover) {
       m.turnover += 1;
+      recordFailure(m.momentum, drivingPlayerId);
       m.state = { ...m.state, drive: nextDrive(m.state.drive) };
       break;
     }
@@ -396,6 +415,7 @@ function processTurn(
       if (scoring === 'home') m.state = { ...m.state, scoreHome: m.state.scoreHome + 1 };
       else m.state = { ...m.state, scoreAway: m.state.scoreAway + 1 };
       m.touchdowns += 1;
+      recordTouchdown(m.momentum, `${scoring}-LOS`);
       emitTd(m, scoring);
       m.state = { ...m.state, drive: nextDrive(m.state.drive) };
     } else {
@@ -452,6 +472,7 @@ export function runHybridDriver(input: SimInput, options: DriverOptions = {}): S
     casualties: [],
     turnover: 0,
     touchdowns: 0,
+    momentum: createMomentumTracker(),
   };
 
   // First half.
@@ -493,6 +514,7 @@ export function runHybridDriver(input: SimInput, options: DriverOptions = {}): S
     turnoverCount: m.turnover,
     touchdownCount: m.touchdowns,
     durationMs: m.state.clockMs - kickoffAtMs,
+    momentum: m.momentum.snapshot(),
   };
 
   return {
