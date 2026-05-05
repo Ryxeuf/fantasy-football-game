@@ -36,6 +36,10 @@
 
 import { prisma } from "../prisma";
 import { persistSeasonAwards } from "./league-scoring";
+import {
+  startPlayoffs,
+  advancePlayoffsWithWinner,
+} from "./league-playoffs";
 import { serverLog } from "../utils/server-log";
 
 export type ForfeitSide = "home" | "away";
@@ -219,6 +223,15 @@ export async function recordForfeit(
   // s'occupe que du round et de la saison liee a ce pairing.
   await maybeCompleteRoundAndSeason(pairing.round.id, seasonId);
 
+  // L2.C.3 — propagation du winner dans le bracket si pairing
+  // playoff. winner est `away` quand side="home" (le home a forfait,
+  // c'est l'away qui passe). Echec non-bloquant.
+  const winnerSide: "home" | "away" = side === "home" ? "away" : "home";
+  advancePlayoffsWithWinner(pairing.id, winnerSide).catch((e: unknown) => {
+    const msg = e instanceof Error ? e.message : "unknown";
+    serverLog.error(`[league-playoffs] advance failed: ${msg}`);
+  });
+
   serverLog.info(
     `[league-forfeit] pairing=${pairing.id} side=${side} winner=${winnerParticipantId} loser=${loserParticipantId}`,
   );
@@ -254,6 +267,26 @@ async function maybeCompleteRoundAndSeason(
     select: { id: true },
   });
   if (remaining.length === 0) {
+    // L2.C.3 — playoffs : si la saison a `playoffSize > 0` et qu'aucun
+    // round playoff n'a encore ete cree, on demarre le bracket et on
+    // garde la saison `in_progress`.
+    const seasonRow = await prisma.leagueSeason.findUnique({
+      where: { id: seasonId },
+      select: { playoffSize: true },
+    });
+    const playoffSize: number = seasonRow?.playoffSize ?? 0;
+    const playoffRoundsExisting = await prisma.leagueRound.count({
+      where: { seasonId, kind: "playoff" },
+    });
+    if (playoffSize > 0 && playoffRoundsExisting === 0) {
+      startPlayoffs(seasonId).catch((e: unknown) => {
+        const msg = e instanceof Error ? e.message : "unknown";
+        serverLog.error(
+          `[league-forfeit] startPlayoffs failed: ${msg}`,
+        );
+      });
+      return;
+    }
     await prisma.leagueSeason.update({
       where: { id: seasonId },
       data: { status: "completed" },

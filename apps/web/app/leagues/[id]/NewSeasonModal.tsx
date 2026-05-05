@@ -33,6 +33,8 @@ export function NewSeasonModal({
   const [name, setName] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  // L2.C.3 — taille du bracket de playoffs (0=disabled).
+  const [playoffSize, setPlayoffSize] = useState<0 | 2 | 4 | 8>(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,6 +55,7 @@ export function NewSeasonModal({
               name: trimmed,
               startDate: startDate || null,
               endDate: endDate || null,
+              playoffSize,
             }),
           },
         );
@@ -61,6 +64,7 @@ export function NewSeasonModal({
         setName("");
         setStartDate("");
         setEndDate("");
+        setPlayoffSize(0);
         onClose();
       } catch (e: unknown) {
         setError(
@@ -75,6 +79,7 @@ export function NewSeasonModal({
       name,
       startDate,
       endDate,
+      playoffSize,
       submitting,
       onCreated,
       onClose,
@@ -145,6 +150,28 @@ export function NewSeasonModal({
               />
             </label>
           </div>
+
+          <label className="block">
+            <span className="text-sm font-medium text-gray-700">
+              {t.leagues.newSeasonPlayoffSizeLabel ??
+                "Playoffs (taille du bracket)"}
+            </span>
+            <select
+              data-testid="new-season-playoff-size"
+              value={playoffSize}
+              onChange={(e) =>
+                setPlayoffSize(
+                  Number(e.target.value) as 0 | 2 | 4 | 8,
+                )
+              }
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white"
+            >
+              <option value={0}>Aucun (champion = 1er du classement)</option>
+              <option value={2}>Finale uniquement (top 2)</option>
+              <option value={4}>Demi-finales + Finale (top 4)</option>
+              <option value={8}>Quarts + SF + Finale (top 8)</option>
+            </select>
+          </label>
 
           <div className="flex items-center gap-3 pt-2">
             <button

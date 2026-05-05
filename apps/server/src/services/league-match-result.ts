@@ -29,6 +29,10 @@ import {
 import { applyThemedSeasonClosure } from "./themed-season-closure";
 import { runPostMatchLeagueSequence } from "./post-match-league-sequence";
 import { persistSeasonAwards } from "./league-scoring";
+import {
+  startPlayoffs,
+  advancePlayoffsWithWinner,
+} from "./league-playoffs";
 import { serverLog } from "../utils/server-log";
 
 export interface RecordMatchResultInput {
@@ -276,50 +280,85 @@ export async function recordLeagueMatchResult(
         select: { id: true },
       });
       if (remainingRounds.length === 0) {
-        await prisma.leagueSeason.update({
+        // L2.C.3 — playoffs : si la saison a `playoffSize > 0` et
+        // qu'aucun round playoff n'a encore ete cree, on declenche
+        // le bracket et on garde la saison `in_progress`. La saison
+        // ne se cloturera qu'apres la finale.
+        const seasonRow = await prisma.leagueSeason.findUnique({
           where: { id: seasonId },
-          data: { status: "completed" },
+          select: { playoffSize: true },
         });
-        seasonCompleted = true;
-
-        // L2.C.1 — fire-and-forget : persistance du snapshot d'awards
-        // de fin de saison. Echec non-bloquant : le score reste
-        // compte meme si l'award n'est pas cree (la page recap peut
-        // toujours recalculer a la demande via computeSeasonRecap).
-        persistSeasonAwards(seasonId)
-          .then((r) => {
-            if (r.created) {
-              serverLog.info(
-                `[league-scoring] season=${seasonId} award persisted (id=${r.awardId})`,
-              );
-            }
-          })
-          .catch((e: unknown) => {
+        const playoffSize: number = seasonRow?.playoffSize ?? 0;
+        const playoffRoundsExisting = await prisma.leagueRound.count({
+          where: { seasonId, kind: "playoff" },
+        });
+        if (playoffSize > 0 && playoffRoundsExisting === 0) {
+          // Demarre les playoffs ; la saison reste in_progress.
+          startPlayoffs(seasonId).catch((e: unknown) => {
             const msg = e instanceof Error ? e.message : "unknown";
             serverLog.error(
-              `[league-scoring] persistSeasonAwards failed: ${msg}`,
+              `[league-playoffs] startPlayoffs failed: ${msg}`,
             );
           });
-
-        // S26.6f — fire-and-forget : la cloture thematique est un point
-        // d'extension non critique. Si elle echoue, le match reste
-        // correctement comptabilise et la saison reste cloturee.
-        applyThemedSeasonClosure(seasonId)
-          .then((r) => {
-            if (!r.skipped) {
-              serverLog.info(
-                "[themed-season-closure] champion:",
-                r.label,
-                r.championUserId,
-              );
-            }
-          })
-          .catch((e: unknown) => {
-            const msg = e instanceof Error ? e.message : "unknown";
-            serverLog.error("[themed-season-closure] error:", msg);
+        } else {
+          await prisma.leagueSeason.update({
+            where: { id: seasonId },
+            data: { status: "completed" },
           });
+          seasonCompleted = true;
+
+          // L2.C.1 — fire-and-forget : persistance du snapshot d'awards
+          // de fin de saison. Echec non-bloquant : le score reste
+          // compte meme si l'award n'est pas cree (la page recap peut
+          // toujours recalculer a la demande via computeSeasonRecap).
+          persistSeasonAwards(seasonId)
+            .then((r) => {
+              if (r.created) {
+                serverLog.info(
+                  `[league-scoring] season=${seasonId} award persisted (id=${r.awardId})`,
+                );
+              }
+            })
+            .catch((e: unknown) => {
+              const msg = e instanceof Error ? e.message : "unknown";
+              serverLog.error(
+                `[league-scoring] persistSeasonAwards failed: ${msg}`,
+              );
+            });
+
+          // S26.6f — fire-and-forget : la cloture thematique est un point
+          // d'extension non critique. Si elle echoue, le match reste
+          // correctement comptabilise et la saison reste cloturee.
+          applyThemedSeasonClosure(seasonId)
+            .then((r) => {
+              if (!r.skipped) {
+                serverLog.info(
+                  "[themed-season-closure] champion:",
+                  r.label,
+                  r.championUserId,
+                );
+              }
+            })
+            .catch((e: unknown) => {
+              const msg = e instanceof Error ? e.message : "unknown";
+              serverLog.error("[themed-season-closure] error:", msg);
+            });
+        }
       }
     }
+  }
+
+  // L2.C.3 — propagation du winner dans le bracket playoff. Si le
+  // pairing termine est un pairing playoff (kind="playoff"), on
+  // avance le winner dans le slot suivant. Echec non-bloquant.
+  if (match.leaguePairingId && winner !== "draw") {
+    const winnerSide: "home" | "away" = winner === "A" ? "home" : "away";
+    advancePlayoffsWithWinner(match.leaguePairingId, winnerSide).catch(
+      (e: unknown) => {
+        const msg = e instanceof Error ? e.message : "unknown";
+        serverLog.error(`[league-playoffs] advance failed: ${msg}`);
+      },
+    );
   }
 
   // L2.B.2b — fire-and-forget : cree la LeaguePostMatchSequence pour

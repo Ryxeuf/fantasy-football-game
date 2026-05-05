@@ -621,6 +621,8 @@ model LeagueSeason {
   // S26.6 — themes saisonniers (cf. services/league-themes.ts).
   theme        String?
   themeYear    Int?
+  // L2.C.3 — taille bracket playoffs (0 = disabled).
+  playoffSize  Int       @default(0)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
@@ -670,6 +672,9 @@ model LeagueRound {
   roundNumber Int
   name        String?
   status      String       @default("pending") // "pending" | "in_progress" | "completed"
+  // L2.C.3 — "regular" | "playoff" (mirror PG)
+  kind        String       @default("regular")
+  bracketSlot String?
   startDate   DateTime?
   endDate     DateTime?
   createdAt   DateTime     @default(now())
@@ -681,6 +686,7 @@ model LeagueRound {
   @@unique([seasonId, roundNumber])
   @@index([seasonId])
   @@index([status])
+  @@index([seasonId, kind])
 }
 
 // Sprint Ligues v2 (PR1) — pairing pre-genere du calendrier round-robin.

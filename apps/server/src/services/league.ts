@@ -67,6 +67,12 @@ export interface CreateSeasonInput {
    * en couple avec `theme`.
    */
   themeYear?: number;
+  /**
+   * L2.C.3 — taille du bracket de playoffs en fin de saison
+   * reguliere. 0 = pas de playoff (default). Valeurs supportees :
+   * 0, 2, 4, 8.
+   */
+  playoffSize?: 0 | 2 | 4 | 8;
 }
 
 export interface AddParticipantInput {
@@ -205,6 +211,14 @@ export async function createSeason(input: CreateSeasonInput) {
     themeYear = input.themeYear as number;
   }
 
+  // L2.C.3 — playoffSize : default 0, valider valeurs autorisees.
+  const playoffSize = input.playoffSize ?? 0;
+  if (![0, 2, 4, 8].includes(playoffSize)) {
+    throw new Error(
+      `playoffSize non supporte: ${playoffSize} (valeurs autorisees: 0, 2, 4, 8)`,
+    );
+  }
+
   return prisma.leagueSeason.create({
     data: {
       leagueId: input.leagueId,
@@ -215,6 +229,7 @@ export async function createSeason(input: CreateSeasonInput) {
       endDate: input.endDate ?? null,
       theme,
       themeYear,
+      playoffSize,
     },
   });
 }

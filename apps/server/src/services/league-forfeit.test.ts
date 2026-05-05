@@ -26,6 +26,7 @@ vi.mock("../prisma", () => ({
     leagueRound: {
       update: vi.fn(),
       findMany: vi.fn(),
+      count: vi.fn().mockResolvedValue(0),
     },
     leagueParticipant: {
       update: vi.fn(),
