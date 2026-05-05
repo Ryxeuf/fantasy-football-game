@@ -59,8 +59,9 @@ export function simulateMatch(input: SimInput): SimResult {
     {
       type: 'KICKOFF',
       displayAtMs: KICKOFF_TIME_MS,
+      engineVer: ENGINE_VER,
       seed: input.seed,
-      payload: {
+      meta: {
         home: input.home.id,
         away: input.away.id,
         rngSnapshot: rng.snapshot(),

@@ -292,11 +292,41 @@ importers:
         specifier: ^2.0.0
         version: 2.1.9(@types/node@22.18.0)(jsdom@23.2.0)(terser@5.43.1)
 
+  packages/shared-types:
+    devDependencies:
+      '@eslint/js':
+        specifier: ^9.35.0
+        version: 9.35.0
+      '@types/node':
+        specifier: ^22.5.1
+        version: 22.18.0
+      '@vitest/coverage-v8':
+        specifier: ^2.0.0
+        version: 2.1.9(vitest@2.1.9(@types/node@22.18.0)(jsdom@23.2.0)(terser@5.43.1))
+      eslint:
+        specifier: ^9.8.0
+        version: 9.34.0(jiti@2.5.1)
+      prettier:
+        specifier: ^3.6.2
+        version: 3.6.2
+      typescript:
+        specifier: ^5.5.4
+        version: 5.9.2
+      typescript-eslint:
+        specifier: ^8.43.0
+        version: 8.43.0(eslint@9.34.0(jiti@2.5.1))(typescript@5.9.2)
+      vitest:
+        specifier: ^2.0.0
+        version: 2.1.9(@types/node@22.18.0)(jsdom@23.2.0)(terser@5.43.1)
+
   packages/sim-engine:
     dependencies:
       '@bb/game-engine':
         specifier: workspace:*
         version: link:../game-engine
+      '@bb/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
     devDependencies:
       '@eslint/js':
         specifier: ^9.35.0

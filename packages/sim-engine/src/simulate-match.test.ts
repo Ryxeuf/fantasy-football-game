@@ -1,3 +1,4 @@
+import { isMatchEvent } from '@bb/shared-types';
 import { describe, expect, it } from 'vitest';
 
 import { ENGINE_VER, simulateMatch } from './index';
@@ -64,5 +65,19 @@ describe('simulateMatch — public contract (sprint Pro League 0.A.1)', () => {
         })
       )
     ).toThrow();
+  });
+
+  it('every emitted event passes the @bb/shared-types runtime guard (0.A.3)', () => {
+    const out = simulateMatch(baseInput());
+    for (const ev of out.events) {
+      expect(isMatchEvent(ev)).toBe(true);
+    }
+  });
+
+  it('the KICKOFF event carries engineVer matching the result envelope', () => {
+    const out = simulateMatch(baseInput());
+    const kickoff = out.events.find((e) => e.type === 'KICKOFF');
+    expect(kickoff).toBeDefined();
+    expect(kickoff?.engineVer).toBe(out.engineVer);
   });
 });

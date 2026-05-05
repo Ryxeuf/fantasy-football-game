@@ -2,12 +2,13 @@
  * Public types for @bb/sim-engine.
  *
  * Sprint Pro League — task 0.A.1 (workspace + public interface).
- * The richer event format (full enum, displayAtMs, meta) is task 0.A.3 ;
- * this file establishes the minimal contract that the driver (0.A.2) and
- * resolvers (0.A.5) will extend.
+ * The wire-level `MatchEvent` enum + `displayAtMs` channel was promoted
+ * to `@bb/shared-types` in task 0.A.3 so that the broadcaster (lot 1.B)
+ * and the spectate UI can consume it without pulling the whole engine.
  */
 
 import type { CasualtyOutcome, TeamId } from '@bb/game-engine';
+import type { MatchEvent } from '@bb/shared-types';
 
 /** Identifies the package version that produced a SimResult. Used for replay
  *  freezing and bench regression baselines (cf. lots 0.D / 1.A.5). */
@@ -48,18 +49,10 @@ export interface SimInput {
   meta?: Readonly<Record<string, unknown>>;
 }
 
-/**
- * Match event emitted by the simulator. Phase-1 placeholder ; the full
- * `EventType` enum + `displayAtMs` field land in task 0.A.3.
- */
-export interface MatchEvent {
-  type: string;
-  /** Wall-clock offset (ms) from kickoff for live broadcast (0.A.3). */
-  displayAtMs?: number;
-  /** Optional event-scoped seed for deterministic replay. */
-  seed?: number;
-  payload?: Readonly<Record<string, unknown>>;
-}
+/** Re-export the wire-level event type so existing consumers keep working
+ *  through `@bb/sim-engine`. New code should import from `@bb/shared-types`
+ *  directly to break the runtime dependency on the engine bundle. */
+export type { MatchEvent, EventType } from '@bb/shared-types';
 
 /**
  * Casualty record persisted post-match (lot 1.E.4 expands it with niggling
