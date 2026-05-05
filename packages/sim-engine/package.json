@@ -18,7 +18,8 @@
   },
   "dependencies": {
     "@bb/game-engine": "workspace:*",
-    "@bb/shared-types": "workspace:*"
+    "@bb/shared-types": "workspace:*",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@eslint/js": "^9.35.0",
