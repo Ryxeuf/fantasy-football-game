@@ -12,10 +12,12 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../lib/auth-context";
+import { useTranslation } from "../lib/i18n-context";
 
 export default function LoginScreen() {
   const router = useRouter();
   const { login } = useAuth();
+  const { t } = useTranslation();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,8 +33,10 @@ export default function LoginScreen() {
     try {
       await login(email.trim(), password);
       router.replace("/lobby");
-    } catch (err: any) {
-      setError(err.message || "Erreur lors de la connexion");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error && err.message ? err.message : t("auth.login.submitError");
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -48,14 +52,14 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.card}>
-          <Text style={styles.title}>Connexion</Text>
+          <Text style={styles.title}>{t("auth.login.title")}</Text>
 
           <Text style={styles.label}>
-            Email <Text style={styles.required}>*</Text>
+            {t("auth.login.emailLabel")} <Text style={styles.required}>*</Text>
           </Text>
           <TextInput
             style={styles.input}
-            placeholder="email@example.com"
+            placeholder={t("auth.login.emailPlaceholder")}
             placeholderTextColor="#9CA3AF"
             value={email}
             onChangeText={setEmail}
@@ -66,11 +70,11 @@ export default function LoginScreen() {
           />
 
           <Text style={styles.label}>
-            Mot de passe <Text style={styles.required}>*</Text>
+            {t("auth.login.passwordLabel")} <Text style={styles.required}>*</Text>
           </Text>
           <TextInput
             style={styles.input}
-            placeholder="Votre mot de passe"
+            placeholder={t("auth.login.passwordPlaceholder")}
             placeholderTextColor="#9CA3AF"
             value={password}
             onChangeText={setPassword}
@@ -90,12 +94,12 @@ export default function LoginScreen() {
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.submitText}>Se connecter</Text>
+              <Text style={styles.submitText}>{t("auth.login.submit")}</Text>
             )}
           </Pressable>
 
           <Text style={styles.preAlphaText}>
-            Nuffle Arena est en pré-alpha. L'inscription sera bientôt disponible.
+            {t("auth.login.preAlphaNotice")}
           </Text>
         </View>
       </ScrollView>

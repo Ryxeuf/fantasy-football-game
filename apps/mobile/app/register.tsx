@@ -1,20 +1,19 @@
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
+import { useTranslation } from "../lib/i18n-context";
 
 export default function RegisterScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
 
   return (
     <View style={styles.container}>
       <View style={styles.card}>
         <Text style={styles.icon}>🚧</Text>
-        <Text style={styles.title}>Inscription indisponible</Text>
-        <Text style={styles.message}>
-          Nuffle Arena est actuellement en pré-alpha. L'inscription sera bientôt
-          disponible. Restez connectés !
-        </Text>
+        <Text style={styles.title}>{t("auth.register.title")}</Text>
+        <Text style={styles.message}>{t("auth.register.message")}</Text>
         <Pressable style={styles.linkButton} onPress={() => router.replace("/login")}>
-          <Text style={styles.linkText}>Retour à la connexion</Text>
+          <Text style={styles.linkText}>{t("auth.register.backToLogin")}</Text>
         </Pressable>
       </View>
     </View>

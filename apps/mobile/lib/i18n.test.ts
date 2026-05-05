@@ -357,3 +357,72 @@ describe("lobby refactor i18n keys (S27.3.4)", () => {
     );
   });
 });
+
+/**
+ * S27.3.5 — Auth screens i18n keys (login.tsx + register.tsx).
+ *
+ * Couvre toutes les cles utilisees par :
+ *  - login.tsx (auth.login.*)
+ *  - register.tsx (auth.register.*)
+ *
+ * Verifie : non-vide FR, non-vide EN, FR != EN (sauf "Email" identique
+ * dans les deux langues).
+ */
+const AUTH_I18N_KEYS = [
+  "auth.login.title",
+  "auth.login.emailLabel",
+  "auth.login.emailPlaceholder",
+  "auth.login.passwordLabel",
+  "auth.login.passwordPlaceholder",
+  "auth.login.submit",
+  "auth.login.submitError",
+  "auth.login.preAlphaNotice",
+  "auth.register.title",
+  "auth.register.message",
+  "auth.register.backToLogin",
+] as const;
+
+describe("auth screens i18n keys (S27.3.5)", () => {
+  it.each(AUTH_I18N_KEYS)(
+    "FR : '%s' retourne une chaine non vide differente de la cle",
+    (key) => {
+      const value = t(key as never);
+      expect(typeof value).toBe("string");
+      expect(value.length).toBeGreaterThan(0);
+      expect(value).not.toBe(key);
+    },
+  );
+
+  it.each(AUTH_I18N_KEYS)(
+    "EN : '%s' retourne une chaine non vide differente de la cle",
+    (key) => {
+      const value = t(key as never, undefined, "en" as Locale);
+      expect(typeof value).toBe("string");
+      expect(value.length).toBeGreaterThan(0);
+      expect(value).not.toBe(key);
+    },
+  );
+
+  // "Email" et "auth.login.emailPlaceholder" (un email d'exemple)
+  // sont legitimement identiques entre FR et EN. Le reste doit differer.
+  const AUTH_KEYS_REQUIRING_DISTINCT_EN = [
+    "auth.login.title",
+    "auth.login.passwordLabel",
+    "auth.login.passwordPlaceholder",
+    "auth.login.submit",
+    "auth.login.submitError",
+    "auth.login.preAlphaNotice",
+    "auth.register.title",
+    "auth.register.message",
+    "auth.register.backToLogin",
+  ] as const;
+
+  it.each(AUTH_KEYS_REQUIRING_DISTINCT_EN)(
+    "FR != EN pour '%s' (parite stricte, pas de copie oubliee)",
+    (key) => {
+      const fr = t(key as never);
+      const en = t(key as never, undefined, "en" as Locale);
+      expect(fr).not.toBe(en);
+    },
+  );
+});
