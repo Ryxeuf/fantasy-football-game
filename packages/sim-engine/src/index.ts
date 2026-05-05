@@ -29,6 +29,18 @@ export {
   type WeightedCandidate,
 } from './tactics/temperature';
 export {
+  applyDecay,
+  confidenceBoostFor,
+  createMomentumTracker,
+  recordBlock,
+  recordFailure,
+  recordTouchdown,
+  type BlockOutcome,
+  type MomentumState,
+  type MomentumTracker,
+  type PlayerMomentum,
+} from './tactics/momentum';
+export {
   ENGINE_VER,
   type Casualty,
   type EngineVersion,

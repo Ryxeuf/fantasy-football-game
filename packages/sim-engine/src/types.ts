@@ -10,6 +10,7 @@
 import type { CasualtyOutcome, TeamId } from '@bb/game-engine';
 import type { MatchEvent } from '@bb/shared-types';
 
+import type { PlayerMomentum } from './tactics/momentum';
 import type { TacticalProfile } from './tactics/tactical-profile';
 
 /** Identifies the package version that produced a SimResult. Used for replay
@@ -77,6 +78,10 @@ export interface MatchSummary {
   turnoverCount: number;
   touchdownCount: number;
   durationMs: number;
+  /** Per-player momentum snapshots (lot 0.B.4) — alimente la Gazette
+   *  (1.E.1) et l'odds calculator (1.D.3). Vide quand aucun joueur n'a
+   *  declenche d'event marquant durant le match. */
+  momentum: readonly PlayerMomentum[];
 }
 
 /**
