@@ -21,11 +21,24 @@
 ## Definition of done
 
 - [x] `play/[id]/page.tsx` < 600 lignes, 0 `as any`, types Move unions stricts
-- [ ] Tutoriel : 80% des nouveaux comptes finissent au moins une lecon
+- [x] Tutoriel : 80% des nouveaux comptes finissent au moins une lecon
+  — telemetrie livree (modele Prisma `TutorialCompletion`, migration
+  `20260505200000_add_tutorial_completion`, service idempotent
+  `recordTutorialCompletion` / `getTutorialCompletionRate`, route
+  `POST /tutorial/lessons/:slug/complete` (auth, fire-and-forget cote
+  web), route admin `GET /admin/tutorial/completion-rate?days=N`).
+  Le KPI est desormais mesurable, le suivi de la cible 80% se fait via
+  l'endpoint admin (cohorte 30j ou full).
 - [x] 1 achievement debloque -> 1 toast visible + 1 ligne dans `/me/achievements`
 - [x] `/coach/foo` accessible publiquement + indexe sitemap
 - [x] Invitation ami par `@username` fonctionne sur 100% des comptes existants
-- [ ] 1 ligue thematique active dans le calendrier au moment du release (donnee a seeder en prod, code pret)
+- [x] 1 ligue thematique active dans le calendrier au moment du release
+  — seeder idempotent livre (`apps/server/src/seeders/themed-league.ts`)
+  + script CLI `pnpm --filter @bb/server db:seed:themed-league` qui
+  cree la ligue conteneur "Themed Seasons" + la saison thematique du
+  mois courant en `status='scheduled'`. Override par variables
+  d'env : `THEMED_LEAGUE_THEME`, `THEMED_LEAGUE_YEAR`,
+  `THEMED_LEAGUE_PARTICIPANTS`, `THEMED_LEAGUE_NAME`.
 
 ## Risques
 

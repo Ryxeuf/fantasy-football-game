@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -18,8 +18,38 @@ import {
   type TutorialStep,
 } from "@bb/game-engine";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { API_BASE } from "../../auth-client";
 
 const STORAGE_PREFIX = "nuffle.tutorial.progress.";
+
+/**
+ * S26 DoD — Telemetrie tutoriel fire-and-forget.
+ *
+ * Notifie le backend qu'une lecon vient d'etre terminee. Idempotent
+ * cote serveur (upsert sur (userId, lessonSlug)). Toute erreur reseau
+ * est silencieuse pour ne pas degrader l'experience tutoriel.
+ *
+ * Si l'utilisateur est invite (pas de token), on no-op : le KPI ne
+ * mesure que les comptes authentifies, donc le ratio reste fiable.
+ */
+function reportLessonCompletion(slug: string): void {
+  if (typeof window === "undefined") return;
+  let token: string | null = null;
+  try {
+    token = window.localStorage.getItem("auth_token");
+  } catch {
+    return;
+  }
+  if (!token) return;
+  const url = `${API_BASE}/tutorial/lessons/${encodeURIComponent(slug)}/complete`;
+  void fetch(url, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    keepalive: true,
+  }).catch(() => {
+    /* fire-and-forget : ne jamais casser le tutoriel sur un echec reseau. */
+  });
+}
 
 function getLocalizedStepText(
   step: TutorialStep,
@@ -87,6 +117,7 @@ export default function TutorielRunnerPage() {
   );
 
   const [progress, setProgress] = useState<TutorialProgress | null>(null);
+  const reportedSlugsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (!script) return;
@@ -99,6 +130,18 @@ export default function TutorielRunnerPage() {
       persistProgress(progress);
     }
   }, [progress]);
+
+  // S26 DoD — declenche la telemetrie de fin de lecon (fire-and-forget).
+  // Les rejouages ne renvoient pas l'event grace au Set local. Le serveur
+  // dedup aussi via upsert, donc une double-emission accidentelle reste
+  // sans effet visible.
+  useEffect(() => {
+    if (!progress?.completed) return;
+    const slug = progress.slug;
+    if (reportedSlugsRef.current.has(slug)) return;
+    reportedSlugsRef.current.add(slug);
+    reportLessonCompletion(slug);
+  }, [progress?.completed, progress?.slug]);
 
   const step = useMemo<TutorialStep | undefined>(() => {
     if (!script || !progress) return undefined;

@@ -27,6 +27,7 @@ import careerStatsRoutes from "./routes/career-stats";
 import achievementsRoutes from "./routes/achievements";
 import coachRoutes from "./routes/coach";
 import leagueRoutes from "./routes/league";
+import { tutorialRouter, adminTutorialRouter } from "./routes/tutorial";
 import kofiRoutes from "./routes/kofi";
 import {
   userFeatureFlagsRouter,
@@ -169,6 +170,9 @@ app.use("/career-stats", careerStatsRoutes);
 app.use("/achievements", achievementsRoutes);
 app.use("/coach", publicCache(), coachRoutes);
 app.use("/leagues", leagueRoutes);
+// S26 DoD — telemetrie tutoriel (mesure du KPI 80% completion).
+app.use("/tutorial", tutorialRouter);
+app.use("/admin/tutorial", adminTutorialRouter);
 // Webhook Ko-fi : public (authentifié via `verification_token` dans le payload).
 // Pas de rate limiter applicatif : Ko-fi doit pouvoir retenter.
 app.use("/webhooks/kofi", kofiRoutes);
