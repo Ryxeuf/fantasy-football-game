@@ -21,16 +21,27 @@ prete a accueillir les phases R+).
   awards de saison. Decoupe en 3 lots (MVP / Jeu en Ligue / Polish),
   ~12 jours, 7 PR planifiees. A demarrer immediatement.
 
+- [**SPRINT Sim Engine — Fondation simulation Blood Bowl**](./docs/roadmap/sprints/SPRINT-sim-engine.md)
+  — **P0** (post-Ligues v2) — **Priorite numero 1 a partir de maintenant.**
+  Construire un moteur de simulation BB credible (driver hybride, 16 profils
+  tactiques, variance Nuffle, bench harness vs FUMBBL, validation panel
+  humain BB experts >= 7/10). Sprint **bloquant** pour PvE Bot et Pro
+  League. ~10 sem (8 sem moteur + 2 sem polish PvE-ready : niveaux
+  difficulte, latence interactive <500ms, 12 personnalites bot).
+
+- [**SPRINT PvE Bot MVP — Vrais joueurs vs IA online**](./docs/roadmap/sprints/SPRINT-pve-bot-mvp.md)
+  — **P1** (post Sim Engine, gate humain passe) — Mode killer pour
+  onboarding et disponibilite 24/7. Integration sim-engine dans flow PvP
+  existant + UI selection difficulte/personnalite + tutorial 4 matchs +
+  historique PvE separe (pas d'impact ELO). ~4 sem. KPI 3 mois (>= 60%
+  nouveaux jouent PvE, retention boost, NPS >= 35) declenche le SPRINT
+  Pro League ou itere sur PvE.
+
 - [**SPRINT Pro League — Championnat virtuel + Paris MVP**](./docs/roadmap/sprints/SPRINT-pro-league.md)
-  — **P1** (post-Ligues v2) — Championnat permanent 16 equipes IA vs IA
-  (hommages NFL × races BB), matchs auto diffuses live le mardi 21h, paris
-  en Crowns, mode spectateur/fan, Nuffle Gazette LLM quotidienne. **Phase 0
-  sim foundation bloquante** (8 sem : behavior trees, profils tactiques,
-  variance Nuffle, bench harness, validation panel humain). **Phase 1 MVP**
-  (4 sem : data model, broadcaster live SSE, UI, paris, Gazette,
-  casualties, HoF light). Calendrier aligne saison NFL 2026-27 (kickoff
-  cible 5 sept 2026). Backlog idees differees (MPG-layer mercato,
-  multi-leagues, weather sync IRL...) consigne dans
+  — **P2/P3 (DIFFERE)** — Reactive uniquement si KPI PvE atteints. Champ.
+  permanent 16 equipes IA vs IA, matchs auto live mardi 21h, paris en
+  Crowns, mode fan, Nuffle Gazette LLM. ~5 sem. Backlog idees differees
+  (MPG-layer mercato, multi-leagues, weather sync IRL...) consigne dans
   [`docs/roadmap/backlog/future-ideas.md`](./docs/roadmap/backlog/future-ideas.md).
 
 ## Suivi qualite actif

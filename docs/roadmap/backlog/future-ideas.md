@@ -1,30 +1,37 @@
-# Backlog — Idees futures (Pro League & engagement async)
+# Backlog — Idees futures (engagement async, Pro League extensions)
 
 > Derniere mise a jour : 2026-05-05
 > Statut : **idees consignees**, non scopees.
-> Ces items ont ete brainstormes lors de la conception du SPRINT Pro League
-> ([sprints/SPRINT-pro-league.md](../sprints/SPRINT-pro-league.md)) puis
-> exclus volontairement du MVP pour eviter la sur-ingenierie.
-> **Aucune de ces idees ne doit etre attaquee** tant que les KPI MVP du
-> SPRINT Pro League ne sont pas atteints (cf. section "Gate de reactivation"
-> en bas).
+> Ces items ont ete brainstormes lors de la conception du sprint Pro League
+> initial puis exclus volontairement par discipline produit.
+> **Aucune de ces idees ne doit etre attaquee** tant que les KPI des sprints
+> amont ne sont pas atteints (cf. section "Gate de reactivation" en bas).
 
 ## 0. Pourquoi ce backlog
 
-Lors de la conception du SPRINT Pro League, plusieurs directions audacieuses
+Lors du brainstorm produit (2026-05-05), plusieurs directions audacieuses
 ont ete explorees (MPG-layer mercato, weather sync IRL, NFL Twin Mirror,
-Twitch auto-cast, etc.). On les a ecartees du MVP par discipline produit :
-**si le MVP ne trouve pas son audience, ces extensions n'ont pas de sens**.
+Twitch auto-cast, etc.). Apres analyse strategique, la priorisation a ete :
 
-Ce document garde la **memoire produit** : si demain on decide d'avancer, on
-reprend la reflexion ici plutot que de tout re-explorer.
+1. [`SPRINT-sim-engine.md`](../sprints/SPRINT-sim-engine.md) — **P0**, fondation
+   bloquante.
+2. [`SPRINT-pve-bot-mvp.md`](../sprints/SPRINT-pve-bot-mvp.md) — **P1**, mode
+   killer pour onboarding et validation sim-engine.
+3. [`SPRINT-pro-league.md`](../sprints/SPRINT-pro-league.md) — **P2/P3**,
+   differe jusqu'a validation traction PvE.
+4. **Tous les autres items ci-dessous** — **P4+**, post Pro League MVP si
+   traction confirmee.
+
+**Si le PvE ou la Pro League ne trouvent pas leur audience, ces extensions
+n'ont pas de sens.** Ce document garde la **memoire produit** : si demain on
+decide d'avancer, on reprend la reflexion ici plutot que de tout re-explorer.
 
 ## Gate de reactivation
 
 Les items de ce backlog ne sont **pas reactivables a la legere**. Pre-requis
 generiques avant d'attaquer **n'importe quel item ci-dessous** :
 
-| KPI MVP Pro League | Cible minimale |
+| KPI Pro League MVP | Cible minimale |
 |--------------------|----------------|
 | Coachs uniques ayant place >=1 pari/semaine | >= 100 |
 | Spectateurs simultanes pic mardi 21h | >= 200 |
@@ -32,8 +39,13 @@ generiques avant d'attaquer **n'importe quel item ci-dessous** :
 | NPS beta + early users | >= 40 |
 | Saison complete livree sans bug bloquant | 1 saison reussie minimum |
 
+**Note** : la Pro League est elle-meme en P2/P3 (cf.
+`SPRINT-pro-league.md`) et depend du retour PvE 3 mois. Le backlog
+ci-dessous ne devient donc pertinent qu'au plus tot **6-9 mois apres le
+demarrage du SPRINT-sim-engine**.
+
 Si ces seuils sont atteints, on peut piocher dans le backlog par ordre de ROI
-estime. Sinon, on itere sur le MVP avant tout.
+estime. Sinon, on itere sur le PvE / la Pro League avant tout.
 
 ---
 

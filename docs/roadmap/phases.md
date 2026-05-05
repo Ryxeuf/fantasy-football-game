@@ -14,7 +14,9 @@
 | **S26** | Refactor + Retention & engagement (page.tsx prerequis, achievements, profil, ligues) | [sprints/S26-retention-engagement.md](./sprints/S26-retention-engagement.md) | TERMINE |
 | **S27** | Evolutions & confort (esport, mobile parite, S4 skeleton, audit log, B0.1 residuels) | [sprints/S27-evolutions-confort.md](./sprints/S27-evolutions-confort.md) | A faire |
 | **Ligues v2** | **PRIORITE** Gestion complete des ligues BB (creation UI, inscription, calendrier auto, forfait, Jeu en Ligue post-match, awards) | [sprints/SPRINT-leagues-v2.md](./sprints/SPRINT-leagues-v2.md) | A faire (P0) |
-| **Pro League** | Championnat virtuel 16 equipes IA vs IA (hommages NFL × races BB), matchs auto diffuses live le mardi 21h, paris en Crowns, mode spectateur/fan, Nuffle Gazette LLM. Phase 0 sim foundation bloquante (8 sem) + Phase 1 MVP (4 sem) | [sprints/SPRINT-pro-league.md](./sprints/SPRINT-pro-league.md) | A faire (P1, post-Ligues v2) |
+| **Sim Engine** | **PRIORITE P0 post-Ligues v2** Fondation simulation BB (driver hybride, 16 profils tactiques, variance Nuffle, bench harness, validation panel humain). Bloquant pour PvE et Pro League. ~10 sem. | [sprints/SPRINT-sim-engine.md](./sprints/SPRINT-sim-engine.md) | A faire (P0) |
+| **PvE Bot MVP** | Vrais joueurs vs IA online avec niveaux de difficulte (Easy/Normal/Hard/Nuffle's Wrath), 12 personnalites bot, tutorial 4 matchs, mode killer pour onboarding et disponibilite 24/7. ~4 sem. | [sprints/SPRINT-pve-bot-mvp.md](./sprints/SPRINT-pve-bot-mvp.md) | A faire (P1, post Sim Engine) |
+| **Pro League** | Championnat virtuel 16 equipes IA vs IA (hommages NFL × races BB), matchs auto diffuses live le mardi 21h, paris en Crowns, mode spectateur/fan, Nuffle Gazette LLM. **Differe**, depend du retour PvE 3 mois (KPI). ~5 sem. | [sprints/SPRINT-pro-league.md](./sprints/SPRINT-pro-league.md) | Differe (P2/P3, post-PvE) |
 
 ## Suivi qualite actif
 
