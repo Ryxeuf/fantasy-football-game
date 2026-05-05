@@ -599,6 +599,9 @@ model League {
   drawPoints      Int      @default(1)
   lossPoints      Int      @default(0)
   forfeitPoints   Int      @default(-1)
+  // L2.C.5 — Ordre de departage configurable (JSON array de slugs,
+  // miroir PG).
+  tieBreakRules   String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

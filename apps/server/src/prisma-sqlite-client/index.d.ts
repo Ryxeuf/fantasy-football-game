@@ -32330,6 +32330,7 @@ export namespace Prisma {
     drawPoints: number | null
     lossPoints: number | null
     forfeitPoints: number | null
+    tieBreakRules: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -32348,6 +32349,7 @@ export namespace Prisma {
     drawPoints: number | null
     lossPoints: number | null
     forfeitPoints: number | null
+    tieBreakRules: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -32366,6 +32368,7 @@ export namespace Prisma {
     drawPoints: number
     lossPoints: number
     forfeitPoints: number
+    tieBreakRules: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -32402,6 +32405,7 @@ export namespace Prisma {
     drawPoints?: true
     lossPoints?: true
     forfeitPoints?: true
+    tieBreakRules?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -32420,6 +32424,7 @@ export namespace Prisma {
     drawPoints?: true
     lossPoints?: true
     forfeitPoints?: true
+    tieBreakRules?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -32438,6 +32443,7 @@ export namespace Prisma {
     drawPoints?: true
     lossPoints?: true
     forfeitPoints?: true
+    tieBreakRules?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -32543,6 +32549,7 @@ export namespace Prisma {
     drawPoints: number
     lossPoints: number
     forfeitPoints: number
+    tieBreakRules: string | null
     createdAt: Date
     updatedAt: Date
     _count: LeagueCountAggregateOutputType | null
@@ -32580,6 +32587,7 @@ export namespace Prisma {
     drawPoints?: boolean
     lossPoints?: boolean
     forfeitPoints?: boolean
+    tieBreakRules?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     creator?: boolean | UserDefaultArgs<ExtArgs>
@@ -32601,6 +32609,7 @@ export namespace Prisma {
     drawPoints?: boolean
     lossPoints?: boolean
     forfeitPoints?: boolean
+    tieBreakRules?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     creator?: boolean | UserDefaultArgs<ExtArgs>
@@ -32620,6 +32629,7 @@ export namespace Prisma {
     drawPoints?: boolean
     lossPoints?: boolean
     forfeitPoints?: boolean
+    tieBreakRules?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     creator?: boolean | UserDefaultArgs<ExtArgs>
@@ -32639,11 +32649,12 @@ export namespace Prisma {
     drawPoints?: boolean
     lossPoints?: boolean
     forfeitPoints?: boolean
+    tieBreakRules?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type LeagueOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "creatorId" | "ruleset" | "status" | "isPublic" | "maxParticipants" | "allowedRosters" | "winPoints" | "drawPoints" | "lossPoints" | "forfeitPoints" | "createdAt" | "updatedAt", ExtArgs["result"]["league"]>
+  export type LeagueOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "creatorId" | "ruleset" | "status" | "isPublic" | "maxParticipants" | "allowedRosters" | "winPoints" | "drawPoints" | "lossPoints" | "forfeitPoints" | "tieBreakRules" | "createdAt" | "updatedAt", ExtArgs["result"]["league"]>
   export type LeagueInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     creator?: boolean | UserDefaultArgs<ExtArgs>
     seasons?: boolean | League$seasonsArgs<ExtArgs>
@@ -32676,6 +32687,7 @@ export namespace Prisma {
       drawPoints: number
       lossPoints: number
       forfeitPoints: number
+      tieBreakRules: string | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["league"]>
@@ -33116,6 +33128,7 @@ export namespace Prisma {
     readonly drawPoints: FieldRef<"League", 'Int'>
     readonly lossPoints: FieldRef<"League", 'Int'>
     readonly forfeitPoints: FieldRef<"League", 'Int'>
+    readonly tieBreakRules: FieldRef<"League", 'String'>
     readonly createdAt: FieldRef<"League", 'DateTime'>
     readonly updatedAt: FieldRef<"League", 'DateTime'>
   }
@@ -43329,6 +43342,7 @@ export namespace Prisma {
     drawPoints: 'drawPoints',
     lossPoints: 'lossPoints',
     forfeitPoints: 'forfeitPoints',
+    tieBreakRules: 'tieBreakRules',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -45743,6 +45757,7 @@ export namespace Prisma {
     drawPoints?: IntFilter<"League"> | number
     lossPoints?: IntFilter<"League"> | number
     forfeitPoints?: IntFilter<"League"> | number
+    tieBreakRules?: StringNullableFilter<"League"> | string | null
     createdAt?: DateTimeFilter<"League"> | Date | string
     updatedAt?: DateTimeFilter<"League"> | Date | string
     creator?: XOR<UserScalarRelationFilter, UserWhereInput>
@@ -45763,6 +45778,7 @@ export namespace Prisma {
     drawPoints?: SortOrder
     lossPoints?: SortOrder
     forfeitPoints?: SortOrder
+    tieBreakRules?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     creator?: UserOrderByWithRelationInput
@@ -45786,6 +45802,7 @@ export namespace Prisma {
     drawPoints?: IntFilter<"League"> | number
     lossPoints?: IntFilter<"League"> | number
     forfeitPoints?: IntFilter<"League"> | number
+    tieBreakRules?: StringNullableFilter<"League"> | string | null
     createdAt?: DateTimeFilter<"League"> | Date | string
     updatedAt?: DateTimeFilter<"League"> | Date | string
     creator?: XOR<UserScalarRelationFilter, UserWhereInput>
@@ -45806,6 +45823,7 @@ export namespace Prisma {
     drawPoints?: SortOrder
     lossPoints?: SortOrder
     forfeitPoints?: SortOrder
+    tieBreakRules?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: LeagueCountOrderByAggregateInput
@@ -45832,6 +45850,7 @@ export namespace Prisma {
     drawPoints?: IntWithAggregatesFilter<"League"> | number
     lossPoints?: IntWithAggregatesFilter<"League"> | number
     forfeitPoints?: IntWithAggregatesFilter<"League"> | number
+    tieBreakRules?: StringNullableWithAggregatesFilter<"League"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"League"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"League"> | Date | string
   }
@@ -48945,6 +48964,7 @@ export namespace Prisma {
     drawPoints?: number
     lossPoints?: number
     forfeitPoints?: number
+    tieBreakRules?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     creator: UserCreateNestedOneWithoutCreatedLeaguesInput
@@ -48965,6 +48985,7 @@ export namespace Prisma {
     drawPoints?: number
     lossPoints?: number
     forfeitPoints?: number
+    tieBreakRules?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     seasons?: LeagueSeasonUncheckedCreateNestedManyWithoutLeagueInput
@@ -48983,6 +49004,7 @@ export namespace Prisma {
     drawPoints?: IntFieldUpdateOperationsInput | number
     lossPoints?: IntFieldUpdateOperationsInput | number
     forfeitPoints?: IntFieldUpdateOperationsInput | number
+    tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     creator?: UserUpdateOneRequiredWithoutCreatedLeaguesNestedInput
@@ -49003,6 +49025,7 @@ export namespace Prisma {
     drawPoints?: IntFieldUpdateOperationsInput | number
     lossPoints?: IntFieldUpdateOperationsInput | number
     forfeitPoints?: IntFieldUpdateOperationsInput | number
+    tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     seasons?: LeagueSeasonUncheckedUpdateManyWithoutLeagueNestedInput
@@ -49022,6 +49045,7 @@ export namespace Prisma {
     drawPoints?: number
     lossPoints?: number
     forfeitPoints?: number
+    tieBreakRules?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -49039,6 +49063,7 @@ export namespace Prisma {
     drawPoints?: IntFieldUpdateOperationsInput | number
     lossPoints?: IntFieldUpdateOperationsInput | number
     forfeitPoints?: IntFieldUpdateOperationsInput | number
+    tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -49057,6 +49082,7 @@ export namespace Prisma {
     drawPoints?: IntFieldUpdateOperationsInput | number
     lossPoints?: IntFieldUpdateOperationsInput | number
     forfeitPoints?: IntFieldUpdateOperationsInput | number
+    tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -51674,6 +51700,7 @@ export namespace Prisma {
     drawPoints?: SortOrder
     lossPoints?: SortOrder
     forfeitPoints?: SortOrder
+    tieBreakRules?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -51700,6 +51727,7 @@ export namespace Prisma {
     drawPoints?: SortOrder
     lossPoints?: SortOrder
     forfeitPoints?: SortOrder
+    tieBreakRules?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -51718,6 +51746,7 @@ export namespace Prisma {
     drawPoints?: SortOrder
     lossPoints?: SortOrder
     forfeitPoints?: SortOrder
+    tieBreakRules?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -55131,6 +55160,7 @@ export namespace Prisma {
     drawPoints?: number
     lossPoints?: number
     forfeitPoints?: number
+    tieBreakRules?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     seasons?: LeagueSeasonCreateNestedManyWithoutLeagueInput
@@ -55149,6 +55179,7 @@ export namespace Prisma {
     drawPoints?: number
     lossPoints?: number
     forfeitPoints?: number
+    tieBreakRules?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     seasons?: LeagueSeasonUncheckedCreateNestedManyWithoutLeagueInput
@@ -55624,6 +55655,7 @@ export namespace Prisma {
     drawPoints?: IntFilter<"League"> | number
     lossPoints?: IntFilter<"League"> | number
     forfeitPoints?: IntFilter<"League"> | number
+    tieBreakRules?: StringNullableFilter<"League"> | string | null
     createdAt?: DateTimeFilter<"League"> | Date | string
     updatedAt?: DateTimeFilter<"League"> | Date | string
   }
@@ -61483,6 +61515,7 @@ export namespace Prisma {
     drawPoints?: number
     lossPoints?: number
     forfeitPoints?: number
+    tieBreakRules?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     creator: UserCreateNestedOneWithoutCreatedLeaguesInput
@@ -61502,6 +61535,7 @@ export namespace Prisma {
     drawPoints?: number
     lossPoints?: number
     forfeitPoints?: number
+    tieBreakRules?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -61691,6 +61725,7 @@ export namespace Prisma {
     drawPoints?: IntFieldUpdateOperationsInput | number
     lossPoints?: IntFieldUpdateOperationsInput | number
     forfeitPoints?: IntFieldUpdateOperationsInput | number
+    tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     creator?: UserUpdateOneRequiredWithoutCreatedLeaguesNestedInput
@@ -61710,6 +61745,7 @@ export namespace Prisma {
     drawPoints?: IntFieldUpdateOperationsInput | number
     lossPoints?: IntFieldUpdateOperationsInput | number
     forfeitPoints?: IntFieldUpdateOperationsInput | number
+    tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -62941,6 +62977,7 @@ export namespace Prisma {
     drawPoints?: number
     lossPoints?: number
     forfeitPoints?: number
+    tieBreakRules?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -63316,6 +63353,7 @@ export namespace Prisma {
     drawPoints?: IntFieldUpdateOperationsInput | number
     lossPoints?: IntFieldUpdateOperationsInput | number
     forfeitPoints?: IntFieldUpdateOperationsInput | number
+    tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     seasons?: LeagueSeasonUpdateManyWithoutLeagueNestedInput
@@ -63334,6 +63372,7 @@ export namespace Prisma {
     drawPoints?: IntFieldUpdateOperationsInput | number
     lossPoints?: IntFieldUpdateOperationsInput | number
     forfeitPoints?: IntFieldUpdateOperationsInput | number
+    tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     seasons?: LeagueSeasonUncheckedUpdateManyWithoutLeagueNestedInput
@@ -63352,6 +63391,7 @@ export namespace Prisma {
     drawPoints?: IntFieldUpdateOperationsInput | number
     lossPoints?: IntFieldUpdateOperationsInput | number
     forfeitPoints?: IntFieldUpdateOperationsInput | number
+    tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

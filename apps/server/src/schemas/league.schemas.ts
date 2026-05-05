@@ -31,6 +31,23 @@ const leagueThemeYear = z
   .int("themeYear doit etre un entier")
   .positive("themeYear doit etre strictement positif");
 
+/**
+ * L2.C.5 — Slugs autorises pour `tieBreakRules`. Doit rester aligne
+ * avec `services/league.ts.TIE_BREAK_SLUGS`. Mirror manuel pour
+ * eviter une dependance circulaire entre schemas/ et services/.
+ */
+const tieBreakSlug = z.enum([
+  "points",
+  "td_diff",
+  "td_for",
+  "td_against",
+  "cas_diff",
+  "cas_for",
+  "season_elo",
+  "wins",
+  "name",
+]);
+
 export const createLeagueSchema = z.object({
   name: z
     .string()
@@ -46,6 +63,9 @@ export const createLeagueSchema = z.object({
   drawPoints: z.number().int().min(0).max(10).optional(),
   lossPoints: z.number().int().min(-10).max(10).optional(),
   forfeitPoints: z.number().int().min(-10).max(10).optional(),
+  // L2.C.5 — ordre de departage personnalise. null/undefined =
+  // ordre par defaut historique. Filtre les doublons cote service.
+  tieBreakRules: z.array(tieBreakSlug).max(9).optional().nullable(),
 });
 
 export const createSeasonSchema = z

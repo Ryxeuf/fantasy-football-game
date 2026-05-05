@@ -140,15 +140,24 @@ export default function LeaguesPage() {
             {t.leagues.description}
           </p>
         </div>
-        {v2UiEnabled ? (
+        <div className="flex items-center gap-2">
           <Link
-            href="/leagues/new"
-            data-testid="leagues-create-cta"
-            className="inline-flex items-center gap-1 px-3 py-2 rounded-md bg-nuffle-gold text-white text-sm font-medium hover:bg-nuffle-gold/90"
+            href="/leagues/archived"
+            data-testid="leagues-archived-link"
+            className="inline-flex items-center gap-1 px-3 py-2 rounded-md border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50"
           >
-            + {t.leagues.createLeagueButton}
+            📦 {t.leagues.archivedLink}
           </Link>
-        ) : null}
+          {v2UiEnabled ? (
+            <Link
+              href="/leagues/new"
+              data-testid="leagues-create-cta"
+              className="inline-flex items-center gap-1 px-3 py-2 rounded-md bg-nuffle-gold text-white text-sm font-medium hover:bg-nuffle-gold/90"
+            >
+              + {t.leagues.createLeagueButton}
+            </Link>
+          ) : null}
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
