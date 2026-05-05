@@ -45,7 +45,7 @@ import {
   DEFAULT_TACTICAL_PROFILE,
   type TacticalProfile,
 } from '../tactics/tactical-profile';
-import { riskAppetiteToTemperature, softmaxSample } from '../tactics/temperature';
+import { aiPlay, type DriveSnapshot } from '../ai';
 import {
   ENGINE_VER,
   type Casualty,
@@ -158,59 +158,30 @@ function buildKeyMomentState(
   };
 }
 
+/**
+ * Picks the key-moment kind for the current turn via the 3-pass
+ * behavior tree (lot 0.B.1) :
+ *   evaluate situation → choose strategy → execute pattern.
+ *
+ * The narrative coherence guarantee (drives stay on-strategy across
+ * the consecutive moments of a turn) is delegated to `aiPlay` ; the
+ * driver only consumes its `moment` output here.
+ */
 function pickKeyMoment(
   rng: Rng,
-  drive: DriveState,
+  state: MatchInternalState,
   profile: TacticalProfile
 ): KeyMomentKind | null {
-  const temperature = riskAppetiteToTemperature(profile.riskAppetite);
-
-  // Score each candidate from the team's tactical fingerprint. Scores
-  // are on the same [0, 1] scale (param / 100) so the softmax remains
-  // numerically tame across all 16 race profiles.
-  const score = (param: keyof TacticalProfile): number => profile[param] / 100;
-
-  if (!drive.hasPossession) {
-    // Loose ball : pickup vs hustle-block. Pickup demand is roughly
-    // anti-correlated with bash (a bash team prefers cracking heads).
-    return softmaxSample(
-      rng,
-      [
-        { value: 'pickup' as KeyMomentKind, score: 1 - score('bashIndex') * 0.5 },
-        { value: 'block' as KeyMomentKind, score: score('bashIndex') },
-      ],
-      temperature
-    );
-  }
-
-  if (drive.ballYardline >= FIELD_YARDS - 4) {
-    // Red-zone : push for TD via bash / dodge / GFI chains.
-    return softmaxSample(
-      rng,
-      [
-        { value: 'block' as KeyMomentKind, score: score('bashIndex') + 0.3 },
-        { value: 'dodge' as KeyMomentKind, score: score('breakawayInstinct') + 0.2 },
-        { value: 'gfi' as KeyMomentKind, score: score('gfiTolerance') },
-      ],
-      temperature
-    );
-  }
-
-  // Open-field decision. The `null` ("nothing scripted, just yards")
-  // branch ties down a baseline tempo so high-pace teams skip more
-  // scripted moments.
-  return softmaxSample(
-    rng,
-    [
-      { value: 'block' as KeyMomentKind, score: score('bashIndex') },
-      { value: 'dodge' as KeyMomentKind, score: score('breakawayInstinct') * 0.8 + 0.2 },
-      { value: 'pass' as KeyMomentKind, score: score('passingFrequency') },
-      { value: 'gfi' as KeyMomentKind, score: score('gfiTolerance') * 0.6 },
-      { value: 'foul' as KeyMomentKind, score: score('foulFrequency') },
-      { value: null as unknown as KeyMomentKind, score: 1 - score('pace') * 0.5 },
-    ],
-    temperature
-  );
+  const snap: DriveSnapshot = {
+    hasPossession: state.drive.hasPossession,
+    ballYardline: state.drive.ballYardline,
+    turn: state.turn,
+    half: state.half,
+    scoreSelf: state.drive.drivingTeam === 'home' ? state.scoreHome : state.scoreAway,
+    scoreOpp: state.drive.drivingTeam === 'home' ? state.scoreAway : state.scoreHome,
+  };
+  const { moment } = aiPlay(rng, snap, profile);
+  return moment;
 }
 
 interface KeyMomentOutcome {
@@ -366,7 +337,7 @@ function processTurn(
   const momentCount = m.state.turn % 3 === 0 ? 2 : 1;
   const activeProfile = m.state.drive.drivingTeam === 'home' ? homeProfile : awayProfile;
   for (let i = 0; i < momentCount; i += 1) {
-    const moment = pickKeyMoment(rngs.strategic, m.state.drive, activeProfile);
+    const moment = pickKeyMoment(rngs.strategic, m.state, activeProfile);
     if (moment === null) continue;
 
     const { events: keyEvents, turnover } = runKeyMoment(
