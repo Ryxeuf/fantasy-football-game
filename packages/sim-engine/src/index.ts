@@ -9,6 +9,15 @@
 export { simulateMatch } from './simulate-match';
 export { runHybridDriver, type DriverOptions } from './driver/hybrid-driver';
 export {
+  DEFAULT_TACTICAL_PROFILE,
+  TACTICAL_PROFILE_PARAMETERS,
+  parseTacticalProfile,
+  safeParseTacticalProfile,
+  tacticalProfileSchema,
+  type TacticalParameter,
+  type TacticalProfile,
+} from './tactics/tactical-profile';
+export {
   ENGINE_VER,
   type Casualty,
   type EngineVersion,

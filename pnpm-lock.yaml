@@ -327,6 +327,9 @@ importers:
       '@bb/shared-types':
         specifier: workspace:*
         version: link:../shared-types
+      zod:
+        specifier: ^4.3.6
+        version: 4.3.6
     devDependencies:
       '@eslint/js':
         specifier: ^9.35.0

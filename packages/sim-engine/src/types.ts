@@ -10,6 +10,8 @@
 import type { CasualtyOutcome, TeamId } from '@bb/game-engine';
 import type { MatchEvent } from '@bb/shared-types';
 
+import type { TacticalProfile } from './tactics/tactical-profile';
+
 /** Identifies the package version that produced a SimResult. Used for replay
  *  freezing and bench regression baselines (cf. lots 0.D / 1.A.5). */
 export const ENGINE_VER = '0.1.0';
@@ -24,9 +26,9 @@ export interface MatchScore {
 }
 
 /**
- * Minimal description of a team passed to the simulator. Tactical profile
- * (lot 0.B) is intentionally optional here so 0.A.1 does not force its
- * shape — task 0.B.2 will introduce the validated `TacticalProfile`.
+ * Minimal description of a team passed to the simulator. The tactical
+ * profile (lot 0.B.2) is optional — when omitted, the driver behaves as
+ * if the team used `DEFAULT_TACTICAL_PROFILE` (every parameter at 50).
  */
 export interface SimTeamInput {
   id: string;
@@ -34,8 +36,10 @@ export interface SimTeamInput {
   side: 'home' | 'away';
   /** Roster id list — actual roster lookup is consumer-side for now. */
   rosterIds?: readonly string[];
-  /** Free-form tactical profile, refined in lot 0.B. */
-  tactics?: Readonly<Record<string, unknown>>;
+  /** Validated tactical fingerprint — see `tactical-profile.ts` (0.B.2).
+   *  Apps/server validates the JSON via `tacticalProfileSchema` before
+   *  reaching the sim-engine. */
+  tactics?: Readonly<TacticalProfile>;
 }
 
 export interface SimInput {
