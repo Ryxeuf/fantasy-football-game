@@ -1,3 +1,10 @@
+## [1.83.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.82.0...v1.83.0) (2026-05-05)
+
+
+### ✨ Features
+
+* **server:** update skill descriptions for Season 3 in French and English ([781538c](https://github.com/Ryxeuf/fantasy-football-game/commit/781538c1212beb54fd327edd69ca75e3038832f3))
+
 ## [1.82.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.81.0...v1.82.0) (2026-05-04)
 
 
