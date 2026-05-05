@@ -291,6 +291,37 @@ necessite stack multi-ligues mature.
 
 ## Annexe — Reports hors Pro League
 
+### A.0 Promotion/relegation multi-tier (ex L2.C.4)
+
+**Concept** : modele `LeagueTier` (D1/D2/D3) avec `League.tierId`. Service
+`applyPromotionRelegation(leagueId)` au passage de saison : top 2 montent,
+bottom 2 descendent vers le tier voisin.
+
+**Source** : reporte du `SPRINT-leagues-v2` (L2.C.4), categorie Backend,
+effort L. Initialement deja dans le backlog "restes optionnels" du TODO.md,
+deplace ici le 2026-05-05 par decision produit (focus acquisition/retention
+plutot qu'extensions structurelles ligues).
+
+**Pourquoi differe** :
+- Aucun sens tant qu'on n'a pas >= 5-8 ligues groupees en pyramide (donc
+  >= 80 equipes inscrites). Probleme d'offre avant probleme de structure.
+- La Pro League apporte deja une boucle d'engagement plus forte qu'un
+  systeme de divisions : pas besoin de complexifier les ligues prive.
+- Risque de collision migrations Prisma avec les 3 migrations sequentielles
+  de la Phase 1 Pro League (Match/Bet/SpectatorFollow).
+- Item #9 du present backlog ("Promotion/relegation pyramidale 8+ divisions
+  mondiales") couvre la version "audacieuse" du concept ; A.0 etait la
+  version "petite" intra-ligue, redondante a long terme.
+
+**Pre-requis de reactivation** :
+- >= 80 equipes inscrites en ligues actives sur 30 jours glissants OU
+- Demande utilisateur explicite (top 5 dans le NPS qualitatif).
+- Pro League MVP livre et stabilise.
+
+**Effort** : L (~1-2 sem).
+
+---
+
 ### A.1 Mobile parite ligues (ex L2.C.7)
 
 **Concept** : portage de l'experience ligues sur l'app Expo

@@ -38,20 +38,13 @@ prete a accueillir les phases R+).
 
 ## Backlog
 
-### Ligues v2 — restes optionnels
+### Ligues v2 — extensions reportees
 
-- [ ] **L2.C.4 — Promotion/relegation multi-tier** (Backend, L)
-  Modele `LeagueTier` (D1/D2/D3) avec `League.tierId`. Service
-  `applyPromotionRelegation(leagueId)` : top 2 montent / bottom 2
-  descendent au passage de saison. Reporte de
-  [`SPRINT-leagues-v2`](./docs/roadmap/sprints/SPRINT-leagues-v2.md)
-  (L2.C.4) — explicitement marque optionnel. A activer si demande
-  utilisateur (ligues longues, structure pyramidale).
-
-> **Note** : L2.C.7 (Mobile parite ligues) a ete archivee dans
+> Toutes les extensions optionnelles de Ligues v2 ont ete archivees dans
 > [`docs/roadmap/backlog/future-ideas.md`](./docs/roadmap/backlog/future-ideas.md)
-> (Annexe A.1) le 2026-05-05 — priorisation Pro League avant les
-> extensions mobile ligues.
+> (annexe A) le 2026-05-05 :
+> - **A.0** : L2.C.4 Promotion/relegation multi-tier (focus acquisition/retention).
+> - **A.1** : L2.C.7 Mobile parite ligues (priorisation Pro League).
 
 ### Autres
 
