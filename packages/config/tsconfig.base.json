@@ -9,6 +9,7 @@
     "baseUrl": ".",
     "paths": {
       "@bb/game-engine": ["../game-engine/src"],
+      "@bb/sim-engine": ["../sim-engine/src"],
       "@bb/ui": ["../ui/src"]
     },
     "esModuleInterop": true,
