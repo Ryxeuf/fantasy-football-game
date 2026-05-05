@@ -303,5 +303,182 @@ export const SEASON_3_SKILL_DESCRIPTIONS: Record<
     descriptionEn:
       "If this player performs a Pass action that is a Quick Pass, or a Hand-off action, and provided no Turnover occurs, their activation does not end once the Pass or Hand-off is resolved. Instead, they may continue their Move action using their remaining movement.",
   },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Compétences / Mutations dont la description a CHANGÉ en Saison 3
+  // Source : extraction_competences_blood_bowl.md (OCR officiel S3)
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // Catégorie Agilité
+  defensive: {
+    description:
+      "Pendant les Tours adverses, les joueurs adverses que ce joueur Marque ne peuvent pas utiliser les Compétences Garde ni Coup de Crampons.",
+    descriptionEn:
+      "During your opponent's team turns, any opposing players being Marked by this player cannot use the Guard or Boot to the Head Skills.",
+  },
+  dodge: {
+    description:
+      "Une fois par Tour, ce joueur peut relancer un unique Test d'Agilité quand il tente d'Esquiver. De plus, cette Compétence affecte le résultat Bousculé quand un joueur adverse effectue une Action de Blocage contre ce joueur, comme décrit en page 62.",
+    descriptionEn:
+      "Once per turn, this player may re-roll a single Agility test when attempting to Dodge. In addition, this Skill affects the Stumble result when an opposing player performs a Block action against this player, as described on page 62.",
+  },
+  "diving-catch": {
+    description:
+      "Ce joueur peut tenter de Réceptionner le ballon s'il atterrit sur une case dans sa Zone de Tacle suite à une Passe, un Renvoi ou un Coup d'Envoi. Il ne peut pas utiliser cette Compétence pour tenter de Réceptionner le ballon s'il atterrit sur une case dans sa Zone de Tacle suite à un Rebond. De plus, ce joueur peut appliquer un modificateur de +1 à ses Test d'Agilité quand il tente de Réceptionner le ballon dans le cadre d'une Action de Passe s'il est sur la case cible.",
+    descriptionEn:
+      "This player may attempt to Catch the ball if it lands in a square in their Tackle Zone from a Pass, Kick-off, or Throw-in. They cannot use this Skill to Catch a ball that Bounces into their Tackle Zone. In addition, this player may apply a +1 modifier to their Agility test when attempting to Catch the ball from a Pass action if they occupy the target square.",
+  },
+  "diving-tackle": {
+    description:
+      "Quand un joueur adverse tente de quitter la Zone de Tacle de ce joueur suite à une Esquive, un Saut ou un Bond, après avoir fait le Test d'Agilité et appliqué les modificateurs et relances éventuelles, ce joueur peut utiliser cette Compétence. Appliquez immédiatement un modificateur de -2 au Test d'Agilité du joueur adverse et placez ce joueur À Terre sur la case que le joueur adverse a quitté. Si un joueur tente de quitter la Zone de Tacle de plusieurs joueurs ayant cette Compétence en même temps, un seul de ces joueurs peut utiliser cette Compétence.",
+    descriptionEn:
+      "When an opposing player attempts to leave this player's Tackle Zone via a Dodge, Jump, or Leap, after making the Agility test and applying any modifiers and re-rolls, this player may use this Skill. Immediately apply a -2 modifier to the opposing player's Agility test and place this player Prone on the square the opposing player vacated. If a player tries to leave the Tackle Zone of multiple players with this Skill simultaneously, only one may use this Skill.",
+  },
+  "safe-pair-of-hands": {
+    description:
+      "Si ce joueur est Plaqué, Chute ou est Mis À Terre alors qu'il est en possession du ballon, alors avant qu'il soit À Terre, il peut placer le ballon sur n'importe quelle case inoccupée adjacente à celle où il se retrouve À Terre au lieu que le ballon Rebondisse normalement.",
+    descriptionEn:
+      "If this player is Knocked Down, Falls Over, or is Placed Prone while in possession of the ball, before they are placed Prone, they may place the ball on any unoccupied square adjacent to the square where they end up Prone instead of the ball Bouncing normally.",
+  },
+
+  // Catégorie Générale
+  catch: {
+    description:
+      "Ce joueur peut relancer tout Test d'Agilité raté quand il tente de Réceptionner le ballon.",
+    descriptionEn:
+      "This player may re-roll any failed Agility test when attempting to Catch the ball.",
+  },
+  dauntless: {
+    description:
+      "Quand ce joueur ayant cette Compétence effectue une Action de Blocage contre un joueur adverse qui a une Caractéristique de Force supérieure (avant d'appliquer des modificateurs aux deux joueurs), ce joueur peut jeter un D6 et ajouter sa propre Caractéristique de Force. Si le résultat est supérieur à la Caractéristique de Force non modifiée du joueur adverse, alors ce joueur augmente sa Caractéristique de Force non modifiée pour qu'elle soit égale à celle du joueur adverse pour la durée de l'Action de Blocage. Puis on applique les modificateurs normalement. Si ce joueur a aussi une Compétence qui l'autorise à effectuer plusieurs Actions de Blocage, comme la Compétence Frénésie, alors il doit faire un jet séparé pour chaque Action de Blocage.",
+    descriptionEn:
+      "When this player performs a Block action against an opposing player that has a higher Strength characteristic (before applying modifiers to either player), this player may roll a D6 and add their own Strength characteristic. If the result exceeds the opposing player's unmodified Strength, this player increases their unmodified Strength to match the opposing player's for the duration of the Block action. Modifiers are then applied normally. If this player also has a Skill that allows multiple Block actions, such as Frenzy, they must make a separate roll for each Block action.",
+  },
+  leader: {
+    description:
+      "Une équipe qui a un ou plusieurs joueurs ayant cette Compétence sur le terrain au début d'une mi-temps gagne une unique Relance d'Équipe bonus : on l'appelle une Relance de Chef. Une équipe peut utiliser une Relance de Chef seulement si elle a un joueur avec la Compétence Chef sur le terrain, et si tous les joueurs ayant cette Compétence sont retirés du jeu, à cause d'une Élimination ou d'une Expulsion, avant que la Relance de Chef ait été utilisée, alors elle est perdue. Une Relance de Chef suit toutes les règles des Relances d'Équipe normales, à l'exception du fait qu'on ne peut pas la perdre à cause d'un Chef Cuistot Halfling.",
+    descriptionEn:
+      "A team that has one or more players with this Skill on the pitch at the start of a half gains a single bonus Team Re-roll called a Leader Re-roll. A team may only use a Leader Re-roll if they have a player with the Leader Skill on the pitch, and if all players with this Skill are removed from play, due to a Casualty or Sending-off, before the Leader Re-roll is used, it is lost. A Leader Re-roll follows all the rules for Team Re-rolls, except it cannot be lost due to a Halfling Master Chef.",
+  },
+  pro: {
+    description:
+      "Pendant l'activation de ce joueur, il peut tenter de relancer un unique dé. Il peut s'agir d'un dé jeté individuellement, dans le cadre d'un jet de plusieurs dés, ou faisant partie d'un groupe de dés. Pour utiliser cette Compétence, le joueur doit jeter un D6 : sur 3+, on peut relancer le dé, sur 1-2, on ne peut pas relancer le dé. On ne peut pas utiliser la Compétence pour relancer un dé dans le cadre d'un Jet d'Armure, Jet de Blessure, Jet d'Élimination, jet fait en dehors de l'activation du joueur, ou jet n'étant pas fait au nom du joueur (comme Contester la Décision, ou une Intervention du Public). Une fois qu'un joueur a tenté d'utiliser cette Compétence, il ne peut utiliser aucune autre relance quelle qu'en soit la source pour relancer le dé.",
+    descriptionEn:
+      "During this player's activation, they may attempt to re-roll a single dice. This may be a dice rolled on its own, as part of a multiple dice roll, or as part of a dice pool. To use this Skill, roll a D6: on 3+, the dice may be re-rolled; on 1-2, it cannot. This Skill cannot be used to re-roll a dice as part of an Armour Roll, Injury Roll, Casualty Roll, a roll made outside this player's activation, or a roll not made on behalf of this player (such as a Argue the Call roll or a Crowd Interference roll). Once a player has attempted to use this Skill, they may not use any other re-roll from any source to re-roll that dice.",
+  },
+  shadowing: {
+    description:
+      "Chaque fois qu'un joueur adverse tente d'Esquiver hors d'une case dans la Zone de Tacle de ce joueur, ce joueur peut utiliser cette Compétence. Quand ce joueur utilise cette Compétence, jetez un D6. Sur un 1-3, rien ne se passe. Sur 4+, ce joueur est immédiatement placé sur la case que le joueur adverse a libérée. Ce joueur peut utiliser cette Compétence autant de fois par Tour que la valeur de son Mouvement. Si un joueur essaie de quitter la Zone de Tacle de plusieurs joueurs ayant cette Compétence en même temps, un seul de ces joueurs peut utiliser cette Compétence.",
+    descriptionEn:
+      "Each time an opposing player attempts to Dodge out of a square in this player's Tackle Zone, this player may use this Skill. When used, roll a D6. On 1-3, nothing happens. On 4+, this player is immediately placed on the square the opposing player vacated. This player may use this Skill a number of times per turn equal to their Movement characteristic. If a player tries to leave the Tackle Zone of multiple players with this Skill simultaneously, only one of them may use this Skill.",
+  },
+  "sure-hands": {
+    description:
+      "Ce joueur peut relancer le D6 quand il tente de ramasser le ballon, mais pas quand il fait une Action de Sécurisation du Ballon. De plus, on ne peut pas utiliser la Compétence Arracher le Ballon contre ce joueur.",
+    descriptionEn:
+      "This player may re-roll the D6 when attempting to pick up the ball, but not when performing a Secure the Ball action. In addition, the Strip Ball Skill cannot be used against this player.",
+  },
+  tackle: {
+    description:
+      "Quand un joueur adverse tente d'Esquiver depuis une case dans la Zone de Tacle de ce joueur, il ne peut pas utiliser la Compétence Esquive. De plus, quand ce joueur effectue une Action de Blocage contre un joueur adverse, le joueur adverse ne compte pas comme ayant la Compétence Esquive si on choisit un résultat Bousculé.",
+    descriptionEn:
+      "When an opposing player attempts to Dodge from a square in this player's Tackle Zone, they cannot use the Dodge Skill. In addition, when this player performs a Block action against an opposing player, that player cannot use the Dodge Skill if a Push Back result is chosen.",
+  },
+  wrestle: {
+    description:
+      "Quand ce joueur effectue une Action de Blocage, ou quand il est la cible d'une Action de Blocage, si on choisit le résultat Les Deux Plaqués, ce joueur peut choisir d'utiliser cette Compétence. En ce cas, les deux joueurs de l'Action de Blocage sont Mis À Terre, quelles que soient les Compétences qu'ils possèdent.",
+    descriptionEn:
+      "When this player performs a Block action, or when they are the target of a Block action, if the Both Down result is chosen, this player may choose to use this Skill. If they do, both players involved in the Block action are Placed Prone, regardless of any Skills either player may have.",
+  },
+
+  // Catégorie Passe
+  "cloud-burster": {
+    description:
+      "Quand ce joueur effectue une Action de Passe, les joueurs adverses ne peuvent pas tenter d'Intercepter le ballon.",
+    descriptionEn:
+      "When this player performs a Pass action, opposing players cannot attempt to Intercept the ball.",
+  },
+  "dump-off": {
+    description:
+      "Chaque fois qu'un joueur adverse tente d'effectuer une Action de Blocage contre ce joueur, ou une Action Spéciale qui cible directement ce joueur, ce joueur peut utiliser cette Compétence. En ce cas, ce joueur peut immédiatement effectuer une Passe Rapide avant qu'on résolve l'Action qui le cible. Cette Passe Rapide ne peut pas provoquer de Turnover, mais suit autrement les règles normales pour faire une Passe Rapide. Une fois la Passe Rapide résolue, l'Action qui cible ce joueur continue.",
+    descriptionEn:
+      "Each time an opposing player attempts to perform a Block action against this player, or a Special Action that directly targets this player, this player may use this Skill. If they do, they may immediately perform a Quick Pass before the targeting action is resolved. This Quick Pass cannot cause a Turnover, but otherwise follows all normal rules. Once the Quick Pass is resolved, the action targeting this player continues.",
+  },
+  "on-the-ball": {
+    description:
+      "Quand un joueur adverse effectue une Action de Passe, après avoir annoncé la case cible mais avant de faire le Test de Capacité de Passe, ce joueur peut se déplacer de jusqu'à 3 cases, selon toutes les règles normales pour une Action de Mouvement, à l'exception du fait qu'il ne peut pas Foncer. Si ce joueur Chute pendant ce mouvement, alors son mouvement prend immédiatement fin et l'Action de Passe reprend. Si plusieurs joueurs ont cette Compétence, alors ils peuvent tous l'utiliser pendant la même Action de Passe, mais ils doivent le faire un à la fois et si l'un d'eux Chute avant que les autres aient eu l'occasion de se déplacer, ils ne peuvent plus se déplacer. De plus, pendant la Séquence de Début de Phase, après que le Coup d'Envoi a Dévié mais avant de faire le jet d'Événement de Coup d'Envoi, un seul joueur Démarqué de l'équipe qui réceptionne et ayant cette Compétence peut se déplacer de jusqu'à 3 cases, selon toutes les règles normales pour une Action de Mouvement, à l'exception du fait qu'il ne peut pas Foncer. Un joueur ne peut pas utiliser cette Compétence si un Renvoi s'ensuit, et il ne peut pas se déplacer dans la moitié de terrain adverse. Si ce joueur Chute pendant ce mouvement, alors son mouvement prend immédiatement fin et on fait le jet de l'Événement du Coup d'Envoi.",
+    descriptionEn:
+      "When an opposing player performs a Pass action, after the target square is announced but before the Passing Ability test is made, this player may move up to 3 squares following all normal rules for a Move action, except they cannot Rush. If this player Falls Over, their movement immediately ends and the Pass action resumes. If multiple players have this Skill, they may all use it during the same Pass action, one at a time; if one Falls Over before the others have moved, they cannot. In addition, during the Start of Drive sequence, after the Kick-off has Deviated but before the Kick-off Event roll, a single unmarked player on the receiving team with this Skill may move up to 3 squares following normal Move action rules, except they cannot Rush or move into the opposing half. If this player Falls Over, their movement ends immediately and the Kick-off Event roll is made.",
+  },
+
+  // Catégorie Force
+  "arm-bar": {
+    description:
+      "Si un joueur adverse Chute en tentant d'Esquiver, Sauter ou Bondir depuis une case dans la Zone de Tacle de ce joueur, ce joueur peut utiliser cette Compétence. En ce cas, il peut appliquer un modificateur de +1 soit au Jet d'Armure, soit au Jet de Blessure. On peut appliquer ce modificateur après avoir fait le jet. Si le joueur adverse subit une Élimination suite à une Esquive, un Saut ou un Bond raté depuis une case dans la Zone de Tacle de ce joueur, alors celui-ci compte comme ayant causé cette Élimination et reçoit les Points de Star Player correspondant. Si un joueur tente de quitter la Zone de Tacle de plusieurs joueurs ayant cette Compétence en même temps, un seul de ces joueurs peut utiliser cette Compétence.",
+    descriptionEn:
+      "If an opposing player Falls Over when attempting to Dodge, Jump, or Leap from a square in this player's Tackle Zone, this player may use this Skill. If they do, they may apply a +1 modifier to either the Armour Roll or the Injury Roll. This modifier may be applied after the roll. If the opposing player suffers a Casualty as a result of a failed Dodge, Jump, or Leap from a square in this player's Tackle Zone, this player counts as having caused the Casualty and gains the corresponding Star Player Points. If a player tries to leave the Tackle Zone of multiple players with this Skill simultaneously, only one may use this Skill.",
+  },
+  grab: {
+    description:
+      "Quand ce joueur annonce une Action de Blocage, si le joueur adverse est Repoussé, alors le Coach de ce joueur peut choisir n'importe quelle case inoccupée adjacente à la cible pour l'y Repousser. S'il n'y a pas de case adjacente inoccupée, alors on ne peut pas utiliser cette Compétence. De plus, quand ce joueur effectue une Action de Blocage, les joueurs adverses ne peuvent pas utiliser la Compétence Glissade Contrôlée. Un joueur ayant cette Compétence ne peut pas aussi avoir la Compétence Frénésie.",
+    descriptionEn:
+      "When this player declares a Block action, if the opposing player is Pushed Back, this player's coach may choose any unoccupied square adjacent to the target to Push them Back into. If there is no unoccupied adjacent square, this Skill cannot be used. In addition, when this player performs a Block action, opposing players cannot use the Side Step Skill. A player with this Skill cannot also have the Frenzy Skill.",
+  },
+  juggernaut: {
+    description:
+      "Quand ce joueur annonce une Action de Blitz, il peut traiter tout résultat Les Deux Plaqués comme Repoussé lors de toutes les Actions de Blocage qu'il effectue pendant l'Action de Blitz. De plus, quand ce joueur effectue une Action de Blocage dans le cadre d'une Action de Blitz, les joueurs adverses ne peuvent pas utiliser les Compétences Parade, Stabilité ni Lutte.",
+    descriptionEn:
+      "When this player declares a Blitz action, they may treat any Both Down results as a Push Back for all Block actions performed during that Blitz action. In addition, when this player performs a Block action as part of a Blitz action, opposing players cannot use the Fend, Stand Firm, or Wrestle Skills.",
+  },
+  "mighty-blow-1": {
+    description:
+      "Chaque fois que ce joueur Plaque un joueur adverse lors d'une Action de Blocage, même si ce joueur est aussi Plaqué, il peut appliquer un modificateur de +1 soit au Jet d'Armure, soit au Jet de Blessure. On peut appliquer ce modificateur après avoir fait le jet.",
+    descriptionEn:
+      "Each time this player Knocks Down an opposing player as the result of a Block action, even if this player is also Knocked Down, they may apply a +1 modifier to either the Armour Roll or the Injury Roll. This modifier may be applied after the roll.",
+  },
+  "pile-driver": {
+    description:
+      "Quand un joueur adverse est Plaqué par ce joueur durant une Action de Blocage, ce joueur peut effectuer une Action d'Agression gratuite contre le joueur adverse tant qu'il est toujours Debout et qu'il Marque toujours le joueur adverse. Puis ce joueur est Mis À Terre et son activation prend immédiatement fin.",
+    descriptionEn:
+      "When an opposing player is Knocked Down by this player as the result of a Block action, this player may perform a free Foul action against the opposing player as long as they are still Standing and still Marking the opposing player. Then this player is Placed Prone and their activation immediately ends.",
+  },
+
+  // Catégorie Mutations
+  "big-hand": {
+    description:
+      "Ce joueur ignore tous les modificateurs négatifs quand il tente de ramasser le ballon.",
+    descriptionEn:
+      "This player ignores all negative modifiers when attempting to pick up the ball.",
+  },
+  "disturbing-presence": {
+    description:
+      "Tout joueur adverse qui effectue une Action de Passe, une Action de Lancer de Coéquipier ou une Action Spéciale de Lancer de Bombe, ou tente d'Intercepter ou de Réceptionner le ballon, applique un modificateur de -1 au Test de Capacité de Passe ou d'Agilité pour chaque joueur de votre équipe ayant cette Compétence et étant à 3 cases ou moins de lui.",
+    descriptionEn:
+      "Any opposing player who performs a Pass action, Throw Team-mate action, or Throw Bomb Special Action, or attempts to Intercept or Catch the ball, applies a -1 modifier to their Passing Ability or Agility test for each player on your team with this Skill within 3 squares of them.",
+  },
+  horns: {
+    description:
+      "Chaque fois que ce joueur annonce une Action de Blitz, alors il applique un modificateur de +1 à sa Caractéristique de Force pour toutes les Actions de Blocage effectuées durant cette Action de Blitz.",
+    descriptionEn:
+      "Each time this player declares a Blitz action, they apply a +1 modifier to their Strength characteristic for all Block actions performed during that Blitz action.",
+  },
+  "iron-hard-skin": {
+    description:
+      "Les joueurs adverses ne peuvent appliquer aucun modificateur quand ils font un Jet d'Armure contre ce joueur. De plus, on ne peut pas utiliser la Compétence Griffes contre ce joueur.",
+    descriptionEn:
+      "Opposing players cannot apply any modifiers when making an Armour Roll against this player. In addition, the Claws Skill cannot be used against this player.",
+  },
+  "prehensile-tail": {
+    description:
+      "Quand un joueur adverse tente d'Esquiver, de Bondir ou de Sauter depuis une case dans la Zone de Tacle de ce joueur, il applique un modificateur de -1 supplémentaire au Test d'Agilité. Si un joueur tente de quitter la Zone de Tacle de plusieurs joueurs ayant cette Compétence en même temps, un seul de ces joueurs peut utiliser cette Compétence.",
+    descriptionEn:
+      "When an opposing player attempts to Dodge, Leap, or Jump from a square in this player's Tackle Zone, they apply an additional -1 modifier to their Agility test. If a player tries to leave the Tackle Zone of multiple players with this Skill simultaneously, only one may use this Skill.",
+  },
+  tentacles: {
+    description:
+      "Quand un joueur adverse tente d'Esquiver, de Bondir ou de Sauter depuis une case dans la Zone de Tacle de ce joueur, ce joueur peut utiliser cette Compétence. Quand un joueur utilise cette Compétence, il jette un D6 et ajoute sa Caractéristique de Force au jet ; il soustrait ensuite la Caractéristique de Force du joueur adverse au résultat. Si le résultat est 6 ou plus, ou si le jet est un 6 naturel, alors le joueur adverse ne quitte pas la case qu'il tentait de quitter et son activation prend fin. Si le résultat est 5 ou moins, ou si le jet est un 1 naturel, cette Compétence n'a pas d'effet. Si un joueur tente de quitter la Zone de Tacle de plusieurs joueurs ayant cette Compétence en même temps, un seul de ces joueurs peut utiliser cette Compétence.",
+    descriptionEn:
+      "When an opposing player attempts to Dodge, Leap, or Jump from a square in this player's Tackle Zone, this player may use this Skill. When used, roll a D6 and add this player's Strength; subtract the opposing player's Strength from the result. On 6+, or a natural 6, the opposing player does not leave the square they were trying to leave and their activation ends. On 5 or less, or a natural 1, this Skill has no effect. If a player tries to leave the Tackle Zone of multiple players with this Skill simultaneously, only one may use this Skill.",
+  },
 };
 
