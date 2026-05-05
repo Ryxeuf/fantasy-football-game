@@ -1,6 +1,6 @@
 # TODO — Nuffle Arena (Blood Bowl 3 Online)
 
-> Derniere mise a jour : 2026-05-04
+> Derniere mise a jour : 2026-05-05
 > Version actuelle : v1.73.0 (beta ouverte au public).
 >
 > La roadmap v1 (Sprints 0-23, Phases A-Q, 201 taches livrees) est
@@ -20,6 +20,18 @@ prete a accueillir les phases R+).
   calendrier auto round-robin, forfait, Jeu en Ligue post-match,
   awards de saison. Decoupe en 3 lots (MVP / Jeu en Ligue / Polish),
   ~12 jours, 7 PR planifiees. A demarrer immediatement.
+
+- [**SPRINT Pro League — Championnat virtuel + Paris MVP**](./docs/roadmap/sprints/SPRINT-pro-league.md)
+  — **P1** (post-Ligues v2) — Championnat permanent 16 equipes IA vs IA
+  (hommages NFL × races BB), matchs auto diffuses live le mardi 21h, paris
+  en Crowns, mode spectateur/fan, Nuffle Gazette LLM quotidienne. **Phase 0
+  sim foundation bloquante** (8 sem : behavior trees, profils tactiques,
+  variance Nuffle, bench harness, validation panel humain). **Phase 1 MVP**
+  (4 sem : data model, broadcaster live SSE, UI, paris, Gazette,
+  casualties, HoF light). Calendrier aligne saison NFL 2026-27 (kickoff
+  cible 5 sept 2026). Backlog idees differees (MPG-layer mercato,
+  multi-leagues, weather sync IRL...) consigne dans
+  [`docs/roadmap/backlog/future-ideas.md`](./docs/roadmap/backlog/future-ideas.md).
 
 ## Suivi qualite actif
 
