@@ -7,6 +7,7 @@
  */
 
 export { simulateMatch } from './simulate-match';
+export { runHybridDriver, type DriverOptions } from './driver/hybrid-driver';
 export {
   ENGINE_VER,
   type Casualty,
