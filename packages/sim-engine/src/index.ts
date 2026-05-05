@@ -41,6 +41,24 @@ export {
   type PlayerMomentum,
 } from './tactics/momentum';
 export {
+  PATTERNS,
+  PATTERN_BY_ID,
+  STRATEGIES,
+  STRATEGY_BY_ID,
+  aiPlay,
+  chooseStrategy,
+  choosePattern,
+  evaluateSituation,
+  executePattern,
+  type DriveContext,
+  type DriveSnapshot,
+  type KeyMomentKind,
+  type Pattern,
+  type PatternId,
+  type Strategy,
+  type StrategyId,
+} from './ai';
+export {
   ENGINE_VER,
   type Casualty,
   type EngineVersion,
