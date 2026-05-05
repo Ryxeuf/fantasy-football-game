@@ -84,7 +84,7 @@ jusqu'a passer le gate.
 
 | # | Tache | Cat | Effort | Statut | Detail |
 |---|-------|-----|--------|--------|--------|
-| 0.A.1 | Nouveau package `packages/sim-engine` | Backend | M | [ ] | Workspace pnpm, build TS, depend de `packages/game-engine` (regles, dices, types). Interface publique : `simulateMatch(input: SimInput): SimResult`. Output : `{result, events: MatchEvent[], summary, casualties[], engineVer}`. |
+| 0.A.1 | Nouveau package `packages/sim-engine` | Backend | M | [x] | Workspace pnpm, build TS, depend de `packages/game-engine` (regles, dices, types). Interface publique : `simulateMatch(input: SimInput): SimResult`. Output : `{result, events: MatchEvent[], summary, casualties[], engineVer}`. |
 | 0.A.2 | Driver hybride (drive-level + key moments) | Backend | L | [ ] | Boucle haut niveau : kickoff → drive → resolution turn-by-turn des actions critiques (block, dodge, pass, turnover) via `game-engine` actions. Drives non-critiques resolus en proba (avancement yards + fumble chance). Garde la possibilite de basculer en `full` driver plus tard sans casser les events. |
 | 0.A.3 | Format `MatchEvent` typé partage | Types | M | [ ] | `packages/shared-types/match-event.ts` : enum `EventType` (KICKOFF / TURN_START / BLOCK / DODGE / PASS / TD / KO / CASUALTY / TURNOVER / NUFFLE / HALFTIME / END). Champs `displayAtMs` (offset depuis kickoff pour la diffusion live), `seed`, `meta`. Versionne via `engineVer`. |
 | 0.A.4 | PRNG seede + injection partout | Backend | M | [ ] | `packages/sim-engine/rng/seeded.ts` (xoroshiro). Banni `Math.random` du package via lint custom (`no-restricted-globals`). Tout consommateur recoit le PRNG en parametre. Permet replay deterministe + audit. |
