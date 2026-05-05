@@ -1,6 +1,16 @@
+import { resolve } from 'node:path';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  // Path-mapped workspace packages : sim-engine consumes them at runtime
+  // (resolvers call `calculateBlockDiceCount`, `getPassRange`, etc.) so we
+  // mirror the tsconfig.base.json `paths` for vitest's module resolver.
+  resolve: {
+    alias: {
+      '@bb/game-engine': resolve(__dirname, '../game-engine/src/index.ts'),
+      '@bb/shared-types': resolve(__dirname, '../shared-types/src/index.ts'),
+    },
+  },
   test: {
     passWithNoTests: false,
     globals: true,
