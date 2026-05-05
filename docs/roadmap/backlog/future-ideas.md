@@ -289,6 +289,68 @@ necessite stack multi-ligues mature.
 
 ---
 
+## Annexe — Reports hors Pro League
+
+### A.0 Promotion/relegation multi-tier (ex L2.C.4)
+
+**Concept** : modele `LeagueTier` (D1/D2/D3) avec `League.tierId`. Service
+`applyPromotionRelegation(leagueId)` au passage de saison : top 2 montent,
+bottom 2 descendent vers le tier voisin.
+
+**Source** : reporte du `SPRINT-leagues-v2` (L2.C.4), categorie Backend,
+effort L. Initialement deja dans le backlog "restes optionnels" du TODO.md,
+deplace ici le 2026-05-05 par decision produit (focus acquisition/retention
+plutot qu'extensions structurelles ligues).
+
+**Pourquoi differe** :
+- Aucun sens tant qu'on n'a pas >= 5-8 ligues groupees en pyramide (donc
+  >= 80 equipes inscrites). Probleme d'offre avant probleme de structure.
+- La Pro League apporte deja une boucle d'engagement plus forte qu'un
+  systeme de divisions : pas besoin de complexifier les ligues prive.
+- Risque de collision migrations Prisma avec les 3 migrations sequentielles
+  de la Phase 1 Pro League (Match/Bet/SpectatorFollow).
+- Item #9 du present backlog ("Promotion/relegation pyramidale 8+ divisions
+  mondiales") couvre la version "audacieuse" du concept ; A.0 etait la
+  version "petite" intra-ligue, redondante a long terme.
+
+**Pre-requis de reactivation** :
+- >= 80 equipes inscrites en ligues actives sur 30 jours glissants OU
+- Demande utilisateur explicite (top 5 dans le NPS qualitatif).
+- Pro League MVP livre et stabilise.
+
+**Effort** : L (~1-2 sem).
+
+---
+
+### A.1 Mobile parite ligues (ex L2.C.7)
+
+**Concept** : portage de l'experience ligues sur l'app Expo
+(`apps/mobile/app/leagues/`) — liste des ligues, detail saison, calendrier,
+classement, bouton inscription, bouton "Lancer match" qui redirige vers le
+flow match existant. Reutilise i18n module S27.3.
+
+**Source** : reporte du `SPRINT-leagues-v2` (L2.C.7), categorie Mobile,
+effort L. Initialement deja dans le backlog "restes optionnels" du TODO.md,
+deplace ici le 2026-05-05 par decision produit (priorisation Pro League
+avant extensions Ligues v2).
+
+**Pourquoi differe** :
+- Les fonctionnalites ligues web sont stables et testees ; l'usage mobile
+  pour de la gestion de ligue async n'est pas un cas d'usage prioritaire
+  (creation/inscription/lancement match restent confortables sur web).
+- L'effort L (semaines) est mieux investi dans Pro League MVP qui apportera
+  une boucle d'engagement plus differenciante.
+
+**Pre-requis de reactivation** :
+- Pro League MVP livre et stabilise.
+- Demande utilisateur explicite (analytics : >= 30% des coachs ligues actifs
+  ouvrent l'app mobile au moins 1x/semaine) OU itinerance reseau
+  (deplacements) prouvee comme cas d'usage frequent en beta.
+
+**Effort** : L (~1-2 sem).
+
+---
+
 ## Synthese de la matrice "Quand reactiver quoi"
 
 | Item | Pre-requis | Effort | Priorite si gate atteint |
