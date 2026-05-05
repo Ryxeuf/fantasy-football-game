@@ -24,6 +24,11 @@ export {
   type ProTeamProfile,
 } from './tactics/race-profiles';
 export {
+  riskAppetiteToTemperature,
+  softmaxSample,
+  type WeightedCandidate,
+} from './tactics/temperature';
+export {
   ENGINE_VER,
   type Casualty,
   type EngineVersion,
