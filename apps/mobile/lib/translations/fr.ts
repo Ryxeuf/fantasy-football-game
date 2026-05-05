@@ -9,6 +9,7 @@
  *   ProfileHeader).
  * S27.3.4 : namespace `lobby.*` pour le refactor `lobby.tsx` -> `MatchCard`,
  *   `MatchList`, `FilterBar`, `LobbyHeader`, `LobbyActions`, `JoinMatchModal`.
+ * S27.3.5 : namespace `auth.*` pour `login.tsx` et `register.tsx`.
  *
  * Les autres namespaces (play, etc.) seront ajoutes au fur et a mesure du
  * remplacement des strings hardcodees.
@@ -146,6 +147,25 @@ export const FR_TRANSLATIONS = {
     joinModal: {
       title: "Rejoindre un match",
       inputPlaceholder: "ID du match",
+    },
+  },
+  auth: {
+    login: {
+      title: "Connexion",
+      emailLabel: "Email",
+      emailPlaceholder: "email@example.com",
+      passwordLabel: "Mot de passe",
+      passwordPlaceholder: "Votre mot de passe",
+      submit: "Se connecter",
+      submitError: "Erreur lors de la connexion",
+      preAlphaNotice:
+        "Nuffle Arena est en pre-alpha. L'inscription sera bientot disponible.",
+    },
+    register: {
+      title: "Inscription indisponible",
+      message:
+        "Nuffle Arena est actuellement en pre-alpha. L'inscription sera bientot disponible. Restez connectes !",
+      backToLogin: "Retour a la connexion",
     },
   },
 } as const;

@@ -139,4 +139,23 @@ export const EN_TRANSLATIONS = {
       inputPlaceholder: "Match ID",
     },
   },
+  auth: {
+    login: {
+      title: "Sign in",
+      emailLabel: "Email",
+      emailPlaceholder: "email@example.com",
+      passwordLabel: "Password",
+      passwordPlaceholder: "Your password",
+      submit: "Sign in",
+      submitError: "Sign-in failed",
+      preAlphaNotice:
+        "Nuffle Arena is in pre-alpha. Registration will be available soon.",
+    },
+    register: {
+      title: "Registration unavailable",
+      message:
+        "Nuffle Arena is currently in pre-alpha. Registration will be available soon. Stay tuned!",
+      backToLogin: "Back to sign-in",
+    },
+  },
 } as const;
