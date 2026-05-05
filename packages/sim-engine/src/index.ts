@@ -19,3 +19,12 @@ export {
   type SimResult,
   type SimTeamInput,
 } from './types';
+export {
+  createRng,
+  rollD3,
+  rollD6,
+  rollD8,
+  rollDie,
+  type Rng,
+  type RngSnapshot,
+} from './rng/seeded';

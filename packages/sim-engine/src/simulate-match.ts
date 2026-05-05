@@ -11,6 +11,7 @@
  * scheduler 1.A, bench 0.D) can wire against it today.
  */
 
+import { createRng } from './rng/seeded';
 import {
   ENGINE_VER,
   type Casualty,
@@ -50,12 +51,20 @@ function decideOutcome(home: number, away: number): MatchOutcome {
 export function simulateMatch(input: SimInput): SimResult {
   validate(input);
 
+  // Single root PRNG ; downstream lots (0.A.5 resolvers, 0.A.2 driver)
+  // will fork dedicated children per resolver to keep streams independent.
+  const rng = createRng(input.seed);
+
   const events: MatchEvent[] = [
     {
       type: 'KICKOFF',
       displayAtMs: KICKOFF_TIME_MS,
       seed: input.seed,
-      payload: { home: input.home.id, away: input.away.id },
+      payload: {
+        home: input.home.id,
+        away: input.away.id,
+        rngSnapshot: rng.snapshot(),
+      },
     },
   ];
 
