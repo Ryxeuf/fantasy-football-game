@@ -112,6 +112,18 @@ const SOURCE_CONFIGS: SourceConfig[] = [
     description: "Esport, mobile parite, S4 skeleton, audit log, B0.1 residuels",
   },
   {
+    id: "sprint-leagues-v2",
+    title: "SPRINT Ligues v2 — Gestion complete des ligues",
+    relPath: "docs/roadmap/sprints/SPRINT-leagues-v2.md",
+    description: "MVP / Jeu en Ligue / Polish — ~12 jours, 3 PR principaux",
+  },
+  {
+    id: "sprint-pro-league",
+    title: "SPRINT Pro League — Championnat virtuel Blood Bowl",
+    relPath: "docs/roadmap/sprints/SPRINT-pro-league.md",
+    description: "Championnat IA vs IA permanent 16 equipes — ~12 semaines",
+  },
+  {
     id: "follow-up-b01",
     title: "Suivi qualite — Skill registry (B0.1)",
     relPath: "docs/roadmap/follow-up-b01.md",
