@@ -1,6 +1,6 @@
 # Roadmap v2 — Sprints 24-27
 
-> Derniere mise a jour : 2026-04-27
+> Derniere mise a jour : 2026-05-05
 > Contexte : v1.74.0 livree (beta publique). Roadmap v1 archivee dans
 > [`archive/v1.73/`](./archive/v1.73/README.md). Cette nouvelle roadmap
 > couvre les 4 sprints suivants, derives d'un audit a 10 agents.
@@ -14,6 +14,7 @@
 | **S26** | Refactor + Retention & engagement (page.tsx prerequis, achievements, profil, ligues) | [sprints/S26-retention-engagement.md](./sprints/S26-retention-engagement.md) | TERMINE |
 | **S27** | Evolutions & confort (esport, mobile parite, S4 skeleton, audit log, B0.1 residuels) | [sprints/S27-evolutions-confort.md](./sprints/S27-evolutions-confort.md) | A faire |
 | **Ligues v2** | **PRIORITE** Gestion complete des ligues BB (creation UI, inscription, calendrier auto, forfait, Jeu en Ligue post-match, awards) | [sprints/SPRINT-leagues-v2.md](./sprints/SPRINT-leagues-v2.md) | A faire (P0) |
+| **Pro League** | Championnat virtuel 16 equipes IA vs IA (hommages NFL × races BB), matchs auto diffuses live le mardi 21h, paris en Crowns, mode spectateur/fan, Nuffle Gazette LLM. Phase 0 sim foundation bloquante (8 sem) + Phase 1 MVP (4 sem) | [sprints/SPRINT-pro-league.md](./sprints/SPRINT-pro-league.md) | A faire (P1, post-Ligues v2) |
 
 ## Suivi qualite actif
 
@@ -27,6 +28,7 @@
 | Faux positifs (deja faits) | A.9 badge connexion, I.6 specialRules star players, O.2 / O.3 audit S2/S3 |
 | Differes (non prioritaires) | Replay public sharable, OpenTelemetry full, CodeQL CI, lore par equipe, season passes / cosmetics premium |
 | Hors scope 4 sprints | E2E mobile Detox/Appium (chantier complet, 1 sprint dedie a prevoir) |
+| Backlog idees Pro League differees | MPG-layer mercato, multi-leagues, weather sync IRL, NFL Twin Mirror, Twitch auto-cast, etc. — voir [`backlog/future-ideas.md`](./backlog/future-ideas.md) |
 
 ## Source
 
