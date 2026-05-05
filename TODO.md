@@ -48,12 +48,10 @@ prete a accueillir les phases R+).
   (L2.C.4) — explicitement marque optionnel. A activer si demande
   utilisateur (ligues longues, structure pyramidale).
 
-- [ ] **L2.C.7 — Mobile parite ligues** (Mobile, L)
-  Sur l'app Expo (`apps/mobile/app/leagues/`) : liste, detail saison,
-  calendrier, classement, bouton inscription, bouton "Lancer match"
-  qui redirige vers le flow match existant. Reporte de
-  [`SPRINT-leagues-v2`](./docs/roadmap/sprints/SPRINT-leagues-v2.md)
-  (L2.C.7). Reutilise i18n module S27.3.
+> **Note** : L2.C.7 (Mobile parite ligues) a ete archivee dans
+> [`docs/roadmap/backlog/future-ideas.md`](./docs/roadmap/backlog/future-ideas.md)
+> (Annexe A.1) le 2026-05-05 — priorisation Pro League avant les
+> extensions mobile ligues.
 
 ### Autres
 

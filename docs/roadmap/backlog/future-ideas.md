@@ -289,6 +289,37 @@ necessite stack multi-ligues mature.
 
 ---
 
+## Annexe — Reports hors Pro League
+
+### A.1 Mobile parite ligues (ex L2.C.7)
+
+**Concept** : portage de l'experience ligues sur l'app Expo
+(`apps/mobile/app/leagues/`) — liste des ligues, detail saison, calendrier,
+classement, bouton inscription, bouton "Lancer match" qui redirige vers le
+flow match existant. Reutilise i18n module S27.3.
+
+**Source** : reporte du `SPRINT-leagues-v2` (L2.C.7), categorie Mobile,
+effort L. Initialement deja dans le backlog "restes optionnels" du TODO.md,
+deplace ici le 2026-05-05 par decision produit (priorisation Pro League
+avant extensions Ligues v2).
+
+**Pourquoi differe** :
+- Les fonctionnalites ligues web sont stables et testees ; l'usage mobile
+  pour de la gestion de ligue async n'est pas un cas d'usage prioritaire
+  (creation/inscription/lancement match restent confortables sur web).
+- L'effort L (semaines) est mieux investi dans Pro League MVP qui apportera
+  une boucle d'engagement plus differenciante.
+
+**Pre-requis de reactivation** :
+- Pro League MVP livre et stabilise.
+- Demande utilisateur explicite (analytics : >= 30% des coachs ligues actifs
+  ouvrent l'app mobile au moins 1x/semaine) OU itinerance reseau
+  (deplacements) prouvee comme cas d'usage frequent en beta.
+
+**Effort** : L (~1-2 sem).
+
+---
+
 ## Synthese de la matrice "Quand reactiver quoi"
 
 | Item | Pre-requis | Effort | Priorite si gate atteint |
