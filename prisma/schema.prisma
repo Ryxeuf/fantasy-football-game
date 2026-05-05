@@ -69,6 +69,7 @@ model User {
   kofiTransactions            KofiTransaction[]
   refreshTokens               RefreshToken[]
   eloSnapshots                EloSnapshot[]
+  tutorialCompletions         TutorialCompletion[]
 }
 
 /// S26.3l — Historique ELO du coach. Une ligne par mise a jour ELO (donc 2
@@ -688,6 +689,22 @@ model Friendship {
   @@index([requesterId])
   @@index([receiverId])
   @@index([status])
+}
+
+/// S26 DoD — Telemetrie de progression tutoriel.
+/// Un row par (userId, lessonSlug) cree quand l'utilisateur termine la lecon.
+/// Sert a mesurer le KPI "80% des nouveaux comptes finissent au moins une lecon".
+/// Idempotent : la route POST upsert pour eviter les doublons.
+model TutorialCompletion {
+  id          String   @id @default(cuid())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  lessonSlug  String
+  completedAt DateTime @default(now())
+
+  @@unique([userId, lessonSlug])
+  @@index([userId])
+  @@index([lessonSlug])
 }
 
 // N.7 — Systeme d'achievements (succes). Un unlock par (userId, slug).

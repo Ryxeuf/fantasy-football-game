@@ -15,8 +15,8 @@ enum Ruleset {
 }
 
 model User {
-  id                          String            @id @default(cuid())
-  email                       String            @unique
+  id                          String               @id @default(cuid())
+  email                       String               @unique
   passwordHash                String
   name                        String? // Conservé pour rétrocompatibilité
   coachName                   String // Nom de coach (obligatoire)
@@ -24,51 +24,52 @@ model User {
   lastName                    String? // Nom (optionnel)
   dateOfBirth                 DateTime? // Date de naissance (optionnel)
   /// Rôle principal (conservé pour compatibilité, ex: "user" | "admin")
-  role                        String            @default("user")
+  role                        String               @default("user")
   /// Liste complète des rôles (stockée en JSON, ex: '["user","admin"]')
-  roles                       String            @default("[]")
+  roles                       String               @default("[]")
   /// Présent dans le schéma Postgres pour les fonctionnalités premium.
   /// Stub côté SQLite pour que /auth/me puisse sélectionner ce champ
   /// sans diverger entre les deux schémas.
-  patreon                     Boolean           @default(false)
+  patreon                     Boolean              @default(false)
   /// Code unique à coller dans le message Ko-fi pour lier le don au compte.
-  kofiLinkCode                String?           @unique
+  kofiLinkCode                String?              @unique
   /// Discord user ID renseigné par le titulaire du compte (3e stratégie de
   /// matching Ko-fi).
-  discordUserId               String?           @unique
+  discordUserId               String?              @unique
   /// Palier (tier_name Ko-fi) du dernier abonnement actif.
   supporterTier               String?
   /// Fin de la période de supporter payée.
   supporterActiveUntil        DateTime?
   /// Map devise→centimes sérialisée en JSON (SQLite n'a pas de type Json).
   /// Exemple : '{"USD":300,"EUR":1000}'.
-  totalDonatedCentsByCurrency String            @default("{}")
+  totalDonatedCentsByCurrency String               @default("{}")
   /// S26.3i — RGPD : opt-in pour cacher le profil public `/coach/{slug}`.
   /// Stub côté SQLite pour que la lookup publique puisse filtrer ce champ
   /// sans diverger entre les deux schémas.
-  privateProfile              Boolean           @default(false)
+  privateProfile              Boolean              @default(false)
   /// Pré-alpha gate côté Postgres ; en SQLite tous les comptes sont valides.
-  valid                       Boolean           @default(true)
+  valid                       Boolean              @default(true)
   /// Date de la dernière connexion réussie de l'utilisateur.
   lastLoginAt                 DateTime?
-  createdAt                   DateTime          @default(now())
-  updatedAt                   DateTime          @updatedAt
+  createdAt                   DateTime             @default(now())
+  updatedAt                   DateTime             @updatedAt
   matches                     Match[]
-  createdMatches              Match[]           @relation("MatchCreator")
+  createdMatches              Match[]              @relation("MatchCreator")
   teams                       Team[]
   teamSelections              TeamSelection[]
-  createdCups                 Cup[]             @relation("CupCreator")
-  createdLeagues              League[]          @relation("LeagueCreator")
-  createdLocalMatches         LocalMatch[]      @relation("LocalMatchCreator")
-  eloRating                   Int               @default(1000)
+  createdCups                 Cup[]                @relation("CupCreator")
+  createdLeagues              League[]             @relation("LeagueCreator")
+  createdLocalMatches         LocalMatch[]         @relation("LocalMatchCreator")
+  eloRating                   Int                  @default(1000)
   matchQueue                  MatchQueue?
   featureFlagOverrides        FeatureFlagUser[]
-  friendshipsSent             Friendship[]      @relation("FriendshipRequester")
-  friendshipsReceived         Friendship[]      @relation("FriendshipReceiver")
+  friendshipsSent             Friendship[]         @relation("FriendshipRequester")
+  friendshipsReceived         Friendship[]         @relation("FriendshipReceiver")
   achievements                UserAchievement[]
   kofiTransactions            KofiTransaction[]
   refreshTokens               RefreshToken[]
   eloSnapshots                EloSnapshot[]
+  tutorialCompletions         TutorialCompletion[]
 }
 
 /// S26.3l — mirror SQLite de l'historique ELO Postgres (snapshot par mise a jour).
@@ -125,6 +126,19 @@ model KofiTransaction {
   @@index([userId])
   @@index([email])
   @@index([receivedAt])
+}
+
+/// S26 DoD — mirror SQLite du modele de telemetrie tutoriel (Postgres).
+model TutorialCompletion {
+  id          String   @id @default(cuid())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  lessonSlug  String
+  completedAt DateTime @default(now())
+
+  @@unique([userId, lessonSlug])
+  @@index([userId])
+  @@index([lessonSlug])
 }
 
 // N.7 — Systeme d'achievements (mirror SQLite du schema Postgres).
