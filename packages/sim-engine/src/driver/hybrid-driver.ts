@@ -35,6 +35,11 @@ import {
   type ResolverState,
 } from '../resolvers';
 import {
+  DEFAULT_TACTICAL_PROFILE,
+  type TacticalProfile,
+} from '../tactics/tactical-profile';
+import { riskAppetiteToTemperature, softmaxSample } from '../tactics/temperature';
+import {
   ENGINE_VER,
   type Casualty,
   type MatchOutcome,
@@ -146,22 +151,59 @@ function buildKeyMomentState(
   };
 }
 
-function pickKeyMoment(rng: Rng, drive: DriveState): KeyMomentKind | null {
-  const r = rng.next();
+function pickKeyMoment(
+  rng: Rng,
+  drive: DriveState,
+  profile: TacticalProfile
+): KeyMomentKind | null {
+  const temperature = riskAppetiteToTemperature(profile.riskAppetite);
+
+  // Score each candidate from the team's tactical fingerprint. Scores
+  // are on the same [0, 1] scale (param / 100) so the softmax remains
+  // numerically tame across all 16 race profiles.
+  const score = (param: keyof TacticalProfile): number => profile[param] / 100;
+
   if (!drive.hasPossession) {
-    return r < 0.6 ? 'pickup' : 'block';
+    // Loose ball : pickup vs hustle-block. Pickup demand is roughly
+    // anti-correlated with bash (a bash team prefers cracking heads).
+    return softmaxSample(
+      rng,
+      [
+        { value: 'pickup' as KeyMomentKind, score: 1 - score('bashIndex') * 0.5 },
+        { value: 'block' as KeyMomentKind, score: score('bashIndex') },
+      ],
+      temperature
+    );
   }
+
   if (drive.ballYardline >= FIELD_YARDS - 4) {
-    if (r < 0.55) return 'block';
-    if (r < 0.85) return 'dodge';
-    return 'gfi';
+    // Red-zone : push for TD via bash / dodge / GFI chains.
+    return softmaxSample(
+      rng,
+      [
+        { value: 'block' as KeyMomentKind, score: score('bashIndex') + 0.3 },
+        { value: 'dodge' as KeyMomentKind, score: score('breakawayInstinct') + 0.2 },
+        { value: 'gfi' as KeyMomentKind, score: score('gfiTolerance') },
+      ],
+      temperature
+    );
   }
-  if (r < 0.35) return 'block';
-  if (r < 0.55) return 'dodge';
-  if (r < 0.7) return 'pass';
-  if (r < 0.8) return 'gfi';
-  if (r < 0.92) return 'foul';
-  return null;
+
+  // Open-field decision. The `null` ("nothing scripted, just yards")
+  // branch ties down a baseline tempo so high-pace teams skip more
+  // scripted moments.
+  return softmaxSample(
+    rng,
+    [
+      { value: 'block' as KeyMomentKind, score: score('bashIndex') },
+      { value: 'dodge' as KeyMomentKind, score: score('breakawayInstinct') * 0.8 + 0.2 },
+      { value: 'pass' as KeyMomentKind, score: score('passingFrequency') },
+      { value: 'gfi' as KeyMomentKind, score: score('gfiTolerance') * 0.6 },
+      { value: 'foul' as KeyMomentKind, score: score('foulFrequency') },
+      { value: null as unknown as KeyMomentKind, score: 1 - score('pace') * 0.5 },
+    ],
+    temperature
+  );
 }
 
 interface KeyMomentOutcome {
@@ -304,14 +346,17 @@ function emitTd(m: MutableMatch, scoringTeam: Side): void {
 function processTurn(
   m: MutableMatch,
   rngs: DriverRng,
-  weather: ResolverState['weather']
+  weather: ResolverState['weather'],
+  homeProfile: TacticalProfile,
+  awayProfile: TacticalProfile
 ): void {
   emitTurnStart(m);
 
   // 1-2 key moments per turn driven by the strategic stream.
   const momentCount = m.state.turn % 3 === 0 ? 2 : 1;
+  const activeProfile = m.state.drive.drivingTeam === 'home' ? homeProfile : awayProfile;
   for (let i = 0; i < momentCount; i += 1) {
-    const moment = pickKeyMoment(rngs.strategic, m.state.drive);
+    const moment = pickKeyMoment(rngs.strategic, m.state.drive, activeProfile);
     if (moment === null) continue;
 
     const { events: keyEvents, turnover } = runKeyMoment(
@@ -376,6 +421,11 @@ export function runHybridDriver(input: SimInput, options: DriverOptions = {}): S
 
   const initialReceiver: Side = rngs.strategic.next() < 0.5 ? 'home' : 'away';
 
+  // Tactical fingerprints. Default to the neutral baseline when a team
+  // input does not provide one (e.g. ad-hoc test seeds).
+  const homeProfile: TacticalProfile = input.home.tactics ?? DEFAULT_TACTICAL_PROFILE;
+  const awayProfile: TacticalProfile = input.away.tactics ?? DEFAULT_TACTICAL_PROFILE;
+
   const m: MutableMatch = {
     state: {
       half: 1,
@@ -406,7 +456,7 @@ export function runHybridDriver(input: SimInput, options: DriverOptions = {}): S
 
   // First half.
   while (m.state.turn <= TURNS_PER_HALF) {
-    processTurn(m, rngs, weather);
+    processTurn(m, rngs, weather, homeProfile, awayProfile);
   }
 
   // Halftime.
@@ -426,7 +476,7 @@ export function runHybridDriver(input: SimInput, options: DriverOptions = {}): S
 
   // Second half.
   while (m.state.turn <= TURNS_PER_HALF) {
-    processTurn(m, rngs, weather);
+    processTurn(m, rngs, weather, homeProfile, awayProfile);
   }
 
   m.events.push({
