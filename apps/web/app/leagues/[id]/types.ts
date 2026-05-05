@@ -88,6 +88,9 @@ export interface LeagueParticipantDetail {
   seasonElo: number;
   status: LeagueParticipantStatus | string;
   teamId: string;
+  // L2.B.5 — flag "coup de mecene" deja joue pour cette saison.
+  mecenePlayed?: boolean;
+  mecenePlayedAt?: string | null;
   team: {
     id: string;
     name: string;

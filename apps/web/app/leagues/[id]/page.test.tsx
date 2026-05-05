@@ -449,4 +449,81 @@ describe("LeagueDetailPage", () => {
       expect(screen.queryByTestId("open-join-season")).toBeNull();
     });
   });
+
+  describe("Sprint Ligues v2 PR11 — manage team & coup de mecene", () => {
+    it("shows 'Gerer mon equipe' link + mecene button when user owns an active participant on an in_progress season", async () => {
+      mockApi({
+        league: mockLeague,
+        season: { ...mockSeason, status: "in_progress" },
+        standings: mockStandings,
+        meUserId: "u1",
+      });
+
+      renderWithProvider();
+
+      await waitFor(() => {
+        expect(screen.getByTestId("manage-my-team")).toBeTruthy();
+      });
+      expect(screen.getByTestId("open-mecene-modal")).toBeTruthy();
+    });
+
+    it("hides mecene button when the season is not in_progress (e.g. draft)", async () => {
+      mockApi({
+        league: mockLeague,
+        season: { ...mockSeason, status: "draft" },
+        standings: mockStandings,
+        meUserId: "u1",
+      });
+
+      renderWithProvider();
+
+      // Le link "Gerer" reste visible tant que le coach a un
+      // participant actif, mais le bouton mecene est cache hors saison.
+      await waitFor(() => {
+        expect(screen.getByTestId("manage-my-team")).toBeTruthy();
+      });
+      expect(screen.queryByTestId("open-mecene-modal")).toBeNull();
+    });
+
+    it("renders 'mecene already played' badge when participant.mecenePlayed=true", async () => {
+      const seasonWithPlayedFlag = {
+        ...mockSeason,
+        status: "in_progress",
+        participants: [
+          { ...mockSeason.participants[0], mecenePlayed: true },
+          mockSeason.participants[1],
+        ],
+      };
+      mockApi({
+        league: mockLeague,
+        season: seasonWithPlayedFlag,
+        standings: mockStandings,
+        meUserId: "u1",
+      });
+
+      renderWithProvider();
+
+      await waitFor(() => {
+        expect(screen.getByTestId("mecene-already-played")).toBeTruthy();
+      });
+      expect(screen.queryByTestId("open-mecene-modal")).toBeNull();
+    });
+
+    it("hides team actions entirely when the user is not a participant", async () => {
+      mockApi({
+        league: mockLeague,
+        season: { ...mockSeason, status: "in_progress" },
+        standings: mockStandings,
+        meUserId: "u-stranger",
+      });
+
+      renderWithProvider();
+
+      await waitFor(() => {
+        expect(screen.getByTestId("league-standings")).toBeTruthy();
+      });
+      expect(screen.queryByTestId("my-team-actions")).toBeNull();
+      expect(screen.queryByTestId("manage-my-team")).toBeNull();
+    });
+  });
 });

@@ -658,6 +658,10 @@ model LeagueParticipant {
   status            String       @default("active") // "active" | "withdrawn"
   joinedAt          DateTime     @default(now())
 
+  // L2.B.5 — Coup de mecene : bonus tresorerie 1x par saison.
+  mecenePlayed   Boolean   @default(false)
+  mecenePlayedAt DateTime?
+
   // Sprint Ligues v2 — back-relations vers les pairings (home/away)
   homePairings LeaguePairing[] @relation("LeaguePairingHome")
   awayPairings LeaguePairing[] @relation("LeaguePairingAway")

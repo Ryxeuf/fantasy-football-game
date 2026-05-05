@@ -820,6 +820,10 @@ model LeagueParticipant {
   status            String       @default("active")
   joinedAt          DateTime     @default(now())
 
+  // L2.B.5 — Coup de mecene : bonus tresorerie 1x par saison.
+  mecenePlayed   Boolean   @default(false)
+  mecenePlayedAt DateTime?
+
   // L2.A.1 — Back-relations vers les pairings ou ce participant est
   // implique comme equipe a domicile ou visiteuse.
   homePairings LeaguePairing[] @relation("LeaguePairingHome")
