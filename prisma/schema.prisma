@@ -737,6 +737,16 @@ model League {
   drawPoints      Int      @default(1)
   lossPoints      Int      @default(0)
   forfeitPoints   Int      @default(-1)
+  // L2.C.5 — Ordre de departage configurable. JSON array de slugs
+  // parmi : "points" / "td_diff" / "td_for" / "td_against" /
+  // "cas_diff" / "cas_for" / "season_elo" / "wins" / "name".
+  // null = ordre par defaut historique :
+  //   ["points","td_diff","td_for","season_elo","name"].
+  // L'ordre dans l'array dicte l'ordre de tri (le 1er = plus
+  // important). Tous les slugs sauf "name" supportent reverse
+  // (false = DESC, default ; pas exprimable dans le JSON pour
+  // l'instant — toujours DESC sauf "name" qui est ASC).
+  tieBreakRules   String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

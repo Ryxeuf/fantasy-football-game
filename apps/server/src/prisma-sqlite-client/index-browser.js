@@ -458,6 +458,7 @@ exports.Prisma.LeagueScalarFieldEnum = {
   drawPoints: 'drawPoints',
   lossPoints: 'lossPoints',
   forfeitPoints: 'forfeitPoints',
+  tieBreakRules: 'tieBreakRules',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };

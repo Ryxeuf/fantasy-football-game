@@ -21,6 +21,7 @@ import { useParams } from "next/navigation";
 import { apiRequest } from "../../../../../lib/api-client";
 import { SeasonStandings } from "../../../SeasonStandings";
 import type { StandingRow } from "../../../types";
+import { buildSeasonEventSchema } from "../../../../season-event-schema";
 
 interface AwardEntry {
   teamId: string;
@@ -48,6 +49,12 @@ interface RecapResponse {
   awards: AwardsCatalogue;
   standings: StandingRow[];
   persistedAt: string | null;
+  // L2.C.8 — meta pour le JSON-LD SEO. Optional pour
+  // retro-compat avec les anciens deploys.
+  leagueId?: string | null;
+  leagueName?: string | null;
+  seasonName?: string | null;
+  seasonStatus?: string | null;
 }
 
 interface AwardCardSpec {
@@ -164,11 +171,37 @@ export default function SeasonRecapPage() {
         null
       : null;
 
+  // L2.C.8 — JSON-LD SportsEvent pour les saisons cloturees avec
+  // un champion identifie. baseUrl tire de NEXT_PUBLIC_SITE_URL.
+  const baseUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://nufflearena.fr";
+  const seasonEventSchema = buildSeasonEventSchema({
+    baseUrl,
+    leagueId: recap.leagueId ?? leagueId,
+    seasonId: recap.seasonId,
+    seasonName: recap.seasonName ?? "Saison",
+    leagueName: recap.leagueName ?? "Ligue",
+    status: recap.seasonStatus ?? "in_progress",
+    endedAt: recap.persistedAt,
+    championCoachName: champion?.coachName ?? null,
+    championTeamName: champion?.teamName ?? null,
+  });
+
   return (
     <div
       data-testid="season-recap-page"
       className="w-full max-w-4xl mx-auto p-4 sm:p-6 space-y-6"
     >
+      {seasonEventSchema ? (
+        <script
+          type="application/ld+json"
+          data-testid="season-recap-jsonld"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(seasonEventSchema),
+          }}
+        />
+      ) : null}
       <div>
         <Link
           href={`/leagues/${leagueId}`}

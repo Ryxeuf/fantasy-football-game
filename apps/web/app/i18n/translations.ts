@@ -502,6 +502,12 @@ export const translations = {
       themeSeasonsTitle: "Éditions",
       themeSeasonsEmpty: "Aucune édition pour ce thème pour le moment.",
       themeNoSeasonsYet: "Aucune édition prévue pour le moment.",
+      // Sprint Ligues v2 PR9 — page archivee.
+      archivedTitle: "Ligues archivées",
+      archivedDescription:
+        "Ligues terminées ou archivées, accessibles en lecture seule pour consulter classements et recap.",
+      archivedEmpty: "Aucune ligue archivée pour le moment.",
+      archivedLink: "Voir les ligues archivées",
       // Sprint Ligues v2 PR2 — création / inscription / admin saison
       createLeagueButton: "Créer une ligue",
       createLeagueTitle: "Nouvelle ligue",
@@ -1142,6 +1148,12 @@ export const translations = {
       themeSeasonsTitle: "Editions",
       themeSeasonsEmpty: "No edition for this theme yet.",
       themeNoSeasonsYet: "No edition scheduled yet.",
+      // Sprint Ligues v2 PR9 — archived leagues page.
+      archivedTitle: "Archived leagues",
+      archivedDescription:
+        "Completed or archived leagues, available for read-only browsing of standings and recap.",
+      archivedEmpty: "No archived league yet.",
+      archivedLink: "View archived leagues",
       // Sprint Ligues v2 PR2 — creation / registration / season admin
       createLeagueButton: "Create a league",
       createLeagueTitle: "New league",

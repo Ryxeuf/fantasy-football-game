@@ -36,6 +36,10 @@ export type LeagueRoundStatus = "pending" | "in_progress" | "completed";
 
 export type LeagueParticipantStatus = "active" | "withdrawn";
 
+/**
+ * L2.C.5 — Slugs autorises pour `tieBreakRules`. Re-exporte ici pour
+ * que la couche route puisse les valider sans importer cycliquement.
+ */
 export interface CreateLeagueInput {
   creatorId: string;
   name: string;
@@ -48,6 +52,11 @@ export interface CreateLeagueInput {
   drawPoints?: number;
   lossPoints?: number;
   forfeitPoints?: number;
+  /**
+   * L2.C.5 — Ordre de departage personnalise. Tableau de slugs parmi
+   * `TIE_BREAK_SLUGS`. null / undefined = ordre par defaut historique.
+   */
+  tieBreakRules?: readonly string[] | null;
 }
 
 export interface CreateSeasonInput {
@@ -134,6 +143,15 @@ export async function createLeague(input: CreateLeagueInput) {
       ? JSON.stringify(input.allowedRosters)
       : null;
 
+  // L2.C.5 — valide les slugs cote serveur. Les slugs inconnus sont
+  // filtres ; si plus rien ne reste, on stocke null (= ordre defaut).
+  let tieBreakRules: string | null = null;
+  if (input.tieBreakRules && input.tieBreakRules.length > 0) {
+    const allowed = TIE_BREAK_SLUGS as readonly string[];
+    const filtered = input.tieBreakRules.filter((s) => allowed.includes(s));
+    tieBreakRules = filtered.length > 0 ? JSON.stringify(filtered) : null;
+  }
+
   return prisma.league.create({
     data: {
       creatorId: input.creatorId,
@@ -147,6 +165,7 @@ export async function createLeague(input: CreateLeagueInput) {
       drawPoints: input.drawPoints ?? 1,
       lossPoints: input.lossPoints ?? 0,
       forfeitPoints: input.forfeitPoints ?? -1,
+      tieBreakRules,
     },
   });
 }
@@ -407,7 +426,9 @@ export interface StandingRow {
 }
 
 /**
- * Classement d'une saison (L.3 standings). Trie selon :
+ * Classement d'une saison (L.3 standings). Trie selon les regles de
+ * departage configurees dans `League.tieBreakRules` (L2.C.5). Si null
+ * ou invalide, retombe sur l'ordre historique :
  *   points DESC → diff TD DESC → TD pour DESC → ELO DESC → nom ASC.
  * Cette methode lit les compteurs materialises sur `LeagueParticipant`
  * (mis a jour par L.7 : integration match -> ligue).
@@ -417,7 +438,10 @@ export async function computeSeasonStandings(
 ): Promise<StandingRow[]> {
   const season = await prisma.leagueSeason.findUnique({
     where: { id: seasonId },
-    select: { id: true },
+    select: {
+      id: true,
+      league: { select: { tieBreakRules: true } },
+    },
   });
   if (!season) {
     throw new Error(`Saison introuvable: ${seasonId}`);
@@ -459,19 +483,120 @@ export async function computeSeasonStandings(
     status: p.status as LeagueParticipantStatus,
   }));
 
-  rows.sort((a, b) => {
-    if (b.points !== a.points) return b.points - a.points;
-    if (b.touchdownDifference !== a.touchdownDifference) {
-      return b.touchdownDifference - a.touchdownDifference;
-    }
-    if (b.touchdownsFor !== a.touchdownsFor) {
-      return b.touchdownsFor - a.touchdownsFor;
-    }
-    if (b.seasonElo !== a.seasonElo) return b.seasonElo - a.seasonElo;
-    return a.teamName.localeCompare(b.teamName);
-  });
+  const tieBreakRules = parseTieBreakRules(
+    (season as { league?: { tieBreakRules?: string | null } | null }).league
+      ?.tieBreakRules ?? null,
+  );
+  rows.sort(makeStandingsComparator(tieBreakRules));
 
   return rows;
+}
+
+/**
+ * L2.C.5 — Slugs supportes pour `League.tieBreakRules`.
+ * "name" est toujours ASC ; les autres sont DESC. L'ordre dans le
+ * tableau dicte la priorite de tri.
+ */
+export const TIE_BREAK_SLUGS = [
+  "points",
+  "td_diff",
+  "td_for",
+  "td_against",
+  "cas_diff",
+  "cas_for",
+  "season_elo",
+  "wins",
+  "name",
+] as const;
+
+export type TieBreakSlug = (typeof TIE_BREAK_SLUGS)[number];
+
+const DEFAULT_TIE_BREAK_RULES: readonly TieBreakSlug[] = [
+  "points",
+  "td_diff",
+  "td_for",
+  "season_elo",
+  "name",
+];
+
+/**
+ * Parse le JSON `tieBreakRules`. Si null / corrompu / contient des
+ * slugs inconnus, retombe sur l'ordre par defaut historique.
+ * Le slug "name" est toujours pousse en derniere position si absent
+ * (sentinel pour eviter les ties strictes).
+ */
+export function parseTieBreakRules(
+  raw: string | null,
+): readonly TieBreakSlug[] {
+  if (!raw) return DEFAULT_TIE_BREAK_RULES;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return DEFAULT_TIE_BREAK_RULES;
+  }
+  if (!Array.isArray(parsed)) return DEFAULT_TIE_BREAK_RULES;
+  const valid: TieBreakSlug[] = [];
+  for (const item of parsed) {
+    if (
+      typeof item === "string" &&
+      (TIE_BREAK_SLUGS as readonly string[]).includes(item) &&
+      !valid.includes(item as TieBreakSlug)
+    ) {
+      valid.push(item as TieBreakSlug);
+    }
+  }
+  if (valid.length === 0) return DEFAULT_TIE_BREAK_RULES;
+  // Garantit que "name" est present en sentinelle de queue.
+  if (!valid.includes("name")) {
+    valid.push("name");
+  }
+  return valid;
+}
+
+/**
+ * Construit un comparator pour `Array.prototype.sort` a partir d'une
+ * liste de slugs de tri. Pure : facilement testable sans Prisma.
+ */
+export function makeStandingsComparator(
+  rules: readonly TieBreakSlug[],
+): (a: StandingRow, b: StandingRow) => number {
+  return (a, b) => {
+    for (const slug of rules) {
+      const cmp = compareBySlug(a, b, slug);
+      if (cmp !== 0) return cmp;
+    }
+    return 0;
+  };
+}
+
+function compareBySlug(
+  a: StandingRow,
+  b: StandingRow,
+  slug: TieBreakSlug,
+): number {
+  switch (slug) {
+    case "points":
+      return b.points - a.points;
+    case "td_diff":
+      return b.touchdownDifference - a.touchdownDifference;
+    case "td_for":
+      return b.touchdownsFor - a.touchdownsFor;
+    case "td_against":
+      // Inverse : moins de TD encaisses = mieux.
+      return a.touchdownsAgainst - b.touchdownsAgainst;
+    case "cas_diff":
+      return b.casualtiesFor - b.casualtiesAgainst -
+        (a.casualtiesFor - a.casualtiesAgainst);
+    case "cas_for":
+      return b.casualtiesFor - a.casualtiesFor;
+    case "season_elo":
+      return b.seasonElo - a.seasonElo;
+    case "wins":
+      return b.wins - a.wins;
+    case "name":
+      return a.teamName.localeCompare(b.teamName);
+  }
 }
 
 /**

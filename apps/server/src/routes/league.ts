@@ -74,13 +74,29 @@ function requireUserId(req: AuthenticatedRequest, res: Response): string | null 
 }
 
 function serializeLeague(
-  league: Record<string, unknown> & { allowedRosters?: string | null },
+  league: Record<string, unknown> & {
+    allowedRosters?: string | null;
+    tieBreakRules?: string | null;
+  },
 ) {
+  // L2.C.5 — parse `tieBreakRules` JSON pour le frontend.
+  let tieBreakRules: string[] | null = null;
+  if (league.tieBreakRules) {
+    try {
+      const parsed: unknown = JSON.parse(league.tieBreakRules);
+      if (Array.isArray(parsed) && parsed.every((v) => typeof v === "string")) {
+        tieBreakRules = parsed as string[];
+      }
+    } catch {
+      tieBreakRules = null;
+    }
+  }
   return {
     ...league,
     allowedRosters: parseAllowedRosters(
       (league.allowedRosters as string | null) ?? null,
     ),
+    tieBreakRules,
   };
 }
 
@@ -110,6 +126,7 @@ export async function handleCreateLeague(
       drawPoints: body.drawPoints,
       lossPoints: body.lossPoints,
       forfeitPoints: body.forfeitPoints,
+      tieBreakRules: body.tieBreakRules ?? null,
     });
     sendSuccess(res, serializeLeague(league as Record<string, unknown>), 201);
   } catch (e: unknown) {
@@ -460,6 +477,17 @@ export async function handleGetSeasonAwards(
   try {
     const persisted = await getPersistedSeasonAward(seasonId);
     const recap = await computeSeasonRecap(seasonId);
+    // L2.C.8 — expose `leagueName` + `seasonName` + `seasonStatus`
+    // pour permettre au frontend de construire le JSON-LD SEO.
+    const seasonRow = await prisma.leagueSeason.findUnique({
+      where: { id: seasonId },
+      select: {
+        id: true,
+        name: true,
+        status: true,
+        league: { select: { id: true, name: true } },
+      },
+    });
     sendSuccess(res, {
       seasonId,
       // Le champion + awards persistes prennent priorite quand
@@ -471,6 +499,10 @@ export async function handleGetSeasonAwards(
       awards: persisted?.awards ?? recap.awards,
       standings: recap.standings,
       persistedAt: persisted?.createdAt ?? null,
+      leagueId: seasonRow?.league?.id ?? null,
+      leagueName: seasonRow?.league?.name ?? null,
+      seasonName: seasonRow?.name ?? null,
+      seasonStatus: seasonRow?.status ?? null,
     });
   } catch (e: unknown) {
     domainError(res, e);
