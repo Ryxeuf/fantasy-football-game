@@ -99,6 +99,25 @@ export async function rawGet(
   });
 }
 
+/**
+ * L2.C.6 — PATCH brut pour les routes admin (status / creator).
+ * Renvoie le `Response` natif sans parser, comme `rawGet` / `rawPost`.
+ */
+export async function rawPatch(
+  path: string,
+  token: string | null,
+  body: unknown,
+): Promise<Response> {
+  return fetch(`${API_BASE}${path}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeader(token),
+    },
+    body: JSON.stringify(body ?? {}),
+  });
+}
+
 export async function put<TResponse = unknown>(
   path: string,
   token: string | null,
