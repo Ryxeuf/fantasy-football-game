@@ -1,0 +1,181 @@
+/**
+ * Pass resolver — sprint Pro League 0.A.5.
+ *
+ * BB rule (BB2020 / BB3) — short-form rules used by the sim :
+ * - Passer must have the ball ; target square is reachable ; range is
+ *   determined by `getPassRange` (Quick / Short / Long / Bomb / null).
+ * - Target on a d6 = `Math.max(2, Math.min(6, 7 - PA - rangeMod - tzMod))`
+ *   where `tzMod = -1` per opposing TZ on the passer (capped per BB rules).
+ * - Skill `pass` : reroll a failed pass once per activation.
+ * - Skill `accurate` : `+1` to pass roll for short / quick.
+ * - Skill `strong_arm` : `+1` to pass roll for long / bomb.
+ * - On fail / fumble (1 modified) the team commits a turnover.
+ *
+ * The catch resolution is deliberately out of scope here ; the driver
+ * (0.A.2) chains a separate catch attempt at the destination square once
+ * the pass succeeds.
+ */
+
+import type { MatchEvent } from '@bb/shared-types';
+import { getPassRange } from '@bb/game-engine';
+
+/** BB2020 / BB3 pass range modifier table. Inlined here because the
+ *  game-engine helper is not part of the public `@bb/game-engine` index. */
+function getPassRangeModifier(range: 'quick' | 'short' | 'long' | 'bomb'): number {
+  switch (range) {
+    case 'quick':
+      return 1;
+    case 'short':
+      return 0;
+    case 'long':
+      return -1;
+    case 'bomb':
+      return -2;
+  }
+}
+
+import { rollD6 } from '../rng/seeded';
+
+import {
+  adjacentOpponents,
+  hasSkill,
+  requirePlayer,
+  updatePlayer,
+  type ResolverPosition,
+  type ResolverResult,
+  type ResolverRng,
+  type ResolverState,
+} from './types';
+
+export interface PassInput {
+  passerId: string;
+  to: ResolverPosition;
+  displayAtMs: number;
+}
+
+export interface PassResult extends ResolverResult {
+  readonly trace: {
+    range: 'quick' | 'short' | 'long' | 'bomb' | null;
+    target: number;
+    modifier: number;
+    roll: number;
+    fumble: boolean;
+    rerollRoll?: number;
+    usedReroll: boolean;
+  };
+}
+
+export function resolvePass(
+  state: ResolverState,
+  input: PassInput,
+  rng: ResolverRng
+): PassResult {
+  const passer = requirePlayer(state, input.passerId);
+  if (passer.state !== 'standing') {
+    throw new Error('resolvePass: passer must be standing');
+  }
+  if (!passer.hasBall) {
+    throw new Error('resolvePass: passer does not have the ball');
+  }
+
+  const range = getPassRange(passer.position, input.to);
+  // `null` range means out-of-range : we model it as a fumble-equivalent
+  // (the driver should never call us in that case ; defensive guard).
+  if (range === null) {
+    throw new Error('resolvePass: target out of pass range');
+  }
+
+  const rangeMod = getPassRangeModifier(range);
+  const tzCount = adjacentOpponents(state, passer.position, passer.team).length;
+  const tzMod = -tzCount;
+  // Skills
+  const accurateMod = hasSkill(passer, 'accurate') && (range === 'quick' || range === 'short') ? 1 : 0;
+  const strongArmMod = hasSkill(passer, 'strong_arm') && (range === 'long' || range === 'bomb') ? 1 : 0;
+
+  const totalModifier = rangeMod + tzMod + accurateMod + strongArmMod;
+
+  // BB target : raw d6 >= 7 - pa - modifier, clamped to [2, 6].
+  const rawTarget = 7 - passer.ag - totalModifier;
+  // Note: in BB3 PA replaces AG for passing — sim-engine's `ResolverPlayer`
+  // uses `ag` as the generic skill stat ; the driver maps PA→ag for the
+  // passer when calling this resolver.
+  const target = Math.max(2, Math.min(6, rawTarget));
+
+  const firstRoll = rollD6(rng as Parameters<typeof rollD6>[0]);
+  // BB rule : a natural 1 is always a fumble (regardless of mods).
+  const isFumble = firstRoll === 1;
+  let success = !isFumble && firstRoll >= target;
+  let usedReroll = false;
+  let secondRoll: number | undefined;
+
+  if (!success && hasSkill(passer, 'pass') && passer.rerollAvailable !== false) {
+    usedReroll = true;
+    secondRoll = rollD6(rng as Parameters<typeof rollD6>[0]);
+    const isSecondFumble = secondRoll === 1;
+    success = !isSecondFumble && secondRoll >= target;
+  }
+
+  let newState: ResolverState = state;
+  if (usedReroll) {
+    newState = updatePlayer(newState, passer.id, { rerollAvailable: false });
+  }
+
+  if (success) {
+    newState = updatePlayer(newState, passer.id, { hasBall: false });
+    newState = { ...newState, ballAt: { ...input.to } };
+  } else {
+    // On fumble, ball drops at passer's feet ; on inaccurate pass scatter
+    // is driver-side. We just clear `hasBall` on the passer.
+    if (isFumble) {
+      newState = updatePlayer(newState, passer.id, { hasBall: false });
+    }
+  }
+
+  const events: MatchEvent[] = [
+    {
+      type: 'PASS',
+      displayAtMs: input.displayAtMs,
+      engineVer: state.engineVer,
+      meta: {
+        passerId: passer.id,
+        from: passer.position,
+        to: input.to,
+        range,
+        target,
+        modifier: totalModifier,
+        roll: firstRoll,
+        rerollRoll: secondRoll,
+        usedReroll,
+        fumble: isFumble || (usedReroll && secondRoll === 1),
+        success,
+      },
+    },
+  ];
+  if (!success) {
+    events.push({
+      type: 'TURNOVER',
+      displayAtMs: input.displayAtMs,
+      engineVer: state.engineVer,
+      meta: {
+        cause: isFumble ? 'pass_fumble' : 'pass_failed',
+        passerId: passer.id,
+      },
+    });
+  }
+
+  return {
+    success,
+    turnover: !success,
+    newState,
+    events,
+    trace: {
+      range,
+      target,
+      modifier: totalModifier,
+      roll: firstRoll,
+      fumble: isFumble,
+      rerollRoll: secondRoll,
+      usedReroll,
+    },
+  };
+}

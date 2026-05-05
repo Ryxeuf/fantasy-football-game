@@ -88,7 +88,7 @@ jusqu'a passer le gate.
 | 0.A.2 | Driver hybride (drive-level + key moments) | Backend | L | [ ] | Boucle haut niveau : kickoff → drive → resolution turn-by-turn des actions critiques (block, dodge, pass, turnover) via `game-engine` actions. Drives non-critiques resolus en proba (avancement yards + fumble chance). Garde la possibilite de basculer en `full` driver plus tard sans casser les events. |
 | 0.A.3 | Format `MatchEvent` typé partage | Types | M | [x] | `packages/shared-types/match-event.ts` : enum `EventType` (KICKOFF / TURN_START / BLOCK / DODGE / PASS / TD / KO / CASUALTY / TURNOVER / NUFFLE / HALFTIME / END). Champs `displayAtMs` (offset depuis kickoff pour la diffusion live), `seed`, `meta`. Versionne via `engineVer`. |
 | 0.A.4 | PRNG seede + injection partout | Backend | M | [x] | `packages/sim-engine/rng/seeded.ts` (xoroshiro). Banni `Math.random` du package via lint custom (`no-restricted-globals`). Tout consommateur recoit le PRNG en parametre. Permet replay deterministe + audit. |
-| 0.A.5 | Resolvers actions BB | Backend | L | [ ] | `resolvers/{block,dodge,pass,pickup,gfi,foul}.ts` consomment `game-engine` rules (skills, modifiers, weather) pour rester strict regle. Output : `{success, newState, events[]}`. Couverture par tests unitaires sur cas typiques + cas edge (skill stack, double-skull, etc.). |
+| 0.A.5 | Resolvers actions BB | Backend | L | [x] | `resolvers/{block,dodge,pass,pickup,gfi,foul}.ts` consomment `game-engine` rules (skills, modifiers, weather) pour rester strict regle. Output : `{success, newState, events[]}`. Couverture par tests unitaires sur cas typiques + cas edge (skill stack, double-skull, etc.). |
 
 ### Lot 0.B — Profils tactiques 16 equipes (~2 sem)
 
