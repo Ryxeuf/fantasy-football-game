@@ -14,6 +14,7 @@ export const EN_TRANSLATIONS = {
     error: "Error",
     retry: "Retry",
     save: "Save",
+    logout: "Log out",
   },
   settings: {
     profile: {
@@ -82,6 +83,60 @@ export const EN_TRANSLATIONS = {
     },
     actions: {
       logout: "Log out",
+    },
+  },
+  lobby: {
+    title: "My matches",
+    greeting: "Hi, {{name}}!",
+    status: {
+      active: "In progress",
+      pending: "Pending",
+      prematch: "Pre-match",
+      prematchSetup: "Setup",
+      ended: "Ended",
+    },
+    myTurnBadge: "Your turn",
+    myTurnBannerSingular: "{{count}} match waiting for your turn",
+    myTurnBannerPlural: "{{count}} matches waiting for your turn",
+    teamPlaceholder: "My team",
+    waitingOpponent: "Waiting...",
+    vsCoach: "vs Coach {{name}}",
+    roundLabel: "H {{half}}, Turn {{turn}}",
+    filters: {
+      all: "All",
+      myTurn: "My turn ({{count}})",
+      active: "Active",
+      ended: "Ended",
+    },
+    actions: {
+      teams: "My teams",
+      leaderboard: "Leaderboard",
+      profile: "Profile",
+      matchmaking: "Find a match",
+      cups: "Cups",
+      leagues: "Leagues",
+      stars: "Stars",
+      create: "Create a match",
+      join: "Join",
+      replay: "▶ Watch replay",
+      replayA11y: "Watch replay",
+    },
+    alerts: {
+      matchCreatedTitle: "Match created",
+      matchCreatedBody: "Match ID: {{id}}",
+      createError: "Unable to create the match",
+      joinSuccessTitle: "Success",
+      joinSuccessBody: "You joined the match!",
+      joinError: "Unable to join the match",
+      loadError: "Loading error",
+    },
+    errors: {
+      prefix: "Error: {{message}}",
+      empty: "No match found.",
+    },
+    joinModal: {
+      title: "Join a match",
+      inputPlaceholder: "Match ID",
     },
   },
 } as const;

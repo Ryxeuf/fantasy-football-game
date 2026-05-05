@@ -194,3 +194,166 @@ describe("settings sub-components i18n keys (S27.3.3)", () => {
     },
   );
 });
+
+/**
+ * S27.3.4 — Lobby refactor i18n keys.
+ *
+ * Couvre toutes les cles utilisees par :
+ *  - LobbyHeader (lobby.title, lobby.greeting, lobby.actions.teams/leaderboard/profile, common.logout)
+ *  - MyTurnBanner (lobby.myTurnBannerSingular/Plural)
+ *  - LobbyActions (lobby.actions.matchmaking/cups/leagues/stars/create/join)
+ *  - FilterBar (lobby.filters.all/myTurn/active/ended)
+ *  - MatchCard (lobby.status.*, lobby.myTurnBadge, lobby.teamPlaceholder, lobby.waitingOpponent, lobby.vsCoach, lobby.roundLabel, lobby.actions.replay/replayA11y)
+ *  - MatchList (lobby.errors.empty)
+ *  - JoinMatchModal (lobby.joinModal.title/inputPlaceholder, common.cancel, lobby.actions.join)
+ *  - lobby.tsx (lobby.alerts.*, lobby.errors.prefix, common.error, common.retry)
+ *
+ * Verifie : non-vide FR, non-vide EN, FR != EN sur les cles necessitant
+ * une trad distincte (les statuts/actions partagent rarement le meme mot).
+ */
+const LOBBY_I18N_KEYS = [
+  "lobby.title",
+  "lobby.greeting",
+  "lobby.status.active",
+  "lobby.status.pending",
+  "lobby.status.prematch",
+  "lobby.status.prematchSetup",
+  "lobby.status.ended",
+  "lobby.myTurnBadge",
+  "lobby.myTurnBannerSingular",
+  "lobby.myTurnBannerPlural",
+  "lobby.teamPlaceholder",
+  "lobby.waitingOpponent",
+  "lobby.vsCoach",
+  "lobby.roundLabel",
+  "lobby.filters.all",
+  "lobby.filters.myTurn",
+  "lobby.filters.active",
+  "lobby.filters.ended",
+  "lobby.actions.teams",
+  "lobby.actions.leaderboard",
+  "lobby.actions.profile",
+  "lobby.actions.matchmaking",
+  "lobby.actions.cups",
+  "lobby.actions.leagues",
+  "lobby.actions.stars",
+  "lobby.actions.create",
+  "lobby.actions.join",
+  "lobby.actions.replay",
+  "lobby.actions.replayA11y",
+  "lobby.alerts.matchCreatedTitle",
+  "lobby.alerts.matchCreatedBody",
+  "lobby.alerts.createError",
+  "lobby.alerts.joinSuccessTitle",
+  "lobby.alerts.joinSuccessBody",
+  "lobby.alerts.joinError",
+  "lobby.alerts.loadError",
+  "lobby.errors.prefix",
+  "lobby.errors.empty",
+  "lobby.joinModal.title",
+  "lobby.joinModal.inputPlaceholder",
+  "common.logout",
+] as const;
+
+describe("lobby refactor i18n keys (S27.3.4)", () => {
+  it.each(LOBBY_I18N_KEYS)(
+    "FR : '%s' retourne une chaine non vide differente de la cle",
+    (key) => {
+      const value = t(key as never);
+      expect(typeof value).toBe("string");
+      expect(value.length).toBeGreaterThan(0);
+      expect(value).not.toBe(key);
+    },
+  );
+
+  it.each(LOBBY_I18N_KEYS)(
+    "EN : '%s' retourne une chaine non vide differente de la cle",
+    (key) => {
+      const value = t(key as never, undefined, "en" as Locale);
+      expect(typeof value).toBe("string");
+      expect(value.length).toBeGreaterThan(0);
+      expect(value).not.toBe(key);
+    },
+  );
+
+  // Cles dont la traduction EN doit differer du FR. Exclut les
+  // identiques legitimes : "Pre-match" (lobby.status.prematch est
+  // identique entre FR et EN), "Stars" (universel), "ELO", etc.
+  const LOBBY_KEYS_REQUIRING_DISTINCT_EN = [
+    "lobby.title",
+    "lobby.greeting",
+    "lobby.status.active",
+    "lobby.status.pending",
+    "lobby.status.prematchSetup",
+    "lobby.status.ended",
+    "lobby.myTurnBadge",
+    "lobby.myTurnBannerSingular",
+    "lobby.myTurnBannerPlural",
+    "lobby.teamPlaceholder",
+    "lobby.waitingOpponent",
+    "lobby.roundLabel",
+    "lobby.filters.all",
+    "lobby.filters.myTurn",
+    "lobby.filters.active",
+    "lobby.filters.ended",
+    "lobby.actions.teams",
+    "lobby.actions.leaderboard",
+    "lobby.actions.profile",
+    "lobby.actions.matchmaking",
+    "lobby.actions.cups",
+    "lobby.actions.leagues",
+    "lobby.actions.create",
+    "lobby.actions.join",
+    "lobby.actions.replay",
+    "lobby.actions.replayA11y",
+    "lobby.alerts.matchCreatedTitle",
+    "lobby.alerts.matchCreatedBody",
+    "lobby.alerts.createError",
+    "lobby.alerts.joinSuccessTitle",
+    "lobby.alerts.joinSuccessBody",
+    "lobby.alerts.joinError",
+    "lobby.alerts.loadError",
+    "lobby.errors.prefix",
+    "lobby.errors.empty",
+    "lobby.joinModal.title",
+    "lobby.joinModal.inputPlaceholder",
+    "common.logout",
+  ] as const;
+
+  it.each(LOBBY_KEYS_REQUIRING_DISTINCT_EN)(
+    "FR != EN pour '%s' (parite stricte, pas de copie oubliee)",
+    (key) => {
+      const fr = t(key as never);
+      const en = t(key as never, undefined, "en" as Locale);
+      expect(fr).not.toBe(en);
+    },
+  );
+
+  it("singulier vs pluriel myTurnBanner FR : compteur interpole", () => {
+    expect(t("lobby.myTurnBannerSingular", { count: 1 })).toBe(
+      "1 match en attente de votre tour",
+    );
+    expect(t("lobby.myTurnBannerPlural", { count: 3 })).toBe(
+      "3 matchs en attente de votre tour",
+    );
+  });
+
+  it("filters.myTurn injecte le compteur", () => {
+    expect(t("lobby.filters.myTurn", { count: 0 })).toBe("Mon tour (0)");
+    expect(t("lobby.filters.myTurn", { count: 4 }, "en")).toBe("My turn (4)");
+  });
+
+  it("vsCoach injecte le nom du coach", () => {
+    expect(t("lobby.vsCoach", { name: "Sid" })).toBe("vs Coach Sid");
+    expect(t("lobby.vsCoach", { name: "Sid" }, "en")).toBe("vs Coach Sid");
+  });
+
+  it("errors.prefix injecte le message", () => {
+    expect(t("lobby.errors.prefix", { message: "Boom" })).toBe(
+      "Erreur : Boom",
+    );
+    expect(t("lobby.errors.prefix", { message: "Boom" }, "en")).toBe(
+      "Error: Boom",
+    );
+  });
+});
