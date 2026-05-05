@@ -18,6 +18,12 @@ export {
   type TacticalProfile,
 } from './tactics/tactical-profile';
 export {
+  PRO_LEAGUE_TEAMS,
+  PRO_LEAGUE_TEAM_BY_ID,
+  type ProTeamId,
+  type ProTeamProfile,
+} from './tactics/race-profiles';
+export {
   ENGINE_VER,
   type Casualty,
   type EngineVersion,
