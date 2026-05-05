@@ -1,8 +1,10 @@
 import { Text, View } from "react-native";
 import { settingsStyles as styles } from "../../app/settings.styles";
+import { useTranslation } from "../../lib/i18n-context";
 import { getInitials, type UserProfile } from "../../lib/profile";
 
 export function ProfileHeader({ profile }: { profile: UserProfile }) {
+  const { t } = useTranslation();
   const initials = getInitials(
     profile.coachName,
     profile.coachName,
@@ -17,7 +19,9 @@ export function ProfileHeader({ profile }: { profile: UserProfile }) {
       <Text style={styles.email}>{profile.email}</Text>
       {profile.patreon && (
         <View style={styles.patreonBadge}>
-          <Text style={styles.patreonText}>Patreon</Text>
+          <Text style={styles.patreonText}>
+            {t("settings.profileHeader.patreonBadge")}
+          </Text>
         </View>
       )}
     </View>
