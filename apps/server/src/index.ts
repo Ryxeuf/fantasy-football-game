@@ -9,6 +9,7 @@ import authRefreshRoutes from "./routes/auth-refresh";
 import matchRoutes from "./routes/match";
 import adminRoutes from "./routes/admin";
 import adminDataRoutes from "./routes/admin-data";
+import adminLeaguesRoutes from "./routes/admin-leagues";
 import userRoutes from "./routes/user";
 import teamRoutes from "./routes/team";
 import teamAdvancementRoutes from "./routes/team-advancement";
@@ -173,6 +174,9 @@ app.use("/leagues", leagueRoutes);
 app.use("/webhooks/kofi", kofiRoutes);
 app.use("/api/feature-flags", userFeatureFlagsRouter);
 app.use("/admin/feature-flags", adminFeatureFlagsRouter);
+// L2.C.6 — admin leagues : reservation aux admins, route distincte
+// pour ne pas polluer /admin (qui devient un sac fourre-tout).
+app.use("/admin/leagues", adminLeaguesRoutes);
 
 // Endpoint public de reset pour tests (uniquement en TEST_SQLITE=1)
 if (process.env.TEST_SQLITE === "1") {
