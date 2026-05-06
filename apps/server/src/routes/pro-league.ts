@@ -39,6 +39,10 @@ import {
   ProLeagueStandingsNotFoundError,
   getProLeagueCurrentStandings,
 } from "../services/pro-league-standings";
+import {
+  ProTeamNotFoundError,
+  getProTeamDetail,
+} from "../services/pro-league-team";
 import { serverLog } from "../utils/server-log";
 
 const HEARTBEAT_INTERVAL_MS = 30_000;
@@ -191,10 +195,38 @@ export async function handleGetCurrentSeasonStandings(
   }
 }
 
+/**
+ * Sprint 1.C.2 — Détail d'une équipe Pro League : meta + record +
+ * roster + 5 prochains matchs + 5 derniers matchs.
+ */
+export async function handleGetTeamDetail(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const slug = req.params.slug;
+  if (!slug || typeof slug !== "string") {
+    res.status(400).json({ error: "missing-slug" });
+    return;
+  }
+  try {
+    const data = await getProTeamDetail(slug);
+    res.json(data);
+  } catch (err: unknown) {
+    if (err instanceof ProTeamNotFoundError) {
+      res.status(404).json({ error: err.message });
+      return;
+    }
+    const msg = err instanceof Error ? err.message : "unknown";
+    serverLog.error(`[pro-league/teams/${slug}] failed: ${msg}`);
+    res.status(500).json({ error: "internal-error" });
+  }
+}
+
 const router = Router();
 
 router.get("/seasons/current", handleGetCurrentSeasonHub);
 router.get("/seasons/current/standings", handleGetCurrentSeasonStandings);
+router.get("/teams/:slug", handleGetTeamDetail);
 router.get("/matches/:id/stream", handleStreamProMatch);
 router.get("/_internal/broadcaster-stats", handleBroadcasterStats);
 
