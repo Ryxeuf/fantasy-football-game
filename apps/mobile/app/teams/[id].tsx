@@ -14,6 +14,7 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { apiGet, apiPut, ApiError } from "../../lib/api";
 import { useAuth } from "../../lib/auth-context";
+import { useTranslation } from "../../lib/i18n-context";
 import {
   type TeamDetail,
   countPlayersByPosition,
@@ -32,6 +33,7 @@ interface EditableInfo {
 export default function TeamDetailScreen() {
   const router = useRouter();
   const { logout } = useAuth();
+  const { t } = useTranslation();
   const params = useLocalSearchParams<{ id: string }>();
   const teamId = params.id;
   const [team, setTeam] = useState<TeamDetail | null>(null);
@@ -56,9 +58,11 @@ export default function TeamDetailScreen() {
         router.replace("/login");
         return;
       }
-      setError(err instanceof Error ? err.message : "Erreur de chargement");
+      setError(
+        err instanceof Error ? err.message : t("teams.detail.errors.loadError"),
+      );
     }
-  }, [teamId, router, logout]);
+  }, [teamId, router, logout, t]);
 
   useEffect(() => {
     fetchTeam().finally(() => setLoading(false));
@@ -91,8 +95,10 @@ export default function TeamDetailScreen() {
       setDraft(null);
     } catch (err: unknown) {
       Alert.alert(
-        "Erreur",
-        err instanceof Error ? err.message : "Impossible de sauvegarder",
+        t("common.error"),
+        err instanceof Error
+          ? err.message
+          : t("teams.detail.errors.saveErrorMessage"),
       );
     } finally {
       setSaving(false);
@@ -111,10 +117,12 @@ export default function TeamDetailScreen() {
     return (
       <View style={styles.center}>
         <Text style={styles.errorText}>
-          {error || "Equipe introuvable"}
+          {error || t("teams.detail.notFound")}
         </Text>
         <Pressable onPress={() => router.replace("/teams")} style={styles.linkButton}>
-          <Text style={styles.linkButtonText}>Retour aux equipes</Text>
+          <Text style={styles.linkButtonText}>
+            {t("teams.detail.backToList")}
+          </Text>
         </Pressable>
       </View>
     );
@@ -136,44 +144,55 @@ export default function TeamDetailScreen() {
         </View>
 
         <View style={styles.statsRow}>
-          <Stat label="Valeur" value={formatTeamValue(team.currentValue)} />
-          <Stat label="Tresor" value={formatGoldShort(team.treasury ?? 0)} />
-          <Stat label="Joueurs" value={String(team.players?.length ?? 0)} />
+          <Stat
+            label={t("teams.detail.stats.value")}
+            value={formatTeamValue(team.currentValue)}
+          />
+          <Stat
+            label={t("teams.detail.stats.treasury")}
+            value={formatGoldShort(team.treasury ?? 0)}
+          />
+          <Stat
+            label={t("teams.detail.stats.players")}
+            value={String(team.players?.length ?? 0)}
+          />
         </View>
 
-        <Section title="Configuration">
+        <Section title={t("teams.detail.configuration.title")}>
           {editMode && draft ? (
             <View>
               <Counter
-                label="Relances"
+                label={t("teams.detail.configuration.rerolls")}
                 value={draft.rerolls}
                 min={0}
                 max={8}
                 onChange={(v) => setDraft({ ...draft, rerolls: v })}
               />
               <Counter
-                label="Pom-pom girls"
+                label={t("teams.detail.configuration.cheerleaders")}
                 value={draft.cheerleaders}
                 min={0}
                 max={12}
                 onChange={(v) => setDraft({ ...draft, cheerleaders: v })}
               />
               <Counter
-                label="Assistants coach"
+                label={t("teams.detail.configuration.assistants")}
                 value={draft.assistants}
                 min={0}
                 max={6}
                 onChange={(v) => setDraft({ ...draft, assistants: v })}
               />
               <Counter
-                label="Fans devoues"
+                label={t("teams.detail.configuration.dedicatedFans")}
                 value={draft.dedicatedFans}
                 min={1}
                 max={6}
                 onChange={(v) => setDraft({ ...draft, dedicatedFans: v })}
               />
               <View style={styles.row}>
-                <Text style={styles.rowLabel}>Apothicaire</Text>
+                <Text style={styles.rowLabel}>
+                  {t("teams.detail.configuration.apothecary")}
+                </Text>
                 <Pressable
                   onPress={() =>
                     setDraft({ ...draft, apothecary: !draft.apothecary })
@@ -184,7 +203,9 @@ export default function TeamDetailScreen() {
                   ]}
                 >
                   <Text style={styles.toggleText}>
-                    {draft.apothecary ? "OUI" : "NON"}
+                    {draft.apothecary
+                      ? t("teams.detail.configuration.onLabel")
+                      : t("teams.detail.configuration.offLabel")}
                   </Text>
                 </Pressable>
               </View>
@@ -194,7 +215,7 @@ export default function TeamDetailScreen() {
                   onPress={cancelEdit}
                   style={[styles.actionButton, styles.cancelButton]}
                 >
-                  <Text style={styles.cancelText}>Annuler</Text>
+                  <Text style={styles.cancelText}>{t("common.cancel")}</Text>
                 </Pressable>
                 <Pressable
                   onPress={saveEdit}
@@ -204,40 +225,55 @@ export default function TeamDetailScreen() {
                   {saving ? (
                     <ActivityIndicator color="#fff" />
                   ) : (
-                    <Text style={styles.saveText}>Sauvegarder</Text>
+                    <Text style={styles.saveText}>
+                      {t("teams.detail.configuration.saveButton")}
+                    </Text>
                   )}
                 </Pressable>
               </View>
             </View>
           ) : (
             <View>
-              <InfoRow label="Relances" value={String(team.rerolls ?? 0)} />
               <InfoRow
-                label="Pom-pom girls"
+                label={t("teams.detail.configuration.rerolls")}
+                value={String(team.rerolls ?? 0)}
+              />
+              <InfoRow
+                label={t("teams.detail.configuration.cheerleaders")}
                 value={String(team.cheerleaders ?? 0)}
               />
               <InfoRow
-                label="Assistants coach"
+                label={t("teams.detail.configuration.assistants")}
                 value={String(team.assistants ?? 0)}
               />
               <InfoRow
-                label="Fans devoues"
+                label={t("teams.detail.configuration.dedicatedFans")}
                 value={String(team.dedicatedFans ?? 1)}
               />
               <InfoRow
-                label="Apothicaire"
-                value={team.apothecary ? "Oui" : "Non"}
+                label={t("teams.detail.configuration.apothecary")}
+                value={
+                  team.apothecary
+                    ? t("teams.detail.configuration.yes")
+                    : t("teams.detail.configuration.no")
+                }
               />
               <Pressable onPress={startEdit} style={styles.editButton}>
-                <Text style={styles.editButtonText}>Editer la configuration</Text>
+                <Text style={styles.editButtonText}>
+                  {t("teams.detail.configuration.editButton")}
+                </Text>
               </Pressable>
             </View>
           )}
         </Section>
 
-        <Section title={`Joueurs (${team.players?.length ?? 0})`}>
+        <Section
+          title={t("teams.detail.players.title", {
+            count: team.players?.length ?? 0,
+          })}
+        >
           {positions.length === 0 ? (
-            <Text style={styles.empty}>Aucun joueur recrute</Text>
+            <Text style={styles.empty}>{t("teams.detail.players.empty")}</Text>
           ) : (
             <>
               {positions.map((p) => (
@@ -264,7 +300,11 @@ export default function TeamDetailScreen() {
         </Section>
 
         {team.starPlayers && team.starPlayers.length > 0 && (
-          <Section title={`Star Players (${team.starPlayers.length})`}>
+          <Section
+            title={t("teams.detail.starPlayers.title", {
+              count: team.starPlayers.length,
+            })}
+          >
             {team.starPlayers.map((sp) => (
               <InfoRow
                 key={sp.id}
@@ -276,7 +316,7 @@ export default function TeamDetailScreen() {
         )}
 
         <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backText}>Retour</Text>
+          <Text style={styles.backText}>{t("teams.detail.backButton")}</Text>
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>

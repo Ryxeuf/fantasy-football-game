@@ -19,6 +19,9 @@
  *   `teams.detail.*` et `teams.new.*` lors des slices suivantes.
  * S27.3.9 : namespace `teams.new.*` pour `teams/new.tsx` (form labels,
  *   alertes de validation, erreurs de chargement et de creation).
+ * S27.3.11 : namespace `teams.detail.*` pour `teams/[id].tsx` (etats,
+ *   stats card, configuration, players, star players, erreurs de chargement
+ *   et de sauvegarde).
  *
  * Les autres namespaces (play, etc.) seront ajoutes au fur et a mesure du
  * remplacement des strings hardcodees.
@@ -185,6 +188,41 @@ export const FR_TRANSLATIONS = {
         invalidBudgetTitle: "Budget invalide",
         createErrorTitle: "Erreur",
         createErrorMessage: "Impossible de creer l'equipe",
+      },
+    },
+    detail: {
+      notFound: "Equipe introuvable",
+      backToList: "Retour aux equipes",
+      backButton: "Retour",
+      stats: {
+        value: "Valeur",
+        treasury: "Tresor",
+        players: "Joueurs",
+      },
+      configuration: {
+        title: "Configuration",
+        rerolls: "Relances",
+        cheerleaders: "Pom-pom girls",
+        assistants: "Assistants coach",
+        dedicatedFans: "Fans devoues",
+        apothecary: "Apothicaire",
+        onLabel: "OUI",
+        offLabel: "NON",
+        yes: "Oui",
+        no: "Non",
+        editButton: "Editer la configuration",
+        saveButton: "Sauvegarder",
+      },
+      players: {
+        title: "Joueurs ({{count}})",
+        empty: "Aucun joueur recrute",
+      },
+      starPlayers: {
+        title: "Star Players ({{count}})",
+      },
+      errors: {
+        loadError: "Erreur de chargement",
+        saveErrorMessage: "Impossible de sauvegarder",
       },
     },
   },

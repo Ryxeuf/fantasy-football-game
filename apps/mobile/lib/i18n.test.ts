@@ -736,3 +736,103 @@ describe("teams new screen i18n keys (S27.3.9)", () => {
     expect(t("teams.new.rosterTier", { tier: 2 }, "en")).toBe("Tier 2");
   });
 });
+
+/**
+ * S27.3.11 — Teams detail screen i18n keys (teams/[id].tsx).
+ *
+ * Couvre les cles utilisees par `apps/mobile/app/teams/[id].tsx` :
+ *  - Etats : notFound, backToList, backButton
+ *  - Stats card (value/treasury/players)
+ *  - Section Configuration (rerolls/cheerleaders/assistants/dedicatedFans/
+ *    apothecary + onLabel/offLabel + yes/no + editButton/saveButton)
+ *  - Section Players ({{count}} interpole, empty state)
+ *  - Section Star Players ({{count}} interpole)
+ *  - Erreurs : loadError, saveErrorMessage (titre = common.error)
+ *
+ * Le bouton "Annuler" reutilise `common.cancel`. Le titre d'alerte d'erreur
+ * de sauvegarde reutilise `common.error`. Les keys
+ * `teams.detail.configuration.title` ("Configuration") et
+ * `teams.detail.starPlayers.title` ("Star Players ({{count}})") sont
+ * legitimement identiques FR/EN car ce sont des termes de domaine Blood Bowl
+ * utilises tels quels dans la version FR.
+ */
+const TEAMS_DETAIL_I18N_KEYS = [
+  "teams.detail.notFound",
+  "teams.detail.backToList",
+  "teams.detail.backButton",
+  "teams.detail.stats.value",
+  "teams.detail.stats.treasury",
+  "teams.detail.stats.players",
+  "teams.detail.configuration.title",
+  "teams.detail.configuration.rerolls",
+  "teams.detail.configuration.cheerleaders",
+  "teams.detail.configuration.assistants",
+  "teams.detail.configuration.dedicatedFans",
+  "teams.detail.configuration.apothecary",
+  "teams.detail.configuration.onLabel",
+  "teams.detail.configuration.offLabel",
+  "teams.detail.configuration.yes",
+  "teams.detail.configuration.no",
+  "teams.detail.configuration.editButton",
+  "teams.detail.configuration.saveButton",
+  "teams.detail.players.title",
+  "teams.detail.players.empty",
+  "teams.detail.starPlayers.title",
+  "teams.detail.errors.loadError",
+  "teams.detail.errors.saveErrorMessage",
+] as const;
+
+const TEAMS_DETAIL_I18N_KEYS_FR_EN_DISTINCT = TEAMS_DETAIL_I18N_KEYS.filter(
+  (key) =>
+    key !== "teams.detail.configuration.title" &&
+    key !== "teams.detail.starPlayers.title",
+);
+
+describe("teams detail screen i18n keys (S27.3.11)", () => {
+  it.each(TEAMS_DETAIL_I18N_KEYS)(
+    "FR : '%s' retourne une chaine non vide differente de la cle",
+    (key) => {
+      const value = t(key as never);
+      expect(typeof value).toBe("string");
+      expect(value.length).toBeGreaterThan(0);
+      expect(value).not.toBe(key);
+    },
+  );
+
+  it.each(TEAMS_DETAIL_I18N_KEYS)(
+    "EN : '%s' retourne une chaine non vide differente de la cle",
+    (key) => {
+      const value = t(key as never, undefined, "en" as Locale);
+      expect(typeof value).toBe("string");
+      expect(value.length).toBeGreaterThan(0);
+      expect(value).not.toBe(key);
+    },
+  );
+
+  it.each(TEAMS_DETAIL_I18N_KEYS_FR_EN_DISTINCT)(
+    "FR != EN pour '%s' (parite stricte, pas de copie oubliee)",
+    (key) => {
+      const fr = t(key as never);
+      const en = t(key as never, undefined, "en" as Locale);
+      expect(fr).not.toBe(en);
+    },
+  );
+
+  it("teams.detail.players.title interpole {{count}}", () => {
+    expect(t("teams.detail.players.title", { count: 11 })).toBe(
+      "Joueurs (11)",
+    );
+    expect(
+      t("teams.detail.players.title", { count: 11 }, "en"),
+    ).toBe("Players (11)");
+  });
+
+  it("teams.detail.starPlayers.title interpole {{count}}", () => {
+    expect(t("teams.detail.starPlayers.title", { count: 2 })).toBe(
+      "Star Players (2)",
+    );
+    expect(
+      t("teams.detail.starPlayers.title", { count: 2 }, "en"),
+    ).toBe("Star Players (2)");
+  });
+});
