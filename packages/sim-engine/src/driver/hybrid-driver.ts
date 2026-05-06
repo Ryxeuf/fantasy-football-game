@@ -45,6 +45,11 @@ import {
   DEFAULT_TACTICAL_PROFILE,
   type TacticalProfile,
 } from '../tactics/tactical-profile';
+import {
+  UNDERDOG_BOOST_PROBABILITY,
+  computeUnderdog,
+  type UnderdogContext,
+} from '../tactics/underdog';
 import { aiPlay, type DriveSnapshot } from '../ai';
 import { emitNuffleEvent, rollNuffleEvent } from '../nuffle/events';
 import {
@@ -92,6 +97,10 @@ interface DriverRng {
    *  independent so adding/removing Nuffle events doesn't shift the
    *  resolver streams. */
   nuffle: Rng;
+  /** Underdog luck stream (lot 0.C.3). Decides whether a turnover
+   *  triggers the silent retry. Independent so toggling the boost
+   *  on/off doesn't shift any other stream. */
+  luck: Rng;
 }
 
 function forkRngs(rootSeed: number): DriverRng {
@@ -105,6 +114,7 @@ function forkRngs(rootSeed: number): DriverRng {
     foul: root.fork('foul-resolver'),
     strategic: root.fork('strategic-decisions'),
     nuffle: root.fork('nuffle-events'),
+    luck: root.fork('underdog-luck'),
   };
 }
 
@@ -298,6 +308,9 @@ interface MutableMatch {
   touchdowns: number;
   /** Number of Eye-of-Nuffle events triggered during the match (lot 0.C.2). */
   nuffleEvents: number;
+  /** Number of times the underdog variance boost saved a turnover
+   *  (lot 0.C.3). Surfaced in `MatchSummary` for bench analytics. */
+  underdogBoosts: number;
   /** Per-player momentum tracker (lot 0.B.4). The MVP synthesises LOS
    *  player IDs ; the full driver (post-MVP) will plug real roster IDs. */
   momentum: MomentumTracker;
@@ -337,7 +350,8 @@ function processTurn(
   rngs: DriverRng,
   weather: ResolverState['weather'],
   homeProfile: TacticalProfile,
-  awayProfile: TacticalProfile
+  awayProfile: TacticalProfile,
+  underdog: UnderdogContext
 ): void {
   emitTurnStart(m);
 
@@ -368,13 +382,26 @@ function processTurn(
     const moment = pickKeyMoment(rngs.strategic, m.state, activeProfile);
     if (moment === null) continue;
 
-    const { events: keyEvents, turnover } = runKeyMoment(
-      m.state,
-      moment,
-      rngs,
-      weather,
-      m.state.clockMs
-    );
+    let attempt = runKeyMoment(m.state, moment, rngs, weather, m.state.clockMs);
+
+    // Underdog variance boost (lot 0.C.3) — silently re-run a turnover
+    // if the active team is the underdog and a 10% luck check triggers.
+    // Invisible to the user : the failed attempt's events are discarded
+    // and only the retry events surface on the timeline.
+    if (
+      attempt.turnover &&
+      underdog.side !== null &&
+      m.state.drive.drivingTeam === underdog.side &&
+      rngs.luck.next() < UNDERDOG_BOOST_PROBABILITY
+    ) {
+      const retry = runKeyMoment(m.state, moment, rngs, weather, m.state.clockMs);
+      if (!retry.turnover) {
+        attempt = retry;
+        m.underdogBoosts += 1;
+      }
+    }
+
+    const { events: keyEvents, turnover } = attempt;
     m.events.push(...keyEvents);
 
     // Synthetic LOS player ids — the full driver (post-MVP) will pass
@@ -444,6 +471,7 @@ export function runHybridDriver(input: SimInput, options: DriverOptions = {}): S
   // input does not provide one (e.g. ad-hoc test seeds).
   const homeProfile: TacticalProfile = input.home.tactics ?? DEFAULT_TACTICAL_PROFILE;
   const awayProfile: TacticalProfile = input.away.tactics ?? DEFAULT_TACTICAL_PROFILE;
+  const underdog: UnderdogContext = computeUnderdog(input.home, input.away);
 
   const m: MutableMatch = {
     state: {
@@ -472,12 +500,13 @@ export function runHybridDriver(input: SimInput, options: DriverOptions = {}): S
     turnover: 0,
     touchdowns: 0,
     nuffleEvents: 0,
+    underdogBoosts: 0,
     momentum: createMomentumTracker(),
   };
 
   // First half.
   while (m.state.turn <= TURNS_PER_HALF) {
-    processTurn(m, rngs, weather, homeProfile, awayProfile);
+    processTurn(m, rngs, weather, homeProfile, awayProfile, underdog);
   }
 
   // Halftime.
@@ -497,7 +526,7 @@ export function runHybridDriver(input: SimInput, options: DriverOptions = {}): S
 
   // Second half.
   while (m.state.turn <= TURNS_PER_HALF) {
-    processTurn(m, rngs, weather, homeProfile, awayProfile);
+    processTurn(m, rngs, weather, homeProfile, awayProfile, underdog);
   }
 
   m.events.push({
@@ -514,6 +543,7 @@ export function runHybridDriver(input: SimInput, options: DriverOptions = {}): S
     turnoverCount: m.turnover,
     touchdownCount: m.touchdowns,
     nuffleCount: m.nuffleEvents,
+    underdogBoostCount: m.underdogBoosts,
     durationMs: m.state.clockMs - kickoffAtMs,
     momentum: m.momentum.snapshot(),
   };

@@ -41,6 +41,12 @@ export {
   type PlayerMomentum,
 } from './tactics/momentum';
 export {
+  UNDERDOG_BOOST_PROBABILITY,
+  UNDERDOG_TV_GAP_THRESHOLD,
+  computeUnderdog,
+  type UnderdogContext,
+} from './tactics/underdog';
+export {
   PATTERNS,
   PATTERN_BY_ID,
   STRATEGIES,

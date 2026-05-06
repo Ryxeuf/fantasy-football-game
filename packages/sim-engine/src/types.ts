@@ -41,6 +41,10 @@ export interface SimTeamInput {
    *  Apps/server validates the JSON via `tacticalProfileSchema` before
    *  reaching the sim-engine. */
   tactics?: Readonly<TacticalProfile>;
+  /** Team Value (gold pieces). Used by the underdog variance boost
+   *  (lot 0.C.3) — the team with the lower TV gets a subtle reroll
+   *  bonus on critical failures when the gap exceeds 200. */
+  tv?: number;
 }
 
 export interface SimInput {
@@ -80,6 +84,9 @@ export interface MatchSummary {
   /** Eye-of-Nuffle events triggered during the match (lot 0.C.2) —
    *  consume by Nuffle Gazette (1.E.1) for storyline mining. */
   nuffleCount: number;
+  /** Times the underdog boost (lot 0.C.3) silently saved a turnover.
+   *  Audit metric for the bench harness ; not exposed in the user UI. */
+  underdogBoostCount: number;
   durationMs: number;
   /** Per-player momentum snapshots (lot 0.B.4) — alimente la Gazette
    *  (1.E.1) et l'odds calculator (1.D.3). Vide quand aucun joueur n'a
