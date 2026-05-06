@@ -72,6 +72,7 @@ model User {
   tutorialCompletions         TutorialCompletion[]
   proSpectatorFollows         ProSpectatorFollow[]
   proWallet                   ProWallet?
+  proBets                     ProBet[]
 }
 
 /// S26.3l — Historique ELO du coach. Une ligne par mise a jour ELO (donc 2
@@ -1262,6 +1263,8 @@ model ProLeagueMatch {
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 
+  betMarkets ProBetMarket[]
+
   @@index([seasonId, status])
   @@index([roundId])
   @@index([scheduledAt])
@@ -1394,4 +1397,91 @@ model ProTransaction {
 
   @@index([walletId, createdAt])
   @@index([type])
+}
+
+/// Sprint Pro League lot 1.D.2 — Marche de pari sur un match.
+///
+/// Un BetMarket regroupe les paris d'un type donne (`type`) sur un
+/// match. Les cotes sont stockees dans `config` (Json) ; la forme
+/// depend du type :
+///   - ONE_X_TWO       : { homeOdds, drawOdds, awayOdds }
+///   - OVER_UNDER_TD   : { line, overOdds, underOdds }
+///   - CAS_COUNT       : { line, overOdds, underOdds }
+///   - NUFFLE_OCCURS   : { yesOdds, noOdds }
+///   - MVP             : { selections: [{key, label, odds}, ...] }
+///
+/// Les cotes sont calculees lot 1.D.3 (odds-calculator) au pre-match
+/// puis mises a jour si le line-up change. Le lot 1.D.5 (settlement)
+/// passe le market a `settled` et evalue les bets.
+model ProBetMarket {
+  id        String         @id @default(cuid())
+  match     ProLeagueMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  matchId   String
+  /// 'ONE_X_TWO' | 'OVER_UNDER_TD' | 'CAS_COUNT' | 'NUFFLE_OCCURS' | 'MVP'
+  type      String
+  config    Json
+  /// 'open' | 'closed' | 'settled'
+  status    String         @default("open")
+  /// Apres ce timestamp, plus aucun pari n'est accepte.
+  closesAt  DateTime
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  bets       ProBet[]
+  settlement ProBetSettlement?
+
+  @@unique([matchId, type])
+  @@index([status, closesAt])
+}
+
+/// Sprint Pro League lot 1.D.2 — Pari pose par un user.
+///
+/// La cote (`oddsAtPlace`) est figee au moment de la pose (fairness :
+/// l'utilisateur sait exactement combien il peut gagner). Le `stake`
+/// est en Crowns. Au settlement (lot 1.D.5), `status` passe a `won`/
+/// `lost`/`void` et `payoutAmount` est rempli pour les gagnants
+/// (= round(stake * oddsAtPlace)).
+///
+/// `clientToken` permet l'idempotence : 2 requetes POST avec le meme
+/// token (par exemple un retry reseau) ne creent qu'un seul Bet.
+model ProBet {
+  id           String       @id @default(cuid())
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String
+  market       ProBetMarket @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  marketId     String
+  /// Selection serialisee selon le type de market (cf. ProBetMarket.type).
+  selection    String
+  stake        Int
+  oddsAtPlace  Float
+  /// 'pending' | 'won' | 'lost' | 'void'
+  status       String       @default("pending")
+  /// Gain net (round(stake * oddsAtPlace)) si won. null sinon.
+  payoutAmount Int?
+  /// Cle d'idempotence cote client (cuid genere au submit).
+  clientToken  String       @unique
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([marketId, status])
+  @@index([status])
+}
+
+/// Sprint Pro League lot 1.D.2 — Audit de settlement d'un market.
+///
+/// Cree au settlement (lot 1.D.5) ; 1-1 avec ProBetMarket via @unique.
+/// `winningSelection` est la selection gagnante ("home"/"draw"/"away"
+/// pour 1X2, "over"/"under" pour over/under, etc.).
+/// `totalStake` / `totalPayout` / `betCount` : metriques agregees
+/// utiles pour les leaderboards (1.D.8) sans rejoindre les bets.
+model ProBetSettlement {
+  id               String       @id @default(cuid())
+  market           ProBetMarket @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  marketId         String       @unique
+  winningSelection String
+  totalStake       Int          @default(0)
+  totalPayout      Int          @default(0)
+  betCount         Int          @default(0)
+  settledAt        DateTime     @default(now())
 }

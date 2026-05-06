@@ -72,6 +72,7 @@ model User {
   tutorialCompletions         TutorialCompletion[]
   proSpectatorFollows         ProSpectatorFollow[]
   proWallet                   ProWallet?
+  proBets                     ProBet[]
 }
 
 /// S26.3l — mirror SQLite de l'historique ELO Postgres (snapshot par mise a jour).
@@ -963,6 +964,8 @@ model ProLeagueMatch {
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 
+  betMarkets ProBetMarket[]
+
   @@index([seasonId, status])
   @@index([roundId])
   @@index([scheduledAt])
@@ -1037,4 +1040,53 @@ model ProTransaction {
 
   @@index([walletId, createdAt])
   @@index([type])
+}
+
+model ProBetMarket {
+  id        String         @id @default(cuid())
+  match     ProLeagueMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  matchId   String
+  type      String
+  config    String
+  status    String         @default("open")
+  closesAt  DateTime
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  bets       ProBet[]
+  settlement ProBetSettlement?
+
+  @@unique([matchId, type])
+  @@index([status, closesAt])
+}
+
+model ProBet {
+  id           String       @id @default(cuid())
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String
+  market       ProBetMarket @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  marketId     String
+  selection    String
+  stake        Int
+  oddsAtPlace  Float
+  status       String       @default("pending")
+  payoutAmount Int?
+  clientToken  String       @unique
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([marketId, status])
+  @@index([status])
+}
+
+model ProBetSettlement {
+  id               String       @id @default(cuid())
+  market           ProBetMarket @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  marketId         String       @unique
+  winningSelection String
+  totalStake       Int          @default(0)
+  totalPayout      Int          @default(0)
+  betCount         Int          @default(0)
+  settledAt        DateTime     @default(now())
 }
