@@ -655,3 +655,84 @@ describe("teams list screen i18n keys (S27.3.8)", () => {
     ).toBe("Error: Boom");
   });
 });
+
+/**
+ * S27.3.9 — Teams new screen i18n keys (teams/new.tsx).
+ *
+ * Couvre les cles utilisees par `apps/mobile/app/teams/new.tsx` :
+ *  - Form labels (nameLabel, namePlaceholder, rosterLabel, rosterTier,
+ *    budgetLabel, submit)
+ *  - Erreurs : load (loadError, prefix), validation (invalidNameTitle,
+ *    rosterRequiredTitle/Message, invalidBudgetTitle), creation
+ *    (createErrorTitle, createErrorMessage)
+ *
+ * Les boutons "Annuler" et "Reessayer" reutilisent `common.cancel` et
+ * `common.retry`. Les keys "rosterLabel" ("Roster") et "rosterTier"
+ * ("Tier {{tier}}") sont legitimement identiques FR/EN car ce sont des
+ * termes de domaine Blood Bowl utilises tels quels dans la version FR.
+ */
+const TEAMS_NEW_I18N_KEYS = [
+  "teams.new.nameLabel",
+  "teams.new.namePlaceholder",
+  "teams.new.rosterLabel",
+  "teams.new.rosterTier",
+  "teams.new.budgetLabel",
+  "teams.new.submit",
+  "teams.new.errors.loadError",
+  "teams.new.errors.prefix",
+  "teams.new.errors.invalidNameTitle",
+  "teams.new.errors.rosterRequiredTitle",
+  "teams.new.errors.rosterRequiredMessage",
+  "teams.new.errors.invalidBudgetTitle",
+  "teams.new.errors.createErrorTitle",
+  "teams.new.errors.createErrorMessage",
+] as const;
+
+const TEAMS_NEW_I18N_KEYS_FR_EN_DISTINCT = TEAMS_NEW_I18N_KEYS.filter(
+  (key) => key !== "teams.new.rosterLabel" && key !== "teams.new.rosterTier",
+);
+
+describe("teams new screen i18n keys (S27.3.9)", () => {
+  it.each(TEAMS_NEW_I18N_KEYS)(
+    "FR : '%s' retourne une chaine non vide differente de la cle",
+    (key) => {
+      const value = t(key as never);
+      expect(typeof value).toBe("string");
+      expect(value.length).toBeGreaterThan(0);
+      expect(value).not.toBe(key);
+    },
+  );
+
+  it.each(TEAMS_NEW_I18N_KEYS)(
+    "EN : '%s' retourne une chaine non vide differente de la cle",
+    (key) => {
+      const value = t(key as never, undefined, "en" as Locale);
+      expect(typeof value).toBe("string");
+      expect(value.length).toBeGreaterThan(0);
+      expect(value).not.toBe(key);
+    },
+  );
+
+  it.each(TEAMS_NEW_I18N_KEYS_FR_EN_DISTINCT)(
+    "FR != EN pour '%s' (parite stricte, pas de copie oubliee)",
+    (key) => {
+      const fr = t(key as never);
+      const en = t(key as never, undefined, "en" as Locale);
+      expect(fr).not.toBe(en);
+    },
+  );
+
+  it("teams.new.errors.prefix interpole {{message}}", () => {
+    expect(
+      t("teams.new.errors.prefix", { message: "Boom" }),
+    ).toBe("Erreur : Boom");
+    expect(
+      t("teams.new.errors.prefix", { message: "Boom" }, "en"),
+    ).toBe("Error: Boom");
+  });
+
+  it("teams.new.rosterTier interpole {{tier}}", () => {
+    expect(t("teams.new.rosterTier", { tier: 2 })).toBe("Tier 2");
+    expect(t("teams.new.rosterTier", { tier: 2 }, "en")).toBe("Tier 2");
+  });
+});

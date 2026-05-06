@@ -14,6 +14,7 @@ import {
 import { useRouter } from "expo-router";
 import { apiGet, apiPost, ApiError } from "../../lib/api";
 import { useAuth } from "../../lib/auth-context";
+import { useTranslation } from "../../lib/i18n-context";
 import {
   type RosterSummary,
   validateTeamName,
@@ -24,6 +25,7 @@ import {
 export default function NewTeamScreen() {
   const router = useRouter();
   const { logout } = useAuth();
+  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [rosters, setRosters] = useState<RosterSummary[]>([]);
   const [selectedRoster, setSelectedRoster] = useState<string | null>(null);
@@ -46,9 +48,11 @@ export default function NewTeamScreen() {
         router.replace("/login");
         return;
       }
-      setError(err instanceof Error ? err.message : "Erreur de chargement");
+      setError(
+        err instanceof Error ? err.message : t("teams.new.errors.loadError"),
+      );
     }
-  }, [router, logout]);
+  }, [router, logout, t]);
 
   useEffect(() => {
     fetchRosters().finally(() => setLoading(false));
@@ -57,16 +61,19 @@ export default function NewTeamScreen() {
   async function handleSubmit() {
     const nameCheck = validateTeamName(name);
     if (nameCheck.valid === false) {
-      Alert.alert("Nom invalide", nameCheck.error);
+      Alert.alert(t("teams.new.errors.invalidNameTitle"), nameCheck.error);
       return;
     }
     if (!selectedRoster) {
-      Alert.alert("Roster requis", "Choisissez un roster pour votre equipe");
+      Alert.alert(
+        t("teams.new.errors.rosterRequiredTitle"),
+        t("teams.new.errors.rosterRequiredMessage"),
+      );
       return;
     }
     const valueCheck = validateTeamValue(teamValue);
     if (valueCheck.valid === false) {
-      Alert.alert("Budget invalide", valueCheck.error);
+      Alert.alert(t("teams.new.errors.invalidBudgetTitle"), valueCheck.error);
       return;
     }
 
@@ -85,8 +92,10 @@ export default function NewTeamScreen() {
       }
     } catch (err: unknown) {
       Alert.alert(
-        "Erreur",
-        err instanceof Error ? err.message : "Impossible de creer l'equipe",
+        t("teams.new.errors.createErrorTitle"),
+        err instanceof Error
+          ? err.message
+          : t("teams.new.errors.createErrorMessage"),
       );
     } finally {
       setSubmitting(false);
@@ -104,7 +113,9 @@ export default function NewTeamScreen() {
   if (error) {
     return (
       <View style={styles.center}>
-        <Text style={styles.errorText}>Erreur : {error}</Text>
+        <Text style={styles.errorText}>
+          {t("teams.new.errors.prefix", { message: error })}
+        </Text>
         <Pressable
           onPress={() => {
             setLoading(true);
@@ -112,7 +123,7 @@ export default function NewTeamScreen() {
           }}
           style={styles.retryButton}
         >
-          <Text style={styles.retryText}>Reessayer</Text>
+          <Text style={styles.retryText}>{t("common.retry")}</Text>
         </Pressable>
       </View>
     );
@@ -124,17 +135,17 @@ export default function NewTeamScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.label}>Nom de l'equipe</Text>
+        <Text style={styles.label}>{t("teams.new.nameLabel")}</Text>
         <TextInput
           style={styles.input}
           value={name}
           onChangeText={setName}
-          placeholder="Ex: Reikland Reavers"
+          placeholder={t("teams.new.namePlaceholder")}
           placeholderTextColor="#9CA3AF"
           maxLength={100}
         />
 
-        <Text style={styles.label}>Roster</Text>
+        <Text style={styles.label}>{t("teams.new.rosterLabel")}</Text>
         <View style={styles.rosterGrid}>
           {rosters.map((roster) => {
             const selected = selectedRoster === roster.slug;
@@ -157,14 +168,16 @@ export default function NewTeamScreen() {
                   {roster.name}
                 </Text>
                 {roster.tier !== null && roster.tier !== undefined && (
-                  <Text style={styles.rosterMeta}>Tier {roster.tier}</Text>
+                  <Text style={styles.rosterMeta}>
+                    {t("teams.new.rosterTier", { tier: roster.tier })}
+                  </Text>
                 )}
               </Pressable>
             );
           })}
         </View>
 
-        <Text style={styles.label}>Budget (K po)</Text>
+        <Text style={styles.label}>{t("teams.new.budgetLabel")}</Text>
         <View style={styles.budgetRow}>
           {getTeamValueOptions().map((value) => {
             const selected = teamValue === value;
@@ -198,12 +211,12 @@ export default function NewTeamScreen() {
           {submitting ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.submitText}>Creer l'equipe</Text>
+            <Text style={styles.submitText}>{t("teams.new.submit")}</Text>
           )}
         </Pressable>
 
         <Pressable onPress={() => router.back()} style={styles.cancel}>
-          <Text style={styles.cancelText}>Annuler</Text>
+          <Text style={styles.cancelText}>{t("common.cancel")}</Text>
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
