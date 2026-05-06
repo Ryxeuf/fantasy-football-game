@@ -1,3 +1,10 @@
+## [1.86.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.85.0...v1.86.0) (2026-05-06)
+
+
+### ✨ Features
+
+* **sim-engine:** replay sampling tool — pnpm sim:replay (0.E.2) ([349e4bb](https://github.com/Ryxeuf/fantasy-football-game/commit/349e4bb6b72c5d5c893dfa586959780452756d84))
+
 ## [1.85.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.84.0...v1.85.0) (2026-05-06)
 
 
