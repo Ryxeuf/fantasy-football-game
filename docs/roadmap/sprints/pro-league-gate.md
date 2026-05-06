@@ -17,16 +17,16 @@ complet.
 
 | Champ | Valeur |
 |---|---|
-| `engineVer` | `0.7.0` (cf. `packages/sim-engine/CHANGELOG.md`) |
+| `engineVer` | `0.8.0` (cf. `packages/sim-engine/CHANGELOG.md`) |
 | Snapshot bench-baseline | `2026-05-06` (3 pairings, runs=200, seed=0) |
-| Tuning iterations effectuées | 6 (race-aware → block→armor + tv → upset fix + bash → defensive disruption → Nuffle casualty injection → breakthrough 8% + nemesis_clash) |
+| Tuning iterations effectuées | 7 (race-aware → block→armor + tv → upset fix + bash → defensive disruption → Nuffle casualty → breakthrough 8% → breakthrough 10% +40/+35/+30 + 6 Nuffle casualties) |
 | Replays panel | 50 fichiers `replays/replay-XXX-*-seed[2026-2075].txt` (à regénérer pour engineVer 0.5.0) |
 
 ## Critères de gate
 
 | # | Critère | Cible sprint | Mesure | Statut |
 |---|---|---|---|---|
-| C1 | Std dev TD ≥ 1.4 (lot 0.D.3) | ≥ 1.4 | _1.02 - 1.09_ | ❌ FAIL (convergence claire) |
+| C1 | Std dev TD ≥ 1.4 (lot 0.D.3) | ≥ 1.4 | _1.14 - 1.23_ | ❌ FAIL (convergence rapide) |
 | C2 | Upset rate 12-18% (lot 0.D.3) | 0.12 - 0.18 | _16.5 - 35% (Halflings vs Ogres 16.5% ✓)_ | ⚠️ 1/5 pairings DANS cible |
 | C3 | Tous matchups raciaux dans ±10% FUMBBL winrate (lot 0.E.1) | ±10% | _Iron Bears 34 vs Gold Rush 30 — parité OK ✓_ | ⚠️ partial RESOLU |
 | C4 | bench-baseline.json passe à `engineVer` cible (lot 0.D.4) | PASS | PASS | ✅ |
