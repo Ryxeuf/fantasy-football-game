@@ -23,6 +23,7 @@
   "dependencies": {
     "@bb/game-engine": "workspace:*",
     "@bb/shared-types": "workspace:*",
+    "cbor-x": "^1.6.4",
     "zod": "^4.3.6"
   },
   "devDependencies": {
