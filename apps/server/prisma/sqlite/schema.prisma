@@ -988,3 +988,13 @@ model ProLeagueStandings {
   @@unique([seasonId, teamId])
   @@index([seasonId, points, tdFor])
 }
+
+model Replay {
+  matchId     String   @id
+  payload     Bytes
+  highlights  String   @default("[]")
+  durationMs  Int
+  rawJsonSize Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

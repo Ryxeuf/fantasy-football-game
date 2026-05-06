@@ -182,3 +182,10 @@ export {
   type ResolverState,
   type ResolverWeather,
 } from './resolvers';
+
+export {
+  compressEvents,
+  decompressEvents,
+  computeCompressionStats,
+  type CompressionStats,
+} from './replay/compress';

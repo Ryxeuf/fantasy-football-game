@@ -1290,3 +1290,34 @@ model ProLeagueStandings {
   @@unique([seasonId, teamId])
   @@index([seasonId, points, tdFor])
 }
+
+/// Replay binaire d'un ProLeagueMatch — sprint Pro League lot 1.A.2.
+///
+/// Stocke le tableau d'events compressé (CBOR + gzip via
+/// `compressEvents` / `decompressEvents` du sim-engine) plus quelques
+/// métadonnées consommables sans décompression :
+///   - `durationMs` : durée totale du match (pour timeline UI)
+///   - `highlights` : sous-ensemble compact d'events marquants (TD,
+///     CAS, NUFFLE) pour l'UI "essentiels" sans charger le replay
+///     complet ; généré au moment de la persistance par
+///     `apps/server/services/replay-storage.ts` (lot 1.A.4).
+///
+/// 1-1 avec ProLeagueMatch : un replay par match max. La FK est
+/// `ProLeagueMatch.replayId` → `Replay.matchId` (déjà unique côté
+/// match). Côté Replay on stocke matchId comme @id pour garantir
+/// l'unicité au niveau DB.
+model Replay {
+  /// PK = id du match. Garantit le 1-1 : un seul replay par match.
+  matchId     String   @id
+  /// Payload binaire CBOR + gzip. ~1-2 KB / match typique.
+  payload     Bytes
+  /// Highlights pré-extraits (TD, CAS, NUFFLE). JSON pour souplesse.
+  /// Format: [{ type: "TD", at: 1500, team: "home" }, ...]
+  highlights  Json     @default("[]")
+  /// Durée totale du match (ms) pour timeline UI sans décodage.
+  durationMs  Int
+  /// Taille originale (JSON équivalent) — audit/monitoring.
+  rawJsonSize Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
