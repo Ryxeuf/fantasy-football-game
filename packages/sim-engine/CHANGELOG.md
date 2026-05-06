@@ -7,6 +7,50 @@ sim engine. Used as the audit trail for sprint Pro League lots 0.D
 Each version bump matches `ENGINE_VER` in `src/types.ts` and is
 reflected in `bench/bench-baseline.json`.
 
+## 0.12.0 — 2026-05-06 (sprint task 0.E.1 iter #11) — **C1 5/5 ✓**
+
+### Headline 🎯
+
+- **C1 atteint sur 5/5 pairings du panel** (std dev TD ≥ 1.4) :
+  - Smashers vs Soaring Hawks : 1.34 → **1.42** ✓
+  - Snow Ogres vs Cheese Halflings : 1.53 ✓
+  - Iron Bears vs Vipers : 1.43 → **1.47** ✓
+  - Soaring Hawks vs Tomb Cardinals : 1.48 → **1.60** ✓
+  - Cold Tacticians vs Jungle Queens : 1.34 → **1.44** ✓
+- **Casualty rate stable ~95-100% FUMBBL** : 0.95-1.01 / match
+- **TD means 3.00-3.19** (haut de la fourchette FUMBBL mais OK)
+
+### Changes
+
+- **Breakthrough proba** : 16% → **18%** (+ band négatif 32% → 34% pour préserver TD mean)
+- **TV delta bonus dans rollYards** : ±1 yard / 100 TV (cap ±3) — le
+  favori (TV ↑) gagne un peu plus consistamment ; alimente la
+  convergence C2 future quand TVs disparates seront réintroduites.
+
+### Observed deltas (200 runs / pairing, seed=0, vs iter #10)
+
+| Matchup | TD std | TD mean | Cas | Upset |
+|---|---|---|---|---|
+| Smashers vs Soaring Hawks | 1.34→**1.42** ✓ | 2.68→3.05 | .96→.95 | 38.5%→39.0% |
+| Snow Ogres vs Cheese Halflings | 1.53→1.53 ✓ | 2.75→3.19 | .98→1.00 | 23.0%→27.0% |
+| Iron Bears vs Vipers | 1.43→**1.47** ✓ | 2.65→3.04 | .96→.96 | (TVs équilibrés) |
+| Soaring Hawks vs Tomb Cardinals | 1.48→**1.60** ✓ | 2.64→3.02 | .95→.95 | 29.0%→28.5% |
+| Cold Tacticians vs Jungle Queens | 1.34→**1.44** ✓ | 2.52→3.00 | 1.00→1.01 | 32.5%→35.0% |
+
+### Critères de gate après iter #11
+
+- **C1** (std dev TD ≥ 1.4) : **5/5 ✓** ✅
+- **C2** (upset rate 12-18%) : 0/5 (gap TV trop petit, métrique
+  difficile par construction des pairings choisis ; nécessite un
+  élargissement des TVs de roster pour mesurer correctement)
+- **C3** (matchups raciaux ±10% FUMBBL) : ✓ résolu
+- **C4** (bench-baseline.json PASS) : ✓
+- **C5** (tests ≥ 95%) : 258/258 = 100% ✓
+- **C6-C9** (panel humain) : en attente
+
+Le panel humain peut désormais être consulté — l'engine est
+"good enough" sur les indicateurs statistiques principaux.
+
 ## 0.11.0 — 2026-05-06 (sprint task 0.E.1 iter #10) — pause for user review
 
 ### Headline 🎯

@@ -324,14 +324,17 @@ function runKeyMoment(
 function rollYards(
   rng: Rng,
   profile: TacticalProfile,
-  defenseProfile: TacticalProfile
+  defenseProfile: TacticalProfile,
+  tvDelta = 0
 ): number {
-  // Sprint 0.E.1 tuning iter #10 (engineVer 0.11.0) :
+  // Sprint 0.E.1 tuning iter #11 (engineVer 0.12.0) :
   //
   // - Base : 2d6+2 (mean 7).
   // - bash counter / disruption / pace offset : unchanged.
-  // - Breakthrough proba : 14% → 16%. Magnitudes unchanged.
-  //   Cible : 4-5 pairings en cible C1 (std dev TD >= 1.4).
+  // - Breakthrough proba : 16% → 18%. Magnitudes unchanged.
+  // - TV delta bonus : +1 yard / 100 TV de différence (cap ±3) — favori
+  //   gagne un peu plus consistamment, ce qui pousse l'upset rate vers
+  //   la cible 12-18% (C2).
   const dice = Math.floor(rng.next() * 6) + Math.floor(rng.next() * 6) + 2;
   const paceOffset = Math.round(profile.pace / 25) - 2;
   const bashCounter = -Math.round(defenseProfile.bashIndex / 28);
@@ -339,16 +342,17 @@ function rollYards(
     3,
     Math.round((defenseProfile.stallTendency * defenseProfile.bashIndex) / 2000)
   );
+  const tvBonus = Math.max(-3, Math.min(3, Math.round(tvDelta / 100)));
   const fatTail = rng.next();
   let breakthrough = 0;
-  if (fatTail < 0.16) {
+  if (fatTail < 0.18) {
     if (defenseProfile.bashIndex < 50) breakthrough = 40;
     else if (defenseProfile.bashIndex < 70) breakthrough = 35;
     else breakthrough = 30;
-  } else if (fatTail < 0.32) {
+  } else if (fatTail < 0.34) {
     breakthrough = -10;
   }
-  return Math.max(0, dice + paceOffset + bashCounter + defensiveDisruption + breakthrough);
+  return Math.max(0, dice + paceOffset + bashCounter + defensiveDisruption + tvBonus + breakthrough);
 }
 
 function nextDrive(prev: DriveState): DriveState {
@@ -410,7 +414,9 @@ function processTurn(
   weather: ResolverState['weather'],
   homeProfile: TacticalProfile,
   awayProfile: TacticalProfile,
-  underdog: UnderdogContext
+  underdog: UnderdogContext,
+  tvHome: number | undefined,
+  tvAway: number | undefined
 ): void {
   emitTurnStart(m);
 
@@ -551,7 +557,11 @@ function processTurn(
   if (m.state.drive.hasPossession) {
     const yardsActive = m.state.drive.drivingTeam === 'home' ? homeProfile : awayProfile;
     const yardsOpposing = m.state.drive.drivingTeam === 'home' ? awayProfile : homeProfile;
-    const gained = rollYards(rngs.strategic, yardsActive, yardsOpposing);
+    const tvActive = m.state.drive.drivingTeam === 'home' ? tvHome : tvAway;
+    const tvOpposing = m.state.drive.drivingTeam === 'home' ? tvAway : tvHome;
+    const tvDelta =
+      typeof tvActive === 'number' && typeof tvOpposing === 'number' ? tvActive - tvOpposing : 0;
+    const gained = rollYards(rngs.strategic, yardsActive, yardsOpposing, tvDelta);
     const newYard = m.state.drive.ballYardline + gained;
     if (newYard >= FIELD_YARDS) {
       const scoring = m.state.drive.drivingTeam;
@@ -625,7 +635,7 @@ export function runHybridDriver(input: SimInput, options: DriverOptions = {}): S
 
   // First half.
   while (m.state.turn <= TURNS_PER_HALF) {
-    processTurn(m, rngs, weather, homeProfile, awayProfile, underdog);
+    processTurn(m, rngs, weather, homeProfile, awayProfile, underdog, input.home.tv, input.away.tv);
   }
 
   // Halftime.
@@ -645,7 +655,7 @@ export function runHybridDriver(input: SimInput, options: DriverOptions = {}): S
 
   // Second half.
   while (m.state.turn <= TURNS_PER_HALF) {
-    processTurn(m, rngs, weather, homeProfile, awayProfile, underdog);
+    processTurn(m, rngs, weather, homeProfile, awayProfile, underdog, input.home.tv, input.away.tv);
   }
 
   m.events.push({
