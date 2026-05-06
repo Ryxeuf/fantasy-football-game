@@ -56,6 +56,20 @@ export {
   type PlayerForm,
 } from './tactics/player-form';
 export {
+  TARGET_STD_DEV_TD,
+  TARGET_UPSET_RATE_MAX,
+  TARGET_UPSET_RATE_MIN,
+  computeVivacityMetrics,
+  giniCoefficient,
+  mean,
+  quantile,
+  simResultToSample,
+  stdDev,
+  variance,
+  type VivacityMetrics,
+  type VivacitySample,
+} from './bench/metrics';
+export {
   PATTERNS,
   PATTERN_BY_ID,
   STRATEGIES,
