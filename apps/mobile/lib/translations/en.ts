@@ -168,6 +168,41 @@ export const EN_TRANSLATIONS = {
         createErrorMessage: "Unable to create the team",
       },
     },
+    detail: {
+      notFound: "Team not found",
+      backToList: "Back to teams",
+      backButton: "Back",
+      stats: {
+        value: "Value",
+        treasury: "Treasury",
+        players: "Players",
+      },
+      configuration: {
+        title: "Configuration",
+        rerolls: "Rerolls",
+        cheerleaders: "Cheerleaders",
+        assistants: "Assistant coaches",
+        dedicatedFans: "Dedicated fans",
+        apothecary: "Apothecary",
+        onLabel: "YES",
+        offLabel: "NO",
+        yes: "Yes",
+        no: "No",
+        editButton: "Edit configuration",
+        saveButton: "Save",
+      },
+      players: {
+        title: "Players ({{count}})",
+        empty: "No player recruited",
+      },
+      starPlayers: {
+        title: "Star Players ({{count}})",
+      },
+      errors: {
+        loadError: "Loading error",
+        saveErrorMessage: "Unable to save",
+      },
+    },
   },
   leaderboard: {
     title: "ELO Ranking",
