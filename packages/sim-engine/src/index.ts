@@ -70,6 +70,16 @@ export {
   type VivacitySample,
 } from './bench/metrics';
 export {
+  FUMBBL_REFERENCE,
+  FUMBBL_TOLERANCE,
+  getFumbblRaceStats,
+  getFumbblRaceStatsOrThrow,
+  isWithinFumbblTolerance,
+  parseFumbblReference,
+  type FumbblRaceStats,
+  type FumbblReference,
+} from './bench/fumbbl-reference';
+export {
   PATTERNS,
   PATTERN_BY_ID,
   STRATEGIES,
