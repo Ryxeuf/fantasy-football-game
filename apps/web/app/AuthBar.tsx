@@ -125,8 +125,8 @@ export default function AuthBar({ isMobileMenu = false }: AuthBarProps) {
       <div className="w-full">
         {/* En-tête utilisateur */}
         <div className="mb-4 pb-4 border-b border-gray-200">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-full bg-nuffle-bronze text-white flex items-center justify-center font-semibold text-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-nuffle-bronze text-white flex items-center justify-center font-semibold text-sm flex-shrink-0">
               {getInitials(userData?.name, userData?.email)}
             </div>
             <div className="flex-1 min-w-0">
@@ -140,66 +140,42 @@ export default function AuthBar({ isMobileMenu = false }: AuthBarProps) {
           </div>
         </div>
 
-        {/* Menu déroulant toujours visible dans le menu mobile */}
-        <div className="space-y-1">
-          <a
-            href="/me/profile"
-            className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-          >
+        {/* Mon compte */}
+        <p className="px-2 pb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+          Mon compte
+        </p>
+        <div className="space-y-1 mb-4">
+          <a href="/me/profile" className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
             👤 {t.auth.profile}
           </a>
-          <a
-            href="/me/teams"
-            className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            ⚽ {t.auth.myTeams}
-          </a>
-          <a
-            href="/cups"
-            className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            🏆 Coupes
-          </a>
-          <a
-            href="/local-matches"
-            className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            🎮 Parties Offline
-          </a>
-          {onlinePlayEnabled && (
-            <>
-              <a
-                href="/play"
-                className="block px-4 py-2.5 text-sm text-nuffle-gold font-semibold hover:bg-yellow-50 rounded-lg transition-colors"
-              >
-                ⚔️ {t.play?.playOnline || "Jouer en ligne"}
-              </a>
-              <a
-                href="/me/matches"
-                className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                📊 {t.play?.myOnlineMatches || "Mes matchs en ligne"}
-              </a>
-            </>
-          )}
-          <a
-            href="/me/achievements"
-            className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-          >
+          <a href="/me/achievements" className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
             🏅 {t.auth.achievements || "Mes succès"}
           </a>
+        </div>
+
+        {/* Mes parties */}
+        <p className="px-2 pb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider border-t border-gray-100 pt-3">
+          Mes parties
+        </p>
+        <div className="space-y-1 mb-4">
+          <a href="/me/teams" className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+            ⚽ {t.auth.myTeams}
+          </a>
+          {onlinePlayEnabled && (
+            <a href="/me/matches" className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+              📊 {t.play?.myOnlineMatches || "Mes matchs en ligne"}
+            </a>
+          )}
+        </div>
+
+        {/* Admin + Déconnexion */}
+        <div className="space-y-1 border-t border-gray-200 pt-3">
           {isAdmin && (
-            <a
-              href="/admin"
-              className="block px-4 py-2.5 text-sm text-purple-600 font-semibold hover:bg-purple-50 rounded-lg transition-colors"
-            >
+            <a href="/admin" className="block px-4 py-2.5 text-sm text-purple-600 font-semibold hover:bg-purple-50 rounded-lg transition-colors">
               🔧 {t.auth.admin}
             </a>
           )}
-          <button
-            onClick={logout}
-            className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-          >
+          <button onClick={logout} className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors">
             🚪 {t.auth.logout}
           </button>
         </div>
@@ -231,78 +207,49 @@ export default function AuthBar({ isMobileMenu = false }: AuthBarProps) {
           </button>
 
           {menuOpen && (
-            <div className="absolute right-0 mt-2 w-56 sm:w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-[60]">
-              <div className="p-3 border-b border-gray-200">
-                <div className="font-semibold text-sm">{userData?.name || t.auth.user}</div>
-                <div className="text-xs text-gray-600 font-mono break-all">{userData?.email}</div>
+            <div className="absolute right-0 mt-2 w-56 sm:w-64 bg-white border border-gray-200 rounded-xl shadow-lg z-[60] overflow-hidden">
+              {/* Entête */}
+              <div className="p-3 border-b border-gray-100 bg-gray-50">
+                <div className="font-semibold text-sm text-gray-900">{userData?.name || t.auth.user}</div>
+                <div className="text-xs text-gray-500 font-mono break-all">{userData?.email}</div>
               </div>
+
+              {/* Mon compte */}
               <div className="py-1">
-                <a
-                  href="/me/profile"
-                  className="block px-4 py-2.5 text-sm hover:bg-gray-100 transition-colors"
-                  onClick={() => setMenuOpen(false)}
-                >
+                <p className="px-4 pt-2 pb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Mon compte
+                </p>
+                <a href="/me/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setMenuOpen(false)}>
                   👤 {t.auth.profile}
                 </a>
-                <a
-                  href="/me/teams"
-                  className="block px-4 py-2.5 text-sm hover:bg-gray-100 transition-colors"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  ⚽ {t.auth.myTeams}
-                </a>
-                <a
-                  href="/cups"
-                  className="block px-4 py-2.5 text-sm hover:bg-gray-100 transition-colors"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  🏆 Coupes
-                </a>
-                <a
-                  href="/local-matches"
-                  className="block px-4 py-2.5 text-sm hover:bg-gray-100 transition-colors"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  🎮 Parties Offline
-                </a>
-                {onlinePlayEnabled && (
-                  <>
-                    <a
-                      href="/play"
-                      className="block px-4 py-2.5 text-sm hover:bg-gray-100 transition-colors text-nuffle-gold font-semibold"
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      ⚔️ {t.play?.playOnline || "Jouer en ligne"}
-                    </a>
-                    <a
-                      href="/me/matches"
-                      className="block px-4 py-2.5 text-sm hover:bg-gray-100 transition-colors"
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      📊 {t.play?.myOnlineMatches || "Mes matchs en ligne"}
-                    </a>
-                  </>
-                )}
-                <a
-                  href="/me/achievements"
-                  className="block px-4 py-2.5 text-sm hover:bg-gray-100 transition-colors"
-                  onClick={() => setMenuOpen(false)}
-                >
+                <a href="/me/achievements" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setMenuOpen(false)}>
                   🏅 {t.auth.achievements || "Mes succès"}
                 </a>
+              </div>
+
+              {/* Mes parties */}
+              <div className="border-t border-gray-100 py-1">
+                <p className="px-4 pt-2 pb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Mes parties
+                </p>
+                <a href="/me/teams" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setMenuOpen(false)}>
+                  ⚽ {t.auth.myTeams}
+                </a>
+                {onlinePlayEnabled && (
+                  <a href="/me/matches" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setMenuOpen(false)}>
+                    📊 {t.play?.myOnlineMatches || "Mes matchs en ligne"}
+                  </a>
+                )}
+              </div>
+
+              {/* Admin + Déconnexion */}
+              <div className="border-t border-gray-100 py-1">
                 {isAdmin && (
-                  <a
-                    href="/admin"
-                    className="block px-4 py-2.5 text-sm hover:bg-gray-100 transition-colors text-purple-600 font-semibold"
-                    onClick={() => setMenuOpen(false)}
-                  >
+                  <a href="/admin" className="block px-4 py-2 text-sm text-purple-600 font-semibold hover:bg-purple-50 transition-colors" onClick={() => setMenuOpen(false)}>
                     🔧 {t.auth.admin}
                   </a>
                 )}
-                <button
-                  onClick={logout}
-                  className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-100 transition-colors text-red-600"
-                >
+                <button onClick={logout} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
                   🚪 {t.auth.logout}
                 </button>
               </div>

@@ -7,31 +7,39 @@ import { useLanguage } from "../contexts/LanguageContext";
 import { useFeatureFlag } from "../hooks/useFeatureFlag";
 import { ONLINE_PLAY_FLAG } from "../lib/featureFlagKeys";
 
+type DropdownId = "competitions" | "compendium" | "play" | null;
+
 export default function Header() {
   const { t } = useLanguage();
   const onlinePlayEnabled = useFeatureFlag(ONLINE_PLAY_FLAG);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<DropdownId>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // Fermer le menu mobile si on clique en dehors ou si on change de taille d'écran
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setMobileMenuOpen(false);
       }
+      const clickedInsideAnyDropdown = Object.values(dropdownRefs.current).some(
+        (ref) => ref && ref.contains(event.target as Node)
+      );
+      if (!clickedInsideAnyDropdown) {
+        setOpenDropdown(null);
+      }
     }
 
     function handleResize() {
-      // Fermer le menu si on passe en mode desktop
       if (window.innerWidth >= 768) {
         setMobileMenuOpen(false);
       }
     }
 
+    document.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener("resize", handleResize);
+
     if (mobileMenuOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      window.addEventListener("resize", handleResize);
-      // Empêcher le scroll du body quand le menu est ouvert
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
@@ -44,59 +52,139 @@ export default function Header() {
     };
   }, [mobileMenuOpen]);
 
+  const toggleDropdown = (id: DropdownId) => {
+    setOpenDropdown((prev) => (prev === id ? null : id));
+  };
+
+  const navLinkClass =
+    "text-sm font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold hover:underline transition-colors whitespace-nowrap";
+
+  const dropdownTriggerClass = (id: DropdownId) =>
+    `flex items-center gap-1 text-sm font-subtitle font-semibold whitespace-nowrap transition-colors ${
+      openDropdown === id
+        ? "text-nuffle-gold"
+        : "text-nuffle-bronze hover:text-nuffle-gold"
+    }`;
+
+  const dropdownItem = (href: string, icon: string, label: string) => (
+    <a
+      href={href}
+      onClick={() => setOpenDropdown(null)}
+      className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-nuffle-bronze transition-colors whitespace-nowrap"
+    >
+      <span>{icon}</span>
+      <span>{label}</span>
+    </a>
+  );
+
+  const chevron = (id: DropdownId) => (
+    <svg
+      className={`w-3.5 h-3.5 transition-transform ${openDropdown === id ? "rotate-180" : ""}`}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+    </svg>
+  );
+
   return (
     <div className="flex items-center justify-between mb-6 relative" ref={menuRef}>
       <div className="flex items-center gap-3 sm:gap-4 md:gap-8 min-w-0 flex-1">
         <Logo variant="compact" showText={true} />
+
         {/* Navigation desktop */}
         <nav className="hidden lg:flex items-center gap-4 xl:gap-6">
-          <a 
-            href="/teams" 
-            className="text-sm font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold hover:underline transition-colors whitespace-nowrap"
-          >
-            ⚽ {t.nav.teams}
-          </a>
-          <a 
-            href="/skills" 
-            className="text-sm font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold hover:underline transition-colors whitespace-nowrap"
-          >
-            📚 {t.nav.skills}
-          </a>
-          <a
-            href="/star-players"
-            className="text-sm font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold hover:underline transition-colors whitespace-nowrap"
-          >
-            ⭐ {t.nav.starPlayers}
-          </a>
-          {onlinePlayEnabled && (
-            <a
-              href="/leaderboard"
-              className="text-sm font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold hover:underline transition-colors whitespace-nowrap"
+
+          {/* Jouer — dropdown si online activé, lien direct sinon */}
+          {onlinePlayEnabled ? (
+            <div
+              className="relative"
+              ref={(el) => { dropdownRefs.current["play"] = el; }}
             >
-              🏆 {t.nav.leaderboard}
+              <button
+                onClick={() => toggleDropdown("play")}
+                className={dropdownTriggerClass("play")}
+              >
+                🎮 {t.nav.play}
+                {chevron("play")}
+              </button>
+              {openDropdown === "play" && (
+                <div className="absolute left-0 top-full mt-2 w-52 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1 overflow-hidden">
+                  <a
+                    href="/play"
+                    onClick={() => setOpenDropdown(null)}
+                    className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-nuffle-gold hover:bg-yellow-50 transition-colors"
+                  >
+                    <span>⚔️</span>
+                    <span>{t.nav.playOnline}</span>
+                  </a>
+                  {dropdownItem("/local-matches", "🎮", t.nav.offlineMatches)}
+                </div>
+              )}
+            </div>
+          ) : (
+            <a href="/local-matches" className={navLinkClass}>
+              🎮 {t.nav.offlineMatches}
             </a>
           )}
-          {onlinePlayEnabled && (
-            <a
-              href="/play"
-              className="text-sm font-subtitle font-semibold text-nuffle-gold hover:text-nuffle-bronze hover:underline transition-colors whitespace-nowrap"
+
+          {/* Compétitions */}
+          <div
+            className="relative"
+            ref={(el) => { dropdownRefs.current["competitions"] = el; }}
+          >
+            <button
+              onClick={() => toggleDropdown("competitions")}
+              className={dropdownTriggerClass("competitions")}
             >
-              🎮 {t.nav.play}
-            </a>
-          )}
+              🏆 {t.nav.competitions}
+              {chevron("competitions")}
+            </button>
+            {openDropdown === "competitions" && (
+              <div className="absolute left-0 top-full mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1 overflow-hidden">
+                {dropdownItem("/leagues", "🏅", t.nav.leagues)}
+                {dropdownItem("/cups", "🏆", t.nav.cups)}
+                {onlinePlayEnabled && dropdownItem("/leaderboard", "📊", t.nav.leaderboard)}
+              </div>
+            )}
+          </div>
+
+          {/* Compendium */}
+          <div
+            className="relative"
+            ref={(el) => { dropdownRefs.current["compendium"] = el; }}
+          >
+            <button
+              onClick={() => toggleDropdown("compendium")}
+              className={dropdownTriggerClass("compendium")}
+            >
+              📖 {t.nav.compendium}
+              {chevron("compendium")}
+            </button>
+            {openDropdown === "compendium" && (
+              <div className="absolute left-0 top-full mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1 overflow-hidden">
+                {dropdownItem("/teams", "⚽", t.nav.teams)}
+                {dropdownItem("/skills", "📚", t.nav.skills)}
+                {dropdownItem("/star-players", "⭐", t.nav.starPlayers)}
+              </div>
+            )}
+          </div>
+
+          {/* Soutenir */}
           <a
             href="/support"
-            className="text-sm font-subtitle font-semibold text-red-500 hover:text-nuffle-gold hover:underline transition-colors whitespace-nowrap inline-flex items-center gap-1"
+            className="text-sm font-subtitle font-semibold text-gray-400 hover:text-nuffle-gold hover:underline transition-colors whitespace-nowrap inline-flex items-center gap-1"
             title={t.support?.navLabel || "Soutenir"}
           >
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
             </svg>
             {t.support?.navLabel || "Soutenir"}
           </a>
         </nav>
       </div>
-      
+
       {/* Actions desktop */}
       <div className="hidden lg:flex items-center gap-2 xl:gap-3 flex-shrink-0">
         <LanguageSwitcher />
@@ -127,12 +215,10 @@ export default function Header() {
       {/* Menu mobile/tablet */}
       {mobileMenuOpen && (
         <>
-          {/* Overlay */}
-          <div 
+          <div
             className="fixed inset-0 bg-black/50 z-40 lg:hidden"
             onClick={() => setMobileMenuOpen(false)}
           />
-          {/* Menu */}
           <div className="fixed top-0 right-0 h-full w-80 max-w-[85vw] sm:max-w-sm bg-white shadow-2xl z-50 lg:hidden overflow-y-auto">
             <div className="p-4 sm:p-6 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white z-10">
               <Logo variant="compact" showText={true} />
@@ -141,76 +227,109 @@ export default function Header() {
                 className="p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors"
                 aria-label="Fermer le menu"
               >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
-            
-            {/* Navigation mobile */}
-            <nav className="p-4 sm:p-6 space-y-3 sm:space-y-4 border-b border-gray-200">
-              <a 
+
+            {/* Jouer */}
+            <nav className="p-4 sm:p-6 space-y-1 border-b border-gray-200">
+              <p className="px-2 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                {t.nav.play}
+              </p>
+              {onlinePlayEnabled && (
+                <a
+                  href="/play"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 px-2 py-2.5 text-base font-subtitle font-semibold text-nuffle-gold hover:text-nuffle-bronze transition-colors"
+                >
+                  ⚔️ {t.nav.playOnline}
+                </a>
+              )}
+              <a
+                href="/local-matches"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 px-2 py-2.5 text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors"
+              >
+                🎮 {t.nav.offlineMatches}
+              </a>
+            </nav>
+
+            {/* Compétitions */}
+            <nav className="p-4 sm:p-6 space-y-1 border-b border-gray-200">
+              <p className="px-2 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                🏆 {t.nav.competitions}
+              </p>
+              <a
+                href="/leagues"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 px-2 py-2.5 text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors"
+              >
+                🏅 {t.nav.leagues}
+              </a>
+              <a
+                href="/cups"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 px-2 py-2.5 text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors"
+              >
+                🏆 {t.nav.cups}
+              </a>
+              {onlinePlayEnabled && (
+                <a
+                  href="/leaderboard"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 px-2 py-2.5 text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors"
+                >
+                  📊 {t.nav.leaderboard}
+                </a>
+              )}
+            </nav>
+
+            {/* Compendium */}
+            <nav className="p-4 sm:p-6 space-y-1 border-b border-gray-200">
+              <p className="px-2 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                📖 {t.nav.compendium}
+              </p>
+              <a
                 href="/teams"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors py-2 active:text-nuffle-gold"
+                className="flex items-center gap-2 px-2 py-2.5 text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors"
               >
                 ⚽ {t.nav.teams}
               </a>
-              <a 
+              <a
                 href="/skills"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors py-2 active:text-nuffle-gold"
+                className="flex items-center gap-2 px-2 py-2.5 text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors"
               >
                 📚 {t.nav.skills}
               </a>
               <a
                 href="/star-players"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors py-2 active:text-nuffle-gold"
+                className="flex items-center gap-2 px-2 py-2.5 text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors"
               >
                 ⭐ {t.nav.starPlayers}
               </a>
-              {onlinePlayEnabled && (
-                <a
-                  href="/leaderboard"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors py-2 active:text-nuffle-gold"
-                >
-                  🏆 {t.nav.leaderboard}
-                </a>
-              )}
-              {onlinePlayEnabled && (
-                <a
-                  href="/play"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block text-base font-subtitle font-semibold text-nuffle-gold hover:text-nuffle-bronze transition-colors py-2 active:text-nuffle-bronze"
-                >
-                  🎮 {t.nav.play}
-                </a>
-              )}
+            </nav>
+
+            {/* Langue + Soutenir */}
+            <div className="p-4 sm:p-6 space-y-4 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">Langue</span>
+                <LanguageSwitcher />
+              </div>
               <a
                 href="/support"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2 text-base font-subtitle font-semibold text-red-500 hover:text-nuffle-gold transition-colors py-2 active:text-nuffle-gold"
+                className="flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-nuffle-gold transition-colors"
               >
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
                 </svg>
                 {t.support?.navLabel || "Soutenir"}
               </a>
-            </nav>
-
-            {/* Actions mobile */}
-            <div className="p-4 sm:p-6 space-y-4 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">Langue</span>
-                <LanguageSwitcher />
-              </div>
             </div>
 
             {/* AuthBar mobile */}
@@ -223,4 +342,3 @@ export default function Header() {
     </div>
   );
 }
-

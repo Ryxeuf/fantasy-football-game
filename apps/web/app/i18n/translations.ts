@@ -6,7 +6,13 @@ export const translations = {
       skills: "Compétences",
       starPlayers: "Star Players",
       play: "Jouer",
+      playOnline: "Jouer en ligne",
+      offlineMatches: "Parties Offline",
       leaderboard: "Classement",
+      competitions: "Compétitions",
+      leagues: "Ligues",
+      cups: "Coupes",
+      compendium: "Compendium",
     },
     // Auth
     auth: {
@@ -652,7 +658,13 @@ export const translations = {
       skills: "Skills",
       starPlayers: "Star Players",
       play: "Play",
+      playOnline: "Play Online",
+      offlineMatches: "Offline Matches",
       leaderboard: "Leaderboard",
+      competitions: "Competitions",
+      leagues: "Leagues",
+      cups: "Cups",
+      compendium: "Compendium",
     },
     // Auth
     auth: {
