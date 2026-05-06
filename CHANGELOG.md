@@ -1,3 +1,13 @@
+## [1.88.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.87.0...v1.88.0) (2026-05-06)
+
+
+### ✨ Features
+
+* **mobile:** S27.3.11 i18n teams detail screen (FR/EN) ([#581](https://github.com/Ryxeuf/fantasy-football-game/issues/581)) ([24d71f7](https://github.com/Ryxeuf/fantasy-football-game/commit/24d71f759c66856afc3738df8244076b0f542035))
+* **nav:** refonte menus principal et utilisateur (Option A) ([0012991](https://github.com/Ryxeuf/fantasy-football-game/commit/00129916f2a67e0bf8f92f4af59af510cfaddb5d))
+* **sim-engine:** tuning iter [#2](https://github.com/Ryxeuf/fantasy-football-game/issues/2) — engineVer 0.3.0 (block→armor + tv per team + bash counter + fat-tails) ([#582](https://github.com/Ryxeuf/fantasy-football-game/issues/582)) ([9d987ed](https://github.com/Ryxeuf/fantasy-football-game/commit/9d987ed8819b2824cceff0a898ed7f9d182bd4db))
+* **sim-engine:** tuning iter [#3](https://github.com/Ryxeuf/fantasy-football-game/issues/3) — engineVer 0.4.0 (upset metric fix + bash recalibration) ([#583](https://github.com/Ryxeuf/fantasy-football-game/issues/583)) ([759d8f5](https://github.com/Ryxeuf/fantasy-football-game/commit/759d8f56b69679950ecc6deb50e13fa57acab300)), closes [#2](https://github.com/Ryxeuf/fantasy-football-game/issues/2)
+
 ## [1.87.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.86.0...v1.87.0) (2026-05-06)
 
 
