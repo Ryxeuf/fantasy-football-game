@@ -75,8 +75,17 @@ describe('runBench — sprint Pro League 0.D.1', () => {
   });
 
   it('omits favorite when TVs are missing', () => {
+    // Strip the bundled tv to simulate ad-hoc pairings without TV input.
+    const stripTv = <T extends { tv?: number }>(t: T): Omit<T, 'tv'> & { tv?: number } => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { tv, ...rest } = t;
+      return rest;
+    };
     const out = runBench({
-      pairing: { home: teamA, away: teamB },
+      pairing: {
+        home: stripTv(teamA) as typeof teamA,
+        away: stripTv(teamB) as typeof teamB,
+      },
       runs: 20,
       seedOffset: 0,
     });

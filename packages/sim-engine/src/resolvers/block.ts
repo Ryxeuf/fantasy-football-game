@@ -169,32 +169,71 @@ export function resolveBlock(
   }
 
   let newState: ResolverState = state;
+  const events: MatchEvent[] = [];
+
+  // Armor + injury chain on knock-downs (sprint 0.E.1 iter #2).
+  // Sans cette chaine, casualtyRate du sim restait ~0.04 / match (vs
+  // FUMBBL ~1.0-1.5) parce que le block resolver ne deroulait jamais
+  // le 2d6+assists vs AV.
+  function rollArmorAndInjury(victim: ResolverPlayer, causedById: string): void {
+    const a1 = rollD6(rng as Parameters<typeof rollD6>[0]);
+    const a2 = rollD6(rng as Parameters<typeof rollD6>[0]);
+    const armorTotal = a1 + a2;
+    if (armorTotal < victim.av + 1) {
+      // Armor held — just prone, already set above.
+      return;
+    }
+    const i1 = rollD6(rng as Parameters<typeof rollD6>[0]);
+    const i2 = rollD6(rng as Parameters<typeof rollD6>[0]);
+    const injury = i1 + i2;
+    let outcome: 'stunned' | 'ko' | 'casualty';
+    if (injury >= 10) outcome = 'casualty';
+    else if (injury >= 8) outcome = 'ko';
+    else outcome = 'stunned';
+    newState = updatePlayer(newState, victim.id, { state: outcome });
+    if (outcome === 'ko') {
+      events.push({
+        type: 'KO',
+        displayAtMs: input.displayAtMs,
+        engineVer: state.engineVer,
+        meta: { playerId: victim.id, causedBy: causedById, via: 'block', armor: armorTotal, injury },
+      });
+    } else if (outcome === 'casualty') {
+      events.push({
+        type: 'CASUALTY',
+        displayAtMs: input.displayAtMs,
+        engineVer: state.engineVer,
+        meta: { playerId: victim.id, causedBy: causedById, via: 'block', armor: armorTotal, injury },
+      });
+    }
+  }
+
   if (attackerDown) {
     newState = updatePlayer(newState, attacker.id, { state: 'prone' });
     if (attacker.hasBall) newState = updatePlayer(newState, attacker.id, { hasBall: false });
+    rollArmorAndInjury(attacker, defender.id);
   }
   if (defenderDown) {
     newState = updatePlayer(newState, defender.id, { state: 'prone' });
     if (defender.hasBall) newState = updatePlayer(newState, defender.id, { hasBall: false });
+    rollArmorAndInjury(defender, attacker.id);
   }
 
-  const events: MatchEvent[] = [
-    {
-      type: 'BLOCK',
-      displayAtMs: input.displayAtMs,
-      engineVer: state.engineVer,
-      meta: {
-        attackerId: attacker.id,
-        defenderId: defender.id,
-        diceCount,
-        chooser,
-        rolls,
-        chosen,
-        resolution,
-        useWrestle: input.useWrestle === true,
-      },
+  events.unshift({
+    type: 'BLOCK',
+    displayAtMs: input.displayAtMs,
+    engineVer: state.engineVer,
+    meta: {
+      attackerId: attacker.id,
+      defenderId: defender.id,
+      diceCount,
+      chooser,
+      rolls,
+      chosen,
+      resolution,
+      useWrestle: input.useWrestle === true,
     },
-  ];
+  });
   if (attackerDown) {
     events.push({
       type: 'TURNOVER',

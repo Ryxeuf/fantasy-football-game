@@ -334,8 +334,11 @@ describe('Block resolver — sprint 0.A.5', () => {
         expect(out.trace.chosen).toBe('BOTH_DOWN');
         expect(out.success).toBe(true);
         expect(out.turnover).toBe(false);
-        // Defender (no block) goes prone.
-        expect(out.newState.players.find((p) => p.id === 'd1')?.state).toBe('prone');
+        // Defender (no block) is knocked down — `prone` if armor held,
+        // or `stunned`/`ko`/`casualty` after the armor+injury chain
+        // (sprint 0.E.1 iter #2 enables this chain on every block KD).
+        const defState = out.newState.players.find((p) => p.id === 'd1')?.state;
+        expect(['prone', 'stunned', 'ko', 'casualty']).toContain(defState);
         return;
       }
     }

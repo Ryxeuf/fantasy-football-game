@@ -17,18 +17,18 @@ complet.
 
 | Champ | Valeur |
 |---|---|
-| `engineVer` | `0.2.0` (cf. `packages/sim-engine/CHANGELOG.md`) |
+| `engineVer` | `0.3.0` (cf. `packages/sim-engine/CHANGELOG.md`) |
 | Snapshot bench-baseline | `2026-05-06` (3 pairings, runs=200, seed=0) |
-| Tuning iterations effectuées | 1 (`0.1.0 → 0.2.0`, race-aware LOS + pace yards) |
-| Replays panel | 50 fichiers `replays/replay-XXX-*-seed[2026-2075].txt` |
+| Tuning iterations effectuées | 2 (`0.1.0 → 0.2.0` race-aware LOS + pace yards ; `0.2.0 → 0.3.0` block→armor chain + tv per-team + bash counter + fat-tails) |
+| Replays panel | 50 fichiers `replays/replay-XXX-*-seed[2026-2075].txt` (à regénérer pour engineVer 0.3.0) |
 
 ## Critères de gate
 
 | # | Critère | Cible sprint | Mesure | Statut |
 |---|---|---|---|---|
-| C1 | Std dev TD ≥ 1.4 (lot 0.D.3) | ≥ 1.4 | _0.85 - 0.97_ | ❌ FAIL |
-| C2 | Upset rate 12-18% (lot 0.D.3) | 0.12 - 0.18 | _non mesurable sans TV gap_ | ⏳ N/A |
-| C3 | Tous matchups raciaux dans ±10% FUMBBL winrate (lot 0.E.1) | ±10% | _≥ 30% deviation sur certains matchups_ | ❌ FAIL |
+| C1 | Std dev TD ≥ 1.4 (lot 0.D.3) | ≥ 1.4 | _0.75 - 0.85_ | ❌ FAIL (iter #3 needed) |
+| C2 | Upset rate 12-18% (lot 0.D.3) | 0.12 - 0.18 | _48 - 72%_ | ❌ FAIL (sur-recompense underdog ; iter #3 calibration) |
+| C3 | Tous matchups raciaux dans ±10% FUMBBL winrate (lot 0.E.1) | ±10% | _Skaven > Dwarves 73/27 vs FUMBBL 50/50, casualties low_ | ❌ FAIL |
 | C4 | bench-baseline.json passe à `engineVer` cible (lot 0.D.4) | PASS | PASS | ✅ |
 | C5 | Tests unitaires sim-engine ≥ 95% pass rate | 95% | 258 / 258 = 100% | ✅ |
 | C6 | Panel humain — moyenne globale ≥ 7/10 (lot 0.E.3) | ≥ 7.0 | _en attente_ | ⏳ |

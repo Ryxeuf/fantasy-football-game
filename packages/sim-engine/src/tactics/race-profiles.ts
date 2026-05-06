@@ -37,6 +37,14 @@ export interface ProTeamProfile {
   nflFlavor: string;
   /** Tunable tactical fingerprint validated by `tacticalProfileSchema`. */
   tactics: TacticalProfile;
+  /** Team Value (gold pieces) — used by the underdog variance boost
+   *  (lot 0.C.3) and the bench harness upset rate metric (lot 0.D.3 / C2).
+   *  Values reflect typical BB2020 roster cost archetypes :
+   *    - Halflings / Goblins / Ogres ~ 800-900 (cheap, high TV gap = underdog)
+   *    - Most rosters baseline ~ 1000
+   *    - Elf rosters (Wood / Dark / Pro / High) ~ 1100 (premium positionals)
+   *  Tunable in next iteration loops. */
+  tv: number;
 }
 
 /** Helper: tune a baseline profile with a small set of overrides. Keeps
@@ -62,6 +70,7 @@ export const PRO_LEAGUE_TEAMS: readonly ProTeamProfile[] = Object.freeze([
       patience: 55,
       foulFrequency: 55,
     }),
+    tv: 1000,
   },
   // 2. Dallas Vipers — Dark Elves / Cowboys (rich, agile, prima donnas).
   {
@@ -79,6 +88,7 @@ export const PRO_LEAGUE_TEAMS: readonly ProTeamProfile[] = Object.freeze([
       blitzPriority: 65,
       patience: 45,
     }),
+    tv: 1100,
   },
   // 3. Kansas City Soaring Hawks — Wood Elves / Chiefs (aerial Mahomes-flavor).
   {
@@ -97,6 +107,7 @@ export const PRO_LEAGUE_TEAMS: readonly ProTeamProfile[] = Object.freeze([
       cageAffinity: 30,
       patience: 40,
     }),
+    tv: 1100,
   },
   // 4. New England Cold Tacticians — Lizardmen / Patriots (cold dynasty).
   {
@@ -115,6 +126,7 @@ export const PRO_LEAGUE_TEAMS: readonly ProTeamProfile[] = Object.freeze([
       rerollUsage: 35,
       pressingDefense: 60,
     }),
+    tv: 1000,
   },
   // 5. San Francisco Gold Rush — Skaven / 49ers (scrappy west-coast speed).
   {
@@ -134,6 +146,7 @@ export const PRO_LEAGUE_TEAMS: readonly ProTeamProfile[] = Object.freeze([
       patience: 30,
       foulFrequency: 60,
     }),
+    tv: 1000,
   },
   // 6. Carolina Jungle Queens — Amazons / Panthers (tribal, defensive).
   {
@@ -151,6 +164,7 @@ export const PRO_LEAGUE_TEAMS: readonly ProTeamProfile[] = Object.freeze([
       blitzPriority: 60,
       pace: 55,
     }),
+    tv: 950,
   },
   // 7. Las Vegas Outlaws — Norse / Raiders (pirate, brutal).
   {
@@ -168,6 +182,7 @@ export const PRO_LEAGUE_TEAMS: readonly ProTeamProfile[] = Object.freeze([
       patience: 40,
       riskAppetite: 65,
     }),
+    tv: 1000,
   },
   // 8. New Orleans Voodoo Saints — Undead / Saints (slow Big Easy grind).
   {
@@ -185,6 +200,7 @@ export const PRO_LEAGUE_TEAMS: readonly ProTeamProfile[] = Object.freeze([
       stallTendency: 75,
       pressingDefense: 65,
     }),
+    tv: 1000,
   },
   // 9. Chicago Iron Bears — Dwarves / Bears (rugged tank).
   {
@@ -204,6 +220,7 @@ export const PRO_LEAGUE_TEAMS: readonly ProTeamProfile[] = Object.freeze([
       pressingDefense: 80,
       gfiTolerance: 20,
     }),
+    tv: 1050,
   },
   // 10. Philadelphia Storm Eagles — Pro Elves / Eagles (balanced).
   {
@@ -222,6 +239,7 @@ export const PRO_LEAGUE_TEAMS: readonly ProTeamProfile[] = Object.freeze([
       pressingDefense: 55,
       cageAffinity: 50,
     }),
+    tv: 1100,
   },
   // 11. Phoenix Tomb Cardinals — Tomb Kings (Khemri) / Cardinals (desert slow).
   {
@@ -240,6 +258,7 @@ export const PRO_LEAGUE_TEAMS: readonly ProTeamProfile[] = Object.freeze([
       gfiTolerance: 15,
       rerollUsage: 25,
     }),
+    tv: 1000,
   },
   // 12. Minneapolis Frostraiders — Norse alt / Vikings (raids).
   {
@@ -257,6 +276,7 @@ export const PRO_LEAGUE_TEAMS: readonly ProTeamProfile[] = Object.freeze([
       pressingDefense: 70,
       riskAppetite: 60,
     }),
+    tv: 1000,
   },
   // 13. Green Bay Cheese Halflings — Halflings / Packers (cheesy underdog).
   {
@@ -275,6 +295,7 @@ export const PRO_LEAGUE_TEAMS: readonly ProTeamProfile[] = Object.freeze([
       foulFrequency: 70,
       breakawayInstinct: 65,
     }),
+    tv: 800,
   },
   // 14. Jacksonville Swamp Lizards — Lizardmen alt / Jaguars (Florida jungle).
   {
@@ -292,6 +313,7 @@ export const PRO_LEAGUE_TEAMS: readonly ProTeamProfile[] = Object.freeze([
       patience: 60,
       breakawayInstinct: 55,
     }),
+    tv: 1000,
   },
   // 15. Denver Mile High Centaurs — Beastmen / Chaos / Broncos (wild).
   {
@@ -309,6 +331,7 @@ export const PRO_LEAGUE_TEAMS: readonly ProTeamProfile[] = Object.freeze([
       pace: 65,
       patience: 35,
     }),
+    tv: 1000,
   },
   // 16. Buffalo Snow Ogres — Ogres / Bills (Buffalo snow brutality).
   {
@@ -328,6 +351,7 @@ export const PRO_LEAGUE_TEAMS: readonly ProTeamProfile[] = Object.freeze([
       rerollUsage: 30,
       gfiTolerance: 20,
     }),
+    tv: 900,
   },
 ] as const) as readonly ProTeamProfile[];
 
