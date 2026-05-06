@@ -326,12 +326,12 @@ function rollYards(
   profile: TacticalProfile,
   defenseProfile: TacticalProfile
 ): number {
-  // Sprint 0.E.1 tuning iter #9 (engineVer 0.10.0) :
+  // Sprint 0.E.1 tuning iter #10 (engineVer 0.11.0) :
   //
   // - Base : 2d6+2 (mean 7).
   // - bash counter / disruption / pace offset : unchanged.
-  // - Breakthrough proba : 12% → 14%. Magnitudes unchanged.
-  //   Cible : std dev TD 1.4.
+  // - Breakthrough proba : 14% → 16%. Magnitudes unchanged.
+  //   Cible : 4-5 pairings en cible C1 (std dev TD >= 1.4).
   const dice = Math.floor(rng.next() * 6) + Math.floor(rng.next() * 6) + 2;
   const paceOffset = Math.round(profile.pace / 25) - 2;
   const bashCounter = -Math.round(defenseProfile.bashIndex / 28);
@@ -341,11 +341,11 @@ function rollYards(
   );
   const fatTail = rng.next();
   let breakthrough = 0;
-  if (fatTail < 0.14) {
+  if (fatTail < 0.16) {
     if (defenseProfile.bashIndex < 50) breakthrough = 40;
     else if (defenseProfile.bashIndex < 70) breakthrough = 35;
     else breakthrough = 30;
-  } else if (fatTail < 0.28) {
+  } else if (fatTail < 0.32) {
     breakthrough = -10;
   }
   return Math.max(0, dice + paceOffset + bashCounter + defensiveDisruption + breakthrough);
@@ -432,16 +432,17 @@ function processTurn(
       })
     );
     m.nuffleEvents += 1;
-    // Sprint 0.E.1 iter #7 (engineVer 0.8.0) : élargi encore les
-    // Nuffle events qui injectent une casualty (cible FUMBBL ~1.0).
-    // Ajouts : tantrum_star 50%, cocky_drop 30%.
+    // Sprint 0.E.1 iter #10 (engineVer 0.11.0) : encore élargi la
+    // casualty injection. 8 events injectent maintenant des casualties.
     if (
       nuffleEvent.id === 'bombardier_gone_wild' ||
       (nuffleEvent.id === 'banana_skin' && rngs.luck.next() < 0.5) ||
-      (nuffleEvent.id === 'crowd_riot' && rngs.luck.next() < 0.5) ||
+      (nuffleEvent.id === 'crowd_riot' && rngs.luck.next() < 0.6) ||
       (nuffleEvent.id === 'nemesis_clash' && rngs.luck.next() < 0.25) ||
       (nuffleEvent.id === 'tantrum_star' && rngs.luck.next() < 0.5) ||
-      (nuffleEvent.id === 'cocky_drop' && rngs.luck.next() < 0.3)
+      (nuffleEvent.id === 'cocky_drop' && rngs.luck.next() < 0.3) ||
+      (nuffleEvent.id === 'equipment_failure' && rngs.luck.next() < 0.3) ||
+      (nuffleEvent.id === 'wardrobe_malfunction' && rngs.luck.next() < 0.2)
     ) {
       const victimSide: Side = otherSide(m.state.drive.drivingTeam);
       const victimId = `${victimSide}-NUFFLE-${m.state.half}-${m.state.turn}`;
