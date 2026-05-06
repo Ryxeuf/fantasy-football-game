@@ -25,8 +25,11 @@
  * S27.3.12 : namespace `players.detail.*` pour `player/[teamId]/[playerId].tsx`
  *   (statut, sections caracteristiques/progression/competences/avancements/
  *   blessures, libelles d'avancements, summary blessures structure).
+ * S27.3.13 : namespace `play.*` pour `apps/mobile/app/play/[id].tsx`
+ *   (chargement, banner de tour, actions Throw Team-Mate / End Turn,
+ *   erreurs, hint, bouton retour).
  *
- * Les autres namespaces (play, etc.) seront ajoutes au fur et a mesure du
+ * Les autres namespaces seront ajoutes au fur et a mesure du
  * remplacement des strings hardcodees.
  */
 
@@ -327,6 +330,28 @@ export const FR_TRANSLATIONS = {
       errors: {
         loadError: "Erreur de chargement",
       },
+    },
+  },
+  play: {
+    loading: "Chargement du match...",
+    noState: "Aucun etat de jeu disponible",
+    hint: "Tap un joueur pour voir ses cases jouables. Double-tap pour annuler.",
+    errors: {
+      loadError: "Erreur de chargement",
+      actionError: "Erreur",
+      prefix: "Erreur : {{message}}",
+    },
+    banner: {
+      myTurn: "Votre tour",
+      opponentTurn: "Tour de l'adversaire",
+      offline: " (hors ligne)",
+    },
+    actions: {
+      throwTeamMate: "Lancer un coequipier",
+      cancelTarget: "Annuler (cible)",
+      cancelThrower: "Annuler (lancer)",
+      endTurn: "Fin de tour",
+      back: "← Retour",
     },
   },
   auth: {
