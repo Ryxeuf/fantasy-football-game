@@ -1065,3 +1065,228 @@ model Feedback {
   @@index([status, createdAt])
   @@index([createdAt])
 }
+
+// =============================================================
+// Pro League — sprint Pro League lot 1.A.1
+// =============================================================
+//
+// Modeles dedies a la Pro League simulee (16 equipes round-robin,
+// 15 journees par saison). Distincts des modeles `League*` (ligues
+// joueur-vs-joueur).
+//
+// Le sim-engine reste source de verite pour les *profils tactiques*
+// et les *team values*. Cote DB on materialise uniquement l'etat
+// observable : equipes, rosters, calendrier, scores, classements.
+// Le replay binaire (events compresses) sera ajoute en 1.A.2.
+
+/// La Pro League elle-meme. Singleton au MVP ("Old World League").
+/// Le modele permet plusieurs ligues a terme (divisions, cross-leagues)
+/// via le slug unique.
+model ProLeague {
+  id          String   @id @default(cuid())
+  /// Slug stable, e.g. "old-world-league". Sert de cle naturelle
+  /// pour les URLs publiques /pro-league/...
+  slug        String   @unique
+  name        String
+  description String?
+  /// Branding optionnel (logo, devise, palette). JSON pour souplesse.
+  /// Exemple: { "motto": "Stand Firm", "primaryColor": "#7A1F1F" }
+  branding    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  teams   ProTeam[]
+  seasons ProLeagueSeason[]
+}
+
+/// Une des 16 equipes Pro League (homages NFL x races BB).
+/// Cf. `packages/sim-engine/src/tactics/race-profiles.ts` pour la liste
+/// canonique. Le profil tactique (bashIndex, pace, etc.) reste dans le
+/// code (versionne avec engineVer) ; la DB stocke seulement les meta
+/// d'affichage et les pointeurs vers le sim.
+model ProTeam {
+  id             String    @id @default(cuid())
+  league         ProLeague @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId       String
+  /// Slug stable matchant `PRO_LEAGUE_TEAMS[i].id` dans race-profiles.ts.
+  /// Ex: "pit-smashers", "buf-snow-ogres", "gb-cheese-halflings".
+  slug           String    @unique
+  city           String
+  name           String
+  /// Nom de race BB lisible ("Orc", "Wood Elf", "Halfling", etc.).
+  race           String
+  /// Inspiration NFL pour le branding/storytelling.
+  nflFlavor      String?
+  primaryColor   String?
+  secondaryColor String?
+  /// Team value de base (gold pieces). Source de verite : race-profiles.ts.
+  /// Materialise ici pour lectures rapides + drift saisonnier.
+  baseTv         Int       @default(1000)
+  /// Meta libre (devises, headlines templates, fanbase size, etc.).
+  meta           Json?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  roster      ProTeamRoster[]
+  homeMatches ProLeagueMatch[]     @relation("ProMatchHome")
+  awayMatches ProLeagueMatch[]     @relation("ProMatchAway")
+  standings   ProLeagueStandings[]
+
+  @@index([leagueId])
+}
+
+/// Un joueur du roster d'une ProTeam. Couvre stats permanentes, forme
+/// courante, et casualties persistantes (lot 1.E.4 etendra).
+model ProTeamRoster {
+  id          String   @id @default(cuid())
+  team        ProTeam  @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId      String
+  name        String
+  /// Position BB ("Lineman", "Blitzer", "Thrower", etc.).
+  position    String
+  /// Stats BB de base.
+  ma          Int
+  st          Int
+  ag          Int
+  /// PA optionnel (BB3 only ; nullable pour rosters Season 2).
+  pa          Int?
+  av          Int
+  /// Skills (slugs). JSON array de strings, ex: ["block","dodge"].
+  skills      Json
+  /// Lot 1.E.4 — casualties persistantes.
+  niggling    Int      @default(0)
+  maReduction Int      @default(0)
+  stReduction Int      @default(0)
+  agReduction Int      @default(0)
+  avReduction Int      @default(0)
+  /// Status : "active" | "injured" | "dead" | "retired".
+  status      String   @default("active")
+  /// Forme 0-100. Updated post-match.
+  form        Int      @default(50)
+  /// Stats carriere (TD, casualties, MVPs). JSON pour souplesse.
+  careerStats Json     @default("{}")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([teamId, status])
+}
+
+/// Une saison instancie une ProLeague pour une annee donnee. engineVer
+/// est gele a la creation pour garantir replay-determinisme.
+model ProLeagueSeason {
+  id        String    @id @default(cuid())
+  league    ProLeague @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId  String
+  year      Int
+  /// Status : "scheduled" | "in_progress" | "completed" | "archived".
+  status    String    @default("scheduled")
+  /// engineVer pinne a la creation. Tous les matches de cette saison
+  /// utilisent cette version pour la deterministe replay (lot 1.A.5).
+  engineVer String
+  startsAt  DateTime?
+  endsAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  rounds    ProLeagueRound[]
+  matches   ProLeagueMatch[]
+  standings ProLeagueStandings[]
+
+  @@unique([leagueId, year])
+  @@index([status])
+}
+
+/// Une journee (matchday). 16 equipes round-robin = 15 journees x 8
+/// matchs/journee = 120 matches/saison.
+model ProLeagueRound {
+  id          String          @id @default(cuid())
+  season      ProLeagueSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  seasonId    String
+  /// 1..15 pour un round-robin classique.
+  roundNumber Int
+  /// Status : "pending" | "in_progress" | "completed".
+  status      String          @default("pending")
+  /// Date programmee (typiquement mardi 21h00).
+  scheduledAt DateTime?
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  matches ProLeagueMatch[]
+
+  @@unique([seasonId, roundNumber])
+  @@index([status])
+}
+
+/// Un match Pro League. Le sim-engine produit un SimResult complet ;
+/// on materialise ici les champs queryables (status, score, outcome,
+/// counters) et on pointe vers `Replay` (lot 1.A.2) pour le payload
+/// binaire compresse.
+model ProLeagueMatch {
+  id             String          @id @default(cuid())
+  season         ProLeagueSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  seasonId       String
+  round          ProLeagueRound  @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  roundId        String
+  homeTeam       ProTeam         @relation("ProMatchHome", fields: [homeTeamId], references: [id], onDelete: Cascade)
+  homeTeamId     String
+  awayTeam       ProTeam         @relation("ProMatchAway", fields: [awayTeamId], references: [id], onDelete: Cascade)
+  awayTeamId     String
+  /// Status : "scheduled" | "ready" | "in_progress" | "completed" | "failed".
+  /// "ready" = pre-simule, en attente du broadcaster (lot 1.B.1).
+  status         String          @default("scheduled")
+  scheduledAt    DateTime
+  simulatedAt    DateTime?
+  completedAt    DateTime?
+  /// Seed sim-engine + engineVer pinne au moment de la simulation.
+  /// Permet de rejouer le match a l'identique tant que engineVer matche.
+  seed           BigInt?
+  engineVer      String?
+  /// Pointeur vers `Replay.matchId` (lot 1.A.2). Pas de FK ici tant que
+  /// le modele Replay n'existe pas — sera converti en relation 1.A.2.
+  replayId       String?         @unique
+  /// Score cache pour listings rapides sans charger le replay.
+  scoreHome      Int?
+  scoreAway      Int?
+  /// Outcome : "home" | "away" | "draw".
+  outcome        String?
+  /// Compteurs caches issus de MatchSummary.
+  touchdownCount Int?
+  casualtyCount  Int?
+  turnoverCount  Int?
+  nuffleCount    Int?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([seasonId, status])
+  @@index([roundId])
+  @@index([scheduledAt])
+  @@index([homeTeamId])
+  @@index([awayTeamId])
+}
+
+/// Classement par equipe / saison. Mis a jour atomiquement post-match.
+model ProLeagueStandings {
+  id                String          @id @default(cuid())
+  season            ProLeagueSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  seasonId          String
+  team              ProTeam         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId            String
+  played            Int             @default(0)
+  wins              Int             @default(0)
+  draws             Int             @default(0)
+  losses            Int             @default(0)
+  /// Points BB-style : 3W / 1D / 0L. Configurable par ligue (Phase 2).
+  points            Int             @default(0)
+  tdFor             Int             @default(0)
+  tdAgainst         Int             @default(0)
+  casualtiesFor     Int             @default(0)
+  casualtiesAgainst Int             @default(0)
+  /// Forme (5 derniers matchs). JSON array : ["W","D","L","W","W"].
+  form              Json            @default("[]")
+  updatedAt         DateTime        @updatedAt
+
+  @@unique([seasonId, teamId])
+  @@index([seasonId, points, tdFor])
+}

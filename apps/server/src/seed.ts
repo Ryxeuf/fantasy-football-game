@@ -24,6 +24,7 @@ import {
   LEAGUES_V2_UI_FLAG,
 } from "./services/featureFlags";
 import { seedDefaultLeagues, DEFAULT_LEAGUE_NAME } from "./seeders/leagues";
+import { seedProLeague, OLD_WORLD_LEAGUE_NAME } from "./seeders/pro-league";
 import { serverLog } from "./utils/server-log";
 
 async function main() {
@@ -2028,6 +2029,11 @@ async function main() {
     serverLog.log("   ⚠️  Admin introuvable, seeder des ligues ignoré");
   }
   serverLog.log("✅ Ligues par défaut terminées\n");
+
+  // Sprint Pro League lot 1.A.1 — Pro League singleton + 16 équipes
+  serverLog.log("🏈 Seed de la Pro League...");
+  await seedProLeague();
+  serverLog.log(`   ✅ Pro League '${OLD_WORLD_LEAGUE_NAME}' + 16 équipes seedées\n`);
 }
 
 main()
@@ -2041,6 +2047,7 @@ main()
     serverLog.log("   - Les comptes par défaut sont prêts");
     serverLog.log("   - La coupe 'Test 1' et un match local ont été créés");
     serverLog.log(`   - La ligue '${DEFAULT_LEAGUE_NAME}' est prête`);
+    serverLog.log(`   - La Pro League '${OLD_WORLD_LEAGUE_NAME}' est seedée (16 équipes)`);
   })
   .catch(async (e) => {
     serverLog.error("❌ Erreur lors du seed:", e);
