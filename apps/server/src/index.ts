@@ -11,6 +11,7 @@ import adminRoutes from "./routes/admin";
 import adminDataRoutes from "./routes/admin-data";
 import adminLeaguesRoutes from "./routes/admin-leagues";
 import adminSimRoutes from "./routes/admin-sim";
+import adminSimReplaysRoutes from "./routes/admin-sim-replays";
 import userRoutes from "./routes/user";
 import teamRoutes from "./routes/team";
 import teamAdvancementRoutes from "./routes/team-advancement";
@@ -188,6 +189,12 @@ app.use("/admin/feature-flags", adminFeatureFlagsRouter);
 // pour ne pas polluer /admin (qui devient un sac fourre-tout).
 app.use("/admin/leagues", adminLeaguesRoutes);
 app.use("/admin/sim", adminSimRoutes);
+// Sprint Pro League 0.E.2 / 0.E.3 — exposition lecture seule des replays
+// panel pour la validation C6-C9 du gate Phase 0 → Phase 1 (cf.
+// docs/roadmap/sprints/pro-league-gate.md). Mountée sur un namespace
+// distinct (`/admin/sim-replays`) pour éviter la double exécution du
+// middleware d'auth qui se produirait si on imbriquait sous `/admin/sim`.
+app.use("/admin/sim-replays", adminSimReplaysRoutes);
 // Feedback public : pas d'auth, captcha + rate limiter dedies dans le router.
 app.use("/feedback", feedbackPublicRouter);
 app.use("/pro-league", proLeagueRoutes);

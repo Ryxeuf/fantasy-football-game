@@ -25,6 +25,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     if (path === "/admin") {
       return pathname === "/admin";
     }
+    // /admin/sim et /admin/sim/replays partagent un préfixe : forcer la
+    // comparaison exacte sur /admin/sim pour éviter le double highlight.
+    if (path === "/admin/sim") {
+      return pathname === "/admin/sim";
+    }
     return pathname?.startsWith(path);
   };
 
@@ -72,6 +77,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               {navItem("/admin/cups", "Coupes", "🏆")}
               {navItem("/admin/feature-flags", "Feature Flags", "🚩")}
               {navItem("/admin/sim", "Sim Pro League", "🎲")}
+              {navItem("/admin/sim/replays", "Replays Panel", "📜")}
               {navItem("/admin/feedback", "Feedback", "💬")}
               {navItem("/admin/routes", "Routes", "📋")}
             </div>
