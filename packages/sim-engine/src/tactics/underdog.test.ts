@@ -47,7 +47,9 @@ describe('computeUnderdog — sprint Pro League 0.C.3', () => {
 
   it('uses exactly the documented threshold (200)', () => {
     expect(UNDERDOG_TV_GAP_THRESHOLD).toBe(200);
-    expect(UNDERDOG_BOOST_PROBABILITY).toBe(0.1);
+    // Iter #12-16 (engineVer 0.13.0) : 0.10 → 0.03 pour ramener
+    // l'upset rate des matchups TV-déséquilibrés dans la cible 12-18%.
+    expect(UNDERDOG_BOOST_PROBABILITY).toBe(0.03);
     // Boundary : exactly 200 → boost active.
     const out = computeUnderdog(team('a', 'home', 1000), team('b', 'away', 1200));
     expect(out.side).toBe('home');

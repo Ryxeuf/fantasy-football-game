@@ -21,8 +21,15 @@ import type { SimTeamInput } from '../types';
 
 /** Seuil de TV gap qui active le boost (sprint table). */
 export const UNDERDOG_TV_GAP_THRESHOLD = 200;
-/** Probabilité par turnover de déclencher le retry (sprint table). */
-export const UNDERDOG_BOOST_PROBABILITY = 0.1;
+/** Probabilité par turnover de déclencher le retry (sprint table).
+ *  Iter #12-16 (engineVer 0.13.0) : 0.10 → 0.03. La proba 10% rendait
+ *  l'upset rate des matchups TV-déséquilibrés trop volatil (Ogres vs
+ *  Halflings 27% au lieu de la cible 12-18%). 3% pousse le favori plus
+ *  consistamment tout en gardant un signal underdog symbolique. Combiné
+ *  avec le tvBonus divisor /80 et recalibrage des TVs (Halflings 700,
+ *  Ogres 1100), Snow Ogres vs Halflings tombe à 17.8% upset (DANS la
+ *  cible C2). */
+export const UNDERDOG_BOOST_PROBABILITY = 0.03;
 
 export interface UnderdogContext {
   /** `null` = pas de boost (TV gap < 200 ou TVs absentes). */
