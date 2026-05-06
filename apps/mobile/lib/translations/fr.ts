@@ -14,6 +14,9 @@
  *   sous-titre, etat de recherche, vide, formulaire et messages d'erreur).
  * S27.3.7 : namespace `leaderboard.*` pour `leaderboard.tsx` (titre,
  *   stat cards, etat vide, erreurs, pagination).
+ * S27.3.8 : namespace `teams.list.*` pour `teams/index.tsx` (titre,
+ *   bouton creer, empty state, erreurs). Place laissee pour
+ *   `teams.detail.*` et `teams.new.*` lors des slices suivantes.
  *
  * Les autres namespaces (play, etc.) seront ajoutes au fur et a mesure du
  * remplacement des strings hardcodees.
@@ -151,6 +154,18 @@ export const FR_TRANSLATIONS = {
     joinModal: {
       title: "Rejoindre un match",
       inputPlaceholder: "ID du match",
+    },
+  },
+  teams: {
+    list: {
+      title: "Mes equipes",
+      createButton: "+ Creer",
+      empty: "Aucune equipe pour l'instant.",
+      createFirst: "Creer ma premiere equipe",
+      errors: {
+        loadError: "Erreur de chargement",
+        prefix: "Erreur : {{message}}",
+      },
     },
   },
   leaderboard: {

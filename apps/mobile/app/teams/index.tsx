@@ -11,6 +11,7 @@ import {
 import { useRouter } from "expo-router";
 import { apiGet, ApiError } from "../../lib/api";
 import { useAuth } from "../../lib/auth-context";
+import { useTranslation } from "../../lib/i18n-context";
 import {
   type TeamSummary,
   summarizeTeamRoster,
@@ -19,6 +20,7 @@ import {
 export default function TeamsListScreen() {
   const router = useRouter();
   const { logout } = useAuth();
+  const { t } = useTranslation();
   const [teams, setTeams] = useState<TeamSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -38,9 +40,11 @@ export default function TeamsListScreen() {
         router.replace("/login");
         return;
       }
-      setError(err instanceof Error ? err.message : "Erreur de chargement");
+      setError(
+        err instanceof Error ? err.message : t("teams.list.errors.loadError"),
+      );
     }
-  }, [router, logout]);
+  }, [router, logout, t]);
 
   useEffect(() => {
     fetchTeams().finally(() => setLoading(false));
@@ -63,9 +67,11 @@ export default function TeamsListScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Mes equipes</Text>
+        <Text style={styles.title}>{t("teams.list.title")}</Text>
         <Pressable onPress={navigateToCreate} style={styles.createButton}>
-          <Text style={styles.createButtonText}>+ Creer</Text>
+          <Text style={styles.createButtonText}>
+            {t("teams.list.createButton")}
+          </Text>
         </Pressable>
       </View>
 
@@ -77,9 +83,11 @@ export default function TeamsListScreen() {
 
       {error && !loading && (
         <View style={styles.center}>
-          <Text style={styles.errorText}>Erreur : {error}</Text>
+          <Text style={styles.errorText}>
+            {t("teams.list.errors.prefix", { message: error })}
+          </Text>
           <Pressable onPress={onRefresh} style={styles.retryButton}>
-            <Text style={styles.retryText}>Reessayer</Text>
+            <Text style={styles.retryText}>{t("common.retry")}</Text>
           </Pressable>
         </View>
       )}
@@ -104,14 +112,14 @@ export default function TeamsListScreen() {
           }
           ListEmptyComponent={
             <View style={styles.center}>
-              <Text style={styles.emptyText}>
-                Aucune equipe pour l'instant.
-              </Text>
+              <Text style={styles.emptyText}>{t("teams.list.empty")}</Text>
               <Pressable
                 onPress={navigateToCreate}
                 style={styles.emptyCreateButton}
               >
-                <Text style={styles.emptyCreateText}>Creer ma premiere equipe</Text>
+                <Text style={styles.emptyCreateText}>
+                  {t("teams.list.createFirst")}
+                </Text>
               </Pressable>
             </View>
           }
