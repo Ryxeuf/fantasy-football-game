@@ -1,0 +1,208 @@
+"use client";
+
+import { useMemo } from "react";
+
+import type { MatchEvent } from "@bb/shared-types";
+
+import { useProLeagueMatchStream } from "../../../../lib/use-pro-league-match-stream";
+
+/**
+ * Page de spectate textuel d'un match Pro League — sprint 1.B.4.
+ *
+ * Vue alternative pure texte pour mobile / low-bandwidth :
+ * - Score sticky en haut (mis à jour à chaque event TD).
+ * - Timeline scrollable des events avec badges (TD / CAS / NUFFLE).
+ * - Auto-refresh via SSE (`useProLeagueMatchStream`).
+ *
+ * Pas d'auth — les matchs Pro League sont publics au MVP.
+ */
+interface LivePageProps {
+  readonly params: { id: string };
+}
+
+interface ScoreState {
+  home: number;
+  away: number;
+  half: 1 | 2 | "final";
+}
+
+function deriveScore(events: readonly MatchEvent[]): ScoreState {
+  let home = 0;
+  let away = 0;
+  let half: 1 | 2 | "final" = 1;
+  for (const ev of events) {
+    if (ev.type === "TD") {
+      const team = (ev.meta as { team?: string } | undefined)?.team;
+      if (team === "home") home += 1;
+      else if (team === "away") away += 1;
+    } else if (ev.type === "HALFTIME") {
+      half = 2;
+    } else if (ev.type === "END") {
+      half = "final";
+    }
+  }
+  return { home, away, half };
+}
+
+const EVENT_BADGE_STYLES: Record<string, string> = {
+  KICKOFF: "bg-slate-700 text-slate-100",
+  TURN_START: "bg-slate-800 text-slate-300",
+  BLOCK: "bg-amber-900 text-amber-100",
+  DODGE: "bg-sky-900 text-sky-100",
+  PASS: "bg-blue-900 text-blue-100",
+  TD: "bg-emerald-700 text-emerald-50 font-semibold",
+  KO: "bg-orange-900 text-orange-100",
+  CASUALTY: "bg-red-700 text-red-50 font-semibold",
+  TURNOVER: "bg-rose-900 text-rose-100",
+  NUFFLE: "bg-purple-700 text-purple-50 font-semibold",
+  HALFTIME: "bg-indigo-900 text-indigo-100",
+  END: "bg-slate-900 text-slate-100 font-semibold",
+};
+
+function formatClock(displayAtMs: number): string {
+  const seconds = Math.floor(displayAtMs / 1000);
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+function summarizeMeta(ev: MatchEvent): string {
+  const meta = (ev.meta ?? {}) as Record<string, unknown>;
+  switch (ev.type) {
+    case "KICKOFF": {
+      const home = String(meta.homeName ?? meta.home ?? "home");
+      const away = String(meta.awayName ?? meta.away ?? "away");
+      return `${home} vs ${away}`;
+    }
+    case "TURN_START": {
+      const half = meta.half;
+      const turn = meta.turn;
+      const drivingTeam = String(meta.drivingTeam ?? "");
+      return `Half ${half ?? ""} · Turn ${turn ?? ""}${drivingTeam ? ` · ${drivingTeam}` : ""}`;
+    }
+    case "TD": {
+      const team = String(meta.team ?? "");
+      return `TOUCHDOWN ${team.toUpperCase()}`;
+    }
+    case "CASUALTY": {
+      const cause = meta.causedBy ? ` (${String(meta.causedBy)})` : "";
+      return `Casualty${cause}`;
+    }
+    case "NUFFLE": {
+      const id = meta.id ?? meta.eventId ?? "?";
+      return `Nuffle: ${String(id)}`;
+    }
+    case "HALFTIME":
+      return "Halftime";
+    case "END":
+      return "Match end";
+    default:
+      return ev.type;
+  }
+}
+
+function ConnectionBadge({
+  state,
+}: {
+  state: "connecting" | "open" | "error" | "closed";
+}): JSX.Element {
+  const label =
+    state === "open"
+      ? "● LIVE"
+      : state === "connecting"
+        ? "○ connecting"
+        : state === "error"
+          ? "⚠ reconnecting"
+          : "■ ended";
+  const klass =
+    state === "open"
+      ? "bg-emerald-600 text-emerald-50"
+      : state === "connecting"
+        ? "bg-slate-600 text-slate-100"
+        : state === "error"
+          ? "bg-amber-600 text-amber-50"
+          : "bg-slate-700 text-slate-300";
+  return (
+    <span
+      data-testid="connection-badge"
+      className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-mono ${klass}`}
+    >
+      {label}
+    </span>
+  );
+}
+
+export default function LiveProMatchPage({
+  params,
+}: LivePageProps): JSX.Element {
+  const { events, connectionState, error } = useProLeagueMatchStream(params.id);
+  const score = useMemo(() => deriveScore(events), [events]);
+
+  return (
+    <main className="mx-auto flex min-h-screen max-w-2xl flex-col bg-slate-950 text-slate-100">
+      <header
+        data-testid="score-header"
+        className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-slate-800 bg-slate-900 px-4 py-3 shadow"
+      >
+        <div className="flex items-center gap-3">
+          <ConnectionBadge state={connectionState} />
+          <span className="font-mono text-sm text-slate-400">
+            {score.half === "final"
+              ? "FT"
+              : score.half === 1
+                ? "1st half"
+                : "2nd half"}
+          </span>
+        </div>
+        <div
+          data-testid="score-display"
+          className="font-mono text-2xl font-bold tracking-wide"
+        >
+          {score.home} – {score.away}
+        </div>
+      </header>
+
+      {error ? (
+        <div
+          role="alert"
+          className="m-4 rounded border border-rose-700 bg-rose-950 px-3 py-2 text-sm text-rose-200"
+        >
+          {error}
+        </div>
+      ) : null}
+
+      <ol
+        data-testid="event-feed"
+        className="flex flex-1 flex-col gap-1 px-4 py-3"
+      >
+        {events.length === 0 ? (
+          <li className="text-sm text-slate-500">
+            En attente du kickoff…
+          </li>
+        ) : (
+          events
+            .slice()
+            .reverse()
+            .map((ev, idx) => (
+              <li
+                key={`${events.length - 1 - idx}-${ev.type}-${ev.displayAtMs}`}
+                className="flex items-start gap-3 rounded border border-slate-800 bg-slate-900 px-3 py-2 text-sm"
+              >
+                <span className="font-mono text-xs text-slate-500">
+                  {formatClock(ev.displayAtMs)}
+                </span>
+                <span
+                  className={`rounded px-2 py-0.5 text-xs font-mono ${EVENT_BADGE_STYLES[ev.type] ?? "bg-slate-700 text-slate-100"}`}
+                >
+                  {ev.type}
+                </span>
+                <span className="flex-1 text-slate-200">
+                  {summarizeMeta(ev)}
+                </span>
+              </li>
+            ))
+        )}
+      </ol>
+    </main>
+  );
+}
