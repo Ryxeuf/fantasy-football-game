@@ -804,3 +804,22 @@ model LeagueSeasonAward {
 
   @@index([championUserId])
 }
+
+// Feedback public (SQLite mirror). Cf. prisma/schema.prisma pour la
+// documentation du modele.
+model Feedback {
+  id        String   @id @default(cuid())
+  type      String
+  name      String?
+  email     String?
+  subject   String
+  message   String
+  userAgent String?
+  pageUrl   String?
+  status    String   @default("new")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([createdAt])
+}

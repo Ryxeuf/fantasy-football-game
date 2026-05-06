@@ -58,3 +58,22 @@ export const apiRateLimiter = rateLimit({
       "Trop de requêtes. Veuillez réessayer dans quelques instants.",
   },
 });
+
+// Rate limiter dedie a la soumission de feedback public.
+// Le formulaire `/feedback` est ouvert aux visiteurs non authentifies :
+// le captcha protege contre les bots, ce limiteur protege contre les
+// flooders humains et limite l'impact si le captcha est compromis.
+export const FEEDBACK_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
+export const FEEDBACK_RATE_LIMIT_MAX_PROD = 5;
+
+export const feedbackRateLimiter = rateLimit({
+  windowMs: FEEDBACK_RATE_LIMIT_WINDOW_MS,
+  max: TEST_MODE ? 10_000 : FEEDBACK_RATE_LIMIT_MAX_PROD,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: isWhitelisted,
+  message: {
+    error:
+      "Trop d'envois. Veuillez patienter quelques minutes avant de renvoyer un retour.",
+  },
+});

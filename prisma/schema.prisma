@@ -1033,3 +1033,35 @@ model LeagueSeasonAward {
 
   @@index([championUserId])
 }
+
+/// Feedback public soumis depuis la page `/feedback`. Le formulaire est
+/// accessible sans authentification : les soumissions doivent donc etre
+/// protegees par un captcha (Cloudflare Turnstile) cote API et limitees
+/// par un rate-limiter dedie.
+///
+/// `type` distingue bug / remarque / commentaire.
+/// `status` suit le cycle de traitement cote admin :
+///   - "new"      : juste recu, jamais consulte
+///   - "read"     : consulte par un admin
+///   - "resolved" : traite (corrige ou repondu)
+///
+/// `name` et `email` sont optionnels (RGPD : minimisation). On ne stocke
+/// volontairement PAS l'IP du visiteur ; elle sert uniquement au rate-limit
+/// et a la verification Turnstile, sans persistence. `userAgent` et
+/// `pageUrl` aident au triage et sont tronques cote service.
+model Feedback {
+  id        String   @id @default(cuid())
+  type      String
+  name      String?
+  email     String?
+  subject   String
+  message   String
+  userAgent String?
+  pageUrl   String?
+  status    String   @default("new")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([createdAt])
+}

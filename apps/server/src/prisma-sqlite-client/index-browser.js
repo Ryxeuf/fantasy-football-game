@@ -181,6 +181,13 @@ exports.Prisma.KofiTransactionScalarFieldEnum = {
   receivedAt: 'receivedAt'
 };
 
+exports.Prisma.TutorialCompletionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  lessonSlug: 'lessonSlug',
+  completedAt: 'completedAt'
+};
+
 exports.Prisma.UserAchievementScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -573,6 +580,20 @@ exports.Prisma.LeagueSeasonAwardScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.FeedbackScalarFieldEnum = {
+  id: 'id',
+  type: 'type',
+  name: 'name',
+  email: 'email',
+  subject: 'subject',
+  message: 'message',
+  userAgent: 'userAgent',
+  pageUrl: 'pageUrl',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -612,6 +633,7 @@ exports.Prisma.ModelName = {
   EloSnapshot: 'EloSnapshot',
   RefreshToken: 'RefreshToken',
   KofiTransaction: 'KofiTransaction',
+  TutorialCompletion: 'TutorialCompletion',
   UserAchievement: 'UserAchievement',
   Friendship: 'Friendship',
   FeatureFlag: 'FeatureFlag',
@@ -639,7 +661,8 @@ exports.Prisma.ModelName = {
   TeamSpecialRule: 'TeamSpecialRule',
   RegionalLeague: 'RegionalLeague',
   LeaguePostMatchSequence: 'LeaguePostMatchSequence',
-  LeagueSeasonAward: 'LeagueSeasonAward'
+  LeagueSeasonAward: 'LeagueSeasonAward',
+  Feedback: 'Feedback'
 };
 
 /**
