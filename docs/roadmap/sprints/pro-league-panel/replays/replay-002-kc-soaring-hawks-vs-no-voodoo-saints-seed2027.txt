@@ -1,0 +1,56 @@
+=== MATCH #2 — Soaring Hawks (Wood Elf) vs Voodoo Saints (Undead) ===
+engine 0.2.0
+
+KICKOFF — kc-soaring-hawks hosts no-voodoo-saints (weather: nice, away receives).
+Half 1 • Turn 1 — away in possession at yardline 4 (score 0-0)
+  ✨ NUFFLE [fog_rolls_in] — Fog rolls onto the field. Long passes become a prayer.
+Half 1 • Turn 2 — away in possession at yardline 12 (score 0-0)
+  ✨ NUFFLE [veteran_redemption] — A grizzled veteran finds one more ounce of glory.
+Half 1 • Turn 3 — away in possession at yardline 18 (score 0-0)
+  DODGE — away-LOS dodges to (13,7): needs 3+, rolled 4 → success.
+Half 1 • Turn 4 — away in possession at yardline 21 (score 0-0)
+  DODGE — away-LOS dodges to (13,7): needs 3+, rolled 5 → success.
+  Touchdown! away crosses the line. Score is now 0-1.
+Half 1 • Turn 5 — home in possession at yardline 4 (score 0-1)
+  TURNOVER — pickup_failed.
+Half 1 • Turn 6 — away in possession at yardline 15 (score 0-1)
+  BLOCK — away-LOS blocks home-LOS: dice [POW/PLAYER_DOWN], chose POW, defender_down.
+Half 1 • Turn 7 — away in possession at yardline 20 (score 0-1)
+  ✨ NUFFLE [sudden_inspiration] — A player is struck by sudden inspiration and grows half a foot.
+  BLOCK — away-LOS blocks home-LOS: dice [STUMBLE/STUMBLE], chose PUSH_BACK, push_only.
+  Touchdown! away crosses the line. Score is now 0-2.
+Half 1 • Turn 8 — home in possession at yardline 4 (score 0-2)
+  ✨ NUFFLE [rookie_brilliance] — A rookie pulls off a play above their stats — Nuffle smiles.
+  BLOCK — home-LOS blocks away-LOS: dice [PLAYER_DOWN/POW], chose PLAYER_DOWN, attacker_down.
+  TURNOVER — block_attacker_down.
+
+--- HALFTIME (score 0-2) ---
+
+Half 2 • Turn 1 — home in possession at yardline 4 (score 0-2)
+  ✨ NUFFLE [bombardier_gone_wild] — The Bombardier mistakes his own teammate for an enemy.
+  TURNOVER — pickup_failed.
+Half 2 • Turn 2 — away in possession at yardline 12 (score 0-2)
+  PASS — away-LOS attempts a short pass: needs 5+, rolled 1 (fumble!) → failed.
+  TURNOVER — pass_fumble.
+Half 2 • Turn 3 — home in possession at yardline 9 (score 0-2)
+  FOUL — home-LOS fouls away-PRONE (armor=7, broken=false).
+Half 2 • Turn 4 — home in possession at yardline 16 (score 0-2)
+  ✨ NUFFLE [sudden_inspiration] — A player is struck by sudden inspiration and grows half a foot.
+  PASS — home-LOS attempts a short pass: needs 5+, rolled 2 → failed.
+  TURNOVER — pass_failed.
+Half 2 • Turn 5 — away in possession at yardline 11 (score 0-2)
+Half 2 • Turn 6 — away in possession at yardline 13 (score 0-2)
+  TURNOVER — pickup_failed.
+Half 2 • Turn 7 — home in possession at yardline 6 (score 0-2)
+  ✨ NUFFLE [rookie_brilliance] — A rookie pulls off a play above their stats — Nuffle smiles.
+  PASS — home-LOS attempts a short pass: needs 5+, rolled 4 → failed.
+  TURNOVER — pass_failed.
+Half 2 • Turn 8 — away in possession at yardline 11 (score 0-2)
+  ✨ NUFFLE [nemesis_clash] — Two old rivals lock eyes — the next block will be personal.
+  FOUL — away-LOS fouls home-PRONE (armor=2, broken=false).
+
+--- END OF MATCH (score 0-2) ---
+
+
+FINAL: 0 - 2 (away)
+Touchdowns: 2 | Casualties: 0 | Turnovers: 7 | Nuffle: 8

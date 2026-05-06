@@ -1,0 +1,51 @@
+=== MATCH #22 — Storm Eagles (Pro Elf) vs Jungle Queens (Amazon) ===
+engine 0.2.0
+
+KICKOFF — phi-storm-eagles hosts car-jungle-queens (weather: nice, away receives).
+Half 1 • Turn 1 — away in possession at yardline 4 (score 0-0)
+Half 1 • Turn 2 — away in possession at yardline 13 (score 0-0)
+Half 1 • Turn 3 — away in possession at yardline 18 (score 0-0)
+  ✨ NUFFLE [bombardier_gone_wild] — The Bombardier mistakes his own teammate for an enemy.
+  Touchdown! away crosses the line. Score is now 0-1.
+Half 1 • Turn 4 — home in possession at yardline 4 (score 0-1)
+  ✨ NUFFLE [coach_sideline_rant] — A sideline rant electrifies the squad — and the ref.
+Half 1 • Turn 5 — home in possession at yardline 9 (score 0-1)
+  BLOCK — home-LOS blocks away-LOS: dice [POW], chose POW, defender_down.
+Half 1 • Turn 6 — home in possession at yardline 16 (score 0-1)
+  PASS — home-LOS attempts a short pass: needs 5+, rolled 3 → failed.
+  TURNOVER — pass_failed.
+Half 1 • Turn 7 — away in possession at yardline 15 (score 0-1)
+Half 1 • Turn 8 — away in possession at yardline 17 (score 0-1)
+  FOUL — away-LOS fouls home-PRONE (armor=6, broken=false).
+  Touchdown! away crosses the line. Score is now 0-2.
+
+--- HALFTIME (score 0-2) ---
+
+Half 2 • Turn 1 — home in possession at yardline 4 (score 0-2)
+  DODGE — home-LOS dodges to (13,7): needs 3+, rolled 4 → success.
+Half 2 • Turn 2 — home in possession at yardline 11 (score 0-2)
+Half 2 • Turn 3 — home in possession at yardline 18 (score 0-2)
+  BLOCK — home-LOS blocks away-LOS: dice [PLAYER_DOWN], chose PLAYER_DOWN, attacker_down.
+  TURNOVER — block_attacker_down.
+Half 2 • Turn 4 — away in possession at yardline 9 (score 0-2)
+  ✨ NUFFLE [banana_skin] — A banana skin appears from nowhere. A player slips spectacularly.
+  PASS — away-LOS attempts a short pass: needs 5+, rolled 2 → failed.
+  TURNOVER — pass_failed.
+Half 2 • Turn 5 — home in possession at yardline 12 (score 0-2)
+  ✨ NUFFLE [cocky_drop] — Showboating costs the carrier the ball.
+  FOUL — home-LOS fouls away-PRONE (armor=9, broken=false, sent off!).
+  TURNOVER — foul_sent_off.
+Half 2 • Turn 6 — away in possession at yardline 11 (score 0-2)
+  BLOCK — away-LOS blocks home-LOS: dice [BOTH_DOWN], chose BOTH_DOWN, both_down.
+  TURNOVER — block_attacker_down.
+Half 2 • Turn 7 — home in possession at yardline 11 (score 0-2)
+  PASS — home-LOS attempts a short pass: needs 5+, rolled 4 → failed.
+  TURNOVER — pass_failed.
+Half 2 • Turn 8 — away in possession at yardline 10 (score 0-2)
+  FOUL — away-LOS fouls home-PRONE (armor=3, broken=false).
+
+--- END OF MATCH (score 0-2) ---
+
+
+FINAL: 0 - 2 (away)
+Touchdowns: 2 | Casualties: 0 | Turnovers: 6 | Nuffle: 4

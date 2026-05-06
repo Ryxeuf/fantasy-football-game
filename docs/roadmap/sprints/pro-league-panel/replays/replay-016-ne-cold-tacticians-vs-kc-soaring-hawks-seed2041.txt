@@ -1,0 +1,46 @@
+=== MATCH #16 — Cold Tacticians (Lizardmen) vs Soaring Hawks (Wood Elf) ===
+engine 0.2.0
+
+KICKOFF — ne-cold-tacticians hosts kc-soaring-hawks (weather: nice, away receives).
+Half 1 • Turn 1 — away in possession at yardline 4 (score 0-0)
+  FOUL — away-LOS fouls home-PRONE (armor=6, broken=false).
+Half 1 • Turn 2 — away in possession at yardline 13 (score 0-0)
+  PASS — away-LOS attempts a short pass: needs 5+, rolled 2 → caught.
+Half 1 • Turn 3 — away in possession at yardline 22 (score 0-0)
+  ✨ NUFFLE [sudden_downpour] — A sudden downpour soaks the pitch. Pickups get harder.
+  TURNOVER — pickup_failed.
+Half 1 • Turn 4 — home in possession at yardline 11 (score 0-0)
+Half 1 • Turn 5 — home in possession at yardline 15 (score 0-0)
+  ✨ NUFFLE [veteran_redemption] — A grizzled veteran finds one more ounce of glory.
+  Touchdown! home crosses the line. Score is now 1-0.
+Half 1 • Turn 6 — away in possession at yardline 4 (score 1-0)
+  FOUL — away-LOS fouls home-PRONE (armor=4, broken=false).
+Half 1 • Turn 7 — away in possession at yardline 9 (score 1-0)
+  ✨ NUFFLE [cocky_drop] — Showboating costs the carrier the ball.
+  FOUL — away-LOS fouls home-PRONE (armor=6, broken=false).
+Half 1 • Turn 8 — away in possession at yardline 16 (score 1-0)
+  PASS — away-LOS attempts a short pass: needs 5+, rolled 2 → caught.
+  Touchdown! away crosses the line. Score is now 1-1.
+
+--- HALFTIME (score 1-1) ---
+
+Half 2 • Turn 1 — home in possession at yardline 4 (score 1-1)
+Half 2 • Turn 2 — home in possession at yardline 16 (score 1-1)
+Half 2 • Turn 3 — home in possession at yardline 23 (score 1-1)
+  TURNOVER — gfi_failed.
+Half 2 • Turn 4 — away in possession at yardline 13 (score 1-1)
+  DODGE — away-LOS dodges to (13,7) (rerolled): needs 3+, rolled 2 → success.
+Half 2 • Turn 5 — away in possession at yardline 23 (score 1-1)
+  Touchdown! away crosses the line. Score is now 1-2.
+Half 2 • Turn 6 — home in possession at yardline 4 (score 1-2)
+  DODGE — home-LOS dodges to (13,7): needs 3+, rolled 1 → fail.
+  TURNOVER — dodge_failed.
+Half 2 • Turn 7 — away in possession at yardline 8 (score 1-2)
+  PASS — away-LOS attempts a short pass: needs 5+, rolled 6 → caught.
+Half 2 • Turn 8 — away in possession at yardline 17 (score 1-2)
+
+--- END OF MATCH (score 1-2) ---
+
+
+FINAL: 1 - 2 (away)
+Touchdowns: 3 | Casualties: 0 | Turnovers: 3 | Nuffle: 3
