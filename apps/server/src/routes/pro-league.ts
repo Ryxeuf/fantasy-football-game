@@ -27,6 +27,15 @@ import { Router, type Request, type Response } from "express";
 
 import type { MatchEvent } from "@bb/sim-engine";
 
+import { authUser, type AuthenticatedRequest } from "../middleware/authUser";
+import {
+  ProTeamFollowError,
+  followProTeam,
+  getMyFeed,
+  isFollowing,
+  listMyFollows,
+  unfollowProTeam,
+} from "../services/pro-league-follow";
 import {
   ProLeagueNotFoundError,
   getProLeagueHubSnapshot,
@@ -254,6 +263,124 @@ export async function handleGetMatchDetail(
   }
 }
 
+/**
+ * Sprint 1.C.4 — Suivre une équipe Pro League. Idempotent.
+ */
+export async function handleFollowTeam(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: "unauthenticated" });
+    return;
+  }
+  const slug = req.params.slug;
+  if (!slug) {
+    res.status(400).json({ error: "missing-slug" });
+    return;
+  }
+  try {
+    const data = await followProTeam(userId, slug);
+    res.status(200).json(data);
+  } catch (err: unknown) {
+    if (err instanceof ProTeamFollowError && err.code === "team_not_found") {
+      res.status(404).json({ error: err.message });
+      return;
+    }
+    const msg = err instanceof Error ? err.message : "unknown";
+    serverLog.error(`[pro-league/follow] failed: ${msg}`);
+    res.status(500).json({ error: "internal-error" });
+  }
+}
+
+/**
+ * Sprint 1.C.4 — Ne plus suivre. Idempotent (200 même si pas de follow).
+ */
+export async function handleUnfollowTeam(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: "unauthenticated" });
+    return;
+  }
+  const slug = req.params.slug;
+  if (!slug) {
+    res.status(400).json({ error: "missing-slug" });
+    return;
+  }
+  try {
+    const removed = await unfollowProTeam(userId, slug);
+    res.status(200).json({ removed });
+  } catch (err: unknown) {
+    if (err instanceof ProTeamFollowError && err.code === "team_not_found") {
+      res.status(404).json({ error: err.message });
+      return;
+    }
+    const msg = err instanceof Error ? err.message : "unknown";
+    serverLog.error(`[pro-league/unfollow] failed: ${msg}`);
+    res.status(500).json({ error: "internal-error" });
+  }
+}
+
+/**
+ * Sprint 1.C.4 — Statut de suivi pour l'user courant. Pratique pour
+ * initialiser le bouton "Follow" sur la page team sans charger toute
+ * la liste.
+ */
+export async function handleIsFollowing(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: "unauthenticated" });
+    return;
+  }
+  const slug = req.params.slug;
+  if (!slug) {
+    res.status(400).json({ error: "missing-slug" });
+    return;
+  }
+  const following = await isFollowing(userId, slug);
+  res.json({ following });
+}
+
+/**
+ * Sprint 1.C.4 — Liste des équipes suivies par l'user courant.
+ */
+export async function handleListMyFollows(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: "unauthenticated" });
+    return;
+  }
+  const follows = await listMyFollows(userId);
+  res.json({ follows });
+}
+
+/**
+ * Sprint 1.C.4 — Newsfeed perso (matchs upcoming + recent des équipes
+ * suivies).
+ */
+export async function handleGetMyFeed(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: "unauthenticated" });
+    return;
+  }
+  const entries = await getMyFeed(userId);
+  res.json({ entries });
+}
+
 const router = Router();
 
 router.get("/seasons/current", handleGetCurrentSeasonHub);
@@ -262,5 +389,12 @@ router.get("/teams/:slug", handleGetTeamDetail);
 router.get("/matches/:id", handleGetMatchDetail);
 router.get("/matches/:id/stream", handleStreamProMatch);
 router.get("/_internal/broadcaster-stats", handleBroadcasterStats);
+
+// Sprint 1.C.4 — endpoints auth-protected pour le mode "fan".
+router.post("/teams/:slug/follow", authUser, handleFollowTeam);
+router.delete("/teams/:slug/follow", authUser, handleUnfollowTeam);
+router.get("/teams/:slug/follow", authUser, handleIsFollowing);
+router.get("/me/follows", authUser, handleListMyFollows);
+router.get("/me/feed", authUser, handleGetMyFeed);
 
 export default router;

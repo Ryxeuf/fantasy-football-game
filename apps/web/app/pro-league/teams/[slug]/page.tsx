@@ -253,12 +253,92 @@ interface TeamPageProps {
   readonly params: { slug: string };
 }
 
+function FollowButton({
+  slug,
+  initiallyFollowing,
+  onChange,
+}: {
+  slug: string;
+  initiallyFollowing: boolean;
+  onChange: (next: boolean) => void;
+}): JSX.Element {
+  const [following, setFollowing] = useState(initiallyFollowing);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setFollowing(initiallyFollowing);
+  }, [initiallyFollowing]);
+
+  const toggle = async (): Promise<void> => {
+    if (pending) return;
+    setPending(true);
+    setError(null);
+    const next = !following;
+    try {
+      await apiRequest(
+        `/pro-league/teams/${encodeURIComponent(slug)}/follow`,
+        { method: next ? "POST" : "DELETE" },
+      );
+      setFollowing(next);
+      onChange(next);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "fetch error";
+      setError(msg);
+    } finally {
+      setPending(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <button
+        type="button"
+        data-testid="follow-button"
+        onClick={() => {
+          void toggle();
+        }}
+        disabled={pending}
+        className={`rounded px-3 py-1 text-xs font-semibold transition disabled:opacity-50 ${
+          following
+            ? "bg-white/20 text-white hover:bg-white/30"
+            : "bg-white text-slate-900 hover:bg-slate-100"
+        }`}
+      >
+        {pending
+          ? "..."
+          : following
+            ? "✓ Suivi"
+            : "+ Suivre"}
+      </button>
+      {error ? (
+        <span className="text-xs text-rose-200" role="alert">
+          {error}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+interface FollowState {
+  readonly authChecked: boolean;
+  readonly authed: boolean;
+  readonly following: boolean;
+}
+
+const INITIAL_FOLLOW: FollowState = {
+  authChecked: false,
+  authed: false,
+  following: false,
+};
+
 export default function ProLeagueTeamPage({
   params,
 }: TeamPageProps): JSX.Element {
   const [data, setData] = useState<TeamDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [followState, setFollowState] = useState<FollowState>(INITIAL_FOLLOW);
 
   useEffect(() => {
     let cancelled = false;
@@ -278,6 +358,34 @@ export default function ProLeagueTeamPage({
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [params.slug]);
+
+  // Charge le statut de follow (auth-required ; 401 silencieux pour
+  // les visiteurs anonymes — le bouton ne s'affichera pas).
+  useEffect(() => {
+    let cancelled = false;
+    apiRequest<{ following: boolean }>(
+      `/pro-league/teams/${encodeURIComponent(params.slug)}/follow`,
+    )
+      .then((r) => {
+        if (cancelled) return;
+        setFollowState({
+          authChecked: true,
+          authed: true,
+          following: !!r.following,
+        });
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setFollowState({
+          authChecked: true,
+          authed: false,
+          following: false,
+        });
       });
     return () => {
       cancelled = true;
@@ -314,9 +422,20 @@ export default function ProLeagueTeamPage({
               >
                 ← Hub
               </Link>
-              <span className="font-mono text-xs text-white/70">
-                {data.race} · TV {data.baseTv}
-              </span>
+              <div className="flex items-center gap-3">
+                {followState.authChecked && followState.authed ? (
+                  <FollowButton
+                    slug={data.slug}
+                    initiallyFollowing={followState.following}
+                    onChange={(next) =>
+                      setFollowState((s) => ({ ...s, following: next }))
+                    }
+                  />
+                ) : null}
+                <span className="font-mono text-xs text-white/70">
+                  {data.race} · TV {data.baseTv}
+                </span>
+              </div>
             </div>
             <h1 className="text-3xl font-black tracking-wide text-white drop-shadow-md">
               {data.name}

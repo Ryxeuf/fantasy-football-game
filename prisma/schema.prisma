@@ -70,6 +70,7 @@ model User {
   refreshTokens               RefreshToken[]
   eloSnapshots                EloSnapshot[]
   tutorialCompletions         TutorialCompletion[]
+  proSpectatorFollows         ProSpectatorFollow[]
 }
 
 /// S26.3l — Historique ELO du coach. Une ligne par mise a jour ELO (donc 2
@@ -1131,6 +1132,7 @@ model ProTeam {
   homeMatches ProLeagueMatch[]     @relation("ProMatchHome")
   awayMatches ProLeagueMatch[]     @relation("ProMatchAway")
   standings   ProLeagueStandings[]
+  followers   ProSpectatorFollow[]
 
   @@index([leagueId])
 }
@@ -1320,4 +1322,26 @@ model Replay {
   rawJsonSize Int?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+/// Sprint Pro League lot 1.C.4 — Fan follow.
+/// Permet à un user de suivre une ProTeam pour recevoir un newsfeed
+/// personnalisé sur /pro-league/feed.
+///
+/// Une seule entrée par couple (userId, proTeamId) garantie par
+/// l'@@unique. `since` permet de filtrer le feed à partir de la date
+/// d'abonnement (rétro-coverage des matchs ne sert à rien — un fan
+/// suit ce qui se passe à partir d'aujourd'hui).
+model ProSpectatorFollow {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  team      ProTeam  @relation(fields: [proTeamId], references: [id], onDelete: Cascade)
+  proTeamId String
+  since     DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  @@unique([userId, proTeamId])
+  @@index([userId])
+  @@index([proTeamId])
 }
