@@ -326,30 +326,27 @@ function rollYards(
   profile: TacticalProfile,
   defenseProfile: TacticalProfile
 ): number {
-  // Sprint 0.E.1 tuning iter #4 (engineVer 0.5.0) :
+  // Sprint 0.E.1 tuning iter #5 (engineVer 0.6.0) :
   //
   // - Base : 2d6+2 (mean 7).
   // - `+pace/25 - 2` : pace-based offset.
-  // - `-defense.bashIndex/25` : strengthened from iter #3's /30 — bash 90
-  //   defense costs the attacker -4 yards (was -3) ; targets the
-  //   Skaven > Dwarves persistent imbalance.
-  // - **NEW** `-defense.stallTendency × bash / 200` : when defense is
-  //   both stally AND bashy (Dwarves : bash 90, stall 75 → -34 effective
-  //   pace), drives suffer extra disruption beyond raw bash.
-  //   Dwarves bash 90 stall 75 → cap at -3 yards more.
-  // - `+ fat-tail breakthrough/crush` : 4% +30 yards (was +20),
-  //   4% -10 yards. Higher breakthrough magnitude → bigger TD variance.
+  // - `-defense.bashIndex/28` : bash counter softened from /25 (iter #4)
+  //   to /28 — bash 90 défense → -3 yards (au lieu de -4). On préserve
+  //   le fix C3 (Skaven > Dwarves) tout en remontant les TD means.
+  // - `-defensiveDisruption` : kept (Dwarves bash + stall combo).
+  // - `+ fat-tail breakthrough/crush` : 6% +30 / 6% -10 (was 4% / 4%).
+  //   Plus d'events fat-tail → std dev TD up.
   const dice = Math.floor(rng.next() * 6) + Math.floor(rng.next() * 6) + 2;
   const paceOffset = Math.round(profile.pace / 25) - 2;
-  const bashCounter = -Math.round(defenseProfile.bashIndex / 25);
+  const bashCounter = -Math.round(defenseProfile.bashIndex / 28);
   const defensiveDisruption = -Math.min(
     3,
     Math.round((defenseProfile.stallTendency * defenseProfile.bashIndex) / 2000)
   );
   const fatTail = rng.next();
   let breakthrough = 0;
-  if (fatTail < 0.04) breakthrough = 30;
-  else if (fatTail < 0.08) breakthrough = -10;
+  if (fatTail < 0.06) breakthrough = 30;
+  else if (fatTail < 0.12) breakthrough = -10;
   return Math.max(0, dice + paceOffset + bashCounter + defensiveDisruption + breakthrough);
 }
 
@@ -434,6 +431,36 @@ function processTurn(
       })
     );
     m.nuffleEvents += 1;
+    // Sprint 0.E.1 iter #5 (engineVer 0.6.0) : certains Nuffle events
+    // injectent une casualty pour pousser le rate vers FUMBBL ~1.0.
+    // Sélection :
+    //   - bombardier_gone_wild → friendly fire casualty (1 par event)
+    //   - banana_skin → KD + chance armor break (50% casualty)
+    //   - crowd_riot → 1 random player stunned, 30% casualty
+    if (
+      nuffleEvent.id === 'bombardier_gone_wild' ||
+      (nuffleEvent.id === 'banana_skin' && rngs.luck.next() < 0.5) ||
+      (nuffleEvent.id === 'crowd_riot' && rngs.luck.next() < 0.3)
+    ) {
+      const victimSide: Side = otherSide(m.state.drive.drivingTeam);
+      const victimId = `${victimSide}-NUFFLE-${m.state.half}-${m.state.turn}`;
+      m.casualties.push({
+        playerId: victimId,
+        team: victimSide === 'home' ? 'A' : 'B',
+        outcome: 'badly_hurt',
+        causedById: `nuffle:${nuffleEvent.id}`,
+      });
+      m.events.push({
+        type: 'CASUALTY',
+        displayAtMs: m.state.clockMs,
+        engineVer: ENGINE_VER,
+        meta: {
+          playerId: victimId,
+          causedBy: nuffleEvent.id,
+          via: 'nuffle',
+        },
+      });
+    }
   }
 
   // 1-2 key moments per turn driven by the strategic stream. Iter #4

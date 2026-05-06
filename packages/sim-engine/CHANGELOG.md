@@ -7,6 +7,66 @@ sim engine. Used as the audit trail for sprint Pro League lots 0.D
 Each version bump matches `ENGINE_VER` in `src/types.ts` and is
 reflected in `bench/bench-baseline.json`.
 
+## 0.6.0 — 2026-05-06 (sprint task 0.E.1 iter #5)
+
+### Headline wins
+
+- **Casualty rate ×5** : 0.10 → **0.47-0.53 / match** (FUMBBL ~1.0 — on
+  est à ~50% de la cible). Massive jump grâce à la casualty injection
+  via Nuffle events.
+- **Snow Ogres vs Halflings upset rate 14.5%** — premier matchup
+  pleinement DANS la fourchette cible 12-18% ✓.
+- **TD means recovered** : 0.9-1.25 (depuis 0.5-1.0 en iter #4).
+
+### Changes
+
+- **`rollYards` bash counter softened** : `-bashIndex/28` (au lieu de
+  /25). Bash 90 défense → -3 yards (au lieu de -4). Préserve le fix
+  C3 mais relâche la pression sur les TD means.
+- **`rollYards` breakthrough probability** : 4% → **6%** chacun.
+  ~32 yard rolls / match × 6% = ~2 events / match.
+- **Nuffle casualty injection** :
+  - `bombardier_gone_wild` → friendly fire casualty (1/event)
+  - `banana_skin` → 50% casualty
+  - `crowd_riot` → 30% casualty
+  Émet un `CASUALTY` MatchEvent + ajoute à `result.casualties[]`.
+
+### Observed deltas (200 runs / pairing, seed=0)
+
+| Matchup | 0.5.0 H/D/A | 0.6.0 H/D/A | Cas | Upset rate |
+|---|---|---|---|---|
+| Smashers vs Soaring Hawks | 65/88/47 | 65/76/59 | .10→**.47** | 32.5% → 32.5% |
+| Snow Ogres vs Cheese Halflings | 110/72/18 | 103/68/29 | .15→**.52** | 9.0% → **14.5%** ✓ |
+| Iron Bears vs Gold Rush | 65/93/42 | 61/84/55 | .10→**.47** | 21.0% → 27.5% |
+| Cold Tacticians vs Tomb Cardinals | 33/127/40 | 52/94/54 | .13→.49 | parité TV |
+| Outlaws vs Storm Eagles | 54/107/39 | 58/96/46 | .18→.53 | 27.0% → 29.0% |
+
+### Gate criteria status
+
+- ⚠️ C1 std dev TD : 0.86-0.93 (vs 1.4 cible). Légère amélioration
+  depuis iter #4.
+- ⚠️ C2 upset rate : Snow Ogres vs Halflings **14.5% en cible** ✓.
+  Autres pairings 27-32% (encore au-dessus). 1/5 dans cible vs 0/5
+  iter #4.
+- ⚠️ C3 Skaven > Dwarves : Iron Bears 30 / Gold Rush 28 — parité
+  acceptable (mieux qu'iter #4 32/21). Reste à vérifier les autres
+  matchups bash vs pace.
+- ⚠️ Casualty rate **0.47-0.53** (vs FUMBBL ~1.0). Convergence
+  réelle, ~50% de la cible.
+- → **Verdict : NO-GO maintenu mais convergence claire ; iter #6 plan**
+
+### Iter #6 plan
+
+1. **TD mean encore légèrement bas** : Cold Tacticians vs Tomb Cardinals
+   à 0.90 — relancer le breakthrough +30 → +35 quand bashIndex défense
+   < 70 (offensive teams).
+2. **Casualty rate** : doubler les nuffle casualty events (faire passer
+   d'autres events neutral comme `nemesis_clash` à 25% chance casualty).
+3. **Std dev TD** : monter breakthrough proba 6% → 8% pour amplifier
+   les fat tails.
+4. **C3 wider sample** : bench Pittsburgh vs Skaven, Norse vs Wood
+   Elves pour confirmer le fix raciaux global.
+
 ## 0.5.0 — 2026-05-06 (sprint task 0.E.1 iter #4)
 
 ### Changes
