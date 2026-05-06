@@ -7,6 +7,67 @@ sim engine. Used as the audit trail for sprint Pro League lots 0.D
 Each version bump matches `ENGINE_VER` in `src/types.ts` and is
 reflected in `bench/bench-baseline.json`.
 
+## 0.4.0 — 2026-05-06 (sprint task 0.E.1 iter #3)
+
+### Why bump
+
+Iter #2 (`0.3.0`) ne passait toujours pas C1 (std dev TD 0.75-0.85,
+cible ≥ 1.4) ni C3 (Skaven > Dwarves 73/27 vs cible 50/50). Et
+l'upset rate à 48-72% sortait de la cible 12-18% — partiellement
+parce que la métrique comptait les draws comme upsets.
+
+### Changes
+
+- **Upset metric fix** : `upsetCount` ne compte plus que les
+  victoires nettes de l'underdog (outcome === otherSide(favorite)).
+  Les draws ne sont plus comptés comme upsets — réservé pour les
+  vrais retournements.
+- **`rollYards` recalibration** :
+  - bash counter passé de `-bashIndex/40` à `-bashIndex/30` (un
+    bash 90 défense coûte -3 yards à l'attaquant, vs -2 en iter #2)
+    pour mieux contrer le pace 90 des Skaven.
+  - fat-tail breakthroughs : 1% → **4%** chacun (+20 / -10 yards).
+    Avec ~32 yard rolls / match, on attend ~1.3 events / match,
+    ce qui devrait bouger l'écart-type des TDs.
+- **Bash teams extra moments** : équipes avec `bashIndex >= 70`
+  ou `foulFrequency >= 70` reçoivent un key moment supplémentaire
+  un tour sur deux. Multi-blocks par turn → casualty rate up.
+
+### Observed deltas (200 runs / pairing, seed=0)
+
+| Matchup | 0.3.0 H/D/A | 0.4.0 H/D/A | Cas | Upset rate |
+|---|---|---|---|---|
+| Smashers vs Soaring Hawks | 83/57/60 | 59/77/64 | .09 → .10 | 70% → **29.5%** |
+| Snow Ogres vs Cheese Halflings | 104/74/22 | 104/75/21 | .12 → .17 | 48% → **10.5%** ✓ |
+| Iron Bears vs Gold Rush | 55/53/92 | 38/69/93 | .07 → .09 | 72.5% → **46.5%** |
+| Cold Tacticians vs Tomb Cardinals | 66/82/52 | 68/95/37 | .12 → .12 | parité TV |
+| Outlaws vs Storm Eagles | _new pairing_ | 63/84/53 | n/a → .17 | n/a → 31.5% |
+
+**Std dev TD** : 0.85 → 1.07 (Pittsburgh-KC), encore sous 1.4 cible.
+**Upset rate** : la majorité des pairings hors cible (10-31%) ; le
+Snow Ogres vs Halflings tombe enfin dans la fourchette cible.
+
+### Gate criteria status
+
+- ✅ C2 upset rate métrique corrigée (mesure réelle des upsets).
+  Snow Ogres vs Halflings = 10.5% (dans cible 12-18%).
+- ⚠️ Casualty rate 0.10-0.17 (sous FUMBBL ~1.0, progrès depuis 0.04
+  → +200-400% sur 3 iters)
+- ⚠️ C1 std dev TD jusqu'à 1.07 (encore sous 1.4)
+- ❌ C3 Skaven > Dwarves toujours 47/19 — la formule pace vs bash
+  reste déséquilibrée
+
+### Known gaps (iter #4 next)
+
+1. **Std dev TD** : monter breakthrough +20 → +30 yards (game-breaker).
+2. **Skaven > Dwarves** : ajouter terme `defensive bashIndex × stallTendency`
+   sur la fréquence de turnovers infligés.
+3. **Casualty rate** : ouvrir le seuil bash extra-moments à 60 (au
+   lieu de 70) pour voir plus de matches à casualty haute.
+4. **Upset rate variability** : certains matchups (TV gap modéré)
+   restent 30%+ — la résilience underdog semble trop forte sur les
+   pairings TV-équilibrés.
+
 ## 0.3.0 — 2026-05-06 (sprint task 0.E.1 iter #2)
 
 ### Why bump

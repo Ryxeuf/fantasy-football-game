@@ -122,15 +122,16 @@ describe('computeVivacityMetrics — sprint targets', () => {
     expect(out.fatTails.bloodbath).toBe(2 / 4); // 50%
   });
 
-  it('upset rate counts matches where outcome != favorite', () => {
+  it('upset rate counts matches where the underdog actually wins (draws are not upsets)', () => {
     const samples: VivacitySample[] = [
-      sample({ outcome: 'home', favorite: 'home' }), // not upset
-      sample({ outcome: 'away', favorite: 'home' }), // upset
-      sample({ outcome: 'draw', favorite: 'home' }), // upset (favorite did not win)
-      sample({ outcome: 'home', favorite: 'home' }), // not upset
+      sample({ outcome: 'home', favorite: 'home' }), // favorite wins, not upset
+      sample({ outcome: 'away', favorite: 'home' }), // underdog wins, upset
+      sample({ outcome: 'draw', favorite: 'home' }), // draw — not an upset
+      sample({ outcome: 'home', favorite: 'home' }), // favorite wins, not upset
     ];
     const out = computeVivacityMetrics(samples);
-    expect(out.outcomes.upsetRate).toBeCloseTo(2 / 4, 10);
+    // Only the away win against home favorite counts. Draw is excluded.
+    expect(out.outcomes.upsetRate).toBeCloseTo(1 / 4, 10);
   });
 
   it('upsetRate is 0 when no favorite is annotated on any match', () => {
