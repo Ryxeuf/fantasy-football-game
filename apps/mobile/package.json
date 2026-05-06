@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "expo start -c",
-    "test": "vitest run"
+    "test": "vitest run",
+    "audit:i18n": "tsx scripts/audit-i18n.ts"
   },
   "dependencies": {
     "@bb/game-engine": "workspace:*",
