@@ -135,18 +135,54 @@ function otherSide(s: Side): Side {
  * rest is yards math. The full driver (planned post-MVP) will replace
  * this synthesis with a proper board snapshot.
  */
+/**
+ * Derives a synthetic LOS player stat sheet from the tactical profile.
+ * Sprint 0.E.1 tuning : the synthetic match was racially homogenous
+ * (every team got st=3, ag=3) so winrates clustered around 33-40%
+ * regardless of race. We now project the profile onto BB-flavored stats
+ * so Halflings/Ogres feel different from Wood Elves/Dwarves.
+ *
+ * Mapping (clamped to BB-realistic ranges) :
+ *   st = 2 + round(bashIndex / 25)              ∈ [2, 6]
+ *   ag = 1 + round(breakawayInstinct / 33)      ∈ [1, 4]   (BB3 PA proxy)
+ *   av = 7 + round((100 - foulFrequency*0) / ...) — left at 9 for simplicity ;
+ *        future iteration can derive AV from race archetype.
+ *   ma = 4 + round(pace / 25)                   ∈ [4, 8]
+ *
+ * Skill grants : team profiles >=70 on a dimension imply iconic skills
+ *  (e.g. Wood Elves get `dodge`, Orcs get `block`, etc.). Kept
+ *  deliberately small so the resolver behaviour stays predictable.
+ */
+function deriveLosStats(profile: TacticalProfile): {
+  st: number;
+  ag: number;
+  ma: number;
+  av: number;
+  skills: string[];
+} {
+  const st = Math.max(2, Math.min(6, 2 + Math.round(profile.bashIndex / 25)));
+  const ag = Math.max(1, Math.min(4, 1 + Math.round(profile.breakawayInstinct / 33)));
+  const ma = Math.max(4, Math.min(8, 4 + Math.round(profile.pace / 25)));
+  const skills: string[] = [];
+  if (profile.bashIndex >= 80) skills.push('block');
+  if (profile.breakawayInstinct >= 75) skills.push('dodge');
+  if (profile.passingFrequency >= 75) skills.push('pass');
+  if (profile.foulFrequency >= 75) skills.push('dirty_player');
+  return { st, ag, ma, av: 9, skills };
+}
+
 function buildKeyMomentState(
   state: MatchInternalState,
-  weather: ResolverState['weather']
+  weather: ResolverState['weather'],
+  attProfile: TacticalProfile,
+  defProfile: TacticalProfile
 ): ResolverState {
+  const attStats = deriveLosStats(attProfile);
+  const defStats = deriveLosStats(defProfile);
   const att: ResolverPlayer = {
     id: `${state.drive.drivingTeam}-LOS`,
     team: state.drive.drivingTeam,
-    st: 3,
-    ag: 3,
-    ma: 6,
-    av: 9,
-    skills: [],
+    ...attStats,
     state: 'standing',
     position: { x: 12, y: 7 },
     hasBall: state.drive.hasPossession,
@@ -154,11 +190,7 @@ function buildKeyMomentState(
   const def: ResolverPlayer = {
     id: `${otherSide(state.drive.drivingTeam)}-LOS`,
     team: otherSide(state.drive.drivingTeam),
-    st: 3,
-    ag: 3,
-    ma: 6,
-    av: 9,
-    skills: [],
+    ...defStats,
     state: 'standing',
     position: { x: 13, y: 7 },
   };
@@ -210,9 +242,11 @@ function runKeyMoment(
   kind: KeyMomentKind,
   rngs: DriverRng,
   weather: ResolverState['weather'],
-  displayAtMs: number
+  displayAtMs: number,
+  attProfile: TacticalProfile,
+  defProfile: TacticalProfile
 ): KeyMomentOutcome {
-  const resolverState = buildKeyMomentState(state, weather);
+  const resolverState = buildKeyMomentState(state, weather, attProfile, defProfile);
   const att = resolverState.players[0];
   const def = resolverState.players[1];
 
@@ -287,9 +321,18 @@ function runKeyMoment(
   }
 }
 
-function rollYards(rng: Rng): number {
-  // 2d6 yards/turn average ~7 — calibrated by lot 0.E tuning.
-  return Math.floor(rng.next() * 6) + Math.floor(rng.next() * 6) + 2;
+function rollYards(rng: Rng, profile: TacticalProfile): number {
+  // Sprint 0.E.1 tuning : the original 2d6+2 (mean ~7) was identical
+  // for every team, so slow rosters (Tomb Kings, Ogres, Dwarves)
+  // scored as much as fast ones (Skaven, Wood Elves). We now scale
+  // around the team's `pace` parameter :
+  //   pace=0   → mean ~3.5 yards / turn (very slow grind)
+  //   pace=50  → mean ~6.5 (default)
+  //   pace=100 → mean ~9.5 (Skaven, halfling underdog)
+  // Implementation : 2d6 (mean 7) + offset = pace/25 - 2 ∈ [-2, +2].
+  const dice = Math.floor(rng.next() * 6) + Math.floor(rng.next() * 6) + 2;
+  const offset = Math.round(profile.pace / 25) - 2;
+  return Math.max(0, dice + offset);
 }
 
 function nextDrive(prev: DriveState): DriveState {
@@ -378,11 +421,20 @@ function processTurn(
   // 1-2 key moments per turn driven by the strategic stream.
   const momentCount = m.state.turn % 3 === 0 ? 2 : 1;
   const activeProfile = m.state.drive.drivingTeam === 'home' ? homeProfile : awayProfile;
+  const opposingProfile = m.state.drive.drivingTeam === 'home' ? awayProfile : homeProfile;
   for (let i = 0; i < momentCount; i += 1) {
     const moment = pickKeyMoment(rngs.strategic, m.state, activeProfile);
     if (moment === null) continue;
 
-    let attempt = runKeyMoment(m.state, moment, rngs, weather, m.state.clockMs);
+    let attempt = runKeyMoment(
+      m.state,
+      moment,
+      rngs,
+      weather,
+      m.state.clockMs,
+      activeProfile,
+      opposingProfile
+    );
 
     // Underdog variance boost (lot 0.C.3) — silently re-run a turnover
     // if the active team is the underdog and a 10% luck check triggers.
@@ -394,7 +446,15 @@ function processTurn(
       m.state.drive.drivingTeam === underdog.side &&
       rngs.luck.next() < UNDERDOG_BOOST_PROBABILITY
     ) {
-      const retry = runKeyMoment(m.state, moment, rngs, weather, m.state.clockMs);
+      const retry = runKeyMoment(
+        m.state,
+        moment,
+        rngs,
+        weather,
+        m.state.clockMs,
+        activeProfile,
+        opposingProfile
+      );
       if (!retry.turnover) {
         attempt = retry;
         m.underdogBoosts += 1;
@@ -434,7 +494,7 @@ function processTurn(
 
   // Yard advancement when still in possession.
   if (m.state.drive.hasPossession) {
-    const gained = rollYards(rngs.strategic);
+    const gained = rollYards(rngs.strategic, activeProfile);
     const newYard = m.state.drive.ballYardline + gained;
     if (newYard >= FIELD_YARDS) {
       const scoring = m.state.drive.drivingTeam;
