@@ -321,18 +321,33 @@ function runKeyMoment(
   }
 }
 
-function rollYards(rng: Rng, profile: TacticalProfile): number {
-  // Sprint 0.E.1 tuning : the original 2d6+2 (mean ~7) was identical
-  // for every team, so slow rosters (Tomb Kings, Ogres, Dwarves)
-  // scored as much as fast ones (Skaven, Wood Elves). We now scale
-  // around the team's `pace` parameter :
-  //   pace=0   → mean ~3.5 yards / turn (very slow grind)
-  //   pace=50  → mean ~6.5 (default)
-  //   pace=100 → mean ~9.5 (Skaven, halfling underdog)
-  // Implementation : 2d6 (mean 7) + offset = pace/25 - 2 ∈ [-2, +2].
+function rollYards(
+  rng: Rng,
+  profile: TacticalProfile,
+  defenseProfile: TacticalProfile
+): number {
+  // Sprint 0.E.1 tuning iter #2 (engineVer 0.3.0) :
+  //
+  // - Base : 2d6+2 (mean 7).
+  // - `+pace/25 - 2` : offset that scales with the active team's pace.
+  //   pace=0 → -2, pace=100 → +2.
+  // - `-defense.bashIndex/40` : counter-term — a high-bash defense
+  //   slows down opposing drives even when the attacker has high pace.
+  //   bashIndex=0 → 0, bashIndex=100 → -2.5 (rounded -3).
+  //   This fixes the iter #1 over-reward of `pace` (Dwarves vs Skaven
+  //   was 32% / 50% — Skaven dominated despite Dwarves being a
+  //   defensive bash team in FUMBBL).
+  // - `+ fat-tail breakthrough/crush` : 1% chance of +20 yards
+  //   (sudden home-run drive) and 1% of -10 yards (defense rallies).
+  //   Increases std dev TD per match (sprint target ≥ 1.4).
   const dice = Math.floor(rng.next() * 6) + Math.floor(rng.next() * 6) + 2;
-  const offset = Math.round(profile.pace / 25) - 2;
-  return Math.max(0, dice + offset);
+  const paceOffset = Math.round(profile.pace / 25) - 2;
+  const bashCounter = -Math.round(defenseProfile.bashIndex / 40);
+  const fatTail = rng.next();
+  let breakthrough = 0;
+  if (fatTail < 0.01) breakthrough = 20;
+  else if (fatTail < 0.02) breakthrough = -10;
+  return Math.max(0, dice + paceOffset + bashCounter + breakthrough);
 }
 
 function nextDrive(prev: DriveState): DriveState {
@@ -492,9 +507,13 @@ function processTurn(
     }
   }
 
-  // Yard advancement when still in possession.
+  // Yard advancement when still in possession. Re-derive profiles at
+  // this point because a turnover during the for-loop above may have
+  // swapped `drivingTeam`.
   if (m.state.drive.hasPossession) {
-    const gained = rollYards(rngs.strategic, activeProfile);
+    const yardsActive = m.state.drive.drivingTeam === 'home' ? homeProfile : awayProfile;
+    const yardsOpposing = m.state.drive.drivingTeam === 'home' ? awayProfile : homeProfile;
+    const gained = rollYards(rngs.strategic, yardsActive, yardsOpposing);
     const newYard = m.state.drive.ballYardline + gained;
     if (newYard >= FIELD_YARDS) {
       const scoring = m.state.drive.drivingTeam;
