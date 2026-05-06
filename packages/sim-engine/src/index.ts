@@ -80,6 +80,29 @@ export {
   type FumbblReference,
 } from './bench/fumbbl-reference';
 export {
+  formatBenchReport,
+  runBench,
+  runBenchMatrix,
+  type BenchInput,
+  type BenchMatrixInput,
+  type BenchMatrixResult,
+  type BenchPair,
+  type BenchPairing,
+} from './bench/runner';
+export {
+  DEFAULT_BASELINE_TOLERANCE,
+  benchBaselineSchema,
+  compareToBaseline,
+  formatBaselineReport,
+  parseBenchBaseline,
+  type BaselineComparison,
+  type BaselineLineItem,
+  type BenchBaseline,
+  type BenchBaselineEntry,
+  type ExpectedMetrics,
+  type MetricDeviation,
+} from './bench/baseline';
+export {
   PATTERNS,
   PATTERN_BY_ID,
   STRATEGIES,

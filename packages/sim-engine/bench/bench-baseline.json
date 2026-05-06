@@ -1,0 +1,52 @@
+{
+  "engineVer": "0.1.0",
+  "snapshotAt": "2026-05-06",
+  "tolerance": 0.05,
+  "pairings": [
+    {
+      "homeId": "pit-smashers",
+      "awayId": "kc-soaring-hawks",
+      "runs": 200,
+      "seedOffset": 0,
+      "expected": {
+        "tdMean": 1.64,
+        "tdStd": 0.9436100889668374,
+        "casualtyMean": 0.035,
+        "turnoverMean": 6.065,
+        "homeWinRate": 0.38,
+        "awayWinRate": 0.305,
+        "drawRate": 0.315
+      }
+    },
+    {
+      "homeId": "buf-snow-ogres",
+      "awayId": "gb-cheese-halflings",
+      "runs": 200,
+      "seedOffset": 0,
+      "expected": {
+        "tdMean": 1.63,
+        "tdStd": 0.9503157370053379,
+        "casualtyMean": 0.035,
+        "turnoverMean": 5.955,
+        "homeWinRate": 0.405,
+        "awayWinRate": 0.315,
+        "drawRate": 0.28
+      }
+    },
+    {
+      "homeId": "chi-iron-bears",
+      "awayId": "dal-vipers",
+      "runs": 200,
+      "seedOffset": 0,
+      "expected": {
+        "tdMean": 1.65,
+        "tdStd": 0.9785192895390473,
+        "casualtyMean": 0.035,
+        "turnoverMean": 6.06,
+        "homeWinRate": 0.385,
+        "awayWinRate": 0.3,
+        "drawRate": 0.315
+      }
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+name: Sim Bench
+
+# Sprint Pro League — task 0.D.4. Sur chaque PR touchant
+# `packages/sim-engine`, run `pnpm sim:bench:ci` qui compare les
+# metriques observees au baseline versionne `bench/bench-baseline.json`
+# et alerte (job failure) si une deviation > 5% est detectee.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'packages/sim-engine/**'
+      - '.github/workflows/sim-bench.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sim-bench-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sim-bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run sim engine regression bench
+        # Le baseline JSON declare `runs=200` par pairing ; on peut
+        # surcharger avec `--runs=5000` pour un check plus serre quand
+        # le bench reduira en performance (worker_threads, lot follow-up).
+        run: pnpm --filter @bb/sim-engine sim:bench:ci
+
+      - name: Annotate PR on failure
+        if: failure()
+        run: echo "::error::sim:bench:ci detected a deviation > 5% from the baseline. Investigate or re-snapshot the baseline with a new engineVer."
