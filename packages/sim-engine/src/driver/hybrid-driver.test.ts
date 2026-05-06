@@ -128,3 +128,54 @@ describe('runHybridDriver — sprint Pro League 0.A.2', () => {
     expect(Math.abs(homeWins - awayWins)).toBeLessThan(40);
   });
 });
+
+describe('runHybridDriver — Eye of Nuffle hooks (sprint 0.C.2)', () => {
+  it('emits NUFFLE events on at least some seeds (~30% turn rate)', () => {
+    let totalNuffle = 0;
+    for (let seed = 0; seed < 30; seed += 1) {
+      const out = runHybridDriver(baseInput({ seed }));
+      totalNuffle += out.summary.nuffleCount;
+    }
+    expect(totalNuffle).toBeGreaterThan(0);
+  });
+
+  it('summary.nuffleCount equals the number of NUFFLE events on the timeline', () => {
+    for (let seed = 0; seed < 20; seed += 1) {
+      const out = runHybridDriver(baseInput({ seed }));
+      const onTimeline = out.events.filter((e) => e.type === 'NUFFLE').length;
+      expect(onTimeline).toBe(out.summary.nuffleCount);
+    }
+  });
+
+  it('every NUFFLE event passes the @bb/shared-types runtime guard', () => {
+    const out = runHybridDriver(baseInput({ seed: 31337 }));
+    const nuffles = out.events.filter((e) => e.type === 'NUFFLE');
+    for (const n of nuffles) {
+      expect(isMatchEvent(n)).toBe(true);
+    }
+  });
+
+  it('NUFFLE events fire just after a TURN_START on the same displayAtMs', () => {
+    const out = runHybridDriver(baseInput({ seed: 7 }));
+    for (let i = 0; i < out.events.length; i += 1) {
+      if (out.events[i].type === 'NUFFLE') {
+        // Walk back: the closest preceding non-NUFFLE event should be a
+        // TURN_START at the same wall-clock offset.
+        let j = i - 1;
+        while (j >= 0 && out.events[j].type === 'NUFFLE') j -= 1;
+        expect(j).toBeGreaterThanOrEqual(0);
+        expect(out.events[j].type).toBe('TURN_START');
+        expect(out.events[j].displayAtMs).toBe(out.events[i].displayAtMs);
+      }
+    }
+  });
+
+  it('determinism: same seed reproduces the exact same NUFFLE timeline', () => {
+    const a = runHybridDriver(baseInput({ seed: 314 }));
+    const b = runHybridDriver(baseInput({ seed: 314 }));
+    const nA = a.events.filter((e) => e.type === 'NUFFLE');
+    const nB = b.events.filter((e) => e.type === 'NUFFLE');
+    expect(nB).toEqual(nA);
+  });
+});
+

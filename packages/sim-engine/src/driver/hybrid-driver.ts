@@ -46,6 +46,7 @@ import {
   type TacticalProfile,
 } from '../tactics/tactical-profile';
 import { aiPlay, type DriveSnapshot } from '../ai';
+import { emitNuffleEvent, rollNuffleEvent } from '../nuffle/events';
 import {
   ENGINE_VER,
   type Casualty,
@@ -87,6 +88,10 @@ interface DriverRng {
   gfi: Rng;
   foul: Rng;
   strategic: Rng;
+  /** Dedicated stream for the Eye-of-Nuffle hook (lot 0.C.2) — kept
+   *  independent so adding/removing Nuffle events doesn't shift the
+   *  resolver streams. */
+  nuffle: Rng;
 }
 
 function forkRngs(rootSeed: number): DriverRng {
@@ -99,6 +104,7 @@ function forkRngs(rootSeed: number): DriverRng {
     gfi: root.fork('gfi-resolver'),
     foul: root.fork('foul-resolver'),
     strategic: root.fork('strategic-decisions'),
+    nuffle: root.fork('nuffle-events'),
   };
 }
 
@@ -290,6 +296,8 @@ interface MutableMatch {
   casualties: Casualty[];
   turnover: number;
   touchdowns: number;
+  /** Number of Eye-of-Nuffle events triggered during the match (lot 0.C.2). */
+  nuffleEvents: number;
   /** Per-player momentum tracker (lot 0.B.4). The MVP synthesises LOS
    *  player IDs ; the full driver (post-MVP) will plug real roster IDs. */
   momentum: MomentumTracker;
@@ -332,6 +340,26 @@ function processTurn(
   awayProfile: TacticalProfile
 ): void {
   emitTurnStart(m);
+
+  // Eye of Nuffle (lot 0.C.2). Rolls a scripted NUFFLE event ~30% of
+  // turns and emits it on the wire timeline. The actual gameplay
+  // effects of each event are layered on by the tuning loop (lot 0.E)
+  // ; this hook only injects the narrative beat.
+  const nuffleEvent = rollNuffleEvent(rngs.nuffle);
+  if (nuffleEvent) {
+    m.events.push(
+      emitNuffleEvent(nuffleEvent, {
+        displayAtMs: m.state.clockMs,
+        engineVer: ENGINE_VER,
+        context: {
+          half: m.state.half,
+          turn: m.state.turn,
+          drivingTeam: m.state.drive.drivingTeam,
+        },
+      })
+    );
+    m.nuffleEvents += 1;
+  }
 
   // 1-2 key moments per turn driven by the strategic stream.
   const momentCount = m.state.turn % 3 === 0 ? 2 : 1;
@@ -443,6 +471,7 @@ export function runHybridDriver(input: SimInput, options: DriverOptions = {}): S
     casualties: [],
     turnover: 0,
     touchdowns: 0,
+    nuffleEvents: 0,
     momentum: createMomentumTracker(),
   };
 
@@ -484,6 +513,7 @@ export function runHybridDriver(input: SimInput, options: DriverOptions = {}): S
     score,
     turnoverCount: m.turnover,
     touchdownCount: m.touchdowns,
+    nuffleCount: m.nuffleEvents,
     durationMs: m.state.clockMs - kickoffAtMs,
     momentum: m.momentum.snapshot(),
   };

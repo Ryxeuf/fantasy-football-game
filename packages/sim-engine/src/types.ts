@@ -77,6 +77,9 @@ export interface MatchSummary {
   score: MatchScore;
   turnoverCount: number;
   touchdownCount: number;
+  /** Eye-of-Nuffle events triggered during the match (lot 0.C.2) —
+   *  consume by Nuffle Gazette (1.E.1) for storyline mining. */
+  nuffleCount: number;
   durationMs: number;
   /** Per-player momentum snapshots (lot 0.B.4) — alimente la Gazette
    *  (1.E.1) et l'odds calculator (1.D.3). Vide quand aucun joueur n'a

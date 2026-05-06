@@ -105,7 +105,7 @@ jusqu'a passer le gate.
 | # | Tache | Cat | Effort | Statut | Detail |
 |---|-------|-----|--------|--------|--------|
 | 0.C.1 | Bibliotheque "Eye of Nuffle" events | Content + Backend | M | [x] | ~25-30 events scriptes avec probabilites : rookie_brilliance (3%), crowd_riot (1%), sudden_inspiration (4%), weather_shift (5%), tantrum_star (2%), banana_skin (2%), bombardier_gone_wild (1%), nemesis_clash (3%), etc. Chacun emet un `MatchEvent` type `NUFFLE` annonce par le ticker. |
-| 0.C.2 | Hooks injection Nuffle events | Backend | S | [ ] | Le driver hybride invoque le rolleur Nuffle a chaque debut de tour. Effets appliques au state via PRNG seede. Events stockes en DB pour replay et alimentation Gazette. |
+| 0.C.2 | Hooks injection Nuffle events | Backend | S | [x] | Le driver hybride invoque le rolleur Nuffle a chaque debut de tour. Effets appliques au state via PRNG seede. Events stockes en DB pour replay et alimentation Gazette. |
 | 0.C.3 | Boost variance underdog (subtil) | Backend | S | [ ] | Si TV gap > 200 ou pre-match win prob < 15%, +10% sur les rolls critiques cote underdog. Non visible utilisateur. Cible : upset rate 12-18% (pas 5%). |
 | 0.C.4 | Streaks/forme cross-match | Backend | S | [ ] | Persiste `PlayerForm` (hot/normal/cold) entre matchs. Decay sur 3 matchs. Visible sur la fiche joueur publique. |
 
