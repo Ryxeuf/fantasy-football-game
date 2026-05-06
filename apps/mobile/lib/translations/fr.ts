@@ -10,6 +10,8 @@
  * S27.3.4 : namespace `lobby.*` pour le refactor `lobby.tsx` -> `MatchCard`,
  *   `MatchList`, `FilterBar`, `LobbyHeader`, `LobbyActions`, `JoinMatchModal`.
  * S27.3.5 : namespace `auth.*` pour `login.tsx` et `register.tsx`.
+ * S27.3.6 : namespace `matchmaking.*` pour `matchmaking.tsx` (titre,
+ *   sous-titre, etat de recherche, vide, formulaire et messages d'erreur).
  *
  * Les autres namespaces (play, etc.) seront ajoutes au fur et a mesure du
  * remplacement des strings hardcodees.
@@ -147,6 +149,32 @@ export const FR_TRANSLATIONS = {
     joinModal: {
       title: "Rejoindre un match",
       inputPlaceholder: "ID du match",
+    },
+  },
+  matchmaking: {
+    title: "Chercher un match",
+    subtitle:
+      "Selectionnez votre equipe et trouvez un adversaire automatiquement (VE +/- 150k po).",
+    searching: {
+      title: "Recherche d'un adversaire...",
+      teamValueRange: "Valeur d'equipe : {{value}}  (matching {{range}})",
+      cancel: "Annuler la recherche",
+    },
+    empty: {
+      title: "Aucune equipe",
+      description:
+        "Vous avez besoin d'une equipe pour entrer dans la file d'attente.",
+      createTeam: "Creer une equipe",
+    },
+    form: {
+      label: "Votre equipe",
+      submit: "Chercher un match",
+    },
+    errors: {
+      selectTeam: "Selectionnez une equipe",
+      loadTeams: "Impossible de charger les equipes",
+      joinQueue: "Impossible de rejoindre la file",
+      cancelSearch: "Impossible d'annuler la recherche",
     },
   },
   auth: {
