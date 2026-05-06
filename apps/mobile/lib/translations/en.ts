@@ -139,6 +139,18 @@ export const EN_TRANSLATIONS = {
       inputPlaceholder: "Match ID",
     },
   },
+  teams: {
+    list: {
+      title: "My teams",
+      createButton: "+ Create",
+      empty: "No team yet.",
+      createFirst: "Create my first team",
+      errors: {
+        loadError: "Loading error",
+        prefix: "Error: {{message}}",
+      },
+    },
+  },
   leaderboard: {
     title: "ELO Ranking",
     stats: {

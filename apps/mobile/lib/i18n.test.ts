@@ -594,3 +594,64 @@ describe("leaderboard screen i18n keys (S27.3.7)", () => {
     ).toBe("Error: Boom");
   });
 });
+
+/**
+ * S27.3.8 — Teams list screen i18n keys (teams/index.tsx).
+ *
+ * Couvre toutes les cles utilisees par `apps/mobile/app/teams/index.tsx` :
+ *  - Header (teams.list.title, teams.list.createButton)
+ *  - Empty state (teams.list.empty, teams.list.createFirst)
+ *  - Erreurs (teams.list.errors.loadError, teams.list.errors.prefix)
+ *
+ * Le bouton "Reessayer"/"Retry" reutilise `common.retry`. Le namespace
+ * est volontairement `teams.list.*` (et non `teams.*`) pour laisser la
+ * place a `teams.detail.*` et `teams.new.*` lors des slices suivantes.
+ */
+const TEAMS_LIST_I18N_KEYS = [
+  "teams.list.title",
+  "teams.list.createButton",
+  "teams.list.empty",
+  "teams.list.createFirst",
+  "teams.list.errors.loadError",
+  "teams.list.errors.prefix",
+] as const;
+
+describe("teams list screen i18n keys (S27.3.8)", () => {
+  it.each(TEAMS_LIST_I18N_KEYS)(
+    "FR : '%s' retourne une chaine non vide differente de la cle",
+    (key) => {
+      const value = t(key as never);
+      expect(typeof value).toBe("string");
+      expect(value.length).toBeGreaterThan(0);
+      expect(value).not.toBe(key);
+    },
+  );
+
+  it.each(TEAMS_LIST_I18N_KEYS)(
+    "EN : '%s' retourne une chaine non vide differente de la cle",
+    (key) => {
+      const value = t(key as never, undefined, "en" as Locale);
+      expect(typeof value).toBe("string");
+      expect(value.length).toBeGreaterThan(0);
+      expect(value).not.toBe(key);
+    },
+  );
+
+  it.each(TEAMS_LIST_I18N_KEYS)(
+    "FR != EN pour '%s' (parite stricte, pas de copie oubliee)",
+    (key) => {
+      const fr = t(key as never);
+      const en = t(key as never, undefined, "en" as Locale);
+      expect(fr).not.toBe(en);
+    },
+  );
+
+  it("teams.list.errors.prefix interpole {{message}}", () => {
+    expect(
+      t("teams.list.errors.prefix", { message: "Boom" }),
+    ).toBe("Erreur : Boom");
+    expect(
+      t("teams.list.errors.prefix", { message: "Boom" }, "en"),
+    ).toBe("Error: Boom");
+  });
+});
