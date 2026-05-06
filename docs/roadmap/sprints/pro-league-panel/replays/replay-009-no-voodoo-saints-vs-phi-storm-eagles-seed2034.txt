@@ -1,0 +1,49 @@
+=== MATCH #9 — Voodoo Saints (Undead) vs Storm Eagles (Pro Elf) ===
+engine 0.2.0
+
+KICKOFF — no-voodoo-saints hosts phi-storm-eagles (weather: nice, away receives).
+Half 1 • Turn 1 — away in possession at yardline 4 (score 0-0)
+  ✨ NUFFLE [weather_shift] — The Nuffle Gods stir the clouds. Weather shifts.
+  TURNOVER — pickup_failed.
+Half 1 • Turn 2 — home in possession at yardline 11 (score 0-0)
+  BLOCK — home-LOS blocks away-LOS: dice [PUSH_BACK/POW], chose POW, defender_down.
+Half 1 • Turn 3 — home in possession at yardline 18 (score 0-0)
+Half 1 • Turn 4 — home in possession at yardline 22 (score 0-0)
+  PASS — home-LOS attempts a short pass: needs 5+, rolled 6 → caught.
+  Touchdown! home crosses the line. Score is now 1-0.
+Half 1 • Turn 5 — away in possession at yardline 4 (score 1-0)
+  PASS — away-LOS attempts a short pass: needs 5+, rolled 6 → caught.
+Half 1 • Turn 6 — away in possession at yardline 11 (score 1-0)
+  BLOCK — away-LOS blocks home-LOS: dice [BOTH_DOWN/PUSH_BACK], chose BOTH_DOWN, both_down.
+  TURNOVER — block_attacker_down.
+Half 1 • Turn 7 — home in possession at yardline 11 (score 1-0)
+  DODGE — home-LOS dodges to (13,7): needs 3+, rolled 6 → success.
+Half 1 • Turn 8 — home in possession at yardline 14 (score 1-0)
+  ✨ NUFFLE [weather_shift] — The Nuffle Gods stir the clouds. Weather shifts.
+  BLOCK — home-LOS blocks away-LOS: dice [PUSH_BACK/POW], chose POW, defender_down.
+
+--- HALFTIME (score 1-0) ---
+
+Half 2 • Turn 1 — home in possession at yardline 4 (score 1-0)
+  PASS — home-LOS attempts a short pass: needs 5+, rolled 2 → failed.
+  TURNOVER — pass_failed.
+Half 2 • Turn 2 — away in possession at yardline 13 (score 1-0)
+Half 2 • Turn 3 — away in possession at yardline 20 (score 1-0)
+  ✨ NUFFLE [equipment_failure] — A boot strap snaps, leaving a player limping.
+  TURNOVER — gfi_failed.
+Half 2 • Turn 4 — home in possession at yardline 14 (score 1-0)
+Half 2 • Turn 5 — home in possession at yardline 19 (score 1-0)
+  DODGE — home-LOS dodges to (13,7): needs 3+, rolled 4 → success.
+Half 2 • Turn 6 — home in possession at yardline 20 (score 1-0)
+  ✨ NUFFLE [coach_sideline_rant] — A sideline rant electrifies the squad — and the ref.
+  TURNOVER — pickup_failed.
+Half 2 • Turn 7 — away in possession at yardline 10 (score 1-0)
+  DODGE — away-LOS dodges to (13,7): needs 3+, rolled 5 → success.
+Half 2 • Turn 8 — away in possession at yardline 14 (score 1-0)
+  ✨ NUFFLE [blood_in_water] — Blood in the water — the crowd's bloodlust is rising.
+
+--- END OF MATCH (score 1-0) ---
+
+
+FINAL: 1 - 0 (home)
+Touchdowns: 1 | Casualties: 0 | Turnovers: 5 | Nuffle: 5

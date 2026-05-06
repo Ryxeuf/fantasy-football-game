@@ -1,0 +1,55 @@
+=== MATCH #14 — Frostraiders (Norse) vs Swamp Lizards (Lizardmen) ===
+engine 0.2.0
+
+KICKOFF — min-frostraiders hosts jax-swamp-lizards (weather: nice, away receives).
+Half 1 • Turn 1 — away in possession at yardline 4 (score 0-0)
+  ✨ NUFFLE [wind_picks_up] — A gust catches the ball mid-pass.
+Half 1 • Turn 2 — away in possession at yardline 6 (score 0-0)
+  ✨ NUFFLE [weather_shift] — The Nuffle Gods stir the clouds. Weather shifts.
+Half 1 • Turn 3 — away in possession at yardline 17 (score 0-0)
+  ✨ NUFFLE [bombardier_gone_wild] — The Bombardier mistakes his own teammate for an enemy.
+Half 1 • Turn 4 — away in possession at yardline 23 (score 0-0)
+  PASS — away-LOS attempts a short pass: needs 5+, rolled 3 → failed.
+  TURNOVER — pass_failed.
+Half 1 • Turn 5 — home in possession at yardline 11 (score 0-0)
+  ✨ NUFFLE [blood_in_water] — Blood in the water — the crowd's bloodlust is rising.
+Half 1 • Turn 6 — home in possession at yardline 20 (score 0-0)
+  ✨ NUFFLE [wind_picks_up] — A gust catches the ball mid-pass.
+  BLOCK — home-LOS blocks away-LOS: dice [POW], chose POW, defender_down.
+  Touchdown! home crosses the line. Score is now 1-0.
+Half 1 • Turn 7 — away in possession at yardline 4 (score 1-0)
+  ✨ NUFFLE [cocky_drop] — Showboating costs the carrier the ball.
+  TURNOVER — gfi_failed.
+Half 1 • Turn 8 — home in possession at yardline 9 (score 1-0)
+  ✨ NUFFLE [weather_shift] — The Nuffle Gods stir the clouds. Weather shifts.
+  FOUL — home-LOS fouls away-PRONE (armor=10, broken=true → stunned).
+
+--- HALFTIME (score 1-0) ---
+
+Half 2 • Turn 1 — home in possession at yardline 4 (score 1-0)
+Half 2 • Turn 2 — home in possession at yardline 11 (score 1-0)
+  ✨ NUFFLE [bombardier_gone_wild] — The Bombardier mistakes his own teammate for an enemy.
+  BLOCK — home-LOS blocks away-LOS: dice [STUMBLE], chose STUMBLE, defender_down.
+Half 2 • Turn 3 — home in possession at yardline 17 (score 1-0)
+  ✨ NUFFLE [tantrum_star] — A star player throws a tantrum and refuses to obey instructions.
+  FOUL — home-LOS fouls away-PRONE (armor=10, broken=true → stunned).
+  FOUL — home-LOS fouls away-PRONE (armor=7, broken=false).
+  Touchdown! home crosses the line. Score is now 2-0.
+Half 2 • Turn 4 — away in possession at yardline 4 (score 2-0)
+  ✨ NUFFLE [rookie_brilliance] — A rookie pulls off a play above their stats — Nuffle smiles.
+  BLOCK — away-LOS blocks home-LOS: dice [PUSH_BACK], chose PUSH_BACK, push_only.
+Half 2 • Turn 5 — away in possession at yardline 11 (score 2-0)
+  ✨ NUFFLE [nemesis_clash] — Two old rivals lock eyes — the next block will be personal.
+Half 2 • Turn 6 — away in possession at yardline 14 (score 2-0)
+  PASS — away-LOS attempts a short pass: needs 5+, rolled 3 → failed.
+  TURNOVER — pass_failed.
+Half 2 • Turn 7 — home in possession at yardline 15 (score 2-0)
+  Touchdown! home crosses the line. Score is now 3-0.
+Half 2 • Turn 8 — away in possession at yardline 4 (score 3-0)
+  FOUL — away-LOS fouls home-PRONE (armor=5, broken=false).
+
+--- END OF MATCH (score 3-0) ---
+
+
+FINAL: 3 - 0 (home)
+Touchdowns: 3 | Casualties: 0 | Turnovers: 3 | Nuffle: 11

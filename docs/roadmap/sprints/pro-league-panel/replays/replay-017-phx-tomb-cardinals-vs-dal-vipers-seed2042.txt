@@ -1,0 +1,51 @@
+=== MATCH #17 — Tomb Cardinals (Tomb Kings) vs Vipers (Dark Elf) ===
+engine 0.2.0
+
+KICKOFF — phx-tomb-cardinals hosts dal-vipers (weather: nice, away receives).
+Half 1 • Turn 1 — away in possession at yardline 4 (score 0-0)
+  TURNOVER — gfi_failed.
+Half 1 • Turn 2 — home in possession at yardline 16 (score 0-0)
+  TURNOVER — pickup_failed.
+Half 1 • Turn 3 — away in possession at yardline 12 (score 0-0)
+  TURNOVER — gfi_failed.
+Half 1 • Turn 4 — home in possession at yardline 15 (score 0-0)
+  ✨ NUFFLE [cocky_drop] — Showboating costs the carrier the ball.
+Half 1 • Turn 5 — home in possession at yardline 24 (score 0-0)
+  ✨ NUFFLE [banana_skin] — A banana skin appears from nowhere. A player slips spectacularly.
+  DODGE — home-LOS dodges to (13,7): needs 3+, rolled 4 → success.
+  Touchdown! home crosses the line. Score is now 1-0.
+Half 1 • Turn 6 — away in possession at yardline 4 (score 1-0)
+  ✨ NUFFLE [tantrum_star] — A star player throws a tantrum and refuses to obey instructions.
+  PASS — away-LOS attempts a short pass: needs 5+, rolled 1 (fumble!) → failed.
+  TURNOVER — pass_fumble.
+Half 1 • Turn 7 — home in possession at yardline 10 (score 1-0)
+  BLOCK — home-LOS blocks away-LOS: dice [PUSH_BACK/POW], chose POW, defender_down.
+Half 1 • Turn 8 — home in possession at yardline 18 (score 1-0)
+  PASS — home-LOS attempts a short pass: needs 5+, rolled 6 → caught.
+
+--- HALFTIME (score 1-0) ---
+
+Half 2 • Turn 1 — home in possession at yardline 4 (score 1-0)
+  PASS — home-LOS attempts a short pass: needs 5+, rolled 4 → failed.
+  TURNOVER — pass_failed.
+Half 2 • Turn 2 — away in possession at yardline 7 (score 1-0)
+  ✨ NUFFLE [ref_blunder] — The ref makes a baffling call — the crowd boos.
+Half 2 • Turn 3 — away in possession at yardline 13 (score 1-0)
+  TURNOVER — pickup_failed.
+Half 2 • Turn 4 — home in possession at yardline 15 (score 1-0)
+Half 2 • Turn 5 — home in possession at yardline 18 (score 1-0)
+  DODGE — home-LOS dodges to (13,7): needs 3+, rolled 2 → fail.
+  TURNOVER — dodge_failed.
+Half 2 • Turn 6 — away in possession at yardline 10 (score 1-0)
+  ✨ NUFFLE [weather_shift] — The Nuffle Gods stir the clouds. Weather shifts.
+Half 2 • Turn 7 — away in possession at yardline 17 (score 1-0)
+  BLOCK — away-LOS blocks home-LOS: dice [PUSH_BACK/BOTH_DOWN], chose BOTH_DOWN, attacker_down.
+  TURNOVER — block_attacker_down.
+Half 2 • Turn 8 — home in possession at yardline 12 (score 1-0)
+  TURNOVER — pickup_failed.
+
+--- END OF MATCH (score 1-0) ---
+
+
+FINAL: 1 - 0 (home)
+Touchdowns: 1 | Casualties: 0 | Turnovers: 9 | Nuffle: 5

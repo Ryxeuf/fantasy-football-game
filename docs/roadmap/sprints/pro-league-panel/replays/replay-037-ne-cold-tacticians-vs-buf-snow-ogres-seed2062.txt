@@ -1,0 +1,55 @@
+=== MATCH #37 — Cold Tacticians (Lizardmen) vs Snow Ogres (Ogre) ===
+engine 0.2.0
+
+KICKOFF — ne-cold-tacticians hosts buf-snow-ogres (weather: nice, home receives).
+Half 1 • Turn 1 — home in possession at yardline 4 (score 0-0)
+  FOUL — home-LOS fouls away-PRONE (armor=6, broken=false).
+Half 1 • Turn 2 — home in possession at yardline 12 (score 0-0)
+  DODGE — home-LOS dodges to (13,7): needs 3+, rolled 4 → success.
+Half 1 • Turn 3 — home in possession at yardline 20 (score 0-0)
+  FOUL — home-LOS fouls away-PRONE (armor=7, broken=false).
+  FOUL — home-LOS fouls away-PRONE (armor=7, broken=false).
+Half 1 • Turn 4 — home in possession at yardline 25 (score 0-0)
+  FOUL — home-LOS fouls away-PRONE (armor=11, broken=true → casualty, sent off!).
+  CASUALTY — away-PRONE is taken off by home-LOS.
+  TURNOVER — foul_sent_off.
+Half 1 • Turn 5 — away in possession at yardline 12 (score 0-0)
+  ✨ NUFFLE [cheering_section] — A new cheering section ignites — the home team feels invincible.
+Half 1 • Turn 6 — away in possession at yardline 19 (score 0-0)
+  ✨ NUFFLE [veteran_redemption] — A grizzled veteran finds one more ounce of glory.
+  FOUL — away-LOS fouls home-PRONE (armor=6, broken=false).
+  BLOCK — away-LOS blocks home-LOS: dice [PUSH_BACK/PLAYER_DOWN], chose PUSH_BACK, push_only.
+Half 1 • Turn 7 — away in possession at yardline 25 (score 0-0)
+  BLOCK — away-LOS blocks home-LOS: dice [STUMBLE/STUMBLE], chose STUMBLE, defender_down.
+  Touchdown! away crosses the line. Score is now 0-1.
+Half 1 • Turn 8 — home in possession at yardline 4 (score 0-1)
+  BLOCK — home-LOS blocks away-LOS: dice [BOTH_DOWN/STUMBLE], chose BOTH_DOWN, attacker_down.
+  TURNOVER — block_attacker_down.
+
+--- HALFTIME (score 0-1) ---
+
+Half 2 • Turn 1 — away in possession at yardline 4 (score 0-1)
+  ✨ NUFFLE [spike_magazine_arrives] — A Spike Magazine reporter arrives. Players posture for the photo.
+Half 2 • Turn 2 — away in possession at yardline 10 (score 0-1)
+  ✨ NUFFLE [cocky_drop] — Showboating costs the carrier the ball.
+Half 2 • Turn 3 — away in possession at yardline 15 (score 0-1)
+  FOUL — away-LOS fouls home-PRONE (armor=5, broken=false, sent off!).
+  TURNOVER — foul_sent_off.
+Half 2 • Turn 4 — home in possession at yardline 6 (score 0-1)
+  ✨ NUFFLE [wardrobe_malfunction] — Wardrobe malfunction. The crowd is, uh, distracted.
+Half 2 • Turn 5 — home in possession at yardline 10 (score 0-1)
+  DODGE — home-LOS dodges to (13,7): needs 3+, rolled 6 → success.
+Half 2 • Turn 6 — home in possession at yardline 16 (score 0-1)
+  FOUL — home-LOS fouls away-PRONE (armor=5, broken=false).
+  BLOCK — home-LOS blocks away-LOS: dice [POW/BOTH_DOWN], chose BOTH_DOWN, attacker_down.
+  TURNOVER — block_attacker_down.
+Half 2 • Turn 7 — away in possession at yardline 9 (score 0-1)
+Half 2 • Turn 8 — away in possession at yardline 20 (score 0-1)
+  ✨ NUFFLE [nemesis_clash] — Two old rivals lock eyes — the next block will be personal.
+  Touchdown! away crosses the line. Score is now 0-2.
+
+--- END OF MATCH (score 0-2) ---
+
+
+FINAL: 0 - 2 (away)
+Touchdowns: 2 | Casualties: 1 | Turnovers: 4 | Nuffle: 6
