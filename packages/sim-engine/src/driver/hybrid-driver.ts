@@ -326,18 +326,14 @@ function rollYards(
   profile: TacticalProfile,
   defenseProfile: TacticalProfile
 ): number {
-  // Sprint 0.E.1 tuning iter #7 (engineVer 0.8.0) :
+  // Sprint 0.E.1 tuning iter #8 (engineVer 0.9.0) :
   //
   // - Base : 2d6+2 (mean 7).
-  // - `+pace/25 - 2` : pace-based offset.
-  // - `-defense.bashIndex/28` : bash counter unchanged.
-  // - `-defensiveDisruption` : kept (Dwarves bash + stall combo).
-  // - `+ fat-tail breakthrough/crush` : 10% +N / 10% -10 (was 8%).
-  //   Breakthrough magnitude conditional :
-  //     - +40 yards quand defense bash très faible (<50) — game-breaking
-  //     - +35 yards quand bash 50-69 (offensive break vs soft D)
-  //     - +30 yards sinon
-  //   Cible : std dev TD vers 1.4.
+  // - bash counter / disruption / pace offset : unchanged.
+  // - Breakthrough proba : 10% → 12%. Magnitude unchanged.
+  // - +Pair-fluide bonus : `(Math.abs(rng.next() - 0.5) > 0.45) → ±2 yards
+  //   extra` — pousse plus d'extrême sur les rolls. Petit boost de
+  //   variance sans dépendre du fat-tail uniquement.
   const dice = Math.floor(rng.next() * 6) + Math.floor(rng.next() * 6) + 2;
   const paceOffset = Math.round(profile.pace / 25) - 2;
   const bashCounter = -Math.round(defenseProfile.bashIndex / 28);
@@ -347,11 +343,11 @@ function rollYards(
   );
   const fatTail = rng.next();
   let breakthrough = 0;
-  if (fatTail < 0.10) {
+  if (fatTail < 0.12) {
     if (defenseProfile.bashIndex < 50) breakthrough = 40;
     else if (defenseProfile.bashIndex < 70) breakthrough = 35;
     else breakthrough = 30;
-  } else if (fatTail < 0.20) {
+  } else if (fatTail < 0.24) {
     breakthrough = -10;
   }
   return Math.max(0, dice + paceOffset + bashCounter + defensiveDisruption + breakthrough);
@@ -444,7 +440,7 @@ function processTurn(
     if (
       nuffleEvent.id === 'bombardier_gone_wild' ||
       (nuffleEvent.id === 'banana_skin' && rngs.luck.next() < 0.5) ||
-      (nuffleEvent.id === 'crowd_riot' && rngs.luck.next() < 0.3) ||
+      (nuffleEvent.id === 'crowd_riot' && rngs.luck.next() < 0.5) ||
       (nuffleEvent.id === 'nemesis_clash' && rngs.luck.next() < 0.25) ||
       (nuffleEvent.id === 'tantrum_star' && rngs.luck.next() < 0.5) ||
       (nuffleEvent.id === 'cocky_drop' && rngs.luck.next() < 0.3)

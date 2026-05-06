@@ -7,6 +7,37 @@ sim engine. Used as the audit trail for sprint Pro League lots 0.D
 Each version bump matches `ENGINE_VER` in `src/types.ts` and is
 reflected in `bench/bench-baseline.json`.
 
+## 0.9.0 — 2026-05-06 (sprint task 0.E.1 iter #8)
+
+### Headline
+
+- **Casualty rate ~93% FUMBBL** : 0.83-0.90 → **0.89-0.94 / match**
+- **Std dev TD** : 1.14-1.23 → **1.18-1.30** (vs cible 1.4)
+- **TD means** : 1.62-1.83 → **1.91-2.08** (FUMBBL range)
+- **First FUMBBL ✓ TD annotation** : Snow Ogres vs Cheese Halflings
+
+### Changes
+
+- Breakthrough proba : 10% → **12%**
+- `crowd_riot` casualty : 30% → **50%**
+- Halflings TV : 800 → **850** (modère écart underdog)
+
+### Observed deltas (200 runs / pairing, seed=0)
+
+| Matchup | Cas 0.8→0.9 | TD mean | Std |
+|---|---|---|---|
+| Smashers vs Soaring Hawks | .83→**.89** | 1.83→**2.08** | 1.19→1.18 |
+| Snow Ogres vs Cheese Halflings | .87→**.93** | 1.79→**2.06** | 1.14→**1.28** |
+| Iron Bears vs Gold Rush | .86→**.91** | 1.67→**1.96** | 1.20→**1.25** |
+| Cold Tacticians vs Tomb Cardinals | .86→**.92** | 1.64→**1.99** | 1.15→**1.20** |
+| Outlaws vs Storm Eagles | .90→**.94** | 1.62→**1.91** | 1.23→**1.30** |
+
+### Iter #9 plan
+
+1. Std dev TD vers 1.4 : breakthrough 12% → 14% ou "deflation defensive" event
+2. Upset rate : limiter écart TV à 200 max
+3. Multi-pair test : matrix 8x8 races identifiables
+
 ## 0.8.0 — 2026-05-06 (sprint task 0.E.1 iter #7)
 
 ### Headline

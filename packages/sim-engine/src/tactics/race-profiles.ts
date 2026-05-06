@@ -295,7 +295,7 @@ export const PRO_LEAGUE_TEAMS: readonly ProTeamProfile[] = Object.freeze([
       foulFrequency: 70,
       breakawayInstinct: 65,
     }),
-    tv: 800,
+    tv: 850,
   },
   // 14. Jacksonville Swamp Lizards — Lizardmen alt / Jaguars (Florida jungle).
   {
