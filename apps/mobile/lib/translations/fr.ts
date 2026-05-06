@@ -17,6 +17,8 @@
  * S27.3.8 : namespace `teams.list.*` pour `teams/index.tsx` (titre,
  *   bouton creer, empty state, erreurs). Place laissee pour
  *   `teams.detail.*` et `teams.new.*` lors des slices suivantes.
+ * S27.3.9 : namespace `teams.new.*` pour `teams/new.tsx` (form labels,
+ *   alertes de validation, erreurs de chargement et de creation).
  *
  * Les autres namespaces (play, etc.) seront ajoutes au fur et a mesure du
  * remplacement des strings hardcodees.
@@ -165,6 +167,24 @@ export const FR_TRANSLATIONS = {
       errors: {
         loadError: "Erreur de chargement",
         prefix: "Erreur : {{message}}",
+      },
+    },
+    new: {
+      nameLabel: "Nom de l'equipe",
+      namePlaceholder: "Ex: Reikland Reavers",
+      rosterLabel: "Roster",
+      rosterTier: "Tier {{tier}}",
+      budgetLabel: "Budget (K po)",
+      submit: "Creer l'equipe",
+      errors: {
+        loadError: "Erreur de chargement",
+        prefix: "Erreur : {{message}}",
+        invalidNameTitle: "Nom invalide",
+        rosterRequiredTitle: "Roster requis",
+        rosterRequiredMessage: "Choisissez un roster pour votre equipe",
+        invalidBudgetTitle: "Budget invalide",
+        createErrorTitle: "Erreur",
+        createErrorMessage: "Impossible de creer l'equipe",
       },
     },
   },
