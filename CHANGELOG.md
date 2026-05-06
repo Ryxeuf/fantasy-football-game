@@ -1,3 +1,16 @@
+## [1.89.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.88.0...v1.89.0) (2026-05-06)
+
+
+### ✨ Features
+
+* **sim-engine:** tuning iter [#4](https://github.com/Ryxeuf/fantasy-football-game/issues/4) — engineVer 0.5.0 (defensive disruption + bash /25 + breakthrough +30) ([#584](https://github.com/Ryxeuf/fantasy-football-game/issues/584)) ([6ddbda8](https://github.com/Ryxeuf/fantasy-football-game/commit/6ddbda8366aecb371f1d988ddf2f7dd521e3d97b)), closes [#3](https://github.com/Ryxeuf/fantasy-football-game/issues/3) [#5](https://github.com/Ryxeuf/fantasy-football-game/issues/5)
+* **sim-engine:** tuning iter [#5](https://github.com/Ryxeuf/fantasy-football-game/issues/5) — engineVer 0.6.0 (Nuffle casualty injection + bash /28 + breakthrough 6%) ([#586](https://github.com/Ryxeuf/fantasy-football-game/issues/586)) ([c32dd11](https://github.com/Ryxeuf/fantasy-football-game/commit/c32dd11c290fc535929f4a71d1f1aa0ba5016772))
+
+
+### 🐛 Bug Fixes
+
+* **admin:** conditionne le lien Ligues au feature flag leagues_v2_ui ([f49d5ff](https://github.com/Ryxeuf/fantasy-football-game/commit/f49d5ff2a721dfe6f6b86186fb889ec0a5368a23))
+
 ## [1.88.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.87.0...v1.88.0) (2026-05-06)
 
 
