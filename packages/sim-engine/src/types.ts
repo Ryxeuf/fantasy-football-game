@@ -15,7 +15,7 @@ import type { TacticalProfile } from './tactics/tactical-profile';
 
 /** Identifies the package version that produced a SimResult. Used for replay
  *  freezing and bench regression baselines (cf. lots 0.D / 1.A.5). */
-export const ENGINE_VER = '0.7.0';
+export const ENGINE_VER = '0.8.0';
 export type EngineVersion = string;
 
 /** Match outcome at score level. */

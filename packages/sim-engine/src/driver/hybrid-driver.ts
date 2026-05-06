@@ -326,17 +326,18 @@ function rollYards(
   profile: TacticalProfile,
   defenseProfile: TacticalProfile
 ): number {
-  // Sprint 0.E.1 tuning iter #6 (engineVer 0.7.0) :
+  // Sprint 0.E.1 tuning iter #7 (engineVer 0.8.0) :
   //
   // - Base : 2d6+2 (mean 7).
   // - `+pace/25 - 2` : pace-based offset.
-  // - `-defense.bashIndex/28` : bash counter unchanged from iter #5.
+  // - `-defense.bashIndex/28` : bash counter unchanged.
   // - `-defensiveDisruption` : kept (Dwarves bash + stall combo).
-  // - `+ fat-tail breakthrough/crush` : 8% +N / 8% -10 (was 6%).
+  // - `+ fat-tail breakthrough/crush` : 10% +N / 10% -10 (was 8%).
   //   Breakthrough magnitude conditional :
-  //     - +35 yards quand defense bash < 70 (offensive break vs soft D)
-  //     - +30 yards sinon (bash D limite la breakthrough)
-  //   Plus de fat-tails → std dev TD up.
+  //     - +40 yards quand defense bash très faible (<50) — game-breaking
+  //     - +35 yards quand bash 50-69 (offensive break vs soft D)
+  //     - +30 yards sinon
+  //   Cible : std dev TD vers 1.4.
   const dice = Math.floor(rng.next() * 6) + Math.floor(rng.next() * 6) + 2;
   const paceOffset = Math.round(profile.pace / 25) - 2;
   const bashCounter = -Math.round(defenseProfile.bashIndex / 28);
@@ -346,9 +347,11 @@ function rollYards(
   );
   const fatTail = rng.next();
   let breakthrough = 0;
-  if (fatTail < 0.08) {
-    breakthrough = defenseProfile.bashIndex < 70 ? 35 : 30;
-  } else if (fatTail < 0.16) {
+  if (fatTail < 0.10) {
+    if (defenseProfile.bashIndex < 50) breakthrough = 40;
+    else if (defenseProfile.bashIndex < 70) breakthrough = 35;
+    else breakthrough = 30;
+  } else if (fatTail < 0.20) {
     breakthrough = -10;
   }
   return Math.max(0, dice + paceOffset + bashCounter + defensiveDisruption + breakthrough);
@@ -435,14 +438,16 @@ function processTurn(
       })
     );
     m.nuffleEvents += 1;
-    // Sprint 0.E.1 iter #6 (engineVer 0.7.0) : élargi les Nuffle
-    // events qui injectent une casualty pour pousser le rate vers
-    // FUMBBL ~1.0. Ajout de `nemesis_clash` 25%.
+    // Sprint 0.E.1 iter #7 (engineVer 0.8.0) : élargi encore les
+    // Nuffle events qui injectent une casualty (cible FUMBBL ~1.0).
+    // Ajouts : tantrum_star 50%, cocky_drop 30%.
     if (
       nuffleEvent.id === 'bombardier_gone_wild' ||
       (nuffleEvent.id === 'banana_skin' && rngs.luck.next() < 0.5) ||
       (nuffleEvent.id === 'crowd_riot' && rngs.luck.next() < 0.3) ||
-      (nuffleEvent.id === 'nemesis_clash' && rngs.luck.next() < 0.25)
+      (nuffleEvent.id === 'nemesis_clash' && rngs.luck.next() < 0.25) ||
+      (nuffleEvent.id === 'tantrum_star' && rngs.luck.next() < 0.5) ||
+      (nuffleEvent.id === 'cocky_drop' && rngs.luck.next() < 0.3)
     ) {
       const victimSide: Side = otherSide(m.state.drive.drivingTeam);
       const victimId = `${victimSide}-NUFFLE-${m.state.half}-${m.state.turn}`;

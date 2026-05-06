@@ -7,6 +7,48 @@ sim engine. Used as the audit trail for sprint Pro League lots 0.D
 Each version bump matches `ENGINE_VER` in `src/types.ts` and is
 reflected in `bench/bench-baseline.json`.
 
+## 0.8.0 — 2026-05-06 (sprint task 0.E.1 iter #7)
+
+### Headline
+
+- **Casualty rate ~85% FUMBBL** : 0.63-0.70 → **0.83-0.90 / match**
+- **Std dev TD vers 1.4** : 1.02-1.09 → **1.14-1.23**
+- **TD means recovered** : 1.26-1.54 → **1.62-1.83** (dans la fourchette FUMBBL)
+
+### Changes
+
+- **Breakthrough proba** : 8% → **10%** (+25%)
+- **Conditional magnitude étendu** : `+40` quand bash défense <50,
+  `+35` quand 50-69, `+30` sinon
+- **Casualty Nuffle ajouts** : `tantrum_star` 50%, `cocky_drop` 30%
+  (6 events injectent maintenant des casualties)
+
+### Observed deltas (200 runs / pairing, seed=0)
+
+| Matchup | 0.7.0 cas | 0.8.0 cas | 0.7.0 TD mean / std | 0.8.0 TD mean / std |
+|---|---|---|---|---|
+| Smashers vs Soaring Hawks | .63 | **.83** | 1.51 / 1.02 | **1.83 / 1.19** |
+| Snow Ogres vs Cheese Halflings | .68 | **.87** | 1.54 / 1.03 | **1.79 / 1.14** |
+| Iron Bears vs Gold Rush | .65 | **.86** | 1.34 / 1.05 | **1.67 / 1.20** |
+| Cold Tacticians vs Tomb Cardinals | .66 | **.86** | 1.28 / 1.09 | **1.64 / 1.15** |
+| Outlaws vs Storm Eagles | .70 | **.90** | 1.26 / 1.08 | **1.62 / 1.23** |
+
+### Gate criteria status
+
+- ⚠️ C1 std dev TD : **1.14-1.23** (vs 1.4 cible — convergence)
+- ⚠️ C2 upset rate : sortie de cible (20.5-35.5%)
+- ⚠️ C3 Iron Bears 36 vs Gold Rush 31 — parité OK
+- ⚠️ Casualty rate **0.83-0.90** (~85% FUMBBL ~1.0)
+- → **Verdict : NO-GO maintenu, iter #8**
+
+### Iter #8 plan
+
+1. **Std dev TD** : breakthrough 10% → 12%, ajouter "early TD" event
+2. **Casualty rate** : ouvrir aussi `crowd_riot` à 50% (était 30%)
+3. **Upset rate** : faire monter le `tv` per team pour les sous-côtés
+   (Halflings 800 → 850) afin de réduire les écarts d'upset
+4. **Premier matrix bench complet** sur 16 races
+
 ## 0.7.0 — 2026-05-06 (sprint task 0.E.1 iter #6)
 
 ### Headline progress
