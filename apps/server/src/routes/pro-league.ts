@@ -28,6 +28,10 @@ import { Router, type Request, type Response } from "express";
 import type { MatchEvent } from "@bb/sim-engine";
 
 import {
+  ProLeagueNotFoundError,
+  getProLeagueHubSnapshot,
+} from "../services/pro-league-hub";
+import {
   getBroadcasterStats,
   subscribeToMatch,
 } from "../services/pro-league-match-broadcaster";
@@ -135,8 +139,32 @@ export function handleBroadcasterStats(_req: Request, res: Response): void {
   res.json(getBroadcasterStats());
 }
 
+/**
+ * Sprint 1.C.1 — Snapshot agrégé pour la page d'accueil `/pro-league`.
+ * Renvoie league + saison courante + round courant + prochains matchs
+ * + classement top 8.
+ */
+export async function handleGetCurrentSeasonHub(
+  _req: Request,
+  res: Response,
+): Promise<void> {
+  try {
+    const data = await getProLeagueHubSnapshot();
+    res.json(data);
+  } catch (err: unknown) {
+    if (err instanceof ProLeagueNotFoundError) {
+      res.status(404).json({ error: err.message });
+      return;
+    }
+    const msg = err instanceof Error ? err.message : "unknown";
+    serverLog.error(`[pro-league/seasons/current] failed: ${msg}`);
+    res.status(500).json({ error: "internal-error" });
+  }
+}
+
 const router = Router();
 
+router.get("/seasons/current", handleGetCurrentSeasonHub);
 router.get("/matches/:id/stream", handleStreamProMatch);
 router.get("/_internal/broadcaster-stats", handleBroadcasterStats);
 
