@@ -139,6 +139,24 @@ export const EN_TRANSLATIONS = {
       inputPlaceholder: "Match ID",
     },
   },
+  leaderboard: {
+    title: "ELO Ranking",
+    stats: {
+      players: "Players",
+      best: "Best",
+      average: "Average",
+    },
+    empty: "No coach ranked yet.",
+    errors: {
+      loadError: "Loading error",
+      prefix: "Error: {{message}}",
+    },
+    pagination: {
+      previous: "Previous",
+      next: "Next",
+      pageOf: "Page {{current}} / {{total}}",
+    },
+  },
   matchmaking: {
     title: "Find a match",
     subtitle:

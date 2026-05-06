@@ -12,6 +12,8 @@
  * S27.3.5 : namespace `auth.*` pour `login.tsx` et `register.tsx`.
  * S27.3.6 : namespace `matchmaking.*` pour `matchmaking.tsx` (titre,
  *   sous-titre, etat de recherche, vide, formulaire et messages d'erreur).
+ * S27.3.7 : namespace `leaderboard.*` pour `leaderboard.tsx` (titre,
+ *   stat cards, etat vide, erreurs, pagination).
  *
  * Les autres namespaces (play, etc.) seront ajoutes au fur et a mesure du
  * remplacement des strings hardcodees.
@@ -149,6 +151,24 @@ export const FR_TRANSLATIONS = {
     joinModal: {
       title: "Rejoindre un match",
       inputPlaceholder: "ID du match",
+    },
+  },
+  leaderboard: {
+    title: "Classement ELO",
+    stats: {
+      players: "Joueurs",
+      best: "Meilleur",
+      average: "Moyen",
+    },
+    empty: "Aucun coach classe pour l'instant.",
+    errors: {
+      loadError: "Erreur de chargement",
+      prefix: "Erreur : {{message}}",
+    },
+    pagination: {
+      previous: "Precedent",
+      next: "Suivant",
+      pageOf: "Page {{current}} / {{total}}",
     },
   },
   matchmaking: {
