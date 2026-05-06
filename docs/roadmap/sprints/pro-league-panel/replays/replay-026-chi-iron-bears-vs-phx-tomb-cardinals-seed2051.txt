@@ -1,47 +1,64 @@
 === MATCH #26 — Iron Bears (Dwarf) vs Tomb Cardinals (Tomb Kings) ===
-engine 0.2.0
+engine 0.13.0
 
 KICKOFF — chi-iron-bears hosts phx-tomb-cardinals (weather: nice, away receives).
 Half 1 • Turn 1 — away in possession at yardline 4 (score 0-0)
-Half 1 • Turn 2 — away in possession at yardline 10 (score 0-0)
+  Touchdown! away crosses the line. Score is now 0-1.
+Half 1 • Turn 2 — home in possession at yardline 4 (score 0-1)
   ✨ NUFFLE [banana_skin] — A banana skin appears from nowhere. A player slips spectacularly.
-Half 1 • Turn 3 — away in possession at yardline 13 (score 0-0)
+  PASS — home-LOS attempts a short pass: needs 5+, rolled 4 → failed.
+  TURNOVER — pass_failed.
+Half 1 • Turn 3 — away in possession at yardline 4 (score 0-1)
   FOUL — away-LOS fouls home-PRONE (armor=8, broken=false).
-Half 1 • Turn 4 — away in possession at yardline 17 (score 0-0)
-Half 1 • Turn 5 — away in possession at yardline 25 (score 0-0)
+  FOUL — away-LOS fouls home-PRONE (armor=2, broken=false).
+Half 1 • Turn 4 — away in possession at yardline 4 (score 0-1)
   BLOCK — away-LOS blocks home-LOS: dice [STUMBLE/PLAYER_DOWN], chose PLAYER_DOWN, attacker_down.
   TURNOVER — block_attacker_down.
-Half 1 • Turn 6 — home in possession at yardline 8 (score 0-0)
-  BLOCK — home-LOS blocks away-LOS: dice [POW/STUMBLE], chose POW, defender_down.
-  PASS — home-LOS attempts a short pass: needs 5+, rolled 4 → failed.
+  Touchdown! home crosses the line. Score is now 1-1.
+Half 1 • Turn 5 — away in possession at yardline 4 (score 1-1)
+  PASS — away-LOS attempts a short pass: needs 5+, rolled 4 → failed.
   TURNOVER — pass_failed.
-Half 1 • Turn 7 — away in possession at yardline 11 (score 0-0)
-Half 1 • Turn 8 — away in possession at yardline 14 (score 0-0)
-  FOUL — away-LOS fouls home-PRONE (armor=2, broken=false).
-
---- HALFTIME (score 0-0) ---
-
-Half 2 • Turn 1 — home in possession at yardline 4 (score 0-0)
-  ✨ NUFFLE [blood_in_water] — Blood in the water — the crowd's bloodlust is rising.
-Half 2 • Turn 2 — home in possession at yardline 7 (score 0-0)
-  ✨ NUFFLE [rookie_brilliance] — A rookie pulls off a play above their stats — Nuffle smiles.
-  BLOCK — home-LOS blocks away-LOS: dice [PLAYER_DOWN/BOTH_DOWN], chose BOTH_DOWN, push_only.
-Half 2 • Turn 3 — home in possession at yardline 13 (score 0-0)
-  PASS — home-LOS attempts a short pass: needs 5+, rolled 4 → failed.
-  TURNOVER — pass_failed.
-Half 2 • Turn 4 — away in possession at yardline 8 (score 0-0)
-  BLOCK — away-LOS blocks home-LOS: dice [POW/POW], chose POW, defender_down.
-Half 2 • Turn 5 — away in possession at yardline 14 (score 0-0)
-  BLOCK — away-LOS blocks home-LOS: dice [PUSH_BACK/PUSH_BACK], chose PUSH_BACK, push_only.
-Half 2 • Turn 6 — away in possession at yardline 20 (score 0-0)
-  BLOCK — away-LOS blocks home-LOS: dice [BOTH_DOWN/POW], chose BOTH_DOWN, push_only.
-Half 2 • Turn 7 — away in possession at yardline 24 (score 0-0)
-  TURNOVER — pickup_failed.
-Half 2 • Turn 8 — home in possession at yardline 10 (score 0-0)
+Half 1 • Turn 6 — home in possession at yardline 5 (score 1-1)
+  BLOCK — home-LOS blocks away-LOS: dice [POW/POW], chose POW, defender_down.
   FOUL — home-LOS fouls away-PRONE (armor=5, broken=false).
+  PASS — home-LOS attempts a short pass: needs 5+, rolled 2 → failed.
+  TURNOVER — pass_failed.
+Half 1 • Turn 7 — away in possession at yardline 4 (score 1-1)
+  BLOCK — away-LOS blocks home-LOS: dice [BOTH_DOWN/POW], chose BOTH_DOWN, push_only.
+Half 1 • Turn 8 — away in possession at yardline 4 (score 1-1)
+  BLOCK — away-LOS blocks home-LOS: dice [POW/STUMBLE], chose STUMBLE, defender_down.
+  BLOCK — away-LOS blocks home-LOS: dice [PUSH_BACK/PUSH_BACK], chose PUSH_BACK, push_only.
 
---- END OF MATCH (score 0-0) ---
+--- HALFTIME (score 1-1) ---
+
+Half 2 • Turn 1 — home in possession at yardline 4 (score 1-1)
+  ✨ NUFFLE [blood_in_water] — Blood in the water — the crowd's bloodlust is rising.
+  BLOCK — home-LOS blocks away-LOS: dice [POW/POW], chose POW, defender_down.
+Half 2 • Turn 2 — home in possession at yardline 4 (score 1-1)
+  ✨ NUFFLE [rookie_brilliance] — A rookie pulls off a play above their stats — Nuffle smiles.
+  TURNOVER — pickup_failed.
+  Touchdown! away crosses the line. Score is now 1-2.
+Half 2 • Turn 3 — home in possession at yardline 4 (score 1-2)
+  FOUL — home-LOS fouls away-PRONE (armor=8, broken=false).
+Half 2 • Turn 4 — home in possession at yardline 4 (score 1-2)
+  BLOCK — home-LOS blocks away-LOS: dice [PUSH_BACK/PLAYER_DOWN], chose PUSH_BACK, push_only.
+  FOUL — home-LOS fouls away-PRONE (armor=8, broken=false).
+Half 2 • Turn 5 — home in possession at yardline 4 (score 1-2)
+  PASS — home-LOS attempts a short pass: needs 5+, rolled 6 → caught.
+  Touchdown! home crosses the line. Score is now 2-2.
+Half 2 • Turn 6 — away in possession at yardline 4 (score 2-2)
+  PASS — away-LOS attempts a short pass: needs 5+, rolled 6 → caught.
+  BLOCK — away-LOS blocks home-LOS: dice [STUMBLE/BOTH_DOWN], chose BOTH_DOWN, push_only.
+Half 2 • Turn 7 — away in possession at yardline 9 (score 2-2)
+  DODGE — away-LOS dodges to (13,7): needs 3+, rolled 2 → fail.
+  TURNOVER — dodge_failed.
+Half 2 • Turn 8 — home in possession at yardline 4 (score 2-2)
+  PASS — home-LOS attempts a short pass: needs 5+, rolled 4 → failed.
+  TURNOVER — pass_failed.
+  Touchdown! away crosses the line. Score is now 2-3.
+
+--- END OF MATCH (score 2-3) ---
 
 
-FINAL: 0 - 0 (draw)
-Touchdowns: 0 | Casualties: 0 | Turnovers: 4 | Nuffle: 3
+FINAL: 2 - 3 (away)
+Touchdowns: 5 | Casualties: 0 | Turnovers: 7 | Nuffle: 3

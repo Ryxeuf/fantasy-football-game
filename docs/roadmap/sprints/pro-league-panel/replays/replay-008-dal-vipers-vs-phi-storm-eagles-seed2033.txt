@@ -1,50 +1,49 @@
 === MATCH #8 — Vipers (Dark Elf) vs Storm Eagles (Pro Elf) ===
-engine 0.2.0
+engine 0.13.0
 
 KICKOFF — dal-vipers hosts phi-storm-eagles (weather: nice, away receives).
 Half 1 • Turn 1 — away in possession at yardline 4 (score 0-0)
   TURNOVER — pickup_failed.
-Half 1 • Turn 2 — home in possession at yardline 13 (score 0-0)
-  PASS — home-LOS attempts a short pass: needs 5+, rolled 1 (fumble!) → failed.
-  TURNOVER — pass_fumble.
-Half 1 • Turn 3 — away in possession at yardline 13 (score 0-0)
-  DODGE — away-LOS dodges to (13,7): needs 3+, rolled 5 → success.
+Half 1 • Turn 2 — home in possession at yardline 4 (score 0-0)
+Half 1 • Turn 3 — home in possession at yardline 4 (score 0-0)
   TURNOVER — pickup_failed.
-Half 1 • Turn 4 — home in possession at yardline 13 (score 0-0)
+Half 1 • Turn 4 — away in possession at yardline 10 (score 0-0)
   ✨ NUFFLE [cocky_drop] — Showboating costs the carrier the ball.
-  DODGE — home-LOS dodges to (13,7): needs 3+, rolled 3 → success.
-Half 1 • Turn 5 — home in possession at yardline 20 (score 0-0)
-  Touchdown! home crosses the line. Score is now 1-0.
-Half 1 • Turn 6 — away in possession at yardline 4 (score 1-0)
-  BLOCK — away-LOS blocks home-LOS: dice [PUSH_BACK/PUSH_BACK], chose PUSH_BACK, push_only.
-Half 1 • Turn 7 — away in possession at yardline 15 (score 1-0)
+  DODGE — away-LOS dodges to (13,7): needs 3+, rolled 5 → success.
+Half 1 • Turn 5 — away in possession at yardline 13 (score 0-0)
+  DODGE — away-LOS dodges to (13,7): needs 3+, rolled 3 → success.
+  Touchdown! away crosses the line. Score is now 0-1.
+Half 1 • Turn 6 — home in possession at yardline 4 (score 0-1)
+  Touchdown! home crosses the line. Score is now 1-1.
+Half 1 • Turn 7 — away in possession at yardline 4 (score 1-1)
   ✨ NUFFLE [lightning_strike] — A lightning strike hits the pitch. Nobody is hurt — yet.
-Half 1 • Turn 8 — away in possession at yardline 18 (score 1-0)
+Half 1 • Turn 8 — away in possession at yardline 6 (score 1-1)
+  BLOCK — away-LOS blocks home-LOS: dice [PUSH_BACK/PUSH_BACK], chose PUSH_BACK, push_only.
 
---- HALFTIME (score 1-0) ---
+--- HALFTIME (score 1-1) ---
 
-Half 2 • Turn 1 — home in possession at yardline 4 (score 1-0)
+Half 2 • Turn 1 — home in possession at yardline 4 (score 1-1)
   ✨ NUFFLE [star_player_rising] — The star player ascends — the cameras eat it up.
-Half 2 • Turn 2 — home in possession at yardline 7 (score 1-0)
-  PASS — home-LOS attempts a short pass: needs 5+, rolled 1 (fumble!) → failed.
-  TURNOVER — pass_fumble.
-Half 2 • Turn 3 — away in possession at yardline 10 (score 1-0)
-  TURNOVER — pickup_failed.
-Half 2 • Turn 4 — home in possession at yardline 14 (score 1-0)
-  ✨ NUFFLE [sudden_inspiration] — A player is struck by sudden inspiration and grows half a foot.
+Half 2 • Turn 2 — home in possession at yardline 12 (score 1-1)
   DODGE — home-LOS dodges to (13,7): needs 3+, rolled 3 → success.
-Half 2 • Turn 5 — home in possession at yardline 21 (score 1-0)
-  Touchdown! home crosses the line. Score is now 2-0.
-Half 2 • Turn 6 — away in possession at yardline 4 (score 2-0)
+Half 2 • Turn 3 — home in possession at yardline 17 (score 1-1)
+  DODGE — home-LOS dodges to (13,7) (rerolled): needs 3+, rolled 2 → success.
+  DODGE — home-LOS dodges to (13,7): needs 3+, rolled 6 → success.
+Half 2 • Turn 4 — home in possession at yardline 21 (score 1-1)
+  ✨ NUFFLE [sudden_inspiration] — A player is struck by sudden inspiration and grows half a foot.
+Half 2 • Turn 5 — home in possession at yardline 24 (score 1-1)
+  BLOCK — home-LOS blocks away-LOS: dice [PUSH_BACK/STUMBLE], chose PUSH_BACK, push_only.
+Half 2 • Turn 6 — home in possession at yardline 24 (score 1-1)
   ✨ NUFFLE [cheering_section] — A new cheering section ignites — the home team feels invincible.
-  DODGE — away-LOS dodges to (13,7): needs 3+, rolled 2 → fail.
-  TURNOVER — dodge_failed.
-Half 2 • Turn 7 — home in possession at yardline 9 (score 2-0)
+  Touchdown! home crosses the line. Score is now 2-1.
+Half 2 • Turn 7 — away in possession at yardline 4 (score 2-1)
   ✨ NUFFLE [tantrum_star] — A star player throws a tantrum and refuses to obey instructions.
-Half 2 • Turn 8 — home in possession at yardline 14 (score 2-0)
+  PASS — away-LOS attempts a short pass: needs 5+, rolled 1 (fumble!) → failed.
+  TURNOVER — pass_fumble.
+Half 2 • Turn 8 — home in possession at yardline 5 (score 2-1)
 
---- END OF MATCH (score 2-0) ---
+--- END OF MATCH (score 2-1) ---
 
 
-FINAL: 2 - 0 (home)
-Touchdowns: 2 | Casualties: 0 | Turnovers: 6 | Nuffle: 6
+FINAL: 2 - 1 (home)
+Touchdowns: 3 | Casualties: 0 | Turnovers: 3 | Nuffle: 6

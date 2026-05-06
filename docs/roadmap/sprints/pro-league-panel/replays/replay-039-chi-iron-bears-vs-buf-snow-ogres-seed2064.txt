@@ -1,50 +1,57 @@
 === MATCH #39 — Iron Bears (Dwarf) vs Snow Ogres (Ogre) ===
-engine 0.2.0
+engine 0.13.0
 
 KICKOFF — chi-iron-bears hosts buf-snow-ogres (weather: nice, away receives).
 Half 1 • Turn 1 — away in possession at yardline 4 (score 0-0)
-Half 1 • Turn 2 — away in possession at yardline 14 (score 0-0)
-  BLOCK — away-LOS blocks home-LOS: dice [PLAYER_DOWN], chose PLAYER_DOWN, attacker_down.
+Half 1 • Turn 2 — away in possession at yardline 9 (score 0-0)
+  TURNOVER — pickup_failed.
+Half 1 • Turn 3 — home in possession at yardline 4 (score 0-0)
+  FOUL — home-LOS fouls away-PRONE (armor=8, broken=false).
+  BLOCK — home-LOS blocks away-LOS: dice [PLAYER_DOWN], chose PLAYER_DOWN, attacker_down.
   TURNOVER — block_attacker_down.
-Half 1 • Turn 3 — home in possession at yardline 9 (score 0-0)
-Half 1 • Turn 4 — home in possession at yardline 14 (score 0-0)
-  BLOCK — home-LOS blocks away-LOS: dice [PUSH_BACK], chose PUSH_BACK, push_only.
-Half 1 • Turn 5 — home in possession at yardline 23 (score 0-0)
-  ✨ NUFFLE [weather_shift] — The Nuffle Gods stir the clouds. Weather shifts.
-  BLOCK — home-LOS blocks away-LOS: dice [BOTH_DOWN], chose BOTH_DOWN, push_only.
-  Touchdown! home crosses the line. Score is now 1-0.
-Half 1 • Turn 6 — away in possession at yardline 4 (score 1-0)
+Half 1 • Turn 4 — away in possession at yardline 4 (score 0-0)
   BLOCK — away-LOS blocks home-LOS: dice [PUSH_BACK], chose PUSH_BACK, push_only.
-Half 1 • Turn 7 — away in possession at yardline 14 (score 1-0)
+  BLOCK — away-LOS blocks home-LOS: dice [STUMBLE], chose STUMBLE, defender_down.
+Half 1 • Turn 5 — away in possession at yardline 4 (score 0-0)
+  ✨ NUFFLE [weather_shift] — The Nuffle Gods stir the clouds. Weather shifts.
+Half 1 • Turn 6 — away in possession at yardline 4 (score 0-0)
+  BLOCK — away-LOS blocks home-LOS: dice [BOTH_DOWN], chose BOTH_DOWN, push_only.
+Half 1 • Turn 7 — away in possession at yardline 7 (score 0-0)
   ✨ NUFFLE [cocky_drop] — Showboating costs the carrier the ball.
-  FOUL — away-LOS fouls home-PRONE (armor=8, broken=false).
-Half 1 • Turn 8 — away in possession at yardline 18 (score 1-0)
+Half 1 • Turn 8 — away in possession at yardline 9 (score 0-0)
+  BLOCK — away-LOS blocks home-LOS: dice [BOTH_DOWN], chose BOTH_DOWN, push_only.
+
+--- HALFTIME (score 0-0) ---
+
+Half 2 • Turn 1 — home in possession at yardline 4 (score 0-0)
+  DODGE — home-LOS dodges to (13,7): needs 3+, rolled 4 → success.
+Half 2 • Turn 2 — home in possession at yardline 4 (score 0-0)
+  ✨ NUFFLE [weather_shift] — The Nuffle Gods stir the clouds. Weather shifts.
+  PASS — home-LOS attempts a short pass: needs 5+, rolled 4 → failed.
+  TURNOVER — pass_failed.
+Half 2 • Turn 3 — away in possession at yardline 6 (score 0-0)
+  BLOCK — away-LOS blocks home-LOS: dice [PUSH_BACK], chose PUSH_BACK, push_only.
+  BLOCK — away-LOS blocks home-LOS: dice [POW], chose POW, defender_down.
+Half 2 • Turn 4 — away in possession at yardline 6 (score 0-0)
+  BLOCK — away-LOS blocks home-LOS: dice [STUMBLE], chose STUMBLE, defender_down.
+  KO — home-LOS is knocked unconscious by away-LOS.
+  FOUL — away-LOS fouls home-PRONE (armor=5, broken=false).
+Half 2 • Turn 5 — away in possession at yardline 6 (score 0-0)
+  BLOCK — away-LOS blocks home-LOS: dice [PUSH_BACK], chose PUSH_BACK, push_only.
+Half 2 • Turn 6 — away in possession at yardline 7 (score 0-0)
+  ✨ NUFFLE [blood_in_water] — Blood in the water — the crowd's bloodlust is rising.
+  FOUL — away-LOS fouls home-PRONE (armor=5, broken=false).
+  PASS — away-LOS attempts a short pass: needs 5+, rolled 2 → failed.
+  TURNOVER — pass_failed.
+  Touchdown! home crosses the line. Score is now 1-0.
+Half 2 • Turn 7 — away in possession at yardline 4 (score 1-0)
+  TURNOVER — pickup_failed.
+Half 2 • Turn 8 — home in possession at yardline 4 (score 1-0)
+  DODGE — home-LOS dodges to (13,7): needs 3+, rolled 4 → success.
   TURNOVER — pickup_failed.
 
---- HALFTIME (score 1-0) ---
-
-Half 2 • Turn 1 — home in possession at yardline 4 (score 1-0)
-Half 2 • Turn 2 — home in possession at yardline 13 (score 1-0)
-  ✨ NUFFLE [weather_shift] — The Nuffle Gods stir the clouds. Weather shifts.
-Half 2 • Turn 3 — home in possession at yardline 20 (score 1-0)
-  BLOCK — home-LOS blocks away-LOS: dice [STUMBLE], chose STUMBLE, defender_down.
-  Touchdown! home crosses the line. Score is now 2-0.
-Half 2 • Turn 4 — away in possession at yardline 4 (score 2-0)
-Half 2 • Turn 5 — away in possession at yardline 12 (score 2-0)
-  PASS — away-LOS attempts a short pass: needs 5+, rolled 4 → failed.
-  TURNOVER — pass_failed.
-Half 2 • Turn 6 — home in possession at yardline 10 (score 2-0)
-  ✨ NUFFLE [blood_in_water] — Blood in the water — the crowd's bloodlust is rising.
-  FOUL — home-LOS fouls away-PRONE (armor=5, broken=false).
-  PASS — home-LOS attempts a short pass: needs 5+, rolled 2 → failed.
-  TURNOVER — pass_failed.
-Half 2 • Turn 7 — away in possession at yardline 11 (score 2-0)
-  BLOCK — away-LOS blocks home-LOS: dice [PUSH_BACK], chose PUSH_BACK, push_only.
-Half 2 • Turn 8 — away in possession at yardline 17 (score 2-0)
-  FOUL — away-LOS fouls home-PRONE (armor=5, broken=false).
-
---- END OF MATCH (score 2-0) ---
+--- END OF MATCH (score 1-0) ---
 
 
-FINAL: 2 - 0 (home)
-Touchdowns: 2 | Casualties: 0 | Turnovers: 4 | Nuffle: 4
+FINAL: 1 - 0 (home)
+Touchdowns: 1 | Casualties: 0 | Turnovers: 6 | Nuffle: 4

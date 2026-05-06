@@ -1,53 +1,57 @@
 === MATCH #3 — Soaring Hawks (Wood Elf) vs Snow Ogres (Ogre) ===
-engine 0.2.0
+engine 0.13.0
 
 KICKOFF — kc-soaring-hawks hosts buf-snow-ogres (weather: nice, home receives).
 Half 1 • Turn 1 — home in possession at yardline 4 (score 0-0)
   PASS — home-LOS attempts a short pass: needs 5+, rolled 2 → failed.
   TURNOVER — pass_failed.
-Half 1 • Turn 2 — away in possession at yardline 10 (score 0-0)
-  FOUL — away-LOS fouls home-PRONE (armor=5, broken=false).
-Half 1 • Turn 3 — away in possession at yardline 19 (score 0-0)
+Half 1 • Turn 2 — away in possession at yardline 6 (score 0-0)
+  TURNOVER — pickup_failed.
+Half 1 • Turn 3 — home in possession at yardline 4 (score 0-0)
   ✨ NUFFLE [tantrum_star] — A star player throws a tantrum and refuses to obey instructions.
+  CASUALTY — away-NUFFLE-1-3 is taken off by tantrum_star.
+  TURNOVER — pickup_failed.
+Half 1 • Turn 4 — away in possession at yardline 10 (score 0-0)
+  ✨ NUFFLE [sudden_downpour] — A sudden downpour soaks the pitch. Pickups get harder.
   PASS — away-LOS attempts a short pass: needs 5+, rolled 3 → failed.
   TURNOVER — pass_failed.
-Half 1 • Turn 4 — home in possession at yardline 7 (score 0-0)
-  ✨ NUFFLE [sudden_downpour] — A sudden downpour soaks the pitch. Pickups get harder.
-Half 1 • Turn 5 — home in possession at yardline 14 (score 0-0)
-Half 1 • Turn 6 — home in possession at yardline 20 (score 0-0)
-  TURNOVER — pickup_failed.
-Half 1 • Turn 7 — away in possession at yardline 14 (score 0-0)
-  ✨ NUFFLE [unhappy_fans] — Unhappy fans throw rotten produce at their own stars.
-  FOUL — away-LOS fouls home-PRONE (armor=8, broken=false).
-Half 1 • Turn 8 — away in possession at yardline 21 (score 0-0)
-  TURNOVER — pickup_failed.
-
---- HALFTIME (score 0-0) ---
-
-Half 2 • Turn 1 — away in possession at yardline 4 (score 0-0)
-Half 2 • Turn 2 — away in possession at yardline 9 (score 0-0)
-  BLOCK — away-LOS blocks home-LOS: dice [PUSH_BACK/POW/PUSH_BACK], chose POW, defender_down.
-Half 2 • Turn 3 — away in possession at yardline 12 (score 0-0)
-  ✨ NUFFLE [tantrum_star] — A star player throws a tantrum and refuses to obey instructions.
-  TURNOVER — gfi_failed.
-Half 2 • Turn 4 — home in possession at yardline 10 (score 0-0)
-  BLOCK — home-LOS blocks away-LOS: dice [PUSH_BACK/BOTH_DOWN], chose BOTH_DOWN, attacker_down.
-  TURNOVER — block_attacker_down.
-Half 2 • Turn 5 — away in possession at yardline 16 (score 0-0)
-  FOUL — away-LOS fouls home-PRONE (armor=10, broken=true → stunned).
-Half 2 • Turn 6 — away in possession at yardline 23 (score 0-0)
-  FOUL — away-LOS fouls home-PRONE (armor=6, broken=false).
-  BLOCK — away-LOS blocks home-LOS: dice [PLAYER_DOWN/STUMBLE/BOTH_DOWN], chose PUSH_BACK, push_only.
-Half 2 • Turn 7 — away in possession at yardline 25 (score 0-0)
-  ✨ NUFFLE [wind_picks_up] — A gust catches the ball mid-pass.
-  BLOCK — away-LOS blocks home-LOS: dice [PUSH_BACK/POW/PLAYER_DOWN], chose POW, defender_down.
-  Touchdown! away crosses the line. Score is now 0-1.
-Half 2 • Turn 8 — home in possession at yardline 4 (score 0-1)
+Half 1 • Turn 5 — home in possession at yardline 6 (score 0-0)
+Half 1 • Turn 6 — home in possession at yardline 9 (score 0-0)
   PASS — home-LOS attempts a short pass: needs 5+, rolled 2 → failed.
   TURNOVER — pass_failed.
+Half 1 • Turn 7 — away in possession at yardline 10 (score 0-0)
+  ✨ NUFFLE [unhappy_fans] — Unhappy fans throw rotten produce at their own stars.
+  Touchdown! away crosses the line. Score is now 0-1.
+Half 1 • Turn 8 — home in possession at yardline 4 (score 0-1)
+  DODGE — home-LOS dodges to (13,7): needs 3+, rolled 6 → success.
 
---- END OF MATCH (score 0-1) ---
+--- HALFTIME (score 0-1) ---
+
+Half 2 • Turn 1 — away in possession at yardline 4 (score 0-1)
+Half 2 • Turn 2 — away in possession at yardline 4 (score 0-1)
+  FOUL — away-LOS fouls home-PRONE (armor=5, broken=false).
+Half 2 • Turn 3 — away in possession at yardline 4 (score 0-1)
+  ✨ NUFFLE [tantrum_star] — A star player throws a tantrum and refuses to obey instructions.
+  BLOCK — away-LOS blocks home-LOS: dice [PUSH_BACK/POW/PUSH_BACK], chose POW, defender_down.
+  BLOCK — away-LOS blocks home-LOS: dice [PLAYER_DOWN/STUMBLE/BOTH_DOWN], chose PUSH_BACK, push_only.
+Half 2 • Turn 4 — away in possession at yardline 4 (score 0-1)
+  BLOCK — away-LOS blocks home-LOS: dice [PUSH_BACK/POW/PLAYER_DOWN], chose POW, defender_down.
+  TURNOVER — pickup_failed.
+Half 2 • Turn 5 — home in possession at yardline 5 (score 0-1)
+  TURNOVER — pickup_failed.
+Half 2 • Turn 6 — away in possession at yardline 9 (score 0-1)
+  BLOCK — away-LOS blocks home-LOS: dice [STUMBLE/BOTH_DOWN/PLAYER_DOWN], chose PUSH_BACK, push_only.
+  PASS — away-LOS attempts a short pass: needs 5+, rolled 4 → failed.
+  TURNOVER — pass_failed.
+Half 2 • Turn 7 — home in possession at yardline 5 (score 0-1)
+  ✨ NUFFLE [wind_picks_up] — A gust catches the ball mid-pass.
+  DODGE — home-LOS dodges to (13,7): needs 3+, rolled 4 → success.
+  Touchdown! home crosses the line. Score is now 1-1.
+Half 2 • Turn 8 — away in possession at yardline 4 (score 1-1)
+  TURNOVER — pickup_failed.
+
+--- END OF MATCH (score 1-1) ---
 
 
-FINAL: 0 - 1 (away)
-Touchdowns: 1 | Casualties: 0 | Turnovers: 7 | Nuffle: 5
+FINAL: 1 - 1 (draw)
+Touchdowns: 2 | Casualties: 1 | Turnovers: 9 | Nuffle: 5
