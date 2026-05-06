@@ -491,6 +491,8 @@ export function runHybridDriver(input: SimInput, options: DriverOptions = {}): S
         meta: {
           home: input.home.id,
           away: input.away.id,
+          homeName: input.home.name,
+          awayName: input.away.name,
           weather,
           receivingTeam: initialReceiver,
         },

@@ -17,7 +17,8 @@
     "test:coverage": "vitest run --coverage",
     "sim:bench": "tsx scripts/bench.ts",
     "sim:bench:ci": "tsx scripts/bench-ci.ts",
-    "sim:bench:snapshot": "tsx scripts/bench-baseline-snapshot.ts"
+    "sim:bench:snapshot": "tsx scripts/bench-baseline-snapshot.ts",
+    "sim:replay": "tsx scripts/replay.ts"
   },
   "dependencies": {
     "@bb/game-engine": "workspace:*",
