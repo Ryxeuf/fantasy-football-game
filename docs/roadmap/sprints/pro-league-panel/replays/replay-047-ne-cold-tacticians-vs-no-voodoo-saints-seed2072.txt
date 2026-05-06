@@ -1,53 +1,58 @@
 === MATCH #47 — Cold Tacticians (Lizardmen) vs Voodoo Saints (Undead) ===
-engine 0.2.0
+engine 0.12.0
 
 KICKOFF — ne-cold-tacticians hosts no-voodoo-saints (weather: nice, away receives).
 Half 1 • Turn 1 — away in possession at yardline 4 (score 0-0)
   FOUL — away-LOS fouls home-PRONE (armor=4, broken=false).
-Half 1 • Turn 2 — away in possession at yardline 11 (score 0-0)
-Half 1 • Turn 3 — away in possession at yardline 16 (score 0-0)
-  BLOCK — away-LOS blocks home-LOS: dice [STUMBLE], chose STUMBLE, defender_down.
-Half 1 • Turn 4 — away in possession at yardline 24 (score 0-0)
+Half 1 • Turn 2 — away in possession at yardline 4 (score 0-0)
+  PASS — away-LOS attempts a short pass: needs 5+, rolled 1 (fumble!) → failed.
+  TURNOVER — pass_fumble.
+  Touchdown! home crosses the line. Score is now 1-0.
+Half 1 • Turn 3 — away in possession at yardline 4 (score 1-0)
+Half 1 • Turn 4 — away in possession at yardline 7 (score 1-0)
   ✨ NUFFLE [wind_picks_up] — A gust catches the ball mid-pass.
   FOUL — away-LOS fouls home-PRONE (armor=9, broken=false, sent off!).
   TURNOVER — foul_sent_off.
-Half 1 • Turn 5 — home in possession at yardline 12 (score 0-0)
+  Touchdown! home crosses the line. Score is now 2-0.
+Half 1 • Turn 5 — away in possession at yardline 4 (score 2-0)
   ✨ NUFFLE [rookie_brilliance] — A rookie pulls off a play above their stats — Nuffle smiles.
-  FOUL — home-LOS fouls away-PRONE (armor=3, broken=false).
-Half 1 • Turn 6 — home in possession at yardline 21 (score 0-0)
-  FOUL — home-LOS fouls away-PRONE (armor=10, broken=true → stunned).
-  Touchdown! home crosses the line. Score is now 1-0.
-Half 1 • Turn 7 — away in possession at yardline 4 (score 1-0)
-  ✨ NUFFLE [crowd_riot] — A riot breaks out in the stands. Some fans spill onto the pitch.
-  FOUL — away-LOS fouls home-PRONE (armor=6, broken=false).
-Half 1 • Turn 8 — away in possession at yardline 15 (score 1-0)
+  BLOCK — away-LOS blocks home-LOS: dice [STUMBLE], chose STUMBLE, defender_down.
+Half 1 • Turn 6 — away in possession at yardline 4 (score 2-0)
+  FOUL — away-LOS fouls home-PRONE (armor=3, broken=false).
   DODGE — away-LOS dodges to (13,7): needs 3+, rolled 1 → fail.
   TURNOVER — dodge_failed.
-
---- HALFTIME (score 1-0) ---
-
-Half 2 • Turn 1 — home in possession at yardline 4 (score 1-0)
-Half 2 • Turn 2 — home in possession at yardline 9 (score 1-0)
-  TURNOVER — gfi_failed.
-Half 2 • Turn 3 — away in possession at yardline 14 (score 1-0)
-  ✨ NUFFLE [lucky_bounce] — The ball takes a friendly bounce — fortune favours the bold.
-  FOUL — away-LOS fouls home-PRONE (armor=5, broken=false).
-  FOUL — away-LOS fouls home-PRONE (armor=4, broken=false).
-Half 2 • Turn 4 — away in possession at yardline 19 (score 1-0)
-  BLOCK — away-LOS blocks home-LOS: dice [POW], chose POW, defender_down.
-Half 2 • Turn 5 — away in possession at yardline 23 (score 1-0)
-  Touchdown! away crosses the line. Score is now 1-1.
-Half 2 • Turn 6 — home in possession at yardline 4 (score 1-1)
-  BLOCK — home-LOS blocks away-LOS: dice [PUSH_BACK], chose PUSH_BACK, push_only.
-  FOUL — home-LOS fouls away-PRONE (armor=7, broken=false).
-Half 2 • Turn 7 — home in possession at yardline 10 (score 1-1)
-  ✨ NUFFLE [banana_skin] — A banana skin appears from nowhere. A player slips spectacularly.
+Half 1 • Turn 7 — home in possession at yardline 4 (score 2-0)
+  ✨ NUFFLE [crowd_riot] — A riot breaks out in the stands. Some fans spill onto the pitch.
   BLOCK — home-LOS blocks away-LOS: dice [PLAYER_DOWN], chose PLAYER_DOWN, attacker_down.
   TURNOVER — block_attacker_down.
-Half 2 • Turn 8 — away in possession at yardline 13 (score 1-1)
+Half 1 • Turn 8 — away in possession at yardline 5 (score 2-0)
+  FOUL — away-LOS fouls home-PRONE (armor=10, broken=true → stunned).
 
---- END OF MATCH (score 1-1) ---
+--- HALFTIME (score 2-0) ---
+
+Half 2 • Turn 1 — home in possession at yardline 4 (score 2-0)
+Half 2 • Turn 2 — home in possession at yardline 4 (score 2-0)
+Half 2 • Turn 3 — home in possession at yardline 4 (score 2-0)
+  ✨ NUFFLE [lucky_bounce] — The ball takes a friendly bounce — fortune favours the bold.
+  FOUL — home-LOS fouls away-PRONE (armor=6, broken=false).
+  TURNOVER — gfi_failed.
+  Touchdown! away crosses the line. Score is now 2-1.
+Half 2 • Turn 4 — home in possession at yardline 4 (score 2-1)
+  DODGE — home-LOS dodges to (13,7): needs 3+, rolled 2 → fail.
+  TURNOVER — dodge_failed.
+Half 2 • Turn 5 — away in possession at yardline 11 (score 2-1)
+  TURNOVER — pickup_failed.
+Half 2 • Turn 6 — home in possession at yardline 4 (score 2-1)
+  BLOCK — home-LOS blocks away-LOS: dice [PLAYER_DOWN], chose PLAYER_DOWN, attacker_down.
+  TURNOVER — block_attacker_down.
+Half 2 • Turn 7 — away in possession at yardline 4 (score 2-1)
+  ✨ NUFFLE [banana_skin] — A banana skin appears from nowhere. A player slips spectacularly.
+  BLOCK — away-LOS blocks home-LOS: dice [PLAYER_DOWN], chose PLAYER_DOWN, attacker_down.
+  TURNOVER — block_attacker_down.
+Half 2 • Turn 8 — home in possession at yardline 5 (score 2-1)
+
+--- END OF MATCH (score 2-1) ---
 
 
-FINAL: 1 - 1 (draw)
-Touchdowns: 2 | Casualties: 0 | Turnovers: 4 | Nuffle: 5
+FINAL: 2 - 1 (home)
+Touchdowns: 3 | Casualties: 0 | Turnovers: 9 | Nuffle: 5

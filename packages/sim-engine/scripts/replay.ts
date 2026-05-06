@@ -152,6 +152,7 @@ function toSimTeamInput(team: ProTeamProfile, side: 'home' | 'away'): SimTeamInp
     name: team.name,
     side,
     tactics: team.tactics,
+    tv: team.tv,
   };
 }
 

@@ -1,55 +1,67 @@
 === MATCH #31 — Cold Tacticians (Lizardmen) vs Snow Ogres (Ogre) ===
-engine 0.2.0
+engine 0.12.0
 
 KICKOFF — ne-cold-tacticians hosts buf-snow-ogres (weather: nice, away receives).
 Half 1 • Turn 1 — away in possession at yardline 4 (score 0-0)
   ✨ NUFFLE [banana_skin] — A banana skin appears from nowhere. A player slips spectacularly.
   BLOCK — away-LOS blocks home-LOS: dice [PUSH_BACK/PLAYER_DOWN], chose PUSH_BACK, push_only.
-Half 1 • Turn 2 — away in possession at yardline 14 (score 0-0)
+Half 1 • Turn 2 — away in possession at yardline 4 (score 0-0)
   ✨ NUFFLE [banana_skin] — A banana skin appears from nowhere. A player slips spectacularly.
-  PASS — away-LOS attempts a short pass: needs 5+, rolled 2 → failed.
-  TURNOVER — pass_failed.
-Half 1 • Turn 3 — home in possession at yardline 10 (score 0-0)
-  PASS — home-LOS attempts a short pass: needs 5+, rolled 6 → caught.
-Half 1 • Turn 4 — home in possession at yardline 20 (score 0-0)
+  DODGE — away-LOS dodges to (13,7): needs 3+, rolled 4 → success.
+  BLOCK — away-LOS blocks home-LOS: dice [PUSH_BACK/PLAYER_DOWN], chose PUSH_BACK, push_only.
+  Touchdown! away crosses the line. Score is now 0-1.
+Half 1 • Turn 3 — home in possession at yardline 4 (score 0-1)
+Half 1 • Turn 4 — home in possession at yardline 4 (score 0-1)
   ✨ NUFFLE [nemesis_clash] — Two old rivals lock eyes — the next block will be personal.
-  Touchdown! home crosses the line. Score is now 1-0.
-Half 1 • Turn 5 — away in possession at yardline 4 (score 1-0)
-  BLOCK — away-LOS blocks home-LOS: dice [PUSH_BACK/PLAYER_DOWN], chose PUSH_BACK, push_only.
-Half 1 • Turn 6 — away in possession at yardline 7 (score 1-0)
-  ✨ NUFFLE [banana_skin] — A banana skin appears from nowhere. A player slips spectacularly.
-  BLOCK — away-LOS blocks home-LOS: dice [PLAYER_DOWN/PUSH_BACK], chose PUSH_BACK, push_only.
-  BLOCK — away-LOS blocks home-LOS: dice [PUSH_BACK/PLAYER_DOWN], chose PUSH_BACK, push_only.
-Half 1 • Turn 7 — away in possession at yardline 17 (score 1-0)
+  DODGE — home-LOS dodges to (13,7): needs 3+, rolled 6 → success.
+Half 1 • Turn 5 — home in possession at yardline 4 (score 0-1)
   TURNOVER — pickup_failed.
-Half 1 • Turn 8 — home in possession at yardline 11 (score 1-0)
+Half 1 • Turn 6 — away in possession at yardline 4 (score 0-1)
+  ✨ NUFFLE [banana_skin] — A banana skin appears from nowhere. A player slips spectacularly.
+  CASUALTY — home-NUFFLE-1-6 is taken off by banana_skin.
+  DODGE — away-LOS dodges to (13,7): needs 3+, rolled 2 → fail.
+  TURNOVER — dodge_failed.
+Half 1 • Turn 7 — home in possession at yardline 7 (score 0-1)
   FOUL — home-LOS fouls away-PRONE (armor=2, broken=false).
-
---- HALFTIME (score 1-0) ---
-
-Half 2 • Turn 1 — home in possession at yardline 4 (score 1-0)
-  ✨ NUFFLE [weather_shift] — The Nuffle Gods stir the clouds. Weather shifts.
+Half 1 • Turn 8 — home in possession at yardline 8 (score 0-1)
   FOUL — home-LOS fouls away-PRONE (armor=7, broken=false).
-Half 2 • Turn 2 — home in possession at yardline 10 (score 1-0)
-Half 2 • Turn 3 — home in possession at yardline 20 (score 1-0)
-  ✨ NUFFLE [cheering_section] — A new cheering section ignites — the home team feels invincible.
   BLOCK — home-LOS blocks away-LOS: dice [PLAYER_DOWN/PUSH_BACK], chose PLAYER_DOWN, attacker_down.
   TURNOVER — block_attacker_down.
-Half 2 • Turn 4 — away in possession at yardline 9 (score 1-0)
+
+--- HALFTIME (score 0-1) ---
+
+Half 2 • Turn 1 — home in possession at yardline 4 (score 0-1)
+  ✨ NUFFLE [weather_shift] — The Nuffle Gods stir the clouds. Weather shifts.
+  BLOCK — home-LOS blocks away-LOS: dice [PLAYER_DOWN/PUSH_BACK], chose PLAYER_DOWN, attacker_down.
+  TURNOVER — block_attacker_down.
+Half 2 • Turn 2 — away in possession at yardline 4 (score 0-1)
+Half 2 • Turn 3 — away in possession at yardline 6 (score 0-1)
+  ✨ NUFFLE [cheering_section] — A new cheering section ignites — the home team feels invincible.
+  BLOCK — away-LOS blocks home-LOS: dice [PUSH_BACK/BOTH_DOWN], chose PUSH_BACK, push_only.
+  BLOCK — away-LOS blocks home-LOS: dice [BOTH_DOWN/PUSH_BACK], chose PUSH_BACK, push_only.
+  Touchdown! away crosses the line. Score is now 0-2.
+Half 2 • Turn 4 — home in possession at yardline 4 (score 0-2)
   ✨ NUFFLE [banana_skin] — A banana skin appears from nowhere. A player slips spectacularly.
+  CASUALTY — away-NUFFLE-2-4 is taken off by banana_skin.
+  DODGE — home-LOS dodges to (13,7): needs 3+, rolled 1 → fail.
+  TURNOVER — dodge_failed.
+Half 2 • Turn 5 — away in possession at yardline 5 (score 0-2)
   TURNOVER — pickup_failed.
-Half 2 • Turn 5 — home in possession at yardline 7 (score 1-0)
-Half 2 • Turn 6 — home in possession at yardline 16 (score 1-0)
+Half 2 • Turn 6 — home in possession at yardline 4 (score 0-2)
   ✨ NUFFLE [sudden_downpour] — A sudden downpour soaks the pitch. Pickups get harder.
   FOUL — home-LOS fouls away-PRONE (armor=6, broken=false).
-Half 2 • Turn 7 — home in possession at yardline 19 (score 1-0)
-  BLOCK — home-LOS blocks away-LOS: dice [POW/PLAYER_DOWN], chose PLAYER_DOWN, attacker_down.
-  TURNOVER — block_attacker_down.
-Half 2 • Turn 8 — away in possession at yardline 7 (score 1-0)
+  FOUL — home-LOS fouls away-PRONE (armor=5, broken=false).
+  Touchdown! home crosses the line. Score is now 1-2.
+Half 2 • Turn 7 — away in possession at yardline 4 (score 1-2)
+  BLOCK — away-LOS blocks home-LOS: dice [POW/PUSH_BACK], chose POW, defender_down.
+  KO — home-LOS is knocked unconscious by away-LOS.
+Half 2 • Turn 8 — away in possession at yardline 4 (score 1-2)
   ✨ NUFFLE [weather_shift] — The Nuffle Gods stir the clouds. Weather shifts.
+  TURNOVER — pickup_failed.
+  Touchdown! home crosses the line. Score is now 2-2.
 
---- END OF MATCH (score 1-0) ---
+--- END OF MATCH (score 2-2) ---
 
 
-FINAL: 1 - 0 (home)
-Touchdowns: 1 | Casualties: 0 | Turnovers: 5 | Nuffle: 9
+FINAL: 2 - 2 (draw)
+Touchdowns: 4 | Casualties: 2 | Turnovers: 7 | Nuffle: 9

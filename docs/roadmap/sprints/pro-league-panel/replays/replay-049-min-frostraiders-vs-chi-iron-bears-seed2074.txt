@@ -1,53 +1,61 @@
 === MATCH #49 — Frostraiders (Norse) vs Iron Bears (Dwarf) ===
-engine 0.2.0
+engine 0.12.0
 
 KICKOFF — min-frostraiders hosts chi-iron-bears (weather: nice, home receives).
 Half 1 • Turn 1 — home in possession at yardline 4 (score 0-0)
   ✨ NUFFLE [unhappy_fans] — Unhappy fans throw rotten produce at their own stars.
   DODGE — home-LOS dodges to (13,7): needs 3+, rolled 6 → success.
-Half 1 • Turn 2 — home in possession at yardline 14 (score 0-0)
-  DODGE — home-LOS dodges to (13,7): needs 3+, rolled 6 → success.
-Half 1 • Turn 3 — home in possession at yardline 25 (score 0-0)
-  BLOCK — home-LOS blocks away-LOS: dice [PLAYER_DOWN/PUSH_BACK], chose PLAYER_DOWN, attacker_down.
-  TURNOVER — block_attacker_down.
-Half 1 • Turn 4 — away in possession at yardline 10 (score 0-0)
-Half 1 • Turn 5 — away in possession at yardline 17 (score 0-0)
-  BLOCK — away-LOS blocks home-LOS: dice [POW/STUMBLE], chose POW, defender_down.
-Half 1 • Turn 6 — away in possession at yardline 22 (score 0-0)
-  BLOCK — away-LOS blocks home-LOS: dice [PLAYER_DOWN/BOTH_DOWN], chose BOTH_DOWN, defender_down.
-  DODGE — away-LOS dodges to (13,7): needs 3+, rolled 4 → success.
-Half 1 • Turn 7 — away in possession at yardline 25 (score 0-0)
-  BLOCK — away-LOS blocks home-LOS: dice [STUMBLE/POW], chose POW, defender_down.
+Half 1 • Turn 2 — home in possession at yardline 8 (score 0-0)
+  TURNOVER — pickup_failed.
   Touchdown! away crosses the line. Score is now 0-1.
-Half 1 • Turn 8 — home in possession at yardline 4 (score 0-1)
-  ✨ NUFFLE [nemesis_clash] — Two old rivals lock eyes — the next block will be personal.
-
---- HALFTIME (score 0-1) ---
-
-Half 2 • Turn 1 — away in possession at yardline 4 (score 0-1)
-  ✨ NUFFLE [weather_shift] — The Nuffle Gods stir the clouds. Weather shifts.
+Half 1 • Turn 3 — home in possession at yardline 4 (score 0-1)
+  DODGE — home-LOS dodges to (13,7): needs 3+, rolled 6 → success.
+  Touchdown! home crosses the line. Score is now 1-1.
+Half 1 • Turn 4 — away in possession at yardline 4 (score 1-1)
+  BLOCK — away-LOS blocks home-LOS: dice [PLAYER_DOWN/PUSH_BACK], chose PUSH_BACK, push_only.
+  Touchdown! away crosses the line. Score is now 1-2.
+Half 1 • Turn 5 — home in possession at yardline 4 (score 1-2)
+  FOUL — home-LOS fouls away-PRONE (armor=4, broken=false).
+  Touchdown! home crosses the line. Score is now 2-2.
+Half 1 • Turn 6 — away in possession at yardline 4 (score 2-2)
   FOUL — away-LOS fouls home-PRONE (armor=4, broken=false).
-Half 2 • Turn 2 — away in possession at yardline 9 (score 0-1)
-  ✨ NUFFLE [rookie_brilliance] — A rookie pulls off a play above their stats — Nuffle smiles.
-  PASS — away-LOS attempts a short pass: needs 5+, rolled 3 → failed.
+  BLOCK — away-LOS blocks home-LOS: dice [POW/STUMBLE], chose POW, defender_down.
+  Touchdown! away crosses the line. Score is now 2-3.
+Half 1 • Turn 7 — home in possession at yardline 4 (score 2-3)
+  PASS — home-LOS attempts a short pass: needs 5+, rolled 3 → failed.
   TURNOVER — pass_failed.
-Half 2 • Turn 3 — home in possession at yardline 10 (score 0-1)
-  BLOCK — home-LOS blocks away-LOS: dice [BOTH_DOWN/PUSH_BACK], chose BOTH_DOWN, attacker_down.
-  TURNOVER — block_attacker_down.
-Half 2 • Turn 4 — away in possession at yardline 14 (score 0-1)
+Half 1 • Turn 8 — away in possession at yardline 6 (score 2-3)
+  ✨ NUFFLE [nemesis_clash] — Two old rivals lock eyes — the next block will be personal.
+  BLOCK — away-LOS blocks home-LOS: dice [STUMBLE/POW], chose POW, defender_down.
+
+--- HALFTIME (score 2-3) ---
+
+Half 2 • Turn 1 — away in possession at yardline 4 (score 2-3)
+  ✨ NUFFLE [weather_shift] — The Nuffle Gods stir the clouds. Weather shifts.
+  Touchdown! away crosses the line. Score is now 2-4.
+Half 2 • Turn 2 — home in possession at yardline 4 (score 2-4)
+  ✨ NUFFLE [rookie_brilliance] — A rookie pulls off a play above their stats — Nuffle smiles.
+  DODGE — home-LOS dodges to (13,7): needs 3+, rolled 4 → success.
+Half 2 • Turn 3 — home in possession at yardline 10 (score 2-4)
+  TURNOVER — pickup_failed.
+Half 2 • Turn 4 — away in possession at yardline 4 (score 2-4)
+  FOUL — away-LOS fouls home-PRONE (armor=2, broken=false).
   BLOCK — away-LOS blocks home-LOS: dice [STUMBLE/PLAYER_DOWN], chose STUMBLE, defender_down.
-Half 2 • Turn 5 — away in possession at yardline 24 (score 0-1)
-  TURNOVER — pickup_failed.
-Half 2 • Turn 6 — home in possession at yardline 5 (score 0-1)
-  BLOCK — home-LOS blocks away-LOS: dice [POW/PUSH_BACK], chose PUSH_BACK, push_only.
-Half 2 • Turn 7 — home in possession at yardline 17 (score 0-1)
+  CASUALTY — home-LOS is taken off by away-LOS.
+Half 2 • Turn 5 — away in possession at yardline 10 (score 2-4)
+Half 2 • Turn 6 — away in possession at yardline 14 (score 2-4)
+  Touchdown! away crosses the line. Score is now 2-5.
+Half 2 • Turn 7 — home in possession at yardline 4 (score 2-5)
   ✨ NUFFLE [banana_skin] — A banana skin appears from nowhere. A player slips spectacularly.
-  TURNOVER — pickup_failed.
-Half 2 • Turn 8 — away in possession at yardline 8 (score 0-1)
+  CASUALTY — away-NUFFLE-2-7 is taken off by banana_skin.
+  PASS — home-LOS attempts a short pass: needs 5+, rolled 5 → caught.
+  Touchdown! home crosses the line. Score is now 3-5.
+Half 2 • Turn 8 — away in possession at yardline 4 (score 3-5)
   ✨ NUFFLE [banana_skin] — A banana skin appears from nowhere. A player slips spectacularly.
+  BLOCK — away-LOS blocks home-LOS: dice [PUSH_BACK/STUMBLE], chose STUMBLE, defender_down.
 
---- END OF MATCH (score 0-1) ---
+--- END OF MATCH (score 3-5) ---
 
 
-FINAL: 0 - 1 (away)
-Touchdowns: 1 | Casualties: 0 | Turnovers: 5 | Nuffle: 6
+FINAL: 3 - 5 (away)
+Touchdowns: 8 | Casualties: 2 | Turnovers: 3 | Nuffle: 6
