@@ -39,6 +39,10 @@ import {
 } from "@bb/sim-engine";
 
 import { prisma } from "../prisma";
+import {
+  EngineVersionMismatchError,
+  assertSimulationAllowed,
+} from "./pro-league-engine-version";
 
 /** Statuts de match qui n'ont plus besoin d'être simulés. */
 const FINAL_STATUSES = new Set(["ready", "in_progress", "completed"]);
@@ -56,6 +60,9 @@ export interface SimulateUpcomingResult {
   readonly simulated: number;
   readonly skipped: number;
   readonly failed: number;
+  /** Lot 1.A.5 — matchs refusés car la version courante du sim-engine
+   *  ne match pas la version pinnée sur la saison ou le match. */
+  readonly versionMismatched: number;
   readonly inspected: number;
 }
 
@@ -104,7 +111,7 @@ export async function simulateProMatch(matchId: string): Promise<boolean> {
   const match = await prisma.proLeagueMatch.findUnique({
     where: { id: matchId },
     include: {
-      season: { select: { engineVer: true } },
+      season: { select: { id: true, engineVer: true } },
       homeTeam: { select: { slug: true, name: true } },
       awayTeam: { select: { slug: true, name: true } },
     },
@@ -116,6 +123,17 @@ export async function simulateProMatch(matchId: string): Promise<boolean> {
   if (FINAL_STATUSES.has(match.status as string)) {
     return false; // déjà simulé
   }
+
+  // Lot 1.A.5 — gating engineVer : refuse de simuler si la version
+  // courante ne match pas la version pinnée sur la saison ou (en cas
+  // de re-simulation) sur le match. Lève EngineVersionMismatchError.
+  assertSimulationAllowed({
+    engineVer: (match.engineVer as string | null) ?? null,
+    season: {
+      id: match.season.id as string,
+      engineVer: match.season.engineVer as string,
+    },
+  });
 
   const homeProfile = PRO_LEAGUE_TEAM_BY_ID[match.homeTeam.slug as string];
   const awayProfile = PRO_LEAGUE_TEAM_BY_ID[match.awayTeam.slug as string];
@@ -232,15 +250,26 @@ export async function simulateUpcomingMatches(
   let simulated = 0;
   let skipped = 0;
   let failed = 0;
+  let versionMismatched = 0;
   for (const { id } of candidates) {
     try {
       const ok = await simulateProMatch(id);
       if (ok) simulated += 1;
       else skipped += 1;
-    } catch {
-      failed += 1;
+    } catch (err) {
+      if (err instanceof EngineVersionMismatchError) {
+        versionMismatched += 1;
+      } else {
+        failed += 1;
+      }
     }
   }
 
-  return { simulated, skipped, failed, inspected: candidates.length };
+  return {
+    simulated,
+    skipped,
+    failed,
+    versionMismatched,
+    inspected: candidates.length,
+  };
 }
