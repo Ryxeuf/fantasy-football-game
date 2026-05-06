@@ -59,6 +59,16 @@ export {
   type StrategyId,
 } from './ai';
 export {
+  NUFFLE_EVENTS,
+  NUFFLE_EVENT_BY_ID,
+  emitNuffleEvent,
+  rollNuffleEvent,
+  type NuffleEffect,
+  type NuffleEmitOptions,
+  type NuffleEvent,
+  type NuffleEventKind,
+} from './nuffle/events';
+export {
   ENGINE_VER,
   type Casualty,
   type EngineVersion,
