@@ -31,6 +31,10 @@ import leagueRoutes from "./routes/league";
 import { tutorialRouter, adminTutorialRouter } from "./routes/tutorial";
 import kofiRoutes from "./routes/kofi";
 import {
+  feedbackPublicRouter,
+  feedbackAdminRouter,
+} from "./routes/feedback";
+import {
   userFeatureFlagsRouter,
   adminFeatureFlagsRouter,
 } from "./routes/feature-flags";
@@ -183,6 +187,10 @@ app.use("/admin/feature-flags", adminFeatureFlagsRouter);
 // pour ne pas polluer /admin (qui devient un sac fourre-tout).
 app.use("/admin/leagues", adminLeaguesRoutes);
 app.use("/admin/sim", adminSimRoutes);
+// Feedback public : pas d'auth, captcha + rate limiter dedies dans le router.
+app.use("/feedback", feedbackPublicRouter);
+// Console admin : auth + role admin appliques dans le router.
+app.use("/admin/feedback", feedbackAdminRouter);
 
 // Endpoint public de reset pour tests (uniquement en TEST_SQLITE=1)
 if (process.env.TEST_SQLITE === "1") {
@@ -242,6 +250,10 @@ if (process.env.TEST_SQLITE === "1") {
       );
       await safe("teamPlayer", () => prisma.teamPlayer.deleteMany({}));
       await safe("team", () => prisma.team.deleteMany({}));
+      // Feedback public : pas de FK vers User, on peut wiper a tout moment.
+      await safe("feedback", () =>
+        (prisma as any).feedback?.deleteMany?.({}) ?? Promise.resolve(),
+      );
       await safe("user", () => prisma.user.deleteMany({}));
       // Reference data caches (memoizeAsync) survive the DB wipe and would
       // otherwise serve stale `[]` lists to the next test. Drop everything.

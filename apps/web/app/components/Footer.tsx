@@ -79,6 +79,11 @@ export default function Footer() {
                 </a>
               </li>
               <li>
+                <a href="/feedback" className="hover:text-nuffle-gold hover:underline transition-colors">
+                  {t.feedback?.navLabel || "Donner un retour"}
+                </a>
+              </li>
+              <li>
                 <a href="/login" className="hover:text-nuffle-gold hover:underline transition-colors">
                   {t.auth.login}
                 </a>
