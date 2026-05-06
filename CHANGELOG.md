@@ -1,3 +1,21 @@
+## [1.87.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.86.0...v1.87.0) (2026-05-06)
+
+
+### ✨ Features
+
+* **sim-engine:** tuning iteration [#1](https://github.com/Ryxeuf/fantasy-football-game/issues/1) — race-aware LOS + pace yards (0.E.1) ([#578](https://github.com/Ryxeuf/fantasy-football-game/issues/578)) ([9a77532](https://github.com/Ryxeuf/fantasy-football-game/commit/9a77532a66630c8a19990926b9a835b9172816c0))
+
+
+### 🐛 Bug Fixes
+
+* **admin:** add missing Ligues link in admin sidebar nav ([4612548](https://github.com/Ryxeuf/fantasy-football-game/commit/461254848114163578424211d410a7123f244f20))
+
+
+### 📝 Documentation
+
+* **pro-league:** gate Phase 0 → Phase 1 — closes Phase 0 (0.E.4) ([#580](https://github.com/Ryxeuf/fantasy-football-game/issues/580)) ([e5359f4](https://github.com/Ryxeuf/fantasy-football-game/commit/e5359f418a8f529a6dea2e51d91c1997b674244e))
+* **pro-league:** kit panel BB experts (sprint 0.E.3) ([#579](https://github.com/Ryxeuf/fantasy-football-game/issues/579)) ([20ad022](https://github.com/Ryxeuf/fantasy-football-game/commit/20ad02202f815924462c4e2a9e3f4a61d2535928))
+
 ## [1.86.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.85.0...v1.86.0) (2026-05-06)
 
 
