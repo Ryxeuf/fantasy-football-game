@@ -164,6 +164,33 @@ describe("simulateProMatch — sprint 1.A.4", () => {
     expect(seed1).toBe(seed2);
   });
 
+  it("refuse de simuler si la saison est pinnée à un autre engineVer", async () => {
+    mocked.proLeagueMatch.findUnique.mockResolvedValue(
+      makeMatch({ season: { id: "s1", engineVer: "9.99.99-pinned" } }),
+    );
+
+    await expect(simulateProMatch(MATCH_ID)).rejects.toThrow(
+      /Engine version mismatch/,
+    );
+    expect(mocked.replay.upsert).not.toHaveBeenCalled();
+    // Le match n'est PAS marqué `failed` — un mismatch n'est pas un
+    // échec de sim mais un refus de policy.
+    expect(mocked.proLeagueMatch.update).not.toHaveBeenCalled();
+  });
+
+  it("refuse de re-simuler un match déjà sim avec un autre engineVer", async () => {
+    mocked.proLeagueMatch.findUnique.mockResolvedValue(
+      makeMatch({
+        status: "failed",
+        engineVer: "9.99.99-old",
+      }),
+    );
+
+    await expect(simulateProMatch(MATCH_ID)).rejects.toThrow(
+      /Engine version mismatch/,
+    );
+  });
+
   it("marque le match 'failed' si simulateMatch throw", async () => {
     mocked.proLeagueMatch.findUnique.mockResolvedValue(makeMatch());
     const spy = vi
@@ -190,7 +217,13 @@ describe("simulateUpcomingMatches — sprint 1.A.4", () => {
   it("renvoie zéros si aucun match dans la fenêtre", async () => {
     mocked.proLeagueMatch.findMany.mockResolvedValue([]);
     const out = await simulateUpcomingMatches();
-    expect(out).toEqual({ simulated: 0, skipped: 0, failed: 0, inspected: 0 });
+    expect(out).toEqual({
+      simulated: 0,
+      skipped: 0,
+      failed: 0,
+      versionMismatched: 0,
+      inspected: 0,
+    });
   });
 
   it("fenêtre par défaut 24h (gte now, lte now+24h)", async () => {
