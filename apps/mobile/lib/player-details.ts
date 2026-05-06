@@ -49,7 +49,6 @@ export type StatKey = "ma" | "st" | "ag" | "pa" | "av";
 export interface AdvancementOption {
   type: AdvancementType;
   sppCost: number;
-  label: string;
 }
 
 export function parsePlayerAdvancements(raw: string): PlayerAdvancement[] {
@@ -102,17 +101,6 @@ export function getEffectiveStat(
   return Math.max(1, base - reduction);
 }
 
-const ADVANCEMENT_LABELS: Record<AdvancementType, string> = {
-  primary: "Primaire",
-  secondary: "Secondaire",
-  "random-primary": "Primaire aleatoire",
-  "random-secondary": "Secondaire aleatoire",
-};
-
-export function formatAdvancementType(type: AdvancementType): string {
-  return ADVANCEMENT_LABELS[type];
-}
-
 const ORDERED_TYPES: AdvancementType[] = [
   "primary",
   "secondary",
@@ -126,7 +114,6 @@ export function getNextAdvancementOptions(
   return ORDERED_TYPES.map((type) => ({
     type,
     sppCost: getNextAdvancementPspCost(advancementsCount, type),
-    label: ADVANCEMENT_LABELS[type],
   }));
 }
 
@@ -134,12 +121,22 @@ export function canAffordAdvancement(spp: number, cost: number): boolean {
   return spp >= cost;
 }
 
+/**
+ * Locale-agnostic structured representation of a player's persistent
+ * injuries. Formatting is the UI layer's responsibility (consume via
+ * `t("players.detail.injuries.*")`).
+ */
+export type InjurySummaryEntry =
+  | { kind: "niggling"; count: number }
+  | { kind: "stat-reduction"; stat: StatKey; value: number }
+  | { kind: "miss-next-match" };
+
 export function computeInjurySummary(
   player: TeamPlayerWithProgression,
-): string[] {
-  const summary: string[] = [];
+): InjurySummaryEntry[] {
+  const summary: InjurySummaryEntry[] = [];
   if (player.nigglingInjuries > 0) {
-    summary.push(`Blessures persistantes : ${player.nigglingInjuries}`);
+    summary.push({ kind: "niggling", count: player.nigglingInjuries });
   }
   const reductions: Array<[StatKey, number]> = [
     ["ma", player.maReduction ?? 0],
@@ -148,28 +145,24 @@ export function computeInjurySummary(
     ["pa", player.paReduction ?? 0],
     ["av", player.avReduction ?? 0],
   ];
-  for (const [key, reduction] of reductions) {
-    if (reduction > 0) {
-      summary.push(`${key.toUpperCase()} -${reduction}`);
+  for (const [stat, value] of reductions) {
+    if (value > 0) {
+      summary.push({ kind: "stat-reduction", stat, value });
     }
   }
   if (player.missNextMatch) {
-    summary.push("Absent au prochain match");
+    summary.push({ kind: "miss-next-match" });
   }
   return summary;
 }
 
-export type PlayerStatus =
-  | "Decede"
-  | "Absent prochain match"
-  | "Blesse"
-  | "Apte";
+export type PlayerStatusKind = "dead" | "miss-next-match" | "injured" | "fit";
 
 export function computePlayerStatus(
   player: TeamPlayerWithProgression,
-): PlayerStatus {
-  if (player.dead) return "Decede";
-  if (player.missNextMatch) return "Absent prochain match";
-  if ((player.nigglingInjuries ?? 0) > 0) return "Blesse";
-  return "Apte";
+): PlayerStatusKind {
+  if (player.dead) return "dead";
+  if (player.missNextMatch) return "miss-next-match";
+  if ((player.nigglingInjuries ?? 0) > 0) return "injured";
+  return "fit";
 }

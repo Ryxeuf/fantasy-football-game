@@ -22,6 +22,9 @@
  * S27.3.11 : namespace `teams.detail.*` pour `teams/[id].tsx` (etats,
  *   stats card, configuration, players, star players, erreurs de chargement
  *   et de sauvegarde).
+ * S27.3.12 : namespace `players.detail.*` pour `player/[teamId]/[playerId].tsx`
+ *   (statut, sections caracteristiques/progression/competences/avancements/
+ *   blessures, libelles d'avancements, summary blessures structure).
  *
  * Les autres namespaces (play, etc.) seront ajoutes au fur et a mesure du
  * remplacement des strings hardcodees.
@@ -268,6 +271,62 @@ export const FR_TRANSLATIONS = {
       loadTeams: "Impossible de charger les equipes",
       joinQueue: "Impossible de rejoindre la file",
       cancelSearch: "Impossible d'annuler la recherche",
+    },
+  },
+  players: {
+    detail: {
+      notFound: "Joueur introuvable",
+      teamNotFound: "Equipe introuvable",
+      backToTeam: "Retour a l'equipe",
+      backButton: "Retour",
+      subtitle: "{{position}} — {{team}}",
+      statBase: "base {{value}}",
+      status: {
+        dead: "Decede",
+        missNextMatch: "Absent prochain match",
+        injured: "Blesse",
+        fit: "Apte",
+      },
+      sections: {
+        stats: "Caracteristiques",
+        progression: "Progression",
+        skills: "Competences",
+        advancements: "Avancements acquis",
+        nextAdvancement: "Prochain avancement",
+        injuries: "Blessures & statut",
+      },
+      progression: {
+        spp: "SPP disponibles",
+        matchesPlayed: "Matchs joues",
+        touchdowns: "Touchdowns",
+        casualties: "Sorties infligees",
+        completions: "Passes reussies",
+        interceptions: "Interceptions",
+        mvp: "MVP",
+        advancementsCount: "Avancements pris",
+      },
+      skills: {
+        empty: "Aucune competence acquise",
+      },
+      advancements: {
+        empty: "Aucun avancement pour l'instant",
+        deadPlayer: "Joueur decede — aucune progression",
+        types: {
+          primary: "Primaire",
+          secondary: "Secondaire",
+          randomPrimary: "Primaire aleatoire",
+          randomSecondary: "Secondaire aleatoire",
+        },
+      },
+      injuries: {
+        empty: "Aucune blessure persistante",
+        niggling: "Blessures persistantes : {{count}}",
+        statReduction: "{{stat}} -{{value}}",
+        missNextMatch: "Absent au prochain match",
+      },
+      errors: {
+        loadError: "Erreur de chargement",
+      },
     },
   },
   auth: {

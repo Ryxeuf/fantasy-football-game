@@ -8,7 +8,6 @@ import {
   canAffordAdvancement,
   computeInjurySummary,
   computePlayerStatus,
-  formatAdvancementType,
   type TeamPlayerWithProgression,
 } from "./player-details";
 
@@ -136,7 +135,6 @@ describe("getNextAdvancementOptions", () => {
   it("increases the cost for later advancements", () => {
     const options = getNextAdvancementOptions(2);
     const primary = options.find((o) => o.type === "primary");
-    // 3rd advancement cost for primary = 12
     expect(primary?.sppCost).toBe(12);
   });
 
@@ -144,6 +142,13 @@ describe("getNextAdvancementOptions", () => {
     const options = getNextAdvancementOptions(10);
     const primary = options.find((o) => o.type === "primary");
     expect(primary?.sppCost).toBe(30);
+  });
+
+  it("does not return locale-bound labels (i18n moves to the UI)", () => {
+    const options = getNextAdvancementOptions(0);
+    for (const opt of options) {
+      expect(opt).not.toHaveProperty("label");
+    }
   });
 });
 
@@ -165,45 +170,71 @@ describe("computeInjurySummary", () => {
     expect(computeInjurySummary(player)).toEqual([]);
   });
 
-  it("reports niggling injuries", () => {
+  it("reports niggling injuries as a structured entry", () => {
     const player = buildPlayer({ nigglingInjuries: 2 });
     expect(computeInjurySummary(player)).toEqual([
-      "Blessures persistantes : 2",
+      { kind: "niggling", count: 2 },
     ]);
   });
 
-  it("reports stat reductions and miss-next-match", () => {
+  it("reports stat reductions as structured entries", () => {
     const player = buildPlayer({
       maReduction: 1,
-      avReduction: 1,
+      avReduction: 2,
+    });
+    const summary = computeInjurySummary(player);
+    expect(summary).toContainEqual({
+      kind: "stat-reduction",
+      stat: "ma",
+      value: 1,
+    });
+    expect(summary).toContainEqual({
+      kind: "stat-reduction",
+      stat: "av",
+      value: 2,
+    });
+  });
+
+  it("reports miss-next-match as its own entry", () => {
+    const player = buildPlayer({ missNextMatch: true });
+    expect(computeInjurySummary(player)).toContainEqual({
+      kind: "miss-next-match",
+    });
+  });
+
+  it("preserves locale-agnostic shape (no FR strings leaked)", () => {
+    const player = buildPlayer({
+      nigglingInjuries: 1,
+      stReduction: 1,
       missNextMatch: true,
     });
     const summary = computeInjurySummary(player);
-    expect(summary).toContain("MA -1");
-    expect(summary).toContain("AV -1");
-    expect(summary).toContain("Absent au prochain match");
+    for (const entry of summary) {
+      expect(typeof entry).toBe("object");
+      expect(entry).toHaveProperty("kind");
+    }
   });
 });
 
 describe("computePlayerStatus", () => {
-  it("returns 'Decede' for a dead player", () => {
-    expect(computePlayerStatus(buildPlayer({ dead: true }))).toBe("Decede");
+  it("returns 'dead' for a dead player", () => {
+    expect(computePlayerStatus(buildPlayer({ dead: true }))).toBe("dead");
   });
 
-  it("returns 'Absent prochain match' when flagged", () => {
-    expect(
-      computePlayerStatus(buildPlayer({ missNextMatch: true })),
-    ).toBe("Absent prochain match");
+  it("returns 'miss-next-match' when flagged", () => {
+    expect(computePlayerStatus(buildPlayer({ missNextMatch: true }))).toBe(
+      "miss-next-match",
+    );
   });
 
-  it("returns 'Blesse' when there are persistent injuries", () => {
-    expect(
-      computePlayerStatus(buildPlayer({ nigglingInjuries: 1 })),
-    ).toBe("Blesse");
+  it("returns 'injured' when there are persistent injuries", () => {
+    expect(computePlayerStatus(buildPlayer({ nigglingInjuries: 1 }))).toBe(
+      "injured",
+    );
   });
 
-  it("returns 'Apte' for a healthy player", () => {
-    expect(computePlayerStatus(buildPlayer())).toBe("Apte");
+  it("returns 'fit' for a healthy player", () => {
+    expect(computePlayerStatus(buildPlayer())).toBe("fit");
   });
 
   it("prioritises death over other statuses", () => {
@@ -212,19 +243,6 @@ describe("computePlayerStatus", () => {
       nigglingInjuries: 3,
       missNextMatch: true,
     });
-    expect(computePlayerStatus(player)).toBe("Decede");
-  });
-});
-
-describe("formatAdvancementType", () => {
-  it("returns a French label for each advancement type", () => {
-    expect(formatAdvancementType("primary")).toBe("Primaire");
-    expect(formatAdvancementType("secondary")).toBe("Secondaire");
-    expect(formatAdvancementType("random-primary")).toBe(
-      "Primaire aleatoire",
-    );
-    expect(formatAdvancementType("random-secondary")).toBe(
-      "Secondaire aleatoire",
-    );
+    expect(computePlayerStatus(player)).toBe("dead");
   });
 });

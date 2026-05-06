@@ -10,19 +10,25 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { apiGet, ApiError } from "../../../lib/api";
 import { useAuth } from "../../../lib/auth-context";
+import { useTranslation } from "../../../lib/i18n-context";
 import {
   canAffordAdvancement,
   computeInjurySummary,
   computePlayerStatus,
-  formatAdvancementType,
   formatSpp,
   formatStatValue,
   getEffectiveStat,
   getNextAdvancementOptions,
   parsePlayerAdvancements,
+  type InjurySummaryEntry,
+  type PlayerStatusKind,
   type StatKey,
   type TeamPlayerWithProgression,
 } from "../../../lib/player-details";
+import {
+  ADVANCEMENT_TRANSLATION_KEYS,
+  PLAYER_STATUS_TRANSLATION_KEYS,
+} from "../../../lib/players-detail-keys";
 
 const STATS: Array<{ key: StatKey; label: string }> = [
   { key: "ma", label: "MA" },
@@ -35,6 +41,7 @@ const STATS: Array<{ key: StatKey; label: string }> = [
 export default function PlayerDetailScreen() {
   const router = useRouter();
   const { logout } = useAuth();
+  const { t } = useTranslation();
   const params = useLocalSearchParams<{ teamId: string; playerId: string }>();
   const teamId = params.teamId;
   const playerId = params.playerId;
@@ -50,7 +57,7 @@ export default function PlayerDetailScreen() {
       const data = await apiGet(`/team/${teamId}`);
       const team = data?.team;
       if (!team) {
-        setError("Equipe introuvable");
+        setError(t("players.detail.teamNotFound"));
         return;
       }
       setTeamName(team.name ?? "");
@@ -58,7 +65,7 @@ export default function PlayerDetailScreen() {
         team.players ?? []
       ).find((p: TeamPlayerWithProgression) => p.id === playerId);
       if (!match) {
-        setError("Joueur introuvable");
+        setError(t("players.detail.notFound"));
         return;
       }
       setPlayer(match);
@@ -72,9 +79,11 @@ export default function PlayerDetailScreen() {
         router.replace("/login");
         return;
       }
-      setError(err instanceof Error ? err.message : "Erreur de chargement");
+      setError(
+        err instanceof Error ? err.message : t("players.detail.errors.loadError"),
+      );
     }
-  }, [teamId, playerId, router, logout]);
+  }, [teamId, playerId, router, logout, t]);
 
   useEffect(() => {
     fetchPlayer().finally(() => setLoading(false));
@@ -101,12 +110,16 @@ export default function PlayerDetailScreen() {
   if (error || !player) {
     return (
       <View style={styles.center}>
-        <Text style={styles.errorText}>{error ?? "Joueur introuvable"}</Text>
+        <Text style={styles.errorText}>
+          {error ?? t("players.detail.notFound")}
+        </Text>
         <Pressable
           onPress={() => (teamId ? router.replace(`/teams/${teamId}`) : router.back())}
           style={styles.linkButton}
         >
-          <Text style={styles.linkButtonText}>Retour a l&apos;equipe</Text>
+          <Text style={styles.linkButtonText}>
+            {t("players.detail.backToTeam")}
+          </Text>
         </Pressable>
       </View>
     );
@@ -125,14 +138,17 @@ export default function PlayerDetailScreen() {
           #{player.number} {player.name}
         </Text>
         <Text style={styles.subtitle}>
-          {player.position} — {teamName}
+          {t("players.detail.subtitle", {
+            position: player.position,
+            team: teamName,
+          })}
         </Text>
         <View style={[styles.badge, statusStyle(status)]}>
-          <Text style={styles.badgeText}>{status}</Text>
+          <Text style={styles.badgeText}>{t(PLAYER_STATUS_TRANSLATION_KEYS[status])}</Text>
         </View>
       </View>
 
-      <Section title="Caracteristiques">
+      <Section title={t("players.detail.sections.stats")}>
         <View style={styles.statRow}>
           {STATS.map((s) => {
             const effective = getEffectiveStat(player, s.key);
@@ -148,7 +164,9 @@ export default function PlayerDetailScreen() {
                 </Text>
                 {reduced && (
                   <Text style={styles.statBase}>
-                    base {formatStatValue(s.key, base)}
+                    {t("players.detail.statBase", {
+                      value: formatStatValue(s.key, base),
+                    })}
                   </Text>
                 )}
               </View>
@@ -157,69 +175,78 @@ export default function PlayerDetailScreen() {
         </View>
       </Section>
 
-      <Section title="Progression">
-        <InfoRow label="SPP disponibles" value={formatSpp(player.spp)} />
+      <Section title={t("players.detail.sections.progression")}>
         <InfoRow
-          label="Matchs joues"
+          label={t("players.detail.progression.spp")}
+          value={formatSpp(player.spp)}
+        />
+        <InfoRow
+          label={t("players.detail.progression.matchesPlayed")}
           value={String(player.matchesPlayed ?? 0)}
         />
         <InfoRow
-          label="Touchdowns"
+          label={t("players.detail.progression.touchdowns")}
           value={String(player.totalTouchdowns ?? 0)}
         />
         <InfoRow
-          label="Sorties infligees"
+          label={t("players.detail.progression.casualties")}
           value={String(player.totalCasualties ?? 0)}
         />
         <InfoRow
-          label="Passes reussies"
+          label={t("players.detail.progression.completions")}
           value={String(player.totalCompletions ?? 0)}
         />
         <InfoRow
-          label="Interceptions"
+          label={t("players.detail.progression.interceptions")}
           value={String(player.totalInterceptions ?? 0)}
         />
         <InfoRow
-          label="MVP"
+          label={t("players.detail.progression.mvp")}
           value={String(player.totalMvpAwards ?? 0)}
         />
         <InfoRow
-          label="Avancements pris"
+          label={t("players.detail.progression.advancementsCount")}
           value={String(advancements.length)}
         />
       </Section>
 
-      <Section title="Competences">
+      <Section title={t("players.detail.sections.skills")}>
         {player.skills ? (
           <Text style={styles.skillsText}>{player.skills}</Text>
         ) : (
-          <Text style={styles.empty}>Aucune competence acquise</Text>
+          <Text style={styles.empty}>{t("players.detail.skills.empty")}</Text>
         )}
       </Section>
 
-      <Section title="Avancements acquis">
+      <Section title={t("players.detail.sections.advancements")}>
         {advancements.length === 0 ? (
-          <Text style={styles.empty}>Aucun avancement pour l&apos;instant</Text>
+          <Text style={styles.empty}>
+            {t("players.detail.advancements.empty")}
+          </Text>
         ) : (
           advancements.map((adv, idx) => (
             <InfoRow
               key={`${adv.skillSlug}-${idx}`}
               label={`${idx + 1}. ${adv.skillSlug}`}
-              value={formatAdvancementType(adv.type)}
+              value={t(ADVANCEMENT_TRANSLATION_KEYS[adv.type])}
             />
           ))
         )}
       </Section>
 
-      <Section title="Prochain avancement">
+      <Section title={t("players.detail.sections.nextAdvancement")}>
         {player.dead ? (
-          <Text style={styles.empty}>Joueur decede — aucune progression</Text>
+          <Text style={styles.empty}>
+            {t("players.detail.advancements.deadPlayer")}
+          </Text>
         ) : (
           options.map((opt) => {
             const affordable = canAffordAdvancement(player.spp, opt.sppCost);
             return (
               <View key={opt.type} style={styles.row}>
-                <Text style={styles.rowLabel}>{opt.label}</Text>
+                <Text style={styles.rowLabel}>
+                  {t(ADVANCEMENT_TRANSLATION_KEYS[opt.type])}
+                </Text>
                 <Text
                   style={[
                     styles.rowValue,
@@ -234,23 +261,39 @@ export default function PlayerDetailScreen() {
         )}
       </Section>
 
-      <Section title="Blessures & statut">
+      <Section title={t("players.detail.sections.injuries")}>
         {injuries.length === 0 ? (
-          <Text style={styles.empty}>Aucune blessure persistante</Text>
+          <Text style={styles.empty}>{t("players.detail.injuries.empty")}</Text>
         ) : (
           injuries.map((entry, idx) => (
             <Text key={idx} style={styles.injuryItem}>
-              • {entry}
+              • {formatInjuryEntry(entry, t)}
             </Text>
           ))
         )}
       </Section>
 
       <Pressable onPress={() => router.back()} style={styles.backButton}>
-        <Text style={styles.backText}>Retour</Text>
+        <Text style={styles.backText}>{t("players.detail.backButton")}</Text>
       </Pressable>
     </ScrollView>
   );
+}
+
+function formatInjuryEntry(
+  entry: InjurySummaryEntry,
+  t: ReturnType<typeof useTranslation>["t"],
+): string {
+  if (entry.kind === "niggling") {
+    return t("players.detail.injuries.niggling", { count: entry.count });
+  }
+  if (entry.kind === "stat-reduction") {
+    return t("players.detail.injuries.statReduction", {
+      stat: entry.stat.toUpperCase(),
+      value: entry.value,
+    });
+  }
+  return t("players.detail.injuries.missNextMatch");
 }
 
 function Section({
@@ -277,10 +320,10 @@ function InfoRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function statusStyle(status: string) {
-  if (status === "Decede") return styles.badgeDead;
-  if (status === "Absent prochain match") return styles.badgeWarn;
-  if (status === "Blesse") return styles.badgeInjured;
+function statusStyle(status: PlayerStatusKind) {
+  if (status === "dead") return styles.badgeDead;
+  if (status === "miss-next-match") return styles.badgeWarn;
+  if (status === "injured") return styles.badgeInjured;
   return styles.badgeOk;
 }
 
