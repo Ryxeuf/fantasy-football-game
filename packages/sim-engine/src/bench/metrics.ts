@@ -178,7 +178,11 @@ export function computeVivacityMetrics(
     if (s.casualties >= BLOODBATH_CASUALTY_THRESHOLD) bloodbath += 1;
     if (s.favorite !== undefined) {
       withFavorite += 1;
-      if (s.outcome !== s.favorite) upsetCount += 1;
+      // Iter #3 (engineVer 0.4.0) : an upset means the underdog
+      // actually WINS the match. Draws are not upsets — they remain
+      // neutral on the outcome ledger.
+      const underdogSide = s.favorite === 'home' ? 'away' : 'home';
+      if (s.outcome === underdogSide) upsetCount += 1;
     }
   }
   const upsetRate = withFavorite > 0 ? upsetCount / withFavorite : 0;
