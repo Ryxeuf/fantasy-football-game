@@ -590,3 +590,40 @@ if (!inTestForfeitEnv && tickMs > 0) {
     }, tickMs).unref();
   });
 }
+
+// =============================================================================
+// Pro League sim-runner cron (sprint Pro League lot 1.A.4 — activation).
+// =============================================================================
+// Pre-simule les matchs ProLeague dont scheduledAt tombe dans les
+// prochaines 24h. Persiste Replay + met a jour ProLeagueMatch.
+//
+// Tick par defaut : 10 min. Configurable via PRO_LEAGUE_SIM_RUNNER_TICK_MS.
+// Mettre = 0 pour desactiver (CI / dev local sans side-effects).
+const inTestSimRunnerEnv =
+  process.env.NODE_ENV === "test" || process.env.TEST_SQLITE === "1";
+const simRunnerTickMsEnv = Number(process.env.PRO_LEAGUE_SIM_RUNNER_TICK_MS);
+const simRunnerTickMs = Number.isFinite(simRunnerTickMsEnv)
+  ? simRunnerTickMsEnv
+  : 10 * 60 * 1000;
+if (!inTestSimRunnerEnv && simRunnerTickMs > 0) {
+  void import("./services/pro-league-sim-runner").then(
+    ({ simulateUpcomingMatches }) => {
+      const tick = async () => {
+        try {
+          const out = await simulateUpcomingMatches();
+          if (out.simulated > 0 || out.failed > 0 || out.versionMismatched > 0) {
+            serverLog.info(
+              `[pro-league-sim] tick: simulated=${out.simulated} skipped=${out.skipped} failed=${out.failed} versionMismatched=${out.versionMismatched} (inspected=${out.inspected})`,
+            );
+          }
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : "unknown";
+          serverLog.error(`[pro-league-sim] tick failed: ${msg}`);
+        }
+      };
+      setInterval(() => {
+        void tick();
+      }, simRunnerTickMs).unref();
+    },
+  );
+}
