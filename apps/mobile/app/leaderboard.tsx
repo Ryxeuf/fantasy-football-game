@@ -11,6 +11,7 @@ import {
 import { useRouter } from "expo-router";
 import { apiGet, ApiError } from "../lib/api";
 import { useAuth } from "../lib/auth-context";
+import { useTranslation } from "../lib/i18n-context";
 import {
   LEADERBOARD_PAGE_SIZE,
   computeLeaderboardStats,
@@ -33,6 +34,7 @@ const EMPTY_META: LeaderboardMeta = {
 export default function LeaderboardScreen() {
   const router = useRouter();
   const { logout } = useAuth();
+  const { t } = useTranslation();
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [meta, setMeta] = useState<LeaderboardMeta>(EMPTY_META);
   const [offset, setOffset] = useState(0);
@@ -59,10 +61,14 @@ export default function LeaderboardScreen() {
           router.replace("/login");
           return;
         }
-        setError(err instanceof Error ? err.message : "Erreur de chargement");
+        setError(
+          err instanceof Error
+            ? err.message
+            : t("leaderboard.errors.loadError"),
+        );
       }
     },
-    [logout, router],
+    [logout, router, t],
   );
 
   useEffect(() => {
@@ -95,18 +101,22 @@ export default function LeaderboardScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Classement ELO</Text>
+        <Text style={styles.title}>{t("leaderboard.title")}</Text>
       </View>
 
       <View style={styles.statsRow}>
-        <StatCard label="Joueurs" value={String(meta.total)} testID="stats-total" />
         <StatCard
-          label="Meilleur"
+          label={t("leaderboard.stats.players")}
+          value={String(meta.total)}
+          testID="stats-total"
+        />
+        <StatCard
+          label={t("leaderboard.stats.best")}
           value={formatEloRating(stats.top)}
           testID="stats-top"
         />
         <StatCard
-          label="Moyen"
+          label={t("leaderboard.stats.average")}
           value={formatEloRating(stats.average)}
           testID="stats-average"
         />
@@ -120,9 +130,11 @@ export default function LeaderboardScreen() {
 
       {error && !loading && (
         <View style={styles.center}>
-          <Text style={styles.errorText}>Erreur : {error}</Text>
+          <Text style={styles.errorText}>
+            {t("leaderboard.errors.prefix", { message: error })}
+          </Text>
           <Pressable onPress={onRefresh} style={styles.retryButton}>
-            <Text style={styles.retryText}>Reessayer</Text>
+            <Text style={styles.retryText}>{t("common.retry")}</Text>
           </Pressable>
         </View>
       )}
@@ -138,9 +150,7 @@ export default function LeaderboardScreen() {
           }
           ListEmptyComponent={
             <View style={styles.center}>
-              <Text style={styles.emptyText}>
-                Aucun coach classe pour l'instant.
-              </Text>
+              <Text style={styles.emptyText}>{t("leaderboard.empty")}</Text>
             </View>
           }
           ListFooterComponent={
@@ -161,11 +171,14 @@ export default function LeaderboardScreen() {
                       firstPage && styles.pageButtonTextDisabled,
                     ]}
                   >
-                    Precedent
+                    {t("leaderboard.pagination.previous")}
                   </Text>
                 </Pressable>
                 <Text style={styles.pageIndicator}>
-                  Page {currentPage} / {totalPages}
+                  {t("leaderboard.pagination.pageOf", {
+                    current: currentPage,
+                    total: totalPages,
+                  })}
                 </Text>
                 <Pressable
                   accessibilityRole="button"
@@ -182,7 +195,7 @@ export default function LeaderboardScreen() {
                       lastPage && styles.pageButtonTextDisabled,
                     ]}
                   >
-                    Suivant
+                    {t("leaderboard.pagination.next")}
                   </Text>
                 </Pressable>
               </View>

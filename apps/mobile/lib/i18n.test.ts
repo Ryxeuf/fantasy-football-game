@@ -504,3 +504,93 @@ describe("matchmaking screen i18n keys (S27.3.6)", () => {
     ).toBe("Team value: 1000k  (matching 850k - 1150k)");
   });
 });
+
+/**
+ * S27.3.7 — Leaderboard screen i18n keys (leaderboard.tsx).
+ *
+ * Couvre toutes les cles utilisees par `apps/mobile/app/leaderboard.tsx` :
+ *  - Header (leaderboard.title)
+ *  - Stat cards (leaderboard.stats.{players,best,average})
+ *  - Empty state (leaderboard.empty)
+ *  - Error (leaderboard.errors.{loadError, prefix})
+ *  - Pagination (leaderboard.pagination.{previous,next,pageOf})
+ *
+ * Pageage "Page X / Y" est legitimement identique en FR et EN, donc
+ * exclu du test FR != EN. Le reste exige une trad distincte.
+ */
+const LEADERBOARD_I18N_KEYS = [
+  "leaderboard.title",
+  "leaderboard.stats.players",
+  "leaderboard.stats.best",
+  "leaderboard.stats.average",
+  "leaderboard.empty",
+  "leaderboard.errors.loadError",
+  "leaderboard.errors.prefix",
+  "leaderboard.pagination.previous",
+  "leaderboard.pagination.next",
+  "leaderboard.pagination.pageOf",
+] as const;
+
+describe("leaderboard screen i18n keys (S27.3.7)", () => {
+  it.each(LEADERBOARD_I18N_KEYS)(
+    "FR : '%s' retourne une chaine non vide differente de la cle",
+    (key) => {
+      const value = t(key as never);
+      expect(typeof value).toBe("string");
+      expect(value.length).toBeGreaterThan(0);
+      expect(value).not.toBe(key);
+    },
+  );
+
+  it.each(LEADERBOARD_I18N_KEYS)(
+    "EN : '%s' retourne une chaine non vide differente de la cle",
+    (key) => {
+      const value = t(key as never, undefined, "en" as Locale);
+      expect(typeof value).toBe("string");
+      expect(value.length).toBeGreaterThan(0);
+      expect(value).not.toBe(key);
+    },
+  );
+
+  // Exclut "leaderboard.pagination.pageOf" : "Page X / Y" est identique
+  // entre FR et EN par convention (seul le mot "Page" varie peu, ici on
+  // garde "Page" dans les deux pour rester court et reconnaissable).
+  const LEADERBOARD_KEYS_REQUIRING_DISTINCT_EN = [
+    "leaderboard.title",
+    "leaderboard.stats.players",
+    "leaderboard.stats.best",
+    "leaderboard.stats.average",
+    "leaderboard.empty",
+    "leaderboard.errors.loadError",
+    "leaderboard.errors.prefix",
+    "leaderboard.pagination.previous",
+    "leaderboard.pagination.next",
+  ] as const;
+
+  it.each(LEADERBOARD_KEYS_REQUIRING_DISTINCT_EN)(
+    "FR != EN pour '%s' (parite stricte, pas de copie oubliee)",
+    (key) => {
+      const fr = t(key as never);
+      const en = t(key as never, undefined, "en" as Locale);
+      expect(fr).not.toBe(en);
+    },
+  );
+
+  it("pageOf interpole {{current}} et {{total}}", () => {
+    expect(
+      t("leaderboard.pagination.pageOf", { current: 2, total: 5 }),
+    ).toBe("Page 2 / 5");
+    expect(
+      t("leaderboard.pagination.pageOf", { current: 1, total: 1 }, "en"),
+    ).toBe("Page 1 / 1");
+  });
+
+  it("errors.prefix interpole {{message}}", () => {
+    expect(
+      t("leaderboard.errors.prefix", { message: "Boom" }),
+    ).toBe("Erreur : Boom");
+    expect(
+      t("leaderboard.errors.prefix", { message: "Boom" }, "en"),
+    ).toBe("Error: Boom");
+  });
+});
