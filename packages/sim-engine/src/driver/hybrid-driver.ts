@@ -326,14 +326,12 @@ function rollYards(
   profile: TacticalProfile,
   defenseProfile: TacticalProfile
 ): number {
-  // Sprint 0.E.1 tuning iter #8 (engineVer 0.9.0) :
+  // Sprint 0.E.1 tuning iter #9 (engineVer 0.10.0) :
   //
   // - Base : 2d6+2 (mean 7).
   // - bash counter / disruption / pace offset : unchanged.
-  // - Breakthrough proba : 10% → 12%. Magnitude unchanged.
-  // - +Pair-fluide bonus : `(Math.abs(rng.next() - 0.5) > 0.45) → ±2 yards
-  //   extra` — pousse plus d'extrême sur les rolls. Petit boost de
-  //   variance sans dépendre du fat-tail uniquement.
+  // - Breakthrough proba : 12% → 14%. Magnitudes unchanged.
+  //   Cible : std dev TD 1.4.
   const dice = Math.floor(rng.next() * 6) + Math.floor(rng.next() * 6) + 2;
   const paceOffset = Math.round(profile.pace / 25) - 2;
   const bashCounter = -Math.round(defenseProfile.bashIndex / 28);
@@ -343,11 +341,11 @@ function rollYards(
   );
   const fatTail = rng.next();
   let breakthrough = 0;
-  if (fatTail < 0.12) {
+  if (fatTail < 0.14) {
     if (defenseProfile.bashIndex < 50) breakthrough = 40;
     else if (defenseProfile.bashIndex < 70) breakthrough = 35;
     else breakthrough = 30;
-  } else if (fatTail < 0.24) {
+  } else if (fatTail < 0.28) {
     breakthrough = -10;
   }
   return Math.max(0, dice + paceOffset + bashCounter + defensiveDisruption + breakthrough);
