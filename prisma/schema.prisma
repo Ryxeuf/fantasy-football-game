@@ -71,6 +71,7 @@ model User {
   eloSnapshots                EloSnapshot[]
   tutorialCompletions         TutorialCompletion[]
   proSpectatorFollows         ProSpectatorFollow[]
+  proWallet                   ProWallet?
 }
 
 /// S26.3l — Historique ELO du coach. Une ligne par mise a jour ELO (donc 2
@@ -1344,4 +1345,53 @@ model ProSpectatorFollow {
   @@unique([userId, proTeamId])
   @@index([userId])
   @@index([proTeamId])
+}
+
+/// Sprint Pro League lot 1.D.1 — Wallet Crowns.
+///
+/// 1 wallet par user (`userId @id`). `crowns` est le solde courant
+/// (cache) ; le ledger immuable est `Transaction` (historique
+/// append-only). `crowns` est mis a jour atomiquement a chaque
+/// debit/credit dans la meme transaction Prisma.
+///
+/// Sources de Crowns au MVP (cf. lot 1.D.6) :
+///  - Inscription : 1000 Crowns offerts (REWARD)
+///  - Login quotidien : 50 Crowns (max 1/24h, type DAILY)
+///  - Gain de pari : montant net (WIN)
+///  - Badge debloque : prime variable (BADGE)
+/// Sortie de Crowns : pose d'un pari (BET, montant negatif).
+model ProWallet {
+  userId    String   @id
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Solde courant en Crowns. Mis a jour atomique avec chaque
+  /// Transaction associee. Toujours >= 0 (les debit echouent en
+  /// dessous via la contrainte service).
+  crowns    Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions ProTransaction[]
+}
+
+/// Sprint Pro League lot 1.D.1 — Ledger immuable des operations Crowns.
+///
+/// `type` distingue la nature : BET (mise sur un pari, debit), WIN
+/// (gain net post-settlement, credit), REWARD (cadeau / first-time
+/// bonus), DAILY (login quotidien), BADGE (recompense badge).
+/// `amount` est signe : negatif pour debit, positif pour credit.
+/// `ref` est optionnel et stocke un identifiant business (`betId`,
+/// `badgeCode`, `marketId`) selon le type — facilite l'audit sans
+/// rejoindre une autre table.
+model ProTransaction {
+  id        String    @id @default(cuid())
+  wallet    ProWallet @relation(fields: [walletId], references: [userId], onDelete: Cascade)
+  walletId  String
+  type      String
+  amount    Int
+  /// Reference business optionnelle (betId, badgeCode, marketId, ...).
+  ref       String?
+  createdAt DateTime  @default(now())
+
+  @@index([walletId, createdAt])
+  @@index([type])
 }

@@ -71,6 +71,7 @@ model User {
   eloSnapshots                EloSnapshot[]
   tutorialCompletions         TutorialCompletion[]
   proSpectatorFollows         ProSpectatorFollow[]
+  proWallet                   ProWallet?
 }
 
 /// S26.3l — mirror SQLite de l'historique ELO Postgres (snapshot par mise a jour).
@@ -1013,4 +1014,27 @@ model ProSpectatorFollow {
   @@unique([userId, proTeamId])
   @@index([userId])
   @@index([proTeamId])
+}
+
+model ProWallet {
+  userId    String   @id
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  crowns    Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions ProTransaction[]
+}
+
+model ProTransaction {
+  id        String    @id @default(cuid())
+  wallet    ProWallet @relation(fields: [walletId], references: [userId], onDelete: Cascade)
+  walletId  String
+  type      String
+  amount    Int
+  ref       String?
+  createdAt DateTime  @default(now())
+
+  @@index([walletId, createdAt])
+  @@index([type])
 }
