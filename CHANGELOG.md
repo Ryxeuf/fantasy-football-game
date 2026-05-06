@@ -1,3 +1,46 @@
+## [1.85.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.84.0...v1.85.0) (2026-05-06)
+
+
+### ✨ Features
+
+* **admin:** petit utilitaire admin pour simuler des paires Pro League ([#576](https://github.com/Ryxeuf/fantasy-football-game/issues/576)) ([9c169f9](https://github.com/Ryxeuf/fantasy-football-game/commit/9c169f9a4ef3b77b3d241e39d9bd064cd2782c1a))
+* initialize @bb/sim-engine package with public API ([#551](https://github.com/Ryxeuf/fantasy-football-game/issues/551)) ([24f7ebf](https://github.com/Ryxeuf/fantasy-football-game/commit/24f7ebfaa52475bdca1af8201b936864b6daf897))
+* **mobile:** i18n auth screens (login/register) — S27.3.5 ([#562](https://github.com/Ryxeuf/fantasy-football-game/issues/562)) ([b4d4e23](https://github.com/Ryxeuf/fantasy-football-game/commit/b4d4e23a9fc9fc51a2a728f741e4db6629add05d))
+* **mobile:** i18n leaderboard screen — S27.3.7 ([#565](https://github.com/Ryxeuf/fantasy-football-game/issues/565)) ([93404a2](https://github.com/Ryxeuf/fantasy-football-game/commit/93404a24d7eeeeb0e1beffe4b3f915eb0ec9efb9))
+* **mobile:** i18n matchmaking screen — S27.3.6 ([#564](https://github.com/Ryxeuf/fantasy-football-game/issues/564)) ([3e13640](https://github.com/Ryxeuf/fantasy-football-game/commit/3e136405a64c258a1dca18aaaf0aa0da50504f89))
+* **mobile:** i18n teams list screen — S27.3.8 ([#566](https://github.com/Ryxeuf/fantasy-football-game/issues/566)) ([bf8a3ab](https://github.com/Ryxeuf/fantasy-football-game/commit/bf8a3ab44726138b5b54fc9d07cb7ab3a3c85354))
+* **mobile:** i18n teams new screen — S27.3.9 ([#567](https://github.com/Ryxeuf/fantasy-football-game/issues/567)) ([acac244](https://github.com/Ryxeuf/fantasy-football-game/commit/acac2448d79ded12891605a4a156e99ff2a4b120))
+* **mobile:** S27.3.10 — script audit i18n (baseline 42 strings) ([#572](https://github.com/Ryxeuf/fantasy-football-game/issues/572)) ([09452c7](https://github.com/Ryxeuf/fantasy-football-game/commit/09452c776fe1b70199bd9b12c0dfa0ec8bc5b666))
+* **mobile:** S27.3.3 i18n sub-components settings/* ([#550](https://github.com/Ryxeuf/fantasy-football-game/issues/550)) ([32105c3](https://github.com/Ryxeuf/fantasy-football-game/commit/32105c3fed1c218851730700705daecd6f573009))
+* **mobile:** S27.3.4 refactor lobby.tsx + i18n lobby.* complet ([#556](https://github.com/Ryxeuf/fantasy-football-game/issues/556)) ([256fb07](https://github.com/Ryxeuf/fantasy-football-game/commit/256fb07b6029514a5a58a0016a6b0c5cfd650c52))
+* **shared-types:** typed MatchEvent format with EventType catalogue (Pro League 0.A.3) ([#553](https://github.com/Ryxeuf/fantasy-football-game/issues/553)) ([7001f74](https://github.com/Ryxeuf/fantasy-football-game/commit/7001f748bb6f0458a761dd8af2f0b2f2d317eff0))
+* **sim-engine:** 16 profils raciaux Pro League (0.B.3) ([#558](https://github.com/Ryxeuf/fantasy-football-game/issues/558)) ([2d348a7](https://github.com/Ryxeuf/fantasy-football-game/commit/2d348a7103e4f4b7ec5dfa21eb1d148407613135))
+* **sim-engine:** BB action resolvers (block/dodge/pass/pickup/gfi/foul) — Pro League 0.A.5 ([#554](https://github.com/Ryxeuf/fantasy-football-game/issues/554)) ([84301e3](https://github.com/Ryxeuf/fantasy-football-game/commit/84301e3e55e3864b94882a500aaf9b0195423322))
+* **sim-engine:** behavior tree 3-passes + 6 strategies + 5 patterns — closes lot B (0.B.1) ([#561](https://github.com/Ryxeuf/fantasy-football-game/issues/561)) ([f3826ce](https://github.com/Ryxeuf/fantasy-football-game/commit/f3826ce2f4f95271f6162c6794df04dad8bc9310))
+* **sim-engine:** bibliothèque Eye of Nuffle (28 events scriptés) (0.C.1) ([#563](https://github.com/Ryxeuf/fantasy-football-game/issues/563)) ([14874a7](https://github.com/Ryxeuf/fantasy-football-game/commit/14874a7bd8b92d74c985d7ed797ee05439167ab6))
+* **sim-engine:** CI bench regression gate — closes lot D (0.D.4) ([#575](https://github.com/Ryxeuf/fantasy-football-game/issues/575)) ([edc7d13](https://github.com/Ryxeuf/fantasy-football-game/commit/edc7d1300f96c4bbbf1d71a178b5ed17a1137c24))
+* **sim-engine:** CLI pnpm sim:bench (runner + formatter + report) (0.D.1) ([#574](https://github.com/Ryxeuf/fantasy-football-game/issues/574)) ([4f5a139](https://github.com/Ryxeuf/fantasy-football-game/commit/4f5a139b2e2cd820e7f7a6de48169152c83eafc0))
+* **sim-engine:** cross-match PlayerForm avec decay sur 3 matchs — closes lot C (0.C.4) ([#570](https://github.com/Ryxeuf/fantasy-football-game/issues/570)) ([9d2c10f](https://github.com/Ryxeuf/fantasy-football-game/commit/9d2c10fc06143dbd0c398bc6bffd3a017e31d564))
+* **sim-engine:** dataset référence FUMBBL versionné (0.D.2) ([#573](https://github.com/Ryxeuf/fantasy-football-game/issues/573)) ([ffcaa5b](https://github.com/Ryxeuf/fantasy-football-game/commit/ffcaa5bb9cc2972fb0c58ec8f80401a4800a16d0))
+* **sim-engine:** hooks injection Nuffle events dans le driver (0.C.2) ([#568](https://github.com/Ryxeuf/fantasy-football-game/issues/568)) ([4a9cc84](https://github.com/Ryxeuf/fantasy-football-game/commit/4a9cc84083e53becd0abd116ce31503b205a4d4d))
+* **sim-engine:** hybrid driver — closes lot A (Pro League 0.A.2) ([#555](https://github.com/Ryxeuf/fantasy-football-game/issues/555)) ([3d1f817](https://github.com/Ryxeuf/fantasy-football-game/commit/3d1f817ab4cf8c4769b7fc2ea1aad65866048f9f))
+* **sim-engine:** IA temperature softmax pilotée par riskAppetite (0.B.5) ([#559](https://github.com/Ryxeuf/fantasy-football-game/issues/559)) ([dbd480d](https://github.com/Ryxeuf/fantasy-football-game/commit/dbd480d7dbb31e366d3690e253b82d3496c09f2a))
+* **sim-engine:** métriques vivacité (variance, fat-tails, Gini, upset rate) (0.D.3) ([#571](https://github.com/Ryxeuf/fantasy-football-game/issues/571)) ([6fdbdd3](https://github.com/Ryxeuf/fantasy-football-game/commit/6fdbdd36f70df63346f6f9a03c60b1a014b35539))
+* **sim-engine:** per-player momentum tracker hot/normal/cold (0.B.4) ([#560](https://github.com/Ryxeuf/fantasy-football-game/issues/560)) ([f554007](https://github.com/Ryxeuf/fantasy-football-game/commit/f554007b03fed38962f05e9ed21cecfd9da47864))
+* **sim-engine:** seeded xoroshiro PRNG + ban Math.random (Pro League 0.A.4) ([#552](https://github.com/Ryxeuf/fantasy-football-game/issues/552)) ([b8d64d9](https://github.com/Ryxeuf/fantasy-football-game/commit/b8d64d9f9636b3b87b724849b3f1e7005ed87a4a))
+* **sim-engine:** TacticalProfile + Zod schema (Pro League 0.B.2) ([#557](https://github.com/Ryxeuf/fantasy-football-game/issues/557)) ([97f619a](https://github.com/Ryxeuf/fantasy-football-game/commit/97f619a17bf6e8f9951d09caae11daeaca65cbd4))
+* **sim-engine:** underdog variance boost (TV gap > 200, +10%) (0.C.3) ([#569](https://github.com/Ryxeuf/fantasy-football-game/issues/569)) ([0214c90](https://github.com/Ryxeuf/fantasy-football-game/commit/0214c9036e5bf1405bd04175667ac41858e9ec03))
+
+
+### 🐛 Bug Fixes
+
+* **docker:** add sim-engine and shared-types package.json to server Dockerfile ([c4b68d5](https://github.com/Ryxeuf/fantasy-football-game/commit/c4b68d54a65a1e9f393fc9497ddced33e51ed8d1))
+
+
+### 📝 Documentation
+
+* archive Ligues v2 optional extensions to future-ideas ([#549](https://github.com/Ryxeuf/fantasy-football-game/issues/549)) ([b636634](https://github.com/Ryxeuf/fantasy-football-game/commit/b636634b605311515934808a10820fbc8e68b73b))
+
 ## [1.84.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.83.0...v1.84.0) (2026-05-05)
 
 
