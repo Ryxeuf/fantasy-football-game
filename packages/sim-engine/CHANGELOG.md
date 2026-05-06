@@ -7,6 +7,56 @@ sim engine. Used as the audit trail for sprint Pro League lots 0.D
 Each version bump matches `ENGINE_VER` in `src/types.ts` and is
 reflected in `bench/bench-baseline.json`.
 
+## 0.11.0 — 2026-05-06 (sprint task 0.E.1 iter #10) — pause for user review
+
+### Headline 🎯
+
+- **Casualty rate ~98% FUMBBL** : 0.89-0.94 → **0.96-0.99 / match**
+  (FUMBBL ~1.0 — virtually parité)
+- **2 matchups passent C1** : Snow Ogres vs Halflings 1.53, Outlaws
+  vs Eagles 1.44. Iron Bears vs Gold Rush 1.39 (just below)
+- **TD means** : 1.91-2.08 → **2.50-2.75** (FUMBBL range)
+
+### Changes
+
+- **Breakthrough proba** : 14% → **16%**
+- **Casualty Nuffle expansion** :
+  - `crowd_riot` 50% → **60%**
+  - `equipment_failure` ajouté (30%)
+  - `wardrobe_malfunction` ajouté (20%)
+  - **8 events** injectent désormais des casualties
+
+### Observed deltas (200 runs / pairing, seed=0)
+
+| Matchup | TD mean | Std | Cas | C1 |
+|---|---|---|---|---|
+| Smashers vs Soaring Hawks | 2.33→**2.68** | 1.19→**1.34** | .89→**.96** | ❌ (close) |
+| Snow Ogres vs Cheese Halflings | 2.46→**2.75** | 1.43→**1.53** | .91→**.98** | **✓** |
+| Iron Bears vs Gold Rush | 2.27→**2.63** | 1.32→**1.39** | .90→**.98** | ❌ (very close) |
+| Cold Tacticians vs Tomb Cardinals | 2.21→**2.50** | 1.26→**1.29** | .93→**.99** | ❌ |
+| Outlaws vs Storm Eagles | 2.25→**2.57** | 1.43→**1.44** | .94→**.99** | **✓** |
+
+### Cumulative progression depuis iter 0 (engineVer 0.1.0)
+
+| Métrique | iter 0 | iter 10 | Delta |
+|---|---|---|---|
+| Casualty rate | 0.04 | **0.96-0.99** | **×24** |
+| Std dev TD | ~0.95 | 1.29-1.53 (2/5 ✓) | +35% |
+| TD mean | 1.65 | 2.50-2.75 | +50% |
+| Skaven vs Dwarves | 73% Skaven | parité | inversion |
+
+### Pause user
+
+10 iterations terminées. Pause pour décision user (option 1 retenue
+au début : iterate jusqu'à 10 puis avise).
+
+C1+C2+C3 ne sont pas tous passés mais convergence claire :
+- C1 : 2/5 pairings DANS cible (1.4) ; 3/5 entre 1.29 et 1.39 (proches)
+- C2 : aucun en cible, range 23-38.5% (cible 12-18%) — métrique
+  difficile à atteindre
+- C3 : parité OK (Iron Bears vs Skaven 37/32)
+- Casualty rate : ~98% FUMBBL (parité quasi-atteinte)
+
 ## 0.10.0 — 2026-05-06 (sprint task 0.E.1 iter #9)
 
 ### Headline 🎯
