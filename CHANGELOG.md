@@ -1,3 +1,10 @@
+## [1.89.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.89.0...v1.89.1) (2026-05-06)
+
+
+### 🐛 Bug Fixes
+
+* **nav:** Soutenir en nuffle-red ([#7](https://github.com/Ryxeuf/fantasy-football-game/issues/7)A1F1F) au lieu du gris ([84b3b2f](https://github.com/Ryxeuf/fantasy-football-game/commit/84b3b2fc94ab413aa9a7b0619308ad08d3045228)), closes [#7A1F1](https://github.com/Ryxeuf/fantasy-football-game/issues/7A1F1)
+
 ## [1.89.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.88.0...v1.89.0) (2026-05-06)
 
 
