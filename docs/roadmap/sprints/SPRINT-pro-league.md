@@ -125,7 +125,7 @@ jusqu'a passer le gate.
 | 0.E.1 | Iteration tuning profils | Tuning | XL | [x] | Boucle : run bench → identifier deltas vs FUMBBL (>10%) → ajuster profils (bashIndex, riskAppetite, etc.) → re-run. Objectif : tous les matchups raciaux dans ±10% du winrate FUMBBL. Documenter ajustements dans `packages/sim-engine/CHANGELOG.md`. (Premiere iteration livree : engineVer 0.1.0 → 0.2.0, race-aware LOS stats + pace-driven yards. Itererations supplementaires necessaires.) |
 | 0.E.2 | Replay sampling tool | DevX | M | [x] | Script `pnpm sim:replay --random=50` qui sort 50 matchs aleatoires en format lisible (txt narratif + lien web Pixi spectate). Pour panel humain. |
 | 0.E.3 | Panel BB experts (5 testeurs) | Process | M | [x] | Recruter 5 testeurs BB experts (FUMBBL veterans, NAF coaches, communaute). Leur fournir 50 replays aleatoires + grille notation 0-10 sur : lisibilite tactique, coherence drives, identite raciale, moments memorables. Cible >= 7/10 moyenne. (Kit livre dans `docs/roadmap/sprints/pro-league-panel/` : 50 replays + brief + grille + synthese template. Recrutement humain hors scope agent.) |
-| 0.E.4 | Gate decision documentee | Process | S | [ ] | Document `docs/roadmap/sprints/pro-league-gate.md` : metriques stat finales, scores humains, deltas residuels, GO/NO-GO motive. Si NO-GO, retour en Lot 0.E.1 avec plan d'amelioration. |
+| 0.E.4 | Gate decision documentee | Process | S | [x] | Document `docs/roadmap/sprints/pro-league-gate.md` : metriques stat finales, scores humains, deltas residuels, GO/NO-GO motive. Si NO-GO, retour en Lot 0.E.1 avec plan d'amelioration. (Verdict provisoire : NO-GO, C1+C3 fail. Plan v0.3.0 documente.) |
 
 ---
 
