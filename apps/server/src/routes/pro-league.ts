@@ -40,6 +40,10 @@ import {
   getProLeagueCurrentStandings,
 } from "../services/pro-league-standings";
 import {
+  ProMatchNotFoundError,
+  getProMatchDetail,
+} from "../services/pro-league-match";
+import {
   ProTeamNotFoundError,
   getProTeamDetail,
 } from "../services/pro-league-team";
@@ -222,11 +226,40 @@ export async function handleGetTeamDetail(
   }
 }
 
+/**
+ * Sprint 1.C.3 — Détail d'un match Pro League (meta + équipes +
+ * scoreboard + highlights). NB : pour les events temps réel,
+ * utiliser `/pro-league/matches/:id/stream` (lot 1.B.2).
+ */
+export async function handleGetMatchDetail(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const id = req.params.id;
+  if (!id || typeof id !== "string") {
+    res.status(400).json({ error: "missing-match-id" });
+    return;
+  }
+  try {
+    const data = await getProMatchDetail(id);
+    res.json(data);
+  } catch (err: unknown) {
+    if (err instanceof ProMatchNotFoundError) {
+      res.status(404).json({ error: err.message });
+      return;
+    }
+    const msg = err instanceof Error ? err.message : "unknown";
+    serverLog.error(`[pro-league/matches/${id}] failed: ${msg}`);
+    res.status(500).json({ error: "internal-error" });
+  }
+}
+
 const router = Router();
 
 router.get("/seasons/current", handleGetCurrentSeasonHub);
 router.get("/seasons/current/standings", handleGetCurrentSeasonStandings);
 router.get("/teams/:slug", handleGetTeamDetail);
+router.get("/matches/:id", handleGetMatchDetail);
 router.get("/matches/:id/stream", handleStreamProMatch);
 router.get("/_internal/broadcaster-stats", handleBroadcasterStats);
 
