@@ -40,6 +40,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@bb/game-engine': resolve(__dirname, '../../packages/game-engine/src'),
+      '@bb/sim-engine': resolve(__dirname, '../../packages/sim-engine/src'),
+      '@bb/shared-types': resolve(__dirname, '../../packages/shared-types/src'),
     },
   },
 });

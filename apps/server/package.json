@@ -23,6 +23,7 @@
     "postinstall": "test -f ../../prisma/schema.prisma && prisma generate --schema ../../prisma/schema.prisma || true"
   },
   "dependencies": {
+    "@bb/sim-engine": "workspace:*",
     "@prisma/client": "^6.16.2",
     "bcryptjs": "^3.0.2",
     "body-parser": "^2.2.0",
