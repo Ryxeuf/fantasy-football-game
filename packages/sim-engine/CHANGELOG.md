@@ -7,6 +7,68 @@ sim engine. Used as the audit trail for sprint Pro League lots 0.D
 Each version bump matches `ENGINE_VER` in `src/types.ts` and is
 reflected in `bench/bench-baseline.json`.
 
+## 0.5.0 — 2026-05-06 (sprint task 0.E.1 iter #4)
+
+### Changes
+
+- **`rollYards` bash counter renforce** : `-bashIndex/25` (au lieu de
+  /30 en iter #3). Bash 90 défense → -4 yards (au lieu de -3).
+- **NEW : `defensiveDisruption` term** : `-min(3, stallTendency × bashIndex / 2000)`.
+  Quand la défense est stally ET bashy (Dwarves bash 90 stall 75 →
+  -3 yards), drives subissent une perturbation extra. Cible
+  spécifique : Dwarves vs Skaven 47/19 → ~50/50.
+- **`rollYards` breakthrough magnitude** : +20 → +30 yards. Plus
+  d'amplitude pour augmenter std dev TD.
+- **Bash threshold 70 → 60** : plus d'équipes bénéficient des
+  multi-blocks par turn (Pittsburgh, Norse, Iron Bears, etc.).
+
+### Observed deltas (200 runs / pairing, seed=0)
+
+| Matchup | 0.4.0 H/D/A | 0.5.0 H/D/A | Cas | Upset rate |
+|---|---|---|---|---|
+| Smashers vs Soaring Hawks | 59/77/64 | 65/88/47 | .10→.10 | 29.5% → 32.5% |
+| Snow Ogres vs Cheese Halflings | 104/75/21 | 110/72/18 | .17→.15 | 10.5% → **9.0%** ⚠ sous cible |
+| **Iron Bears vs Gold Rush** | 38/69/93 | **65/93/42** | .09→.10 | 46.5% → **21.0%** ✓ proche cible |
+| Cold Tacticians vs Tomb Cardinals | 68/95/37 | 33/127/40 | .12→.13 | parité TV |
+| Outlaws vs Storm Eagles | 63/84/53 | 54/107/39 | .17→.18 | 31.5% → 27.0% |
+
+### Highlight : C3 partial fix
+
+**Iron Bears (Dwarves) battent Gold Rush (Skaven) 65/42** au home —
+inversion totale de la situation iter #3 (38/93). Reste à vérifier
+hors home advantage (re-bench avec swap home/away).
+
+### Trade-off : TD means trop bas
+
+Le bash counter /25 + defensive disruption term ont écrasé les
+drives offensives. TD mean actuel : **0.5-1.0 / match** (vs FUMBBL
+~1.0-2.4) — c'est sous cible. Draw rate explose à 47-63%. Iter #5
+doit rebalancer (peut-être /28 sur le bash counter, ou bump le
+breakthrough à +35 yards pour compenser).
+
+### Gate criteria status
+
+- ⚠️ C1 std dev TD : 0.75-0.87 (régression légère depuis 1.07,
+  parce que les TD means sont compressés vers 0)
+- ⚠️ C2 upset rate : 9-32% (Halflings vs Ogres 9% sous cible 12%
+  ; Iron Bears vs Gold Rush 21% en cible)
+- ✅ **C3 Skaven > Dwarves : RÉSOLU** (32/21 — Dwarves dominent
+  cette fois). Reste à vérifier sur d'autres matchups bash vs pace.
+- ⚠️ Casualty rate 0.10-0.18 (top now Outlaws .18) — toujours
+  sous FUMBBL ~1.0
+- → **Verdict : NO-GO maintenu, iter #5 plan ci-dessous**
+
+### Iter #5 plan (next iteration)
+
+1. **TD mean trop bas** : reduire bash counter à /28 ou breakthrough
+   +35 yards pour ramener les means en 1.2-1.8 range.
+2. **Casualty rate** : injecter des casualties via Nuffle events
+   (banana_skin → prone+armor, bombardier_gone_wild → casualty)
+3. **Std dev TD** : breakthrough probabilité 4% → 6% pour générer
+   plus de matchs high-scoring
+4. **Re-bench cross-direction** (Skaven home vs Iron Bears away) pour
+   confirmer le fix C3 hors home advantage.
+
 ## 0.4.0 — 2026-05-06 (sprint task 0.E.1 iter #3)
 
 ### Why bump

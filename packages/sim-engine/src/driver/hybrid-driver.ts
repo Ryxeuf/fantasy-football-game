@@ -326,28 +326,31 @@ function rollYards(
   profile: TacticalProfile,
   defenseProfile: TacticalProfile
 ): number {
-  // Sprint 0.E.1 tuning iter #3 (engineVer 0.4.0) :
+  // Sprint 0.E.1 tuning iter #4 (engineVer 0.5.0) :
   //
   // - Base : 2d6+2 (mean 7).
-  // - `+pace/25 - 2` : offset that scales with the active team's pace.
-  //   pace=0 → -2, pace=100 → +2.
-  // - `-defense.bashIndex/30` : counter-term — strengthened from iter #2's
-  //   /40 to /30 so a bash 90 defense costs the attacker -3 yards (vs
-  //   -2 in iter #2). Specifically targets the Dwarves vs Skaven 73/27
-  //   imbalance — bash défense doit dominer offensive pace.
-  // - `+ fat-tail breakthrough/crush` : 4% chance of +20 yards
-  //   (sudden home-run drive) and 4% of -10 yards (defense rallies).
-  //   Bumped from iter #2's 1% so std dev TD per match has a chance
-  //   to exceed the 1.4 sprint target. Expected ~32 yard rolls / match
-  //   × 4% = ~1.3 breakthroughs / match.
+  // - `+pace/25 - 2` : pace-based offset.
+  // - `-defense.bashIndex/25` : strengthened from iter #3's /30 — bash 90
+  //   defense costs the attacker -4 yards (was -3) ; targets the
+  //   Skaven > Dwarves persistent imbalance.
+  // - **NEW** `-defense.stallTendency × bash / 200` : when defense is
+  //   both stally AND bashy (Dwarves : bash 90, stall 75 → -34 effective
+  //   pace), drives suffer extra disruption beyond raw bash.
+  //   Dwarves bash 90 stall 75 → cap at -3 yards more.
+  // - `+ fat-tail breakthrough/crush` : 4% +30 yards (was +20),
+  //   4% -10 yards. Higher breakthrough magnitude → bigger TD variance.
   const dice = Math.floor(rng.next() * 6) + Math.floor(rng.next() * 6) + 2;
   const paceOffset = Math.round(profile.pace / 25) - 2;
-  const bashCounter = -Math.round(defenseProfile.bashIndex / 30);
+  const bashCounter = -Math.round(defenseProfile.bashIndex / 25);
+  const defensiveDisruption = -Math.min(
+    3,
+    Math.round((defenseProfile.stallTendency * defenseProfile.bashIndex) / 2000)
+  );
   const fatTail = rng.next();
   let breakthrough = 0;
-  if (fatTail < 0.04) breakthrough = 20;
+  if (fatTail < 0.04) breakthrough = 30;
   else if (fatTail < 0.08) breakthrough = -10;
-  return Math.max(0, dice + paceOffset + bashCounter + breakthrough);
+  return Math.max(0, dice + paceOffset + bashCounter + defensiveDisruption + breakthrough);
 }
 
 function nextDrive(prev: DriveState): DriveState {
@@ -433,15 +436,14 @@ function processTurn(
     m.nuffleEvents += 1;
   }
 
-  // 1-2 key moments per turn driven by the strategic stream. Iter #3
-  // (engineVer 0.4.0) : bash teams (bashIndex >= 70) ou high-foul teams
-  // (foulFrequency >= 70) get an extra moment every other turn — adds
-  // multi-block opportunities per turn so the casualty rate climbs
-  // toward FUMBBL ~1.0 / match.
+  // 1-2 key moments per turn driven by the strategic stream. Iter #4
+  // (engineVer 0.5.0) : threshold lowered from 70 to 60 — broader set
+  // of bash teams (Pittsburgh, Norse, Iron Bears, etc.) get the extra
+  // moment, pushing casualty rate further toward FUMBBL ~1.0 / match.
   const activeProfile = m.state.drive.drivingTeam === 'home' ? homeProfile : awayProfile;
   const opposingProfile = m.state.drive.drivingTeam === 'home' ? awayProfile : homeProfile;
   const isBashy =
-    activeProfile.bashIndex >= 70 || activeProfile.foulFrequency >= 70;
+    activeProfile.bashIndex >= 60 || activeProfile.foulFrequency >= 60;
   const baseCount = m.state.turn % 3 === 0 ? 2 : 1;
   const momentCount = isBashy && m.state.turn % 2 === 0 ? baseCount + 1 : baseCount;
   for (let i = 0; i < momentCount; i += 1) {
