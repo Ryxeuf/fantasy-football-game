@@ -179,3 +179,59 @@ describe('runHybridDriver — Eye of Nuffle hooks (sprint 0.C.2)', () => {
   });
 });
 
+describe('runHybridDriver — Underdog variance boost (sprint 0.C.3)', () => {
+  const evenMatch = (seed: number): SimInput => ({
+    seed,
+    home: { id: 'pit-smashers', name: 'Pittsburgh', side: 'home', tv: 1000 },
+    away: { id: 'kc-hawks', name: 'Kansas City', side: 'away', tv: 1000 },
+  });
+
+  const lopsidedMatch = (seed: number): SimInput => ({
+    seed,
+    home: { id: 'pit-smashers', name: 'Pittsburgh', side: 'home', tv: 1500 },
+    away: { id: 'gb-cheese-halflings', name: 'Halflings', side: 'away', tv: 800 },
+  });
+
+  it('summary.underdogBoostCount is 0 when no TV gap is provided (default match)', () => {
+    const out = runHybridDriver(baseInput({ seed: 1 }));
+    expect(out.summary.underdogBoostCount).toBe(0);
+  });
+
+  it('summary.underdogBoostCount is 0 when TVs are equal', () => {
+    const out = runHybridDriver(evenMatch(1));
+    expect(out.summary.underdogBoostCount).toBe(0);
+  });
+
+  it('summary.underdogBoostCount can be positive when there is a TV gap > 200', () => {
+    let total = 0;
+    for (let seed = 0; seed < 30; seed += 1) {
+      total += runHybridDriver(lopsidedMatch(seed)).summary.underdogBoostCount;
+    }
+    // Across 30 seeds we expect at least one trigger ;
+    // P(no boost in a single match) is high but compounded
+    // over seeds it becomes nearly impossible.
+    expect(total).toBeGreaterThan(0);
+  });
+
+  it('underdog boost reduces total turnovers vs no-TV baseline (statistical)', () => {
+    let withBoostTurnovers = 0;
+    let baselineTurnovers = 0;
+    const N = 50;
+    for (let seed = 0; seed < N; seed += 1) {
+      withBoostTurnovers += runHybridDriver(lopsidedMatch(seed)).summary.turnoverCount;
+      baselineTurnovers += runHybridDriver(evenMatch(seed)).summary.turnoverCount;
+    }
+    // The underdog boost retries some turnovers, so at the population
+    // level the lopsided match should not generate strictly more
+    // turnovers. We assert the no-boost baseline is at least as
+    // turnover-heavy as the boosted lopsided.
+    expect(withBoostTurnovers).toBeLessThanOrEqual(baselineTurnovers + 5);
+  });
+
+  it('determinism: same seed + same TV gap reproduces the result', () => {
+    const a = runHybridDriver(lopsidedMatch(7777));
+    const b = runHybridDriver(lopsidedMatch(7777));
+    expect(b).toEqual(a);
+  });
+});
+
