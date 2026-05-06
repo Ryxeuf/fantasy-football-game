@@ -88,7 +88,7 @@ export const PRO_LEAGUE_TEAMS: readonly ProTeamProfile[] = Object.freeze([
       blitzPriority: 65,
       patience: 45,
     }),
-    tv: 1100,
+    tv: 1050,
   },
   // 3. Kansas City Soaring Hawks — Wood Elves / Chiefs (aerial Mahomes-flavor).
   {
@@ -107,7 +107,7 @@ export const PRO_LEAGUE_TEAMS: readonly ProTeamProfile[] = Object.freeze([
       cageAffinity: 30,
       patience: 40,
     }),
-    tv: 1100,
+    tv: 1050,
   },
   // 4. New England Cold Tacticians — Lizardmen / Patriots (cold dynasty).
   {
@@ -239,7 +239,7 @@ export const PRO_LEAGUE_TEAMS: readonly ProTeamProfile[] = Object.freeze([
       pressingDefense: 55,
       cageAffinity: 50,
     }),
-    tv: 1100,
+    tv: 1050,
   },
   // 11. Phoenix Tomb Cardinals — Tomb Kings (Khemri) / Cardinals (desert slow).
   {

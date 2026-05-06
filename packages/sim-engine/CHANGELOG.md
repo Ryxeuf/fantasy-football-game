@@ -7,6 +7,40 @@ sim engine. Used as the audit trail for sprint Pro League lots 0.D
 Each version bump matches `ENGINE_VER` in `src/types.ts` and is
 reflected in `bench/bench-baseline.json`.
 
+## 0.10.0 — 2026-05-06 (sprint task 0.E.1 iter #9)
+
+### Headline 🎯
+
+- **2 matchups passent C1** (std dev TD ≥ 1.4 ✓) :
+  - Snow Ogres vs Cheese Halflings : **1.43**
+  - Outlaws vs Storm Eagles : **1.43**
+- **TD means 2.21-2.46** (FUMBBL range OK)
+- Casualty rate stable ~92% FUMBBL (0.89-0.94)
+
+### Changes
+
+- **Breakthrough proba** : 12% → **14%** (+17%)
+- **TV gap cap to 200 max** : Dark Elves / Wood Elves / Pro Elves
+  passent 1100 → **1050**. Halflings restent 850, Ogres 900. Tous les
+  matchups TV-équilibrés ont maintenant un gap ≤ 200.
+
+### Observed deltas (200 runs / pairing, seed=0)
+
+| Matchup | TD mean | Std | Cas | C1 |
+|---|---|---|---|---|
+| Smashers vs Soaring Hawks | 2.08→**2.33** | 1.18→1.19 | .89 | ❌ |
+| Snow Ogres vs Cheese Halflings | 2.06→**2.46** | 1.28→**1.43** | .91 | **✓** |
+| Iron Bears vs Gold Rush | 1.96→**2.27** | 1.25→**1.32** | .90 | ❌ |
+| Cold Tacticians vs Tomb Cardinals | 1.99→**2.21** | 1.20→**1.26** | .93 | ❌ |
+| Outlaws vs Storm Eagles | 1.91→**2.25** | 1.30→**1.43** | .94 | **✓** |
+
+### Iter #10 plan (final iteration before pause)
+
+1. Std dev TD : breakthrough 14% → 16% pour passer C1 sur 4-5 pairings
+2. Casualty rate : pousser 0.94 → 1.0 (FUMBBL parité) — augmenter
+   `crowd_riot` à 60% ou ajouter `equipment_failure` 30%
+3. Upset rate : ajustement final pour viser 1-2/5 pairings dans cible
+
 ## 0.9.0 — 2026-05-06 (sprint task 0.E.1 iter #8)
 
 ### Headline
