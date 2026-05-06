@@ -47,6 +47,15 @@ export {
   type UnderdogContext,
 } from './tactics/underdog';
 export {
+  FORM_DECAY_MATCHES,
+  applyMatchToForms,
+  decayForm,
+  getPlayerForm,
+  type FormState,
+  type FormUpdateInput,
+  type PlayerForm,
+} from './tactics/player-form';
+export {
   PATTERNS,
   PATTERN_BY_ID,
   STRATEGIES,
