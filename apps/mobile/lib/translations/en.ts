@@ -303,6 +303,28 @@ export const EN_TRANSLATIONS = {
       },
     },
   },
+  play: {
+    loading: "Loading the match...",
+    noState: "No game state available",
+    hint: "Tap a player to see playable cells. Double-tap to deselect.",
+    errors: {
+      loadError: "Loading error",
+      actionError: "Error",
+      prefix: "Error: {{message}}",
+    },
+    banner: {
+      myTurn: "Your turn",
+      opponentTurn: "Opponent's turn",
+      offline: " (offline)",
+    },
+    actions: {
+      throwTeamMate: "Throw a team-mate",
+      cancelTarget: "Cancel (target)",
+      cancelThrower: "Cancel (thrower)",
+      endTurn: "End turn",
+      back: "← Back",
+    },
+  },
   auth: {
     login: {
       title: "Sign in",
