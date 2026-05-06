@@ -1,10 +1,28 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useMemo } from "react";
 
 import type { MatchEvent } from "@bb/shared-types";
 
+import { deriveProLeagueFieldState } from "../../../../lib/pro-league-field-state";
 import { useProLeagueMatchStream } from "../../../../lib/use-pro-league-match-stream";
+
+// Lazy-load Pixi (>500KB) — même pattern que /play et /spectate PvP.
+// Le chunk /pro-league/matches ne porte plus le moteur de rendu en
+// main bundle (sprint 1.B.3).
+const ProLeagueField = dynamic(
+  () => import("./ProLeagueField").then((m) => m.default),
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        className="aspect-[3/1] w-full animate-pulse rounded bg-slate-800/60"
+        aria-label="Chargement du terrain"
+      />
+    ),
+  },
+);
 
 /**
  * Page de spectate textuel d'un match Pro League — sprint 1.B.4.
@@ -137,6 +155,10 @@ export default function LiveProMatchPage({
 }: LivePageProps): JSX.Element {
   const { events, connectionState, error } = useProLeagueMatchStream(params.id);
   const score = useMemo(() => deriveScore(events), [events]);
+  const fieldState = useMemo(
+    () => deriveProLeagueFieldState(events),
+    [events],
+  );
 
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col bg-slate-950 text-slate-100">
@@ -161,6 +183,10 @@ export default function LiveProMatchPage({
           {score.home} – {score.away}
         </div>
       </header>
+
+      <div className="px-4 pt-4" data-testid="field-wrapper">
+        <ProLeagueField fieldState={fieldState} />
+      </div>
 
       {error ? (
         <div
