@@ -34,6 +34,7 @@ import {
   feedbackPublicRouter,
   feedbackAdminRouter,
 } from "./routes/feedback";
+import proLeagueRoutes from "./routes/pro-league";
 import {
   userFeatureFlagsRouter,
   adminFeatureFlagsRouter,
@@ -189,6 +190,7 @@ app.use("/admin/leagues", adminLeaguesRoutes);
 app.use("/admin/sim", adminSimRoutes);
 // Feedback public : pas d'auth, captcha + rate limiter dedies dans le router.
 app.use("/feedback", feedbackPublicRouter);
+app.use("/pro-league", proLeagueRoutes);
 // Console admin : auth + role admin appliques dans le router.
 app.use("/admin/feedback", feedbackAdminRouter);
 
