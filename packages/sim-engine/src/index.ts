@@ -102,6 +102,7 @@ export {
   type ExpectedMetrics,
   type MetricDeviation,
 } from './bench/baseline';
+export { narrateMatch, type NarrateOptions } from './replay/narrator';
 export {
   PATTERNS,
   PATTERN_BY_ID,
