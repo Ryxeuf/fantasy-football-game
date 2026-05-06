@@ -139,6 +139,31 @@ export const EN_TRANSLATIONS = {
       inputPlaceholder: "Match ID",
     },
   },
+  matchmaking: {
+    title: "Find a match",
+    subtitle:
+      "Select your team and find an opponent automatically (TV +/- 150k gp).",
+    searching: {
+      title: "Looking for an opponent...",
+      teamValueRange: "Team value: {{value}}  (matching {{range}})",
+      cancel: "Cancel search",
+    },
+    empty: {
+      title: "No team",
+      description: "You need a team to enter the queue.",
+      createTeam: "Create a team",
+    },
+    form: {
+      label: "Your team",
+      submit: "Find a match",
+    },
+    errors: {
+      selectTeam: "Select a team",
+      loadTeams: "Unable to load teams",
+      joinQueue: "Unable to join the queue",
+      cancelSearch: "Unable to cancel the search",
+    },
+  },
   auth: {
     login: {
       title: "Sign in",

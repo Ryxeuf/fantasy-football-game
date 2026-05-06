@@ -9,6 +9,7 @@ import {
 import { useRouter } from "expo-router";
 import { apiGet, apiPost, apiDelete, ApiError } from "../lib/api";
 import { useAuth } from "../lib/auth-context";
+import { useTranslation } from "../lib/i18n-context";
 import {
   canStartSearch,
   formatElapsed,
@@ -26,6 +27,7 @@ const POLL_INTERVAL_MS = 3000;
 export default function MatchmakingScreen() {
   const router = useRouter();
   const { logout } = useAuth();
+  const { t } = useTranslation();
 
   const [teams, setTeams] = useState<TeamOption[]>([]);
   const [selectedTeamId, setSelectedTeamId] = useState("");
@@ -76,9 +78,11 @@ export default function MatchmakingScreen() {
       setTeams(list);
     } catch (err: unknown) {
       if (await handleAuthError(err)) return;
-      setError(err instanceof Error ? err.message : "Impossible de charger les equipes");
+      setError(
+        err instanceof Error ? err.message : t("matchmaking.errors.loadTeams"),
+      );
     }
-  }, [handleAuthError]);
+  }, [handleAuthError, t]);
 
   const loadQueueStatus = useCallback(async () => {
     try {
@@ -135,7 +139,7 @@ export default function MatchmakingScreen() {
     setError(null);
     const validation = canStartSearch(selectedTeamId);
     if (validation.valid === false) {
-      setError(validation.error);
+      setError(t("matchmaking.errors.selectTeam"));
       return;
     }
     setStartingSearch(true);
@@ -157,7 +161,7 @@ export default function MatchmakingScreen() {
     } catch (err: unknown) {
       if (await handleAuthError(err)) return;
       setError(
-        err instanceof Error ? err.message : "Impossible de rejoindre la file",
+        err instanceof Error ? err.message : t("matchmaking.errors.joinQueue"),
       );
     } finally {
       setStartingSearch(false);
@@ -174,7 +178,9 @@ export default function MatchmakingScreen() {
     } catch (err: unknown) {
       if (await handleAuthError(err)) return;
       setError(
-        err instanceof Error ? err.message : "Impossible d'annuler la recherche",
+        err instanceof Error
+          ? err.message
+          : t("matchmaking.errors.cancelSearch"),
       );
     } finally {
       setCancelling(false);
@@ -190,11 +196,8 @@ export default function MatchmakingScreen() {
       contentContainerStyle={styles.content}
     >
       <View style={styles.header}>
-        <Text style={styles.title}>Chercher un match</Text>
-        <Text style={styles.subtitle}>
-          Selectionnez votre equipe et trouvez un adversaire automatiquement
-          (VE +/- 150k po).
-        </Text>
+        <Text style={styles.title}>{t("matchmaking.title")}</Text>
+        <Text style={styles.subtitle}>{t("matchmaking.subtitle")}</Text>
       </View>
 
       {error && (
@@ -213,13 +216,17 @@ export default function MatchmakingScreen() {
         <View style={styles.searchBox} testID="matchmaking-searching">
           <View style={styles.searchRow}>
             <View style={styles.pulseDot} />
-            <Text style={styles.searchingTitle}>Recherche d'un adversaire...</Text>
+            <Text style={styles.searchingTitle}>
+              {t("matchmaking.searching.title")}
+            </Text>
             <Text style={styles.elapsed}>{formatElapsed(searchElapsed)}</Text>
           </View>
           {selectedTeamValue !== undefined && (
             <Text style={styles.rangeText}>
-              Valeur d'equipe: {formatTVShort(selectedTeamValue)}
-              {"  "}(matching {formatTVRange(selectedTeamValue)})
+              {t("matchmaking.searching.teamValueRange", {
+                value: formatTVShort(selectedTeamValue),
+                range: formatTVRange(selectedTeamValue),
+              })}
             </Text>
           )}
           <Pressable
@@ -231,7 +238,9 @@ export default function MatchmakingScreen() {
             {cancelling ? (
               <ActivityIndicator color="#DC2626" size="small" />
             ) : (
-              <Text style={styles.cancelText}>Annuler la recherche</Text>
+              <Text style={styles.cancelText}>
+                {t("matchmaking.searching.cancel")}
+              </Text>
             )}
           </Pressable>
         </View>
@@ -239,22 +248,24 @@ export default function MatchmakingScreen() {
 
       {!loading && !searching && teams.length === 0 && (
         <View style={styles.emptyBox}>
-          <Text style={styles.emptyTitle}>Aucune equipe</Text>
+          <Text style={styles.emptyTitle}>{t("matchmaking.empty.title")}</Text>
           <Text style={styles.emptyText}>
-            Vous avez besoin d'une equipe pour entrer dans la file d'attente.
+            {t("matchmaking.empty.description")}
           </Text>
           <Pressable
             style={styles.primaryButton}
             onPress={() => router.push("/teams/new")}
           >
-            <Text style={styles.primaryButtonText}>Creer une equipe</Text>
+            <Text style={styles.primaryButtonText}>
+              {t("matchmaking.empty.createTeam")}
+            </Text>
           </Pressable>
         </View>
       )}
 
       {!loading && !searching && teams.length > 0 && (
         <View style={styles.formBox}>
-          <Text style={styles.label}>Votre equipe</Text>
+          <Text style={styles.label}>{t("matchmaking.form.label")}</Text>
           <View style={styles.teamList}>
             {teams.map((team) => {
               const selected = team.id === selectedTeamId;
@@ -294,7 +305,9 @@ export default function MatchmakingScreen() {
             {startingSearch ? (
               <ActivityIndicator color="#fff" size="small" />
             ) : (
-              <Text style={styles.primaryButtonText}>Chercher un match</Text>
+              <Text style={styles.primaryButtonText}>
+                {t("matchmaking.form.submit")}
+              </Text>
             )}
           </Pressable>
         </View>

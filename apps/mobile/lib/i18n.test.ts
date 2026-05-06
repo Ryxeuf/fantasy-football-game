@@ -426,3 +426,81 @@ describe("auth screens i18n keys (S27.3.5)", () => {
     },
   );
 });
+
+/**
+ * S27.3.6 — Matchmaking screen i18n keys (matchmaking.tsx).
+ *
+ * Couvre toutes les cles utilisees par `apps/mobile/app/matchmaking.tsx` :
+ *  - Header (matchmaking.title, matchmaking.subtitle)
+ *  - Searching block (matchmaking.searching.title, teamValueRange, cancel)
+ *  - Empty state (matchmaking.empty.title, description, createTeam)
+ *  - Form (matchmaking.form.label, submit)
+ *  - Error messages (matchmaking.errors.selectTeam, loadTeams, joinQueue,
+ *    cancelSearch)
+ *
+ * Verifie : non-vide FR, non-vide EN, FR != EN sur l'integralite (aucune
+ * cle legitimement identique entre les langues sur cet ecran).
+ */
+const MATCHMAKING_I18N_KEYS = [
+  "matchmaking.title",
+  "matchmaking.subtitle",
+  "matchmaking.searching.title",
+  "matchmaking.searching.teamValueRange",
+  "matchmaking.searching.cancel",
+  "matchmaking.empty.title",
+  "matchmaking.empty.description",
+  "matchmaking.empty.createTeam",
+  "matchmaking.form.label",
+  "matchmaking.form.submit",
+  "matchmaking.errors.selectTeam",
+  "matchmaking.errors.loadTeams",
+  "matchmaking.errors.joinQueue",
+  "matchmaking.errors.cancelSearch",
+] as const;
+
+describe("matchmaking screen i18n keys (S27.3.6)", () => {
+  it.each(MATCHMAKING_I18N_KEYS)(
+    "FR : '%s' retourne une chaine non vide differente de la cle",
+    (key) => {
+      const value = t(key as never);
+      expect(typeof value).toBe("string");
+      expect(value.length).toBeGreaterThan(0);
+      expect(value).not.toBe(key);
+    },
+  );
+
+  it.each(MATCHMAKING_I18N_KEYS)(
+    "EN : '%s' retourne une chaine non vide differente de la cle",
+    (key) => {
+      const value = t(key as never, undefined, "en" as Locale);
+      expect(typeof value).toBe("string");
+      expect(value.length).toBeGreaterThan(0);
+      expect(value).not.toBe(key);
+    },
+  );
+
+  it.each(MATCHMAKING_I18N_KEYS)(
+    "FR != EN pour '%s' (parite stricte, pas de copie oubliee)",
+    (key) => {
+      const fr = t(key as never);
+      const en = t(key as never, undefined, "en" as Locale);
+      expect(fr).not.toBe(en);
+    },
+  );
+
+  it("teamValueRange interpole {{value}} et {{range}}", () => {
+    expect(
+      t("matchmaking.searching.teamValueRange", {
+        value: "1000k",
+        range: "850k - 1150k",
+      }),
+    ).toBe("Valeur d'equipe : 1000k  (matching 850k - 1150k)");
+    expect(
+      t(
+        "matchmaking.searching.teamValueRange",
+        { value: "1000k", range: "850k - 1150k" },
+        "en",
+      ),
+    ).toBe("Team value: 1000k  (matching 850k - 1150k)");
+  });
+});
