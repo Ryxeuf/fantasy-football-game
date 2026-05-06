@@ -204,12 +204,11 @@ describe('runHybridDriver — Underdog variance boost (sprint 0.C.3)', () => {
 
   it('summary.underdogBoostCount can be positive when there is a TV gap > 200', () => {
     let total = 0;
-    for (let seed = 0; seed < 30; seed += 1) {
+    // Iter #12-16 : UNDERDOG_BOOST_PROBABILITY 10% → 3%, donc un
+    // échantillon plus large est nécessaire pour observer un trigger.
+    for (let seed = 0; seed < 200; seed += 1) {
       total += runHybridDriver(lopsidedMatch(seed)).summary.underdogBoostCount;
     }
-    // Across 30 seeds we expect at least one trigger ;
-    // P(no boost in a single match) is high but compounded
-    // over seeds it becomes nearly impossible.
     expect(total).toBeGreaterThan(0);
   });
 

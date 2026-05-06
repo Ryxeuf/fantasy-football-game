@@ -327,14 +327,18 @@ function rollYards(
   defenseProfile: TacticalProfile,
   tvDelta = 0
 ): number {
-  // Sprint 0.E.1 tuning iter #11 (engineVer 0.12.0) :
+  // Sprint 0.E.1 tuning iter #12-16 (engineVer 0.13.0) :
   //
   // - Base : 2d6+2 (mean 7).
   // - bash counter / disruption / pace offset : unchanged.
-  // - Breakthrough proba : 16% → 18%. Magnitudes unchanged.
-  // - TV delta bonus : +1 yard / 100 TV de différence (cap ±3) — favori
-  //   gagne un peu plus consistamment, ce qui pousse l'upset rate vers
-  //   la cible 12-18% (C2).
+  // - Breakthrough proba : 18%. Magnitudes unchanged.
+  // - TV delta bonus : divisor /100 → /80 (cap ±3, inchangé) — affine la
+  //   sensibilité au gap TV pour pousser l'upset des matchups
+  //   TV-déséquilibrés sous 18% (cible C2).
+  //   Combiné avec UNDERDOG_BOOST_PROBABILITY 3% (au lieu de 10%) et
+  //   recalibrage TVs vers signature BB (Halflings 700, Ogres 1100,
+  //   élites 1050-1100), Snow Ogres vs Halflings tombe à 17.8% upset
+  //   (cible 12-18%) — premier pairing du panel à passer C2.
   const dice = Math.floor(rng.next() * 6) + Math.floor(rng.next() * 6) + 2;
   const paceOffset = Math.round(profile.pace / 25) - 2;
   const bashCounter = -Math.round(defenseProfile.bashIndex / 28);
@@ -342,7 +346,7 @@ function rollYards(
     3,
     Math.round((defenseProfile.stallTendency * defenseProfile.bashIndex) / 2000)
   );
-  const tvBonus = Math.max(-3, Math.min(3, Math.round(tvDelta / 100)));
+  const tvBonus = Math.max(-3, Math.min(3, Math.round(tvDelta / 80)));
   const fatTail = rng.next();
   let breakthrough = 0;
   if (fatTail < 0.18) {
