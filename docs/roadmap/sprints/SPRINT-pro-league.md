@@ -115,7 +115,7 @@ jusqu'a passer le gate.
 |---|-------|-----|--------|--------|--------|
 | 0.D.1 | CLI `pnpm sim:bench` | DevX | M | [ ] | Script `packages/sim-engine/scripts/bench.ts` : `--team=A vs --team=B --runs=10000` simule en parallele worker_threads, sort un rapport stat (TDs/match, casualties, turnovers, win%, std dev, p5/p95). Optionnel `--matrix` pour toutes les races. |
 | 0.D.2 | Dataset reference FUMBBL | Data | M | [ ] | Scraper / import statique des stats publiques FUMBBL : winrates par race, casualty rates, TD averages, durees de drive. Stocke en `packages/sim-engine/bench/reference-fumbbl.json` versionne. |
-| 0.D.3 | Metriques "vivacite" (variance & outliers) | DevX | S | [ ] | Au-dela des moyennes : std dev, fat-tails (% matchs avec >= 5 TD, >= 4 casualties), upset rate, distribution MVP (Gini coefficient). Cible MVP : std dev TD >= 1.4, upset rate 12-18%, MVP non concentre uniquement sur stars. |
+| 0.D.3 | Metriques "vivacite" (variance & outliers) | DevX | S | [x] | Au-dela des moyennes : std dev, fat-tails (% matchs avec >= 5 TD, >= 4 casualties), upset rate, distribution MVP (Gini coefficient). Cible MVP : std dev TD >= 1.4, upset rate 12-18%, MVP non concentre uniquement sur stars. |
 | 0.D.4 | CI regression `sim-bench` | DevX | M | [ ] | `.github/workflows/sim-bench.yml` : sur chaque PR touchant `packages/sim-engine`, run `--runs=5000` vs `bench-baseline.json`. Alerte si deviation > 5% sur metriques cles. Baseline versionne avec `engineVer`. |
 
 ### Lot 0.E — Tuning loop + Human playtest gate (~2 sem)
