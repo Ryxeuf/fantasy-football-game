@@ -70,6 +70,7 @@ model User {
   refreshTokens               RefreshToken[]
   eloSnapshots                EloSnapshot[]
   tutorialCompletions         TutorialCompletion[]
+  proSpectatorFollows         ProSpectatorFollow[]
 }
 
 /// S26.3l — mirror SQLite de l'historique ELO Postgres (snapshot par mise a jour).
@@ -865,6 +866,7 @@ model ProTeam {
   homeMatches ProLeagueMatch[]     @relation("ProMatchHome")
   awayMatches ProLeagueMatch[]     @relation("ProMatchAway")
   standings   ProLeagueStandings[]
+  followers   ProSpectatorFollow[]
 
   @@index([leagueId])
 }
@@ -997,4 +999,18 @@ model Replay {
   rawJsonSize Int?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model ProSpectatorFollow {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  team      ProTeam  @relation(fields: [proTeamId], references: [id], onDelete: Cascade)
+  proTeamId String
+  since     DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  @@unique([userId, proTeamId])
+  @@index([userId])
+  @@index([proTeamId])
 }
