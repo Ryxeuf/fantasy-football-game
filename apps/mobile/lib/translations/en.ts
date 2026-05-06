@@ -247,6 +247,62 @@ export const EN_TRANSLATIONS = {
       cancelSearch: "Unable to cancel the search",
     },
   },
+  players: {
+    detail: {
+      notFound: "Player not found",
+      teamNotFound: "Team not found",
+      backToTeam: "Back to the team",
+      backButton: "Back",
+      subtitle: "{{position}} — {{team}}",
+      statBase: "base {{value}}",
+      status: {
+        dead: "Deceased",
+        missNextMatch: "Misses next match",
+        injured: "Injured",
+        fit: "Fit",
+      },
+      sections: {
+        stats: "Characteristics",
+        progression: "Progression",
+        skills: "Skills",
+        advancements: "Advancements taken",
+        nextAdvancement: "Next advancement",
+        injuries: "Injuries & status",
+      },
+      progression: {
+        spp: "Available SPP",
+        matchesPlayed: "Matches played",
+        touchdowns: "Touchdowns scored",
+        casualties: "Casualties inflicted",
+        completions: "Passes completed",
+        interceptions: "Interceptions caught",
+        mvp: "MVP",
+        advancementsCount: "Advancements unlocked",
+      },
+      skills: {
+        empty: "No skill acquired yet",
+      },
+      advancements: {
+        empty: "No advancement taken yet",
+        deadPlayer: "Player deceased — no progression",
+        types: {
+          primary: "Primary",
+          secondary: "Secondary",
+          randomPrimary: "Random primary",
+          randomSecondary: "Random secondary",
+        },
+      },
+      injuries: {
+        empty: "No persistent injuries",
+        niggling: "Persistent injuries: {{count}}",
+        statReduction: "{{stat}} -{{value}}",
+        missNextMatch: "Misses next match",
+      },
+      errors: {
+        loadError: "Loading error",
+      },
+    },
+  },
   auth: {
     login: {
       title: "Sign in",
