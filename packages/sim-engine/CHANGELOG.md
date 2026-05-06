@@ -7,6 +7,56 @@ sim engine. Used as the audit trail for sprint Pro League lots 0.D
 Each version bump matches `ENGINE_VER` in `src/types.ts` and is
 reflected in `bench/bench-baseline.json`.
 
+## 0.7.0 — 2026-05-06 (sprint task 0.E.1 iter #6)
+
+### Headline progress
+
+- **Casualty rate +30%** : 0.47-0.53 → **0.63-0.70 / match** (FUMBBL ~1.0
+  — now ~70% de la cible).
+- **Std dev TD up** : 0.86-0.93 → **1.02-1.09** (still under 1.4 mais
+  closer).
+- **TD means up** : 0.9-1.25 → **1.26-1.54**.
+- Snow Ogres vs Halflings upset 16.5% **toujours en cible** ✓.
+
+### Changes
+
+- **`rollYards` breakthrough proba** : 6% → **8%**. ~32 yard rolls / match
+  × 8% = ~2.5 events / match.
+- **Conditional breakthrough magnitude** : `+35` yards quand defense
+  bash < 70 (offensive break vs soft D), `+30` sinon. Permet aux
+  équipes balance de scorer plus contre les non-bash.
+- **`nemesis_clash` Nuffle event** ajouté à la casualty injection
+  (25% chance casualty). Maintenant 4 events Nuffle injectent des
+  casualties (bombardier, banana, riot, nemesis).
+
+### Observed deltas (200 runs / pairing, seed=0)
+
+| Matchup | 0.6.0 H/D/A | 0.7.0 H/D/A | Cas | Upset rate | TD mean | Std |
+|---|---|---|---|---|---|---|
+| Smashers vs Soaring Hawks | 65/76/59 | 70/68/62 | .47→.63 | 32.5%→35% | 1.24→1.51 | .93→1.02 |
+| Snow Ogres vs Cheese Halflings | 103/68/29 | 103/64/33 | .52→.68 | 14.5%→**16.5%** ✓ | 1.25→1.54 | .91→1.03 |
+| Iron Bears vs Gold Rush | 61/84/55 | 68/73/59 | .47→.65 | 27.5%→29.5% | 1.04→1.34 | .89→1.05 |
+| Cold Tacticians vs Tomb Cardinals | 52/94/54 | 55/88/57 | .49→.66 | parité TV | 0.90→1.28 | .89→1.09 |
+| Outlaws vs Storm Eagles | 58/96/46 | 62/85/53 | .53→.70 | 29%→31% | 0.93→1.26 | .86→1.08 |
+
+### Gate criteria status
+
+- ⚠️ C1 std dev TD : **1.02-1.09** (vs 1.4 cible — convergence claire)
+- ⚠️ C2 upset rate : Halflings vs Ogres 16.5% en cible ✓ (1/5)
+- ⚠️ C3 Skaven > Dwarves : Iron Bears 34 / Gold Rush 30 — parité OK
+- ⚠️ Casualty rate **0.63-0.70** (~70% FUMBBL ~1.0)
+- → **Verdict : NO-GO maintenu mais convergence rapide ; iter #7 plan**
+
+### Iter #7 plan
+
+1. **Std dev TD vers 1.4** : breakthrough proba 8% → 10%, magnitude
+   +35 → +40 quand bash défense très faible (<50)
+2. **Casualty rate** : ajouter `tantrum_star` 50%, `cocky_drop` 30%
+3. **Upset rate trop haut sur autres pairings** : revoir le `tv` per
+   team — peut-être trop d'écart entre 800 et 1100 ; modérer.
+4. **C3 wider sample** : matrix 5x5 sur les races les plus
+   identifiables.
+
 ## 0.6.0 — 2026-05-06 (sprint task 0.E.1 iter #5)
 
 ### Headline wins

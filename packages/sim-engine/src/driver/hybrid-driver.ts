@@ -326,16 +326,17 @@ function rollYards(
   profile: TacticalProfile,
   defenseProfile: TacticalProfile
 ): number {
-  // Sprint 0.E.1 tuning iter #5 (engineVer 0.6.0) :
+  // Sprint 0.E.1 tuning iter #6 (engineVer 0.7.0) :
   //
   // - Base : 2d6+2 (mean 7).
   // - `+pace/25 - 2` : pace-based offset.
-  // - `-defense.bashIndex/28` : bash counter softened from /25 (iter #4)
-  //   to /28 — bash 90 défense → -3 yards (au lieu de -4). On préserve
-  //   le fix C3 (Skaven > Dwarves) tout en remontant les TD means.
+  // - `-defense.bashIndex/28` : bash counter unchanged from iter #5.
   // - `-defensiveDisruption` : kept (Dwarves bash + stall combo).
-  // - `+ fat-tail breakthrough/crush` : 6% +30 / 6% -10 (was 4% / 4%).
-  //   Plus d'events fat-tail → std dev TD up.
+  // - `+ fat-tail breakthrough/crush` : 8% +N / 8% -10 (was 6%).
+  //   Breakthrough magnitude conditional :
+  //     - +35 yards quand defense bash < 70 (offensive break vs soft D)
+  //     - +30 yards sinon (bash D limite la breakthrough)
+  //   Plus de fat-tails → std dev TD up.
   const dice = Math.floor(rng.next() * 6) + Math.floor(rng.next() * 6) + 2;
   const paceOffset = Math.round(profile.pace / 25) - 2;
   const bashCounter = -Math.round(defenseProfile.bashIndex / 28);
@@ -345,8 +346,11 @@ function rollYards(
   );
   const fatTail = rng.next();
   let breakthrough = 0;
-  if (fatTail < 0.06) breakthrough = 30;
-  else if (fatTail < 0.12) breakthrough = -10;
+  if (fatTail < 0.08) {
+    breakthrough = defenseProfile.bashIndex < 70 ? 35 : 30;
+  } else if (fatTail < 0.16) {
+    breakthrough = -10;
+  }
   return Math.max(0, dice + paceOffset + bashCounter + defensiveDisruption + breakthrough);
 }
 
@@ -431,16 +435,14 @@ function processTurn(
       })
     );
     m.nuffleEvents += 1;
-    // Sprint 0.E.1 iter #5 (engineVer 0.6.0) : certains Nuffle events
-    // injectent une casualty pour pousser le rate vers FUMBBL ~1.0.
-    // Sélection :
-    //   - bombardier_gone_wild → friendly fire casualty (1 par event)
-    //   - banana_skin → KD + chance armor break (50% casualty)
-    //   - crowd_riot → 1 random player stunned, 30% casualty
+    // Sprint 0.E.1 iter #6 (engineVer 0.7.0) : élargi les Nuffle
+    // events qui injectent une casualty pour pousser le rate vers
+    // FUMBBL ~1.0. Ajout de `nemesis_clash` 25%.
     if (
       nuffleEvent.id === 'bombardier_gone_wild' ||
       (nuffleEvent.id === 'banana_skin' && rngs.luck.next() < 0.5) ||
-      (nuffleEvent.id === 'crowd_riot' && rngs.luck.next() < 0.3)
+      (nuffleEvent.id === 'crowd_riot' && rngs.luck.next() < 0.3) ||
+      (nuffleEvent.id === 'nemesis_clash' && rngs.luck.next() < 0.25)
     ) {
       const victimSide: Side = otherSide(m.state.drive.drivingTeam);
       const victimId = `${victimSide}-NUFFLE-${m.state.half}-${m.state.turn}`;
