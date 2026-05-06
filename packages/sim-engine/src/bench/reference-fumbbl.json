@@ -1,0 +1,104 @@
+{
+  "version": "fumbbl-2024-snapshot",
+  "snapshotAt": "2024-01-01",
+  "source": "FUMBBL community archives + NAF tournament aggregates (BB2020 ruleset). Approximated from publicly available statistics ; will be refined via the 0.E tuning loop.",
+  "sampleSize": 50000,
+  "races": {
+    "Orc": {
+      "winrate": 0.52,
+      "casualtyRate": 1.45,
+      "tdAverage": 1.7,
+      "driveDurationTurns": 4.3
+    },
+    "Dark Elf": {
+      "winrate": 0.55,
+      "casualtyRate": 1.05,
+      "tdAverage": 2.1,
+      "driveDurationTurns": 3.6
+    },
+    "Wood Elf": {
+      "winrate": 0.54,
+      "casualtyRate": 0.85,
+      "tdAverage": 2.4,
+      "driveDurationTurns": 3.2
+    },
+    "Lizardmen": {
+      "winrate": 0.55,
+      "casualtyRate": 1.3,
+      "tdAverage": 1.9,
+      "driveDurationTurns": 4.0
+    },
+    "Skaven": {
+      "winrate": 0.5,
+      "casualtyRate": 1.2,
+      "tdAverage": 2.2,
+      "driveDurationTurns": 3.4
+    },
+    "Amazon": {
+      "winrate": 0.49,
+      "casualtyRate": 1.1,
+      "tdAverage": 1.8,
+      "driveDurationTurns": 4.1
+    },
+    "Norse": {
+      "winrate": 0.48,
+      "casualtyRate": 1.4,
+      "tdAverage": 1.7,
+      "driveDurationTurns": 4.2
+    },
+    "Undead": {
+      "winrate": 0.5,
+      "casualtyRate": 1.3,
+      "tdAverage": 1.7,
+      "driveDurationTurns": 4.5
+    },
+    "Dwarf": {
+      "winrate": 0.5,
+      "casualtyRate": 1.5,
+      "tdAverage": 1.5,
+      "driveDurationTurns": 4.6
+    },
+    "Pro Elf": {
+      "winrate": 0.51,
+      "casualtyRate": 0.9,
+      "tdAverage": 2.0,
+      "driveDurationTurns": 3.7
+    },
+    "Tomb Kings": {
+      "winrate": 0.46,
+      "casualtyRate": 1.35,
+      "tdAverage": 1.4,
+      "driveDurationTurns": 4.8
+    },
+    "Halfling": {
+      "winrate": 0.32,
+      "casualtyRate": 0.65,
+      "tdAverage": 1.0,
+      "driveDurationTurns": 4.4
+    },
+    "Beastmen": {
+      "winrate": 0.47,
+      "casualtyRate": 1.45,
+      "tdAverage": 1.6,
+      "driveDurationTurns": 4.3
+    },
+    "Ogre": {
+      "winrate": 0.36,
+      "casualtyRate": 1.7,
+      "tdAverage": 1.1,
+      "driveDurationTurns": 4.7
+    },
+    "High Elf": {
+      "winrate": 0.51,
+      "casualtyRate": 0.9,
+      "tdAverage": 2.0,
+      "driveDurationTurns": 3.8
+    },
+    "Chaos Chosen": {
+      "winrate": 0.48,
+      "casualtyRate": 1.6,
+      "tdAverage": 1.4,
+      "driveDurationTurns": 4.5
+    }
+  }
+}
