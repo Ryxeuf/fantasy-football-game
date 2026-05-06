@@ -35,6 +35,10 @@ import {
   getBroadcasterStats,
   subscribeToMatch,
 } from "../services/pro-league-match-broadcaster";
+import {
+  ProLeagueStandingsNotFoundError,
+  getProLeagueCurrentStandings,
+} from "../services/pro-league-standings";
 import { serverLog } from "../utils/server-log";
 
 const HEARTBEAT_INTERVAL_MS = 30_000;
@@ -162,9 +166,35 @@ export async function handleGetCurrentSeasonHub(
   }
 }
 
+/**
+ * Sprint 1.C.5 — Classement détaillé de la saison courante.
+ * Renvoie 16 entrées avec V/N/D, points, TD diff, casualties diff,
+ * form (5 derniers résultats), rang.
+ */
+export async function handleGetCurrentSeasonStandings(
+  _req: Request,
+  res: Response,
+): Promise<void> {
+  try {
+    const data = await getProLeagueCurrentStandings();
+    res.json(data);
+  } catch (err: unknown) {
+    if (err instanceof ProLeagueStandingsNotFoundError) {
+      res.status(404).json({ error: err.message });
+      return;
+    }
+    const msg = err instanceof Error ? err.message : "unknown";
+    serverLog.error(
+      `[pro-league/seasons/current/standings] failed: ${msg}`,
+    );
+    res.status(500).json({ error: "internal-error" });
+  }
+}
+
 const router = Router();
 
 router.get("/seasons/current", handleGetCurrentSeasonHub);
+router.get("/seasons/current/standings", handleGetCurrentSeasonStandings);
 router.get("/matches/:id/stream", handleStreamProMatch);
 router.get("/_internal/broadcaster-stats", handleBroadcasterStats);
 
