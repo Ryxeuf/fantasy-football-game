@@ -3,32 +3,25 @@
  * Gère l'application des mouvements, les jets de dés et la logique de jeu
  */
 
-import { GameState, Move, Player, Position, TeamId, RNG, BlockResult, ActionType } from '../core/types';
+import { GameState, Move, Player, Position, TeamId, RNG } from '../core/types';
 import { hasSkill } from '../skills/skill-effects';
-import { getDodgeSkillModifiers, getPickupSkillModifiers, canSkillReroll } from '../skills/skill-bridge';
-import { collectModifiers } from '../skills/skill-registry';
+import { getDodgeSkillModifiers } from '../skills/skill-bridge';
 import {
   inBounds,
   samePos,
   requiresDodgeRoll,
   calculateDodgeModifiers,
-  calculatePickupModifiers,
 } from '../mechanics/movement';
-import {
-  performDodgeRoll,
-  performPickupRoll,
-  performArmorRoll,
-  rollBlockDice,
-  rollBlockDiceManyWithRolls,
-  blockResultFromRoll,
-} from '../utils/dice';
+// S27.8.8 — Tous les helpers de des bruts (`performDodgeRoll`,
+// `rollBlockDice`, `blockResultFromRoll`, etc.) sont consommes dans
+// les modules extraits (`block-action`, `move-handlers`,
+// `choice-handlers`, `failure-helpers`, `ball-pickup`, `pass-actions`).
+// `actions.ts` ne consomme plus que les variantes With Notification
+// pour handleDodge et handleBlitz.
+import { rollBlockDiceManyWithRolls } from '../utils/dice';
 import {
   performDodgeRollWithNotification,
-  // S27.8.7 — `performPickupRollWithNotification` consomme uniquement
-  // dans `actions/choice-handlers.ts`. Plus d'import direct ici.
   performArmorRollWithNotification,
-  rollBlockDiceWithNotification,
-  rollBlockDiceManyWithNotification,
 } from '../utils/dice-notifications';
 import { performInjuryRoll } from '../mechanics/injury';
 import { createLogEntry, truncateGameLog } from '../utils/logging';
@@ -38,9 +31,6 @@ import {
   awardTouchdown,
   bounceBall,
 } from '../mechanics/ball';
-// S27.8.2 — `hasAnimosityAgainst` / `checkAnimosity` consommes uniquement
-// dans `actions/pass-actions.ts` (handlePass + handleHandoff). Plus
-// d'import direct ici.
 import {
   canBlock,
   canBlitz,
@@ -48,9 +38,6 @@ import {
   calculateDefensiveAssists,
   calculateBlockDiceCount,
   getBlockDiceChooser,
-  resolveBlockResult,
-  // S27.8.7 — `applyChainPush` consomme uniquement dans
-  // `actions/choice-handlers.ts` (handlePushChoose).
 } from '../mechanics/blocking';
 import {
   hasPlayerActed,
@@ -60,13 +47,8 @@ import {
   checkPlayerTurnEnd,
   shouldAutoEndTurn,
   handlePlayerSwitch,
-  getPlayerAction,
   incrementTeamBlitzCount,
-  // S27.8.3 — `advanceHalfIfNeeded` et `handlePostTouchdown` consommes
-  // uniquement dans `actions/turn-foul-actions.ts` (handleEndTurn).
   canTeamBlitz,
-  // S27.8.5 — `canUseTeamReroll` deplace dans `core/game-state.ts`.
-  canUseTeamReroll,
 } from '../core/game-state';
 // S27.8.2 — `executePass` / `executeHandoff` consommes dans
 // `actions/pass-actions.ts`. `getPassRange` + `canAttemptPassForRange`
@@ -144,6 +126,11 @@ import {
   handleFollowUpChoose,
   handleRerollChoose,
 } from './choice-handlers';
+// S27.8.8 — `handleBlock` extrait dans `actions/block-action.ts`.
+// Appele depuis le dispatcher + handleMultiBlock + resolveFrenzyBlock
+// + resolveMultipleBlock + handleDumpOffChoose (toutes en
+// dependances unidirectionnelles, pas cycliques).
+import { handleBlock } from './block-action';
 import { canDumpOff, getDumpOffReceivers, executeDumpOff } from '../mechanics/dump-off';
 import { checkDauntless } from '../mechanics/dauntless';
 import { checkBreakTackle } from '../mechanics/break-tackle';
@@ -1042,182 +1029,7 @@ function handleDodge(
   }
 }
 
-/**
- * Gère un blocage
- */
-function handleBlock(
-  state: GameState,
-  move: { type: 'BLOCK'; playerId: string; targetId: string },
-  rng: RNG,
-  options: { skipDumpOff?: boolean } = {}
-): GameState {
-  const attacker = state.players.find(p => p.id === move.playerId);
-  const target = state.players.find(p => p.id === move.targetId);
-
-  if (!attacker || !target) return state;
-
-  // Détecter un blitz pendant un mouvement : le joueur a déjà bougé et blitz un adversaire adjacent
-  const playerAction = state.playerActions?.[move.playerId];
-  const isBlitzDuringMove = playerAction === 'MOVE' && canTeamBlitz(state, attacker.team);
-
-  if (isBlitzDuringMove) {
-    // Vérifier manuellement les conditions du blitz-block (sans canBlock qui exige pm > 0)
-    if (attacker.stunned || target.stunned || attacker.team === target.team) return state;
-    if (!isAdjacent(attacker.pos, target.pos)) return state;
-  } else {
-    // Vérifier que le blocage est légal
-    if (!canBlock(state, move.playerId, move.targetId)) return state;
-  }
-
-  // ─── Dump-off check ────────────────────────────────────────────────────
-  // Si la cible possède le skill `dump-off` et a le ballon, elle peut
-  // effectuer une Passe Rapide immédiate avant que les dés de bloc soient
-  // lancés. On interrompt le blocage en posant `pendingDumpOff`. Le blocage
-  // reprend ensuite via `handleDumpOffChoose` (avec `skipDumpOff: true`).
-  if (!options.skipDumpOff && canDumpOff(state, target)) {
-    const receivers = getDumpOffReceivers(state, target);
-    if (receivers.length > 0) {
-      const dumpLog = createLogEntry(
-        'info',
-        `${target.name} peut tenter un Délestage (Dump-off) !`,
-        target.id,
-        target.team,
-        { skill: 'dump-off' },
-      );
-      return {
-        ...state,
-        gameLog: [...state.gameLog, dumpLog],
-        pendingDumpOff: {
-          attackerId: attacker.id,
-          targetId: target.id,
-          receiverOptions: receivers.map(r => r.id),
-          pendingBlockMove: {
-            type: 'BLOCK',
-            playerId: move.playerId,
-            targetId: move.targetId,
-          },
-        },
-      };
-    }
-  }
-
-  // ─── Foul Appearance check ─────────────────────────────────────────────
-  // Rolled by the attacker before any block dice. On 1, the declared action
-  // is wasted (no turnover) and the attacker's activation ends.
-  const foulAppearanceCheck = checkFoulAppearance(state, attacker, target, rng, isBlitzDuringMove);
-  if (!foulAppearanceCheck.shouldContinueBlock) {
-    return foulAppearanceCheck.newState;
-  }
-  const stateAfterFA = foulAppearanceCheck.newState;
-
-  // Calculer les assists
-  const offensiveAssists = calculateOffensiveAssists(stateAfterFA, attacker, target);
-  const defensiveAssists = calculateDefensiveAssists(stateAfterFA, attacker, target);
-
-  // S27.7.3 — Modifiers ST de l'attaquant collectes via le registry :
-  // Horns +1 ST (Blitz uniquement), Multiple Block -2 ST (sequence
-  // active), futurs skills ST. Plus de hardcode dans la mecanique :
-  // tout passe par `collectModifiers(..., 'on-block-attacker',
-  // { state, opponent, isBlitz })`.
-  const attackerSkillStMods = collectModifiers(attacker, 'on-block-attacker', {
-    state: stateAfterFA,
-    opponent: target,
-    isBlitz: isBlitzDuringMove,
-  });
-  const attackerSkillStBonus = attackerSkillStMods.strengthModifier ?? 0;
-
-  // Forces de base avant Dauntless (penalite Multiple Block et bonus
-  // Horns inclus via `attackerSkillStBonus`).
-  const baseAttackerStrength =
-    attacker.st + offensiveAssists + attackerSkillStBonus;
-  const targetStrength = target.st + defensiveAssists;
-
-  // ─── Dauntless check ───────────────────────────────────────────────────
-  // Si l'attaquant a Dauntless et est en desavantage, il tente d'egaliser la force.
-  const dauntlessResult = checkDauntless(
-    stateAfterFA,
-    attacker,
-    target,
-    baseAttackerStrength,
-    targetStrength,
-    rng
-  );
-  const stateAfterDauntless = dauntlessResult.newState;
-  const attackerStrength = dauntlessResult.newAttackerStrength;
-
-  // Nombre de dés et qui choisit
-  const diceCount = calculateBlockDiceCount(attackerStrength, targetStrength);
-  const chooser = getBlockDiceChooser(attackerStrength, targetStrength);
-
-  // Enregistrer l'action — blitz consomme le compteur de blitz de l'équipe
-  let newState: GameState;
-  if (isBlitzDuringMove) {
-    newState = setPlayerAction(stateAfterDauntless, attacker.id, 'BLITZ');
-    newState.teamBlitzCount = {
-      ...newState.teamBlitzCount,
-      [attacker.team]: (newState.teamBlitzCount[attacker.team] || 0) + 1,
-    };
-  } else {
-    newState = setPlayerAction(stateAfterDauntless, attacker.id, 'BLOCK');
-  }
-
-  // Si un seul dé, résoudre immédiatement
-  if (diceCount === 1) {
-    // Single RNG call: derive both diceRoll and blockResult from same value
-    const diceRoll = Math.floor(rng() * 6) + 1;
-    const blockResult = blockResultFromRoll(diceRoll);
-    const blockDiceResult = {
-      type: 'block' as const,
-      playerId: attacker.id,
-      targetId: target.id,
-      diceRoll,
-      result: blockResult,
-      offensiveAssists,
-      defensiveAssists,
-      totalStrength: attackerStrength,
-      targetStrength,
-    };
-
-    // Log du résultat de blocage
-    const blockLogEntry = createLogEntry(
-      'dice',
-      `Blocage: ${diceRoll} → ${blockResult}`,
-      attacker.id,
-      attacker.team,
-      { diceRoll: diceRoll, result: blockResult, offensiveAssists, defensiveAssists }
-    );
-    newState.gameLog = [...newState.gameLog, blockLogEntry];
-
-    return resolveBlockResult(newState, blockDiceResult, rng);
-  } else {
-    // Plusieurs dés : enregistrer un choix en attente
-    const options = rollBlockDiceManyWithNotification(rng, diceCount, attacker.name); // BlockResult[]
-
-    // Log des dés lancés (on logge les résultats faute des valeurs brutes)
-    const blockLogEntry = createLogEntry(
-      'dice',
-      `Blocage: ${options.join(', ')} (${diceCount} dés)`,
-      attacker.id,
-      attacker.team,
-      { results: options, diceCount, offensiveAssists, defensiveAssists }
-    );
-    newState.gameLog = [...newState.gameLog, blockLogEntry];
-
-    return {
-      ...newState,
-      pendingBlock: {
-        attackerId: attacker.id,
-        targetId: target.id,
-        options: options,
-        chooser,
-        offensiveAssists,
-        defensiveAssists,
-        totalStrength: attackerStrength,
-        targetStrength,
-      },
-    };
-  }
-}
+// S27.8.8 — `handleBlock` extrait dans `actions/block-action.ts`.
 
 /**
  * Gère le choix de Dump-off : la cible d'un blocage (porteuse du ballon, skill
