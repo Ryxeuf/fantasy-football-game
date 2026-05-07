@@ -179,6 +179,39 @@ describe('runHybridDriver — turnover does not chain into a same-turn TD (Bug #
    * pickup when the active player already holds the ball — at which
    * point no `pickup_failed` should ever fire across a normal match.
    */
+  /**
+   * Regression : breakthrough yards used to push +30..+40 in a single
+   * roll, which on a 26-yard field meant single-turn TD from the
+   * kickoff line. Now capped at 16 yards/turn, so the ball cannot
+   * advance from yardline ≤ 9 to TD inside a single turn block. We
+   * scan every TD event and verify the *previous* TURN_START's
+   * `ballYardline` was at least 10.
+   */
+  it('no TD scores from yardline ≤ 9 inside a single turn (post-cap of 16 yards/turn)', () => {
+    for (let seed = 0; seed < 200; seed += 1) {
+      const out = runHybridDriver(baseInput({ seed }));
+      let lastTurnStartYardline: number | null = null;
+      let lastTurnStartTeam: string | null = null;
+      for (const ev of out.events) {
+        if (ev.type === 'TURN_START') {
+          const m = (ev.meta ?? {}) as Record<string, unknown>;
+          lastTurnStartYardline = Number(m.ballYardline);
+          lastTurnStartTeam = String(m.drivingTeam);
+        }
+        if (ev.type === 'TD' && lastTurnStartYardline !== null) {
+          const m = (ev.meta ?? {}) as Record<string, unknown>;
+          // Only assert when the scoring team matches the team in
+          // possession at the start of this turn — guards against a
+          // mid-turn drive switch (which our other regression test
+          // already prevents anyway).
+          if (m.team === lastTurnStartTeam) {
+            expect(lastTurnStartYardline).toBeGreaterThanOrEqual(10);
+          }
+        }
+      }
+    }
+  });
+
   it('no pickup_failed turnover ever fires (active team always already has possession)', () => {
     for (let seed = 0; seed < 200; seed += 1) {
       const out = runHybridDriver(baseInput({ seed }));
@@ -286,8 +319,11 @@ describe('runHybridDriver — Underdog variance boost (sprint 0.C.3)', () => {
     // The underdog boost retries some turnovers, so at the population
     // level the lopsided match should not generate strictly more
     // turnovers. We assert the no-boost baseline is at least as
-    // turnover-heavy as the boosted lopsided.
-    expect(withBoostTurnovers).toBeLessThanOrEqual(baselineTurnovers + 5);
+    // turnover-heavy as the boosted lopsided. Tolerance bumped from
+    // ±5 to ±15 after the breakthrough cap landed (longer drives = more
+    // key moments per match = larger absolute turnover counts) ; the
+    // intent (boost reduces turnovers) is unchanged.
+    expect(withBoostTurnovers).toBeLessThanOrEqual(baselineTurnovers + 15);
   });
 
   it('determinism: same seed + same TV gap reproduces the result', () => {

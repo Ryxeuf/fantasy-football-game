@@ -66,6 +66,16 @@ const TURNS_PER_HALF = 8;
 const FIELD_YARDS = 26;
 const MS_PER_TURN = 30_000;
 const MS_HALFTIME = 15_000;
+/**
+ * Hard cap on the yards a single turn can advance the drive. The
+ * breakthrough mechanic in `rollYards` used to push +30..+40 yards,
+ * which on a 26-yard field meant a TD was reachable from the kickoff
+ * line in one turn — narratively absurd ("Touchdown from yardline 4
+ * after a single block"). Capping at 16 forces drives to span at
+ * least two turns from the receiving line (4 + 16 = 20 < 26) and
+ * keeps breakthroughs as "long plays" rather than full-field sprints.
+ */
+const MAX_TURN_YARDS = 16;
 
 type Side = 'home' | 'away';
 type KeyMomentKind = 'block' | 'pass' | 'dodge' | 'pickup' | 'gfi' | 'foul';
@@ -336,14 +346,27 @@ function rollYards(
   //
   // - Base : 2d6+2 (mean 7).
   // - bash counter / disruption / pace offset : unchanged.
-  // - Breakthrough proba : 18%. Magnitudes unchanged.
+  // - Breakthrough proba : 18%.
   // - TV delta bonus : divisor /100 → /80 (cap ±3, inchangé) — affine la
   //   sensibilité au gap TV pour pousser l'upset des matchups
   //   TV-déséquilibrés sous 18% (cible C2).
-  //   Combiné avec UNDERDOG_BOOST_PROBABILITY 3% (au lieu de 10%) et
-  //   recalibrage TVs vers signature BB (Halflings 700, Ogres 1100,
-  //   élites 1050-1100), Snow Ogres vs Halflings tombe à 17.8% upset
-  //   (cible 12-18%) — premier pairing du panel à passer C2.
+  //
+  // Sprint Pro League — tuning narratif (Bug #2 panel feedback) :
+  //
+  // - Breakthrough magnitudes 30/35/40 → 12/15/18. The original values
+  //   meant a single breakthrough roll could traverse the entire 26-yard
+  //   field, producing TDs from the kickoff line right after a single
+  //   block — see replay #2 turn 3. The reduced magnitudes still create
+  //   "long play" drama (a +18 against a weak D feels like a sweep run)
+  //   but multi-yard advances now require 2-3 turns to compose into a
+  //   TD, which mirrors how a real BB drive is shaped.
+  // - Hard cap at MAX_TURN_YARDS = 16 yards/turn. Belt-and-suspenders :
+  //   even with the reduced magnitudes, dice + bonuses + breakthrough
+  //   could still reach ~30 yards in extreme stacks. Capping at 16
+  //   guarantees a drive needs at least 2 turns to score from the
+  //   receiving yardline (4 + 16 = 20 < 26 = FIELD_YARDS) and that the
+  //   single-turn-TD-from-yardline-9 case the panel flagged becomes
+  //   impossible (9 + 16 = 25 < 26).
   const dice = Math.floor(rng.next() * 6) + Math.floor(rng.next() * 6) + 2;
   const paceOffset = Math.round(profile.pace / 25) - 2;
   const bashCounter = -Math.round(defenseProfile.bashIndex / 28);
@@ -355,13 +378,14 @@ function rollYards(
   const fatTail = rng.next();
   let breakthrough = 0;
   if (fatTail < 0.18) {
-    if (defenseProfile.bashIndex < 50) breakthrough = 40;
-    else if (defenseProfile.bashIndex < 70) breakthrough = 35;
-    else breakthrough = 30;
+    if (defenseProfile.bashIndex < 50) breakthrough = 18;
+    else if (defenseProfile.bashIndex < 70) breakthrough = 15;
+    else breakthrough = 12;
   } else if (fatTail < 0.34) {
     breakthrough = -10;
   }
-  return Math.max(0, dice + paceOffset + bashCounter + defensiveDisruption + tvBonus + breakthrough);
+  const total = dice + paceOffset + bashCounter + defensiveDisruption + tvBonus + breakthrough;
+  return Math.max(0, Math.min(MAX_TURN_YARDS, total));
 }
 
 function nextDrive(prev: DriveState): DriveState {
