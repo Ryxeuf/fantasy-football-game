@@ -130,6 +130,25 @@ app.get("/health", liveness);
 app.get("/health/live", liveness);
 app.get("/health/ready", probeReadiness);
 
+// Pro League healthcheck (sprint 1.F.2). Sous-systeme observable :
+// season, simRunner, gazette, bettingMarkets. 503 si "down", 200
+// sinon (degraded compris : un orchestrateur qui veut un signal
+// strict peut filtrer status='up').
+app.get("/health/pro-league", async (_req, res) => {
+  try {
+    const { getProLeagueHealth } = await import(
+      "./services/pro-league-health"
+    );
+    const out = await getProLeagueHealth();
+    const code = out.status === "down" ? 503 : 200;
+    res.status(code).json(out);
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "unknown";
+    serverLog.error(`[health/pro-league] failed: ${msg}`);
+    res.status(503).json({ status: "down", error: "internal-error" });
+  }
+});
+
 // Endpoint Prometheus (S25.3). Format texte standard, scrape par
 // Prometheus qui le pousse ensuite vers Grafana LGTM.
 app.get("/metrics", async (_req, res, next) => {
