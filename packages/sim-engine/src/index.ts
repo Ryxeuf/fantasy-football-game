@@ -8,6 +8,7 @@
 
 export { simulateMatch } from './simulate-match';
 export { runHybridDriver, type DriverOptions } from './driver/hybrid-driver';
+export { runFullDriver } from './driver/full-driver';
 export {
   DEFAULT_TACTICAL_PROFILE,
   TACTICAL_PROFILE_PARAMETERS,
