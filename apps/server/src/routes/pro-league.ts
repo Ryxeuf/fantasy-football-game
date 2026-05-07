@@ -46,6 +46,12 @@ import {
   listUserBadges,
 } from "../services/pro-badges";
 import {
+  GazetteValidationError,
+  listEditionDates,
+  listEditionForDate,
+  listLatestEdition,
+} from "../services/pro-gazette";
+import {
   InsufficientFundsError,
   getBalance,
   getRecentTransactions,
@@ -562,6 +568,69 @@ export async function handleEvaluateMyBadges(
 }
 
 /**
+ * Sprint 1.E.2 — Renvoie la dernière édition de la Gazette publiée.
+ * 200 avec edition=null si aucun article.
+ */
+export async function handleGetLatestEdition(
+  _req: Request,
+  res: Response,
+): Promise<void> {
+  const edition = await listLatestEdition();
+  res.json({ edition });
+}
+
+/**
+ * Sprint 1.E.2 — Renvoie l'édition d'une date donnée (YYYY-MM-DD).
+ */
+export async function handleGetEditionByDate(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const date = req.params.date;
+  if (typeof date !== "string") {
+    res.status(400).json({ error: "missing-date" });
+    return;
+  }
+  try {
+    const edition = await listEditionForDate(date);
+    res.json({ edition });
+  } catch (err: unknown) {
+    if (err instanceof GazetteValidationError) {
+      res.status(400).json({ error: err.message, code: err.code });
+      return;
+    }
+    const msg = err instanceof Error ? err.message : "unknown";
+    serverLog.error(`[pro-league/gazette/${date}] failed: ${msg}`);
+    res.status(500).json({ error: "internal-error" });
+  }
+}
+
+/**
+ * Sprint 1.E.2 — Liste les dates publiées (archive). `?limit=N`.
+ */
+export async function handleListEditionDates(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const limit =
+    typeof req.query.limit === "string"
+      ? Number.parseInt(req.query.limit, 10)
+      : 30;
+  try {
+    const dates = await listEditionDates(limit);
+    res.json({ dates });
+  } catch (err: unknown) {
+    if (err instanceof GazetteValidationError) {
+      res.status(400).json({ error: err.message, code: err.code });
+      return;
+    }
+    const msg = err instanceof Error ? err.message : "unknown";
+    serverLog.error(`[pro-league/gazette/dates] failed: ${msg}`);
+    res.status(500).json({ error: "internal-error" });
+  }
+}
+
+/**
  * Sprint 1.D.6 — Snapshot wallet : solde + 20 dernières transactions.
  */
 export async function handleGetMyWallet(
@@ -678,6 +747,9 @@ router.get("/matches/:id", handleGetMatchDetail);
 router.get("/matches/:id/markets", handleListMarkets);
 router.get("/matches/:id/stream", handleStreamProMatch);
 router.get("/leaderboard", handleGetBetLeaderboard);
+router.get("/gazette/latest", handleGetLatestEdition);
+router.get("/gazette/dates", handleListEditionDates);
+router.get("/gazette/:date", handleGetEditionByDate);
 router.get("/_internal/broadcaster-stats", handleBroadcasterStats);
 
 // Sprint 1.C.4 — endpoints auth-protected pour le mode "fan".

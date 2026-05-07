@@ -1104,3 +1104,18 @@ model ProUserBadge {
   @@index([badgeCode])
   @@index([userId])
 }
+
+model ProGazetteArticle {
+  id               String   @id @default(cuid())
+  date             DateTime
+  type             String
+  persona          String?
+  title            String
+  body             String
+  relatedTeamIds   String?
+  relatedPlayerIds String?
+  createdAt        DateTime @default(now())
+
+  @@index([date])
+  @@index([type, date])
+}
