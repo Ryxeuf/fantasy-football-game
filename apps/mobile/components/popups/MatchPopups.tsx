@@ -13,6 +13,7 @@ import {
   buildFollowUpChooseMove,
   buildRerollChooseMove,
 } from "../../lib/block-popups";
+import { useTranslation } from "../../lib/i18n-context";
 
 interface MatchPopupsProps {
   state: GameState;
@@ -29,13 +30,18 @@ export default function MatchPopups({
   isMyTurn,
   submitMove,
 }: MatchPopupsProps) {
+  const { t } = useTranslation();
+  const attackerFallback = t("popups.fallbacks.attacker");
+  const defenderFallback = t("popups.fallbacks.defender");
+  const playerFallback = t("popups.fallbacks.player");
+
   return (
     <>
       {state.pendingBlock && (
         <BlockChoicePopup
           visible={shouldShowBlockPopup(state)}
-          attackerName={playerName(state, state.pendingBlock.attackerId, "Attaquant")}
-          defenderName={playerName(state, state.pendingBlock.targetId, "Défenseur")}
+          attackerName={playerName(state, state.pendingBlock.attackerId, attackerFallback)}
+          defenderName={playerName(state, state.pendingBlock.targetId, defenderFallback)}
           chooser={state.pendingBlock.chooser}
           options={state.pendingBlock.options as BlockResult[]}
           onChoose={(result) =>
@@ -48,8 +54,8 @@ export default function MatchPopups({
       {state.pendingPushChoice && (
         <PushChoicePopup
           visible={shouldShowPushPopup(state)}
-          attackerName={playerName(state, state.pendingPushChoice.attackerId, "Attaquant")}
-          targetName={playerName(state, state.pendingPushChoice.targetId, "Défenseur")}
+          attackerName={playerName(state, state.pendingPushChoice.attackerId, attackerFallback)}
+          targetName={playerName(state, state.pendingPushChoice.targetId, defenderFallback)}
           availableDirections={state.pendingPushChoice.availableDirections}
           onChoose={(direction) =>
             submitMove(buildPushChooseMove(state.pendingPushChoice!, direction))
@@ -61,8 +67,8 @@ export default function MatchPopups({
       {state.pendingFollowUpChoice && (
         <FollowUpChoicePopup
           visible={shouldShowFollowUpPopup(state)}
-          attackerName={playerName(state, state.pendingFollowUpChoice.attackerId, "Attaquant")}
-          targetName={playerName(state, state.pendingFollowUpChoice.targetId, "Défenseur")}
+          attackerName={playerName(state, state.pendingFollowUpChoice.attackerId, attackerFallback)}
+          targetName={playerName(state, state.pendingFollowUpChoice.targetId, defenderFallback)}
           targetNewPosition={state.pendingFollowUpChoice.targetNewPosition}
           onChoose={(followUp) =>
             submitMove(
@@ -77,7 +83,7 @@ export default function MatchPopups({
         <RerollChoicePopup
           visible={shouldShowRerollPopup(state)}
           rollType={state.pendingReroll.rollType}
-          playerName={playerName(state, state.pendingReroll.playerId, "Joueur")}
+          playerName={playerName(state, state.pendingReroll.playerId, playerFallback)}
           teamRerollsLeft={
             state.pendingReroll.team === "A"
               ? state.teamRerolls?.teamA ?? 0
