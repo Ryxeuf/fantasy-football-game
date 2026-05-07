@@ -6,15 +6,21 @@
  * production.
  */
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { Request, Response } from "express";
 
+vi.mock("../services/pro-league-engine-drift-watcher", () => ({
+  computeEngineDrift: vi.fn(),
+}));
+
 import {
+  handleGetDrift,
   handleListTeams,
   handleRunSim,
   runSimSchema,
   type RunSimBody,
 } from "./admin-sim";
+import { computeEngineDrift } from "../services/pro-league-engine-drift-watcher";
 
 function buildRes(): Response & { statusCode: number; body: unknown } {
   const res = {
@@ -162,5 +168,56 @@ describe("runSimSchema (Zod validation)", () => {
         seed: -1,
       }),
     ).toThrow();
+  });
+});
+
+describe("handleGetDrift — Lot 2.A.5", () => {
+  it("retourne les samples + computedAt sans args", async () => {
+    (computeEngineDrift as ReturnType<typeof vi.fn>).mockResolvedValue([
+      {
+        metric: "tdMean",
+        race: "Wood Elf",
+        seasonId: "S",
+        observed: 2.5,
+        reference: 2.4,
+        drift: 0.04,
+        samples: 10,
+      },
+    ]);
+    const res = buildRes();
+    await handleGetDrift({ query: {} } as unknown as Request, res);
+    const body = res.body as { samples: unknown[]; computedAt: string };
+    expect(body.samples).toHaveLength(1);
+    expect(typeof body.computedAt).toBe("string");
+    expect(computeEngineDrift).toHaveBeenCalledWith({
+      windowMs: undefined,
+      seasonId: undefined,
+    });
+  });
+
+  it("forwarde windowMs et seasonId quand fournis en query string", async () => {
+    (computeEngineDrift as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    const res = buildRes();
+    await handleGetDrift(
+      { query: { windowMs: "86400000", seasonId: "S2026" } } as unknown as Request,
+      res,
+    );
+    expect(computeEngineDrift).toHaveBeenCalledWith({
+      windowMs: 86400000,
+      seasonId: "S2026",
+    });
+  });
+
+  it("ignore un windowMs non-numérique (sécurise contre une chaîne arbitraire)", async () => {
+    (computeEngineDrift as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    const res = buildRes();
+    await handleGetDrift(
+      { query: { windowMs: "drop-tables" } } as unknown as Request,
+      res,
+    );
+    expect(computeEngineDrift).toHaveBeenCalledWith({
+      windowMs: undefined,
+      seasonId: undefined,
+    });
   });
 });
