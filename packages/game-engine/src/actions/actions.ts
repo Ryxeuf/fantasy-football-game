@@ -37,7 +37,9 @@ import {
   awardTouchdown,
   bounceBall,
 } from '../mechanics/ball';
-import { hasAnimosityAgainst, checkAnimosity } from '../mechanics/animosity';
+// S27.8.2 — `hasAnimosityAgainst` / `checkAnimosity` consommes uniquement
+// dans `actions/pass-actions.ts` (handlePass + handleHandoff). Plus
+// d'import direct ici.
 import {
   canBlock,
   canBlitz,
@@ -62,16 +64,19 @@ import {
   handlePostTouchdown,
   canTeamBlitz,
 } from '../core/game-state';
-import { executePass, executeHandoff, getPassRange, canAttemptPassForRange } from '../mechanics/passing';
-import {
-  canApplyRunningPass,
-  canApplyRunningPassToHandoff,
-  markRunningPassUsed,
-} from '../mechanics/running-pass';
+// S27.8.2 — `executePass` / `executeHandoff` consommes dans
+// `actions/pass-actions.ts`. `getPassRange` + `canAttemptPassForRange`
+// restent ici car utilises dans `getLegalMoves`.
+import { getPassRange, canAttemptPassForRange } from '../mechanics/passing';
+// S27.8.2 — Running Pass consomme uniquement dans
+// `actions/pass-actions.ts`. Plus d'import direct ici.
 import { canFoul, executeFoul } from '../mechanics/foul';
 import { isAdjacent } from '../mechanics/movement';
 import { applyApothecaryChoice } from '../mechanics/apothecary';
-import { canThrowTeamMate, getThrowRange, executeThrowTeamMate } from '../mechanics/throw-team-mate';
+// S27.8.2 — `executeThrowTeamMate` consomme dans
+// `actions/pass-actions.ts`. `canThrowTeamMate` + `getThrowRange`
+// restent ici car utilises dans `getLegalMoves`.
+import { canThrowTeamMate, getThrowRange } from '../mechanics/throw-team-mate';
 import { canHypnoticGaze } from '../mechanics/hypnotic-gaze';
 import { canProjectileVomit } from '../mechanics/projectile-vomit';
 import { canStab } from '../mechanics/stab';
@@ -89,6 +94,15 @@ import {
   handleBallAndChain,
   handleBombThrow,
 } from './special-actions';
+// S27.8.2 — Famille pass (PASS, ON_THE_BALL_MOVE, ON_THE_BALL_DECLINE,
+// HANDOFF, THROW_TEAM_MATE) extraite dans `actions/pass-actions.ts`.
+import {
+  handlePass,
+  handleOnTheBallMove,
+  handleOnTheBallDecline,
+  handleHandoff,
+  handleThrowTeamMate,
+} from './pass-actions';
 import { canDumpOff, getDumpOffReceivers, executeDumpOff } from '../mechanics/dump-off';
 import { checkDauntless } from '../mechanics/dauntless';
 import { checkBreakTackle } from '../mechanics/break-tackle';
@@ -100,11 +114,8 @@ import {
   canPerformMultipleBlock,
   markMultipleBlockUsed,
 } from '../mechanics/multiple-block';
-import {
-  getOnTheBallReactivePlayers,
-  executeOnTheBallMove,
-  markOnTheBallUsed,
-} from '../mechanics/on-the-ball';
+// S27.8.2 — On the Ball flow consomme uniquement dans
+// `actions/pass-actions.ts`. Plus d'import direct ici.
 import {
   resolveKickoffPerfectDefence,
   resolveKickoffHighKick,
@@ -2338,223 +2349,9 @@ function handleBlitz(
   };
 }
 
-/**
- * Gère une action de passe
- */
-function handlePass(state: GameState, move: { type: 'PASS'; playerId: string; targetId: string }, rng: RNG): GameState {
-  const passer = state.players.find(p => p.id === move.playerId);
-  const target = state.players.find(p => p.id === move.targetId);
-
-  if (!passer || !target) return state;
-  if (!passer.hasBall) return state;
-  if (passer.team !== state.currentPlayer) return state;
-  if (hasPlayerActed(state, passer.id)) return state;
-
-  // Instable (Unstable): prohibition — Pass action cannot be declared.
-  // No dice are rolled, no turnover. The action is simply rejected with a log.
-  if (!canInstablePerformAction(passer, 'PASS')) {
-    return logInstablePrevention(state, passer, 'PASS');
-  }
-
-  // Stunty: passes Long/Long Bomb interdites. L'action est rejetee sans dé
-  // ni turnover (retourne l'etat inchange, le coach doit choisir un autre recepteur).
-  const passRange = getPassRange(passer.pos, target.pos);
-  if (!canAttemptPassForRange(passer, passRange)) {
-    return state;
-  }
-
-  // ─── On the Ball : réaction adverse avant la passe ──────────────────
-  const reactivePlayers = getOnTheBallReactivePlayers(state, passer.team);
-  if (reactivePlayers.length > 0) {
-    const otbLog = createLogEntry(
-      'info',
-      `Un joueur adverse peut activer Sur le Ballon avant la passe !`,
-      undefined,
-      reactivePlayers[0].team,
-      { skill: 'on-the-ball' },
-    );
-    return {
-      ...state,
-      gameLog: [...state.gameLog, otbLog],
-      pendingOnTheBall: {
-        passerTeam: passer.team,
-        pendingPassMove: { type: 'PASS', playerId: move.playerId, targetId: move.targetId },
-        reactivePlayers: reactivePlayers.map(p => p.id),
-      },
-    };
-  }
-
-  // Animosity check: roll D6 before pass if passer dislikes target
-  let currentState = state;
-  if (hasAnimosityAgainst(passer, target)) {
-    const animResult = checkAnimosity(currentState, passer, target, rng);
-    currentState = animResult.newState;
-    if (!animResult.passed) {
-      // Player refuses — activation ends, no turnover
-      currentState = setPlayerAction(currentState, passer.id, 'PASS');
-      currentState = checkPlayerTurnEnd(currentState, passer.id);
-      return currentState;
-    }
-  }
-
-  let newState = executePass(currentState, passer, target, rng);
-  newState = setPlayerAction(newState, passer.id, 'PASS');
-
-  // Running Pass : si le passeur a le skill, qu'il s'agit d'une Quick Pass
-  // sans turnover et qu'il lui reste de la MA, il peut continuer son mouvement
-  // apres la passe (une fois par tour). On ne le marque pas avant le passe pour
-  // permettre la lecture du flag dans canApplyRunningPass / canPlayerContinueMoving.
-  const passerAfter = newState.players.find(p => p.id === passer.id);
-  if (passerAfter && canApplyRunningPass(newState, passerAfter, passRange, newState.isTurnover)) {
-    newState = markRunningPassUsed(newState, passer.id);
-    const rpLog = createLogEntry(
-      'info',
-      `Passe dans la Course : ${passer.name} peut continuer son mouvement`,
-      passer.id,
-      passer.team,
-      { skill: 'running-pass' },
-    );
-    newState = { ...newState, gameLog: [...newState.gameLog, rpLog] };
-  }
-
-  newState = checkPlayerTurnEnd(newState, passer.id);
-  return newState;
-}
-
-/**
- * Gère le mouvement réactif On the Ball — le coach défenseur déplace un
- * joueur possédant le skill avant la passe.
- */
-function handleOnTheBallMove(
-  state: GameState,
-  move: { type: 'ON_THE_BALL_MOVE'; playerId: string; to: Position },
-  rng: RNG,
-): GameState {
-  if (!state.pendingOnTheBall) return state;
-  // Vérifier que le joueur choisi fait partie des réactifs éligibles
-  if (!state.pendingOnTheBall.reactivePlayers.includes(move.playerId)) return state;
-
-  const passMove = state.pendingOnTheBall.pendingPassMove;
-  let next: GameState = { ...state, pendingOnTheBall: undefined };
-
-  // Exécuter le mouvement On the Ball
-  next = executeOnTheBallMove(next, move.playerId, move.to, rng);
-
-  // Reprendre la passe initiale
-  return handlePass(next, passMove, rng);
-}
-
-/**
- * Le coach défenseur décline On the Ball — la passe reprend normalement.
- */
-function handleOnTheBallDecline(state: GameState, rng: RNG): GameState {
-  if (!state.pendingOnTheBall) return state;
-
-  const passMove = state.pendingOnTheBall.pendingPassMove;
-  const opposingTeam: TeamId = state.pendingOnTheBall.passerTeam === 'A' ? 'B' : 'A';
-  let next: GameState = { ...state, pendingOnTheBall: undefined };
-
-  // Marquer l'utilisation pour que handlePass ne re-déclenche pas
-  next = markOnTheBallUsed(next, opposingTeam);
-
-  const declineLog = createLogEntry(
-    'info',
-    `Sur le Ballon décliné par le coach défenseur`,
-    undefined,
-    opposingTeam,
-    { skill: 'on-the-ball' },
-  );
-  next.gameLog = [...next.gameLog, declineLog];
-
-  // Reprendre la passe initiale
-  return handlePass(next, passMove, rng);
-}
-
-/**
- * Gère une action de remise (handoff)
- */
-function handleHandoff(state: GameState, move: { type: 'HANDOFF'; playerId: string; targetId: string }, rng: RNG): GameState {
-  const passer = state.players.find(p => p.id === move.playerId);
-  const target = state.players.find(p => p.id === move.targetId);
-
-  if (!passer || !target) return state;
-  if (!passer.hasBall) return state;
-  if (passer.team !== state.currentPlayer) return state;
-  if (hasPlayerActed(state, passer.id)) return state;
-  if (!isAdjacent(passer.pos, target.pos)) return state;
-
-  // Instable (Unstable): prohibition — Hand-Off action cannot be declared.
-  if (!canInstablePerformAction(passer, 'HANDOFF')) {
-    return logInstablePrevention(state, passer, 'HANDOFF');
-  }
-
-  // Animosity check: roll D6 before handoff if passer dislikes target
-  let currentState = state;
-  if (hasAnimosityAgainst(passer, target)) {
-    const animResult = checkAnimosity(currentState, passer, target, rng);
-    currentState = animResult.newState;
-    if (!animResult.passed) {
-      // Player refuses — activation ends, no turnover
-      currentState = setPlayerAction(currentState, passer.id, 'HANDOFF');
-      currentState = checkPlayerTurnEnd(currentState, passer.id);
-      return currentState;
-    }
-  }
-
-  let newState = executeHandoff(currentState, passer, target, rng);
-  newState = setPlayerAction(newState, passer.id, 'HANDOFF');
-
-  // Running Pass (variante S3) : un Hand-Off s'integre dans la regle ; meme
-  // resolution que pour une Quick Pass.
-  const passerAfter = newState.players.find(p => p.id === passer.id);
-  if (passerAfter && canApplyRunningPassToHandoff(newState, passerAfter, newState.isTurnover)) {
-    newState = markRunningPassUsed(newState, passer.id);
-    const rpLog = createLogEntry(
-      'info',
-      `Transmission dans la course : ${passer.name} peut continuer son mouvement`,
-      passer.id,
-      passer.team,
-      { skill: 'running-pass-2025' },
-    );
-    newState = { ...newState, gameLog: [...newState.gameLog, rpLog] };
-  }
-
-  newState = checkPlayerTurnEnd(newState, passer.id);
-  return newState;
-}
-
-/**
- * Gère une action de Lancer de Coéquipier (Throw Team-Mate)
- */
-function handleThrowTeamMate(
-  state: GameState,
-  move: { type: 'THROW_TEAM_MATE'; playerId: string; thrownPlayerId: string; targetPos: Position },
-  rng: RNG,
-): GameState {
-  const thrower = state.players.find(p => p.id === move.playerId);
-  const thrown = state.players.find(p => p.id === move.thrownPlayerId);
-
-  if (!thrower || !thrown) return state;
-  if (thrower.team !== state.currentPlayer) return state;
-  if (hasPlayerActed(state, thrower.id)) return state;
-  if (!canThrowTeamMate(state, thrower, thrown)) return state;
-
-  // Instable (Unstable): prohibition — Throw Team-Mate action cannot be declared.
-  if (!canInstablePerformAction(thrower, 'THROW_TEAM_MATE')) {
-    return logInstablePrevention(state, thrower, 'THROW_TEAM_MATE');
-  }
-
-  // Vérifier que la cible est dans la portée
-  const range = getThrowRange(thrower.pos, move.targetPos);
-  if (!range) return state;
-
-  // Note: le test Always Hungry (BB3) est realise dans executeThrowTeamMate,
-  // apres le deplacement mais avant le lancer.
-  let newState = executeThrowTeamMate(state, thrower, thrown, move.targetPos, rng);
-  newState = setPlayerAction(newState, thrower.id, 'THROW_TEAM_MATE');
-  newState = checkPlayerTurnEnd(newState, thrower.id);
-  return newState;
-}
+// S27.8.2 — handlePass / handleOnTheBallMove / handleOnTheBallDecline /
+// handleHandoff / handleThrowTeamMate extraits dans
+// `actions/pass-actions.ts` (re-importes en haut de ce fichier).
 
 /**
  * Gère une action de faute
@@ -2593,3 +2390,6 @@ function handleFoul(state: GameState, move: { type: 'FOUL'; playerId: string; ta
 // S27.8.1 — handleHypnoticGaze / handleProjectileVomit / handleStab /
 // handleChainsaw / handleBallAndChain / handleBombThrow extraits dans
 // `actions/special-actions.ts` (re-importes en haut de ce fichier).
+// S27.8.2 — handlePass / handleOnTheBallMove / handleOnTheBallDecline /
+// handleHandoff / handleThrowTeamMate extraits dans
+// `actions/pass-actions.ts` (re-importes en haut de ce fichier).
