@@ -63,6 +63,8 @@ import {
   // S27.8.3 — `advanceHalfIfNeeded` et `handlePostTouchdown` consommes
   // uniquement dans `actions/turn-foul-actions.ts` (handleEndTurn).
   canTeamBlitz,
+  // S27.8.5 — `canUseTeamReroll` deplace dans `core/game-state.ts`.
+  canUseTeamReroll,
 } from '../core/game-state';
 // S27.8.2 — `executePass` / `executeHandoff` consommes dans
 // `actions/pass-actions.ts`. `getPassRange` + `canAttemptPassForRange`
@@ -120,6 +122,10 @@ import {
   applyRollFailure,
   applyPickupFailure,
 } from './failure-helpers';
+// S27.8.5 — `handleBallPickup` extrait dans `actions/ball-pickup.ts`
+// pour servir de feuille reutilisable par handleNormalMove /
+// handleDodgeRoll / handleLeap / handleRerollChoose.
+import { handleBallPickup } from './ball-pickup';
 import { canDumpOff, getDumpOffReceivers, executeDumpOff } from '../mechanics/dump-off';
 import { checkDauntless } from '../mechanics/dauntless';
 import { checkBreakTackle } from '../mechanics/break-tackle';
@@ -430,14 +436,9 @@ function getAdjacentOpponents(state: GameState, position: Position, team: TeamId
   return opponents;
 }
 
-/**
- * Vérifie si une équipe peut utiliser une relance d'équipe
- */
-function canUseTeamReroll(state: GameState, team: TeamId): boolean {
-  if (state.rerollUsedThisTurn) return false;
-  const rerolls = team === 'A' ? state.teamRerolls?.teamA : state.teamRerolls?.teamB;
-  return (rerolls ?? 0) > 0;
-}
+// S27.8.5 — `canUseTeamReroll` deplace dans `core/game-state.ts` pour
+// pouvoir etre consomme par les handlers extraits (ball-leap-actions
+// notamment) sans creer de cycle d'import vers `actions.ts`.
 
 /**
  * Résout le second bloc Frenzy si `pendingFrenzyBlock` est défini et qu'il
@@ -1179,114 +1180,8 @@ function handleNormalMove(
   return next;
 }
 
-/**
- * Gère le ramassage de balle
- */
-function handleBallPickup(state: GameState, player: Player, rng: RNG, idx: number): GameState {
-  // No Hands: player cannot pick up the ball at all (no roll)
-  if (hasSkill(player, 'no-hands')) {
-    const noHandsLog = createLogEntry(
-      'info',
-      `Sans Ballon: ${player.name} ne peut pas ramasser le ballon !`,
-      player.id,
-      player.team,
-      { skill: 'no-hands' }
-    );
-    const turnoverLog = createLogEntry(
-      'turnover',
-      `Échec du ramassage (Sans Ballon) - Turnover`,
-      player.id,
-      player.team
-    );
-    const newState: GameState = {
-      ...state,
-      isTurnover: true,
-      gameLog: [...state.gameLog, noHandsLog, turnoverLog],
-    };
-    return bounceBall(newState, rng);
-  }
-
-  // Calculer les modificateurs de pickup (malus pour adversaires + bonus skills)
-  const basePickupModifiers = calculatePickupModifiers(state, state.ball!, player.team);
-  const skillPickupModifiers = getPickupSkillModifiers(state, player);
-  const pickupModifiers = basePickupModifiers + skillPickupModifiers;
-
-  // Effectuer le jet de pickup
-  let pickupResult = performPickupRollWithNotification(player, rng, pickupModifiers);
-
-  // Sure Hands : relance automatique du pickup raté (via skill registry)
-  if (!pickupResult.success && canSkillReroll(player, 'on-pickup', state)) {
-    const rerollLog = createLogEntry(
-      'dice',
-      `Sure Hands : relance du ramassage (${pickupResult.diceRoll} raté)`,
-      player.id,
-      player.team
-    );
-    state.gameLog = [...state.gameLog, rerollLog];
-    pickupResult = performPickupRollWithNotification(player, rng, pickupModifiers);
-  }
-
-  // Stocker le résultat pour l'affichage
-  state.lastDiceResult = pickupResult;
-
-  // Log du jet de pickup
-  const pickupLogEntry = createLogEntry(
-    'dice',
-    `Jet de pickup: ${pickupResult.diceRoll}/${pickupResult.targetNumber} ${pickupResult.success ? '✓' : '✗'}`,
-    player.id,
-    player.team,
-    {
-      diceRoll: pickupResult.diceRoll,
-      targetNumber: pickupResult.targetNumber,
-      success: pickupResult.success,
-      modifiers: pickupModifiers,
-    }
-  );
-  state.gameLog = [...state.gameLog, pickupLogEntry];
-
-  if (pickupResult.success) {
-    // Ramassage réussi : attacher la balle au joueur
-    state.ball = undefined;
-    state.players[idx].hasBall = true;
-
-    // Log du ramassage réussi
-    const successLogEntry = createLogEntry(
-      'action',
-      `Ballon ramassé avec succès`,
-      player.id,
-      player.team
-    );
-    state.gameLog = [...state.gameLog, successLogEntry];
-
-    // Si pickup dans l'en-but adverse, touchdown immédiat
-    const picker = state.players[idx];
-    if (isInOpponentEndzone(state, picker)) {
-      return awardTouchdown(state, picker.team, picker);
-    }
-  } else {
-    // Échec de pickup : offrir relance d'équipe si disponible
-    if (canUseTeamReroll(state, player.team)) {
-      state.pendingReroll = { rollType: 'pickup', playerId: player.id, team: player.team, targetNumber: pickupResult.targetNumber, modifiers: pickupModifiers, playerIndex: idx };
-      return state;
-    }
-    // Pas de relance : la balle rebondit et turnover
-    state.isTurnover = true;
-
-    // Log du ramassage échoué
-    const failLogEntry = createLogEntry(
-      'turnover',
-      `Échec du ramassage - Turnover`,
-      player.id,
-      player.team
-    );
-    state.gameLog = [...state.gameLog, failLogEntry];
-
-    // Faire rebondir la balle
-    return bounceBall(state, rng);
-  }
-
-  return state;
-}
+// S27.8.5 — `handleBallPickup` extrait dans `actions/ball-pickup.ts`
+// (re-importe en haut de ce fichier).
 
 /**
  * Gère une action d'esquive explicite
