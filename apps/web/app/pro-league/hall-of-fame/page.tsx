@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { apiRequest } from "../../lib/api-client";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 import { WalletBadge } from "../_components/WalletBadge";
 
@@ -30,20 +31,9 @@ interface HallOfFameData {
   readonly entries: readonly HallOfFameEntry[];
 }
 
-const REASON_LABELS: Record<string, string> = {
-  death_in_match: "Mort en match",
-  career_tds: "TDs carriere",
-  mvp_legend: "Legende MVP",
-  title: "Titre",
-};
-
-function reasonLabel(code: string): string {
-  return REASON_LABELS[code] ?? code;
-}
-
-function formatDate(iso: string): string {
+function formatDate(iso: string, locale: string): string {
   const d = new Date(iso);
-  return d.toLocaleDateString("fr-FR", {
+  return d.toLocaleDateString(locale, {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -51,9 +41,19 @@ function formatDate(iso: string): string {
 }
 
 export default function HallOfFamePage(): JSX.Element {
+  const { t, language } = useLanguage();
   const [data, setData] = useState<HallOfFameData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const reasonLabel = (code: string): string => {
+    if (code === "death_in_match") return t.proLeague.hof.reasonDeath;
+    if (code === "career_tds") return t.proLeague.hof.reasonCareerTds;
+    if (code === "mvp_legend") return t.proLeague.hof.reasonMvpLegend;
+    if (code === "title") return t.proLeague.hof.reasonTitle;
+    return code;
+  };
+  const localeTag = language === "fr" ? "fr-FR" : "en-US";
 
   useEffect(() => {
     let cancelled = false;
@@ -81,7 +81,7 @@ export default function HallOfFamePage(): JSX.Element {
     <main className="mx-auto flex min-h-screen max-w-4xl flex-col bg-slate-950 px-4 py-6 text-slate-100">
       <header className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-wide text-amber-200">
-          Hall of Fame
+          {t.proLeague.hof.title}
         </h1>
         <div className="flex items-center gap-2">
           <WalletBadge />
@@ -89,18 +89,15 @@ export default function HallOfFamePage(): JSX.Element {
             href="/pro-league"
             className="rounded border border-slate-700 px-3 py-1 text-sm text-slate-300 hover:bg-slate-800"
           >
-            ← Hub
+            {t.proLeague.common.backToHub}
           </Link>
         </div>
       </header>
 
-      <p className="mb-4 text-sm text-slate-400">
-        Les joueurs immortalises de la Old World League. Tombes au champ
-        d&apos;honneur de Nuffle ou couronnes par leur palmares.
-      </p>
+      <p className="mb-4 text-sm text-slate-400">{t.proLeague.hof.intro}</p>
 
       {loading ? (
-        <p className="text-sm text-slate-400">Chargement…</p>
+        <p className="text-sm text-slate-400">{t.proLeague.common.loading}</p>
       ) : error ? (
         <p
           role="alert"
@@ -113,8 +110,7 @@ export default function HallOfFamePage(): JSX.Element {
           data-testid="empty-hof"
           className="rounded border border-slate-800 bg-slate-900 px-3 py-3 text-sm text-slate-400"
         >
-          Aucun joueur au Hall of Fame pour le moment. Soyez patient — Nuffle
-          finira par reclamer son du.
+          {t.proLeague.hof.emptyState}
         </p>
       ) : (
         <ul
@@ -132,7 +128,7 @@ export default function HallOfFamePage(): JSX.Element {
                   {e.playerName}
                 </h2>
                 <span className="text-xs font-mono text-slate-500">
-                  {formatDate(e.inductedAt)}
+                  {formatDate(e.inductedAt, localeTag)}
                 </span>
               </div>
               <p className="mt-0.5 text-sm text-slate-400">

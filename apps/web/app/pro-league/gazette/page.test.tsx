@@ -7,9 +7,18 @@ vi.mock("../../lib/api-client", () => ({
 }));
 
 import { apiRequest } from "../../lib/api-client";
+import { LanguageProvider } from "../../contexts/LanguageContext";
 import GazetteHomePage from "./page";
 
 const mockedApi = vi.mocked(apiRequest);
+
+function renderPage(): ReturnType<typeof render> {
+  return render(
+    <LanguageProvider>
+      <GazetteHomePage />
+    </LanguageProvider>,
+  );
+}
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -18,7 +27,7 @@ beforeEach(() => {
 describe("GazetteHomePage — sprint 1.E.2", () => {
   it("affiche 'Chargement' pendant le fetch", () => {
     mockedApi.mockReturnValue(new Promise(() => undefined));
-    render(<GazetteHomePage />);
+    renderPage();
     expect(screen.getByText(/Chargement/)).toBeTruthy();
   });
 
@@ -26,7 +35,7 @@ describe("GazetteHomePage — sprint 1.E.2", () => {
     mockedApi
       .mockResolvedValueOnce({ edition: null })
       .mockResolvedValueOnce({ dates: [] });
-    render(<GazetteHomePage />);
+    renderPage();
     await waitFor(() => {
       expect(screen.getByTestId("gazette-no-edition")).toBeTruthy();
     });
@@ -65,7 +74,7 @@ describe("GazetteHomePage — sprint 1.E.2", () => {
       })
       .mockResolvedValueOnce({ dates: ["2026-09-15", "2026-09-14"] });
 
-    render(<GazetteHomePage />);
+    renderPage();
     await waitFor(() => {
       expect(screen.getByTestId("gazette-edition")).toBeTruthy();
     });
@@ -100,7 +109,7 @@ describe("GazetteHomePage — sprint 1.E.2", () => {
         dates: ["2026-09-15", "2026-09-14", "2026-09-13"],
       });
 
-    render(<GazetteHomePage />);
+    renderPage();
     await waitFor(() => {
       expect(screen.getByTestId("gazette-archive")).toBeTruthy();
     });
@@ -111,7 +120,7 @@ describe("GazetteHomePage — sprint 1.E.2", () => {
 
   it("affiche message d'erreur sur API throw", async () => {
     mockedApi.mockRejectedValue(new Error("boom"));
-    render(<GazetteHomePage />);
+    renderPage();
     await waitFor(() => {
       expect(screen.getByRole("alert")).toBeTruthy();
     });

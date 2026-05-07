@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 
+import { useLanguage } from "../../contexts/LanguageContext";
+
 /**
- * Shared types + components — sprint 1.E.2.
+ * Shared types + components — sprint 1.E.2 + i18n.3.
  */
 
 export type GazetteArticleType = "MAIN" | "BREVE" | "EDITO";
@@ -26,22 +28,10 @@ export interface GazetteEdition {
   readonly articles: readonly GazetteArticle[];
 }
 
-export const PERSONA_LABEL: Record<GazettePersona, string> = {
-  cynic: "Le Cynique",
-  orc_enthusiast: "L'Enthousiaste Orc",
-  statistician: "Le Statisticien",
-};
-
 export const PERSONA_EMOJI: Record<GazettePersona, string> = {
   cynic: "🦝",
   orc_enthusiast: "🟢",
   statistician: "📊",
-};
-
-export const TYPE_LABEL: Record<GazetteArticleType, string> = {
-  MAIN: "Article principal",
-  BREVE: "Brève",
-  EDITO: "Édito",
 };
 
 const TYPE_BG: Record<GazetteArticleType, string> = {
@@ -55,6 +45,17 @@ export function ArticleCard({
 }: {
   article: GazetteArticle;
 }): JSX.Element {
+  const { t } = useLanguage();
+  const typeLabel: Record<GazetteArticleType, string> = {
+    MAIN: t.proLeague.gazette.articleTypeMain,
+    BREVE: t.proLeague.gazette.articleTypeBreve,
+    EDITO: t.proLeague.gazette.articleTypeEdito,
+  };
+  const personaLabel: Record<GazettePersona, string> = {
+    cynic: t.proLeague.gazette.personaCynic,
+    orc_enthusiast: t.proLeague.gazette.personaOrcEnthusiast,
+    statistician: t.proLeague.gazette.personaStatistician,
+  };
   return (
     <article
       data-testid={`gazette-article-${article.type}`}
@@ -62,11 +63,11 @@ export function ArticleCard({
     >
       <div className="mb-2 flex items-center gap-2 text-xs uppercase">
         <span className="font-bold tracking-wide text-slate-400">
-          {TYPE_LABEL[article.type]}
+          {typeLabel[article.type]}
         </span>
         {article.persona ? (
           <span className="rounded bg-slate-800 px-2 py-0.5 text-slate-300">
-            {PERSONA_EMOJI[article.persona]} {PERSONA_LABEL[article.persona]}
+            {PERSONA_EMOJI[article.persona]} {personaLabel[article.persona]}
           </span>
         ) : null}
       </div>
@@ -96,10 +97,11 @@ export function EditionDisplay({
 }: {
   edition: GazetteEdition;
 }): JSX.Element {
+  const { t } = useLanguage();
   if (edition.articles.length === 0) {
     return (
       <p className="text-sm text-slate-500" data-testid="gazette-empty">
-        Aucun article publié pour le {edition.date}.
+        {t.proLeague.gazette.emptyEdition.replace("{date}", edition.date)}
       </p>
     );
   }

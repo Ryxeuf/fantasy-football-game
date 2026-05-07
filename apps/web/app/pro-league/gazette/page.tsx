@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { apiRequest } from "../../lib/api-client";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 import { type GazetteEdition, EditionDisplay } from "./_shared";
 
@@ -22,6 +23,7 @@ interface DatesResponse {
 }
 
 export default function GazetteHomePage(): JSX.Element {
+  const { t } = useLanguage();
   const [edition, setEdition] = useState<GazetteEdition | null>(null);
   const [archiveDates, setArchiveDates] = useState<readonly string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,22 +60,22 @@ export default function GazetteHomePage(): JSX.Element {
       <header className="mb-6 flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-black tracking-tight text-amber-200">
-            🗞️ Nuffle Gazette
+            {t.proLeague.gazette.title}
           </h1>
           <p className="mt-1 text-sm text-slate-400">
-            Le quotidien officiel de la Pro League
+            {t.proLeague.gazette.subtitle}
           </p>
         </div>
         <Link
           href="/pro-league"
           className="rounded border border-slate-700 px-3 py-1 text-sm text-slate-300 hover:bg-slate-800"
         >
-          ← Hub
+          {t.proLeague.common.backToHub}
         </Link>
       </header>
 
       {loading ? (
-        <p className="text-sm text-slate-400">Chargement…</p>
+        <p className="text-sm text-slate-400">{t.proLeague.common.loading}</p>
       ) : error ? (
         <p
           role="alert"
@@ -86,13 +88,12 @@ export default function GazetteHomePage(): JSX.Element {
           data-testid="gazette-no-edition"
           className="rounded border border-slate-800 bg-slate-900 px-3 py-3 text-sm text-slate-400"
         >
-          La Gazette n'a encore rien publié. Reviens demain matin pour le
-          premier numéro !
+          {t.proLeague.gazette.noEditionYet}
         </p>
       ) : (
         <>
           <p className="mb-4 text-sm text-slate-500">
-            Édition du{" "}
+            {t.proLeague.gazette.editionDate}{" "}
             <span className="font-mono text-slate-300">{edition.date}</span>
           </p>
           <EditionDisplay edition={edition} />
@@ -102,7 +103,7 @@ export default function GazetteHomePage(): JSX.Element {
       {archiveDates.length > 1 ? (
         <section className="mt-8" data-testid="gazette-archive">
           <h2 className="mb-2 text-lg font-semibold text-slate-100">
-            Archive
+            {t.proLeague.gazette.archiveTitle}
           </h2>
           <ul className="flex flex-wrap gap-2">
             {archiveDates.slice(1).map((d) => (
