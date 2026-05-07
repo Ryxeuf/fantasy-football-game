@@ -126,6 +126,50 @@ test.describe("E2E UI — Pro League fan flow", () => {
     expect(hasList || hasEmpty).toBe(true);
   });
 
+  test("la page /pro-league/about rend pitch + FAQ + disclaimer", async ({
+    page,
+  }) => {
+    await page.goto("/pro-league/about");
+
+    await expect(page.getByTestId("about-hero")).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(
+      /Pro League/i,
+    );
+
+    // Sections cles
+    await expect(page.getByTestId("about-howitworks")).toBeVisible();
+    await expect(page.getByTestId("about-features")).toBeVisible();
+    await expect(page.getByTestId("about-schedule")).toBeVisible();
+    await expect(page.getByTestId("about-faq")).toBeVisible();
+    await expect(page.getByTestId("about-disclaimer")).toBeVisible();
+
+    // FAQ doit contenir au moins 6 items
+    const faqItems = page.getByTestId("about-faq-item");
+    await expect(faqItems).toHaveCount(8);
+
+    // Disclaimer doit mentionner "no real money"
+    await expect(page.getByTestId("about-disclaimer")).toContainText(
+      /argent r.el/i,
+    );
+  });
+
+  test("le hub expose un lien 'A propos' qui pointe vers /pro-league/about", async ({
+    page,
+  }) => {
+    await page.goto("/pro-league");
+    const aboutLink = page.getByTestId("hub-about-link");
+    await expect(aboutLink).toBeVisible({ timeout: 15_000 });
+    await expect(aboutLink).toHaveAttribute("href", "/pro-league/about");
+
+    await aboutLink.click();
+    await page.waitForURL((u) => u.pathname === "/pro-league/about", {
+      timeout: 15_000,
+    });
+    await expect(page.getByTestId("about-hero")).toBeVisible();
+  });
+
   test("navigation hub -> standings via deep link", async ({ page }) => {
     await page.goto("/pro-league/standings");
     expect(new URL(page.url()).pathname).toBe("/pro-league/standings");

@@ -1,3 +1,10 @@
+## [1.94.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.94.0...v1.94.1) (2026-05-07)
+
+
+### ♻️ Code Refactoring
+
+* **game-engine:** extract pass family handlers (S27.8.2) ([f7e6ed4](https://github.com/Ryxeuf/fantasy-football-game/commit/f7e6ed42e04ae8e0152e35c9da56035d14609def))
+
 ## [1.94.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.93.0...v1.94.0) (2026-05-07)
 
 

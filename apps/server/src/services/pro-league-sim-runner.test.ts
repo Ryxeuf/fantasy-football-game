@@ -12,6 +12,8 @@
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
+import { ENGINE_VER as CURRENT_ENGINE_VER } from "@bb/sim-engine";
+
 vi.mock("../prisma", () => ({
   prisma: {
     proLeagueMatch: {
@@ -39,7 +41,6 @@ vi.mock("@bb/sim-engine", async () => {
 
 import { prisma } from "../prisma";
 import * as simEngine from "@bb/sim-engine";
-import { ENGINE_VER } from "@bb/sim-engine";
 
 import {
   simulateProMatch,
@@ -66,7 +67,7 @@ function makeMatch(overrides: Record<string, unknown> = {}) {
     status: "scheduled",
     homeTeam: { slug: "pit-smashers", name: "Smashers" },
     awayTeam: { slug: "kc-soaring-hawks", name: "Soaring Hawks" },
-    season: { id: "season_1", engineVer: ENGINE_VER },
+    season: { engineVer: CURRENT_ENGINE_VER },
     ...overrides,
   };
 }
@@ -136,7 +137,7 @@ describe("simulateProMatch — sprint 1.A.4", () => {
     expect(updateCall.where.id).toBe(MATCH_ID);
     expect(updateCall.data.status).toBe("ready");
     expect(updateCall.data.replayId).toBe(MATCH_ID);
-    expect(updateCall.data.engineVer).toBe(ENGINE_VER);
+    expect(updateCall.data.engineVer).toBe(CURRENT_ENGINE_VER);
     expect(typeof updateCall.data.seed).toBe("bigint");
     expect(["home", "away", "draw"]).toContain(updateCall.data.outcome);
     expect(typeof updateCall.data.scoreHome).toBe("number");
@@ -283,7 +284,7 @@ describe("simulateUpcomingMatches — sprint 1.A.4", () => {
             momentum: [],
           },
           casualties: [],
-          engineVer: ENGINE_VER,
+          engineVer: CURRENT_ENGINE_VER,
         };
       });
 
