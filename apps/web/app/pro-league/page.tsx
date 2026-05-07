@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { apiRequest } from "../lib/api-client";
+import { useLanguage } from "../contexts/LanguageContext";
 
 import { WalletBadge } from "./_components/WalletBadge";
 
@@ -156,10 +157,11 @@ function StandingsTable({
 }: {
   rows: readonly HubStandingsEntry[];
 }): JSX.Element {
+  const { t } = useLanguage();
   if (rows.length === 0) {
     return (
       <p className="text-sm text-slate-500">
-        Le classement apparaîtra après la première journée.
+        {t.proLeague.hub.standingsEmpty}
       </p>
     );
   }
@@ -205,6 +207,7 @@ function StandingsTable({
 }
 
 export default function ProLeagueHubPage(): JSX.Element {
+  const { t } = useLanguage();
   const [data, setData] = useState<HubData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -251,7 +254,7 @@ export default function ProLeagueHubPage(): JSX.Element {
       <header data-testid="hub-header" className="mb-6">
         <div className="flex items-start justify-between gap-3">
           <h1 className="text-2xl font-bold tracking-wide text-slate-50">
-            {data?.league.name ?? "Pro League"}
+            {data?.league.name ?? t.proLeague.hub.defaultName}
           </h1>
           <div className="flex items-center gap-2">
             <Link
@@ -259,7 +262,7 @@ export default function ProLeagueHubPage(): JSX.Element {
               data-testid="hub-about-link"
               className="rounded border border-slate-700 px-2 py-1 text-xs text-slate-300 hover:bg-slate-800"
             >
-              À propos
+              {t.proLeague.hub.aboutLink}
             </Link>
             <WalletBadge />
           </div>
@@ -269,14 +272,16 @@ export default function ProLeagueHubPage(): JSX.Element {
         ) : null}
         {data?.season ? (
           <p className="mt-2 text-sm text-slate-300">
-            Saison {data.season.year} · {data.season.status} · engine{" "}
+            {t.proLeague.hub.seasonInfo
+              .replace("{year}", String(data.season.year))
+              .replace("{status}", data.season.status)}{" "}
             <span className="font-mono">{data.season.engineVer}</span>
           </p>
         ) : null}
       </header>
 
       {loading ? (
-        <p className="text-sm text-slate-400">Chargement…</p>
+        <p className="text-sm text-slate-400">{t.proLeague.hub.loading}</p>
       ) : error ? (
         <p
           role="alert"
@@ -286,8 +291,7 @@ export default function ProLeagueHubPage(): JSX.Element {
         </p>
       ) : !data?.season ? (
         <p className="rounded border border-slate-800 bg-slate-900 px-3 py-3 text-sm text-slate-400">
-          Aucune saison active pour le moment. La prochaine kickoff sera
-          annoncée bientôt.
+          {t.proLeague.hub.noSeason}
         </p>
       ) : (
         <>
@@ -299,7 +303,7 @@ export default function ProLeagueHubPage(): JSX.Element {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-lg font-semibold text-slate-100">
-                    Round {data.currentRound.roundNumber}
+                    {t.proLeague.hub.currentRound} {data.currentRound.roundNumber}
                   </h2>
                   <p className="text-xs uppercase text-slate-500">
                     {data.currentRound.status}
@@ -319,12 +323,10 @@ export default function ProLeagueHubPage(): JSX.Element {
 
           <section data-testid="next-matches" className="mb-6">
             <h2 className="mb-2 text-lg font-semibold text-slate-100">
-              Prochains matchs
+              {t.proLeague.hub.nextMatches}
             </h2>
             {data.nextMatches.length === 0 ? (
-              <p className="text-sm text-slate-500">
-                Aucun match programmé.
-              </p>
+              <p className="text-sm text-slate-500">—</p>
             ) : (
               <div className="grid gap-2 sm:grid-cols-2">
                 {data.nextMatches.map((m) => (
@@ -336,7 +338,7 @@ export default function ProLeagueHubPage(): JSX.Element {
 
           <section data-testid="standings">
             <h2 className="mb-2 text-lg font-semibold text-slate-100">
-              Classement
+              {t.proLeague.hub.standingsTitle}
             </h2>
             <StandingsTable rows={data.standings} />
           </section>

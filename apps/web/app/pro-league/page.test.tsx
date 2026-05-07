@@ -14,7 +14,16 @@ vi.mock("../lib/api-client", () => ({
 }));
 
 import { apiRequest } from "../lib/api-client";
+import { LanguageProvider } from "../contexts/LanguageContext";
 import ProLeagueHubPage from "./page";
+
+function renderWithLang(): ReturnType<typeof render> {
+  return render(
+    <LanguageProvider>
+      <ProLeagueHubPage />
+    </LanguageProvider>,
+  );
+}
 
 const mockedApi = vi.mocked(apiRequest);
 
@@ -90,13 +99,13 @@ beforeEach(() => {
 describe("ProLeagueHubPage — sprint 1.C.1", () => {
   it("affiche 'Chargement…' pendant le fetch", () => {
     mockedApi.mockReturnValue(new Promise(() => undefined));
-    render(<ProLeagueHubPage />);
+    renderWithLang();
     expect(screen.getByText(/Chargement/)).toBeTruthy();
   });
 
   it("affiche le titre + motto une fois la donnée chargée", async () => {
     mockedApi.mockResolvedValue(makeHubData());
-    render(<ProLeagueHubPage />);
+    renderWithLang();
     await waitFor(() => {
       expect(screen.getByText("Old World League")).toBeTruthy();
     });
@@ -108,7 +117,7 @@ describe("ProLeagueHubPage — sprint 1.C.1", () => {
 
   it("affiche le current round", async () => {
     mockedApi.mockResolvedValue(makeHubData());
-    render(<ProLeagueHubPage />);
+    renderWithLang();
     await waitFor(() => {
       expect(screen.getByTestId("current-round")).toBeTruthy();
     });
@@ -119,7 +128,7 @@ describe("ProLeagueHubPage — sprint 1.C.1", () => {
 
   it("affiche les match cards avec noms équipes", async () => {
     mockedApi.mockResolvedValue(makeHubData());
-    render(<ProLeagueHubPage />);
+    renderWithLang();
     await waitFor(() => {
       expect(screen.getByTestId("match-card")).toBeTruthy();
     });
@@ -129,7 +138,7 @@ describe("ProLeagueHubPage — sprint 1.C.1", () => {
 
   it("affiche le classement avec points", async () => {
     mockedApi.mockResolvedValue(makeHubData());
-    render(<ProLeagueHubPage />);
+    renderWithLang();
     await waitFor(() => {
       expect(screen.getByTestId("standings-table")).toBeTruthy();
     });
@@ -141,7 +150,7 @@ describe("ProLeagueHubPage — sprint 1.C.1", () => {
     mockedApi.mockResolvedValue(
       makeHubData({ season: null, currentRound: null, nextMatches: [], standings: [] }),
     );
-    render(<ProLeagueHubPage />);
+    renderWithLang();
     await waitFor(() => {
       expect(screen.getByText(/Aucune saison active/i)).toBeTruthy();
     });
@@ -149,7 +158,7 @@ describe("ProLeagueHubPage — sprint 1.C.1", () => {
 
   it("affiche un message d'erreur si l'API throw", async () => {
     mockedApi.mockRejectedValue(new Error("boom"));
-    render(<ProLeagueHubPage />);
+    renderWithLang();
     await waitFor(() => {
       expect(screen.getByRole("alert")).toBeTruthy();
     });
@@ -158,7 +167,7 @@ describe("ProLeagueHubPage — sprint 1.C.1", () => {
 
   it("affiche un placeholder dans la table de classement si vide", async () => {
     mockedApi.mockResolvedValue(makeHubData({ standings: [] }));
-    render(<ProLeagueHubPage />);
+    renderWithLang();
     await waitFor(() => {
       expect(
         screen.getByText(/classement apparaîtra/i),

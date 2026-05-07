@@ -679,6 +679,113 @@ export const translations = {
       configMissing: "Le formulaire n'est pas configuré (clé Turnstile manquante). Contactez l'administrateur du site.",
       messageMinHint: "Au moins 10 caractères.",
     },
+    proLeague: {
+      hub: {
+        defaultName: "Pro League",
+        loading: "Chargement…",
+        seasonInfo: "Saison {year} · {status} · engine",
+        aboutLink: "À propos",
+        currentRound: "Journée actuelle",
+        nextMatches: "Prochains matchs",
+        standingsTitle: "Classement",
+        noSeason:
+          "Aucune saison active pour le moment. La prochaine kickoff sera annoncée bientôt.",
+        countdownPrefix: "Kickoff dans",
+        liveBadge: "● LIVE",
+        finalBadge: "FT",
+        standingsEmpty:
+          "Le classement apparaîtra après la première journée.",
+      },
+      about: {
+        backToHub: "← Hub",
+        eyebrow: "Old World League",
+        title: "La Pro League Nuffle Arena",
+        intro:
+          "Une ligue Blood Bowl-like permanente : 16 équipes simulées, 15 journées, paris virtuels, Gazette quotidienne et Hall of Fame. Chaque mardi 21h, Nuffle décide du destin des plus grandes légendes du Vieux Monde.",
+        ctaHub: "Voir le hub",
+        ctaStandings: "Classement live",
+        howItWorksTitle: "Comment ça marche",
+        howItWorksStep1Title: "Simulation déterministe.",
+        howItWorksStep1Body:
+          "Le sim engine joue chaque match selon un seed et une version gelée (`engineVer`). Pas d'aléa caché — tout est rejouable à l'identique.",
+        howItWorksStep2Title: "Diffusion live SSE.",
+        howItWorksStep2Body:
+          "À l'heure du kickoff, le broadcaster dispatch les events pré-simulés en temps réel. Latence faible, reconnect-friendly via Last-Event-ID.",
+        howItWorksStep3Title: "Paris en Crowns.",
+        howItWorksStep3Body:
+          "Les cotes sont calculées par pré-simulation (N=200 runs). La cote au moment du pari (`oddsAtPlace`) est gelée pour fairness. Settlement automatique post-match.",
+        howItWorksStep4Title: "Gazette LLM.",
+        howItWorksStep4Body:
+          "Chaque matin 8h, Claude Haiku écrit l'édition du jour à partir du recap factuel : 1 article principal + brèves + édito signé.",
+        featuresTitle: "Ce que tu peux faire",
+        featureLiveTitle: "Diffusion live mardi 21h",
+        featureLiveBody:
+          "8 matchs simulés en parallèle chaque mardi soir, diffusés en direct via SSE avec rendu Pixi + ticker textuel mobile-friendly.",
+        featureLiveCta: "Voir la prochaine journée",
+        featureBetsTitle: "Paris virtuels en Crowns",
+        featureBetsBody:
+          "6+ marchés par match (Moneyline, Total TDs, MVP, Casualties, Nuffle, Double chance). Cotes dynamiques. Gains crédités automatiquement post-match.",
+        featureBetsCta: "Leaderboard parieurs",
+        featureGazetteTitle: "Nuffle Gazette quotidienne",
+        featureGazetteBody:
+          "Articles écrits par IA chaque matin à 8h : 1 article principal + brèves + édito signé par 1 des 3 personas (le cynique, l'enthousiaste orc, le statisticien).",
+        featureGazetteCta: "Lire l'édition du jour",
+        featureHofTitle: "Hall of Fame légendes",
+        featureHofBody:
+          "Snapshot figé des joueurs immortalisés (mort en match, palmarès carrière) — nom, race, stats, raison de l'induction restent consultables pour toujours.",
+        featureHofCta: "Hall of Fame",
+        scheduleTitle: "Calendrier",
+        scheduleHeaderWhen: "Quand",
+        scheduleHeaderTime: "Heure",
+        scheduleHeaderWhat: "Quoi",
+        scheduleTuesdayLabel: "Mardi",
+        scheduleTuesdayTime: "21h00",
+        scheduleTuesdayBody:
+          "Kickoff de la journée — 8 matchs simulés en parallèle, broadcast SSE en direct.",
+        scheduleDailyLabel: "Mercredi → Lundi",
+        scheduleDailyTime: "8h00",
+        scheduleDailyBody:
+          "Édition Nuffle Gazette du jour : article principal + brèves + édito.",
+        scheduleResetLabel: "Quotidien",
+        scheduleResetTime: "Reset 00h00 UTC",
+        scheduleResetBody:
+          "Bonus de connexion Crowns + 1ʳᵉ visite saison = bonus de bienvenue.",
+        scheduleSeasonLabel: "Saison",
+        scheduleSeasonTime: "15 journées",
+        scheduleSeasonBody:
+          "Round-robin classique. Saison alignée sur le calendrier NFL 2026-27.",
+        faqTitle: "FAQ",
+        faqQ1: "Qu'est-ce que la Pro League ?",
+        faqA1:
+          "Une ligue Blood Bowl-like de 16 équipes simulées (hommages NFL × races BB). Les matchs sont joués automatiquement par un engine déterministe, les fans suivent, parient et lisent la Gazette quotidienne.",
+        faqQ2: "Comment je participe ?",
+        faqA2:
+          "Aucune action obligatoire. Tu peux suivre passivement, ouvrir un compte gratuit pour parier en Crowns virtuels, ou suivre une équipe pour recevoir un newsfeed personnalisé.",
+        faqQ3: "Les paris sont-ils en argent réel ?",
+        faqA3:
+          "Non. Les Crowns sont une monnaie 100% virtuelle, créditée à l'inscription et regagnée par bonus quotidiens. Aucun cashout possible, aucun lien avec la monnaie réelle, aucun achat in-app.",
+        faqQ4: "Pourquoi 16 équipes ?",
+        faqA4:
+          "Round-robin classique : 16 équipes × 15 journées = 120 matchs par saison, 8 matchs par journée. Calibré pour aligner sur la saison NFL (septembre → janvier).",
+        faqQ5: "Comment l'engine garantit-il du fair-play ?",
+        faqA5:
+          "Tous les matchs utilisent le même engine déterministe versionné (engineVer figé sur chaque match). Les replays sont stockés en CBOR + gzip et rejouables à l'identique. Les cotes sont gelées au moment du pari (`oddsAtPlace`) — pas de re-pricing rétroactif.",
+        faqQ6: "Que se passe-t-il quand un joueur meurt en match ?",
+        faqA6:
+          "Casualty 'dead' → joueur retiré du roster, entrée automatique au Hall of Fame, rookie procédural généré pour combler le manque. Cycle réaliste qui imite l'attrition Blood Bowl.",
+        faqQ7: "La Gazette est-elle écrite par un humain ?",
+        faqA7:
+          "Non — c'est Claude Haiku qui rédige chaque édition à partir du recap factuel de la veille. Le ton est pulp Blood Bowl-like, signé par 1 des 3 personas. Tout est ancré sur les données réelles du match.",
+        faqQ8: "Puis-je rejouer un match passé ?",
+        faqA8:
+          "Oui. Chaque match completed dispose d'un replay player avec play/pause, scrub bar, vitesse 0.5×–8×, markers sur les key moments (TD/casualty/Nuffle), et raccourcis clavier.",
+        disclaimerTitle: "🛡 Pas d'argent réel impliqué",
+        disclaimerBody:
+          "Les Crowns sont une monnaie de jeu virtuelle. Pas de cashout, pas d'achat in-app, pas de lien avec la monnaie réelle. Nuffle Arena n'est pas une plateforme de paris sportifs au sens légal — c'est un jeu fantasy où la stratégie, les pronostics et l'humour pulp remplacent l'argent. La participation est gratuite et sans obligation.",
+        footerCtaHub: "Rejoindre le hub →",
+        footerCtaGazette: "Lire la Gazette",
+      },
+    },
   },
   en: {
     // Navigation
@@ -1359,6 +1466,112 @@ export const translations = {
       captchaMissing: "Loading the anti-spam protection...",
       configMissing: "This form is not configured (missing Turnstile key). Please contact the site admin.",
       messageMinHint: "At least 10 characters.",
+    },
+    proLeague: {
+      hub: {
+        defaultName: "Pro League",
+        loading: "Loading…",
+        seasonInfo: "Season {year} · {status} · engine",
+        aboutLink: "About",
+        currentRound: "Current round",
+        nextMatches: "Upcoming matches",
+        standingsTitle: "Standings",
+        noSeason:
+          "No active season at the moment. The next kickoff will be announced soon.",
+        countdownPrefix: "Kickoff in",
+        liveBadge: "● LIVE",
+        finalBadge: "FT",
+        standingsEmpty: "Standings will appear after matchday 1.",
+      },
+      about: {
+        backToHub: "← Hub",
+        eyebrow: "Old World League",
+        title: "The Nuffle Arena Pro League",
+        intro:
+          "A permanent Blood Bowl-like league: 16 simulated teams, 15 matchdays, virtual betting, daily Gazette and a Hall of Fame. Every Tuesday at 9 PM CET, Nuffle decides the fate of the Old World's greatest legends.",
+        ctaHub: "Open the hub",
+        ctaStandings: "Live standings",
+        howItWorksTitle: "How it works",
+        howItWorksStep1Title: "Deterministic simulation.",
+        howItWorksStep1Body:
+          "The sim engine plays each match using a seed and a frozen version (`engineVer`). No hidden randomness — everything is replayable bit-for-bit.",
+        howItWorksStep2Title: "Live SSE broadcast.",
+        howItWorksStep2Body:
+          "At kickoff, the broadcaster dispatches pre-simulated events in real time. Low latency, reconnect-friendly via Last-Event-ID.",
+        howItWorksStep3Title: "Crowns betting.",
+        howItWorksStep3Body:
+          "Odds come from pre-simulation (N=200 runs). The odd at bet placement (`oddsAtPlace`) is locked for fairness. Automatic post-match settlement.",
+        howItWorksStep4Title: "LLM Gazette.",
+        howItWorksStep4Body:
+          "Every morning at 8 AM, Claude Haiku writes the day's edition from the factual recap: 1 main article + briefs + signed editorial.",
+        featuresTitle: "What you can do",
+        featureLiveTitle: "Tuesday 9 PM live broadcast",
+        featureLiveBody:
+          "8 matches simulated in parallel each Tuesday night, streamed live via SSE with Pixi rendering and a mobile-friendly text ticker.",
+        featureLiveCta: "Next matchday",
+        featureBetsTitle: "Virtual Crowns betting",
+        featureBetsBody:
+          "6+ markets per match (Moneyline, Total TDs, MVP, Casualties, Nuffle, Double chance). Dynamic odds. Winnings credited automatically post-match.",
+        featureBetsCta: "Bettors leaderboard",
+        featureGazetteTitle: "Daily Nuffle Gazette",
+        featureGazetteBody:
+          "Articles written by AI every morning at 8 AM: 1 main article + briefs + editorial signed by 1 of 3 personas (the cynic, the orc enthusiast, the statistician).",
+        featureGazetteCta: "Read today's edition",
+        featureHofTitle: "Hall of Fame legends",
+        featureHofBody:
+          "Frozen snapshot of immortalised players (death in match, career achievements) — name, race, stats, induction reason remain accessible forever.",
+        featureHofCta: "Hall of Fame",
+        scheduleTitle: "Schedule",
+        scheduleHeaderWhen: "When",
+        scheduleHeaderTime: "Time",
+        scheduleHeaderWhat: "What",
+        scheduleTuesdayLabel: "Tuesday",
+        scheduleTuesdayTime: "9:00 PM CET",
+        scheduleTuesdayBody:
+          "Matchday kickoff — 8 matches simulated in parallel, live SSE broadcast.",
+        scheduleDailyLabel: "Wed → Mon",
+        scheduleDailyTime: "8:00 AM",
+        scheduleDailyBody:
+          "Day's Nuffle Gazette: main article + briefs + editorial.",
+        scheduleResetLabel: "Daily",
+        scheduleResetTime: "Reset 00:00 UTC",
+        scheduleResetBody:
+          "Daily Crowns login bonus + first season visit = welcome bonus.",
+        scheduleSeasonLabel: "Season",
+        scheduleSeasonTime: "15 matchdays",
+        scheduleSeasonBody:
+          "Classic round-robin. Season aligned with the NFL 2026-27 calendar.",
+        faqTitle: "FAQ",
+        faqQ1: "What is the Pro League?",
+        faqA1:
+          "A Blood Bowl-like league of 16 simulated teams (NFL × BB race tributes). Matches are played automatically by a deterministic engine; fans follow, bet and read the daily Gazette.",
+        faqQ2: "How do I take part?",
+        faqA2:
+          "No mandatory action. You can follow passively, open a free account to bet in virtual Crowns, or follow a team to receive a personalised newsfeed.",
+        faqQ3: "Do bets involve real money?",
+        faqA3:
+          "No. Crowns are a 100% virtual currency, credited at signup and earned through daily bonuses. No cashout, no link to real currency, no in-app purchases.",
+        faqQ4: "Why 16 teams?",
+        faqA4:
+          "Classic round-robin: 16 teams × 15 matchdays = 120 matches per season, 8 matches per matchday. Calibrated to align with the NFL season (September → January).",
+        faqQ5: "How does the engine guarantee fair play?",
+        faqA5:
+          "All matches use the same versioned deterministic engine (engineVer frozen on each match). Replays are stored in CBOR + gzip and replayable bit-for-bit. Odds are locked at the time of the bet (`oddsAtPlace`) — no retroactive re-pricing.",
+        faqQ6: "What happens when a player dies in a match?",
+        faqA6:
+          "Casualty 'dead' → player removed from the roster, automatic entry to the Hall of Fame, procedurally generated rookie to fill the gap. A realistic cycle that mimics Blood Bowl attrition.",
+        faqQ7: "Is the Gazette written by a human?",
+        faqA7:
+          "No — Claude Haiku writes each edition from the previous day's factual recap. The tone is pulp Blood Bowl-like, signed by 1 of 3 personas. Everything is anchored on real match data.",
+        faqQ8: "Can I rewatch a past match?",
+        faqA8:
+          "Yes. Every completed match has a replay player with play/pause, scrub bar, 0.5×–8× speed, markers on key moments (TD/casualty/Nuffle), and keyboard shortcuts.",
+        disclaimerTitle: "🛡 No real money involved",
+        disclaimerBody:
+          "Crowns are a virtual in-game currency. No cashout, no in-app purchase, no link to real currency. Nuffle Arena is not a sports betting platform in any legal sense — it's a fantasy game where strategy, predictions and pulp humour replace money. Participation is free and without obligation.",
+        footerCtaHub: "Join the hub →",
+        footerCtaGazette: "Read the Gazette",
+      },
     },
   },
 } as const;
