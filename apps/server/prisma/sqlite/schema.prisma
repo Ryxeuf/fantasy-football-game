@@ -1145,3 +1145,24 @@ model ProHallOfFame {
   @@index([reason])
   @@index([inductedAt])
 }
+
+// S27.6 — Audit log admin. Schema SQLite : `oldValue`/`newValue`
+// stockes en String (JSON serialise) car SQLite n'a pas de type JSONB
+// natif. Les helpers du service serialisent/parsent autour.
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  oldValue  String?
+  newValue  String?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([entity, entityId])
+  @@index([action])
+  @@index([createdAt])
+}

@@ -818,6 +818,19 @@ exports.Prisma.ProHallOfFameScalarFieldEnum = {
   inductedAt: 'inductedAt'
 };
 
+exports.Prisma.AuditLogScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  action: 'action',
+  entity: 'entity',
+  entityId: 'entityId',
+  oldValue: 'oldValue',
+  newValue: 'newValue',
+  ipAddress: 'ipAddress',
+  userAgent: 'userAgent',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -903,7 +916,8 @@ exports.Prisma.ModelName = {
   ProBetSettlement: 'ProBetSettlement',
   ProUserBadge: 'ProUserBadge',
   ProGazetteArticle: 'ProGazetteArticle',
-  ProHallOfFame: 'ProHallOfFame'
+  ProHallOfFame: 'ProHallOfFame',
+  AuditLog: 'AuditLog'
 };
 
 /**
