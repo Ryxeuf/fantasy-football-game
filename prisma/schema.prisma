@@ -1247,6 +1247,11 @@ model ProLeagueMatch {
   /// Sprint 1.E.4 — flag idempotence pour le post-process casualties.
   /// Non-null = casualties déjà appliquées au roster.
   casualtiesAppliedAt DateTime?
+  /// Lot 2.C.1 — sandbox flag. `true` = match lancé depuis l'admin
+  /// (`POST /admin/sim/test-match`), exclu des standings/ELO/paris/
+  /// wallet/leaderboards. Permet de tester un nouveau driver ou une
+  /// nouvelle race-profile en prod sans polluer les compétitions.
+  isTest              Boolean         @default(false)
   /// Seed sim-engine + engineVer pinne au moment de la simulation.
   /// Permet de rejouer le match a l'identique tant que engineVer matche.
   seed                BigInt?
