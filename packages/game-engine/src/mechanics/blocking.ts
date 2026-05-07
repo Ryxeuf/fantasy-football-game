@@ -15,6 +15,7 @@ import {
 import { isAdjacent, inBounds, isPositionOccupied } from './movement';
 import { checkGuard, checkBlockNegatesBothDown, checkDodgeNegatesStumble, getMightyBlowBonusFromRegistry, checkWrestleOnBothDown, getArmorSkillContext, getInjurySkillModifiers } from '../skills/skill-bridge';
 import { hasSkill } from '../skills/skill-effects';
+import { collectModifiers } from '../skills/skill-registry';
 import { performArmorRoll, roll2D6 } from '../utils/dice';
 import { performArmorRollWithNotification } from '../utils/dice-notifications';
 import { createLogEntry } from '../utils/logging';
@@ -134,11 +135,13 @@ function armorAndInjuryWithMightyBlow(
   // Claws: armor breaks on 8+ regardless of AV (unless defender has Iron Hard Skin)
   // Iron Hard Skin: bloque les modificateurs positifs de l'attaquant sur le jet
   // d'armure (Mighty Blow notamment). La blessure n'est pas concernée.
-  // Stunty: la valeur d'armure du joueur cible est reduite de 1 (plus fragile).
+  // S27.7 — Stunty (-1 AV) passe par le registry via `collectModifiers`
+  //          au trigger `on-armor`, plus de hardcode `hasSkill`.
   // Le malus s'applique toujours, cumulatif avec Claws et Mighty Blow.
   const { clawsActive, ironHardSkinActive } = getArmorSkillContext(state, attacker, victim);
   const mbBonusOnArmor = ironHardSkinActive ? 0 : mbBonusRaw;
-  const stuntyAdjust = hasSkill(victim, 'stunty') ? -1 : 0;
+  const armorMods = collectModifiers(victim, 'on-armor', { state, opponent: attacker });
+  const stuntyAdjust = armorMods.armorModifier ?? 0;
   const baseTarget = clawsActive ? Math.min(victim.av, 8) : victim.av;
   const armorTarget = baseTarget + stuntyAdjust;
 
