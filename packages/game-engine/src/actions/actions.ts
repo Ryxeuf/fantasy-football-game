@@ -60,8 +60,8 @@ import {
   handlePlayerSwitch,
   getPlayerAction,
   incrementTeamBlitzCount,
-  advanceHalfIfNeeded,
-  handlePostTouchdown,
+  // S27.8.3 — `advanceHalfIfNeeded` et `handlePostTouchdown` consommes
+  // uniquement dans `actions/turn-foul-actions.ts` (handleEndTurn).
   canTeamBlitz,
 } from '../core/game-state';
 // S27.8.2 — `executePass` / `executeHandoff` consommes dans
@@ -70,7 +70,8 @@ import {
 import { getPassRange, canAttemptPassForRange } from '../mechanics/passing';
 // S27.8.2 — Running Pass consomme uniquement dans
 // `actions/pass-actions.ts`. Plus d'import direct ici.
-import { canFoul, executeFoul } from '../mechanics/foul';
+// S27.8.3 — `canFoul` / `executeFoul` consommes uniquement dans
+// `actions/turn-foul-actions.ts`. Plus d'import direct ici.
 import { isAdjacent } from '../mechanics/movement';
 import { applyApothecaryChoice } from '../mechanics/apothecary';
 // S27.8.2 — `executeThrowTeamMate` consomme dans
@@ -103,6 +104,13 @@ import {
   handleHandoff,
   handleThrowTeamMate,
 } from './pass-actions';
+// S27.8.3 — Fin de tour + faute (END_PLAYER_TURN, END_TURN, FOUL)
+// extraits dans `actions/turn-foul-actions.ts`.
+import {
+  handleEndPlayerTurn,
+  handleEndTurn,
+  handleFoul,
+} from './turn-foul-actions';
 import { canDumpOff, getDumpOffReceivers, executeDumpOff } from '../mechanics/dump-off';
 import { checkDauntless } from '../mechanics/dauntless';
 import { checkBreakTackle } from '../mechanics/break-tackle';
@@ -829,97 +837,8 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
 /**
  * Termine l'activation d'un joueur (met fin à son mouvement/action en cours)
  */
-function handleEndPlayerTurn(
-  state: GameState,
-  move: { type: 'END_PLAYER_TURN'; playerId: string },
-): GameState {
-  const player = state.players.find(p => p.id === move.playerId);
-  if (!player) return state;
-  if (player.team !== state.currentPlayer) return state;
-
-  // Mettre les PM du joueur à 0 pour empêcher d'autres actions
-  const newState = {
-    ...state,
-    players: state.players.map(p =>
-      p.id === move.playerId ? { ...p, pm: 0, gfiUsed: 2 } : p,
-    ),
-    selectedPlayerId: null,
-  };
-
-  // Marquer le joueur comme ayant agi s'il ne l'a pas encore été
-  if (!hasPlayerActed(newState, move.playerId)) {
-    return setPlayerAction(newState, move.playerId, 'MOVE');
-  }
-
-  return newState;
-}
-
-/**
- * Gère la fin de tour
- */
-function handleEndTurn(state: GameState, rng: RNG): GameState {
-  // Si le match est terminé, ne rien faire
-  if (state.gamePhase === 'ended') return state;
-
-  // Si on est en phase post-TD, faire le reset et kickoff
-  if (state.gamePhase === 'post-td') {
-    return handlePostTouchdown(state, rng);
-  }
-
-  // Si c'est un tour de blitz kickoff, le tour du kicking team est terminé
-  // Retourner le contrôle à l'équipe qui reçoit
-  if (state.kickoffBlitzTurn) {
-    const receivingTeam = state.kickingTeam === 'A' ? 'B' : 'A';
-    return {
-      ...state,
-      kickoffBlitzTurn: undefined,
-      currentPlayer: receivingTeam,
-      selectedPlayerId: null,
-      players: state.players.map(p => ({ ...p, pm: p.ma, gfiUsed: 0, breakTackleUsed: false })),
-      isTurnover: false,
-      playerActions: {},
-      teamBlitzCount: {},
-      teamFoulCount: {},
-      rerollUsedThisTurn: false,
-      hypnotizedPlayers: [],
-      usedRunningPassThisTurn: [],
-      usedOnTheBallThisTurn: [],
-      usedMultipleBlockThisTurn: [],
-    };
-  }
-
-  // Changement de tour - le porteur de ballon garde le ballon
-  const newState: GameState = {
-    ...state,
-    currentPlayer: state.currentPlayer === 'A' ? 'B' : 'A',
-    turn: state.currentPlayer === 'B' ? state.turn + 1 : state.turn,
-    selectedPlayerId: null,
-    players: state.players.map(p => ({ ...p, pm: p.ma, gfiUsed: 0 })),
-    isTurnover: false,
-    lastDiceResult: undefined,
-    playerActions: {} as Record<string, ActionType>, // Réinitialiser les actions
-    teamBlitzCount: {} as Record<string, number>, // Réinitialiser les compteurs de blitz
-    teamFoulCount: {} as Record<string, number>, // Réinitialiser les compteurs de foul
-    rerollUsedThisTurn: false, // Réinitialiser le flag de relance
-    hypnotizedPlayers: [], // Réinitialiser les joueurs hypnotisés
-    usedRunningPassThisTurn: [], // Réinitialiser Running Pass (une fois par tour)
-    usedOnTheBallThisTurn: [], // Réinitialiser On the Ball (une fois par tour d'equipe)
-    usedMultipleBlockThisTurn: [], // Réinitialiser Multiple Block (une fois par tour d'equipe)
-  };
-
-  // Log du changement de tour
-  const turnLogEntry = createLogEntry(
-    'action',
-    `Fin du tour - ${newState.currentPlayer === 'A' ? newState.teamNames.teamA : newState.teamNames.teamB} joue maintenant`,
-    undefined,
-    newState.currentPlayer
-  );
-  newState.gameLog = [...newState.gameLog, turnLogEntry];
-
-  // Le porteur de ballon garde le ballon lors du changement de tour
-  // Vérifier touchdowns, puis passage de mi-temps si besoin
-  return advanceHalfIfNeeded(checkTouchdowns(newState), rng);
-}
+// S27.8.3 — handleEndPlayerTurn / handleEndTurn extraits dans
+// `actions/turn-foul-actions.ts`.
 
 /**
  * Gère un mouvement simple
@@ -2356,33 +2275,7 @@ function handleBlitz(
 /**
  * Gère une action de faute
  */
-function handleFoul(state: GameState, move: { type: 'FOUL'; playerId: string; targetId: string }, rng: RNG): GameState {
-  const attacker = state.players.find(p => p.id === move.playerId);
-  const target = state.players.find(p => p.id === move.targetId);
-
-  if (!attacker || !target) return state;
-  if (attacker.team !== state.currentPlayer) return state;
-  if (hasPlayerActed(state, attacker.id)) return state;
-
-  // Vérifier la limite de 1 foul par tour
-  const team = attacker.team;
-  if ((state.teamFoulCount && state.teamFoulCount[team] || 0) >= 1) return state;
-
-  if (!canFoul(state, attacker, target)) return state;
-
-  let newState = executeFoul(state, attacker, target, rng);
-
-  // Incrémenter le compteur de foul
-  const currentFoulCount = newState.teamFoulCount || {};
-  newState.teamFoulCount = {
-    ...currentFoulCount,
-    [team]: (currentFoulCount[team] || 0) + 1,
-  };
-
-  newState = setPlayerAction(newState, attacker.id, 'FOUL');
-  newState = checkPlayerTurnEnd(newState, attacker.id);
-  return newState;
-}
+// S27.8.3 — handleFoul extrait dans `actions/turn-foul-actions.ts`.
 
 /**
  * Gère une action de Regard Hypnotique (Hypnotic Gaze)
