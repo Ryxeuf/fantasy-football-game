@@ -754,3 +754,62 @@ if (!inTestHofEnv && hofTickMs > 0) {
     },
   );
 }
+
+
+// =============================================================================
+// Pro League Nuffle Gazette LLM cron (sprint 1.E.1).
+// =============================================================================
+// Genere quotidiennement (8h UTC par defaut) une edition Gazette pour
+// J-1 via Claude Haiku. Idempotent (skip si edition existante).
+//
+// Strategie : tick 5 min, declenche generateEditionForDate si l'heure
+// UTC == PRO_LEAGUE_GAZETTE_HOUR_UTC (default 8) et qu'on n'a pas
+// deja tick aujourd'hui. Simple et tolerant aux redemarrages : si le
+// serveur restart entre 8h00 et 8h05, ca tick au prochain tick.
+//
+// Mettre PRO_LEAGUE_GAZETTE_TICK_MS = 0 pour desactiver.
+// Necessite ANTHROPIC_API_KEY dans l'env.
+const inTestGazetteEnv =
+  process.env.NODE_ENV === "test" || process.env.TEST_SQLITE === "1";
+const gazetteTickMsEnv = Number(process.env.PRO_LEAGUE_GAZETTE_TICK_MS);
+const gazetteTickMs = Number.isFinite(gazetteTickMsEnv)
+  ? gazetteTickMsEnv
+  : 5 * 60 * 1000;
+const gazetteHourEnv = Number(process.env.PRO_LEAGUE_GAZETTE_HOUR_UTC);
+const gazetteHourUtc = Number.isFinite(gazetteHourEnv) ? gazetteHourEnv : 8;
+if (
+  !inTestGazetteEnv &&
+  gazetteTickMs > 0 &&
+  process.env.ANTHROPIC_API_KEY
+) {
+  void import("./services/pro-gazette-llm").then(
+    ({ generateEditionForDate }) => {
+      let lastRunDate: string | null = null;
+      const tick = async () => {
+        const now = new Date();
+        if (now.getUTCHours() !== gazetteHourUtc) return;
+        const today = now.toISOString().slice(0, 10);
+        if (lastRunDate === today) return;
+        lastRunDate = today;
+        try {
+          const out = await generateEditionForDate();
+          if (!out.skipped) {
+            serverLog.info(
+              `[pro-gazette-llm] cron: generated date=${out.date} articles=${out.created}`,
+            );
+          } else {
+            serverLog.info(
+              `[pro-gazette-llm] cron: skipped (${out.skipReason}) date=${out.date}`,
+            );
+          }
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : "unknown";
+          serverLog.error(`[pro-gazette-llm] cron failed: ${msg}`);
+        }
+      };
+      setInterval(() => {
+        void tick();
+      }, gazetteTickMs).unref();
+    },
+  );
+}
