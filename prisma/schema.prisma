@@ -1602,3 +1602,39 @@ model ProHallOfFame {
   @@index([reason])
   @@index([inductedAt])
 }
+
+/// S27.6 — Trace immuable des actions admin (compliance + tracabilite).
+///
+/// Une entree par mutation effectuee par un compte admin sur les
+/// routes `/admin/*`. Les lectures (GET) ne sont pas tracees pour
+/// eviter de saturer la table.
+///
+/// `userId` peut etre null si l'action est un job systeme (cron,
+/// migration script). Sinon il pointe sur l'admin qui a declenche
+/// l'action.
+model AuditLog {
+  id        String   @id @default(cuid())
+  /// Admin qui a declenche l'action (null si systeme).
+  userId    String?
+  /// Slug d'action ("user.role.update", "match.delete", etc.).
+  action    String
+  /// Type d'entite cible ("User", "Match", "Skill", ...).
+  entity    String
+  /// Identifiant de l'entite cible (cuid ou null pour les batchs).
+  entityId  String?
+  /// Snapshot avant mutation (Json libre, null pour les creations).
+  oldValue  Json?
+  /// Snapshot apres mutation (Json libre, null pour les suppressions).
+  newValue  Json?
+  /// Adresse IP source (best-effort, peut etre absente derriere un
+  /// proxy mal configure).
+  ipAddress String?
+  /// User-Agent source (debug + forensic).
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([entity, entityId])
+  @@index([action])
+  @@index([createdAt])
+}
