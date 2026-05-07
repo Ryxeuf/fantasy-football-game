@@ -1507,3 +1507,46 @@ model ProUserBadge {
   @@index([badgeCode])
   @@index([userId])
 }
+
+/// Sprint Pro League lot 1.E.2 — Article de la Nuffle Gazette.
+///
+/// Genere quotidiennement par le service `pro-gazette-llm.ts` (lot
+/// 1.E.1, LLM Claude Haiku) a partir du recap aggregator (1.E.3).
+/// Stocke en DB pour permettre l'archive consultable a l'URL
+/// `/nuffle-gazette/:date` (1.E.2).
+///
+/// `type` :
+///  - MAIN  : article principal du jour (resume long, ~300 mots)
+///  - BREVE : breve courte (~50-80 mots) sur une storyline secondaire
+///  - EDITO : editorial signe par 1 des 3 personas
+///
+/// `persona` :
+///  - 'cynic'           : le cynique (rumeurs, sarcasmes)
+///  - 'orc_enthusiast'  : l'enthousiaste orc (hype, capslock)
+///  - 'statistician'    : le statisticien (chiffres, analyses)
+///
+/// `relatedTeamIds` / `relatedPlayerIds` : Json arrays de slugs
+/// referenced dans l'article — sert au cross-linking UI (lot 1.E.5
+/// HoF, 1.C.2 team page).
+model ProGazetteArticle {
+  id               String   @id @default(cuid())
+  /// Date d'edition (YYYY-MM-DD). Plusieurs articles par date.
+  /// Index pour archive rapide.
+  date             DateTime
+  /// 'MAIN' | 'BREVE' | 'EDITO'
+  type             String
+  /// 'cynic' | 'orc_enthusiast' | 'statistician'
+  /// MAIN/BREVE peuvent etre signes ou non ; EDITO l'est toujours.
+  persona          String?
+  title            String
+  /// Markdown-friendly. Pas de HTML brut (sanitize cote rendu UI).
+  body             String   @db.Text
+  /// Json array de slugs ProTeam : ['buf-snow-ogres', 'kc-...'].
+  relatedTeamIds   Json?
+  /// Json array de roster ids ou autres ids joueur.
+  relatedPlayerIds Json?
+  createdAt        DateTime @default(now())
+
+  @@index([date])
+  @@index([type, date])
+}
