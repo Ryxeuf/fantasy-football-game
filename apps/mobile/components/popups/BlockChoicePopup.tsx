@@ -1,4 +1,6 @@
 import { Modal, View, Text, Pressable, StyleSheet } from "react-native";
+import { useTranslation } from "../../lib/i18n-context";
+import type { TranslationKey } from "../../lib/i18n";
 
 export type BlockResult =
   | "PLAYER_DOWN"
@@ -17,12 +19,12 @@ interface BlockChoicePopupProps {
   onClose: () => void;
 }
 
-const RESULT_LABELS: Record<BlockResult, string> = {
-  PLAYER_DOWN: "Attaquant à terre",
-  BOTH_DOWN: "Deux à terre",
-  PUSH_BACK: "Repoussé",
-  STUMBLE: "Trébuche",
-  POW: "POW !",
+const RESULT_LABEL_KEYS: Record<BlockResult, TranslationKey> = {
+  PLAYER_DOWN: "popups.block.results.playerDown",
+  BOTH_DOWN: "popups.block.results.bothDown",
+  PUSH_BACK: "popups.block.results.pushBack",
+  STUMBLE: "popups.block.results.stumble",
+  POW: "popups.block.results.pow",
 };
 
 export default function BlockChoicePopup({
@@ -34,6 +36,10 @@ export default function BlockChoicePopup({
   onChoose,
   onClose,
 }: BlockChoicePopupProps) {
+  const { t } = useTranslation();
+  const chooserName = chooser === "attacker" ? attackerName : defenderName;
+  const cancelLabel = t("common.cancel");
+
   return (
     <Modal
       visible={visible}
@@ -43,35 +49,38 @@ export default function BlockChoicePopup({
     >
       <View style={styles.backdrop}>
         <View style={styles.card}>
-          <Text style={styles.title}>Choix du dé de blocage</Text>
+          <Text style={styles.title}>{t("popups.block.title")}</Text>
           <Text style={styles.subtitle}>
-            {chooser === "attacker"
-              ? `${attackerName} choisit`
-              : `${defenderName} choisit`}
+            {t("popups.block.chooserChoosing", { name: chooserName })}
           </Text>
 
           <View style={styles.grid}>
-            {options.map((opt) => (
-              <Pressable
-                key={opt}
-                onPress={() => onChoose(opt)}
-                style={({ pressed }) => [
-                  styles.optionButton,
-                  pressed && styles.optionButtonPressed,
-                ]}
-                accessibilityLabel={`Choisir ${RESULT_LABELS[opt]}`}
-              >
-                <Text style={styles.optionLabel}>{RESULT_LABELS[opt]}</Text>
-              </Pressable>
-            ))}
+            {options.map((opt) => {
+              const label = t(RESULT_LABEL_KEYS[opt]);
+              return (
+                <Pressable
+                  key={opt}
+                  onPress={() => onChoose(opt)}
+                  style={({ pressed }) => [
+                    styles.optionButton,
+                    pressed && styles.optionButtonPressed,
+                  ]}
+                  accessibilityLabel={t("popups.block.chooseA11y", {
+                    result: label,
+                  })}
+                >
+                  <Text style={styles.optionLabel}>{label}</Text>
+                </Pressable>
+              );
+            })}
           </View>
 
           <Pressable
             onPress={onClose}
             style={styles.cancelButton}
-            accessibilityLabel="Annuler"
+            accessibilityLabel={cancelLabel}
           >
-            <Text style={styles.cancelText}>Annuler</Text>
+            <Text style={styles.cancelText}>{cancelLabel}</Text>
           </Pressable>
         </View>
       </View>

@@ -28,6 +28,11 @@
  * S27.3.13 : namespace `play.*` pour `apps/mobile/app/play/[id].tsx`
  *   (chargement, banner de tour, actions Throw Team-Mate / End Turn,
  *   erreurs, hint, bouton retour).
+ * S27.3.14 : namespace `popups.*` pour les 4 popups in-match
+ *   (`BlockChoicePopup`, `PushChoicePopup`, `FollowUpChoicePopup` et
+ *   les fallbacks de `MatchPopups`). Couvre titres, sous-titres,
+ *   labels de resultat de blocage, libelles d'accessibilite et
+ *   fallbacks de noms de joueurs.
  *
  * Les autres namespaces seront ajoutes au fur et a mesure du
  * remplacement des strings hardcodees.
@@ -352,6 +357,41 @@ export const FR_TRANSLATIONS = {
       cancelThrower: "Annuler (lancer)",
       endTurn: "Fin de tour",
       back: "← Retour",
+    },
+  },
+  popups: {
+    fallbacks: {
+      attacker: "Attaquant",
+      defender: "Défenseur",
+      player: "Joueur",
+    },
+    block: {
+      title: "Choix du dé de blocage",
+      chooserChoosing: "{{name}} choisit",
+      chooseA11y: "Choisir {{result}}",
+      results: {
+        playerDown: "Attaquant à terre",
+        bothDown: "Deux à terre",
+        pushBack: "Repoussé",
+        stumble: "Trébuche",
+        pow: "POW !",
+      },
+    },
+    push: {
+      title: "Choix de direction de poussée",
+      subtitle:
+        "{{attacker}} doit choisir dans quelle direction pousser {{target}}",
+      pushTowardsA11y: "Pousser vers {{label}}",
+    },
+    followUp: {
+      title: "Suivi (Follow-up)",
+      subtitle: "{{attacker}} a repoussé {{target}} vers ({{x}}, {{y}})",
+      question:
+        "Voulez-vous que {{attacker}} le suive dans la case libérée ?",
+      yes: "Suivre",
+      no: "Ne pas suivre",
+      hint:
+        "Le suivi est gratuit et ne consomme pas de points de mouvement",
     },
   },
   auth: {

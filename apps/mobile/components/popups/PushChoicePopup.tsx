@@ -1,5 +1,6 @@
 import { Modal, View, Text, Pressable, StyleSheet } from "react-native";
 import { describeDirection } from "../../lib/block-popups";
+import { useTranslation } from "../../lib/i18n-context";
 
 interface PushDirection {
   x: number;
@@ -23,6 +24,9 @@ export default function PushChoicePopup({
   onChoose,
   onClose,
 }: PushChoicePopupProps) {
+  const { t } = useTranslation();
+  const cancelLabel = t("common.cancel");
+
   return (
     <Modal
       visible={visible}
@@ -32,9 +36,12 @@ export default function PushChoicePopup({
     >
       <View style={styles.backdrop}>
         <View style={styles.card}>
-          <Text style={styles.title}>Choix de direction de poussée</Text>
+          <Text style={styles.title}>{t("popups.push.title")}</Text>
           <Text style={styles.subtitle}>
-            {attackerName} doit choisir dans quelle direction pousser {targetName}
+            {t("popups.push.subtitle", {
+              attacker: attackerName,
+              target: targetName,
+            })}
           </Text>
 
           <View style={styles.grid}>
@@ -49,7 +56,9 @@ export default function PushChoicePopup({
                     styles.optionButton,
                     pressed && styles.optionButtonPressed,
                   ]}
-                  accessibilityLabel={`Pousser vers ${label}`}
+                  accessibilityLabel={t("popups.push.pushTowardsA11y", {
+                    label,
+                  })}
                 >
                   <Text style={styles.arrow}>{arrow}</Text>
                   <Text style={styles.label}>{label}</Text>
@@ -61,9 +70,9 @@ export default function PushChoicePopup({
           <Pressable
             onPress={onClose}
             style={styles.cancelButton}
-            accessibilityLabel="Annuler"
+            accessibilityLabel={cancelLabel}
           >
-            <Text style={styles.cancelText}>Annuler</Text>
+            <Text style={styles.cancelText}>{cancelLabel}</Text>
           </Pressable>
         </View>
       </View>
