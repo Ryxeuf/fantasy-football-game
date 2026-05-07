@@ -58,6 +58,12 @@ export interface SkillModifier {
   strengthModifier?: number;
   movementModifier?: number;
   blockDiceModifier?: number; // +1 = additional die for attacker
+  /**
+   * S27.7.2 — Bonus de cap de GFI (defaut 2). Sprint = +1 (cap 3).
+   * Lu via `getGfiCap(player, state)` au lieu de hardcoder 2 dans
+   * `canPlayerMove`, `canPlayerContinueMoving`, `getReachableCells`.
+   */
+  gfiCapBonus?: number;
 }
 
 export interface SkillEffect {
@@ -446,12 +452,16 @@ registerSkill({
 });
 
 // SPRINT
+// S27.7.2 — Sprint passe par `gfiCapBonus` (+1 GFI), consomme par
+// `getGfiCap(player, state)` (voir `core/game-state.ts`). L'ancien
+// `movementModifier: 1` etait trompeur : Sprint n'augmente pas la MA
+// du joueur, il leve le cap de GFI de 2 a 3.
 registerSkill({
   slug: 'sprint',
   triggers: ['on-gfi'],
   description: 'Peut tenter 3 GFI au lieu de 2.',
   canApply: (ctx) => hasSkill(ctx.player, 'sprint'),
-  getModifiers: () => ({ movementModifier: 1 }),
+  getModifiers: () => ({ gfiCapBonus: 1 }),
 });
 
 // LEADER
