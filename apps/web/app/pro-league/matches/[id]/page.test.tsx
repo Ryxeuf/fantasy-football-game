@@ -6,10 +6,34 @@ vi.mock("../../../lib/api-client", () => ({
   ApiClientError: class ApiClientError extends Error {},
 }));
 
+vi.mock("../../../lib/use-wallet", () => ({
+  useWallet: () => ({
+    authed: false,
+    loading: false,
+    balance: 0,
+    transactions: [],
+    dailyAvailable: false,
+    dailyNextEligibleAt: null,
+    error: null,
+    refresh: vi.fn(),
+    claimDaily: vi.fn(),
+    grantFirstTime: vi.fn(),
+  }),
+}));
+
 import { apiRequest } from "../../../lib/api-client";
+import { LanguageProvider } from "../../../contexts/LanguageContext";
 import ProLeagueMatchDetailPage from "./page";
 
 const mockedApi = vi.mocked(apiRequest);
+
+function renderPage(props: { params: { id: string } }): ReturnType<typeof render> {
+  return render(
+    <LanguageProvider>
+      <ProLeagueMatchDetailPage {...props} />
+    </LanguageProvider>,
+  );
+}
 
 function makeMatch(overrides: Record<string, unknown> = {}): unknown {
   return {
@@ -67,13 +91,13 @@ beforeEach(() => {
 describe("ProLeagueMatchDetailPage — sprint 1.C.3", () => {
   it("affiche 'Chargement…' pendant le fetch", () => {
     mockedApi.mockReturnValue(new Promise(() => undefined));
-    render(<ProLeagueMatchDetailPage params={{ id: "m_1" }} />);
+    renderPage({ params: { id: "m_1" } });
     expect(screen.getByText(/Chargement/)).toBeTruthy();
   });
 
   it("affiche le banner avec les noms d'équipes + saison + round", async () => {
     mockedApi.mockResolvedValue(makeMatch());
-    render(<ProLeagueMatchDetailPage params={{ id: "m_1" }} />);
+    renderPage({ params: { id: "m_1" } });
     await waitFor(() => {
       expect(screen.getByTestId("match-banner")).toBeTruthy();
     });
@@ -89,7 +113,7 @@ describe("ProLeagueMatchDetailPage — sprint 1.C.3", () => {
 
   it("post-match : affiche le score + counters + highlights", async () => {
     mockedApi.mockResolvedValue(makeMatch());
-    render(<ProLeagueMatchDetailPage params={{ id: "m_1" }} />);
+    renderPage({ params: { id: "m_1" } });
     await waitFor(() => {
       expect(screen.getByTestId("scoreboard")).toBeTruthy();
     });
@@ -104,7 +128,7 @@ describe("ProLeagueMatchDetailPage — sprint 1.C.3", () => {
     mockedApi.mockResolvedValue(
       makeMatch({ replay: { durationMs: 100, highlights: [] } }),
     );
-    render(<ProLeagueMatchDetailPage params={{ id: "m_1" }} />);
+    renderPage({ params: { id: "m_1" } });
     await waitFor(() => {
       expect(screen.getByTestId("post-match-stats")).toBeTruthy();
     });
@@ -126,7 +150,7 @@ describe("ProLeagueMatchDetailPage — sprint 1.C.3", () => {
         scheduledAt: new Date(Date.now() + 90 * 60_000).toISOString(),
       }),
     );
-    render(<ProLeagueMatchDetailPage params={{ id: "m_1" }} />);
+    renderPage({ params: { id: "m_1" } });
     await waitFor(() => {
       expect(screen.getByTestId("pre-match-card")).toBeTruthy();
     });
@@ -143,7 +167,7 @@ describe("ProLeagueMatchDetailPage — sprint 1.C.3", () => {
         outcome: null,
       }),
     );
-    render(<ProLeagueMatchDetailPage params={{ id: "m_1" }} />);
+    renderPage({ params: { id: "m_1" } });
     await waitFor(() => {
       expect(screen.getByTestId("pre-match-card")).toBeTruthy();
     });
@@ -152,7 +176,7 @@ describe("ProLeagueMatchDetailPage — sprint 1.C.3", () => {
 
   it("in_progress : affiche le card live", async () => {
     mockedApi.mockResolvedValue(makeMatch({ status: "in_progress" }));
-    render(<ProLeagueMatchDetailPage params={{ id: "m_1" }} />);
+    renderPage({ params: { id: "m_1" } });
     await waitFor(() => {
       expect(screen.getByTestId("live-card")).toBeTruthy();
     });
@@ -161,7 +185,7 @@ describe("ProLeagueMatchDetailPage — sprint 1.C.3", () => {
 
   it("affiche message d'erreur si API throw", async () => {
     mockedApi.mockRejectedValue(new Error("not-found"));
-    render(<ProLeagueMatchDetailPage params={{ id: "x" }} />);
+    renderPage({ params: { id: "x" } });
     await waitFor(() => {
       expect(screen.getByRole("alert")).toBeTruthy();
     });

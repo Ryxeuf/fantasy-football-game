@@ -22,9 +22,18 @@ vi.mock("../../../../lib/use-match-mode-redirect", () => ({
 }));
 
 import { useProLeagueMatchStream } from "../../../../lib/use-pro-league-match-stream";
+import { LanguageProvider } from "../../../../contexts/LanguageContext";
 import LiveProMatchPage from "./page";
 
 const mockedHook = vi.mocked(useProLeagueMatchStream);
+
+function renderPage(props: { params: { id: string } }): ReturnType<typeof render> {
+  return render(
+    <LanguageProvider>
+      <LiveProMatchPage {...props} />
+    </LanguageProvider>,
+  );
+}
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -38,7 +47,7 @@ describe("LiveProMatchPage — sprint 1.B.4", () => {
       error: null,
     });
 
-    render(<LiveProMatchPage params={{ id: "m1" }} />);
+    renderPage({ params: { id: "m1" } });
 
     expect(screen.getByTestId("score-display").textContent).toContain("0");
     expect(screen.getByText(/En attente/i)).toBeTruthy();
@@ -53,7 +62,7 @@ describe("LiveProMatchPage — sprint 1.B.4", () => {
       connectionState: "open",
       error: null,
     });
-    render(<LiveProMatchPage params={{ id: "m1" }} />);
+    renderPage({ params: { id: "m1" } });
     expect(screen.getByTestId("connection-badge").textContent).toMatch(/LIVE/);
   });
 
@@ -90,7 +99,7 @@ describe("LiveProMatchPage — sprint 1.B.4", () => {
       connectionState: "open",
       error: null,
     });
-    render(<LiveProMatchPage params={{ id: "m1" }} />);
+    renderPage({ params: { id: "m1" } });
     expect(screen.getByTestId("score-display").textContent).toContain("2");
     expect(screen.getByTestId("score-display").textContent).toContain("1");
   });
@@ -116,7 +125,7 @@ describe("LiveProMatchPage — sprint 1.B.4", () => {
       connectionState: "open",
       error: null,
     });
-    const { rerender } = render(<LiveProMatchPage params={{ id: "m1" }} />);
+    const { rerender } = renderPage({ params: { id: "m1" } });
     expect(screen.getByText(/2nd half/i)).toBeTruthy();
 
     mockedHook.mockReturnValue({
@@ -132,7 +141,11 @@ describe("LiveProMatchPage — sprint 1.B.4", () => {
       connectionState: "closed",
       error: null,
     });
-    rerender(<LiveProMatchPage params={{ id: "m1" }} />);
+    rerender(
+      <LanguageProvider>
+        <LiveProMatchPage params={{ id: "m1" }} />
+      </LanguageProvider>,
+    );
     expect(screen.getByText("FT")).toBeTruthy();
   });
 
@@ -150,7 +163,7 @@ describe("LiveProMatchPage — sprint 1.B.4", () => {
       connectionState: "open",
       error: null,
     });
-    render(<LiveProMatchPage params={{ id: "m1" }} />);
+    renderPage({ params: { id: "m1" } });
     expect(screen.getByText("TD")).toBeTruthy();
     expect(screen.getByText("1:15")).toBeTruthy();
     expect(screen.getByText(/TOUCHDOWN HOME/i)).toBeTruthy();
@@ -177,7 +190,7 @@ describe("LiveProMatchPage — sprint 1.B.4", () => {
       connectionState: "open",
       error: null,
     });
-    render(<LiveProMatchPage params={{ id: "m1" }} />);
+    renderPage({ params: { id: "m1" } });
     const items = screen.getByTestId("event-feed").querySelectorAll("li");
     expect(items.length).toBe(2);
     // Premier li = event le plus récent (TD).
@@ -191,7 +204,7 @@ describe("LiveProMatchPage — sprint 1.B.4", () => {
       connectionState: "error",
       error: "boom-parse",
     });
-    render(<LiveProMatchPage params={{ id: "m1" }} />);
+    renderPage({ params: { id: "m1" } });
     expect(screen.getByRole("alert").textContent).toContain("boom-parse");
   });
 });

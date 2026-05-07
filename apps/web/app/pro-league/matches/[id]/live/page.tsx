@@ -5,13 +5,16 @@ import { useMemo } from "react";
 
 import type { MatchEvent } from "@bb/shared-types";
 
+import { useLanguage } from "../../../../contexts/LanguageContext";
 import { deriveProLeagueFieldState } from "../../../../lib/pro-league-field-state";
 import { useMatchModeRedirect } from "../../../../lib/use-match-mode-redirect";
 import { useProLeagueMatchStream } from "../../../../lib/use-pro-league-match-stream";
 
 // Lazy-load Pixi (>500KB) — même pattern que /play et /spectate PvP.
 // Le chunk /pro-league/matches ne porte plus le moteur de rendu en
-// main bundle (sprint 1.B.3).
+// main bundle (sprint 1.B.3). Le aria-label du loading reste statique
+// pour ne pas exposer le hook hors d'un Provider — c'est un fallback
+// court qui disparait des qu'EE Pixi est chargee.
 const ProLeagueField = dynamic(
   () => import("./ProLeagueField").then((m) => m.default),
   {
@@ -19,7 +22,7 @@ const ProLeagueField = dynamic(
     loading: () => (
       <div
         className="aspect-[3/1] w-full animate-pulse rounded bg-slate-800/60"
-        aria-label="Chargement du terrain"
+        aria-label="Loading the field"
       />
     ),
   },
@@ -85,36 +88,57 @@ function formatClock(displayAtMs: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-function summarizeMeta(ev: MatchEvent): string {
+interface EventsT {
+  kickoffPair: string;
+  turnStart: string;
+  turnStartWithTeam: string;
+  touchdownTeam: string;
+  casualty: string;
+  casualtyWithCause: string;
+  nuffle: string;
+  halftime: string;
+  matchEnd: string;
+}
+
+function summarizeMeta(ev: MatchEvent, e: EventsT): string {
   const meta = (ev.meta ?? {}) as Record<string, unknown>;
   switch (ev.type) {
     case "KICKOFF": {
       const home = String(meta.homeName ?? meta.home ?? "home");
       const away = String(meta.awayName ?? meta.away ?? "away");
-      return `${home} vs ${away}`;
+      return e.kickoffPair.replace("{home}", home).replace("{away}", away);
     }
     case "TURN_START": {
-      const half = meta.half;
-      const turn = meta.turn;
+      const half = String(meta.half ?? "");
+      const turn = String(meta.turn ?? "");
       const drivingTeam = String(meta.drivingTeam ?? "");
-      return `Half ${half ?? ""} · Turn ${turn ?? ""}${drivingTeam ? ` · ${drivingTeam}` : ""}`;
+      const tpl = drivingTeam ? e.turnStartWithTeam : e.turnStart;
+      return tpl
+        .replace("{half}", half)
+        .replace("{turn}", turn)
+        .replace("{team}", drivingTeam);
     }
     case "TD": {
-      const team = String(meta.team ?? "");
-      return `TOUCHDOWN ${team.toUpperCase()}`;
+      const team = String(meta.team ?? "").toUpperCase();
+      return e.touchdownTeam.replace("{team}", team);
     }
     case "CASUALTY": {
-      const cause = meta.causedBy ? ` (${String(meta.causedBy)})` : "";
-      return `Casualty${cause}`;
+      if (meta.causedBy) {
+        return e.casualtyWithCause.replace(
+          "{cause}",
+          String(meta.causedBy),
+        );
+      }
+      return e.casualty;
     }
     case "NUFFLE": {
-      const id = meta.id ?? meta.eventId ?? "?";
-      return `Nuffle: ${String(id)}`;
+      const id = String(meta.id ?? meta.eventId ?? "?");
+      return e.nuffle.replace("{id}", id);
     }
     case "HALFTIME":
-      return "Halftime";
+      return e.halftime;
     case "END":
-      return "Match end";
+      return e.matchEnd;
     default:
       return ev.type;
   }
@@ -125,14 +149,15 @@ function ConnectionBadge({
 }: {
   state: "connecting" | "open" | "error" | "closed";
 }): JSX.Element {
+  const { t } = useLanguage();
   const label =
     state === "open"
-      ? "● LIVE"
+      ? t.proLeague.live.connOpen
       : state === "connecting"
-        ? "○ connecting"
+        ? t.proLeague.live.connConnecting
         : state === "error"
-          ? "⚠ reconnecting"
-          : "■ ended";
+          ? t.proLeague.live.connError
+          : t.proLeague.live.connClosed;
   const klass =
     state === "open"
       ? "bg-emerald-600 text-emerald-50"
@@ -154,6 +179,7 @@ function ConnectionBadge({
 export default function LiveProMatchPage({
   params,
 }: LivePageProps): JSX.Element {
+  const { t } = useLanguage();
   const redirect = useMatchModeRedirect(params.id, "live");
   const { events, connectionState, error } = useProLeagueMatchStream(params.id);
   const score = useMemo(() => deriveScore(events), [events]);
@@ -166,7 +192,7 @@ export default function LiveProMatchPage({
     return (
       <main className="mx-auto flex min-h-screen max-w-2xl flex-col bg-slate-950 px-4 py-6 text-slate-100">
         <p data-testid="live-redirecting" className="text-sm text-slate-400">
-          Redirection vers le replay…
+          {t.proLeague.live.redirectingToReplay}
         </p>
       </main>
     );
@@ -182,10 +208,10 @@ export default function LiveProMatchPage({
           <ConnectionBadge state={connectionState} />
           <span className="font-mono text-sm text-slate-400">
             {score.half === "final"
-              ? "FT"
+              ? t.proLeague.live.scoreFt
               : score.half === 1
-                ? "1st half"
-                : "2nd half"}
+                ? t.proLeague.live.scoreHalf1
+                : t.proLeague.live.scoreHalf2}
           </span>
         </div>
         <div
@@ -215,7 +241,7 @@ export default function LiveProMatchPage({
       >
         {events.length === 0 ? (
           <li className="text-sm text-slate-500">
-            En attente du kickoff…
+            {t.proLeague.live.awaitingKickoff}
           </li>
         ) : (
           events
@@ -235,7 +261,7 @@ export default function LiveProMatchPage({
                   {ev.type}
                 </span>
                 <span className="flex-1 text-slate-200">
-                  {summarizeMeta(ev)}
+                  {summarizeMeta(ev, t.proLeague.events)}
                 </span>
               </li>
             ))
