@@ -50,6 +50,15 @@
  *   2/3, toggle Mega Stars on/off, vide, hirable, badge Mega Star,
  *   detail introuvable, image a11y, sections caracteristiques/
  *   competences/recrutable par/regle speciale, actions retour).
+ * S27.3.18 : namespaces `match.*` et `replay.*` pour
+ *   `match/[id].tsx` (titre historique, score final, stats, vide,
+ *   erreurs, libelle MT/Tour, types de tour `start/accept/coinToss/
+ *   selectKickTeam/validateSetup/kickoffSequence/kickoffScatter/
+ *   kickoffEventResolved`, types d'action `move/block/blitz/pass/
+ *   handoff/foul/endTurn/select/chooseBlockResult/choosePushDirection/
+ *   followUp`) et `replay/[id].tsx` (chargement, vide, retour, erreurs,
+ *   mi-temps/tour, transport play/pause/start/previous/next/end,
+ *   vitesse + a11y, action label).
  *
  * Les autres namespaces seront ajoutes au fur et a mesure du
  * remplacement des strings hardcodees.
@@ -410,6 +419,69 @@ export const FR_TRANSLATIONS = {
       hint:
         "Le suivi est gratuit et ne consomme pas de points de mouvement",
     },
+  },
+  match: {
+    history: {
+      title: "Historique",
+      back: "← Retour",
+      empty: "Aucun historique disponible.",
+      scoreFinal: "Score final : {{teamA}} - {{teamB}}",
+      stats: {
+        actions: "Actions",
+        movesPlayed: "Coups joues",
+      },
+      errors: {
+        loadError: "Erreur de chargement",
+        prefix: "Erreur : {{message}}",
+      },
+      turnRound: "MT {{half}}, Tour {{turn}}",
+      actionFallback: "Action",
+      turnTypes: {
+        start: "Debut du match",
+        accept: "Match accepte",
+        coinToss: "Tirage au sort",
+        selectKickTeam: "Choix du kickoff",
+        validateSetup: "Placement valide",
+        kickoffSequence: "Sequence de kickoff",
+        kickoffScatter: "Deviation du ballon",
+        kickoffEventResolved: "Evenement de kickoff",
+      },
+      moveTypes: {
+        move: "Deplacement",
+        block: "Blocage",
+        blitz: "Blitz",
+        pass: "Passe",
+        handoff: "Transmission",
+        foul: "Agression",
+        endTurn: "Fin de tour",
+        select: "Selection",
+        chooseBlockResult: "Choix du bloc",
+        choosePushDirection: "Choix de poussee",
+        followUp: "Poursuite",
+      },
+    },
+  },
+  replay: {
+    loading: "Chargement du replay...",
+    empty: "Aucune donnee de replay disponible",
+    back: "Retour",
+    errors: {
+      loadError: "Erreur de chargement du replay",
+    },
+    halfTurn: "Mi-temps {{half}} • Tour {{turn}}",
+    transport: {
+      start: "Debut",
+      previous: "Image precedente",
+      next: "Image suivante",
+      end: "Fin",
+      play: "Lecture",
+      pause: "Pause",
+    },
+    speed: {
+      label: "Vitesse",
+      a11y: "Vitesse {{label}}",
+    },
+    actionLabel: "Action : {{label}}",
   },
   starPlayers: {
     megaStarBadge: "Mega Star",
