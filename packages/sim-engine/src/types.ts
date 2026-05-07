@@ -31,12 +31,47 @@ export interface MatchScore {
  * profile (lot 0.B.2) is optional — when omitted, the driver behaves as
  * if the team used `DEFAULT_TACTICAL_PROFILE` (every parameter at 50).
  */
+/**
+ * Snapshot d'un joueur du roster passé au full driver pour produire
+ * des MatchEvent[] roster-aware (Lot 3.A.2.c).
+ *
+ * Le hybrid driver n'utilise pas ce champ — il génère ses propres
+ * `home-LOS` / `away-LOS` synthétiques. Le full driver, lui, mappe
+ * cette snapshot vers les `Player` de game-engine pour que les
+ * events portent les vrais playerId / playerName.
+ */
+export interface SimRosterPlayer {
+  /** ID stable (ex: cuid Prisma `proTeamRoster.id`). */
+  id: string;
+  /** Nom complet (lisible par le narrator). */
+  name: string;
+  /** Numéro du jersey (1-16). */
+  number: number;
+  /** Poste BB ('Lineman', 'Blitzer', 'Thrower', ...). */
+  position: string;
+  ma: number;
+  st: number;
+  ag: number;
+  pa: number;
+  av: number;
+  /** Liste de skills (slugs). */
+  skills?: readonly string[];
+}
+
 export interface SimTeamInput {
   id: string;
   name: string;
   side: 'home' | 'away';
   /** Roster id list — actual roster lookup is consumer-side for now. */
   rosterIds?: readonly string[];
+  /**
+   * Lot 3.A.2.c — snapshot du roster passé au full driver pour
+   * piloter le sim avec les vrais joueurs. Optionnel : si absent,
+   * le full driver retombe sur `setup()` minimal (~6 joueurs
+   * synthétiques) ; si présent, les events MatchEvent[] portent
+   * les vrais ids/names du roster.
+   */
+  roster?: readonly SimRosterPlayer[];
   /** Validated tactical fingerprint — see `tactical-profile.ts` (0.B.2).
    *  Apps/server validates the JSON via `tacticalProfileSchema` before
    *  reaching the sim-engine. */

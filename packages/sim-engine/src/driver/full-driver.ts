@@ -68,6 +68,7 @@ import {
 import type { MatchEvent } from '@bb/shared-types';
 
 import { MS_PER_ACTION, diffStatesToEvents } from './full-driver-events';
+import { buildGameStateFromRosters } from './full-driver-roster';
 
 /**
  * Plafond d'actions par match. Sécurité contre une boucle d'IA qui
@@ -228,10 +229,22 @@ export function runFullDriver(input: SimInput): SimResult {
   const rng = createRng(input.seed);
   const engineRng = adaptRng(rng);
 
-  // MVP : `setup()` produit un état avec quelques joueurs par équipe
-  // et une balle prête. Lot 3.A.2.c remplacera par un setup à partir
-  // des vrais rosters Pro League.
-  let state = setup();
+  // Lot 3.A.2.c — quand des rosters complets sont fournis dans
+  // SimInput, on construit le GameState depuis eux pour que les
+  // events portent les vrais playerId / playerName. Sinon on
+  // retombe sur `setup()` minimal (legacy MVP).
+  const homeRoster = input.home.roster;
+  const awayRoster = input.away.roster;
+  let state =
+    homeRoster && homeRoster.length > 0 && awayRoster && awayRoster.length > 0
+      ? buildGameStateFromRosters({
+          homeRoster,
+          awayRoster,
+          homeName: input.home.name,
+          awayName: input.away.name,
+          receivingTeam: 'B', // away receives par convention sim-engine
+        })
+      : setup();
 
   // Lot 3.A.2.b — collect MatchEvent[] via state diff après chaque
   // applyMove. Le KICKOFF event est émis avant la boucle et l'END

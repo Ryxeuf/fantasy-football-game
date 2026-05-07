@@ -9,6 +9,7 @@
 export { simulateMatch } from './simulate-match';
 export { runHybridDriver, type DriverOptions } from './driver/hybrid-driver';
 export { runFullDriver } from './driver/full-driver';
+export { buildGameStateFromRosters } from './driver/full-driver-roster';
 export {
   DEFAULT_TACTICAL_PROFILE,
   TACTICAL_PROFILE_PARAMETERS,
@@ -152,6 +153,7 @@ export {
   type MatchSummary,
   type SimInput,
   type SimResult,
+  type SimRosterPlayer,
   type SimTeamInput,
 } from './types';
 export {
