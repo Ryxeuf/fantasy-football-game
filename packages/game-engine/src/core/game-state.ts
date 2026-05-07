@@ -15,6 +15,7 @@ import { expelSecretWeapons } from '../mechanics/secret-weapons';
 import { getWeatherModifiers, applyWeatherDriveEffects } from '../mechanics/weather-effects';
 import { getWeatherCondition, type WeatherType } from './weather-types';
 import { hasSkill } from '../skills/skill-effects';
+import { collectModifiers } from '../skills/skill-registry';
 
 export type { PreMatchState };
 
@@ -921,6 +922,19 @@ export function canPlayerAct(state: GameState, playerId: string): boolean {
 }
 
 /**
+ * S27.7.2 — Cap de GFI pour un joueur, derive du registry des skills.
+ *
+ * Defaut 2 (regle BB3). Sprint ajoute +1 (cap = 3) via le modifier
+ * `gfiCapBonus` collecte sur le trigger `on-gfi`. Tout futur skill
+ * qui modifie le cap (ex: Big Hand variant, Tarpit, etc.) n'aura
+ * qu'a poser un `gfiCapBonus` sans toucher aux call-sites.
+ */
+export function getGfiCap(state: GameState, player: Player): number {
+  const mods = collectModifiers(player, 'on-gfi', { state });
+  return 2 + (mods.gfiCapBonus ?? 0);
+}
+
+/**
  * Vérifie si un joueur peut bouger
  * @param state - État du jeu
  * @param playerId - ID du joueur
@@ -932,7 +946,8 @@ export function canPlayerMove(state: GameState, playerId: string): boolean {
 
   // Un joueur peut bouger s'il n'est pas étourdi, a des PM (ou du GFI disponible),
   // n'a pas encore fait d'action principale, et c'est le tour de son équipe
-  const hasMovement = player.pm > 0 || (player.gfiUsed ?? 0) < 2;
+  // S27.7.2 — le cap GFI passe par `getGfiCap` (Sprint = 3, defaut 2).
+  const hasMovement = player.pm > 0 || (player.gfiUsed ?? 0) < getGfiCap(state, player);
   return (
     !player.stunned &&
     hasMovement &&
@@ -956,7 +971,8 @@ export function canPlayerContinueMoving(state: GameState, playerId: string): boo
   // Cas particulier : Running Pass autorise le passeur a continuer sa MA apres une Quick Pass
   // (ou un Hand-Off pour la variante S3) sans changer son action principale.
   const playerAction = getPlayerAction(state, playerId);
-  const hasMovement = player.pm > 0 || (player.gfiUsed ?? 0) < 2;
+  // S27.7.2 — cap GFI via le registry (Sprint = 3, defaut 2).
+  const hasMovement = player.pm > 0 || (player.gfiUsed ?? 0) < getGfiCap(state, player);
   const runningPassActive =
     (state.usedRunningPassThisTurn ?? []).includes(playerId) &&
     (playerAction === 'PASS' || playerAction === 'HANDOFF');

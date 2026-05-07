@@ -5,6 +5,7 @@
 
 import { GameState, Position } from '../core/types';
 import { PassRange } from './passing';
+import { getGfiCap } from '../core/game-state';
 
 const DIRS = [
   { x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 },
@@ -33,7 +34,8 @@ export function getReachableCells(state: GameState, playerId: string): Reachable
   if (!player || player.stunned) return [];
 
   const pm = player.pm;
-  const gfiAvailable = 2 - (player.gfiUsed ?? 0);
+  // S27.7.2 — le cap GFI passe par le registry (Sprint = 3, defaut 2).
+  const gfiAvailable = getGfiCap(state, player) - (player.gfiUsed ?? 0);
   const maxSteps = pm + gfiAvailable;
 
   if (maxSteps <= 0) return [];
