@@ -101,6 +101,37 @@ type Side = 'home' | 'away';
 type KeyMomentKind = 'block' | 'pass' | 'dodge' | 'pickup' | 'gfi' | 'foul';
 
 /**
+ * (#4) Narrative classifier for the bulk yardage advance. The hybrid
+ * driver previously returned an opaque integer ("the team gained 7
+ * yards") which read poorly on the timeline — the user couldn't
+ * tell what kind of play just happened. Each category maps to a
+ * narrator tagline :
+ *
+ *   halt          : 0 yards, defense holds the line
+ *   positioning   : 1-3 yards, line build-up / formation push
+ *   run           : 4-7 yards, ball carrier sprints forward
+ *   sweep         : 8-12 yards, wide play to the wing
+ *   breakaway     : 13+ yards, long play (was the breakthrough roll)
+ *   scoring_run   : reached the goal line, regardless of yardage
+ */
+export type MoveKind =
+  | 'halt'
+  | 'positioning'
+  | 'run'
+  | 'sweep'
+  | 'breakaway'
+  | 'scoring_run';
+
+export function classifyMove(yards: number, scored: boolean): MoveKind {
+  if (scored) return 'scoring_run';
+  if (yards <= 0) return 'halt';
+  if (yards <= 3) return 'positioning';
+  if (yards <= 7) return 'run';
+  if (yards <= 12) return 'sweep';
+  return 'breakaway';
+}
+
+/**
  * Drive state in the hybrid driver. The active team always carries
  * the ball — the model has no "loose ball" phase between turns
  * (kickoff scatter, fumble pickups, etc. are abstracted away). A
@@ -700,8 +731,32 @@ function processTurn(
     // single-turn-TD from yardline 6, breaking the cap #1 guarantee.
     const remaining = Math.max(0, MAX_TURN_YARDS - yardsThisTurn);
     const gained = Math.min(rolled, remaining);
-    const newYard = m.state.drive.ballYardline + gained;
-    if (newYard >= FIELD_YARDS) {
+    const fromYard = m.state.drive.ballYardline;
+    const newYard = fromYard + gained;
+    const scored = newYard >= FIELD_YARDS;
+    // Clamp the destination at the goal line. If the bulk roll
+    // overshoots (e.g. fromYard=14, gained=16 → newYard=30), the
+    // ball stops at FIELD_YARDS=26 and the played yardage is the
+    // distance actually travelled, not the raw roll. This keeps the
+    // MOVE event invariant `yards == to - from` true.
+    const to = scored ? FIELD_YARDS : newYard;
+    const actualYards = to - fromYard;
+    // (#4) Every yard the ball travels must be backed by a narrated
+    // event. Replace the previously-invisible bulk advance with a
+    // MOVE event whose `kind` reflects the play's character.
+    m.events.push({
+      type: 'MOVE',
+      displayAtMs: bulkAtMs,
+      engineVer: ENGINE_VER,
+      meta: {
+        team: m.state.drive.drivingTeam,
+        kind: classifyMove(actualYards, scored),
+        yards: actualYards,
+        from: fromYard,
+        to,
+      },
+    });
+    if (scored) {
       const scoring = m.state.drive.drivingTeam;
       if (scoring === 'home') m.state = { ...m.state, scoreHome: m.state.scoreHome + 1 };
       else m.state = { ...m.state, scoreAway: m.state.scoreAway + 1 };

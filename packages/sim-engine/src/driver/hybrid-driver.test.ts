@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { SimInput } from '../types';
 
-import { runHybridDriver } from './hybrid-driver';
+import { classifyMove, runHybridDriver } from './hybrid-driver';
 
 const baseInput = (overrides: Partial<SimInput> = {}): SimInput => ({
   seed: 42,
@@ -384,6 +384,117 @@ describe('runHybridDriver — Underdog variance boost (sprint 0.C.3)', () => {
     const a = runHybridDriver(lopsidedMatch(7777));
     const b = runHybridDriver(lopsidedMatch(7777));
     expect(b).toEqual(a);
+  });
+});
+
+describe('runHybridDriver — yards as narrated MOVE events (#4)', () => {
+  it('classifyMove maps yardage to the documented narrative kind', () => {
+    expect(classifyMove(0, false)).toBe('halt');
+    expect(classifyMove(1, false)).toBe('positioning');
+    expect(classifyMove(3, false)).toBe('positioning');
+    expect(classifyMove(4, false)).toBe('run');
+    expect(classifyMove(7, false)).toBe('run');
+    expect(classifyMove(8, false)).toBe('sweep');
+    expect(classifyMove(12, false)).toBe('sweep');
+    expect(classifyMove(13, false)).toBe('breakaway');
+    expect(classifyMove(16, false)).toBe('breakaway');
+    // scoring overrides yardage classification
+    expect(classifyMove(0, true)).toBe('scoring_run');
+    expect(classifyMove(5, true)).toBe('scoring_run');
+    expect(classifyMove(16, true)).toBe('scoring_run');
+  });
+
+  /**
+   * Smoke regression : every non-turnover, non-end-of-half turn
+   * should emit at least one MOVE event so no yardage is invisible
+   * on the timeline. We require the bulk advance to produce a MOVE
+   * — even a "halt" 0-yard gain is narrated.
+   */
+  it('every non-turnover turn emits at least one MOVE event explaining the bulk advance', () => {
+    const out = runHybridDriver(baseInput({ seed: 7 }));
+    let currentTurnHasTurnover = false;
+    let currentTurnHasMove = false;
+    let inTurn = false;
+    let totalNonTurnoverTurns = 0;
+    let turnsWithMove = 0;
+    for (const ev of out.events) {
+      if (ev.type === 'TURN_START') {
+        if (inTurn && !currentTurnHasTurnover) {
+          totalNonTurnoverTurns += 1;
+          if (currentTurnHasMove) turnsWithMove += 1;
+        }
+        inTurn = true;
+        currentTurnHasTurnover = false;
+        currentTurnHasMove = false;
+      } else if (ev.type === 'TURNOVER') {
+        currentTurnHasTurnover = true;
+      } else if (ev.type === 'MOVE') {
+        currentTurnHasMove = true;
+      } else if (ev.type === 'HALFTIME' || ev.type === 'END') {
+        if (inTurn && !currentTurnHasTurnover) {
+          totalNonTurnoverTurns += 1;
+          if (currentTurnHasMove) turnsWithMove += 1;
+        }
+        inTurn = false;
+      }
+    }
+    expect(totalNonTurnoverTurns).toBeGreaterThan(0);
+    expect(turnsWithMove).toBe(totalNonTurnoverTurns);
+  });
+
+  /**
+   * Regression : MOVE meta integrity. Each event must declare
+   * coherent `from` / `to` / `yards` / `team` / `kind` so consumers
+   * (narrator, broadcaster, future analytics) can rely on the shape.
+   */
+  it('MOVE events carry coherent meta on every seed sampled', () => {
+    for (let seed = 0; seed < 30; seed += 1) {
+      const out = runHybridDriver(baseInput({ seed }));
+      for (const ev of out.events) {
+        if (ev.type !== 'MOVE') continue;
+        const meta = (ev.meta ?? {}) as Record<string, unknown>;
+        expect(typeof meta.team).toBe('string');
+        expect(['home', 'away']).toContain(String(meta.team));
+        expect(typeof meta.kind).toBe('string');
+        expect([
+          'halt',
+          'positioning',
+          'run',
+          'sweep',
+          'breakaway',
+          'scoring_run',
+        ]).toContain(String(meta.kind));
+        expect(typeof meta.yards).toBe('number');
+        expect(typeof meta.from).toBe('number');
+        expect(typeof meta.to).toBe('number');
+        expect(Number(meta.yards)).toBeGreaterThanOrEqual(0);
+        expect(Number(meta.yards)).toBeLessThanOrEqual(16);
+        expect(Number(meta.to) - Number(meta.from)).toBe(Number(meta.yards));
+      }
+    }
+  });
+
+  /**
+   * Regression : a MOVE with kind='scoring_run' must always be
+   * paired with a TD event at the same displayAtMs. Conversely,
+   * any bulk-advance TD must be preceded by a scoring_run MOVE
+   * (passes have their own PASS+TD pairing).
+   */
+  it('scoring_run MOVE events are always paired with a TD on the same displayAtMs', () => {
+    for (let seed = 0; seed < 30; seed += 1) {
+      const out = runHybridDriver(baseInput({ seed }));
+      for (let i = 0; i < out.events.length; i += 1) {
+        const ev = out.events[i];
+        if (ev.type === 'MOVE') {
+          const meta = (ev.meta ?? {}) as Record<string, unknown>;
+          if (meta.kind === 'scoring_run') {
+            const next = out.events[i + 1];
+            expect(next?.type).toBe('TD');
+            expect(next?.displayAtMs).toBe(ev.displayAtMs);
+          }
+        }
+      }
+    }
   });
 });
 
