@@ -31,6 +31,7 @@ function makeMatch(overrides: Record<string, unknown> = {}) {
     simulatedAt: new Date("2026-09-14T21:00:00Z"),
     completedAt: new Date("2026-09-15T21:08:00Z"),
     engineVer: "0.13.0",
+    isTest: false,
     scoreHome: 3,
     scoreAway: 1,
     outcome: "home",

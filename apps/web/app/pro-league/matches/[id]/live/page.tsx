@@ -200,6 +200,15 @@ export default function LiveProMatchPage({
 
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col bg-slate-950 text-slate-100">
+      {redirect.isTest && (
+        <div
+          data-testid="test-match-banner"
+          className="sticky top-0 z-20 bg-amber-500 px-4 py-2 text-center text-sm font-semibold text-amber-950 shadow"
+        >
+          🧪 TEST MATCH — sandbox, ne compte ni dans les standings ni
+          dans l&apos;ELO ni dans les paris.
+        </div>
+      )}
       <header
         data-testid="score-header"
         className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-slate-800 bg-slate-900 px-4 py-3 shadow"

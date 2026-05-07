@@ -15,17 +15,28 @@ vi.mock("../services/pro-league-engine-drift-watcher", () => ({
 vi.mock("../services/pro-league-match-broadcaster", () => ({
   getBroadcasterStats: vi.fn(),
 }));
+vi.mock("../services/pro-league-sandbox", () => ({
+  createTestMatch: vi.fn(),
+  listTestMatches: vi.fn(),
+}));
 
 import {
+  handleCreateTestMatch,
   handleGetBroadcasterStats,
   handleGetDrift,
   handleListTeams,
+  handleListTestMatches,
   handleRunSim,
   runSimSchema,
+  testMatchSchema,
   type RunSimBody,
 } from "./admin-sim";
 import { computeEngineDrift } from "../services/pro-league-engine-drift-watcher";
 import { getBroadcasterStats } from "../services/pro-league-match-broadcaster";
+import {
+  createTestMatch,
+  listTestMatches,
+} from "../services/pro-league-sandbox";
 import { appMetrics } from "../utils/metrics";
 
 function buildRes(): Response & { statusCode: number; body: unknown } {
@@ -249,5 +260,110 @@ describe("handleGetBroadcasterStats — Lot 2.B.4", () => {
     expect(body.promExposed.activeSessions).toBe(3);
     expect(body.promExposed.totalSubscribers).toBe(12);
     expect(typeof body.fetchedAt).toBe("string");
+  });
+});
+
+describe("testMatchSchema — Lot 2.C.2 input validation", () => {
+  it("accepte un payload valide", () => {
+    const out = testMatchSchema.parse({
+      homeTeamId: "t1",
+      awayTeamId: "t2",
+    });
+    expect(out).toEqual({ homeTeamId: "t1", awayTeamId: "t2" });
+  });
+
+  it("rejette les ids vides", () => {
+    expect(() =>
+      testMatchSchema.parse({ homeTeamId: "", awayTeamId: "t2" }),
+    ).toThrow();
+  });
+});
+
+describe("handleCreateTestMatch — Lot 2.C.2", () => {
+  it("retourne 201 + matchId quand la création réussit", async () => {
+    (createTestMatch as ReturnType<typeof vi.fn>).mockResolvedValue({
+      matchId: "m-abc",
+      seasonId: "s-2026",
+      engineVer: "0.16.0",
+    });
+    const res = buildRes();
+    await handleCreateTestMatch(
+      { body: { homeTeamId: "t1", awayTeamId: "t2" } } as unknown as Request,
+      res,
+    );
+    expect(res.statusCode).toBe(201);
+    expect(res.body).toEqual({
+      matchId: "m-abc",
+      seasonId: "s-2026",
+      engineVer: "0.16.0",
+    });
+  });
+
+  it("retourne 400 quand les teams sont identiques (user input error)", async () => {
+    (createTestMatch as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new Error("homeTeamId et awayTeamId doivent être distincts"),
+    );
+    const res = buildRes();
+    await handleCreateTestMatch(
+      { body: { homeTeamId: "t1", awayTeamId: "t1" } } as unknown as Request,
+      res,
+    );
+    expect(res.statusCode).toBe(400);
+  });
+
+  it("retourne 400 quand une team est introuvable", async () => {
+    (createTestMatch as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new Error("Teams introuvables : t-unknown"),
+    );
+    const res = buildRes();
+    await handleCreateTestMatch(
+      {
+        body: { homeTeamId: "t1", awayTeamId: "t-unknown" },
+      } as unknown as Request,
+      res,
+    );
+    expect(res.statusCode).toBe(400);
+  });
+
+  it("retourne 500 quand le sim crash (erreur interne)", async () => {
+    (createTestMatch as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new Error("simulateMatch boom"),
+    );
+    const res = buildRes();
+    await handleCreateTestMatch(
+      { body: { homeTeamId: "t1", awayTeamId: "t2" } } as unknown as Request,
+      res,
+    );
+    expect(res.statusCode).toBe(500);
+  });
+});
+
+describe("handleListTestMatches — Lot 2.C.2", () => {
+  it("retourne la liste sans limit", async () => {
+    (listTestMatches as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    const res = buildRes();
+    await handleListTestMatches({ query: {} } as unknown as Request, res);
+    expect(listTestMatches).toHaveBeenCalledWith(undefined);
+    expect(res.body).toEqual({ matches: [] });
+  });
+
+  it("forwarde une limit numérique en query string", async () => {
+    (listTestMatches as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    const res = buildRes();
+    await handleListTestMatches(
+      { query: { limit: "50" } } as unknown as Request,
+      res,
+    );
+    expect(listTestMatches).toHaveBeenCalledWith(50);
+  });
+
+  it("ignore une limit non-numérique", async () => {
+    (listTestMatches as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    const res = buildRes();
+    await handleListTestMatches(
+      { query: { limit: "abc" } } as unknown as Request,
+      res,
+    );
+    expect(listTestMatches).toHaveBeenCalledWith(undefined);
   });
 });
