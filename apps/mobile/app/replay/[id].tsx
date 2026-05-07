@@ -15,6 +15,7 @@ import {
 } from "@bb/game-engine";
 import { apiGet, ApiError } from "../../lib/api";
 import { useAuth } from "../../lib/auth-context";
+import { useTranslation } from "../../lib/i18n-context";
 import {
   REPLAY_DEFAULT_SPEED_MS,
   REPLAY_SPEED_OPTIONS,
@@ -44,6 +45,7 @@ export default function ReplayScreen() {
   const { id: matchId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { logout } = useAuth();
+  const { t } = useTranslation();
 
   const [replay, setReplay] = useState<ReplayResponse | null>(null);
   const [frames, setFrames] = useState<ReplayFrame[]>([]);
@@ -86,7 +88,9 @@ export default function ReplayScreen() {
           return;
         }
         setError(
-          err instanceof Error ? err.message : "Erreur de chargement du replay",
+          err instanceof Error
+            ? err.message
+            : t("replay.errors.loadError"),
         );
       } finally {
         if (!cancelled) setLoading(false);
@@ -96,7 +100,7 @@ export default function ReplayScreen() {
     return () => {
       cancelled = true;
     };
-  }, [matchId, router, logout]);
+  }, [matchId, router, logout, t]);
 
   useEffect(() => {
     if (!isPlaying) {
@@ -165,7 +169,7 @@ export default function ReplayScreen() {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color="#2563EB" />
-        <Text style={styles.loadingText}>Chargement du replay...</Text>
+        <Text style={styles.loadingText}>{t("replay.loading")}</Text>
       </View>
     );
   }
@@ -173,10 +177,10 @@ export default function ReplayScreen() {
   if (error) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.errorTitle}>Erreur</Text>
+        <Text style={styles.errorTitle}>{t("common.error")}</Text>
         <Text style={styles.errorText}>{error}</Text>
         <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backButtonText}>Retour</Text>
+          <Text style={styles.backButtonText}>{t("replay.back")}</Text>
         </Pressable>
       </View>
     );
@@ -185,9 +189,9 @@ export default function ReplayScreen() {
   if (frames.length === 0) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.emptyText}>Aucune donnee de replay disponible</Text>
+        <Text style={styles.emptyText}>{t("replay.empty")}</Text>
         <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backButtonText}>Retour</Text>
+          <Text style={styles.backButtonText}>{t("replay.back")}</Text>
         </Pressable>
       </View>
     );
@@ -206,7 +210,7 @@ export default function ReplayScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backLink}>
-          <Text style={styles.backLinkText}>Retour</Text>
+          <Text style={styles.backLinkText}>{t("replay.back")}</Text>
         </Pressable>
         <Text style={styles.headerTitle} numberOfLines={1}>
           {title}
@@ -223,7 +227,7 @@ export default function ReplayScreen() {
           </Text>
           {typeof half === "number" && typeof turn === "number" && (
             <Text style={styles.halfTurn}>
-              Mi-temps {half} • Tour {turn}
+              {t("replay.halfTurn", { half, turn })}
             </Text>
           )}
         </View>
@@ -243,14 +247,14 @@ export default function ReplayScreen() {
           <Pressable
             onPress={handleGoToStart}
             style={styles.transportButton}
-            accessibilityLabel="Debut"
+            accessibilityLabel={t("replay.transport.start")}
           >
             <Text style={styles.transportIcon}>|◀</Text>
           </Pressable>
           <Pressable
             onPress={handleStepBackward}
             style={styles.transportButton}
-            accessibilityLabel="Image precedente"
+            accessibilityLabel={t("replay.transport.previous")}
           >
             <Text style={styles.transportIcon}>◀</Text>
           </Pressable>
@@ -258,7 +262,7 @@ export default function ReplayScreen() {
             <Pressable
               onPress={handlePause}
               style={[styles.transportButton, styles.playButton]}
-              accessibilityLabel="Pause"
+              accessibilityLabel={t("replay.transport.pause")}
             >
               <Text style={styles.playIcon}>||</Text>
             </Pressable>
@@ -266,7 +270,7 @@ export default function ReplayScreen() {
             <Pressable
               onPress={handlePlay}
               style={[styles.transportButton, styles.playButton]}
-              accessibilityLabel="Lecture"
+              accessibilityLabel={t("replay.transport.play")}
             >
               <Text style={styles.playIcon}>▶</Text>
             </Pressable>
@@ -274,14 +278,14 @@ export default function ReplayScreen() {
           <Pressable
             onPress={handleStepForward}
             style={styles.transportButton}
-            accessibilityLabel="Image suivante"
+            accessibilityLabel={t("replay.transport.next")}
           >
             <Text style={styles.transportIcon}>▶</Text>
           </Pressable>
           <Pressable
             onPress={handleGoToEnd}
             style={styles.transportButton}
-            accessibilityLabel="Fin"
+            accessibilityLabel={t("replay.transport.end")}
           >
             <Text style={styles.transportIcon}>▶|</Text>
           </Pressable>
@@ -307,7 +311,7 @@ export default function ReplayScreen() {
         </View>
 
         <View style={styles.speedRow}>
-          <Text style={styles.speedLabel}>Vitesse</Text>
+          <Text style={styles.speedLabel}>{t("replay.speed.label")}</Text>
           {REPLAY_SPEED_OPTIONS.map((opt) => {
             const active = speed === opt.ms;
             return (
@@ -315,7 +319,7 @@ export default function ReplayScreen() {
                 key={opt.ms}
                 onPress={() => setSpeed(opt.ms)}
                 style={[styles.speedButton, active && styles.speedButtonActive]}
-                accessibilityLabel={`Vitesse ${opt.label}`}
+                accessibilityLabel={t("replay.speed.a11y", { label: opt.label })}
               >
                 <Text
                   style={[
@@ -331,7 +335,9 @@ export default function ReplayScreen() {
         </View>
 
         {moveLabel.length > 0 && (
-          <Text style={styles.moveLabel}>Action : {moveLabel}</Text>
+          <Text style={styles.moveLabel}>
+            {t("replay.actionLabel", { label: moveLabel })}
+          </Text>
         )}
       </View>
     </View>

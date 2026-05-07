@@ -11,6 +11,9 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { apiGet, ApiError } from "../../lib/api";
 import { useAuth } from "../../lib/auth-context";
+import { useTranslation } from "../../lib/i18n-context";
+import type { TranslationFn } from "../../lib/i18n-context";
+import type { TranslationKey } from "../../lib/i18n";
 
 interface TurnSummary {
   id: string;
@@ -24,58 +27,74 @@ interface TurnSummary {
   moveType: string | null;
 }
 
-function getTurnTypeLabel(type: string, moveType: string | null): string {
+function getTurnTypeLabelKey(
+  type: string,
+  moveType: string | null,
+): TranslationKey | null {
   switch (type) {
     case "start":
-      return "Debut du match";
+      return "match.history.turnTypes.start";
     case "accept":
-      return "Match accepte";
+      return "match.history.turnTypes.accept";
     case "coin-toss":
-      return "Tirage au sort";
+      return "match.history.turnTypes.coinToss";
     case "select-kick-team":
-      return "Choix du kickoff";
+      return "match.history.turnTypes.selectKickTeam";
     case "validate-setup":
-      return "Placement valide";
+      return "match.history.turnTypes.validateSetup";
     case "kickoff-sequence":
-      return "Sequence de kickoff";
+      return "match.history.turnTypes.kickoffSequence";
     case "kickoff-scatter":
-      return "Deviation du ballon";
+      return "match.history.turnTypes.kickoffScatter";
     case "kickoff-event-resolved":
-      return "Evenement de kickoff";
+      return "match.history.turnTypes.kickoffEventResolved";
     case "gameplay-move":
-      return getMoveLabel(moveType);
+      return getMoveLabelKey(moveType);
     default:
-      return type;
+      return null;
   }
 }
 
-function getMoveLabel(moveType: string | null): string {
+function getMoveLabelKey(moveType: string | null): TranslationKey | null {
   switch (moveType) {
     case "move":
-      return "Deplacement";
+      return "match.history.moveTypes.move";
     case "block":
-      return "Blocage";
+      return "match.history.moveTypes.block";
     case "blitz":
-      return "Blitz";
+      return "match.history.moveTypes.blitz";
     case "pass":
-      return "Passe";
+      return "match.history.moveTypes.pass";
     case "handoff":
-      return "Transmission";
+      return "match.history.moveTypes.handoff";
     case "foul":
-      return "Agression";
+      return "match.history.moveTypes.foul";
     case "end-turn":
-      return "Fin de tour";
+      return "match.history.moveTypes.endTurn";
     case "select":
-      return "Selection";
+      return "match.history.moveTypes.select";
     case "choose-block-result":
-      return "Choix du bloc";
+      return "match.history.moveTypes.chooseBlockResult";
     case "choose-push-direction":
-      return "Choix de poussee";
+      return "match.history.moveTypes.choosePushDirection";
     case "follow-up":
-      return "Poursuite";
+      return "match.history.moveTypes.followUp";
     default:
-      return moveType || "Action";
+      return null;
   }
+}
+
+function resolveTurnLabel(
+  type: string,
+  moveType: string | null,
+  t: TranslationFn,
+): string {
+  const key = getTurnTypeLabelKey(type, moveType);
+  if (key !== null) return t(key);
+  if (type === "gameplay-move") {
+    return moveType ?? t("match.history.actionFallback");
+  }
+  return type;
 }
 
 function getTurnIcon(type: string, moveType: string | null): string {
@@ -122,9 +141,9 @@ function formatDate(dateStr: string): string {
   });
 }
 
-function TurnCard({ turn }: { turn: TurnSummary }) {
+function TurnCard({ turn, t }: { turn: TurnSummary; t: TranslationFn }) {
   const icon = getTurnIcon(turn.type, turn.moveType);
-  const label = getTurnTypeLabel(turn.type, turn.moveType);
+  const label = resolveTurnLabel(turn.type, turn.moveType, t);
 
   return (
     <View style={styles.turnCard}>
@@ -140,7 +159,10 @@ function TurnCard({ turn }: { turn: TurnSummary }) {
         <View style={styles.turnMeta}>
           {turn.half != null && turn.turn != null && (
             <Text style={styles.turnMetaText}>
-              MT {turn.half}, Tour {turn.turn}
+              {t("match.history.turnRound", {
+                half: turn.half,
+                turn: turn.turn,
+              })}
             </Text>
           )}
           {turn.score && (
@@ -158,6 +180,7 @@ export default function MatchHistoryScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { logout } = useAuth();
+  const { t } = useTranslation();
   const [turns, setTurns] = useState<TurnSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -179,10 +202,12 @@ export default function MatchHistoryScreen() {
         return;
       }
       setError(
-        err instanceof Error ? err.message : "Erreur de chargement",
+        err instanceof Error
+          ? err.message
+          : t("match.history.errors.loadError"),
       );
     }
-  }, [id, router, logout]);
+  }, [id, router, logout, t]);
 
   useEffect(() => {
     fetchTurns().finally(() => setLoading(false));
@@ -206,9 +231,9 @@ export default function MatchHistoryScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backText}>← Retour</Text>
+          <Text style={styles.backText}>{t("match.history.back")}</Text>
         </Pressable>
-        <Text style={styles.title}>Historique</Text>
+        <Text style={styles.title}>{t("match.history.title")}</Text>
         <View style={styles.backButton} />
       </View>
 
@@ -219,7 +244,10 @@ export default function MatchHistoryScreen() {
       {finalScore && (
         <View style={styles.scoreBanner}>
           <Text style={styles.scoreBannerText}>
-            Score final : {finalScore.teamA} - {finalScore.teamB}
+            {t("match.history.scoreFinal", {
+              teamA: finalScore.teamA,
+              teamB: finalScore.teamB,
+            })}
           </Text>
         </View>
       )}
@@ -227,11 +255,15 @@ export default function MatchHistoryScreen() {
       <View style={styles.statsRow}>
         <View style={styles.statBox}>
           <Text style={styles.statNumber}>{turns.length}</Text>
-          <Text style={styles.statLabel}>Actions</Text>
+          <Text style={styles.statLabel}>
+            {t("match.history.stats.actions")}
+          </Text>
         </View>
         <View style={styles.statBox}>
           <Text style={styles.statNumber}>{gameplayTurns.length}</Text>
-          <Text style={styles.statLabel}>Coups joues</Text>
+          <Text style={styles.statLabel}>
+            {t("match.history.stats.movesPlayed")}
+          </Text>
         </View>
       </View>
 
@@ -243,9 +275,11 @@ export default function MatchHistoryScreen() {
 
       {error && (
         <View style={styles.center}>
-          <Text style={styles.errorText}>Erreur : {error}</Text>
+          <Text style={styles.errorText}>
+            {t("match.history.errors.prefix", { message: error })}
+          </Text>
           <Pressable onPress={onRefresh} style={styles.retryButton}>
-            <Text style={styles.retryText}>Reessayer</Text>
+            <Text style={styles.retryText}>{t("common.retry")}</Text>
           </Pressable>
         </View>
       )}
@@ -254,14 +288,16 @@ export default function MatchHistoryScreen() {
         <FlatList
           data={gameplayTurns}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <TurnCard turn={item} />}
+          renderItem={({ item }) => <TurnCard turn={item} t={t} />}
           contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
           ListEmptyComponent={
             <View style={styles.center}>
-              <Text style={styles.emptyText}>Aucun historique disponible.</Text>
+              <Text style={styles.emptyText}>
+                {t("match.history.empty")}
+              </Text>
             </View>
           }
         />
