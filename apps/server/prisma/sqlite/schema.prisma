@@ -953,6 +953,8 @@ model ProLeagueMatch {
   simulatedAt         DateTime?
   completedAt         DateTime?
   casualtiesAppliedAt DateTime?
+  /// Lot 2.C.1 — sandbox flag (matchs admin "test" exclus des stats).
+  isTest              Boolean         @default(false)
   seed                BigInt?
   engineVer           String?
   replayId            String?         @unique
