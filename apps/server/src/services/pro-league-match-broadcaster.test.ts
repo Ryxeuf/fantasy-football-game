@@ -32,6 +32,7 @@ import {
   preloadMatch,
   subscribeToMatch,
 } from "./pro-league-match-broadcaster";
+import { appMetrics } from "../utils/metrics";
 
 interface MockedPrisma {
   proLeagueMatch: { findUnique: ReturnType<typeof vi.fn> };
@@ -266,5 +267,26 @@ describe("getBroadcasterStats — sprint 1.B.1", () => {
     expect(getBroadcasterStats().totalSubscribers).toBe(1);
     un2();
     expect(getBroadcasterStats().totalSubscribers).toBe(0);
+  });
+});
+
+describe("Prometheus gauges — Lot 2.A.4", () => {
+  it("setBroadcasterActiveSessions / setBroadcasterTotalSubscribers reflètent l'état après chaque mutation", async () => {
+    mocked.proLeagueMatch.findUnique.mockResolvedValue({ status: "ready" });
+    await mockReplay(makeEvents());
+
+    expect(await appMetrics.snapshotGauge("nuffle_broadcaster_active_sessions")).toBe(0);
+    expect(await appMetrics.snapshotGauge("nuffle_broadcaster_total_subscribers")).toBe(0);
+
+    const un1 = await subscribeToMatch(MATCH_ID, () => undefined);
+    expect(await appMetrics.snapshotGauge("nuffle_broadcaster_active_sessions")).toBe(1);
+    expect(await appMetrics.snapshotGauge("nuffle_broadcaster_total_subscribers")).toBe(1);
+
+    const un2 = await subscribeToMatch(MATCH_ID, () => undefined);
+    expect(await appMetrics.snapshotGauge("nuffle_broadcaster_total_subscribers")).toBe(2);
+
+    un1();
+    un2();
+    expect(await appMetrics.snapshotGauge("nuffle_broadcaster_total_subscribers")).toBe(0);
   });
 });

@@ -39,6 +39,7 @@ import {
 } from "@bb/sim-engine";
 
 import { prisma } from "../prisma";
+import { appMetrics, type SimDriver, type SimOutcome } from "../utils/metrics";
 import {
   EngineVersionMismatchError,
   assertSimulationAllowed,
@@ -164,10 +165,23 @@ export async function simulateProMatch(matchId: string): Promise<boolean> {
     },
   };
 
+  // Lot 2.A.3 — instrumentation Prometheus. `driver` est figé à
+  // 'hybrid' jusqu'à ce que Lot 3.B.1 introduise le toggle
+  // `season.driverKind`. À ce moment-là, on lira la valeur depuis
+  // la DB ici.
+  const driver: SimDriver = "hybrid";
+
   let result: SimResult;
+  const simStart = process.hrtime.bigint();
   try {
     result = simulateMatch(input);
   } catch (err: unknown) {
+    const elapsedSec = Number(process.hrtime.bigint() - simStart) / 1e9;
+    appMetrics.observeSimMatchDuration(
+      { engineVer, driver, outcome: "failed" },
+      elapsedSec,
+    );
+    appMetrics.recordSimMatch({ status: "failed", driver });
     const msg = err instanceof Error ? err.message : "unknown";
     await prisma.proLeagueMatch.update({
       where: { id: matchId },
@@ -175,10 +189,17 @@ export async function simulateProMatch(matchId: string): Promise<boolean> {
     });
     throw new Error(`Sim failed for match '${matchId}': ${msg}`);
   }
+  const elapsedSec = Number(process.hrtime.bigint() - simStart) / 1e9;
+  appMetrics.observeSimMatchDuration(
+    { engineVer, driver, outcome: result.summary.outcome as SimOutcome },
+    elapsedSec,
+  );
+  appMetrics.recordSimMatch({ status: "success", driver });
 
   const compressed = await compressEvents(result.events);
   const stats = computeCompressionStats(result.events, compressed);
   const highlights = extractHighlights(result.events);
+  appMetrics.observeReplaySize({ engineVer }, compressed.byteLength);
 
   // Upsert Replay puis MAJ ProLeagueMatch en transaction pour cohérence.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
