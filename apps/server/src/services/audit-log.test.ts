@@ -9,7 +9,11 @@
  */
 import { describe, it, expect, vi } from "vitest";
 import { Prisma } from "@prisma/client";
-import { recordAdminAction } from "./audit-log";
+import {
+  extractRequestContext,
+  recordAdminAction,
+  recordAdminActionFromRequest,
+} from "./audit-log";
 
 interface CallArgs {
   data: {
@@ -157,5 +161,81 @@ describe("recordAdminAction", () => {
         entityId: "u",
       }),
     ).rejects.toThrow("DB down");
+  });
+});
+
+describe("extractRequestContext", () => {
+  it("extrait IP et User-Agent quand fournis", () => {
+    const ctx = extractRequestContext({
+      ip: "10.0.0.1",
+      headers: { "user-agent": "curl/8.0" },
+    });
+    expect(ctx.ipAddress).toBe("10.0.0.1");
+    expect(ctx.userAgent).toBe("curl/8.0");
+  });
+
+  it("retourne null pour les valeurs manquantes ou vides", () => {
+    expect(
+      extractRequestContext({ ip: undefined as never, headers: {} }),
+    ).toEqual({ ipAddress: null, userAgent: null });
+    expect(
+      extractRequestContext({
+        ip: "",
+        headers: { "user-agent": "" },
+      }),
+    ).toEqual({ ipAddress: null, userAgent: null });
+  });
+
+  it("tronque les User-Agent excessivement longs a 512 chars", () => {
+    const longUa = "x".repeat(2048);
+    const ctx = extractRequestContext({
+      ip: "1.2.3.4",
+      headers: { "user-agent": longUa },
+    });
+    expect(ctx.userAgent).not.toBeNull();
+    expect((ctx.userAgent ?? "").length).toBe(512);
+  });
+
+  it("ignore un User-Agent non-string", () => {
+    const ctx = extractRequestContext({
+      ip: "1.2.3.4",
+      headers: { "user-agent": ["a", "b"] as unknown as string },
+    });
+    expect(ctx.userAgent).toBeNull();
+  });
+});
+
+describe("recordAdminActionFromRequest", () => {
+  it("remplit userId/ip/userAgent depuis la requete", async () => {
+    const create = vi.fn(async () => undefined);
+    const prisma = { auditLog: { create } } as never;
+    const req = {
+      ip: "192.168.1.10",
+      headers: { "user-agent": "Mozilla/5.0" },
+      user: { id: "admin-42", roles: ["admin"] },
+    } as never;
+    await recordAdminActionFromRequest(prisma, req, {
+      action: "user.role.update",
+      entity: "User",
+      entityId: "user-99",
+      newValue: { role: "ADMIN" },
+    });
+    const args = create.mock.calls[0][0];
+    expect(args.data.userId).toBe("admin-42");
+    expect(args.data.ipAddress).toBe("192.168.1.10");
+    expect(args.data.userAgent).toBe("Mozilla/5.0");
+    expect(args.data.newValue).toBe('{"role":"ADMIN"}');
+  });
+
+  it("fallback userId=null si la requete n'a pas user", async () => {
+    const create = vi.fn(async () => undefined);
+    const prisma = { auditLog: { create } } as never;
+    const req = { ip: "1.2.3.4", headers: {} } as never;
+    await recordAdminActionFromRequest(prisma, req, {
+      action: "match.purge",
+      entity: "Match",
+    });
+    const args = create.mock.calls[0][0];
+    expect(args.data.userId).toBeNull();
   });
 });

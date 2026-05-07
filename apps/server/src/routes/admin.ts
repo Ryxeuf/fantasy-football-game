@@ -14,10 +14,33 @@ import {
   updateMatchStatusSchema,
 } from "../schemas/admin.schemas";
 import { serverLog } from "../utils/server-log";
+import {
+  recordAdminActionFromRequest,
+  type RecordAdminActionInput,
+} from "../services/audit-log";
 
 const router = Router();
 
 router.use(authUser, adminOnly);
+
+/**
+ * S27.6.2 — Wrapper resilient autour de `recordAdminActionFromRequest`.
+ * Une defaillance de l'audit log NE DOIT PAS faire echouer la mutation
+ * deja committee. On log et on swallow l'erreur (visible cote ops).
+ */
+async function safeAudit(
+  req: Parameters<typeof recordAdminActionFromRequest>[1],
+  partial: Omit<
+    RecordAdminActionInput,
+    "userId" | "ipAddress" | "userAgent"
+  >,
+): Promise<void> {
+  try {
+    await recordAdminActionFromRequest(prisma, req, partial);
+  } catch (err) {
+    serverLog.error("[audit] Failed to record admin action", err);
+  }
+}
 
 // Route améliorée pour lister les utilisateurs avec statistiques
 router.get("/users", validateQuery(adminUsersQuerySchema), async (req, res) => {
@@ -208,6 +231,11 @@ router.patch("/users/:id/role", validate(updateUserRoleSchema), async (req, res)
 
     const primaryRole = rolesArray.includes("admin") ? "admin" : "user";
 
+    const previous = await prisma.user.findUnique({
+      where: { id },
+      select: { role: true, roles: true },
+    });
+
     const user = await prisma.user.update({
       where: { id },
       data: { role: primaryRole, roles: rolesArray },
@@ -227,6 +255,14 @@ router.patch("/users/:id/role", validate(updateUserRoleSchema), async (req, res)
       roles: normalizeRoles(user.roles ?? user.role),
     };
 
+    await safeAudit(req, {
+      action: "user.role.update",
+      entity: "User",
+      entityId: id,
+      oldValue: previous,
+      newValue: { role: user.role, roles: user.roles },
+    });
+
     res.json({ user: userWithRoles });
   } catch (e: any) {
     if (e.code === "P2025") {
@@ -243,10 +279,23 @@ router.patch("/users/:id/patreon", validate(updateUserPatreonSchema), async (req
     const { id } = req.params;
     const { patreon } = req.body;
 
+    const previous = await prisma.user.findUnique({
+      where: { id },
+      select: { patreon: true },
+    });
+
     const user = await prisma.user.update({
       where: { id },
       data: { patreon },
       select: { id: true, email: true, name: true, role: true, patreon: true, valid: true },
+    });
+
+    await safeAudit(req, {
+      action: "user.patreon.update",
+      entity: "User",
+      entityId: id,
+      oldValue: previous,
+      newValue: { patreon: user.patreon },
     });
 
     res.json({ user });
@@ -265,10 +314,23 @@ router.patch("/users/:id/valid", validate(updateUserValidSchema), async (req, re
     const { id } = req.params;
     const { valid } = req.body;
 
+    const previous = await prisma.user.findUnique({
+      where: { id },
+      select: { valid: true },
+    });
+
     const user = await prisma.user.update({
       where: { id },
       data: { valid },
       select: { id: true, email: true, name: true, role: true, patreon: true, valid: true },
+    });
+
+    await safeAudit(req, {
+      action: "user.valid.update",
+      entity: "User",
+      entityId: id,
+      oldValue: previous,
+      newValue: { valid: user.valid },
     });
 
     res.json({ user });
@@ -291,8 +353,28 @@ router.delete("/users/:id", async (req, res) => {
       return res.status(400).json({ error: "Vous ne pouvez pas supprimer votre propre compte" });
     }
 
+    const previous = await prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        roles: true,
+        patreon: true,
+        valid: true,
+      },
+    });
+
     await prisma.user.delete({
       where: { id },
+    });
+
+    await safeAudit(req, {
+      action: "user.delete",
+      entity: "User",
+      entityId: id,
+      oldValue: previous,
     });
 
     res.json({ ok: true });
@@ -461,10 +543,23 @@ router.patch("/matches/:id/status", validate(updateMatchStatusSchema), async (re
     const { id } = req.params;
     const { status } = req.body;
 
+    const previous = await prisma.match.findUnique({
+      where: { id },
+      select: { status: true },
+    });
+
     const match = await prisma.match.update({
       where: { id },
       data: { status },
       select: { id: true, status: true },
+    });
+
+    await safeAudit(req, {
+      action: "match.status.update",
+      entity: "Match",
+      entityId: id,
+      oldValue: previous,
+      newValue: { status: match.status },
     });
 
     res.json({ match });
@@ -484,7 +579,7 @@ router.delete("/matches/:id", async (req, res) => {
 
     const match = await prisma.match.findUnique({
       where: { id },
-      select: { id: true },
+      select: { id: true, status: true, seed: true, createdAt: true },
     });
 
     if (!match) {
@@ -500,6 +595,13 @@ router.delete("/matches/:id", async (req, res) => {
     );
     await prisma.match.delete({ where: { id } });
 
+    await safeAudit(req, {
+      action: "match.delete",
+      entity: "Match",
+      entityId: id,
+      oldValue: match,
+    });
+
     res.json({ ok: true });
   } catch (e: any) {
     if (e.code === "P2025") {
@@ -511,13 +613,21 @@ router.delete("/matches/:id", async (req, res) => {
 });
 
 // Purge toutes les parties (matches, turns, selections et liens joueurs)
-router.post("/matches/purge", async (_req, res) => {
+router.post("/matches/purge", async (req, res) => {
   try {
+    const matchCount = await prisma.match.count();
     await prisma.turn.deleteMany({});
     await prisma.teamSelection.deleteMany({});
     // Supprimer les relations dans la table de jonction _MatchToUser
     await (prisma as any).$executeRawUnsafe('DELETE FROM "_MatchToUser"');
     await prisma.match.deleteMany({});
+
+    await safeAudit(req, {
+      action: "match.purge",
+      entity: "Match",
+      oldValue: { matchCount },
+    });
+
     res.json({ ok: true });
   } catch (e) {
     serverLog.error(e);
@@ -798,6 +908,13 @@ router.delete("/teams/:id", async (req, res) => {
 
     // Supprimer l'équipe
     await prisma.team.delete({ where: { id } });
+
+    await safeAudit(req, {
+      action: "team.delete",
+      entity: "Team",
+      entityId: id,
+      oldValue: { id: team.id, name: team.name, ownerId: team.ownerId },
+    });
 
     res.json({ ok: true });
   } catch (e: any) {

@@ -24,6 +24,9 @@
  * mutation reussie cote business — voir slice 2.
  */
 import { Prisma, type PrismaClient } from "@prisma/client";
+import type { Request } from "express";
+
+import type { AuthenticatedRequest } from "../middleware/authUser";
 
 export interface RecordAdminActionInput {
   /** Admin qui declenche l'action. `null` = job systeme (cron). */
@@ -76,5 +79,40 @@ export async function recordAdminAction(
       ipAddress: input.ipAddress ?? null,
       userAgent: input.userAgent ?? null,
     },
+  });
+}
+
+/**
+ * Extrait l'IP et le User-Agent d'une requete Express. Helpers
+ * extraites en module pour pouvoir etre testees independamment de la
+ * couche route.
+ */
+export function extractRequestContext(
+  req: Pick<Request, "ip" | "headers">,
+): { ipAddress: string | null; userAgent: string | null } {
+  const ipAddress = typeof req.ip === "string" && req.ip.length > 0 ? req.ip : null;
+  const ua = req.headers["user-agent"];
+  const userAgent =
+    typeof ua === "string" && ua.length > 0 ? ua.slice(0, 512) : null;
+  return { ipAddress, userAgent };
+}
+
+/**
+ * Variante "request-aware" : prend la requete authentifiee et remplit
+ * automatiquement `userId` (admin connecte), `ipAddress` et `userAgent`.
+ * Reduit le boilerplate cote routes : il suffit de passer
+ * `{ action, entity, entityId, oldValue?, newValue? }`.
+ */
+export async function recordAdminActionFromRequest(
+  prisma: PrismaClient,
+  req: AuthenticatedRequest,
+  partial: Omit<RecordAdminActionInput, "userId" | "ipAddress" | "userAgent">,
+): Promise<void> {
+  const ctx = extractRequestContext(req);
+  await recordAdminAction(prisma, {
+    userId: req.user?.id ?? null,
+    ...partial,
+    ipAddress: ctx.ipAddress,
+    userAgent: ctx.userAgent,
   });
 }
