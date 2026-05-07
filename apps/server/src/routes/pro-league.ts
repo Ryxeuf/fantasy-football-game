@@ -35,7 +35,16 @@ import {
   listMyBets,
   placeBet,
 } from "../services/pro-bet";
-import { InsufficientFundsError } from "../services/pro-wallet";
+import {
+  InsufficientFundsError,
+  getBalance,
+  getRecentTransactions,
+} from "../services/pro-wallet";
+import {
+  claimDailyBonus,
+  getDailyBonusStatus,
+  grantFirstTimeBonus,
+} from "../services/pro-wallet-rewards";
 import {
   ProTeamFollowError,
   followProTeam,
@@ -502,6 +511,83 @@ export async function handleListMyBets(
   }
 }
 
+/**
+ * Sprint 1.D.6 — Snapshot wallet : solde + 20 dernières transactions.
+ */
+export async function handleGetMyWallet(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: "unauthenticated" });
+    return;
+  }
+  const balance = await getBalance(userId);
+  const transactions = await getRecentTransactions(userId, 20);
+  res.json({ balance, transactions });
+}
+
+/**
+ * Sprint 1.D.6 — First-time bonus (1000 Crowns) — idempotent.
+ */
+export async function handleGrantFirstTimeBonus(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: "unauthenticated" });
+    return;
+  }
+  try {
+    const out = await grantFirstTimeBonus(userId);
+    res.json(out);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "unknown";
+    serverLog.error(`[pro-league/wallet/first-time] failed: ${msg}`);
+    res.status(500).json({ error: "internal-error" });
+  }
+}
+
+/**
+ * Sprint 1.D.6 — Daily bonus (50 Crowns / 24h glissantes).
+ */
+export async function handleClaimDailyBonus(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: "unauthenticated" });
+    return;
+  }
+  try {
+    const out = await claimDailyBonus(userId);
+    res.json(out);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "unknown";
+    serverLog.error(`[pro-league/wallet/daily-bonus] failed: ${msg}`);
+    res.status(500).json({ error: "internal-error" });
+  }
+}
+
+/**
+ * Sprint 1.D.6 — Statut daily bonus (sans rien crédit).
+ */
+export async function handleGetDailyBonusStatus(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: "unauthenticated" });
+    return;
+  }
+  const out = await getDailyBonusStatus(userId);
+  res.json(out);
+}
+
 const router = Router();
 
 router.get("/seasons/current", handleGetCurrentSeasonHub);
@@ -522,5 +608,15 @@ router.get("/me/feed", authUser, handleGetMyFeed);
 // Sprint 1.D.4 — endpoints paris.
 router.post("/bets", authUser, handlePlaceBet);
 router.get("/me/bets", authUser, handleListMyBets);
+
+// Sprint 1.D.6 — wallet & bonuses.
+router.get("/me/wallet", authUser, handleGetMyWallet);
+router.post(
+  "/me/wallet/first-time-bonus",
+  authUser,
+  handleGrantFirstTimeBonus,
+);
+router.post("/me/wallet/daily-bonus", authUser, handleClaimDailyBonus);
+router.get("/me/wallet/daily-bonus", authUser, handleGetDailyBonusStatus);
 
 export default router;
