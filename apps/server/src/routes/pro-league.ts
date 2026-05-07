@@ -36,6 +36,11 @@ import {
   placeBet,
 } from "../services/pro-bet";
 import {
+  LeaderboardError,
+  type LeaderboardPeriod,
+  getBetLeaderboard,
+} from "../services/pro-bet-leaderboard";
+import {
   InsufficientFundsError,
   getBalance,
   getRecentTransactions,
@@ -588,6 +593,37 @@ export async function handleGetDailyBonusStatus(
   res.json(out);
 }
 
+/**
+ * Sprint 1.D.8 — Leaderboard parieurs (public).
+ * Query : `?period=weekly|season|all-time&limit=N&offset=N`.
+ */
+export async function handleGetBetLeaderboard(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const period = (req.query.period ?? "season") as LeaderboardPeriod;
+  const limit =
+    typeof req.query.limit === "string"
+      ? Number.parseInt(req.query.limit, 10)
+      : 20;
+  const offset =
+    typeof req.query.offset === "string"
+      ? Number.parseInt(req.query.offset, 10)
+      : 0;
+  try {
+    const data = await getBetLeaderboard({ period, limit, offset });
+    res.json(data);
+  } catch (err: unknown) {
+    if (err instanceof LeaderboardError) {
+      res.status(400).json({ error: err.message, code: err.code });
+      return;
+    }
+    const msg = err instanceof Error ? err.message : "unknown";
+    serverLog.error(`[pro-league/leaderboard] failed: ${msg}`);
+    res.status(500).json({ error: "internal-error" });
+  }
+}
+
 const router = Router();
 
 router.get("/seasons/current", handleGetCurrentSeasonHub);
@@ -596,6 +632,7 @@ router.get("/teams/:slug", handleGetTeamDetail);
 router.get("/matches/:id", handleGetMatchDetail);
 router.get("/matches/:id/markets", handleListMarkets);
 router.get("/matches/:id/stream", handleStreamProMatch);
+router.get("/leaderboard", handleGetBetLeaderboard);
 router.get("/_internal/broadcaster-stats", handleBroadcasterStats);
 
 // Sprint 1.C.4 — endpoints auth-protected pour le mode "fan".
