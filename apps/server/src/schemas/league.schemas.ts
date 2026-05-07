@@ -55,7 +55,7 @@ export const createLeagueSchema = z.object({
     .min(1, "Le nom de la ligue est requis")
     .max(100, "Le nom de la ligue ne peut pas depasser 100 caracteres"),
   description: z.string().max(500).optional().nullable(),
-  ruleset: z.enum(["season_2", "season_3"]).optional(),
+  ruleset: z.enum(["season_2", "season_3", "season_4"]).optional(),
   isPublic: z.boolean().optional(),
   maxParticipants: z.number().int().min(2).max(128).optional(),
   allowedRosters: z.array(rosterSlug).max(64).optional().nullable(),

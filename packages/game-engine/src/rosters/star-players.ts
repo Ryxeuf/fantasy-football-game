@@ -1140,10 +1140,55 @@ function buildSeasonThreeStarPlayers(): Record<string, StarPlayerDefinition> {
   return base;
 }
 
+// ---------------------------------------------------------------------------
+// S27.5 — Saison 4 Blood Bowl 3 (skeleton vide pret a recevoir les
+// modifications officielles GW 2025-2026).
+// ---------------------------------------------------------------------------
+
+/**
+ * S4-specific overrides : seuls les champs qui different de S3.
+ *
+ * **VIDE EN ATTENTE DES ROSTERS OFFICIELS GW 2025-2026.**
+ *
+ * Pour ajouter un changement S4, suivre exactement le pattern S3
+ * (voir `SEASON_THREE_STAR_PLAYER_OVERRIDES` ci-dessus) : ajouter une
+ * entree `slug: { ...champs modifies }`. Le builder ci-dessous applique
+ * ces overrides sur le snapshot S3 au build-time.
+ */
+const SEASON_FOUR_STAR_PLAYER_OVERRIDES: Record<string, Partial<StarPlayerDefinition>> = {};
+
+/**
+ * Build the Season 4 star player map from S3 base + S4-specific overrides.
+ * Tant que `SEASON_FOUR_STAR_PLAYER_OVERRIDES` est vide, la liste S4
+ * est strictement equivalente a S3 (clone profond : pas de reference
+ * partagee avec S3 ou S2).
+ */
+function buildSeasonFourStarPlayers(): Record<string, StarPlayerDefinition> {
+  const base = cloneStarPlayersMap(buildSeasonThreeStarPlayers());
+
+  for (const [slug, overrides] of Object.entries(SEASON_FOUR_STAR_PLAYER_OVERRIDES)) {
+    if (base[slug]) {
+      base[slug] = {
+        ...base[slug],
+        ...overrides,
+        // Deep-copy hirableBy if overridden to prevent shared references
+        hirableBy: overrides.hirableBy
+          ? [...overrides.hirableBy]
+          : [...base[slug].hirableBy],
+      };
+    }
+  }
+
+  return base;
+}
+
 // Export du mapping des Star Players par ruleset
 export const STAR_PLAYERS_BY_RULESET: Record<Ruleset, Record<string, StarPlayerDefinition>> = {
   season_2: SEASON_TWO_STAR_PLAYERS,
   season_3: buildSeasonThreeStarPlayers(),
+  // S27.5 — skeleton S4 ; clone profond de S3 tant que les overrides
+  // sont vides. Aucune reference partagee avec S2 / S3.
+  season_4: buildSeasonFourStarPlayers(),
 };
 
 // Export de STAR_PLAYERS pour la compatibilité avec le code existant (utilise le ruleset par défaut)
@@ -1241,6 +1286,8 @@ export const TEAM_REGIONAL_RULES_BY_RULESET: Record<
 > = {
   season_2: TEAM_REGIONAL_RULES,
   season_3: cloneRegionalRules(TEAM_REGIONAL_RULES),
+  // S27.5 — clone profond pour S4 ; aucune reference partagee.
+  season_4: cloneRegionalRules(TEAM_REGIONAL_RULES),
 };
 
 export function getRegionalRulesForTeam(
