@@ -16,7 +16,16 @@ vi.mock("../../lib/api-client", () => {
 });
 
 import { ApiClientError, apiRequest } from "../../lib/api-client";
+import { LanguageProvider } from "../../contexts/LanguageContext";
 import ProLeagueFeedPage from "./page";
+
+function renderPage(): ReturnType<typeof render> {
+  return render(
+    <LanguageProvider>
+      <ProLeagueFeedPage />
+    </LanguageProvider>,
+  );
+}
 
 const FakeApiError = ApiClientError as unknown as new (
   msg: string,
@@ -88,13 +97,13 @@ beforeEach(() => {
 describe("ProLeagueFeedPage — sprint 1.C.4", () => {
   it("affiche 'Chargement…' pendant le fetch", () => {
     mockedApi.mockReturnValue(new Promise(() => undefined));
-    render(<ProLeagueFeedPage />);
+    renderPage();
     expect(screen.getByText(/Chargement/)).toBeTruthy();
   });
 
   it("affiche la liste recent + upcoming", async () => {
     mockedApi.mockResolvedValue(makeFeed());
-    render(<ProLeagueFeedPage />);
+    renderPage();
     await waitFor(() => {
       expect(screen.getByTestId("feed-recent")).toBeTruthy();
     });
@@ -107,7 +116,7 @@ describe("ProLeagueFeedPage — sprint 1.C.4", () => {
 
   it("affiche un message si aucune équipe suivie", async () => {
     mockedApi.mockResolvedValue({ entries: [] });
-    render(<ProLeagueFeedPage />);
+    renderPage();
     await waitFor(() => {
       expect(screen.getByTestId("empty-feed")).toBeTruthy();
     });
@@ -115,7 +124,7 @@ describe("ProLeagueFeedPage — sprint 1.C.4", () => {
 
   it("affiche le message auth-required si 401", async () => {
     mockedApi.mockRejectedValue(new FakeApiError("auth", 401));
-    render(<ProLeagueFeedPage />);
+    renderPage();
     await waitFor(() => {
       expect(screen.getByTestId("auth-required")).toBeTruthy();
     });
@@ -123,7 +132,7 @@ describe("ProLeagueFeedPage — sprint 1.C.4", () => {
 
   it("affiche message d'erreur générique si autre erreur", async () => {
     mockedApi.mockRejectedValue(new Error("boom"));
-    render(<ProLeagueFeedPage />);
+    renderPage();
     await waitFor(() => {
       expect(screen.getByRole("alert")).toBeTruthy();
     });

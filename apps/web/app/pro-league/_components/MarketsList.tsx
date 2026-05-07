@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { useLanguage } from "../../contexts/LanguageContext";
 import { ApiClientError, apiRequest } from "../../lib/api-client";
 
 import { BetSlip } from "./BetSlip";
@@ -40,19 +41,44 @@ interface SelectionTarget {
   readonly odds: number;
 }
 
-const MARKET_LABELS: Record<string, string> = {
-  ONE_X_TWO: "Vainqueur",
-  OVER_UNDER_TD: "Total touchdowns",
-  CAS_COUNT: "Nombre de blessés",
-  NUFFLE_OCCURS: "Event Nuffle",
-};
+interface MarketsT {
+  labelOneXTwo: string;
+  labelOverUnderTd: string;
+  labelCasCount: string;
+  labelNuffleOccurs: string;
+  selectionHome: string;
+  selectionDraw: string;
+  selectionAway: string;
+  selectionOver: string;
+  selectionUnder: string;
+  selectionYes: string;
+  selectionNo: string;
+}
+
+function marketLabel(type: string, m: MarketsT): string {
+  switch (type) {
+    case "ONE_X_TWO":
+      return m.labelOneXTwo;
+    case "OVER_UNDER_TD":
+      return m.labelOverUnderTd;
+    case "CAS_COUNT":
+      return m.labelCasCount;
+    case "NUFFLE_OCCURS":
+      return m.labelNuffleOccurs;
+    default:
+      return type;
+  }
+}
 
 function readNumber(o: Record<string, unknown>, key: string): number | null {
   const v = o[key];
   return typeof v === "number" ? v : null;
 }
 
-function selectionsForMarket(market: MarketSummary): SelectionTarget[] {
+function selectionsForMarket(
+  market: MarketSummary,
+  m: MarketsT,
+): SelectionTarget[] {
   const cfg = market.config;
   switch (market.type) {
     case "ONE_X_TWO": {
@@ -64,16 +90,21 @@ function selectionsForMarket(market: MarketSummary): SelectionTarget[] {
         out.push({
           market,
           selection: "home",
-          label: "Domicile",
+          label: m.selectionHome,
           odds: home,
         });
       if (draw !== null)
-        out.push({ market, selection: "draw", label: "Nul", odds: draw });
+        out.push({
+          market,
+          selection: "draw",
+          label: m.selectionDraw,
+          odds: draw,
+        });
       if (away !== null)
         out.push({
           market,
           selection: "away",
-          label: "Extérieur",
+          label: m.selectionAway,
           odds: away,
         });
       return out;
@@ -88,14 +119,14 @@ function selectionsForMarket(market: MarketSummary): SelectionTarget[] {
         out.push({
           market,
           selection: "over",
-          label: `Plus de ${line}`,
+          label: m.selectionOver.replace("{line}", String(line)),
           odds: over,
         });
       if (under !== null)
         out.push({
           market,
           selection: "under",
-          label: `Moins de ${line}`,
+          label: m.selectionUnder.replace("{line}", String(line)),
           odds: under,
         });
       return out;
@@ -105,9 +136,19 @@ function selectionsForMarket(market: MarketSummary): SelectionTarget[] {
       const no = readNumber(cfg, "noOdds");
       const out: SelectionTarget[] = [];
       if (yes !== null)
-        out.push({ market, selection: "yes", label: "Oui", odds: yes });
+        out.push({
+          market,
+          selection: "yes",
+          label: m.selectionYes,
+          odds: yes,
+        });
       if (no !== null)
-        out.push({ market, selection: "no", label: "Non", odds: no });
+        out.push({
+          market,
+          selection: "no",
+          label: m.selectionNo,
+          odds: no,
+        });
       return out;
     }
     default:
@@ -119,6 +160,7 @@ export function MarketsList({
   matchId,
   authed,
 }: MarketsListProps): JSX.Element {
+  const { t } = useLanguage();
   const [markets, setMarkets] = useState<readonly MarketSummary[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -160,14 +202,14 @@ export function MarketsList({
     if (!markets) return [];
     return markets.map((m) => ({
       market: m,
-      selections: selectionsForMarket(m),
+      selections: selectionsForMarket(m, t.proLeague.markets),
     }));
-  }, [markets]);
+  }, [markets, t.proLeague.markets]);
 
   if (loading) {
     return (
       <p className="text-sm text-slate-400" data-testid="markets-loading">
-        Chargement des paris…
+        {t.proLeague.markets.loading}
       </p>
     );
   }
@@ -184,7 +226,7 @@ export function MarketsList({
   if (!markets || markets.length === 0) {
     return (
       <p className="text-sm text-slate-500" data-testid="markets-empty">
-        Aucun pari disponible pour ce match.
+        {t.proLeague.markets.empty}
       </p>
     );
   }
@@ -198,7 +240,7 @@ export function MarketsList({
             className="rounded border border-slate-800 bg-slate-900 px-3 py-2"
           >
             <h3 className="mb-2 text-sm font-semibold text-slate-100">
-              {MARKET_LABELS[market.type] ?? market.type}
+              {marketLabel(market.type, t.proLeague.markets)}
             </h3>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {selections.map((s) => (
@@ -219,7 +261,7 @@ export function MarketsList({
             </div>
             {!authed ? (
               <p className="mt-2 text-xs text-slate-500">
-                Connecte-toi pour parier.
+                {t.proLeague.markets.loginPrompt}
               </p>
             ) : null}
           </section>

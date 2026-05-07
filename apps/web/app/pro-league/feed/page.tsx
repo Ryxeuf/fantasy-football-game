@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { ApiClientError, apiRequest } from "../../lib/api-client";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 /**
  * Newsfeed perso Pro League — sprint 1.C.4.
@@ -35,8 +36,10 @@ interface FeedEntry {
 }
 
 function FeedRow({ entry }: { entry: FeedEntry }): JSX.Element {
+  const { t, language } = useLanguage();
+  const localeTag = language === "fr" ? "fr-FR" : "en-US";
   const at = new Date(entry.scheduledAt);
-  const formatted = at.toLocaleString("fr-FR", {
+  const formatted = at.toLocaleString(localeTag, {
     day: "2-digit",
     month: "short",
     hour: "2-digit",
@@ -72,12 +75,16 @@ function FeedRow({ entry }: { entry: FeedEntry }): JSX.Element {
           <div className="flex items-center gap-2 text-slate-100">
             <span className="font-medium">{entry.followedTeam.name}</span>
             <span className="text-xs text-slate-500">
-              {entry.isHome ? "vs" : "@"}
+              {entry.isHome
+                ? t.proLeague.feed.labelHomeAt
+                : t.proLeague.feed.labelAwayAt}
             </span>
             <span>{entry.opponent.name}</span>
           </div>
           <span className="text-xs text-slate-500">
-            R{entry.roundNumber} · saison {entry.seasonYear}
+            {t.proLeague.feed.roundSeasonInfo
+              .replace("{round}", String(entry.roundNumber))
+              .replace("{year}", String(entry.seasonYear))}
           </span>
         </div>
       </div>
@@ -98,6 +105,7 @@ function FeedRow({ entry }: { entry: FeedEntry }): JSX.Element {
 }
 
 export default function ProLeagueFeedPage(): JSX.Element {
+  const { t } = useLanguage();
   const [entries, setEntries] = useState<readonly FeedEntry[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -137,25 +145,24 @@ export default function ProLeagueFeedPage(): JSX.Element {
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col bg-slate-950 px-4 py-6 text-slate-100">
       <header className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-wide text-slate-50">
-          Mon feed
+          {t.proLeague.feed.title}
         </h1>
         <Link
           href="/pro-league"
           className="rounded border border-slate-700 px-3 py-1 text-sm text-slate-300 hover:bg-slate-800"
         >
-          ← Hub
+          {t.proLeague.common.backToHub}
         </Link>
       </header>
 
       {loading ? (
-        <p className="text-sm text-slate-400">Chargement…</p>
+        <p className="text-sm text-slate-400">{t.proLeague.common.loading}</p>
       ) : needsAuth ? (
         <p
           data-testid="auth-required"
           className="rounded border border-amber-700 bg-amber-950 px-3 py-2 text-sm text-amber-200"
         >
-          Connecte-toi pour suivre tes équipes Pro League préférées et
-          consulter ton feed personnalisé.
+          {t.proLeague.feed.authRequired}
         </p>
       ) : error ? (
         <p
@@ -169,15 +176,14 @@ export default function ProLeagueFeedPage(): JSX.Element {
           data-testid="empty-feed"
           className="rounded border border-slate-800 bg-slate-900 px-3 py-3 text-sm text-slate-400"
         >
-          Tu ne suis aucune équipe pour l'instant. Explore les fiches
-          équipes et clique sur "+ Suivre" pour personnaliser ton feed.
+          {t.proLeague.feed.empty}
         </p>
       ) : (
         <>
           {recent.length > 0 ? (
             <section data-testid="feed-recent" className="mb-6">
               <h2 className="mb-2 text-lg font-semibold text-slate-100">
-                Derniers résultats
+                {t.proLeague.feed.recentTitle}
               </h2>
               <div className="flex flex-col gap-2">
                 {recent.map((e) => (
@@ -189,7 +195,7 @@ export default function ProLeagueFeedPage(): JSX.Element {
           {upcoming.length > 0 ? (
             <section data-testid="feed-upcoming">
               <h2 className="mb-2 text-lg font-semibold text-slate-100">
-                À venir
+                {t.proLeague.feed.upcomingTitle}
               </h2>
               <div className="flex flex-col gap-2">
                 {upcoming.map((e) => (

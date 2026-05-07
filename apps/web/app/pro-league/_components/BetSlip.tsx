@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useMemo, useState } from "react";
 
+import { useLanguage } from "../../contexts/LanguageContext";
 import { ApiClientError, apiRequest } from "../../lib/api-client";
 import { useWallet } from "../../lib/use-wallet";
 
@@ -70,6 +71,7 @@ export function BetSlip({
   onClose,
   onSuccess,
 }: BetSlipProps): JSX.Element {
+  const { t } = useLanguage();
   const wallet = useWallet();
   const dialogId = useId();
   const [stake, setStake] = useState(50);
@@ -121,7 +123,7 @@ export function BetSlip({
           : null;
       const friendly =
         (code && ERROR_MESSAGES[code]) ||
-        (e instanceof Error ? e.message : "Erreur inconnue");
+        (e instanceof Error ? e.message : t.proLeague.betSlip.unknownError);
       setError(friendly);
     } finally {
       setPending(false);
@@ -142,12 +144,12 @@ export function BetSlip({
       <div className="w-full max-w-md rounded-lg border border-slate-700 bg-slate-900 p-4 text-slate-100 shadow-xl">
         <header className="mb-3 flex items-center justify-between">
           <h3 id={`${dialogId}-title`} className="text-lg font-bold">
-            Placer un pari
+            {t.proLeague.betSlip.title}
           </h3>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Fermer"
+            aria-label={t.proLeague.betSlip.labelClose}
             className="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
           >
             ✕
@@ -160,11 +162,15 @@ export function BetSlip({
             className="rounded border border-emerald-700 bg-emerald-950 px-3 py-3"
           >
             <p className="text-sm text-emerald-100">
-              ✓ Pari placé avec succès
+              {t.proLeague.betSlip.confirmedTitle}
             </p>
             <p className="mt-2 font-mono text-emerald-200">
-              Mise {stake} → gain potentiel{" "}
-              <span className="font-bold">{confirmation.payout}</span> Crowns
+              {t.proLeague.betSlip.confirmedSummary.replace(
+                "{stake}",
+                String(stake),
+              )}{" "}
+              <span className="font-bold">{confirmation.payout}</span>{" "}
+              {t.proLeague.wallet.crowns}
             </p>
             <div className="mt-3 flex justify-end gap-2">
               <button
@@ -172,7 +178,7 @@ export function BetSlip({
                 onClick={onSuccess}
                 className="rounded bg-emerald-700 px-3 py-1.5 text-sm font-semibold hover:bg-emerald-600"
               >
-                OK
+                {t.proLeague.betSlip.ok}
               </button>
             </div>
           </div>
@@ -180,12 +186,14 @@ export function BetSlip({
           <>
             <div className="mb-3 rounded border border-slate-800 bg-slate-950 px-3 py-2">
               <p className="text-xs uppercase text-slate-500">
-                Sélection
+                {t.proLeague.betSlip.selection}
               </p>
               <p className="text-sm font-medium text-slate-100">
                 {target.label}
               </p>
-              <p className="mt-1 text-xs uppercase text-slate-500">Cote</p>
+              <p className="mt-1 text-xs uppercase text-slate-500">
+                {t.proLeague.betSlip.odds}
+              </p>
               <p className="font-mono text-lg font-bold text-emerald-300">
                 {target.odds.toFixed(2)}
               </p>
@@ -195,7 +203,7 @@ export function BetSlip({
               htmlFor={`${dialogId}-stake`}
               className="text-xs uppercase text-slate-400"
             >
-              Mise (Crowns)
+              {t.proLeague.betSlip.stakeLabel}
             </label>
             <div className="mb-2 flex items-center gap-2">
               <input
@@ -227,7 +235,7 @@ export function BetSlip({
 
             <div className="mb-3 flex items-center justify-between rounded bg-slate-950 px-3 py-2">
               <span className="text-xs uppercase text-slate-500">
-                Gain potentiel
+                {t.proLeague.betSlip.potentialPayout}
               </span>
               <span className="font-mono text-lg font-bold text-emerald-300">
                 {potentialPayout}
@@ -236,8 +244,9 @@ export function BetSlip({
 
             {wallet.authed ? (
               <p className="mb-3 text-xs text-slate-500">
-                Solde dispo :{" "}
-                <span className="font-mono">{wallet.balance}</span> Crowns
+                {t.proLeague.betSlip.balanceAvailable}{" "}
+                <span className="font-mono">{wallet.balance}</span>{" "}
+                {t.proLeague.wallet.crowns}
               </p>
             ) : null}
 
@@ -256,7 +265,7 @@ export function BetSlip({
                 onClick={onClose}
                 className="rounded border border-slate-700 px-3 py-1.5 text-sm hover:bg-slate-800"
               >
-                Annuler
+                {t.proLeague.betSlip.cancel}
               </button>
               <button
                 type="button"
@@ -267,7 +276,9 @@ export function BetSlip({
                 disabled={pending || stake < 1}
                 className="rounded bg-emerald-700 px-3 py-1.5 text-sm font-semibold hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {pending ? "..." : "Confirmer"}
+                {pending
+                  ? t.proLeague.betSlip.sending
+                  : t.proLeague.betSlip.confirm}
               </button>
             </div>
           </>

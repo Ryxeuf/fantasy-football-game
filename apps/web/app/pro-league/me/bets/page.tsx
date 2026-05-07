@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { ApiClientError, apiRequest } from "../../../lib/api-client";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { useWallet } from "../../../lib/use-wallet";
 
 import { WalletBadge } from "../../_components/WalletBadge";
@@ -40,25 +41,59 @@ const STATUS_BADGE: Record<string, string> = {
   void: "bg-amber-700 text-amber-50",
 };
 
-const SELECTION_LABEL: Record<string, Record<string, string>> = {
-  ONE_X_TWO: { home: "Domicile", draw: "Nul", away: "Extérieur" },
-  OVER_UNDER_TD: { over: "Plus", under: "Moins" },
-  CAS_COUNT: { over: "Plus", under: "Moins" },
-  NUFFLE_OCCURS: { yes: "Oui", no: "Non" },
-};
-
-function selectionLabel(marketType: string, selection: string): string {
-  return SELECTION_LABEL[marketType]?.[selection] ?? selection;
+interface MyBetsT {
+  selectionHome: string;
+  selectionDraw: string;
+  selectionAway: string;
+  selectionOver: string;
+  selectionUnder: string;
+  selectionYes: string;
+  selectionNo: string;
+  labelMarketOneXTwo: string;
+  labelMarketOverUnderTd: string;
+  labelMarketCasCount: string;
+  labelMarketNuffleOccurs: string;
 }
 
-const MARKET_LABEL: Record<string, string> = {
-  ONE_X_TWO: "Vainqueur",
-  OVER_UNDER_TD: "Total TD",
-  CAS_COUNT: "Blessés",
-  NUFFLE_OCCURS: "Nuffle",
-};
+function selectionLabel(
+  marketType: string,
+  selection: string,
+  m: MyBetsT,
+): string {
+  if (marketType === "ONE_X_TWO") {
+    if (selection === "home") return m.selectionHome;
+    if (selection === "draw") return m.selectionDraw;
+    if (selection === "away") return m.selectionAway;
+  }
+  if (marketType === "OVER_UNDER_TD" || marketType === "CAS_COUNT") {
+    if (selection === "over") return m.selectionOver;
+    if (selection === "under") return m.selectionUnder;
+  }
+  if (marketType === "NUFFLE_OCCURS") {
+    if (selection === "yes") return m.selectionYes;
+    if (selection === "no") return m.selectionNo;
+  }
+  return selection;
+}
+
+function marketLabel(marketType: string, m: MyBetsT): string {
+  switch (marketType) {
+    case "ONE_X_TWO":
+      return m.labelMarketOneXTwo;
+    case "OVER_UNDER_TD":
+      return m.labelMarketOverUnderTd;
+    case "CAS_COUNT":
+      return m.labelMarketCasCount;
+    case "NUFFLE_OCCURS":
+      return m.labelMarketNuffleOccurs;
+    default:
+      return marketType;
+  }
+}
 
 export default function MyBetsPage(): JSX.Element {
+  const { t, language } = useLanguage();
+  const localeTag = language === "fr" ? "fr-FR" : "en-US";
   const wallet = useWallet();
   const [bets, setBets] = useState<readonly BetRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -96,7 +131,7 @@ export default function MyBetsPage(): JSX.Element {
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col bg-slate-950 px-4 py-6 text-slate-100">
       <header className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-wide text-slate-50">
-          Mes paris
+          {t.proLeague.myBets.title}
         </h1>
         <div className="flex items-center gap-2">
           <WalletBadge />
@@ -104,28 +139,33 @@ export default function MyBetsPage(): JSX.Element {
             href="/pro-league"
             className="rounded border border-slate-700 px-3 py-1 text-sm text-slate-300 hover:bg-slate-800"
           >
-            ← Hub
+            {t.proLeague.common.backToHub}
           </Link>
         </div>
       </header>
 
       {wallet.authed ? (
         <section className="mb-6 rounded border border-slate-800 bg-slate-900 px-4 py-3">
-          <p className="text-xs uppercase text-slate-500">Solde</p>
+          <p className="text-xs uppercase text-slate-500">
+            {t.proLeague.myBets.balanceLabel}
+          </p>
           <p className="font-mono text-2xl font-bold text-emerald-300">
-            {wallet.balance} <span className="text-sm text-slate-400">Crowns</span>
+            {wallet.balance}{" "}
+            <span className="text-sm text-slate-400">
+              {t.proLeague.wallet.crowns}
+            </span>
           </p>
         </section>
       ) : null}
 
       {loading ? (
-        <p className="text-sm text-slate-400">Chargement…</p>
+        <p className="text-sm text-slate-400">{t.proLeague.common.loading}</p>
       ) : needsAuth ? (
         <p
           data-testid="auth-required"
           className="rounded border border-amber-700 bg-amber-950 px-3 py-2 text-sm text-amber-200"
         >
-          Connecte-toi pour voir ton historique de paris.
+          {t.proLeague.myBets.authRequired}
         </p>
       ) : error ? (
         <p
@@ -139,7 +179,7 @@ export default function MyBetsPage(): JSX.Element {
           data-testid="empty-bets"
           className="rounded border border-slate-800 bg-slate-900 px-3 py-3 text-sm text-slate-400"
         >
-          Aucun pari placé. Choisis un match et tente ta chance !
+          {t.proLeague.myBets.empty}
         </p>
       ) : (
         <ol data-testid="bets-list" className="flex flex-col gap-2">
@@ -153,12 +193,19 @@ export default function MyBetsPage(): JSX.Element {
                   href={`/pro-league/matches/${b.matchId}`}
                   className="text-slate-100 hover:text-emerald-300"
                 >
-                  {MARKET_LABEL[b.marketType] ?? b.marketType} ·{" "}
-                  {selectionLabel(b.marketType, b.selection)}
+                  {marketLabel(b.marketType, t.proLeague.myBets)} ·{" "}
+                  {selectionLabel(
+                    b.marketType,
+                    b.selection,
+                    t.proLeague.myBets,
+                  )}
                 </Link>
                 <span className="text-xs text-slate-500">
-                  Cote {b.oddsAtPlace.toFixed(2)} · Mise {b.stake} ·{" "}
-                  {new Date(b.createdAt).toLocaleString("fr-FR", {
+                  {t.proLeague.myBets.oddsMise
+                    .replace("{odds}", b.oddsAtPlace.toFixed(2))
+                    .replace("{stake}", String(b.stake))}{" "}
+                  ·{" "}
+                  {new Date(b.createdAt).toLocaleString(localeTag, {
                     day: "2-digit",
                     month: "short",
                     hour: "2-digit",
