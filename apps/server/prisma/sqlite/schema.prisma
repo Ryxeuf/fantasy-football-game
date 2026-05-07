@@ -70,6 +70,10 @@ model User {
   refreshTokens               RefreshToken[]
   eloSnapshots                EloSnapshot[]
   tutorialCompletions         TutorialCompletion[]
+  proSpectatorFollows         ProSpectatorFollow[]
+  proWallet                   ProWallet?
+  proBets                     ProBet[]
+  proUserBadges               ProUserBadge[]
 }
 
 /// S26.3l — mirror SQLite de l'historique ELO Postgres (snapshot par mise a jour).
@@ -822,4 +826,322 @@ model Feedback {
 
   @@index([status, createdAt])
   @@index([createdAt])
+}
+
+// =============================================================
+// Pro League — sprint Pro League lot 1.A.1 (sqlite mirror)
+// =============================================================
+// Cf. /prisma/schema.prisma pour la documentation. Ce mirror sqlite
+// remplace les colonnes `Json` par `String` (sqlite supporte JSON
+// uniquement via JSON1 module — on serialise/parse cote application
+// pour rester compatible).
+
+model ProLeague {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String?
+  branding    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  teams   ProTeam[]
+  seasons ProLeagueSeason[]
+}
+
+model ProTeam {
+  id             String    @id @default(cuid())
+  league         ProLeague @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId       String
+  slug           String    @unique
+  city           String
+  name           String
+  race           String
+  nflFlavor      String?
+  primaryColor   String?
+  secondaryColor String?
+  baseTv         Int       @default(1000)
+  meta           String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  roster      ProTeamRoster[]
+  homeMatches ProLeagueMatch[]     @relation("ProMatchHome")
+  awayMatches ProLeagueMatch[]     @relation("ProMatchAway")
+  standings   ProLeagueStandings[]
+  followers   ProSpectatorFollow[]
+
+  @@index([leagueId])
+}
+
+model ProTeamRoster {
+  id          String   @id @default(cuid())
+  team        ProTeam  @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId      String
+  name        String
+  position    String
+  ma          Int
+  st          Int
+  ag          Int
+  pa          Int?
+  av          Int
+  skills      String   @default("[]")
+  niggling    Int      @default(0)
+  maReduction Int      @default(0)
+  stReduction Int      @default(0)
+  agReduction Int      @default(0)
+  avReduction Int      @default(0)
+  status      String   @default("active")
+  form        Int      @default(50)
+  careerStats String   @default("{}")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([teamId, status])
+}
+
+model ProLeagueSeason {
+  id        String    @id @default(cuid())
+  league    ProLeague @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId  String
+  year      Int
+  status    String    @default("scheduled")
+  engineVer String
+  startsAt  DateTime?
+  endsAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  rounds    ProLeagueRound[]
+  matches   ProLeagueMatch[]
+  standings ProLeagueStandings[]
+
+  @@unique([leagueId, year])
+  @@index([status])
+}
+
+model ProLeagueRound {
+  id          String          @id @default(cuid())
+  season      ProLeagueSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  seasonId    String
+  roundNumber Int
+  status      String          @default("pending")
+  scheduledAt DateTime?
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  matches ProLeagueMatch[]
+
+  @@unique([seasonId, roundNumber])
+  @@index([status])
+}
+
+model ProLeagueMatch {
+  id                  String          @id @default(cuid())
+  season              ProLeagueSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  seasonId            String
+  round               ProLeagueRound  @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  roundId             String
+  homeTeam            ProTeam         @relation("ProMatchHome", fields: [homeTeamId], references: [id], onDelete: Cascade)
+  homeTeamId          String
+  awayTeam            ProTeam         @relation("ProMatchAway", fields: [awayTeamId], references: [id], onDelete: Cascade)
+  awayTeamId          String
+  status              String          @default("scheduled")
+  scheduledAt         DateTime
+  simulatedAt         DateTime?
+  completedAt         DateTime?
+  casualtiesAppliedAt DateTime?
+  seed                BigInt?
+  engineVer           String?
+  replayId            String?         @unique
+  scoreHome           Int?
+  scoreAway           Int?
+  outcome             String?
+  touchdownCount      Int?
+  casualtyCount       Int?
+  turnoverCount       Int?
+  nuffleCount         Int?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  betMarkets ProBetMarket[]
+
+  @@index([seasonId, status])
+  @@index([roundId])
+  @@index([scheduledAt])
+  @@index([homeTeamId])
+  @@index([awayTeamId])
+}
+
+model ProLeagueStandings {
+  id                String          @id @default(cuid())
+  season            ProLeagueSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  seasonId          String
+  team              ProTeam         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId            String
+  played            Int             @default(0)
+  wins              Int             @default(0)
+  draws             Int             @default(0)
+  losses            Int             @default(0)
+  points            Int             @default(0)
+  tdFor             Int             @default(0)
+  tdAgainst         Int             @default(0)
+  casualtiesFor     Int             @default(0)
+  casualtiesAgainst Int             @default(0)
+  form              String          @default("[]")
+  updatedAt         DateTime        @updatedAt
+
+  @@unique([seasonId, teamId])
+  @@index([seasonId, points, tdFor])
+}
+
+model Replay {
+  matchId     String   @id
+  payload     Bytes
+  highlights  String   @default("[]")
+  durationMs  Int
+  rawJsonSize Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ProSpectatorFollow {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  team      ProTeam  @relation(fields: [proTeamId], references: [id], onDelete: Cascade)
+  proTeamId String
+  since     DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  @@unique([userId, proTeamId])
+  @@index([userId])
+  @@index([proTeamId])
+}
+
+model ProWallet {
+  userId    String   @id
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  crowns    Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions ProTransaction[]
+}
+
+model ProTransaction {
+  id        String    @id @default(cuid())
+  wallet    ProWallet @relation(fields: [walletId], references: [userId], onDelete: Cascade)
+  walletId  String
+  type      String
+  amount    Int
+  ref       String?
+  createdAt DateTime  @default(now())
+
+  @@index([walletId, createdAt])
+  @@index([type])
+}
+
+model ProBetMarket {
+  id        String         @id @default(cuid())
+  match     ProLeagueMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  matchId   String
+  type      String
+  config    String
+  status    String         @default("open")
+  closesAt  DateTime
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  bets       ProBet[]
+  settlement ProBetSettlement?
+
+  @@unique([matchId, type])
+  @@index([status, closesAt])
+}
+
+model ProBet {
+  id           String       @id @default(cuid())
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String
+  market       ProBetMarket @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  marketId     String
+  selection    String
+  stake        Int
+  oddsAtPlace  Float
+  status       String       @default("pending")
+  payoutAmount Int?
+  clientToken  String       @unique
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([marketId, status])
+  @@index([status])
+}
+
+model ProBetSettlement {
+  id               String       @id @default(cuid())
+  market           ProBetMarket @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  marketId         String       @unique
+  winningSelection String
+  totalStake       Int          @default(0)
+  totalPayout      Int          @default(0)
+  betCount         Int          @default(0)
+  settledAt        DateTime     @default(now())
+}
+
+model ProUserBadge {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  badgeCode String
+  earnedAt  DateTime @default(now())
+  meta      String?
+
+  @@unique([userId, badgeCode])
+  @@index([badgeCode])
+  @@index([userId])
+}
+
+model ProGazetteArticle {
+  id               String   @id @default(cuid())
+  date             DateTime
+  type             String
+  persona          String?
+  title            String
+  body             String
+  relatedTeamIds   String?
+  relatedPlayerIds String?
+  createdAt        DateTime @default(now())
+
+  @@index([date])
+  @@index([type, date])
+}
+
+model ProHallOfFame {
+  id          String   @id @default(cuid())
+  rosterId    String
+  teamSlug    String
+  teamName    String
+  playerName  String
+  race        String
+  position    String
+  ma          Int
+  st          Int
+  ag          Int
+  pa          Int?
+  av          Int
+  skills      String
+  careerStats String
+  reason      String
+  citation    String?
+  inductedAt  DateTime @default(now())
+
+  @@unique([rosterId, reason])
+  @@index([teamSlug])
+  @@index([reason])
+  @@index([inductedAt])
 }

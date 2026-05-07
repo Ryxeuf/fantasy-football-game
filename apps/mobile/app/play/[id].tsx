@@ -25,6 +25,7 @@ import {
   canActivateThrowTeamMate,
   type LegalThrow,
 } from "../../lib/throw-team-mate-click";
+import { useTranslation } from "../../lib/i18n-context";
 
 function normalizeState(state: any): GameState {
   if (!state) return state;
@@ -41,6 +42,7 @@ export default function PlayScreen() {
   const { id: matchId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { user, logout } = useAuth();
+  const { t } = useTranslation();
 
   const [state, setState] = useState<GameState | null>(null);
   const [loading, setLoading] = useState(true);
@@ -70,9 +72,9 @@ export default function PlayScreen() {
         router.replace("/login");
         return;
       }
-      setError(err instanceof Error ? err.message : "Erreur de chargement");
+      setError(err instanceof Error ? err.message : t("play.errors.loadError"));
     }
-  }, [matchId, router, logout]);
+  }, [matchId, router, logout, t]);
 
   useEffect(() => {
     fetchState().finally(() => setLoading(false));
@@ -197,12 +199,12 @@ export default function PlayScreen() {
           router.replace("/login");
           return;
         }
-        setError(err instanceof Error ? err.message : "Erreur");
+        setError(err instanceof Error ? err.message : t("play.errors.actionError"));
       } finally {
         setSubmitting(false);
       }
     },
-    [matchId, router, logout, wsConnected, wsSubmitMove],
+    [matchId, router, logout, wsConnected, wsSubmitMove, t],
   );
 
   // Handle cell tap
@@ -312,7 +314,7 @@ export default function PlayScreen() {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color="#2563EB" />
-        <Text style={styles.loadingText}>Chargement du match...</Text>
+        <Text style={styles.loadingText}>{t("play.loading")}</Text>
       </View>
     );
   }
@@ -320,9 +322,11 @@ export default function PlayScreen() {
   if (error) {
     return (
       <View style={styles.center}>
-        <Text style={styles.errorText}>Erreur : {error}</Text>
+        <Text style={styles.errorText}>
+          {t("play.errors.prefix", { message: error })}
+        </Text>
         <Pressable onPress={() => fetchState()} style={styles.retryButton}>
-          <Text style={styles.retryText}>Reessayer</Text>
+          <Text style={styles.retryText}>{t("common.retry")}</Text>
         </Pressable>
       </View>
     );
@@ -331,7 +335,7 @@ export default function PlayScreen() {
   if (!state) {
     return (
       <View style={styles.center}>
-        <Text style={styles.errorText}>Aucun etat de jeu disponible</Text>
+        <Text style={styles.errorText}>{t("play.noState")}</Text>
       </View>
     );
   }
@@ -345,7 +349,7 @@ export default function PlayScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backText}>← Retour</Text>
+          <Text style={styles.backText}>{t("play.actions.back")}</Text>
         </Pressable>
         <View style={styles.scoreContainer}>
           <Text style={styles.scoreText}>
@@ -368,8 +372,8 @@ export default function PlayScreen() {
         ]}
       >
         <Text style={styles.turnBannerText}>
-          {isMyTurn ? "Votre tour" : "Tour de l'adversaire"}
-          {wsConnected ? "" : " (hors ligne)"}
+          {isMyTurn ? t("play.banner.myTurn") : t("play.banner.opponentTurn")}
+          {wsConnected ? "" : t("play.banner.offline")}
         </Text>
         {submitting && (
           <ActivityIndicator
@@ -397,7 +401,7 @@ export default function PlayScreen() {
             {selectedPlayer.pm}
           </Text>
           <Pressable onPress={onDeselect} style={styles.deselectButton}>
-            <Text style={styles.deselectText}>Annuler</Text>
+            <Text style={styles.deselectText}>{t("common.cancel")}</Text>
           </Pressable>
         </View>
       )}
@@ -434,7 +438,9 @@ export default function PlayScreen() {
                 onPress={() => setCurrentAction("THROW_TEAM_MATE")}
                 disabled={submitting}
               >
-                <Text style={styles.endTurnText}>Lancer un coéquipier</Text>
+                <Text style={styles.endTurnText}>
+                  {t("play.actions.throwTeamMate")}
+                </Text>
               </Pressable>
             )}
           {currentAction === "THROW_TEAM_MATE" && (
@@ -448,8 +454,8 @@ export default function PlayScreen() {
             >
               <Text style={styles.endTurnText}>
                 {throwTeamMateThrownId
-                  ? "Annuler (cible)"
-                  : "Annuler (lancer)"}
+                  ? t("play.actions.cancelTarget")
+                  : t("play.actions.cancelThrower")}
               </Text>
             </Pressable>
           )}
@@ -458,16 +464,14 @@ export default function PlayScreen() {
             onPress={handleEndTurn}
             disabled={submitting}
           >
-            <Text style={styles.endTurnText}>Fin de tour</Text>
+            <Text style={styles.endTurnText}>{t("play.actions.endTurn")}</Text>
           </Pressable>
         </View>
       )}
 
       {/* Help hint */}
       <View style={styles.hintBar}>
-        <Text style={styles.hintText}>
-          Tap un joueur pour voir ses cases jouables. Double-tap pour annuler.
-        </Text>
+        <Text style={styles.hintText}>{t("play.hint")}</Text>
       </View>
 
       <MatchPopups

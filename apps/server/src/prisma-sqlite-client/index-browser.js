@@ -594,6 +594,230 @@ exports.Prisma.FeedbackScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.ProLeagueScalarFieldEnum = {
+  id: 'id',
+  slug: 'slug',
+  name: 'name',
+  description: 'description',
+  branding: 'branding',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ProTeamScalarFieldEnum = {
+  id: 'id',
+  leagueId: 'leagueId',
+  slug: 'slug',
+  city: 'city',
+  name: 'name',
+  race: 'race',
+  nflFlavor: 'nflFlavor',
+  primaryColor: 'primaryColor',
+  secondaryColor: 'secondaryColor',
+  baseTv: 'baseTv',
+  meta: 'meta',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ProTeamRosterScalarFieldEnum = {
+  id: 'id',
+  teamId: 'teamId',
+  name: 'name',
+  position: 'position',
+  ma: 'ma',
+  st: 'st',
+  ag: 'ag',
+  pa: 'pa',
+  av: 'av',
+  skills: 'skills',
+  niggling: 'niggling',
+  maReduction: 'maReduction',
+  stReduction: 'stReduction',
+  agReduction: 'agReduction',
+  avReduction: 'avReduction',
+  status: 'status',
+  form: 'form',
+  careerStats: 'careerStats',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ProLeagueSeasonScalarFieldEnum = {
+  id: 'id',
+  leagueId: 'leagueId',
+  year: 'year',
+  status: 'status',
+  engineVer: 'engineVer',
+  startsAt: 'startsAt',
+  endsAt: 'endsAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ProLeagueRoundScalarFieldEnum = {
+  id: 'id',
+  seasonId: 'seasonId',
+  roundNumber: 'roundNumber',
+  status: 'status',
+  scheduledAt: 'scheduledAt',
+  startedAt: 'startedAt',
+  completedAt: 'completedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ProLeagueMatchScalarFieldEnum = {
+  id: 'id',
+  seasonId: 'seasonId',
+  roundId: 'roundId',
+  homeTeamId: 'homeTeamId',
+  awayTeamId: 'awayTeamId',
+  status: 'status',
+  scheduledAt: 'scheduledAt',
+  simulatedAt: 'simulatedAt',
+  completedAt: 'completedAt',
+  casualtiesAppliedAt: 'casualtiesAppliedAt',
+  seed: 'seed',
+  engineVer: 'engineVer',
+  replayId: 'replayId',
+  scoreHome: 'scoreHome',
+  scoreAway: 'scoreAway',
+  outcome: 'outcome',
+  touchdownCount: 'touchdownCount',
+  casualtyCount: 'casualtyCount',
+  turnoverCount: 'turnoverCount',
+  nuffleCount: 'nuffleCount',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ProLeagueStandingsScalarFieldEnum = {
+  id: 'id',
+  seasonId: 'seasonId',
+  teamId: 'teamId',
+  played: 'played',
+  wins: 'wins',
+  draws: 'draws',
+  losses: 'losses',
+  points: 'points',
+  tdFor: 'tdFor',
+  tdAgainst: 'tdAgainst',
+  casualtiesFor: 'casualtiesFor',
+  casualtiesAgainst: 'casualtiesAgainst',
+  form: 'form',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ReplayScalarFieldEnum = {
+  matchId: 'matchId',
+  payload: 'payload',
+  highlights: 'highlights',
+  durationMs: 'durationMs',
+  rawJsonSize: 'rawJsonSize',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ProSpectatorFollowScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  proTeamId: 'proTeamId',
+  since: 'since',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.ProWalletScalarFieldEnum = {
+  userId: 'userId',
+  crowns: 'crowns',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ProTransactionScalarFieldEnum = {
+  id: 'id',
+  walletId: 'walletId',
+  type: 'type',
+  amount: 'amount',
+  ref: 'ref',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.ProBetMarketScalarFieldEnum = {
+  id: 'id',
+  matchId: 'matchId',
+  type: 'type',
+  config: 'config',
+  status: 'status',
+  closesAt: 'closesAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ProBetScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  marketId: 'marketId',
+  selection: 'selection',
+  stake: 'stake',
+  oddsAtPlace: 'oddsAtPlace',
+  status: 'status',
+  payoutAmount: 'payoutAmount',
+  clientToken: 'clientToken',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ProBetSettlementScalarFieldEnum = {
+  id: 'id',
+  marketId: 'marketId',
+  winningSelection: 'winningSelection',
+  totalStake: 'totalStake',
+  totalPayout: 'totalPayout',
+  betCount: 'betCount',
+  settledAt: 'settledAt'
+};
+
+exports.Prisma.ProUserBadgeScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  badgeCode: 'badgeCode',
+  earnedAt: 'earnedAt',
+  meta: 'meta'
+};
+
+exports.Prisma.ProGazetteArticleScalarFieldEnum = {
+  id: 'id',
+  date: 'date',
+  type: 'type',
+  persona: 'persona',
+  title: 'title',
+  body: 'body',
+  relatedTeamIds: 'relatedTeamIds',
+  relatedPlayerIds: 'relatedPlayerIds',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.ProHallOfFameScalarFieldEnum = {
+  id: 'id',
+  rosterId: 'rosterId',
+  teamSlug: 'teamSlug',
+  teamName: 'teamName',
+  playerName: 'playerName',
+  race: 'race',
+  position: 'position',
+  ma: 'ma',
+  st: 'st',
+  ag: 'ag',
+  pa: 'pa',
+  av: 'av',
+  skills: 'skills',
+  careerStats: 'careerStats',
+  reason: 'reason',
+  citation: 'citation',
+  inductedAt: 'inductedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -662,7 +886,24 @@ exports.Prisma.ModelName = {
   RegionalLeague: 'RegionalLeague',
   LeaguePostMatchSequence: 'LeaguePostMatchSequence',
   LeagueSeasonAward: 'LeagueSeasonAward',
-  Feedback: 'Feedback'
+  Feedback: 'Feedback',
+  ProLeague: 'ProLeague',
+  ProTeam: 'ProTeam',
+  ProTeamRoster: 'ProTeamRoster',
+  ProLeagueSeason: 'ProLeagueSeason',
+  ProLeagueRound: 'ProLeagueRound',
+  ProLeagueMatch: 'ProLeagueMatch',
+  ProLeagueStandings: 'ProLeagueStandings',
+  Replay: 'Replay',
+  ProSpectatorFollow: 'ProSpectatorFollow',
+  ProWallet: 'ProWallet',
+  ProTransaction: 'ProTransaction',
+  ProBetMarket: 'ProBetMarket',
+  ProBet: 'ProBet',
+  ProBetSettlement: 'ProBetSettlement',
+  ProUserBadge: 'ProUserBadge',
+  ProGazetteArticle: 'ProGazetteArticle',
+  ProHallOfFame: 'ProHallOfFame'
 };
 
 /**

@@ -1,4 +1,5 @@
 import { Modal, View, Text, Pressable, StyleSheet } from "react-native";
+import { useTranslation } from "../../lib/i18n-context";
 
 interface FollowUpChoicePopupProps {
   visible: boolean;
@@ -17,6 +18,11 @@ export default function FollowUpChoicePopup({
   onChoose,
   onClose,
 }: FollowUpChoicePopupProps) {
+  const { t } = useTranslation();
+  const cancelLabel = t("common.cancel");
+  const yesLabel = t("popups.followUp.yes");
+  const noLabel = t("popups.followUp.no");
+
   return (
     <Modal
       visible={visible}
@@ -26,13 +32,17 @@ export default function FollowUpChoicePopup({
     >
       <View style={styles.backdrop}>
         <View style={styles.card}>
-          <Text style={styles.title}>Suivi (Follow-up)</Text>
+          <Text style={styles.title}>{t("popups.followUp.title")}</Text>
           <Text style={styles.subtitle}>
-            {attackerName} a repoussé {targetName} vers ({targetNewPosition.x},{" "}
-            {targetNewPosition.y})
+            {t("popups.followUp.subtitle", {
+              attacker: attackerName,
+              target: targetName,
+              x: targetNewPosition.x,
+              y: targetNewPosition.y,
+            })}
           </Text>
           <Text style={styles.question}>
-            Voulez-vous que {attackerName} le suive dans la case libérée ?
+            {t("popups.followUp.question", { attacker: attackerName })}
           </Text>
 
           <View style={styles.row}>
@@ -43,10 +53,10 @@ export default function FollowUpChoicePopup({
                 styles.choiceYes,
                 pressed && styles.pressed,
               ]}
-              accessibilityLabel="Suivre"
+              accessibilityLabel={yesLabel}
             >
               <Text style={styles.choiceIcon}>✓</Text>
-              <Text style={styles.choiceText}>Suivre</Text>
+              <Text style={styles.choiceText}>{yesLabel}</Text>
             </Pressable>
             <Pressable
               onPress={() => onChoose(false)}
@@ -55,23 +65,21 @@ export default function FollowUpChoicePopup({
                 styles.choiceNo,
                 pressed && styles.pressed,
               ]}
-              accessibilityLabel="Ne pas suivre"
+              accessibilityLabel={noLabel}
             >
               <Text style={styles.choiceIcon}>✗</Text>
-              <Text style={styles.choiceText}>Ne pas suivre</Text>
+              <Text style={styles.choiceText}>{noLabel}</Text>
             </Pressable>
           </View>
 
-          <Text style={styles.hint}>
-            Le suivi est gratuit et ne consomme pas de points de mouvement
-          </Text>
+          <Text style={styles.hint}>{t("popups.followUp.hint")}</Text>
 
           <Pressable
             onPress={onClose}
             style={styles.cancelButton}
-            accessibilityLabel="Annuler"
+            accessibilityLabel={cancelLabel}
           >
-            <Text style={styles.cancelText}>Annuler</Text>
+            <Text style={styles.cancelText}>{cancelLabel}</Text>
           </Pressable>
         </View>
       </View>

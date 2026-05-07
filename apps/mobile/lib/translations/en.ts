@@ -303,6 +303,62 @@ export const EN_TRANSLATIONS = {
       },
     },
   },
+  play: {
+    loading: "Loading the match...",
+    noState: "No game state available",
+    hint: "Tap a player to see playable cells. Double-tap to deselect.",
+    errors: {
+      loadError: "Loading error",
+      actionError: "Error",
+      prefix: "Error: {{message}}",
+    },
+    banner: {
+      myTurn: "Your turn",
+      opponentTurn: "Opponent's turn",
+      offline: " (offline)",
+    },
+    actions: {
+      throwTeamMate: "Throw a team-mate",
+      cancelTarget: "Cancel (target)",
+      cancelThrower: "Cancel (thrower)",
+      endTurn: "End turn",
+      back: "← Back",
+    },
+  },
+  popups: {
+    fallbacks: {
+      attacker: "Attacker",
+      defender: "Defender",
+      player: "Player",
+    },
+    block: {
+      title: "Block dice choice",
+      chooserChoosing: "{{name}} chooses",
+      chooseA11y: "Choose {{result}}",
+      results: {
+        playerDown: "Attacker down",
+        bothDown: "Both down",
+        pushBack: "Push back",
+        stumble: "Stumble",
+        pow: "POW!",
+      },
+    },
+    push: {
+      title: "Push direction choice",
+      subtitle:
+        "{{attacker}} must choose where to push {{target}}",
+      pushTowardsA11y: "Push towards {{label}}",
+    },
+    followUp: {
+      title: "Follow-up",
+      subtitle: "{{attacker}} pushed {{target}} to ({{x}}, {{y}})",
+      question:
+        "Do you want {{attacker}} to follow into the freed square?",
+      yes: "Follow up",
+      no: "Stay put",
+      hint: "Following up is free and does not cost movement points",
+    },
+  },
   auth: {
     login: {
       title: "Sign in",

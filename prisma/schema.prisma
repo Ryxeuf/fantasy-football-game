@@ -70,6 +70,10 @@ model User {
   refreshTokens               RefreshToken[]
   eloSnapshots                EloSnapshot[]
   tutorialCompletions         TutorialCompletion[]
+  proSpectatorFollows         ProSpectatorFollow[]
+  proWallet                   ProWallet?
+  proBets                     ProBet[]
+  proUserBadges               ProUserBadge[]
 }
 
 /// S26.3l — Historique ELO du coach. Une ligne par mise a jour ELO (donc 2
@@ -1064,4 +1068,537 @@ model Feedback {
 
   @@index([status, createdAt])
   @@index([createdAt])
+}
+
+// =============================================================
+// Pro League — sprint Pro League lot 1.A.1
+// =============================================================
+//
+// Modeles dedies a la Pro League simulee (16 equipes round-robin,
+// 15 journees par saison). Distincts des modeles `League*` (ligues
+// joueur-vs-joueur).
+//
+// Le sim-engine reste source de verite pour les *profils tactiques*
+// et les *team values*. Cote DB on materialise uniquement l'etat
+// observable : equipes, rosters, calendrier, scores, classements.
+// Le replay binaire (events compresses) sera ajoute en 1.A.2.
+
+/// La Pro League elle-meme. Singleton au MVP ("Old World League").
+/// Le modele permet plusieurs ligues a terme (divisions, cross-leagues)
+/// via le slug unique.
+model ProLeague {
+  id          String   @id @default(cuid())
+  /// Slug stable, e.g. "old-world-league". Sert de cle naturelle
+  /// pour les URLs publiques /pro-league/...
+  slug        String   @unique
+  name        String
+  description String?
+  /// Branding optionnel (logo, devise, palette). JSON pour souplesse.
+  /// Exemple: { "motto": "Stand Firm", "primaryColor": "#7A1F1F" }
+  branding    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  teams   ProTeam[]
+  seasons ProLeagueSeason[]
+}
+
+/// Une des 16 equipes Pro League (homages NFL x races BB).
+/// Cf. `packages/sim-engine/src/tactics/race-profiles.ts` pour la liste
+/// canonique. Le profil tactique (bashIndex, pace, etc.) reste dans le
+/// code (versionne avec engineVer) ; la DB stocke seulement les meta
+/// d'affichage et les pointeurs vers le sim.
+model ProTeam {
+  id             String    @id @default(cuid())
+  league         ProLeague @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId       String
+  /// Slug stable matchant `PRO_LEAGUE_TEAMS[i].id` dans race-profiles.ts.
+  /// Ex: "pit-smashers", "buf-snow-ogres", "gb-cheese-halflings".
+  slug           String    @unique
+  city           String
+  name           String
+  /// Nom de race BB lisible ("Orc", "Wood Elf", "Halfling", etc.).
+  race           String
+  /// Inspiration NFL pour le branding/storytelling.
+  nflFlavor      String?
+  primaryColor   String?
+  secondaryColor String?
+  /// Team value de base (gold pieces). Source de verite : race-profiles.ts.
+  /// Materialise ici pour lectures rapides + drift saisonnier.
+  baseTv         Int       @default(1000)
+  /// Meta libre (devises, headlines templates, fanbase size, etc.).
+  meta           Json?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  roster      ProTeamRoster[]
+  homeMatches ProLeagueMatch[]     @relation("ProMatchHome")
+  awayMatches ProLeagueMatch[]     @relation("ProMatchAway")
+  standings   ProLeagueStandings[]
+  followers   ProSpectatorFollow[]
+
+  @@index([leagueId])
+}
+
+/// Un joueur du roster d'une ProTeam. Couvre stats permanentes, forme
+/// courante, et casualties persistantes (lot 1.E.4 etendra).
+model ProTeamRoster {
+  id          String   @id @default(cuid())
+  team        ProTeam  @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId      String
+  name        String
+  /// Position BB ("Lineman", "Blitzer", "Thrower", etc.).
+  position    String
+  /// Stats BB de base.
+  ma          Int
+  st          Int
+  ag          Int
+  /// PA optionnel (BB3 only ; nullable pour rosters Season 2).
+  pa          Int?
+  av          Int
+  /// Skills (slugs). JSON array de strings, ex: ["block","dodge"].
+  skills      Json
+  /// Lot 1.E.4 — casualties persistantes.
+  niggling    Int      @default(0)
+  maReduction Int      @default(0)
+  stReduction Int      @default(0)
+  agReduction Int      @default(0)
+  avReduction Int      @default(0)
+  /// Status : "active" | "injured" | "dead" | "retired".
+  status      String   @default("active")
+  /// Forme 0-100. Updated post-match.
+  form        Int      @default(50)
+  /// Stats carriere (TD, casualties, MVPs). JSON pour souplesse.
+  careerStats Json     @default("{}")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([teamId, status])
+}
+
+/// Une saison instancie une ProLeague pour une annee donnee. engineVer
+/// est gele a la creation pour garantir replay-determinisme.
+model ProLeagueSeason {
+  id        String    @id @default(cuid())
+  league    ProLeague @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId  String
+  year      Int
+  /// Status : "scheduled" | "in_progress" | "completed" | "archived".
+  status    String    @default("scheduled")
+  /// engineVer pinne a la creation. Tous les matches de cette saison
+  /// utilisent cette version pour la deterministe replay (lot 1.A.5).
+  engineVer String
+  startsAt  DateTime?
+  endsAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  rounds    ProLeagueRound[]
+  matches   ProLeagueMatch[]
+  standings ProLeagueStandings[]
+
+  @@unique([leagueId, year])
+  @@index([status])
+}
+
+/// Une journee (matchday). 16 equipes round-robin = 15 journees x 8
+/// matchs/journee = 120 matches/saison.
+model ProLeagueRound {
+  id          String          @id @default(cuid())
+  season      ProLeagueSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  seasonId    String
+  /// 1..15 pour un round-robin classique.
+  roundNumber Int
+  /// Status : "pending" | "in_progress" | "completed".
+  status      String          @default("pending")
+  /// Date programmee (typiquement mardi 21h00).
+  scheduledAt DateTime?
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  matches ProLeagueMatch[]
+
+  @@unique([seasonId, roundNumber])
+  @@index([status])
+}
+
+/// Un match Pro League. Le sim-engine produit un SimResult complet ;
+/// on materialise ici les champs queryables (status, score, outcome,
+/// counters) et on pointe vers `Replay` (lot 1.A.2) pour le payload
+/// binaire compresse.
+model ProLeagueMatch {
+  id                  String          @id @default(cuid())
+  season              ProLeagueSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  seasonId            String
+  round               ProLeagueRound  @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  roundId             String
+  homeTeam            ProTeam         @relation("ProMatchHome", fields: [homeTeamId], references: [id], onDelete: Cascade)
+  homeTeamId          String
+  awayTeam            ProTeam         @relation("ProMatchAway", fields: [awayTeamId], references: [id], onDelete: Cascade)
+  awayTeamId          String
+  /// Status : "scheduled" | "ready" | "in_progress" | "completed" | "failed".
+  /// "ready" = pre-simule, en attente du broadcaster (lot 1.B.1).
+  status              String          @default("scheduled")
+  scheduledAt         DateTime
+  simulatedAt         DateTime?
+  completedAt         DateTime?
+  /// Sprint 1.E.4 — flag idempotence pour le post-process casualties.
+  /// Non-null = casualties déjà appliquées au roster.
+  casualtiesAppliedAt DateTime?
+  /// Seed sim-engine + engineVer pinne au moment de la simulation.
+  /// Permet de rejouer le match a l'identique tant que engineVer matche.
+  seed                BigInt?
+  engineVer           String?
+  /// Pointeur vers `Replay.matchId` (lot 1.A.2). Pas de FK ici tant que
+  /// le modele Replay n'existe pas — sera converti en relation 1.A.2.
+  replayId            String?         @unique
+  /// Score cache pour listings rapides sans charger le replay.
+  scoreHome           Int?
+  scoreAway           Int?
+  /// Outcome : "home" | "away" | "draw".
+  outcome             String?
+  /// Compteurs caches issus de MatchSummary.
+  touchdownCount      Int?
+  casualtyCount       Int?
+  turnoverCount       Int?
+  nuffleCount         Int?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  betMarkets ProBetMarket[]
+
+  @@index([seasonId, status])
+  @@index([roundId])
+  @@index([scheduledAt])
+  @@index([homeTeamId])
+  @@index([awayTeamId])
+}
+
+/// Classement par equipe / saison. Mis a jour atomiquement post-match.
+model ProLeagueStandings {
+  id                String          @id @default(cuid())
+  season            ProLeagueSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  seasonId          String
+  team              ProTeam         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId            String
+  played            Int             @default(0)
+  wins              Int             @default(0)
+  draws             Int             @default(0)
+  losses            Int             @default(0)
+  /// Points BB-style : 3W / 1D / 0L. Configurable par ligue (Phase 2).
+  points            Int             @default(0)
+  tdFor             Int             @default(0)
+  tdAgainst         Int             @default(0)
+  casualtiesFor     Int             @default(0)
+  casualtiesAgainst Int             @default(0)
+  /// Forme (5 derniers matchs). JSON array : ["W","D","L","W","W"].
+  form              Json            @default("[]")
+  updatedAt         DateTime        @updatedAt
+
+  @@unique([seasonId, teamId])
+  @@index([seasonId, points, tdFor])
+}
+
+/// Replay binaire d'un ProLeagueMatch — sprint Pro League lot 1.A.2.
+///
+/// Stocke le tableau d'events compressé (CBOR + gzip via
+/// `compressEvents` / `decompressEvents` du sim-engine) plus quelques
+/// métadonnées consommables sans décompression :
+///   - `durationMs` : durée totale du match (pour timeline UI)
+///   - `highlights` : sous-ensemble compact d'events marquants (TD,
+///     CAS, NUFFLE) pour l'UI "essentiels" sans charger le replay
+///     complet ; généré au moment de la persistance par
+///     `apps/server/services/replay-storage.ts` (lot 1.A.4).
+///
+/// 1-1 avec ProLeagueMatch : un replay par match max. La FK est
+/// `ProLeagueMatch.replayId` → `Replay.matchId` (déjà unique côté
+/// match). Côté Replay on stocke matchId comme @id pour garantir
+/// l'unicité au niveau DB.
+model Replay {
+  /// PK = id du match. Garantit le 1-1 : un seul replay par match.
+  matchId     String   @id
+  /// Payload binaire CBOR + gzip. ~1-2 KB / match typique.
+  payload     Bytes
+  /// Highlights pré-extraits (TD, CAS, NUFFLE). JSON pour souplesse.
+  /// Format: [{ type: "TD", at: 1500, team: "home" }, ...]
+  highlights  Json     @default("[]")
+  /// Durée totale du match (ms) pour timeline UI sans décodage.
+  durationMs  Int
+  /// Taille originale (JSON équivalent) — audit/monitoring.
+  rawJsonSize Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+/// Sprint Pro League lot 1.C.4 — Fan follow.
+/// Permet à un user de suivre une ProTeam pour recevoir un newsfeed
+/// personnalisé sur /pro-league/feed.
+///
+/// Une seule entrée par couple (userId, proTeamId) garantie par
+/// l'@@unique. `since` permet de filtrer le feed à partir de la date
+/// d'abonnement (rétro-coverage des matchs ne sert à rien — un fan
+/// suit ce qui se passe à partir d'aujourd'hui).
+model ProSpectatorFollow {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  team      ProTeam  @relation(fields: [proTeamId], references: [id], onDelete: Cascade)
+  proTeamId String
+  since     DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  @@unique([userId, proTeamId])
+  @@index([userId])
+  @@index([proTeamId])
+}
+
+/// Sprint Pro League lot 1.D.1 — Wallet Crowns.
+///
+/// 1 wallet par user (`userId @id`). `crowns` est le solde courant
+/// (cache) ; le ledger immuable est `Transaction` (historique
+/// append-only). `crowns` est mis a jour atomiquement a chaque
+/// debit/credit dans la meme transaction Prisma.
+///
+/// Sources de Crowns au MVP (cf. lot 1.D.6) :
+///  - Inscription : 1000 Crowns offerts (REWARD)
+///  - Login quotidien : 50 Crowns (max 1/24h, type DAILY)
+///  - Gain de pari : montant net (WIN)
+///  - Badge debloque : prime variable (BADGE)
+/// Sortie de Crowns : pose d'un pari (BET, montant negatif).
+model ProWallet {
+  userId    String   @id
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Solde courant en Crowns. Mis a jour atomique avec chaque
+  /// Transaction associee. Toujours >= 0 (les debit echouent en
+  /// dessous via la contrainte service).
+  crowns    Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions ProTransaction[]
+}
+
+/// Sprint Pro League lot 1.D.1 — Ledger immuable des operations Crowns.
+///
+/// `type` distingue la nature : BET (mise sur un pari, debit), WIN
+/// (gain net post-settlement, credit), REWARD (cadeau / first-time
+/// bonus), DAILY (login quotidien), BADGE (recompense badge).
+/// `amount` est signe : negatif pour debit, positif pour credit.
+/// `ref` est optionnel et stocke un identifiant business (`betId`,
+/// `badgeCode`, `marketId`) selon le type — facilite l'audit sans
+/// rejoindre une autre table.
+model ProTransaction {
+  id        String    @id @default(cuid())
+  wallet    ProWallet @relation(fields: [walletId], references: [userId], onDelete: Cascade)
+  walletId  String
+  type      String
+  amount    Int
+  /// Reference business optionnelle (betId, badgeCode, marketId, ...).
+  ref       String?
+  createdAt DateTime  @default(now())
+
+  @@index([walletId, createdAt])
+  @@index([type])
+}
+
+/// Sprint Pro League lot 1.D.2 — Marche de pari sur un match.
+///
+/// Un BetMarket regroupe les paris d'un type donne (`type`) sur un
+/// match. Les cotes sont stockees dans `config` (Json) ; la forme
+/// depend du type :
+///   - ONE_X_TWO       : { homeOdds, drawOdds, awayOdds }
+///   - OVER_UNDER_TD   : { line, overOdds, underOdds }
+///   - CAS_COUNT       : { line, overOdds, underOdds }
+///   - NUFFLE_OCCURS   : { yesOdds, noOdds }
+///   - MVP             : { selections: [{key, label, odds}, ...] }
+///
+/// Les cotes sont calculees lot 1.D.3 (odds-calculator) au pre-match
+/// puis mises a jour si le line-up change. Le lot 1.D.5 (settlement)
+/// passe le market a `settled` et evalue les bets.
+model ProBetMarket {
+  id        String         @id @default(cuid())
+  match     ProLeagueMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  matchId   String
+  /// 'ONE_X_TWO' | 'OVER_UNDER_TD' | 'CAS_COUNT' | 'NUFFLE_OCCURS' | 'MVP'
+  type      String
+  config    Json
+  /// 'open' | 'closed' | 'settled'
+  status    String         @default("open")
+  /// Apres ce timestamp, plus aucun pari n'est accepte.
+  closesAt  DateTime
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  bets       ProBet[]
+  settlement ProBetSettlement?
+
+  @@unique([matchId, type])
+  @@index([status, closesAt])
+}
+
+/// Sprint Pro League lot 1.D.2 — Pari pose par un user.
+///
+/// La cote (`oddsAtPlace`) est figee au moment de la pose (fairness :
+/// l'utilisateur sait exactement combien il peut gagner). Le `stake`
+/// est en Crowns. Au settlement (lot 1.D.5), `status` passe a `won`/
+/// `lost`/`void` et `payoutAmount` est rempli pour les gagnants
+/// (= round(stake * oddsAtPlace)).
+///
+/// `clientToken` permet l'idempotence : 2 requetes POST avec le meme
+/// token (par exemple un retry reseau) ne creent qu'un seul Bet.
+model ProBet {
+  id           String       @id @default(cuid())
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String
+  market       ProBetMarket @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  marketId     String
+  /// Selection serialisee selon le type de market (cf. ProBetMarket.type).
+  selection    String
+  stake        Int
+  oddsAtPlace  Float
+  /// 'pending' | 'won' | 'lost' | 'void'
+  status       String       @default("pending")
+  /// Gain net (round(stake * oddsAtPlace)) si won. null sinon.
+  payoutAmount Int?
+  /// Cle d'idempotence cote client (cuid genere au submit).
+  clientToken  String       @unique
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([marketId, status])
+  @@index([status])
+}
+
+/// Sprint Pro League lot 1.D.2 — Audit de settlement d'un market.
+///
+/// Cree au settlement (lot 1.D.5) ; 1-1 avec ProBetMarket via @unique.
+/// `winningSelection` est la selection gagnante ("home"/"draw"/"away"
+/// pour 1X2, "over"/"under" pour over/under, etc.).
+/// `totalStake` / `totalPayout` / `betCount` : metriques agregees
+/// utiles pour les leaderboards (1.D.8) sans rejoindre les bets.
+model ProBetSettlement {
+  id               String       @id @default(cuid())
+  market           ProBetMarket @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  marketId         String       @unique
+  winningSelection String
+  totalStake       Int          @default(0)
+  totalPayout      Int          @default(0)
+  betCount         Int          @default(0)
+  settledAt        DateTime     @default(now())
+}
+
+/// Sprint Pro League lot 1.D.9 — Badge debloque par un user.
+///
+/// Le catalogue des badges (codes + criteria) vit dans le code
+/// (apps/server/src/services/pro-badges-catalogue.ts) — pas en DB.
+/// La table ProUserBadge stocke uniquement les badges effectivement
+/// debloques.
+model ProUserBadge {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  /// Code stable du badge (ex: "oracle_of_nuffle", "first_kickoff").
+  badgeCode String
+  earnedAt  DateTime @default(now())
+  /// Meta optionnelles pour l'audit (ex: betId qui a debloque le badge).
+  meta      Json?
+
+  @@unique([userId, badgeCode])
+  @@index([badgeCode])
+  @@index([userId])
+}
+
+/// Sprint Pro League lot 1.E.2 — Article de la Nuffle Gazette.
+///
+/// Genere quotidiennement par le service `pro-gazette-llm.ts` (lot
+/// 1.E.1, LLM Claude Haiku) a partir du recap aggregator (1.E.3).
+/// Stocke en DB pour permettre l'archive consultable a l'URL
+/// `/nuffle-gazette/:date` (1.E.2).
+///
+/// `type` :
+///  - MAIN  : article principal du jour (resume long, ~300 mots)
+///  - BREVE : breve courte (~50-80 mots) sur une storyline secondaire
+///  - EDITO : editorial signe par 1 des 3 personas
+///
+/// `persona` :
+///  - 'cynic'           : le cynique (rumeurs, sarcasmes)
+///  - 'orc_enthusiast'  : l'enthousiaste orc (hype, capslock)
+///  - 'statistician'    : le statisticien (chiffres, analyses)
+///
+/// `relatedTeamIds` / `relatedPlayerIds` : Json arrays de slugs
+/// referenced dans l'article — sert au cross-linking UI (lot 1.E.5
+/// HoF, 1.C.2 team page).
+model ProGazetteArticle {
+  id               String   @id @default(cuid())
+  /// Date d'edition (YYYY-MM-DD). Plusieurs articles par date.
+  /// Index pour archive rapide.
+  date             DateTime
+  /// 'MAIN' | 'BREVE' | 'EDITO'
+  type             String
+  /// 'cynic' | 'orc_enthusiast' | 'statistician'
+  /// MAIN/BREVE peuvent etre signes ou non ; EDITO l'est toujours.
+  persona          String?
+  title            String
+  /// Markdown-friendly. Pas de HTML brut (sanitize cote rendu UI).
+  body             String   @db.Text
+  /// Json array de slugs ProTeam : ['buf-snow-ogres', 'kc-...'].
+  relatedTeamIds   Json?
+  /// Json array de roster ids ou autres ids joueur.
+  relatedPlayerIds Json?
+  createdAt        DateTime @default(now())
+
+  @@index([date])
+  @@index([type, date])
+}
+
+/// Sprint Pro League lot 1.E.5 — Hall of Fame light.
+///
+/// Snapshot d'un joueur immortalise. L'induction est declenchee :
+///  - automatique sur status='dead' (apres casualty 'dead' du sweep
+///    casualties 1.E.4) — `reason='death_in_match'`,
+///  - manuelle ou cron later via criteres carriere (TDs, MVP, titre)
+///    avec d'autres `reason` codes.
+///
+/// L'enregistrement gele les stats au moment de l'induction (le
+/// roster d'origine peut disparaitre via cleanup futur). Idempotence
+/// par `unique([rosterId, reason])`.
+model ProHallOfFame {
+  id          String   @id @default(cuid())
+  /// Lien vers le roster d'origine (peut etre supprime a terme — ne
+  /// pas cascade pour preserver l'archive Hall of Fame).
+  rosterId    String
+  /// Slug ProTeam au moment de l'induction (cross-link UI sans join).
+  teamSlug    String
+  /// Nom team affiche au moment de l'induction.
+  teamName    String
+  /// Nom du joueur immortalise.
+  playerName  String
+  /// Race au moment de l'induction.
+  race        String
+  /// Position au moment de l'induction.
+  position    String
+  /// Snapshot stats au moment de l'induction.
+  ma          Int
+  st          Int
+  ag          Int
+  pa          Int?
+  av          Int
+  /// Snapshot skills (Json array).
+  skills      Json
+  /// Snapshot career stats (TDs, casualties, MVPs).
+  careerStats Json
+  /// Code raison de l'induction.
+  /// Valeurs : 'death_in_match' | 'career_tds' | 'mvp_legend' | 'title'.
+  reason      String
+  /// Description humaine optionnelle (pour rendu UI).
+  citation    String?
+  inductedAt  DateTime @default(now())
+
+  @@unique([rosterId, reason])
+  @@index([teamSlug])
+  @@index([reason])
+  @@index([inductedAt])
 }

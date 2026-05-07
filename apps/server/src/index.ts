@@ -11,6 +11,7 @@ import adminRoutes from "./routes/admin";
 import adminDataRoutes from "./routes/admin-data";
 import adminLeaguesRoutes from "./routes/admin-leagues";
 import adminSimRoutes from "./routes/admin-sim";
+import adminSimReplaysRoutes from "./routes/admin-sim-replays";
 import userRoutes from "./routes/user";
 import teamRoutes from "./routes/team";
 import teamAdvancementRoutes from "./routes/team-advancement";
@@ -34,6 +35,7 @@ import {
   feedbackPublicRouter,
   feedbackAdminRouter,
 } from "./routes/feedback";
+import proLeagueRoutes from "./routes/pro-league";
 import {
   userFeatureFlagsRouter,
   adminFeatureFlagsRouter,
@@ -128,6 +130,25 @@ app.get("/health", liveness);
 app.get("/health/live", liveness);
 app.get("/health/ready", probeReadiness);
 
+// Pro League healthcheck (sprint 1.F.2). Sous-systeme observable :
+// season, simRunner, gazette, bettingMarkets. 503 si "down", 200
+// sinon (degraded compris : un orchestrateur qui veut un signal
+// strict peut filtrer status='up').
+app.get("/health/pro-league", async (_req, res) => {
+  try {
+    const { getProLeagueHealth } = await import(
+      "./services/pro-league-health"
+    );
+    const out = await getProLeagueHealth();
+    const code = out.status === "down" ? 503 : 200;
+    res.status(code).json(out);
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "unknown";
+    serverLog.error(`[health/pro-league] failed: ${msg}`);
+    res.status(503).json({ status: "down", error: "internal-error" });
+  }
+});
+
 // Endpoint Prometheus (S25.3). Format texte standard, scrape par
 // Prometheus qui le pousse ensuite vers Grafana LGTM.
 app.get("/metrics", async (_req, res, next) => {
@@ -187,8 +208,15 @@ app.use("/admin/feature-flags", adminFeatureFlagsRouter);
 // pour ne pas polluer /admin (qui devient un sac fourre-tout).
 app.use("/admin/leagues", adminLeaguesRoutes);
 app.use("/admin/sim", adminSimRoutes);
+// Sprint Pro League 0.E.2 / 0.E.3 — exposition lecture seule des replays
+// panel pour la validation C6-C9 du gate Phase 0 → Phase 1 (cf.
+// docs/roadmap/sprints/pro-league-gate.md). Mountée sur un namespace
+// distinct (`/admin/sim-replays`) pour éviter la double exécution du
+// middleware d'auth qui se produirait si on imbriquait sous `/admin/sim`.
+app.use("/admin/sim-replays", adminSimReplaysRoutes);
 // Feedback public : pas d'auth, captcha + rate limiter dedies dans le router.
 app.use("/feedback", feedbackPublicRouter);
+app.use("/pro-league", proLeagueRoutes);
 // Console admin : auth + role admin appliques dans le router.
 app.use("/admin/feedback", feedbackAdminRouter);
 
@@ -589,4 +617,218 @@ if (!inTestForfeitEnv && tickMs > 0) {
       void tick();
     }, tickMs).unref();
   });
+}
+
+// =============================================================================
+// Pro League sim-runner cron (sprint Pro League lot 1.A.4 — activation).
+// =============================================================================
+// Pre-simule les matchs ProLeague dont scheduledAt tombe dans les
+// prochaines 24h. Persiste Replay + met a jour ProLeagueMatch.
+//
+// Tick par defaut : 10 min. Configurable via PRO_LEAGUE_SIM_RUNNER_TICK_MS.
+// Mettre = 0 pour desactiver (CI / dev local sans side-effects).
+const inTestSimRunnerEnv =
+  process.env.NODE_ENV === "test" || process.env.TEST_SQLITE === "1";
+const simRunnerTickMsEnv = Number(process.env.PRO_LEAGUE_SIM_RUNNER_TICK_MS);
+const simRunnerTickMs = Number.isFinite(simRunnerTickMsEnv)
+  ? simRunnerTickMsEnv
+  : 10 * 60 * 1000;
+if (!inTestSimRunnerEnv && simRunnerTickMs > 0) {
+  void import("./services/pro-league-sim-runner").then(
+    ({ simulateUpcomingMatches }) => {
+      const tick = async () => {
+        try {
+          const out = await simulateUpcomingMatches();
+          if (out.simulated > 0 || out.failed > 0 || out.versionMismatched > 0) {
+            serverLog.info(
+              `[pro-league-sim] tick: simulated=${out.simulated} skipped=${out.skipped} failed=${out.failed} versionMismatched=${out.versionMismatched} (inspected=${out.inspected})`,
+            );
+          }
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : "unknown";
+          serverLog.error(`[pro-league-sim] tick failed: ${msg}`);
+        }
+      };
+      setInterval(() => {
+        void tick();
+      }, simRunnerTickMs).unref();
+    },
+  );
+}
+
+
+// =============================================================================
+// Pro League bet-settlement cron (sprint 1.D.5).
+// =============================================================================
+// Sweep les matchs completed dont les markets restent open/closed (jamais
+// settled) et evalue les bets : credit gagnants WIN, marque market settled.
+// Idempotent (skip si ProBetSettlement existe deja).
+//
+// Tick par defaut : 5 min. Configurable via PRO_LEAGUE_BET_SETTLE_TICK_MS.
+// Mettre = 0 pour desactiver (CI / dev local).
+const inTestBetSettleEnv =
+  process.env.NODE_ENV === "test" || process.env.TEST_SQLITE === "1";
+const betSettleTickMsEnv = Number(process.env.PRO_LEAGUE_BET_SETTLE_TICK_MS);
+const betSettleTickMs = Number.isFinite(betSettleTickMsEnv)
+  ? betSettleTickMsEnv
+  : 5 * 60 * 1000;
+if (!inTestBetSettleEnv && betSettleTickMs > 0) {
+  void import("./services/pro-bet-settlement").then(
+    ({ sweepUnsettledMarkets }) => {
+      const tick = async () => {
+        try {
+          const out = await sweepUnsettledMarkets();
+          if (out.settled > 0 || out.failed > 0) {
+            serverLog.info(
+              `[pro-bet-settle] sweep: settled=${out.settled} failed=${out.failed} (inspected=${out.matchesInspected})`,
+            );
+          }
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : "unknown";
+          serverLog.error(`[pro-bet-settle] sweep failed: ${msg}`);
+        }
+      };
+      setInterval(() => {
+        void tick();
+      }, betSettleTickMs).unref();
+    },
+  );
+}
+
+
+// =============================================================================
+// Pro League rookie replenish cron (sprint 1.E.6).
+// =============================================================================
+// Sweep les equipes Pro dont le roster `active` est sous la cible
+// (TARGET_ROSTER_SIZE = 12) et genere des rookies pour combler. Couvre
+// les morts (status='dead' apres casualties 1.E.4) et toute attrition
+// future. Idempotent (no-op si deja plein).
+//
+// Tick par defaut : 30 min. Configurable via PRO_LEAGUE_ROOKIE_TICK_MS.
+// Mettre = 0 pour desactiver (CI / dev local).
+const inTestRookieEnv =
+  process.env.NODE_ENV === "test" || process.env.TEST_SQLITE === "1";
+const rookieTickMsEnv = Number(process.env.PRO_LEAGUE_ROOKIE_TICK_MS);
+const rookieTickMs = Number.isFinite(rookieTickMsEnv)
+  ? rookieTickMsEnv
+  : 30 * 60 * 1000;
+if (!inTestRookieEnv && rookieTickMs > 0) {
+  void import("./services/pro-roster-generator").then(
+    ({ sweepRookieReplenish }) => {
+      const tick = async () => {
+        try {
+          const out = await sweepRookieReplenish();
+          if (out.replenished > 0 || out.failed > 0) {
+            serverLog.info(
+              `[pro-rookie] sweep: replenished=${out.replenished} failed=${out.failed} (inspected=${out.inspected})`,
+            );
+          }
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : "unknown";
+          serverLog.error(`[pro-rookie] sweep failed: ${msg}`);
+        }
+      };
+      setInterval(() => {
+        void tick();
+      }, rookieTickMs).unref();
+    },
+  );
+}
+
+
+// =============================================================================
+// Pro League Hall of Fame death-induction cron (sprint 1.E.5).
+// =============================================================================
+// Sweep les joueurs status='dead' (post-casualties 1.E.4) et cree
+// l'entree Hall of Fame correspondante (idempotent par
+// (rosterId, reason='death_in_match')).
+//
+// Tick par defaut : 30 min. Configurable via PRO_LEAGUE_HOF_TICK_MS.
+// Mettre = 0 pour desactiver (CI / dev local).
+const inTestHofEnv =
+  process.env.NODE_ENV === "test" || process.env.TEST_SQLITE === "1";
+const hofTickMsEnv = Number(process.env.PRO_LEAGUE_HOF_TICK_MS);
+const hofTickMs = Number.isFinite(hofTickMsEnv)
+  ? hofTickMsEnv
+  : 30 * 60 * 1000;
+if (!inTestHofEnv && hofTickMs > 0) {
+  void import("./services/pro-hall-of-fame").then(
+    ({ sweepDeathInductions }) => {
+      const tick = async () => {
+        try {
+          const out = await sweepDeathInductions();
+          if (out.inducted > 0 || out.failed > 0) {
+            serverLog.info(
+              `[pro-hof] sweep: inducted=${out.inducted} failed=${out.failed} (inspected=${out.inspected})`,
+            );
+          }
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : "unknown";
+          serverLog.error(`[pro-hof] sweep failed: ${msg}`);
+        }
+      };
+      setInterval(() => {
+        void tick();
+      }, hofTickMs).unref();
+    },
+  );
+}
+
+
+// =============================================================================
+// Pro League Nuffle Gazette LLM cron (sprint 1.E.1).
+// =============================================================================
+// Genere quotidiennement (8h UTC par defaut) une edition Gazette pour
+// J-1 via Claude Haiku. Idempotent (skip si edition existante).
+//
+// Strategie : tick 5 min, declenche generateEditionForDate si l'heure
+// UTC == PRO_LEAGUE_GAZETTE_HOUR_UTC (default 8) et qu'on n'a pas
+// deja tick aujourd'hui. Simple et tolerant aux redemarrages : si le
+// serveur restart entre 8h00 et 8h05, ca tick au prochain tick.
+//
+// Mettre PRO_LEAGUE_GAZETTE_TICK_MS = 0 pour desactiver.
+// Necessite ANTHROPIC_API_KEY dans l'env.
+const inTestGazetteEnv =
+  process.env.NODE_ENV === "test" || process.env.TEST_SQLITE === "1";
+const gazetteTickMsEnv = Number(process.env.PRO_LEAGUE_GAZETTE_TICK_MS);
+const gazetteTickMs = Number.isFinite(gazetteTickMsEnv)
+  ? gazetteTickMsEnv
+  : 5 * 60 * 1000;
+const gazetteHourEnv = Number(process.env.PRO_LEAGUE_GAZETTE_HOUR_UTC);
+const gazetteHourUtc = Number.isFinite(gazetteHourEnv) ? gazetteHourEnv : 8;
+if (
+  !inTestGazetteEnv &&
+  gazetteTickMs > 0 &&
+  process.env.ANTHROPIC_API_KEY
+) {
+  void import("./services/pro-gazette-llm").then(
+    ({ generateEditionForDate }) => {
+      let lastRunDate: string | null = null;
+      const tick = async () => {
+        const now = new Date();
+        if (now.getUTCHours() !== gazetteHourUtc) return;
+        const today = now.toISOString().slice(0, 10);
+        if (lastRunDate === today) return;
+        lastRunDate = today;
+        try {
+          const out = await generateEditionForDate();
+          if (!out.skipped) {
+            serverLog.info(
+              `[pro-gazette-llm] cron: generated date=${out.date} articles=${out.created}`,
+            );
+          } else {
+            serverLog.info(
+              `[pro-gazette-llm] cron: skipped (${out.skipReason}) date=${out.date}`,
+            );
+          }
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : "unknown";
+          serverLog.error(`[pro-gazette-llm] cron failed: ${msg}`);
+        }
+      };
+      setInterval(() => {
+        void tick();
+      }, gazetteTickMs).unref();
+    },
+  );
 }
