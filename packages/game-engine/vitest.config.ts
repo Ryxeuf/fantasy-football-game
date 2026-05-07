@@ -41,6 +41,7 @@ export default defineConfig({
         'src/actions/move-handlers.ts',
         'src/actions/choice-handlers.ts',
         'src/actions/block-action.ts',
+        'src/actions/blitz-action.ts',
       ],
       // S25.4 — Seuils initiaux conservateurs. v8 reporte 0% lines sur
       // certains fichiers TS du moteur a cause d'un quirk source-map ;
