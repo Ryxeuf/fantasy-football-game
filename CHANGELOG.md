@@ -1,3 +1,22 @@
+## [1.94.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.93.0...v1.94.0) (2026-05-07)
+
+
+### ✨ Features
+
+* **sim-engine:** space key-moment events inside the turn window ([5bdcb70](https://github.com/Ryxeuf/fantasy-football-game/commit/5bdcb70ba3b189c738997ac26199dc115aef75c4))
+* **sim-engine:** successful passes advance the drive (and can score) ([6bd8642](https://github.com/Ryxeuf/fantasy-football-game/commit/6bd8642dcd73a1f80654ac828fe47ee5826dc0b9)), closes [#1](https://github.com/Ryxeuf/fantasy-football-game/issues/1)
+
+
+### 🐛 Bug Fixes
+
+* **sim-engine:** cap single-turn yards so TDs span multiple turns ([d1d7f81](https://github.com/Ryxeuf/fantasy-football-game/commit/d1d7f8102ddfde4602604cf590cacbb11fdff12d)), closes [#2](https://github.com/Ryxeuf/fantasy-football-game/issues/2)
+* **sim-engine:** turnovers no longer chain into a same-turn TD ([daaedb9](https://github.com/Ryxeuf/fantasy-football-game/commit/daaedb937c7fa5208a8c1df27adfcf59cc593407)), closes [#2](https://github.com/Ryxeuf/fantasy-football-game/issues/2)
+
+
+### ♻️ Code Refactoring
+
+* **sim-engine:** drop dead hasPossession field on DriveState ([6ad385d](https://github.com/Ryxeuf/fantasy-football-game/commit/6ad385d8af778e2a72961dd7a7863345cdfed2b1))
+
 ## [1.93.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.92.0...v1.93.0) (2026-05-07)
 
 
