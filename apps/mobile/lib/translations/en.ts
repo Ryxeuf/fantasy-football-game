@@ -359,6 +359,54 @@ export const EN_TRANSLATIONS = {
       hint: "Following up is free and does not cost movement points",
     },
   },
+  starPlayers: {
+    megaStarBadge: "Mega Star",
+    list: {
+      title: "Star Players catalog",
+      subtitleSingular: "{{count}} player",
+      subtitlePlural: "{{count}} players",
+      subtitleFiltered: " out of {{total}}",
+      search: {
+        placeholder: "Search by name...",
+      },
+      ruleset: {
+        season3: "Season 3",
+        season2: "Season 2",
+      },
+      megaToggle: {
+        on: "Mega stars only",
+        off: "Mega stars ({{count}})",
+      },
+      empty: "No star player matches the filters.",
+      row: {
+        hirable: "Hirable by: {{hirable}}",
+      },
+      errors: {
+        loadError: "Failed to load",
+        prefix: "Error: {{message}}",
+      },
+    },
+    detail: {
+      notFound: "Star Player not found",
+      imageA11y: "Illustration of {{name}}",
+      sections: {
+        stats: "Stats",
+        skills: "Skills",
+        hirable: "Hirable by",
+        specialRule: "Special rule",
+      },
+      skills: {
+        empty: "No skill",
+      },
+      actions: {
+        back: "Back",
+        backToCatalog: "Back to catalog",
+      },
+      errors: {
+        loadError: "Failed to load",
+      },
+    },
+  },
   cups: {
     public: "Public",
     private: "Private",
