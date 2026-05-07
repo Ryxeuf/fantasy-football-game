@@ -715,3 +715,42 @@ if (!inTestRookieEnv && rookieTickMs > 0) {
     },
   );
 }
+
+
+// =============================================================================
+// Pro League Hall of Fame death-induction cron (sprint 1.E.5).
+// =============================================================================
+// Sweep les joueurs status='dead' (post-casualties 1.E.4) et cree
+// l'entree Hall of Fame correspondante (idempotent par
+// (rosterId, reason='death_in_match')).
+//
+// Tick par defaut : 30 min. Configurable via PRO_LEAGUE_HOF_TICK_MS.
+// Mettre = 0 pour desactiver (CI / dev local).
+const inTestHofEnv =
+  process.env.NODE_ENV === "test" || process.env.TEST_SQLITE === "1";
+const hofTickMsEnv = Number(process.env.PRO_LEAGUE_HOF_TICK_MS);
+const hofTickMs = Number.isFinite(hofTickMsEnv)
+  ? hofTickMsEnv
+  : 30 * 60 * 1000;
+if (!inTestHofEnv && hofTickMs > 0) {
+  void import("./services/pro-hall-of-fame").then(
+    ({ sweepDeathInductions }) => {
+      const tick = async () => {
+        try {
+          const out = await sweepDeathInductions();
+          if (out.inducted > 0 || out.failed > 0) {
+            serverLog.info(
+              `[pro-hof] sweep: inducted=${out.inducted} failed=${out.failed} (inspected=${out.inspected})`,
+            );
+          }
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : "unknown";
+          serverLog.error(`[pro-hof] sweep failed: ${msg}`);
+        }
+      };
+      setInterval(() => {
+        void tick();
+      }, hofTickMs).unref();
+    },
+  );
+}
