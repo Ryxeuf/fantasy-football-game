@@ -22,6 +22,7 @@
 import { PRO_LEAGUE_TEAMS } from "@bb/sim-engine";
 
 import { prisma } from "../prisma";
+import { seedTeamRoster } from "../services/pro-roster-generator";
 
 export const OLD_WORLD_LEAGUE_SLUG = "old-world-league";
 export const OLD_WORLD_LEAGUE_NAME = "Old World League";
@@ -73,7 +74,7 @@ export async function seedProLeague(): Promise<void> {
 
   for (const team of PRO_LEAGUE_TEAMS) {
     const branding = TEAM_BRANDING[team.id];
-    await prisma.proTeam.upsert({
+    const upserted = await prisma.proTeam.upsert({
       where: { slug: team.id },
       create: {
         leagueId: league.id,
@@ -96,5 +97,8 @@ export async function seedProLeague(): Promise<void> {
         baseTv: team.tv,
       },
     });
+    // Sprint 1.E.6 — peuple le ProTeamRoster initial via le rookie
+    // generator. Idempotent : skip si l'equipe a deja un roster.
+    await seedTeamRoster(upserted.id);
   }
 }

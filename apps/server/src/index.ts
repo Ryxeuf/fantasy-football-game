@@ -675,3 +675,43 @@ if (!inTestBetSettleEnv && betSettleTickMs > 0) {
     },
   );
 }
+
+
+// =============================================================================
+// Pro League rookie replenish cron (sprint 1.E.6).
+// =============================================================================
+// Sweep les equipes Pro dont le roster `active` est sous la cible
+// (TARGET_ROSTER_SIZE = 12) et genere des rookies pour combler. Couvre
+// les morts (status='dead' apres casualties 1.E.4) et toute attrition
+// future. Idempotent (no-op si deja plein).
+//
+// Tick par defaut : 30 min. Configurable via PRO_LEAGUE_ROOKIE_TICK_MS.
+// Mettre = 0 pour desactiver (CI / dev local).
+const inTestRookieEnv =
+  process.env.NODE_ENV === "test" || process.env.TEST_SQLITE === "1";
+const rookieTickMsEnv = Number(process.env.PRO_LEAGUE_ROOKIE_TICK_MS);
+const rookieTickMs = Number.isFinite(rookieTickMsEnv)
+  ? rookieTickMsEnv
+  : 30 * 60 * 1000;
+if (!inTestRookieEnv && rookieTickMs > 0) {
+  void import("./services/pro-roster-generator").then(
+    ({ sweepRookieReplenish }) => {
+      const tick = async () => {
+        try {
+          const out = await sweepRookieReplenish();
+          if (out.replenished > 0 || out.failed > 0) {
+            serverLog.info(
+              `[pro-rookie] sweep: replenished=${out.replenished} failed=${out.failed} (inspected=${out.inspected})`,
+            );
+          }
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : "unknown";
+          serverLog.error(`[pro-rookie] sweep failed: ${msg}`);
+        }
+      };
+      setInterval(() => {
+        void tick();
+      }, rookieTickMs).unref();
+    },
+  );
+}
