@@ -73,6 +73,7 @@ model User {
   proSpectatorFollows         ProSpectatorFollow[]
   proWallet                   ProWallet?
   proBets                     ProBet[]
+  proUserBadges               ProUserBadge[]
 }
 
 /// S26.3l — mirror SQLite de l'historique ELO Postgres (snapshot par mise a jour).
@@ -1089,4 +1090,17 @@ model ProBetSettlement {
   totalPayout      Int          @default(0)
   betCount         Int          @default(0)
   settledAt        DateTime     @default(now())
+}
+
+model ProUserBadge {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  badgeCode String
+  earnedAt  DateTime @default(now())
+  meta      String?
+
+  @@unique([userId, badgeCode])
+  @@index([badgeCode])
+  @@index([userId])
 }

@@ -41,6 +41,11 @@ import {
   getBetLeaderboard,
 } from "../services/pro-bet-leaderboard";
 import {
+  evaluateBadgesForUser,
+  getCatalogueWithStatus,
+  listUserBadges,
+} from "../services/pro-badges";
+import {
   InsufficientFundsError,
   getBalance,
   getRecentTransactions,
@@ -517,6 +522,46 @@ export async function handleListMyBets(
 }
 
 /**
+ * Sprint 1.D.9 — Liste les badges + statut (earned/not) du user.
+ */
+export async function handleListMyBadges(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: "unauthenticated" });
+    return;
+  }
+  const earned = await listUserBadges(userId);
+  const catalogue = await getCatalogueWithStatus(userId);
+  res.json({ earned, catalogue });
+}
+
+/**
+ * Sprint 1.D.9 — Évalue tous les criteria pour l'user et débloque
+ * les nouveaux badges. Renvoie les codes débloqués cette fois.
+ */
+export async function handleEvaluateMyBadges(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: "unauthenticated" });
+    return;
+  }
+  try {
+    const newlyEarned = await evaluateBadgesForUser(userId);
+    res.json({ newlyEarned });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "unknown";
+    serverLog.error(`[pro-league/me/badges/evaluate] failed: ${msg}`);
+    res.status(500).json({ error: "internal-error" });
+  }
+}
+
+/**
  * Sprint 1.D.6 — Snapshot wallet : solde + 20 dernières transactions.
  */
 export async function handleGetMyWallet(
@@ -645,6 +690,10 @@ router.get("/me/feed", authUser, handleGetMyFeed);
 // Sprint 1.D.4 — endpoints paris.
 router.post("/bets", authUser, handlePlaceBet);
 router.get("/me/bets", authUser, handleListMyBets);
+
+// Sprint 1.D.9 — badges/titres.
+router.get("/me/badges", authUser, handleListMyBadges);
+router.post("/me/badges/evaluate", authUser, handleEvaluateMyBadges);
 
 // Sprint 1.D.6 — wallet & bonuses.
 router.get("/me/wallet", authUser, handleGetMyWallet);
