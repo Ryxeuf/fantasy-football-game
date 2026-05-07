@@ -5,6 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 
 import { apiRequest } from "../lib/api-client";
 
+import { WalletBadge } from "./_components/WalletBadge";
+
 /**
  * Page d'accueil Pro League — sprint Pro League lot 1.C.1.
  *
@@ -247,9 +249,12 @@ export default function ProLeagueHubPage(): JSX.Element {
   return (
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col bg-slate-950 px-4 py-6 text-slate-100">
       <header data-testid="hub-header" className="mb-6">
-        <h1 className="text-2xl font-bold tracking-wide text-slate-50">
-          {data?.league.name ?? "Pro League"}
-        </h1>
+        <div className="flex items-start justify-between gap-3">
+          <h1 className="text-2xl font-bold tracking-wide text-slate-50">
+            {data?.league.name ?? "Pro League"}
+          </h1>
+          <WalletBadge />
+        </div>
         {motto ? (
           <p className="mt-1 text-sm italic text-slate-400">"{motto}"</p>
         ) : null}

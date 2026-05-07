@@ -4,6 +4,10 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { apiRequest } from "../../../lib/api-client";
+import { useWallet } from "../../../lib/use-wallet";
+
+import { MarketsList } from "../../_components/MarketsList";
+import { WalletBadge } from "../../_components/WalletBadge";
 
 /**
  * Page détail d'un match Pro League — sprint Pro League lot 1.C.3.
@@ -297,6 +301,11 @@ interface MatchDetailPageProps {
   readonly params: { id: string };
 }
 
+function MatchMarkets({ matchId }: { matchId: string }): JSX.Element {
+  const wallet = useWallet();
+  return <MarketsList matchId={matchId} authed={wallet.authed} />;
+}
+
 export default function ProLeagueMatchDetailPage({
   params,
 }: MatchDetailPageProps): JSX.Element {
@@ -352,7 +361,15 @@ export default function ProLeagueMatchDetailPage({
           <ScoreboardBanner match={data} />
           <div className="px-4 py-6">
             {data.status === "scheduled" || data.status === "ready" ? (
-              <PreMatchCard match={data} now={now} />
+              <>
+                <PreMatchCard match={data} now={now} />
+                <section data-testid="markets-section" className="mt-4">
+                  <h2 className="mb-2 text-lg font-semibold text-slate-100">
+                    Paris
+                  </h2>
+                  <MatchMarkets matchId={data.id} />
+                </section>
+              </>
             ) : data.status === "in_progress" ? (
               <section
                 data-testid="live-card"
