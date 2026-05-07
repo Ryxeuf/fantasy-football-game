@@ -636,3 +636,42 @@ if (!inTestSimRunnerEnv && simRunnerTickMs > 0) {
     },
   );
 }
+
+
+// =============================================================================
+// Pro League bet-settlement cron (sprint 1.D.5).
+// =============================================================================
+// Sweep les matchs completed dont les markets restent open/closed (jamais
+// settled) et evalue les bets : credit gagnants WIN, marque market settled.
+// Idempotent (skip si ProBetSettlement existe deja).
+//
+// Tick par defaut : 5 min. Configurable via PRO_LEAGUE_BET_SETTLE_TICK_MS.
+// Mettre = 0 pour desactiver (CI / dev local).
+const inTestBetSettleEnv =
+  process.env.NODE_ENV === "test" || process.env.TEST_SQLITE === "1";
+const betSettleTickMsEnv = Number(process.env.PRO_LEAGUE_BET_SETTLE_TICK_MS);
+const betSettleTickMs = Number.isFinite(betSettleTickMsEnv)
+  ? betSettleTickMsEnv
+  : 5 * 60 * 1000;
+if (!inTestBetSettleEnv && betSettleTickMs > 0) {
+  void import("./services/pro-bet-settlement").then(
+    ({ sweepUnsettledMarkets }) => {
+      const tick = async () => {
+        try {
+          const out = await sweepUnsettledMarkets();
+          if (out.settled > 0 || out.failed > 0) {
+            serverLog.info(
+              `[pro-bet-settle] sweep: settled=${out.settled} failed=${out.failed} (inspected=${out.matchesInspected})`,
+            );
+          }
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : "unknown";
+          serverLog.error(`[pro-bet-settle] sweep failed: ${msg}`);
+        }
+      };
+      setInterval(() => {
+        void tick();
+      }, betSettleTickMs).unref();
+    },
+  );
+}
