@@ -300,17 +300,22 @@ describe('runHybridDriver — Eye of Nuffle hooks (sprint 0.C.2)', () => {
     }
   });
 
-  it('NUFFLE events fire just after a TURN_START on the same displayAtMs', () => {
+  it('NUFFLE events fire just after a TURN_START within the turn window', () => {
     const out = runHybridDriver(baseInput({ seed: 7 }));
     for (let i = 0; i < out.events.length; i += 1) {
       if (out.events[i].type === 'NUFFLE') {
-        // Walk back: the closest preceding non-NUFFLE event should be a
-        // TURN_START at the same wall-clock offset.
+        // Walk back: the closest preceding non-NUFFLE event should be
+        // a TURN_START at the same turn (sub-turn timing #5 spaces
+        // events inside a 30s window — the NUFFLE now lands at
+        // TURN_START + 2s instead of T+0s).
         let j = i - 1;
         while (j >= 0 && out.events[j].type === 'NUFFLE') j -= 1;
         expect(j).toBeGreaterThanOrEqual(0);
         expect(out.events[j].type).toBe('TURN_START');
-        expect(out.events[j].displayAtMs).toBe(out.events[i].displayAtMs);
+        const dt = out.events[i].displayAtMs - out.events[j].displayAtMs;
+        // Same turn = within MS_PER_TURN (30s).
+        expect(dt).toBeGreaterThanOrEqual(0);
+        expect(dt).toBeLessThan(30_000);
       }
     }
   });

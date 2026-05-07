@@ -66,6 +66,26 @@ const TURNS_PER_HALF = 8;
 const FIELD_YARDS = 26;
 const MS_PER_TURN = 30_000;
 const MS_HALFTIME = 15_000;
+
+/**
+ * Sub-turn timing offsets (#5). Events inside a single TURN_START
+ * block used to share the same displayAtMs (the turn start), which
+ * read poorly on the timeline ("[T+01:00] block, pass, TD all at
+ * once"). We now space them inside the 30-second turn window :
+ *   T+0s   TURN_START
+ *   T+2s   NUFFLE event (if any)
+ *   T+5s   key moment 0
+ *   T+10s  key moment 1
+ *   T+15s  key moment 2 (only on bashy double-moment turns)
+ *   T+20s  bulk yard advancement (and TD if it crosses the line)
+ *   T+30s  next TURN_START
+ * Casualty / turnover events ride the displayAtMs of the moment that
+ * triggered them, so they stay grouped narratively.
+ */
+const SUBTURN_NUFFLE_OFFSET_MS = 2_000;
+const SUBTURN_FIRST_MOMENT_OFFSET_MS = 5_000;
+const SUBTURN_BETWEEN_MOMENTS_MS = 5_000;
+const SUBTURN_BULK_OFFSET_MS = 20_000;
 /**
  * Hard cap on the yards a single turn can advance the drive. The
  * breakthrough mechanic in `rollYards` used to push +30..+40 yards,
@@ -458,10 +478,10 @@ function emitTurnStart(m: MutableMatch): void {
   });
 }
 
-function emitTd(m: MutableMatch, scoringTeam: Side): void {
+function emitTd(m: MutableMatch, scoringTeam: Side, displayAtMs: number): void {
   m.events.push({
     type: 'TD',
-    displayAtMs: m.state.clockMs,
+    displayAtMs,
     engineVer: ENGINE_VER,
     meta: {
       team: scoringTeam,
@@ -489,10 +509,11 @@ function processTurn(
   // effects of each event are layered on by the tuning loop (lot 0.E)
   // ; this hook only injects the narrative beat.
   const nuffleEvent = rollNuffleEvent(rngs.nuffle);
+  const nuffleAtMs = m.state.clockMs + SUBTURN_NUFFLE_OFFSET_MS;
   if (nuffleEvent) {
     m.events.push(
       emitNuffleEvent(nuffleEvent, {
-        displayAtMs: m.state.clockMs,
+        displayAtMs: nuffleAtMs,
         engineVer: ENGINE_VER,
         context: {
           half: m.state.half,
@@ -524,7 +545,7 @@ function processTurn(
       });
       m.events.push({
         type: 'CASUALTY',
-        displayAtMs: m.state.clockMs,
+        displayAtMs: nuffleAtMs,
         engineVer: ENGINE_VER,
         meta: {
           playerId: victimId,
@@ -557,6 +578,8 @@ function processTurn(
   // advance could chain into a single-turn TD from the LOS again.
   let yardsThisTurn = 0;
   for (let i = 0; i < momentCount; i += 1) {
+    const momentAtMs =
+      m.state.clockMs + SUBTURN_FIRST_MOMENT_OFFSET_MS + i * SUBTURN_BETWEEN_MOMENTS_MS;
     const moment = pickKeyMoment(rngs.strategic, m.state, activeProfile);
     if (moment === null) continue;
 
@@ -565,7 +588,7 @@ function processTurn(
       moment,
       rngs,
       weather,
-      m.state.clockMs,
+      momentAtMs,
       activeProfile,
       opposingProfile
     );
@@ -585,7 +608,7 @@ function processTurn(
         moment,
         rngs,
         weather,
-        m.state.clockMs,
+        momentAtMs,
         activeProfile,
         opposingProfile
       );
@@ -643,7 +666,7 @@ function processTurn(
         else m.state = { ...m.state, scoreAway: m.state.scoreAway + 1 };
         m.touchdowns += 1;
         recordTouchdown(m.momentum, drivingPlayerId);
-        emitTd(m, scoring);
+        emitTd(m, scoring, momentAtMs);
         m.state = { ...m.state, drive: nextDrive(m.state.drive) };
         // A scoring play ends the team's turn ; treat it like a
         // turnover-on-the-positive-side so the bulk yard advancement
@@ -663,6 +686,7 @@ function processTurn(
   // turn on the next call to processTurn. Otherwise the active team
   // (which always has the ball in the hybrid model) advances.
   if (!turnoverThisTurn) {
+    const bulkAtMs = m.state.clockMs + SUBTURN_BULK_OFFSET_MS;
     const yardsActive = m.state.drive.drivingTeam === 'home' ? homeProfile : awayProfile;
     const yardsOpposing = m.state.drive.drivingTeam === 'home' ? awayProfile : homeProfile;
     const tvActive = m.state.drive.drivingTeam === 'home' ? tvHome : tvAway;
@@ -683,7 +707,7 @@ function processTurn(
       else m.state = { ...m.state, scoreAway: m.state.scoreAway + 1 };
       m.touchdowns += 1;
       recordTouchdown(m.momentum, `${scoring}-LOS`);
-      emitTd(m, scoring);
+      emitTd(m, scoring, bulkAtMs);
       m.state = { ...m.state, drive: nextDrive(m.state.drive) };
     } else {
       m.state = {
