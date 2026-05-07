@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import ProLeagueStructuredData from "./_components/ProLeagueStructuredData";
+
 export const metadata: Metadata = {
   title: "Pro League — Old World League | Nuffle Arena",
   description:
@@ -27,5 +29,10 @@ export default function ProLeagueLayout({
 }: {
   children: React.ReactNode;
 }): JSX.Element {
-  return <>{children}</>;
+  return (
+    <>
+      <ProLeagueStructuredData />
+      {children}
+    </>
+  );
 }
