@@ -86,6 +86,37 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'yearly',
       priority: 0.3,
     },
+    // Pro League — sprint 1.F.3
+    {
+      url: `${BASE_URL}/pro-league`,
+      lastModified: now,
+      changeFrequency: 'daily',
+      priority: 0.9,
+    },
+    {
+      url: `${BASE_URL}/pro-league/standings`,
+      lastModified: now,
+      changeFrequency: 'daily',
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/pro-league/leaderboard`,
+      lastModified: now,
+      changeFrequency: 'daily',
+      priority: 0.6,
+    },
+    {
+      url: `${BASE_URL}/pro-league/gazette`,
+      lastModified: now,
+      changeFrequency: 'daily',
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/pro-league/hall-of-fame`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.6,
+    },
   ];
 
   // Pages dynamiques - Teams
@@ -159,5 +190,41 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error('Erreur lors de la récupération des profils coach pour le sitemap:', error);
   }
 
-  return [...staticPages, ...teamPages, ...starPlayerPages, ...coachPages];
+  // Pro League — equipes officielles (sprint 1.F.3). Slugs stables
+  // venant de PRO_LEAGUE_TEAMS dans @bb/sim-engine. Inline ici pour
+  // ne pas dependre du runtime sim-engine cote sitemap.
+  const PRO_LEAGUE_TEAM_SLUGS = [
+    'pit-smashers',
+    'dal-vipers',
+    'kc-soaring-hawks',
+    'ne-cold-tacticians',
+    'sf-gold-rush',
+    'car-jungle-queens',
+    'lv-outlaws',
+    'no-voodoo-saints',
+    'chi-iron-bears',
+    'phi-storm-eagles',
+    'phx-tomb-cardinals',
+    'min-frostraiders',
+    'gb-cheese-halflings',
+    'jax-swamp-lizards',
+    'den-mile-high-centaurs',
+    'buf-snow-ogres',
+  ] as const;
+  const proLeagueTeamPages: MetadataRoute.Sitemap = PRO_LEAGUE_TEAM_SLUGS.map(
+    (slug) => ({
+      url: `${BASE_URL}/pro-league/teams/${slug}`,
+      lastModified: now,
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
+    }),
+  );
+
+  return [
+    ...staticPages,
+    ...teamPages,
+    ...starPlayerPages,
+    ...coachPages,
+    ...proLeagueTeamPages,
+  ];
 }
