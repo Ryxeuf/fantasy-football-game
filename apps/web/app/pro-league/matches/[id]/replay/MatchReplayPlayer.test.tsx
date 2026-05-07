@@ -262,6 +262,33 @@ describe("<MatchReplayPlayer> — sprint 1.G.2", () => {
     expect(tdMarkers[0].getAttribute("title")).toMatch(/TOUCHDOWN/);
   });
 
+  it("affiche le hint des raccourcis clavier", async () => {
+    mockedRequest.mockResolvedValue(FIXTURE_DUMP);
+    render(<MatchReplayPlayer matchId="m1" />);
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(
+      screen.getByTestId("replay-shortcuts-hint").textContent,
+    ).toMatch(/Espace/);
+  });
+
+  it("Space keypress toggle play/pause", async () => {
+    mockedRequest.mockResolvedValue(FIXTURE_DUMP);
+    render(<MatchReplayPlayer matchId="m1" />);
+    await act(async () => {
+      await Promise.resolve();
+    });
+    const toggle = screen.getByTestId("replay-toggle");
+    expect(toggle.getAttribute("aria-pressed")).toBe("false");
+    await act(async () => {
+      window.dispatchEvent(
+        new KeyboardEvent("keydown", { key: " ", cancelable: true }),
+      );
+    });
+    expect(toggle.getAttribute("aria-pressed")).toBe("true");
+  });
+
   it("ne rend pas de markers si le replay n'a aucun key moment", async () => {
     mockedRequest.mockResolvedValue({
       ...FIXTURE_DUMP,

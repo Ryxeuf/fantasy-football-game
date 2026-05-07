@@ -18,6 +18,7 @@ import {
   formatReplayClock,
   useReplayClock,
 } from "../../../../lib/use-replay-clock";
+import { useReplayShortcuts } from "../../../../lib/use-replay-shortcuts";
 
 /**
  * Sprint 1.G.2 — Player de replay Pro League.
@@ -208,6 +209,7 @@ function PlayerControls({
         onClick={onToggle}
         aria-label={playing ? "Pause" : "Play"}
         aria-pressed={playing}
+        aria-keyshortcuts="Space"
         data-testid="replay-toggle"
         className="rounded bg-emerald-700 px-3 py-1 text-sm font-semibold text-emerald-50 hover:bg-emerald-600"
       >
@@ -307,6 +309,16 @@ export default function MatchReplayPlayer({
     });
   }, [dump]);
 
+  useReplayShortcuts({
+    enabled: dump !== null,
+    currentMs: clock.currentMs,
+    onToggle: clock.toggle,
+    onSeek: clock.seek,
+    onRestart: clock.restart,
+    onSkipToEnd: clock.skipToEnd,
+    markers,
+  });
+
   if (error) {
     return (
       <main className="mx-auto flex min-h-screen max-w-2xl flex-col bg-slate-950 px-4 py-6 text-slate-100">
@@ -391,6 +403,14 @@ export default function MatchReplayPlayer({
           onSkipToEnd={clock.skipToEnd}
           onRestart={clock.restart}
         />
+        <p
+          data-testid="replay-shortcuts-hint"
+          className="text-[11px] text-slate-500"
+        >
+          Raccourcis : <kbd>Espace</kbd> play/pause · <kbd>←</kbd>/<kbd>→</kbd>{" "}
+          ±5s · <kbd>Shift</kbd>+<kbd>←</kbd>/<kbd>→</kbd> moment cle ·{" "}
+          <kbd>Home</kbd> debut · <kbd>End</kbd> fin
+        </p>
       </section>
 
       <ol
