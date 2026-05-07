@@ -40,6 +40,10 @@ import {
 import { canDumpOff, getDumpOffReceivers } from '../mechanics/dump-off';
 import { checkFoulAppearance } from '../mechanics/negative-traits';
 import { checkDauntless } from '../mechanics/dauntless';
+import {
+  canPerformMultipleBlock,
+  markMultipleBlockUsed,
+} from '../mechanics/multiple-block';
 import { collectModifiers } from '../skills/skill-registry';
 import { blockResultFromRoll } from '../utils/dice';
 import { rollBlockDiceManyWithNotification } from '../utils/dice-notifications';
@@ -250,4 +254,195 @@ export function handleBlock(
       },
     };
   }
+}
+
+/**
+ * S27.8.10 — Resout le second bloc Frenzy si `pendingFrenzyBlock` est defini
+ * et qu'il n'y a plus de choix en attente (push / follow-up). Appel
+ * conditionnel depuis `applyMove` apres chaque handler susceptible de
+ * terminer un push.
+ */
+export function resolveFrenzyBlock(state: GameState, rng: RNG): GameState {
+  if (!state.pendingFrenzyBlock) return state;
+  // Ne pas resoudre tant qu'un choix de push ou follow-up est en attente
+  if (state.pendingPushChoice || state.pendingFollowUpChoice) return state;
+
+  const { attackerId, targetId } = state.pendingFrenzyBlock;
+  const attacker = state.players.find((p) => p.id === attackerId);
+  const target = state.players.find((p) => p.id === targetId);
+
+  // Consommer le pending
+  const next: GameState = { ...state, pendingFrenzyBlock: undefined };
+
+  // Conditions pour le second bloc : attaquant et cible debout et adjacents
+  if (!attacker || !target) return next;
+  if (attacker.stunned || target.stunned) return next;
+  if (!isAdjacent(attacker.pos, target.pos)) return next;
+
+  const frenzyLog = createLogEntry(
+    'action',
+    `${attacker.name} effectue un second blocage (Frenzy) contre ${target.name} !`,
+    attacker.id,
+    attacker.team,
+    { skill: 'frenzy' },
+  );
+  next.gameLog = [...next.gameLog, frenzyLog];
+
+  // Executer le second bloc via handleBlock — en passant par la mecanique
+  // standard (assists, des, resolution).
+  return handleBlock(
+    next,
+    { type: 'BLOCK', playerId: attackerId, targetId },
+    rng,
+  );
+}
+
+/**
+ * S27.8.10 — Declare un Multiple Block : l'attaquant cible deux adversaires
+ * adjacents. Applique le premier bloc ; le second est differe via
+ * `pendingMultipleBlock` et resolu par `resolveMultipleBlock` apres la fin du
+ * premier (push/follow-up eventuels termines).
+ */
+export function handleMultiBlock(
+  state: GameState,
+  move: {
+    type: 'MULTI_BLOCK';
+    playerId: string;
+    firstTargetId: string;
+    secondTargetId: string;
+  },
+  rng: RNG,
+): GameState {
+  if (
+    !canPerformMultipleBlock(
+      state,
+      move.playerId,
+      move.firstTargetId,
+      move.secondTargetId,
+    )
+  ) {
+    return state;
+  }
+  const attacker = state.players.find((p) => p.id === move.playerId);
+  if (!attacker) return state;
+
+  // Marquer l'usage AVANT le premier bloc (one-shot par tour d'equipe) et
+  // poser le flag actif qui provoque le -2 ST dans handleBlock.
+  const prepared: GameState = markMultipleBlockUsed(state, attacker.team);
+  const withPending: GameState = {
+    ...prepared,
+    pendingMultipleBlock: {
+      attackerId: attacker.id,
+      secondTargetId: move.secondTargetId,
+    },
+  };
+
+  const declareLog = createLogEntry(
+    'action',
+    `${attacker.name} declare un Blocage Multiple (Multiple Block) !`,
+    attacker.id,
+    attacker.team,
+    { skill: 'multiple-block' },
+  );
+  const logged: GameState = {
+    ...withPending,
+    gameLog: [...withPending.gameLog, declareLog],
+  };
+
+  return handleBlock(
+    logged,
+    { type: 'BLOCK', playerId: move.playerId, targetId: move.firstTargetId },
+    rng,
+  );
+}
+
+/**
+ * S27.8.10 — Resout le second bloc d'une sequence Multiple Block une fois que
+ * le premier bloc est entierement resolu (plus de pending block/push/follow-up
+ * /reroll et pas de turnover). Si l'attaquant n'est plus adjacent a la
+ * seconde cible, le second bloc est annule (loggue).
+ */
+export function resolveMultipleBlock(state: GameState, rng: RNG): GameState {
+  if (!state.pendingMultipleBlock) return state;
+  // Attendre la fin de toute resolution en cours (dice / push / follow-up /
+  // reroll / frenzy).
+  if (
+    state.pendingBlock ||
+    state.pendingPushChoice ||
+    state.pendingFollowUpChoice ||
+    state.pendingReroll ||
+    state.pendingFrenzyBlock
+  ) {
+    return state;
+  }
+
+  const { attackerId, secondTargetId } = state.pendingMultipleBlock;
+
+  // Si le second bloc a deja ete lance (secondTargetId absent), la sequence
+  // est terminee : on nettoie le flag.
+  if (!secondTargetId) {
+    return { ...state, pendingMultipleBlock: undefined };
+  }
+
+  const attacker = state.players.find((p) => p.id === attackerId);
+  const target = state.players.find((p) => p.id === secondTargetId);
+
+  // Un turnover interrompt la sequence — on nettoie sans lancer le second
+  // bloc.
+  if (state.isTurnover || !attacker || !target) {
+    return { ...state, pendingMultipleBlock: undefined };
+  }
+
+  // Adjacence obligatoire au moment du second bloc (follow-up peut l'avoir
+  // deplace). Attaquant et cible debout.
+  const secondBlockPossible =
+    !attacker.stunned &&
+    attacker.pm > 0 &&
+    !target.stunned &&
+    target.pm > 0 &&
+    isAdjacent(attacker.pos, target.pos);
+
+  if (!secondBlockPossible) {
+    const cancelledLog = createLogEntry(
+      'info',
+      `${attacker.name} ne peut pas effectuer le second Blocage Multiple (cible hors de portee).`,
+      attacker.id,
+      attacker.team,
+      { skill: 'multiple-block' },
+    );
+    return {
+      ...state,
+      pendingMultipleBlock: undefined,
+      gameLog: [...state.gameLog, cancelledLog],
+    };
+  }
+
+  // Consommer le secondTargetId (mais garder attackerId pour que le -2 ST
+  // s'applique aussi au second bloc).
+  const launching: GameState = {
+    ...state,
+    pendingMultipleBlock: { attackerId, secondTargetId: undefined },
+  };
+
+  const secondLog = createLogEntry(
+    'action',
+    `${attacker.name} effectue le second Blocage Multiple contre ${target.name} !`,
+    attacker.id,
+    attacker.team,
+    { skill: 'multiple-block' },
+  );
+  const withLog: GameState = {
+    ...launching,
+    gameLog: [...launching.gameLog, secondLog],
+  };
+
+  const afterSecondBlock = handleBlock(
+    withLog,
+    { type: 'BLOCK', playerId: attackerId, targetId: secondTargetId },
+    rng,
+  );
+
+  // Appel recursif : si le second bloc s'est resolu immediatement sans
+  // pending, on nettoie le flag dans la meme dispatch.
+  return resolveMultipleBlock(afterSecondBlock, rng);
 }
