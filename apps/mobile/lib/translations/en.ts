@@ -324,6 +324,12 @@ export const EN_TRANSLATIONS = {
       endTurn: "End turn",
       back: "← Back",
     },
+    a11y: {
+      boardLabel:
+        "Blood Bowl board. Score {{teamA}} {{scoreA}} versus {{teamB}} {{scoreB}}. Half {{half}}, turn {{turn}}. {{playersA}} players on the field for {{teamA}}, {{playersB}} for {{teamB}}.",
+      boardHint:
+        "Tap a cell to select. Double-tap to deselect or reset the zoom.",
+    },
   },
   popups: {
     fallbacks: {

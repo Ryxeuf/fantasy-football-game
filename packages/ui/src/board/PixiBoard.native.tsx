@@ -178,6 +178,16 @@ type Props = {
   legalMoves?: Position[];
   blockTargets?: Position[];
   selectedPlayerId?: string | null;
+  /**
+   * S27.4 — Accessibility label dicte par le parent (texte deja
+   * localise). Si absent, fallback "Game board".
+   */
+  accessibilityLabel?: string;
+  /**
+   * S27.4 — Hint complementaire pour les screen readers (gestes
+   * disponibles : tap / double-tap / pinch).
+   */
+  accessibilityHint?: string;
 };
 
 export default function PixiBoardNative({
@@ -188,6 +198,8 @@ export default function PixiBoardNative({
   legalMoves = [],
   blockTargets = [],
   selectedPlayerId,
+  accessibilityLabel,
+  accessibilityHint,
 }: Props) {
   const boardWidth = state.width * cellSize;
   const boardHeight = state.height * cellSize;
@@ -318,7 +330,13 @@ export default function PixiBoardNative({
   }
 
   return (
-    <View style={styles.container}>
+    <View
+      style={styles.container}
+      accessible
+      accessibilityRole="adjustable"
+      accessibilityLabel={accessibilityLabel ?? "Game board"}
+      accessibilityHint={accessibilityHint}
+    >
       <GestureDetector gesture={composedGesture}>
         <Animated.View style={[styles.board, animatedStyle]}>
           <Svg width={boardWidth} height={boardHeight}>

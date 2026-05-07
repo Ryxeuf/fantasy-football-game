@@ -26,6 +26,7 @@ import {
   type LegalThrow,
 } from "../../lib/throw-team-mate-click";
 import { useTranslation } from "../../lib/i18n-context";
+import { summarizeBoardForA11y } from "../../lib/board-a11y";
 
 function normalizeState(state: any): GameState {
   if (!state) return state;
@@ -416,6 +417,11 @@ export default function PlayScreen() {
           blockTargets={blockTargets}
           selectedPlayerId={state.selectedPlayerId}
           cellSize={28}
+          accessibilityLabel={t(
+            "play.a11y.boardLabel",
+            summarizeBoardForA11y(state),
+          )}
+          accessibilityHint={t("play.a11y.boardHint")}
         />
       </View>
 

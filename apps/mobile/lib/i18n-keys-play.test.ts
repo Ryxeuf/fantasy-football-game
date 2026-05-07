@@ -26,6 +26,8 @@ const REQUIRED_KEYS = [
   "play.actions.endTurn",
   "play.actions.back",
   "play.hint",
+  "play.a11y.boardLabel",
+  "play.a11y.boardHint",
 ] as const;
 
 // Cles ou FR != EN doit etre strictement different (texte traduit).
@@ -44,6 +46,8 @@ const DISTINCT_FR_EN: ReadonlyArray<(typeof REQUIRED_KEYS)[number]> = [
   "play.actions.endTurn",
   "play.actions.back",
   "play.hint",
+  "play.a11y.boardLabel",
+  "play.a11y.boardHint",
 ];
 
 describe("S27.3.13 — namespace play.* (FR + EN)", () => {
@@ -76,5 +80,47 @@ describe("S27.3.13 — namespace play.* (FR + EN)", () => {
   it("interpolation {{message}} pour play.errors.prefix (EN)", () => {
     const out = t("play.errors.prefix", { message: "boom" }, "en");
     expect(out).toContain("boom");
+  });
+
+  it("interpolation des params pour play.a11y.boardLabel (FR)", () => {
+    const out = t(
+      "play.a11y.boardLabel",
+      {
+        teamA: "Skavens",
+        scoreA: 2,
+        teamB: "Halflings",
+        scoreB: 1,
+        half: 1,
+        turn: 5,
+        playersA: 11,
+        playersB: 10,
+      },
+      "fr",
+    );
+    expect(out).toContain("Skavens");
+    expect(out).toContain("Halflings");
+    expect(out).toContain("2");
+    expect(out).toContain("1");
+    expect(out).toContain("5");
+    expect(out).toContain("11");
+  });
+
+  it("interpolation des params pour play.a11y.boardLabel (EN)", () => {
+    const out = t(
+      "play.a11y.boardLabel",
+      {
+        teamA: "Skavens",
+        scoreA: 0,
+        teamB: "Halflings",
+        scoreB: 0,
+        half: 1,
+        turn: 1,
+        playersA: 11,
+        playersB: 11,
+      },
+      "en",
+    );
+    expect(out).toContain("Skavens");
+    expect(out).toContain("Halflings");
   });
 });
