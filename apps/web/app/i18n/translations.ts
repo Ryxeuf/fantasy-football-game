@@ -735,6 +735,35 @@ export const translations = {
         thStreak: "Streak",
         thBiggest: "Biggest",
       },
+      gazette: {
+        title: "🗞️ Nuffle Gazette",
+        subtitle: "Le quotidien officiel de la Pro League",
+        backToLatest: "← Latest",
+        editionDate: "Édition du",
+        noEditionYet:
+          "La Gazette n'a encore rien publié. Reviens demain matin pour le premier numéro !",
+        archiveTitle: "Archive",
+        emptyEdition: "Aucun article publié pour le {date}.",
+        emptyDateGeneric: "Aucun article pour cette date.",
+        invalidDate: "Date invalide.",
+        articleTypeMain: "Article principal",
+        articleTypeBreve: "Brève",
+        articleTypeEdito: "Édito",
+        personaCynic: "Le Cynique",
+        personaOrcEnthusiast: "L'Enthousiaste Orc",
+        personaStatistician: "Le Statisticien",
+      },
+      hof: {
+        title: "Hall of Fame",
+        intro:
+          "Les joueurs immortalisés de la Old World League. Tombés au champ d'honneur de Nuffle ou couronnés par leur palmarès.",
+        emptyState:
+          "Aucun joueur au Hall of Fame pour le moment. Soyez patient — Nuffle finira par réclamer son dû.",
+        reasonDeath: "Mort en match",
+        reasonCareerTds: "TDs carrière",
+        reasonMvpLegend: "Légende MVP",
+        reasonTitle: "Titre",
+      },
       about: {
         backToHub: "← Hub",
         eyebrow: "Old World League",
@@ -1560,6 +1589,35 @@ export const translations = {
         thAccuracy: "Accuracy",
         thStreak: "Streak",
         thBiggest: "Biggest",
+      },
+      gazette: {
+        title: "🗞️ Nuffle Gazette",
+        subtitle: "The official daily of the Pro League",
+        backToLatest: "← Latest",
+        editionDate: "Edition of",
+        noEditionYet:
+          "The Gazette has not published yet. Come back tomorrow morning for the first issue!",
+        archiveTitle: "Archive",
+        emptyEdition: "No articles published for {date}.",
+        emptyDateGeneric: "No articles for this date.",
+        invalidDate: "Invalid date.",
+        articleTypeMain: "Main article",
+        articleTypeBreve: "Brief",
+        articleTypeEdito: "Editorial",
+        personaCynic: "The Cynic",
+        personaOrcEnthusiast: "The Orc Enthusiast",
+        personaStatistician: "The Statistician",
+      },
+      hof: {
+        title: "Hall of Fame",
+        intro:
+          "The immortalised players of the Old World League. Fallen on Nuffle's field of honour or crowned by their career achievements.",
+        emptyState:
+          "No player in the Hall of Fame yet. Be patient — Nuffle will eventually claim his due.",
+        reasonDeath: "Killed in match",
+        reasonCareerTds: "Career TDs",
+        reasonMvpLegend: "MVP legend",
+        reasonTitle: "Title",
       },
       about: {
         backToHub: "← Hub",

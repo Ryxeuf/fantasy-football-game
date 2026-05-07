@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { apiRequest, ApiClientError } from "../../../lib/api-client";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 import { type GazetteEdition, EditionDisplay } from "../_shared";
 
@@ -22,6 +23,7 @@ interface EditionResponse {
 export default function GazetteArchivePage({
   params,
 }: PageProps): JSX.Element {
+  const { t } = useLanguage();
   const [edition, setEdition] = useState<GazetteEdition | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +42,7 @@ export default function GazetteArchivePage({
       .catch((e: unknown) => {
         if (cancelled) return;
         if (e instanceof ApiClientError && e.status === 400) {
-          setError("Date invalide.");
+          setError(t.proLeague.gazette.invalidDate);
           return;
         }
         const msg = e instanceof Error ? e.message : "fetch error";
@@ -52,17 +54,17 @@ export default function GazetteArchivePage({
     return () => {
       cancelled = true;
     };
-  }, [params.date]);
+  }, [params.date, t.proLeague.gazette.invalidDate]);
 
   return (
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col bg-slate-950 px-4 py-6 text-slate-100">
       <header className="mb-6 flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-black tracking-tight text-amber-200">
-            🗞️ Nuffle Gazette
+            {t.proLeague.gazette.title}
           </h1>
           <p className="mt-1 text-sm text-slate-400">
-            Édition du{" "}
+            {t.proLeague.gazette.editionDate}{" "}
             <span className="font-mono text-slate-300">{params.date}</span>
           </p>
         </div>
@@ -70,12 +72,12 @@ export default function GazetteArchivePage({
           href="/pro-league/gazette"
           className="rounded border border-slate-700 px-3 py-1 text-sm text-slate-300 hover:bg-slate-800"
         >
-          ← Latest
+          {t.proLeague.gazette.backToLatest}
         </Link>
       </header>
 
       {loading ? (
-        <p className="text-sm text-slate-400">Chargement…</p>
+        <p className="text-sm text-slate-400">{t.proLeague.common.loading}</p>
       ) : error ? (
         <p
           role="alert"
@@ -90,7 +92,7 @@ export default function GazetteArchivePage({
           data-testid="gazette-empty"
           className="text-sm text-slate-500"
         >
-          Aucun article pour cette date.
+          {t.proLeague.gazette.emptyDateGeneric}
         </p>
       )}
     </main>
