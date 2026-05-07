@@ -1229,40 +1229,43 @@ model ProLeagueRound {
 /// counters) et on pointe vers `Replay` (lot 1.A.2) pour le payload
 /// binaire compresse.
 model ProLeagueMatch {
-  id             String          @id @default(cuid())
-  season         ProLeagueSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
-  seasonId       String
-  round          ProLeagueRound  @relation(fields: [roundId], references: [id], onDelete: Cascade)
-  roundId        String
-  homeTeam       ProTeam         @relation("ProMatchHome", fields: [homeTeamId], references: [id], onDelete: Cascade)
-  homeTeamId     String
-  awayTeam       ProTeam         @relation("ProMatchAway", fields: [awayTeamId], references: [id], onDelete: Cascade)
-  awayTeamId     String
+  id                  String          @id @default(cuid())
+  season              ProLeagueSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  seasonId            String
+  round               ProLeagueRound  @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  roundId             String
+  homeTeam            ProTeam         @relation("ProMatchHome", fields: [homeTeamId], references: [id], onDelete: Cascade)
+  homeTeamId          String
+  awayTeam            ProTeam         @relation("ProMatchAway", fields: [awayTeamId], references: [id], onDelete: Cascade)
+  awayTeamId          String
   /// Status : "scheduled" | "ready" | "in_progress" | "completed" | "failed".
   /// "ready" = pre-simule, en attente du broadcaster (lot 1.B.1).
-  status         String          @default("scheduled")
-  scheduledAt    DateTime
-  simulatedAt    DateTime?
-  completedAt    DateTime?
+  status              String          @default("scheduled")
+  scheduledAt         DateTime
+  simulatedAt         DateTime?
+  completedAt         DateTime?
+  /// Sprint 1.E.4 — flag idempotence pour le post-process casualties.
+  /// Non-null = casualties déjà appliquées au roster.
+  casualtiesAppliedAt DateTime?
   /// Seed sim-engine + engineVer pinne au moment de la simulation.
   /// Permet de rejouer le match a l'identique tant que engineVer matche.
-  seed           BigInt?
-  engineVer      String?
+  seed                BigInt?
+  engineVer           String?
   /// Pointeur vers `Replay.matchId` (lot 1.A.2). Pas de FK ici tant que
   /// le modele Replay n'existe pas — sera converti en relation 1.A.2.
-  replayId       String?         @unique
+  replayId            String?         @unique
   /// Score cache pour listings rapides sans charger le replay.
-  scoreHome      Int?
-  scoreAway      Int?
+  scoreHome           Int?
+  scoreAway           Int?
   /// Outcome : "home" | "away" | "draw".
-  outcome        String?
+  outcome             String?
   /// Compteurs caches issus de MatchSummary.
-  touchdownCount Int?
-  casualtyCount  Int?
-  turnoverCount  Int?
-  nuffleCount    Int?
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  touchdownCount      Int?
+  casualtyCount       Int?
+  turnoverCount       Int?
+  nuffleCount         Int?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
 
   betMarkets ProBetMarket[]
 

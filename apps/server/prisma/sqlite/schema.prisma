@@ -939,31 +939,32 @@ model ProLeagueRound {
 }
 
 model ProLeagueMatch {
-  id             String          @id @default(cuid())
-  season         ProLeagueSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
-  seasonId       String
-  round          ProLeagueRound  @relation(fields: [roundId], references: [id], onDelete: Cascade)
-  roundId        String
-  homeTeam       ProTeam         @relation("ProMatchHome", fields: [homeTeamId], references: [id], onDelete: Cascade)
-  homeTeamId     String
-  awayTeam       ProTeam         @relation("ProMatchAway", fields: [awayTeamId], references: [id], onDelete: Cascade)
-  awayTeamId     String
-  status         String          @default("scheduled")
-  scheduledAt    DateTime
-  simulatedAt    DateTime?
-  completedAt    DateTime?
-  seed           BigInt?
-  engineVer      String?
-  replayId       String?         @unique
-  scoreHome      Int?
-  scoreAway      Int?
-  outcome        String?
-  touchdownCount Int?
-  casualtyCount  Int?
-  turnoverCount  Int?
-  nuffleCount    Int?
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  id                  String          @id @default(cuid())
+  season              ProLeagueSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  seasonId            String
+  round               ProLeagueRound  @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  roundId             String
+  homeTeam            ProTeam         @relation("ProMatchHome", fields: [homeTeamId], references: [id], onDelete: Cascade)
+  homeTeamId          String
+  awayTeam            ProTeam         @relation("ProMatchAway", fields: [awayTeamId], references: [id], onDelete: Cascade)
+  awayTeamId          String
+  status              String          @default("scheduled")
+  scheduledAt         DateTime
+  simulatedAt         DateTime?
+  completedAt         DateTime?
+  casualtiesAppliedAt DateTime?
+  seed                BigInt?
+  engineVer           String?
+  replayId            String?         @unique
+  scoreHome           Int?
+  scoreAway           Int?
+  outcome             String?
+  touchdownCount      Int?
+  casualtyCount       Int?
+  turnoverCount       Int?
+  nuffleCount         Int?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
 
   betMarkets ProBetMarket[]
 
