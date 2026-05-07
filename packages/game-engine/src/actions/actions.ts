@@ -72,12 +72,23 @@ import { canFoul, executeFoul } from '../mechanics/foul';
 import { isAdjacent } from '../mechanics/movement';
 import { applyApothecaryChoice } from '../mechanics/apothecary';
 import { canThrowTeamMate, getThrowRange, executeThrowTeamMate } from '../mechanics/throw-team-mate';
-import { canHypnoticGaze, executeHypnoticGaze } from '../mechanics/hypnotic-gaze';
-import { canProjectileVomit, executeProjectileVomit } from '../mechanics/projectile-vomit';
-import { canStab, executeStab } from '../mechanics/stab';
-import { canChainsaw, executeChainsaw } from '../mechanics/chainsaw';
-import { canBallAndChain, executeBallAndChain } from '../mechanics/ball-and-chain';
-import { canBombThrow, executeBombThrow } from '../mechanics/bombardier';
+import { canHypnoticGaze } from '../mechanics/hypnotic-gaze';
+import { canProjectileVomit } from '../mechanics/projectile-vomit';
+import { canStab } from '../mechanics/stab';
+import { canChainsaw } from '../mechanics/chainsaw';
+// S27.8.1 — Les handlers d'actions speciales (gaze/vomit/stab/chainsaw/
+// ball-and-chain/bomb) sont extraits dans `actions/special-actions.ts`
+// pour reduire la taille de ce fichier monolithique. Les helpers `can*`
+// restent importes directement ici pour `getLegalMoves` qui les
+// consomme aussi.
+import {
+  handleHypnoticGaze,
+  handleProjectileVomit,
+  handleStab,
+  handleChainsaw,
+  handleBallAndChain,
+  handleBombThrow,
+} from './special-actions';
 import { canDumpOff, getDumpOffReceivers, executeDumpOff } from '../mechanics/dump-off';
 import { checkDauntless } from '../mechanics/dauntless';
 import { checkBreakTackle } from '../mechanics/break-tackle';
@@ -2579,128 +2590,6 @@ function handleFoul(state: GameState, move: { type: 'FOUL'; playerId: string; ta
 /**
  * Gère une action de Regard Hypnotique (Hypnotic Gaze)
  */
-function handleHypnoticGaze(
-  state: GameState,
-  move: { type: 'HYPNOTIC_GAZE'; playerId: string; targetId: string },
-  rng: RNG,
-): GameState {
-  const gazer = state.players.find(p => p.id === move.playerId);
-  const target = state.players.find(p => p.id === move.targetId);
-
-  if (!gazer || !target) return state;
-  if (gazer.team !== state.currentPlayer) return state;
-  if (hasPlayerActed(state, gazer.id)) return state;
-  if (!canHypnoticGaze(state, gazer, target)) return state;
-
-  let newState = executeHypnoticGaze(state, gazer, target, rng);
-  newState = setPlayerAction(newState, gazer.id, 'HYPNOTIC_GAZE');
-  newState = checkPlayerTurnEnd(newState, gazer.id);
-  return newState;
-}
-
-/**
- * Gère une action de Vomissement Projectile (Projectile Vomit)
- */
-function handleProjectileVomit(
-  state: GameState,
-  move: { type: 'PROJECTILE_VOMIT'; playerId: string; targetId: string },
-  rng: RNG,
-): GameState {
-  const vomiter = state.players.find(p => p.id === move.playerId);
-  const target = state.players.find(p => p.id === move.targetId);
-
-  if (!vomiter || !target) return state;
-  if (vomiter.team !== state.currentPlayer) return state;
-  if (hasPlayerActed(state, vomiter.id)) return state;
-  if (!canProjectileVomit(state, vomiter, target)) return state;
-
-  let newState = executeProjectileVomit(state, vomiter, target, rng);
-  newState = setPlayerAction(newState, vomiter.id, 'PROJECTILE_VOMIT');
-  newState = checkPlayerTurnEnd(newState, vomiter.id);
-  return newState;
-}
-
-/**
- * Gère une action de Poignard (Stab)
- */
-function handleStab(
-  state: GameState,
-  move: { type: 'STAB'; playerId: string; targetId: string },
-  rng: RNG,
-): GameState {
-  const stabber = state.players.find(p => p.id === move.playerId);
-  const target = state.players.find(p => p.id === move.targetId);
-
-  if (!stabber || !target) return state;
-  if (stabber.team !== state.currentPlayer) return state;
-  if (hasPlayerActed(state, stabber.id)) return state;
-  if (!canStab(state, stabber, target)) return state;
-
-  let newState = executeStab(state, stabber, target, rng);
-  newState = setPlayerAction(newState, stabber.id, 'STAB');
-  newState = checkPlayerTurnEnd(newState, stabber.id);
-  return newState;
-}
-
-/**
- * Gère une action de Tronçonneuse (Chainsaw)
- */
-function handleChainsaw(
-  state: GameState,
-  move: { type: 'CHAINSAW'; playerId: string; targetId: string },
-  rng: RNG,
-): GameState {
-  const attacker = state.players.find(p => p.id === move.playerId);
-  const target = state.players.find(p => p.id === move.targetId);
-
-  if (!attacker || !target) return state;
-  if (attacker.team !== state.currentPlayer) return state;
-  if (hasPlayerActed(state, attacker.id)) return state;
-  if (!canChainsaw(state, attacker, target)) return state;
-
-  let newState = executeChainsaw(state, attacker, target, rng);
-  newState = setPlayerAction(newState, attacker.id, 'CHAINSAW');
-  newState = checkPlayerTurnEnd(newState, attacker.id);
-  return newState;
-}
-
-/**
- * Gere une action Ball and Chain (Chaine et Boulet).
- * Remplace le Move normal du Fanatic : deplacement aleatoire automatique.
- */
-function handleBallAndChain(
-  state: GameState,
-  move: { type: 'BALL_AND_CHAIN'; playerId: string },
-  rng: RNG,
-): GameState {
-  const player = state.players.find(p => p.id === move.playerId);
-  if (!player) return state;
-  if (player.team !== state.currentPlayer) return state;
-  if (hasPlayerActed(state, player.id)) return state;
-  if (!canBallAndChain(state, move.playerId)) return state;
-
-  let newState = executeBallAndChain(state, move.playerId, rng);
-  newState = setPlayerAction(newState, move.playerId, 'MOVE');
-  newState = checkPlayerTurnEnd(newState, move.playerId);
-  return newState;
-}
-
-/**
- * Gere une action Bomb Throw (Lancer de Bombe) pour un Bombardier.
- */
-function handleBombThrow(
-  state: GameState,
-  move: { type: 'BOMB_THROW'; playerId: string; target: Position },
-  rng: RNG,
-): GameState {
-  const player = state.players.find(p => p.id === move.playerId);
-  if (!player) return state;
-  if (player.team !== state.currentPlayer) return state;
-  if (hasPlayerActed(state, player.id)) return state;
-  if (!canBombThrow(state, move.playerId, move.target)) return state;
-
-  let newState = executeBombThrow(state, move.playerId, move.target, rng);
-  newState = setPlayerAction(newState, move.playerId, 'BOMB_THROW');
-  newState = checkPlayerTurnEnd(newState, move.playerId);
-  return newState;
-}
+// S27.8.1 — handleHypnoticGaze / handleProjectileVomit / handleStab /
+// handleChainsaw / handleBallAndChain / handleBombThrow extraits dans
+// `actions/special-actions.ts` (re-importes en haut de ce fichier).
