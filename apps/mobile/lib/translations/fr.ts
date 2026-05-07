@@ -59,6 +59,12 @@
  *   followUp`) et `replay/[id].tsx` (chargement, vide, retour, erreurs,
  *   mi-temps/tour, transport play/pause/start/previous/next/end,
  *   vitesse + a11y, action label).
+ * S27.3.19 : namespace `nav.*` pour `_layout.tsx` (titres de
+ *   Stack.Screen : appName, lobby, matchmaking, leaderboard, login,
+ *   register, matchHistory, replay, teamsList/New/Detail,
+ *   cupsList/Archived/Detail, leaguesList/Detail,
+ *   starPlayersList/Detail, settings). Cloture S27.3 : audit i18n
+ *   mobile a 0 chaine hardcodee.
  *
  * Les autres namespaces seront ajoutes au fur et a mesure du
  * remplacement des strings hardcodees.
@@ -419,6 +425,27 @@ export const FR_TRANSLATIONS = {
       hint:
         "Le suivi est gratuit et ne consomme pas de points de mouvement",
     },
+  },
+  nav: {
+    appName: "Nuffle Arena",
+    lobby: "Mes matchs",
+    matchmaking: "Chercher un match",
+    leaderboard: "Classement",
+    login: "Connexion",
+    register: "Inscription",
+    matchHistory: "Historique du match",
+    replay: "Replay",
+    teamsList: "Mes equipes",
+    teamsNew: "Nouvelle equipe",
+    teamsDetail: "Detail equipe",
+    cupsList: "Coupes",
+    cupsArchived: "Coupes archivees",
+    cupsDetail: "Detail coupe",
+    leaguesList: "Ligues",
+    leaguesDetail: "Detail ligue",
+    starPlayersList: "Star Players",
+    starPlayersDetail: "Detail Star Player",
+    settings: "Profil et reglages",
   },
   match: {
     history: {
