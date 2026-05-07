@@ -1,3 +1,17 @@
+## [1.93.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.92.0...v1.93.0) (2026-05-07)
+
+
+### ✨ Features
+
+* **web,e2e:** replay keyboard shortcuts + Playwright spec (sprint 1.G.5) ([e662751](https://github.com/Ryxeuf/fantasy-football-game/commit/e6627515d24fb4b9fab0a5a30da668d2790abc23))
+* **web:** auto LIVE vs REPLAY mode redirect (sprint 1.G.3) ([#651](https://github.com/Ryxeuf/fantasy-football-game/issues/651)) ([5316969](https://github.com/Ryxeuf/fantasy-football-game/commit/5316969c461d4d8d0f6b176558adac570809abbb))
+* **web:** TD/CASUALTY/NUFFLE markers on replay scrub bar (sprint 1.G.4) ([#653](https://github.com/Ryxeuf/fantasy-football-game/issues/653)) ([4f4f8d8](https://github.com/Ryxeuf/fantasy-football-game/commit/4f4f8d83df8fbed71cc01f4e42d3fba7f6c2cd9f))
+
+
+### ♻️ Code Refactoring
+
+* **game-engine:** extract special-action handlers (S27.8.1) ([#650](https://github.com/Ryxeuf/fantasy-football-game/issues/650)) ([de3b20e](https://github.com/Ryxeuf/fantasy-football-game/commit/de3b20e36da7335d8392fa03518039fb6314d4a2))
+
 ## [1.92.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.91.0...v1.92.0) (2026-05-07)
 
 
