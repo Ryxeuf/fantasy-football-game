@@ -14,14 +14,12 @@ import {
   calculateDodgeModifiers,
   calculatePickupModifiers,
 } from '../mechanics/movement';
-import {
-  performDodgeRoll,
-  performPickupRoll,
-  performArmorRoll,
-  rollBlockDice,
-  rollBlockDiceManyWithRolls,
-  blockResultFromRoll,
-} from '../utils/dice';
+// S27.8.8 — `rollBlockDiceManyWithRolls` consomme uniquement dans
+// `actions/blitz-handler.ts`. Les helpers `performDodgeRoll`,
+// `performPickupRoll`, `performArmorRoll` et `rollBlockDice` n'etaient
+// plus consommes ici depuis les extractions S27.8.5 / S27.8.6 / S27.8.8 ;
+// seul `blockResultFromRoll` est encore utilise par `handleBlock`.
+import { blockResultFromRoll } from '../utils/dice';
 import {
   performDodgeRollWithNotification,
   // S27.8.7 — `performPickupRollWithNotification` consomme uniquement
@@ -61,12 +59,13 @@ import {
   shouldAutoEndTurn,
   handlePlayerSwitch,
   getPlayerAction,
-  incrementTeamBlitzCount,
   // S27.8.3 — `advanceHalfIfNeeded` et `handlePostTouchdown` consommes
   // uniquement dans `actions/turn-foul-actions.ts` (handleEndTurn).
   canTeamBlitz,
   // S27.8.5 — `canUseTeamReroll` deplace dans `core/game-state.ts`.
   canUseTeamReroll,
+  // S27.8.8 — `incrementTeamBlitzCount` consomme uniquement dans
+  // `actions/blitz-handler.ts`. Plus d'import direct ici.
 } from '../core/game-state';
 // S27.8.2 — `executePass` / `executeHandoff` consommes dans
 // `actions/pass-actions.ts`. `getPassRange` + `canAttemptPassForRange`
@@ -115,6 +114,9 @@ import {
   handleEndTurn,
   handleFoul,
 } from './turn-foul-actions';
+// S27.8.8 — `handleBlitz` extrait dans `actions/blitz-handler.ts`.
+// Seul appelant : le dispatcher `applyMove` dans ce fichier.
+import { handleBlitz } from './blitz-handler';
 // S27.8.4 — Helpers d'echec (applyRollFailure / applyPickupFailure)
 // extraits dans `actions/failure-helpers.ts`. Reutilises par
 // handleNormalMove / handleDodgeRoll / handleRerollChoose / handleLeap
@@ -1266,236 +1268,6 @@ function handleDumpOffChoose(
   return afterDumpOff;
 }
 
-
-/**
- * Gère un blitz
- */
-function handleBlitz(
-  state: GameState,
-  move: { type: 'BLITZ'; playerId: string; to: Position; targetId: string },
-  rng: RNG
-): GameState {
-  const attacker = state.players.find(p => p.id === move.playerId);
-  const target = state.players.find(p => p.id === move.targetId);
-
-  if (!attacker || !target) return state;
-
-  // Vérifier que le blitz est légal
-  if (!canBlitz(state, move.playerId, move.to, move.targetId)) return state;
-
-  // ─── Foul Appearance check ─────────────────────────────────────────────
-  // Rolled by the attacker before the blitz begins. On 1, the declared
-  // action is wasted (no turnover) and the attacker's activation ends.
-  const foulAppearanceCheck = checkFoulAppearance(state, attacker, target, rng, true);
-  if (!foulAppearanceCheck.shouldContinueBlock) {
-    return foulAppearanceCheck.newState;
-  }
-
-  // Gérer le changement de joueur
-  let newState = handlePlayerSwitch(foulAppearanceCheck.newState, move.playerId);
-
-  // 1. Effectuer le mouvement
-  const from = attacker.pos;
-  const to = move.to;
-
-  // Vérifier si un jet d'esquive est nécessaire pour le mouvement
-  const needsDodge = requiresDodgeRoll(newState, from, to, attacker.team);
-
-  if (needsDodge) {
-    // Calculer les modificateurs de désquive (adversaires à l'arrivée + skills)
-    const baseDodgeModifiers = calculateDodgeModifiers(newState, from, to, attacker.team);
-    const skillDodgeModifiers = getDodgeSkillModifiers(newState, attacker, from);
-    const dodgeModifiers = baseDodgeModifiers + skillDodgeModifiers;
-
-    // Effectuer le jet d'esquive
-    const dodgeResult = performDodgeRollWithNotification(attacker, rng, dodgeModifiers);
-
-    newState.lastDiceResult = dodgeResult;
-
-    // Log du jet d'esquive
-    const dodgeLogEntry = createLogEntry(
-      'dice',
-      `Jet d'esquive (Blitz): ${dodgeResult.diceRoll}/${dodgeResult.targetNumber} ${dodgeResult.success ? '✓' : '✗'}`,
-      attacker.id,
-      attacker.team,
-      {
-        diceRoll: dodgeResult.diceRoll,
-        targetNumber: dodgeResult.targetNumber,
-        success: dodgeResult.success,
-        modifiers: dodgeModifiers,
-      }
-    );
-    newState.gameLog = [...newState.gameLog, dodgeLogEntry];
-
-    // Le joueur se déplace toujours, que le jet d'esquive réussisse ou échoue
-    const attackerIdx = newState.players.findIndex(p => p.id === attacker.id);
-    newState.players[attackerIdx].pos = { ...to };
-
-    // Calculer le coût en PM : distance seulement (le blocage coûtera 1 PM supplémentaire)
-    const distance = Math.abs(from.x - to.x) + Math.abs(from.y - to.y);
-    newState.players[attackerIdx].pm = Math.max(0, newState.players[attackerIdx].pm - distance);
-
-    // Shadowing : tentative de suivi après le mouvement (BB3).
-    newState = resolveShadowingAfterDodge(newState, attacker, from, rng);
-
-    // Break Tackle (BB3): +1/+2 une fois par activation sur un Dodge raté
-    // pendant un Blitz.
-    let blitzDodgeSuccess = dodgeResult.success;
-    if (!blitzDodgeSuccess) {
-      const breakTackleCheck = checkBreakTackle(
-        newState,
-        newState.players[attackerIdx],
-        dodgeResult.diceRoll,
-        dodgeResult.targetNumber,
-        dodgeResult.success
-      );
-      if (breakTackleCheck.triggered) {
-        newState = breakTackleCheck.newState;
-        blitzDodgeSuccess = true;
-      }
-    }
-
-    if (blitzDodgeSuccess) {
-      // Si le joueur porte la balle et atteint l'en-but adverse -> touchdown
-      const mover = newState.players[attackerIdx];
-      if (mover.hasBall && isInOpponentEndzone(newState, mover)) {
-        return awardTouchdown(newState, mover.team, mover);
-      }
-    } else {
-      // Jet d'esquive échoué : le joueur chute et doit faire un jet d'armure
-      newState.isTurnover = true;
-
-      // Vérifier si le joueur avait le ballon AVANT de le mettre à terre
-      const hadBall = newState.players[attackerIdx].hasBall;
-
-      // Le joueur chute (est mis à terre)
-      newState.players[attackerIdx].stunned = true;
-
-      // Effectuer le jet d'armure
-      const armorResult = performArmorRollWithNotification(newState.players[attackerIdx], rng);
-      newState.lastDiceResult = armorResult;
-
-      // Log du jet d'armure
-      const armorLogEntry = createLogEntry(
-        'dice',
-        `Jet d'armure (Blitz échoué): ${armorResult.diceRoll}/${armorResult.targetNumber} ${armorResult.success ? '✓' : '✗'}`,
-        newState.players[attackerIdx].id,
-        newState.players[attackerIdx].team,
-        {
-          diceRoll: armorResult.diceRoll,
-          targetNumber: armorResult.targetNumber,
-          success: armorResult.success,
-        }
-      );
-      newState.gameLog = [...newState.gameLog, armorLogEntry];
-
-      // Si l'armure est percée (success = false), faire un jet de blessure
-      if (!armorResult.success) {
-        newState = performInjuryRoll(newState, newState.players[attackerIdx], rng);
-      }
-
-      // Si le joueur avait le ballon, il le perd et le ballon rebondit
-      // (même si l'armure n'est pas percée, le joueur chute et perd le ballon)
-      if (hadBall) {
-        newState.players[attackerIdx].hasBall = false;
-        newState.ball = { ...newState.players[attackerIdx].pos };
-
-        // Log de la perte de ballon
-        const ballLossLogEntry = createLogEntry(
-          'action',
-          `Ballon perdu après échec de blitz`,
-          attacker.id,
-          attacker.team
-        );
-        newState.gameLog = [...newState.gameLog, ballLossLogEntry];
-
-        // Faire rebondir le ballon depuis la position du joueur
-        return bounceBall(newState, rng);
-      }
-
-      // Enregistrer l'action de blitz et terminer le tour
-      newState = setPlayerAction(newState, attacker.id, 'BLITZ');
-      newState = checkPlayerTurnEnd(newState, attacker.id);
-      return newState;
-    }
-  } else {
-    // Pas de jet d'esquive nécessaire, déplacer directement
-    const attackerIdx = newState.players.findIndex(p => p.id === attacker.id);
-    newState.players[attackerIdx].pos = { ...to };
-
-    // Calculer le coût en PM : distance seulement (le blocage coûtera 1 PM supplémentaire)
-    const distance = Math.abs(from.x - to.x) + Math.abs(from.y - to.y);
-    newState.players[attackerIdx].pm = Math.max(0, newState.players[attackerIdx].pm - distance);
-
-    // Si le joueur porte la balle et atteint l'en-but adverse -> touchdown
-    const mover = newState.players[attackerIdx];
-    if (mover.hasBall && isInOpponentEndzone(newState, mover)) {
-      return awardTouchdown(newState, mover.team, mover);
-    }
-  }
-
-  // 2. Effectuer le blocage après le mouvement
-  const updatedAttacker = newState.players.find(p => p.id === attacker.id);
-  const updatedTarget = newState.players.find(p => p.id === target.id);
-
-  if (!updatedAttacker || !updatedTarget) return newState;
-
-  // Vérifier que le blocage est toujours possible après le mouvement
-  if (!canBlock(newState, updatedAttacker.id, updatedTarget.id)) {
-    // Si le blocage n'est plus possible, enregistrer l'action et terminer
-    newState = setPlayerAction(newState, attacker.id, 'BLITZ');
-    newState = checkPlayerTurnEnd(newState, attacker.id);
-    return newState;
-  }
-
-  // Calculer les assists
-  const offensiveAssists = calculateOffensiveAssists(newState, updatedAttacker, updatedTarget);
-  const defensiveAssists = calculateDefensiveAssists(newState, updatedAttacker, updatedTarget);
-
-  // Nombre de dés et qui choisit
-  const attackerStrength = updatedAttacker.st + offensiveAssists;
-  const targetStrength = updatedTarget.st + defensiveAssists;
-  const diceCount = calculateBlockDiceCount(attackerStrength, targetStrength);
-  const chooser = getBlockDiceChooser(attackerStrength, targetStrength);
-
-  // Tirer les dés et enregistrer un choix en attente
-  const options = rollBlockDiceManyWithRolls(rng, diceCount);
-
-  // Log de l'action de blitz
-  const blitzLogEntry = createLogEntry(
-    'action',
-    `Blitz: mouvement vers (${to.x}, ${to.y}) puis blocage de ${updatedTarget.name}`,
-    attacker.id,
-    attacker.team
-  );
-  newState.gameLog = [...newState.gameLog, blitzLogEntry];
-
-  // Enregistrer l'action de blitz AVANT de créer le pendingBlock
-  newState = setPlayerAction(newState, attacker.id, 'BLITZ');
-
-  // Incrémenter le compteur de blitz de l'équipe
-  newState = incrementTeamBlitzCount(newState, attacker.team);
-
-  // Vérifier si le joueur porte la balle et est dans l'en-but adverse après le mouvement
-  const mover = newState.players.find(p => p.id === attacker.id);
-  if (mover && mover.hasBall && isInOpponentEndzone(newState, mover)) {
-    return awardTouchdown(newState, mover.team, mover);
-  }
-
-  return {
-    ...newState,
-    pendingBlock: {
-      attackerId: updatedAttacker.id,
-      targetId: updatedTarget.id,
-      options: options.map(o => o.result),
-      chooser,
-      offensiveAssists,
-      defensiveAssists,
-      totalStrength: attackerStrength,
-      targetStrength,
-    },
-  };
-}
 
 // S27.8.2 — handlePass / handleOnTheBallMove / handleOnTheBallDecline /
 // handleHandoff / handleThrowTeamMate extraits dans
