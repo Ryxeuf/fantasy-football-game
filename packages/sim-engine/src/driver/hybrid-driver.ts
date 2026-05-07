@@ -80,10 +80,18 @@ const MAX_TURN_YARDS = 16;
 type Side = 'home' | 'away';
 type KeyMomentKind = 'block' | 'pass' | 'dodge' | 'pickup' | 'gfi' | 'foul';
 
+/**
+ * Drive state in the hybrid driver. The active team always carries
+ * the ball — the model has no "loose ball" phase between turns
+ * (kickoff scatter, fumble pickups, etc. are abstracted away). A
+ * future full driver will reintroduce a dedicated `hasPossession`
+ * flag to distinguish "live ball, no holder" scenarios ; the AI
+ * `DriveSnapshot` already exposes that flag for forward-looking
+ * planning.
+ */
 interface DriveState {
   drivingTeam: Side;
   ballYardline: number; // 0..FIELD_YARDS, 0 = own goal line
-  hasPossession: boolean;
 }
 
 interface MatchInternalState {
@@ -195,7 +203,7 @@ function buildKeyMomentState(
     ...attStats,
     state: 'standing',
     position: { x: 12, y: 7 },
-    hasBall: state.drive.hasPossession,
+    hasBall: true,
   };
   const def: ResolverPlayer = {
     id: `${otherSide(state.drive.drivingTeam)}-LOS`,
@@ -206,7 +214,7 @@ function buildKeyMomentState(
   };
   return {
     players: [att, def],
-    ballAt: state.drive.hasPossession ? { x: 12, y: 7 } : undefined,
+    ballAt: { x: 12, y: 7 },
     activeTeam: state.drive.drivingTeam,
     weather,
     width: FIELD_YARDS,
@@ -231,7 +239,11 @@ function pickKeyMoment(
   profile: TacticalProfile
 ): KeyMomentKind | null {
   const snap: DriveSnapshot = {
-    hasPossession: state.drive.hasPossession,
+    // The hybrid driver only models the active team's offensive turn ;
+    // possession is implied. The AI snapshot keeps a `hasPossession`
+    // field for the future full driver that will model defensive
+    // turns and loose-ball scenarios.
+    hasPossession: true,
     ballYardline: state.drive.ballYardline,
     turn: state.turn,
     half: state.half,
@@ -392,7 +404,6 @@ function nextDrive(prev: DriveState): DriveState {
   return {
     drivingTeam: otherSide(prev.drivingTeam),
     ballYardline: 4,
-    hasPossession: true,
   };
 }
 
@@ -591,10 +602,11 @@ function processTurn(
     }
   }
 
-  // Yard advancement when still in possession AND no turnover happened
-  // this turn. After a turnover the new team simply receives possession ;
-  // its drive is played on the next turn.
-  if (m.state.drive.hasPossession && !turnoverThisTurn) {
+  // Yard advancement skipped when a turnover happened this turn ;
+  // the active team's drive ends and the opponent will play its own
+  // turn on the next call to processTurn. Otherwise the active team
+  // (which always has the ball in the hybrid model) advances.
+  if (!turnoverThisTurn) {
     const yardsActive = m.state.drive.drivingTeam === 'home' ? homeProfile : awayProfile;
     const yardsOpposing = m.state.drive.drivingTeam === 'home' ? awayProfile : homeProfile;
     const tvActive = m.state.drive.drivingTeam === 'home' ? tvHome : tvAway;
@@ -646,7 +658,7 @@ export function runHybridDriver(input: SimInput, options: DriverOptions = {}): S
       turn: 1,
       scoreHome: 0,
       scoreAway: 0,
-      drive: { drivingTeam: initialReceiver, ballYardline: 4, hasPossession: true },
+      drive: { drivingTeam: initialReceiver, ballYardline: 4 },
       clockMs: kickoffAtMs,
     },
     events: [
@@ -690,7 +702,7 @@ export function runHybridDriver(input: SimInput, options: DriverOptions = {}): S
     half: 2,
     turn: 1,
     clockMs: m.state.clockMs + MS_HALFTIME,
-    drive: { drivingTeam: otherSide(initialReceiver), ballYardline: 4, hasPossession: true },
+    drive: { drivingTeam: otherSide(initialReceiver), ballYardline: 4 },
   };
 
   // Second half.
