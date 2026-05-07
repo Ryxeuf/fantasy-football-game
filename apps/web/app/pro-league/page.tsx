@@ -253,7 +253,16 @@ export default function ProLeagueHubPage(): JSX.Element {
           <h1 className="text-2xl font-bold tracking-wide text-slate-50">
             {data?.league.name ?? "Pro League"}
           </h1>
-          <WalletBadge />
+          <div className="flex items-center gap-2">
+            <Link
+              href="/pro-league/about"
+              data-testid="hub-about-link"
+              className="rounded border border-slate-700 px-2 py-1 text-xs text-slate-300 hover:bg-slate-800"
+            >
+              À propos
+            </Link>
+            <WalletBadge />
+          </div>
         </div>
         {motto ? (
           <p className="mt-1 text-sm italic text-slate-400">"{motto}"</p>
