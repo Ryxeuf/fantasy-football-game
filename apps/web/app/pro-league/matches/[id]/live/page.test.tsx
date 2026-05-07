@@ -13,6 +13,14 @@ vi.mock("../../../../lib/use-pro-league-match-stream", () => ({
   useProLeagueMatchStream: vi.fn(),
 }));
 
+vi.mock("../../../../lib/use-match-mode-redirect", () => ({
+  useMatchModeRedirect: () => ({
+    redirecting: false,
+    status: "in_progress",
+    error: null,
+  }),
+}));
+
 import { useProLeagueMatchStream } from "../../../../lib/use-pro-league-match-stream";
 import LiveProMatchPage from "./page";
 

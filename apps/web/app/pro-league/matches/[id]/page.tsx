@@ -288,7 +288,7 @@ function PostMatchCard({ match }: { match: MatchDetail }): JSX.Element {
       ) : null}
 
       <Link
-        href={`/pro-league/matches/${match.id}/live`}
+        href={`/pro-league/matches/${match.id}/replay`}
         className="inline-block rounded bg-slate-800 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-700"
       >
         Revoir le replay →

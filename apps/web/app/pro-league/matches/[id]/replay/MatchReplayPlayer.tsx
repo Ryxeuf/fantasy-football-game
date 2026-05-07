@@ -7,6 +7,7 @@ import type { MatchEvent } from "@bb/shared-types";
 
 import { apiRequest } from "../../../../lib/api-client";
 import { deriveProLeagueFieldState } from "../../../../lib/pro-league-field-state";
+import { useMatchModeRedirect } from "../../../../lib/use-match-mode-redirect";
 import {
   PLAYBACK_SPEEDS,
   type PlaybackSpeed,
@@ -206,10 +207,13 @@ function PlayerControls({
 export default function MatchReplayPlayer({
   matchId,
 }: PlayerProps): JSX.Element {
+  const redirect = useMatchModeRedirect(matchId, "replay");
   const [dump, setDump] = useState<ReplayDump | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (redirect.redirecting) return;
+    if (redirect.status !== null && redirect.status !== "completed") return;
     let cancelled = false;
     apiRequest<ReplayDump>(
       `/pro-league/matches/${encodeURIComponent(matchId)}/replay`,
@@ -225,7 +229,17 @@ export default function MatchReplayPlayer({
     return () => {
       cancelled = true;
     };
-  }, [matchId]);
+  }, [matchId, redirect.redirecting, redirect.status]);
+
+  if (redirect.redirecting) {
+    return (
+      <main className="mx-auto flex min-h-screen max-w-2xl flex-col bg-slate-950 px-4 py-6 text-slate-100">
+        <p data-testid="replay-redirecting" className="text-sm text-slate-400">
+          Redirection vers le mode adapte…
+        </p>
+      </main>
+    );
+  }
 
   const durationMs = dump?.durationMs ?? 0;
   const clock = useReplayClock({ durationMs });

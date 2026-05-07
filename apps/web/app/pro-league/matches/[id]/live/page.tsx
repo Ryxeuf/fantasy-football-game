@@ -6,6 +6,7 @@ import { useMemo } from "react";
 import type { MatchEvent } from "@bb/shared-types";
 
 import { deriveProLeagueFieldState } from "../../../../lib/pro-league-field-state";
+import { useMatchModeRedirect } from "../../../../lib/use-match-mode-redirect";
 import { useProLeagueMatchStream } from "../../../../lib/use-pro-league-match-stream";
 
 // Lazy-load Pixi (>500KB) — même pattern que /play et /spectate PvP.
@@ -153,12 +154,23 @@ function ConnectionBadge({
 export default function LiveProMatchPage({
   params,
 }: LivePageProps): JSX.Element {
+  const redirect = useMatchModeRedirect(params.id, "live");
   const { events, connectionState, error } = useProLeagueMatchStream(params.id);
   const score = useMemo(() => deriveScore(events), [events]);
   const fieldState = useMemo(
     () => deriveProLeagueFieldState(events),
     [events],
   );
+
+  if (redirect.redirecting) {
+    return (
+      <main className="mx-auto flex min-h-screen max-w-2xl flex-col bg-slate-950 px-4 py-6 text-slate-100">
+        <p data-testid="live-redirecting" className="text-sm text-slate-400">
+          Redirection vers le replay…
+        </p>
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col bg-slate-950 text-slate-100">

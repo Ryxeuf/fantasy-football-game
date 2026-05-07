@@ -14,6 +14,10 @@ vi.mock("../../../../lib/api-client", () => ({
   apiRequest: vi.fn(),
 }));
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: vi.fn() }),
+}));
+
 // Stub le ProLeagueField (chargee via next/dynamic) pour eviter Pixi.
 vi.mock("../live/ProLeagueField", () => ({
   default: () => <div data-testid="field-stub" />,
