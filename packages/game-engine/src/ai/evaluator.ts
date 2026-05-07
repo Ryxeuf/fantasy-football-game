@@ -58,6 +58,39 @@ export const EVAL_WEIGHTS = {
   END_TURN_PENALTY: 1,
 } as const;
 
+/**
+ * Sprint Pro League — Lot 3.A.0.a : pondérations effectives passées
+ * aux fonctions de scoring. Permet aux callers (sim-engine full
+ * driver) d'override certaines poids selon le profil tactique de
+ * l'équipe (Halflings ne pénalisent pas les casualties autant qu'une
+ * équipe élite, Wood Elves valorisent plus la progression de balle,
+ * etc.) tout en gardant `EVAL_WEIGHTS` immuable comme baseline.
+ *
+ * Le découplage est volontaire : `game-engine` ne dépend pas de
+ * `@bb/sim-engine` (cyclic dep), donc la conversion
+ * `TacticalProfile → Partial<EvalWeights>` se fait côté sim-engine
+ * (`packages/sim-engine/src/tactics/ai-weights.ts`).
+ *
+ * Note typage : `EvalWeights` élargit chaque entrée de `EVAL_WEIGHTS`
+ * (literals via `as const`) en `number` pour permettre des overrides
+ * avec n'importe quelle valeur entière. La constante baseline reste
+ * littérale et donc immutable.
+ */
+export type EvalWeights = {
+  [K in keyof typeof EVAL_WEIGHTS]: number;
+};
+
+/**
+ * Merge un override partiel avec les pondérations baseline. Toute
+ * clé absente du `override` retombe sur la valeur d'`EVAL_WEIGHTS`.
+ */
+export function resolveWeights(
+  override?: Partial<EvalWeights>
+): EvalWeights {
+  if (!override) return EVAL_WEIGHTS;
+  return { ...EVAL_WEIGHTS, ...override } as EvalWeights;
+}
+
 const OPPOSITE: Record<TeamId, TeamId> = { A: 'B', B: 'A' };
 
 function otherTeam(team: TeamId): TeamId {
@@ -93,33 +126,45 @@ function findBallCarrier(state: GameState): Player | undefined {
   return state.players.find(p => p.hasBall);
 }
 
-function attritionScore(state: GameState, team: TeamId): number {
+function attritionScore(
+  state: GameState,
+  team: TeamId,
+  weights: EvalWeights
+): number {
   let score = 0;
   for (const p of state.players) {
     const sign = p.team === team ? -1 : 1;
     if (p.state === 'casualty') {
-      score += sign * EVAL_WEIGHTS.PLAYER_CASUALTY_PENALTY;
+      score += sign * weights.PLAYER_CASUALTY_PENALTY;
     } else if (p.state === 'sent_off') {
-      score += sign * EVAL_WEIGHTS.PLAYER_SENT_OFF_PENALTY;
+      score += sign * weights.PLAYER_SENT_OFF_PENALTY;
     } else if (p.state === 'knocked_out') {
-      score += sign * EVAL_WEIGHTS.PLAYER_KO_PENALTY;
+      score += sign * weights.PLAYER_KO_PENALTY;
     } else if (p.stunned) {
-      score += sign * EVAL_WEIGHTS.PLAYER_STUNNED_PENALTY;
+      score += sign * weights.PLAYER_STUNNED_PENALTY;
     }
   }
   return score;
 }
 
-function playerCountScore(state: GameState, team: TeamId): number {
+function playerCountScore(
+  state: GameState,
+  team: TeamId,
+  weights: EvalWeights
+): number {
   let score = 0;
   for (const p of state.players) {
     if (!isActive(p)) continue;
-    score += (p.team === team ? 1 : -1) * EVAL_WEIGHTS.PLAYER_ACTIVE;
+    score += (p.team === team ? 1 : -1) * weights.PLAYER_ACTIVE;
   }
   return score;
 }
 
-function carrierSafetyScore(state: GameState, team: TeamId): number {
+function carrierSafetyScore(
+  state: GameState,
+  team: TeamId,
+  weights: EvalWeights
+): number {
   const carrier = findBallCarrier(state);
   if (!carrier) return 0;
   const sign = carrier.team === team ? 1 : -1;
@@ -135,8 +180,8 @@ function carrierSafetyScore(state: GameState, team: TeamId): number {
 
   return (
     sign *
-    (allies * EVAL_WEIGHTS.CARRIER_PROTECTION_ALLY -
-      opponentsInTz * EVAL_WEIGHTS.CARRIER_TACKLEZONE_PENALTY)
+    (allies * weights.CARRIER_PROTECTION_ALLY -
+      opponentsInTz * weights.CARRIER_TACKLEZONE_PENALTY)
   );
 }
 
@@ -157,7 +202,11 @@ function chebyshevDistance(a: Position, b: Position): number {
  *    (pression / marquage). Si la balle est libre, on recompense la
  *    proximite a la balle (course au pickup).
  */
-function positioningScore(state: GameState, team: TeamId): number {
+function positioningScore(
+  state: GameState,
+  team: TeamId,
+  weights: EvalWeights
+): number {
   const carrier = findBallCarrier(state);
   let total = 0;
   for (const p of state.players) {
@@ -166,50 +215,70 @@ function positioningScore(state: GameState, team: TeamId): number {
 
     if (carrier && p.team === carrier.team) {
       const distance = distanceToEndzone(state, p.pos, p.team);
-      total += sign * (state.width - 1 - distance) * EVAL_WEIGHTS.POSITIONING_PER_STEP;
+      total += sign * (state.width - 1 - distance) * weights.POSITIONING_PER_STEP;
       continue;
     }
 
     if (carrier) {
       const distance = chebyshevDistance(p.pos, carrier.pos);
-      total += sign * Math.max(0, state.width - distance) * EVAL_WEIGHTS.POSITIONING_PER_STEP;
+      total += sign * Math.max(0, state.width - distance) * weights.POSITIONING_PER_STEP;
       continue;
     }
 
     if (state.ball) {
       const distance = chebyshevDistance(p.pos, state.ball);
-      total += sign * Math.max(0, state.width - distance) * EVAL_WEIGHTS.POSITIONING_PER_STEP;
+      total += sign * Math.max(0, state.width - distance) * weights.POSITIONING_PER_STEP;
     }
   }
   return total;
 }
 
-function ballProgressScore(state: GameState, team: TeamId): number {
+function ballProgressScore(
+  state: GameState,
+  team: TeamId,
+  weights: EvalWeights
+): number {
   const carrier = findBallCarrier(state);
   if (!carrier) return 0;
   const sign = carrier.team === team ? 1 : -1;
   const distance = distanceToEndzone(state, carrier.pos, carrier.team);
-  const progress = (state.width - 1 - distance) * EVAL_WEIGHTS.BALL_PROGRESS_PER_STEP;
-  const endzoneBonus = distance === 0 ? EVAL_WEIGHTS.CARRIER_IN_ENDZONE_BONUS : 0;
+  const progress = (state.width - 1 - distance) * weights.BALL_PROGRESS_PER_STEP;
+  const endzoneBonus = distance === 0 ? weights.CARRIER_IN_ENDZONE_BONUS : 0;
   return sign * (progress + endzoneBonus);
 }
 
-function possessionScore(state: GameState, team: TeamId): number {
+function possessionScore(
+  state: GameState,
+  team: TeamId,
+  weights: EvalWeights
+): number {
   const carrier = findBallCarrier(state);
   if (!carrier) return 0;
-  return (carrier.team === team ? 1 : -1) * EVAL_WEIGHTS.POSSESSION;
+  return (carrier.team === team ? 1 : -1) * weights.POSSESSION;
 }
 
-function scoreDifferenceScore(state: GameState, team: TeamId): number {
+function scoreDifferenceScore(
+  state: GameState,
+  team: TeamId,
+  weights: EvalWeights
+): number {
   const diff = teamScore(state, team) - teamScore(state, otherTeam(team));
-  return diff * EVAL_WEIGHTS.TOUCHDOWN;
+  return diff * weights.TOUCHDOWN;
 }
 
 /**
  * Score global d'un GameState du point de vue de `team`.
  * Plus haut = meilleur pour `team`.
+ *
+ * Lot 3.A.0.a — accepte un override `weights` partiel pour modulation
+ * tactique (sim-engine full driver passe les poids dérivés du
+ * `TacticalProfile` de l'équipe).
  */
-export function evaluatePosition(state: GameState, team: TeamId): PositionEvaluation {
+export function evaluatePosition(
+  state: GameState,
+  team: TeamId,
+  weightsOverride?: Partial<EvalWeights>
+): PositionEvaluation {
   if (state.gamePhase === 'ended' && state.score.teamA === 0 && state.score.teamB === 0) {
     const zero: EvaluationBreakdown = {
       score: 0,
@@ -223,14 +292,15 @@ export function evaluatePosition(state: GameState, team: TeamId): PositionEvalua
     return { total: 0, breakdown: zero };
   }
 
+  const weights = resolveWeights(weightsOverride);
   const breakdown: EvaluationBreakdown = {
-    score: scoreDifferenceScore(state, team),
-    possession: possessionScore(state, team),
-    ballProgress: ballProgressScore(state, team),
-    playerCount: playerCountScore(state, team),
-    carrierSafety: carrierSafetyScore(state, team),
-    attrition: attritionScore(state, team),
-    positioning: positioningScore(state, team),
+    score: scoreDifferenceScore(state, team, weights),
+    possession: possessionScore(state, team, weights),
+    ballProgress: ballProgressScore(state, team, weights),
+    playerCount: playerCountScore(state, team, weights),
+    carrierSafety: carrierSafetyScore(state, team, weights),
+    attrition: attritionScore(state, team, weights),
+    positioning: positioningScore(state, team, weights),
   };
 
   const total =
@@ -275,12 +345,13 @@ function estimateBlockKnockdown(state: GameState, attacker: Player, target: Play
 function scoreMoveMove(
   state: GameState,
   move: Extract<Move, { type: 'MOVE' }>,
-  team: TeamId
+  team: TeamId,
+  weightsOverride?: Partial<EvalWeights>
 ): number {
   const player = findPlayer(state, move.playerId);
   if (!player) return -Infinity;
 
-  const before = evaluatePosition(state, team).total;
+  const before = evaluatePosition(state, team, weightsOverride).total;
   const simulated: GameState = {
     ...state,
     players: state.players.map(p =>
@@ -288,30 +359,28 @@ function scoreMoveMove(
     ),
     ball: player.hasBall ? { ...move.to } : state.ball,
   };
-  const after = evaluatePosition(simulated, team).total;
+  const after = evaluatePosition(simulated, team, weightsOverride).total;
   return after - before;
 }
 
 function scoreMoveBlock(
   state: GameState,
   move: Extract<Move, { type: 'BLOCK' }>,
-  team: TeamId
+  team: TeamId,
+  weightsOverride?: Partial<EvalWeights>
 ): number {
   const attacker = findPlayer(state, move.playerId);
   const target = findPlayer(state, move.targetId);
   if (!attacker || !target) return -Infinity;
 
+  const weights = resolveWeights(weightsOverride);
   const knockdown = estimateBlockKnockdown(state, attacker, target);
   const knockoutValue =
     target.team === team
-      ? -EVAL_WEIGHTS.PLAYER_ACTIVE - EVAL_WEIGHTS.PLAYER_STUNNED_PENALTY
-      : EVAL_WEIGHTS.PLAYER_ACTIVE + EVAL_WEIGHTS.PLAYER_STUNNED_PENALTY;
+      ? -weights.PLAYER_ACTIVE - weights.PLAYER_STUNNED_PENALTY
+      : weights.PLAYER_ACTIVE + weights.PLAYER_STUNNED_PENALTY;
 
-  const possessionSwing = target.hasBall ? EVAL_WEIGHTS.POSSESSION * 0.5 : 0;
-  // Risque calibre pour qu un block 50/50 reste preferable a END_TURN :
-  // un attaquant tombe rarement (defAssists > atkAssists) sur un block
-  // equilibre, le malus reflete le risque reel de turnover sans le rendre
-  // prohibitif.
+  const possessionSwing = target.hasBall ? weights.POSSESSION * 0.5 : 0;
   const selfRisk = knockdown < 0.2 ? -30 : knockdown < 0.4 ? -10 : 0;
   return knockdown * (knockoutValue + possessionSwing) + selfRisk;
 }
@@ -319,7 +388,8 @@ function scoreMoveBlock(
 function scoreMoveBlitz(
   state: GameState,
   move: Extract<Move, { type: 'BLITZ' }>,
-  team: TeamId
+  team: TeamId,
+  weightsOverride?: Partial<EvalWeights>
 ): number {
   const attacker = findPlayer(state, move.playerId);
   const target = findPlayer(state, move.targetId);
@@ -328,7 +398,8 @@ function scoreMoveBlitz(
   const moveDelta = scoreMoveMove(
     state,
     { type: 'MOVE', playerId: move.playerId, to: move.to },
-    team
+    team,
+    weightsOverride
   );
   const simulated: GameState = {
     ...state,
@@ -337,7 +408,8 @@ function scoreMoveBlitz(
   const blockDelta = scoreMoveBlock(
     simulated,
     { type: 'BLOCK', playerId: move.playerId, targetId: move.targetId },
-    team
+    team,
+    weightsOverride
   );
   return moveDelta + blockDelta;
 }
@@ -345,7 +417,8 @@ function scoreMoveBlitz(
 function scoreMovePass(
   state: GameState,
   move: Extract<Move, { type: 'PASS' | 'HANDOFF' }>,
-  team: TeamId
+  team: TeamId,
+  weightsOverride?: Partial<EvalWeights>
 ): number {
   const passer = findPlayer(state, move.playerId);
   const receiver = findPlayer(state, move.targetId);
@@ -360,9 +433,9 @@ function scoreMovePass(
       return p;
     }),
   };
-  const delta = evaluatePosition(simulated, team).total - evaluatePosition(state, team).total;
-  // Risque de PASS reduit (echec/intercept) : avec l ancien -20, l IA refusait
-  // toute passe sauf gain positionnel exceptionnel.
+  const delta =
+    evaluatePosition(simulated, team, weightsOverride).total -
+    evaluatePosition(state, team, weightsOverride).total;
   const risk = move.type === 'PASS' ? -8 : 0;
   return delta + risk;
 }
@@ -382,27 +455,38 @@ function scoreMoveFoul(
 /**
  * Score heuristique d'un coup (perspective `team`).
  * Un score plus haut indique un coup juge preferable.
+ *
+ * Lot 3.A.0.a — accepte un override `weights` partiel (typiquement
+ * dérivé du `TacticalProfile` côté sim-engine full driver).
  */
-export function scoreMove(state: GameState, move: Move, team: TeamId): number {
+export function scoreMove(
+  state: GameState,
+  move: Move,
+  team: TeamId,
+  weightsOverride?: Partial<EvalWeights>
+): number {
+  const weights = resolveWeights(weightsOverride);
   switch (move.type) {
     case 'END_TURN':
-      // Petite penalite pour casser les egalites avec les MOVE neutres.
-      // Sans ca, END_TURN (premier dans getLegalMoves) gagne tout tie-break
-      // stable et l IA passe son tour des qu un coup ne change pas l evaluation.
-      return -EVAL_WEIGHTS.END_TURN_PENALTY;
+      return -weights.END_TURN_PENALTY;
     case 'MOVE':
-      return scoreMoveMove(state, move, team);
+      return scoreMoveMove(state, move, team, weightsOverride);
     case 'LEAP':
       return (
-        scoreMoveMove(state, { type: 'MOVE', playerId: move.playerId, to: move.to }, team) - 15
+        scoreMoveMove(
+          state,
+          { type: 'MOVE', playerId: move.playerId, to: move.to },
+          team,
+          weightsOverride
+        ) - 15
       );
     case 'BLOCK':
-      return scoreMoveBlock(state, move, team);
+      return scoreMoveBlock(state, move, team, weightsOverride);
     case 'BLITZ':
-      return scoreMoveBlitz(state, move, team);
+      return scoreMoveBlitz(state, move, team, weightsOverride);
     case 'PASS':
     case 'HANDOFF':
-      return scoreMovePass(state, move, team);
+      return scoreMovePass(state, move, team, weightsOverride);
     case 'FOUL':
       return scoreMoveFoul(state, move, team);
     case 'END_PLAYER_TURN':
@@ -415,16 +499,22 @@ export function scoreMove(state: GameState, move: Move, team: TeamId): number {
 /**
  * Retourne le coup legal au meilleur score pour `team` (null si aucun coup).
  * En cas d'egalite, conserve le premier coup rencontre (ordre stable).
+ *
+ * Lot 3.A.0.a — `weightsOverride` propagé jusqu'au scoring.
  */
-export function pickBestMove(state: GameState, team: TeamId): Move | null {
+export function pickBestMove(
+  state: GameState,
+  team: TeamId,
+  weightsOverride?: Partial<EvalWeights>
+): Move | null {
   const legal = getLegalMoves(state);
   if (legal.length === 0) return null;
 
   let bestMove: Move = legal[0];
-  let bestScore = scoreMove(state, bestMove, team);
+  let bestScore = scoreMove(state, bestMove, team, weightsOverride);
   for (let i = 1; i < legal.length; i++) {
     const candidate = legal[i];
-    const candidateScore = scoreMove(state, candidate, team);
+    const candidateScore = scoreMove(state, candidate, team, weightsOverride);
     if (candidateScore > bestScore) {
       bestScore = candidateScore;
       bestMove = candidate;

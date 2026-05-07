@@ -9,8 +9,13 @@ export {
   scoreMove,
   pickBestMove,
   EVAL_WEIGHTS,
+  resolveWeights,
 } from './evaluator';
-export type { EvaluationBreakdown, PositionEvaluation } from './evaluator';
+export type {
+  EvalWeights,
+  EvaluationBreakdown,
+  PositionEvaluation,
+} from './evaluator';
 
 export {
   AI_DIFFICULTY_LEVELS,

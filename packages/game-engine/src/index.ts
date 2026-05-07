@@ -406,6 +406,7 @@ export {
   scoreMove,
   pickBestMove,
   EVAL_WEIGHTS,
+  resolveWeights,
   AI_DIFFICULTY_LEVELS,
   AI_DIFFICULTY_PROFILES,
   DEFAULT_AI_DIFFICULTY,
@@ -422,6 +423,7 @@ export {
   pickAIKickoffBallPosition,
 } from './ai';
 export type {
+  EvalWeights,
   EvaluationBreakdown,
   PositionEvaluation,
   AIDifficulty,
