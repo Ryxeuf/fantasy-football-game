@@ -212,6 +212,55 @@ describe('runHybridDriver — turnover does not chain into a same-turn TD (Bug #
     }
   });
 
+  /**
+   * Successful pass moments now advance the drive by the pass
+   * distance (4 yards short pass in the synthetic resolver state).
+   * We assert that across 200 seeds at least one TURN_START → next
+   * TURN_START transition reflects an integer yard delta — i.e. the
+   * driver's bulk rollYards output isn't the only source of yardage
+   * anymore, passes contribute too. This is a smoke test : the
+   * exact yardage attribution per event is hard to verify from the
+   * timeline alone (events share displayAtMs), so we just verify
+   * yardline progression is observed across PASS-success turns.
+   */
+  it('successful PASS events contribute to ball advancement (smoke)', () => {
+    let observed = 0;
+    for (let seed = 0; seed < 200 && observed < 1; seed += 1) {
+      const out = runHybridDriver(baseInput({ seed }));
+      // Find a turn that contains a successful PASS event and check
+      // the next TURN_START shows a positive yardline delta on the
+      // same drivingTeam.
+      let lastTurnStart:
+        | { yardline: number; team: string }
+        | null = null;
+      let sawPassSuccess = false;
+      for (const ev of out.events) {
+        if (ev.type === 'TURN_START') {
+          if (sawPassSuccess && lastTurnStart) {
+            const m = (ev.meta ?? {}) as Record<string, unknown>;
+            if (
+              String(m.drivingTeam) === lastTurnStart.team &&
+              Number(m.ballYardline) > lastTurnStart.yardline
+            ) {
+              observed += 1;
+            }
+          }
+          const m = (ev.meta ?? {}) as Record<string, unknown>;
+          lastTurnStart = {
+            yardline: Number(m.ballYardline),
+            team: String(m.drivingTeam),
+          };
+          sawPassSuccess = false;
+        }
+        if (ev.type === 'PASS') {
+          const m = (ev.meta ?? {}) as Record<string, unknown>;
+          if (m.success === true) sawPassSuccess = true;
+        }
+      }
+    }
+    expect(observed).toBeGreaterThan(0);
+  });
+
   it('no pickup_failed turnover ever fires (active team always already has possession)', () => {
     for (let seed = 0; seed < 200; seed += 1) {
       const out = runHybridDriver(baseInput({ seed }));

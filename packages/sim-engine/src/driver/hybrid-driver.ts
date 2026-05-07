@@ -257,6 +257,15 @@ function pickKeyMoment(
 interface KeyMomentOutcome {
   events: readonly MatchEvent[];
   turnover: boolean;
+  /**
+   * Yards the ball physically travelled forward as part of this key
+   * moment. Currently only emitted by a successful pass — block /
+   * dodge / pickup / gfi / foul are positional moments that don't
+   * advance the drive directly. The driver applies this on top of
+   * the bulk per-turn yard advancement so a "+4 yard short pass" on
+   * the timeline is reflected in the next TURN_START's yardline.
+   */
+  yardsGained?: number;
 }
 
 function runKeyMoment(
@@ -295,16 +304,27 @@ function runKeyMoment(
     }
     case 'pass': {
       if (!att.hasBall) return { events: [], turnover: false };
+      // The synthetic resolver state always places the LOS attacker at
+      // x=12, target at x=16 (a 4-yard short pass). On success the
+      // ball physically advanced by that distance, so we surface it
+      // to the driver via `yardsGained` ; the driver then advances
+      // ballYardline (and may even score a TD if the pass crosses
+      // the goal line).
+      const passDistance = 4;
       const out = resolvePass(
         resolverState,
         {
           passerId: att.id,
-          to: { x: att.position.x + 4, y: att.position.y },
+          to: { x: att.position.x + passDistance, y: att.position.y },
           displayAtMs,
         },
         rngs.pass
       );
-      return { events: out.events, turnover: out.turnover };
+      return {
+        events: out.events,
+        turnover: out.turnover,
+        yardsGained: out.success ? passDistance : 0,
+      };
     }
     case 'pickup': {
       // Skip when the active team already has the ball — a pickup
@@ -531,6 +551,11 @@ function processTurn(
   // sequences in the same TURN_START block. The new possession is
   // played out normally on the next call to processTurn.
   let turnoverThisTurn = false;
+  // Track yards already gained via key moments (currently only PASS).
+  // The MAX_TURN_YARDS cap (#1) applies to the *total* turn — not just
+  // the bulk rollYards block — otherwise a successful pass + bulk
+  // advance could chain into a single-turn TD from the LOS again.
+  let yardsThisTurn = 0;
   for (let i = 0; i < momentCount; i += 1) {
     const moment = pickKeyMoment(rngs.strategic, m.state, activeProfile);
     if (moment === null) continue;
@@ -600,6 +625,37 @@ function processTurn(
       turnoverThisTurn = true;
       break;
     }
+
+    // A successful key moment (currently only PASS) can physically
+    // advance the ball. Apply the gain immediately so the drive
+    // reflects the play, and emit a TD if the throw crossed the
+    // goal line. The remaining yard budget for the turn (cap #1)
+    // shrinks accordingly so a pass + bulk advance can't compound
+    // into a single-turn LOS-to-TD.
+    const yardsGained = attempt.yardsGained ?? 0;
+    if (yardsGained > 0) {
+      const allowed = Math.min(yardsGained, MAX_TURN_YARDS - yardsThisTurn);
+      yardsThisTurn += allowed;
+      const newYard = m.state.drive.ballYardline + allowed;
+      if (newYard >= FIELD_YARDS) {
+        const scoring = m.state.drive.drivingTeam;
+        if (scoring === 'home') m.state = { ...m.state, scoreHome: m.state.scoreHome + 1 };
+        else m.state = { ...m.state, scoreAway: m.state.scoreAway + 1 };
+        m.touchdowns += 1;
+        recordTouchdown(m.momentum, drivingPlayerId);
+        emitTd(m, scoring);
+        m.state = { ...m.state, drive: nextDrive(m.state.drive) };
+        // A scoring play ends the team's turn ; treat it like a
+        // turnover-on-the-positive-side so the bulk yard advancement
+        // below is skipped and the opponent receives next turn.
+        turnoverThisTurn = true;
+        break;
+      }
+      m.state = {
+        ...m.state,
+        drive: { ...m.state.drive, ballYardline: newYard },
+      };
+    }
   }
 
   // Yard advancement skipped when a turnover happened this turn ;
@@ -613,7 +669,13 @@ function processTurn(
     const tvOpposing = m.state.drive.drivingTeam === 'home' ? tvAway : tvHome;
     const tvDelta =
       typeof tvActive === 'number' && typeof tvOpposing === 'number' ? tvActive - tvOpposing : 0;
-    const gained = rollYards(rngs.strategic, yardsActive, yardsOpposing, tvDelta);
+    const rolled = rollYards(rngs.strategic, yardsActive, yardsOpposing, tvDelta);
+    // Apply the per-turn cap accounting for yards already gained via
+    // key moments. Without this clamp a pass (+4) followed by a
+    // breakthrough bulk roll (+16) would compound to +20 — enough to
+    // single-turn-TD from yardline 6, breaking the cap #1 guarantee.
+    const remaining = Math.max(0, MAX_TURN_YARDS - yardsThisTurn);
+    const gained = Math.min(rolled, remaining);
     const newYard = m.state.drive.ballYardline + gained;
     if (newYard >= FIELD_YARDS) {
       const scoring = m.state.drive.drivingTeam;
