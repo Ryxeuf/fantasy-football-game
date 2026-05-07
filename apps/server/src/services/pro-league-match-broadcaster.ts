@@ -40,6 +40,7 @@ import { EventEmitter } from "node:events";
 import { decompressEvents, type MatchEvent } from "@bb/sim-engine";
 
 import { prisma } from "../prisma";
+import { appMetrics } from "../utils/metrics";
 
 /** Fréquence du tick interne (ms). 100ms = précision visuelle suffisante. */
 const TICK_INTERVAL_MS = 100;
@@ -64,6 +65,22 @@ interface MatchSession {
 }
 
 const sessions = new Map<string, MatchSession>();
+
+/**
+ * Lot 2.A.4 — recompute and push the broadcaster gauges from the
+ * current sessions Map. Called after every mutation (session
+ * created/reaped, subscriber added/removed) so Grafana sees the
+ * live state without a polling loop. O(n) on number of active
+ * sessions ; n is small (a handful at MVP scale).
+ */
+function refreshBroadcasterGauges(): void {
+  let totalSubscribers = 0;
+  for (const session of sessions.values()) {
+    totalSubscribers += session.subscribers;
+  }
+  appMetrics.setBroadcasterActiveSessions(sessions.size);
+  appMetrics.setBroadcasterTotalSubscribers(totalSubscribers);
+}
 
 /**
  * Charge la session d'un match si elle n'existe pas encore. Décompresse
@@ -110,6 +127,7 @@ async function ensureSession(matchId: string): Promise<MatchSession> {
   // Permet beaucoup de listeners (par défaut 10) — on cap à 1024.
   session.emitter.setMaxListeners(1024);
   sessions.set(matchId, session);
+  refreshBroadcasterGauges();
 
   startTickLoop(session);
   return session;
@@ -128,6 +146,11 @@ function startTickLoop(session: MatchSession): void {
       session.events[session.nextIndex].displayAtMs <= elapsed
     ) {
       const ev = session.events[session.nextIndex];
+      // Lot 2.A.4 — observe le délai dispatch : combien de temps cet
+      // event a attendu après son `displayAtMs` planifié. Un dispatch
+      // healthy reste sous TICK_INTERVAL_MS (100ms) ; au-delà,
+      // ça signale un saturation du tick loop ou de l'event loop Node.
+      appMetrics.observeBroadcasterDispatchLag(elapsed - ev.displayAtMs);
       session.emitter.emit("event", ev);
       session.nextIndex += 1;
     }
@@ -153,6 +176,7 @@ function maybeReap(session: MatchSession): void {
     !session.timer
   ) {
     sessions.delete(session.matchId);
+    refreshBroadcasterGauges();
   }
 }
 
@@ -174,10 +198,12 @@ export async function subscribeToMatch(
 
   session.emitter.on("event", listener);
   session.subscribers += 1;
+  refreshBroadcasterGauges();
 
   return () => {
     session.emitter.off("event", listener);
     session.subscribers -= 1;
+    refreshBroadcasterGauges();
     maybeReap(session);
   };
 }
@@ -201,6 +227,7 @@ export function __resetBroadcasterForTesting(): void {
     session.emitter.removeAllListeners();
   }
   sessions.clear();
+  refreshBroadcasterGauges();
 }
 
 /**
