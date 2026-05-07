@@ -926,4 +926,76 @@ router.delete("/teams/:id", async (req, res) => {
   }
 });
 
+/**
+ * S27.6.3 — Pure helper qui parse les query params de `/audit-log` en
+ * un `where` Prisma + pagination clamped (max 200 par page). Extrait
+ * pour pouvoir etre teste sans Prisma.
+ */
+export function parseAuditLogQuery(query: {
+  limit?: unknown;
+  page?: unknown;
+  userId?: unknown;
+  action?: unknown;
+  entity?: unknown;
+}): {
+  limit: number;
+  page: number;
+  skip: number;
+  where: { userId?: string; action?: string; entity?: string };
+} {
+  const limitRaw = parseInt(
+    typeof query.limit === "string" ? query.limit : "50",
+    10,
+  );
+  const limit = Number.isFinite(limitRaw)
+    ? Math.max(1, Math.min(200, limitRaw))
+    : 50;
+  const pageRaw = parseInt(
+    typeof query.page === "string" ? query.page : "1",
+    10,
+  );
+  const page = Number.isFinite(pageRaw) && pageRaw > 0 ? pageRaw : 1;
+  const skip = (page - 1) * limit;
+
+  const where: { userId?: string; action?: string; entity?: string } = {};
+  if (typeof query.userId === "string" && query.userId.length > 0) {
+    where.userId = query.userId;
+  }
+  if (typeof query.action === "string" && query.action.length > 0) {
+    where.action = query.action;
+  }
+  if (typeof query.entity === "string" && query.entity.length > 0) {
+    where.entity = query.entity;
+  }
+  return { limit, page, skip, where };
+}
+
+/**
+ * S27.6.3 — Lecture du journal d'audit admin.
+ *
+ * Retourne les entrees `AuditLog` les plus recentes, paginated +
+ * filtrables par `userId`, `action`, `entity`. Tri par `createdAt`
+ * DESC (plus recent en haut), borne a 200 entrees max par page pour
+ * eviter de saturer le payload.
+ */
+router.get("/audit-log", async (req, res) => {
+  try {
+    const { limit, page, skip, where } = parseAuditLogQuery(req.query);
+    const total = await prisma.auditLog.count({ where });
+    const entries = await prisma.auditLog.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      skip,
+    });
+
+    res.json({ entries, total, page, limit });
+  } catch (e) {
+    serverLog.error(e);
+    res
+      .status(500)
+      .json({ error: "Erreur lors de la lecture du journal d'audit" });
+  }
+});
+
 export default router;

@@ -165,6 +165,9 @@ export default function NewTeamBuilder() {
   const rulesetLabels: Record<Ruleset, string> = {
     season_2: t.teams.rulesetSeason2 ?? "Saison 2",
     season_3: t.teams.rulesetSeason3 ?? "Saison 3",
+    // S27.5 — skeleton S4 vide ; libelle minimaliste en attendant
+    // les rosters officiels GW 2025-2026.
+    season_4: "Saison 4 (skeleton)",
   };
 
   function change(slug: string, delta: number) {
