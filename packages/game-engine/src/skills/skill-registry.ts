@@ -45,6 +45,12 @@ export interface SkillContext {
    * automatiquement avec le trigger demande.
    */
   currentTrigger?: SkillTrigger;
+  /**
+   * S27.7.3 — Indique si l'action en cours est un Blitz (mouvement +
+   * blocage). Utilise par Horns (`+1 ST` uniquement sur Blitz). Reste
+   * `undefined` pour un blocage standard ou les autres triggers.
+   */
+  isBlitz?: boolean;
 }
 
 export interface SkillModifier {
@@ -420,11 +426,15 @@ registerSkill({
 });
 
 // HORNS
+// S27.7.3 — Le bonus ne s'applique qu'en cas de Blitz (mouvement + blocage),
+// jamais sur un Block standard. Lu via `collectModifiers(attacker,
+// 'on-block-attacker', { state, opponent: target, isBlitz })` dans
+// `actions.ts` au moment du calcul de `attackerStrength`.
 registerSkill({
   slug: 'horns',
   triggers: ['on-block-attacker'],
   description: '+1 ST lors d\'un Blitz.',
-  canApply: (ctx) => hasSkill(ctx.player, 'horns'),
+  canApply: (ctx) => hasSkill(ctx.player, 'horns') && ctx.isBlitz === true,
   getModifiers: () => ({ strengthModifier: 1 }),
 });
 
@@ -669,9 +679,16 @@ registerSkill({
 });
 
 // PILE DRIVER
+// S27.7.3 — Trigger `passive` : Pile Driver n'a pas de modificateur
+// chiffre cote moteur ; il documente une regle (faute gratuite apres
+// knockdown) traitee au niveau de l'orchestration. L'ancien trigger
+// `on-block-attacker` faisait apparaitre Pile Driver dans
+// `getSkillsForTrigger('on-block-attacker')` sans intention metier.
+// La decouverte UI continue via `getSkillEffect('pile-driver')` ou
+// `getAllRegisteredSkills()`.
 registerSkill({
   slug: 'pile-driver',
-  triggers: ['on-block-attacker'],
+  triggers: ['passive'],
   description: 'Après avoir renversé un joueur, peut effectuer une faute gratuite (sans risque d\'expulsion).',
   canApply: (ctx) => hasSkill(ctx.player, 'pile-driver') || hasSkill(ctx.player, 'pile_driver'),
 });
@@ -1037,11 +1054,21 @@ registerSkill({
 // `findMultipleBlockTargets`, etc.) avec tracking via
 // `state.usedMultipleBlockThisTurn` et `state.pendingMultipleBlock`.
 // L'entree du registre sert a la decouverte UI.
+// S27.7.3 — `canApply` se gate desormais sur `pendingMultipleBlock`
+// pour eviter un double-comptage avec la logique legacy de
+// `actions.ts` (`multipleBlockPenalty`). Apres S27.7.3 la mecanique
+// passe entierement par le registry : `actions.ts` consomme le -2 ST
+// via `collectModifiers(attacker, 'on-block-attacker', { state, ...})`,
+// le const `MULTIPLE_BLOCK_ST_PENALTY` reste source de verite pour le
+// chiffre.
 registerSkill({
   slug: 'multiple-block',
   triggers: ['on-block-attacker'],
   description: "Une fois par tour d'equipe, ce joueur peut effectuer une action de Blocage ciblant deux adversaires adjacents simultanement. Chaque bloc subit un malus de -2 a la Force de l'attaquant.",
-  canApply: (ctx) => hasSkill(ctx.player, 'multiple-block') || hasSkill(ctx.player, 'multiple_block'),
+  canApply: (ctx) =>
+    (hasSkill(ctx.player, 'multiple-block') ||
+      hasSkill(ctx.player, 'multiple_block')) &&
+    ctx.state.pendingMultipleBlock?.attackerId === ctx.player.id,
   getModifiers: () => ({ strengthModifier: -2 }),
 });
 

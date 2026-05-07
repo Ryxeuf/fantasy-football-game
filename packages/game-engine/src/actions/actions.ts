@@ -6,6 +6,7 @@
 import { GameState, Move, Player, Position, TeamId, RNG, BlockResult, ActionType } from '../core/types';
 import { hasSkill } from '../skills/skill-effects';
 import { getDodgeSkillModifiers, getPickupSkillModifiers, canSkillReroll } from '../skills/skill-bridge';
+import { collectModifiers } from '../skills/skill-registry';
 import {
   inBounds,
   samePos,
@@ -86,9 +87,7 @@ import { hasFrenzy } from '../mechanics/frenzy';
 import { getArmBarBonus } from '../mechanics/arm-bar';
 import {
   canPerformMultipleBlock,
-  isMultipleBlockActiveFor,
   markMultipleBlockUsed,
-  MULTIPLE_BLOCK_ST_PENALTY,
 } from '../mechanics/multiple-block';
 import {
   getOnTheBallReactivePlayers,
@@ -1590,16 +1589,22 @@ function handleBlock(
   const offensiveAssists = calculateOffensiveAssists(stateAfterFA, attacker, target);
   const defensiveAssists = calculateDefensiveAssists(stateAfterFA, attacker, target);
 
-  // Multiple Block : -2 ST applique aux deux blocs de la sequence.
-  // Le flag `pendingMultipleBlock.attackerId` reste pose pour toute la
-  // sequence multi-bloc ; il est consomme apres la resolution complete du
-  // second bloc.
-  const multipleBlockPenalty = isMultipleBlockActiveFor(stateAfterFA, attacker.id)
-    ? MULTIPLE_BLOCK_ST_PENALTY
-    : 0;
+  // S27.7.3 — Modifiers ST de l'attaquant collectes via le registry :
+  // Horns +1 ST (Blitz uniquement), Multiple Block -2 ST (sequence
+  // active), futurs skills ST. Plus de hardcode dans la mecanique :
+  // tout passe par `collectModifiers(..., 'on-block-attacker',
+  // { state, opponent, isBlitz })`.
+  const attackerSkillStMods = collectModifiers(attacker, 'on-block-attacker', {
+    state: stateAfterFA,
+    opponent: target,
+    isBlitz: isBlitzDuringMove,
+  });
+  const attackerSkillStBonus = attackerSkillStMods.strengthModifier ?? 0;
 
-  // Forces de base avant Dauntless (incluant la penalite Multiple Block)
-  const baseAttackerStrength = attacker.st + offensiveAssists + multipleBlockPenalty;
+  // Forces de base avant Dauntless (penalite Multiple Block et bonus
+  // Horns inclus via `attackerSkillStBonus`).
+  const baseAttackerStrength =
+    attacker.st + offensiveAssists + attackerSkillStBonus;
   const targetStrength = target.st + defensiveAssists;
 
   // ─── Dauntless check ───────────────────────────────────────────────────

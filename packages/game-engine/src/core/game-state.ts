@@ -16,6 +16,7 @@ import { getWeatherModifiers, applyWeatherDriveEffects } from '../mechanics/weat
 import { getWeatherCondition, type WeatherType } from './weather-types';
 import { hasSkill } from '../skills/skill-effects';
 import { collectModifiers } from '../skills/skill-registry';
+import { isSneakyGitActive } from '../skills/skill-bridge';
 
 export type { PreMatchState };
 
@@ -976,10 +977,12 @@ export function canPlayerContinueMoving(state: GameState, playerId: string): boo
   const runningPassActive =
     (state.usedRunningPassThisTurn ?? []).includes(playerId) &&
     (playerAction === 'PASS' || playerAction === 'HANDOFF');
-  // Sneaky Git : l'activation ne se termine pas apres une faute.
+  // S27.7.3 — Sneaky Git : l'activation ne se termine pas apres une faute.
+  // Unifie via `isSneakyGitActive` (skill-bridge) qui passe par
+  // `getSkillEffect('sneaky-git').canApply()`. Plus de double check direct
+  // `hasSkill`.
   const sneakyGitFoulContinues =
-    playerAction === 'FOUL' &&
-    (hasSkill(player, 'sneaky-git') || hasSkill(player, 'sneaky_git'));
+    playerAction === 'FOUL' && isSneakyGitActive(state, player);
   return (
     !player.stunned &&
     hasMovement &&

@@ -108,9 +108,18 @@ describe('O.1 batch 3k — skill-registry discovery entries', () => {
 
       it(`"${slug}" : canApply = true avec le skill`, () => {
         const effect = getSkillEffect(slug)!;
+        const player = { ...basePlayer, skills: [slug] };
+        // S27.7.3 — multiple-block est gate sur `pendingMultipleBlock`
+        // (anti double-comptage avec la legacy `multipleBlockPenalty`).
+        // Pour les autres skills de ce batch, le state vide suffit.
+        const stateExtras =
+          slug === 'multiple-block'
+            ? { pendingMultipleBlock: { attackerId: player.id, secondTargetId: 'X' } }
+            : {};
         const ctx = {
           ...baseCtx,
-          player: { ...basePlayer, skills: [slug] },
+          player,
+          state: { ...(baseCtx.state as object), ...stateExtras },
         };
         expect(effect.canApply(ctx as any)).toBe(true);
       });
