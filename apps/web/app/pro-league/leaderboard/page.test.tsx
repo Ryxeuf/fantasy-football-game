@@ -21,9 +21,18 @@ vi.mock("../../lib/use-wallet", () => ({
 }));
 
 import { apiRequest } from "../../lib/api-client";
+import { LanguageProvider } from "../../contexts/LanguageContext";
 import LeaderboardPage from "./page";
 
 const mockedApi = vi.mocked(apiRequest);
+
+function renderPage(): ReturnType<typeof render> {
+  return render(
+    <LanguageProvider>
+      <LeaderboardPage />
+    </LanguageProvider>,
+  );
+}
 
 function makeData(entries: Array<Partial<{
   rank: number; userId: string; coachName: string; betsCount: number;
@@ -57,13 +66,13 @@ beforeEach(() => {
 describe("LeaderboardPage — sprint 1.D.8", () => {
   it("affiche 'Chargement' pendant le fetch", () => {
     mockedApi.mockReturnValue(new Promise(() => undefined));
-    render(<LeaderboardPage />);
+    renderPage();
     expect(screen.getByText(/Chargement/)).toBeTruthy();
   });
 
   it("affiche les 3 onglets de période", () => {
     mockedApi.mockReturnValue(new Promise(() => undefined));
-    render(<LeaderboardPage />);
+    renderPage();
     expect(screen.getByTestId("period-weekly")).toBeTruthy();
     expect(screen.getByTestId("period-season")).toBeTruthy();
     expect(screen.getByTestId("period-all-time")).toBeTruthy();
@@ -76,7 +85,7 @@ describe("LeaderboardPage — sprint 1.D.8", () => {
         { coachName: "Bob", profit: -100 },
       ]),
     );
-    render(<LeaderboardPage />);
+    renderPage();
     await waitFor(() => {
       expect(screen.getByTestId("leaderboard-table")).toBeTruthy();
     });
@@ -88,7 +97,7 @@ describe("LeaderboardPage — sprint 1.D.8", () => {
 
   it("change de période en cliquant sur un onglet", async () => {
     mockedApi.mockResolvedValue(makeData());
-    render(<LeaderboardPage />);
+    renderPage();
     await waitFor(() => {
       expect(mockedApi).toHaveBeenCalledWith(
         expect.stringContaining("period=season"),
@@ -104,7 +113,7 @@ describe("LeaderboardPage — sprint 1.D.8", () => {
 
   it("affiche placeholder si entries vide", async () => {
     mockedApi.mockResolvedValue(makeData([]));
-    render(<LeaderboardPage />);
+    renderPage();
     await waitFor(() => {
       expect(screen.getByTestId("empty-leaderboard")).toBeTruthy();
     });
@@ -112,7 +121,7 @@ describe("LeaderboardPage — sprint 1.D.8", () => {
 
   it("affiche message d'erreur si API throw", async () => {
     mockedApi.mockRejectedValue(new Error("boom"));
-    render(<LeaderboardPage />);
+    renderPage();
     await waitFor(() => {
       expect(screen.getByRole("alert")).toBeTruthy();
     });

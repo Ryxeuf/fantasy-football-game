@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { apiRequest } from "../../lib/api-client";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 import { WalletBadge } from "../_components/WalletBadge";
 
@@ -37,11 +38,7 @@ interface LeaderboardData {
   readonly offset: number;
 }
 
-const PERIOD_LABELS: Record<Period, string> = {
-  weekly: "Semaine",
-  season: "Saison",
-  "all-time": "Tout temps",
-};
+const PERIODS: readonly Period[] = ["weekly", "season", "all-time"];
 
 function profitColorClass(p: number): string {
   if (p > 0) return "text-emerald-300";
@@ -55,10 +52,17 @@ function formatProfit(p: number): string {
 }
 
 export default function LeaderboardPage(): JSX.Element {
+  const { t } = useLanguage();
   const [period, setPeriod] = useState<Period>("season");
   const [data, setData] = useState<LeaderboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const periodLabel = (p: Period): string => {
+    if (p === "weekly") return t.proLeague.leaderboard.periodWeekly;
+    if (p === "season") return t.proLeague.leaderboard.periodSeason;
+    return t.proLeague.leaderboard.periodAllTime;
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -88,7 +92,7 @@ export default function LeaderboardPage(): JSX.Element {
     <main className="mx-auto flex min-h-screen max-w-4xl flex-col bg-slate-950 px-4 py-6 text-slate-100">
       <header className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-wide text-slate-50">
-          Leaderboard parieurs
+          {t.proLeague.leaderboard.title}
         </h1>
         <div className="flex items-center gap-2">
           <WalletBadge />
@@ -96,7 +100,7 @@ export default function LeaderboardPage(): JSX.Element {
             href="/pro-league"
             className="rounded border border-slate-700 px-3 py-1 text-sm text-slate-300 hover:bg-slate-800"
           >
-            ← Hub
+            {t.proLeague.common.backToHub}
           </Link>
         </div>
       </header>
@@ -105,7 +109,7 @@ export default function LeaderboardPage(): JSX.Element {
         data-testid="period-tabs"
         className="mb-4 flex gap-1 rounded border border-slate-800 bg-slate-900 p-1"
       >
-        {(Object.keys(PERIOD_LABELS) as Period[]).map((p) => (
+        {PERIODS.map((p) => (
           <button
             key={p}
             type="button"
@@ -117,13 +121,13 @@ export default function LeaderboardPage(): JSX.Element {
                 : "text-slate-400 hover:bg-slate-800"
             }`}
           >
-            {PERIOD_LABELS[p]}
+            {periodLabel(p)}
           </button>
         ))}
       </div>
 
       {loading ? (
-        <p className="text-sm text-slate-400">Chargement…</p>
+        <p className="text-sm text-slate-400">{t.proLeague.common.loading}</p>
       ) : error ? (
         <p
           role="alert"
@@ -136,20 +140,34 @@ export default function LeaderboardPage(): JSX.Element {
           data-testid="empty-leaderboard"
           className="rounded border border-slate-800 bg-slate-900 px-3 py-3 text-sm text-slate-400"
         >
-          Aucun parieur classé pour cette période. Soyez le premier !
+          {t.proLeague.leaderboard.emptyState}
         </p>
       ) : (
         <div className="overflow-x-auto rounded border border-slate-800">
           <table data-testid="leaderboard-table" className="w-full text-sm">
             <thead className="bg-slate-900 text-xs uppercase text-slate-400">
               <tr>
-                <th className="w-12 px-2 py-2 text-left">#</th>
-                <th className="px-2 py-2 text-left">Coach</th>
-                <th className="w-16 px-2 py-2 text-center">Paris</th>
-                <th className="w-20 px-2 py-2 text-center">Profit</th>
-                <th className="w-16 px-2 py-2 text-center">Accuracy</th>
-                <th className="w-16 px-2 py-2 text-center">Streak</th>
-                <th className="w-20 px-2 py-2 text-center">Biggest</th>
+                <th className="w-12 px-2 py-2 text-left">
+                  {t.proLeague.leaderboard.thRank}
+                </th>
+                <th className="px-2 py-2 text-left">
+                  {t.proLeague.leaderboard.thCoach}
+                </th>
+                <th className="w-16 px-2 py-2 text-center">
+                  {t.proLeague.leaderboard.thBets}
+                </th>
+                <th className="w-20 px-2 py-2 text-center">
+                  {t.proLeague.leaderboard.thProfit}
+                </th>
+                <th className="w-16 px-2 py-2 text-center">
+                  {t.proLeague.leaderboard.thAccuracy}
+                </th>
+                <th className="w-16 px-2 py-2 text-center">
+                  {t.proLeague.leaderboard.thStreak}
+                </th>
+                <th className="w-20 px-2 py-2 text-center">
+                  {t.proLeague.leaderboard.thBiggest}
+                </th>
               </tr>
             </thead>
             <tbody>

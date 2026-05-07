@@ -7,9 +7,18 @@ vi.mock("../../lib/api-client", () => ({
 }));
 
 import { apiRequest } from "../../lib/api-client";
+import { LanguageProvider } from "../../contexts/LanguageContext";
 import ProLeagueStandingsPage from "./page";
 
 const mockedApi = vi.mocked(apiRequest);
+
+function renderPage(): ReturnType<typeof render> {
+  return render(
+    <LanguageProvider>
+      <ProLeagueStandingsPage />
+    </LanguageProvider>,
+  );
+}
 
 function makeData(rows: number = 2): unknown {
   const all = [
@@ -76,13 +85,13 @@ beforeEach(() => {
 describe("ProLeagueStandingsPage — sprint 1.C.5", () => {
   it("affiche 'Chargement…' pendant le fetch", () => {
     mockedApi.mockReturnValue(new Promise(() => undefined));
-    render(<ProLeagueStandingsPage />);
+    renderPage();
     expect(screen.getByText(/Chargement/)).toBeTruthy();
   });
 
   it("affiche le titre et la saison", async () => {
     mockedApi.mockResolvedValue(makeData());
-    render(<ProLeagueStandingsPage />);
+    renderPage();
     await waitFor(() => {
       expect(screen.getByText(/Saison 2026/i)).toBeTruthy();
     });
@@ -90,7 +99,7 @@ describe("ProLeagueStandingsPage — sprint 1.C.5", () => {
 
   it("affiche les rangs + équipes + points + diff TD", async () => {
     mockedApi.mockResolvedValue(makeData());
-    render(<ProLeagueStandingsPage />);
+    renderPage();
     await waitFor(() => {
       expect(screen.getByTestId("standings-table")).toBeTruthy();
     });
@@ -103,7 +112,7 @@ describe("ProLeagueStandingsPage — sprint 1.C.5", () => {
 
   it("affiche la forme avec 5 badges", async () => {
     mockedApi.mockResolvedValue(makeData());
-    render(<ProLeagueStandingsPage />);
+    renderPage();
     await waitFor(() => {
       const badges = screen.getAllByTestId("form-badges");
       expect(badges.length).toBe(2);
@@ -115,7 +124,7 @@ describe("ProLeagueStandingsPage — sprint 1.C.5", () => {
 
   it("affiche placeholder si rows vide", async () => {
     mockedApi.mockResolvedValue(makeData(0));
-    render(<ProLeagueStandingsPage />);
+    renderPage();
     await waitFor(() => {
       expect(screen.getByText(/Pas encore de matchs/i)).toBeTruthy();
     });
@@ -123,7 +132,7 @@ describe("ProLeagueStandingsPage — sprint 1.C.5", () => {
 
   it("affiche message d'erreur si API throw", async () => {
     mockedApi.mockRejectedValue(new Error("boom"));
-    render(<ProLeagueStandingsPage />);
+    renderPage();
     await waitFor(() => {
       expect(screen.getByRole("alert")).toBeTruthy();
     });

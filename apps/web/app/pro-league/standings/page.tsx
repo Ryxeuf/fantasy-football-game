@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { apiRequest } from "../../lib/api-client";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 /**
  * Page classement détaillé Pro League — sprint Pro League lot 1.C.5.
@@ -60,16 +61,22 @@ const FORM_BADGE_STYLES: Record<FormChar, string> = {
 };
 
 function FormBadges({ form }: { form: readonly FormChar[] }): JSX.Element {
+  const { t } = useLanguage();
   if (form.length === 0) {
     return <span className="text-xs text-slate-600">—</span>;
   }
+  const titleFor = (c: FormChar): string => {
+    if (c === "W") return t.proLeague.standings.formWin;
+    if (c === "D") return t.proLeague.standings.formDraw;
+    return t.proLeague.standings.formLoss;
+  };
   return (
     <div className="flex gap-0.5" data-testid="form-badges">
       {form.map((c, i) => (
         <span
           key={i}
           className={`flex h-4 w-4 items-center justify-center rounded text-[10px] font-bold font-mono ${FORM_BADGE_STYLES[c]}`}
-          title={c === "W" ? "Win" : c === "D" ? "Draw" : "Loss"}
+          title={titleFor(c)}
         >
           {c}
         </span>
@@ -90,6 +97,7 @@ function diffColorClass(d: number): string {
 }
 
 export default function ProLeagueStandingsPage(): JSX.Element {
+  const { t } = useLanguage();
   const [data, setData] = useState<StandingsSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -121,11 +129,13 @@ export default function ProLeagueStandingsPage(): JSX.Element {
       <header className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-wide text-slate-50">
-            Classement
+            {t.proLeague.standings.title}
           </h1>
           {data ? (
             <p className="mt-1 text-sm text-slate-400">
-              Saison {data.seasonYear} · {data.seasonStatus}
+              {t.proLeague.standings.seasonInfo
+                .replace("{year}", String(data.seasonYear))
+                .replace("{status}", data.seasonStatus)}
             </p>
           ) : null}
         </div>
@@ -133,12 +143,12 @@ export default function ProLeagueStandingsPage(): JSX.Element {
           href="/pro-league"
           className="rounded border border-slate-700 px-3 py-1 text-sm text-slate-300 hover:bg-slate-800"
         >
-          ← Hub
+          {t.proLeague.common.backToHub}
         </Link>
       </header>
 
       {loading ? (
-        <p className="text-sm text-slate-400">Chargement…</p>
+        <p className="text-sm text-slate-400">{t.proLeague.common.loading}</p>
       ) : error ? (
         <p
           role="alert"
@@ -148,8 +158,7 @@ export default function ProLeagueStandingsPage(): JSX.Element {
         </p>
       ) : !data || data.rows.length === 0 ? (
         <p className="rounded border border-slate-800 bg-slate-900 px-3 py-3 text-sm text-slate-400">
-          Pas encore de matchs joués cette saison — le classement
-          apparaîtra après la première journée.
+          {t.proLeague.standings.emptyState}
         </p>
       ) : (
         <div className="overflow-x-auto rounded border border-slate-800">
@@ -159,18 +168,42 @@ export default function ProLeagueStandingsPage(): JSX.Element {
           >
             <thead className="bg-slate-900 text-xs uppercase text-slate-400">
               <tr>
-                <th className="w-10 px-2 py-2 text-left">#</th>
-                <th className="px-2 py-2 text-left">Équipe</th>
-                <th className="w-10 px-2 py-2 text-center">J</th>
-                <th className="w-10 px-2 py-2 text-center">V</th>
-                <th className="w-10 px-2 py-2 text-center">N</th>
-                <th className="w-10 px-2 py-2 text-center">D</th>
-                <th className="w-12 px-2 py-2 text-center">Pts</th>
-                <th className="w-20 px-2 py-2 text-center">TD</th>
-                <th className="w-12 px-2 py-2 text-center">+/-</th>
-                <th className="w-20 px-2 py-2 text-center">Cas</th>
-                <th className="w-12 px-2 py-2 text-center">+/-</th>
-                <th className="w-24 px-2 py-2 text-center">Forme</th>
+                <th className="w-10 px-2 py-2 text-left">
+                  {t.proLeague.standings.thRank}
+                </th>
+                <th className="px-2 py-2 text-left">
+                  {t.proLeague.standings.thTeam}
+                </th>
+                <th className="w-10 px-2 py-2 text-center">
+                  {t.proLeague.standings.thPlayed}
+                </th>
+                <th className="w-10 px-2 py-2 text-center">
+                  {t.proLeague.standings.thWins}
+                </th>
+                <th className="w-10 px-2 py-2 text-center">
+                  {t.proLeague.standings.thDraws}
+                </th>
+                <th className="w-10 px-2 py-2 text-center">
+                  {t.proLeague.standings.thLosses}
+                </th>
+                <th className="w-12 px-2 py-2 text-center">
+                  {t.proLeague.standings.thPoints}
+                </th>
+                <th className="w-20 px-2 py-2 text-center">
+                  {t.proLeague.standings.thTd}
+                </th>
+                <th className="w-12 px-2 py-2 text-center">
+                  {t.proLeague.standings.thDiff}
+                </th>
+                <th className="w-20 px-2 py-2 text-center">
+                  {t.proLeague.standings.thCas}
+                </th>
+                <th className="w-12 px-2 py-2 text-center">
+                  {t.proLeague.standings.thDiff}
+                </th>
+                <th className="w-24 px-2 py-2 text-center">
+                  {t.proLeague.standings.thForm}
+                </th>
               </tr>
             </thead>
             <tbody>
