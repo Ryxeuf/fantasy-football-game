@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 
+import { useLanguage } from "../../contexts/LanguageContext";
 import { useWallet } from "../../lib/use-wallet";
 
 /**
@@ -16,6 +17,7 @@ import { useWallet } from "../../lib/use-wallet";
  */
 
 export function WalletBadge(): JSX.Element | null {
+  const { t } = useLanguage();
   const wallet = useWallet();
   const [toast, setToast] = useState<string | null>(null);
 
@@ -24,7 +26,9 @@ export function WalletBadge(): JSX.Element | null {
   const handleClaim = async (): Promise<void> => {
     const out = await wallet.claimDaily();
     if (out.granted) {
-      setToast(`+${out.amount} Crowns`);
+      setToast(
+        t.proLeague.wallet.toastClaim.replace("{amount}", String(out.amount)),
+      );
       window.setTimeout(() => setToast(null), 2_500);
     }
   };
@@ -42,7 +46,7 @@ export function WalletBadge(): JSX.Element | null {
         <span className="font-mono font-bold text-emerald-300">
           {wallet.loading ? "…" : wallet.balance}
         </span>
-        <span className="text-slate-500">Crowns</span>
+        <span className="text-slate-500">{t.proLeague.wallet.crowns}</span>
       </Link>
       {wallet.dailyAvailable ? (
         <button
@@ -53,7 +57,7 @@ export function WalletBadge(): JSX.Element | null {
           }}
           className="rounded bg-emerald-700 px-2 py-0.5 text-xs font-semibold text-emerald-50 hover:bg-emerald-600"
         >
-          +50 Daily
+          {t.proLeague.wallet.claimDaily}
         </button>
       ) : null}
       {toast ? (
