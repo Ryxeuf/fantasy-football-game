@@ -359,6 +359,65 @@ export const EN_TRANSLATIONS = {
       hint: "Following up is free and does not cost movement points",
     },
   },
+  cups: {
+    public: "Public",
+    private: "Private",
+    list: {
+      title: "Cups",
+      archivedLink: "Archived",
+      filters: {
+        all: "All",
+      },
+      empty: "No cup for this filter.",
+      errors: {
+        loadError: "Failed to load",
+        prefix: "Error: {{message}}",
+      },
+      card: {
+        participantSingular: "{{count}} participant",
+        participantPlural: "{{count}} participants",
+      },
+    },
+    archived: {
+      title: "Archived cups",
+      empty: "No archived cup.",
+      errors: {
+        loadError: "Failed to load",
+        prefix: "Error: {{message}}",
+      },
+    },
+    detail: {
+      notFound: "Cup not found",
+      creatorMeta: "Created by {{creator}}",
+      sections: {
+        participants: "Participants",
+        standings: "Standings",
+        matches: "Matches",
+      },
+      participants: {
+        empty: "No participant yet.",
+        summary: "{{roster}} — {{coach}}",
+      },
+      standings: {
+        empty: "No match completed yet.",
+        headers: {
+          team: "Team",
+          wins: "W",
+          draws: "D",
+          losses: "L",
+          points: "Pts",
+        },
+      },
+      matches: {
+        empty: "No match played.",
+        label: "Match {{id}}",
+      },
+      errors: {
+        loadError: "Failed to load",
+        prefix: "Error: {{message}}",
+      },
+    },
+  },
   leagues: {
     public: "Public",
     private: "Private",

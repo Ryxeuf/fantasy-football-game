@@ -11,6 +11,7 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { apiGet, ApiError } from "../../lib/api";
 import { useAuth } from "../../lib/auth-context";
+import { useTranslation } from "../../lib/i18n-context";
 import {
   formatCupStatusLabel,
   parseCupDetailResponse,
@@ -22,6 +23,7 @@ export default function CupDetailScreen() {
   const cupId = typeof params.id === "string" ? params.id : "";
   const router = useRouter();
   const { logout } = useAuth();
+  const { t } = useTranslation();
   const [cup, setCup] = useState<CupDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -34,7 +36,7 @@ export default function CupDetailScreen() {
       const response = await apiGet(`/cup/${cupId}`);
       const parsed = parseCupDetailResponse(response);
       if (!parsed) {
-        throw new Error("Coupe introuvable");
+        throw new Error(t("cups.detail.notFound"));
       }
       setCup(parsed);
     } catch (err: unknown) {
@@ -46,9 +48,11 @@ export default function CupDetailScreen() {
         router.replace("/login");
         return;
       }
-      setError(err instanceof Error ? err.message : "Erreur de chargement");
+      setError(
+        err instanceof Error ? err.message : t("cups.detail.errors.loadError"),
+      );
     }
-  }, [cupId, logout, router]);
+  }, [cupId, logout, router, t]);
 
   useEffect(() => {
     setLoading(true);
@@ -72,9 +76,11 @@ export default function CupDetailScreen() {
   if (error || !cup) {
     return (
       <View style={styles.center}>
-        <Text style={styles.errorText}>{error ?? "Coupe introuvable"}</Text>
+        <Text style={styles.errorText}>
+          {error ?? t("cups.detail.notFound")}
+        </Text>
         <Pressable onPress={onRefresh} style={styles.retryButton}>
-          <Text style={styles.retryText}>Reessayer</Text>
+          <Text style={styles.retryText}>{t("common.retry")}</Text>
         </Pressable>
       </View>
     );
@@ -95,41 +101,66 @@ export default function CupDetailScreen() {
         <View style={styles.badgeRow}>
           <Text style={styles.badge}>{formatCupStatusLabel(cup.status)}</Text>
           <Text style={styles.badgeSecondary}>
-            {cup.isPublic ? "Publique" : "Privee"}
+            {cup.isPublic ? t("cups.public") : t("cups.private")}
           </Text>
           <Text style={styles.badgeSecondary}>{cup.ruleset}</Text>
         </View>
         <Text style={styles.metaText}>
-          Cree par {cup.creator.coachName || cup.creator.email || "—"}
+          {t("cups.detail.creatorMeta", {
+            creator: cup.creator.coachName || cup.creator.email || "—",
+          })}
         </Text>
       </View>
 
-      <Section title="Participants" testID="cup-participants">
+      <Section
+        title={t("cups.detail.sections.participants")}
+        testID="cup-participants"
+      >
         {cup.participants.length === 0 ? (
-          <Text style={styles.mutedText}>Aucun participant pour l'instant.</Text>
+          <Text style={styles.mutedText}>
+            {t("cups.detail.participants.empty")}
+          </Text>
         ) : (
           cup.participants.map((p) => (
             <View key={p.id} style={styles.row} testID={`cup-participant-${p.id}`}>
               <Text style={styles.rowMain}>{p.name}</Text>
               <Text style={styles.rowSub}>
-                {p.roster} — {p.owner.coachName || p.owner.email || "—"}
+                {t("cups.detail.participants.summary", {
+                  roster: p.roster,
+                  coach: p.owner.coachName || p.owner.email || "—",
+                })}
               </Text>
             </View>
           ))
         )}
       </Section>
 
-      <Section title="Classement" testID="cup-standings">
+      <Section
+        title={t("cups.detail.sections.standings")}
+        testID="cup-standings"
+      >
         {cup.standings.length === 0 ? (
-          <Text style={styles.mutedText}>Aucun match termine.</Text>
+          <Text style={styles.mutedText}>
+            {t("cups.detail.standings.empty")}
+          </Text>
         ) : (
           <View>
             <View style={[styles.standingRow, styles.standingHeader]}>
-              <Text style={styles.standingCellTeam}>Equipe</Text>
-              <Text style={styles.standingCell}>V</Text>
-              <Text style={styles.standingCell}>N</Text>
-              <Text style={styles.standingCell}>D</Text>
-              <Text style={styles.standingCellPts}>Pts</Text>
+              <Text style={styles.standingCellTeam}>
+                {t("cups.detail.standings.headers.team")}
+              </Text>
+              <Text style={styles.standingCell}>
+                {t("cups.detail.standings.headers.wins")}
+              </Text>
+              <Text style={styles.standingCell}>
+                {t("cups.detail.standings.headers.draws")}
+              </Text>
+              <Text style={styles.standingCell}>
+                {t("cups.detail.standings.headers.losses")}
+              </Text>
+              <Text style={styles.standingCellPts}>
+                {t("cups.detail.standings.headers.points")}
+              </Text>
             </View>
             {cup.standings.map((row) => {
               const participant = cup.participants.find((p) => p.id === row.teamId);
@@ -153,13 +184,18 @@ export default function CupDetailScreen() {
         )}
       </Section>
 
-      <Section title="Matchs" testID="cup-matches">
+      <Section
+        title={t("cups.detail.sections.matches")}
+        testID="cup-matches"
+      >
         {cup.matches.length === 0 ? (
-          <Text style={styles.mutedText}>Aucun match joue.</Text>
+          <Text style={styles.mutedText}>{t("cups.detail.matches.empty")}</Text>
         ) : (
           cup.matches.map((m) => (
             <View key={m.id} style={styles.row}>
-              <Text style={styles.rowMain}>Match {m.id.slice(0, 8)}</Text>
+              <Text style={styles.rowMain}>
+                {t("cups.detail.matches.label", { id: m.id.slice(0, 8) })}
+              </Text>
               <Text style={styles.rowSub}>{m.status}</Text>
             </View>
           ))
