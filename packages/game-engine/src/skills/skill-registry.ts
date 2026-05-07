@@ -38,6 +38,13 @@ export interface SkillContext {
   targetNumber?: number;
   /** Distance categorielle de la passe en cours, pour les skills de passe range-dependants (Accurate/Strong Arm/Cannoneer). */
   passRange?: 'quick' | 'short' | 'long' | 'bomb';
+  /**
+   * S27.7 — Trigger en cours d'execution. Permet a `getModifiers()` de
+   * discriminer quand un skill couvre plusieurs triggers (ex: Stunty
+   * `on-dodge` ET `on-armor`). `collectModifiers()` le remplit
+   * automatiquement avec le trigger demande.
+   */
+  currentTrigger?: SkillTrigger;
 }
 
 export interface SkillModifier {
@@ -101,9 +108,9 @@ export function getSkillsForTrigger(trigger: SkillTrigger): SkillEffect[] {
 export function collectModifiers(
   player: Player,
   trigger: SkillTrigger,
-  ctx: Omit<SkillContext, 'player'>
+  ctx: Omit<SkillContext, 'player' | 'currentTrigger'>
 ): SkillModifier {
-  const fullCtx: SkillContext = { ...ctx, player };
+  const fullCtx: SkillContext = { ...ctx, player, currentTrigger: trigger };
   const result: SkillModifier = {};
 
   for (const skill of player.skills) {
@@ -334,23 +341,26 @@ registerSkill({
 
 // STUNTY
 // Règle BB3 :
-//  - +1 au jet d'esquive (collecté via skill-registry ici).
-//  - Malus d'armure -1 quand la cible est Stunty (appliqué directement dans
-//    `calculateArmorTarget` / `performArmorRollWithNotification` / `blocking.ts`).
+//  - +1 au jet d'esquive (trigger on-dodge).
+//  - Malus d'armure -1 quand la cible est Stunty (trigger on-armor — S27.7).
 //  - Passes Long et Long Bomb interdites (appliqué via `canAttemptPassForRange`
 //    dans `passing.ts`, consommé par `getLegalMoves` et `handlePass`).
 registerSkill({
   slug: 'stunty',
-  triggers: ['on-dodge'],
+  triggers: ['on-dodge', 'on-armor'],
   description: '+1 au jet d\'esquive, armure réduite de 1 (plus fragile), passes limitées à Quick/Short.',
   canApply: (ctx) => hasSkill(ctx.player, 'stunty'),
   getModifiers: (ctx) => {
-    const mods: SkillModifier = {};
-    // Contexte esquive : +1 au dodge
-    if (ctx.blockResult === undefined) {
-      mods.dodgeModifier = 1;
+    // S27.7 — discriminer dodge vs armor via `currentTrigger` (rempli par
+    // `collectModifiers`). L'ancien fallback `blockResult === undefined`
+    // ne couvrait pas le cas armor proprement.
+    if (ctx.currentTrigger === 'on-armor') {
+      return { armorModifier: -1 };
     }
-    return mods;
+    if (ctx.currentTrigger === 'on-dodge' || ctx.currentTrigger === undefined) {
+      return { dodgeModifier: 1 };
+    }
+    return {};
   },
 });
 
