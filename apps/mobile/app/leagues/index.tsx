@@ -11,6 +11,8 @@ import {
 import { useRouter } from "expo-router";
 import { apiGet, ApiError } from "../../lib/api";
 import { useAuth } from "../../lib/auth-context";
+import { useTranslation } from "../../lib/i18n-context";
+import type { TranslationFn } from "../../lib/i18n-context";
 import {
   LEAGUE_STATUSES,
   filterLeaguesByStatus,
@@ -21,22 +23,29 @@ import {
   type LeagueStatusFilter,
 } from "../../lib/leagues";
 
-const FILTER_OPTIONS: ReadonlyArray<{ value: LeagueStatusFilter; label: string }> = [
-  { value: "all", label: "Toutes" },
-  ...LEAGUE_STATUSES.map((s) => ({
-    value: s as LeagueStatusFilter,
-    label: formatLeagueStatusLabel(s),
-  })),
-];
+function buildFilterOptions(
+  t: TranslationFn,
+): ReadonlyArray<{ value: LeagueStatusFilter; label: string }> {
+  return [
+    { value: "all", label: t("leagues.list.filters.all") },
+    ...LEAGUE_STATUSES.map((s) => ({
+      value: s as LeagueStatusFilter,
+      label: formatLeagueStatusLabel(s),
+    })),
+  ];
+}
 
 export default function LeaguesListScreen() {
   const router = useRouter();
   const { logout } = useAuth();
+  const { t } = useTranslation();
   const [leagues, setLeagues] = useState<League[]>([]);
   const [filter, setFilter] = useState<LeagueStatusFilter>("all");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const filterOptions = useMemo(() => buildFilterOptions(t), [t]);
 
   const fetchLeagues = useCallback(async () => {
     try {
@@ -54,9 +63,11 @@ export default function LeaguesListScreen() {
         router.replace("/login");
         return;
       }
-      setError(err instanceof Error ? err.message : "Erreur de chargement");
+      setError(
+        err instanceof Error ? err.message : t("leagues.list.errors.loadError"),
+      );
     }
-  }, [filter, logout, router]);
+  }, [filter, logout, router, t]);
 
   useEffect(() => {
     setLoading(true);
@@ -77,10 +88,10 @@ export default function LeaguesListScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Ligues</Text>
+      <Text style={styles.title}>{t("leagues.list.title")}</Text>
 
       <View style={styles.filters} testID="leagues-filters">
-        {FILTER_OPTIONS.map((opt) => {
+        {filterOptions.map((opt) => {
           const active = opt.value === filter;
           return (
             <Pressable
@@ -110,9 +121,11 @@ export default function LeaguesListScreen() {
 
       {error && !loading && (
         <View style={styles.center}>
-          <Text style={styles.errorText}>Erreur : {error}</Text>
+          <Text style={styles.errorText}>
+            {t("leagues.list.errors.prefix", { message: error })}
+          </Text>
           <Pressable onPress={onRefresh} style={styles.retryButton}>
-            <Text style={styles.retryText}>Reessayer</Text>
+            <Text style={styles.retryText}>{t("common.retry")}</Text>
           </Pressable>
         </View>
       )}
@@ -124,6 +137,7 @@ export default function LeaguesListScreen() {
           renderItem={({ item }) => (
             <LeagueCard
               league={item}
+              t={t}
               onPress={() => router.push(`/leagues/${item.id}`)}
             />
           )}
@@ -134,7 +148,7 @@ export default function LeaguesListScreen() {
           ListEmptyComponent={
             <View style={styles.center}>
               <Text style={styles.emptyText} testID="leagues-empty">
-                Aucune ligue pour ce filtre.
+                {t("leagues.list.empty")}
               </Text>
             </View>
           }
@@ -147,9 +161,11 @@ export default function LeaguesListScreen() {
 function LeagueCard({
   league,
   onPress,
+  t,
 }: {
   league: League;
   onPress: () => void;
+  t: TranslationFn;
 }) {
   return (
     <Pressable
@@ -175,10 +191,12 @@ function LeagueCard({
           {formatLeagueRulesetLabel(league.ruleset)}
         </Text>
         <Text style={styles.cardMetaText}>
-          Max {league.maxParticipants} equipes
+          {t("leagues.list.card.maxParticipants", {
+            count: league.maxParticipants,
+          })}
         </Text>
         <Text style={styles.cardMetaText}>
-          {league.isPublic ? "Publique" : "Privee"}
+          {league.isPublic ? t("leagues.public") : t("leagues.private")}
         </Text>
       </View>
     </Pressable>
