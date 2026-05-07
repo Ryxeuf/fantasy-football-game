@@ -73,6 +73,7 @@ model User {
   proSpectatorFollows         ProSpectatorFollow[]
   proWallet                   ProWallet?
   proBets                     ProBet[]
+  proUserBadges               ProUserBadge[]
 }
 
 /// S26.3l — Historique ELO du coach. Une ligne par mise a jour ELO (donc 2
@@ -1484,4 +1485,25 @@ model ProBetSettlement {
   totalPayout      Int          @default(0)
   betCount         Int          @default(0)
   settledAt        DateTime     @default(now())
+}
+
+/// Sprint Pro League lot 1.D.9 — Badge debloque par un user.
+///
+/// Le catalogue des badges (codes + criteria) vit dans le code
+/// (apps/server/src/services/pro-badges-catalogue.ts) — pas en DB.
+/// La table ProUserBadge stocke uniquement les badges effectivement
+/// debloques.
+model ProUserBadge {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  /// Code stable du badge (ex: "oracle_of_nuffle", "first_kickoff").
+  badgeCode String
+  earnedAt  DateTime @default(now())
+  /// Meta optionnelles pour l'audit (ex: betId qui a debloque le badge).
+  meta      Json?
+
+  @@unique([userId, badgeCode])
+  @@index([badgeCode])
+  @@index([userId])
 }
