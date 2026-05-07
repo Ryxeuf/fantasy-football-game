@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import type { MatchEvent } from "@bb/shared-types";
 
+import { useLanguage } from "../../../../contexts/LanguageContext";
 import { apiRequest } from "../../../../lib/api-client";
 import { deriveProLeagueFieldState } from "../../../../lib/pro-league-field-state";
 import {
@@ -42,7 +43,7 @@ const ProLeagueField = dynamic(
     loading: () => (
       <div
         className="aspect-[3/1] w-full animate-pulse rounded bg-slate-800/60"
-        aria-label="Chargement du terrain"
+        aria-label="Loading the field"
       />
     ),
   },
@@ -75,36 +76,57 @@ const EVENT_BADGE_STYLES: Record<string, string> = {
   END: "bg-slate-900 text-slate-100 font-semibold",
 };
 
-function summarizeMeta(ev: MatchEvent): string {
+interface EventsT {
+  kickoffPair: string;
+  turnStart: string;
+  turnStartWithTeam: string;
+  touchdownTeam: string;
+  casualty: string;
+  casualtyWithCause: string;
+  nuffle: string;
+  halftime: string;
+  matchEnd: string;
+}
+
+function summarizeMeta(ev: MatchEvent, e: EventsT): string {
   const meta = (ev.meta ?? {}) as Record<string, unknown>;
   switch (ev.type) {
     case "KICKOFF": {
       const home = String(meta.homeName ?? meta.home ?? "home");
       const away = String(meta.awayName ?? meta.away ?? "away");
-      return `${home} vs ${away}`;
+      return e.kickoffPair.replace("{home}", home).replace("{away}", away);
     }
     case "TURN_START": {
-      const half = meta.half;
-      const turn = meta.turn;
+      const half = String(meta.half ?? "");
+      const turn = String(meta.turn ?? "");
       const drivingTeam = String(meta.drivingTeam ?? "");
-      return `Half ${half ?? ""} · Turn ${turn ?? ""}${drivingTeam ? ` · ${drivingTeam}` : ""}`;
+      const tpl = drivingTeam ? e.turnStartWithTeam : e.turnStart;
+      return tpl
+        .replace("{half}", half)
+        .replace("{turn}", turn)
+        .replace("{team}", drivingTeam);
     }
     case "TD": {
-      const team = String(meta.team ?? "");
-      return `TOUCHDOWN ${team.toUpperCase()}`;
+      const team = String(meta.team ?? "").toUpperCase();
+      return e.touchdownTeam.replace("{team}", team);
     }
     case "CASUALTY": {
-      const cause = meta.causedBy ? ` (${String(meta.causedBy)})` : "";
-      return `Casualty${cause}`;
+      if (meta.causedBy) {
+        return e.casualtyWithCause.replace(
+          "{cause}",
+          String(meta.causedBy),
+        );
+      }
+      return e.casualty;
     }
     case "NUFFLE": {
-      const id = meta.id ?? meta.eventId ?? "?";
-      return `Nuffle: ${String(id)}`;
+      const id = String(meta.id ?? meta.eventId ?? "?");
+      return e.nuffle.replace("{id}", id);
     }
     case "HALFTIME":
-      return "Halftime";
+      return e.halftime;
     case "END":
-      return "Match end";
+      return e.matchEnd;
     default:
       return ev.type;
   }
@@ -147,12 +169,13 @@ function ScrubMarkers({
   markers,
   onSeek,
 }: ScrubMarkersProps): JSX.Element | null {
+  const { t } = useLanguage();
   if (markers.length === 0) return null;
   return (
     <div
       data-testid="scrub-markers"
       role="list"
-      aria-label="Key moments"
+      aria-label={t.proLeague.replay.labelKeyMoments}
       className="relative h-2"
     >
       {markers.map((m) => (
@@ -161,7 +184,7 @@ function ScrubMarkers({
           type="button"
           role="listitem"
           onClick={() => onSeek(m.displayAtMs)}
-          aria-label={`${m.label} (seek)`}
+          aria-label={t.proLeague.replay.seekLabel.replace("{label}", m.label)}
           title={m.label}
           data-testid={`scrub-marker-${m.type.toLowerCase()}`}
           data-event-index={m.eventIndex}
@@ -190,6 +213,7 @@ function PlayerControls({
   onSkipToEnd,
   onRestart,
 }: ControlsProps): JSX.Element {
+  const { t } = useLanguage();
   return (
     <div
       data-testid="replay-controls"
@@ -198,7 +222,7 @@ function PlayerControls({
       <button
         type="button"
         onClick={onRestart}
-        aria-label="Restart"
+        aria-label={t.proLeague.replay.labelRestart}
         data-testid="replay-restart"
         className="rounded border border-slate-700 px-2 py-1 text-sm text-slate-300 hover:bg-slate-800"
       >
@@ -207,7 +231,7 @@ function PlayerControls({
       <button
         type="button"
         onClick={onToggle}
-        aria-label={playing ? "Pause" : "Play"}
+        aria-label={playing ? t.proLeague.replay.labelPause : t.proLeague.replay.labelPlay}
         aria-pressed={playing}
         aria-keyshortcuts="Space"
         data-testid="replay-toggle"
@@ -218,7 +242,7 @@ function PlayerControls({
       <button
         type="button"
         onClick={onSkipToEnd}
-        aria-label="Skip to end"
+        aria-label={t.proLeague.replay.labelSkipToEnd}
         data-testid="replay-skip-end"
         className="rounded border border-slate-700 px-2 py-1 text-sm text-slate-300 hover:bg-slate-800"
       >
@@ -226,7 +250,7 @@ function PlayerControls({
       </button>
       <div
         role="group"
-        aria-label="Playback speed"
+        aria-label={t.proLeague.replay.labelPlaybackSpeed}
         data-testid="replay-speed-group"
         className="ml-2 flex items-center gap-1 rounded border border-slate-800 bg-slate-900 p-0.5"
       >
@@ -254,6 +278,7 @@ function PlayerControls({
 export default function MatchReplayPlayer({
   matchId,
 }: PlayerProps): JSX.Element {
+  const { t } = useLanguage();
   const redirect = useMatchModeRedirect(matchId, "replay");
   const [dump, setDump] = useState<ReplayDump | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -282,7 +307,7 @@ export default function MatchReplayPlayer({
     return (
       <main className="mx-auto flex min-h-screen max-w-2xl flex-col bg-slate-950 px-4 py-6 text-slate-100">
         <p data-testid="replay-redirecting" className="text-sm text-slate-400">
-          Redirection vers le mode adapte…
+          {t.proLeague.replay.redirecting}
         </p>
       </main>
     );
@@ -337,7 +362,7 @@ export default function MatchReplayPlayer({
     return (
       <main className="mx-auto flex min-h-screen max-w-2xl flex-col bg-slate-950 px-4 py-6 text-slate-100">
         <p data-testid="replay-loading" className="text-sm text-slate-400">
-          Chargement du replay…
+          {t.proLeague.replay.loading}
         </p>
       </main>
     );
@@ -354,10 +379,10 @@ export default function MatchReplayPlayer({
           className="font-mono text-sm text-slate-400"
         >
           {score.half === "final"
-            ? "FT"
+            ? t.proLeague.live.scoreFt
             : score.half === 1
-              ? "1st half"
-              : "2nd half"}
+              ? t.proLeague.live.scoreHalf1
+              : t.proLeague.live.scoreHalf2}
         </span>
         <span
           data-testid="replay-score"
@@ -391,7 +416,7 @@ export default function MatchReplayPlayer({
           step={500}
           value={clock.currentMs}
           onChange={(e) => clock.seek(Number(e.target.value))}
-          aria-label="Scrub replay"
+          aria-label={t.proLeague.replay.labelScrub}
           data-testid="replay-scrub"
           className="w-full accent-emerald-500"
         />
@@ -406,11 +431,13 @@ export default function MatchReplayPlayer({
         <p
           data-testid="replay-shortcuts-hint"
           className="text-[11px] text-slate-500"
-        >
-          Raccourcis : <kbd>Espace</kbd> play/pause · <kbd>←</kbd>/<kbd>→</kbd>{" "}
-          ±5s · <kbd>Shift</kbd>+<kbd>←</kbd>/<kbd>→</kbd> moment cle ·{" "}
-          <kbd>Home</kbd> debut · <kbd>End</kbd> fin
-        </p>
+          // Le texte translation contient des <kbd> qui doivent etre rendus
+          // comme HTML — dangerouslySetInnerHTML est sur ici car la chaine
+          // vient d'une constante de traduction (pas de user input).
+          dangerouslySetInnerHTML={{
+            __html: t.proLeague.replay.shortcutsHint,
+          }}
+        />
       </section>
 
       <ol
@@ -418,7 +445,9 @@ export default function MatchReplayPlayer({
         className="flex flex-1 flex-col gap-1 px-4 py-3"
       >
         {visibleEvents.length === 0 ? (
-          <li className="text-sm text-slate-500">En attente du kickoff…</li>
+          <li className="text-sm text-slate-500">
+            {t.proLeague.live.awaitingKickoff}
+          </li>
         ) : (
           visibleEvents
             .slice()
@@ -437,7 +466,7 @@ export default function MatchReplayPlayer({
                   {ev.type}
                 </span>
                 <span className="flex-1 text-slate-200">
-                  {summarizeMeta(ev)}
+                  {summarizeMeta(ev, t.proLeague.events)}
                 </span>
               </li>
             ))

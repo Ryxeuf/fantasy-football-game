@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { apiRequest } from "../../../lib/api-client";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { useWallet } from "../../../lib/use-wallet";
 
 import { MarketsList } from "../../_components/MarketsList";
@@ -71,15 +72,34 @@ const HIGHLIGHT_BADGE_STYLES: Record<Highlight["type"], string> = {
   NUFFLE: "bg-purple-700 text-purple-50",
 };
 
-function formatRelative(target: Date, now: Date): string {
+interface MatchTranslations {
+  relativeInProgress: string;
+  relativeDayHour: string;
+  relativeHourMin: string;
+  relativeMin: string;
+}
+
+function formatRelative(
+  target: Date,
+  now: Date,
+  m: MatchTranslations,
+): string {
   const diffMs = target.getTime() - now.getTime();
-  if (diffMs < 0) return "en cours";
+  if (diffMs < 0) return m.relativeInProgress;
   const days = Math.floor(diffMs / 86_400_000);
   const hours = Math.floor((diffMs % 86_400_000) / 3_600_000);
   const minutes = Math.floor((diffMs % 3_600_000) / 60_000);
-  if (days >= 1) return `J-${days}j ${hours}h`;
-  if (hours >= 1) return `T-${hours}h${minutes.toString().padStart(2, "0")}`;
-  return `T-${minutes}min`;
+  if (days >= 1) {
+    return m.relativeDayHour
+      .replace("{days}", String(days))
+      .replace("{hours}", String(hours));
+  }
+  if (hours >= 1) {
+    return m.relativeHourMin
+      .replace("{hours}", String(hours))
+      .replace("{minutes}", minutes.toString().padStart(2, "0"));
+  }
+  return m.relativeMin.replace("{minutes}", String(minutes));
 }
 
 function formatClock(ms: number): string {
@@ -89,18 +109,33 @@ function formatClock(ms: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-function summarizeHighlight(h: Highlight): string {
+interface EventsTranslations {
+  touchdownTeam: string;
+  casualty: string;
+  casualtyWithCause: string;
+  nuffle: string;
+}
+
+function summarizeHighlight(h: Highlight, e: EventsTranslations): string {
   switch (h.type) {
     case "TD": {
-      const team = String(h.meta.team ?? "");
-      return `Touchdown ${team.toUpperCase()}`;
+      const team = String(h.meta.team ?? "").toUpperCase();
+      return e.touchdownTeam.replace("{team}", team);
     }
     case "CASUALTY": {
-      const cause = h.meta.causedBy ? ` (${String(h.meta.causedBy)})` : "";
-      return `Casualty${cause}`;
+      if (h.meta.causedBy) {
+        return e.casualtyWithCause.replace(
+          "{cause}",
+          String(h.meta.causedBy),
+        );
+      }
+      return e.casualty;
     }
     case "NUFFLE":
-      return `Nuffle: ${String(h.meta.id ?? h.meta.eventId ?? "?")}`;
+      return e.nuffle.replace(
+        "{id}",
+        String(h.meta.id ?? h.meta.eventId ?? "?"),
+      );
   }
 }
 
@@ -111,6 +146,7 @@ function TeamPanel({
   team: DetailTeam;
   alignRight?: boolean;
 }): JSX.Element {
+  const { t } = useLanguage();
   return (
     <div
       className={`flex flex-1 flex-col gap-1 ${alignRight ? "items-end text-right" : ""}`}
@@ -128,7 +164,7 @@ function TeamPanel({
         href={`/pro-league/teams/${encodeURIComponent(team.slug)}`}
         className="mt-1 inline-block rounded border border-white/30 px-2 py-0.5 text-xs text-white/90 hover:bg-white/10"
       >
-        Voir l'équipe
+        {t.proLeague.match.viewTeam}
       </Link>
     </div>
   );
@@ -139,6 +175,7 @@ function ScoreboardBanner({
 }: {
   match: MatchDetail;
 }): JSX.Element {
+  const { t } = useLanguage();
   const home = match.homeTeam;
   const away = match.awayTeam;
   return (
@@ -154,10 +191,12 @@ function ScoreboardBanner({
           href="/pro-league"
           className="rounded border border-white/30 px-2 py-1 text-xs text-white/90 hover:bg-white/10"
         >
-          ← Hub
+          {t.proLeague.common.backToHub}
         </Link>
         <span className="font-mono text-xs text-white/70">
-          Saison {match.seasonYear} · R{match.roundNumber}
+          {t.proLeague.match.bannerSeasonInfo
+            .replace("{year}", String(match.seasonYear))
+            .replace("{round}", String(match.roundNumber))}
         </span>
       </div>
       <div className="flex items-center gap-4">
@@ -171,7 +210,9 @@ function ScoreboardBanner({
               {match.scoreHome} – {match.scoreAway}
             </span>
           ) : (
-            <span className="text-2xl font-bold text-white/70">vs</span>
+            <span className="text-2xl font-bold text-white/70">
+              {t.proLeague.match.statusVs}
+            </span>
           )}
           <span className="mt-1 text-xs uppercase text-white/70">
             {match.status}
@@ -190,8 +231,10 @@ function PreMatchCard({
   match: MatchDetail;
   now: Date;
 }): JSX.Element {
+  const { t, language } = useLanguage();
+  const localeTag = language === "fr" ? "fr-FR" : "en-US";
   const at = new Date(match.scheduledAt);
-  const formattedDate = at.toLocaleString("fr-FR", {
+  const formattedDate = at.toLocaleString(localeTag, {
     weekday: "long",
     day: "2-digit",
     month: "long",
@@ -206,23 +249,25 @@ function PreMatchCard({
     >
       <div className="flex items-center justify-between">
         <div className="flex flex-col">
-          <span className="text-xs uppercase text-slate-500">Kickoff</span>
+          <span className="text-xs uppercase text-slate-500">
+            {t.proLeague.match.kickoffLabel}
+          </span>
           <span className="text-sm text-slate-200">{formattedDate}</span>
         </div>
         <span className="font-mono text-lg text-emerald-300">
-          {formatRelative(at, now)}
+          {formatRelative(at, now, t.proLeague.match)}
         </span>
       </div>
       <p className="mt-3 text-xs text-slate-400">
         {isReady
-          ? "Pré-simulation faite — le match sera streamé en direct au kickoff."
-          : "La pré-simulation aura lieu T-24h avant le kickoff."}
+          ? t.proLeague.match.preMatchReady
+          : t.proLeague.match.preMatchScheduled}
       </p>
       <Link
         href={`/pro-league/matches/${match.id}/live`}
         className="mt-3 inline-block rounded bg-emerald-700 px-3 py-1.5 text-sm text-emerald-50 hover:bg-emerald-600"
       >
-        Suivre en direct →
+        {t.proLeague.match.followLive}
       </Link>
     </section>
   );
@@ -246,16 +291,29 @@ function StatBox({
 }
 
 function PostMatchCard({ match }: { match: MatchDetail }): JSX.Element {
+  const { t } = useLanguage();
   return (
     <>
       <section
         data-testid="post-match-stats"
         className="mb-6 grid grid-cols-2 gap-2 sm:grid-cols-4"
       >
-        <StatBox label="Touchdowns" value={match.touchdownCount} />
-        <StatBox label="Casualties" value={match.casualtyCount} />
-        <StatBox label="Turnovers" value={match.turnoverCount} />
-        <StatBox label="Nuffle" value={match.nuffleCount} />
+        <StatBox
+          label={t.proLeague.match.statTouchdowns}
+          value={match.touchdownCount}
+        />
+        <StatBox
+          label={t.proLeague.match.statCasualties}
+          value={match.casualtyCount}
+        />
+        <StatBox
+          label={t.proLeague.match.statTurnovers}
+          value={match.turnoverCount}
+        />
+        <StatBox
+          label={t.proLeague.match.statNuffle}
+          value={match.nuffleCount}
+        />
       </section>
 
       {match.replay && match.replay.highlights.length > 0 ? (
@@ -264,7 +322,7 @@ function PostMatchCard({ match }: { match: MatchDetail }): JSX.Element {
           className="mb-6 rounded border border-slate-800 bg-slate-900 px-4 py-3"
         >
           <h2 className="mb-2 text-lg font-semibold text-slate-100">
-            Highlights
+            {t.proLeague.match.highlightsTitle}
           </h2>
           <ol className="flex flex-col gap-1">
             {match.replay.highlights.map((h, i) => (
@@ -280,7 +338,9 @@ function PostMatchCard({ match }: { match: MatchDetail }): JSX.Element {
                 >
                   {h.type}
                 </span>
-                <span className="flex-1">{summarizeHighlight(h)}</span>
+                <span className="flex-1">
+                  {summarizeHighlight(h, t.proLeague.events)}
+                </span>
               </li>
             ))}
           </ol>
@@ -291,7 +351,7 @@ function PostMatchCard({ match }: { match: MatchDetail }): JSX.Element {
         href={`/pro-league/matches/${match.id}/replay`}
         className="inline-block rounded bg-slate-800 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-700"
       >
-        Revoir le replay →
+        {t.proLeague.match.replayLink}
       </Link>
     </>
   );
@@ -309,6 +369,7 @@ function MatchMarkets({ matchId }: { matchId: string }): JSX.Element {
 export default function ProLeagueMatchDetailPage({
   params,
 }: MatchDetailPageProps): JSX.Element {
+  const { t } = useLanguage();
   const [data, setData] = useState<MatchDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -346,7 +407,9 @@ export default function ProLeagueMatchDetailPage({
   return (
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col bg-slate-950 text-slate-100">
       {loading ? (
-        <p className="px-4 py-6 text-sm text-slate-400">Chargement…</p>
+        <p className="px-4 py-6 text-sm text-slate-400">
+          {t.proLeague.common.loading}
+        </p>
       ) : error ? (
         <p
           role="alert"
@@ -355,7 +418,9 @@ export default function ProLeagueMatchDetailPage({
           {error}
         </p>
       ) : !data ? (
-        <p className="px-4 py-6 text-sm text-slate-400">Match inconnu.</p>
+        <p className="px-4 py-6 text-sm text-slate-400">
+          {t.proLeague.match.unknownMatch}
+        </p>
       ) : (
         <>
           <ScoreboardBanner match={data} />
@@ -365,7 +430,7 @@ export default function ProLeagueMatchDetailPage({
                 <PreMatchCard match={data} now={now} />
                 <section data-testid="markets-section" className="mt-4">
                   <h2 className="mb-2 text-lg font-semibold text-slate-100">
-                    Paris
+                    {t.proLeague.match.bettingTitle}
                   </h2>
                   <MatchMarkets matchId={data.id} />
                 </section>
@@ -376,20 +441,23 @@ export default function ProLeagueMatchDetailPage({
                 className="rounded border border-emerald-700 bg-emerald-950 px-4 py-3"
               >
                 <p className="text-sm text-emerald-200">
-                  Match en cours — suivez les events en direct.
+                  {t.proLeague.match.liveCardBody}
                 </p>
                 <Link
                   href={`/pro-league/matches/${data.id}/live`}
                   className="mt-3 inline-block rounded bg-emerald-700 px-3 py-1.5 text-sm text-emerald-50 hover:bg-emerald-600"
                 >
-                  Voir le live →
+                  {t.proLeague.match.viewLive}
                 </Link>
               </section>
             ) : data.status === "completed" ? (
               <PostMatchCard match={data} />
             ) : (
               <p className="text-sm text-rose-300">
-                Match en erreur (status="{data.status}"). Contactez l'admin.
+                {t.proLeague.match.matchInError.replace(
+                  "{status}",
+                  data.status,
+                )}
               </p>
             )}
           </div>

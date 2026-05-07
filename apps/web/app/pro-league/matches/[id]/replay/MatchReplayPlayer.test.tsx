@@ -34,9 +34,18 @@ vi.mock("next/dynamic", () => ({
 }));
 
 import { apiRequest } from "../../../../lib/api-client";
+import { LanguageProvider } from "../../../../contexts/LanguageContext";
 import MatchReplayPlayer from "./MatchReplayPlayer";
 
 const mockedRequest = vi.mocked(apiRequest);
+
+function renderPlayer(matchId: string): ReturnType<typeof render> {
+  return render(
+    <LanguageProvider>
+      <MatchReplayPlayer matchId={matchId} />
+    </LanguageProvider>,
+  );
+}
 
 const FIXTURE_EVENTS: MatchEvent[] = [
   {
@@ -97,13 +106,13 @@ afterEach(() => {
 describe("<MatchReplayPlayer> — sprint 1.G.2", () => {
   it("affiche un loading initial", () => {
     mockedRequest.mockReturnValue(new Promise(() => {})); // never resolve
-    render(<MatchReplayPlayer matchId="m1" />);
+    renderPlayer("m1");
     expect(screen.getByTestId("replay-loading")).toBeTruthy();
   });
 
   it("affiche une erreur si la fetch echoue", async () => {
     mockedRequest.mockRejectedValue(new Error("server down"));
-    render(<MatchReplayPlayer matchId="m1" />);
+    renderPlayer("m1");
     await act(async () => {
       await Promise.resolve();
     });
@@ -114,7 +123,7 @@ describe("<MatchReplayPlayer> — sprint 1.G.2", () => {
 
   it("rend score 0-0 au mount (currentMs=0, avant les TDs)", async () => {
     mockedRequest.mockResolvedValue(FIXTURE_DUMP);
-    render(<MatchReplayPlayer matchId="m1" />);
+    renderPlayer("m1");
     await act(async () => {
       await Promise.resolve();
     });
@@ -124,7 +133,7 @@ describe("<MatchReplayPlayer> — sprint 1.G.2", () => {
 
   it("affiche durationMs format MM:SS dans le scrubber", async () => {
     mockedRequest.mockResolvedValue(FIXTURE_DUMP);
-    render(<MatchReplayPlayer matchId="m1" />);
+    renderPlayer("m1");
     await act(async () => {
       await Promise.resolve();
     });
@@ -134,7 +143,7 @@ describe("<MatchReplayPlayer> — sprint 1.G.2", () => {
 
   it("seek via scrub bar update score si TD passe", async () => {
     mockedRequest.mockResolvedValue(FIXTURE_DUMP);
-    render(<MatchReplayPlayer matchId="m1" />);
+    renderPlayer("m1");
     await act(async () => {
       await Promise.resolve();
     });
@@ -148,7 +157,7 @@ describe("<MatchReplayPlayer> — sprint 1.G.2", () => {
 
   it("skip-to-end affiche le score final + half=FT", async () => {
     mockedRequest.mockResolvedValue(FIXTURE_DUMP);
-    render(<MatchReplayPlayer matchId="m1" />);
+    renderPlayer("m1");
     await act(async () => {
       await Promise.resolve();
     });
@@ -162,7 +171,7 @@ describe("<MatchReplayPlayer> — sprint 1.G.2", () => {
 
   it("toggle play/pause met aria-pressed sur le bouton", async () => {
     mockedRequest.mockResolvedValue(FIXTURE_DUMP);
-    render(<MatchReplayPlayer matchId="m1" />);
+    renderPlayer("m1");
     await act(async () => {
       await Promise.resolve();
     });
@@ -180,7 +189,7 @@ describe("<MatchReplayPlayer> — sprint 1.G.2", () => {
 
   it("speed selector marque la vitesse active", async () => {
     mockedRequest.mockResolvedValue(FIXTURE_DUMP);
-    render(<MatchReplayPlayer matchId="m1" />);
+    renderPlayer("m1");
     await act(async () => {
       await Promise.resolve();
     });
@@ -200,7 +209,7 @@ describe("<MatchReplayPlayer> — sprint 1.G.2", () => {
 
   it("event feed contient kickoff visible meme a currentMs=0", async () => {
     mockedRequest.mockResolvedValue(FIXTURE_DUMP);
-    render(<MatchReplayPlayer matchId="m1" />);
+    renderPlayer("m1");
     await act(async () => {
       await Promise.resolve();
     });
@@ -210,7 +219,7 @@ describe("<MatchReplayPlayer> — sprint 1.G.2", () => {
 
   it("event feed reverse-chronologique apres skip-to-end", async () => {
     mockedRequest.mockResolvedValue(FIXTURE_DUMP);
-    render(<MatchReplayPlayer matchId="m1" />);
+    renderPlayer("m1");
     await act(async () => {
       await Promise.resolve();
     });
@@ -226,7 +235,7 @@ describe("<MatchReplayPlayer> — sprint 1.G.2", () => {
 
   it("affiche les markers TD pour chaque touchdown du replay", async () => {
     mockedRequest.mockResolvedValue(FIXTURE_DUMP);
-    render(<MatchReplayPlayer matchId="m1" />);
+    renderPlayer("m1");
     await act(async () => {
       await Promise.resolve();
     });
@@ -237,7 +246,7 @@ describe("<MatchReplayPlayer> — sprint 1.G.2", () => {
 
   it("click sur un marker TD seek vers son displayAtMs", async () => {
     mockedRequest.mockResolvedValue(FIXTURE_DUMP);
-    render(<MatchReplayPlayer matchId="m1" />);
+    renderPlayer("m1");
     await act(async () => {
       await Promise.resolve();
     });
@@ -253,7 +262,7 @@ describe("<MatchReplayPlayer> — sprint 1.G.2", () => {
 
   it("expose un title (tooltip) sur chaque marker", async () => {
     mockedRequest.mockResolvedValue(FIXTURE_DUMP);
-    render(<MatchReplayPlayer matchId="m1" />);
+    renderPlayer("m1");
     await act(async () => {
       await Promise.resolve();
     });
@@ -264,7 +273,7 @@ describe("<MatchReplayPlayer> — sprint 1.G.2", () => {
 
   it("affiche le hint des raccourcis clavier", async () => {
     mockedRequest.mockResolvedValue(FIXTURE_DUMP);
-    render(<MatchReplayPlayer matchId="m1" />);
+    renderPlayer("m1");
     await act(async () => {
       await Promise.resolve();
     });
@@ -275,7 +284,7 @@ describe("<MatchReplayPlayer> — sprint 1.G.2", () => {
 
   it("Space keypress toggle play/pause", async () => {
     mockedRequest.mockResolvedValue(FIXTURE_DUMP);
-    render(<MatchReplayPlayer matchId="m1" />);
+    renderPlayer("m1");
     await act(async () => {
       await Promise.resolve();
     });
@@ -313,7 +322,7 @@ describe("<MatchReplayPlayer> — sprint 1.G.2", () => {
         } as never,
       ],
     });
-    render(<MatchReplayPlayer matchId="m1" />);
+    renderPlayer("m1");
     await act(async () => {
       await Promise.resolve();
     });
