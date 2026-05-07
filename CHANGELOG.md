@@ -1,3 +1,20 @@
+## [1.91.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.90.0...v1.91.0) (2026-05-07)
+
+
+### ✨ Features
+
+* **server,db:** casualties post-process roster (sprint 1.E.4) ([#626](https://github.com/Ryxeuf/fantasy-football-game/issues/626)) ([a8e3184](https://github.com/Ryxeuf/fantasy-football-game/commit/a8e318455420e8c4d42367f287fd95237f4921d8))
+* **server,db:** Pro League badges/titres (sprint 1.D.9) ([#623](https://github.com/Ryxeuf/fantasy-football-game/issues/623)) ([96ac911](https://github.com/Ryxeuf/fantasy-football-game/commit/96ac91137868bccc8f2e990308ca01440bd7b29c)), closes [#614](https://github.com/Ryxeuf/fantasy-football-game/issues/614) [#615](https://github.com/Ryxeuf/fantasy-football-game/issues/615) [#616](https://github.com/Ryxeuf/fantasy-football-game/issues/616) [#617](https://github.com/Ryxeuf/fantasy-football-game/issues/617) [#618](https://github.com/Ryxeuf/fantasy-football-game/issues/618) [#619](https://github.com/Ryxeuf/fantasy-football-game/issues/619) [#621](https://github.com/Ryxeuf/fantasy-football-game/issues/621) [#622](https://github.com/Ryxeuf/fantasy-football-game/issues/622)
+* **server,web,db:** Pro League Hall of Fame light (sprint 1.E.5) ([#628](https://github.com/Ryxeuf/fantasy-football-game/issues/628)) ([796f0af](https://github.com/Ryxeuf/fantasy-football-game/commit/796f0af02fc6b672852f734e989428a827c5aa47))
+* **server,web:** Pro League bet leaderboard (sprint 1.D.8) ([#622](https://github.com/Ryxeuf/fantasy-football-game/issues/622)) ([5508c2b](https://github.com/Ryxeuf/fantasy-football-game/commit/5508c2b89612d3dd7e653aaa644e2e9b5872fa08))
+* **server,web:** Pro League Gazette models + UI (sprint 1.E.2) ([#625](https://github.com/Ryxeuf/fantasy-football-game/issues/625)) ([23cd25a](https://github.com/Ryxeuf/fantasy-football-game/commit/23cd25a359264cec452c4f397f06971e72ba9205))
+* **server,web:** SEO metadata + Pro League healthcheck (sprint 1.F.2) ([#631](https://github.com/Ryxeuf/fantasy-football-game/issues/631)) ([bafb5ff](https://github.com/Ryxeuf/fantasy-football-game/commit/bafb5ff12bc6c6a12c0539d14e419244ea7fd3d8))
+* **server:** Pro League LLM Gazette daily generation (sprint 1.E.1) ([#629](https://github.com/Ryxeuf/fantasy-football-game/issues/629)) ([53415d0](https://github.com/Ryxeuf/fantasy-football-game/commit/53415d0e8f7722168025854754f408b429b472fa))
+* **server:** Pro League rookie generator + seed + replenish (sprint 1.E.6) ([#627](https://github.com/Ryxeuf/fantasy-football-game/issues/627)) ([41ae06f](https://github.com/Ryxeuf/fantasy-football-game/commit/41ae06fee8df2a73d6d780ff28b9997b9fc11c7a))
+* **server:** Pro League storyline detector + Gazette daily recap (sprint 1.E.3) ([#624](https://github.com/Ryxeuf/fantasy-football-game/issues/624)) ([cd68eb1](https://github.com/Ryxeuf/fantasy-football-game/commit/cd68eb10490057f8e468f3d1001986218eec4a5d))
+* **turnstile:** injecte NEXT_PUBLIC_TURNSTILE_SITE_KEY au build Next.js ([d888d6d](https://github.com/Ryxeuf/fantasy-football-game/commit/d888d6dbe60244192835130a093b48492abd628c))
+* **web:** Pro League betting UI (sprint 1.D.7) ([#621](https://github.com/Ryxeuf/fantasy-football-game/issues/621)) ([78d3d01](https://github.com/Ryxeuf/fantasy-football-game/commit/78d3d01283f85262674591997e3a186566cefc0f))
+
 ## [1.90.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.89.1...v1.90.0) (2026-05-07)
 
 
