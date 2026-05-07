@@ -11,6 +11,8 @@ import {
 import { useRouter } from "expo-router";
 import { apiGet, ApiError } from "../../lib/api";
 import { useAuth } from "../../lib/auth-context";
+import { useTranslation } from "../../lib/i18n-context";
+import type { TranslationFn } from "../../lib/i18n-context";
 import {
   CUP_STATUSES,
   filterCupsByStatus,
@@ -21,22 +23,29 @@ import {
   type CupStatusFilter,
 } from "../../lib/cups";
 
-const FILTER_OPTIONS: ReadonlyArray<{ value: CupStatusFilter; label: string }> = [
-  { value: "all", label: "Toutes" },
-  ...CUP_STATUSES.map((s) => ({
-    value: s as CupStatusFilter,
-    label: formatCupStatusLabel(s),
-  })),
-];
+function buildFilterOptions(
+  t: TranslationFn,
+): ReadonlyArray<{ value: CupStatusFilter; label: string }> {
+  return [
+    { value: "all", label: t("cups.list.filters.all") },
+    ...CUP_STATUSES.map((s) => ({
+      value: s as CupStatusFilter,
+      label: formatCupStatusLabel(s),
+    })),
+  ];
+}
 
 export default function CupsListScreen() {
   const router = useRouter();
   const { logout } = useAuth();
+  const { t } = useTranslation();
   const [cups, setCups] = useState<Cup[]>([]);
   const [filter, setFilter] = useState<CupStatusFilter>("all");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const filterOptions = useMemo(() => buildFilterOptions(t), [t]);
 
   const fetchCups = useCallback(async () => {
     try {
@@ -52,9 +61,11 @@ export default function CupsListScreen() {
         router.replace("/login");
         return;
       }
-      setError(err instanceof Error ? err.message : "Erreur de chargement");
+      setError(
+        err instanceof Error ? err.message : t("cups.list.errors.loadError"),
+      );
     }
-  }, [logout, router]);
+  }, [logout, router, t]);
 
   useEffect(() => {
     setLoading(true);
@@ -72,18 +83,20 @@ export default function CupsListScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Coupes</Text>
+        <Text style={styles.title}>{t("cups.list.title")}</Text>
         <Pressable
           onPress={() => router.push("/cups/archived")}
           style={styles.archivedLink}
           testID="cups-archived-link"
         >
-          <Text style={styles.archivedLinkText}>Archivees</Text>
+          <Text style={styles.archivedLinkText}>
+            {t("cups.list.archivedLink")}
+          </Text>
         </Pressable>
       </View>
 
       <View style={styles.filters} testID="cups-filters">
-        {FILTER_OPTIONS.map((opt) => {
+        {filterOptions.map((opt) => {
           const active = opt.value === filter;
           return (
             <Pressable
@@ -113,9 +126,11 @@ export default function CupsListScreen() {
 
       {error && !loading && (
         <View style={styles.center}>
-          <Text style={styles.errorText}>Erreur : {error}</Text>
+          <Text style={styles.errorText}>
+            {t("cups.list.errors.prefix", { message: error })}
+          </Text>
           <Pressable onPress={onRefresh} style={styles.retryButton}>
-            <Text style={styles.retryText}>Reessayer</Text>
+            <Text style={styles.retryText}>{t("common.retry")}</Text>
           </Pressable>
         </View>
       )}
@@ -125,7 +140,11 @@ export default function CupsListScreen() {
           data={visible}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <CupCard cup={item} onPress={() => router.push(`/cups/${item.id}`)} />
+            <CupCard
+              cup={item}
+              t={t}
+              onPress={() => router.push(`/cups/${item.id}`)}
+            />
           )}
           contentContainerStyle={styles.listContent}
           refreshControl={
@@ -134,7 +153,7 @@ export default function CupsListScreen() {
           ListEmptyComponent={
             <View style={styles.center}>
               <Text style={styles.emptyText} testID="cups-empty">
-                Aucune coupe pour ce filtre.
+                {t("cups.list.empty")}
               </Text>
             </View>
           }
@@ -144,7 +163,15 @@ export default function CupsListScreen() {
   );
 }
 
-function CupCard({ cup, onPress }: { cup: Cup; onPress: () => void }) {
+function CupCard({
+  cup,
+  onPress,
+  t,
+}: {
+  cup: Cup;
+  onPress: () => void;
+  t: TranslationFn;
+}) {
   return (
     <Pressable
       onPress={onPress}
@@ -161,11 +188,16 @@ function CupCard({ cup, onPress }: { cup: Cup; onPress: () => void }) {
       </View>
       <View style={styles.cardMeta}>
         <Text style={styles.cardMetaText}>
-          {cup.participantCount} participant
-          {cup.participantCount > 1 ? "s" : ""}
+          {cup.participantCount > 1
+            ? t("cups.list.card.participantPlural", {
+                count: cup.participantCount,
+              })
+            : t("cups.list.card.participantSingular", {
+                count: cup.participantCount,
+              })}
         </Text>
         <Text style={styles.cardMetaText}>
-          {cup.isPublic ? "Publique" : "Privee"}
+          {cup.isPublic ? t("cups.public") : t("cups.private")}
         </Text>
         <Text style={styles.cardMetaText}>{cup.ruleset}</Text>
       </View>

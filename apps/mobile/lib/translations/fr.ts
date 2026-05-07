@@ -38,6 +38,12 @@
  *   detail introuvable, sections bareme/saisons/journees/classement/
  *   participants, scoring V/N/D/Forfait, headers de standings,
  *   summary participants).
+ * S27.3.16 : namespace `cups.*` pour `cups/index.tsx`,
+ *   `cups/archived.tsx` et `cups/[id].tsx` (titre liste + lien
+ *   archivees, filtres, vide, erreurs, card avec singulier/pluriel
+ *   participants, detail introuvable, creator meta, sections
+ *   participants/standings/matches, headers de classement V/N/D/Pts,
+ *   summary participant et label match).
  *
  * Les autres namespaces seront ajoutes au fur et a mesure du
  * remplacement des strings hardcodees.
@@ -397,6 +403,65 @@ export const FR_TRANSLATIONS = {
       no: "Ne pas suivre",
       hint:
         "Le suivi est gratuit et ne consomme pas de points de mouvement",
+    },
+  },
+  cups: {
+    public: "Publique",
+    private: "Privee",
+    list: {
+      title: "Coupes",
+      archivedLink: "Archivees",
+      filters: {
+        all: "Toutes",
+      },
+      empty: "Aucune coupe pour ce filtre.",
+      errors: {
+        loadError: "Erreur de chargement",
+        prefix: "Erreur : {{message}}",
+      },
+      card: {
+        participantSingular: "{{count}} participant",
+        participantPlural: "{{count}} participants",
+      },
+    },
+    archived: {
+      title: "Coupes archivees",
+      empty: "Aucune coupe archivee.",
+      errors: {
+        loadError: "Erreur de chargement",
+        prefix: "Erreur : {{message}}",
+      },
+    },
+    detail: {
+      notFound: "Coupe introuvable",
+      creatorMeta: "Cree par {{creator}}",
+      sections: {
+        participants: "Participants",
+        standings: "Classement",
+        matches: "Matchs",
+      },
+      participants: {
+        empty: "Aucun participant pour l'instant.",
+        summary: "{{roster}} — {{coach}}",
+      },
+      standings: {
+        empty: "Aucun match termine.",
+        headers: {
+          team: "Equipe",
+          wins: "V",
+          draws: "N",
+          losses: "D",
+          points: "Pts",
+        },
+      },
+      matches: {
+        empty: "Aucun match joue.",
+        label: "Match {{id}}",
+      },
+      errors: {
+        loadError: "Erreur de chargement",
+        prefix: "Erreur : {{message}}",
+      },
     },
   },
   leagues: {

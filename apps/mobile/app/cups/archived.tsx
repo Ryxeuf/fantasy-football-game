@@ -11,6 +11,7 @@ import {
 import { useRouter } from "expo-router";
 import { apiGet, ApiError } from "../../lib/api";
 import { useAuth } from "../../lib/auth-context";
+import { useTranslation } from "../../lib/i18n-context";
 import {
   formatCupStatusLabel,
   parseCupListResponse,
@@ -21,6 +22,7 @@ import {
 export default function ArchivedCupsScreen() {
   const router = useRouter();
   const { logout } = useAuth();
+  const { t } = useTranslation();
   const [cups, setCups] = useState<Cup[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -40,9 +42,11 @@ export default function ArchivedCupsScreen() {
         router.replace("/login");
         return;
       }
-      setError(err instanceof Error ? err.message : "Erreur de chargement");
+      setError(
+        err instanceof Error ? err.message : t("cups.archived.errors.loadError"),
+      );
     }
-  }, [logout, router]);
+  }, [logout, router, t]);
 
   useEffect(() => {
     setLoading(true);
@@ -57,7 +61,7 @@ export default function ArchivedCupsScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Coupes archivees</Text>
+      <Text style={styles.title}>{t("cups.archived.title")}</Text>
 
       {loading && (
         <View style={styles.center}>
@@ -67,9 +71,11 @@ export default function ArchivedCupsScreen() {
 
       {error && !loading && (
         <View style={styles.center}>
-          <Text style={styles.errorText}>Erreur : {error}</Text>
+          <Text style={styles.errorText}>
+            {t("cups.archived.errors.prefix", { message: error })}
+          </Text>
           <Pressable onPress={onRefresh} style={styles.retryButton}>
-            <Text style={styles.retryText}>Reessayer</Text>
+            <Text style={styles.retryText}>{t("common.retry")}</Text>
           </Pressable>
         </View>
       )}
@@ -98,9 +104,7 @@ export default function ArchivedCupsScreen() {
           }
           ListEmptyComponent={
             <View style={styles.center}>
-              <Text style={styles.emptyText}>
-                Aucune coupe archivee.
-              </Text>
+              <Text style={styles.emptyText}>{t("cups.archived.empty")}</Text>
             </View>
           }
         />
