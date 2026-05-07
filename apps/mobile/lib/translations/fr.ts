@@ -390,6 +390,12 @@ export const FR_TRANSLATIONS = {
       endTurn: "Fin de tour",
       back: "← Retour",
     },
+    a11y: {
+      boardLabel:
+        "Plateau Blood Bowl. Score {{teamA}} {{scoreA}} contre {{teamB}} {{scoreB}}. Mi-temps {{half}}, tour {{turn}}. {{playersA}} joueurs sur le terrain pour {{teamA}}, {{playersB}} pour {{teamB}}.",
+      boardHint:
+        "Touchez une case pour selectionner. Double-tap pour deselectionner ou reinitialiser le zoom.",
+    },
   },
   popups: {
     fallbacks: {
