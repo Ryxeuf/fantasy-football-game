@@ -1,3 +1,18 @@
+## [1.95.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.94.1...v1.95.0) (2026-05-07)
+
+
+### ✨ Features
+
+* **server:** wire audit log into admin-data routes (S27.6.4) ([#652](https://github.com/Ryxeuf/fantasy-football-game/issues/652)) ([4b3727d](https://github.com/Ryxeuf/fantasy-football-game/commit/4b3727db9fbb2412c6885294cb3bc518dc575fc7))
+* **sim-engine:** every yard the ball moves is a narrated MOVE event ([fbd9b40](https://github.com/Ryxeuf/fantasy-football-game/commit/fbd9b40d66f40b06fd2f8b93737a1d5f833a6bd2))
+* **web:** /pro-league/about marketing page (sprint 1.F.4) ([#660](https://github.com/Ryxeuf/fantasy-football-game/issues/660)) ([926d6d2](https://github.com/Ryxeuf/fantasy-football-game/commit/926d6d24a91e5fad341bcb1994775b7acbc3fbe8)), closes [#630](https://github.com/Ryxeuf/fantasy-football-game/issues/630) [#631](https://github.com/Ryxeuf/fantasy-football-game/issues/631) [#632](https://github.com/Ryxeuf/fantasy-football-game/issues/632)
+* **web:** i18n Pro League hub + about pages (sprint i18n.1) ([#661](https://github.com/Ryxeuf/fantasy-football-game/issues/661)) ([41602c4](https://github.com/Ryxeuf/fantasy-football-game/commit/41602c40edd07b0aeb650c8266e8257a5a0008f3))
+
+
+### ♻️ Code Refactoring
+
+* **game-engine:** extract turn + foul handlers (S27.8.3) ([ebc46c4](https://github.com/Ryxeuf/fantasy-football-game/commit/ebc46c41a451ffa795df55ea175d45e5de65d10a))
+
 ## [1.94.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.94.0...v1.94.1) (2026-05-07)
 
 
