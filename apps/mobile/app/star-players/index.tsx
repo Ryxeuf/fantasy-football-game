@@ -12,6 +12,9 @@ import {
 import { useRouter } from "expo-router";
 import { apiGet, ApiError } from "../../lib/api";
 import { useAuth } from "../../lib/auth-context";
+import { useTranslation } from "../../lib/i18n-context";
+import type { TranslationFn } from "../../lib/i18n-context";
+import type { TranslationKey } from "../../lib/i18n";
 import {
   DEFAULT_RULESET,
   filterStarPlayers,
@@ -24,14 +27,15 @@ import {
   type StarRuleset,
 } from "../../lib/star-players";
 
-const RULESET_OPTIONS: { key: StarRuleset; label: string }[] = [
-  { key: "season_3", label: "Saison 3" },
-  { key: "season_2", label: "Saison 2" },
+const RULESET_OPTIONS: { key: StarRuleset; labelKey: TranslationKey }[] = [
+  { key: "season_3", labelKey: "starPlayers.list.ruleset.season3" },
+  { key: "season_2", labelKey: "starPlayers.list.ruleset.season2" },
 ];
 
 export default function StarPlayersIndexScreen() {
   const router = useRouter();
   const { logout } = useAuth();
+  const { t } = useTranslation();
   const [ruleset, setRuleset] = useState<StarRuleset>(DEFAULT_RULESET);
   const [players, setPlayers] = useState<StarPlayerSummary[]>([]);
   const [search, setSearch] = useState("");
@@ -57,10 +61,14 @@ export default function StarPlayersIndexScreen() {
           router.replace("/login");
           return;
         }
-        setError(err instanceof Error ? err.message : "Erreur de chargement");
+        setError(
+          err instanceof Error
+            ? err.message
+            : t("starPlayers.list.errors.loadError"),
+        );
       }
     },
-    [logout, router],
+    [logout, router, t],
   );
 
   useEffect(() => {
@@ -91,11 +99,15 @@ export default function StarPlayersIndexScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Catalogue Star Players</Text>
+        <Text style={styles.title}>{t("starPlayers.list.title")}</Text>
         <Text style={styles.subtitle}>
-          {filtered.length} joueur{filtered.length > 1 ? "s" : ""}
+          {filtered.length > 1
+            ? t("starPlayers.list.subtitlePlural", { count: filtered.length })
+            : t("starPlayers.list.subtitleSingular", {
+                count: filtered.length,
+              })}
           {filtered.length !== players.length
-            ? ` sur ${players.length}`
+            ? t("starPlayers.list.subtitleFiltered", { total: players.length })
             : ""}
         </Text>
       </View>
@@ -118,7 +130,7 @@ export default function StarPlayersIndexScreen() {
                   ruleset === opt.key && styles.rulesetTextActive,
                 ]}
               >
-                {opt.label}
+                {t(opt.labelKey)}
               </Text>
             </Pressable>
           ))}
@@ -126,7 +138,7 @@ export default function StarPlayersIndexScreen() {
 
         <TextInput
           style={styles.searchInput}
-          placeholder="Rechercher par nom..."
+          placeholder={t("starPlayers.list.search.placeholder")}
           placeholderTextColor="#9CA3AF"
           value={search}
           onChangeText={setSearch}
@@ -149,7 +161,9 @@ export default function StarPlayersIndexScreen() {
               megaStarOnly && styles.megaToggleTextActive,
             ]}
           >
-            {megaStarOnly ? "Mega stars uniquement" : `Mega stars (${megaCount})`}
+            {megaStarOnly
+              ? t("starPlayers.list.megaToggle.on")
+              : t("starPlayers.list.megaToggle.off", { count: megaCount })}
           </Text>
         </Pressable>
       </View>
@@ -162,9 +176,11 @@ export default function StarPlayersIndexScreen() {
 
       {error && !loading && (
         <View style={styles.center}>
-          <Text style={styles.errorText}>Erreur : {error}</Text>
+          <Text style={styles.errorText}>
+            {t("starPlayers.list.errors.prefix", { message: error })}
+          </Text>
           <Pressable onPress={onRefresh} style={styles.retryButton}>
-            <Text style={styles.retryText}>Reessayer</Text>
+            <Text style={styles.retryText}>{t("common.retry")}</Text>
           </Pressable>
         </View>
       )}
@@ -176,6 +192,7 @@ export default function StarPlayersIndexScreen() {
           renderItem={({ item }) => (
             <StarRow
               player={item}
+              t={t}
               onPress={() => navigateToDetail(item)}
             />
           )}
@@ -186,7 +203,7 @@ export default function StarPlayersIndexScreen() {
           ListEmptyComponent={
             <View style={styles.center}>
               <Text style={styles.emptyText}>
-                Aucun star player ne correspond aux filtres.
+                {t("starPlayers.list.empty")}
               </Text>
             </View>
           }
@@ -199,9 +216,11 @@ export default function StarPlayersIndexScreen() {
 function StarRow({
   player,
   onPress,
+  t,
 }: {
   player: StarPlayerSummary;
   onPress: () => void;
+  t: TranslationFn;
 }) {
   const skills = getStarSkillList(player.skills);
   return (
@@ -229,11 +248,15 @@ function StarRow({
         </Text>
       )}
       <Text style={styles.hirableText} numberOfLines={1}>
-        Recrutable : {formatHirableBy(player.hirableBy)}
+        {t("starPlayers.list.row.hirable", {
+          hirable: formatHirableBy(player.hirableBy),
+        })}
       </Text>
       {player.isMegaStar && (
         <View style={styles.megaBadge}>
-          <Text style={styles.megaBadgeText}>Mega Star</Text>
+          <Text style={styles.megaBadgeText}>
+            {t("starPlayers.megaStarBadge")}
+          </Text>
         </View>
       )}
     </Pressable>

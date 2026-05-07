@@ -44,6 +44,12 @@
  *   participants, detail introuvable, creator meta, sections
  *   participants/standings/matches, headers de classement V/N/D/Pts,
  *   summary participant et label match).
+ * S27.3.17 : namespace `starPlayers.*` pour `star-players/index.tsx`
+ *   et `star-players/[slug].tsx` (titre catalogue, sous-titre avec
+ *   compteurs singulier/pluriel/filtre, recherche, ruleset Saison
+ *   2/3, toggle Mega Stars on/off, vide, hirable, badge Mega Star,
+ *   detail introuvable, image a11y, sections caracteristiques/
+ *   competences/recrutable par/regle speciale, actions retour).
  *
  * Les autres namespaces seront ajoutes au fur et a mesure du
  * remplacement des strings hardcodees.
@@ -403,6 +409,54 @@ export const FR_TRANSLATIONS = {
       no: "Ne pas suivre",
       hint:
         "Le suivi est gratuit et ne consomme pas de points de mouvement",
+    },
+  },
+  starPlayers: {
+    megaStarBadge: "Mega Star",
+    list: {
+      title: "Catalogue Star Players",
+      subtitleSingular: "{{count}} joueur",
+      subtitlePlural: "{{count}} joueurs",
+      subtitleFiltered: " sur {{total}}",
+      search: {
+        placeholder: "Rechercher par nom...",
+      },
+      ruleset: {
+        season3: "Saison 3",
+        season2: "Saison 2",
+      },
+      megaToggle: {
+        on: "Mega stars uniquement",
+        off: "Mega stars ({{count}})",
+      },
+      empty: "Aucun star player ne correspond aux filtres.",
+      row: {
+        hirable: "Recrutable : {{hirable}}",
+      },
+      errors: {
+        loadError: "Erreur de chargement",
+        prefix: "Erreur : {{message}}",
+      },
+    },
+    detail: {
+      notFound: "Star Player introuvable",
+      imageA11y: "Illustration de {{name}}",
+      sections: {
+        stats: "Caracteristiques",
+        skills: "Competences",
+        hirable: "Recrutable par",
+        specialRule: "Regle speciale",
+      },
+      skills: {
+        empty: "Aucune competence",
+      },
+      actions: {
+        back: "Retour",
+        backToCatalog: "Retour au catalogue",
+      },
+      errors: {
+        loadError: "Erreur de chargement",
+      },
     },
   },
   cups: {

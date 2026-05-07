@@ -12,6 +12,7 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { apiGet, ApiError, API_BASE } from "../../lib/api";
 import { useAuth } from "../../lib/auth-context";
+import { useTranslation } from "../../lib/i18n-context";
 import {
   DEFAULT_RULESET,
   formatHirableBy,
@@ -53,6 +54,7 @@ export default function StarPlayerDetailScreen() {
 
   const router = useRouter();
   const { logout } = useAuth();
+  const { t } = useTranslation();
   const [player, setPlayer] = useState<StarPlayerSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -67,7 +69,7 @@ export default function StarPlayerDetailScreen() {
       );
       const parsed = parseStarDetailResponse(response);
       if (!parsed) {
-        throw new Error("Star Player introuvable");
+        throw new Error(t("starPlayers.detail.notFound"));
       }
       setPlayer(parsed);
     } catch (err: unknown) {
@@ -79,9 +81,13 @@ export default function StarPlayerDetailScreen() {
         router.replace("/login");
         return;
       }
-      setError(err instanceof Error ? err.message : "Erreur de chargement");
+      setError(
+        err instanceof Error
+          ? err.message
+          : t("starPlayers.detail.errors.loadError"),
+      );
     }
-  }, [slug, ruleset, logout, router]);
+  }, [slug, ruleset, logout, router, t]);
 
   useEffect(() => {
     setLoading(true);
@@ -106,13 +112,15 @@ export default function StarPlayerDetailScreen() {
     return (
       <View style={styles.center}>
         <Text style={styles.errorText}>
-          {error ?? "Star Player introuvable"}
+          {error ?? t("starPlayers.detail.notFound")}
         </Text>
         <Pressable onPress={onRefresh} style={styles.retryButton}>
-          <Text style={styles.retryText}>Reessayer</Text>
+          <Text style={styles.retryText}>{t("common.retry")}</Text>
         </Pressable>
         <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backButtonSecondaryText}>Retour</Text>
+          <Text style={styles.backButtonSecondaryText}>
+            {t("starPlayers.detail.actions.back")}
+          </Text>
         </Pressable>
       </View>
     );
@@ -135,20 +143,26 @@ export default function StarPlayerDetailScreen() {
             source={{ uri: imageUrl }}
             style={styles.playerImage}
             resizeMode="contain"
-            accessibilityLabel={`Illustration de ${player.displayName}`}
+            accessibilityLabel={t("starPlayers.detail.imageA11y", {
+              name: player.displayName,
+            })}
           />
         )}
         <Text style={styles.playerName}>{player.displayName}</Text>
         <Text style={styles.playerCost}>{formatStarCost(player.cost)}</Text>
         {player.isMegaStar && (
           <View style={styles.megaBadge}>
-            <Text style={styles.megaBadgeText}>Mega Star</Text>
+            <Text style={styles.megaBadgeText}>
+              {t("starPlayers.megaStarBadge")}
+            </Text>
           </View>
         )}
       </View>
 
       <View style={styles.statsCard}>
-        <Text style={styles.sectionTitle}>Caracteristiques</Text>
+        <Text style={styles.sectionTitle}>
+          {t("starPlayers.detail.sections.stats")}
+        </Text>
         <View style={styles.statsGrid}>
           <StatBlock label="MA" value={formatStarStat("ma", player.ma)} />
           <StatBlock label="ST" value={formatStarStat("st", player.st)} />
@@ -159,9 +173,13 @@ export default function StarPlayerDetailScreen() {
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Competences</Text>
+        <Text style={styles.sectionTitle}>
+          {t("starPlayers.detail.sections.skills")}
+        </Text>
         {skills.length === 0 ? (
-          <Text style={styles.emptyText}>Aucune competence</Text>
+          <Text style={styles.emptyText}>
+            {t("starPlayers.detail.skills.empty")}
+          </Text>
         ) : (
           <View style={styles.skillChips}>
             {skills.map((skill) => (
@@ -174,13 +192,17 @@ export default function StarPlayerDetailScreen() {
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Recrutable par</Text>
+        <Text style={styles.sectionTitle}>
+          {t("starPlayers.detail.sections.hirable")}
+        </Text>
         <Text style={styles.bodyText}>{formatHirableBy(player.hirableBy)}</Text>
       </View>
 
       {player.specialRule && (
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Regle speciale</Text>
+          <Text style={styles.sectionTitle}>
+            {t("starPlayers.detail.sections.specialRule")}
+          </Text>
           <Text style={styles.bodyText}>{player.specialRule}</Text>
         </View>
       )}
@@ -190,7 +212,9 @@ export default function StarPlayerDetailScreen() {
         style={styles.backButtonFull}
         testID="star-detail-back"
       >
-        <Text style={styles.backButtonText}>Retour au catalogue</Text>
+        <Text style={styles.backButtonText}>
+          {t("starPlayers.detail.actions.backToCatalog")}
+        </Text>
       </Pressable>
     </ScrollView>
   );
