@@ -9,8 +9,7 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { apiGet, apiPost, ApiError } from "../../lib/api";
 import { useAuth } from "../../lib/auth-context";
-import { useGameSocket } from "../../lib/use-game-socket";
-import { useGameChat } from "../../lib/use-game-chat";
+import { useGameMatch } from "../../lib/use-game-match";
 import {
   getLegalMoves,
   type GameState,
@@ -93,12 +92,14 @@ export default function PlayScreen() {
     [user],
   );
 
-  // Real-time updates via WebSocket
+  // Real-time updates + chat via WebSocket (S27.4.2 — hook composite)
   const {
     connected: wsConnected,
     submitMove: wsSubmitMove,
-    socket: wsSocket,
-  } = useGameSocket(matchId ?? "", {
+    chatMessages,
+    sendChatMessage,
+  } = useGameMatch({
+    matchId: matchId ?? "",
     onStateUpdate: ({ gameState }) => {
       if (!gameState) return;
       setState(normalizeState(gameState));
@@ -121,12 +122,6 @@ export default function PlayScreen() {
         setState(normalizeState(gameState));
       }
     },
-  });
-
-  // In-game chat wired on the same /game socket
-  const { messages: chatMessages, sendMessage: sendChatMessage } = useGameChat({
-    socket: wsSocket,
-    matchId: matchId ?? "",
   });
 
   // HTTP polling fallback — only when WebSocket is not connected
