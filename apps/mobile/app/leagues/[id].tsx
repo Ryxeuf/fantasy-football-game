@@ -11,6 +11,7 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { apiGet, ApiError } from "../../lib/api";
 import { useAuth } from "../../lib/auth-context";
+import { useTranslation } from "../../lib/i18n-context";
 import {
   formatLeagueRulesetLabel,
   formatLeagueSeasonStatusLabel,
@@ -28,6 +29,7 @@ export default function LeagueDetailScreen() {
   const leagueId = typeof params.id === "string" ? params.id : "";
   const router = useRouter();
   const { logout } = useAuth();
+  const { t } = useTranslation();
   const [league, setLeague] = useState<LeagueDetail | null>(null);
   const [selectedSeasonId, setSelectedSeasonId] = useState<string | null>(null);
   const [season, setSeason] = useState<LeagueSeasonDetail | null>(null);
@@ -59,7 +61,7 @@ export default function LeagueDetailScreen() {
       setError(null);
       const response = await apiGet(`/league/${leagueId}`);
       const parsed = parseLeagueDetailResponse(response);
-      if (!parsed) throw new Error("Ligue introuvable");
+      if (!parsed) throw new Error(t("leagues.detail.notFound"));
       setLeague(parsed);
       setSelectedSeasonId((prev) => {
         if (prev) return prev;
@@ -68,9 +70,11 @@ export default function LeagueDetailScreen() {
       });
     } catch (err: unknown) {
       if (await handleAuthError(err)) return;
-      setError(err instanceof Error ? err.message : "Erreur de chargement");
+      setError(
+        err instanceof Error ? err.message : t("leagues.detail.errors.loadError"),
+      );
     }
-  }, [leagueId, handleAuthError]);
+  }, [leagueId, handleAuthError, t]);
 
   const fetchSeason = useCallback(
     async (seasonId: string) => {
@@ -88,13 +92,15 @@ export default function LeagueDetailScreen() {
         setSeason(null);
         setStandings([]);
         setSeasonError(
-          err instanceof Error ? err.message : "Erreur de chargement",
+          err instanceof Error
+            ? err.message
+            : t("leagues.detail.errors.loadError"),
         );
       } finally {
         setSeasonLoading(false);
       }
     },
-    [handleAuthError],
+    [handleAuthError, t],
   );
 
   useEffect(() => {
@@ -141,9 +147,11 @@ export default function LeagueDetailScreen() {
   if (error || !league) {
     return (
       <View style={styles.center}>
-        <Text style={styles.errorText}>{error ?? "Ligue introuvable"}</Text>
+        <Text style={styles.errorText}>
+          {error ?? t("leagues.detail.notFound")}
+        </Text>
         <Pressable onPress={onRefresh} style={styles.retryButton}>
-          <Text style={styles.retryText}>Reessayer</Text>
+          <Text style={styles.retryText}>{t("common.retry")}</Text>
         </Pressable>
       </View>
     );
@@ -169,32 +177,54 @@ export default function LeagueDetailScreen() {
             {formatLeagueRulesetLabel(league.ruleset)}
           </Text>
           <Text style={styles.badgeSecondary}>
-            {league.isPublic ? "Publique" : "Privee"}
+            {league.isPublic
+              ? t("leagues.public")
+              : t("leagues.private")}
           </Text>
         </View>
         {league.description ? (
           <Text style={styles.description}>{league.description}</Text>
         ) : null}
         <Text style={styles.metaText}>
-          {`Createur: ${league.creator.coachName || league.creator.email || "—"} • Max ${league.maxParticipants} equipes`}
+          {t("leagues.detail.creatorMeta", {
+            creator:
+              league.creator.coachName || league.creator.email || "—",
+            count: league.maxParticipants,
+          })}
         </Text>
       </View>
 
       <View style={styles.scoringCard}>
-        <Text style={styles.sectionTitle}>Bareme</Text>
+        <Text style={styles.sectionTitle}>
+          {t("leagues.detail.sections.scoring")}
+        </Text>
         <View style={styles.scoringRow}>
-          <ScoreCell label="Victoire" value={league.winPoints} />
-          <ScoreCell label="Nul" value={league.drawPoints} />
-          <ScoreCell label="Defaite" value={league.lossPoints} />
-          <ScoreCell label="Forfait" value={league.forfeitPoints} />
+          <ScoreCell
+            label={t("leagues.detail.scoring.win")}
+            value={league.winPoints}
+          />
+          <ScoreCell
+            label={t("leagues.detail.scoring.draw")}
+            value={league.drawPoints}
+          />
+          <ScoreCell
+            label={t("leagues.detail.scoring.loss")}
+            value={league.lossPoints}
+          />
+          <ScoreCell
+            label={t("leagues.detail.scoring.forfeit")}
+            value={league.forfeitPoints}
+          />
         </View>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Saisons</Text>
+        <Text style={styles.sectionTitle}>
+          {t("leagues.detail.sections.seasons")}
+        </Text>
         {league.seasons.length === 0 ? (
           <Text style={styles.mutedText} testID="league-no-seasons">
-            Aucune saison pour l'instant.
+            {t("leagues.detail.seasons.empty")}
           </Text>
         ) : (
           <View style={styles.seasonTabs} testID="league-seasons-tabs">
@@ -213,7 +243,10 @@ export default function LeagueDetailScreen() {
                       active && styles.seasonTabTextActive,
                     ]}
                   >
-                    S{s.seasonNumber} — {s.name}
+                    {t("leagues.detail.seasons.tabLabel", {
+                      number: s.seasonNumber,
+                      name: s.name,
+                    })}
                   </Text>
                   <Text
                     style={[
@@ -238,16 +271,20 @@ export default function LeagueDetailScreen() {
             </View>
           ) : null}
           {seasonError ? (
-            <Text style={styles.errorText}>Erreur : {seasonError}</Text>
+            <Text style={styles.errorText}>
+              {t("leagues.detail.errors.prefix", { message: seasonError })}
+            </Text>
           ) : null}
 
           {season ? (
             <>
               <View style={styles.section} testID="season-rounds">
-                <Text style={styles.sectionTitle}>Journees</Text>
+                <Text style={styles.sectionTitle}>
+                  {t("leagues.detail.sections.rounds")}
+                </Text>
                 {season.rounds.length === 0 ? (
                   <Text style={styles.mutedText}>
-                    Aucune journee planifiee.
+                    {t("leagues.detail.rounds.empty")}
                   </Text>
                 ) : (
                   season.rounds.map((r) => (
@@ -257,8 +294,14 @@ export default function LeagueDetailScreen() {
                       testID={`season-round-${r.id}`}
                     >
                       <Text style={styles.rowMain}>
-                        Journee {r.roundNumber}
-                        {r.name ? ` — ${r.name}` : ""}
+                        {r.name
+                          ? t("leagues.detail.rounds.labelWithName", {
+                              number: r.roundNumber,
+                              name: r.name,
+                            })
+                          : t("leagues.detail.rounds.label", {
+                              number: r.roundNumber,
+                            })}
                       </Text>
                       <Text style={styles.rowSub}>{r.status}</Text>
                     </View>
@@ -267,19 +310,31 @@ export default function LeagueDetailScreen() {
               </View>
 
               <View style={styles.section} testID="season-standings">
-                <Text style={styles.sectionTitle}>Classement</Text>
+                <Text style={styles.sectionTitle}>
+                  {t("leagues.detail.sections.standings")}
+                </Text>
                 {standings.length === 0 ? (
                   <Text style={styles.mutedText}>
-                    Aucun match comptabilise.
+                    {t("leagues.detail.standings.empty")}
                   </Text>
                 ) : (
                   <View>
                     <View style={[styles.standingRow, styles.standingHeader]}>
-                      <Text style={styles.standingCellTeam}>Equipe</Text>
-                      <Text style={styles.standingCell}>V</Text>
-                      <Text style={styles.standingCell}>N</Text>
-                      <Text style={styles.standingCell}>D</Text>
-                      <Text style={styles.standingCellPts}>Pts</Text>
+                      <Text style={styles.standingCellTeam}>
+                        {t("leagues.detail.standings.headers.team")}
+                      </Text>
+                      <Text style={styles.standingCell}>
+                        {t("leagues.detail.standings.headers.wins")}
+                      </Text>
+                      <Text style={styles.standingCell}>
+                        {t("leagues.detail.standings.headers.draws")}
+                      </Text>
+                      <Text style={styles.standingCell}>
+                        {t("leagues.detail.standings.headers.losses")}
+                      </Text>
+                      <Text style={styles.standingCellPts}>
+                        {t("leagues.detail.standings.headers.points")}
+                      </Text>
                     </View>
                     {standings.map((row) => (
                       <View
@@ -303,10 +358,12 @@ export default function LeagueDetailScreen() {
               </View>
 
               <View style={styles.section} testID="season-participants">
-                <Text style={styles.sectionTitle}>Participants</Text>
+                <Text style={styles.sectionTitle}>
+                  {t("leagues.detail.sections.participants")}
+                </Text>
                 {season.participants.length === 0 ? (
                   <Text style={styles.mutedText}>
-                    Aucun participant pour cette saison.
+                    {t("leagues.detail.participants.empty")}
                   </Text>
                 ) : (
                   season.participants.map((p) => (
@@ -317,8 +374,11 @@ export default function LeagueDetailScreen() {
                     >
                       <Text style={styles.rowMain}>{p.team.name}</Text>
                       <Text style={styles.rowSub}>
-                        {p.team.roster} •{" "}
-                        {p.team.owner.coachName ?? "—"} • ELO {p.seasonElo}
+                        {t("leagues.detail.participants.summary", {
+                          roster: p.team.roster,
+                          coach: p.team.owner.coachName ?? "—",
+                          elo: p.seasonElo,
+                        })}
                       </Text>
                     </View>
                   ))

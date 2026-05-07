@@ -33,6 +33,11 @@
  *   les fallbacks de `MatchPopups`). Couvre titres, sous-titres,
  *   labels de resultat de blocage, libelles d'accessibilite et
  *   fallbacks de noms de joueurs.
+ * S27.3.15 : namespace `leagues.*` pour `leagues/index.tsx` et
+ *   `leagues/[id].tsx` (titre liste, filtres, vide, erreurs, card,
+ *   detail introuvable, sections bareme/saisons/journees/classement/
+ *   participants, scoring V/N/D/Forfait, headers de standings,
+ *   summary participants).
  *
  * Les autres namespaces seront ajoutes au fur et a mesure du
  * remplacement des strings hardcodees.
@@ -392,6 +397,68 @@ export const FR_TRANSLATIONS = {
       no: "Ne pas suivre",
       hint:
         "Le suivi est gratuit et ne consomme pas de points de mouvement",
+    },
+  },
+  leagues: {
+    public: "Publique",
+    private: "Privee",
+    list: {
+      title: "Ligues",
+      filters: {
+        all: "Toutes",
+      },
+      empty: "Aucune ligue pour ce filtre.",
+      errors: {
+        loadError: "Erreur de chargement",
+        prefix: "Erreur : {{message}}",
+      },
+      card: {
+        maxParticipants: "Max {{count}} equipes",
+      },
+    },
+    detail: {
+      notFound: "Ligue introuvable",
+      creatorMeta: "Createur: {{creator}} • Max {{count}} equipes",
+      sections: {
+        scoring: "Bareme",
+        seasons: "Saisons",
+        rounds: "Journees",
+        standings: "Classement",
+        participants: "Participants",
+      },
+      scoring: {
+        win: "Victoire",
+        draw: "Nul",
+        loss: "Defaite",
+        forfeit: "Forfait",
+      },
+      seasons: {
+        empty: "Aucune saison pour l'instant.",
+        tabLabel: "S{{number}} — {{name}}",
+      },
+      rounds: {
+        empty: "Aucune journee planifiee.",
+        label: "Journee {{number}}",
+        labelWithName: "Journee {{number}} — {{name}}",
+      },
+      standings: {
+        empty: "Aucun match comptabilise.",
+        headers: {
+          team: "Equipe",
+          wins: "V",
+          draws: "N",
+          losses: "D",
+          points: "Pts",
+        },
+      },
+      participants: {
+        empty: "Aucun participant pour cette saison.",
+        summary: "{{roster}} • {{coach}} • ELO {{elo}}",
+      },
+      errors: {
+        loadError: "Erreur de chargement",
+        prefix: "Erreur : {{message}}",
+      },
     },
   },
   auth: {

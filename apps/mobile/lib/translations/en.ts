@@ -359,6 +359,68 @@ export const EN_TRANSLATIONS = {
       hint: "Following up is free and does not cost movement points",
     },
   },
+  leagues: {
+    public: "Public",
+    private: "Private",
+    list: {
+      title: "Leagues",
+      filters: {
+        all: "All",
+      },
+      empty: "No league for this filter.",
+      errors: {
+        loadError: "Failed to load",
+        prefix: "Error: {{message}}",
+      },
+      card: {
+        maxParticipants: "Max {{count}} teams",
+      },
+    },
+    detail: {
+      notFound: "League not found",
+      creatorMeta: "Creator: {{creator}} • Max {{count}} teams",
+      sections: {
+        scoring: "Scoring",
+        seasons: "Seasons",
+        rounds: "Rounds",
+        standings: "Standings",
+        participants: "Participants",
+      },
+      scoring: {
+        win: "Win",
+        draw: "Draw",
+        loss: "Loss",
+        forfeit: "Forfeit",
+      },
+      seasons: {
+        empty: "No season yet.",
+        tabLabel: "S{{number}} — {{name}}",
+      },
+      rounds: {
+        empty: "No round scheduled.",
+        label: "Round {{number}}",
+        labelWithName: "Round {{number}} — {{name}}",
+      },
+      standings: {
+        empty: "No match counted yet.",
+        headers: {
+          team: "Team",
+          wins: "W",
+          draws: "D",
+          losses: "L",
+          points: "Pts",
+        },
+      },
+      participants: {
+        empty: "No participant for this season.",
+        summary: "{{roster}} • {{coach}} • ELO {{elo}}",
+      },
+      errors: {
+        loadError: "Failed to load",
+        prefix: "Error: {{message}}",
+      },
+    },
+  },
   auth: {
     login: {
       title: "Sign in",
