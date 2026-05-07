@@ -1,64 +1,64 @@
 === MATCH #10 — Iron Bears (Dwarf) vs Outlaws (Norse) ===
 engine 0.13.0
 
-KICKOFF — chi-iron-bears hosts lv-outlaws (weather: nice, home receives).
-Half 1 • Turn 1 — home in possession at yardline 4 (score 0-0)
-  PASS — home-LOS attempts a short pass: needs 5+, rolled 6 → caught.
-  Touchdown! home crosses the line. Score is now 1-0.
-Half 1 • Turn 2 — away in possession at yardline 4 (score 1-0)
-  TURNOVER — pickup_failed.
-Half 1 • Turn 3 — home in possession at yardline 4 (score 1-0)
-  ✨ NUFFLE [coach_sideline_rant] — A sideline rant electrifies the squad — and the ref.
-  BLOCK — home-LOS blocks away-LOS: dice [BOTH_DOWN/PLAYER_DOWN], chose BOTH_DOWN, defender_down.
-  KO — away-LOS is knocked unconscious by home-LOS.
-Half 1 • Turn 4 — home in possession at yardline 5 (score 1-0)
-  BLOCK — home-LOS blocks away-LOS: dice [PUSH_BACK/PLAYER_DOWN], chose PUSH_BACK, push_only.
-  BLOCK — home-LOS blocks away-LOS: dice [STUMBLE/POW], chose POW, defender_down.
-Half 1 • Turn 5 — home in possession at yardline 5 (score 1-0)
-  BLOCK — home-LOS blocks away-LOS: dice [BOTH_DOWN/PUSH_BACK], chose PUSH_BACK, push_only.
-  Touchdown! home crosses the line. Score is now 2-0.
-Half 1 • Turn 6 — away in possession at yardline 4 (score 2-0)
-  ✨ NUFFLE [wind_picks_up] — A gust catches the ball mid-pass.
-  BLOCK — away-LOS blocks home-LOS: dice [BOTH_DOWN/BOTH_DOWN], chose BOTH_DOWN, attacker_down.
-  TURNOVER — block_attacker_down.
-Half 1 • Turn 7 — home in possession at yardline 5 (score 2-0)
-Half 1 • Turn 8 — home in possession at yardline 5 (score 2-0)
-  FOUL — home-LOS fouls away-PRONE (armor=4, broken=false).
-  PASS — home-LOS attempts a short pass: needs 5+, rolled 4 → failed.
-  TURNOVER — pass_failed.
-  Touchdown! away crosses the line. Score is now 2-1.
+[T+00:00] KICKOFF — chi-iron-bears hosts lv-outlaws (weather: nice, home receives).
+[T+00:00] Half 1 • Turn 1 — home in possession at yardline 4 (score 0-0)
+  [T+00:00] PASS — home-LOS attempts a short pass: needs 5+, rolled 6 → caught.
+  [T+00:00] Touchdown! home crosses the line. Score is now 1-0.
+[T+00:30] Half 1 • Turn 2 — away in possession at yardline 4 (score 1-0)
+  [T+00:30] TURNOVER — pickup_failed.
+[T+01:00] Half 1 • Turn 3 — home in possession at yardline 4 (score 1-0)
+  [T+01:00] ✨ NUFFLE [coach_sideline_rant] — A sideline rant electrifies the squad — and the ref.
+  [T+01:00] BLOCK — home-LOS blocks away-LOS: dice [BOTH_DOWN/PLAYER_DOWN], chose BOTH_DOWN, defender_down.
+  [T+01:00] KO — away-LOS is knocked unconscious by home-LOS (armor=10, injury=9).
+[T+01:30] Half 1 • Turn 4 — home in possession at yardline 5 (score 1-0) (drive +1 yds)
+  [T+01:30] BLOCK — home-LOS blocks away-LOS: dice [PUSH_BACK/PLAYER_DOWN], chose PUSH_BACK, push_only.
+  [T+01:30] BLOCK — home-LOS blocks away-LOS: dice [STUMBLE/POW], chose POW, defender_down.
+[T+02:00] Half 1 • Turn 5 — home in possession at yardline 5 (score 1-0)
+  [T+02:00] BLOCK — home-LOS blocks away-LOS: dice [BOTH_DOWN/PUSH_BACK], chose PUSH_BACK, push_only.
+  [T+02:00] Touchdown! home crosses the line. Score is now 2-0.
+[T+02:30] Half 1 • Turn 6 — away in possession at yardline 4 (score 2-0)
+  [T+02:30] ✨ NUFFLE [wind_picks_up] — A gust catches the ball mid-pass.
+  [T+02:30] BLOCK — away-LOS blocks home-LOS: dice [BOTH_DOWN/BOTH_DOWN], chose BOTH_DOWN, attacker_down.
+  [T+02:30] TURNOVER — block_attacker_down.
+[T+03:00] Half 1 • Turn 7 — home in possession at yardline 5 (score 2-0)
+[T+03:30] Half 1 • Turn 8 — home in possession at yardline 5 (score 2-0)
+  [T+03:30] FOUL — home-LOS fouls away-PRONE (armor=4, broken=false).
+  [T+03:30] PASS — home-LOS attempts a short pass: needs 5+, rolled 4 → failed.
+  [T+03:30] TURNOVER — pass_failed.
+  [T+03:30] Touchdown! away crosses the line. Score is now 2-1.
 
 --- HALFTIME (score 2-1) ---
 
-Half 2 • Turn 1 — away in possession at yardline 4 (score 2-1)
-  ✨ NUFFLE [blood_in_water] — Blood in the water — the crowd's bloodlust is rising.
-  DODGE — away-LOS dodges to (13,7): needs 3+, rolled 2 → fail.
-  TURNOVER — dodge_failed.
-  Touchdown! home crosses the line. Score is now 3-1.
-Half 2 • Turn 2 — away in possession at yardline 4 (score 3-1)
-  PASS — away-LOS attempts a short pass: needs 5+, rolled 6 → caught.
-Half 2 • Turn 3 — away in possession at yardline 4 (score 3-1)
-  DODGE — away-LOS dodges to (13,7): needs 3+, rolled 4 → success.
-  BLOCK — away-LOS blocks home-LOS: dice [PUSH_BACK/BOTH_DOWN], chose BOTH_DOWN, attacker_down.
-  TURNOVER — block_attacker_down.
-Half 2 • Turn 4 — home in possession at yardline 5 (score 3-1)
-  ✨ NUFFLE [rookie_brilliance] — A rookie pulls off a play above their stats — Nuffle smiles.
-  FOUL — home-LOS fouls away-PRONE (armor=7, broken=false).
-  PASS — home-LOS attempts a short pass: needs 5+, rolled 2 → failed.
-  TURNOVER — pass_failed.
-Half 2 • Turn 5 — away in possession at yardline 4 (score 3-1)
-  Touchdown! away crosses the line. Score is now 3-2.
-Half 2 • Turn 6 — home in possession at yardline 4 (score 3-2)
-  FOUL — home-LOS fouls away-PRONE (armor=4, broken=false).
-  PASS — home-LOS attempts a short pass: needs 5+, rolled 4 → failed.
-  TURNOVER — pass_failed.
-Half 2 • Turn 7 — away in possession at yardline 7 (score 3-2)
-  ✨ NUFFLE [apprentice_wizard_spotted] — An apprentice wizard sneaks a Lightning Bolt into play.
-  PASS — away-LOS attempts a short pass: needs 5+, rolled 4 → failed.
-  TURNOVER — pass_failed.
-Half 2 • Turn 8 — home in possession at yardline 5 (score 3-2)
-  BLOCK — home-LOS blocks away-LOS: dice [PUSH_BACK/BOTH_DOWN], chose PUSH_BACK, push_only.
-  BLOCK — home-LOS blocks away-LOS: dice [PUSH_BACK/PUSH_BACK], chose PUSH_BACK, push_only.
+[T+04:15] Half 2 • Turn 1 — away in possession at yardline 4 (score 2-1)
+  [T+04:15] ✨ NUFFLE [blood_in_water] — Blood in the water — the crowd's bloodlust is rising.
+  [T+04:15] DODGE — away-LOS dodges to (13,7): needs 3+, rolled 2 → fail.
+  [T+04:15] TURNOVER — dodge_failed.
+  [T+04:15] Touchdown! home crosses the line. Score is now 3-1.
+[T+04:45] Half 2 • Turn 2 — away in possession at yardline 4 (score 3-1)
+  [T+04:45] PASS — away-LOS attempts a short pass: needs 5+, rolled 6 → caught.
+[T+05:15] Half 2 • Turn 3 — away in possession at yardline 4 (score 3-1)
+  [T+05:15] DODGE — away-LOS dodges to (13,7): needs 3+, rolled 4 → success.
+  [T+05:15] BLOCK — away-LOS blocks home-LOS: dice [PUSH_BACK/BOTH_DOWN], chose BOTH_DOWN, attacker_down.
+  [T+05:15] TURNOVER — block_attacker_down.
+[T+05:45] Half 2 • Turn 4 — home in possession at yardline 5 (score 3-1)
+  [T+05:45] ✨ NUFFLE [rookie_brilliance] — A rookie pulls off a play above their stats — Nuffle smiles.
+  [T+05:45] FOUL — home-LOS fouls away-PRONE (armor=7, broken=false).
+  [T+05:45] PASS — home-LOS attempts a short pass: needs 5+, rolled 2 → failed.
+  [T+05:45] TURNOVER — pass_failed.
+[T+06:15] Half 2 • Turn 5 — away in possession at yardline 4 (score 3-1)
+  [T+06:15] Touchdown! away crosses the line. Score is now 3-2.
+[T+06:45] Half 2 • Turn 6 — home in possession at yardline 4 (score 3-2)
+  [T+06:45] FOUL — home-LOS fouls away-PRONE (armor=4, broken=false).
+  [T+06:45] PASS — home-LOS attempts a short pass: needs 5+, rolled 4 → failed.
+  [T+06:45] TURNOVER — pass_failed.
+[T+07:15] Half 2 • Turn 7 — away in possession at yardline 7 (score 3-2)
+  [T+07:15] ✨ NUFFLE [apprentice_wizard_spotted] — An apprentice wizard sneaks a Lightning Bolt into play.
+  [T+07:15] PASS — away-LOS attempts a short pass: needs 5+, rolled 4 → failed.
+  [T+07:15] TURNOVER — pass_failed.
+[T+07:45] Half 2 • Turn 8 — home in possession at yardline 5 (score 3-2)
+  [T+07:45] BLOCK — home-LOS blocks away-LOS: dice [PUSH_BACK/BOTH_DOWN], chose PUSH_BACK, push_only.
+  [T+07:45] BLOCK — home-LOS blocks away-LOS: dice [PUSH_BACK/PUSH_BACK], chose PUSH_BACK, push_only.
 
 --- END OF MATCH (score 3-2) ---
 

@@ -33,7 +33,21 @@ Le seed `2026` est figé pour que tous les testeurs reçoivent le même
 
 ## Statut actuel
 
-- Engine version : `0.2.0` (lot 0.E.1 première itération)
-- Replays générés : 50 (seed 2026)
+- Engine version : `0.13.0` (lot 0.E.1 iter #16, gate stat C1-C5 ✅)
+- Replays générés : 50 (seed 2026, format narratif enrichi 2026-05-07)
 - Panel recruté : **TODO** — recrutement humain hors scope automatique
 - Synthèse remplie : **TODO** — après réception des 5 grilles
+
+## Format narratif (post 2026-05-07)
+
+Les `.txt` ont été enrichis pour rendre la lecture panel plus fidèle :
+
+- Préfixe `[T+MM:SS]` sur chaque event (timing match-clock issu de `displayAtMs`).
+- Annotation `(drive ±N yds)` sur les TURN_STARTs successifs même drive.
+- Skill annotations sur BLOCK (`wrestled`) et DODGE (`[tackle blocks reroll]`).
+- Détail `(armor=N, injury=M)` sur KO et CASUALTY quand disponible.
+- Footer FINAL inchangé (compatible aggregation panel).
+
+Restent agrégés à la turn (pas event-par-event) : déplacements simples, pickups
+réussis, setups. Pour la plénitude visuelle, donner aux testeurs l'URL spectate
+Pixi en complément du `.txt` (post-deploy).

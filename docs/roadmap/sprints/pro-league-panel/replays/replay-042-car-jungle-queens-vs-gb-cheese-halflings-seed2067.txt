@@ -1,58 +1,58 @@
 === MATCH #42 — Jungle Queens (Amazon) vs Cheese Halflings (Halfling) ===
 engine 0.13.0
 
-KICKOFF — car-jungle-queens hosts gb-cheese-halflings (weather: nice, away receives).
-Half 1 • Turn 1 — away in possession at yardline 4 (score 0-0)
-  PASS — away-LOS attempts a short pass: needs 5+, rolled 6 → caught.
-Half 1 • Turn 2 — away in possession at yardline 5 (score 0-0)
-  PASS — away-LOS attempts a short pass: needs 5+, rolled 2 → failed.
-  TURNOVER — pass_failed.
-Half 1 • Turn 3 — home in possession at yardline 4 (score 0-0)
-  DODGE — home-LOS dodges to (13,7): needs 3+, rolled 2 → fail.
-  TURNOVER — dodge_failed.
-Half 1 • Turn 4 — away in possession at yardline 7 (score 0-0)
-  PASS — away-LOS attempts a short pass: needs 5+, rolled 4 → failed.
-  TURNOVER — pass_failed.
-Half 1 • Turn 5 — home in possession at yardline 10 (score 0-0)
-  TURNOVER — pickup_failed.
-  Touchdown! away crosses the line. Score is now 0-1.
-Half 1 • Turn 6 — home in possession at yardline 4 (score 0-1)
-  ✨ NUFFLE [banana_skin] — A banana skin appears from nowhere. A player slips spectacularly.
-  CASUALTY — away-NUFFLE-1-6 is taken off by banana_skin.
-  DODGE — home-LOS dodges to (13,7): needs 3+, rolled 5 → success.
-  DODGE — home-LOS dodges to (13,7): needs 3+, rolled 6 → success.
-Half 1 • Turn 7 — home in possession at yardline 15 (score 0-1)
-Half 1 • Turn 8 — home in possession at yardline 25 (score 0-1)
-  DODGE — home-LOS dodges to (13,7): needs 3+, rolled 5 → success.
-  Touchdown! home crosses the line. Score is now 1-1.
+[T+00:00] KICKOFF — car-jungle-queens hosts gb-cheese-halflings (weather: nice, away receives).
+[T+00:00] Half 1 • Turn 1 — away in possession at yardline 4 (score 0-0)
+  [T+00:00] PASS — away-LOS attempts a short pass: needs 5+, rolled 6 → caught.
+[T+00:30] Half 1 • Turn 2 — away in possession at yardline 5 (score 0-0) (drive +1 yds)
+  [T+00:30] PASS — away-LOS attempts a short pass: needs 5+, rolled 2 → failed.
+  [T+00:30] TURNOVER — pass_failed.
+[T+01:00] Half 1 • Turn 3 — home in possession at yardline 4 (score 0-0)
+  [T+01:00] DODGE — home-LOS dodges to (13,7): needs 3+, rolled 2 → fail.
+  [T+01:00] TURNOVER — dodge_failed.
+[T+01:30] Half 1 • Turn 4 — away in possession at yardline 7 (score 0-0)
+  [T+01:30] PASS — away-LOS attempts a short pass: needs 5+, rolled 4 → failed.
+  [T+01:30] TURNOVER — pass_failed.
+[T+02:00] Half 1 • Turn 5 — home in possession at yardline 10 (score 0-0)
+  [T+02:00] TURNOVER — pickup_failed.
+  [T+02:00] Touchdown! away crosses the line. Score is now 0-1.
+[T+02:30] Half 1 • Turn 6 — home in possession at yardline 4 (score 0-1) (drive -6 yds)
+  [T+02:30] ✨ NUFFLE [banana_skin] — A banana skin appears from nowhere. A player slips spectacularly.
+  [T+02:30] CASUALTY — away-NUFFLE-1-6 is taken off by banana_skin.
+  [T+02:30] DODGE — home-LOS dodges to (13,7): needs 3+, rolled 5 → success.
+  [T+02:30] DODGE — home-LOS dodges to (13,7): needs 3+, rolled 6 → success.
+[T+03:00] Half 1 • Turn 7 — home in possession at yardline 15 (score 0-1) (drive +11 yds)
+[T+03:30] Half 1 • Turn 8 — home in possession at yardline 25 (score 0-1) (drive +10 yds)
+  [T+03:30] DODGE — home-LOS dodges to (13,7): needs 3+, rolled 5 → success.
+  [T+03:30] Touchdown! home crosses the line. Score is now 1-1.
 
 --- HALFTIME (score 1-1) ---
 
-Half 2 • Turn 1 — home in possession at yardline 4 (score 1-1)
-Half 2 • Turn 2 — home in possession at yardline 13 (score 1-1)
-  PASS — home-LOS attempts a short pass: needs 5+, rolled 1 (fumble!) → failed.
-  TURNOVER — pass_fumble.
-  Touchdown! away crosses the line. Score is now 1-2.
-Half 2 • Turn 3 — home in possession at yardline 4 (score 1-2)
-  PASS — home-LOS attempts a short pass: needs 5+, rolled 2 → failed.
-  TURNOVER — pass_failed.
-Half 2 • Turn 4 — away in possession at yardline 4 (score 1-2)
-  ✨ NUFFLE [wardrobe_malfunction] — Wardrobe malfunction. The crowd is, uh, distracted.
-  CASUALTY — home-NUFFLE-2-4 is taken off by wardrobe_malfunction.
-  PASS — away-LOS attempts a short pass: needs 5+, rolled 1 (fumble!) → failed.
-  TURNOVER — pass_fumble.
-Half 2 • Turn 5 — home in possession at yardline 16 (score 1-2)
-  ✨ NUFFLE [cocky_drop] — Showboating costs the carrier the ball.
-  CASUALTY — away-NUFFLE-2-5 is taken off by cocky_drop.
-  DODGE — home-LOS dodges to (13,7): needs 3+, rolled 5 → success.
-Half 2 • Turn 6 — home in possession at yardline 25 (score 1-2)
-  TURNOVER — pickup_failed.
-Half 2 • Turn 7 — away in possession at yardline 4 (score 1-2)
-  ✨ NUFFLE [banana_skin] — A banana skin appears from nowhere. A player slips spectacularly.
-  DODGE — away-LOS dodges to (13,7): needs 3+, rolled 1 → fail.
-  TURNOVER — dodge_failed.
-Half 2 • Turn 8 — home in possession at yardline 4 (score 1-2)
-  ✨ NUFFLE [tantrum_star] — A star player throws a tantrum and refuses to obey instructions.
+[T+04:15] Half 2 • Turn 1 — home in possession at yardline 4 (score 1-1) (drive -21 yds)
+[T+04:45] Half 2 • Turn 2 — home in possession at yardline 13 (score 1-1) (drive +9 yds)
+  [T+04:45] PASS — home-LOS attempts a short pass: needs 5+, rolled 1 (fumble!) → failed.
+  [T+04:45] TURNOVER — pass_fumble.
+  [T+04:45] Touchdown! away crosses the line. Score is now 1-2.
+[T+05:15] Half 2 • Turn 3 — home in possession at yardline 4 (score 1-2) (drive -9 yds)
+  [T+05:15] PASS — home-LOS attempts a short pass: needs 5+, rolled 2 → failed.
+  [T+05:15] TURNOVER — pass_failed.
+[T+05:45] Half 2 • Turn 4 — away in possession at yardline 4 (score 1-2)
+  [T+05:45] ✨ NUFFLE [wardrobe_malfunction] — Wardrobe malfunction. The crowd is, uh, distracted.
+  [T+05:45] CASUALTY — home-NUFFLE-2-4 is taken off by wardrobe_malfunction.
+  [T+05:45] PASS — away-LOS attempts a short pass: needs 5+, rolled 1 (fumble!) → failed.
+  [T+05:45] TURNOVER — pass_fumble.
+[T+06:15] Half 2 • Turn 5 — home in possession at yardline 16 (score 1-2)
+  [T+06:15] ✨ NUFFLE [cocky_drop] — Showboating costs the carrier the ball.
+  [T+06:15] CASUALTY — away-NUFFLE-2-5 is taken off by cocky_drop.
+  [T+06:15] DODGE — home-LOS dodges to (13,7): needs 3+, rolled 5 → success.
+[T+06:45] Half 2 • Turn 6 — home in possession at yardline 25 (score 1-2) (drive +9 yds)
+  [T+06:45] TURNOVER — pickup_failed.
+[T+07:15] Half 2 • Turn 7 — away in possession at yardline 4 (score 1-2)
+  [T+07:15] ✨ NUFFLE [banana_skin] — A banana skin appears from nowhere. A player slips spectacularly.
+  [T+07:15] DODGE — away-LOS dodges to (13,7): needs 3+, rolled 1 → fail.
+  [T+07:15] TURNOVER — dodge_failed.
+[T+07:45] Half 2 • Turn 8 — home in possession at yardline 4 (score 1-2)
+  [T+07:45] ✨ NUFFLE [tantrum_star] — A star player throws a tantrum and refuses to obey instructions.
 
 --- END OF MATCH (score 1-2) ---
 

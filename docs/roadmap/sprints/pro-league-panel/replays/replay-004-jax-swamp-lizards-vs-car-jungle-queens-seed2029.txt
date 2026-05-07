@@ -1,60 +1,60 @@
 === MATCH #4 — Swamp Lizards (Lizardmen) vs Jungle Queens (Amazon) ===
 engine 0.13.0
 
-KICKOFF — jax-swamp-lizards hosts car-jungle-queens (weather: nice, away receives).
-Half 1 • Turn 1 — away in possession at yardline 4 (score 0-0)
-  DODGE — away-LOS dodges to (13,7): needs 3+, rolled 5 → success.
-Half 1 • Turn 2 — away in possession at yardline 4 (score 0-0)
-  ✨ NUFFLE [spike_magazine_arrives] — A Spike Magazine reporter arrives. Players posture for the photo.
-  BLOCK — away-LOS blocks home-LOS: dice [STUMBLE/BOTH_DOWN], chose BOTH_DOWN, both_down.
-  TURNOVER — block_attacker_down.
-Half 1 • Turn 3 — home in possession at yardline 9 (score 0-0)
-  ✨ NUFFLE [ref_blunder] — The ref makes a baffling call — the crowd boos.
-Half 1 • Turn 4 — home in possession at yardline 17 (score 0-0)
-  PASS — home-LOS attempts a short pass: needs 5+, rolled 3 → failed.
-  TURNOVER — pass_failed.
-Half 1 • Turn 5 — away in possession at yardline 9 (score 0-0)
-  ✨ NUFFLE [weather_shift] — The Nuffle Gods stir the clouds. Weather shifts.
-  TURNOVER — pickup_failed.
-Half 1 • Turn 6 — home in possession at yardline 9 (score 0-0)
-  ✨ NUFFLE [rookie_brilliance] — A rookie pulls off a play above their stats — Nuffle smiles.
-  DODGE — home-LOS dodges to (13,7): needs 3+, rolled 4 → success.
-  DODGE — home-LOS dodges to (13,7): needs 3+, rolled 3 → success.
-  PASS — home-LOS attempts a short pass: needs 5+, rolled 3 → failed.
-  TURNOVER — pass_failed.
-  Touchdown! away crosses the line. Score is now 0-1.
-Half 1 • Turn 7 — home in possession at yardline 4 (score 0-1)
-  Touchdown! home crosses the line. Score is now 1-1.
-Half 1 • Turn 8 — away in possession at yardline 4 (score 1-1)
-  ✨ NUFFLE [spike_magazine_arrives] — A Spike Magazine reporter arrives. Players posture for the photo.
-  PASS — away-LOS attempts a short pass: needs 5+, rolled 3 → failed.
-  TURNOVER — pass_failed.
+[T+00:00] KICKOFF — jax-swamp-lizards hosts car-jungle-queens (weather: nice, away receives).
+[T+00:00] Half 1 • Turn 1 — away in possession at yardline 4 (score 0-0)
+  [T+00:00] DODGE — away-LOS dodges to (13,7): needs 3+, rolled 5 → success.
+[T+00:30] Half 1 • Turn 2 — away in possession at yardline 4 (score 0-0)
+  [T+00:30] ✨ NUFFLE [spike_magazine_arrives] — A Spike Magazine reporter arrives. Players posture for the photo.
+  [T+00:30] BLOCK — away-LOS blocks home-LOS: dice [STUMBLE/BOTH_DOWN], chose BOTH_DOWN, both_down.
+  [T+00:30] TURNOVER — block_attacker_down.
+[T+01:00] Half 1 • Turn 3 — home in possession at yardline 9 (score 0-0)
+  [T+01:00] ✨ NUFFLE [ref_blunder] — The ref makes a baffling call — the crowd boos.
+[T+01:30] Half 1 • Turn 4 — home in possession at yardline 17 (score 0-0) (drive +8 yds)
+  [T+01:30] PASS — home-LOS attempts a short pass: needs 5+, rolled 3 → failed.
+  [T+01:30] TURNOVER — pass_failed.
+[T+02:00] Half 1 • Turn 5 — away in possession at yardline 9 (score 0-0)
+  [T+02:00] ✨ NUFFLE [weather_shift] — The Nuffle Gods stir the clouds. Weather shifts.
+  [T+02:00] TURNOVER — pickup_failed.
+[T+02:30] Half 1 • Turn 6 — home in possession at yardline 9 (score 0-0)
+  [T+02:30] ✨ NUFFLE [rookie_brilliance] — A rookie pulls off a play above their stats — Nuffle smiles.
+  [T+02:30] DODGE — home-LOS dodges to (13,7): needs 3+, rolled 4 → success.
+  [T+02:30] DODGE — home-LOS dodges to (13,7): needs 3+, rolled 3 → success.
+  [T+02:30] PASS — home-LOS attempts a short pass: needs 5+, rolled 3 → failed.
+  [T+02:30] TURNOVER — pass_failed.
+  [T+02:30] Touchdown! away crosses the line. Score is now 0-1.
+[T+03:00] Half 1 • Turn 7 — home in possession at yardline 4 (score 0-1) (drive -5 yds)
+  [T+03:00] Touchdown! home crosses the line. Score is now 1-1.
+[T+03:30] Half 1 • Turn 8 — away in possession at yardline 4 (score 1-1)
+  [T+03:30] ✨ NUFFLE [spike_magazine_arrives] — A Spike Magazine reporter arrives. Players posture for the photo.
+  [T+03:30] PASS — away-LOS attempts a short pass: needs 5+, rolled 3 → failed.
+  [T+03:30] TURNOVER — pass_failed.
 
 --- HALFTIME (score 1-1) ---
 
-Half 2 • Turn 1 — home in possession at yardline 4 (score 1-1)
-  Touchdown! home crosses the line. Score is now 2-1.
-Half 2 • Turn 2 — away in possession at yardline 4 (score 2-1)
-  ✨ NUFFLE [fan_factor_surge] — Fan Factor surges — a roar that can be heard for miles.
-  FOUL — away-LOS fouls home-PRONE (armor=1, broken=false, sent off!).
-  TURNOVER — foul_sent_off.
-Half 2 • Turn 3 — home in possession at yardline 4 (score 2-1)
-  FOUL — home-LOS fouls away-PRONE (armor=6, broken=false).
-  DODGE — home-LOS dodges to (13,7): needs 3+, rolled 6 → success.
-Half 2 • Turn 4 — home in possession at yardline 9 (score 2-1)
-  ✨ NUFFLE [crowd_riot] — A riot breaks out in the stands. Some fans spill onto the pitch.
-  FOUL — home-LOS fouls away-PRONE (armor=8, broken=false).
-  BLOCK — home-LOS blocks away-LOS: dice [POW/STUMBLE], chose POW, defender_down.
-Half 2 • Turn 5 — home in possession at yardline 19 (score 2-1)
-  TURNOVER — pickup_failed.
-Half 2 • Turn 6 — away in possession at yardline 4 (score 2-1)
-  ✨ NUFFLE [sudden_inspiration] — A player is struck by sudden inspiration and grows half a foot.
-Half 2 • Turn 7 — away in possession at yardline 4 (score 2-1)
-  ✨ NUFFLE [coach_sideline_rant] — A sideline rant electrifies the squad — and the ref.
-  PASS — away-LOS attempts a short pass: needs 5+, rolled 1 (fumble!) → failed.
-  TURNOVER — pass_fumble.
-Half 2 • Turn 8 — home in possession at yardline 8 (score 2-1)
-  FOUL — home-LOS fouls away-PRONE (armor=7, broken=false).
+[T+04:15] Half 2 • Turn 1 — home in possession at yardline 4 (score 1-1)
+  [T+04:15] Touchdown! home crosses the line. Score is now 2-1.
+[T+04:45] Half 2 • Turn 2 — away in possession at yardline 4 (score 2-1)
+  [T+04:45] ✨ NUFFLE [fan_factor_surge] — Fan Factor surges — a roar that can be heard for miles.
+  [T+04:45] FOUL — away-LOS fouls home-PRONE (armor=1, broken=false, sent off!).
+  [T+04:45] TURNOVER — foul_sent_off.
+[T+05:15] Half 2 • Turn 3 — home in possession at yardline 4 (score 2-1)
+  [T+05:15] FOUL — home-LOS fouls away-PRONE (armor=6, broken=false).
+  [T+05:15] DODGE — home-LOS dodges to (13,7): needs 3+, rolled 6 → success.
+[T+05:45] Half 2 • Turn 4 — home in possession at yardline 9 (score 2-1) (drive +5 yds)
+  [T+05:45] ✨ NUFFLE [crowd_riot] — A riot breaks out in the stands. Some fans spill onto the pitch.
+  [T+05:45] FOUL — home-LOS fouls away-PRONE (armor=8, broken=false).
+  [T+05:45] BLOCK — home-LOS blocks away-LOS: dice [POW/STUMBLE], chose POW, defender_down.
+[T+06:15] Half 2 • Turn 5 — home in possession at yardline 19 (score 2-1) (drive +10 yds)
+  [T+06:15] TURNOVER — pickup_failed.
+[T+06:45] Half 2 • Turn 6 — away in possession at yardline 4 (score 2-1)
+  [T+06:45] ✨ NUFFLE [sudden_inspiration] — A player is struck by sudden inspiration and grows half a foot.
+[T+07:15] Half 2 • Turn 7 — away in possession at yardline 4 (score 2-1)
+  [T+07:15] ✨ NUFFLE [coach_sideline_rant] — A sideline rant electrifies the squad — and the ref.
+  [T+07:15] PASS — away-LOS attempts a short pass: needs 5+, rolled 1 (fumble!) → failed.
+  [T+07:15] TURNOVER — pass_fumble.
+[T+07:45] Half 2 • Turn 8 — home in possession at yardline 8 (score 2-1)
+  [T+07:45] FOUL — home-LOS fouls away-PRONE (armor=7, broken=false).
 
 --- END OF MATCH (score 2-1) ---
 
