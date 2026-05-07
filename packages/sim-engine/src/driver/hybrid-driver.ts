@@ -285,6 +285,11 @@ function runKeyMoment(
       return { events: out.events, turnover: out.turnover };
     }
     case 'pickup': {
+      // Skip when the active team already has the ball — a pickup
+      // resolver call here would otherwise roll on a ball-already-in-hand
+      // and could surface a "pickup_failed" turnover from a team that
+      // never lost possession (mirrors the `!att.hasBall` guard on PASS).
+      if (att.hasBall) return { events: [], turnover: false };
       const stateWithBall: ResolverState = {
         ...resolverState,
         ballAt: { ...att.position },
@@ -485,6 +490,12 @@ function processTurn(
     activeProfile.bashIndex >= 60 || activeProfile.foulFrequency >= 60;
   const baseCount = m.state.turn % 3 === 0 ? 2 : 1;
   const momentCount = isBashy && m.state.turn % 2 === 0 ? baseCount + 1 : baseCount;
+  // Bug #1 fix : a turnover terminates the active team's turn. The
+  // opponent must NOT advance yards (and possibly score) on the same
+  // turn — that produced absurd "pickup_failed → opponent TD"
+  // sequences in the same TURN_START block. The new possession is
+  // played out normally on the next call to processTurn.
+  let turnoverThisTurn = false;
   for (let i = 0; i < momentCount; i += 1) {
     const moment = pickKeyMoment(rngs.strategic, m.state, activeProfile);
     if (moment === null) continue;
@@ -551,14 +562,15 @@ function processTurn(
       m.turnover += 1;
       recordFailure(m.momentum, drivingPlayerId);
       m.state = { ...m.state, drive: nextDrive(m.state.drive) };
+      turnoverThisTurn = true;
       break;
     }
   }
 
-  // Yard advancement when still in possession. Re-derive profiles at
-  // this point because a turnover during the for-loop above may have
-  // swapped `drivingTeam`.
-  if (m.state.drive.hasPossession) {
+  // Yard advancement when still in possession AND no turnover happened
+  // this turn. After a turnover the new team simply receives possession ;
+  // its drive is played on the next turn.
+  if (m.state.drive.hasPossession && !turnoverThisTurn) {
     const yardsActive = m.state.drive.drivingTeam === 'home' ? homeProfile : awayProfile;
     const yardsOpposing = m.state.drive.drivingTeam === 'home' ? awayProfile : homeProfile;
     const tvActive = m.state.drive.drivingTeam === 'home' ? tvHome : tvAway;

@@ -129,6 +129,69 @@ describe('runHybridDriver — sprint Pro League 0.A.2', () => {
   });
 });
 
+describe('runHybridDriver — turnover does not chain into a same-turn TD (Bug #1)', () => {
+  /**
+   * Regression : a turnover during a key moment used to leave
+   * `hasPossession=true` on the new team and the yard-advancement
+   * block still ran for that team in the same turn — producing
+   * "pickup_failed → opponent TD" sequences inside a single
+   * TURN_START block. After the fix, a turnover ends the turn ; the
+   * new possession is played on the next call to processTurn.
+   *
+   * We assert this over 200 seeds : there is no TURN_START block in
+   * which a TURNOVER event is followed by a TD event before the next
+   * TURN_START / HALFTIME / END.
+   */
+  it('no TD ever follows a TURNOVER inside the same turn block', () => {
+    for (let seed = 0; seed < 200; seed += 1) {
+      const out = runHybridDriver(baseInput({ seed }));
+      let inTurnoverBlock = false;
+      for (const ev of out.events) {
+        if (
+          ev.type === 'TURN_START' ||
+          ev.type === 'HALFTIME' ||
+          ev.type === 'END' ||
+          ev.type === 'KICKOFF'
+        ) {
+          inTurnoverBlock = false;
+          continue;
+        }
+        if (ev.type === 'TURNOVER') {
+          inTurnoverBlock = true;
+          continue;
+        }
+        if (inTurnoverBlock && ev.type === 'TD') {
+          throw new Error(
+            `seed=${seed}: a TD event was emitted in the same turn as a preceding TURNOVER`
+          );
+        }
+      }
+    }
+  });
+
+  /**
+   * Regression : the hybrid AI can pick `pickup` as a key moment for a
+   * team that is already in possession (the hybrid model never enters
+   * a "loose ball" state — `hasPossession` is always true on the
+   * driving team). The resolver then rolls and could surface a
+   * nonsensical "team-with-ball pickup_failed → turnover", which the
+   * user observed in replay #2 turn 4. The driver must skip the
+   * pickup when the active player already holds the ball — at which
+   * point no `pickup_failed` should ever fire across a normal match.
+   */
+  it('no pickup_failed turnover ever fires (active team always already has possession)', () => {
+    for (let seed = 0; seed < 200; seed += 1) {
+      const out = runHybridDriver(baseInput({ seed }));
+      const pickupFails = out.events.filter(
+        (ev) =>
+          ev.type === 'TURNOVER' &&
+          (ev.meta as { cause?: string } | undefined)?.cause === 'pickup_failed'
+      );
+      expect(pickupFails).toHaveLength(0);
+    }
+  });
+});
+
 describe('runHybridDriver — Eye of Nuffle hooks (sprint 0.C.2)', () => {
   it('emits NUFFLE events on at least some seeds (~30% turn rate)', () => {
     let totalNuffle = 0;
