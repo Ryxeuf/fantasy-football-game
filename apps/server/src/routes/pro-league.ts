@@ -87,6 +87,10 @@ import {
   getProMatchDetail,
 } from "../services/pro-league-match";
 import {
+  ReplayDumpError,
+  getMatchReplayDump,
+} from "../services/pro-league-replay";
+import {
   ProTeamNotFoundError,
   getProTeamDetail,
 } from "../services/pro-league-team";
@@ -192,6 +196,40 @@ export async function handleStreamProMatch(
  */
 export function handleBroadcasterStats(_req: Request, res: Response): void {
   res.json(getBroadcasterStats());
+}
+
+/**
+ * Sprint 1.G.1 — Dump complet du replay d'un match `completed`. Pour
+ * matchs `in_progress` utiliser `/stream` (SSE). Pour `scheduled` /
+ * `failed` la route renvoie 409.
+ */
+export async function handleGetMatchReplay(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const matchId = req.params.id;
+  if (!matchId || typeof matchId !== "string") {
+    res.status(400).json({ error: "missing-match-id" });
+    return;
+  }
+  try {
+    const dump = await getMatchReplayDump(matchId);
+    res.json(dump);
+  } catch (err: unknown) {
+    if (err instanceof ReplayDumpError) {
+      const status =
+        err.code === "MATCH_NOT_REPLAYABLE"
+          ? 409
+          : err.code === "MATCH_NOT_FOUND" || err.code === "REPLAY_NOT_FOUND"
+            ? 404
+            : 500;
+      res.status(status).json({ error: err.message, code: err.code });
+      return;
+    }
+    const msg = err instanceof Error ? err.message : "unknown";
+    serverLog.error(`[pro-league/matches/${matchId}/replay] failed: ${msg}`);
+    res.status(500).json({ error: "internal-error" });
+  }
 }
 
 /**
@@ -771,6 +809,7 @@ router.get("/teams/:slug", handleGetTeamDetail);
 router.get("/matches/:id", handleGetMatchDetail);
 router.get("/matches/:id/markets", handleListMarkets);
 router.get("/matches/:id/stream", handleStreamProMatch);
+router.get("/matches/:id/replay", handleGetMatchReplay);
 router.get("/leaderboard", handleGetBetLeaderboard);
 router.get("/gazette/latest", handleGetLatestEdition);
 router.get("/gazette/dates", handleListEditionDates);
