@@ -67,13 +67,51 @@ const FIELD_YARDS = 26;
 const MS_PER_TURN = 30_000;
 const MS_HALFTIME = 15_000;
 
+/**
+ * Sub-turn timing offsets (#5). Events inside a single TURN_START
+ * block used to share the same displayAtMs (the turn start), which
+ * read poorly on the timeline ("[T+01:00] block, pass, TD all at
+ * once"). We now space them inside the 30-second turn window :
+ *   T+0s   TURN_START
+ *   T+2s   NUFFLE event (if any)
+ *   T+5s   key moment 0
+ *   T+10s  key moment 1
+ *   T+15s  key moment 2 (only on bashy double-moment turns)
+ *   T+20s  bulk yard advancement (and TD if it crosses the line)
+ *   T+30s  next TURN_START
+ * Casualty / turnover events ride the displayAtMs of the moment that
+ * triggered them, so they stay grouped narratively.
+ */
+const SUBTURN_NUFFLE_OFFSET_MS = 2_000;
+const SUBTURN_FIRST_MOMENT_OFFSET_MS = 5_000;
+const SUBTURN_BETWEEN_MOMENTS_MS = 5_000;
+const SUBTURN_BULK_OFFSET_MS = 20_000;
+/**
+ * Hard cap on the yards a single turn can advance the drive. The
+ * breakthrough mechanic in `rollYards` used to push +30..+40 yards,
+ * which on a 26-yard field meant a TD was reachable from the kickoff
+ * line in one turn — narratively absurd ("Touchdown from yardline 4
+ * after a single block"). Capping at 16 forces drives to span at
+ * least two turns from the receiving line (4 + 16 = 20 < 26) and
+ * keeps breakthroughs as "long plays" rather than full-field sprints.
+ */
+const MAX_TURN_YARDS = 16;
+
 type Side = 'home' | 'away';
 type KeyMomentKind = 'block' | 'pass' | 'dodge' | 'pickup' | 'gfi' | 'foul';
 
+/**
+ * Drive state in the hybrid driver. The active team always carries
+ * the ball — the model has no "loose ball" phase between turns
+ * (kickoff scatter, fumble pickups, etc. are abstracted away). A
+ * future full driver will reintroduce a dedicated `hasPossession`
+ * flag to distinguish "live ball, no holder" scenarios ; the AI
+ * `DriveSnapshot` already exposes that flag for forward-looking
+ * planning.
+ */
 interface DriveState {
   drivingTeam: Side;
   ballYardline: number; // 0..FIELD_YARDS, 0 = own goal line
-  hasPossession: boolean;
 }
 
 interface MatchInternalState {
@@ -185,7 +223,7 @@ function buildKeyMomentState(
     ...attStats,
     state: 'standing',
     position: { x: 12, y: 7 },
-    hasBall: state.drive.hasPossession,
+    hasBall: true,
   };
   const def: ResolverPlayer = {
     id: `${otherSide(state.drive.drivingTeam)}-LOS`,
@@ -196,7 +234,7 @@ function buildKeyMomentState(
   };
   return {
     players: [att, def],
-    ballAt: state.drive.hasPossession ? { x: 12, y: 7 } : undefined,
+    ballAt: { x: 12, y: 7 },
     activeTeam: state.drive.drivingTeam,
     weather,
     width: FIELD_YARDS,
@@ -221,7 +259,11 @@ function pickKeyMoment(
   profile: TacticalProfile
 ): KeyMomentKind | null {
   const snap: DriveSnapshot = {
-    hasPossession: state.drive.hasPossession,
+    // The hybrid driver only models the active team's offensive turn ;
+    // possession is implied. The AI snapshot keeps a `hasPossession`
+    // field for the future full driver that will model defensive
+    // turns and loose-ball scenarios.
+    hasPossession: true,
     ballYardline: state.drive.ballYardline,
     turn: state.turn,
     half: state.half,
@@ -235,6 +277,15 @@ function pickKeyMoment(
 interface KeyMomentOutcome {
   events: readonly MatchEvent[];
   turnover: boolean;
+  /**
+   * Yards the ball physically travelled forward as part of this key
+   * moment. Currently only emitted by a successful pass — block /
+   * dodge / pickup / gfi / foul are positional moments that don't
+   * advance the drive directly. The driver applies this on top of
+   * the bulk per-turn yard advancement so a "+4 yard short pass" on
+   * the timeline is reflected in the next TURN_START's yardline.
+   */
+  yardsGained?: number;
 }
 
 function runKeyMoment(
@@ -273,18 +324,34 @@ function runKeyMoment(
     }
     case 'pass': {
       if (!att.hasBall) return { events: [], turnover: false };
+      // The synthetic resolver state always places the LOS attacker at
+      // x=12, target at x=16 (a 4-yard short pass). On success the
+      // ball physically advanced by that distance, so we surface it
+      // to the driver via `yardsGained` ; the driver then advances
+      // ballYardline (and may even score a TD if the pass crosses
+      // the goal line).
+      const passDistance = 4;
       const out = resolvePass(
         resolverState,
         {
           passerId: att.id,
-          to: { x: att.position.x + 4, y: att.position.y },
+          to: { x: att.position.x + passDistance, y: att.position.y },
           displayAtMs,
         },
         rngs.pass
       );
-      return { events: out.events, turnover: out.turnover };
+      return {
+        events: out.events,
+        turnover: out.turnover,
+        yardsGained: out.success ? passDistance : 0,
+      };
     }
     case 'pickup': {
+      // Skip when the active team already has the ball — a pickup
+      // resolver call here would otherwise roll on a ball-already-in-hand
+      // and could surface a "pickup_failed" turnover from a team that
+      // never lost possession (mirrors the `!att.hasBall` guard on PASS).
+      if (att.hasBall) return { events: [], turnover: false };
       const stateWithBall: ResolverState = {
         ...resolverState,
         ballAt: { ...att.position },
@@ -331,14 +398,27 @@ function rollYards(
   //
   // - Base : 2d6+2 (mean 7).
   // - bash counter / disruption / pace offset : unchanged.
-  // - Breakthrough proba : 18%. Magnitudes unchanged.
+  // - Breakthrough proba : 18%.
   // - TV delta bonus : divisor /100 → /80 (cap ±3, inchangé) — affine la
   //   sensibilité au gap TV pour pousser l'upset des matchups
   //   TV-déséquilibrés sous 18% (cible C2).
-  //   Combiné avec UNDERDOG_BOOST_PROBABILITY 3% (au lieu de 10%) et
-  //   recalibrage TVs vers signature BB (Halflings 700, Ogres 1100,
-  //   élites 1050-1100), Snow Ogres vs Halflings tombe à 17.8% upset
-  //   (cible 12-18%) — premier pairing du panel à passer C2.
+  //
+  // Sprint Pro League — tuning narratif (Bug #2 panel feedback) :
+  //
+  // - Breakthrough magnitudes 30/35/40 → 12/15/18. The original values
+  //   meant a single breakthrough roll could traverse the entire 26-yard
+  //   field, producing TDs from the kickoff line right after a single
+  //   block — see replay #2 turn 3. The reduced magnitudes still create
+  //   "long play" drama (a +18 against a weak D feels like a sweep run)
+  //   but multi-yard advances now require 2-3 turns to compose into a
+  //   TD, which mirrors how a real BB drive is shaped.
+  // - Hard cap at MAX_TURN_YARDS = 16 yards/turn. Belt-and-suspenders :
+  //   even with the reduced magnitudes, dice + bonuses + breakthrough
+  //   could still reach ~30 yards in extreme stacks. Capping at 16
+  //   guarantees a drive needs at least 2 turns to score from the
+  //   receiving yardline (4 + 16 = 20 < 26 = FIELD_YARDS) and that the
+  //   single-turn-TD-from-yardline-9 case the panel flagged becomes
+  //   impossible (9 + 16 = 25 < 26).
   const dice = Math.floor(rng.next() * 6) + Math.floor(rng.next() * 6) + 2;
   const paceOffset = Math.round(profile.pace / 25) - 2;
   const bashCounter = -Math.round(defenseProfile.bashIndex / 28);
@@ -350,20 +430,20 @@ function rollYards(
   const fatTail = rng.next();
   let breakthrough = 0;
   if (fatTail < 0.18) {
-    if (defenseProfile.bashIndex < 50) breakthrough = 40;
-    else if (defenseProfile.bashIndex < 70) breakthrough = 35;
-    else breakthrough = 30;
+    if (defenseProfile.bashIndex < 50) breakthrough = 18;
+    else if (defenseProfile.bashIndex < 70) breakthrough = 15;
+    else breakthrough = 12;
   } else if (fatTail < 0.34) {
     breakthrough = -10;
   }
-  return Math.max(0, dice + paceOffset + bashCounter + defensiveDisruption + tvBonus + breakthrough);
+  const total = dice + paceOffset + bashCounter + defensiveDisruption + tvBonus + breakthrough;
+  return Math.max(0, Math.min(MAX_TURN_YARDS, total));
 }
 
 function nextDrive(prev: DriveState): DriveState {
   return {
     drivingTeam: otherSide(prev.drivingTeam),
     ballYardline: 4,
-    hasPossession: true,
   };
 }
 
@@ -398,10 +478,10 @@ function emitTurnStart(m: MutableMatch): void {
   });
 }
 
-function emitTd(m: MutableMatch, scoringTeam: Side): void {
+function emitTd(m: MutableMatch, scoringTeam: Side, displayAtMs: number): void {
   m.events.push({
     type: 'TD',
-    displayAtMs: m.state.clockMs,
+    displayAtMs,
     engineVer: ENGINE_VER,
     meta: {
       team: scoringTeam,
@@ -429,10 +509,11 @@ function processTurn(
   // effects of each event are layered on by the tuning loop (lot 0.E)
   // ; this hook only injects the narrative beat.
   const nuffleEvent = rollNuffleEvent(rngs.nuffle);
+  const nuffleAtMs = m.state.clockMs + SUBTURN_NUFFLE_OFFSET_MS;
   if (nuffleEvent) {
     m.events.push(
       emitNuffleEvent(nuffleEvent, {
-        displayAtMs: m.state.clockMs,
+        displayAtMs: nuffleAtMs,
         engineVer: ENGINE_VER,
         context: {
           half: m.state.half,
@@ -464,7 +545,7 @@ function processTurn(
       });
       m.events.push({
         type: 'CASUALTY',
-        displayAtMs: m.state.clockMs,
+        displayAtMs: nuffleAtMs,
         engineVer: ENGINE_VER,
         meta: {
           playerId: victimId,
@@ -485,7 +566,20 @@ function processTurn(
     activeProfile.bashIndex >= 60 || activeProfile.foulFrequency >= 60;
   const baseCount = m.state.turn % 3 === 0 ? 2 : 1;
   const momentCount = isBashy && m.state.turn % 2 === 0 ? baseCount + 1 : baseCount;
+  // Bug #1 fix : a turnover terminates the active team's turn. The
+  // opponent must NOT advance yards (and possibly score) on the same
+  // turn — that produced absurd "pickup_failed → opponent TD"
+  // sequences in the same TURN_START block. The new possession is
+  // played out normally on the next call to processTurn.
+  let turnoverThisTurn = false;
+  // Track yards already gained via key moments (currently only PASS).
+  // The MAX_TURN_YARDS cap (#1) applies to the *total* turn — not just
+  // the bulk rollYards block — otherwise a successful pass + bulk
+  // advance could chain into a single-turn TD from the LOS again.
+  let yardsThisTurn = 0;
   for (let i = 0; i < momentCount; i += 1) {
+    const momentAtMs =
+      m.state.clockMs + SUBTURN_FIRST_MOMENT_OFFSET_MS + i * SUBTURN_BETWEEN_MOMENTS_MS;
     const moment = pickKeyMoment(rngs.strategic, m.state, activeProfile);
     if (moment === null) continue;
 
@@ -494,7 +588,7 @@ function processTurn(
       moment,
       rngs,
       weather,
-      m.state.clockMs,
+      momentAtMs,
       activeProfile,
       opposingProfile
     );
@@ -514,7 +608,7 @@ function processTurn(
         moment,
         rngs,
         weather,
-        m.state.clockMs,
+        momentAtMs,
         activeProfile,
         opposingProfile
       );
@@ -551,21 +645,61 @@ function processTurn(
       m.turnover += 1;
       recordFailure(m.momentum, drivingPlayerId);
       m.state = { ...m.state, drive: nextDrive(m.state.drive) };
+      turnoverThisTurn = true;
       break;
+    }
+
+    // A successful key moment (currently only PASS) can physically
+    // advance the ball. Apply the gain immediately so the drive
+    // reflects the play, and emit a TD if the throw crossed the
+    // goal line. The remaining yard budget for the turn (cap #1)
+    // shrinks accordingly so a pass + bulk advance can't compound
+    // into a single-turn LOS-to-TD.
+    const yardsGained = attempt.yardsGained ?? 0;
+    if (yardsGained > 0) {
+      const allowed = Math.min(yardsGained, MAX_TURN_YARDS - yardsThisTurn);
+      yardsThisTurn += allowed;
+      const newYard = m.state.drive.ballYardline + allowed;
+      if (newYard >= FIELD_YARDS) {
+        const scoring = m.state.drive.drivingTeam;
+        if (scoring === 'home') m.state = { ...m.state, scoreHome: m.state.scoreHome + 1 };
+        else m.state = { ...m.state, scoreAway: m.state.scoreAway + 1 };
+        m.touchdowns += 1;
+        recordTouchdown(m.momentum, drivingPlayerId);
+        emitTd(m, scoring, momentAtMs);
+        m.state = { ...m.state, drive: nextDrive(m.state.drive) };
+        // A scoring play ends the team's turn ; treat it like a
+        // turnover-on-the-positive-side so the bulk yard advancement
+        // below is skipped and the opponent receives next turn.
+        turnoverThisTurn = true;
+        break;
+      }
+      m.state = {
+        ...m.state,
+        drive: { ...m.state.drive, ballYardline: newYard },
+      };
     }
   }
 
-  // Yard advancement when still in possession. Re-derive profiles at
-  // this point because a turnover during the for-loop above may have
-  // swapped `drivingTeam`.
-  if (m.state.drive.hasPossession) {
+  // Yard advancement skipped when a turnover happened this turn ;
+  // the active team's drive ends and the opponent will play its own
+  // turn on the next call to processTurn. Otherwise the active team
+  // (which always has the ball in the hybrid model) advances.
+  if (!turnoverThisTurn) {
+    const bulkAtMs = m.state.clockMs + SUBTURN_BULK_OFFSET_MS;
     const yardsActive = m.state.drive.drivingTeam === 'home' ? homeProfile : awayProfile;
     const yardsOpposing = m.state.drive.drivingTeam === 'home' ? awayProfile : homeProfile;
     const tvActive = m.state.drive.drivingTeam === 'home' ? tvHome : tvAway;
     const tvOpposing = m.state.drive.drivingTeam === 'home' ? tvAway : tvHome;
     const tvDelta =
       typeof tvActive === 'number' && typeof tvOpposing === 'number' ? tvActive - tvOpposing : 0;
-    const gained = rollYards(rngs.strategic, yardsActive, yardsOpposing, tvDelta);
+    const rolled = rollYards(rngs.strategic, yardsActive, yardsOpposing, tvDelta);
+    // Apply the per-turn cap accounting for yards already gained via
+    // key moments. Without this clamp a pass (+4) followed by a
+    // breakthrough bulk roll (+16) would compound to +20 — enough to
+    // single-turn-TD from yardline 6, breaking the cap #1 guarantee.
+    const remaining = Math.max(0, MAX_TURN_YARDS - yardsThisTurn);
+    const gained = Math.min(rolled, remaining);
     const newYard = m.state.drive.ballYardline + gained;
     if (newYard >= FIELD_YARDS) {
       const scoring = m.state.drive.drivingTeam;
@@ -573,7 +707,7 @@ function processTurn(
       else m.state = { ...m.state, scoreAway: m.state.scoreAway + 1 };
       m.touchdowns += 1;
       recordTouchdown(m.momentum, `${scoring}-LOS`);
-      emitTd(m, scoring);
+      emitTd(m, scoring, bulkAtMs);
       m.state = { ...m.state, drive: nextDrive(m.state.drive) };
     } else {
       m.state = {
@@ -610,7 +744,7 @@ export function runHybridDriver(input: SimInput, options: DriverOptions = {}): S
       turn: 1,
       scoreHome: 0,
       scoreAway: 0,
-      drive: { drivingTeam: initialReceiver, ballYardline: 4, hasPossession: true },
+      drive: { drivingTeam: initialReceiver, ballYardline: 4 },
       clockMs: kickoffAtMs,
     },
     events: [
@@ -654,7 +788,7 @@ export function runHybridDriver(input: SimInput, options: DriverOptions = {}): S
     half: 2,
     turn: 1,
     clockMs: m.state.clockMs + MS_HALFTIME,
-    drive: { drivingTeam: otherSide(initialReceiver), ballYardline: 4, hasPossession: true },
+    drive: { drivingTeam: otherSide(initialReceiver), ballYardline: 4 },
   };
 
   // Second half.

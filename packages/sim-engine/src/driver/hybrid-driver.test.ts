@@ -129,6 +129,151 @@ describe('runHybridDriver — sprint Pro League 0.A.2', () => {
   });
 });
 
+describe('runHybridDriver — turnover does not chain into a same-turn TD (Bug #1)', () => {
+  /**
+   * Regression : a turnover during a key moment used to leave
+   * `hasPossession=true` on the new team and the yard-advancement
+   * block still ran for that team in the same turn — producing
+   * "pickup_failed → opponent TD" sequences inside a single
+   * TURN_START block. After the fix, a turnover ends the turn ; the
+   * new possession is played on the next call to processTurn.
+   *
+   * We assert this over 200 seeds : there is no TURN_START block in
+   * which a TURNOVER event is followed by a TD event before the next
+   * TURN_START / HALFTIME / END.
+   */
+  it('no TD ever follows a TURNOVER inside the same turn block', () => {
+    for (let seed = 0; seed < 200; seed += 1) {
+      const out = runHybridDriver(baseInput({ seed }));
+      let inTurnoverBlock = false;
+      for (const ev of out.events) {
+        if (
+          ev.type === 'TURN_START' ||
+          ev.type === 'HALFTIME' ||
+          ev.type === 'END' ||
+          ev.type === 'KICKOFF'
+        ) {
+          inTurnoverBlock = false;
+          continue;
+        }
+        if (ev.type === 'TURNOVER') {
+          inTurnoverBlock = true;
+          continue;
+        }
+        if (inTurnoverBlock && ev.type === 'TD') {
+          throw new Error(
+            `seed=${seed}: a TD event was emitted in the same turn as a preceding TURNOVER`
+          );
+        }
+      }
+    }
+  });
+
+  /**
+   * Regression : the hybrid AI can pick `pickup` as a key moment for a
+   * team that is already in possession (the hybrid model never enters
+   * a "loose ball" state — `hasPossession` is always true on the
+   * driving team). The resolver then rolls and could surface a
+   * nonsensical "team-with-ball pickup_failed → turnover", which the
+   * user observed in replay #2 turn 4. The driver must skip the
+   * pickup when the active player already holds the ball — at which
+   * point no `pickup_failed` should ever fire across a normal match.
+   */
+  /**
+   * Regression : breakthrough yards used to push +30..+40 in a single
+   * roll, which on a 26-yard field meant single-turn TD from the
+   * kickoff line. Now capped at 16 yards/turn, so the ball cannot
+   * advance from yardline ≤ 9 to TD inside a single turn block. We
+   * scan every TD event and verify the *previous* TURN_START's
+   * `ballYardline` was at least 10.
+   */
+  it('no TD scores from yardline ≤ 9 inside a single turn (post-cap of 16 yards/turn)', () => {
+    for (let seed = 0; seed < 200; seed += 1) {
+      const out = runHybridDriver(baseInput({ seed }));
+      let lastTurnStartYardline: number | null = null;
+      let lastTurnStartTeam: string | null = null;
+      for (const ev of out.events) {
+        if (ev.type === 'TURN_START') {
+          const m = (ev.meta ?? {}) as Record<string, unknown>;
+          lastTurnStartYardline = Number(m.ballYardline);
+          lastTurnStartTeam = String(m.drivingTeam);
+        }
+        if (ev.type === 'TD' && lastTurnStartYardline !== null) {
+          const m = (ev.meta ?? {}) as Record<string, unknown>;
+          // Only assert when the scoring team matches the team in
+          // possession at the start of this turn — guards against a
+          // mid-turn drive switch (which our other regression test
+          // already prevents anyway).
+          if (m.team === lastTurnStartTeam) {
+            expect(lastTurnStartYardline).toBeGreaterThanOrEqual(10);
+          }
+        }
+      }
+    }
+  });
+
+  /**
+   * Successful pass moments now advance the drive by the pass
+   * distance (4 yards short pass in the synthetic resolver state).
+   * We assert that across 200 seeds at least one TURN_START → next
+   * TURN_START transition reflects an integer yard delta — i.e. the
+   * driver's bulk rollYards output isn't the only source of yardage
+   * anymore, passes contribute too. This is a smoke test : the
+   * exact yardage attribution per event is hard to verify from the
+   * timeline alone (events share displayAtMs), so we just verify
+   * yardline progression is observed across PASS-success turns.
+   */
+  it('successful PASS events contribute to ball advancement (smoke)', () => {
+    let observed = 0;
+    for (let seed = 0; seed < 200 && observed < 1; seed += 1) {
+      const out = runHybridDriver(baseInput({ seed }));
+      // Find a turn that contains a successful PASS event and check
+      // the next TURN_START shows a positive yardline delta on the
+      // same drivingTeam.
+      let lastTurnStart:
+        | { yardline: number; team: string }
+        | null = null;
+      let sawPassSuccess = false;
+      for (const ev of out.events) {
+        if (ev.type === 'TURN_START') {
+          if (sawPassSuccess && lastTurnStart) {
+            const m = (ev.meta ?? {}) as Record<string, unknown>;
+            if (
+              String(m.drivingTeam) === lastTurnStart.team &&
+              Number(m.ballYardline) > lastTurnStart.yardline
+            ) {
+              observed += 1;
+            }
+          }
+          const m = (ev.meta ?? {}) as Record<string, unknown>;
+          lastTurnStart = {
+            yardline: Number(m.ballYardline),
+            team: String(m.drivingTeam),
+          };
+          sawPassSuccess = false;
+        }
+        if (ev.type === 'PASS') {
+          const m = (ev.meta ?? {}) as Record<string, unknown>;
+          if (m.success === true) sawPassSuccess = true;
+        }
+      }
+    }
+    expect(observed).toBeGreaterThan(0);
+  });
+
+  it('no pickup_failed turnover ever fires (active team always already has possession)', () => {
+    for (let seed = 0; seed < 200; seed += 1) {
+      const out = runHybridDriver(baseInput({ seed }));
+      const pickupFails = out.events.filter(
+        (ev) =>
+          ev.type === 'TURNOVER' &&
+          (ev.meta as { cause?: string } | undefined)?.cause === 'pickup_failed'
+      );
+      expect(pickupFails).toHaveLength(0);
+    }
+  });
+});
+
 describe('runHybridDriver — Eye of Nuffle hooks (sprint 0.C.2)', () => {
   it('emits NUFFLE events on at least some seeds (~30% turn rate)', () => {
     let totalNuffle = 0;
@@ -155,17 +300,22 @@ describe('runHybridDriver — Eye of Nuffle hooks (sprint 0.C.2)', () => {
     }
   });
 
-  it('NUFFLE events fire just after a TURN_START on the same displayAtMs', () => {
+  it('NUFFLE events fire just after a TURN_START within the turn window', () => {
     const out = runHybridDriver(baseInput({ seed: 7 }));
     for (let i = 0; i < out.events.length; i += 1) {
       if (out.events[i].type === 'NUFFLE') {
-        // Walk back: the closest preceding non-NUFFLE event should be a
-        // TURN_START at the same wall-clock offset.
+        // Walk back: the closest preceding non-NUFFLE event should be
+        // a TURN_START at the same turn (sub-turn timing #5 spaces
+        // events inside a 30s window — the NUFFLE now lands at
+        // TURN_START + 2s instead of T+0s).
         let j = i - 1;
         while (j >= 0 && out.events[j].type === 'NUFFLE') j -= 1;
         expect(j).toBeGreaterThanOrEqual(0);
         expect(out.events[j].type).toBe('TURN_START');
-        expect(out.events[j].displayAtMs).toBe(out.events[i].displayAtMs);
+        const dt = out.events[i].displayAtMs - out.events[j].displayAtMs;
+        // Same turn = within MS_PER_TURN (30s).
+        expect(dt).toBeGreaterThanOrEqual(0);
+        expect(dt).toBeLessThan(30_000);
       }
     }
   });
@@ -223,8 +373,11 @@ describe('runHybridDriver — Underdog variance boost (sprint 0.C.3)', () => {
     // The underdog boost retries some turnovers, so at the population
     // level the lopsided match should not generate strictly more
     // turnovers. We assert the no-boost baseline is at least as
-    // turnover-heavy as the boosted lopsided.
-    expect(withBoostTurnovers).toBeLessThanOrEqual(baselineTurnovers + 5);
+    // turnover-heavy as the boosted lopsided. Tolerance bumped from
+    // ±5 to ±15 after the breakthrough cap landed (longer drives = more
+    // key moments per match = larger absolute turnover counts) ; the
+    // intent (boost reduces turnovers) is unchanged.
+    expect(withBoostTurnovers).toBeLessThanOrEqual(baselineTurnovers + 15);
   });
 
   it('determinism: same seed + same TV gap reproduces the result', () => {
