@@ -15,31 +15,25 @@ import {
 } from "../schemas/admin.schemas";
 import { serverLog } from "../utils/server-log";
 import {
-  recordAdminActionFromRequest,
+  safeRecordAdminActionFromRequest,
   type RecordAdminActionInput,
 } from "../services/audit-log";
+import type { AuthenticatedRequest } from "../middleware/authUser";
 
 const router = Router();
 
 router.use(authUser, adminOnly);
 
 /**
- * S27.6.2 — Wrapper resilient autour de `recordAdminActionFromRequest`.
- * Une defaillance de l'audit log NE DOIT PAS faire echouer la mutation
- * deja committee. On log et on swallow l'erreur (visible cote ops).
+ * S27.6.4 — Helper local : on delegue au wrapper partage
+ * `safeRecordAdminActionFromRequest` afin de partager le meme
+ * comportement "log + swallow" avec `admin-data.ts`.
  */
 async function safeAudit(
-  req: Parameters<typeof recordAdminActionFromRequest>[1],
-  partial: Omit<
-    RecordAdminActionInput,
-    "userId" | "ipAddress" | "userAgent"
-  >,
+  req: AuthenticatedRequest,
+  partial: Omit<RecordAdminActionInput, "userId" | "ipAddress" | "userAgent">,
 ): Promise<void> {
-  try {
-    await recordAdminActionFromRequest(prisma, req, partial);
-  } catch (err) {
-    serverLog.error("[audit] Failed to record admin action", err);
-  }
+  await safeRecordAdminActionFromRequest(prisma, req, partial);
 }
 
 // Route améliorée pour lister les utilisateurs avec statistiques

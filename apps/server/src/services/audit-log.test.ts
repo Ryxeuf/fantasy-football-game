@@ -13,6 +13,7 @@ import {
   extractRequestContext,
   recordAdminAction,
   recordAdminActionFromRequest,
+  safeRecordAdminActionFromRequest,
 } from "./audit-log";
 
 interface CallArgs {
@@ -237,5 +238,85 @@ describe("recordAdminActionFromRequest", () => {
     });
     const args = create.mock.calls[0][0];
     expect(args.data.userId).toBeNull();
+  });
+});
+
+/**
+ * S27.6.4 — `safeRecordAdminActionFromRequest` : variante "log + swallow"
+ * partagee par les routes admin pour qu'une defaillance de l'audit log
+ * NE FASSE PAS echouer la mutation deja committee. Le wrapper etait
+ * jusque-la duplique dans `routes/admin.ts` ; on le centralise ici pour
+ * pouvoir le reutiliser depuis `routes/admin-data.ts` (skills, rosters,
+ * positions, star players).
+ */
+describe("safeRecordAdminActionFromRequest", () => {
+  it("propage l'enregistrement vers Prisma quand tout va bien", async () => {
+    const create = vi.fn(async () => undefined);
+    const prisma = { auditLog: { create } } as never;
+    const req = {
+      ip: "10.0.0.5",
+      headers: { "user-agent": "vitest" },
+      user: { id: "admin-7" },
+    } as never;
+    await safeRecordAdminActionFromRequest(prisma, req, {
+      action: "skill.create",
+      entity: "Skill",
+      entityId: "sk-1",
+      newValue: { slug: "block" },
+    });
+    expect(create).toHaveBeenCalledTimes(1);
+    const args = create.mock.calls[0][0];
+    expect(args.data.userId).toBe("admin-7");
+    expect(args.data.action).toBe("skill.create");
+    expect(args.data.newValue).toBe('{"slug":"block"}');
+  });
+
+  it("swallow les erreurs Prisma sans throw (mutation deja committee)", async () => {
+    const create = vi.fn(async () => {
+      throw new Error("DB down");
+    });
+    const prisma = { auditLog: { create } } as never;
+    const req = { ip: "1.2.3.4", headers: {}, user: { id: "a" } } as never;
+    await expect(
+      safeRecordAdminActionFromRequest(prisma, req, {
+        action: "skill.delete",
+        entity: "Skill",
+        entityId: "sk-2",
+      }),
+    ).resolves.toBeUndefined();
+    expect(create).toHaveBeenCalledTimes(1);
+  });
+
+  it("log l'erreur via le logger fourni quand l'insert echoue", async () => {
+    const create = vi.fn(async () => {
+      throw new Error("boom");
+    });
+    const prisma = { auditLog: { create } } as never;
+    const req = { ip: "1.2.3.4", headers: {} } as never;
+    const logError = vi.fn();
+    await safeRecordAdminActionFromRequest(
+      prisma,
+      req,
+      { action: "x", entity: "Y" },
+      { logError },
+    );
+    expect(logError).toHaveBeenCalledTimes(1);
+    const [message, err] = logError.mock.calls[0];
+    expect(message).toContain("Failed to record admin action");
+    expect((err as Error).message).toBe("boom");
+  });
+
+  it("n'invoque pas le logger quand l'insert reussit", async () => {
+    const create = vi.fn(async () => undefined);
+    const prisma = { auditLog: { create } } as never;
+    const req = { ip: "1.2.3.4", headers: {} } as never;
+    const logError = vi.fn();
+    await safeRecordAdminActionFromRequest(
+      prisma,
+      req,
+      { action: "x", entity: "Y" },
+      { logError },
+    );
+    expect(logError).not.toHaveBeenCalled();
   });
 });
