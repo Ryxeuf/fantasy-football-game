@@ -1,24 +1,24 @@
 === MATCH #34 — Iron Bears (Dwarf) vs Smashers (Orc) ===
-engine 0.12.0
+engine 0.13.0
 
 KICKOFF — chi-iron-bears hosts pit-smashers (weather: nice, away receives).
 Half 1 • Turn 1 — away in possession at yardline 4 (score 0-0)
   ✨ NUFFLE [streaker_invasion] — A streaker invades the pitch. Players don't know where to look.
   TURNOVER — pickup_failed.
-Half 1 • Turn 2 — home in possession at yardline 5 (score 0-0)
+Half 1 • Turn 2 — home in possession at yardline 4 (score 0-0)
   BLOCK — home-LOS blocks away-LOS: dice [PUSH_BACK/STUMBLE], chose STUMBLE, defender_down.
-Half 1 • Turn 3 — home in possession at yardline 5 (score 0-0)
+Half 1 • Turn 3 — home in possession at yardline 4 (score 0-0)
   ✨ NUFFLE [coach_sideline_rant] — A sideline rant electrifies the squad — and the ref.
   PASS — home-LOS attempts a short pass: needs 5+, rolled 5 → caught.
-Half 1 • Turn 4 — home in possession at yardline 5 (score 0-0)
+Half 1 • Turn 4 — home in possession at yardline 4 (score 0-0)
   ✨ NUFFLE [veteran_redemption] — A grizzled veteran finds one more ounce of glory.
-Half 1 • Turn 5 — home in possession at yardline 5 (score 0-0)
+Half 1 • Turn 5 — home in possession at yardline 4 (score 0-0)
   FOUL — home-LOS fouls away-PRONE (armor=10, broken=true → ko).
   KO — away-PRONE is knocked unconscious by home-LOS.
-Half 1 • Turn 6 — home in possession at yardline 6 (score 0-0)
-Half 1 • Turn 7 — home in possession at yardline 7 (score 0-0)
+Half 1 • Turn 6 — home in possession at yardline 4 (score 0-0)
+Half 1 • Turn 7 — home in possession at yardline 4 (score 0-0)
   BLOCK — home-LOS blocks away-LOS: dice [POW/PUSH_BACK], chose POW, defender_down.
-Half 1 • Turn 8 — home in possession at yardline 9 (score 0-0)
+Half 1 • Turn 8 — home in possession at yardline 5 (score 0-0)
   ✨ NUFFLE [nemesis_clash] — Two old rivals lock eyes — the next block will be personal.
   CASUALTY — away-NUFFLE-1-8 is taken off by nemesis_clash.
   DODGE — home-LOS dodges to (13,7): needs 3+, rolled 4 → success.

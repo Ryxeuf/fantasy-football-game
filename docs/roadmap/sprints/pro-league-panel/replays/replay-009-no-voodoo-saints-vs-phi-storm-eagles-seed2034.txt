@@ -1,5 +1,5 @@
 === MATCH #9 — Voodoo Saints (Undead) vs Storm Eagles (Pro Elf) ===
-engine 0.12.0
+engine 0.13.0
 
 KICKOFF — no-voodoo-saints hosts phi-storm-eagles (weather: nice, away receives).
 Half 1 • Turn 1 — away in possession at yardline 4 (score 0-0)
@@ -15,9 +15,9 @@ Half 1 • Turn 5 — away in possession at yardline 4 (score 0-0)
 Half 1 • Turn 6 — away in possession at yardline 4 (score 0-0)
   FOUL — away-LOS fouls home-PRONE (armor=9, broken=false).
   DODGE — away-LOS dodges to (13,7): needs 3+, rolled 6 → success.
-Half 1 • Turn 7 — away in possession at yardline 6 (score 0-0)
+Half 1 • Turn 7 — away in possession at yardline 5 (score 0-0)
   FOUL — away-LOS fouls home-PRONE (armor=8, broken=false).
-Half 1 • Turn 8 — away in possession at yardline 12 (score 0-0)
+Half 1 • Turn 8 — away in possession at yardline 10 (score 0-0)
   ✨ NUFFLE [weather_shift] — The Nuffle Gods stir the clouds. Weather shifts.
   FOUL — away-LOS fouls home-PRONE (armor=6, broken=false).
 
@@ -37,7 +37,7 @@ Half 2 • Turn 3 — home in possession at yardline 4 (score 0-1)
 Half 2 • Turn 4 — home in possession at yardline 4 (score 0-1)
   Touchdown! home crosses the line. Score is now 1-1.
 Half 2 • Turn 5 — away in possession at yardline 4 (score 1-1)
-Half 2 • Turn 6 — away in possession at yardline 10 (score 1-1)
+Half 2 • Turn 6 — away in possession at yardline 9 (score 1-1)
   ✨ NUFFLE [coach_sideline_rant] — A sideline rant electrifies the squad — and the ref.
   TURNOVER — gfi_failed.
 Half 2 • Turn 7 — home in possession at yardline 7 (score 1-1)

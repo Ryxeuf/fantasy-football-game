@@ -1,5 +1,5 @@
 === MATCH #26 — Iron Bears (Dwarf) vs Tomb Cardinals (Tomb Kings) ===
-engine 0.12.0
+engine 0.13.0
 
 KICKOFF — chi-iron-bears hosts phx-tomb-cardinals (weather: nice, away receives).
 Half 1 • Turn 1 — away in possession at yardline 4 (score 0-0)
@@ -18,7 +18,7 @@ Half 1 • Turn 4 — away in possession at yardline 4 (score 0-1)
 Half 1 • Turn 5 — away in possession at yardline 4 (score 1-1)
   PASS — away-LOS attempts a short pass: needs 5+, rolled 4 → failed.
   TURNOVER — pass_failed.
-Half 1 • Turn 6 — home in possession at yardline 6 (score 1-1)
+Half 1 • Turn 6 — home in possession at yardline 5 (score 1-1)
   BLOCK — home-LOS blocks away-LOS: dice [POW/POW], chose POW, defender_down.
   FOUL — home-LOS fouls away-PRONE (armor=5, broken=false).
   PASS — home-LOS attempts a short pass: needs 5+, rolled 2 → failed.
@@ -34,16 +34,16 @@ Half 1 • Turn 8 — away in possession at yardline 4 (score 1-1)
 Half 2 • Turn 1 — home in possession at yardline 4 (score 1-1)
   ✨ NUFFLE [blood_in_water] — Blood in the water — the crowd's bloodlust is rising.
   BLOCK — home-LOS blocks away-LOS: dice [POW/POW], chose POW, defender_down.
-Half 2 • Turn 2 — home in possession at yardline 5 (score 1-1)
+Half 2 • Turn 2 — home in possession at yardline 4 (score 1-1)
   ✨ NUFFLE [rookie_brilliance] — A rookie pulls off a play above their stats — Nuffle smiles.
   TURNOVER — pickup_failed.
   Touchdown! away crosses the line. Score is now 1-2.
 Half 2 • Turn 3 — home in possession at yardline 4 (score 1-2)
   FOUL — home-LOS fouls away-PRONE (armor=8, broken=false).
-Half 2 • Turn 4 — home in possession at yardline 5 (score 1-2)
+Half 2 • Turn 4 — home in possession at yardline 4 (score 1-2)
   BLOCK — home-LOS blocks away-LOS: dice [PUSH_BACK/PLAYER_DOWN], chose PUSH_BACK, push_only.
   FOUL — home-LOS fouls away-PRONE (armor=8, broken=false).
-Half 2 • Turn 5 — home in possession at yardline 5 (score 1-2)
+Half 2 • Turn 5 — home in possession at yardline 4 (score 1-2)
   PASS — home-LOS attempts a short pass: needs 5+, rolled 6 → caught.
   Touchdown! home crosses the line. Score is now 2-2.
 Half 2 • Turn 6 — away in possession at yardline 4 (score 2-2)

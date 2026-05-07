@@ -1,5 +1,5 @@
 === MATCH #14 — Frostraiders (Norse) vs Swamp Lizards (Lizardmen) ===
-engine 0.12.0
+engine 0.13.0
 
 KICKOFF — min-frostraiders hosts jax-swamp-lizards (weather: nice, away receives).
 Half 1 • Turn 1 — away in possession at yardline 4 (score 0-0)
@@ -12,11 +12,11 @@ Half 1 • Turn 3 — away in possession at yardline 4 (score 0-0)
   CASUALTY — home-NUFFLE-1-3 is taken off by bombardier_gone_wild.
   PASS — away-LOS attempts a short pass: needs 5+, rolled 3 → failed.
   TURNOVER — pass_failed.
-Half 1 • Turn 4 — home in possession at yardline 5 (score 0-0)
-Half 1 • Turn 5 — home in possession at yardline 9 (score 0-0)
+Half 1 • Turn 4 — home in possession at yardline 4 (score 0-0)
+Half 1 • Turn 5 — home in possession at yardline 7 (score 0-0)
   ✨ NUFFLE [blood_in_water] — Blood in the water — the crowd's bloodlust is rising.
   BLOCK — home-LOS blocks away-LOS: dice [PUSH_BACK], chose PUSH_BACK, push_only.
-Half 1 • Turn 6 — home in possession at yardline 14 (score 0-0)
+Half 1 • Turn 6 — home in possession at yardline 11 (score 0-0)
   ✨ NUFFLE [wind_picks_up] — A gust catches the ball mid-pass.
   DODGE — home-LOS dodges to (13,7): needs 3+, rolled 1 → fail.
   TURNOVER — dodge_failed.
@@ -24,7 +24,7 @@ Half 1 • Turn 7 — away in possession at yardline 4 (score 0-0)
   ✨ NUFFLE [cocky_drop] — Showboating costs the carrier the ball.
   CASUALTY — home-NUFFLE-1-7 is taken off by cocky_drop.
   FOUL — away-LOS fouls home-PRONE (armor=10, broken=true → stunned).
-Half 1 • Turn 8 — away in possession at yardline 7 (score 0-0)
+Half 1 • Turn 8 — away in possession at yardline 8 (score 0-0)
   ✨ NUFFLE [weather_shift] — The Nuffle Gods stir the clouds. Weather shifts.
   PASS — away-LOS attempts a short pass: needs 5+, rolled 3 → failed.
   TURNOVER — pass_failed.
@@ -45,19 +45,19 @@ Half 2 • Turn 3 — home in possession at yardline 4 (score 1-0)
   CASUALTY — away-NUFFLE-2-3 is taken off by tantrum_star.
   PASS — home-LOS attempts a short pass: needs 5+, rolled 6 → caught.
   BLOCK — home-LOS blocks away-LOS: dice [STUMBLE], chose STUMBLE, defender_down.
-Half 2 • Turn 4 — home in possession at yardline 9 (score 1-0)
+Half 2 • Turn 4 — home in possession at yardline 8 (score 1-0)
   ✨ NUFFLE [rookie_brilliance] — A rookie pulls off a play above their stats — Nuffle smiles.
   PASS — home-LOS attempts a short pass: needs 5+, rolled 2 → failed.
   TURNOVER — pass_failed.
-Half 2 • Turn 5 — away in possession at yardline 7 (score 1-0)
+Half 2 • Turn 5 — away in possession at yardline 8 (score 1-0)
   ✨ NUFFLE [nemesis_clash] — Two old rivals lock eyes — the next block will be personal.
   FOUL — away-LOS fouls home-PRONE (armor=7, broken=false).
-Half 2 • Turn 6 — away in possession at yardline 12 (score 1-0)
+Half 2 • Turn 6 — away in possession at yardline 14 (score 1-0)
   PASS — away-LOS attempts a short pass: needs 5+, rolled 2 → failed.
   TURNOVER — pass_failed.
-Half 2 • Turn 7 — home in possession at yardline 7 (score 1-0)
+Half 2 • Turn 7 — home in possession at yardline 6 (score 1-0)
   DODGE — home-LOS dodges to (13,7): needs 3+, rolled 6 → success.
-Half 2 • Turn 8 — home in possession at yardline 8 (score 1-0)
+Half 2 • Turn 8 — home in possession at yardline 6 (score 1-0)
   FOUL — home-LOS fouls away-PRONE (armor=5, broken=false).
   Touchdown! home crosses the line. Score is now 2-0.
 

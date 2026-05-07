@@ -1,5 +1,5 @@
 === MATCH #7 — Soaring Hawks (Wood Elf) vs Tomb Cardinals (Tomb Kings) ===
-engine 0.12.0
+engine 0.13.0
 
 KICKOFF — kc-soaring-hawks hosts phx-tomb-cardinals (weather: nice, home receives).
 Half 1 • Turn 1 — home in possession at yardline 4 (score 0-0)
@@ -14,10 +14,10 @@ Half 1 • Turn 5 — home in possession at yardline 13 (score 0-0)
 Half 1 • Turn 6 — home in possession at yardline 17 (score 0-0)
   BLOCK — home-LOS blocks away-LOS: dice [POW/BOTH_DOWN], chose BOTH_DOWN, attacker_down.
   TURNOVER — block_attacker_down.
-Half 1 • Turn 7 — away in possession at yardline 7 (score 0-0)
+Half 1 • Turn 7 — away in possession at yardline 6 (score 0-0)
   ✨ NUFFLE [nemesis_clash] — Two old rivals lock eyes — the next block will be personal.
   BLOCK — away-LOS blocks home-LOS: dice [PUSH_BACK/BOTH_DOWN], chose PUSH_BACK, push_only.
-Half 1 • Turn 8 — away in possession at yardline 12 (score 0-0)
+Half 1 • Turn 8 — away in possession at yardline 10 (score 0-0)
   FOUL — away-LOS fouls home-PRONE (armor=7, broken=false, sent off!).
   TURNOVER — foul_sent_off.
 
@@ -39,9 +39,9 @@ Half 2 • Turn 5 — home in possession at yardline 14 (score 1-1)
 Half 2 • Turn 6 — away in possession at yardline 4 (score 2-1)
   FOUL — away-LOS fouls home-PRONE (armor=6, broken=false).
   BLOCK — away-LOS blocks home-LOS: dice [BOTH_DOWN/PLAYER_DOWN], chose BOTH_DOWN, defender_down.
-Half 2 • Turn 7 — away in possession at yardline 11 (score 2-1)
+Half 2 • Turn 7 — away in possession at yardline 10 (score 2-1)
   BLOCK — away-LOS blocks home-LOS: dice [STUMBLE/PLAYER_DOWN], chose PUSH_BACK, push_only.
-Half 2 • Turn 8 — away in possession at yardline 16 (score 2-1)
+Half 2 • Turn 8 — away in possession at yardline 14 (score 2-1)
   ✨ NUFFLE [tantrum_star] — A star player throws a tantrum and refuses to obey instructions.
   BLOCK — away-LOS blocks home-LOS: dice [PLAYER_DOWN/BOTH_DOWN], chose BOTH_DOWN, defender_down.
   TURNOVER — pickup_failed.

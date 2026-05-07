@@ -1,5 +1,5 @@
 === MATCH #12 — Voodoo Saints (Undead) vs Iron Bears (Dwarf) ===
-engine 0.12.0
+engine 0.13.0
 
 KICKOFF — no-voodoo-saints hosts chi-iron-bears (weather: nice, home receives).
 Half 1 • Turn 1 — home in possession at yardline 4 (score 0-0)
@@ -22,9 +22,9 @@ Half 1 • Turn 5 — home in possession at yardline 4 (score 1-1)
 Half 1 • Turn 6 — home in possession at yardline 4 (score 1-1)
   FOUL — home-LOS fouls away-PRONE (armor=1, broken=false, sent off!).
   TURNOVER — foul_sent_off.
-Half 1 • Turn 7 — away in possession at yardline 6 (score 1-1)
+Half 1 • Turn 7 — away in possession at yardline 5 (score 1-1)
   BLOCK — away-LOS blocks home-LOS: dice [PUSH_BACK/PLAYER_DOWN], chose PUSH_BACK, push_only.
-Half 1 • Turn 8 — away in possession at yardline 6 (score 1-1)
+Half 1 • Turn 8 — away in possession at yardline 5 (score 1-1)
   DODGE — away-LOS dodges to (13,7): needs 3+, rolled 4 → success.
   BLOCK — away-LOS blocks home-LOS: dice [STUMBLE/STUMBLE], chose STUMBLE, defender_down.
 
@@ -47,9 +47,9 @@ Half 2 • Turn 5 — home in possession at yardline 4 (score 1-2)
 Half 2 • Turn 6 — home in possession at yardline 4 (score 1-2)
   PASS — home-LOS attempts a short pass: needs 5+, rolled 3 → failed.
   TURNOVER — pass_failed.
-Half 2 • Turn 7 — away in possession at yardline 6 (score 1-2)
+Half 2 • Turn 7 — away in possession at yardline 5 (score 1-2)
   ✨ NUFFLE [crowd_riot] — A riot breaks out in the stands. Some fans spill onto the pitch.
-Half 2 • Turn 8 — away in possession at yardline 12 (score 1-2)
+Half 2 • Turn 8 — away in possession at yardline 10 (score 1-2)
 
 --- END OF MATCH (score 1-2) ---
 

@@ -1,5 +1,5 @@
 === MATCH #36 — Cheese Halflings (Halfling) vs Iron Bears (Dwarf) ===
-engine 0.12.0
+engine 0.13.0
 
 KICKOFF — gb-cheese-halflings hosts chi-iron-bears (weather: nice, home receives).
 Half 1 • Turn 1 — home in possession at yardline 4 (score 0-0)
@@ -16,43 +16,44 @@ Half 1 • Turn 4 — home in possession at yardline 4 (score 1-1)
 Half 1 • Turn 5 — home in possession at yardline 4 (score 1-1)
   ✨ NUFFLE [nemesis_clash] — Two old rivals lock eyes — the next block will be personal.
   CASUALTY — away-NUFFLE-1-5 is taken off by nemesis_clash.
-  DODGE — home-LOS dodges to (13,7): needs 3+, rolled 3 → success.
-Half 1 • Turn 6 — home in possession at yardline 4 (score 1-1)
-  DODGE — home-LOS dodges to (13,7): needs 3+, rolled 4 → success.
-  BLOCK — home-LOS blocks away-LOS: dice [PUSH_BACK/STUMBLE], chose PUSH_BACK, push_only.
-  PASS — home-LOS attempts a short pass: needs 5+, rolled 5 → caught.
-Half 1 • Turn 7 — home in possession at yardline 6 (score 1-1)
-  FOUL — home-LOS fouls away-PRONE (armor=7, broken=false).
-Half 1 • Turn 8 — home in possession at yardline 6 (score 1-1)
+  DODGE — home-LOS dodges to (13,7): needs 3+, rolled 1 → fail.
+  TURNOVER — dodge_failed.
+Half 1 • Turn 6 — away in possession at yardline 4 (score 1-1)
+  BLOCK — away-LOS blocks home-LOS: dice [PUSH_BACK/STUMBLE/PLAYER_DOWN], chose STUMBLE, defender_down.
+  BLOCK — away-LOS blocks home-LOS: dice [STUMBLE/STUMBLE/PUSH_BACK], chose STUMBLE, defender_down.
+  DODGE — away-LOS dodges to (13,7): needs 3+, rolled 3 → success.
+Half 1 • Turn 7 — away in possession at yardline 15 (score 1-1)
+  FOUL — away-LOS fouls home-PRONE (armor=7, broken=false).
+Half 1 • Turn 8 — away in possession at yardline 20 (score 1-1)
 
 --- HALFTIME (score 1-1) ---
 
 Half 2 • Turn 1 — away in possession at yardline 4 (score 1-1)
-Half 2 • Turn 2 — away in possession at yardline 11 (score 1-1)
+Half 2 • Turn 2 — away in possession at yardline 12 (score 1-1)
   ✨ NUFFLE [crowd_riot] — A riot breaks out in the stands. Some fans spill onto the pitch.
-  BLOCK — away-LOS blocks home-LOS: dice [PLAYER_DOWN/PLAYER_DOWN/POW], chose POW, defender_down.
-Half 2 • Turn 3 — away in possession at yardline 17 (score 1-1)
+  CASUALTY — home-NUFFLE-2-2 is taken off by crowd_riot.
+  BLOCK — away-LOS blocks home-LOS: dice [PUSH_BACK/PUSH_BACK/POW], chose POW, defender_down.
+Half 2 • Turn 3 — away in possession at yardline 19 (score 1-1)
   ✨ NUFFLE [apprentice_wizard_spotted] — An apprentice wizard sneaks a Lightning Bolt into play.
   PASS — away-LOS attempts a short pass: needs 5+, rolled 5 → caught.
-  PASS — away-LOS attempts a short pass: needs 5+, rolled 1 (fumble!) → failed.
-  TURNOVER — pass_fumble.
-Half 2 • Turn 4 — home in possession at yardline 4 (score 1-1)
-  BLOCK — home-LOS blocks away-LOS: dice [STUMBLE/PUSH_BACK], chose PUSH_BACK, push_only.
-Half 2 • Turn 5 — home in possession at yardline 4 (score 1-1)
+  PASS — away-LOS attempts a short pass: needs 5+, rolled 5 → caught.
+  Touchdown! away crosses the line. Score is now 1-2.
+Half 2 • Turn 4 — home in possession at yardline 4 (score 1-2)
+  BLOCK — home-LOS blocks away-LOS: dice [PUSH_BACK/STUMBLE], chose PUSH_BACK, push_only.
+Half 2 • Turn 5 — home in possession at yardline 4 (score 1-2)
   TURNOVER — pickup_failed.
-Half 2 • Turn 6 — away in possession at yardline 10 (score 1-1)
+Half 2 • Turn 6 — away in possession at yardline 11 (score 1-2)
   ✨ NUFFLE [cocky_drop] — Showboating costs the carrier the ball.
   CASUALTY — home-NUFFLE-2-6 is taken off by cocky_drop.
   TURNOVER — pickup_failed.
-Half 2 • Turn 7 — home in possession at yardline 4 (score 1-1)
-  Touchdown! home crosses the line. Score is now 2-1.
-Half 2 • Turn 8 — away in possession at yardline 4 (score 2-1)
-  PASS — away-LOS attempts a short pass: needs 5+, rolled 5 → caught.
-  Touchdown! away crosses the line. Score is now 2-2.
+Half 2 • Turn 7 — home in possession at yardline 4 (score 1-2)
+  Touchdown! home crosses the line. Score is now 2-2.
+Half 2 • Turn 8 — away in possession at yardline 4 (score 2-2)
+  PASS — away-LOS attempts a short pass: needs 5+, rolled 1 (fumble!) → failed.
+  TURNOVER — pass_fumble.
 
 --- END OF MATCH (score 2-2) ---
 
 
 FINAL: 2 - 2 (draw)
-Touchdowns: 4 | Casualties: 2 | Turnovers: 5 | Nuffle: 4
-Underdog boosts triggered: 2
+Touchdowns: 4 | Casualties: 3 | Turnovers: 6 | Nuffle: 4

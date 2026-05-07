@@ -1,5 +1,5 @@
 === MATCH #29 — Voodoo Saints (Undead) vs Soaring Hawks (Wood Elf) ===
-engine 0.12.0
+engine 0.13.0
 
 KICKOFF — no-voodoo-saints hosts kc-soaring-hawks (weather: nice, away receives).
 Half 1 • Turn 1 — away in possession at yardline 4 (score 0-0)
@@ -10,9 +10,9 @@ Half 1 • Turn 2 — away in possession at yardline 4 (score 0-0)
 Half 1 • Turn 3 — away in possession at yardline 10 (score 0-0)
   BLOCK — away-LOS blocks home-LOS: dice [PUSH_BACK/BOTH_DOWN], chose BOTH_DOWN, both_down.
   TURNOVER — block_attacker_down.
-Half 1 • Turn 4 — home in possession at yardline 6 (score 0-0)
+Half 1 • Turn 4 — home in possession at yardline 5 (score 0-0)
   ✨ NUFFLE [sudden_inspiration] — A player is struck by sudden inspiration and grows half a foot.
-Half 1 • Turn 5 — home in possession at yardline 6 (score 0-0)
+Half 1 • Turn 5 — home in possession at yardline 5 (score 0-0)
   TURNOVER — pickup_failed.
 Half 1 • Turn 6 — away in possession at yardline 4 (score 0-0)
   ✨ NUFFLE [banana_skin] — A banana skin appears from nowhere. A player slips spectacularly.
@@ -36,7 +36,7 @@ Half 2 • Turn 1 — home in possession at yardline 4 (score 0-1)
   TURNOVER — pickup_failed.
 Half 2 • Turn 2 — away in possession at yardline 9 (score 0-1)
   TURNOVER — pickup_failed.
-Half 2 • Turn 3 — home in possession at yardline 13 (score 0-1)
+Half 2 • Turn 3 — home in possession at yardline 12 (score 0-1)
   BLOCK — home-LOS blocks away-LOS: dice [STUMBLE/PUSH_BACK], chose PUSH_BACK, push_only.
   DODGE — home-LOS dodges to (13,7): needs 3+, rolled 6 → success.
   Touchdown! home crosses the line. Score is now 1-1.
@@ -51,7 +51,7 @@ Half 2 • Turn 6 — home in possession at yardline 4 (score 1-2)
 Half 2 • Turn 7 — away in possession at yardline 7 (score 1-2)
   PASS — away-LOS attempts a short pass: needs 5+, rolled 2 (fumble!) → failed.
   TURNOVER — pass_failed.
-Half 2 • Turn 8 — home in possession at yardline 11 (score 1-2)
+Half 2 • Turn 8 — home in possession at yardline 10 (score 1-2)
   ✨ NUFFLE [cheering_section] — A new cheering section ignites — the home team feels invincible.
   DODGE — home-LOS dodges to (13,7): needs 3+, rolled 6 → success.
   Touchdown! home crosses the line. Score is now 2-2.

@@ -1,5 +1,5 @@
 === MATCH #16 — Cold Tacticians (Lizardmen) vs Soaring Hawks (Wood Elf) ===
-engine 0.12.0
+engine 0.13.0
 
 KICKOFF — ne-cold-tacticians hosts kc-soaring-hawks (weather: nice, away receives).
 Half 1 • Turn 1 — away in possession at yardline 4 (score 0-0)
@@ -21,13 +21,13 @@ Half 1 • Turn 6 — away in possession at yardline 23 (score 0-1)
   Touchdown! away crosses the line. Score is now 0-2.
 Half 1 • Turn 7 — home in possession at yardline 4 (score 0-2)
   ✨ NUFFLE [cocky_drop] — Showboating costs the carrier the ball.
-Half 1 • Turn 8 — home in possession at yardline 7 (score 0-2)
+Half 1 • Turn 8 — home in possession at yardline 6 (score 0-2)
 
 --- HALFTIME (score 0-2) ---
 
 Half 2 • Turn 1 — home in possession at yardline 4 (score 0-2)
   FOUL — home-LOS fouls away-PRONE (armor=4, broken=false).
-Half 2 • Turn 2 — home in possession at yardline 11 (score 0-2)
+Half 2 • Turn 2 — home in possession at yardline 10 (score 0-2)
   FOUL — home-LOS fouls away-PRONE (armor=6, broken=false).
   Touchdown! home crosses the line. Score is now 1-2.
 Half 2 • Turn 3 — away in possession at yardline 4 (score 1-2)
@@ -41,8 +41,8 @@ Half 2 • Turn 5 — away in possession at yardline 13 (score 1-2)
 Half 2 • Turn 6 — away in possession at yardline 17 (score 1-2)
   BLOCK — away-LOS blocks home-LOS: dice [PLAYER_DOWN/PLAYER_DOWN], chose PLAYER_DOWN, attacker_down.
   TURNOVER — block_attacker_down.
-Half 2 • Turn 7 — home in possession at yardline 6 (score 1-2)
-Half 2 • Turn 8 — home in possession at yardline 6 (score 1-2)
+Half 2 • Turn 7 — home in possession at yardline 5 (score 1-2)
+Half 2 • Turn 8 — home in possession at yardline 5 (score 1-2)
   TURNOVER — pickup_failed.
 
 --- END OF MATCH (score 1-2) ---

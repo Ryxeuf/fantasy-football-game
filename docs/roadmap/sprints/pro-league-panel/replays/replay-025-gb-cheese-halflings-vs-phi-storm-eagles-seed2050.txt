@@ -1,5 +1,5 @@
 === MATCH #25 — Cheese Halflings (Halfling) vs Storm Eagles (Pro Elf) ===
-engine 0.12.0
+engine 0.13.0
 
 KICKOFF — gb-cheese-halflings hosts phi-storm-eagles (weather: nice, home receives).
 Half 1 • Turn 1 — home in possession at yardline 4 (score 0-0)
@@ -10,11 +10,11 @@ Half 1 • Turn 2 — home in possession at yardline 4 (score 0-0)
   ✨ NUFFLE [cheering_section] — A new cheering section ignites — the home team feels invincible.
   BLOCK — home-LOS blocks away-LOS: dice [PLAYER_DOWN/STUMBLE], chose PLAYER_DOWN, attacker_down.
   TURNOVER — block_attacker_down.
-Half 1 • Turn 3 — away in possession at yardline 4 (score 0-0)
+Half 1 • Turn 3 — away in possession at yardline 5 (score 0-0)
   ✨ NUFFLE [ref_blunder] — The ref makes a baffling call — the crowd boos.
   DODGE — away-LOS dodges to (13,7): needs 3+, rolled 4 → success.
   BLOCK — away-LOS blocks home-LOS: dice [PUSH_BACK/PLAYER_DOWN], chose PUSH_BACK, push_only.
-Half 1 • Turn 4 — away in possession at yardline 16 (score 0-0)
+Half 1 • Turn 4 — away in possession at yardline 18 (score 0-0)
   ✨ NUFFLE [banana_skin] — A banana skin appears from nowhere. A player slips spectacularly.
   CASUALTY — home-NUFFLE-1-4 is taken off by banana_skin.
   BLOCK — away-LOS blocks home-LOS: dice [POW/PUSH_BACK], chose POW, defender_down.
@@ -28,7 +28,7 @@ Half 1 • Turn 6 — away in possession at yardline 4 (score 0-1)
   CASUALTY — home-NUFFLE-1-6 is taken off by nemesis_clash.
   TURNOVER — pickup_failed.
 Half 1 • Turn 7 — home in possession at yardline 4 (score 0-1)
-Half 1 • Turn 8 — home in possession at yardline 11 (score 0-1)
+Half 1 • Turn 8 — home in possession at yardline 10 (score 0-1)
   ✨ NUFFLE [cocky_drop] — Showboating costs the carrier the ball.
   DODGE — home-LOS dodges to (13,7): needs 3+, rolled 3 → success.
 
@@ -37,20 +37,20 @@ Half 1 • Turn 8 — home in possession at yardline 11 (score 0-1)
 Half 2 • Turn 1 — away in possession at yardline 4 (score 0-1)
   DODGE — away-LOS dodges to (13,7): needs 3+, rolled 1 → fail.
   TURNOVER — dodge_failed.
-Half 2 • Turn 2 — home in possession at yardline 11 (score 0-1)
+Half 2 • Turn 2 — home in possession at yardline 10 (score 0-1)
   DODGE — home-LOS dodges to (13,7): needs 3+, rolled 3 → success.
-Half 2 • Turn 3 — home in possession at yardline 11 (score 0-1)
+Half 2 • Turn 3 — home in possession at yardline 10 (score 0-1)
   ✨ NUFFLE [lucky_bounce] — The ball takes a friendly bounce — fortune favours the bold.
   DODGE — home-LOS dodges to (13,7): needs 3+, rolled 6 → success.
   DODGE — home-LOS dodges to (13,7): needs 3+, rolled 1 → fail.
   TURNOVER — dodge_failed.
-Half 2 • Turn 4 — away in possession at yardline 11 (score 0-1)
+Half 2 • Turn 4 — away in possession at yardline 12 (score 0-1)
   DODGE — away-LOS dodges to (13,7): needs 3+, rolled 3 → success.
   Touchdown! away crosses the line. Score is now 0-2.
 Half 2 • Turn 5 — home in possession at yardline 4 (score 0-2)
   BLOCK — home-LOS blocks away-LOS: dice [BOTH_DOWN/PLAYER_DOWN], chose PLAYER_DOWN, attacker_down.
   TURNOVER — block_attacker_down.
-Half 2 • Turn 6 — away in possession at yardline 10 (score 0-2)
+Half 2 • Turn 6 — away in possession at yardline 11 (score 0-2)
   ✨ NUFFLE [sudden_inspiration] — A player is struck by sudden inspiration and grows half a foot.
   FOUL — away-LOS fouls home-PRONE (armor=4, broken=false).
   PASS — away-LOS attempts a short pass: needs 5+, rolled 6 → caught.

@@ -1,19 +1,19 @@
 === MATCH #27 — Swamp Lizards (Lizardmen) vs Cheese Halflings (Halfling) ===
-engine 0.12.0
+engine 0.13.0
 
 KICKOFF — jax-swamp-lizards hosts gb-cheese-halflings (weather: nice, away receives).
 Half 1 • Turn 1 — away in possession at yardline 4 (score 0-0)
-Half 1 • Turn 2 — away in possession at yardline 9 (score 0-0)
+Half 1 • Turn 2 — away in possession at yardline 7 (score 0-0)
   BLOCK — away-LOS blocks home-LOS: dice [PUSH_BACK/STUMBLE], chose PUSH_BACK, push_only.
   TURNOVER — gfi_failed.
-Half 1 • Turn 3 — home in possession at yardline 12 (score 0-0)
+Half 1 • Turn 3 — home in possession at yardline 13 (score 0-0)
   DODGE — home-LOS dodges to (13,7): needs 3+, rolled 4 → success.
   DODGE — home-LOS dodges to (13,7): needs 3+, rolled 4 → success.
   Touchdown! home crosses the line. Score is now 1-0.
 Half 1 • Turn 4 — away in possession at yardline 4 (score 1-0)
   ✨ NUFFLE [rookie_brilliance] — A rookie pulls off a play above their stats — Nuffle smiles.
   TURNOVER — pickup_failed.
-Half 1 • Turn 5 — home in possession at yardline 12 (score 1-0)
+Half 1 • Turn 5 — home in possession at yardline 13 (score 1-0)
   TURNOVER — pickup_failed.
 Half 1 • Turn 6 — away in possession at yardline 4 (score 1-0)
   ✨ NUFFLE [sudden_inspiration] — A player is struck by sudden inspiration and grows half a foot.
@@ -30,27 +30,28 @@ Half 1 • Turn 8 — away in possession at yardline 4 (score 2-1)
 
 Half 2 • Turn 1 — home in possession at yardline 4 (score 3-1)
   ✨ NUFFLE [nemesis_clash] — Two old rivals lock eyes — the next block will be personal.
-Half 2 • Turn 2 — home in possession at yardline 11 (score 3-1)
+Half 2 • Turn 2 — home in possession at yardline 12 (score 3-1)
   ✨ NUFFLE [banana_skin] — A banana skin appears from nowhere. A player slips spectacularly.
   DODGE — home-LOS dodges to (13,7): needs 3+, rolled 3 → success.
   FOUL — home-LOS fouls away-PRONE (armor=7, broken=false).
-Half 2 • Turn 3 — home in possession at yardline 21 (score 3-1)
+Half 2 • Turn 3 — home in possession at yardline 23 (score 3-1)
+  TURNOVER — pickup_failed.
+Half 2 • Turn 4 — away in possession at yardline 4 (score 3-1)
+  TURNOVER — pickup_failed.
+Half 2 • Turn 5 — home in possession at yardline 16 (score 3-1)
   BLOCK — home-LOS blocks away-LOS: dice [POW/PLAYER_DOWN], chose POW, defender_down.
-  Touchdown! home crosses the line. Score is now 4-1.
-Half 2 • Turn 4 — away in possession at yardline 4 (score 4-1)
-  TURNOVER — pickup_failed.
-Half 2 • Turn 5 — home in possession at yardline 15 (score 4-1)
-  BLOCK — home-LOS blocks away-LOS: dice [PLAYER_DOWN/PUSH_BACK], chose PUSH_BACK, push_only.
-Half 2 • Turn 6 — home in possession at yardline 23 (score 4-1)
-  TURNOVER — pickup_failed.
-Half 2 • Turn 7 — away in possession at yardline 5 (score 4-1)
-  FOUL — away-LOS fouls home-PRONE (armor=9, broken=false, sent off!).
-  TURNOVER — foul_sent_off.
-Half 2 • Turn 8 — home in possession at yardline 7 (score 4-1)
-  BLOCK — home-LOS blocks away-LOS: dice [PLAYER_DOWN/PUSH_BACK], chose PUSH_BACK, push_only.
+Half 2 • Turn 6 — home in possession at yardline 25 (score 3-1)
+  PASS — home-LOS attempts a short pass: needs 5+, rolled 2 → failed.
+  TURNOVER — pass_failed.
+Half 2 • Turn 7 — away in possession at yardline 4 (score 3-1)
+  DODGE — away-LOS dodges to (13,7): needs 3+, rolled 6 → success.
+Half 2 • Turn 8 — away in possession at yardline 4 (score 3-1)
+  DODGE — away-LOS dodges to (13,7): needs 3+, rolled 5 → success.
+  PASS — away-LOS attempts a short pass: needs 5+, rolled 3 → failed.
+  TURNOVER — pass_failed.
 
---- END OF MATCH (score 4-1) ---
+--- END OF MATCH (score 3-1) ---
 
 
-FINAL: 4 - 1 (home)
-Touchdowns: 5 | Casualties: 0 | Turnovers: 7 | Nuffle: 4
+FINAL: 3 - 1 (home)
+Touchdowns: 4 | Casualties: 0 | Turnovers: 8 | Nuffle: 4

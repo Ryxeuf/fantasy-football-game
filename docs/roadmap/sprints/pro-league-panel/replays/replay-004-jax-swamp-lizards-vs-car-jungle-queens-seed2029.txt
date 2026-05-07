@@ -1,5 +1,5 @@
 === MATCH #4 — Swamp Lizards (Lizardmen) vs Jungle Queens (Amazon) ===
-engine 0.12.0
+engine 0.13.0
 
 KICKOFF — jax-swamp-lizards hosts car-jungle-queens (weather: nice, away receives).
 Half 1 • Turn 1 — away in possession at yardline 4 (score 0-0)
@@ -13,7 +13,7 @@ Half 1 • Turn 3 — home in possession at yardline 9 (score 0-0)
 Half 1 • Turn 4 — home in possession at yardline 17 (score 0-0)
   PASS — home-LOS attempts a short pass: needs 5+, rolled 3 → failed.
   TURNOVER — pass_failed.
-Half 1 • Turn 5 — away in possession at yardline 10 (score 0-0)
+Half 1 • Turn 5 — away in possession at yardline 9 (score 0-0)
   ✨ NUFFLE [weather_shift] — The Nuffle Gods stir the clouds. Weather shifts.
   TURNOVER — pickup_failed.
 Half 1 • Turn 6 — home in possession at yardline 9 (score 0-0)
@@ -49,7 +49,7 @@ Half 2 • Turn 5 — home in possession at yardline 19 (score 2-1)
   TURNOVER — pickup_failed.
 Half 2 • Turn 6 — away in possession at yardline 4 (score 2-1)
   ✨ NUFFLE [sudden_inspiration] — A player is struck by sudden inspiration and grows half a foot.
-Half 2 • Turn 7 — away in possession at yardline 5 (score 2-1)
+Half 2 • Turn 7 — away in possession at yardline 4 (score 2-1)
   ✨ NUFFLE [coach_sideline_rant] — A sideline rant electrifies the squad — and the ref.
   PASS — away-LOS attempts a short pass: needs 5+, rolled 1 (fumble!) → failed.
   TURNOVER — pass_fumble.
