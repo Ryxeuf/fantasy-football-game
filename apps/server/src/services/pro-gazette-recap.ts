@@ -79,6 +79,8 @@ export async function getDailyRecap(
     where: {
       status: "completed",
       completedAt: { gte: fromAt, lt: toAt },
+      // Lot 2.C.3 — la Nuffle Gazette ne couvre pas les matchs sandbox.
+      isTest: false,
     },
     orderBy: { completedAt: "asc" },
     select: {
@@ -181,6 +183,7 @@ export async function getDailyRecap(
       where: {
         status: "completed",
         completedAt: { gte: rivalryFromAt, lte: toAt },
+        isTest: false,
         OR: [
           {
             homeTeam: { slug: m.homeTeamSlug },

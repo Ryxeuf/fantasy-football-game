@@ -206,6 +206,9 @@ export async function getProTeamDetail(
         seasonId,
         OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }],
         status: { in: ["scheduled", "ready"] },
+        // Lot 2.C.3 — sandbox matchs ne doivent pas apparaître dans
+        // le calendrier public d'une équipe.
+        isTest: false,
       },
       orderBy: { scheduledAt: "asc" },
       take: UPCOMING_LIMIT,
@@ -216,6 +219,7 @@ export async function getProTeamDetail(
         seasonId,
         OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }],
         status: "completed",
+        isTest: false,
       },
       orderBy: { scheduledAt: "desc" },
       take: RECENT_LIMIT,

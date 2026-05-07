@@ -300,6 +300,11 @@ export async function sweepUnsettledMarkets(): Promise<SweepResult> {
       betMarkets: {
         some: { status: { in: ["open", "closed"] } },
       },
+      // Lot 2.C.3 — sandbox matchs ne settle aucun pari (par
+      // construction ils n'ont pas de markets puisque la création
+      // de bet est refusée sur isTest=true ; mais on filtre quand
+      // même par défense en profondeur).
+      isTest: false,
     },
     select: { id: true },
     orderBy: { completedAt: "asc" },
