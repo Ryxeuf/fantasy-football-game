@@ -36,6 +36,7 @@ export default defineConfig({
         'src/actions/special-actions.ts',
         'src/actions/pass-actions.ts',
         'src/actions/turn-foul-actions.ts',
+        'src/actions/failure-helpers.ts',
       ],
       // S25.4 — Seuils initiaux conservateurs. v8 reporte 0% lines sur
       // certains fichiers TS du moteur a cause d'un quirk source-map ;

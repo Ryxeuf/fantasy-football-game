@@ -111,6 +111,15 @@ import {
   handleEndTurn,
   handleFoul,
 } from './turn-foul-actions';
+// S27.8.4 — Helpers d'echec (applyRollFailure / applyPickupFailure)
+// extraits dans `actions/failure-helpers.ts`. Reutilises par
+// handleNormalMove / handleDodgeRoll / handleRerollChoose / handleLeap
+// / handleBallPickup. Permet aux extractions ulterieures de ces
+// handlers de ne pas dependre cycliquement de `actions.ts`.
+import {
+  applyRollFailure,
+  applyPickupFailure,
+} from './failure-helpers';
 import { canDumpOff, getDumpOffReceivers, executeDumpOff } from '../mechanics/dump-off';
 import { checkDauntless } from '../mechanics/dauntless';
 import { checkBreakTackle } from '../mechanics/break-tackle';
@@ -623,65 +632,8 @@ function consumeTeamReroll(state: GameState, team: TeamId): GameState {
   return { ...state, teamRerolls: newRerolls, rerollUsedThisTurn: true };
 }
 
-/**
- * Applique les conséquences d'un échec de jet (chute, turnover, armure, perte de balle).
- * @param armorBonus Bonus optionnel applique au jet d'armure (ex: +1 d'Arm Bar
- *   quand un esquive a echoue dans la zone de tacle d'un adversaire avec ce skill).
- */
-function applyRollFailure(
-  state: GameState,
-  playerIndex: number,
-  rng: RNG,
-  armorBonus: number = 0,
-): GameState {
-  const player = state.players[playerIndex];
-  state.isTurnover = true;
-  state.players[playerIndex] = { ...player, stunned: true };
-
-  // Jet d'armure (avec bonus eventuel d'Arm Bar). `armorBonus` est exprime
-  // comme bonus a l'attaquant (i.e. +1 facilite la cassure d'armure). Il est
-  // negativise ici car `performArmorRollWithNotification` attend un modificateur
-  // a appliquer au TARGET (positif = armure plus difficile a percer).
-  const armorResult = performArmorRollWithNotification(state.players[playerIndex], rng, -armorBonus);
-  state.lastDiceResult = armorResult;
-  const armorLog = createLogEntry(
-    'dice',
-    `Jet d'armure: ${armorResult.diceRoll}/${armorResult.targetNumber} ${armorResult.success ? '✓' : '✗'}${armorBonus > 0 ? ` [Arm Bar +${armorBonus}]` : ''}`,
-    player.id,
-    player.team,
-    { diceRoll: armorResult.diceRoll, targetNumber: armorResult.targetNumber, success: armorResult.success, armBar: armorBonus > 0 }
-  );
-  state.gameLog = [...state.gameLog, armorLog];
-
-  // Si l'armure est percée (success = false), faire un jet de blessure
-  if (!armorResult.success) {
-    state = performInjuryRoll(state, state.players[playerIndex], rng);
-  }
-
-  // Perte de balle si le joueur la portait
-  if (player.hasBall) {
-    state.players[playerIndex] = { ...state.players[playerIndex], hasBall: false };
-    state.ball = { ...state.players[playerIndex].pos };
-    return bounceBall(state, rng);
-  }
-
-  return state;
-}
-
-/**
- * Applique les conséquences d'un échec de pickup (rebond + turnover)
- */
-function applyPickupFailure(state: GameState, playerIndex: number, rng: RNG): GameState {
-  state.isTurnover = true;
-  const failLog = createLogEntry(
-    'turnover',
-    `Échec du ramassage - Turnover`,
-    state.players[playerIndex].id,
-    state.players[playerIndex].team
-  );
-  state.gameLog = [...state.gameLog, failLog];
-  return bounceBall(state, rng);
-}
+// S27.8.4 — applyRollFailure / applyPickupFailure extraits dans
+// `actions/failure-helpers.ts` (re-importes en haut de ce fichier).
 
 /**
  * Applique un mouvement à l'état du jeu
