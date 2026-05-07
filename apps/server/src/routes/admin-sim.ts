@@ -11,6 +11,9 @@ import {
 import { adminOnly } from "../middleware/adminOnly";
 import { authUser } from "../middleware/authUser";
 import { validate } from "../middleware/validate";
+import { computeEngineDrift } from "../services/pro-league-engine-drift-watcher";
+import { getBroadcasterStats } from "../services/pro-league-match-broadcaster";
+import { appMetrics } from "../utils/metrics";
 
 /**
  * Petit utilitaire admin (Phase 0 — pre-Pro League UI).
@@ -84,11 +87,78 @@ export function handleRunSim(req: Request, res: Response): void {
   });
 }
 
+/**
+ * Handler for `GET /admin/sim/drift` — Lot 2.A.5.
+ *
+ * Calcule la drift courante (rolling 7 jours par default) sans
+ * dépendre de Prometheus / Grafana. Sert au dashboard admin
+ * `/admin/sim/health` (Lot 2.B.3).
+ *
+ * Query params :
+ *   - `windowMs` (number, optional) : fenêtre glissante en ms.
+ *   - `seasonId` (string, optional) : filtre saison.
+ */
+export async function handleGetDrift(req: Request, res: Response): Promise<void> {
+  const windowMsRaw = req.query.windowMs;
+  const seasonId =
+    typeof req.query.seasonId === "string" && req.query.seasonId.length > 0
+      ? req.query.seasonId
+      : undefined;
+  const windowMs =
+    typeof windowMsRaw === "string" && /^\d+$/.test(windowMsRaw)
+      ? Number.parseInt(windowMsRaw, 10)
+      : undefined;
+  const samples = await computeEngineDrift({ windowMs, seasonId });
+  res.json({
+    samples,
+    computedAt: new Date().toISOString(),
+  });
+}
+
+/**
+ * Handler for `GET /admin/sim/broadcaster` — Lot 2.B.4.
+ *
+ * Retourne l'état live du broadcaster (sessions actives, total
+ * subscribers) et les histogrammes Prometheus dérivés (lag dispatch
+ * dernier scrape interne). Utilisé par l'UI admin
+ * `/admin/sim/broadcaster` qui rafraîchit toutes les 5s.
+ *
+ * On lit `getBroadcasterStats()` (synchrone) plus le snapshot des
+ * gauges Prometheus pour confirmer la cohérence.
+ */
+export async function handleGetBroadcasterStats(
+  _req: Request,
+  res: Response,
+): Promise<void> {
+  const stats = getBroadcasterStats();
+  // On lit directement depuis le registre Prometheus pour être sûr
+  // que ce qu'on affiche dans l'UI = ce que voit Grafana.
+  const activeSessionsGauge = await appMetrics.snapshotGauge(
+    "nuffle_broadcaster_active_sessions",
+  );
+  const totalSubscribersGauge = await appMetrics.snapshotGauge(
+    "nuffle_broadcaster_total_subscribers",
+  );
+  res.json({
+    activeSessions: stats.activeSessions,
+    totalSubscribers: stats.totalSubscribers,
+    /** Valeurs lues côté Prometheus — utile pour détecter une dérive
+     *  entre l'état mémoire et ce qui est exposé. */
+    promExposed: {
+      activeSessions: activeSessionsGauge,
+      totalSubscribers: totalSubscribersGauge,
+    },
+    fetchedAt: new Date().toISOString(),
+  });
+}
+
 const router = Router();
 
 router.use(authUser, adminOnly);
 
 router.get("/teams", handleListTeams);
 router.post("/run", validate(runSimSchema), handleRunSim);
+router.get("/drift", handleGetDrift);
+router.get("/broadcaster", handleGetBroadcasterStats);
 
 export default router;

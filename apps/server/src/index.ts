@@ -656,6 +656,23 @@ if (!inTestSimRunnerEnv && simRunnerTickMs > 0) {
   );
 }
 
+// Lot 2.A.5 — engine drift watcher. Calcule chaque heure la drift
+// observée (rolling 7j) vs FUMBBL et pousse `nuffle_engine_drift`
+// pour Grafana. Désactivable via PRO_LEAGUE_DRIFT_WATCHER_TICK_MS=0.
+const driftWatcherTickMsEnv = Number(
+  process.env.PRO_LEAGUE_DRIFT_WATCHER_TICK_MS,
+);
+const driftWatcherTickMs = Number.isFinite(driftWatcherTickMsEnv)
+  ? driftWatcherTickMsEnv
+  : 60 * 60 * 1000;
+if (!inTestSimRunnerEnv && driftWatcherTickMs > 0) {
+  void import("./services/pro-league-engine-drift-watcher").then(
+    ({ startDriftWatcher }) => {
+      startDriftWatcher({ intervalMs: driftWatcherTickMs });
+    },
+  );
+}
+
 
 // =============================================================================
 // Pro League bet-settlement cron (sprint 1.D.5).
