@@ -29,6 +29,14 @@ import type { MatchEvent } from "@bb/sim-engine";
 
 import { authUser, type AuthenticatedRequest } from "../middleware/authUser";
 import {
+  BetValidationError,
+  MarketNotFoundError,
+  listMarketsForMatch,
+  listMyBets,
+  placeBet,
+} from "../services/pro-bet";
+import { InsufficientFundsError } from "../services/pro-wallet";
+import {
   ProTeamFollowError,
   followProTeam,
   getMyFeed,
@@ -381,12 +389,126 @@ export async function handleGetMyFeed(
   res.json({ entries });
 }
 
+/**
+ * Sprint 1.D.4 — Liste les markets `open` d'un match (public).
+ */
+export async function handleListMarkets(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const id = req.params.id;
+  if (!id) {
+    res.status(400).json({ error: "missing-match-id" });
+    return;
+  }
+  const markets = await listMarketsForMatch(id);
+  res.json({ markets });
+}
+
+/**
+ * Sprint 1.D.4 — Place un pari (auth-required, idempotent via
+ * `clientToken`). Body : `{marketId, selection, stake, oddsAtPlace,
+ * clientToken}`.
+ */
+export async function handlePlaceBet(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: "unauthenticated" });
+    return;
+  }
+  const body = req.body as Partial<{
+    marketId: string;
+    selection: string;
+    stake: number;
+    oddsAtPlace: number;
+    clientToken: string;
+  }>;
+  if (
+    !body ||
+    typeof body.marketId !== "string" ||
+    typeof body.selection !== "string" ||
+    typeof body.stake !== "number" ||
+    typeof body.oddsAtPlace !== "number" ||
+    typeof body.clientToken !== "string"
+  ) {
+    res.status(400).json({ error: "invalid-body" });
+    return;
+  }
+
+  try {
+    const bet = await placeBet({
+      userId,
+      marketId: body.marketId,
+      selection: body.selection,
+      stake: body.stake,
+      oddsAtPlace: body.oddsAtPlace,
+      clientToken: body.clientToken,
+    });
+    res.status(201).json(bet);
+  } catch (err: unknown) {
+    if (err instanceof MarketNotFoundError) {
+      res.status(404).json({ error: err.message, code: err.code });
+      return;
+    }
+    if (err instanceof BetValidationError) {
+      res.status(400).json({ error: err.message, code: err.code });
+      return;
+    }
+    if (err instanceof InsufficientFundsError) {
+      res.status(402).json({
+        error: err.message,
+        code: err.code,
+        available: err.available,
+        requested: err.requested,
+      });
+      return;
+    }
+    const msg = err instanceof Error ? err.message : "unknown";
+    serverLog.error(`[pro-league/bets] failed: ${msg}`);
+    res.status(500).json({ error: "internal-error" });
+  }
+}
+
+/**
+ * Sprint 1.D.4 — Historique des paris de l'user courant (auth-required).
+ * Query : `?limit=N` (default 50, max 200).
+ */
+export async function handleListMyBets(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: "unauthenticated" });
+    return;
+  }
+  const limitRaw = req.query.limit;
+  const limit =
+    typeof limitRaw === "string" ? Number.parseInt(limitRaw, 10) : 50;
+  try {
+    const bets = await listMyBets(userId, limit);
+    res.json({ bets });
+  } catch (err: unknown) {
+    if (err instanceof BetValidationError) {
+      res.status(400).json({ error: err.message, code: err.code });
+      return;
+    }
+    const msg = err instanceof Error ? err.message : "unknown";
+    serverLog.error(`[pro-league/me/bets] failed: ${msg}`);
+    res.status(500).json({ error: "internal-error" });
+  }
+}
+
 const router = Router();
 
 router.get("/seasons/current", handleGetCurrentSeasonHub);
 router.get("/seasons/current/standings", handleGetCurrentSeasonStandings);
 router.get("/teams/:slug", handleGetTeamDetail);
 router.get("/matches/:id", handleGetMatchDetail);
+router.get("/matches/:id/markets", handleListMarkets);
 router.get("/matches/:id/stream", handleStreamProMatch);
 router.get("/_internal/broadcaster-stats", handleBroadcasterStats);
 
@@ -396,5 +518,9 @@ router.delete("/teams/:slug/follow", authUser, handleUnfollowTeam);
 router.get("/teams/:slug/follow", authUser, handleIsFollowing);
 router.get("/me/follows", authUser, handleListMyFollows);
 router.get("/me/feed", authUser, handleGetMyFeed);
+
+// Sprint 1.D.4 — endpoints paris.
+router.post("/bets", authUser, handlePlaceBet);
+router.get("/me/bets", authUser, handleListMyBets);
 
 export default router;
