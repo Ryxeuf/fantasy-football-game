@@ -1,49 +1,49 @@
 === MATCH #16 — Cold Tacticians (Lizardmen) vs Soaring Hawks (Wood Elf) ===
 engine 0.13.0
 
-KICKOFF — ne-cold-tacticians hosts kc-soaring-hawks (weather: nice, away receives).
-Half 1 • Turn 1 — away in possession at yardline 4 (score 0-0)
-  FOUL — away-LOS fouls home-PRONE (armor=6, broken=false).
-  Touchdown! away crosses the line. Score is now 0-1.
-Half 1 • Turn 2 — home in possession at yardline 4 (score 0-1)
-  PASS — home-LOS attempts a short pass: needs 5+, rolled 2 → failed.
-  TURNOVER — pass_failed.
-Half 1 • Turn 3 — away in possession at yardline 10 (score 0-1)
-  ✨ NUFFLE [sudden_downpour] — A sudden downpour soaks the pitch. Pickups get harder.
-  PASS — away-LOS attempts a short pass: needs 5+, rolled 5 → caught.
-Half 1 • Turn 4 — away in possession at yardline 12 (score 0-1)
-  DODGE — away-LOS dodges to (13,7) (rerolled): needs 3+, rolled 2 → success.
-Half 1 • Turn 5 — away in possession at yardline 16 (score 0-1)
-  ✨ NUFFLE [veteran_redemption] — A grizzled veteran finds one more ounce of glory.
-  DODGE — away-LOS dodges to (13,7) (rerolled): needs 3+, rolled 1 → success.
-Half 1 • Turn 6 — away in possession at yardline 23 (score 0-1)
-  DODGE — away-LOS dodges to (13,7) (rerolled): needs 3+, rolled 1 → success.
-  Touchdown! away crosses the line. Score is now 0-2.
-Half 1 • Turn 7 — home in possession at yardline 4 (score 0-2)
-  ✨ NUFFLE [cocky_drop] — Showboating costs the carrier the ball.
-Half 1 • Turn 8 — home in possession at yardline 6 (score 0-2)
+[T+00:00] KICKOFF — ne-cold-tacticians hosts kc-soaring-hawks (weather: nice, away receives).
+[T+00:00] Half 1 • Turn 1 — away in possession at yardline 4 (score 0-0)
+  [T+00:00] FOUL — away-LOS fouls home-PRONE (armor=6, broken=false).
+  [T+00:00] Touchdown! away crosses the line. Score is now 0-1.
+[T+00:30] Half 1 • Turn 2 — home in possession at yardline 4 (score 0-1)
+  [T+00:30] PASS — home-LOS attempts a short pass: needs 5+, rolled 2 → failed.
+  [T+00:30] TURNOVER — pass_failed.
+[T+01:00] Half 1 • Turn 3 — away in possession at yardline 10 (score 0-1)
+  [T+01:00] ✨ NUFFLE [sudden_downpour] — A sudden downpour soaks the pitch. Pickups get harder.
+  [T+01:00] PASS — away-LOS attempts a short pass: needs 5+, rolled 5 → caught.
+[T+01:30] Half 1 • Turn 4 — away in possession at yardline 12 (score 0-1) (drive +2 yds)
+  [T+01:30] DODGE — away-LOS dodges to (13,7) (rerolled): needs 3+, rolled 2 → success.
+[T+02:00] Half 1 • Turn 5 — away in possession at yardline 16 (score 0-1) (drive +4 yds)
+  [T+02:00] ✨ NUFFLE [veteran_redemption] — A grizzled veteran finds one more ounce of glory.
+  [T+02:00] DODGE — away-LOS dodges to (13,7) (rerolled): needs 3+, rolled 1 → success.
+[T+02:30] Half 1 • Turn 6 — away in possession at yardline 23 (score 0-1) (drive +7 yds)
+  [T+02:30] DODGE — away-LOS dodges to (13,7) (rerolled): needs 3+, rolled 1 → success.
+  [T+02:30] Touchdown! away crosses the line. Score is now 0-2.
+[T+03:00] Half 1 • Turn 7 — home in possession at yardline 4 (score 0-2)
+  [T+03:00] ✨ NUFFLE [cocky_drop] — Showboating costs the carrier the ball.
+[T+03:30] Half 1 • Turn 8 — home in possession at yardline 6 (score 0-2) (drive +2 yds)
 
 --- HALFTIME (score 0-2) ---
 
-Half 2 • Turn 1 — home in possession at yardline 4 (score 0-2)
-  FOUL — home-LOS fouls away-PRONE (armor=4, broken=false).
-Half 2 • Turn 2 — home in possession at yardline 10 (score 0-2)
-  FOUL — home-LOS fouls away-PRONE (armor=6, broken=false).
-  Touchdown! home crosses the line. Score is now 1-2.
-Half 2 • Turn 3 — away in possession at yardline 4 (score 1-2)
-  PASS — away-LOS attempts a short pass: needs 5+, rolled 2 → caught.
-  PASS — away-LOS attempts a short pass: needs 5+, rolled 6 → caught.
-Half 2 • Turn 4 — away in possession at yardline 6 (score 1-2)
-  FOUL — away-LOS fouls home-PRONE (armor=7, broken=false).
-Half 2 • Turn 5 — away in possession at yardline 13 (score 1-2)
-  FOUL — away-LOS fouls home-PRONE (armor=10, broken=true → casualty).
-  CASUALTY — home-PRONE is taken off by away-LOS.
-Half 2 • Turn 6 — away in possession at yardline 17 (score 1-2)
-  BLOCK — away-LOS blocks home-LOS: dice [PLAYER_DOWN/PLAYER_DOWN], chose PLAYER_DOWN, attacker_down.
-  TURNOVER — block_attacker_down.
-Half 2 • Turn 7 — home in possession at yardline 5 (score 1-2)
-Half 2 • Turn 8 — home in possession at yardline 5 (score 1-2)
-  TURNOVER — pickup_failed.
+[T+04:15] Half 2 • Turn 1 — home in possession at yardline 4 (score 0-2) (drive -2 yds)
+  [T+04:15] FOUL — home-LOS fouls away-PRONE (armor=4, broken=false).
+[T+04:45] Half 2 • Turn 2 — home in possession at yardline 10 (score 0-2) (drive +6 yds)
+  [T+04:45] FOUL — home-LOS fouls away-PRONE (armor=6, broken=false).
+  [T+04:45] Touchdown! home crosses the line. Score is now 1-2.
+[T+05:15] Half 2 • Turn 3 — away in possession at yardline 4 (score 1-2)
+  [T+05:15] PASS — away-LOS attempts a short pass: needs 5+, rolled 2 → caught.
+  [T+05:15] PASS — away-LOS attempts a short pass: needs 5+, rolled 6 → caught.
+[T+05:45] Half 2 • Turn 4 — away in possession at yardline 6 (score 1-2) (drive +2 yds)
+  [T+05:45] FOUL — away-LOS fouls home-PRONE (armor=7, broken=false).
+[T+06:15] Half 2 • Turn 5 — away in possession at yardline 13 (score 1-2) (drive +7 yds)
+  [T+06:15] FOUL — away-LOS fouls home-PRONE (armor=10, broken=true → casualty).
+  [T+06:15] CASUALTY — home-PRONE is taken off by away-LOS.
+[T+06:45] Half 2 • Turn 6 — away in possession at yardline 17 (score 1-2) (drive +4 yds)
+  [T+06:45] BLOCK — away-LOS blocks home-LOS: dice [PLAYER_DOWN/PLAYER_DOWN], chose PLAYER_DOWN, attacker_down.
+  [T+06:45] TURNOVER — block_attacker_down.
+[T+07:15] Half 2 • Turn 7 — home in possession at yardline 5 (score 1-2)
+[T+07:45] Half 2 • Turn 8 — home in possession at yardline 5 (score 1-2)
+  [T+07:45] TURNOVER — pickup_failed.
 
 --- END OF MATCH (score 1-2) ---
 

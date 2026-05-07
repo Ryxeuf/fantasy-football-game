@@ -1,55 +1,55 @@
 === MATCH #21 — Gold Rush (Skaven) vs Tomb Cardinals (Tomb Kings) ===
 engine 0.13.0
 
-KICKOFF — sf-gold-rush hosts phx-tomb-cardinals (weather: nice, away receives).
-Half 1 • Turn 1 — away in possession at yardline 4 (score 0-0)
-Half 1 • Turn 2 — away in possession at yardline 10 (score 0-0)
-  BLOCK — away-LOS blocks home-LOS: dice [PUSH_BACK/POW], chose POW, defender_down.
-  DODGE — away-LOS dodges to (13,7): needs 3+, rolled 4 → success.
-Half 1 • Turn 3 — away in possession at yardline 10 (score 0-0)
-  ✨ NUFFLE [nemesis_clash] — Two old rivals lock eyes — the next block will be personal.
-  TURNOVER — pickup_failed.
-Half 1 • Turn 4 — home in possession at yardline 5 (score 0-0)
-  DODGE — home-LOS dodges to (13,7): needs 2+, rolled 4 → success.
-  PASS — home-LOS attempts a short pass: needs 4+, rolled 5 → caught.
-Half 1 • Turn 5 — home in possession at yardline 5 (score 0-0)
-  PASS — home-LOS attempts a short pass: needs 4+, rolled 6 → caught.
-Half 1 • Turn 6 — home in possession at yardline 5 (score 0-0)
-  FOUL — home-LOS fouls away-PRONE (armor=1, broken=false, sent off!).
-  TURNOVER — foul_sent_off.
-Half 1 • Turn 7 — away in possession at yardline 6 (score 0-0)
-Half 1 • Turn 8 — away in possession at yardline 12 (score 0-0)
-  ✨ NUFFLE [veteran_redemption] — A grizzled veteran finds one more ounce of glory.
-  FOUL — away-LOS fouls home-PRONE (armor=8, broken=false).
-  FOUL — away-LOS fouls home-PRONE (armor=8, broken=false).
-  Touchdown! away crosses the line. Score is now 0-1.
+[T+00:00] KICKOFF — sf-gold-rush hosts phx-tomb-cardinals (weather: nice, away receives).
+[T+00:00] Half 1 • Turn 1 — away in possession at yardline 4 (score 0-0)
+[T+00:30] Half 1 • Turn 2 — away in possession at yardline 10 (score 0-0) (drive +6 yds)
+  [T+00:30] BLOCK — away-LOS blocks home-LOS: dice [PUSH_BACK/POW], chose POW, defender_down.
+  [T+00:30] DODGE — away-LOS dodges to (13,7): needs 3+, rolled 4 → success.
+[T+01:00] Half 1 • Turn 3 — away in possession at yardline 10 (score 0-0)
+  [T+01:00] ✨ NUFFLE [nemesis_clash] — Two old rivals lock eyes — the next block will be personal.
+  [T+01:00] TURNOVER — pickup_failed.
+[T+01:30] Half 1 • Turn 4 — home in possession at yardline 5 (score 0-0)
+  [T+01:30] DODGE — home-LOS dodges to (13,7): needs 2+, rolled 4 → success.
+  [T+01:30] PASS — home-LOS attempts a short pass: needs 4+, rolled 5 → caught.
+[T+02:00] Half 1 • Turn 5 — home in possession at yardline 5 (score 0-0)
+  [T+02:00] PASS — home-LOS attempts a short pass: needs 4+, rolled 6 → caught.
+[T+02:30] Half 1 • Turn 6 — home in possession at yardline 5 (score 0-0)
+  [T+02:30] FOUL — home-LOS fouls away-PRONE (armor=1, broken=false, sent off!).
+  [T+02:30] TURNOVER — foul_sent_off.
+[T+03:00] Half 1 • Turn 7 — away in possession at yardline 6 (score 0-0)
+[T+03:30] Half 1 • Turn 8 — away in possession at yardline 12 (score 0-0) (drive +6 yds)
+  [T+03:30] ✨ NUFFLE [veteran_redemption] — A grizzled veteran finds one more ounce of glory.
+  [T+03:30] FOUL — away-LOS fouls home-PRONE (armor=8, broken=false).
+  [T+03:30] FOUL — away-LOS fouls home-PRONE (armor=8, broken=false).
+  [T+03:30] Touchdown! away crosses the line. Score is now 0-1.
 
 --- HALFTIME (score 0-1) ---
 
-Half 2 • Turn 1 — home in possession at yardline 4 (score 0-1)
-  ✨ NUFFLE [sudden_inspiration] — A player is struck by sudden inspiration and grows half a foot.
-  DODGE — home-LOS dodges to (13,7): needs 2+, rolled 6 → success.
-Half 2 • Turn 2 — home in possession at yardline 7 (score 0-1)
-  PASS — home-LOS attempts a short pass: needs 4+, rolled 3 → failed.
-  TURNOVER — pass_failed.
-  Touchdown! away crosses the line. Score is now 0-2.
-Half 2 • Turn 3 — home in possession at yardline 4 (score 0-2)
-  BLOCK — home-LOS blocks away-LOS: dice [POW/PLAYER_DOWN], chose PLAYER_DOWN, attacker_down.
-  TURNOVER — block_attacker_down.
-  Touchdown! away crosses the line. Score is now 0-3.
-Half 2 • Turn 4 — home in possession at yardline 4 (score 0-3)
-Half 2 • Turn 5 — home in possession at yardline 4 (score 0-3)
-  ✨ NUFFLE [cheering_section] — A new cheering section ignites — the home team feels invincible.
-  Touchdown! home crosses the line. Score is now 1-3.
-Half 2 • Turn 6 — away in possession at yardline 4 (score 1-3)
-  DODGE — away-LOS dodges to (13,7): needs 3+, rolled 2 → fail.
-  TURNOVER — dodge_failed.
-  Touchdown! home crosses the line. Score is now 2-3.
-Half 2 • Turn 7 — away in possession at yardline 4 (score 2-3)
-  PASS — away-LOS attempts a short pass: needs 5+, rolled 3 → failed.
-  TURNOVER — pass_failed.
-Half 2 • Turn 8 — home in possession at yardline 7 (score 2-3)
-  DODGE — home-LOS dodges to (13,7): needs 2+, rolled 3 → success.
+[T+04:15] Half 2 • Turn 1 — home in possession at yardline 4 (score 0-1)
+  [T+04:15] ✨ NUFFLE [sudden_inspiration] — A player is struck by sudden inspiration and grows half a foot.
+  [T+04:15] DODGE — home-LOS dodges to (13,7): needs 2+, rolled 6 → success.
+[T+04:45] Half 2 • Turn 2 — home in possession at yardline 7 (score 0-1) (drive +3 yds)
+  [T+04:45] PASS — home-LOS attempts a short pass: needs 4+, rolled 3 → failed.
+  [T+04:45] TURNOVER — pass_failed.
+  [T+04:45] Touchdown! away crosses the line. Score is now 0-2.
+[T+05:15] Half 2 • Turn 3 — home in possession at yardline 4 (score 0-2) (drive -3 yds)
+  [T+05:15] BLOCK — home-LOS blocks away-LOS: dice [POW/PLAYER_DOWN], chose PLAYER_DOWN, attacker_down.
+  [T+05:15] TURNOVER — block_attacker_down.
+  [T+05:15] Touchdown! away crosses the line. Score is now 0-3.
+[T+05:45] Half 2 • Turn 4 — home in possession at yardline 4 (score 0-3)
+[T+06:15] Half 2 • Turn 5 — home in possession at yardline 4 (score 0-3)
+  [T+06:15] ✨ NUFFLE [cheering_section] — A new cheering section ignites — the home team feels invincible.
+  [T+06:15] Touchdown! home crosses the line. Score is now 1-3.
+[T+06:45] Half 2 • Turn 6 — away in possession at yardline 4 (score 1-3)
+  [T+06:45] DODGE — away-LOS dodges to (13,7): needs 3+, rolled 2 → fail.
+  [T+06:45] TURNOVER — dodge_failed.
+  [T+06:45] Touchdown! home crosses the line. Score is now 2-3.
+[T+07:15] Half 2 • Turn 7 — away in possession at yardline 4 (score 2-3)
+  [T+07:15] PASS — away-LOS attempts a short pass: needs 5+, rolled 3 → failed.
+  [T+07:15] TURNOVER — pass_failed.
+[T+07:45] Half 2 • Turn 8 — home in possession at yardline 7 (score 2-3)
+  [T+07:45] DODGE — home-LOS dodges to (13,7): needs 2+, rolled 3 → success.
 
 --- END OF MATCH (score 2-3) ---
 

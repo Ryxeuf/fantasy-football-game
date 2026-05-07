@@ -12,7 +12,7 @@
 | Profil | _FUMBBL veteran 312 matchs / NAF coach 2 tournois / autre_ |
 | Date d'envoi du brief | _YYYY-MM-DD_ |
 | Date de soumission | _YYYY-MM-DD_ |
-| Engine version review | `0.2.0` (cf. `packages/sim-engine/CHANGELOG.md`) |
+| Engine version review | `0.13.0` (cf. `packages/sim-engine/CHANGELOG.md`) |
 | Replays reviewés | _x sur 50 lus integralement, y skim_ |
 
 ## Notes (0-10 par axe)

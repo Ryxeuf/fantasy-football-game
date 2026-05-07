@@ -1,54 +1,54 @@
 === MATCH #17 — Tomb Cardinals (Tomb Kings) vs Vipers (Dark Elf) ===
 engine 0.13.0
 
-KICKOFF — phx-tomb-cardinals hosts dal-vipers (weather: nice, away receives).
-Half 1 • Turn 1 — away in possession at yardline 4 (score 0-0)
-  TURNOVER — gfi_failed.
-  Touchdown! home crosses the line. Score is now 1-0.
-Half 1 • Turn 2 — away in possession at yardline 4 (score 1-0)
-  TURNOVER — gfi_failed.
-Half 1 • Turn 3 — home in possession at yardline 10 (score 1-0)
-  FOUL — home-LOS fouls away-PRONE (armor=8, broken=false).
-Half 1 • Turn 4 — home in possession at yardline 10 (score 1-0)
-  ✨ NUFFLE [cocky_drop] — Showboating costs the carrier the ball.
-  FOUL — home-LOS fouls away-PRONE (armor=10, broken=true → stunned).
-  BLOCK — home-LOS blocks away-LOS: dice [PUSH_BACK/POW], chose POW, defender_down.
-  Touchdown! home crosses the line. Score is now 2-0.
-Half 1 • Turn 5 — away in possession at yardline 4 (score 2-0)
-  ✨ NUFFLE [banana_skin] — A banana skin appears from nowhere. A player slips spectacularly.
-  CASUALTY — home-NUFFLE-1-5 is taken off by banana_skin.
-Half 1 • Turn 6 — away in possession at yardline 4 (score 2-0)
-  ✨ NUFFLE [tantrum_star] — A star player throws a tantrum and refuses to obey instructions.
-  DODGE — away-LOS dodges to (13,7): needs 3+, rolled 4 → success.
-Half 1 • Turn 7 — away in possession at yardline 7 (score 2-0)
-  DODGE — away-LOS dodges to (13,7) (rerolled): needs 3+, rolled 2 → success.
-Half 1 • Turn 8 — away in possession at yardline 9 (score 2-0)
-  FOUL — away-LOS fouls home-PRONE (armor=5, broken=false).
+[T+00:00] KICKOFF — phx-tomb-cardinals hosts dal-vipers (weather: nice, away receives).
+[T+00:00] Half 1 • Turn 1 — away in possession at yardline 4 (score 0-0)
+  [T+00:00] TURNOVER — gfi_failed.
+  [T+00:00] Touchdown! home crosses the line. Score is now 1-0.
+[T+00:30] Half 1 • Turn 2 — away in possession at yardline 4 (score 1-0)
+  [T+00:30] TURNOVER — gfi_failed.
+[T+01:00] Half 1 • Turn 3 — home in possession at yardline 10 (score 1-0)
+  [T+01:00] FOUL — home-LOS fouls away-PRONE (armor=8, broken=false).
+[T+01:30] Half 1 • Turn 4 — home in possession at yardline 10 (score 1-0)
+  [T+01:30] ✨ NUFFLE [cocky_drop] — Showboating costs the carrier the ball.
+  [T+01:30] FOUL — home-LOS fouls away-PRONE (armor=10, broken=true → stunned).
+  [T+01:30] BLOCK — home-LOS blocks away-LOS: dice [PUSH_BACK/POW], chose POW, defender_down.
+  [T+01:30] Touchdown! home crosses the line. Score is now 2-0.
+[T+02:00] Half 1 • Turn 5 — away in possession at yardline 4 (score 2-0)
+  [T+02:00] ✨ NUFFLE [banana_skin] — A banana skin appears from nowhere. A player slips spectacularly.
+  [T+02:00] CASUALTY — home-NUFFLE-1-5 is taken off by banana_skin.
+[T+02:30] Half 1 • Turn 6 — away in possession at yardline 4 (score 2-0)
+  [T+02:30] ✨ NUFFLE [tantrum_star] — A star player throws a tantrum and refuses to obey instructions.
+  [T+02:30] DODGE — away-LOS dodges to (13,7): needs 3+, rolled 4 → success.
+[T+03:00] Half 1 • Turn 7 — away in possession at yardline 7 (score 2-0) (drive +3 yds)
+  [T+03:00] DODGE — away-LOS dodges to (13,7) (rerolled): needs 3+, rolled 2 → success.
+[T+03:30] Half 1 • Turn 8 — away in possession at yardline 9 (score 2-0) (drive +2 yds)
+  [T+03:30] FOUL — away-LOS fouls home-PRONE (armor=5, broken=false).
 
 --- HALFTIME (score 2-0) ---
 
-Half 2 • Turn 1 — home in possession at yardline 4 (score 2-0)
-  BLOCK — home-LOS blocks away-LOS: dice [STUMBLE/BOTH_DOWN], chose PUSH_BACK, push_only.
-Half 2 • Turn 2 — home in possession at yardline 8 (score 2-0)
-  ✨ NUFFLE [ref_blunder] — The ref makes a baffling call — the crowd boos.
-  FOUL — home-LOS fouls away-PRONE (armor=4, broken=false).
-Half 2 • Turn 3 — home in possession at yardline 10 (score 2-0)
-  TURNOVER — gfi_failed.
-Half 2 • Turn 4 — away in possession at yardline 7 (score 2-0)
-  BLOCK — away-LOS blocks home-LOS: dice [PLAYER_DOWN/PLAYER_DOWN], chose PLAYER_DOWN, attacker_down.
-  TURNOVER — block_attacker_down.
-Half 2 • Turn 5 — home in possession at yardline 4 (score 2-0)
-  BLOCK — home-LOS blocks away-LOS: dice [STUMBLE/PUSH_BACK], chose PUSH_BACK, push_only.
-  Touchdown! home crosses the line. Score is now 3-0.
-Half 2 • Turn 6 — away in possession at yardline 4 (score 3-0)
-  ✨ NUFFLE [weather_shift] — The Nuffle Gods stir the clouds. Weather shifts.
-  PASS — away-LOS attempts a short pass: needs 5+, rolled 1 (fumble!) → failed.
-  TURNOVER — pass_fumble.
-Half 2 • Turn 7 — home in possession at yardline 7 (score 3-0)
-  PASS — home-LOS attempts a short pass: needs 5+, rolled 6 → caught.
-  Touchdown! home crosses the line. Score is now 4-0.
-Half 2 • Turn 8 — away in possession at yardline 4 (score 4-0)
-  Touchdown! away crosses the line. Score is now 4-1.
+[T+04:15] Half 2 • Turn 1 — home in possession at yardline 4 (score 2-0)
+  [T+04:15] BLOCK — home-LOS blocks away-LOS: dice [STUMBLE/BOTH_DOWN], chose PUSH_BACK, push_only.
+[T+04:45] Half 2 • Turn 2 — home in possession at yardline 8 (score 2-0) (drive +4 yds)
+  [T+04:45] ✨ NUFFLE [ref_blunder] — The ref makes a baffling call — the crowd boos.
+  [T+04:45] FOUL — home-LOS fouls away-PRONE (armor=4, broken=false).
+[T+05:15] Half 2 • Turn 3 — home in possession at yardline 10 (score 2-0) (drive +2 yds)
+  [T+05:15] TURNOVER — gfi_failed.
+[T+05:45] Half 2 • Turn 4 — away in possession at yardline 7 (score 2-0)
+  [T+05:45] BLOCK — away-LOS blocks home-LOS: dice [PLAYER_DOWN/PLAYER_DOWN], chose PLAYER_DOWN, attacker_down.
+  [T+05:45] TURNOVER — block_attacker_down.
+[T+06:15] Half 2 • Turn 5 — home in possession at yardline 4 (score 2-0)
+  [T+06:15] BLOCK — home-LOS blocks away-LOS: dice [STUMBLE/PUSH_BACK], chose PUSH_BACK, push_only.
+  [T+06:15] Touchdown! home crosses the line. Score is now 3-0.
+[T+06:45] Half 2 • Turn 6 — away in possession at yardline 4 (score 3-0)
+  [T+06:45] ✨ NUFFLE [weather_shift] — The Nuffle Gods stir the clouds. Weather shifts.
+  [T+06:45] PASS — away-LOS attempts a short pass: needs 5+, rolled 1 (fumble!) → failed.
+  [T+06:45] TURNOVER — pass_fumble.
+[T+07:15] Half 2 • Turn 7 — home in possession at yardline 7 (score 3-0)
+  [T+07:15] PASS — home-LOS attempts a short pass: needs 5+, rolled 6 → caught.
+  [T+07:15] Touchdown! home crosses the line. Score is now 4-0.
+[T+07:45] Half 2 • Turn 8 — away in possession at yardline 4 (score 4-0)
+  [T+07:45] Touchdown! away crosses the line. Score is now 4-1.
 
 --- END OF MATCH (score 4-1) ---
 

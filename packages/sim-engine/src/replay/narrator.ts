@@ -1,11 +1,18 @@
 /**
- * Replay narrator — sprint Pro League 0.E.2.
+ * Replay narrator — sprint Pro League 0.E.2 (enrichi 1.F follow-up).
  *
  * Convertit la timeline d'un `SimResult` en texte narratif lisible
  * pour le panel humain BB experts (lot 0.E.3) : grille de notation
  * "lisibilite tactique, coherence drives, identite raciale, moments
  * memorables". Le narrateur n'invente rien — il reformate les events
  * 0.A.3 dans une langue accessible aux coachs FUMBBL/NAF.
+ *
+ * Enrichissement (post-merge Phase 1) :
+ *  - Prefixe `[T+MM:SS]` sur chaque event via `displayAtMs`.
+ *  - Delta de yardline entre TURN_STARTs successifs ("+7 yds").
+ *  - Annotations skills sur BLOCK (wrestle) et DODGE (tackle suppress).
+ *  - Detail armor/injury (rolls 2d6) sur KO et CASUALTY.
+ *  - Score live affiche apres chaque TD.
  *
  * Pure function : aucune I/O. Le CLI `pnpm sim:replay` (script
  * `scripts/replay.ts`) appelle ce narrateur avec les SimResults
@@ -21,6 +28,8 @@ export interface NarrateOptions {
   title?: string;
   /** Hide the FINAL score footer (useful when concatenating). */
   hideFooter?: boolean;
+  /** Hide the `[T+MM:SS]` timestamp prefix (default: shown). */
+  hideTimestamps?: boolean;
 }
 
 interface MetaShape {
@@ -37,6 +46,16 @@ function n(value: unknown, fallback = '?'): string {
   return fallback;
 }
 
+/** Format displayAtMs as `[T+MM:SS]`. */
+function formatTimestamp(displayAtMs: number): string {
+  const total = Math.max(0, Math.floor(displayAtMs / 1000));
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  const mm = String(m).padStart(2, '0');
+  const ss = String(s).padStart(2, '0');
+  return `[T+${mm}:${ss}]`;
+}
+
 function renderKickoff(ev: MatchEvent): string {
   const meta = getMeta(ev);
   const home = n(meta.home);
@@ -46,13 +65,34 @@ function renderKickoff(ev: MatchEvent): string {
   return `KICKOFF — ${home} hosts ${away} (weather: ${weather}, ${receiver} receives).`;
 }
 
-function renderTurnStart(ev: MatchEvent): string {
+interface TurnStartContext {
+  prevYardline?: number;
+  prevDrivingTeam?: string;
+}
+
+function renderTurnStart(ev: MatchEvent, ctx: TurnStartContext): string {
   const meta = getMeta(ev);
   const score = (meta.score as { home: number; away: number } | undefined) ?? {
     home: 0,
     away: 0,
   };
-  return `Half ${n(meta.half)} • Turn ${n(meta.turn)} — ${n(meta.drivingTeam)} in possession at yardline ${n(meta.ballYardline)} (score ${score.home}-${score.away})`;
+  const yardline = typeof meta.ballYardline === 'number' ? meta.ballYardline : null;
+  const drivingTeam = n(meta.drivingTeam);
+
+  let delta = '';
+  if (
+    yardline !== null &&
+    ctx.prevYardline !== undefined &&
+    ctx.prevDrivingTeam === drivingTeam
+  ) {
+    const d = yardline - ctx.prevYardline;
+    if (d !== 0) {
+      const sign = d > 0 ? '+' : '';
+      delta = ` (drive ${sign}${d} yds)`;
+    }
+  }
+
+  return `Half ${n(meta.half)} • Turn ${n(meta.turn)} — ${drivingTeam} in possession at yardline ${n(meta.ballYardline)} (score ${score.home}-${score.away})${delta}`;
 }
 
 function renderBlock(ev: MatchEvent): string {
@@ -67,7 +107,8 @@ function renderBlock(ev: MatchEvent): string {
   const dice = (meta.rolls as string[] | undefined)?.join('/') ?? '?';
   const chosen = n(meta.chosen);
   const resolution = n(meta.resolution);
-  return `  BLOCK — ${n(meta.attackerId)} blocks ${n(meta.defenderId)}: dice [${dice}], chose ${chosen}, ${resolution}.`;
+  const wrestle = meta.useWrestle === true ? ', wrestled' : '';
+  return `  BLOCK — ${n(meta.attackerId)} blocks ${n(meta.defenderId)}: dice [${dice}], chose ${chosen}, ${resolution}${wrestle}.`;
 }
 
 function renderDodge(ev: MatchEvent): string {
@@ -76,7 +117,9 @@ function renderDodge(ev: MatchEvent): string {
   const target = n(meta.target);
   const roll = n(meta.roll);
   const reroll = meta.usedReroll === true ? ' (rerolled)' : '';
-  return `  DODGE — ${n(meta.playerId)} dodges to ${formatPos(meta.to)}${reroll}: needs ${target}+, rolled ${roll} → ${success ? 'success' : 'fail'}.`;
+  const tackleNote =
+    meta.rerollSuppressedByTackle === true ? ' [tackle blocks reroll]' : '';
+  return `  DODGE — ${n(meta.playerId)} dodges to ${formatPos(meta.to)}${reroll}${tackleNote}: needs ${target}+, rolled ${roll} → ${success ? 'success' : 'fail'}.`;
 }
 
 function renderPass(ev: MatchEvent): string {
@@ -107,12 +150,18 @@ function renderTurnover(ev: MatchEvent): string {
 
 function renderKO(ev: MatchEvent): string {
   const meta = getMeta(ev);
-  return `  KO — ${n(meta.playerId)} is knocked unconscious${meta.causedBy ? ` by ${n(meta.causedBy)}` : ''}.`;
+  const armor = typeof meta.armor === 'number' ? ` (armor=${meta.armor}` : '';
+  const injury =
+    typeof meta.injury === 'number' ? `, injury=${meta.injury})` : armor ? ')' : '';
+  return `  KO — ${n(meta.playerId)} is knocked unconscious${meta.causedBy ? ` by ${n(meta.causedBy)}` : ''}${armor}${injury}.`;
 }
 
 function renderCasualty(ev: MatchEvent): string {
   const meta = getMeta(ev);
-  return `  CASUALTY — ${n(meta.playerId)} is taken off${meta.causedBy ? ` by ${n(meta.causedBy)}` : ''}.`;
+  const armor = typeof meta.armor === 'number' ? ` (armor=${meta.armor}` : '';
+  const injury =
+    typeof meta.injury === 'number' ? `, injury=${meta.injury})` : armor ? ')' : '';
+  return `  CASUALTY — ${n(meta.playerId)} is taken off${meta.causedBy ? ` by ${n(meta.causedBy)}` : ''}${armor}${injury}.`;
 }
 
 function renderNuffle(ev: MatchEvent): string {
@@ -153,12 +202,12 @@ function formatPos(value: unknown): string {
   return '?';
 }
 
-function renderEvent(ev: MatchEvent): string {
+function renderEvent(ev: MatchEvent, ctx: TurnStartContext): string {
   switch (ev.type) {
     case 'KICKOFF':
       return renderKickoff(ev);
     case 'TURN_START':
-      return renderTurnStart(ev);
+      return renderTurnStart(ev, ctx);
     case 'BLOCK':
       return renderBlock(ev);
     case 'DODGE':
@@ -184,7 +233,26 @@ function renderEvent(ev: MatchEvent): string {
   }
 }
 
+/** Apply optional `[T+MM:SS]` prefix. Skips on pure separator lines
+ *  (HALFTIME / END which start with a blank line). */
+function withTimestamp(
+  line: string,
+  ev: MatchEvent,
+  showTimestamp: boolean,
+): string {
+  if (!showTimestamp) return line;
+  if (line.startsWith('\n')) return line;
+  const ts = formatTimestamp(ev.displayAtMs);
+  // Indented event lines : `  BLOCK — ...` becomes `  [T+00:30] BLOCK — ...`.
+  if (line.startsWith('  ')) {
+    return `  ${ts} ${line.slice(2)}`;
+  }
+  // Non-indented (KICKOFF, TURN_START) : `[T+00:30] KICKOFF — ...`.
+  return `${ts} ${line}`;
+}
+
 export function narrateMatch(result: SimResult, options: NarrateOptions = {}): string {
+  const showTimestamps = options.hideTimestamps !== true;
   const lines: string[] = [];
 
   // Header — extract team names from the KICKOFF event meta when possible.
@@ -201,8 +269,19 @@ export function narrateMatch(result: SimResult, options: NarrateOptions = {}): s
 
   // Body : one line per event, grouped by turn (the TURN_START line is a
   // mini header ; subsequent events are indented inside it).
+  const ctx: TurnStartContext = {};
   for (const ev of result.events) {
-    lines.push(renderEvent(ev));
+    const raw = renderEvent(ev, ctx);
+    lines.push(withTimestamp(raw, ev, showTimestamps));
+    if (ev.type === 'TURN_START') {
+      const m = getMeta(ev);
+      if (typeof m.ballYardline === 'number') {
+        ctx.prevYardline = m.ballYardline;
+      }
+      if (typeof m.drivingTeam === 'string') {
+        ctx.prevDrivingTeam = m.drivingTeam;
+      }
+    }
   }
 
   if (!options.hideFooter) {

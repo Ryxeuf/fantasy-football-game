@@ -91,4 +91,44 @@ describe('narrateMatch — sprint Pro League 0.E.2', () => {
     const b = narrateMatch(simulateMatch(baseInput({ seed: 7 })));
     expect(b).toBe(a);
   });
+
+  it('prefixes event lines with [T+MM:SS] timestamps by default', () => {
+    const out = narrateMatch(simulateMatch(baseInput()));
+    // KICKOFF is the first event at displayAtMs=0.
+    expect(out).toMatch(/\[T\+00:00\] KICKOFF/);
+    // At least one TURN_START after kickoff carries a non-zero timestamp.
+    expect(out).toMatch(/\[T\+\d{2}:\d{2}\] Half \d+ • Turn \d+/);
+  });
+
+  it('honours hideTimestamps=true to drop the [T+MM:SS] prefix', () => {
+    const out = narrateMatch(simulateMatch(baseInput()), {
+      hideTimestamps: true,
+    });
+    expect(out).not.toMatch(/\[T\+\d{2}:\d{2}\]/);
+    // The events themselves are still rendered.
+    expect(out).toMatch(/KICKOFF/);
+  });
+
+  it('renders ball-yardline delta on consecutive TURN_STARTs same drive', () => {
+    // Run several seeds until at least one match shows a "(drive ±N yds)"
+    // annotation — guaranteed when 2+ TURN_STARTs share the same driving
+    // team and the ball moved.
+    let withDelta: string | null = null;
+    for (let seed = 0; seed < 30 && withDelta === null; seed += 1) {
+      const out = narrateMatch(simulateMatch(baseInput({ seed })));
+      if (/\(drive [+-]\d+ yds\)/.test(out)) withDelta = out;
+    }
+    expect(withDelta).not.toBeNull();
+  });
+
+  it('exposes armor + injury detail on KO and CASUALTY when available', () => {
+    let withDetail: string | null = null;
+    for (let seed = 0; seed < 50 && withDetail === null; seed += 1) {
+      const out = narrateMatch(simulateMatch(baseInput({ seed })));
+      if (/(KO|CASUALTY) — .* \(armor=\d+, injury=\d+\)/.test(out)) {
+        withDetail = out;
+      }
+    }
+    expect(withDetail).not.toBeNull();
+  });
 });

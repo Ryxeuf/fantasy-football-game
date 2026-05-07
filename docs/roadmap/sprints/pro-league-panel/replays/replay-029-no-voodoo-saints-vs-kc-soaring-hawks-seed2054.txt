@@ -1,60 +1,60 @@
 === MATCH #29 — Voodoo Saints (Undead) vs Soaring Hawks (Wood Elf) ===
 engine 0.13.0
 
-KICKOFF — no-voodoo-saints hosts kc-soaring-hawks (weather: nice, away receives).
-Half 1 • Turn 1 — away in possession at yardline 4 (score 0-0)
-  ✨ NUFFLE [unhappy_fans] — Unhappy fans throw rotten produce at their own stars.
-  DODGE — away-LOS dodges to (13,7): needs 3+, rolled 5 → success.
-Half 1 • Turn 2 — away in possession at yardline 4 (score 0-0)
-  DODGE — away-LOS dodges to (13,7): needs 3+, rolled 5 → success.
-Half 1 • Turn 3 — away in possession at yardline 10 (score 0-0)
-  BLOCK — away-LOS blocks home-LOS: dice [PUSH_BACK/BOTH_DOWN], chose BOTH_DOWN, both_down.
-  TURNOVER — block_attacker_down.
-Half 1 • Turn 4 — home in possession at yardline 5 (score 0-0)
-  ✨ NUFFLE [sudden_inspiration] — A player is struck by sudden inspiration and grows half a foot.
-Half 1 • Turn 5 — home in possession at yardline 5 (score 0-0)
-  TURNOVER — pickup_failed.
-Half 1 • Turn 6 — away in possession at yardline 4 (score 0-0)
-  ✨ NUFFLE [banana_skin] — A banana skin appears from nowhere. A player slips spectacularly.
-  CASUALTY — home-NUFFLE-1-6 is taken off by banana_skin.
-  BLOCK — away-LOS blocks home-LOS: dice [PLAYER_DOWN/PUSH_BACK], chose PLAYER_DOWN, attacker_down.
-  TURNOVER — block_attacker_down.
-Half 1 • Turn 7 — home in possession at yardline 4 (score 0-0)
-  ✨ NUFFLE [banana_skin] — A banana skin appears from nowhere. A player slips spectacularly.
-  CASUALTY — away-NUFFLE-1-7 is taken off by banana_skin.
-  FOUL — home-LOS fouls away-PRONE (armor=7, broken=false, sent off!).
-  TURNOVER — foul_sent_off.
-  Touchdown! away crosses the line. Score is now 0-1.
-Half 1 • Turn 8 — home in possession at yardline 4 (score 0-1)
-  PASS — home-LOS attempts a short pass: needs 5+, rolled 4 → failed.
-  TURNOVER — pass_failed.
+[T+00:00] KICKOFF — no-voodoo-saints hosts kc-soaring-hawks (weather: nice, away receives).
+[T+00:00] Half 1 • Turn 1 — away in possession at yardline 4 (score 0-0)
+  [T+00:00] ✨ NUFFLE [unhappy_fans] — Unhappy fans throw rotten produce at their own stars.
+  [T+00:00] DODGE — away-LOS dodges to (13,7): needs 3+, rolled 5 → success.
+[T+00:30] Half 1 • Turn 2 — away in possession at yardline 4 (score 0-0)
+  [T+00:30] DODGE — away-LOS dodges to (13,7): needs 3+, rolled 5 → success.
+[T+01:00] Half 1 • Turn 3 — away in possession at yardline 10 (score 0-0) (drive +6 yds)
+  [T+01:00] BLOCK — away-LOS blocks home-LOS: dice [PUSH_BACK/BOTH_DOWN], chose BOTH_DOWN, both_down.
+  [T+01:00] TURNOVER — block_attacker_down.
+[T+01:30] Half 1 • Turn 4 — home in possession at yardline 5 (score 0-0)
+  [T+01:30] ✨ NUFFLE [sudden_inspiration] — A player is struck by sudden inspiration and grows half a foot.
+[T+02:00] Half 1 • Turn 5 — home in possession at yardline 5 (score 0-0)
+  [T+02:00] TURNOVER — pickup_failed.
+[T+02:30] Half 1 • Turn 6 — away in possession at yardline 4 (score 0-0)
+  [T+02:30] ✨ NUFFLE [banana_skin] — A banana skin appears from nowhere. A player slips spectacularly.
+  [T+02:30] CASUALTY — home-NUFFLE-1-6 is taken off by banana_skin.
+  [T+02:30] BLOCK — away-LOS blocks home-LOS: dice [PLAYER_DOWN/PUSH_BACK], chose PLAYER_DOWN, attacker_down.
+  [T+02:30] TURNOVER — block_attacker_down.
+[T+03:00] Half 1 • Turn 7 — home in possession at yardline 4 (score 0-0)
+  [T+03:00] ✨ NUFFLE [banana_skin] — A banana skin appears from nowhere. A player slips spectacularly.
+  [T+03:00] CASUALTY — away-NUFFLE-1-7 is taken off by banana_skin.
+  [T+03:00] FOUL — home-LOS fouls away-PRONE (armor=7, broken=false, sent off!).
+  [T+03:00] TURNOVER — foul_sent_off.
+  [T+03:00] Touchdown! away crosses the line. Score is now 0-1.
+[T+03:30] Half 1 • Turn 8 — home in possession at yardline 4 (score 0-1)
+  [T+03:30] PASS — home-LOS attempts a short pass: needs 5+, rolled 4 → failed.
+  [T+03:30] TURNOVER — pass_failed.
 
 --- HALFTIME (score 0-1) ---
 
-Half 2 • Turn 1 — home in possession at yardline 4 (score 0-1)
-  ✨ NUFFLE [apprentice_wizard_spotted] — An apprentice wizard sneaks a Lightning Bolt into play.
-  TURNOVER — pickup_failed.
-Half 2 • Turn 2 — away in possession at yardline 9 (score 0-1)
-  TURNOVER — pickup_failed.
-Half 2 • Turn 3 — home in possession at yardline 12 (score 0-1)
-  BLOCK — home-LOS blocks away-LOS: dice [STUMBLE/PUSH_BACK], chose PUSH_BACK, push_only.
-  DODGE — home-LOS dodges to (13,7): needs 3+, rolled 6 → success.
-  Touchdown! home crosses the line. Score is now 1-1.
-Half 2 • Turn 4 — away in possession at yardline 4 (score 1-1)
-Half 2 • Turn 5 — away in possession at yardline 8 (score 1-1)
-  Touchdown! away crosses the line. Score is now 1-2.
-Half 2 • Turn 6 — home in possession at yardline 4 (score 1-2)
-  ✨ NUFFLE [rookie_brilliance] — A rookie pulls off a play above their stats — Nuffle smiles.
-  BLOCK — home-LOS blocks away-LOS: dice [STUMBLE/BOTH_DOWN], chose PUSH_BACK, push_only.
-  DODGE — home-LOS dodges to (13,7): needs 3+, rolled 2 → fail.
-  TURNOVER — dodge_failed.
-Half 2 • Turn 7 — away in possession at yardline 7 (score 1-2)
-  PASS — away-LOS attempts a short pass: needs 5+, rolled 2 (fumble!) → failed.
-  TURNOVER — pass_failed.
-Half 2 • Turn 8 — home in possession at yardline 10 (score 1-2)
-  ✨ NUFFLE [cheering_section] — A new cheering section ignites — the home team feels invincible.
-  DODGE — home-LOS dodges to (13,7): needs 3+, rolled 6 → success.
-  Touchdown! home crosses the line. Score is now 2-2.
+[T+04:15] Half 2 • Turn 1 — home in possession at yardline 4 (score 0-1)
+  [T+04:15] ✨ NUFFLE [apprentice_wizard_spotted] — An apprentice wizard sneaks a Lightning Bolt into play.
+  [T+04:15] TURNOVER — pickup_failed.
+[T+04:45] Half 2 • Turn 2 — away in possession at yardline 9 (score 0-1)
+  [T+04:45] TURNOVER — pickup_failed.
+[T+05:15] Half 2 • Turn 3 — home in possession at yardline 12 (score 0-1)
+  [T+05:15] BLOCK — home-LOS blocks away-LOS: dice [STUMBLE/PUSH_BACK], chose PUSH_BACK, push_only.
+  [T+05:15] DODGE — home-LOS dodges to (13,7): needs 3+, rolled 6 → success.
+  [T+05:15] Touchdown! home crosses the line. Score is now 1-1.
+[T+05:45] Half 2 • Turn 4 — away in possession at yardline 4 (score 1-1)
+[T+06:15] Half 2 • Turn 5 — away in possession at yardline 8 (score 1-1) (drive +4 yds)
+  [T+06:15] Touchdown! away crosses the line. Score is now 1-2.
+[T+06:45] Half 2 • Turn 6 — home in possession at yardline 4 (score 1-2)
+  [T+06:45] ✨ NUFFLE [rookie_brilliance] — A rookie pulls off a play above their stats — Nuffle smiles.
+  [T+06:45] BLOCK — home-LOS blocks away-LOS: dice [STUMBLE/BOTH_DOWN], chose PUSH_BACK, push_only.
+  [T+06:45] DODGE — home-LOS dodges to (13,7): needs 3+, rolled 2 → fail.
+  [T+06:45] TURNOVER — dodge_failed.
+[T+07:15] Half 2 • Turn 7 — away in possession at yardline 7 (score 1-2)
+  [T+07:15] PASS — away-LOS attempts a short pass: needs 5+, rolled 2 (fumble!) → failed.
+  [T+07:15] TURNOVER — pass_failed.
+[T+07:45] Half 2 • Turn 8 — home in possession at yardline 10 (score 1-2)
+  [T+07:45] ✨ NUFFLE [cheering_section] — A new cheering section ignites — the home team feels invincible.
+  [T+07:45] DODGE — home-LOS dodges to (13,7): needs 3+, rolled 6 → success.
+  [T+07:45] Touchdown! home crosses the line. Score is now 2-2.
 
 --- END OF MATCH (score 2-2) ---
 
