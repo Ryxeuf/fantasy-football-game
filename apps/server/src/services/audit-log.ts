@@ -27,6 +27,7 @@ import { Prisma, type PrismaClient } from "@prisma/client";
 import type { Request } from "express";
 
 import type { AuthenticatedRequest } from "../middleware/authUser";
+import { serverLog } from "../utils/server-log";
 
 export interface RecordAdminActionInput {
   /** Admin qui declenche l'action. `null` = job systeme (cron). */
@@ -115,4 +116,26 @@ export async function recordAdminActionFromRequest(
     ipAddress: ctx.ipAddress,
     userAgent: ctx.userAgent,
   });
+}
+
+/**
+ * S27.6.4 — Wrapper resilient autour de `recordAdminActionFromRequest`
+ * partage par toutes les routes admin (`admin.ts`, `admin-data.ts`).
+ *
+ * Une defaillance de l'audit log NE DOIT PAS faire echouer la mutation
+ * deja committee : l'erreur est loggee via `serverLog` (ou un logger
+ * injecte pour les tests) puis swallowee.
+ */
+export async function safeRecordAdminActionFromRequest(
+  prisma: PrismaClient,
+  req: AuthenticatedRequest,
+  partial: Omit<RecordAdminActionInput, "userId" | "ipAddress" | "userAgent">,
+  options?: { logError?: (message: string, err: unknown) => void },
+): Promise<void> {
+  try {
+    await recordAdminActionFromRequest(prisma, req, partial);
+  } catch (err) {
+    const log = options?.logError ?? ((m, e) => serverLog.error(m, e));
+    log("[audit] Failed to record admin action", err);
+  }
 }

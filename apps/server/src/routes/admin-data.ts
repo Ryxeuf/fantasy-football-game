@@ -29,10 +29,27 @@ import {
   updateStarPlayerDataSchema,
 } from "../schemas/admin-data.schemas";
 import { serverLog } from "../utils/server-log";
+import {
+  safeRecordAdminActionFromRequest,
+  type RecordAdminActionInput,
+} from "../services/audit-log";
+import type { AuthenticatedRequest } from "../middleware/authUser";
 
 const router = Router();
 
 router.use(authUser, adminOnly);
+
+/**
+ * S27.6.4 — Wrapper local autour de `safeRecordAdminActionFromRequest`
+ * pour reduire le boilerplate sur chaque route admin/data. Les erreurs
+ * d'audit sont swallowees (le log reste cote ops via serverLog).
+ */
+async function safeAudit(
+  req: AuthenticatedRequest,
+  partial: Omit<RecordAdminActionInput, "userId" | "ipAddress" | "userAgent">,
+): Promise<void> {
+  await safeRecordAdminActionFromRequest(prisma, req, partial);
+}
 
 // =============================================================================
 // SKILLS (Compétences)
@@ -102,6 +119,12 @@ router.post("/skills", validate(createSkillSchema), async (req, res) => {
     const skill = await prisma.skill.create({
       data: { slug, ruleset, nameFr, nameEn, description, descriptionEn: descriptionEn || null, category },
     });
+    await safeAudit(req, {
+      action: "skill.create",
+      entity: "Skill",
+      entityId: skill.id,
+      newValue: { slug: skill.slug, ruleset: skill.ruleset, category: skill.category },
+    });
     res.status(201).json({ skill });
   } catch (error: any) {
     if (error.code === "P2002") {
@@ -115,13 +138,13 @@ router.post("/skills", validate(createSkillSchema), async (req, res) => {
 router.put("/skills/:id", validate(updateSkillSchema), async (req, res) => {
   try {
     const { nameFr, nameEn, description, descriptionEn, category, ruleset: rawRuleset, isElite, isPassive, isModified } = req.body;
-    
-    const data: any = { 
-      nameFr, 
-      nameEn, 
-      description, 
-      descriptionEn: descriptionEn || null, 
-      category 
+
+    const data: any = {
+      nameFr,
+      nameEn,
+      description,
+      descriptionEn: descriptionEn || null,
+      category
     };
 
     if (rawRuleset) {
@@ -139,9 +162,39 @@ router.put("/skills/:id", validate(updateSkillSchema), async (req, res) => {
       data.isModified = isModified;
     }
 
+    const previous = await prisma.skill.findUnique({
+      where: { id: req.params.id },
+      select: {
+        slug: true,
+        ruleset: true,
+        nameFr: true,
+        nameEn: true,
+        category: true,
+        isElite: true,
+        isPassive: true,
+        isModified: true,
+      },
+    });
+
     const skill = await prisma.skill.update({
       where: { id: req.params.id },
       data,
+    });
+    await safeAudit(req, {
+      action: "skill.update",
+      entity: "Skill",
+      entityId: skill.id,
+      oldValue: previous,
+      newValue: {
+        slug: skill.slug,
+        ruleset: skill.ruleset,
+        nameFr: skill.nameFr,
+        nameEn: skill.nameEn,
+        category: skill.category,
+        isElite: skill.isElite,
+        isPassive: skill.isPassive,
+        isModified: skill.isModified,
+      },
     });
     res.json({ skill });
   } catch (error: any) {
@@ -199,7 +252,15 @@ router.post("/skills/:id/duplicate", validate(duplicateToRulesetSchema), async (
       },
     });
 
-    res.status(201).json({ 
+    await safeAudit(req, {
+      action: "skill.duplicate",
+      entity: "Skill",
+      entityId: newSkill.id,
+      oldValue: { sourceId: sourceSkill.id, sourceRuleset: sourceSkill.ruleset, slug: sourceSkill.slug },
+      newValue: { slug: newSkill.slug, ruleset: newSkill.ruleset, category: newSkill.category },
+    });
+
+    res.status(201).json({
       skill: newSkill,
       message: `Compétence dupliquée avec succès vers ${newRuleset}`,
     });
@@ -211,8 +272,18 @@ router.post("/skills/:id/duplicate", validate(duplicateToRulesetSchema), async (
 
 router.delete("/skills/:id", async (req, res) => {
   try {
+    const previous = await prisma.skill.findUnique({
+      where: { id: req.params.id },
+      select: { id: true, slug: true, ruleset: true, category: true, nameFr: true },
+    });
     await prisma.skill.delete({
       where: { id: req.params.id },
+    });
+    await safeAudit(req, {
+      action: "skill.delete",
+      entity: "Skill",
+      entityId: req.params.id,
+      oldValue: previous,
     });
     res.json({ success: true });
   } catch (error: any) {
@@ -340,19 +411,25 @@ router.post("/rosters", validate(createRosterSchema), async (req, res) => {
     const regionalRulesJson = regionalRules ? JSON.stringify(regionalRules) : null;
 
     const roster = await prisma.roster.create({
-      data: { 
-        slug, 
+      data: {
+        slug,
         ruleset,
-        name, 
-        nameEn, 
+        name,
+        nameEn,
         descriptionFr: descriptionFr || null,
         descriptionEn: descriptionEn || null,
-        budget, 
-        tier, 
+        budget,
+        tier,
         regionalRules: regionalRulesJson,
         specialRules: specialRules || null,
-        naf: naf || false 
+        naf: naf || false
       },
+    });
+    await safeAudit(req, {
+      action: "roster.create",
+      entity: "Roster",
+      entityId: roster.id,
+      newValue: { slug: roster.slug, ruleset: roster.ruleset, name: roster.name, tier: roster.tier },
     });
     res.status(201).json({ roster });
   } catch (error: any) {
@@ -396,9 +473,37 @@ router.put("/rosters/:id", validate(updateRosterSchema), async (req, res) => {
       data.ruleset = resolveRuleset(rawRuleset);
     }
 
+    const previous = await prisma.roster.findUnique({
+      where: { id: req.params.id },
+      select: {
+        slug: true,
+        ruleset: true,
+        name: true,
+        nameEn: true,
+        budget: true,
+        tier: true,
+        naf: true,
+      },
+    });
+
     const roster = await prisma.roster.update({
       where: { id: req.params.id },
       data,
+    });
+    await safeAudit(req, {
+      action: "roster.update",
+      entity: "Roster",
+      entityId: roster.id,
+      oldValue: previous,
+      newValue: {
+        slug: roster.slug,
+        ruleset: roster.ruleset,
+        name: roster.name,
+        nameEn: roster.nameEn,
+        budget: roster.budget,
+        tier: roster.tier,
+        naf: roster.naf,
+      },
     });
     res.json({ roster });
   } catch (error: any) {
@@ -496,7 +601,15 @@ router.post("/rosters/:id/duplicate", validate(duplicateToRulesetSchema), async 
       }
     }
 
-    res.status(201).json({ 
+    await safeAudit(req, {
+      action: "roster.duplicate",
+      entity: "Roster",
+      entityId: newRoster.id,
+      oldValue: { sourceId: sourceRoster.id, sourceRuleset: sourceRoster.ruleset, slug: sourceRoster.slug },
+      newValue: { slug: newRoster.slug, ruleset: newRoster.ruleset, positionCount: sourceRoster.positions.length },
+    });
+
+    res.status(201).json({
       roster: newRoster,
       message: `Roster dupliqué avec succès vers ${newRuleset}`,
     });
@@ -508,8 +621,18 @@ router.post("/rosters/:id/duplicate", validate(duplicateToRulesetSchema), async 
 
 router.delete("/rosters/:id", async (req, res) => {
   try {
+    const previous = await prisma.roster.findUnique({
+      where: { id: req.params.id },
+      select: { id: true, slug: true, ruleset: true, name: true, tier: true },
+    });
     await prisma.roster.delete({
       where: { id: req.params.id },
+    });
+    await safeAudit(req, {
+      action: "roster.delete",
+      entity: "Roster",
+      entityId: req.params.id,
+      oldValue: previous,
     });
     res.json({ success: true });
   } catch (error: any) {
@@ -626,6 +749,18 @@ router.post("/positions", validate(createPositionSchema), async (req, res) => {
         },
       },
     });
+    await safeAudit(req, {
+      action: "position.create",
+      entity: "Position",
+      entityId: position.id,
+      newValue: {
+        rosterId: position.rosterId,
+        slug: position.slug,
+        displayName: position.displayName,
+        cost: position.cost,
+        skillCount: position.skills.length,
+      },
+    });
     res.status(201).json({ position });
   } catch (error: any) {
     if (error.code === "P2002") {
@@ -639,7 +774,23 @@ router.post("/positions", validate(createPositionSchema), async (req, res) => {
 router.put("/positions/:id", validate(updatePositionSchema), async (req, res) => {
   try {
     const { displayName, cost, min, max, ma, st, ag, pa, av, keywords, skillSlugs } = req.body;
-    
+
+    const previous = await prisma.position.findUnique({
+      where: { id: req.params.id },
+      select: {
+        slug: true,
+        displayName: true,
+        cost: true,
+        min: true,
+        max: true,
+        ma: true,
+        st: true,
+        ag: true,
+        pa: true,
+        av: true,
+      },
+    });
+
     // Supprimer les anciennes relations de compétences
     await prisma.positionSkill.deleteMany({
       where: { positionId: req.params.id },
@@ -671,6 +822,25 @@ router.put("/positions/:id", validate(updatePositionSchema), async (req, res) =>
         skills: {
           include: { skill: true },
         },
+      },
+    });
+    await safeAudit(req, {
+      action: "position.update",
+      entity: "Position",
+      entityId: position.id,
+      oldValue: previous,
+      newValue: {
+        slug: position.slug,
+        displayName: position.displayName,
+        cost: position.cost,
+        min: position.min,
+        max: position.max,
+        ma: position.ma,
+        st: position.st,
+        ag: position.ag,
+        pa: position.pa,
+        av: position.av,
+        skillCount: position.skills.length,
       },
     });
     res.json({ position });
@@ -748,7 +918,15 @@ router.post("/positions/:id/duplicate", validate(duplicatePositionSchema), async
       },
     });
 
-    res.status(201).json({ 
+    await safeAudit(req, {
+      action: "position.duplicate",
+      entity: "Position",
+      entityId: newPosition.id,
+      oldValue: { sourceId: sourcePosition.id, sourceRosterId: sourcePosition.rosterId, slug: sourcePosition.slug },
+      newValue: { rosterId: targetRosterId, slug: newPosition.slug, skillCount: sourcePosition.skills.length },
+    });
+
+    res.status(201).json({
       position: result,
       message: `Position dupliquée avec succès vers le roster ${targetRoster.name}`,
     });
@@ -760,8 +938,18 @@ router.post("/positions/:id/duplicate", validate(duplicatePositionSchema), async
 
 router.delete("/positions/:id", async (req, res) => {
   try {
+    const previous = await prisma.position.findUnique({
+      where: { id: req.params.id },
+      select: { id: true, rosterId: true, slug: true, displayName: true, cost: true },
+    });
     await prisma.position.delete({
       where: { id: req.params.id },
+    });
+    await safeAudit(req, {
+      action: "position.delete",
+      entity: "Position",
+      entityId: req.params.id,
+      oldValue: previous,
     });
     res.json({ success: true });
   } catch (error: any) {
@@ -872,6 +1060,18 @@ router.post("/star-players", validate(createStarPlayerDataSchema), async (req, r
         },
       },
     });
+    await safeAudit(req, {
+      action: "star-player.create",
+      entity: "StarPlayer",
+      entityId: starPlayer.id,
+      newValue: {
+        slug: starPlayer.slug,
+        displayName: starPlayer.displayName,
+        cost: starPlayer.cost,
+        skillCount: starPlayer.skills.length,
+        hirableCount: starPlayer.hirableBy.length,
+      },
+    });
     res.status(201).json({ starPlayer });
   } catch (error: any) {
     if (error.code === "P2002") {
@@ -885,7 +1085,22 @@ router.post("/star-players", validate(createStarPlayerDataSchema), async (req, r
 router.put("/star-players/:id", validate(updateStarPlayerDataSchema), async (req, res) => {
   try {
     const { displayName, cost, ma, st, ag, pa, av, specialRule, imageUrl, skillSlugs, hirableBy } = req.body;
-    
+
+    const previous = await prisma.starPlayer.findUnique({
+      where: { id: req.params.id },
+      select: {
+        slug: true,
+        displayName: true,
+        cost: true,
+        ma: true,
+        st: true,
+        ag: true,
+        pa: true,
+        av: true,
+        specialRule: true,
+      },
+    });
+
     // Supprimer les anciennes relations
     await prisma.starPlayerSkill.deleteMany({
       where: { starPlayerId: req.params.id },
@@ -932,6 +1147,25 @@ router.put("/star-players/:id", validate(updateStarPlayerDataSchema), async (req
         },
       },
     });
+    await safeAudit(req, {
+      action: "star-player.update",
+      entity: "StarPlayer",
+      entityId: starPlayer.id,
+      oldValue: previous,
+      newValue: {
+        slug: starPlayer.slug,
+        displayName: starPlayer.displayName,
+        cost: starPlayer.cost,
+        ma: starPlayer.ma,
+        st: starPlayer.st,
+        ag: starPlayer.ag,
+        pa: starPlayer.pa,
+        av: starPlayer.av,
+        specialRule: starPlayer.specialRule,
+        skillCount: starPlayer.skills.length,
+        hirableCount: starPlayer.hirableBy.length,
+      },
+    });
     res.json({ starPlayer });
   } catch (error: any) {
     if (error.code === "P2025") {
@@ -944,8 +1178,18 @@ router.put("/star-players/:id", validate(updateStarPlayerDataSchema), async (req
 
 router.delete("/star-players/:id", async (req, res) => {
   try {
+    const previous = await prisma.starPlayer.findUnique({
+      where: { id: req.params.id },
+      select: { id: true, slug: true, displayName: true, cost: true },
+    });
     await prisma.starPlayer.delete({
       where: { id: req.params.id },
+    });
+    await safeAudit(req, {
+      action: "star-player.delete",
+      entity: "StarPlayer",
+      entityId: req.params.id,
+      oldValue: previous,
     });
     res.json({ success: true });
   } catch (error: any) {
