@@ -223,4 +223,73 @@ describe("<MatchReplayPlayer> — sprint 1.G.2", () => {
     expect(items[0].textContent).toContain("END");
     expect(items[items.length - 1].textContent).toContain("KICKOFF");
   });
+
+  it("affiche les markers TD pour chaque touchdown du replay", async () => {
+    mockedRequest.mockResolvedValue(FIXTURE_DUMP);
+    render(<MatchReplayPlayer matchId="m1" />);
+    await act(async () => {
+      await Promise.resolve();
+    });
+    const tdMarkers = screen.queryAllByTestId("scrub-marker-td");
+    // FIXTURE_EVENTS contient 2 TDs.
+    expect(tdMarkers).toHaveLength(2);
+  });
+
+  it("click sur un marker TD seek vers son displayAtMs", async () => {
+    mockedRequest.mockResolvedValue(FIXTURE_DUMP);
+    render(<MatchReplayPlayer matchId="m1" />);
+    await act(async () => {
+      await Promise.resolve();
+    });
+    const tdMarkers = screen.getAllByTestId("scrub-marker-td");
+    // Premier TD = displayAtMs 90_000 (1:30). Avant click, currentMs=0 -> score 0-0.
+    expect(screen.getByTestId("replay-score").textContent).toContain("0 – 0");
+    await act(async () => {
+      fireEvent.click(tdMarkers[0]);
+    });
+    // Apres seek a 90s, le 1er TD est inclus -> score 0-1.
+    expect(screen.getByTestId("replay-score").textContent).toContain("0 – 1");
+  });
+
+  it("expose un title (tooltip) sur chaque marker", async () => {
+    mockedRequest.mockResolvedValue(FIXTURE_DUMP);
+    render(<MatchReplayPlayer matchId="m1" />);
+    await act(async () => {
+      await Promise.resolve();
+    });
+    const tdMarkers = screen.getAllByTestId("scrub-marker-td");
+    // Chaque title contient "TOUCHDOWN" + team.
+    expect(tdMarkers[0].getAttribute("title")).toMatch(/TOUCHDOWN/);
+  });
+
+  it("ne rend pas de markers si le replay n'a aucun key moment", async () => {
+    mockedRequest.mockResolvedValue({
+      ...FIXTURE_DUMP,
+      events: [
+        {
+          type: "KICKOFF",
+          displayAtMs: 0,
+          engineVer: "0.13.0",
+          meta: {},
+        } as never,
+        {
+          type: "TURN_START",
+          displayAtMs: 30_000,
+          engineVer: "0.13.0",
+          meta: { half: 1, turn: 1, drivingTeam: "home", ballYardline: 4 },
+        } as never,
+        {
+          type: "END",
+          displayAtMs: 600_000,
+          engineVer: "0.13.0",
+          meta: { score: { home: 0, away: 0 } },
+        } as never,
+      ],
+    });
+    render(<MatchReplayPlayer matchId="m1" />);
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(screen.queryByTestId("scrub-markers")).toBeNull();
+  });
 });

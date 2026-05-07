@@ -7,6 +7,10 @@ import type { MatchEvent } from "@bb/shared-types";
 
 import { apiRequest } from "../../../../lib/api-client";
 import { deriveProLeagueFieldState } from "../../../../lib/pro-league-field-state";
+import {
+  type ScrubMarker,
+  buildScrubMarkers,
+} from "../../../../lib/replay-scrub-markers";
 import { useMatchModeRedirect } from "../../../../lib/use-match-mode-redirect";
 import {
   PLAYBACK_SPEEDS,
@@ -125,6 +129,47 @@ function deriveScore(events: readonly MatchEvent[]): {
     }
   }
   return { home, away, half };
+}
+
+const MARKER_COLOR_CLASSES: Record<ScrubMarker["type"], string> = {
+  TD: "bg-emerald-500 hover:bg-emerald-300",
+  CASUALTY: "bg-rose-500 hover:bg-rose-300",
+  NUFFLE: "bg-purple-500 hover:bg-purple-300",
+};
+
+interface ScrubMarkersProps {
+  readonly markers: readonly ScrubMarker[];
+  readonly onSeek: (ms: number) => void;
+}
+
+function ScrubMarkers({
+  markers,
+  onSeek,
+}: ScrubMarkersProps): JSX.Element | null {
+  if (markers.length === 0) return null;
+  return (
+    <div
+      data-testid="scrub-markers"
+      role="list"
+      aria-label="Key moments"
+      className="relative h-2"
+    >
+      {markers.map((m) => (
+        <button
+          key={`${m.eventIndex}-${m.type}`}
+          type="button"
+          role="listitem"
+          onClick={() => onSeek(m.displayAtMs)}
+          aria-label={`${m.label} (seek)`}
+          title={m.label}
+          data-testid={`scrub-marker-${m.type.toLowerCase()}`}
+          data-event-index={m.eventIndex}
+          style={{ left: `${m.percent}%` }}
+          className={`absolute top-0 h-2 w-2 -translate-x-1/2 rounded-full ${MARKER_COLOR_CLASSES[m.type]} transition-colors`}
+        />
+      ))}
+    </div>
+  );
 }
 
 interface ControlsProps {
@@ -254,6 +299,13 @@ export default function MatchReplayPlayer({
     [visibleEvents],
   );
   const score = useMemo(() => deriveScore(visibleEvents), [visibleEvents]);
+  const markers = useMemo(() => {
+    if (!dump) return [];
+    return buildScrubMarkers({
+      events: dump.events,
+      durationMs: dump.durationMs,
+    });
+  }, [dump]);
 
   if (error) {
     return (
@@ -319,6 +371,7 @@ export default function MatchReplayPlayer({
             {formatReplayClock(durationMs)}
           </span>
         </div>
+        <ScrubMarkers markers={markers} onSeek={clock.seek} />
         <input
           type="range"
           min={0}
