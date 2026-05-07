@@ -1,3 +1,36 @@
+## [1.92.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.91.0...v1.92.0) (2026-05-07)
+
+
+### ✨ Features
+
+* **game-engine,server:** skeleton Saison 4 BB3 (S27.5) ([#642](https://github.com/Ryxeuf/fantasy-football-game/issues/642)) ([0cff968](https://github.com/Ryxeuf/fantasy-football-game/commit/0cff9684fed3e111dcbdba317248a9ce9e6b1041))
+* **mobile:** a11y board PixiBoardNative (S27.4.1) ([#639](https://github.com/Ryxeuf/fantasy-football-game/issues/639)) ([0e31865](https://github.com/Ryxeuf/fantasy-football-game/commit/0e318651d189aa5e0b792bd13d09bb0f83f8bda7))
+* **mobile:** hook composite useGameMatch (S27.4.2, cloture S27.4) ([#641](https://github.com/Ryxeuf/fantasy-football-game/issues/641)) ([6910531](https://github.com/Ryxeuf/fantasy-football-game/commit/6910531c525d36934dd5d1b9c0bd794b3a03ac7b))
+* **mobile:** i18n des ecrans cups (S27.3.16) ([#635](https://github.com/Ryxeuf/fantasy-football-game/issues/635)) ([23fa839](https://github.com/Ryxeuf/fantasy-football-game/commit/23fa839fdc8156f0574805c1919bb7fa9abde9e2))
+* **mobile:** i18n des ecrans leagues (S27.3.15) ([#633](https://github.com/Ryxeuf/fantasy-football-game/issues/633)) ([4444915](https://github.com/Ryxeuf/fantasy-football-game/commit/44449156543218b57d0f3422c1773be754b8671d))
+* **mobile:** i18n des ecrans match + replay (S27.3.18) ([#637](https://github.com/Ryxeuf/fantasy-football-game/issues/637)) ([dbc2660](https://github.com/Ryxeuf/fantasy-football-game/commit/dbc266015f4a64c75f7938baa3cc2a20cd6f3552))
+* **mobile:** i18n des ecrans star-players (S27.3.17) ([#636](https://github.com/Ryxeuf/fantasy-football-game/issues/636)) ([f5a6274](https://github.com/Ryxeuf/fantasy-football-game/commit/f5a627458a8051d9bb5532e9d1dc310e6fc321fa))
+* **mobile:** i18n des titres de navigation (S27.3.19, cloture S27.3) ([#638](https://github.com/Ryxeuf/fantasy-football-game/issues/638)) ([975d1fd](https://github.com/Ryxeuf/fantasy-football-game/commit/975d1fd7e2edf86672a8e5b7abc73a9e3713a2ea))
+* **server,db:** audit log admin foundation (S27.6.1) ([#643](https://github.com/Ryxeuf/fantasy-football-game/issues/643)) ([ca57808](https://github.com/Ryxeuf/fantasy-football-game/commit/ca57808e27d618531fbc00a80a59677716de2f03))
+* **server,web:** UI lecture du journal d'audit (S27.6.3, cloture S27.6) ([#645](https://github.com/Ryxeuf/fantasy-football-game/issues/645)) ([7b84502](https://github.com/Ryxeuf/fantasy-football-game/commit/7b84502b5e4ddc8768a06417257e57e0bf122858))
+* **server:** replay dump endpoint for completed matches (sprint 1.G.1) ([#640](https://github.com/Ryxeuf/fantasy-football-game/issues/640)) ([00fb4a3](https://github.com/Ryxeuf/fantasy-football-game/commit/00fb4a30af66213b52cca1b5bb5b0fe9f1d207fe))
+* **server:** wire audit log into admin routes (S27.6.2) ([#644](https://github.com/Ryxeuf/fantasy-football-game/issues/644)) ([99301b6](https://github.com/Ryxeuf/fantasy-football-game/commit/99301b649db74d075e1db726d42b5f78c85ee372))
+* **sim-engine:** enriched narrator + regen 50 panel replays on 0.13.0 ([#634](https://github.com/Ryxeuf/fantasy-football-game/issues/634)) ([f6e9b6f](https://github.com/Ryxeuf/fantasy-football-game/commit/f6e9b6fee945975bf8aa4d040c66e735a587d31c))
+* **web:** MatchReplayPlayer with scrub bar + speed controls (sprint 1.G.2) ([2c01743](https://github.com/Ryxeuf/fantasy-football-game/commit/2c0174387dceadc31f496335c33f5a7d5571fd47))
+* **web:** Pro League sitemap + JSON-LD SportsLeague/FAQ (sprint 1.F.3) ([#632](https://github.com/Ryxeuf/fantasy-football-game/issues/632)) ([60f292e](https://github.com/Ryxeuf/fantasy-football-game/commit/60f292eb3d30624c059610bf3999c0dae2f6a4c4))
+
+
+### 📝 Documentation
+
+* **panel:** regenerate 50 panel replays on engineVer 0.13.0 (post iter [#12](https://github.com/Ryxeuf/fantasy-football-game/issues/12)-16) ([#596](https://github.com/Ryxeuf/fantasy-football-game/issues/596)) ([01154c6](https://github.com/Ryxeuf/fantasy-football-game/commit/01154c6d8714c0caede63f4626ffedb291db63dd)), closes [#12-16](https://github.com/Ryxeuf/fantasy-football-game/issues/12-16) [#12-16](https://github.com/Ryxeuf/fantasy-football-game/issues/12-16) [#12-16](https://github.com/Ryxeuf/fantasy-football-game/issues/12-16) [#13-14](https://github.com/Ryxeuf/fantasy-football-game/issues/13-14) [#15-16](https://github.com/Ryxeuf/fantasy-football-game/issues/15-16) [#12-16](https://github.com/Ryxeuf/fantasy-football-game/issues/12-16) [#594](https://github.com/Ryxeuf/fantasy-football-game/issues/594) [#12-16](https://github.com/Ryxeuf/fantasy-football-game/issues/12-16) [#594](https://github.com/Ryxeuf/fantasy-football-game/issues/594) [#595](https://github.com/Ryxeuf/fantasy-football-game/issues/595)
+
+
+### ♻️ Code Refactoring
+
+* **game-engine:** Horns/PileDriver/SneakyGit via registry (S27.7.3, cloture S27.7) ([#649](https://github.com/Ryxeuf/fantasy-football-game/issues/649)) ([b732eeb](https://github.com/Ryxeuf/fantasy-football-game/commit/b732eeb0df67cff54b8023fafe545cb2fd589845))
+* **game-engine:** Sprint GFI cap via skill registry (S27.7.2) ([#647](https://github.com/Ryxeuf/fantasy-football-game/issues/647)) ([43f8ea0](https://github.com/Ryxeuf/fantasy-football-game/commit/43f8ea0118d8fedd58578341e0e00df627fb4a1a))
+* **game-engine:** Stunty AV via skill registry (S27.7.1) ([#646](https://github.com/Ryxeuf/fantasy-football-game/issues/646)) ([ddbc5b1](https://github.com/Ryxeuf/fantasy-football-game/commit/ddbc5b1ce19f20e005cb882deba04ee1fbc7a2a4))
+
 ## [1.91.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.90.0...v1.91.0) (2026-05-07)
 
 
