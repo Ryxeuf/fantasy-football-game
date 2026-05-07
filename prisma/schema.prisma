@@ -1553,3 +1553,52 @@ model ProGazetteArticle {
   @@index([date])
   @@index([type, date])
 }
+
+/// Sprint Pro League lot 1.E.5 — Hall of Fame light.
+///
+/// Snapshot d'un joueur immortalise. L'induction est declenchee :
+///  - automatique sur status='dead' (apres casualty 'dead' du sweep
+///    casualties 1.E.4) — `reason='death_in_match'`,
+///  - manuelle ou cron later via criteres carriere (TDs, MVP, titre)
+///    avec d'autres `reason` codes.
+///
+/// L'enregistrement gele les stats au moment de l'induction (le
+/// roster d'origine peut disparaitre via cleanup futur). Idempotence
+/// par `unique([rosterId, reason])`.
+model ProHallOfFame {
+  id          String   @id @default(cuid())
+  /// Lien vers le roster d'origine (peut etre supprime a terme — ne
+  /// pas cascade pour preserver l'archive Hall of Fame).
+  rosterId    String
+  /// Slug ProTeam au moment de l'induction (cross-link UI sans join).
+  teamSlug    String
+  /// Nom team affiche au moment de l'induction.
+  teamName    String
+  /// Nom du joueur immortalise.
+  playerName  String
+  /// Race au moment de l'induction.
+  race        String
+  /// Position au moment de l'induction.
+  position    String
+  /// Snapshot stats au moment de l'induction.
+  ma          Int
+  st          Int
+  ag          Int
+  pa          Int?
+  av          Int
+  /// Snapshot skills (Json array).
+  skills      Json
+  /// Snapshot career stats (TDs, casualties, MVPs).
+  careerStats Json
+  /// Code raison de l'induction.
+  /// Valeurs : 'death_in_match' | 'career_tds' | 'mvp_legend' | 'title'.
+  reason      String
+  /// Description humaine optionnelle (pour rendu UI).
+  citation    String?
+  inductedAt  DateTime @default(now())
+
+  @@unique([rosterId, reason])
+  @@index([teamSlug])
+  @@index([reason])
+  @@index([inductedAt])
+}

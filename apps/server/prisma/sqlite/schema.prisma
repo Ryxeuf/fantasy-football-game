@@ -1120,3 +1120,28 @@ model ProGazetteArticle {
   @@index([date])
   @@index([type, date])
 }
+
+model ProHallOfFame {
+  id          String   @id @default(cuid())
+  rosterId    String
+  teamSlug    String
+  teamName    String
+  playerName  String
+  race        String
+  position    String
+  ma          Int
+  st          Int
+  ag          Int
+  pa          Int?
+  av          Int
+  skills      String
+  careerStats String
+  reason      String
+  citation    String?
+  inductedAt  DateTime @default(now())
+
+  @@unique([rosterId, reason])
+  @@index([teamSlug])
+  @@index([reason])
+  @@index([inductedAt])
+}

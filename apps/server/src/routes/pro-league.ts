@@ -51,6 +51,7 @@ import {
   listEditionForDate,
   listLatestEdition,
 } from "../services/pro-gazette";
+import { listHallOfFame } from "../services/pro-hall-of-fame";
 import {
   InsufficientFundsError,
   getBalance,
@@ -606,6 +607,30 @@ export async function handleGetEditionByDate(
 }
 
 /**
+ * Sprint 1.E.5 — Liste paginée du Hall of Fame.
+ * Query params : `?team=<slug>&limit=<n>`.
+ */
+export async function handleListHallOfFame(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const teamSlug =
+    typeof req.query.team === "string" ? req.query.team : undefined;
+  const limit =
+    typeof req.query.limit === "string"
+      ? Number.parseInt(req.query.limit, 10)
+      : 50;
+  try {
+    const entries = await listHallOfFame({ teamSlug, limit });
+    res.json({ entries });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "unknown";
+    serverLog.error(`[pro-league/hall-of-fame] failed: ${msg}`);
+    res.status(500).json({ error: "internal-error" });
+  }
+}
+
+/**
  * Sprint 1.E.2 — Liste les dates publiées (archive). `?limit=N`.
  */
 export async function handleListEditionDates(
@@ -750,6 +775,7 @@ router.get("/leaderboard", handleGetBetLeaderboard);
 router.get("/gazette/latest", handleGetLatestEdition);
 router.get("/gazette/dates", handleListEditionDates);
 router.get("/gazette/:date", handleGetEditionByDate);
+router.get("/hall-of-fame", handleListHallOfFame);
 router.get("/_internal/broadcaster-stats", handleBroadcasterStats);
 
 // Sprint 1.C.4 — endpoints auth-protected pour le mode "fan".
