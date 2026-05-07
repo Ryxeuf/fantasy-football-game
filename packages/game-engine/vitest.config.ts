@@ -34,6 +34,7 @@ export default defineConfig({
         // slice du refactor monolith->modules.
         'src/actions/actions.ts',
         'src/actions/special-actions.ts',
+        'src/actions/pass-actions.ts',
       ],
       // S25.4 — Seuils initiaux conservateurs. v8 reporte 0% lines sur
       // certains fichiers TS du moteur a cause d'un quirk source-map ;
