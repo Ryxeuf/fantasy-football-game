@@ -1,3 +1,10 @@
+## [1.96.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.95.0...v1.96.0) (2026-05-07)
+
+
+### ✨ Features
+
+* **web:** i18n Pro League standings + leaderboard (sprint i18n.2) ([ccec376](https://github.com/Ryxeuf/fantasy-football-game/commit/ccec37684de7dc9c2d2f332071947bff3c6b5cfd))
+
 ## [1.95.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.94.1...v1.95.0) (2026-05-07)
 
 
