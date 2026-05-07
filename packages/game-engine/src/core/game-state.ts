@@ -936,6 +936,18 @@ export function getGfiCap(state: GameState, player: Player): number {
 }
 
 /**
+ * S27.8.5 — Verifie si une equipe peut utiliser une relance d'equipe
+ * (extrait de `actions/actions.ts` pour casser le cycle d'import vers
+ * les handlers extraits).
+ */
+export function canUseTeamReroll(state: GameState, team: TeamId): boolean {
+  if (state.rerollUsedThisTurn) return false;
+  const rerolls =
+    team === 'A' ? state.teamRerolls?.teamA : state.teamRerolls?.teamB;
+  return (rerolls ?? 0) > 0;
+}
+
+/**
  * Vérifie si un joueur peut bouger
  * @param state - État du jeu
  * @param playerId - ID du joueur
