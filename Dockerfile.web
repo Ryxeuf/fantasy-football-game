@@ -5,8 +5,10 @@ FROM node:18-alpine
 # docker-compose; defaults match the current production host.
 ARG NEXT_PUBLIC_API_BASE=https://api.nufflearena.fr
 ARG NEXT_PUBLIC_UMAMI_ENABLED=true
+ARG NEXT_PUBLIC_TURNSTILE_SITE_KEY
 ENV NEXT_PUBLIC_API_BASE=$NEXT_PUBLIC_API_BASE
 ENV NEXT_PUBLIC_UMAMI_ENABLED=$NEXT_PUBLIC_UMAMI_ENABLED
+ENV NEXT_PUBLIC_TURNSTILE_SITE_KEY=$NEXT_PUBLIC_TURNSTILE_SITE_KEY
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Install pnpm — version pinnee a celle declaree dans package.json (packageManager).
