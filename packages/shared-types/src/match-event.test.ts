@@ -16,6 +16,7 @@ describe('EventType — sprint Pro League 0.A.3 catalogue', () => {
       'BLOCK',
       'DODGE',
       'PASS',
+      'MOVE',
       'TD',
       'KO',
       'CASUALTY',

@@ -25,6 +25,15 @@ export const EVENT_TYPES = Object.freeze([
   'BLOCK',
   'DODGE',
   'PASS',
+  /**
+   * Generic ball-carrier advance not tied to a key moment (#4). The
+   * sim-engine bulk yardage roll used to be invisible on the timeline
+   * — only TURN_START's "(drive +N yds)" annotation hinted at it.
+   * MOVE makes the play explicit : every yard the ball travels is
+   * backed by a narrated event with a `kind` (positioning / run /
+   * sweep / breakaway / halt / scoring_run).
+   */
+  'MOVE',
   'TD',
   'KO',
   'CASUALTY',

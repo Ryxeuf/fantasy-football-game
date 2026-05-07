@@ -142,6 +142,33 @@ function renderTd(ev: MatchEvent): string {
   return `  Touchdown! ${team} crosses the line. Score is now ${score.home}-${score.away}.`;
 }
 
+function renderMove(ev: MatchEvent): string {
+  const meta = getMeta(ev);
+  const team = n(meta.team);
+  const yards = typeof meta.yards === 'number' ? meta.yards : 0;
+  const kind = String(meta.kind ?? 'run');
+  const from = typeof meta.from === 'number' ? meta.from : null;
+  const to = typeof meta.to === 'number' ? meta.to : null;
+  const range = from !== null && to !== null ? ` (yardline ${from} → ${to})` : '';
+  // Sprint Pro League #4 — narrative taglines per move kind.
+  switch (kind) {
+    case 'halt':
+      return `  HALT — ${team} drive stalls : the defense holds the line${range}.`;
+    case 'positioning':
+      return `  POSITIONING — ${team} pushes the line forward, +${yards} yds${range}.`;
+    case 'run':
+      return `  RUN — ${team} ball carrier drives through the middle, +${yards} yds${range}.`;
+    case 'sweep':
+      return `  SWEEP — ${team} sweeps wide, +${yards} yds${range}.`;
+    case 'breakaway':
+      return `  BREAKAWAY — ${team} breaks open daylight, +${yards} yds${range}.`;
+    case 'scoring_run':
+      return `  SCORING RUN — ${team} sprints for the endzone, +${yards} yds${range}.`;
+    default:
+      return `  MOVE — ${team} +${yards} yds${range}.`;
+  }
+}
+
 function renderTurnover(ev: MatchEvent): string {
   const meta = getMeta(ev);
   const cause = n(meta.cause, 'unknown');
@@ -214,6 +241,8 @@ function renderEvent(ev: MatchEvent, ctx: TurnStartContext): string {
       return renderDodge(ev);
     case 'PASS':
       return renderPass(ev);
+    case 'MOVE':
+      return renderMove(ev);
     case 'TD':
       return renderTd(ev);
     case 'TURNOVER':
