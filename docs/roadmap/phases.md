@@ -12,7 +12,7 @@
 | **S24** | Stabilite & DX core (fix P0 + securite + hot-reload dev) | [sprints/S24-stabilite-securite.md](./sprints/S24-stabilite-securite.md) | TERMINE |
 | **S25** | Observabilite, perf & qualite (logs, metrics, tests, bundle) | [sprints/S25-observabilite-qualite.md](./sprints/S25-observabilite-qualite.md) | TERMINE |
 | **S26** | Refactor + Retention & engagement (page.tsx prerequis, achievements, profil, ligues) | [sprints/S26-retention-engagement.md](./sprints/S26-retention-engagement.md) | TERMINE |
-| **S27** | Evolutions & confort (esport, mobile parite, S4 skeleton, audit log, B0.1 residuels) | [sprints/S27-evolutions-confort.md](./sprints/S27-evolutions-confort.md) | A faire |
+| **S27** | Evolutions & confort (esport, mobile parite, S4 skeleton, audit log, B0.1 residuels) | [sprints/S27-evolutions-confort.md](./sprints/S27-evolutions-confort.md) | TERMINE |
 | **Ligues v2** | **PRIORITE** Gestion complete des ligues BB (creation UI, inscription, calendrier auto, forfait, Jeu en Ligue post-match, awards) | [sprints/SPRINT-leagues-v2.md](./sprints/SPRINT-leagues-v2.md) | A faire (P0) |
 | **Pro League** | Championnat virtuel 16 equipes IA vs IA (hommages NFL × races BB), matchs auto diffuses live le mardi 21h, paris en Crowns, mode spectateur/fan, Nuffle Gazette LLM. Phase 0 sim foundation bloquante (8 sem) + Phase 1 MVP (4 sem) | [sprints/SPRINT-pro-league.md](./sprints/SPRINT-pro-league.md) | A faire (P1, post-Ligues v2) |
 
