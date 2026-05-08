@@ -1614,153 +1614,18 @@ export async function handleListLiveMatches(
 
 router.get("/live", authUser, handleListLiveMatches);
 
-// Get match state for spectators (no participant check) (S25.5i — ApiResponse<T>)
-export async function handleSpectateMatch(
-  req: AuthenticatedRequest,
-  res: Response,
-): Promise<void> {
-  try {
-    const matchId = req.params.id;
-    const match = await prisma.match.findUnique({
-      where: { id: matchId },
-      include: { turns: { orderBy: { number: "asc" } } },
-    });
+// S27.8.16 — `handleSpectateMatch` et `handleReplayMatch` extraits dans
+// `routes/match-spectate-replay-handlers.ts` pour reduire la taille de
+// ce fichier. Re-export pour preserver l'API publique consommee par
+// les tests d'integration et tout consommateur externe.
+export {
+  handleSpectateMatch,
+  handleReplayMatch,
+} from './match-spectate-replay-handlers';
+import {
+  handleSpectateMatch as handleSpectateMatchImpl,
+  handleReplayMatch as handleReplayMatchImpl,
+} from './match-spectate-replay-handlers';
 
-    if (!match) {
-      sendError(res, "Partie introuvable", 404);
-      return;
-    }
-
-    if (match.status !== "active" && match.status !== "prematch-setup") {
-      sendError(res, "Ce match n'est pas en cours", 400);
-      return;
-    }
-
-    const latestStateTurn = [...match.turns]
-      .reverse()
-      .find((t: any) => t.payload?.gameState);
-
-    if (!latestStateTurn) {
-      sendError(res, "Etat de jeu introuvable", 400);
-      return;
-    }
-
-    let gameState = (latestStateTurn as any).payload.gameState;
-    if (typeof gameState === "string") {
-      gameState = JSON.parse(gameState);
-    }
-
-    const selections = await prisma.teamSelection.findMany({
-      where: { matchId },
-      orderBy: { createdAt: "asc" },
-      include: {
-        user: { select: { id: true, coachName: true } },
-        teamRef: { select: { name: true, roster: true } },
-      },
-    });
-
-    const teamA = selections[0];
-    const teamB = selections[1];
-
-    sendSuccess(res, {
-      gameState,
-      matchStatus: match.status,
-      spectatorCount: getSpectatorCount(matchId),
-      teamA: teamA
-        ? {
-            coachName: teamA.user?.coachName || "",
-            teamName: teamA.teamRef?.name || "",
-          }
-        : null,
-      teamB: teamB
-        ? {
-            coachName: teamB.user?.coachName || "",
-            teamName: teamB.teamRef?.name || "",
-          }
-        : null,
-    });
-  } catch (e: unknown) {
-    serverLog.error(e);
-    sendError(res, "Erreur serveur", 500);
-  }
-}
-
-router.get("/:id/spectate", authUser, handleSpectateMatch);
-
-// Replay data: returns all turns with game states for replaying a finished match
-// (S25.5i — ApiResponse<T>)
-export async function handleReplayMatch(
-  req: AuthenticatedRequest,
-  res: Response,
-): Promise<void> {
-  try {
-    const matchId = req.params.id;
-
-    const match = await prisma.match.findUnique({
-      where: { id: matchId },
-      include: {
-        turns: {
-          orderBy: { number: "asc" },
-          select: { number: true, payload: true, createdAt: true },
-        },
-        teamSelections: {
-          orderBy: { createdAt: "asc" },
-          include: {
-            user: { select: { id: true, coachName: true } },
-            teamRef: { select: { id: true, name: true, roster: true } },
-          },
-        },
-      },
-    });
-
-    if (!match) {
-      sendError(res, "Partie introuvable", 404);
-      return;
-    }
-
-    if (match.status !== "ended") {
-      sendError(res, "Le replay n'est disponible que pour les matchs termines", 400);
-      return;
-    }
-
-    const replayTurns = match.turns
-      .filter((t: any) => t.payload?.gameState != null)
-      .map((t: any) => ({
-        type: t.payload.type,
-        gameState: t.payload.gameState,
-        move: t.payload.move,
-        timestamp: t.payload.timestamp || t.createdAt?.toISOString(),
-      }));
-
-    const [selA, selB] = match.teamSelections;
-    const teamMeta = {
-      teamA: selA
-        ? {
-            coachName: selA.user?.coachName || "",
-            teamName: selA.teamRef?.name || "",
-            roster: selA.teamRef?.roster || "",
-          }
-        : null,
-      teamB: selB
-        ? {
-            coachName: selB.user?.coachName || "",
-            teamName: selB.teamRef?.name || "",
-            roster: selB.teamRef?.roster || "",
-          }
-        : null,
-    };
-
-    sendSuccess(res, {
-      matchId,
-      status: match.status,
-      turns: replayTurns,
-      teams: teamMeta,
-      createdAt: match.createdAt,
-    });
-  } catch (e: unknown) {
-    serverLog.error(e);
-    sendError(res, "Erreur serveur", 500);
-  }
-}
-
-router.get("/:id/replay", authUser, handleReplayMatch);
+router.get("/:id/spectate", authUser, handleSpectateMatchImpl);
+router.get("/:id/replay", authUser, handleReplayMatchImpl);
