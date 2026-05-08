@@ -206,3 +206,14 @@ export {
   computeCompressionStats,
   type CompressionStats,
 } from './replay/compress';
+
+export {
+  aggregateComparisons,
+  compareDriversOnce,
+  type CompareDriverKind,
+  type ComparisonAggregate,
+  type ComparisonDeltas,
+  type ComparisonRun,
+  type MetricStats,
+  type SimulateFn,
+} from './compare/compare-drivers';

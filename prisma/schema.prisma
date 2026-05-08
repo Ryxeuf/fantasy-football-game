@@ -1652,3 +1652,57 @@ model AuditLog {
   @@index([action])
   @@index([createdAt])
 }
+
+/// Lot 3.B.2 — Snapshot d'une comparaison hybrid vs full driver.
+///
+/// Une entree par exécution du comparator (script CLI ou route admin
+/// `POST /admin/sim/comparison`). Permet :
+///   - de tracker la dérive entre les deux drivers à travers les
+///     versions d'engineVer (avant/apres rebalance, post bugfix, etc.)
+///   - de fournir un input à un dashboard Grafana (jointure sur
+///     engineVer + race pairing pour graph time-series)
+///   - de detecter une regression brutale du full driver (ex: outcome
+///     flip rate > 10% sur un pairing qui avait 2%) avant prod.
+///
+/// Les runs CLI ne persistent PAS automatiquement — seul `POST
+/// /admin/sim/comparison` ecrit dans cette table. Les Prometheus
+/// gauges `nuffle_engine_compare_*` sont mises a jour par le meme
+/// service au moment de la persistence.
+model EngineComparison {
+  id          String   @id @default(cuid())
+  /// engineVer pour lequel la comparaison a ete lancee (les deux
+  /// drivers utilisent forcement la meme version a un instant T).
+  engineVer   String
+  /// Slug de l'equipe a domicile (ex: 'pit-smashers'). Pas de FK car
+  /// le comparator peut etre lance sur des profils PRO_LEAGUE_TEAMS qui
+  /// existent uniquement dans le code, pas en DB (ex: bench dev).
+  homeTeamId  String
+  /// Slug de l'equipe a l'exterieur.
+  awayTeamId  String
+  /// Nombre de matchs simulés dans cette comparaison.
+  matches     Int
+  /// Seed offset utilisé (premier seed = `seedOffset`, dernier = `seedOffset + matches - 1`).
+  seedOffset  Int
+  /// scoreTotal — moyenne du delta absolu home+away.
+  meanScoreDelta   Float
+  /// scoreTotal — p95 du delta absolu (Prometheus gauge).
+  p95ScoreDelta    Float
+  /// scoreTotal — max du delta absolu (worst-case audit).
+  maxScoreDelta    Float
+  /// turnoverCount — moyenne du delta.
+  meanTurnoverDelta Float
+  /// touchdownCount — moyenne du delta.
+  meanTouchdownDelta Float
+  /// casualtyCount — moyenne du delta.
+  meanCasualtyDelta Float
+  /// Nombre de matchs avec outcome flip (home<->away ou draw shift).
+  outcomeFlippedCount Int
+  /// Pct (0..1) de matchs avec scoreTotal>0 OR outcomeChanged.
+  divergedPct      Float
+  /// Source d'invocation : 'cli' | 'admin' (provenance audit).
+  source     String   @default("admin")
+  createdAt  DateTime @default(now())
+
+  @@index([engineVer, createdAt])
+  @@index([homeTeamId, awayTeamId, createdAt])
+}

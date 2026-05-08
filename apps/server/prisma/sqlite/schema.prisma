@@ -1171,3 +1171,27 @@ model AuditLog {
   @@index([action])
   @@index([createdAt])
 }
+
+// Lot 3.B.2 — Snapshot d'une comparaison hybrid vs full driver.
+// Voir prisma/schema.prisma (postgres) pour la doc complete.
+model EngineComparison {
+  id          String   @id @default(cuid())
+  engineVer   String
+  homeTeamId  String
+  awayTeamId  String
+  matches     Int
+  seedOffset  Int
+  meanScoreDelta   Float
+  p95ScoreDelta    Float
+  maxScoreDelta    Float
+  meanTurnoverDelta Float
+  meanTouchdownDelta Float
+  meanCasualtyDelta Float
+  outcomeFlippedCount Int
+  divergedPct      Float
+  source     String   @default("admin")
+  createdAt  DateTime @default(now())
+
+  @@index([engineVer, createdAt])
+  @@index([homeTeamId, awayTeamId, createdAt])
+}
