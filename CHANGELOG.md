@@ -1,3 +1,55 @@
+## [1.97.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.96.0...v1.97.0) (2026-05-08)
+
+
+### ✨ Features
+
+* **admin:** sim health + broadcaster live UIs (Lot 2.B.3 + 2.B.4) ([#673](https://github.com/Ryxeuf/fantasy-football-game/issues/673)) ([920e58e](https://github.com/Ryxeuf/fantasy-football-game/commit/920e58ec371d236c88eebdd8ebd2a4d0d3a7104e))
+* **metrics:** instrument sim-runner + broadcaster (Lot 2.A.3 + 2.A.4) ([#670](https://github.com/Ryxeuf/fantasy-football-game/issues/670)) ([e9d6988](https://github.com/Ryxeuf/fantasy-football-game/commit/e9d69881d8ef323e7657199bdaaf3dc00ca6289b))
+* **metrics:** Pro League sim engine metrics (Lot 2.A.1 + 2.A.2) ([#668](https://github.com/Ryxeuf/fantasy-football-game/issues/668)) ([b2a7786](https://github.com/Ryxeuf/fantasy-football-game/commit/b2a77869ca507d7270a924ecb404cba3fba4b4cb))
+* **schema:** isTest flag on ProLeagueMatch (Lot 2.C.1) ([#675](https://github.com/Ryxeuf/fantasy-football-game/issues/675)) ([b39b04d](https://github.com/Ryxeuf/fantasy-football-game/commit/b39b04d94faf2f01ead480bf349066c13dfd8ea6))
+* **web:** i18n Pro League components + feed + me (sprint i18n.5) ([#677](https://github.com/Ryxeuf/fantasy-football-game/issues/677)) ([dfc10e6](https://github.com/Ryxeuf/fantasy-football-game/commit/dfc10e6a98d60c8783dc2d552660894b156c0e1d)), closes [#661](https://github.com/Ryxeuf/fantasy-football-game/issues/661) [#662](https://github.com/Ryxeuf/fantasy-football-game/issues/662) [#664](https://github.com/Ryxeuf/fantasy-football-game/issues/664) [#671](https://github.com/Ryxeuf/fantasy-football-game/issues/671)
+* **web:** i18n Pro League gazette + hall-of-fame (sprint i18n.3) ([#664](https://github.com/Ryxeuf/fantasy-football-game/issues/664)) ([e14be21](https://github.com/Ryxeuf/fantasy-football-game/commit/e14be21386f252432e44dfe0861026fae35b92fe))
+* **web:** i18n Pro League matches detail + live + replay (sprint i18n.4) ([#671](https://github.com/Ryxeuf/fantasy-football-game/issues/671)) ([a26fdaf](https://github.com/Ryxeuf/fantasy-football-game/commit/a26fdaf3ddf4e9e115033fce819a73ca8d009735))
+
+
+### 📝 Documentation
+
+* **audit:** Lot 3.A.1 — AI game-engine assessment for full driver ([#680](https://github.com/Ryxeuf/fantasy-football-game/issues/680)) ([34f4ad4](https://github.com/Ryxeuf/fantasy-football-game/commit/34f4ad49df1ceee672171471de7fea99f498f6c4))
+* **roadmap:** sprint sim-engine — observability + full driver + sandbox ([#667](https://github.com/Ryxeuf/fantasy-football-game/issues/667)) ([b13f083](https://github.com/Ryxeuf/fantasy-football-game/commit/b13f0837c098311adabefb87f50b949b717c023a)), closes [#655](https://github.com/Ryxeuf/fantasy-football-game/issues/655) [#658](https://github.com/Ryxeuf/fantasy-football-game/issues/658)
+
+
+### ♻️ Code Refactoring
+
+* **game-engine:** extract choice handlers (S27.8.7) ([#669](https://github.com/Ryxeuf/fantasy-football-game/issues/669)) ([169abe5](https://github.com/Ryxeuf/fantasy-football-game/commit/169abe5d2c064b88acacbe6cf1f7beca4e1b0b48))
+* **game-engine:** extract failure helpers (S27.8.4) ([#663](https://github.com/Ryxeuf/fantasy-football-game/issues/663)) ([8b1bd20](https://github.com/Ryxeuf/fantasy-football-game/commit/8b1bd20c8abce5922e8bc091672477fd7f487bf5))
+* **game-engine:** extract getLegalMoves to legal-moves.ts (S27.8.11) ([#689](https://github.com/Ryxeuf/fantasy-football-game/issues/689)) ([203716b](https://github.com/Ryxeuf/fantasy-football-game/commit/203716be4f7c5af4740d00763077acea3e620990))
+* **game-engine:** extract handleBallPickup + canUseTeamReroll (S27.8.5) ([#665](https://github.com/Ryxeuf/fantasy-football-game/issues/665)) ([907b9d6](https://github.com/Ryxeuf/fantasy-football-game/commit/907b9d658205fabcb129c6543bf6ce412162143e))
+* **game-engine:** extract handleBlitz to blitz-handler.ts (S27.8.13) — DoD <=600 atteint ([#691](https://github.com/Ryxeuf/fantasy-football-game/issues/691)) ([c358918](https://github.com/Ryxeuf/fantasy-football-game/commit/c3589184544272f545704aecc67efcb4f27d6b9d))
+* **game-engine:** extract handleBlock + import cleanup (S27.8.8) ([#674](https://github.com/Ryxeuf/fantasy-football-game/issues/674)) ([b1b9c85](https://github.com/Ryxeuf/fantasy-football-game/commit/b1b9c851b8090ce50f6209acc2bf857358c10627))
+* **game-engine:** extract handleLeap/Move/Dodge + handleDumpOffChoose (S27.8.12) ([#690](https://github.com/Ryxeuf/fantasy-football-game/issues/690)) ([562d4a9](https://github.com/Ryxeuf/fantasy-football-game/commit/562d4a90f7858506a9b7927708cdabb1e6982144))
+* **game-engine:** extract move sub-handlers (S27.8.6) ([#666](https://github.com/Ryxeuf/fantasy-football-game/issues/666)) ([c779e0c](https://github.com/Ryxeuf/fantasy-football-game/commit/c779e0c37674959993022d3b32fd551f313a0e9c))
+* **game-engine:** extract multi-block + frenzy from actions.ts (S27.8.10) ([#686](https://github.com/Ryxeuf/fantasy-football-game/issues/686)) ([a6aecbd](https://github.com/Ryxeuf/fantasy-football-game/commit/a6aecbdfdee038394f327fabe6d2f89d308ee639))
+* **game-engine:** split block-action — extract handleBlock (S27.8.15) ([#693](https://github.com/Ryxeuf/fantasy-football-game/issues/693)) ([7a12a1e](https://github.com/Ryxeuf/fantasy-football-game/commit/7a12a1ee48b0df208e4538a03b7f04ef0976e013)), closes [#683](https://github.com/Ryxeuf/fantasy-football-game/issues/683)
+* **game-engine:** split choice-handlers — extract handleRerollChoose (S27.8.14) ([#692](https://github.com/Ryxeuf/fantasy-football-game/issues/692)) ([22491f3](https://github.com/Ryxeuf/fantasy-football-game/commit/22491f3252220d3125c4297540b2078070945dfd))
+* **server:** extract handleGetMatchSummary to dedicated module (S27.8.32) ([#710](https://github.com/Ryxeuf/fantasy-football-game/issues/710)) ([78c29e9](https://github.com/Ryxeuf/fantasy-football-game/commit/78c29e900e06cdcd4e2a7c29a425a1b3b05545ac))
+* **server:** extract handleHireStarPlayer to dedicated module (S27.8.31) ([#709](https://github.com/Ryxeuf/fantasy-football-game/issues/709)) ([08c26bd](https://github.com/Ryxeuf/fantasy-football-game/commit/08c26bd3aa32e760a4e0e3079d4a1024ce551678))
+* **server:** extract handleUpdatePlayerSkills to dedicated module (S27.8.30) ([#708](https://github.com/Ryxeuf/fantasy-football-game/issues/708)) ([b2f8f48](https://github.com/Ryxeuf/fantasy-football-game/commit/b2f8f48cd14c0eec66258eadedd10a7f31c977d0))
+* **server:** split match.ts — extract 3 kickoff handlers (S27.8.21) ([#699](https://github.com/Ryxeuf/fantasy-football-game/issues/699)) ([6d83669](https://github.com/Ryxeuf/fantasy-football-game/commit/6d83669701c48611440b3426e625251d262edd2a))
+* **server:** split match.ts — extract 3 readonly handlers (S27.8.17) ([#695](https://github.com/Ryxeuf/fantasy-football-game/issues/695)) ([3035a9c](https://github.com/Ryxeuf/fantasy-football-game/commit/3035a9c0d37de980bafcd2754cdbbba5213f90d1))
+* **server:** split match.ts — extract 4 lifecycle handlers (S27.8.20) ([#698](https://github.com/Ryxeuf/fantasy-football-game/issues/698)) ([815b648](https://github.com/Ryxeuf/fantasy-football-game/commit/815b6486dbe5606c095ff029891c20ea956d2479))
+* **server:** split match.ts — extract 5 details/list handlers (S27.8.19) ([#697](https://github.com/Ryxeuf/fantasy-football-game/issues/697)) ([57b133f](https://github.com/Ryxeuf/fantasy-football-game/commit/57b133f1e6d5b9cad77e53e6e89e02984def6671))
+* **server:** split match.ts — extract handleGetMatchState (S27.8.18) ([#696](https://github.com/Ryxeuf/fantasy-football-game/issues/696)) ([2881508](https://github.com/Ryxeuf/fantasy-football-game/commit/2881508aeb8d9387c78b3b207e30c55b110a4f9e))
+* **server:** split match.ts — extract handleValidateSetup (S27.8.29) ([#707](https://github.com/Ryxeuf/fantasy-football-game/issues/707)) ([43b7345](https://github.com/Ryxeuf/fantasy-football-game/commit/43b7345514e53991b3f1c4b37c8715646afc562b))
+* **server:** split match.ts — extract spectate + replay handlers (S27.8.16) ([#694](https://github.com/Ryxeuf/fantasy-football-game/issues/694)) ([04b58ad](https://github.com/Ryxeuf/fantasy-football-game/commit/04b58ad2f5356c24150fe7afd4cfb4640296e182))
+* **server:** split team.ts — extract 2 selection handlers (S27.8.26) ([#704](https://github.com/Ryxeuf/fantasy-football-game/issues/704)) ([1a936e2](https://github.com/Ryxeuf/fantasy-football-game/commit/1a936e2f6ccf4ce6c5531ed9118e7c2e8054eb97))
+* **server:** split team.ts — extract 3 mutation handlers (S27.8.25) ([#703](https://github.com/Ryxeuf/fantasy-football-game/issues/703)) ([18c6949](https://github.com/Ryxeuf/fantasy-football-game/commit/18c6949ad88eb77d20d20787bd4e01fa610a5dc8))
+* **server:** split team.ts — extract 4 player handlers (S27.8.24) ([#702](https://github.com/Ryxeuf/fantasy-football-game/issues/702)) ([17c31a3](https://github.com/Ryxeuf/fantasy-football-game/commit/17c31a3f28cf235085799daf3df84a9614dc11f9))
+* **server:** split team.ts — extract 4 readonly handlers (S27.8.22) ([#700](https://github.com/Ryxeuf/fantasy-football-game/issues/700)) ([f477ad8](https://github.com/Ryxeuf/fantasy-football-game/commit/f477ad80f50dce9a4052272328b473ab15a06b26))
+* **server:** split team.ts — extract 4 star-player handlers (S27.8.23) ([#701](https://github.com/Ryxeuf/fantasy-football-game/issues/701)) ([94b1fc2](https://github.com/Ryxeuf/fantasy-football-game/commit/94b1fc2a6c811d726038888864ca6a3e061727f1))
+* **server:** split team.ts — extract handleBuildTeam (S27.8.27) ([#705](https://github.com/Ryxeuf/fantasy-football-game/issues/705)) ([c07eeee](https://github.com/Ryxeuf/fantasy-football-game/commit/c07eeeedd2f8501d55421a0ec44aa0af76e263d6))
+* **server:** split team.ts — extract handlePurchase (S27.8.28) ([#706](https://github.com/Ryxeuf/fantasy-football-game/issues/706)) ([3c72e19](https://github.com/Ryxeuf/fantasy-football-game/commit/3c72e19fe2e24c94a15d0bbe5e03d8c556cc0511))
+* **server:** split team.ts — final extraction + S27 TERMINE (S27.8.33) ([#711](https://github.com/Ryxeuf/fantasy-football-game/issues/711)) ([ad94c1e](https://github.com/Ryxeuf/fantasy-football-game/commit/ad94c1ee1117d9a79cd1b0a93e172db9319e0524))
+
 ## [1.96.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.95.0...v1.96.0) (2026-05-07)
 
 
