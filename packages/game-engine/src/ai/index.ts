@@ -17,6 +17,9 @@ export type {
   PositionEvaluation,
 } from './evaluator';
 
+// Lot 3.A.0.b — 2-ply minimax lookahead for END_TURN decisions.
+export { pickBestMove2Ply, scoreMove2Ply } from './lookahead';
+
 export {
   AI_DIFFICULTY_LEVELS,
   AI_DIFFICULTY_PROFILES,

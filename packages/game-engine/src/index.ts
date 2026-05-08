@@ -404,7 +404,9 @@ export {
 export {
   evaluatePosition,
   scoreMove,
+  scoreMove2Ply,
   pickBestMove,
+  pickBestMove2Ply,
   EVAL_WEIGHTS,
   resolveWeights,
   AI_DIFFICULTY_LEVELS,
