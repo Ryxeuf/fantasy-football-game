@@ -6,8 +6,6 @@ import jwt from "jsonwebtoken";
 import { acceptAndMaybeStartMatch } from "../services/match-start";
 import { cancelMatch } from "../services/match-cancel";
 import type { Move } from "@bb/game-engine";
-import { getUserTeamSide } from "../services/turn-ownership";
-import { ensureSetupPhasePersisted } from "../services/prematch-setup";
 import { validate } from "../middleware/validate";
 import { processMove } from "../services/move-processor";
 import {
@@ -20,11 +18,7 @@ import {
   createPracticeOnlineMatchSchema,
 } from "../schemas/match.schemas";
 import { createOnlinePracticeMatch } from "../services/practice-match";
-import { scheduleAILoop } from "../services/ai-loop";
-import { runAISetupIfNeeded } from "../services/ai-setup";
-import { runAIKickoffIfNeeded } from "../services/ai-kickoff";
 import type { AIDifficulty } from "@bb/game-engine";
-import { getSpectatorCount } from "../game-spectator";
 import { MATCH_SECRET } from "../config";
 import { serverLog } from "../utils/server-log";
 import { sendError, sendSuccess } from "../utils/api-response";
@@ -208,215 +202,17 @@ import { handleGetMatchState as handleGetMatchStateImpl } from './match-state-ha
 router.get("/:id/state", authUser, handleGetMatchStateImpl);
 
 // Valider le placement des joueurs en phase setup
+// S27.8.29 — handleValidateSetup extrait dans
+// `routes/match-validate-setup-handler.ts`. Re-export pour preserver
+// l'API publique consommee par les tests d'integration.
+export { handleValidateSetup } from './match-validate-setup-handler';
+import { handleValidateSetup as handleValidateSetupImpl } from './match-validate-setup-handler';
+
 router.post(
   "/:id/validate-setup",
   authUser,
   validate(validateSetupSchema),
-  async (req: AuthenticatedRequest, res) => {
-    try {
-      const matchId = req.params.id;
-      const { placedPlayers, playerPositions } = req.body;
-
-      // Vérifier que le match existe et est en phase setup
-      const match = await prisma.match.findUnique({
-        where: { id: matchId },
-        include: { turns: { orderBy: { number: "asc" } } },
-      });
-
-      if (!match) {
-        return res.status(404).json({ error: "Partie introuvable" });
-      }
-
-      if (match.status !== "prematch-setup" && match.status !== "active") {
-        return res
-          .status(400)
-          .json({ error: "La partie n'est pas en phase de setup" });
-      }
-
-      // Vérifier que l'utilisateur est bien un des joueurs de la partie
-      const selections = await prisma.teamSelection.findMany({
-        where: { matchId },
-        select: { userId: true },
-      });
-
-      const userIds = selections.map((s: any) => s.userId);
-      if (!userIds.includes(req.user!.id)) {
-        return res
-          .status(403)
-          .json({ error: "Vous n'êtes pas un joueur de cette partie" });
-      }
-
-      // Idempotently persist the idle → setup transition before doing anything
-      // else. The returned `gameState` is the canonical post-bypass state
-      // (preferring `setup-init`/`validate-setup` over a stale
-      // `pre-match-sequence` written by the parallel automation).
-      const ensured = await ensureSetupPhasePersisted(matchId, prisma as any);
-
-      // Re-read turns after the potential setup-init insert.
-      const refreshedTurns = await prisma.turn.findMany({
-        where: { matchId },
-        orderBy: { number: "asc" },
-      });
-
-      // Créer un nouveau turn pour sauvegarder le placement
-      const newTurn = await prisma.turn.create({
-        data: {
-          matchId,
-          number: refreshedTurns.length + 1,
-          payload: {
-            type: "validate-setup",
-            userId: req.user!.id,
-            placedPlayers,
-            playerPositions,
-            timestamp: new Date().toISOString(),
-          },
-        },
-      });
-
-      // Build the working gameState. Prefer the most recent `validate-setup`
-      // (carries player placements), then fall back to the canonical state
-      // returned by `ensureSetupPhasePersisted` (skips a stale
-      // `pre-match-sequence` written by the parallel automation).
-      const lastValidateSetupTurn = [...refreshedTurns]
-        .reverse()
-        .find(
-          (t: any) =>
-            t.payload?.type === "validate-setup" && t.payload?.gameState,
-        );
-      let gameState: any = lastValidateSetupTurn
-        ? lastValidateSetupTurn.payload.gameState
-        : ensured?.gameState;
-      if (typeof gameState === "string") {
-        gameState = JSON.parse(gameState);
-      }
-
-      // Mettre à jour les positions des joueurs dans l'état du jeu
-      if (gameState && gameState.players) {
-        gameState.players.forEach((player: any) => {
-          const newPosition = playerPositions.find(
-            (pos: any) => pos.playerId === player.id,
-          );
-          if (newPosition) {
-            player.pos = { x: newPosition.x, y: newPosition.y };
-          }
-        });
-      }
-
-      // Vérifier que l'utilisateur est bien le coach actuel
-      const userTeamSide = await getUserTeamSide(prisma as any, matchId, req.user!.id);
-      const currentCoach = gameState.preMatch?.currentCoach;
-      if (userTeamSide !== currentCoach) {
-        return res.status(403).json({ error: "Ce n'est pas votre tour de placer" });
-      }
-
-      const playersOnField = gameState.players?.filter(
-        (p: any) => p.team === currentCoach && p.pos.x >= 0
-      ).length || 0;
-
-      // Si 11 joueurs sont placés, utiliser la fonction de validation explicite
-      if (playersOnField === 11) {
-        const { validatePlayerPlacement, startKickoffSequence } = await import("@bb/game-engine");
-
-        // Valider le placement et passer à la phase suivante
-        gameState = validatePlayerPlacement(gameState);
-
-        // Si on arrive en phase kickoff, commencer la séquence
-        if (gameState.preMatch.phase === 'kickoff') {
-          gameState = startKickoffSequence(gameState);
-        }
-      }
-
-      // Sauvegarder l'état mis à jour dans le nouveau turn
-      await prisma.turn.update({
-        where: { id: newTurn.id },
-        data: {
-          payload: {
-            ...newTurn.payload,
-            gameState,
-          },
-        },
-      });
-
-      // Notifier l'adversaire via WebSocket
-      try {
-        const { broadcastGameState } = await import("../services/game-broadcast");
-        broadcastGameState(matchId, gameState, { type: "validate-setup" }, req.user!.id);
-      } catch {}
-
-      // Si apres validation l'IA doit placer ses joueurs, on le fait cote serveur.
-      // Sans ceci, le match reste bloque en phase setup pour les matchs pratique online.
-      const aiMatchForSetup = await prisma.match.findUnique({
-        where: { id: matchId },
-        select: { aiOpponent: true, aiTeamSide: true },
-      });
-      if (
-        aiMatchForSetup?.aiOpponent &&
-        aiMatchForSetup.aiTeamSide &&
-        gameState.preMatch?.phase === "setup" &&
-        gameState.preMatch?.currentCoach === aiMatchForSetup.aiTeamSide
-      ) {
-        const report = await runAISetupIfNeeded(matchId, prisma as any);
-        if (report.ran && report.gameState) {
-          gameState = report.gameState;
-        }
-      }
-
-      // Mettre à jour le statut du match si kickoff atteint
-      if (gameState.preMatch?.phase === 'kickoff' || gameState.preMatch?.phase === 'kickoff-sequence') {
-        await prisma.match.update({
-          where: { id: matchId },
-          data: { status: "active" },
-        });
-        // If the active player is the AI, kick off the loop.
-        const postMatch = await prisma.match.findUnique({
-          where: { id: matchId },
-          select: { aiOpponent: true, aiTeamSide: true },
-        });
-        if (
-          postMatch?.aiOpponent &&
-          postMatch.aiTeamSide &&
-          gameState.currentPlayer === postMatch.aiTeamSide
-        ) {
-          scheduleAILoop(matchId);
-        }
-        // Si l'IA est l'equipe qui frappe, placer immediatement le ballon pour
-        // eviter que le match reste bloque sur l'etape `place-ball` du kickoff.
-        if (
-          postMatch?.aiOpponent &&
-          postMatch.aiTeamSide &&
-          gameState.preMatch?.phase === 'kickoff-sequence' &&
-          gameState.preMatch?.kickoffStep === 'place-ball' &&
-          gameState.preMatch?.kickingTeam === postMatch.aiTeamSide
-        ) {
-          const kickoffReport = await runAIKickoffIfNeeded(matchId, prisma as any);
-          if (kickoffReport.ran && kickoffReport.gameState) {
-            gameState = kickoffReport.gameState;
-          }
-        }
-      }
-
-      // Déterminer le message approprié
-      let message = "Placement validé et sauvegardé";
-      if (playersOnField === 11) {
-        if (gameState.preMatch?.phase === 'kickoff' || gameState.preMatch?.phase === 'kickoff-sequence') {
-          message = "Placement validé - Le match commence !";
-        } else {
-          message = "Placement validé - Passage au coach suivant";
-        }
-      }
-
-      return res.json({
-        success: true,
-        gameState,
-        message,
-        isMyTurn: gameState.preMatch?.currentCoach === userTeamSide,
-        myTeamSide: userTeamSide,
-      });
-    } catch (e: any) {
-      serverLog.error("Erreur lors de la validation du setup:", e);
-      return res.status(500).json({ error: "Erreur serveur" });
-    }
-  },
+  handleValidateSetupImpl,
 );
 
 // S27.8.21 — Handlers de la sequence de kickoff (place-ball / kick
