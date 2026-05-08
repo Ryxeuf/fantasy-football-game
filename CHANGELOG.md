@@ -1,3 +1,12 @@
+## [1.98.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.97.0...v1.98.0) (2026-05-08)
+
+
+### ✨ Features
+
+* **ai:** 2-ply minimax lookahead for END_TURN (Lot 3.A.0.b) ([#683](https://github.com/Ryxeuf/fantasy-football-game/issues/683)) ([61d84e4](https://github.com/Ryxeuf/fantasy-football-game/commit/61d84e4258c56ba7a79af9c2d6a9e3fa5859df92))
+* **ai:** per-race opening book bonus (Lot 3.A.0.c) ([#684](https://github.com/Ryxeuf/fantasy-football-game/issues/684)) ([1fe4f24](https://github.com/Ryxeuf/fantasy-football-game/commit/1fe4f24eeb6b7163f734418900c95749a4cbff41))
+* **ai:** tactical profile modulates AI weights (Lot 3.A.0.a) ([#682](https://github.com/Ryxeuf/fantasy-football-game/issues/682)) ([10ec5f7](https://github.com/Ryxeuf/fantasy-football-game/commit/10ec5f7fec30c532c12ebc5617f49b47ddc6b767)), closes [#4](https://github.com/Ryxeuf/fantasy-football-game/issues/4)
+
 ## [1.97.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.96.0...v1.97.0) (2026-05-08)
 
 
