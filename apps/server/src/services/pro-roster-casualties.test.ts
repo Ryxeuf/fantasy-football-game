@@ -264,4 +264,177 @@ describe("sweepMatchCasualties — sprint 1.E.4", () => {
     expect(out.processed).toBe(1);
     expect(out.failed).toBe(1);
   });
+
+  it("Lot 3.C.1 — sweep cible 'ready' OR 'completed' (status post-sim)", async () => {
+    mocked.proLeagueMatch.findMany.mockResolvedValue([]);
+    await sweepMatchCasualties();
+    expect(mocked.proLeagueMatch.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          status: { in: ["ready", "completed"] },
+        }),
+      }),
+    );
+  });
 });
+
+describe("applyMatchCasualties — Lot 3.C.1 (roster-aware)", () => {
+  it("status='ready' (post-sim) est accepté (plus uniquement 'completed')", async () => {
+    mocked.proLeagueMatch.findUnique.mockResolvedValue({
+      id: "m1",
+      status: "ready",
+      casualtiesAppliedAt: null,
+      casualtyCount: 0,
+      homeTeamId: "th",
+      awayTeamId: "ta",
+      replayId: null,
+    });
+    const out = await applyMatchCasualties("m1");
+    // Pas d'erreur MATCH_NOT_COMPLETED ; comportement no-casualties.
+    expect(out.skipReason).toBe("no_casualties");
+  });
+
+  it("rejette les autres statuts ('scheduled', 'failed', 'in_progress')", async () => {
+    for (const status of ["scheduled", "in_progress", "failed"]) {
+      mocked.proLeagueMatch.findUnique.mockResolvedValueOnce({
+        id: "m1",
+        status,
+        casualtiesAppliedAt: null,
+        casualtyCount: 0,
+        homeTeamId: "th",
+        awayTeamId: "ta",
+        replayId: null,
+      });
+      try {
+        await applyMatchCasualties("m1");
+        throw new Error("expected throw");
+      } catch (err) {
+        expect(err).toBeInstanceOf(CasualtyApplicationError);
+        expect((err as CasualtyApplicationError).code).toBe(
+          "MATCH_NOT_COMPLETED",
+        );
+      }
+    }
+  });
+
+  it("playerId réel (CUID) → applique au joueur ciblé, pas un random pick", async () => {
+    mocked.proLeagueMatch.findUnique.mockResolvedValue({
+      id: "m_real",
+      status: "ready",
+      casualtiesAppliedAt: null,
+      casualtyCount: 1,
+      homeTeamId: "th",
+      awayTeamId: "ta",
+      replayId: "m_real",
+    });
+    mocked.replay.findUnique.mockResolvedValue({ payload: Buffer.from([]) });
+    mockedDecompress.mockResolvedValue([
+      // playerId réel = CUID-like (pas "home-X" / "away-X").
+      { type: "CASUALTY", meta: { playerId: "ckxyz1234567890abcdef", team: "home" } },
+    ] as never);
+    // findMany retourne un seul roster pour confirmer la cible.
+    mocked.proTeamRoster.findMany.mockResolvedValue([
+      {
+        id: "ckxyz1234567890abcdef",
+        teamId: "th",
+        name: "Snorri",
+        niggling: 0,
+        maReduction: 0,
+        stReduction: 0,
+        avReduction: 0,
+      },
+    ]);
+
+    const out = await applyMatchCasualties("m_real");
+    expect(out.skipped).toBe(false);
+    expect(out.affected).toBe(1);
+    expect(out.outcomes[0]).toMatchObject({
+      side: "home",
+      rosterId: "ckxyz1234567890abcdef",
+      playerName: "Snorri",
+    });
+    expect(mocked.proTeamRoster.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "ckxyz1234567890abcdef" },
+      }),
+    );
+  });
+
+  it("playerId réel mais pas dans le roster team → fallback random sur la team", async () => {
+    mocked.proLeagueMatch.findUnique.mockResolvedValue({
+      id: "m_orphan",
+      status: "ready",
+      casualtiesAppliedAt: null,
+      casualtyCount: 1,
+      homeTeamId: "th",
+      awayTeamId: "ta",
+      replayId: "m_orphan",
+    });
+    mocked.replay.findUnique.mockResolvedValue({ payload: Buffer.from([]) });
+    mockedDecompress.mockResolvedValue([
+      // CUID inconnu de la DB (orphan, ex: roster supprime entre-temps).
+      { type: "CASUALTY", meta: { playerId: "ckorphanid000000000abc", team: "away" } },
+    ] as never);
+    mocked.proTeamRoster.findMany.mockResolvedValueOnce([
+      {
+        id: "a0",
+        teamId: "ta",
+        name: "Replacement",
+        niggling: 0,
+        maReduction: 0,
+        stReduction: 0,
+        avReduction: 0,
+      },
+    ]);
+
+    const out = await applyMatchCasualties("m_orphan");
+    expect(out.affected).toBe(1);
+    expect(out.outcomes[0].side).toBe("away");
+    // Ciblé Replacement (le seul disponible) — fallback random a tape sur lui.
+    expect(out.outcomes[0].rosterId).toBe("a0");
+  });
+
+  it("mix réel + synthétique : applique chaque event indépendamment", async () => {
+    mocked.proLeagueMatch.findUnique.mockResolvedValue({
+      id: "m_mix",
+      status: "ready",
+      casualtiesAppliedAt: null,
+      casualtyCount: 2,
+      homeTeamId: "th",
+      awayTeamId: "ta",
+      replayId: "m_mix",
+    });
+    mocked.replay.findUnique.mockResolvedValue({ payload: Buffer.from([]) });
+    mockedDecompress.mockResolvedValue([
+      { type: "CASUALTY", meta: { playerId: "ckreal1234567890abcdef", team: "home" } },
+      { type: "CASUALTY", meta: { playerId: "away-LOS3" } }, // synthétique
+    ] as never);
+    mocked.proTeamRoster.findMany.mockResolvedValue([
+      {
+        id: "ckreal1234567890abcdef",
+        teamId: "th",
+        name: "RealPlayer",
+        niggling: 0,
+        maReduction: 0,
+        stReduction: 0,
+        avReduction: 0,
+      },
+      {
+        id: "a0",
+        teamId: "ta",
+        name: "AwaySub",
+        niggling: 0,
+        maReduction: 0,
+        stReduction: 0,
+        avReduction: 0,
+      },
+    ]);
+
+    const out = await applyMatchCasualties("m_mix");
+    expect(out.affected).toBe(2);
+    expect(out.outcomes.map((o) => o.side).sort()).toEqual(["away", "home"]);
+    const real = out.outcomes.find((o) => o.side === "home");
+    expect(real?.rosterId).toBe("ckreal1234567890abcdef");
+  });
+});
+

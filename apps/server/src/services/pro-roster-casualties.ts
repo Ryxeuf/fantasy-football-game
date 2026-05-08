@@ -103,6 +103,12 @@ export function rollCasualtyOutcome(rand: number): CasualtyOutcome {
  * Compte les casualties par côté en inspectant le préfixe du
  * `playerId` synthétique dans les events. Pure (consomme un array
  * d'events). Le sim émet la victime (= côté qui subit).
+ *
+ * Lot 3.C.1 — quand le full driver pousse des rosters réels via
+ * `SimInput.home.roster`, les playerId sont des `ProTeamRoster.id`
+ * (CUID) sans préfixe. Le compteur prend en compte aussi
+ * `meta.team` (`'home' | 'away'`) qui est toujours émis depuis
+ * lot 3.A.2.b (full-driver-events:194).
  */
 export function countCasualtiesPerSide(
   events: readonly unknown[],
@@ -113,7 +119,17 @@ export function countCasualtiesPerSide(
     if (!ev || typeof ev !== "object") continue;
     const e = ev as { type?: unknown; meta?: unknown };
     if (e.type !== "CASUALTY") continue;
-    const meta = (e.meta ?? {}) as { playerId?: unknown };
+    const meta = (e.meta ?? {}) as { playerId?: unknown; team?: unknown };
+    // Lot 3.C.1 — priorité au champ `team` (toujours émis), fallback
+    // sur le préfixe synthétique pour les vieux replays hybrid.
+    if (meta.team === "home") {
+      home += 1;
+      continue;
+    }
+    if (meta.team === "away") {
+      away += 1;
+      continue;
+    }
     if (typeof meta.playerId !== "string") continue;
     if (meta.playerId.startsWith("home-")) home += 1;
     else if (meta.playerId.startsWith("away-")) away += 1;
@@ -180,8 +196,40 @@ function applyOutcomeToData(
 }
 
 /**
- * Applique les casualties d'un match `completed` sur les rosters
- * concernés. Idempotent via `casualtiesAppliedAt`.
+ * Status acceptés pour le post-process casualty (Lot 3.C.1).
+ *
+ * `'ready'` = match simulé, en attente de broadcast (status par défaut
+ * apres `simulateProMatch`). En prod aucun mécanisme automatique ne le
+ * transitionne vers `'completed'` — donc la sweep DOIT inclure `ready`
+ * pour fonctionner.
+ *
+ * `'completed'` = match terminé (broadcast fini ou seed direct).
+ * Conservé pour rétrocompat avec les seeds de dev.
+ */
+const POST_SIM_STATUSES = new Set(["ready", "completed"]);
+
+/**
+ * Détecte si un `playerId` est synthétique (`'home-LOS'`, `'away-3'`,
+ * etc.) ou s'il s'agit d'un `ProTeamRoster.id` réel (CUID).
+ *
+ * Discriminer purement par le préfixe : tout ID qui ne commence pas
+ * par `home-` ou `away-` est traité comme un CUID candidat. Un CUID
+ * commence par `c` + 24 caractères hex/base32 — mais on n'impose pas
+ * cette regex stricte ici : la lookup DB échouera et on tombera en
+ * fallback random.
+ */
+function isSyntheticPlayerId(playerId: string): boolean {
+  return playerId.startsWith("home-") || playerId.startsWith("away-");
+}
+
+/**
+ * Applique les casualties d'un match `ready` ou `completed` sur les
+ * rosters concernés. Idempotent via `casualtiesAppliedAt`.
+ *
+ * Lot 3.C.1 — la fonction lit individuellement chaque CASUALTY event
+ * et préfère cibler le `playerId` réel (CUID = `ProTeamRoster.id`)
+ * quand le full driver l'émet. Sinon, fallback sur le pick random
+ * legacy parmi les actifs de l'équipe.
  */
 export async function applyMatchCasualties(
   matchId: string,
@@ -204,10 +252,10 @@ export async function applyMatchCasualties(
       `ProLeagueMatch '${matchId}' introuvable`,
     );
   }
-  if (match.status !== "completed") {
+  if (!POST_SIM_STATUSES.has(match.status as string)) {
     throw new CasualtyApplicationError(
       "MATCH_NOT_COMPLETED",
-      `Match status='${match.status}' — casualties post-process réservé aux matchs completed`,
+      `Match status='${match.status}' — casualties post-process réservé aux matchs ready/completed`,
     );
   }
   if (match.casualtiesAppliedAt) {
@@ -238,7 +286,7 @@ export async function applyMatchCasualties(
     };
   }
 
-  // Charge le replay pour compter par côté.
+  // Charge le replay pour répartir.
   const replay = await prisma.replay.findUnique({
     where: { matchId: matchId },
     select: { payload: true },
@@ -255,15 +303,41 @@ export async function applyMatchCasualties(
   const homeTeamId = match.homeTeamId as string;
   const awayTeamId = match.awayTeamId as string;
 
+  // Lot 3.C.1 — extraction event-par-event au lieu du compteur global.
+  // Chaque CASUALTY event porte (playerId, team) ; pour les playerId
+  // réels (CUID matching `ProTeamRoster.id`) on cible directement,
+  // sinon fallback sur pick random côté équipe.
+  type CasualtyTarget = {
+    readonly side: "home" | "away";
+    readonly playerId: string;
+    readonly synthetic: boolean;
+  };
+  const targets: CasualtyTarget[] = [];
+  for (const ev of events) {
+    if (!ev || typeof ev !== "object") continue;
+    const e = ev as { type?: unknown; meta?: unknown };
+    if (e.type !== "CASUALTY") continue;
+    const meta = (e.meta ?? {}) as { playerId?: unknown; team?: unknown };
+    if (typeof meta.playerId !== "string") continue;
+    const synthetic = isSyntheticPlayerId(meta.playerId);
+    let side: "home" | "away" | null = null;
+    if (meta.team === "home" || meta.team === "away") {
+      side = meta.team;
+    } else if (synthetic) {
+      side = meta.playerId.startsWith("home-") ? "home" : "away";
+    }
+    if (!side) continue;
+    targets.push({ side, playerId: meta.playerId, synthetic });
+  }
+
   const rng = mulberry32(hashSeed(`cas:${matchId}`));
   const outcomes: AppliedCasualty[] = [];
 
-  const sides: ReadonlyArray<["home" | "away", string, number]> = [
-    ["home", homeTeamId, home],
-    ["away", awayTeamId, away],
-  ];
-  for (const [side, teamId, count] of sides) {
-    if (count <= 0) continue;
+  // Cache du roster par teamId pour éviter une lookup par event.
+  const rosterCache = new Map<string, RosterPick[]>();
+  const loadRoster = async (teamId: string): Promise<RosterPick[]> => {
+    const cached = rosterCache.get(teamId);
+    if (cached) return cached;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const roster = (await prisma.proTeamRoster.findMany({
       where: { teamId, status: "active" },
@@ -276,23 +350,48 @@ export async function applyMatchCasualties(
         avReduction: true,
       },
     })) as RosterPick[];
+    rosterCache.set(teamId, roster);
+    return roster;
+  };
+
+  for (const target of targets) {
+    const teamId = target.side === "home" ? homeTeamId : awayTeamId;
+    const roster = await loadRoster(teamId);
     if (roster.length === 0) continue;
 
-    const picks = pickRandomRosters(roster, count, rng);
-    for (const pick of picks) {
-      const outcome = rollCasualtyOutcome(rng());
-      const { data } = applyOutcomeToData(outcome, pick);
-      await prisma.proTeamRoster.update({
-        where: { id: pick.id },
-        data,
-      });
-      outcomes.push({
-        side,
-        rosterId: pick.id,
-        playerName: pick.name,
-        outcome,
-      });
-    }
+    // 1) Cherche le `playerId` réel sur le roster de la team.
+    const directHit = !target.synthetic
+      ? roster.find((r) => r.id === target.playerId)
+      : undefined;
+
+    // 2) Sinon (synthétique OU CUID orphan) → pick random parmi les
+    //    actifs encore non touchés dans ce match.
+    const alreadyHitIds = new Set(
+      outcomes
+        .filter((o) => o.side === target.side)
+        .map((o) => o.rosterId),
+    );
+    const picked: RosterPick | undefined =
+      directHit ??
+      pickRandomRosters(
+        roster.filter((r) => !alreadyHitIds.has(r.id)),
+        1,
+        rng,
+      )[0];
+    if (!picked) continue;
+
+    const outcome = rollCasualtyOutcome(rng());
+    const { data } = applyOutcomeToData(outcome, picked);
+    await prisma.proTeamRoster.update({
+      where: { id: picked.id },
+      data,
+    });
+    outcomes.push({
+      side: target.side,
+      rosterId: picked.id,
+      playerName: picked.name,
+      outcome,
+    });
   }
 
   await prisma.proLeagueMatch.update({
@@ -312,8 +411,13 @@ export async function applyMatchCasualties(
 }
 
 /**
- * Cron sweep : trouve les matchs `completed` avec `casualtiesAppliedAt`
- * null et applique. Erreur par match isolée. Limit 50.
+ * Cron sweep : trouve les matchs `ready` ou `completed` avec
+ * `casualtiesAppliedAt` null et applique. Erreur par match isolée.
+ * Limit 50.
+ *
+ * Lot 3.C.1 — accepte `'ready'` parce qu'en prod aucun process ne
+ * transitionne automatiquement `ready -> completed`. Sans ce filtre,
+ * la sweep ne traitait jamais aucun match en pratique.
  */
 export async function sweepMatchCasualties(): Promise<{
   inspected: number;
@@ -322,7 +426,7 @@ export async function sweepMatchCasualties(): Promise<{
 }> {
   const candidates = await prisma.proLeagueMatch.findMany({
     where: {
-      status: "completed",
+      status: { in: ["ready", "completed"] },
       casualtiesAppliedAt: null,
       // Lot 2.C.3 — sandbox matchs n'appliquent pas leurs casualties
       // au roster (sinon les coachs subiraient des absences sur des
@@ -330,7 +434,7 @@ export async function sweepMatchCasualties(): Promise<{
       isTest: false,
     },
     select: { id: true },
-    orderBy: { completedAt: "asc" },
+    orderBy: { simulatedAt: "asc" },
     take: 50,
   });
   let processed = 0;
