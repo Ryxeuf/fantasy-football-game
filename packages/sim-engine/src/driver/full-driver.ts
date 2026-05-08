@@ -67,6 +67,8 @@ import {
 } from '../tactics/tactical-profile';
 import type { MatchEvent } from '@bb/shared-types';
 
+import { MS_PER_ACTION, diffStatesToEvents } from './full-driver-events';
+
 /**
  * Plafond d'actions par match. Sécurité contre une boucle d'IA qui
  * ne progresse pas (deux IAs qui ne s'entendent pas sur un END_TURN).
@@ -231,6 +233,37 @@ export function runFullDriver(input: SimInput): SimResult {
   // des vrais rosters Pro League.
   let state = setup();
 
+  // Lot 3.A.2.b — collect MatchEvent[] via state diff après chaque
+  // applyMove. Le KICKOFF event est émis avant la boucle et l'END
+  // est inféré du diff (gamePhase 'ended').
+  const events: MatchEvent[] = [
+    {
+      type: 'KICKOFF',
+      displayAtMs: 0,
+      engineVer: ENGINE_VER,
+      meta: {
+        home: input.home.id,
+        away: input.away.id,
+        weather: input.weather ?? 'nice',
+        receivingTeam: 'away',
+      },
+    },
+    // TURN_START initial pour le premier tour — sans cet event,
+    // le narrator commence sans header de tour.
+    {
+      type: 'TURN_START',
+      displayAtMs: 0,
+      engineVer: ENGINE_VER,
+      meta: {
+        half: state.half,
+        turn: state.turn,
+        drivingTeam: state.currentPlayer === 'A' ? 'home' : 'away',
+        score: { home: state.score.teamA, away: state.score.teamB },
+        ballYardline: 4,
+      },
+    },
+  ];
+
   let actionsApplied = 0;
   let staleEndTurns = 0;
   let lastTurn = state.turn;
@@ -251,57 +284,69 @@ export function runFullDriver(input: SimInput): SimResult {
       if (staleEndTurns > MAX_STALE_END_TURNS) break;
     }
 
+    const prev = state;
+    let next: GameState;
     try {
-      state = applyMove(state, move, engineRng);
+      next = applyMove(state, move, engineRng);
     } catch {
-      // Le coup retourné par l'IA s'avère illégal (pendingApothecary,
-      // pendingPushChoice, etc. non couverts). On force END_TURN pour
-      // avancer.
+      // Le coup retourné par l'IA s'avère illégal. On force END_TURN
+      // pour avancer.
       try {
-        state = applyMove(state, { type: 'END_TURN' }, engineRng);
+        next = applyMove(state, { type: 'END_TURN' }, engineRng);
       } catch {
         break;
       }
     }
 
+    // Lot 3.A.2.b — diff prev → next pour émettre les events
+    // narratifs (BLOCK/PASS/DODGE/TD/CASUALTY/KO/TURNOVER/HALFTIME/
+    // END/TURN_START). Timestamps incrémentaux 1s/action.
+    const displayAtMs = (actionsApplied + 1) * MS_PER_ACTION;
+    const newEvents = diffStatesToEvents(prev, next, {
+      displayAtMs,
+      move,
+    });
+    events.push(...newEvents);
+
+    state = next;
     lastTurn = state.turn;
     lastHalf = state.half;
     actionsApplied += 1;
+  }
+
+  // Si le match s'est terminé via timeout / break, on émet un END
+  // synthétique pour que le narrator + broadcaster aient leur clôture.
+  if (!events.some((e) => e.type === 'END')) {
+    events.push({
+      type: 'END',
+      displayAtMs: (actionsApplied + 1) * MS_PER_ACTION,
+      engineVer: ENGINE_VER,
+      meta: {
+        score: { home: state.score.teamA, away: state.score.teamB },
+        outcome:
+          state.score.teamA > state.score.teamB
+            ? 'home'
+            : state.score.teamB > state.score.teamA
+              ? 'away'
+              : 'draw',
+      },
+    });
   }
 
   const stats = deriveStats(state);
   const casualties = buildCasualties(state);
   const outcome = deriveOutcome(stats.score);
 
-  // MVP : pas d'events MatchEvent réels (Lot 3.A.2.b les ajoutera).
-  // On émet uniquement les events terminus pour rester compatible
-  // avec l'infrastructure broadcaster qui attend au moins KICKOFF + END.
-  const events: MatchEvent[] = [
-    {
-      type: 'KICKOFF',
-      displayAtMs: 0,
-      engineVer: ENGINE_VER,
-      meta: {
-        home: input.home.id,
-        away: input.away.id,
-        weather: input.weather ?? 'nice',
-        receivingTeam: 'away',
-      },
-    },
-    {
-      type: 'END',
-      displayAtMs: 1,
-      engineVer: ENGINE_VER,
-      meta: { score: stats.score, outcome },
-    },
-  ];
-
+  // Lot 3.A.2.b — `events` a été collecté tour par tour via
+  // diffStatesToEvents au-dessus. On compte les turnovers réels en
+  // post-process pour cohérence avec le hybrid driver summary.
+  const turnoverCount = events.filter((e) => e.type === 'TURNOVER').length;
   const summary: MatchSummary = {
     score: stats.score,
     outcome,
     durationMs: 0,
     touchdownCount: stats.touchdownCount,
-    turnoverCount: stats.turnoverCount,
+    turnoverCount,
     nuffleCount: 0,
     underdogBoostCount: 0,
     momentum: [],
