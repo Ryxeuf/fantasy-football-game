@@ -297,6 +297,8 @@ export async function getMyFeed(userId: string): Promise<FeedEntry[]> {
       where: {
         OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }],
         status: { in: ["scheduled", "ready"] },
+        // Lot 2.C.3 — fan feed n'inclut pas les sandbox matchs.
+        isTest: false,
       },
       orderBy: { scheduledAt: "asc" },
       take: FEED_UPCOMING_PER_TEAM,
@@ -310,6 +312,7 @@ export async function getMyFeed(userId: string): Promise<FeedEntry[]> {
       where: {
         OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }],
         status: "completed",
+        isTest: false,
       },
       orderBy: { scheduledAt: "desc" },
       take: FEED_RECENT_PER_TEAM,

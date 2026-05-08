@@ -227,10 +227,21 @@ export async function placeBet(input: PlaceBetInput): Promise<ProBetSummary> {
       config: true,
       status: true,
       closesAt: true,
+      // Lot 2.C.3 — `match.isTest` permet de refuser tout pari sur
+      // un sandbox match. Aucun market ne devrait jamais être créé
+      // pour un sandbox match, mais on filtre par défense en
+      // profondeur au moment du placement.
+      match: { select: { isTest: true } },
     },
   });
   if (!market) {
     throw new MarketNotFoundError(input.marketId);
+  }
+  if (market.match?.isTest === true) {
+    throw new BetValidationError(
+      "TEST_MATCH",
+      "Les paris ne sont pas autorisés sur les matchs sandbox / test.",
+    );
   }
   const marketType = market.type as string;
   const marketStatus = market.status as string;

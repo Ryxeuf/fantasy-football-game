@@ -112,6 +112,10 @@ async function loadCompletedMatches(
     where: {
       status: { in: ["completed", "ready"] },
       simulatedAt: { gte: since, lte: now },
+      // Lot 2.C.3 — exclude sandbox / test matchs from the drift
+      // baseline so admin sandbox runs don't pollute the moving
+      // average of real production matches.
+      isTest: false,
       ...(seasonId ? { seasonId } : {}),
     },
     select: {

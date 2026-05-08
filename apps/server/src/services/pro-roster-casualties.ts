@@ -324,6 +324,10 @@ export async function sweepMatchCasualties(): Promise<{
     where: {
       status: "completed",
       casualtiesAppliedAt: null,
+      // Lot 2.C.3 — sandbox matchs n'appliquent pas leurs casualties
+      // au roster (sinon les coachs subiraient des absences sur des
+      // matchs qui ne devraient avoir aucun impact).
+      isTest: false,
     },
     select: { id: true },
     orderBy: { completedAt: "asc" },

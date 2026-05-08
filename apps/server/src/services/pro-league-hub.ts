@@ -194,6 +194,8 @@ export async function getProLeagueHubSnapshot(
     where: {
       seasonId,
       status: { in: ["scheduled", "ready"] },
+      // Lot 2.C.3 — exclure les sandbox matchs du hub public.
+      isTest: false,
     },
     orderBy: [{ scheduledAt: "asc" }],
     take: NEXT_MATCHES_LIMIT,
