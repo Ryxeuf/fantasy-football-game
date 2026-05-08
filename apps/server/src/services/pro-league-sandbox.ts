@@ -39,6 +39,7 @@
 import { ENGINE_VER as CURRENT_ENGINE_VER } from "@bb/sim-engine";
 
 import { prisma } from "../prisma";
+import { isValidDriverKind } from "./pro-league-driver-resolver";
 import { simulateProMatch } from "./pro-league-sim-runner";
 
 const SANDBOX_ROUND_NUMBER = 0;
@@ -48,6 +49,15 @@ export interface CreateTestMatchInput {
   readonly awayTeamId: string;
   /** Override seed for reproducibility (optional, default = derived from cuid). */
   readonly seed?: number;
+  /**
+   * Lot 3.B.1 — override optionnel du driver de simulation. Si fourni,
+   * persisté dans `ProLeagueMatch.driverKindOverride` ; le sim-runner
+   * utilisera cette valeur plutôt que le default de la saison. Permet
+   * à l'admin de tester un match en `full` driver sans changer la
+   * saison entière (ou inversement de re-jouer un match en `hybrid`
+   * après bug `full`).
+   */
+  readonly driverKind?: "hybrid" | "full";
 }
 
 export interface CreateTestMatchResult {
@@ -147,6 +157,14 @@ export async function createTestMatch(
   const season = await findLatestActiveSeason();
   const roundId = await ensureSandboxRound(season.id);
 
+  // Lot 3.B.1 — propage l'override driverKind si valide ; sinon
+  // null = la saison fournit le default. Validation defense-in-depth
+  // au cas où la couche route oublie le check Zod.
+  const driverKindOverride =
+    input.driverKind && isValidDriverKind(input.driverKind)
+      ? input.driverKind
+      : null;
+
   const created = await prisma.proLeagueMatch.create({
     data: {
       seasonId: season.id,
@@ -156,6 +174,7 @@ export async function createTestMatch(
       status: "scheduled",
       scheduledAt: new Date(),
       isTest: true,
+      driverKindOverride,
     },
     select: { id: true },
   });

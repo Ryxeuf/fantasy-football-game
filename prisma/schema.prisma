@@ -1188,10 +1188,15 @@ model ProLeagueSeason {
   /// engineVer pinne a la creation. Tous les matches de cette saison
   /// utilisent cette version pour la deterministe replay (lot 1.A.5).
   engineVer String
-  startsAt  DateTime?
-  endsAt    DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  /// Lot 3.B.1 — driver de simulation par defaut pour la saison.
+  /// "hybrid" = synthese archetype-vs-archetype (lot 0.A.2, default).
+  /// "full"   = auto-play game-engine roster-aware (lot 3.A.2).
+  /// Override possible par match via `ProLeagueMatch.driverKindOverride`.
+  driverKind String    @default("hybrid")
+  startsAt   DateTime?
+  endsAt     DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   rounds    ProLeagueRound[]
   matches   ProLeagueMatch[]
@@ -1252,6 +1257,10 @@ model ProLeagueMatch {
   /// wallet/leaderboards. Permet de tester un nouveau driver ou une
   /// nouvelle race-profile en prod sans polluer les compétitions.
   isTest              Boolean         @default(false)
+  /// Lot 3.B.1 — override optionnel du driver de simulation pour ce match
+  /// specifique. null = inherit `season.driverKind`. Sinon "hybrid" |
+  /// "full". Utilise pour A/B test progressif au sein d'une saison.
+  driverKindOverride  String?
   /// Seed sim-engine + engineVer pinne au moment de la simulation.
   /// Permet de rejouer le match a l'identique tant que engineVer matche.
   seed                BigInt?

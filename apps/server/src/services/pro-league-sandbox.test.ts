@@ -109,6 +109,78 @@ describe("createTestMatch — Lot 2.C.2", () => {
     });
   });
 
+  it("Lot 3.B.1 — driverKindOverride par défaut null (= inherit saison)", async () => {
+    mocked.proTeam.findMany.mockResolvedValue([
+      { id: "t1", slug: "a" },
+      { id: "t2", slug: "b" },
+    ]);
+    mocked.proLeagueSeason.findFirst.mockResolvedValue({
+      id: "season-2026",
+      engineVer: "0.16.0",
+    });
+    mocked.proLeagueRound.findUnique.mockResolvedValue({ id: "r1" });
+    mocked.proLeagueMatch.create.mockResolvedValue({ id: "m1" });
+
+    await createTestMatch({ homeTeamId: "t1", awayTeamId: "t2" });
+
+    expect(mocked.proLeagueMatch.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ driverKindOverride: null }),
+      }),
+    );
+  });
+
+  it("Lot 3.B.1 — propage driverKind='full' dans driverKindOverride", async () => {
+    mocked.proTeam.findMany.mockResolvedValue([
+      { id: "t1", slug: "a" },
+      { id: "t2", slug: "b" },
+    ]);
+    mocked.proLeagueSeason.findFirst.mockResolvedValue({
+      id: "season-2026",
+      engineVer: "0.16.0",
+    });
+    mocked.proLeagueRound.findUnique.mockResolvedValue({ id: "r1" });
+    mocked.proLeagueMatch.create.mockResolvedValue({ id: "m1" });
+
+    await createTestMatch({
+      homeTeamId: "t1",
+      awayTeamId: "t2",
+      driverKind: "full",
+    });
+
+    expect(mocked.proLeagueMatch.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ driverKindOverride: "full" }),
+      }),
+    );
+  });
+
+  it("Lot 3.B.1 — driverKind invalide (defense-in-depth) → null", async () => {
+    mocked.proTeam.findMany.mockResolvedValue([
+      { id: "t1", slug: "a" },
+      { id: "t2", slug: "b" },
+    ]);
+    mocked.proLeagueSeason.findFirst.mockResolvedValue({
+      id: "season-2026",
+      engineVer: "0.16.0",
+    });
+    mocked.proLeagueRound.findUnique.mockResolvedValue({ id: "r1" });
+    mocked.proLeagueMatch.create.mockResolvedValue({ id: "m1" });
+
+    await createTestMatch({
+      homeTeamId: "t1",
+      awayTeamId: "t2",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      driverKind: "garbage" as any,
+    });
+
+    expect(mocked.proLeagueMatch.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ driverKindOverride: null }),
+      }),
+    );
+  });
+
   it("upsert le round sandbox (roundNumber=0) si absent", async () => {
     mocked.proTeam.findMany.mockResolvedValue([
       { id: "t1", slug: "a" },

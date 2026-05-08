@@ -51141,6 +51141,7 @@ export namespace Prisma {
     year: number | null
     status: string | null
     engineVer: string | null
+    driverKind: string | null
     startsAt: Date | null
     endsAt: Date | null
     createdAt: Date | null
@@ -51153,6 +51154,7 @@ export namespace Prisma {
     year: number | null
     status: string | null
     engineVer: string | null
+    driverKind: string | null
     startsAt: Date | null
     endsAt: Date | null
     createdAt: Date | null
@@ -51165,6 +51167,7 @@ export namespace Prisma {
     year: number
     status: number
     engineVer: number
+    driverKind: number
     startsAt: number
     endsAt: number
     createdAt: number
@@ -51187,6 +51190,7 @@ export namespace Prisma {
     year?: true
     status?: true
     engineVer?: true
+    driverKind?: true
     startsAt?: true
     endsAt?: true
     createdAt?: true
@@ -51199,6 +51203,7 @@ export namespace Prisma {
     year?: true
     status?: true
     engineVer?: true
+    driverKind?: true
     startsAt?: true
     endsAt?: true
     createdAt?: true
@@ -51211,6 +51216,7 @@ export namespace Prisma {
     year?: true
     status?: true
     engineVer?: true
+    driverKind?: true
     startsAt?: true
     endsAt?: true
     createdAt?: true
@@ -51310,6 +51316,7 @@ export namespace Prisma {
     year: number
     status: string
     engineVer: string
+    driverKind: string
     startsAt: Date | null
     endsAt: Date | null
     createdAt: Date
@@ -51341,6 +51348,7 @@ export namespace Prisma {
     year?: boolean
     status?: boolean
     engineVer?: boolean
+    driverKind?: boolean
     startsAt?: boolean
     endsAt?: boolean
     createdAt?: boolean
@@ -51358,6 +51366,7 @@ export namespace Prisma {
     year?: boolean
     status?: boolean
     engineVer?: boolean
+    driverKind?: boolean
     startsAt?: boolean
     endsAt?: boolean
     createdAt?: boolean
@@ -51371,6 +51380,7 @@ export namespace Prisma {
     year?: boolean
     status?: boolean
     engineVer?: boolean
+    driverKind?: boolean
     startsAt?: boolean
     endsAt?: boolean
     createdAt?: boolean
@@ -51384,13 +51394,14 @@ export namespace Prisma {
     year?: boolean
     status?: boolean
     engineVer?: boolean
+    driverKind?: boolean
     startsAt?: boolean
     endsAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type ProLeagueSeasonOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "leagueId" | "year" | "status" | "engineVer" | "startsAt" | "endsAt" | "createdAt" | "updatedAt", ExtArgs["result"]["proLeagueSeason"]>
+  export type ProLeagueSeasonOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "leagueId" | "year" | "status" | "engineVer" | "driverKind" | "startsAt" | "endsAt" | "createdAt" | "updatedAt", ExtArgs["result"]["proLeagueSeason"]>
   export type ProLeagueSeasonInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     league?: boolean | ProLeagueDefaultArgs<ExtArgs>
     rounds?: boolean | ProLeagueSeason$roundsArgs<ExtArgs>
@@ -51419,6 +51430,7 @@ export namespace Prisma {
       year: number
       status: string
       engineVer: string
+      driverKind: string
       startsAt: Date | null
       endsAt: Date | null
       createdAt: Date
@@ -51855,6 +51867,7 @@ export namespace Prisma {
     readonly year: FieldRef<"ProLeagueSeason", 'Int'>
     readonly status: FieldRef<"ProLeagueSeason", 'String'>
     readonly engineVer: FieldRef<"ProLeagueSeason", 'String'>
+    readonly driverKind: FieldRef<"ProLeagueSeason", 'String'>
     readonly startsAt: FieldRef<"ProLeagueSeason", 'DateTime'>
     readonly endsAt: FieldRef<"ProLeagueSeason", 'DateTime'>
     readonly createdAt: FieldRef<"ProLeagueSeason", 'DateTime'>
@@ -53558,6 +53571,8 @@ export namespace Prisma {
     simulatedAt: Date | null
     completedAt: Date | null
     casualtiesAppliedAt: Date | null
+    isTest: boolean | null
+    driverKindOverride: string | null
     seed: bigint | null
     engineVer: string | null
     replayId: string | null
@@ -53583,6 +53598,8 @@ export namespace Prisma {
     simulatedAt: Date | null
     completedAt: Date | null
     casualtiesAppliedAt: Date | null
+    isTest: boolean | null
+    driverKindOverride: string | null
     seed: bigint | null
     engineVer: string | null
     replayId: string | null
@@ -53608,6 +53625,8 @@ export namespace Prisma {
     simulatedAt: number
     completedAt: number
     casualtiesAppliedAt: number
+    isTest: number
+    driverKindOverride: number
     seed: number
     engineVer: number
     replayId: number
@@ -53655,6 +53674,8 @@ export namespace Prisma {
     simulatedAt?: true
     completedAt?: true
     casualtiesAppliedAt?: true
+    isTest?: true
+    driverKindOverride?: true
     seed?: true
     engineVer?: true
     replayId?: true
@@ -53680,6 +53701,8 @@ export namespace Prisma {
     simulatedAt?: true
     completedAt?: true
     casualtiesAppliedAt?: true
+    isTest?: true
+    driverKindOverride?: true
     seed?: true
     engineVer?: true
     replayId?: true
@@ -53705,6 +53728,8 @@ export namespace Prisma {
     simulatedAt?: true
     completedAt?: true
     casualtiesAppliedAt?: true
+    isTest?: true
+    driverKindOverride?: true
     seed?: true
     engineVer?: true
     replayId?: true
@@ -53817,6 +53842,8 @@ export namespace Prisma {
     simulatedAt: Date | null
     completedAt: Date | null
     casualtiesAppliedAt: Date | null
+    isTest: boolean
+    driverKindOverride: string | null
     seed: bigint | null
     engineVer: string | null
     replayId: string | null
@@ -53861,6 +53888,8 @@ export namespace Prisma {
     simulatedAt?: boolean
     completedAt?: boolean
     casualtiesAppliedAt?: boolean
+    isTest?: boolean
+    driverKindOverride?: boolean
     seed?: boolean
     engineVer?: boolean
     replayId?: boolean
@@ -53892,6 +53921,8 @@ export namespace Prisma {
     simulatedAt?: boolean
     completedAt?: boolean
     casualtiesAppliedAt?: boolean
+    isTest?: boolean
+    driverKindOverride?: boolean
     seed?: boolean
     engineVer?: boolean
     replayId?: boolean
@@ -53921,6 +53952,8 @@ export namespace Prisma {
     simulatedAt?: boolean
     completedAt?: boolean
     casualtiesAppliedAt?: boolean
+    isTest?: boolean
+    driverKindOverride?: boolean
     seed?: boolean
     engineVer?: boolean
     replayId?: boolean
@@ -53950,6 +53983,8 @@ export namespace Prisma {
     simulatedAt?: boolean
     completedAt?: boolean
     casualtiesAppliedAt?: boolean
+    isTest?: boolean
+    driverKindOverride?: boolean
     seed?: boolean
     engineVer?: boolean
     replayId?: boolean
@@ -53964,7 +53999,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type ProLeagueMatchOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "seasonId" | "roundId" | "homeTeamId" | "awayTeamId" | "status" | "scheduledAt" | "simulatedAt" | "completedAt" | "casualtiesAppliedAt" | "seed" | "engineVer" | "replayId" | "scoreHome" | "scoreAway" | "outcome" | "touchdownCount" | "casualtyCount" | "turnoverCount" | "nuffleCount" | "createdAt" | "updatedAt", ExtArgs["result"]["proLeagueMatch"]>
+  export type ProLeagueMatchOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "seasonId" | "roundId" | "homeTeamId" | "awayTeamId" | "status" | "scheduledAt" | "simulatedAt" | "completedAt" | "casualtiesAppliedAt" | "isTest" | "driverKindOverride" | "seed" | "engineVer" | "replayId" | "scoreHome" | "scoreAway" | "outcome" | "touchdownCount" | "casualtyCount" | "turnoverCount" | "nuffleCount" | "createdAt" | "updatedAt", ExtArgs["result"]["proLeagueMatch"]>
   export type ProLeagueMatchInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     season?: boolean | ProLeagueSeasonDefaultArgs<ExtArgs>
     round?: boolean | ProLeagueRoundDefaultArgs<ExtArgs>
@@ -54006,6 +54041,14 @@ export namespace Prisma {
       simulatedAt: Date | null
       completedAt: Date | null
       casualtiesAppliedAt: Date | null
+      /**
+       * Lot 2.C.1 — sandbox flag (matchs admin "test" exclus des stats).
+       */
+      isTest: boolean
+      /**
+       * Lot 3.B.1 — override optionnel du driver (null = inherit season).
+       */
+      driverKindOverride: string | null
       seed: bigint | null
       engineVer: string | null
       replayId: string | null
@@ -54456,6 +54499,8 @@ export namespace Prisma {
     readonly simulatedAt: FieldRef<"ProLeagueMatch", 'DateTime'>
     readonly completedAt: FieldRef<"ProLeagueMatch", 'DateTime'>
     readonly casualtiesAppliedAt: FieldRef<"ProLeagueMatch", 'DateTime'>
+    readonly isTest: FieldRef<"ProLeagueMatch", 'Boolean'>
+    readonly driverKindOverride: FieldRef<"ProLeagueMatch", 'String'>
     readonly seed: FieldRef<"ProLeagueMatch", 'BigInt'>
     readonly engineVer: FieldRef<"ProLeagueMatch", 'String'>
     readonly replayId: FieldRef<"ProLeagueMatch", 'String'>
@@ -68950,6 +68995,7 @@ export namespace Prisma {
     year: 'year',
     status: 'status',
     engineVer: 'engineVer',
+    driverKind: 'driverKind',
     startsAt: 'startsAt',
     endsAt: 'endsAt',
     createdAt: 'createdAt',
@@ -68985,6 +69031,8 @@ export namespace Prisma {
     simulatedAt: 'simulatedAt',
     completedAt: 'completedAt',
     casualtiesAppliedAt: 'casualtiesAppliedAt',
+    isTest: 'isTest',
+    driverKindOverride: 'driverKindOverride',
     seed: 'seed',
     engineVer: 'engineVer',
     replayId: 'replayId',
@@ -72746,6 +72794,7 @@ export namespace Prisma {
     year?: IntFilter<"ProLeagueSeason"> | number
     status?: StringFilter<"ProLeagueSeason"> | string
     engineVer?: StringFilter<"ProLeagueSeason"> | string
+    driverKind?: StringFilter<"ProLeagueSeason"> | string
     startsAt?: DateTimeNullableFilter<"ProLeagueSeason"> | Date | string | null
     endsAt?: DateTimeNullableFilter<"ProLeagueSeason"> | Date | string | null
     createdAt?: DateTimeFilter<"ProLeagueSeason"> | Date | string
@@ -72762,6 +72811,7 @@ export namespace Prisma {
     year?: SortOrder
     status?: SortOrder
     engineVer?: SortOrder
+    driverKind?: SortOrder
     startsAt?: SortOrderInput | SortOrder
     endsAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -72782,6 +72832,7 @@ export namespace Prisma {
     year?: IntFilter<"ProLeagueSeason"> | number
     status?: StringFilter<"ProLeagueSeason"> | string
     engineVer?: StringFilter<"ProLeagueSeason"> | string
+    driverKind?: StringFilter<"ProLeagueSeason"> | string
     startsAt?: DateTimeNullableFilter<"ProLeagueSeason"> | Date | string | null
     endsAt?: DateTimeNullableFilter<"ProLeagueSeason"> | Date | string | null
     createdAt?: DateTimeFilter<"ProLeagueSeason"> | Date | string
@@ -72798,6 +72849,7 @@ export namespace Prisma {
     year?: SortOrder
     status?: SortOrder
     engineVer?: SortOrder
+    driverKind?: SortOrder
     startsAt?: SortOrderInput | SortOrder
     endsAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -72818,6 +72870,7 @@ export namespace Prisma {
     year?: IntWithAggregatesFilter<"ProLeagueSeason"> | number
     status?: StringWithAggregatesFilter<"ProLeagueSeason"> | string
     engineVer?: StringWithAggregatesFilter<"ProLeagueSeason"> | string
+    driverKind?: StringWithAggregatesFilter<"ProLeagueSeason"> | string
     startsAt?: DateTimeNullableWithAggregatesFilter<"ProLeagueSeason"> | Date | string | null
     endsAt?: DateTimeNullableWithAggregatesFilter<"ProLeagueSeason"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"ProLeagueSeason"> | Date | string
@@ -72919,6 +72972,8 @@ export namespace Prisma {
     simulatedAt?: DateTimeNullableFilter<"ProLeagueMatch"> | Date | string | null
     completedAt?: DateTimeNullableFilter<"ProLeagueMatch"> | Date | string | null
     casualtiesAppliedAt?: DateTimeNullableFilter<"ProLeagueMatch"> | Date | string | null
+    isTest?: BoolFilter<"ProLeagueMatch"> | boolean
+    driverKindOverride?: StringNullableFilter<"ProLeagueMatch"> | string | null
     seed?: BigIntNullableFilter<"ProLeagueMatch"> | bigint | number | null
     engineVer?: StringNullableFilter<"ProLeagueMatch"> | string | null
     replayId?: StringNullableFilter<"ProLeagueMatch"> | string | null
@@ -72949,6 +73004,8 @@ export namespace Prisma {
     simulatedAt?: SortOrderInput | SortOrder
     completedAt?: SortOrderInput | SortOrder
     casualtiesAppliedAt?: SortOrderInput | SortOrder
+    isTest?: SortOrder
+    driverKindOverride?: SortOrderInput | SortOrder
     seed?: SortOrderInput | SortOrder
     engineVer?: SortOrderInput | SortOrder
     replayId?: SortOrderInput | SortOrder
@@ -72983,6 +73040,8 @@ export namespace Prisma {
     simulatedAt?: DateTimeNullableFilter<"ProLeagueMatch"> | Date | string | null
     completedAt?: DateTimeNullableFilter<"ProLeagueMatch"> | Date | string | null
     casualtiesAppliedAt?: DateTimeNullableFilter<"ProLeagueMatch"> | Date | string | null
+    isTest?: BoolFilter<"ProLeagueMatch"> | boolean
+    driverKindOverride?: StringNullableFilter<"ProLeagueMatch"> | string | null
     seed?: BigIntNullableFilter<"ProLeagueMatch"> | bigint | number | null
     engineVer?: StringNullableFilter<"ProLeagueMatch"> | string | null
     scoreHome?: IntNullableFilter<"ProLeagueMatch"> | number | null
@@ -73012,6 +73071,8 @@ export namespace Prisma {
     simulatedAt?: SortOrderInput | SortOrder
     completedAt?: SortOrderInput | SortOrder
     casualtiesAppliedAt?: SortOrderInput | SortOrder
+    isTest?: SortOrder
+    driverKindOverride?: SortOrderInput | SortOrder
     seed?: SortOrderInput | SortOrder
     engineVer?: SortOrderInput | SortOrder
     replayId?: SortOrderInput | SortOrder
@@ -73045,6 +73106,8 @@ export namespace Prisma {
     simulatedAt?: DateTimeNullableWithAggregatesFilter<"ProLeagueMatch"> | Date | string | null
     completedAt?: DateTimeNullableWithAggregatesFilter<"ProLeagueMatch"> | Date | string | null
     casualtiesAppliedAt?: DateTimeNullableWithAggregatesFilter<"ProLeagueMatch"> | Date | string | null
+    isTest?: BoolWithAggregatesFilter<"ProLeagueMatch"> | boolean
+    driverKindOverride?: StringNullableWithAggregatesFilter<"ProLeagueMatch"> | string | null
     seed?: BigIntNullableWithAggregatesFilter<"ProLeagueMatch"> | bigint | number | null
     engineVer?: StringNullableWithAggregatesFilter<"ProLeagueMatch"> | string | null
     replayId?: StringNullableWithAggregatesFilter<"ProLeagueMatch"> | string | null
@@ -77825,6 +77888,7 @@ export namespace Prisma {
     year: number
     status?: string
     engineVer: string
+    driverKind?: string
     startsAt?: Date | string | null
     endsAt?: Date | string | null
     createdAt?: Date | string
@@ -77841,6 +77905,7 @@ export namespace Prisma {
     year: number
     status?: string
     engineVer: string
+    driverKind?: string
     startsAt?: Date | string | null
     endsAt?: Date | string | null
     createdAt?: Date | string
@@ -77855,6 +77920,7 @@ export namespace Prisma {
     year?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
     engineVer?: StringFieldUpdateOperationsInput | string
+    driverKind?: StringFieldUpdateOperationsInput | string
     startsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -77871,6 +77937,7 @@ export namespace Prisma {
     year?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
     engineVer?: StringFieldUpdateOperationsInput | string
+    driverKind?: StringFieldUpdateOperationsInput | string
     startsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -77886,6 +77953,7 @@ export namespace Prisma {
     year: number
     status?: string
     engineVer: string
+    driverKind?: string
     startsAt?: Date | string | null
     endsAt?: Date | string | null
     createdAt?: Date | string
@@ -77897,6 +77965,7 @@ export namespace Prisma {
     year?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
     engineVer?: StringFieldUpdateOperationsInput | string
+    driverKind?: StringFieldUpdateOperationsInput | string
     startsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -77909,6 +77978,7 @@ export namespace Prisma {
     year?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
     engineVer?: StringFieldUpdateOperationsInput | string
+    driverKind?: StringFieldUpdateOperationsInput | string
     startsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -78009,6 +78079,8 @@ export namespace Prisma {
     simulatedAt?: Date | string | null
     completedAt?: Date | string | null
     casualtiesAppliedAt?: Date | string | null
+    isTest?: boolean
+    driverKindOverride?: string | null
     seed?: bigint | number | null
     engineVer?: string | null
     replayId?: string | null
@@ -78039,6 +78111,8 @@ export namespace Prisma {
     simulatedAt?: Date | string | null
     completedAt?: Date | string | null
     casualtiesAppliedAt?: Date | string | null
+    isTest?: boolean
+    driverKindOverride?: string | null
     seed?: bigint | number | null
     engineVer?: string | null
     replayId?: string | null
@@ -78061,6 +78135,8 @@ export namespace Prisma {
     simulatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     casualtiesAppliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isTest?: BoolFieldUpdateOperationsInput | boolean
+    driverKindOverride?: NullableStringFieldUpdateOperationsInput | string | null
     seed?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     engineVer?: NullableStringFieldUpdateOperationsInput | string | null
     replayId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -78091,6 +78167,8 @@ export namespace Prisma {
     simulatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     casualtiesAppliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isTest?: BoolFieldUpdateOperationsInput | boolean
+    driverKindOverride?: NullableStringFieldUpdateOperationsInput | string | null
     seed?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     engineVer?: NullableStringFieldUpdateOperationsInput | string | null
     replayId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -78117,6 +78195,8 @@ export namespace Prisma {
     simulatedAt?: Date | string | null
     completedAt?: Date | string | null
     casualtiesAppliedAt?: Date | string | null
+    isTest?: boolean
+    driverKindOverride?: string | null
     seed?: bigint | number | null
     engineVer?: string | null
     replayId?: string | null
@@ -78138,6 +78218,8 @@ export namespace Prisma {
     simulatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     casualtiesAppliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isTest?: BoolFieldUpdateOperationsInput | boolean
+    driverKindOverride?: NullableStringFieldUpdateOperationsInput | string | null
     seed?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     engineVer?: NullableStringFieldUpdateOperationsInput | string | null
     replayId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -78163,6 +78245,8 @@ export namespace Prisma {
     simulatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     casualtiesAppliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isTest?: BoolFieldUpdateOperationsInput | boolean
+    driverKindOverride?: NullableStringFieldUpdateOperationsInput | string | null
     seed?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     engineVer?: NullableStringFieldUpdateOperationsInput | string | null
     replayId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -81880,6 +81964,7 @@ export namespace Prisma {
     year?: SortOrder
     status?: SortOrder
     engineVer?: SortOrder
+    driverKind?: SortOrder
     startsAt?: SortOrder
     endsAt?: SortOrder
     createdAt?: SortOrder
@@ -81896,6 +81981,7 @@ export namespace Prisma {
     year?: SortOrder
     status?: SortOrder
     engineVer?: SortOrder
+    driverKind?: SortOrder
     startsAt?: SortOrder
     endsAt?: SortOrder
     createdAt?: SortOrder
@@ -81908,6 +81994,7 @@ export namespace Prisma {
     year?: SortOrder
     status?: SortOrder
     engineVer?: SortOrder
+    driverKind?: SortOrder
     startsAt?: SortOrder
     endsAt?: SortOrder
     createdAt?: SortOrder
@@ -82009,6 +82096,8 @@ export namespace Prisma {
     simulatedAt?: SortOrder
     completedAt?: SortOrder
     casualtiesAppliedAt?: SortOrder
+    isTest?: SortOrder
+    driverKindOverride?: SortOrder
     seed?: SortOrder
     engineVer?: SortOrder
     replayId?: SortOrder
@@ -82044,6 +82133,8 @@ export namespace Prisma {
     simulatedAt?: SortOrder
     completedAt?: SortOrder
     casualtiesAppliedAt?: SortOrder
+    isTest?: SortOrder
+    driverKindOverride?: SortOrder
     seed?: SortOrder
     engineVer?: SortOrder
     replayId?: SortOrder
@@ -82069,6 +82160,8 @@ export namespace Prisma {
     simulatedAt?: SortOrder
     completedAt?: SortOrder
     casualtiesAppliedAt?: SortOrder
+    isTest?: SortOrder
+    driverKindOverride?: SortOrder
     seed?: SortOrder
     engineVer?: SortOrder
     replayId?: SortOrder
@@ -95403,6 +95496,7 @@ export namespace Prisma {
     year: number
     status?: string
     engineVer: string
+    driverKind?: string
     startsAt?: Date | string | null
     endsAt?: Date | string | null
     createdAt?: Date | string
@@ -95417,6 +95511,7 @@ export namespace Prisma {
     year: number
     status?: string
     engineVer: string
+    driverKind?: string
     startsAt?: Date | string | null
     endsAt?: Date | string | null
     createdAt?: Date | string
@@ -95495,6 +95590,7 @@ export namespace Prisma {
     year?: IntFilter<"ProLeagueSeason"> | number
     status?: StringFilter<"ProLeagueSeason"> | string
     engineVer?: StringFilter<"ProLeagueSeason"> | string
+    driverKind?: StringFilter<"ProLeagueSeason"> | string
     startsAt?: DateTimeNullableFilter<"ProLeagueSeason"> | Date | string | null
     endsAt?: DateTimeNullableFilter<"ProLeagueSeason"> | Date | string | null
     createdAt?: DateTimeFilter<"ProLeagueSeason"> | Date | string
@@ -95588,6 +95684,8 @@ export namespace Prisma {
     simulatedAt?: Date | string | null
     completedAt?: Date | string | null
     casualtiesAppliedAt?: Date | string | null
+    isTest?: boolean
+    driverKindOverride?: string | null
     seed?: bigint | number | null
     engineVer?: string | null
     replayId?: string | null
@@ -95616,6 +95714,8 @@ export namespace Prisma {
     simulatedAt?: Date | string | null
     completedAt?: Date | string | null
     casualtiesAppliedAt?: Date | string | null
+    isTest?: boolean
+    driverKindOverride?: string | null
     seed?: bigint | number | null
     engineVer?: string | null
     replayId?: string | null
@@ -95647,6 +95747,8 @@ export namespace Prisma {
     simulatedAt?: Date | string | null
     completedAt?: Date | string | null
     casualtiesAppliedAt?: Date | string | null
+    isTest?: boolean
+    driverKindOverride?: string | null
     seed?: bigint | number | null
     engineVer?: string | null
     replayId?: string | null
@@ -95675,6 +95777,8 @@ export namespace Prisma {
     simulatedAt?: Date | string | null
     completedAt?: Date | string | null
     casualtiesAppliedAt?: Date | string | null
+    isTest?: boolean
+    driverKindOverride?: string | null
     seed?: bigint | number | null
     engineVer?: string | null
     replayId?: string | null
@@ -95868,6 +95972,8 @@ export namespace Prisma {
     simulatedAt?: DateTimeNullableFilter<"ProLeagueMatch"> | Date | string | null
     completedAt?: DateTimeNullableFilter<"ProLeagueMatch"> | Date | string | null
     casualtiesAppliedAt?: DateTimeNullableFilter<"ProLeagueMatch"> | Date | string | null
+    isTest?: BoolFilter<"ProLeagueMatch"> | boolean
+    driverKindOverride?: StringNullableFilter<"ProLeagueMatch"> | string | null
     seed?: BigIntNullableFilter<"ProLeagueMatch"> | bigint | number | null
     engineVer?: StringNullableFilter<"ProLeagueMatch"> | string | null
     replayId?: StringNullableFilter<"ProLeagueMatch"> | string | null
@@ -96113,6 +96219,8 @@ export namespace Prisma {
     simulatedAt?: Date | string | null
     completedAt?: Date | string | null
     casualtiesAppliedAt?: Date | string | null
+    isTest?: boolean
+    driverKindOverride?: string | null
     seed?: bigint | number | null
     engineVer?: string | null
     replayId?: string | null
@@ -96141,6 +96249,8 @@ export namespace Prisma {
     simulatedAt?: Date | string | null
     completedAt?: Date | string | null
     casualtiesAppliedAt?: Date | string | null
+    isTest?: boolean
+    driverKindOverride?: string | null
     seed?: bigint | number | null
     engineVer?: string | null
     replayId?: string | null
@@ -96307,6 +96417,7 @@ export namespace Prisma {
     year: number
     status?: string
     engineVer: string
+    driverKind?: string
     startsAt?: Date | string | null
     endsAt?: Date | string | null
     createdAt?: Date | string
@@ -96322,6 +96433,7 @@ export namespace Prisma {
     year: number
     status?: string
     engineVer: string
+    driverKind?: string
     startsAt?: Date | string | null
     endsAt?: Date | string | null
     createdAt?: Date | string
@@ -96342,6 +96454,8 @@ export namespace Prisma {
     simulatedAt?: Date | string | null
     completedAt?: Date | string | null
     casualtiesAppliedAt?: Date | string | null
+    isTest?: boolean
+    driverKindOverride?: string | null
     seed?: bigint | number | null
     engineVer?: string | null
     replayId?: string | null
@@ -96370,6 +96484,8 @@ export namespace Prisma {
     simulatedAt?: Date | string | null
     completedAt?: Date | string | null
     casualtiesAppliedAt?: Date | string | null
+    isTest?: boolean
+    driverKindOverride?: string | null
     seed?: bigint | number | null
     engineVer?: string | null
     replayId?: string | null
@@ -96410,6 +96526,7 @@ export namespace Prisma {
     year?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
     engineVer?: StringFieldUpdateOperationsInput | string
+    driverKind?: StringFieldUpdateOperationsInput | string
     startsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -96425,6 +96542,7 @@ export namespace Prisma {
     year?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
     engineVer?: StringFieldUpdateOperationsInput | string
+    driverKind?: StringFieldUpdateOperationsInput | string
     startsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -96454,6 +96572,7 @@ export namespace Prisma {
     year: number
     status?: string
     engineVer: string
+    driverKind?: string
     startsAt?: Date | string | null
     endsAt?: Date | string | null
     createdAt?: Date | string
@@ -96469,6 +96588,7 @@ export namespace Prisma {
     year: number
     status?: string
     engineVer: string
+    driverKind?: string
     startsAt?: Date | string | null
     endsAt?: Date | string | null
     createdAt?: Date | string
@@ -96650,6 +96770,7 @@ export namespace Prisma {
     year?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
     engineVer?: StringFieldUpdateOperationsInput | string
+    driverKind?: StringFieldUpdateOperationsInput | string
     startsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -96665,6 +96786,7 @@ export namespace Prisma {
     year?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
     engineVer?: StringFieldUpdateOperationsInput | string
+    driverKind?: StringFieldUpdateOperationsInput | string
     startsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -96845,6 +96967,7 @@ export namespace Prisma {
     year: number
     status?: string
     engineVer: string
+    driverKind?: string
     startsAt?: Date | string | null
     endsAt?: Date | string | null
     createdAt?: Date | string
@@ -96860,6 +96983,7 @@ export namespace Prisma {
     year: number
     status?: string
     engineVer: string
+    driverKind?: string
     startsAt?: Date | string | null
     endsAt?: Date | string | null
     createdAt?: Date | string
@@ -96934,6 +97058,7 @@ export namespace Prisma {
     year?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
     engineVer?: StringFieldUpdateOperationsInput | string
+    driverKind?: StringFieldUpdateOperationsInput | string
     startsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -96949,6 +97074,7 @@ export namespace Prisma {
     year?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
     engineVer?: StringFieldUpdateOperationsInput | string
+    driverKind?: StringFieldUpdateOperationsInput | string
     startsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -97592,6 +97718,8 @@ export namespace Prisma {
     simulatedAt?: Date | string | null
     completedAt?: Date | string | null
     casualtiesAppliedAt?: Date | string | null
+    isTest?: boolean
+    driverKindOverride?: string | null
     seed?: bigint | number | null
     engineVer?: string | null
     replayId?: string | null
@@ -97621,6 +97749,8 @@ export namespace Prisma {
     simulatedAt?: Date | string | null
     completedAt?: Date | string | null
     casualtiesAppliedAt?: Date | string | null
+    isTest?: boolean
+    driverKindOverride?: string | null
     seed?: bigint | number | null
     engineVer?: string | null
     replayId?: string | null
@@ -97716,6 +97846,8 @@ export namespace Prisma {
     simulatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     casualtiesAppliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isTest?: BoolFieldUpdateOperationsInput | boolean
+    driverKindOverride?: NullableStringFieldUpdateOperationsInput | string | null
     seed?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     engineVer?: NullableStringFieldUpdateOperationsInput | string | null
     replayId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -97745,6 +97877,8 @@ export namespace Prisma {
     simulatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     casualtiesAppliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isTest?: BoolFieldUpdateOperationsInput | boolean
+    driverKindOverride?: NullableStringFieldUpdateOperationsInput | string | null
     seed?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     engineVer?: NullableStringFieldUpdateOperationsInput | string | null
     replayId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -100719,6 +100853,7 @@ export namespace Prisma {
     year: number
     status?: string
     engineVer: string
+    driverKind?: string
     startsAt?: Date | string | null
     endsAt?: Date | string | null
     createdAt?: Date | string
@@ -100785,6 +100920,7 @@ export namespace Prisma {
     year?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
     engineVer?: StringFieldUpdateOperationsInput | string
+    driverKind?: StringFieldUpdateOperationsInput | string
     startsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -100799,6 +100935,7 @@ export namespace Prisma {
     year?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
     engineVer?: StringFieldUpdateOperationsInput | string
+    driverKind?: StringFieldUpdateOperationsInput | string
     startsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -100813,6 +100950,7 @@ export namespace Prisma {
     year?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
     engineVer?: StringFieldUpdateOperationsInput | string
+    driverKind?: StringFieldUpdateOperationsInput | string
     startsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -100851,6 +100989,8 @@ export namespace Prisma {
     simulatedAt?: Date | string | null
     completedAt?: Date | string | null
     casualtiesAppliedAt?: Date | string | null
+    isTest?: boolean
+    driverKindOverride?: string | null
     seed?: bigint | number | null
     engineVer?: string | null
     replayId?: string | null
@@ -100875,6 +101015,8 @@ export namespace Prisma {
     simulatedAt?: Date | string | null
     completedAt?: Date | string | null
     casualtiesAppliedAt?: Date | string | null
+    isTest?: boolean
+    driverKindOverride?: string | null
     seed?: bigint | number | null
     engineVer?: string | null
     replayId?: string | null
@@ -100985,6 +101127,8 @@ export namespace Prisma {
     simulatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     casualtiesAppliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isTest?: BoolFieldUpdateOperationsInput | boolean
+    driverKindOverride?: NullableStringFieldUpdateOperationsInput | string | null
     seed?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     engineVer?: NullableStringFieldUpdateOperationsInput | string | null
     replayId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -101013,6 +101157,8 @@ export namespace Prisma {
     simulatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     casualtiesAppliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isTest?: BoolFieldUpdateOperationsInput | boolean
+    driverKindOverride?: NullableStringFieldUpdateOperationsInput | string | null
     seed?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     engineVer?: NullableStringFieldUpdateOperationsInput | string | null
     replayId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -101038,6 +101184,8 @@ export namespace Prisma {
     simulatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     casualtiesAppliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isTest?: BoolFieldUpdateOperationsInput | boolean
+    driverKindOverride?: NullableStringFieldUpdateOperationsInput | string | null
     seed?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     engineVer?: NullableStringFieldUpdateOperationsInput | string | null
     replayId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -101059,6 +101207,8 @@ export namespace Prisma {
     simulatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     casualtiesAppliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isTest?: BoolFieldUpdateOperationsInput | boolean
+    driverKindOverride?: NullableStringFieldUpdateOperationsInput | string | null
     seed?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     engineVer?: NullableStringFieldUpdateOperationsInput | string | null
     replayId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -101087,6 +101237,8 @@ export namespace Prisma {
     simulatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     casualtiesAppliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isTest?: BoolFieldUpdateOperationsInput | boolean
+    driverKindOverride?: NullableStringFieldUpdateOperationsInput | string | null
     seed?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     engineVer?: NullableStringFieldUpdateOperationsInput | string | null
     replayId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -101112,6 +101264,8 @@ export namespace Prisma {
     simulatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     casualtiesAppliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isTest?: BoolFieldUpdateOperationsInput | boolean
+    driverKindOverride?: NullableStringFieldUpdateOperationsInput | string | null
     seed?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     engineVer?: NullableStringFieldUpdateOperationsInput | string | null
     replayId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -101216,6 +101370,8 @@ export namespace Prisma {
     simulatedAt?: Date | string | null
     completedAt?: Date | string | null
     casualtiesAppliedAt?: Date | string | null
+    isTest?: boolean
+    driverKindOverride?: string | null
     seed?: bigint | number | null
     engineVer?: string | null
     replayId?: string | null
@@ -101288,6 +101444,8 @@ export namespace Prisma {
     simulatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     casualtiesAppliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isTest?: BoolFieldUpdateOperationsInput | boolean
+    driverKindOverride?: NullableStringFieldUpdateOperationsInput | string | null
     seed?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     engineVer?: NullableStringFieldUpdateOperationsInput | string | null
     replayId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -101316,6 +101474,8 @@ export namespace Prisma {
     simulatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     casualtiesAppliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isTest?: BoolFieldUpdateOperationsInput | boolean
+    driverKindOverride?: NullableStringFieldUpdateOperationsInput | string | null
     seed?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     engineVer?: NullableStringFieldUpdateOperationsInput | string | null
     replayId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -101341,6 +101501,8 @@ export namespace Prisma {
     simulatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     casualtiesAppliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isTest?: BoolFieldUpdateOperationsInput | boolean
+    driverKindOverride?: NullableStringFieldUpdateOperationsInput | string | null
     seed?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     engineVer?: NullableStringFieldUpdateOperationsInput | string | null
     replayId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -101413,6 +101575,8 @@ export namespace Prisma {
     simulatedAt?: Date | string | null
     completedAt?: Date | string | null
     casualtiesAppliedAt?: Date | string | null
+    isTest?: boolean
+    driverKindOverride?: string | null
     seed?: bigint | number | null
     engineVer?: string | null
     replayId?: string | null
@@ -101434,6 +101598,8 @@ export namespace Prisma {
     simulatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     casualtiesAppliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isTest?: BoolFieldUpdateOperationsInput | boolean
+    driverKindOverride?: NullableStringFieldUpdateOperationsInput | string | null
     seed?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     engineVer?: NullableStringFieldUpdateOperationsInput | string | null
     replayId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -101462,6 +101628,8 @@ export namespace Prisma {
     simulatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     casualtiesAppliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isTest?: BoolFieldUpdateOperationsInput | boolean
+    driverKindOverride?: NullableStringFieldUpdateOperationsInput | string | null
     seed?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     engineVer?: NullableStringFieldUpdateOperationsInput | string | null
     replayId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -101487,6 +101655,8 @@ export namespace Prisma {
     simulatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     casualtiesAppliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isTest?: BoolFieldUpdateOperationsInput | boolean
+    driverKindOverride?: NullableStringFieldUpdateOperationsInput | string | null
     seed?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     engineVer?: NullableStringFieldUpdateOperationsInput | string | null
     replayId?: NullableStringFieldUpdateOperationsInput | string | null

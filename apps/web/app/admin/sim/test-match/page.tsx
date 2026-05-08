@@ -65,10 +65,14 @@ async function fetchJSON<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+type DriverKindChoice = "season-default" | "hybrid" | "full";
+
 export default function AdminTestMatchPage() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [homeTeamId, setHomeTeamId] = useState<string>("");
   const [awayTeamId, setAwayTeamId] = useState<string>("");
+  const [driverKindChoice, setDriverKindChoice] =
+    useState<DriverKindChoice>("season-default");
   const [list, setList] = useState<TestMatchSummary[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [running, setRunning] = useState<boolean>(false);
@@ -113,11 +117,23 @@ export default function AdminTestMatchPage() {
     setError(null);
     setLastResult(null);
     try {
+      // Lot 3.B.1 — driverKind est omis si l'admin a laissé "season-default" :
+      // dans ce cas le sim-runner utilisera `season.driverKind`. Sinon on
+      // force l'override via `match.driverKindOverride`.
+      const body: {
+        homeTeamId: string;
+        awayTeamId: string;
+        driverKind?: "hybrid" | "full";
+      } = { homeTeamId, awayTeamId };
+      if (driverKindChoice !== "season-default") {
+        body.driverKind = driverKindChoice;
+      }
+
       const result = await fetchJSON<CreateResult>(
         "/admin/sim/test-match",
         {
           method: "POST",
-          body: JSON.stringify({ homeTeamId, awayTeamId }),
+          body: JSON.stringify(body),
         },
       );
       setLastResult(result);
@@ -139,7 +155,7 @@ export default function AdminTestMatchPage() {
         et exclus des statistiques agrégées.
       </p>
 
-      <div className="grid grid-cols-3 gap-3 items-end mb-4 p-4 border rounded bg-white">
+      <div className="grid grid-cols-4 gap-3 items-end mb-4 p-4 border rounded bg-white">
         <label className="text-sm">
           <div className="mb-1">Équipe à domicile</div>
           <select
@@ -166,6 +182,20 @@ export default function AdminTestMatchPage() {
                 {t.city} {t.name} ({t.race})
               </option>
             ))}
+          </select>
+        </label>
+        <label className="text-sm" title="Lot 3.B.1 — override du driver pour ce match. 'Season default' utilise season.driverKind.">
+          <div className="mb-1">Driver</div>
+          <select
+            value={driverKindChoice}
+            onChange={(e) =>
+              setDriverKindChoice(e.target.value as DriverKindChoice)
+            }
+            className="w-full border rounded p-2"
+          >
+            <option value="season-default">Season default</option>
+            <option value="hybrid">Force hybrid</option>
+            <option value="full">Force full</option>
           </select>
         </label>
         <button

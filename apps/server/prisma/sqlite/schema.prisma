@@ -901,16 +901,17 @@ model ProTeamRoster {
 }
 
 model ProLeagueSeason {
-  id        String    @id @default(cuid())
-  league    ProLeague @relation(fields: [leagueId], references: [id], onDelete: Cascade)
-  leagueId  String
-  year      Int
-  status    String    @default("scheduled")
-  engineVer String
-  startsAt  DateTime?
-  endsAt    DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id         String    @id @default(cuid())
+  league     ProLeague @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId   String
+  year       Int
+  status     String    @default("scheduled")
+  engineVer  String
+  driverKind String    @default("hybrid")
+  startsAt   DateTime?
+  endsAt     DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   rounds    ProLeagueRound[]
   matches   ProLeagueMatch[]
@@ -955,6 +956,8 @@ model ProLeagueMatch {
   casualtiesAppliedAt DateTime?
   /// Lot 2.C.1 — sandbox flag (matchs admin "test" exclus des stats).
   isTest              Boolean         @default(false)
+  /// Lot 3.B.1 — override optionnel du driver (null = inherit season).
+  driverKindOverride  String?
   seed                BigInt?
   engineVer           String?
   replayId            String?         @unique

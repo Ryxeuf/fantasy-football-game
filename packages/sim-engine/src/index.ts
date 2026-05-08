@@ -6,7 +6,11 @@
  * downstream consumers (apps/server scheduler, broadcaster, bench harness).
  */
 
-export { simulateMatch } from './simulate-match';
+export {
+  simulateMatch,
+  type SimulateDriverKind,
+  type SimulateMatchOptions,
+} from './simulate-match';
 export { runHybridDriver, type DriverOptions } from './driver/hybrid-driver';
 export { runFullDriver } from './driver/full-driver';
 export { buildGameStateFromRosters } from './driver/full-driver-roster';
