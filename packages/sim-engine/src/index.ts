@@ -25,6 +25,15 @@ export {
 } from './tactics/race-profiles';
 export { weightsFromProfile } from './tactics/ai-weights';
 export {
+  RACE_OPENING_BOOKS,
+  getOpeningBookForRace,
+  openingBookBonus,
+  openingBookBonusForRace,
+  type OpeningBookMoveType,
+  type OpeningBookRule,
+  type RaceOpeningBook,
+} from './tactics/opening-book';
+export {
   riskAppetiteToTemperature,
   softmaxSample,
   type WeightedCandidate,
