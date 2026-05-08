@@ -759,6 +759,44 @@ if (!inTestCasualtyEnv && casualtyTickMs > 0) {
 
 
 // =============================================================================
+// Pro League SPP / progression cron (Lot 3.C.2).
+// =============================================================================
+// Sweep les matchs `ready`/`completed` avec `sppAppliedAt=null`,
+// attribue les SPP (TD=3, CAS=2, COMP=1, MVP=4) aux rosters reels
+// emis par le sim, met a jour `spp` cumulatif + compteurs carriere
+// (tdCount, casCount, compCount, mvpCount). Idempotent.
+//
+// Tick par defaut : 30 min. Configurable via PRO_LEAGUE_SPP_TICK_MS.
+// Mettre = 0 pour desactiver (CI / dev local).
+const inTestSppEnv =
+  process.env.NODE_ENV === "test" || process.env.TEST_SQLITE === "1";
+const sppTickMsEnv = Number(process.env.PRO_LEAGUE_SPP_TICK_MS);
+const sppTickMs = Number.isFinite(sppTickMsEnv)
+  ? sppTickMsEnv
+  : 30 * 60 * 1000;
+if (!inTestSppEnv && sppTickMs > 0) {
+  void import("./services/pro-roster-spp").then(({ sweepMatchSpp }) => {
+    const tick = async () => {
+      try {
+        const out = await sweepMatchSpp();
+        if (out.processed > 0 || out.failed > 0) {
+          serverLog.info(
+            `[pro-spp] sweep: processed=${out.processed} failed=${out.failed} (inspected=${out.inspected})`,
+          );
+        }
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : "unknown";
+        serverLog.error(`[pro-spp] sweep failed: ${msg}`);
+      }
+    };
+    setInterval(() => {
+      void tick();
+    }, sppTickMs).unref();
+  });
+}
+
+
+// =============================================================================
 // Pro League rookie replenish cron (sprint 1.E.6).
 // =============================================================================
 // Sweep les equipes Pro dont le roster `active` est sous la cible

@@ -1170,10 +1170,22 @@ model ProTeamRoster {
   form        Int      @default(50)
   /// Stats carriere (TD, casualties, MVPs). JSON pour souplesse.
   careerStats Json     @default("{}")
+  /// Lot 3.C.2 — Star Player Points cumules (BB rules : TD=3, CAS=2,
+  /// MVP=4, COMP=1). Sert au level-up entre matchs (table BB officielle :
+  /// 6 SPP = first level, 16 = second, 31, 51, 76, 176).
+  spp         Int      @default(0)
+  /// Career counters individuels (cumulatifs sur la carriere du joueur
+  /// chez ce ProTeam). Diversite -> JSON `careerStats` est trop opaque
+  /// pour les index ; champs plats pour leaderboards rapides.
+  tdCount     Int      @default(0)
+  casCount    Int      @default(0)
+  compCount   Int      @default(0)
+  mvpCount    Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([teamId, status])
+  @@index([teamId, spp])
 }
 
 /// Une saison instancie une ProLeague pour une annee donnee. engineVer
@@ -1252,6 +1264,9 @@ model ProLeagueMatch {
   /// Sprint 1.E.4 — flag idempotence pour le post-process casualties.
   /// Non-null = casualties déjà appliquées au roster.
   casualtiesAppliedAt DateTime?
+  /// Lot 3.C.2 — flag idempotence pour le post-process SPP / progression.
+  /// Non-null = SPP deja attribues aux rosters concernes.
+  sppAppliedAt        DateTime?
   /// Lot 2.C.1 — sandbox flag. `true` = match lancé depuis l'admin
   /// (`POST /admin/sim/test-match`), exclu des standings/ELO/paris/
   /// wallet/leaderboards. Permet de tester un nouveau driver ou une
