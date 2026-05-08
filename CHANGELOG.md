@@ -1,3 +1,12 @@
+## [1.99.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.98.0...v1.99.0) (2026-05-08)
+
+
+### ✨ Features
+
+* **sim-engine:** full driver emits MatchEvent[] via state diff (Lot 3.A.2.b) ([#687](https://github.com/Ryxeuf/fantasy-football-game/issues/687)) ([985f08d](https://github.com/Ryxeuf/fantasy-football-game/commit/985f08d0c01e99bad17433a7869a7df2d96cfa95))
+* **sim-engine:** full driver MVP orchestrator (Lot 3.A.2.a) ([#685](https://github.com/Ryxeuf/fantasy-football-game/issues/685)) ([f97f3a5](https://github.com/Ryxeuf/fantasy-football-game/commit/f97f3a5468dd3cf3bd88495d2a96023f0e99716a))
+* **sim-engine:** roster-aware GameState builder for full driver (Lot 3.A.2.c) ([#688](https://github.com/Ryxeuf/fantasy-football-game/issues/688)) ([d42741f](https://github.com/Ryxeuf/fantasy-football-game/commit/d42741f47dc8806709375fbbec1debf81b1c1edb))
+
 ## [1.98.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.97.0...v1.98.0) (2026-05-08)
 
 
