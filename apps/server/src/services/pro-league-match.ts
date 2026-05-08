@@ -46,6 +46,9 @@ export interface ProMatchDetail {
   readonly simulatedAt: string | null;
   readonly completedAt: string | null;
   readonly engineVer: string | null;
+  /** Lot 2.C.1 — sandbox flag exposed to the frontend so the live
+   *  viewer can render a "TEST MATCH — does not count" banner. */
+  readonly isTest: boolean;
   readonly homeTeam: ProMatchDetailTeam;
   readonly awayTeam: ProMatchDetailTeam;
   readonly scoreHome: number | null;
@@ -136,6 +139,7 @@ export async function getProMatchDetail(id: string): Promise<ProMatchDetail> {
       simulatedAt: true,
       completedAt: true,
       engineVer: true,
+      isTest: true,
       scoreHome: true,
       scoreAway: true,
       outcome: true,
@@ -200,6 +204,7 @@ export async function getProMatchDetail(id: string): Promise<ProMatchDetail> {
     completedAt:
       (m.completedAt as Date | null)?.toISOString() ?? null,
     engineVer: (m.engineVer as string | null) ?? null,
+    isTest: Boolean(m.isTest),
     homeTeam: teamMeta(m.homeTeam),
     awayTeam: teamMeta(m.awayTeam),
     scoreHome: (m.scoreHome as number | null) ?? null,

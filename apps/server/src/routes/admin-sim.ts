@@ -13,6 +13,10 @@ import { authUser } from "../middleware/authUser";
 import { validate } from "../middleware/validate";
 import { computeEngineDrift } from "../services/pro-league-engine-drift-watcher";
 import { getBroadcasterStats } from "../services/pro-league-match-broadcaster";
+import {
+  createTestMatch,
+  listTestMatches,
+} from "../services/pro-league-sandbox";
 import { appMetrics } from "../utils/metrics";
 
 /**
@@ -152,6 +156,59 @@ export async function handleGetBroadcasterStats(
   });
 }
 
+/**
+ * Schema for `POST /admin/sim/test-match` — Lot 2.C.2.
+ *
+ * Pas de `seed` exposé dans cette V1 — le sim-runner dérive le seed
+ * depuis le matchId (cuid) ce qui est suffisant pour relancer
+ * exactement le même match en re-cliquant. Lot futur : exposer un
+ * seed override pour reproduire un bug donné.
+ */
+export const testMatchSchema = z.object({
+  homeTeamId: z.string().min(1),
+  awayTeamId: z.string().min(1),
+});
+
+export type TestMatchBody = z.infer<typeof testMatchSchema>;
+
+/** Handler `POST /admin/sim/test-match` — Lot 2.C.2. */
+export async function handleCreateTestMatch(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const { homeTeamId, awayTeamId } = req.body as TestMatchBody;
+  try {
+    const result = await createTestMatch({ homeTeamId, awayTeamId });
+    res.status(201).json(result);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "unknown";
+    // Erreur user-input → 400 ; sim qui throw → 500 propagé.
+    if (
+      msg.includes("introuvables") ||
+      msg.includes("distincts") ||
+      msg.includes("saison")
+    ) {
+      res.status(400).json({ error: msg });
+    } else {
+      res.status(500).json({ error: msg });
+    }
+  }
+}
+
+/** Handler `GET /admin/sim/test-matches` — Lot 2.C.4. */
+export async function handleListTestMatches(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const limitRaw = req.query.limit;
+  const limit =
+    typeof limitRaw === "string" && /^\d+$/.test(limitRaw)
+      ? Number.parseInt(limitRaw, 10)
+      : undefined;
+  const matches = await listTestMatches(limit);
+  res.json({ matches });
+}
+
 const router = Router();
 
 router.use(authUser, adminOnly);
@@ -160,5 +217,11 @@ router.get("/teams", handleListTeams);
 router.post("/run", validate(runSimSchema), handleRunSim);
 router.get("/drift", handleGetDrift);
 router.get("/broadcaster", handleGetBroadcasterStats);
+router.post(
+  "/test-match",
+  validate(testMatchSchema),
+  handleCreateTestMatch,
+);
+router.get("/test-matches", handleListTestMatches);
 
 export default router;

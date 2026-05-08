@@ -25,12 +25,19 @@ export type MatchMode = "live" | "replay";
 interface MinimalMatch {
   readonly id: string;
   readonly status: string;
+  readonly isTest?: boolean;
 }
 
 export interface MatchModeRedirectResult {
   readonly redirecting: boolean;
   readonly status: string | null;
   readonly error: string | null;
+  /**
+   * Lot 2.C.5 — `true` quand le match est un sandbox lancé depuis
+   * l'admin. Permet aux pages live/replay d'afficher un bandeau
+   * "TEST MATCH — does not count" sans une fetch séparée.
+   */
+  readonly isTest: boolean;
 }
 
 function targetPathFor(matchId: string, status: string): string | null {
@@ -48,6 +55,7 @@ export function useMatchModeRedirect(
   const [status, setStatus] = useState<string | null>(null);
   const [redirecting, setRedirecting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [isTest, setIsTest] = useState<boolean>(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -57,6 +65,7 @@ export function useMatchModeRedirect(
       .then((m) => {
         if (cancelled) return;
         setStatus(m.status);
+        setIsTest(Boolean(m.isTest));
         const expected =
           expectedMode === "live" ? "in_progress" : "completed";
         if (m.status !== expected) {
@@ -76,5 +85,5 @@ export function useMatchModeRedirect(
     };
   }, [matchId, expectedMode, router]);
 
-  return { redirecting, status, error };
+  return { redirecting, status, error, isTest };
 }
