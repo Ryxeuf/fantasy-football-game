@@ -894,10 +894,17 @@ model ProTeamRoster {
   status      String   @default("active")
   form        Int      @default(50)
   careerStats String   @default("{}")
+  // Lot 3.C.2 — Star Player Points + career counters.
+  spp         Int      @default(0)
+  tdCount     Int      @default(0)
+  casCount    Int      @default(0)
+  compCount   Int      @default(0)
+  mvpCount    Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([teamId, status])
+  @@index([teamId, spp])
 }
 
 model ProLeagueSeason {
@@ -954,6 +961,8 @@ model ProLeagueMatch {
   simulatedAt         DateTime?
   completedAt         DateTime?
   casualtiesAppliedAt DateTime?
+  /// Lot 3.C.2 — flag idempotence post-process SPP.
+  sppAppliedAt        DateTime?
   /// Lot 2.C.1 — sandbox flag (matchs admin "test" exclus des stats).
   isTest              Boolean         @default(false)
   /// Lot 3.B.1 — override optionnel du driver (null = inherit season).

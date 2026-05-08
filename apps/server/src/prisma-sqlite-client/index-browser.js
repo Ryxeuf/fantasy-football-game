@@ -639,6 +639,11 @@ exports.Prisma.ProTeamRosterScalarFieldEnum = {
   status: 'status',
   form: 'form',
   careerStats: 'careerStats',
+  spp: 'spp',
+  tdCount: 'tdCount',
+  casCount: 'casCount',
+  compCount: 'compCount',
+  mvpCount: 'mvpCount',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -679,6 +684,7 @@ exports.Prisma.ProLeagueMatchScalarFieldEnum = {
   simulatedAt: 'simulatedAt',
   completedAt: 'completedAt',
   casualtiesAppliedAt: 'casualtiesAppliedAt',
+  sppAppliedAt: 'sppAppliedAt',
   isTest: 'isTest',
   driverKindOverride: 'driverKindOverride',
   seed: 'seed',
