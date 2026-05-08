@@ -53,6 +53,11 @@ export default defineConfig({
         // extraction, `actions.ts` descend a ~324 lignes (DoD <= 600
         // atteint).
         'src/actions/blitz-handler.ts',
+        // S27.8.14 — `reroll-choose-handler.ts` extrait depuis
+        // `choice-handlers.ts` (handleRerollChoose + helpers prives
+        // getLonerThreshold + consumeTeamReroll), meme quirk
+        // source-map v8.
+        'src/actions/reroll-choose-handler.ts',
       ],
       // S25.4 — Seuils initiaux conservateurs. v8 reporte 0% lines sur
       // certains fichiers TS du moteur a cause d'un quirk source-map ;
