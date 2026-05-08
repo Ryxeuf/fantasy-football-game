@@ -3,72 +3,25 @@
  * Gère l'application des mouvements, les jets de dés et la logique de jeu
  */
 
-import { GameState, Move, Position, RNG } from '../core/types';
-// S27.8.12 — `hasSkill` consomme uniquement par `move-leap-dodge-handlers.ts`
-// (handleLeap log entry skill discrimination). Plus d'import direct ici.
-import { getDodgeSkillModifiers } from '../skills/skill-bridge';
-// S27.8.11 — `inBounds` consomme uniquement dans `actions/legal-moves.ts`.
-// S27.8.12 — `samePos` consomme uniquement par `move-leap-dodge-handlers.ts`
-// (handleLeap/handleMove/handleDodge legality checks et ball pickup).
-// `requiresDodgeRoll` / `calculateDodgeModifiers` consommes par les
-// memes handlers extraits — plus d'import direct ici, mais conserves
-// pour `handleBlitz` qui reste dans ce fichier (consommateur direct).
-import {
-  requiresDodgeRoll,
-  calculateDodgeModifiers,
-} from '../mechanics/movement';
-// S27.8.8 — Tous les helpers de des bruts (`performDodgeRoll`,
-// `rollBlockDice`, `blockResultFromRoll`, etc.) sont consommes dans
-// les modules extraits (`block-action`, `move-handlers`,
-// `choice-handlers`, `failure-helpers`, `ball-pickup`, `pass-actions`).
-// `actions.ts` ne consomme plus que les variantes With Notification
-// pour handleDodge et handleBlitz.
-import { rollBlockDiceManyWithRolls } from '../utils/dice';
-import {
-  performDodgeRollWithNotification,
-  performArmorRollWithNotification,
-} from '../utils/dice-notifications';
-import { performInjuryRoll } from '../mechanics/injury';
-import { createLogEntry, truncateGameLog } from '../utils/logging';
-import {
-  checkTouchdowns,
-  isInOpponentEndzone,
-  awardTouchdown,
-  bounceBall,
-} from '../mechanics/ball';
-import {
-  canBlock,
-  canBlitz,
-  calculateOffensiveAssists,
-  calculateDefensiveAssists,
-  calculateBlockDiceCount,
-  getBlockDiceChooser,
-} from '../mechanics/blocking';
-// S27.8.11 — `canPlayerMove` / `canPlayerContinueMoving` /
-// `shouldAutoEndTurn` / `canTeamBlitz` consommes uniquement dans
-// `actions/legal-moves.ts`. Plus d'import direct ici.
-import {
-  hasPlayerActed,
-  setPlayerAction,
-  checkPlayerTurnEnd,
-  handlePlayerSwitch,
-  incrementTeamBlitzCount,
-} from '../core/game-state';
-// S27.8.2 — `executePass` / `executeHandoff` / `getPassRange` /
-// `canAttemptPassForRange` consommes dans `actions/pass-actions.ts`
-// et (pour les helpers `can*`/`get*Range`) dans `actions/legal-moves.ts`
-// depuis S27.8.11. Plus d'import direct ici.
-// S27.8.3 — `canFoul` / `executeFoul` consommes uniquement dans
-// `actions/turn-foul-actions.ts`. Plus d'import direct ici.
+// S27.8.13 — Apres extraction de `handleBlitz` dans `blitz-handler.ts`,
+// `actions.ts` ne contient plus que le dispatcher `applyMove`. Tous les
+// imports specifiques aux handlers extraits S27.8.x ont ete nettoyes.
+// Les seuls imports restants sont :
+//  - les types de l'API publique (`GameState`, `Move`, `RNG`),
+//  - les helpers utilises directement dans le dispatcher
+//    (`hasPlayerActed`, `applyApothecaryChoice`, `checkTouchdowns`,
+//    `truncateGameLog`),
+//  - les fonctions de check de traits negatifs (Bone Head, Really
+//    Stupid, etc.) appelees au debut de chaque action,
+//  - les resolutions kickoff (4 routes du dispatcher),
+//  - tous les `handle*` extraits dans des modules dedies.
+import { GameState, Move, RNG } from '../core/types';
+import { truncateGameLog } from '../utils/logging';
+import { checkTouchdowns } from '../mechanics/ball';
+import { hasPlayerActed } from '../core/game-state';
 import { applyApothecaryChoice } from '../mechanics/apothecary';
-// S27.8.2 — `executeThrowTeamMate` consomme dans
-// `actions/pass-actions.ts`. S27.8.11 — `canThrowTeamMate` + `getThrowRange`
-// consommes dans `actions/legal-moves.ts`. Plus d'import direct ici.
-// S27.8.1 — Les handlers d'actions speciales (gaze/vomit/stab/chainsaw/
-// ball-and-chain/bomb) sont extraits dans `actions/special-actions.ts`.
-// S27.8.11 — Les helpers `canHypnoticGaze` / `canProjectileVomit` /
-// `canStab` / `canChainsaw` consommes uniquement dans
-// `actions/legal-moves.ts`. Plus d'import direct ici.
+// S27.8.1 — Handlers d'actions speciales (gaze/vomit/stab/chainsaw/
+// ball-and-chain/bomb) extraits dans `actions/special-actions.ts`.
 import {
   handleHypnoticGaze,
   handleProjectileVomit,
@@ -137,48 +90,19 @@ import {
   handleMove,
   handleDodge,
 } from './move-leap-dodge-handlers';
-// S27.8.11 — `canDumpOff` / `getDumpOffReceivers` consommes par
-// `block-action.ts` (handleBlock pendingDumpOff).
-// S27.8.12 — `executeDumpOff` consomme par `block-action.ts`
-// (`handleDumpOffChoose` y a migre). Plus d'import direct ici.
-// S27.8.11 — `checkDauntless` consomme uniquement par `block-action.ts`
-// (handleBlock) et `blitz-handler.ts` (s'il existe). Plus d'import ici.
-// S27.8.12 — `checkBreakTackle` consomme uniquement par
-// `move-leap-dodge-handlers.ts` (handleDodge break tackle gate) et
-// par `handleBlitz` qui reste ici. On garde l'import car `handleBlitz`
-// l'utilise encore.
-import { checkBreakTackle } from '../mechanics/break-tackle';
-// S27.8.7 — `isFendActiveForFollowUp` consomme uniquement dans
-// `actions/choice-handlers.ts` (handlePushChoose).
-// S27.8.12 — `resolveShadowingAfterDodge` consomme uniquement par
-// `move-leap-dodge-handlers.ts` (handleDodge). `handleBlitz` qui
-// reste ici l'importe directement aussi — on garde l'import.
-import { resolveShadowingAfterDodge } from '../mechanics/shadowing';
-// S27.8.7 — `hasFrenzy` consomme uniquement dans
-// `actions/choice-handlers.ts` (handlePushChoose).
-// S27.8.11 — `getArmBarBonus` consomme uniquement par `block-action.ts`.
-// Plus d'import direct ici.
-// S27.8.10 — `canPerformMultipleBlock` / `markMultipleBlockUsed` consommes
-// uniquement dans `actions/block-action.ts` (handleMultiBlock).
-// S27.8.2 — On the Ball flow consomme uniquement dans
-// `actions/pass-actions.ts`. Plus d'import direct ici.
+// S27.8.13 — `handleBlitz` extrait dans `actions/blitz-handler.ts`.
+import { handleBlitz } from './blitz-handler';
+// S27.8.13 — Helpers Kickoff + traits negatifs consommes directement
+// dans `applyMove`. Tous les autres helpers ont migre avec leurs
+// handlers respectifs (block-action, move-leap-dodge-handlers,
+// blitz-handler, pass-actions, turn-foul-actions, etc.).
 import {
   resolveKickoffPerfectDefence,
   resolveKickoffHighKick,
   resolveKickoffQuickSnap,
   resolveKickoffBlitz,
 } from '../mechanics/kickoff-resolution';
-// S27.8.11 — `canInstablePerformAction` et `logInstablePrevention`
-// consommes uniquement dans `actions/legal-moves.ts` (et les autres
-// modules block/move qui les importent directement). Plus d'import
-// direct ici.
-import { checkBoneHead, checkReallyStupid, checkWildAnimal, checkAnimalSavagery, checkTakeRoot, checkBloodlust, checkFoulAppearance } from '../mechanics/negative-traits';
-// S27.8.11 — `canLeap` (re-alias `playerCanLeap`) et
-// `getLegalLeapDestinations` consommes uniquement dans
-// `actions/legal-moves.ts`.
-// S27.8.12 — `getLeapModifier` + `performLeapRoll` consommes
-// uniquement par `move-leap-dodge-handlers.ts` (handleLeap). Plus
-// d'import direct ici.
+import { checkBoneHead, checkReallyStupid, checkWildAnimal, checkAnimalSavagery, checkTakeRoot, checkBloodlust } from '../mechanics/negative-traits';
 
 // S27.8.11 — `getLegalMoves` + `getAdjacentOpponents` (variante locale)
 // extraits dans `actions/legal-moves.ts`. Re-export pour preserver
@@ -376,236 +300,10 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
 // S27.8.8 — `handleBlock` extrait dans `actions/block-action.ts`.
 
 
-/**
- * Gère un blitz
- */
-function handleBlitz(
-  state: GameState,
-  move: { type: 'BLITZ'; playerId: string; to: Position; targetId: string },
-  rng: RNG
-): GameState {
-  const attacker = state.players.find(p => p.id === move.playerId);
-  const target = state.players.find(p => p.id === move.targetId);
-
-  if (!attacker || !target) return state;
-
-  // Vérifier que le blitz est légal
-  if (!canBlitz(state, move.playerId, move.to, move.targetId)) return state;
-
-  // ─── Foul Appearance check ─────────────────────────────────────────────
-  // Rolled by the attacker before the blitz begins. On 1, the declared
-  // action is wasted (no turnover) and the attacker's activation ends.
-  const foulAppearanceCheck = checkFoulAppearance(state, attacker, target, rng, true);
-  if (!foulAppearanceCheck.shouldContinueBlock) {
-    return foulAppearanceCheck.newState;
-  }
-
-  // Gérer le changement de joueur
-  let newState = handlePlayerSwitch(foulAppearanceCheck.newState, move.playerId);
-
-  // 1. Effectuer le mouvement
-  const from = attacker.pos;
-  const to = move.to;
-
-  // Vérifier si un jet d'esquive est nécessaire pour le mouvement
-  const needsDodge = requiresDodgeRoll(newState, from, to, attacker.team);
-
-  if (needsDodge) {
-    // Calculer les modificateurs de désquive (adversaires à l'arrivée + skills)
-    const baseDodgeModifiers = calculateDodgeModifiers(newState, from, to, attacker.team);
-    const skillDodgeModifiers = getDodgeSkillModifiers(newState, attacker, from);
-    const dodgeModifiers = baseDodgeModifiers + skillDodgeModifiers;
-
-    // Effectuer le jet d'esquive
-    const dodgeResult = performDodgeRollWithNotification(attacker, rng, dodgeModifiers);
-
-    newState.lastDiceResult = dodgeResult;
-
-    // Log du jet d'esquive
-    const dodgeLogEntry = createLogEntry(
-      'dice',
-      `Jet d'esquive (Blitz): ${dodgeResult.diceRoll}/${dodgeResult.targetNumber} ${dodgeResult.success ? '✓' : '✗'}`,
-      attacker.id,
-      attacker.team,
-      {
-        diceRoll: dodgeResult.diceRoll,
-        targetNumber: dodgeResult.targetNumber,
-        success: dodgeResult.success,
-        modifiers: dodgeModifiers,
-      }
-    );
-    newState.gameLog = [...newState.gameLog, dodgeLogEntry];
-
-    // Le joueur se déplace toujours, que le jet d'esquive réussisse ou échoue
-    const attackerIdx = newState.players.findIndex(p => p.id === attacker.id);
-    newState.players[attackerIdx].pos = { ...to };
-
-    // Calculer le coût en PM : distance seulement (le blocage coûtera 1 PM supplémentaire)
-    const distance = Math.abs(from.x - to.x) + Math.abs(from.y - to.y);
-    newState.players[attackerIdx].pm = Math.max(0, newState.players[attackerIdx].pm - distance);
-
-    // Shadowing : tentative de suivi après le mouvement (BB3).
-    newState = resolveShadowingAfterDodge(newState, attacker, from, rng);
-
-    // Break Tackle (BB3): +1/+2 une fois par activation sur un Dodge raté
-    // pendant un Blitz.
-    let blitzDodgeSuccess = dodgeResult.success;
-    if (!blitzDodgeSuccess) {
-      const breakTackleCheck = checkBreakTackle(
-        newState,
-        newState.players[attackerIdx],
-        dodgeResult.diceRoll,
-        dodgeResult.targetNumber,
-        dodgeResult.success
-      );
-      if (breakTackleCheck.triggered) {
-        newState = breakTackleCheck.newState;
-        blitzDodgeSuccess = true;
-      }
-    }
-
-    if (blitzDodgeSuccess) {
-      // Si le joueur porte la balle et atteint l'en-but adverse -> touchdown
-      const mover = newState.players[attackerIdx];
-      if (mover.hasBall && isInOpponentEndzone(newState, mover)) {
-        return awardTouchdown(newState, mover.team, mover);
-      }
-    } else {
-      // Jet d'esquive échoué : le joueur chute et doit faire un jet d'armure
-      newState.isTurnover = true;
-
-      // Vérifier si le joueur avait le ballon AVANT de le mettre à terre
-      const hadBall = newState.players[attackerIdx].hasBall;
-
-      // Le joueur chute (est mis à terre)
-      newState.players[attackerIdx].stunned = true;
-
-      // Effectuer le jet d'armure
-      const armorResult = performArmorRollWithNotification(newState.players[attackerIdx], rng);
-      newState.lastDiceResult = armorResult;
-
-      // Log du jet d'armure
-      const armorLogEntry = createLogEntry(
-        'dice',
-        `Jet d'armure (Blitz échoué): ${armorResult.diceRoll}/${armorResult.targetNumber} ${armorResult.success ? '✓' : '✗'}`,
-        newState.players[attackerIdx].id,
-        newState.players[attackerIdx].team,
-        {
-          diceRoll: armorResult.diceRoll,
-          targetNumber: armorResult.targetNumber,
-          success: armorResult.success,
-        }
-      );
-      newState.gameLog = [...newState.gameLog, armorLogEntry];
-
-      // Si l'armure est percée (success = false), faire un jet de blessure
-      if (!armorResult.success) {
-        newState = performInjuryRoll(newState, newState.players[attackerIdx], rng);
-      }
-
-      // Si le joueur avait le ballon, il le perd et le ballon rebondit
-      // (même si l'armure n'est pas percée, le joueur chute et perd le ballon)
-      if (hadBall) {
-        newState.players[attackerIdx].hasBall = false;
-        newState.ball = { ...newState.players[attackerIdx].pos };
-
-        // Log de la perte de ballon
-        const ballLossLogEntry = createLogEntry(
-          'action',
-          `Ballon perdu après échec de blitz`,
-          attacker.id,
-          attacker.team
-        );
-        newState.gameLog = [...newState.gameLog, ballLossLogEntry];
-
-        // Faire rebondir le ballon depuis la position du joueur
-        return bounceBall(newState, rng);
-      }
-
-      // Enregistrer l'action de blitz et terminer le tour
-      newState = setPlayerAction(newState, attacker.id, 'BLITZ');
-      newState = checkPlayerTurnEnd(newState, attacker.id);
-      return newState;
-    }
-  } else {
-    // Pas de jet d'esquive nécessaire, déplacer directement
-    const attackerIdx = newState.players.findIndex(p => p.id === attacker.id);
-    newState.players[attackerIdx].pos = { ...to };
-
-    // Calculer le coût en PM : distance seulement (le blocage coûtera 1 PM supplémentaire)
-    const distance = Math.abs(from.x - to.x) + Math.abs(from.y - to.y);
-    newState.players[attackerIdx].pm = Math.max(0, newState.players[attackerIdx].pm - distance);
-
-    // Si le joueur porte la balle et atteint l'en-but adverse -> touchdown
-    const mover = newState.players[attackerIdx];
-    if (mover.hasBall && isInOpponentEndzone(newState, mover)) {
-      return awardTouchdown(newState, mover.team, mover);
-    }
-  }
-
-  // 2. Effectuer le blocage après le mouvement
-  const updatedAttacker = newState.players.find(p => p.id === attacker.id);
-  const updatedTarget = newState.players.find(p => p.id === target.id);
-
-  if (!updatedAttacker || !updatedTarget) return newState;
-
-  // Vérifier que le blocage est toujours possible après le mouvement
-  if (!canBlock(newState, updatedAttacker.id, updatedTarget.id)) {
-    // Si le blocage n'est plus possible, enregistrer l'action et terminer
-    newState = setPlayerAction(newState, attacker.id, 'BLITZ');
-    newState = checkPlayerTurnEnd(newState, attacker.id);
-    return newState;
-  }
-
-  // Calculer les assists
-  const offensiveAssists = calculateOffensiveAssists(newState, updatedAttacker, updatedTarget);
-  const defensiveAssists = calculateDefensiveAssists(newState, updatedAttacker, updatedTarget);
-
-  // Nombre de dés et qui choisit
-  const attackerStrength = updatedAttacker.st + offensiveAssists;
-  const targetStrength = updatedTarget.st + defensiveAssists;
-  const diceCount = calculateBlockDiceCount(attackerStrength, targetStrength);
-  const chooser = getBlockDiceChooser(attackerStrength, targetStrength);
-
-  // Tirer les dés et enregistrer un choix en attente
-  const options = rollBlockDiceManyWithRolls(rng, diceCount);
-
-  // Log de l'action de blitz
-  const blitzLogEntry = createLogEntry(
-    'action',
-    `Blitz: mouvement vers (${to.x}, ${to.y}) puis blocage de ${updatedTarget.name}`,
-    attacker.id,
-    attacker.team
-  );
-  newState.gameLog = [...newState.gameLog, blitzLogEntry];
-
-  // Enregistrer l'action de blitz AVANT de créer le pendingBlock
-  newState = setPlayerAction(newState, attacker.id, 'BLITZ');
-
-  // Incrémenter le compteur de blitz de l'équipe
-  newState = incrementTeamBlitzCount(newState, attacker.team);
-
-  // Vérifier si le joueur porte la balle et est dans l'en-but adverse après le mouvement
-  const mover = newState.players.find(p => p.id === attacker.id);
-  if (mover && mover.hasBall && isInOpponentEndzone(newState, mover)) {
-    return awardTouchdown(newState, mover.team, mover);
-  }
-
-  return {
-    ...newState,
-    pendingBlock: {
-      attackerId: updatedAttacker.id,
-      targetId: updatedTarget.id,
-      options: options.map(o => o.result),
-      chooser,
-      offensiveAssists,
-      defensiveAssists,
-      totalStrength: attackerStrength,
-      targetStrength,
-    },
-  };
-}
-
+// S27.8.13 — `handleBlitz` extrait dans `actions/blitz-handler.ts`.
+// Aucun cycle vers `actions.ts` (helpers leaf uniquement). Avec cette
+// extraction, `actions.ts` descend sous la cible DoD `<= 600 lignes`.
+//
 // S27.8.2 — handlePass / handleOnTheBallMove / handleOnTheBallDecline /
 // handleHandoff / handleThrowTeamMate extraits dans
 // `actions/pass-actions.ts` (re-importes en haut de ce fichier).
