@@ -36,130 +36,26 @@ function errorMessage(e: unknown): string {
   return e instanceof Error ? e.message : "Erreur serveur";
 }
 
-// Créer une partie, le créateur reçoit un token de match (S25.5 — ApiResponse<T>)
-export async function handleCreateMatch(
-  req: AuthenticatedRequest,
-  res: Response,
-): Promise<void> {
-  try {
-    const { terrainSkin, turnTimerEnabled, rulesMode } = req.body || {};
-    const seed = `match-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    const match = await prisma.match.create({
-      data: {
-        status: "pending",
-        seed,
-        players: { connect: { id: req.user!.id } },
-      },
-    });
+// S27.8.20 — Handlers de cycle de vie (create / join / accept / cancel)
+// extraits dans `routes/match-lifecycle-handlers.ts`. Re-export pour
+// preserver l'API publique consommee par les tests d'integration.
+export {
+  handleCreateMatch,
+  handleJoinMatch,
+  handleAcceptMatch,
+  handleCancelMatch,
+} from './match-lifecycle-handlers';
+import {
+  handleCreateMatch as handleCreateMatchImpl,
+  handleJoinMatch as handleJoinMatchImpl,
+  handleAcceptMatch as handleAcceptMatchImpl,
+  handleCancelMatch as handleCancelMatchImpl,
+} from './match-lifecycle-handlers';
 
-    // Stocker les options de match dans un turn initial de type "options"
-    const hasOptions =
-      terrainSkin || typeof turnTimerEnabled === "boolean" || rulesMode;
-    if (hasOptions) {
-      await prisma.turn.create({
-        data: {
-          matchId: match.id,
-          number: 0,
-          payload: {
-            type: "match-options",
-            terrainSkin: terrainSkin || "grass",
-            turnTimerEnabled: turnTimerEnabled !== false,
-            // N.2 — Mode simplifie pour debutants (leverager SIMPLIFIED_RULES).
-            rulesMode: rulesMode === "simplified" ? "simplified" : "full",
-          },
-        },
-      });
-    }
-    const matchToken = jwt.sign(
-      { matchId: match.id, userId: req.user!.id },
-      MATCH_SECRET,
-      { expiresIn: "2h" },
-    );
-    sendSuccess(res, { match, matchToken }, 201);
-  } catch (e: unknown) {
-    serverLog.error(e);
-    sendError(res, errorMessage(e), 500);
-  }
-}
-
-// Rejoindre une partie existante, retourne un token de match (S25.5 — ApiResponse<T>)
-export async function handleJoinMatch(
-  req: AuthenticatedRequest,
-  res: Response,
-): Promise<void> {
-  try {
-    const { matchId } = req.body;
-    const match = await prisma.match.update({
-      where: { id: matchId },
-      data: { players: { connect: { id: req.user!.id } } },
-    });
-    if (!match) {
-      sendError(res, "Partie introuvable", 404);
-      return;
-    }
-    const matchToken = jwt.sign(
-      { matchId: match.id, userId: req.user!.id },
-      MATCH_SECRET,
-      { expiresIn: "2h" },
-    );
-    sendSuccess(res, { match, matchToken });
-  } catch (e: unknown) {
-    serverLog.error(e);
-    sendError(res, errorMessage(e), 500);
-  }
-}
-
-// Accepter le match: chaque coach doit accepter. Au second accept, on lance la séquence de pré-match (S25.5 — ApiResponse<T>)
-export async function handleAcceptMatch(
-  req: AuthenticatedRequest,
-  res: Response,
-): Promise<void> {
-  try {
-    const { matchId } = req.body as { matchId: string };
-    const result = await acceptAndMaybeStartMatch(prisma as any, {
-      matchId,
-      userId: req.user!.id,
-    });
-    if (!result.ok && "status" in result && typeof result.status === "number") {
-      sendError(res, result.error ?? "Erreur", result.status);
-      return;
-    }
-    sendSuccess(res, result);
-  } catch (e: unknown) {
-    serverLog.error(e);
-    sendError(res, errorMessage(e), 500);
-  }
-}
-
-router.post("/create", authUser, validate(createMatchSchema), handleCreateMatch);
-router.post("/join", authUser, validate(joinMatchSchema), handleJoinMatch);
-router.post("/accept", authUser, validate(acceptMatchSchema), handleAcceptMatch);
-
-// Annuler un match en attente. N'est possible que tant que le match n'a pas
-// commence (status === "pending"). L'utilisateur doit etre inscrit au match.
-// (S25.5g — ApiResponse<T>)
-export async function handleCancelMatch(
-  req: AuthenticatedRequest,
-  res: Response,
-): Promise<void> {
-  try {
-    const matchId = req.params.id;
-    const result = await cancelMatch(prisma as any, {
-      matchId,
-      userId: req.user!.id,
-    });
-    if (!result.ok) {
-      sendError(res, result.error, result.status);
-      return;
-    }
-    sendSuccess(res, result);
-  } catch (e: unknown) {
-    serverLog.error(e);
-    sendError(res, errorMessage(e), 500);
-  }
-}
-
-router.post("/:id/cancel", authUser, handleCancelMatch);
+router.post("/create", authUser, validate(createMatchSchema), handleCreateMatchImpl);
+router.post("/join", authUser, validate(joinMatchSchema), handleJoinMatchImpl);
+router.post("/accept", authUser, validate(acceptMatchSchema), handleAcceptMatchImpl);
+router.post("/:id/cancel", authUser, handleCancelMatchImpl);
 
 // Create an online match vs AI (practice mode). (S25.5g — ApiResponse<T>)
 // Reuses the ensureAISystemUser / spawnAITeam helpers from the LocalMatch
