@@ -23,6 +23,7 @@ export {
   type ProTeamId,
   type ProTeamProfile,
 } from './tactics/race-profiles';
+export { weightsFromProfile } from './tactics/ai-weights';
 export {
   riskAppetiteToTemperature,
   softmaxSample,

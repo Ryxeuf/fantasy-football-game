@@ -15,7 +15,7 @@
 import type { GameState, Move, RNG, TeamId } from '../core/types';
 import { getLegalMoves } from '../actions/actions';
 import { makeRNG } from '../utils/rng';
-import { pickBestMove, scoreMove } from './evaluator';
+import { pickBestMove, scoreMove, type EvalWeights } from './evaluator';
 
 export type AIDifficulty = 'easy' | 'medium' | 'hard';
 
@@ -90,9 +90,10 @@ export function scoreMoveForDifficulty(
   move: Move,
   team: TeamId,
   difficulty: AIDifficulty,
-  rng?: RNG
+  rng?: RNG,
+  weightsOverride?: Partial<EvalWeights>
 ): number {
-  const base = scoreMove(state, move, team);
+  const base = scoreMove(state, move, team, weightsOverride);
   const profile = getAIDifficultyProfile(difficulty);
   let score = base;
   if (move.type === 'END_TURN') {
@@ -107,6 +108,14 @@ export function scoreMoveForDifficulty(
 export interface PickAIMoveOptions {
   difficulty?: AIDifficulty;
   rng?: RNG;
+  /**
+   * Lot 3.A.0.a — override partiel des pondérations d'évaluation.
+   * Permet au sim-engine full driver de moduler les poids selon le
+   * `TacticalProfile` racial (Halflings ≠ Wood Elves ≠ Orcs) sans
+   * dupliquer la logique d'IA. game-engine ne dépend pas de
+   * sim-engine — la dérivation se fait côté caller.
+   */
+  weights?: Partial<EvalWeights>;
 }
 
 /**
@@ -122,9 +131,10 @@ export function pickAIMove(
   options: PickAIMoveOptions = {}
 ): Move | null {
   const difficulty = options.difficulty ?? DEFAULT_AI_DIFFICULTY;
+  const weights = options.weights;
 
   if (difficulty === 'hard') {
-    return pickBestMove(state, team);
+    return pickBestMove(state, team, weights);
   }
 
   const legal = getLegalMoves(state);
@@ -138,7 +148,7 @@ export function pickAIMove(
 
   const scored = pool.map(candidate => ({
     move: candidate,
-    score: scoreMoveForDifficulty(state, candidate, team, difficulty, rng),
+    score: scoreMoveForDifficulty(state, candidate, team, difficulty, rng, weights),
   }));
 
   const sorted = sortByScoreDescStable(scored);
