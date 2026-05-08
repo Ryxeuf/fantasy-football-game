@@ -217,3 +217,18 @@ export {
   type MetricStats,
   type SimulateFn,
 } from './compare/compare-drivers';
+
+export {
+  extractFullDriverTrace,
+  runFullDriverWithTrace,
+  type DrivingTeamSide,
+  type FullDriverTrace,
+  type FullDriverTraceSummary,
+  type FullDriverTraceTurn,
+} from './driver/full-driver-trace';
+
+export {
+  measureSimulationPerf,
+  type MeasureSimulationPerfInput,
+  type PerfBaselineResult,
+} from './perf/perf-baseline';
