@@ -11,6 +11,7 @@ import {
 import { adminOnly } from "../middleware/adminOnly";
 import { authUser } from "../middleware/authUser";
 import { validate } from "../middleware/validate";
+import { runEngineComparison } from "../services/engine-comparison";
 import { computeEngineDrift } from "../services/pro-league-engine-drift-watcher";
 import { getBroadcasterStats } from "../services/pro-league-match-broadcaster";
 import {
@@ -219,6 +220,60 @@ export async function handleListTestMatches(
   res.json({ matches });
 }
 
+/**
+ * Schema pour `POST /admin/sim/comparison` — Lot 3.B.2.
+ *
+ * Lance N matchs avec hybrid + full driver (même seed à chaque step)
+ * et persiste un row `EngineComparison` + met à jour les Prometheus
+ * gauges. Ce endpoint est intentionnellement synchrone — pour 25
+ * matchs en hybrid (~50ms) + 25 en full (~1-3s) on est sous 90s ; pour
+ * des batchs plus gros, utiliser `pnpm sim:compare --json` côté CLI.
+ *
+ * Bornes :
+ *   - matches ∈ [1, 1000] (defense-in-depth, route bloquante au-delà).
+ *   - seedOffset ∈ tout entier (négatifs autorisés pour éviter de coller
+ *     aux seeds de prod par accident).
+ */
+export const comparisonSchema = z.object({
+  homeTeamId: z.string().min(1),
+  awayTeamId: z.string().min(1),
+  matches: z.number().int().min(1).max(1000),
+  seedOffset: z.number().int(),
+});
+
+export type ComparisonBody = z.infer<typeof comparisonSchema>;
+
+/** Handler `POST /admin/sim/comparison` — Lot 3.B.2. */
+export async function handleRunComparison(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const { homeTeamId, awayTeamId, matches, seedOffset } =
+    req.body as ComparisonBody;
+  try {
+    const result = await runEngineComparison(
+      { homeTeamId, awayTeamId, matches, seedOffset, source: "admin" },
+      { metrics: appMetrics },
+    );
+    res.status(201).json({
+      id: result.id,
+      engineVer: result.engineVer,
+      aggregate: result.aggregate,
+    });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "unknown";
+    if (
+      msg.includes("distincts") ||
+      msg.includes("inconnue") ||
+      msg.includes("matches")
+    ) {
+      res.status(400).json({ error: msg });
+    } else {
+      res.status(500).json({ error: msg });
+    }
+  }
+}
+
 const router = Router();
 
 router.use(authUser, adminOnly);
@@ -233,5 +288,10 @@ router.post(
   handleCreateTestMatch,
 );
 router.get("/test-matches", handleListTestMatches);
+router.post(
+  "/comparison",
+  validate(comparisonSchema),
+  handleRunComparison,
+);
 
 export default router;

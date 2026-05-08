@@ -18,6 +18,7 @@
     "sim:bench": "tsx scripts/bench.ts",
     "sim:bench:ci": "tsx scripts/bench-ci.ts",
     "sim:bench:snapshot": "tsx scripts/bench-baseline-snapshot.ts",
+    "sim:compare": "tsx scripts/compare-drivers.ts",
     "sim:replay": "tsx scripts/replay.ts"
   },
   "dependencies": {

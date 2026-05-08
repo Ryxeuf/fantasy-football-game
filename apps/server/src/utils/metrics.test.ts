@@ -185,4 +185,50 @@ describe("metrics registry", () => {
       expect(text).toMatch(/nuffle_sim_match_duration_seconds_bucket\{[^}]*le="5"[^}]*\} 5/);
     });
   });
+
+  describe("Pro League driver comparator metrics (Lot 3.B.2)", () => {
+    it("setEngineCompareStats expose les 4 jauges avec le bon pairing", async () => {
+      metrics.setEngineCompareStats(
+        { engineVer: "0.16.0", pairing: "pit-smashers__kc-soaring-hawks" },
+        {
+          meanScoreDelta: 0.42,
+          p95ScoreDelta: 2,
+          divergedPct: 0.31,
+          outcomeFlippedPct: 0.05,
+        },
+      );
+      const text = await metricsExposition(metrics.registry);
+      expect(text).toMatch(
+        /nuffle_engine_compare_score_delta_mean\{[^}]*pairing="pit-smashers__kc-soaring-hawks"[^}]*\} 0\.42/,
+      );
+      expect(text).toMatch(
+        /nuffle_engine_compare_score_delta_p95\{[^}]*pairing="pit-smashers__kc-soaring-hawks"[^}]*\} 2/,
+      );
+      expect(text).toMatch(
+        /nuffle_engine_compare_diverged_pct\{[^}]*pairing="pit-smashers__kc-soaring-hawks"[^}]*\} 0\.31/,
+      );
+      expect(text).toMatch(
+        /nuffle_engine_compare_outcome_flipped_pct\{[^}]*pairing="pit-smashers__kc-soaring-hawks"[^}]*\} 0\.05/,
+      );
+    });
+
+    it("setEngineCompareStats clamp les valeurs non-finite à 0 (defense-in-depth)", async () => {
+      metrics.setEngineCompareStats(
+        { engineVer: "0.16.0", pairing: "X__Y" },
+        {
+          meanScoreDelta: Number.NaN,
+          p95ScoreDelta: Number.POSITIVE_INFINITY,
+          divergedPct: 0.5,
+          outcomeFlippedPct: -Number.POSITIVE_INFINITY,
+        },
+      );
+      const text = await metricsExposition(metrics.registry);
+      expect(text).toMatch(
+        /nuffle_engine_compare_score_delta_mean\{[^}]*pairing="X__Y"[^}]*\} 0\b/,
+      );
+      expect(text).toMatch(
+        /nuffle_engine_compare_diverged_pct\{[^}]*pairing="X__Y"[^}]*\} 0\.5/,
+      );
+    });
+  });
 });

@@ -834,6 +834,25 @@ exports.Prisma.AuditLogScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.EngineComparisonScalarFieldEnum = {
+  id: 'id',
+  engineVer: 'engineVer',
+  homeTeamId: 'homeTeamId',
+  awayTeamId: 'awayTeamId',
+  matches: 'matches',
+  seedOffset: 'seedOffset',
+  meanScoreDelta: 'meanScoreDelta',
+  p95ScoreDelta: 'p95ScoreDelta',
+  maxScoreDelta: 'maxScoreDelta',
+  meanTurnoverDelta: 'meanTurnoverDelta',
+  meanTouchdownDelta: 'meanTouchdownDelta',
+  meanCasualtyDelta: 'meanCasualtyDelta',
+  outcomeFlippedCount: 'outcomeFlippedCount',
+  divergedPct: 'divergedPct',
+  source: 'source',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -920,7 +939,8 @@ exports.Prisma.ModelName = {
   ProUserBadge: 'ProUserBadge',
   ProGazetteArticle: 'ProGazetteArticle',
   ProHallOfFame: 'ProHallOfFame',
-  AuditLog: 'AuditLog'
+  AuditLog: 'AuditLog',
+  EngineComparison: 'EngineComparison'
 };
 
 /**

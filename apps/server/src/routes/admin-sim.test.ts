@@ -19,13 +19,18 @@ vi.mock("../services/pro-league-sandbox", () => ({
   createTestMatch: vi.fn(),
   listTestMatches: vi.fn(),
 }));
+vi.mock("../services/engine-comparison", () => ({
+  runEngineComparison: vi.fn(),
+}));
 
 import {
+  comparisonSchema,
   handleCreateTestMatch,
   handleGetBroadcasterStats,
   handleGetDrift,
   handleListTeams,
   handleListTestMatches,
+  handleRunComparison,
   handleRunSim,
   runSimSchema,
   testMatchSchema,
@@ -37,6 +42,7 @@ import {
   createTestMatch,
   listTestMatches,
 } from "../services/pro-league-sandbox";
+import { runEngineComparison } from "../services/engine-comparison";
 import { appMetrics } from "../utils/metrics";
 
 function buildRes(): Response & { statusCode: number; body: unknown } {
@@ -417,5 +423,149 @@ describe("handleListTestMatches — Lot 2.C.2", () => {
       res,
     );
     expect(listTestMatches).toHaveBeenCalledWith(undefined);
+  });
+});
+
+describe("comparisonSchema — Lot 3.B.2 input validation", () => {
+  it("accepte un payload valide", () => {
+    const out = comparisonSchema.parse({
+      homeTeamId: "pit-smashers",
+      awayTeamId: "kc-soaring-hawks",
+      matches: 25,
+      seedOffset: 0,
+    });
+    expect(out.matches).toBe(25);
+  });
+
+  it("rejette matches > 1000", () => {
+    expect(() =>
+      comparisonSchema.parse({
+        homeTeamId: "a",
+        awayTeamId: "b",
+        matches: 1001,
+        seedOffset: 0,
+      }),
+    ).toThrow();
+  });
+
+  it("rejette matches non entier", () => {
+    expect(() =>
+      comparisonSchema.parse({
+        homeTeamId: "a",
+        awayTeamId: "b",
+        matches: 25.5,
+        seedOffset: 0,
+      }),
+    ).toThrow();
+  });
+
+  it("rejette homeTeamId vide", () => {
+    expect(() =>
+      comparisonSchema.parse({
+        homeTeamId: "",
+        awayTeamId: "b",
+        matches: 25,
+        seedOffset: 0,
+      }),
+    ).toThrow();
+  });
+});
+
+describe("handleRunComparison — Lot 3.B.2", () => {
+  it("retourne 201 + aggregate quand le service réussit", async () => {
+    (runEngineComparison as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: "ec-1",
+      engineVer: "0.16.0",
+      aggregate: {
+        matches: 25,
+        scoreTotal: { mean: 0.4, p50: 0, p95: 1, max: 2 },
+        turnoverCount: { mean: 0.5, p50: 0, p95: 1, max: 2 },
+        touchdownCount: { mean: 0.2, p50: 0, p95: 1, max: 1 },
+        casualtyCount: { mean: 0.1, p50: 0, p95: 1, max: 1 },
+        outcomeFlippedCount: 1,
+        divergedPct: 0.2,
+      },
+    });
+    const res = buildRes();
+    await handleRunComparison(
+      {
+        body: {
+          homeTeamId: "pit-smashers",
+          awayTeamId: "kc-soaring-hawks",
+          matches: 25,
+          seedOffset: 0,
+        },
+      } as unknown as Request,
+      res,
+    );
+    expect(res.statusCode).toBe(201);
+    expect((res.body as { id: string }).id).toBe("ec-1");
+    expect(runEngineComparison).toHaveBeenCalledWith(
+      expect.objectContaining({
+        homeTeamId: "pit-smashers",
+        awayTeamId: "kc-soaring-hawks",
+        matches: 25,
+        seedOffset: 0,
+        source: "admin",
+      }),
+      expect.objectContaining({ metrics: appMetrics }),
+    );
+  });
+
+  it("retourne 400 quand teams identiques (user input)", async () => {
+    (runEngineComparison as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new Error("homeTeamId et awayTeamId doivent être distincts"),
+    );
+    const res = buildRes();
+    await handleRunComparison(
+      {
+        body: {
+          homeTeamId: "a",
+          awayTeamId: "a",
+          matches: 5,
+          seedOffset: 0,
+        },
+      } as unknown as Request,
+      res,
+    );
+    expect(res.statusCode).toBe(400);
+  });
+
+  it("retourne 400 quand team inconnue", async () => {
+    (runEngineComparison as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new Error("Team home inconnue : team-bidon"),
+    );
+    const res = buildRes();
+    await handleRunComparison(
+      {
+        body: {
+          homeTeamId: "team-bidon",
+          awayTeamId: "kc-soaring-hawks",
+          matches: 5,
+          seedOffset: 0,
+        },
+      } as unknown as Request,
+      res,
+    );
+    expect(res.statusCode).toBe(400);
+  });
+
+  it("retourne 500 quand le sim crash", async () => {
+    (runEngineComparison as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new Error("simulateMatch boom"),
+    );
+    const res = buildRes();
+    await handleRunComparison(
+      {
+        body: {
+          homeTeamId: "a",
+          awayTeamId: "b",
+          matches: 5,
+          seedOffset: 0,
+        },
+      } as unknown as Request,
+      res,
+    );
+    expect(res.statusCode).toBe(500);
   });
 });

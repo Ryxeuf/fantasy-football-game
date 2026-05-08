@@ -25,6 +25,12 @@
  *   - nuffle_broadcaster_event_dispatch_lag_ms histogram
  *   - nuffle_engine_drift                     gauge(metric, race, seasonId)
  *
+ * Pro League driver comparator (Lot 3.B.2) :
+ *   - nuffle_engine_compare_score_delta_mean  gauge(engineVer, pairing)
+ *   - nuffle_engine_compare_score_delta_p95   gauge(engineVer, pairing)
+ *   - nuffle_engine_compare_diverged_pct      gauge(engineVer, pairing)
+ *   - nuffle_engine_compare_outcome_flipped_pct gauge(engineVer, pairing)
+ *
  * Le serveur expose `/metrics` sur le réseau Docker interne (Prometheus
  * scrape, non exposé internet). Cardinality kept bounded :
  *  - `driver` ∈ {'hybrid','full'}
@@ -33,6 +39,7 @@
  *  - `metric` ∈ {'tdMean','casualtyMean','turnoverMean','homeWinRate', …}
  *  - `race` couvre les 16 archétypes Pro League
  *  - `engineVer` change rarement (~1/saison via pinning)
+ *  - `pairing` ∈ {'<homeId>__<awayId>'} (16*15=240 combinaisons max)
  */
 
 import {
@@ -88,6 +95,17 @@ export interface EngineDriftLabels {
   seasonId: string;
 }
 
+/**
+ * Lot 3.B.2 — labels pour les jauges du comparator hybrid vs full.
+ * `pairing` est concaténé `<homeTeamId>__<awayTeamId>` côté caller pour
+ * limiter la cardinalité (240 max sur 16 équipes Pro League) et garder
+ * les requêtes Grafana lisibles.
+ */
+export interface EngineCompareLabels {
+  engineVer: string;
+  pairing: string;
+}
+
 export interface MetricsRegistry {
   readonly registry: Registry;
 
@@ -118,6 +136,17 @@ export interface MetricsRegistry {
   observeBroadcasterDispatchLag(ms: number): void;
   /** Engine drift — set la dérive d'une métrique vs baseline (en delta relatif, ex: 0.04 pour +4%). */
   setEngineDrift(labels: EngineDriftLabels, value: number): void;
+
+  /** Lot 3.B.2 — set les jauges du comparator hybrid vs full pour un pairing. */
+  setEngineCompareStats(
+    labels: EngineCompareLabels,
+    stats: {
+      readonly meanScoreDelta: number;
+      readonly p95ScoreDelta: number;
+      readonly divergedPct: number;
+      readonly outcomeFlippedPct: number;
+    },
+  ): void;
 
   /** Helper test : retourne la valeur courante d'une gauge. */
   snapshotGauge(name: string): Promise<number>;
@@ -232,6 +261,32 @@ export function buildMetricsRegistry(): MetricsRegistry {
     registers: [registry],
   });
 
+  // Lot 3.B.2 — jauges comparator hybrid vs full driver, par pairing.
+  const engineCompareScoreDeltaMean = new Gauge({
+    name: "nuffle_engine_compare_score_delta_mean",
+    help: "Moyenne du delta absolu home+away score entre hybrid et full pour un pairing (Lot 3.B.2)",
+    labelNames: ["engineVer", "pairing"],
+    registers: [registry],
+  });
+  const engineCompareScoreDeltaP95 = new Gauge({
+    name: "nuffle_engine_compare_score_delta_p95",
+    help: "p95 du delta absolu home+away score entre hybrid et full pour un pairing (Lot 3.B.2)",
+    labelNames: ["engineVer", "pairing"],
+    registers: [registry],
+  });
+  const engineCompareDivergedPct = new Gauge({
+    name: "nuffle_engine_compare_diverged_pct",
+    help: "Pct (0..1) de matchs où hybrid et full divergent (scoreTotal>0 OR outcomeChanged) — Lot 3.B.2",
+    labelNames: ["engineVer", "pairing"],
+    registers: [registry],
+  });
+  const engineCompareOutcomeFlippedPct = new Gauge({
+    name: "nuffle_engine_compare_outcome_flipped_pct",
+    help: "Pct (0..1) de matchs où l'outcome flip entre hybrid et full — Lot 3.B.2",
+    labelNames: ["engineVer", "pairing"],
+    registers: [registry],
+  });
+
   const clamp = (n: number) => (Number.isFinite(n) && n > 0 ? n : 0);
 
   return {
@@ -305,6 +360,14 @@ export function buildMetricsRegistry(): MetricsRegistry {
         },
         safe,
       );
+    },
+    setEngineCompareStats(labels, stats) {
+      const safe = (n: number): number => (Number.isFinite(n) ? n : 0);
+      const tags = { engineVer: labels.engineVer, pairing: labels.pairing };
+      engineCompareScoreDeltaMean.set(tags, safe(stats.meanScoreDelta));
+      engineCompareScoreDeltaP95.set(tags, safe(stats.p95ScoreDelta));
+      engineCompareDivergedPct.set(tags, safe(stats.divergedPct));
+      engineCompareOutcomeFlippedPct.set(tags, safe(stats.outcomeFlippedPct));
     },
 
     async snapshotGauge(name) {
