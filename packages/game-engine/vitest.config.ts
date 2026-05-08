@@ -41,6 +41,13 @@ export default defineConfig({
         'src/actions/move-handlers.ts',
         'src/actions/choice-handlers.ts',
         'src/actions/block-action.ts',
+        // S27.8.11 — `legal-moves.ts` extrait depuis `actions.ts`,
+        // meme quirk source-map v8.
+        'src/actions/legal-moves.ts',
+        // S27.8.12 — `move-leap-dodge-handlers.ts` extrait depuis
+        // `actions.ts` (handleLeap, handleMove, handleDodge), meme
+        // quirk source-map v8.
+        'src/actions/move-leap-dodge-handlers.ts',
       ],
       // S25.4 — Seuils initiaux conservateurs. v8 reporte 0% lines sur
       // certains fichiers TS du moteur a cause d'un quirk source-map ;
