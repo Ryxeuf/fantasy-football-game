@@ -37,7 +37,7 @@ import {
   getBlockDiceChooser,
   resolveBlockResult,
 } from '../mechanics/blocking';
-import { canDumpOff, getDumpOffReceivers } from '../mechanics/dump-off';
+import { canDumpOff, getDumpOffReceivers, executeDumpOff } from '../mechanics/dump-off';
 import { checkFoulAppearance } from '../mechanics/negative-traits';
 import { checkDauntless } from '../mechanics/dauntless';
 import {
@@ -445,4 +445,59 @@ export function resolveMultipleBlock(state: GameState, rng: RNG): GameState {
   // Appel recursif : si le second bloc s'est resolu immediatement sans
   // pending, on nettoie le flag dans la meme dispatch.
   return resolveMultipleBlock(afterSecondBlock, rng);
+}
+
+/**
+ * S27.8.12 — `handleDumpOffChoose` migre depuis `actions.ts`.
+ *
+ * Gere le choix de Dump-off : la cible d'un blocage (porteuse du
+ * ballon, skill `dump-off`) choisit un receveur pour une Passe Rapide,
+ * ou passe son tour de Dump-off (`receiverId = null`). Apres
+ * resolution, le blocage initial reprend via `handleBlock` avec
+ * `skipDumpOff: true` pour eviter une nouvelle demande de delestage.
+ *
+ * Cohesion thematique avec `block-action.ts` : la fonction termine en
+ * relancant `handleBlock` ; elle n'avait aucune raison de rester dans
+ * le dispatcher monolithique.
+ */
+export function handleDumpOffChoose(
+  state: GameState,
+  move: { type: 'DUMP_OFF_CHOOSE'; passerId: string; receiverId: string | null },
+  rng: RNG
+): GameState {
+  if (!state.pendingDumpOff) return state;
+  if (state.pendingDumpOff.targetId !== move.passerId) return state;
+
+  const pendingMove = state.pendingDumpOff.pendingBlockMove;
+  const receiverOptions = state.pendingDumpOff.receiverOptions;
+
+  // Nettoyer le pendingDumpOff dans tous les cas
+  const cleared: GameState = { ...state, pendingDumpOff: undefined };
+
+  let afterDumpOff: GameState = cleared;
+
+  if (move.receiverId !== null) {
+    // Vérifier que le receveur choisi est bien éligible (évite triche client)
+    if (!receiverOptions.includes(move.receiverId)) {
+      return cleared;
+    }
+    afterDumpOff = executeDumpOff(cleared, move.passerId, move.receiverId, rng);
+  } else {
+    const skipLog = createLogEntry(
+      'info',
+      `Délestage refusé par le coach défenseur`,
+      move.passerId,
+      undefined,
+      { skill: 'dump-off' },
+    );
+    afterDumpOff = { ...cleared, gameLog: [...cleared.gameLog, skipLog] };
+  }
+
+  // Reprendre le blocage initial en ignorant le nouveau check dump-off
+  if (pendingMove.type === 'BLOCK') {
+    return handleBlock(afterDumpOff, pendingMove, rng, { skipDumpOff: true });
+  }
+  // BLITZ : pour l'instant, non intégré (un follow-up portera l'intégration
+  // complète dans `handleBlitz`). Fallback : on renvoie l'état post-dump-off.
+  return afterDumpOff;
 }

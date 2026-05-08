@@ -4,13 +4,16 @@
  */
 
 import { GameState, Move, Position, RNG } from '../core/types';
-import { hasSkill } from '../skills/skill-effects';
+// S27.8.12 — `hasSkill` consomme uniquement par `move-leap-dodge-handlers.ts`
+// (handleLeap log entry skill discrimination). Plus d'import direct ici.
 import { getDodgeSkillModifiers } from '../skills/skill-bridge';
 // S27.8.11 — `inBounds` consomme uniquement dans `actions/legal-moves.ts`.
-// `samePos`, `requiresDodgeRoll`, `calculateDodgeModifiers` restent
-// ici (handleLeap, handleMove, handleDodge, handleBlitz).
+// S27.8.12 — `samePos` consomme uniquement par `move-leap-dodge-handlers.ts`
+// (handleLeap/handleMove/handleDodge legality checks et ball pickup).
+// `requiresDodgeRoll` / `calculateDodgeModifiers` consommes par les
+// memes handlers extraits — plus d'import direct ici, mais conserves
+// pour `handleBlitz` qui reste dans ce fichier (consommateur direct).
 import {
-  samePos,
   requiresDodgeRoll,
   calculateDodgeModifiers,
 } from '../mechanics/movement';
@@ -97,19 +100,13 @@ import {
 // handlers de ne pas dependre cycliquement de `actions.ts`.
 // S27.8.11 — `applyPickupFailure` consomme uniquement par les
 // modules extraits (ball-pickup, move-handlers). Plus d'import
-// direct ici. `applyRollFailure` reste utilise par `handleLeap`.
-import { applyRollFailure } from './failure-helpers';
-// S27.8.5 — `handleBallPickup` extrait dans `actions/ball-pickup.ts`
-// pour servir de feuille reutilisable par handleNormalMove /
-// handleDodgeRoll / handleLeap / handleRerollChoose.
-import { handleBallPickup } from './ball-pickup';
+// direct ici.
+// S27.8.12 — `applyRollFailure` consomme uniquement par
+// `move-leap-dodge-handlers.ts` (handleLeap echec). Plus d'import ici.
+// S27.8.5 — `handleBallPickup` extrait dans `actions/ball-pickup.ts`.
 // S27.8.6 — `handleDodgeRoll` et `handleNormalMove` extraits dans
-// `actions/move-handlers.ts`. Appeles depuis `handleMove` (qui reste
-// dans ce fichier car couple a `getLegalMoves`).
-import {
-  handleDodgeRoll,
-  handleNormalMove,
-} from './move-handlers';
+// `actions/move-handlers.ts`. S27.8.12 — handleMove (qui les appelle)
+// rejoint `move-leap-dodge-handlers.ts` ; plus d'import direct ici.
 // S27.8.7 — Choix utilisateur (BLOCK_CHOOSE / PUSH_CHOOSE /
 // FOLLOW_UP_CHOOSE / REROLL_CHOOSE) extraits dans
 // `actions/choice-handlers.ts`. Aucun cycle vers actions.ts.
@@ -123,21 +120,39 @@ import {
 // S27.8.10 — `handleMultiBlock`, `resolveMultipleBlock`, `resolveFrenzyBlock`
 // rejoignent egalement `block-action.ts` (toutes block-related, sans
 // dependance vers `actions.ts`).
+// S27.8.12 — `handleDumpOffChoose` rejoint aussi `block-action.ts`
+// (cohesion : termine en relancant `handleBlock`).
 import {
   handleBlock,
   handleMultiBlock,
   resolveFrenzyBlock,
   resolveMultipleBlock,
+  handleDumpOffChoose,
 } from './block-action';
+// S27.8.12 — `handleLeap`, `handleMove`, `handleDodge` extraits dans
+// `actions/move-leap-dodge-handlers.ts` (apres S27.8.11 qui a brise
+// le cycle via `legal-moves.ts`).
+import {
+  handleLeap,
+  handleMove,
+  handleDodge,
+} from './move-leap-dodge-handlers';
 // S27.8.11 — `canDumpOff` / `getDumpOffReceivers` consommes par
-// `block-action.ts` (handleBlock pendingDumpOff). `executeDumpOff`
-// reste utilise par `handleDumpOffChoose` ici.
-import { executeDumpOff } from '../mechanics/dump-off';
+// `block-action.ts` (handleBlock pendingDumpOff).
+// S27.8.12 — `executeDumpOff` consomme par `block-action.ts`
+// (`handleDumpOffChoose` y a migre). Plus d'import direct ici.
 // S27.8.11 — `checkDauntless` consomme uniquement par `block-action.ts`
 // (handleBlock) et `blitz-handler.ts` (s'il existe). Plus d'import ici.
+// S27.8.12 — `checkBreakTackle` consomme uniquement par
+// `move-leap-dodge-handlers.ts` (handleDodge break tackle gate) et
+// par `handleBlitz` qui reste ici. On garde l'import car `handleBlitz`
+// l'utilise encore.
 import { checkBreakTackle } from '../mechanics/break-tackle';
 // S27.8.7 — `isFendActiveForFollowUp` consomme uniquement dans
 // `actions/choice-handlers.ts` (handlePushChoose).
+// S27.8.12 — `resolveShadowingAfterDodge` consomme uniquement par
+// `move-leap-dodge-handlers.ts` (handleDodge). `handleBlitz` qui
+// reste ici l'importe directement aussi — on garde l'import.
 import { resolveShadowingAfterDodge } from '../mechanics/shadowing';
 // S27.8.7 — `hasFrenzy` consomme uniquement dans
 // `actions/choice-handlers.ts` (handlePushChoose).
@@ -160,12 +175,10 @@ import {
 import { checkBoneHead, checkReallyStupid, checkWildAnimal, checkAnimalSavagery, checkTakeRoot, checkBloodlust, checkFoulAppearance } from '../mechanics/negative-traits';
 // S27.8.11 — `canLeap` (re-alias `playerCanLeap`) et
 // `getLegalLeapDestinations` consommes uniquement dans
-// `actions/legal-moves.ts`. `getLeapModifier` + `performLeapRoll`
-// restent ici car utilises par `handleLeap`.
-import {
-  getLeapModifier,
-  performLeapRoll,
-} from '../mechanics/leap';
+// `actions/legal-moves.ts`.
+// S27.8.12 — `getLeapModifier` + `performLeapRoll` consommes
+// uniquement par `move-leap-dodge-handlers.ts` (handleLeap). Plus
+// d'import direct ici.
 
 // S27.8.11 — `getLegalMoves` + `getAdjacentOpponents` (variante locale)
 // extraits dans `actions/legal-moves.ts`. Re-export pour preserver
@@ -348,302 +361,19 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
 // S27.8.3 — handleEndPlayerTurn / handleEndTurn extraits dans
 // `actions/turn-foul-actions.ts`.
 
-/**
- * Gère un mouvement simple
- */
-/**
- * Gère une action LEAP (Saut) — compétence Leap ou trait Pogo Stick.
- *
- * Le joueur saute 2 cases (distance Chebyshev) depuis sa position actuelle.
- * Un seul test d'Agilité est effectué, qui remplace le jet d'esquive quand le
- * joueur quitte des zones de tacle. Coûte 2 points de mouvement.
- * Échec = le joueur tombe à la case d'arrivée (armure + blessure + turnover
- * s'il portait le ballon).
- */
-function handleLeap(
-  state: GameState,
-  move: { type: 'LEAP'; playerId: string; to: Position },
-  rng: RNG
-): GameState {
-  const idx = state.players.findIndex(p => p.id === move.playerId);
-  if (idx === -1) return state;
-
-  // Gestion du changement de joueur actif
-  const newState = handlePlayerSwitch(state, move.playerId);
-
-  // Vérifier que ce LEAP est bien légal (skill, distance, case libre, PM suffisants)
-  const legal = getLegalMoves(newState).some(
-    m => m.type === 'LEAP' && m.playerId === move.playerId && samePos(m.to, move.to)
-  );
-  if (!legal) return newState;
-
-  if (newState.isTurnover) return newState;
-
-  const player = newState.players[idx];
-  const modifiers = getLeapModifier(player);
-
-  // Jet d'Agilité pour le saut
-  const leapResult = performLeapRoll(player, rng, modifiers);
-
-  let next = structuredClone(newState) as GameState;
-  next.lastDiceResult = leapResult;
-
-  const leapLogEntry = createLogEntry(
-    'dice',
-    `Saut (Leap): ${leapResult.diceRoll}/${leapResult.targetNumber} ${leapResult.success ? '✓' : '✗'}`,
-    player.id,
-    player.team,
-    {
-      diceRoll: leapResult.diceRoll,
-      targetNumber: leapResult.targetNumber,
-      success: leapResult.success,
-      modifiers,
-      skill: hasSkill(player, 'pogo-stick') ? 'pogo-stick' : 'leap',
-    }
-  );
-  next.gameLog = [...next.gameLog, leapLogEntry];
-
-  // Déplacer le joueur vers la case d'arrivée et consommer 2 PM
-  next.players[idx].pos = { ...move.to };
-  next.players[idx].pm = Math.max(0, next.players[idx].pm - 2);
-
-  // Enregistrer l'action de mouvement si c'est le premier mouvement
-  if (!hasPlayerActed(next, player.id)) {
-    next = setPlayerAction(next, player.id, 'MOVE');
-  }
-
-  next = checkPlayerTurnEnd(next, player.id);
-
-  if (!leapResult.success) {
-    // Échec : le joueur tombe à la case d'arrivée (armure + blessure + turnover)
-    return applyRollFailure(next, idx, rng);
-  }
-
-  // Succès : pas de jet d'esquive nécessaire même si on quittait des zones de tacle.
-  // Touchdown si on porte la balle et qu'on atteint l'en-but adverse.
-  const mover = next.players[idx];
-  if (mover.hasBall && isInOpponentEndzone(next, mover)) {
-    return awardTouchdown(next, mover.team, mover);
-  }
-
-  // Ramassage de balle si on atterrit sur le ballon.
-  if (next.ball && samePos(next.ball, move.to)) {
-    return handleBallPickup(next, player, rng, idx);
-  }
-
-  return next;
-}
-
-function handleMove(
-  state: GameState,
-  move: { type: 'MOVE'; playerId: string; to: Position },
-  rng: RNG
-): GameState {
-  const idx = state.players.findIndex(p => p.id === move.playerId);
-  if (idx === -1) return state;
-
-  // Gérer le changement de joueur
-  const newState = handlePlayerSwitch(state, move.playerId);
-
-  const legal = getLegalMoves(newState).some(
-    m => m.type === 'MOVE' && m.playerId === move.playerId && samePos(m.to, move.to)
-  );
-  if (!legal) return newState;
-
-  const player = newState.players[idx];
-  const from = player.pos;
-  const to = move.to;
-
-  // Si c'est un turnover, on ne peut pas faire de mouvement
-  if (newState.isTurnover) {
-    return newState;
-  }
-
-  // Vérifier si un jet d'esquive est nécessaire
-  const needsDodge = requiresDodgeRoll(newState, from, to, player.team);
-
-  if (needsDodge) {
-    return handleDodgeRoll(newState, player, from, to, rng, idx);
-  } else {
-    return handleNormalMove(newState, player, from, to, rng, idx);
-  }
-}
-
-// S27.8.5 — `handleBallPickup` extrait dans `actions/ball-pickup.ts`
-// (re-importe en haut de ce fichier).
-// S27.8.6 — `handleDodgeRoll` et `handleNormalMove` extraits dans
-// `actions/move-handlers.ts` (re-importes en haut de ce fichier).
-
-/**
- * Gère une action d'esquive explicite
- */
-function handleDodge(
-  state: GameState,
-  move: { type: 'DODGE'; playerId: string; from: Position; to: Position },
-  rng: RNG
-): GameState {
-  // Action d'esquive explicite (pour l'interface)
-  const idx = state.players.findIndex(p => p.id === move.playerId);
-  if (idx === -1) return state;
-
-  const player = state.players[idx];
-  const from = player.pos;
-  const to = move.to;
-
-  // Calculer les modificateurs de désquive (malus pour adversaires à l'arrivée + skills)
-  const baseDodgeModifiers = calculateDodgeModifiers(state, from, to, player.team);
-  const skillDodgeModifiers = getDodgeSkillModifiers(state, player, from);
-  const dodgeModifiers = baseDodgeModifiers + skillDodgeModifiers;
-
-  const dodgeResult = performDodgeRollWithNotification(player, rng, dodgeModifiers);
-
-  let next = structuredClone(state) as GameState;
-  next.lastDiceResult = dodgeResult;
-
-  // Log du jet d'esquive
-  const dodgeLogEntry = createLogEntry(
-    'dice',
-    `Jet d'esquive: ${dodgeResult.diceRoll}/${dodgeResult.targetNumber} ${dodgeResult.success ? '✓' : '✗'}`,
-    player.id,
-    player.team,
-    {
-      diceRoll: dodgeResult.diceRoll,
-      targetNumber: dodgeResult.targetNumber,
-      success: dodgeResult.success,
-      modifiers: dodgeModifiers,
-    }
-  );
-  next.gameLog = [...next.gameLog, dodgeLogEntry];
-
-  // Le joueur se déplace toujours, que le jet d'esquive réussisse ou échoue
-  next.players[idx].pos = { ...move.to };
-  next.players[idx].pm = Math.max(0, next.players[idx].pm - 1);
-
-  // Shadowing : résolu après le mouvement, indépendamment du résultat (BB3).
-  next = resolveShadowingAfterDodge(next, player, from, rng);
-
-  // Break Tackle (BB3): +1/+2 une fois par activation sur un Dodge raté.
-  let dodgeSucceeded = dodgeResult.success;
-  if (!dodgeSucceeded) {
-    const breakTackleCheck = checkBreakTackle(
-      next,
-      next.players[idx],
-      dodgeResult.diceRoll,
-      dodgeResult.targetNumber,
-      dodgeResult.success
-    );
-    if (breakTackleCheck.triggered) {
-      next = breakTackleCheck.newState;
-      dodgeSucceeded = true;
-    }
-  }
-
-  if (dodgeSucceeded) {
-    // Avancement d'état standard après mouvement réussi
-    if (!hasPlayerActed(next, player.id)) {
-      next = setPlayerAction(next, player.id, 'MOVE');
-    }
-    next = checkPlayerTurnEnd(next, player.id);
-
-    // Événements liés à la balle
-    const mover = next.players[idx];
-    if (mover.hasBall && isInOpponentEndzone(next, mover)) {
-      return awardTouchdown(next, mover.team, mover);
-    }
-    if (next.ball && samePos(next.ball, to)) {
-      return handleBallPickup(next, player, rng, idx);
-    }
-
-    return next;
-  } else {
-    // En cas d'échec: jet d'armure puis potentiellement blessure/turnover
-    const armorResult = performArmorRollWithNotification(player, rng);
-    const armorSuccess = armorResult.success;
-    next.lastDiceResult = armorResult;
-
-    const armorLogEntry = createLogEntry(
-      'dice',
-      `Jet d'armure (Dodge échoué): ${armorResult.diceRoll}/${armorResult.targetNumber} ${armorSuccess ? '✓' : '✗'}`,
-      player.id,
-      player.team,
-      {
-        diceRoll: armorResult.diceRoll,
-        targetNumber: armorResult.targetNumber,
-        success: armorSuccess,
-      }
-    );
-    next.gameLog = [...next.gameLog, armorLogEntry];
-
-    if (!armorSuccess) {
-      // Armure percée: jet de blessure (stunned, KO ou casualty)
-      next = performInjuryRoll(next, player, rng);
-    } else {
-      // Armure tient: joueur sonné (stunned)
-      next.players[idx].state = 'stunned';
-      next.players[idx].stunned = true;
-    }
-
-    // Si le joueur portait la balle, il la perd et elle rebondit
-    if (next.players[idx]?.hasBall) {
-      next.players[idx].hasBall = false;
-      next.ball = { ...to };
-      next = bounceBall(next, rng);
-    }
-
-    // Échec d'esquive entraîne turnover
-    next.isTurnover = true;
-    return next;
-  }
-}
-
+// S27.8.12 — `handleLeap`, `handleMove`, `handleDodge` extraits dans
+// `actions/move-leap-dodge-handlers.ts`. L'extraction est devenue
+// possible apres S27.8.11 qui a sorti `getLegalMoves` dans son
+// propre module : le cycle d'import qui empechait jusque-la cette
+// migration est leve.
+// `handleDumpOffChoose` rejoint `actions/block-action.ts` car il
+// termine en relancant `handleBlock` (cohesion thematique avec le
+// flux de blocage / dump-off).
+//
+// S27.8.5 — `handleBallPickup` extrait dans `actions/ball-pickup.ts`.
+// S27.8.6 — `handleDodgeRoll` / `handleNormalMove` extraits dans
+// `actions/move-handlers.ts`.
 // S27.8.8 — `handleBlock` extrait dans `actions/block-action.ts`.
-
-/**
- * Gère le choix de Dump-off : la cible d'un blocage (porteuse du ballon, skill
- * `dump-off`) choisit un receveur pour une Passe Rapide, ou passe son tour de
- * Dump-off (receiverId = null). Après résolution, le blocage initial reprend.
- */
-function handleDumpOffChoose(
-  state: GameState,
-  move: { type: 'DUMP_OFF_CHOOSE'; passerId: string; receiverId: string | null },
-  rng: RNG
-): GameState {
-  if (!state.pendingDumpOff) return state;
-  if (state.pendingDumpOff.targetId !== move.passerId) return state;
-
-  const pendingMove = state.pendingDumpOff.pendingBlockMove;
-  const receiverOptions = state.pendingDumpOff.receiverOptions;
-
-  // Nettoyer le pendingDumpOff dans tous les cas
-  const cleared: GameState = { ...state, pendingDumpOff: undefined };
-
-  let afterDumpOff: GameState = cleared;
-
-  if (move.receiverId !== null) {
-    // Vérifier que le receveur choisi est bien éligible (évite triche client)
-    if (!receiverOptions.includes(move.receiverId)) {
-      return cleared;
-    }
-    afterDumpOff = executeDumpOff(cleared, move.passerId, move.receiverId, rng);
-  } else {
-    const skipLog = createLogEntry(
-      'info',
-      `Délestage refusé par le coach défenseur`,
-      move.passerId,
-      undefined,
-      { skill: 'dump-off' },
-    );
-    afterDumpOff = { ...cleared, gameLog: [...cleared.gameLog, skipLog] };
-  }
-
-  // Reprendre le blocage initial en ignorant le nouveau check dump-off
-  if (pendingMove.type === 'BLOCK') {
-    return handleBlock(afterDumpOff, pendingMove, rng, { skipDumpOff: true });
-  }
-  // BLITZ : pour l'instant, non intégré (un follow-up portera l'intégration
-  // complète dans `handleBlitz`). Fallback : on renvoie l'état post-dump-off.
-  return afterDumpOff;
-}
 
 
 /**
