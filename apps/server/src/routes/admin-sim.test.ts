@@ -277,6 +277,38 @@ describe("testMatchSchema — Lot 2.C.2 input validation", () => {
       testMatchSchema.parse({ homeTeamId: "", awayTeamId: "t2" }),
     ).toThrow();
   });
+
+  it("Lot 3.B.1 — accepte driverKind 'hybrid' ou 'full'", () => {
+    expect(
+      testMatchSchema.parse({
+        homeTeamId: "t1",
+        awayTeamId: "t2",
+        driverKind: "hybrid",
+      }),
+    ).toMatchObject({ driverKind: "hybrid" });
+    expect(
+      testMatchSchema.parse({
+        homeTeamId: "t1",
+        awayTeamId: "t2",
+        driverKind: "full",
+      }),
+    ).toMatchObject({ driverKind: "full" });
+  });
+
+  it("Lot 3.B.1 — driverKind optionnel (omis = inherit saison)", () => {
+    const out = testMatchSchema.parse({ homeTeamId: "t1", awayTeamId: "t2" });
+    expect(out.driverKind).toBeUndefined();
+  });
+
+  it("Lot 3.B.1 — rejette driverKind invalide", () => {
+    expect(() =>
+      testMatchSchema.parse({
+        homeTeamId: "t1",
+        awayTeamId: "t2",
+        driverKind: "garbage",
+      }),
+    ).toThrow();
+  });
 });
 
 describe("handleCreateTestMatch — Lot 2.C.2", () => {
@@ -335,6 +367,26 @@ describe("handleCreateTestMatch — Lot 2.C.2", () => {
       res,
     );
     expect(res.statusCode).toBe(500);
+  });
+
+  it("Lot 3.B.1 — propage driverKind à createTestMatch", async () => {
+    (createTestMatch as ReturnType<typeof vi.fn>).mockResolvedValue({
+      matchId: "m-x",
+      seasonId: "s-2026",
+      engineVer: "0.16.0",
+    });
+    const res = buildRes();
+    await handleCreateTestMatch(
+      {
+        body: { homeTeamId: "t1", awayTeamId: "t2", driverKind: "full" },
+      } as unknown as Request,
+      res,
+    );
+    expect(createTestMatch).toHaveBeenCalledWith({
+      homeTeamId: "t1",
+      awayTeamId: "t2",
+      driverKind: "full",
+    });
   });
 });
 

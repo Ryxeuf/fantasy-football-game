@@ -163,10 +163,16 @@ export async function handleGetBroadcasterStats(
  * depuis le matchId (cuid) ce qui est suffisant pour relancer
  * exactement le même match en re-cliquant. Lot futur : exposer un
  * seed override pour reproduire un bug donné.
+ *
+ * Lot 3.B.1 : `driverKind` optionnel pour forcer le driver de
+ * simulation au niveau du sandbox match (utile pour A/B test ou
+ * rejouer un match en hybrid après bug full). Si omis, la saison
+ * fournit le default (`'hybrid'` pour toutes les saisons existantes).
  */
 export const testMatchSchema = z.object({
   homeTeamId: z.string().min(1),
   awayTeamId: z.string().min(1),
+  driverKind: z.enum(["hybrid", "full"]).optional(),
 });
 
 export type TestMatchBody = z.infer<typeof testMatchSchema>;
@@ -176,9 +182,13 @@ export async function handleCreateTestMatch(
   req: Request,
   res: Response,
 ): Promise<void> {
-  const { homeTeamId, awayTeamId } = req.body as TestMatchBody;
+  const { homeTeamId, awayTeamId, driverKind } = req.body as TestMatchBody;
   try {
-    const result = await createTestMatch({ homeTeamId, awayTeamId });
+    const result = await createTestMatch({
+      homeTeamId,
+      awayTeamId,
+      driverKind,
+    });
     res.status(201).json(result);
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "unknown";

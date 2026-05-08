@@ -40,6 +40,7 @@ import {
 
 import { prisma } from "../prisma";
 import { appMetrics, type SimDriver, type SimOutcome } from "../utils/metrics";
+import { resolveDriverKind } from "./pro-league-driver-resolver";
 import {
   EngineVersionMismatchError,
   assertSimulationAllowed,
@@ -112,7 +113,7 @@ export async function simulateProMatch(matchId: string): Promise<boolean> {
   const match = await prisma.proLeagueMatch.findUnique({
     where: { id: matchId },
     include: {
-      season: { select: { id: true, engineVer: true } },
+      season: { select: { id: true, engineVer: true, driverKind: true } },
       homeTeam: { select: { slug: true, name: true } },
       awayTeam: { select: { slug: true, name: true } },
     },
@@ -165,16 +166,20 @@ export async function simulateProMatch(matchId: string): Promise<boolean> {
     },
   };
 
-  // Lot 2.A.3 — instrumentation Prometheus. `driver` est figé à
-  // 'hybrid' jusqu'à ce que Lot 3.B.1 introduise le toggle
-  // `season.driverKind`. À ce moment-là, on lira la valeur depuis
-  // la DB ici.
-  const driver: SimDriver = "hybrid";
+  // Lot 3.B.1 — toggle driverKind. Lit le default saison + l'override
+  // optionnel sur le match, et choisit `runHybridDriver` (lot 0.A.2,
+  // synthèse archétype) ou `runFullDriver` (lot 3.A.2, auto-play
+  // game-engine) en fonction. Métrique Prometheus 2.A.3 reçoit la
+  // bonne valeur pour les agrégations par driver.
+  const driver: SimDriver = resolveDriverKind({
+    seasonDriverKind: match.season.driverKind as string,
+    matchOverride: (match.driverKindOverride as string | null) ?? null,
+  });
 
   let result: SimResult;
   const simStart = process.hrtime.bigint();
   try {
-    result = simulateMatch(input);
+    result = simulateMatch(input, { driverKind: driver });
   } catch (err: unknown) {
     const elapsedSec = Number(process.hrtime.bigint() - simStart) / 1e9;
     appMetrics.observeSimMatchDuration(

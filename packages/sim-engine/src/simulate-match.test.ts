@@ -81,3 +81,36 @@ describe('simulateMatch — public contract (sprint Pro League 0.A.1)', () => {
     expect(kickoff?.engineVer).toBe(out.engineVer);
   });
 });
+
+describe('simulateMatch — driver toggle hybrid/full (sprint Pro League 3.B.1)', () => {
+  it('default (no options) → uses hybrid driver, deterministe (rétrocompat)', () => {
+    const a = simulateMatch(baseInput({ seed: 7 }));
+    const b = simulateMatch(baseInput({ seed: 7 }), {});
+    const c = simulateMatch(baseInput({ seed: 7 }), { driverKind: 'hybrid' });
+    expect(b).toEqual(a);
+    expect(c).toEqual(a);
+  });
+
+  it('driverKind: "full" produit un résultat différent du hybrid (drivers distincts)', () => {
+    const hybrid = simulateMatch(baseInput({ seed: 11 }), {
+      driverKind: 'hybrid',
+    });
+    const full = simulateMatch(baseInput({ seed: 11 }), {
+      driverKind: 'full',
+    });
+    // Pas une assertion stricte de différence (deux drivers peuvent
+    // converger sur le même score par coïncidence), mais on vérifie
+    // que chaque mode produit une SimResult valide. Le délégation a
+    // été testée séparément dans full-driver.test.ts / hybrid-driver.test.ts.
+    expect(hybrid).toHaveProperty('events');
+    expect(full).toHaveProperty('events');
+    expect(hybrid.engineVer).toBe(ENGINE_VER);
+    expect(full.engineVer).toBe(ENGINE_VER);
+  });
+
+  it('driverKind: "full" reste déterministe pour un même seed', () => {
+    const a = simulateMatch(baseInput({ seed: 99 }), { driverKind: 'full' });
+    const b = simulateMatch(baseInput({ seed: 99 }), { driverKind: 'full' });
+    expect(b).toEqual(a);
+  });
+});

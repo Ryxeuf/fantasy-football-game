@@ -67,7 +67,8 @@ function makeMatch(overrides: Record<string, unknown> = {}) {
     status: "scheduled",
     homeTeam: { slug: "pit-smashers", name: "Smashers" },
     awayTeam: { slug: "kc-soaring-hawks", name: "Soaring Hawks" },
-    season: { engineVer: CURRENT_ENGINE_VER },
+    season: { engineVer: CURRENT_ENGINE_VER, driverKind: "hybrid" },
+    driverKindOverride: null,
     ...overrides,
   };
 }
@@ -191,6 +192,129 @@ describe("simulateProMatch — sprint 1.A.4", () => {
     await expect(simulateProMatch(MATCH_ID)).rejects.toThrow(
       /Engine version mismatch/,
     );
+  });
+
+  describe("driver toggle hybrid/full — Lot 3.B.1", () => {
+    function stubSimResult(
+      driver: "hybrid" | "full",
+    ): import("@bb/sim-engine").SimResult {
+      return {
+        result: "home",
+        events: [],
+        summary: {
+          outcome: "home",
+          score: { home: 2, away: 1 },
+          turnoverCount: 5,
+          touchdownCount: 3,
+          nuffleCount: 0,
+          underdogBoostCount: 0,
+          durationMs: 480_000,
+          momentum: [],
+        },
+        casualties: [],
+        engineVer: CURRENT_ENGINE_VER,
+        // marker pour distinguer dans les assertions au cas ou (non lu).
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ...({ __driver: driver } as any),
+      };
+    }
+
+    it("default season hybrid + override null → simulateMatch reçoit driverKind=hybrid", async () => {
+      mocked.proLeagueMatch.findUnique.mockResolvedValue(
+        makeMatch({
+          season: { engineVer: CURRENT_ENGINE_VER, driverKind: "hybrid" },
+          driverKindOverride: null,
+        }),
+      );
+      mocked.replay.upsert.mockResolvedValue({});
+      mocked.proLeagueMatch.update.mockResolvedValue({});
+      const spy = vi
+        .spyOn(simEngine, "simulateMatch")
+        .mockImplementation(() => stubSimResult("hybrid"));
+
+      await simulateProMatch(MATCH_ID);
+
+      expect(spy).toHaveBeenCalledTimes(1);
+      const opts = spy.mock.calls[0][1];
+      expect(opts).toMatchObject({ driverKind: "hybrid" });
+      spy.mockRestore();
+    });
+
+    it("season full + override null → simulateMatch reçoit driverKind=full", async () => {
+      mocked.proLeagueMatch.findUnique.mockResolvedValue(
+        makeMatch({
+          season: { engineVer: CURRENT_ENGINE_VER, driverKind: "full" },
+          driverKindOverride: null,
+        }),
+      );
+      mocked.replay.upsert.mockResolvedValue({});
+      mocked.proLeagueMatch.update.mockResolvedValue({});
+      const spy = vi
+        .spyOn(simEngine, "simulateMatch")
+        .mockImplementation(() => stubSimResult("full"));
+
+      await simulateProMatch(MATCH_ID);
+
+      expect(spy.mock.calls[0][1]).toMatchObject({ driverKind: "full" });
+      spy.mockRestore();
+    });
+
+    it("season hybrid + override='full' → driverKind=full (override prend précédence)", async () => {
+      mocked.proLeagueMatch.findUnique.mockResolvedValue(
+        makeMatch({
+          season: { engineVer: CURRENT_ENGINE_VER, driverKind: "hybrid" },
+          driverKindOverride: "full",
+        }),
+      );
+      mocked.replay.upsert.mockResolvedValue({});
+      mocked.proLeagueMatch.update.mockResolvedValue({});
+      const spy = vi
+        .spyOn(simEngine, "simulateMatch")
+        .mockImplementation(() => stubSimResult("full"));
+
+      await simulateProMatch(MATCH_ID);
+
+      expect(spy.mock.calls[0][1]).toMatchObject({ driverKind: "full" });
+      spy.mockRestore();
+    });
+
+    it("season full + override='hybrid' → driverKind=hybrid (rollback ciblé)", async () => {
+      mocked.proLeagueMatch.findUnique.mockResolvedValue(
+        makeMatch({
+          season: { engineVer: CURRENT_ENGINE_VER, driverKind: "full" },
+          driverKindOverride: "hybrid",
+        }),
+      );
+      mocked.replay.upsert.mockResolvedValue({});
+      mocked.proLeagueMatch.update.mockResolvedValue({});
+      const spy = vi
+        .spyOn(simEngine, "simulateMatch")
+        .mockImplementation(() => stubSimResult("hybrid"));
+
+      await simulateProMatch(MATCH_ID);
+
+      expect(spy.mock.calls[0][1]).toMatchObject({ driverKind: "hybrid" });
+      spy.mockRestore();
+    });
+
+    it("season driverKind invalide → fallback safe sur hybrid", async () => {
+      mocked.proLeagueMatch.findUnique.mockResolvedValue(
+        makeMatch({
+          season: { engineVer: CURRENT_ENGINE_VER, driverKind: "garbage" },
+          driverKindOverride: null,
+        }),
+      );
+      mocked.replay.upsert.mockResolvedValue({});
+      mocked.proLeagueMatch.update.mockResolvedValue({});
+      const spy = vi
+        .spyOn(simEngine, "simulateMatch")
+        .mockImplementation(() => stubSimResult("hybrid"));
+
+      await simulateProMatch(MATCH_ID);
+
+      expect(spy.mock.calls[0][1]).toMatchObject({ driverKind: "hybrid" });
+      spy.mockRestore();
+    });
   });
 
   it("marque le match 'failed' si simulateMatch throw", async () => {
