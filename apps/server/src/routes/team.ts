@@ -1,6 +1,5 @@
 import { Router } from "express";
 import type { Response } from "express";
-import { Prisma } from "@prisma/client";
 import { prisma } from "../prisma";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
 import { sendError, sendSuccess } from "../utils/api-response";
@@ -841,255 +840,28 @@ export async function handleBuildTeam(
 router.post("/build", authUser, validate(buildTeamSchema), handleBuildTeam);
 
 // Endpoint pour mettre a jour les informations d'equipe (S25.5u — ApiResponse<T>)
-export async function handlePutTeamInfo(
-  req: AuthenticatedRequest,
-  res: Response,
-): Promise<void> {
-  const teamId = req.params.id;
-  const { rerolls, cheerleaders, assistants, apothecary, dedicatedFans } =
-    req.body as {
-      rerolls?: number;
-      cheerleaders?: number;
-      assistants?: number;
-      apothecary?: boolean;
-      dedicatedFans?: number;
-    };
-
-  try {
-    const team = await prisma.team.findFirst({
-      where: { id: teamId, ownerId: req.user!.id },
-    });
-
-    if (!team) {
-      sendError(res, "Equipe introuvable", 404);
-      return;
-    }
-
-    const activeSelection = await prisma.teamSelection.findFirst({
-      where: {
-        teamId: teamId,
-        match: { status: { in: ["pending", "active"] } },
-      },
-    });
-
-    if (activeSelection) {
-      sendError(
-        res,
-        "Impossible de modifier cette equipe car elle est engagee dans un match en cours",
-        400,
-      );
-      return;
-    }
-
-    await prisma.team.update({
-      where: { id: teamId },
-      data: {
-        ...(rerolls !== undefined && { rerolls }),
-        ...(cheerleaders !== undefined && { cheerleaders }),
-        ...(assistants !== undefined && { assistants }),
-        ...(apothecary !== undefined && { apothecary }),
-        ...(dedicatedFans !== undefined && { dedicatedFans }),
-      },
-      include: { players: true },
-    });
-
-    await updateTeamValues(prisma, teamId);
-
-    const finalTeam = await prisma.team.findUnique({
-      where: { id: teamId },
-      include: { players: true },
-    });
-
-    sendSuccess(res, { team: finalTeam });
-  } catch (e: unknown) {
-    serverLog.error("Erreur lors de la modification des informations d'equipe:", e);
-    sendError(res, "Erreur serveur", 500);
-  }
-}
+// S27.8.25 — Handlers de mutation team (info / recalculate / update)
+// extraits dans `routes/team-mutation-handlers.ts`. Re-export pour
+// preserver l'API publique consommee par `team.test.ts`.
+export {
+  handlePutTeamInfo,
+  handleRecalculateTeam,
+  handleUpdateTeam,
+} from './team-mutation-handlers';
+import {
+  handlePutTeamInfo as handlePutTeamInfoImpl,
+  handleRecalculateTeam as handleRecalculateTeamImpl,
+  handleUpdateTeam as handleUpdateTeamImpl,
+} from './team-mutation-handlers';
 
 router.put(
   "/:id/info",
   authUser,
   validate(updateTeamInfoSchema),
-  handlePutTeamInfo,
+  handlePutTeamInfoImpl,
 );
-
-// Endpoint pour recalculer les valeurs d'equipe (S25.5r — ApiResponse<T>)
-export async function handleRecalculateTeam(
-  req: AuthenticatedRequest,
-  res: Response,
-): Promise<void> {
-  const teamId = req.params.id;
-
-  try {
-    const team = await prisma.team.findFirst({
-      where: { id: teamId, ownerId: req.user!.id },
-    });
-
-    if (!team) {
-      sendError(res, "Equipe introuvable", 404);
-      return;
-    }
-
-    const { teamValue, currentValue } = await updateTeamValues(prisma, teamId);
-
-    const updatedTeam = await prisma.team.findUnique({
-      where: { id: teamId },
-      include: { players: true },
-    });
-
-    sendSuccess(res, {
-      team: updatedTeam,
-      message: `Valeurs recalculees: VE=${teamValue.toLocaleString()} po, VEA=${currentValue.toLocaleString()} po`,
-    });
-  } catch (e: unknown) {
-    serverLog.error("Erreur lors du recalcul des valeurs d'equipe:", e);
-    sendError(res, "Erreur serveur", 500);
-  }
-}
-
-router.post("/:id/recalculate", authUser, handleRecalculateTeam);
-
-// Endpoint pour mettre a jour une equipe (S25.5y — ApiResponse<T>)
-export async function handleUpdateTeam(
-  req: AuthenticatedRequest,
-  res: Response,
-): Promise<void> {
-  const teamId = req.params.id;
-  const { players, name } = req.body as {
-    players: Array<{ id: string; name: string; number: number }>;
-    name?: string;
-  };
-
-  try {
-    const team = await prisma.team.findFirst({
-      where: { id: teamId, ownerId: req.user!.id },
-      include: { players: true },
-    });
-
-    if (!team) {
-      sendError(res, "Equipe introuvable", 404);
-      return;
-    }
-
-    const activeSelection = await prisma.teamSelection.findFirst({
-      where: {
-        teamId: teamId,
-        match: { status: { in: ["pending", "active"] } },
-      },
-    });
-
-    if (activeSelection) {
-      sendError(
-        res,
-        "Impossible de modifier cette equipe car elle est engagee dans un match en cours",
-        400,
-      );
-      return;
-    }
-
-    const playerIds = team.players.map((p: any) => p.id);
-    const providedPlayerIds = players.map((p: any) => p.id);
-
-    const invalidPlayerIds = providedPlayerIds.filter(
-      (id: any) => !playerIds.includes(id),
-    );
-    if (invalidPlayerIds.length > 0) {
-      sendError(res, `Joueurs invalides: ${invalidPlayerIds.join(", ")}`, 400);
-      return;
-    }
-
-    const missingPlayerIds = playerIds.filter(
-      (id: any) => !providedPlayerIds.includes(id),
-    );
-    if (missingPlayerIds.length > 0) {
-      sendError(res, `Joueurs manquants: ${missingPlayerIds.join(", ")}`, 400);
-      return;
-    }
-
-    const numbers = players.map((p) => p.number);
-    const uniqueNumbers = new Set(numbers);
-    if (uniqueNumbers.size !== numbers.length) {
-      sendError(res, "Les numeros de joueurs doivent etre uniques", 400);
-      return;
-    }
-
-    const invalidNumbers = numbers.filter(
-      (n) => n < 1 || n > 99 || !Number.isInteger(n),
-    );
-    if (invalidNumbers.length > 0) {
-      sendError(res, "Les numeros doivent etre des entiers entre 1 et 99", 400);
-      return;
-    }
-
-    const emptyNames = players.filter((p) => !p.name || p.name.trim() === "");
-    if (emptyNames.length > 0) {
-      sendError(res, "Tous les joueurs doivent avoir un nom", 400);
-      return;
-    }
-
-    if (name !== undefined) {
-      if (!name || name.trim() === "") {
-        sendError(res, "Le nom de l'equipe ne peut pas etre vide", 400);
-        return;
-      }
-      if (name.trim().length > 100) {
-        sendError(
-          res,
-          "Le nom de l'equipe ne peut pas depasser 100 caracteres",
-          400,
-        );
-        return;
-      }
-    }
-
-    const operations: Prisma.PrismaPromise<unknown>[] = [];
-    if (name !== undefined) {
-      operations.push(
-        prisma.team.update({
-          where: { id: teamId },
-          data: { name: name.trim() },
-        }),
-      );
-    }
-    for (const player of players) {
-      operations.push(
-        prisma.teamPlayer.update({
-          where: { id: player.id },
-          data: {
-            name: player.name.trim(),
-            number: player.number,
-          },
-        }),
-      );
-    }
-    if (operations.length > 0) {
-      await prisma.$transaction(operations);
-    }
-
-    const updates = new Map(
-      players.map((p) => [
-        p.id,
-        { name: p.name.trim(), number: p.number },
-      ]),
-    );
-    const updatedTeam = {
-      ...team,
-      name: name !== undefined ? name.trim() : team.name,
-      players: team.players.map((existing: any) => {
-        const update = updates.get(existing.id);
-        return update ? { ...existing, ...update } : existing;
-      }),
-    };
-
-    sendSuccess(res, { team: updatedTeam });
-  } catch (e: unknown) {
-    serverLog.error("Erreur lors de la modification de l'equipe:", e);
-    sendError(res, "Erreur serveur", 500);
-  }
-}
-
-router.put("/:id", authUser, validate(updateTeamSchema), handleUpdateTeam);
+router.post("/:id/recalculate", authUser, handleRecalculateTeamImpl);
+router.put("/:id", authUser, validate(updateTeamSchema), handleUpdateTeamImpl);
 
 // S27.8.24 — Handlers Player CRUD (add / delete / update-skills /
 // list-available-positions) extraits dans
