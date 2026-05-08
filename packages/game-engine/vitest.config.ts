@@ -58,6 +58,11 @@ export default defineConfig({
         // getLonerThreshold + consumeTeamReroll), meme quirk
         // source-map v8.
         'src/actions/reroll-choose-handler.ts',
+        // S27.8.15 — `block-handler.ts` extrait depuis
+        // `block-action.ts` (handleBlock), meme quirk source-map v8.
+        // Avec cette extraction, `block-action.ts` descend a 282
+        // lignes (DoD secondaire <= 400 atteint).
+        'src/actions/block-handler.ts',
       ],
       // S25.4 — Seuils initiaux conservateurs. v8 reporte 0% lines sur
       // certains fichiers TS du moteur a cause d'un quirk source-map ;
