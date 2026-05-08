@@ -714,6 +714,51 @@ if (!inTestBetSettleEnv && betSettleTickMs > 0) {
 
 
 // =============================================================================
+// Pro League casualty sweep cron (Lot 3.C.1 — wiring).
+// =============================================================================
+// Sweep les matchs `ready` ou `completed` avec `casualtiesAppliedAt=null`,
+// applique les casualties sur les rosters concernes (niggling, stat
+// reductions, mort) et marque le match comme traite (idempotent).
+//
+// Doit tourner AVANT le cron Hall-of-Fame (qui inducte les morts) et
+// AVANT le cron rookie-replenish (qui regenere les slots vides), sinon
+// les morts ne sont pas detectes. Le `setInterval` ne garantit pas
+// l'ordonnancement strict, mais l'ecart de 30min entre ticks (et
+// l'idempotence de chaque sweep) absorbe les cas limites.
+//
+// Tick par defaut : 30 min. Configurable via PRO_LEAGUE_CASUALTY_TICK_MS.
+// Mettre = 0 pour desactiver (CI / dev local).
+const inTestCasualtyEnv =
+  process.env.NODE_ENV === "test" || process.env.TEST_SQLITE === "1";
+const casualtyTickMsEnv = Number(process.env.PRO_LEAGUE_CASUALTY_TICK_MS);
+const casualtyTickMs = Number.isFinite(casualtyTickMsEnv)
+  ? casualtyTickMsEnv
+  : 30 * 60 * 1000;
+if (!inTestCasualtyEnv && casualtyTickMs > 0) {
+  void import("./services/pro-roster-casualties").then(
+    ({ sweepMatchCasualties }) => {
+      const tick = async () => {
+        try {
+          const out = await sweepMatchCasualties();
+          if (out.processed > 0 || out.failed > 0) {
+            serverLog.info(
+              `[pro-casualty] sweep: processed=${out.processed} failed=${out.failed} (inspected=${out.inspected})`,
+            );
+          }
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : "unknown";
+          serverLog.error(`[pro-casualty] sweep failed: ${msg}`);
+        }
+      };
+      setInterval(() => {
+        void tick();
+      }, casualtyTickMs).unref();
+    },
+  );
+}
+
+
+// =============================================================================
 // Pro League rookie replenish cron (sprint 1.E.6).
 // =============================================================================
 // Sweep les equipes Pro dont le roster `active` est sous la cible
