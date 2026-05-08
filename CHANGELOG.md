@@ -1,3 +1,11 @@
+## [1.100.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.99.0...v1.100.0) (2026-05-08)
+
+
+### ✨ Features
+
+* **sandbox:** create test matches from admin (Lot 2.C.2 + 2.C.4 + 2.C.5) ([#678](https://github.com/Ryxeuf/fantasy-football-game/issues/678)) ([b45dca3](https://github.com/Ryxeuf/fantasy-football-game/commit/b45dca3401a5aa1737ff215bc00e1d8dd9fa606b))
+* **sandbox:** exclude isTest matches from aggregators (Lot 2.C.3) ([#679](https://github.com/Ryxeuf/fantasy-football-game/issues/679)) ([91680d2](https://github.com/Ryxeuf/fantasy-football-game/commit/91680d23fe78fda5426b0640c0a224ce7ce031f8))
+
 ## [1.99.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.98.0...v1.99.0) (2026-05-08)
 
 
