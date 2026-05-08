@@ -57,120 +57,25 @@ router.post("/join", authUser, validate(joinMatchSchema), handleJoinMatchImpl);
 router.post("/accept", authUser, validate(acceptMatchSchema), handleAcceptMatchImpl);
 router.post("/:id/cancel", authUser, handleCancelMatchImpl);
 
-// Create an online match vs AI (practice mode). (S25.5g — ApiResponse<T>)
-// Reuses the ensureAISystemUser / spawnAITeam helpers from the LocalMatch
-// practice service, but creates a regular Match so the standard /play/:id
-// flow kicks in (same pre-match, same WebSocket broadcasts).
-export async function handlePracticeMatch(
-  req: AuthenticatedRequest,
-  res: Response,
-): Promise<void> {
-  try {
-    const { userTeamId, difficulty, aiRosterSlug, userSide, seed } =
-      req.body as {
-        userTeamId: string;
-        difficulty: AIDifficulty;
-        aiRosterSlug?: string;
-        userSide?: "A" | "B";
-        seed?: string;
-      };
-
-    const result = await createOnlinePracticeMatch(prisma as any, {
-      creatorId: req.user!.id,
-      userTeamId,
-      difficulty,
-      aiRosterSlug,
-      userSide,
-      seed,
-    });
-
-    const matchToken = jwt.sign(
-      { matchId: result.matchId, userId: req.user!.id },
-      MATCH_SECRET,
-      { expiresIn: "2h" },
-    );
-
-    sendSuccess(
-      res,
-      {
-        match: { id: result.matchId },
-        matchToken,
-        ai: {
-          roster: result.aiRoster,
-          teamId: result.aiTeamId,
-          teamSide: result.aiTeamSide,
-          userId: result.aiUserId,
-          difficulty,
-        },
-      },
-      201,
-    );
-  } catch (e: unknown) {
-    const message = errorMessage(e);
-    const status = message.includes("introuvable")
-      ? 404
-      : message.includes("proprietaire")
-        ? 403
-        : message.includes("non autorise")
-          ? 400
-          : message.includes("est requis")
-            ? 400
-            : 500;
-    if (status >= 500) {
-      serverLog.error("Erreur creation match pratique online:", e);
-    }
-    sendError(res, message, status);
-  }
-}
+// S27.8.21 — Handlers d'action (`handlePracticeMatch`, `handleSubmitMove`)
+// extraits dans `routes/match-action-handlers.ts`. Re-export pour
+// preserver l'API publique consommee par les tests d'integration.
+export {
+  handlePracticeMatch,
+  handleSubmitMove,
+} from './match-action-handlers';
+import {
+  handlePracticeMatch as handlePracticeMatchImpl,
+  handleSubmitMove as handleSubmitMoveImpl,
+} from './match-action-handlers';
 
 router.post(
   "/practice",
   authUser,
   validate(createPracticeOnlineMatchSchema),
-  handlePracticeMatch,
+  handlePracticeMatchImpl,
 );
-
-// Soumettre un coup pendant la phase active du match (S25.5m — ApiResponse<T>).
-// La collision entre le `success` du handler et celui de `MoveAckPayload`
-// (cote client WS) est resolue en n'exposant cote HTTP que la donnee
-// metier ({gameState,isMyTurn,moveCount}) sous `data`. Le client adapte
-// l'enveloppe vers `MoveAckPayload` (voir `submitMoveHttp.ts`).
-const MOVE_ERROR_STATUS: Record<string, number> = {
-  NOT_FOUND: 404,
-  INVALID_STATUS: 400,
-  NOT_PLAYER: 403,
-  NO_STATE: 500,
-  NOT_YOUR_TURN: 403,
-  ENGINE_ERROR: 400,
-};
-
-export async function handleSubmitMove(
-  req: AuthenticatedRequest,
-  res: Response,
-): Promise<void> {
-  try {
-    const matchId = req.params.id;
-    const { move } = req.body as { move: Move };
-
-    const result = await processMove(matchId, req.user!.id, move);
-
-    if (!result.success) {
-      sendError(res, result.error, MOVE_ERROR_STATUS[result.code] ?? 500);
-      return;
-    }
-
-    sendSuccess(res, {
-      gameState: result.gameState,
-      isMyTurn: result.isMyTurn,
-      moveCount: result.moveCount,
-    });
-  } catch (e: unknown) {
-    serverLog.error("Erreur lors de l'application du coup:", e);
-    sendError(res, errorMessage(e), 500);
-  }
-}
-
-router.post("/:id/move", authUser, validate(moveSchema), handleSubmitMove);
+router.post("/:id/move", authUser, validate(moveSchema), handleSubmitMoveImpl);
 
 export default router;
 
