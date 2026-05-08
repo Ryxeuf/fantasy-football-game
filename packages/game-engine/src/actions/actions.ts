@@ -3,11 +3,13 @@
  * Gère l'application des mouvements, les jets de dés et la logique de jeu
  */
 
-import { GameState, Move, Player, Position, TeamId, RNG } from '../core/types';
+import { GameState, Move, Position, RNG } from '../core/types';
 import { hasSkill } from '../skills/skill-effects';
 import { getDodgeSkillModifiers } from '../skills/skill-bridge';
+// S27.8.11 — `inBounds` consomme uniquement dans `actions/legal-moves.ts`.
+// `samePos`, `requiresDodgeRoll`, `calculateDodgeModifiers` restent
+// ici (handleLeap, handleMove, handleDodge, handleBlitz).
 import {
-  inBounds,
   samePos,
   requiresDodgeRoll,
   calculateDodgeModifiers,
@@ -39,40 +41,31 @@ import {
   calculateBlockDiceCount,
   getBlockDiceChooser,
 } from '../mechanics/blocking';
+// S27.8.11 — `canPlayerMove` / `canPlayerContinueMoving` /
+// `shouldAutoEndTurn` / `canTeamBlitz` consommes uniquement dans
+// `actions/legal-moves.ts`. Plus d'import direct ici.
 import {
   hasPlayerActed,
-  canPlayerMove,
-  canPlayerContinueMoving,
   setPlayerAction,
   checkPlayerTurnEnd,
-  shouldAutoEndTurn,
   handlePlayerSwitch,
   incrementTeamBlitzCount,
-  canTeamBlitz,
 } from '../core/game-state';
-// S27.8.2 — `executePass` / `executeHandoff` consommes dans
-// `actions/pass-actions.ts`. `getPassRange` + `canAttemptPassForRange`
-// restent ici car utilises dans `getLegalMoves`.
-import { getPassRange, canAttemptPassForRange } from '../mechanics/passing';
-// S27.8.2 — Running Pass consomme uniquement dans
-// `actions/pass-actions.ts`. Plus d'import direct ici.
+// S27.8.2 — `executePass` / `executeHandoff` / `getPassRange` /
+// `canAttemptPassForRange` consommes dans `actions/pass-actions.ts`
+// et (pour les helpers `can*`/`get*Range`) dans `actions/legal-moves.ts`
+// depuis S27.8.11. Plus d'import direct ici.
 // S27.8.3 — `canFoul` / `executeFoul` consommes uniquement dans
 // `actions/turn-foul-actions.ts`. Plus d'import direct ici.
-import { isAdjacent } from '../mechanics/movement';
 import { applyApothecaryChoice } from '../mechanics/apothecary';
 // S27.8.2 — `executeThrowTeamMate` consomme dans
-// `actions/pass-actions.ts`. `canThrowTeamMate` + `getThrowRange`
-// restent ici car utilises dans `getLegalMoves`.
-import { canThrowTeamMate, getThrowRange } from '../mechanics/throw-team-mate';
-import { canHypnoticGaze } from '../mechanics/hypnotic-gaze';
-import { canProjectileVomit } from '../mechanics/projectile-vomit';
-import { canStab } from '../mechanics/stab';
-import { canChainsaw } from '../mechanics/chainsaw';
+// `actions/pass-actions.ts`. S27.8.11 — `canThrowTeamMate` + `getThrowRange`
+// consommes dans `actions/legal-moves.ts`. Plus d'import direct ici.
 // S27.8.1 — Les handlers d'actions speciales (gaze/vomit/stab/chainsaw/
-// ball-and-chain/bomb) sont extraits dans `actions/special-actions.ts`
-// pour reduire la taille de ce fichier monolithique. Les helpers `can*`
-// restent importes directement ici pour `getLegalMoves` qui les
-// consomme aussi.
+// ball-and-chain/bomb) sont extraits dans `actions/special-actions.ts`.
+// S27.8.11 — Les helpers `canHypnoticGaze` / `canProjectileVomit` /
+// `canStab` / `canChainsaw` consommes uniquement dans
+// `actions/legal-moves.ts`. Plus d'import direct ici.
 import {
   handleHypnoticGaze,
   handleProjectileVomit,
@@ -102,10 +95,10 @@ import {
 // handleNormalMove / handleDodgeRoll / handleRerollChoose / handleLeap
 // / handleBallPickup. Permet aux extractions ulterieures de ces
 // handlers de ne pas dependre cycliquement de `actions.ts`.
-import {
-  applyRollFailure,
-  applyPickupFailure,
-} from './failure-helpers';
+// S27.8.11 — `applyPickupFailure` consomme uniquement par les
+// modules extraits (ball-pickup, move-handlers). Plus d'import
+// direct ici. `applyRollFailure` reste utilise par `handleLeap`.
+import { applyRollFailure } from './failure-helpers';
 // S27.8.5 — `handleBallPickup` extrait dans `actions/ball-pickup.ts`
 // pour servir de feuille reutilisable par handleNormalMove /
 // handleDodgeRoll / handleLeap / handleRerollChoose.
@@ -136,15 +129,20 @@ import {
   resolveFrenzyBlock,
   resolveMultipleBlock,
 } from './block-action';
-import { canDumpOff, getDumpOffReceivers, executeDumpOff } from '../mechanics/dump-off';
-import { checkDauntless } from '../mechanics/dauntless';
+// S27.8.11 — `canDumpOff` / `getDumpOffReceivers` consommes par
+// `block-action.ts` (handleBlock pendingDumpOff). `executeDumpOff`
+// reste utilise par `handleDumpOffChoose` ici.
+import { executeDumpOff } from '../mechanics/dump-off';
+// S27.8.11 — `checkDauntless` consomme uniquement par `block-action.ts`
+// (handleBlock) et `blitz-handler.ts` (s'il existe). Plus d'import ici.
 import { checkBreakTackle } from '../mechanics/break-tackle';
 // S27.8.7 — `isFendActiveForFollowUp` consomme uniquement dans
 // `actions/choice-handlers.ts` (handlePushChoose).
 import { resolveShadowingAfterDodge } from '../mechanics/shadowing';
 // S27.8.7 — `hasFrenzy` consomme uniquement dans
 // `actions/choice-handlers.ts` (handlePushChoose).
-import { getArmBarBonus } from '../mechanics/arm-bar';
+// S27.8.11 — `getArmBarBonus` consomme uniquement par `block-action.ts`.
+// Plus d'import direct ici.
 // S27.8.10 — `canPerformMultipleBlock` / `markMultipleBlockUsed` consommes
 // uniquement dans `actions/block-action.ts` (handleMultiBlock).
 // S27.8.2 — On the Ball flow consomme uniquement dans
@@ -155,296 +153,29 @@ import {
   resolveKickoffQuickSnap,
   resolveKickoffBlitz,
 } from '../mechanics/kickoff-resolution';
-import { checkBoneHead, checkReallyStupid, checkWildAnimal, checkAnimalSavagery, checkTakeRoot, checkBloodlust, checkFoulAppearance, canInstablePerformAction, logInstablePrevention } from '../mechanics/negative-traits';
+// S27.8.11 — `canInstablePerformAction` et `logInstablePrevention`
+// consommes uniquement dans `actions/legal-moves.ts` (et les autres
+// modules block/move qui les importent directement). Plus d'import
+// direct ici.
+import { checkBoneHead, checkReallyStupid, checkWildAnimal, checkAnimalSavagery, checkTakeRoot, checkBloodlust, checkFoulAppearance } from '../mechanics/negative-traits';
+// S27.8.11 — `canLeap` (re-alias `playerCanLeap`) et
+// `getLegalLeapDestinations` consommes uniquement dans
+// `actions/legal-moves.ts`. `getLeapModifier` + `performLeapRoll`
+// restent ici car utilises par `handleLeap`.
 import {
-  canLeap as playerCanLeap,
   getLeapModifier,
   performLeapRoll,
-  getLegalLeapDestinations,
 } from '../mechanics/leap';
 
-/**
- * Obtient tous les mouvements légaux pour l'état actuel
- * @param state - État du jeu
- * @returns Liste des mouvements possibles
- */
-export function getLegalMoves(state: GameState): Move[] {
-  const moves: Move[] = [{ type: 'END_TURN' }];
-  const team = state.currentPlayer;
-
-  // Si le match est terminé, aucune action possible
-  if (state.gamePhase === 'ended') {
-    return [];
-  }
-
-  // Vérifier que state.players existe
-  if (!state.players || !Array.isArray(state.players)) {
-    return moves;
-  }
-
-  // Si un pendingKickoffEvent est en attente, seules les actions kickoff sont possibles
-  if (state.pendingKickoffEvent) {
-    switch (state.pendingKickoffEvent.type) {
-      case 'perfect-defence':
-        return [{ type: 'KICKOFF_PERFECT_DEFENCE', positions: [] } as Move];
-      case 'high-kick':
-        return [{ type: 'KICKOFF_HIGH_KICK', playerId: null } as Move];
-      case 'quick-snap':
-        return [{ type: 'KICKOFF_QUICK_SNAP', moves: [] } as Move];
-      case 'blitz':
-        return [{ type: 'KICKOFF_BLITZ_RESOLVE' } as Move];
-    }
-  }
-
-  // Si un pendingApothecary est en attente, seul le choix d'apothecaire est possible
-  if (state.pendingApothecary) {
-    return [
-      { type: 'APOTHECARY_CHOOSE', useApothecary: true } as Move,
-      { type: 'APOTHECARY_CHOOSE', useApothecary: false } as Move,
-    ];
-  }
-
-  // Si un pendingReroll est en attente, seules les relances sont possibles
-  if (state.pendingReroll) {
-    return [
-      { type: 'REROLL_CHOOSE', useReroll: true } as Move,
-      { type: 'REROLL_CHOOSE', useReroll: false } as Move,
-    ];
-  }
-
-  // Si c'est un turnover, seul END_TURN est possible
-  if (state.isTurnover) {
-    return moves;
-  }
-
-  // Si tous les joueurs de l'équipe ont agi ou ne peuvent plus agir, seul END_TURN est possible
-  if (shouldAutoEndTurn(state)) {
-    return moves;
-  }
-
-  const myPlayers = state.players.filter(
-    p => p.team === team && (canPlayerMove(state, p.id) || canPlayerContinueMoving(state, p.id))
-  );
-  const occ = new Map<string, Player>();
-  state.players.forEach(p => occ.set(`${p.pos.x},${p.pos.y}`, p));
-
-  for (const p of myPlayers) {
-    // Mouvements orthogonaux ET diagonaux (Blood Bowl rules)
-    const dirs = [
-      // Orthogonaux
-      { x: 1, y: 0 }, // droite
-      { x: -1, y: 0 }, // gauche
-      { x: 0, y: 1 }, // bas
-      { x: 0, y: -1 }, // haut
-      // Diagonaux
-      { x: 1, y: 1 }, // bas-droite
-      { x: 1, y: -1 }, // haut-droite
-      { x: -1, y: 1 }, // bas-gauche
-      { x: -1, y: -1 }, // haut-gauche
-    ];
-    for (const d of dirs) {
-      const to = { x: p.pos.x + d.x, y: p.pos.y + d.y };
-      if (!inBounds(state, to)) continue;
-      if (occ.has(`${to.x},${to.y}`)) continue; // pas de chevauchement
-      moves.push({ type: 'MOVE', playerId: p.id, to });
-    }
-
-    // Actions de Saut (LEAP / Pogo Stick) — 2 cases de mouvement, test d'AG,
-    // ignore les zones de tacle au depart.
-    // MVP: on exige p.pm >= 2 (pas de leap-via-GFI pour l'instant).
-    if (playerCanLeap(p) && p.pm >= 2) {
-      const leapDests = getLegalLeapDestinations(state, p.pos);
-      for (const to of leapDests) {
-        moves.push({ type: 'LEAP', playerId: p.id, to });
-      }
-    }
-
-    // Actions de blocage
-    const adjacentOpponents = getAdjacentOpponents(state, p.pos, p.team);
-    for (const opponent of adjacentOpponents) {
-      if (canBlock(state, p.id, opponent.id)) {
-        moves.push({ type: 'BLOCK', playerId: p.id, targetId: opponent.id });
-      }
-    }
-
-    // Blitz au contact : un joueur qui a commencé à se déplacer peut bloquer
-    // un adversaire adjacent si l'équipe peut encore blitzer
-    const playerAction = state.playerActions?.[p.id];
-    if (playerAction === 'MOVE' && canTeamBlitz(state, p.team) && p.pm > 0) {
-      for (const opponent of adjacentOpponents) {
-        // Éviter les doublons si canBlock a déjà ajouté ce BLOCK
-        const alreadyHasBlock = moves.some(
-          m => m.type === 'BLOCK' && m.playerId === p.id && m.targetId === opponent.id
-        );
-        if (!alreadyHasBlock && !opponent.stunned && opponent.team !== p.team) {
-          moves.push({ type: 'BLOCK', playerId: p.id, targetId: opponent.id });
-        }
-      }
-    }
-
-    // Actions de blitz (mouvement + blocage atomique, pour les joueurs pas encore déplacés)
-    if (!playerAction) {
-      for (const d of dirs) {
-        const to = { x: p.pos.x + d.x, y: p.pos.y + d.y };
-        if (!inBounds(state, to)) continue;
-        if (occ.has(`${to.x},${to.y}`)) continue;
-
-        const allOpponents = state.players.filter(opp => opp.team !== p.team && !opp.stunned);
-        for (const opponent of allOpponents) {
-          if (canBlitz(state, p.id, to, opponent.id)) {
-            moves.push({ type: 'BLITZ', playerId: p.id, to, targetId: opponent.id });
-          }
-        }
-      }
-    }
-
-    // Actions de passe (PASS) - le joueur doit avoir le ballon et pas encore agi
-    // Passes interdites pendant le tour de blitz kickoff
-    // Instable: prohibition — le joueur ne peut pas declarer d'action de passe
-    if (p.hasBall && !hasPlayerActed(state, p.id) && !state.kickoffBlitzTurn && canInstablePerformAction(p, 'PASS')) {
-      const teammates = state.players.filter(
-        t => t.team === team && t.id !== p.id && !t.stunned && t.state === 'active'
-      );
-      for (const target of teammates) {
-        const range = getPassRange(p.pos, target.pos);
-        if (canAttemptPassForRange(p, range)) {
-          moves.push({ type: 'PASS', playerId: p.id, targetId: target.id });
-        }
-      }
-    }
-
-    // Actions de remise (HANDOFF) - le joueur doit avoir le ballon, cible adjacente
-    // Remises interdites pendant le tour de blitz kickoff
-    // Instable: prohibition — le joueur ne peut pas declarer d'action de remise
-    if (p.hasBall && !hasPlayerActed(state, p.id) && !state.kickoffBlitzTurn && canInstablePerformAction(p, 'HANDOFF')) {
-      const teammates = state.players.filter(
-        t => t.team === team && t.id !== p.id && !t.stunned && t.state === 'active'
-      );
-      for (const target of teammates) {
-        if (isAdjacent(p.pos, target.pos)) {
-          moves.push({ type: 'HANDOFF', playerId: p.id, targetId: target.id });
-        }
-      }
-    }
-
-    // Actions de faute (FOUL) - sur un joueur au sol, max 1 par tour
-    if (!hasPlayerActed(state, p.id) && ((state.teamFoulCount && state.teamFoulCount[team]) || 0) === 0) {
-      const groundedOpponents = state.players.filter(
-        opp => opp.team !== team && opp.stunned && isAdjacent(p.pos, opp.pos)
-      );
-      for (const target of groundedOpponents) {
-        moves.push({ type: 'FOUL', playerId: p.id, targetId: target.id });
-      }
-    }
-
-    // Actions de Lancer de Coéquipier (THROW_TEAM_MATE)
-    // Instable: prohibition — le joueur ne peut pas declarer d'action de lancer de coequipier
-    if (!hasPlayerActed(state, p.id) && hasSkill(p, 'throw-team-mate') && canInstablePerformAction(p, 'THROW_TEAM_MATE')) {
-      // Chercher les coéquipiers adjacents avec Right Stuff
-      const throwableTeammates = state.players.filter(
-        t => t.team === team && t.id !== p.id && canThrowTeamMate(state, p, t)
-      );
-      for (const thrown of throwableTeammates) {
-        // Générer les positions cibles dans la portée Long Pass max (distance ≤ 10)
-        for (let dx = -10; dx <= 10; dx++) {
-          for (let dy = -10; dy <= 10; dy++) {
-            const targetPos = { x: p.pos.x + dx, y: p.pos.y + dy };
-            if (!inBounds(state, targetPos)) continue;
-            if (dx === 0 && dy === 0) continue;
-            const range = getThrowRange(p.pos, targetPos);
-            if (!range) continue;
-            moves.push({
-              type: 'THROW_TEAM_MATE',
-              playerId: p.id,
-              thrownPlayerId: thrown.id,
-              targetPos,
-            });
-          }
-        }
-      }
-    }
-
-    // Actions de Regard Hypnotique (HYPNOTIC_GAZE)
-    if (!hasPlayerActed(state, p.id) && hasSkill(p, 'hypnotic-gaze')) {
-      const adjacentOpponents = state.players.filter(
-        opp => opp.team !== team && canHypnoticGaze(state, p, opp)
-      );
-      for (const target of adjacentOpponents) {
-        moves.push({ type: 'HYPNOTIC_GAZE', playerId: p.id, targetId: target.id });
-      }
-    }
-
-    // Actions de Vomissement Projectile (PROJECTILE_VOMIT)
-    if (!hasPlayerActed(state, p.id) && hasSkill(p, 'projectile-vomit')) {
-      const adjacentOpponents = state.players.filter(
-        opp => opp.team !== team && canProjectileVomit(state, p, opp)
-      );
-      for (const target of adjacentOpponents) {
-        moves.push({ type: 'PROJECTILE_VOMIT', playerId: p.id, targetId: target.id });
-      }
-    }
-
-    // Actions de Poignard (STAB)
-    if (!hasPlayerActed(state, p.id) && hasSkill(p, 'stab')) {
-      const adjacentOpponents = state.players.filter(
-        opp => opp.team !== team && canStab(state, p, opp)
-      );
-      for (const target of adjacentOpponents) {
-        moves.push({ type: 'STAB', playerId: p.id, targetId: target.id });
-      }
-    }
-
-    // Actions de Tronçonneuse (CHAINSAW)
-    if (!hasPlayerActed(state, p.id) && hasSkill(p, 'chainsaw')) {
-      const adjacentOpponents = state.players.filter(
-        opp => opp.team !== team && canChainsaw(state, p, opp)
-      );
-      for (const target of adjacentOpponents) {
-        moves.push({ type: 'CHAINSAW', playerId: p.id, targetId: target.id });
-      }
-    }
-
-    // END_PLAYER_TURN : permet d'arrêter l'activation d'un joueur en cours
-    const pAction = state.playerActions?.[p.id];
-    if (pAction === 'MOVE' || pAction === 'BLITZ') {
-      moves.push({ type: 'END_PLAYER_TURN', playerId: p.id });
-    }
-  }
-  return moves;
-}
-
-/**
- * Trouve tous les adversaires adjacents à une position
- * @param state - État du jeu
- * @param position - Position de référence
- * @param team - Équipe du joueur (pour identifier les adversaires)
- * @returns Liste des adversaires adjacents
- */
-function getAdjacentOpponents(state: GameState, position: Position, team: TeamId): Player[] {
-  const opponents: Player[] = [];
-  const dirs = [
-    { x: 1, y: 0 },
-    { x: -1, y: 0 },
-    { x: 0, y: 1 },
-    { x: 0, y: -1 },
-    { x: 1, y: 1 },
-    { x: 1, y: -1 },
-    { x: -1, y: 1 },
-    { x: -1, y: -1 },
-  ];
-
-  for (const dir of dirs) {
-    const checkPos = { x: position.x + dir.x, y: position.y + dir.y };
-    const opponent = state.players.find(
-      p => p.team !== team && p.pos.x === checkPos.x && p.pos.y === checkPos.y && !p.stunned
-    );
-    if (opponent) {
-      opponents.push(opponent);
-    }
-  }
-
-  return opponents;
-}
+// S27.8.11 — `getLegalMoves` + `getAdjacentOpponents` (variante locale)
+// extraits dans `actions/legal-moves.ts`. Re-export pour preserver
+// l'API publique consommee par `index.ts`, `ai/*`, `utils/referee.ts`,
+// etc. Import local separe car `handleLeap`/`handleMove`/`handleDodge`
+// continuent a verifier la legalite via `getLegalMoves`. La variante
+// locale de `getAdjacentOpponents` reste privee au nouveau module
+// (comportement preserve : ne filtre que `stunned`).
+import { getLegalMoves } from './legal-moves';
+export { getLegalMoves };
 
 // S27.8.5 — `canUseTeamReroll` deplace dans `core/game-state.ts` pour
 // pouvoir etre consomme par les handlers extraits (ball-leap-actions
