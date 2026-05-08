@@ -31,9 +31,7 @@ import {
   requiresPair,
 } from "../utils/star-player-validation";
 import { getRosterFromDb } from "../utils/roster-helpers";
-import { resolveRuleset, isValidRuleset } from "../utils/ruleset-helpers";
-import { parsePagination, buildApiMeta } from "../utils/pagination";
-import { generateTeamName } from "../services/team-name-generator";
+import { resolveRuleset } from "../utils/ruleset-helpers";
 import { validate } from "../middleware/validate";
 import {
   createFromRosterSchema,
@@ -214,104 +212,27 @@ function rosterTemplates(roster: AllowedRoster) {
 // O.8a — Générateur de noms d'équipe par roster.
 // Public (pas d'auth) : aide à la création d'équipe, sans contenu sensible.
 // (S25.5n — ApiResponse<T>)
-export function handleGenerateTeamName(
-  req: AuthenticatedRequest,
-  res: Response,
-): void {
-  const roster =
-    typeof req.query.roster === "string" && req.query.roster.length > 0
-      ? req.query.roster
-      : "generic";
-  const seed =
-    typeof req.query.seed === "string" && req.query.seed.length > 0
-      ? req.query.seed
-      : undefined;
-  const name = generateTeamName(roster, seed ? { seed } : {});
-  sendSuccess(res, { name, roster });
-}
+// S27.8.22 — Handlers de lecture seule (name-generator / available /
+// mine / rosters/:id) extraits dans `routes/team-readonly-handlers.ts`.
+// Re-export pour preserver l'API publique consommee par les tests
+// d'integration (`team.test.ts`).
+export {
+  handleGenerateTeamName,
+  handleListAvailableTeams,
+  handleListMyTeams,
+  handleGetRoster,
+} from './team-readonly-handlers';
+import {
+  handleGenerateTeamName as handleGenerateTeamNameImpl,
+  handleListAvailableTeams as handleListAvailableTeamsImpl,
+  handleListMyTeams as handleListMyTeamsImpl,
+  handleGetRoster as handleGetRosterImpl,
+} from './team-readonly-handlers';
 
-router.get("/name-generator", handleGenerateTeamName);
-
-// (S25.5o — ApiResponse<T>)
-export async function handleListAvailableTeams(
-  req: AuthenticatedRequest,
-  res: Response,
-): Promise<void> {
-  const requestedRuleset = req.query.ruleset as string | undefined;
-  const filterRuleset = isValidRuleset(requestedRuleset)
-    ? (requestedRuleset as Ruleset)
-    : undefined;
-  const teams = await prisma.team.findMany({
-    where: {
-      ownerId: req.user!.id,
-      ...(filterRuleset && { ruleset: filterRuleset }),
-      selections: {
-        none: {
-          match: { status: { in: ["pending", "active"] } },
-        },
-      },
-    },
-    select: { id: true, name: true, roster: true, ruleset: true, createdAt: true },
-    orderBy: { createdAt: "desc" },
-  });
-  sendSuccess(res, { teams });
-}
-
-router.get("/available", authUser, handleListAvailableTeams);
-
-// (S25.5p — ApiResponse<T>)
-export async function handleListMyTeams(
-  req: AuthenticatedRequest,
-  res: Response,
-): Promise<void> {
-  const requestedRuleset = req.query.ruleset as string | undefined;
-  const filterRuleset = isValidRuleset(requestedRuleset)
-    ? (requestedRuleset as Ruleset)
-    : undefined;
-  const { limit, offset } = parsePagination(
-    req.query as Record<string, unknown>,
-  );
-  const where = {
-    ownerId: req.user!.id,
-    ...(filterRuleset && { ruleset: filterRuleset }),
-  };
-  const [teams, total] = await Promise.all([
-    prisma.team.findMany({
-      where,
-      select: { id: true, name: true, roster: true, ruleset: true, createdAt: true, currentValue: true },
-      orderBy: { createdAt: "desc" },
-      take: limit,
-      skip: offset,
-    }),
-    prisma.team.count({ where }),
-  ]);
-  sendSuccess(res, { teams, meta: buildApiMeta({ total, limit, offset }) });
-}
-
-router.get("/mine", authUser, handleListMyTeams);
-
-// (S25.5n — ApiResponse<T>)
-export async function handleGetRoster(
-  req: AuthenticatedRequest,
-  res: Response,
-): Promise<void> {
-  const id = req.params.id;
-  if (!(ALLOWED_TEAMS as readonly string[]).includes(id)) {
-    sendError(res, "Roster inconnu", 404);
-    return;
-  }
-  const ruleset = resolveRuleset(req.query.ruleset as string | undefined);
-
-  const roster = await getRosterFromDb(id, "fr", ruleset);
-  if (!roster) {
-    sendError(res, "Roster non trouve en base de donnees", 404);
-    return;
-  }
-
-  sendSuccess(res, { roster, ruleset });
-}
-
-router.get("/rosters/:id", authUser, handleGetRoster);
+router.get("/name-generator", handleGenerateTeamNameImpl);
+router.get("/available", authUser, handleListAvailableTeamsImpl);
+router.get("/mine", authUser, handleListMyTeamsImpl);
+router.get("/rosters/:id", authUser, handleGetRosterImpl);
 
 // Endpoint pour choisir une equipe pour un match (S25.5x — ApiResponse<T>)
 export async function handleChooseTeam(
