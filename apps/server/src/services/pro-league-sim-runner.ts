@@ -39,12 +39,28 @@ import {
 } from "@bb/sim-engine";
 
 import { prisma } from "../prisma";
+import { serverLog } from "../utils/server-log";
 import { appMetrics, type SimDriver, type SimOutcome } from "../utils/metrics";
 import { resolveDriverKind } from "./pro-league-driver-resolver";
 import {
   EngineVersionMismatchError,
   assertSimulationAllowed,
 } from "./pro-league-engine-version";
+import {
+  buildSimErrorLog,
+  buildSlowSimLog,
+  DEFAULT_SLOW_SIM_THRESHOLD_SEC,
+} from "./sim-error-logger";
+
+/**
+ * Lot 4.A.2 — seuil au-dela duquel un sim est considere "slow" et
+ * declenche un log structure pour Loki. Configurable via env pour
+ * tester sans devoir attendre 5s.
+ */
+const SLOW_SIM_THRESHOLD_SEC = (() => {
+  const raw = Number(process.env.PRO_LEAGUE_SLOW_SIM_THRESHOLD_SEC);
+  return Number.isFinite(raw) && raw > 0 ? raw : DEFAULT_SLOW_SIM_THRESHOLD_SEC;
+})();
 
 /** Statuts de match qui n'ont plus besoin d'être simulés. */
 const FINAL_STATUSES = new Set(["ready", "in_progress", "completed"]);
@@ -187,6 +203,20 @@ export async function simulateProMatch(matchId: string): Promise<boolean> {
       elapsedSec,
     );
     appMetrics.recordSimMatch({ status: "failed", driver });
+    // Lot 4.A.1 — log structured pour Loki / Grafana queries.
+    serverLog.error(
+      "sim_error",
+      buildSimErrorLog(err, {
+        matchId,
+        engineVer,
+        driver,
+        seasonId: match.season.id as string,
+        homeTeamId: match.homeTeamId as string,
+        awayTeamId: match.awayTeamId as string,
+        homeRace: homeProfile.race,
+        awayRace: awayProfile.race,
+      }),
+    );
     const msg = err instanceof Error ? err.message : "unknown";
     await prisma.proLeagueMatch.update({
       where: { id: matchId },
@@ -200,6 +230,26 @@ export async function simulateProMatch(matchId: string): Promise<boolean> {
     elapsedSec,
   );
   appMetrics.recordSimMatch({ status: "success", driver });
+
+  // Lot 4.A.2 — slow sim detection : log structure si > seuil.
+  // Le seuil par defaut (5s) est genereux ; un sim full driver typique
+  // tourne en 1-3s. Au-dela, on veut un trace dans Loki pour
+  // investigation.
+  const slowLog = buildSlowSimLog({
+    matchId,
+    durationSec: elapsedSec,
+    thresholdSec: SLOW_SIM_THRESHOLD_SEC,
+    engineVer,
+    driver,
+    seasonId: match.season.id as string,
+    homeTeamId: match.homeTeamId as string,
+    awayTeamId: match.awayTeamId as string,
+    homeRace: homeProfile.race,
+    awayRace: awayProfile.race,
+  });
+  if (slowLog) {
+    serverLog.warn("sim_slow", slowLog);
+  }
 
   const compressed = await compressEvents(result.events);
   const stats = computeCompressionStats(result.events, compressed);
