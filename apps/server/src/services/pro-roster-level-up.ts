@@ -30,6 +30,7 @@
  */
 
 import { prisma } from "../prisma";
+import { computePlayerTv } from "./pro-roster-tv";
 
 /**
  * Seuils SPP cumulatifs pour atteindre les niveaux 2..7. Index `i`
@@ -184,6 +185,8 @@ export async function applyLevelUps(
       level: true,
       skills: true,
       status: true,
+      // Lot 3.C.5 — position lue pour recompute tvCached inline.
+      position: true,
     },
   });
   if (!roster) {
@@ -245,11 +248,17 @@ export async function applyLevelUps(
   }
 
   const newSkills = [...skills, ...advancements];
+  // Lot 3.C.5 — recompute TV inline (1 UPDATE pour level + skills + tv).
+  const newTvCached = computePlayerTv(
+    (roster.position as string) ?? "",
+    newSkills.length,
+  );
   await prisma.proTeamRoster.update({
     where: { id: rosterId },
     data: {
       level: currentLevel,
       skills: newSkills,
+      tvCached: newTvCached,
     },
   });
 

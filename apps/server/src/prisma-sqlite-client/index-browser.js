@@ -645,6 +645,7 @@ exports.Prisma.ProTeamRosterScalarFieldEnum = {
   compCount: 'compCount',
   mvpCount: 'mvpCount',
   level: 'level',
+  tvCached: 'tvCached',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };

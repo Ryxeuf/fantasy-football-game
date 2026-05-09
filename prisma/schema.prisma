@@ -1186,11 +1186,17 @@ model ProTeamRoster {
   /// les filtres "joueurs au-dessus de level 3" sans recompute en SQL.
   /// Update transactionnel avec append de skill via le level-up applier.
   level       Int      @default(1)
+  /// Lot 3.C.5 — Team Value individuelle (gold pieces). Computed from
+  /// position base cost + skill bonus (~20k par skill General). Update
+  /// transactionnel par le level-up applier ; recomputable par batch
+  /// via `sweepRecomputeTvs` pour les rosters legacy.
+  tvCached    Int      @default(50000)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([teamId, status])
   @@index([teamId, spp])
+  @@index([teamId, tvCached])
 }
 
 /// Une saison instancie une ProLeague pour une annee donnee. engineVer

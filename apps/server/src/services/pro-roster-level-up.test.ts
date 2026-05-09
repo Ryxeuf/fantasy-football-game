@@ -137,6 +137,7 @@ describe("applyLevelUps — Lot 3.C.4", () => {
       level: 1,
       skills: [],
       status: "active",
+      position: "Lineman",
     });
     const out = await applyLevelUps("r1");
     expect(out.skipped).toBe(true);
@@ -151,6 +152,7 @@ describe("applyLevelUps — Lot 3.C.4", () => {
       level: 1,
       skills: [],
       status: "active",
+      position: "Lineman",
     });
     const out = await applyLevelUps("r2");
     expect(out.skipped).toBe(false);
@@ -163,6 +165,8 @@ describe("applyLevelUps — Lot 3.C.4", () => {
         data: expect.objectContaining({
           level: 2,
           skills: expect.any(Array),
+          // Lot 3.C.5 — Lineman 50k + 1 skill 20k = 70k.
+          tvCached: 70_000,
         }),
       }),
     );
@@ -175,6 +179,7 @@ describe("applyLevelUps — Lot 3.C.4", () => {
       level: 1,
       skills: [],
       status: "active",
+      position: "Lineman",
     });
     const out = await applyLevelUps("r3");
     expect(out.newLevel).toBe(3);
@@ -189,6 +194,7 @@ describe("applyLevelUps — Lot 3.C.4", () => {
       level: 1,
       skills: [],
       status: "dead",
+      position: "Lineman",
     });
     const out = await applyLevelUps("r_dead");
     expect(out.skipped).toBe(true);
@@ -203,6 +209,7 @@ describe("applyLevelUps — Lot 3.C.4", () => {
       level: 1,
       skills: [...GENERAL_SKILL_POOL],
       status: "active",
+      position: "Lineman",
     });
     const out = await applyLevelUps("r_full");
     expect(out.skipped).toBe(true);
@@ -244,6 +251,7 @@ describe("sweepLevelUps — Lot 3.C.4", () => {
         level: 1,
         skills: [],
         status: "active",
+        position: "Lineman",
       })
       .mockResolvedValueOnce(null); // 2eme = ROSTER_NOT_FOUND
     const out = await sweepLevelUps();

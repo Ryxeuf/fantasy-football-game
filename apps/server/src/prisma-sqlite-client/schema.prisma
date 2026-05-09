@@ -902,11 +902,14 @@ model ProTeamRoster {
   mvpCount    Int      @default(0)
   // Lot 3.C.4 — niveau du joueur (1..7) calcule depuis spp.
   level       Int      @default(1)
+  // Lot 3.C.5 — TV individuelle (gold pieces) recomputee a chaque level-up.
+  tvCached    Int      @default(50000)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([teamId, status])
   @@index([teamId, spp])
+  @@index([teamId, tvCached])
 }
 
 model ProLeagueSeason {
