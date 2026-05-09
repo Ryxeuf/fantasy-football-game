@@ -154,7 +154,20 @@ export function diffStatesToEvents(
   if (primary) events.push(primary);
 
   // 2) TD : score changé sur l'une des deux équipes.
+  // Lot 3.C.3 — `scorerId` = playerId du porteur de balle au moment
+  // du TD. Cherche d'abord dans `prev` (le porteur juste avant
+  // d'entrer en endzone) ; fallback sur `next` si le moteur ne reset
+  // pas immediatement le `hasBall` post-TD ; null si aucun porteur
+  // identifie (TD synthetique / state corrompu — le SPP service
+  // tombera en no-op).
+  function scorerFor(team: TeamId): string | undefined {
+    const candidate =
+      prev.players.find((p) => p.team === team && p.hasBall === true) ??
+      next.players.find((p) => p.team === team && p.hasBall === true);
+    return candidate?.id;
+  }
   if (next.score.teamA > prev.score.teamA) {
+    const scorerId = scorerFor('A');
     events.push({
       type: 'TD',
       displayAtMs,
@@ -163,10 +176,12 @@ export function diffStatesToEvents(
         team: 'home',
         half: next.half,
         scoreAfter: { home: next.score.teamA, away: next.score.teamB },
+        ...(scorerId ? { scorerId } : {}),
       },
     });
   }
   if (next.score.teamB > prev.score.teamB) {
+    const scorerId = scorerFor('B');
     events.push({
       type: 'TD',
       displayAtMs,
@@ -175,6 +190,7 @@ export function diffStatesToEvents(
         team: 'away',
         half: next.half,
         scoreAfter: { home: next.score.teamA, away: next.score.teamB },
+        ...(scorerId ? { scorerId } : {}),
       },
     });
   }

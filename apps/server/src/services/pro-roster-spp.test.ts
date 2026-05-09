@@ -215,6 +215,58 @@ describe("attributeSpp — Lot 3.C.2", () => {
     expect(a.rewards).toEqual(b.rewards);
   });
 
+  it("Lot 3.C.3 — TD avec scorerId reel attribue 3 SPP td au porteur", () => {
+    const scorer = realCuid("scorer1");
+    const out = attributeSpp({
+      seed: 1,
+      events: [
+        {
+          type: "TD",
+          meta: { team: "home", scorerId: scorer, scoreAfter: { home: 1, away: 0 } },
+        },
+      ],
+      casualties: [],
+      homeRosterIds: new Set([scorer, realCuid("home2")]),
+      awayRosterIds: new Set([realCuid("away1")]),
+    });
+    const reward = out.rewards.find((r) => r.rosterId === scorer);
+    expect(reward?.tdCount).toBe(1);
+    // Au moins 3 SPP du TD ; le MVP peut s'ajouter (4 de plus).
+    expect(reward?.totalSpp).toBeGreaterThanOrEqual(SPP_VALUES.td);
+  });
+
+  it("Lot 3.C.3 — TD sans scorerId (hybrid driver / state corrompu) -> pas d'attribution", () => {
+    const out = attributeSpp({
+      seed: 1,
+      events: [
+        {
+          type: "TD",
+          meta: { team: "home", scoreAfter: { home: 1, away: 0 } }, // pas de scorerId
+        },
+      ],
+      casualties: [],
+      homeRosterIds: new Set([realCuid("home1"), realCuid("home2")]),
+      awayRosterIds: new Set([realCuid("away1")]),
+    });
+    expect(out.rewards.every((r) => r.tdCount === 0)).toBe(true);
+  });
+
+  it("Lot 3.C.3 — TD avec scorerId synthetique -> pas d'attribution", () => {
+    const out = attributeSpp({
+      seed: 1,
+      events: [
+        {
+          type: "TD",
+          meta: { team: "home", scorerId: "home-3" },
+        },
+      ],
+      casualties: [],
+      homeRosterIds: new Set([realCuid("home1")]),
+      awayRosterIds: new Set([realCuid("away1")]),
+    });
+    expect(out.rewards.every((r) => r.tdCount === 0)).toBe(true);
+  });
+
   it("agrege multi-source : MVP + 2 completions sur le meme joueur", () => {
     const star = realCuid("star1");
     const out = attributeSpp({
