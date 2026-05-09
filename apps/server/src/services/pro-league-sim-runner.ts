@@ -51,6 +51,11 @@ import {
   buildSlowSimLog,
   DEFAULT_SLOW_SIM_THRESHOLD_SEC,
 } from "./sim-error-logger";
+import {
+  captureProfileIfSlow,
+  CpuProfilerSession,
+  nodeInspectorAdapter,
+} from "./sim-cpu-profiler";
 
 /**
  * Lot 4.A.2 — seuil au-dela duquel un sim est considere "slow" et
@@ -61,6 +66,19 @@ const SLOW_SIM_THRESHOLD_SEC = (() => {
   const raw = Number(process.env.PRO_LEAGUE_SLOW_SIM_THRESHOLD_SEC);
   return Number.isFinite(raw) && raw > 0 ? raw : DEFAULT_SLOW_SIM_THRESHOLD_SEC;
 })();
+
+/**
+ * Lot 4.A.2 — opt-in CPU profiling pour les slow sims. Off par defaut
+ * (overhead V8 ~5-10%). Quand ON, on capture un .cpuprofile pour
+ * chaque sim et on le garde uniquement si la duree depasse le seuil.
+ *
+ * Set `PRO_LEAGUE_PROFILE_SLOW_SIMS=1` pour activer. Output dans
+ * `PRO_LEAGUE_PROFILE_DIR` (default `/tmp/sim-profiles`). Les
+ * fichiers .cpuprofile sont ouvrables dans Chrome DevTools.
+ */
+const CPU_PROFILE_ENABLED = process.env.PRO_LEAGUE_PROFILE_SLOW_SIMS === "1";
+const CPU_PROFILE_DIR =
+  process.env.PRO_LEAGUE_PROFILE_DIR || "/tmp/sim-profiles";
 
 /** Statuts de match qui n'ont plus besoin d'être simulés. */
 const FINAL_STATUSES = new Set(["ready", "in_progress", "completed"]);
@@ -192,6 +210,28 @@ export async function simulateProMatch(matchId: string): Promise<boolean> {
     matchOverride: (match.driverKindOverride as string | null) ?? null,
   });
 
+  // Lot 4.A.2 — opt-in CPU profile : demarre la session avant le sim
+  // et la stoppe apres. On garde uniquement si slow (cf.
+  // captureProfileIfSlow plus bas).
+  let cpuProfilerSession: CpuProfilerSession | null = null;
+  if (CPU_PROFILE_ENABLED) {
+    try {
+      cpuProfilerSession = new CpuProfilerSession(nodeInspectorAdapter());
+      await cpuProfilerSession.start();
+    } catch (err: unknown) {
+      // Best-effort : si le profiler n'arrive pas a demarrer, on
+      // continue sans (logging warn pour visibilite mais pas
+      // bloquant pour le sim).
+      const msg = err instanceof Error ? err.message : "unknown";
+      serverLog.warn(
+        "sim_profiler_start_failed",
+        { event: "sim_profiler_start_failed", matchId, error: msg },
+      );
+      cpuProfilerSession?.dispose();
+      cpuProfilerSession = null;
+    }
+  }
+
   let result: SimResult;
   const simStart = process.hrtime.bigint();
   try {
@@ -218,6 +258,16 @@ export async function simulateProMatch(matchId: string): Promise<boolean> {
       }),
     );
     const msg = err instanceof Error ? err.message : "unknown";
+    // Lot 4.A.2 — cleanup CPU profiler en cas d'erreur sim, sinon le
+    // session reste hanging et fuite de la memoire V8.
+    if (cpuProfilerSession) {
+      try {
+        await cpuProfilerSession.stop();
+      } catch {
+        /* best-effort */
+      }
+      cpuProfilerSession.dispose();
+    }
     await prisma.proLeagueMatch.update({
       where: { id: matchId },
       data: { status: "failed", simulatedAt: new Date() },
@@ -249,6 +299,54 @@ export async function simulateProMatch(matchId: string): Promise<boolean> {
   });
   if (slowLog) {
     serverLog.warn("sim_slow", slowLog);
+  }
+
+  // Lot 4.A.2 — stop CPU profile + dump si slow.
+  if (cpuProfilerSession) {
+    try {
+      const profile = await cpuProfilerSession.stop();
+      const { writeFile } = await import("node:fs/promises");
+      const { mkdir } = await import("node:fs/promises");
+      // mkdir best-effort : si le repertoire existe deja, on ignore
+      // l'erreur EEXIST.
+      try {
+        await mkdir(CPU_PROFILE_DIR, { recursive: true });
+      } catch {
+        /* ignore */
+      }
+      const captured = await captureProfileIfSlow({
+        profile,
+        matchId,
+        durationSec: elapsedSec,
+        thresholdSec: SLOW_SIM_THRESHOLD_SEC,
+        profileDir: CPU_PROFILE_DIR,
+        writeFile: (path, data) => writeFile(path, data, "utf-8"),
+      });
+      if (captured.saved && captured.path) {
+        serverLog.info("sim_profile_captured", {
+          event: "sim_profile_captured",
+          matchId,
+          path: captured.path,
+          durationSec: elapsedSec,
+          driver,
+        });
+      } else if (captured.error) {
+        serverLog.warn("sim_profile_capture_failed", {
+          event: "sim_profile_capture_failed",
+          matchId,
+          error: captured.error,
+        });
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "unknown";
+      serverLog.warn("sim_profiler_stop_failed", {
+        event: "sim_profiler_stop_failed",
+        matchId,
+        error: msg,
+      });
+    } finally {
+      cpuProfilerSession.dispose();
+    }
   }
 
   const compressed = await compressEvents(result.events);
