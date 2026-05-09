@@ -900,6 +900,8 @@ model ProTeamRoster {
   casCount    Int      @default(0)
   compCount   Int      @default(0)
   mvpCount    Int      @default(0)
+  // Lot 3.C.4 — niveau du joueur (1..7) calcule depuis spp.
+  level       Int      @default(1)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

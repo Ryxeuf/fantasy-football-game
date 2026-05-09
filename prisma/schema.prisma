@@ -1181,6 +1181,11 @@ model ProTeamRoster {
   casCount    Int      @default(0)
   compCount   Int      @default(0)
   mvpCount    Int      @default(0)
+  /// Lot 3.C.4 — Niveau du joueur (1=rookie, 7=legend). Computed from
+  /// `spp` via la table BB (6/16/31/51/76/176). Stocke pour permettre
+  /// les filtres "joueurs au-dessus de level 3" sans recompute en SQL.
+  /// Update transactionnel avec append de skill via le level-up applier.
+  level       Int      @default(1)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

@@ -644,6 +644,7 @@ exports.Prisma.ProTeamRosterScalarFieldEnum = {
   casCount: 'casCount',
   compCount: 'compCount',
   mvpCount: 'mvpCount',
+  level: 'level',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
