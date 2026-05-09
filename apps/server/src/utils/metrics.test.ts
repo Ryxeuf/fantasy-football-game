@@ -231,4 +231,30 @@ describe("metrics registry", () => {
       );
     });
   });
+
+  describe("Pro League drift alerts metrics (Lot 4.A.3)", () => {
+    it("setEngineDriftAlertsCount expose la jauge avec le label severity", async () => {
+      metrics.setEngineDriftAlertsCount("warn", 3);
+      metrics.setEngineDriftAlertsCount("critical", 1);
+      const text = await metricsExposition(metrics.registry);
+      expect(text).toMatch(
+        /nuffle_engine_drift_alerts_count\{severity="warn"\} 3/,
+      );
+      expect(text).toMatch(
+        /nuffle_engine_drift_alerts_count\{severity="critical"\} 1/,
+      );
+    });
+
+    it("setEngineDriftAlertsCount clamp les valeurs negatives / NaN à 0", async () => {
+      metrics.setEngineDriftAlertsCount("warn", -5);
+      metrics.setEngineDriftAlertsCount("critical", Number.NaN);
+      const text = await metricsExposition(metrics.registry);
+      expect(text).toMatch(
+        /nuffle_engine_drift_alerts_count\{severity="warn"\} 0/,
+      );
+      expect(text).toMatch(
+        /nuffle_engine_drift_alerts_count\{severity="critical"\} 0/,
+      );
+    });
+  });
 });

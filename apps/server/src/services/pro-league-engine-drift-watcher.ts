@@ -287,9 +287,86 @@ function pushDriftToMetrics(samples: readonly DriftSample[]): void {
 }
 
 /**
- * Tick unitaire : compute + push. Erreur isolée — log et continue.
- * Retourne le nombre de samples pushés pour usage dans les tests
- * sans avoir besoin de scrutateur Prometheus.
+ * Lot 4.A.3 — Seuils de severite drift (FUMBBL_TOLERANCE = 10% est
+ * la tolerance "normale" de la PR #655 ; au-dela on alerte).
+ *   - warn     : |drift| > 10% (= FUMBBL_TOLERANCE)
+ *   - critical : |drift| > 25%
+ *
+ * Pas d'alerte sur les samples avec moins de `MIN_MATCHES_FOR_ALERT`
+ * matchs : la variance d'echantillonnage est trop forte pour conclure.
+ */
+export const DRIFT_WARN_THRESHOLD = 0.1;
+export const DRIFT_CRITICAL_THRESHOLD = 0.25;
+export const MIN_MATCHES_FOR_ALERT = 5;
+
+export interface DriftAlert {
+  readonly severity: "warn" | "critical";
+  readonly metric: DriftMetric;
+  readonly race: string;
+  readonly seasonId: string;
+  readonly drift: number;
+  readonly observed: number;
+  readonly reference: number;
+  readonly samples: number;
+}
+
+/**
+ * Pure : a partir des drift samples, retourne la liste des alertes.
+ * Les samples avec moins de `MIN_MATCHES_FOR_ALERT` matchs sont
+ * silencieusement ignores (variance trop forte pour conclure).
+ */
+export function detectDriftAlerts(
+  samples: readonly DriftSample[],
+  options: {
+    readonly warnThreshold?: number;
+    readonly criticalThreshold?: number;
+    readonly minMatches?: number;
+  } = {},
+): DriftAlert[] {
+  const warn = options.warnThreshold ?? DRIFT_WARN_THRESHOLD;
+  const critical = options.criticalThreshold ?? DRIFT_CRITICAL_THRESHOLD;
+  const minMatches = options.minMatches ?? MIN_MATCHES_FOR_ALERT;
+  const alerts: DriftAlert[] = [];
+  for (const s of samples) {
+    if (s.samples < minMatches) continue;
+    const abs = Math.abs(s.drift);
+    if (abs <= warn) continue;
+    alerts.push({
+      severity: abs > critical ? "critical" : "warn",
+      metric: s.metric,
+      race: s.race,
+      seasonId: s.seasonId,
+      drift: s.drift,
+      observed: s.observed,
+      reference: s.reference,
+      samples: s.samples,
+    });
+  }
+  return alerts;
+}
+
+/**
+ * Compte les alertes par severite. Sert au push gauge Prometheus.
+ */
+export function countAlertsBySeverity(
+  alerts: readonly DriftAlert[],
+): { readonly warn: number; readonly critical: number } {
+  let warn = 0;
+  let critical = 0;
+  for (const a of alerts) {
+    if (a.severity === "critical") critical += 1;
+    else warn += 1;
+  }
+  return { warn, critical };
+}
+
+/**
+ * Tick unitaire : compute + push + alert detection. Erreur isolée —
+ * log et continue. Retourne le nombre de samples pushés pour usage
+ * dans les tests sans avoir besoin de scrutateur Prometheus.
+ *
+ * Lot 4.A.3 — emet aussi un `serverLog.warn("drift_alert", ...)` par
+ * alerte detectee, et update les jauges `nuffle_engine_drift_alerts_count`.
  */
 export async function runDriftTick(
   options: ComputeDriftOptions = {},
@@ -297,6 +374,26 @@ export async function runDriftTick(
   try {
     const samples = await computeEngineDrift(options);
     pushDriftToMetrics(samples);
+    const alerts = detectDriftAlerts(samples);
+    const counts = countAlertsBySeverity(alerts);
+    appMetrics.setEngineDriftAlertsCount("warn", counts.warn);
+    appMetrics.setEngineDriftAlertsCount("critical", counts.critical);
+    for (const alert of alerts) {
+      // Log structure pino-friendly : Loki indexera les labels
+      // (severity, metric, race, seasonId, drift) pour les queries
+      // type "alertes critical sur saison s_2026 par race".
+      serverLog.warn("drift_alert", {
+        event: "drift_alert",
+        severity: alert.severity,
+        metric: alert.metric,
+        race: alert.race,
+        seasonId: alert.seasonId,
+        drift: alert.drift,
+        observed: alert.observed,
+        reference: alert.reference,
+        samples: alert.samples,
+      });
+    }
     return samples.length;
   } catch (err: unknown) {
     serverLog.error("[engine-drift-watcher] tick failed", err);

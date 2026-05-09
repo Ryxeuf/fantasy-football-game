@@ -95,6 +95,9 @@ export interface EngineDriftLabels {
   seasonId: string;
 }
 
+/** Lot 4.A.3 — severite d'une alerte drift (warn = >10%, critical = >25%). */
+export type DriftAlertSeverity = "warn" | "critical";
+
 /**
  * Lot 3.B.2 — labels pour les jauges du comparator hybrid vs full.
  * `pairing` est concaténé `<homeTeamId>__<awayTeamId>` côté caller pour
@@ -136,6 +139,8 @@ export interface MetricsRegistry {
   observeBroadcasterDispatchLag(ms: number): void;
   /** Engine drift — set la dérive d'une métrique vs baseline (en delta relatif, ex: 0.04 pour +4%). */
   setEngineDrift(labels: EngineDriftLabels, value: number): void;
+  /** Lot 4.A.3 — set le compteur d'alertes drift par severite. */
+  setEngineDriftAlertsCount(severity: DriftAlertSeverity, count: number): void;
 
   /** Lot 3.B.2 — set les jauges du comparator hybrid vs full pour un pairing. */
   setEngineCompareStats(
@@ -261,6 +266,16 @@ export function buildMetricsRegistry(): MetricsRegistry {
     registers: [registry],
   });
 
+  // Lot 4.A.3 — compteur d'alertes drift par severite (warn / critical).
+  // Permet a Grafana de declencher une notif Discord quand le compteur
+  // augmente plus rapidement que threshold/h sur une fenetre glissante.
+  const engineDriftAlertsCount = new Gauge({
+    name: "nuffle_engine_drift_alerts_count",
+    help: "Nombre d'alertes drift actuellement actives par severite (Lot 4.A.3)",
+    labelNames: ["severity"],
+    registers: [registry],
+  });
+
   // Lot 3.B.2 — jauges comparator hybrid vs full driver, par pairing.
   const engineCompareScoreDeltaMean = new Gauge({
     name: "nuffle_engine_compare_score_delta_mean",
@@ -360,6 +375,11 @@ export function buildMetricsRegistry(): MetricsRegistry {
         },
         safe,
       );
+    },
+    setEngineDriftAlertsCount(severity, count) {
+      const safe =
+        Number.isFinite(count) && count >= 0 ? Math.floor(count) : 0;
+      engineDriftAlertsCount.set({ severity }, safe);
     },
     setEngineCompareStats(labels, stats) {
       const safe = (n: number): number => (Number.isFinite(n) ? n : 0);

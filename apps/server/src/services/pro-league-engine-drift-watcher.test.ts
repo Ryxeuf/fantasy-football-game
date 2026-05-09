@@ -27,8 +27,14 @@ import {
   buildDriftSamples,
   computeEngineDrift,
   computeRelativeDrift,
+  countAlertsBySeverity,
+  detectDriftAlerts,
+  DRIFT_CRITICAL_THRESHOLD,
+  DRIFT_WARN_THRESHOLD,
+  MIN_MATCHES_FOR_ALERT,
   runDriftTick,
   startDriftWatcher,
+  type DriftSample,
 } from "./pro-league-engine-drift-watcher";
 import { appMetrics } from "../utils/metrics";
 
@@ -314,5 +320,103 @@ describe("startDriftWatcher", () => {
     // Si un timer avait démarré, stop() le clearInterval. Smoke test :
     // pas d'erreur = OK.
     expect(true).toBe(true);
+  });
+});
+
+describe("detectDriftAlerts — Lot 4.A.3", () => {
+  function sample(
+    overrides: Partial<DriftSample> = {},
+  ): DriftSample {
+    return {
+      metric: "tdMean",
+      race: "Wood Elf",
+      seasonId: "s_2026",
+      observed: 2.5,
+      reference: 2.4,
+      drift: 0.04,
+      samples: 50,
+      ...overrides,
+    };
+  }
+
+  it("seuils par defaut respectent FUMBBL_TOLERANCE (10%) + critical (25%)", () => {
+    expect(DRIFT_WARN_THRESHOLD).toBe(0.1);
+    expect(DRIFT_CRITICAL_THRESHOLD).toBe(0.25);
+    expect(MIN_MATCHES_FOR_ALERT).toBe(5);
+  });
+
+  it("aucune alerte sous le seuil warn (10%)", () => {
+    expect(detectDriftAlerts([sample({ drift: 0.05 })])).toEqual([]);
+    expect(detectDriftAlerts([sample({ drift: -0.09 })])).toEqual([]);
+  });
+
+  it("warn si |drift| > 10% et < 25% (signe ne change pas la severite)", () => {
+    const alerts = detectDriftAlerts([
+      sample({ drift: 0.15, race: "Halfling" }),
+      sample({ drift: -0.2, race: "Chaos Dwarf" }),
+    ]);
+    expect(alerts.map((a) => a.severity)).toEqual(["warn", "warn"]);
+  });
+
+  it("critical si |drift| > 25%", () => {
+    const alerts = detectDriftAlerts([sample({ drift: 0.3, race: "Halfling" })]);
+    expect(alerts).toHaveLength(1);
+    expect(alerts[0].severity).toBe("critical");
+  });
+
+  it("ignore les samples sous MIN_MATCHES_FOR_ALERT (variance trop forte)", () => {
+    expect(
+      detectDriftAlerts([sample({ drift: 0.5, samples: 3 })]),
+    ).toEqual([]);
+  });
+
+  it("override des seuils via options", () => {
+    const alerts = detectDriftAlerts(
+      [sample({ drift: 0.06 })],
+      { warnThreshold: 0.05 },
+    );
+    expect(alerts).toHaveLength(1);
+  });
+});
+
+describe("countAlertsBySeverity — Lot 4.A.3", () => {
+  it("compte par severite", () => {
+    const result = countAlertsBySeverity([
+      {
+        severity: "warn",
+        metric: "tdMean",
+        race: "Halfling",
+        seasonId: "s",
+        drift: 0.15,
+        observed: 2,
+        reference: 1.8,
+        samples: 50,
+      },
+      {
+        severity: "critical",
+        metric: "winRate",
+        race: "Chaos",
+        seasonId: "s",
+        drift: 0.3,
+        observed: 0.7,
+        reference: 0.55,
+        samples: 50,
+      },
+      {
+        severity: "warn",
+        metric: "casualtyMean",
+        race: "Orc",
+        seasonId: "s",
+        drift: 0.12,
+        observed: 1.5,
+        reference: 1.34,
+        samples: 50,
+      },
+    ]);
+    expect(result).toEqual({ warn: 2, critical: 1 });
+  });
+
+  it("0/0 sur liste vide", () => {
+    expect(countAlertsBySeverity([])).toEqual({ warn: 0, critical: 0 });
   });
 });
