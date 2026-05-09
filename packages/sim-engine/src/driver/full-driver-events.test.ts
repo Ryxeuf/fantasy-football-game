@@ -88,6 +88,68 @@ describe('diffStatesToEvents — Lot 3.A.2.b', () => {
     expect((td?.meta as { team: string }).team).toBe('away');
   });
 
+  it('Lot 3.C.3 — TD event porte scorerId = porteur de balle dans prev (team A)', () => {
+    const baseline = setup();
+    const carrier = baseline.players.find((p) => p.team === 'A');
+    if (!carrier) throw new Error('No team A player in setup');
+    const prev = modify(baseline, {
+      players: baseline.players.map((p) =>
+        p.id === carrier.id ? { ...p, hasBall: true } : { ...p, hasBall: false },
+      ),
+    });
+    const next = modify(prev, {
+      score: { teamA: prev.score.teamA + 1, teamB: prev.score.teamB },
+    });
+    const move: Move = { type: 'END_TURN' };
+    const events = diffStatesToEvents(prev, next, {
+      displayAtMs: 1000,
+      move,
+    });
+    const td = events.find((e) => e.type === 'TD');
+    expect((td?.meta as { scorerId?: string }).scorerId).toBe(carrier.id);
+  });
+
+  it('Lot 3.C.3 — fallback sur next si hasBall reset post-TD dans prev', () => {
+    const baseline = setup();
+    const carrier = baseline.players.find((p) => p.team === 'B');
+    if (!carrier) throw new Error('No team B player in setup');
+    // Aucun joueur n'a la balle dans prev, mais carrier l'a dans next.
+    const prev = modify(baseline, {
+      players: baseline.players.map((p) => ({ ...p, hasBall: false })),
+    });
+    const next = modify(prev, {
+      score: { teamA: prev.score.teamA, teamB: prev.score.teamB + 1 },
+      players: prev.players.map((p) =>
+        p.id === carrier.id ? { ...p, hasBall: true } : p,
+      ),
+    });
+    const move: Move = { type: 'END_TURN' };
+    const events = diffStatesToEvents(prev, next, {
+      displayAtMs: 1000,
+      move,
+    });
+    const td = events.find((e) => e.type === 'TD');
+    expect((td?.meta as { scorerId?: string }).scorerId).toBe(carrier.id);
+  });
+
+  it('Lot 3.C.3 — pas de scorerId si aucun porteur (state corrompu)', () => {
+    const prev = setup();
+    const next = modify(prev, {
+      score: { teamA: prev.score.teamA + 1, teamB: prev.score.teamB },
+      players: prev.players.map((p) => ({ ...p, hasBall: false })),
+    });
+    const move: Move = { type: 'END_TURN' };
+    const events = diffStatesToEvents(
+      modify(prev, {
+        players: prev.players.map((p) => ({ ...p, hasBall: false })),
+      }),
+      next,
+      { displayAtMs: 1000, move },
+    );
+    const td = events.find((e) => e.type === 'TD');
+    expect((td?.meta as { scorerId?: string }).scorerId).toBeUndefined();
+  });
+
   it('émet un CASUALTY quand un joueur passe à state="casualty"', () => {
     const prev = setup();
     const next = modify(prev, {

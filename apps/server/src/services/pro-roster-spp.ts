@@ -137,21 +137,36 @@ export function attributeSpp(
     acc.set(id, cur);
   };
 
-  // 1) Completions (PASS success, hors handoff).
+  // 1) Completions (PASS success, hors handoff) + TD (scorerId).
+  // Lot 3.C.3 — TD events emis par le full driver (full-driver-events
+  // depuis cette PR) portent maintenant `meta.scorerId` quand un
+  // porteur de balle est identifie. 3 SPP par TD attribues au scorer
+  // s'il appartient au roster de la team. Si scorerId absent
+  // (TD synthetique du hybrid driver, ou state sans porteur identifie),
+  // pas d'attribution — comportement existant preserve.
   for (const ev of input.events) {
     if (!ev || typeof ev !== "object") continue;
     const e = ev as { type?: unknown; meta?: unknown };
-    if (e.type !== "PASS") continue;
-    const meta = (e.meta ?? {}) as {
-      passerId?: unknown;
-      range?: unknown;
-      success?: unknown;
-    };
-    if (meta.success !== true) continue;
-    if (meta.range === "handoff") continue;
-    if (typeof meta.passerId !== "string") continue;
-    if (isSyntheticId(meta.passerId)) continue;
-    bump(meta.passerId, "compCount");
+    if (e.type === "PASS") {
+      const meta = (e.meta ?? {}) as {
+        passerId?: unknown;
+        range?: unknown;
+        success?: unknown;
+      };
+      if (meta.success !== true) continue;
+      if (meta.range === "handoff") continue;
+      if (typeof meta.passerId !== "string") continue;
+      if (isSyntheticId(meta.passerId)) continue;
+      bump(meta.passerId, "compCount");
+      continue;
+    }
+    if (e.type === "TD") {
+      const meta = (e.meta ?? {}) as { scorerId?: unknown };
+      if (typeof meta.scorerId !== "string") continue;
+      if (isSyntheticId(meta.scorerId)) continue;
+      bump(meta.scorerId, "tdCount");
+      continue;
+    }
   }
 
   // 2) Casualties caused : attribue au causedById quand present (CUID
