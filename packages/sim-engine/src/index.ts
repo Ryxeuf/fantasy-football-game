@@ -118,6 +118,16 @@ export {
   type ExpectedMetrics,
   type MetricDeviation,
 } from './bench/baseline';
+export {
+  compareBaselines,
+  formatVersionComparisonReport,
+  type ComparisonSeverity,
+  type ComparisonSummary,
+  type CompareBaselinesOptions,
+  type MissingPairing,
+  type PairingDelta,
+  type VersionComparisonResult,
+} from './bench/version-comparator';
 export { narrateMatch, type NarrateOptions } from './replay/narrator';
 export {
   PATTERNS,
