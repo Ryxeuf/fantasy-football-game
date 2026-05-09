@@ -797,6 +797,48 @@ if (!inTestSppEnv && sppTickMs > 0) {
 
 
 // =============================================================================
+// Pro League level-up cron (Lot 3.C.4).
+// =============================================================================
+// Sweep les rosters `active` avec spp>0, calcule le level attendu via
+// la table BB officielle et applique les advancements manquants
+// (1 skill General par level franchi). Idempotent : un roster deja
+// au niveau cible passe en no-op.
+//
+// Doit tourner APRES le SPP cron (qui credit le `spp`). Le decalage
+// de 30min sur les ticks setInterval garanti l'ordre logique en
+// regime stable.
+//
+// Tick par defaut : 30 min. Configurable via PRO_LEAGUE_LEVELUP_TICK_MS.
+// Mettre = 0 pour desactiver (CI / dev local).
+const inTestLevelUpEnv =
+  process.env.NODE_ENV === "test" || process.env.TEST_SQLITE === "1";
+const levelUpTickMsEnv = Number(process.env.PRO_LEAGUE_LEVELUP_TICK_MS);
+const levelUpTickMs = Number.isFinite(levelUpTickMsEnv)
+  ? levelUpTickMsEnv
+  : 30 * 60 * 1000;
+if (!inTestLevelUpEnv && levelUpTickMs > 0) {
+  void import("./services/pro-roster-level-up").then(({ sweepLevelUps }) => {
+    const tick = async () => {
+      try {
+        const out = await sweepLevelUps();
+        if (out.processed > 0 || out.failed > 0) {
+          serverLog.info(
+            `[pro-levelup] sweep: processed=${out.processed} failed=${out.failed} (inspected=${out.inspected})`,
+          );
+        }
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : "unknown";
+        serverLog.error(`[pro-levelup] sweep failed: ${msg}`);
+      }
+    };
+    setInterval(() => {
+      void tick();
+    }, levelUpTickMs).unref();
+  });
+}
+
+
+// =============================================================================
 // Pro League rookie replenish cron (sprint 1.E.6).
 // =============================================================================
 // Sweep les equipes Pro dont le roster `active` est sous la cible
