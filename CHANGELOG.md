@@ -1,3 +1,17 @@
+## [1.101.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.100.0...v1.101.0) (2026-05-09)
+
+
+### ✨ Features
+
+* **pro-league:** level-up applier (skill rolls aux seuils BB) (Lot 3.C.4) ([524635f](https://github.com/Ryxeuf/fantasy-football-game/commit/524635f1dcc1fb01d5178bd6a22ad4115a4212d8))
+* **pro-league:** SPP attribution + career counters + progression cron (Lot 3.C.2) ([#717](https://github.com/Ryxeuf/fantasy-football-game/issues/717)) ([9e74218](https://github.com/Ryxeuf/fantasy-football-game/commit/9e74218dbf589e864bc939c8008edd2342f6abb6))
+* **pro-league:** structured sim error logs + slow sim warn + drift alerts (Lot 4.A) ([#720](https://github.com/Ryxeuf/fantasy-football-game/issues/720)) ([242e3cf](https://github.com/Ryxeuf/fantasy-football-game/commit/242e3cf0f55481dc97b90370951ef0ce3ee7b0eb))
+* **pro-league:** wire casualty sweep + roster-aware applier (Lot 3.C.1) ([#716](https://github.com/Ryxeuf/fantasy-football-game/issues/716)) ([060b4fe](https://github.com/Ryxeuf/fantasy-football-game/commit/060b4fe6211429e1b8b87c48940d3d007eb1a0af))
+* **sim-engine:** comparator hybrid vs full + EngineComparison + Prometheus (Lot 3.B.2) ([#713](https://github.com/Ryxeuf/fantasy-football-game/issues/713)) ([d0d6563](https://github.com/Ryxeuf/fantasy-football-game/commit/d0d65632fda64be6fff1ed5601d44e7f4f4da26a))
+* **sim-engine:** perf baseline + verbose trace pour le full driver (Lot 3.B.3) ([#715](https://github.com/Ryxeuf/fantasy-football-game/issues/715)) ([d90d475](https://github.com/Ryxeuf/fantasy-football-game/commit/d90d47520400e4adc6bc0404682dcdf5ecbb7c8c))
+* **sim-engine:** TD scorerId in events + 3 SPP per TD attribution (Lot 3.C.3) ([#718](https://github.com/Ryxeuf/fantasy-football-game/issues/718)) ([85dbeaa](https://github.com/Ryxeuf/fantasy-football-game/commit/85dbeaa56088df82c682189c174db61f36e6031c))
+* **sim-engine:** toggle hybrid/full driver par saison + override match (Lot 3.B.1) ([#712](https://github.com/Ryxeuf/fantasy-football-game/issues/712)) ([61dcf6b](https://github.com/Ryxeuf/fantasy-football-game/commit/61dcf6b2eeecdf356e608647e4e2e8ed5bea394b))
+
 ## [1.100.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.99.0...v1.100.0) (2026-05-08)
 
 
