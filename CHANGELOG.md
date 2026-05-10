@@ -1,3 +1,15 @@
+## [1.105.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.104.0...v1.105.0) (2026-05-10)
+
+
+### ✨ Features
+
+* **pro-league:** player match history avec SPP delta (Lot L) ([96c1b36](https://github.com/Ryxeuf/fantasy-football-game/commit/96c1b36ed2b307bd189688abf5d42cf2b1d6c46a))
+
+
+### 🐛 Bug Fixes
+
+* **pro-league:** readyToLevelUp flag — phantom badge dans Lot H (Lot K) ([#739](https://github.com/Ryxeuf/fantasy-football-game/issues/739)) ([bcff4dc](https://github.com/Ryxeuf/fantasy-football-game/commit/bcff4dc9c0ef836d998e0fd96cdbeb467e55fc2d))
+
 ## [1.104.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.103.0...v1.104.0) (2026-05-10)
 
 
