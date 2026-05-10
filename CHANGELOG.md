@@ -1,3 +1,10 @@
+## [1.106.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.105.0...v1.106.0) (2026-05-10)
+
+
+### ✨ Features
+
+* **pro-league:** top earners widget sur team detail (Lot M) ([8ff3fa7](https://github.com/Ryxeuf/fantasy-football-game/commit/8ff3fa72416232f419fc3fae27f3e5216da60cfe))
+
 ## [1.105.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.104.0...v1.105.0) (2026-05-10)
 
 
