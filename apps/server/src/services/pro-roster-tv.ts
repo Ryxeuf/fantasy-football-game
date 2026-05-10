@@ -31,6 +31,7 @@
  */
 
 import { prisma } from "../prisma";
+import { skillSourceForPlayer } from "./pro-position-skill-access";
 
 /**
  * Costs canoniques BB rookies (gold pieces). Sources : Blood Bowl
@@ -62,9 +63,10 @@ export const BASE_POSITION_COST: Record<string, number> = {
 export const DEFAULT_POSITION_COST = 50_000;
 
 /**
- * Cost d'un skill General (BB rules : 20k pour primary, 30k pour
- * secondary). Le level-up applier de 3.C.4 ne distribue que General,
- * donc 20k flat est correct ici.
+ * Cost d'un skill primary (BB rules officiel) : 20k. Conserve comme
+ * `SKILL_COST` pour rétrocompat ; l'API `computePlayerTv` accepte
+ * desormais les skills sous forme de slugs et applique 20k/30k selon
+ * `skillSourceForPlayer(position, slug)`.
  */
 export const SKILL_COST = 20_000;
 
@@ -104,6 +106,9 @@ export function computeStatBonusCost(bonuses: StatBonuses): number {
   );
 }
 
+/** Lot 4.D.2 — cost d'un skill secondary (acces hors primary BB). */
+export const SECONDARY_SKILL_COST = 30_000;
+
 /**
  * Lot 4.D.3 — malus par niggling injury (BB rules : -10k TV par
  * niggling pour le matchmaking). Le joueur reste actif mais "fragile"
@@ -127,33 +132,63 @@ export class RecomputeTvError extends Error {
 }
 
 /**
- * Pure : calcule la TV individuelle a partir de la position, du nombre
- * de skills, du nombre de niggling injuries, et des stat bonuses.
+ * Pure : calcule le cost agrege d'une liste de skills selon leur
+ * categorie (primary 20k / secondary 30k / unavailable 0).
  *
- * Formule : `base + skills * SKILL_COST + sum(statBonuses * STAT_COSTS)
- *           - niggling * NIGGLING_MALUS`.
+ * Lot 4.D.2 — applique le pricing exact BB. Skills inconnus du
+ * lookup (`unavailable`) compte 0 — defense-in-depth pour un slug
+ * mal serialise. Les vrais "unavailable" (joueur a un skill hors
+ * pool) sont impossibles avec le level-up applier qui filtre, mais
+ * possibles si un coach a edit le roster manuellement.
+ */
+export function computeSkillsCost(
+  position: string,
+  skills: readonly string[],
+): number {
+  let cost = 0;
+  for (const slug of skills) {
+    const source = skillSourceForPlayer(position, slug);
+    if (source === "primary") cost += SKILL_COST;
+    else if (source === "secondary") cost += SECONDARY_SKILL_COST;
+    // `unavailable` -> 0 (defense)
+  }
+  return cost;
+}
+
+/**
+ * Pure : calcule la TV individuelle a partir de la position, des
+ * skills, du nombre de niggling injuries, et des stat bonuses.
  *
- * Tous les arguments numeriques negatifs sont traites comme 0
- * (defense-in-depth). Le total est clampe a 0 (un joueur ne peut
- * jamais avoir une TV negative).
+ * Surcharges :
+ *   - `(position, skillCount, niggling?, statBonuses?)` — legacy count,
+ *     assume tous skills primary (rétrocompat).
+ *   - `(position, skills[], niggling?, statBonuses?)` — slugs, pricing
+ *     exact 20k primary / 30k secondary / 0 unavailable.
  *
  * Lot 4.D.1 — stat bonuses ajoutes.
- * Lot 4.D.3 — niggling malus ajoute.
+ * Lot 4.D.2 — pricing primary/secondary par slug.
+ * Lot 4.D.3 — niggling malus -10k.
  */
 export function computePlayerTv(
   position: string,
-  skillCount: number,
+  skillsOrCount: readonly string[] | number,
   niggling: number = 0,
   statBonuses: StatBonuses = {},
 ): number {
   const base = BASE_POSITION_COST[position] ?? DEFAULT_POSITION_COST;
-  const safeSkills =
-    Number.isFinite(skillCount) && skillCount > 0 ? skillCount : 0;
+  const skillsCost = Array.isArray(skillsOrCount)
+    ? computeSkillsCost(position, skillsOrCount)
+    : (() => {
+        const count = skillsOrCount as number;
+        const safeCount =
+          Number.isFinite(count) && count > 0 ? count : 0;
+        return safeCount * SKILL_COST;
+      })();
   const safeNiggling =
     Number.isFinite(niggling) && niggling > 0 ? niggling : 0;
   const tv =
     base +
-    safeSkills * SKILL_COST +
+    skillsCost +
     computeStatBonusCost(statBonuses) -
     safeNiggling * NIGGLING_MALUS;
   return tv > 0 ? tv : 0;
@@ -222,9 +257,11 @@ export async function recomputePlayerTv(
   }
 
   const skills = parseSkillsJson(roster.skills);
+  // Lot 4.D.1 + 4.D.2 + 4.D.3 — passe les slugs pour le pricing
+  // primary/secondary, le niggling pour le malus, et les stat bonuses.
   const newTv = computePlayerTv(
     roster.position as string,
-    skills.length,
+    skills,
     (roster.niggling as number) ?? 0,
     {
       ma: (roster.maBonus as number) ?? 0,

@@ -38,6 +38,7 @@
 
 import { prisma } from "../prisma";
 import { computePlayerTv, type StatBonuses } from "./pro-roster-tv";
+import { getEligiblePoolFor } from "./pro-position-skill-access";
 
 /**
  * Seuils SPP cumulatifs pour atteindre les niveaux 2..7. Index `i`
@@ -123,6 +124,10 @@ function hashStringToInt(s: string): number {
  * Retourne `null` si toutes les skills du pool sont deja prises.
  *
  * Deterministe : meme `(skills, seed)` -> meme pick.
+ *
+ * Conserve pour retrocompat des callers existants (pre-Lot 4.D.2).
+ * Le code level-up applier utilise desormais `pickAdvancementFor`
+ * qui prend en compte la position du joueur.
  */
 export function pickAdvancement(
   skills: readonly string[],
@@ -179,6 +184,74 @@ export function pickStatIncrease(seed: number): StatIncreaseKind {
 export function rollStatVsSkill(seed: number): boolean {
   const rng = mulberry32(seed);
   return rng() < 1 / 6;
+}
+
+/**
+ * Lot 4.D.2 — proba qu'un advancement skill soit pris dans le pool
+ * `secondary` plutot que `primary`. En BB, les secondary necessitent
+ * un double roll (1/6) ; primary est l'option par defaut. Mais notre
+ * level-up applier reserve deja le 1/6 de doubles aux stat increases
+ * (Lot 4.D.1). Pour preserver la diversite, on autorise quand meme
+ * 25% des skills "non-stat" a piocher dans le pool secondary.
+ *
+ * Tunable si on observe que les rosters convergent trop vers les
+ * primary classiques (block/tackle/sure_hands) sans diversite.
+ */
+export const SECONDARY_PICK_PROBABILITY = 0.25;
+
+/**
+ * Lot 4.D.2 — choisit un skill non encore connu pour la position.
+ * Pioche dans le pool primary par defaut, avec une chance
+ * `SECONDARY_PICK_PROBABILITY` (25%) de tirer dans le pool secondary.
+ *
+ * Si le pool primary est vide -> retombe sur secondary.
+ * Si les deux sont vides -> retourne null (caller skip 'no_skill_available').
+ *
+ * Deterministe via le seed.
+ *
+ * Retour : `{ slug, source }` pour permettre au caller de tracker
+ * la source (utile pour le logging / TV cost si besoin futur).
+ */
+export interface PickAdvancementResult {
+  readonly slug: string;
+  readonly source: "primary" | "secondary";
+}
+
+export function pickAdvancementFor(
+  position: string,
+  knownSkills: readonly string[],
+  seed: number,
+): PickAdvancementResult | null {
+  const known = new Set(knownSkills);
+  const primaryAvailable = getEligiblePoolFor(position, "primary").filter(
+    (s) => !known.has(s),
+  );
+  const secondaryAvailable = getEligiblePoolFor(position, "secondary").filter(
+    (s) => !known.has(s),
+  );
+
+  // Decide source via une proba seedee.
+  const rngSource = mulberry32(seed);
+  const wantSecondary = rngSource() < SECONDARY_PICK_PROBABILITY;
+  // Si le pool prefere est vide, fallback sur l'autre.
+  const tryFirst = wantSecondary ? secondaryAvailable : primaryAvailable;
+  const tryFallback = wantSecondary ? primaryAvailable : secondaryAvailable;
+  const sourceFirst: "primary" | "secondary" = wantSecondary
+    ? "secondary"
+    : "primary";
+  const sourceFallback: "primary" | "secondary" = wantSecondary
+    ? "primary"
+    : "secondary";
+
+  const pool = tryFirst.length > 0 ? tryFirst : tryFallback;
+  const source = tryFirst.length > 0 ? sourceFirst : sourceFallback;
+  if (pool.length === 0) return null;
+
+  // Seed independant pour le pick dans le pool (eviter que le check
+  // wantSecondary biaise aussi le pick).
+  const rngPick = mulberry32((seed ^ 0x6c8e9cf5) >>> 0);
+  const idx = Math.floor(rngPick() * pool.length);
+  return { slug: pool[idx], source };
 }
 
 export type LevelUpSkipReason =
@@ -309,6 +382,7 @@ export async function applyLevelUps(
   // levels grimpes d'un coup).
   const newSkillsAcc: string[] = [];
   let currentLevel = oldLevel;
+  const position = (roster.position as string) ?? "Lineman";
   for (let l = oldLevel + 1; l <= targetLevel; l += 1) {
     // Variation par level pour eviter qu'un meme rosterId pioche
     // plusieurs fois le meme skill quand on grimpe de plusieurs
@@ -328,15 +402,22 @@ export async function applyLevelUps(
       continue;
     }
 
-    const skill = pickAdvancement([...skills, ...newSkillsAcc], seedSkill);
-    if (!skill) {
+    // Lot 4.D.2 — pioche dans le pool primary (75%) ou secondary (25%)
+    // accessible a la position du joueur, en filtrant les skills
+    // deja connus.
+    const pick = pickAdvancementFor(
+      position,
+      [...skills, ...newSkillsAcc],
+      seedSkill,
+    );
+    if (!pick) {
       // Pool epuise sur ce level. On stoppe la progression (les
       // levels suivants seront tente au prochain tick une fois que
       // le pool aura grandit — peu probable, mais defensif).
       break;
     }
-    newSkillsAcc.push(skill);
-    advancements.push({ kind: "skill", skill });
+    newSkillsAcc.push(pick.slug);
+    advancements.push({ kind: "skill", skill: pick.slug });
     currentLevel = l;
   }
 
@@ -352,10 +433,10 @@ export async function applyLevelUps(
   }
 
   const newSkills = [...skills, ...newSkillsAcc];
-  // Lot 3.C.5 + 4.D.1 + 4.D.3 — recompute TV inline avec stat bonuses
-  // accumules dans la session de level-up + ceux deja persistes +
-  // malus niggling courant (le casualty applier peut avoir incremente
-  // niggling avant le tick level-up).
+  // Lot 3.C.5 + 4.D.1 + 4.D.2 + 4.D.3 — recompute TV inline avec :
+  //   - slugs pour pricing primary/secondary (20k/30k)
+  //   - niggling courant (-10k chacun, lu depuis le casualty applier)
+  //   - stat bonuses cumules (existing + accrued de cette session)
   const totalStatBonuses: StatBonuses = {
     ma: ((roster.maBonus as number) ?? 0) + accruedStats.ma,
     ag: ((roster.agBonus as number) ?? 0) + accruedStats.ag,
@@ -364,8 +445,8 @@ export async function applyLevelUps(
     st: ((roster.stBonus as number) ?? 0) + accruedStats.st,
   };
   const newTvCached = computePlayerTv(
-    (roster.position as string) ?? "",
-    newSkills.length,
+    position,
+    newSkills,
     (roster.niggling as number) ?? 0,
     totalStatBonuses,
   );
