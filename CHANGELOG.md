@@ -1,3 +1,14 @@
+## [1.104.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.103.0...v1.104.0) (2026-05-10)
+
+
+### ✨ Features
+
+* **admin:** sim health = drift + alerts + last-sim + cross-links (Lot 2.B.3+) ([#732](https://github.com/Ryxeuf/fantasy-football-game/issues/732)) ([429db17](https://github.com/Ryxeuf/fantasy-football-game/commit/429db17aa6d44c0503ca815cf7d6e01cdf2e8a2a)), closes [#673](https://github.com/Ryxeuf/fantasy-football-game/issues/673)
+* **admin:** UI broadcaster load test (Lot J) ([#735](https://github.com/Ryxeuf/fantasy-football-game/issues/735)) ([2835505](https://github.com/Ryxeuf/fantasy-football-game/commit/283550595da416665d57a2fa3bc7da64b09b5cb8))
+* **pro-league:** player detail page (Lot G) ([#736](https://github.com/Ryxeuf/fantasy-football-game/issues/736)) ([a0d8b52](https://github.com/Ryxeuf/fantasy-football-game/commit/a0d8b522dc1207f7f692be35106fed423d8cc00e))
+* **pro-league:** roster filters/sort + ready-to-level-up badge (Lot H) ([#737](https://github.com/Ryxeuf/fantasy-football-game/issues/737)) ([10bee24](https://github.com/Ryxeuf/fantasy-football-game/commit/10bee24d32eae14010d5c3fbffefc6cadfc5fefb))
+* **pro-league:** standings TV column + sort by TV (Lot I) ([ff216fc](https://github.com/Ryxeuf/fantasy-football-game/commit/ff216fc4b8140d7f7f1e563b910c9d3557ba6ccd))
+
 ## [1.103.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.102.0...v1.103.0) (2026-05-10)
 
 
