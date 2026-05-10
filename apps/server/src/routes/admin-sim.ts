@@ -23,6 +23,7 @@ import {
   createTestMatch,
   listTestMatches,
 } from "../services/pro-league-sandbox";
+import { computeSimHealthSnapshot } from "../services/pro-league-sim-health";
 import { appMetrics } from "../utils/metrics";
 
 /**
@@ -123,6 +124,33 @@ export async function handleGetDrift(req: Request, res: Response): Promise<void>
     samples,
     computedAt: new Date().toISOString(),
   });
+}
+
+/**
+ * Handler for `GET /admin/sim/health-snapshot` — Lot 2.B.3 (extension 4.A.3).
+ *
+ * Snapshot agrégé : drift samples + drift alerts + bound alerts +
+ * timestamp dernier match. Sert au dashboard admin `/admin/sim/health`
+ * en remplaçant les 3 round-trips drift / alerts / last-sim par un
+ * unique appel cohérent (même `samples` / même `now()`).
+ *
+ * Query params identiques à `/admin/sim/drift` (`windowMs`, `seasonId`).
+ */
+export async function handleGetHealthSnapshot(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const windowMsRaw = req.query.windowMs;
+  const seasonId =
+    typeof req.query.seasonId === "string" && req.query.seasonId.length > 0
+      ? req.query.seasonId
+      : undefined;
+  const windowMs =
+    typeof windowMsRaw === "string" && /^\d+$/.test(windowMsRaw)
+      ? Number.parseInt(windowMsRaw, 10)
+      : undefined;
+  const snapshot = await computeSimHealthSnapshot({ windowMs, seasonId });
+  res.json(snapshot);
 }
 
 /**
@@ -357,6 +385,7 @@ router.use(authUser, adminOnly);
 router.get("/teams", handleListTeams);
 router.post("/run", validate(runSimSchema), handleRunSim);
 router.get("/drift", handleGetDrift);
+router.get("/health-snapshot", handleGetHealthSnapshot);
 router.get("/broadcaster", handleGetBroadcasterStats);
 router.post(
   "/test-match",

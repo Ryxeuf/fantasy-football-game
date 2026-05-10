@@ -32,6 +32,9 @@ vi.mock("../services/pro-league-admin-tools", async () => {
     runReplayDiff: vi.fn(),
   };
 });
+vi.mock("../services/pro-league-sim-health", () => ({
+  computeSimHealthSnapshot: vi.fn(),
+}));
 
 import {
   comparisonSchema,
@@ -42,6 +45,7 @@ import {
   handleDiffReplays,
   handleGetBroadcasterStats,
   handleGetDrift,
+  handleGetHealthSnapshot,
   handleListTeams,
   handleListTestMatches,
   handleRunComparison,
@@ -51,6 +55,7 @@ import {
   type RunSimBody,
 } from "./admin-sim";
 import { computeEngineDrift } from "../services/pro-league-engine-drift-watcher";
+import { computeSimHealthSnapshot } from "../services/pro-league-sim-health";
 import { getBroadcasterStats } from "../services/pro-league-match-broadcaster";
 import {
   createTestMatch,
@@ -258,6 +263,70 @@ describe("handleGetDrift — Lot 2.A.5", () => {
       res,
     );
     expect(computeEngineDrift).toHaveBeenCalledWith({
+      windowMs: undefined,
+      seasonId: undefined,
+    });
+  });
+});
+
+describe("handleGetHealthSnapshot — Lot 2.B.3", () => {
+  it("retourne le snapshot complet du service", async () => {
+    (computeSimHealthSnapshot as ReturnType<typeof vi.fn>).mockResolvedValue({
+      samples: [],
+      driftAlerts: [],
+      boundAlerts: [],
+      counts: { warn: 0, critical: 0 },
+      lastSimAt: "2026-05-09T10:00:00.000Z",
+      computedAt: "2026-05-10T11:00:00.000Z",
+    });
+    const res = buildRes();
+    await handleGetHealthSnapshot({ query: {} } as unknown as Request, res);
+    const body = res.body as { lastSimAt: string; counts: { warn: number } };
+    expect(body.lastSimAt).toBe("2026-05-09T10:00:00.000Z");
+    expect(body.counts.warn).toBe(0);
+    expect(computeSimHealthSnapshot).toHaveBeenCalledWith({
+      windowMs: undefined,
+      seasonId: undefined,
+    });
+  });
+
+  it("forwarde windowMs et seasonId quand fournis en query string", async () => {
+    (computeSimHealthSnapshot as ReturnType<typeof vi.fn>).mockResolvedValue({
+      samples: [],
+      driftAlerts: [],
+      boundAlerts: [],
+      counts: { warn: 0, critical: 0 },
+      lastSimAt: null,
+      computedAt: "2026-05-10T11:00:00.000Z",
+    });
+    const res = buildRes();
+    await handleGetHealthSnapshot(
+      {
+        query: { windowMs: "86400000", seasonId: "S2027" },
+      } as unknown as Request,
+      res,
+    );
+    expect(computeSimHealthSnapshot).toHaveBeenCalledWith({
+      windowMs: 86400000,
+      seasonId: "S2027",
+    });
+  });
+
+  it("ignore windowMs non-numérique", async () => {
+    (computeSimHealthSnapshot as ReturnType<typeof vi.fn>).mockResolvedValue({
+      samples: [],
+      driftAlerts: [],
+      boundAlerts: [],
+      counts: { warn: 0, critical: 0 },
+      lastSimAt: null,
+      computedAt: "2026-05-10T11:00:00.000Z",
+    });
+    const res = buildRes();
+    await handleGetHealthSnapshot(
+      { query: { windowMs: "abc" } } as unknown as Request,
+      res,
+    );
+    expect(computeSimHealthSnapshot).toHaveBeenCalledWith({
       windowMs: undefined,
       seasonId: undefined,
     });
