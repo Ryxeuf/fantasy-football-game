@@ -429,4 +429,50 @@ describe("ProLeagueTeamPage — sprint 1.C.2", () => {
       });
     });
   });
+
+  describe("Lot M — Top earners widget", () => {
+    it("affiche 5 cards (top earners) ordonnées par TV desc", async () => {
+      mockedApi.mockResolvedValue(
+        makeTeam({
+          topEarners: [
+            { id: "p3", name: "Star", position: "Blitzer", level: 5, tv: 150_000, status: "active" },
+            { id: "p5", name: "Mid3", position: "Catcher", level: 3, tv: 110_000, status: "active" },
+            { id: "p4", name: "Mid2", position: "Lineman", level: 2, tv: 95_000, status: "active" },
+            { id: "p2", name: "Mid", position: "Lineman", level: 2, tv: 90_000, status: "active" },
+            { id: "p7", name: "Bench", position: "Lineman", level: 1, tv: 60_000, status: "active" },
+          ],
+          totalRosterTv: 555_000,
+        }),
+      );
+      render(<ProLeagueTeamPage params={{ slug: "buf-snow-ogres" }} />);
+      await waitFor(() => {
+        expect(screen.getByTestId("top-earners")).toBeTruthy();
+      });
+      // Compteurs sur les 5 cards
+      expect(screen.getByTestId("top-earner-1").textContent).toContain("Star");
+      expect(screen.getByTestId("top-earner-1").textContent).toContain("150k");
+      expect(screen.getByTestId("top-earner-5").textContent).toContain("Bench");
+      // Roster total visible
+      expect(screen.getByText(/555k/)).toBeTruthy();
+    });
+
+    it("masque la section si topEarners est absent", async () => {
+      mockedApi.mockResolvedValue(makeTeam({ topEarners: undefined }));
+      render(<ProLeagueTeamPage params={{ slug: "buf-snow-ogres" }} />);
+      await waitFor(() => {
+        expect(screen.getByTestId("roster-table")).toBeTruthy();
+      });
+      expect(screen.queryByTestId("top-earners")).toBeNull();
+    });
+
+    it("masque la section si topEarners est vide (no active roster)", async () => {
+      mockedApi.mockResolvedValue(
+        makeTeam({ topEarners: [], totalRosterTv: 0 }),
+      );
+      render(<ProLeagueTeamPage params={{ slug: "buf-snow-ogres" }} />);
+      await waitFor(() => {
+        expect(screen.queryByTestId("top-earners")).toBeNull();
+      });
+    });
+  });
 });

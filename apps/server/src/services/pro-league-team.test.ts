@@ -411,6 +411,129 @@ describe("getProTeamDetail roster — Lot E (progression / TV / career)", () => 
   });
 });
 
+describe("getProTeamDetail topEarners — Lot M", () => {
+  it("retourne le top 5 actifs trié par TV desc", async () => {
+    mocked.proTeam.findUnique.mockResolvedValue(fakeTeam());
+    const mkRoster = (id: string, name: string, tv: number, status = "active") => ({
+      id,
+      name,
+      position: "Lineman",
+      ma: 5,
+      st: 3,
+      ag: 3,
+      pa: 4,
+      av: 9,
+      skills: [],
+      status,
+      form: 50,
+      niggling: 0,
+      spp: 0,
+      level: 1,
+      tvCached: tv,
+      tdCount: 0,
+      casCount: 0,
+      compCount: 0,
+      mvpCount: 0,
+      maBonus: 0,
+      stBonus: 0,
+      agBonus: 0,
+      paBonus: 0,
+      avBonus: 0,
+    });
+    mocked.proTeamRoster.findMany.mockResolvedValue([
+      mkRoster("p1", "Cheap", 50_000),
+      mkRoster("p2", "Mid", 90_000),
+      mkRoster("p3", "Star", 150_000),
+      mkRoster("p4", "Mid2", 95_000),
+      mkRoster("p5", "Mid3", 110_000),
+      mkRoster("p6", "Lineman6", 50_000),
+      mkRoster("p7", "Bench", 60_000),
+    ]);
+
+    const out = await getProTeamDetail("buf-snow-ogres");
+    expect(out.topEarners).toHaveLength(5);
+    expect(out.topEarners.map((p) => p.id)).toEqual([
+      "p3",
+      "p5",
+      "p4",
+      "p2",
+      "p7",
+    ]);
+    expect(out.topEarners[0]!.tv).toBe(150_000);
+    expect(out.totalRosterTv).toBe(50_000 + 90_000 + 150_000 + 95_000 + 110_000 + 50_000 + 60_000);
+  });
+
+  it("exclut les joueurs non-active du top earners et du total TV", async () => {
+    mocked.proTeam.findUnique.mockResolvedValue(fakeTeam());
+    mocked.proTeamRoster.findMany.mockResolvedValue([
+      {
+        id: "p_active",
+        name: "Active",
+        position: "Lineman",
+        ma: 5,
+        st: 3,
+        ag: 3,
+        pa: 4,
+        av: 9,
+        skills: [],
+        status: "active",
+        form: 50,
+        niggling: 0,
+        spp: 0,
+        level: 1,
+        tvCached: 50000,
+        tdCount: 0,
+        casCount: 0,
+        compCount: 0,
+        mvpCount: 0,
+        maBonus: 0,
+        stBonus: 0,
+        agBonus: 0,
+        paBonus: 0,
+        avBonus: 0,
+      },
+      {
+        id: "p_dead",
+        name: "Dead",
+        position: "Lineman",
+        ma: 5,
+        st: 3,
+        ag: 3,
+        pa: 4,
+        av: 9,
+        skills: [],
+        status: "dead",
+        form: 0,
+        niggling: 0,
+        spp: 100,
+        level: 5,
+        tvCached: 200000,
+        tdCount: 5,
+        casCount: 0,
+        compCount: 0,
+        mvpCount: 0,
+        maBonus: 0,
+        stBonus: 0,
+        agBonus: 0,
+        paBonus: 0,
+        avBonus: 0,
+      },
+    ]);
+    const out = await getProTeamDetail("buf-snow-ogres");
+    expect(out.topEarners).toHaveLength(1);
+    expect(out.topEarners[0]!.id).toBe("p_active");
+    expect(out.totalRosterTv).toBe(50000);
+  });
+
+  it("topEarners=[] si aucun joueur actif", async () => {
+    mocked.proTeam.findUnique.mockResolvedValue(fakeTeam());
+    mocked.proTeamRoster.findMany.mockResolvedValue([]);
+    const out = await getProTeamDetail("buf-snow-ogres");
+    expect(out.topEarners).toEqual([]);
+    expect(out.totalRosterTv).toBe(0);
+  });
+});
+
 describe("nextLevelSpp — Lot E", () => {
   it("retourne le prochain seuil BB (6/16/31/51/76/176)", () => {
     expect(nextLevelSpp(0)).toBe(6);
