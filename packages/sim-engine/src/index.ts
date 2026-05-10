@@ -218,6 +218,17 @@ export {
 } from './replay/compress';
 
 export {
+  diffReplayEvents,
+  formatReplayDiffReport,
+  type DiffReplayEventsOptions,
+  type FormatReplayDiffReportOptions,
+  type ReplayDiffResult,
+  type ReplayDiffSummary,
+  type ReplayDivergence,
+  type ReplayDivergenceKind,
+} from './replay/replay-diff';
+
+export {
   aggregateComparisons,
   compareDriversOnce,
   type CompareDriverKind,
