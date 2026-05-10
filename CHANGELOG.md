@@ -1,3 +1,18 @@
+## [1.102.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.101.0...v1.102.0) (2026-05-10)
+
+
+### ✨ Features
+
+* **pro-league:** alertes drift par race + bornes BB-realistes (Lot 4.A.3) ([da2b131](https://github.com/Ryxeuf/fantasy-football-game/commit/da2b1319c50185ed2efe268e49e3a72c0455573c))
+* **pro-league:** opt-in CPU profile capture pour les slow sims (Lot 4.A.2) ([#721](https://github.com/Ryxeuf/fantasy-football-game/issues/721)) ([2ad9e02](https://github.com/Ryxeuf/fantasy-football-game/commit/2ad9e024fc9a3999e5763361909dccc78b9fac79))
+* **pro-league:** TV recalculation from learned skills (Lot 3.C.5) ([#723](https://github.com/Ryxeuf/fantasy-football-game/issues/723)) ([f1b38d5](https://github.com/Ryxeuf/fantasy-football-game/commit/f1b38d58a6f08c9b9734571acd4c6f3a6993c982))
+* **sim-engine:** cross-version baseline comparator + pnpm sim:compare-versions (Lot 4.B.1) ([#722](https://github.com/Ryxeuf/fantasy-football-game/issues/722)) ([f017beb](https://github.com/Ryxeuf/fantasy-football-game/commit/f017beb3b93f3071e9d7dd1bd55b276d4b72c5e2))
+
+
+### 📝 Documentation
+
+* **sprint:** consigne Lot 4.D (stat increases, pools S/A/P/M, niggling TV malus, hybrid scorerId) ([#724](https://github.com/Ryxeuf/fantasy-football-game/issues/724)) ([5a854c8](https://github.com/Ryxeuf/fantasy-football-game/commit/5a854c8eac5fe88b89752cab81897bf58511821e))
+
 ## [1.101.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.100.0...v1.101.0) (2026-05-09)
 
 
