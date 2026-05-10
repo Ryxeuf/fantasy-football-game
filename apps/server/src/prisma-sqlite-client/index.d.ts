@@ -49912,6 +49912,11 @@ export namespace Prisma {
     mvpCount: number | null
     level: number | null
     tvCached: number | null
+    maBonus: number | null
+    agBonus: number | null
+    paBonus: number | null
+    avBonus: number | null
+    stBonus: number | null
   }
 
   export type ProTeamRosterSumAggregateOutputType = {
@@ -49933,6 +49938,11 @@ export namespace Prisma {
     mvpCount: number | null
     level: number | null
     tvCached: number | null
+    maBonus: number | null
+    agBonus: number | null
+    paBonus: number | null
+    avBonus: number | null
+    stBonus: number | null
   }
 
   export type ProTeamRosterMinAggregateOutputType = {
@@ -49961,6 +49971,11 @@ export namespace Prisma {
     mvpCount: number | null
     level: number | null
     tvCached: number | null
+    maBonus: number | null
+    agBonus: number | null
+    paBonus: number | null
+    avBonus: number | null
+    stBonus: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -49991,6 +50006,11 @@ export namespace Prisma {
     mvpCount: number | null
     level: number | null
     tvCached: number | null
+    maBonus: number | null
+    agBonus: number | null
+    paBonus: number | null
+    avBonus: number | null
+    stBonus: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -50021,6 +50041,11 @@ export namespace Prisma {
     mvpCount: number
     level: number
     tvCached: number
+    maBonus: number
+    agBonus: number
+    paBonus: number
+    avBonus: number
+    stBonus: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -50046,6 +50071,11 @@ export namespace Prisma {
     mvpCount?: true
     level?: true
     tvCached?: true
+    maBonus?: true
+    agBonus?: true
+    paBonus?: true
+    avBonus?: true
+    stBonus?: true
   }
 
   export type ProTeamRosterSumAggregateInputType = {
@@ -50067,6 +50097,11 @@ export namespace Prisma {
     mvpCount?: true
     level?: true
     tvCached?: true
+    maBonus?: true
+    agBonus?: true
+    paBonus?: true
+    avBonus?: true
+    stBonus?: true
   }
 
   export type ProTeamRosterMinAggregateInputType = {
@@ -50095,6 +50130,11 @@ export namespace Prisma {
     mvpCount?: true
     level?: true
     tvCached?: true
+    maBonus?: true
+    agBonus?: true
+    paBonus?: true
+    avBonus?: true
+    stBonus?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -50125,6 +50165,11 @@ export namespace Prisma {
     mvpCount?: true
     level?: true
     tvCached?: true
+    maBonus?: true
+    agBonus?: true
+    paBonus?: true
+    avBonus?: true
+    stBonus?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -50155,6 +50200,11 @@ export namespace Prisma {
     mvpCount?: true
     level?: true
     tvCached?: true
+    maBonus?: true
+    agBonus?: true
+    paBonus?: true
+    avBonus?: true
+    stBonus?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -50272,6 +50322,11 @@ export namespace Prisma {
     mvpCount: number
     level: number
     tvCached: number
+    maBonus: number
+    agBonus: number
+    paBonus: number
+    avBonus: number
+    stBonus: number
     createdAt: Date
     updatedAt: Date
     _count: ProTeamRosterCountAggregateOutputType | null
@@ -50321,6 +50376,11 @@ export namespace Prisma {
     mvpCount?: boolean
     level?: boolean
     tvCached?: boolean
+    maBonus?: boolean
+    agBonus?: boolean
+    paBonus?: boolean
+    avBonus?: boolean
+    stBonus?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     team?: boolean | ProTeamDefaultArgs<ExtArgs>
@@ -50352,6 +50412,11 @@ export namespace Prisma {
     mvpCount?: boolean
     level?: boolean
     tvCached?: boolean
+    maBonus?: boolean
+    agBonus?: boolean
+    paBonus?: boolean
+    avBonus?: boolean
+    stBonus?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     team?: boolean | ProTeamDefaultArgs<ExtArgs>
@@ -50383,6 +50448,11 @@ export namespace Prisma {
     mvpCount?: boolean
     level?: boolean
     tvCached?: boolean
+    maBonus?: boolean
+    agBonus?: boolean
+    paBonus?: boolean
+    avBonus?: boolean
+    stBonus?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     team?: boolean | ProTeamDefaultArgs<ExtArgs>
@@ -50414,11 +50484,16 @@ export namespace Prisma {
     mvpCount?: boolean
     level?: boolean
     tvCached?: boolean
+    maBonus?: boolean
+    agBonus?: boolean
+    paBonus?: boolean
+    avBonus?: boolean
+    stBonus?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type ProTeamRosterOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "teamId" | "name" | "position" | "ma" | "st" | "ag" | "pa" | "av" | "skills" | "niggling" | "maReduction" | "stReduction" | "agReduction" | "avReduction" | "status" | "form" | "careerStats" | "spp" | "tdCount" | "casCount" | "compCount" | "mvpCount" | "level" | "tvCached" | "createdAt" | "updatedAt", ExtArgs["result"]["proTeamRoster"]>
+  export type ProTeamRosterOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "teamId" | "name" | "position" | "ma" | "st" | "ag" | "pa" | "av" | "skills" | "niggling" | "maReduction" | "stReduction" | "agReduction" | "avReduction" | "status" | "form" | "careerStats" | "spp" | "tdCount" | "casCount" | "compCount" | "mvpCount" | "level" | "tvCached" | "maBonus" | "agBonus" | "paBonus" | "avBonus" | "stBonus" | "createdAt" | "updatedAt", ExtArgs["result"]["proTeamRoster"]>
   export type ProTeamRosterInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     team?: boolean | ProTeamDefaultArgs<ExtArgs>
   }
@@ -50460,6 +50535,11 @@ export namespace Prisma {
       mvpCount: number
       level: number
       tvCached: number
+      maBonus: number
+      agBonus: number
+      paBonus: number
+      avBonus: number
+      stBonus: number
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["proTeamRoster"]>
@@ -50911,6 +50991,11 @@ export namespace Prisma {
     readonly mvpCount: FieldRef<"ProTeamRoster", 'Int'>
     readonly level: FieldRef<"ProTeamRoster", 'Int'>
     readonly tvCached: FieldRef<"ProTeamRoster", 'Int'>
+    readonly maBonus: FieldRef<"ProTeamRoster", 'Int'>
+    readonly agBonus: FieldRef<"ProTeamRoster", 'Int'>
+    readonly paBonus: FieldRef<"ProTeamRoster", 'Int'>
+    readonly avBonus: FieldRef<"ProTeamRoster", 'Int'>
+    readonly stBonus: FieldRef<"ProTeamRoster", 'Int'>
     readonly createdAt: FieldRef<"ProTeamRoster", 'DateTime'>
     readonly updatedAt: FieldRef<"ProTeamRoster", 'DateTime'>
   }
@@ -70421,6 +70506,11 @@ export namespace Prisma {
     mvpCount: 'mvpCount',
     level: 'level',
     tvCached: 'tvCached',
+    maBonus: 'maBonus',
+    agBonus: 'agBonus',
+    paBonus: 'paBonus',
+    avBonus: 'avBonus',
+    stBonus: 'stBonus',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -74144,6 +74234,11 @@ export namespace Prisma {
     mvpCount?: IntFilter<"ProTeamRoster"> | number
     level?: IntFilter<"ProTeamRoster"> | number
     tvCached?: IntFilter<"ProTeamRoster"> | number
+    maBonus?: IntFilter<"ProTeamRoster"> | number
+    agBonus?: IntFilter<"ProTeamRoster"> | number
+    paBonus?: IntFilter<"ProTeamRoster"> | number
+    avBonus?: IntFilter<"ProTeamRoster"> | number
+    stBonus?: IntFilter<"ProTeamRoster"> | number
     createdAt?: DateTimeFilter<"ProTeamRoster"> | Date | string
     updatedAt?: DateTimeFilter<"ProTeamRoster"> | Date | string
     team?: XOR<ProTeamScalarRelationFilter, ProTeamWhereInput>
@@ -74175,6 +74270,11 @@ export namespace Prisma {
     mvpCount?: SortOrder
     level?: SortOrder
     tvCached?: SortOrder
+    maBonus?: SortOrder
+    agBonus?: SortOrder
+    paBonus?: SortOrder
+    avBonus?: SortOrder
+    stBonus?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     team?: ProTeamOrderByWithRelationInput
@@ -74209,6 +74309,11 @@ export namespace Prisma {
     mvpCount?: IntFilter<"ProTeamRoster"> | number
     level?: IntFilter<"ProTeamRoster"> | number
     tvCached?: IntFilter<"ProTeamRoster"> | number
+    maBonus?: IntFilter<"ProTeamRoster"> | number
+    agBonus?: IntFilter<"ProTeamRoster"> | number
+    paBonus?: IntFilter<"ProTeamRoster"> | number
+    avBonus?: IntFilter<"ProTeamRoster"> | number
+    stBonus?: IntFilter<"ProTeamRoster"> | number
     createdAt?: DateTimeFilter<"ProTeamRoster"> | Date | string
     updatedAt?: DateTimeFilter<"ProTeamRoster"> | Date | string
     team?: XOR<ProTeamScalarRelationFilter, ProTeamWhereInput>
@@ -74240,6 +74345,11 @@ export namespace Prisma {
     mvpCount?: SortOrder
     level?: SortOrder
     tvCached?: SortOrder
+    maBonus?: SortOrder
+    agBonus?: SortOrder
+    paBonus?: SortOrder
+    avBonus?: SortOrder
+    stBonus?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: ProTeamRosterCountOrderByAggregateInput
@@ -74278,6 +74388,11 @@ export namespace Prisma {
     mvpCount?: IntWithAggregatesFilter<"ProTeamRoster"> | number
     level?: IntWithAggregatesFilter<"ProTeamRoster"> | number
     tvCached?: IntWithAggregatesFilter<"ProTeamRoster"> | number
+    maBonus?: IntWithAggregatesFilter<"ProTeamRoster"> | number
+    agBonus?: IntWithAggregatesFilter<"ProTeamRoster"> | number
+    paBonus?: IntWithAggregatesFilter<"ProTeamRoster"> | number
+    avBonus?: IntWithAggregatesFilter<"ProTeamRoster"> | number
+    stBonus?: IntWithAggregatesFilter<"ProTeamRoster"> | number
     createdAt?: DateTimeWithAggregatesFilter<"ProTeamRoster"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"ProTeamRoster"> | Date | string
   }
@@ -79359,6 +79474,11 @@ export namespace Prisma {
     mvpCount?: number
     level?: number
     tvCached?: number
+    maBonus?: number
+    agBonus?: number
+    paBonus?: number
+    avBonus?: number
+    stBonus?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     team: ProTeamCreateNestedOneWithoutRosterInput
@@ -79390,6 +79510,11 @@ export namespace Prisma {
     mvpCount?: number
     level?: number
     tvCached?: number
+    maBonus?: number
+    agBonus?: number
+    paBonus?: number
+    avBonus?: number
+    stBonus?: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -79419,6 +79544,11 @@ export namespace Prisma {
     mvpCount?: IntFieldUpdateOperationsInput | number
     level?: IntFieldUpdateOperationsInput | number
     tvCached?: IntFieldUpdateOperationsInput | number
+    maBonus?: IntFieldUpdateOperationsInput | number
+    agBonus?: IntFieldUpdateOperationsInput | number
+    paBonus?: IntFieldUpdateOperationsInput | number
+    avBonus?: IntFieldUpdateOperationsInput | number
+    stBonus?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     team?: ProTeamUpdateOneRequiredWithoutRosterNestedInput
@@ -79450,6 +79580,11 @@ export namespace Prisma {
     mvpCount?: IntFieldUpdateOperationsInput | number
     level?: IntFieldUpdateOperationsInput | number
     tvCached?: IntFieldUpdateOperationsInput | number
+    maBonus?: IntFieldUpdateOperationsInput | number
+    agBonus?: IntFieldUpdateOperationsInput | number
+    paBonus?: IntFieldUpdateOperationsInput | number
+    avBonus?: IntFieldUpdateOperationsInput | number
+    stBonus?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -79480,6 +79615,11 @@ export namespace Prisma {
     mvpCount?: number
     level?: number
     tvCached?: number
+    maBonus?: number
+    agBonus?: number
+    paBonus?: number
+    avBonus?: number
+    stBonus?: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -79509,6 +79649,11 @@ export namespace Prisma {
     mvpCount?: IntFieldUpdateOperationsInput | number
     level?: IntFieldUpdateOperationsInput | number
     tvCached?: IntFieldUpdateOperationsInput | number
+    maBonus?: IntFieldUpdateOperationsInput | number
+    agBonus?: IntFieldUpdateOperationsInput | number
+    paBonus?: IntFieldUpdateOperationsInput | number
+    avBonus?: IntFieldUpdateOperationsInput | number
+    stBonus?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -79539,6 +79684,11 @@ export namespace Prisma {
     mvpCount?: IntFieldUpdateOperationsInput | number
     level?: IntFieldUpdateOperationsInput | number
     tvCached?: IntFieldUpdateOperationsInput | number
+    maBonus?: IntFieldUpdateOperationsInput | number
+    agBonus?: IntFieldUpdateOperationsInput | number
+    paBonus?: IntFieldUpdateOperationsInput | number
+    avBonus?: IntFieldUpdateOperationsInput | number
+    stBonus?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -83672,6 +83822,11 @@ export namespace Prisma {
     mvpCount?: SortOrder
     level?: SortOrder
     tvCached?: SortOrder
+    maBonus?: SortOrder
+    agBonus?: SortOrder
+    paBonus?: SortOrder
+    avBonus?: SortOrder
+    stBonus?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -83695,6 +83850,11 @@ export namespace Prisma {
     mvpCount?: SortOrder
     level?: SortOrder
     tvCached?: SortOrder
+    maBonus?: SortOrder
+    agBonus?: SortOrder
+    paBonus?: SortOrder
+    avBonus?: SortOrder
+    stBonus?: SortOrder
   }
 
   export type ProTeamRosterMaxOrderByAggregateInput = {
@@ -83723,6 +83883,11 @@ export namespace Prisma {
     mvpCount?: SortOrder
     level?: SortOrder
     tvCached?: SortOrder
+    maBonus?: SortOrder
+    agBonus?: SortOrder
+    paBonus?: SortOrder
+    avBonus?: SortOrder
+    stBonus?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -83753,6 +83918,11 @@ export namespace Prisma {
     mvpCount?: SortOrder
     level?: SortOrder
     tvCached?: SortOrder
+    maBonus?: SortOrder
+    agBonus?: SortOrder
+    paBonus?: SortOrder
+    avBonus?: SortOrder
+    stBonus?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -83776,6 +83946,11 @@ export namespace Prisma {
     mvpCount?: SortOrder
     level?: SortOrder
     tvCached?: SortOrder
+    maBonus?: SortOrder
+    agBonus?: SortOrder
+    paBonus?: SortOrder
+    avBonus?: SortOrder
+    stBonus?: SortOrder
   }
 
   export type ProLeagueRoundListRelationFilter = {
@@ -97570,6 +97745,11 @@ export namespace Prisma {
     mvpCount?: number
     level?: number
     tvCached?: number
+    maBonus?: number
+    agBonus?: number
+    paBonus?: number
+    avBonus?: number
+    stBonus?: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -97599,6 +97779,11 @@ export namespace Prisma {
     mvpCount?: number
     level?: number
     tvCached?: number
+    maBonus?: number
+    agBonus?: number
+    paBonus?: number
+    avBonus?: number
+    stBonus?: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -97884,6 +98069,11 @@ export namespace Prisma {
     mvpCount?: IntFilter<"ProTeamRoster"> | number
     level?: IntFilter<"ProTeamRoster"> | number
     tvCached?: IntFilter<"ProTeamRoster"> | number
+    maBonus?: IntFilter<"ProTeamRoster"> | number
+    agBonus?: IntFilter<"ProTeamRoster"> | number
+    paBonus?: IntFilter<"ProTeamRoster"> | number
+    avBonus?: IntFilter<"ProTeamRoster"> | number
+    stBonus?: IntFilter<"ProTeamRoster"> | number
     createdAt?: DateTimeFilter<"ProTeamRoster"> | Date | string
     updatedAt?: DateTimeFilter<"ProTeamRoster"> | Date | string
   }
@@ -102937,6 +103127,11 @@ export namespace Prisma {
     mvpCount?: number
     level?: number
     tvCached?: number
+    maBonus?: number
+    agBonus?: number
+    paBonus?: number
+    avBonus?: number
+    stBonus?: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -103043,6 +103238,11 @@ export namespace Prisma {
     mvpCount?: IntFieldUpdateOperationsInput | number
     level?: IntFieldUpdateOperationsInput | number
     tvCached?: IntFieldUpdateOperationsInput | number
+    maBonus?: IntFieldUpdateOperationsInput | number
+    agBonus?: IntFieldUpdateOperationsInput | number
+    paBonus?: IntFieldUpdateOperationsInput | number
+    avBonus?: IntFieldUpdateOperationsInput | number
+    stBonus?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -103072,6 +103272,11 @@ export namespace Prisma {
     mvpCount?: IntFieldUpdateOperationsInput | number
     level?: IntFieldUpdateOperationsInput | number
     tvCached?: IntFieldUpdateOperationsInput | number
+    maBonus?: IntFieldUpdateOperationsInput | number
+    agBonus?: IntFieldUpdateOperationsInput | number
+    paBonus?: IntFieldUpdateOperationsInput | number
+    avBonus?: IntFieldUpdateOperationsInput | number
+    stBonus?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -103101,6 +103306,11 @@ export namespace Prisma {
     mvpCount?: IntFieldUpdateOperationsInput | number
     level?: IntFieldUpdateOperationsInput | number
     tvCached?: IntFieldUpdateOperationsInput | number
+    maBonus?: IntFieldUpdateOperationsInput | number
+    agBonus?: IntFieldUpdateOperationsInput | number
+    paBonus?: IntFieldUpdateOperationsInput | number
+    avBonus?: IntFieldUpdateOperationsInput | number
+    stBonus?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

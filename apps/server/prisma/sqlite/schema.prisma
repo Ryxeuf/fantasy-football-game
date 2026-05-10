@@ -904,6 +904,12 @@ model ProTeamRoster {
   level       Int      @default(1)
   // Lot 3.C.5 — TV individuelle (gold pieces) recomputee a chaque level-up.
   tvCached    Int      @default(50000)
+  // Lot 4.D.1 — Stat increases (doubles roll au level-up).
+  maBonus     Int      @default(0)
+  agBonus     Int      @default(0)
+  paBonus     Int      @default(0)
+  avBonus     Int      @default(0)
+  stBonus     Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

@@ -1191,6 +1191,14 @@ model ProTeamRoster {
   /// transactionnel par le level-up applier ; recomputable par batch
   /// via `sweepRecomputeTvs` pour les rosters legacy.
   tvCached    Int      @default(50000)
+  /// Lot 4.D.1 — Stat increases gagnes via doubles roll au level-up
+  /// (BB rules : 1/6 chance par advancement). Chaque +1 ajoute au TV :
+  /// MA/AV = +30k, AG = +40k, PA = +20k, ST = +80k.
+  maBonus     Int      @default(0)
+  agBonus     Int      @default(0)
+  paBonus     Int      @default(0)
+  avBonus     Int      @default(0)
+  stBonus     Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
