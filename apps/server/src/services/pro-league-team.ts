@@ -14,6 +14,10 @@
 import { prisma } from "../prisma";
 
 import { OLD_WORLD_LEAGUE_SLUG } from "./pro-league-hub";
+import {
+  SPP_LEVEL_THRESHOLDS,
+  levelForSpp,
+} from "./pro-roster-level-up";
 
 const UPCOMING_LIMIT = 5;
 const RECENT_LIMIT = 5;
@@ -39,6 +43,32 @@ export interface ProTeamDetailMatch {
   readonly outcome: string | null;
 }
 
+export interface ProTeamRosterStatBonuses {
+  readonly ma: number;
+  readonly st: number;
+  readonly ag: number;
+  readonly pa: number;
+  readonly av: number;
+}
+
+export interface ProTeamRosterCareer {
+  readonly tdCount: number;
+  readonly casCount: number;
+  readonly compCount: number;
+  readonly mvpCount: number;
+}
+
+export interface ProTeamRosterProgression {
+  /** Niveau (1..7) calculé à partir du SPP via la table BB. */
+  readonly level: number;
+  /** SPP cumulés. */
+  readonly spp: number;
+  /** Prochain seuil SPP (null si déjà legend, level 7). */
+  readonly nextLevelSpp: number | null;
+  /** TV individuelle (gp), recomputée par le level-up applier (Lot 3.C.5+). */
+  readonly tv: number;
+}
+
 export interface ProTeamRosterEntry {
   readonly id: string;
   readonly name: string;
@@ -52,6 +82,10 @@ export interface ProTeamRosterEntry {
   readonly status: string;
   readonly form: number;
   readonly niggling: number;
+  /** Lot E — affichage fiche coach. */
+  readonly progression: ProTeamRosterProgression;
+  readonly statBonuses: ProTeamRosterStatBonuses;
+  readonly career: ProTeamRosterCareer;
 }
 
 export interface ProTeamDetailRecord {
@@ -88,6 +122,17 @@ export class ProTeamNotFoundError extends Error {
     super(`ProTeam slug='${slug}' introuvable`);
     this.name = "ProTeamNotFoundError";
   }
+}
+
+/**
+ * Lot E — prochain seuil SPP pour passer au level suivant. `null` si
+ * le joueur est déjà legend (level 7 = au-dessus de 176 SPP).
+ */
+export function nextLevelSpp(spp: number): number | null {
+  for (const threshold of SPP_LEVEL_THRESHOLDS) {
+    if (spp < threshold) return threshold;
+  }
+  return null;
 }
 
 function parseSkills(raw: unknown): string[] {
@@ -250,23 +295,60 @@ export async function getProTeamDetail(
       status: true,
       form: true,
       niggling: true,
+      spp: true,
+      level: true,
+      tvCached: true,
+      tdCount: true,
+      casCount: true,
+      compCount: true,
+      mvpCount: true,
+      maBonus: true,
+      stBonus: true,
+      agBonus: true,
+      paBonus: true,
+      avBonus: true,
     },
   });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const roster: ProTeamRosterEntry[] = rosterRaw.map((r: any) => ({
-    id: r.id as string,
-    name: r.name as string,
-    position: r.position as string,
-    ma: r.ma as number,
-    st: r.st as number,
-    ag: r.ag as number,
-    pa: (r.pa as number | null) ?? null,
-    av: r.av as number,
-    skills: parseSkills(r.skills),
-    status: (r.status as string) ?? "active",
-    form: (r.form as number) ?? 50,
-    niggling: (r.niggling as number) ?? 0,
-  }));
+  const roster: ProTeamRosterEntry[] = rosterRaw.map((r: any) => {
+    const spp = (r.spp as number | null) ?? 0;
+    // Toujours prendre le level recompute pour rester cohérent même si
+    // la colonne `level` n'a pas été migrée (rosters legacy avant 3.C.4).
+    const level = Math.max((r.level as number | null) ?? 1, levelForSpp(spp));
+    return {
+      id: r.id as string,
+      name: r.name as string,
+      position: r.position as string,
+      ma: r.ma as number,
+      st: r.st as number,
+      ag: r.ag as number,
+      pa: (r.pa as number | null) ?? null,
+      av: r.av as number,
+      skills: parseSkills(r.skills),
+      status: (r.status as string) ?? "active",
+      form: (r.form as number) ?? 50,
+      niggling: (r.niggling as number) ?? 0,
+      progression: {
+        level,
+        spp,
+        nextLevelSpp: nextLevelSpp(spp),
+        tv: (r.tvCached as number | null) ?? 50000,
+      },
+      statBonuses: {
+        ma: (r.maBonus as number | null) ?? 0,
+        st: (r.stBonus as number | null) ?? 0,
+        ag: (r.agBonus as number | null) ?? 0,
+        pa: (r.paBonus as number | null) ?? 0,
+        av: (r.avBonus as number | null) ?? 0,
+      },
+      career: {
+        tdCount: (r.tdCount as number | null) ?? 0,
+        casCount: (r.casCount as number | null) ?? 0,
+        compCount: (r.compCount as number | null) ?? 0,
+        mvpCount: (r.mvpCount as number | null) ?? 0,
+      },
+    };
+  });
 
   const meta = (team.meta as { motto?: string } | null | undefined) ?? null;
 

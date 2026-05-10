@@ -48,6 +48,9 @@ function makeTeam(overrides: Record<string, unknown> = {}): unknown {
         status: "active",
         form: 60,
         niggling: 0,
+        progression: { level: 2, spp: 10, nextLevelSpp: 16, tv: 70000 },
+        statBonuses: { ma: 0, st: 0, ag: 0, pa: 0, av: 0 },
+        career: { tdCount: 1, casCount: 0, compCount: 0, mvpCount: 0 },
       },
     ],
     upcomingMatches: [
@@ -139,6 +142,82 @@ describe("ProLeagueTeamPage — sprint 1.C.2", () => {
     expect(screen.getByText("Grim")).toBeTruthy();
     expect(screen.getByText("Lineman")).toBeTruthy();
     expect(screen.getByText("block")).toBeTruthy();
+  });
+
+  it("Lot E — affiche level / SPP progress / TV / career counters", async () => {
+    mockedApi.mockResolvedValue(makeTeam());
+    render(<ProLeagueTeamPage params={{ slug: "buf-snow-ogres" }} />);
+    await waitFor(() => {
+      expect(screen.getByTestId("roster-table")).toBeTruthy();
+    });
+    expect(screen.getByTestId("roster-level").textContent).toBe("2");
+    expect(screen.getByTestId("roster-tv").textContent).toBe("70k");
+    // Progress badge contient "10/16"
+    expect(screen.getByText("10/16")).toBeTruthy();
+    // Career counters tdCount/casCount/compCount/mvpCount
+    expect(screen.getByText("1/0/0/0")).toBeTruthy();
+  });
+
+  it("Lot E — affiche les stat bonuses quand non-zero", async () => {
+    mockedApi.mockResolvedValue(
+      makeTeam({
+        roster: [
+          {
+            id: "p1",
+            name: "Star",
+            position: "Catcher",
+            ma: 8,
+            st: 2,
+            ag: 4,
+            pa: null,
+            av: 8,
+            skills: ["dodge"],
+            status: "active",
+            form: 70,
+            niggling: 0,
+            progression: { level: 5, spp: 80, nextLevelSpp: 176, tv: 130000 },
+            statBonuses: { ma: 1, st: 0, ag: 1, pa: 0, av: 0 },
+            career: { tdCount: 12, casCount: 1, compCount: 3, mvpCount: 2 },
+          },
+        ],
+      }),
+    );
+    render(<ProLeagueTeamPage params={{ slug: "buf-snow-ogres" }} />);
+    await waitFor(() => {
+      expect(screen.getByTestId("roster-table")).toBeTruthy();
+    });
+    expect(screen.getByTestId("roster-bonuses").textContent).toBe("+1MA +1AG");
+  });
+
+  it("Lot E — legend (nextLevelSpp=null) affiche ⭐ + total SPP", async () => {
+    mockedApi.mockResolvedValue(
+      makeTeam({
+        roster: [
+          {
+            id: "p1",
+            name: "Legend",
+            position: "Blitzer",
+            ma: 7,
+            st: 4,
+            ag: 4,
+            pa: 4,
+            av: 10,
+            skills: ["block", "dodge", "tackle"],
+            status: "active",
+            form: 80,
+            niggling: 0,
+            progression: { level: 7, spp: 200, nextLevelSpp: null, tv: 180000 },
+            statBonuses: { ma: 0, st: 1, ag: 0, pa: 0, av: 0 },
+            career: { tdCount: 30, casCount: 10, compCount: 0, mvpCount: 5 },
+          },
+        ],
+      }),
+    );
+    render(<ProLeagueTeamPage params={{ slug: "buf-snow-ogres" }} />);
+    await waitFor(() => {
+      expect(screen.getByTestId("roster-table")).toBeTruthy();
+    });
+    expect(screen.getByText(/⭐ 200 SPP/)).toBeTruthy();
   });
 
   it("affiche placeholder roster si vide", async () => {

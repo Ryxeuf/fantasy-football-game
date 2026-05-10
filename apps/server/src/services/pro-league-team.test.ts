@@ -14,6 +14,7 @@ import { prisma } from "../prisma";
 import {
   ProTeamNotFoundError,
   getProTeamDetail,
+  nextLevelSpp,
 } from "./pro-league-team";
 
 interface MockedPrisma {
@@ -208,5 +209,186 @@ describe("getProTeamDetail — sprint 1.C.2", () => {
     expect(out.roster[1].skills).toEqual(["dodge"]);
     expect(out.roster[1].pa).toBeNull();
     expect(out.roster[1].niggling).toBe(1);
+  });
+});
+
+describe("getProTeamDetail roster — Lot E (progression / TV / career)", () => {
+  it("expose progression {level, spp, nextLevelSpp, tv}", async () => {
+    mocked.proTeam.findUnique.mockResolvedValue(fakeTeam());
+    mocked.proTeamRoster.findMany.mockResolvedValue([
+      {
+        id: "p1",
+        name: "Veteran",
+        position: "Blitzer",
+        ma: 6,
+        st: 4,
+        ag: 3,
+        pa: 4,
+        av: 10,
+        skills: ["block"],
+        status: "active",
+        form: 50,
+        niggling: 0,
+        spp: 25, // 16 < 25 < 31 → level 3 (rookie + 2 advancements)
+        level: 3,
+        tvCached: 90000,
+        tdCount: 5,
+        casCount: 2,
+        compCount: 0,
+        mvpCount: 1,
+        maBonus: 0,
+        stBonus: 0,
+        agBonus: 0,
+        paBonus: 0,
+        avBonus: 0,
+      },
+    ]);
+    const out = await getProTeamDetail("buf-snow-ogres");
+    expect(out.roster).toHaveLength(1);
+    const p = out.roster[0]!;
+    expect(p.progression.level).toBe(3);
+    expect(p.progression.spp).toBe(25);
+    expect(p.progression.nextLevelSpp).toBe(31);
+    expect(p.progression.tv).toBe(90000);
+  });
+
+  it("recompute le level depuis spp si la colonne level est en retard (legacy)", async () => {
+    mocked.proTeam.findUnique.mockResolvedValue(fakeTeam());
+    mocked.proTeamRoster.findMany.mockResolvedValue([
+      {
+        id: "p_legacy",
+        name: "Legacy",
+        position: "Lineman",
+        ma: 5,
+        st: 3,
+        ag: 3,
+        pa: 4,
+        av: 9,
+        skills: [],
+        status: "active",
+        form: 50,
+        niggling: 0,
+        spp: 50,
+        level: 1, // legacy : pas update par level-up applier
+        tvCached: 50000,
+        tdCount: 0,
+        casCount: 0,
+        compCount: 0,
+        mvpCount: 0,
+        maBonus: 0,
+        stBonus: 0,
+        agBonus: 0,
+        paBonus: 0,
+        avBonus: 0,
+      },
+    ]);
+    const out = await getProTeamDetail("buf-snow-ogres");
+    // 50 SPP ⇒ level 4 (passé 16, 31, 51 ? non, 50 < 51 → level 4 = passé 6, 16, 31)
+    expect(out.roster[0]!.progression.level).toBe(4);
+  });
+
+  it("expose statBonuses (Lot 4.D.1) et career counters (Lot 3.C.x)", async () => {
+    mocked.proTeam.findUnique.mockResolvedValue(fakeTeam());
+    mocked.proTeamRoster.findMany.mockResolvedValue([
+      {
+        id: "p_star",
+        name: "Star",
+        position: "Catcher",
+        ma: 8,
+        st: 2,
+        ag: 4,
+        pa: null,
+        av: 8,
+        skills: ["dodge", "catch"],
+        status: "active",
+        form: 70,
+        niggling: 0,
+        spp: 80,
+        level: 5,
+        tvCached: 130000,
+        tdCount: 12,
+        casCount: 1,
+        compCount: 3,
+        mvpCount: 2,
+        maBonus: 1,
+        stBonus: 0,
+        agBonus: 0,
+        paBonus: 0,
+        avBonus: 0,
+      },
+    ]);
+    const out = await getProTeamDetail("buf-snow-ogres");
+    const p = out.roster[0]!;
+    expect(p.statBonuses).toEqual({ ma: 1, st: 0, ag: 0, pa: 0, av: 0 });
+    expect(p.career).toEqual({
+      tdCount: 12,
+      casCount: 1,
+      compCount: 3,
+      mvpCount: 2,
+    });
+  });
+
+  it("fallback sur valeurs par defaut quand colonnes absentes (rosters anciens)", async () => {
+    mocked.proTeam.findUnique.mockResolvedValue(fakeTeam());
+    mocked.proTeamRoster.findMany.mockResolvedValue([
+      {
+        id: "p_old",
+        name: "Old",
+        position: "Lineman",
+        ma: 5,
+        st: 3,
+        ag: 3,
+        pa: 4,
+        av: 9,
+        skills: [],
+        status: "active",
+        form: 50,
+        niggling: 0,
+        // pas de spp / level / tvCached / counters / bonuses : null tous
+        spp: null,
+        level: null,
+        tvCached: null,
+        tdCount: null,
+        casCount: null,
+        compCount: null,
+        mvpCount: null,
+        maBonus: null,
+        stBonus: null,
+        agBonus: null,
+        paBonus: null,
+        avBonus: null,
+      },
+    ]);
+    const out = await getProTeamDetail("buf-snow-ogres");
+    const p = out.roster[0]!;
+    expect(p.progression.spp).toBe(0);
+    expect(p.progression.level).toBe(1);
+    expect(p.progression.nextLevelSpp).toBe(6);
+    expect(p.progression.tv).toBe(50000);
+    expect(p.statBonuses).toEqual({ ma: 0, st: 0, ag: 0, pa: 0, av: 0 });
+    expect(p.career).toEqual({
+      tdCount: 0,
+      casCount: 0,
+      compCount: 0,
+      mvpCount: 0,
+    });
+  });
+});
+
+describe("nextLevelSpp — Lot E", () => {
+  it("retourne le prochain seuil BB (6/16/31/51/76/176)", () => {
+    expect(nextLevelSpp(0)).toBe(6);
+    expect(nextLevelSpp(5)).toBe(6);
+    expect(nextLevelSpp(6)).toBe(16);
+    expect(nextLevelSpp(15)).toBe(16);
+    expect(nextLevelSpp(16)).toBe(31);
+    expect(nextLevelSpp(50)).toBe(51);
+    expect(nextLevelSpp(75)).toBe(76);
+    expect(nextLevelSpp(175)).toBe(176);
+  });
+
+  it("retourne null pour un legend (>= 176 SPP)", () => {
+    expect(nextLevelSpp(176)).toBeNull();
+    expect(nextLevelSpp(500)).toBeNull();
   });
 });

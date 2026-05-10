@@ -40,6 +40,28 @@ interface DetailMatch {
   readonly outcome: string | null;
 }
 
+interface RosterStatBonuses {
+  readonly ma: number;
+  readonly st: number;
+  readonly ag: number;
+  readonly pa: number;
+  readonly av: number;
+}
+
+interface RosterCareer {
+  readonly tdCount: number;
+  readonly casCount: number;
+  readonly compCount: number;
+  readonly mvpCount: number;
+}
+
+interface RosterProgression {
+  readonly level: number;
+  readonly spp: number;
+  readonly nextLevelSpp: number | null;
+  readonly tv: number;
+}
+
 interface RosterEntry {
   readonly id: string;
   readonly name: string;
@@ -53,6 +75,9 @@ interface RosterEntry {
   readonly status: string;
   readonly form: number;
   readonly niggling: number;
+  readonly progression: RosterProgression;
+  readonly statBonuses: RosterStatBonuses;
+  readonly career: RosterCareer;
 }
 
 interface DetailRecord {
@@ -173,6 +198,64 @@ function MatchRow({ match }: { match: DetailMatch }): JSX.Element {
   );
 }
 
+/** Lot E — formate "+1MA" / "+2ST" si bonuses non-zéro, sinon "—". */
+function formatStatBonuses(b: RosterStatBonuses): string {
+  const parts: string[] = [];
+  if (b.ma > 0) parts.push(`+${b.ma}MA`);
+  if (b.st > 0) parts.push(`+${b.st}ST`);
+  if (b.ag > 0) parts.push(`+${b.ag}AG`);
+  if (b.pa > 0) parts.push(`+${b.pa}PA`);
+  if (b.av > 0) parts.push(`+${b.av}AV`);
+  return parts.length === 0 ? "—" : parts.join(" ");
+}
+
+/** Formatte 90000 → "90k". */
+function formatTv(gp: number): string {
+  return `${Math.round(gp / 1000)}k`;
+}
+
+/**
+ * Lot E — barre de progression SPP. Affiche `cur / next` avec une barre
+ * qui montre l'avancement entre le seuil précédent (= cur du level
+ * actuel) et le prochain seuil. `null` next ⇒ legend (level 7).
+ */
+function SppProgressBadge({
+  spp,
+  nextLevelSpp,
+  level,
+}: RosterProgression): JSX.Element {
+  if (nextLevelSpp === null) {
+    return (
+      <span className="text-xs text-amber-300" title="Legend (level 7)">
+        ⭐ {spp} SPP
+      </span>
+    );
+  }
+  // Seuils précédents pour calculer le pct entre (prev, next).
+  const THRESHOLDS = [0, 6, 16, 31, 51, 76, 176];
+  const prev = THRESHOLDS[level - 1] ?? 0;
+  const range = Math.max(1, nextLevelSpp - prev);
+  const pct = Math.max(0, Math.min(100, ((spp - prev) / range) * 100));
+  return (
+    <div
+      className="flex flex-col gap-0.5 text-[10px] text-slate-400"
+      title={`SPP ${spp} / ${nextLevelSpp} pour level ${level + 1}`}
+    >
+      <div className="flex items-center justify-between font-mono">
+        <span>
+          {spp}/{nextLevelSpp}
+        </span>
+      </div>
+      <div className="h-1 w-full rounded bg-slate-800">
+        <div
+          className="h-full rounded bg-emerald-500"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
 function RosterTable({
   rows,
 }: {
@@ -193,12 +276,25 @@ function RosterTable({
           <tr>
             <th className="px-2 py-2 text-left">Nom</th>
             <th className="px-2 py-2 text-left">Position</th>
+            <th className="w-10 px-2 py-2 text-center" title="Niveau (1=rookie, 7=legend)">
+              Lvl
+            </th>
+            <th className="w-24 px-2 py-2 text-center" title="Star Player Points">
+              SPP
+            </th>
+            <th className="w-12 px-2 py-2 text-center">TV</th>
             <th className="w-10 px-2 py-2 text-center">MA</th>
             <th className="w-10 px-2 py-2 text-center">ST</th>
             <th className="w-10 px-2 py-2 text-center">AG</th>
             <th className="w-10 px-2 py-2 text-center">PA</th>
             <th className="w-10 px-2 py-2 text-center">AV</th>
+            <th className="w-20 px-2 py-2 text-left" title="Stat increases gagnés via doubles roll">
+              Bonus
+            </th>
             <th className="px-2 py-2 text-left">Skills</th>
+            <th className="w-24 px-2 py-2 text-left" title="TD / CAS / COMP / MVP carriere">
+              Carrière
+            </th>
             <th className="w-20 px-2 py-2 text-center">Status</th>
             <th className="w-12 px-2 py-2 text-center">Forme</th>
           </tr>
@@ -213,6 +309,21 @@ function RosterTable({
                 {r.name}
               </td>
               <td className="px-2 py-2 text-slate-300">{r.position}</td>
+              <td
+                data-testid="roster-level"
+                className="px-2 py-2 text-center font-mono text-slate-100"
+              >
+                {r.progression.level}
+              </td>
+              <td className="px-2 py-2">
+                <SppProgressBadge {...r.progression} />
+              </td>
+              <td
+                data-testid="roster-tv"
+                className="px-2 py-2 text-center font-mono text-slate-300"
+              >
+                {formatTv(r.progression.tv)}
+              </td>
               <td className="px-2 py-2 text-center font-mono text-slate-300">
                 {r.ma}
               </td>
@@ -228,8 +339,20 @@ function RosterTable({
               <td className="px-2 py-2 text-center font-mono text-slate-300">
                 {r.av}
               </td>
+              <td
+                data-testid="roster-bonuses"
+                className="px-2 py-2 font-mono text-xs text-amber-300"
+              >
+                {formatStatBonuses(r.statBonuses)}
+              </td>
               <td className="px-2 py-2 text-xs text-slate-400">
                 {r.skills.length === 0 ? "—" : r.skills.join(", ")}
+              </td>
+              <td className="px-2 py-2 text-xs text-slate-400">
+                <span className="font-mono">
+                  {r.career.tdCount}/{r.career.casCount}/{r.career.compCount}/
+                  {r.career.mvpCount}
+                </span>
               </td>
               <td className="px-2 py-2 text-center">
                 <span
