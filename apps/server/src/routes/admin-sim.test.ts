@@ -22,10 +22,24 @@ vi.mock("../services/pro-league-sandbox", () => ({
 vi.mock("../services/engine-comparison", () => ({
   runEngineComparison: vi.fn(),
 }));
+vi.mock("../services/pro-league-admin-tools", async () => {
+  const actual = await vi.importActual<
+    typeof import("../services/pro-league-admin-tools")
+  >("../services/pro-league-admin-tools");
+  return {
+    ...actual,
+    runVersionComparison: vi.fn(),
+    runReplayDiff: vi.fn(),
+  };
+});
 
 import {
   comparisonSchema,
+  compareVersionsSchema,
+  diffReplaysSchema,
+  handleCompareVersions,
   handleCreateTestMatch,
+  handleDiffReplays,
   handleGetBroadcasterStats,
   handleGetDrift,
   handleListTeams,
@@ -43,6 +57,11 @@ import {
   listTestMatches,
 } from "../services/pro-league-sandbox";
 import { runEngineComparison } from "../services/engine-comparison";
+import {
+  AdminToolsError,
+  runReplayDiff,
+  runVersionComparison,
+} from "../services/pro-league-admin-tools";
 import { appMetrics } from "../utils/metrics";
 
 function buildRes(): Response & { statusCode: number; body: unknown } {
@@ -564,6 +583,228 @@ describe("handleRunComparison — Lot 3.B.2", () => {
           seedOffset: 0,
         },
       } as unknown as Request,
+      res,
+    );
+    expect(res.statusCode).toBe(500);
+  });
+});
+
+describe("compareVersionsSchema — Lot 4.F input validation", () => {
+  it("accepte un payload minimal (baseRaw + headRaw)", () => {
+    const out = compareVersionsSchema.parse({
+      baseRaw: { engineVer: "0.15.0" },
+      headRaw: { engineVer: "0.16.0" },
+    });
+    expect(out.baseRaw).toBeDefined();
+    expect(out.headRaw).toBeDefined();
+  });
+
+  it("accepte des thresholds entre 0 et 1", () => {
+    const out = compareVersionsSchema.parse({
+      baseRaw: {},
+      headRaw: {},
+      warnThreshold: 0.1,
+      criticalThreshold: 0.25,
+    });
+    expect(out.warnThreshold).toBe(0.1);
+    expect(out.criticalThreshold).toBe(0.25);
+  });
+
+  it("rejette warnThreshold >= 1 (% relatif borné)", () => {
+    expect(() =>
+      compareVersionsSchema.parse({
+        baseRaw: {},
+        headRaw: {},
+        warnThreshold: 1,
+      }),
+    ).toThrow();
+  });
+
+  it("rejette criticalThreshold <= 0", () => {
+    expect(() =>
+      compareVersionsSchema.parse({
+        baseRaw: {},
+        headRaw: {},
+        criticalThreshold: 0,
+      }),
+    ).toThrow();
+  });
+});
+
+describe("handleCompareVersions — Lot 4.F", () => {
+  it("retourne 200 + result quand les baselines sont valides", async () => {
+    (runVersionComparison as ReturnType<typeof vi.fn>).mockReturnValue({
+      base: { engineVer: "0.15.0", snapshotAt: "2026-01-01" },
+      head: { engineVer: "0.16.0", snapshotAt: "2026-05-01" },
+      pairings: [],
+      summary: {
+        maxAbsDeltaByMetric: {
+          tdMean: 0,
+          tdStd: 0,
+          casualtyMean: 0,
+          turnoverMean: 0,
+          homeWinRate: 0,
+          awayWinRate: 0,
+          drawRate: 0,
+        },
+        missingInBase: [],
+        missingInHead: [],
+        matchedPairings: 0,
+        warnCount: 0,
+        criticalCount: 0,
+      },
+    });
+    const res = buildRes();
+    await handleCompareVersions(
+      {
+        body: { baseRaw: {}, headRaw: {} },
+      } as unknown as Request,
+      res,
+    );
+    expect(res.statusCode).toBe(200);
+    expect((res.body as { head: { engineVer: string } }).head.engineVer).toBe(
+      "0.16.0",
+    );
+    expect(runVersionComparison).toHaveBeenCalledWith({
+      baseRaw: {},
+      headRaw: {},
+    });
+  });
+
+  it("retourne 400 + code quand AdminToolsError INVALID_BASELINE", async () => {
+    (runVersionComparison as ReturnType<typeof vi.fn>).mockImplementation(
+      () => {
+        throw new AdminToolsError(
+          "INVALID_BASELINE",
+          "INVALID_BASELINE: base — schema KO",
+        );
+      },
+    );
+    const res = buildRes();
+    await handleCompareVersions(
+      { body: { baseRaw: {}, headRaw: {} } } as unknown as Request,
+      res,
+    );
+    expect(res.statusCode).toBe(400);
+    expect((res.body as { code: string }).code).toBe("INVALID_BASELINE");
+  });
+
+  it("retourne 500 sur erreur inattendue (non typée)", async () => {
+    (runVersionComparison as ReturnType<typeof vi.fn>).mockImplementation(
+      () => {
+        throw new Error("oops");
+      },
+    );
+    const res = buildRes();
+    await handleCompareVersions(
+      { body: { baseRaw: {}, headRaw: {} } } as unknown as Request,
+      res,
+    );
+    expect(res.statusCode).toBe(500);
+  });
+});
+
+describe("diffReplaysSchema — Lot 4.F input validation", () => {
+  it("accepte un payload valide", () => {
+    const out = diffReplaysSchema.parse({
+      matchIdA: "a",
+      matchIdB: "b",
+    });
+    expect(out.matchIdA).toBe("a");
+    expect(out.matchIdB).toBe("b");
+  });
+
+  it("rejette les ids vides", () => {
+    expect(() =>
+      diffReplaysSchema.parse({ matchIdA: "", matchIdB: "b" }),
+    ).toThrow();
+  });
+
+  it("rejette maxDivergences > 1000", () => {
+    expect(() =>
+      diffReplaysSchema.parse({
+        matchIdA: "a",
+        matchIdB: "b",
+        maxDivergences: 5000,
+      }),
+    ).toThrow();
+  });
+});
+
+describe("handleDiffReplays — Lot 4.F", () => {
+  it("retourne 200 + diff quand le service réussit", async () => {
+    (runReplayDiff as ReturnType<typeof vi.fn>).mockResolvedValue({
+      matchA: { id: "a", engineVer: "0.15.0", scoreHome: 2, scoreAway: 1 },
+      matchB: { id: "b", engineVer: "0.16.0", scoreHome: 2, scoreAway: 1 },
+      diff: {
+        divergences: [],
+        summary: {
+          totalA: 10,
+          totalB: 10,
+          matchedCount: 10,
+          divergenceCount: 0,
+          firstDivergenceIndex: null,
+        },
+      },
+    });
+    const res = buildRes();
+    await handleDiffReplays(
+      { body: { matchIdA: "a", matchIdB: "b" } } as unknown as Request,
+      res,
+    );
+    expect(res.statusCode).toBe(200);
+    expect(
+      (res.body as { diff: { summary: { totalA: number } } }).diff.summary
+        .totalA,
+    ).toBe(10);
+  });
+
+  it("retourne 404 + code quand AdminToolsError MATCH_NOT_FOUND", async () => {
+    (runReplayDiff as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new AdminToolsError("MATCH_NOT_FOUND", "Match introuvable"),
+    );
+    const res = buildRes();
+    await handleDiffReplays(
+      { body: { matchIdA: "a", matchIdB: "b" } } as unknown as Request,
+      res,
+    );
+    expect(res.statusCode).toBe(404);
+    expect((res.body as { code: string }).code).toBe("MATCH_NOT_FOUND");
+  });
+
+  it("retourne 404 + code quand AdminToolsError REPLAY_NOT_FOUND", async () => {
+    (runReplayDiff as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new AdminToolsError("REPLAY_NOT_FOUND", "Replay manquant"),
+    );
+    const res = buildRes();
+    await handleDiffReplays(
+      { body: { matchIdA: "a", matchIdB: "b" } } as unknown as Request,
+      res,
+    );
+    expect(res.statusCode).toBe(404);
+    expect((res.body as { code: string }).code).toBe("REPLAY_NOT_FOUND");
+  });
+
+  it("retourne 400 quand AdminToolsError INVALID_INPUT (matchIdA === matchIdB)", async () => {
+    (runReplayDiff as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new AdminToolsError("INVALID_INPUT", "matchIdA et matchIdB doivent etre distincts"),
+    );
+    const res = buildRes();
+    await handleDiffReplays(
+      { body: { matchIdA: "x", matchIdB: "x" } } as unknown as Request,
+      res,
+    );
+    expect(res.statusCode).toBe(400);
+    expect((res.body as { code: string }).code).toBe("INVALID_INPUT");
+  });
+
+  it("retourne 500 sur erreur inattendue", async () => {
+    (runReplayDiff as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new Error("DB pool exhausted"),
+    );
+    const res = buildRes();
+    await handleDiffReplays(
+      { body: { matchIdA: "a", matchIdB: "b" } } as unknown as Request,
       res,
     );
     expect(res.statusCode).toBe(500);
