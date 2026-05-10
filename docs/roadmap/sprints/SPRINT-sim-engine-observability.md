@@ -149,6 +149,17 @@ sans incident.
 | **4.C.1** | **Load test broadcaster** — script qui simule 1000+ subscribers concurrents sur 10 matchs. Mesure CPU, RAM, lag dispatch p99. Identifie le seuil de scaling. | M | TODO |
 | **4.C.2** | **Redis pub/sub broadcaster** (si nécessaire) — passe le broadcaster en multi-instance via Redis. Mentionné en "Phase 2" dans `pro-league-match-broadcaster.ts`, à activer si scaling horizontal devient nécessaire. | L | TODO |
 
+### Lot 4.D — Compléments progression / TV (issus du travail Phase 3.C)
+
+> Découlent organiquement des PRs 3.C.4 (level-up applier) et 3.C.5 (TV recalc). Pas dans le sprint initial mais nécessaires pour atteindre la fidélité BB pleine.
+
+| Lot | Description | Effort | Statut |
+|---|---|---|---|
+| **4.D.1** | **Stat increases on doubles** — quand le SPP roll donne un double (deux dés identiques), autoriser `+1 MA/AG/PA/AV` au lieu d'un skill. Ajoute la profondeur BB officielle au level-up applier. Le service `pro-roster-level-up.ts` doit reconnaître ce cas, persister le stat increase via une nouvelle colonne `ProTeamRoster.{maBonus,agBonus,paBonus,avBonus}` (ou JSON), et faire interagir avec `pro-roster-tv.ts` (chaque +stat = 30-50k TV selon BB). | M | TODO |
+| **4.D.2** | **Pools S/A/P/M par position** — le level-up applier ne tape que `GENERAL_SKILL_POOL`. Real BB définit 5 catégories (G/A/S/P/M) avec primary/secondary par position : Catcher → G+A primary, Blitzer → G+S, Thrower → G+P, etc. Le pick d'advancement doit consulter une table `POSITION_SKILL_ACCESS` et choisir aléatoirement parmi les pools accessibles. Distinction primary (20k) vs secondary (30k) impacte aussi `pro-roster-tv.ts`. | M | TODO |
+| **4.D.3** | **Niggling injury TV malus + cron `sweepRecomputeTvs`** — BB applique -10k TV par niggling pour le matchmaking (joueur encore actif mais "fragile"). Étendre `computePlayerTv(position, skillCount)` en `computePlayerTv(position, skillCount, niggling)`. Brancher le cron `sweepRecomputeTvs` (déjà écrit dans Lot 3.C.5) sur un `setInterval` 30min dans `index.ts` pour reconcilier les TV qui drift entre level-ups (ex: nouveau niggling appliqué par casualty applier sans recompute TV inline). | S | TODO |
+| **4.D.4** | **Hybrid driver scorerId** — Lot 3.C.3 ajoute `scorerId` aux TD events du **full driver** uniquement. Le hybrid driver (synthèse archétype) émet des TD sans porteur identifié, donc 0 SPP TD attribué en mode hybrid. Pour combler, dans `hybrid-driver.ts:emitTd`, attribuer un scorer pseudo-aléatoire pondéré par stats (Catcher / Runner > Blitzer > Lineman) parmi le roster réel quand `SimInput.home.roster` est fourni. Cohérence cross-driver — un coach qui passe d'hybrid à full ne doit pas voir ses meilleurs scorers stagner. | S | TODO |
+
 ---
 
 ## Ordre de bataille recommandé
