@@ -94,6 +94,10 @@ import {
   ProTeamNotFoundError,
   getProTeamDetail,
 } from "../services/pro-league-team";
+import {
+  ProPlayerNotFoundError,
+  getProPlayerDetail,
+} from "../services/pro-player-detail";
 import { serverLog } from "../utils/server-log";
 
 const HEARTBEAT_INTERVAL_MS = 30_000;
@@ -303,6 +307,36 @@ export async function handleGetTeamDetail(
     }
     const msg = err instanceof Error ? err.message : "unknown";
     serverLog.error(`[pro-league/teams/${slug}] failed: ${msg}`);
+    res.status(500).json({ error: "internal-error" });
+  }
+}
+
+/**
+ * Handler `GET /api/pro-league/players/:id` — Lot G.
+ *
+ * Public, pas d'auth. Renvoie l'agrégat fiche joueur :
+ * identité + stats + bonuses + skills + progression + career +
+ * skill access pools + meta équipe.
+ */
+export async function handleGetPlayerDetail(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const id = req.params.id;
+  if (!id || typeof id !== "string") {
+    res.status(400).json({ error: "missing-id" });
+    return;
+  }
+  try {
+    const data = await getProPlayerDetail(id);
+    res.json(data);
+  } catch (err: unknown) {
+    if (err instanceof ProPlayerNotFoundError) {
+      res.status(404).json({ error: err.message });
+      return;
+    }
+    const msg = err instanceof Error ? err.message : "unknown";
+    serverLog.error(`[pro-league/players/${id}] failed: ${msg}`);
     res.status(500).json({ error: "internal-error" });
   }
 }
@@ -806,6 +840,7 @@ const router = Router();
 router.get("/seasons/current", handleGetCurrentSeasonHub);
 router.get("/seasons/current/standings", handleGetCurrentSeasonStandings);
 router.get("/teams/:slug", handleGetTeamDetail);
+router.get("/players/:id", handleGetPlayerDetail);
 router.get("/matches/:id", handleGetMatchDetail);
 router.get("/matches/:id/markets", handleListMarkets);
 router.get("/matches/:id/stream", handleStreamProMatch);
