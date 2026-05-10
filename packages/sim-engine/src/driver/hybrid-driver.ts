@@ -60,7 +60,9 @@ import {
   type MatchSummary,
   type SimInput,
   type SimResult,
+  type SimRosterPlayer,
 } from '../types';
+import { pickHybridScorer } from './hybrid-scorer';
 
 const TURNS_PER_HALF = 8;
 const FIELD_YARDS = 26;
@@ -170,6 +172,9 @@ interface DriverRng {
    *  triggers the silent retry. Independent so toggling the boost
    *  on/off doesn't shift any other stream. */
   luck: Rng;
+  /** Lot 4.D.4 — scorer attribution for hybrid driver. Independent
+   *  so adding it doesn't shift any other stream (replay-stable). */
+  scorer: Rng;
 }
 
 function forkRngs(rootSeed: number): DriverRng {
@@ -184,6 +189,7 @@ function forkRngs(rootSeed: number): DriverRng {
     strategic: root.fork('strategic-decisions'),
     nuffle: root.fork('nuffle-events'),
     luck: root.fork('underdog-luck'),
+    scorer: root.fork('hybrid-scorer'),
   };
 }
 
@@ -492,6 +498,12 @@ interface MutableMatch {
   /** Per-player momentum tracker (lot 0.B.4). The MVP synthesises LOS
    *  player IDs ; the full driver (post-MVP) will plug real roster IDs. */
   momentum: MomentumTracker;
+  /** Lot 4.D.4 — rosters reels passes via SimInput.{home,away}.roster.
+   *  Permettent au hybrid driver d'attribuer un `scorerId` pseudo-
+   *  aleatoire pondere par position sur les TD events. Vide en mode
+   *  archetype-vs-archetype (legacy) — emitTd skip le scorerId. */
+  homeRoster: readonly SimRosterPlayer[];
+  awayRoster: readonly SimRosterPlayer[];
 }
 
 function emitTurnStart(m: MutableMatch): void {
@@ -509,7 +521,23 @@ function emitTurnStart(m: MutableMatch): void {
   });
 }
 
-function emitTd(m: MutableMatch, scoringTeam: Side, displayAtMs: number): void {
+function emitTd(
+  m: MutableMatch,
+  scoringTeam: Side,
+  displayAtMs: number,
+  rngs: DriverRng,
+): void {
+  // Lot 4.D.4 — quand un roster reel est fourni cote `SimInput`, on
+  // attribue un `scorerId` pseudo-aleatoire pondere par position
+  // (Catcher / Runner > Lineman > Big Guy). Sans roster (mode legacy
+  // archetype-vs-archetype), on omet `scorerId` -> SPP service
+  // ignore le TD.
+  const roster =
+    scoringTeam === 'home' ? m.homeRoster : m.awayRoster;
+  const scorerId =
+    roster.length > 0
+      ? pickHybridScorer(roster, () => rngs.scorer.next())
+      : null;
   m.events.push({
     type: 'TD',
     displayAtMs,
@@ -519,6 +547,7 @@ function emitTd(m: MutableMatch, scoringTeam: Side, displayAtMs: number): void {
       half: m.state.half,
       turn: m.state.turn,
       scoreAfter: { home: m.state.scoreHome, away: m.state.scoreAway },
+      ...(scorerId ? { scorerId } : {}),
     },
   });
 }
@@ -697,7 +726,7 @@ function processTurn(
         else m.state = { ...m.state, scoreAway: m.state.scoreAway + 1 };
         m.touchdowns += 1;
         recordTouchdown(m.momentum, drivingPlayerId);
-        emitTd(m, scoring, momentAtMs);
+        emitTd(m, scoring, momentAtMs, rngs);
         m.state = { ...m.state, drive: nextDrive(m.state.drive) };
         // A scoring play ends the team's turn ; treat it like a
         // turnover-on-the-positive-side so the bulk yard advancement
@@ -762,7 +791,7 @@ function processTurn(
       else m.state = { ...m.state, scoreAway: m.state.scoreAway + 1 };
       m.touchdowns += 1;
       recordTouchdown(m.momentum, `${scoring}-LOS`);
-      emitTd(m, scoring, bulkAtMs);
+      emitTd(m, scoring, bulkAtMs, rngs);
       m.state = { ...m.state, drive: nextDrive(m.state.drive) };
     } else {
       m.state = {
@@ -824,6 +853,10 @@ export function runHybridDriver(input: SimInput, options: DriverOptions = {}): S
     nuffleEvents: 0,
     underdogBoosts: 0,
     momentum: createMomentumTracker(),
+    // Lot 4.D.4 — rosters reels propages depuis SimInput. Vide quand
+    // le caller utilise le hybrid driver en mode legacy archetype.
+    homeRoster: input.home.roster ?? [],
+    awayRoster: input.away.roster ?? [],
   };
 
   // First half.
