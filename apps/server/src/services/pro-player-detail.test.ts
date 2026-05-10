@@ -89,6 +89,7 @@ describe("getProPlayerDetail — Lot G", () => {
       level: 3,
       spp: 25,
       nextLevelSpp: 31,
+      readyToLevelUp: false,
       tv: 110000,
     });
     expect(out.career).toEqual({
@@ -250,5 +251,72 @@ describe("getProPlayerDetail — Lot G", () => {
       compCount: 0,
       mvpCount: 0,
     });
+  });
+
+  it("Lot K — readyToLevelUp=true quand l'applier est en retard", async () => {
+    // 50 SPP ⇒ levelForSpp=4. DB level=2 (sweep en retard de 2 paliers).
+    mocked.proTeamRoster.findUnique.mockResolvedValueOnce({
+      id: "p_lag",
+      name: "Lagging",
+      position: "Lineman",
+      ma: 5,
+      st: 3,
+      ag: 3,
+      pa: 4,
+      av: 9,
+      skills: [],
+      status: "active",
+      form: 50,
+      niggling: 0,
+      spp: 50,
+      level: 2,
+      tvCached: 50000,
+      tdCount: 0,
+      casCount: 0,
+      compCount: 0,
+      mvpCount: 0,
+      maBonus: 0,
+      stBonus: 0,
+      agBonus: 0,
+      paBonus: 0,
+      avBonus: 0,
+      team: FAKE_TEAM,
+    });
+    const out = await getProPlayerDetail("p_lag");
+    expect(out.progression.readyToLevelUp).toBe(true);
+    // level affiché = max(rawDb=2, computed=4) = 4
+    expect(out.progression.level).toBe(4);
+  });
+
+  it("Lot K — readyToLevelUp=false quand DB level synchro avec spp", async () => {
+    mocked.proTeamRoster.findUnique.mockResolvedValueOnce({
+      id: "p_sync",
+      name: "Synchro",
+      position: "Lineman",
+      ma: 5,
+      st: 3,
+      ag: 3,
+      pa: 4,
+      av: 9,
+      skills: [],
+      status: "active",
+      form: 50,
+      niggling: 0,
+      spp: 25,
+      level: 3, // levelForSpp(25) = 3 → pas de retard
+      tvCached: 60000,
+      tdCount: 0,
+      casCount: 0,
+      compCount: 0,
+      mvpCount: 0,
+      maBonus: 0,
+      stBonus: 0,
+      agBonus: 0,
+      paBonus: 0,
+      avBonus: 0,
+      team: FAKE_TEAM,
+    });
+    const out = await getProPlayerDetail("p_sync");
+    expect(out.progression.readyToLevelUp).toBe(false);
   });
 });

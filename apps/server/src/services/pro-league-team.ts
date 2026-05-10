@@ -65,6 +65,16 @@ export interface ProTeamRosterProgression {
   readonly spp: number;
   /** Prochain seuil SPP (null si déjà legend, level 7). */
   readonly nextLevelSpp: number | null;
+  /**
+   * Lot K — true si le joueur a accumulé assez de SPP pour franchir le
+   * prochain palier mais que l'applier (`sweepLevelUps`, tick 30 min)
+   * n'a pas encore tourné. Calculé via `levelForSpp(spp) > rawDbLevel`.
+   *
+   * NB: l'API expose `level = max(rawDbLevel, levelForSpp(spp))` pour
+   * cacher le lag de l'applier dans l'affichage du level. Mais on a
+   * besoin du flag brut côté UI pour signaler "advancement en attente".
+   */
+  readonly readyToLevelUp: boolean;
   /** TV individuelle (gp), recomputée par le level-up applier (Lot 3.C.5+). */
   readonly tv: number;
 }
@@ -312,9 +322,14 @@ export async function getProTeamDetail(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const roster: ProTeamRosterEntry[] = rosterRaw.map((r: any) => {
     const spp = (r.spp as number | null) ?? 0;
+    const rawDbLevel = (r.level as number | null) ?? 1;
     // Toujours prendre le level recompute pour rester cohérent même si
     // la colonne `level` n'a pas été migrée (rosters legacy avant 3.C.4).
-    const level = Math.max((r.level as number | null) ?? 1, levelForSpp(spp));
+    const computedLevel = levelForSpp(spp);
+    const level = Math.max(rawDbLevel, computedLevel);
+    // Lot K — readyToLevelUp = applier en retard (advancement en attente).
+    // Comparaison sur rawDbLevel pour ignorer le recompute UI.
+    const readyToLevelUp = computedLevel > rawDbLevel;
     return {
       id: r.id as string,
       name: r.name as string,
@@ -332,6 +347,7 @@ export async function getProTeamDetail(
         level,
         spp,
         nextLevelSpp: nextLevelSpp(spp),
+        readyToLevelUp,
         tv: (r.tvCached as number | null) ?? 50000,
       },
       statBonuses: {

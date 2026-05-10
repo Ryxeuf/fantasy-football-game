@@ -53,6 +53,8 @@ export interface ProPlayerProgression {
   readonly level: number;
   readonly spp: number;
   readonly nextLevelSpp: number | null;
+  /** Lot K — true si l'applier sweep est en retard (advancement en attente). */
+  readonly readyToLevelUp: boolean;
   readonly tv: number;
 }
 
@@ -155,7 +157,10 @@ export async function getProPlayerDetail(
     throw new ProPlayerNotFoundError(playerId);
   }
   const spp = (row.spp as number | null) ?? 0;
-  const level = Math.max((row.level as number | null) ?? 1, levelForSpp(spp));
+  const rawDbLevel = (row.level as number | null) ?? 1;
+  const computedLevel = levelForSpp(spp);
+  const level = Math.max(rawDbLevel, computedLevel);
+  const readyToLevelUp = computedLevel > rawDbLevel;
   const access =
     POSITION_SKILL_ACCESS[row.position as string] ??
     POSITION_SKILL_ACCESS.Lineman;
@@ -185,6 +190,7 @@ export async function getProPlayerDetail(
       level,
       spp,
       nextLevelSpp: nextLevelSpp(spp),
+      readyToLevelUp,
       tv: (row.tvCached as number | null) ?? 50000,
     },
     career: {

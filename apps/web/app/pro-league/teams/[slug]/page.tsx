@@ -59,6 +59,8 @@ interface RosterProgression {
   readonly level: number;
   readonly spp: number;
   readonly nextLevelSpp: number | null;
+  /** Lot K — l'applier est en retard. Le badge ⬆ ready se base dessus. */
+  readonly readyToLevelUp?: boolean;
   readonly tv: number;
 }
 
@@ -215,13 +217,19 @@ function formatTv(gp: number): string {
 }
 
 /**
- * Lot H — un joueur est "ready to level-up" quand spp >= nextLevelSpp.
- * Le level-up applier asynchrone n'a pas encore tourné (il consume les
- * SPP en background entre matchs), mais le coach peut savoir au coup
- * d'œil quels joueurs ont franchi un palier.
+ * Lot K — un joueur est "ready to level-up" quand l'applier
+ * `sweepLevelUps` (tick 30 min) est en retard sur le level computed
+ * depuis le SPP courant. Le serveur expose le flag dans
+ * `progression.readyToLevelUp`.
+ *
+ * Avant Lot K, ce check faisait `spp >= nextLevelSpp`, mais
+ * `nextLevelSpp(spp)` retourne le seuil **strictement supérieur** à
+ * spp — donc la condition était mathématiquement impossible et le
+ * badge ne se déclenchait jamais. Le payload pré-K (sans flag) est
+ * traité comme "pas ready" pour rester rétrocompat.
  */
 function isReadyToLevelUp(p: RosterProgression): boolean {
-  return p.nextLevelSpp !== null && p.spp >= p.nextLevelSpp;
+  return p.readyToLevelUp === true;
 }
 
 /**
@@ -235,6 +243,7 @@ function SppProgressBadge({
   spp,
   nextLevelSpp,
   level,
+  readyToLevelUp,
 }: RosterProgression): JSX.Element {
   if (nextLevelSpp === null) {
     return (
@@ -243,7 +252,7 @@ function SppProgressBadge({
       </span>
     );
   }
-  const ready = spp >= nextLevelSpp;
+  const ready = readyToLevelUp === true;
   // Seuils précédents pour calculer le pct entre (prev, next).
   const THRESHOLDS = [0, 6, 16, 31, 51, 76, 176];
   const prev = THRESHOLDS[level - 1] ?? 0;
